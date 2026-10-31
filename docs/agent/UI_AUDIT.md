@@ -22,7 +22,7 @@ Le prototype contient un shell cohérent, une navigation qui couvre les principa
 
 ## Limites
 
-- Le shell principal de l’application est validé à 1440, 768 et 390 px. Les états détaillés, autorisations et parcours de chaque vue restent à vérifier.
+- Le shell principal de l’application est validé à 1440, 768 et 390 px. Un contrôle navigateur ciblé des noms accessibles des liens, boutons et champs visibles ne détecte aucun manque sur les routes principales. Les états détaillés, autorisations et parcours de chaque vue restent à vérifier; ce contrôle n’équivaut pas à un audit WCAG.
 - Parcours UI PNJ, rapports privés, erreurs, états vides, permissions administrateur et responsive complet pas encore traversés.
 - Pas de rapport RGAA/WCAG exhaustif ni de vérification lecteur d’écran.
 - Pas de comparaison frame-par-frame entre Figma et Twig ; le fichier Make natif reste non inspectable par connecteur.
