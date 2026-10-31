@@ -5,11 +5,11 @@ Branche : feat/genesis-reborn-production-completion
 HEAD de départ : 80668fa — chore: snapshot Genesis Reborn before completion work; un commit de suivi documentaire a été créé depuis, vérifier git log
 
 ## Position actuelle
-- Phase active : 03/15 — phases 01 et 02 clôturées. Avancement global : 2/15 phases clôturées. Phase 03 en cours; l’arbitrage sur la version Symfony est consigné dans docs/agent/PHASE_03_AUDIT.md.
+- Phase active : 04/15 — phases 01, 02 et 03 clôturées. Avancement global : 3/15 phases clôturées. Phase 03 a retenu PHP 8.4/Symfony 7.4 LTS; voir docs/agent/PHASE_03_AUDIT.md.
 - Phase 01 : TERMINÉE. Inventaire Git, état du dépôt, architecture, documentation et contrôles initiaux actualisés dans docs/agent/PHASE_01_AUDIT.md; les documents de traçabilité qui décrivaient encore l’espionnage et la conquête comme à faire ont été synchronisés.
 - Phase 02 : TERMINÉE. Simulation déterministe, événements persistés, journal, attaque, défense temporisée, rapports privés, orbite, butin, conquête JcE et espionnage implémentés. Règles confirmées; les compositions PNJ et les coefficients d’espionnage restent explicitement provisoires et configurables. Validation : 67 tests / 335 assertions, lint, configuration, schéma et installation vierge avec 11 migrations. Décisions : docs/agent/PHASE_02_COMBAT_CRITERIA.md et PHASE_02_DECISIONS.md.
 - Phase 09 : première version de résolution persistante livrée; couverture fonctionnelle incomplète, voir la liste ci-dessus.
-- Prochaine étape : clore l’arbitrage de phase 03, puis passer à la phase 04.
+- Prochaine étape : phase 04 — comptes et sécurité.
 
 ## État vérifié aujourd'hui
 - Dépôt accessible; branche demandée déjà active.

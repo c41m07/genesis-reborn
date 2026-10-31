@@ -1,6 +1,6 @@
 # Phase 03 — architecture et environnement
 
-État : en cours, choix de version Symfony à confirmer.
+État : TERMINÉE après arbitrage utilisateur du 31/10/2026.
 
 ## Vérifications déjà établies
 
@@ -9,14 +9,10 @@
 - Reproductibilité déjà vérifiée : make validate, make lint, make test et make verify-install ont réussi au 31/10/2026. L’installation isolée a appliqué 11 migrations, importé 146 planètes, vérifié la ré-importation idempotente et le redémarrage avec persistance (résultats détaillés dans TEST_STATUS.md).
 - Architecture observée : Symfony conventionnel, contrôleurs d’entrée, services de domaine, entités et repositories Doctrine, handlers Messenger, migrations versionnées, outbox pour découpler les notifications. Les validations de conteneur et de schéma Doctrine ont réussi.
 
-## Arbitrage bloquant
+## Arbitrage retenu
 
-La spécification docs/specifications/6 - Choix techniques — Stack complète.txt vise PHP 8.5 et Symfony 8.x. Le dépôt utilise PHP 8.4 et Symfony 7.4. Ces versions actuelles sont compatibles entre elles, mais l’écart avec la cible du document doit être tranché avant de déclarer la phase 03 terminée. Ne pas modifier le runtime ni les dépendances avant la réponse de l’utilisateur.
+La spécification docs/specifications/6 - Choix techniques — Stack complète.txt vise PHP 8.5 et Symfony 8.x. Le dépôt utilise PHP 8.4 et Symfony 7.4. L’utilisateur a choisi de conserver Symfony 7.4 LTS et PHP 8.4, puis de mettre à jour la spécification de stack. La combinaison actuelle est maintenue; aucun runtime ni lockfile ne doit être changé dans cette phase.
 
 Au 31/10/2026, Symfony 8.1 est la branche stable et demande PHP 8.4 ou supérieur; Symfony 7.4 est la branche LTS maintenue avec corrections de bugs jusqu’en novembre 2028 et sécurité jusqu’en novembre 2029. Source officielle : https://symfony.com/releases.
 
-## À terminer après l’arbitrage
-
-1. Garder Symfony 7.4 LTS/PHP 8.4 et mettre à jour la spécification de stack; ou migrer vers Symfony 8.x/PHP compatible, puis reprendre l’installation vierge et les contrôles.
-2. Mettre à jour les décisions, README et état maître avec la cible retenue.
-3. Clore la phase 03 puis passer à la phase 04.
+La spécification de stack, README, suivi maître et journal de décisions sont synchronisés avec la cible retenue. Les vérifications d’installation et de migrations référencées plus haut précèdent les changements documentaires; aucune modification applicative n’a été nécessaire. Phase 04 — comptes et sécurité — est la prochaine étape.

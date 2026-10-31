@@ -70,3 +70,8 @@ La barre de contexte et le bandeau de ressources sont sticky avec des niveaux d�
 La phase 02 a ajouté le combat persistant, défense et orbite temporisées, butin, conquête JcE des planètes PNJ et espionnage. Les décisions détaillées et les coefficients provisoires figurent dans docs/agent/PHASE_02_DECISIONS.md. La conquête ne permet pas de prendre une planète détenue par un joueur; les bâtiments, stocks et développement de la planète PNJ sont conservés après capture. Les sondes d’espionnage ciblent uniquement des planètes connues non possédées par l’émetteur, sans escorte.
 
 Validation du lot : 67 tests / 335 assertions; lint PHP/YAML/Twig, schéma, Compose et installation vierge avec 11 migrations réussis. Ce résultat n’est pas une validation de l’équilibrage final, de l’accessibilité exhaustive, de la sécurité complète ou de la charge.
+
+
+## Mise à jour — cible technique, 31 octobre 2026
+
+L’utilisateur a retenu PHP 8.4 et Symfony 7.4 LTS pour le dépôt; l’exigence initiale PHP 8.5/Symfony 8.x est remplacée pour la cible courante par addendum à la spécification 6. Motif : conserver la branche LTS et éviter une migration majeure avant que le jeu et ses contrôles ne soient stabilisés. Symfony 7.4 est maintenu jusqu’en 2029 selon https://symfony.com/releases/7.4. Le runtime actuel est conservé; l’installation vierge et les migrations avaient déjà passé les contrôles consignés dans TEST_STATUS.md.

@@ -1,3 +1,7 @@
+## 2026-10-31 — clôture phase 03
+- Vérifications architecture, installation vierge, migrations et reprise consignées dans PHASE_03_AUDIT.md.
+- Après arbitrage utilisateur, cible PHP 8.4/Symfony 7.4 LTS documentée dans la spécification 6, README et DECISIONS.md. Suivi avancé à la phase 04 (3/15).
+
 # Genesis Reborn — journal de l'agent
 
 ## 2026-10-31 — audit phase 01 actualisé

@@ -513,3 +513,5 @@ dans ces cas :
 
                                                                             Stack technique v1 — Mars 2026
 
+
+Addendum utilisateur — 31/10/2026 : la cible retenue pour le dépôt est PHP 8.4 avec Symfony 7.4 LTS. Cette décision remplace les versions 8.5/8.x du tableau de stack initial pour le développement courant. Motif : conserver la branche LTS afin de privilégier la durée de maintenance; le projet utilise déjà cette combinaison et son installation vierge avec migrations a été vérifiée. La page officielle indique un support correctif de Symfony 7.4 jusqu’en novembre 2028 et sécurité jusqu’en novembre 2029 : https://symfony.com/releases/7.4. Toute migration majeure ultérieure devra être planifiée et validée comme un changement distinct.
