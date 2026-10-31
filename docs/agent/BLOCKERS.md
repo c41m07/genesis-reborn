@@ -1,16 +1,18 @@
 # Genesis Reborn — blocages et travaux restants
 
-## Blocages techniques
-Aucun blocage n'empêche l'accès au dépôt ou l'exécution des tests PHP. Compose nécessite --env-file .env.local; les cibles Makefile le font déjà. L'appel docker compose ps sans cet argument échoue sur les variables locales obligatoires, mais ce n'est pas un défaut applicatif. Le terminal PowerShell du contexte ne démarre pas; les commandes WSL passent par le runtime du dépôt.
+## État général
+Aucun blocage n’empêche l’accès au dépôt ou l’exécution des tests PHP. Le projet n’est pas prêt pour la production. Les phases et écarts du prompt sont détaillés dans PROMPT_PHASE_CROSSCHECK.md.
 
-## Règles et choix encore à confirmer
-- Les règles de conquête JcE ont été confirmées par Kévin : cibles neutres, flottes et défenses PNJ, victoire plus vaisseau colonie survivant, limite habituelle de colonies, bâtiments/stocks conservés, défenses PNJ retirées, pertes PNJ persistantes. Les compositions de départ par niveau sont provisoires et modifiables dans le catalogue.
-- Les règles d’espionnage sont désormais consolidées et implémentées. La fermeture asynchrone d’univers est implémentée et vérifiée.
-- L'équilibrage final manque pour certaines unités et les données sont explicitement provisional. Implémentation possible avec valeurs provisoires étiquetées; mise en production bloquée jusqu'à validation.
-- Les classements/statistiques et droits admin ont des exigences incomplètes.
+## Écarts de phases à terminer
+- Phase 12 active : inspecter la refonte existante sur tous les parcours, états et formats d’écran, réaliser l’audit clavier/contraste et corriger les défauts constatés. Runner isolé en place; campagne la plus récente 4/6. Deux points restent à diagnostiquer : toast temps réel de fin de construction et durée du trajet de colonisation dans le test.
+- Phase 04 partielle : récupération de mot de passe et préférences utilisateur citées par le prompt mais non implémentées. Concevoir et tester un flux sûr.
+- Phase 11 partielle : l’administration n’offre pas encore le réglage fin des paramètres de catalogues bâtiments, technologies, vaisseaux et défenses.
+- Phase 13 à faire : campagne navigateur complète avec le runner isolé disponible, sécurité, concurrence et performance.
+- Phase 14 à valider : CI, observabilité, sauvegarde/restauration et procédures.
+- Phase 15 à faire : audit final, équilibrage des valeurs provisoires et verdict production.
 
-## Publication et planification
-Le prompt interdit publication/déploiement réel sans autorisation; aucun Site n'est créé. Une tâche planifiée ne peut pas coder la suite sans session de développement et accès au dépôt; aucune relance automatique après quota n'est revendiquée. La reprise manuelle figure dans RESUME.md.
+## Paramètres provisoires
+Compositions PNJ, statistiques de combat, coûts, productions, durées, stocks initiaux, kit de colonie et plusieurs coefficients restent à valider. Ne pas présenter ces valeurs comme équilibrées. Les règles confirmées par Kévin sur la conquête JcE sont consignées dans REGLES.md et DECISIONS.md.
 
-## Travail restant
-Les éléments de docs/LIVRAISON-DOMAINES-UI.md sont des tâches, pas des blocages techniques. Priorité : phase 10 — audit social et stratégique; ensuite classements, classements, administration, CI, audits sécurité/accessibilité/performance, sauvegarde et restauration.
+## Limites d’environnement et données
+Compose nécessite --env-file .env.local; les cibles Makefile l’ajoutent. Des essais navigateur antérieurs ont consommé des planètes dans la base partagée; les conteneurs de ces essais ont été nettoyés. Le runner actuel utilise une base éphémère isolée pour les comptes E2E. Aucun déploiement n’a été réalisé ni ne doit l’être sans autorisation spécifique. Aucune relance automatique après quota n’est revendiquée.

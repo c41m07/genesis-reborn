@@ -1,6 +1,6 @@
 # Phase 12 — UI, responsive et accessibilité
 
-État au 31/10/2026 : phase en cours. Une revue ciblée a permis de corriger des défauts clavier/mobile, mais cela ne réalise pas la refonte UI/UX attendue : parcours complets et cohérents, responsive abouti, identité visuelle homogène et validation d’accessibilité. Aucune conformité RGAA ou WCAG complète n’est revendiquée.
+État au 31/10/2026 : phase en cours. La refonte visuelle professionnelle et responsive existe déjà dans la livraison du 21/10; les corrections clavier/mobile du 31/10 l’améliorent. La revue de l’ensemble des parcours et critères d’accessibilité n’est pas complète. Il faut valider les écrans existants et corriger uniquement les écarts observés; aucune conformité RGAA ou WCAG complète n’est revendiquée.
 
 ## Revue et corrections
 - Navigation : lien d’évitement vers main, titres structurés, langue de document définie en français, navigation principale nommée, menu mobile avec état ARIA, fermeture Échap et retour du focus. Le piège clavier inclut maintenant les liens, boutons, champs et sélecteurs.
@@ -16,9 +16,9 @@
 - make lint : PHP, YAML, Twig, conteneur Symfony et schéma Doctrine valides.
 - make validate : configuration Compose valide.
 - make assets : compilation production réussie.
-- make test-browser : 3 des 6 scénarios ont réussi lors de l’exécution. Un échec était dû à l’ancien intitulé attendu des rapports, corrigé ensuite. Deux scénarios de création de compte ont été bloqués car l’univers Turbo n’avait plus de planète libre dans la base de développement partagée. Le scénario responsive a atteint son assertion finale avant la correction du libellé.
+- La suite Playwright a été relancée dans une base MariaDB éphémère, sans écrire les captures dans docs/validation : 4/6 scénarios réussis (responsive/navigation, diplomatie/guilde, files et prérequis technologiques). Deux restent ouverts : la notification de fin de construction n’apparaît pas dans le toast temps réel; le scénario colonisation était encore « En route » après 60 s, ce qui a conduit à relever son attente à 160 s mais ce correctif n’a pas encore été relancé.
 
 ## Limites à traiter
-- La suite Playwright utilise la base locale partagée; elle consomme des planètes de départ et n’isole pas ses données. Pour cette raison, seuls 3/6 scénarios ont abouti. Préparer une base isolée comme tâche de test, puis terminer les validations de la refonte dans cette phase 12.
+- Un runner isolé a été ajouté; configuration Compose et syntaxe Bash validées. La base et les services de test sont détruits par le script à la fin. La notification temps réel doit être diagnostiquée; le test de colonisation doit être rejoué avec son délai mis à jour.
 - Aucun outil axe/RGAA automatisé n’est installé; la revue manuelle et les contrôles existants ne suffisent pas à revendiquer une conformité exhaustive.
 - Les captures produites durant les parcours restent des artefacts locaux non inclus dans le commit.

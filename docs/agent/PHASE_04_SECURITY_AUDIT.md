@@ -1,6 +1,6 @@
 # Phase 04 — comptes et sécurité
 
-État : TERMINÉE le 31/10/2026.
+État : PARTIELLE au regard du prompt initial; les parcours présents sont techniquement vérifiés, mais la récupération de compte et les préférences utilisateur restent absentes.
 
 ## Contrôles revus
 
@@ -19,4 +19,4 @@
 
 ## Limites de périmètre
 
-L’audit valide les parcours spécifiés et les contrôles présents. Il n’ajoute pas de vérification d’adresse email, récupération de mot de passe ou authentification multifacteur, qui ne sont pas définies dans les spécifications actuelles. L’audit final sécurité, accessibilité et charge demeure en phase 13/15.
+Le prompt de mission (§5.1) demande explicitement la récupération de mot de passe et les préférences utilisateur; aucun flux de récupération ni écran/service de préférences n’a été trouvé lors du contrôle croisé du 31/10. La phase 04 reste donc partielle jusqu’à conception et implémentation testée de ces fonctions. Vérification d’adresse email et MFA ne figurent pas comme exigences explicites du prompt et ne sont pas incluses dans ce constat.

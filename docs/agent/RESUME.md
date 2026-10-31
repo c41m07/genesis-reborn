@@ -1,15 +1,15 @@
 # Genesis Reborn — reprise
 
-## Démarrage de la prochaine session
-1. Accéder à /home/caim/Projets/Genesis_Reborn.
-2. Lire ce fichier, docs/agent/PROGRESS.md, MASTER_PLAN.md, BLOCKERS.md et docs/DECISIONS.md.
-3. Contrôler git status --short --branch; travailler sur feat/genesis-reborn-production-completion. Ne pas écraser les modifications préexistantes indiquées dans PROGRESS.
-4. Lire docs/REGLES.md, docs/LIVRAISON-DOMAINES-UI.md, les sections combat des spécifications 1 et 2 et les trajets pertinents du document 3; lire aussi docs/agent/PHASE_02_COMBAT_CRITERIA.md et PHASE_02_DECISIONS.md.
-5. Examiner les entités Fleet/FleetShip, FleetService/MovementCalculator, messages/handlers, schéma, migrations et tests avant toute extension.
-6. Mettre à jour la matrice d'acceptation 08/09 avant d'écrire les changements. Commencer par la première tâche inachevée; ne pas refaire le travail vérifié.
+## Au démarrage
+1. Lire PROMPT_PHASE_CROSSCHECK.md, PROGRESS.md, MASTER_PLAN.md, BLOCKERS.md et TEST_STATUS.md.
+2. Vérifier la branche feat/genesis-reborn-production-completion et le statut Git. Ne jamais écraser les modifications préexistantes.
+3. Reprendre les contrôles de la phase 12 sur l’interface existante (livraison UI du 21/10), ses parcours utilisateur, états, tailles d’écran et accessibilité; corriger les problèmes observés.
+4. Ne pas conclure la phase 12 sur la base des seules corrections CSS/clavier. Garder la suite navigateur isolée des données de développement.
+5. Après phase 12, terminer les critères rouverts des phases 04 (récupération de mot de passe, préférences) et 11 (outils d’équilibrage), puis poursuivre les phases 13–15.
 
-## État de reprise
-- HEAD de départ : 80668fa; plusieurs commits locaux de suivi sont postérieurs, vérifier git log.
-- Dernière validation : 72 tests / 365 assertions; make lint (62 YAML, 17 Twig, PHP, conteneur et schéma), make validate et make verify-install réussis. Installation vierge : 11 migrations, import de 146 planètes, ré-import idempotent et services prêts après redémarrage; voir docs/agent/TEST_STATUS.md. La conquête JcE et l’espionnage sont intégrés; règles confirmées par Kévin. Les compositions PNJ et coefficients d’espionnage sont configurables et provisoires. Migration 11 appliquée localement. Phase 02 clôturée : 67 tests / 335 assertions, make lint, make validate et make verify-install réussis. Reprendre par la phase 10 — audit social et stratégique (voir docs/agent/MASTER_PLAN.md), sans refaire le combat, l’orbite, la conquête, l’espionnage, la fermeture asynchrone, les invariants économiques ou le raccordement des technologies au combat. Les phases 01 à 09 sont clôturées; audits : PHASE_01_AUDIT.md, PHASE_03_AUDIT.md, PHASE_04_SECURITY_AUDIT.md, PHASE_05_UNIVERSE_AUDIT.md, PHASE_06_ECONOMY_AUDIT.md, PHASE_07_BUILDINGS_TECHNOLOGIES_AUDIT.md et PHASE_08_FLEET_MISSIONS_AUDIT.md et PHASE_09_COMBAT_AUDIT.md.
-- Un commit de documentation de reprise existe; vérifier git log pour les changements après cette note.
-- Aucun déploiement. Pas de mécanisme capable de réveiller une session de code avec accès au dépôt après quota; reprise manuelle documentée.
+## Position vérifiée au 31/10/2026
+- 9/15 phases validées : 01–03 et 05–10. Phase 04 partielle, phase 11 partielle, phase 12 active; 13–15 à faire. Voir PROMPT_PHASE_CROSSCHECK.md pour la comparaison détaillée avec le prompt initial.
+- Dernière validation PHP rapportée : 78 tests / 406 assertions. lint, validate, assets et installation vierge (14 migrations) réussis selon TEST_STATUS.md. Suite navigateur isolée : 4/6 passent; restent un toast de notification temps réel absent et un délai d’attente de colonisation à rejouer.
+- Les corrections UI du 31/10 sont commit 17be81d; suivi corrigé commit c3ded73, à compter du dernier HEAD local.
+- Les données et fichiers de validation contiennent des modifications locales préexistantes; ne pas réinitialiser, clean ou restaurer ni toucher aux PDF, scripts, binaires ou captures sans nécessité et inspection explicite.
+- Aucun déploiement/publication. Aucun réveil automatique après quota n’a été programmé; une reprise manuelle est requise.

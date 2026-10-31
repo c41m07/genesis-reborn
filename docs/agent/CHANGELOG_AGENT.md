@@ -1,7 +1,7 @@
-## 2026-10-31 — correction du statut de phase 12
+## 2026-10-31 — audit du prompt et reprise de phase 12
 - La clôture précédente était prématurée : les corrections ciblées clavier/mobile ne réalisent pas la refonte UI/UX prévue (parcours complets, responsive et accessibilité). Phase 12 rouverte et active.
-- Les 78 tests / 406 assertions, le lint, le schéma, Compose et la compilation assets restent des validations techniques valides. Playwright : 3/6 scénarios passés; deux tests bloqués par l’absence de planète libre dans la base partagée.
-- Avancement corrigé : 11/15 phases clôturées; phase 12 en cours. Les travaux réalisés sont consignés dans PHASE_12_UI_ACCESSIBILITY_AUDIT.md.
+- Les 78 tests / 406 assertions, le lint, le schéma, Compose et la compilation assets restent les dernières validations PHP rapportées. Campagne Playwright isolée : 4/6 passent; notification temps réel absente et trajet colonisation encore en cours à 60 s. Runner configuré pour isoler DB/services et captures; configuration Compose valide.
+- Avancement : 9/15 phases validées; phases 04 et 11 partielles; phase 12 en cours. Voir PROMPT_PHASE_CROSSCHECK.md et PHASE_12_UI_ACCESSIBILITY_AUDIT.md.
 
 ## 2026-10-31 — clôture phase 11
 - Console ROLE_ADMIN avec suspension/réactivation, révocation de sessions actives, signalements de messages privés/de guilde, paramètres effectifs par univers et journal d’audit. La première attribution admin passe par app:admin:grant.

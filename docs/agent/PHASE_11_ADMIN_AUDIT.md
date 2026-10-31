@@ -1,6 +1,6 @@
 # Phase 11 — administration, modération et audit
 
-État au 31/10/2026 : terminée techniquement. Console sécurisée, rôle administrateur, suspension des comptes, signalements, réglages de jeu par univers et journal d’audit sont implémentés. La phase 12 est la prochaine étape.
+État au 31/10/2026 : partielle au regard du prompt initial. Console sécurisée, rôle administrateur, suspension des comptes, signalements, réglages par univers et journal d’audit sont implémentés; l’équilibrage fin des catalogues de bâtiments, technologies et unités reste à livrer. La phase 12 se poursuit en parallèle comme reprise prioritaire.
 
 ## Accès et comptes
 - Console sous /admin protégée par ROLE_ADMIN et formulaires CSRF.
