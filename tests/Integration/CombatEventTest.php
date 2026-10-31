@@ -151,6 +151,28 @@ final class CombatEventTest extends KernelTestCase
         $fleetB = $this->attackFleet($attackerB, $originB, $target, 'b');
         $relief = $this->player('Relief');
         $reliefOrigin = $this->join($relief);
+        $externalOrbit = new Fleet();
+        $externalOrbit->playerUniverse = $relief->currentPlayerUniverse;
+        $externalOrbit->homePlanet = $reliefOrigin;
+        $externalOrbit->destination = $target;
+        $externalOrbit->destinationSystem = $target->solarSystem;
+        $externalOrbit->status = 'orbiting';
+        $externalOrbit->mission = 'orbit';
+        $externalOrbit->travelSeconds = 60;
+        $externalOrbit->reservedFuel = 100;
+        $externalOrbit->orbitFuel = 10;
+        $externalOrbit->orbitDurationSeconds = 3600;
+        $externalOrbit->cargo = ['hydrogen' => 100];
+        $externalOrbit->departureAt = $clock->now()->modify('-60 seconds');
+        $externalOrbit->arrivalAt = $clock->now()->modify('+3600 seconds');
+        $externalOrbit->dispatchToken = 'orbiting-test-fleet';
+        $this->em->persist($externalOrbit);
+        $orbitShip = new FleetShip();
+        $orbitShip->fleet = $externalOrbit;
+        $orbitShip->slug = 'fighter';
+        $orbitShip->quantity = 1;
+        $this->em->persist($orbitShip);
+        $this->em->flush();
         $service = self::getContainer()->get(CombatEventService::class);
         $fleetService = self::getContainer()->get(\App\Service\Fleet\FleetService::class);
         $manager = self::getContainer()->get(\App\Manager\GameManager::class);
@@ -169,7 +191,8 @@ final class CombatEventTest extends KernelTestCase
         $fleetB->arrivalAt = $clock->now();
         $this->em->flush();
         self::assertTrue($manager->transaction(fn (): bool => $service->joinAttack($fleetB)));
-        self::assertSame(4, $this->em->getRepository(CombatParticipant::class)->count(['combatEvent' => $event]));
+        self::assertSame(5, $this->em->getRepository(CombatParticipant::class)->count(['combatEvent' => $event]));
+        self::assertSame('defending', $externalOrbit->status);
         $participantB = $this->em->getRepository(CombatParticipant::class)->findOneBy(['combatEvent' => $event, 'fleet' => $fleetB]);
         self::assertSame(6, $participantB->arrivalRound);
 
@@ -189,6 +212,8 @@ final class CombatEventTest extends KernelTestCase
         self::assertContains($fleetB->status, ['returning', 'completed']);
         self::assertContains($externalDefense->status, ['returning', 'completed']);
         self::assertSame(0.0, $externalDefense->orbitFuel);
+        self::assertContains($externalOrbit->status, ['returning', 'completed']);
+        self::assertSame(0.0, $externalOrbit->orbitFuel);
         self::assertSame('idle', $garrison->status);
     }
     public function testDefenseWithoutCombatReturnsAfterItsStationingWindow(): void
@@ -227,6 +252,92 @@ final class CombatEventTest extends KernelTestCase
         self::assertSame('returning', $fleet->status);
         self::assertSame(0.0, $fleet->orbitFuel);
         self::assertEqualsWithDelta(45.0, $fleet->reservedFuel, 0.001);
+    }
+
+    public function testOrbitNeedsGuildHostApprovalThenConsumesStationingFuel(): void
+    {
+        $clock = $this->clock();
+        $host = $this->player('OrbitHost');
+        $this->join($host);
+        $sender = $this->player('OrbitSender');
+        $origin = $this->join($sender);
+        $target = $this->em->getRepository(Planet::class)->findOneBy(['solarSystem' => $origin->solarSystem, 'owner' => null]);
+        self::assertNotNull($target);
+        $target->owner = $host->currentPlayerUniverse;
+
+        $guild = new \App\Entity\Guild();
+        $guild->universe = $host->currentPlayerUniverse->universe;
+        $guild->leader = $host->currentPlayerUniverse;
+        $guild->name = 'Orbit guild';
+        $this->em->persist($guild);
+        foreach ([$host->currentPlayerUniverse, $sender->currentPlayerUniverse] as $membership) {
+            $member = new \App\Entity\GuildMember();
+            $member->guild = $guild;
+            $member->playerUniverse = $membership;
+            $this->em->persist($member);
+        }
+
+        $idle = new Fleet();
+        $idle->playerUniverse = $sender->currentPlayerUniverse;
+        $idle->homePlanet = $origin;
+        $this->em->persist($idle);
+        $stock = new FleetShip();
+        $stock->fleet = $idle;
+        $stock->slug = 'fighter';
+        $stock->quantity = 1;
+        $this->em->persist($stock);
+        $this->em->flush();
+
+        $fleetService = self::getContainer()->get(\App\Service\Fleet\FleetService::class);
+        $quote = $fleetService->quote($sender->currentPlayerUniverse, $origin, 'orbit', $target->id, ['fighter' => 1], 0.5, [], 24);
+        self::assertEqualsWithDelta(7.2, $quote['orbit_fuel'], 0.000001);
+        $combat = self::getContainer()->get(CombatEventService::class);
+        self::assertFalse($combat->orbitAutoAccepted($sender->currentPlayerUniverse, $target));
+
+        $fleet = new Fleet();
+        $fleet->playerUniverse = $sender->currentPlayerUniverse;
+        $fleet->homePlanet = $origin;
+        $fleet->destination = $target;
+        $fleet->destinationSystem = $target->solarSystem;
+        $fleet->status = 'traveling';
+        $fleet->mission = 'orbit';
+        $fleet->travelSeconds = 60;
+        $fleet->reservedFuel = 100;
+        $fleet->orbitFuel = 10;
+        $fleet->orbitDurationSeconds = 86400;
+        $fleet->cargo = ['hydrogen' => 100];
+        $fleet->arrivalAt = $clock->now();
+        $fleet->dispatchToken = 'orbit-arrival';
+        $this->em->persist($fleet);
+        $outbound = new FleetShip();
+        $outbound->fleet = $fleet;
+        $outbound->slug = 'fighter';
+        $outbound->quantity = 1;
+        $this->em->persist($outbound);
+        $this->em->flush();
+
+        $fleetService->arrive($fleet->id, $fleet->dispatchToken);
+        self::assertSame('orbit_pending', $fleet->status);
+        self::assertNull($fleet->arrivalAt);
+        $fleetService->decideOrbit($host->currentPlayerUniverse, $fleet->id, true);
+        self::assertSame('orbiting', $fleet->status);
+        self::assertSame(86400, $fleet->arrivalAt->getTimestamp() - $clock->now()->getTimestamp());
+        $orbitToken = $fleet->dispatchToken;
+        $clock->sleep(86400);
+        $fleetService->arrive($fleet->id, $orbitToken);
+        self::assertSame('returning', $fleet->status);
+        self::assertSame(0.0, $fleet->orbitFuel);
+        self::assertEqualsWithDelta(45.0, $fleet->reservedFuel, 0.001);
+        self::assertEqualsWithDelta(45.0, $fleet->cargo['hydrogen'], 0.001);
+
+        $contract = new \App\Entity\AllianceContract();
+        $contract->playerA = min($host->currentPlayerUniverse->id, $sender->currentPlayerUniverse->id) === $host->currentPlayerUniverse->id ? $host->currentPlayerUniverse : $sender->currentPlayerUniverse;
+        $contract->playerB = $contract->playerA->id === $host->currentPlayerUniverse->id ? $sender->currentPlayerUniverse : $host->currentPlayerUniverse;
+        $contract->proposer = $contract->playerA;
+        $contract->status = 'accepted';
+        $this->em->persist($contract);
+        $this->em->flush();
+        self::assertTrue($combat->orbitAutoAccepted($sender->currentPlayerUniverse, $target));
     }
 
 }

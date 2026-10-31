@@ -5,17 +5,17 @@ Branche : feat/genesis-reborn-production-completion
 HEAD de départ : 80668fa — chore: snapshot Genesis Reborn before completion work; un commit de suivi documentaire a été créé depuis, vérifier git log
 
 ## Position actuelle
-- Phase active : 02/15 — première tranche opérationnelle du combat persistant; les missions avancées restent incomplètes.
+- Phase active : 02/15 — combat persistant, rapports privés, Défense temporisée et Orbite intégrés; butin, espionnage et conquête restent incomplets. Avancement global : 0/15 phases clôturées.
 - Phase 01 : PARTIELLE. Les livrables du 21/10 couvrent le socle; la revalidation courante confirme la branche, l'architecture, les tests et les changements préexistants. La revue complète de tous les documents reste à reconfirmer.
-- Phase 02 : PARTIELLE. Simulation déterministe, événements persistés, journal, attaque, défense temporisée et rapports privés implémentés. L’orbite, le butin, l’espionnage et la conquête restent à traiter. Décisions : docs/agent/PHASE_02_COMBAT_CRITERIA.md et PHASE_02_DECISIONS.md.
+- Phase 02 : PARTIELLE. Simulation déterministe, événements persistés, journal, attaque, défense temporisée, rapports privés et orbite implémentés. Butin, espionnage et conquête restent à traiter. Décisions : docs/agent/PHASE_02_COMBAT_CRITERIA.md et PHASE_02_DECISIONS.md.
 - Phase 09 : première version de résolution persistante livrée; couverture fonctionnelle incomplète, voir la liste ci-dessus.
-- Phase suivante : ajouter l’orbite et ses règles d’acceptation/carburant, puis traiter le butin et la conquête.
+- Phase suivante : traiter le butin et la conquête, puis l’espionnage.
 
 ## État vérifié aujourd'hui
 - Dépôt accessible; branche demandée déjà active.
 - Dépôt initial : branche de travail déjà active et dossier .idea/ non suivi; les changements faits pendant cette reprise sont limités aux chemins listés dans le statut Git courant. Les captures docs/validation sont produites par les tests navigateur et restent des artefacts locaux.
 - Stack observée : Symfony 7.4, Doctrine ORM 3, PHP 8.4 en conteneur, Twig, Stimulus/Encore, MariaDB, RabbitMQ et Mercure.
-- Contrôles : make validate réussi; make test réussi — 59 tests / 226 assertions; make lint réussi — PHP, 58 YAML, 16 Twig, conteneur et schéma. make verify-install réussi sur installation isolée. Suite navigateur complète réussie : 6/6 parcours, voir docs/agent/TEST_STATUS.md.
+- Contrôles : make validate réussi; make test réussi — 60 tests / 241 assertions; make lint réussi — PHP, 58 YAML, 16 Twig, conteneur et schéma. make verify-install réussi sur installation isolée avec 8 migrations; voir docs/agent/TEST_STATUS.md.
 - Aucun déploiement ou publication.
 
 ## Fonctionnalités présentes

@@ -57,4 +57,4 @@ Date : 31/10/2026. Sources : docs/specifications/1 - Conception batiment vaissea
 
 ## État d’implémentation au 31/10/2026
 
-Les missions attaque et défense, les événements persistés, rounds échelonnés, pertes, retours et rapports privés sont intégrés et couverts par des tests d’intégration. La flotte en défense sans combat repart à l’expiration de sa fenêtre; `orbit_fuel` est réservé puis consommé. La mission orbite, l’acceptation manuelle/directe, le butin, l’espionnage et la conquête restent à implémenter. Les valeurs de combat demeurent provisoires.
+Les missions attaque et défense, les événements persistés, rounds échelonnés, pertes, retours et rapports privés sont intégrés et couverts par des tests d’intégration. La flotte en défense sans combat repart à l’expiration de sa fenêtre; `orbit_fuel` est réservé puis consommé. La mission orbite prend en charge la demande manuelle et l’acceptation automatique par contrat direct, le stationnement temporisé, le retour et l’entrée en défense lors d’un combat ouvert. Le butin, l’espionnage et la conquête restent à implémenter. Les valeurs de combat demeurent provisoires.

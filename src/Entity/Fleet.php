@@ -27,6 +27,8 @@ class Fleet
     public float $reservedFuel = 0;
     #[ORM\Column]
     public float $orbitFuel = 0;
+    #[ORM\Column]
+    public int $orbitDurationSeconds = 0;
     #[ORM\Column(nullable: true)]
     public ?\DateTimeImmutable $departureAt = null;
     #[ORM\Column(nullable: true)]

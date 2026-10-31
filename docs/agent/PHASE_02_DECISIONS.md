@@ -16,13 +16,21 @@ Date : 31/10/2026. Ces décisions rendent implémentables les points non chiffr�
 
 ## Composant créé
 
-CombatSimulator reste un service pur. Son intégration aux événements persistés, aux arrivées de flottes, aux pertes, au journal interne et aux notifications est implémentée et couverte par des tests d'intégration. Un rapport joueur avec contrôle d’accès participant/propriétaire est maintenant en place; la mission Défense temporisée rejoint un combat ouvert ou repart après 600 secondes sans attaque; l’orbite, le butin et la conquête manquent encore; la phase 08/09 reste donc partielle.
+CombatSimulator reste un service pur. Son intégration aux événements persistés, aux arrivées de flottes, aux pertes, au journal interne et aux notifications est implémentée et couverte par des tests d'intégration. Un rapport joueur avec contrôle d’accès participant/propriétaire est maintenant en place; la mission Défense temporisée rejoint un combat ouvert ou repart après 600 secondes sans attaque; l’orbite est implémentée; le butin, l’espionnage et la conquête manquent encore; la phase 08/09 reste donc partielle.
 
 ## Choix ajoutés — mission Défense
 
 - Une flotte Défense peut viser une planète connue et possédée du même univers, qu’il existe ou non une relation d’alliance; ce choix autorise le cas documenté d’un défenseur extérieur non allié.
 - Si un combat a une fenêtre ouverte, la flotte entre immédiatement comme participante défenseuse et son round dépend de l’heure d’arrivée. Sinon elle attend une fenêtre `combat_window_seconds`; si aucun combat ne s’ouvre, elle rentre automatiquement.
 - Le carburant de stationnement est réservé distinctement à l’envoi. À l’expiration sans attaque ou à la résolution du combat, il est débité avant le retour; le carburant aller-retour reste réservé.
+
+## Choix ajoutés — mission Orbite
+
+- Durée choisie à l’envoi : nombre entier de 1 à 168 heures; le plafond de 168 heures est un choix provisoire d’implémentation.
+- Une flotte peut stationner sur une planète possédée par un autre membre allié, dans le même univers. Un contrat direct accepté permet l’acceptation automatique; les relations par guilde ou alliance de guildes exigent la décision du propriétaire.
+- Le carburant de trajet aller-retour et le carburant de stationnement sont réservés au départ. Le carburant de stationnement est prélevé au retour de la durée acceptée; un refus d’accueil libère cette réserve et lance le retour. La durée de stationnement ne dépend pas de la vitesse choisie.
+- Une flotte en orbite rejoint la défense si une attaque ouvre un combat pendant son stationnement. Une demande d’accueil en attente n’est pas une défense participante.
+- La demande masque l’identité de l’émetteur si son système d’origine n’a pas été découvert par l’hôte.
 
 ## Équilibrage et limites
 
