@@ -31,7 +31,7 @@ final class FleetService
         if($mission==='orbit' && !$this->combats->canOrbit($m,$target instanceof Planet?$target:null)) throw new \DomainException('Une orbite est possible uniquement chez un allié de cet univers.');
         if(!is_finite($orbitHours) || $orbitHours<0 || $orbitHours>168 || ($mission==='orbit' && ($orbitHours<1 || floor($orbitHours)!==$orbitHours)) || ($mission!=='orbit' && $orbitHours!=0)) throw new \DomainException('Durée d’orbite invalide. Choisissez entre 1 et 168 heures.');
         if($mission==='colonize' && ($target->owner!==null || $target->npcPlanet)) throw new \DomainException('Cette planète doit être conquise ou n’est pas vierge.');
-        $config=$this->catalog->get('universes',$m->universe->slug);
+        $config=$this->catalog->forUniverse($m->universe);
         if($mission==='conquer' && count($this->repo->planets($m->universe,$m)) >= $config['limits']['max_planets']) throw new \DomainException('Limite de colonies atteinte; une planète conquise occupe un emplacement.');
         if($mission==='colonize' && count($this->repo->planets($m->universe,$m)) >= $config['limits']['max_planets']) throw new \DomainException('Limite de colonies atteinte.');
         $idle=$this->repo->one(Fleet::class,['homePlanet'=>$origin,'playerUniverse'=>$m,'status'=>'idle']);$stock=[];
@@ -140,7 +140,7 @@ final class FleetService
                 $this->consumeShip($f,'probe');$this->notifications->enqueue($m,'Système découvert : '.$f->destinationSystem->name.'.');
             } elseif($f->mission==='colonize') {
                 $target=$f->destination;$this->manager->lock($target);
-                $limit=$this->catalog->get('universes',$m->universe->slug)['limits']['max_planets'];
+                $limit=$this->catalog->forUniverse($m->universe)['limits']['max_planets'];
                 if(!$target->owner && !$target->npcPlanet && count($this->repo->planets($m->universe,$m))<$limit) { $target->owner=$m;$this->resources->initialize($target,true);$this->consumeShip($f,'colony_ship');$this->notifications->enqueue($m,'Nouvelle colonie : '.$target->name.'.'); }
                 else $this->notifications->enqueue($m,'Colonisation impossible à l’arrivée. Votre flotte revient.');
             } elseif($f->mission==='transport') {

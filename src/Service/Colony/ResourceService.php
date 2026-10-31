@@ -34,7 +34,7 @@ final class ResourceService
     {
         // Position bonus curve is an explicit provisional balancing parameter.
         $positionFactor=$slug==='hydrogen' ? .5+$planet->position/10 : ($slug==='antimatter' ? 1 : 1.5-$planet->position/10);
-        $mult=$this->catalog->get('universes',$planet->solarSystem->galaxy->universe->slug)['multipliers']['resource_production'];
+        $mult=$this->catalog->forUniverse($planet->solarSystem->galaxy->universe)['multipliers']['resource_production'];
         $levels??=['mine_'.$slug=>$mineLevel];$bonus=0;
         foreach($this->catalog->all('buildings') as $building) {
             if(($building['production_resource']??null)===$slug) $bonus+=($levels[$building['slug']]??0)*($building['production_per_level']??$this->catalog->rules()['mine_production_per_level']);

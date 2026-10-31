@@ -38,7 +38,7 @@ final class QueueService
             if($group==='ships' && ($buildings['shipyard']??0)<1) throw new \DomainException('Un chantier spatial est nécessaire.');
             $failures=$this->requirements->check($this->requirements->forLevel($d,$level),$buildings,$techs);
             if($failures) throw new \DomainException('Prérequis : '.implode(', ',$failures).'.');
-            $config=$this->catalog->get('universes',$m->universe->slug);
+            $config=$this->catalog->forUniverse($m->universe);
             $plan=$this->calculator->calculate($d,$group,$level,$quantity,$buildings,$config);$duration=$plan['duration'];
             $this->resources->consume($planet,$plan['costs']);
             $item=new QueueItem();$item->planet=$planet;$item->playerUniverse=$m;$item->queueType=$type;$item->itemSlug=$slug;$item->itemLevel=in_array($group,['buildings','technologies'],true)?$level:null;$item->quantity=$quantity;$item->paidCosts=$plan['costs'];$item->durationSeconds=$duration;$item->queuedAt=$this->clock->now();$item->dependsOn=$depends;$item->dispatchToken=Uuid::v4()->toRfc4122();

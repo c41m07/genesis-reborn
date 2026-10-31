@@ -2,6 +2,7 @@
 namespace App\Service\Catalog;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Yaml\Yaml;
+use App\Entity\Universe;
 final class GameCatalog
 {
     private array $data=[];
@@ -20,6 +21,14 @@ final class GameCatalog
         $this->data['combat_modifiers']=Yaml::parseFile($dir.'/combat_modifiers.yaml');
     }
     public function all(string $group): array { return $this->data[$group] ?? []; }
+    public function forUniverse(Universe $universe): array
+    {
+        $config = $this->get('universes', $universe->slug);
+        foreach (['features', 'multipliers', 'limits'] as $section) {
+            $config[$section] = array_replace($config[$section] ?? [], $universe->gameSettings[$section] ?? []);
+        }
+        return $config;
+    }
     public function get(string $group,string $slug): array { return $this->data[$group][$slug] ?? throw new \DomainException('Élément de catalogue inconnu.'); }
     public function rules(): array { return $this->data['rules']; }
     public function costs(array $definition,int $level=1,int $quantity=1): array

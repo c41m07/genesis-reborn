@@ -1,0 +1,52 @@
+{% extends 'base.html.twig' %}
+{% block title %}Administration · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="page-heading"><div><p class="eyebrow">CONSOLE SÉCURISÉE</p><h1>Administration</h1><p>Actions restreintes aux administrateurs et enregistrées dans le journal.</p></div></div>
+{% for message in app.flashes('error') %}<p class="alert">{{ message }}</p>{% endfor %}
+<section class="panel">
+<h2>Signalements de messages privés</h2>
+<p>Seuls les messages ayant été signalés par un participant apparaissent ici.</p>
+{% for report in reports %}
+<article class="panel">
+<p><strong>Signalement #{{ report.id }}</strong> · {{ report.createdAt|date('d/m/Y H:i') }} · {{ report.reporter.player.username }}</p>
+<p>Message de {{ report.message.sender.player.username }} à {{ report.message.recipient.player.username }} · {{ report.message.createdAt|date('d/m/Y H:i') }}</p>
+<blockquote>{{ report.message.content }}</blockquote><p>Motif : {{ report.reason }}</p>
+<form method="post" action="{{ path('app_admin_report_review',{id:report.id}) }}">
+<input type="hidden" name="_token" value="{{ csrf_token('admin_report_'~report.id) }}">
+<button name="decision" value="dismiss">Classer sans suite</button>
+<button class="primary" name="decision" value="redact">Masquer le message</button>
+</form>
+</article>
+{% else %}<p>Aucun signalement à traiter.</p>{% endfor %}
+</section>
+<section class="panel">
+<h2>Comptes joueurs</h2>
+<div class="table-wrap"><table><thead><tr><th>Joueur</th><th>Courriel</th><th>État</th><th>Action</th></tr></thead><tbody>
+{% for player in players %}<tr><td>{{ player.username }}</td><td>{{ player.email }}</td><td>{{ player.lockedAt ? 'Suspendu' : 'Actif' }}</td><td>
+{% if 'ROLE_ADMIN' not in player.roles %}<form method="post" action="{{ path('app_admin_player_suspend',{id:player.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('admin_suspend_'~player.id) }}"><input type="hidden" name="suspend" value="{{ player.lockedAt ? '0' : '1' }}"><button>{{ player.lockedAt ? 'Réactiver' : 'Suspendre' }}</button></form>{% else %}Administrateur{% endif %}
+</td></tr>{% endfor %}
+</tbody></table></div>
+</section>
+<section class="panel">
+<h2>Univers</h2>
+<p>Tu peux planifier ou retirer une date de fermeture. Un univers déjà fermé reste fermé.</p>
+{% for universe in universes %}<article class="panel"><h3>{{ universe.name }} · {{ universe.status }}</h3><form method="post" action="{{ path('app_admin_universe_schedule',{id:universe.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('admin_universe_'~universe.id) }}"><label for="start-{{ universe.id }}">Ouverture (UTC)</label><input id="start-{{ universe.id }}" type="datetime-local" name="starts_at" value="{{ universe.startsAt ? universe.startsAt|date('Y-m-d\\TH:i', 'UTC') : '' }}"><label for="end-{{ universe.id }}">Fermeture planifiée (UTC)</label><input id="end-{{ universe.id }}" type="datetime-local" name="ends_at" value="{{ universe.endsAt ? universe.endsAt|date('Y-m-d\\TH:i', 'UTC') : '' }}"><button>Enregistrer le calendrier</button></form>
+{% set config = universeConfigs[universe.id] %}
+<form method="post" action="{{ path('app_admin_universe_settings',{id:universe.id}) }}">
+<input type="hidden" name="_token" value="{{ csrf_token('admin_settings_'~universe.id) }}">
+<h4>Règles de jeu</h4>
+{% for key,label in {'building_time':'Durée bâtiments','research_time':'Durée recherches','ship_build_time':'Durée vaisseaux','resource_production':'Production ressources','travel_time':'Durée trajets'} %}
+<label for="{{ key }}-{{ universe.id }}">{{ label }} (×)</label><input id="{{ key }}-{{ universe.id }}" type="number" name="multipliers[{{ key }}]" min="0.01" max="10" step="0.01" value="{{ config.multipliers[key] }}" required>
+{% endfor %}
+<label for="planets-{{ universe.id }}">Colonies maximum</label><input id="planets-{{ universe.id }}" type="number" name="limits[max_planets]" min="1" max="50" value="{{ config.limits.max_planets }}" required>
+<label for="fleet-{{ universe.id }}">Vaisseaux maximum par flotte</label><input id="fleet-{{ universe.id }}" type="number" name="limits[max_fleet_size]" min="1" max="10000" value="{{ config.limits.max_fleet_size }}" required>
+{% for key,label in {'guilds_enabled':'Guildes autorisées','planet_conquest':'Conquête de planètes PNJ autorisée'} %}
+<input type="hidden" name="features[{{ key }}]" value="0"><label><input type="checkbox" name="features[{{ key }}]" value="1" {{ config.features[key] ? 'checked' : '' }}> {{ label }}</label>
+{% endfor %}
+<button class="primary">Enregistrer les règles</button></form></article>{% endfor %}
+</section>
+<section class="panel">
+<h2>Journal d’audit</h2><div class="table-wrap"><table><thead><tr><th>Date</th><th>Administrateur</th><th>Action</th><th>Cible</th><th>Détails</th></tr></thead><tbody>
+{% for entry in auditLogs %}<tr><td>{{ entry.createdAt|date('d/m/Y H:i:s') }}</td><td>{{ entry.actor ? entry.actor.username : 'Compte supprimé' }}</td><td>{{ entry.action }}</td><td>{{ entry.targetType }} #{{ entry.targetId }}</td><td>{{ entry.details|json_encode }}</td></tr>{% else %}<tr><td colspan="5">Aucune action consignée.</td></tr>{% endfor %}
+</tbody></table></div></section>
+{% endblock %}

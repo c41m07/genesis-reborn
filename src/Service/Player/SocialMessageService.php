@@ -47,7 +47,7 @@ final class SocialMessageService
     {
         $this->manager->transaction(function () use ($sender, $content): void {
             $this->lockUniverse($sender);
-            if (!$this->catalog->get('universes', $sender->universe->slug)['features']['guilds_enabled']) {
+            if (!$this->catalog->forUniverse($sender->universe)['features']['guilds_enabled']) {
                 throw new \DomainException('Les guildes sont désactivées dans cet univers.');
             }
             $guild = $this->relations->guild($sender);

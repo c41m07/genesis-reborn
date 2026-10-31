@@ -314,9 +314,69 @@ final class GamePersistenceTest extends KernelTestCase
         self::assertCount(1, $thread);
         self::assertSame($member->currentPlayerUniverse->id, $thread[0]->sender->id);
         self::assertNotEmpty($this->em->getRepository(\App\Entity\Notification::class)->findBy(['recipient' => $leader->currentPlayerUniverse]));
+        self::getContainer()->get(\App\Service\Admin\AdminService::class)->reportMessage($leader->currentPlayerUniverse, $thread[0]->id, 'Propos inappropriés');
+        self::assertSame(1, $this->em->getRepository(\App\Entity\MessageReport::class)->count());
 
         $this->expectException(\DomainException::class);
         $messages->guildConversation($outsider->currentPlayerUniverse, $guild);
+    }
+
+
+    public function testPrivateMessageModerationRequiresReportAndAuditsRedaction(): void
+    {
+        $sender = $this->player('ReportSender');
+        $this->join($sender, 'omega-1');
+        $recipient = $this->player('ReportRecipient');
+        $this->join($recipient, 'omega-1');
+        $admin = $this->player('ReportAdmin');
+        $admin->roles = ['ROLE_ADMIN'];
+        $this->em->flush();
+
+        $messages = self::getContainer()->get(\App\Service\Player\SocialMessageService::class);
+        $messages->sendPrivate($sender->currentPlayerUniverse, $recipient->currentPlayerUniverse->id, 'Contenu signalé');
+        $message = $this->em->getRepository(\App\Entity\SocialMessage::class)->findOneBy([]);
+        $moderation = self::getContainer()->get(\App\Service\Admin\AdminService::class);
+        $moderation->reportMessage($recipient->currentPlayerUniverse, $message->id, 'Propos abusifs');
+        $report = $this->em->getRepository(\App\Entity\MessageReport::class)->findOneBy([]);
+        self::assertSame('open', $report->status);
+        $moderation->recordReportViews($admin, [$report]);
+        self::assertSame('message_report_view', $this->em->getRepository(\App\Entity\AdminAuditLog::class)->findOneBy(['action' => 'message_report_view'])->action);
+        $moderation->reviewReport($admin, $report->id, 'redact');
+        self::assertSame('[Message masqué après modération]', $message->content);
+        self::assertNotNull($message->moderatedAt);
+        self::assertSame('actioned', $report->status);
+        self::assertSame(2, $this->em->getRepository(\App\Entity\AdminAuditLog::class)->count());
+    }
+
+    public function testAdministrationSuspensionAndUniverseScheduleAreAudited(): void
+    {
+        $admin = $this->player('ControlAdmin');
+        $admin->roles = ['ROLE_ADMIN'];
+        $target = $this->player('SuspendedPlayer');
+        $universe = $this->em->getRepository(Universe::class)->findOneBy(['slug' => 'omega-1']);
+        $this->em->flush();
+        $service = self::getContainer()->get(\App\Service\Admin\AdminService::class);
+        $service->setPlayerSuspended($admin, $target->id, true);
+        self::assertNotNull($target->lockedAt);
+        try {
+            self::getContainer()->get(\App\Security\PlayerUserChecker::class)->checkPreAuth($target);
+            self::fail('Un compte suspendu doit refuser l’authentification.');
+        } catch (\Symfony\Component\Security\Core\Exception\CustomUserMessageAccountStatusException) {
+            self::assertTrue(true);
+        }
+        $service->setPlayerSuspended($admin, $target->id, false);
+        self::assertNull($target->lockedAt);
+        $openAt = new \DateTimeImmutable('+2 hours');
+        $service->setUniverseSchedule($admin, $universe->id, $openAt, new \DateTimeImmutable('+1 day'));
+        self::assertEquals($openAt, $universe->startsAt);
+        self::assertNotNull($universe->endsAt);
+        self::assertSame(3, $this->em->getRepository(\App\Entity\AdminAuditLog::class)->count());
+        $service->setUniverseSettings($admin, $universe->id, ['multipliers' => ['building_time' => '1.5', 'research_time' => '1', 'ship_build_time' => '1', 'resource_production' => '2', 'travel_time' => '1'], 'limits' => ['max_planets' => '8', 'max_fleet_size' => '150'], 'features' => ['guilds_enabled' => '1', 'planet_conquest' => '0']]);
+        $effective = self::getContainer()->get(GameCatalog::class)->forUniverse($universe);
+        self::assertSame(1.5, $effective['multipliers']['building_time']);
+        self::assertSame(8, $effective['limits']['max_planets']);
+        self::assertFalse($effective['features']['planet_conquest']);
+        self::assertSame(4, $this->em->getRepository(\App\Entity\AdminAuditLog::class)->count());
     }
 
     public function testDirectAllianceRequiresMutualConsentAndIsSymmetric(): void

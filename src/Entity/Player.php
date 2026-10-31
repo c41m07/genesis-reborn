@@ -14,11 +14,15 @@ class Player implements UserInterface, PasswordAuthenticatedUserInterface
     public string $username;
     #[ORM\Column(length: 255)]
     public string $password;
+    #[ORM\Column(type: 'json')]
+    public array $roles = [];
+    #[ORM\Column(nullable: true)]
+    public ?\DateTimeImmutable $lockedAt = null;
     #[ORM\ManyToOne(targetEntity: PlayerUniverse::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
     public ?PlayerUniverse $currentPlayerUniverse = null;
     public function getUserIdentifier(): string { return $this->email; }
     public function getPassword(): string { return $this->password; }
-    public function getRoles(): array { return ['ROLE_USER']; }
+    public function getRoles(): array { return array_values(array_unique([...$this->roles, 'ROLE_USER'])); }
     public function eraseCredentials(): void {}
 }

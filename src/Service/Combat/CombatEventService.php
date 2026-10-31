@@ -54,7 +54,7 @@ final class CombatEventService
             && $target->owner === null
             && $target->npcPlanet
             && $target->solarSystem->galaxy->universe->id === $attacker->universe->id
-            && (bool) ($this->catalog->get('universes', $attacker->universe->slug)['features']['planet_conquest'] ?? false);
+            && (bool) ($this->catalog->forUniverse($attacker->universe)['features']['planet_conquest'] ?? false);
     }
 
     public function canDefend(PlayerUniverse $defender, ?Planet $target): bool
@@ -542,7 +542,7 @@ final class CombatEventService
             $colonyShip = $this->repo->one(FleetShip::class, ['fleet' => $fleet, 'slug' => 'colony_ship']);
             if (!$colonyShip || $colonyShip->quantity < 1) continue;
             if ($event->planet->owner !== null) { $reason = 'target_claimed'; continue; }
-            $config = $this->catalog->get('universes', $participant->playerUniverse->universe->slug);
+            $config = $this->catalog->forUniverse($participant->playerUniverse->universe);
             if (count($this->repo->planets($participant->playerUniverse->universe, $participant->playerUniverse)) >= $config['limits']['max_planets']) {
                 $reason = 'planet_limit'; continue;
             }

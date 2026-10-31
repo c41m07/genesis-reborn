@@ -1,3 +1,8 @@
+## 2026-10-31 — clôture phase 11
+- Console ROLE_ADMIN avec suspension/réactivation, révocation de sessions actives, signalements de messages privés/de guilde, paramètres effectifs par univers et journal d’audit. La première attribution admin passe par app:admin:grant.
+- La consultation du contenu privé est réservée aux signalements et enregistrée. Tests permissions, confidentialité, réglages et migrations vierges réussis. Audit : PHASE_11_ADMIN_AUDIT.md.
+- Validation : 78 tests / 406 assertions; lint, schéma et Compose valides; installation vierge avec 14 migrations vérifiée. Phase 12 active (11/15).
+
 ## 2026-10-31 — clôture phase 10
 - Classement par univers selon la règle validée : recherche + flotte (vaisseaux et défenses fixes) + bâtiments; 100 ressources de coût catalogue = 1 point. Les actifs perdus cessent de compter.
 - Ajout des messages privés, du canal de guilde et des notifications associées, avec périmètre par univers/membership, CSRF, limite 10/minute et 2 000 caractères. Audit : PHASE_10_SOCIAL_STRATEGY_AUDIT.md.

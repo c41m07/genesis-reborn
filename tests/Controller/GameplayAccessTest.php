@@ -27,6 +27,29 @@ final class GameplayAccessTest extends WebTestCase
         $f=new Fleet();$f->playerUniverse=$p->currentPlayerUniverse;$f->homePlanet=$planet;$this->em->persist($f);
         foreach(['probe','transport','colony_ship'] as $slug){$s=new FleetShip();$s->fleet=$f;$s->slug=$slug;$s->quantity=1;$this->em->persist($s);}$this->em->flush();return [$p,$planet];
     }
+
+    public function testAdminConsoleRequiresRoleAndSuspensionRevokesActiveSession(): void
+    {
+        [$player] = $this->player('RegularPlayer');
+        $this->client->loginUser($player);
+        $this->client->request('GET', '/admin');
+        self::assertResponseStatusCodeSame(403);
+
+        $player->lockedAt = new \DateTimeImmutable();
+        $this->em->flush();
+        $this->client->request('GET', '/profil');
+        self::assertResponseRedirects('http://genesis-reborn.localhost/connexion');
+
+        $admin = $this->em->getRepository(Player::class)->findOneBy(['username' => 'RegularPlayer']);
+        $admin->lockedAt = null;
+        $admin->roles = ['ROLE_ADMIN'];
+        $this->em->flush();
+        $this->client->loginUser($admin);
+        $crawler = $this->client->request('GET', '/admin');
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Administration', $crawler->filter('h1')->text());
+    }
+
     public function testOtherPlayerPlanetResourcesAndActionsAreInaccessible():void
     {
         [$a,$own]=$this->player('Alpha');[$b,$foreign]=$this->player('Beta');$this->client->loginUser($a);

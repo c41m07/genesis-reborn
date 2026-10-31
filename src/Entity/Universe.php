@@ -13,6 +13,8 @@ class Universe
     public string $name;
     #[ORM\Column(length: 16)]
     public string $status = 'active';
+    #[ORM\Column(type: 'json')]
+    public array $gameSettings = [];
     #[ORM\Column(nullable: true)]
     public ?\DateTimeImmutable $startsAt = null;
     #[ORM\Column(nullable: true)]

@@ -16,8 +16,8 @@ Compléter le jeu existant en conservant les décisions de docs/REGLES.md, docs/
 | 08 | Flottes et missions | Trajets, carburant, départ/arrivée/retour et missions vérifiés | Terminée — parcours de flotte, idempotence, consommation et retours vérifiés; limites des règles intergalactiques et valeurs provisoires consignées dans PHASE_08_FLEET_MISSIONS_AUDIT.md |
 | 09 | Combat | Résolution reproductible, pertes, butin, rapports et notifications testés | Terminée techniquement — déterminisme, pertes, butin, rapports privés, notifications idempotentes et conquête JcE vérifiés; équilibrage provisoire conservé pour l’audit final (PHASE_09_COMBAT_AUDIT.md) |
 | 10 | Social et stratégie | Diplomatie et communications, protections anti-abus | Terminée techniquement — classement, messages privés et canal de guilde livrés et testés; détails dans PHASE_10_SOCIAL_STRATEGY_AUDIT.md |
-| 11 | Administration | Paramètres et modération sécurisés, journaux d'audit | Active — modération et journaux d’audit à traiter |
-| 12 | UI/UX | Parcours complets, responsive et audit accessibilité satisfaisant | Partielle — refonte existante; audit RGAA/WCAG complet à faire |
+| 11 | Administration | Paramètres et modération sécurisés, journaux d'audit | Terminée techniquement — suspension, signalements respectueux de la vie privée, paramètres par univers et audit testés; voir PHASE_11_ADMIN_AUDIT.md |
+| 12 | UI/UX | Parcours complets, responsive et audit accessibilité satisfaisant | Active — audit RGAA/WCAG complet à faire |
 | 13 | Tests/sécurité/performance | Tests critiques, concurrence et sécurité contrôlés | Partielle — suite PHP passante; couverture et charge restantes |
 | 14 | Exploitation/documentation | CI, sauvegarde/restauration et procédures vérifiées | Partielle — documentation présente; CI et restauration à valider |
 | 15 | Audit final | Critères production prouvés ou limites bloquantes listées | À faire — application non déclarée prête |

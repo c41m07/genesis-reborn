@@ -12,7 +12,7 @@ final class DiplomacyService
     {
         $this->manager->lock($m);$this->manager->lock($m->universe);
         if(!$m->universe->isAccessible($this->clock->now())) throw new \DomainException('Univers inaccessible.');
-        if($guildFeature && !$this->catalog->get('universes',$m->universe->slug)['features']['guilds_enabled']) throw new \DomainException('Les guildes sont désactivées dans cet univers.');
+        if($guildFeature && !$this->catalog->forUniverse($m->universe)['features']['guilds_enabled']) throw new \DomainException('Les guildes sont désactivées dans cet univers.');
     }
     public function create(PlayerUniverse $m,string $name): void
     {

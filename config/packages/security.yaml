@@ -13,6 +13,7 @@ security:
         main:
             lazy: true
             provider: players
+            user_checker: App\Security\PlayerUserChecker
             form_login:
                 login_path: app_login
                 check_path: app_login

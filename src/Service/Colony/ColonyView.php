@@ -27,7 +27,7 @@ final class ColonyView
                 $failures=$this->requirements->check($this->requirements->forLevel($d,$target),$buildings,$tech);
                 if($group==='ships' && ($buildings['shipyard']??0)<1) $failures[]='Chantier spatial niveau 1';
                 if($group==='technologies' && ($buildings['lab']??0)<1) $failures[]='Laboratoire niveau 1';
-                $cards[$group][]= ['benefits'=>$this->insights->benefits($d,$group,$target,$planet,$buildings,$tech),'unlocks'=>$this->insights->unlocks($group,$slug,$target),'definition'=>$d,'level'=>$level,'target'=>$target,'duration'=>$this->calculator->calculate($d,$group,$target,1,$buildings,$this->catalog->get('universes',$m->universe->slug))['duration'],'costs'=>$this->catalog->costs($d,$target),'failures'=>array_unique($failures),'maximum'=>isset($d['max_level']) && $target>$d['max_level']];
+                $cards[$group][]= ['benefits'=>$this->insights->benefits($d,$group,$target,$planet,$buildings,$tech),'unlocks'=>$this->insights->unlocks($group,$slug,$target),'definition'=>$d,'level'=>$level,'target'=>$target,'duration'=>$this->calculator->calculate($d,$group,$target,1,$buildings,$this->catalog->forUniverse($m->universe))['duration'],'costs'=>$this->catalog->costs($d,$target),'failures'=>array_unique($failures),'maximum'=>isset($d['max_level']) && $target>$d['max_level']];
             }
         }
         $ships=[];

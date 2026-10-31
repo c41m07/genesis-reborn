@@ -14,5 +14,5 @@ final class UniverseContext
         if (!$m || $m->player->id !== $p->id || !$m->universe->isAccessible($this->clock->now())) throw new UniverseNotAccessible();
         return $m;
     }
-    public function config(): array { return $this->catalog->get('universes',$this->membership()->universe->slug); }
+    public function config(): array { return $this->catalog->forUniverse($this->membership()->universe); }
 }

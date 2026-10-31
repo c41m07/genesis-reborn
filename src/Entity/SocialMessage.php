@@ -28,4 +28,10 @@ class SocialMessage
 
     #[ORM\Column(nullable: true)]
     public ?\DateTimeImmutable $readAt = null;
+
+    #[ORM\Column(nullable: true)]
+    public ?\DateTimeImmutable $moderatedAt = null;
+
+    #[ORM\ManyToOne, ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    public ?Player $moderatedBy = null;
 }
