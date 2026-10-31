@@ -1,3 +1,7 @@
+## 2026-10-31 — clôture phase 06
+- Audit des calculs de production, chronologie, capacités, dépenses et remboursements consigné dans PHASE_06_ECONOMY_AUDIT.md. Les équilibres non spécifiés restent provisoires.
+- La suite actuelle reste à 71 tests / 355 assertions; phase 07 active (6/15).
+
 ## 2026-10-31 — clôture phase 05
 - Ajout du cycle de vie asynchrone des univers via Outbox/Messenger, avec gestion des dates révisées et jetons idempotents. Les planètes et leurs stocks sont conservés à la fermeture.
 - Tests : 71 / 355; lint et Compose valides. Suivi avancé à la phase 06 (5/15).

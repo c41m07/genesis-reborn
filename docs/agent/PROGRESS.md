@@ -5,11 +5,11 @@ Branche : feat/genesis-reborn-production-completion
 HEAD de départ : 80668fa — chore: snapshot Genesis Reborn before completion work; un commit de suivi documentaire a été créé depuis, vérifier git log
 
 ## Position actuelle
-- Phase active : 06/15 — phases 01 à 05 clôturées. Avancement global : 5/15 phases clôturées. Phase 03 retient PHP 8.4/Symfony 7.4 LTS; phase 04 couvre les comptes/sessions; phase 05 couvre la fermeture asynchrone d’univers. Validation actuelle : 71 tests / 355 assertions, lint PHP/YAML/Twig/conteneur/schéma et configuration Compose réussis. Détails : audits de phases 01, 03, 04 et 05.
+- Phase active : 07/15 — phases 01 à 06 clôturées. Avancement global : 6/15 phases clôturées. La phase 06 clôt les invariants économiques; coefficients et stocks de départ restent provisoires. Validation actuelle : 71 tests / 355 assertions, lint PHP/YAML/Twig/conteneur/schéma et configuration Compose réussis. Détails : audits de phases 01, 03, 04, 05 et 06.
 - Phase 01 : TERMINÉE. Inventaire Git, état du dépôt, architecture, documentation et contrôles initiaux actualisés dans docs/agent/PHASE_01_AUDIT.md; les documents de traçabilité qui décrivaient encore l’espionnage et la conquête comme à faire ont été synchronisés.
 - Phase 02 : TERMINÉE. Simulation déterministe, événements persistés, journal, attaque, défense temporisée, rapports privés, orbite, butin, conquête JcE et espionnage implémentés. Règles confirmées; les compositions PNJ et les coefficients d’espionnage restent explicitement provisoires et configurables. Validation à la clôture : 67 tests / 335 assertions, lint, configuration, schéma et installation vierge avec 11 migrations. Décisions : docs/agent/PHASE_02_COMBAT_CRITERIA.md et PHASE_02_DECISIONS.md.
 - Phase 09 : première version de résolution persistante livrée; couverture fonctionnelle incomplète, voir la liste ci-dessus.
-- Prochaine étape : phase 06 — économie.
+- Prochaine étape : phase 07 — bâtiments et technologies.
 
 ## État vérifié aujourd'hui
 - Dépôt accessible; branche demandée déjà active.
@@ -22,7 +22,7 @@ HEAD de départ : 80668fa — chore: snapshot Genesis Reborn before completion w
 Comptes et profil; univers Omega/Turbo; carte et découvertes; colonies, ressources, bâtiments, recherches et trois files; reprise chronologique des échéances; missions exploration, espionnage, colonisation, transport, attaque, conquête JcE, défense temporisée, orbite et butin; rapports de combat privés; carburant et estimation serveur; guildes/alliances/relations; notifications; UI refondue avec multi-colonies. Les états et limites détaillés figurent dans docs/LIVRAISON-DOMAINES-UI.md.
 
 ## Reste majeur
-Classements/statistiques; interface admin; audit sécurité/accessibilité/performance et CI; sauvegarde/restauration vérifiées; validation d’équilibrage.
+Effets de bâtiments/technologies liés au combat; classement/statistiques; interface admin; audit sécurité/accessibilité/performance et CI; sauvegarde/restauration vérifiées; validation de l’équilibrage.
 
 ## État des changements
 Ne pas faire de reset, checkout global, clean ou restauration des fichiers listés. Inspecter les diffs avant toute modification de ces chemins. Garder les nouveaux changements sur la branche dédiée et faire des commits cohérents après vérification.

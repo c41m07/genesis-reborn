@@ -2,7 +2,7 @@
 
 Jeu de stratégie spatiale en construction à partir des huit PDF dans `docs/technic` (108 pages). Le projet historique a été supprimé le 21 octobre 2026 à la demande de l'utilisateur. Ses volumes restent conservés et ne sont jamais utilisés par cette application.
 
-**État actuel :** 5 phases sur 15 clôturées. Le jeu inclut économie, colonies, bâtiments, technologies, files, navigation, exploration, colonisation, transport, attaque, défense, orbite, rapports, butin, conquête JcE de planètes PNJ, espionnage et diplomatie. La phase active est la phase 06 (économie). Le runtime cible est PHP 8.4 avec Symfony 7.4 LTS. Voir [l’avancement](docs/agent/PROGRESS.md), [la roadmap](docs/ROADMAP.md) et [la traçabilité](docs/TRACEABILITE.md).
+**État actuel :** 6 phases sur 15 clôturées. Le jeu inclut économie, colonies, bâtiments, technologies, files, navigation, exploration, colonisation, transport, attaque, défense, orbite, rapports, butin, conquête JcE de planètes PNJ, espionnage et diplomatie. La phase active est la phase 07 (bâtiments et technologies). Le runtime cible est PHP 8.4 avec Symfony 7.4 LTS. Voir [l’avancement](docs/agent/PROGRESS.md), [la roadmap](docs/ROADMAP.md) et [la traçabilité](docs/TRACEABILITE.md).
 
 URL locale : **http://genesis-reborn.localhost**
 
@@ -43,7 +43,7 @@ Base : MariaDB 11.8, serveur Docker `database:3306`, base `genesis_v2`, utilisat
 
 Parcours disponibles : inscription/connexion/déconnexion, profil sécurisé, sélection d’univers, colonies, carte et découvertes, cinq ressources, bâtiments, recherches et trois files. Les missions couvrent exploration, colonisation, transport, attaque, défense temporisée, orbite, conquête JcE des planètes PNJ et espionnage. Combat persistant, pertes, butin, rapports privés, notifications, guildes et alliances sont intégrés. Les valeurs d’équilibrage PNJ et les coefficients d’espionnage restent provisoires et configurables.
 
-Le jeu n’est pas déclaré prêt pour production. Les prochains travaux couvrent la revue d’architecture et le choix de version Symfony, les classements, l’administration, la CI, les audits sécurité/accessibilité/performance, la sauvegarde/restauration et l’audit final.
+Le jeu n’est pas déclaré prêt pour production. Les prochains travaux couvrent les effets de bâtiments/technologies liés au combat, les classements, l’administration, la CI, les audits sécurité/accessibilité/performance, la sauvegarde/restauration et l’audit final.
 
 ## Vérification
 
