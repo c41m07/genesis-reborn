@@ -91,7 +91,7 @@ final class GameplayAccessTest extends WebTestCase
     public function testMapMissionPrefillChecksDiscoveriesOwnershipAndUniverse():void
     {
         [$a,$own]=$this->player('Alpha');[$b,$foreign]=$this->player('Beta');
-        $free=$this->em->getRepository(Planet::class)->findOneBy(['solarSystem'=>$own->solarSystem,'owner'=>null]);
+        $free=$this->em->getRepository(Planet::class)->findOneBy(['solarSystem'=>$own->solarSystem,'owner'=>null]);$free->npcPlanet=false;
         $unknown=$this->em->getRepository(Planet::class)->findOneBy(['solarSystem'=>$this->em->getRepository(\App\Entity\SolarSystem::class)->findOneBy(['name'=>'Système 12','galaxy'=>$own->solarSystem->galaxy])]);
         $freeId=$free->id;$foreignId=$foreign->id;$unknownId=$unknown->id;$this->client->loginUser($a);
         $crawler=$this->client->request('GET','/flottes?mission=colonize&planet='.$freeId);self::assertResponseIsSuccessful();self::assertSame('colonize',$crawler->filter('select[name="mission"] option[selected]')->first()->attr('value'));self::assertSame((string)$freeId,$crawler->filter('select[name="planet"] option[selected]')->first()->attr('value'));

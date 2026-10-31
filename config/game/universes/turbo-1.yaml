@@ -3,7 +3,7 @@
   "name": "Turbo · laboratoire de jeu",
   "features": {
     "guilds_enabled": false,
-    "planet_conquest": false
+    "planet_conquest": true
   },
   "multipliers": {
     "building_time": 0.01,

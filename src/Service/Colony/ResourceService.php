@@ -12,13 +12,17 @@ final class ResourceService
     {
         return min($cap,max(0,$stock)+max(0,$now->getTimestamp()-$last->getTimestamp())*$rate);
     }
-    public function initialize(Planet $planet,bool $colony=false): void
+    public function initialize(Planet $planet,bool $colony=false,?array $initialLevels=null,float $stockMultiplier=1): void
     {
+        $levels=$initialLevels??$this->repo->levels(PlanetBuilding::class,['planet'=>$planet]);
         foreach ($this->catalog->rules()['resources'] as $slug=>$label) {
+            if($this->repo->one(PlanetResource::class,['planet'=>$planet,'resourceType'=>$slug])) continue;
+            $capacity=$this->capacity($planet,$slug,$levels);
+            $stock=$this->catalog->rules()[$colony?'colony_initial_stock':'initial_stock'][$slug];
             $r=new PlanetResource();$r->planet=$planet;$r->resourceType=$slug;
-            $r->currentStock=$this->catalog->rules()[$colony?'colony_initial_stock':'initial_stock'][$slug];
+            $r->currentStock=min($capacity,$stock*$stockMultiplier);
             $r->lastUpdatedAt=$this->clock->now();
-            $r->productionRate=$this->rate($planet,$slug,0);
+            $r->productionRate=$this->rate($planet,$slug,$levels['mine_'.$slug]??0,$levels);
             $this->manager->save($r);
         }
     }

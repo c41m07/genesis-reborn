@@ -142,7 +142,7 @@ final class GamePersistenceTest extends KernelTestCase
     public function testSoloColonyShipCanColonizeKnownPlanet(): void
     {
         $p=$this->player();$origin=$this->join($p);$this->ships($origin,['colony_ship'=>1]);$m=$p->currentPlayerUniverse;
-        $target=$this->em->getRepository(Planet::class)->findOneBy(['solarSystem'=>$origin->solarSystem,'owner'=>null]);
+        $target=$this->em->getRepository(Planet::class)->findOneBy(['solarSystem'=>$origin->solarSystem,'owner'=>null]);$target->npcPlanet=false;
         $service=self::getContainer()->get(\App\Service\Fleet\FleetService::class);
         $service->send($m,$origin,'colonize',$target->id,['colony_ship'=>1],1,[],str_repeat('a',32));
         $fleet=$this->em->getRepository(\App\Entity\Fleet::class)->findOneBy(['status'=>'traveling']);$this->land($fleet,$service);

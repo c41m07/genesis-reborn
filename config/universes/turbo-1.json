@@ -11,13 +11,19 @@
           "coord_y": 0,
           "planets": [
             {
-              "position": 3
+              "position": 3,
+              "conquest_level": 2,
+              "npc_planet": true
             },
             {
-              "position": 4
+              "position": 4,
+              "conquest_level": 2,
+              "npc_planet": true
             },
             {
-              "position": 5
+              "position": 5,
+              "conquest_level": 3,
+              "npc_planet": false
             }
           ]
         },
@@ -27,19 +33,29 @@
           "coord_y": 0,
           "planets": [
             {
-              "position": 2
+              "position": 2,
+              "conquest_level": 1,
+              "npc_planet": true
             },
             {
-              "position": 4
+              "position": 4,
+              "conquest_level": 2,
+              "npc_planet": false
             },
             {
-              "position": 5
+              "position": 5,
+              "conquest_level": 3,
+              "npc_planet": false
             },
             {
-              "position": 7
+              "position": 7,
+              "conquest_level": 4,
+              "npc_planet": false
             },
             {
-              "position": 8
+              "position": 8,
+              "conquest_level": 4,
+              "npc_planet": false
             }
           ]
         },
@@ -49,13 +65,19 @@
           "coord_y": 0,
           "planets": [
             {
-              "position": 5
+              "position": 5,
+              "conquest_level": 3,
+              "npc_planet": true
             },
             {
-              "position": 7
+              "position": 7,
+              "conquest_level": 4,
+              "npc_planet": false
             },
             {
-              "position": 9
+              "position": 9,
+              "conquest_level": 5,
+              "npc_planet": false
             }
           ]
         },
@@ -65,19 +87,29 @@
           "coord_y": 0,
           "planets": [
             {
-              "position": 1
+              "position": 1,
+              "conquest_level": 1,
+              "npc_planet": false
             },
             {
-              "position": 2
+              "position": 2,
+              "conquest_level": 1,
+              "npc_planet": false
             },
             {
-              "position": 4
+              "position": 4,
+              "conquest_level": 2,
+              "npc_planet": false
             },
             {
-              "position": 7
+              "position": 7,
+              "conquest_level": 4,
+              "npc_planet": true
             },
             {
-              "position": 9
+              "position": 9,
+              "conquest_level": 5,
+              "npc_planet": true
             }
           ]
         },
@@ -87,31 +119,49 @@
           "coord_y": 0,
           "planets": [
             {
-              "position": 1
+              "position": 1,
+              "conquest_level": 1,
+              "npc_planet": false
             },
             {
-              "position": 2
+              "position": 2,
+              "conquest_level": 1,
+              "npc_planet": false
             },
             {
-              "position": 3
+              "position": 3,
+              "conquest_level": 2,
+              "npc_planet": true
             },
             {
-              "position": 4
+              "position": 4,
+              "conquest_level": 2,
+              "npc_planet": true
             },
             {
-              "position": 5
+              "position": 5,
+              "conquest_level": 3,
+              "npc_planet": false
             },
             {
-              "position": 6
+              "position": 6,
+              "conquest_level": 3,
+              "npc_planet": false
             },
             {
-              "position": 7
+              "position": 7,
+              "conquest_level": 4,
+              "npc_planet": false
             },
             {
-              "position": 8
+              "position": 8,
+              "conquest_level": 4,
+              "npc_planet": true
             },
             {
-              "position": 9
+              "position": 9,
+              "conquest_level": 5,
+              "npc_planet": false
             }
           ]
         },
@@ -121,31 +171,49 @@
           "coord_y": 0,
           "planets": [
             {
-              "position": 1
+              "position": 1,
+              "conquest_level": 1,
+              "npc_planet": false
             },
             {
-              "position": 2
+              "position": 2,
+              "conquest_level": 1,
+              "npc_planet": true
             },
             {
-              "position": 3
+              "position": 3,
+              "conquest_level": 2,
+              "npc_planet": true
             },
             {
-              "position": 4
+              "position": 4,
+              "conquest_level": 2,
+              "npc_planet": false
             },
             {
-              "position": 5
+              "position": 5,
+              "conquest_level": 3,
+              "npc_planet": false
             },
             {
-              "position": 6
+              "position": 6,
+              "conquest_level": 3,
+              "npc_planet": false
             },
             {
-              "position": 7
+              "position": 7,
+              "conquest_level": 4,
+              "npc_planet": false
             },
             {
-              "position": 8
+              "position": 8,
+              "conquest_level": 4,
+              "npc_planet": false
             },
             {
-              "position": 9
+              "position": 9,
+              "conquest_level": 5,
+              "npc_planet": true
             }
           ]
         },
@@ -155,13 +223,19 @@
           "coord_y": 0,
           "planets": [
             {
-              "position": 3
+              "position": 3,
+              "conquest_level": 2,
+              "npc_planet": false
             },
             {
-              "position": 5
+              "position": 5,
+              "conquest_level": 3,
+              "npc_planet": false
             },
             {
-              "position": 9
+              "position": 9,
+              "conquest_level": 5,
+              "npc_planet": false
             }
           ]
         },
@@ -171,13 +245,19 @@
           "coord_y": 0,
           "planets": [
             {
-              "position": 2
+              "position": 2,
+              "conquest_level": 1,
+              "npc_planet": false
             },
             {
-              "position": 7
+              "position": 7,
+              "conquest_level": 4,
+              "npc_planet": false
             },
             {
-              "position": 9
+              "position": 9,
+              "conquest_level": 5,
+              "npc_planet": true
             }
           ]
         },
@@ -187,31 +267,49 @@
           "coord_y": 0,
           "planets": [
             {
-              "position": 1
+              "position": 1,
+              "conquest_level": 1,
+              "npc_planet": true
             },
             {
-              "position": 2
+              "position": 2,
+              "conquest_level": 1,
+              "npc_planet": true
             },
             {
-              "position": 3
+              "position": 3,
+              "conquest_level": 2,
+              "npc_planet": false
             },
             {
-              "position": 4
+              "position": 4,
+              "conquest_level": 2,
+              "npc_planet": false
             },
             {
-              "position": 5
+              "position": 5,
+              "conquest_level": 3,
+              "npc_planet": true
             },
             {
-              "position": 6
+              "position": 6,
+              "conquest_level": 3,
+              "npc_planet": false
             },
             {
-              "position": 7
+              "position": 7,
+              "conquest_level": 4,
+              "npc_planet": false
             },
             {
-              "position": 8
+              "position": 8,
+              "conquest_level": 4,
+              "npc_planet": false
             },
             {
-              "position": 9
+              "position": 9,
+              "conquest_level": 5,
+              "npc_planet": false
             }
           ]
         },
@@ -221,16 +319,24 @@
           "coord_y": 0,
           "planets": [
             {
-              "position": 1
+              "position": 1,
+              "conquest_level": 1,
+              "npc_planet": false
             },
             {
-              "position": 2
+              "position": 2,
+              "conquest_level": 1,
+              "npc_planet": false
             },
             {
-              "position": 5
+              "position": 5,
+              "conquest_level": 3,
+              "npc_planet": false
             },
             {
-              "position": 6
+              "position": 6,
+              "conquest_level": 3,
+              "npc_planet": false
             }
           ]
         },
@@ -240,19 +346,29 @@
           "coord_y": 0,
           "planets": [
             {
-              "position": 1
+              "position": 1,
+              "conquest_level": 1,
+              "npc_planet": false
             },
             {
-              "position": 3
+              "position": 3,
+              "conquest_level": 2,
+              "npc_planet": true
             },
             {
-              "position": 5
+              "position": 5,
+              "conquest_level": 3,
+              "npc_planet": true
             },
             {
-              "position": 6
+              "position": 6,
+              "conquest_level": 3,
+              "npc_planet": true
             },
             {
-              "position": 9
+              "position": 9,
+              "conquest_level": 5,
+              "npc_planet": false
             }
           ]
         },
@@ -262,25 +378,39 @@
           "coord_y": 0,
           "planets": [
             {
-              "position": 1
+              "position": 1,
+              "conquest_level": 1,
+              "npc_planet": false
             },
             {
-              "position": 2
+              "position": 2,
+              "conquest_level": 1,
+              "npc_planet": true
             },
             {
-              "position": 3
+              "position": 3,
+              "conquest_level": 2,
+              "npc_planet": false
             },
             {
-              "position": 4
+              "position": 4,
+              "conquest_level": 2,
+              "npc_planet": false
             },
             {
-              "position": 5
+              "position": 5,
+              "conquest_level": 3,
+              "npc_planet": false
             },
             {
-              "position": 6
+              "position": 6,
+              "conquest_level": 3,
+              "npc_planet": false
             },
             {
-              "position": 7
+              "position": 7,
+              "conquest_level": 4,
+              "npc_planet": false
             }
           ]
         }

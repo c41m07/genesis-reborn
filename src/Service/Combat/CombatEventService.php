@@ -12,6 +12,8 @@ use App\Entity\Notification;
 use App\Entity\OutboxMessage;
 use App\Entity\Planet;
 use App\Entity\PlanetDefense;
+use App\Entity\PlanetNpcShip;
+use App\Service\Universe\PlanetNpcSeeder;
 use App\Entity\PlayerDiscovery;
 use App\Entity\PlayerUniverse;
 use App\Manager\GameManager;
@@ -34,6 +36,7 @@ final class CombatEventService
         private RelationResolver $relations,
         private NotificationService $notifications,
         private ClockInterface $clock,
+        private PlanetNpcSeeder $npcSeeder,
     ) {}
 
     public function canAttack(PlayerUniverse $attacker, Planet $target): bool
@@ -41,6 +44,15 @@ final class CombatEventService
         return $target->owner !== null
             && $target->owner->universe->id === $attacker->universe->id
             && !$this->relations->allied($attacker, $target->owner);
+    }
+
+    public function canConquer(PlayerUniverse $attacker, ?Planet $target): bool
+    {
+        return $target !== null
+            && $target->owner === null
+            && $target->npcPlanet
+            && $target->solarSystem->galaxy->universe->id === $attacker->universe->id
+            && (bool) ($this->catalog->get('universes', $attacker->universe->slug)['features']['planet_conquest'] ?? false);
     }
 
     public function canDefend(PlayerUniverse $defender, ?Planet $target): bool
@@ -170,11 +182,20 @@ final class CombatEventService
     public function joinAttack(Fleet $fleet): bool
     {
         $planet = $fleet->destination;
-        if (!$planet || !$planet->owner || !$this->canAttack($fleet->playerUniverse, $planet)) {
+        if (!$planet) {
+            return false;
+        }
+        if ($fleet->mission === 'conquer') {
+            if (!$this->canConquer($fleet->playerUniverse, $planet)) return false;
+        } elseif (!$planet->owner || !$this->canAttack($fleet->playerUniverse, $planet)) {
             return false;
         }
 
         $this->manager->lock($planet);
+        if ($fleet->mission === 'conquer') {
+            if (!$this->canConquer($fleet->playerUniverse, $planet)) return false;
+            $this->npcSeeder->seed($planet);
+        }
         $now = $this->clock->now();
         $events = $this->repo->all(CombatEvent::class, ['planet' => $planet, 'status' => 'pending'], ['id' => 'DESC']);
         $event = null;
@@ -229,8 +250,10 @@ final class CombatEventService
             $outbox->token = $event->dispatchToken;
             $outbox->dueAt = $event->resolveAt;
             $this->manager->save($outbox);
-            $this->registerGarrison($event, $planet->owner);
-            $this->notifyAttack($planet, $fleet);
+            if ($planet->owner) {
+                $this->registerGarrison($event, $planet->owner);
+                $this->notifyAttack($planet, $fleet);
+            }
         } else {
             $this->notifyReinforcement($planet, $fleet);
         }
@@ -249,8 +272,18 @@ final class CombatEventService
             if ($event->status !== 'pending' || !hash_equals($event->dispatchToken, $token) || $event->resolveAt > $this->clock->now()) {
                 return;
             }
-            $this->manager->lock($event->planet);
             $participants = $this->repo->all(CombatParticipant::class, ['combatEvent' => $event], ['id' => 'ASC']);
+            $conquestOwners = [];
+            foreach ($participants as $participant) {
+                if ($participant->role === 'attacker' && $participant->fleet->mission === 'conquer') {
+                    $conquestOwners[$participant->playerUniverse->id] = $participant->playerUniverse;
+                }
+            }
+            ksort($conquestOwners, SORT_NUMERIC);
+            foreach ($conquestOwners as $owner) {
+                $this->manager->lock($owner);
+            }
+            $this->manager->lock($event->planet);
             if ($participants === []) {
                 $event->status = 'resolved';
                 return;
@@ -291,6 +324,17 @@ final class CombatEventService
                 ];
             }
 
+            $npcShips = $this->repo->all(PlanetNpcShip::class, ['planet' => $event->planet], ['id' => 'ASC']);
+            $npcUnits = [];
+            foreach ($npcShips as $npcShip) {
+                if ($npcShip->quantity > 0) $npcUnits[] = $this->catalog->get('ships', $npcShip->slug) + ['quantity' => $npcShip->quantity];
+            }
+            if ($npcUnits !== []) {
+                $npcId = 'npc:' . $event->planet->id;
+                $combatParticipants[] = ['id' => $npcId, 'role' => 'defender', 'camp' => 'defenders', 'arrival_round' => 1, 'units' => $npcUnits];
+                $snapshot[] = ['participant_id' => null, 'fleet_id' => null, 'player_universe_id' => null, 'role' => 'defender', 'camp' => 'defenders', 'arrival_at' => $event->startedAt->format(DATE_ATOM), 'arrival_round' => 1, 'units' => $npcUnits, 'pve_npc' => true, 'planet_id' => $event->planet->id];
+            }
+
             $defenseSnapshots = [];
             foreach ($this->repo->all(PlanetDefense::class, ['planet' => $event->planet], ['id' => 'ASC']) as $defense) {
                 if ($defense->quantity < 1) {
@@ -312,8 +356,9 @@ final class CombatEventService
                 $event->seed,
             );
 
-            $this->persistLosses($participants, $defenseSnapshots, $result['losses']);
+            $this->persistLosses($participants, $defenseSnapshots, $result['losses'], $event->planet);
             $loot = $this->collectLoot($participants, $result['outcome'], $event);
+            $capture = $this->capturePlanet($participants, $result['outcome'], $event, $result['losses']);
             foreach ($participants as $participant) {
                 $this->consumeOrbitFuel($participant->fleet);
                 $this->sendFleetHome($participant);
@@ -336,6 +381,7 @@ final class CombatEventService
                 'survivors' => $result['survivors'],
                 'losses' => $result['losses'],
                 'loot' => $loot,
+                'capture' => $capture,
             ];
             $log->resolvedAt = $this->clock->now();
             $this->manager->save($log);
@@ -468,6 +514,53 @@ final class CombatEventService
         return $result;
     }
 
+    /** Résout le transfert de planète à partir des vaisseaux colonie survivants. */
+    /** Prise d'une planète neutre après une victoire JcE et avec un vaisseau colonie survivant. */
+    private function capturePlanet(array $participants, string $outcome, CombatEvent $event, array &$losses): ?array
+    {
+        $candidates = array_values(array_filter($participants, static fn (CombatParticipant $participant): bool =>
+            $participant->role === 'attacker' && $participant->fleet->mission === 'conquer'
+        ));
+        if ($candidates === []) return null;
+        if ($outcome !== 'attacker_wins') return ['status' => 'failed', 'reason' => 'attack_lost'];
+
+        usort($candidates, static fn (CombatParticipant $a, CombatParticipant $b): int =>
+            ($a->arrivalAt <=> $b->arrivalAt) ?: ($a->fleet->id <=> $b->fleet->id)
+        );
+        $reason = 'colony_ship_destroyed';
+        foreach ($candidates as $participant) {
+            $fleet = $participant->fleet;
+            $colonyShip = $this->repo->one(FleetShip::class, ['fleet' => $fleet, 'slug' => 'colony_ship']);
+            if (!$colonyShip || $colonyShip->quantity < 1) continue;
+            if ($event->planet->owner !== null) { $reason = 'target_claimed'; continue; }
+            $config = $this->catalog->get('universes', $participant->playerUniverse->universe->slug);
+            if (count($this->repo->planets($participant->playerUniverse->universe, $participant->playerUniverse)) >= $config['limits']['max_planets']) {
+                $reason = 'planet_limit'; continue;
+            }
+
+            --$colonyShip->quantity;
+            $lossKey = $fleet->id . ':colony_ship';
+            $losses[$lossKey] = ($losses[$lossKey] ?? 0) + 1;
+            $event->planet->owner = $participant->playerUniverse;
+            foreach ($this->repo->all(PlanetNpcShip::class, ['planet' => $event->planet]) as $npcShip) $this->manager->remove($npcShip);
+            foreach ($this->repo->all(PlanetDefense::class, ['planet' => $event->planet]) as $defense) $this->manager->remove($defense);
+            if ($this->repo->all(\App\Entity\PlanetResource::class, ['planet' => $event->planet]) === []) $this->resources->initialize($event->planet, true);
+            $this->notifications->enqueue($participant->playerUniverse, 'Planète PNJ conquise : ' . $event->planet->name . '. Ses bâtiments et ressources sont conservés.');
+
+            return ['status' => 'captured', 'reason' => null, 'fleet_id' => $fleet->id, 'captor_player_universe_id' => $participant->playerUniverse->id];
+        }
+
+        foreach ($candidates as $participant) {
+            $message = match ($reason) {
+                'planet_limit' => 'Combat gagné, mais la limite de colonies empêche la conquête.',
+                'target_claimed' => 'Combat gagné, mais la planète a déjà été revendiquée.',
+                default => 'Combat gagné, mais aucun vaisseau colonie n’a survécu pour prendre la planète.',
+            };
+            $this->notifications->enqueue($participant->playerUniverse, $message);
+        }
+        return ['status' => 'failed', 'reason' => $reason];
+    }
+
     private function arrivalRound(CombatEvent $event, \DateTimeImmutable $arrivalAt): int
     {
         $maxRounds = max(1, (int) ($this->catalog->rules()['max_combat_rounds'] ?? 10));
@@ -512,13 +605,17 @@ final class CombatEventService
         return $camps;
     }
 
-    private function persistLosses(array $participants, array $defenseSnapshots, array $losses): void
+    private function persistLosses(array $participants, array $defenseSnapshots, array $losses, Planet $planet): void
     {
         foreach ($participants as $participant) {
             foreach ($this->repo->all(FleetShip::class, ['fleet' => $participant->fleet]) as $ship) {
                 $lost = $losses[$participant->fleet->id . ':' . $ship->slug] ?? 0;
                 $ship->quantity = max(0, $ship->quantity - $lost);
             }
+        }
+        foreach ($this->repo->all(PlanetNpcShip::class, ['planet' => $planet]) as $npcShip) {
+            $lost = $losses['npc:' . $planet->id . ':' . $npcShip->slug] ?? 0;
+            $npcShip->quantity = max(0, $npcShip->quantity - $lost);
         }
         foreach ($defenseSnapshots as $snapshot) {
             $id = (int) $snapshot['id'];
@@ -545,7 +642,8 @@ final class CombatEventService
     {
         $fleet = $participant->fleet;
         if ($participant->role === 'defender' && $fleet->homePlanet->id === $participant->combatEvent->planet->id) {
-            $fleet->status = 'idle';
+            $capturedByAnotherCommander = $fleet->homePlanet->owner?->id !== $participant->playerUniverse->id;
+            $fleet->status = $capturedByAnotherCommander ? 'completed' : 'idle';
             $fleet->mission = 'idle';
             $fleet->destination = null;
             $fleet->destinationSystem = null;

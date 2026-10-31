@@ -10,6 +10,6 @@
 
 ## État de reprise
 - HEAD de départ : 80668fa; plusieurs commits locaux de suivi sont postérieurs, vérifier git log.
-- Dernière validation : 61 tests / 274 assertions; make lint réussi (58 YAML, 16 Twig, conteneur et schéma Doctrine). Installation vierge avec 8 migrations, ré-import idempotent et redémarrage réussis après l’ajout du retour plafonné. Le butin ciblé passe l’intégration; voir docs/agent/TEST_STATUS.md. Reprendre par la consolidation et l'implémentation de la conquête, sans refaire le combat et l’orbite.
+- Dernière validation : 63 tests / 299 assertions; make lint réussi (59 YAML, 16 Twig, conteneur et schéma Doctrine). Installation vierge avec 10 migrations, ré-import idempotent et redémarrage réussis après l’ajout du retour plafonné. Le butin ciblé passe l’intégration; voir docs/agent/TEST_STATUS.md. La conquête JcE est intégrée et les règles ont été confirmées par Kévin. La version PNJ s’appuie sur des compositions modifiables et provisoires par niveau. Continuer par l’espionnage sans refaire le combat ni l’orbite.
 - Un commit de documentation de reprise existe; vérifier git log pour les changements après cette note.
 - Aucun déploiement. Pas de mécanisme capable de réveiller une session de code avec accès au dépôt après quota; reprise manuelle documentée.

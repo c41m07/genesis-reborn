@@ -15,6 +15,12 @@ class Planet
     public string $name;
     #[ORM\Column]
     public int $position;
+    #[ORM\Column(options: ['default' => false])]
+    public bool $npcPlanet = false;
+    #[ORM\Column(options: ['default' => 1])]
+    public int $conquestLevel = 1;
+    #[ORM\Column(options: ['default' => false])]
+    public bool $npcGarrisonInitialized = false;
     #[ORM\Column(nullable: true)]
     public ?\DateTimeImmutable $buildingQueueStartedAt = null;
     #[ORM\Column(nullable: true)]

@@ -16,7 +16,7 @@ Date : 31/10/2026. Ces décisions rendent implémentables les points non chiffr�
 
 ## Composant créé
 
-CombatSimulator reste un service pur. Son intégration aux événements persistés, aux arrivées de flottes, aux pertes, au journal interne et aux notifications est implémentée et couverte par des tests d'intégration. Un rapport joueur avec contrôle d’accès participant/propriétaire est maintenant en place; la mission Défense temporisée rejoint un combat ouvert ou repart après 600 secondes sans attaque; l’orbite est implémentée; le butin est livré; l’espionnage et la conquête manquent encore; la phase 08/09 reste donc partielle.
+CombatSimulator reste un service pur. Son intégration aux événements persistés, aux arrivées de flottes, aux pertes, au journal interne et aux notifications est implémentée et couverte par des tests d'intégration. Un rapport joueur avec contrôle d’accès participant/propriétaire est maintenant en place; la mission Défense temporisée rejoint un combat ouvert ou repart après 600 secondes sans attaque; l’orbite, le butin et la conquête JcE sont intégrés. Kévin a confirmé les règles de conquête; les compositions PNJ restent provisoires. L’espionnage reste à faire, donc la phase 08/09 est partielle.
 
 ## Choix ajoutés — mission Défense
 
@@ -31,6 +31,17 @@ CombatSimulator reste un service pur. Son intégration aux événements persist�
 - Le carburant de trajet aller-retour et le carburant de stationnement sont réservés au départ. Le carburant de stationnement est prélevé au retour de la durée acceptée; un refus d’accueil libère cette réserve et lance le retour. La durée de stationnement ne dépend pas de la vitesse choisie.
 - Une flotte en orbite rejoint la défense si une attaque ouvre un combat pendant son stationnement. Une demande d’accueil en attente n’est pas une défense participante.
 - La demande masque l’identité de l’émetteur si son système d’origine n’a pas été découvert par l’hôte.
+
+## Choix confirmés par Kévin — conquête JcE
+
+- La conquête n’est pas JcJ : elle vise uniquement les planètes neutres défendues par le jeu et est activée dans Omega et Turbo. Les planètes vierges restent colonisables sans combat; les planètes déjà détenues restent aux joueurs. Le contrôle est représenté par propriétaire, statut PNJ ou statut vierge.
+- La flotte PNJ et les défenses fixes combattent. Les pertes PNJ restent acquises après une attaque échouée.
+- La planète est prise après une victoire avec au moins un vaisseau colonie survivant; le vaisseau est consommé. La limite habituelle de colonies s’applique.
+- Après la prise, la planète conserve ses bâtiments et ses ressources. Les défenses fixes et la flotte PNJ disparaissent.
+- La carte respecte la spécification existante : 1 à 9 planètes par système, maximum déjà validé par l’importateur. Environ 30 % des planètes cataloguées sont choisies aléatoirement comme PNJ; les autres restent vierges. Ce tirage est écrit une fois dans le JSON de carte pour rester fixe après import et redémarrage.
+- Chaque planète PNJ possède un niveau fixe 1–5 dans le catalogue. La répartition des niveaux progresse selon la position orbitale (positions 1–2 niveau 1, 3–4 niveau 2, 5–6 niveau 3, 7–8 niveau 4, 9 niveau 5).
+- Chaque niveau définit des préréglages de bâtiments, stock, flotte et défenses. Ils sont configurables dans config/game/planet_conquest.yaml; leurs valeurs de départ sont explicitement provisoires.
+- Le préréglage PNJ est créé à la première attaque JcE. Les bâtiments et ressources existants sont conservés; les pertes de flotte PNJ sont persistées et ne sont pas regénérées après un échec.
 
 ## Équilibrage et limites
 

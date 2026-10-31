@@ -3,7 +3,7 @@
   "name": "Omega · univers standard",
   "features": {
     "guilds_enabled": true,
-    "planet_conquest": false
+    "planet_conquest": true
   },
   "multipliers": {
     "building_time": 1,

@@ -29,11 +29,12 @@ final class CombatReportController extends AbstractController
         $rows = [];
         foreach ($log->snapshot['participants'] ?? [] as $participant) {
             $own = (int) ($participant['player_universe_id'] ?? 0) === $membership->id;
+            $isNpc = (bool) ($participant['pve_npc'] ?? false);
             foreach ($participant['units'] ?? [] as $unit) {
                 $slug = (string) ($unit['slug'] ?? '');
-                $key = (string) ($participant['fleet_id'] ?? '') . ':' . $slug;
+                $key = ($isNpc ? 'npc:' . (string) ($participant['planet_id'] ?? '') : (string) ($participant['fleet_id'] ?? '')) . ':' . $slug;
                 $rows[] = [
-                    'label' => $own ? 'Votre flotte' : ($participant['role'] === 'defender' ? 'Garnison engagée' : 'Autre flotte engagée'),
+                    'label' => $isNpc ? 'Flotte PNJ' : ($own ? 'Votre flotte' : ($participant['role'] === 'defender' ? 'Garnison engagée' : 'Autre flotte engagée')),
                     'unit' => (string) ($unit['label'] ?? $slug),
                     'initial' => (int) ($unit['quantity'] ?? 0),
                     'lost' => (int) ($log->snapshot['losses'][$key] ?? 0),
@@ -69,6 +70,6 @@ final class CombatReportController extends AbstractController
             }
         }
 
-        return $this->render('combat/report.html.twig', ['report' => $log, 'rows' => $rows, 'loot_rows' => $lootRows]);
+        return $this->render('combat/report.html.twig', ['report' => $log, 'rows' => $rows, 'loot_rows' => $lootRows, 'membership' => $membership]);
     }
 }

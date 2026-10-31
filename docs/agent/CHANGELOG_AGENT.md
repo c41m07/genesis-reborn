@@ -1,5 +1,12 @@
 # Genesis Reborn — journal de l'agent
 
+## 2026-10-31 — conquête JcE (tranche intégrée)
+
+- Conquête uniquement contre les planètes neutres, activée dans Omega et Turbo; les planètes vierges restent colonisables et les planètes détenues par un joueur sont exclues. Une victoire avec un vaisseau colonie survivant permet la prise, la limite habituelle de colonies s’applique.
+- Environ 30 % des planètes ont été réparties aléatoirement comme PNJ dans les cartes JSON et le reste reste vierge; ce tirage est figé. Les niveaux 1–5 sont inscrits dans les catalogues d’univers. Les préréglages créent bâtiments, ressources, flotte PNJ et défenses fixes au premier combat; les valeurs de composition sont provisoires et modifiables.
+- À la prise, bâtiments et stocks restent en place; flotte PNJ et défenses disparaissent. Les pertes PNJ persistent après une attaque échouée. Deux tests d’intégration couvrent ces parcours.
+- Validation : 63 tests / 299 assertions; lint, Compose et installation vierge (10 migrations) réussis. La phase 02 reste partielle car l’espionnage est à faire.
+
 ## 2026-10-31 — butin de combat (tranche livrée)
 
 - Ajout du pillage des stocks au-delà du plancher protégé de 10 % de la capacité de stockage propre à chaque ressource, selon le choix de Kévin.

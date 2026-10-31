@@ -8,6 +8,8 @@ use App\Entity\Fleet;
 use App\Entity\FleetShip;
 use App\Entity\Planet;
 use App\Entity\PlanetDefense;
+use App\Entity\PlanetBuilding;
+use App\Entity\PlanetNpcShip;
 use App\Entity\PlanetResource;
 use App\Entity\Player;
 use App\Entity\Universe;
@@ -419,6 +421,100 @@ final class CombatEventTest extends KernelTestCase
         foreach ($resourceService->snapshot($origin) as $resource) {
             self::assertLessThanOrEqual($resource['capacity'], $resource['stock']);
         }
+    }
+
+    public function testWinningPveConquestKeepsProgressAndConsumesColonyShip(): void
+    {
+        $clock = $this->clock();
+        $attacker = $this->player('ConquestAttacker');
+        $origin = $this->join($attacker);
+        $universe = $attacker->currentPlayerUniverse->universe;
+        $target = null;
+        foreach ($this->em->getRepository(Planet::class)->findBy(['owner' => null]) as $candidate) {
+            if ($candidate->solarSystem->galaxy->universe->id === $universe->id && $candidate->npcPlanet) { $target = $candidate; break; }
+        }
+        self::assertNotNull($target);
+        $target->conquestLevel = 1;
+        self::getContainer()->get(\App\Service\Colony\ResourceService::class)->initialize($target);
+        $building = new PlanetBuilding();
+        $building->planet = $target; $building->slug = 'shipyard'; $building->level = 2;
+        $this->em->persist($building);
+        $this->em->flush();
+        $resourceRows = $this->em->getRepository(PlanetResource::class)->findBy(['planet' => $target]);
+        $resourceIds = array_map(static fn (PlanetResource $resource): int => $resource->id, $resourceRows);
+        $resourceStocks = array_map(static fn (PlanetResource $resource): float => $resource->currentStock, $resourceRows);
+
+        $combat = self::getContainer()->get(CombatEventService::class);
+        self::assertTrue($combat->canConquer($attacker->currentPlayerUniverse, $target));
+        $fleet = $this->attackFleet($attacker, $origin, $target, 'pve-conquest');
+        $fleet->mission = 'conquer';
+        $fighter = $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $fleet, 'slug' => 'fighter']);
+        $fighter->quantity = 12;
+        $capital = new FleetShip(); $capital->fleet = $fleet; $capital->slug = 'battleship'; $capital->quantity = 1; $this->em->persist($capital);
+        $colonyShip = new FleetShip(); $colonyShip->fleet = $fleet; $colonyShip->slug = 'colony_ship'; $colonyShip->quantity = 1; $this->em->persist($colonyShip);
+        $this->em->flush();
+
+        $manager = self::getContainer()->get(\App\Manager\GameManager::class);
+        self::assertTrue($manager->transaction(fn (): bool => $combat->joinAttack($fleet)));
+        $event = $this->em->getRepository(CombatEvent::class)->findOneBy(['planet' => $target]);
+        self::assertNotNull($event);
+        $event->seed = 123;
+        $clock->sleep(600);
+        $combat->resolve($event->id, $event->dispatchToken);
+
+        $log = $this->em->getRepository(CombatLog::class)->findOneBy(['combatEvent' => $event]);
+        self::assertNotNull($log);
+        self::assertSame('attacker_wins', $log->outcome);
+        self::assertSame('captured', $log->snapshot['capture']['status']);
+        self::assertSame($attacker->currentPlayerUniverse->id, $target->owner->id);
+        self::assertSame(1, $log->snapshot['losses'][$fleet->id . ':colony_ship']);
+        self::assertSame(0, $colonyShip->quantity);
+        self::assertSame(2, $building->level);
+        $afterResources = $this->em->getRepository(PlanetResource::class)->findBy(['planet' => $target]);
+        self::assertSame($resourceIds, array_map(static fn (PlanetResource $resource): int => $resource->id, $afterResources));
+        self::assertSame($resourceStocks, array_map(static fn (PlanetResource $resource): float => $resource->currentStock, $afterResources));
+        self::assertSame([], $this->em->getRepository(PlanetNpcShip::class)->findBy(['planet' => $target]));
+        self::assertSame([], $this->em->getRepository(PlanetDefense::class)->findBy(['planet' => $target]));
+    }
+
+    public function testFailedPveConquestKeepsNpcLossesForTheNextAttack(): void
+    {
+        $clock = $this->clock();
+        $attacker = $this->player('NpcLossAttacker');
+        $origin = $this->join($attacker);
+        $universe = $attacker->currentPlayerUniverse->universe;
+        $target = null;
+        foreach ($this->em->getRepository(Planet::class)->findBy(['owner' => null]) as $candidate) {
+            if ($candidate->solarSystem->galaxy->universe->id === $universe->id && $candidate->npcPlanet) { $target = $candidate; break; }
+        }
+        self::assertNotNull($target);
+        $target->conquestLevel = 1;
+        $combat = self::getContainer()->get(CombatEventService::class);
+        $manager = self::getContainer()->get(\App\Manager\GameManager::class);
+
+        $fleet = $this->attackFleet($attacker, $origin, $target, 'npc-loss-a');
+        $fleet->mission = 'conquer';
+        $battleship = new FleetShip(); $battleship->fleet = $fleet; $battleship->slug = 'battleship'; $battleship->quantity = 8; $this->em->persist($battleship);
+        $this->em->flush();
+        self::assertTrue($manager->transaction(fn (): bool => $combat->joinAttack($fleet)));
+        $event = $this->em->getRepository(CombatEvent::class)->findOneBy(['planet' => $target, 'status' => 'pending']);
+        self::assertNotNull($event); $event->seed = 321; $clock->sleep(600);
+        $combat->resolve($event->id, $event->dispatchToken);
+        $npcShips = $this->em->getRepository(PlanetNpcShip::class)->findBy(['planet' => $target]);
+        self::assertCount(1, $npcShips);
+        self::assertSame(0, $npcShips[0]->quantity);
+        self::assertNull($target->owner);
+
+        $secondFleet = $this->attackFleet($attacker, $origin, $target, 'npc-loss-b');
+        $secondFleet->mission = 'conquer';
+        $this->em->flush();
+        self::assertTrue($manager->transaction(fn (): bool => $combat->joinAttack($secondFleet)));
+        $nextEvent = $this->em->getRepository(CombatEvent::class)->findOneBy(['planet' => $target, 'status' => 'pending']);
+        self::assertNotNull($nextEvent);
+        $clock->sleep(600);
+        $combat->resolve($nextEvent->id, $nextEvent->dispatchToken);
+        self::assertSame(0, $npcShips[0]->quantity);
+        self::assertTrue($target->npcGarrisonInitialized);
     }
 
 }

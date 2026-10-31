@@ -15,7 +15,7 @@ final class FleetService
     public function quote(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo=[],float $orbitHours=0): array
     {
         if($origin->owner?->id!==$m->id || $origin->solarSystem->galaxy->universe->id!==$m->universe->id) throw new \DomainException('Planète inaccessible.');
-        if(!in_array($mission,['explore','colonize','transport','attack','defend','orbit'],true)) throw new \DomainException('Mission indisponible.');
+        if(!in_array($mission,['explore','colonize','transport','attack','conquer','defend','orbit'],true)) throw new \DomainException('Mission indisponible.');
         $target=$this->repo->find($mission==='explore'?SolarSystem::class:Planet::class,$targetId);
         if(!$target) throw new \DomainException('Destination inconnue.');
         $system=$target instanceof Planet?$target->solarSystem:$target;
@@ -25,11 +25,13 @@ final class FleetService
         if($target instanceof Planet && $target->id===$origin->id) throw new \DomainException('Choisissez une autre planète.');
         if($mission==='transport' && $target->owner?->id!==$m->id) throw new \DomainException('Le transport est limité à vos colonies.');
         if($mission==='attack' && !$this->combats->canAttack($m,$target instanceof Planet?$target:null)) throw new \DomainException('Cette planète ne peut pas être attaquée.');
+        if($mission==='conquer' && !$this->combats->canConquer($m,$target instanceof Planet?$target:null)) throw new \DomainException('La conquête n’est pas activée ou cette planète ne peut pas être prise.');
         if($mission==='defend' && !$this->combats->canDefend($m,$target instanceof Planet?$target:null)) throw new \DomainException('Cette planète ne peut pas être défendue depuis cet univers.');
         if($mission==='orbit' && !$this->combats->canOrbit($m,$target instanceof Planet?$target:null)) throw new \DomainException('Une orbite est possible uniquement chez un allié de cet univers.');
         if(!is_finite($orbitHours) || $orbitHours<0 || $orbitHours>168 || ($mission==='orbit' && ($orbitHours<1 || floor($orbitHours)!==$orbitHours)) || ($mission!=='orbit' && $orbitHours!=0)) throw new \DomainException('Durée d’orbite invalide. Choisissez entre 1 et 168 heures.');
-        if($mission==='colonize' && $target->owner!==null) throw new \DomainException('La planète est déjà colonisée.');
+        if($mission==='colonize' && ($target->owner!==null || $target->npcPlanet)) throw new \DomainException('Cette planète doit être conquise ou n’est pas vierge.');
         $config=$this->catalog->get('universes',$m->universe->slug);
+        if($mission==='conquer' && count($this->repo->planets($m->universe,$m)) >= $config['limits']['max_planets']) throw new \DomainException('Limite de colonies atteinte; une planète conquise occupe un emplacement.');
         if($mission==='colonize' && count($this->repo->planets($m->universe,$m)) >= $config['limits']['max_planets']) throw new \DomainException('Limite de colonies atteinte.');
         $idle=$this->repo->one(Fleet::class,['homePlanet'=>$origin,'playerUniverse'=>$m,'status'=>'idle']);$stock=[];
         if($idle) foreach($this->repo->all(FleetShip::class,['fleet'=>$idle]) as $s) $stock[$s->slug]=$s->quantity;
@@ -44,8 +46,8 @@ final class FleetService
         if(array_sum($valid)>$config['limits']['max_fleet_size']) throw new \DomainException('Flotte trop grande.');
         if($mission==='attack' && $target instanceof Planet && $target->owner?->id===$m->id) throw new \DomainException('Vous ne pouvez pas attaquer votre propre colonie.');
         if($mission==='explore' && empty($valid['probe'])) throw new \DomainException('Une sonde exploratrice est nécessaire.');
-        if($mission==='colonize' && empty($valid['colony_ship'])) throw new \DomainException('Un vaisseau colonie est nécessaire.');
-        $windowHours=in_array($mission,['attack','defend'],true)?((int)($this->catalog->rules()['combat_window_seconds']??600)/3600):($mission==='orbit'?$orbitHours:0);
+        if(in_array($mission,['colonize','conquer'],true) && empty($valid['colony_ship'])) throw new \DomainException('Un vaisseau colonie survivant est nécessaire à cette mission.');
+        $windowHours=in_array($mission,['attack','conquer','defend'],true)?((int)($this->catalog->rules()['combat_window_seconds']??600)/3600):($mission==='orbit'?$orbitHours:0);
         $quote=$this->calculator->quote($this->coords($origin->solarSystem,$origin->position),$this->coords($system,$target instanceof Planet?$target->position:null),$ships,$ratio,$config['multipliers']['travel_time'],$this->catalog->rules()['fuel_ratio_policy'],$windowHours);
         $freight=[];
         foreach($cargo as $resource=>$amount) {
@@ -108,7 +110,7 @@ final class FleetService
                 $this->notifications->enqueue($m,'Votre flotte est rentrée sur '.$f->homePlanet->name.'.');return;
             }
             $oneWay=max(0,($f->reservedFuel-$f->orbitFuel)/2);$f->cargo['hydrogen']=max(0,($f->cargo['hydrogen']??0)-$oneWay);$f->reservedFuel-=$oneWay;
-            if($f->mission==='attack') {
+            if(in_array($f->mission,['attack','conquer'],true)) {
                 if($this->combats->joinAttack($f)) return;
                 $this->releaseOrbitFuel($f);$this->notifications->enqueue($m,'La fenêtre de combat était déjà close. Votre flotte repart.');
             } elseif($f->mission==='defend') {
@@ -131,7 +133,7 @@ final class FleetService
             } elseif($f->mission==='colonize') {
                 $target=$f->destination;$this->manager->lock($target);
                 $limit=$this->catalog->get('universes',$m->universe->slug)['limits']['max_planets'];
-                if(!$target->owner && count($this->repo->planets($m->universe,$m))<$limit) { $target->owner=$m;$this->resources->initialize($target,true);$this->consumeShip($f,'colony_ship');$this->notifications->enqueue($m,'Nouvelle colonie : '.$target->name.'.'); }
+                if(!$target->owner && !$target->npcPlanet && count($this->repo->planets($m->universe,$m))<$limit) { $target->owner=$m;$this->resources->initialize($target,true);$this->consumeShip($f,'colony_ship');$this->notifications->enqueue($m,'Nouvelle colonie : '.$target->name.'.'); }
                 else $this->notifications->enqueue($m,'Colonisation impossible à l’arrivée. Votre flotte revient.');
             } elseif($f->mission==='transport') {
                 $target=$f->destination;$this->manager->lock($target);

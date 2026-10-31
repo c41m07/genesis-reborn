@@ -36,6 +36,12 @@ Date : 31/10/2026. Sources : docs/specifications/1 - Conception batiment vaissea
 - Identité de l'attaquant masquée si le défenseur n'a pas découvert son système d'origine; le système d'origine reste visible.
 - Renfort entrant : même politique de visibilité; le défenseur est notifié.
 
+## Conquête JcE — règles confirmées et équilibrage provisoire
+
+Kévin a confirmé que la conquête cible uniquement les planètes neutres marquées PNJ (aucun JcJ), avec flottes et défenses PNJ dans Omega et Turbo. Les autres planètes neutres restent vierges et colonisables sans combat; une planète colonisée par un joueur ne peut pas être conquise. Une victoire avec un vaisseau colonie survivant permet la prise; ce vaisseau est consommé et max_planets reste applicable. Les bâtiments et stocks restent sur la planète; la flotte PNJ et les défenses fixes disparaissent. Après une attaque échouée, les pertes PNJ persistent.
+
+La spécification conserve 1 à 9 planètes par système solaire. Environ 30 % des planètes actuelles sont tirées au sort comme PNJ et cette classification est stockée dans les JSON pour rester fixe; les autres sont vierges. Les catalogues définissent un niveau fixe 1–5 par planète PNJ et un préréglage par niveau (bâtiments, ressources, flotte et défenses). La composition de départ est provisoire et modifiable dans config/game/planet_conquest.yaml. La répartition initiale suit la position orbitale : 1–2 niveau 1, 3–4 niveau 2, 5–6 niveau 3, 7–8 niveau 4, 9 niveau 5.
+
 ## Critères d'acceptation techniques
 1. Deux arrivées simultanées au premier attaquant ne créent qu'un événement de combat par planète et fenêtre.
 2. L'événement démarre seulement à la première arrivée ATTAQUE; les flottes DEFENSE seules ne déclenchent pas de combat.
@@ -57,4 +63,4 @@ Date : 31/10/2026. Sources : docs/specifications/1 - Conception batiment vaissea
 
 ## État d’implémentation au 31/10/2026
 
-Les missions attaque et défense, les événements persistés, rounds échelonnés, pertes, retours et rapports privés sont intégrés et couverts par des tests d’intégration. La flotte en défense sans combat repart à l’expiration de sa fenêtre; `orbit_fuel` est réservé puis consommé. La mission orbite prend en charge la demande manuelle et l’acceptation automatique par contrat direct, le stationnement temporisé, le retour et l’entrée en défense lors d’un combat ouvert. Le butin est implémenté avec le seuil protégé de 10 % confirmé par Kévin; l’espionnage et la conquête restent à implémenter. Les valeurs de combat demeurent provisoires.
+Les missions attaque et défense, les événements persistés, rounds échelonnés, pertes, retours et rapports privés sont intégrés et couverts par des tests d’intégration. La flotte en défense sans combat repart à l’expiration de sa fenêtre; `orbit_fuel` est réservé puis consommé. La mission orbite prend en charge la demande manuelle et l’acceptation automatique par contrat direct, le stationnement temporisé, le retour et l’entrée en défense lors d’un combat ouvert. Le butin est implémenté avec le seuil protégé de 10 % confirmé par Kévin; la conquête JcE est intégrée avec des compositions provisoires; l’espionnage reste à implémenter. Les valeurs de combat demeurent provisoires.
