@@ -1,6 +1,6 @@
 # Contrôle croisé du prompt initial — Genesis Reborn
 
-Date : 31/10/2026. Source contrôlée : « GENESIS REBORN — AGENT IA AUTONOME DE DÉVELOPPEMENT INTÉGRAL » (17 sections, 15 phases), comparée aux audits, résultats de tests, code décrit et état Git. Une campagne navigateur isolée partielle (4/6) a été exécutée pendant ce contrôle; les preuves et leurs limites sont consignées dans TEST_STATUS.md et PHASE_12_UI_ACCESSIBILITY_AUDIT.md. Les statuts restent fondés sur les critères du prompt, pas sur les seuls anciens rapports.
+Date : 31/10/2026. Source contrôlée : « GENESIS REBORN — AGENT IA AUTONOME DE DÉVELOPPEMENT INTÉGRAL » (17 sections, 15 phases), comparée aux audits, résultats de tests, code décrit et état Git. Le lancement navigateur agrégé a expiré sans rapport, puis les six scénarios ont réussi individuellement; les preuves et limites sont consignées dans TEST_STATUS.md et PHASE_12_UI_ACCESSIBILITY_AUDIT.md. Les statuts restent fondés sur les critères du prompt, pas sur les seuls anciens rapports.
 
 ## Résultat global
 

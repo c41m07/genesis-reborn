@@ -16,13 +16,13 @@ Le prototype contient un shell cohérent, une navigation qui couvre les principa
 - Site publié : HTTP 200, title chargé, aucun événement pageerror observé au chargement.
 - Écrans principaux parcourus au desktop 1440 px ; navigation « architecture » annonce 15 écrans et 7 parcours.
 - À 390 px, mesure scrollWidth = innerWidth = 390 ; menu mobile Plus présente les fonctions de navigation complète. À 768 px, scrollWidth = innerWidth = 768 et le bouton Ouvrir la navigation présente 15 entrées. Il manque aria-expanded sur ce bouton dans le prototype.
-- App locale : test Playwright responsive/navigation ciblé réussi, 1/1.
+- App locale : test Playwright responsive/navigation ciblé réussi, 1/1. Un test multi-breakpoints ajouté et réussi vérifie le shell colonie à 1440, 768 et 390 px, l’absence de débordement horizontal, et l’ouverture/fermeture clavier du menu mobile.
 - App locale : test réel de construction/notification ciblé réussi après correction du runner E2E ; détails dans TEST_STATUS.md.
 - Les six tests navigateur de la suite ont ensuite réussi en exécution individuelle : responsive/navigation, toast Mercure, missions complètes (3,1 min), alliances, files, bénéfices/prérequis. Le lancement agrégé n’a pas rendu son rapport avant 300 s; aucun échec de test n’est inféré de son expiration.
 
 ## Limites
 
-- Tablette 768 px pas vérifiée.
+- Le shell principal de l’application est validé à 1440, 768 et 390 px. Les vues secondaires et leurs états restent à vérifier.
 - Parcours UI PNJ, rapports privés, erreurs, états vides, permissions administrateur et responsive complet pas encore traversés.
 - Pas de rapport RGAA/WCAG exhaustif ni de vérification lecteur d’écran.
 - Pas de comparaison frame-par-frame entre Figma et Twig ; le fichier Make natif reste non inspectable par connecteur.

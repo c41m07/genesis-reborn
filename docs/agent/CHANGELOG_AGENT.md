@@ -13,7 +13,7 @@
 
 ## 2026-10-31 — audit du prompt et reprise de phase 12
 - La clôture précédente était prématurée : les corrections ciblées clavier/mobile ne réalisent pas la refonte UI/UX prévue (parcours complets, responsive et accessibilité). Phase 12 rouverte et active.
-- Les 78 tests / 406 assertions, le lint, le schéma, Compose et la compilation assets restent les dernières validations PHP rapportées. Campagne Playwright isolée : 4/6 passent; notification temps réel absente et trajet colonisation encore en cours à 60 s. Runner configuré pour isoler DB/services et captures; configuration Compose valide.
+- Les 78 tests / 406 assertions, le lint, le schéma, Compose et la compilation assets restent les dernières validations PHP rapportées. Le lancement Playwright agrégé a expiré à 300 s; les six scénarios navigateur ont ensuite tous réussi individuellement avec le runner isolé. Détails dans TEST_STATUS.md; aucun résultat agrégé n’est revendiqué.
 - Avancement : 9/15 phases validées; phases 04 et 11 partielles; phase 12 en cours. Voir PROMPT_PHASE_CROSSCHECK.md et PHASE_12_UI_ACCESSIBILITY_AUDIT.md.
 
 ## 2026-10-31 — clôture phase 11
