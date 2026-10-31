@@ -14,7 +14,7 @@ Compléter le jeu existant en conservant les décisions de docs/REGLES.md, docs/
 | 06 | Économie | Calculs serveur, reprise chronologique, stockage et dépenses cohérents | Partielle — économie corrigée; équilibrage provisoire à valider |
 | 07 | Bâtiments et technologies | Prérequis, effets, files et annulations fonctionnels et vérifiés | Partielle — fonctionnalités principales; effets de combat liés restants |
 | 08 | Flottes et missions | Trajets, carburant, départ/arrivée/retour et missions vérifiés | Partielle — exploration, colonisation, transport; orbite, défense, espionnage et renforts à faire |
-| 09 | Combat | Résolution reproductible, pertes, butin, rapports et notifications testés | À faire |
+| 09 | Combat | Résolution reproductible, pertes, butin, rapports et notifications testés | Préparatoire — simulateur pur créé; intégration de jeu entièrement à faire |
 | 10 | Social et stratégie | Diplomatie et communications, protections anti-abus | Partielle — guildes/alliances réalisées; classements et communications restant |
 | 11 | Administration | Paramètres et modération sécurisés, journaux d'audit | À faire |
 | 12 | UI/UX | Parcours complets, responsive et audit accessibilité satisfaisant | Partielle — refonte existante; audit RGAA/WCAG complet à faire |

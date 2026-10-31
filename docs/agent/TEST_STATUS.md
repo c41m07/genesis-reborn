@@ -1,11 +1,11 @@
 # Genesis Reborn — état des tests
 
-Dernière exécution : 31/10/2026, dépôt /home/caim/Projets/Genesis_Reborn.
+Dernière exécution : après l'ajout du simulateur, 31/10/2026, dépôt /home/caim/Projets/Genesis_Reborn.
 
 | Commande | Résultat |
 |---|---|
 | make validate | Réussi; configuration Docker Compose valide |
-| make test | Réussi — PHPUnit 13.4.3, PHP 8.4.26, 51 tests / 189 assertions |
+| make test | Réussi — PHPUnit 13.4.3, PHP 8.4.26, 57 tests / 200 assertions |
 | make lint | Réussi — lint PHP; 58 YAML; 14 Twig; conteneur Symfony valide; validation du schéma Doctrine sans erreur |
 
 Les tests utilisent database-test (profil test, base en tmpfs), conformément à la protection du projet.
