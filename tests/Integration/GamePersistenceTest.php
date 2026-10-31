@@ -1,11 +1,13 @@
 <?php
 namespace App\Tests\Integration;
-use App\Entity\{Player,PlayerUniverse,Universe,Planet,QueueItem,PlanetBuilding,PlanetResource,OutboxMessage,PlayerTechnology};
+use App\Entity\{Player,PlayerUniverse,Universe,Planet,QueueItem,PlanetBuilding,PlanetResource,OutboxMessage,PlayerTechnology,Fleet,FleetShip,PlanetDefense,Notification};
 use App\Service\Universe\{UniverseImporter,UniverseService,UniverseLifecycleService};
 use App\Service\Notification\OutboxRelay;
 use App\Message\UniverseClosureDue;
 use App\MessageHandler\UniverseClosureDueHandler;
 use App\Service\Player\RegistrationService;
+use App\Service\Player\LeaderboardService;
+use App\Service\Catalog\GameCatalog;
 use App\Service\Queue\QueueService;
 use App\Service\Colony\ResourceService;
 use App\Validator\DTO\RegistrationData;
@@ -268,6 +270,55 @@ final class GamePersistenceTest extends KernelTestCase
         self::assertSame(0,(int)$this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM outbox_message WHERE kind='queue'"));
     }
 
+    public function testPrivateMessagesStayInUniverseAndBecomeReadForRecipient(): void
+    {
+        $sender = $this->player('PrivateSender');
+        $this->join($sender, 'omega-1');
+        $recipient = $this->player('PrivateRecipient');
+        $this->join($recipient, 'omega-1');
+        $outsider = $this->player('PrivateOutsider');
+        $this->join($outsider, 'turbo-1');
+
+        $service = self::getContainer()->get(\App\Service\Player\SocialMessageService::class);
+        $service->sendPrivate($sender->currentPlayerUniverse, $recipient->currentPlayerUniverse->id, 'Message de test');
+        self::assertSame(1, $service->unreadPrivateCount($recipient->currentPlayerUniverse));
+        self::assertSame(0, $service->unreadPrivateCount($sender->currentPlayerUniverse));
+
+        $thread = $service->privateConversation($recipient->currentPlayerUniverse, $sender->currentPlayerUniverse->id);
+        self::assertCount(1, $thread);
+        self::assertSame('Message de test', $thread[0]->content);
+        self::assertNotNull($thread[0]->readAt);
+        self::assertSame(0, $service->unreadPrivateCount($recipient->currentPlayerUniverse));
+
+        $this->expectException(\DomainException::class);
+        $service->sendPrivate($sender->currentPlayerUniverse, $outsider->currentPlayerUniverse->id, 'Inter-univers interdit');
+    }
+
+    public function testGuildChatRequiresMembershipAndNotifiesOtherMembers(): void
+    {
+        $leader = $this->player('ChatLeader');
+        $this->join($leader, 'omega-1');
+        $member = $this->player('ChatMember');
+        $this->join($member, 'omega-1');
+        $outsider = $this->player('ChatOutsider');
+        $this->join($outsider, 'omega-1');
+        $diplomacy = self::getContainer()->get(\App\Service\Player\DiplomacyService::class);
+        $relations = self::getContainer()->get(\App\Service\Player\RelationResolver::class);
+        $diplomacy->create($leader->currentPlayerUniverse, 'Canal privé');
+        $guild = $relations->guild($leader->currentPlayerUniverse);
+        $diplomacy->join($member->currentPlayerUniverse, $guild->id);
+
+        $messages = self::getContainer()->get(\App\Service\Player\SocialMessageService::class);
+        $messages->sendGuild($member->currentPlayerUniverse, 'Message réservé aux membres');
+        $thread = $messages->guildConversation($leader->currentPlayerUniverse, $guild);
+        self::assertCount(1, $thread);
+        self::assertSame($member->currentPlayerUniverse->id, $thread[0]->sender->id);
+        self::assertNotEmpty($this->em->getRepository(\App\Entity\Notification::class)->findBy(['recipient' => $leader->currentPlayerUniverse]));
+
+        $this->expectException(\DomainException::class);
+        $messages->guildConversation($outsider->currentPlayerUniverse, $guild);
+    }
+
     public function testDirectAllianceRequiresMutualConsentAndIsSymmetric(): void
     {
         $a=$this->player('Alpha');$this->join($a);$b=$this->player('Beta');$this->join($b);
@@ -317,6 +368,65 @@ final class GamePersistenceTest extends KernelTestCase
         $service->create($a->currentPlayerUniverse,'Guilde Alpha');$service->create($b->currentPlayerUniverse,'Guilde Beta');$service->join($c->currentPlayerUniverse,$relations->guild($a->currentPlayerUniverse)->id);
         $this->expectException(\DomainException::class);$service->relation($c->currentPlayerUniverse,$relations->guild($b->currentPlayerUniverse)->id,'enemies');
     }
+    public function testLeaderboardCountsOwnedAssetsAndRemovesPointsAfterFleetLoss(): void
+    {
+        $player = $this->player('Ranked');
+        $planet = $this->join($player);
+        $noScore = $this->player('NoScore');
+        $this->join($noScore);
+        $building = new PlanetBuilding();
+        $building->planet = $planet;
+        $building->slug = 'mine_metal';
+        $building->level = 2;
+        $this->em->persist($building);
+        $technology = new PlayerTechnology();
+        $technology->playerUniverse = $player->currentPlayerUniverse;
+        $technology->slug = 'precision_fire';
+        $technology->level = 1;
+        $this->em->persist($technology);
+
+        $fleet = new Fleet();
+        $fleet->playerUniverse = $player->currentPlayerUniverse;
+        $fleet->homePlanet = $planet;
+        $fleet->status = 'idle';
+        $fleet->mission = 'idle';
+        $this->em->persist($fleet);
+        $ship = new FleetShip();
+        $ship->fleet = $fleet;
+        $ship->slug = 'fighter';
+        $ship->quantity = 3;
+        $this->em->persist($ship);
+        $defense = new PlanetDefense();
+        $defense->planet = $planet;
+        $defense->slug = 'ground_turret';
+        $defense->quantity = 2;
+        $this->em->persist($defense);
+        $this->em->flush();
+
+        $catalog = self::getContainer()->get(GameCatalog::class);
+        $buildingCost = array_sum($catalog->costs($catalog->get('buildings', 'mine_metal'), 1))
+            + array_sum($catalog->costs($catalog->get('buildings', 'mine_metal'), 2));
+        $researchCost = array_sum($catalog->costs($catalog->get('technologies', 'precision_fire'), 1));
+        $fleetCost = array_sum($catalog->costs($catalog->get('ships', 'fighter'), 1, 3))
+            + array_sum($catalog->costs($catalog->get('defenses', 'ground_turret'), 1, 2));
+        $leaderboard = self::getContainer()->get(LeaderboardService::class);
+        $rows = $leaderboard->forUniverse($player->currentPlayerUniverse);
+        $own = array_values(array_filter($rows, static fn (array $row): bool => $row['membership']->id === $player->currentPlayerUniverse->id))[0];
+
+        self::assertSame(intdiv($buildingCost, 100), $own['building_points']);
+        self::assertSame(intdiv($researchCost, 100), $own['research_points']);
+        self::assertSame(intdiv($fleetCost, 100), $own['fleet_points']);
+        self::assertSame($own['building_points'] + $own['research_points'] + $own['fleet_points'], $own['total_points']);
+        self::assertSame(5, $own['fleet_units']);
+        self::assertSame(1, $own['planets']);
+        self::assertSame(1, $own['ranks']['points']);
+
+        $ship->quantity = 1;
+        $this->em->flush();
+        $afterLoss = array_values(array_filter($leaderboard->forUniverse($player->currentPlayerUniverse), static fn (array $row): bool => $row['membership']->id === $player->currentPlayerUniverse->id))[0];
+        self::assertLessThan($own['fleet_points'], $afterLoss['fleet_points']);
+    }
+
     public function testPowerPlantActuallyIncreasesEnergyProduction(): void
     {
         $clock=$this->clock();$a=$this->player();$planet=$this->join($a);$resources=self::getContainer()->get(ResourceService::class);$before=$resources->snapshot($planet)['energy']['rate'];

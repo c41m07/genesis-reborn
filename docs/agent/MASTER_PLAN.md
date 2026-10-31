@@ -15,8 +15,8 @@ Compléter le jeu existant en conservant les décisions de docs/REGLES.md, docs/
 | 07 | Bâtiments et technologies | Prérequis, effets, files et annulations fonctionnels et vérifiés | Terminée — effets de technologies all_ships appliqués aux flottes joueurs et aux vaisseaux PNJ; défenses statiques inchangées; rapports figés avec les niveaux utilisés |
 | 08 | Flottes et missions | Trajets, carburant, départ/arrivée/retour et missions vérifiés | Terminée — parcours de flotte, idempotence, consommation et retours vérifiés; limites des règles intergalactiques et valeurs provisoires consignées dans PHASE_08_FLEET_MISSIONS_AUDIT.md |
 | 09 | Combat | Résolution reproductible, pertes, butin, rapports et notifications testés | Terminée techniquement — déterminisme, pertes, butin, rapports privés, notifications idempotentes et conquête JcE vérifiés; équilibrage provisoire conservé pour l’audit final (PHASE_09_COMBAT_AUDIT.md) |
-| 10 | Social et stratégie | Diplomatie et communications, protections anti-abus | Partielle — guildes/alliances réalisées; classements et communications restant |
-| 11 | Administration | Paramètres et modération sécurisés, journaux d'audit | À faire |
+| 10 | Social et stratégie | Diplomatie et communications, protections anti-abus | Terminée techniquement — classement, messages privés et canal de guilde livrés et testés; détails dans PHASE_10_SOCIAL_STRATEGY_AUDIT.md |
+| 11 | Administration | Paramètres et modération sécurisés, journaux d'audit | Active — modération et journaux d’audit à traiter |
 | 12 | UI/UX | Parcours complets, responsive et audit accessibilité satisfaisant | Partielle — refonte existante; audit RGAA/WCAG complet à faire |
 | 13 | Tests/sécurité/performance | Tests critiques, concurrence et sécurité contrôlés | Partielle — suite PHP passante; couverture et charge restantes |
 | 14 | Exploitation/documentation | CI, sauvegarde/restauration et procédures vérifiées | Partielle — documentation présente; CI et restauration à valider |

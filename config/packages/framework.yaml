@@ -2,6 +2,11 @@ framework:
     secret: '%env(APP_SECRET)%'
     default_locale: fr
     csrf_protection: true
+    rate_limiter:
+        social_message:
+            policy: sliding_window
+            limit: 10
+            interval: '1 minute'
     session:
         cookie_httponly: true
         cookie_samesite: lax

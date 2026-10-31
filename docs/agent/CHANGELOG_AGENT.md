@@ -1,3 +1,8 @@
+## 2026-10-31 — clôture phase 10
+- Classement par univers selon la règle validée : recherche + flotte (vaisseaux et défenses fixes) + bâtiments; 100 ressources de coût catalogue = 1 point. Les actifs perdus cessent de compter.
+- Ajout des messages privés, du canal de guilde et des notifications associées, avec périmètre par univers/membership, CSRF, limite 10/minute et 2 000 caractères. Audit : PHASE_10_SOCIAL_STRATEGY_AUDIT.md.
+- Validation : 75 tests / 384 assertions; lint, schéma et Compose valides. Phase 11 active (10/15).
+
 ## 2026-10-31 — clôture phase 09
 - Audit de simulation, pertes, butin, rapports, notifications et conquête JcE consigné dans PHASE_09_COMBAT_AUDIT.md. Le test de combat vérifie désormais l’unicité des notifications de fin après résolution répétée.
 - Validation : 72 tests / 365 assertions; lint, schéma et Compose valides. Avancement : 9/15, phase 10 active.

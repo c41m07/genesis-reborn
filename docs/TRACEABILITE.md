@@ -21,14 +21,14 @@
 | 0 p.7 ; 1 p.3,5, 1.8 | Exploration, colonisation, transport, défense, orbite et espionnage | FleetService, EspionageService, FleetController, report readers | GamePersistenceTest : exploration, transport, colonisation, espionnage réussi/détecté; CombatEventTest : défense/orbite | Parcours implémentés et lint/tests PHP réussis; navigateur espionnage non relancé |
 | 2 p.2 ; 5 p.2–3 | Guildes et alliances réciproques par univers | DiplomacyService, RelationResolver, DiplomacyController | Tests alliances, consentement, hostilités, droits, univers, transfert/dissolution ; navigateur deux comptes | Réalisé ; recrutement ouvert provisoire |
 | 6 p.7–10 ; 0 p.8 | Notifications privées, découplage et mises à jour | MercurePublisher, NotificationService, OutboxRelay, events/colony_live | Confidentialité JWT ; panne de publication isolée ; vraie construction avec notification Chromium | Réalisé |
-| 0 p.9 ; 5 p.2–4 | Conquête JcE PNJ et variantes avancées | CombatEventService, PlanetNpcSeeder, catalogs, feature flags | CombatEventTest : capture et persistance des pertes PNJ; GamePersistenceTest : espionnage PNJ | Conquête PNJ implémentée Omega/Turbo; classements/statistiques restent à faire |
+| 0 p.9 ; 5 p.2–4 | Conquête JcE PNJ et variantes avancées | CombatEventService, PlanetNpcSeeder, catalogs, feature flags | CombatEventTest : capture et persistance des pertes PNJ; GamePersistenceTest : espionnage PNJ | Conquête PNJ implémentée Omega/Turbo; classements et communications livrés en phase 10; voir audit phase 10 |
 | 4 p.2–20 | Contrôleurs, services métier, manager et repositories | src/, DTO, GameShell, GameUiExtension | lint PHP/Twig/YAML/conteneur/schéma ; tests HTTP et services | En place, repository générique proportionné au périmètre |
 | Prompt utilisateur ; 0 p.9 | Refonte UI française, responsive, clavier et parcours réels | Twig, Stimulus, CSS, public/art | Chromium desktop/390px, onglets clavier, menu mobile, opérations réelles ; références dans UI-RECHERCHE | Réalisé ; aucun audit RGAA exhaustif revendiqué |
 
 ## Prochaine étape du jeu complet
 
-1. Phase 10 : audit des systèmes sociaux et des protections stratégiques déjà livrés.
-2. Classements/statistiques et administration; la fermeture asynchrone des univers est livrée en phase 05.
-3. CI, tests de charge, audit accessibilité complet, sauvegarde/restauration et validation des valeurs provisoires.
+1. Phase 11 : administration, modération et journaux d’audit.
+2. CI, tests de charge, audit accessibilité complet, sauvegarde/restauration et validation des valeurs provisoires.
+3. Audit final avant toute décision de mise en production.
 
 Historique : suppression de l’ancien dossier, conteneurs et deux images applicatives autorisée par l’utilisateur ; volumes conservés, PDF copiés vérifiés SHA-256. MariaDB nouvelle application publiée uniquement sur 127.0.0.1:3309.

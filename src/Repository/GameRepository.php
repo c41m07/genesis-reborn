@@ -45,6 +45,40 @@ final class GameRepository
         foreach ($this->all($class,$criteria) as $row) $levels[$row->slug]=$row->level;
         return $levels;
     }
+    public function privateConversation(PlayerUniverse $a, PlayerUniverse $b, int $limit = 100): array
+    {
+        $rows = $this->em->createQueryBuilder()->select('m')->from(\App\Entity\SocialMessage::class, 'm')
+            ->where('m.guild IS NULL')
+            ->andWhere('((m.sender = :a AND m.recipient = :b) OR (m.sender = :b AND m.recipient = :a))')
+            ->setParameter('a', $a)->setParameter('b', $b)
+            ->orderBy('m.createdAt', 'DESC')->addOrderBy('m.id', 'DESC')
+            ->setMaxResults(max(1, min(500, $limit)))->getQuery()->getResult();
+
+        return array_reverse($rows);
+    }
+    public function markPrivateConversationRead(PlayerUniverse $reader, PlayerUniverse $sender, \DateTimeImmutable $readAt): int
+    {
+        return $this->em->createQueryBuilder()->update(\App\Entity\SocialMessage::class, 'm')
+            ->set('m.readAt', ':readAt')->where('m.recipient = :reader')->andWhere('m.sender = :sender')
+            ->andWhere('m.readAt IS NULL')->setParameter('readAt', $readAt)
+            ->setParameter('reader', $reader)->setParameter('sender', $sender)->getQuery()->execute();
+    }
+    public function unreadPrivateMessageCount(PlayerUniverse $recipient): int
+    {
+        return (int) $this->em->createQueryBuilder()->select('COUNT(m.id)')->from(\App\Entity\SocialMessage::class, 'm')
+            ->where('m.recipient = :recipient')->andWhere('m.readAt IS NULL')
+            ->setParameter('recipient', $recipient)->getQuery()->getSingleScalarResult();
+    }
+    public function guildConversation(\App\Entity\Guild $guild, int $limit = 100): array
+    {
+        $rows = $this->em->createQueryBuilder()->select('m')->from(\App\Entity\SocialMessage::class, 'm')
+            ->where('m.guild = :guild')->setParameter('guild', $guild)
+            ->orderBy('m.createdAt', 'DESC')->addOrderBy('m.id', 'DESC')
+            ->setMaxResults(max(1, min(500, $limit)))->getQuery()->getResult();
+
+        return array_reverse($rows);
+    }
+
     public function outbox(bool $notifications): array
     {
         return $this->em->createQueryBuilder()->select('o')->from(OutboxMessage::class,'o')
