@@ -16,7 +16,7 @@ Le prototype contient un shell cohérent, une navigation qui couvre les principa
 - Site publié : HTTP 200, title chargé, aucun événement pageerror observé au chargement.
 - Écrans principaux parcourus au desktop 1440 px ; navigation « architecture » annonce 15 écrans et 7 parcours.
 - À 390 px, mesure scrollWidth = innerWidth = 390 ; menu mobile Plus présente les fonctions de navigation complète. À 768 px, scrollWidth = innerWidth = 768 et le bouton Ouvrir la navigation présente 15 entrées. Il manque aria-expanded sur ce bouton dans le prototype.
-- App locale : test Playwright responsive/navigation ciblé réussi, 1/1. Un test multi-breakpoints vérifie le shell à 1440/768/390 px et le menu mobile au clavier. Un second test parcourt plus de dix routes authentifiées aux trois largeurs; elles répondent avec un statut inférieur à 400, affichent main et ne débordent pas horizontalement.
+- App locale : test Playwright responsive/navigation ciblé réussi, 1/1. Un test multi-breakpoints vérifie le shell à 1440/768/390 px et le menu mobile au clavier. Un second test parcourt plus de dix routes authentifiées aux trois largeurs; elles répondent avec un statut inférieur à 400, affichent main et un h1, ne déclenchent aucune erreur JavaScript et ne débordent pas horizontalement.
 - App locale : test réel de construction/notification ciblé réussi après correction du runner E2E ; détails dans TEST_STATUS.md.
 - Les six tests navigateur de la suite ont ensuite réussi en exécution individuelle : responsive/navigation, toast Mercure, missions complètes (3,1 min), alliances, files, bénéfices/prérequis. Le lancement agrégé n’a pas rendu son rapport avant 300 s; aucun échec de test n’est inféré de son expiration.
 

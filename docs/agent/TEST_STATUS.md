@@ -13,7 +13,7 @@ Dernière exécution : 31/10/2026, dépôt /home/caim/Projets/Genesis_Reborn.
 | Playwright ciblé construction/toast | Réussi — 1/1 après ajout de MERCURE_PUBLIC_URL=http://$BROWSER_HOST/.well-known/mercure à l’overlay de test. La cause était l’URL hub publique statique qui empêchait le cookie d’abonnement sur le sous-domaine E2E dynamique. |
 | Playwright colonisation complète | Réussi — scénario chantier, estimation, colonisation, transport et exploration 1/1 en 3,1 min. Base et services isolés, détruits en fin de run. |
 | Playwright responsive multi-breakpoints | Réussi — compte neuf et shell colonie à 1440/768/390 px, sans débordement horizontal; menu mobile accessible au clavier. 1/1. |
-| Playwright routes UI responsive | Réussi — plus de dix routes authentifiées; statut HTTP < 400, main visible et aucune largeur de document supérieure au viewport à 1440/768/390. 1/1. |
+| Playwright routes UI responsive | Réussi — plus de dix routes authentifiées; statut HTTP < 400, main et titre h1 visibles, aucune erreur JavaScript et aucune largeur de document supérieure au viewport à 1440/768/390. 1/1. |
 
 Les tests PHP utilisent la base database-test isolée (profil test, base en tmpfs). Les parcours de connexion, CSRF, profil et isolation des comptes sont maintenant testés. Les audits sécurité élargi, concurrence, accessibilité et performance restent à vérifier. Les résultats datés du 21/10 dans docs/LIVRAISON-DOMAINES-UI.md sont historiques et ne remplacent pas la validation des changements actuels.
 
