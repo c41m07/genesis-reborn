@@ -20,13 +20,14 @@ final class FleetController extends AbstractController
         $known=[];foreach($repo->all(PlayerDiscovery::class,['playerUniverse'=>$m]) as $d) $known[$d->solarSystem->id]=true;
         $targets=array_filter($repo->planets($m->universe),fn($p)=>isset($known[$p->solarSystem->id]));
         if($mission==='attack') $targets=array_filter($targets,fn($p)=>$combats->canAttack($m,$p));
-        if(!in_array($mission,['explore','colonize','transport','attack'],true)) throw $this->createNotFoundException('Mission indisponible.');
+        if($mission==='defend') $targets=array_filter($targets,fn($p)=>$combats->canDefend($m,$p));
+        if(!in_array($mission,['explore','colonize','transport','attack','defend'],true)) throw $this->createNotFoundException('Mission indisponible.');
         $systemId=$request->query->getInt('system');$planetId=$request->query->getInt('planet');
         if($systemId&&!array_filter($systems,fn($s)=>$s->id===$systemId)) throw $this->createNotFoundException('Système inaccessible.');
         if($planetId&&!array_filter($targets,fn($p)=>$p->id===$planetId&&($mission!=='transport'||$p->owner?->id===$m->id)&&($mission!=='colonize'||$p->owner===null))) throw $this->createNotFoundException('Destination inaccessible.');
         $origin=$request->getSession()->get('selected_planet_'.$m->id,0);
         usort($idle,fn($a,$b)=>(($a['fleet']->homePlanet->id===$planetId?2:($a['fleet']->homePlanet->id===$origin?0:1)))<=>(($b['fleet']->homePlanet->id===$planetId?2:($b['fleet']->homePlanet->id===$origin?0:1))));
-        return $this->render('fleet/index.html.twig',['prefill'=>['mission'=>$mission,'system'=>$systemId,'planet'=>$planetId],'active_fleets'=>$repo->all(Fleet::class,['playerUniverse'=>$m,'status'=>['traveling','returning']],['arrivalAt'=>'ASC']),'membership'=>$m,'fleets'=>$repo->all(Fleet::class,['playerUniverse'=>$m],['id'=>'DESC']),'idle'=>$idle,'systems'=>$systems,'targets'=>$targets,'catalog'=>$catalog->all('ships'),'resources'=>$catalog->rules()['resources'],'fuel_pending'=>$catalog->rules()['fuel_ratio_policy']==='pending']);
+        return $this->render('fleet/index.html.twig',['prefill'=>['mission'=>$mission,'system'=>$systemId,'planet'=>$planetId],'active_fleets'=>$repo->all(Fleet::class,['playerUniverse'=>$m,'status'=>['traveling','returning','defending']],['arrivalAt'=>'ASC']),'membership'=>$m,'fleets'=>$repo->all(Fleet::class,['playerUniverse'=>$m],['id'=>'DESC']),'idle'=>$idle,'systems'=>$systems,'targets'=>$targets,'catalog'=>$catalog->all('ships'),'resources'=>$catalog->rules()['resources'],'fuel_pending'=>$catalog->rules()['fuel_ratio_policy']==='pending']);
     }
     #[Route('/flottes/estimer',name:'app_fleet_preview',methods:['POST'])]
     public function preview(Request $request,UniverseContext $context,GameRepository $repo,FleetService $service): Response

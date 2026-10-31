@@ -41,6 +41,64 @@ final class CombatEventService
             && !$this->relations->allied($attacker, $target->owner);
     }
 
+    public function canDefend(PlayerUniverse $defender, ?Planet $target): bool
+    {
+        return $target !== null && $target->owner !== null
+            && $target->owner->universe->id === $defender->universe->id;
+    }
+
+    /** Place une flotte en défense pour une fenêtre, ou l'ajoute au combat déjà ouvert. */
+    public function arriveDefender(Fleet $fleet): bool
+    {
+        $planet = $fleet->destination;
+        if (!$planet || !$planet->owner || !$this->canDefend($fleet->playerUniverse, $planet)) {
+            return false;
+        }
+        $this->manager->lock($planet);
+        $now = $this->clock->now();
+        $events = $this->repo->all(CombatEvent::class, ['planet' => $planet, 'status' => 'pending'], ['id' => 'DESC']);
+        $event = null;
+        foreach ($events as $candidate) {
+            if ($candidate->resolveAt > $now) {
+                $event = $candidate;
+                break;
+            }
+        }
+        if ($event) {
+            $participant = $this->repo->one(CombatParticipant::class, ['combatEvent' => $event, 'fleet' => $fleet]);
+            if (!$participant) {
+                $participant = new CombatParticipant();
+                $participant->combatEvent = $event;
+                $participant->fleet = $fleet;
+                $participant->playerUniverse = $fleet->playerUniverse;
+                $participant->role = 'defender';
+                $participant->arrivalAt = $now;
+                $participant->arrivalRound = $this->arrivalRound($event, $now);
+                $this->manager->save($participant);
+                $this->notifyReinforcement($planet, $fleet);
+            }
+            $fleet->status = 'defending';
+            $fleet->arrivalAt = null;
+            $fleet->dispatchToken = Uuid::v4()->toRfc4122();
+            return true;
+        }
+        if ($events !== []) {
+            return false;
+        }
+        $window = max(1, (int) ($this->catalog->rules()['combat_window_seconds'] ?? 600));
+        $fleet->status = 'defending';
+        $fleet->departureAt = $now;
+        $fleet->arrivalAt = $now->modify('+' . $window . ' seconds');
+        $fleet->dispatchToken = Uuid::v4()->toRfc4122();
+        $outbox = new OutboxMessage();
+        $outbox->kind = 'fleet';
+        $outbox->targetId = $fleet->id;
+        $outbox->token = $fleet->dispatchToken;
+        $outbox->dueAt = $fleet->arrivalAt;
+        $this->manager->save($outbox);
+        return true;
+    }
+
     /** Enregistre une arrivée d'attaque dans une fenêtre ouverte ou en crée une. */
     public function joinAttack(Fleet $fleet): bool
     {
@@ -189,6 +247,7 @@ final class CombatEventService
 
             $this->persistLosses($participants, $defenseSnapshots, $result['losses']);
             foreach ($participants as $participant) {
+                $this->consumeOrbitFuel($participant->fleet);
                 $this->sendFleetHome($participant);
                 $this->notifications->enqueue(
                     $participant->playerUniverse,
@@ -278,6 +337,16 @@ final class CombatEventService
         }
     }
 
+    private function consumeOrbitFuel(Fleet $fleet): void
+    {
+        if ($fleet->orbitFuel <= 0) {
+            return;
+        }
+        $fleet->cargo['hydrogen'] = max(0, ($fleet->cargo['hydrogen'] ?? 0) - $fleet->orbitFuel);
+        $fleet->reservedFuel = max(0, $fleet->reservedFuel - $fleet->orbitFuel);
+        $fleet->orbitFuel = 0;
+    }
+
     private function sendFleetHome(CombatParticipant $participant): void
     {
         $fleet = $participant->fleet;
@@ -322,6 +391,25 @@ final class CombatEventService
 
     private function registerGarrison(CombatEvent $event, PlayerUniverse $defender): void
     {
+        foreach ($this->repo->all(Fleet::class, ['destination' => $event->planet, 'status' => 'defending', 'mission' => 'defend'], ['id' => 'ASC']) as $fleet) {
+            if (!$fleet->arrivalAt || $fleet->arrivalAt <= $this->clock->now()) {
+                continue;
+            }
+            if ($this->repo->one(CombatParticipant::class, ['combatEvent' => $event, 'fleet' => $fleet])) {
+                continue;
+            }
+            $participant = new CombatParticipant();
+            $participant->combatEvent = $event;
+            $participant->fleet = $fleet;
+            $participant->playerUniverse = $fleet->playerUniverse;
+            $participant->role = 'defender';
+            $participant->arrivalAt = $this->clock->now();
+            $participant->arrivalRound = $this->arrivalRound($event, $participant->arrivalAt);
+            $this->manager->save($participant);
+            $fleet->arrivalAt = null;
+            $fleet->dispatchToken = Uuid::v4()->toRfc4122();
+            $this->notifyReinforcement($event->planet, $fleet);
+        }
         foreach ($this->repo->all(Fleet::class, ['homePlanet' => $event->planet, 'playerUniverse' => $defender, 'status' => 'idle'], ['id' => 'ASC']) as $fleet) {
             $hasShips = false;
             foreach ($this->repo->all(FleetShip::class, ['fleet' => $fleet]) as $ship) {

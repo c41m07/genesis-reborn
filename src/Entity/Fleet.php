@@ -25,6 +25,8 @@ class Fleet
     public array $cargo = [];
     #[ORM\Column]
     public float $reservedFuel = 0;
+    #[ORM\Column]
+    public float $orbitFuel = 0;
     #[ORM\Column(nullable: true)]
     public ?\DateTimeImmutable $departureAt = null;
     #[ORM\Column(nullable: true)]

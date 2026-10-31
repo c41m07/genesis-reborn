@@ -16,7 +16,13 @@ Date : 31/10/2026. Ces décisions rendent implémentables les points non chiffr�
 
 ## Composant créé
 
-CombatSimulator reste un service pur. Son intégration aux événements persistés, aux arrivées de flottes, aux pertes, au journal interne et aux notifications est implémentée et couverte par des tests d'intégration. Un rapport joueur avec contrôle d’accès participant/propriétaire est maintenant en place; les renforts/défense en missions dédiées, le butin et la conquête manquent encore; la phase 08/09 reste donc partielle.
+CombatSimulator reste un service pur. Son intégration aux événements persistés, aux arrivées de flottes, aux pertes, au journal interne et aux notifications est implémentée et couverte par des tests d'intégration. Un rapport joueur avec contrôle d’accès participant/propriétaire est maintenant en place; la mission Défense temporisée rejoint un combat ouvert ou repart après 600 secondes sans attaque; l’orbite, le butin et la conquête manquent encore; la phase 08/09 reste donc partielle.
+
+## Choix ajoutés — mission Défense
+
+- Une flotte Défense peut viser une planète connue et possédée du même univers, qu’il existe ou non une relation d’alliance; ce choix autorise le cas documenté d’un défenseur extérieur non allié.
+- Si un combat a une fenêtre ouverte, la flotte entre immédiatement comme participante défenseuse et son round dépend de l’heure d’arrivée. Sinon elle attend une fenêtre `combat_window_seconds`; si aucun combat ne s’ouvre, elle rentre automatiquement.
+- Le carburant de stationnement est réservé distinctement à l’envoi. À l’expiration sans attaque ou à la résolution du combat, il est débité avant le retour; le carburant aller-retour reste réservé.
 
 ## Équilibrage et limites
 

@@ -40,6 +40,7 @@ test('Chantier, estimation, colonisation, transport et exploration réels', asyn
   for(const name of ['Sonde exploratrice','Vaisseau colonie','Transporteur']) await expect(card(name).locator('.badge')).toContainText('1 EN RÉSERVE',{timeout:90000});
   await page.getByRole('link',{name:'Flottes',exact:true}).click();
   let form=page.locator('.fleet-form form').first();
+  await form.locator('[name="mission"]').selectOption('defend');await expect(form.locator('[name="planet"]')).toBeVisible();await expect(form.locator('[name="planet"] option')).not.toHaveCount(0);
   await form.locator('[name="mission"]').selectOption('explore');await form.locator('[name="ships[probe]"]').fill('1');
   const earlySystems=await form.locator('[name="system"] option').evaluateAll(options=>options.map(o=>({value:o.value,text:o.textContent})));
   const earlyOrigin=await page.locator('.fleet-form').first().evaluate(el=>[Number(el.dataset.systemX),Number(el.dataset.systemY)]);

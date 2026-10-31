@@ -55,6 +55,6 @@ Date : 31/10/2026. Sources : docs/specifications/1 - Conception batiment vaissea
 - En FFA, les camps survivants et l'outcome global exigent une règle unique; l'enum du document ne permet pas d'exprimer un vainqueur parmi plusieurs camps attaquants.
 - Les ressources de butin, la quantité/ratio récupérable et les bornes du butin ne sont pas précisées.
 
-## État du dépôt
+## État d’implémentation au 31/10/2026
 
-Les fichiers Fleet/FleetShip ne portent actuellement ni mission d'attaque, ni destination de flotte en cours, ni HP, ni lien CombatParticipant. PlanetDefense ne porte que le type et la quantité. FleetService n'autorise que explore, colonize et transport. La phase d'implémentation doit ajouter une extension persistée et migrée, sans réécrire ni invalider les flux existants.
+Les missions attaque et défense, les événements persistés, rounds échelonnés, pertes, retours et rapports privés sont intégrés et couverts par des tests d’intégration. La flotte en défense sans combat repart à l’expiration de sa fenêtre; `orbit_fuel` est réservé puis consommé. La mission orbite, l’acceptation manuelle/directe, le butin, l’espionnage et la conquête restent à implémenter. Les valeurs de combat demeurent provisoires.

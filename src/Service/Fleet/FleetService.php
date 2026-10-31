@@ -15,7 +15,7 @@ final class FleetService
     public function quote(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo=[]): array
     {
         if($origin->owner?->id!==$m->id || $origin->solarSystem->galaxy->universe->id!==$m->universe->id) throw new \DomainException('Planète inaccessible.');
-        if(!in_array($mission,['explore','colonize','transport','attack'],true)) throw new \DomainException('Mission indisponible.');
+        if(!in_array($mission,['explore','colonize','transport','attack','defend'],true)) throw new \DomainException('Mission indisponible.');
         $target=$this->repo->find($mission==='explore'?SolarSystem::class:Planet::class,$targetId);
         if(!$target) throw new \DomainException('Destination inconnue.');
         $system=$target instanceof Planet?$target->solarSystem:$target;
@@ -25,6 +25,7 @@ final class FleetService
         if($target instanceof Planet && $target->id===$origin->id) throw new \DomainException('Choisissez une autre planète.');
         if($mission==='transport' && $target->owner?->id!==$m->id) throw new \DomainException('Le transport est limité à vos colonies.');
         if($mission==='attack' && !$this->combats->canAttack($m,$target instanceof Planet?$target:null)) throw new \DomainException('Cette planète ne peut pas être attaquée.');
+        if($mission==='defend' && !$this->combats->canDefend($m,$target instanceof Planet?$target:null)) throw new \DomainException('Cette planète ne peut pas être défendue depuis cet univers.');
         if($mission==='colonize' && $target->owner!==null) throw new \DomainException('La planète est déjà colonisée.');
         $config=$this->catalog->get('universes',$m->universe->slug);
         if($mission==='colonize' && count($this->repo->planets($m->universe,$m)) >= $config['limits']['max_planets']) throw new \DomainException('Limite de colonies atteinte.');
@@ -42,7 +43,8 @@ final class FleetService
         if($mission==='attack' && $target instanceof Planet && $target->owner?->id===$m->id) throw new \DomainException('Vous ne pouvez pas attaquer votre propre colonie.');
         if($mission==='explore' && empty($valid['probe'])) throw new \DomainException('Une sonde exploratrice est nécessaire.');
         if($mission==='colonize' && empty($valid['colony_ship'])) throw new \DomainException('Un vaisseau colonie est nécessaire.');
-        $quote=$this->calculator->quote($this->coords($origin->solarSystem,$origin->position),$this->coords($system,$target instanceof Planet?$target->position:null),$ships,$ratio,$config['multipliers']['travel_time'],$this->catalog->rules()['fuel_ratio_policy']);
+        $windowHours=in_array($mission,['attack','defend'],true)?((int)($this->catalog->rules()['combat_window_seconds']??600)/3600):0;
+        $quote=$this->calculator->quote($this->coords($origin->solarSystem,$origin->position),$this->coords($system,$target instanceof Planet?$target->position:null),$ships,$ratio,$config['multipliers']['travel_time'],$this->catalog->rules()['fuel_ratio_policy'],$windowHours);
         $freight=[];
         foreach($cargo as $resource=>$amount) {
             if(!array_key_exists($resource,$this->catalog->rules()['resources'])) throw new \DomainException('Ressource inconnue.');
@@ -70,7 +72,7 @@ final class FleetService
             $q=$this->quote($m,$origin,$mission,$targetId,$composition,$ratio,$cargo);
             if($q['target'] instanceof Planet) $this->manager->lock($q['target']);
             $costs=$q['freight'];$costs['hydrogen']=($costs['hydrogen']??0)+$q['total_fuel'];$this->resources->consume($origin,$costs);
-            $f=new Fleet();$f->playerUniverse=$m;$f->homePlanet=$origin;$f->destination=$q['target'] instanceof Planet?$q['target']:null;$f->destinationSystem=$q['system'];$f->status='traveling';$f->mission=$mission;$f->speedRatio=$ratio;$f->cargo=$costs;$f->reservedFuel=$q['total_fuel'];$f->travelSeconds=$q['seconds'];$f->departureAt=$this->clock->now();$f->arrivalAt=$this->clock->now()->modify('+'.$f->travelSeconds.' seconds');$this->manager->save($f);$this->manager->flush();
+            $f=new Fleet();$f->playerUniverse=$m;$f->homePlanet=$origin;$f->destination=$q['target'] instanceof Planet?$q['target']:null;$f->destinationSystem=$q['system'];$f->status='traveling';$f->mission=$mission;$f->speedRatio=$ratio;$f->cargo=$costs;$f->reservedFuel=$q['total_fuel'];$f->orbitFuel=$q['orbit_fuel'];$f->travelSeconds=$q['seconds'];$f->departureAt=$this->clock->now();$f->arrivalAt=$this->clock->now()->modify('+'.$f->travelSeconds.' seconds');$this->manager->save($f);$this->manager->flush();
             foreach($q['composition'] as $slug=>$quantity) {
                 $stock=$this->repo->one(FleetShip::class,['fleet'=>$q['idle'],'slug'=>$slug]);$stock->quantity-=$quantity;
                 $ship=new FleetShip();$ship->fleet=$f;$ship->slug=$slug;$ship->quantity=$quantity;$this->manager->save($ship);
@@ -87,7 +89,11 @@ final class FleetService
         $this->manager->transaction(function()use($id,$token){
             $f=$this->repo->find(Fleet::class,$id);if(!$f) return;
             $m=$f->playerUniverse;$this->guard->lock($m,$f->homePlanet);$this->queues->synchronize($m);$this->manager->lock($f);
-            if(!in_array($f->status,['traveling','returning'],true) || !hash_equals($f->dispatchToken,$token) || !$f->arrivalAt || $f->arrivalAt>$this->clock->now()) return;
+            if(!in_array($f->status,['traveling','returning','defending'],true) || !hash_equals($f->dispatchToken,$token) || !$f->arrivalAt || $f->arrivalAt>$this->clock->now()) return;
+            if($f->status==='defending') {
+                $f->cargo['hydrogen']=max(0,($f->cargo['hydrogen']??0)-$f->orbitFuel);$f->reservedFuel=max(0,$f->reservedFuel-$f->orbitFuel);$f->orbitFuel=0;
+                $f->status='returning';$f->departureAt=$f->arrivalAt;$f->arrivalAt=$this->clock->now()->modify('+'.$f->travelSeconds.' seconds');$this->schedule($f);return;
+            }
             if($f->status==='returning') {
                 $rows=$this->resources->materialize($f->homePlanet);
                 $f->cargo['hydrogen']=max(0,($f->cargo['hydrogen']??0)-$f->reservedFuel);
@@ -100,10 +106,13 @@ final class FleetService
                 $f->cargo=[];$f->reservedFuel=0;$f->status='completed';$f->arrivalAt=null;$f->dispatchToken=Uuid::v4()->toRfc4122();
                 $this->notifications->enqueue($m,'Votre flotte est rentrée sur '.$f->homePlanet->name.'.');return;
             }
-            $oneWay=$f->reservedFuel/2;$f->cargo['hydrogen']=max(0,($f->cargo['hydrogen']??0)-$oneWay);$f->reservedFuel-=$oneWay;
+            $oneWay=max(0,($f->reservedFuel-$f->orbitFuel)/2);$f->cargo['hydrogen']=max(0,($f->cargo['hydrogen']??0)-$oneWay);$f->reservedFuel-=$oneWay;
             if($f->mission==='attack') {
                 if($this->combats->joinAttack($f)) return;
-                $this->notifications->enqueue($m,'La fenêtre de combat était déjà close. Votre flotte repart.');
+                $this->releaseOrbitFuel($f);$this->notifications->enqueue($m,'La fenêtre de combat était déjà close. Votre flotte repart.');
+            } elseif($f->mission==='defend') {
+                if($this->combats->arriveDefender($f)) return;
+                $this->releaseOrbitFuel($f);$this->notifications->enqueue($m,'La fenêtre de combat était close. Votre flotte repart.');
             } elseif($f->mission==='explore') {
                 $d=$this->repo->one(PlayerDiscovery::class,['playerUniverse'=>$m,'solarSystem'=>$f->destinationSystem]);
                 if(!$d) { $d=new PlayerDiscovery();$d->playerUniverse=$m;$d->solarSystem=$f->destinationSystem;$this->manager->save($d); }
@@ -128,6 +137,10 @@ final class FleetService
             }
             $f->status='returning';$f->departureAt=$f->arrivalAt;$f->arrivalAt=$f->departureAt->modify('+'.$f->travelSeconds.' seconds');$this->schedule($f);
         });
+    }
+    private function releaseOrbitFuel(Fleet $f): void
+    {
+        $f->reservedFuel=max(0,$f->reservedFuel-$f->orbitFuel);$f->orbitFuel=0;
     }
     private function consumeShip(Fleet $f,string $slug): void
     {
