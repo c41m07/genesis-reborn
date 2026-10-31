@@ -7,13 +7,13 @@ Compléter le jeu existant en conservant les décisions de docs/REGLES.md, docs/
 | Phase | Domaine | Critère de sortie | État au 31/10/2026 |
 |---|---|---|---|
 | 01 | Audit | Inventaire, état Git, fonctionnalités, architecture, documentation et contrôles initiaux consignés | Partielle — audit antérieur conservé; état courant revalidé, revue complète à reconfirmer |
-| 02 | Spécifications | Règles, ambiguïtés, critères d'acceptation et valeurs provisoires distingués | Partielle — règles de simulation, d’orbite et de butin précisées; conquête JcE spécifiée et implémentée; compositions PNJ provisoires; espionnage restant |
+| 02 | Spécifications | Règles, ambiguïtés, critères d'acceptation et valeurs provisoires distingués | Terminée — règles et critères d’acceptation documentés; conquête JcE et espionnage intégrés et validés; coefficients et compositions PNJ identifiés comme provisoires |
 | 03 | Architecture et environnement | Installation/reprise reproductibles, architecture cohérente, migrations vérifiées | Partielle — stack en place; installation vierge et migrations vérifiées |
 | 04 | Comptes et sécurité | Parcours et contrôles d'accès validés, sécurité des comptes et sessions | Partielle — inscription, profil et accès de base réalisés; audit complet restant |
 | 05 | Univers et planètes | Carte, colonies, exploration/colonisation et accès par univers cohérents | Partielle — base jouable; carte à trois états PNJ/vierge/joueur; fermeture asynchrone à faire |
 | 06 | Économie | Calculs serveur, reprise chronologique, stockage et dépenses cohérents | Partielle — économie corrigée; équilibrage provisoire à valider |
 | 07 | Bâtiments et technologies | Prérequis, effets, files et annulations fonctionnels et vérifiés | Partielle — fonctionnalités principales; effets de combat liés restants |
-| 08 | Flottes et missions | Trajets, carburant, départ/arrivée/retour et missions vérifiés | Partielle — exploration, colonisation, transport, attaque, défense temporisée et orbite intégrés; espionnage reste à faire |
+| 08 | Flottes et missions | Trajets, carburant, départ/arrivée/retour et missions vérifiés | Partielle — exploration, espionnage, colonisation, transport, attaque, défense temporisée et orbite intégrés; audit fonctionnel restant |
 | 09 | Combat | Résolution reproductible, pertes, butin, rapports et notifications testés | Partielle — événements persistés, résolution, pertes, journal, rapports, flottes défenseuses, orbite et butin intégrés; conquête JcE avec flotte PNJ, défenses fixes, pertes persistantes et rapports intégrés; compositions provisoires |
 | 10 | Social et stratégie | Diplomatie et communications, protections anti-abus | Partielle — guildes/alliances réalisées; classements et communications restant |
 | 11 | Administration | Paramètres et modération sécurisés, journaux d'audit | À faire |
@@ -26,7 +26,6 @@ Compléter le jeu existant en conservant les décisions de docs/REGLES.md, docs/
 1. Consolider les règles des phases 08/09 à partir des spécifications 1, 2 et 3.
 2. Vérifier les états et invariants de flotte actuels; consolider les tests du combat livré.
 3. Renforcer les rapports de combat à partir des retours; leur accès et la confidentialité de l’identité sont en place.
-4. Poursuivre avec l’espionnage; les niveaux et compositions JcE sont paramétrés mais restent à équilibrer.
-5. Implémenter l’espionnage et les variantes d’univers.
-6. Traiter variantes d'univers, classements, administration, accessibilité, CI, sauvegarde et audit final.
+4. Poursuivre par la phase 03 (architecture et environnement); garder les valeurs PNJ/espionnage explicitement provisoires.
+5. Traiter variantes d’univers, classements, administration, accessibilité, CI, sauvegarde et audit final.
 Ne pas créer d'écrans factices ni présenter des données provisoires comme définitives.

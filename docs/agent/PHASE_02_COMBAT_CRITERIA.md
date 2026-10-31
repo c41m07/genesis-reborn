@@ -52,7 +52,8 @@ La spécification conserve 1 à 9 planètes par système solaire. Environ 30 % d
 7. Les retours des survivants, pertes, butin, carburant réservé et soutes sont atomiques et testés sur MariaDB isolée.
 8. L'accès aux rapports est limité aux participants du combat; les notifications ne divulguent pas d'identité non découverte.
 9. Les handlers/outbox tolèrent doublons, messages périmés, panne de Mercure et reprise après redémarrage.
-10. Aucun bouton d'attaque/défense/orbite ne s'affiche avant que le parcours correspondant soit réellement câblé et protégé par CSRF, propriété et contrôles d'univers.
+10. Aucun bouton d’attaque/défense/orbite/espionnage ne s’affiche avant que le parcours correspondant soit câblé et protégé par CSRF, propriété et contrôles d’univers.
+11. L’espionnage cible uniquement les planètes connues non possédées par l’émetteur, accepte uniquement des sondes, les consomme à l’arrivée, applique les coefficients configurables de détection et de profondeur, et limite chaque rapport à son émetteur. Une détection avertit le propriétaire et bloque les renseignements.
 
 ## Points explicitement provisoires ou incomplets
 - Fenêtre 600 secondes et maximum 10 rounds sont déjà paramétrés, mais le catalogue global porte provisional=true. Ils peuvent être utilisés en dev et ne qualifient pas l'équilibrage de production.
@@ -63,4 +64,4 @@ La spécification conserve 1 à 9 planètes par système solaire. Environ 30 % d
 
 ## État d’implémentation au 31/10/2026
 
-Les missions attaque et défense, les événements persistés, rounds échelonnés, pertes, retours et rapports privés sont intégrés et couverts par des tests d’intégration. La flotte en défense sans combat repart à l’expiration de sa fenêtre; `orbit_fuel` est réservé puis consommé. La mission orbite prend en charge la demande manuelle et l’acceptation automatique par contrat direct, le stationnement temporisé, le retour et l’entrée en défense lors d’un combat ouvert. Le butin est implémenté avec le seuil protégé de 10 % confirmé par Kévin; la conquête JcE est intégrée avec des compositions provisoires; l’espionnage reste à implémenter. Les valeurs de combat demeurent provisoires.
+Les missions attaque et défense, les événements persistés, rounds échelonnés, pertes, retours et rapports privés sont intégrés et couverts par des tests d’intégration. La flotte en défense sans combat repart à l’expiration de sa fenêtre; `orbit_fuel` est réservé puis consommé. La mission orbite prend en charge la demande manuelle et l’acceptation automatique par contrat direct, le stationnement temporisé, le retour et l’entrée en défense lors d’un combat ouvert. Le butin est implémenté avec le seuil protégé de 10 % confirmé par Kévin; la conquête JcE est intégrée avec des compositions provisoires; l’espionnage est intégré : sondes uniquement, catégories graduées, détection configurable, alerte au propriétaire, rapports privés. Migration 11 ajoutée; lint et schéma validés après intégration. Les tests fonctionnels post-espionnage passent; les critères de la phase 02 sont validés. Les valeurs de combat demeurent provisoires.

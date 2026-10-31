@@ -15,6 +15,7 @@ final class GameCatalog
             }
         }
         $this->data['planet_conquest']=Yaml::parseFile($dir.'/planet_conquest.yaml');
+        $this->data['espionage']=Yaml::parseFile($dir.'/espionage.yaml');
         $this->data['rules']=Yaml::parseFile($dir.'/rules.yaml');
         $this->data['combat_modifiers']=Yaml::parseFile($dir.'/combat_modifiers.yaml');
     }

@@ -93,6 +93,10 @@ informatif entre deux requêtes.
    •    Les ressources disponibles sont : métal, énergie, antimatière, hydrogène, carbone.
         D'autres pourront être ajoutées.
    •    Le transport inter-planètes se fait via des flottes équipées de vaisseaux cargo.
+   •    Conquête d’une planète PNJ : la planète conserve ses bâtiments, ses stocks et son
+        développement économique. Le joueur prend donc possession d’une planète déjà avancée,
+        contrairement à la colonisation d’une planète vierge, qui démarre sans développement.
+        La flotte et les défenses PNJ sont retirées après la capture.
 
 
 
@@ -184,6 +188,17 @@ Catégorie à redéfinir
            ◦ Il y a deux types de sondes :
                Espionnage => espionne un planète en particulier
                Exploration => découvre les planètes d’un systèmes
+           ◦ L’espionnage vise une planète connue du même univers autre que les planètes de
+             l’émetteur; les cibles peuvent être vierges, PNJ ou détenues par un joueur.
+           ◦ Une mission d’espionnage transporte uniquement des sondes; toutes sont détruites
+             à l’arrivée. Le nombre de sondes augmente à la fois le risque de détection et la
+             profondeur des renseignements.
+           ◦ Les informations sont révélées dans l’ordre : ressources et production, bâtiments,
+             recherches, flottes, défenses fixes. Le niveau d’espionnage de l’émetteur comparé à
+             celui de la cible détermine aussi le nombre de catégories révélées.
+           ◦ La contre-espionnage de la cible, la furtivité de l’émetteur, les sondes envoyées et
+             les sondes en réserve locale déterminent la détection. Si les sondes sont repérées,
+             le propriétaire est averti et le rapport de renseignement est bloqué.
    •     La colonisation consomme le vaisseau colonie à l'arrivée.
 
 

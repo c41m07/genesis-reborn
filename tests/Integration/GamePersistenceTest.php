@@ -351,4 +351,156 @@ final class GamePersistenceTest extends KernelTestCase
         $tree=$insights->tree([],['basic_engineering'=>2]);$nodes=array_merge(...array_values($tree));$propulsion=array_values(array_filter($nodes,fn($n)=>$n['definition']['slug']==='advanced_propulsion'))[0];self::assertFalse($propulsion['available']);
     }
 
+    public function testSpyMissionConsumesAllProbesAndKeepsReportPrivate(): void
+    {
+        $clock = $this->clock();
+        $sender = $this->player('SpySender');
+        $origin = $this->join($sender);
+        $targetOwner = $this->player('SpyTarget');
+        $this->join($targetOwner);
+        $target = null;
+        foreach ($this->em->getRepository(\App\Entity\Planet::class)->findBy(['owner' => null, 'npcPlanet' => false]) as $candidate) {
+            if ($candidate->solarSystem->galaxy->universe->id === $sender->currentPlayerUniverse->universe->id) { $target = $candidate; break; }
+        }
+        self::assertNotNull($target);
+        $fleetStock = $this->ships($origin, ['probe' => 1]);
+        $discovery = $this->em->getRepository(\App\Entity\PlayerDiscovery::class)->findOneBy(['playerUniverse' => $sender->currentPlayerUniverse, 'solarSystem' => $target->solarSystem]);
+        if (!$discovery) { $discovery = new \App\Entity\PlayerDiscovery(); $discovery->playerUniverse = $sender->currentPlayerUniverse; $discovery->solarSystem = $target->solarSystem; $this->em->persist($discovery); }
+        foreach ([['espionage_technology', 2], ['stealth_technology', 5]] as [$slug, $level]) {
+            $technology = new PlayerTechnology();
+            $technology->playerUniverse = $sender->currentPlayerUniverse;
+            $technology->slug = $slug;
+            $technology->level = $level;
+            $this->em->persist($technology);
+        }
+        foreach ($this->em->getRepository(\App\Entity\Fleet::class)->findBy(['homePlanet' => $target, 'status' => 'idle']) as $localFleet) {
+            $localProbe = $this->em->getRepository(\App\Entity\FleetShip::class)->findOneBy(['fleet' => $localFleet, 'slug' => 'probe']);
+            if ($localProbe) $localProbe->quantity = 0;
+        }
+        $this->em->flush();
+        $service = self::getContainer()->get(\App\Service\Fleet\FleetService::class);
+        $service->send($sender->currentPlayerUniverse, $origin, 'spy', $target->id, ['probe' => 1], 1, [], str_repeat('e', 32));
+        $spyFleet = $this->em->getRepository(\App\Entity\Fleet::class)->findOneBy(['playerUniverse' => $sender->currentPlayerUniverse, 'status' => 'traveling', 'mission' => 'spy']);
+        self::assertNotNull($spyFleet);
+        $clock->sleep($spyFleet->travelSeconds + 1);
+        $service->arrive($spyFleet->id, $spyFleet->dispatchToken);
+
+        $report = $this->em->getRepository(\App\Entity\EspionageReport::class)->findOneBy(['sender' => $sender->currentPlayerUniverse]);
+        self::assertNotNull($report);
+        self::assertSame('success', $report->result);
+        self::assertSame(0, $report->detectionChance);
+        self::assertSame(1, $report->probesSent);
+        self::assertSame(3, $report->intelCategories);
+        self::assertSame(['resources', 'buildings', 'research'], array_keys($report->snapshot));
+        self::assertSame(0, $this->em->getRepository(\App\Entity\FleetShip::class)->findOneBy(['fleet' => $spyFleet, 'slug' => 'probe'])->quantity);
+        self::assertSame('completed', $spyFleet->status);
+        $reader = self::getContainer()->get(\App\Service\Fleet\EspionageReportReader::class);
+        self::assertSame($report->id, $reader->findVisible($sender->currentPlayerUniverse, $report->id)?->id);
+        self::assertNull($reader->findVisible($targetOwner->currentPlayerUniverse, $report->id));
+        self::assertSame('idle', $fleetStock->status);
+    }
+
+    public function testDetectedSpyMissionAlertsTargetAndStoresNoIntel(): void
+    {
+        $clock = $this->clock();
+        $sender = $this->player('CaughtSpy');
+        $origin = $this->join($sender);
+        $targetOwner = $this->player('CounterSpy');
+        $target = $this->join($targetOwner);
+        $this->ships($origin, ['probe' => 2]);
+        $localFleet = $this->ships($target, ['probe' => 20]);
+        $discovery = $this->em->getRepository(\App\Entity\PlayerDiscovery::class)->findOneBy(['playerUniverse' => $sender->currentPlayerUniverse, 'solarSystem' => $target->solarSystem]);
+        if (!$discovery) { $discovery = new \App\Entity\PlayerDiscovery(); $discovery->playerUniverse = $sender->currentPlayerUniverse; $discovery->solarSystem = $target->solarSystem; $this->em->persist($discovery); }
+        $counter = new PlayerTechnology();
+        $counter->playerUniverse = $targetOwner->currentPlayerUniverse;
+        $counter->slug = 'counter_espionage';
+        $counter->level = 5;
+        $this->em->persist($counter);
+        $this->em->flush();
+        $service = self::getContainer()->get(\App\Service\Fleet\FleetService::class);
+        $service->send($sender->currentPlayerUniverse, $origin, 'spy', $target->id, ['probe' => 2], 1, [], str_repeat('a', 32));
+        $spyFleet = $this->em->getRepository(\App\Entity\Fleet::class)->findOneBy(['playerUniverse' => $sender->currentPlayerUniverse, 'status' => 'traveling', 'mission' => 'spy']);
+        self::assertNotNull($spyFleet);
+        $clock->sleep($spyFleet->travelSeconds + 1);
+        $service->arrive($spyFleet->id, $spyFleet->dispatchToken);
+
+        $report = $this->em->getRepository(\App\Entity\EspionageReport::class)->findOneBy(['sender' => $sender->currentPlayerUniverse]);
+        self::assertNotNull($report);
+        self::assertSame('detected', $report->result);
+        self::assertSame(100, $report->detectionChance);
+        self::assertSame(2, $report->probesSent);
+        self::assertSame([], $report->snapshot);
+        self::assertSame(0, $report->intelCategories);
+        self::assertSame('completed', $spyFleet->status);
+        self::assertSame(0, $this->em->getRepository(\App\Entity\FleetShip::class)->findOneBy(['fleet' => $spyFleet, 'slug' => 'probe'])->quantity);
+        $alerts = $this->em->getRepository(\App\Entity\Notification::class)->findBy(['recipient' => $targetOwner->currentPlayerUniverse]);
+        self::assertNotEmpty(array_filter($alerts, static fn ($notification): bool => str_contains($notification->message, 'Sondes d’espionnage détectées')));
+        self::assertSame('idle', $localFleet->status);
+    }
+
+
+    public function testNpcSpyReportInitializesGarrisonAndUsesItsCounterTechnology(): void
+    {
+        $clock = $this->clock();
+        $sender = $this->player('NpcSpy');
+        $origin = $this->join($sender);
+        $this->ships($origin, ['probe' => 2]);
+        $target = null;
+        foreach ($this->em->getRepository(\App\Entity\Planet::class)->findBy(['owner' => null, 'npcPlanet' => true]) as $candidate) {
+            if ($candidate->solarSystem->galaxy->universe->id === $sender->currentPlayerUniverse->universe->id) { $target = $candidate; break; }
+        }
+        self::assertNotNull($target);
+        $target->conquestLevel = 5;
+        $discovery = $this->em->getRepository(\App\Entity\PlayerDiscovery::class)->findOneBy(['playerUniverse' => $sender->currentPlayerUniverse, 'solarSystem' => $target->solarSystem]);
+        if (!$discovery) { $discovery = new \App\Entity\PlayerDiscovery(); $discovery->playerUniverse = $sender->currentPlayerUniverse; $discovery->solarSystem = $target->solarSystem; $this->em->persist($discovery); }
+        $this->em->flush();
+        $service = self::getContainer()->get(\App\Service\Fleet\FleetService::class);
+        $service->send($sender->currentPlayerUniverse, $origin, 'spy', $target->id, ['probe' => 2], 1, [], str_repeat('b', 32));
+        $fleet = $this->em->getRepository(\App\Entity\Fleet::class)->findOneBy(['playerUniverse' => $sender->currentPlayerUniverse, 'status' => 'traveling', 'mission' => 'spy']);
+        self::assertNotNull($fleet);
+        $clock->sleep($fleet->travelSeconds + 1);
+        $service->arrive($fleet->id, $fleet->dispatchToken);
+
+        $report = $this->em->getRepository(\App\Entity\EspionageReport::class)->findOneBy(['sender' => $sender->currentPlayerUniverse]);
+        self::assertNotNull($report);
+        self::assertSame('detected', $report->result);
+        self::assertSame(4, $report->targetCounterEspionageLevel);
+        self::assertSame(100, $report->detectionChance);
+        self::assertSame([], $report->snapshot);
+        self::assertTrue($target->npcGarrisonInitialized);
+        self::assertGreaterThan(0, $this->em->getRepository(\App\Entity\PlanetNpcShip::class)->count(['planet' => $target]));
+        self::assertSame(0, $this->em->getRepository(\App\Entity\FleetShip::class)->findOneBy(['fleet' => $fleet, 'slug' => 'probe'])->quantity);
+    }
+
+
+    public function testSpyQuoteRejectsOwnedTargetsAndAnyEscortShip(): void
+    {
+        $sender = $this->player('SpyRules');
+        $origin = $this->join($sender);
+        $ownedTarget = $this->secondPlanet($sender);
+        $other = $this->player('SpyRulesTarget');
+        $this->join($other);
+        $foreignTarget = null;
+        foreach ($this->em->getRepository(\App\Entity\Planet::class)->findBy(['owner' => null, 'npcPlanet' => false]) as $candidate) {
+            if ($candidate->solarSystem->galaxy->universe->id === $other->currentPlayerUniverse->universe->id) { $foreignTarget = $candidate; break; }
+        }
+        self::assertNotNull($foreignTarget);
+        $foreignTarget->owner = $other->currentPlayerUniverse;
+        self::getContainer()->get(ResourceService::class)->initialize($foreignTarget);
+        $this->ships($origin, ['probe' => 1, 'fighter' => 1]);
+        $discovery = $this->em->getRepository(\App\Entity\PlayerDiscovery::class)->findOneBy(['playerUniverse' => $sender->currentPlayerUniverse, 'solarSystem' => $foreignTarget->solarSystem]);
+        if (!$discovery) { $discovery = new \App\Entity\PlayerDiscovery(); $discovery->playerUniverse = $sender->currentPlayerUniverse; $discovery->solarSystem = $foreignTarget->solarSystem; $this->em->persist($discovery); }
+        $this->em->flush();
+        $service = self::getContainer()->get(\App\Service\Fleet\FleetService::class);
+        try {
+            $service->quote($sender->currentPlayerUniverse, $origin, 'spy', $ownedTarget->id, ['probe' => 1], 1);
+            self::fail('L’espionnage d’une planète détenue par l’émetteur doit être refusé.');
+        } catch (\DomainException) {}
+        try {
+            $service->quote($sender->currentPlayerUniverse, $origin, 'spy', $foreignTarget->id, ['probe' => 1, 'fighter' => 1], 1);
+            self::fail('Une escorte ne doit pas être acceptée pour l’espionnage.');
+        } catch (\DomainException) {}
+    }
+
+
 }

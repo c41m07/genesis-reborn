@@ -19,13 +19,14 @@ final class FleetController extends AbstractController
         $systems=$repo->systems($m->universe);$mission=(string)$request->query->get('mission','explore');$universeConfig=$catalog->get('universes',$m->universe->slug);$conquestEnabled=(bool)($universeConfig['features']['planet_conquest']??false);
         $known=[];foreach($repo->all(PlayerDiscovery::class,['playerUniverse'=>$m]) as $d) $known[$d->solarSystem->id]=true;
         $targets=array_filter($repo->planets($m->universe),fn($p)=>isset($known[$p->solarSystem->id]));
+        if($mission==='spy') $targets=array_filter($targets,fn($p)=>$p->owner?->id!==$m->id);
         if($mission==='attack') $targets=array_filter($targets,fn($p)=>$combats->canAttack($m,$p));
         if($mission==='colonize') $targets=array_filter($targets,fn($p)=>$p->owner===null&&!$p->npcPlanet);
         if($mission==='conquer') $targets=array_filter($targets,fn($p)=>$conquestEnabled&&$combats->canConquer($m,$p));
         if($mission==='defend') $targets=array_filter($targets,fn($p)=>$combats->canDefend($m,$p));
         if($mission==='orbit') $targets=array_filter($targets,fn($p)=>$combats->canOrbit($m,$p));
         if($mission==='conquer'&&count($repo->planets($m->universe,$m))>=$universeConfig['limits']['max_planets']) $targets=[];
-        if(!in_array($mission,['explore','colonize','transport','attack','conquer','defend','orbit'],true)) throw $this->createNotFoundException('Mission indisponible.');
+        if(!in_array($mission,['explore','colonize','transport','attack','conquer','defend','orbit','spy'],true)) throw $this->createNotFoundException('Mission indisponible.');
         $systemId=$request->query->getInt('system');$planetId=$request->query->getInt('planet');
         if($systemId&&!array_filter($systems,fn($s)=>$s->id===$systemId)) throw $this->createNotFoundException('Système inaccessible.');
         if($planetId&&!array_filter($targets,fn($p)=>$p->id===$planetId&&($mission!=='transport'||$p->owner?->id===$m->id)&&($mission!=='colonize'||($p->owner===null&&!$p->npcPlanet)))) throw $this->createNotFoundException('Destination inaccessible.');

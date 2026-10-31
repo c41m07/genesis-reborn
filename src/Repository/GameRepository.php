@@ -8,6 +8,13 @@ final class GameRepository
     public function find(string $class, int $id): ?object { return $this->em->find($class, $id); }
     public function one(string $class, array $criteria): ?object { return $this->em->getRepository($class)->findOneBy($criteria); }
     public function all(string $class, array $criteria = [], array $order = ['id' => 'ASC']): array { return $this->em->getRepository($class)->findBy($criteria, $order); }
+    public function espionageReportsFor(PlayerUniverse $membership, int $limit = 50): array
+    {
+        return $this->em->createQueryBuilder()->select('r')->from(\App\Entity\EspionageReport::class, 'r')
+            ->where('r.sender = :membership')->setParameter('membership', $membership)
+            ->orderBy('r.createdAt', 'DESC')->setMaxResults(max(1, min(100, $limit)))->getQuery()->getResult();
+    }
+
     public function combatLogsFor(PlayerUniverse $membership, int $limit = 50): array
     {
         return $this->em->createQueryBuilder()->select('DISTINCT l')->from(CombatLog::class, 'l')

@@ -500,9 +500,11 @@ final class CombatEventTest extends KernelTestCase
         $event = $this->em->getRepository(CombatEvent::class)->findOneBy(['planet' => $target, 'status' => 'pending']);
         self::assertNotNull($event); $event->seed = 321; $clock->sleep(600);
         $combat->resolve($event->id, $event->dispatchToken);
-        $npcShips = $this->em->getRepository(PlanetNpcShip::class)->findBy(['planet' => $target]);
-        self::assertCount(1, $npcShips);
-        self::assertSame(0, $npcShips[0]->quantity);
+        $fighterGarrison = $this->em->getRepository(PlanetNpcShip::class)->findOneBy(['planet' => $target, 'slug' => 'fighter']);
+        $probeGarrison = $this->em->getRepository(PlanetNpcShip::class)->findOneBy(['planet' => $target, 'slug' => 'probe']);
+        self::assertNotNull($fighterGarrison);
+        self::assertNotNull($probeGarrison);
+        self::assertSame(0, $fighterGarrison->quantity);
         self::assertNull($target->owner);
 
         $secondFleet = $this->attackFleet($attacker, $origin, $target, 'npc-loss-b');
@@ -513,7 +515,7 @@ final class CombatEventTest extends KernelTestCase
         self::assertNotNull($nextEvent);
         $clock->sleep(600);
         $combat->resolve($nextEvent->id, $nextEvent->dispatchToken);
-        self::assertSame(0, $npcShips[0]->quantity);
+        self::assertSame(0, $fighterGarrison->quantity);
         self::assertTrue($target->npcGarrisonInitialized);
     }
 

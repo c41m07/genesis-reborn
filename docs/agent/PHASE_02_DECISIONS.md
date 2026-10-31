@@ -16,7 +16,7 @@ Date : 31/10/2026. Ces décisions rendent implémentables les points non chiffr�
 
 ## Composant créé
 
-CombatSimulator reste un service pur. Son intégration aux événements persistés, aux arrivées de flottes, aux pertes, au journal interne et aux notifications est implémentée et couverte par des tests d'intégration. Un rapport joueur avec contrôle d’accès participant/propriétaire est maintenant en place; la mission Défense temporisée rejoint un combat ouvert ou repart après 600 secondes sans attaque; l’orbite, le butin et la conquête JcE sont intégrés. Kévin a confirmé les règles de conquête; les compositions PNJ restent provisoires. L’espionnage reste à faire, donc la phase 08/09 est partielle.
+CombatSimulator reste un service pur. Son intégration aux événements persistés, aux arrivées de flottes, aux pertes, au journal interne et aux notifications est implémentée et couverte par des tests d'intégration. Un rapport joueur avec contrôle d’accès participant/propriétaire est maintenant en place; la mission Défense temporisée rejoint un combat ouvert ou repart après 600 secondes sans attaque; l’orbite, le butin et la conquête JcE sont intégrés. Kévin a confirmé les règles de conquête; les compositions PNJ restent provisoires. L’espionnage est intégré et couvert par des tests d’intégration; lint, schéma et installation vierge passent. La phase 02 est clôturée; les coefficients PNJ et d’espionnage restent provisoires.
 
 ## Choix ajoutés — mission Défense
 
@@ -48,3 +48,15 @@ CombatSimulator reste un service pur. Son intégration aux événements persist�
 La fenêtre de 600 secondes, les dix rounds, les statistiques et la matrice restent provisoires lorsque les catalogues l'indiquent. Le choix uniforme, l'initiative, la valeur de base du dégât et la retraite sont des règles explicites d'implémentation; ils devront être relus dans l'audit d'équilibrage final. Règle de butin demandée par Kévin : 100 % du stock au-dessus de 10 % de la capacité de stockage propre à chaque ressource est pillable après une victoire des attaquants. Le mélange suit le prorata des stocks pillables; le butin va à tous les attaquants survivants, proportionnellement à leur soute libre après protection du carburant de retour. Au retour, le dépôt est plafonné par la capacité de stockage de la planète d’origine et le surplus est perdu.
 
 Le ratio 100 % et le plancher protégé de 10 % sont confirmés par l'utilisateur; leur équilibrage économique reste à observer en partie réelle.
+
+
+## Choix confirmés par Kévin — espionnage
+
+- Une mission d’espionnage vise une planète connue du même univers qui n’appartient pas à l’émetteur : joueur, PNJ ou planète vierge.
+- La mission transporte une ou plusieurs sondes uniquement, sans escorte. Toutes les sondes envoyées sont consommées à l’arrivée, que la mission soit détectée ou non.
+- Catégories révélées, dans l’ordre : ressources/production, bâtiments, recherches, flottes, défenses fixes. Les valeurs sont filtrées selon le niveau d’espionnage de l’émetteur comparé à celui de la cible et le nombre de sondes : score provisoire = max(0, 1 + espionnage émetteur − espionnage cible + sondes envoyées − 1), plafonné au nombre de catégories.
+- Le risque de détection est provisoirement réglé à 50 % de base, puis +10 points par niveau de contre-espionnage de la cible, −10 par niveau de furtivité de l’émetteur, +5 par sonde envoyée après la première et +5 par sonde dans la réserve locale de la cible; résultat borné entre 0 et 100 %.
+- En cas de détection, le propriétaire reçoit une alerte et le rapport ne contient aucun renseignement. Son identité n’est révélée que si le système d’origine est connu de la cible. Les rapports restent consultables uniquement par leur émetteur.
+- Les sondes locales présentes dans une flotte idle sur la planète, en défense ou en orbite comptent comme réserve défensive. Les réserves PNJ sont prises dans le catalogue de niveau PNJ.
+- Pour les rapports PNJ, la garnison PNJ est initialisée avant la capture des renseignements. Les valeurs de recherche PNJ sont issues du préréglage de niveau; une planète vierge ne possède aucune recherche ni garnison.
+- Ces coefficients sont provisoires et regroupés dans config/game/espionage.yaml; les profils de recherche et les sondes PNJ sont dans config/game/planet_conquest.yaml.

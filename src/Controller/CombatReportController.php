@@ -12,10 +12,10 @@ use Symfony\Component\Routing\Attribute\Route;
 final class CombatReportController extends AbstractController
 {
     #[Route('/rapports', name: 'app_combat_reports', methods: ['GET'])]
-    public function index(UniverseContext $context, CombatReportReader $reader): Response
+    public function index(UniverseContext $context, CombatReportReader $reader, \App\Service\Fleet\EspionageReportReader $espionageReader): Response
     {
         $membership = $context->membership();
-        return $this->render('combat/reports.html.twig', ['reports' => $reader->list($membership)]);
+        return $this->render('combat/reports.html.twig', ['reports' => $reader->list($membership), 'espionage_reports' => $espionageReader->list($membership)]);
     }
 
     #[Route('/rapports/combat/{id}', name: 'app_combat_report', requirements: ['id' => '\d+'], methods: ['GET'])]
