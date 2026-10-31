@@ -5,7 +5,7 @@ Branche : feat/genesis-reborn-production-completion
 HEAD de départ : 80668fa — chore: snapshot Genesis Reborn before completion work; un commit de suivi documentaire a été créé depuis, vérifier git log
 
 ## Position actuelle
-- Phase active : 12/15 — phases 01 à 11 clôturées techniquement. Avancement global : 11/15 phases clôturées. Les coefficients et stocks de départ restent provisoires. Validation actuelle : 78 tests / 406 assertions; lint PHP, 62 YAML, 20 Twig, conteneur, schéma et Compose réussis; installation vierge validée avec 14 migrations. Détails : audits des phases 01 et 03 à 11.
+- Phase active : 13/15 — phases 01 à 12 clôturées techniquement. Avancement global : 12/15 phases clôturées. Les coefficients et stocks de départ restent provisoires. Validation actuelle : 78 tests / 406 assertions; lint PHP, 62 YAML, 20 Twig, conteneur, schéma et Compose réussis; installation vierge validée avec 14 migrations. Audit responsive/accessibilité ciblé consigné en phase 12; la suite navigateur complète requiert une base isolée.
 - Phase 01 : TERMINÉE. Inventaire Git, état du dépôt, architecture, documentation et contrôles initiaux actualisés dans docs/agent/PHASE_01_AUDIT.md; les documents de traçabilité qui décrivaient encore l’espionnage et la conquête comme à faire ont été synchronisés.
 - Phase 02 : TERMINÉE. Simulation déterministe, événements persistés, journal, attaque, défense temporisée, rapports privés, orbite, butin, conquête JcE et espionnage implémentés. Règles confirmées; les compositions PNJ et les coefficients d’espionnage restent explicitement provisoires et configurables. Validation à la clôture : 67 tests / 335 assertions, lint, configuration, schéma et installation vierge avec 11 migrations. Décisions : docs/agent/PHASE_02_COMBAT_CRITERIA.md et PHASE_02_DECISIONS.md.
 - Phase 09 : TERMINÉE techniquement. La résolution, les pertes, le butin, les rapports, les notifications et la conquête JcE sont vérifiés; l’équilibrage provisoire reste à valider avant production. Voir PHASE_09_COMBAT_AUDIT.md.
@@ -13,7 +13,8 @@ HEAD de départ : 80668fa — chore: snapshot Genesis Reborn before completion w
 - Phase 08 : TERMINÉE. Les déplacements, cycles aller-retour, réservations, compositions, idempotence et parcours de missions sont vérifiés; limites restantes consignées dans PHASE_08_FLEET_MISSIONS_AUDIT.md.
 - Phase 10 : TERMINÉE techniquement. Classement, messages privés, canal de guilde et protections vérifiés; voir docs/agent/PHASE_10_SOCIAL_STRATEGY_AUDIT.md.
 - Phase 11 : TERMINÉE techniquement. Console admin, comptes suspendus, modération sur signalement, paramètres par univers et journal d’audit vérifiés; voir docs/agent/PHASE_11_ADMIN_AUDIT.md.
-- Prochaine étape : phase 12 — audit UI/UX, responsive et accessibilité.
+- Phase 12 : TERMINÉE techniquement. Revue ciblée, correction du focus clavier/mobile, formulaires et tableaux; limites RGAA/Playwright documentées dans PHASE_12_UI_ACCESSIBILITY_AUDIT.md.
+- Prochaine étape : phase 13 — isoler la base des tests navigateur, compléter les contrôles sécurité et performance.
 
 ## État vérifié aujourd'hui
 - Dépôt accessible; branche demandée déjà active.
@@ -26,7 +27,7 @@ HEAD de départ : 80668fa — chore: snapshot Genesis Reborn before completion w
 Comptes et profil; univers Omega/Turbo; carte et découvertes; colonies, ressources, bâtiments, recherches et trois files; reprise chronologique des échéances; missions exploration, espionnage, colonisation, transport, attaque, conquête JcE, défense temporisée, orbite et butin; rapports de combat privés; carburant et estimation serveur; guildes/alliances/relations; notifications; UI refondue avec multi-colonies. Les états et limites détaillés figurent dans docs/LIVRAISON-DOMAINES-UI.md.
 
 ## Reste majeur
-Effets de bâtiments/technologies liés au combat; classement/statistiques; interface admin; audit sécurité/accessibilité/performance et CI; sauvegarde/restauration vérifiées; validation de l’équilibrage.
+Isolation de la base Playwright; audit RGAA/WCAG exhaustif et performance; CI; sauvegarde/restauration vérifiées; validation de l’équilibrage.
 
 ## État des changements
 Ne pas faire de reset, checkout global, clean ou restauration des fichiers listés. Inspecter les diffs avant toute modification de ces chemins. Garder les nouveaux changements sur la branche dédiée et faire des commits cohérents après vérification.

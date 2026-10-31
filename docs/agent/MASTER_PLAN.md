@@ -17,8 +17,8 @@ Compléter le jeu existant en conservant les décisions de docs/REGLES.md, docs/
 | 09 | Combat | Résolution reproductible, pertes, butin, rapports et notifications testés | Terminée techniquement — déterminisme, pertes, butin, rapports privés, notifications idempotentes et conquête JcE vérifiés; équilibrage provisoire conservé pour l’audit final (PHASE_09_COMBAT_AUDIT.md) |
 | 10 | Social et stratégie | Diplomatie et communications, protections anti-abus | Terminée techniquement — classement, messages privés et canal de guilde livrés et testés; détails dans PHASE_10_SOCIAL_STRATEGY_AUDIT.md |
 | 11 | Administration | Paramètres et modération sécurisés, journaux d'audit | Terminée techniquement — suspension, signalements respectueux de la vie privée, paramètres par univers et audit testés; voir PHASE_11_ADMIN_AUDIT.md |
-| 12 | UI/UX | Parcours complets, responsive et audit accessibilité satisfaisant | Active — audit RGAA/WCAG complet à faire |
-| 13 | Tests/sécurité/performance | Tests critiques, concurrence et sécurité contrôlés | Partielle — suite PHP passante; couverture et charge restantes |
+| 12 | UI/UX | Parcours complets, responsive et audit accessibilité satisfaisant | Terminée techniquement — revue clavier/mobile et corrections ciblées; exécution Playwright complète et audit RGAA exhaustif à reprendre en phase 13; détails dans PHASE_12_UI_ACCESSIBILITY_AUDIT.md |
+| 13 | Tests/sécurité/performance | Tests critiques, concurrence et sécurité contrôlés | Active — isoler les données Playwright; couverture et charge à compléter |
 | 14 | Exploitation/documentation | CI, sauvegarde/restauration et procédures vérifiées | Partielle — documentation présente; CI et restauration à valider |
 | 15 | Audit final | Critères production prouvés ou limites bloquantes listées | À faire — application non déclarée prête |
 

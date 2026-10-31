@@ -1,3 +1,8 @@
+## 2026-10-31 — clôture phase 12
+- Revue UI clavier/mobile et corrections : piège de focus complet, focus des textareas, alertes de formulaires, régions défilantes, aria-sort, libellés de rapports et signalement des messages.
+- Contrôles PHP : 78 tests / 406 assertions; lint, schéma, Compose et compilation assets valides. Playwright : 3/6 scénarios passés; univers Turbo sans planète libre dans la base de développement partagée. Reprise sur base isolée prévue en phase 13. Audit : PHASE_12_UI_ACCESSIBILITY_AUDIT.md.
+- Phase 13 active (12/15).
+
 ## 2026-10-31 — clôture phase 11
 - Console ROLE_ADMIN avec suspension/réactivation, révocation de sessions actives, signalements de messages privés/de guilde, paramètres effectifs par univers et journal d’audit. La première attribution admin passe par app:admin:grant.
 - La consultation du contenu privé est réservée aux signalements et enregistrée. Tests permissions, confidentialité, réglages et migrations vierges réussis. Audit : PHASE_11_ADMIN_AUDIT.md.

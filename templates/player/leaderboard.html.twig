@@ -5,10 +5,10 @@
     <div><p class="eyebrow">{{ membership.universe.name }}</p><h1>Classement</h1><p>Les points suivent les ressources engagées dans les entités encore possédées. Les points de flotte incluent les vaisseaux mobiles et les défenses fixes; une perte retire les points correspondants.</p></div>
 </div>
 <div class="section-heading"><h2>Commandants</h2></div>
-<div class="panel table-scroll">
+<div class="panel table-scroll" role="region" tabindex="0" aria-label="Classement défilant horizontalement">
 <table class="data-table">
     <caption>Classement de l’univers {{ membership.universe.name }}</caption>
-    <thead><tr><th scope="col">Rang</th><th scope="col">Commandant</th><th scope="col"><a href="{{ path('app_leaderboard',{by:'points'}) }}">Points</a></th><th scope="col"><a href="{{ path('app_leaderboard',{by:'fleet'}) }}">Flotte et défenses</a></th><th scope="col"><a href="{{ path('app_leaderboard',{by:'planets'}) }}">Planètes</a></th></tr></thead>
+    <thead><tr><th scope="col">Rang</th><th scope="col">Commandant</th><th scope="col" aria-sort="{{ sort=='points'?'descending':'none' }}"><a href="{{ path('app_leaderboard',{by:'points'}) }}">Points</a></th><th scope="col" aria-sort="{{ sort=='fleet'?'descending':'none' }}"><a href="{{ path('app_leaderboard',{by:'fleet'}) }}">Flotte et défenses</a></th><th scope="col" aria-sort="{{ sort=='planets'?'descending':'none' }}"><a href="{{ path('app_leaderboard',{by:'planets'}) }}">Planètes</a></th></tr></thead>
     <tbody>
     {% for row in rows %}
         <tr{% if row.membership.id==membership.id %} aria-current="true"{% endif %}>

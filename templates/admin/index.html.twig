@@ -4,12 +4,12 @@
 <div class="page-heading"><div><p class="eyebrow">CONSOLE SÉCURISÉE</p><h1>Administration</h1><p>Actions restreintes aux administrateurs et enregistrées dans le journal.</p></div></div>
 {% for message in app.flashes('error') %}<p class="alert">{{ message }}</p>{% endfor %}
 <section class="panel">
-<h2>Signalements de messages privés</h2>
+<h2>Signalements de messages</h2>
 <p>Seuls les messages ayant été signalés par un participant apparaissent ici.</p>
 {% for report in reports %}
 <article class="panel">
 <p><strong>Signalement #{{ report.id }}</strong> · {{ report.createdAt|date('d/m/Y H:i') }} · {{ report.reporter.player.username }}</p>
-<p>Message de {{ report.message.sender.player.username }} à {{ report.message.recipient.player.username }} · {{ report.message.createdAt|date('d/m/Y H:i') }}</p>
+<p>{% if report.message.recipient %}Message privé de {{ report.message.sender.player.username }} à {{ report.message.recipient.player.username }}{% else %}Message de la guilde {{ report.message.guild.name }} par {{ report.message.sender.player.username }}{% endif %} · {{ report.message.createdAt|date('d/m/Y H:i') }}</p>
 <blockquote>{{ report.message.content }}</blockquote><p>Motif : {{ report.reason }}</p>
 <form method="post" action="{{ path('app_admin_report_review',{id:report.id}) }}">
 <input type="hidden" name="_token" value="{{ csrf_token('admin_report_'~report.id) }}">
@@ -21,7 +21,7 @@
 </section>
 <section class="panel">
 <h2>Comptes joueurs</h2>
-<div class="table-wrap"><table><thead><tr><th>Joueur</th><th>Courriel</th><th>État</th><th>Action</th></tr></thead><tbody>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Tableau défilant horizontalement"><table><caption>Comptes joueurs</caption><thead><tr><th scope="col">Joueur</th><th scope="col">Courriel</th><th scope="col">État</th><th scope="col">Action</th></tr></thead><tbody>
 {% for player in players %}<tr><td>{{ player.username }}</td><td>{{ player.email }}</td><td>{{ player.lockedAt ? 'Suspendu' : 'Actif' }}</td><td>
 {% if 'ROLE_ADMIN' not in player.roles %}<form method="post" action="{{ path('app_admin_player_suspend',{id:player.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('admin_suspend_'~player.id) }}"><input type="hidden" name="suspend" value="{{ player.lockedAt ? '0' : '1' }}"><button>{{ player.lockedAt ? 'Réactiver' : 'Suspendre' }}</button></form>{% else %}Administrateur{% endif %}
 </td></tr>{% endfor %}
@@ -46,7 +46,7 @@
 <button class="primary">Enregistrer les règles</button></form></article>{% endfor %}
 </section>
 <section class="panel">
-<h2>Journal d’audit</h2><div class="table-wrap"><table><thead><tr><th>Date</th><th>Administrateur</th><th>Action</th><th>Cible</th><th>Détails</th></tr></thead><tbody>
+<h2>Journal d’audit</h2><div class="table-wrap" role="region" tabindex="0" aria-label="Tableau défilant horizontalement"><table><caption>Journal des actions administratives</caption><thead><tr><th scope="col">Date</th><th scope="col">Administrateur</th><th scope="col">Action</th><th scope="col">Cible</th><th scope="col">Détails</th></tr></thead><tbody>
 {% for entry in auditLogs %}<tr><td>{{ entry.createdAt|date('d/m/Y H:i:s') }}</td><td>{{ entry.actor ? entry.actor.username : 'Compte supprimé' }}</td><td>{{ entry.action }}</td><td>{{ entry.targetType }} #{{ entry.targetId }}</td><td>{{ entry.details|json_encode }}</td></tr>{% else %}<tr><td colspan="5">Aucune action consignée.</td></tr>{% endfor %}
 </tbody></table></div></section>
 {% endblock %}

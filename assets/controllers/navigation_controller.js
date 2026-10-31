@@ -11,7 +11,7 @@ export default class extends Controller {
             if (!this.element.classList.contains('nav-open')) return;
             if (event.key === 'Escape') this.close();
             if (event.key === 'Tab') {
-                const items = [...this.sidebarTarget.querySelectorAll('a,button')].filter(item => item.offsetParent !== null);
+                const items = [...this.sidebarTarget.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]):not([type=hidden]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')].filter(item => item.offsetParent !== null && !item.closest('[inert]'));
                 const first = items[0], last = items.at(-1);
                 if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
                 else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }

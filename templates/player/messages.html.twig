@@ -20,7 +20,7 @@
                         <strong>{{ message.sender.player.username }}</strong>
                         <time datetime="{{ message.createdAt|date('c') }}">{{ message.createdAt|date('d/m/Y H:i') }}</time>
                         <p>{{ message.content }}</p>
-                        {% if message.moderatedAt is null and (message.sender.id != membership.id or message.recipient.id != membership.id) %}<form method="post"><input type="hidden" name="_token" value="{{ csrf_token('private_message_report') }}"><input type="hidden" name="action" value="report"><input type="hidden" name="message_id" value="{{ message.id }}"><input type="hidden" name="with" value="{{ peer.id }}"><label for="reason-{{ message.id }}">Signaler ce message</label><input id="reason-{{ message.id }}" name="reason" maxlength="500" required><button>Signaler</button></form>{% endif %}
+                        {% if message.moderatedAt is null and (message.sender.id != membership.id) %}<form method="post"><input type="hidden" name="_token" value="{{ csrf_token('private_message_report') }}"><input type="hidden" name="action" value="report"><input type="hidden" name="message_id" value="{{ message.id }}"><input type="hidden" name="with" value="{{ peer.id }}"><label for="reason-{{ message.id }}">Signaler ce message</label><input id="reason-{{ message.id }}" name="reason" maxlength="500" required><button>Signaler</button></form>{% endif %}
                     </article>
                 {% else %}<p>Aucun message dans cette conversation.</p>{% endfor %}
             </div>
@@ -43,7 +43,7 @@
                     <article class="panel">
                         <strong>{{ message.sender.player.username }}</strong>
                         <time datetime="{{ message.createdAt|date('c') }}">{{ message.createdAt|date('d/m/Y H:i') }}</time>
-                        <p>{{ message.content }}</p>{% if message.moderatedAt is null %}<form method="post"><input type="hidden" name="_token" value="{{ csrf_token('private_message_report') }}"><input type="hidden" name="action" value="report"><input type="hidden" name="message_id" value="{{ message.id }}"><label for="guild-reason-{{ message.id }}">Signaler ce message</label><input id="guild-reason-{{ message.id }}" name="reason" maxlength="500" required><button>Signaler</button></form>{% endif %}
+                        <p>{{ message.content }}</p>{% if message.moderatedAt is null and message.sender.id != membership.id %}<form method="post"><input type="hidden" name="_token" value="{{ csrf_token('private_message_report') }}"><input type="hidden" name="action" value="report"><input type="hidden" name="message_id" value="{{ message.id }}"><label for="guild-reason-{{ message.id }}">Signaler ce message</label><input id="guild-reason-{{ message.id }}" name="reason" maxlength="500" required><button>Signaler</button></form>{% endif %}
                     </article>
                 {% else %}<p>Aucun message pour l’instant.</p>{% endfor %}
             </div>
