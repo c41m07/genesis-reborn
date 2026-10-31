@@ -1,3 +1,7 @@
+## 2026-10-31 — clôture phase 08
+- Audit des distances, carburant, départs, retours et missions consigné dans PHASE_08_FLEET_MISSIONS_AUDIT.md. Les missions sont déjà couvertes par les tests d’intégration existants.
+- Validation globale : 72 tests / 363 assertions; phase 09 active (8/15).
+
 ## 2026-10-31 — clôture phase 07
 - Application des effets de technologie déclarés aux flottes joueurs et aux vaisseaux PNJ à la résolution; instantané enrichi des niveaux de recherche. Les défenses statiques restent inchangées.
 - Validation : 72 tests / 363 assertions; lint et configuration Compose valides. Avancement : 7/15, phase 08 active.

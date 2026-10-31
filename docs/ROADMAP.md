@@ -11,4 +11,4 @@ Référence : PDF 0 p.3–9, précisions des PDF 1–7, adaptations dans DECISIO
 | 5. Diplomatie et combat | Combat persisté, camps, renforts, graine, butin, rapports et notifications intégrés | Équilibrage final et tests de charge |
 | 6. Variantes et finitions | Conquête JcE PNJ ajoutée à l’UI et à Omega/Turbo; fermeture asynchrone livrée | Classements, statistiques, audit accessibilité et charge |
 
-Phase active : phase 08 — audit des flottes et missions déjà intégrées. Maintenir les valeurs provisoires identifiées et ne pas déclarer le jeu prêt avant l’audit final.
+Phase active : phase 09 — audit du combat et des rapports déjà intégrés. Maintenir les valeurs provisoires identifiées et ne pas déclarer le jeu prêt avant l’audit final.

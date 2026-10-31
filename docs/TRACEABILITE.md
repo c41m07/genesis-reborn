@@ -27,7 +27,7 @@
 
 ## Prochaine étape du jeu complet
 
-1. Phase 08 : audit des parcours de flottes et missions déjà livrés.
+1. Phase 09 : audit du combat, des pertes, rapports et notifications déjà livrés.
 2. Classements/statistiques et administration; la fermeture asynchrone des univers est livrée en phase 05.
 3. CI, tests de charge, audit accessibilité complet, sauvegarde/restauration et validation des valeurs provisoires.
 

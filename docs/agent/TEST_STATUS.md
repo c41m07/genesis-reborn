@@ -29,6 +29,11 @@ Résultats post-espionnage : `make test` réussi — 67 tests / 335 assertions; 
 - make lint et make validate réussis après les changements : PHP, 62 YAML, 17 Twig, conteneur Symfony, schéma Doctrine et configuration Compose.
 
 
+## Mise à jour — phase 08, 31/10/2026
+
+- Audit des trajets et missions terminé à partir des tests existants; aucune modification métier requise. La suite globale est à 72 tests / 363 assertions.
+- Limites explicites : règles intergalactiques non définies; coefficients carburant, réservoirs et durées de trajet provisoires; parcours navigateur espionnage à relancer.
+
 ## Mise à jour — phase 07, 31/10/2026
 
 - make test réussi : 72 tests / 363 assertions. CombatEventTest vérifie les bonus Tir de précision à deux niveaux différents pour les flottes du défenseur et de l’attaquant; la tourelle conserve sa précision de base.
