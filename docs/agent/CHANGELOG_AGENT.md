@@ -1,3 +1,7 @@
+## 2026-10-31 — clôture phase 07
+- Application des effets de technologie déclarés aux flottes joueurs et aux vaisseaux PNJ à la résolution; instantané enrichi des niveaux de recherche. Les défenses statiques restent inchangées.
+- Validation : 72 tests / 363 assertions; lint et configuration Compose valides. Avancement : 7/15, phase 08 active.
+
 ## 2026-10-31 — clôture phase 06
 - Audit des calculs de production, chronologie, capacités, dépenses et remboursements consigné dans PHASE_06_ECONOMY_AUDIT.md. Les équilibres non spécifiés restent provisoires.
 - La suite actuelle reste à 71 tests / 355 assertions; phase 07 active (6/15).

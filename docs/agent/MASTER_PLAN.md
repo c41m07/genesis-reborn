@@ -12,7 +12,7 @@ Compléter le jeu existant en conservant les décisions de docs/REGLES.md, docs/
 | 04 | Comptes et sécurité | Parcours et contrôles d'accès validés, sécurité des comptes et sessions | Terminée — inscription, accès, CSRF, limitation des tentatives, profil sensible et session vérifiés; détails dans PHASE_04_SECURITY_AUDIT.md |
 | 05 | Univers et planètes | Carte, colonies, exploration/colonisation et accès par univers cohérents | Terminée — accès daté, fermeture asynchrone par outbox avec le transport Messenger de test et conservation des planètes; détails dans PHASE_05_UNIVERSE_AUDIT.md |
 | 06 | Économie | Calculs serveur, reprise chronologique, stockage et dépenses cohérents | Terminée — production paresseuse, rattrapage chronologique, plafonds, dépense concurrente et remboursement vérifiés; coefficients d’équilibrage restent provisoires (PHASE_06_ECONOMY_AUDIT.md) |
-| 07 | Bâtiments et technologies | Prérequis, effets, files et annulations fonctionnels et vérifiés | Partielle — fonctionnalités principales; effets de combat liés restants |
+| 07 | Bâtiments et technologies | Prérequis, effets, files et annulations fonctionnels et vérifiés | Terminée — effets de technologies all_ships appliqués aux flottes joueurs et aux vaisseaux PNJ; défenses statiques inchangées; rapports figés avec les niveaux utilisés |
 | 08 | Flottes et missions | Trajets, carburant, départ/arrivée/retour et missions vérifiés | Partielle — exploration, espionnage, colonisation, transport, attaque, défense temporisée et orbite intégrés; audit fonctionnel restant |
 | 09 | Combat | Résolution reproductible, pertes, butin, rapports et notifications testés | Partielle — événements persistés, résolution, pertes, journal, rapports, flottes défenseuses, orbite et butin intégrés; conquête JcE avec flotte PNJ, défenses fixes, pertes persistantes et rapports intégrés; compositions provisoires |
 | 10 | Social et stratégie | Diplomatie et communications, protections anti-abus | Partielle — guildes/alliances réalisées; classements et communications restant |
@@ -23,9 +23,8 @@ Compléter le jeu existant en conservant les décisions de docs/REGLES.md, docs/
 | 15 | Audit final | Critères production prouvés ou limites bloquantes listées | À faire — application non déclarée prête |
 
 ## Ordre de travail
-1. Phase 06 : vérifier l’économie, la chronologie des opérations et les limites de stockage; garder les valeurs non spécifiées provisoires.
-2. Phase 07 : compléter les effets de bâtiments et technologies liés au combat.
-3. Phases 08/09 : poursuivre l’audit des missions et du combat autour des parcours déjà livrés.
-4. Traiter classements/statistiques et administration; la fermeture asynchrone des univers est livrée en phase 05.
-5. Compléter CI, accessibilité, sécurité, charge et sauvegarde/restauration avant l’audit de production.
+1. Phase 08 : auditer les parcours des flottes et missions déjà livrés.
+2. Phase 09 : compléter l’audit des missions et du combat autour des parcours déjà livrés.
+3. Traiter classements/statistiques et administration; la fermeture asynchrone des univers est livrée en phase 05.
+4. Compléter CI, accessibilité, sécurité, charge et sauvegarde/restauration avant l’audit de production.
 Ne pas créer d'écrans factices ni présenter des données provisoires comme définitives.

@@ -5,11 +5,12 @@ Branche : feat/genesis-reborn-production-completion
 HEAD de départ : 80668fa — chore: snapshot Genesis Reborn before completion work; un commit de suivi documentaire a été créé depuis, vérifier git log
 
 ## Position actuelle
-- Phase active : 07/15 — phases 01 à 06 clôturées. Avancement global : 6/15 phases clôturées. La phase 06 clôt les invariants économiques; coefficients et stocks de départ restent provisoires. Validation actuelle : 71 tests / 355 assertions, lint PHP/YAML/Twig/conteneur/schéma et configuration Compose réussis. Détails : audits de phases 01, 03, 04, 05 et 06.
+- Phase active : 08/15 — phases 01 à 07 clôturées. Avancement global : 7/15 phases clôturées. Les coefficients et stocks de départ restent provisoires. Validation actuelle : 72 tests / 363 assertions; lint PHP, 62 YAML, 17 Twig, conteneur, schéma et Compose réussis. Détails : audits des phases 01 et 03 à 07.
 - Phase 01 : TERMINÉE. Inventaire Git, état du dépôt, architecture, documentation et contrôles initiaux actualisés dans docs/agent/PHASE_01_AUDIT.md; les documents de traçabilité qui décrivaient encore l’espionnage et la conquête comme à faire ont été synchronisés.
 - Phase 02 : TERMINÉE. Simulation déterministe, événements persistés, journal, attaque, défense temporisée, rapports privés, orbite, butin, conquête JcE et espionnage implémentés. Règles confirmées; les compositions PNJ et les coefficients d’espionnage restent explicitement provisoires et configurables. Validation à la clôture : 67 tests / 335 assertions, lint, configuration, schéma et installation vierge avec 11 migrations. Décisions : docs/agent/PHASE_02_COMBAT_CRITERIA.md et PHASE_02_DECISIONS.md.
 - Phase 09 : première version de résolution persistante livrée; couverture fonctionnelle incomplète, voir la liste ci-dessus.
-- Prochaine étape : phase 07 — bâtiments et technologies.
+- Phase 07 : TERMINÉE. Les bonus technologiques stat_bonus/all_ships sont appliqués à la résolution aux flottes joueurs et aux vaisseaux PNJ selon leurs niveaux; les défenses statiques sont inchangées. Le rapport conserve les niveaux et statistiques effectifs.
+- Prochaine étape : phase 08 — audit des flottes et missions.
 
 ## État vérifié aujourd'hui
 - Dépôt accessible; branche demandée déjà active.

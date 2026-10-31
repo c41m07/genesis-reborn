@@ -11,6 +11,8 @@ use App\Entity\PlanetDefense;
 use App\Entity\PlanetBuilding;
 use App\Entity\PlanetNpcShip;
 use App\Entity\PlanetResource;
+use App\Entity\PlayerTechnology;
+use App\Manager\GameManager;
 use App\Entity\Player;
 use App\Entity\Universe;
 use App\Service\Combat\CombatEventService;
@@ -219,6 +221,65 @@ final class CombatEventTest extends KernelTestCase
         self::assertSame(0.0, $externalOrbit->orbitFuel);
         self::assertSame('idle', $garrison->status);
     }
+    public function testCombatSnapshotsApplyEachMembershipTechnologyWithoutChangingPlanetDefenses(): void
+    {
+        $clock = $this->clock();
+        $defender = $this->player('TechDefender');
+        $target = $this->join($defender);
+        $attacker = $this->player('TechAttacker');
+        $origin = $this->join($attacker);
+
+        foreach ([[$defender->currentPlayerUniverse, 1], [$attacker->currentPlayerUniverse, 2]] as [$membership, $level]) {
+            $technology = new PlayerTechnology();
+            $technology->playerUniverse = $membership;
+            $technology->slug = 'precision_fire';
+            $technology->level = $level;
+            $this->em->persist($technology);
+        }
+
+        $garrison = new Fleet();
+        $garrison->playerUniverse = $defender->currentPlayerUniverse;
+        $garrison->homePlanet = $target;
+        $garrison->status = 'idle';
+        $garrison->mission = 'idle';
+        $this->em->persist($garrison);
+        $garrisonShip = new FleetShip();
+        $garrisonShip->fleet = $garrison;
+        $garrisonShip->slug = 'fighter';
+        $garrisonShip->quantity = 1;
+        $this->em->persist($garrisonShip);
+
+        $turret = new PlanetDefense();
+        $turret->planet = $target;
+        $turret->slug = 'ground_turret';
+        $turret->quantity = 1;
+        $this->em->persist($turret);
+        $this->em->flush();
+
+        $fleet = $this->attackFleet($attacker, $origin, $target, 'tech-combat');
+        $combat = self::getContainer()->get(CombatEventService::class);
+        $manager = self::getContainer()->get(GameManager::class);
+        self::assertTrue($manager->transaction(fn (): bool => $combat->joinAttack($fleet)));
+        $event = $this->em->getRepository(CombatEvent::class)->findOneBy(['planet' => $target, 'status' => 'pending']);
+        self::assertNotNull($event);
+        $event->seed = 77;
+        $clock->sleep(600);
+        $combat->resolve($event->id, $event->dispatchToken);
+
+        $log = $this->em->getRepository(CombatLog::class)->findOneBy(['combatEvent' => $event]);
+        self::assertNotNull($log);
+        $snapshots = [];
+        foreach ($log->snapshot['participants'] as $participant) {
+            $snapshots[$participant['fleet_id']] = $participant;
+        }
+        self::assertSame(80.0, $snapshots[$fleet->id]['units'][0]['precision']);
+        self::assertSame(['precision_fire' => 2], $snapshots[$fleet->id]['technology_levels']);
+        $defenderSnapshot = array_values(array_filter($snapshots, static fn (array $participant): bool => $participant['player_universe_id'] === $defender->currentPlayerUniverse->id))[0];
+        self::assertSame(75.0, $defenderSnapshot['units'][0]['precision']);
+        self::assertSame(['precision_fire' => 1], $defenderSnapshot['technology_levels']);
+        self::assertSame(65, $log->snapshot['defenses'][0]['precision']);
+    }
+
     public function testDefenseWithoutCombatReturnsAfterItsStationingWindow(): void
     {
         $clock = $this->clock();

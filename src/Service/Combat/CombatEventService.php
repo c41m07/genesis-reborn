@@ -13,6 +13,7 @@ use App\Entity\OutboxMessage;
 use App\Entity\Planet;
 use App\Entity\PlanetDefense;
 use App\Entity\PlanetNpcShip;
+use App\Entity\PlayerTechnology;
 use App\Service\Universe\PlanetNpcSeeder;
 use App\Entity\PlayerDiscovery;
 use App\Entity\PlayerUniverse;
@@ -33,6 +34,7 @@ final class CombatEventService
         private GameCatalog $catalog,
         private ResourceService $resources,
         private CombatSimulator $simulator,
+        private TechnologyEffectCalculator $technologyEffects,
         private RelationResolver $relations,
         private NotificationService $notifications,
         private ClockInterface $clock,
@@ -293,8 +295,11 @@ final class CombatEventService
             $campByMembership = $this->attackerCamps($attackerParticipants);
             $snapshot = [];
             $combatParticipants = [];
+            $technologyLevels = [];
             foreach ($participants as $participant) {
                 $fleet = $participant->fleet;
+                $membershipId = $participant->playerUniverse->id;
+                $technologyLevels[$membershipId] ??= $this->repo->levels(PlayerTechnology::class, ['playerUniverse' => $participant->playerUniverse]);
                 $units = [];
                 foreach ($this->repo->all(FleetShip::class, ['fleet' => $fleet], ['id' => 'ASC']) as $fleetShip) {
                     if ($fleetShip->quantity < 1) {
@@ -302,6 +307,7 @@ final class CombatEventService
                     }
                     $units[] = $this->catalog->get('ships', $fleetShip->slug) + ['quantity' => $fleetShip->quantity];
                 }
+                $units = $this->technologyEffects->applyToShips($units, $technologyLevels[$membershipId]);
                 $id = (string) $fleet->id;
                 $role = $participant->role;
                 $camp = $role === 'attacker' ? ($campByMembership[$participant->playerUniverse->id] ?? 'attacker-' . $participant->playerUniverse->id) : 'defenders';
@@ -321,6 +327,7 @@ final class CombatEventService
                     'arrival_at' => $participant->arrivalAt->format(DATE_ATOM),
                     'arrival_round' => $participant->arrivalRound,
                     'units' => $units,
+                    'technology_levels' => $technologyLevels[$membershipId],
                 ];
             }
 
@@ -330,9 +337,11 @@ final class CombatEventService
                 if ($npcShip->quantity > 0) $npcUnits[] = $this->catalog->get('ships', $npcShip->slug) + ['quantity' => $npcShip->quantity];
             }
             if ($npcUnits !== []) {
+                $npcResearch = $this->catalog->all('planet_conquest')['levels'][$event->planet->conquestLevel]['research'] ?? [];
+                $npcUnits = $this->technologyEffects->applyToShips($npcUnits, $npcResearch);
                 $npcId = 'npc:' . $event->planet->id;
                 $combatParticipants[] = ['id' => $npcId, 'role' => 'defender', 'camp' => 'defenders', 'arrival_round' => 1, 'units' => $npcUnits];
-                $snapshot[] = ['participant_id' => null, 'fleet_id' => null, 'player_universe_id' => null, 'role' => 'defender', 'camp' => 'defenders', 'arrival_at' => $event->startedAt->format(DATE_ATOM), 'arrival_round' => 1, 'units' => $npcUnits, 'pve_npc' => true, 'planet_id' => $event->planet->id];
+                $snapshot[] = ['participant_id' => null, 'fleet_id' => null, 'player_universe_id' => null, 'role' => 'defender', 'camp' => 'defenders', 'arrival_at' => $event->startedAt->format(DATE_ATOM), 'arrival_round' => 1, 'units' => $npcUnits, 'technology_levels' => $npcResearch, 'pve_npc' => true, 'planet_id' => $event->planet->id];
             }
 
             $defenseSnapshots = [];
