@@ -1,5 +1,11 @@
 # Genesis Reborn — journal de l'agent
 
+## 2026-10-31 — audit phase 01 actualisé
+
+- Revue de l’état Git, de l’architecture, des spécifications/règles et des docs actuelles; synchronisation de la traçabilité après livraison espionnage/conquête.
+- Confirmation des contrôles post-phase 02 : 67 tests / 335 assertions, lint, validate et installation vierge avec 11 migrations.
+- Phase 01 clôturée; phase 03 est la prochaine étape du plan.
+
 ## 2026-10-31 — espionnage (implémentation initiale)
 
 - Ajout d’une mission sondes uniquement sur toute planète connue non possédée par l’émetteur; les sondes sont consommées à l’arrivée.

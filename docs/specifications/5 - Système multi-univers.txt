@@ -49,7 +49,7 @@ spécifiques. Les variantes possibles incluent :
    •     Multiplicateurs de temps différents par action (recherche x10, construction vaisseaux x2,
          production ressources x1...)
    •     Désactivation des guildes
-   •     Activation de la conquête de planètes (voler la planète d'un autre joueur)
+   •     Activation de la conquête JcE des planètes neutres PNJ (règle précisée par l’addendum utilisateur du 31/10/2026)
    •     Toute autre variante de gameplay définie dans le YAML
 
 
@@ -178,7 +178,7 @@ current_player_universe sur Player indique l'univers dans lequel il joue actuell
 
   features:
       guilds_enabled: false                      # pas de guildes dans cet univers
-      planet_conquest: false                     # impossible de voler une planète
+      planet_conquest: false                     # exemple historique : conquête JcE désactivée dans cet univers
 
 
   multipliers:
@@ -485,7 +485,7 @@ Chaque service qui dépend d'un multiplicateur ou d'une feature injecte Universe
 5.3 Récapitulatif des features
  Clé YAML                          Impacte                              Si false
  guilds_enabled                    GuildService                         Création de guilde bloquée
- planet_conquest                   ColonizationService                  Vol de planète impossible
+ planet_conquest                   ColonizationService                  Conquête JcE PNJ désactivée si le feature flag est false
 
 
     La liste des features est extensible. Ajouter une nouvelle feature ne nécessite qu'une clé dans le
@@ -576,3 +576,5 @@ Chaque service qui dépend d'un multiplicateur ou d'une feature injecte Universe
 
                                                                                 Complément au document v1
 
+
+Addendum utilisateur — 31/10/2026 : dans l’implémentation actuelle, le feature flag planet_conquest active uniquement la conquête JcE des planètes neutres identifiées PNJ. Il ne permet jamais de voler une planète détenue par un joueur. Omega et Turbo activent cette fonctionnalité. Les planètes vierges restent colonisables; la règle de prise et de conservation du développement est décrite dans la spécification 1 et docs/agent/PHASE_02_DECISIONS.md.

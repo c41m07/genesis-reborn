@@ -13,4 +13,4 @@ Aucun blocage n'empêche l'accès au dépôt ou l'exécution des tests PHP. Comp
 Le prompt interdit publication/déploiement réel sans autorisation; aucun Site n'est créé. Une tâche planifiée ne peut pas coder la suite sans session de développement et accès au dépôt; aucune relance automatique après quota n'est revendiquée. La reprise manuelle figure dans RESUME.md.
 
 ## Travail restant
-Les éléments de docs/LIVRAISON-DOMAINES-UI.md sont des tâches, pas des blocages techniques. Priorité : phase 03 (architecture et environnement), puis fermeture d’univers, classement, administration, CI, audit sécurité/accessibilité/performance, sauvegarde et restauration. La revue documentaire complète de la phase 01 reste à reconfirmer.
+Les éléments de docs/LIVRAISON-DOMAINES-UI.md sont des tâches, pas des blocages techniques. Priorité : phase 03 (architecture et environnement), puis fermeture d’univers, classement, administration, CI, audit sécurité/accessibilité/performance, sauvegarde et restauration.

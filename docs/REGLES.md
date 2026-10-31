@@ -31,4 +31,8 @@ Les opérations en retard sont rejouées à leurs dates théoriques avant dépen
 
 Guildes : recrutement ouvert provisoire, adhésion exclusive dans chaque univers, transfert du commandement à un autre membre, départ après transfert, dissolution par le dirigeant. Alliances personnelles et alliances de guildes exigent le consentement réciproque. Une hostilité de guilde invalide les contrats personnels incompatibles.
 
-Périmètre restant : espionnage, conquête, classements et fermeture asynchrone. Attaque, défense, orbite, résolution, butin et rapports sont maintenant livrés en première version. Les recherches de statistiques de combat peuvent progresser mais leur effet en combat attend ce domaine ; elles ne prouvent pas qu’un combat est implémenté.
+Conquête JcE : seules les planètes neutres marquées PNJ sont attaquables; une victoire avec un vaisseau colonie survivant capture la planète. Bâtiments, stocks et développement sont conservés; flotte et défenses PNJ disparaissent. Les planètes vierges restent colonisables et aucune planète détenue par un joueur n’est conquérable.
+
+Espionnage : une mission cible une planète connue du même univers autre que celles de l’émetteur. Elle transporte uniquement des sondes, détruites à l’arrivée. La détection avertit le propriétaire et bloque le rapport; les renseignements et rapports suivent les niveaux et règles résumés dans docs/agent/PHASE_02_DECISIONS.md.
+
+Périmètre restant : fermeture asynchrone, classements, administration, CI et audits finaux. Attaque, défense, orbite, résolution, butin, rapports, conquête JcE et espionnage sont livrés en première version; les équilibres PNJ et espionnage restent provisoires.

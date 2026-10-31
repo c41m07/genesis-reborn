@@ -1,6 +1,6 @@
 # Livraison des domaines existants et refonte UI — 21 octobre 2026
 
-Cette livraison termine et vérifie les domaines demandés dans le dernier périmètre : infrastructure, comptes/profil, univers/carte, économie/constructions/recherches/queues, missions exploration-colonisation-transport et carburant, guildes/alliances. Elle ne constitue pas la réalisation de toutes les phases des huit PDF : combats et univers avancés restent à développer.
+Cette livraison termine et vérifie les domaines demandés dans le dernier périmètre : infrastructure, comptes/profil, univers/carte, économie/constructions/recherches/queues, missions exploration-colonisation-transport et carburant, guildes/alliances. Elle ne décrit pas les ajouts du 31 octobre (combat, missions avancées, conquête PNJ et espionnage). Pour l’état courant, utiliser la matrice TRACEABILITE.md et docs/agent/PROGRESS.md.
 
 ## Accès et démarrage
 

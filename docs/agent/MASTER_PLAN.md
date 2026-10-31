@@ -6,7 +6,7 @@ Compléter le jeu existant en conservant les décisions de docs/REGLES.md, docs/
 ## Phases et critères
 | Phase | Domaine | Critère de sortie | État au 31/10/2026 |
 |---|---|---|---|
-| 01 | Audit | Inventaire, état Git, fonctionnalités, architecture, documentation et contrôles initiaux consignés | Partielle — audit antérieur conservé; état courant revalidé, revue complète à reconfirmer |
+| 01 | Audit | Inventaire, état Git, fonctionnalités, architecture, documentation et contrôles initiaux consignés | Terminée — inventaire Git, architecture, documentation et contrôles initiaux actualisés dans PHASE_01_AUDIT.md |
 | 02 | Spécifications | Règles, ambiguïtés, critères d'acceptation et valeurs provisoires distingués | Terminée — règles et critères d’acceptation documentés; conquête JcE et espionnage intégrés et validés; coefficients et compositions PNJ identifiés comme provisoires |
 | 03 | Architecture et environnement | Installation/reprise reproductibles, architecture cohérente, migrations vérifiées | Partielle — stack en place; installation vierge et migrations vérifiées |
 | 04 | Comptes et sécurité | Parcours et contrôles d'accès validés, sécurité des comptes et sessions | Partielle — inscription, profil et accès de base réalisés; audit complet restant |
@@ -23,9 +23,9 @@ Compléter le jeu existant en conservant les décisions de docs/REGLES.md, docs/
 | 15 | Audit final | Critères production prouvés ou limites bloquantes listées | À faire — application non déclarée prête |
 
 ## Ordre de travail
-1. Consolider les règles des phases 08/09 à partir des spécifications 1, 2 et 3.
-2. Vérifier les états et invariants de flotte actuels; consolider les tests du combat livré.
-3. Renforcer les rapports de combat à partir des retours; leur accès et la confidentialité de l’identité sont en place.
-4. Poursuivre par la phase 03 (architecture et environnement); garder les valeurs PNJ/espionnage explicitement provisoires.
-5. Traiter variantes d’univers, classements, administration, accessibilité, CI, sauvegarde et audit final.
+1. Phase 03 : vérifier l’architecture et la reproductibilité des installations/migrations à partir de l’audit de phase 01.
+2. Implémenter et vérifier la fermeture asynchrone des univers temporaires.
+3. Poursuivre par les classements/statistiques et les outils d’administration.
+4. Compléter CI, accessibilité, sécurité, charge et sauvegarde/restauration.
+5. Terminer par l’audit de production; garder les valeurs PNJ/espionnage explicitement provisoires jusque-là.
 Ne pas créer d'écrans factices ni présenter des données provisoires comme définitives.

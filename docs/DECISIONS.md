@@ -63,3 +63,10 @@ Port corrigé explicitement par l’utilisateur à `3309` (et non 309). Connexio
 Sur demande utilisateur : suppression des onglets « Gestion de la colonie » et du bloc inventaire. Le menu est la navigation principale vers chaque catégorie, rendue seule par Symfony. Colonie regroupe Bâtiments/Chantier spatial/Défenses ; Empire regroupe Vue générale/Recherche/Carte/Flottes/Diplomatie ; Commandement regroupe Univers/Profil et la déconnexion reste en bas. Les quantités militaires sont conservées sur leurs cartes de catalogue.
 
 La barre de contexte et le bandeau de ressources sont sticky avec des niveaux d’empilement inférieurs au menu mobile. Décalage testé : 68 px sur ordinateur, 60 px sur mobile. Défilement horizontal conservé à l’actualisation des ressources. Aucun changement de données ou de règles métier.
+
+
+## Mise à jour — 31 octobre 2026
+
+La phase 02 a ajouté le combat persistant, défense et orbite temporisées, butin, conquête JcE des planètes PNJ et espionnage. Les décisions détaillées et les coefficients provisoires figurent dans docs/agent/PHASE_02_DECISIONS.md. La conquête ne permet pas de prendre une planète détenue par un joueur; les bâtiments, stocks et développement de la planète PNJ sont conservés après capture. Les sondes d’espionnage ciblent uniquement des planètes connues non possédées par l’émetteur, sans escorte.
+
+Validation du lot : 67 tests / 335 assertions; lint PHP/YAML/Twig, schéma, Compose et installation vierge avec 11 migrations réussis. Ce résultat n’est pas une validation de l’équilibrage final, de l’accessibilité exhaustive, de la sécurité complète ou de la charge.
