@@ -15,6 +15,7 @@ final class GameCatalog
             }
         }
         $this->data['rules']=Yaml::parseFile($dir.'/rules.yaml');
+        $this->data['combat_modifiers']=Yaml::parseFile($dir.'/combat_modifiers.yaml');
     }
     public function all(string $group): array { return $this->data[$group] ?? []; }
     public function get(string $group,string $slug): array { return $this->data[$group][$slug] ?? throw new \DomainException('Élément de catalogue inconnu.'); }

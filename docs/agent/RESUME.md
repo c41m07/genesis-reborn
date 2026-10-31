@@ -10,6 +10,6 @@
 
 ## État de reprise
 - HEAD de départ : 80668fa; plusieurs commits locaux de suivi sont postérieurs, vérifier git log.
-- Dernière validation après simulateur : 57 tests / 200 assertions; lint réussi le 31/10.
+- Dernière validation : 58 tests / 212 assertions; lint et installation vierge réussis le 31/10. Première tranche de combat persistant ajoutée; lire docs/agent/PHASE_02_DECISIONS.md et TEST_STATUS.md.
 - Un commit de documentation de reprise existe; vérifier git log pour les changements après cette note.
 - Aucun déploiement. Pas de mécanisme capable de réveiller une session de code avec accès au dépôt après quota; reprise manuelle documentée.

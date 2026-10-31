@@ -10,12 +10,12 @@ use Symfony\Component\Uid\Uuid;
 use Psr\Clock\ClockInterface;
 final class FleetService
 {
-    public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues) {}
+    public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues,private \App\Service\Combat\CombatEventService $combats) {}
     private function coords(SolarSystem $s,?int $position): array { return [$s->id,$s->galaxy->id,$s->coordX,$s->coordY,$position]; }
     public function quote(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo=[]): array
     {
         if($origin->owner?->id!==$m->id || $origin->solarSystem->galaxy->universe->id!==$m->universe->id) throw new \DomainException('Planète inaccessible.');
-        if(!in_array($mission,['explore','colonize','transport'],true)) throw new \DomainException('Mission indisponible.');
+        if(!in_array($mission,['explore','colonize','transport','attack'],true)) throw new \DomainException('Mission indisponible.');
         $target=$this->repo->find($mission==='explore'?SolarSystem::class:Planet::class,$targetId);
         if(!$target) throw new \DomainException('Destination inconnue.');
         $system=$target instanceof Planet?$target->solarSystem:$target;
@@ -24,6 +24,7 @@ final class FleetService
         if($mission!=='explore' && !$known) throw new \DomainException('Explorez ce système avant de cibler une planète.');
         if($target instanceof Planet && $target->id===$origin->id) throw new \DomainException('Choisissez une autre planète.');
         if($mission==='transport' && $target->owner?->id!==$m->id) throw new \DomainException('Le transport est limité à vos colonies.');
+        if($mission==='attack' && !$this->combats->canAttack($m,$target instanceof Planet?$target:null)) throw new \DomainException('Cette planète ne peut pas être attaquée.');
         if($mission==='colonize' && $target->owner!==null) throw new \DomainException('La planète est déjà colonisée.');
         $config=$this->catalog->get('universes',$m->universe->slug);
         if($mission==='colonize' && count($this->repo->planets($m->universe,$m)) >= $config['limits']['max_planets']) throw new \DomainException('Limite de colonies atteinte.');
@@ -38,6 +39,7 @@ final class FleetService
             $ships[]=$this->catalog->get('ships',$slug)+['quantity'=>$n];$valid[$slug]=$n;
         }
         if(array_sum($valid)>$config['limits']['max_fleet_size']) throw new \DomainException('Flotte trop grande.');
+        if($mission==='attack' && $target instanceof Planet && $target->owner?->id===$m->id) throw new \DomainException('Vous ne pouvez pas attaquer votre propre colonie.');
         if($mission==='explore' && empty($valid['probe'])) throw new \DomainException('Une sonde exploratrice est nécessaire.');
         if($mission==='colonize' && empty($valid['colony_ship'])) throw new \DomainException('Un vaisseau colonie est nécessaire.');
         $quote=$this->calculator->quote($this->coords($origin->solarSystem,$origin->position),$this->coords($system,$target instanceof Planet?$target->position:null),$ships,$ratio,$config['multipliers']['travel_time'],$this->catalog->rules()['fuel_ratio_policy']);
@@ -99,7 +101,10 @@ final class FleetService
                 $this->notifications->enqueue($m,'Votre flotte est rentrée sur '.$f->homePlanet->name.'.');return;
             }
             $oneWay=$f->reservedFuel/2;$f->cargo['hydrogen']=max(0,($f->cargo['hydrogen']??0)-$oneWay);$f->reservedFuel-=$oneWay;
-            if($f->mission==='explore') {
+            if($f->mission==='attack') {
+                if($this->combats->joinAttack($f)) return;
+                $this->notifications->enqueue($m,'La fenêtre de combat était déjà close. Votre flotte repart.');
+            } elseif($f->mission==='explore') {
                 $d=$this->repo->one(PlayerDiscovery::class,['playerUniverse'=>$m,'solarSystem'=>$f->destinationSystem]);
                 if(!$d) { $d=new PlayerDiscovery();$d->playerUniverse=$m;$d->solarSystem=$f->destinationSystem;$this->manager->save($d); }
                 $this->consumeShip($f,'probe');$this->notifications->enqueue($m,'Système découvert : '.$f->destinationSystem->name.'.');

@@ -4,7 +4,7 @@ use App\Entity\Notification;
 use App\Manager\GameManager;
 use App\Repository\GameRepository;
 use App\Integration\Mercure\PublisherInterface;
-use App\Message\{QueueItemFinished,FleetArrived};
+use App\Message\{QueueItemFinished,FleetArrived,CombatEventDue};
 use Symfony\Component\Messenger\{MessageBusInterface,Stamp\DelayStamp};
 use Psr\Clock\ClockInterface;
 final class OutboxRelay
@@ -20,7 +20,7 @@ final class OutboxRelay
                     $n=$this->repo->find(Notification::class,$o->targetId);
                     if($n) $this->publisher->publish(NotificationService::topic($n->recipient),['message'=>$n->message,'id'=>$n->id],'notification-'.$n->id);
                 } else {
-                    $message=match($o->kind){'queue'=>new QueueItemFinished($o->targetId,$o->token),'fleet'=>new FleetArrived($o->targetId,$o->token),default=>throw new \LogicException('Événement inconnu.')};
+                    $message=match($o->kind){'queue'=>new QueueItemFinished($o->targetId,$o->token),'fleet'=>new FleetArrived($o->targetId,$o->token),'combat'=>new CombatEventDue($o->targetId,$o->token),default=>throw new \LogicException('Événement inconnu.')};
                     $delay=max(0,($o->dueAt->getTimestamp()-$this->clock->now()->getTimestamp())*1000);
                     $this->bus->dispatch($message,[new DelayStamp($delay)]);
                 }

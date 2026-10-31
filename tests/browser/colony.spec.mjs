@@ -36,14 +36,25 @@ test('Chantier, estimation, colonisation, transport et exploration réels', asyn
   for(const name of ['Sonde exploratrice','Vaisseau colonie','Transporteur']) {
     await page.getByRole('link',{name:'Chantier spatial',exact:true}).click();await card(name).getByRole('button',{name:'Construire',exact:true}).click();
   }
-  await page.getByRole('link',{name:'Chantier spatial',exact:true}).click();await expect(card('Transporteur').locator('.badge')).toContainText('1 EN RÉSERVE',{timeout:25000});
+  await page.getByRole('link',{name:'Chantier spatial',exact:true}).click();
+  for(const name of ['Sonde exploratrice','Vaisseau colonie','Transporteur']) await expect(card(name).locator('.badge')).toContainText('1 EN RÉSERVE',{timeout:90000});
   await page.getByRole('link',{name:'Flottes',exact:true}).click();
-  let form=page.locator('.fleet-form form').first();const available=await form.locator('select[name="planet"] option').allTextContents();const targetIndex=available.findIndex(t=>t.includes('libre'));expect(targetIndex).toBeGreaterThanOrEqual(0);
+  let form=page.locator('.fleet-form form').first();
+  await form.locator('[name="mission"]').selectOption('explore');await form.locator('[name="ships[probe]"]').fill('1');
+  const earlySystems=await form.locator('[name="system"] option').evaluateAll(options=>options.map(o=>({value:o.value,text:o.textContent})));
+  const earlyOrigin=await page.locator('.fleet-form').first().evaluate(el=>[Number(el.dataset.systemX),Number(el.dataset.systemY)]);
+  const earlyCandidates=earlySystems.map(s=>{const xy=s.text.match(/\(([-\d.]+), ([-\d.]+)\)/);return {...s,distance:Math.hypot(Number(xy[1])-earlyOrigin[0],Number(xy[2])-earlyOrigin[1])};}).filter(s=>s.distance>0).sort((a,b)=>a.distance-b.distance);
+  const earlyDestination=earlyCandidates[0];await form.locator('[name="system"]').selectOption(earlyDestination.value);await form.locator('[name="ratio"]').selectOption('0.7');
+  await form.getByRole('button',{name:'Estimer le trajet'}).click();await expect(form.locator('.flight-estimate')).toContainText('Carburant aller-retour');
+  await form.getByRole('button',{name:/Envoyer la flotte/}).click();await expect(page.locator('[data-status="traveling"]')).toHaveCount(1);
+  await expect.poll(async()=>await page.locator('[data-status="completed"]').count(),{timeout:160000,intervals:[1000]}).toBe(1);
+  await page.getByRole('link',{name:'Flottes',exact:true}).click();form=page.locator('.fleet-form form').first();
+  const available=await form.locator('select[name="planet"] option').allTextContents();const targetIndex=available.findIndex(t=>t.includes('libre'));expect(targetIndex).toBeGreaterThanOrEqual(0);
   const target=Number(await form.locator('select[name="planet"] option').nth(targetIndex).getAttribute('value'));
   await page.goto('/carte');await page.locator(`a[href="/flottes?mission=colonize&planet=${target}"]`).click();form=page.locator('.fleet-form form').first();await expect(form.locator('[name="mission"]')).toHaveValue('colonize');await expect(form.locator('[name="planet"]')).toHaveValue(String(target));
   await form.locator('[name="mission"]').selectOption('colonize');await form.locator('[name="planet"]').selectOption(String(target));await form.locator('[name="ships[colony_ship]"]').fill('1');
   await form.getByRole('button',{name:'Estimer le trajet'}).click();await expect(form.locator('.flight-estimate')).toContainText('Carburant aller-retour');
-  await form.getByRole('button',{name:/Envoyer la flotte/}).click();await expect(page.locator('[data-status="completed"]')).toHaveCount(1,{timeout:60000});
+  await form.getByRole('button',{name:/Envoyer la flotte/}).click();await expect(page.locator('[data-status="completed"]')).toHaveCount(2,{timeout:60000});
   await page.getByRole('link',{name:'Vue générale',exact:true}).click();await expect(page.getByLabel('Choisir une colonie')).toHaveValue(String(origin));
   await expect(page.locator('#sidebar-colony option')).toHaveCount(2);await page.getByLabel('Choisir une colonie').selectOption(String(target));await expect(page).toHaveURL(new RegExp(`/planetes/${target}$`));
   await page.getByRole('link',{name:'Recherche',exact:true}).click();await expect(page.locator('#panel-technologies')).toBeVisible();
@@ -56,17 +67,8 @@ test('Chantier, estimation, colonisation, transport et exploration réels', asyn
   const bar=page.locator('[data-active-fleet] [role="progressbar"]');const initial=Number(await bar.getAttribute('aria-valuenow'));await expect.poll(async()=>Number(await bar.getAttribute('aria-valuenow'))).toBeGreaterThan(initial);
   await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));await page.screenshot({path:'docs/validation/colonie-multicolonies-vol.png',fullPage:true});
   await page.getByRole('link',{name:'Flottes',exact:true}).click();
-  await expect.poll(async()=>await page.locator('[data-status="completed"]').count(),{timeout:80000,intervals:[1000]}).toBe(2);
-  form=page.locator('.fleet-form form').first();await form.locator('[name="mission"]').selectOption('explore');await form.locator('[name="ships[probe]"]').fill('1');
-  const systems=await form.locator('[name="system"] option').evaluateAll(options=>options.map(o=>({value:o.value,text:o.textContent})));
-  const originCoords=await page.locator('.fleet-form').first().evaluate(el=>[Number(el.dataset.systemX),Number(el.dataset.systemY)]);
-  const candidates=systems.map(s=>{const xy=s.text.match(/\(([-\d.]+), ([-\d.]+)\)/);return {...s,distance:Math.hypot(Number(xy[1])-originCoords[0],Number(xy[2])-originCoords[1])};}).filter(s=>s.distance>0).sort((a,b)=>a.distance-b.distance);
-  // A neighbouring system at 70% fits the dedicated tank: do not bypass the fuel rule.
-  const destination=candidates[0];await form.locator('[name="system"]').selectOption(destination.value);await form.locator('[name="ratio"]').selectOption('0.7');
-  await form.getByRole('button',{name:'Estimer le trajet'}).click();await expect(form.locator('.flight-estimate')).toContainText('Carburant aller-retour');
-  await form.getByRole('button',{name:/Envoyer la flotte/}).click();await expect(page.locator('[data-status="traveling"]')).toHaveCount(1);
-  await expect.poll(async()=>await page.locator('[data-status="completed"]').count(),{timeout:160000,intervals:[1000]}).toBe(3);
-  await page.getByRole('link',{name:'Carte stellaire',exact:true}).click();await expect(page.locator('.system-card').filter({hasText:destination.text.split(' (')[0]}).locator('.badge')).toContainText('EXPLORÉ');
+  await expect.poll(async()=>await page.locator('[data-status="completed"]').count(),{timeout:80000,intervals:[1000]}).toBe(3);
+  const destination=earlyDestination;await page.getByRole('link',{name:'Carte stellaire',exact:true}).click();await expect(page.locator('.system-card').filter({hasText:destination.text.split(' (')[0]}).locator('.badge')).toContainText('EXPLORÉ');
   await page.screenshot({path:'docs/validation/carte.png',fullPage:true});
 });
 test('Alliances réciproques, guilde, transfert et dissolution depuis deux comptes',async({browser})=>{

@@ -4,6 +4,7 @@ use App\Entity\{Fleet,FleetShip,Planet,PlayerDiscovery};
 use App\Repository\GameRepository;
 use App\Service\Universe\UniverseContext;
 use App\Service\Fleet\FleetService;
+use App\Service\Combat\CombatEventService;
 use App\Service\Catalog\GameCatalog;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{Request,Response};
@@ -11,14 +12,15 @@ use Symfony\Component\Routing\Attribute\Route;
 final class FleetController extends AbstractController
 {
     #[Route('/flottes',name:'app_fleets',methods:['GET'])]
-    public function index(Request $request,UniverseContext $context,GameRepository $repo,GameCatalog $catalog,\App\Service\Queue\QueueService $queues): Response
+    public function index(Request $request,UniverseContext $context,GameRepository $repo,GameCatalog $catalog,\App\Service\Queue\QueueService $queues,CombatEventService $combats): Response
     {
         $m=$context->membership();$queues->synchronize($m);$idle=[];
         foreach($repo->all(Fleet::class,['playerUniverse'=>$m,'status'=>'idle']) as $f) { $ships=array_filter($repo->all(FleetShip::class,['fleet'=>$f]),fn($s)=>$s->quantity>0);if($ships) $idle[]=['fleet'=>$f,'ships'=>$ships]; }
+        $systems=$repo->systems($m->universe);$mission=(string)$request->query->get('mission','explore');
         $known=[];foreach($repo->all(PlayerDiscovery::class,['playerUniverse'=>$m]) as $d) $known[$d->solarSystem->id]=true;
         $targets=array_filter($repo->planets($m->universe),fn($p)=>isset($known[$p->solarSystem->id]));
-        $systems=$repo->systems($m->universe);$mission=(string)$request->query->get('mission','explore');
-        if(!in_array($mission,['explore','colonize','transport'],true)) throw $this->createNotFoundException('Mission indisponible.');
+        if($mission==='attack') $targets=array_filter($targets,fn($p)=>$combats->canAttack($m,$p));
+        if(!in_array($mission,['explore','colonize','transport','attack'],true)) throw $this->createNotFoundException('Mission indisponible.');
         $systemId=$request->query->getInt('system');$planetId=$request->query->getInt('planet');
         if($systemId&&!array_filter($systems,fn($s)=>$s->id===$systemId)) throw $this->createNotFoundException('Système inaccessible.');
         if($planetId&&!array_filter($targets,fn($p)=>$p->id===$planetId&&($mission!=='transport'||$p->owner?->id===$m->id)&&($mission!=='colonize'||$p->owner===null))) throw $this->createNotFoundException('Destination inaccessible.');
