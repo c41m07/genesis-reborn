@@ -2,7 +2,7 @@
 
 Jeu de stratégie spatiale en construction à partir des huit PDF dans `docs/technic` (108 pages). Le projet historique a été supprimé le 21 octobre 2026 à la demande de l'utilisateur. Ses volumes restent conservés et ne sont jamais utilisés par cette application.
 
-**État actuel :** 3 phases sur 15 clôturées. Le jeu inclut économie, colonies, bâtiments, technologies, files, navigation, exploration, colonisation, transport, attaque, défense, orbite, rapports, butin, conquête JcE de planètes PNJ, espionnage et diplomatie. La phase active est la phase 04 (comptes et sécurité). Le runtime cible est PHP 8.4 avec Symfony 7.4 LTS. Voir [l’avancement](docs/agent/PROGRESS.md), [la roadmap](docs/ROADMAP.md) et [la traçabilité](docs/TRACEABILITE.md).
+**État actuel :** 4 phases sur 15 clôturées. Le jeu inclut économie, colonies, bâtiments, technologies, files, navigation, exploration, colonisation, transport, attaque, défense, orbite, rapports, butin, conquête JcE de planètes PNJ, espionnage et diplomatie. La phase active est la phase 05 (univers et planètes). Le runtime cible est PHP 8.4 avec Symfony 7.4 LTS. Voir [l’avancement](docs/agent/PROGRESS.md), [la roadmap](docs/ROADMAP.md) et [la traçabilité](docs/TRACEABILITE.md).
 
 URL locale : **http://genesis-reborn.localhost**
 

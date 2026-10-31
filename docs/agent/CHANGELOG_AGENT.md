@@ -1,3 +1,7 @@
+## 2026-10-31 — clôture phase 04
+- Audit des contrôles de compte/session consigné dans PHASE_04_SECURITY_AUDIT.md. Ajout de deux tests CSRF; 69 tests / 339 assertions, lint et Compose valides.
+- Suivi avancé à la phase 05 (4/15).
+
 ## 2026-10-31 — clôture phase 03
 - Vérifications architecture, installation vierge, migrations et reprise consignées dans PHASE_03_AUDIT.md.
 - Après arbitrage utilisateur, cible PHP 8.4/Symfony 7.4 LTS documentée dans la spécification 6, README et DECISIONS.md. Suivi avancé à la phase 04 (3/15).
