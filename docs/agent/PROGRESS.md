@@ -15,7 +15,7 @@ HEAD de départ : 80668fa — chore: snapshot Genesis Reborn before completion w
 - Dépôt accessible; branche demandée déjà active.
 - Dépôt initial : branche de travail déjà active et dossier .idea/ non suivi; les changements faits pendant cette reprise sont limités aux chemins listés dans le statut Git courant. Les captures docs/validation sont produites par les tests navigateur et restent des artefacts locaux.
 - Stack observée : Symfony 7.4, Doctrine ORM 3, PHP 8.4 en conteneur, Twig, Stimulus/Encore, MariaDB, RabbitMQ et Mercure.
-- Contrôles : make validate réussi; make test réussi — 58 tests / 212 assertions; make lint réussi — PHP, 58 YAML, 14 Twig, conteneur et schéma. make verify-install réussi sur installation isolée. Suite navigateur complète réussie : 6/6 parcours, voir docs/agent/TEST_STATUS.md.
+- Contrôles : make validate réussi; make test réussi — 58 tests / 215 assertions; make lint réussi — PHP, 58 YAML, 16 Twig, conteneur et schéma. make verify-install réussi sur installation isolée. Suite navigateur complète réussie : 6/6 parcours, voir docs/agent/TEST_STATUS.md.
 - Aucun déploiement ou publication.
 
 ## Fonctionnalités présentes

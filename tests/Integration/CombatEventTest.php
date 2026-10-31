@@ -146,6 +146,12 @@ final class CombatEventTest extends KernelTestCase
 
         self::assertSame('resolved', $event->status);
         self::assertSame(1, $this->em->getRepository(CombatLog::class)->count(['combatEvent' => $event]));
+        $log = $this->em->getRepository(CombatLog::class)->findOneBy(['combatEvent' => $event]);
+        $spectator = $this->join($this->player('Spectator'));
+        $reports = self::getContainer()->get(\App\Service\Combat\CombatReportReader::class);
+        self::assertCount(1, $reports->list($attackerA->currentPlayerUniverse));
+        self::assertNotNull($reports->findVisible($defender->currentPlayerUniverse, $log->id));
+        self::assertNull($reports->findVisible($spectator->owner, $log->id));
         self::assertContains($fleetA->status, ['returning', 'completed']);
         self::assertContains($fleetB->status, ['returning', 'completed']);
         self::assertSame('idle', $garrison->status);

@@ -1,0 +1,7 @@
+{% extends 'base.html.twig' %}
+{% import 'ui/macros.html.twig' as ui %}
+{% block title %}Rapports de combat · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="page-heading"><div><p class="eyebrow">COMMANDES RÉCENTES</p><h1>Rapports de combat</h1><p>Les rapports sont accessibles aux participants et au propriétaire de la planète défendue.</p></div></div>
+{% if reports %}<div class="mission-list">{% for report in reports %}<article class="panel mission-card"><span class="mission-symbol">{{ ui.icon('fleet') }}</span><div><p class="eyebrow">{{ report.resolvedAt|date('d/m/Y H:i') }}</p><h2><a href="{{ path('app_combat_report',{id:report.id}) }}">{{ report.combatEvent.planet.name }}</a></h2><p>{{ report.combatEvent.planet.coordinates() }} · {{ report.snapshot.participants|length }} flottes impliquées</p></div><div class="mission-state"><span class="badge">{% if report.outcome=='attacker_wins' %}Victoire des attaquants{% elseif report.outcome=='defender_wins' %}Victoire de la défense{% else %}Égalité{% endif %}</span></div></article>{% endfor %}</div>{% else %}<section class="panel empty-state"><h2>Aucun rapport pour le moment</h2><p>Les combats auxquels vous participez apparaîtront ici après leur résolution.</p></section>{% endif %}
+{% endblock %}

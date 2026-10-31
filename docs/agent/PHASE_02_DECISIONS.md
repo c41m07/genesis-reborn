@@ -16,7 +16,7 @@ Date : 31/10/2026. Ces décisions rendent implémentables les points non chiffr�
 
 ## Composant créé
 
-CombatSimulator est un service pur, sans persistance ni effet de bord. Il valide les snapshots, génère un journal déterministe, un outcome, les survivants et les pertes. Son intégration aux événements, aux flottes, aux unités persistées, aux rapports et aux notifications reste à faire; cette classe seule n'achève ni la phase 08 ni la phase 09.
+CombatSimulator reste un service pur. Son intégration aux événements persistés, aux arrivées de flottes, aux pertes, au journal interne et aux notifications est implémentée et couverte par des tests d'intégration. Un rapport joueur avec contrôle d’accès participant/propriétaire est maintenant en place; les renforts/défense en missions dédiées, le butin et la conquête manquent encore; la phase 08/09 reste donc partielle.
 
 ## Équilibrage et limites
 
