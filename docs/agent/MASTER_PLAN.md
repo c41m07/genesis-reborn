@@ -8,7 +8,7 @@ Compléter le jeu existant en conservant les décisions de docs/REGLES.md, docs/
 |---|---|---|---|
 | 01 | Audit | Inventaire, état Git, fonctionnalités, architecture, documentation et contrôles initiaux consignés | Terminée — inventaire Git, architecture, documentation et contrôles initiaux actualisés dans PHASE_01_AUDIT.md |
 | 02 | Spécifications | Règles, ambiguïtés, critères d'acceptation et valeurs provisoires distingués | Terminée — règles et critères d’acceptation documentés; conquête JcE et espionnage intégrés et validés; coefficients et compositions PNJ identifiés comme provisoires |
-| 03 | Architecture et environnement | Installation/reprise reproductibles, architecture cohérente, migrations vérifiées | Partielle — stack en place; installation vierge et migrations vérifiées |
+| 03 | Architecture et environnement | Installation/reprise reproductibles, architecture cohérente, migrations vérifiées | En cours — installation, migrations et architecture vérifiées; arbitrage nécessaire entre la stack documentée Symfony 8.x/PHP 8.5 et la stack du dépôt Symfony 7.4/PHP 8.4 |
 | 04 | Comptes et sécurité | Parcours et contrôles d'accès validés, sécurité des comptes et sessions | Partielle — inscription, profil et accès de base réalisés; audit complet restant |
 | 05 | Univers et planètes | Carte, colonies, exploration/colonisation et accès par univers cohérents | Partielle — base jouable; carte à trois états PNJ/vierge/joueur; fermeture asynchrone à faire |
 | 06 | Économie | Calculs serveur, reprise chronologique, stockage et dépenses cohérents | Partielle — économie corrigée; équilibrage provisoire à valider |

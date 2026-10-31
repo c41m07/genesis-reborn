@@ -2,7 +2,7 @@
 
 Jeu de stratégie spatiale en construction à partir des huit PDF dans `docs/technic` (108 pages). Le projet historique a été supprimé le 21 octobre 2026 à la demande de l'utilisateur. Ses volumes restent conservés et ne sont jamais utilisés par cette application.
 
-**Livraison actuelle :** domaines économiques, missions logistiques et diplomatie finalisés et testés ; interface refondue avec [navigation multi-colonies, files intégrées et suivi des vols](docs/UI-MULTI-COLONIES.md). Voir [le bilan et ses limites](docs/LIVRAISON-DOMAINES-UI.md). Le jeu complet des six phases reste en développement.
+**État actuel :** 2 phases sur 15 clôturées. Le jeu inclut économie, colonies, bâtiments, technologies, files, navigation, exploration, colonisation, transport, attaque, défense, orbite, rapports, butin, conquête JcE de planètes PNJ, espionnage et diplomatie. La phase 03 (architecture et environnement) est en cours; le choix de version Symfony reste à confirmer. Voir [l’avancement](docs/agent/PROGRESS.md), [la roadmap](docs/ROADMAP.md) et [la traçabilité](docs/TRACEABILITE.md).
 
 URL locale : **http://genesis-reborn.localhost**
 
@@ -41,13 +41,9 @@ Base : MariaDB 11.8, serveur Docker `database:3306`, base `genesis_v2`, utilisat
 
 ## État réel
 
-Utilisable : inscription/connexion/déconnexion, sélection de deux univers, attribution d'une première colonie, carte avec systèmes inconnus masqués, cinq ressources calculées à la demande, bâtiments, recherches, chantier et défenses, queues indépendantes, annulation en cascade, notifications Mercure privées.
+Parcours disponibles : inscription/connexion/déconnexion, profil sécurisé, sélection d’univers, colonies, carte et découvertes, cinq ressources, bâtiments, recherches et trois files. Les missions couvrent exploration, colonisation, transport, attaque, défense temporisée, orbite, conquête JcE des planètes PNJ et espionnage. Combat persistant, pertes, butin, rapports privés, notifications, guildes et alliances sont intégrés. Les valeurs d’équilibrage PNJ et les coefficients d’espionnage restent provisoires et configurables.
 
-Missions exploration/colonisation/transport activées avec consommation proportionnelle à la vitesse, réservoirs individuels et réservation aller-retour. Tests MariaDB de découvertes, colonisation, livraisons et idempotence réussis. Guildes et alliances : consentement réciproque, relations ennemies/neutres, adhésion, transfert, départ et dissolution vérifiés. Profil éditable avec confirmation du mot de passe et reconnexion. Estimation serveur des trajets et mises à jour automatiques des queues, ressources et inventaires.
-
-À réaliser : attaque/défense/orbite et résolution persistée des combats, rapports, notifications d'attaque avec visibilité, variante conquête, fermeture asynchrone des univers temporaires, classements, CI et guide utilisateur final. Le projet n'est pas encore le jeu complet des six phases.
-
-Les données d'équilibrage absentes des PDF sont marquées provisoires dans `config/game`. Turbo est un univers de démonstration à durées réduites. Les catalogues et coûts sont autoritaires côté serveur.
+Le jeu n’est pas déclaré prêt pour production. Les prochains travaux couvrent la revue d’architecture et le choix de version Symfony, la fermeture asynchrone des univers temporaires, les classements, l’administration, la CI, les audits sécurité/accessibilité/performance, la sauvegarde/restauration et l’audit final.
 
 ## Vérification
 
