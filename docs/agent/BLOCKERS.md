@@ -4,7 +4,7 @@
 Aucun blocage n’empêche l’accès au dépôt ou l’exécution des tests PHP. Le projet n’est pas prêt pour la production. Les phases et écarts du prompt sont détaillés dans PROMPT_PHASE_CROSSCHECK.md.
 
 ## Écarts de phases à terminer
-- Phase 12 active : poursuivre l’audit écran par écran, des états, des breakpoints 1440/768/390 et du clavier/contraste. Le toast temps réel et le parcours colonisation long ont été validés dans les six scénarios E2E exécutés individuellement. Le lancement agrégé a expiré à 300 s sans rapport. Le shell principal de l’application est testé à 1440/768/390; les vues secondaires restent à vérifier. Prototype public inspecté; UX-01 accès/récupération et UX-15 admin sont incomplets dans le prototype observé.
+- Phase 12 active : poursuivre l’audit écran par écran, des états, des breakpoints 1440/768/390 et du clavier/contraste. Le toast temps réel et le parcours colonisation long ont été validés dans les six scénarios E2E exécutés individuellement. Le lancement agrégé a expiré à 300 s sans rapport. Le shell principal et plus de dix routes authentifiées sont testés à 1440/768/390; les états et permissions des vues restent à vérifier. Prototype public inspecté; UX-01 accès/récupération et UX-15 admin sont incomplets dans le prototype observé.
 - Phase 04 partielle : récupération de mot de passe et préférences utilisateur citées par le prompt mais non implémentées. Concevoir et tester un flux sûr.
 - Phase 11 partielle : l’administration n’offre pas encore le réglage fin des paramètres de catalogues bâtiments, technologies, vaisseaux et défenses.
 - Phase 13 à faire : campagne navigateur complète avec le runner isolé disponible, sécurité, concurrence et performance.

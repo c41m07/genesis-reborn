@@ -13,6 +13,7 @@ Dernière exécution : 31/10/2026, dépôt /home/caim/Projets/Genesis_Reborn.
 | Playwright ciblé construction/toast | Réussi — 1/1 après ajout de MERCURE_PUBLIC_URL=http://$BROWSER_HOST/.well-known/mercure à l’overlay de test. La cause était l’URL hub publique statique qui empêchait le cookie d’abonnement sur le sous-domaine E2E dynamique. |
 | Playwright colonisation complète | Réussi — scénario chantier, estimation, colonisation, transport et exploration 1/1 en 3,1 min. Base et services isolés, détruits en fin de run. |
 | Playwright responsive multi-breakpoints | Réussi — compte neuf et shell colonie à 1440/768/390 px, sans débordement horizontal; menu mobile accessible au clavier. 1/1. |
+| Playwright routes UI responsive | Réussi — plus de dix routes authentifiées; statut HTTP < 400, main visible et aucune largeur de document supérieure au viewport à 1440/768/390. 1/1. |
 
 Les tests PHP utilisent la base database-test isolée (profil test, base en tmpfs). Les parcours de connexion, CSRF, profil et isolation des comptes sont maintenant testés. Les audits sécurité élargi, concurrence, accessibilité et performance restent à vérifier. Les résultats datés du 21/10 dans docs/LIVRAISON-DOMAINES-UI.md sont historiques et ne remplacent pas la validation des changements actuels.
 
@@ -21,7 +22,7 @@ Les tests PHP utilisent la base database-test isolée (profil test, base en tmpf
 
 - Playwright a ouvert le site public Figma fourni par Kévin : HTTP 200. Figma Make URL directe : HTTP 403/login dans Chromium isolé. Le preview est documenté dans FIGMA_HANDOFF.md.
 - Scénario responsive/navigation : 1/1 réussi. Scénario construction et notification : d’abord 500 sur /notifications/abonnement; après correction de MERCURE_PUBLIC_URL dans compose.browser-test.yaml, 1/1 réussi.
-- Le lancement agrégé a dépassé la limite de restitution de l’outil (300 s). Les six tests sont validés individuellement; un septième test responsive dédié confirme le shell à 1440/768/390. Aucun résultat agrégé n’est déduit.
+- Le lancement agrégé a dépassé la limite de restitution de l’outil (300 s). Les six tests sont validés individuellement; deux tests responsive dédiés confirment le shell et plus de dix routes à 1440/768/390. Aucun résultat agrégé n’est déduit.
 
 ## Mise à jour — espionnage, 31/10/2026
 

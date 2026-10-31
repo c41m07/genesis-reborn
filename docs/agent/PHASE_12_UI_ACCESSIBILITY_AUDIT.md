@@ -20,10 +20,10 @@
 
 ## Résultats et limites au 31/10/2026
 - Le site public Figma fourni répond 200; pages clés parcourues au desktop et aux vues 768/390 px. Le prototype annonce 15 écrans et 7 parcours, avec données fictives et actions en mémoire. UX-01 et UX-15 restent incomplets ou indisponibles dans l’aperçu observé; voir FIGMA_HANDOFF.md.
-- Le shell principal de l’application est validé à 1440, 768 et 390 px par un test Playwright dédié. Les vues secondaires, états négatifs et permissions restent à vérifier.
+- Le shell principal et plus de dix routes authentifiées sont validés à 1440, 768 et 390 px par deux tests Playwright dédiés. Les états détaillés, états négatifs et permissions restent à vérifier.
 - Aucun outil axe/RGAA automatisé n’est installé; la revue manuelle actuelle ne suffit pas à revendiquer une conformité exhaustive.
 - Le fichier Make natif reste inaccessible au connecteur et renvoie un écran de connexion via Playwright; il n’y a pas de comparaison frame par frame. La provenance/licence des assets et la validation complète de la direction artistique restent ouvertes.
 - Les matrices REQUIREMENTS_MATRIX.md, UI_SCREEN_MATRIX.md, UX_FLOWS.md, ASSET_MANIFEST.md, UI_AUDIT.md et FIGMA_HANDOFF.md tracent les exigences et preuves.
-- Un runner isolé existe; la correction dynamique du public URL Mercure et le parcours de colonisation long ont été vérifiés. Le shell principal de l’application est validé à 1440/768/390 px; vérifier les vues secondaires ainsi que chaque état négatif/permission.
+- Un runner isolé existe; la correction dynamique du public URL Mercure et le parcours de colonisation long ont été vérifiés. Le shell principal et plus de dix routes sont vérifiés à 1440/768/390 px; compléter les parcours, états négatifs et permissions écran par écran.
 - Aucun outil axe/RGAA automatisé n’est installé; la revue manuelle et les contrôles existants ne suffisent pas à revendiquer une conformité exhaustive.
 - Les captures produites durant les parcours restent des artefacts locaux non inclus dans le commit.

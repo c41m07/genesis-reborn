@@ -14,7 +14,7 @@ HEAD de départ : 80668fa — chore: snapshot Genesis Reborn before completion w
 - Phase 08 : TERMINÉE. Les déplacements, cycles aller-retour, réservations, compositions, idempotence et parcours de missions sont vérifiés; limites restantes consignées dans PHASE_08_FLEET_MISSIONS_AUDIT.md.
 - Phase 10 : TERMINÉE techniquement. Classement, messages privés, canal de guilde et protections vérifiés; voir docs/agent/PHASE_10_SOCIAL_STRATEGY_AUDIT.md.
 - Phase 11 : PARTIELLE — console admin, comptes suspendus, modération, paramètres par univers et journal d’audit vérifiés; équilibrage fin des catalogues absent. Voir PHASE_11_ADMIN_AUDIT.md et PROMPT_PHASE_CROSSCHECK.md.
-- Phase 12 : EN COURS. Site Figma public inspecté : 15 vues annoncées, prototype simulé; UX-01 et UX-15 incomplets, rapports détaillés non vérifiés. Application : tests UI ciblés passés sur responsive/navigation et toast Mercure après correction du runner. Le shell principal est testé à 1440/768/390; les breakpoints des vues secondaires, états complets, parcours critiques et audit accessibilité restent ouverts. Voir UI_AUDIT.md, UI_SCREEN_MATRIX.md, FIGMA_HANDOFF.md.
+- Phase 12 : EN COURS. Site Figma public inspecté : 15 vues annoncées, prototype simulé; UX-01 et UX-15 incomplets, rapports détaillés non vérifiés. Application : tests UI ciblés passés sur responsive/navigation et toast Mercure après correction du runner. Le shell principal et plus de dix routes sont testés à 1440/768/390; états complets, parcours critiques et audit accessibilité restent ouverts. Voir UI_AUDIT.md, UI_SCREEN_MATRIX.md, FIGMA_HANDOFF.md.
 - Prochaine étape : compléter la matrice UI/états et tester les vues secondaires; ensuite couvrir les lacunes 04 et 11.
 
 ## État vérifié aujourd'hui
