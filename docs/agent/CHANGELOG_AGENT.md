@@ -1,3 +1,7 @@
+## 2026-10-31 — clôture phase 05
+- Ajout du cycle de vie asynchrone des univers via Outbox/Messenger, avec gestion des dates révisées et jetons idempotents. Les planètes et leurs stocks sont conservés à la fermeture.
+- Tests : 71 / 355; lint et Compose valides. Suivi avancé à la phase 06 (5/15).
+
 ## 2026-10-31 — clôture phase 04
 - Audit des contrôles de compte/session consigné dans PHASE_04_SECURITY_AUDIT.md. Ajout de deux tests CSRF; 69 tests / 339 assertions, lint et Compose valides.
 - Suivi avancé à la phase 05 (4/15).

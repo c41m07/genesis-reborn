@@ -48,7 +48,7 @@ final class GameRepository
     public function outbox(bool $notifications): array
     {
         return $this->em->createQueryBuilder()->select('o')->from(OutboxMessage::class,'o')
-            ->where($notifications?'o.kind = :kind':'o.kind IN (:kind)')->setParameter('kind',$notifications?'notification':['queue','fleet','combat'])
+            ->where($notifications?'o.kind = :kind':'o.kind IN (:kind)')->setParameter('kind',$notifications?'notification':['queue','fleet','combat','universe'])
             ->orderBy('o.id','ASC')->setMaxResults(100)->getQuery()->getResult();
     }
     public function activeQueueItems(): array

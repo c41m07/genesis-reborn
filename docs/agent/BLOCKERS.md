@@ -5,12 +5,12 @@ Aucun blocage n'empêche l'accès au dépôt ou l'exécution des tests PHP. Comp
 
 ## Règles et choix encore à confirmer
 - Les règles de conquête JcE ont été confirmées par Kévin : cibles neutres, flottes et défenses PNJ, victoire plus vaisseau colonie survivant, limite habituelle de colonies, bâtiments/stocks conservés, défenses PNJ retirées, pertes PNJ persistantes. Les compositions de départ par niveau sont provisoires et modifiables dans le catalogue.
-- Les règles d’espionnage sont désormais consolidées et implémentées. La fermeture asynchrone reste à définir avant implémentation.
+- Les règles d’espionnage sont désormais consolidées et implémentées. La fermeture asynchrone d’univers est implémentée et vérifiée.
 - L'équilibrage final manque pour certaines unités et les données sont explicitement provisional. Implémentation possible avec valeurs provisoires étiquetées; mise en production bloquée jusqu'à validation.
-- Fermeture d’univers, classement et droits admin ont des exigences incomplètes.
+- Les classements/statistiques et droits admin ont des exigences incomplètes.
 
 ## Publication et planification
 Le prompt interdit publication/déploiement réel sans autorisation; aucun Site n'est créé. Une tâche planifiée ne peut pas coder la suite sans session de développement et accès au dépôt; aucune relance automatique après quota n'est revendiquée. La reprise manuelle figure dans RESUME.md.
 
 ## Travail restant
-Les éléments de docs/LIVRAISON-DOMAINES-UI.md sont des tâches, pas des blocages techniques. Priorité : phase 05 — univers et planètes; ensuite économie, bâtiments/technologies, flottes/combat, fermeture d’univers, classements, administration, CI, audits sécurité/accessibilité/performance, sauvegarde et restauration.
+Les éléments de docs/LIVRAISON-DOMAINES-UI.md sont des tâches, pas des blocages techniques. Priorité : phase 06 — économie; ensuite bâtiments/technologies, flottes/combat, classements, administration, CI, audits sécurité/accessibilité/performance, sauvegarde et restauration.

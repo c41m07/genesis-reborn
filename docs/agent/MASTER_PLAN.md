@@ -10,7 +10,7 @@ Compléter le jeu existant en conservant les décisions de docs/REGLES.md, docs/
 | 02 | Spécifications | Règles, ambiguïtés, critères d'acceptation et valeurs provisoires distingués | Terminée — règles et critères d’acceptation documentés; conquête JcE et espionnage intégrés et validés; coefficients et compositions PNJ identifiés comme provisoires |
 | 03 | Architecture et environnement | Installation/reprise reproductibles, architecture cohérente, migrations vérifiées | Terminée — installation vierge, migrations et reprise vérifiées; cible PHP 8.4/Symfony 7.4 LTS choisie et documentée |
 | 04 | Comptes et sécurité | Parcours et contrôles d'accès validés, sécurité des comptes et sessions | Terminée — inscription, accès, CSRF, limitation des tentatives, profil sensible et session vérifiés; détails dans PHASE_04_SECURITY_AUDIT.md |
-| 05 | Univers et planètes | Carte, colonies, exploration/colonisation et accès par univers cohérents | Partielle — base jouable; carte à trois états PNJ/vierge/joueur; fermeture asynchrone à faire |
+| 05 | Univers et planètes | Carte, colonies, exploration/colonisation et accès par univers cohérents | Terminée — accès daté, fermeture asynchrone par outbox avec le transport Messenger de test et conservation des planètes; détails dans PHASE_05_UNIVERSE_AUDIT.md |
 | 06 | Économie | Calculs serveur, reprise chronologique, stockage et dépenses cohérents | Partielle — économie corrigée; équilibrage provisoire à valider |
 | 07 | Bâtiments et technologies | Prérequis, effets, files et annulations fonctionnels et vérifiés | Partielle — fonctionnalités principales; effets de combat liés restants |
 | 08 | Flottes et missions | Trajets, carburant, départ/arrivée/retour et missions vérifiés | Partielle — exploration, espionnage, colonisation, transport, attaque, défense temporisée et orbite intégrés; audit fonctionnel restant |
@@ -23,9 +23,9 @@ Compléter le jeu existant en conservant les décisions de docs/REGLES.md, docs/
 | 15 | Audit final | Critères production prouvés ou limites bloquantes listées | À faire — application non déclarée prête |
 
 ## Ordre de travail
-1. Phase 03 : vérifier l’architecture et la reproductibilité des installations/migrations à partir de l’audit de phase 01.
-2. Implémenter et vérifier la fermeture asynchrone des univers temporaires.
-3. Poursuivre par les classements/statistiques et les outils d’administration.
-4. Compléter CI, accessibilité, sécurité, charge et sauvegarde/restauration.
-5. Terminer par l’audit de production; garder les valeurs PNJ/espionnage explicitement provisoires jusque-là.
+1. Phase 06 : vérifier l’économie, la chronologie des opérations et les limites de stockage; garder les valeurs non spécifiées provisoires.
+2. Phase 07 : compléter les effets de bâtiments et technologies liés au combat.
+3. Phases 08/09 : poursuivre l’audit des missions et du combat autour des parcours déjà livrés.
+4. Traiter classements/statistiques et administration; la fermeture asynchrone des univers est livrée en phase 05.
+5. Compléter CI, accessibilité, sécurité, charge et sauvegarde/restauration avant l’audit de production.
 Ne pas créer d'écrans factices ni présenter des données provisoires comme définitives.

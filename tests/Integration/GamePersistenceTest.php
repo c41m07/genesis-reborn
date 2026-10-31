@@ -1,7 +1,10 @@
 <?php
 namespace App\Tests\Integration;
 use App\Entity\{Player,PlayerUniverse,Universe,Planet,QueueItem,PlanetBuilding,PlanetResource,OutboxMessage,PlayerTechnology};
-use App\Service\Universe\{UniverseImporter,UniverseService};
+use App\Service\Universe\{UniverseImporter,UniverseService,UniverseLifecycleService};
+use App\Service\Notification\OutboxRelay;
+use App\Message\UniverseClosureDue;
+use App\MessageHandler\UniverseClosureDueHandler;
 use App\Service\Player\RegistrationService;
 use App\Service\Queue\QueueService;
 use App\Service\Colony\ResourceService;
@@ -35,6 +38,32 @@ final class GamePersistenceTest extends KernelTestCase
         $p=$this->player();$planet=$this->join($p);$count=$this->em->getRepository(Planet::class)->count();
         self::assertSame(0,self::getContainer()->get(UniverseImporter::class)->import());
         self::assertSame($count,$this->em->getRepository(Planet::class)->count());self::assertSame($p->currentPlayerUniverse->id,$planet->owner->id);
+    }
+    public function testTemporaryUniverseClosesAsynchronouslyAndKeepsItsState(): void
+    {
+        $player=$this->player();$planet=$this->join($player);$membershipId=$player->currentPlayerUniverse->id;
+        $universeId=$player->currentPlayerUniverse->universe->id;$planetId=$planet->id;
+        $metal=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$planet,'resourceType'=>'metal']);$stock=$metal->currentStock;
+        $lifecycle=self::getContainer()->get(UniverseLifecycleService::class);
+        $lifecycle->setEndDate($universeId,new \DateTimeImmutable('+1 day'));
+        $outbox=$this->em->getRepository(OutboxMessage::class)->findOneBy(['kind'=>'universe','targetId'=>$universeId]);
+        self::assertNotNull($outbox);
+        $relay=self::getContainer()->get(OutboxRelay::class);self::assertSame(1,$relay->run());
+        $transport=self::getContainer()->get('messenger.transport.async');$sent=$transport->getSent();self::assertCount(1,$sent);
+        $early=$sent[0]->getMessage();self::assertInstanceOf(UniverseClosureDue::class,$early);
+        $handler=self::getContainer()->get(UniverseClosureDueHandler::class);$handler($early);
+        self::assertSame('active',$this->em->find(Universe::class,$universeId)->status);
+
+        $lifecycle->setEndDate($universeId,new \DateTimeImmutable('-1 hour'));
+        $handler($early);
+        self::assertSame('active',$this->em->find(Universe::class,$universeId)->status);
+        self::assertSame(1,$relay->run());$sent=$transport->getSent();self::assertCount(2,$sent);
+        $due=$sent[1]->getMessage();self::assertInstanceOf(UniverseClosureDue::class,$due);
+        $handler($due);$handler($due);$this->em->clear();
+
+        $closed=$this->em->find(Universe::class,$universeId);self::assertSame('closed',$closed->status);
+        $preserved=$this->em->find(Planet::class,$planetId);self::assertSame($membershipId,$preserved->owner->id);
+        self::assertEqualsWithDelta($stock,$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$preserved,'resourceType'=>'metal'])->currentStock,.000001);
     }
     public function testQueuedLevelDependenciesCancellationAndDuplicateRequest(): void
     {

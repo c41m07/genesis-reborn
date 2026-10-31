@@ -35,4 +35,8 @@ Conquête JcE : seules les planètes neutres marquées PNJ sont attaquables; une
 
 Espionnage : une mission cible une planète connue du même univers autre que celles de l’émetteur. Elle transporte uniquement des sondes, détruites à l’arrivée. La détection avertit le propriétaire et bloque le rapport; les renseignements et rapports suivent les niveaux et règles résumés dans docs/agent/PHASE_02_DECISIONS.md.
 
-Périmètre restant : fermeture asynchrone, classements, administration, CI et audits finaux. Attaque, défense, orbite, résolution, butin, rapports, conquête JcE et espionnage sont livrés en première version; les équilibres PNJ et espionnage restent provisoires.
+Périmètre restant : classements, administration, CI et audits finaux. Attaque, défense, orbite, résolution, butin, rapports, conquête JcE et espionnage sont livrés en première version; les équilibres PNJ et espionnage restent provisoires.
+
+
+## Fermeture d’univers temporaires
+Un événement Outbox est créé avec la date de fin; le relais le programme via Messenger. Le handler verrouille l’univers, vérifie la date et le jeton courant, puis passe son statut à fermé. Les anciens événements sont ignorés et les données des planètes restent intactes.

@@ -1,6 +1,6 @@
 <?php
 namespace App\Service\Universe;
-use App\Entity\{Universe,Galaxy,SolarSystem,Planet};
+use App\Entity\{Universe,Galaxy,SolarSystem,Planet,OutboxMessage};
 use App\Repository\GameRepository;
 use App\Manager\GameManager;
 use App\Service\Catalog\GameCatalog;
@@ -16,7 +16,17 @@ final class UniverseImporter
             $config=$this->catalog->get('universes',$data['slug']);
             $this->manager->transaction(function()use($data,$config,&$count){
                 $u=$this->repo->one(Universe::class,['slug'=>$data['slug']]);
-                if (!$u) { $u=new Universe();$u->slug=$data['slug'];$u->name=$config['name'];$this->manager->save($u);$this->manager->flush(); }
+                if (!$u) {
+                    $u=new Universe();$u->slug=$data['slug'];$u->name=$config['name'];
+                    $u->startsAt=$this->parseDate($config['starts_at']??null);
+                    $u->endsAt=$this->parseDate($config['ends_at']??null);
+                    if(($config['temporary']??false) && $u->endsAt===null) throw new \DomainException('Un univers temporaire doit définir ends_at.');
+                    $this->manager->save($u);$this->manager->flush();
+                    if($u->endsAt!==null) {
+                        $outbox=new OutboxMessage();$outbox->kind='universe';$outbox->targetId=$u->id;
+                        $outbox->token=UniverseLifecycleService::closureToken($u->id,$u->endsAt);$outbox->dueAt=$u->endsAt;$this->manager->save($outbox);
+                    }
+                }
                 $this->manager->lock($u);
                 foreach($data['galaxies'] as $gd) {
                     $existingGalaxy=$this->repo->one(Galaxy::class,['universe'=>$u,'name'=>$gd['name']]);
@@ -54,4 +64,13 @@ final class UniverseImporter
         }
         return $count;
     }
+    private function parseDate(mixed $value): ?\DateTimeImmutable
+    {
+        if($value===null || $value==='') return null;
+        if($value instanceof \DateTimeImmutable) return $value;
+        if($value instanceof \DateTimeInterface) return \DateTimeImmutable::createFromInterface($value);
+        if(!is_string($value)) throw new \DomainException('Date d’univers invalide.');
+        return new \DateTimeImmutable($value);
+    }
+
 }

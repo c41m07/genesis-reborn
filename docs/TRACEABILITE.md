@@ -7,7 +7,7 @@
 | 0 p.3–4 ; 6 p.2–6,11–13 | Symfony, Doctrine, Twig, Docker, authentification session | Compose, SecurityController, RegistrationType, Dockerfile | AuthenticationTest ; navigateur inscription/connexion ; installation vierge | Réalisé et vérifié |
 | Prompt utilisateur, profil | Profil avec confirmation du mot de passe et reconnexion | ProfileData, ProfileType, ProfileService, ProfileController | GameplayAccessTest::testProfileRequiresCurrentPasswordThenLogsOutAfterSave ; GamePersistenceTest::testProfileUpdateHashesPasswordAndPreservesMembership | Réalisé |
 | 0 p.5 ; 5 p.2–8 | Univers indépendants, cartes JSON, import idempotent | UniverseImporter, UniverseService, UniverseContext | GamePersistenceTest::testImportIsIdempotentAndPreservesOwnership ; tests HTTP croisés et inscription navigateur | Réalisé pour les univers accessibles |
-| 5 p.3–4,9–10 | Dates d’accès et fermeture logique | Universe::isAccessible, UniverseContext | GameRulesTest::testClosedAndFutureUniverses | Accès réalisé ; fermeture asynchrone restante |
+| 5 p.3–4,9–10 | Dates d’accès et fermeture logique | Universe::isAccessible, UniverseContext, UniverseLifecycleService, UniverseClosureDueHandler, OutboxRelay | GameRulesTest; GamePersistenceTest; GameplayAccessTest — 71 tests / 355 assertions | Fermeture asynchrone idempotente, échéances révisables, accès bloqué et données conservées |
 | 1 p.2–3 ; 5 p.9 | Production paresseuse, capacités, chronologie des changements de taux | ResourceService, QueueService, resource_controller | testDelayedMineCompletionAndSpendingUseActualEventChronology ; testCatchupRespectsStorageCapBeforeStorageUpgrade ; testPowerPlantActuallyIncreasesEnergyProduction | Défaut A1 corrigé ; équilibrage provisoire |
 | 1 p.3–4,14–15 | Bâtiments uniques, niveaux, coûts, prérequis par palier | QueueService, GameCatalog, RequirementChecker, OperationCalculator | Tests dépendances/annulation/doublons ; coûts et durées ; construction navigateur réelle | Réalisé |
 | 1 p.5,11,15–16 ; 7 p.1–7 | Recherche par planète, technologie par inscription, exclusivité multi-planètes | PlayerTechnology, QueueService | testResearchSameTechnologyCannotRunOnTwoPlanets ; testDifferentResearchQueuesCanCompleteOnDifferentPlanets | Réalisé ; bonus de combat à brancher au futur resolver |
@@ -21,14 +21,14 @@
 | 0 p.7 ; 1 p.3,5, 1.8 | Exploration, colonisation, transport, défense, orbite et espionnage | FleetService, EspionageService, FleetController, report readers | GamePersistenceTest : exploration, transport, colonisation, espionnage réussi/détecté; CombatEventTest : défense/orbite | Parcours implémentés et lint/tests PHP réussis; navigateur espionnage non relancé |
 | 2 p.2 ; 5 p.2–3 | Guildes et alliances réciproques par univers | DiplomacyService, RelationResolver, DiplomacyController | Tests alliances, consentement, hostilités, droits, univers, transfert/dissolution ; navigateur deux comptes | Réalisé ; recrutement ouvert provisoire |
 | 6 p.7–10 ; 0 p.8 | Notifications privées, découplage et mises à jour | MercurePublisher, NotificationService, OutboxRelay, events/colony_live | Confidentialité JWT ; panne de publication isolée ; vraie construction avec notification Chromium | Réalisé |
-| 0 p.9 ; 5 p.2–4 | Conquête JcE PNJ et variantes avancées | CombatEventService, PlanetNpcSeeder, catalogs, feature flags | CombatEventTest : capture et persistance des pertes PNJ; GamePersistenceTest : espionnage PNJ | Conquête PNJ implémentée Omega/Turbo; classements et fermeture asynchrone restent à faire |
+| 0 p.9 ; 5 p.2–4 | Conquête JcE PNJ et variantes avancées | CombatEventService, PlanetNpcSeeder, catalogs, feature flags | CombatEventTest : capture et persistance des pertes PNJ; GamePersistenceTest : espionnage PNJ | Conquête PNJ implémentée Omega/Turbo; classements/statistiques restent à faire |
 | 4 p.2–20 | Contrôleurs, services métier, manager et repositories | src/, DTO, GameShell, GameUiExtension | lint PHP/Twig/YAML/conteneur/schéma ; tests HTTP et services | En place, repository générique proportionné au périmètre |
 | Prompt utilisateur ; 0 p.9 | Refonte UI française, responsive, clavier et parcours réels | Twig, Stimulus, CSS, public/art | Chromium desktop/390px, onglets clavier, menu mobile, opérations réelles ; références dans UI-RECHERCHE | Réalisé ; aucun audit RGAA exhaustif revendiqué |
 
 ## Prochaine étape du jeu complet
 
 1. Phase 03 : revue d’architecture et d’environnement, sur la base de l’audit phase 01 actualisé.
-2. Fermeture asynchrone des univers temporaires, classements/statistiques et administration.
+2. Classements/statistiques et administration; la fermeture asynchrone des univers est désormais livrée en phase 05.
 3. CI, tests de charge, audit accessibilité complet, sauvegarde/restauration et validation des valeurs provisoires.
 
 Historique : suppression de l’ancien dossier, conteneurs et deux images applicatives autorisée par l’utilisateur ; volumes conservés, PDF copiés vérifiés SHA-256. MariaDB nouvelle application publiée uniquement sur 127.0.0.1:3309.

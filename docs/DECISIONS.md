@@ -75,3 +75,8 @@ Validation du lot : 67 tests / 335 assertions; lint PHP/YAML/Twig, schéma, Comp
 ## Mise à jour — cible technique, 31 octobre 2026
 
 L’utilisateur a retenu PHP 8.4 et Symfony 7.4 LTS pour le dépôt; l’exigence initiale PHP 8.5/Symfony 8.x est remplacée pour la cible courante par addendum à la spécification 6. Motif : conserver la branche LTS et éviter une migration majeure avant que le jeu et ses contrôles ne soient stabilisés. Symfony 7.4 est maintenu jusqu’en 2029 selon https://symfony.com/releases/7.4. Le runtime actuel est conservé; l’installation vierge et les migrations avaient déjà passé les contrôles consignés dans TEST_STATUS.md.
+
+
+## Mise à jour — fermeture asynchrone, 31 octobre 2026
+
+Les univers temporaires utilisent le modèle Outbox et le transport Messenger existants. Un jeton dérivé de l’univers et de endsAt empêche une ancienne échéance de fermer un univers dont la date a été repoussée. Le statut passe à closed sans supprimer les affiliations, planètes ni stocks. Les références et validations figurent dans docs/agent/PHASE_05_UNIVERSE_AUDIT.md.

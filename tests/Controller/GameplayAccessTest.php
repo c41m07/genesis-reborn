@@ -52,6 +52,19 @@ final class GameplayAccessTest extends WebTestCase
         self::assertNotNull($jwt);$part=explode('.',$jwt)[1];$claims=json_decode(base64_decode(strtr($part,'-_','+/')),true);
         self::assertSame(['https://genesis-reborn.localhost/players/'.$ownId.'/events'],$claims['mercure']['subscribe']);self::assertStringNotContainsString('/players/'.$foreignId.'/events',json_encode($claims));
     }
+    public function testClosedUniverseRedirectsMemberAndKeepsPlanet():void
+    {
+        [$player,$planet]=$this->player('Alpha');$universe=$player->currentPlayerUniverse->universe;
+        $planetId=$planet->id;$universeId=$universe->id;
+        $lifecycle=static::getContainer()->get(\App\Service\Universe\UniverseLifecycleService::class);
+        $lifecycle->setEndDate($universeId,new \DateTimeImmutable('-1 hour'));
+        $pending=$this->em->getRepository(\App\Entity\OutboxMessage::class)->findOneBy(['kind'=>'universe','targetId'=>$universeId]);
+        $lifecycle->closeIfDue($universeId,$pending->token);
+        $this->client->loginUser($player);$this->client->request('GET','/planetes/'.$planetId);
+        self::assertResponseRedirects('http://genesis-reborn.localhost/univers');
+        self::assertSame('closed',$this->em->find(Universe::class,$universeId)->status);
+        self::assertNotNull($this->em->find(Planet::class,$planetId));
+    }
     public function testProfileRequiresCurrentPasswordThenLogsOutAfterSave():void
     {
         [$a]=$this->player('Alpha');$this->client->loginUser($a);$crawler=$this->client->request('GET','/profil');self::assertResponseIsSuccessful();
