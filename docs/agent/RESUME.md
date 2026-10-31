@@ -9,7 +9,7 @@
 
 ## Position vérifiée au 31/10/2026
 - 9/15 phases validées : 01–03 et 05–10. Phase 04 partielle, phase 11 partielle, phase 12 active; 13–15 à faire. Voir PROMPT_PHASE_CROSSCHECK.md pour la comparaison détaillée avec le prompt initial.
-- Validation PHP rapportée : 78 tests / 406 assertions; lint, validate, assets et installation vierge (14 migrations) dans TEST_STATUS.md. Cette session : Playwright responsive/navigation 1/1 pass; construction + notification Mercure 1/1 pass après ajustement de l’URL dans l’overlay. Run complet expiré à 300 s sans résultat global; colonisation longue reste à rejouer.
+- Validation PHP rapportée : 78 tests / 406 assertions; lint, validate, assets et installation vierge (14 migrations) dans TEST_STATUS.md. Cette session : Playwright responsive/navigation 1/1 pass; construction + notification Mercure 1/1 pass après ajustement de l’URL dans l’overlay. Run agrégé expiré à 300 s sans rapport; les six tests E2E réussissent quand ils sont lancés séparément, dont le parcours colonisation (3,1 min).
 - Derniers commits existants : e8273b1 puis historique 17be81d/c3ded73. Les nouveaux changements UI, test runner et matrices sont en attente de commit; vérifier git status avant reprise.
 - Les données et fichiers de validation contiennent des modifications locales préexistantes; ne pas réinitialiser, clean ou restaurer ni toucher aux PDF, scripts, binaires ou captures sans nécessité et inspection explicite.
 - Aucun déploiement/publication. Aucun réveil automatique après quota n’a été programmé; une reprise manuelle est requise.

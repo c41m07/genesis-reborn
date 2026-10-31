@@ -1,5 +1,10 @@
 # Genesis Reborn — journal de l'agent
 
+## 2026-10-31 — validation navigateur ciblée complète
+- Les six cas Playwright du fichier tests/browser/colony.spec.mjs ont tous réussi en exécution isolée individuelle : responsive/navigation, construction avec notification Mercure, missions et colonisation (3,1 min), alliance, files de production, bénéfices/prérequis technologiques.
+- Le lancement groupé n’a pas rendu de rapport avant 300 s; aucune conclusion d’échec ne lui est attribuée.
+- Phase 12 demeure EN COURS : écran d’accès et admin du prototype incomplets, détail de rapport et résultat conquête à contrôler, états, accessibilité et correspondance app/Figma à compléter.
+
 ## 2026-10-31 — audit du prototype Figma et correction du runner E2E
 - Lien public figma.site inspecté avec Playwright : HTTP 200, navigation et vues principales accessibles; prototype annoncé comme 15 écrans/7 parcours, données fictives et actions simulées. Vérification mobile 390 px sans débordement horizontal mesuré. Figma Make direct reste bloqué par l’authentification/API non supportée. Détails : FIGMA_HANDOFF.md.
 - Correction ciblée de compose.browser-test.yaml : MERCURE_PUBLIC_URL suit désormais BROWSER_HOST. Le toast de construction passe en Playwright isolé après avoir échoué en HTTP 500 sur l’abonnement Mercure avec un host dynamique.

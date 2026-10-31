@@ -18,7 +18,7 @@ Le prototype contient un shell cohérent, une navigation qui couvre les principa
 - À 390 px, mesure scrollWidth = innerWidth = 390 ; menu mobile Plus présente les fonctions de navigation complète. À 768 px, scrollWidth = innerWidth = 768 et le bouton Ouvrir la navigation présente 15 entrées. Il manque aria-expanded sur ce bouton dans le prototype.
 - App locale : test Playwright responsive/navigation ciblé réussi, 1/1.
 - App locale : test réel de construction/notification ciblé réussi après correction du runner E2E ; détails dans TEST_STATUS.md.
-- Campagne complète Playwright : l’outil n’a pas restitué l’appel après 300 s ; les stacks isolées avaient été nettoyées, mais aucun bilan global n’est déduit de ce run.
+- Les six tests navigateur de la suite ont ensuite réussi en exécution individuelle : responsive/navigation, toast Mercure, missions complètes (3,1 min), alliances, files, bénéfices/prérequis. Le lancement agrégé n’a pas rendu son rapport avant 300 s; aucun échec de test n’est inféré de son expiration.
 
 ## Limites
 
