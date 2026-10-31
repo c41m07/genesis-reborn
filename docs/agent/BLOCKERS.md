@@ -4,14 +4,14 @@
 Aucun blocage n’empêche l’accès au dépôt ou l’exécution des tests PHP. Le projet n’est pas prêt pour la production. Les phases et écarts du prompt sont détaillés dans PROMPT_PHASE_CROSSCHECK.md.
 
 ## Écarts de phases à terminer
-- Phase 12 active : inspecter la refonte existante sur tous les parcours, états et formats d’écran, réaliser l’audit clavier/contraste et corriger les défauts constatés. Runner isolé en place; campagne la plus récente 4/6. Deux points restent à diagnostiquer : toast temps réel de fin de construction et durée du trajet de colonisation dans le test.
+- Phase 12 active : poursuivre l’audit écran par écran, des états, des breakpoints 1440/768/390, du clavier/contraste. Le toast temps réel a été validé par Playwright ciblé après correction de l’URL publique Mercure dans compose.browser-test.yaml; le parcours colonisation long et les autres flux restent à rejouer. La campagne complète a expiré à 300 s sans résultat global restitué. Prototype public inspecté; UX-01 accès/récupération et UX-15 admin sont incomplets dans le prototype observé.
 - Phase 04 partielle : récupération de mot de passe et préférences utilisateur citées par le prompt mais non implémentées. Concevoir et tester un flux sûr.
 - Phase 11 partielle : l’administration n’offre pas encore le réglage fin des paramètres de catalogues bâtiments, technologies, vaisseaux et défenses.
 - Phase 13 à faire : campagne navigateur complète avec le runner isolé disponible, sécurité, concurrence et performance.
 - Phase 14 à valider : CI, observabilité, sauvegarde/restauration et procédures.
 - Phase 15 à faire : audit final, équilibrage des valeurs provisoires et verdict production.
 
-## Paramètres provisoires
+## Accès Figma en lecture native\nLe fichier Make n’est pas pris en charge par la session Figma API ici; le lien preview direct exige une connexion dans le navigateur isolé (HTTP 403). Le site figma.site public est inspectable et a été utilisé comme référence. Aucune tâche indépendante du dépôt n’est bloquée par cette limite.\n\n## Paramètres provisoires
 Compositions PNJ, statistiques de combat, coûts, productions, durées, stocks initiaux, kit de colonie et plusieurs coefficients restent à valider. Ne pas présenter ces valeurs comme équilibrées. Les règles confirmées par Kévin sur la conquête JcE sont consignées dans REGLES.md et DECISIONS.md.
 
 ## Limites d’environnement et données

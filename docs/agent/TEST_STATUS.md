@@ -5,13 +5,22 @@ Dernière exécution : 31/10/2026, dépôt /home/caim/Projets/Genesis_Reborn.
 | Commande | Résultat |
 |---|---|
 | make validate | Réussi — configuration Docker Compose valide. |
-| make test | Réussi — 78 tests / 406 assertions (dernière exécution rapportée le 31/10/2026). |
-| make lint | Réussi — PHP; 62 YAML; 20 Twig; conteneur Symfony et schéma Doctrine valides (dernière exécution rapportée le 31/10/2026). |
+| make test | Réussi — 78 tests / 406 assertions, exécuté pendant la reprise le 31/10/2026. |
+| make lint | Réussi pendant la reprise — PHP; 62 YAML; 20 Twig; conteneur Symfony et schéma Doctrine valides. |
 | make verify-install | Réussi — installation isolée; 14 migrations appliquées, import de 146 planètes, ré-import idempotent, services prêts après redémarrage; environnement temporaire nettoyé. |
-| Playwright | Campagne isolée la plus récente : 4/6 réussis. Deux échecs restent à traiter : toast temps réel de fin de construction absent; parcours colonisation toujours en route après 60 s (attente de test relevée à 160 s, à rejouer). La base E2E et les captures sont séparées des données de développement. |
+| Playwright campagne complète | Appel expiré à 300 s avant restitution du rapport; stack isolée nettoyée. Aucun nouveau résultat global n’est revendiqué. Résultat historique 4/6 conservé comme historique. |
+| Playwright ciblé responsive/navigation | Réussi — 1/1, inscription/connexion, navigation clavier, menus, stocks visibles, largeur 390 px et rapport vide. Runner isolé, MariaDB tmpfs. |
+| Playwright ciblé construction/toast | Réussi — 1/1 après ajout de MERCURE_PUBLIC_URL=http://$BROWSER_HOST/.well-known/mercure à l’overlay de test. La cause était l’URL hub publique statique qui empêchait le cookie d’abonnement sur le sous-domaine E2E dynamique. |
+| Playwright colonisation complète | Non rejoué après la campagne expirée. L’attente E2E reste à vérifier. |
 
 Les tests PHP utilisent la base database-test isolée (profil test, base en tmpfs). Les parcours de connexion, CSRF, profil et isolation des comptes sont maintenant testés. Les audits sécurité élargi, concurrence, accessibilité et performance restent à vérifier. Les résultats datés du 21/10 dans docs/LIVRAISON-DOMAINES-UI.md sont historiques et ne remplacent pas la validation des changements actuels.
 
+
+## Mise à jour — reprise Figma et tests ciblés, 31/10/2026
+
+- Playwright a ouvert le site public Figma fourni par Kévin : HTTP 200. Figma Make URL directe : HTTP 403/login dans Chromium isolé. Le preview est documenté dans FIGMA_HANDOFF.md.
+- Scénario responsive/navigation : 1/1 réussi. Scénario construction et notification : d’abord 500 sur /notifications/abonnement; après correction de MERCURE_PUBLIC_URL dans compose.browser-test.yaml, 1/1 réussi.
+- La campagne complète a dépassé la limite de restitution de l’outil (300 s). Aucun score total n’est déduit.
 
 ## Mise à jour — espionnage, 31/10/2026
 

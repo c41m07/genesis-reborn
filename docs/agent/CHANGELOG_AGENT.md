@@ -1,3 +1,11 @@
+# Genesis Reborn — journal de l'agent
+
+## 2026-10-31 — audit du prototype Figma et correction du runner E2E
+- Lien public figma.site inspecté avec Playwright : HTTP 200, navigation et vues principales accessibles; prototype annoncé comme 15 écrans/7 parcours, données fictives et actions simulées. Vérification mobile 390 px sans débordement horizontal mesuré. Figma Make direct reste bloqué par l’authentification/API non supportée. Détails : FIGMA_HANDOFF.md.
+- Correction ciblée de compose.browser-test.yaml : MERCURE_PUBLIC_URL suit désormais BROWSER_HOST. Le toast de construction passe en Playwright isolé après avoir échoué en HTTP 500 sur l’abonnement Mercure avec un host dynamique.
+- Deux scénarios Playwright ciblés réussis (responsive/navigation 1/1, construction/toast 1/1). Run complet expiré à 300 s, aucun résultat total annoncé.
+- Ajout de REQUIREMENTS_MATRIX.md, UI_SCREEN_MATRIX.md, FIGMA_HANDOFF.md, UX_FLOWS.md, ASSET_MANIFEST.md et UI_AUDIT.md. Phase 12 reste en cours; avancement global 9/15 phases validées.
+
 ## 2026-10-31 — audit du prompt et reprise de phase 12
 - La clôture précédente était prématurée : les corrections ciblées clavier/mobile ne réalisent pas la refonte UI/UX prévue (parcours complets, responsive et accessibilité). Phase 12 rouverte et active.
 - Les 78 tests / 406 assertions, le lint, le schéma, Compose et la compilation assets restent les dernières validations PHP rapportées. Campagne Playwright isolée : 4/6 passent; notification temps réel absente et trajet colonisation encore en cours à 60 s. Runner configuré pour isoler DB/services et captures; configuration Compose valide.
@@ -41,7 +49,8 @@
 - Vérifications architecture, installation vierge, migrations et reprise consignées dans PHASE_03_AUDIT.md.
 - Après arbitrage utilisateur, cible PHP 8.4/Symfony 7.4 LTS documentée dans la spécification 6, README et DECISIONS.md. Suivi avancé à la phase 04 (3/15).
 
-# Genesis Reborn — journal de l'agent
+
+
 
 ## 2026-10-31 — audit phase 01 actualisé
 
