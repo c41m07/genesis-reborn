@@ -1,7 +1,7 @@
 # Genesis Reborn — journal de l'agent
 
 ## 2026-10-31
-- Reprise du dépôt sur feat/genesis-reborn-production-completion, HEAD 80668fa.
+- Reprise du dépôt sur feat/genesis-reborn-production-completion, HEAD 80668fa. Le statut Git WSL ne signalait au départ aucun changement suivi; .idea/ non suivi a été préservé.
 - Création des documents de suivi sous docs/agent/. Les fichiers préexistants sont préservés.
 - Validation Compose réussie. PHPUnit initial : 51 tests, 189 assertions; après le simulateur : 57 tests, 200 assertions, réussite. Lint : PHP valide; 58 YAML; 14 Twig; conteneur Symfony et schéma Doctrine validés.
 - Les anciens résultats de docs/LIVRAISON-DOMAINES-UI.md sont datés du 21/10 et ne remplacent pas le contrôle courant.

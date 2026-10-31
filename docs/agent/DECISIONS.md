@@ -5,7 +5,7 @@ La source de vérité gameplay reste docs/REGLES.md, docs/DECISIONS.md, puis doc
 
 ## Décisions de cette exécution
 - Réutiliser feat/genesis-reborn-production-completion; ne pas créer une branche doublon.
-- Préserver les modifications préexistantes et .idea/; ne pas nettoyer ou restaurer le dépôt.
+- Utiliser le statut Git WSL comme référence. Préserver .idea/ non suivi; un statut Git Windows via UNC différait (modes/binaires) et n'a pas été utilisé pour piloter le dépôt.
 - Le dépôt est une application PHP/Symfony locale; aucun .openai/hosting.json n'a été inventorié à la racine. Sites ne sait pas héberger une app Symfony comme Worker/static. Aucune création de Site ni publication; le prompt interdit toute publication sans autorisation spécifique.
 - Les tests locaux sont autorisés par le prompt et utilisent database-test isolé en tmpfs. La validation du 31/10 a confirmé 51 tests / 189 assertions.
 - Ne pas modifier les valeurs d'équilibrage provisoires avant consolidation des règles.
