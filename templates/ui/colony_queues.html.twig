@@ -1,0 +1,13 @@
+{% import 'ui/macros.html.twig' as ui %}
+<div class="scene-operations" data-live-region="queues" aria-label="Files d’attente de {{ planet.name }}">
+<div class="section-heading"><h2>Activité de la colonie</h2><span class="scene-live"><i class="connection-dot"></i> EN DIRECT</span></div>
+{% for type,label in {'building':'Bâtiment','research':'Recherche','shipyard':'Vaisseaux & défenses'} %}
+{% set items=queues[type]|default([]) %}{% set head=items|first %}
+<div class="scene-operation" data-queue-type="{{ type }}">
+<div class="operation-heading"><span class="operation-type">{{ ui.icon(type=='building'?'buildings':(type=='research'?'research':'fleet')) }}{{ label }}</span>{% if items|length>1 %}<span class="queue-extra" title="{{ items|length-1 }} commandes supplémentaires en attente">+{{ items|length-1 }}</span>{% endif %}</div>
+{% if head %}<div class="operation-name"><strong>{{ head.label }}</strong><small>{{ head.item.itemLevel?'Niveau '~head.item.itemLevel:'× '~head.item.quantity }}</small></div>
+{{ ui.progress(head.item.startedAt,head.finish,'Progression : '~label,(items|last).finish) }}
+<details class="queue-details"><summary>Gérer la file <span>({{ items|length }})</span></summary><div class="queue-detail-list">{% for row in items %}{% set q=row.item %}<div class="queue-detail-item"><span><strong>{{ row.label }}</strong><small>{{ q.itemLevel?'Niveau '~q.itemLevel:'× '~q.quantity }} · {{ loop.first?'En cours':'En attente' }}</small></span><form method="post" action="{{ path('app_queue_cancel',{id:planet.id,itemId:q.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('cancel'~q.id) }}"><input type="hidden" name="request_key" value="{{ request_key() }}"><input type="hidden" name="section" value="{{ section }}"><button class="text-button" aria-label="Annuler {{ row.label }} et ses dépendances">Annuler</button></form></div>{% endfor %}<p>Les annulations suppriment les niveaux dépendants, avec remboursement de 25 % des ressources de chaque commande annulée, dans la limite du stockage.</p></div></details>
+{% else %}<p class="operation-idle">Aucune commande en cours</p><div class="progress-track empty-track" aria-hidden="true"></div>{% endif %}
+</div>{% endfor %}
+</div>

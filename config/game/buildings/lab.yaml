@@ -1,0 +1,18 @@
+{
+  "slug": "lab",
+  "label": "Laboratoire",
+  "max_level": 10,
+  "base_build_time": 240,
+  "build_time_scaling": 1.6,
+  "costs_base": {
+    "metal": 5000,
+    "energy": 2000
+  },
+  "costs_scaling": 1.8,
+  "levels": {
+    "1": {
+      "unlock_requirements": {}
+    }
+  },
+  "provisional": true
+}

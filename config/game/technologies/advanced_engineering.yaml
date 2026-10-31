@@ -1,0 +1,24 @@
+{
+  "slug": "advanced_engineering",
+  "label": "Ingénierie avancée",
+  "max_level": 5,
+  "research_time_base": 600,
+  "research_time_scaling": 1.8,
+  "costs_base": {
+    "metal": 2000,
+    "energy": 1000
+  },
+  "costs_scaling": 2,
+  "unlock_requirements": {
+    "buildings": [
+      {
+        "slug": "lab",
+        "level": 1
+      }
+    ]
+  },
+  "effect": {
+    "type": "unlock"
+  },
+  "provisional": true
+}

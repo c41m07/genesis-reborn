@@ -1,0 +1,22 @@
+{
+  "slug": "omega-1",
+  "name": "Omega · univers standard",
+  "features": {
+    "guilds_enabled": true,
+    "planet_conquest": false
+  },
+  "multipliers": {
+    "building_time": 1,
+    "research_time": 1,
+    "ship_build_time": 1,
+    "resource_production": 1,
+    "travel_time": 1
+  },
+  "limits": {
+    "max_planets": 5,
+    "max_fleet_size": 100
+  },
+  "temporary": false,
+  "provisional": true,
+  "note": "Turbo réduit les durées à 1% pour les essais locaux ; variante de démonstration."
+}

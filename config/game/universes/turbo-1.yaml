@@ -1,0 +1,22 @@
+{
+  "slug": "turbo-1",
+  "name": "Turbo · laboratoire de jeu",
+  "features": {
+    "guilds_enabled": false,
+    "planet_conquest": false
+  },
+  "multipliers": {
+    "building_time": 0.01,
+    "research_time": 0.01,
+    "ship_build_time": 0.01,
+    "resource_production": 1,
+    "travel_time": 0.01
+  },
+  "limits": {
+    "max_planets": 5,
+    "max_fleet_size": 100
+  },
+  "temporary": false,
+  "provisional": true,
+  "note": "Turbo réduit les durées à 1% pour les essais locaux ; variante de démonstration."
+}

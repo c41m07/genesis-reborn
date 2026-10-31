@@ -1,0 +1,37 @@
+{
+  "slug": "battleship",
+  "label": "Cuirassé",
+  "category": "heavy",
+  "hp": 4000,
+  "precision": 70,
+  "tracking": 80,
+  "evasion": 60,
+  "signature": 20,
+  "base_attack": 800,
+  "shots_min": 1,
+  "shots_max": 3,
+  "build_time_base": 900,
+  "costs": {
+    "metal": 50000,
+    "energy": 16666
+  },
+  "speed_system": 50,
+  "speed_galaxy": 500,
+  "fuel_travel_system": 0.5,
+  "fuel_travel_galaxy": 2,
+  "fuel_orbit": 0.3,
+  "cargo_capacity": 0,
+  "unlock_requirements": {
+    "buildings": [
+      {
+        "slug": "shipyard",
+        "level": 1
+      }
+    ]
+  },
+  "provisional": true,
+  "note": "Navigation et équilibrage provisoires ; fighter et stealth_fighter reprennent les stats de combat documentées.",
+  "fuel_capacity": 8000,
+  "fuel_capacity_provisional": true,
+  "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 8000 H. Réservoir réservé au carburant, distinct de la soute de fret."
+}

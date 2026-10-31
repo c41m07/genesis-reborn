@@ -1,0 +1,28 @@
+{
+  "slug": "precision_fire",
+  "label": "Tir de précision",
+  "max_level": 3,
+  "research_time_base": 7200,
+  "research_time_scaling": 2,
+  "costs_base": {
+    "metal": 8000,
+    "antimatter": 1000
+  },
+  "costs_scaling": 2.5,
+  "unlock_requirements": {
+    "technologies": [
+      {
+        "slug": "advanced_targeting",
+        "level": 1
+      }
+    ]
+  },
+  "effect": {
+    "type": "stat_bonus",
+    "targets": "all_ships",
+    "stat": "precision",
+    "formula": "flat",
+    "value_per_level": 5
+  },
+  "source": "PDF 1 p.15–16"
+}

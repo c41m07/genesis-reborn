@@ -1,0 +1,372 @@
+Space Empire — Distances, coordonnées & calcul de trajet
+
+
+
+
+                                 Space Empire
+       Supplément — Distances, coordonnées & calcul de trajet
+                       Complément au document de conception technique v1
+
+
+                                                 Mars 2026
+
+
+
+
+                                                                    Complément au document v1
+Space Empire — Distances, coordonnées & calcul de trajet
+
+
+
+
+1. Référentiels et unités
+1.1 Unité de référence
+L'unité astronomique (UA) est l'unité de distance universelle dans le jeu.
+
+ Échelle                               Valeur                    Remarque
+ Taille d'un système stellaire         100 UA                    Rayon de 100 UA autour de l'étoile
+ Distance planète / étoile             position × 10 UA          Position 1 = 10 UA, position 9 = 90
+                                                                 UA
+ Point d'entrée dans un système        100 UA de l'étoile        Bord du système, quel que soit le
+                                                                 trajet
+ 1 unité de coordonnée galaxie         100 UA                    = 1 taille de système stellaire
+ Taille maximale d'une galaxie         200 000 UA en             Soit 2 000 unités de coordonnées
+                                       diagonale
+
+
+
+
+1.2 Coordonnées d'une planète
+Une planète est identifiée de façon unique par trois éléments :
+  [Nom galaxie] — [X, Y] — [Position dans le système]
+
+
+  Exemple : Alpha — (3, 5) — 7
+     → Galaxie Alpha
+     → Système stellaire aux coordonnées (3, 5) dans la galaxie
+     → Planète en position 7 (à 70 UA de son étoile)
+
+Chaque système aura son propre nom
+
+1.3 Positions des planètes dans un système
+Chaque planète est à une distance fixe de son étoile, déterminée par sa position :
+
+ Position                Distance étoile             Dist. depuis bord         Remarque
+                                                     système
+ 1                       10 UA                       90 UA                     Proche de l'étoile —
+                                                                               longue approche
+ 2                       20 UA                       80 UA
+
+ 3                       30 UA                       70 UA
+
+ 4                       40 UA                       60 UA
+
+ 5                       50 UA                       50 UA                     Centre du système
+
+
+
+
+                                                                                Complément au document v1
+Space Empire — Distances, coordonnées & calcul de trajet
+
+
+
+ Position                Distance étoile             Dist. depuis bord        Remarque
+                                                     système
+ 6                       60 UA                       40 UA
+
+ 7                       70 UA                       30 UA
+
+ 8                       80 UA                       20 UA
+
+ 9                       90 UA                       10 UA                    Loin de l'étoile —
+                                                                              approche courte
+
+
+     La distance depuis le bord du système = 100 UA - (position × 10 UA). C'est cette valeur qui est
+     utilisée dans les segments 1 et 3 du calcul de trajet.
+
+
+
+
+                                                                               Complément au document v1
+Space Empire — Distances, coordonnées & calcul de trajet
+
+
+
+
+2. Types de navigation
+ Type                               Contexte                  Vitesse                   Carburant
+ Navigation normale                 Intra-système stellaire   speed_system × ratio      fuel_travel_system
+ Hyperespace                        Inter-systèmes            speed_galaxy × ratio      fuel_travel_galaxy
+                                    (même galaxie)
+
+
+
+   •     Un trajet inter-systèmes est toujours découpé en 3 segments : sortie en navigation
+         normale, hyperespace, entrée en navigation normale.
+   •     Un trajet intra-système (même système, planète différente) est entièrement en navigation
+         normale, sans hyperespace.
+   •     Le passage en hyperespace débute dès que la flotte atteint 100 UA de son étoile
+         d'origine.
+   •     Le passage en hyperespace se termine à 100 UA de l'étoile du système cible.
+
+
+       Même si la flotte traverse d'autres systèmes stellaires pendant l'hyperespace, elle ne s'y arrête pas
+       et ne les "visite" pas. Le trajet est direct de bord à bord.
+
+
+
+
+2.1 Vitesse de flotte
+   •     La vitesse maximale d'une flotte est déterminée par le vaisseau le plus lent qui la
+         compose.
+   •     Le joueur choisit un ratio de vitesse entre 10% et 100% au départ.
+   •     Réduire le ratio réduit la consommation en déplacement proportionnellement et augmente
+         la durée du trajet dans les mêmes proportions.
+  vitesse_effective_system           = speed_system_min_flotte × speed_ratio
+  vitesse_effective_galaxy           = speed_galaxy_min_flotte × speed_ratio
+
+
+
+
+                                                                                     Complément au document v1
+Space Empire — Distances, coordonnées & calcul de trajet
+
+
+
+
+3. Formules de calcul de trajet
+3.1 Trajet inter-systèmes (cas général)
+  # ── Distances ──────────────────────────────────────────────
+
+
+  dist_sortie_origine = 100 UA - (position_planète_A × 10 UA)
+  dist_hyperespace         = sqrt((Xb - Xa)² + (Yb - Ya)²) × 100 UA
+  dist_entrée_cible        = 100 UA - (position_planète_B × 10 UA)
+
+
+  distance_totale = dist_sortie_origine + dist_hyperespace + dist_entrée_cible
+
+
+  # ── Temps ───────────────────────────────────────────────────
+
+
+  temps_sortie       = dist_sortie_origine / (speed_system × speed_ratio)
+  temps_hyper        = dist_hyperespace          / (speed_galaxy × speed_ratio)
+  temps_entrée       = dist_entrée_cible         / (speed_system × speed_ratio)
+
+
+  temps_total = temps_sortie + temps_hyper + temps_entrée
+
+
+  # ── Consommation hydrogène ──────────────────────────────────
+
+
+  # Par segment, pour l'ensemble de la flotte :
+  hydro_sortie = dist_sortie_origine × fuel_travel_system × nb_vaisseaux × (1 /
+  speed_ratio)
+  hydro_hyper = dist_hyperespace               × fuel_travel_galaxy × nb_vaisseaux × (1 /
+  speed_ratio)
+  hydro_entrée = dist_entrée_cible             × fuel_travel_system × nb_vaisseaux × (1 /
+  speed_ratio)
+
+
+  hydro_déplacement = hydro_sortie + hydro_hyper + hydro_entrée
+
+
+
+    Le trajet A→B et le trajet B→A ont toujours la même distance, le même temps et la même
+    consommation en déplacement. Les segments 1 et 3 sont simplement inversés, mais leurs valeurs
+    sont symétriques.
+
+
+
+
+3.2 Trajet intra-système (même système stellaire)
+  # Pas d'hyperespace — navigation normale uniquement
+
+
+  distance = |position_B - position_A| × 10 UA
+
+
+  temps      = distance / (speed_system × speed_ratio)
+
+
+
+                                                                           Complément au document v1
+Space Empire — Distances, coordonnées & calcul de trajet
+
+
+
+
+  hydro      = distance × fuel_travel_system × nb_vaisseaux × (1 / speed_ratio)
+
+
+
+
+3.3 Consommation totale aller-retour (pour le chargement au départ)
+  # Le système calcule automatiquement l'hydrogène nécessaire
+  # pour l'ensemble du voyage avant le départ.
+
+
+  hydro_total =
+       hydro_déplacement_aller
+    + hydro_orbite       (fuel_orbit × nb_vaisseaux × durée_stationnement_prévue)
+    + hydro_déplacement_retour
+
+
+  # Comme aller = retour en consommation déplacement :
+  hydro_total = (hydro_déplacement × 2) + hydro_orbite
+
+
+  # Ce montant est prélevé sur la planète d'origine et chargé en soute.
+  # Le reste de la soute est disponible pour le fret (butin, transport).
+  # Départ refusé si soute_totale_flotte < hydro_total.
+
+
+
+
+                                                                      Complément au document v1
+Space Empire — Distances, coordonnées & calcul de trajet
+
+
+
+
+4. Exemple complet de calcul
+4.1 Paramètres
+Planètes
+                         Galaxie                      Système (X, Y)       Position
+
+ Planète A (origine)     Alpha                        (3, 5)               3
+ Planète B (cible)       Alpha                        (7, 9)               7
+
+
+
+
+Flotte
+ Paramètre                                  Valeur                     Remarque
+ Composition                                5 chasseurs + 2 cargos     7 vaisseaux au total
+ speed_system                               50 UA/h                    Navigation normale
+ speed_galaxy                               500 UA/h                   Hyperespace
+ speed_ratio                                0.8 (80%)                  Choisi par le joueur
+ fuel_travel_system                         0.5 H/UA/vaisseau
+
+ fuel_travel_galaxy                         2.0 H/UA/vaisseau
+
+ fuel_orbit                                 0.3 H/h/vaisseau           Pendant le timer de combat
+ Timer de combat                            10 min = 0.167h            Durée stationnement sur B
+
+
+
+
+4.2 Trajet A → B
+Segment 1 — Sortie du système A (navigation normale)
+  dist        = 100 UA - (3 × 10 UA)                  = 70 UA
+  temps       = 70 / (50 × 0.8)                       = 1.75h
+  hydro       = 70 × 0.5 × 7 × (1 / 0.8)             = 306.25 H
+
+
+
+
+Segment 2 — Hyperespace A → B
+  dist        = sqrt((7-3)² + (9-5)²) × 100 UA
+              = sqrt(16 + 16) × 100 UA
+              = sqrt(32) × 100 UA
+              = 5.657 × 100 UA                        = 565.7 UA
+  temps       = 565.7 / (500 × 0.8)                   = 1.414h
+  hydro       = 565.7 × 2.0 × 7 × (1 / 0.8)          = 9 899.75 H
+
+
+
+
+                                                                            Complément au document v1
+Space Empire — Distances, coordonnées & calcul de trajet
+
+
+
+
+Segment 3 — Entrée dans le système B (navigation normale)
+  dist     = 100 UA - (7 × 10 UA)                    = 30 UA
+  temps    = 30 / (50 × 0.8)                         = 0.75h
+  hydro    = 30 × 0.5 × 7 × (1 / 0.8)               = 131.25 H
+
+
+
+
+Total A → B
+ Segment                            Distance               Temps     Hydrogène
+ Sortie système A (nav.             70 UA                  1.75h     306.25 H
+ normale)
+ Hyperespace A → B                  565.7 UA               1.414h    9 899.75 H
+ Entrée système B (nav.             30 UA                  0.75h     131.25 H
+ normale)
+ TOTAL A → B                        665.7 UA               3.914h    10 337.25 H
+
+
+
+
+4.3 Stationnement sur B (timer de combat)
+  durée    = 0.167h
+  hydro    = 0.3 H/h × 7 vaisseaux × 0.167h = 0.35 H
+
+
+
+
+4.4 Trajet B → A (retour)
+Segments identiques à l'aller, inversés :
+
+ Segment                            Distance               Temps     Hydrogène
+ Sortie système B (nav.             30 UA                  0.75h     131.25 H
+ normale)
+ Hyperespace B → A                  565.7 UA               1.414h    9 899.75 H
+ Entrée système A (nav.             70 UA                  1.75h     306.25 H
+ normale)
+ TOTAL B → A                        665.7 UA               3.914h    10 337.25 H
+
+
+
+
+4.5 Récapitulatif complet du voyage
+
+
+
+
+                                                                    Complément au document v1
+Space Empire — Distances, coordonnées & calcul de trajet
+
+
+
+ Phase                                        Distance            Temps                 Hydrogène
+ Trajet A → B                                 665.7 UA            3.914h                10 337.25 H
+ Stationnement sur B (timer)                  —                   0.167h                0.35 H
+ Trajet B → A                                 665.7 UA            3.914h                10 337.25 H
+ TOTAL VOYAGE                                 1 331.4 UA          7.995h                20 674.85 H
+
+
+    20 674.85 H doivent être disponibles dans la soute au départ. Avec 2 cargos, la capacité de soute
+    devra être d'au moins 10 337.5 H par cargo pour ce trajet. Le reste de la soute est disponible pour le
+    fret (butin après combat).
+
+
+
+
+4.6 Vérification de la symétrie
+  # A → B et B → A ont bien la même distance et la même consommation
+  # car les segments 1 et 3 sont inversés mais identiques en valeur.
+
+
+  dist_seg1_aller       = 100 - (pos_A × 10) = 100 - 30 = 70 UA            = dist_seg3_retour ✓
+  dist_seg3_aller       = 100 - (pos_B × 10) = 100 - 70 = 30 UA            = dist_seg1_retour ✓
+  dist_seg2             = identique dans les deux sens                         ✓
+
+
+
+
+                    Supplément v1 — Distances, coordonnées & calcul de trajet — Mars 2026
+
+
+
+
+                                                                                   Complément au document v1
+

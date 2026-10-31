@@ -1,0 +1,19 @@
+{
+  "slug": "storage_energy",
+  "label": "Entrepôt · Énergie",
+  "max_level": 20,
+  "base_build_time": 180,
+  "build_time_scaling": 1.6,
+  "costs_base": {
+    "metal": 1500,
+    "carbon": 500
+  },
+  "costs_scaling": 1.8,
+  "storage_resource": "energy",
+  "levels": {
+    "1": {
+      "unlock_requirements": {}
+    }
+  },
+  "provisional": true
+}

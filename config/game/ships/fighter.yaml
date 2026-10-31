@@ -1,0 +1,30 @@
+{
+  "slug": "fighter",
+  "label": "Chasseur",
+  "category": "light",
+  "hp": 150,
+  "precision": 70,
+  "tracking": 80,
+  "evasion": 60,
+  "signature": 20,
+  "base_attack": 40,
+  "shots_min": 1,
+  "shots_max": 3,
+  "build_time_base": 60,
+  "costs": {
+    "metal": 3000,
+    "energy": 1000
+  },
+  "speed_system": 50,
+  "speed_galaxy": 500,
+  "fuel_travel_system": 0.5,
+  "fuel_travel_galaxy": 2,
+  "fuel_orbit": 0.3,
+  "cargo_capacity": 0,
+  "unlock_requirements": {},
+  "provisional": true,
+  "note": "Navigation et équilibrage provisoires ; fighter et stealth_fighter reprennent les stats de combat documentées.",
+  "fuel_capacity": 700,
+  "fuel_capacity_provisional": true,
+  "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 700 H. Réservoir réservé au carburant, distinct de la soute de fret."
+}

@@ -1,0 +1,9 @@
+{% macro icon(name, class='') %}<svg class="icon {{ class }}" aria-hidden="true" focusable="false"><use href="{{ asset('art/icons.svg') }}#{{ name }}"/></svg>{% endmacro %}
+{% macro structure(name, class='') %}<svg class="structure-art {{ class }}" aria-hidden="true" focusable="false"><use href="{{ asset('art/structures.svg') }}#{{ name }}"/></svg>{% endmacro %}
+{% macro progress(start, end, label, totalEnd=null) %}
+{% set now='now'|date('U') %}{% set duration=max(1,end|date('U')-start|date('U')) %}{% set percent=max(0,min(100,(now-start|date('U'))/duration*100)) %}
+<div class="operation-progress" data-controller="progress" data-progress-start-value="{{ start|date('c') }}" data-progress-end-value="{{ end|date('c') }}" {% if totalEnd %}data-progress-total-value="{{ totalEnd|date('c') }}"{% endif %}>
+<div class="progress-track" role="progressbar" aria-label="{{ label }}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ percent|round }}" data-progress-target="bar"><span style="width:{{ percent }}%" data-progress-target="fill"></span></div>
+<div class="progress-times"><span>En cours · <strong data-progress-target="remaining">{{ duration_label(max(0,end|date('U')-now)) }}</strong></span>{% if totalEnd %}<span>File complète · <strong data-progress-target="total">{{ duration_label(max(0,totalEnd|date('U')-now)) }}</strong></span>{% endif %}</div>
+</div>
+{% endmacro %}

@@ -1,0 +1,42 @@
+{
+  "resources": {
+    "metal": "Métal",
+    "energy": "Énergie",
+    "antimatter": "Antimatière",
+    "hydrogen": "Hydrogène",
+    "carbon": "Carbone"
+  },
+  "initial_stock": {
+    "metal": 100000,
+    "energy": 60000,
+    "antimatter": 20000,
+    "hydrogen": 50000,
+    "carbon": 40000
+  },
+  "base_production": {
+    "metal": 0.3,
+    "energy": 0.3,
+    "antimatter": 0.03,
+    "hydrogen": 0.15,
+    "carbon": 0.2
+  },
+  "mine_production_per_level": 0.5,
+  "base_storage_capacity": 200000,
+  "storage_capacity_per_level": 100000,
+  "building_time_multiplier_key": "building_time",
+  "cancellation_refund_ratio": 0.25,
+  "fuel_ratio_policy": "proportional",
+  "combat_window_seconds": 600,
+  "max_combat_rounds": 10,
+  "provisional": true,
+  "note": "Paramètres de démonstration non chiffrés dans les PDF, à équilibrer. Carburant proportionnel à la vitesse, confirmé par l’utilisateur.",
+  "colony_initial_stock": {
+    "metal": 2000,
+    "energy": 1000,
+    "antimatter": 0,
+    "hydrogen": 200,
+    "carbon": 500
+  },
+  "colony_kit_provisional": true,
+  "colony_kit_note": "Kit limité confirmé ; quantités de départ proposées et provisoires, à équilibrer."
+}

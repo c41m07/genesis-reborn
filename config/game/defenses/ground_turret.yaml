@@ -1,0 +1,26 @@
+{
+  "slug": "ground_turret",
+  "label": "Tourelle au sol",
+  "hp": 600,
+  "precision": 65,
+  "tracking": 85,
+  "evasion": 0,
+  "signature": 60,
+  "base_attack": 100,
+  "shots_min": 1,
+  "shots_max": 2,
+  "build_time_base": 180,
+  "costs": {
+    "metal": 4000,
+    "energy": 1000
+  },
+  "unlock_requirements": {
+    "buildings": [
+      {
+        "slug": "fortress",
+        "level": 1
+      }
+    ]
+  },
+  "provisional": true
+}

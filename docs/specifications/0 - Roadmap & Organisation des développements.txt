@@ -1,0 +1,436 @@
+Space Empire — Roadmap & Organisation des développements
+
+
+
+
+                              Space Empire
+              Roadmap & Organisation des développements
+           RÉPARTITION PAS OUF / MAIS BON DÉCOUPAGE
+                    Priorisation des features — Répartition Thomas / Binôme
+
+
+                                             Mars 2026
+
+
+
+
+                                                                        Roadmap v1 — Mars 2026
+Space Empire — Roadmap & Organisation des développements
+
+
+
+
+1. Principes de la roadmap
+1.1 Contraintes prises en compte
+   •     Binôme débutant en Symfony/PHP — montée en compétence progressive obligatoire
+   •     Projet long terme sans deadline — on privilégie la qualité et la solidité des bases
+   •     Travail en parallèle maximisé — Thomas sur le backend complexe, binôme sur les
+         domaines accessibles
+   •     Pas de sur-architecture prématurée — on construit dans l'ordre de la dépendance
+         technique
+
+
+
+1.2 Répartition générale des responsabilités
+ Thomas                                              Binôme
+
+ • Architecture & infrastructure (Docker,            • Entités Doctrine & migrations (guidé par
+ Traefik, RabbitMQ, Mercure)                         Thomas)
+ • Logique métier complexe (combat, flotte,          • Fichiers YAML de catalogue (vaisseaux,
+ calculs univers)                                    bâtiments, techno...)
+ • Services Symfony (UniverseContext,                • Templates Twig (pages, layouts, composants UI)
+ CombatResolver...)                                  • Controllers simples (lecture seule, affichage)
+ • RabbitMQ — messages différés                      • CSS / Stimulus (comportements UI)
+ • Revue de code du binôme                           • Script Python de génération de carte
+ • Décisions d'architecture
+ * Script Python de génération de carte
+
+
+
+       Le binôme ne touche jamais à un service métier ou un MessageHandler sans relecture de Thomas.
+       En revanche, il est autonome sur les entités, le YAML, Twig et le CSS une fois les patterns montrés.
+
+
+       Thomas ne push pas dans que Caim n’a pas regarder ce qu’il a fait, pour pouvoir poser des
+       questions
+
+
+
+
+                                                                                   Roadmap v1 — Mars 2026
+Space Empire — Roadmap & Organisation des développements
+
+
+
+
+2. Les 6 phases de développement
+ Phase          Objectif                                                   Livrable
+ Phase 1        Socle technique — projet qui démarre, BDD connectée,       Login fonctionnel
+                authentification
+ Phase 2        Univers & carte — import JSON, PlayerUniverse, sélection   Joueur dans un
+                d'univers                                                  univers
+ Phase 3        Colonie — ressources, bâtiments, recherches, chantier      Planète jouable
+ Phase 4        Flottes & déplacements — envoi, calculs, cargo, retour     Flotte qui bouge
+ Phase 5        Combat & guildes — résolution, camps, logs, relations      Jeu complet MVP
+ Phase 6        Multi-univers avancé — modes de jeu, variantes, UI         Produit final
+                complète
+
+
+
+
+                                                                            Roadmap v1 — Mars 2026
+Space Empire — Roadmap & Organisation des développements
+
+
+
+
+3. Phase 1 — Socle technique
+Objectif : avoir un projet Symfony qui démarre, avec Docker, la BDD connectée,
+l'authentification par session et la structure de code en place. Rien de jouable encore — c'est la
+fondation sur laquelle tout le reste s'appuie.
+
+                  Thomas (bleu)                            Binôme (vert)                        Durée
+
+ Infra Docker     • Dockerfile PHP-FPM 8.3                 • Lire et comprendre le docker-        S1
+                  • Docker Compose (nginx, mariadb,        compose
+                  rabbitmq, mercure)                       • Tester le démarrage en local
+                  • Traefik + certificats
+                  • Entrypoint.sh (migrations + import)
+
+ Structure        • Installer Symfony 7 + tous les         • Installer les dépendances npm        S1
+ projet           bundles                                  (Webpack Encore, Stimulus)
+                  • Créer l'arborescence src/ (Service/,   • Créer le layout Twig de base
+                  Manager/, Validator/DTO/, etc.)          (base.html.twig)
+                  • Configurer security.yaml,              • Mettre en place le CSS global
+                  messenger.yaml, mercure.yaml
+
+ Entité Player    • Entity Player + migration              • Page de login Twig (formulaire,    S1-S2
+ & auth           • Formulaire de login/logout             erreurs)
+                  (Security)                               • Page d'accueil après connexion
+                  • Guard authenticator                    (stub)
+                  • Fixtures de test (1 joueur admin)      • Controller HomeController (page
+                                                           vide connectée)
+
+
+
+    À la fin de la Phase 1 : docker compose up démarre tout, un joueur peut se connecter et voir une
+    page d'accueil vide. Le binôme a compris l'architecture de base.
+
+
+
+
+                                                                                   Roadmap v1 — Mars 2026
+Space Empire — Roadmap & Organisation des développements
+
+
+
+
+4. Phase 2 — Univers & carte
+Objectif : un joueur peut choisir un univers et y être rattaché. La carte (galaxies, systèmes,
+planètes) est importée depuis le JSON. L'UniverseContext est opérationnel.
+
+                  Thomas (bleu)                           Binôme (vert)                        Durée
+
+ Entités          • Entity Universe, PlayerUniverse       • YAML config des 2 premiers           S2
+ univers          • Entity Galaxy, SolarSystem, Planet    univers (omega-1.yaml, turbo-
+                  • Migrations correspondantes            1.yaml)
+                  • UniverseManager, PlanetManager        • Script Python
+                                                          universe_generator.py (génère le
+                                                          JSON de carte)
+
+ Import &         • UniverseImportCommand                 • JSON de carte pour omega-1 (via    S2-S3
+ context          (app:universe:import)                   script Python)
+                  • UniverseImporter                      • JSON de carte pour turbo-1
+                  (Service/Universe/)                     • Tester le script Python en local
+                  • UniverseContext —
+                  getPlayerUniverse(), getMultiplier(),
+                  isFeatureEnabled()
+                  • EventListener redirect si univers
+                  null/fermé
+
+ Sélection        • UniverseController (liste +           • Page de sélection des univers        S3
+ univers          changement d'univers)                   (Twig)
+                  • PlayerManager —                       • Carte de chaque univers (nom,
+                  createOrGetPlayerUniverse()             description, statut, vitesse)
+                  • Logique current_player_universe       • Redirection automatique si
+                  sur Player                              déconnecté de l'univers
+
+
+
+    À la fin de la Phase 2 : le joueur voit la liste des univers, en choisit un, et est rattaché à un
+    PlayerUniverse. La carte est en BDD. L'UniverseContext est prêt pour toutes les phases suivantes.
+
+
+
+
+                                                                                  Roadmap v1 — Mars 2026
+Space Empire — Roadmap & Organisation des développements
+
+
+
+
+5. Phase 3 — Colonie
+Objectif : le joueur colonise une planète, voit ses ressources évoluer, construit des bâtiments,
+lance des recherches et commande des vaisseaux. Première mécanique asynchrone via
+RabbitMQ (fin de construction).
+
+                  Thomas (bleu)                          Binôme (vert)                          Durée
+
+ Catalogues       • UniverseCatalog, ShipCatalog,        • Rédiger tous les fichiers YAML       S3-S4
+ YAML             BuildingCatalog, TechnologyCatalog,    vaisseaux (14 slugs)
+                  DefenseCatalog                         • Rédiger tous les fichiers YAML
+                  • ValueObjects — ShipDefinition,       bâtiments
+                  BuildingDefinition, etc.               • Rédiger tous les fichiers YAML
+                  • RequirementChecker,                  technologies
+                  ShipUnlockChecker
+
+ Ressources       • Entity PlanetResource + migration    • Page de la planète — affichage        S4
+                  • ResourceService — lazy calculation   ressources en temps réel (Twig +
+                  + multiplicateurs univers              Stimulus counter)
+                  • ResourceManager                      • Barre de progression des
+                  • ColonizationService (première        ressources
+                  planète du joueur)
+
+ Bâtiments        • Entity PlanetBuilding + migration    • Page des bâtiments — liste, niveau   S4-S5
+                  • BuildingService — vérif prérequis,   actuel, bouton upgrade
+                  déduction ressources                   • Affichage du timer de construction
+                  • BuildingManager                      (Stimulus countdown)
+                  • Message BuildingUpgradeFinished      • Notification Mercure fin de
+                  + Handler                              construction (Stimulus)
+
+ Recherches       • Entity PlayerTechnology,             • Page des recherches — arbre de        S5
+                  ResearchQueue + migrations             technologies, prérequis visuels
+                  • ResearchService — contraintes (1     • Affichage du timer de recherche en
+                  active), ResearchTimeCalculator        cours
+                  • ResearchManager
+                  • Message ResearchFinished +
+                  Handler
+
+ Chantier         • Entity ShipyardQueue + migration     • Page du chantier — catalogue         S5-S6
+ spatial          • ShipyardService,                     vaisseaux, prérequis, file de
+                  BuildTimeCalculator                    construction
+                  • ShipyardManager                      • Affichage de la queue avec timers
+                  • Message ShipConstructionFinished
+                  + Handler
+
+
+
+    À la fin de la Phase 3 : un joueur peut coloniser une planète, voir ses ressources augmenter en
+    temps réel, construire des bâtiments, chercher des technologies et commander des vaisseaux. Les
+    timers RabbitMQ fonctionnent.
+
+
+
+
+                                                                                 Roadmap v1 — Mars 2026
+Space Empire — Roadmap & Organisation des développements
+
+
+
+
+6. Phase 4 — Flottes & déplacements
+Objectif : le joueur peut envoyer une flotte vers une autre planète. Les calculs de distance, de
+carburant, de temps de trajet et les messages RabbitMQ d'arrivée sont opérationnels.
+
+                   Thomas (bleu)                            Binôme (vert)                            Durée
+
+ Entités flotte    • Entity Fleet, FleetShip + migrations   • Page de mes flottes — liste, statut,    S6
+                   • FleetManager                           destination, ETA
+                   • FleetRepository — requêtes filtrées    • Carte interactive simplifiée
+                   par PlayerUniverse                       (Stimulus + SVG ou canvas)
+
+ Mouvement         • FleetMovementService — distance        • Formulaire d'envoi de flotte           S6-S7
+                   3 segments, temps de trajet              (destination, composition, vitesse)
+                   • CargoService — calcul hydrogène,       • Affichage ETA et consommation
+                   validation soute                         carburant estimée
+                   • FleetService — envoi, retour,
+                   changement statut
+                   • Message FleetArrived + Handler
+
+ Fog of War        • Entity PlayerDiscovery + migration     • Affichage différencié carte —           S7
+                   • FogOfWarService — découverte           systèmes connus vs inconnus
+                   système à l'arrivée d'une sonde          • Icône sonde, animation de scan
+                   • Filtrage des réponses API selon        (Stimulus)
+                   découvertes
+
+ Orbite &          • Gestion statut orbit — durée limitée   • Page détail d'une flotte en             S7
+ transport         par carburant                            déplacement
+                   • Transport de ressources —              • Barre de progression du trajet
+                   chargement/déchargement                  (Stimulus countdown)
+                   • Gestion du retour automatique
+
+
+
+    À la fin de la Phase 4 : le jeu est déjà partiellement jouable en solo. On peut coloniser, développer
+    une planète, envoyer des flottes, explorer la carte.
+
+
+
+
+                                                                                      Roadmap v1 — Mars 2026
+Space Empire — Roadmap & Organisation des développements
+
+
+
+
+7. Phase 5 — Combat & guildes
+Objectif : le jeu devient multi-joueurs. Les flottes peuvent s'attaquer, les combats se résolvent
+avec logs, les guildes et alliances fonctionnent.
+
+                   Thomas (bleu)                           Binôme (vert)                            Durée
+
+ Relations         • Entity Guild, GuildMember,            • Page de guilde — membres, statut,      S7-S8
+ joueurs           GuildRelation, AllianceContract +       relations inter-guildes
+                   migrations                              • Page des alliances — contrats
+                   • GuildManager, AllianceService,        actifs, demandes en attente
+                   GuildRelationService,
+                   RelationResolver
+                   • GuildController
+
+ Système de        • Entity CombatEvent,                   • Page de rapport de combat — log        S8-S9
+ combat            CombatParticipant, CombatLog +          des rounds, pertes, butin
+                   migrations                              • Historique des combats d'une
+                   • CombatEventService — timer,           planète
+                   arrivées, fenêtre de renfort
+                   • CampResolver — détermination
+                   des camps (1v1, coalition, FFA)
+                   • HitCalculator — formule de toucher,
+                   modificateurs
+                   • CombatResolver — rounds,
+                   destructions, butin
+                   • TechnologyBonusResolver
+                   • Message CombatResolve +
+                   Handler
+
+ Notifications     • CombatNotificationService — qui       • Controller Stimulus de notifications    S9
+                   notifier, visibilité attaquant          (toast, alertes, sons)
+                   • FleetNotificationService              • Bannière d'alerte attaque en cours
+                   • MercurePublisher — publication        (temps réel)
+                   des événements SSE
+
+ Défenses          • Entity PlanetDefense + migration      • YAML des défenses statiques             S9
+                   • DefenseService — construction,        • Page des défenses d'une planète
+                   intégration au combat
+                   • DefenseCatalog
+
+
+
+    À la fin de la Phase 5 : le jeu est un MVP complet et jouable. Plusieurs joueurs peuvent s'affronter
+    dans un univers, former des guildes, se battre et explorer.
+
+
+
+
+                                                                                     Roadmap v1 — Mars 2026
+Space Empire — Roadmap & Organisation des développements
+
+
+
+
+8. Phase 6 — Multi-univers avancé & polish
+Objectif : exploiter pleinement le système multi-univers. Ajout des modes de jeu spéciaux,
+fermeture automatique des univers temporaires, UI complète et polish général.
+
+                  Thomas (bleu)                          Binôme (vert)                         Durée
+
+ Modes de jeu     • Feature flags — planet_conquest,     • YAML des univers spéciaux           S9-S10
+                  guilds_enabled dans                    (conquest.yaml, speed_x10.yaml...)
+                  UniverseContext                        • Page de sélection enrichie
+                  • ColonizationService — vol de         (description du mode, règles)
+                  planète si feature activée
+                  • Univers temporaires — Message
+                  UniverseClose + Handler
+
+ Classements      • Requêtes de classement par           • Page classement par univers —        S10
+                  univers (points, flottes, planètes)    tableau, podium
+                  • API endpoints classement             • Statistiques personnelles par
+                                                         univers
+
+ UI & polish      • Optimisation des requêtes Doctrine   • Refonte UI complète — design         S10+
+                  (N+1, index manquants)                 cohérent, responsive
+                  • Mise en place du cache Symfony       • Animations Stimulus (transitions,
+                  pour les catalogues                    effets combat)
+                                                         • Carte interactive avancée
+                                                         • Dark mode
+
+ Qualité          • Tests unitaires Service/ (PHPUnit)   • Tests des pages Twig                  En
+                  • Tests fonctionnels Controller/       (accessibilité, rendu)                continu
+                  • CI/CD GitLab — lint, tests           • Documentation utilisateur
+                  automatiques
+
+
+
+
+                                                                                   Roadmap v1 — Mars 2026
+Space Empire — Roadmap & Organisation des développements
+
+
+
+
+9. Planning et priorisation
+9.1 Ordre de priorité des features
+ #        Feature                      Pourquoi cette priorité                  Phase
+ 1        Socle Docker + Symfony       Tout le reste en dépend                  Phase 1
+ 2        Authentification (session)   Nécessaire avant toute page              Phase 1
+ 3        Univers + PlayerUniverse     Toutes les entités en dépendent          Phase 2
+ 4        Import de carte (JSON →      Nécessaire avant colonie                 Phase 2
+          BDD)
+ 5        UniverseContext              Injecté dans tous les services           Phase 2
+ 6        Catalogues YAML              Prérequis du chantier et des bâtiments   Phase 3
+ 7        Ressources (lazy calc)       Mécanique centrale du jeu                Phase 3
+ 8        Bâtiments + RabbitMQ         Premier timer asynchrone                 Phase 3
+ 9        Recherches                   Prérequis des vaisseaux avancés          Phase 3
+          technologiques
+ 10       Chantier spatial             Prérequis des flottes                    Phase 3
+ 11       Flottes + déplacements       Prérequis du combat                      Phase 4
+ 12       Fog of War                   Explorations et sondes                   Phase 4
+ 13       Guildes + alliances          Prérequis du combat multi                Phase 5
+ 14       Système de combat            Feature centrale multi-joueurs           Phase 5
+ 15       Notifications Mercure        UX temps réel                            Phase 5
+ 16       Modes de jeu (univers)       Différenciation des univers              Phase 6
+ 17       Classements                  Engagement joueur long terme             Phase 6
+ 18       Tests & CI/CD                Qualité, en continu dès Phase 3          Continu
+
+
+
+
+9.2 Ce qui ne doit PAS être fait trop tôt
+     •   Optimisation des performances — seulement quand le jeu est jouable et qu'un problème
+         réel est observé
+     •   Redis — pas avant d'avoir des joueurs réels et des mesures de perf
+     •   Turbo (navigation SPA) — ajoute de la complexité au cycle de vie Stimulus, post-MVP
+         uniquement
+     •   Classements et statistiques avancées — inutile sans une base de joueurs
+     •   Modes de jeu spéciaux — d'abord un univers standard qui fonctionne bien
+
+
+
+
+                                                                                Roadmap v1 — Mars 2026
+Space Empire — Roadmap & Organisation des développements
+
+
+
+9.3 Points de synchronisation obligatoires
+Avant de commencer chaque phase, Thomas et le binôme doivent faire un point ensemble :
+
+ Avant la phase     Point de synchronisation
+ Phase 2            Thomas explique Universe/PlayerUniverse et montre un exemple d'entité +
+                    migration
+ Phase 3            Thomas montre le pattern Service → Manager → Repository sur
+                    ResourceService. Le binôme reproduit pour BuildingService sous supervision.
+ Phase 4            Thomas explique RabbitMQ et les DelayStamp. Le binôme lit le code du Handler
+                    avant de toucher aux pages Twig.
+ Phase 5            Thomas explique le CombatResolver en détail. Le binôme n'intervient que sur le
+                    frontend.
+ Phase 6            Bilan MVP — que manque-t-il ? Que retravailler ? Priorisation collective.
+
+
+
+                                       Roadmap v1 — Mars 2026
+
+
+
+
+                                                                                Roadmap v1 — Mars 2026
+

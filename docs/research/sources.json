@@ -1,0 +1,506 @@
+[
+  {
+    "name": "projet-genesis",
+    "url": "https://www.projetgenesis.com/",
+    "images": [
+      {
+        "src": "https://www.projetgenesis.com/images/screen1_m.gif",
+        "alt": "vue d'ensemble",
+        "width": 100,
+        "height": 69
+      },
+      {
+        "src": "https://www.projetgenesis.com/images/screen2_m.gif",
+        "alt": "batiment",
+        "width": 100,
+        "height": 60
+      },
+      {
+        "src": "https://www.projetgenesis.com/images/screen3_m.gif",
+        "alt": "galaxie",
+        "width": 100,
+        "height": 62
+      },
+      {
+        "src": "https://www.projetgenesis.com/images/screen4_m.gif",
+        "alt": "score",
+        "width": 100,
+        "height": 69
+      }
+    ]
+  },
+  {
+    "name": "antaris",
+    "url": "https://antaris-legacy.com/presentation",
+    "images": [
+      {
+        "src": "https://antaris-legacy.com/image/screen/salle_de_controle.jpg",
+        "alt": "1. Salle de contrôle",
+        "width": 770,
+        "height": 399
+      },
+      {
+        "src": "https://antaris-legacy.com/image/screen/capteur.jpg",
+        "alt": "2. Capteurs Intrastellaires",
+        "width": 770,
+        "height": 399
+      },
+      {
+        "src": "https://antaris-legacy.com/image/screen/portail.jpg",
+        "alt": "3. Portail de téléportation",
+        "width": 770,
+        "height": 399
+      },
+      {
+        "src": "https://antaris-legacy.com/image/screen/centre_spatial.jpg",
+        "alt": "4. Centre Spatial",
+        "width": 770,
+        "height": 399
+      },
+      {
+        "src": "https://antaris-legacy.com/image/screen/batiment.jpg",
+        "alt": "5. Bâtiments",
+        "width": 770,
+        "height": 399
+      },
+      {
+        "src": "https://antaris-legacy.com/image/screen/technologie.jpg",
+        "alt": "6. Technologies",
+        "width": 770,
+        "height": 399
+      },
+      {
+        "src": "https://antaris-legacy.com/image/screen/appareil.jpg",
+        "alt": "7. Appareils spécialisés",
+        "width": 770,
+        "height": 399
+      },
+      {
+        "src": "https://antaris-legacy.com/image/screen/defense.jpg",
+        "alt": "8. Défenses",
+        "width": 770,
+        "height": 399
+      },
+      {
+        "src": "https://antaris-legacy.com/image/screen/population.jpg",
+        "alt": "9. Populations",
+        "width": 770,
+        "height": 399
+      },
+      {
+        "src": "https://antaris-legacy.com/image/screen/banque.jpg",
+        "alt": "10. Banque : évolution du marché",
+        "width": 770,
+        "height": 399
+      },
+      {
+        "src": "https://antaris-legacy.com/image/screen/statistique.jpg",
+        "alt": "11. Statistiques de l'univers",
+        "width": 770,
+        "height": 399
+      },
+      {
+        "src": "https://antaris-legacy.com/image/screen/mission.jpg",
+        "alt": "12. Mission pour les débutants",
+        "width": 770,
+        "height": 399
+      },
+      {
+        "src": "https://antaris-legacy.com/image/icon_browser/chrome_black.png",
+        "alt": "",
+        "width": 256,
+        "height": 256
+      },
+      {
+        "src": "https://antaris-legacy.com/image/icon_browser/firefox_black.png",
+        "alt": "",
+        "width": 256,
+        "height": 256
+      },
+      {
+        "src": "https://antaris-legacy.com/image/icon_browser/safari_black.png",
+        "alt": "",
+        "width": 256,
+        "height": 256
+      },
+      {
+        "src": "https://antaris-legacy.com/image/icon_browser/IE_black.png",
+        "alt": "",
+        "width": 256,
+        "height": 256
+      }
+    ]
+  },
+  {
+    "name": "astro-empires",
+    "url": "https://www.astroempires.com/?lang=en",
+    "images": [
+      {
+        "src": "https://cdn.astroempires.com/images/flags/gb.gif",
+        "alt": "",
+        "width": 18,
+        "height": 12
+      },
+      {
+        "src": "https://cdn.astroempires.com/images/flags/a1.gif",
+        "alt": "",
+        "width": 18,
+        "height": 12
+      },
+      {
+        "src": "https://cdn.astroempires.com/images/flags/cn.gif",
+        "alt": "",
+        "width": 18,
+        "height": 12
+      },
+      {
+        "src": "https://cdn.astroempires.com/images/flags/dk.gif",
+        "alt": "",
+        "width": 18,
+        "height": 12
+      },
+      {
+        "src": "https://cdn.astroempires.com/images/flags/nl.gif",
+        "alt": "",
+        "width": 18,
+        "height": 12
+      },
+      {
+        "src": "https://cdn.astroempires.com/images/flags/fi.gif",
+        "alt": "",
+        "width": 18,
+        "height": 12
+      },
+      {
+        "src": "https://cdn.astroempires.com/images/flags/fr.gif",
+        "alt": "",
+        "width": 18,
+        "height": 12
+      },
+      {
+        "src": "https://cdn.astroempires.com/images/flags/de.gif",
+        "alt": "",
+        "width": 18,
+        "height": 12
+      },
+      {
+        "src": "https://cdn.astroempires.com/images/flags/gr.gif",
+        "alt": "",
+        "width": 18,
+        "height": 12
+      },
+      {
+        "src": "https://cdn.astroempires.com/images/flags/hu.gif",
+        "alt": "",
+        "width": 18,
+        "height": 12
+      },
+      {
+        "src": "https://cdn.astroempires.com/images/flags/it.gif",
+        "alt": "",
+        "width": 18,
+        "height": 12
+      },
+      {
+        "src": "https://cdn.astroempires.com/images/flags/no.gif",
+        "alt": "",
+        "width": 18,
+        "height": 12
+      },
+      {
+        "src": "https://cdn.astroempires.com/images/flags/pl.gif",
+        "alt": "",
+        "width": 18,
+        "height": 12
+      },
+      {
+        "src": "https://cdn.astroempires.com/images/flags/pt.gif",
+        "alt": "",
+        "width": 18,
+        "height": 12
+      },
+      {
+        "src": "https://cdn.astroempires.com/images/flags/es.gif",
+        "alt": "",
+        "width": 18,
+        "height": 12
+      },
+      {
+        "src": "https://cdn.astroempires.com/images/flags/se.gif",
+        "alt": "",
+        "width": 18,
+        "height": 12
+      },
+      {
+        "src": "https://cdn.astroempires.com/landing-page/landing2/desktop/images/screenshots/map_1024x748.jpg?c=3",
+        "alt": "",
+        "width": 1024,
+        "height": 748
+      },
+      {
+        "src": "https://cdn.astroempires.com/landing-page/landing2/desktop/images/screenshots/asteroid_1024x748.jpg",
+        "alt": "",
+        "width": 1024,
+        "height": 748
+      },
+      {
+        "src": "https://cdn.astroempires.com/landing-page/landing2/desktop/images/screenshots/construction_1024x748.jpg",
+        "alt": "",
+        "width": 1024,
+        "height": 748
+      },
+      {
+        "src": "https://cdn.astroempires.com/landing-page/landing2/desktop/images/screenshots/production_1024x748.jpg",
+        "alt": "",
+        "width": 1024,
+        "height": 748
+      },
+      {
+        "src": "https://cdn.astroempires.com/landing-page/landing2/desktop/images/screenshots/star_system_1024x748.jpg",
+        "alt": "",
+        "width": 1024,
+        "height": 748
+      },
+      {
+        "src": "https://cdn.astroempires.com/landing-page/landing2/desktop/images/ships/deathstar1.jpg",
+        "alt": "",
+        "width": 1024,
+        "height": 768
+      },
+      {
+        "src": "https://cdn.astroempires.com/landing-page/landing2/desktop/images/ships/heavy-cruiser2.jpg",
+        "alt": "",
+        "width": 1024,
+        "height": 768
+      },
+      {
+        "src": "https://cdn.astroempires.com/landing-page/landing2/desktop/images/ships/outpost-ship1.jpg",
+        "alt": "",
+        "width": 1024,
+        "height": 768
+      },
+      {
+        "src": "https://cdn.astroempires.com/landing-page/landing2/desktop/images/ships/cruiser1.jpg",
+        "alt": "",
+        "width": 1024,
+        "height": 768
+      },
+      {
+        "src": "https://cdn.astroempires.com/landing-page/landing2/desktop/images/ships/leviathan1.jpg",
+        "alt": "",
+        "width": 1024,
+        "height": 768
+      },
+      {
+        "src": "https://cdn.astroempires.com/landing-page/landing2/desktop/images/ships/titan1.jpg",
+        "alt": "",
+        "width": 1024,
+        "height": 768
+      },
+      {
+        "src": "https://cdn.astroempires.com/landing-page/landing2/desktop/images/logo2.png",
+        "alt": "",
+        "width": 600,
+        "height": 160
+      },
+      {
+        "src": "https://cdn.astroempires.com/landing-page/landing2/desktop/images/thumb-screenshots.jpg",
+        "alt": "",
+        "width": 780,
+        "height": 450
+      },
+      {
+        "src": "https://cdn.astroempires.com/landing-page/landing2/desktop/images/thumb-concepts.jpg",
+        "alt": "",
+        "width": 780,
+        "height": 450
+      }
+    ]
+  },
+  {
+    "name": "ogame",
+    "url": "https://play.ogame.gameforge.com/forgemasters",
+    "images": [
+      {
+        "src": "https://cdn.lugc.link/e2895c4d-2016-4289-927d-17e17328a1e8/-/preview/275x93/-/format/auto/",
+        "alt": "",
+        "width": 384,
+        "height": 130
+      },
+      {
+        "src": "https://cdn.lugc.link/dbace560-e8c2-4de3-b5ba-7f30a71fd2ef/-/preview/320x64/-/format/auto/",
+        "alt": "",
+        "width": 390,
+        "height": 79
+      },
+      {
+        "src": "https://cdn.lugc.link/ee52dd26-0c76-4958-ab1e-11d1354c8879/-/preview/320x200/-/format/auto/",
+        "alt": "",
+        "width": 594,
+        "height": 375
+      },
+      {
+        "src": "https://cdn.lugc.link/82b72c12-ba20-46df-b2c9-0db1daf9f246/-/preview/80x80/-/format/auto/",
+        "alt": "",
+        "width": 100,
+        "height": 100
+      },
+      {
+        "src": "https://cdn.lugc.link/3f4fa4c6-1698-4429-8eb0-d7d8535cb0de/-/preview/80x80/-/format/auto/",
+        "alt": "",
+        "width": 100,
+        "height": 100
+      },
+      {
+        "src": "https://cdn.lugc.link/b79ebb97-e23b-4175-8299-269c8f3beb8c/-/preview/80x80/-/format/auto/",
+        "alt": "",
+        "width": 100,
+        "height": 100
+      },
+      {
+        "src": "https://cdn.lugc.link/1ebb6540-0b24-4006-b32b-20b6a900369a/-/preview/320x136/-/format/auto/",
+        "alt": "",
+        "width": 598,
+        "height": 255
+      },
+      {
+        "src": "https://cdn.lugc.link/2c350394-e1da-41b9-b2e1-bc2436aca333/-/preview/320x176/-/format/auto/",
+        "alt": "",
+        "width": 600,
+        "height": 332
+      },
+      {
+        "src": "",
+        "alt": "",
+        "width": 0,
+        "height": 0
+      },
+      {
+        "src": "",
+        "alt": "",
+        "width": 0,
+        "height": 0
+      },
+      {
+        "src": "",
+        "alt": "",
+        "width": 0,
+        "height": 0
+      },
+      {
+        "src": "",
+        "alt": "",
+        "width": 0,
+        "height": 0
+      },
+      {
+        "src": "",
+        "alt": "",
+        "width": 0,
+        "height": 0
+      },
+      {
+        "src": "",
+        "alt": "",
+        "width": 0,
+        "height": 0
+      },
+      {
+        "src": "",
+        "alt": "",
+        "width": 0,
+        "height": 0
+      },
+      {
+        "src": "",
+        "alt": "",
+        "width": 0,
+        "height": 0
+      },
+      {
+        "src": "",
+        "alt": "",
+        "width": 0,
+        "height": 0
+      },
+      {
+        "src": "https://cdn.lugc.link/fbee803c-c88c-473f-aff0-56d01beb1b0b/-/preview/",
+        "alt": "",
+        "width": 874,
+        "height": 488
+      },
+      {
+        "src": "https://cdn.lugc.link/5e4fdf56-346e-4494-b19c-826fc833d3de/-/preview/",
+        "alt": "",
+        "width": 874,
+        "height": 488
+      },
+      {
+        "src": "https://cdn.lugc.link/98eb9e95-7928-48e2-9c5e-206094ec3399/-/preview/",
+        "alt": "",
+        "width": 874,
+        "height": 488
+      },
+      {
+        "src": "https://cdn.lugc.link/154bb21a-d475-4950-a187-8c5036f597b8/-/preview/",
+        "alt": "",
+        "width": 874,
+        "height": 488
+      },
+      {
+        "src": "",
+        "alt": "",
+        "width": 0,
+        "height": 0
+      },
+      {
+        "src": "",
+        "alt": "",
+        "width": 0,
+        "height": 0
+      },
+      {
+        "src": "",
+        "alt": "",
+        "width": 0,
+        "height": 0
+      },
+      {
+        "src": "",
+        "alt": "",
+        "width": 0,
+        "height": 0
+      },
+      {
+        "src": "",
+        "alt": "",
+        "width": 0,
+        "height": 0
+      },
+      {
+        "src": "",
+        "alt": "",
+        "width": 0,
+        "height": 0
+      },
+      {
+        "src": "",
+        "alt": "",
+        "width": 0,
+        "height": 0
+      },
+      {
+        "src": "",
+        "alt": "",
+        "width": 0,
+        "height": 0
+      },
+      {
+        "src": "",
+        "alt": "",
+        "width": 0,
+        "height": 0
+      }
+    ]
+  }
+]
