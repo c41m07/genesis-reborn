@@ -17,6 +17,7 @@ use App\Entity\PlayerUniverse;
 use App\Manager\GameManager;
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
+use App\Service\Colony\ResourceService;
 use App\Service\Notification\NotificationService;
 use App\Service\Player\RelationResolver;
 use Psr\Clock\ClockInterface;
@@ -28,6 +29,7 @@ final class CombatEventService
         private GameManager $manager,
         private GameRepository $repo,
         private GameCatalog $catalog,
+        private ResourceService $resources,
         private CombatSimulator $simulator,
         private RelationResolver $relations,
         private NotificationService $notifications,
@@ -311,6 +313,7 @@ final class CombatEventService
             );
 
             $this->persistLosses($participants, $defenseSnapshots, $result['losses']);
+            $loot = $this->collectLoot($participants, $result['outcome'], $event);
             foreach ($participants as $participant) {
                 $this->consumeOrbitFuel($participant->fleet);
                 $this->sendFleetHome($participant);
@@ -332,11 +335,137 @@ final class CombatEventService
                 'seed' => $event->seed,
                 'survivors' => $result['survivors'],
                 'losses' => $result['losses'],
+                'loot' => $loot,
             ];
             $log->resolvedAt = $this->clock->now();
             $this->manager->save($log);
             $event->status = 'resolved';
         });
+    }
+
+
+    /** Répartit le butin de façon déterministe dans les soutes encore libres des attaquants survivants. */
+    private function collectLoot(array $participants, string $outcome, CombatEvent $event): array
+    {
+        $rules = $this->catalog->rules();
+        $ratio = max(0.0, min(1.0, (float) ($rules['combat_loot_ratio'] ?? 1.0)));
+        $protectedRatio = max(0.0, min(1.0, (float) ($rules['combat_loot_protected_storage_ratio'] ?? 0.1)));
+        $result = ['ratio' => $ratio, 'protected_storage_ratio' => $protectedRatio, 'fleets' => [], 'total' => []];
+        if ($outcome !== 'attacker_wins' || !$event->planet->owner) {
+            return $result;
+        }
+
+        $fleets = [];
+        foreach ($participants as $participant) {
+            if ($participant->role !== 'attacker') {
+                continue;
+            }
+            $capacity = 0.0;
+            foreach ($this->repo->all(FleetShip::class, ['fleet' => $participant->fleet], ['id' => 'ASC']) as $ship) {
+                if ($ship->quantity < 1) {
+                    continue;
+                }
+                $type = $this->catalog->get('ships', $ship->slug);
+                $capacity += (($type['cargo_capacity'] ?? 0) + ($type['fuel_capacity'] ?? 0)) * $ship->quantity;
+            }
+            $occupied = array_sum(array_map(static fn ($amount): float => max(0.0, (float) $amount), $participant->fleet->cargo));
+            $space = max(0, (int) floor($capacity - $occupied));
+            if ($space > 0) {
+                $fleets[(int) $participant->fleet->id] = ['fleet' => $participant->fleet, 'space' => $space];
+            }
+        }
+        if ($fleets === []) {
+            return $result;
+        }
+
+        ksort($fleets, SORT_NUMERIC);
+        $rows = $this->resources->materialize($event->planet, $this->clock->now());
+        $storage = $this->resources->snapshot($event->planet);
+        $available = [];
+        foreach ($rows as $slug => $resource) {
+            $protected = (float) ($storage[$slug]['capacity'] ?? 0) * $protectedRatio;
+            $available[$slug] = max(0, (int) floor(max(0.0, $resource->currentStock - $protected) * $ratio));
+        }
+        $capacity = array_sum(array_column($fleets, 'space'));
+        $availableTotal = array_sum($available);
+        if ($availableTotal < 1 || $capacity < 1) {
+            return $result;
+        }
+
+        $loadTotal = min($capacity, $availableTotal);
+        $exact = [];
+        $loaded = 0;
+        foreach ($available as $slug => $amount) {
+            $exact[$slug] = $availableTotal > $loadTotal ? $amount * $loadTotal / $availableTotal : (float) $amount;
+            $available[$slug] = (int) floor($exact[$slug]);
+            $loaded += $available[$slug];
+        }
+        $fractions = [];
+        foreach ($available as $slug => $amount) {
+            $fractions[$slug] = $exact[$slug] - $amount;
+        }
+        uksort($fractions, static fn (string $a, string $b): int => ($fractions[$b] <=> $fractions[$a]) ?: strcmp($a, $b));
+        $left = $loadTotal - $loaded;
+        foreach ($fractions as $slug => $_fraction) {
+            if ($left < 1) {
+                break;
+            }
+            if ($available[$slug] < (int) floor(max(0.0, $rows[$slug]->currentStock - (float) ($storage[$slug]['capacity'] ?? 0) * $protectedRatio) * $ratio)) {
+                ++$available[$slug];
+                --$left;
+            }
+        }
+
+        foreach ($available as $slug => $amount) {
+            if ($amount < 1) {
+                continue;
+            }
+            $fractionsByFleet = [];
+            $remainingSpace = array_sum(array_column($fleets, 'space'));
+            if ($remainingSpace < 1) {
+                break;
+            }
+            $assigned = 0;
+            foreach ($fleets as $fleetId => $entry) {
+                $share = $amount * $entry['space'] / $remainingSpace;
+                $share = min($entry['space'], (int) floor($share));
+                if ($share > 0) {
+                    $fleets[$fleetId]['space'] -= $share;
+                    $entry['fleet']->cargo[$slug] = ($entry['fleet']->cargo[$slug] ?? 0) + $share;
+                    $result['fleets'][$fleetId][$slug] = ($result['fleets'][$fleetId][$slug] ?? 0) + $share;
+                    $assigned += $share;
+                }
+                $fractionsByFleet[$fleetId] = $share < $entry['space'] ? ($amount * $entry['space'] / $remainingSpace - floor($amount * $entry['space'] / $remainingSpace)) : -1;
+            }
+            $remainder = $amount - $assigned;
+            uksort($fractionsByFleet, static fn (int $a, int $b): int => ($fractionsByFleet[$b] <=> $fractionsByFleet[$a]) ?: ($a <=> $b));
+            while ($remainder > 0) {
+                $progress = false;
+                foreach ($fractionsByFleet as $fleetId => $_fraction) {
+                    if ($remainder < 1) {
+                        break;
+                    }
+                    if ($fleets[$fleetId]['space'] < 1) {
+                        continue;
+                    }
+                    --$fleets[$fleetId]['space'];
+                    $fleets[$fleetId]['fleet']->cargo[$slug] = ($fleets[$fleetId]['fleet']->cargo[$slug] ?? 0) + 1;
+                    $result['fleets'][$fleetId][$slug] = ($result['fleets'][$fleetId][$slug] ?? 0) + 1;
+                    --$remainder;
+                    $progress = true;
+                }
+                if (!$progress) {
+                    break;
+                }
+            }
+            $taken = $amount - $remainder;
+            if ($taken > 0) {
+                $rows[$slug]->currentStock = max(0, $rows[$slug]->currentStock - $taken);
+                $result['total'][$slug] = $taken;
+            }
+        }
+
+        return $result;
     }
 
     private function arrivalRound(CombatEvent $event, \DateTimeImmutable $arrivalAt): int

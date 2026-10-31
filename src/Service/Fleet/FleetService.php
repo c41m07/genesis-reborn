@@ -97,9 +97,8 @@ final class FleetService
                 $f->status='returning';$f->departureAt=$f->arrivalAt;$f->arrivalAt=$this->clock->now()->modify('+'.$f->travelSeconds.' seconds');$this->schedule($f);return;
             }
             if($f->status==='returning') {
-                $rows=$this->resources->materialize($f->homePlanet);
                 $f->cargo['hydrogen']=max(0,($f->cargo['hydrogen']??0)-$f->reservedFuel);
-                foreach($f->cargo as $slug=>$n) $rows[$slug]->currentStock+=$n;
+                $this->resources->deposit($f->homePlanet, $f->cargo);
                 $idle=$this->repo->one(Fleet::class,['homePlanet'=>$f->homePlanet,'playerUniverse'=>$m,'status'=>'idle']);
                 if(!$idle) { $idle=new Fleet();$idle->homePlanet=$f->homePlanet;$idle->playerUniverse=$m;$this->manager->save($idle);$this->manager->flush(); }
                 foreach($this->repo->all(FleetShip::class,['fleet'=>$f]) as $s) {

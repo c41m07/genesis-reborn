@@ -8,6 +8,7 @@ use App\Entity\Fleet;
 use App\Entity\FleetShip;
 use App\Entity\Planet;
 use App\Entity\PlanetDefense;
+use App\Entity\PlanetResource;
 use App\Entity\Player;
 use App\Entity\Universe;
 use App\Service\Combat\CombatEventService;
@@ -338,6 +339,86 @@ final class CombatEventTest extends KernelTestCase
         $this->em->persist($contract);
         $this->em->flush();
         self::assertTrue($combat->orbitAutoAccepted($sender->currentPlayerUniverse, $target));
+    }
+
+    public function testWinningAttackLootProtectsStorageFloorAndSplitsBySurvivingCargoSpace(): void
+    {
+        $clock = $this->clock();
+        $defender = $this->player('LootDefender');
+        $target = $this->join($defender);
+        $attacker = $this->player('LootAttacker');
+        $origin = $this->join($attacker);
+
+        foreach ($this->em->getRepository(PlanetResource::class)->findBy(['planet' => $target]) as $resource) {
+            $resource->currentStock = 25000;
+            $resource->lastUpdatedAt = $clock->now();
+        }
+        $this->em->flush();
+
+        $first = $this->attackFleet($attacker, $origin, $target, 'loot-a');
+        $first->reservedFuel = 10;
+        $first->cargo = ['hydrogen' => 10];
+        $firstCargo = new FleetShip();
+        $firstCargo->fleet = $first;
+        $firstCargo->slug = 'transport';
+        $firstCargo->quantity = 1;
+        $this->em->persist($firstCargo);
+
+        $second = $this->attackFleet($attacker, $origin, $target, 'loot-b');
+        $second->reservedFuel = 10;
+        $second->cargo = ['hydrogen' => 10];
+        $secondCargo = new FleetShip();
+        $secondCargo->fleet = $second;
+        $secondCargo->slug = 'transport';
+        $secondCargo->quantity = 2;
+        $this->em->persist($secondCargo);
+        $this->em->flush();
+
+        $combat = self::getContainer()->get(CombatEventService::class);
+        $manager = self::getContainer()->get(\App\Manager\GameManager::class);
+        self::assertTrue($manager->transaction(fn (): bool => $combat->joinAttack($first)));
+        self::assertTrue($manager->transaction(fn (): bool => $combat->joinAttack($second)));
+        $event = $this->em->getRepository(CombatEvent::class)->findOneBy(['planet' => $target]);
+        self::assertNotNull($event);
+        $clock->sleep(600);
+        $projected = self::getContainer()->get(\App\Service\Colony\ResourceService::class)->snapshot($target);
+        $expectedLoot = 0;
+        foreach ($projected as $resource) {
+            $expectedLoot += max(0, (int) floor($resource['stock'] - $resource['capacity'] * 0.1));
+        }
+        $combat->resolve($event->id, $event->dispatchToken);
+
+        $log = $this->em->getRepository(CombatLog::class)->findOneBy(['combatEvent' => $event]);
+        self::assertNotNull($log);
+        self::assertSame('attacker_wins', $log->outcome);
+        self::assertSame(0.1, $log->snapshot['loot']['protected_storage_ratio']);
+        self::assertSame(1.0, $log->snapshot['loot']['ratio']);
+        $firstLoot = $log->snapshot['loot']['fleets'][$first->id] ?? [];
+        $secondLoot = $log->snapshot['loot']['fleets'][$second->id] ?? [];
+        self::assertNotEmpty($firstLoot);
+        self::assertNotEmpty($secondLoot);
+        self::assertGreaterThan(array_sum($firstLoot), array_sum($secondLoot));
+        self::assertSame($expectedLoot, array_sum($log->snapshot['loot']['total']));
+        foreach ($this->em->getRepository(PlanetResource::class)->findBy(['planet' => $target]) as $resource) {
+            self::assertGreaterThanOrEqual(20000, $resource->currentStock);
+        }
+
+        $resourceService = self::getContainer()->get(\App\Service\Colony\ResourceService::class);
+        $homeStorage = $resourceService->snapshot($origin);
+        foreach ($this->em->getRepository(PlanetResource::class)->findBy(['planet' => $origin]) as $resource) {
+            $resource->currentStock = $homeStorage[$resource->resourceType]['capacity'];
+            $resource->lastUpdatedAt = $clock->now();
+        }
+        $this->em->flush();
+        $clock->sleep(60);
+        $fleetService = self::getContainer()->get(\App\Service\Fleet\FleetService::class);
+        $fleetService->arrive($first->id, $first->dispatchToken);
+        $fleetService->arrive($second->id, $second->dispatchToken);
+        self::assertSame('completed', $first->status);
+        self::assertSame('completed', $second->status);
+        foreach ($resourceService->snapshot($origin) as $resource) {
+            self::assertLessThanOrEqual($resource['capacity'], $resource['stock']);
+        }
     }
 
 }

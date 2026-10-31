@@ -27,6 +27,8 @@
   "cancellation_refund_ratio": 0.25,
   "fuel_ratio_policy": "proportional",
   "combat_window_seconds": 600,
+  "combat_loot_ratio": 1.0,
+  "combat_loot_protected_storage_ratio": 0.1,
   "max_combat_rounds": 10,
   "provisional": true,
   "note": "Paramètres de démonstration non chiffrés dans les PDF, à équilibrer. Carburant proportionnel à la vitesse, confirmé par l’utilisateur.",

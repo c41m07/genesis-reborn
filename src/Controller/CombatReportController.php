@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use App\Entity\CombatLog;
 use App\Service\Combat\CombatReportReader;
+use App\Service\Catalog\GameCatalog;
 use App\Service\Universe\UniverseContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,7 +19,7 @@ final class CombatReportController extends AbstractController
     }
 
     #[Route('/rapports/combat/{id}', name: 'app_combat_report', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function show(int $id, UniverseContext $context, CombatReportReader $reader): Response
+    public function show(int $id, UniverseContext $context, CombatReportReader $reader, GameCatalog $catalog): Response
     {
         $membership = $context->membership();
         $log = $reader->findVisible($membership, $id);
@@ -51,6 +52,23 @@ final class CombatReportController extends AbstractController
                 'round' => 1,
             ];
         }
-        return $this->render('combat/report.html.twig', ['report' => $log, 'rows' => $rows]);
+        $ownLoot = [];
+        foreach ($log->snapshot['loot']['fleets'] ?? [] as $fleetId => $resources) {
+            foreach ($log->snapshot['participants'] ?? [] as $participant) {
+                if ((int) ($participant['fleet_id'] ?? 0) === (int) $fleetId && (int) ($participant['player_universe_id'] ?? 0) === $membership->id) {
+                    foreach ($resources as $slug => $amount) {
+                        $ownLoot[$slug] = ($ownLoot[$slug] ?? 0) + (int) $amount;
+                    }
+                }
+            }
+        }
+        $lootRows = [];
+        foreach ($ownLoot as $slug => $amount) {
+            if ($amount > 0) {
+                $lootRows[] = ['label' => $catalog->rules()['resources'][$slug] ?? $slug, 'amount' => $amount];
+            }
+        }
+
+        return $this->render('combat/report.html.twig', ['report' => $log, 'rows' => $rows, 'loot_rows' => $lootRows]);
     }
 }

@@ -1,5 +1,11 @@
 # Genesis Reborn — journal de l'agent
 
+## 2026-10-31 — butin de combat (tranche livrée)
+
+- Ajout du pillage des stocks au-delà du plancher protégé de 10 % de la capacité de stockage propre à chaque ressource, selon le choix de Kévin.
+- Après victoire des attaquants, le fret libre des flottes survivantes se répartit selon leur capacité restante, carburant réservé au retour compris dans l’espace occupé.
+- Le rapport joueur n’affiche que le butin de ses propres flottes; tests d’intégration et lint réussis : 61 tests / 274 assertions.
+
 ## 2026-10-31
 - Reprise du dépôt sur feat/genesis-reborn-production-completion, HEAD 80668fa. Le statut Git WSL ne signalait au départ aucun changement suivi; .idea/ non suivi a été préservé.
 - Création des documents de suivi sous docs/agent/. Les fichiers préexistants sont préservés.

@@ -31,7 +31,7 @@ Date : 31/10/2026. Sources : docs/specifications/1 - Conception batiment vaissea
 
 ### Rapport, carburant et notification
 - Persister l'événement, ses participants et les rounds; outcomes documentés : attaquant gagne, défenseur gagne, égalité.
-- Les pertes de cargos réduisent la soute de retour et le butin; l'hydrogène de retour réservé au départ doit rester disponible, donc pas de panne sèche.
+- Les pertes de cargos réduisent la capacité de butin; l'hydrogène de retour réservé au départ reste disponible. Après une victoire des attaquants, tout le stock au-delà de 10 % de la capacité de stockage de chaque ressource est pillable, jusqu'à remplissage des soutes libres des attaquants survivants. En FFA, les camps attaquants survivants se partagent selon leur capacité cargo libre. Si la capacité manque, le mélange suit le prorata des stocks pillables; au retour, le dépôt est plafonné et le surplus perdu.
 - Notification d'attaque : membres de la guilde du défenseur et alliés directs du défenseur; les guildes seulement alliées ne sont pas notifiées; les alliés de l'attaquant ne sont pas notifiés.
 - Identité de l'attaquant masquée si le défenseur n'a pas découvert son système d'origine; le système d'origine reste visible.
 - Renfort entrant : même politique de visibilité; le défenseur est notifié.
@@ -53,8 +53,8 @@ Date : 31/10/2026. Sources : docs/specifications/1 - Conception batiment vaissea
 - Plusieurs statistiques et la matrice de matchup sont incomplètes; ne pas traiter les valeurs provisoires comme validées.
 - L'algorithme exact de choix de cible, l'ordre d'initiative, la distribution du nombre de tirs, l'arrondi des dégâts/HP et la règle de coalition transitive ne sont pas complètement définis dans les textes. Une règle déterministe simple doit être documentée avant d'être codée.
 - En FFA, les camps survivants et l'outcome global exigent une règle unique; l'enum du document ne permet pas d'exprimer un vainqueur parmi plusieurs camps attaquants.
-- Les ressources de butin, la quantité/ratio récupérable et les bornes du butin ne sont pas précisées.
+- Les seuils de butin sont confirmés par Kévin : 10 % de capacité reste protégé, le surplus est pillable dans la limite des soutes; l’équilibrage économique restera à observer en jeu.
 
 ## État d’implémentation au 31/10/2026
 
-Les missions attaque et défense, les événements persistés, rounds échelonnés, pertes, retours et rapports privés sont intégrés et couverts par des tests d’intégration. La flotte en défense sans combat repart à l’expiration de sa fenêtre; `orbit_fuel` est réservé puis consommé. La mission orbite prend en charge la demande manuelle et l’acceptation automatique par contrat direct, le stationnement temporisé, le retour et l’entrée en défense lors d’un combat ouvert. Le butin, l’espionnage et la conquête restent à implémenter. Les valeurs de combat demeurent provisoires.
+Les missions attaque et défense, les événements persistés, rounds échelonnés, pertes, retours et rapports privés sont intégrés et couverts par des tests d’intégration. La flotte en défense sans combat repart à l’expiration de sa fenêtre; `orbit_fuel` est réservé puis consommé. La mission orbite prend en charge la demande manuelle et l’acceptation automatique par contrat direct, le stationnement temporisé, le retour et l’entrée en défense lors d’un combat ouvert. Le butin est implémenté avec le seuil protégé de 10 % confirmé par Kévin; l’espionnage et la conquête restent à implémenter. Les valeurs de combat demeurent provisoires.

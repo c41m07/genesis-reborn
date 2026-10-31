@@ -16,7 +16,7 @@ Date : 31/10/2026. Ces décisions rendent implémentables les points non chiffr�
 
 ## Composant créé
 
-CombatSimulator reste un service pur. Son intégration aux événements persistés, aux arrivées de flottes, aux pertes, au journal interne et aux notifications est implémentée et couverte par des tests d'intégration. Un rapport joueur avec contrôle d’accès participant/propriétaire est maintenant en place; la mission Défense temporisée rejoint un combat ouvert ou repart après 600 secondes sans attaque; l’orbite est implémentée; le butin, l’espionnage et la conquête manquent encore; la phase 08/09 reste donc partielle.
+CombatSimulator reste un service pur. Son intégration aux événements persistés, aux arrivées de flottes, aux pertes, au journal interne et aux notifications est implémentée et couverte par des tests d'intégration. Un rapport joueur avec contrôle d’accès participant/propriétaire est maintenant en place; la mission Défense temporisée rejoint un combat ouvert ou repart après 600 secondes sans attaque; l’orbite est implémentée; le butin est livré; l’espionnage et la conquête manquent encore; la phase 08/09 reste donc partielle.
 
 ## Choix ajoutés — mission Défense
 
@@ -34,4 +34,6 @@ CombatSimulator reste un service pur. Son intégration aux événements persist�
 
 ## Équilibrage et limites
 
-La fenêtre de 600 secondes, les dix rounds, les statistiques et la matrice restent provisoires lorsque les catalogues l'indiquent. Le choix uniforme, l'initiative, la valeur de base du dégât et la retraite sont des règles explicites d'implémentation; ils devront être relus dans l'audit d'équilibrage final. Le modèle de butin demeure non spécifié et n'est pas simulé par ce composant.
+La fenêtre de 600 secondes, les dix rounds, les statistiques et la matrice restent provisoires lorsque les catalogues l'indiquent. Le choix uniforme, l'initiative, la valeur de base du dégât et la retraite sont des règles explicites d'implémentation; ils devront être relus dans l'audit d'équilibrage final. Règle de butin demandée par Kévin : 100 % du stock au-dessus de 10 % de la capacité de stockage propre à chaque ressource est pillable après une victoire des attaquants. Le mélange suit le prorata des stocks pillables; le butin va à tous les attaquants survivants, proportionnellement à leur soute libre après protection du carburant de retour. Au retour, le dépôt est plafonné par la capacité de stockage de la planète d’origine et le surplus est perdu.
+
+Le ratio 100 % et le plancher protégé de 10 % sont confirmés par l'utilisateur; leur équilibrage économique reste à observer en partie réelle.

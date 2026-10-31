@@ -74,6 +74,26 @@ final class ResourceService
             $rows[$slug]->currentStock=min($this->capacity($planet,$slug,$levels),$rows[$slug]->currentStock+$amount*$ratio);
         }
     }
+    /** Décharge le fret sans dépasser le stockage de la planète et renvoie la part perdue. */
+    public function deposit(Planet $planet, array $cargo): array
+    {
+        $rows = $this->materialize($planet);
+        $levels = $this->repo->levels(PlanetBuilding::class, ['planet' => $planet]);
+        $delivered = [];
+        $overflow = [];
+        foreach ($cargo as $slug => $amount) {
+            if (!isset($rows[$slug]) || !is_finite((float) $amount) || $amount < 0) {
+                throw new \DomainException('Fret de retour invalide.');
+            }
+            $room = max(0.0, $this->capacity($planet, $slug, $levels) - $rows[$slug]->currentStock);
+            $delivered[$slug] = min((float) $amount, $room);
+            $overflow[$slug] = max(0.0, (float) $amount - $delivered[$slug]);
+            $rows[$slug]->currentStock += $delivered[$slug];
+        }
+
+        return ['delivered' => $delivered, 'overflow' => $overflow];
+    }
+
     public function refreshProduction(Planet $planet): void
     {
         $levels=$this->repo->levels(PlanetBuilding::class,['planet'=>$planet]);

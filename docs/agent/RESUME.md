@@ -10,6 +10,6 @@
 
 ## État de reprise
 - HEAD de départ : 80668fa; plusieurs commits locaux de suivi sont postérieurs, vérifier git log.
-- Dernière validation : 58 tests / 212 assertions; lint et installation vierge réussis le 31/10. Première tranche de combat persistant ajoutée; lire docs/agent/PHASE_02_DECISIONS.md et TEST_STATUS.md.
+- Dernière validation : 61 tests / 274 assertions; make lint réussi (58 YAML, 16 Twig, conteneur et schéma Doctrine). Installation vierge avec 8 migrations, ré-import idempotent et redémarrage réussis après l’ajout du retour plafonné. Le butin ciblé passe l’intégration; voir docs/agent/TEST_STATUS.md. Reprendre par la consolidation et l'implémentation de la conquête, sans refaire le combat et l’orbite.
 - Un commit de documentation de reprise existe; vérifier git log pour les changements après cette note.
 - Aucun déploiement. Pas de mécanisme capable de réveiller une session de code avec accès au dépôt après quota; reprise manuelle documentée.
