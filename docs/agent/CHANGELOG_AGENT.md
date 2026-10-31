@@ -1,3 +1,7 @@
+## 2026-10-31 — clôture phase 09
+- Audit de simulation, pertes, butin, rapports, notifications et conquête JcE consigné dans PHASE_09_COMBAT_AUDIT.md. Le test de combat vérifie désormais l’unicité des notifications de fin après résolution répétée.
+- Validation : 72 tests / 365 assertions; lint, schéma et Compose valides. Avancement : 9/15, phase 10 active.
+
 ## 2026-10-31 — clôture phase 08
 - Audit des distances, carburant, départs, retours et missions consigné dans PHASE_08_FLEET_MISSIONS_AUDIT.md. Les missions sont déjà couvertes par les tests d’intégration existants.
 - Validation globale : 72 tests / 363 assertions; phase 09 active (8/15).

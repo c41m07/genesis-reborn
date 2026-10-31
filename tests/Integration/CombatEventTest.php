@@ -4,6 +4,7 @@ namespace App\Tests\Integration;
 use App\Entity\CombatEvent;
 use App\Entity\CombatLog;
 use App\Entity\CombatParticipant;
+use App\Entity\Notification;
 use App\Entity\Fleet;
 use App\Entity\FleetShip;
 use App\Entity\Planet;
@@ -208,6 +209,16 @@ final class CombatEventTest extends KernelTestCase
         self::assertSame('resolved', $event->status);
         self::assertSame(1, $this->em->getRepository(CombatLog::class)->count(['combatEvent' => $event]));
         $log = $this->em->getRepository(CombatLog::class)->findOneBy(['combatEvent' => $event]);
+        $attackerCompletionNotices = array_filter(
+            $this->em->getRepository(Notification::class)->findBy(['recipient' => $attackerA->currentPlayerUniverse]),
+            static fn (Notification $notice): bool => str_starts_with($notice->message, 'Combat terminé sur '),
+        );
+        $defenderCompletionNotices = array_filter(
+            $this->em->getRepository(Notification::class)->findBy(['recipient' => $defender->currentPlayerUniverse]),
+            static fn (Notification $notice): bool => str_starts_with($notice->message, 'Combat terminé sur '),
+        );
+        self::assertCount(1, $attackerCompletionNotices);
+        self::assertCount(1, $defenderCompletionNotices);
         $spectator = $this->join($this->player('Spectator'));
         $reports = self::getContainer()->get(\App\Service\Combat\CombatReportReader::class);
         self::assertCount(1, $reports->list($attackerA->currentPlayerUniverse));
