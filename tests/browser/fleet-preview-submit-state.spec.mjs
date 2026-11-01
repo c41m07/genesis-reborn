@@ -45,9 +45,19 @@ test('La prévisualisation valide autorise l’envoi, les erreurs backend et ré
   await form.locator('[name="ships[fighter]"]').fill('1');
   await form.locator('[name="ships[probe]"]').fill('1');
   await form.getByRole('button', { name: /Choisir la destination/ }).click();
-  await form.getByRole('button', { name: /Vérifier la mission/ }).click();
-
   const send = form.getByRole('button', { name: /Envoyer la flotte/ });
+  let releaseEstimate;
+  const estimateGate = new Promise(resolve => { releaseEstimate = resolve; });
+  await page.route('**/flottes/estimer', async route => { await estimateGate; await route.continue(); }, { times: 1 });
+  await form.getByRole('button', { name: /Vérifier la mission/ }).click();
+  await expect(estimate).toContainText('Estimation en cours');
+  await expect(send).toBeDisabled();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator('.sidebar')).toHaveAttribute('aria-hidden', 'true');
+  await expect.poll(() => page.locator('.sidebar').evaluate(element => element.getBoundingClientRect().right)).toBeLessThanOrEqual(0);
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await page.screenshot({ path: '/home/caim/Projets/Genesis_Reborn/docs/validation/flottes-estimation-chargement-mobile-20261101.png', fullPage: false });
+  releaseEstimate();
   await expect.poll(() => send.isDisabled(), { timeout: 10000 }).toBe(false);
   await expect(estimate).not.toHaveClass(/error/);
 

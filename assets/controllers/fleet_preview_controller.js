@@ -21,15 +21,23 @@ export default class extends Controller {
         this.abort?.abort();
     }
 
-    schedule() {
+    schedule(event) {
         clearTimeout(this.timer);
+        if (event && this.hasResultTarget) {
+            this.resultTarget.textContent = 'Estimation en cours…';
+            this.resultTarget.classList.remove('error');
+        }
         if (this.submitButton) {
             this.submitButton.disabled = true;
         }
         this.timer = setTimeout(() => this.estimate(), 300);
     }
 
-    async estimate() {
+    async estimate(event) {
+        if (event && this.hasResultTarget) {
+            this.resultTarget.textContent = 'Estimation en cours…';
+            this.resultTarget.classList.remove('error');
+        }
         this.abort?.abort();
         this.abort = new AbortController();
 
