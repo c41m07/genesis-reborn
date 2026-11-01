@@ -100,3 +100,6 @@
 @media(max-width:740px){html{scroll-padding-bottom:calc(72px + env(safe-area-inset-bottom))}.authenticated .shell{padding-bottom:calc(112px + env(safe-area-inset-bottom))}}
 
 .metric-card strong{overflow-wrap:anywhere}
+
+/* Keep ranking actions compact instead of stretching across the final column. */
+.data-table td .secondary{width:fit-content;max-width:100%;justify-content:center}
