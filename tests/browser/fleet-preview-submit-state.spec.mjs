@@ -1,0 +1,49 @@
+import { test, expect } from './support/isolated-test.mjs';
+import { execFileSync } from 'node:child_process';
+
+async function enter(page) {
+  const id = crypto.randomUUID().slice(0, 8);
+  const email = 'fleet-preview-' + id + '@example.test';
+  const password = 'Browser-test-2026!';
+
+  await page.goto('/inscription');
+  await page.getByLabel('Adresse email').fill(email);
+  await page.getByLabel('Nom de commandant').fill('Preview-' + id);
+  await page.getByLabel('Mot de passe (12 caractères minimum)', { exact: true }).fill(password);
+  await page.getByLabel('Confirmer le mot de passe').fill(password);
+  await page.getByRole('button', { name: 'Créer mon compte' }).click();
+  await expect(page).toHaveURL(/connexion/);
+  await page.getByLabel('Adresse email').fill(email);
+  await page.getByLabel('Mot de passe', { exact: true }).fill(password);
+  await page.getByRole('button', { name: /Connexion/ }).click();
+  await page.locator('article.universe-card').filter({ has: page.getByRole('heading', { name: /Turbo/ }) }).getByRole('button').click();
+  await expect(page).toHaveURL(new RegExp('planetes/[0-9]+$'));
+  return email;
+}
+
+function sql(project, query) {
+  execFileSync('docker', ['compose', '--project-name', project, '--env-file', '.env.local', 'exec', '-T', 'app', 'php', 'bin/console', 'dbal:run-sql', query], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+}
+
+test('Une estimation invalide bloque l’envoi de la flotte', async ({ page }) => {
+  test.setTimeout(90000);
+  const email = await enter(page);
+  const project = process.env.BROWSER_ROUTER;
+  expect(project).toMatch(/^genesis-browser-test-[0-9]+-[0-9]+$/);
+
+  const createFleet = "INSERT INTO fleet (status, mission, speed_ratio, cargo, reserved_fuel, orbit_fuel, orbit_duration_seconds, travel_seconds, dispatch_token, player_universe_id, home_planet_id) SELECT 'idle', 'idle', 1, '{}', 0, 0, 0, 0, '00000000-0000-4000-8000-000000000001', pu.id, planet.id FROM player_universe pu INNER JOIN player p ON p.id=pu.player_id INNER JOIN planet ON planet.owner_id=pu.id WHERE p.email='" + email + "' LIMIT 1";
+  sql(project, createFleet);
+  const addFighter = "INSERT INTO fleet_ship (fleet_id, slug, quantity) SELECT f.id, 'fighter', 1 FROM fleet f INNER JOIN player_universe pu ON pu.id=f.player_universe_id INNER JOIN player p ON p.id=pu.player_id WHERE p.email='" + email + "' AND f.status='idle' LIMIT 1 ON DUPLICATE KEY UPDATE quantity=VALUES(quantity)";
+  sql(project, addFighter);
+
+  await page.goto('/flottes');
+  const form = page.locator('.fleet-form form').first();
+  const estimate = form.locator('[data-fleet-preview-target="result"]');
+  await form.locator('[name="ships[fighter]"]').fill('1');
+  await form.getByRole('button', { name: /Choisir la destination/ }).click();
+  await form.getByRole('button', { name: /Vérifier la mission/ }).click();
+
+  const send = form.getByRole('button', { name: /Envoyer la flotte/ });
+  await expect(estimate).toContainText('Une sonde exploratrice est nécessaire', { timeout: 10000 });
+  await expect(send).toBeDisabled();
+});
