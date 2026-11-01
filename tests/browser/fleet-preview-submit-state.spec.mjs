@@ -25,7 +25,7 @@ function sql(project, query) {
   execFileSync('docker', ['compose', '--project-name', project, '--env-file', '.env.local', 'exec', '-T', 'app', 'php', 'bin/console', 'dbal:run-sql', query], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 }
 
-test('Une estimation valide autorise l’envoi et une erreur backend le bloque', async ({ page }) => {
+test('La prévisualisation valide autorise l’envoi, les erreurs backend et réseau le bloquent', async ({ page }) => {
   test.setTimeout(90000);
   const email = await enter(page);
   const project = process.env.BROWSER_ROUTER;
@@ -41,6 +41,7 @@ test('Une estimation valide autorise l’envoi et une erreur backend le bloque',
   await page.goto('/flottes');
   const form = page.locator('.fleet-form form').first();
   const estimate = form.locator('[data-fleet-preview-target="result"]');
+  await expect(estimate).toHaveAttribute('aria-live', 'polite');
   await form.locator('[name="ships[fighter]"]').fill('1');
   await form.locator('[name="ships[probe]"]').fill('1');
   await form.getByRole('button', { name: /Choisir la destination/ }).click();
@@ -56,5 +57,14 @@ test('Une estimation valide autorise l’envoi et une erreur backend le bloque',
   await form.getByRole('button', { name: /Choisir la destination/ }).click();
   await form.getByRole('button', { name: /Vérifier la mission/ }).click();
   await expect(estimate).toContainText('Une sonde exploratrice est nécessaire', { timeout: 10000 });
+  await expect(send).toBeDisabled();
+
+  await form.getByRole('button', { name: /Modifier la destination/ }).click();
+  await form.getByRole('button', { name: /Retour à la composition/ }).click();
+  await form.locator('[name="ships[probe]"]').fill('1');
+  await page.route('**/flottes/estimer', route => route.abort());
+  await form.getByRole('button', { name: /Choisir la destination/ }).click();
+  await form.getByRole('button', { name: /Vérifier la mission/ }).click();
+  await expect(estimate).toHaveClass(/error/, { timeout: 10000 });
   await expect(send).toBeDisabled();
 });
