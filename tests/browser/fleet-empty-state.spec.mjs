@@ -23,11 +23,24 @@ test('L’état Espionnage sans flotte conduit au chantier réel', async ({ page
   await page.screenshot({ path: '/home/caim/Projets/Genesis_Reborn/docs/validation/espionnage-sans-flotte-20261101.png', fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await expect.poll(() => page.locator('.sidebar').evaluate(element => element.getBoundingClientRect().right)).toBeLessThanOrEqual(0);
+  await expect(page.locator('.sidebar')).toHaveAttribute('aria-hidden', 'true');
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await page.screenshot({ path: '/home/caim/Projets/Genesis_Reborn/docs/validation/espionnage-sans-flotte-mobile-20261101.png', fullPage: true });
   const shipyard = page.getByRole('link', { name: /Accéder au chantier spatial/ });
   await expect(shipyard).toHaveAttribute('href', /planetes\/\d+\?section=ships/);
-  await shipyard.click();
+  let shipyardFocused = false;
+  for (let index = 0; index < 50; index++) {
+    await page.keyboard.press('Tab');
+    if (await page.evaluate(() => document.activeElement?.getAttribute('href')) === await shipyard.getAttribute('href')) {
+      shipyardFocused = true;
+      break;
+    }
+  }
+  expect(shipyardFocused).toBe(true);
+  await expect(shipyard).toBeFocused();
+  await expect.poll(() => shipyard.evaluate(element => element.matches(':focus-visible'))).toBe(true);
+  await page.screenshot({ path: '/home/caim/Projets/Genesis_Reborn/docs/validation/espionnage-chantier-focus-mobile-20261101.png', fullPage: true });
+  await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/planetes\/\d+\?section=ships/);
   await expect(page.getByRole('heading', { name: /Chantier spatial/ })).toBeVisible();
 });
