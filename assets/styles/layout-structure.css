@@ -98,3 +98,5 @@
 .table-scroll{width:100%;min-width:0;max-width:100%;box-sizing:border-box}
 /* Leave room for the fixed mobile navigation and keep final form actions reachable. */
 @media(max-width:740px){html{scroll-padding-bottom:calc(72px + env(safe-area-inset-bottom))}.authenticated .shell{padding-bottom:calc(112px + env(safe-area-inset-bottom))}}
+
+.metric-card strong{overflow-wrap:anywhere}
