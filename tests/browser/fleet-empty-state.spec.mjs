@@ -43,4 +43,16 @@ test('L’état Espionnage sans flotte conduit au chantier réel', async ({ page
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/planetes\/\d+\?section=ships/);
   await expect(page.getByRole('heading', { name: /Chantier spatial/ })).toBeVisible();
+
+  const menuToggle = page.getByRole('button', { name: 'Plus' });
+  await menuToggle.click();
+  await expect(menuToggle).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.locator('.sidebar')).toHaveAttribute('aria-hidden', 'false');
+  await expect.poll(() => page.locator('.sidebar').evaluate(element => element.getBoundingClientRect().left)).toBe(0);
+  await page.screenshot({ path: '/home/caim/Projets/Genesis_Reborn/docs/validation/espionnage-menu-plus-mobile-20261101.png', fullPage: false });
+  await page.keyboard.press('Escape');
+  await expect(menuToggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.locator('.sidebar')).toHaveAttribute('aria-hidden', 'true');
+  await expect.poll(() => page.locator('.sidebar').evaluate(element => element.getBoundingClientRect().right)).toBeLessThanOrEqual(0);
+  await expect(menuToggle).toBeFocused();
 });
