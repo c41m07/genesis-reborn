@@ -103,3 +103,10 @@
 
 /* Keep ranking actions compact instead of stretching across the final column. */
 .data-table td .secondary{width:fit-content;max-width:100%;justify-content:center}
+
+/* Keep a long inbox scrollable beside a stable conversation pane, as in the wireframe. */
+.inbox-layout{height:min(55vh,500px);min-height:420px;align-items:stretch}
+.inbox-sidebar{min-height:0;max-height:100%;overflow:auto}
+.message-pane{height:100%;min-height:0}
+.message-thread{min-height:0}
+@media(max-width:740px){.inbox-layout{height:auto;min-height:0}.inbox-sidebar{max-height:220px}.message-pane{height:340px;min-height:340px}.message-thread{min-height:0}}
