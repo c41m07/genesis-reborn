@@ -8,6 +8,10 @@ export default class extends Controller {
         return this.element.querySelector('button:not([type="button"])');
     }
 
+    initialize() {
+        this.submitLocked = this.submitButton?.disabled ?? false;
+    }
+
     connect() {
         this.schedule();
     }
@@ -50,7 +54,7 @@ export default class extends Controller {
             this.resultTarget.textContent = `${format(preview.distance)} UA · ${Math.floor(preview.seconds / 3600)} h ${Math.floor(preview.seconds % 3600 / 60)} min ${preview.seconds % 60} s · Carburant aller-retour : ${format(preview.total_fuel)} H · Fret disponible : ${format(preview.freight_capacity)}`;
             this.resultTarget.classList.remove('error');
             if (this.submitButton) {
-                this.submitButton.disabled = false;
+                this.submitButton.disabled = this.submitLocked;
             }
         } catch (error) {
             if (error.name !== 'AbortError') {

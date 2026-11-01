@@ -7,7 +7,7 @@ Date : 2026-11-01. Parcours observé dans le navigateur sur la route réelle **/
 - Le formulaire réel accompagne la composition, le choix de destination et la confirmation; revenir à la destination conserve la composition choisie.
 - À ces trois largeurs, aucun débordement horizontal du document n’a été observé. La confirmation et son action restent accessibles sur mobile au-dessus de la navigation basse.
 - La prévisualisation appelle le backend réel. Pour le compte d’essai observé, le backend refuse la mission d’exploration faute de sonde exploratrice. Le bouton d’envoi restait actif avant le correctif, malgré cette erreur.
-- Le contrôleur désactive maintenant l’envoi avant une estimation, le maintient désactivé sur toute erreur et ne le réactive qu’après une estimation HTTP valide. Aucun départ de flotte n’a été soumis pendant cette vérification.
+- Le contrôleur désactive maintenant l’envoi avant une estimation et le maintient désactivé sur toute erreur. Après une estimation valide, il restaure l’état initial du bouton afin de conserver un verrou métier rendu par le serveur (dont la règle de carburant en attente). Aucun départ de flotte n’a été soumis pendant cette vérification.
 - Le test navigateur isolé tests/browser/fleet-preview-submit-state.spec.mjs vérifie le refus serveur faute de sonde et l’état désactivé du bouton. Résultat : 1/1.
 - Le test de parcours existant tests/browser/fleet-wizard.spec.mjs a également passé précédemment : 1/1. Il vérifie les trois étapes et la conservation de la composition.
 
