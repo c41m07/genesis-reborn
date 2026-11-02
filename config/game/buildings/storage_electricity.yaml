@@ -1,14 +1,15 @@
 {
-  "slug": "mine_carbon",
-  "label": "Extracteur · Carbone",
-  "base_build_time": 120,
+  "slug": "storage_electricity",
+  "label": "Stockage · Électricité",
+  "base_build_time": 180,
   "build_time_scaling": 1.6,
   "costs_base": {
-    "metal": 800,
-    "energy": 400
+    "metal": 2125,
+    "nano": 188,
+    "antimatter": 0
   },
   "costs_scaling": 1.8,
-  "production_resource": "carbon",
+  "storage_resource": "electricity",
   "levels": {
     "1": {
       "unlock_requirements": {}
@@ -19,7 +20,7 @@
     "intermediate": {
       "technologies": [
         {
-          "slug": "nano_construction",
+          "slug": "advanced_engineering",
           "tier": "basic",
           "level": 5
         }
@@ -35,7 +36,7 @@
     "superior": {
       "technologies": [
         {
-          "slug": "nano_construction",
+          "slug": "advanced_engineering",
           "tier": "intermediate",
           "level": 10
         }
@@ -47,6 +48,24 @@
           "level": 10
         }
       ]
+    }
+  },
+  "economy_value_budget": 5000,
+  "cost_profiles": {
+    "basic": {
+      "metal": 2125,
+      "nano": 188,
+      "antimatter": 0
+    },
+    "intermediate": {
+      "metal": 2032,
+      "nano": 469,
+      "antimatter": 40
+    },
+    "superior": {
+      "metal": 1758,
+      "nano": 782,
+      "antimatter": 147
     }
   }
 }

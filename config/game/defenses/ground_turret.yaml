@@ -10,13 +10,7 @@
   "shots_min": 2,
   "shots_max": 2,
   "build_time_base": 180,
-  "costs": {
-    "metal": 8000,
-    "energy": 2000,
-    "antimatter": 0,
-    "hydrogen": 0,
-    "carbon": 0
-  },
+  "costs": {},
   "unlock_requirements": {
     "buildings": [
       {
@@ -26,5 +20,23 @@
     ]
   },
   "provisional": true,
-  "shield": 100
+  "shield": 100,
+  "economy_value_budget": 16000,
+  "cost_profiles": {
+    "basic": {
+      "metal": 7200,
+      "nano": 400,
+      "antimatter": 0
+    },
+    "intermediate": {
+      "metal": 6500,
+      "nano": 1500,
+      "antimatter": 125
+    },
+    "superior": {
+      "metal": 5625,
+      "nano": 2500,
+      "antimatter": 469
+    }
+  }
 }

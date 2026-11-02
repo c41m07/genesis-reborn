@@ -25,7 +25,7 @@ final class ColonyView
             $groupDefinitions=$definitions[$group];
             if(in_array($group,['buildings','technologies'],true)) {
                 $order=match($group) {
-                    'buildings'=>array_flip(['power_plant','mine_metal','mine_carbon','mine_hydrogen','mine_antimatter','storage_metal','storage_carbon','storage_hydrogen','storage_energy','storage_antimatter','lab','shipyard','fortress']),
+                    'buildings'=>array_flip(['power_plant','mine_metal','mine_nano','mine_hydrogen','mine_antimatter','storage_metal','storage_nano','storage_hydrogen','storage_electricity','storage_antimatter','lab','shipyard','fortress']),
                     'technologies'=>array_flip(['basic_engineering','advanced_engineering','robotics','nano_construction','advanced_propulsion','precision_fire','advanced_targeting','hull_reinforcement','shield_technology','evasion_systems','signature_dampening','ballistic_overdrive','auxiliary_fuel_tanks','cargo_optimization','espionage_technology','counter_espionage','stealth_technology']),
                 };
                 uksort($groupDefinitions,static fn(string $a,string $b): int => ($order[$a]??PHP_INT_MAX)<=>($order[$b]??PHP_INT_MAX));
@@ -41,7 +41,7 @@ final class ColonyView
                 });
             }
             foreach($groupDefinitions as $slug=>$base) {
-                $tiers=$group==='defenses'?['basic']:GameCatalog::TIERS;
+                $tiers=GameCatalog::TIERS;
                 foreach($tiers as $tier) {
                     $d=$this->catalog->getTierForUniverse($m->universe,$group,$slug,$tier);
                     $level=match($group){'buildings'=>(int)($buildings[$slug][$tier]??0),'technologies'=>(int)($tech[$slug][$tier]??0),default=>0};$target=$level+1;
@@ -51,7 +51,7 @@ final class ColonyView
                     if($group==='ships'&&($buildings['shipyard']['basic']??0)<1&&$slug!=='fighter')$failures[]='Chantier spatial · Basique niveau 1';
                     if($group==='technologies'&&($buildings['lab']['basic']??0)<1)$failures[]='Laboratoire · Basique niveau 1';
                     if($group==='defenses')$level=0;
-                    $cards[$group][]=['benefits'=>$this->insights->benefits($d,$group,$target,$planet,$buildings,$tech),'unlocks'=>$this->insights->unlocks($group,$slug,$target),'definition'=>$d,'tier'=>$tier,'level'=>$level,'target'=>$target,'quantity'=>$group==='ships'?($this->repo->one(FleetShip::class,['fleet'=>$this->repo->one(Fleet::class,['homePlanet'=>$planet,'playerUniverse'=>$m,'status'=>'idle']),'slug'=>$slug,'tier'=>$tier])?->quantity??0):0,'duration'=>$this->calculator->calculate($d,$group,$target,1,$buildings,$universeConfig,$tech)['duration'],'costs'=>$this->catalog->costs($d,$target),'failures'=>array_values(array_unique($failures)),'maximum'=>isset($d['max_level'])&&$target>$d['max_level'],'queued'=>$queued!==null];
+                    $cards[$group][]=['benefits'=>$this->insights->benefits($d,$group,$target,$planet,$buildings,$tech),'unlocks'=>$this->insights->unlocks($group,$slug,$target),'definition'=>$d,'tier'=>$tier,'level'=>$level,'target'=>$target,'quantity'=>$group==='ships'?($this->repo->one(FleetShip::class,['fleet'=>$this->repo->one(Fleet::class,['homePlanet'=>$planet,'playerUniverse'=>$m,'status'=>'idle']),'slug'=>$slug,'tier'=>$tier])?->quantity??0):($group==='defenses'?($this->repo->one(PlanetDefense::class,['planet'=>$planet,'slug'=>$slug,'tier'=>$tier])?->quantity??0):0),'duration'=>$this->calculator->calculate($d,$group,$target,1,$buildings,$universeConfig,$tech)['duration'],'costs'=>$this->catalog->costs($d,$target),'failures'=>array_values(array_unique($failures)),'maximum'=>isset($d['max_level'])&&$target>$d['max_level'],'queued'=>$queued!==null];
                 }
             }
         }
@@ -63,7 +63,7 @@ final class ColonyView
         foreach($activeFleets as $activeFleet) { $participant=$this->repo->one(CombatParticipant::class,['fleet'=>$activeFleet]); if($participant && $participant->combatEvent->status==='pending') $combatEvents[$activeFleet->id]=$participant->combatEvent; }
         $ships=[];
         foreach($this->repo->all(Fleet::class,['homePlanet'=>$planet,'playerUniverse'=>$m,'status'=>'idle']) as $f) foreach($this->repo->all(FleetShip::class,['fleet'=>$f]) as $s) $ships[$s->slug][$s->tier]=($ships[$s->slug][$s->tier]??0)+$s->quantity;
-        $defenses=$this->repo->all(PlanetDefense::class,['planet'=>$planet]);$defenseQuantities=[];foreach($defenses as $defense) $defenseQuantities[$defense->slug]=$defense->quantity;
+        $defenses=$this->repo->all(PlanetDefense::class,['planet'=>$planet]);$defenseQuantities=[];foreach($defenses as $defense) $defenseQuantities[$defense->slug][$defense->tier]=$defense->quantity;
         return ['technology_tree'=>$technologyTree,'show_locked_items'=>$showLockedItems,'combat_events'=>$combatEvents,'defense_quantities'=>$defenseQuantities,'active_fleets'=>$activeFleets,'membership'=>$m,'planet'=>$planet,'planets'=>$this->repo->planets($m->universe,$m),'resources'=>$this->resources->snapshot($planet),'cards'=>$cards,'queues'=>$queues,'ships'=>$ships,'defenses'=>$defenses,'defense_catalog'=>$definitions['defenses'],'ship_catalog'=>$definitions['ships']];
     }
 }

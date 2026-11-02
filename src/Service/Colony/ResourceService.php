@@ -26,41 +26,19 @@ final class ResourceService
             $this->manager->save($r);
         }
     }
-    public static function miningWindow(float $energyProductionRate,float $mineUpkeepRate,float $storedEnergy,int $elapsedSeconds): array
-    {
-        if(!is_finite($energyProductionRate)||!is_finite($mineUpkeepRate)||!is_finite($storedEnergy)||$energyProductionRate<0||$mineUpkeepRate<0||$storedEnergy<0||$elapsedSeconds<0) {
-            throw new \InvalidArgumentException('Fenêtre de production énergétique invalide.');
-        }
-        $net=$energyProductionRate-$mineUpkeepRate;
-        $fullSeconds=(float)$elapsedSeconds;
-        if($net<0&&$mineUpkeepRate>0) $fullSeconds=min($fullSeconds,$storedEnergy/(-$net));
-        $throttledSeconds=max(0,$elapsedSeconds-$fullSeconds);
-        $throttle=$mineUpkeepRate>0&&($throttledSeconds>0||($net<0&&$storedEnergy<=0))?min(1,$energyProductionRate/$mineUpkeepRate):1;
-        return [
-            'full_mining_seconds'=>$fullSeconds,
-            'throttled_mining_seconds'=>$throttledSeconds,
-            'throttle'=>$throttle,
-            'energy_stock'=>max(0.0,$storedEnergy+$net*$elapsedSeconds),
-        ];
-    }
-
     public function capacity(Planet $planet,string $slug,array $buildings): float
     {
         $storedLevels=$buildings['storage_'.$slug]??0;$added=0.0;
         foreach(GameCatalog::TIERS as $tier)$added+=$this->tierLevel($storedLevels,$tier)*$this->catalog->tierFactor($tier)*$this->catalog->rules()['storage_capacity_per_level'];
         return $this->catalog->rules()['base_storage_capacity']+$added;
     }
-    public function rate(Planet $planet,string $slug,int $mineLevel,?array $levels=null): float
+    public function rate(Planet $planet,string $slug,int $mineLevel,?array $levels=null):float
     {
-        $rules=$this->catalog->rules();$levels??=['mine_'.$slug=>['basic'=>$mineLevel]];$bonus=0.0;
-        $definitions=$this->catalog->forUniverse($planet->solarSystem->galaxy->universe)['catalog']['buildings'];
-        foreach($definitions as $building)if(($building['production_resource']??null)===$slug){
-            $ranked=$levels[$building['slug']]??0;$per=(float)($building['production_per_level']??$rules['mine_production_per_level']);
-            foreach(GameCatalog::TIERS as $tier)$bonus+=$this->tierLevel($ranked,$tier)*$per*$this->catalog->tierFactor($tier);
-        }
-        $mult=$this->catalog->forUniverse($planet->solarSystem->galaxy->universe)['multipliers']['resource_production'];
-        return ((float)$rules['base_production'][$slug]+$bonus)*$this->positionFactor($planet,$slug)*$mult;
+        $levels??=['mine_'.$slug=>['basic'=>$mineLevel]];$input=$this->operatingInput($planet,$levels);$rate=(float)($input['base'][$slug]??0.0);
+        foreach($input['factories'] as $factory)if($factory['resource']===$slug)$rate+=$factory['rate'];
+        return $rate;
     }
+
     private function tierLevel(int|array $levels,string $tier):int
     {
         if(is_int($levels))return $tier==='basic'?$levels:0;
@@ -70,7 +48,7 @@ final class ResourceService
     private function positionFactor(Planet $planet,string $slug): float
     {
         $factors=$this->catalog->rules()['position_production_factors']??[];
-        $group=match($slug){'metal','energy','carbon'=>'metal_energy_carbon',default=>$slug};
+        $group=match($slug){'metal','electricity','nano'=>$slug,default=>$slug};
         $definition=$factors[$group]??[];
         if(isset($definition['all_positions'])) return (float)$definition['all_positions'];
         $first=(float)($definition['position_1']??1);
@@ -79,76 +57,36 @@ final class ResourceService
         return $first+($last-$first)*$ratio;
     }
 
-    private function mineUpkeep(array $levels): float
+    private function operatingInput(Planet $planet,array $levels):array
     {
-        $rules=$this->catalog->rules();
-        $definitions=$this->catalog->all('buildings');
-        $weightedExtractorLevels=0.0;
-        foreach($definitions as $building) {
-            $resource=$building['production_resource']??null;
-            if(is_string($resource)&&$resource!=='energy'){
-                $ranked=$levels[$building['slug']]??0;
-                foreach(GameCatalog::TIERS as $tier)$weightedExtractorLevels+=$this->tierLevel($ranked,$tier)*$this->catalog->tierFactor($tier);
-            }
-        }
-        return $weightedExtractorLevels*(float)($rules['mine_energy_upkeep_per_level']??0);
+        $rules=$this->catalog->rules();$universe=$this->catalog->forUniverse($planet->solarSystem->galaxy->universe);$mult=(float)$universe['multipliers']['resource_production'];$base=[];
+        foreach($rules['resources'] as $slug=>$label)$base[$slug]=(float)($rules['base_production'][$slug]??0)*$this->positionFactor($planet,$slug)*$mult;
+        $factories=[];
+        foreach($universe['catalog']['buildings'] as $building){$resource=$building['production_resource']??null;if(!is_string($resource))continue;$ranked=$levels[$building['slug']]??0;$weighted=0.0;foreach(GameCatalog::TIERS as $tier)$weighted+=$this->tierLevel($ranked,$tier)*$this->catalog->tierFactor($tier);if($weighted<=0)continue;$per=(float)($building['production_per_level']??$rules['mine_production_per_level']??0);$rate=$weighted*$per*$this->positionFactor($planet,$resource)*$mult;$electricity=$resource==='electricity'?0.0:$weighted*(float)($building['electricity_use_per_level']??$rules['factory_electricity_use_per_level']??0)*$this->positionFactor($planet,$resource)*$mult;$hydrogen=$resource==='antimatter'?$rate*(float)($building['hydrogen_per_output']??$rules['antimatter_hydrogen_per_unit']??8):0.0;$factories[]=['slug'=>$building['slug'],'resource'=>$resource,'rate'=>$rate,'electricity'=>$electricity,'hydrogen'=>$hydrogen];}
+        return ['base'=>$base,'factories'=>$factories];
+    }
+
+    private function simulate(Planet $planet,array $levels,array $stocks,int $elapsed):array
+    {
+        $input=$this->operatingInput($planet,$levels);$capacities=[];foreach($this->catalog->rules()['resources'] as $slug=>$label)$capacities[$slug]=$this->capacity($planet,$slug,$levels);
+        return FactoryEconomy::simulate($input['base'],$input['factories'],$stocks,$capacities,$elapsed,(float)($this->catalog->rules()['minimum_factory_efficiency']??.1));
     }
 
     public function snapshot(Planet $planet): array
     {
-        $levels=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);
-        $rows=[];
-        foreach($this->repo->all(PlanetResource::class,['planet'=>$planet]) as $resource) $rows[$resource->resourceType]=$resource;
-        $rates=[];
-        foreach($this->catalog->rules()['resources'] as $slug=>$label) $rates[$slug]=(float)($rows[$slug]->productionRate??$this->rate($planet,$slug,0,$levels));
-        if($rows===[]) {
-            $empty=[];foreach($this->catalog->rules()['resources'] as $slug=>$label)$empty[$slug]=['label'=>$label,'stock'=>0.0,'rate'=>0.0,'capacity'=>(float)$this->catalog->rules()['base_storage_capacity']];
-            return $empty;
-        }
-        $upkeep=$this->mineUpkeep($levels);
-        $energyNet=($rates['energy']??0)-$upkeep;
-        $anchor=$rows['energy']->lastUpdatedAt??array_values($rows)[0]->lastUpdatedAt;
-        $elapsed=max(0,$this->clock->now()->getTimestamp()-$anchor->getTimestamp());
-        $window=self::miningWindow((float)($rates['energy']??0),$upkeep,(float)($rows['energy']->currentStock??0),$elapsed);
-        $fullSeconds=$window['full_mining_seconds'];$throttledSeconds=$window['throttled_mining_seconds'];$throttle=$window['throttle'];
-        foreach($rows as $slug=>$resource) {
-            $capacity=$this->capacity($planet,$slug,$levels);
-            $rate=$slug==='energy'?$energyNet:(($rates[$slug]??0)*$throttle);
-            $stock=$slug==='energy'?$window['energy_stock']: $resource->currentStock+($rates[$slug]??0)*($fullSeconds+$throttledSeconds*$throttle);
-            $rows[$slug]=['label'=>$this->catalog->rules()['resources'][$slug],'stock'=>min($capacity,max(0,$stock)),'rate'=>$rate,'capacity'=>$capacity];
-        }
-        return $rows;
+        $levels=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);$rows=[];foreach($this->repo->all(PlanetResource::class,['planet'=>$planet]) as $resource)$rows[$resource->resourceType]=$resource;
+        $result=[];foreach($this->catalog->rules()['resources'] as $slug=>$label)$result[$slug]=['label'=>$label,'stock'=>0.0,'rate'=>0.0,'capacity'=>$this->capacity($planet,$slug,$levels)];if($rows===[])return $result;
+        $anchor=$rows['electricity']->lastUpdatedAt??array_values($rows)[0]->lastUpdatedAt;$elapsed=max(0,$this->clock->now()->getTimestamp()-$anchor->getTimestamp());$stocks=[];foreach($rows as $slug=>$resource)$stocks[$slug]=$resource->currentStock;$simulation=$this->simulate($planet,$levels,$stocks,$elapsed);
+        foreach($this->catalog->rules()['resources'] as $slug=>$label){$result[$slug]['stock']=min($result[$slug]['capacity'],max(0.0,(float)($simulation['stocks'][$slug]??0)));$result[$slug]['rate']=(float)($simulation['rates'][$slug]??0.0);}return $result;
     }
-    public function materialize(Planet $planet,?\DateTimeImmutable $at=null): array
+
+    public function materialize(Planet $planet,?\DateTimeImmutable $at=null):array
     {
-        $at??=$this->clock->now();
-        $levels=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);
-        $rows=[];
-        foreach($this->repo->all(PlanetResource::class,['planet'=>$planet]) as $resource) $rows[$resource->resourceType]=$resource;
-        if($rows===[]) return [];
-        $anchor=$rows['energy']->lastUpdatedAt??array_values($rows)[0]->lastUpdatedAt;
-        $effective=$at<$anchor?$anchor:$at;
-        $elapsed=max(0,$effective->getTimestamp()-$anchor->getTimestamp());
-        $rates=[];
-        foreach($this->catalog->rules()['resources'] as $slug=>$label) $rates[$slug]=(float)($rows[$slug]->productionRate??$this->rate($planet,$slug,0,$levels));
-        $upkeep=$this->mineUpkeep($levels);
-        $energyRate=($rates['energy']??0)-$upkeep;
-        $energyStart=(float)($rows['energy']->currentStock??0);
-        $window=self::miningWindow((float)($rates['energy']??0),$upkeep,$energyStart,$elapsed);
-        $fullMiningSeconds=$window['full_mining_seconds'];$throttledSeconds=$window['throttled_mining_seconds'];$throttle=$window['throttle'];
-        foreach($rows as $slug=>$resource) {
-            $capacity=$this->capacity($planet,$slug,$levels);
-            if($slug==='energy') {
-                $stock=$window['energy_stock'];
-            } else {
-                $productiveSeconds=$fullMiningSeconds+$throttledSeconds*$throttle;
-                $stock=$resource->currentStock+($rates[$slug]??0)*$productiveSeconds;
-            }
-            $resource->currentStock=min($capacity,max(0,$stock));
-            $resource->lastUpdatedAt=$effective;
-        }
-        return $rows;
+        $at??=$this->clock->now();$levels=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);$rows=[];foreach($this->repo->all(PlanetResource::class,['planet'=>$planet]) as $resource)$rows[$resource->resourceType]=$resource;if($rows===[])return [];
+        $anchor=$rows['electricity']->lastUpdatedAt??array_values($rows)[0]->lastUpdatedAt;$effective=$at<$anchor?$anchor:$at;$elapsed=max(0,$effective->getTimestamp()-$anchor->getTimestamp());$stocks=[];foreach($rows as $slug=>$resource)$stocks[$slug]=$resource->currentStock;$simulation=$this->simulate($planet,$levels,$stocks,$elapsed);
+        foreach($rows as $slug=>$resource){$resource->currentStock=min($this->capacity($planet,$slug,$levels),max(0.0,(float)($simulation['stocks'][$slug]??$resource->currentStock)));$resource->lastUpdatedAt=$effective;}return $rows;
     }
+
     public function consume(Planet $planet,array $costs): void
     {
         $rows=$this->materialize($planet);

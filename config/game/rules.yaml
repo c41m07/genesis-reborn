@@ -1,24 +1,24 @@
 {
   "resources": {
     "metal": "Métal",
-    "energy": "Énergie",
+    "electricity": "Électricité",
     "antimatter": "Antimatière",
     "hydrogen": "Hydrogène",
-    "carbon": "Carbone"
+    "nano": "Nano"
   },
   "initial_stock": {
     "metal": 40000,
-    "energy": 20000,
+    "electricity": 20000,
     "antimatter": 2000,
     "hydrogen": 10000,
-    "carbon": 10000
+    "nano": 10000
   },
   "base_production": {
     "metal": 0.15,
-    "energy": 0.15,
+    "electricity": 0.15,
     "antimatter": 0.015,
     "hydrogen": 0.075,
-    "carbon": 0.1
+    "nano": 0.1
   },
   "mine_production_per_level": 0.1,
   "base_storage_capacity": 200000,
@@ -34,15 +34,23 @@
   "note": "Valeurs choisies lors du QCM d’équilibrage des 01–02/11/2026. Les indicateurs provisional restent internes et ne doivent pas apparaître dans les textes visibles par les joueurs.",
   "colony_initial_stock": {
     "metal": 8000,
-    "energy": 3000,
+    "electricity": 3000,
     "antimatter": 0,
     "hydrogen": 1500,
-    "carbon": 1000
+    "nano": 1000
   },
   "colony_kit_provisional": false,
   "colony_kit_note": "Kit limité et stocks de départ validés lors du QCM d’équilibrage.",
   "position_production_factors": {
-    "metal_energy_carbon": {
+    "metal": {
+      "position_1": 1.2,
+      "position_9": 0.8
+    },
+    "electricity": {
+      "position_1": 1.2,
+      "position_9": 0.8
+    },
+    "nano": {
       "position_1": 1.2,
       "position_9": 0.8
     },
@@ -54,8 +62,6 @@
       "all_positions": 1
     }
   },
-  "mine_energy_upkeep_per_level": 0.05,
-  "energy_shortage_policy": "proportional",
   "research_time_reduction_percent_per_lab_level": 10,
   "research_time_reduction_max_percent": 50,
   "defense_rebuild_percent_per_robotics_level": 10,
@@ -71,5 +77,8 @@
     "duration_seconds": 86400,
     "military_loss_ratio": 0.7,
     "cooldown_seconds": 604800
-  }
+  },
+  "factory_electricity_use_per_level": 0.05,
+  "antimatter_hydrogen_per_unit": 8,
+  "minimum_factory_efficiency": 0.1
 }

@@ -18,7 +18,6 @@ final class QueueService
             if(!$this->guard->receipt($m,$requestKey)) return;
             if(!in_array($group,['buildings','technologies','ships','defenses'],true)) throw new \DomainException('Type de construction invalide.');
             if(!in_array($tier,GameCatalog::TIERS,true)) throw new \DomainException('Rang de progression invalide.');
-            if($group==='defenses'&&$tier!=='basic') throw new \DomainException('Les défenses n’ont pas de variante de rang.');
             if($quantity<1 || $quantity>100) throw new \DomainException('Quantité autorisée : 1 à 100.');
             if(!isset($this->catalog->all($group)[$slug])) throw new \DomainException('Élément indisponible.');
             $config=$this->catalog->forUniverse($m->universe);$base=$config['catalog'][$group][$slug]??$this->catalog->get($group,$slug);$d=$this->catalog->withTier($base,$tier);
@@ -89,8 +88,8 @@ final class QueueService
             $t=$this->repo->one(PlayerTechnology::class,['playerUniverse'=>$m,'slug'=>$item->itemSlug,'tier'=>$item->tier])??new PlayerTechnology();
             $t->playerUniverse=$m;$t->slug=$item->itemSlug;$t->tier=$item->tier;$t->level=$item->itemLevel;$this->manager->save($t);
         } elseif(isset($this->catalog->all('defenses')[$item->itemSlug])) {
-            $d=$this->repo->one(PlanetDefense::class,['planet'=>$planet,'slug'=>$item->itemSlug])??new PlanetDefense();
-            $d->planet=$planet;$d->slug=$item->itemSlug;$d->quantity+=$item->quantity;$this->manager->save($d);
+            $d=$this->repo->one(PlanetDefense::class,['planet'=>$planet,'slug'=>$item->itemSlug,'tier'=>$item->tier])??new PlanetDefense();
+            $d->planet=$planet;$d->slug=$item->itemSlug;$d->tier=$item->tier;$d->quantity+=$item->quantity;$this->manager->save($d);
         } else {
             $fleet=$this->repo->one(Fleet::class,['homePlanet'=>$planet,'playerUniverse'=>$m,'status'=>'idle']);
             if(!$fleet) { $fleet=new Fleet();$fleet->playerUniverse=$m;$fleet->homePlanet=$planet;$this->manager->save($fleet);$this->manager->flush(); }

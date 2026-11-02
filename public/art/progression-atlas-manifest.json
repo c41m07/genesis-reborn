@@ -24,7 +24,7 @@
             "column": 1,
             "row": 0
           },
-          "mine_carbon": {
+          "mine_nano": {
             "column": 2,
             "row": 0
           },
@@ -40,7 +40,7 @@
             "column": 1,
             "row": 1
           },
-          "storage_carbon": {
+          "storage_nano": {
             "column": 2,
             "row": 1
           },
@@ -48,7 +48,7 @@
             "column": 3,
             "row": 1
           },
-          "storage_energy": {
+          "storage_electricity": {
             "column": 0,
             "row": 2
           },
@@ -224,7 +224,7 @@
             "column": 1,
             "row": 0
           },
-          "mine_carbon": {
+          "mine_nano": {
             "column": 2,
             "row": 0
           },
@@ -240,7 +240,7 @@
             "column": 1,
             "row": 1
           },
-          "storage_carbon": {
+          "storage_nano": {
             "column": 2,
             "row": 1
           },
@@ -248,7 +248,7 @@
             "column": 3,
             "row": 1
           },
-          "storage_energy": {
+          "storage_electricity": {
             "column": 0,
             "row": 2
           },
@@ -424,7 +424,7 @@
             "column": 1,
             "row": 0
           },
-          "mine_carbon": {
+          "mine_nano": {
             "column": 2,
             "row": 0
           },
@@ -440,7 +440,7 @@
             "column": 1,
             "row": 1
           },
-          "storage_carbon": {
+          "storage_nano": {
             "column": 2,
             "row": 1
           },
@@ -448,7 +448,7 @@
             "column": 3,
             "row": 1
           },
-          "storage_energy": {
+          "storage_electricity": {
             "column": 0,
             "row": 2
           },
@@ -609,5 +609,15 @@
         }
       }
     }
+  },
+  "defenses": {
+    "sprite_sheet": "defenses-atlas.png",
+    "columns": [
+      "basic",
+      "intermediate",
+      "superior"
+    ],
+    "source_of_mapping": "templates/colony/show.html.twig",
+    "sprite": "ground_turret"
   }
 }

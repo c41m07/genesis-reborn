@@ -1,14 +1,15 @@
 {
-  "slug": "storage_carbon",
-  "label": "Entrepôt · Carbone",
+  "slug": "storage_nano",
+  "label": "Entrepôt · Nano",
   "base_build_time": 180,
   "build_time_scaling": 1.6,
   "costs_base": {
-    "metal": 1500,
-    "carbon": 500
+    "metal": 2125,
+    "nano": 188,
+    "antimatter": 0
   },
   "costs_scaling": 1.8,
-  "storage_resource": "carbon",
+  "storage_resource": "nano",
   "levels": {
     "1": {
       "unlock_requirements": {}
@@ -47,6 +48,24 @@
           "level": 10
         }
       ]
+    }
+  },
+  "economy_value_budget": 5000,
+  "cost_profiles": {
+    "basic": {
+      "metal": 2125,
+      "nano": 188,
+      "antimatter": 0
+    },
+    "intermediate": {
+      "metal": 2032,
+      "nano": 469,
+      "antimatter": 40
+    },
+    "superior": {
+      "metal": 1758,
+      "nano": 782,
+      "antimatter": 147
     }
   }
 }

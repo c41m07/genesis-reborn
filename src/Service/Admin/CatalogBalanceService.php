@@ -63,7 +63,7 @@ final class CatalogBalanceService
             default=>['hp'=>['Structure (PV)',1,100000000,false],'precision'=>['Précision',0,1000,false],'tracking'=>['Poursuite',0,1000,false],'evasion'=>['Évasion',0,1000,false],'signature'=>['Signature',0,1000,false],'base_attack'=>['Dégâts de base',0,100000000,false],'shots_min'=>['Tirs minimum',1,100,true],'shots_max'=>['Tirs maximum',1,100,true],'build_time_base'=>['Temps de construction (s)',1,100000000,false],'speed_system'=>['Vitesse système',0,100000000,false],'speed_galaxy'=>['Vitesse galaxie',0,100000000,false],'fuel_travel_system'=>['Carburant système',0,100000000,false],'fuel_travel_galaxy'=>['Carburant galaxie',0,100000000,false],'fuel_orbit'=>['Carburant orbite',0,100000000,false],'cargo_capacity'=>['Capacité de fret',0,100000000,false],'fuel_capacity'=>['Capacité carburant',0,100000000,false]],
         };
         $result=[];foreach($map as $path=>[$label,$min,$max,$integer])if($this->has($definition,$path))$result[$path]=['label'=>$label,'min'=>$min,'max'=>$max,'integer'=>$integer];
-        foreach(['costs_base','costs'] as $costKey)if(isset($definition[$costKey])&&is_array($definition[$costKey]))foreach($definition[$costKey] as $resource=>$amount)$result[$costKey.'.'.$resource]=['label'=>'Coût '.ucfirst((string)$resource),'min'=>0,'max'=>1000000000,'integer'=>true];
+        if(isset($definition['cost_profiles'])&&is_array($definition['cost_profiles']))foreach($definition['cost_profiles'] as $tier=>$costs)foreach($costs as $resource=>$amount)$result['cost_profiles.'.$tier.'.'.$resource]=['label'=>'Coût '.$tier.' · '.ucfirst((string)$resource),'min'=>0,'max'=>1000000000,'integer'=>true];
         return $result;
     }
 

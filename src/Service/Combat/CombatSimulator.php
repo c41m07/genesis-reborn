@@ -146,7 +146,10 @@ final class CombatSimulator
 
     public function hitChance(array $attacker, array $target): float
     {
-        $value = $attacker['precision'] + $attacker['tracking'] - $target['evasion'] + ($target['signature'] / 5) - 15;
+        $tierFactors = ['basic' => 1, 'intermediate' => 2, 'superior' => 3];
+        $attackerTier = $tierFactors[$attacker['tier'] ?? 'basic'] ?? 1;
+        $targetTier = $tierFactors[$target['tier'] ?? 'basic'] ?? 1;
+        $value = $attacker['precision'] + $attacker['tracking'] - $target['evasion'] + ($target['signature'] / 5) - 15 + 10 * ($attackerTier - $targetTier);
 
         return max(15.0, min(95.0, $value));
     }
@@ -202,6 +205,7 @@ final class CombatSimulator
                 }
                 $stats[$stat] = (float) $value;
             }
+            $stats['tier'] = (string) ($definition['tier'] ?? 'basic');
             $shield = $definition['shield'] ?? 0;
             if (!is_numeric($shield) || !is_finite((float) $shield) || $shield < 0) {
                 throw new \DomainException('Statistique de combat invalide : shield.');

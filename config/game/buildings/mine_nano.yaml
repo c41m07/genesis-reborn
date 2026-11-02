@@ -1,14 +1,15 @@
 {
-  "slug": "storage_energy",
-  "label": "Entrepôt · Énergie",
-  "base_build_time": 180,
+  "slug": "mine_nano",
+  "label": "Extracteur · Nano",
+  "base_build_time": 120,
   "build_time_scaling": 1.6,
   "costs_base": {
-    "metal": 1500,
-    "carbon": 500
+    "metal": 560,
+    "nano": 120,
+    "antimatter": 0
   },
   "costs_scaling": 1.8,
-  "storage_resource": "energy",
+  "production_resource": "nano",
   "levels": {
     "1": {
       "unlock_requirements": {}
@@ -19,7 +20,7 @@
     "intermediate": {
       "technologies": [
         {
-          "slug": "advanced_engineering",
+          "slug": "nano_construction",
           "tier": "basic",
           "level": 5
         }
@@ -35,7 +36,7 @@
     "superior": {
       "technologies": [
         {
-          "slug": "advanced_engineering",
+          "slug": "nano_construction",
           "tier": "intermediate",
           "level": 10
         }
@@ -47,6 +48,25 @@
           "level": 10
         }
       ]
+    }
+  },
+  "electricity_use_per_level": 0.05,
+  "economy_value_budget": 1600,
+  "cost_profiles": {
+    "basic": {
+      "metal": 560,
+      "nano": 120,
+      "antimatter": 0
+    },
+    "intermediate": {
+      "metal": 600,
+      "nano": 200,
+      "antimatter": 0
+    },
+    "superior": {
+      "metal": 625,
+      "nano": 313,
+      "antimatter": 0
     }
   }
 }

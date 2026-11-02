@@ -33,7 +33,7 @@ html{scroll-padding-top:180px}@media(max-width:740px){html{scroll-padding-top:22
 .universe-rules{position:relative;margin-top:22px}.universe-rules h3{font-size:12px;margin:0;padding:12px 0 3px;border-top:1px solid var(--line)}.universe-rules dl{margin:0 0 16px}.universe-rules dl>div{gap:12px;padding:10px 0;font-size:10px}.universe-rules dd{margin:0;text-align:right;font-weight:700;font-variant-numeric:tabular-nums}.universe-opening-timer{display:grid;gap:8px;margin-top:14px;padding:14px 16px;border:1px solid color-mix(in srgb,var(--accent) 38%,var(--line));border-radius:6px;background:color-mix(in srgb,var(--accent) 7%,var(--panel));color:var(--muted)}.universe-opening-timer span{font-size:9px;font-weight:800;letter-spacing:.12em}.universe-opening-timer strong{color:var(--accent);font-size:20px;font-variant-numeric:tabular-nums}
 
 .generated-catalogue-art{position:absolute;inset:0;background-repeat:no-repeat;background-size:400% 400%}.generated-building-art{background-image:url('/art/buildings-atlas.png')}.generated-research-art{background-image:url('/art/research-atlas.png')}
-.generated-defense-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.generated-defense-art{position:absolute;inset:0;width:100%;height:100%;background-image:url('/art/defenses-atlas.png');background-size:300% 100%;background-repeat:no-repeat}
 
 .card-art--generated{height:auto!important;aspect-ratio:16/9;flex:0 0 auto}.generated-ship-art{background-image:url('/art/ships-atlas.png')}.generated-catalogue-art{background-size:400% 400%}.generated-defense-art{object-fit:cover}
 

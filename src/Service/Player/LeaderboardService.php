@@ -58,7 +58,7 @@ final class LeaderboardService
                 continue;
             }
             $row = &$rows[$defense->planet->owner->id];
-            $row['fleet_resources'] += $this->unitCost($universe, 'defenses', $defense->slug, $defense->quantity);
+            $row['fleet_resources'] += $this->unitCost($universe, 'defenses', $defense->slug, $defense->quantity, $defense->tier);
             $row['defense_units'] += $defense->quantity;
             unset($row);
         }

@@ -12,31 +12,31 @@ initial_level_by_position:
   9: 5
 levels:
   1:
-    buildings: { mine_metal: 1, mine_carbon: 1, mine_hydrogen: 1, power_plant: 1, shipyard: 1, lab: 1 }
+    buildings: { mine_metal: 1, mine_nano: 1, mine_hydrogen: 1, power_plant: 1, shipyard: 1, lab: 1 }
     resource_multiplier: 1
     research: { espionage_technology: 0, counter_espionage: 0, stealth_technology: 0 }
     fleet: { fighter: 1, probe: 1 }
     defenses: { ground_turret: 1 }
   2:
-    buildings: { mine_metal: 2, mine_carbon: 2, mine_hydrogen: 2, power_plant: 2, shipyard: 2, lab: 1, storage_metal: 1 }
+    buildings: { mine_metal: 2, mine_nano: 2, mine_hydrogen: 2, power_plant: 2, shipyard: 2, lab: 1, storage_metal: 1 }
     resource_multiplier: 1.5
     research: { espionage_technology: 0, counter_espionage: 1, stealth_technology: 0 }
     fleet: { fighter: 2, probe: 1 }
     defenses: { ground_turret: 1 }
   3:
-    buildings: { mine_metal: 3, mine_carbon: 3, mine_hydrogen: 2, mine_antimatter: 1, power_plant: 3, shipyard: 2, lab: 2, storage_metal: 1, storage_hydrogen: 1, fortress: 1 }
+    buildings: { mine_metal: 3, mine_nano: 3, mine_hydrogen: 2, mine_antimatter: 1, power_plant: 3, shipyard: 2, lab: 2, storage_metal: 1, storage_hydrogen: 1, fortress: 1 }
     resource_multiplier: 2
     research: { espionage_technology: 1, counter_espionage: 2, stealth_technology: 1 }
     fleet: { fighter: 3, heavy_fighter: 1, probe: 2 }
     defenses: { ground_turret: 2 }
   4:
-    buildings: { mine_metal: 4, mine_carbon: 4, mine_hydrogen: 3, mine_antimatter: 2, power_plant: 4, shipyard: 3, lab: 3, storage_metal: 2, storage_hydrogen: 2, storage_carbon: 1, fortress: 2 }
+    buildings: { mine_metal: 4, mine_nano: 4, mine_hydrogen: 3, mine_antimatter: 2, power_plant: 4, shipyard: 3, lab: 3, storage_metal: 2, storage_hydrogen: 2, storage_nano: 1, fortress: 2 }
     resource_multiplier: 2.75
     research: { espionage_technology: 2, counter_espionage: 3, stealth_technology: 2 }
     fleet: { fighter: 3, heavy_fighter: 2, probe: 2 }
     defenses: { ground_turret: 3 }
   5:
-    buildings: { mine_metal: 5, mine_carbon: 5, mine_hydrogen: 5, mine_antimatter: 3, power_plant: 5, shipyard: 4, lab: 4, storage_metal: 2, storage_energy: 1, storage_hydrogen: 2, storage_antimatter: 1, storage_carbon: 2, fortress: 3 }
+    buildings: { mine_metal: 5, mine_nano: 5, mine_hydrogen: 5, mine_antimatter: 3, power_plant: 5, shipyard: 4, lab: 4, storage_metal: 2, storage_electricity: 1, storage_hydrogen: 2, storage_antimatter: 1, storage_nano: 2, fortress: 3 }
     resource_multiplier: 3.5
     research: { espionage_technology: 3, counter_espionage: 4, stealth_technology: 3 }
     fleet: { fighter: 4, heavy_fighter: 3, probe: 3 }

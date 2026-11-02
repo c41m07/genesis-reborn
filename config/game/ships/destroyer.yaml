@@ -11,13 +11,7 @@
   "shots_min": 1,
   "shots_max": 3,
   "build_time_base": 600,
-  "costs": {
-    "metal": 30000,
-    "energy": 10000,
-    "antimatter": 0,
-    "hydrogen": 0,
-    "carbon": 0
-  },
+  "costs": {},
   "speed_system": 50,
   "speed_galaxy": 500,
   "fuel_travel_system": 0.5,
@@ -70,6 +64,24 @@
           "level": 10
         }
       ]
+    }
+  },
+  "economy_value_budget": 60000,
+  "cost_profiles": {
+    "basic": {
+      "metal": 27000,
+      "nano": 1500,
+      "antimatter": 0
+    },
+    "intermediate": {
+      "metal": 24375,
+      "nano": 5625,
+      "antimatter": 469
+    },
+    "superior": {
+      "metal": 21094,
+      "nano": 9375,
+      "antimatter": 1758
     }
   }
 }

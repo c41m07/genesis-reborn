@@ -63,9 +63,9 @@ final class GameCatalog
         $definition['_tier']=$tier;
         $definition['_tier_factor']=$factor;
         $definition['_tier_label']=$this->tiers()[$tier]['label'];
-        if(isset($definition['category'])&&array_key_exists('base_attack',$definition)){
-            foreach(['hp','shield','base_attack','precision','tracking','evasion','speed_system','speed_galaxy','fuel_capacity','cargo_capacity'] as $stat)if(isset($definition[$stat])&&is_numeric($definition[$stat])&&(float)$definition[$stat]>0)$definition[$stat]=(int)ceil((float)$definition[$stat]*$factor);
-            if(isset($definition['signature'])&&is_numeric($definition['signature'])&&(float)$definition['signature']>0)$definition['signature']=(int)ceil((float)$definition['signature']/$factor);
+        if(array_key_exists('base_attack',$definition)){
+            $definition['tier']=$tier;
+            foreach(['hp','shield','base_attack','speed_system','speed_galaxy','fuel_capacity','cargo_capacity'] as $stat)if(isset($definition[$stat])&&is_numeric($definition[$stat])&&(float)$definition[$stat]>0)$definition[$stat]=(int)ceil((float)$definition[$stat]*$factor);
             if($factor>1)$definition['extra_shot_chances'][]=$factor-1;
         }
         return $definition;
@@ -74,10 +74,18 @@ final class GameCatalog
     public function rules(): array { return $this->data['rules']; }
     public function costs(array $definition,int $level=1,int $quantity=1): array
     {
-        $result=[];$factor=(float)($definition['_tier_factor']??self::tierFactor((string)($definition['_tier']??'basic')));
-        foreach ($definition['costs_base'] ?? $definition['costs'] ?? [] as $resource=>$base) {
-            $amount=(float)$base*$factor*($definition['costs_scaling'] ?? 1)**($level-1)*$quantity;
-            $result[$resource]=$base>0?max(1,(int)ceil($amount)):0;
+        if($level<1||$quantity<1)throw new \InvalidArgumentException('Niveau ou quantité de coût invalide.');
+        $tier=(string)($definition['_tier']??'basic');
+        $profiles=$definition['cost_profiles']??null;
+        $base=is_array($profiles)?($profiles[$tier]??[]):($definition['costs_base']??$definition['costs']??[]);
+        $factor=is_array($profiles)?1.0:self::tierFactor($tier);
+        $scale=max(0.01,(float)($definition['costs_scaling']??1));$result=['metal'=>0,'nano'=>0,'antimatter'=>0,'hydrogen'=>0];
+        foreach($base as $resource=>$amount){
+            $resource=match($resource){'carbon'=>'nano','energy'=>'electricity',default=>$resource};
+            if($resource==='electricity')continue;
+            if(!array_key_exists($resource,$result)||!is_numeric($amount)||$amount<=0)continue;
+            $scaled=(float)$amount*$factor*$scale**($level-1)*$quantity;
+            $result[$resource]=max(1,(int)ceil($scaled));
         }
         return $result;
     }

@@ -5,7 +5,8 @@
   "build_time_scaling": 1.6,
   "costs_base": {
     "metal": 6000,
-    "energy": 2000
+    "nano": 0,
+    "antimatter": 0
   },
   "costs_scaling": 1.8,
   "levels": {
@@ -14,7 +15,7 @@
     }
   },
   "provisional": true,
-  "production_resource": "energy",
+  "production_resource": "electricity",
   "production_per_level": 0.1,
   "effect_note": "Production d’énergie : +0,1 énergie/s par niveau avant facteur de position et multiplicateur d’univers.",
   "tier_unlock_requirements": {
@@ -49,6 +50,24 @@
           "level": 10
         }
       ]
+    }
+  },
+  "economy_value_budget": 12000,
+  "cost_profiles": {
+    "basic": {
+      "metal": 6000,
+      "nano": 0,
+      "antimatter": 0
+    },
+    "intermediate": {
+      "metal": 6000,
+      "nano": 750,
+      "antimatter": 0
+    },
+    "superior": {
+      "metal": 6094,
+      "nano": 1641,
+      "antimatter": 0
     }
   }
 }

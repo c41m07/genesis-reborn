@@ -37,7 +37,7 @@ final class PlanetNpcSeeder
         foreach ($preset['defenses'] ?? [] as $slug => $quantity) {
             $this->catalog->getForUniverse($planet->solarSystem->galaxy->universe, 'defenses', (string) $slug);
             if (!is_int($quantity) || $quantity < 1) throw new \DomainException('Composition de défense PNJ invalide.');
-            $row = $this->repo->one(PlanetDefense::class, ['planet' => $planet, 'slug' => (string) $slug]);
+            $row = $this->repo->one(PlanetDefense::class, ['planet' => $planet, 'slug' => (string) $slug, 'tier' => 'basic']);
             if (!$row) { $row = new PlanetDefense(); $row->planet = $planet; $row->slug = (string) $slug; $row->quantity = $quantity; $this->manager->save($row); }
         }
         if ($this->repo->all(PlanetResource::class, ['planet' => $planet]) === []) {

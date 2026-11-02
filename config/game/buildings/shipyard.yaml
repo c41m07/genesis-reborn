@@ -5,8 +5,9 @@
   "base_build_time": 1800,
   "build_time_scaling": 1.6,
   "costs_base": {
-    "metal": 10000,
-    "energy": 3000
+    "metal": 8500,
+    "nano": 750,
+    "antimatter": 0
   },
   "costs_scaling": 1.8,
   "build_time_reduction_percent_per_level": 2,
@@ -81,6 +82,24 @@
           "level": 10
         }
       ]
+    }
+  },
+  "economy_value_budget": 20000,
+  "cost_profiles": {
+    "basic": {
+      "metal": 8500,
+      "nano": 750,
+      "antimatter": 0
+    },
+    "intermediate": {
+      "metal": 8125,
+      "nano": 1875,
+      "antimatter": 157
+    },
+    "superior": {
+      "metal": 7032,
+      "nano": 3125,
+      "antimatter": 586
     }
   }
 }

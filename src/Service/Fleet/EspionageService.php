@@ -111,7 +111,7 @@ final class EspionageService
             }
         }
         $defenses = [];
-        foreach ($this->repo->all(PlanetDefense::class, ['planet' => $planet]) as $defense) if ($defense->quantity > 0) $defenses[$defense->slug] = ['label' => $this->catalog->get('defenses', $defense->slug)['label'] ?? $defense->slug, 'quantity' => $defense->quantity];
+        foreach ($this->repo->all(PlanetDefense::class, ['planet' => $planet]) as $defense) if ($defense->quantity > 0) $defenses[$defense->slug . ':' . $defense->tier] = ['label' => ($this->catalog->get('defenses', $defense->slug)['label'] ?? $defense->slug) . ' · ' . $this->catalog->tiers()[$defense->tier]['label'], 'quantity' => $defense->quantity];
         return ['resources' => $this->resources->snapshot($planet), 'buildings' => $buildings, 'research' => $research, 'fleets' => $fleets, 'defenses' => $defenses];
     }
 

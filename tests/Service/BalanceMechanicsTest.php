@@ -23,16 +23,6 @@ final class BalanceMechanicsTest extends TestCase
         return $universe;
     }
 
-    public function testMineOutputScalesAfterStoredEnergyIsExhausted(): void
-    {
-        $window = \App\Service\Colony\ResourceService::miningWindow(0.15, 0.30, 3, 30);
-
-        self::assertSame(20.0, $window['full_mining_seconds']);
-        self::assertSame(10.0, $window['throttled_mining_seconds']);
-        self::assertEqualsWithDelta(0.5, $window['throttle'], 0.000001);
-        self::assertEquals(0.0, $window['energy_stock']);
-    }
-
     public function testSelectedCombatResearchChangesShipStatistics(): void
     {
         $catalog = $this->catalog();
@@ -67,44 +57,40 @@ final class BalanceMechanicsTest extends TestCase
         );
 
         self::assertSame(48, $plan['duration']);
-        self::assertSame(['metal' => 2850, 'energy' => 950, 'antimatter' => 0, 'hydrogen' => 0, 'carbon' => 0], $plan['costs']);
+        self::assertSame(['metal'=>2565,'nano'=>143,'antimatter'=>0,'hydrogen'=>0],$plan['costs']);
     }
 
-    public function testAllBuildingTechnologyAndShipCostsScaleEachResourceAcrossAllRanks(): void
+    public function testTierCostProfilesIncreaseRareValueShareWithoutPricingElectricity(): void
     {
-        $catalog = $this->catalog();
-        $factors = ['basic' => 1.0, 'intermediate' => 1.25, 'superior' => 1.5625];
-
-        foreach (['buildings', 'technologies', 'ships'] as $group) {
-            foreach ($catalog->all($group) as $slug => $definition) {
-                $basicCosts = $catalog->costs($catalog->withTier($definition, 'basic'));
-                foreach ($factors as $tier => $factor) {
-                    $rankedCosts = $catalog->costs($catalog->withTier($definition, $tier));
-                    foreach ($basicCosts as $resource => $basicCost) {
-                        $expected = $basicCost > 0 ? (int) ceil($basicCost * $factor) : 0;
-                        self::assertSame($expected, $rankedCosts[$resource] ?? 0, $group.'/'.$slug.' '.$tier.' '.$resource);
-                        if ($basicCost > 0) {
-                            self::assertGreaterThanOrEqual(1, $rankedCosts[$resource], $group.'/'.$slug.' '.$tier.' '.$resource.' ne doit pas tomber à zéro.');
-                        }
-                    }
-                }
-            }
+        $catalog=$this->catalog();$factor=['basic'=>1.0,'intermediate'=>1.25,'superior'=>1.5625];
+        foreach(['buildings','technologies','ships','defenses'] as $group)foreach($catalog->all($group) as $slug=>$definition){
+            foreach($factor as $tier=>$multiplier){$costs=$catalog->costs($catalog->withTier($definition,$tier));self::assertArrayNotHasKey('electricity',$costs);self::assertArrayNotHasKey('energy',$costs);foreach($costs as $amount)self::assertGreaterThanOrEqual(0,$amount);}
+            if(in_array($slug,['mine_metal','mine_nano','mine_antimatter','mine_hydrogen','power_plant'],true))continue;
+            $shares=[];foreach(GameCatalog::TIERS as $tier){$costs=$catalog->costs($catalog->withTier($definition,$tier));$total=2*$costs['metal']+4*$costs['nano']+8*$costs['antimatter']+$costs['hydrogen'];$shares[]=$total>0?(4*$costs['nano']+8*$costs['antimatter'])/$total:0;}
+            self::assertGreaterThanOrEqual($shares[0],$shares[1],$group.'/'.$slug.' rang intermédiaire');self::assertGreaterThanOrEqual($shares[1],$shares[2],$group.'/'.$slug.' rang supérieur');
         }
+    }
+
+    public function testTierCostProfilesScaleTheReferenceBudget(): void
+    {
+        $catalog=$this->catalog();$fighter=$catalog->get('ships','fighter');$expected=[
+            'basic'=>['metal'=>2700,'nano'=>150,'antimatter'=>0,'hydrogen'=>0],
+            'intermediate'=>['metal'=>2438,'nano'=>563,'antimatter'=>47,'hydrogen'=>0],
+            'superior'=>['metal'=>2110,'nano'=>938,'antimatter'=>176,'hydrogen'=>0],
+        ];
+        foreach($expected as $tier=>$costs)self::assertSame($costs,$catalog->costs($catalog->withTier($fighter,$tier)));
+    }
+
+    public function testTierCostsRoundEachResourceUpWithoutCreatingZeroCosts(): void
+    {
+        $catalog=$this->catalog();self::assertSame(['metal'=>1,'nano'=>0,'antimatter'=>0,'hydrogen'=>0],$catalog->costs(['_tier'=>'intermediate','costs'=>['metal'=>0.1,'energy'=>0]]));
     }
 
     public function testHigherShipRanksImproveBaseStatsAndIntegerShotCountsRemainProbabilistic(): void
     {
         $catalog=$this->catalog();$universe=$this->universe();$intermediate=$catalog->getTierForUniverse($universe,'ships','fighter','intermediate');$superior=$catalog->getTierForUniverse($universe,'ships','fighter','superior');
-        self::assertSame(188,$intermediate['hp']);self::assertSame(63,$intermediate['shield']);self::assertSame(16,$intermediate['signature']);self::assertSame([0.25],$intermediate['extra_shot_chances']);
-        self::assertSame(235,$superior['hp']);self::assertSame(79,$superior['shield']);self::assertSame(13,$superior['signature']);self::assertSame([0.5625],$superior['extra_shot_chances']);
-    }
-
-    public function testTierCostsRoundEachResourceUpWithoutCreatingZeroCosts(): void
-    {
-        $catalog=$this->catalog();$fighter=$catalog->get('ships','fighter');
-        self::assertSame(['metal'=>3750,'energy'=>1250,'antimatter'=>0,'hydrogen'=>0,'carbon'=>0],$catalog->costs($catalog->withTier($fighter,'intermediate')));
-        self::assertSame(['metal'=>4688,'energy'=>1563,'antimatter'=>0,'hydrogen'=>0,'carbon'=>0],$catalog->costs($catalog->withTier($fighter,'superior')));
-        self::assertSame(['metal'=>1,'energy'=>0],$catalog->costs(['_tier'=>'intermediate','costs'=>['metal'=>0.1,'energy'=>0]]));
+        self::assertSame(188,$intermediate['hp']);self::assertSame(63,$intermediate['shield']);self::assertSame(20,$intermediate['signature']);self::assertSame(70,$intermediate['precision']);self::assertSame(76,$intermediate['tracking']);self::assertSame(60,$intermediate['evasion']);self::assertSame([0.25],$intermediate['extra_shot_chances']);
+        self::assertSame(235,$superior['hp']);self::assertSame(79,$superior['shield']);self::assertSame(20,$superior['signature']);self::assertSame(70,$superior['precision']);self::assertSame(76,$superior['tracking']);self::assertSame(60,$superior['evasion']);self::assertSame([0.5625],$superior['extra_shot_chances']);
     }
 
     public function testRanksCompoundAndKeepExtraShotChancePerRank(): void

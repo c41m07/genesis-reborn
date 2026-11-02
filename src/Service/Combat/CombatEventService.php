@@ -413,7 +413,7 @@ final class CombatEventService
                     if ($defense->quantity < 1) {
                         continue;
                     }
-                    $definition = $this->catalog->getForUniverse($event->planet->solarSystem->galaxy->universe, 'defenses', $defense->slug);
+                    $definition = $this->catalog->getTierForUniverse($event->planet->solarSystem->galaxy->universe, 'defenses', $defense->slug, $defense->tier);
                     $defender = $event->planet->owner;
                     $defenderLevels = $defender ? $this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $defender]) : [];
                     $definition = $this->technologyEffects->applyToDefenses([$definition], $defenderLevels, $event->planet->solarSystem->galaxy->universe)[0];
@@ -427,6 +427,7 @@ final class CombatEventService
                         'id' => (string) $defense->id,
                         'camp' => 'defenders',
                         'quantity' => $defense->quantity,
+                        'tier' => $defense->tier,
                     ];
                 }
             }
@@ -787,10 +788,10 @@ final class CombatEventService
             $id = (int) $snapshot['id'];
             $defense = $this->repo->find(PlanetDefense::class, $id);
             if (!$defense) continue;
-            $lost = (int) ($losses['planet:' . $id . ':' . $defense->slug] ?? 0);
+            $lost = (int) ($losses['planet:' . $id . ':' . $defense->slug . ($defense->tier === 'basic' ? '' : ':' . $defense->tier)] ?? 0);
             $restored = (int) floor($lost * $rebuildPercent / 100);
             $defense->quantity = max(0, $defense->quantity - $lost) + $restored;
-            if ($restored > 0) $rebuilt[$defense->slug] = ($rebuilt[$defense->slug] ?? 0) + $restored;
+            if ($restored > 0) $rebuilt[$defense->slug . ':' . $defense->tier] = ($rebuilt[$defense->slug . ':' . $defense->tier] ?? 0) + $restored;
         }
         ksort($rebuilt);
         return $rebuilt;

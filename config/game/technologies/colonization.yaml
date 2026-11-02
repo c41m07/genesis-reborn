@@ -5,11 +5,9 @@
   "research_time_base": 288000,
   "research_time_scaling": 1.8,
   "costs_base": {
-    "metal": 10000,
-    "energy": 5000,
-    "antimatter": 250,
-    "hydrogen": 0,
-    "carbon": 0
+    "metal": 9350,
+    "nano": 825,
+    "antimatter": 0
   },
   "costs_scaling": 2,
   "unlock_requirements": {
@@ -59,6 +57,24 @@
           "level": 10
         }
       ]
+    }
+  },
+  "economy_value_budget": 22000,
+  "cost_profiles": {
+    "basic": {
+      "metal": 9350,
+      "nano": 825,
+      "antimatter": 0
+    },
+    "intermediate": {
+      "metal": 8250,
+      "nano": 2063,
+      "antimatter": 344
+    },
+    "superior": {
+      "metal": 6875,
+      "nano": 3438,
+      "antimatter": 860
     }
   }
 }

@@ -34,7 +34,7 @@ final class GameRulesTest extends TestCase
         self::assertNotEmpty($checker->check($checker->forLevel($d,4),[],[]));
         self::assertSame([], $checker->check($checker->forLevel($d,4),['mine_metal'=>2],['advanced_engineering'=>1]));
         self::assertSame([], $checker->check(['ships'=>['fighter']],[],[]));
-        self::assertSame(['metal'=>9000,'energy'=>3000,'antimatter'=>0,'hydrogen'=>0,'carbon'=>0],$c->costs($c->get('ships','fighter'),1,3));
+        self::assertSame(['metal'=>8100,'nano'=>450,'antimatter'=>0,'hydrogen'=>0],$c->costs($c->get('ships','fighter'),1,3));
     }
     public function testClosedAndFutureUniverses(): void
     {

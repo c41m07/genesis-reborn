@@ -4,8 +4,9 @@
   "base_build_time": 120,
   "build_time_scaling": 1.6,
   "costs_base": {
-    "metal": 800,
-    "energy": 400
+    "metal": 480,
+    "nano": 100,
+    "antimatter": 30
   },
   "costs_scaling": 1.8,
   "production_resource": "antimatter",
@@ -47,6 +48,26 @@
           "level": 10
         }
       ]
+    }
+  },
+  "hydrogen_per_output": 8,
+  "electricity_use_per_level": 0.05,
+  "economy_value_budget": 1600,
+  "cost_profiles": {
+    "basic": {
+      "metal": 480,
+      "nano": 100,
+      "antimatter": 30
+    },
+    "intermediate": {
+      "metal": 500,
+      "nano": 150,
+      "antimatter": 50
+    },
+    "superior": {
+      "metal": 500,
+      "nano": 219,
+      "antimatter": 79
     }
   }
 }

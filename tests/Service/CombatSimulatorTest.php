@@ -147,4 +147,10 @@ final class CombatSimulatorTest extends TestCase
         $this->expectException(\DomainException::class);
         (new CombatSimulator())->simulate($participants, [], [], 5, 42);
     }
+    public function testTierAdvantageChangesHitChanceWithoutMultiplyingBaseStats():void
+    {
+        $simulator=new CombatSimulator();$base=['precision'=>70,'tracking'=>76,'evasion'=>60,'signature'=>20];$expected=[[75,65,55],[85,75,65],[95,85,75]];$tiers=['basic','intermediate','superior'];
+        foreach($tiers as $i=>$attackerTier)foreach($tiers as $j=>$targetTier)self::assertSame((float)$expected[$i][$j],$simulator->hitChance($base+['tier'=>$attackerTier],$base+['tier'=>$targetTier]));
+    }
+
 }
