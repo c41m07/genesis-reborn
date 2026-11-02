@@ -1,24 +1,19 @@
 # Phase 06 — économie
 
-État : TERMINÉE le 31/10/2026 pour les mécaniques et invariants économiques.
+Mise à jour : 2 novembre 2026. La phase économique est techniquement validée; les valeurs chiffrées forment le point de départ du test Alpha.
 
-## Fonctionnement vérifié
+## Règles et calculs vérifiés
 
-- Les ressources sont calculées à la demande côté serveur à partir du stock, du taux et de l’instant du dernier calcul; une horloge qui recule ne peut pas faire baisser ou réécrire le stock.
-- Les files sont rattrapées chronologiquement avant dépense ou lecture. Lorsqu’un bâtiment change production ou stockage, le stock est d’abord matérialisé à la date de fin avec les anciennes règles; le nouveau taux/plafond ne s’applique qu’ensuite.
-- La capacité de base et les entrepôts imposent un plafond. Le rattrapage ne permet pas de conserver une production excédentaire antérieure à l’amélioration du stockage.
-- Les coûts et durées sont calculés côté serveur à partir des catalogues et multiplicateurs d’univers. La dépense s’effectue sous verrou; les remboursements après annulation sont plafonnés par l’espace disponible.
-- La centrale énergétique augmente effectivement la production d’énergie; les dépendances économiques affichées sont comparées au calcul serveur.
+- Production des ressources calculée côté serveur à partir du stock, du taux et de l’instant de matérialisation.
+- Reprise chronologique des files avant lecture ou dépense, avec l’ancien taux appliqué jusqu’à l’échéance de l’amélioration et les plafonds de stockage respectés.
+- Dépenses concurrentes protégées par verrou; remboursements d’annulation fixés à 25 % des coûts effectivement payés et limités par la capacité de stockage.
+- La consommation énergétique des extracteurs est appliquée avant de réduire proportionnellement la production minière lorsque l’énergie disponible ne couvre pas la demande.
+- Les boosts et événements sont documentés dans PHASE_07_BUILDINGS_TECHNOLOGIES_AUDIT.md; leur moteur n’est plus un travail restant de phase 06.
 
-## Preuves de test dans la suite actuelle
+## Valeurs et mesure
 
-- Chronologie d’une mine achevée avant une dépense, sans double traitement d’un ancien message.
-- Stockage plafonné avant la fin de son amélioration.
-- Dépense concurrente : deux commandes ne peuvent pas consommer plus que le stock disponible.
-- Remboursement plafonné au stockage restant.
-- Production énergétique réelle et avantages de catalogue cohérents.
-- Résultat de la suite courante : 71 tests / 355 assertions; lint, schéma et configuration Compose valides (voir TEST_STATUS.md).
+Les stocks de départ, productions, coûts, durées et réductions ont été choisis par Kévin et appliqués aux catalogues pour l’Alpha. La stratégie retenue est modérée. Mesurer avec les joueurs les ressources limitantes, les temps d’attente, les jalons de progression, les effets de l’entretien énergétique et la capacité de récupération après revers. Les choix initiaux et calculs dérivés figurent dans BALANCING_QCM_2026-11-02.md.
 
-## Limites conservées
+## Preuves
 
-Les coefficients de production, coûts, durées, stocks initiaux, kit de colonie et ratio de remboursement sont explicitement marqués provisoires dans les catalogues. Cette phase clôt les invariants de calcul, pas l’équilibrage de partie réelle; ces valeurs restent à observer puis valider avant de déclarer le jeu prêt pour production. Le coût et l’acquisition des boosts restent à spécifier.
+Les tests ciblés de chronologie, stockage, concurrence, dépenses et remboursement sont couverts dans GamePersistenceTest et GameRulesTest. L’état courant de la suite complète et des contrôles est dans TEST_STATUS.md.

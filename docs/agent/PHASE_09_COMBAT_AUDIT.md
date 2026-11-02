@@ -1,29 +1,20 @@
-# Audit de phase 09 — combat, pertes et rapports
+# Phase 09 — combat
 
-État : **terminée** — 31/10/2026
-Avancement : **9/15 phases clôturées**; phase 10 active.
+État : **terminée et validée techniquement**. Mise à jour : 2 novembre 2026.
 
-## Critères vérifiés
+## Règles appliquées
 
-- Simulation déterministe : un même instantané et une même graine produisent les mêmes rounds, tirs, dégâts, survivants et pertes.
-- Résolution persistée : événements et participants sont créés par fenêtre; les arrivées, camps et rounds d’entrée sont figés. Une seconde résolution ne rejoue pas les pertes, butins ni notifications.
-- Règles de round : unités arrivées tardivement, destruction avant le tour, limites de chance de toucher et ciblage des défenses statiques sont couverts par CombatSimulatorTest.
-- Pertes : les quantités survivantes sont enregistrées pour les flottes, les garnisons PNJ et les défenses. Les pertes PNJ demeurent après une conquête échouée.
-- Butin : victoire des attaquants requise; protection de 10 % de stockage par ressource, partage selon les soutes encore libres, réservation du carburant de retour et dépôt soumis aux capacités vérifiés.
-- Conquête JcE : victoire avec un vaisseau colonie survivant; le vaisseau est consommé et les bâtiments/ressources acquis restent sur place. La conquête JcJ reste exclue selon la décision de Kévin.
-- Rapports : journal des rounds, instantané effectif, pertes, butin et capture persistés. Lecture réservée aux participants et au propriétaire de la planète; un spectateur non autorisé est refusé.
-- Notifications : attaque signalée à la cible; notification de fin envoyée aux participants une seule fois. La panne de publication Mercure ne bloque pas la transaction de jeu.
-- Les bonus technologiques appliqués en phase 07 sont conservés dans l’instantané de combat.
+- Un round de combat est exécuté par minute, jusqu’à dix rounds ou élimination anticipée d’un camp.
+- Les renforts rejoignent le prochain round non résolu admissible selon leur heure d’arrivée; une flotte arrivée après la clôture repart sans participer.
+- Les combats sont persistés, déterministes à partir de leur graine et traités de manière idempotente.
+- Les pertes, rapports privés, butin, retraite, conquête JcE PNJ, retours et notifications sont intégrés.
+- Structure et bouclier sont des statistiques distinctes. Les boucliers absorbent les dégâts avant la structure, se rechargent entre rounds selon la configuration, et les survivants sont restaurés après combat.
+- Robotique reconstruit la proportion décidée des défenses; les vaisseaux détruits ne sont pas récupérés.
 
-## Validation
+## Équilibrage Alpha
 
-- CombatSimulatorTest : déterminisme, arrivées tardives, unité détruite avant son tour, bornes de précision, ciblage des défenses et statistiques invalides.
-- CombatEventTest : fenêtre commune, résolution répétée, accès aux rapports, notifications de fin exactement une fois, butin et conquêtes PNJ.
-- GamePersistenceTest : outbox de notification, panne de Mercure isolée et missions d’espionnage PNJ.
-- make test : **72 tests / 365 assertions**.
-- make lint : PHP, 62 YAML, 17 Twig, conteneur Symfony et schéma Doctrine valides.
-- make validate : configuration Docker Compose valide.
+Les statistiques, précisions, suivi, chances de toucher, matrice de matchups, boucliers et profils PNJ sont choisis dans BALANCING_QCM_2026-11-02.md et reliés aux catalogues. Les résultats des joueurs Alpha permettront de mesurer la durée, l’issue, les pertes et le temps de récupération. Ne pas extrapoler l’équilibre à partir du seul passage des tests.
 
-## Limites conservées
+## Vérification
 
-Les compositions PNJ, statistiques et coefficients signalés provisoires ne sont pas équilibrés pour la production. La phase clôt les comportements techniques vérifiés; l’équilibrage et les valeurs finales restent des critères bloquants pour l’audit de production.
+Les tests de domaine et de persistance couvrent les rounds, les renforts, les limites d’arrivée, l’idempotence, les pertes, le butin et la conquête. La campagne navigateur et ses résultats les plus récents sont consignés dans TEST_STATUS.md.

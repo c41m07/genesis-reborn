@@ -1,24 +1,18 @@
-# Audit de phase 07 — bâtiments et technologies
+# Phase 07 — bâtiments, technologies et boosts
 
-État : **terminée** — 31/10/2026
-Avancement : **7/15 phases clôturées**; phase 08 active.
+État : **terminée et validée techniquement**. Mise à jour : 2 novembre 2026.
 
-## Périmètre contrôlé
+## Couverture
 
-- Les prérequis, effets économiques, files de bâtiments et de recherche ainsi que les annulations étaient déjà couverts par les services et tests existants.
-- Le catalogue déclarait Tir de précision avec un effet stat_bonus, cible all_ships, formule flat, de 5 points par niveau. La résolution de combat utilisait jusque-là les statistiques brutes du catalogue de vaisseaux.
-- Les recherches de joueur sont lues par inscription d’univers au moment de la résolution. Chaque flotte reçoit uniquement les niveaux de sa propre inscription.
-- Les niveaux de recherche définis dans le préréglage PNJ sont transmis au même calculateur. Les préréglages actuels ne donnent pas de niveau positif de Tir de précision.
-- Les défenses statiques ne sont pas dans la cible all_ships. Le rapport conserve les statistiques effectives et les niveaux appliqués afin de permettre la reconstitution du combat.
+- Prérequis, catalogue, effets économiques, files de bâtiments et de recherche, annulations et effets de technologie vérifiés côté serveur.
+- Les recherches d’une inscription à un univers affectent ses flottes, et les niveaux de recherche PNJ sont transmis au même calculateur. Les défenses fixes restent hors des bonus ciblant les vaisseaux.
+- Les boosts d’événement et de mission à risque sont implémentés : attribution idempotente selon la réussite métier, plafond quotidien UTC pour les missions à risque, inventaire et file FIFO en cas de stock plein, consommation et réduction de 25 % du temps restant d’une opération active.
+- /boosts est relié au menu Opérations. Les événements hebdomadaires configurés utilisent les contributions réelles d’exploration, de combat et de transport.
 
-## Validation
+## Paramètres d’Alpha
 
-- CombatEventTest::testCombatSnapshotsApplyEachMembershipTechnologyWithoutChangingPlanetDefenses vérifie une précision de 80 pour l’attaquant (base 70, niveau 2), une précision de 75 pour le défenseur (niveau 1) et une tourelle inchangée à 65.
-- make test : **72 tests / 363 assertions**.
-- make lint : PHP valide, 62 fichiers YAML, 17 fichiers Twig, conteneur Symfony et schéma Doctrine valides.
-- make validate : configuration Docker Compose valide.
+Les niveaux, coûts, durées et bonus choisis figurent dans BALANCING_QCM_2026-11-02.md. Leur effet sur le rythme, les spécialisations et les combats doit être observé pendant l’Alpha. Cette évaluation ne constitue pas une fonctionnalité technique manquante.
 
-## Limites maintenues
+## Vérifications
 
-- Le catalogue ne déclare actuellement qu’un seul effet de combat stat_bonus. Les formules autres que flat ne sont pas prises en charge par le calculateur.
-- Les valeurs marquées provisoires dans les catalogues restent à équilibrer. Cette clôture vérifie l’application de l’effet déclaré, pas son équilibrage final.
+Les tests couvrent la recherche et ses effets, les défenses fixes non affectées, la concurrence et l’idempotence des boosts, les récompenses Top 3/égalité, seuil de contribution, livraison, plafond/FIFO et réinitialisation UTC. Les résultats récents sont dans TEST_STATUS.md.

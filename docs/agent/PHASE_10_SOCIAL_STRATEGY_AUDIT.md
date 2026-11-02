@@ -24,3 +24,10 @@
 - La valeur catalogue reflète les actifs encore détenus et non les dépenses historiques réelles.
 - Aucune fonction de blocage, suppression ou modération des messages n’est incluse; ces contrôles relèvent de la phase administration.
 - Aucune déclaration de conformité RGAA/WCAG ou de préparation à la production n’est faite.
+
+## Réaudit Work V4 — 31/10/2026
+
+- Revue actuelle du classement (scores par univers et valeur des actifs détenus), relations guildes/alliances et contrôles de messagerie privée/chat de guilde. Limites d’accès et permissions vérifiées dans les services et routes; écriture HTML échappée par Twig, CSRF et limite de débit en place.
+- Exécution ciblée GamePersistenceTest pour classement, messages privés, chat, modération et alliances/guildes : 11 tests / 44 assertions, succès. Suite complète actuelle : 84 tests / 448 assertions.
+- Les messages restent strictement entre joueurs du même univers; chat limité aux membres et notifications aux autres membres. Le classement est une estimation de valeur catalogue des actifs détenus, pas une comptabilité historique.
+- Les contrôles de suppression/modération plus larges relèvent de la phase 11. Aucun verdict de conformité accessibilité ou de préparation production n’est émis ici.

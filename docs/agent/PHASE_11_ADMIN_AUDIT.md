@@ -15,18 +15,20 @@
 ## Univers et règles de jeu
 - La console permet de planifier les dates d’ouverture et de fermeture des univers. Un univers fermé ne peut pas être réouvert.
 - Réglages par univers persistés en base et appliqués immédiatement aux services : multiplicateurs de durées, production et trajets (0,01–10); maximum de planètes (1–50); taille de flotte (1–10 000); activation des guildes et de la conquête JcE.
-- Les catalogues de référence restent des valeurs initiales; les overrides sont validés, limités et enregistrés dans le journal.
+- Les catalogues de référence restent les valeurs initiales. L’administrateur peut régler, par univers, les coûts, durées, niveaux maximum, production/stockage, caractéristiques et consommations des unités; les valeurs sont bornées et validées, avec possibilité de retour aux références.
+- Les modifications s’appliquent immédiatement de façon cohérente : la production acquise est matérialisée avant le changement et les taux recalculés sous verrou; les éléments déjà en file gardent leur coût et leur durée enregistrés, tandis que les nouveaux éléments utilisent les valeurs modifiées.
+- Le contrôleur et le service limitent l’accès aux administrateurs; les formulaires exigent un jeton CSRF; sauvegardes et réinitialisations sont inscrites au journal d’audit.
 
 ## Journal d’audit
 Les actions d’administration stockent l’acteur, l’action, le type et l’identifiant de cible, l’horodatage et les détails JSON : accès aux signalements, décisions de modération, suspension/réactivation, calendrier et paramètres d’univers, attribution initiale du rôle. Le contenu privé antérieur au masquage n’est pas copié dans le journal.
 
-## Validation
-- make test : 78 tests, 406 assertions, réussite.
-- make lint : PHP, 62 YAML, 20 Twig, conteneur et schéma Doctrine valides.
-- make validate : Compose valide.
-- make verify-install : installation vierge, 14 migrations, import de 146 planètes, réimport idempotent et conservation après redémarrage réussis.
+## Validation — 01/11/2026
+- PHPUnit complet : 93 tests / 477 assertions, réussi. CatalogBalanceTest : 7 tests / 21 assertions; CatalogBalanceControllerTest : 2 / 8.
+- Lint Twig : 25 fichiers; YAML : 63 fichiers; conteneur Symfony : réussi. doctrine:schema:validate a terminé avec le code retour 0.
+- make lint et make validate ne sont pas disponibles dans le shell Windows du runner (make absent); les contrôles correspondants ont été exécutés directement dans le conteneur avec docker-compose --env-file .env.local.
+- Les migrations 18 à 20 et l’installation vierge ne sont pas des changements de cette phase; aucune migration nouvelle n’est nécessaire pour les overrides stockés dans les réglages JSON d’univers.
 
 ## Limites
 - L’attribution initiale du rôle administrateur se fait par commande console; aucune promotion n’est disponible depuis l’interface web.
 - Les listes de l’interface d’administration ne sont pas encore paginées.
-- Cette phase ne constitue pas un audit RGAA/WCAG, de charge ni une déclaration de préparation à la production.
+- Les listes d’administration ne sont pas encore paginées. Cette phase ne constitue pas un audit RGAA/WCAG, de charge ni une déclaration de préparation à la production.

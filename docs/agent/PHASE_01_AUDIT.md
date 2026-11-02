@@ -1,5 +1,7 @@
 # Phase 01 — audit actualisé du dépôt
 
+> Audit historique : les nombres et statuts des sections datées décrivent leur date de collecte. L’état actuel est indexé dans docs/README.md, MASTER_PLAN.md et ALPHA_READINESS.md.
+
 Audit initial : 31/10/2026. Réexamen du lancement Work V4 : 01/11/2026 (Europe/Paris). Branche : feat/genesis-reborn-production-completion.
 
 ## Périmètre contrôlé
@@ -12,10 +14,10 @@ Audit initial : 31/10/2026. Réexamen du lancement Work V4 : 01/11/2026 (Europe/
 
 ## Écarts documentaires corrigés
 
-- La matrice TRACEABILITE.md indiquait encore que l’espionnage et la conquête étaient à faire; elle est alignée sur l’implémentation et les tests courants.
+- La matrice REQUIREMENTS_MATRIX.md indiquait encore que l’espionnage et la conquête étaient à faire; elle est alignée sur l’implémentation et les tests courants.
 - REGLES.md, ROADMAP.md et DECISIONS.md distinguent désormais les décisions actuelles des états historiques du 21 octobre.
 - La spécification multi-univers précise l’évolution du drapeau planet_conquest : conquête JcE de planètes PNJ uniquement, jamais vol de planètes détenues par les joueurs.
-- Les rapports de livraison du 21 octobre restent conservés comme comptes-rendus datés, avec renvoi explicite vers la traçabilité actualisée.
+- Les rapports de livraison et le contrôle croisé obsolètes ont été retirés; leurs preuves fonctionnelles sont conservées dans les audits de phase. La documentation courante est indexée dans docs/README.md.
 
 ## Limites non bloquantes de cette phase
 
@@ -34,7 +36,7 @@ L’audit de base est terminé, mais le jeu entier n’est pas déclaré prêt p
 
 - Structure réelle : Symfony 7.4 / PHP 8.4; 105 fichiers sous `src/` répartis entre contrôleurs, services, entités, dépôts, sécurité, gestionnaires d’événements/messages et intégration Mercure. Le projet utilise Doctrine ORM/Migrations, Twig, Stimulus, Webpack Encore, MariaDB, RabbitMQ, Mercure et Docker Compose; lockfiles PHP/JavaScript présents.
 - Inventaires : 29 routes Symfony (authentification, colonies/économie, carte, flottes/missions, combat et espionnage, social/classements/messages, notifications, profil et administration); 14 migrations versionnées; 14 fichiers sous `tests/`; 20 templates Twig; 17 fichiers d’assets applicatifs. Les listes de routes et modules ont été relevées via `debug:router`, `rg --files` et le dépôt, et rapprochées de `UI_SCREEN_MATRIX.md`.
-- Documentation : 8 spécifications texte extraites de 8 PDF conservés, règles et décisions, roadmap, traçabilité, livraison, recherche UI, contrôles de mission, audits par phase, états de tests, inventaires UX et résultats de validation. Les travaux antérieurs sont consignés dans `CHANGELOG_AGENT.md`; les gaps connus sont détaillés dans `PROMPT_PHASE_CROSSCHECK.md`, `BLOCKERS.md` et les audits 04/11/12.
+- Documentation : 8 spécifications texte extraites de 8 PDF conservés, règles et décisions, roadmap, traçabilité, livraison, recherche UI, contrôles de mission, audits par phase, états de tests, inventaires UX et résultats de validation. Les travaux antérieurs sont consignés dans `PHASE_01_AUDIT.md`; les gaps connus sont détaillés dans `REQUIREMENTS_MATRIX.md`, `BLOCKERS.md` et les audits 04/11/12.
 - État fonctionnel classé par preuves existantes : socle et phases 01–03, 05–10 déclarés validés dans les audits; phase 04 partielle (récupération de compte et préférences absentes); phase 11 partielle (réglage fin des catalogues absent); phase 12 en cours (refonte existante et tests partiels, inventaire des états/parcours/accessibilité incomplet); phases 13–15 ouvertes. Les coefficients de gameplay signalés provisoires ne sont pas des règles d’équilibrage finales.
 
 ### Référence Figma et état UX

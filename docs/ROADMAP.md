@@ -1,14 +1,37 @@
-# Roadmap de développement
+# Roadmap Genesis Reborn
 
-Référence : PDF 0 p.3–9, précisions des PDF 1–7, adaptations dans DECISIONS.md. Mise à jour le 31 octobre 2026; la livraison UI du 21 octobre reste un jalon historique.
+Mise à jour : 2 novembre 2026. Pour les règles et arbitrages de gameplay, se reporter à [REGLES.md](REGLES.md) et [DECISIONS.md](DECISIONS.md).
 
-| Étape | État | Suite |
+## État général
+
+Le jeu est au stade **Alpha jouable contrôlée**, pas en production. Les quinze domaines de travail ont été audités; le statut strict consigné dans l’audit final est 14 phases validées sur 15, la phase 12 restant partielle pour l’accessibilité manuelle exhaustive.
+
+La priorité de l’Alpha est d’observer les joueurs et de mesurer leur progression réelle. L’orientation confirmée est une stratégie modérée. Les cibles de durée début/milieu/fin, les gains et pertes et les profils PNJ seront comparés aux sessions et ajustés ensuite; aucun objectif de durée n’est déclaré atteint d’avance.
+
+## Phases auditées
+
+| Phase | Domaine | État actuel |
 |---|---|---|
-| 1. Socle et comptes | Infrastructure, authentification, profil et installation propre vérifiés | CI et exploitation de production |
-| 2. Univers et cartes | Import, inscription isolée, contexte, visibilité et fermeture asynchrone vérifiés | Variantes avancées en étape 6 |
-| 3. Colonie | Ressources, bâtiments, recherche, chantier/défenses, queues et reprise corrigés/testés | Équilibrage final ; source/prix des boosts à définir |
-| 4. Flottes | Exploration, colonisation, transport, défense, orbite et espionnage intégrés | Vérification navigateur des missions avancées et suivi en charge |
-| 5. Diplomatie et combat | Combat persisté, camps, renforts, graine, butin, rapports et notifications intégrés | Équilibrage final et tests de charge |
-| 6. Variantes et finitions | Conquête JcE PNJ ajoutée à l’UI et à Omega/Turbo; fermeture asynchrone livrée | Classements, statistiques, audit accessibilité et charge |
+| 01–05 | Socle, règles, architecture, comptes, univers | Fonctionnalités principales et audits livrés |
+| 06–08 | Économie, bâtiments/recherches/boosts, flottes et missions | Implémentés et testés; valeurs de balance à évaluer pendant l’Alpha |
+| 09 | Combat | Implémenté : rounds persistés, un round par minute, jusqu’à dix rounds; équilibre à mesurer |
+| 10–11 | Social, stratégie et administration | Diplomatie, messages, classement, réglages et modération livrés |
+| 12 | Interface et accessibilité | Refonte et parcours livrés; revue manuelle RGAA/WCAG avec lecteur d’écran reste ouverte |
+| 13–14 | Tests, sécurité, performance et exploitation | Contrôles locaux et procédures livrés; CI distante et charge restent non prouvées |
+| 15 | Audit final | Réalisé; verdict NON PRÊT production et limites documentées |
 
-Phase active : phase 10 — audit des systèmes sociaux et stratégiques déjà intégrés. Maintenir les valeurs provisoires identifiées et ne pas déclarer le jeu prêt avant l’audit final.
+## Collecte et itération Alpha
+
+Pendant les sessions Alpha, relever notamment le temps pour atteindre les premiers jalons, la fréquence de connexion nécessaire, les périodes d’attente, les ressources excédentaires ou limitantes, les pertes de flotte, le coût de reconstitution et la capacité à revenir après un revers. Ventiler les observations par nouveaux joueurs et joueurs avancés. Les objectifs chiffrés seront établis à partir de ces résultats avant de modifier les valeurs de production.
+
+Les valeurs en configuration sont l’état initial du test. Leur présence ne signifie pas qu’elles sont validées comme équilibre final.
+
+## Portes avant production
+
+- Compléter une feuille de balance à partir des résultats Alpha et valider les changements associés.
+- Exécuter la CI sur l’hébergeur distant retenu.
+- Mesurer la capacité sous charge et définir supervision/SLA.
+- Compléter les sauvegardes distantes, leur protection et le plan de reprise.
+- Réaliser la revue manuelle d’accessibilité avec lecteur d’écran et cadrer la conformité RGAA/WCAG.
+
+Les critères, preuves et limites sont suivis dans [BLOCKERS.md](agent/BLOCKERS.md), [REQUIREMENTS_MATRIX.md](agent/REQUIREMENTS_MATRIX.md) et [PHASE_15_FINAL_AUDIT.md](agent/PHASE_15_FINAL_AUDIT.md).

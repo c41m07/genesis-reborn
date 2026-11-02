@@ -21,3 +21,9 @@
 ## Limites
 
 Les univers Omega et Turbo actuels sont permanents. Aucune interface admin ne modifie encore endsAt; l’importeur prend en charge les futurs univers temporaires et UniverseLifecycleService fournit le point d’entrée à utiliser par la future administration (phase 11). La livraison RabbitMQ réelle n’a pas été exercée par cette suite, qui utilise son transport Messenger en mémoire.
+
+## Réaudit Work V4 — 31/10/2026
+
+- Comparaison du code reprise : UniverseContext applique l’accessibilité aux memberships courants; UniverseImporter valide les échéances temporaires, programme la fermeture dans l’outbox et conserve les importations idempotentes; UniverseLifecycleService remplace les échéances, ignore les jetons obsolètes et ferme sous verrou en conservant les données.
+- Rerun ciblé : GamePersistenceTest 41 tests / 187 assertions, GameplayAccessTest 9 tests / 50 assertions. Résultat combiné : 50 / 237, succès. La suite complète courante passe à 84 tests / 448 assertions.
+- Les fermetures sont couvertes avec le transport Messenger de test; la livraison RabbitMQ réelle n’est toujours pas exercée par la suite d’intégration. Aucune migration ou modification métier n’a été nécessaire pour la phase 05.

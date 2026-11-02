@@ -1,7 +1,8 @@
 # Audit de phase 08 — flottes et missions
 
-État : **terminée** — 31/10/2026
-Avancement : **8/15 phases clôturées**; phase 09 active.
+> Instantané historique du 31 octobre 2026 : les compteurs de phase et validations datés ci-dessous décrivent cet audit. L’état courant est dans [TEST_STATUS.md](TEST_STATUS.md) et [ALPHA_READINESS.md](ALPHA_READINESS.md).
+
+État à la date du rapport : **terminée**. Avancement historique : **8/15 phases clôturées**; phase 09 alors active.
 
 ## Parcours vérifiés dans le code et les tests
 
@@ -24,3 +25,9 @@ Avancement : **8/15 phases clôturées**; phase 09 active.
 - Les voyages intergalactiques sont refusés, car leur règle n’est pas spécifiée dans les sources.
 - Les capacités de réservoir, coefficients de carburant et durées de voyage signalés provisoires ne sont pas déclarés équilibrés.
 - Les écrans navigateur d’espionnage n’ont pas été relancés depuis son ajout; cette limite est conservée dans TEST_STATUS.md.
+
+## Réaudit Work V4 — 31/10/2026
+
+- Réexamen du calcul de distance, durée, vitesse, carburant/fret, envoi idempotent, réservations, retours, missions et règles de cible. Les missions intergalactiques restent explicitement refusées tant que leur règle n’est pas définie.
+- Tests ciblés relancés : MovementCalculatorTest 6 / 20; CombatEventTest 7 / 110; huit tests d’intégration exploration/transport/colonisation/espionnage 8 / 58. Tous passent. GamePersistenceTest (41 / 187) et la suite globale (84 / 448) ont également passé.
+- Les scénarios navigateur restent à exécuter avec la campagne UI des phases 12–13, particulièrement le parcours espionnage. Paramètres de carburant, capacité et durées restent provisoires selon catalogues/règles.
