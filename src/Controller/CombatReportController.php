@@ -7,15 +7,29 @@ use App\Service\Catalog\GameCatalog;
 use App\Service\Universe\UniverseContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 
 final class CombatReportController extends AbstractController
 {
     #[Route('/rapports', name: 'app_combat_reports', methods: ['GET'])]
-    public function index(UniverseContext $context, CombatReportReader $reader, \App\Service\Fleet\EspionageReportReader $espionageReader): Response
+    public function index(Request $request, UniverseContext $context, CombatReportReader $reader, \App\Service\Fleet\EspionageReportReader $espionageReader): Response
     {
         $membership = $context->membership();
-        return $this->render('combat/reports.html.twig', ['reports' => $reader->list($membership), 'espionage_reports' => $espionageReader->list($membership)]);
+        $combatReports = $reader->list($membership);
+        $espionageReports = $espionageReader->list($membership);
+        $filter = $request->query->getString('type', 'all');
+        if (!in_array($filter, ['all', 'combat', 'economy', 'espionage'], true)) {
+            $filter = 'all';
+        }
+
+        return $this->render('combat/reports.html.twig', [
+            'membership' => $membership,
+            'reports' => $filter === 'espionage' ? [] : $combatReports,
+            'espionage_reports' => in_array($filter, ['combat', 'economy'], true) ? [] : $espionageReports,
+            'filter' => $filter,
+            'report_count' => count($combatReports) + count($espionageReports),
+        ]);
     }
 
     #[Route('/rapports/combat/{id}', name: 'app_combat_report', requirements: ['id' => '\d+'], methods: ['GET'])]

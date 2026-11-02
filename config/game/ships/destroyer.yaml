@@ -4,16 +4,19 @@
   "category": "escort",
   "hp": 1600,
   "precision": 70,
-  "tracking": 80,
-  "evasion": 60,
-  "signature": 20,
+  "tracking": 56,
+  "evasion": 30,
+  "signature": 45,
   "base_attack": 300,
   "shots_min": 1,
   "shots_max": 3,
-  "build_time_base": 480,
+  "build_time_base": 600,
   "costs": {
-    "metal": 24000,
-    "energy": 8000
+    "metal": 30000,
+    "energy": 10000,
+    "antimatter": 0,
+    "hydrogen": 0,
+    "carbon": 0
   },
   "speed_system": 50,
   "speed_galaxy": 500,
@@ -33,5 +36,6 @@
   "note": "Navigation et équilibrage provisoires ; fighter et stealth_fighter reprennent les stats de combat documentées.",
   "fuel_capacity": 4500,
   "fuel_capacity_provisional": true,
-  "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 4500 H. Réservoir réservé au carburant, distinct de la soute de fret."
+  "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 4500 H. Réservoir réservé au carburant, distinct de la soute de fret.",
+  "shield": 600
 }

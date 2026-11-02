@@ -11,4 +11,8 @@ class Galaxy
     public Universe $universe;
     #[ORM\Column(length: 80)]
     public string $name;
+    public function coordinateCode(): string
+    {
+        return preg_replace('/^galaxie\\s+/iu', '', trim($this->name)) ?: trim($this->name);
+    }
 }

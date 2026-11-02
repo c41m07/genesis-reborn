@@ -1,6 +1,6 @@
 <?php
 namespace App\Repository;
-use App\Entity\{Player,PlayerUniverse,Universe,Galaxy,SolarSystem,Planet,PlanetResource,PlanetBuilding,PlayerTechnology,Fleet,FleetShip,PlayerDiscovery,QueueItem,OutboxMessage,CombatLog,CombatParticipant};
+use App\Entity\{Player,PlayerUniverse,Universe,Galaxy,SolarSystem,Planet,PlanetResource,PlanetBuilding,PlayerTechnology,Fleet,FleetShip,PlayerDiscovery,QueueItem,OutboxMessage,CombatLog,CombatParticipant,PlayerBoost,BoostEvent,BoostEventContribution};
 use Doctrine\ORM\EntityManagerInterface;
 final class GameRepository
 {
@@ -34,6 +34,29 @@ final class GameRepository
     public function systems(Universe $u): array
     {
         return $this->em->createQueryBuilder()->select('s','g')->from(SolarSystem::class,'s')->join('s.galaxy','g')->where('g.universe = :u')->setParameter('u',$u)->orderBy('s.id','ASC')->getQuery()->getResult();
+    }
+
+    /** @return list<Fleet> */
+    public function activeFleetsInUniverse(Universe $universe): array
+    {
+        return $this->em->createQueryBuilder()->select('f', 'pu', 'home', 'homeSystem', 'homeGalaxy', 'destination', 'destinationSystem', 'destinationGalaxy', 'directSystem', 'directGalaxy')
+            ->from(Fleet::class, 'f')
+            ->join('f.playerUniverse', 'pu')
+            ->join('f.homePlanet', 'home')
+            ->join('home.solarSystem', 'homeSystem')
+            ->join('homeSystem.galaxy', 'homeGalaxy')
+            ->leftJoin('f.destination', 'destination')
+            ->leftJoin('destination.solarSystem', 'destinationSystem')
+            ->leftJoin('destinationSystem.galaxy', 'destinationGalaxy')
+            ->leftJoin('f.destinationSystem', 'directSystem')
+            ->leftJoin('directSystem.galaxy', 'directGalaxy')
+            ->where('pu.universe = :universe')
+            ->andWhere('f.status IN (:statuses)')
+            ->setParameter('universe', $universe)
+            ->setParameter('statuses', ['traveling', 'returning', 'attacking', 'defending', 'orbiting', 'orbit_pending'])
+            ->orderBy('f.arrivalAt', 'ASC')
+            ->getQuery()
+            ->getResult();
     }
     public function queue(Planet $p, ?string $type = null): array
     {
@@ -79,6 +102,57 @@ final class GameRepository
         return array_reverse($rows);
     }
 
+
+    public function activeUniverses(): array
+    {
+        return $this->all(Universe::class, ['status' => 'active'], ['id' => 'ASC']);
+    }
+
+    public function boostEventByKey(string $eventKey): ?BoostEvent
+    {
+        $event = $this->one(BoostEvent::class, ['eventKey' => $eventKey]);
+        return $event instanceof BoostEvent ? $event : null;
+    }
+
+    public function boostEvents(string $status): array
+    {
+        return $this->all(BoostEvent::class, ['status' => $status], ['scheduledAt' => 'ASC', 'id' => 'ASC']);
+    }
+
+
+    public function boostEventsForUniverse(string $status, Universe $universe): array
+    {
+        return $this->all(BoostEvent::class, ['status' => $status, 'universe' => $universe], ['scheduledAt' => 'ASC', 'id' => 'ASC']);
+    }
+
+    public function activeBoostEventsFor(PlayerUniverse $membership, string $templateKey, \DateTimeImmutable $now): array
+    {
+        return $this->em->createQueryBuilder()->select('e')->from(BoostEvent::class, 'e')
+            ->where('e.universe = :universe')->andWhere('e.templateKey = :template')->andWhere('e.status = :status')
+            ->andWhere('e.startedAt <= :now')->andWhere('e.endsAt > :now')
+            ->setParameter('universe', $membership->universe)->setParameter('template', $templateKey)
+            ->setParameter('status', 'active')->setParameter('now', $now)->orderBy('e.startedAt', 'ASC')
+            ->getQuery()->getResult();
+    }
+
+    public function boostEventContributionExists(BoostEvent $event, string $sourceKey): bool
+    {
+        return $this->one(BoostEventContribution::class, ['event' => $event, 'sourceKey' => $sourceKey]) !== null;
+    }
+
+
+    public function boostEventContributionTotal(BoostEvent $event, PlayerUniverse $membership): float
+    {
+        return (float) $this->em->createQueryBuilder()->select('COALESCE(SUM(c.value), 0)')
+            ->from(BoostEventContribution::class, 'c')->where('c.event = :event')->andWhere('c.playerUniverse = :membership')
+            ->setParameter('event', $event)->setParameter('membership', $membership)->getQuery()->getSingleScalarResult();
+    }
+
+    public function boostEventContributions(BoostEvent $event): array
+    {
+        return $this->all(BoostEventContribution::class, ['event' => $event], ['id' => 'ASC']);
+    }
+
     public function outbox(bool $notifications): array
     {
         return $this->em->createQueryBuilder()->select('o')->from(OutboxMessage::class,'o')
@@ -88,5 +162,49 @@ final class GameRepository
     public function activeQueueItems(): array
     {
         return $this->em->createQueryBuilder()->select('q')->from(QueueItem::class,'q')->where('q.startedAt IS NOT NULL')->getQuery()->getResult();
+    }
+
+    public function activeQueueItemsFor(PlayerUniverse $membership): array
+    {
+        return $this->em->createQueryBuilder()->select('q')->from(QueueItem::class, 'q')
+            ->where('q.playerUniverse = :membership')->andWhere('q.startedAt IS NOT NULL')
+            ->setParameter('membership', $membership)->orderBy('q.startedAt', 'ASC')->getQuery()->getResult();
+    }
+
+    public function activeFleetsForBoost(PlayerUniverse $membership): array
+    {
+        return $this->em->createQueryBuilder()->select('f')->from(Fleet::class, 'f')
+            ->where('f.playerUniverse = :membership')->andWhere('f.status IN (:statuses)')->andWhere('f.arrivalAt IS NOT NULL')
+            ->setParameter('membership', $membership)->setParameter('statuses', ['traveling', 'returning', 'defending', 'orbiting'])
+            ->orderBy('f.arrivalAt', 'ASC')->getQuery()->getResult();
+    }
+
+    public function boostsFor(PlayerUniverse $membership): array
+    {
+        return $this->all(PlayerBoost::class, ['playerUniverse' => $membership], ['earnedAt' => 'ASC', 'id' => 'ASC']);
+    }
+
+    public function countBoosts(PlayerUniverse $membership, string $status): int
+    {
+        return (int) $this->em->createQueryBuilder()->select('COUNT(b.id)')->from(PlayerBoost::class, 'b')
+            ->where('b.playerUniverse = :membership')->andWhere('b.status = :status')
+            ->setParameter('membership', $membership)->setParameter('status', $status)->getQuery()->getSingleScalarResult();
+    }
+
+    public function oldestBoost(PlayerUniverse $membership, string $status): ?PlayerBoost
+    {
+        return $this->em->getRepository(PlayerBoost::class)->findOneBy(
+            ['playerUniverse' => $membership, 'status' => $status],
+            ['earnedAt' => 'ASC', 'id' => 'ASC'],
+        );
+    }
+
+    public function riskBoostCountSince(PlayerUniverse $membership, \DateTimeImmutable $from, \DateTimeImmutable $until): int
+    {
+        return (int) $this->em->createQueryBuilder()->select('COUNT(b.id)')->from(PlayerBoost::class, 'b')
+            ->where('b.playerUniverse = :membership')->andWhere('b.sourceType = :source')
+            ->andWhere('b.earnedAt >= :from')->andWhere('b.earnedAt < :until')
+            ->setParameter('membership', $membership)->setParameter('source', 'risk_mission')
+            ->setParameter('from', $from)->setParameter('until', $until)->getQuery()->getSingleScalarResult();
     }
 }

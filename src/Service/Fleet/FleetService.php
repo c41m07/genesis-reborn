@@ -1,16 +1,18 @@
 <?php
 namespace App\Service\Fleet;
-use App\Entity\{Fleet,FleetShip,Planet,PlayerUniverse,SolarSystem,PlayerDiscovery,OutboxMessage,PlanetResource};
+use App\Entity\{Fleet,FleetShip,Planet,PlayerUniverse,SolarSystem,PlayerDiscovery,OutboxMessage,PlanetResource,PlayerTechnology};
 use App\Repository\GameRepository;
 use App\Manager\GameManager;
 use App\Service\Colony\{ActionGuard,ResourceService};
 use App\Service\Catalog\GameCatalog;
+use App\Service\Boost\BoostGrantService;
+use App\Service\Boost\BoostEventService;
 use App\Service\Notification\NotificationService;
 use Symfony\Component\Uid\Uuid;
 use Psr\Clock\ClockInterface;
 final class FleetService
 {
-    public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues,private \App\Service\Combat\CombatEventService $combats,private EspionageService $espionage) {}
+    public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues,private \App\Service\Combat\CombatEventService $combats,private EspionageService $espionage,private BoostGrantService $boostGrants,private BoostEventService $boostEvents,private \App\Service\Universe\PlanetNameGenerator $planetNames) {}
     private function coords(SolarSystem $s,?int $position): array { return [$s->id,$s->galaxy->id,$s->coordX,$s->coordY,$position]; }
     public function quote(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo=[],float $orbitHours=0): array
     {
@@ -23,7 +25,7 @@ final class FleetService
         $known=$this->repo->one(PlayerDiscovery::class,['playerUniverse'=>$m,'solarSystem'=>$system]);
         if($mission!=='explore' && !$known) throw new \DomainException('Explorez ce système avant de cibler une planète.');
         if($target instanceof Planet && $target->id===$origin->id) throw new \DomainException('Choisissez une autre planète.');
-        if($mission==='spy' && (!$target instanceof Planet || $target->owner?->id===$m->id)) throw new \DomainException('L’espionnage cible une planète connue qui ne vous appartient pas.');
+        if($mission==='spy' && (!$target instanceof Planet || $target->owner?->id===$m->id)) throw new \DomainException('L’espionnage cible une planète occupée par un autre joueur ou un monde PNJ connu.');
         if($mission==='transport' && $target->owner?->id!==$m->id) throw new \DomainException('Le transport est limité à vos colonies.');
         if($mission==='attack' && !$this->combats->canAttack($m,$target instanceof Planet?$target:null)) throw new \DomainException('Cette planète ne peut pas être attaquée.');
         if($mission==='conquer' && !$this->combats->canConquer($m,$target instanceof Planet?$target:null)) throw new \DomainException('La conquête n’est pas activée ou cette planète ne peut pas être prise.');
@@ -31,9 +33,9 @@ final class FleetService
         if($mission==='orbit' && !$this->combats->canOrbit($m,$target instanceof Planet?$target:null)) throw new \DomainException('Une orbite est possible uniquement chez un allié de cet univers.');
         if(!is_finite($orbitHours) || $orbitHours<0 || $orbitHours>168 || ($mission==='orbit' && ($orbitHours<1 || floor($orbitHours)!==$orbitHours)) || ($mission!=='orbit' && $orbitHours!=0)) throw new \DomainException('Durée d’orbite invalide. Choisissez entre 1 et 168 heures.');
         if($mission==='colonize' && ($target->owner!==null || $target->npcPlanet)) throw new \DomainException('Cette planète doit être conquise ou n’est pas vierge.');
-        $config=$this->catalog->forUniverse($m->universe);
-        if($mission==='conquer' && count($this->repo->planets($m->universe,$m)) >= $config['limits']['max_planets']) throw new \DomainException('Limite de colonies atteinte; une planète conquise occupe un emplacement.');
-        if($mission==='colonize' && count($this->repo->planets($m->universe,$m)) >= $config['limits']['max_planets']) throw new \DomainException('Limite de colonies atteinte.');
+        $config=$this->catalog->forUniverse($m->universe);$planetLimit=$this->planetLimit($m,$config);
+        if($mission==='conquer' && count($this->repo->planets($m->universe,$m)) >= $planetLimit) throw new \DomainException('Limite de colonies atteinte; une planète conquise occupe un emplacement.');
+        if($mission==='colonize' && count($this->repo->planets($m->universe,$m)) >= $planetLimit) throw new \DomainException('Limite de colonies atteinte.');
         $idle=$this->repo->one(Fleet::class,['homePlanet'=>$origin,'playerUniverse'=>$m,'status'=>'idle']);$stock=[];
         if($idle) foreach($this->repo->all(FleetShip::class,['fleet'=>$idle]) as $s) $stock[$s->slug]=$s->quantity;
         $ships=[];$valid=[];
@@ -42,7 +44,7 @@ final class FleetService
             if($n===false || $n<0 || $n>100) throw new \DomainException('Quantité de vaisseaux invalide.');
             if(!$n) continue;
             if($n>($stock[$slug]??0)) throw new \DomainException('Vaisseaux indisponibles.');
-            $ships[]=$this->catalog->get('ships',$slug)+['quantity'=>$n];$valid[$slug]=$n;
+            $ships[]=$this->catalog->getForUniverse($m->universe,'ships',$slug)+['quantity'=>$n];$valid[$slug]=$n;
         }
         if(array_sum($valid)>$config['limits']['max_fleet_size']) throw new \DomainException('Flotte trop grande.');
         if($mission==='attack' && $target instanceof Planet && $target->owner?->id===$m->id) throw new \DomainException('Vous ne pouvez pas attaquer votre propre colonie.');
@@ -50,6 +52,11 @@ final class FleetService
         if($mission==='spy' && (empty($valid['probe']) || count($valid)!==1)) throw new \DomainException('Une mission d’espionnage exige une ou plusieurs sondes, sans escorte.');
         if(in_array($mission,['colonize','conquer'],true) && empty($valid['colony_ship'])) throw new \DomainException('Un vaisseau colonie survivant est nécessaire à cette mission.');
         $windowHours=in_array($mission,['attack','conquer','defend'],true)?((int)($this->catalog->rules()['combat_window_seconds']??600)/3600):($mission==='orbit'?$orbitHours:0);
+        $techLevels=$this->repo->levels(PlayerTechnology::class,['playerUniverse'=>$m]);
+        $propulsion=$config['catalog']['technologies']['advanced_propulsion']['effect']??[];
+        $propulsionLevel=min((int)($config['catalog']['technologies']['advanced_propulsion']['max_level']??0),(int)($techLevels['advanced_propulsion']??0));
+        $speedBonus=min((float)($propulsion['max_bonus']??0),(float)($propulsion['value_per_level']??0)*$propulsionLevel);
+        if($speedBonus>0)foreach($ships as &$ship){foreach($propulsion['stats']??['speed_system','speed_galaxy'] as $stat)if(isset($ship[$stat]))$ship[$stat]*=1+$speedBonus;}unset($ship);
         $quote=$this->calculator->quote($this->coords($origin->solarSystem,$origin->position),$this->coords($system,$target instanceof Planet?$target->position:null),$ships,$ratio,$config['multipliers']['travel_time'],$this->catalog->rules()['fuel_ratio_policy'],$windowHours);
         $freight=[];
         foreach($cargo as $resource=>$amount) {
@@ -63,6 +70,15 @@ final class FleetService
         if(array_sum($freight)>$quote['freight_capacity']+1e-6) throw new \DomainException('Soute de fret insuffisante. Les petits réservoirs sont réservés au carburant.');
         return $quote+['target'=>$target,'system'=>$system,'composition'=>$valid,'freight'=>$freight,'idle'=>$idle];
     }
+    private function planetLimit(PlayerUniverse $membership,array $config): int
+    {
+        $definition=$config['catalog']['technologies']['colonization']??null;$effect=$definition['effect']??null;
+        if(!is_array($effect)||($effect['type']??null)!=='planet_limit')return (int)$config['limits']['max_planets'];
+        $level=(int)($this->repo->levels(PlayerTechnology::class,['playerUniverse'=>$membership])['colonization']??0);
+        $base=(int)($effect['base_planets']??1);$perLevel=(int)($effect['value_per_level']??1);$cap=min((int)($effect['max_planets']??5),(int)$config['limits']['max_planets']);
+        return max(1,min($cap,$base+$perLevel*min($level,(int)($definition['max_level']??$level))));
+    }
+
     public function preview(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo=[],float $orbitHours=0): array
     {
         return $this->manager->transaction(function()use($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$orbitHours){
@@ -86,6 +102,15 @@ final class FleetService
             $this->schedule($f);
         });
     }
+    public function reschedulePlayerBoost(Fleet $fleet, \DateTimeImmutable $arrivalAt): void
+    {
+        if (!in_array($fleet->status, ['traveling', 'returning', 'defending', 'orbiting'], true) || !$fleet->arrivalAt) {
+            throw new \DomainException('Mission chronométrée active introuvable.');
+        }
+        $fleet->arrivalAt = $arrivalAt;
+        $this->schedule($fleet);
+    }
+
     private function schedule(Fleet $f): void
     {
         $f->dispatchToken=Uuid::v4()->toRfc4122();$o=new OutboxMessage();$o->kind='fleet';$o->targetId=$f->id;$o->token=$f->dispatchToken;$o->dueAt=$f->arrivalAt;$this->manager->save($o);
@@ -132,22 +157,26 @@ final class FleetService
                 $probe=$this->repo->one(FleetShip::class,['fleet'=>$f,'slug'=>'probe']);
                 $probeCount=$probe?->quantity??0;
                 if($probeCount<1) throw new \LogicException('Sondes d’espionnage absentes à l’arrivée.');
-                $this->espionage->resolve($f,$probeCount);
+                $report = $this->espionage->resolve($f,$probeCount);
                 $probe->quantity=0;
+                if ($report->result === 'success' && $report->intelCategories > 0) $this->boostGrants->awardRiskMission($m,$f);
             } elseif($f->mission==='explore') {
                 $d=$this->repo->one(PlayerDiscovery::class,['playerUniverse'=>$m,'solarSystem'=>$f->destinationSystem]);
+                $newDiscovery = !$d;
                 if(!$d) { $d=new PlayerDiscovery();$d->playerUniverse=$m;$d->solarSystem=$f->destinationSystem;$this->manager->save($d); }
                 $this->consumeShip($f,'probe');$this->notifications->enqueue($m,'Système découvert : '.$f->destinationSystem->name.'.');
+                if ($newDiscovery) { $this->boostGrants->awardRiskMission($m,$f); $this->boostEvents->recordExplorationDiscovery($m,$f->destinationSystem); }
             } elseif($f->mission==='colonize') {
                 $target=$f->destination;$this->manager->lock($target);
-                $limit=$this->catalog->forUniverse($m->universe)['limits']['max_planets'];
-                if(!$target->owner && !$target->npcPlanet && count($this->repo->planets($m->universe,$m))<$limit) { $target->owner=$m;$this->resources->initialize($target,true);$this->consumeShip($f,'colony_ship');$this->notifications->enqueue($m,'Nouvelle colonie : '.$target->name.'.'); }
+                $limit=$this->planetLimit($m,$this->catalog->forUniverse($m->universe));
+                if(!$target->owner && !$target->npcPlanet && count($this->repo->planets($m->universe,$m))<$limit) { $target->name=$this->planetNames->generate($m);$target->owner=$m;$this->resources->initialize($target,true);$this->consumeShip($f,'colony_ship');$this->notifications->enqueue($m,'Nouvelle colonie : '.$target->name.'.'); }
                 else $this->notifications->enqueue($m,'Colonisation impossible à l’arrivée. Votre flotte revient.');
             } elseif($f->mission==='transport') {
                 $target=$f->destination;$this->manager->lock($target);
                 if($target->owner?->id===$m->id) {
-                    $rows=$this->resources->materialize($target);
-                    foreach($f->cargo as $slug=>$n) { $freight=max(0,$n-($slug==='hydrogen'?$f->reservedFuel:0));$rows[$slug]->currentStock+=$freight;$f->cargo[$slug]-=$freight; }
+                    $rows=$this->resources->materialize($target);$delivered=0.0;
+                    foreach($f->cargo as $slug=>$n) { $freight=max(0,$n-($slug==='hydrogen'?$f->reservedFuel:0));$rows[$slug]->currentStock+=$freight;$f->cargo[$slug]-=$freight;$delivered+=$freight; }
+                    if($delivered>0) $this->boostEvents->recordTransportDelivery($m,$f->id,$delivered);
                     $this->notifications->enqueue($m,'Transport livré sur '.$target->name.'.');
                 }
             }

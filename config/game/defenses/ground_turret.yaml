@@ -7,12 +7,15 @@
   "evasion": 0,
   "signature": 60,
   "base_attack": 100,
-  "shots_min": 1,
+  "shots_min": 2,
   "shots_max": 2,
   "build_time_base": 180,
   "costs": {
-    "metal": 4000,
-    "energy": 1000
+    "metal": 8000,
+    "energy": 2000,
+    "antimatter": 0,
+    "hydrogen": 0,
+    "carbon": 0
   },
   "unlock_requirements": {
     "buildings": [
@@ -22,5 +25,6 @@
       }
     ]
   },
-  "provisional": true
+  "provisional": true,
+  "shield": 100
 }

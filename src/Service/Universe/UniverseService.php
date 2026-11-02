@@ -7,7 +7,7 @@ use App\Service\Colony\ResourceService;
 use Psr\Clock\ClockInterface;
 final class UniverseService
 {
-    public function __construct(private GameRepository $repo,private GameManager $manager,private ResourceService $resources,private ClockInterface $clock) {}
+    public function __construct(private GameRepository $repo,private GameManager $manager,private ResourceService $resources,private ClockInterface $clock,private PlanetNameGenerator $planetNames) {}
     public function select(Player $player,int $universeId): void
     {
         $this->manager->transaction(function()use($player,$universeId){
@@ -17,10 +17,23 @@ final class UniverseService
             if (!$u->isAccessible($this->clock->now())) throw new \DomainException('Cet univers est fermé ou pas encore ouvert.');
             $m=$this->repo->one(PlayerUniverse::class,['player'=>$player,'universe'=>$u]);
             if (!$m) {
-                $planets=$this->repo->planets($u,null,true);
+                $planets=array_values(array_filter($this->repo->planets($u,null,true), static fn (Planet $planet): bool => !$planet->npcPlanet));
                 if (!$planets) throw new \DomainException('Cet univers ne dispose plus de planète libre.');
                 $m=new PlayerUniverse();$m->player=$player;$m->universe=$u;$m->joinedAt=$this->clock->now();$this->manager->save($m);
-                $planet=$planets[0];$this->manager->lock($planet);$planet->owner=$m;
+                shuffle($planets);
+                $planet = null;
+                foreach ($planets as $candidate) {
+                    $this->manager->lock($candidate);
+                    if ($candidate->owner === null) {
+                        $planet = $candidate;
+                        break;
+                    }
+                }
+                if ($planet === null) {
+                    throw new \DomainException('Cet univers ne dispose plus de planète libre.');
+                }
+                $planet->name = $this->planetNames->generate($m);
+                $planet->owner = $m;
                 $this->resources->initialize($planet);
                 $d=new PlayerDiscovery();$d->playerUniverse=$m;$d->solarSystem=$planet->solarSystem;$this->manager->save($d);
             }

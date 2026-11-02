@@ -7,38 +7,69 @@
     "carbon": "Carbone"
   },
   "initial_stock": {
-    "metal": 100000,
-    "energy": 60000,
-    "antimatter": 20000,
-    "hydrogen": 50000,
-    "carbon": 40000
+    "metal": 40000,
+    "energy": 20000,
+    "antimatter": 2000,
+    "hydrogen": 10000,
+    "carbon": 10000
   },
   "base_production": {
-    "metal": 0.3,
-    "energy": 0.3,
-    "antimatter": 0.03,
-    "hydrogen": 0.15,
-    "carbon": 0.2
+    "metal": 0.15,
+    "energy": 0.15,
+    "antimatter": 0.015,
+    "hydrogen": 0.075,
+    "carbon": 0.1
   },
-  "mine_production_per_level": 0.5,
+  "mine_production_per_level": 0.1,
   "base_storage_capacity": 200000,
   "storage_capacity_per_level": 100000,
   "building_time_multiplier_key": "building_time",
   "cancellation_refund_ratio": 0.25,
   "fuel_ratio_policy": "proportional",
   "combat_window_seconds": 600,
-  "combat_loot_ratio": 1.0,
+  "combat_loot_ratio": 1,
   "combat_loot_protected_storage_ratio": 0.1,
   "max_combat_rounds": 10,
   "provisional": true,
-  "note": "Paramètres de démonstration non chiffrés dans les PDF, à équilibrer. Carburant proportionnel à la vitesse, confirmé par l’utilisateur.",
+  "note": "Valeurs choisies lors du QCM d’équilibrage des 01–02/11/2026. Les indicateurs provisional restent internes et ne doivent pas apparaître dans les textes visibles par les joueurs.",
   "colony_initial_stock": {
-    "metal": 2000,
-    "energy": 1000,
+    "metal": 8000,
+    "energy": 3000,
     "antimatter": 0,
-    "hydrogen": 200,
-    "carbon": 500
+    "hydrogen": 1500,
+    "carbon": 1000
   },
-  "colony_kit_provisional": true,
-  "colony_kit_note": "Kit limité confirmé ; quantités de départ proposées et provisoires, à équilibrer."
+  "colony_kit_provisional": false,
+  "colony_kit_note": "Kit limité et stocks de départ validés lors du QCM d’équilibrage.",
+  "position_production_factors": {
+    "metal_energy_carbon": {
+      "position_1": 1.2,
+      "position_9": 0.8
+    },
+    "hydrogen": {
+      "position_1": 0.8,
+      "position_9": 1.2
+    },
+    "antimatter": {
+      "all_positions": 1
+    }
+  },
+  "mine_energy_upkeep_per_level": 0.05,
+  "energy_shortage_policy": "proportional",
+  "research_time_reduction_percent_per_lab_level": 10,
+  "research_time_reduction_max_percent": 50,
+  "defense_rebuild_percent_per_robotics_level": 10,
+  "defense_rebuild_max_percent": 50,
+  "shield_recharge_percent_per_round": 5,
+  "restore_survivor_shields_after_combat": true,
+  "new_player_protection": {
+    "duration_seconds": 604800,
+    "score_limit": 5000,
+    "attacker_score_ratio": 5
+  },
+  "recovery_protection": {
+    "duration_seconds": 86400,
+    "military_loss_ratio": 0.7,
+    "cooldown_seconds": 604800
+  }
 }

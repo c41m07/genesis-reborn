@@ -27,4 +27,10 @@ class CombatEvent
 
     #[ORM\Column(length: 36)]
     public string $dispatchToken = '';
+
+    #[ORM\Column(options: ['default' => 0])]
+    public int $currentRound = 0;
+
+    #[ORM\Column(type: 'json')]
+    public array $combatSnapshot = [];
 }

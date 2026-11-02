@@ -18,7 +18,10 @@
     ]
   },
   "effect": {
-    "type": "unlock"
+    "type": "cost_discount",
+    "targets": "buildings",
+    "value_per_level": 5,
+    "max_bonus": 25
   },
   "provisional": true
 }

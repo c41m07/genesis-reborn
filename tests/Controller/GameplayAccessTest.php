@@ -1,6 +1,6 @@
 <?php
 namespace App\Tests\Controller;
-use App\Entity\{Player,Universe,Planet,PlanetBuilding,Fleet,FleetShip,QueueItem};
+use App\Entity\{Player,Universe,Planet,PlanetBuilding,Fleet,FleetShip,QueueItem,SolarSystem,Galaxy};
 use App\Service\Player\RegistrationService;
 use App\Service\Universe\{UniverseImporter,UniverseService};
 use App\Validator\DTO\RegistrationData;
@@ -33,7 +33,7 @@ final class GameplayAccessTest extends WebTestCase
         [$player] = $this->player('RegularPlayer');
         $this->client->loginUser($player);
         $this->client->request('GET', '/admin');
-        self::assertResponseStatusCodeSame(403);
+        self::assertResponseRedirects('/acces-refuse');
 
         $player->lockedAt = new \DateTimeImmutable();
         $this->em->flush();
@@ -61,7 +61,7 @@ final class GameplayAccessTest extends WebTestCase
     {
         [$a,$own]=$this->player('Alpha');[$b,$foreign]=$this->player('Beta');$this->client->loginUser($a);
         $crawler=$this->client->request('GET','/flottes');self::assertResponseIsSuccessful();$token=$crawler->filter('input[name="_token"]')->first()->attr('value');
-        $payload=['_token'=>$token,'origin'=>$own->id,'mission'=>'explore','system'=>$own->solarSystem->id,'ratio'=>'0.5','ships'=>['probe'=>1],'cargo'=>[],'total_fuel'=>0,'seconds'=>0];
+        $payload=['_token'=>$token,'origin'=>$own->id,'mission'=>'explore','coordinates'=>$own->solarSystem->galaxy->coordinateCode().':'.$own->solarSystem->number(),'ratio'=>'0.5','ships'=>['probe'=>1],'cargo'=>[],'total_fuel'=>0,'seconds'=>0];
         $this->client->request('POST','/flottes/estimer',$payload);self::assertResponseIsSuccessful();$q=json_decode($this->client->getResponse()->getContent(),true);self::assertGreaterThan(0,$q['total_fuel']);self::assertGreaterThan(0,$q['seconds']);
         $payload['origin']=$foreign->id;$this->client->request('POST','/flottes/estimer',$payload);self::assertResponseStatusCodeSame(422);
         $payload['origin']=$own->id;$payload['ships']=['probe'=>999];$this->client->request('POST','/flottes/estimer',$payload);self::assertResponseStatusCodeSame(422);
@@ -118,7 +118,7 @@ final class GameplayAccessTest extends WebTestCase
         $flight=new Fleet();$flight->playerUniverse=$m;$flight->homePlanet=$second;$flight->destination=$first;$flight->destinationSystem=$first->solarSystem;$flight->status='returning';$flight->mission='transport';$flight->departureAt=$start;$flight->arrivalAt=$now->modify('+90 seconds');$this->em->persist($flight);
         $enemy=new Fleet();$enemy->playerUniverse=$b->currentPlayerUniverse;$enemy->homePlanet=$foreign;$enemy->destinationSystem=$foreign->solarSystem;$enemy->status='traveling';$enemy->mission='explore';$enemy->departureAt=$start;$enemy->arrivalAt=$now->modify('+90 seconds');$this->em->persist($enemy);$this->em->flush();
         $flightId=$flight->id;$enemyId=$enemy->id;$this->client->loginUser($a);$crawler=$this->client->request('GET','/planetes/'.$first->id);self::assertResponseIsSuccessful();
-        self::assertCount(3,$crawler->filter('.colony-banner [data-queue-type]'));self::assertSame('+1',$crawler->filter('[data-queue-type="building"] .queue-extra')->text());
+        self::assertCount(3,$crawler->filter('.dashboard-activity [data-queue-type]'));self::assertSame('+1',$crawler->filter('[data-queue-type="building"] .queue-extra')->text());
         self::assertSame($start->modify('+300 seconds')->format('c'),$crawler->filter('[data-queue-type="building"] [data-progress-total-value]')->attr('data-progress-total-value'));
         self::assertCount(1,$crawler->filter('[data-active-fleet="'.$flightId.'"]'));self::assertCount(0,$crawler->filter('[data-active-fleet="'.$enemyId.'"]'));
         self::assertStringContainsString('RETOUR',$crawler->filter('[data-active-fleet="'.$flightId.'"]')->text());
@@ -128,11 +128,62 @@ final class GameplayAccessTest extends WebTestCase
     {
         [$a,$own]=$this->player('Alpha');[$b,$foreign]=$this->player('Beta');
         $free=$this->em->getRepository(Planet::class)->findOneBy(['solarSystem'=>$own->solarSystem,'owner'=>null]);$free->npcPlanet=false;
-        $unknown=$this->em->getRepository(Planet::class)->findOneBy(['solarSystem'=>$this->em->getRepository(\App\Entity\SolarSystem::class)->findOneBy(['name'=>'Système 12','galaxy'=>$own->solarSystem->galaxy])]);
+        $otherSystems=array_values(array_filter($this->em->getRepository(\App\Entity\SolarSystem::class)->findBy(['galaxy'=>$own->solarSystem->galaxy]),static fn(\App\Entity\SolarSystem $system):bool=>$system->id!==$own->solarSystem->id));
+        self::assertNotEmpty($otherSystems,'Le système de test doit contenir une destination non découverte.');
+        $unknown=$this->em->getRepository(Planet::class)->findOneBy(['solarSystem'=>$otherSystems[0]]);
         $freeId=$free->id;$foreignId=$foreign->id;$unknownId=$unknown->id;$this->client->loginUser($a);
-        $crawler=$this->client->request('GET','/flottes?mission=colonize&planet='.$freeId);self::assertResponseIsSuccessful();self::assertSame('colonize',$crawler->filter('select[name="mission"] option[selected]')->first()->attr('value'));self::assertSame((string)$freeId,$crawler->filter('select[name="planet"] option[selected]')->first()->attr('value'));
+        $crawler=$this->client->request('GET','/flottes?mission=colonize&planet='.$freeId);self::assertResponseIsSuccessful();self::assertSame('colonize',$crawler->filter('select[name="mission"] option[selected]')->first()->attr('value'));self::assertSame($free->coordinates(),$crawler->filter('input[name="coordinates"]')->attr('value'));
         $this->client->request('GET','/flottes?mission=transport&planet='.$foreignId);self::assertResponseStatusCodeSame(404);
         $this->client->request('GET','/flottes?mission=colonize&planet='.$unknownId);self::assertResponseStatusCodeSame(404);
     }
 
+
+    public function testGalaxyV2UsesPersistentSystemDataAndKeepsClassicGalaxy(): void
+    {
+        [$player, $planet] = $this->player('GalaxyV2Player');
+        $membership = $player->currentPlayerUniverse;
+        $homeGalaxy = new Galaxy();
+        $homeGalaxy->universe = $membership->universe;
+        $homeGalaxy->name = 'ZZ Regression Home';
+        $this->em->persist($homeGalaxy);
+        $planet->solarSystem->galaxy = $homeGalaxy;
+        $this->em->flush();
+
+        $flight = new Fleet();
+        $flight->playerUniverse = $membership;
+        $flight->homePlanet = $planet;
+        $flight->destinationSystem = $planet->solarSystem;
+        $flight->status = 'traveling';
+        $flight->mission = 'explore';
+        $flight->departureAt = new \DateTimeImmutable('-10 seconds');
+        $flight->arrivalAt = new \DateTimeImmutable('+90 seconds');
+        $this->em->persist($flight);
+        $this->em->flush();
+
+        $this->client->loginUser($player);
+        $crawler = $this->client->request('GET', '/carte-v2');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('.galaxy-v2[data-controller="galaxy-v2"]');
+        self::assertSelectorExists('canvas.gv2-canvas--galaxy');
+        self::assertSelectorExists('canvas.gv2-canvas--system');
+        self::assertSelectorExists('canvas.gv2-canvas--planet');
+
+        $raw = $crawler->filter('.galaxy-v2')->attr('data-galaxy-v2-map-value');
+        $map = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+        self::assertNotEmpty($map['systems']);
+        self::assertSame($homeGalaxy->coordinateCode(), $map['galaxy']);
+        self::assertSame('explore', $map['flights'][0]['mission']);
+        self::assertSame($flight->id, $map['flights'][0]['id']);
+
+        $realSystem = $this->em->getRepository(SolarSystem::class)->find($planet->solarSystem->id);
+        $serializedHome = current(array_filter($map['systems'], static fn (array $row): bool => $row['id'] === $realSystem->id));
+        self::assertNotFalse($serializedHome);
+        self::assertSame($realSystem->coordX, $serializedHome['x']);
+        self::assertSame($realSystem->coordY, $serializedHome['y']);
+        self::assertTrue($serializedHome['known']);
+        self::assertContains($planet->name, array_column($serializedHome['planets'], 'name'));
+
+        $this->client->request('GET', '/carte');
+        self::assertResponseIsSuccessful();
+    }
 }

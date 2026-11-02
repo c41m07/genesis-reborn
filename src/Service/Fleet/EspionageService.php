@@ -26,12 +26,12 @@ final class EspionageService
         $targetTech = $target->owner ? $this->techLevel($target->owner, 'espionage_technology') : $this->npcResearch($target, 'espionage_technology');
         $targetCounter = $target->owner ? $this->techLevel($target->owner, 'counter_espionage') : $this->npcResearch($target, 'counter_espionage');
         $settings = $this->catalog->all('espionage');
-        $detectionChance = (int) round(max(0, min(100,
+        $detectionChance = (int) round(max((int) ($settings['min_detection_chance'] ?? 5), min((int) ($settings['max_detection_chance'] ?? 95),
             (int) ($settings['base_detection_chance'] ?? 50)
             + (int) ($settings['counter_espionage_weight'] ?? 10) * $targetCounter
             - (int) ($settings['stealth_weight'] ?? 10) * $senderStealth
-            + (int) ($settings['extra_probe_weight'] ?? 5) * max(0, $probeCount - 1)
-            + (int) ($settings['local_probe_weight'] ?? 5) * $this->localProbeCount($target)
+            + (int) ($settings['extra_probe_weight'] ?? 1) * max(0, $probeCount - 1)
+            + (int) ($settings['local_probe_weight'] ?? 1) * $this->localProbeCount($target)
         )));
         $detected = random_int(1, 100) <= $detectionChance;
         $report = new EspionageReport();

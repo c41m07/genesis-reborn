@@ -4,16 +4,19 @@
   "category": "support",
   "hp": 10,
   "precision": 70,
-  "tracking": 80,
-  "evasion": 60,
-  "signature": 20,
+  "tracking": 60,
+  "evasion": 90,
+  "signature": 5,
   "base_attack": 0,
   "shots_min": 1,
   "shots_max": 3,
   "build_time_base": 30,
   "costs": {
     "metal": 500,
-    "energy": 166
+    "energy": 166,
+    "antimatter": 0,
+    "hydrogen": 0,
+    "carbon": 0
   },
   "speed_system": 50,
   "speed_galaxy": 500,
@@ -31,7 +34,8 @@
   },
   "provisional": true,
   "note": "Navigation et équilibrage provisoires ; fighter et stealth_fighter reprennent les stats de combat documentées.",
-  "fuel_capacity": 1000,
+  "fuel_capacity": 16000,
   "fuel_capacity_provisional": true,
-  "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 1000 H. Réservoir réservé au carburant, distinct de la soute de fret."
+  "fuel_capacity_note": "Capacité équilibrée pour couvrir en aller-retour la diagonale maximale d’une galaxie de 100 systèmes, sans transporteur.",
+  "shield": 5
 }

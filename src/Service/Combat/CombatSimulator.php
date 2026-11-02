@@ -13,7 +13,7 @@ final class CombatSimulator
      * Les participants doivent déjà être regroupés dans leurs camps par l'appelant.
      * Chaque entrée de participant contient id, role, camp, arrival_round et units.
      */
-    public function simulate(array $participants, array $stationaryDefenses, array $modifiers, int $maxRounds, int $seed): array
+    public function simulate(array $participants, array $stationaryDefenses, array $modifiers, int $maxRounds, int $seed, ?int $roundLimit = null, float $shieldRechargePercent = 5.0, bool $restoreSurvivorShields = true): array
     {
         if ($maxRounds < 1 || $maxRounds > 100) {
             throw new \DomainException('Nombre de rounds invalide.');
@@ -21,13 +21,17 @@ final class CombatSimulator
         if ($seed < 0 || $seed > 0xffffffff) {
             throw new \DomainException('Graine de combat invalide.');
         }
+        if (!is_finite($shieldRechargePercent) || $shieldRechargePercent < 0 || $shieldRechargePercent > 100) {
+            throw new \DomainException('Pourcentage de recharge des boucliers invalide.');
+        }
+        $roundLimit = max(1, min($maxRounds, $roundLimit ?? $maxRounds));
         $units = $this->snapshot($participants, $stationaryDefenses, $maxRounds);
         $this->validateModifiers($modifiers);
         $random = new Randomizer(new Mt19937($seed));
         $rounds = [];
         $outcome = 'draw';
 
-        for ($roundNumber = 1; $roundNumber <= $maxRounds; ++$roundNumber) {
+        for ($roundNumber = 1; $roundNumber <= $roundLimit; ++$roundNumber) {
             $order = [];
             foreach ($units as $key => $unit) {
                 if ($unit['arrival_round'] <= $roundNumber && $unit['hp'] > 0) {
@@ -54,11 +58,18 @@ final class CombatSimulator
                 for ($shotNumber = 1; $shotNumber <= $shotCount; ++$shotNumber) {
                     $hit = $random->getInt(1, 10000) <= ($chance * 100);
                     $damage = 0.0;
+                    $shieldDamage = 0.0;
+                    $structureDamage = 0.0;
                     $destroyed = false;
                     if ($hit && $units[$targetKey]['hp'] > 0) {
                         $modifier = $modifiers[$attacker['slug']][$target['slug']] ?? 1.0;
-                        $damage = min($units[$targetKey]['hp'], $attacker['base_attack'] * $modifier);
-                        $units[$targetKey]['hp'] = max(0.0, $units[$targetKey]['hp'] - $damage);
+                        $damage = $attacker['base_attack'] * $modifier;
+                        $shieldDamage = min($units[$targetKey]['shield'], $damage);
+                        $units[$targetKey]['shield'] -= $shieldDamage;
+                        $remainingDamage = max(0.0, $damage - $shieldDamage);
+                        $structureDamage = min($units[$targetKey]['hp'], $remainingDamage);
+                        $units[$targetKey]['hp'] = max(0.0, $units[$targetKey]['hp'] - $structureDamage);
+                        $damage = $shieldDamage + $structureDamage;
                         $destroyed = $units[$targetKey]['hp'] <= 0;
                     }
                     $shots[] = [
@@ -68,12 +79,21 @@ final class CombatSimulator
                         'hit' => $hit,
                         'chance' => $chance,
                         'damage' => $damage,
+                        'shield_damage' => $shieldDamage,
+                        'structure_damage' => $structureDamage,
                         'target_hp' => $units[$targetKey]['hp'],
+                        'target_shield' => $units[$targetKey]['shield'],
                         'destroyed' => $destroyed,
                     ];
                 }
             }
 
+            foreach ($units as &$unit) {
+                if ($unit['hp'] > 0 && $unit['arrival_round'] <= $roundNumber) {
+                    $unit['shield'] = min($unit['max_shield'], $unit['shield'] + $unit['max_shield'] * $shieldRechargePercent / 100);
+                }
+            }
+            unset($unit);
             $rounds[] = ['number' => $roundNumber, 'shots' => $shots];
             $aliveAttackers = $this->countAlive($units, 'attacker', $roundNumber);
             $aliveDefenders = $this->countAlive($units, 'defender', $roundNumber) + $this->countAlive($units, 'static_defense', $roundNumber);
@@ -90,6 +110,8 @@ final class CombatSimulator
             if ($roundNumber === $maxRounds) {
                 // La règle du document prévoit la retraite des attaquants survivants.
                 $outcome = 'defender_wins';
+            } elseif ($roundNumber === $roundLimit) {
+                $outcome = 'ongoing';
             }
         }
 
@@ -104,6 +126,7 @@ final class CombatSimulator
                 'camp' => $unit['camp'],
                 'slug' => $unit['slug'],
                 'hp' => $unit['hp'],
+                'shield' => $restoreSurvivorShields ? $unit['max_shield'] : $unit['shield'],
             ], array_filter($units, static fn (array $unit): bool => $unit['hp'] > 0)),
             'losses' => $this->losses($units),
         ];
@@ -167,6 +190,10 @@ final class CombatSimulator
                 }
                 $stats[$stat] = (float) $value;
             }
+            $shield = $definition['shield'] ?? 0;
+            if (!is_numeric($shield) || !is_finite((float) $shield) || $shield < 0) {
+                throw new \DomainException('Statistique de combat invalide : shield.');
+            }
             $shotsMin = $definition['shots_min'] ?? null;
             $shotsMax = $definition['shots_max'] ?? null;
             if (!is_int($shotsMin) || !is_int($shotsMax) || $shotsMin < 1 || $shotsMax < $shotsMin || $shotsMax > 100) {
@@ -178,6 +205,8 @@ final class CombatSimulator
                     throw new \DomainException('Identifiant d’unité de combat dupliqué.');
                 }
                 $units[$key] = $stats + [
+                    'shield' => (float) $shield,
+                    'max_shield' => (float) $shield,
                     'owner' => $owner,
                     'role' => $role,
                     'camp' => $camp,

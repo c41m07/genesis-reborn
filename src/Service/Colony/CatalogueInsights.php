@@ -12,22 +12,80 @@ final class CatalogueInsights
         if($group==='buildings') {
             $next=$levels;$next[$d['slug']]=$target;
             if(isset($d['production_resource'])) {
-                $r=$d['production_resource'];return [['label'=>'Production de '.mb_strtolower($this->catalog->rules()['resources'][$r]),'before'=>$this->resources->rate($planet,$r,0,$levels)*3600,'after'=>$this->resources->rate($planet,$r,0,$next)*3600,'unit'=>'/ h']];
+                $resource=$d['production_resource'];
+                return [['label'=>'Production de '.mb_strtolower($this->catalog->rules()['resources'][$resource]),'before'=>$this->resources->rate($planet,$resource,0,$levels)*3600,'after'=>$this->resources->rate($planet,$resource,0,$next)*3600,'unit'=>'/ h']];
             }
             if(isset($d['storage_resource'])) {
-                $r=$d['storage_resource'];return [['label'=>'Stockage de '.mb_strtolower($this->catalog->rules()['resources'][$r]),'before'=>$this->resources->capacity($planet,$r,$levels),'after'=>$this->resources->capacity($planet,$r,$next),'unit'=>'']];
+                $resource=$d['storage_resource'];
+                return [['label'=>'Stockage de '.mb_strtolower($this->catalog->rules()['resources'][$resource]),'before'=>$this->resources->capacity($planet,$resource,$levels),'after'=>$this->resources->capacity($planet,$resource,$next),'unit'=>'']];
             }
-            if($d['slug']==='shipyard') return [['label'=>'Réduction du temps des vaisseaux','before'=>min(80,($levels['shipyard']??0)*$d['build_time_reduction_percent_per_level']),'after'=>min(80,$target*$d['build_time_reduction_percent_per_level']),'unit'=>'%']];
-            if($d['slug']==='lab') return [['label'=>'Vitesse des recherches','before'=>$levels['lab']??0,'after'=>$target,'unit'=>'×']];
-            if($d['slug']==='fortress') return [['text'=>'Permet de fabriquer les défenses selon leurs prérequis.']];
+            if($d['slug']==='shipyard') {
+                $per=(float)($d['build_time_reduction_percent_per_level']??5);
+                $cap=(float)($d['build_time_reduction_max_percent']??50);
+                return [['label'=>'Réduction du temps de construction des vaisseaux','before'=>min($cap,($levels['shipyard']??0)*$per),'after'=>min($cap,$target*$per),'unit'=>'%']];
+            }
+            if($d['slug']==='lab') {
+                $per=(float)($d['research_time_reduction_percent_per_level']??10);
+                $cap=(float)($d['research_time_reduction_max_percent']??50);
+                return [['label'=>'Réduction du temps de recherche','before'=>min($cap,($levels['lab']??0)*$per),'after'=>min($cap,$target*$per),'unit'=>'%']];
+            }
+            if($d['slug']==='fortress') {
+                $effect=$d['effect']??[];
+                $per=(float)($effect['value_per_level']??2.5);$cap=(float)($effect['max_bonus']??25);
+                return [['label'=>'Structure supplémentaire des défenses','before'=>min($cap,($levels['fortress']??0)*$per),'after'=>min($cap,$target*$per),'unit'=>'%']];
+            }
         }
-        if($group==='technologies'&&($d['effect']['type']??null)==='stat_bonus') {
-            $per=$d['effect']['value_per_level'];return [['label'=>'Précision prévue pour les combats','before'=>($tech[$d['slug']]??0)*$per,'after'=>$target*$per,'unit'=>'points']];
-        }
-        if($group==='ships') return [['label'=>'Réservoir de carburant','value'=>$d['fuel_capacity'],'unit'=>'H'],['label'=>'Soute de fret','value'=>$d['cargo_capacity'],'unit'=>'']];
-        if($group==='defenses') return [['label'=>'Structure par unité','value'=>$d['hp'],'unit'=>'PV']];
+        if($group==='technologies') return $this->technologyBenefits($d,$target,$tech);
+        if($group==='ships') return [
+            ['label'=>'Attaque','value'=>$d['base_attack'],'unit'=>'points'],
+            ['label'=>'Structure','value'=>$d['hp'],'unit'=>'PV'],
+            ['label'=>'Bouclier maximal','value'=>$d['shield']??0,'unit'=>'PV'],
+            ['label'=>'Soute','value'=>$d['cargo_capacity'],'unit'=>''],
+            ['label'=>'Réservoir à carburant','value'=>$d['fuel_capacity'],'unit'=>'H'],
+        ];
+        if($group==='defenses') return [
+            ['label'=>'Attaque','value'=>$d['base_attack']??0,'unit'=>'points'],
+            ['label'=>'Structure','value'=>$d['hp'],'unit'=>'PV'],
+            ['label'=>'Bouclier maximal','value'=>$d['shield']??0,'unit'=>'PV'],
+        ];
         return [];
     }
+
+    private function technologyBenefits(array $definition,int $target,array $levels):array
+    {
+        $effect=$definition['effect']??[];$slug=$definition['slug'];$current=(int)($levels[$slug]??0);
+        $maxLevel=(int)($definition['max_level']??$target);$target=min($target,$maxLevel);
+        $type=$effect['type']??null;
+        if($type==='stat_bonus') {
+            $stats=$effect['stats']??[$effect['stat']??null];$result=[];
+            foreach(array_filter($stats,'is_string') as $stat) {
+                $label=match($stat){'precision'=>'Précision','tracking'=>'Suivi','shield'=>'Bouclier maximal','base_attack'=>'Attaque','speed_system'=>'Vitesse dans un système','speed_galaxy'=>'Vitesse entre systèmes',default=>$stat};
+                $per=(float)($effect['value_per_level']??0);$cap=(float)($effect['max_bonus']??PHP_FLOAT_MAX);
+                $before=$per*$current;$after=$per*$target;
+                if(($effect['formula']??'flat')==='percent') {$before=min($cap,$before)*100;$after=min($cap,$after)*100;$unit='%';}
+                else {$before=min($cap,$before);$after=min($cap,$after);$unit='points';}
+                $result[]=['label'=>$label,'before'=>$before,'after'=>$after,'unit'=>$unit];
+            }
+            return $result;
+        }
+        if(in_array($type,['time_discount','cost_discount'],true)) {
+            $cap=(float)($effect['max_bonus']??PHP_FLOAT_MAX);$per=(float)($effect['value_per_level']??0);
+            $before=min($cap,$per*$current);$after=min($cap,$per*$target);
+            $targetLabel=match($effect['targets']??''){ 'buildings'=>'des bâtiments','ships'=>'des vaisseaux','default'=>'des opérations concernées' };
+            $label=$type==='time_discount'?'Réduction du temps '.$targetLabel:'Réduction du coût '.$targetLabel;
+            return [['label'=>$label,'before'=>$before,'after'=>$after,'unit'=>'%']];
+        }
+        if($type==='defense_rebuild') {
+            $cap=(float)($effect['max_bonus']??50);$per=(float)($effect['value_per_level']??10);
+            return [['label'=>'Défenses reconstruites après combat','before'=>min($cap,$per*$current),'after'=>min($cap,$per*$target),'unit'=>'%']];
+        }
+        if($type==='planet_limit') {
+            $base=(int)($effect['base_planets']??1);$per=(int)($effect['value_per_level']??1);$cap=(int)($effect['max_planets']??5);
+            return [['label'=>'Nombre maximal de planètes','before'=>min($cap,$base+$per*$current),'after'=>min($cap,$base+$per*$target),'unit'=>'']];
+        }
+        return [];
+    }
+
     public function unlocks(string $group,string $slug,int $target):array
     {
         if(!in_array($group,['buildings','technologies'],true)) return [];

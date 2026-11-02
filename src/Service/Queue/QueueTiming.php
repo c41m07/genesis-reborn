@@ -6,7 +6,7 @@ final class QueueTiming
     {
         if($duration<1 || $elapsed<0 || !is_finite($divisor) || $divisor<=1) throw new \InvalidArgumentException('Boost invalide.');
         $elapsed=min($elapsed,$duration);
-        return $elapsed+(int)ceil(($duration-$elapsed)/$divisor);
+        return max(1,$elapsed+(int)ceil(($duration-$elapsed)/$divisor));
     }
     public static function finishTimes(\DateTimeImmutable $start,array $durations): array
     {

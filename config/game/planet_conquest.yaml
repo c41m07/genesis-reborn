@@ -31,13 +31,13 @@ levels:
     defenses: { ground_turret: 2 }
   4:
     buildings: { mine_metal: 4, mine_carbon: 4, mine_hydrogen: 3, mine_antimatter: 2, power_plant: 4, shipyard: 3, lab: 3, storage_metal: 2, storage_hydrogen: 2, storage_carbon: 1, fortress: 2 }
-    resource_multiplier: 3
+    resource_multiplier: 2.75
     research: { espionage_technology: 2, counter_espionage: 3, stealth_technology: 2 }
     fleet: { fighter: 3, heavy_fighter: 2, probe: 2 }
     defenses: { ground_turret: 3 }
   5:
     buildings: { mine_metal: 5, mine_carbon: 5, mine_hydrogen: 5, mine_antimatter: 3, power_plant: 5, shipyard: 4, lab: 4, storage_metal: 2, storage_energy: 1, storage_hydrogen: 2, storage_antimatter: 1, storage_carbon: 2, fortress: 3 }
-    resource_multiplier: 4
+    resource_multiplier: 3.5
     research: { espionage_technology: 3, counter_espionage: 4, stealth_technology: 3 }
     fleet: { fighter: 4, heavy_fighter: 3, probe: 3 }
     defenses: { ground_turret: 4 }

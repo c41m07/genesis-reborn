@@ -17,6 +17,7 @@ final class CombatSimulatorTest extends TestCase
             'evasion' => 0,
             'signature' => 100,
             'base_attack' => $attack,
+            'shield' => 0,
             'shots_min' => $shots,
             'shots_max' => $shots,
         ];
@@ -95,6 +96,40 @@ final class CombatSimulatorTest extends TestCase
         foreach ($defenseShots as $shot) {
             self::assertStringStartsWith('attacker-a:attacker:', $shot['target']);
         }
+    }
+
+    public function testShieldsAbsorbDamageAndRechargeBetweenRounds(): void
+    {
+        $attacker = $this->unit('fighter', 100, 30);
+        $target = $this->unit('cruiser', 100, 0);
+        $target['shield'] = 20;
+        $participants = [
+            ['id' => 'a', 'role' => 'attacker', 'camp' => 'attackers', 'arrival_round' => 1, 'units' => [$attacker]],
+            ['id' => 'b', 'role' => 'defender', 'camp' => 'defenders', 'arrival_round' => 1, 'units' => [$target]],
+        ];
+        $simulator = new CombatSimulator();
+        $result = null;
+        for ($seed = 0; $seed < 200; ++$seed) {
+            $candidate = $simulator->simulate($participants, [], [], 5, $seed, 2);
+            $shots = array_values(array_filter(
+                [...$candidate['rounds'][0]['shots'], ...$candidate['rounds'][1]['shots']],
+                static fn (array $shot): bool => str_starts_with($shot['attacker'], 'a:attacker:'),
+            ));
+            if (count($shots) === 2 && $shots[0]['hit'] && $shots[1]['hit']) {
+                $result = $candidate;
+                break;
+            }
+        }
+        self::assertNotNull($result);
+        $shots = array_values(array_filter(
+            [...$result['rounds'][0]['shots'], ...$result['rounds'][1]['shots']],
+            static fn (array $shot): bool => str_starts_with($shot['attacker'], 'a:attacker:'),
+        ));
+        self::assertSame(20.0, $shots[0]['shield_damage']);
+        self::assertSame(10.0, $shots[0]['structure_damage']);
+        self::assertSame(1.0, $shots[1]['shield_damage']);
+        $cruiser = array_values(array_filter($result['survivors'], static fn (array $unit): bool => $unit['slug'] === 'cruiser'))[0];
+        self::assertSame(20.0, $cruiser['shield']);
     }
 
     public function testInvalidUnitStatisticsAreRejected(): void

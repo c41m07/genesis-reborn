@@ -1,19 +1,22 @@
 {
   "slug": "heavy_fighter",
   "label": "Chasseur lourd",
-  "category": "light",
+  "category": "heavy",
   "hp": 250,
-  "precision": 70,
-  "tracking": 80,
-  "evasion": 60,
-  "signature": 20,
+  "precision": 65,
+  "tracking": 73,
+  "evasion": 50,
+  "signature": 35,
   "base_attack": 70,
   "shots_min": 1,
   "shots_max": 3,
-  "build_time_base": 90,
+  "build_time_base": 120,
   "costs": {
     "metal": 6000,
-    "energy": 2000
+    "energy": 2000,
+    "antimatter": 0,
+    "hydrogen": 0,
+    "carbon": 0
   },
   "speed_system": 50,
   "speed_galaxy": 500,
@@ -33,5 +36,6 @@
   "note": "Navigation et équilibrage provisoires ; fighter et stealth_fighter reprennent les stats de combat documentées.",
   "fuel_capacity": 1000,
   "fuel_capacity_provisional": true,
-  "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 1000 H. Réservoir réservé au carburant, distinct de la soute de fret."
+  "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 1000 H. Réservoir réservé au carburant, distinct de la soute de fret.",
+  "shield": 100
 }

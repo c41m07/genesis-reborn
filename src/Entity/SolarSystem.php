@@ -15,4 +15,9 @@ class SolarSystem
     public int $coordX;
     #[ORM\Column]
     public int $coordY;
+    public function number(): int
+    {
+        // Le générateur place les systèmes sur une grille de 10 colonnes espacées de 3 unités.
+        return intdiv($this->coordY, 3) * 10 + intdiv($this->coordX, 3) + 1;
+    }
 }

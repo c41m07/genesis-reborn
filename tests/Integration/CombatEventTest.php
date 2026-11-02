@@ -66,8 +66,14 @@ final class CombatEventTest extends KernelTestCase
     {
         $universe = $this->em->getRepository(Universe::class)->findOneBy(['slug' => 'omega-1']);
         self::getContainer()->get(UniverseService::class)->select($player, $universe->id);
+        // Ces scénarios testent le combat entre joueurs établis, hors protection de début de partie.
+        $player->currentPlayerUniverse->joinedAt = new \DateTimeImmutable('2026-10-13T12:00:00Z');
+        $planet = $this->em->getRepository(Planet::class)->findOneBy(['owner' => $player->currentPlayerUniverse]);
+        $mine = $this->em->getRepository(PlanetBuilding::class)->findOneBy(['planet' => $planet, 'slug' => 'mine_metal']) ?? new PlanetBuilding();
+        $mine->planet = $planet; $mine->slug = 'mine_metal'; $mine->level = max(5, $mine->level); $this->em->persist($mine);
+        $this->em->flush();
 
-        return $this->em->getRepository(Planet::class)->findOneBy(['owner' => $player->currentPlayerUniverse]);
+        return $planet;
     }
 
     private function attackFleet(Player $player, Planet $origin, Planet $target, string $slug): Fleet
@@ -191,6 +197,8 @@ final class CombatEventTest extends KernelTestCase
 
         $clock->sleep(300);
         $externalDefense = $this->defenseFleet($relief, $reliefOrigin, $target, 'join', $clock->now());
+        $reliefShip = $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $externalDefense, 'slug' => 'fighter']);
+        $reliefShip->slug = 'battleship'; $reliefShip->quantity = 50; $this->em->flush();
         $fleetService->arrive($externalDefense->id, $externalDefense->dispatchToken);
         self::assertSame('defending', $externalDefense->status);
         self::assertNull($externalDefense->arrivalAt);
@@ -198,9 +206,10 @@ final class CombatEventTest extends KernelTestCase
         $this->em->flush();
         self::assertTrue($manager->transaction(fn (): bool => $service->joinAttack($fleetB)));
         self::assertSame(5, $this->em->getRepository(CombatParticipant::class)->count(['combatEvent' => $event]));
+        $event->seed = 123;
         self::assertSame('defending', $externalOrbit->status);
         $participantB = $this->em->getRepository(CombatParticipant::class)->findOneBy(['combatEvent' => $event, 'fleet' => $fleetB]);
-        self::assertSame(6, $participantB->arrivalRound);
+        self::assertSame(5, $participantB->arrivalRound);
 
         $clock->sleep(300);
         $service->resolve($event->id, $event->dispatchToken);
@@ -217,6 +226,8 @@ final class CombatEventTest extends KernelTestCase
             $this->em->getRepository(Notification::class)->findBy(['recipient' => $defender->currentPlayerUniverse]),
             static fn (Notification $notice): bool => str_starts_with($notice->message, 'Combat terminé sur '),
         );
+        self::assertSame('defender_wins', $log->outcome);
+        self::assertSame(1, $this->em->getRepository(\App\Entity\PlayerBoost::class)->count(['playerUniverse' => $relief->currentPlayerUniverse, 'sourceType' => 'risk_mission']));
         self::assertCount(1, $attackerCompletionNotices);
         self::assertCount(1, $defenderCompletionNotices);
         $spectator = $this->join($this->player('Spectator'));
@@ -232,6 +243,113 @@ final class CombatEventTest extends KernelTestCase
         self::assertSame(0.0, $externalOrbit->orbitFuel);
         self::assertSame('idle', $garrison->status);
     }
+    public function testCombatRunsAndPersistsOneDeterministicRoundPerMinute(): void
+    {
+        $clock = $this->clock();
+        $defender = $this->player('RoundDefender');
+        $target = $this->join($defender);
+        $attacker = $this->player('RoundAttacker');
+        $origin = $this->join($attacker);
+        $fleet = $this->attackFleet($attacker, $origin, $target, 'round-a');
+        $attackingShip = $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $fleet]);
+        $attackingShip->slug = 'probe';
+        $attackingShip->quantity = 2;
+
+        $garrison = new Fleet();
+        $garrison->playerUniverse = $defender->currentPlayerUniverse;
+        $garrison->homePlanet = $target;
+        $garrison->status = 'idle';
+        $garrison->mission = 'idle';
+        $this->em->persist($garrison);
+        $defendingShip = new FleetShip();
+        $defendingShip->fleet = $garrison;
+        $defendingShip->slug = 'probe';
+        $defendingShip->quantity = 2;
+        $this->em->persist($defendingShip);
+        $this->em->flush();
+
+        $service = self::getContainer()->get(CombatEventService::class);
+        $manager = self::getContainer()->get(GameManager::class);
+        self::assertTrue($manager->transaction(fn (): bool => $service->joinAttack($fleet)));
+        $event = $this->em->getRepository(CombatEvent::class)->findOneBy(['planet' => $target, 'status' => 'pending']);
+        self::assertNotNull($event);
+        $firstToken = $event->dispatchToken;
+
+        $clock->sleep(59);
+        $service->resolve($event->id, $firstToken);
+        self::assertSame(0, $event->currentRound);
+        self::assertSame('pending', $event->status);
+
+        $clock->sleep(1);
+        $reinforcement = $this->attackFleet($attacker, $origin, $target, 'round-b');
+        $reinforcement->arrivalAt = $clock->now();
+        $reinforcement->departureAt = $clock->now()->modify('-60 seconds');
+        $reinforcementShip = $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $reinforcement]);
+        $reinforcementShip->slug = 'probe';
+        $reinforcementShip->quantity = 1;
+        $this->em->flush();
+        $service->resolve($event->id, $firstToken);
+        self::assertSame(0, $event->currentRound, 'Le tick attend le traitement de l’arrivée exactement à +60 s.');
+        self::assertNotSame($firstToken, $event->dispatchToken);
+        $waitingToken = $event->dispatchToken;
+        self::assertTrue($manager->transaction(fn (): bool => $service->joinAttack($reinforcement)));
+        $reinforcementParticipant = $this->em->getRepository(CombatParticipant::class)->findOneBy(['combatEvent' => $event, 'fleet' => $reinforcement]);
+        self::assertSame(1, $reinforcementParticipant->arrivalRound, 'Une arrivée exactement à +60 s rejoint le round 1.');
+
+        $clock->sleep(1);
+        $service->resolve($event->id, $waitingToken);
+        self::assertSame(1, $event->currentRound);
+        self::assertSame('pending', $event->status);
+        self::assertNotSame($firstToken, $event->dispatchToken);
+        self::assertNotEmpty($event->combatSnapshot);
+        self::assertSame([1], array_column($event->combatSnapshot['round_history'], 'number'), 'Le round résolu est persisté dans l’instantané du combat.');
+        self::assertSame(0, $this->em->getRepository(CombatLog::class)->count(['combatEvent' => $event]));
+        $secondToken = $event->dispatchToken;
+        $service->resolve($event->id, $firstToken);
+        self::assertSame(1, $event->currentRound, 'Un ancien jeton ne rejoue pas le round déjà persisté.');
+
+        $clock->sleep(60);
+        $service->resolve($event->id, $secondToken);
+        self::assertSame(2, $event->currentRound);
+        self::assertSame('pending', $event->status);
+        self::assertSame(0, $this->em->getRepository(CombatLog::class)->count(['combatEvent' => $event]));
+    }
+
+    public function testCombatClosesAsSoonAsTheDefenderCampIsEmptyAndRejectsLateAttackers(): void
+    {
+        $clock = $this->clock();
+        $defender = $this->player('EarlyDefender');
+        $target = $this->join($defender);
+        $attacker = $this->player('EarlyAttacker');
+        $origin = $this->join($attacker);
+        $fleet = $this->attackFleet($attacker, $origin, $target, 'early-a');
+        $service = self::getContainer()->get(CombatEventService::class);
+        $manager = self::getContainer()->get(GameManager::class);
+        self::assertTrue($manager->transaction(fn (): bool => $service->joinAttack($fleet)));
+        $event = $this->em->getRepository(CombatEvent::class)->findOneBy(['planet' => $target, 'status' => 'pending']);
+        self::assertNotNull($event);
+
+        $clock->sleep(60);
+        $service->resolve($event->id, $event->dispatchToken);
+        self::assertSame('resolved', $event->status);
+        self::assertSame(1, $event->currentRound);
+        $log = $this->em->getRepository(CombatLog::class)->findOneBy(['combatEvent' => $event]);
+        self::assertNotNull($log);
+        self::assertSame('attacker_wins', $log->outcome);
+
+        $clock->sleep(60);
+        $lateFleet = $this->attackFleet($attacker, $origin, $target, 'early-late');
+        $lateFleet->arrivalAt = $clock->now();
+        $this->em->flush();
+        self::assertFalse($manager->transaction(fn (): bool => $service->joinAttack($lateFleet)));
+        $clock->sleep(600);
+        $veryLateFleet = $this->attackFleet($attacker, $origin, $target, 'early-very-late');
+        $veryLateFleet->arrivalAt = $clock->now();
+        $this->em->flush();
+        self::assertFalse($manager->transaction(fn (): bool => $service->joinAttack($veryLateFleet)), 'Une flotte partie avant la clôture reste exclue même après la fenêtre initiale.');
+        self::assertSame(1, $this->em->getRepository(CombatEvent::class)->count(['planet' => $target]));
+    }
+
     public function testCombatSnapshotsApplyEachMembershipTechnologyWithoutChangingPlanetDefenses(): void
     {
         $clock = $this->clock();
@@ -291,6 +409,35 @@ final class CombatEventTest extends KernelTestCase
         self::assertSame(65, $log->snapshot['defenses'][0]['precision']);
     }
 
+    public function testBeginnerProtectionExpiresAndBlocksFiveToOneScoreAdvantage(): void
+    {
+        $clock = $this->clock();
+        $defender = $this->player('ProtectedDefender');
+        $target = $this->join($defender);
+        $attacker = $this->player('ProtectedAttacker');
+        $origin = $this->join($attacker);
+        $defender->currentPlayerUniverse->joinedAt = $clock->now()->modify('-1 day');
+        $this->em->flush();
+        $combat = self::getContainer()->get(CombatEventService::class);
+
+        self::assertFalse($combat->canAttack($attacker->currentPlayerUniverse, $target));
+        $defender->currentPlayerUniverse->joinedAt = $clock->now()->modify('-8 days');
+        self::assertTrue($combat->canAttack($attacker->currentPlayerUniverse, $target));
+
+        $fleet = new Fleet();
+        $fleet->playerUniverse = $attacker->currentPlayerUniverse;
+        $fleet->homePlanet = $origin;
+        $this->em->persist($fleet);
+        $ship = new FleetShip();
+        $ship->fleet = $fleet;
+        $ship->slug = 'capital';
+        $ship->quantity = 1;
+        $this->em->persist($ship);
+        $this->em->flush();
+
+        self::assertFalse($combat->canAttack($attacker->currentPlayerUniverse, $target));
+    }
+
     public function testDefenseWithoutCombatReturnsAfterItsStationingWindow(): void
     {
         $clock = $this->clock();
@@ -313,10 +460,15 @@ final class CombatEventTest extends KernelTestCase
         $stock->slug = 'fighter';
         $stock->quantity = 1;
         $this->em->persist($stock);
+        $fuelShip = new FleetShip();
+        $fuelShip->fleet = $idle;
+        $fuelShip->slug = 'transport';
+        $fuelShip->quantity = 1;
+        $this->em->persist($fuelShip);
         $this->em->flush();
         $service = self::getContainer()->get(\App\Service\Fleet\FleetService::class);
-        $quote = $service->quote($visitor->currentPlayerUniverse, $origin, 'defend', $target->id, ['fighter' => 1], 0.5);
-        self::assertEqualsWithDelta(0.05, $quote['orbit_fuel'], 0.000001);
+        $quote = $service->quote($visitor->currentPlayerUniverse, $origin, 'defend', $target->id, ['fighter' => 1, 'transport' => 1], 0.5);
+        self::assertEqualsWithDelta(0.10, $quote['orbit_fuel'], 0.000001);
         $fleet = $this->defenseFleet($visitor, $origin, $target, 'idle', $clock->now());
         $service->arrive($fleet->id, $fleet->dispatchToken);
         self::assertSame('defending', $fleet->status);
@@ -418,6 +570,8 @@ final class CombatEventTest extends KernelTestCase
     public function testWinningAttackLootProtectsStorageFloorAndSplitsBySurvivingCargoSpace(): void
     {
         $clock = $this->clock();
+        $clock->sleep(19 * 86400);
+        self::getContainer()->get(\App\Service\Boost\BoostEventService::class)->tick();
         $defender = $this->player('LootDefender');
         $target = $this->join($defender);
         $attacker = $this->player('LootAttacker');
@@ -439,6 +593,7 @@ final class CombatEventTest extends KernelTestCase
         $this->em->persist($firstCargo);
 
         $second = $this->attackFleet($attacker, $origin, $target, 'loot-b');
+        foreach ([$first, $second] as $fleet) { $fleet->departureAt = $clock->now()->modify('-60 seconds'); $fleet->arrivalAt = $clock->now(); }
         $second->reservedFuel = 10;
         $second->cargo = ['hydrogen' => 10];
         $secondCargo = new FleetShip();
@@ -452,6 +607,9 @@ final class CombatEventTest extends KernelTestCase
         $manager = self::getContainer()->get(\App\Manager\GameManager::class);
         self::assertTrue($manager->transaction(fn (): bool => $combat->joinAttack($first)));
         self::assertTrue($manager->transaction(fn (): bool => $combat->joinAttack($second)));
+        $defendingFleet = $this->defenseFleet($defender, $target, $target, 'damage-event', $clock->now());
+        $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $defendingFleet, 'slug' => 'fighter'])->slug = 'probe';
+        self::assertTrue($manager->transaction(fn (): bool => $combat->arriveDefender($defendingFleet)));
         $event = $this->em->getRepository(CombatEvent::class)->findOneBy(['planet' => $target]);
         self::assertNotNull($event);
         $clock->sleep(600);
@@ -465,6 +623,9 @@ final class CombatEventTest extends KernelTestCase
         $log = $this->em->getRepository(CombatLog::class)->findOneBy(['combatEvent' => $event]);
         self::assertNotNull($log);
         self::assertSame('attacker_wins', $log->outcome);
+        self::assertSame(1, $this->em->getRepository(\App\Entity\PlayerBoost::class)->count(['playerUniverse' => $attacker->currentPlayerUniverse, 'sourceType' => 'risk_mission']));
+        $combatEvent = $this->em->getRepository(\App\Entity\BoostEvent::class)->findOneBy(['universe' => $attacker->currentPlayerUniverse->universe, 'templateKey' => 'combat', 'status' => 'active']);
+        self::assertGreaterThan(0, $this->em->getRepository(\App\Entity\BoostEventContribution::class)->findOneBy(['event' => $combatEvent, 'playerUniverse' => $attacker->currentPlayerUniverse])->value);
         self::assertSame(0.1, $log->snapshot['loot']['protected_storage_ratio']);
         self::assertSame(1.0, $log->snapshot['loot']['ratio']);
         $firstLoot = $log->snapshot['loot']['fleets'][$first->id] ?? [];
@@ -500,6 +661,12 @@ final class CombatEventTest extends KernelTestCase
         $clock = $this->clock();
         $attacker = $this->player('ConquestAttacker');
         $origin = $this->join($attacker);
+        $colonization = new PlayerTechnology();
+        $colonization->playerUniverse = $attacker->currentPlayerUniverse;
+        $colonization->slug = 'colonization';
+        $colonization->level = 1;
+        $this->em->persist($colonization);
+        $this->em->flush();
         $universe = $attacker->currentPlayerUniverse->universe;
         $target = null;
         foreach ($this->em->getRepository(Planet::class)->findBy(['owner' => null]) as $candidate) {
@@ -538,6 +705,7 @@ final class CombatEventTest extends KernelTestCase
         self::assertNotNull($log);
         self::assertSame('attacker_wins', $log->outcome);
         self::assertSame('captured', $log->snapshot['capture']['status']);
+        self::assertSame(1, $this->em->getRepository(\App\Entity\PlayerBoost::class)->count(['playerUniverse' => $attacker->currentPlayerUniverse, 'sourceType' => 'risk_mission']));
         self::assertSame($attacker->currentPlayerUniverse->id, $target->owner->id);
         self::assertSame(1, $log->snapshot['losses'][$fleet->id . ':colony_ship']);
         self::assertSame(0, $colonyShip->quantity);
@@ -580,6 +748,7 @@ final class CombatEventTest extends KernelTestCase
         self::assertNull($target->owner);
 
         $secondFleet = $this->attackFleet($attacker, $origin, $target, 'npc-loss-b');
+        $secondFleet->departureAt = $clock->now();
         $secondFleet->mission = 'conquer';
         $this->em->flush();
         self::assertTrue($manager->transaction(fn (): bool => $combat->joinAttack($secondFleet)));

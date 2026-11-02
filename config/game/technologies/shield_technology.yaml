@@ -1,0 +1,37 @@
+{
+  "slug": "shield_technology",
+  "label": "Technologie de bouclier",
+  "max_level": 5,
+  "research_time_base": 14400,
+  "research_time_scaling": 1.8,
+  "costs_base": {
+    "metal": 6000,
+    "energy": 3000,
+    "antimatter": 500,
+    "hydrogen": 0,
+    "carbon": 0
+  },
+  "costs_scaling": 2,
+  "unlock_requirements": {
+    "technologies": [
+      {
+        "slug": "advanced_engineering",
+        "level": 1
+      }
+    ],
+    "buildings": [
+      {
+        "slug": "lab",
+        "level": 2
+      }
+    ]
+  },
+  "effect": {
+    "type": "stat_bonus",
+    "targets": "all_combat_units",
+    "stat": "shield",
+    "formula": "percent",
+    "value_per_level": 0.05,
+    "max_bonus": 0.25
+  }
+}

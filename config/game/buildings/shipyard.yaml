@@ -9,7 +9,7 @@
     "energy": 3000
   },
   "costs_scaling": 1.8,
-  "build_time_reduction_percent_per_level": 8,
+  "build_time_reduction_percent_per_level": 5,
   "levels": {
     "1": {
       "unlock_requirements": {}
@@ -61,5 +61,6 @@
       }
     }
   },
-  "source": "PDF 1 p.14–15"
+  "source": "PDF 1 p.14–15",
+  "build_time_reduction_max_percent": 50
 }

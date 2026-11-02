@@ -19,7 +19,7 @@ final class QueueService
             if(!in_array($group,['buildings','technologies','ships','defenses'],true)) throw new \DomainException('Type de construction invalide.');
             if($quantity<1 || $quantity>100) throw new \DomainException('Quantité autorisée : 1 à 100.');
             if(!isset($this->catalog->all($group)[$slug])) throw new \DomainException('Élément indisponible.');
-            $d=$this->catalog->get($group,$slug);
+            $config=$this->catalog->forUniverse($m->universe);$d=$config['catalog'][$group][$slug]??$this->catalog->get($group,$slug);
             $type=match($group){'buildings'=>'building','technologies'=>'research',default=>'shipyard'};
             $queue=$this->repo->queue($planet,$type);
             if(count($queue)>=30) throw new \DomainException('File pleine (30 commandes maximum).');
@@ -38,8 +38,7 @@ final class QueueService
             if($group==='ships' && ($buildings['shipyard']??0)<1) throw new \DomainException('Un chantier spatial est nécessaire.');
             $failures=$this->requirements->check($this->requirements->forLevel($d,$level),$buildings,$techs);
             if($failures) throw new \DomainException('Prérequis : '.implode(', ',$failures).'.');
-            $config=$this->catalog->forUniverse($m->universe);
-            $plan=$this->calculator->calculate($d,$group,$level,$quantity,$buildings,$config);$duration=$plan['duration'];
+            $plan=$this->calculator->calculate($d,$group,$level,$quantity,$buildings,$config,$techs);$duration=$plan['duration'];
             $this->resources->consume($planet,$plan['costs']);
             $item=new QueueItem();$item->planet=$planet;$item->playerUniverse=$m;$item->queueType=$type;$item->itemSlug=$slug;$item->itemLevel=in_array($group,['buildings','technologies'],true)?$level:null;$item->quantity=$quantity;$item->paidCosts=$plan['costs'];$item->durationSeconds=$duration;$item->queuedAt=$this->clock->now();$item->dependsOn=$depends;$item->dispatchToken=Uuid::v4()->toRfc4122();
             $this->manager->save($item);$this->manager->flush();
@@ -116,6 +115,16 @@ final class QueueService
             $this->settleMembershipLocked($item->playerUniverse);
         });
     }
+    public function applyPlayerBoost(QueueItem $item, float $divisor): void
+    {
+        if (!$item->startedAt || $divisor <= 1) {
+            throw new \DomainException('Opération active introuvable.');
+        }
+        $elapsed = max(0, $this->clock->now()->getTimestamp() - $item->startedAt->getTimestamp());
+        $item->durationSeconds = QueueTiming::boostedDuration($item->durationSeconds, $elapsed, $divisor);
+        $this->start($item, $item->startedAt);
+    }
+
     /** Operator-granted boosts only: no unspecified player currency or free public endpoint. */
     public function boost(PlayerUniverse $m,int $id,float $divisor,string $key): void
     {
@@ -150,7 +159,7 @@ final class QueueService
     {
         foreach($this->repo->all(QueueItem::class,['dependsOn'=>$item]) as $dependent) $this->removeTree($dependent);
         $group=match($item->queueType){'building'=>'buildings','research'=>'technologies',default=>isset($this->catalog->all('defenses')[$item->itemSlug])?'defenses':'ships'};
-        $paid=$item->paidCosts??$this->catalog->costs($this->catalog->get($group,$item->itemSlug),$item->itemLevel??1,$item->quantity);
+        $paid=$item->paidCosts??$this->catalog->costs($this->catalog->getForUniverse($m->universe,$group,$item->itemSlug),$item->itemLevel??1,$item->quantity);
         $this->resources->refund($item->planet,$paid,$this->catalog->rules()['cancellation_refund_ratio']);
         $this->manager->remove($item);
     }

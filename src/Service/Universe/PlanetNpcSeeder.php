@@ -22,20 +22,20 @@ final class PlanetNpcSeeder
         if (!is_array($preset)) throw new \DomainException('Préréglage de planète PNJ absent du catalogue.');
         $levels = [];
         foreach ($preset['buildings'] ?? [] as $slug => $level) {
-            $definition = $this->catalog->get('buildings', (string) $slug);
+            $definition = $this->catalog->getForUniverse($planet->solarSystem->galaxy->universe, 'buildings', (string) $slug);
             if (!is_int($level) || $level < 1 || $level > 100) throw new \DomainException('Niveau de bâtiment PNJ invalide.');
             $row = $this->repo->one(PlanetBuilding::class, ['planet' => $planet, 'slug' => (string) $slug]);
             if (!$row) { $row = new PlanetBuilding(); $row->planet = $planet; $row->slug = (string) $slug; }
             $row->level = max($row->level, $level); $levels[(string) $slug] = $row->level; $this->manager->save($row);
         }
         foreach ($preset['fleet'] ?? [] as $slug => $quantity) {
-            $this->catalog->get('ships', (string) $slug);
+            $this->catalog->getForUniverse($planet->solarSystem->galaxy->universe, 'ships', (string) $slug);
             if (!is_int($quantity) || $quantity < 1) throw new \DomainException('Composition de flotte PNJ invalide.');
             $row = $this->repo->one(PlanetNpcShip::class, ['planet' => $planet, 'slug' => (string) $slug]);
             if (!$row) { $row = new PlanetNpcShip(); $row->planet = $planet; $row->slug = (string) $slug; $row->quantity = $quantity; $this->manager->save($row); }
         }
         foreach ($preset['defenses'] ?? [] as $slug => $quantity) {
-            $this->catalog->get('defenses', (string) $slug);
+            $this->catalog->getForUniverse($planet->solarSystem->galaxy->universe, 'defenses', (string) $slug);
             if (!is_int($quantity) || $quantity < 1) throw new \DomainException('Composition de défense PNJ invalide.');
             $row = $this->repo->one(PlanetDefense::class, ['planet' => $planet, 'slug' => (string) $slug]);
             if (!$row) { $row = new PlanetDefense(); $row->planet = $planet; $row->slug = (string) $slug; $row->quantity = $quantity; $this->manager->save($row); }

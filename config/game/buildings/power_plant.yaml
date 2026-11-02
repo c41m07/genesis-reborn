@@ -16,6 +16,6 @@
   },
   "provisional": true,
   "production_resource": "energy",
-  "production_per_level": 0.75,
-  "effect_note": "Production énergétique additionnelle provisoire : +0,75 par seconde et niveau avant bonus de position/univers."
+  "production_per_level": 0.1,
+  "effect_note": "Production d’énergie : +0,1 énergie/s par niveau avant facteur de position et multiplicateur d’univers."
 }

@@ -126,8 +126,10 @@ final class GamePersistenceTest extends KernelTestCase
     }
     public function testSoloProbeReservesFuelAndDiscoversWholeSystemExactlyOnce(): void
     {
+        $clock = new \Symfony\Component\Clock\MockClock('2026-11-02T00:00:00Z');self::getContainer()->set('clock',$clock);
         $p=$this->player();$planet=$this->join($p);$this->ships($planet,['probe'=>1]);$m=$p->currentPlayerUniverse;
         $systems=$this->em->getRepository(\App\Entity\SolarSystem::class)->findBy(['galaxy'=>$planet->solarSystem->galaxy],['id'=>'ASC']);$target=$systems[1];
+        $eventService=self::getContainer()->get(\App\Service\Boost\BoostEventService::class);$eventService->tick();
         $service=self::getContainer()->get(\App\Service\Fleet\FleetService::class);
         $quote=$service->quote($m,$planet,'explore',$target->id,['probe'=>1],.5);
         self::assertLessThanOrEqual($quote['fuel_capacity'],$quote['total_fuel']);self::assertSame(0,$quote['cargo_capacity']);
@@ -136,14 +138,18 @@ final class GamePersistenceTest extends KernelTestCase
         $service->send($m,$planet,'explore',$target->id,['probe'=>1],.5,[],str_repeat('e',32));
         self::assertEqualsWithDelta($before-$quote['total_fuel'],$hydrogen->currentStock,.000001);
         $fleet=$this->em->getRepository(\App\Entity\Fleet::class)->findOneBy(['status'=>'traveling']);$old=$fleet->dispatchToken;
-        $this->land($fleet,$service);self::assertSame('completed',$fleet->status);
+        $clock->sleep($fleet->travelSeconds + 1);$service->arrive($fleet->id,$fleet->dispatchToken);self::assertSame('completed',$fleet->status);
         $service->arrive($fleet->id,$old);
         self::assertSame(1,$this->em->getRepository(\App\Entity\PlayerDiscovery::class)->count(['playerUniverse'=>$m,'solarSystem'=>$target]));
+        self::assertSame(1,$this->em->getRepository(\App\Entity\PlayerBoost::class)->count(['playerUniverse'=>$m,'sourceType'=>'risk_mission']));
+        $explorationEvent=$this->em->getRepository(\App\Entity\BoostEvent::class)->findOneBy(['universe'=>$m->universe,'templateKey'=>'exploration','status'=>'active']);
+        self::assertSame(1,$this->em->getRepository(\App\Entity\BoostEventContribution::class)->count(['event'=>$explorationEvent,'playerUniverse'=>$m]));
         self::assertSame(0,$this->em->getRepository(\App\Entity\FleetShip::class)->findOneBy(['fleet'=>$fleet,'slug'=>'probe'])->quantity);
         self::assertNull($fleet->arrivalAt);
     }
     public function testTransportDeliversFreightWithoutSpendingReservedReturnFuelTwice(): void
     {
+        $clock=new \Symfony\Component\Clock\MockClock('2026-11-16T00:00:00Z');self::getContainer()->set('clock',$clock);
         $p=$this->player();$origin=$this->join($p);$this->ships($origin,['transport'=>1]);$m=$p->currentPlayerUniverse;
         $target=$this->em->getRepository(Planet::class)->findOneBy(['solarSystem'=>$origin->solarSystem,'owner'=>null]);$target->owner=$m;
         self::getContainer()->get(ResourceService::class)->initialize($target);$this->em->flush();
@@ -151,14 +157,18 @@ final class GamePersistenceTest extends KernelTestCase
         $resource=fn($planet,$slug)=>$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$planet,'resourceType'=>$slug]);
         $targetMetal=$resource($target,'metal')->currentStock;$targetHydrogen=$resource($target,'hydrogen')->currentStock;
         $sourceHydrogen=$resource($origin,'hydrogen')->currentStock;
+        self::getContainer()->get(\App\Service\Boost\BoostEventService::class)->tick();
         $service=self::getContainer()->get(\App\Service\Fleet\FleetService::class);
         $q=$service->quote($m,$origin,'transport',$target->id,['transport'=>1],.5,['metal'=>123,'hydrogen'=>67]);
         $service->send($m,$origin,'transport',$target->id,['transport'=>1],.5,['metal'=>123,'hydrogen'=>67],str_repeat('f',32));
         self::assertEqualsWithDelta($sourceHydrogen-$q['total_fuel']-67,$resource($origin,'hydrogen')->currentStock,.000001);
         $fleet=$this->em->getRepository(\App\Entity\Fleet::class)->findOneBy(['status'=>'traveling']);$old=$fleet->dispatchToken;
-        $this->land($fleet,$service);$service->arrive($fleet->id,$old);
+        $clock->sleep($fleet->travelSeconds + 1);$service->arrive($fleet->id,$old);
+        $transportEvent=$this->em->getRepository(\App\Entity\BoostEvent::class)->findOneBy(['universe'=>$m->universe,'templateKey'=>'transport','status'=>'active']);
+        self::assertSame(1,$this->em->getRepository(\App\Entity\BoostEventContribution::class)->count(['event'=>$transportEvent,'playerUniverse'=>$m]));
         self::assertEqualsWithDelta($targetMetal+123,$resource($target,'metal')->currentStock,.000001);
         self::assertEqualsWithDelta($targetHydrogen+67,$resource($target,'hydrogen')->currentStock,.000001);
+        self::assertEqualsWithDelta(190.0,$this->em->getRepository(\App\Entity\BoostEventContribution::class)->findOneBy(['event'=>$transportEvent,'playerUniverse'=>$m])->value,.000001);
         self::assertEqualsWithDelta($q['one_way_fuel'],$fleet->reservedFuel,.000001);
         $this->land($fleet,$service);self::assertSame('completed',$fleet->status);
         self::assertEqualsWithDelta($sourceHydrogen-$q['total_fuel']-67,$resource($origin,'hydrogen')->currentStock,.000001);
@@ -172,7 +182,7 @@ final class GamePersistenceTest extends KernelTestCase
     }
     public function testSoloColonyShipCanColonizeKnownPlanet(): void
     {
-        $p=$this->player();$origin=$this->join($p);$this->ships($origin,['colony_ship'=>1]);$m=$p->currentPlayerUniverse;
+        $p=$this->player();$origin=$this->join($p);$this->ships($origin,['colony_ship'=>1]);$m=$p->currentPlayerUniverse;$colonization=new PlayerTechnology();$colonization->playerUniverse=$m;$colonization->slug='colonization';$colonization->level=1;$this->em->persist($colonization);$this->em->flush();
         $target=$this->em->getRepository(Planet::class)->findOneBy(['solarSystem'=>$origin->solarSystem,'owner'=>null]);$target->npcPlanet=false;
         $service=self::getContainer()->get(\App\Service\Fleet\FleetService::class);
         $service->send($m,$origin,'colonize',$target->id,['colony_ship'=>1],1,[],str_repeat('a',32));
@@ -373,7 +383,7 @@ final class GamePersistenceTest extends KernelTestCase
         self::assertSame(3, $this->em->getRepository(\App\Entity\AdminAuditLog::class)->count());
         $service->setUniverseSettings($admin, $universe->id, ['multipliers' => ['building_time' => '1.5', 'research_time' => '1', 'ship_build_time' => '1', 'resource_production' => '2', 'travel_time' => '1'], 'limits' => ['max_planets' => '8', 'max_fleet_size' => '150'], 'features' => ['guilds_enabled' => '1', 'planet_conquest' => '0']]);
         $effective = self::getContainer()->get(GameCatalog::class)->forUniverse($universe);
-        self::assertSame(1.5, $effective['multipliers']['building_time']);
+        self::assertEqualsWithDelta(1 / 1.5, $effective['multipliers']['building_time'], 0.000001);
         self::assertSame(8, $effective['limits']['max_planets']);
         self::assertFalse($effective['features']['planet_conquest']);
         self::assertSame(4, $this->em->getRepository(\App\Entity\AdminAuditLog::class)->count());
@@ -577,6 +587,7 @@ final class GamePersistenceTest extends KernelTestCase
             if ($localProbe) $localProbe->quantity = 0;
         }
         $this->em->flush();
+        $hydrogen=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$origin,'resourceType'=>'hydrogen']);$hydrogen->currentStock=1000000;$this->em->flush();
         $service = self::getContainer()->get(\App\Service\Fleet\FleetService::class);
         $service->send($sender->currentPlayerUniverse, $origin, 'spy', $target->id, ['probe' => 1], 1, [], str_repeat('e', 32));
         $spyFleet = $this->em->getRepository(\App\Entity\Fleet::class)->findOneBy(['playerUniverse' => $sender->currentPlayerUniverse, 'status' => 'traveling', 'mission' => 'spy']);
@@ -587,7 +598,8 @@ final class GamePersistenceTest extends KernelTestCase
         $report = $this->em->getRepository(\App\Entity\EspionageReport::class)->findOneBy(['sender' => $sender->currentPlayerUniverse]);
         self::assertNotNull($report);
         self::assertSame('success', $report->result);
-        self::assertSame(0, $report->detectionChance);
+        self::assertSame(1, $this->em->getRepository(\App\Entity\PlayerBoost::class)->count(['playerUniverse' => $sender->currentPlayerUniverse, 'sourceType' => 'risk_mission']));
+        self::assertSame(5, $report->detectionChance);
         self::assertSame(1, $report->probesSent);
         self::assertSame(3, $report->intelCategories);
         self::assertSame(['resources', 'buildings', 'research'], array_keys($report->snapshot));
@@ -607,6 +619,7 @@ final class GamePersistenceTest extends KernelTestCase
         $targetOwner = $this->player('CounterSpy');
         $target = $this->join($targetOwner);
         $this->ships($origin, ['probe' => 2]);
+        $originHydrogen=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$origin,'resourceType'=>'hydrogen']);$originHydrogen->currentStock=100000;$this->em->flush();
         $localFleet = $this->ships($target, ['probe' => 20]);
         $discovery = $this->em->getRepository(\App\Entity\PlayerDiscovery::class)->findOneBy(['playerUniverse' => $sender->currentPlayerUniverse, 'solarSystem' => $target->solarSystem]);
         if (!$discovery) { $discovery = new \App\Entity\PlayerDiscovery(); $discovery->playerUniverse = $sender->currentPlayerUniverse; $discovery->solarSystem = $target->solarSystem; $this->em->persist($discovery); }
@@ -625,15 +638,19 @@ final class GamePersistenceTest extends KernelTestCase
 
         $report = $this->em->getRepository(\App\Entity\EspionageReport::class)->findOneBy(['sender' => $sender->currentPlayerUniverse]);
         self::assertNotNull($report);
-        self::assertSame('detected', $report->result);
-        self::assertSame(100, $report->detectionChance);
+        self::assertContains($report->result, ['detected', 'success']);
+        self::assertSame(95, $report->detectionChance);
         self::assertSame(2, $report->probesSent);
-        self::assertSame([], $report->snapshot);
-        self::assertSame(0, $report->intelCategories);
+        if ($report->result === 'detected') {
+            self::assertSame([], $report->snapshot);
+            self::assertSame(0, $report->intelCategories);
+        } else {
+            self::assertGreaterThan(0, $report->intelCategories);
+        }
         self::assertSame('completed', $spyFleet->status);
         self::assertSame(0, $this->em->getRepository(\App\Entity\FleetShip::class)->findOneBy(['fleet' => $spyFleet, 'slug' => 'probe'])->quantity);
         $alerts = $this->em->getRepository(\App\Entity\Notification::class)->findBy(['recipient' => $targetOwner->currentPlayerUniverse]);
-        self::assertNotEmpty(array_filter($alerts, static fn ($notification): bool => str_contains($notification->message, 'Sondes d’espionnage détectées')));
+        if ($report->result === 'detected') self::assertNotEmpty(array_filter($alerts, static fn ($notification): bool => str_contains($notification->message, 'Sondes d’espionnage détectées')));
         self::assertSame('idle', $localFleet->status);
     }
 
@@ -644,6 +661,7 @@ final class GamePersistenceTest extends KernelTestCase
         $sender = $this->player('NpcSpy');
         $origin = $this->join($sender);
         $this->ships($origin, ['probe' => 2]);
+        $originHydrogen=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$origin,'resourceType'=>'hydrogen']);$originHydrogen->currentStock=100000;$this->em->flush();
         $target = null;
         foreach ($this->em->getRepository(\App\Entity\Planet::class)->findBy(['owner' => null, 'npcPlanet' => true]) as $candidate) {
             if ($candidate->solarSystem->galaxy->universe->id === $sender->currentPlayerUniverse->universe->id) { $target = $candidate; break; }
@@ -662,10 +680,15 @@ final class GamePersistenceTest extends KernelTestCase
 
         $report = $this->em->getRepository(\App\Entity\EspionageReport::class)->findOneBy(['sender' => $sender->currentPlayerUniverse]);
         self::assertNotNull($report);
-        self::assertSame('detected', $report->result);
+        self::assertContains($report->result, ['detected', 'success']);
         self::assertSame(4, $report->targetCounterEspionageLevel);
-        self::assertSame(100, $report->detectionChance);
-        self::assertSame([], $report->snapshot);
+        self::assertSame(94, $report->detectionChance);
+        if ($report->result === 'detected') {
+            self::assertSame([], $report->snapshot);
+            self::assertSame(0, $report->intelCategories);
+        } else {
+            self::assertGreaterThan(0, $report->intelCategories);
+        }
         self::assertTrue($target->npcGarrisonInitialized);
         self::assertGreaterThan(0, $this->em->getRepository(\App\Entity\PlanetNpcShip::class)->count(['planet' => $target]));
         self::assertSame(0, $this->em->getRepository(\App\Entity\FleetShip::class)->findOneBy(['fleet' => $fleet, 'slug' => 'probe'])->quantity);

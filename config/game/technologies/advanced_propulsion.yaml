@@ -24,7 +24,15 @@
     ]
   },
   "effect": {
-    "type": "unlock"
+    "type": "stat_bonus",
+    "targets": "all_ships",
+    "stats": [
+      "speed_system",
+      "speed_galaxy"
+    ],
+    "formula": "percent",
+    "value_per_level": 0.05,
+    "max_bonus": 0.25
   },
   "source": "PDF 1 p.15"
 }

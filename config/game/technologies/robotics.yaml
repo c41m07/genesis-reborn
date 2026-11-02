@@ -18,7 +18,9 @@
     ]
   },
   "effect": {
-    "type": "unlock"
+    "type": "defense_rebuild",
+    "value_per_level": 10,
+    "max_bonus": 50
   },
   "provisional": true
 }

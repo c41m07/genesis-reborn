@@ -3,17 +3,20 @@
   "label": "Croiseur",
   "category": "heavy",
   "hp": 2500,
-  "precision": 70,
-  "tracking": 80,
-  "evasion": 60,
-  "signature": 20,
+  "precision": 75,
+  "tracking": 45,
+  "evasion": 25,
+  "signature": 50,
   "base_attack": 500,
   "shots_min": 1,
   "shots_max": 3,
-  "build_time_base": 600,
+  "build_time_base": 900,
   "costs": {
-    "metal": 35000,
-    "energy": 11666
+    "metal": 45000,
+    "energy": 15000,
+    "antimatter": 0,
+    "hydrogen": 0,
+    "carbon": 0
   },
   "speed_system": 50,
   "speed_galaxy": 500,
@@ -33,5 +36,6 @@
   "note": "Navigation et équilibrage provisoires ; fighter et stealth_fighter reprennent les stats de combat documentées.",
   "fuel_capacity": 6000,
   "fuel_capacity_provisional": true,
-  "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 6000 H. Réservoir réservé au carburant, distinct de la soute de fret."
+  "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 6000 H. Réservoir réservé au carburant, distinct de la soute de fret.",
+  "shield": 1000
 }

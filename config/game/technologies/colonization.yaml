@@ -1,0 +1,30 @@
+{
+  "slug": "colonization",
+  "label": "Colonisation",
+  "max_level": 4,
+  "research_time_base": 288000,
+  "research_time_scaling": 1.8,
+  "costs_base": {
+    "metal": 10000,
+    "energy": 5000,
+    "antimatter": 250,
+    "hydrogen": 0,
+    "carbon": 0
+  },
+  "costs_scaling": 2,
+  "unlock_requirements": {
+    "buildings": [
+      {
+        "slug": "lab",
+        "level": 1
+      }
+    ]
+  },
+  "effect": {
+    "type": "planet_limit",
+    "base_planets": 1,
+    "value_per_level": 1,
+    "max_planets": 5
+  },
+  "provisional": true
+}

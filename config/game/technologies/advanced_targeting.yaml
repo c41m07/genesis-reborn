@@ -18,7 +18,11 @@
     ]
   },
   "effect": {
-    "type": "unlock"
+    "type": "stat_bonus",
+    "targets": "all_ships",
+    "stat": "tracking",
+    "formula": "flat",
+    "value_per_level": 2
   },
   "provisional": true
 }

@@ -29,6 +29,6 @@ class Planet
     public ?\DateTimeImmutable $shipyardQueueStartedAt = null;
     public function coordinates(): string
     {
-        return $this->solarSystem->galaxy->name.' · ('.$this->solarSystem->coordX.','.$this->solarSystem->coordY.') · '.$this->position;
+        return $this->solarSystem->galaxy->coordinateCode().':'.$this->solarSystem->number().':'.$this->position;
     }
 }

@@ -14,5 +14,7 @@
       "unlock_requirements": {}
     }
   },
-  "provisional": true
+  "provisional": true,
+  "research_time_reduction_percent_per_level": 10,
+  "research_time_reduction_max_percent": 50
 }

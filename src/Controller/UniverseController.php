@@ -13,7 +13,13 @@ final class UniverseController extends AbstractController
     #[Route('/univers',name:'app_universes',methods:['GET'])]
     public function index(GameRepository $repo,GameCatalog $catalog,ClockInterface $clock): Response
     {
-        return $this->render('universe/index.html.twig',['universes'=>$repo->all(Universe::class),'configs'=>$catalog->all('universes'),'now'=>$clock->now()]);
+        $universes = $repo->all(Universe::class);
+        $configs = [];
+        foreach ($universes as $universe) {
+            $configs[$universe->slug] = $catalog->forUniverse($universe);
+        }
+
+        return $this->render('universe/index.html.twig', ['universes' => $universes, 'configs' => $configs, 'now' => $clock->now()]);
     }
     #[Route('/univers/{id}/rejoindre',name:'app_universe_join',methods:['POST'],requirements:['id'=>'\d+'])]
     public function join(int $id,Request $request,UniverseService $service): Response

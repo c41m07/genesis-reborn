@@ -14,5 +14,13 @@
       "unlock_requirements": {}
     }
   },
-  "provisional": true
+  "provisional": true,
+  "effect": {
+    "type": "stat_bonus",
+    "targets": "ground_defenses",
+    "stat": "hp",
+    "formula": "percent",
+    "value_per_level": 2.5,
+    "max_bonus": 25
+  }
 }

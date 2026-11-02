@@ -4,5 +4,7 @@ report_score_base: 1
 base_detection_chance: 50
 counter_espionage_weight: 10
 stealth_weight: 10
-extra_probe_weight: 5
-local_probe_weight: 5
+extra_probe_weight: 1
+local_probe_weight: 1
+min_detection_chance: 5
+max_detection_chance: 95

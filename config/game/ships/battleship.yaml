@@ -3,17 +3,20 @@
   "label": "Cuirassé",
   "category": "heavy",
   "hp": 4000,
-  "precision": 70,
-  "tracking": 80,
-  "evasion": 60,
-  "signature": 20,
+  "precision": 75,
+  "tracking": 38,
+  "evasion": 20,
+  "signature": 60,
   "base_attack": 800,
   "shots_min": 1,
   "shots_max": 3,
-  "build_time_base": 900,
+  "build_time_base": 1500,
   "costs": {
-    "metal": 50000,
-    "energy": 16666
+    "metal": 72000,
+    "energy": 24000,
+    "antimatter": 0,
+    "hydrogen": 0,
+    "carbon": 0
   },
   "speed_system": 50,
   "speed_galaxy": 500,
@@ -33,5 +36,6 @@
   "note": "Navigation et équilibrage provisoires ; fighter et stealth_fighter reprennent les stats de combat documentées.",
   "fuel_capacity": 8000,
   "fuel_capacity_provisional": true,
-  "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 8000 H. Réservoir réservé au carburant, distinct de la soute de fret."
+  "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 8000 H. Réservoir réservé au carburant, distinct de la soute de fret.",
+  "shield": 2000
 }

@@ -1,0 +1,41 @@
+{
+  "slug": "weapon_technology",
+  "label": "Technologie d’armement",
+  "max_level": 5,
+  "research_time_base": 21600,
+  "research_time_scaling": 1.8,
+  "costs_base": {
+    "metal": 8000,
+    "energy": 4000,
+    "antimatter": 1000,
+    "hydrogen": 0,
+    "carbon": 0
+  },
+  "costs_scaling": 2,
+  "unlock_requirements": {
+    "technologies": [
+      {
+        "slug": "advanced_targeting",
+        "level": 2
+      },
+      {
+        "slug": "precision_fire",
+        "level": 1
+      }
+    ],
+    "buildings": [
+      {
+        "slug": "lab",
+        "level": 2
+      }
+    ]
+  },
+  "effect": {
+    "type": "stat_bonus",
+    "targets": "all_ships",
+    "stat": "base_attack",
+    "formula": "percent",
+    "value_per_level": 0.05,
+    "max_bonus": 0.25
+  }
+}

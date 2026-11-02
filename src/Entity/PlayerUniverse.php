@@ -13,4 +13,8 @@ class PlayerUniverse
     public Universe $universe;
     #[ORM\Column]
     public \DateTimeImmutable $joinedAt;
+    #[ORM\Column(nullable: true)]
+    public ?\DateTimeImmutable $recoveryProtectedUntil = null;
+    #[ORM\Column(nullable: true)]
+    public ?\DateTimeImmutable $lastRecoveryProtectionAt = null;
 }

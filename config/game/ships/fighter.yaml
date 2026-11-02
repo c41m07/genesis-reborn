@@ -4,7 +4,7 @@
   "category": "light",
   "hp": 150,
   "precision": 70,
-  "tracking": 80,
+  "tracking": 76,
   "evasion": 60,
   "signature": 20,
   "base_attack": 40,
@@ -13,7 +13,10 @@
   "build_time_base": 60,
   "costs": {
     "metal": 3000,
-    "energy": 1000
+    "energy": 1000,
+    "antimatter": 0,
+    "hydrogen": 0,
+    "carbon": 0
   },
   "speed_system": 50,
   "speed_galaxy": 500,
@@ -26,5 +29,6 @@
   "note": "Navigation et équilibrage provisoires ; fighter et stealth_fighter reprennent les stats de combat documentées.",
   "fuel_capacity": 700,
   "fuel_capacity_provisional": true,
-  "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 700 H. Réservoir réservé au carburant, distinct de la soute de fret."
+  "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 700 H. Réservoir réservé au carburant, distinct de la soute de fret.",
+  "shield": 50
 }

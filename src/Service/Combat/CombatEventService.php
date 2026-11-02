@@ -12,17 +12,22 @@ use App\Entity\Notification;
 use App\Entity\OutboxMessage;
 use App\Entity\Planet;
 use App\Entity\PlanetDefense;
+use App\Entity\PlanetBuilding;
 use App\Entity\PlanetNpcShip;
 use App\Entity\PlayerTechnology;
 use App\Service\Universe\PlanetNpcSeeder;
+use App\Service\Universe\PlanetNameGenerator;
 use App\Entity\PlayerDiscovery;
 use App\Entity\PlayerUniverse;
 use App\Manager\GameManager;
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
+use App\Service\Boost\BoostGrantService;
+use App\Service\Boost\BoostEventService;
 use App\Service\Colony\ResourceService;
 use App\Service\Notification\NotificationService;
 use App\Service\Player\RelationResolver;
+use App\Service\Player\LeaderboardService;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\Uid\Uuid;
 
@@ -36,16 +41,33 @@ final class CombatEventService
         private CombatSimulator $simulator,
         private TechnologyEffectCalculator $technologyEffects,
         private RelationResolver $relations,
+        private LeaderboardService $leaderboard,
         private NotificationService $notifications,
         private ClockInterface $clock,
         private PlanetNpcSeeder $npcSeeder,
+        private PlanetNameGenerator $planetNames,
+        private BoostGrantService $boostGrants,
+        private BoostEventService $boostEvents,
     ) {}
 
     public function canAttack(PlayerUniverse $attacker, Planet $target): bool
     {
-        return $target->owner !== null
-            && $target->owner->universe->id === $attacker->universe->id
-            && !$this->relations->allied($attacker, $target->owner);
+        $defender = $target->owner;
+        if ($defender === null || $defender->universe->id !== $attacker->universe->id || $this->relations->allied($attacker, $defender)) return false;
+        $rules = $this->catalog->rules();
+        $now = $this->clock->now();
+        if ($defender->recoveryProtectedUntil !== null && $defender->recoveryProtectedUntil > $now) return false;
+        $scores = [];
+        foreach ($this->leaderboard->forUniverse($attacker) as $row) $scores[$row['membership']->id] = (int) $row['total_points'];
+        $attackerScore = $scores[$attacker->id] ?? 0;
+        $defenderScore = $scores[$defender->id] ?? 0;
+        $protection = $rules['new_player_protection'] ?? [];
+        $duration = max(0, (int) ($protection['duration_seconds'] ?? 0));
+        $scoreLimit = max(0, (int) ($protection['score_limit'] ?? 0));
+        $stillNew = $duration > 0 && $defender->joinedAt->modify('+' . $duration . ' seconds') > $now && $defenderScore < $scoreLimit;
+        if ($stillNew) return false;
+        $ratio = max(1.0, (float) ($protection['attacker_score_ratio'] ?? 5));
+        return $attackerScore <= max(1, $defenderScore) * $ratio;
     }
 
     public function canConquer(PlayerUniverse $attacker, ?Planet $target): bool
@@ -73,9 +95,13 @@ final class CombatEventService
         $this->manager->lock($planet);
         $now = $this->clock->now();
         $events = $this->repo->all(CombatEvent::class, ['planet' => $planet, 'status' => 'pending'], ['id' => 'DESC']);
+        $latestEvent = $this->repo->all(CombatEvent::class, ['planet' => $planet], ['id' => 'DESC'])[0] ?? null;
+        if ($events === [] && $latestEvent?->status === 'resolved' && $fleet->departureAt < $latestEvent->startedAt->modify('+' . $latestEvent->currentRound * 60 . ' seconds')) {
+            return false;
+        }
         $event = null;
         foreach ($events as $candidate) {
-            if ($candidate->resolveAt > $now) {
+            if ($candidate->resolveAt >= $now) {
                 $event = $candidate;
                 break;
             }
@@ -156,6 +182,10 @@ final class CombatEventService
         if (!$planet) {
             return false;
         }
+        $latestEvent = $this->repo->all(CombatEvent::class, ['planet' => $planet], ['id' => 'DESC'])[0] ?? null;
+        if ($latestEvent?->status === 'resolved' && $fleet->departureAt < $latestEvent->startedAt->modify('+' . $latestEvent->currentRound * 60 . ' seconds')) {
+            return false;
+        }
         foreach ($this->repo->all(CombatEvent::class, ['planet' => $planet, 'status' => 'pending'], ['id' => 'DESC']) as $event) {
             if ($event->resolveAt <= $this->clock->now()) {
                 continue;
@@ -200,9 +230,13 @@ final class CombatEventService
         }
         $now = $this->clock->now();
         $events = $this->repo->all(CombatEvent::class, ['planet' => $planet, 'status' => 'pending'], ['id' => 'DESC']);
+        $latestEvent = $this->repo->all(CombatEvent::class, ['planet' => $planet], ['id' => 'DESC'])[0] ?? null;
+        if ($events === [] && $latestEvent?->status === 'resolved' && $fleet->departureAt < $latestEvent->startedAt->modify('+' . $latestEvent->currentRound * 60 . ' seconds')) {
+            return false;
+        }
         $event = null;
         foreach ($events as $candidate) {
-            if ($candidate->resolveAt > $now) {
+            if ($candidate->resolveAt >= $now) {
                 $event = $candidate;
                 break;
             }
@@ -250,7 +284,7 @@ final class CombatEventService
             $outbox->kind = 'combat';
             $outbox->targetId = $event->id;
             $outbox->token = $event->dispatchToken;
-            $outbox->dueAt = $event->resolveAt;
+            $outbox->dueAt = $event->startedAt->modify('+60 seconds');
             $this->manager->save($outbox);
             if ($planet->owner) {
                 $this->registerGarrison($event, $planet->owner);
@@ -271,8 +305,20 @@ final class CombatEventService
                 return;
             }
             $this->manager->lock($event);
-            if ($event->status !== 'pending' || !hash_equals($event->dispatchToken, $token) || $event->resolveAt > $this->clock->now()) {
+            if ($event->status !== 'pending' || !hash_equals($event->dispatchToken, $token) || $event->startedAt->modify('+' . ($event->currentRound + 1) * 60 . ' seconds') > $this->clock->now()) {
                 return;
+            }
+            foreach ($this->repo->all(Fleet::class, ['destination' => $event->planet, 'status' => 'traveling']) as $arrivingFleet) {
+                if ($arrivingFleet->arrivalAt !== null && $arrivingFleet->arrivalAt <= $this->clock->now()) {
+                    $event->dispatchToken = Uuid::v4()->toRfc4122();
+                    $outbox = new OutboxMessage();
+                    $outbox->kind = 'combat';
+                    $outbox->targetId = $event->id;
+                    $outbox->token = $event->dispatchToken;
+                    $outbox->dueAt = $this->clock->now()->modify('+1 second');
+                    $this->manager->save($outbox);
+                    return;
+                }
             }
             $participants = $this->repo->all(CombatParticipant::class, ['combatEvent' => $event], ['id' => 'ASC']);
             $conquestOwners = [];
@@ -291,12 +337,26 @@ final class CombatEventService
                 return;
             }
 
+            $rules = $this->catalog->rules();
+            $maxRounds = max(1, (int) ($rules['max_combat_rounds'] ?? 10));
+            $elapsedSeconds = max(0, $this->clock->now()->getTimestamp() - $event->startedAt->getTimestamp());
+            $targetRound = min($maxRounds, max($event->currentRound + 1, intdiv($elapsedSeconds, 60)));
+            $state = $event->combatSnapshot;
+            $snapshot = $state['participants'] ?? [];
+            $combatParticipants = $state['combat_participants'] ?? [];
+            $snapshotParticipantIds = [];
+            foreach ($snapshot as $entry) {
+                if (($entry['participant_id'] ?? null) !== null) {
+                    $snapshotParticipantIds[(int) $entry['participant_id']] = true;
+                }
+            }
             $attackerParticipants = array_values(array_filter($participants, static fn (CombatParticipant $p): bool => $p->role === 'attacker'));
             $campByMembership = $this->attackerCamps($attackerParticipants);
-            $snapshot = [];
-            $combatParticipants = [];
             $technologyLevels = [];
             foreach ($participants as $participant) {
+                if (isset($snapshotParticipantIds[(int) $participant->id])) {
+                    continue;
+                }
                 $fleet = $participant->fleet;
                 $membershipId = $participant->playerUniverse->id;
                 $technologyLevels[$membershipId] ??= $this->repo->levels(PlayerTechnology::class, ['playerUniverse' => $participant->playerUniverse]);
@@ -305,69 +365,150 @@ final class CombatEventService
                     if ($fleetShip->quantity < 1) {
                         continue;
                     }
-                    $units[] = $this->catalog->get('ships', $fleetShip->slug) + ['quantity' => $fleetShip->quantity];
+                    $units[] = $this->catalog->getForUniverse($participant->playerUniverse->universe, 'ships', $fleetShip->slug) + ['quantity' => $fleetShip->quantity];
                 }
-                $units = $this->technologyEffects->applyToShips($units, $technologyLevels[$membershipId]);
-                $id = (string) $fleet->id;
+                $units = $this->technologyEffects->applyToShips($units, $technologyLevels[$membershipId], $participant->playerUniverse->universe);
                 $role = $participant->role;
-                $camp = $role === 'attacker' ? ($campByMembership[$participant->playerUniverse->id] ?? 'attacker-' . $participant->playerUniverse->id) : 'defenders';
-                $combatParticipants[] = [
-                    'id' => $id,
-                    'role' => $role,
-                    'camp' => $camp,
-                    'arrival_round' => $participant->arrivalRound ?? 1,
-                    'units' => $units,
-                ];
+                $camp = $role === 'attacker' ? ($campByMembership[$membershipId] ?? 'attacker-' . $membershipId) : 'defenders';
+                $arrivalRound = $participant->arrivalRound ?? 1;
+                $combatParticipants[] = ['id' => (string) $fleet->id, 'role' => $role, 'camp' => $camp, 'arrival_round' => $arrivalRound, 'units' => $units];
                 $snapshot[] = [
                     'participant_id' => $participant->id,
                     'fleet_id' => $fleet->id,
-                    'player_universe_id' => $participant->playerUniverse->id,
+                    'player_universe_id' => $membershipId,
                     'role' => $role,
                     'camp' => $camp,
                     'arrival_at' => $participant->arrivalAt->format(DATE_ATOM),
-                    'arrival_round' => $participant->arrivalRound,
+                    'arrival_round' => $arrivalRound,
                     'units' => $units,
                     'technology_levels' => $technologyLevels[$membershipId],
                 ];
+                $snapshotParticipantIds[(int) $participant->id] = true;
+            }
+            $campByMembership = [];
+            foreach ($snapshot as $entry) {
+                if (($entry['role'] ?? null) === 'attacker' && isset($entry['player_universe_id'])) {
+                    $campByMembership[(int) $entry['player_universe_id']] = $entry['camp'];
+                }
             }
 
-            $npcShips = $this->repo->all(PlanetNpcShip::class, ['planet' => $event->planet], ['id' => 'ASC']);
-            $npcUnits = [];
-            foreach ($npcShips as $npcShip) {
-                if ($npcShip->quantity > 0) $npcUnits[] = $this->catalog->get('ships', $npcShip->slug) + ['quantity' => $npcShip->quantity];
-            }
-            if ($npcUnits !== []) {
-                $npcResearch = $this->catalog->all('planet_conquest')['levels'][$event->planet->conquestLevel]['research'] ?? [];
-                $npcUnits = $this->technologyEffects->applyToShips($npcUnits, $npcResearch);
-                $npcId = 'npc:' . $event->planet->id;
-                $combatParticipants[] = ['id' => $npcId, 'role' => 'defender', 'camp' => 'defenders', 'arrival_round' => 1, 'units' => $npcUnits];
-                $snapshot[] = ['participant_id' => null, 'fleet_id' => null, 'player_universe_id' => null, 'role' => 'defender', 'camp' => 'defenders', 'arrival_at' => $event->startedAt->format(DATE_ATOM), 'arrival_round' => 1, 'units' => $npcUnits, 'technology_levels' => $npcResearch, 'pve_npc' => true, 'planet_id' => $event->planet->id];
+            $hasNpcSnapshot = (bool) array_filter($snapshot, static fn (array $entry): bool => ($entry['pve_npc'] ?? false) === true);
+            if (!$hasNpcSnapshot) {
+                $npcUnits = [];
+                foreach ($this->repo->all(PlanetNpcShip::class, ['planet' => $event->planet], ['id' => 'ASC']) as $npcShip) {
+                    if ($npcShip->quantity > 0) $npcUnits[] = $this->catalog->getForUniverse($event->planet->solarSystem->galaxy->universe, 'ships', $npcShip->slug) + ['quantity' => $npcShip->quantity];
+                }
+                if ($npcUnits !== []) {
+                    $npcResearch = $this->catalog->all('planet_conquest')['levels'][$event->planet->conquestLevel]['research'] ?? [];
+                    $npcUnits = $this->technologyEffects->applyToShips($npcUnits, $npcResearch, $event->planet->solarSystem->galaxy->universe);
+                    $npcId = 'npc:' . $event->planet->id;
+                    $combatParticipants[] = ['id' => $npcId, 'role' => 'defender', 'camp' => 'defenders', 'arrival_round' => 1, 'units' => $npcUnits];
+                    $snapshot[] = ['participant_id' => null, 'fleet_id' => null, 'player_universe_id' => null, 'role' => 'defender', 'camp' => 'defenders', 'arrival_at' => $event->startedAt->format(DATE_ATOM), 'arrival_round' => 1, 'units' => $npcUnits, 'technology_levels' => $npcResearch, 'pve_npc' => true, 'planet_id' => $event->planet->id];
+                }
             }
 
-            $defenseSnapshots = [];
-            foreach ($this->repo->all(PlanetDefense::class, ['planet' => $event->planet], ['id' => 'ASC']) as $defense) {
-                if ($defense->quantity < 1) {
+            $defenseSnapshots = $state['defenses'] ?? [];
+            if (!array_key_exists('defenses', $state)) {
+                foreach ($this->repo->all(PlanetDefense::class, ['planet' => $event->planet], ['id' => 'ASC']) as $defense) {
+                    if ($defense->quantity < 1) {
+                        continue;
+                    }
+                    $definition = $this->catalog->getForUniverse($event->planet->solarSystem->galaxy->universe, 'defenses', $defense->slug);
+                    $defender = $event->planet->owner;
+                    $defenderLevels = $defender ? $this->repo->levels(PlayerTechnology::class, ['playerUniverse' => $defender]) : [];
+                    $definition = $this->technologyEffects->applyToDefenses([$definition], $defenderLevels, $event->planet->solarSystem->galaxy->universe)[0];
+                    $fortressLevel = $this->repo->levels(PlanetBuilding::class, ['planet' => $event->planet])['fortress'] ?? 0;
+                    $fortress = $this->catalog->getForUniverse($event->planet->solarSystem->galaxy->universe, 'buildings', 'fortress')['effect'] ?? [];
+                    if (($fortress['targets'] ?? null) === 'ground_defenses' && ($fortress['stat'] ?? null) === 'hp') {
+                        $bonus = min((float) ($fortress['max_bonus'] ?? 0), (float) ($fortress['value_per_level'] ?? 0) * $fortressLevel) / 100;
+                        $definition['hp'] *= 1 + $bonus;
+                    }
+                    $defenseSnapshots[] = $definition + [
+                        'id' => (string) $defense->id,
+                        'camp' => 'defenders',
+                        'quantity' => $defense->quantity,
+                    ];
+                }
+            }
+            $modifiers = $state['modifiers'] ?? ($this->catalog->all('combat_modifiers')['modifiers'] ?? []);
+            $event->combatSnapshot = ['participants' => $snapshot, 'combat_participants' => $combatParticipants, 'defenses' => $defenseSnapshots, 'modifiers' => $modifiers];
+            $result = $this->simulator->simulate(
+                $combatParticipants, $defenseSnapshots, $modifiers, $maxRounds, $event->seed, $targetRound,
+                (float) ($rules['shield_recharge_percent_per_round'] ?? 5),
+                (bool) ($rules['restore_survivor_shields_after_combat'] ?? true),
+            );
+            $roundHistory = $state['round_history'] ?? [];
+            foreach ($result['rounds'] as $round) {
+                if ($round['number'] > $event->currentRound) {
+                    $roundHistory[] = $round;
+                }
+            }
+            $event->combatSnapshot['round_history'] = $roundHistory;
+
+            $damageByMembership = [];
+            $membershipByFleet = [];
+            foreach ($participants as $participant) {
+                $membershipByFleet[$participant->fleet->id] = $participant->playerUniverse;
+            }
+            foreach ($result['rounds'] as $round) {
+                if ($round['number'] <= $event->currentRound) {
                     continue;
                 }
-                $defenseSnapshots[] = $this->catalog->get('defenses', $defense->slug) + [
-                    'id' => (string) $defense->id,
-                    'camp' => 'defenders',
-                    'quantity' => $defense->quantity,
-                ];
+                foreach ($round['shots'] as $shot) {
+                    $fleetId = (int) explode(':', (string) $shot['attacker'], 2)[0];
+                    $membership = $membershipByFleet[$fleetId] ?? null;
+                    if ($membership) {
+                        $damageByMembership[$round['number']][$membership->id] ??= ['membership' => $membership, 'damage' => 0.0];
+                        $damageByMembership[$round['number']][$membership->id]['damage'] += (float) $shot['damage'];
+                    }
+                }
             }
-            $rules = $this->catalog->rules();
-            $modifiers = $this->catalog->all('combat_modifiers')['modifiers'] ?? [];
-            $result = $this->simulator->simulate(
-                $combatParticipants,
-                $defenseSnapshots,
-                $modifiers,
-                (int) ($rules['max_combat_rounds'] ?? 10),
-                $event->seed,
-            );
+            foreach ($damageByMembership as $roundNumber => $scores) {
+                foreach ($scores as $score) {
+                    $this->boostEvents->recordCombatDamage($score['membership'], $event->id, (int) $roundNumber, $score['damage']);
+                }
+            }
 
-            $this->persistLosses($participants, $defenseSnapshots, $result['losses'], $event->planet);
+            if ($result['outcome'] === 'ongoing') {
+                $event->currentRound = $result['rounds_played'];
+                $event->dispatchToken = Uuid::v4()->toRfc4122();
+                $outbox = new OutboxMessage();
+                $outbox->kind = 'combat';
+                $outbox->targetId = $event->id;
+                $outbox->token = $event->dispatchToken;
+                $outbox->dueAt = $event->startedAt->modify('+' . ($event->currentRound + 1) * 60 . ' seconds');
+                $this->manager->save($outbox);
+                return;
+            }
+            $event->currentRound = $result['rounds_played'];
+
+            $defenseRebuilt = $this->persistLosses($participants, $defenseSnapshots, $result['losses'], $event->planet);
+            $recoveryProtection = $this->applyRecoveryProtection($snapshot, $result['losses'], $participants);
             $loot = $this->collectLoot($participants, $result['outcome'], $event);
             $capture = $this->capturePlanet($participants, $result['outcome'], $event, $result['losses']);
+            $winningAttackerCamps = [];
+            foreach ($result['survivors'] as $survivor) {
+                if ($survivor['role'] === 'attacker') {
+                    $winningAttackerCamps[$survivor['camp']] = true;
+                }
+            }
+            foreach ($participants as $participant) {
+                if ($participant->role === 'attacker' && $participant->fleet->mission === 'attack' && $result['outcome'] === 'attacker_wins') {
+                    $camp = $campByMembership[$participant->playerUniverse->id] ?? null;
+                    if ($camp !== null && isset($winningAttackerCamps[$camp])) {
+                        $this->boostGrants->awardRiskMission($participant->playerUniverse, $participant->fleet);
+                    }
+                } elseif ($participant->role === 'defender' && $participant->fleet->mission === 'defend' && $result['outcome'] === 'defender_wins') {
+                    $this->boostGrants->awardRiskMission($participant->playerUniverse, $participant->fleet);
+                } elseif (
+                    $participant->role === 'attacker'
+                    && $participant->fleet->mission === 'conquer'
+                    && ($capture['status'] ?? null) === 'captured'
+                    && (int) ($capture['fleet_id'] ?? 0) === $participant->fleet->id
+                ) {
+                    $this->boostGrants->awardRiskMission($participant->playerUniverse, $participant->fleet);
+                }
+            }
             foreach ($participants as $participant) {
                 $this->consumeOrbitFuel($participant->fleet);
                 $this->sendFleetHome($participant);
@@ -389,6 +530,8 @@ final class CombatEventService
                 'seed' => $event->seed,
                 'survivors' => $result['survivors'],
                 'losses' => $result['losses'],
+                'defense_rebuilt' => $defenseRebuilt,
+                'recovery_protection' => $recoveryProtection,
                 'loot' => $loot,
                 'capture' => $capture,
             ];
@@ -420,7 +563,7 @@ final class CombatEventService
                 if ($ship->quantity < 1) {
                     continue;
                 }
-                $type = $this->catalog->get('ships', $ship->slug);
+                $type = $this->catalog->getForUniverse($participant->playerUniverse->universe, 'ships', $ship->slug);
                 $capacity += (($type['cargo_capacity'] ?? 0) + ($type['fuel_capacity'] ?? 0)) * $ship->quantity;
             }
             $occupied = array_sum(array_map(static fn ($amount): float => max(0.0, (float) $amount), $participant->fleet->cargo));
@@ -543,13 +686,14 @@ final class CombatEventService
             if (!$colonyShip || $colonyShip->quantity < 1) continue;
             if ($event->planet->owner !== null) { $reason = 'target_claimed'; continue; }
             $config = $this->catalog->forUniverse($participant->playerUniverse->universe);
-            if (count($this->repo->planets($participant->playerUniverse->universe, $participant->playerUniverse)) >= $config['limits']['max_planets']) {
+            if (count($this->repo->planets($participant->playerUniverse->universe, $participant->playerUniverse)) >= $this->planetLimit($participant->playerUniverse)) {
                 $reason = 'planet_limit'; continue;
             }
 
             --$colonyShip->quantity;
             $lossKey = $fleet->id . ':colony_ship';
             $losses[$lossKey] = ($losses[$lossKey] ?? 0) + 1;
+            $event->planet->name = $this->planetNames->generate($participant->playerUniverse);
             $event->planet->owner = $participant->playerUniverse;
             foreach ($this->repo->all(PlanetNpcShip::class, ['planet' => $event->planet]) as $npcShip) $this->manager->remove($npcShip);
             foreach ($this->repo->all(PlanetDefense::class, ['planet' => $event->planet]) as $defense) $this->manager->remove($defense);
@@ -570,13 +714,21 @@ final class CombatEventService
         return ['status' => 'failed', 'reason' => $reason];
     }
 
+    private function planetLimit(PlayerUniverse $membership): int
+    {
+        $config=$this->catalog->forUniverse($membership->universe);$definition=$config['catalog']['technologies']['colonization']??null;$effect=$definition['effect']??null;
+        if(!is_array($effect)||($effect['type']??null)!=='planet_limit')return (int)$config['limits']['max_planets'];
+        $level=(int)($this->repo->levels(PlayerTechnology::class,['playerUniverse'=>$membership])['colonization']??0);
+        $base=(int)($effect['base_planets']??1);$perLevel=(int)($effect['value_per_level']??1);$cap=min((int)($effect['max_planets']??5),(int)$config['limits']['max_planets']);
+        return max(1,min($cap,$base+$perLevel*min($level,(int)($definition['max_level']??$level))));
+    }
+
     private function arrivalRound(CombatEvent $event, \DateTimeImmutable $arrivalAt): int
     {
         $maxRounds = max(1, (int) ($this->catalog->rules()['max_combat_rounds'] ?? 10));
-        $window = max(1, $event->resolveAt->getTimestamp() - $event->startedAt->getTimestamp());
-        $elapsed = max(0, min($window, $arrivalAt->getTimestamp() - $event->startedAt->getTimestamp()));
+        $elapsed = max(0, $arrivalAt->getTimestamp() - $event->startedAt->getTimestamp());
 
-        return max(1, min($maxRounds, 1 + (int) round(($elapsed / $window) * ($maxRounds - 1))));
+        return max(1, min($maxRounds, (int) ceil($elapsed / 60)));
     }
 
     private function attackerCamps(array $participants): array
@@ -614,7 +766,7 @@ final class CombatEventService
         return $camps;
     }
 
-    private function persistLosses(array $participants, array $defenseSnapshots, array $losses, Planet $planet): void
+    private function persistLosses(array $participants, array $defenseSnapshots, array $losses, Planet $planet): array
     {
         foreach ($participants as $participant) {
             foreach ($this->repo->all(FleetShip::class, ['fleet' => $participant->fleet]) as $ship) {
@@ -626,15 +778,64 @@ final class CombatEventService
             $lost = $losses['npc:' . $planet->id . ':' . $npcShip->slug] ?? 0;
             $npcShip->quantity = max(0, $npcShip->quantity - $lost);
         }
+        $rebuilt = [];
+        $robotics = $planet->owner
+            ? (int) ($this->repo->levels(PlayerTechnology::class, ['playerUniverse' => $planet->owner])['robotics'] ?? 0)
+            : 0;
+        $rules = $this->catalog->rules();
+        $rebuildPercent = min(
+            (float) ($rules['defense_rebuild_max_percent'] ?? 50),
+            (float) ($rules['defense_rebuild_percent_per_robotics_level'] ?? 10) * $robotics,
+        );
         foreach ($defenseSnapshots as $snapshot) {
             $id = (int) $snapshot['id'];
             $defense = $this->repo->find(PlanetDefense::class, $id);
-            if (!$defense) {
-                continue;
-            }
-            $lost = $losses['planet:' . $id . ':' . $defense->slug] ?? 0;
-            $defense->quantity = max(0, $defense->quantity - $lost);
+            if (!$defense) continue;
+            $lost = (int) ($losses['planet:' . $id . ':' . $defense->slug] ?? 0);
+            $restored = (int) floor($lost * $rebuildPercent / 100);
+            $defense->quantity = max(0, $defense->quantity - $lost) + $restored;
+            if ($restored > 0) $rebuilt[$defense->slug] = ($rebuilt[$defense->slug] ?? 0) + $restored;
         }
+        ksort($rebuilt);
+        return $rebuilt;
+    }
+
+    private function applyRecoveryProtection(array $snapshot, array $losses, array $participants): array
+    {
+        $memberships = [];
+        foreach ($participants as $participant) $memberships[$participant->playerUniverse->id] = $participant->playerUniverse;
+        $engaged = [];
+        $lost = [];
+        foreach ($snapshot as $entry) {
+            $membershipId = $entry['player_universe_id'] ?? null;
+            $fleetId = $entry['fleet_id'] ?? null;
+            if ($membershipId === null || $fleetId === null || !isset($memberships[$membershipId])) continue;
+            foreach ($entry['units'] ?? [] as $unit) {
+                $slug = (string) ($unit['slug'] ?? '');
+                $definition = $this->catalog->getForUniverse($memberships[$membershipId]->universe, 'ships', $slug);
+                if ((float) ($definition['base_attack'] ?? 0) <= 0) continue;
+                $quantity = (int) ($unit['quantity'] ?? 0);
+                $engaged[$membershipId] = ($engaged[$membershipId] ?? 0) + $quantity;
+                $lost[$membershipId] = ($lost[$membershipId] ?? 0) + (int) ($losses[$fleetId . ':' . $slug] ?? 0);
+            }
+        }
+        $rules = $this->catalog->rules()['recovery_protection'] ?? [];
+        $threshold = max(0.0, min(1.0, (float) ($rules['military_loss_ratio'] ?? 0.7)));
+        $duration = max(0, (int) ($rules['duration_seconds'] ?? 86400));
+        $cooldown = max(0, (int) ($rules['cooldown_seconds'] ?? 604800));
+        $now = $this->clock->now();
+        $protected = [];
+        foreach ($engaged as $id => $quantity) {
+            $membership = $memberships[$id];
+            if ($quantity < 1 || ($lost[$id] ?? 0) / $quantity < $threshold) continue;
+            if ($membership->lastRecoveryProtectionAt !== null && $membership->lastRecoveryProtectionAt->modify('+' . $cooldown . ' seconds') > $now) continue;
+            $membership->lastRecoveryProtectionAt = $now;
+            $membership->recoveryProtectedUntil = $now->modify('+' . $duration . ' seconds');
+            $protected[] = (int) $id;
+            $this->notifications->enqueue($membership, 'Protection de récupération activée pendant 24 heures après de lourdes pertes.');
+        }
+        sort($protected);
+        return $protected;
     }
 
     private function consumeOrbitFuel(Fleet $fleet): void
