@@ -12,6 +12,7 @@ security:
             security: false
         main:
             lazy: true
+            access_denied_handler: App\Security\AdminAccessDeniedHandler
             provider: players
             user_checker: App\Security\PlayerUserChecker
             form_login:
@@ -27,7 +28,7 @@ security:
                 target: app_login
                 enable_csrf: true
     access_control:
-        - {path: ^/(connexion|inscription|health)$, roles: PUBLIC_ACCESS}
+        - {path: ^/(connexion|inscription|mot-de-passe|acces-refuse|health)(/|$), roles: PUBLIC_ACCESS}
         - {path: ^/, roles: ROLE_USER}
 when@test:
     security:

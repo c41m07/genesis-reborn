@@ -1,0 +1,111 @@
+<?php
+namespace App\Service\Boost;
+
+use App\Entity\Fleet;
+use App\Entity\PlayerBoost;
+use App\Entity\PlayerUniverse;
+use App\Manager\GameManager;
+use App\Repository\GameRepository;
+use App\Service\Catalog\GameCatalog;
+use Psr\Clock\ClockInterface;
+
+final class BoostGrantService
+{
+    private const RISK_MISSIONS = ['attack', 'defend', 'conquer', 'explore', 'spy'];
+
+    public function __construct(
+        private GameManager $manager,
+        private GameRepository $repo,
+        private GameCatalog $catalog,
+        private ClockInterface $clock,
+    ) {}
+
+    public function awardRiskMission(PlayerUniverse $membership, Fleet $fleet): bool
+    {
+        if (!in_array($fleet->mission, self::RISK_MISSIONS, true)) {
+            throw new \DomainException('Cette mission ne peut pas attribuer un boost de risque.');
+        }
+
+        return $this->manager->transaction(fn (): bool => $this->grant(
+            $membership,
+            'risk_mission',
+            'risk-fleet-' . $fleet->id,
+            true,
+        ));
+    }
+
+    public function awardEvent(PlayerUniverse $membership, string $eventKey): bool
+    {
+        $eventKey = trim($eventKey);
+        if ($eventKey === '' || strlen($eventKey) > 80) {
+            throw new \DomainException('Identifiant d’événement invalide.');
+        }
+
+        return $this->manager->transaction(fn (): bool => $this->grant(
+            $membership,
+            'event',
+            'event-' . $eventKey . '-player-' . $membership->id,
+            false,
+        ));
+    }
+
+    public function inventory(PlayerUniverse $membership): array
+    {
+        return $this->repo->boostsFor($membership);
+    }
+
+    public function inventoryCapacity(): int
+    {
+        return max(1, min(100, (int) ($this->catalog->all('boosts')['inventory_capacity'] ?? 3)));
+    }
+
+    public function durationReductionRatio(): float
+    {
+        $ratio = (float) ($this->catalog->all('boosts')['duration_reduction_ratio'] ?? 0.25);
+        if (!is_finite($ratio) || $ratio <= 0 || $ratio >= 1) {
+            throw new \LogicException('Ratio de réduction des boosts invalide.');
+        }
+
+        return $ratio;
+    }
+
+    private function grant(PlayerUniverse $membership, string $sourceType, string $sourceKey, bool $riskMission): bool
+    {
+        $this->manager->lock($membership);
+
+        if ($this->repo->one(PlayerBoost::class, ['sourceKey' => $sourceKey])) {
+            return false;
+        }
+
+        $now = $this->clock->now();
+        if ($riskMission && $this->riskMissionDailyLimitReached($membership, $now)) {
+            return false;
+        }
+
+        $boost = new PlayerBoost();
+        $boost->playerUniverse = $membership;
+        $boost->sourceType = $sourceType;
+        $boost->sourceKey = $sourceKey;
+        $boost->earnedAt = $now;
+        $boost->status = $this->repo->countBoosts($membership, 'available') < $this->inventoryCapacity()
+            ? 'available'
+            : 'pending';
+
+        $this->manager->save($boost);
+        $this->manager->flush();
+
+        return true;
+    }
+
+    private function riskMissionDailyLimitReached(PlayerUniverse $membership, \DateTimeImmutable $now): bool
+    {
+        $settings = $this->catalog->all('boosts');
+        $timezone = new \DateTimeZone((string) ($settings['risk_mission_timezone'] ?? 'UTC'));
+        $localNow = $now->setTimezone($timezone);
+        $dayStart = $localNow->setTime(0, 0)->setTimezone(new \DateTimeZone('UTC'));
+        $dayEnd = $dayStart->modify('+1 day');
+        $limit = max(0, min(10, (int) ($settings['risk_mission_daily_limit'] ?? 1)));
+
+        return $limit === 0 || $this->repo->riskBoostCountSince($membership, $dayStart, $dayEnd) >= $limit;
+    }
+}

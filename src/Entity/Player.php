@@ -16,6 +16,8 @@ class Player implements UserInterface, PasswordAuthenticatedUserInterface
     public string $password;
     #[ORM\Column(type: 'json')]
     public array $roles = [];
+    #[ORM\Column(type: 'json')]
+    public array $preferences = [];
     #[ORM\Column(nullable: true)]
     public ?\DateTimeImmutable $lockedAt = null;
     #[ORM\ManyToOne(targetEntity: PlayerUniverse::class)]

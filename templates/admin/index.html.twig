@@ -1,13 +1,41 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/layout.html.twig' %}
 {% block title %}Administration · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="page-heading"><div><p class="eyebrow">CONSOLE SÉCURISÉE</p><h1>Administration</h1><p>Actions restreintes aux administrateurs et enregistrées dans le journal.</p></div></div>
-{% for message in app.flashes('error') %}<p class="alert">{{ message }}</p>{% endfor %}
-<section class="panel">
+<div class="page-heading" id="admin-heading"><div><p class="eyebrow">CENTRE DE CONTRÔLE · TOUS LES UNIVERS</p><h1>Administration</h1><p>Gérez les comptes, la modération, les règles et les catalogues de chaque univers.</p></div></div>
+{% for message in app.flashes('error') %}<p class="flash error" role="alert">{{ message }}</p>{% endfor %}
+<div data-controller="admin-tabs" data-action="hashchange@window->admin-tabs#sync">
+<nav class="admin-tabs" role="tablist" aria-label="Sections d’administration" data-action="keydown->admin-tabs#onKeydown">
+  <button id="tab-overview" type="button" role="tab" aria-controls="admin-overview" aria-selected="true" data-admin-tabs-target="tab" data-panel-id="admin-overview" data-action="click->admin-tabs#select">Vue d’ensemble</button>
+  <button id="tab-reports" type="button" role="tab" aria-controls="admin-reports" aria-selected="false" data-admin-tabs-target="tab" data-panel-id="admin-reports" data-action="click->admin-tabs#select">Modération</button>
+  <button id="tab-players" type="button" role="tab" aria-controls="admin-players" aria-selected="false" data-admin-tabs-target="tab" data-panel-id="admin-players" data-action="click->admin-tabs#select">Joueurs</button>
+  <button id="tab-universes" type="button" role="tab" aria-controls="admin-universes" aria-selected="false" data-admin-tabs-target="tab" data-panel-id="admin-universes" data-action="click->admin-tabs#select">Univers</button>
+  <button id="tab-security" type="button" role="tab" aria-controls="admin-security" aria-selected="false" data-admin-tabs-target="tab" data-panel-id="admin-security" data-action="click->admin-tabs#select">Sécurité</button>
+  <button id="tab-audit" type="button" role="tab" aria-controls="admin-audit" aria-selected="false" data-admin-tabs-target="tab" data-panel-id="admin-audit" data-action="click->admin-tabs#select">Journal</button>
+</nav>
+<section class="panel admin-tab-panel" id="admin-overview" role="tabpanel" aria-labelledby="tab-overview" data-admin-tabs-target="panel">
+<h2>Vue d’ensemble</h2>
+<section class="admin-metrics" aria-label="Indicateurs de la plateforme">
+  <article class="admin-metric"><span>COMPTES</span><strong>{{ playerCount }}</strong><small>{{ suspendedPlayerCount }} suspendu{{ suspendedPlayerCount == 1 ? '' : 's' }}</small></article>
+  <article class="admin-metric"><span>UNIVERS ACTIFS</span><strong>{{ activeUniverseCount }}</strong><small>sur {{ universes|length }} univers au total</small></article>
+  <article class="admin-metric"><span>À MODÉRER</span><strong>{{ openReportCount }}</strong><small>signalement{{ openReportCount == 1 ? '' : 's' }} ouvert{{ openReportCount == 1 ? '' : 's' }}</small></article>
+  <article class="admin-metric"><span>SÉCURITÉ</span><strong>{{ securityIncidentCount }}</strong><small>tentative{{ securityIncidentCount == 1 ? '' : 's' }} d’accès à l’admin</small></article>
+</section>
+<section class="panel admin-operations">
+  <h2>État des opérations</h2><p>État relevé le {{ operations.captured_at|date('d/m/Y H:i:s', 'UTC') }} UTC.</p>
+  <div class="admin-operations-grid">
+    <article class="admin-operation-card"><h3>Base de données</h3><span class="admin-operation-status {{ operations.database_healthy ? 'is-healthy' : 'is-missing' }}">{{ operations.database_healthy ? 'Disponible' : 'Indisponible' }}</span></article>
+    {% for process in operations.processes %}<article class="admin-operation-card"><h3>{{ process.name }}</h3><span class="admin-operation-status {{ process.status == 'healthy' ? 'is-healthy' : (process.status == 'stale' ? 'is-stale' : 'is-missing') }}">{% if process.status == 'healthy' %}Actif{% elseif process.status == 'stale' %}Signal ancien{% else %}Aucun signal{% endif %}</span><p>{% if process.age_seconds is not null %}Dernier signal il y a {{ process.age_seconds }} s{% else %}Aucun battement de vie reçu{% endif %}</p></article>{% endfor %}
+    <article class="admin-operation-card"><h3>Relais en attente</h3><strong>{{ operations.outbox_total }}</strong><p>{{ operations.outbox_overdue }} en retard</p><p>Files : {{ operations.outbox.queue }} · Flottes : {{ operations.outbox.fleet }} · Combats : {{ operations.outbox.combat }} · Univers : {{ operations.outbox.universe }} · Notifications : {{ operations.outbox.notification }}</p></article>
+  </div>
+</section>
+</section>
+<section class="panel admin-tab-panel" id="admin-reports" role="tabpanel" aria-labelledby="tab-reports" data-admin-tabs-target="panel" data-controller="admin-filter">
+
 <h2>Signalements de messages</h2>
 <p>Seuls les messages ayant été signalés par un participant apparaissent ici.</p>
+<div class="admin-search"><label for="report-search">Rechercher</label><input id="report-search" type="search" placeholder="Joueur, guilde, motif…" data-admin-filter-target="query" data-action="input->admin-filter#filter"><output data-admin-filter-target="count"></output></div>
 {% for report in reports %}
-<article class="panel">
+<article class="panel" data-admin-filter-target="row">
 <p><strong>Signalement #{{ report.id }}</strong> · {{ report.createdAt|date('d/m/Y H:i') }} · {{ report.reporter.player.username }}</p>
 <p>{% if report.message.recipient %}Message privé de {{ report.message.sender.player.username }} à {{ report.message.recipient.player.username }}{% else %}Message de la guilde {{ report.message.guild.name }} par {{ report.message.sender.player.username }}{% endif %} · {{ report.message.createdAt|date('d/m/Y H:i') }}</p>
 <blockquote>{{ report.message.content }}</blockquote><p>Motif : {{ report.reason }}</p>
@@ -18,35 +46,90 @@
 </form>
 </article>
 {% else %}<p>Aucun signalement à traiter.</p>{% endfor %}
+<p hidden data-admin-filter-target="empty">Aucun signalement ne correspond à cette recherche.</p>
 </section>
-<section class="panel">
+<section class="panel admin-tab-panel" id="admin-security" role="tabpanel" aria-labelledby="tab-security" data-admin-tabs-target="panel" data-controller="admin-filter">
+  <h2>Signalements de sécurité</h2>
+  <p>Les tentatives d’accès refusées sont à examiner ; les événements déjà examinés restent au journal.</p>
+  <div class="admin-search"><label for="security-search">Rechercher</label><input id="security-search" type="search" placeholder="Compte ou chemin…" data-admin-filter-target="query" data-action="input->admin-filter#filter"><label for="security-auth-filter">Origine</label><select id="security-auth-filter" data-admin-filter-target="filter" data-filter-key="authenticated" data-action="change->admin-filter#filter"><option value="">Toutes</option><option value="yes">Connectée</option><option value="no">Anonyme</option></select><output data-admin-filter-target="count"></output></div>
+  <div class="table-wrap" role="region" tabindex="0" aria-label="Tentatives d’accès administrateur refusées">
+    <table><caption>Accès à l’administration refusés</caption><thead><tr><th scope="col">Date</th><th scope="col">Compte</th><th scope="col">Méthode</th><th scope="col">Chemin demandé</th><th scope="col">Action</th></tr></thead><tbody>
+    {% for incident in securityIncidents|slice(0, 50) %}<tr data-admin-filter-target="row" data-filter-authenticated="{{ incident.details.authenticated|default(false) ? 'yes' : 'no' }}"><td>{{ incident.createdAt|date('d/m/Y H:i:s') }}</td><td>{{ incident.actor ? incident.actor.username : 'Visiteur non connecté' }}</td><td>{{ incident.details.method|default('—') }}</td><td><code>{{ incident.details.path|default('/admin') }}</code></td><td><form method="post" action="{{ path('app_admin_security_review',{id:incident.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('admin_security_review_'~incident.id) }}"><button>Marquer examinée</button></form></td></tr>{% else %}<tr><td colspan="5">Aucune tentative refusée en attente d’examen.</td></tr>{% endfor %}
+    </tbody></table>
+  </div>
+  <p hidden data-admin-filter-target="empty">Aucun incident ne correspond à cette recherche.</p>
+</section>
+<section class="panel admin-tab-panel" id="admin-players" role="tabpanel" aria-labelledby="tab-players" data-admin-tabs-target="panel" data-controller="admin-filter">
 <h2>Comptes joueurs</h2>
-<div class="table-wrap" role="region" tabindex="0" aria-label="Tableau défilant horizontalement"><table><caption>Comptes joueurs</caption><thead><tr><th scope="col">Joueur</th><th scope="col">Courriel</th><th scope="col">État</th><th scope="col">Action</th></tr></thead><tbody>
-{% for player in players %}<tr><td>{{ player.username }}</td><td>{{ player.email }}</td><td>{{ player.lockedAt ? 'Suspendu' : 'Actif' }}</td><td>
-{% if 'ROLE_ADMIN' not in player.roles %}<form method="post" action="{{ path('app_admin_player_suspend',{id:player.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('admin_suspend_'~player.id) }}"><input type="hidden" name="suspend" value="{{ player.lockedAt ? '0' : '1' }}"><button>{{ player.lockedAt ? 'Réactiver' : 'Suspendre' }}</button></form>{% else %}Administrateur{% endif %}
-</td></tr>{% endfor %}
+<div class="admin-search"><label for="player-search">Rechercher</label><input id="player-search" type="search" placeholder="Pseudo, courriel…" data-admin-filter-target="query" data-action="input->admin-filter#filter"><label for="player-state-filter">État</label><select id="player-state-filter" data-admin-filter-target="filter" data-filter-key="status" data-action="change->admin-filter#filter"><option value="">Tous</option><option value="active">Actif</option><option value="suspended">Suspendu</option></select><label for="player-role-filter">Rôle</label><select id="player-role-filter" data-admin-filter-target="filter" data-filter-key="role" data-action="change->admin-filter#filter"><option value="">Tous</option><option value="admin">Administrateur</option><option value="player">Joueur</option></select><output data-admin-filter-target="count"></output></div>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Tableau défilant horizontalement"><table><caption>Comptes joueurs</caption><thead><tr><th scope="col">Joueur</th><th scope="col">Courriel</th><th scope="col">État</th><th scope="col">Rôle</th><th scope="col">Actions</th></tr></thead><tbody>
+{% for player in players %}<tr data-admin-filter-target="row" data-filter-status="{{ player.lockedAt ? 'suspended' : 'active' }}" data-filter-role="{{ 'ROLE_ADMIN' in player.roles ? 'admin' : 'player' }}"><td>{{ player.username }}</td><td>{{ player.email }}</td><td>{{ player.lockedAt ? 'Suspendu' : 'Actif' }}</td><td>{% if 'ROLE_ADMIN' in player.roles %}<span class="badge">Administrateur</span>{% else %}<span class="badge">Joueur</span>{% endif %}</td><td class="admin-player-actions">
+{% if player.id == app.user.id %}<span>Compte courant</span>{% else %}
+<form method="post" action="{{ path('app_admin_player_role',{id:player.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('admin_role_'~player.id) }}"><input type="hidden" name="role" value="{{ 'ROLE_ADMIN' in player.roles ? 'demote' : 'promote' }}"><button class="{{ 'ROLE_ADMIN' in player.roles ? 'secondary' : 'primary' }}">{{ 'ROLE_ADMIN' in player.roles ? 'Retirer admin' : 'Promouvoir admin' }}</button></form>
+{% if 'ROLE_ADMIN' not in player.roles %}<form method="post" action="{{ path('app_admin_player_suspend',{id:player.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('admin_suspend_'~player.id) }}"><input type="hidden" name="suspend" value="{{ player.lockedAt ? '0' : '1' }}"><button>{{ player.lockedAt ? 'Réactiver' : 'Suspendre' }}</button></form>{% endif %}
+{% endif %}
+</td></tr>{% else %}<tr><td colspan="5">Aucun compte joueur.</td></tr>{% endfor %}
 </tbody></table></div>
+<p hidden data-admin-filter-target="empty">Aucun compte ne correspond à cette recherche.</p>
 </section>
-<section class="panel">
-<h2>Univers</h2>
+<section class="panel admin-tab-panel" id="admin-universes" role="tabpanel" aria-labelledby="tab-universes" data-admin-tabs-target="panel" data-controller="admin-filter">
+<h2>Tous les univers</h2>
+<div class="admin-search"><label for="universe-search">Rechercher</label><input id="universe-search" type="search" placeholder="Nom ou code…" data-admin-filter-target="query" data-action="input->admin-filter#filter"><label for="universe-state-filter">État</label><select id="universe-state-filter" data-admin-filter-target="filter" data-filter-key="status" data-action="change->admin-filter#filter"><option value="">Tous</option><option value="active">Actif</option><option value="closed">Fermé</option></select><output data-admin-filter-target="count"></output></div>
 <p>Tu peux planifier ou retirer une date de fermeture. Un univers déjà fermé reste fermé.</p>
-{% for universe in universes %}<article class="panel"><h3>{{ universe.name }} · {{ universe.status }}</h3><form method="post" action="{{ path('app_admin_universe_schedule',{id:universe.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('admin_universe_'~universe.id) }}"><label for="start-{{ universe.id }}">Ouverture (UTC)</label><input id="start-{{ universe.id }}" type="datetime-local" name="starts_at" value="{{ universe.startsAt ? universe.startsAt|date('Y-m-d\\TH:i', 'UTC') : '' }}"><label for="end-{{ universe.id }}">Fermeture planifiée (UTC)</label><input id="end-{{ universe.id }}" type="datetime-local" name="ends_at" value="{{ universe.endsAt ? universe.endsAt|date('Y-m-d\\TH:i', 'UTC') : '' }}"><button>Enregistrer le calendrier</button></form>
+<article class="panel admin-create-universe" id="admin-universe-create">
+  <h3>Créer un univers</h3>
+  <p>La vitesse augmente la production et réduit les durées. Les nouveaux systèmes auront neuf positions planétaires libres.</p>
+  <form method="post" action="{{ path('app_admin_universe_create') }}">
+    <input type="hidden" name="_token" value="{{ csrf_token('admin_create_universe') }}">
+    <div><label for="new-universe-name">Nom affiché</label><input id="new-universe-name" name="name" type="text" minlength="3" maxlength="100" autocomplete="off" required></div>
+    <div><label for="new-universe-slug">Code unique</label><input id="new-universe-slug" name="slug" type="text" pattern="[a-z0-9]+(-[a-z0-9]+)*" maxlength="64" autocapitalize="none" autocomplete="off" aria-describedby="universe-slug-help" required><small id="universe-slug-help">Minuscules, chiffres et tirets, par exemple « delta-1 ».</small></div>
+    <div><label for="new-universe-profile">Profil de règles</label><select id="new-universe-profile" name="profile" required>{% for profile in universeProfiles %}<option value="{{ profile.slug }}">{{ profile.name }}</option>{% endfor %}</select></div>
+    <div><label for="new-universe-galaxies">Nombre de galaxies</label><input id="new-universe-galaxies" name="galaxies" type="number" min="1" max="5" value="1" required></div>
+    <div><label for="new-universe-systems">Systèmes par galaxie</label><input id="new-universe-systems" name="systems_per_galaxy" type="number" min="1" max="100" value="12" required></div>
+    <button class="primary">Créer l’univers</button>
+  </form>
+</article>
+{% for universe in universes %}<article class="panel admin-universe-card" data-admin-filter-target="row" data-filter-status="{{ universe.status }}"><h3>{{ universe.name }} · {{ universe.status }}</h3><p><a class="secondary" href="{{ path('app_admin_catalogue',{id:universe.id}) }}">Équilibrer les catalogues de cet univers</a></p><form method="post" action="{{ path('app_admin_universe_schedule',{id:universe.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('admin_universe_'~universe.id) }}"><label for="start-{{ universe.id }}">Ouverture (UTC)</label><input id="start-{{ universe.id }}" type="datetime-local" name="starts_at" value="{{ universe.startsAt ? universe.startsAt|date('Y-m-d\\TH:i', 'UTC') : '' }}"><label for="end-{{ universe.id }}">Fermeture planifiée (UTC)</label><input id="end-{{ universe.id }}" type="datetime-local" name="ends_at" value="{{ universe.endsAt ? universe.endsAt|date('Y-m-d\\TH:i', 'UTC') : '' }}"><button>Enregistrer le calendrier</button></form>
 {% set config = universeConfigs[universe.id] %}
 <form method="post" action="{{ path('app_admin_universe_settings',{id:universe.id}) }}">
 <input type="hidden" name="_token" value="{{ csrf_token('admin_settings_'~universe.id) }}">
 <h4>Règles de jeu</h4>
-{% for key,label in {'building_time':'Durée bâtiments','research_time':'Durée recherches','ship_build_time':'Durée vaisseaux','resource_production':'Production ressources','travel_time':'Durée trajets'} %}
-<label for="{{ key }}-{{ universe.id }}">{{ label }} (×)</label><input id="{{ key }}-{{ universe.id }}" type="number" name="multipliers[{{ key }}]" min="0.01" max="10" step="0.01" value="{{ config.multipliers[key] }}" required>
+{% set selectedSpeedProfile = 'custom' %}
+{% for profile in universeProfiles %}
+  {% set profileDuration = (1 / profile.speed)|round(3) %}
+  {% if profileDuration == config.multipliers.building_time|round(3) and profileDuration == config.multipliers.research_time|round(3) and profileDuration == config.multipliers.ship_build_time|round(3) and profileDuration == config.multipliers.travel_time|round(3) and profile.speed == config.multipliers.resource_production|round(3) %}
+    {% set selectedSpeedProfile = profile.slug %}
+  {% endif %}
 {% endfor %}
+<div data-controller="admin-speed">
+  <label for="speed-profile-{{ universe.id }}">Profil de vitesse</label>
+  <select id="speed-profile-{{ universe.id }}" name="speed_profile" data-admin-speed-target="profile" data-action="change->admin-speed#apply">
+    <option value="custom" {{ selectedSpeedProfile == 'custom' ? 'selected' : '' }}>Personnalisé</option>
+    {% for profile in universeProfiles %}<option value="{{ profile.slug }}" data-speed="{{ profile.speed }}" {{ selectedSpeedProfile == profile.slug ? 'selected' : '' }}>{{ profile.name }}</option>{% endfor %}
+  </select>
+  <small>Tous les champs affichent la vitesse ×N. Par exemple, ×40 règle la production à ×40 et divise les durées par 40. Modifier une valeur passe en personnalisé.</small>
+  {% for key,label in {'building_time':'Vitesse bâtiments','research_time':'Vitesse recherches','ship_build_time':'Vitesse vaisseaux','resource_production':'Vitesse production ressources','travel_time':'Vitesse trajets'} %}
+  <label for="{{ key }}-{{ universe.id }}">{{ label }} (×)</label><input id="{{ key }}-{{ universe.id }}" type="number" name="multipliers[{{ key }}]" data-admin-speed-target="multiplier" data-multiplier-key="{{ key }}" data-action="input->admin-speed#markCustom" min="0.01" max="40" step="0.001" value="{{ key == 'resource_production' ? config.multipliers[key] : (1 / config.multipliers[key])|round(3) }}" required>
+  {% endfor %}
+</div>
 <label for="planets-{{ universe.id }}">Colonies maximum</label><input id="planets-{{ universe.id }}" type="number" name="limits[max_planets]" min="1" max="50" value="{{ config.limits.max_planets }}" required>
 <label for="fleet-{{ universe.id }}">Vaisseaux maximum par flotte</label><input id="fleet-{{ universe.id }}" type="number" name="limits[max_fleet_size]" min="1" max="10000" value="{{ config.limits.max_fleet_size }}" required>
 {% for key,label in {'guilds_enabled':'Guildes autorisées','planet_conquest':'Conquête de planètes PNJ autorisée'} %}
 <input type="hidden" name="features[{{ key }}]" value="0"><label><input type="checkbox" name="features[{{ key }}]" value="1" {{ config.features[key] ? 'checked' : '' }}> {{ label }}</label>
 {% endfor %}
-<button class="primary">Enregistrer les règles</button></form></article>{% endfor %}
+<button class="primary">Enregistrer les règles</button></form>
+<details class="admin-danger-zone"><summary>Zone de suppression définitive</summary><p>Cette action supprime l’univers et toutes ses données de jeu. Elle ne peut pas être annulée.</p><form method="post" action="{{ path('app_admin_universe_delete',{id:universe.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('admin_delete_universe_'~universe.id) }}"><label for="confirm-universe-{{ universe.id }}">Saisis <strong>{{ universe.name }}</strong> pour confirmer</label><input id="confirm-universe-{{ universe.id }}" name="confirmation" type="text" autocomplete="off" required><button class="danger">Supprimer définitivement l’univers</button></form></details></article>{% endfor %}
+<p hidden data-admin-filter-target="empty">Aucun univers ne correspond à cette recherche.</p>
 </section>
-<section class="panel">
-<h2>Journal d’audit</h2><div class="table-wrap" role="region" tabindex="0" aria-label="Tableau défilant horizontalement"><table><caption>Journal des actions administratives</caption><thead><tr><th scope="col">Date</th><th scope="col">Administrateur</th><th scope="col">Action</th><th scope="col">Cible</th><th scope="col">Détails</th></tr></thead><tbody>
-{% for entry in auditLogs %}<tr><td>{{ entry.createdAt|date('d/m/Y H:i:s') }}</td><td>{{ entry.actor ? entry.actor.username : 'Compte supprimé' }}</td><td>{{ entry.action }}</td><td>{{ entry.targetType }} #{{ entry.targetId }}</td><td>{{ entry.details|json_encode }}</td></tr>{% else %}<tr><td colspan="5">Aucune action consignée.</td></tr>{% endfor %}
-</tbody></table></div></section>
+<section class="panel admin-tab-panel" id="admin-audit" role="tabpanel" aria-labelledby="tab-audit" data-admin-tabs-target="panel" data-controller="admin-filter">
+<h2>Journal d’audit</h2>
+<div class="admin-search"><label for="audit-search">Rechercher dans le journal</label><input id="audit-search" type="search" placeholder="Administrateur, cible ou détails…" data-admin-filter-target="query" data-action="input->admin-filter#filter"><label for="audit-action-filter">Action</label><select id="audit-action-filter" data-admin-filter-target="filter" data-filter-key="action" data-action="change->admin-filter#filter"><option value="">Toutes les actions</option>{% for action in auditActions %}<option value="{{ action }}">{{ action }}</option>{% endfor %}</select><output data-admin-filter-target="count"></output></div>
+<div class="admin-audit-actions"><button type="button" class="secondary" data-action="click->admin-filter#exportCsv">Exporter les lignes visibles en CSV</button></div>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Tableau défilant horizontalement"><table><caption>Journal des actions administratives</caption><thead><tr><th scope="col">Date</th><th scope="col">Administrateur</th><th scope="col">Action</th><th scope="col">Cible</th><th scope="col">Détails</th></tr></thead><tbody>
+{% for entry in auditLogs %}<tr data-admin-filter-target="row" data-filter-action="{{ entry.action }}"><td>{{ entry.createdAt|date('d/m/Y H:i:s') }}</td><td>{{ entry.actor ? entry.actor.username : 'Compte supprimé' }}</td><td>{{ entry.action }}</td><td>{{ entry.targetType }} #{{ entry.targetId }}</td><td>{{ entry.details|json_encode }}</td></tr>{% else %}<tr><td colspan="5">Aucune action consignée.</td></tr>{% endfor %}
+</tbody></table></div>
+<p hidden data-admin-filter-target="empty">Aucune entrée ne correspond à cette recherche.</p>
+</section>
+</div>
+</div>
 {% endblock %}

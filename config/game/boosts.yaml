@@ -1,0 +1,30 @@
+inventory_capacity: 3
+risk_mission_daily_limit: 1
+risk_mission_timezone: UTC
+duration_reduction_ratio: 0.25
+
+events:
+  timezone: UTC
+  weekday: monday
+  start_time: '00:00'
+  default_duration_seconds: 604800
+  max_concurrent: 2
+  first_occurrence_at: '2026-11-02T00:00:00Z'
+  weekly_rotation:
+    - key: exploration
+      format: competitive
+      reward_mode: top3
+      contribution_metric: new_systems_discovered
+      global_goal: 10
+      duration_seconds: 604800
+    - key: combat
+      format: individual
+      reward_mode: threshold
+      contribution_metric: damage_dealt
+      threshold_value: 5000
+      duration_seconds: 604800
+    - key: transport
+      format: collective
+      reward_mode: all_contributors
+      contribution_metric: freight_delivered
+      duration_seconds: 604800

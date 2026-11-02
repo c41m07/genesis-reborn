@@ -24,7 +24,7 @@ final class SocialMessageController extends AbstractController
             }
             try {
                 if ($action === 'report') {
-                    $admin->reportPrivateMessage($membership, (int) $request->request->get('message_id'), (string) $request->request->get('reason'));
+                    $admin->reportMessage($membership, (int) $request->request->get('message_id'), (string) $request->request->get('reason'));
                     $this->addFlash('success', 'Signalement transmis à la modération.');
                     return $this->redirectToRoute('app_messages', ['with' => (int) $request->request->get('with')]);
                 }
@@ -37,6 +37,7 @@ final class SocialMessageController extends AbstractController
                 if ($action === 'guild') {
                     $messages->sendGuild($membership, (string) $request->request->get('content'));
                     $this->addFlash('success', 'Message envoyé à la guilde.');
+                    return $this->redirectToRoute('app_messages', ['channel' => 'guild']);
                 } else {
                     throw new \DomainException('Action de message inconnue.');
                 }
@@ -51,7 +52,8 @@ final class SocialMessageController extends AbstractController
             $repo->all(PlayerUniverse::class, ['universe' => $membership->universe]),
             static fn (PlayerUniverse $player): bool => $player->id !== $membership->id,
         ));
-        $peerId = $request->query->getInt('with');
+        $activeChannel = $request->query->getString('channel') === 'guild' ? 'guild' : 'private';
+        $peerId = $activeChannel === 'guild' ? 0 : $request->query->getInt('with');
         $peer = null;
         $conversation = [];
         if ($peerId > 0) {
@@ -74,6 +76,7 @@ final class SocialMessageController extends AbstractController
             'guild' => $guild,
             'guildConversation' => $guildConversation,
             'unreadPrivate' => $messages->unreadPrivateCount($membership),
+            'activeChannel' => $activeChannel,
         ]);
     }
 }

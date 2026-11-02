@@ -4,8 +4,11 @@ namespace App\Controller;
 use App\Entity\{AdminAuditLog, MessageReport, Player, Universe};
 use App\Repository\GameRepository;
 use App\Service\Admin\AdminService;
+use App\Service\Admin\AdminOperationsService;
+use App\Service\Admin\CatalogBalanceService;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Universe\UniverseLifecycleService;
+use App\Service\Universe\UniverseCreationService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{Request, Response};
 use Symfony\Component\Routing\Attribute\Route;
@@ -16,20 +19,103 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class AdminController extends AbstractController
 {
     #[Route('', name: '_index', methods: ['GET'])]
-    public function index(GameRepository $repo, GameCatalog $catalog, AdminService $admin): Response
+    public function index(GameRepository $repo, GameCatalog $catalog, AdminService $admin, AdminOperationsService $operations): Response
     {
         $reports = $repo->all(MessageReport::class, ['status' => 'open'], ['createdAt' => 'DESC']);
         $admin->recordReportViews($this->getUser(), $reports);
         $universes = $repo->all(Universe::class, [], ['id' => 'ASC']);
         $universeConfigs = [];
         foreach ($universes as $universe) { $universeConfigs[$universe->id] = $catalog->forUniverse($universe); }
+        $players = $repo->all(Player::class, [], ['id' => 'DESC']);
+        $activeUniverseCount = count(array_filter($universes, static fn (Universe $universe): bool => $universe->status === 'active'));
+        $suspendedPlayerCount = count(array_filter($players, static fn (Player $player): bool => $player->lockedAt !== null));
+        $auditLogs = $repo->all(AdminAuditLog::class, [], ['createdAt' => 'DESC']);
+        $reviewedIncidentIds = [];
+        foreach ($auditLogs as $entry) {
+            if ($entry->action === 'admin_access_reviewed' && $entry->targetType === 'admin_access_incident') {
+                $reviewedIncidentIds[$entry->targetId] = true;
+            }
+        }
+        $securityIncidents = array_values(array_filter($auditLogs, static fn (AdminAuditLog $entry): bool => $entry->action === 'admin_access_denied' && !isset($reviewedIncidentIds[$entry->id])));
+        $auditActions = array_values(array_unique(array_map(static fn (AdminAuditLog $entry): string => $entry->action, $auditLogs)));
+        sort($auditActions);
+        $operationsSnapshot = $operations->snapshot();
         return $this->render('admin/index.html.twig', [
-            'players' => $repo->all(Player::class, [], ['id' => 'DESC']),
+            'players' => $players,
+            'playerCount' => count($players),
+            'suspendedPlayerCount' => $suspendedPlayerCount,
+            'activeUniverseCount' => $activeUniverseCount,
+            'openReportCount' => count($reports),
+            'securityIncidents' => $securityIncidents,
+            'securityIncidentCount' => count($securityIncidents),
+            'operations' => $operationsSnapshot,
+            'auditActions' => $auditActions,
             'universes' => $universes,
             'universeConfigs' => $universeConfigs,
+            'universeProfiles' => UniverseCreationService::profiles(),
             'reports' => $reports,
-            'auditLogs' => $repo->all(AdminAuditLog::class, [], ['createdAt' => 'DESC']),
+            'auditLogs' => $auditLogs,
         ]);
+    }
+
+    #[Route('/universes/{id}/catalogue', name: '_catalogue', methods: ['GET'])]
+    public function catalogue(int $id, GameRepository $repo, CatalogBalanceService $balance): Response
+    {
+        $universe=$repo->find(Universe::class,$id);
+        if(!$universe instanceof Universe)throw $this->createNotFoundException('Univers introuvable.');
+        return $this->render('admin/catalogue.html.twig',['universe'=>$universe,'catalogues'=>$balance->entries($universe),'adminUniverses'=>$repo->all(Universe::class,[],['id'=>'ASC'])]);
+    }
+
+    #[Route('/universes/{id}/catalogue/{group}/{slug}', name: '_catalogue_save', methods: ['POST'])]
+    public function saveCatalogue(int $id,string $group,string $slug,Request $request,CatalogBalanceService $balance):Response
+    {
+        $tokenId='admin_catalogue_'.$id.'_'.$group.'_'.$slug;
+        if(!$this->isCsrfTokenValid($tokenId,$request->request->get('_token')))throw $this->createAccessDeniedException('Formulaire expiré.');
+        try{if($request->request->getBoolean('reset'))$balance->reset($this->getUser(),$id,$group,$slug);else $balance->save($this->getUser(),$id,$group,$slug,$request->request->all('values'));$this->addFlash('success','Équilibrage enregistré pour cet univers.');}
+        catch(\DomainException $error){$this->addFlash('error',$error->getMessage());}
+        return $this->redirectToRoute('app_admin_catalogue',['id'=>$id,'_fragment'=>$group.'-'.$slug]);
+    }
+
+    #[Route('/security-incidents/{id}/review', name: '_security_review', methods: ['POST'])]
+    public function reviewSecurityIncident(int $id, Request $request, AdminService $admin): Response
+    {
+        if (!$this->isCsrfTokenValid('admin_security_review_'.$id, $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Formulaire expiré.');
+        }
+
+        try {
+            $admin->reviewSecurityIncident($this->getUser(), $id);
+            $this->addFlash('success', 'Tentative marquée comme examinée.');
+        } catch (\DomainException $error) {
+            $this->addFlash('error', $error->getMessage());
+        }
+
+        return $this->redirectToRoute('app_admin_index', ['_fragment' => 'admin-security']);
+    }
+
+    #[Route('/players/{id}/role', name: '_player_role', methods: ['POST'])]
+    public function playerRole(int $id, Request $request, AdminService $admin): Response
+    {
+        if (!$this->isCsrfTokenValid('admin_role_'.$id, $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Formulaire expiré.');
+        }
+
+        try {
+            $requestedRole = (string) $request->request->get('role');
+            if (!in_array($requestedRole, ['promote', 'demote'], true)) {
+                throw new \DomainException('Action de rôle inconnue.');
+            }
+            $actor = $this->getUser();
+            if (!$actor instanceof Player) {
+                throw $this->createAccessDeniedException();
+            }
+            $admin->setPlayerAdminRole($actor, $id, $requestedRole === 'promote');
+            $this->addFlash('success', $requestedRole === 'promote' ? 'Rôle administrateur accordé.' : 'Rôle administrateur retiré.');
+        } catch (\DomainException $error) {
+            $this->addFlash('error', $error->getMessage());
+        }
+
+        return $this->redirectToRoute('app_admin_index', ['_fragment' => 'admin-players']);
     }
 
     #[Route('/players/{id}/suspension', name: '_player_suspend', methods: ['POST'])]
@@ -63,6 +149,47 @@ final class AdminController extends AbstractController
         }
         try { $admin->setUniverseSettings($this->getUser(), $id, $request->request->all()); }
         catch (\Exception $error) { $this->addFlash('error', $error->getMessage()); }
+        return $this->redirectToRoute('app_admin_index');
+    }
+
+    #[Route('/universes', name: '_universe_create', methods: ['POST'])]
+    public function createUniverse(Request $request, AdminService $admin): Response
+    {
+        if (!$this->isCsrfTokenValid('admin_create_universe', $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Formulaire expiré.');
+        }
+
+        try {
+            $admin->createUniverse(
+                $this->getUser(),
+                (string) $request->request->get('name'),
+                (string) $request->request->get('slug'),
+                (string) $request->request->get('profile'),
+                (int) $request->request->get('galaxies'),
+                (int) $request->request->get('systems_per_galaxy'),
+            );
+            $this->addFlash('success', 'Univers créé et prêt à accueillir des joueurs.');
+        } catch (\DomainException $error) {
+            $this->addFlash('error', $error->getMessage());
+        }
+
+        return $this->redirectToRoute('app_admin_index', ['_fragment' => 'admin-universes']);
+    }
+
+    #[Route('/universes/{id}/delete', name: '_universe_delete', methods: ['POST'])]
+    public function deleteUniverse(int $id, Request $request, AdminService $admin): Response
+    {
+        if (!$this->isCsrfTokenValid('admin_delete_universe_'.$id, $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Formulaire expiré.');
+        }
+
+        try {
+            $admin->deleteUniverse($this->getUser(), $id, (string) $request->request->get('confirmation'));
+            $this->addFlash('success', 'Univers supprimé définitivement avec toutes ses données de jeu.');
+        } catch (\DomainException $error) {
+            $this->addFlash('error', $error->getMessage());
+        }
+
         return $this->redirectToRoute('app_admin_index');
     }
 

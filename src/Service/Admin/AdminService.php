@@ -5,6 +5,7 @@ use App\Entity\{AdminAuditLog, MessageReport, Player, PlayerUniverse, SocialMess
 use App\Manager\GameManager;
 use App\Repository\GameRepository;
 use App\Service\Universe\UniverseLifecycleService;
+use App\Service\Universe\UniverseCreationService;
 use Psr\Clock\ClockInterface;
 
 final class AdminService
@@ -14,6 +15,8 @@ final class AdminService
         private GameRepository $repo,
         private UniverseLifecycleService $lifecycle,
         private ClockInterface $clock,
+        private DatabaseScopePurger $purger,
+        private UniverseCreationService $universeCreation,
     ) {}
 
     public function reportMessage(PlayerUniverse $reporter, int $messageId, string $reason): void
@@ -98,6 +101,105 @@ final class AdminService
         });
     }
 
+    public function reviewSecurityIncident(Player $admin, int $incidentId): void
+    {
+        $this->manager->transaction(function () use ($admin, $incidentId): void {
+            $incident = $this->repo->find(AdminAuditLog::class, $incidentId);
+            if (!$incident instanceof AdminAuditLog || $incident->action !== 'admin_access_denied') {
+                throw new \DomainException('Signalement de sécurité introuvable.');
+            }
+            $this->manager->lock($incident);
+            if ($this->repo->one(AdminAuditLog::class, ['action' => 'admin_access_reviewed', 'targetType' => 'admin_access_incident', 'targetId' => $incidentId]) !== null) {
+                throw new \DomainException('Ce signalement a déjà été examiné.');
+            }
+
+            $this->audit($admin, 'admin_access_reviewed', 'admin_access_incident', $incidentId, [
+                'incident_id' => $incidentId,
+                'path' => $incident->details['path'] ?? '/admin',
+            ]);
+            $this->manager->flush();
+        });
+    }
+
+    public function setPlayerAdminRole(Player $admin, int $targetId, bool $promote): void
+    {
+        $this->manager->transaction(function () use ($admin, $targetId, $promote): void {
+            $target = $this->repo->find(Player::class, $targetId);
+            if (!$target instanceof Player) {
+                throw new \DomainException('Joueur introuvable.');
+            }
+            if ($target->id === $admin->id) {
+                throw new \DomainException('Tu ne peux pas modifier ton propre rôle administrateur.');
+            }
+
+            $playersToLock = [$admin, $target];
+            usort($playersToLock, static fn (Player $first, Player $second): int => $first->id <=> $second->id);
+            foreach ($playersToLock as $playerToLock) {
+                $this->manager->lock($playerToLock);
+            }
+            if (!in_array('ROLE_ADMIN', $admin->roles, true) || $admin->lockedAt !== null) {
+                throw new \DomainException('Ton rôle administrateur a changé ; recharge la page avant de réessayer.');
+            }
+
+            $isAdmin = in_array('ROLE_ADMIN', $target->roles, true);
+            if ($isAdmin === $promote) {
+                throw new \DomainException($promote ? 'Ce joueur est déjà administrateur.' : 'Ce joueur n’est pas administrateur.');
+            }
+
+            if ($promote) {
+                $target->roles = array_values(array_unique([...$target->roles, 'ROLE_ADMIN']));
+            } else {
+                $activeAdmins = array_filter(
+                    $this->repo->all(Player::class),
+                    static fn (Player $player): bool => $player->lockedAt === null && in_array('ROLE_ADMIN', $player->roles, true),
+                );
+                if ($target->lockedAt === null && count($activeAdmins) <= 1) {
+                    throw new \DomainException('Impossible de retirer le dernier rôle administrateur actif.');
+                }
+                $target->roles = array_values(array_filter($target->roles, static fn (string $role): bool => $role !== 'ROLE_ADMIN'));
+            }
+
+            $this->audit($admin, $promote ? 'player_promote_admin' : 'player_remove_admin', 'player', $targetId, ['username' => $target->username]);
+            $this->manager->flush();
+        });
+    }
+
+    public function createUniverse(Player $admin, string $name, string $slug, string $profile, int $galaxyCount, int $systemsPerGalaxy): Universe
+    {
+        return $this->manager->transaction(function () use ($admin, $name, $slug, $profile, $galaxyCount, $systemsPerGalaxy): Universe {
+            $universe = $this->universeCreation->create($name, $slug, $profile, $galaxyCount, $systemsPerGalaxy);
+            $this->audit($admin, 'universe_created', 'universe', $universe->id, [
+                'slug' => $universe->slug,
+                'profile' => $profile,
+                'galaxies' => $galaxyCount,
+                'systems_per_galaxy' => $systemsPerGalaxy,
+            ]);
+            $this->manager->flush();
+
+            return $universe;
+        });
+    }
+
+    public function deleteUniverse(Player $admin, int $universeId, string $confirmation): void
+    {
+        $this->manager->transaction(function () use ($admin, $universeId, $confirmation): void {
+            $universe = $this->repo->find(Universe::class, $universeId);
+            if (!$universe instanceof Universe) {
+                throw new \DomainException('Univers introuvable.');
+            }
+
+            $this->manager->lock($universe);
+            if (!hash_equals($universe->name, trim($confirmation))) {
+                throw new \DomainException('Le nom saisi ne correspond pas à cet univers.');
+            }
+
+            $deletedName = $universe->name;
+            $this->purger->purge('universe', [$universeId], ['player']);
+            $this->audit($admin, 'universe_permanently_deleted', 'universe', $universeId, ['name' => $deletedName]);
+            $this->manager->flush();
+        });
+    }
+
     public function setUniverseSchedule(Player $admin, int $universeId, ?\DateTimeImmutable $startsAt, ?\DateTimeImmutable $endsAt): void
     {
         $this->manager->transaction(function () use ($admin, $universeId, $startsAt, $endsAt): void {
@@ -117,13 +219,37 @@ final class AdminService
     public function setUniverseSettings(Player $admin, int $universeId, array $input): void
     {
         $multiplierKeys = ['building_time', 'research_time', 'ship_build_time', 'resource_production', 'travel_time'];
+        $speedProfile = trim((string) ($input['speed_profile'] ?? 'custom'));
+        $speed = null;
+        if ($speedProfile !== '' && $speedProfile !== 'custom') {
+            foreach (UniverseCreationService::profiles() as $profile) {
+                if ($profile['slug'] === $speedProfile) {
+                    $speed = $profile['speed'];
+                    break;
+                }
+            }
+            if ($speed === null) {
+                throw new \DomainException('Profil de vitesse inconnu.');
+            }
+
+            foreach ($multiplierKeys as $key) {
+                $submittedSpeed = filter_var($input['multipliers'][$key] ?? null, FILTER_VALIDATE_FLOAT);
+                if ($submittedSpeed === false || abs((float) $submittedSpeed - $speed) > 0.0001) {
+                    $speed = null;
+                    break;
+                }
+            }
+        }
+
         $multipliers = [];
         foreach ($multiplierKeys as $key) {
-            $value = filter_var($input['multipliers'][$key] ?? null, FILTER_VALIDATE_FLOAT);
-            if ($value === false || !is_finite((float) $value) || $value < 0.01 || $value > 10) {
-                throw new \DomainException('Chaque multiplicateur doit être compris entre 0,01 et 10.');
+            $value = $speed ?? filter_var($input['multipliers'][$key] ?? null, FILTER_VALIDATE_FLOAT);
+            if ($value === false || !is_finite((float) $value) || $value < 0.01 || $value > 40) {
+                throw new \DomainException('Chaque vitesse doit être comprise entre 0,01 et 40.');
             }
-            $multipliers[$key] = (float) $value;
+
+            $speedValue = (float) $value;
+            $multipliers[$key] = $key === 'resource_production' ? $speedValue : 1 / $speedValue;
         }
         $maxPlanets = filter_var($input['limits']['max_planets'] ?? null, FILTER_VALIDATE_INT);
         $maxFleet = filter_var($input['limits']['max_fleet_size'] ?? null, FILTER_VALIDATE_INT);
@@ -144,6 +270,7 @@ final class AdminService
                 throw new \DomainException('Univers introuvable ou fermé.');
             }
             $this->manager->lock($universe);
+            $settings['catalog_overrides']=$universe->gameSettings['catalog_overrides']??[];
             $universe->gameSettings = $settings;
             $this->audit($admin, 'universe_settings_change', 'universe', $universeId, $settings);
             $this->manager->flush();

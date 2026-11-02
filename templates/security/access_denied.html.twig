@@ -1,0 +1,10 @@
+{% extends 'base.html.twig' %}
+{% block title %}Accès refusé · Genesis Reborn{% endblock %}
+{% block body %}
+<section class="panel access-denied-panel" aria-labelledby="access-denied-title">
+  <p class="eyebrow">AUTORISATION REQUISE</p>
+  <h1 id="access-denied-title">Accès refusé</h1>
+  <p>Cette console est réservée aux comptes administrateurs. Si tu penses qu’il s’agit d’une erreur, contacte un administrateur.</p>
+  <p><a class="primary" href="{{ path('app_home') }}">Retourner au jeu</a></p>
+</section>
+{% endblock %}

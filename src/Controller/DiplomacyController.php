@@ -25,6 +25,6 @@ final class DiplomacyController extends AbstractController
         }
         $players=[];foreach($repo->all(PlayerUniverse::class,['universe'=>$m->universe]) as $pu) if($pu->id!==$m->id) $players[]=['player'=>$pu,'contract'=>$relations->contract($m,$pu),'allied'=>$relations->allied($m,$pu)];
         $own=$relations->guild($m);$guilds=[];foreach($repo->all(Guild::class,['universe'=>$m->universe]) as $g) $guilds[]=['guild'=>$g,'status'=>$relations->guildStatus($own,$g),'members'=>$repo->all(GuildMember::class,['guild'=>$g])];
-        return $this->render('player/diplomacy.html.twig',['membership'=>$m,'players'=>$players,'guilds'=>$guilds,'own'=>$own,'enabled'=>$catalog->get('universes',$m->universe->slug)['features']['guilds_enabled']]);
+        return $this->render('player/diplomacy.html.twig',['membership'=>$m,'players'=>$players,'guilds'=>$guilds,'own'=>$own,'enabled'=>$catalog->forUniverse($m->universe)['features']['guilds_enabled']]);
     }
 }
