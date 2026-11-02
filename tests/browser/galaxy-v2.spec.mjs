@@ -17,12 +17,29 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   await page.getByRole('button', { name: /Connexion/ }).click();
   await page.locator('article.universe-card').filter({ has: page.getByRole('heading', { name: /Turbo/ }) }).getByRole('button').click();
 
+  await expect(page.getByRole('navigation', {name:'Navigation principale'}).getByRole('link', {name:'Espionnage', exact:true})).toHaveCount(0);
+  const mainNavigation=page.getByRole('navigation', {name:'Navigation principale'});
+  await expect(mainNavigation.getByRole('link', {name:'Paramètres', exact:true})).toHaveCount(0);
+  await expect(mainNavigation.getByRole('link', {name:'Inventaire', exact:true})).toBeVisible();
+  const menuLabels=await mainNavigation.locator('a').allTextContents();
+  await expect(mainNavigation.getByRole('link', {name:'Technologie', exact:true})).toBeVisible();
+  await expect(page.getByRole('heading', {name:'Mes planètes', exact:true})).toHaveCount(0);
+  await mainNavigation.getByRole('link', {name:'Profil', exact:true}).click();
+  await expect(page.getByRole('link', {name:'Paramètres', exact:true})).toBeVisible();
+  await mainNavigation.getByRole('link', {name:'Technologie', exact:true}).click();
+  await expect(page.locator('.technology-tree')).toBeVisible();
+  await page.goto('/carte-v2');
+  expect(menuLabels.indexOf('Rapports')).toBeLessThan(menuLabels.indexOf('Messages'));
   await page.goto('/carte-v2');
   const map = page.locator('.galaxy-v2');
   await expect(map).toBeVisible();
   await expect(page.locator('canvas.gv2-canvas--galaxy')).toBeVisible();
   await page.screenshot({ path: '/tmp/galaxy-v2-browser.png' });
-  await expect(page.locator('a').filter({ hasText: 'GalaxieV2' })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByRole('link', {name:'V2 [WIP]', exact:true})).toHaveAttribute('aria-current', 'page');
+  await page.getByRole('link', {name:'Galaxie', exact:true}).last().click();
+  await expect(page).toHaveURL(/\/carte(?:\?.*)?$/);
+  await page.getByRole('link', {name:'V2 [WIP]', exact:true}).click();
+  await expect(page).toHaveURL(/\/carte-v2(?:\?.*)?$/);
 
   const data = JSON.parse(await map.getAttribute('data-galaxy-v2-map-value'));
   const homeSystem = data.systems.find(system => system.known && system.planets.some(planet => planet.ownedByCurrentPlayer));
@@ -50,7 +67,7 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   await page.locator('[data-galaxy-v2-target="systemBack"]').click();
   await expect(page.locator('.gv2-system-panel')).toBeHidden();
 
-  await page.getByRole('link', { name: 'Galaxie', exact: true }).click();
+  await page.getByRole('navigation', {name:'Navigation principale'}).getByRole('link', { name: 'Galaxie', exact: true }).click();
   await expect(page).toHaveURL(/\/carte(?:\?.*)?$/);
   await expect(page.locator('.galaxy-v2')).toHaveCount(0);
 

@@ -2,6 +2,7 @@
 {% import 'ui/macros.html.twig' as ui %}
 {% block title %}GalaxieV2 · Genesis Reborn{% endblock %}
 {% block body %}
+{% include 'ui/galaxy_tabs.html.twig' %}
 <div class="galaxy-v2" data-controller="galaxy-v2"
      data-galaxy-v2-map-value="{{ galaxy_v2_json|e('html_attr') }}"
      data-galaxy-v2-reduced-motion-value="{{ preferences.reducedMotion|default(false)?'true':'false' }}">

@@ -1,0 +1,4 @@
+<nav class="report-tabs galaxy-view-tabs" aria-label="Vue de la galaxie">
+    <a href="{{ path('app_map', selected_galaxy ? {galaxy:selected_galaxy.id} : {}) }}" class="{{ route=='app_map'?'active':'' }}" {{ route=='app_map'?'aria-current="page"':'' }}>Galaxie</a>
+    <a href="{{ path('app_map_v2', selected_galaxy ? {galaxy:selected_galaxy.id} : {}) }}" class="{{ route=='app_map_v2'?'active':'' }}" {{ route=='app_map_v2'?'aria-current="page"':'' }}>V2 [WIP]</a>
+</nav>

@@ -4,14 +4,16 @@
 
 | Vérification | Résultat |
 |---|---|
-| make test | Réussite — 110 tests, 627 assertions. |
-| make lint | Réussite — PHP, 67 fichiers YAML, 37 fichiers Twig, conteneur Symfony et schéma Doctrine. |
+| make test (02/11/2026) | Réussite — 118 tests, 1 696 assertions, après recréation de la base de test éphémère devenue incohérente. |
+| make lint (02/11/2026) | Réussite — PHP, 74 fichiers YAML, 39 fichiers Twig, conteneur Symfony et schéma Doctrine. |
 | make validate | Réussite — configuration Docker Compose. |
-| npm run build | Réussite — compilation frontend Encore, 5 bundles. |
+| npm run build (02/11/2026) | Réussite — compilation frontend Encore, 5 bundles. |
 | Playwright isolé complet | 21/34 réussis, 13 échecs, 15,8 minutes, 1 worker. Ce résultat n’est pas une campagne verte. |
-| Playwright ciblé après mise à jour des attentes | Réussite — 5/5 scénarios : administration catalogue, thème sombre, modération, responsive multi-breakpoints et accessibilité smoke. Modération réussie au rejeu après correction d’un onglet fermé au rechargement. |
+| Playwright ciblé UI/a11y (2 nov.) | Réussite — 5/5 scénarios : administration catalogue, thème sombre, modération, responsive multi-breakpoints et accessibilité smoke. |
+| Playwright, parcours Alpha historiquement en échec (2 nov.) | Réussite — 9/9 : construction/notification, colonie + exploration + transport aller-retour, bénéfices/arbre techno, conquête/rapport privé, espionnage/rapport privé, prévisualisation flotte, assistant flotte, orbite alliée et pages 403/404. Exécutés ensemble dans la base isolée, avec 1 worker et remise à zéro entre scénarios. |
 | Liens Markdown relatifs | Vérifiés après la consolidation documentaire. |
-| git diff --check | À relancer après les derniers changements documentaires. |
+| Playwright ciblé progression/navigation (02/11/2026) | Réussite — 4/4 scénarios isolés : menu, arbre dans Compte, recherche, rangs et affichage des éléments verrouillés. Les illustrations de rang ont été rendues dans le catalogue. |
+| node --check + git diff --check | Réussite sur les scripts JavaScript/MJS modifiés et le diff. |
 
 La campagne Playwright utilise une base et des services jetables. Chaque scénario se lance dans un projet Compose isolé, supprimé en fin d’exécution. Le journal brut de la campagne complète est conservé dans le temporaire local, pas dans le dépôt.
 
@@ -25,7 +27,7 @@ Les 13 échecs observés avant les ajustements ciblés se répartissaient ainsi 
 - Assertions d’interface trop strictes ou périmées : dimensions exactes de l’image, contrôles dans des panneaux details fermés, réponse personnalisée d’accès refusé.
 - Le test d’orbite a expiré sur l’ancien formulaire de destination.
 
-Cinq scénarios ciblés ont été rejoués avec succès après mise à jour de leurs attentes. Huit échecs de la campagne complète restent sans rejeu ciblé concluant : construction/réserve, arbre technologique, conquête, espionnage, prévisualisation de flotte, assistant de flotte, orbite et page d’erreur. La campagne de 34 tests n’a pas été relancée intégralement après les corrections ciblées; son dernier résultat agrégé reste 21/34.
+Les huit familles de parcours qui restaient à reprendre ont désormais une couverture ciblée concluante (9 tests, car le chantier/colonie couvre plusieurs étapes) : construction/réserve et notifications, arbre technologique, conquête, espionnage, prévisualisation, assistant de flotte, orbite et pages d’erreur. Le lot ciblé a passé 9/9 dans un seul run isolé. La campagne Playwright complète de 34 tests n’a pas été relancée; son dernier résultat agrégé reste 21/34 et ne doit pas être présenté comme un résultat à jour ni comme une campagne verte.
 
 ## Lecture des résultats
 

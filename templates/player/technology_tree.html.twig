@@ -1,0 +1,6 @@
+{% extends 'base.html.twig' %}
+{% block title %}Technologie · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="page-heading"><div><p class="eyebrow">{{ membership.universe.name }}</p><h1>Arbre technologique</h1><p>Arbre de recherche de votre empire · infrastructure évaluée depuis {{ planet.name }}.</p></div></div>
+{% include 'ui/technology_tree.html.twig' with {tree_standalone:true} %}
+{% endblock %}
