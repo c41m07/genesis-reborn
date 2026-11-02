@@ -1,4 +1,9 @@
 import { test, expect } from './support/isolated-test.mjs';
+import { execFileSync } from 'node:child_process';
+function accelerateShipyard(project,email) {
+  const query = "UPDATE queue_item q INNER JOIN player_universe pu ON pu.id=q.player_universe_id INNER JOIN player p ON p.id=pu.player_id SET q.duration_seconds=1, q.started_at=UTC_TIMESTAMP()-INTERVAL 10 SECOND WHERE p.email='"+email+"' AND q.queue_type='shipyard' AND q.item_slug IN ('probe','colony_ship','transport')";
+  execFileSync('docker',['compose','--project-name',project,'--env-file','.env.local','exec','-T','app','php','bin/console','dbal:run-sql',query],{encoding:'utf8',stdio:['ignore','pipe','pipe']});
+}
 async function enter(page,prefix='E2E',universe='Turbo') {
   const id=crypto.randomUUID().slice(0,8), email=`${prefix.toLowerCase()}-${id}@example.test`,password='Browser-test-2026!';
   await page.goto('/inscription');
@@ -32,13 +37,15 @@ test('Construction réelle, notification privée et actualisation sans rechargem
   await expect(card().locator('.badge')).toContainText('NIVEAU 1',{timeout:15000});
 });
 test('Chantier, estimation, colonisation, transport et exploration réels', async ({page}) => {
-  test.setTimeout(320000);await enter(page,'Fleet');const origin=Number(page.url().split('/').pop());await page.getByRole('link',{name:'Bâtiments',exact:true}).click();
+  test.setTimeout(320000);const {email}=await enter(page,'Fleet');const origin=Number(page.url().split('/').pop());await page.getByRole('link',{name:'Bâtiments',exact:true}).click();
   const card=name=>page.locator('article.catalog-card').filter({has:page.getByRole('heading',{name,exact:true})});
   await card('Chantier spatial').getByRole('button',{name:/Améliorer au niveau 1/}).click();await expect(card('Chantier spatial').locator('.badge')).toContainText('NIVEAU 1',{timeout:30000});
   for(const name of ['Sonde exploratrice','Vaisseau colonie','Transporteur']) {
     await page.getByRole('link',{name:'Chantier spatial',exact:true}).click();await card(name).getByRole('button',{name:'Construire',exact:true}).click();
   }
   await page.getByRole('link',{name:'Chantier spatial',exact:true}).click();
+  accelerateShipyard(process.env.BROWSER_ROUTER,email);
+  await page.reload();
   for(const name of ['Sonde exploratrice','Vaisseau colonie','Transporteur']) await expect(card(name).locator('.badge')).toContainText('1 EN RÉSERVE',{timeout:90000});
   await page.getByRole('link',{name:'Flottes et missions',exact:true}).click();
   let form=page.locator('.fleet-form form').first();

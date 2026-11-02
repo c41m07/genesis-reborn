@@ -1,60 +1,30 @@
 {% extends 'base.html.twig' %}
+{% import 'ui/macros.html.twig' as ui %}
 {% block title %}Messages · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="page-heading">
-    <div><p class="eyebrow">{{ membership.universe.name }}</p><h1>Communications</h1><p>Messages privés limités à cet univers; le canal de guilde est réservé à ses membres.</p></div>
-    {% if unreadPrivate %}<span class="badge">{{ unreadPrivate }} message{{ unreadPrivate>1?'s':'' }} non lu{{ unreadPrivate>1?'s':'' }}</span>{% endif %}
-</div>
-<div class="section-heading"><h2>Messages privés</h2></div>
-<div class="catalog-grid">
-    <section class="panel">
-        <h3>Choisir un commandant</h3>
-        {% if peers %}
-            <ul>{% for member in peers %}<li><a href="{{ path('app_messages',{with:member.id}) }}">{{ member.player.username }}</a></li>{% endfor %}</ul>
-        {% else %}<p>Aucun autre commandant dans cet univers.</p>{% endif %}
-        {% if peer %}
-            <h3>Conversation avec {{ peer.player.username }}</h3>
+<div class="page-heading"><div><p class="eyebrow">{{ membership.universe.name }}</p><h1>Messages</h1><p>Votre centre de communication dans cet univers.</p></div></div>
+<div class="inbox-layout">
+    <aside class="panel inbox-sidebar" aria-label="Boîte de réception">
+        <header class="inbox-heading"><h2>Messagerie</h2>{% if unreadPrivate %}<span class="badge">{{ unreadPrivate }} non lu{{ unreadPrivate>1?'s':'' }}</span>{% endif %}</header>
+        <nav class="inbox-list" aria-label="Conversations">
+            {% for member in peers %}<a class="inbox-item {{ peer and peer.id==member.id and activeChannel!='guild' ? 'active' : '' }}" href="{{ path('app_messages',{with:member.id}) }}" {% if peer and peer.id==member.id and activeChannel!='guild' %}aria-current="page"{% endif %}><span class="inbox-icon">{{ ui.icon('notifications') }}</span><span class="inbox-item-copy"><strong>{{ member.player.username }}</strong><small>Conversation privée</small></span></a>{% endfor %}
+            {% if guild %}<a class="inbox-item {{ activeChannel=='guild' ? 'active' : '' }}" href="{{ path('app_messages',{channel:'guild'}) }}" {% if activeChannel=='guild' %}aria-current="page"{% endif %}><span class="inbox-icon">{{ ui.icon('diplomacy') }}</span><span class="inbox-item-copy"><strong>Canal de guilde · {{ guild.name }}</strong><small>{{ guildConversation|length }} derniers messages</small></span></a>{% endif %}
+        </nav>
+        {% if peers is empty and not guild %}<div class="inbox-empty"><p>Aucune conversation pour le moment.</p><small>Les commandants de votre univers apparaîtront ici.</small></div>{% endif %}
+        {% if not guild %}<a class="inbox-guild-hint" href="{{ path('app_diplomacy') }}">Le canal de guilde est accessible après avoir rejoint une guilde.</a>{% endif %}
+    </aside>
+    <section class="panel message-pane" aria-label="Conversation sélectionnée">
+        {% if peer and activeChannel!='guild' %}
+            <header class="message-pane-heading"><div class="message-avatar" aria-hidden="true">{{ peer.player.username|first|upper }}</div><div><h2>Conversation avec {{ peer.player.username }}</h2><p>{{ membership.universe.name }}</p></div></header>
             <div class="message-thread" aria-live="polite">
-                {% for message in conversation %}
-                    <article class="panel">
-                        <strong>{{ message.sender.player.username }}</strong>
-                        <time datetime="{{ message.createdAt|date('c') }}">{{ message.createdAt|date('d/m/Y H:i') }}</time>
-                        <p>{{ message.content }}</p>
-                        {% if message.moderatedAt is null and (message.sender.id != membership.id) %}<form method="post"><input type="hidden" name="_token" value="{{ csrf_token('private_message_report') }}"><input type="hidden" name="action" value="report"><input type="hidden" name="message_id" value="{{ message.id }}"><input type="hidden" name="with" value="{{ peer.id }}"><label for="reason-{{ message.id }}">Signaler ce message</label><input id="reason-{{ message.id }}" name="reason" maxlength="500" required><button>Signaler</button></form>{% endif %}
-                    </article>
-                {% else %}<p>Aucun message dans cette conversation.</p>{% endfor %}
+                {% for message in conversation %}<article class="message-bubble {{ message.sender.id==membership.id ? 'message-bubble--own' : '' }}"><div class="message-meta"><strong>{{ message.sender.player.username }}</strong><time datetime="{{ message.createdAt|date('c') }}">{{ message.createdAt|date('d/m/Y H:i') }}</time></div><p>{{ message.content }}</p>{% if message.moderatedAt is null and message.sender.id!=membership.id %}<form method="post"><input type="hidden" name="_token" value="{{ csrf_token('private_message_report') }}"><input type="hidden" name="action" value="report"><input type="hidden" name="message_id" value="{{ message.id }}"><input type="hidden" name="with" value="{{ peer.id }}"><label for="reason-{{ message.id }}">Signaler ce message</label><input id="reason-{{ message.id }}" name="reason" maxlength="500" required><button class="secondary">Signaler</button></form>{% endif %}</article>{% else %}<p class="message-empty">Aucun message échangé avec ce commandant.</p>{% endfor %}
             </div>
-            <form method="post">
-                <input type="hidden" name="_token" value="{{ csrf_token('private_message') }}">
-                <input type="hidden" name="action" value="private">
-                <input type="hidden" name="recipient" value="{{ peer.id }}">
-                <label for="private-content">Votre message</label>
-                <textarea id="private-content" name="content" maxlength="2000" rows="4" required></textarea>
-                <button class="primary">Envoyer</button>
-            </form>
-        {% endif %}
-    </section>
-    <section class="panel">
-        <h2>Canal de guilde</h2>
-        {% if guild %}
-            <p>{{ guild.name }} · {{ guildConversation|length }} derniers messages</p>
-            <div class="message-thread" aria-live="polite">
-                {% for message in guildConversation %}
-                    <article class="panel">
-                        <strong>{{ message.sender.player.username }}</strong>
-                        <time datetime="{{ message.createdAt|date('c') }}">{{ message.createdAt|date('d/m/Y H:i') }}</time>
-                        <p>{{ message.content }}</p>{% if message.moderatedAt is null and message.sender.id != membership.id %}<form method="post"><input type="hidden" name="_token" value="{{ csrf_token('private_message_report') }}"><input type="hidden" name="action" value="report"><input type="hidden" name="message_id" value="{{ message.id }}"><label for="guild-reason-{{ message.id }}">Signaler ce message</label><input id="guild-reason-{{ message.id }}" name="reason" maxlength="500" required><button>Signaler</button></form>{% endif %}
-                    </article>
-                {% else %}<p>Aucun message pour l’instant.</p>{% endfor %}
-            </div>
-            <form method="post">
-                <input type="hidden" name="_token" value="{{ csrf_token('guild_message') }}">
-                <input type="hidden" name="action" value="guild">
-                <label for="guild-content">Message pour la guilde</label>
-                <textarea id="guild-content" name="content" maxlength="2000" rows="3" required></textarea>
-                <button class="primary">Envoyer à la guilde</button>
-            </form>
-        {% else %}<p>Rejoignez une guilde dans Diplomatie pour accéder à son canal privé.</p>{% endif %}
+            <form class="message-compose" method="post"><input type="hidden" name="_token" value="{{ csrf_token('private_message') }}"><input type="hidden" name="action" value="private"><input type="hidden" name="recipient" value="{{ peer.id }}"><label class="visually-hidden" for="private-content">Votre message</label><textarea id="private-content" name="content" maxlength="2000" rows="2" placeholder="Écrire un message à {{ peer.player.username }}…" required></textarea><button class="primary">Envoyer {{ ui.icon('arrow') }}</button></form>
+        {% elseif activeChannel=='guild' and guild %}
+            <header class="message-pane-heading"><div class="message-avatar" aria-hidden="true">{{ ui.icon('diplomacy') }}</div><div><h2>Canal de guilde · {{ guild.name }}</h2><p>{{ guildConversation|length }} derniers messages</p></div></header>
+            <div class="message-thread" aria-live="polite">{% for message in guildConversation %}<article class="message-bubble {{ message.sender.id==membership.id ? 'message-bubble--own' : '' }}"><div class="message-meta"><strong>{{ message.sender.player.username }}</strong><time datetime="{{ message.createdAt|date('c') }}">{{ message.createdAt|date('d/m/Y H:i') }}</time></div><p>{{ message.content }}</p>{% if message.moderatedAt is null and message.sender.id!=membership.id %}<form method="post"><input type="hidden" name="_token" value="{{ csrf_token('private_message_report') }}"><input type="hidden" name="action" value="report"><input type="hidden" name="message_id" value="{{ message.id }}"><label for="guild-reason-{{ message.id }}">Signaler ce message</label><input id="guild-reason-{{ message.id }}" name="reason" maxlength="500" required><button class="secondary">Signaler</button></form>{% endif %}</article>{% else %}<p class="message-empty">Aucun message dans le canal pour l’instant.</p>{% endfor %}</div>
+            <form class="message-compose" method="post"><input type="hidden" name="_token" value="{{ csrf_token('guild_message') }}"><input type="hidden" name="action" value="guild"><label class="visually-hidden" for="guild-content">Message pour la guilde</label><textarea id="guild-content" name="content" maxlength="2000" rows="2" placeholder="Écrire un message à votre guilde…" required></textarea><button class="primary">Envoyer {{ ui.icon('arrow') }}</button></form>
+        {% else %}<div class="message-placeholder"><span class="message-avatar">{{ ui.icon('notifications') }}</span><h2>Sélectionnez une conversation</h2><p>Choisissez un commandant dans votre messagerie pour consulter l’échange.</p></div>{% endif %}
     </section>
 </div>
 {% endblock %}

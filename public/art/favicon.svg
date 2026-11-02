@@ -1,1 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#101b2b"/><g fill="none" stroke="#e7b76b" stroke-width="3"><ellipse cx="32" cy="32" rx="25" ry="10" transform="rotate(-35 32 32)"/><circle cx="32" cy="32" r="11"/></g><circle cx="50" cy="16" r="4" fill="#77d5e9"/></svg>
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Favicon original Genesis Reborn, tracé pour le projet le 01/11/2026. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<defs><linearGradient id="f" x2="1" y2="1"><stop stop-color="#f1d29a"/><stop offset="1" stop-color="#a8793f"/></linearGradient></defs>
+<rect x="2" y="2" width="60" height="60" rx="15" fill="#101b2b" stroke="#34485b" stroke-width="2"/>
+<circle cx="32" cy="32" r="14" fill="none" stroke="url(#f)" stroke-width="3"/><ellipse cx="32" cy="32" rx="25" ry="9" fill="none" stroke="#77d5e9" stroke-width="2" transform="rotate(-28 32 32)"/><circle cx="50" cy="23" r="4" fill="#e7b76b"/><path d="M32 21a11 11 0 0 0 0 22h5v-8h-7v-6h14v19H32a16 16 0 1 1 14-24" fill="url(#f)" stroke="#101b2b" stroke-width="1"/>
+</svg>

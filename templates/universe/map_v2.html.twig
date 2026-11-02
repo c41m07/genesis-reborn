@@ -1,0 +1,100 @@
+{% extends 'base.html.twig' %}
+{% import 'ui/macros.html.twig' as ui %}
+{% block title %}GalaxieV2 · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="galaxy-v2" data-controller="galaxy-v2"
+     data-galaxy-v2-map-value="{{ galaxy_v2_json|e('html_attr') }}"
+     data-galaxy-v2-reduced-motion-value="{{ preferences.reducedMotion|default(false)?'true':'false' }}">
+    <div class="gv2-scene" data-galaxy-v2-target="scene">
+        <canvas class="gv2-canvas gv2-canvas--galaxy is-active" data-galaxy-v2-target="galaxyCanvas" aria-label="Carte animée de la galaxie. Glissez pour déplacer, molette pour zoomer, cliquez sur un système pour l’examiner."></canvas>
+        <canvas class="gv2-canvas gv2-canvas--system" data-galaxy-v2-target="systemCanvas" aria-label="Vue animée du système solaire"></canvas>
+        <canvas class="gv2-canvas gv2-canvas--planet" data-galaxy-v2-target="planetCanvas" aria-label="Vue rapprochée de la planète"></canvas>
+        <div class="gv2-scanlines" aria-hidden="true"></div><div class="gv2-vignette" aria-hidden="true"></div>
+        <div class="gv2-hud">
+            <div class="gv2-locator"><span class="gv2-live-dot"></span><span data-galaxy-v2-target="location">{{ selected_galaxy.name|default(membership.universe.name) }}</span></div>
+            <form class="gv2-galaxy-form" method="get" action="{{ path('app_map_v2') }}">
+                <label class="visually-hidden" for="gv2-galaxy">Choisir une galaxie</label>
+                <select id="gv2-galaxy" name="galaxy" data-galaxy-v2-target="galaxySelect" data-action="change->galaxy-v2#changeGalaxy">
+                    {% for galaxy in galaxies %}<option value="{{ galaxy.id }}" {{ selected_galaxy and selected_galaxy.id==galaxy.id?'selected':'' }}>{{ galaxy.name }}</option>{% endfor %}
+                </select>
+            </form>
+            <div class="gv2-search">
+                <span aria-hidden="true">⌕</span><label class="visually-hidden" for="gv2-search">Rechercher un système ou une planète connue</label>
+                <input id="gv2-search" type="search" placeholder="Système ou planète…" autocomplete="off" spellcheck="false" data-galaxy-v2-target="searchInput" data-action="input->galaxy-v2#search keydown->galaxy-v2#searchKeydown">
+                <button type="button" class="gv2-search-clear" aria-label="Effacer la recherche" data-galaxy-v2-target="searchClear" data-action="click->galaxy-v2#clearSearch">×</button>
+                <div class="gv2-search-results" role="listbox" aria-label="Résultats de recherche" data-galaxy-v2-target="searchResults" hidden></div>
+            </div>
+            <div class="gv2-coordinate" aria-live="polite" data-galaxy-v2-target="coordinates">{% if selected_galaxy %}{{ selected_galaxy.coordinateCode() }}{% else %}—{% endif %}</div>
+        </div>
+        <button type="button" class="gv2-back" data-galaxy-v2-target="systemBack" data-action="click->galaxy-v2#toGalaxy" hidden>‹ Galaxie</button>
+        <button type="button" class="gv2-back" data-galaxy-v2-target="planetBack" data-action="click->galaxy-v2#toSystem" hidden>‹ Système</button>
+        <div class="gv2-tooltip" role="status" data-galaxy-v2-target="tooltip" hidden></div>
+
+        <aside class="gv2-system-panel" aria-label="Informations sur le système sélectionné" data-galaxy-v2-target="systemPanel" hidden>
+            <div data-galaxy-v2-target="systemContent"></div>
+        </aside>
+        <aside class="gv2-planet-panel" aria-label="Informations sur la planète sélectionnée" data-galaxy-v2-target="planetPanel" hidden>
+            <div data-galaxy-v2-target="planetContent"></div>
+        </aside>
+
+        <div class="gv2-minimap" data-galaxy-v2-target="minimapWrap">
+            <span>CARTE LOCALE</span><canvas data-galaxy-v2-target="minimapCanvas" aria-label="Mini-carte interactive ; cliquez pour déplacer la caméra"></canvas>
+        </div>
+        <div class="gv2-flight-log">
+            <h2><span class="gv2-live-dot"></span>Journal de flotte</h2>
+            <div data-galaxy-v2-target="fleetLog">
+                {% if galaxy_v2_flights is empty %}<p class="gv2-empty-log">Aucune flotte en mission actuellement.</p>{% else %}
+                    {% for flight in galaxy_v2_flights %}<article class="gv2-flight-entry" data-flight-id="{{ flight.id }}">
+                        <strong>{{ flight.missionLabel }}</strong><span>{{ flight.statusLabel }}</span>
+                        <small>{{ flight.relationLabel }} · {{ flight.ownerName }}</small>
+                        <small>{{ flight.originName }} → {{ flight.destinationName }}</small>
+                        {% if flight.ships %}<small>{{ flight.ships }}</small>{% endif %}
+                        {% if flight.arrivalAt %}<time datetime="{{ flight.arrivalAt }}" data-galaxy-v2-countdown="{{ flight.arrivalAt }}">Calcul du temps…</time>{% endif %}
+                    </article>{% endfor %}
+                {% endif %}
+            </div>
+        </div>
+        <div class="gv2-map-controls">
+            <button type="button" aria-label="Zoomer" data-action="click->galaxy-v2#zoomIn">+</button>
+            <button type="button" aria-label="Dézoomer" data-action="click->galaxy-v2#zoomOut">−</button>
+            <button type="button" aria-pressed="false" data-galaxy-v2-target="motionToggle" data-action="click->galaxy-v2#toggleMotion" title="Réduire ou rétablir les animations">◌</button>
+        </div>
+        <div class="gv2-map-help" data-galaxy-v2-target="mapHelp">Glisser pour naviguer · Molette pour zoomer · Cliquer sur un système pour l’examiner</div>
+    </div>
+
+    {% for row in systems %}
+        {% set system = row.system %}
+        <template data-gv2-system="{{ system.id }}">
+            <header class="gv2-panel-heading"><div><span class="gv2-eyebrow">SYSTÈME STELLAIRE</span><h2>{{ system.galaxy.coordinateCode() }}:{{ system.number() }}</h2><p>{{ system.name }}</p></div><button type="button" aria-label="Fermer la vue système" data-action="click->galaxy-v2#toGalaxy">×</button></header>
+            <div class="gv2-system-state"><span class="gv2-state-dot {{ row.known?'is-known':'' }}"></span>{% if row.known %}Système exploré · {{ row.planets|length }} planètes cartographiées{% else %}Signal inconnu · aucune planète révélée{% endif %}</div>
+            {% if row.known %}
+                <ul class="gv2-planet-list">{% for p in row.planets|sort((a,b)=>a.position<=>b.position) %}
+                    <li><button type="button" class="gv2-planet-choice" data-action="click->galaxy-v2#selectPlanet" data-planet-id="{{ p.id }}">
+                        <span class="gv2-planet-number">{{ '%02d'|format(p.position) }}</span><span class="gv2-planet-choice-name">{{ p.name }}</span>
+                        <span class="gv2-planet-owner">{% if p.owner and p.owner.id==membership.id %}Votre monde{% elseif p.owner %}{{ p.owner.player.username }}{% elseif p.npcPlanet %}Faction PNJ · niv. {{ p.conquestLevel }}{% else %}Inhabitée{% endif %}</span>
+                    </button></li>
+                {% endfor %}</ul>
+            {% else %}
+                <p class="gv2-panel-note">Les coordonnées sont connues, mais le système n’a pas encore été cartographié.</p>
+                {% if map_can_explore %}{% include 'ui/map_quick_mission.html.twig' with {quick_mission:'explore',quick_target:system.id,quick_return_to:'app_map_v2'} %}{% else %}<p class="gv2-panel-note">Aucune sonde exploratrice disponible sur {{ map_origin ? map_origin.name : 'une planète de départ' }}.</p>{% endif %}
+            {% endif %}
+        </template>
+        {% if row.known %}{% for p in row.planets %}
+        <template data-gv2-planet="{{ p.id }}">
+            <header class="gv2-panel-heading"><div><span class="gv2-eyebrow">PLANÈTE · {{ p.coordinates() }}</span><h2>{{ p.name }}</h2><p>{% if p.owner and p.owner.id==membership.id %}Votre colonie{% elseif p.owner %}Monde de {{ p.owner.player.username }}{% elseif p.npcPlanet %}Monde PNJ · niveau {{ p.conquestLevel }}{% else %}Monde inhabité{% endif %}</p></div><button type="button" aria-label="Fermer les informations de la planète" data-action="click->galaxy-v2#closePlanet">×</button></header>
+            <div class="gv2-visual-note">REPRÉSENTATION VISUELLE · DONNÉES DE JEU CI-DESSOUS</div>
+            <dl class="gv2-facts"><div><dt>Coordonnées</dt><dd>{{ p.coordinates() }}</dd></div><div><dt>Statut</dt><dd>{% if p.owner and p.owner.id==membership.id %}Votre colonie{% elseif p.owner %}Occupée par {{ p.owner.player.username }}{% elseif p.npcPlanet %}Faction PNJ{% else %}Inhabitée{% endif %}</dd></div>{% if p.npcPlanet %}<div><dt>Niveau PNJ</dt><dd>{{ p.conquestLevel }}</dd></div>{% endif %}</dl>
+            <button type="button" class="gv2-primary-action" data-action="click->galaxy-v2#enterPlanetView">◉ Vue rapprochée</button>
+            <div class="gv2-action-list">
+                {% if p.owner and p.owner.id==membership.id %}<a class="gv2-action-link" href="{{ path('app_colony',{id:p.id}) }}">Gérer cette planète →</a>
+                {% elseif p.owner or p.npcPlanet %}
+                    {% if map_can_spy %}{% include 'ui/map_quick_mission.html.twig' with {quick_mission:'spy',quick_target:p.id,quick_return_to:'app_map_v2'} %}{% else %}<p class="gv2-panel-note">Aucune sonde d’espionnage disponible.</p>{% endif %}
+                    {% if p.npcPlanet and map_can_conquer %}<a class="gv2-action-link gv2-action-link--amber" href="{{ path('app_fleets',{mission:'conquer',planet:p.id}) }}">Préparer la conquête →</a>{% endif %}
+                {% elseif map_can_colonize %}{% include 'ui/map_quick_mission.html.twig' with {quick_mission:'colonize',quick_target:p.id,quick_return_to:'app_map_v2'} %}
+                {% else %}<p class="gv2-panel-note">Colonisation indisponible : vaisseau colonie absent ou limite atteinte.</p>{% endif %}
+            </div>
+        </template>
+        {% endfor %}{% endif %}
+    {% endfor %}
+</div>
+{% endblock %}

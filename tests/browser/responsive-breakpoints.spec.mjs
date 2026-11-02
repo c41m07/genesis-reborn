@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './support/isolated-test.mjs';
 
 async function signIn(page) {
   const id = crypto.randomUUID().slice(0, 8);
@@ -20,6 +20,10 @@ async function signIn(page) {
 
 test('Application sans débordement aux breakpoints desktop, tablette et mobile', async ({ page }) => {
   await signIn(page);
+  await page.screenshot({ path: 'test-results/genesis-emblem-preview.png' });
+  await expect.poll(() => page.locator('.brand-mark img').evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
+  await page.goto('/planetes');
+  await expect.poll(() => page.locator('.planet-index-art img').first().evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
 
   for (const width of [1440, 768]) {
     await page.setViewportSize({ width, height: 900 });
@@ -29,12 +33,12 @@ test('Application sans débordement aux breakpoints desktop, tablette et mobile'
 
   await page.setViewportSize({ width: 390, height: 844 });
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
-  const toggle = page.getByRole('button', { name: 'Ouvrir le menu' });
+  const toggle = page.getByRole('navigation', { name: 'Navigation mobile' }).getByRole('button', { name: 'Plus' });
   await expect(toggle).toBeVisible();
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
   await toggle.click();
   await expect(toggle).toHaveAttribute('aria-expanded', 'true');
-  await expect(page.getByRole('link', { name: 'Carte stellaire', exact: true })).toBeVisible();
+  await expect(page.locator('#command-navigation').getByRole('link', { name: 'Galaxie', exact: true })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
 });

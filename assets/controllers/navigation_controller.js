@@ -29,7 +29,7 @@ export default class extends Controller {
         const open = this.element.classList.contains('nav-open');
         this.sidebarTarget.inert = this.mobile.matches && !open;
         this.sidebarTarget.setAttribute('aria-hidden', String(this.mobile.matches && !open));
-        this.toggleTarget.setAttribute('aria-expanded', String(open));
+        for (const toggle of this.toggleTargets) toggle.setAttribute('aria-expanded', String(open));
     }
     toggle() {
         this.element.classList.toggle('nav-open');
@@ -39,6 +39,6 @@ export default class extends Controller {
     close() {
         this.element.classList.remove('nav-open');
         this.sync();
-        this.toggleTarget.focus();
+        (this.toggleTargets.find(toggle => toggle.offsetParent !== null) ?? this.toggleTarget).focus();
     }
 }

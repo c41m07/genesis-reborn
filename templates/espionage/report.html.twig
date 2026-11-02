@@ -3,7 +3,7 @@
 {% block body %}
 <div class="page-heading"><div><p class="eyebrow">RENSEIGNEMENTS</p><h1>{{ report.target.name }}</h1><p>{{ report.target.coordinates() }} · {{ report.createdAt|date('d/m/Y H:i') }}</p></div><a class="inline-link" href="{{ path('app_combat_reports') }}">Retour aux rapports</a></div>
 <section class="panel"><p>Sondes envoyées : {{ report.probesSent }} · Risque de détection estimé : {{ report.detectionChance }} %</p>
-{% if report.result == 'detected' %}<div class="flash"><strong>Sondes détectées.</strong> Le propriétaire a été averti et aucun renseignement n’a été obtenu.</div>
-{% else %}<p class="badge">{{ report.intelCategories }} catégorie(s) de renseignements obtenue(s)</p>
+{% if report.result == 'detected' %}<div class="flash" role="status"><strong>Sondes détectées.</strong> Le propriétaire a été averti et aucun renseignement n’a été obtenu.</div>
+{% else %}<p class="badge" role="status">{{ report.intelCategories }} catégorie(s) de renseignements obtenue(s)</p>
 {% for category, title in {resources:'Ressources et production', buildings:'Bâtiments', research:'Recherches', fleets:'Flottes', defenses:'Défenses fixes'} %}{% if report.snapshot[category] is defined %}<section><h2>{{ title }}</h2>{% set items = report.snapshot[category] %}{% if items %}<div class="catalog-grid">{% for slug, item in items %}<article class="panel"><strong>{{ item.label ?? slug }}</strong><p>{% if category == 'resources' %}Stock : {{ item.stock|number_format(0, ',', ' ') }} · Production : {{ item.rate|number_format(2, ',', ' ') }}/s · Capacité : {{ item.capacity|number_format(0, ',', ' ') }}{% elseif category == 'buildings' %}Niveau {{ item.level }}{% else %}Quantité : {{ item.quantity }}{% endif %}</p></article>{% endfor %}</div>{% else %}<p>Aucun élément détecté dans cette catégorie.</p>{% endif %}</section>{% endif %}{% endfor %}{% endif %}</section>
 {% endblock %}

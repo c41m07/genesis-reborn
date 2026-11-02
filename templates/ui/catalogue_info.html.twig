@@ -1,0 +1,86 @@
+<div class="catalog-info" data-controller="catalog-info">
+    <button class="catalog-info-trigger" type="button" data-action="catalog-info#open" aria-haspopup="dialog" aria-label="Informations sur {{ d.label }}">i</button>
+    <dialog class="catalog-info-dialog" data-catalog-info-target="dialog" data-action="click->catalog-info#outside" aria-labelledby="catalog-info-title-{{ group }}-{{ d.slug }}">
+        <div class="catalog-info-content">
+            <header>
+                <div><p class="eyebrow">FICHE DÉTAILLÉE · {{ {buildings:'BÂTIMENT',technologies:'RECHERCHE',ships:'VAISSEAU',defenses:'DÉFENSE'}[group] }}</p><h2 id="catalog-info-title-{{ group }}-{{ d.slug }}">{{ d.label }}</h2></div>
+                <form method="dialog"><button type="submit" class="catalog-info-close" aria-label="Fermer">×</button></form>
+            </header>
+
+            {% if group == 'ships' %}
+                <p>{{ d.description|default(d.slug == 'probe' ? 'Sonde de reconnaissance et d’espionnage.' : (d.slug == 'colony_ship' ? 'Vaisseau conçu pour fonder une colonie.' : (d.cargo_capacity|default(0) > 0 ? 'Vaisseau de transport et de logistique.' : 'Vaisseau de combat.'))) }}</p>
+                <h3>Performances</h3>
+                <dl class="catalog-info-stats">
+                    <div><dt>Attaque</dt><dd>{{ d.base_attack|default(0)|number_format(0,',',' ') }} pts</dd></div>
+                    <div><dt>Structure</dt><dd>{{ d.hp|default(0)|number_format(0,',',' ') }} PV</dd></div>
+                    <div><dt>Bouclier</dt><dd>{% if d.shield is defined %}{{ d.shield|number_format(0,',',' ') }} PV{% else %}Non configuré{% endif %}</dd></div>
+                    <div><dt>Précision</dt><dd>{{ d.precision|default(0) }} %</dd></div>
+                    <div><dt>Poursuite</dt><dd>{{ d.tracking|default(0) }} %</dd></div>
+                    <div><dt>Évasion</dt><dd>{{ d.evasion|default(0) }} %</dd></div>
+                    <div><dt>Salves par round</dt><dd>{{ d.shots_min|default(1) }} à {{ d.shots_max|default(1) }}</dd></div>
+                    <div><dt>Vitesse</dt><dd>{{ d.speed_system|default(0)|number_format(0,',',' ') }} UA/système · {{ d.speed_galaxy|default(0)|number_format(0,',',' ') }} UA/galaxie</dd></div>
+                    <div><dt>Soute</dt><dd>{{ d.cargo_capacity|default(0)|number_format(0,',',' ') }} unités</dd></div>
+                    <div><dt>Réservoir</dt><dd>{{ d.fuel_capacity|default(0)|number_format(0,',',' ') }} H</dd></div>
+                </dl>
+                <p class="catalog-info-stock">En réserve sur cette colonie : <strong>{{ ships[d.slug]|default(0)|number_format(0,',',' ') }}</strong></p>
+            {% elseif group == 'defenses' %}
+                <p>Installation fixe : elle protège cette planète et ne peut pas rejoindre une flotte.</p>
+                <h3>Performances</h3>
+                <dl class="catalog-info-stats">
+                    <div><dt>Attaque</dt><dd>{{ d.base_attack|default(0)|number_format(0,',',' ') }} pts</dd></div>
+                    <div><dt>Structure</dt><dd>{{ d.hp|default(0)|number_format(0,',',' ') }} PV par unité</dd></div>
+                    <div><dt>Bouclier</dt><dd>{% if d.shield is defined %}{{ d.shield|number_format(0,',',' ') }} PV{% else %}Non configuré{% endif %}</dd></div>
+                    <div><dt>Précision</dt><dd>{{ d.precision|default(0) }} %</dd></div>
+                    <div><dt>Poursuite</dt><dd>{{ d.tracking|default(0) }} %</dd></div>
+                    <div><dt>Salves par round</dt><dd>{{ d.shots_min|default(1) }} à {{ d.shots_max|default(1) }}</dd></div>
+                </dl>
+                <p class="catalog-info-stock">Déployées sur cette planète : <strong>{{ defense_quantities[d.slug]|default(0)|number_format(0,',',' ') }}</strong></p>
+            {% elseif group == 'buildings' %}
+                <p>{{ d.description|default('Infrastructure planétaire dont les effets progressent avec le niveau.') }}</p>
+                <h3>Progression</h3>
+                <dl class="catalog-info-stats">
+                    <div><dt>Niveau actuel</dt><dd>{{ card.level }}</dd></div>
+                    <div><dt>Prochain niveau</dt><dd>{{ card.target }}</dd></div>
+                    {% if d.max_level is defined %}<div><dt>Niveau maximum</dt><dd>{{ d.max_level }}</dd></div>{% endif %}
+                    {% if d.production_resource is defined %}<div><dt>Production</dt><dd>{% if d.production_per_level is defined %}+{{ d.production_per_level|number_format(2,',',' ') }} {{ resources[d.production_resource].label|default(d.production_resource) }} / s / niveau{% else %}{{ resources[d.production_resource].label|default(d.production_resource) }}{% endif %}</dd></div>{% endif %}
+                    {% if d.storage_resource is defined %}<div><dt>Ressource stockée</dt><dd>{{ resources[d.storage_resource].label|default(d.storage_resource) }}</dd></div>{% endif %}
+                </dl>
+                {% if card.benefits %}<h3>Effet du prochain niveau</h3><ul class="catalog-info-benefits">{% for benefit in card.benefits %}<li>{% if benefit.text is defined %}{{ benefit.text }}{% else %}<strong>{{ benefit.label }}</strong>{% if benefit.before is defined %} · {{ benefit.before|number_format(0,',',' ') }} → {% endif %}{{ (benefit.after is defined ? benefit.after : benefit.value)|number_format(0,',',' ') }} {{ benefit.unit }}{% endif %}</li>{% endfor %}</ul>{% endif %}
+            {% else %}
+                <p>{{ d.description|default('Recherche impériale qui améliore les capacités de votre empire ou débloque de nouvelles possibilités.') }}</p>
+                <h3>Progression</h3>
+                <dl class="catalog-info-stats">
+                    <div><dt>Niveau actuel</dt><dd>{{ card.level }}</dd></div>
+                    <div><dt>Prochain niveau</dt><dd>{{ card.target }}</dd></div>
+                    {% if d.max_level is defined %}<div><dt>Niveau maximum</dt><dd>{{ d.max_level }}</dd></div>{% endif %}
+                    {% if d.source is defined %}<div><dt>Référence</dt><dd>{{ d.source }}</dd></div>{% endif %}
+                </dl>
+                {% if d.effect is defined and d.effect.type|default('') == 'unlock' %}
+                    <h3>Effet de la recherche</h3><p>Débloque l’accès aux éléments associés, sous réserve de remplir leurs prérequis.</p>
+                    {% if card.unlocks %}<ul class="catalog-info-benefits">{% for unlock in card.unlocks %}<li><strong>{{ unlock.label }}</strong> · disponible dès le niveau {{ unlock.requiredLevel }}</li>{% endfor %}</ul>{% endif %}
+                {% elseif card.benefits %}
+                    <h3>Effet de la recherche</h3><ul class="catalog-info-benefits">{% for benefit in card.benefits %}<li>{% if benefit.text is defined %}{{ benefit.text }}{% else %}<strong>{{ benefit.label }}</strong>{% if benefit.before is defined %} · {{ benefit.before|number_format(0,',',' ') }} → {% endif %}{{ (benefit.after is defined ? benefit.after : benefit.value)|number_format(0,',',' ') }} {{ benefit.unit }}{% endif %}</li>{% endfor %}</ul>
+                {% endif %}
+            {% endif %}
+
+            {% if group in ['ships','defenses'] %}
+                <h3>Construction</h3>
+                <p>Durée : <strong>{{ duration_label(card.duration) }}</strong> par unité</p>
+            {% elseif group == 'buildings' %}
+                <h3>Amélioration</h3>
+                <p>Durée : <strong>{{ duration_label(card.duration) }}</strong></p>
+            {% else %}
+                <h3>Recherche</h3>
+                <p>Durée : <strong>{{ duration_label(card.duration) }}</strong></p>
+            {% endif %}
+            {% if card.costs %}
+                <ul class="catalog-info-costs" aria-label="Coût">
+                    {% for resource,cost in card.costs %}<li>{{ resources[resource].label|default(resource) }} <strong>{{ cost|number_format(0,',',' ') }}</strong></li>{% endfor %}
+                </ul>
+            {% endif %}
+
+            {% if card.failures %}<p class="catalog-info-requirements"><strong>Prérequis manquants :</strong> {{ card.failures|join(', ') }}</p>{% else %}<p class="catalog-info-ready">Prérequis remplis</p>{% endif %}
+            <form method="dialog"><button type="submit" class="secondary">Fermer</button></form>
+        </div>
+    </dialog>
+</div>

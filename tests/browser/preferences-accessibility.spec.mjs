@@ -1,0 +1,41 @@
+import { test, expect } from './support/isolated-test.mjs';
+
+test('Préférences accessibles : mouvement réduit, alertes désactivées et fuseau persistant', async ({ page }) => {
+  const id = crypto.randomUUID().slice(0, 8);
+  const email = 'preferences-ui-' + id + '@example.test';
+  const password = 'Browser-test-2026!';
+  await page.goto('/inscription');
+  await page.getByLabel('Adresse email').fill(email);
+  await page.getByLabel('Nom de commandant').fill('Preferences-' + id);
+  await page.getByLabel('Mot de passe (12 caractères minimum)', { exact: true }).fill(password);
+  await page.getByLabel('Confirmer le mot de passe').fill(password);
+  await page.getByRole('button', { name: 'Créer mon compte' }).click();
+  await expect(page).toHaveURL(/connexion/);
+  await page.getByLabel('Adresse email').fill(email);
+  await page.getByLabel('Mot de passe', { exact: true }).fill(password);
+  await page.getByRole('button', { name: /Connexion/ }).click();
+  await expect(page.getByRole('link', { name: 'Paramètres', exact: true })).toBeVisible();
+  await expect(page.locator('body')).toHaveAttribute('data-theme', 'dark');
+  await expect(page.locator('link[href*=wireframe-theme]')).toHaveCount(0);
+  await page.goto('/profil/preferences');
+  await expect(page.getByRole('heading', { name: 'Paramètres', exact: true })).toBeVisible();
+  await page.getByLabel('Thème de l’interface').selectOption('light');
+
+  const timezone = page.getByLabel('Fuseau horaire de l’horloge');
+  await timezone.selectOption('Europe/Paris');
+  await page.getByLabel('Réduire les animations de l’interface').check();
+  await page.getByLabel('Afficher les alertes de jeu en temps réel').uncheck();
+  await page.getByRole('button', { name: 'Enregistrer les paramètres' }).click();
+  await expect(page.getByRole('status')).toContainText('Préférences enregistrées');
+  await expect(page.locator('body')).toHaveClass(/reduced-motion/);
+  await expect(page.locator('body')).toHaveAttribute('data-theme', 'light');
+  await expect(page.locator('link[href*=wireframe-theme]')).toHaveCount(1);
+  await expect(page.locator('body')).toHaveAttribute('data-realtime-notifications', 'false');
+  await expect(page.locator('.server-clock small')).toContainText('Europe/Paris');
+  await expect(page.getByLabel('Réduire les animations de l’interface')).toBeChecked();
+  await expect(page.getByLabel('Afficher les alertes de jeu en temps réel')).not.toBeChecked();
+  await page.getByLabel('Thème de l’interface').selectOption('dark');
+  await page.getByRole('button', { name: 'Enregistrer les paramètres' }).click();
+  await expect(page.locator('body')).toHaveAttribute('data-theme', 'dark');
+  await expect(page.locator('link[href*=wireframe-theme]')).toHaveCount(0);
+});

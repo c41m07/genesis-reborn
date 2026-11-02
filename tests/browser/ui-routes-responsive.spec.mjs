@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './support/isolated-test.mjs';
 
 async function signIn(page) {
   const id = crypto.randomUUID().slice(0, 8);
@@ -28,7 +28,8 @@ test('Routes de navigation utilisables sans débordement aux trois tailles', asy
     for (const route of routes) {
       const response = await page.goto(route);
       expect(response?.status(), `GET ${route} à ${width}px`).toBeLessThan(400);
-      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth), { message: `${route} déborde à ${width}px` }).toBeLessThanOrEqual(width);
+      const overflow = await page.evaluate(() => ({ document: document.documentElement.scrollWidth, offenders: [...document.querySelectorAll('body *')].map(el => { const r=el.getBoundingClientRect(); return {tag:el.tagName, cls:typeof el.className==='string'?el.className:'', left:Math.round(r.left), right:Math.round(r.right), width:Math.round(r.width), scroll:el.scrollWidth, client:el.clientWidth}; }).filter(x => x.right > innerWidth + 1 && x.width > 0).sort((a,b)=>b.right-a.right).slice(0,8) }));
+      expect(overflow.document, `${route} déborde à ${width}px : ${JSON.stringify(overflow.offenders)}`).toBeLessThanOrEqual(width);
       await expect(page.locator('main#main')).toBeVisible();
     }
   }

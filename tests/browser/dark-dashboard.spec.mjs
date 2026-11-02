@@ -28,7 +28,7 @@ test('Thème sombre par défaut : dashboard structuré et navigation responsive'
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.screenshot({ path: 'docs/validation/colonie-theme-dark.png' });
   await page.goto(colonyPath + '?section=buildings');
-  await page.getByRole('button', { name: 'Économie' }).click();
+  await page.getByRole('button', { name: 'Production' }).click();
   await expect(page.locator('.catalog-card[data-category="economy"]:visible').first()).toBeVisible();
   await expect(page.locator('.catalog-card[data-category="infrastructure"]:visible')).toHaveCount(0);
   await page.goto(colonyPath);

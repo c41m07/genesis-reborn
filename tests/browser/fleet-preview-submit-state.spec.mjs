@@ -56,7 +56,7 @@ test('La prévisualisation valide autorise l’envoi, les erreurs backend et ré
   await expect(page.locator('.sidebar')).toHaveAttribute('aria-hidden', 'true');
   await expect.poll(() => page.locator('.sidebar').evaluate(element => element.getBoundingClientRect().right)).toBeLessThanOrEqual(0);
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
-  await page.screenshot({ path: '/home/caim/Projets/Genesis_Reborn/docs/validation/flottes-estimation-chargement-mobile-20261101.png', fullPage: false });
+  await page.screenshot({ path: 'docs/validation/flottes-estimation-chargement-mobile-20261101.png', fullPage: false });
   releaseEstimate();
   await expect.poll(() => send.isDisabled(), { timeout: 10000 }).toBe(false);
   await expect(estimate).not.toHaveClass(/error/);

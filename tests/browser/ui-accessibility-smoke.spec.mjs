@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './support/isolated-test.mjs';
 
 async function signIn(page) {
   const id = crypto.randomUUID().slice(0, 8);
@@ -22,7 +22,7 @@ function accessibilityNames(elements) {
   return elements.evaluateAll(nodes => nodes.flatMap(element => {
     const style = getComputedStyle(element);
     const rect = element.getBoundingClientRect();
-    if (style.display === 'none' || style.visibility === 'hidden' || rect.width === 0 || rect.height === 0) return [];
+    if (style.display === 'none' || style.visibility === 'hidden' || rect.width === 0 || rect.height === 0 || element.closest('details:not([open])')) return [];
     const labelledBy = element.getAttribute('aria-labelledby')?.split(/\s+/).map(id => document.getElementById(id)?.textContent ?? '').join(' ').trim();
     const direct = element.getAttribute('aria-label') || element.getAttribute('title') || element.innerText?.trim() || element.textContent?.trim();
     const contentName = [...element.querySelectorAll('img[alt],svg title')].map(node => node.getAttribute('alt') || node.textContent).join(' ').trim();

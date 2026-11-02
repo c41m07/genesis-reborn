@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#090f1b">
+    <title>{% block title %}Incident · Genesis Reborn{% endblock %}</title>
+    <link rel="icon" href="/art/genesis-reborn-emblem.png" type="image/png">
+    <style>
+        :root{color-scheme:dark;font-family:system-ui,sans-serif;background:#090f1b;color:#e7eef6}
+        *{box-sizing:border-box}body{min-height:100vh;margin:0;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% 0,#18263d,transparent 60%),#090f1b}
+        .skip{position:fixed;top:-100px;left:16px;padding:12px;background:#fff;color:#111;z-index:2}.skip:focus{top:12px}
+        main{width:min(100%,620px);padding:clamp(24px,6vw,56px);border:1px solid #34475e;border-radius:12px;background:#101b2b;box-shadow:0 24px 80px #0007}
+        .brand{display:flex;align-items:center;gap:12px;margin-bottom:36px;color:#e7eef6;font-weight:800;letter-spacing:.16em}.brand img{width:38px;height:38px}
+        .code{color:#77d5e9;font-size:.8rem;font-weight:700;letter-spacing:.18em}.eyebrow{color:#9aabc2;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase}h1{margin:.5rem 0 1rem;font-size:clamp(2rem,7vw,3.4rem);line-height:1.08;letter-spacing:-.04em}p{line-height:1.7;color:#c2cede;max-width:48ch}
+        a.action{display:inline-flex;align-items:center;justify-content:center;min-height:44px;margin-top:18px;padding:12px 18px;border:1px solid #e7b76b;border-radius:5px;background:#e7b76b;color:#17191d;font-weight:700;text-decoration:none}a.action:hover{background:#f2cd91}a:focus-visible{outline:3px solid #77d5e9;outline-offset:4px}
+    </style>
+</head>
+<body>
+<a class="skip" href="#main">Aller au contenu principal</a>
+<main id="main" tabindex="-1" aria-labelledby="error-title">
+    <div class="brand"><img src="/art/genesis-reborn-emblem.webp" alt=""><span>GENESIS REBORN</span></div>
+    <p class="code">{% block error_code %}INCIDENT{% endblock %}</p>
+    <h1 id="error-title">{% block error_title %}Une erreur est survenue{% endblock %}</h1>
+    <p>{% block error_message %}La page ne peut pas être affichée pour le moment. Réessayez plus tard.{% endblock %}</p>
+    <a class="action" href="/">Retour à l’accueil</a>
+</main>
+</body>
+</html>
