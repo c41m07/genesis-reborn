@@ -14,7 +14,9 @@ test('Préférences accessibles : mouvement réduit, alertes désactivées et fu
   await page.getByLabel('Adresse email').fill(email);
   await page.getByLabel('Mot de passe', { exact: true }).fill(password);
   await page.getByRole('button', { name: /Connexion/ }).click();
+  await page.goto('/profil');
   await expect(page.getByRole('link', { name: 'Paramètres', exact: true })).toBeVisible();
+  await page.getByRole('link', { name: 'Paramètres', exact: true }).click();
   await expect(page.locator('body')).toHaveAttribute('data-theme', 'dark');
   await expect(page.locator('link[href*=wireframe-theme]')).toHaveCount(0);
   await page.goto('/profil/preferences');
