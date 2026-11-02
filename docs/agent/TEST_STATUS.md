@@ -13,6 +13,7 @@
 | Playwright, parcours Alpha historiquement en échec (2 nov.) | Réussite — 9/9 : construction/notification, colonie + exploration + transport aller-retour, bénéfices/arbre techno, conquête/rapport privé, espionnage/rapport privé, prévisualisation flotte, assistant flotte, orbite alliée et pages 403/404. Exécutés ensemble dans la base isolée, avec 1 worker et remise à zéro entre scénarios. |
 | Liens Markdown relatifs | Vérifiés après la consolidation documentaire. |
 | Playwright ciblé progression/navigation (02/11/2026) | Réussite — 4/4 scénarios isolés : menu, arbre dans Compte, recherche, rangs et affichage des éléments verrouillés. Les illustrations de rang ont été rendues dans le catalogue. |
+| Playwright ciblé final préférences/flottes (02/11/2026) | Réussite — 2/2 scénarios isolés : enregistrement des préférences depuis Profil et désactivation de l’envoi pendant une estimation en attente ou en erreur. |
 | node --check + git diff --check | Réussite sur les scripts JavaScript/MJS modifiés et le diff. |
 
 La campagne Playwright utilise une base et des services jetables. Chaque scénario se lance dans un projet Compose isolé, supprimé en fin d’exécution. Le journal brut de la campagne complète est conservé dans le temporaire local, pas dans le dépôt.
