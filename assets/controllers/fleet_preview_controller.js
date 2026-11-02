@@ -38,6 +38,9 @@ export default class extends Controller {
             this.resultTarget.textContent = 'Estimation en cours…';
             this.resultTarget.classList.remove('error');
         }
+        if (event && this.submitButton) {
+            this.submitButton.disabled = true;
+        }
         this.abort?.abort();
         this.abort = new AbortController();
 
