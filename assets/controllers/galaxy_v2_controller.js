@@ -242,7 +242,7 @@ export default class extends Controller {
         this.sceneTarget.addEventListener('wheel', this.wheelHandler, { passive: false });
         this.systemCanvasTarget.addEventListener('click', this.systemClickHandler);
         this.systemCanvasTarget.addEventListener('dblclick', this.systemDoubleClickHandler);
-        
+
         this.minimapCanvasTarget.addEventListener('pointerdown', this.minimapPointerHandler);
         this.searchOutsideHandler = this.searchOutsideHandler.bind(this);
         document.addEventListener('pointerdown', this.searchOutsideHandler);
@@ -264,7 +264,7 @@ export default class extends Controller {
         this.sceneTarget.removeEventListener('wheel', this.wheelHandler);
         this.systemCanvasTarget.removeEventListener('click', this.systemClickHandler);
         this.systemCanvasTarget.removeEventListener('dblclick', this.systemDoubleClickHandler);
-        
+
         this.minimapCanvasTarget.removeEventListener('pointerdown', this.minimapPointerHandler);
         document.removeEventListener('pointerdown', this.searchOutsideHandler);
         this.motionMedia?.removeEventListener?.('change', this.motionPreferenceChange);

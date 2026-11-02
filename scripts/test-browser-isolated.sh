@@ -37,4 +37,4 @@ compose exec -T --user "$(id -u):$(id -g)" app php bin/console doctrine:migratio
 compose exec -T --user "$(id -u):$(id -g)" app php bin/console app:universe:import
 compose up -d --wait worker relay notifier
 
-PLAYWRIGHT_BASE_URL="http://$BROWSER_HOST" npx playwright test "$@"
+PLAYWRIGHT_RESET_DB=1 PLAYWRIGHT_WORKERS=1 PLAYWRIGHT_BASE_URL="http://$BROWSER_HOST" npx playwright test "$@" --workers=1

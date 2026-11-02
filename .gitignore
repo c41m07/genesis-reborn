@@ -28,5 +28,8 @@ yarn-error.log
 
 # Fichiers d’environnement locaux potentiellement sensibles
 .env*
-# Fichiers d’environnement locaux potentiellement sensibles
-.env*
+!.env.example
+
+# Configuration locale de l’IDE et de Codex
+/.idea/
+/.codex/

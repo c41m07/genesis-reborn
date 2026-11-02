@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 DC = docker compose --env-file .env.local
 EXEC = $(DC) exec -T --user $(shell id -u):$(shell id -g) app
-.PHONY: help configure doctor validate build start stop down status logs shell console install migrate import seed-demo test lint assets verify-install test-browser
+.PHONY: help configure doctor validate build start stop down status logs shell console install migrate import seed-demo test lint assets watch verify-install test-browser backup restore
 help: ## Afficher les commandes
 	@awk 'BEGIN {FS = ":.*## "} /^[a-z-]+:.*## / {printf "%-16s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 configure: ## Générer les secrets locaux sans écraser l'existant
@@ -32,6 +32,8 @@ install: ## Installer les dépendances PHP et frontend verrouillées
 	npm ci
 assets: ## Compiler les assets Encore
 	npm run build
+watch: ## Recompiler les assets à chaque modification (actualiser le navigateur)
+	npm run watch
 migrate: ## Appliquer les migrations sur la nouvelle base
 	$(EXEC) php bin/console doctrine:migrations:migrate --no-interaction
 import: ## Importer les cartes et univers de référence
@@ -40,6 +42,7 @@ seed-demo: ## Créer le compte de démonstration local
 	$(EXEC) php bin/console app:seed-demo
 test: ## Tests unitaires, HTTP et MariaDB isolée en mémoire
 	$(DC) --profile test up -d --wait database-test
+	$(DC) exec -T --user root app chown -R $(shell id -u):$(shell id -g) var/cache
 	$(EXEC) php bin/phpunit
 lint: ## Vérifier PHP, Twig, YAML, conteneur et schéma
 	$(EXEC) sh -c 'find src tests migrations -name "*.php" -print0 | xargs -0 -n1 php -l >/dev/null'
@@ -48,7 +51,11 @@ lint: ## Vérifier PHP, Twig, YAML, conteneur et schéma
 	$(EXEC) php bin/console lint:container
 	$(EXEC) php bin/console doctrine:schema:validate
 
-test-browser: ## Vérifier les parcours navigateur locaux (création de comptes de test)
-	npx playwright test
+test-browser: ## Vérifier les parcours navigateur dans une base MariaDB éphémère isolée
+	bash scripts/test-browser-isolated.sh
 verify-install: ## Vérifier une installation vierge isolée et la persistance après redémarrage
 	bash scripts/verify-install.sh
+backup: ## Sauvegarder la base active en archive gzip avec checksum
+	bash scripts/db-backup.sh
+restore: ## Restaurer BACKUP_FILE après confirmation RESTORE_CONFIRM=<projet Compose>
+	bash scripts/db-restore.sh
