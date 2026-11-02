@@ -32,7 +32,7 @@ test('Espionnage PNJ : envoyer une sonde et consulter le rapport privé', async 
   await page.reload();
   await expect(card('Chantier spatial').locator('.badge')).toContainText('NIVEAU 1', { timeout: 30000 });
   await page.getByRole('link', { name: 'Chantier spatial', exact: true }).click();
-  await card('Sonde exploratrice').getByRole('button', { name: 'Construire', exact: true }).click();
+  await card('Sonde exploratrice').getByRole('button', { name: /Construire/ }).click();
   accelerateQueuedItem(process.env.BROWSER_ROUTER, email, 'shipyard', 'probe');
   await page.reload();
   await expect(card('Sonde exploratrice').locator('.badge')).toContainText('1 EN RÉSERVE', { timeout: 60000 });

@@ -42,7 +42,7 @@ test('Chantier, estimation, colonisation, transport et exploration réels', asyn
   const card=name=>page.locator('article.catalog-card').filter({has:page.getByRole('heading',{name,exact:true})});
   await card('Chantier spatial').getByRole('button',{name:/Améliorer .* niveau 1/}).click();accelerateQueuedItem(process.env.BROWSER_ROUTER,email,'building','shipyard');await page.reload();await expect(card('Chantier spatial').locator('.badge')).toContainText('NIVEAU 1',{timeout:30000});
   for(const name of ['Sonde exploratrice','Vaisseau colonie','Transporteur']) {
-    await page.getByRole('link',{name:'Chantier spatial',exact:true}).click();await card(name).getByRole('button',{name:'Construire',exact:true}).click();
+    await page.getByRole('link',{name:'Chantier spatial',exact:true}).click();await card(name).getByRole('button',{name:/Construire/}).click();
   }
   await page.getByRole('link',{name:'Chantier spatial',exact:true}).click();
   accelerateShipyard(process.env.BROWSER_ROUTER,email);
@@ -109,7 +109,7 @@ test('Files intégrées : commande active, supplément, durée totale et annulat
   const operation=row.locator('[data-controller="progress"]');const end=Date.parse(await operation.getAttribute('data-progress-end-value')),total=Date.parse(await operation.getAttribute('data-progress-total-value'));expect(total).toBeGreaterThan(end);
   await expect(row.getByText('File complète ·',{exact:false})).toBeVisible();const bar=row.getByRole('progressbar');const start=Number(await bar.getAttribute('aria-valuenow'));await expect.poll(async()=>Number(await bar.getAttribute('aria-valuenow')),{timeout:10000}).toBeGreaterThan(start);
   await page.evaluate(()=>{document.activeElement?.blur();window.scrollTo({top:0,behavior:'instant'})});await page.screenshot({path:'test-results/files-integrees.png',fullPage:true});
-  await row.locator('summary').click();await row.getByRole('button',{name:'Annuler Extracteur · Métal et ses dépendances'}).first().click();
+  await row.locator('summary').click();await row.getByRole('button',{name:/Annuler Extracteur · Métal.*et ses dépendances/}).first().click();
   await expect(page.locator('.scene-operations [data-queue-type="building"]')).toContainText('Aucune commande en cours');await expect(page.locator('.queue-extra')).toHaveCount(0);
 });
 test('Bénéfices des niveaux, arbre technologique et prérequis visuels',async({page})=>{

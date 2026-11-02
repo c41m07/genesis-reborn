@@ -56,7 +56,7 @@ test('Le thème clair couvre les principaux écrans stratégiques sans débordem
       await expect(page.locator('.colony-catalog-aside .scene-operations')).toBeVisible();
     }
     if (route === '/flottes') await expect(page.getByRole('navigation', { name: 'Navigation principale' }).getByRole('link', { name: 'Flottes et missions' })).toHaveAttribute('aria-current', 'page');
-    if (route === '/flottes?mission=spy') await expect(page.getByRole('navigation', { name: 'Navigation principale' }).getByRole('link', { name: 'Espionnage' })).toHaveAttribute('aria-current', 'page');
+    if (route === '/flottes?mission=spy') await expect(page.getByRole('navigation', { name: 'Navigation principale' }).getByRole('link', { name: 'Flottes et missions' })).toHaveAttribute('aria-current', 'page');
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1440);
     await page.screenshot({ path: `docs/validation/${capture}`, fullPage: true });
     if (route === '/rapports') {
