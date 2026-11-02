@@ -401,11 +401,11 @@ final class CombatEventTest extends KernelTestCase
         foreach ($log->snapshot['participants'] as $participant) {
             $snapshots[$participant['fleet_id']] = $participant;
         }
-        self::assertSame(80.0, $snapshots[$fleet->id]['units'][0]['precision']);
-        self::assertSame(['precision_fire' => 2], $snapshots[$fleet->id]['technology_levels']);
+        self::assertEqualsWithDelta(round(70.0 * (1.01 ** 2), 1), $snapshots[$fleet->id]['units'][0]['precision'], 0.000001);
+        self::assertSame(['precision_fire' => ['basic' => 2]], $snapshots[$fleet->id]['technology_levels']);
         $defenderSnapshot = array_values(array_filter($snapshots, static fn (array $participant): bool => $participant['player_universe_id'] === $defender->currentPlayerUniverse->id))[0];
-        self::assertSame(75.0, $defenderSnapshot['units'][0]['precision']);
-        self::assertSame(['precision_fire' => 1], $defenderSnapshot['technology_levels']);
+        self::assertEqualsWithDelta(70.0 * 1.01, $defenderSnapshot['units'][0]['precision'], 0.000001);
+        self::assertSame(['precision_fire' => ['basic' => 1]], $defenderSnapshot['technology_levels']);
         self::assertSame(65, $log->snapshot['defenses'][0]['precision']);
     }
 

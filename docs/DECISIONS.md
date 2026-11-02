@@ -85,3 +85,10 @@ Les univers temporaires utilisent le modèle Outbox et le transport Messenger ex
 ## QCM d’équilibrage validé par Kévin — 01–02/11/2026
 
 Kévin choisit une stratégie modérée et fixe les valeurs de départ des cinq ressources, leur production, le stockage, les coefficients de coûts/durées, les statistiques et coûts des unités, les règles de bouclier, l’espionnage, les planètes PNJ et les protections après pertes. Les valeurs complètes sont consignées dans docs/agent/BALANCING_QCM_2026-11-02.md. Les décisions de combat déjà confirmées (round/minute, dix minutes, butin 1,0 et protection de stockage 0,1) restent inchangées. Pour la matrice de combat, les coefficients explicites du PDF priment; le cycle de rôles complète uniquement les paires sans valeur documentée. La table PNJ multiplie uniquement les stocks initiaux.
+
+
+## Progression par rangs — 2 novembre 2026
+
+Décision confirmée : Basique, Intermédiaire et Supérieur sont des pistes indépendantes et simultanées. Les données historiques deviennent Basique. Les multiplicateurs de rang sont 1×, 1,25× et 1,5625×, appliqués cumulativement à la puissance, à chaque ressource du coût et aux durées d’opération. La recherche conserve ×1,8 de temps et ×2 de coût par niveau; les durées de construction ×1,6. Les technologies précédemment à +5 % par niveau deviennent +1 % avec niveau maximum 25; laboratoire et chantier spatial sont à +2 % avec niveau maximum 25. Mines, centrale et stockage n’ont pas de niveau maximum. Les déblocages Intermédiaire/Supérieur sont thématiques, aux seuils 5 Basique puis 10 Intermédiaire.
+
+La puissance de vaisseau suit sa fonction et ses statistiques de base. Les nombres de tirs restent entiers grâce à une chance de tir supplémentaire par tir de base. L’arrondi des ressources positives et des statistiques entières dérivées est vers le haut; zéro reste zéro.

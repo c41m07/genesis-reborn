@@ -20,8 +20,6 @@ yarn-error.log
 /phpunit.xml
 /.phpunit.cache/
 ###< phpunit/phpunit ###
-/node_modules/
-/public/build/
 /test-results/
 /playwright-report/
 /.demo-credentials

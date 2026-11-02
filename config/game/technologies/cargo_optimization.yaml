@@ -1,0 +1,63 @@
+{
+  "slug": "cargo_optimization",
+  "label": "Optimisation des soutes",
+  "max_level": 25,
+  "research_time_base": 7200,
+  "research_time_scaling": 1.8,
+  "costs_base": {
+    "metal": 5000,
+    "energy": 2500
+  },
+  "costs_scaling": 2,
+  "unlock_requirements": {
+    "buildings": [
+      {
+        "slug": "lab",
+        "level": 1
+      }
+    ]
+  },
+  "effect": {
+    "type": "stat_bonus",
+    "targets": "all_ships",
+    "stat": "cargo_capacity",
+    "formula": "percent",
+    "direction": "increase",
+    "value_per_level": 0.01,
+    "max_bonus": 0.25
+  },
+  "tier_unlock_requirements": {
+    "intermediate": {
+      "technologies": [
+        {
+          "slug": "colonization",
+          "tier": "basic",
+          "level": 5
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "basic",
+          "level": 5
+        }
+      ]
+    },
+    "superior": {
+      "technologies": [
+        {
+          "slug": "colonization",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ]
+    }
+  }
+}

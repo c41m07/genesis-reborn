@@ -53,9 +53,19 @@ final class CombatSimulator
                 $attacker = $units[$attackerKey];
                 $target = $units[$targetKey];
                 $chance = $this->hitChance($attacker, $target);
-                $shotCount = $random->getInt($attacker['shots_min'], $attacker['shots_max']);
+                $baseShotCount = $random->getInt($attacker['shots_min'], $attacker['shots_max']);
+                $shotSchedule = [];
+                for ($baseShot = 0; $baseShot < $baseShotCount; ++$baseShot) {
+                    $shotSchedule[] = false;
+                    foreach ($attacker['extra_shot_chances'] ?? [] as $extraChance) {
+                        if ($random->getInt(1, 10000) <= max(0, min(1, (float) $extraChance)) * 10000) {
+                            $shotSchedule[] = true;
+                        }
+                    }
+                }
 
-                for ($shotNumber = 1; $shotNumber <= $shotCount; ++$shotNumber) {
+                foreach ($shotSchedule as $shotIndex => $isExtraShot) {
+                    $shotNumber = $shotIndex + 1;
                     $hit = $random->getInt(1, 10000) <= ($chance * 100);
                     $damage = 0.0;
                     $shieldDamage = 0.0;
@@ -76,6 +86,7 @@ final class CombatSimulator
                         'attacker' => $attackerKey,
                         'target' => $targetKey,
                         'shot' => $shotNumber,
+                        'extra_shot' => $isExtraShot,
                         'hit' => $hit,
                         'chance' => $chance,
                         'damage' => $damage,
@@ -125,6 +136,7 @@ final class CombatSimulator
                 'role' => $unit['role'],
                 'camp' => $unit['camp'],
                 'slug' => $unit['slug'],
+                'tier' => $unit['tier'] ?? 'basic',
                 'hp' => $unit['hp'],
                 'shield' => $restoreSurvivorShields ? $unit['max_shield'] : $unit['shield'],
             ], array_filter($units, static fn (array $unit): bool => $unit['hp'] > 0)),
@@ -200,7 +212,9 @@ final class CombatSimulator
                 throw new \DomainException('Nombre de tirs invalide.');
             }
             for ($index = 1; $index <= $quantity; ++$index) {
-                $key = $owner . ':' . $role . ':' . $slug . ':' . $index;
+                $tier=(string)($definition['tier']??'basic');
+                $tierSuffix=$tier==='basic'?'':':'.$tier;
+                $key=$owner.':'.$role.':'.$slug.$tierSuffix.':'.$index;
                 if (isset($units[$key])) {
                     throw new \DomainException('Identifiant d’unité de combat dupliqué.');
                 }
@@ -211,12 +225,20 @@ final class CombatSimulator
                     'role' => $role,
                     'camp' => $camp,
                     'slug' => $slug,
+                    'tier' => $tier,
                     'arrival_round' => $arrivalRound,
                     'shots_min' => $shotsMin,
                     'shots_max' => $shotsMax,
+                    'extra_shot_chances' => $this->validatedExtraShotChances($definition['extra_shot_chances'] ?? []),
                 ];
             }
         }
+    }
+
+    private function validatedExtraShotChances(array $chances): array
+    {
+        foreach($chances as $chance)if(!is_numeric($chance)||!is_finite((float)$chance)||(float)$chance<0||(float)$chance>1)throw new \DomainException('Chance de tir supplémentaire invalide.');
+        return array_map('floatval',$chances);
     }
 
     private function validateModifiers(array $modifiers): void
@@ -285,7 +307,7 @@ final class CombatSimulator
             if ($unit['hp'] > 0) {
                 continue;
             }
-            $key = $unit['owner'] . ':' . $unit['slug'];
+            $key=$unit['owner'].':'.$unit['slug'].(($unit['tier']??'basic')==='basic'?'':':'.$unit['tier']);
             $losses[$key] = ($losses[$key] ?? 0) + 1;
         }
         ksort($losses);

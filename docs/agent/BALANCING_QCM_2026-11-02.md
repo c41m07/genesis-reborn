@@ -223,3 +223,8 @@ Le document ne remplace pas les règles de combat confirmées : un round par min
 Les paramètres de ce document sont reliés aux services métier : les files de construction appliquent les réductions configurées et les coûts de vaisseaux incluent les cinq ressources; les mines suivent les facteurs de position et consomment l’énergie disponible avant de réduire proportionnellement leur production; les technologies modifient les statistiques de combat et de voyage; les boucliers absorbent les dégâts puis rechargent entre rounds; la forteresse augmente la structure des défenses et la robotique en reconstruit une part après combat. Les limites de colonisation, la détection d’espionnage et les protections de début et d’après-défaite sont également contrôlées au moment des missions et de la résolution des combats.
 
 Les champs de protection après défaite sont persistés par migrations/Version20261102100000.php. Les combats déjà ouverts gardent leur instantané initial afin de préserver le caractère déterministe de leur résolution.
+
+
+## Extension décidée après le QCM
+
+Les choix du 2 novembre définissent aussi trois rangs de progression indépendants. Les multiplicateurs 1× / 1,25× / 1,5625× sont composés (jamais additionnés). Les bonus statistiques s’appliquent en pourcentage de la valeur de base; les recherches historiques à +5 % passent à +1 %/niveau, niveau 25. Le laboratoire et le chantier spatial apportent 2 %/niveau jusqu’au niveau 25. Les bâtiments de production et de stockage restent sans plafond. La croissance de durée de recherche ×1,8 est conservée, tout comme le coût par niveau ×2. Voir [REGLES.md](../REGLES.md) pour l’arrondi et les conversions de statistiques entières.

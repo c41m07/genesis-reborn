@@ -13,7 +13,7 @@ async function enter(page) {
   await page.getByLabel('Adresse email').fill(email);
   await page.getByLabel('Mot de passe', { exact: true }).fill(password);
   await page.getByRole('button', { name: /Connexion/ }).click();
-  await page.locator('article.universe-card').filter({ has: page.getByRole('heading', { name: /Turbo/ }) }).getByRole('button').click();
+  await page.locator('article.universe-card').first().getByRole('button').click();
   await expect(page).toHaveURL(new RegExp('planetes/[0-9]+$'));
   return email;
 }
@@ -37,11 +37,12 @@ test('Le parcours de flotte guide de la composition à la confirmation', async (
   await expect(steps.nth(0)).toBeVisible();
   await expect(form.getByText('Étape 1 / 3')).toBeVisible();
   await form.getByRole('button', { name: /Choisir la destination/ }).click();
-  await expect(form.getByRole('alert')).toContainText('Choisissez au moins un vaisseau');
+  await expect(form.locator('[data-fleet-wizard-target="error"]')).toContainText('Choisissez au moins un vaisseau');
   await form.locator('[name="ships[fighter]"]').fill('1');
   await form.getByRole('button', { name: /Choisir la destination/ }).click();
   await expect(steps.nth(1)).toBeVisible();
   await expect(form.getByRole('heading', { name: 'Choisissez la destination' })).toBeVisible();
+  await form.locator('[name="coordinates"]').fill('Alpha:2');
   await form.getByRole('button', { name: /Vérifier la mission/ }).click();
   await expect(steps.nth(2)).toBeVisible();
   await expect(form.locator('[data-fleet-wizard-target="summary"]')).toContainText('Chasseur');

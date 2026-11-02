@@ -1,5 +1,6 @@
 import { test, expect } from './support/isolated-test.mjs';
 import { execFileSync } from 'node:child_process';
+import { planetCoordinates } from './support/game-fixtures.mjs';
 
 async function enter(page, prefix) {
   const id = crypto.randomUUID().slice(0, 8);
@@ -16,7 +17,7 @@ async function enter(page, prefix) {
   await page.getByLabel('Adresse email').fill(email);
   await page.getByLabel('Mot de passe', { exact: true }).fill(password);
   await page.getByRole('button', { name: /Connexion/ }).click();
-  await page.locator('article.universe-card').filter({ has: page.getByRole('heading', { name: /Omega/ }) }).getByRole('button').click();
+  await page.locator('article.universe-card').first().getByRole('button').click();
   await expect(page).toHaveURL(/planetes\/\d+$/);
   return { email, username, planetId: Number(page.url().split('/').pop()) };
 }
@@ -63,18 +64,19 @@ test('Orbite alliée : demande entrante, accord du propriétaire et stationnemen
     expect(project).toMatch(/^genesis-browser-test-[0-9]+-[0-9]+$/);
     const createFleet = "INSERT INTO fleet (status, mission, speed_ratio, cargo, reserved_fuel, orbit_fuel, orbit_duration_seconds, travel_seconds, dispatch_token, player_universe_id, home_planet_id) SELECT 'idle', 'idle', 1, '{}', 0, 0, 0, 0, '00000000-0000-4000-8000-000000000002', pu.id, home.id FROM player_universe pu INNER JOIN player p ON p.id=pu.player_id INNER JOIN planet home ON home.owner_id=pu.id WHERE p.email='" + sender.email + "' LIMIT 1";
     sql(project, createFleet);
-    const stockShip = "INSERT INTO fleet_ship (fleet_id, slug, quantity) SELECT f.id, 'fighter', 1 FROM fleet f INNER JOIN player_universe pu ON pu.id=f.player_universe_id INNER JOIN player p ON p.id=pu.player_id WHERE p.email='" + sender.email + "' AND f.status='idle' LIMIT 1 ON DUPLICATE KEY UPDATE quantity=VALUES(quantity)";
+    const stockShip = "INSERT INTO fleet_ship (fleet_id, slug, quantity) SELECT f.id, 'probe', 1 FROM fleet f INNER JOIN player_universe pu ON pu.id=f.player_universe_id INNER JOIN player p ON p.id=pu.player_id WHERE p.email='" + sender.email + "' AND f.status='idle' LIMIT 1 ON DUPLICATE KEY UPDATE quantity=VALUES(quantity)";
     sql(project, stockShip);
     const discovery = "INSERT IGNORE INTO player_discovery (player_universe_id, solar_system_id) SELECT pu.id, target.solar_system_id FROM player_universe pu INNER JOIN player p ON p.id=pu.player_id INNER JOIN planet target ON target.id=" + host.planetId + " WHERE p.email='" + sender.email + "'";
     sql(project, discovery);
 
     await senderPage.goto('/flottes?mission=orbit');
     const form = senderPage.locator('.fleet-form form').first();
-    await form.locator('[name="ships[fighter]"]').fill('1');
+    await form.locator('[name="ships[probe]"]').fill('1');
     await form.getByRole('button', { name: /Choisir la destination/ }).click();
     await form.locator('[name="mission"]').selectOption('orbit');
-    await form.locator('[name="planet"]').selectOption(String(host.planetId));
+    await form.locator('[name="coordinates"]').fill(planetCoordinates(project, host.planetId));
     await form.locator('[name="orbit_hours"]').fill('1');
+    await form.locator('[name="ratio"]').selectOption('0.1');
     await form.getByRole('button', { name: /Vérifier la mission/ }).click();
     await form.getByRole('button', { name: 'Estimer le trajet' }).click();
     await expect(form.locator('.flight-estimate')).toContainText('Carburant aller-retour');

@@ -359,13 +359,13 @@ final class CombatEventService
                 }
                 $fleet = $participant->fleet;
                 $membershipId = $participant->playerUniverse->id;
-                $technologyLevels[$membershipId] ??= $this->repo->levels(PlayerTechnology::class, ['playerUniverse' => $participant->playerUniverse]);
+                $technologyLevels[$membershipId] ??= $this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $participant->playerUniverse]);
                 $units = [];
                 foreach ($this->repo->all(FleetShip::class, ['fleet' => $fleet], ['id' => 'ASC']) as $fleetShip) {
                     if ($fleetShip->quantity < 1) {
                         continue;
                     }
-                    $units[] = $this->catalog->getForUniverse($participant->playerUniverse->universe, 'ships', $fleetShip->slug) + ['quantity' => $fleetShip->quantity];
+                    $units[] = $this->catalog->getTierForUniverse($participant->playerUniverse->universe, 'ships', $fleetShip->slug, $fleetShip->tier) + ['quantity' => $fleetShip->quantity, 'tier' => $fleetShip->tier];
                 }
                 $units = $this->technologyEffects->applyToShips($units, $technologyLevels[$membershipId], $participant->playerUniverse->universe);
                 $role = $participant->role;
@@ -415,13 +415,13 @@ final class CombatEventService
                     }
                     $definition = $this->catalog->getForUniverse($event->planet->solarSystem->galaxy->universe, 'defenses', $defense->slug);
                     $defender = $event->planet->owner;
-                    $defenderLevels = $defender ? $this->repo->levels(PlayerTechnology::class, ['playerUniverse' => $defender]) : [];
+                    $defenderLevels = $defender ? $this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $defender]) : [];
                     $definition = $this->technologyEffects->applyToDefenses([$definition], $defenderLevels, $event->planet->solarSystem->galaxy->universe)[0];
-                    $fortressLevel = $this->repo->levels(PlanetBuilding::class, ['planet' => $event->planet])['fortress'] ?? 0;
+                    $fortressLevels = $this->repo->levelsByTier(PlanetBuilding::class, ['planet' => $event->planet])['fortress'] ?? [];
                     $fortress = $this->catalog->getForUniverse($event->planet->solarSystem->galaxy->universe, 'buildings', 'fortress')['effect'] ?? [];
                     if (($fortress['targets'] ?? null) === 'ground_defenses' && ($fortress['stat'] ?? null) === 'hp') {
-                        $bonus = min((float) ($fortress['max_bonus'] ?? 0), (float) ($fortress['value_per_level'] ?? 0) * $fortressLevel) / 100;
-                        $definition['hp'] *= 1 + $bonus;
+                        $remaining=1.0;foreach(\App\Service\Catalog\GameCatalog::TIERS as $rank){$rankLevel=(int)($fortressLevels[$rank]??0);$rankFactor=\App\Service\Catalog\GameCatalog::tierFactor($rank);$bonus=min((float)($fortress['max_bonus']??0)*$rankFactor,(float)($fortress['value_per_level']??0)*$rankLevel*$rankFactor)/100;$remaining*=1+$bonus;}
+                        $definition['hp'] *= $remaining;
                     }
                     $defenseSnapshots[] = $definition + [
                         'id' => (string) $defense->id,
@@ -682,8 +682,9 @@ final class CombatEventService
         $reason = 'colony_ship_destroyed';
         foreach ($candidates as $participant) {
             $fleet = $participant->fleet;
-            $colonyShip = $this->repo->one(FleetShip::class, ['fleet' => $fleet, 'slug' => 'colony_ship']);
-            if (!$colonyShip || $colonyShip->quantity < 1) continue;
+            $colonyShips=$this->repo->all(FleetShip::class,['fleet'=>$fleet,'slug'=>'colony_ship']);
+            $colonyShip=null;foreach($colonyShips as $candidate)if($candidate->quantity>0){$colonyShip=$candidate;break;}
+            if(!$colonyShip)continue;
             if ($event->planet->owner !== null) { $reason = 'target_claimed'; continue; }
             $config = $this->catalog->forUniverse($participant->playerUniverse->universe);
             if (count($this->repo->planets($participant->playerUniverse->universe, $participant->playerUniverse)) >= $this->planetLimit($participant->playerUniverse)) {
@@ -718,9 +719,8 @@ final class CombatEventService
     {
         $config=$this->catalog->forUniverse($membership->universe);$definition=$config['catalog']['technologies']['colonization']??null;$effect=$definition['effect']??null;
         if(!is_array($effect)||($effect['type']??null)!=='planet_limit')return (int)$config['limits']['max_planets'];
-        $level=(int)($this->repo->levels(PlayerTechnology::class,['playerUniverse'=>$membership])['colonization']??0);
-        $base=(int)($effect['base_planets']??1);$perLevel=(int)($effect['value_per_level']??1);$cap=min((int)($effect['max_planets']??5),(int)$config['limits']['max_planets']);
-        return max(1,min($cap,$base+$perLevel*min($level,(int)($definition['max_level']??$level))));
+        $ranks=$this->repo->levelsByTier(PlayerTechnology::class,['playerUniverse'=>$membership])['colonization']??[];$base=(int)($effect['base_planets']??1);$perLevel=(float)($effect['value_per_level']??1);$basicCap=max(0,(int)($effect['max_planets']??5)-$base);$extra=0.0;foreach(\App\Service\Catalog\GameCatalog::TIERS as $tier){$factor=\App\Service\Catalog\GameCatalog::tierFactor($tier);$level=min((int)($definition['max_level']??25),(int)($ranks[$tier]??0));$extra+=min($basicCap*$factor,$perLevel*$level*$factor);}
+        return max(1,min((int)$config['limits']['max_planets'],$base+(int)floor($extra)));
     }
 
     private function arrivalRound(CombatEvent $event, \DateTimeImmutable $arrivalAt): int
@@ -770,7 +770,7 @@ final class CombatEventService
     {
         foreach ($participants as $participant) {
             foreach ($this->repo->all(FleetShip::class, ['fleet' => $participant->fleet]) as $ship) {
-                $lost = $losses[$participant->fleet->id . ':' . $ship->slug] ?? 0;
+                $lost = $losses[$participant->fleet->id . ':' . $ship->slug . ($ship->tier==='basic'?'':':'.$ship->tier)] ?? 0;
                 $ship->quantity = max(0, $ship->quantity - $lost);
             }
         }
@@ -779,14 +779,10 @@ final class CombatEventService
             $npcShip->quantity = max(0, $npcShip->quantity - $lost);
         }
         $rebuilt = [];
-        $robotics = $planet->owner
-            ? (int) ($this->repo->levels(PlayerTechnology::class, ['playerUniverse' => $planet->owner])['robotics'] ?? 0)
-            : 0;
+        $robotics = $planet->owner ? ($this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $planet->owner])['robotics'] ?? []) : [];
         $rules = $this->catalog->rules();
-        $rebuildPercent = min(
-            (float) ($rules['defense_rebuild_max_percent'] ?? 50),
-            (float) ($rules['defense_rebuild_percent_per_robotics_level'] ?? 10) * $robotics,
-        );
+        $remainingFailure=1.0;foreach(\App\Service\Catalog\GameCatalog::TIERS as $rank){$level=(int)($robotics[$rank]??0);$factor=\App\Service\Catalog\GameCatalog::tierFactor($rank);$chance=min((float)($rules['defense_rebuild_max_percent']??50)*$factor,(float)($rules['defense_rebuild_percent_per_robotics_level']??10)*$level*$factor)/100;$remainingFailure*=1-$chance;}
+        $rebuildPercent=(1-$remainingFailure)*100;
         foreach ($defenseSnapshots as $snapshot) {
             $id = (int) $snapshot['id'];
             $defense = $this->repo->find(PlanetDefense::class, $id);
@@ -812,11 +808,11 @@ final class CombatEventService
             if ($membershipId === null || $fleetId === null || !isset($memberships[$membershipId])) continue;
             foreach ($entry['units'] ?? [] as $unit) {
                 $slug = (string) ($unit['slug'] ?? '');
-                $definition = $this->catalog->getForUniverse($memberships[$membershipId]->universe, 'ships', $slug);
+                $unitTier=(string)($unit['tier']??'basic');$definition = $this->catalog->getTierForUniverse($memberships[$membershipId]->universe, 'ships', $slug, $unitTier);
                 if ((float) ($definition['base_attack'] ?? 0) <= 0) continue;
                 $quantity = (int) ($unit['quantity'] ?? 0);
                 $engaged[$membershipId] = ($engaged[$membershipId] ?? 0) + $quantity;
-                $lost[$membershipId] = ($lost[$membershipId] ?? 0) + (int) ($losses[$fleetId . ':' . $slug] ?? 0);
+                $lost[$membershipId] = ($lost[$membershipId] ?? 0) + (int) ($losses[$fleetId . ':' . $slug . ((($unit['tier']??'basic')==='basic')?'':':'.$unit['tier'])] ?? 0);
             }
         }
         $rules = $this->catalog->rules()['recovery_protection'] ?? [];

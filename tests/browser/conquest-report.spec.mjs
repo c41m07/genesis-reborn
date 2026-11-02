@@ -1,5 +1,6 @@
 import { test, expect } from './support/isolated-test.mjs';
 import { execFileSync } from 'node:child_process';
+import { prepareOwnedColony, revealNpcPlanet, grantSecondColony, accelerateTravelingMission } from './support/game-fixtures.mjs';
 
 async function enter(page) {
   const id = crypto.randomUUID().slice(0, 8);
@@ -15,7 +16,7 @@ async function enter(page) {
   await page.getByLabel('Adresse email').fill(email);
   await page.getByLabel('Mot de passe', { exact: true }).fill(password);
   await page.getByRole('button', { name: /Connexion/ }).click();
-  await page.locator('article.universe-card').filter({ has: page.getByRole('heading', { name: /Turbo/ }) }).getByRole('button').click();
+  await page.locator('article.universe-card').first().getByRole('button').click();
   await expect(page).toHaveURL(/planetes\/\d+$/);
   return email;
 }
@@ -29,6 +30,9 @@ test('Conquête PNJ : rapport détaillé, résultat, responsive et confidentiali
   const email = await enter(page);
   const project = process.env.BROWSER_ROUTER;
   expect(project).toMatch(/^genesis-browser-test-[0-9]+-[0-9]+$/);
+  prepareOwnedColony(project,email);
+  grantSecondColony(project,email);
+  const target = revealNpcPlanet(project,email);
 
   // Une inscription neuve ne crée pas de flotte tant qu'aucune unité n'est construite.
   const createFleet = "INSERT INTO fleet (status, mission, speed_ratio, cargo, reserved_fuel, orbit_fuel, orbit_duration_seconds, travel_seconds, dispatch_token, player_universe_id, home_planet_id) SELECT 'idle', 'idle', 1, '{}', 0, 0, 0, 0, '00000000-0000-4000-8000-000000000001', pu.id, planet.id FROM player_universe pu INNER JOIN player p ON p.id=pu.player_id INNER JOIN planet ON planet.owner_id=pu.id WHERE p.email='" + email + "' LIMIT 1";
@@ -45,18 +49,15 @@ test('Conquête PNJ : rapport détaillé, résultat, responsive et confidentiali
   await form.locator('[name="ships[colony_ship]"]').fill('1');
   await form.getByRole('button', { name: /Choisir la destination/ }).click();
   await form.locator('[name="mission"]').selectOption('conquer');
-  const targets = await form.locator('[name="planet"] option').evaluateAll(options => options.map(option => ({ value: option.value, text: option.textContent || '' })));
-  const target = targets.find(option => option.text.includes('PNJ'));
-  expect(target, 'une planète PNJ doit être disponible pour le test isolé').toBeTruthy();
-  const targetId = Number(target.value);
-  await form.locator('[name="planet"]').selectOption(String(targetId));
+  const targetId = target.id;
+  await form.locator('[name="coordinates"]').fill(target.coordinates);
+  await form.locator('[name="ratio"]').selectOption('0.1');
   await form.getByRole('button', { name: /Vérifier la mission/ }).click();
   await form.getByRole('button', { name: 'Estimer le trajet' }).click();
   await expect(form.locator('.flight-estimate')).toContainText('Carburant aller-retour');
   await form.getByRole('button', { name: /Envoyer la flotte/ }).click();
 
-  const accelerateFleet = "UPDATE fleet f INNER JOIN outbox_message o ON o.kind='fleet' AND o.target_id=f.id INNER JOIN player_universe pu ON pu.id=f.player_universe_id INNER JOIN player p ON p.id=pu.player_id SET f.arrival_at=UTC_TIMESTAMP()-INTERVAL 2 SECOND, o.due_at=UTC_TIMESTAMP()-INTERVAL 2 SECOND WHERE p.email='" + email + "' AND f.mission='conquer' AND f.status='traveling' AND f.destination_id=" + targetId;
-  sql(project, accelerateFleet);
+  accelerateTravelingMission(project, email, 'conquer');
   await expect.poll(async () => {
     await page.reload();
     return page.locator('[data-status="attacking"]').count();

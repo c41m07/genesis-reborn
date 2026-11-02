@@ -14,7 +14,7 @@ final class ResourceService
     }
     public function initialize(Planet $planet,bool $colony=false,?array $initialLevels=null,float $stockMultiplier=1): void
     {
-        $levels=$initialLevels??$this->repo->levels(PlanetBuilding::class,['planet'=>$planet]);
+        $levels=$initialLevels??$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);
         foreach ($this->catalog->rules()['resources'] as $slug=>$label) {
             if($this->repo->one(PlanetResource::class,['planet'=>$planet,'resourceType'=>$slug])) continue;
             $capacity=$this->capacity($planet,$slug,$levels);
@@ -22,7 +22,7 @@ final class ResourceService
             $r=new PlanetResource();$r->planet=$planet;$r->resourceType=$slug;
             $r->currentStock=min($capacity,$stock*$stockMultiplier);
             $r->lastUpdatedAt=$this->clock->now();
-            $r->productionRate=$this->rate($planet,$slug,$levels['mine_'.$slug]??0,$levels);
+            $r->productionRate=$this->rate($planet,$slug,0,$levels);
             $this->manager->save($r);
         }
     }
@@ -46,21 +46,25 @@ final class ResourceService
 
     public function capacity(Planet $planet,string $slug,array $buildings): float
     {
-        return $this->catalog->rules()['base_storage_capacity']+($buildings['storage_'.$slug]??0)*$this->catalog->rules()['storage_capacity_per_level'];
+        $storedLevels=$buildings['storage_'.$slug]??0;$added=0.0;
+        foreach(GameCatalog::TIERS as $tier)$added+=$this->tierLevel($storedLevels,$tier)*$this->catalog->tierFactor($tier)*$this->catalog->rules()['storage_capacity_per_level'];
+        return $this->catalog->rules()['base_storage_capacity']+$added;
     }
     public function rate(Planet $planet,string $slug,int $mineLevel,?array $levels=null): float
     {
-        $rules=$this->catalog->rules();
-        $levels??=['mine_'.$slug=>$mineLevel];
-        $bonus=0.0;
+        $rules=$this->catalog->rules();$levels??=['mine_'.$slug=>['basic'=>$mineLevel]];$bonus=0.0;
         $definitions=$this->catalog->forUniverse($planet->solarSystem->galaxy->universe)['catalog']['buildings'];
-        foreach($definitions as $building) {
-            if(($building['production_resource']??null)===$slug) {
-                $bonus+=($levels[$building['slug']]??0)*($building['production_per_level']??$rules['mine_production_per_level']);
-            }
+        foreach($definitions as $building)if(($building['production_resource']??null)===$slug){
+            $ranked=$levels[$building['slug']]??0;$per=(float)($building['production_per_level']??$rules['mine_production_per_level']);
+            foreach(GameCatalog::TIERS as $tier)$bonus+=$this->tierLevel($ranked,$tier)*$per*$this->catalog->tierFactor($tier);
         }
         $mult=$this->catalog->forUniverse($planet->solarSystem->galaxy->universe)['multipliers']['resource_production'];
         return ((float)$rules['base_production'][$slug]+$bonus)*$this->positionFactor($planet,$slug)*$mult;
+    }
+    private function tierLevel(int|array $levels,string $tier):int
+    {
+        if(is_int($levels))return $tier==='basic'?$levels:0;
+        return (int)($levels[$tier]??0);
     }
 
     private function positionFactor(Planet $planet,string $slug): float
@@ -79,21 +83,24 @@ final class ResourceService
     {
         $rules=$this->catalog->rules();
         $definitions=$this->catalog->all('buildings');
-        $extractorLevels=0;
+        $weightedExtractorLevels=0.0;
         foreach($definitions as $building) {
             $resource=$building['production_resource']??null;
-            if(is_string($resource)&&$resource!=='energy') $extractorLevels+=(int)($levels[$building['slug']]??0);
+            if(is_string($resource)&&$resource!=='energy'){
+                $ranked=$levels[$building['slug']]??0;
+                foreach(GameCatalog::TIERS as $tier)$weightedExtractorLevels+=$this->tierLevel($ranked,$tier)*$this->catalog->tierFactor($tier);
+            }
         }
-        return $extractorLevels*(float)($rules['mine_energy_upkeep_per_level']??0);
+        return $weightedExtractorLevels*(float)($rules['mine_energy_upkeep_per_level']??0);
     }
 
     public function snapshot(Planet $planet): array
     {
-        $levels=$this->repo->levels(PlanetBuilding::class,['planet'=>$planet]);
+        $levels=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);
         $rows=[];
         foreach($this->repo->all(PlanetResource::class,['planet'=>$planet]) as $resource) $rows[$resource->resourceType]=$resource;
         $rates=[];
-        foreach($this->catalog->rules()['resources'] as $slug=>$label) $rates[$slug]=(float)($rows[$slug]->productionRate??$this->rate($planet,$slug,(int)($levels['mine_'.$slug]??0),$levels));
+        foreach($this->catalog->rules()['resources'] as $slug=>$label) $rates[$slug]=(float)($rows[$slug]->productionRate??$this->rate($planet,$slug,0,$levels));
         if($rows===[]) {
             $empty=[];foreach($this->catalog->rules()['resources'] as $slug=>$label)$empty[$slug]=['label'=>$label,'stock'=>0.0,'rate'=>0.0,'capacity'=>(float)$this->catalog->rules()['base_storage_capacity']];
             return $empty;
@@ -115,7 +122,7 @@ final class ResourceService
     public function materialize(Planet $planet,?\DateTimeImmutable $at=null): array
     {
         $at??=$this->clock->now();
-        $levels=$this->repo->levels(PlanetBuilding::class,['planet'=>$planet]);
+        $levels=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);
         $rows=[];
         foreach($this->repo->all(PlanetResource::class,['planet'=>$planet]) as $resource) $rows[$resource->resourceType]=$resource;
         if($rows===[]) return [];
@@ -123,7 +130,7 @@ final class ResourceService
         $effective=$at<$anchor?$anchor:$at;
         $elapsed=max(0,$effective->getTimestamp()-$anchor->getTimestamp());
         $rates=[];
-        foreach($this->catalog->rules()['resources'] as $slug=>$label) $rates[$slug]=(float)($rows[$slug]->productionRate??$this->rate($planet,$slug,(int)($levels['mine_'.$slug]??0),$levels));
+        foreach($this->catalog->rules()['resources'] as $slug=>$label) $rates[$slug]=(float)($rows[$slug]->productionRate??$this->rate($planet,$slug,0,$levels));
         $upkeep=$this->mineUpkeep($levels);
         $energyRate=($rates['energy']??0)-$upkeep;
         $energyStart=(float)($rows['energy']->currentStock??0);
@@ -153,7 +160,7 @@ final class ResourceService
     }
     public function refund(Planet $planet,array $paid,float $ratio): void
     {
-        $rows=$this->materialize($planet);$levels=$this->repo->levels(PlanetBuilding::class,['planet'=>$planet]);
+        $rows=$this->materialize($planet);$levels=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);
         foreach($paid as $slug=>$amount) {
             if(!isset($rows[$slug]) || $amount<0 || !is_finite((float)$amount)) throw new \DomainException('Coût payé invalide.');
             $rows[$slug]->currentStock=min($this->capacity($planet,$slug,$levels),$rows[$slug]->currentStock+$amount*$ratio);
@@ -163,7 +170,7 @@ final class ResourceService
     public function deposit(Planet $planet, array $cargo): array
     {
         $rows = $this->materialize($planet);
-        $levels = $this->repo->levels(PlanetBuilding::class, ['planet' => $planet]);
+        $levels = $this->repo->levelsByTier(PlanetBuilding::class, ['planet' => $planet]);
         $delivered = [];
         $overflow = [];
         foreach ($cargo as $slug => $amount) {
@@ -181,7 +188,7 @@ final class ResourceService
 
     public function refreshProduction(Planet $planet): void
     {
-        $levels=$this->repo->levels(PlanetBuilding::class,['planet'=>$planet]);
-        foreach ($this->repo->all(PlanetResource::class,['planet'=>$planet]) as $r) $r->productionRate=$this->rate($planet,$r->resourceType,$levels['mine_'.$r->resourceType]??0,$levels);
+        $levels=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);
+        foreach ($this->repo->all(PlanetResource::class,['planet'=>$planet]) as $r) $r->productionRate=$this->rate($planet,$r->resourceType,0,$levels);
     }
 }

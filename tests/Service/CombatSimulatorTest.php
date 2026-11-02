@@ -132,6 +132,14 @@ final class CombatSimulatorTest extends TestCase
         self::assertSame(20.0, $cruiser['shield']);
     }
 
+    public function testExtraShotChanceAddsAnIndependentShotPerBaseShot(): void
+    {
+        $attacker=$this->unit('fighter',10000,1);$attacker['extra_shot_chances']=[1.0];
+        $participants=[['id'=>'attacker-a','role'=>'attacker','camp'=>'attackers','arrival_round'=>1,'units'=>[$attacker]],['id'=>'defender-b','role'=>'defender','camp'=>'defenders','arrival_round'=>1,'units'=>[$this->unit('cruiser',10000,0)]]];
+        $result=(new CombatSimulator())->simulate($participants,[],[],1,11);$shots=array_values(array_filter($result['rounds'][0]['shots'],static fn(array $shot):bool=>str_starts_with($shot['attacker'],'attacker-a:attacker:')));
+        self::assertCount(2,$shots);self::assertFalse($shots[0]['extra_shot']);self::assertTrue($shots[1]['extra_shot']);
+    }
+
     public function testInvalidUnitStatisticsAreRejected(): void
     {
         $participants = $this->participants();

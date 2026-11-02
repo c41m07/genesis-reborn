@@ -25,7 +25,7 @@ L’orientation choisie est une stratégie modérée. Les réglages de départ, 
 - Lint : syntaxe PHP, YAML, Twig, conteneur Symfony et schéma Doctrine réussis.
 - Compose : configuration valide.
 - Frontend : compilation Encore réussie.
-- Playwright : campagne complète isolée 21/34; cinq scénarios ciblés (administration catalogue, thème, modération, responsive, accessibilité) passent après adaptation des sélecteurs. Le bilan agrégé n’a pas été relancé après ces corrections; huit parcours restent à reprendre, listés dans TEST_STATUS.md.
+- Playwright : campagne complète isolée connue 21/34 (13 échecs), pas relancée intégralement. Depuis, le lot ciblé des huit familles de parcours navigateur restantes a passé 9/9 le 02/11/2026. Le statut détaillé et les limites sont dans TEST_STATUS.md.
 
 Les commandes, leurs périmètres et les résultats sont détaillés dans TEST_STATUS.md.
 

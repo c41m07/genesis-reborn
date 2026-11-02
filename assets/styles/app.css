@@ -41,3 +41,15 @@ html{scroll-padding-top:180px}@media(max-width:740px){html{scroll-padding-top:22
 
 .catalog-card.card--buildings .card-art>.badge,.catalog-card.card--technologies .card-art>.badge{font-size:11px!important;font-weight:800;letter-spacing:.04em;padding:7px 10px;background:#07111fee;border-color:#77d5e9;color:#fff;box-shadow:0 2px 10px #02071199}.catalog-card.card--buildings .build-duration>span,.catalog-card.card--technologies .build-duration>span{font-size:11px!important;font-weight:800;line-height:1.2;color:#ffe0a0;padding:5px 9px;border:1px solid #dcae5c66;border-radius:4px;background:#302718cc;text-shadow:0 1px 4px #000}.catalog-card.card--buildings .build-duration,.catalog-card.card--technologies .build-duration{font-size:10px;gap:7px}
 @media(max-width:480px){.catalog-card.card--buildings .card-art>.badge,.catalog-card.card--technologies .card-art>.badge{font-size:10px!important;padding:6px 8px}.catalog-card.card--buildings .build-duration>span,.catalog-card.card--technologies .build-duration>span{font-size:10px!important;padding:4px 7px}}
+
+/* Variant atlas backgrounds for progression ranks. Basique art remains the original PNG atlas. */
+.generated-building-art.tier-art--intermediate{background-image:url('/art/buildings-atlas-intermediate.svg'),url('/art/buildings-atlas.png')}
+.generated-building-art.tier-art--superior{background-image:url('/art/buildings-atlas-superior.svg'),url('/art/buildings-atlas.png')}
+.generated-ship-art.tier-art--intermediate{background-image:url('/art/ships-atlas-intermediate.svg'),url('/art/ships-atlas.png')}
+.generated-ship-art.tier-art--superior{background-image:url('/art/ships-atlas-superior.svg'),url('/art/ships-atlas.png')}
+.generated-research-extra-art.tier-art--basic{background-image:url('/art/research-atlas-basic-extra.svg')}
+.generated-research-extra-art.tier-art--intermediate{background-image:url('/art/research-atlas-intermediate-extra.svg')}
+.generated-research-extra-art.tier-art--superior{background-image:url('/art/research-atlas-superior-extra.svg')}
+.generated-research-art.tier-art--intermediate{background-image:url('/art/research-atlas-intermediate.svg'),url('/art/research-atlas.png')}
+.generated-research-art.tier-art--superior{background-image:url('/art/research-atlas-superior.svg'),url('/art/research-atlas.png')}
+.tier-label{display:inline-flex;padding:.2rem .5rem;border:1px solid currentColor;border-radius:999px;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:#75bde8}.tier-label--intermediate{color:#60d9e1}.tier-label--superior{color:#c19bff}

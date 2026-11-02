@@ -1,7 +1,6 @@
 {
   "slug": "mine_hydrogen",
   "label": "Extracteur · Hydrogène",
-  "max_level": 20,
   "base_build_time": 120,
   "build_time_scaling": 1.6,
   "costs_base": {
@@ -15,5 +14,39 @@
       "unlock_requirements": {}
     }
   },
-  "provisional": true
+  "provisional": true,
+  "tier_unlock_requirements": {
+    "intermediate": {
+      "technologies": [
+        {
+          "slug": "advanced_propulsion",
+          "tier": "basic",
+          "level": 5
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "basic",
+          "level": 5
+        }
+      ]
+    },
+    "superior": {
+      "technologies": [
+        {
+          "slug": "advanced_propulsion",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ]
+    }
+  }
 }

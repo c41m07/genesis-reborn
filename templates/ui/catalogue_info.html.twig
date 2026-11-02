@@ -1,9 +1,9 @@
 <div class="catalog-info" data-controller="catalog-info">
     <button class="catalog-info-trigger" type="button" data-action="catalog-info#open" aria-haspopup="dialog" aria-label="Informations sur {{ d.label }}">i</button>
-    <dialog class="catalog-info-dialog" data-catalog-info-target="dialog" data-action="click->catalog-info#outside" aria-labelledby="catalog-info-title-{{ group }}-{{ d.slug }}">
+    <dialog class="catalog-info-dialog" data-catalog-info-target="dialog" data-action="click->catalog-info#outside" aria-labelledby="catalog-info-title-{{ group }}-{{ d.slug }}-{{ card.tier }}">
         <div class="catalog-info-content">
             <header>
-                <div><p class="eyebrow">FICHE DÉTAILLÉE · {{ {buildings:'BÂTIMENT',technologies:'RECHERCHE',ships:'VAISSEAU',defenses:'DÉFENSE'}[group] }}</p><h2 id="catalog-info-title-{{ group }}-{{ d.slug }}">{{ d.label }}</h2></div>
+                <div><p class="eyebrow">FICHE DÉTAILLÉE · {{ {buildings:'BÂTIMENT',technologies:'RECHERCHE',ships:'VAISSEAU',defenses:'DÉFENSE'}[group] }}</p><h2 id="catalog-info-title-{{ group }}-{{ d.slug }}-{{ card.tier }}">{{ d.label }} · {{ d._tier_label }}</h2></div>
                 <form method="dialog"><button type="submit" class="catalog-info-close" aria-label="Fermer">×</button></form>
             </header>
 
@@ -22,7 +22,7 @@
                     <div><dt>Soute</dt><dd>{{ d.cargo_capacity|default(0)|number_format(0,',',' ') }} unités</dd></div>
                     <div><dt>Réservoir</dt><dd>{{ d.fuel_capacity|default(0)|number_format(0,',',' ') }} H</dd></div>
                 </dl>
-                <p class="catalog-info-stock">En réserve sur cette colonie : <strong>{{ ships[d.slug]|default(0)|number_format(0,',',' ') }}</strong></p>
+                <p class="catalog-info-stock">En réserve sur cette colonie : <strong>{{ card.quantity|default(0)|number_format(0,',',' ') }}</strong></p>
             {% elseif group == 'defenses' %}
                 <p>Installation fixe : elle protège cette planète et ne peut pas rejoindre une flotte.</p>
                 <h3>Performances</h3>

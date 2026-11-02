@@ -2,7 +2,7 @@
 namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity]
-#[ORM\UniqueConstraint(name: 'building_unique', columns: ['planet_id', 'slug'])]
+#[ORM\UniqueConstraint(name: 'building_unique', columns: ['planet_id', 'slug', 'tier'])]
 class PlanetBuilding
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]
@@ -11,6 +11,8 @@ class PlanetBuilding
     public Planet $planet;
     #[ORM\Column(length: 64)]
     public string $slug;
+    #[ORM\Column(length: 16, options: ['default' => 'basic'])]
+    public string $tier = 'basic';
     #[ORM\Column]
     public int $level = 0;
 }

@@ -46,3 +46,28 @@ Un événement Outbox est créé avec la date de fin; le relais le programme via
 ## Équilibrage retenu — 01–02/11/2026
 
 Les valeurs initiales des stocks, productions, coûts, durées, vaisseaux, défenses, boucliers, contre-bonus, espionnage, PNJ et protections ont été choisies par Kévin pendant le QCM. Elles constituent la configuration de l’Alpha; elles ne sont pas déclarées équilibrées sur la seule base de leur présence. Les cibles de progression seront mesurées pendant l’Alpha, puis révisées à partir des résultats. La cadence confirmée reste un round par minute pendant dix minutes maximum.
+
+
+## Progression technologique par rangs — décision du 02/11/2026
+
+Chaque bâtiment, technologie et vaisseau conserve trois progressions distinctes, actives en parallèle : **Basique**, **Intermédiaire** et **Supérieur**. Les niveaux déjà sauvegardés sont conservés en Basique. Un niveau 10 Basique et un niveau 5 Intermédiaire sont donc simultanément possibles. Les défenses stationnaires restent Basique, car elles ne sont pas des variantes de vaisseau.
+
+| Rang | Puissance et coûts | Durée d’opération |
+|---|---:|---:|
+| Basique | 1× | 1× |
+| Intermédiaire | 1,25× | 1,25× |
+| Supérieur | 1,5625× | 1,5625× |
+
+Les coûts sont multipliés ressource par ressource, y compris toutes les ressources d’un vaisseau. Les opérations arrondissent chaque coût positif à l’entier supérieur; une ressource configurée à zéro reste à zéro. Cette règle évite un coût nul pour une ressource effectivement requise. Les durées sont arrondies à la seconde supérieure, avec un minimum d’une seconde.
+
+La puissance dépend de la spécialité : la production et le stockage utilisent l’effet par niveau propre au bâtiment; les technologies appliquent leur bonus au champ concerné; les vaisseaux renforcent structure, bouclier, attaque, précision, suivi, esquive, vitesse, réservoir et soute. Une signature est bénéfique lorsqu’elle baisse, elle est donc divisée par le facteur du rang. Les stats positives entières des vaisseaux sont arrondies vers le haut. Pour les tirs entiers, le rang donne une chance de tir supplémentaire par tir de base : 25 % au rang Intermédiaire, 56,25 % au rang Supérieur. Les technologies de cadence ajoutent leur propre chance, indépendamment.
+
+Les bonus technologiques en pourcentage qui étaient à +5 % par niveau passent à **+1 % par niveau et niveau maximum 25**. Le laboratoire et le chantier spatial passent à **2 % par niveau, maximum 25**, conservant leur maximum Basique de 50 %. Les bonus de rang sont multipliés puis composés : une technologie à 25 niveaux dans chacun des trois rangs produit les facteurs 1,25 × 1,3125 × 1,390625 = **2,281494×**. Les bâtiments de production de ressources et de stockage n’ont plus de niveau maximum.
+
+Les prérequis Basique existants restent en place. Les ouvertures des rangs supérieurs sont spécifiques à chaque élément : Intermédiaire demande la technologie liée au niveau 5 Basique; Supérieur demande cette technologie au niveau 10 Intermédiaire. Le laboratoire et le chantier spatial sont aussi utilisés dans les chaînes concernées. Aucun ancien niveau n’est dupliqué ni réinitialisé.
+
+Les coûts de recherche par niveau conservent la croissance ×2 et les durées de recherche la croissance ×1,8. Les durées de bâtiment conservent ×1,6. Ces courbes restent des paramètres distincts des multiplicateurs de rang. La migration attribue les données historiques au rang Basique; les opérations déjà en file conservent leurs coûts et durées enregistrés.
+
+Les technologies de combat couvrent structure, bouclier, attaque, précision, suivi, esquive, signature, cadence de tir, vitesse, réservoir et soute. Le tir supplémentaire est une chance indépendante par tir de base pour conserver une résolution entière et éviter des valeurs de tirs fractionnaires.
+
+Pour les effets discrets de colonisation, chaque rang contribue son quota pondéré, puis les fractions de colonies sont arrondies vers le bas; la limite de colonies configurée par l’univers reste prioritaire. Les productions et capacités de stockage de plusieurs bâtiments-rangs s’additionnent, car chaque rang de bâtiment fonctionne comme une installation distincte; le multiplicateur de rang s’applique à son effet par niveau.

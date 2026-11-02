@@ -1,7 +1,7 @@
 {
   "slug": "advanced_propulsion",
   "label": "Propulsion avancée",
-  "max_level": 5,
+  "max_level": 25,
   "research_time_base": 3600,
   "research_time_scaling": 1.8,
   "costs_base": {
@@ -31,8 +31,42 @@
       "speed_galaxy"
     ],
     "formula": "percent",
-    "value_per_level": 0.05,
+    "value_per_level": 0.01,
     "max_bonus": 0.25
   },
-  "source": "PDF 1 p.15"
+  "source": "PDF 1 p.15",
+  "tier_unlock_requirements": {
+    "intermediate": {
+      "technologies": [
+        {
+          "slug": "basic_engineering",
+          "tier": "basic",
+          "level": 5
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "basic",
+          "level": 5
+        }
+      ]
+    },
+    "superior": {
+      "technologies": [
+        {
+          "slug": "basic_engineering",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ]
+    }
+  }
 }

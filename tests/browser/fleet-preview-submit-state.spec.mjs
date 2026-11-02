@@ -16,7 +16,7 @@ async function enter(page) {
   await page.getByLabel('Adresse email').fill(email);
   await page.getByLabel('Mot de passe', { exact: true }).fill(password);
   await page.getByRole('button', { name: /Connexion/ }).click();
-  await page.locator('article.universe-card').filter({ has: page.getByRole('heading', { name: /Turbo/ }) }).getByRole('button').click();
+  await page.locator('article.universe-card').first().getByRole('button').click();
   await expect(page).toHaveURL(new RegExp('planetes/[0-9]+$'));
   return email;
 }
@@ -45,11 +45,15 @@ test('La prévisualisation valide autorise l’envoi, les erreurs backend et ré
   await form.locator('[name="ships[fighter]"]').fill('1');
   await form.locator('[name="ships[probe]"]').fill('1');
   await form.getByRole('button', { name: /Choisir la destination/ }).click();
+  await form.locator('[name="coordinates"]').fill('Alpha:2');
+  await form.locator('[name="ratio"]').selectOption('0.1');
+  await form.getByRole('button', { name: /Vérifier la mission/ }).click();
   const send = form.getByRole('button', { name: /Envoyer la flotte/ });
+  await expect(estimate).toContainText('Carburant aller-retour', { timeout: 10000 });
   let releaseEstimate;
   const estimateGate = new Promise(resolve => { releaseEstimate = resolve; });
   await page.route('**/flottes/estimer', async route => { await estimateGate; await route.continue(); }, { times: 1 });
-  await form.getByRole('button', { name: /Vérifier la mission/ }).click();
+  await form.getByRole('button', { name: 'Estimer le trajet' }).click();
   await expect(estimate).toContainText('Estimation en cours');
   await expect(send).toBeDisabled();
   await page.setViewportSize({ width: 390, height: 844 });
@@ -72,9 +76,10 @@ test('La prévisualisation valide autorise l’envoi, les erreurs backend et ré
   await form.getByRole('button', { name: /Modifier la destination/ }).click();
   await form.getByRole('button', { name: /Retour à la composition/ }).click();
   await form.locator('[name="ships[probe]"]').fill('1');
-  await page.route('**/flottes/estimer', route => route.abort());
   await form.getByRole('button', { name: /Choisir la destination/ }).click();
   await form.getByRole('button', { name: /Vérifier la mission/ }).click();
+  await page.route('**/flottes/estimer', route => route.abort(), { times: 1 });
+  await form.getByRole('button', { name: 'Estimer le trajet' }).click();
   await expect(estimate).toHaveClass(/error/, { timeout: 10000 });
   await expect(send).toBeDisabled();
 });

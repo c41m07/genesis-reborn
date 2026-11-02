@@ -1,7 +1,6 @@
 {
   "slug": "power_plant",
   "label": "Centrale énergétique",
-  "max_level": 10,
   "base_build_time": 360,
   "build_time_scaling": 1.6,
   "costs_base": {
@@ -17,5 +16,39 @@
   "provisional": true,
   "production_resource": "energy",
   "production_per_level": 0.1,
-  "effect_note": "Production d’énergie : +0,1 énergie/s par niveau avant facteur de position et multiplicateur d’univers."
+  "effect_note": "Production d’énergie : +0,1 énergie/s par niveau avant facteur de position et multiplicateur d’univers.",
+  "tier_unlock_requirements": {
+    "intermediate": {
+      "technologies": [
+        {
+          "slug": "basic_engineering",
+          "tier": "basic",
+          "level": 5
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "basic",
+          "level": 5
+        }
+      ]
+    },
+    "superior": {
+      "technologies": [
+        {
+          "slug": "basic_engineering",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ]
+    }
+  }
 }

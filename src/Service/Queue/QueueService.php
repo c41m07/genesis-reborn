@@ -11,36 +11,35 @@ use Symfony\Component\Uid\Uuid;
 final class QueueService
 {
     public function __construct(private GameManager $manager,private GameRepository $repo,private GameCatalog $catalog,private RequirementChecker $requirements,private ResourceService $resources,private ActionGuard $guard,private ClockInterface $clock,private \App\Service\Notification\NotificationService $notifications,private OperationCalculator $calculator) {}
-    public function add(PlayerUniverse $m,Planet $planet,string $group,string $slug,int $quantity,string $requestKey): void
+    public function add(PlayerUniverse $m,Planet $planet,string $group,string $slug,int $quantity,string $requestKey,string $tier='basic'): void
     {
-        $this->manager->transaction(function()use($m,$planet,$group,$slug,$quantity,$requestKey){
+        $this->manager->transaction(function()use($m,$planet,$group,$slug,$quantity,$requestKey,$tier){
             $this->guard->lock($m,$planet);$this->settleMembershipLocked($m);
             if(!$this->guard->receipt($m,$requestKey)) return;
             if(!in_array($group,['buildings','technologies','ships','defenses'],true)) throw new \DomainException('Type de construction invalide.');
+            if(!in_array($tier,GameCatalog::TIERS,true)) throw new \DomainException('Rang de progression invalide.');
+            if($group==='defenses'&&$tier!=='basic') throw new \DomainException('Les défenses n’ont pas de variante de rang.');
             if($quantity<1 || $quantity>100) throw new \DomainException('Quantité autorisée : 1 à 100.');
             if(!isset($this->catalog->all($group)[$slug])) throw new \DomainException('Élément indisponible.');
-            $config=$this->catalog->forUniverse($m->universe);$d=$config['catalog'][$group][$slug]??$this->catalog->get($group,$slug);
+            $config=$this->catalog->forUniverse($m->universe);$base=$config['catalog'][$group][$slug]??$this->catalog->get($group,$slug);$d=$this->catalog->withTier($base,$tier);
             $type=match($group){'buildings'=>'building','technologies'=>'research',default=>'shipyard'};
             $queue=$this->repo->queue($planet,$type);
             if(count($queue)>=30) throw new \DomainException('File pleine (30 commandes maximum).');
-            $buildings=$this->repo->levels(PlanetBuilding::class,['planet'=>$planet]);
-            $techs=$this->repo->levels(PlayerTechnology::class,['playerUniverse'=>$m]);
+            $buildings=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);
+            $techs=$this->repo->levelsByTier(PlayerTechnology::class,['playerUniverse'=>$m]);
             $level=1;$depends=null;
             if(in_array($group,['buildings','technologies'],true)) {
-                $quantity=1;$level=($group==='buildings' ? ($buildings[$slug]??0) : ($techs[$slug]??0))+1;
-                foreach($queue as $item) if($item->itemSlug===$slug) { $level=$item->itemLevel+1;$depends=$item; }
-                if($level>$d['max_level']) throw new \DomainException('Niveau maximum atteint.');
+                $quantity=1;$level=(int)($group==='buildings'?($buildings[$slug][$tier]??0):($techs[$slug][$tier]??0))+1;
+                foreach($queue as $item) if($item->itemSlug===$slug&&$item->tier===$tier) {$level=($item->itemLevel??0)+1;$depends=$item;}
+                if(isset($d['max_level'])&&$level>$d['max_level']) throw new \DomainException('Niveau maximum atteint.');
             }
-            if($group==='technologies') {
-                if(($buildings['lab']??0)<1) throw new \DomainException('Un laboratoire est nécessaire.');
-                foreach($this->repo->all(QueueItem::class,['playerUniverse'=>$m,'queueType'=>'research','itemSlug'=>$slug]) as $item) if($item->planet->id!==$planet->id) throw new \DomainException('Cette technologie est déjà en recherche sur une autre planète.');
-            }
-            if($group==='ships' && ($buildings['shipyard']??0)<1) throw new \DomainException('Un chantier spatial est nécessaire.');
-            $failures=$this->requirements->check($this->requirements->forLevel($d,$level),$buildings,$techs);
-            if($failures) throw new \DomainException('Prérequis : '.implode(', ',$failures).'.');
+            if($group==='technologies')foreach($this->repo->all(QueueItem::class,['playerUniverse'=>$m,'queueType'=>'research','itemSlug'=>$slug,'tier'=>$tier]) as $item)if($item->planet->id!==$planet->id)throw new \DomainException('Ce rang de technologie est déjà en recherche sur une autre planète.');
+            $failures=$this->requirements->check($this->requirements->forTier($d,$tier,$level),$buildings,$techs);
+            if($group==='ships'&&$slug!=='fighter'&&($buildings['shipyard']['basic']??0)<1)$failures[]='Chantier spatial · Basique niveau 1';
+            if($failures) throw new \DomainException('Prérequis : '.implode(', ',array_unique($failures)).'.');
             $plan=$this->calculator->calculate($d,$group,$level,$quantity,$buildings,$config,$techs);$duration=$plan['duration'];
             $this->resources->consume($planet,$plan['costs']);
-            $item=new QueueItem();$item->planet=$planet;$item->playerUniverse=$m;$item->queueType=$type;$item->itemSlug=$slug;$item->itemLevel=in_array($group,['buildings','technologies'],true)?$level:null;$item->quantity=$quantity;$item->paidCosts=$plan['costs'];$item->durationSeconds=$duration;$item->queuedAt=$this->clock->now();$item->dependsOn=$depends;$item->dispatchToken=Uuid::v4()->toRfc4122();
+            $item=new QueueItem();$item->planet=$planet;$item->playerUniverse=$m;$item->queueType=$type;$item->itemSlug=$slug;$item->tier=$tier;$item->itemLevel=in_array($group,['buildings','technologies'],true)?$level:null;$item->quantity=$quantity;$item->paidCosts=$plan['costs'];$item->durationSeconds=$duration;$item->queuedAt=$this->clock->now();$item->dependsOn=$depends;$item->dispatchToken=Uuid::v4()->toRfc4122();
             $this->manager->save($item);$this->manager->flush();
             if(!$queue) $this->start($item,$this->clock->now());
         });
@@ -83,24 +82,24 @@ final class QueueService
         if($item->queueType==='building') {
             // Settle using the OLD production and storage capacity exactly at the event date.
             $this->resources->materialize($planet,$finish);
-            $b=$this->repo->one(PlanetBuilding::class,['planet'=>$planet,'slug'=>$item->itemSlug])??new PlanetBuilding();
-            $b->planet=$planet;$b->slug=$item->itemSlug;$b->level=$item->itemLevel;
+            $b=$this->repo->one(PlanetBuilding::class,['planet'=>$planet,'slug'=>$item->itemSlug,'tier'=>$item->tier])??new PlanetBuilding();
+            $b->planet=$planet;$b->slug=$item->itemSlug;$b->tier=$item->tier;$b->level=$item->itemLevel;
             $this->manager->save($b);$this->manager->flush();$this->resources->refreshProduction($planet);
         } elseif($item->queueType==='research') {
-            $t=$this->repo->one(PlayerTechnology::class,['playerUniverse'=>$m,'slug'=>$item->itemSlug])??new PlayerTechnology();
-            $t->playerUniverse=$m;$t->slug=$item->itemSlug;$t->level=$item->itemLevel;$this->manager->save($t);
+            $t=$this->repo->one(PlayerTechnology::class,['playerUniverse'=>$m,'slug'=>$item->itemSlug,'tier'=>$item->tier])??new PlayerTechnology();
+            $t->playerUniverse=$m;$t->slug=$item->itemSlug;$t->tier=$item->tier;$t->level=$item->itemLevel;$this->manager->save($t);
         } elseif(isset($this->catalog->all('defenses')[$item->itemSlug])) {
             $d=$this->repo->one(PlanetDefense::class,['planet'=>$planet,'slug'=>$item->itemSlug])??new PlanetDefense();
             $d->planet=$planet;$d->slug=$item->itemSlug;$d->quantity+=$item->quantity;$this->manager->save($d);
         } else {
             $fleet=$this->repo->one(Fleet::class,['homePlanet'=>$planet,'playerUniverse'=>$m,'status'=>'idle']);
             if(!$fleet) { $fleet=new Fleet();$fleet->playerUniverse=$m;$fleet->homePlanet=$planet;$this->manager->save($fleet);$this->manager->flush(); }
-            $ship=$this->repo->one(FleetShip::class,['fleet'=>$fleet,'slug'=>$item->itemSlug])??new FleetShip();
-            $ship->fleet=$fleet;$ship->slug=$item->itemSlug;$ship->quantity+=$item->quantity;$this->manager->save($ship);
+            $ship=$this->repo->one(FleetShip::class,['fleet'=>$fleet,'slug'=>$item->itemSlug,'tier'=>$item->tier])??new FleetShip();
+            $ship->fleet=$fleet;$ship->slug=$item->itemSlug;$ship->tier=$item->tier;$ship->quantity+=$item->quantity;$this->manager->save($ship);
         }
         foreach($this->repo->all(QueueItem::class,['dependsOn'=>$item]) as $dependent) $dependent->dependsOn=null;
         $group=match($item->queueType){'building'=>'buildings','research'=>'technologies',default=>isset($this->catalog->all('defenses')[$item->itemSlug])?'defenses':'ships'};
-        $this->notifications->enqueue($m,'Terminé : '.$this->catalog->get($group,$item->itemSlug)['label'].' sur '.$planet->name.'.');
+        $this->notifications->enqueue($m,'Terminé : '.$this->catalog->getTierForUniverse($m->universe,$group,$item->itemSlug,$item->tier)['label'].' · '.$this->catalog->tiers()[$item->tier]['label'].' sur '.$planet->name.'.');
         $type=$item->queueType;$this->manager->remove($item);$this->manager->flush();
         $next=$this->repo->queue($planet,$type)[0]??null;
         if($next) $this->start($next,$finish);else { $field=$type.'QueueStartedAt';$planet->$field=null; }
@@ -159,7 +158,7 @@ final class QueueService
     {
         foreach($this->repo->all(QueueItem::class,['dependsOn'=>$item]) as $dependent) $this->removeTree($dependent);
         $group=match($item->queueType){'building'=>'buildings','research'=>'technologies',default=>isset($this->catalog->all('defenses')[$item->itemSlug])?'defenses':'ships'};
-        $paid=$item->paidCosts??$this->catalog->costs($this->catalog->getForUniverse($m->universe,$group,$item->itemSlug),$item->itemLevel??1,$item->quantity);
+        $paid=$item->paidCosts??$this->catalog->costs($this->catalog->getTierForUniverse($item->playerUniverse->universe,$group,$item->itemSlug,$item->tier),$item->itemLevel??1,$item->quantity);
         $this->resources->refund($item->planet,$paid,$this->catalog->rules()['cancellation_refund_ratio']);
         $this->manager->remove($item);
     }

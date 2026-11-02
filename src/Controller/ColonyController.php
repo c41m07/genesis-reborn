@@ -49,6 +49,26 @@ final class ColonyController extends AbstractController
         }
         return $this->render('colony/show.html.twig',$data+['section'=>$section]);
     }
+    #[Route('/technologies',name:'app_technology_tree',methods:['GET'])]
+    public function technologyTree(Request $request, ColonyView $view): Response
+    {
+        $membership = $this->context->membership();
+        $planets = $this->repo->planets($membership->universe, $membership);
+        if ($planets === []) {
+            return $this->redirectToRoute('app_universes');
+        }
+        $selectedId = (int) $request->getSession()->get('selected_planet_'.$membership->id, 0);
+        $planet = null;
+        foreach ($planets as $candidate) {
+            if ($candidate->id === $selectedId) {
+                $planet = $candidate;
+                break;
+            }
+        }
+        $planet ??= $planets[0];
+        return $this->render('player/technology_tree.html.twig', $view->data($membership, $planet) + ['tree_standalone' => true]);
+    }
+
     #[Route('/planetes/{id}/renommer',name:'app_planet_rename',methods:['POST'],requirements:['id'=>'\\d+'])]
     public function rename(int $id,Request $request,GameManager $manager): Response
     {
@@ -77,10 +97,10 @@ final class ColonyController extends AbstractController
         $quantity=filter_var($request->request->get('quantity',1),FILTER_VALIDATE_INT);
         try {
             if($quantity===false) throw new \DomainException('Quantité invalide.');
-            $service->add($this->context->membership(),$p,(string)$request->request->get('group'),(string)$request->request->get('slug'),$quantity,(string)$request->request->get('request_key'));
+            $service->add($this->context->membership(),$p,(string)$request->request->get('group'),(string)$request->request->get('slug'),$quantity,(string)$request->request->get('request_key'),(string)$request->request->get('tier','basic'));
             $this->addFlash('success','Commande enregistrée dans la file.');
         } catch(\DomainException $e) { $this->addFlash('error',$e->getMessage()); }
-        return $this->redirectToRoute('app_colony',['id'=>$id,'section'=>$this->section((string)$request->request->get('section','overview')),'_fragment'=>'item-'.(string)$request->request->get('slug','')]);
+        return $this->redirectToRoute('app_colony',['id'=>$id,'section'=>$this->section((string)$request->request->get('section','overview')),'_fragment'=>'item-'.(string)$request->request->get('slug','').'-'.(string)$request->request->get('tier','basic')]);
     }
     #[Route('/planetes/{id}/file/{itemId}/annuler',name:'app_queue_cancel',methods:['POST'],requirements:['id'=>'\d+','itemId'=>'\d+'])]
     public function cancel(int $id,int $itemId,Request $request,QueueService $service): Response

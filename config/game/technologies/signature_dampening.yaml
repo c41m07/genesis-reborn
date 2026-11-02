@@ -1,0 +1,63 @@
+{
+  "slug": "signature_dampening",
+  "label": "Dissipation de signature",
+  "max_level": 25,
+  "research_time_base": 7200,
+  "research_time_scaling": 1.8,
+  "costs_base": {
+    "metal": 3000,
+    "energy": 1500
+  },
+  "costs_scaling": 2,
+  "unlock_requirements": {
+    "buildings": [
+      {
+        "slug": "lab",
+        "level": 1
+      }
+    ]
+  },
+  "effect": {
+    "type": "stat_bonus",
+    "targets": "all_combat_units",
+    "stat": "signature",
+    "formula": "percent",
+    "direction": "decrease",
+    "value_per_level": 0.01,
+    "max_bonus": 0.25
+  },
+  "tier_unlock_requirements": {
+    "intermediate": {
+      "technologies": [
+        {
+          "slug": "stealth_technology",
+          "tier": "basic",
+          "level": 5
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "basic",
+          "level": 5
+        }
+      ]
+    },
+    "superior": {
+      "technologies": [
+        {
+          "slug": "stealth_technology",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ]
+    }
+  }
+}

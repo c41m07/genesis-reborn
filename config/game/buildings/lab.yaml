@@ -1,7 +1,7 @@
 {
   "slug": "lab",
   "label": "Laboratoire",
-  "max_level": 10,
+  "max_level": 25,
   "base_build_time": 240,
   "build_time_scaling": 1.6,
   "costs_base": {
@@ -15,6 +15,26 @@
     }
   },
   "provisional": true,
-  "research_time_reduction_percent_per_level": 10,
-  "research_time_reduction_max_percent": 50
+  "research_time_reduction_percent_per_level": 2,
+  "research_time_reduction_max_percent": 50,
+  "tier_unlock_requirements": {
+    "intermediate": {
+      "technologies": [
+        {
+          "slug": "basic_engineering",
+          "tier": "basic",
+          "level": 5
+        }
+      ]
+    },
+    "superior": {
+      "technologies": [
+        {
+          "slug": "basic_engineering",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ]
+    }
+  }
 }

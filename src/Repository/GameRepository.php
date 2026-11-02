@@ -68,6 +68,13 @@ final class GameRepository
         foreach ($this->all($class,$criteria) as $row) $levels[$row->slug]=$row->level;
         return $levels;
     }
+    /** @return array<string,array<string,int>> */
+    public function levelsByTier(string $class, array $criteria): array
+    {
+        $levels=[];
+        foreach ($this->all($class,$criteria) as $row) $levels[$row->slug][$row->tier]=$row->level;
+        return $levels;
+    }
     public function privateConversation(PlayerUniverse $a, PlayerUniverse $b, int $limit = 100): array
     {
         $rows = $this->em->createQueryBuilder()->select('m')->from(\App\Entity\SocialMessage::class, 'm')

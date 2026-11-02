@@ -15,6 +15,8 @@ class QueueItem
     public string $queueType;
     #[ORM\Column(length: 64)]
     public string $itemSlug;
+    #[ORM\Column(length: 16, options: ['default' => 'basic'])]
+    public string $tier = 'basic';
     #[ORM\Column(nullable: true)]
     public ?int $itemLevel = null;
     #[ORM\Column]

@@ -1,0 +1,29 @@
+{
+  "tiers": {
+    "basic": {
+      "label": "Basique",
+      "multiplier": 1
+    },
+    "intermediate": {
+      "label": "Intermédiaire",
+      "multiplier": 1.25
+    },
+    "superior": {
+      "label": "Supérieur",
+      "multiplier": 1.5625
+    }
+  },
+  "cost_rounding": "ceil_each_resource_minimum_one_for_nonzero_base",
+  "tier_cost_multiplier_applies_per_resource": true,
+  "tier_duration_multiplier_applies_after_level_scaling": true,
+  "unlock_thresholds": {
+    "intermediate": {
+      "related_technology_tier": "basic",
+      "level": 5
+    },
+    "superior": {
+      "related_technology_tier": "intermediate",
+      "level": 10
+    }
+  }
+}

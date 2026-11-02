@@ -14,3 +14,25 @@ Mise à jour : 01/11/2026. Deux illustrations originales ont été intégrées d
 | Visuels de capture Playwright | /tmp/genesis-figma-make.png, /tmp/genesis-figma-mobile.png | Preuve temporaire de l’audit de preview | PNG générés en local | Captures d’un rendu public fourni par l’utilisateur | Non suivis par Git ; non intégrés à l’application | Temporaire |
 
 Les illustrations raster principales ont été générées pour le projet, puis converties en WebP. Les quatre SVG hérités ont été remplacés par des assets vectoriels originaux documentés ici; les anciens chemins de symboles nécessaires aux vues ont été conservés. Aucun SVG actif ne référence de ressource externe. Les WebP livrés pèsent 186 KB au total.
+
+## Atlas de progression — 02/11/2026
+
+Les atlas Basique PNG existants sont conservés. Les rangs Intermédiaire et Supérieur ajoutent des planches SVG au même canevas 1672×941 et à la même grille CSS 4×4. Les planches suivent la palette bleu/cyan/violet et ajoutent des anneaux et détails d’énergie progressifs. Les recherches sans correspondance visuelle auparavant (armement, bouclier, colonisation et six nouvelles recherches) utilisent des planches supplémentaires.
+
+Le manifeste complet des chemins et coordonnées est dans public/art/progression-atlas-manifest.json. Les coordonnées utilisées par Twig sont dans templates/colony/show.html.twig; les chemins de rang sont définis dans assets/styles/app.css.
+
+| Rang/catégorie | Atlas | Entrées | État |
+|---|---|---:|---|
+| Basique bâtiments | buildings-atlas.png | 13 | Conservé |
+| Intermédiaire bâtiments | buildings-atlas-intermediate.svg | 13 | Ajouté |
+| Supérieur bâtiments | buildings-atlas-superior.svg | 13 | Ajouté |
+| Basique vaisseaux | ships-atlas.png | 14 | Conservé |
+| Intermédiaire vaisseaux | ships-atlas-intermediate.svg | 14 | Ajouté |
+| Supérieur vaisseaux | ships-atlas-superior.svg | 14 | Ajouté |
+| Recherche Basique | research-atlas.png + research-atlas-basic-extra.svg | 10 + 9 | Atlas conservé, correspondances complétées |
+| Recherche Intermédiaire | research-atlas-intermediate.svg + research-atlas-intermediate-extra.svg | 10 + 9 | Ajouté |
+| Recherche Supérieur | research-atlas-superior.svg + research-atlas-superior-extra.svg | 10 + 9 | Ajouté |
+
+Les trois PNG historiques restent inchangés. Les planches SVG gardent les dimensions d’affichage et le découpage CSS; les entrées sans rapport restent conservées.
+
+Capture de validation des trois familles d’illustrations : docs/validation/progression-ranks-atlas-20261102.png. Elle montre les silhouettes Basique préservées, les halos Intermédiaire/Supérieur et une recherche ajoutée.

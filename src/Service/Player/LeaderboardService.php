@@ -36,12 +36,12 @@ final class LeaderboardService
         }
         foreach ($this->repo->all(PlanetBuilding::class, ['planet' => $planets]) as $building) {
             if ($building->level > 0 && isset($building->planet->owner)) {
-                $rows[$building->planet->owner->id]['building_resources'] += $this->cumulativeCost($universe, 'buildings', $building->slug, $building->level);
+                $rows[$building->planet->owner->id]['building_resources'] += $this->cumulativeCost($universe, 'buildings', $building->slug, $building->level, $building->tier);
             }
         }
         foreach ($this->repo->all(PlayerTechnology::class, ['playerUniverse' => $memberships]) as $technology) {
             if ($technology->level > 0) {
-                $rows[$technology->playerUniverse->id]['research_resources'] += $this->cumulativeCost($universe, 'technologies', $technology->slug, $technology->level);
+                $rows[$technology->playerUniverse->id]['research_resources'] += $this->cumulativeCost($universe, 'technologies', $technology->slug, $technology->level, $technology->tier);
             }
         }
         foreach ($this->repo->all(FleetShip::class, ['fleet' => $fleets]) as $ship) {
@@ -49,7 +49,7 @@ final class LeaderboardService
                 continue;
             }
             $row = &$rows[$ship->fleet->playerUniverse->id];
-            $row['fleet_resources'] += $this->unitCost($universe, 'ships', $ship->slug, $ship->quantity);
+            $row['fleet_resources'] += $this->unitCost($universe, 'ships', $ship->slug, $ship->quantity, $ship->tier);
             $row['ship_units'] += $ship->quantity;
             unset($row);
         }
@@ -103,9 +103,9 @@ final class LeaderboardService
         return $result;
     }
 
-    private function cumulativeCost(\App\Entity\Universe $universe,string $group,string $slug,int $level):int
+    private function cumulativeCost(\App\Entity\Universe $universe,string $group,string $slug,int $level,string $tier='basic'):int
     {
-        $definition=$this->catalog->getForUniverse($universe,$group,$slug);
+        $definition=$this->catalog->getTierForUniverse($universe,$group,$slug,$tier);
         $total = 0;
         for ($currentLevel = 1; $currentLevel <= $level; ++$currentLevel) {
             $total += array_sum($this->catalog->costs($definition, $currentLevel));
@@ -114,8 +114,8 @@ final class LeaderboardService
         return $total;
     }
 
-    private function unitCost(\App\Entity\Universe $universe,string $group,string $slug,int $quantity):int
+    private function unitCost(\App\Entity\Universe $universe,string $group,string $slug,int $quantity,string $tier='basic'):int
     {
-        return array_sum($this->catalog->costs($this->catalog->getForUniverse($universe,$group,$slug),1,$quantity));
+        return array_sum($this->catalog->costs($this->catalog->getTierForUniverse($universe,$group,$slug,$tier),1,$quantity));
     }
 }

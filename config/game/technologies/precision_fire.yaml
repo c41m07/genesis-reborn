@@ -1,7 +1,7 @@
 {
   "slug": "precision_fire",
   "label": "Tir de précision",
-  "max_level": 3,
+  "max_level": 25,
   "research_time_base": 7200,
   "research_time_scaling": 1.8,
   "costs_base": {
@@ -21,8 +21,43 @@
     "type": "stat_bonus",
     "targets": "all_ships",
     "stat": "precision",
-    "formula": "flat",
-    "value_per_level": 5
+    "formula": "percent",
+    "value_per_level": 0.01,
+    "max_bonus": 0.25
   },
-  "source": "PDF 1 p.15–16"
+  "source": "PDF 1 p.15–16",
+  "tier_unlock_requirements": {
+    "intermediate": {
+      "technologies": [
+        {
+          "slug": "advanced_targeting",
+          "tier": "basic",
+          "level": 5
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "basic",
+          "level": 5
+        }
+      ]
+    },
+    "superior": {
+      "technologies": [
+        {
+          "slug": "advanced_targeting",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ]
+    }
+  }
 }
