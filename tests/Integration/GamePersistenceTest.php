@@ -769,6 +769,49 @@ final class GamePersistenceTest extends KernelTestCase
         self::assertSame('idle', $fleetStock->status);
     }
 
+    public function testSpySnapshotUsesTheTargetUniverseCatalogueForEveryCategory(): void
+    {
+        $player = $this->player('SpySnapshot');
+        $planet = $this->join($player);
+        $universe = $planet->solarSystem->galaxy->universe;
+        $entries = [
+            'buildings' => 'mine_metal',
+            'technologies' => 'tactical_intelligence',
+            'ships' => 'fighter',
+            'defenses' => 'ground_turret_anti_light',
+        ];
+        foreach ($entries as $group => $slug) {
+            $universe->gameSettings['catalog_overrides'][$group][$slug]['tier_labels']['basic'] = 'Rapport ' . $group;
+        }
+        $building = new PlanetBuilding();
+        $building->planet = $planet;
+        $building->slug = 'mine_metal';
+        $building->level = 1;
+        $this->em->persist($building);
+        $technology = new PlayerTechnology();
+        $technology->playerUniverse = $player->currentPlayerUniverse;
+        $technology->slug = 'tactical_intelligence';
+        $technology->level = 1;
+        $this->em->persist($technology);
+        $this->ships($planet, ['fighter' => 2]);
+        $defense = new PlanetDefense();
+        $defense->planet = $planet;
+        $defense->slug = 'ground_turret_anti_light';
+        $defense->quantity = 3;
+        $this->em->persist($defense);
+        $this->em->flush();
+
+        // Vérifie toutes les catégories sans dépendre du tirage de détection.
+        $service = self::getContainer()->get(\App\Service\Fleet\EspionageService::class);
+        $snapshot = new \ReflectionMethod($service, 'snapshot')->invoke($service, $planet);
+        self::assertSame('Rapport buildings', $snapshot['buildings']['mine_metal']['basic']['label']);
+        self::assertSame('Rapport technologies', $snapshot['research']['tactical_intelligence']['basic']['label']);
+        self::assertSame('Rapport ships', $snapshot['fleets']['fighter:basic']['label']);
+        self::assertSame(2, $snapshot['fleets']['fighter:basic']['quantity']);
+        self::assertSame('Rapport defenses', $snapshot['defenses']['ground_turret_anti_light:basic']['label']);
+        self::assertSame(3, $snapshot['defenses']['ground_turret_anti_light:basic']['quantity']);
+    }
+
     public function testDetectedSpyMissionAlertsTargetAndStoresNoIntel(): void
     {
         $clock = $this->clock();

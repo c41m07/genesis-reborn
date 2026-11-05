@@ -91,11 +91,12 @@ final class EspionageService
 
     private function snapshot(Planet $planet): array
     {
+        $universe = $planet->solarSystem->galaxy->universe;
         $buildings = [];
-        foreach ($this->repo->all(PlanetBuilding::class, ['planet' => $planet]) as $building) if($building->level>0)$buildings[$building->slug][$building->tier]=['label'=>$this->catalog->getTierForUniverse($planet->universe,'buildings',$building->slug,$building->tier)['label'],'level'=>$building->level];
+        foreach ($this->repo->all(PlanetBuilding::class, ['planet' => $planet]) as $building) if($building->level>0)$buildings[$building->slug][$building->tier]=['label'=>$this->catalog->getTierForUniverse($universe,'buildings',$building->slug,$building->tier)['label'],'level'=>$building->level];
         $research = [];
         if ($planet->owner) {
-            foreach ($this->repo->all(PlayerTechnology::class, ['playerUniverse' => $planet->owner]) as $tech) if($tech->level>0)$research[$tech->slug][$tech->tier]=['label'=>$this->catalog->getTierForUniverse($planet->universe,'technologies',$tech->slug,$tech->tier)['label'],'level'=>$tech->level];
+            foreach ($this->repo->all(PlayerTechnology::class, ['playerUniverse' => $planet->owner]) as $tech) if($tech->level>0)$research[$tech->slug][$tech->tier]=['label'=>$this->catalog->getTierForUniverse($universe,'technologies',$tech->slug,$tech->tier)['label'],'level'=>$tech->level];
         } elseif ($planet->npcPlanet) {
             foreach ($this->catalog->all('planet_conquest')['levels'][$planet->conquestLevel]['research'] ?? [] as $slug => $level) if ($level > 0) $research[$slug] = ['label' => $this->catalog->withTier($this->catalog->get('technologies', $slug), 'basic')['label'] ?? $slug, 'level' => $level];
         }
@@ -106,12 +107,12 @@ final class EspionageService
             $present = $this->repo->all(Fleet::class, ['homePlanet' => $planet, 'status' => 'idle']);
             foreach (['orbiting', 'defending'] as $status) $present = array_merge($present, $this->repo->all(Fleet::class, ['destination' => $planet, 'status' => $status]));
             foreach ($present as $fleet) foreach ($this->repo->all(FleetShip::class, ['fleet' => $fleet]) as $ship) if ($ship->quantity > 0) {
-                $key=$ship->slug.':'.$ship->tier;$fleets[$key]['label']=$this->catalog->getTierForUniverse($planet->universe,'ships',$ship->slug,$ship->tier)['label'];
+                $key=$ship->slug.':'.$ship->tier;$fleets[$key]['label']=$this->catalog->getTierForUniverse($universe,'ships',$ship->slug,$ship->tier)['label'];
                 $fleets[$key]['quantity']=($fleets[$key]['quantity']??0)+$ship->quantity;
             }
         }
         $defenses = [];
-        foreach ($this->repo->all(PlanetDefense::class, ['planet' => $planet]) as $defense) if ($defense->quantity > 0) $defenses[$defense->slug . ':' . $defense->tier] = ['label' => $this->catalog->getTierForUniverse($planet->universe,'defenses',$defense->slug,$defense->tier)['label'], 'quantity' => $defense->quantity];
+        foreach ($this->repo->all(PlanetDefense::class, ['planet' => $planet]) as $defense) if ($defense->quantity > 0) $defenses[$defense->slug . ':' . $defense->tier] = ['label' => $this->catalog->getTierForUniverse($universe,'defenses',$defense->slug,$defense->tier)['label'], 'quantity' => $defense->quantity];
         return ['resources' => $this->resources->snapshot($planet), 'buildings' => $buildings, 'research' => $research, 'fleets' => $fleets, 'defenses' => $defenses];
     }
 
