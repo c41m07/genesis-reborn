@@ -20,7 +20,7 @@ jobs:
           echo "LOCAL_GID=$(id -g)" >> "$GITHUB_ENV"
           docker network create traefik_network || true
           docker network create mail_network || true
-          docker run -d --name genesis-ci-traefik --network traefik_network -p 80:80 -v /var/run/docker.sock:/var/run/docker.sock traefik:v3.3 --providers.docker=true --providers.docker.exposedbydefault=false --entrypoints.web.address=:80
+          docker run -d --name genesis-ci-traefik --network traefik_network -p 80:80 -v /var/run/docker.sock:/var/run/docker.sock traefik:v3.7.17@sha256:321153f6f732f912cf5c6f0597fe38743fc7895d482d7d8804a479ae0403e151 --providers.docker=true --providers.docker.exposedbydefault=false --entrypoints.web.address=:80
           make configure
       - name: Validate Compose and build containers
         run: make validate build
