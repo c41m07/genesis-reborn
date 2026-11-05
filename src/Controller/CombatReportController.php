@@ -25,7 +25,7 @@ final class CombatReportController extends AbstractController
 
         return $this->render('combat/reports.html.twig', [
             'membership' => $membership,
-            'reports' => $filter === 'espionage' ? [] : $combatReports,
+            'reports' => in_array($filter, ['all', 'combat'], true) ? $combatReports : [],
             'espionage_reports' => in_array($filter, ['combat', 'economy'], true) ? [] : $espionageReports,
             'filter' => $filter,
             'report_count' => count($combatReports) + count($espionageReports),

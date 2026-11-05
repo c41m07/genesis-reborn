@@ -16,7 +16,11 @@ function resetGameDatabase() {
 }
 
 export const test = base.extend({
-  isolatedDatabase: [async ({}, use) => {
+  isolatedDatabase: [async ({ baseURL }, use) => {
+    const project = process.env.BROWSER_ROUTER;
+    if (!/^genesis-browser-test-[0-9]+-[0-9]+$/.test(project ?? '') || new URL(baseURL).hostname !== `${project}.localhost`) {
+      throw new Error('Utilisez make test-browser ou scripts/test-browser-isolated.sh : ces scénarios écrivent uniquement dans une base de test temporaire.');
+    }
     if (process.env.PLAYWRIGHT_RESET_DB === '1') resetGameDatabase();
     await use();
   }, { auto: true }],

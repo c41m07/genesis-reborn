@@ -1,4 +1,6 @@
 /* Figma alignment: page-specific workspaces keep game data intact. */
+.report-tabs a[aria-current="page"]{color:var(--text);font-weight:700}.report-tabs a[aria-current="page"]:after{content:"";background:var(--accent)}
+.intel-section{margin-top:24px}.intel-card{min-width:0}.intel-card>strong{overflow-wrap:anywhere}.intel-card>.badge{margin-left:8px}.intel-card>p{margin:12px 0 0}.intel-facts{margin:16px 0 0;display:grid;gap:8px}.intel-facts>div{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}.intel-facts dt{color:var(--muted)}.intel-facts dd{margin:0;font-variant-numeric:tabular-nums}.combat-losses td:nth-child(n+3),.combat-losses th:nth-child(n+3){text-align:right;font-variant-numeric:tabular-nums}
 .colony-catalog-workspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(275px,310px);gap:22px;align-items:start;margin-top:20px}
 .colony-catalog-workspace>.colony-catalog{min-width:0;margin-top:0}
 .colony-catalog-workspace .catalog-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
