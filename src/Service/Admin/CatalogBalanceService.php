@@ -59,10 +59,18 @@ final class CatalogBalanceService
     {
         $map=match($group){
             'buildings'=>['max_level'=>['Niveau maximum',1,100,true],'base_build_time'=>['Temps de base (s)',1,100000000,false],'build_time_scaling'=>['Croissance de durée',0.01,10,false],'costs_scaling'=>['Croissance des coûts',0.01,10,false],'production_per_level'=>['Production par niveau',0,100000000,false],'build_time_reduction_percent_per_level'=>['Réduction par niveau (%)',0,90,false]],
-            'technologies'=>['max_level'=>['Niveau maximum',1,100,true],'research_time_base'=>['Temps de recherche de base (s)',1,100000000,false],'research_time_scaling'=>['Croissance de durée',0.01,10,false],'costs_scaling'=>['Croissance des coûts',0.01,10,false],'effect.value_per_level'=>['Effet par niveau',0,10000,false]],
+            'technologies'=>['max_level'=>['Niveau maximum',1,100,true],'research_time_base'=>['Temps de recherche de base (s)',1,100000000,false],'research_time_scaling'=>['Croissance de durée',0.01,10,false],'costs_scaling'=>['Croissance des coûts',0.01,10,false],'effect.value_per_level'=>['Effet par niveau',0,10000,false],'effect.max_bonus'=>['Plafond du bonus tous rangs confondus',0,10000,false]],
             default=>['hp'=>['Structure (PV)',1,100000000,false],'precision'=>['Précision',0,1000,false],'tracking'=>['Poursuite',0,1000,false],'evasion'=>['Évasion',0,1000,false],'signature'=>['Signature',0,1000,false],'base_attack'=>['Dégâts de base',0,100000000,false],'shots_min'=>['Tirs minimum',1,100,true],'shots_max'=>['Tirs maximum',1,100,true],'build_time_base'=>['Temps de construction (s)',1,100000000,false],'speed_system'=>['Vitesse système',0,100000000,false],'speed_galaxy'=>['Vitesse galaxie',0,100000000,false],'fuel_travel_system'=>['Carburant système',0,100000000,false],'fuel_travel_galaxy'=>['Carburant galaxie',0,100000000,false],'fuel_orbit'=>['Carburant orbite',0,100000000,false],'cargo_capacity'=>['Capacité de fret',0,100000000,false],'fuel_capacity'=>['Capacité carburant',0,100000000,false]],
         };
-        $result=[];foreach($map as $path=>[$label,$min,$max,$integer])if($this->has($definition,$path))$result[$path]=['label'=>$label,'min'=>$min,'max'=>$max,'integer'=>$integer];
+        $sharedBonus = in_array($definition['effect']['type'] ?? null, ['stat_bonus', 'extra_shot_chance'], true);
+        $result = [];
+        foreach ($map as $path => [$label, $min, $max, $integer]) {
+            if (!$this->has($definition, $path)) continue;
+            if ($path === 'effect.value_per_level' && $sharedBonus) continue;
+            if ($path === 'effect.max_bonus' && !$sharedBonus) continue;
+            if ($path === 'effect.max_bonus') $label = 'Plafond commun aux trois rangs (0,15 = 15 %)';
+            $result[$path] = ['label' => $label, 'min' => $min, 'max' => $max, 'integer' => $integer];
+        }
         if(isset($definition['cost_profiles'])&&is_array($definition['cost_profiles']))foreach($definition['cost_profiles'] as $tier=>$costs)foreach($costs as $resource=>$amount)$result['cost_profiles.'.$tier.'.'.$resource]=['label'=>'Coût '.$tier.' · '.ucfirst((string)$resource),'min'=>0,'max'=>1000000000,'integer'=>true];
         return $result;
     }
