@@ -30,6 +30,7 @@ Les valeurs en configuration sont l’état initial du test. Leur présence ne s
 
 - Compléter une feuille de balance à partir des résultats Alpha et valider les changements associés.
 - Exécuter la CI sur l’hébergeur distant retenu.
+  La publication GHCR après validation et le déploiement SSH manuel sont configurés ; leur exécution distante reste à vérifier (voir [déploiement](DEPLOIEMENT.md)).
 - Mesurer la capacité sous charge et définir supervision/SLA.
 - Compléter les sauvegardes distantes, leur protection et le plan de reprise.
 - Réaliser la revue manuelle d’accessibilité avec lecteur d’écran et cadrer la conformité RGAA/WCAG.

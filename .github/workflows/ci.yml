@@ -43,3 +43,31 @@ jobs:
         run: |
           docker compose --env-file .env.local down --volumes --remove-orphans || true
           docker rm -f genesis-ci-traefik || true
+  publish:
+    needs: quality
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Define image
+        id: image
+        env:
+          REPOSITORY: ${{ github.repository }}
+        run: echo "name=ghcr.io/${REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+      - name: Authenticate to GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+      - name: Build and publish production image
+        env:
+          IMAGE: ${{ steps.image.outputs.name }}
+        run: |
+          docker build -f docker/prod/Dockerfile -t "$IMAGE:$GITHUB_SHA" --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" .
+          docker push "$IMAGE:$GITHUB_SHA" | tee /tmp/push-result
+          DIGEST=$(sed -n 's/.*digest: \(sha256:[a-f0-9]*\).*/\1/p' /tmp/push-result)
+          test -n "$DIGEST"
+          printf 'Image à déployer : `%s@%s`\n' "$IMAGE" "$DIGEST" >> "$GITHUB_STEP_SUMMARY"

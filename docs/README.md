@@ -14,6 +14,7 @@ Les objectifs de durée début/milieu/fin, les gains et pertes et les profils PN
 
 ## État et exploitation
 
+- [Déploiement GitHub Actions / GHCR](DEPLOIEMENT.md) : image autonome et déploiement serveur par SSH, à valider sur l'infrastructure cible.
 - [État Alpha](agent/ALPHA_READINESS.md) : critères, preuves récentes et limites des tests.
 - [Audit final](agent/PHASE_15_FINAL_AUDIT.md) : verdict production et critères encore ouverts.
 - [Roadmap](ROADMAP.md) et [plan maître](agent/MASTER_PLAN.md).

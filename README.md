@@ -12,6 +12,7 @@ Le jeu comprend les comptes et profils, univers et colonies, économie, bâtimen
 
 ## Documentation
 
+- [Déploiement GitHub Actions et image GHCR](docs/DEPLOIEMENT.md) : préparation du serveur, secrets et déploiement manuel.
 - [Index documentaire](docs/README.md) : règles, décisions, fonctionnement, audits, validation et limites.
 - [Règles de jeu](docs/REGLES.md) et [décisions confirmées](docs/DECISIONS.md).
 - [Roadmap](docs/ROADMAP.md), [plan maître](docs/agent/MASTER_PLAN.md) et [matrice de couverture](docs/agent/REQUIREMENTS_MATRIX.md).

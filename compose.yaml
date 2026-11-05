@@ -2,7 +2,7 @@ name: genesis_reborn_v2
 x-app: &app
   build:
     context: .
-    dockerfile: docker/Dockerfile
+    dockerfile: docker/dev/Dockerfile
   image: genesis-reborn-v2-app:local
   working_dir: /app
   volumes: [".:/app"]

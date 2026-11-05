@@ -4,7 +4,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends libicu-dev libr
  && pecl install amqp-2.2.0 && docker-php-ext-enable amqp \
  && a2enmod rewrite headers && rm -rf /var/lib/apt/lists/*
 COPY --from=composer:2@sha256:af98f42dfff7c68ba8d53c2164fd9fde1087b7d449514baa38c418b1f6bc4bac /usr/bin/composer /usr/local/bin/composer
-COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf
+COPY docker/dev/apache.conf /etc/apache2/sites-available/000-default.conf
 RUN printf 'date.timezone=UTC\nexpose_php=Off\n' > /usr/local/etc/php/conf.d/genesis.ini
 WORKDIR /app
 ARG LOCAL_UID=1000
