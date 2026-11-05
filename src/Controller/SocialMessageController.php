@@ -12,6 +12,13 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class SocialMessageController extends AbstractController
 {
+    #[Route('/messages/non-lus', name: 'app_messages_unread', methods: ['GET'])]
+    public function unread(Request $request, UniverseContext $context, SocialMessageService $messages, RelationResolver $relations, GameRepository $repo): Response
+    {
+        $membership = $context->membership();
+        return $this->json(['unread' => $messages->unreadPrivateCount($membership) + $messages->unreadGuildCount($membership), 'conversations' => $this->renderView('player/_message_contacts.html.twig', ['contacts' => $repo->messageContacts($membership), 'guild' => $relations->guild($membership), 'unreadGuild' => $messages->unreadGuildCount($membership), 'peer' => $repo->find(PlayerUniverse::class, $request->query->getInt('with')), 'activeChannel' => $request->query->getString('channel')])], headers: ['Cache-Control' => 'no-store']);
+    }
+
     #[Route('/messages', name: 'app_messages', methods: ['GET', 'POST'])]
     public function index(Request $request, UniverseContext $context, SocialMessageService $messages, RelationResolver $relations, GameRepository $repo, AdminService $admin): Response
     {
@@ -48,10 +55,6 @@ final class SocialMessageController extends AbstractController
             return $this->redirectToRoute('app_messages');
         }
 
-        $peers = array_values(array_filter(
-            $repo->all(PlayerUniverse::class, ['universe' => $membership->universe]),
-            static fn (PlayerUniverse $player): bool => $player->id !== $membership->id,
-        ));
         $activeChannel = $request->query->getString('channel') === 'guild' ? 'guild' : 'private';
         $peerId = $activeChannel === 'guild' ? 0 : $request->query->getInt('with');
         $peer = null;
@@ -66,11 +69,15 @@ final class SocialMessageController extends AbstractController
         }
 
         $guild = $relations->guild($membership);
-        $guildConversation = $guild ? $messages->guildConversation($membership, $guild) : [];
+        $guildConversation = $guild && $activeChannel === 'guild' ? $messages->guildConversation($membership, $guild) : [];
+        $search = mb_substr(trim($request->query->getString('q')), 0, 40);
 
         return $this->render('player/messages.html.twig', [
             'membership' => $membership,
-            'peers' => $peers,
+            'contacts' => $repo->messageContacts($membership),
+            'search' => $search,
+            'searchResults' => $repo->searchMessageRecipients($membership, $search),
+            'unreadGuild' => $messages->unreadGuildCount($membership),
             'peer' => $peer,
             'conversation' => $conversation,
             'guild' => $guild,

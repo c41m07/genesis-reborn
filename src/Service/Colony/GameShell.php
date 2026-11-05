@@ -6,7 +6,7 @@ use Psr\Clock\ClockInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 final class GameShell
 {
-    public function __construct(private GameRepository $repo,private ResourceService $resources,private ClockInterface $clock,private RequestStack $requests,private \App\Service\Event\GameEventService $gameEvents) {}
+    public function __construct(private GameRepository $repo,private ResourceService $resources,private ClockInterface $clock,private RequestStack $requests,private \App\Service\Event\GameEventService $gameEvents,private \App\Service\Player\LeaderboardService $leaderboard,private \App\Service\Player\SocialMessageService $messages,private \App\Service\Catalog\GameCatalog $catalog) {}
     public function get(?Player $player,?Planet $selected=null):array
     {
         $m=$player?->currentPlayerUniverse;
@@ -16,6 +16,15 @@ final class GameShell
         if(!$selected) foreach($planets as $p) if($p->id===$session?->get('selected_planet_'.$m->id)) $selected=$p;
         $selected??=$planets[0]??null;
         $notifications=array_slice($this->repo->all(Notification::class,['recipient'=>$m],['id'=>'DESC']),0,5);
-        return ['membership'=>$m,'planet'=>$selected,'planets'=>$planets,'resources'=>$selected?$this->resources->snapshot($selected):[],'notifications'=>$notifications,'events'=>$this->gameEvents->visibleFor($m)];
+        $protection=null;
+        foreach($this->leaderboard->forUniverse($m) as $row) if($row['membership']->id===$m->id) {$protection=$row['protection'];break;}
+        $config=$this->catalog->forUniverse($m->universe);
+        $effect=$config['catalog']['technologies']['colonial_expansion']['effect']??null;
+        $colonyLimit=(int)$config['limits']['max_planets'];
+        if(is_array($effect) && ($effect['type']??null)==='planet_limit') {
+            $levels=$this->repo->levelsByTier(\App\Entity\PlayerTechnology::class,['playerUniverse'=>$m])['colonial_expansion']??[];
+            $colonyLimit=\App\Service\Catalog\GameCatalog::colonyLimit($levels,$effect,$colonyLimit);
+        }
+        return ['colonyLimit'=>$colonyLimit,'unreadMessages'=>$this->messages->unreadPrivateCount($m)+$this->messages->unreadGuildCount($m),'protection'=>$protection,'membership'=>$m,'planet'=>$selected,'planets'=>$planets,'resources'=>$selected?$this->resources->snapshot($selected):[],'notifications'=>$notifications,'events'=>$this->gameEvents->visibleFor($m)];
     }
 }

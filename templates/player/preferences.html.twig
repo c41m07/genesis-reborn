@@ -2,7 +2,7 @@
 {% block title %}Paramètres · Genesis Reborn{% endblock %}
 {% block body %}
 <section class="panel account-panel">
-    <p class="eyebrow">PERSONNALISATION</p><h1>Paramètres</h1><p>Ces réglages s’appliquent à votre compte et à cette interface.</p>
+    <h1>Paramètres</h1><p>Ces réglages s’appliquent à votre compte et à cette interface.</p>
     {{ form_start(form) }}
     {% if form.vars.submitted and not form.vars.valid %}<div class="form-error" role="alert"><strong>Paramètres non enregistrés.</strong><p>Corrigez les champs signalés puis réessayez.</p>{{ form_errors(form) }}</div>{% endif %}
     <fieldset class="account-section"><legend>Affichage et horloge</legend><div class="account-grid">{{ form_row(form.theme) }}{{ form_row(form.timezone) }}</div></fieldset>
@@ -13,6 +13,5 @@
         <div class="preference-toggle">{{ form_widget(form.showLockedItems) }}{{ form_label(form.showLockedItems) }}{{ form_errors(form.showLockedItems) }}</div>
     </fieldset>
     <button class="primary full">Enregistrer les paramètres</button>{{ form_end(form) }}
-    <p class="account-footer"><a class="profile-preferences-link" href="{{ path('app_profile') }}">Retour au profil</a></p>
 </section>
 {% endblock %}

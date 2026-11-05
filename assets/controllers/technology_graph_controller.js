@@ -7,11 +7,20 @@ export default class extends Controller {
         this.observer = new ResizeObserver(() => this.draw());
         this.observer.observe(this.element);
         this.nodeTargets.forEach((node) => this.observer.observe(node));
+        this.filterObserver = new MutationObserver(() => {
+            this.element.scrollTo({ left: 0, top: 0, behavior: 'instant' });
+            window.cancelAnimationFrame(this.resetFrame);
+            this.resetFrame = window.requestAnimationFrame(() => this.element.scrollTo({ left: 0, top: 0, behavior: 'instant' }));
+            this.draw();
+        });
+        this.filterObserver.observe(this.element, { attributes: true, attributeFilter: ['hidden'], subtree: true });
         this.draw();
     }
 
     disconnect() {
         this.observer?.disconnect();
+        this.filterObserver?.disconnect();
+        window.cancelAnimationFrame(this.resetFrame);
     }
 
     draw() {
@@ -22,8 +31,9 @@ export default class extends Controller {
         svg.setAttribute('viewBox', `0 0 ${this.element.scrollWidth} ${this.element.scrollHeight}`);
         svg.replaceChildren();
 
-        const byKey = new Map(this.nodeTargets.map((node) => [node.dataset.nodeKey, node]));
-        this.nodeTargets.forEach((child) => {
+        const visibleNodes = this.nodeTargets.filter((node) => node.getClientRects().length > 0);
+        const byKey = new Map(visibleNodes.map((node) => [node.dataset.nodeKey, node]));
+        visibleNodes.forEach((child) => {
             JSON.parse(child.dataset.parents || '[]').forEach((parentKey) => {
                 const parent = byKey.get(parentKey);
                 if (!parent) return;

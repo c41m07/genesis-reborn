@@ -16,7 +16,7 @@
   },
   "provisional": true,
   "production_resource": "electricity",
-  "production_per_level": 0.1,
+  "production_per_level": 0.2,
   "effect_note": "Production d’énergie : +0,1 énergie/s par niveau avant facteur de position et multiplicateur d’univers.",
   "tier_unlock_requirements": {
     "intermediate": {
@@ -55,19 +55,22 @@
   "economy_value_budget": 12000,
   "cost_profiles": {
     "basic": {
-      "metal": 6000,
-      "nano": 0,
-      "antimatter": 0
+      "metal": 3600,
+      "nano": 1200,
+      "antimatter": 0,
+      "hydrogen": 0
     },
     "intermediate": {
-      "metal": 6000,
-      "nano": 750,
-      "antimatter": 0
+      "metal": 3376,
+      "nano": 1688,
+      "antimatter": 187,
+      "hydrogen": 0
     },
     "superior": {
-      "metal": 6094,
-      "nano": 1641,
-      "antimatter": 0
+      "metal": 2813,
+      "nano": 2109,
+      "antimatter": 469,
+      "hydrogen": 938
     }
   },
   "tier_labels": {

@@ -54,23 +54,23 @@ final class BoostSystemTest extends KernelTestCase
         $membership = $player->currentPlayerUniverse;
         $grants = self::getContainer()->get(BoostGrantService::class);
 
-        for ($i = 1; $i <= 4; ++$i) {
+        for ($i = 1; $i <= 101; ++$i) {
             self::assertTrue($grants->awardEvent($membership, 'test-' . $i));
         }
-        self::assertSame(3, $this->em->getRepository(PlayerBoost::class)->count(['playerUniverse' => $membership, 'status' => 'available']));
+        self::assertSame(100, $this->em->getRepository(PlayerBoost::class)->count(['playerUniverse' => $membership, 'status' => 'available']));
         self::assertSame(1, $this->em->getRepository(PlayerBoost::class)->count(['playerUniverse' => $membership, 'status' => 'pending']));
-        self::assertCount(3, $grants->inventory($membership), 'Seuls les boosts disponibles appartiennent à l’inventaire utilisable.');
+        self::assertCount(100, $grants->inventory($membership), 'Seuls les boosts disponibles appartiennent à l’inventaire utilisable.');
 
         $queues = self::getContainer()->get(QueueService::class);
         $queues->add($membership, $planet, 'buildings', 'mine_metal', 1, str_repeat('a', 32));
         $item = $this->em->getRepository(QueueItem::class)->findOneBy(['planet' => $planet]);
         $initialFinish = $item->finishAt();
-        $clock->sleep(20);
+        $clock->sleep(1);
 
         self::getContainer()->get(BoostUseService::class)->useOnQueue($membership, $item->id, str_repeat('b', 32));
 
         self::assertSame('used', $this->em->getRepository(PlayerBoost::class)->findOneBy(['playerUniverse' => $membership, 'status' => 'used'])->status);
-        self::assertSame(3, $this->em->getRepository(PlayerBoost::class)->count(['playerUniverse' => $membership, 'status' => 'available']), json_encode(array_map(static fn(PlayerBoost $b) => [$b->status, $b->sourceKey], $this->em->getRepository(PlayerBoost::class)->findBy(['playerUniverse' => $membership]))));
+        self::assertSame(100, $this->em->getRepository(PlayerBoost::class)->count(['playerUniverse' => $membership, 'status' => 'available']), json_encode(array_map(static fn(PlayerBoost $b) => [$b->status, $b->sourceKey], $this->em->getRepository(PlayerBoost::class)->findBy(['playerUniverse' => $membership]))));
         self::assertSame(0, $this->em->getRepository(PlayerBoost::class)->count(['playerUniverse' => $membership, 'status' => 'pending']));
         self::assertLessThan($initialFinish, $item->finishAt());
     }
@@ -80,15 +80,15 @@ final class BoostSystemTest extends KernelTestCase
         [$player, $planet] = $this->playerAndPlanet('HiddenPending');
         $membership = $player->currentPlayerUniverse;
         $grants = self::getContainer()->get(BoostGrantService::class);
-        for ($i = 1; $i <= 4; ++$i) $grants->awardEvent($membership, 'pending-' . $i);
-        self::assertCount(3, $grants->inventory($membership));
+        for ($i = 1; $i <= 101; ++$i) $grants->awardEvent($membership, 'pending-' . $i);
+        self::assertCount(100, $grants->inventory($membership));
         foreach ($grants->inventory($membership) as $boost) $boost->status = 'pending';
         $this->em->flush();
-        self::getContainer()->get(QueueService::class)->add($membership, $planet, 'buildings', 'mine_metal', 1, str_repeat('q', 32));
+        self::getContainer()->get(QueueService::class)->add($membership, $planet, 'buildings', 'mine_metal', 1, str_repeat('d', 32));
         $queue = $this->em->getRepository(QueueItem::class)->findOneBy(['planet' => $planet]);
 
         $this->expectException(\DomainException::class);
-        self::getContainer()->get(BoostUseService::class)->useOnQueue($membership, $queue->id, str_repeat('z', 32));
+        self::getContainer()->get(BoostUseService::class)->useOnQueue($membership, $queue->id, str_repeat('e', 32));
     }
 
     public function testWeeklyExplorationEventUsesTiedTopThreeAndGlobalGoal(): void

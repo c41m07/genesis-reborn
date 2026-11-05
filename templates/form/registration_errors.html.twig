@@ -1,9 +1,15 @@
-{% use 'form_div_layout.html.twig' %}
+{% use 'form_div_layout.html.twig' with form_start as base_form_start %}
+{% block form_start %}
+    {% if form.vars.submitted and not form.vars.valid %}
+        {% set attr = attr|merge({autofocus: true, tabindex: '-1', 'aria-label': 'Formulaire à corriger'}) %}
+    {% endif %}
+    {{ block('base_form_start') }}
+{% endblock form_start %}
 {% block form_errors %}
     {% if errors|length > 0 %}
-        <div id="{{ id }}_errors" role="alert"><ul>
+        <div class="auth-field-errors" id="{{ id }}_errors" role="alert"><ul>
             {% for error in errors %}
-                <li>{{ error.message }}</li>
+                <li id="{{ id ~ '_error' ~ loop.index }}">{{ error.message }}</li>
             {% endfor %}
         </ul></div>
     {% endif %}

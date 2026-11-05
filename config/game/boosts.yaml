@@ -1,4 +1,4 @@
-inventory_capacity: 3
+inventory_capacity: 100
 risk_mission_daily_limit: 1
 risk_mission_timezone: UTC
 duration_reduction_ratio: 0.25

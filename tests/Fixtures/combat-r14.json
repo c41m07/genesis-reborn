@@ -1,0 +1,5940 @@
+{
+    "provenance": {
+        "candidate_sha256": "0fd323710f8a7fbe5b5b12d99e52524988d390fc55b96e85fe576720f0e066c4",
+        "reference_sha256": "19f048878642f121091115a9eaf0f16bbf4ef8d08904be6b8661753393bfa220",
+        "description": "Instantanés R14 figés de l’étude ; empreintes des résultats complets, journaux de tirs inclus."
+    },
+    "definitions": {
+        "none": {
+            "basic": {
+                "fighter": {
+                    "unit": {
+                        "slug": "fighter",
+                        "category": "light",
+                        "hp": 150,
+                        "precision": 55,
+                        "tracking": 75,
+                        "evasion": 60,
+                        "signature": 20,
+                        "base_attack": 24,
+                        "shots_min": 2,
+                        "shots_max": 3,
+                        "shield": 50,
+                        "tier": "basic"
+                    },
+                    "cost": {
+                        "metal": 2700,
+                        "nano": 150,
+                        "antimatter": 0,
+                        "hydrogen": 0
+                    }
+                },
+                "interceptor": {
+                    "unit": {
+                        "slug": "interceptor",
+                        "category": "light",
+                        "hp": 215,
+                        "precision": 30,
+                        "tracking": 85,
+                        "evasion": 75,
+                        "signature": 18,
+                        "base_attack": 35,
+                        "shots_min": 1,
+                        "shots_max": 3,
+                        "shield": 40,
+                        "tier": "basic"
+                    },
+                    "cost": {
+                        "metal": 3308,
+                        "nano": 184,
+                        "antimatter": 0,
+                        "hydrogen": 0
+                    }
+                },
+                "heavy_fighter": {
+                    "unit": {
+                        "slug": "heavy_fighter",
+                        "category": "heavy",
+                        "hp": 500,
+                        "precision": 65,
+                        "tracking": 75,
+                        "evasion": 50,
+                        "signature": 35,
+                        "base_attack": 26,
+                        "shots_min": 4,
+                        "shots_max": 4,
+                        "shield": 200,
+                        "tier": "basic"
+                    },
+                    "cost": {
+                        "metal": 6660,
+                        "nano": 370,
+                        "antimatter": 0,
+                        "hydrogen": 0
+                    }
+                },
+                "bomber": {
+                    "unit": {
+                        "slug": "bomber",
+                        "category": "bomber",
+                        "hp": 632,
+                        "precision": 65,
+                        "tracking": 80,
+                        "evasion": 45,
+                        "signature": 40,
+                        "base_attack": 146,
+                        "shots_min": 1,
+                        "shots_max": 2,
+                        "shield": 158,
+                        "tier": "basic"
+                    },
+                    "cost": {
+                        "metal": 9675,
+                        "nano": 538,
+                        "antimatter": 0,
+                        "hydrogen": 0
+                    }
+                },
+                "frigate": {
+                    "unit": {
+                        "slug": "frigate",
+                        "category": "escort",
+                        "hp": 1048,
+                        "precision": 75,
+                        "tracking": 80,
+                        "evasion": 35,
+                        "signature": 35,
+                        "base_attack": 32,
+                        "shots_min": 18,
+                        "shots_max": 19,
+                        "shield": 286,
+                        "tier": "basic"
+                    },
+                    "cost": {
+                        "metal": 20502,
+                        "nano": 1139,
+                        "antimatter": 0,
+                        "hydrogen": 0
+                    }
+                },
+                "cruiser": {
+                    "unit": {
+                        "slug": "cruiser",
+                        "category": "heavy",
+                        "hp": 3509,
+                        "precision": 100,
+                        "tracking": 65,
+                        "evasion": 14,
+                        "signature": 50,
+                        "base_attack": 160,
+                        "shots_min": 7,
+                        "shots_max": 9,
+                        "shield": 1404,
+                        "secondary_attack": 254,
+                        "secondary_shots_min": 2,
+                        "secondary_shots_max": 2,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "basic"
+                    },
+                    "cost": {
+                        "metal": 54777,
+                        "nano": 3044,
+                        "antimatter": 0,
+                        "hydrogen": 0
+                    }
+                },
+                "destroyer": {
+                    "unit": {
+                        "slug": "destroyer",
+                        "category": "escort",
+                        "hp": 1600,
+                        "precision": 100,
+                        "tracking": 70,
+                        "evasion": 8,
+                        "signature": 45,
+                        "base_attack": 467,
+                        "shots_min": 2,
+                        "shots_max": 4,
+                        "shield": 600,
+                        "secondary_attack": 100,
+                        "secondary_shots_min": 6,
+                        "secondary_shots_max": 6,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "basic"
+                    },
+                    "cost": {
+                        "metal": 37899,
+                        "nano": 2106,
+                        "antimatter": 0,
+                        "hydrogen": 0
+                    }
+                },
+                "battleship": {
+                    "unit": {
+                        "slug": "battleship",
+                        "category": "heavy",
+                        "hp": 5079,
+                        "precision": 100,
+                        "tracking": 65,
+                        "evasion": 11,
+                        "signature": 60,
+                        "base_attack": 160,
+                        "shots_min": 17,
+                        "shots_max": 18,
+                        "shield": 2540,
+                        "secondary_attack": 224,
+                        "secondary_shots_min": 4,
+                        "secondary_shots_max": 4,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "basic"
+                    },
+                    "cost": {
+                        "metal": 99225,
+                        "nano": 5513,
+                        "antimatter": 0,
+                        "hydrogen": 0
+                    }
+                },
+                "capital": {
+                    "unit": {
+                        "slug": "capital",
+                        "category": "capital",
+                        "hp": 6349,
+                        "precision": 100,
+                        "tracking": 70,
+                        "evasion": 8,
+                        "signature": 70,
+                        "base_attack": 160,
+                        "shots_min": 42,
+                        "shots_max": 43,
+                        "shield": 3175,
+                        "secondary_attack": 240,
+                        "secondary_shots_min": 8,
+                        "secondary_shots_max": 8,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "basic"
+                    },
+                    "cost": {
+                        "metal": 169898,
+                        "nano": 9439,
+                        "antimatter": 0,
+                        "hydrogen": 0
+                    }
+                }
+            },
+            "intermediate": {
+                "fighter": {
+                    "unit": {
+                        "slug": "fighter",
+                        "category": "light",
+                        "hp": 225,
+                        "precision": 55,
+                        "tracking": 75,
+                        "evasion": 60,
+                        "signature": 20,
+                        "base_attack": 36,
+                        "shots_min": 2,
+                        "shots_max": 3,
+                        "shield": 75,
+                        "tier": "intermediate"
+                    },
+                    "cost": {
+                        "metal": 2438,
+                        "nano": 563,
+                        "antimatter": 47,
+                        "hydrogen": 0
+                    }
+                },
+                "interceptor": {
+                    "unit": {
+                        "slug": "interceptor",
+                        "category": "light",
+                        "hp": 323,
+                        "precision": 30,
+                        "tracking": 85,
+                        "evasion": 75,
+                        "signature": 18,
+                        "base_attack": 53,
+                        "shots_min": 1,
+                        "shots_max": 3,
+                        "shield": 60,
+                        "tier": "intermediate"
+                    },
+                    "cost": {
+                        "metal": 2987,
+                        "nano": 690,
+                        "antimatter": 58,
+                        "hydrogen": 0
+                    }
+                },
+                "heavy_fighter": {
+                    "unit": {
+                        "slug": "heavy_fighter",
+                        "category": "heavy",
+                        "hp": 750,
+                        "precision": 65,
+                        "tracking": 75,
+                        "evasion": 50,
+                        "signature": 35,
+                        "base_attack": 39,
+                        "shots_min": 4,
+                        "shots_max": 4,
+                        "shield": 300,
+                        "tier": "intermediate"
+                    },
+                    "cost": {
+                        "metal": 6013,
+                        "nano": 1388,
+                        "antimatter": 116,
+                        "hydrogen": 0
+                    }
+                },
+                "bomber": {
+                    "unit": {
+                        "slug": "bomber",
+                        "category": "bomber",
+                        "hp": 948,
+                        "precision": 65,
+                        "tracking": 80,
+                        "evasion": 45,
+                        "signature": 40,
+                        "base_attack": 219,
+                        "shots_min": 1,
+                        "shots_max": 2,
+                        "shield": 237,
+                        "tier": "intermediate"
+                    },
+                    "cost": {
+                        "metal": 8735,
+                        "nano": 2016,
+                        "antimatter": 169,
+                        "hydrogen": 0
+                    }
+                },
+                "frigate": {
+                    "unit": {
+                        "slug": "frigate",
+                        "category": "escort",
+                        "hp": 1572,
+                        "precision": 75,
+                        "tracking": 80,
+                        "evasion": 35,
+                        "signature": 35,
+                        "base_attack": 48,
+                        "shots_min": 18,
+                        "shots_max": 19,
+                        "shield": 429,
+                        "tier": "intermediate"
+                    },
+                    "cost": {
+                        "metal": 18508,
+                        "nano": 4272,
+                        "antimatter": 357,
+                        "hydrogen": 0
+                    }
+                },
+                "cruiser": {
+                    "unit": {
+                        "slug": "cruiser",
+                        "category": "heavy",
+                        "hp": 5264,
+                        "precision": 100,
+                        "tracking": 65,
+                        "evasion": 14,
+                        "signature": 50,
+                        "base_attack": 240,
+                        "shots_min": 7,
+                        "shots_max": 9,
+                        "shield": 2106,
+                        "secondary_attack": 381,
+                        "secondary_shots_min": 2,
+                        "secondary_shots_max": 2,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "intermediate"
+                    },
+                    "cost": {
+                        "metal": 49452,
+                        "nano": 11413,
+                        "antimatter": 953,
+                        "hydrogen": 0
+                    }
+                },
+                "destroyer": {
+                    "unit": {
+                        "slug": "destroyer",
+                        "category": "escort",
+                        "hp": 2400,
+                        "precision": 100,
+                        "tracking": 70,
+                        "evasion": 8,
+                        "signature": 45,
+                        "base_attack": 701,
+                        "shots_min": 2,
+                        "shots_max": 4,
+                        "shield": 900,
+                        "secondary_attack": 150,
+                        "secondary_shots_min": 6,
+                        "secondary_shots_max": 6,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "intermediate"
+                    },
+                    "cost": {
+                        "metal": 34214,
+                        "nano": 7896,
+                        "antimatter": 659,
+                        "hydrogen": 0
+                    }
+                },
+                "battleship": {
+                    "unit": {
+                        "slug": "battleship",
+                        "category": "heavy",
+                        "hp": 7619,
+                        "precision": 100,
+                        "tracking": 65,
+                        "evasion": 11,
+                        "signature": 60,
+                        "base_attack": 240,
+                        "shots_min": 17,
+                        "shots_max": 18,
+                        "shield": 3810,
+                        "secondary_attack": 336,
+                        "secondary_shots_min": 4,
+                        "secondary_shots_max": 4,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "intermediate"
+                    },
+                    "cost": {
+                        "metal": 89579,
+                        "nano": 20672,
+                        "antimatter": 1723,
+                        "hydrogen": 0
+                    }
+                },
+                "capital": {
+                    "unit": {
+                        "slug": "capital",
+                        "category": "capital",
+                        "hp": 9524,
+                        "precision": 100,
+                        "tracking": 70,
+                        "evasion": 8,
+                        "signature": 70,
+                        "base_attack": 240,
+                        "shots_min": 42,
+                        "shots_max": 43,
+                        "shield": 4763,
+                        "secondary_attack": 360,
+                        "secondary_shots_min": 8,
+                        "secondary_shots_max": 8,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "intermediate"
+                    },
+                    "cost": {
+                        "metal": 153380,
+                        "nano": 35396,
+                        "antimatter": 2950,
+                        "hydrogen": 0
+                    }
+                }
+            },
+            "superior": {
+                "fighter": {
+                    "unit": {
+                        "slug": "fighter",
+                        "category": "light",
+                        "hp": 338,
+                        "precision": 55,
+                        "tracking": 75,
+                        "evasion": 60,
+                        "signature": 20,
+                        "base_attack": 54,
+                        "shots_min": 2,
+                        "shots_max": 3,
+                        "shield": 113,
+                        "tier": "superior"
+                    },
+                    "cost": {
+                        "metal": 2110,
+                        "nano": 938,
+                        "antimatter": 176,
+                        "hydrogen": 0
+                    }
+                },
+                "interceptor": {
+                    "unit": {
+                        "slug": "interceptor",
+                        "category": "light",
+                        "hp": 484,
+                        "precision": 30,
+                        "tracking": 85,
+                        "evasion": 75,
+                        "signature": 18,
+                        "base_attack": 79,
+                        "shots_min": 1,
+                        "shots_max": 3,
+                        "shield": 90,
+                        "tier": "superior"
+                    },
+                    "cost": {
+                        "metal": 2585,
+                        "nano": 1149,
+                        "antimatter": 217,
+                        "hydrogen": 0
+                    }
+                },
+                "heavy_fighter": {
+                    "unit": {
+                        "slug": "heavy_fighter",
+                        "category": "heavy",
+                        "hp": 1125,
+                        "precision": 65,
+                        "tracking": 75,
+                        "evasion": 50,
+                        "signature": 35,
+                        "base_attack": 59,
+                        "shots_min": 4,
+                        "shots_max": 4,
+                        "shield": 450,
+                        "tier": "superior"
+                    },
+                    "cost": {
+                        "metal": 5204,
+                        "nano": 2313,
+                        "antimatter": 435,
+                        "hydrogen": 0
+                    }
+                },
+                "bomber": {
+                    "unit": {
+                        "slug": "bomber",
+                        "category": "bomber",
+                        "hp": 1422,
+                        "precision": 65,
+                        "tracking": 80,
+                        "evasion": 45,
+                        "signature": 40,
+                        "base_attack": 328,
+                        "shots_min": 1,
+                        "shots_max": 2,
+                        "shield": 356,
+                        "tier": "superior"
+                    },
+                    "cost": {
+                        "metal": 7560,
+                        "nano": 3360,
+                        "antimatter": 631,
+                        "hydrogen": 0
+                    }
+                },
+                "frigate": {
+                    "unit": {
+                        "slug": "frigate",
+                        "category": "escort",
+                        "hp": 2358,
+                        "precision": 75,
+                        "tracking": 80,
+                        "evasion": 35,
+                        "signature": 35,
+                        "base_attack": 72,
+                        "shots_min": 18,
+                        "shots_max": 19,
+                        "shield": 644,
+                        "tier": "superior"
+                    },
+                    "cost": {
+                        "metal": 16017,
+                        "nano": 7119,
+                        "antimatter": 1336,
+                        "hydrogen": 0
+                    }
+                },
+                "cruiser": {
+                    "unit": {
+                        "slug": "cruiser",
+                        "category": "heavy",
+                        "hp": 7896,
+                        "precision": 100,
+                        "tracking": 65,
+                        "evasion": 14,
+                        "signature": 50,
+                        "base_attack": 360,
+                        "shots_min": 7,
+                        "shots_max": 9,
+                        "shield": 3159,
+                        "secondary_attack": 572,
+                        "secondary_shots_min": 2,
+                        "secondary_shots_max": 2,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "superior"
+                    },
+                    "cost": {
+                        "metal": 42795,
+                        "nano": 19021,
+                        "antimatter": 3567,
+                        "hydrogen": 0
+                    }
+                },
+                "destroyer": {
+                    "unit": {
+                        "slug": "destroyer",
+                        "category": "escort",
+                        "hp": 3600,
+                        "precision": 100,
+                        "tracking": 70,
+                        "evasion": 8,
+                        "signature": 45,
+                        "base_attack": 1051,
+                        "shots_min": 2,
+                        "shots_max": 4,
+                        "shield": 1350,
+                        "secondary_attack": 225,
+                        "secondary_shots_min": 6,
+                        "secondary_shots_max": 6,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "superior"
+                    },
+                    "cost": {
+                        "metal": 29609,
+                        "nano": 13160,
+                        "antimatter": 2468,
+                        "hydrogen": 0
+                    }
+                },
+                "battleship": {
+                    "unit": {
+                        "slug": "battleship",
+                        "category": "heavy",
+                        "hp": 11428,
+                        "precision": 100,
+                        "tracking": 65,
+                        "evasion": 11,
+                        "signature": 60,
+                        "base_attack": 360,
+                        "shots_min": 17,
+                        "shots_max": 18,
+                        "shield": 5715,
+                        "secondary_attack": 504,
+                        "secondary_shots_min": 4,
+                        "secondary_shots_max": 4,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "superior"
+                    },
+                    "cost": {
+                        "metal": 77520,
+                        "nano": 34454,
+                        "antimatter": 6461,
+                        "hydrogen": 0
+                    }
+                },
+                "capital": {
+                    "unit": {
+                        "slug": "capital",
+                        "category": "capital",
+                        "hp": 14286,
+                        "precision": 100,
+                        "tracking": 70,
+                        "evasion": 8,
+                        "signature": 70,
+                        "base_attack": 360,
+                        "shots_min": 42,
+                        "shots_max": 43,
+                        "shield": 7144,
+                        "secondary_attack": 540,
+                        "secondary_shots_min": 8,
+                        "secondary_shots_max": 8,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "superior"
+                    },
+                    "cost": {
+                        "metal": 132733,
+                        "nano": 58993,
+                        "antimatter": 11062,
+                        "hydrogen": 0
+                    }
+                }
+            }
+        },
+        "mid": {
+            "basic": {
+                "fighter": {
+                    "unit": {
+                        "slug": "fighter",
+                        "category": "light",
+                        "hp": 160.01502244451137,
+                        "precision": 57.203304937792495,
+                        "tracking": 78.00450673335341,
+                        "evasion": 63.20480718224364,
+                        "signature": 18.66466367406515,
+                        "base_attack": 25.60240359112182,
+                        "shots_min": 2,
+                        "shots_max": 3,
+                        "shield": 53.338340814837125,
+                        "tier": "basic",
+                        "extra_shot_chances": [
+                            0.133533632593485
+                        ]
+                    },
+                    "cost": {
+                        "metal": 2412,
+                        "nano": 134,
+                        "antimatter": 0,
+                        "hydrogen": 0
+                    }
+                },
+                "interceptor": {
+                    "unit": {
+                        "slug": "interceptor",
+                        "category": "light",
+                        "hp": 229.35486550379963,
+                        "precision": 31.201802693341364,
+                        "tracking": 88.40510763113386,
+                        "evasion": 79.00600897780456,
+                        "signature": 16.798197306658636,
+                        "base_attack": 37.336838570385986,
+                        "shots_min": 1,
+                        "shots_max": 3,
+                        "shield": 42.6706726518697,
+                        "tier": "basic",
+                        "extra_shot_chances": [
+                            0.133533632593485
+                        ]
+                    },
+                    "cost": {
+                        "metal": 2955,
+                        "nano": 165,
+                        "antimatter": 0,
+                        "hydrogen": 0
+                    }
+                },
+                "heavy_fighter": {
+                    "unit": {
+                        "slug": "heavy_fighter",
+                        "category": "heavy",
+                        "hp": 533.3834081483712,
+                        "precision": 67.60390583557296,
+                        "tracking": 78.00450673335341,
+                        "evasion": 52.6706726518697,
+                        "signature": 32.663161429614014,
+                        "base_attack": 27.735937223715304,
+                        "shots_min": 4,
+                        "shots_max": 4,
+                        "shield": 213.3533632593485,
+                        "tier": "basic",
+                        "extra_shot_chances": [
+                            0.133533632593485
+                        ]
+                    },
+                    "cost": {
+                        "metal": 5949,
+                        "nano": 331,
+                        "antimatter": 0,
+                        "hydrogen": 0
+                    }
+                },
+                "bomber": {
+                    "unit": {
+                        "slug": "bomber",
+                        "category": "bomber",
+                        "hp": 674.1966278995412,
+                        "precision": 67.60390583557296,
+                        "tracking": 83.20480718224363,
+                        "evasion": 47.40360538668273,
+                        "signature": 37.3293273481303,
+                        "base_attack": 155.7479551793244,
+                        "shots_min": 1,
+                        "shots_max": 2,
+                        "shield": 168.5491569748853,
+                        "tier": "basic",
+                        "extra_shot_chances": [
+                            0.133533632593485
+                        ]
+                    },
+                    "cost": {
+                        "metal": 8642,
+                        "nano": 481,
+                        "antimatter": 0,
+                        "hydrogen": 0
+                    }
+                },
+                "frigate": {
+                    "unit": {
+                        "slug": "frigate",
+                        "category": "escort",
+                        "hp": 1117.9716234789862,
+                        "precision": 78.00450673335341,
+                        "tracking": 83.20480718224363,
+                        "evasion": 36.86947085630879,
+                        "signature": 32.663161429614014,
+                        "base_attack": 34.13653812149576,
+                        "shots_min": 18,
+                        "shots_max": 19,
+                        "shield": 305.09530946086835,
+                        "tier": "basic",
+                        "extra_shot_chances": [
+                            0.133533632593485
+                        ]
+                    },
+                    "cost": {
+                        "metal": 18312,
+                        "nano": 1018,
+                        "antimatter": 0,
+                        "hydrogen": 0
+                    }
+                },
+                "cruiser": {
+                    "unit": {
+                        "slug": "cruiser",
+                        "category": "heavy",
+                        "hp": 3743.2847583852695,
+                        "precision": 104.00600897780454,
+                        "tracking": 67.60390583557296,
+                        "evasion": 14.747788342523515,
+                        "signature": 46.661659185162875,
+                        "base_attack": 170.6826906074788,
+                        "shots_min": 7,
+                        "shots_max": 9,
+                        "shield": 1497.7406100806265,
+                        "secondary_attack": 270.9587713393726,
+                        "secondary_shots_min": 2,
+                        "secondary_shots_max": 2,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "basic",
+                        "extra_shot_chances": [
+                            0.133533632593485
+                        ]
+                    },
+                    "cost": {
+                        "metal": 48926,
+                        "nano": 2719,
+                        "antimatter": 0,
+                        "hydrogen": 0
+                    }
+                },
+                "destroyer": {
+                    "unit": {
+                        "slug": "destroyer",
+                        "category": "escort",
+                        "hp": 1706.826906074788,
+                        "precision": 104.00600897780454,
+                        "tracking": 72.80420628446318,
+                        "evasion": 8.427307624299152,
+                        "signature": 41.995493266646584,
+                        "base_attack": 498.18010321057875,
+                        "shots_min": 2,
+                        "shots_max": 4,
+                        "shield": 640.0600897780455,
+                        "secondary_attack": 106.67668162967425,
+                        "secondary_shots_min": 6,
+                        "secondary_shots_max": 6,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "basic",
+                        "extra_shot_chances": [
+                            0.133533632593485
+                        ]
+                    },
+                    "cost": {
+                        "metal": 33851,
+                        "nano": 1882,
+                        "antimatter": 0,
+                        "hydrogen": 0
+                    }
+                },
+                "battleship": {
+                    "unit": {
+                        "slug": "battleship",
+                        "category": "heavy",
+                        "hp": 5418.108659971155,
+                        "precision": 104.00600897780454,
+                        "tracking": 67.60390583557296,
+                        "evasion": 11.587547983411334,
+                        "signature": 55.993991022195445,
+                        "base_attack": 170.6826906074788,
+                        "shots_min": 17,
+                        "shots_max": 18,
+                        "shield": 2709.587713393726,
+                        "secondary_attack": 238.95576685047033,
+                        "secondary_shots_min": 4,
+                        "secondary_shots_max": 4,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "basic",
+                        "extra_shot_chances": [
+                            0.133533632593485
+                        ]
+                    },
+                    "cost": {
+                        "metal": 88626,
+                        "nano": 4925,
+                        "antimatter": 0,
+                        "hydrogen": 0
+                    }
+                },
+                "capital": {
+                    "unit": {
+                        "slug": "capital",
+                        "category": "capital",
+                        "hp": 6772.9025166680185,
+                        "precision": 104.00600897780454,
+                        "tracking": 72.80420628446318,
+                        "evasion": 8.427307624299152,
+                        "signature": 65.32632285922803,
+                        "base_attack": 170.6826906074788,
+                        "shots_min": 42,
+                        "shots_max": 43,
+                        "shield": 3386.9846417421577,
+                        "secondary_attack": 256.0240359112182,
+                        "secondary_shots_min": 8,
+                        "secondary_shots_max": 8,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "basic",
+                        "extra_shot_chances": [
+                            0.133533632593485
+                        ]
+                    },
+                    "cost": {
+                        "metal": 151749,
+                        "nano": 8431,
+                        "antimatter": 0,
+                        "hydrogen": 0
+                    }
+                }
+            },
+            "intermediate": {
+                "fighter": {
+                    "unit": {
+                        "slug": "fighter",
+                        "category": "light",
+                        "hp": 240.02253366676706,
+                        "precision": 57.203304937792495,
+                        "tracking": 78.00450673335341,
+                        "evasion": 63.20480718224364,
+                        "signature": 18.66466367406515,
+                        "base_attack": 38.40360538668273,
+                        "shots_min": 2,
+                        "shots_max": 3,
+                        "shield": 80.00751122225569,
+                        "tier": "intermediate",
+                        "extra_shot_chances": [
+                            0.133533632593485
+                        ]
+                    },
+                    "cost": {
+                        "metal": 2178,
+                        "nano": 503,
+                        "antimatter": 42,
+                        "hydrogen": 0
+                    }
+                },
+                "interceptor": {
+                    "unit": {
+                        "slug": "interceptor",
+                        "category": "light",
+                        "hp": 344.56568166384784,
+                        "precision": 31.201802693341364,
+                        "tracking": 88.40510763113386,
+                        "evasion": 79.00600897780456,
+                        "signature": 16.798197306658636,
+                        "base_attack": 56.53864126372736,
+                        "shots_min": 1,
+                        "shots_max": 3,
+                        "shield": 64.00600897780456,
+                        "tier": "intermediate",
+                        "extra_shot_chances": [
+                            0.133533632593485
+                        ]
+                    },
+                    "cost": {
+                        "metal": 2668,
+                        "nano": 617,
+                        "antimatter": 52,
+                        "hydrogen": 0
+                    }
+                },
+                "heavy_fighter": {
+                    "unit": {
+                        "slug": "heavy_fighter",
+                        "category": "heavy",
+                        "hp": 800.0751122225569,
+                        "precision": 67.60390583557296,
+                        "tracking": 78.00450673335341,
+                        "evasion": 52.6706726518697,
+                        "signature": 32.663161429614014,
+                        "base_attack": 41.60390583557296,
+                        "shots_min": 4,
+                        "shots_max": 4,
+                        "shield": 320.03004488902275,
+                        "tier": "intermediate",
+                        "extra_shot_chances": [
+                            0.133533632593485
+                        ]
+                    },
+                    "cost": {
+                        "metal": 5371,
+                        "nano": 1240,
+                        "antimatter": 104,
+                        "hydrogen": 0
+                    }
+                },
+                "bomber": {
+                    "unit": {
+                        "slug": "bomber",
+                        "category": "bomber",
+                        "hp": 1011.294941849312,
+                        "precision": 67.60390583557296,
+                        "tracking": 83.20480718224363,
+                        "evasion": 47.40360538668273,
+                        "signature": 37.3293273481303,
+                        "base_attack": 233.62193276898662,
+                        "shots_min": 1,
+                        "shots_max": 2,
+                        "shield": 252.823735462328,
+                        "tier": "intermediate",
+                        "extra_shot_chances": [
+                            0.133533632593485
+                        ]
+                    },
+                    "cost": {
+                        "metal": 7802,
+                        "nano": 1801,
+                        "antimatter": 151,
+                        "hydrogen": 0
+                    }
+                },
+                "frigate": {
+                    "unit": {
+                        "slug": "frigate",
+                        "category": "escort",
+                        "hp": 1676.9574352184793,
+                        "precision": 78.00450673335341,
+                        "tracking": 83.20480718224363,
+                        "evasion": 36.86947085630879,
+                        "signature": 32.663161429614014,
+                        "base_attack": 51.20480718224364,
+                        "shots_min": 18,
+                        "shots_max": 19,
+                        "shield": 457.64296419130255,
+                        "tier": "intermediate",
+                        "extra_shot_chances": [
+                            0.133533632593485
+                        ]
+                    },
+                    "cost": {
+                        "metal": 16531,
+                        "nano": 3816,
+                        "antimatter": 319,
+                        "hydrogen": 0
+                    }
+                },
+                "cruiser": {
+                    "unit": {
+                        "slug": "cruiser",
+                        "category": "heavy",
+                        "hp": 5615.460520986053,
+                        "precision": 104.00600897780454,
+                        "tracking": 67.60390583557296,
+                        "evasion": 14.747788342523515,
+                        "signature": 46.661659185162875,
+                        "base_attack": 256.0240359112182,
+                        "shots_min": 7,
+                        "shots_max": 9,
+                        "shield": 2246.61091512094,
+                        "secondary_attack": 406.4381570090589,
+                        "secondary_shots_min": 2,
+                        "secondary_shots_max": 2,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "intermediate",
+                        "extra_shot_chances": [
+                            0.133533632593485
+                        ]
+                    },
+                    "cost": {
+                        "metal": 44170,
+                        "nano": 10194,
+                        "antimatter": 852,
+                        "hydrogen": 0
+                    }
+                },
+                "destroyer": {
+                    "unit": {
+                        "slug": "destroyer",
+                        "category": "escort",
+                        "hp": 2560.240359112182,
+                        "precision": 104.00600897780454,
+                        "tracking": 72.80420628446318,
+                        "evasion": 8.427307624299152,
+                        "signature": 41.995493266646584,
+                        "base_attack": 747.8035382240165,
+                        "shots_min": 2,
+                        "shots_max": 4,
+                        "shield": 960.0901346670682,
+                        "secondary_attack": 160.01502244451137,
+                        "secondary_shots_min": 6,
+                        "secondary_shots_max": 6,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "intermediate",
+                        "extra_shot_chances": [
+                            0.133533632593485
+                        ]
+                    },
+                    "cost": {
+                        "metal": 30560,
+                        "nano": 7053,
+                        "antimatter": 589,
+                        "hydrogen": 0
+                    }
+                },
+                "battleship": {
+                    "unit": {
+                        "slug": "battleship",
+                        "category": "heavy",
+                        "hp": 8127.696373364881,
+                        "precision": 104.00600897780454,
+                        "tracking": 67.60390583557296,
+                        "evasion": 11.587547983411334,
+                        "signature": 55.993991022195445,
+                        "base_attack": 256.0240359112182,
+                        "shots_min": 17,
+                        "shots_max": 18,
+                        "shield": 4064.381570090589,
+                        "secondary_attack": 358.4336502757055,
+                        "secondary_shots_min": 4,
+                        "secondary_shots_max": 4,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "intermediate",
+                        "extra_shot_chances": [
+                            0.133533632593485
+                        ]
+                    },
+                    "cost": {
+                        "metal": 80010,
+                        "nano": 18464,
+                        "antimatter": 1539,
+                        "hydrogen": 0
+                    }
+                },
+                "capital": {
+                    "unit": {
+                        "slug": "capital",
+                        "category": "capital",
+                        "hp": 10159.887158410176,
+                        "precision": 104.00600897780454,
+                        "tracking": 72.80420628446318,
+                        "evasion": 8.427307624299152,
+                        "signature": 65.32632285922803,
+                        "base_attack": 256.0240359112182,
+                        "shots_min": 42,
+                        "shots_max": 43,
+                        "shield": 5081.010346021385,
+                        "secondary_attack": 384.03605386682733,
+                        "secondary_shots_min": 8,
+                        "secondary_shots_max": 8,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "intermediate",
+                        "extra_shot_chances": [
+                            0.133533632593485
+                        ]
+                    },
+                    "cost": {
+                        "metal": 136995,
+                        "nano": 31615,
+                        "antimatter": 2635,
+                        "hydrogen": 0
+                    }
+                }
+            },
+            "superior": {
+                "fighter": {
+                    "unit": {
+                        "slug": "fighter",
+                        "category": "light",
+                        "hp": 360.567183908299,
+                        "precision": 57.203304937792495,
+                        "tracking": 78.00450673335341,
+                        "evasion": 63.20480718224364,
+                        "signature": 18.66466367406515,
+                        "base_attack": 57.6054080800241,
+                        "shots_min": 2,
+                        "shots_max": 3,
+                        "shield": 120.54465024153191,
+                        "tier": "superior",
+                        "extra_shot_chances": [
+                            0.133533632593485
+                        ]
+                    },
+                    "cost": {
+                        "metal": 1885,
+                        "nano": 838,
+                        "antimatter": 158,
+                        "hydrogen": 0
+                    }
+                },
+                "interceptor": {
+                    "unit": {
+                        "slug": "interceptor",
+                        "category": "light",
+                        "hp": 516.3151390876234,
+                        "precision": 31.201802693341364,
+                        "tracking": 88.40510763113386,
+                        "evasion": 79.00600897780456,
+                        "signature": 16.798197306658636,
+                        "base_attack": 84.27457848744265,
+                        "shots_min": 1,
+                        "shots_max": 3,
+                        "shield": 96.00901346670683,
+                        "tier": "superior",
+                        "extra_shot_chances": [
+                            0.133533632593485
+                        ]
+                    },
+                    "cost": {
+                        "metal": 2309,
+                        "nano": 1027,
+                        "antimatter": 194,
+                        "hydrogen": 0
+                    }
+                },
+                "heavy_fighter": {
+                    "unit": {
+                        "slug": "heavy_fighter",
+                        "category": "heavy",
+                        "hp": 1200.1126683338352,
+                        "precision": 67.60390583557296,
+                        "tracking": 78.00450673335341,
+                        "evasion": 52.6706726518697,
+                        "signature": 32.663161429614014,
+                        "base_attack": 62.939242161507806,
+                        "shots_min": 4,
+                        "shots_max": 4,
+                        "shield": 480.0450673335341,
+                        "tier": "superior",
+                        "extra_shot_chances": [
+                            0.133533632593485
+                        ]
+                    },
+                    "cost": {
+                        "metal": 4649,
+                        "nano": 2066,
+                        "antimatter": 389,
+                        "hydrogen": 0
+                    }
+                },
+                "bomber": {
+                    "unit": {
+                        "slug": "bomber",
+                        "category": "bomber",
+                        "hp": 1516.9424127739678,
+                        "precision": 67.60390583557296,
+                        "tracking": 83.20480718224363,
+                        "evasion": 47.40360538668273,
+                        "signature": 37.3293273481303,
+                        "base_attack": 349.89951574533154,
+                        "shots_min": 1,
+                        "shots_max": 2,
+                        "shield": 379.76898660164034,
+                        "tier": "superior",
+                        "extra_shot_chances": [
+                            0.133533632593485
+                        ]
+                    },
+                    "cost": {
+                        "metal": 6753,
+                        "nano": 3002,
+                        "antimatter": 564,
+                        "hydrogen": 0
+                    }
+                },
+                "frigate": {
+                    "unit": {
+                        "slug": "frigate",
+                        "category": "escort",
+                        "hp": 2515.436152827719,
+                        "precision": 78.00450673335341,
+                        "tracking": 83.20480718224363,
+                        "evasion": 36.86947085630879,
+                        "signature": 32.663161429614014,
+                        "base_attack": 76.80721077336545,
+                        "shots_min": 18,
+                        "shots_max": 19,
+                        "shield": 686.9978296951022,
+                        "tier": "superior",
+                        "extra_shot_chances": [
+                            0.133533632593485
+                        ]
+                    },
+                    "cost": {
+                        "metal": 14306,
+                        "nano": 6359,
+                        "antimatter": 1194,
+                        "hydrogen": 0
+                    }
+                },
+                "cruiser": {
+                    "unit": {
+                        "slug": "cruiser",
+                        "category": "heavy",
+                        "hp": 8423.19078147908,
+                        "precision": 104.00600897780454,
+                        "tracking": 67.60390583557296,
+                        "evasion": 14.747788342523515,
+                        "signature": 46.661659185162875,
+                        "base_attack": 384.03605386682733,
+                        "shots_min": 7,
+                        "shots_max": 9,
+                        "shield": 3369.9163726814095,
+                        "secondary_attack": 610.1906189217367,
+                        "secondary_shots_min": 2,
+                        "secondary_shots_max": 2,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "superior",
+                        "extra_shot_chances": [
+                            0.133533632593485
+                        ]
+                    },
+                    "cost": {
+                        "metal": 38224,
+                        "nano": 16990,
+                        "antimatter": 3186,
+                        "hydrogen": 0
+                    }
+                },
+                "destroyer": {
+                    "unit": {
+                        "slug": "destroyer",
+                        "category": "escort",
+                        "hp": 3840.360538668273,
+                        "precision": 104.00600897780454,
+                        "tracking": 72.80420628446318,
+                        "evasion": 8.427307624299152,
+                        "signature": 41.995493266646584,
+                        "base_attack": 1121.1719239278764,
+                        "shots_min": 2,
+                        "shots_max": 4,
+                        "shield": 1440.1352020006025,
+                        "secondary_attack": 240.02253366676706,
+                        "secondary_shots_min": 6,
+                        "secondary_shots_max": 6,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "superior",
+                        "extra_shot_chances": [
+                            0.133533632593485
+                        ]
+                    },
+                    "cost": {
+                        "metal": 26446,
+                        "nano": 11755,
+                        "antimatter": 2205,
+                        "hydrogen": 0
+                    }
+                },
+                "battleship": {
+                    "unit": {
+                        "slug": "battleship",
+                        "category": "heavy",
+                        "hp": 12191.011176639173,
+                        "precision": 104.00600897780454,
+                        "tracking": 67.60390583557296,
+                        "evasion": 11.587547983411334,
+                        "signature": 55.993991022195445,
+                        "base_attack": 384.03605386682733,
+                        "shots_min": 17,
+                        "shots_max": 18,
+                        "shield": 6096.572355135883,
+                        "secondary_attack": 537.6504754135582,
+                        "secondary_shots_min": 4,
+                        "secondary_shots_max": 4,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "superior",
+                        "extra_shot_chances": [
+                            0.133533632593485
+                        ]
+                    },
+                    "cost": {
+                        "metal": 69239,
+                        "nano": 30774,
+                        "antimatter": 5771,
+                        "hydrogen": 0
+                    }
+                },
+                "capital": {
+                    "unit": {
+                        "slug": "capital",
+                        "category": "capital",
+                        "hp": 15239.830737615264,
+                        "precision": 104.00600897780454,
+                        "tracking": 72.80420628446318,
+                        "evasion": 8.427307624299152,
+                        "signature": 65.32632285922803,
+                        "base_attack": 384.03605386682733,
+                        "shots_min": 42,
+                        "shots_max": 43,
+                        "shield": 7620.982135623929,
+                        "secondary_attack": 576.054080800241,
+                        "secondary_shots_min": 8,
+                        "secondary_shots_max": 8,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "superior",
+                        "extra_shot_chances": [
+                            0.133533632593485
+                        ]
+                    },
+                    "cost": {
+                        "metal": 118554,
+                        "nano": 52691,
+                        "antimatter": 9881,
+                        "hydrogen": 0
+                    }
+                }
+            }
+        },
+        "max": {
+            "basic": {
+                "fighter": {
+                    "unit": {
+                        "slug": "fighter",
+                        "category": "light",
+                        "hp": 187.5,
+                        "precision": 63.24999999999999,
+                        "tracking": 86.25,
+                        "evasion": 72,
+                        "signature": 15,
+                        "base_attack": 30,
+                        "shots_min": 2,
+                        "shots_max": 3,
+                        "shield": 62.5,
+                        "tier": "basic",
+                        "extra_shot_chances": [
+                            0.5
+                        ]
+                    },
+                    "cost": {
+                        "metal": 1620,
+                        "nano": 90,
+                        "antimatter": 0,
+                        "hydrogen": 0
+                    }
+                },
+                "interceptor": {
+                    "unit": {
+                        "slug": "interceptor",
+                        "category": "light",
+                        "hp": 268.75,
+                        "precision": 34.5,
+                        "tracking": 97.74999999999999,
+                        "evasion": 90,
+                        "signature": 13.5,
+                        "base_attack": 43.75,
+                        "shots_min": 1,
+                        "shots_max": 3,
+                        "shield": 50,
+                        "tier": "basic",
+                        "extra_shot_chances": [
+                            0.5
+                        ]
+                    },
+                    "cost": {
+                        "metal": 1985,
+                        "nano": 111,
+                        "antimatter": 0,
+                        "hydrogen": 0
+                    }
+                },
+                "heavy_fighter": {
+                    "unit": {
+                        "slug": "heavy_fighter",
+                        "category": "heavy",
+                        "hp": 625,
+                        "precision": 74.75,
+                        "tracking": 86.25,
+                        "evasion": 60,
+                        "signature": 26.25,
+                        "base_attack": 32.5,
+                        "shots_min": 4,
+                        "shots_max": 4,
+                        "shield": 250,
+                        "tier": "basic",
+                        "extra_shot_chances": [
+                            0.5
+                        ]
+                    },
+                    "cost": {
+                        "metal": 3996,
+                        "nano": 222,
+                        "antimatter": 0,
+                        "hydrogen": 0
+                    }
+                },
+                "bomber": {
+                    "unit": {
+                        "slug": "bomber",
+                        "category": "bomber",
+                        "hp": 790,
+                        "precision": 74.75,
+                        "tracking": 92,
+                        "evasion": 54,
+                        "signature": 30,
+                        "base_attack": 182.5,
+                        "shots_min": 1,
+                        "shots_max": 2,
+                        "shield": 197.5,
+                        "tier": "basic",
+                        "extra_shot_chances": [
+                            0.5
+                        ]
+                    },
+                    "cost": {
+                        "metal": 5805,
+                        "nano": 323,
+                        "antimatter": 0,
+                        "hydrogen": 0
+                    }
+                },
+                "frigate": {
+                    "unit": {
+                        "slug": "frigate",
+                        "category": "escort",
+                        "hp": 1310,
+                        "precision": 86.25,
+                        "tracking": 92,
+                        "evasion": 42,
+                        "signature": 26.25,
+                        "base_attack": 40,
+                        "shots_min": 18,
+                        "shots_max": 19,
+                        "shield": 357.5,
+                        "tier": "basic",
+                        "extra_shot_chances": [
+                            0.5
+                        ]
+                    },
+                    "cost": {
+                        "metal": 12302,
+                        "nano": 684,
+                        "antimatter": 0,
+                        "hydrogen": 0
+                    }
+                },
+                "cruiser": {
+                    "unit": {
+                        "slug": "cruiser",
+                        "category": "heavy",
+                        "hp": 4386.25,
+                        "precision": 114.99999999999999,
+                        "tracking": 74.75,
+                        "evasion": 16.8,
+                        "signature": 37.5,
+                        "base_attack": 200,
+                        "shots_min": 7,
+                        "shots_max": 9,
+                        "shield": 1755,
+                        "secondary_attack": 317.5,
+                        "secondary_shots_min": 2,
+                        "secondary_shots_max": 2,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "basic",
+                        "extra_shot_chances": [
+                            0.5
+                        ]
+                    },
+                    "cost": {
+                        "metal": 32867,
+                        "nano": 1827,
+                        "antimatter": 0,
+                        "hydrogen": 0
+                    }
+                },
+                "destroyer": {
+                    "unit": {
+                        "slug": "destroyer",
+                        "category": "escort",
+                        "hp": 2000,
+                        "precision": 114.99999999999999,
+                        "tracking": 80.5,
+                        "evasion": 9.6,
+                        "signature": 33.75,
+                        "base_attack": 583.75,
+                        "shots_min": 2,
+                        "shots_max": 4,
+                        "shield": 750,
+                        "secondary_attack": 125,
+                        "secondary_shots_min": 6,
+                        "secondary_shots_max": 6,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "basic",
+                        "extra_shot_chances": [
+                            0.5
+                        ]
+                    },
+                    "cost": {
+                        "metal": 22740,
+                        "nano": 1264,
+                        "antimatter": 0,
+                        "hydrogen": 0
+                    }
+                },
+                "battleship": {
+                    "unit": {
+                        "slug": "battleship",
+                        "category": "heavy",
+                        "hp": 6348.75,
+                        "precision": 114.99999999999999,
+                        "tracking": 74.75,
+                        "evasion": 13.2,
+                        "signature": 45,
+                        "base_attack": 200,
+                        "shots_min": 17,
+                        "shots_max": 18,
+                        "shield": 3175,
+                        "secondary_attack": 280,
+                        "secondary_shots_min": 4,
+                        "secondary_shots_max": 4,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "basic",
+                        "extra_shot_chances": [
+                            0.5
+                        ]
+                    },
+                    "cost": {
+                        "metal": 59535,
+                        "nano": 3308,
+                        "antimatter": 0,
+                        "hydrogen": 0
+                    }
+                },
+                "capital": {
+                    "unit": {
+                        "slug": "capital",
+                        "category": "capital",
+                        "hp": 7936.25,
+                        "precision": 114.99999999999999,
+                        "tracking": 80.5,
+                        "evasion": 9.6,
+                        "signature": 52.5,
+                        "base_attack": 200,
+                        "shots_min": 42,
+                        "shots_max": 43,
+                        "shield": 3968.75,
+                        "secondary_attack": 300,
+                        "secondary_shots_min": 8,
+                        "secondary_shots_max": 8,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "basic",
+                        "extra_shot_chances": [
+                            0.5
+                        ]
+                    },
+                    "cost": {
+                        "metal": 101939,
+                        "nano": 5664,
+                        "antimatter": 0,
+                        "hydrogen": 0
+                    }
+                }
+            },
+            "intermediate": {
+                "fighter": {
+                    "unit": {
+                        "slug": "fighter",
+                        "category": "light",
+                        "hp": 281.25,
+                        "precision": 63.24999999999999,
+                        "tracking": 86.25,
+                        "evasion": 72,
+                        "signature": 15,
+                        "base_attack": 45,
+                        "shots_min": 2,
+                        "shots_max": 3,
+                        "shield": 93.75,
+                        "tier": "intermediate",
+                        "extra_shot_chances": [
+                            0.5
+                        ]
+                    },
+                    "cost": {
+                        "metal": 1463,
+                        "nano": 338,
+                        "antimatter": 29,
+                        "hydrogen": 0
+                    }
+                },
+                "interceptor": {
+                    "unit": {
+                        "slug": "interceptor",
+                        "category": "light",
+                        "hp": 403.75,
+                        "precision": 34.5,
+                        "tracking": 97.74999999999999,
+                        "evasion": 90,
+                        "signature": 13.5,
+                        "base_attack": 66.25,
+                        "shots_min": 1,
+                        "shots_max": 3,
+                        "shield": 75,
+                        "tier": "intermediate",
+                        "extra_shot_chances": [
+                            0.5
+                        ]
+                    },
+                    "cost": {
+                        "metal": 1793,
+                        "nano": 414,
+                        "antimatter": 35,
+                        "hydrogen": 0
+                    }
+                },
+                "heavy_fighter": {
+                    "unit": {
+                        "slug": "heavy_fighter",
+                        "category": "heavy",
+                        "hp": 937.5,
+                        "precision": 74.75,
+                        "tracking": 86.25,
+                        "evasion": 60,
+                        "signature": 26.25,
+                        "base_attack": 48.75,
+                        "shots_min": 4,
+                        "shots_max": 4,
+                        "shield": 375,
+                        "tier": "intermediate",
+                        "extra_shot_chances": [
+                            0.5
+                        ]
+                    },
+                    "cost": {
+                        "metal": 3608,
+                        "nano": 833,
+                        "antimatter": 70,
+                        "hydrogen": 0
+                    }
+                },
+                "bomber": {
+                    "unit": {
+                        "slug": "bomber",
+                        "category": "bomber",
+                        "hp": 1185,
+                        "precision": 74.75,
+                        "tracking": 92,
+                        "evasion": 54,
+                        "signature": 30,
+                        "base_attack": 273.75,
+                        "shots_min": 1,
+                        "shots_max": 2,
+                        "shield": 296.25,
+                        "tier": "intermediate",
+                        "extra_shot_chances": [
+                            0.5
+                        ]
+                    },
+                    "cost": {
+                        "metal": 5241,
+                        "nano": 1210,
+                        "antimatter": 102,
+                        "hydrogen": 0
+                    }
+                },
+                "frigate": {
+                    "unit": {
+                        "slug": "frigate",
+                        "category": "escort",
+                        "hp": 1965,
+                        "precision": 86.25,
+                        "tracking": 92,
+                        "evasion": 42,
+                        "signature": 26.25,
+                        "base_attack": 60,
+                        "shots_min": 18,
+                        "shots_max": 19,
+                        "shield": 536.25,
+                        "tier": "intermediate",
+                        "extra_shot_chances": [
+                            0.5
+                        ]
+                    },
+                    "cost": {
+                        "metal": 11105,
+                        "nano": 2564,
+                        "antimatter": 215,
+                        "hydrogen": 0
+                    }
+                },
+                "cruiser": {
+                    "unit": {
+                        "slug": "cruiser",
+                        "category": "heavy",
+                        "hp": 6580,
+                        "precision": 114.99999999999999,
+                        "tracking": 74.75,
+                        "evasion": 16.8,
+                        "signature": 37.5,
+                        "base_attack": 300,
+                        "shots_min": 7,
+                        "shots_max": 9,
+                        "shield": 2632.5,
+                        "secondary_attack": 476.25,
+                        "secondary_shots_min": 2,
+                        "secondary_shots_max": 2,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "intermediate",
+                        "extra_shot_chances": [
+                            0.5
+                        ]
+                    },
+                    "cost": {
+                        "metal": 29672,
+                        "nano": 6848,
+                        "antimatter": 572,
+                        "hydrogen": 0
+                    }
+                },
+                "destroyer": {
+                    "unit": {
+                        "slug": "destroyer",
+                        "category": "escort",
+                        "hp": 3000,
+                        "precision": 114.99999999999999,
+                        "tracking": 80.5,
+                        "evasion": 9.6,
+                        "signature": 33.75,
+                        "base_attack": 876.25,
+                        "shots_min": 2,
+                        "shots_max": 4,
+                        "shield": 1125,
+                        "secondary_attack": 187.5,
+                        "secondary_shots_min": 6,
+                        "secondary_shots_max": 6,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "intermediate",
+                        "extra_shot_chances": [
+                            0.5
+                        ]
+                    },
+                    "cost": {
+                        "metal": 20529,
+                        "nano": 4738,
+                        "antimatter": 396,
+                        "hydrogen": 0
+                    }
+                },
+                "battleship": {
+                    "unit": {
+                        "slug": "battleship",
+                        "category": "heavy",
+                        "hp": 9523.75,
+                        "precision": 114.99999999999999,
+                        "tracking": 74.75,
+                        "evasion": 13.2,
+                        "signature": 45,
+                        "base_attack": 300,
+                        "shots_min": 17,
+                        "shots_max": 18,
+                        "shield": 4762.5,
+                        "secondary_attack": 420,
+                        "secondary_shots_min": 4,
+                        "secondary_shots_max": 4,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "intermediate",
+                        "extra_shot_chances": [
+                            0.5
+                        ]
+                    },
+                    "cost": {
+                        "metal": 53748,
+                        "nano": 12404,
+                        "antimatter": 1034,
+                        "hydrogen": 0
+                    }
+                },
+                "capital": {
+                    "unit": {
+                        "slug": "capital",
+                        "category": "capital",
+                        "hp": 11905,
+                        "precision": 114.99999999999999,
+                        "tracking": 80.5,
+                        "evasion": 9.6,
+                        "signature": 52.5,
+                        "base_attack": 300,
+                        "shots_min": 42,
+                        "shots_max": 43,
+                        "shield": 5953.75,
+                        "secondary_attack": 450,
+                        "secondary_shots_min": 8,
+                        "secondary_shots_max": 8,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "intermediate",
+                        "extra_shot_chances": [
+                            0.5
+                        ]
+                    },
+                    "cost": {
+                        "metal": 92028,
+                        "nano": 21238,
+                        "antimatter": 1770,
+                        "hydrogen": 0
+                    }
+                }
+            },
+            "superior": {
+                "fighter": {
+                    "unit": {
+                        "slug": "fighter",
+                        "category": "light",
+                        "hp": 422.5,
+                        "precision": 63.24999999999999,
+                        "tracking": 86.25,
+                        "evasion": 72,
+                        "signature": 15,
+                        "base_attack": 67.5,
+                        "shots_min": 2,
+                        "shots_max": 3,
+                        "shield": 141.25,
+                        "tier": "superior",
+                        "extra_shot_chances": [
+                            0.5
+                        ]
+                    },
+                    "cost": {
+                        "metal": 1266,
+                        "nano": 563,
+                        "antimatter": 106,
+                        "hydrogen": 0
+                    }
+                },
+                "interceptor": {
+                    "unit": {
+                        "slug": "interceptor",
+                        "category": "light",
+                        "hp": 605,
+                        "precision": 34.5,
+                        "tracking": 97.74999999999999,
+                        "evasion": 90,
+                        "signature": 13.5,
+                        "base_attack": 98.75,
+                        "shots_min": 1,
+                        "shots_max": 3,
+                        "shield": 112.5,
+                        "tier": "superior",
+                        "extra_shot_chances": [
+                            0.5
+                        ]
+                    },
+                    "cost": {
+                        "metal": 1551,
+                        "nano": 690,
+                        "antimatter": 131,
+                        "hydrogen": 0
+                    }
+                },
+                "heavy_fighter": {
+                    "unit": {
+                        "slug": "heavy_fighter",
+                        "category": "heavy",
+                        "hp": 1406.25,
+                        "precision": 74.75,
+                        "tracking": 86.25,
+                        "evasion": 60,
+                        "signature": 26.25,
+                        "base_attack": 73.75,
+                        "shots_min": 4,
+                        "shots_max": 4,
+                        "shield": 562.5,
+                        "tier": "superior",
+                        "extra_shot_chances": [
+                            0.5
+                        ]
+                    },
+                    "cost": {
+                        "metal": 3123,
+                        "nano": 1388,
+                        "antimatter": 261,
+                        "hydrogen": 0
+                    }
+                },
+                "bomber": {
+                    "unit": {
+                        "slug": "bomber",
+                        "category": "bomber",
+                        "hp": 1777.5,
+                        "precision": 74.75,
+                        "tracking": 92,
+                        "evasion": 54,
+                        "signature": 30,
+                        "base_attack": 410,
+                        "shots_min": 1,
+                        "shots_max": 2,
+                        "shield": 445,
+                        "tier": "superior",
+                        "extra_shot_chances": [
+                            0.5
+                        ]
+                    },
+                    "cost": {
+                        "metal": 4536,
+                        "nano": 2016,
+                        "antimatter": 379,
+                        "hydrogen": 0
+                    }
+                },
+                "frigate": {
+                    "unit": {
+                        "slug": "frigate",
+                        "category": "escort",
+                        "hp": 2947.5,
+                        "precision": 86.25,
+                        "tracking": 92,
+                        "evasion": 42,
+                        "signature": 26.25,
+                        "base_attack": 90,
+                        "shots_min": 18,
+                        "shots_max": 19,
+                        "shield": 805,
+                        "tier": "superior",
+                        "extra_shot_chances": [
+                            0.5
+                        ]
+                    },
+                    "cost": {
+                        "metal": 9611,
+                        "nano": 4272,
+                        "antimatter": 802,
+                        "hydrogen": 0
+                    }
+                },
+                "cruiser": {
+                    "unit": {
+                        "slug": "cruiser",
+                        "category": "heavy",
+                        "hp": 9870,
+                        "precision": 114.99999999999999,
+                        "tracking": 74.75,
+                        "evasion": 16.8,
+                        "signature": 37.5,
+                        "base_attack": 450,
+                        "shots_min": 7,
+                        "shots_max": 9,
+                        "shield": 3948.75,
+                        "secondary_attack": 715,
+                        "secondary_shots_min": 2,
+                        "secondary_shots_max": 2,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "superior",
+                        "extra_shot_chances": [
+                            0.5
+                        ]
+                    },
+                    "cost": {
+                        "metal": 25677,
+                        "nano": 11413,
+                        "antimatter": 2141,
+                        "hydrogen": 0
+                    }
+                },
+                "destroyer": {
+                    "unit": {
+                        "slug": "destroyer",
+                        "category": "escort",
+                        "hp": 4500,
+                        "precision": 114.99999999999999,
+                        "tracking": 80.5,
+                        "evasion": 9.6,
+                        "signature": 33.75,
+                        "base_attack": 1313.75,
+                        "shots_min": 2,
+                        "shots_max": 4,
+                        "shield": 1687.5,
+                        "secondary_attack": 281.25,
+                        "secondary_shots_min": 6,
+                        "secondary_shots_max": 6,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "superior",
+                        "extra_shot_chances": [
+                            0.5
+                        ]
+                    },
+                    "cost": {
+                        "metal": 17766,
+                        "nano": 7896,
+                        "antimatter": 1481,
+                        "hydrogen": 0
+                    }
+                },
+                "battleship": {
+                    "unit": {
+                        "slug": "battleship",
+                        "category": "heavy",
+                        "hp": 14285,
+                        "precision": 114.99999999999999,
+                        "tracking": 74.75,
+                        "evasion": 13.2,
+                        "signature": 45,
+                        "base_attack": 450,
+                        "shots_min": 17,
+                        "shots_max": 18,
+                        "shield": 7143.75,
+                        "secondary_attack": 630,
+                        "secondary_shots_min": 4,
+                        "secondary_shots_max": 4,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "superior",
+                        "extra_shot_chances": [
+                            0.5
+                        ]
+                    },
+                    "cost": {
+                        "metal": 46512,
+                        "nano": 20673,
+                        "antimatter": 3877,
+                        "hydrogen": 0
+                    }
+                },
+                "capital": {
+                    "unit": {
+                        "slug": "capital",
+                        "category": "capital",
+                        "hp": 17857.5,
+                        "precision": 114.99999999999999,
+                        "tracking": 80.5,
+                        "evasion": 9.6,
+                        "signature": 52.5,
+                        "base_attack": 450,
+                        "shots_min": 42,
+                        "shots_max": 43,
+                        "shield": 8930,
+                        "secondary_attack": 675,
+                        "secondary_shots_min": 8,
+                        "secondary_shots_max": 8,
+                        "secondary_target_category": "light",
+                        "secondary_precision_modifier": 50,
+                        "tier": "superior",
+                        "extra_shot_chances": [
+                            0.5
+                        ]
+                    },
+                    "cost": {
+                        "metal": 79640,
+                        "nano": 35396,
+                        "antimatter": 6638,
+                        "hydrogen": 0
+                    }
+                }
+            }
+        }
+    },
+    "modifiers": {
+        "interceptor": {
+            "interceptor": 1,
+            "cruiser": 1,
+            "capital": 1,
+            "destroyer": 1,
+            "heavy_fighter": 2.35,
+            "battleship": 1,
+            "frigate": 1,
+            "bomber": 2.52,
+            "fighter": 1
+        },
+        "cruiser": {
+            "interceptor": 1,
+            "cruiser": 1,
+            "capital": 1,
+            "destroyer": 1,
+            "heavy_fighter": 6,
+            "battleship": 1,
+            "frigate": 4.59,
+            "bomber": 1,
+            "fighter": 1
+        },
+        "capital": {
+            "interceptor": 1,
+            "cruiser": 8,
+            "capital": 1,
+            "destroyer": 1,
+            "heavy_fighter": 1,
+            "battleship": 4.8,
+            "frigate": 1,
+            "bomber": 1,
+            "fighter": 1
+        },
+        "destroyer": {
+            "interceptor": 1,
+            "cruiser": 5.31,
+            "capital": 5.06,
+            "destroyer": 1,
+            "heavy_fighter": 1,
+            "battleship": 4.53,
+            "frigate": 1,
+            "bomber": 1,
+            "fighter": 1
+        },
+        "heavy_fighter": {
+            "interceptor": 1,
+            "cruiser": 1,
+            "capital": 1,
+            "destroyer": 4.03,
+            "heavy_fighter": 1,
+            "battleship": 1,
+            "frigate": 4.44,
+            "bomber": 1,
+            "fighter": 4.15
+        },
+        "battleship": {
+            "interceptor": 1,
+            "cruiser": 4.5,
+            "capital": 1,
+            "destroyer": 1,
+            "heavy_fighter": 1,
+            "battleship": 1,
+            "frigate": 7.3,
+            "bomber": 1,
+            "fighter": 1
+        },
+        "frigate": {
+            "interceptor": 4.5,
+            "cruiser": 1,
+            "capital": 1,
+            "destroyer": 1,
+            "heavy_fighter": 1,
+            "battleship": 1,
+            "frigate": 1,
+            "bomber": 4.6,
+            "fighter": 8
+        },
+        "bomber": {
+            "interceptor": 1,
+            "cruiser": 1,
+            "capital": 4.38,
+            "destroyer": 4.16,
+            "heavy_fighter": 1,
+            "battleship": 4.35,
+            "frigate": 1,
+            "bomber": 1,
+            "fighter": 1
+        },
+        "fighter": {
+            "interceptor": 2.04,
+            "cruiser": 1,
+            "capital": 1,
+            "destroyer": 1,
+            "heavy_fighter": 1,
+            "battleship": 1,
+            "frigate": 1,
+            "bomber": 2.42,
+            "fighter": 1
+        }
+    },
+    "cases": [
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 127,
+            "flip": false,
+            "result_sha256": "980c0ddf2ae31776040ac86531c1889345ed330ba07af24881b2f6d4b2373ea4"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 127,
+            "flip": true,
+            "result_sha256": "0e908b79c2a48c2ac1022a35f21a33522da43bacb0d109b7dd89accfd80891b1"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 9821,
+            "flip": false,
+            "result_sha256": "089904ae37fafe345223c21b8e8ebe6695d8f5d63739f01513a0da4f14283794"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 9821,
+            "flip": true,
+            "result_sha256": "325571e5dfa40fbb1769fe738328236ca2d534da923ae5fbcc3b12921df2d066"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 65437,
+            "flip": false,
+            "result_sha256": "5d64d65c56905bddb4e35538a52efdeeeafabf24be7d72a88151182c904e36f4"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 65437,
+            "flip": true,
+            "result_sha256": "6e16c94e909a77dfa2cb555d661656dcd4a85a40f97f0198ee6d0c6a72dfbdd0"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 190019,
+            "flip": false,
+            "result_sha256": "93c61eec400aa43cc1af8c296d12b2d85f9c44972774816ad38e044c9ce69ab2"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 190019,
+            "flip": true,
+            "result_sha256": "aac5f8b2def17931fa1e1974044010c19c35fd3d26a60d816486aaf32884df67"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 127,
+            "flip": false,
+            "result_sha256": "368a141c67fa3e204ddd18409cd24c0fc6be2d95a24cc77bda12417ef27e811c"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 127,
+            "flip": true,
+            "result_sha256": "f7610abefe333482cc3d5e4e09027163b111eaa577f6b16db3d2dad5149b7e9c"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 9821,
+            "flip": false,
+            "result_sha256": "a71cb3e074eafd0b2ad9bc705f1262914c7ed209dc4550cc18d68840d390707b"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 9821,
+            "flip": true,
+            "result_sha256": "0ed34a0ad62b02a2b1ad88fbfb6a6115b27f09f2155e36779a2b0ce74800d8f9"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 65437,
+            "flip": false,
+            "result_sha256": "0dfe2050dd51b72eab0e3b0694f4cc00aaba4ad4a1b69e1c79eb5f7be467cda3"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 65437,
+            "flip": true,
+            "result_sha256": "15900872b3d1053b1e5483a2ba2c4b2fb2f294995e2765bcc4ac38bb94c5f737"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 190019,
+            "flip": false,
+            "result_sha256": "a2bbfd8e8f6250ddc23be2640a1e4ef2fade7737061d8e8b1f8977cd2822ff5f"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 190019,
+            "flip": true,
+            "result_sha256": "23d646cb40cfeb14586b70f3eafa64f86bc5a5efc988eaebe9758c3435c2087a"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 127,
+            "flip": false,
+            "result_sha256": "cf50f5d109a161ebc30cc818f27595d060d6500315992c68b5f2608213fec5ff"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 127,
+            "flip": true,
+            "result_sha256": "631e3459b553fb273d9e78ce1fbd66161f95778e7c34504a4ab7462131fad1fb"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 9821,
+            "flip": false,
+            "result_sha256": "6e4d36025aaaebd163506ec568221032ab2c51136900d66663886cb6736a61a9"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 9821,
+            "flip": true,
+            "result_sha256": "b3e8817dd7596d998c65c821957c08e0619875e5cdd0d1a348bb876e274c13f0"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 65437,
+            "flip": false,
+            "result_sha256": "bbc08c1d44874fa39a4f94b3e70229fb329a535b2997ffa722030dc7622eea1d"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 65437,
+            "flip": true,
+            "result_sha256": "9d48874a9a939b86cad2c6f5621fa6067fa8b09d52bafc9012cdb6421d1fc8cf"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 190019,
+            "flip": false,
+            "result_sha256": "3cd5c9100ccc9ebd1f79bb8adb33647dfbfb8bf328702c51dc880d2f503547c8"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 190019,
+            "flip": true,
+            "result_sha256": "8873db681a86918186ea75c4abd930746034091717482e3ed48985a3576d42ad"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 127,
+            "flip": false,
+            "result_sha256": "0ede5fe886b370542acbd9181a85fb68d98a12b63dd8973416390a52581594b0"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 127,
+            "flip": true,
+            "result_sha256": "708c5dc167f3d38c7687cab96af086970871acd717ba62e646171133dbfbe0bc"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 9821,
+            "flip": false,
+            "result_sha256": "68dda9529f19d859b7027e4a8e52b08ce9545f59524aa54bd3ae85b27caaaa50"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 9821,
+            "flip": true,
+            "result_sha256": "057dd30fd251e961e38ffeb5d925b8ffd1a375835a810f74d2c3824aa6e850c5"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 65437,
+            "flip": false,
+            "result_sha256": "63d6ad6723f8972dc9893b4f2ef2b1ac621a53e10c5d76599acfe6857553d952"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 65437,
+            "flip": true,
+            "result_sha256": "3a8f723b49076c1f5faa2169d2537611d60e924164a2859e39e9b86df5b432a0"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 190019,
+            "flip": false,
+            "result_sha256": "c6728afe36d08d1a8e627257034c1a8557d119f7641c97a557b5c3029f9df3d1"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 190019,
+            "flip": true,
+            "result_sha256": "e3d17e0dc923d5fd99e6d254766b59a6448f86356b89678a2bb9b3bdafeb4920"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 127,
+            "flip": false,
+            "result_sha256": "213b350b497db6ea78b1db994d874561df041bc91e69ab0007a5450f5f931df6"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 127,
+            "flip": true,
+            "result_sha256": "994f70d647b41bcfbf7dac41b1134e6a02c519c9af1c41ce98b92c75eb8634f3"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 9821,
+            "flip": false,
+            "result_sha256": "d28ce3263b79fa008507f0d5ac5bf393cecb3323de272976947865f12232c660"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 9821,
+            "flip": true,
+            "result_sha256": "c1bca61bd8bd13c5cad69f537e151b8be5c2766ec4b611ec0b98f86ba70f7cff"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 65437,
+            "flip": false,
+            "result_sha256": "57c82ea8ca33b442c23c4a2b04967224428507fbc1315ab3dd25e6c428426757"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 65437,
+            "flip": true,
+            "result_sha256": "ef778e9960a19774cbf54134d50d2dc31d7b2a44bcc72d4f8326ab6d4a7872b7"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 190019,
+            "flip": false,
+            "result_sha256": "3a8053f26874377335dff74d1f4653e66d27aa5b364cfb3920efe55d4a56a896"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 190019,
+            "flip": true,
+            "result_sha256": "bd5b4560c3b8c4b273fade9a01347ccd6d0c3b6fde3b271fdb80286076c1b99c"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 127,
+            "flip": false,
+            "result_sha256": "1fe00ddd562fa609eaa70c47f828c92cb63d1a42fad40b59ac7099a15d7b1a34"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 127,
+            "flip": true,
+            "result_sha256": "735a6228a492be6e4030b05740be2262ed90312e825976f4b4f0f297f9b5b256"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 9821,
+            "flip": false,
+            "result_sha256": "0ca153488f7e14caae315cbace4e06a5a6ca1e7d0fa76e3849417673c78127e4"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 9821,
+            "flip": true,
+            "result_sha256": "902ee9d2e69bdc6d2901ff2421fa58f09d1ce145605a93cf0e01ab26f88676c5"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 65437,
+            "flip": false,
+            "result_sha256": "a7a865188aac8506431a706d125d0052e9c54870dccf75c64ec44176045e95b8"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 65437,
+            "flip": true,
+            "result_sha256": "a5285de0901bc71184ec42606b0ba33b5b2d4c86489f099b6d2f0c6d21d0757f"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 190019,
+            "flip": false,
+            "result_sha256": "076267aa36030ea5f91632906000c6ccf58312acbce6ba52be8873a14d6dcb5d"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 190019,
+            "flip": true,
+            "result_sha256": "f1cbf522bbd4c393cb6593f4cd735562cb928fcb112a27122295e82c3e039163"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 127,
+            "flip": false,
+            "result_sha256": "ec1422e906a558ad32bff9225ea79e0af5618b4a5728ea5dc4bcc6a4fd211c14"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 127,
+            "flip": true,
+            "result_sha256": "073c2afc8d4b80ea5d2277dcc5af21d09fb58303ff4f37f93e4a450ba6aa2ce6"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 9821,
+            "flip": false,
+            "result_sha256": "8e6339064ffab729acc414ecc175fd6a2bd655183abb8866d6bc3b54b56462a9"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 9821,
+            "flip": true,
+            "result_sha256": "1eac242eac7d26a4583f8f818a4cf44d0c88718ccdf19ac9eacff01c37081f8a"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 65437,
+            "flip": false,
+            "result_sha256": "56986c183b8c0be223bbb2b17447e334406f3202824dedaad9369fb7d287a8b5"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 65437,
+            "flip": true,
+            "result_sha256": "e4be0378b08f12674f29191d01a7949175826c47502978a8d832e994dd60fa49"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 190019,
+            "flip": false,
+            "result_sha256": "11b5b32c2ac0271e791377dff22669c9df761bf14236ec3561cd761c42325acc"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 190019,
+            "flip": true,
+            "result_sha256": "b67f9408a1c5fd06b7737f47135d8d9d1085193b64b7c89ef6f5a3840adc1a89"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 127,
+            "flip": false,
+            "result_sha256": "0f1681af47bed80a406d43911cdc788d801ee121aaad66ccd30d51aa12fd2ddd"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 127,
+            "flip": true,
+            "result_sha256": "82f9fc7011dc792e431effde3de98a1306a2531e94531a605261531cb61c6353"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 9821,
+            "flip": false,
+            "result_sha256": "4793e95e9250cc2a1b9da2b214348b68befb640d4356b6edac6d1c17dfcabf70"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 9821,
+            "flip": true,
+            "result_sha256": "f83fa18c83bdb5310f51a695f9ab4df671647ba5e1606a8e4234669548f3bb77"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 65437,
+            "flip": false,
+            "result_sha256": "0452f2ed04a356481fe5a0fc17bc88086816d2b5e00835b54067f2a561726a63"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 65437,
+            "flip": true,
+            "result_sha256": "3ade6df1fe77ab31d38d315f2503a9090529d87823337fd67a88b15683e9f53f"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 190019,
+            "flip": false,
+            "result_sha256": "912fdedb180d35f9cf0b964b1424ab6032aba7dff11dfa7e0d7261f3037baaed"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 190019,
+            "flip": true,
+            "result_sha256": "b11b7e422b32ebd3609f1ce6d890cc77d25421cc900d9536d547d4ac4249d675"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 127,
+            "flip": false,
+            "result_sha256": "0690f5c98ccd6d2a5e9bed180022a3ee7a4eabf80693c4c3517c1464cd9e4306"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 127,
+            "flip": true,
+            "result_sha256": "76b0a6ce1a571b4a12dd316dc4e3ba42c04d6fb03f43e07e09f979f5082e1f19"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 9821,
+            "flip": false,
+            "result_sha256": "afe16f20a210803342df82ff40534a79fc9fe086b7262cde97746be26d508e3f"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 9821,
+            "flip": true,
+            "result_sha256": "50fd8c65c90c3754f63d02f7e7cd67689adde88f53bf544d0384c7a009789c27"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 65437,
+            "flip": false,
+            "result_sha256": "f9f971949d1cd9ed0968e10140e4877983a62fe4c6a8da5ddc13a27976a82956"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 65437,
+            "flip": true,
+            "result_sha256": "f62cca065b95cfa5a30551d2ea2beabfd3d1ec2e97cf9d10496975bbe01925d3"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 190019,
+            "flip": false,
+            "result_sha256": "301a7c000c7e387bad309e1c0563e817ea72193e47f3e9526041a44ec3e69fbb"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 190019,
+            "flip": true,
+            "result_sha256": "6d235dc334ae00996241561e64e9447972b80edc5fb804e77d11bb1c85aad3ec"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 127,
+            "flip": false,
+            "result_sha256": "4a042a7055021c7087ffeb7caf0810c180f8162555c6dc23ae8dfa2db728f064"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 127,
+            "flip": true,
+            "result_sha256": "3efbfaae2ec01009a03f0c94f2a304312a03f6e57ea89649dcd6e2ce4224ac5f"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 9821,
+            "flip": false,
+            "result_sha256": "f073d266b189010ea2ac236d0fc89a68dd29c7a209bbe882e581e5c7f5b80893"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 9821,
+            "flip": true,
+            "result_sha256": "450684c04912c31b3761d06b76c16efb3c48b512749a4cf22ca1e8ba0eee5f90"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 65437,
+            "flip": false,
+            "result_sha256": "b50ba8f8bc03558eec2140e355b03904fb9b1bbc1387e490b27a8395b90de053"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 65437,
+            "flip": true,
+            "result_sha256": "ab16db9e1dcfc7a2be39014fcec6f8045f72779c772de41ec36b9a6f661559fb"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 190019,
+            "flip": false,
+            "result_sha256": "21e0deb3c2a6880cce089eb80261767729d20b5d147cb894cef7afbb020b66b6"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 190019,
+            "flip": true,
+            "result_sha256": "c92c0da5605b2970aeca18e4880777853e60ced689227d16b930d85ba1960d8b"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 127,
+            "flip": false,
+            "result_sha256": "27cd65e90aee534f0183a512b717a9e8e810f12e145267eaaa2447e57bc31c0d"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 127,
+            "flip": true,
+            "result_sha256": "8d5fed81d24fe6260c5ba35da958ec6ecbcb36c686d8ea38f02b0a417cefd91c"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 9821,
+            "flip": false,
+            "result_sha256": "7e2436f551b6641b715b01af9ad189f7c70e663d0db1bf965500b0f2b1358e4d"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 9821,
+            "flip": true,
+            "result_sha256": "09b2f57fa6988b8db7871b25c5dec8c9e4d54d35fa8615836da54194a99d4ba6"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 65437,
+            "flip": false,
+            "result_sha256": "071d0027dd17ae65ca8b4ca16fb66bceed75d6d45c04d74c3010c627257c13ac"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 65437,
+            "flip": true,
+            "result_sha256": "a67e3112fa3f3492b3fb19fb55e125e093b71f0c8ca2a4a7b544a2b70b5da1f8"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 190019,
+            "flip": false,
+            "result_sha256": "331106c32addfebc8e792a817895200a0ba34d124d52f8326efd7f9a9bb5c9fd"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 190019,
+            "flip": true,
+            "result_sha256": "60b4e3e3a2c3783f1c1a927b81787a372c55bec703f6ca3684ae72bca09b9c68"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 127,
+            "flip": false,
+            "result_sha256": "bac634dc46ffd9a77783e5c63b3a505fc972a23ce34c1b9a999955c4925b1123"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 127,
+            "flip": true,
+            "result_sha256": "ced5b1cb70c5aaa76f181dd8be3aba7e19739de4e09d31c78258fe77341c04c3"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 9821,
+            "flip": false,
+            "result_sha256": "3b2c1d92495aa370df21d57e3d2365ed1d37984b0b2de0777b380a5a3ace74bf"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 9821,
+            "flip": true,
+            "result_sha256": "c7c5afe4702c79942888ff3477f904d5b20a36754ad98bc86fd1cd78a789e8e1"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 65437,
+            "flip": false,
+            "result_sha256": "57bcdc3013a910c91a90f380c37ed0e6c5fb1d1cc74d3f5ed1cabf3569a20995"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 65437,
+            "flip": true,
+            "result_sha256": "74ade17dddc3009ea9a38db725f8a42abdbc7acf558dc529699b67ab5b60c47e"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 190019,
+            "flip": false,
+            "result_sha256": "74c80204fe03d330f892445bba1b487972c0b25358b05bf82b12fab80d6f3df7"
+        },
+        {
+            "research": "none",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 190019,
+            "flip": true,
+            "result_sha256": "1ac9c04b0f29977bf7e112b08e6255e6dc42bbefc32782f4bc32c6a17788c032"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 127,
+            "flip": false,
+            "result_sha256": "cf9d8cd346757ac3f9c4e845c058ca162b8324bb3c01136df817d44f59781c82"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 127,
+            "flip": true,
+            "result_sha256": "81f0ebe3f29b84cc211aafc1f333c879a140f1fcb666e59c598ae9637461126f"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 9821,
+            "flip": false,
+            "result_sha256": "4504ce97fd751539cab7654c0f1a488558b7c53a1577b00aa88a8e22472a804c"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 9821,
+            "flip": true,
+            "result_sha256": "98841473cb9d791ec8d5e503b64e8460eb2ecc7052e09d511d8257fe458f65f6"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 65437,
+            "flip": false,
+            "result_sha256": "e5ff0d5972459ba9096dd74118453eb8087d794ca2f50c25ac99043d8da1542e"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 65437,
+            "flip": true,
+            "result_sha256": "03460a62e1cfd8fa0c165e517487b404ac41f4d4c6963b5dc28f12fe6be230e3"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 190019,
+            "flip": false,
+            "result_sha256": "7cd1bd1cfc188470ee0a81907ea30cdecfa159ebd6ce6dc3523ebf3a59a6cc04"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 190019,
+            "flip": true,
+            "result_sha256": "e8950f25068caf214e15b706f155f92e322b971aec61c208d8803e32d419ceb9"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 127,
+            "flip": false,
+            "result_sha256": "2304cd6a580473041da336908688315f5c9f5604288f6cbca459938d86e5cdd4"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 127,
+            "flip": true,
+            "result_sha256": "8260d7e46332457fcf29a30766ccfbd140aec9904a82a3d37fce97875e16f279"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 9821,
+            "flip": false,
+            "result_sha256": "74904d937d787cba451c63f65be194f52fbb6117ad6f3e54d9e832480449ffd2"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 9821,
+            "flip": true,
+            "result_sha256": "29d7e8a87e79670fc463043b79db070f756c95ac8ed7ff34dd5e93e09a4f50c8"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 65437,
+            "flip": false,
+            "result_sha256": "2273188e6b9a0f2f2482d3a648c15f09bb280c75e45a454f569e6e5c0e255cbb"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 65437,
+            "flip": true,
+            "result_sha256": "58ad7284028b9c8371d5c2d1c02798d0ebad12f89fc5ea35683df2eb55f42dff"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 190019,
+            "flip": false,
+            "result_sha256": "00b4eb8c4a51fc9f7d373190312437a4dae0c79c8d5fa4b61b3f290da57892f8"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 190019,
+            "flip": true,
+            "result_sha256": "87c7bf87ac0c8f31693aa2b981103bf05dd8df634ccc63f70fbcec63bb83732b"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 127,
+            "flip": false,
+            "result_sha256": "21d91566c8e7e4570f67d685df764c1707cd65a9ed8441969b7c2ab9b14f07f1"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 127,
+            "flip": true,
+            "result_sha256": "1efd48b8b2a0228a4e826036e3bb8c6ffddf3c82d6e3982226ba2863c64c99d7"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 9821,
+            "flip": false,
+            "result_sha256": "a03641b95b3cc9519c56d760bfea297eaa272e3914ca2fbe41f76c1306eca0ba"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 9821,
+            "flip": true,
+            "result_sha256": "557a9fb23f3b17cc195b273baa7042fa4675ba64f62d3cb22636c7b6dd6b531d"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 65437,
+            "flip": false,
+            "result_sha256": "4e9f3692fa92b9729ba8f735d52918e3a7e20a43e9219f0149f132dc1fb51a5c"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 65437,
+            "flip": true,
+            "result_sha256": "986c006058e05a19b122dcdf65a364194651887dd73528ebd78169dc26fe6408"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 190019,
+            "flip": false,
+            "result_sha256": "5282de20f6393106e9f3101e095bde9cdf2fca591c03100127eb9fa0ab2deaf8"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 190019,
+            "flip": true,
+            "result_sha256": "c56a5a342720bbe5c0c4536a44a4f811fbc160ca2fcb6d2017fdcad5c4eb6493"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 127,
+            "flip": false,
+            "result_sha256": "af000c83fcf2a1822e8b228bc8d675cac924f67e171ebac0cc2ece2850ce40b7"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 127,
+            "flip": true,
+            "result_sha256": "f330804dc128ca469908baccea1684e310afeae02d0458817381ab6bd9a8f82d"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 9821,
+            "flip": false,
+            "result_sha256": "f4849ece202735ae11f35f7e97c2d72ca03e5a1f757439e8d4fa1cc0b166bd69"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 9821,
+            "flip": true,
+            "result_sha256": "be0a4670b1be9a87bb7407f716007e55c4c0cfbf2616e0acfb7113c85f8c97d4"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 65437,
+            "flip": false,
+            "result_sha256": "1607f5145bd16903ea408909fe419868423495f5cfa6a6b719a935d601c452bf"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 65437,
+            "flip": true,
+            "result_sha256": "50e9c9a590a4e184704ca777ba1b69b796f79379fe6b2048927b25b81e0e4cde"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 190019,
+            "flip": false,
+            "result_sha256": "e627c147a7e52fe8231dbe400df8fe3ab703bd775d7362a99a90fd6c80877bb1"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 190019,
+            "flip": true,
+            "result_sha256": "d0cbac9c6861b47eba3c612b15f5ebfe0cd4734ab7849674eb19f273c38664aa"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 127,
+            "flip": false,
+            "result_sha256": "8cf654256d2de96c8b1f02179b17a18e7676a83f80671ac53b4cb355e8b3cb0b"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 127,
+            "flip": true,
+            "result_sha256": "6f3739da1a0c0a30f5a296340829c648872dc7602b97127e5a39e94f312b4b35"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 9821,
+            "flip": false,
+            "result_sha256": "fd81e5894e660100283152a9b2fc9f9e7b97ea4e429e3740dd41a221e33f03ab"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 9821,
+            "flip": true,
+            "result_sha256": "8db389c5a223aa8a12ae26a850fc4ae29436e6e42a5eec08b4eddfb06b49ba45"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 65437,
+            "flip": false,
+            "result_sha256": "bcb142d11f4c1deeeace5226a24b5347fe81d0df45d2cd8f4c0683aea11bdd3c"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 65437,
+            "flip": true,
+            "result_sha256": "1426b5c02925c31c7b744a45a02b317808763845319560e4ff55a89a460495f3"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 190019,
+            "flip": false,
+            "result_sha256": "da732991c3f29f5f191cde23d9cbd6e00d95b680a63d9567fbf2231b72505a1a"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 190019,
+            "flip": true,
+            "result_sha256": "b5a57a7db3cbfa0297d676c547aaf157e1654b5d3ae9ab440a59e3cf9ee1f991"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 127,
+            "flip": false,
+            "result_sha256": "83b2de61ce0a9c03d175e7571caaad39fd3b09d9f02405fb5e35e5e30bb802bf"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 127,
+            "flip": true,
+            "result_sha256": "d7450af07780c5b016625bf9480126b26c9c8bedfa8805ed148d5b4c7fe7640a"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 9821,
+            "flip": false,
+            "result_sha256": "33a2662f9106200aebe2d36d03c80578f523df340813135f2d2be106a4fb6402"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 9821,
+            "flip": true,
+            "result_sha256": "2084969ffa12c599c6ebd137b890ebe012140468fff2a976f0d70a1c864f9274"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 65437,
+            "flip": false,
+            "result_sha256": "357c51c766974747c9d38451fd789823e3353df827b633ae1acdaf741191bf2e"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 65437,
+            "flip": true,
+            "result_sha256": "f4c525daf0462ca5ce3d2c48998a84f65a06b61b73dafcc0d07e8d4a6742d011"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 190019,
+            "flip": false,
+            "result_sha256": "0c65806bec2a511360c6e78babcbf28bc3753aa65594befd3bd2e72bfbaaff14"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "basic",
+                "basic"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 190019,
+            "flip": true,
+            "result_sha256": "55fb133c6429401ba410032829906d8de2dbbab8359a017a9535b472ec95e83b"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 127,
+            "flip": false,
+            "result_sha256": "c38bb7ecb00ca4d8e78b0a08274829275def2abc255541754ba587fac7c9db46"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 127,
+            "flip": true,
+            "result_sha256": "fe2447e36959972ff63c29814dbc3cdf0da9d8ea7bf76821039d19f0e78b4bc9"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 9821,
+            "flip": false,
+            "result_sha256": "dd7e8364730fc20fb7988e0024e927027fa994686b1ad7a83e18b4b6bd7251e3"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 9821,
+            "flip": true,
+            "result_sha256": "0a0ebf5c2413e65683be939f14a9ac7cbf4ba46b17d94c0f517d518e61739463"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 65437,
+            "flip": false,
+            "result_sha256": "263044d9d77fa9a5c47f45374c9bbf9c9e8da44d6100912be46e48e9743caa1c"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 65437,
+            "flip": true,
+            "result_sha256": "ad81dad4a45d59e18da90fcd5d4f0ea1d2dbcf3d200b5a4bf0ab50ddd70412b5"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 190019,
+            "flip": false,
+            "result_sha256": "45209d044a3dea4d08947b153efc33d7d25e46e1437d5b40c7467737d4678041"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 8
+                },
+                {
+                    "interceptor": 7
+                }
+            ],
+            "seed": 190019,
+            "flip": true,
+            "result_sha256": "3a30c79e34ea87be9c41efe362dcca39b1f27446a5fc58e9b2cb0692ab22f72b"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 127,
+            "flip": false,
+            "result_sha256": "e8ce02aa9052f062302dcb277553041934a729c892e0921ff33867869a48141b"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 127,
+            "flip": true,
+            "result_sha256": "a0b38c554677ec9080631554a560cac82c63c81bd2f96645c14b8681f6c5406b"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 9821,
+            "flip": false,
+            "result_sha256": "b12077e8043d34f94dd4781c8412c6f7645e0df6daa3578e37c6e7e4cbd161e5"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 9821,
+            "flip": true,
+            "result_sha256": "76c6137d03ae09efc2e779f318f3f7dde4e78e0b1ec0e7ed8755d64f698757b6"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 65437,
+            "flip": false,
+            "result_sha256": "38457c54bb653d6f5eb13546ea7da4c2c98decfaa3aa56797989559d0efff38f"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 65437,
+            "flip": true,
+            "result_sha256": "95060872c6dcac1c2cbb8c695380310ce2d94f3cbac445fca12958c4a867ab01"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 190019,
+            "flip": false,
+            "result_sha256": "cb388a3c3eb3a5e97fdd2d8c24d766352cd40489c574c49aa31df7edf393c581"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "heavy_fighter": 4
+                },
+                {
+                    "frigate": 2
+                }
+            ],
+            "seed": 190019,
+            "flip": true,
+            "result_sha256": "030956cc5f95c5564637f3323f1bd70a8ed51eca58c186f5ec5c64032f37ed06"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 127,
+            "flip": false,
+            "result_sha256": "7da591eda83f55ddbee7c79f45f7e0f935e17a8460ec0d7a95194866cb298a1d"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 127,
+            "flip": true,
+            "result_sha256": "63bf5027ead4dfe68e3879011f0fa833bae44a73c95938630d5b3b563452e9bc"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 9821,
+            "flip": false,
+            "result_sha256": "0ce2b172657ae07405d270af0a40310a3f1686224006a040431bb480f8defd77"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 9821,
+            "flip": true,
+            "result_sha256": "5ce7e4e00a9174029de7b9eefd68fb3b1495f223e9d00faedcb1de6d25ace805"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 65437,
+            "flip": false,
+            "result_sha256": "d0c01ddbca2e4c1da1554403e0b34ebfeaf5baf74e37e2e6e4d3e4bb5544c144"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 65437,
+            "flip": true,
+            "result_sha256": "752645c4d411283138de477b8906db80ca8b3148d50950612af7b464e5315878"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 190019,
+            "flip": false,
+            "result_sha256": "10e21ff0fd883f9bb4e841afa9db6708f26894712785721adfd6cff9c2f4e396"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "bomber": 8
+                },
+                {
+                    "capital": 1
+                }
+            ],
+            "seed": 190019,
+            "flip": true,
+            "result_sha256": "ff32b20457600a27cecec1fe19aeb0b206fefdc2e61d03b3bb60c8e4c856b7b2"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 127,
+            "flip": false,
+            "result_sha256": "2f6e11d9cfc420cde72cfe5c87b9c022b97533b403d18caef0ff9794c66fed59"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 127,
+            "flip": true,
+            "result_sha256": "263a41cfbf12d216a5abd3859ce76cd4f3109ba5a81b787a70f2783a8a7e7b10"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 9821,
+            "flip": false,
+            "result_sha256": "e6235b31efd2888394a70ce7307fbc3de4d055001a1413e2f37265f09772d22e"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 9821,
+            "flip": true,
+            "result_sha256": "7a7d8da356dccd86754ed33714270bb5f9617a53819002759c9ffcee0194c4c6"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 65437,
+            "flip": false,
+            "result_sha256": "f28853d6a4f457230c45e04a3cfbfa1d91efa07f1aa30fcbcf7cd521de88117b"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 65437,
+            "flip": true,
+            "result_sha256": "705f91edf99f6512f80f54c79eac27502ccc7fe6cecda0b00bcb81be86d15d1a"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 190019,
+            "flip": false,
+            "result_sha256": "ff66a93bfdb6e4ab954cdd2e9be641967ce0b17669901ad7a8921ada5e3a1a89"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "destroyer": 3
+                },
+                {
+                    "cruiser": 2
+                }
+            ],
+            "seed": 190019,
+            "flip": true,
+            "result_sha256": "f287fb94d93b9f354ba37cd4207880dda7bcfcea0d3f63f9b08848579f113e20"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 127,
+            "flip": false,
+            "result_sha256": "23f9c088449f08d272d14238878978ea19cb6e32136c421c7338ca15f33df1d8"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 127,
+            "flip": true,
+            "result_sha256": "ad2a6efef9944a562ab1e915ca5ada61a937923cfb21e9525925d635aa5bff14"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 9821,
+            "flip": false,
+            "result_sha256": "8fc1a04f8f3771c9d54c9554582b45da42524ef10d824078e1d2b9f0f111f175"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 9821,
+            "flip": true,
+            "result_sha256": "e0b353c5fc141150200cf1ade36eeffe5f34abedd464e18c78a70ea3bd8fc7ab"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 65437,
+            "flip": false,
+            "result_sha256": "2dc586ed11bc37d8d959bd80c95c6f5718e193bed34d596db3f59cf5436f5721"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 65437,
+            "flip": true,
+            "result_sha256": "0954a0d4cf5785505e2c6807975beb3b238f7b94ae98c416a954e3df3f2aaf1d"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 190019,
+            "flip": false,
+            "result_sha256": "f6470d26647e6a2913507409c21544652732a8074b40e11263e8ecad1de5611d"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "capital": 1,
+                    "frigate": 8
+                },
+                {
+                    "bomber": 12,
+                    "interceptor": 8
+                }
+            ],
+            "seed": 190019,
+            "flip": true,
+            "result_sha256": "b374193fff28eeb5bd2753e646c04bc1f154958721ff922f2ed3afa6cd249851"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 127,
+            "flip": false,
+            "result_sha256": "02c06ca2b2a5fe5df0f16bd31a95282234c6393407968ef5c0311079f49b3806"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 127,
+            "flip": true,
+            "result_sha256": "22e2316ace37f72f07537aaba5da4106d3f0666394c1caf694cb24515e782fd2"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 9821,
+            "flip": false,
+            "result_sha256": "abe70c60051ce6e130fccd6e140b518a892cf354d2e36ab1e8b0a31e1a27b0e4"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 9821,
+            "flip": true,
+            "result_sha256": "acec227942d90be3867bef8dff92ce3af66c231b03582e5e6ab4ffac3ef80147"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 65437,
+            "flip": false,
+            "result_sha256": "341b08ac1f91334f2e885a6935887589ea167941d0243f0cf668c1609abe2bc4"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 65437,
+            "flip": true,
+            "result_sha256": "7cb9d8481293d7d6707c42426937dfe37820cf02de15f43cec1dc2115449eb00"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 190019,
+            "flip": false,
+            "result_sha256": "2b881cfbf694276a6435b76a5a341057140b4de9829d6cce5595c264dc61b6b1"
+        },
+        {
+            "research": "max",
+            "tiers": [
+                "superior",
+                "intermediate"
+            ],
+            "compositions": [
+                {
+                    "fighter": 6,
+                    "heavy_fighter": 2,
+                    "bomber": 2,
+                    "cruiser": 1
+                },
+                {
+                    "frigate": 3,
+                    "destroyer": 1,
+                    "battleship": 1
+                }
+            ],
+            "seed": 190019,
+            "flip": true,
+            "result_sha256": "3ffa0db0789afbc4915b3209af37814d29d08f7173beb83a4229d60467e84d0b"
+        }
+    ]
+}

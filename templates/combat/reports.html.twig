@@ -3,7 +3,7 @@
 {% block title %}Rapports · Genesis Reborn{% endblock %}
 {% block body %}
 {% set reportFilters = {all: 'Tous', combat: 'Combats', economy: 'Économie', espionage: 'Espionnage'} %}
-<div class="page-heading"><div><p class="eyebrow">{{ membership.universe.name|default('CENTRE DE COMMANDES') }}</p><h1>Rapports</h1><p>L’information au service de vos décisions.</p></div></div>
+<div class="page-heading"><div><h1>Rapports</h1><p>L’information au service de vos décisions.</p></div></div>
 <section class="panel report-center" aria-labelledby="report-center-title">
     <div class="report-center-heading"><h2 id="report-center-title">Centre de rapports</h2><span class="badge">{{ report_count|default(0) }} disponible{{ (report_count|default(0)) == 1 ? '' : 's' }}</span></div>
     <nav class="report-tabs" aria-label="Filtrer les rapports">{% for key,label in reportFilters %}<a href="{{ path('app_combat_reports', {type:key}) }}" class="{{ filter|default('all') == key ? 'active' : '' }}" {{ filter|default('all') == key ? 'aria-current="page"' : '' }}>{{ label }}</a>{% endfor %}</nav>

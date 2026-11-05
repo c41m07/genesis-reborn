@@ -47,9 +47,10 @@ final class CatalogueDetails
             }
             $sections[]=$this->section('Production et entretien',[
                 'Ces débits sont nominaux, pour la position de cette planète et la vitesse de cet univers. Les productions des trois rangs s’additionnent.',
+                'Les gains de production et les consommations suivent les facteurs '.$this->number($this->catalog->productionTierFactor('basic')).' / '.$this->number($this->catalog->productionTierFactor('intermediate')).' / '.$this->number($this->catalog->productionTierFactor('superior')).' selon le rang. Les prix et les durées suivent leur propre progression.',
                 $resource==='electricity'?'La centrale alimente les usines et recharge le stock électrique. Sa production ne baisse pas lorsque le stock d’électricité est vide.':
                     'Quand le stock électrique est épuisé et que la production ne couvre plus les besoins, les usines ralentissent. Leur rendement de secours minimal est de '.$this->number((float)($rules['minimum_factory_efficiency']??.1)*100).' %.',
-                'La barre de ressources affiche le débit net réel, après consommation, et la productivité des usines actives. Un stockage plein empêche l’accumulation au-delà de sa capacité.'
+                'La barre de ressources affiche le débit net réel, après consommation, et la productivité des usines actives. Une usine dont le stockage de sortie est plein suspend ses consommations inutiles ; les productions d’hydrogène et d’électricité continuent à alimenter les autres usines si nécessaire.'
             ],$rows);
             if($resource==='antimatter')$sections[]=$this->section('Approvisionnement en hydrogène',[
                 'Chaque unité d’antimatière produite consomme '.$this->number((float)($d['hydrogen_per_output']??$rules['antimatter_hydrogen_per_unit']??8)).' unités d’hydrogène.',
@@ -239,6 +240,7 @@ final class CatalogueDetails
             if($d['slug']==='probe')$sections=[...$sections,...$this->espionageSections()];
             elseif($d['slug']==='colony_ship')$sections[]=$this->section('Fondation et conquête',[
                 'Fonde une colonie sur une planète vierge connue, si votre limite de colonies le permet. Un vaisseau colonie est consommé à la fondation.',
+                'Les ressources de départ de la nouvelle colonie sont multipliées par le rang du vaisseau consommé : ×1 en Basique, ×1,25 en Intermédiaire et ×1,5625 en Supérieur. Si plusieurs rangs sont présents, le rang le plus bas disponible est consommé.',
                 'Pour conquérir une planète PNJ, au moins un vaisseau colonie doit survivre au combat. Les planètes détenues par d’autres joueurs ne peuvent pas être conquises.'
             ]);
             elseif((float)($d['cargo_capacity']??0)>0)$sections[]=$this->section('Transport',[

@@ -83,6 +83,42 @@ final class GameRepository
         foreach ($this->all($class,$criteria) as $row) $levels[$row->slug][$row->tier]=$row->level;
         return $levels;
     }
+    public function messageContacts(PlayerUniverse $viewer): array
+    {
+        $rows = $this->em->createQueryBuilder()
+            ->select('IDENTITY(m.sender) AS senderId, IDENTITY(m.recipient) AS recipientId, MAX(m.id) AS latest, SUM(CASE WHEN m.recipient = :viewer AND m.readAt IS NULL THEN 1 ELSE 0 END) AS unread')
+            ->from(\App\Entity\SocialMessage::class, 'm')->where('m.guild IS NULL')
+            ->andWhere('(m.sender = :viewer OR m.recipient = :viewer)')->setParameter('viewer', $viewer)
+            ->groupBy('m.sender, m.recipient')->getQuery()->getArrayResult();
+        $contacts = [];
+        foreach ($rows as $row) {
+            $id = (int) $row['senderId'] === $viewer->id ? (int) $row['recipientId'] : (int) $row['senderId'];
+            $contacts[$id] ??= ['member' => $this->find(PlayerUniverse::class, $id), 'unread' => 0, 'latest' => 0];
+            $contacts[$id]['unread'] += (int) $row['unread'];
+            $contacts[$id]['latest'] = max($contacts[$id]['latest'], (int) $row['latest']);
+        }
+        $contacts = array_filter($contacts, static fn (array $contact): bool => $contact['member']?->universe->id === $viewer->universe->id);
+        usort($contacts, static fn (array $a, array $b): int => [(int) ($b['unread'] > 0), $b['latest']] <=> [(int) ($a['unread'] > 0), $a['latest']]);
+        return $contacts;
+    }
+
+    public function searchMessageRecipients(PlayerUniverse $viewer, string $query): array
+    {
+        if (mb_strlen($query) < 2) return [];
+        return $this->em->createQueryBuilder()->select('m', 'p')->from(PlayerUniverse::class, 'm')->join('m.player', 'p')
+            ->where('m.universe = :universe')->andWhere('m != :viewer')->andWhere("LOWER(p.username) LIKE :query ESCAPE '!' ")
+            ->setParameter('universe', $viewer->universe)->setParameter('viewer', $viewer)
+            ->setParameter('query', '%' . str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($query)) . '%')
+            ->orderBy('p.username', 'ASC')->setMaxResults(20)->getQuery()->getResult();
+    }
+
+    public function unreadGuildMessageCount(PlayerUniverse $viewer, \App\Entity\Guild $guild, int $lastRead): int
+    {
+        return (int) $this->em->createQueryBuilder()->select('COUNT(m.id)')->from(\App\Entity\SocialMessage::class, 'm')
+            ->where('m.guild = :guild')->andWhere('m.sender != :viewer')->andWhere('m.id > :lastRead')
+            ->setParameter('guild', $guild)->setParameter('viewer', $viewer)->setParameter('lastRead', $lastRead)->getQuery()->getSingleScalarResult();
+    }
+
     public function privateConversation(PlayerUniverse $a, PlayerUniverse $b, int $limit = 100): array
     {
         $rows = $this->em->createQueryBuilder()->select('m')->from(\App\Entity\SocialMessage::class, 'm')

@@ -2,22 +2,22 @@
   "slug": "battleship",
   "label": "Cuirassé de ligne",
   "category": "heavy",
-  "hp": 4000,
-  "precision": 75,
-  "tracking": 38,
-  "evasion": 20,
+  "hp": 5079,
+  "precision": 100,
+  "tracking": 65,
+  "evasion": 11,
   "signature": 60,
-  "base_attack": 800,
-  "shots_min": 4,
-  "shots_max": 5,
+  "base_attack": 160,
+  "shots_min": 17,
+  "shots_max": 18,
   "build_time_base": 172800,
   "costs": {},
-  "speed_system": 30,
-  "speed_galaxy": 300,
+  "speed_system": 88,
+  "speed_galaxy": 436,
   "fuel_travel_system": 0.5,
   "fuel_travel_galaxy": 2,
   "fuel_orbit": 0.3,
-  "cargo_capacity": 0,
+  "cargo_capacity": 8000,
   "unlock_requirements": {
     "buildings": [
       {
@@ -45,11 +45,11 @@
     ]
   },
   "provisional": true,
-  "note": "Profil de mobilité et de combat différencié, équilibrage validé le 02/11/2026 et à mesurer en Alpha.",
-  "fuel_capacity": 8000,
+  "note": "Équilibrage R14 adopté pour la branche Alpha le 05/11/2026 ; validation en jeu à poursuivre.",
+  "fuel_capacity": 16000,
   "fuel_capacity_provisional": true,
-  "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 8000 H. Réservoir réservé au carburant, distinct de la soute de fret.",
-  "shield": 2000,
+  "fuel_capacity_note": "Réservoir dédié de 16 000 H au rang basique, permettant le plus long aller-retour des cartes de référence sans utiliser la soute. Consommation maximale mesurée : environ 15 453,51 H hors stationnement.",
+  "shield": 2540,
   "tier_unlock_requirements": {
     "intermediate": {
       "technologies": [
@@ -84,29 +84,32 @@
       ]
     }
   },
-  "economy_value_budget": 144000,
+  "economy_value_budget": 220502,
   "cost_profiles": {
     "basic": {
-      "metal": 64800,
-      "nano": 3600,
-      "antimatter": 0
+      "metal": 66151,
+      "nano": 22050,
+      "antimatter": 0,
+      "hydrogen": 0
     },
     "intermediate": {
-      "metal": 58500,
-      "nano": 13500,
-      "antimatter": 1125
+      "metal": 62017,
+      "nano": 31009,
+      "antimatter": 3445,
+      "hydrogen": 0
     },
     "superior": {
-      "metal": 50625,
-      "nano": 22500,
-      "antimatter": 4219
+      "metal": 51681,
+      "nano": 38761,
+      "antimatter": 8614,
+      "hydrogen": 17226
     }
   },
-  "secondary_attack": 100,
-  "secondary_shots_min": 1,
-  "secondary_shots_max": 1,
+  "secondary_attack": 224,
+  "secondary_shots_min": 4,
+  "secondary_shots_max": 4,
   "secondary_target_category": "light",
-  "secondary_precision_modifier": 30,
+  "secondary_precision_modifier": 50,
   "tier_labels": {
     "basic": "Cuirassé de ligne",
     "intermediate": "Cuirassé d’artillerie",
@@ -117,5 +120,6 @@
     "intermediate": "Cuirassé d’artillerie renforcé pour les duels lourds et le bombardement de positions orbitales. Il impose sa puissance dans les grandes batailles. Armement visible : trois tourelles lourdes à accélération magnétique, avec canons massifs sur la coque supérieure.",
     "superior": "Cuirassé de bataille conçu pour absorber les salves ennemies et briser les lignes lourdes adverses. Il menace destroyers, cuirassés, capitaux et défenses orbitales. Armement visible : tourelles géantes d’artillerie magnétique, avec recul et éclairs d’accélération."
   },
-  "description": "Artillerie lourde de flotte, extrêmement résistante et dominante dans les affrontements majeurs. Le cuirassé cible destroyers, cuirassés, vaisseaux capitaux et défenses orbitales avec trois tourelles d’artillerie lourde à accélération magnétique."
+  "description": "Artillerie lourde de flotte, extrêmement résistante et dominante dans les affrontements majeurs. Le cuirassé cible destroyers, cuirassés, vaisseaux capitaux et défenses orbitales avec trois tourelles d’artillerie lourde à accélération magnétique.",
+  "combat_tier_growth": 1.5
 }

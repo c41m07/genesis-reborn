@@ -1,6 +1,21 @@
 {% extends 'base.html.twig' %}
 {% block title %}Événements · Genesis Reborn{% endblock %}
 {% block body %}
-<section class="page-heading"><p class="eyebrow">UNIVERS {{ membership.universe.name }}</p><h1>Événements</h1><p>Événements à venir et en cours dans votre univers.</p></section>
-{% for event in events %}<article class="panel"><p class="eyebrow">{{ event.startsAt > date() ? 'À venir' : 'En cours' }} · {{ event.type|replace({'_':' '})|capitalize }} · {{ event.universe ? event.universe.name : 'Tous les univers' }}</p><h2>{{ event.name }}</h2><p>{{ event.description }}</p>{% if event.type=='production_bonus' %}<p>Production : +{{ event.parameters.percentage }} %</p>{% endif %}{% if event.startsAt > date() %}<p>Débute le {{ event.startsAt|date('d/m/Y à H:i') }} UTC</p>{% else %}<p>Se termine le {{ event.endsAt|date('d/m/Y à H:i') }} UTC</p>{% endif %}</article>{% else %}<p class="panel">Aucun événement à venir ou en cours.</p>{% endfor %}
+<div class="page-heading"><div><h1>Événements</h1><p>Les rendez-vous en cours et à venir dans votre univers. Horaires en UTC.</p></div><span class="badge">{{ events|length }} événement{{ events|length > 1 ? 's' : '' }}</span></div>
+{% set typeLabels = {'production_bonus':'Bonus de production','construction_speed':'Vitesse de construction','research_speed':'Vitesse de recherche','fleet_speed':'Vitesse des flottes','special':'Événement spécial','reward':'Récompense','announcement':'Annonce'} %}
+{% set eventNow = date() %}
+<div class="event-list">
+{% for event in events %}
+    {% set upcoming = event.startsAt > eventNow %}
+    <article class="panel event-card" aria-labelledby="event-{{ event.id }}-title">
+        <div class="event-meta"><span class="badge {{ upcoming ? '' : 'event-active' }}">{{ upcoming ? 'À venir' : 'En cours' }}</span><span class="muted">{{ typeLabels[event.type]|default(event.type|replace({'_':' '})|capitalize) }} · {{ event.universe ? event.universe.name : 'Tous les univers' }}</span></div>
+        <h2 id="event-{{ event.id }}-title">{{ event.name }}</h2>
+        {% if event.description %}<p class="event-description">{{ event.description }}</p>{% endif %}
+        {% if event.type == 'production_bonus' %}<p class="event-effect">Production des ressources : <strong>+{{ event.parameters.percentage }} %</strong></p>{% endif %}
+        <dl class="event-period"><div><dt>Début</dt><dd><time datetime="{{ event.startsAt|date('c', 'UTC') }}">{{ event.startsAt|date('d/m/Y à H:i', 'UTC') }} UTC</time></dd></div><div><dt>Fin</dt><dd><time datetime="{{ event.endsAt|date('c', 'UTC') }}">{{ event.endsAt|date('d/m/Y à H:i', 'UTC') }} UTC</time></dd></div></dl>
+    </article>
+{% else %}
+    <section class="panel empty-state"><h2>Aucun événement annoncé</h2><p>Aucun événement à venir ou en cours dans cet univers. Les prochaines annonces apparaîtront ici.</p><a href="{{ path('app_home') }}">Retour à votre colonie</a></section>
+{% endfor %}
+</div>
 {% endblock %}

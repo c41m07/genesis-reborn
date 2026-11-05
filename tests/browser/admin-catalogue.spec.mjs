@@ -60,10 +60,10 @@ test('Administration catalogue: accès, édition, sauvegarde et restauration res
   const original = Number(await cost.inputValue());
   await cost.fill(String(original + 1));
   await firstEntry.getByRole('button', { name: 'Enregistrer cet équilibrage' }).click();
-  await expect(page.getByRole('status')).toContainText('Équilibrage enregistré');
+  await expect(page.locator('.flash[role="status"]')).toContainText('Équilibrage enregistré');
   await page.locator('details.panel').first().locator('summary').click();
   await page.locator('details.panel').first().getByRole('button', { name: 'Restaurer les valeurs de référence' }).click();
-  await expect(page.getByRole('status')).toContainText('Équilibrage enregistré');
+  await expect(page.locator('.flash[role="status"]')).toContainText('Équilibrage enregistré');
 
   for (const width of [1440, 768, 390]) {
     await page.setViewportSize({ width, height: 900 });

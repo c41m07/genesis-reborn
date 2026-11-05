@@ -1,0 +1,56 @@
+/* Onglets et filtres : même apparence en pastilles sur toutes les pages. */
+.ui-tabs.ui-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 18px;
+    padding: 3px 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    overflow: visible;
+}
+.ui-tabs.ui-tabs > :is(a, button) {
+    display: inline-flex;
+    flex: 0 1 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-width: 0;
+    min-height: 32px;
+    margin: 0;
+    padding: 8px 13px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 1.4;
+    letter-spacing: normal;
+    text-align: center;
+    text-decoration: none;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    box-shadow: none;
+    cursor: pointer;
+}
+.ui-tabs.ui-tabs > :is(a, button):hover {
+    border-color: var(--accent);
+    color: var(--text);
+    text-decoration: none;
+}
+.ui-tabs.ui-tabs > :is(.active, [aria-current="page"], [aria-selected="true"], [aria-pressed="true"]) {
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+    background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+    color: var(--accent);
+    font-weight: 400;
+}
+.ui-tabs.ui-tabs > :is(a, button)::after { display: none; }
+.ui-tabs.ui-tabs > :is(a, button):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+.ui-tabs.ui-tabs > :is(a, button) > .icon { width: 14px; height: 14px; }

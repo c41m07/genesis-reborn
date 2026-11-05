@@ -2,22 +2,22 @@
   "slug": "frigate",
   "label": "Frégate d’escorte",
   "category": "escort",
-  "hp": 1100,
-  "precision": 70,
-  "tracking": 63,
+  "hp": 1048,
+  "precision": 75,
+  "tracking": 80,
   "evasion": 35,
   "signature": 35,
-  "base_attack": 220,
-  "shots_min": 2,
-  "shots_max": 3,
+  "base_attack": 32,
+  "shots_min": 18,
+  "shots_max": 19,
   "build_time_base": 7200,
   "costs": {},
-  "speed_system": 55,
-  "speed_galaxy": 550,
+  "speed_system": 136,
+  "speed_galaxy": 674,
   "fuel_travel_system": 0.5,
   "fuel_travel_galaxy": 2,
   "fuel_orbit": 0.3,
-  "cargo_capacity": 0,
+  "cargo_capacity": 1500,
   "unlock_requirements": {
     "buildings": [
       {
@@ -40,11 +40,11 @@
     ]
   },
   "provisional": true,
-  "note": "Profil de mobilité et de combat différencié, équilibrage validé le 02/11/2026 et à mesurer en Alpha.",
-  "fuel_capacity": 3500,
+  "note": "Équilibrage R14 adopté pour la branche Alpha le 05/11/2026 ; validation en jeu à poursuivre.",
+  "fuel_capacity": 16000,
   "fuel_capacity_provisional": true,
-  "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 3500 H. Réservoir réservé au carburant, distinct de la soute de fret.",
-  "shield": 300,
+  "fuel_capacity_note": "Réservoir dédié de 16 000 H au rang basique, permettant le plus long aller-retour des cartes de référence sans utiliser la soute. Consommation maximale mesurée : environ 15 453,51 H hors stationnement.",
+  "shield": 286,
   "tier_unlock_requirements": {
     "intermediate": {
       "technologies": [
@@ -79,22 +79,25 @@
       ]
     }
   },
-  "economy_value_budget": 44000,
+  "economy_value_budget": 45560,
   "cost_profiles": {
     "basic": {
-      "metal": 19800,
-      "nano": 1100,
-      "antimatter": 0
+      "metal": 13668,
+      "nano": 4556,
+      "antimatter": 0,
+      "hydrogen": 0
     },
     "intermediate": {
-      "metal": 17875,
-      "nano": 4125,
-      "antimatter": 344
+      "metal": 12816,
+      "nano": 6408,
+      "antimatter": 712,
+      "hydrogen": 0
     },
     "superior": {
-      "metal": 15469,
-      "nano": 6875,
-      "antimatter": 1290
+      "metal": 10679,
+      "nano": 8010,
+      "antimatter": 1780,
+      "hydrogen": 3560
     }
   },
   "tier_labels": {
@@ -107,5 +110,6 @@
     "intermediate": "Frégate de ligne renforcée pour former l’écran rapproché d’une flotte. Elle intercepte les unités légères et couvre les bâtiments lourds contre les attaques de bombardiers. Armement visible : réseaux de tourelles antiaériennes à fragmentation sur la coque.",
     "superior": "Frégate de bataille spécialisée dans la défense rapprochée des groupes lourds. Elle sature l’espace autour de la flotte contre chasseurs, bombardiers et projectiles entrants. Armement visible : tourelles défensives à fragmentation réparties sur toute la coque, avec explosions rapprochées."
   },
-  "description": "Vaisseau de défense et d’escorte protégeant les grandes unités contre chasseurs, bombardiers, missiles et torpilles grâce à des tourelles antiaériennes à fragmentation réparties sur la coque."
+  "description": "Vaisseau de défense et d’escorte protégeant les grandes unités contre chasseurs, bombardiers, missiles et torpilles grâce à des tourelles antiaériennes à fragmentation réparties sur la coque.",
+  "combat_tier_growth": 1.5
 }

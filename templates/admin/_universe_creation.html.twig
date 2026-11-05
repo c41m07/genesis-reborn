@@ -1,0 +1,14 @@
+<article class="panel admin-create-universe" id="admin-universe-create" tabindex="-1" aria-labelledby="universe-create-title" {% if universeCreationDraft %}aria-describedby="universe-create-error"{% endif %}>
+    <h3 id="universe-create-title">Créer un univers</h3>
+    <p>Le nouvel univers est ouvert immédiatement. Le profil définit les vitesses de production et les durées; chaque système comporte neuf positions planétaires.</p>
+    {% if universeCreationDraft %}<p class="admin-draft-notice" id="universe-create-error">{{ universeCreationDraft.error|default('Cet univers n’a pas été créé.') }} Vos saisies sont conservées pour correction.</p>{% endif %}
+    <form method="post" action="{{ path('app_admin_universe_create') }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('admin_create_universe') }}">
+        <div><label for="new-universe-name">Nom affiché</label><input id="new-universe-name" name="name" type="text" minlength="3" maxlength="100" autocomplete="off" value="{{ universeCreationDraft.name|default('') }}" required></div>
+        <div><label for="new-universe-slug">Code unique</label><input id="new-universe-slug" name="slug" type="text" pattern="[a-z0-9]+(-[a-z0-9]+)*" maxlength="64" autocapitalize="none" autocomplete="off" aria-describedby="universe-slug-help" value="{{ universeCreationDraft.slug|default('') }}" required><small id="universe-slug-help">Minuscules, chiffres et tirets, par exemple « delta-1 ».</small></div>
+        <div><label for="new-universe-profile">Profil de règles</label><select id="new-universe-profile" name="profile" required>{% for profile in universeProfiles %}<option value="{{ profile.slug }}" {{ universeCreationDraft.profile|default('normal') == profile.slug ? 'selected' : '' }}>{{ profile.name }}</option>{% endfor %}</select></div>
+        <div><label for="new-universe-galaxies">Nombre de galaxies</label><input id="new-universe-galaxies" name="galaxies" type="number" min="1" max="5" value="{{ universeCreationDraft.galaxies|default(1) }}" required></div>
+        <div><label for="new-universe-systems">Systèmes par galaxie</label><input id="new-universe-systems" name="systems_per_galaxy" type="number" min="1" max="100" value="{{ universeCreationDraft.systems_per_galaxy|default(12) }}" required></div>
+        <button class="primary">Créer l’univers</button>
+    </form>
+</article>

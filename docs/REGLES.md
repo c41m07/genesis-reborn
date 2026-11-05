@@ -52,7 +52,7 @@ Les valeurs initiales des stocks, productions, coûts, durées, vaisseaux, défe
 
 Chaque bâtiment, technologie et vaisseau conserve trois progressions distinctes, actives en parallèle : **Basique**, **Intermédiaire** et **Supérieur**. Les niveaux déjà sauvegardés sont conservés en Basique. Un niveau 10 Basique et un niveau 5 Intermédiaire sont donc simultanément possibles. Les défenses stationnaires possèdent aussi les trois rangs, enregistrés et combattus séparément.
 
-| Rang | Puissance et coûts | Durée d’opération |
+| Rang | Facteur commun de référence (coûts et effets hors exceptions ci-dessous) | Durée d’opération |
 |---|---:|---:|
 | Basique | 1× | 1× |
 | Intermédiaire | 1,25× | 1,25× |
@@ -60,7 +60,7 @@ Chaque bâtiment, technologie et vaisseau conserve trois progressions distinctes
 
 Les profils de coûts par rang sont pré-calibrés par famille dans les catalogues; les coûts par niveau croissent ensuite selon la courbe du bâtiment ou de la technologie. Les opérations arrondissent chaque coût positif à l’entier supérieur; une ressource configurée à zéro reste à zéro. Cette règle évite un coût nul pour une ressource effectivement requise. Les durées sont arrondies à la seconde supérieure, avec un minimum d’une seconde.
 
-La puissance dépend de la spécialité : la production et le stockage utilisent l’effet par niveau propre au bâtiment; les technologies appliquent leur bonus au champ concerné; vaisseaux et défenses renforcent structure, bouclier et attaque; les vaisseaux améliorent aussi vitesse, réservoir et soute. Précision, suivi et esquive gardent leurs valeurs de base; la signature n’est pas divisée. Chaque écart de rang ajoute ou retire 10 points de pourcentage à la chance de toucher, bornée entre 15 % et 95 %. Les stats positives entières sont arrondies vers le haut. Pour les tirs entiers, le rang donne une chance de tir supplémentaire par tir de base : 25 % au rang Intermédiaire, 56,25 % au rang Supérieur. Les technologies de cadence ajoutent leur propre chance, indépendamment.
+La puissance dépend de la spécialité : la production et le stockage utilisent l’effet par niveau propre au bâtiment; les technologies appliquent leur bonus au champ concerné; vaisseaux et défenses renforcent structure, bouclier et attaque; les vaisseaux améliorent aussi vitesse, réservoir et soute. Précision, suivi et esquive gardent leurs valeurs de base; la signature n’est pas divisée. Depuis R14, chaque écart de rang ajoute ou retire 30 points de pourcentage après application du contre, avec une chance bornée entre 15 % et 95 %. Les stats positives entières sont arrondies vers le haut. Le nombre de tirs de base reste entier ; les technologies de cadence accordent une chance de tir supplémentaire, sans bonus implicite de cadence lié au rang.
 
 Les bonus technologiques en pourcentage qui étaient à +5 % par niveau passent à **+1 % par niveau et niveau maximum 25**. Le laboratoire et le chantier spatial passent à **2 % par niveau, maximum 25**, conservant leur maximum Basique de 50 %. Les bonus de rang sont multipliés puis composés : une technologie à 25 niveaux dans chacun des trois rangs produit les facteurs 1,25 × 1,3125 × 1,390625 = **2,281494×**. Les bâtiments de production de ressources et de stockage n’ont plus de niveau maximum.
 
@@ -85,9 +85,96 @@ Les courbes, bonus communs entre rangs, profils de mobilité, ciblage furtif, re
 
 ### Tirs secondaires et contres — 4 novembre 2026
 
-Les destroyers, croiseurs, cuirassés et vaisseaux capitaux disposent d’une arme secondaire avec une correction de précision de +30 points. Cette correction est ajoutée avant le calcul de la chance de base ; le coefficient de contre est ensuite appliqué relativement à la chance bornée, puis les limites finales de 15–95 % sont réappliquées. Les coefficients concernent les tirs principaux et secondaires ainsi que les défenses.
+Les destroyers, croiseurs, cuirassés et vaisseaux capitaux disposent d’une arme secondaire avec une correction de précision de +50 points depuis R14. Cette correction est ajoutée avant le calcul de la chance de base ; le coefficient de contre est ensuite appliqué relativement à la chance bornée, puis les limites finales de 15–95 % sont réappliquées. Les coefficients concernent les tirs principaux et secondaires ainsi que les défenses.
 
-Les armes secondaires ne déclenchent pas les tirs supplémentaires de la recherche de cadence. Leur cible doit correspondre à la catégorie configurée pour l’arme. Les classes admissibles sont décrites dans le catalogue ; une cible inadmissible ne reçoit aucun tir secondaire, ce qui est différent d’une probabilité de toucher de 0 %.
+Depuis R14, les armes secondaires déclenchent aussi les tirs supplémentaires de la recherche de cadence, sans récursion. Leur cible doit correspondre à la catégorie configurée pour l’arme. Les classes admissibles sont décrites dans le catalogue ; une cible inadmissible ne reçoit aucun tir secondaire, ce qui est différent d’une probabilité de toucher de 0 %.
 
 
-Les noms des cibles de contre sont ceux des familles génériques de coque, communs aux trois rangs. Par exemple, la famille Capital couvre Vaisseau capital, Dreadnought et Vaisseau amiral. Les défenses au sol partagent une famille générique de cible lorsqu’aucune relation particulière à une tourelle n’est définie. La classe cible Chasseur regroupe le Chasseur standard, le Chasseur furtif et l’Intercepteur, à leurs trois rangs. Le Chasseur lourd reste séparé. Un contre envers Chasseur s’applique à chacun des trois types ; leurs profils de tir offensifs et leurs statistiques restent propres à chaque coque. Lorsque des anciennes relations vers ces membres avaient des coefficients différents pour un même tireur, la classe reprend le coefficient le plus fort, sans cumul.
+Les noms des cibles de contre sont ceux des familles génériques de coque, communs aux trois rangs. Par exemple, la famille Capital couvre Vaisseau capital, Dreadnought et Vaisseau amiral. Les défenses au sol partagent une famille générique de cible lorsqu’aucune relation particulière à une tourelle n’est définie. La classe cible Chasseur regroupe le Chasseur standard, le Chasseur furtif et l’Intercepteur, à leurs trois rangs. Le Chasseur lourd reste séparé. Un contre exprimé envers ce groupe s’applique à chacun des trois types ; R14 utilise des relations explicites pour distinguer leurs rôles parmi les neuf classes étudiées ; leurs profils de tir offensifs et leurs statistiques restent propres à chaque coque. Lorsque des anciennes relations vers ces membres avaient des coefficients différents pour un même tireur, la classe reprend le coefficient le plus fort, sans cumul.
+
+
+## R14 Alpha — règles de combat en vigueur depuis le 5 novembre 2026
+
+Cette section remplace les anciens réglages de combat décrits plus haut. Chance = borne15–95(borne15–95(borne15–95(précision + tracking + correction arme − évasion − 15) × contre) + 30 × écart de rang). Le contre multiplie également les dégâts. La signature pondère les cibles, avec priorité aux unités dont structure ou bouclier est entamé. La cible principale reste verrouillée pendant le tour tant qu’elle survit ; les secondaires gardent leur catégorie admissible et bénéficient aussi du tir rapide.
+
+Les dégâts d’un tour sont multipliés par ((HP + bouclier restants)/(HP + bouclier initiaux))². Un bouclier encore positif récupère 5 % de son maximum par round ; à zéro il ne recharge plus pendant cette bataille. Sous 25 % de structure, chaque prochain tir qui touche teste avant ses dégâts une explosion de probabilité max(0, 1 − HP/(0,25 × HP_initial)). Pas d’explosion sur tir raté. Les excédents ne se transfèrent pas à une autre coque.
+
+Les neuf classes R14 ont une croissance de combat 1/1,5/2,25 ; les coûts par rang et les autres facteurs de mobilité/construction restent séparés. Une escorte est une composition financée par remplacement, sans interception ou interposition automatique. Un round reste une minute, dix rounds au maximum ; si les camps subsistent à la limite, le défenseur gagne officiellement. Les HP individuels ne sont pas persistés entre batailles.
+
+Les statistiques, prix, coefficients, preuves de transposition et précautions de déploiement R14 sont détaillés dans [BALANCING_R14.md](BALANCING_R14.md).
+
+
+## Vitesses de voyage — 5 novembre 2026
+
+Le Capital est la classe la plus lente à rang et recherches comparables. La durée dépend des distances réelles de la carte, de la position de départ et d’arrivée, des deux vitesses minimales de la flotte (dans le système et entre systèmes), des recherches, du rang, du pourcentage de départ et du multiplicateur de l’univers. Elle est arrondie à la seconde supérieure. Le retour utilise la même durée de trajet enregistrée à l’aller ; les stationnements, combats et temps de traitement sont supplémentaires.
+
+Un trajet prend au minimum 60 secondes, même dans un univers accéléré ou avec des recherches. Une flotte exclusivement composée de sondes voyageant dans le même système dispose d’un minimum de 30 secondes. Ajouter un autre type de vaisseau rétablit le minimum de 60 secondes et la vitesse du plus lent. Au rang basique sans recherche et à 100 %, le trajet local le plus long (position 1 → 9) prend 60 secondes en Sonde et 3 600 secondes en Capital. Sur les cartes du projet et la grille générée maximale de 100 systèmes, les trajets intersystèmes de référence ne dépassent pas 3 minutes en Sonde et 12 heures en Capital. Les bonus réduisent ces durées ; un départ à vitesse réduite peut les dépasser. Les vitesses et exemples intersystèmes sont détaillés dans [SPEED_BALANCE_2026-11-05.md](SPEED_BALANCE_2026-11-05.md).
+
+
+Ordre de vitesse adopté : Capital → Cuirassé → Colonie → Transport → Bombardier → Destroyer → Croiseur → Frégate → Chasseur lourd → Chasseur → Corvette → Furtif → Intercepteur → Sonde. Chaque classe possède un réservoir dédié de 16 000 H au rang basique, suffisant pour le plus long aller-retour des cartes de référence à 100 %, sans utiliser la soute. Les consommations par distance sont inchangées ; les recherches et rangs peuvent augmenter le réservoir. Le carburant nécessaire doit toujours être présent et chargé au départ ; le stationnement consomme en supplément.
+
+
+## Soutes des vaisseaux — 5 novembre 2026
+
+Les capacités de fret basiques sans recherche, distinctes des réservoirs dédiés, sont :
+
+| Classe | Capacité de soute |
+|---|---:|
+| Sonde | 0 |
+| Intercepteur | 100 |
+| Chasseur | 200 |
+| Bombardier | 200 |
+| Furtif | 300 |
+| Chasseur lourd | 500 |
+| Corvette | 1 000 |
+| Colonie | 1 000 |
+| Frégate | 1 500 |
+| Destroyer | 2 500 |
+| Croiseur | 4 000 |
+| Cuirassé | 8 000 |
+| Capital | 15 000 |
+| Transport | 50 000 |
+
+Les rangs multiplient ces capacités par 1 / 1,25 / 1,5625 avec arrondi supérieur, puis la recherche Soute compartimentée apporte son bonus. La Sonde conserve une capacité nulle. Les cartes de vaisseaux affichent la capacité effective du rang, recherches comprises. La soute sert au fret et au butin ; le carburant de mission utilise d’abord les réservoirs dédiés et n’emprunte la soute que si leur capacité ne suffit pas.
+
+
+## Kit de colonisation par rang — 5 novembre 2026
+
+À la fondation d’une colonie vierge, les stocks du kit initial sont multipliés par le rang du vaisseau colonisateur consommé : ×1 / ×1,25 / ×1,5625. Le rang disponible le plus bas est consommé en priorité ; aucun cumul entre vaisseaux. Les stocks conservent les fractions et respectent la capacité de stockage. Aucun bâtiment ou bonus permanent de production n’est ajouté.
+
+
+## Production des bâtiments — cadence A, 5 novembre 2026
+
+Cette section remplace les anciennes références de puissance pour les producteurs. La production et les consommations industrielles suivent **1 / 1,5 / 2,25** aux rangs T1/T2/T3. Les rangs s’additionnent. La centrale produit **0,2 électricité/s/niveau basique**, soit 720/h en univers normal à la position de référence. Métal, nano, hydrogène et antimatière conservent leurs productions unitaires de base ; le réacteur convertit toujours 8 H par A.
+
+Les coûts des seuls producteurs croissent par niveau de ×1,12 jusqu’à 20, ×1,09 jusqu’à 40, ×1,035 jusqu’à 80, ×1,015 jusqu’à 120, puis ×1,01. Les premiers prix, profils de ressources par rang et arrondis par ressource restent utilisés. Les durées et les effets des laboratoires, chantiers, bunkers et stockages ne reçoivent pas le nouveau facteur de production ; leur calcul reste séparé.
+
+Une usine dont la production ne peut plus être stockée suspend ses consommations inutiles. Les raffineries et centrales continuent de fournir les besoins immédiats des autres usines lorsque leurs propres stocks sont pleins. Les pénuries et remplissages sont calculés pendant toute la période écoulée ; les petites erreurs numériques ne doivent pas interrompre ce calcul. Les débits nets affichés excluent les excédents impossibles à stocker.
+
+Les valeurs et résultats de référence, la distinction entre délai d’accès et remboursement, les données existantes et les vérifications sont détaillés dans [BUILDING_BALANCE_2026-11-05.md](BUILDING_BALANCE_2026-11-05.md). Les surcharges d’univers peuvent toujours remplacer les valeurs de base. Les coûts et durées déjà payés en file restent conservés.
+
+### Limites par défaut des univers — 5 novembre 2026
+
+Le nombre maximum de vaisseaux par flotte est fixé par défaut à **1 000 000** et le plafond de planètes à **31**. Ces valeurs s’appliquent aux profils de référence et aux nouveaux univers. Les réglages personnalisés d’un univers restent prioritaires. Le plafond de planètes ne modifie pas les prérequis de recherche de colonisation.
+
+### Capacité d’inventaire — 5 novembre 2026
+
+L’inventaire peut contenir **100 bonus disponibles** par joueur et par univers. Les récompenses supplémentaires restent en attente et rejoignent l’inventaire lorsqu’une place se libère. Cette capacité remplace la limite précédente de 3 emplacements.
+
+### Classement des guildes — 5 novembre 2026
+
+Le classement des guildes additionne les points actuels de bâtiments, recherches et flotte de leurs membres. Le total détermine le rang. La médiane des scores individuels complète le total : pour un effectif pair, elle est la moyenne des deux scores centraux. Une guilde sans membre compte zéro point et une médiane de zéro. Le classement joueur reste fondé sur les points totaux ; sa présentation détaille bâtiments, recherches, flotte et total.
+
+
+## Répartition des coûts des vaisseaux — 5 novembre 2026
+
+Les 14 classes utilisent les parts de valeur économique suivantes : T1 60 % métal / 40 % nano ; T2 45 % métal / 45 % nano / 10 % antimatière ; T3 30 % métal / 50 % nano / 20 % antimatière. Le calcul pondère M×2, N×4, A×8 et H×1. Ces pourcentages ne représentent pas les quantités brutes. Les arrondis des trois ressources sont répartis pour conserver exactement la valeur de chaque profil de rang avant recherche ; les profils réels font foi.
+
+Le carburant des missions est séparé des coûts de construction, qui n’ajoutent pas d’hydrogène. Les recherches de réduction des coûts s’appliquent ensuite avec leurs arrondis par ressource. Les nouvelles commandes utilisent les nouveaux prix ; les coûts déjà payés restent enregistrés. Les profils, budgets conservés et limites sont détaillés dans [SHIP_COSTS_2026-11-05.md](SHIP_COSTS_2026-11-05.md).
+
+
+## Grille commune des prix — 5 novembre 2026
+
+Cette grille remplace les anciennes répartitions des ressources pour tous les bâtiments, vaisseaux, défenses et recherches : **T1 M60/N40 ; T2 M45/N45/A10 ; T3 M30/N45/A20/H5**, en parts de valeur économique, avec M×2, N×4, A×8 et H×1. Les quantités sont entières, et la valeur réelle de chaque profil de rang de base est conservée. Les prix réels aux niveaux suivants ou après recherche suivent les mêmes courbes et arrondis par ressource qu’auparavant ; de petits écarts de valeur dus à ces arrondis sont possibles.
+
+L’hydrogène industriel est payé à la commande et ne remplit pas un réservoir de vaisseau. Les carburants de mission et les consommations d’hydrogène du réacteur restent des dépenses distinctes. Les profils, contrôles et effets sur la progression sont détaillés dans [COMMON_COSTS_2026-11-05.md](COMMON_COSTS_2026-11-05.md). Les coûts déjà payés en file restent enregistrés et les réglages personnalisés d’univers restent prioritaires.

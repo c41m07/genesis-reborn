@@ -3,27 +3,27 @@
   "label": "Chasseur de patrouille",
   "category": "light",
   "hp": 150,
-  "precision": 70,
-  "tracking": 76,
+  "precision": 55,
+  "tracking": 75,
   "evasion": 60,
   "signature": 20,
-  "base_attack": 40,
-  "shots_min": 1,
-  "shots_max": 2,
+  "base_attack": 24,
+  "shots_min": 2,
+  "shots_max": 3,
   "build_time_base": 180,
   "costs": {},
-  "speed_system": 65,
-  "speed_galaxy": 650,
+  "speed_system": 152,
+  "speed_galaxy": 753,
   "fuel_travel_system": 0.5,
   "fuel_travel_galaxy": 2,
   "fuel_orbit": 0.3,
-  "cargo_capacity": 0,
+  "cargo_capacity": 200,
   "unlock_requirements": {},
   "provisional": true,
-  "note": "Profil de mobilité et de combat différencié, équilibrage validé le 02/11/2026 et à mesurer en Alpha.",
-  "fuel_capacity": 700,
+  "note": "Équilibrage R14 adopté pour la branche Alpha le 05/11/2026 ; validation en jeu à poursuivre.",
+  "fuel_capacity": 16000,
   "fuel_capacity_provisional": true,
-  "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 700 H. Réservoir réservé au carburant, distinct de la soute de fret.",
+  "fuel_capacity_note": "Réservoir dédié de 16 000 H au rang basique, permettant le plus long aller-retour des cartes de référence sans utiliser la soute. Consommation maximale mesurée : environ 15 453,51 H hors stationnement.",
   "shield": 50,
   "tier_unlock_requirements": {
     "intermediate": {
@@ -62,19 +62,22 @@
   "economy_value_budget": 6000,
   "cost_profiles": {
     "basic": {
-      "metal": 2700,
-      "nano": 150,
-      "antimatter": 0
+      "metal": 1800,
+      "nano": 600,
+      "antimatter": 0,
+      "hydrogen": 0
     },
     "intermediate": {
-      "metal": 2438,
-      "nano": 563,
-      "antimatter": 47
+      "metal": 1688,
+      "nano": 844,
+      "antimatter": 94,
+      "hydrogen": 0
     },
     "superior": {
-      "metal": 2110,
-      "nano": 938,
-      "antimatter": 176
+      "metal": 1406,
+      "nano": 1055,
+      "antimatter": 235,
+      "hydrogen": 468
     }
   },
   "tier_labels": {
@@ -87,5 +90,6 @@
     "intermediate": "Chasseur multirôle plus réactif, conçu pour escorter les flottes et maintenir la pression sur les unités légères adverses. Il reste efficace contre chasseurs, intercepteurs et bombardiers. Armement visible : deux canons laser à impulsions renforcés sur les ailes, avec tirs rouges plus soutenus.",
     "superior": "Chasseur d’assaut orbital optimisé pour le combat léger intensif. Il protège les bâtiments majeurs et harcèle les bombardiers avant leur approche. Armement visible : double système de canons laser à impulsions rouges, intégré aux ailes et stabilisé pour les poursuites rapides."
   },
-  "description": "Unité de combat standard, rapide et peu coûteuse. Le chasseur affronte les chasseurs ennemis, intercepteurs et bombardiers, et protège les unités plus importantes grâce à deux canons laser à impulsions montés sur les ailes."
+  "description": "Unité de combat standard, rapide et peu coûteuse. Le chasseur affronte les chasseurs ennemis, intercepteurs et bombardiers, et protège les unités plus importantes grâce à deux canons laser à impulsions montés sur les ailes.",
+  "combat_tier_growth": 1.5
 }

@@ -52,6 +52,57 @@ final class CatalogueDetailsTest extends KernelTestCase
         self::assertEqualsWithDelta($stats['Structure maximale']['base']*1.25*1.25,$stats['Structure maximale']['effective'],1e-8);
     }
 
+    public function testFactoryBenefitCardsShowTheNewProductionRanksAndConsumption():void
+    {
+        $insights=self::getContainer()->get(CatalogueInsights::class);
+        $universe=$this->planet->solarSystem->galaxy->universe;
+        $plant=$this->catalog->getTierForUniverse($universe,'buildings','power_plant','superior');
+        $rows=array_column($insights->benefits($plant,'buildings',1,$this->planet,[],[]),null,'label');
+        self::assertEqualsWithDelta(1620,$rows['Production de électricité']['after']-$rows['Production de électricité']['before'],1e-8);
+        $reactor=$this->catalog->getTierForUniverse($universe,'buildings','mine_antimatter','superior');
+        $rows=array_column($insights->benefits($reactor,'buildings',1,$this->planet,[],[]),null,'label');
+        self::assertEqualsWithDelta(810,$rows['Production de antimatière']['after']-$rows['Production de antimatière']['before'],1e-8);
+        self::assertEqualsWithDelta(6480,$rows['Consommation d’hydrogène']['after']-$rows['Consommation d’hydrogène']['before'],1e-8);
+        self::assertEqualsWithDelta(405,$rows['Consommation électrique']['after']-$rows['Consommation électrique']['before'],1e-8);
+    }
+
+    public function testShipCharacteristicsIncludeResearchForTheSelectedRank():void
+    {
+        $max=['basic'=>25,'intermediate'=>25,'superior'=>25];
+        $tech=array_fill_keys(['weapons_engineering','structural_armor','shield_harmonics','weapon_calibration','target_acquisition','evasive_navigation','signature_reduction','vector_propulsion','modular_cargo_bays','cryogenic_reserves','rapid_fire_cycle'],$max);
+        $insights=self::getContainer()->get(CatalogueInsights::class);
+        $definition=$this->catalog->getTierForUniverse($this->planet->solarSystem->galaxy->universe,'ships','destroyer','intermediate');
+        $rows=array_column($insights->benefits($definition,'ships',1,$this->planet,[],$tech),null,'label');
+        foreach(['Attaque'=>876.25,'Structure'=>3000.0,'Bouclier maximal'=>1125.0,'Précision de tir'=>115.0,'Suivi de cible'=>80.5,'Capacité d’esquive'=>9.6,'Signature · faible = moins ciblé'=>33.75,'Tir secondaire anti-léger'=>187.5,'Chance de tir supplémentaire par tir de base'=>50.0] as $label=>$expected){
+            self::assertEqualsWithDelta($expected,$rows[$label]['value'],1e-8,$label);
+        }
+        foreach(['Vitesse dans le système'=>'speed_system','Vitesse entre systèmes'=>'speed_galaxy','Capacité de soute'=>'cargo_capacity','Réservoir d’hydrogène'=>'fuel_capacity'] as $label=>$stat)self::assertEqualsWithDelta($definition[$stat]*1.25,$rows[$label]['value'],1e-8,$label);
+        self::assertSame('2–4',$rows['Tirs principaux par round']['text']);
+        self::assertSame('6–6',$rows['Tirs secondaires par round']['text']);
+        self::assertSame(50,$rows['Correction de précision secondaire']['value']);
+        self::assertSame(701,$definition['base_attack'],'Le catalogue de base ne doit pas être modifié.');
+        $twig=self::getContainer()->get(\Twig\Environment::class);
+        $html=$twig->render('ui/catalogue_benefits.html.twig',['card'=>['maximum'=>false,'benefits'=>array_values($rows),'details'=>['unlocks'=>[]],'target'=>1],'group'=>'ships','d'=>$definition,'show_locked_items'=>false]);
+        self::assertStringContainsString('876,25',$html);
+        self::assertStringContainsString('Vos recherches sont incluses',$html);
+    }
+
+    public function testShipCharacteristicsWithoutResearchKeepBaseValuesAndUnarmedShipsDoNotGainShots():void
+    {
+        $insights=self::getContainer()->get(CatalogueInsights::class);
+        $definition=$this->catalog->getTierForUniverse($this->planet->solarSystem->galaxy->universe,'ships','fighter','superior');
+        $rows=array_column($insights->benefits($definition,'ships',1,$this->planet,[],[]),null,'label');
+        self::assertSame(54,$rows['Attaque']['value']);
+        self::assertSame(338,$rows['Structure']['value']);
+        self::assertSame(113,$rows['Bouclier maximal']['value']);
+        self::assertSame(0.0,$rows['Chance de tir supplémentaire par tir de base']['value']);
+        self::assertSame(0,$rows['Structure']['decimals']);
+        $probe=$this->catalog->getTierForUniverse($this->planet->solarSystem->galaxy->universe,'ships','probe','basic');
+        $rows=array_column($insights->benefits($probe,'ships',1,$this->planet,[],['rapid_fire_cycle'=>['basic'=>25,'intermediate'=>25,'superior'=>25]]),null,'label');
+        self::assertSame('Aucun',$rows['Tirs principaux par round']['text']);
+        self::assertArrayNotHasKey('Chance de tir supplémentaire par tir de base',$rows);
+    }
+
     public function testColonizationDetailsShowLinearGainAndUniverseCap():void
     {
         $details=$this->describe('technologies','colonial_expansion');

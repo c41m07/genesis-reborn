@@ -3,30 +3,33 @@
 {% block body %}
 <div class="page-heading">
     <div>
-        <p class="eyebrow">{{ membership.universe.name }}</p>
+        
         <h1>Inventaire</h1>
-        <p>Retrouvez ici les bonus attribués à votre joueur.</p>
+        <p>Consultez vos bonus disponibles et la place restante dans cet univers.</p>
     </div>
 </div>
 
 <section class="panel" aria-labelledby="boost-inventory-title">
     <div class="section-heading">
         <h2 id="boost-inventory-title">Bonus disponibles</h2>
-        <span class="badge">{{ boosts|length }} / {{ inventory_capacity }}</span>
+        <span class="badge">{{ boosts|length }} / {{ inventory_capacity }} emplacements</span>
     </div>
+    <progress class="boost-capacity" value="{{ boosts|length }}" max="{{ inventory_capacity }}" aria-label="Emplacements utilisés dans l’inventaire">{{ boosts|length }} / {{ inventory_capacity }}</progress>
+    {% if boosts|length >= inventory_capacity %}<p class="muted">Inventaire plein. Les nouvelles récompenses sont conservées en attente.</p>{% endif %}
     {% if boosts is empty %}
-        <p class="muted">Aucun item disponible pour le moment.</p>
+        <div class="empty-state"><h3>Aucun bonus disponible</h3><p>Les récompenses de vos missions et événements apparaîtront ici.</p></div>
     {% else %}
         <article class="mission-card">
             <div>
                 <h3>Boost de réduction de durée</h3>
-                <p>Bonus attribué à votre joueur.</p>
+                <p>Réduit de {{ duration_reduction_percent|number_format(2, ',', ' ') }} % le temps restant d’une opération active.</p>
             </div>
             <span class="badge">Quantité : {{ boosts|length }}</span>
         </article>
     {% endif %}
     {% if pending_boost_count > 0 %}
-        <p class="muted">{{ pending_boost_count }} bonus en attente d’une place dans l’inventaire.</p>
+        <p class="boost-pending" role="status">{{ pending_boost_count }} bonus en attente. Dès qu’une place se libère, la récompense la plus ancienne rejoint votre inventaire.</p>
     {% endif %}
 </section>
+<section class="panel boost-information"><h2>Comprendre vos bonus</h2><p>Un boost s’applique au temps restant d’une opération active, et non aux opérations encore en attente. Les réductions successives se calculent sur le nouveau temps restant.</p><p>Les bonus gagnés restent disponibles jusqu’à leur utilisation. La capacité ci-dessus concerne les bonus disponibles; les récompenses en attente sont conservées séparément.</p></section>
 {% endblock %}

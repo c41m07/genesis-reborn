@@ -253,7 +253,7 @@ final class AdminService
         }
         $maxPlanets = filter_var($input['limits']['max_planets'] ?? null, FILTER_VALIDATE_INT);
         $maxFleet = filter_var($input['limits']['max_fleet_size'] ?? null, FILTER_VALIDATE_INT);
-        if ($maxPlanets === false || $maxPlanets < 1 || $maxPlanets > 50 || $maxFleet === false || $maxFleet < 1 || $maxFleet > 10000) {
+        if ($maxPlanets === false || $maxPlanets < 1 || $maxPlanets > 50 || $maxFleet === false || $maxFleet < 1 || $maxFleet > 1000000) {
             throw new \DomainException('Les limites doivent rester dans les bornes autorisées.');
         }
         $settings = [

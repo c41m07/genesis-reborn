@@ -17,7 +17,8 @@ final class CombatCountersTest extends TestCase
         self::assertEqualsWithDelta(19.5,$simulator->hitChance(['precision'=>0,'tracking'=>0],$target,0,1.3),1e-8);
         self::assertEqualsWithDelta(66.5,$simulator->hitChance(['precision'=>200,'tracking'=>200],$target,0,.7),1e-8);
         self::assertSame(15.0,$simulator->hitChance(['precision'=>0,'tracking'=>0],$target,0,.7));
-        self::assertEqualsWithDelta(91,$simulator->hitChance($attacker+['tier'=>'superior'],$target+['tier'=>'basic'],0,1.3),1e-8);
+        self::assertEqualsWithDelta(95,$simulator->hitChance($attacker+['tier'=>'superior'],$target+['tier'=>'basic'],0,1.3),1e-8);
+        self::assertSame(65.0,$simulator->hitChance($attacker+['tier'=>'basic'],$target+['tier'=>'intermediate'],0,8));
     }
 
     public function testPrimaryExtraAndSecondaryShotsUseTheSameCounterOnceForChanceAndDamage():void
@@ -30,8 +31,9 @@ final class CombatCountersTest extends TestCase
             $result=(new CombatSimulator())->simulate($participants,[],['attacker'=>['target'=>$factor]],1,12345);
             $primary=array_values(array_filter($result['rounds'][0]['shots'],static fn(array $s):bool=>$s['weapon']==='primary'));
             $secondary=array_values(array_filter($result['rounds'][0]['shots'],static fn(array $s):bool=>$s['weapon']==='anti_light'));
-            self::assertCount(200,$primary);self::assertCount(2,$secondary);
+            self::assertCount(200,$primary);self::assertCount(4,$secondary);
             self::assertCount(100,array_filter($primary,static fn(array $s):bool=>$s['extra_shot']));
+            self::assertCount(2,array_filter($secondary,static fn(array $s):bool=>$s['extra_shot']));
             $hits=0;
             foreach([...$primary,...$secondary] as $shot){
                 $isSecondary=$shot['weapon']==='anti_light';
@@ -45,20 +47,17 @@ final class CombatCountersTest extends TestCase
     public function testAllSecondaryWeaponsOnlyFireAtEligibleShipCategoriesAndUseConfiguredChances():void
     {
         $catalog=new GameCatalog(dirname(__DIR__,2).'/config/game');$modifiers=$catalog->all('combat_modifiers')['modifiers'];
-        $expected=['destroyer'=>['fighter'=>81,'interceptor'=>66,'stealth_fighter'=>51],
-            'cruiser'=>['fighter'=>75,'interceptor'=>60,'stealth_fighter'=>45],
-            'battleship'=>['fighter'=>68,'interceptor'=>53,'stealth_fighter'=>38],
-            'capital'=>['fighter'=>70.15,'interceptor'=>52.9,'stealth_fighter'=>35.65]];
-        foreach($expected as $slug=>$targets){
+        $expected=['destroyer'=>6,'cruiser'=>2,'battleship'=>4,'capital'=>8];
+        foreach($expected as $slug=>$count){
             $attacker=$catalog->withTier($catalog->get('ships',$slug),'basic');$attacker['quantity']=1;
-            self::assertSame(30,$attacker['secondary_precision_modifier']);
+            self::assertSame(50,$attacker['secondary_precision_modifier']);
             foreach($catalog->all('ships') as $targetSlug=>$base){
                 $target=$catalog->withTier($base,'basic');$target['quantity']=1;$target['hp']=1000000;$target['shield']=0;$target['base_attack']=0;
                 $result=(new CombatSimulator())->simulate($this->participants($attacker,$target),[],$modifiers,1,12345);
                 $shots=array_values(array_filter($result['rounds'][0]['shots'],static fn(array $s):bool=>$s['weapon']==='anti_light'));
-                if(!isset($targets[$targetSlug])){self::assertSame([],$shots,$slug.' contre '.$targetSlug);continue;}
-                self::assertCount(1,$shots,$slug.' contre '.$targetSlug);
-                self::assertEqualsWithDelta($targets[$targetSlug],$shots[0]['chance'],1e-8,$slug.' contre '.$targetSlug);
+                if(!in_array($targetSlug,['fighter','interceptor','stealth_fighter'],true)){self::assertSame([],$shots,$slug.' contre '.$targetSlug);continue;}
+                self::assertCount($count,$shots,$slug.' contre '.$targetSlug);
+                self::assertEqualsWithDelta(95,$shots[0]['chance'],1e-8,$slug.' contre '.$targetSlug);
             }
         }
     }
@@ -92,7 +91,7 @@ final class CombatCountersTest extends TestCase
         }
     }
 
-    public function testChasseurCounterTargetsAllThreeMembersAcrossEveryRankButExcludesHeavyFighters():void
+    public function testGroupsPreserveCorvetteTargetsAndExplicitR14RolesAcrossEveryRank():void
     {
         $catalog=new GameCatalog(dirname(__DIR__,2).'/config/game');$counters=$catalog->all('combat_modifiers');
         self::assertSame(['fighter','stealth_fighter','interceptor'],$counters['target_groups']['fighters']['members']);
@@ -100,7 +99,7 @@ final class CombatCountersTest extends TestCase
         self::assertArrayNotHasKey('fighters',$counters['modifiers']['corvette']);
         foreach(['fighter','stealth_fighter','interceptor'] as $slug){
             self::assertSame(1.3,$counters['modifiers']['corvette'][$slug]);
-            self::assertSame(1.3,$counters['modifiers']['heavy_fighter'][$slug]);
+            self::assertSame(['fighter'=>4.15,'stealth_fighter'=>1.15,'interceptor'=>1][$slug],$counters['modifiers']['heavy_fighter'][$slug]);
             foreach(GameCatalog::TIERS as $attackerTier)foreach(GameCatalog::TIERS as $targetTier){
                 $attacker=$catalog->withTier($catalog->get('ships','corvette'),$attackerTier);$attacker['quantity']=1;
                 $target=$catalog->withTier($catalog->get('ships',$slug),$targetTier);$target['quantity']=1;$target['hp']=1000000;$target['shield']=0;$target['base_attack']=0;
@@ -113,7 +112,7 @@ final class CombatCountersTest extends TestCase
             }
         }
         self::assertEquals(1,$counters['modifiers']['corvette']['heavy_fighter']);
-        self::assertSame(1.3,$counters['modifiers']['capital']['heavy_fighter']);
+        self::assertSame(1,$counters['modifiers']['capital']['heavy_fighter']);
     }
 
     private function unit(string $slug,int $attack):array

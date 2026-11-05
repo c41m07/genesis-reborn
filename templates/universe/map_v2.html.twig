@@ -1,9 +1,11 @@
 {% extends 'base.html.twig' %}
 {% import 'ui/macros.html.twig' as ui %}
-{% block title %}GalaxieV2 · Genesis Reborn{% endblock %}
+{% block title %}Galaxie · Genesis Reborn{% endblock %}
 {% block body %}
 {% include 'ui/galaxy_tabs.html.twig' %}
-<div class="galaxy-v2" data-controller="galaxy-v2"
+<h1 class="visually-hidden">Carte interactive de la galaxie</h1>
+
+<div class="galaxy-v2" data-controller="galaxy-v2" data-action="keydown->galaxy-v2#navigateBack"
      data-galaxy-v2-map-value="{{ galaxy_v2_json|e('html_attr') }}"
      data-galaxy-v2-reduced-motion-value="{{ preferences.reducedMotion|default(false)?'true':'false' }}">
     <div class="gv2-scene" data-galaxy-v2-target="scene">
@@ -21,9 +23,11 @@
             </form>
             <div class="gv2-search">
                 <span aria-hidden="true">⌕</span><label class="visually-hidden" for="gv2-search">Rechercher un système ou une planète connue</label>
-                <input id="gv2-search" type="search" placeholder="Système ou planète…" autocomplete="off" spellcheck="false" data-galaxy-v2-target="searchInput" data-action="input->galaxy-v2#search keydown->galaxy-v2#searchKeydown">
-                <button type="button" class="gv2-search-clear" aria-label="Effacer la recherche" data-galaxy-v2-target="searchClear" data-action="click->galaxy-v2#clearSearch">×</button>
-                <div class="gv2-search-results" role="listbox" aria-label="Résultats de recherche" data-galaxy-v2-target="searchResults" hidden></div>
+                <input id="gv2-search" type="search" placeholder="Système ou planète…" autocomplete="off" spellcheck="false" aria-controls="gv2-search-results" aria-describedby="gv2-search-help" data-galaxy-v2-target="searchInput" data-action="input->galaxy-v2#search keydown->galaxy-v2#searchKeydown">
+                <span class="visually-hidden" id="gv2-search-help">Saisissez au moins deux caractères. Flèches haut et bas pour parcourir les résultats, Entrée pour ouvrir, Échap pour fermer. Douze résultats maximum sont affichés.</span>
+                <button type="button" class="gv2-search-clear" aria-label="Effacer la recherche" data-galaxy-v2-target="searchClear" data-action="click->galaxy-v2#clearSearch" hidden>×</button>
+                <div id="gv2-search-results" class="gv2-search-results" role="region" aria-label="Résultats de recherche" data-galaxy-v2-target="searchResults" data-action="keydown->galaxy-v2#searchKeydown" hidden></div>
+                <span class="visually-hidden" role="status" data-galaxy-v2-target="searchStatus"></span>
             </div>
             <div class="gv2-coordinate" aria-live="polite" data-galaxy-v2-target="coordinates">{% if selected_galaxy %}{{ selected_galaxy.coordinateCode() }}{% else %}—{% endif %}</div>
         </div>
@@ -66,7 +70,7 @@
     {% for row in systems %}
         {% set system = row.system %}
         <template data-gv2-system="{{ system.id }}">
-            <header class="gv2-panel-heading"><div><span class="gv2-eyebrow">SYSTÈME STELLAIRE</span><h2>{{ system.galaxy.coordinateCode() }}:{{ system.number() }}</h2><p>{{ system.name }}</p></div><button type="button" aria-label="Fermer la vue système" data-action="click->galaxy-v2#toGalaxy">×</button></header>
+            <header class="gv2-panel-heading"><div><h2>{{ system.galaxy.coordinateCode() }}:{{ system.number() }}</h2><p>{{ system.name }}</p></div><button type="button" aria-label="Fermer la vue système" data-action="click->galaxy-v2#toGalaxy">×</button></header>
             <div class="gv2-system-state"><span class="gv2-state-dot {{ row.known?'is-known':'' }}"></span>{% if row.known %}Système exploré · {{ row.planets|length }} planètes cartographiées{% else %}Signal inconnu · aucune planète révélée{% endif %}</div>
             {% if row.known %}
                 <ul class="gv2-planet-list">{% for p in row.planets|sort((a,b)=>a.position<=>b.position) %}
@@ -82,7 +86,7 @@
         </template>
         {% if row.known %}{% for p in row.planets %}
         <template data-gv2-planet="{{ p.id }}">
-            <header class="gv2-panel-heading"><div><span class="gv2-eyebrow">PLANÈTE · {{ p.coordinates() }}</span><h2>{{ p.name }}</h2><p>{% if p.owner and p.owner.id==membership.id %}Votre colonie{% elseif p.owner %}Monde de {{ p.owner.player.username }}{% elseif p.npcPlanet %}Monde PNJ · niveau {{ p.conquestLevel }}{% else %}Monde inhabité{% endif %}</p></div><button type="button" aria-label="Fermer les informations de la planète" data-action="click->galaxy-v2#closePlanet">×</button></header>
+            <header class="gv2-panel-heading"><div><span class="muted">PLANÈTE · {{ p.coordinates() }}</span><h2>{{ p.name }}</h2><p>{% if p.owner and p.owner.id==membership.id %}Votre colonie{% elseif p.owner %}Monde de {{ p.owner.player.username }}{% elseif p.npcPlanet %}Monde PNJ · niveau {{ p.conquestLevel }}{% else %}Monde inhabité{% endif %}</p></div><button type="button" aria-label="Fermer les informations de la planète" data-action="click->galaxy-v2#closePlanet">×</button></header>
             <div class="gv2-visual-note">REPRÉSENTATION VISUELLE · DONNÉES DE JEU CI-DESSOUS</div>
             <dl class="gv2-facts"><div><dt>Coordonnées</dt><dd>{{ p.coordinates() }}</dd></div><div><dt>Statut</dt><dd>{% if p.owner and p.owner.id==membership.id %}Votre colonie{% elseif p.owner %}Occupée par {{ p.owner.player.username }}{% elseif p.npcPlanet %}Faction PNJ{% else %}Inhabitée{% endif %}</dd></div>{% if p.npcPlanet %}<div><dt>Niveau PNJ</dt><dd>{{ p.conquestLevel }}</dd></div>{% endif %}</dl>
             <button type="button" class="gv2-primary-action" data-action="click->galaxy-v2#enterPlanetView">◉ Vue rapprochée</button>

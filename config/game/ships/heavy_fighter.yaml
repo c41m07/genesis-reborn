@@ -2,22 +2,22 @@
   "slug": "heavy_fighter",
   "label": "Chasseur lourd",
   "category": "heavy",
-  "hp": 250,
+  "hp": 500,
   "precision": 65,
-  "tracking": 73,
+  "tracking": 75,
   "evasion": 50,
   "signature": 35,
-  "base_attack": 70,
-  "shots_min": 1,
-  "shots_max": 2,
+  "base_attack": 26,
+  "shots_min": 4,
+  "shots_max": 4,
   "build_time_base": 600,
   "costs": {},
-  "speed_system": 55,
-  "speed_galaxy": 550,
+  "speed_system": 144,
+  "speed_galaxy": 713,
   "fuel_travel_system": 0.5,
   "fuel_travel_galaxy": 2,
   "fuel_orbit": 0.3,
-  "cargo_capacity": 0,
+  "cargo_capacity": 500,
   "unlock_requirements": {
     "buildings": [
       {
@@ -35,11 +35,11 @@
     ]
   },
   "provisional": true,
-  "note": "Profil de mobilité et de combat différencié, équilibrage validé le 02/11/2026 et à mesurer en Alpha.",
-  "fuel_capacity": 1000,
+  "note": "Équilibrage R14 adopté pour la branche Alpha le 05/11/2026 ; validation en jeu à poursuivre.",
+  "fuel_capacity": 16000,
   "fuel_capacity_provisional": true,
-  "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 1000 H. Réservoir réservé au carburant, distinct de la soute de fret.",
-  "shield": 100,
+  "fuel_capacity_note": "Réservoir dédié de 16 000 H au rang basique, permettant le plus long aller-retour des cartes de référence sans utiliser la soute. Consommation maximale mesurée : environ 15 453,51 H hors stationnement.",
+  "shield": 200,
   "tier_unlock_requirements": {
     "intermediate": {
       "technologies": [
@@ -74,22 +74,25 @@
       ]
     }
   },
-  "economy_value_budget": 12000,
+  "economy_value_budget": 14800,
   "cost_profiles": {
     "basic": {
-      "metal": 5400,
-      "nano": 300,
-      "antimatter": 0
+      "metal": 4440,
+      "nano": 1480,
+      "antimatter": 0,
+      "hydrogen": 0
     },
     "intermediate": {
-      "metal": 4875,
-      "nano": 1125,
-      "antimatter": 94
+      "metal": 4165,
+      "nano": 2082,
+      "antimatter": 231,
+      "hydrogen": 0
     },
     "superior": {
-      "metal": 4219,
-      "nano": 1875,
-      "antimatter": 352
+      "metal": 3470,
+      "nano": 2603,
+      "antimatter": 579,
+      "hydrogen": 1156
     }
   },
   "tier_labels": {
@@ -102,5 +105,6 @@
     "intermediate": "Chasseur-bombardier lourd renforcé pour les assauts rapprochés contre les petites coques militaires. Il conserve une bonne pression contre chasseurs et bombardiers, tout en menaçant les frégates. Armement visible : canons rotatifs à plasma verts sous les ailes, avec cadence accrue.",
     "superior": "Chasseur d’appui blindé destiné à ouvrir des brèches dans les escortes légères. Sa résistance et ses armes à plasma en font une menace directe pour les frégates isolées. Armement visible : doubles canons rotatifs à plasma lourd, tirant des projectiles verts concentrés."
   },
-  "description": "Vaisseau d’assaut rapproché plus résistant qu’un chasseur classique, mais moins rapide. Il attaque chasseurs, bombardiers et frégates avec deux canons rotatifs à plasma sous les ailes."
+  "description": "Vaisseau d’assaut rapproché plus résistant qu’un chasseur classique, mais moins rapide. Il attaque chasseurs, bombardiers et frégates avec deux canons rotatifs à plasma sous les ailes.",
+  "combat_tier_growth": 1.5
 }

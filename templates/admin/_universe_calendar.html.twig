@@ -1,0 +1,12 @@
+{% set draftCalendar = universeScheduleDraft.universe_id|default(null) == universe.id %}
+<form class="admin-calendar-form" method="post" action="{{ path('app_admin_universe_schedule', {id: universe.id}) }}" {% if draftCalendar %}aria-describedby="calendar-error-{{ universe.id }}"{% endif %}>
+    <input type="hidden" name="_token" value="{{ csrf_token('admin_universe_' ~ universe.id) }}">
+    {% if draftCalendar %}<p class="admin-draft-notice" id="calendar-error-{{ universe.id }}">{{ universeScheduleDraft.error|default('Ces dates ne sont pas enregistrées.') }} Corrigez le calendrier puis enregistrez de nouveau.</p>{% endif %}
+    <fieldset {{ universe.status == 'closed' ? 'disabled' : '' }}>
+        <legend>Calendrier de l’univers · UTC</legend>
+        <div><label for="start-{{ universe.id }}">Ouverture (UTC)</label><input id="start-{{ universe.id }}" type="datetime-local" name="starts_at" aria-describedby="calendar-help-{{ universe.id }}" value="{{ draftCalendar ? universeScheduleDraft.starts_at : (universe.startsAt ? universe.startsAt|date('Y-m-d', 'UTC') ~ 'T' ~ universe.startsAt|date('H:i', 'UTC') : '') }}"></div>
+        <div><label for="end-{{ universe.id }}">Fermeture planifiée (UTC)</label><input id="end-{{ universe.id }}" type="datetime-local" name="ends_at" aria-describedby="calendar-help-{{ universe.id }}" value="{{ draftCalendar ? universeScheduleDraft.ends_at : (universe.endsAt ? universe.endsAt|date('Y-m-d', 'UTC') ~ 'T' ~ universe.endsAt|date('H:i', 'UTC') : '') }}"></div>
+    </fieldset>
+    <p id="calendar-help-{{ universe.id }}">{% if universe.status == 'closed' %}Cet univers est fermé et ne peut pas être rouvert.{% else %}Horaires en UTC. Laissez la fermeture vide pour retirer sa planification.{% endif %}</p>
+    <button class="secondary" {{ universe.status == 'closed' ? 'disabled' : '' }}>Enregistrer le calendrier</button>
+</form>

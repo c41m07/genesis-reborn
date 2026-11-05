@@ -4,7 +4,7 @@
     <dialog class="catalog-info-dialog" data-catalog-info-target="dialog" data-action="click->catalog-info#outside" aria-labelledby="catalog-info-title-{{ group }}-{{ d.slug }}-{{ card.tier }}">
         <div class="catalog-info-content">
             <header>
-                <div><p class="eyebrow">FICHE DÉTAILLÉE · {{ {buildings:'BÂTIMENT',technologies:'RECHERCHE',ships:'VAISSEAU',defenses:'DÉFENSE'}[group] }} · {{ d._tier_label }}</p><h2 id="catalog-info-title-{{ group }}-{{ d.slug }}-{{ card.tier }}">{{ d.label }}</h2></div>
+                <div><h2 id="catalog-info-title-{{ group }}-{{ d.slug }}-{{ card.tier }}">{{ d.label }}</h2></div>
                 <form method="dialog"><button type="submit" class="catalog-info-close" aria-label="Fermer la fiche de {{ d.label }}">×</button></form>
             </header>
             <p class="catalog-info-intro">{{ info.intro }}</p>

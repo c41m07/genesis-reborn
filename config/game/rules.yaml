@@ -159,6 +159,32 @@
       {
         "multiplier": 1.12
       }
+    ],
+    "production_building_cost": [
+      {
+        "max_level": 20,
+        "multiplier": 1.12
+      },
+      {
+        "max_level": 40,
+        "multiplier": 1.09
+      },
+      {
+        "max_level": 80,
+        "multiplier": 1.035
+      },
+      {
+        "max_level": 120,
+        "multiplier": 1.015
+      },
+      {
+        "multiplier": 1.01
+      }
     ]
+  },
+  "building_production_tier_factors": {
+    "basic": 1.0,
+    "intermediate": 1.5,
+    "superior": 2.25
   }
 }

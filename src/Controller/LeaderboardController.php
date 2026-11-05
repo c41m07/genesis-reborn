@@ -1,7 +1,7 @@
 <?php
 namespace App\Controller;
 
-use App\Service\Player\LeaderboardService;
+use App\Service\Player\{LeaderboardService,RelationResolver};
 use App\Service\Universe\UniverseContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{JsonResponse,Request,Response};
@@ -10,18 +10,33 @@ use Symfony\Component\Routing\Attribute\Route;
 final class LeaderboardController extends AbstractController
 {
     #[Route('/classement', name: 'app_leaderboard', methods: ['GET'])]
-    public function index(Request $request, UniverseContext $context, LeaderboardService $leaderboard): Response
+    public function index(Request $request, UniverseContext $context, LeaderboardService $leaderboard, RelationResolver $relations): Response
     {
         $membership = $context->membership();
-        $sort = $request->query->getString('by', 'points');
-        if (!in_array($sort, ['points', 'fleet', 'planets'], true)) {
-            $sort = 'points';
+        $tab = $request->query->getString('tab') === 'guilds' ? 'guilds' : 'players';
+        $ownGuild = $relations->guild($membership);
+        $rows = $leaderboard->forUniverse($membership);
+        foreach ($rows as &$row) {
+            $peer = $row['membership'];
+            $guild = $relations->guild($peer);
+            $guildStatus = $relations->guildStatus($ownGuild, $guild);
+            $row['relation'] = $peer->id === $membership->id ? 'self' : ($guildStatus === 'enemies' ? 'enemy' : ($guildStatus === 'allies' ? 'guild' : ($relations->contract($membership, $peer)?->status === 'accepted' ? 'commander' : 'neutral')));
         }
+        unset($row);
+
+        $guildRows = $tab === 'guilds' ? $leaderboard->guildsForUniverse($membership, $rows) : [];
+        foreach ($guildRows as &$row) {
+            $status = $relations->guildStatus($ownGuild, $row['guild']);
+            $row['relation'] = $status === 'enemies' ? 'enemy' : ($status === 'allies' ? 'guild' : 'neutral');
+        }
+        unset($row);
 
         return $this->render('player/leaderboard.html.twig', [
             'membership' => $membership,
-            'rows' => $leaderboard->forUniverse($membership),
-            'sort' => $sort,
+            'rows' => $rows,
+            'tab' => $tab,
+            'guildRows' => $guildRows,
+            'ownGuild' => $ownGuild,
         ]);
     }
 

@@ -20,6 +20,9 @@ final class FeedbackController extends AbstractController
         $player = $this->getUser();
         if (!$player instanceof Player) throw $this->createAccessDeniedException();
         $errors = [];
+        $contextUrl = trim((string) ($request->isMethod('POST')
+            ? $request->request->get('context_url', '')
+            : $request->query->get('context_url', $request->headers->get('referer', ''))));
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('create_feedback', $request->request->get('_token'))) throw $this->createAccessDeniedException('Formulaire expiré.');
             $type=(string)$request->request->get('type'); $priority=(string)$request->request->get('priority');
@@ -28,6 +31,7 @@ final class FeedbackController extends AbstractController
             if (!in_array($priority,['low','medium','high'],true)) $errors[]='Choisissez une priorité valide.';
             if ($title==='' || mb_strlen($title)>120) $errors[]='Le titre est obligatoire (120 caractères maximum).';
             if ($description==='' || mb_strlen($description)>5000) $errors[]='La description est obligatoire (5 000 caractères maximum).';
+            if ($contextUrl !== '' && (mb_strlen($contextUrl)>500 || !filter_var($contextUrl, FILTER_VALIDATE_URL) || !in_array(strtolower((string)parse_url($contextUrl, PHP_URL_SCHEME)), ['http','https'], true))) $errors[]='Le lien de la page concernée doit être une URL HTTP ou HTTPS valide (500 caractères maximum).';
             $screenshot=$request->files->get('screenshot');
             $extension=null;
             if ($screenshot !== null) {
@@ -44,7 +48,7 @@ final class FeedbackController extends AbstractController
             if (!$errors) {
                 $feedback=new UserFeedback(); $feedback->player=$player; $feedback->universe=$player->currentPlayerUniverse?->universe;
                 $feedback->type=$type; $feedback->priority=$priority; $feedback->title=$title; $feedback->description=$description;
-                $feedback->contextUrl=mb_substr($request->headers->get('referer',''),0,500); $feedback->createdAt=$clock->now();
+                $feedback->contextUrl=$contextUrl !== '' ? $contextUrl : null; $feedback->createdAt=$clock->now();
                 if ($screenshot && $extension) {
                     $directory=$kernel->getProjectDir().'/var/feedback-attachments';
                     if (!is_dir($directory) && !mkdir($directory,0700,true) && !is_dir($directory)) throw new \RuntimeException('Impossible de créer le dossier privé des captures.');
@@ -58,7 +62,7 @@ final class FeedbackController extends AbstractController
                 return $this->redirectToRoute('app_feedback');
             }
         }
-        return $this->render('feedback/create.html.twig',['errors'=>$errors]);
+        return $this->render('feedback/create.html.twig',['errors'=>$errors, 'contextUrl'=>$contextUrl]);
     }
 
     #[Route('/feedback/{id}/capture', name: 'app_feedback_attachment', methods: ['GET'])]

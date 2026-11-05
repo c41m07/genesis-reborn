@@ -1,10 +1,18 @@
 {% extends 'base.html.twig' %}
 {% block title %}Accès refusé · Genesis Reborn{% endblock %}
 {% block body %}
-<section class="panel access-denied-panel" aria-labelledby="access-denied-title">
-  <p class="eyebrow">AUTORISATION REQUISE</p>
+<section class="panel narrow auth-card access-denied-panel" aria-labelledby="access-denied-title">
+  
   <h1 id="access-denied-title">Accès refusé</h1>
-  <p>Cette console est réservée aux comptes administrateurs. Si tu penses qu’il s’agit d’une erreur, contacte un administrateur.</p>
-  <p><a class="primary" href="{{ path('app_home') }}">Retourner au jeu</a></p>
+  {% if is_granted('ROLE_ADMIN') %}
+    <p>Cette action n’a pas pu être autorisée. Le formulaire peut avoir expiré. Revenez à la console pour recharger la page et réessayer.</p>
+    <p><a class="primary" href="{{ path('app_admin_index') }}">Retour à la console</a></p>
+  {% elseif app.user %}
+    <p>Cette console est réservée aux comptes administrateurs. Si vous pensez qu’il s’agit d’une erreur, contactez un administrateur.</p>
+    <p><a class="primary" href="{{ path('app_home') }}">Retourner au jeu</a></p>
+  {% else %}
+    <p>La console est réservée aux comptes administrateurs. Connectez-vous avec le compte approprié pour vérifier votre accès.</p>
+    <p><a class="primary" href="{{ path('app_login') }}">Se connecter</a></p>
+  {% endif %}
 </section>
 {% endblock %}

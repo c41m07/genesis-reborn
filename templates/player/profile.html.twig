@@ -2,7 +2,7 @@
 {% block title %}Profil · Genesis Reborn{% endblock %}
 {% block body %}
 <section class="panel account-panel">
-    <p class="eyebrow">IDENTITÉ DU COMMANDANT</p><h1>Mon profil</h1>
+    <h1>Mon profil</h1>
     <p>Vos colonies restent rattachées au même compte. Toute modification enregistrée ferme cette session : reconnectez-vous ensuite avec vos identifiants.</p>
     {{ form_start(form) }}
     {% if form.vars.submitted and not form.vars.valid %}<div class="form-error" role="alert"><strong>Profil non enregistré.</strong><p>Vérifiez les champs signalés puis réessayez.</p>{{ form_errors(form) }}</div>{% endif %}
@@ -10,6 +10,5 @@
     <fieldset class="account-section"><legend>Changer de mot de passe</legend><p>Facultatif. Laissez ces deux champs vides pour conserver votre mot de passe.</p>{{ form_errors(form.newPassword) }}<div class="account-grid">{{ form_row(form.newPassword.first) }}{{ form_row(form.newPassword.second) }}</div></fieldset>
     <fieldset class="account-section"><legend>Confirmer la modification</legend>{{ form_row(form.currentPassword, {help: 'Votre mot de passe actuel est nécessaire pour enregistrer le profil.'}) }}</fieldset>
     <button class="primary full">Enregistrer mon profil</button>{{ form_end(form) }}
-    <p class="account-footer"><a class="profile-preferences-link" href="{{ path('app_preferences') }}">Paramètres</a></p>
 </section>
 {% endblock %}

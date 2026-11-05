@@ -9,8 +9,7 @@ export default class extends Controller {
         if (!Number.isFinite(speed) || speed <= 0) return;
 
         for (const input of this.multiplierTargets) {
-            const value = input.dataset.multiplierKey === 'resource_production' ? speed : 1 / speed;
-            input.value = String(Number(value.toFixed(3)));
+            input.value = String(Number(speed.toFixed(3)));
         }
     }
 

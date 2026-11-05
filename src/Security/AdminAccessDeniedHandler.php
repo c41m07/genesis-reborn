@@ -32,7 +32,7 @@ final class AdminAccessDeniedHandler implements AccessDeniedHandlerInterface
         $user = $this->tokenStorage->getToken()?->getUser();
         $this->incidentLogger->log($request, $user instanceof Player ? $user : null);
         if ($request->hasSession()) {
-            $request->getSession()->getFlashBag()->add('error', 'Accès refusé : la console est réservée aux administrateurs. La tentative a été consignée.');
+            $request->getSession()->getFlashBag()->add('error', 'Accès refusé. Vérifiez le compte utilisé ou rechargez le formulaire depuis sa page d’origine. La tentative a été consignée.');
         }
 
         return new RedirectResponse($this->urlGenerator->generate('app_access_denied'));

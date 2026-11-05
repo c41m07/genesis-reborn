@@ -117,3 +117,109 @@ Kévin précise explicitement : **Chasseur = Chasseur standard, Chasseur furtif 
 La matrice de référence exprime ses relations vers cette classe une seule fois, puis le catalogue les développe vers les trois types pour les calculs et les instantanés du simulateur. Pour un même tireur, les anciens coefficients vers ces membres sont consolidés par leur valeur la plus forte : notamment +15 % et +30 % deviennent un seul +30 %, sans addition ni cumul. Les coefficients neutres identiques et les faiblesses identiques restent inchangés.
 
 La Corvette applique ainsi ×1,30 contre les trois membres de Chasseur et garde ×1,15 contre Capital. Les fiches affichent « Chasseur » et détaillent ses membres. Les contres continuent de multiplier les dégâts et les chances de toucher selon la décision précédente.
+
+
+## R14 — combats Alpha, décision du 5 novembre 2026
+
+L’utilisateur autorise l’implémentation complète de R14 sur sa branche de test Alpha après l’étude chiffrée. Les neuf classes du tableau reçoivent les coûts réels par rang, les statistiques et les 22 coefficients de R14 ; les relations hors de ce tableau restent conservées après développement des groupes. Les profils de ressources restent au format JSON malgré leur extension `.yaml`.
+
+Règles adoptées : bouclier épuisé non rechargeable pendant le combat ; explosion critique progressive sur le prochain tir qui touche sous 25 % de structure ; priorité aux cibles déjà entamées, pondérée par signature ; dégâts multipliés par le carré de la fraction structure+bouclier restante au début du tour ; tir rapide appliqué aux secondaires ; avantage de rang de 30 points après le coefficient ; progression HP/bouclier/dégâts de 1/1,5/2,25 pour ces neuf classes seulement. La limite de dix rounds et le verdict de retraite restent conservés.
+
+Le rendement économique de référence compare la valeur adverse détruite à la valeur propre détruite sur toutes les victoires et défaites : objectif moyen ≥ 1,25 à environ moitié budget. Poids M=2, N=4, A=8, H=1 ; dommages survivants, carburant, fret, butin et réparations sont séparés. Les temps, prérequis, mobilité, capacités et assets restent conservés. Aucun coût de réparation ni persistance individuelle des HP n’est introduit.
+
+L’étude a contrôlé 439 configurations distinctes à demi-budget, les rangs, les escortes par remplacement et des compositions mixtes. Furtif, corvette, défenses, arrivées décalées et métajeu restent des contrôles Alpha ; cette adoption n’ajoute pas de rôle implicite à ces classes. Des surcharges de catalogue propres à un univers peuvent toujours remplacer les valeurs de base : elles doivent être examinées sans réinitialisation automatique des données existantes.
+
+### 5 novembre 2026 — Finalité de l’arbre technologique
+
+L’arbre sert à comprendre comment débloquer un bâtiment, une recherche, un vaisseau ou une défense encore inaccessible. Il conserve donc les éléments verrouillés indépendamment de la préférence de masquage du catalogue. Une recherche affiche les correspondances et tous leurs prérequis directs et indirects, même dans les autres catégories ; les correspondances sont mises en évidence. Les liens depuis l’arbre rendent les fiches verrouillées consultables sans enregistrer de changement de préférence. Les règles de déblocage restent inchangées.
+
+
+## Vitesses des flottes — décision du 5 novembre 2026
+
+L’utilisateur demande un Chasseur plus lent que toutes les autres classes et une Sonde rapide. Il valide 1.A / 2.A / 3.B : références au rang basique, sans recherche, départ à 100 %, univers normal ; bonus de rang/recherche et multiplicateurs d’univers conservés ; minimum d’une minute par aller et par retour, sauf flotte exclusivement composée de sondes dans le même système (30 secondes) ; distances géométriques de la carte conservées.
+
+Les références locales depuis la position 4 vers la position 9 sont 1 h en Chasseur et 1 min en Sonde. Sur la grille actuelle, entre positions 4, A:40 → A:1 prend environ 12 h en Chasseur et 3 min en Sonde ; A:40 → A:80 est géométriquement plus court et ne peut pas avoir la même durée avec des vitesses constantes. Les profils, valeurs exactes et contrôles sont consignés dans [SPEED_BALANCE_2026-11-05.md](SPEED_BALANCE_2026-11-05.md). Les coûts, consommations, capacités et caractéristiques de combat sont conservés.
+
+
+### Correction des références de vitesse — plafond sur toutes les distances
+
+L’utilisateur précise que A:1 et A:80 ne sont que des exemples : il faut rechercher les trajets réellement les plus longs. Cette correction remplace la calibration précédente, sans changer les distances géométriques. Sur toutes les positions des cartes du projet et de la grille générée maximale de 100 systèmes : plafond de référence de 12 h par aller/retour en Chasseur et de 3 min en Sonde ; dans un système, plafond de 1 h et de 1 min respectivement. Le trajet local de référence devient donc position 1 → 9, plus long que 4 → 9. Les minimums 60 s / exception sondes locales 30 s et les références sans recherche, rang basique, départ à 100 %, univers normal restent inchangés. Les réglages des autres classes sont rééchelonnés pour conserver leur hiérarchie et leurs rapports de vitesse. Il n’est pas introduit de plafond artificiel dans la formule de durée : réduire la vitesse de départ peut toujours dépasser les durées de référence.
+
+
+### Mobilité par rôle et autonomie — décision du 5 novembre 2026
+
+L’utilisateur remplace explicitement la demande « Chasseur le plus lent » par l’ordre suivant, appliqué dans un système comme entre systèmes, à rang/recherches comparables : Capital → Cuirassé → Colonie → Transport → Bombardier → Destroyer → Croiseur → Frégate → Chasseur lourd → Chasseur → Corvette → Furtif → Intercepteur → Sonde. Le Capital reprend les références maximales de 1 h dans un système et environ 12 h entre systèmes ; les références Sonde et les minimums restent conservés.
+
+Chaque vaisseau doit pouvoir effectuer seul le plus long aller-retour avec son réservoir dédié, sans emprunter de capacité à sa soute. Les consommations actuelles sont identiques pour les 14 classes : 0,5 H par unité de distance normale et 2 H par unité hyperspatiale. Le besoin maximal de référence est donc identique, environ 15 453,51 H aller-retour à 100 %, hors stationnement. Les réservoirs basiques sont portés à 16 000 H, soit environ 546,49 H de marge. Les rangs et la recherche de réservoir restent applicables. Aucun coût de construction, statistique de combat, consommation par distance ni capacité de fret n’est changé par cette décision. Une différenciation future des consommations par rôle reste une décision séparée.
+
+
+### Soutes des vaisseaux — validation du 5 novembre 2026
+
+L’utilisateur valide explicitement les capacités basiques proposées : Sonde 0 ; Intercepteur 100 ; Chasseur 200 ; Bombardier 200 ; Furtif 300 ; Chasseur lourd 500 ; Corvette 1 000 ; Colonie 1 000 ; Frégate 1 500 ; Destroyer 2 500 ; Croiseur 4 000 ; Cuirassé 8 000 ; Capital 15 000 ; Transport 50 000, valeur conservée. Les unités de combat peuvent ramener un petit butin ; le transport conserve une capacité par coût nettement supérieure. La Sonde reste sans fret.
+
+Les facteurs de soute par rang restent 1 / 1,25 / 1,5625, avec arrondi supérieur avant recherche ; la recherche Soute compartimentée s’applique ensuite normalement. Les réservoirs dédiés de carburant, consommations, vitesses, coûts et caractéristiques de combat restent inchangés. Il s’agit des valeurs de base : une surcharge d’univers peut toujours les remplacer. Aucune migration ni modification des missions déjà enregistrées n’est effectuée.
+
+
+## Kit de colonisation par rang — 5 novembre 2026
+
+Le kit de ressources de départ d’une nouvelle colonie suit le multiplicateur du rang du vaisseau colonisateur consommé : Basique ×1, Intermédiaire ×1,25, Supérieur ×1,5625. En flotte mixte, le rang le plus bas disponible reste consommé en priorité et détermine le kit ; les autres vaisseaux ne cumulent aucun bonus. Les quantités fractionnaires sont conservées, dans la limite du stockage. Cette décision concerne la fondation sur planète vierge, pas la conquête.
+
+
+## Bâtiments — cadence A et centrale ×2, décision du 5 novembre 2026
+
+Après l’étude, l’utilisateur valide A pour un remboursement de référence d’environ 2–3 semaines de l’amélioration T1 de mine de métal vers le niveau 80 en univers normal, puis A pour une centrale deux fois plus productive et une progression énergétique T2/T3 utile. Le candidat retenu applique aux producteurs les facteurs de production et consommation 1 / 1,5 / 2,25 ; la centrale basique passe de 0,1 à 0,2 électricité/s/niveau. Les consommations de base et les profils des autres ressources restent conservés.
+
+Les coûts des seuls producteurs suivent ×1,12 jusqu’au niveau 20, ×1,09 jusqu’à 40, ×1,035 jusqu’à 80, ×1,015 jusqu’à 120, puis ×1,01. Les facteurs de durée, les profils de coûts par rang, les capacités de stockage et les effets des bâtiments utilitaires restent distincts. Une usine à stockage plein ne gaspille plus ses consommations ; hydrogène et électricité continuent à fournir les consommateurs locaux. Les résidus numériques ne doivent plus tronquer une absence de production.
+
+L’intégration et ses vérifications sont détaillées dans [BUILDING_BALANCE_2026-11-05.md](BUILDING_BALANCE_2026-11-05.md). Elle conserve les opérations déjà payées, ne réinitialise aucune donnée et n’applique aucune migration. Les surcharges d’univers restent prioritaires. La validation économique globale reste à confirmer en Alpha.
+
+### Messagerie et panneaux d’alliances — 5 novembre 2026
+
+- La recherche de destinataires porte sur les pseudos des joueurs du même univers, à partir de deux caractères. La liste privée ne présente que les joueurs avec lesquels au moins un message a été échangé.
+- Le canal de guilde reste en tête. Les conversations privées comportant des messages non lus précèdent les autres, puis suivent l’ordre du dernier message. Une pastille rouge signale les non-lus dans les conversations et sur l’entrée « Messages » de la navigation. Les indicateurs sont actualisés à réception d’une notification et toutes les quinze secondes.
+- L’ouverture d’une conversation marque les messages affichés comme lus. La lecture du canal de guilde est suivie séparément pour chaque joueur et chaque guilde.
+- La page Alliances s’ouvre sur « Guildes ». Les liens sont ordonnés « Guildes », « Diplomatie », « Relation » et seul le panneau sélectionné est affiché. « Diplomatie » regroupe les relations entre guildes, « Relation » les contrats entre commandants.
+
+### Limites par défaut des univers — 5 novembre 2026
+
+Le nombre maximum de vaisseaux par flotte est fixé par défaut à **1 000 000** et le plafond de planètes à **31**. Ces valeurs s’appliquent aux profils de référence et aux nouveaux univers. Les réglages personnalisés d’un univers restent prioritaires. Le plafond de planètes ne modifie pas les prérequis de recherche de colonisation.
+
+### Capacité d’inventaire — 5 novembre 2026
+
+L’inventaire peut contenir **100 bonus disponibles** par joueur et par univers. Les récompenses supplémentaires restent en attente et rejoignent l’inventaire lorsqu’une place se libère. Cette capacité remplace la limite précédente de 3 emplacements.
+
+### Hub de guilde et relations personnelles — 5 novembre 2026
+
+- L’onglet Guildes rassemble le rôle du joueur, l’équipage, les nombres de guildes alliées et ennemies, un aperçu des trois derniers messages du canal et les accès à la discussion, à la diplomatie, à la galaxie et au classement. L’aperçu ne marque pas les messages comme lus.
+- L’annuaire indique les membres et permet de contacter le commandant. La fondation, le recrutement ouvert et les permissions de commandement conservent leurs règles existantes.
+- L’onglet Relation présente par défaut les contrats et propositions du joueur, ainsi que les alliances et hostilités issues des guildes. Une recherche compacte par pseudo permet de trouver de nouveaux contacts du même univers, à partir de deux caractères, sans remplacer les relations existantes.
+
+### Classements, profil et recherche diplomatique — 5 novembre 2026
+
+- Le profil comporte deux onglets : Profil et Paramètres.
+- Le classement joueur présente, après le rang et le pseudo, les points de bâtiments, de recherche, de flotte puis le total. Le rang repose sur les points totaux ; les planètes ne figurent plus dans ce tableau.
+- Les lignes ennemies sont teintées en rouge, les alliances de guilde en bleu et les alliances personnelles en vert, avec un libellé textuel. Priorité : hostilité de guilde, alliance de guilde (y compris sa propre guilde), puis contrat personnel accepté. La ligne du joueur conserve son identification « Vous ».
+- Le classement des guildes additionne les points des membres actuels par catégorie. Il indique l’effectif, les totaux et la médiane des scores individuels (moyenne des deux valeurs centrales pour un effectif pair). Le rang dépend du total ; les égalités sont départagées par nom, puis identifiant.
+- Diplomatie affiche les relations de guilde existantes et une recherche compacte par nom, limitée à l’univers courant. La recherche permet aussi de rejoindre une guilde. L’annuaire « Guildes de l’univers » est retiré du hub pour éviter le doublon.
+
+### Accès aux paramètres et relations du classement des guildes — 5 novembre 2026
+
+L’accès aux paramètres passe désormais par une roue crantée à côté du pseudo dans l’en-tête. Les onglets Profil/Paramètres sont retirés des deux pages. Les titres intermédiaires des classements et le paragraphe explicatif du classement des guildes sont retirés. Les guildes alliées (dont la guilde du joueur) sont teintées en bleu et les guildes ennemies en rouge ; une légende et des libellés complètent la couleur.
+
+### En-têtes et onglets de rapports — 5 novembre 2026
+
+Les surtitres eyebrow sont retirés de l’interface, en conservant les métadonnées utiles. Les paragraphes d’aide gv2-access-help sont retirés de la galaxie interactive. Les onglets du centre de rapports retrouvent leur style antérieur, contrairement aux autres onglets en pastilles.
+
+
+## Répartition des ressources des vaisseaux — décision du 5 novembre 2026
+
+L’utilisateur valide l’application aux 14 classes des parts en valeur économique : T1 60 % métal / 40 % nano ; T2 45 % métal / 45 % nano / 10 % antimatière ; T3 30 % métal / 50 % nano / 20 % antimatière. Chaque profil de rang conserve exactement sa valeur réelle avant recherche (M×2, N×4, A×8, H×1), avec des quantités entières et des arrondis ajustés ensemble. Le Chasseur conserve les budgets 6 000 / 7 504 / 9 380 et reçoit les quantités de l’exemple approuvé.
+
+Les réductions de recherche continuent d’arrondir chaque ressource : de petits écarts économiques après recherche sont possibles et mesurés, jusqu’à 10 unités par commande dans les devis de référence. Durées, statistiques, contres, mobilité, capacités et autres catalogues restent conservés. Les coûts déjà payés ne sont pas réécrits et les surcharges d’univers restent prioritaires. Voir [SHIP_COSTS_2026-11-05.md](SHIP_COSTS_2026-11-05.md) pour les 42 profils, budgets et vérifications. Les besoins réels de production et les pénuries restent à mesurer en Alpha.
+
+
+## Grille commune et hydrogène industriel T3 — décision du 5 novembre 2026
+
+L’utilisateur valide la progression T1 métal/nano, T2 ajout d’antimatière, T3 ajout d’hydrogène, et demande son application aux bâtiments, chantier spatial, défenses et recherches. Les parts en valeur retenues sont T1 M60/N40 ; T2 M45/N45/A10 ; T3 M30/N45/A20/H5. Les 50 fiches et 150 profils conservent exactement leur valeur économique de base réelle (M×2, N×4, A×8, H×1), avec des quantités entières. Les courbes de niveau et les réductions restent inchangées ; les coûts réels après leurs arrondis peuvent légèrement différer, et sont vérifiés séparément.
+
+L’hydrogène de construction/recherche est une dépense industrielle, distincte du carburant réservé au départ des missions et des consommations des usines. Les coûts enregistrés des commandes déjà payées restent conservés. Les surcharges d’univers sont préservées champ par champ. L’étude et les vérifications de démarrage, progression et conservation sont consignées dans [COMMON_COSTS_2026-11-05.md](COMMON_COSTS_2026-11-05.md). Aucun prix d’asset premium ni réglage d’univers n’est modifié par cette décision.

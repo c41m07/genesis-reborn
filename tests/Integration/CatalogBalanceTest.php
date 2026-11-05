@@ -31,9 +31,9 @@ final class CatalogBalanceTest extends KernelTestCase
         $service=static::getContainer()->get(CatalogBalanceService::class);$catalog=static::getContainer()->get(GameCatalog::class);$turbo=$this->universe();$omega=$this->universe('omega-1');
         $values=$this->values($service,$turbo,'ships','fighter');$values['precision']=88;$values['cost_profiles.basic.metal']=4500;$service->save($this->admin,$turbo->id,'ships','fighter',$values);
         self::assertSame(88.0,$catalog->getForUniverse($turbo,'ships','fighter')['precision']);self::assertSame(4500,$catalog->getForUniverse($turbo,'ships','fighter')['cost_profiles']['basic']['metal']);
-        self::assertSame(70,$catalog->getForUniverse($omega,'ships','fighter')['precision']);self::assertSame(1,$this->em->getRepository(AdminAuditLog::class)->count());
+        self::assertSame(55,$catalog->getForUniverse($omega,'ships','fighter')['precision']);self::assertSame(1,$this->em->getRepository(AdminAuditLog::class)->count());
         static::getContainer()->get(\App\Service\Admin\AdminService::class)->setUniverseSettings($this->admin,$turbo->id,['multipliers'=>array_fill_keys(['building_time','research_time','ship_build_time','resource_production','travel_time'],1.0),'limits'=>['max_planets'=>9,'max_fleet_size'=>100],'features'=>['guilds_enabled'=>true,'planet_conquest'=>true]]);self::assertSame(88.0,$catalog->getForUniverse($turbo,'ships','fighter')['precision']);
-        $service->reset($this->admin,$turbo->id,'ships','fighter');self::assertSame(70,$catalog->getForUniverse($turbo,'ships','fighter')['precision']);self::assertSame(3,$this->em->getRepository(AdminAuditLog::class)->count());
+        $service->reset($this->admin,$turbo->id,'ships','fighter');self::assertSame(55,$catalog->getForUniverse($turbo,'ships','fighter')['precision']);self::assertSame(3,$this->em->getRepository(AdminAuditLog::class)->count());
     }
     public function testTechnologyAndDefenseValuesResolvePerUniverse():void
     {
@@ -70,6 +70,6 @@ final class CatalogBalanceTest extends KernelTestCase
         $data=new RegistrationData();$data->email='builder@example.test';$data->username='Builder';$data->plainPassword='Long-test-password-2026';$player=static::getContainer()->get(RegistrationService::class)->register($data);$universe=$this->universe();static::getContainer()->get(UniverseService::class)->select($player,$universe->id);$planet=$this->em->getRepository(\App\Entity\Planet::class)->findOneBy(['owner'=>$player->currentPlayerUniverse]);
         $plant=new PlanetBuilding();$plant->planet=$planet;$plant->slug='power_plant';$plant->level=2;$this->em->persist($plant);$this->em->flush();$resources=static::getContainer()->get(ResourceService::class);$resources->refreshProduction($planet);$before=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$planet,'resourceType'=>'electricity'])->productionRate;
         $balance=static::getContainer()->get(CatalogBalanceService::class);$values=$this->values($balance,$universe,'buildings','power_plant');$values['production_per_level']=2.5;$planetId=$planet->id;$balance->save($this->admin,$universe->id,'buildings','power_plant',$values);$this->em->clear();$planet=$this->em->find(\App\Entity\Planet::class,$planetId);$after=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$planet,'resourceType'=>'electricity'])->productionRate;
-        self::assertGreaterThan($before,$after);$factor=1.2-(($planet->position-1)*0.05);self::assertEqualsWithDelta(4.8*$factor,$after-$before,.000001);
+        self::assertGreaterThan($before,$after);$factor=1.2-(($planet->position-1)*0.05);self::assertEqualsWithDelta(4.6*$factor,$after-$before,.000001);
     }
 }

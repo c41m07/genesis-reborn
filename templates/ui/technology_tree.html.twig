@@ -1,16 +1,35 @@
-<details class="panel technology-tree" {{ tree_standalone|default(false) ? 'open' : '' }}>
-    <summary>Arbre technologique <span>{{ cards.technologies|length }} recherches</span></summary>
-    <p>Les branches suivent les prérequis de recherche. Les bâtiments requis sont indiqués dans chaque fiche.</p>
-    <div class="technology-graph" data-controller="technology-graph">
+{% set nodeCount = 0 %}{% for nodes in technology_tree %}{% set nodeCount = nodeCount + nodes|length %}{% endfor %}
+<details class="panel technology-tree" data-controller="admin-filter" data-admin-filter-include-ancestors-value="true" {{ tree_standalone|default(false) ? 'open' : '' }}>
+    <summary>Arbre technologique <span>{{ nodeCount }} élément{{ nodeCount > 1 ? 's' : '' }} affiché{{ nodeCount > 1 ? 's' : '' }}</span></summary>
+    <p>Identifiez les prérequis nécessaires pour débloquer un élément, y compris ceux encore verrouillés. Lisez les déblocages de gauche à droite, avec les rangs basique, intermédiaire et supérieur de haut en bas : bâtiments, recherches, vaisseaux et défenses sont reliés à leurs prérequis de déblocage. Les niveaux requis sont détaillés dans chaque fiche.</p>
+    {% if nodeCount == 0 %}
+        <div class="empty-state"><h2>Aucun élément affiché</h2><p>Aucun élément à afficher actuellement.</p></div>
+    {% else %}
+    <div class="catalogue-search" role="search" aria-label="Rechercher dans l’arbre technologique" data-admin-filter-target="tools" hidden>
+        <div><label for="technology-query">Rechercher un élément</label><input id="technology-query" type="search" placeholder="Nom, identifiant ou rang" data-admin-filter-target="query" data-action="input->admin-filter#filter"></div>
+        <div><label for="technology-state">Disponibilité</label><select id="technology-state" data-admin-filter-target="filter" data-filter-key="state" data-action="change->admin-filter#filter"><option value="">Tous les éléments affichés</option><option value="available">Disponibles</option><option value="locked">Verrouillées</option></select></div>
+        <div><label for="technology-kind">Catégorie</label><select id="technology-kind" data-admin-filter-target="filter" data-filter-key="kind" data-action="change->admin-filter#filter"><option value="">Toutes les catégories</option><option value="buildings">Bâtiments</option><option value="technologies">Recherches</option><option value="ships">Vaisseaux · chantier spatial</option><option value="defenses">Défenses</option></select></div>
+        <button type="button" class="secondary" data-admin-filter-target="resetPath" data-action="admin-filter#clear" hidden>Afficher tout l’arbre</button>
+        <button type="button" class="secondary" data-action="admin-filter#clear">Effacer les filtres</button><output data-admin-filter-target="count" aria-live="polite"></output>
+    </div>
+    <div class="technology-legend" aria-label="Légende des cartes">
+        <div><strong>Fond · catégorie</strong><ul>{% for kind,label in {buildings:'Bâtiment',technologies:'Recherche',ships:'Vaisseau',defenses:'Défense'} %}<li><span class="tech-kind-swatch" data-kind="{{ kind }}" aria-hidden="true"></span>{{ label }}</li>{% endfor %}</ul></div>
+        <div><strong>Cadre · rang</strong><ul>{% for tier,label in {basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'} %}<li><span class="tech-tier-swatch" data-tier="{{ tier }}" aria-hidden="true"></span>{{ label }}</li>{% endfor %}</ul></div>
+    </div>
+    <p class="technology-scroll-help" id="technology-scroll-help">Une recherche affiche les résultats et toute leur chaîne de prérequis, même dans les autres catégories. Les résultats sont encadrés en surbrillance. Les prérequis se trouvent à gauche des éléments qu’ils débloquent. Les rangs sont disposés de haut en bas : basique, intermédiaire, supérieur. Cliquez sur une carte pour la déplier et isoler son chemin de prérequis. Utilisez « Afficher tout l’arbre » pour revenir à la vue complète. La zone défile avec les flèches du clavier lorsqu’elle a le focus.</p>
+    <p class="empty-state" data-admin-filter-target="empty" hidden>Aucun élément ne correspond à ces filtres.</p>
+    <div class="technology-graph" data-controller="technology-graph" role="region" tabindex="0" aria-label="Arbre technologique de gauche à droite" aria-describedby="technology-scroll-help">
         <svg class="technology-graph-links" data-technology-graph-target="links" aria-hidden="true"></svg>
         {% for depth,nodes in technology_tree %}
-            <section class="technology-branch-column" aria-label="Branche {{ depth + 1 }}">
-                {% for node in nodes %}
-                    <details id="tech-{{ node.slug }}-{{ node.tier }}" class="tech-node {{ node.available ? 'available' : 'locked' }}" data-technology-graph-target="node" data-node-key="{{ node.key }}" data-parents="{{ node.parents|json_encode|e('html_attr') }}">
-                        <summary>
+            {% for tier,label in {basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'} %}
+            <section class="technology-branch-column" style="grid-column:{{ depth + 1 }};grid-row:{{ loop.index }}" aria-label="{{ label }} · étape {{ depth + 1 }}" data-admin-filter-target="group">
+                <h2 class="technology-lane-heading" data-tier="{{ tier }}">{{ label }} <span>Étape {{ depth + 1 }}</span></h2>
+                {% for node in nodes %}{% if node.tier == tier %}
+                    <details id="tech-{{ node.group == 'technologies' ? '' : node.group ~ '-' }}{{ node.slug }}-{{ node.tier }}" class="tech-node {{ node.available ? 'available' : 'locked' }}" data-technology-graph-target="node" data-node-key="{{ node.key }}" data-tier="{{ node.tier }}" data-parents="{{ node.parents|json_encode|e('html_attr') }}" data-admin-filter-target="row" data-filter-kind="{{ node.group }}" data-filter-state="{{ node.available ? 'available' : 'locked' }}" data-search-text="{{ node.definition.label }} {{ node.slug }} {{ {basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'}[node.tier] }}">
+                        <summary data-action="click->admin-filter#selectPath">
                             <span class="tech-node-tier tier-label--{{ node.tier }}">{{ {basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'}[node.tier] }}</span>
-                            <strong>{{ node.definition.label }}</strong>
-                            <span class="badge">Niveau {{ node.level }}{% if node.definition.max_level is defined %} / {{ node.definition.max_level }}{% endif %}</span>
+                            <span class="tech-node-kind">{{ {buildings: 'Bâtiment', technologies: 'Recherche', ships: 'Vaisseau · chantier spatial', defenses: 'Défense'}[node.group] }}</span><strong>{{ node.definition.label }}</strong>
+                            {% if node.group in ['buildings','technologies'] %}<span class="badge">Niveau {{ node.level }}{% if node.definition.max_level is defined %} / {{ node.definition.max_level }}{% endif %}</span>{% endif %}
                             <small>{{ node.available ? 'Disponible' : 'Verrouillée' }}</small>
                         </summary>
                         <div class="tech-node-details">
@@ -18,17 +37,19 @@
                                 <h3>Prérequis</h3>
                                 <ul>{% for requirement in node.prerequisites %}
                                     <li class="{{ requirement.met ? 'met' : 'missing' }}">
-                                        <a href="{{ path('app_colony',{id:planet.id,section:requirement.group=='technologies'?'technologies':'buildings'}) }}#item-{{ requirement.slug }}-{{ requirement.tier }}">{{ requirement.met ? '✓' : '○' }} {{ requirement.label }} · niveau {{ requirement.level }} requis (actuel : {{ requirement.current }})</a>
+                                        <a href="{{ path('app_colony',{id:planet.id,section:requirement.group,showLockedItems:1}) }}#item-{{ requirement.slug }}-{{ requirement.tier }}">{{ requirement.met ? '✓' : '○' }} {{ requirement.label }}{% if requirement.level is not null %} · niveau {{ requirement.level }} requis (actuel : {{ requirement.current }}){% else %} · prérequis de déblocage{% endif %}</a>
                                     </li>
                                 {% endfor %}</ul>
                             {% else %}
-                                <p>Recherche de départ</p>
+                                <p>Accessible sans prérequis</p>
                             {% endif %}
-                            <a class="tech-node-open" href="{{ path('app_colony',{id:planet.id,section:'technologies'}) }}#item-{{ node.slug }}-{{ node.tier }}">Voir la fiche de recherche →</a>
+                            <a class="tech-node-open" href="{{ path('app_colony',{id:planet.id,section:node.group,showLockedItems:1}) }}#item-{{ node.slug }}-{{ node.tier }}">Voir la fiche →</a>
                         </div>
                     </details>
-                {% endfor %}
+                {% endif %}{% endfor %}
             </section>
+            {% endfor %}
         {% endfor %}
     </div>
+    {% endif %}
 </details>

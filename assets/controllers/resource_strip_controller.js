@@ -2,8 +2,16 @@ import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
     static values = { url: String };
-    connect() { this.timer = setInterval(() => this.refresh(), 10000); }
-    disconnect() { clearInterval(this.timer); this.abort?.abort(); }
+    static targets = ['protection', 'protectionLabel', 'protectionTime'];
+    connect() { this.tickProtection(); this.protectionTimer = setInterval(() => this.tickProtection(), 1000); this.timer = setInterval(() => this.refresh(), 10000); }
+    disconnect() { clearInterval(this.protectionTimer); clearInterval(this.timer); this.abort?.abort(); }
+    tickProtection() {
+        if (!this.hasProtectionTarget) return;
+        const end = Date.parse(this.protectionTarget.dataset.until);
+        const seconds = Number.isFinite(end) ? Math.max(0, Math.ceil((end - Date.now()) / 1000)) : 0;
+        this.protectionLabelTarget.textContent = seconds ? 'Protégé du pillage' : 'Aucune protection temporaire';
+        this.protectionTimeTarget.textContent = seconds ? `(${Math.floor(seconds / 86400)}j ${Math.floor(seconds % 86400 / 3600)}h ${Math.floor(seconds % 3600 / 60)}m ${seconds % 60}s)` : '';
+    }
     async refresh() {
         if (document.hidden || this.loading) return;
         this.loading = true;
@@ -12,6 +20,11 @@ export default class extends Controller {
             const response = await fetch(this.urlValue, { signal: this.abort.signal });
             if (!response.ok) return;
             const resources = await response.json();
+            if (this.hasProtectionTarget && resources._protection) {
+                this.protectionTarget.dataset.until = resources._protection.until ?? '';
+                this.protectionTarget.title = resources._protection.reason ?? 'Aucune protection temporaire';
+                this.tickProtection();
+            }
             for (const element of this.element.querySelectorAll('[data-resource-slug]')) {
                 const resource = resources[element.dataset.resourceSlug];
                 if (resource) element.dispatchEvent(new CustomEvent('resource:update', { detail: resource }));

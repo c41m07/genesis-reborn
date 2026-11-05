@@ -7,11 +7,11 @@ use App\Service\Requirement\RequirementChecker;
 final class ColonyView
 {
     public function __construct(private GameRepository $repo,private GameCatalog $catalog,private RequirementChecker $requirements,private ResourceService $resources,private \App\Service\Queue\QueueService $queueService,private \App\Service\Queue\OperationCalculator $calculator,private CatalogueInsights $insights,private CatalogueDetails $details) {}
-    public function data(PlayerUniverse $m,Planet $planet): array
+    public function data(PlayerUniverse $m,Planet $planet,bool $revealLockedItems=false): array
     {
         $this->queueService->synchronize($m);
         $buildings=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);$tech=$this->repo->levelsByTier(PlayerTechnology::class,['playerUniverse'=>$m]);
-        $universeConfig=$this->catalog->forUniverse($m->universe);$definitions=$universeConfig['catalog'];$cards=[];$queues=[];$showLockedItems=(bool)($m->player->preferences['showLockedItems']??false);
+        $universeConfig=$this->catalog->forUniverse($m->universe);$definitions=$universeConfig['catalog'];$cards=[];$queues=[];$showLockedItems=$revealLockedItems||(bool)($m->player->preferences['showLockedItems']??false);
         foreach(['building','research','shipyard'] as $type) {
             $sum=0;
             foreach($this->repo->queue($planet,$type) as $q) {
@@ -59,7 +59,6 @@ final class ColonyView
         }
         if(!$showLockedItems) foreach($cards as $group=>$items) $cards[$group]=array_values(array_filter($items,static fn(array $card): bool=>$card['failures']===[]||$card['maximum']));
         $technologyTree=$this->insights->tree($buildings,$tech);
-        if(!$showLockedItems)foreach($technologyTree as $tier=>$nodes){$technologyTree[$tier]=array_values(array_filter($nodes,static fn(array $node):bool=>$node['available']));if($technologyTree[$tier]===[])unset($technologyTree[$tier]);}
         $activeFleets=$this->repo->all(Fleet::class,['playerUniverse'=>$m,'status'=>['traveling','returning','attacking','defending']],['arrivalAt'=>'ASC']);
         $combatEvents=[];
         foreach($activeFleets as $activeFleet) { $participant=$this->repo->one(CombatParticipant::class,['fleet'=>$activeFleet]); if($participant && $participant->combatEvent->status==='pending') $combatEvents[$activeFleet->id]=$participant->combatEvent; }

@@ -12,12 +12,12 @@
   "shots_max": 2,
   "build_time_base": 900,
   "costs": {},
-  "speed_system": 75,
-  "speed_galaxy": 800,
+  "speed_system": 192,
+  "speed_galaxy": 1056,
   "fuel_travel_system": 0.5,
   "fuel_travel_galaxy": 2,
   "fuel_orbit": 0.3,
-  "cargo_capacity": 0,
+  "cargo_capacity": 300,
   "unlock_requirements": {
     "technologies": [
       {
@@ -41,9 +41,9 @@
   },
   "provisional": true,
   "note": "Profil de mobilité et de combat différencié, équilibrage validé le 02/11/2026 et à mesurer en Alpha.",
-  "fuel_capacity": 1200,
+  "fuel_capacity": 16000,
   "fuel_capacity_provisional": true,
-  "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 1200 H. Réservoir réservé au carburant, distinct de la soute de fret.",
+  "fuel_capacity_note": "Réservoir dédié de 16 000 H au rang basique, permettant le plus long aller-retour des cartes de référence sans utiliser la soute. Consommation maximale mesurée : environ 15 453,51 H hors stationnement.",
   "shield": 75,
   "tier_unlock_requirements": {
     "intermediate": {
@@ -82,19 +82,22 @@
   "economy_value_budget": 24400,
   "cost_profiles": {
     "basic": {
-      "metal": 10980,
-      "nano": 610,
-      "antimatter": 0
+      "metal": 7320,
+      "nano": 2440,
+      "antimatter": 0,
+      "hydrogen": 0
     },
     "intermediate": {
-      "metal": 9913,
-      "nano": 2288,
-      "antimatter": 191
+      "metal": 6865,
+      "nano": 3432,
+      "antimatter": 381,
+      "hydrogen": 0
     },
     "superior": {
-      "metal": 8579,
-      "nano": 3813,
-      "antimatter": 715
+      "metal": 5720,
+      "nano": 4290,
+      "antimatter": 953,
+      "hydrogen": 1906
     }
   },
   "tier_labels": {

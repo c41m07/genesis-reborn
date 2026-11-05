@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 {% block title %}Patchnotes · Genesis Reborn{% endblock %}
 {% block body %}
-<section class="page-heading"><div><p class="eyebrow">ACTUALITÉS DU JEU</p><h1>Patchnotes</h1><p>Les dernières évolutions de Genesis Reborn.</p></div></section>
-{% if patchNotes is empty %}<section class="panel empty-state"><h2>Aucune patchnote publiée</h2><p>Les nouveautés du jeu apparaîtront ici.</p></section>{% else %}<div class="stack-list">{% for note in patchNotes %}<article class="panel patchnote-card"><header class="section-heading"><div><p class="eyebrow">{{ note.version }} · {{ note.publishedAt|date('d/m/Y') }}</p><h2>{{ note.title }}</h2></div></header><p>{{ note.summary }}</p><details class="patchnote-details"><summary>Lire le détail<span class="visually-hidden"> de {{ note.title }}</span></summary><div class="patchnote-content">{{ note.content|nl2br }}</div></details></article>{% endfor %}</div>{% endif %}
+<section class="page-heading"><div><h1>Patchnotes</h1><p>Les dernières évolutions de Genesis Reborn.</p></div></section>
+{% if patchNotes is empty %}<section class="panel empty-state"><h2>Aucune patchnote publiée</h2><p>Les nouveautés du jeu apparaîtront ici.</p></section>{% else %}<div class="stack-list">{% for note in patchNotes %}<article class="panel patchnote-card"><header class="section-heading"><div><p class="muted">{{ note.version }} · {{ note.publishedAt|date('d/m/Y') }}</p><h2>{{ note.title }}</h2></div></header><p>{{ note.summary }}</p><details class="patchnote-details"><summary>Lire le détail<span class="visually-hidden"> de {{ note.title }}</span></summary><div class="patchnote-content">{{ note.content|nl2br }}</div></details></article>{% endfor %}</div>{% endif %}
 {% endblock %}

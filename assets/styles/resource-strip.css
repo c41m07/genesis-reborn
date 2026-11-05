@@ -47,3 +47,11 @@ body[data-theme="light"] .event-drawer{background:#e8f7f5;border-color:#74b9b2;c
 body[data-theme="light"] .event-drawer summary,body[data-theme="light"] .event-drawer-item strong{color:#174d4b}
 body[data-theme="light"] .event-drawer-item small,body[data-theme="light"] .event-drawer-item p{color:#526d70}
 @media(max-width:740px){.event-drawer-wrap{padding:6px 10px 0}.event-drawer{width:min(100%,420px)}.event-drawer-item{gap:8px}.event-drawer-item time{font-size:10px}}
+
+.resource-strip .resource-protection-duration{display:block;color:var(--green);margin-top:2px}
+body[data-theme="light"] .resource-strip .resource-protection-duration{color:#226344}
+
+.resource-protection-indicator{display:block;margin-top:3px;white-space:normal}
+.resource-protection-indicator small{display:block}
+.player-protection-shield{display:inline-flex;vertical-align:middle;color:#42bd82;margin-left:4px}
+body[data-theme="light"] .player-protection-shield{color:#226344}

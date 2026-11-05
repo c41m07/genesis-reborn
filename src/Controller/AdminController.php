@@ -19,7 +19,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class AdminController extends AbstractController
 {
     #[Route('', name: '_index', methods: ['GET'])]
-    public function index(GameRepository $repo, GameCatalog $catalog, AdminService $admin, AdminOperationsService $operations): Response
+    public function index(Request $request, GameRepository $repo, GameCatalog $catalog, AdminService $admin, AdminOperationsService $operations): Response
     {
         $reports = $repo->all(MessageReport::class, ['status' => 'open'], ['createdAt' => 'DESC']);
         $admin->recordReportViews($this->getUser(), $reports);
@@ -64,6 +64,9 @@ final class AdminController extends AbstractController
             'universes' => $universes,
             'universeConfigs' => $universeConfigs,
             'universeProfiles' => UniverseCreationService::profiles(),
+            'universeCreationDraft' => $request->getSession()->remove('admin_universe_creation_draft') ?? [],
+            'universeScheduleDraft' => $request->getSession()->remove('admin_universe_schedule_draft') ?? [],
+            'universeSettingsDraft' => $request->getSession()->remove('admin_universe_settings_draft') ?? [],
             'reports' => $reports,
             'auditLogs' => $auditLogs,
         ]);
@@ -158,9 +161,21 @@ final class AdminController extends AbstractController
         if (!$this->isCsrfTokenValid('admin_settings_'.$id, $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Formulaire expiré.');
         }
-        try { $admin->setUniverseSettings($this->getUser(), $id, $request->request->all()); }
-        catch (\Exception $error) { $this->addFlash('error', $error->getMessage()); }
-        return $this->redirectToRoute('app_admin_index');
+        $input = $request->request->all();
+        try {
+            $admin->setUniverseSettings($this->getUser(), $id, $input);
+            $request->getSession()->remove('admin_universe_settings_draft');
+            $this->addFlash('success', 'Paramètres de l’univers enregistrés.');
+        } catch (\Exception $error) {
+            $this->addFlash('error', $error->getMessage());
+            $draft = ['universe_id' => $id, 'error' => $error->getMessage(), 'speed_profile' => is_string($input['speed_profile'] ?? null) ? $input['speed_profile'] : 'custom'];
+            foreach (['multipliers' => ['building_time', 'research_time', 'ship_build_time', 'resource_production', 'travel_time'], 'limits' => ['max_planets', 'max_fleet_size'], 'features' => ['guilds_enabled', 'planet_conquest']] as $group => $keys) {
+                $values = is_array($input[$group] ?? null) ? $input[$group] : [];
+                $draft[$group] = array_filter(array_intersect_key($values, array_flip($keys)), 'is_scalar');
+            }
+            $request->getSession()->set('admin_universe_settings_draft', $draft);
+        }
+        return $this->redirectToRoute('app_admin_index', ['_fragment' => 'admin-universe-'.$id]);
     }
 
     #[Route('/universes', name: '_universe_create', methods: ['POST'])]
@@ -170,8 +185,9 @@ final class AdminController extends AbstractController
             throw $this->createAccessDeniedException('Formulaire expiré.');
         }
 
+        $fragment = 'admin-universe-create';
         try {
-            $admin->createUniverse(
+            $universe = $admin->createUniverse(
                 $this->getUser(),
                 (string) $request->request->get('name'),
                 (string) $request->request->get('slug'),
@@ -179,12 +195,20 @@ final class AdminController extends AbstractController
                 (int) $request->request->get('galaxies'),
                 (int) $request->request->get('systems_per_galaxy'),
             );
+            $request->getSession()->remove('admin_universe_creation_draft');
+            $fragment = 'admin-universe-'.$universe->id;
             $this->addFlash('success', 'Univers créé et prêt à accueillir des joueurs.');
         } catch (\DomainException $error) {
             $this->addFlash('error', $error->getMessage());
+            $draft = array_intersect_key(
+                $request->request->all(),
+                array_flip(['name', 'slug', 'profile', 'galaxies', 'systems_per_galaxy']),
+            );
+            $draft['error'] = $error->getMessage();
+            $request->getSession()->set('admin_universe_creation_draft', $draft);
         }
 
-        return $this->redirectToRoute('app_admin_index', ['_fragment' => 'admin-universes']);
+        return $this->redirectToRoute('app_admin_index', ['_fragment' => $fragment]);
     }
 
     #[Route('/universes/{id}/delete', name: '_universe_delete', methods: ['POST'])]
@@ -210,15 +234,22 @@ final class AdminController extends AbstractController
         if (!$this->isCsrfTokenValid('admin_universe_'.$id, $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Formulaire expiré.');
         }
+        $draft = ['universe_id' => $id, 'starts_at' => '', 'ends_at' => ''];
         try {
             $startRaw = trim((string) $request->request->get('starts_at'));
             $endRaw = trim((string) $request->request->get('ends_at'));
+            $draft['starts_at'] = $startRaw;
+            $draft['ends_at'] = $endRaw;
             $startsAt = $startRaw === '' ? null : new \DateTimeImmutable($startRaw, new \DateTimeZone('UTC'));
             $endsAt = $endRaw === '' ? null : new \DateTimeImmutable($endRaw, new \DateTimeZone('UTC'));
             $admin->setUniverseSchedule($this->getUser(), $id, $startsAt, $endsAt);
+            $request->getSession()->remove('admin_universe_schedule_draft');
+            $this->addFlash('success', 'Calendrier de l’univers enregistré.');
         } catch (\Exception $error) {
             $this->addFlash('error', $error->getMessage());
+            $draft['error'] = $error->getMessage();
+            $request->getSession()->set('admin_universe_schedule_draft', $draft);
         }
-        return $this->redirectToRoute('app_admin_index');
+        return $this->redirectToRoute('app_admin_index', ['_fragment' => 'admin-universe-'.$id]);
     }
 }

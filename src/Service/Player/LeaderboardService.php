@@ -7,7 +7,7 @@ use App\Service\Catalog\GameCatalog;
 
 final class LeaderboardService
 {
-    public function __construct(private GameRepository $repo, private GameCatalog $catalog) {}
+    public function __construct(private GameRepository $repo, private GameCatalog $catalog, private PlayerProtection $protection) {}
 
     public function forUniverse(PlayerUniverse $context): array
     {
@@ -70,6 +70,7 @@ final class LeaderboardService
             $row['research_points'] = intdiv($row['research_resources'], 100);
             $row['fleet_points'] = intdiv($row['fleet_resources'], 100);
             $row['total_points'] = $row['building_points'] + $row['research_points'] + $row['fleet_points'];
+            $row['protection'] = $this->protection->status($row['membership'], $row['total_points']);
             $result[] = $row;
         }
 
@@ -101,6 +102,34 @@ final class LeaderboardService
         usort($result, static fn (array $a, array $b): int => $a['ranks']['points'] <=> $b['ranks']['points']);
 
         return $result;
+    }
+
+    /** Additionne les points des membres actuels, sans modifier le calcul individuel. */
+    public function guildsForUniverse(PlayerUniverse $viewer, ?array $playerRows = null): array
+    {
+        $scores = [];
+        foreach ($playerRows ?? $this->forUniverse($viewer) as $row) $scores[$row['membership']->id] = $row;
+        $guilds = $this->repo->all(\App\Entity\Guild::class, ['universe' => $viewer->universe]);
+        $rows = [];
+        foreach ($guilds as $guild) {
+            $row = ['guild' => $guild, 'members' => 0, 'building_points' => 0, 'research_points' => 0, 'fleet_points' => 0, 'total_points' => 0, 'median_points' => 0];
+            $totals = [];
+            foreach ($this->repo->all(\App\Entity\GuildMember::class, ['guild' => $guild]) as $member) {
+                $score = $scores[$member->playerUniverse->id] ?? null;
+                if ($score === null) continue;
+                ++$row['members'];
+                foreach (['building_points', 'research_points', 'fleet_points', 'total_points'] as $key) $row[$key] += $score[$key];
+                $totals[] = $score['total_points'];
+            }
+            sort($totals, SORT_NUMERIC);
+            $count = count($totals);
+            if ($count > 0) $row['median_points'] = $count % 2 ? $totals[intdiv($count, 2)] : ($totals[$count / 2 - 1] + $totals[$count / 2]) / 2;
+            $rows[] = $row;
+        }
+        usort($rows, static fn (array $a, array $b): int => ($b['total_points'] <=> $a['total_points']) ?: strcasecmp($a['guild']->name, $b['guild']->name) ?: ($a['guild']->id <=> $b['guild']->id));
+        foreach ($rows as $index => &$row) $row['rank'] = $index + 1;
+        unset($row);
+        return $rows;
     }
 
     private function cumulativeCost(\App\Entity\Universe $universe,string $group,string $slug,int $level,string $tier='basic'):int

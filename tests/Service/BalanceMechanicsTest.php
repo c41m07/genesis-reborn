@@ -74,9 +74,9 @@ final class BalanceMechanicsTest extends TestCase
     public function testTierCostProfilesScaleTheReferenceBudget(): void
     {
         $catalog=$this->catalog();$fighter=$catalog->get('ships','fighter');$expected=[
-            'basic'=>['metal'=>2700,'nano'=>150,'antimatter'=>0,'hydrogen'=>0],
-            'intermediate'=>['metal'=>2438,'nano'=>563,'antimatter'=>47,'hydrogen'=>0],
-            'superior'=>['metal'=>2110,'nano'=>938,'antimatter'=>176,'hydrogen'=>0],
+            'basic'=>['metal'=>1800,'nano'=>600,'antimatter'=>0,'hydrogen'=>0],
+            'intermediate'=>['metal'=>1688,'nano'=>844,'antimatter'=>94,'hydrogen'=>0],
+            'superior'=>['metal'=>1406,'nano'=>1055,'antimatter'=>235,'hydrogen'=>468],
         ];
         foreach($expected as $tier=>$costs)self::assertSame($costs,$catalog->costs($catalog->withTier($fighter,$tier)));
     }
@@ -86,11 +86,12 @@ final class BalanceMechanicsTest extends TestCase
         $catalog=$this->catalog();self::assertSame(['metal'=>1,'nano'=>0,'antimatter'=>0,'hydrogen'=>0],$catalog->costs(['_tier'=>'intermediate','costs'=>['metal'=>0.1,'energy'=>0]]));
     }
 
-    public function testHigherShipRanksImproveBaseStatsAndIntegerShotCountsRemainProbabilistic(): void
+    public function testHigherShipRanksImproveCombatStatsAndPreserveTheBaseShotRange(): void
     {
         $catalog=$this->catalog();$universe=$this->universe();$intermediate=$catalog->getTierForUniverse($universe,'ships','fighter','intermediate');$superior=$catalog->getTierForUniverse($universe,'ships','fighter','superior');
-        self::assertSame(188,$intermediate['hp']);self::assertSame(63,$intermediate['shield']);self::assertSame(20,$intermediate['signature']);self::assertSame(70,$intermediate['precision']);self::assertSame(76,$intermediate['tracking']);self::assertSame(60,$intermediate['evasion']);self::assertSame([0.25],$intermediate['extra_shot_chances']);
-        self::assertSame(235,$superior['hp']);self::assertSame(79,$superior['shield']);self::assertSame(20,$superior['signature']);self::assertSame(70,$superior['precision']);self::assertSame(76,$superior['tracking']);self::assertSame(60,$superior['evasion']);self::assertSame([0.5625],$superior['extra_shot_chances']);
+        self::assertSame(225,$intermediate['hp']);self::assertSame(75,$intermediate['shield']);self::assertSame(36,$intermediate['base_attack']);self::assertSame(20,$intermediate['signature']);self::assertSame(55,$intermediate['precision']);self::assertSame(75,$intermediate['tracking']);self::assertSame(60,$intermediate['evasion']);
+        self::assertSame(338,$superior['hp']);self::assertSame(113,$superior['shield']);self::assertSame(54,$superior['base_attack']);self::assertSame(20,$superior['signature']);self::assertSame(55,$superior['precision']);self::assertSame(75,$superior['tracking']);self::assertSame(60,$superior['evasion']);
+        foreach([$intermediate,$superior] as $unit){self::assertSame(2,$unit['shots_min']);self::assertSame(3,$unit['shots_max']);self::assertArrayNotHasKey('extra_shot_chances',$unit);}
     }
 
     public function testRanksCompoundAndKeepExtraShotChancePerRank(): void

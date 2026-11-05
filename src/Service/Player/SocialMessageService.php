@@ -102,13 +102,28 @@ final class SocialMessageService
             if ($this->relations->guild($viewer)?->id !== $guild->id) {
                 throw new \DomainException('Vous ne pouvez pas lire ce canal de guilde.');
             }
-            return $this->repo->guildConversation($guild);
+            $conversation = $this->repo->guildConversation($guild);
+            $this->manager->lock($viewer->player);
+            $key = $this->guildReadKey($viewer, $guild);
+            $viewer->player->preferences[$key] = max((int) ($viewer->player->preferences[$key] ?? 0), ...array_merge([0], array_map(static fn (SocialMessage $message): int => $message->id, $conversation)));
+            return $conversation;
         });
     }
 
     public function unreadPrivateCount(PlayerUniverse $viewer): int
     {
         return $this->repo->unreadPrivateMessageCount($viewer);
+    }
+
+    public function unreadGuildCount(PlayerUniverse $viewer): int
+    {
+        $guild = $this->relations->guild($viewer);
+        return $guild ? $this->repo->unreadGuildMessageCount($viewer, $guild, (int) ($viewer->player->preferences[$this->guildReadKey($viewer, $guild)] ?? 0)) : 0;
+    }
+
+    private function guildReadKey(PlayerUniverse $viewer, Guild $guild): string
+    {
+        return 'guild_read_' . $viewer->id . '_' . $guild->id;
     }
 
     private function lockUniverse(PlayerUniverse $membership): void

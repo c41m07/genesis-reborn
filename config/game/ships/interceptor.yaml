@@ -2,9 +2,9 @@
   "slug": "interceptor",
   "label": "Intercepteur atmosphérique",
   "category": "light",
-  "hp": 180,
-  "precision": 75,
-  "tracking": 86.4,
+  "hp": 215,
+  "precision": 30,
+  "tracking": 85,
   "evasion": 75,
   "signature": 18,
   "base_attack": 35,
@@ -12,12 +12,12 @@
   "shots_max": 3,
   "build_time_base": 240,
   "costs": {},
-  "speed_system": 100,
-  "speed_galaxy": 1000,
+  "speed_system": 224,
+  "speed_galaxy": 1320,
   "fuel_travel_system": 0.5,
   "fuel_travel_galaxy": 2,
   "fuel_orbit": 0.3,
-  "cargo_capacity": 0,
+  "cargo_capacity": 100,
   "unlock_requirements": {
     "buildings": [
       {
@@ -35,10 +35,10 @@
     ]
   },
   "provisional": true,
-  "note": "Profil de mobilité et de combat différencié, équilibrage validé le 02/11/2026 et à mesurer en Alpha.",
-  "fuel_capacity": 800,
+  "note": "Équilibrage R14 adopté pour la branche Alpha le 05/11/2026 ; validation en jeu à poursuivre.",
+  "fuel_capacity": 16000,
   "fuel_capacity_provisional": true,
-  "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 800 H. Réservoir réservé au carburant, distinct de la soute de fret.",
+  "fuel_capacity_note": "Réservoir dédié de 16 000 H au rang basique, permettant le plus long aller-retour des cartes de référence sans utiliser la soute. Consommation maximale mesurée : environ 15 453,51 H hors stationnement.",
   "shield": 40,
   "tier_unlock_requirements": {
     "intermediate": {
@@ -74,22 +74,25 @@
       ]
     }
   },
-  "economy_value_budget": 7000,
+  "economy_value_budget": 7352,
   "cost_profiles": {
     "basic": {
-      "metal": 3150,
-      "nano": 175,
-      "antimatter": 0
+      "metal": 2206,
+      "nano": 735,
+      "antimatter": 0,
+      "hydrogen": 0
     },
     "intermediate": {
-      "metal": 2844,
-      "nano": 657,
-      "antimatter": 55
+      "metal": 2069,
+      "nano": 1035,
+      "antimatter": 115,
+      "hydrogen": 0
     },
     "superior": {
-      "metal": 2461,
-      "nano": 1094,
-      "antimatter": 206
+      "metal": 1724,
+      "nano": 1294,
+      "antimatter": 288,
+      "hydrogen": 574
     }
   },
   "tier_labels": {
@@ -102,5 +105,6 @@
     "intermediate": "Intercepteur d’interdiction capable de verrouiller rapidement les bombardiers et chasseurs adverses. Sa vitesse élevée lui permet de contrôler les engagements légers. Armement visible : quatre lance-missiles guidés avec traînées lumineuses plus longues et verrouillage renforcé.",
     "superior": "Intercepteur de supériorité conçu pour dominer les combats rapides et empêcher les bombardiers d’atteindre les grandes unités. Armement visible : batteries de missiles à tête chercheuse autour du cockpit, avec traînées lumineuses multiples."
   },
-  "description": "Vaisseau le plus rapide, spécialisé dans la poursuite et la destruction des unités légères, particulièrement des bombardiers. Il utilise quatre lance-missiles à tête chercheuse intégrés autour du cockpit."
+  "description": "Vaisseau le plus rapide, spécialisé dans la poursuite et la destruction des unités légères, particulièrement des bombardiers. Il utilise quatre lance-missiles à tête chercheuse intégrés autour du cockpit.",
+  "combat_tier_growth": 1.5
 }

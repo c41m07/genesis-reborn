@@ -31,21 +31,24 @@ final class ColonyController extends AbstractController
         return $planet ? $this->redirectToRoute('app_colony',array_filter(['id'=>$planet->id,'section'=>$section==='overview'?null:$section])) : $this->redirectToRoute('app_universes');
     }
     #[Route('/planetes',name:'app_planets',methods:['GET'])]
-    public function planets(): Response
+    public function planets(ResourceService $resources): Response
     {
         $membership=$this->context->membership();
         $planets=$this->repo->planets($membership->universe,$membership);
         $available=array_values(array_filter($this->repo->planets($membership->universe,null,true),static fn(Planet $planet): bool => !$planet->npcPlanet));
-        return $this->render('colony/planets.html.twig',['membership'=>$membership,'planets'=>$planets,'available_planets'=>$available]);
+        $positionModifiers=[];
+        foreach($planets as $planet) $positionModifiers[$planet->id]=$resources->positionProductionModifiers($planet);
+        return $this->render('colony/planets.html.twig',['membership'=>$membership,'planets'=>$planets,'available_planets'=>$available,'position_modifiers'=>$positionModifiers]);
     }
     #[Route('/planetes/{id}',name:'app_colony',methods:['GET'],requirements:['id'=>'\d+'])]
     public function show(int $id,Request $request,ColonyView $view,LeaderboardService $leaderboard,RelationResolver $relations,GameCatalog $catalog): Response
     {
-        $p=$this->owned($id);$m=$this->context->membership();$section=$this->section((string)$request->query->get('section','overview'));$data=$view->data($m,$p);
+        $p=$this->owned($id);$m=$this->context->membership();$section=$this->section((string)$request->query->get('section','overview'));$data=$view->data($m,$p,$request->query->getBoolean('showLockedItems'));
         if($section==='overview') {
-            $rank=null;foreach($leaderboard->forUniverse($m) as $row) if($row['membership']->id===$m->id) {$rank=$row['ranks']['points'];break;}
+            $points=['building_points'=>0,'research_points'=>0,'fleet_points'=>0,'total_points'=>0];
+            $rank=null;foreach($leaderboard->forUniverse($m) as $row) if($row['membership']->id===$m->id) {$rank=$row['ranks']['points'];$points=array_intersect_key($row,$points);break;}
             $features=$catalog->forUniverse($m->universe)['features']??[];
-            $data['empire_rank']=$rank;$data['empire_guild']=$relations->guild($m);$data['guilds_enabled']=(bool)($features['guilds_enabled']??false);
+            $data['empire_points']=$points;$data['empire_rank']=$rank;$data['empire_guild']=$relations->guild($m);$data['guilds_enabled']=(bool)($features['guilds_enabled']??false);
         }
         return $this->render('colony/show.html.twig',$data+['section'=>$section]);
     }
@@ -84,10 +87,12 @@ final class ColonyController extends AbstractController
         return $this->redirectToRoute('app_planets',['_fragment'=>'planet-'.$id]);
     }
     #[Route('/planetes/{id}/ressources',name:'app_resources',methods:['GET'],requirements:['id'=>'\d+'])]
-    public function resources(int $id,ResourceService $resources): JsonResponse
+    public function resources(int $id,ResourceService $resources,LeaderboardService $leaderboard): JsonResponse
     {
         $planet=$this->owned($id);$this->queueService->synchronize($this->context->membership());
-        return $this->json($resources->snapshot($planet),200,['Cache-Control'=>'private, no-store']);
+        $snapshot=$resources->snapshot($planet);
+        foreach($leaderboard->forUniverse($this->context->membership()) as $row) if($row['membership']->id===$planet->owner->id) {$snapshot['_protection']=$row['protection'];break;}
+        return $this->json($snapshot,200,['Cache-Control'=>'private, no-store']);
     }
     #[Route('/planetes/{id}/construire',name:'app_queue_add',methods:['POST'],requirements:['id'=>'\d+'])]
     public function add(int $id,Request $request,QueueService $service): Response
@@ -179,7 +184,7 @@ final class ColonyController extends AbstractController
             throw $this->createNotFoundException('Système inaccessible dans cet univers.');
         }
 
-        $mapStock=[];$mapFleetLimit=max(1,(int)($catalog->forUniverse($m->universe)['limits']['max_fleet_size']??100));
+        $mapStock=[];$mapFleetLimit=max(1,(int)($catalog->forUniverse($m->universe)['limits']['max_fleet_size']??1000000));
         if($mapOrigin) { $idleFleet=$this->repo->one(Fleet::class,['homePlanet'=>$mapOrigin,'playerUniverse'=>$m,'status'=>'idle']);if($idleFleet) foreach($this->repo->all(FleetShip::class,['fleet'=>$idleFleet]) as $ship) $mapStock[$ship->slug]=$ship->quantity; }
 
         $galaxyV2Json = '';
@@ -288,10 +293,10 @@ final class ColonyController extends AbstractController
             'selected_galaxy' => $selectedGalaxy,
             'galaxy_v2_json' => $galaxyV2Json,
             'galaxy_v2_flights' => $flights,
-            'map_can_colonize' => count($ownedPlanets) < (int) ($catalog->forUniverse($m->universe)['limits']['max_planets'] ?? 5) && ($mapStock['colony_ship'] ?? 0) > 0,
+            'map_can_colonize' => count($ownedPlanets) < (int) ($catalog->forUniverse($m->universe)['limits']['max_planets'] ?? 31) && ($mapStock['colony_ship'] ?? 0) > 0,
             'map_can_spy' => ($mapStock['probe'] ?? 0) > 0,
             'map_can_explore' => ($mapStock['probe'] ?? 0) > 0,
-            'map_can_conquer' => (bool) ($catalog->forUniverse($m->universe)['features']['planet_conquest'] ?? false) && count($ownedPlanets) < (int) ($catalog->forUniverse($m->universe)['limits']['max_planets'] ?? 5) && ($mapStock['colony_ship'] ?? 0) > 0,
+            'map_can_conquer' => (bool) ($catalog->forUniverse($m->universe)['features']['planet_conquest'] ?? false) && count($ownedPlanets) < (int) ($catalog->forUniverse($m->universe)['limits']['max_planets'] ?? 31) && ($mapStock['colony_ship'] ?? 0) > 0,
         ];
     }
 }

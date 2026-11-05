@@ -2,22 +2,22 @@
   "slug": "cruiser",
   "label": "Croiseur de combat",
   "category": "heavy",
-  "hp": 2500,
-  "precision": 75,
-  "tracking": 45,
-  "evasion": 25,
+  "hp": 3509,
+  "precision": 100,
+  "tracking": 65,
+  "evasion": 14,
   "signature": 50,
-  "base_attack": 500,
-  "shots_min": 3,
-  "shots_max": 4,
+  "base_attack": 160.0,
+  "shots_min": 7,
+  "shots_max": 9,
   "build_time_base": 57600,
   "costs": {},
-  "speed_system": 38,
-  "speed_galaxy": 380,
+  "speed_system": 128,
+  "speed_galaxy": 634,
   "fuel_travel_system": 0.5,
   "fuel_travel_galaxy": 2,
   "fuel_orbit": 0.3,
-  "cargo_capacity": 0,
+  "cargo_capacity": 4000,
   "unlock_requirements": {
     "buildings": [
       {
@@ -45,11 +45,11 @@
     ]
   },
   "provisional": true,
-  "note": "Profil de mobilité et de combat différencié, équilibrage validé le 02/11/2026 et à mesurer en Alpha.",
-  "fuel_capacity": 6000,
+  "note": "Équilibrage R14 adopté pour la branche Alpha le 05/11/2026 ; validation en jeu à poursuivre.",
+  "fuel_capacity": 16000,
   "fuel_capacity_provisional": true,
-  "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 6000 H. Réservoir réservé au carburant, distinct de la soute de fret.",
-  "shield": 1000,
+  "fuel_capacity_note": "Réservoir dédié de 16 000 H au rang basique, permettant le plus long aller-retour des cartes de référence sans utiliser la soute. Consommation maximale mesurée : environ 15 453,51 H hors stationnement.",
+  "shield": 1404,
   "tier_unlock_requirements": {
     "intermediate": {
       "technologies": [
@@ -84,29 +84,32 @@
       ]
     }
   },
-  "economy_value_budget": 90000,
+  "economy_value_budget": 121730,
   "cost_profiles": {
     "basic": {
-      "metal": 40500,
-      "nano": 2250,
-      "antimatter": 0
+      "metal": 36519,
+      "nano": 12173,
+      "antimatter": 0,
+      "hydrogen": 0
     },
     "intermediate": {
-      "metal": 36563,
-      "nano": 8438,
-      "antimatter": 704
+      "metal": 34242,
+      "nano": 17120,
+      "antimatter": 1902,
+      "hydrogen": 0
     },
     "superior": {
-      "metal": 31641,
-      "nano": 14063,
-      "antimatter": 2637
+      "metal": 28532,
+      "nano": 21399,
+      "antimatter": 4755,
+      "hydrogen": 9510
     }
   },
-  "secondary_attack": 70,
-  "secondary_shots_min": 1,
-  "secondary_shots_max": 1,
+  "secondary_attack": 254,
+  "secondary_shots_min": 2,
+  "secondary_shots_max": 2,
   "secondary_target_category": "light",
-  "secondary_precision_modifier": 30,
+  "secondary_precision_modifier": 50,
   "tier_labels": {
     "basic": "Croiseur de combat",
     "intermediate": "Croiseur d’artillerie",
@@ -117,5 +120,6 @@
     "intermediate": "Croiseur d’artillerie capable de soutenir durablement une ligne de bataille. Il échange de larges bordées contre frégates, croiseurs et destroyers. Armement visible : batteries latérales de canons à plasma renforcées.",
     "superior": "Croiseur de bataille optimisé pour les affrontements prolongés. Il conserve une grande polyvalence de ligne et peut tenir le centre d’une flotte. Armement visible : longues batteries de canons à plasma sur les flancs, capables de tirer des bordées coordonnées."
   },
-  "description": "Vaisseau de ligne polyvalent, équilibré en puissance, résistance et portée. Il forme la colonne vertébrale des flottes et cible frégates, croiseurs et destroyers avec des batteries latérales de canons à plasma."
+  "description": "Vaisseau de ligne polyvalent, équilibré en puissance, résistance et portée. Il forme la colonne vertébrale des flottes et cible frégates, croiseurs et destroyers avec des batteries latérales de canons à plasma.",
+  "combat_tier_growth": 1.5
 }

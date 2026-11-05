@@ -2,15 +2,20 @@
 {% import 'ui/macros.html.twig' as ui %}
 {% block title %}Messages · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="page-heading"><div><p class="eyebrow">{{ membership.universe.name }}</p><h1>Messages</h1><p>Votre centre de communication dans cet univers.</p></div></div>
+<div class="page-heading"><div><h1>Messages</h1><p>Votre centre de communication dans cet univers.</p></div></div>
 <div class="inbox-layout">
     <aside class="panel inbox-sidebar" aria-label="Boîte de réception">
         <header class="inbox-heading"><h2>Messagerie</h2>{% if unreadPrivate %}<span class="badge">{{ unreadPrivate }} non lu{{ unreadPrivate>1?'s':'' }}</span>{% endif %}</header>
-        <nav class="inbox-list" aria-label="Conversations">
-            {% for member in peers %}<a class="inbox-item {{ peer and peer.id==member.id and activeChannel!='guild' ? 'active' : '' }}" href="{{ path('app_messages',{with:member.id}) }}" {% if peer and peer.id==member.id and activeChannel!='guild' %}aria-current="page"{% endif %}><span class="inbox-icon">{{ ui.icon('notifications') }}</span><span class="inbox-item-copy"><strong>{{ member.player.username }}</strong><small>Conversation privée</small></span></a>{% endfor %}
-            {% if guild %}<a class="inbox-item {{ activeChannel=='guild' ? 'active' : '' }}" href="{{ path('app_messages',{channel:'guild'}) }}" {% if activeChannel=='guild' %}aria-current="page"{% endif %}><span class="inbox-icon">{{ ui.icon('diplomacy') }}</span><span class="inbox-item-copy"><strong>Canal de guilde · {{ guild.name }}</strong><small>{{ guildConversation|length }} derniers messages</small></span></a>{% endif %}
-        </nav>
-        {% if peers is empty and not guild %}<div class="inbox-empty"><p>Aucune conversation pour le moment.</p><small>Les commandants de votre univers apparaîtront ici.</small></div>{% endif %}
+        <form class="message-search" method="get" action="{{ path('app_messages') }}" role="search">
+            <label for="message-recipient-search">Rechercher un joueur</label>
+            <div><input id="message-recipient-search" type="search" name="q" value="{{ search }}" minlength="2" maxlength="40" placeholder="Pseudo du commandant"><button class="secondary">Rechercher</button></div>
+        </form>
+        {% if search %}<section class="message-search-results" aria-label="Résultats de recherche">
+            {% if search|length < 2 %}<p>Saisissez au moins deux caractères.</p>{% else %}
+                {% for member in searchResults %}<a class="inbox-item" href="{{ path('app_messages', {with: member.id}) }}"><span class="inbox-item-copy"><strong>{{ member.player.username }}</strong><small>Écrire un message</small></span></a>{% else %}<p>Aucun joueur trouvé dans cet univers.</p>{% endfor %}
+            {% endif %}
+        </section>{% endif %}
+        <div data-message-notifications-target="conversations">{% include 'player/_message_contacts.html.twig' %}</div>
         {% if not guild %}<a class="inbox-guild-hint" href="{{ path('app_diplomacy') }}">Le canal de guilde est accessible après avoir rejoint une guilde.</a>{% endif %}
     </aside>
     <section class="panel message-pane" aria-label="Conversation sélectionnée">

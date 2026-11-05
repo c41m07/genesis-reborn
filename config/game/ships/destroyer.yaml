@@ -3,21 +3,21 @@
   "label": "Destroyer d’escorte",
   "category": "escort",
   "hp": 1600,
-  "precision": 70,
-  "tracking": 56,
-  "evasion": 30,
+  "precision": 100,
+  "tracking": 70,
+  "evasion": 8,
   "signature": 45,
-  "base_attack": 360,
+  "base_attack": 467,
   "shots_min": 2,
   "shots_max": 4,
   "build_time_base": 21600,
   "costs": {},
-  "speed_system": 45,
-  "speed_galaxy": 450,
+  "speed_system": 120,
+  "speed_galaxy": 594,
   "fuel_travel_system": 0.5,
   "fuel_travel_galaxy": 2,
   "fuel_orbit": 0.3,
-  "cargo_capacity": 0,
+  "cargo_capacity": 2500,
   "unlock_requirements": {
     "buildings": [
       {
@@ -40,10 +40,10 @@
     ]
   },
   "provisional": true,
-  "note": "Profil de mobilité et de combat différencié, équilibrage validé le 02/11/2026 et à mesurer en Alpha.",
-  "fuel_capacity": 4500,
+  "note": "Équilibrage R14 adopté pour la branche Alpha le 05/11/2026 ; validation en jeu à poursuivre.",
+  "fuel_capacity": 16000,
   "fuel_capacity_provisional": true,
-  "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 4500 H. Réservoir réservé au carburant, distinct de la soute de fret.",
+  "fuel_capacity_note": "Réservoir dédié de 16 000 H au rang basique, permettant le plus long aller-retour des cartes de référence sans utiliser la soute. Consommation maximale mesurée : environ 15 453,51 H hors stationnement.",
   "shield": 600,
   "tier_unlock_requirements": {
     "intermediate": {
@@ -79,29 +79,32 @@
       ]
     }
   },
-  "economy_value_budget": 60000,
+  "economy_value_budget": 84222,
   "cost_profiles": {
     "basic": {
-      "metal": 27000,
-      "nano": 1500,
-      "antimatter": 0
+      "metal": 25267,
+      "nano": 8422,
+      "antimatter": 0,
+      "hydrogen": 0
     },
     "intermediate": {
-      "metal": 24375,
-      "nano": 5625,
-      "antimatter": 469
+      "metal": 23690,
+      "nano": 11844,
+      "antimatter": 1316,
+      "hydrogen": 0
     },
     "superior": {
-      "metal": 21094,
-      "nano": 9375,
-      "antimatter": 1758
+      "metal": 19741,
+      "nano": 14805,
+      "antimatter": 3290,
+      "hydrogen": 6580
     }
   },
-  "secondary_attack": 45,
-  "secondary_shots_min": 1,
-  "secondary_shots_max": 1,
+  "secondary_attack": 100,
+  "secondary_shots_min": 6,
+  "secondary_shots_max": 6,
   "secondary_target_category": "light",
-  "secondary_precision_modifier": 30,
+  "secondary_precision_modifier": 50,
   "tier_labels": {
     "basic": "Destroyer d’escorte",
     "intermediate": "Destroyer de ligne",
@@ -112,5 +115,6 @@
     "intermediate": "Destroyer de ligne conçu pour concentrer sa puissance sur les coques militaires lourdes. Il excelle contre les croiseurs et menace les cuirassés avec son railgun axial. Armement visible : canon électromagnétique axial renforcé, intégré à la proue.",
     "superior": "Destroyer de rupture optimisé pour perforer les formations de vaisseaux de guerre. Sa puissance vient d’un tir axial précis plutôt que d’une large polyvalence. Armement visible : railgun de proue surdimensionné, tirant des projectiles hypervéloces à longue portée."
   },
-  "description": "Chasseur de vaisseaux de guerre spécialisé contre croiseurs, destroyers et cuirassés. Moins polyvalent qu’un croiseur, il mise sur un canon électromagnétique axial de proue pour frapper à moyenne et longue portée."
+  "description": "Chasseur de vaisseaux de guerre spécialisé contre croiseurs, destroyers et cuirassés. Moins polyvalent qu’un croiseur, il mise sur un canon électromagnétique axial de proue pour frapper à moyenne et longue portée.",
+  "combat_tier_growth": 1.5
 }

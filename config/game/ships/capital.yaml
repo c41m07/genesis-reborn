@@ -2,22 +2,22 @@
   "slug": "capital",
   "label": "Vaisseau capital",
   "category": "capital",
-  "hp": 10000,
-  "precision": 80,
-  "tracking": 26,
-  "evasion": 15,
+  "hp": 6349,
+  "precision": 100,
+  "tracking": 70,
+  "evasion": 8,
   "signature": 70,
-  "base_attack": 1600,
-  "shots_min": 5,
-  "shots_max": 6,
+  "base_attack": 160,
+  "shots_min": 42,
+  "shots_max": 43,
   "build_time_base": 259200,
   "costs": {},
-  "speed_system": 22,
-  "speed_galaxy": 220,
+  "speed_system": 80,
+  "speed_galaxy": 392,
   "fuel_travel_system": 0.5,
   "fuel_travel_galaxy": 2,
   "fuel_orbit": 0.3,
-  "cargo_capacity": 0,
+  "cargo_capacity": 15000,
   "unlock_requirements": {
     "buildings": [
       {
@@ -50,11 +50,11 @@
     ]
   },
   "provisional": true,
-  "note": "Profil de mobilité et de combat différencié, équilibrage validé le 02/11/2026 et à mesurer en Alpha.",
-  "fuel_capacity": 15000,
+  "note": "Équilibrage R14 adopté pour la branche Alpha le 05/11/2026 ; validation en jeu à poursuivre.",
+  "fuel_capacity": 16000,
   "fuel_capacity_provisional": true,
-  "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 15000 H. Réservoir réservé au carburant, distinct de la soute de fret.",
-  "shield": 5000,
+  "fuel_capacity_note": "Réservoir dédié de 16 000 H au rang basique, permettant le plus long aller-retour des cartes de référence sans utiliser la soute. Consommation maximale mesurée : environ 15 453,51 H hors stationnement.",
+  "shield": 3175,
   "tier_unlock_requirements": {
     "intermediate": {
       "technologies": [
@@ -89,29 +89,32 @@
       ]
     }
   },
-  "economy_value_budget": 320000,
+  "economy_value_budget": 377552,
   "cost_profiles": {
     "basic": {
-      "metal": 144000,
-      "nano": 8000,
-      "antimatter": 0
+      "metal": 113266,
+      "nano": 37755,
+      "antimatter": 0,
+      "hydrogen": 0
     },
     "intermediate": {
-      "metal": 130000,
-      "nano": 30000,
-      "antimatter": 2500
+      "metal": 106188,
+      "nano": 53094,
+      "antimatter": 5899,
+      "hydrogen": 0
     },
     "superior": {
-      "metal": 112500,
-      "nano": 50000,
-      "antimatter": 9375
+      "metal": 88490,
+      "nano": 66368,
+      "antimatter": 14748,
+      "hydrogen": 29498
     }
   },
-  "secondary_attack": 160,
-  "secondary_shots_min": 1,
-  "secondary_shots_max": 1,
+  "secondary_attack": 240,
+  "secondary_shots_min": 8,
+  "secondary_shots_max": 8,
   "secondary_target_category": "light",
-  "secondary_precision_modifier": 30,
+  "secondary_precision_modifier": 50,
   "tier_labels": {
     "basic": "Vaisseau capital",
     "intermediate": "Dreadnought",
@@ -122,5 +125,6 @@
     "intermediate": "Dreadnought de commandement capable de concentrer la puissance stratégique d’une flotte. Il menace cuirassés, autres capitaux, stations spatiales et forteresses orbitales. Armement visible : émetteur énergétique Titan renforcé dans la proue, avec charge lumineuse prolongée.",
     "superior": "Vaisseau amiral ultime, centre de commandement et arme stratégique de flotte. Il domine les engagements contre cuirassés, capitaux et grandes structures orbitales. Armement visible : lance énergétique Titan massif, traversant la proue avec un rayon de charge dévastateur."
   },
-  "description": "Vaisseau amiral stratégique, extrêmement résistant, servant de centre de commandement de flotte. Il soutient les alliés et menace cuirassés, capitaux, stations spatiales et forteresses orbitales avec un lance énergétique Titan intégré à la proue."
+  "description": "Vaisseau amiral stratégique, extrêmement résistant, servant de centre de commandement de flotte. Il soutient les alliés et menace cuirassés, capitaux, stations spatiales et forteresses orbitales avec un lance énergétique Titan intégré à la proue.",
+  "combat_tier_growth": 1.5
 }

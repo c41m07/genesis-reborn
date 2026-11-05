@@ -1,5 +1,116 @@
 # Audit UI/UX — Genesis Reborn
 
+## Lot 20 — refus d’accès et retours selon la session
+
+| Page | Problème | Impact | Cause | Amélioration | Critère de réussite | Gravité / fréquence |
+|---|---|---|---|---|---|---|
+| Refus dédié, administrateur | Un CSRF invalide aboutit à « console réservée aux administrateurs » malgré le rôle détenu | Mauvais diagnostic et retour au jeu au lieu de la console | Message générique du handler et carte sans variante de session | Notification neutre; explication du formulaire potentiellement expiré et retour console pour un administrateur | Vrai refus avec configuration inchangée, explication pertinente et retour console réel | Élevée / occasionnelle — reproduit puis corrigé |
+| Refus dédié, anonyme | Retour au jeu renvoyant indirectement à la connexion | Action peu explicite | Même lien pour toutes les sessions | Action Se connecter, sans ouverture de la console | Connexion réellement ouverte; accès admin toujours protégé sans JS | Modérée / occasionnelle — testé |
+| Refus dédié, thème clair | Texte et surtitre à 4,41:1 sur blanc | Contraste sous le seuil 4,5:1 pour ces textes | Token muted du thème clair appliqué à tous les paragraphes de la carte | Token text limité à cette carte en clair | Axe sans violation; calcul de palette à 14,32:1 | Élevée / occasionnelle — corrigé et retesté |
+| En-tête commun admin | Nom accessible ne reprend pas le mot visible Admin | Commande vocale et nom annoncé incohérents | aria-label Console administrateur | Admin : ouvrir la console | Label visible inclus; Axe sur l’en-tête de la colonie et la page de refus admin | Modérée / régulière — corrigé et retesté |
+
+La 403 générique est conservée dans ce lot : explication et retour fonctionnent avant/après entrée en univers, au clavier et sans JS. Aucune règle d’accès, journalisation, réponse de refus ou vérification CSRF modifiée; seule la notification du handler change de texte.
+
+## Lot 19 — paramètres hérités/fermés et nouveau mot de passe
+
+| Page | Problème | Impact | Cause | Amélioration | Critère de réussite | Gravité / fréquence |
+|---|---|---|---|---|---|---|
+| Paramètres d’univers | Des vitesses enregistrées ×100 apparaissent dans des champs limités à ×40 sans explication | Enregistrement bloqué, risque d’ajuster l’équilibrage pour résoudre un problème de formulaire | Univers Turbo importé avec durées à 0,01; édition serveur légitimement limitée à des vitesses 0,01–40 | Avertissement listant les vitesses enregistrées hors plage, relié aux champs concernés, sans normalisation ni changement de bornes | Lecture et refus conservent le JSON; un choix explicite suivi d’une sauvegarde est nécessaire pour modifier la fixture | Élevée / occasionnelle — testé |
+| Paramètres d’univers | Nouvel avertissement occupait seulement une colonne sur desktop | Bloc étroit et inutilement haut | Élément div absent des éléments pleine largeur de la grille | Étendre la règle existante à l’avertissement | Alignement avec les groupes et absence de débordement | Modérée / occasionnelle — finition après revue visuelle |
+
+Univers fermé : interface déjà désactivée et explication présentes, conservées après test clavier/sans JS et refus serveur. Aucun besoin de modifier cette règle. Nouveau mot de passe : gabarit conservé après clôture de sa grille, sans nouvelle retouche visuelle; correction de focus du lot 18 maintenue.
+
+## Lot 18 — formulaires publics au clavier
+
+| Page | Problème | Impact | Cause | Amélioration | Critère de réussite | Gravité / fréquence |
+|---|---|---|---|---|---|---|
+| Inscription, demande et nouveau mot de passe | Après refus serveur, focus sur BODY | Le clavier reprend au début de la page, loin des champs à corriger | Nouveau document sans cible de focus après erreur | Thème partagé : autofocus natif sur le formulaire invalide, nom accessible et focus visible; Tab mène au premier champ | Focus sur Formulaire à corriger après refus, y compris sans JavaScript; aucune prise de focus ajoutée au formulaire initial valide | Modérée / occasionnelle — constatée puis corrigée et testée |
+
+Les règles d’authentification, bornes, protections CSRF, limitations et services ne sont pas modifiés. Les grilles UI publiques connexion/inscription/demande sont closes dans le périmètre décrit dans validation.md; acheminement réel des emails, lecteurs d’écran et autres moteurs de navigateur restent hors de cette validation. Le formulaire de nouveau mot de passe reçoit la correction partagée et un contrôle de non-régression, sans clôture de sa grille complète.
+
+## Lot 17 — paramètres et validation publique
+
+| Page | Problème | Impact | Cause | Amélioration | Critère de réussite | Gravité / fréquence |
+|---|---|---|---|---|---|---|
+| Paramètres d’univers | Choisir ×2 injectait 0,5 dans les quatre vitesses de durée | Le formulaire pouvait enregistrer un ralentissement au lieu de l’accélération choisie | Inversion dans Stimulus suivie de l’inversion légitime du service | Affecter la vitesse à tous les champs; conserver le service | Cinq champs à 2 puis coefficients de durée à 0,5 après sauvegarde temporaire | Élevée / occasionnelle — testé |
+| Paramètres d’univers | Erreur sans restitution et formulaire long peu structuré | Ressaisie et difficulté à vérifier les changements | Redirection générale et champs non regroupés | Brouillon limité aux champs utiles, contexte rouvert, cause et succès explicites, fieldsets responsive | Zéro refusé sans écriture, saisies conservées puis correction réellement sauvegardée | Modérée / occasionnelle — testé |
+| Carte d’univers | Résumé Personnalisé malgré un profil reconnu par les vitesses | Doute sur le réglage effectif | Résumé fondé sur une étiquette différente du calcul du formulaire | Même détection pour résumé et sélection | Résumé ×2 puis Personnalisé après passage manuel à ×3 | Modérée / régulière — testé |
+| Lien de récupération invalide | Retour connexion de 28 px malgré une règle prévue à 44 px | Cible tactile réduite | Sélecteur historique plus spécifique | Surcharge limitée au retour de la carte publique | Tous les liens de la carte atteignent 44 px aux cinq tailles | Modérée / occasionnelle — corrigé, testé |
+
+La 404 reste conservée après contrôle réel. Les deux écrans simples sont VALIDÉS dans leur périmètre décrit dans validation.md. Cela ne valide pas automatiquement les autres consommateurs du layout public ni l’administration entière.
+
+## Lot 16 — création/calendrier d’univers et colonies multiples
+
+| Page | Problème | Impact | Cause | Amélioration | Critère de réussite | Gravité / fréquence |
+|---|---|---|---|---|---|---|
+| Création d’univers | Erreur suivie d’un formulaire réinitialisé | Ressaisie et risque de modifier le profil choisi | Redirection sans brouillon de présentation | Conserver seulement les cinq champs du formulaire en session, afficher la cause près des champs et revenir à l’ancre du formulaire | Code déjà utilisé rejeté; nom/code/profil/taille de carte conservés | Modérée / occasionnelle — testé |
+| Calendrier | Erreur sans dates restituées, succès sans retour explicite et retour hors onglet | Planification difficile à vérifier | POST redirige vers l’index général | Brouillon de dates, volet rouvert après erreur, confirmation de succès et retour à la carte ciblée | Ordre de dates invalide sans modification; correction, relecture UTC et retrait de fermeture fonctionnels | Élevée / occasionnelle — testé |
+| Univers fermé | Calendrier éditable malgré interdiction serveur de rouvrir | Formulaire aboutissant à un refus prévisible | Règle existante non reflétée dans les contrôles | Calendrier désactivé et explication visible; règle serveur intacte | Champs et commande désactivés, aucune réouverture | Modérée / occasionnelle — testé après rechargement réel |
+| Liste d’univers | Aucun filtre Planifié, alerte de configuration fondée sur des overrides vides et date nullable | Recherche incomplète et faux avertissement sur un univers valide | États affichés absents du filtre; configuration brute confondue avec configuration résolue | Ajouter Planifié; vérifier les sections résolues et indiquer l’ouverture immédiate quand elle est prévue par la règle existante | Univers créé ouvert sans fausse alerte, puis retrouvable après planification | Modérée / régulière — testé |
+| Colonies multiples | Noms longs et badge sélectionné coupés | Colonies difficiles à identifier | Titre flex non réductible dans une carte masquant son débordement | Nom sécable, conteneur réductible, badge pouvant passer à la ligne; noms accessibles contextualisés | Deux noms longs lisibles aux cinq tailles, sélection et renommage préservés | Élevée / régulière — testé |
+| Colonies vides | L’en-tête construit un lien avec une planète nulle | L’état vide prévu peut être empêché par une erreur de route | Raccourci Vue générale rendu sans vérifier la sélection | Afficher ce raccourci uniquement si une planète est présente | Page vide en 200 avec action vers la carte, sans lien invalide | Élevée / rare — testé sur fixture temporaire |
+
+Les valeurs de profil, limites, ressources et bonus de position restent produites par les services existants. Le bloc de bonus de production déjà présent dans le fichier partagé est conservé, pas attribué à ce lot.
+
+Résolu au lot 17 : le résumé et le formulaire utilisent la même reconnaissance du profil à partir des multiplicateurs, sans modification des valeurs de jeu.
+
+## Lot 15 — comptes, onglets admin et flottes actives
+
+| Page | Problème | Impact | Cause | Amélioration | Critère de réussite | Gravité / fréquence |
+|---|---|---|---|---|---|---|
+| Onglets admin | Les flèches ne partaient pas de l’onglet focalisé | Navigation clavier imprévisible | Gestionnaire porté par la navigation mais index calculé avec `currentTarget` | Identifier l’onglet depuis la cible de l’événement, ignorer les raccourcis modifiés | Droite/gauche, boucle et Début/Fin cohérents, panneau et ARIA synchronisés | Élevée / régulière — corrigé, testé |
+| Comptes admin | Rôles et suspensions exécutés immédiatement, boutons peu contextualisés | Risque de modifier le mauvais compte | Formulaires directs sans confirmation et noms répétés | Confirmation native pour rôles/suspension, cible dans le nom accessible, style sensible, statut explicite et en-tête de ligne | Annuler conserve l’état; accepter respecte toujours les mêmes permissions et journaux serveur | Élevée / occasionnelle — parcours temporaires réussis |
+| Sécurité / Journal | Message « aucun résultat » pouvait accompagner la vraie liste vide | Retour ambigu après examen | Ligne vide statique plus message du filtre | Message unique adapté à la présence initiale de données; bouton d’examen harmonisé | Liste vide distincte de la recherche vide, export filtré préservé | Modérée / occasionnelle — examen et CSV réussis; journal initial vide non exercé |
+| Flottes actives sur mobile | Cartes dépassaient à droite avec noms de planètes longs | Statut et données coupés | Taille minimale du journal en flex propagée à la colonne de grille | Colonnes bornées, contenu autorisé à rétrécir, noms sécables et trajet en deux colonnes | Pas de débordement du document ni de texte long tronqué aux cinq tailles | Élevée / régulière — corrigé sur Flottes et accueil |
+| Journal de flotte au retour | Le texte conservait l’origine→destination de l’aller | Sens du déplacement mal compris | Copie du trajet indépendante du statut | Inverser uniquement l’affichage lorsque le statut est `returning`, comme le résumé partagé | Destination initiale→colonie d’origine dans le journal de retour | Modérée / régulière — test ajouté |
+
+## Lot 14 — technologie et cartes
+
+| Page | Problème | Impact | Cause | Amélioration | Critère de réussite | Gravité / fréquence |
+|---|---|---|---|---|---|---|
+| Technologie, compte neuf | Grand panneau vide avec « 0 recherches », sans explication | Impression de fonctionnalité absente | Les recherches verrouillées sont déjà masquées par la préférence utilisateur; aucun état vide dédié | Expliquer cette préférence, proposer bâtiments et préférences; ne changer aucune disponibilité | État vide compréhensible, préférence respectée et liens réels | Élevée / début de partie |
+| Technologie, arbre complet | Nombreux nœuds sans recherche; défilement conservé après filtrage | Recherche lente et première fiche partiellement coupée | Diagramme horizontal sans outils de sélection | Réutiliser les filtres existants, compter les nœuds affichés, masquer les branches vides et connecteurs hors filtre, recentrer au début après filtre | Recherche/état vide/remise à zéro et fiche ouverte conservée, liens de prérequis inchangés | Modérée / régulière |
+| Technologie en clair | Titres et statuts très pâles sur fond clair | Lecture difficile | Couleurs fixes du diagramme; corrections présentes dans le fichier source du thème mais absentes du fichier public servi | Texte fondé sur les tokens et états sémantiques locaux à l’arbre, dans le CSS réellement compilé | Libellés, états et liens lisibles en clair et sombre | Élevée / régulière |
+| Carte classique | Dernière colonne étroite empilant les commandes et allongeant fortement les lignes | Comparaison des planètes lente sur mobile | Formulaire rapide en flex-wrap dans une colonne minimale de 170 px | Garantir l’espace du formulaire, conserver le défilement du tableau et expliquer ce défilement | Actions accessibles sans comprimer les données, aucun débordement de page | Modérée / régulière |
+| V2, recherche et vues | Focus supprimé ou laissé sur un élément masqué; résultats déclarés comme listbox sans modèle clavier correspondant | Navigation clavier difficile après sélection | `blur()` et remplacement de contenu sans restitution; rôles ARIA inadaptés | Boutons natifs dans une région nommée, flèches/Entrée/Échap, compte de résultats, focus sur le titre puis restitution à la commande pertinente | Galaxie→système→planète→vue rapprochée→retour réalisable au clavier | Élevée / régulière |
+| V2, panneaux et zoom | Panneaux système/planète superposés et zoom pouvant recouvrir leur fermeture | Commandes masquées ou focus sur un panneau recouvert | Positions absolues identiques ou concurrentes | Un seul panneau de détails visible; zoom repositionné selon la largeur, sans supprimer ses actions | Aucun recouvrement des commandes de zoom et du panneau aux cinq tailles | Élevée / régulière |
+| V2 sans JS | Canvas sans navigation utilisable explicite sur cet écran | Parcours interrompu | Dépendance au contrôleur interactif | Lien visible vers la carte classique et explication sans JS | Retour vers une carte fonctionnelle sans script | Modérée / occasionnelle |
+
+La représentation du canvas, les données révélées, les règles de mission, les disponibilités et les autorisations restent celles de l’existant. Les modifications d’équilibrage présentes simultanément dans le dépôt sont extérieures à ce lot.
+
+## Lot 13 — authentification et erreurs
+
+| Page | Problème | Impact | Cause | Amélioration | Critère de réussite | Gravité / fréquence |
+|---|---|---|---|---|---|---|
+| Inscription | Les champs invalides référencent des identifiants d’erreur absents | L’erreur visible n’est pas correctement reliée au champ pour les aides techniques | Thème personnalisé sans les identifiants `id_errorN` attendus par le `form_row` Symfony installé | Conserver le thème et son alerte, attribuer ces identifiants à chaque erreur; partager avec la récupération | Tous les identifiants référencés par un champ invalide existent et sont visibles | Élevée / occasionnelle |
+| Connexion | Erreur générique visible mais non reliée aux champs; introduction haute sur mobile | Correction moins claire et accès au formulaire repoussé | Aucun `aria-describedby`; titre immersif de 46 px sur petit écran | Relier le message aux deux champs, conserver le texte neutre et compacter uniquement l’introduction mobile | Focus email puis mot de passe au clavier; formulaire sans débordement et message associé | Modérée / fréquente |
+| Récupération | Présentation et annonces d’erreurs différentes de l’inscription; peu de chemins de reprise | Parcours moins cohérent après saisie invalide ou lien expiré | Thèmes de formulaire et liens propres à chaque gabarit | Même thème d’erreurs et carte commune, liens de reprise, explication invalide/expiré/déjà utilisé | Formulaire utilisable sans JS; lien expiré mène vers une nouvelle demande | Modérée / occasionnelle |
+| Accès refusé dédié | Tutoiement isolé | Ton incohérent avec les écrans d’accès | Texte spécifique à la console | Vouvoiement et carte d’accès commune | Message et retour au jeu compréhensibles, statut 403 préservé | Faible / rare |
+| Erreur 403 générique | Message sur les droits même après un CSRF refusé | Mauvaise explication du refus de formulaire | Tous les 403 partagent le même texte | Évoquer autorisation ou session invalide et proposer un retour | Refus réel conservé, aucune permission modifiée | Modérée / rare |
+| Erreur 500 | Mention technique de l’absence d’informations internes | Texte inutile pour reprendre le parcours | Copie orientée implémentation | Incident temporaire et action de reprise | Message sobre sans exception ni détail interne | Faible / rare |
+
+Le layout autonome des erreurs est conservé : il fonctionne sans le shell, les données de jeu ni les assets compilés et possède déjà une action de 44 px, un lien d’évitement et un focus visible. La 404 ne nécessite pas de modification si les contrôles confirment sa lisibilité et sa navigation.
+
+## Lot 12 — événements, retour joueur et choix d’univers
+
+| Page | Problème | Impact | Cause | Amélioration | Critère de réussite | Gravité / fréquence |
+|---|---|---|---|---|---|---|
+| Événements | En-tête dispersé; statut, portée et période peu différenciés | Annonce difficile à parcourir et durée ambiguë | En-tête flex à trois enfants et une seule date selon l’état | En-tête regroupé, libellés français, statut distinct, dates de début/fin avec UTC explicite, description multilignes et état vide avec retour au jeu | Seuls les événements autorisés apparaissent; dates et effet conservés, longs textes sans débordement | Modérée / occasionnelle |
+| Retour joueur | Grande zone grise occupant 55 vh, priorité éloignée du type | Long formulaire et rupture visuelle, constatés à 390 px | Textarea sans thème et hauteur minimale liée au viewport | Fond thématique, hauteur adaptée, groupes réutilisés du compte, type/priorité rapprochés et aides reliées aux champs | Description lisible et formulaire utilisable sur mobile | Modérée / occasionnelle |
+| Retour après erreur | Type et priorité revenaient aux valeurs initiales | Ressaisie et risque d’envoyer un classement différent | Options non liées au POST | Restitution des sélections, résumé unique des erreurs et consigne pour joindre de nouveau la capture | Erreur serveur puis envoi valide sans perte des valeurs | Modérée / occasionnelle |
+| Univers | Règles en petit corps; ouverture dépendante d’un minuteur « Calcul… » et fermeture sans explication | Comparaison moins lisible et état programmé incomplet sans JS | Texte de 10 px et absence de date absolue/fallback | Corps des règles à 12 px, univers actuel identifié, date UTC et fallback sans JS, message d’inaccessibilité | Comparaison conservée, accès existants respectés, date disponible sans script | Modérée / régulière |
+
+La grille des univers et toutes les règles comparées sont conservées : elles sont déjà structurées pour comparer deux univers, comme le montre la capture desktop avant intervention. Aucun service métier ni contrôle d’accès modifié.
+
+## Lot 11 — catalogue administrateur et inventaire joueur
+
+| Page | Problème | Impact | Cause | Amélioration | Critère de réussite | Gravité / fréquence |
+|---|---|---|---|---|---|---|
+| Catalogue admin | Nombreuses entrées à parcourir sans recherche | Accès lent à une valeur précise | Navigation par famille seulement | Recherche nom/identifiant/rang, filtre famille, compteur et remise à zéro; masquage des groupes sans résultat | Une entrée retrouvée sans perdre les valeurs saisies; sauvegarde et restauration inchangées | Modérée / occasionnelle — scénarios isolés réussis |
+| Inventaire | Quantité seule, effet et capacité peu expliqués | Difficile de comprendre la récompense et son attente | Présentation minimale malgré les données disponibles | Progression native, effet issu de la configuration, états vide/plein/attente et explication des règles existantes | Bonus utilisés exclus du compte, attente distincte, effet et capacité exacts | Modérée / régulière — états et responsive testés |
+
+Captures finales revues à 1440 et 390 px pour le catalogue et à 390 px pour l’inventaire. Aucun jeu de captures avant/après disponible pour ce lot. L’inventaire conserve son périmètre de consultation : aucune nouvelle action de consommation n’est ajoutée.
+
 ## Lot 10 — navigation mobile et notes de version
 
 | Page | Problème | Impact | Cause | Amélioration | Critère de réussite | Gravité / fréquence |

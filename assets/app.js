@@ -13,3 +13,7 @@ import './styles/galaxy-v2.css';
 import './styles/resource-strip.css';
 import './styles/catalogue-details.css';
 import './styles/technology-tree.css';
+
+import './styles/empire-overview.css';
+
+import './styles/tabs.css';

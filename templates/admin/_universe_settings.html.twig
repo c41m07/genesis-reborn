@@ -1,0 +1,47 @@
+{% set draftSettings = universeSettingsDraft.universe_id|default(null) == universe.id %}
+{% set speedLabels = {'building_time':'Vitesse bâtiments','research_time':'Vitesse recherches','ship_build_time':'Vitesse vaisseaux','resource_production':'Vitesse production ressources','travel_time':'Vitesse trajets'} %}
+{% set savedSpeeds = {} %}
+{% set outsideSpeeds = [] %}
+{% for key,label in speedLabels %}
+    {% set savedSpeed = key == 'resource_production' ? config.multipliers[key] : 1 / config.multipliers[key] %}
+    {% set savedSpeeds = savedSpeeds|merge({(key): savedSpeed}) %}
+    {% if savedSpeed < 0.01 or savedSpeed > 40 %}{% set outsideSpeeds = outsideSpeeds|merge([label ~ ' ×' ~ savedSpeed]) %}{% endif %}
+{% endfor %}
+{% set showRangeNotice = outsideSpeeds|length > 0 and universe.status != 'closed' %}
+<form class="admin-settings-form" method="post" action="{{ path('app_admin_universe_settings', {id: universe.id}) }}" {% if draftSettings %}aria-describedby="settings-error-{{ universe.id }}"{% endif %}>
+    <input type="hidden" name="_token" value="{{ csrf_token('admin_settings_' ~ universe.id) }}">
+    <h4>Règles de jeu</h4>
+    {% if draftSettings %}<p class="admin-draft-notice" id="settings-error-{{ universe.id }}">{{ universeSettingsDraft.error }} Vos saisies sont conservées; elles ne sont pas encore enregistrées.</p>{% endif %}
+    {% if universe.status == 'closed' %}<p>Cet univers est fermé; ses paramètres ne peuvent plus être modifiés.</p>{% endif %}
+    {% if showRangeNotice %}
+        <div class="admin-range-notice" id="settings-range-{{ universe.id }}">
+            <p><strong>Vitesses enregistrées hors plage</strong></p>
+            <p>{{ outsideSpeeds|join(' · ') }}.</p>
+            <p>Les modifications sont limitées à ×0,01–×40. Les valeurs enregistrées sont conservées, sans ajustement automatique. Pour enregistrer des changements, choisissez explicitement un profil autorisé ou corrigez les vitesses concernées.</p>
+        </div>
+    {% endif %}
+    <fieldset data-controller="admin-speed" {{ universe.status == 'closed' ? 'disabled' : '' }}>
+        <legend>Vitesses de jeu</legend>
+        <div class="admin-settings-wide"><label for="speed-profile-{{ universe.id }}">Profil de vitesse</label><select id="speed-profile-{{ universe.id }}" name="speed_profile" data-admin-speed-target="profile" data-action="change->admin-speed#apply" aria-describedby="speed-help-{{ universe.id }}">
+            {% set formProfile = draftSettings ? universeSettingsDraft.speed_profile : selectedSpeedProfile %}
+            <option value="custom" {{ formProfile == 'custom' ? 'selected' : '' }}>Personnalisé</option>
+            {% for profile in universeProfiles %}<option value="{{ profile.slug }}" data-speed="{{ profile.speed }}" {{ formProfile == profile.slug ? 'selected' : '' }}>{{ profile.name }}</option>{% endfor %}
+        </select></div>
+        <p class="admin-settings-wide" id="speed-help-{{ universe.id }}">Tous les champs affichent une vitesse ×N. Une vitesse ×2 double la production et divise les durées par deux. Modifier une valeur passe en personnalisé.</p>
+        {% if universe.status != 'closed' %}<noscript class="admin-settings-wide"><p>Sans JavaScript, le profil ne remplit pas les champs : renseignez les cinq vitesses avant d’enregistrer.</p></noscript>{% endif %}
+        {% for key,label in speedLabels %}
+            <div><label for="{{ key }}-{{ universe.id }}">{{ label }} (×)</label><input id="{{ key }}-{{ universe.id }}" type="number" name="multipliers[{{ key }}]" data-admin-speed-target="multiplier" data-multiplier-key="{{ key }}" data-action="input->admin-speed#markCustom" min="0.01" max="40" step="0.001" value="{{ draftSettings and universeSettingsDraft.multipliers[key] is defined ? universeSettingsDraft.multipliers[key] : (key == 'resource_production' ? savedSpeeds[key] : savedSpeeds[key]|round(3)) }}" {% if showRangeNotice and (savedSpeeds[key] < 0.01 or savedSpeeds[key] > 40) %}aria-describedby="settings-range-{{ universe.id }}"{% endif %}required></div>
+        {% endfor %}
+    </fieldset>
+    <fieldset {{ universe.status == 'closed' ? 'disabled' : '' }}><legend>Limites de l’empire</legend>
+        <div><label for="planets-{{ universe.id }}">Colonies maximum</label><input id="planets-{{ universe.id }}" type="number" name="limits[max_planets]" min="1" max="50" value="{{ draftSettings and universeSettingsDraft.limits.max_planets is defined ? universeSettingsDraft.limits.max_planets : config.limits.max_planets }}" required></div>
+        <div><label for="fleet-{{ universe.id }}">Vaisseaux maximum par flotte</label><input id="fleet-{{ universe.id }}" type="number" name="limits[max_fleet_size]" min="1" max="1000000" value="{{ draftSettings and universeSettingsDraft.limits.max_fleet_size is defined ? universeSettingsDraft.limits.max_fleet_size : config.limits.max_fleet_size }}" required></div>
+    </fieldset>
+    <fieldset {{ universe.status == 'closed' ? 'disabled' : '' }}><legend>Fonctionnalités</legend>
+        {% for key,label in {'guilds_enabled':'Guildes autorisées','planet_conquest':'Conquête de planètes PNJ autorisée'} %}
+            {% set enabled = draftSettings and universeSettingsDraft.features[key] is defined ? universeSettingsDraft.features[key] : config.features[key] %}
+            <input type="hidden" name="features[{{ key }}]" value="0"><label class="admin-feature-toggle" for="feature-{{ key }}-{{ universe.id }}"><input id="feature-{{ key }}-{{ universe.id }}" type="checkbox" name="features[{{ key }}]" value="1" {{ enabled ? 'checked' : '' }}>{{ label }}</label>
+        {% endfor %}
+    </fieldset>
+    <button class="primary" {{ universe.status == 'closed' ? 'disabled' : '' }}>Enregistrer les règles</button>
+</form>

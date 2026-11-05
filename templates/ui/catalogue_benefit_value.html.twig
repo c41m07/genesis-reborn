@@ -4,5 +4,5 @@
     {{- signedDelta > 0 ? '+' : (signedDelta < 0 ? '−' : '') -}}
     {{- (signedDelta|abs)|number_format(2, ',', ' ')|trim('0', 'right')|trim(',', 'right') -}}
 {%- else -%}
-    {{- benefit.value|number_format(0, ',', ' ') -}}
+    {{- benefit.value|number_format(benefit.decimals|default(0), ',', ' ') -}}
 {%- endif %} {{ benefit.unit }}

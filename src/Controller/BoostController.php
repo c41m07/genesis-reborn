@@ -25,6 +25,7 @@ final class BoostController extends AbstractController
             'boosts' => $grants->inventory($membership),
             'pending_boost_count' => $grants->pendingCount($membership),
             'inventory_capacity' => $grants->inventoryCapacity(),
+            'duration_reduction_percent' => $grants->durationReductionRatio() * 100,
         ]);
     }
 

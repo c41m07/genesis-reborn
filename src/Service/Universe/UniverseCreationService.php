@@ -62,7 +62,7 @@ final class UniverseCreationService
                 'resource_production' => $speed,
                 'travel_time' => 1 / $speed,
             ],
-            'limits' => ['max_planets' => 5, 'max_fleet_size' => 100],
+            'limits' => ['max_planets' => 31, 'max_fleet_size' => 1000000],
             'catalog_overrides' => [],
         ];
 

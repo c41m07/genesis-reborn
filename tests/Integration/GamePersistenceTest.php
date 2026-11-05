@@ -184,25 +184,36 @@ final class GamePersistenceTest extends KernelTestCase
         $sourceBeforeLanding=self::getContainer()->get(ResourceService::class)->snapshot($origin)['hydrogen']['stock'];$returnHydrogen=max(0.0,($fleet->cargo['hydrogen']??0)-$fleet->reservedFuel);$this->land($fleet,$service);self::assertSame('completed',$fleet->status);
         self::assertEqualsWithDelta($sourceBeforeLanding+$returnHydrogen,$resource($origin,'hydrogen')->currentStock,.000001);
     }
-    public function testFuelTankCannotTransportFreightWithoutCargoShip(): void
+    public function testDedicatedFuelTankDoesNotProvideFreightCapacity(): void
     {
-        $p=$this->player();$origin=$this->join($p);$this->ships($origin,['fighter'=>1]);$m=$p->currentPlayerUniverse;
+        $p=$this->player();$origin=$this->join($p);$this->ships($origin,['probe'=>1]);$m=$p->currentPlayerUniverse;
         $target=$this->em->getRepository(Planet::class)->findOneBy(['solarSystem'=>$origin->solarSystem,'owner'=>null]);$target->owner=$m;$this->em->flush();
         $this->expectException(\DomainException::class);
-        self::getContainer()->get(\App\Service\Fleet\FleetService::class)->quote($m,$origin,'transport',$target->id,['fighter'=>1],1,['metal'=>1]);
+        self::getContainer()->get(\App\Service\Fleet\FleetService::class)->quote($m,$origin,'transport',$target->id,['probe'=>1],1,['metal'=>1]);
     }
-    public function testSoloColonyShipCanColonizeKnownPlanet(): void
+    public static function colonyShipKits(): array
     {
-        $p=$this->player();$origin=$this->join($p);$this->ships($origin,['colony_ship'=>1]);$m=$p->currentPlayerUniverse;$colonial_expansion=new PlayerTechnology();$colonial_expansion->playerUniverse=$m;$colonial_expansion->slug='colonial_expansion';$colonial_expansion->level=1;$this->em->persist($colonial_expansion);$this->em->flush();
+        return [
+            'basic'=>[['basic'=>1],1.0,'basic'],
+            'intermediate'=>[['intermediate'=>1],1.25,'intermediate'],
+            'superior'=>[['superior'=>1],1.5625,'superior'],
+            'mixed'=>[['basic'=>1,'superior'=>1],1.0,'basic'],
+        ];
+    }
+    #[\PHPUnit\Framework\Attributes\DataProvider('colonyShipKits')]
+    public function testSoloColonyShipCanColonizeKnownPlanet(array $ranks,float $factor,string $consumedTier): void
+    {
+        $p=$this->player();$origin=$this->join($p);$idle=$this->ships($origin,[]);foreach($ranks as $tier=>$quantity){$ship=new FleetShip();$ship->fleet=$idle;$ship->slug='colony_ship';$ship->tier=$tier;$ship->quantity=$quantity;$this->em->persist($ship);}$m=$p->currentPlayerUniverse;$colonial_expansion=new PlayerTechnology();$colonial_expansion->playerUniverse=$m;$colonial_expansion->slug='colonial_expansion';$colonial_expansion->level=1;$this->em->persist($colonial_expansion);$this->em->flush();
         $target=$this->em->getRepository(Planet::class)->findOneBy(['solarSystem'=>$origin->solarSystem,'owner'=>null]);$target->npcPlanet=false;
         $service=self::getContainer()->get(\App\Service\Fleet\FleetService::class);
-        $service->send($m,$origin,'colonize',$target->id,['colony_ship'=>1],1,[],str_repeat('a',32));
+        $service->send($m,$origin,'colonize',$target->id,['colony_ship'=>$ranks],1,[],str_repeat('a',32));
         $fleet=$this->em->getRepository(\App\Entity\Fleet::class)->findOneBy(['status'=>'traveling']);$this->land($fleet,$service);
         self::assertSame($m->id,$target->owner->id);
         $kit=self::getContainer()->get(\App\Service\Catalog\GameCatalog::class)->rules()['colony_initial_stock'];
-        foreach($this->em->getRepository(PlanetResource::class)->findBy(['planet'=>$target]) as $resource) self::assertEquals($kit[$resource->resourceType],$resource->currentStock);
+        foreach($this->em->getRepository(PlanetResource::class)->findBy(['planet'=>$target]) as $resource) self::assertEquals($kit[$resource->resourceType]*$factor,$resource->currentStock);
+        if(isset($ranks['superior']) && $consumedTier!=='superior') self::assertSame(1,$this->em->getRepository(FleetShip::class)->findOneBy(['fleet'=>$fleet,'slug'=>'colony_ship','tier'=>'superior'])->quantity);
         self::assertSame(5,$this->em->getRepository(PlanetResource::class)->count(['planet'=>$target]));
-        self::assertSame(0,$this->em->getRepository(\App\Entity\FleetShip::class)->findOneBy(['fleet'=>$fleet,'slug'=>'colony_ship'])->quantity);
+        self::assertSame(0,$this->em->getRepository(\App\Entity\FleetShip::class)->findOneBy(['fleet'=>$fleet,'slug'=>'colony_ship','tier'=>$consumedTier])->quantity);
     }
 
     private function clock(): \Symfony\Component\Clock\MockClock
@@ -341,7 +352,10 @@ final class GamePersistenceTest extends KernelTestCase
 
         $messages = self::getContainer()->get(\App\Service\Player\SocialMessageService::class);
         $messages->sendGuild($member->currentPlayerUniverse, 'Message réservé aux membres');
+        self::assertSame(1, $messages->unreadGuildCount($leader->currentPlayerUniverse));
+        self::assertSame(0, $messages->unreadGuildCount($member->currentPlayerUniverse));
         $thread = $messages->guildConversation($leader->currentPlayerUniverse, $guild);
+        self::assertSame(0, $messages->unreadGuildCount($leader->currentPlayerUniverse));
         self::assertCount(1, $thread);
         self::assertSame($member->currentPlayerUniverse->id, $thread[0]->sender->id);
         self::assertNotEmpty($this->em->getRepository(\App\Entity\Notification::class)->findBy(['recipient' => $leader->currentPlayerUniverse]));
@@ -495,11 +509,11 @@ final class GamePersistenceTest extends KernelTestCase
         $this->em->flush();
 
         $catalog = self::getContainer()->get(GameCatalog::class);
-        $buildingCost = array_sum($catalog->costs($catalog->get('buildings', 'mine_metal'), 1))
-            + array_sum($catalog->costs($catalog->get('buildings', 'mine_metal'), 2));
-        $researchCost = array_sum($catalog->costs($catalog->get('technologies', 'weapon_calibration'), 1));
-        $fleetCost = array_sum($catalog->costs($catalog->get('ships', 'fighter'), 1, 3))
-            + array_sum($catalog->costs($catalog->get('defenses', 'ground_turret_anti_light'), 1, 2));
+        $buildingCost = array_sum($catalog->costs($catalog->get('buildings', 'mine_metal'), 1, 1, 'buildings'))
+            + array_sum($catalog->costs($catalog->get('buildings', 'mine_metal'), 2, 1, 'buildings'));
+        $researchCost = array_sum($catalog->costs($catalog->get('technologies', 'weapon_calibration'), 1, 1, 'technologies'));
+        $fleetCost = array_sum($catalog->costs($catalog->get('ships', 'fighter'), 1, 3, 'ships'))
+            + array_sum($catalog->costs($catalog->get('defenses', 'ground_turret_anti_light'), 1, 2, 'defenses'));
         $leaderboard = self::getContainer()->get(LeaderboardService::class);
         $rows = $leaderboard->forUniverse($player->currentPlayerUniverse);
         $own = array_values(array_filter($rows, static fn (array $row): bool => $row['membership']->id === $player->currentPlayerUniverse->id))[0];
@@ -524,6 +538,63 @@ final class GamePersistenceTest extends KernelTestCase
         $q=self::getContainer()->get(QueueService::class);$q->add($a->currentPlayerUniverse,$planet,'buildings','power_plant',1,str_repeat('a',32));$clock->sleep(60);$q->synchronize($a->currentPlayerUniverse);
         self::assertGreaterThan($before,$resources->snapshot($planet)['electricity']['rate']);
     }
+    public function testShellColonyLimitFollowsResearchAndUniverseCap(): void
+    {
+        $player = $this->player('ColonyCounter');
+        $planet = $this->join($player, 'omega-1');
+        $shell = self::getContainer()->get(\App\Service\Colony\GameShell::class);
+        self::assertSame(1, $shell->get($player, $planet)['colonyLimit']);
+        $technology = new PlayerTechnology();
+        $technology->playerUniverse = $player->currentPlayerUniverse;
+        $technology->slug = 'colonial_expansion';
+        $technology->level = 2;
+        $this->em->persist($technology);
+        $this->em->flush();
+        self::assertSame(3, $shell->get($player, $planet)['colonyLimit']);
+        $player->currentPlayerUniverse->universe->gameSettings['limits']['max_planets'] = 2;
+        $this->em->flush();
+        self::assertSame(2, $shell->get($player, $planet)['colonyLimit']);
+    }
+
+    public function testGuildLeaderboardAggregatesMembersAndComputesMedian(): void
+    {
+        $viewer = null;
+        $rows = [];
+        foreach (['Alpha' => [10, 40, 90], 'Beta' => [7, 10]] as $name => $totals) {
+            $guild = new \App\Entity\Guild();
+            $guild->name = $name;
+            foreach ($totals as $index => $total) {
+                $player = $this->player('GuildScore' . $name . $index);
+                $this->join($player, 'omega-1');
+                $membership = $player->currentPlayerUniverse;
+                $viewer ??= $membership;
+                if ($index === 0) {
+                    $guild->leader = $membership;
+                    $guild->universe = $membership->universe;
+                    $this->em->persist($guild);
+                }
+                $member = new \App\Entity\GuildMember();
+                $member->guild = $guild;
+                $member->playerUniverse = $membership;
+                $this->em->persist($member);
+                $rows[] = ['membership' => $membership, 'building_points' => $total - 3, 'research_points' => 1, 'fleet_points' => 2, 'total_points' => $total];
+            }
+        }
+        $this->em->flush();
+        $standings = self::getContainer()->get(LeaderboardService::class)->guildsForUniverse($viewer, $rows);
+        self::assertCount(2, $standings);
+        self::assertSame('Alpha', $standings[0]['guild']->name);
+        self::assertSame(1, $standings[0]['rank']);
+        self::assertSame(3, $standings[0]['members']);
+        self::assertSame(131, $standings[0]['building_points']);
+        self::assertSame(3, $standings[0]['research_points']);
+        self::assertSame(6, $standings[0]['fleet_points']);
+        self::assertSame(140, $standings[0]['total_points']);
+        self::assertEquals(40, $standings[0]['median_points']);
+        self::assertSame(17, $standings[1]['total_points']);
+        self::assertEquals(8.5, $standings[1]['median_points']);
+    }
+
     public function testProfileUpdateHashesPasswordAndPreservesMembership(): void
     {
         $a=$this->player();$this->join($a);$membership=$a->currentPlayerUniverse->id;$data=new \App\Validator\DTO\ProfileData();$data->email='new@example.test';$data->username='Nouveau Commandant';$data->currentPassword='A-test-password-2026';$data->newPassword='New-test-password-2026';
@@ -546,10 +617,14 @@ final class GamePersistenceTest extends KernelTestCase
     }
     public function testConcurrentSpendingCannotOverdrawResourceStock(): void
     {
-        $p=$this->player();$planet=$this->join($p);$metal=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$planet,'resourceType'=>'metal']);$metal->currentStock=1500;$metal->productionRate=0;$this->em->flush();
+        $p=$this->player();$planet=$this->join($p);$universe=$p->currentPlayerUniverse->universe;
+        $catalog=self::getContainer()->get(GameCatalog::class);$price=$catalog->costs($catalog->getTierForUniverse($universe,'buildings','mine_metal','basic'),1,1,'buildings')['metal'];
+        $available=$price+intdiv($price,2);$expectedRemaining=$available-$price;
+        $universe->gameSettings['multipliers']['resource_production']=.01;
+        $metal=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$planet,'resourceType'=>'metal']);$metal->currentStock=$available;$metal->productionRate=0;$this->em->flush();
         $codes=$this->concurrentProcesses($p,$planet,[str_repeat('a',32),str_repeat('b',32)]);sort($codes);self::assertSame([0,10],$codes);
         self::assertSame(1,(int)$this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM queue_item'));
-        $remaining=(float)$this->em->getConnection()->fetchOne('SELECT current_stock FROM planet_resource WHERE id=?',[$metal->id]);self::assertGreaterThanOrEqual(700,$remaining);self::assertLessThan(701,$remaining);
+        $remaining=(float)$this->em->getConnection()->fetchOne('SELECT current_stock FROM planet_resource WHERE id=?',[$metal->id]);self::assertGreaterThanOrEqual($expectedRemaining,$remaining);self::assertLessThan($expectedRemaining+1,$remaining);
     }
 
     public function testCancellationRefundsPaidCostsAndDependentsExactlyOnce():void
@@ -557,12 +632,13 @@ final class GamePersistenceTest extends KernelTestCase
         $this->clock();$p=$this->player();$planet=$this->join($p,'omega-1');$m=$p->currentPlayerUniverse;$q=self::getContainer()->get(QueueService::class);
         $q->add($m,$planet,'buildings','mine_metal',1,str_repeat('a',32));$q->add($m,$planet,'buildings','mine_metal',1,str_repeat('b',32));
         $items=$this->em->getRepository(QueueItem::class)->findBy([],['id'=>'ASC']);$id=$items[0]->id;
-        self::assertSame(['metal'=>800,'nano'=>0,'antimatter'=>0,'hydrogen'=>0],$items[0]->paidCosts);
-        $metal=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$planet,'resourceType'=>'metal']);$before=$metal->currentStock;
-        // Changing tomorrow's prices must not change yesterday's paid costs.
-        $catalog=self::getContainer()->get(\App\Service\Catalog\GameCatalog::class);$field=new \ReflectionProperty($catalog,'data');$data=$field->getValue($catalog);$data['buildings']['mine_metal']['costs_base']['metal']=99999;$field->setValue($catalog,$data);
-        $q->cancel($m,$id,str_repeat('c',32));$expected=$before+(800+1440)*.25;self::assertEqualsWithDelta($expected,$metal->currentStock,.000001);
-        $q->cancel($m,$id,str_repeat('d',32));self::assertEqualsWithDelta($expected,$metal->currentStock,.000001);self::assertSame(0,$this->em->getRepository(QueueItem::class)->count());
+        self::assertSame(['metal'=>480,'nano'=>160,'antimatter'=>0,'hydrogen'=>0],$items[0]->paidCosts);
+        $paid=['metal'=>0,'nano'=>0,'antimatter'=>0,'hydrogen'=>0];foreach($items as $item)foreach($item->paidCosts as $resource=>$amount)$paid[$resource]+=$amount;
+        $resources=[];$before=[];foreach($this->em->getRepository(PlanetResource::class)->findBy(['planet'=>$planet]) as $resource){$resources[$resource->resourceType]=$resource;$before[$resource->resourceType]=$resource->currentStock;}
+        // Modifier les nouveaux prix ne doit pas changer les coûts déjà payés.
+        $catalog=self::getContainer()->get(GameCatalog::class);$field=new \ReflectionProperty($catalog,'data');$data=$field->getValue($catalog);$data['buildings']['mine_metal']['cost_profiles']['basic']['metal']=99999;$field->setValue($catalog,$data);
+        $q->cancel($m,$id,str_repeat('c',32));foreach($paid as $resource=>$amount)self::assertEqualsWithDelta($before[$resource]+$amount*.25,$resources[$resource]->currentStock,.000001,$resource);
+        $q->cancel($m,$id,str_repeat('d',32));foreach($paid as $resource=>$amount)self::assertEqualsWithDelta($before[$resource]+$amount*.25,$resources[$resource]->currentStock,.000001,$resource);self::assertSame(0,$this->em->getRepository(QueueItem::class)->count());
     }
     public function testCancellationRefundRespectsStorageCapacity():void
     {
@@ -625,6 +701,21 @@ final class GamePersistenceTest extends KernelTestCase
         $unlocks=$insights->unlocks('technologies','engineering_foundations',2);self::assertContains('vector_propulsion',array_column($unlocks,'slug'));
         $tree=$insights->tree(['lab'=>1],['engineering_foundations'=>2]);$nodes=array_merge(...array_values($tree));$propulsion=array_values(array_filter($nodes,fn($n)=>$n['definition']['slug']==='vector_propulsion'))[0];self::assertTrue($propulsion['available']);
         $tree=$insights->tree([],['engineering_foundations'=>2]);$nodes=array_merge(...array_values($tree));$propulsion=array_values(array_filter($nodes,fn($n)=>$n['definition']['slug']==='vector_propulsion'))[0];self::assertFalse($propulsion['available']);
+    }
+
+    public function testTechnologyTreeIncludesEveryCategoryAndOrdersAllPrerequisites():void
+    {
+        $insights=self::getContainer()->get(\App\Service\Colony\CatalogueInsights::class);
+        $tree=$insights->tree([],[]);$nodes=array_merge(...array_values($tree));
+        $byKey=array_column($nodes,null,'key');
+        self::assertEqualsCanonicalizing(['buildings','technologies','ships','defenses'],array_values(array_unique(array_column($nodes,'group'))));
+        self::assertContains('buildings:lab-basic',$byKey['technologies:vector_propulsion-basic']['parents']);
+        self::assertContains('buildings:shipyard-basic',$byKey['ships:cruiser-basic']['parents']);
+        self::assertNotContains('buildings:shipyard-basic',$byKey['ships:fighter-basic']['parents']);
+        foreach($byKey as $node)foreach($node['parents'] as $parent){
+            self::assertArrayHasKey($parent,$byKey);
+            self::assertLessThan($node['depth'],$byKey[$parent]['depth']);
+        }
     }
 
     public function testSpyMissionConsumesAllProbesAndKeepsReportPrivate(): void

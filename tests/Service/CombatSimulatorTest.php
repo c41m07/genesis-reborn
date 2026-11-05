@@ -98,7 +98,7 @@ final class CombatSimulatorTest extends TestCase
         }
     }
 
-    public function testShieldsAbsorbDamageAndRechargeBetweenRounds(): void
+    public function testDepletedShieldsStayDownDuringCombatAndRestoreAfterwards(): void
     {
         $attacker = $this->unit('fighter', 100, 30);
         $target = $this->unit('cruiser', 100, 0);
@@ -127,7 +127,7 @@ final class CombatSimulatorTest extends TestCase
         ));
         self::assertSame(20.0, $shots[0]['shield_damage']);
         self::assertSame(10.0, $shots[0]['structure_damage']);
-        self::assertSame(1.0, $shots[1]['shield_damage']);
+        self::assertSame(0.0, $shots[1]['shield_damage']);
         $cruiser = array_values(array_filter($result['survivors'], static fn (array $unit): bool => $unit['slug'] === 'cruiser'))[0];
         self::assertSame(20.0, $cruiser['shield']);
     }
@@ -140,6 +140,94 @@ final class CombatSimulatorTest extends TestCase
         self::assertCount(2,$shots);self::assertFalse($shots[0]['extra_shot']);self::assertTrue($shots[1]['extra_shot']);
     }
 
+    public function testPartiallyDamagedShieldsStillRechargeFivePercentOfTheirMaximum(): void
+    {
+        $participants = $this->participants();
+        $participants[0]['units'] = [$this->unit('fighter', 100, 5)];
+        $target = $this->unit('cruiser', 100, 0);
+        $target['shield'] = 20;
+        $participants[1]['units'] = [$target];
+        $checked = false;
+        for ($seed = 0; $seed < 20; ++$seed) {
+            $result = (new CombatSimulator())->simulate($participants, [], [], 2, $seed, null, 5, false);
+            $first = $result['rounds'][0]['shots'][0];
+            $second = $result['rounds'][1]['shots'][0];
+            if (!$first['hit'] || !$second['hit']) continue;
+            self::assertSame(15.0, $first['target_shield']);
+            self::assertSame(11.0, $second['target_shield']);
+            self::assertSame(12.0, array_values(array_filter($result['survivors'], static fn(array $unit): bool => $unit['slug'] === 'cruiser'))[0]['shield']);
+            $checked = true;
+            break;
+        }
+        self::assertTrue($checked);
+    }
+
+    public function testCriticalExplosionOnlyStartsOnTheNextSuccessfulHitAndIsProgressive(): void
+    {
+        foreach ([75=>0.0, 80=>0.2, 90=>0.6, 99=>0.96] as $damage => $expectedRate) {
+            $participants = $this->participants();
+            $participants[0]['units'] = [$this->unit('fighter', 1000, $damage, 2)];
+            $participants[1]['units'] = [$this->unit('cruiser', 100, 0)];
+            $critical = 0;
+            $eligible = 0;
+            for ($seed = 0; $seed < 512; ++$seed) {
+                $result = (new CombatSimulator())->simulate($participants, [], [], 1, $seed);
+                [$first, $second] = $result['rounds'][0]['shots'];
+                if ($first['hit']) {
+                    self::assertFalse($first['destroyed']);
+                    self::assertSame((float)(100-$damage), $first['target_hp']);
+                    if (!$second['hit']) {
+                        self::assertFalse($second['destroyed']);
+                        self::assertSame($first['target_hp'], $second['target_hp']);
+                    }
+                }
+                if (!$first['hit'] || !$second['hit']) continue;
+                ++$eligible;
+                if ($second['destroyed'] && $second['damage'] === 0.0) ++$critical;
+            }
+            self::assertGreaterThan(400, $eligible);
+            self::assertEqualsWithDelta($expectedRate, $critical/$eligible, 0.07, "Structure restante : ".(100-$damage).'%');
+        }
+    }
+
+    public function testDamagedTargetsArePrioritizedAcrossDifferentShooters(): void
+    {
+        $participants = $this->participants();
+        $attacker = $this->unit('fighter', 1000, 30);
+        $attacker['quantity'] = 3;
+        $target = $this->unit('cruiser', 100, 0);
+        $target['quantity'] = 2;
+        $participants[0]['units'] = [$attacker];
+        $participants[1]['units'] = [$target];
+        for ($seed = 0; $seed < 32; ++$seed) {
+            $result = (new CombatSimulator())->simulate($participants, [], [], 1, $seed);
+            $hits = array_values(array_filter($result['rounds'][0]['shots'], static fn(array $shot): bool => $shot['hit']));
+            self::assertGreaterThanOrEqual(2, count($hits));
+            self::assertCount(1, array_unique(array_column($hits, 'target')));
+        }
+    }
+
+    public function testLosingHalfOfTotalDurabilityReducesVolleyPowerToOneQuarter(): void
+    {
+        $participants = $this->participants();
+        $participants[0]['units'] = [$this->unit('fighter', 1000, 100)];
+        $target = $this->unit('cruiser', 100, 40, 2);
+        $target['shield'] = 100;
+        $participants[1]['units'] = [$target];
+        $checked = false;
+        for ($seed = 0; $seed < 100; ++$seed) {
+            $result = (new CombatSimulator())->simulate($participants, [], [], 1, $seed);
+            $shots = $result['rounds'][0]['shots'];
+            if ($shots[0]['hit'] && $shots[0]['shield_damage'] === 100.0 && $shots[1]['hit'] && $shots[2]['hit']) {
+                self::assertSame(10.0, $shots[1]['damage']);
+                self::assertSame(10.0, $shots[2]['damage']);
+                $checked = true;
+                break;
+            }
+        }
+        self::assertTrue($checked);
+    }
+
     public function testInvalidUnitStatisticsAreRejected(): void
     {
         $participants = $this->participants();
@@ -149,7 +237,7 @@ final class CombatSimulatorTest extends TestCase
     }
     public function testTierAdvantageChangesHitChanceWithoutMultiplyingBaseStats():void
     {
-        $simulator=new CombatSimulator();$base=['precision'=>70,'tracking'=>76,'evasion'=>60,'signature'=>20];$expected=[[75,65,55],[85,75,65],[95,85,75]];$tiers=['basic','intermediate','superior'];
+        $simulator=new CombatSimulator();$base=['precision'=>70,'tracking'=>76,'evasion'=>60,'signature'=>20];$expected=[[71,41,15],[95,71,41],[95,95,71]];$tiers=['basic','intermediate','superior'];
         foreach($tiers as $i=>$attackerTier)foreach($tiers as $j=>$targetTier)self::assertSame((float)$expected[$i][$j],$simulator->hitChance($base+['tier'=>$attackerTier],$base+['tier'=>$targetTier]));
     }
 

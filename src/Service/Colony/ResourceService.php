@@ -45,6 +45,15 @@ final class ResourceService
         return (int)($levels[$tier]??0);
     }
 
+    public function positionProductionModifiers(Planet $planet): array
+    {
+        $modifiers=[];
+        foreach($this->catalog->rules()['resources'] as $slug=>$label) {
+            $modifiers[]=['label'=>$label,'percent'=>round(($this->positionFactor($planet,$slug)-1)*100,2)];
+        }
+        return $modifiers;
+    }
+
     private function positionFactor(Planet $planet,string $slug): float
     {
         $factors=$this->catalog->rules()['position_production_factors']??[];
@@ -64,7 +73,7 @@ final class ResourceService
         $factories=[];
         $eventMultiplier=$this->events->productionMultiplier($planet->solarSystem->galaxy->universe,$at);
         foreach($base as $slug=>$rate)$base[$slug]*=$eventMultiplier;
-        foreach($universe['catalog']['buildings'] as $building){$resource=$building['production_resource']??null;if(!is_string($resource))continue;$ranked=$levels[$building['slug']]??0;$weighted=0.0;foreach(GameCatalog::TIERS as $tier)$weighted+=$this->tierLevel($ranked,$tier)*$this->catalog->tierFactor($tier);if($weighted<=0)continue;$per=(float)($building['production_per_level']??$rules['mine_production_per_level']??0);$rate=$weighted*$per*$this->positionFactor($planet,$resource)*$mult*$eventMultiplier;$electricity=$resource==='electricity'?0.0:$weighted*(float)($building['electricity_use_per_level']??$rules['factory_electricity_use_per_level']??0)*$this->positionFactor($planet,$resource)*$mult;$hydrogen=$resource==='antimatter'?$rate*(float)($building['hydrogen_per_output']??$rules['antimatter_hydrogen_per_unit']??8):0.0;$factories[]=['slug'=>$building['slug'],'resource'=>$resource,'rate'=>$rate,'electricity'=>$electricity,'hydrogen'=>$hydrogen];}
+        foreach($universe['catalog']['buildings'] as $building){$resource=$building['production_resource']??null;if(!is_string($resource))continue;$ranked=$levels[$building['slug']]??0;$weighted=0.0;foreach(GameCatalog::TIERS as $tier)$weighted+=$this->tierLevel($ranked,$tier)*$this->catalog->productionTierFactor($tier);if($weighted<=0)continue;$per=(float)($building['production_per_level']??$rules['mine_production_per_level']??0);$rate=$weighted*$per*$this->positionFactor($planet,$resource)*$mult*$eventMultiplier;$electricity=$resource==='electricity'?0.0:$weighted*(float)($building['electricity_use_per_level']??$rules['factory_electricity_use_per_level']??0)*$this->positionFactor($planet,$resource)*$mult;$hydrogen=$resource==='antimatter'?$rate*(float)($building['hydrogen_per_output']??$rules['antimatter_hydrogen_per_unit']??8):0.0;$factories[]=['slug'=>$building['slug'],'resource'=>$resource,'rate'=>$rate,'electricity'=>$electricity,'hydrogen'=>$hydrogen];}
         return ['base'=>$base,'factories'=>$factories];
     }
 

@@ -1,7 +1,7 @@
 {% extends 'admin/layout.html.twig' %}
 {% block title %}Événements · Console d’administration{% endblock %}
 {% block body %}
-<section class="page-heading"><p class="eyebrow">COMMUNICATION ET GAMEPLAY</p><h1>Événements</h1><p>Planifiez des événements globaux ou associés à un univers.</p></section>
+<section class="page-heading"><h1>Événements</h1><p>Planifiez des événements globaux ou associés à un univers.</p></section>
 <section class="panel"><h2>Créer un événement</h2><form method="post" class="form-grid admin-event-form"><input type="hidden" name="_token" value="{{ csrf_token('game_event_create') }}">
 <label>Nom<input name="name" maxlength="120" required value="{{ draft.name }}"></label><label>Type<select name="type">{% for type in types %}<option value="{{ type }}" {{ draft.type==type?'selected':'' }}>{{ type|replace({'_':' '})|capitalize }}</option>{% endfor %}</select></label>
 <label>Description<textarea name="description">{{ draft.description }}</textarea></label><label>Statut<select name="status">{% for status in statuses %}<option value="{{ status }}" {{ draft.status==status?'selected':'' }}>{{ status|capitalize }}</option>{% endfor %}</select></label>

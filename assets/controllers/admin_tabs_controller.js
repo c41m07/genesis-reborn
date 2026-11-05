@@ -6,9 +6,7 @@ export default class extends Controller {
     connect() {
         this.element.dataset.tabsReady = 'true';
         const requestedPanel = window.location.hash.slice(1);
-        const panelId = this.panelTargets.some((panel) => panel.id === requestedPanel)
-            ? requestedPanel
-            : this.panelTargets[0]?.id;
+        const panelId = this.panelForAnchor(requestedPanel)?.id ?? this.panelTargets[0]?.id;
 
         if (panelId) this.activate(panelId, false);
     }
@@ -18,14 +16,20 @@ export default class extends Controller {
     }
 
     sync() {
-        const panelId = window.location.hash.slice(1);
-        if (this.panelTargets.some((panel) => panel.id === panelId)) {
-            this.activate(panelId, false);
+        const panel = this.panelForAnchor(window.location.hash.slice(1));
+        if (panel) {
+            this.activate(panel.id, false);
         }
     }
 
+    panelForAnchor(id) {
+        const anchor = document.getElementById(id);
+        return this.panelTargets.find((panel) => panel.id === id || (anchor && panel.contains(anchor)));
+    }
+
     onKeydown(event) {
-        const currentIndex = this.tabTargets.indexOf(event.currentTarget);
+        const currentIndex = this.tabTargets.indexOf(event.target.closest('[role="tab"]'));
+        if (currentIndex < 0 || event.altKey || event.ctrlKey || event.metaKey) return;
         let nextIndex = currentIndex;
 
         if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % this.tabTargets.length;

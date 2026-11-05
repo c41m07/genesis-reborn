@@ -2,11 +2,12 @@
 namespace App\Service\Colony;
 use App\Entity\Planet;
 use App\Service\Catalog\GameCatalog;
+use App\Service\Combat\TechnologyEffectCalculator;
 use App\Service\Requirement\RequirementChecker;
 
 final class CatalogueInsights
 {
-    public function __construct(private GameCatalog $catalog,private ResourceService $resources,private RequirementChecker $requirements) {}
+    public function __construct(private GameCatalog $catalog,private ResourceService $resources,private RequirementChecker $requirements,private TechnologyEffectCalculator $technologyEffects) {}
     public function benefits(array $d,string $group,int $target,Planet $planet,array $levels,array $tech):array
     {
         $tier=(string)($d['_tier']??'basic');$factor=GameCatalog::tierFactor($tier);$slug=$d['slug'];
@@ -18,7 +19,24 @@ final class CatalogueInsights
             if($slug==='fortress'){$effect=$d['effect']??[];$maxLevel=max(1,(int)($d['max_level']??25));$afterRanks=$levels[$slug]??[];$afterRanks[$tier]=$target;$cap=(float)($effect['max_bonus']??25);return [['label'=>'Structure supplémentaire des défenses','before'=>GameCatalog::diminishingBonus($levels[$slug]??[],$cap,$maxLevel),'after'=>GameCatalog::diminishingBonus($afterRanks,$cap,$maxLevel),'unit'=>'%']];}
         }
         if($group==='technologies')return $this->technologyBenefits($d,$target,$tech,$planet);
-        if($group==='ships'){$shipBenefits=[['label'=>'Vitesse dans le système','value'=>$d['speed_system']??0,'unit'=>''],['label'=>'Vitesse entre systèmes','value'=>$d['speed_galaxy']??0,'unit'=>''],['label'=>'Tirs principaux par round','text'=>(float)($d['base_attack']??0)>0?(($d['shots_min']??0).'–'.($d['shots_max']??0)):'Aucun'],['label'=>'Attaque','value'=>$d['base_attack']??0,'unit'=>''],['label'=>'Structure','value'=>$d['hp'],'unit'=>''],['label'=>'Bouclier maximal','value'=>$d['shield']??0,'unit'=>''],['label'=>'Précision de tir','value'=>($d['precision']??0),'unit'=>'%'],['label'=>'Suivi de cible','value'=>($d['tracking']??0),'unit'=>'%'],['label'=>'Capacité d’esquive','value'=>($d['evasion']??0),'unit'=>'%'],['label'=>'Signature · faible = moins ciblé','value'=>($d['signature']??0),'unit'=>''],['label'=>'Capacité de soute','value'=>($d['cargo_capacity']??0),'unit'=>'unités'],['label'=>'Réservoir d’hydrogène','value'=>($d['fuel_capacity']??0),'unit'=>'unités']];if(isset($d['secondary_attack']))$shipBenefits[]=['label'=>'Tir secondaire anti-léger','value'=>$d['secondary_attack'],'unit'=>''];return $shipBenefits;}
+        if($group==='ships')$d=$this->technologyEffects->applyToShips([$d],$tech,$planet->solarSystem->galaxy->universe)[0];
+        if($group==='ships'){$shipBenefits=[['label'=>'Vitesse dans le système','value'=>$d['speed_system']??0,'unit'=>''],['label'=>'Vitesse entre systèmes','value'=>$d['speed_galaxy']??0,'unit'=>''],['label'=>'Tirs principaux par round','text'=>(float)($d['base_attack']??0)>0?(($d['shots_min']??0).'–'.($d['shots_max']??0)):'Aucun'],['label'=>'Attaque','value'=>$d['base_attack']??0,'unit'=>''],['label'=>'Structure','value'=>$d['hp'],'unit'=>''],['label'=>'Bouclier maximal','value'=>$d['shield']??0,'unit'=>''],['label'=>'Précision de tir','value'=>($d['precision']??0),'unit'=>'%'],['label'=>'Suivi de cible','value'=>($d['tracking']??0),'unit'=>'%'],['label'=>'Capacité d’esquive','value'=>($d['evasion']??0),'unit'=>'%'],['label'=>'Signature · faible = moins ciblé','value'=>($d['signature']??0),'unit'=>''],['label'=>'Capacité de soute','value'=>($d['cargo_capacity']??0),'unit'=>'unités'],['label'=>'Réservoir d’hydrogène','value'=>($d['fuel_capacity']??0),'unit'=>'unités']];if(isset($d['secondary_attack']))$shipBenefits[]=['label'=>'Tir secondaire anti-léger','value'=>$d['secondary_attack'],'unit'=>''];
+            array_unshift($shipBenefits,['text'=>'Vos recherches sont incluses · valeurs maximales avant combat.']);
+            if((float)($d['base_attack']??0)>0){
+                $chance=1.0;
+                foreach($d['extra_shot_chances']??[] as $extraChance)$chance*=1.0-(float)$extraChance;
+                $shipBenefits[]=['label'=>'Chance de tir supplémentaire par tir de base','value'=>(1.0-$chance)*100,'unit'=>'%'];
+            }
+            if(isset($d['secondary_attack'])){
+                $shipBenefits[]=['label'=>'Tirs secondaires par round','text'=>($d['secondary_shots_min']??0).'–'.($d['secondary_shots_max']??0)];
+                $shipBenefits[]=['label'=>'Correction de précision secondaire','value'=>$d['secondary_precision_modifier']??0,'unit'=>'points'];
+            }
+            foreach($shipBenefits as &$benefit){
+                if(isset($benefit['value']))$benefit['decimals']=(float)$benefit['value']===floor((float)$benefit['value'])?0:2;
+            }
+            unset($benefit);
+            return $shipBenefits;
+        }
         if($group==='defenses')return [...(isset($d['countered_class_label'])?[['text'=>'Bonus contre : '.$d['countered_class_label'].' ('.implode(', ',$d['countered_ship_labels']??[]).') · dégâts et chance de toucher ×1,30']]:[]),['label'=>'Attaque','value'=>$d['base_attack']??0,'unit'=>''],['label'=>'Structure','value'=>$d['hp'],'unit'=>''],['label'=>'Bouclier maximal','value'=>$d['shield']??0,'unit'=>'']];
         return [];
     }
@@ -59,18 +77,28 @@ final class CatalogueInsights
     }
     public function tree(array $levels,array $tech):array
     {
-        $definitions=$this->catalog->all('technologies');$nodes=[];$depths=[];$visiting=[];
-        foreach(GameCatalog::TIERS as $tier)foreach($definitions as $slug=>$base){
-            $key=$slug.'-'.$tier;$definition=$this->catalog->withTier($base,$tier);$requirements=$this->requirements->forTier($definition,$tier,1);
-            if(!array_filter($requirements['buildings']??[],static fn($r)=>$r['slug']==='lab'))$requirements['buildings'][]=['slug'=>'lab','level'=>1,'tier'=>'basic'];
+        $nodes=[];$depths=[];$visiting=[];
+        foreach(['buildings','technologies','ships','defenses'] as $kind)
+        foreach(GameCatalog::TIERS as $tier)foreach($this->catalog->all($kind) as $slug=>$base){
+            $key=$kind.':'.$slug.'-'.$tier;$definition=$this->catalog->withTier($base,$tier);$requirements=$this->requirements->forTier($definition,$tier,1);
+            if($kind==='technologies'&&!array_filter($requirements['buildings']??[],static fn($r)=>$r['slug']==='lab'))$requirements['buildings'][]=['slug'=>'lab','level'=>1,'tier'=>'basic'];
+            if($kind==='ships'&&$slug!=='fighter')$requirements['buildings'][]=['slug'=>'shipyard','level'=>1,'tier'=>'basic'];
             $prerequisites=[];$parents=[];
             foreach(['buildings'=>$levels,'technologies'=>$tech] as $group=>$owned)foreach($requirements[$group]??[] as $requirement){
                 $requiredTier=$requirement['tier']??'basic';$have=(int)($owned[$requirement['slug']][$requiredTier]??(is_numeric($owned[$requirement['slug']]??null)?$owned[$requirement['slug']]:0));
                 $requiredDefinition=$this->catalog->withTier($this->catalog->get($group,$requirement['slug']),$requiredTier);
                 $prerequisites[]=['group'=>$group,'slug'=>$requirement['slug'],'tier'=>$requiredTier,'label'=>$requiredDefinition['label'],'level'=>$requirement['level'],'current'=>$have,'met'=>$have>=(int)$requirement['level']];
-                if($group==='technologies')$parents[]=$requirement['slug'].'-'.$requiredTier;
+                $parents[]=$group.':'.$requirement['slug'].'-'.$requiredTier;
             }
-            $nodes[$key]=['key'=>$key,'definition'=>$definition,'tier'=>$tier,'slug'=>$slug,'level'=>(int)($tech[$slug][$tier]??0),'prerequisites'=>$prerequisites,'parents'=>array_values(array_unique($parents)),'available'=>!$this->requirements->check($requirements,$levels,$tech)];
+            foreach($requirements['ships']??[] as $entry){
+                $shipSlug=is_array($entry)?$entry['slug']:$entry;$shipTier=is_array($entry)?($entry['tier']??'basic'):'basic';
+                $parents[]='ships:'.$shipSlug.'-'.$shipTier;
+                $ship=$this->catalog->withTier($this->catalog->get('ships',$shipSlug),$shipTier);
+                $met=!$this->requirements->check($this->requirements->forTier($ship,$shipTier),$levels,$tech);
+                $prerequisites[]=['group'=>'ships','slug'=>$shipSlug,'tier'=>$shipTier,'label'=>$ship['label'],'level'=>null,'current'=>null,'met'=>$met];
+            }
+            $owned=$kind==='buildings'?$levels:($kind==='technologies'?$tech:[]);$value=$owned[$slug]??0;
+            $nodes[$key]=['group'=>$kind,'key'=>$key,'definition'=>$definition,'tier'=>$tier,'slug'=>$slug,'level'=>is_array($value)?(int)($value[$tier]??0):(int)$value,'prerequisites'=>$prerequisites,'parents'=>array_values(array_unique($parents)),'available'=>!$this->requirements->check($requirements,$levels,$tech)];
         }
         $depth=function(string $key)use(&$depth,&$depths,&$visiting,$nodes):int{
             if(isset($depths[$key]))return $depths[$key];

@@ -165,7 +165,7 @@ final class FleetService
             } elseif($f->mission==='colonize') {
                 $target=$f->destination;$this->manager->lock($target);
                 $limit=$this->planetLimit($m,$this->catalog->forUniverse($m->universe));
-                if(!$target->owner && !$target->npcPlanet && count($this->repo->planets($m->universe,$m))<$limit) { $target->name=$this->planetNames->generate($m);$target->owner=$m;$this->resources->initialize($target,true);$this->consumeShip($f,'colony_ship');$this->notifications->enqueue($m,'Nouvelle colonie : '.$target->name.'.'); }
+                if(!$target->owner && !$target->npcPlanet && count($this->repo->planets($m->universe,$m))<$limit) { $target->name=$this->planetNames->generate($m);$target->owner=$m;$colonyTier=$this->consumeShip($f,'colony_ship');$this->resources->initialize($target,true,stockMultiplier:GameCatalog::tierFactor($colonyTier));$this->notifications->enqueue($m,'Nouvelle colonie : '.$target->name.'.'); }
                 else $this->notifications->enqueue($m,'Colonisation impossible à l’arrivée. Votre flotte revient.');
             } elseif($f->mission==='transport') {
                 $target=$f->destination;$this->manager->lock($target);
@@ -231,9 +231,9 @@ final class FleetService
     {
         $f->reservedFuel=max(0,$f->reservedFuel-$f->orbitFuel);$f->orbitFuel=0;
     }
-    private function consumeShip(Fleet $f,string $slug): void
+    private function consumeShip(Fleet $f,string $slug): string
     {
-        $ships=$this->repo->all(FleetShip::class,['fleet'=>$f,'slug'=>$slug]);usort($ships,static fn($a,$b)=>array_search($a->tier,GameCatalog::TIERS,true)<=>array_search($b->tier,GameCatalog::TIERS,true));foreach($ships as $ship)if($ship->quantity>0){--$ship->quantity;return;}throw new \LogicException('Vaisseau de mission absent.');
+        $ships=$this->repo->all(FleetShip::class,['fleet'=>$f,'slug'=>$slug]);usort($ships,static fn($a,$b)=>array_search($a->tier,GameCatalog::TIERS,true)<=>array_search($b->tier,GameCatalog::TIERS,true));foreach($ships as $ship)if($ship->quantity>0){--$ship->quantity;return $ship->tier;}throw new \LogicException('Vaisseau de mission absent.');
     }
 }
 

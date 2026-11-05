@@ -1,7 +1,26 @@
 {% extends 'base.html.twig' %}
 {% block title %}Envoyer un feedback · Genesis Reborn{% endblock %}
-{% block body %}<section class="panel feedback-panel"><p class="eyebrow">AIDEZ-NOUS À AMÉLIORER LE JEU</p><h1>Envoyer un feedback</h1><p>Signalez un bug, partagez une idée ou décrivez votre expérience.</p>
-{% for error in errors %}<p class="flash error" role="alert">{{ error }}</p>{% endfor %}
-<form method="post" enctype="multipart/form-data" class="feedback-form"><input type="hidden" name="_token" value="{{ csrf_token('create_feedback') }}"><label for="type">Type</label><select id="type" name="type" required><option value="">Choisir…</option><option value="bug">Bug</option><option value="suggestion">Suggestion</option><option value="improvement">Amélioration</option><option value="other">Autre</option></select><label for="title">Titre</label><input id="title" name="title" maxlength="120" required value="{{ app.request.request.get('title') }}"><label for="description">Description détaillée</label><textarea id="description" name="description" maxlength="5000" rows="12" required>{{ app.request.request.get('description') }}</textarea><label for="priority">Priorité ressentie</label><select id="priority" name="priority"><option value="low">Faible</option><option value="medium" selected>Moyenne</option><option value="high">Élevée</option></select><p>Votre page actuelle et votre univers sont ajoutés automatiquement.</p><label for="screenshot">Capture facultative : JPEG, PNG ou WebP, 5 Mo maximum</label><input id="screenshot" name="screenshot" type="file" accept="image/jpeg,image/png,image/webp"><button class="primary">Envoyer</button></form></section>{% endblock %}
+{% block body %}
+<section class="panel account-panel feedback-panel" aria-labelledby="feedback-title">
+    <h1 id="feedback-title">Envoyer un feedback</h1><p>Signalez un bug, partagez une idée ou décrivez votre expérience.</p>
+    {% if errors %}<div class="flash error feedback-errors" role="alert" aria-labelledby="feedback-errors-title"><h2 id="feedback-errors-title">Votre retour n’a pas été envoyé</h2><ul>{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul><p>Corrigez les informations ci-dessous. Si vous aviez joint une capture, sélectionnez-la de nouveau.</p></div>{% endif %}
+    {% set selectedType = app.request.request.get('type', '') %}
+    {% set selectedPriority = app.request.request.get('priority', 'medium') %}
+    <form method="post" enctype="multipart/form-data" class="feedback-form">
+        <input type="hidden" name="_token" value="{{ csrf_token('create_feedback') }}">
+        <fieldset class="account-section"><legend>Votre retour</legend><p>Le type, le titre et la description sont obligatoires.</p>
+            <div class="account-grid">
+                <div><label for="type">Type</label><select id="type" name="type" required><option value="">Choisir…</option>{% for value,label in {'bug':'Bug','suggestion':'Suggestion','improvement':'Amélioration','other':'Autre'} %}<option value="{{ value }}" {{ selectedType == value ? 'selected' : '' }}>{{ label }}</option>{% endfor %}</select></div>
+                <div><label for="priority">Priorité ressentie</label><select id="priority" name="priority">{% for value,label in {'low':'Faible','medium':'Moyenne','high':'Élevée'} %}<option value="{{ value }}" {{ selectedPriority == value ? 'selected' : '' }}>{{ label }}</option>{% endfor %}</select></div>
+            </div>
+            <label for="title">Titre</label><input id="title" name="title" maxlength="120" required aria-describedby="feedback-title-help" value="{{ app.request.request.get('title') }}"><p id="feedback-title-help" class="field-help">Résumez votre retour en 120 caractères maximum.</p>
+            <label for="description">Description détaillée</label><textarea id="description" name="description" maxlength="5000" rows="8" required aria-describedby="feedback-description-help">{{ app.request.request.get('description') }}</textarea><p id="feedback-description-help" class="field-help">Jusqu’à 5 000 caractères. Pour un bug, indiquez les étapes, le résultat attendu et le résultat obtenu.</p>
+        </fieldset>
+        <fieldset class="account-section"><legend>Page concernée</legend><label for="context_url">Lien de la page concernée (facultatif)</label><input id="context_url" name="context_url" type="url" maxlength="500" value="{{ contextUrl }}" aria-describedby="feedback-context-help"><p id="feedback-context-help" class="field-help">Le lien est prérempli depuis la page où vous avez ouvert ce formulaire. Vous pouvez le modifier ou l’effacer.</p></fieldset>
+        <fieldset class="account-section"><legend>Capture facultative</legend><label for="screenshot">Joindre une capture</label><input id="screenshot" name="screenshot" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="feedback-screenshot-help"><p id="feedback-screenshot-help" class="field-help">JPEG, PNG ou WebP · 5 Mo maximum.</p></fieldset>
+        <p>Votre univers, si sélectionné, accompagne votre retour.</p><button class="primary">Envoyer</button>
+    </form>
+</section>
+{% endblock %}
 
 

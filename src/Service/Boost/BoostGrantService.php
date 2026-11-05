@@ -64,7 +64,7 @@ final class BoostGrantService
 
     public function inventoryCapacity(): int
     {
-        return max(1, min(100, (int) ($this->catalog->all('boosts')['inventory_capacity'] ?? 3)));
+        return max(1, min(100, (int) ($this->catalog->all('boosts')['inventory_capacity'] ?? 100)));
     }
 
     public function durationReductionRatio(): float

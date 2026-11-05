@@ -18,7 +18,7 @@ const planetPalettes = [
 export default class extends Controller {
     static targets = [
         'scene', 'galaxyCanvas', 'systemCanvas', 'planetCanvas', 'location', 'coordinates',
-        'searchInput', 'searchResults', 'searchClear', 'tooltip', 'systemBack', 'planetBack',
+        'searchInput', 'searchResults', 'searchClear', 'searchStatus', 'tooltip', 'systemBack', 'planetBack',
         'systemPanel', 'systemContent', 'planetPanel', 'planetContent', 'minimapWrap',
         'minimapCanvas', 'fleetLog', 'motionToggle', 'galaxySelect', 'mapHelp',
     ];
@@ -232,7 +232,7 @@ export default class extends Controller {
         this.systemDoubleClickHandler = (event) => this.systemCanvasDoubleClick(event);
         this.minimapPointerHandler = (event) => this.minimapPointer(event);
         this.searchOutsideHandler = (event) => {
-            if (!event.target.closest('.gv2-search')) this.searchResultsTarget.hidden = true;
+            if (!event.target.closest('.gv2-search')) this.hideSearchResults();
         };
 
         this.sceneTarget.addEventListener('pointerdown', this.pointerDownHandler);
@@ -962,6 +962,7 @@ export default class extends Controller {
         if (template) this.systemContentTarget.append(template.content.cloneNode(true));
         this.systemPanelTarget.hidden = false;
         this.planetPanelTarget.hidden = true;
+        this.focusPanel(this.systemPanelTarget);
         this.systemBackTarget.hidden = false;
         this.planetBackTarget.hidden = true;
         this.minimapWrapTarget.hidden = true;
@@ -1026,6 +1027,7 @@ export default class extends Controller {
         this.locationTarget.textContent = this.gameMap.galaxy || this.gameMap.universe;
         this.coordinatesTarget.textContent = this.gameMap.galaxy || '—';
         this.mapHelpTarget.textContent = 'Glisser pour naviguer · Molette pour zoomer · Cliquer sur un système pour l’examiner';
+        this.searchInputTarget.focus({ preventScroll: true });
         const camera = this.savedCamera?.camera || this.baseCamera;
         const zoom = this.savedCamera?.zoom || this.baseZoom;
         const done = () => {
@@ -1066,6 +1068,8 @@ export default class extends Controller {
         if (template) {
             this.planetContentTarget.replaceChildren(template.content.cloneNode(true));
             this.planetPanelTarget.hidden = false;
+            this.systemPanelTarget.hidden = true;
+            this.focusPanel(this.planetPanelTarget);
         }
         this.systemContentTarget.querySelectorAll('.gv2-planet-choice').forEach((button) => {
             button.classList.toggle('is-selected', Number(button.dataset.planetId) === Number(planet.id));
@@ -1075,9 +1079,32 @@ export default class extends Controller {
     }
 
     closePlanet() {
+        const id = this.selectedPlanet?.id;
         this.selectedPlanet = null;
         this.planetPanelTarget.hidden = true;
+        if (!this.planetBackTarget.hidden) this.planetBackTarget.focus({ preventScroll: true });
+        else {
+            this.systemPanelTarget.hidden = false;
+            this.systemContentTarget.querySelector('[data-planet-id="' + id + '"]')?.focus({ preventScroll: true });
+        }
         this.drawFrame(0);
+    }
+
+    focusPanel(panel) {
+        const heading = panel.querySelector('h2');
+        if (!heading) return;
+        panel.scrollTop = 0;
+        heading.tabIndex = -1;
+        heading.focus({ preventScroll: true });
+    }
+
+    navigateBack(event) {
+        if (event.key !== 'Escape' || event.defaultPrevented || event.target.closest('input, select, textarea')) return;
+        if (!this.planetBackTarget.hidden) this.toSystem();
+        else if (!this.planetPanelTarget.hidden) this.closePlanet();
+        else if (!this.systemPanelTarget.hidden) this.toGalaxy();
+        else return;
+        event.preventDefault();
     }
 
     enterPlanetView() {
@@ -1109,6 +1136,9 @@ export default class extends Controller {
         this.systemPanelTarget.hidden = false;
         this.systemBackTarget.hidden = false;
         this.planetBackTarget.hidden = true;
+        const choice = this.systemContentTarget.querySelector('[data-planet-id="' + this.selectedPlanet?.id + '"]');
+        if (choice) choice.focus({ preventScroll: true });
+        else this.focusPanel(this.systemPanelTarget);
         this.minimapWrapTarget.hidden = true;
         this.fleetLogTarget.parentElement.hidden = true;
         this.locationTarget.textContent = this.selectedSystem.name;
@@ -1562,9 +1592,10 @@ export default class extends Controller {
     search() {
         const query = this.searchInputTarget.value.trim().toLocaleLowerCase('fr');
         this.searchClearTarget.classList.toggle('is-visible', query.length > 0);
+        this.searchClearTarget.hidden = query.length === 0;
         this.searchResultsTarget.replaceChildren();
         if (query.length < 2) {
-            this.searchResultsTarget.hidden = true;
+            this.hideSearchResults();
             return;
         }
         const matches = this.searchIndex
@@ -1587,7 +1618,6 @@ export default class extends Controller {
                 const button = document.createElement('button');
                 button.type = 'button';
                 button.className = 'gv2-search-result';
-                button.setAttribute('role', 'option');
                 button.dataset.index = String(index);
                 const icon = document.createElement('span');
                 icon.className = 'gv2-search-result-icon';
@@ -1605,31 +1635,46 @@ export default class extends Controller {
             });
         }
         this.searchResultsTarget.hidden = false;
+        this.searchStatusTarget.textContent = matches.length + ' résultat' + (matches.length === 1 ? '' : 's') + ' affiché' + (matches.length === 1 ? '' : 's');
     }
 
     searchKeydown(event) {
-        const items = Array.from(this.searchResultsTarget.querySelectorAll('.gv2-search-result'));
         if (event.key === 'Escape') {
-            this.searchResultsTarget.hidden = true;
-            this.searchInputTarget.blur();
+            event.preventDefault();
+            event.stopPropagation();
+            this.hideSearchResults();
+            this.searchInputTarget.focus({ preventScroll: true });
             return;
         }
-        if (event.key === 'Enter') {
+        if (['ArrowDown', 'ArrowUp'].includes(event.key) && this.searchResultsTarget.hidden) this.search();
+        const items = Array.from(this.searchResultsTarget.querySelectorAll('.gv2-search-result'));
+        if (['ArrowDown', 'ArrowUp'].includes(event.key) && items.length) {
+            event.preventDefault();
+            const current = items.indexOf(document.activeElement);
+            const next = current < 0 ? (event.key === 'ArrowDown' ? 0 : items.length - 1) : (current + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+            items[next].focus();
+        }
+        if (event.key === 'Enter' && event.currentTarget === this.searchInputTarget) {
             event.preventDefault();
             if (items.length) items[0].click();
         }
     }
 
     selectSearchResult(item) {
-        this.searchResultsTarget.hidden = true;
-        this.searchInputTarget.blur();
+        this.hideSearchResults();
         if (item.type === 'system') this.focusSystem(item.system);
         else this.focusSystem(item.system, item.planet.id);
     }
 
+    hideSearchResults() {
+        this.searchResultsTarget.hidden = true;
+        this.searchStatusTarget.textContent = '';
+    }
+
     clearSearch() {
         this.searchInputTarget.value = '';
-        this.searchResultsTarget.hidden = true;
+        this.hideSearchResults();
+        this.searchClearTarget.hidden = true;
         this.searchClearTarget.classList.remove('is-visible');
         this.searchInputTarget.focus();
     }

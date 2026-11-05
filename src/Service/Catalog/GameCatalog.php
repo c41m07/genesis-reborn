@@ -55,6 +55,14 @@ final class GameCatalog
     {
         return match($tier){'basic'=>1.0,'intermediate'=>1.25,'superior'=>1.5625,default=>throw new \DomainException('Rang de progression invalide.')};
     }
+    /** Production et consommations industrielles, distinctes des coûts et des effets utilitaires. */
+    public function productionTierFactor(string $tier):float
+    {
+        $fallback=self::tierFactor($tier);
+        $factor=(float)($this->data['rules']['building_production_tier_factors'][$tier]??$fallback);
+        if(!is_finite($factor)||$factor<=0)throw new \DomainException('Facteur de production invalide.');
+        return $factor;
+    }
     public static function colonyLimit(array|int $levels,array $effect,int $universeLimit):int
     {
         if(is_int($levels)||is_numeric($levels))$levels=['basic'=>(int)$levels];
@@ -93,7 +101,7 @@ final class GameCatalog
             'slug' => $universe->slug,'name' => $universe->name,
             'features' => ['guilds_enabled' => false, 'planet_conquest' => false],
             'multipliers' => ['building_time' => 1, 'research_time' => 1, 'ship_build_time' => 1, 'resource_production' => 1, 'travel_time' => 1],
-            'limits' => ['max_planets' => 5, 'max_fleet_size' => 100],
+            'limits' => ['max_planets' => 31, 'max_fleet_size' => 1000000],
         ];
         foreach (['features', 'multipliers', 'limits'] as $section) $config[$section] = array_replace($config[$section] ?? [], $universe->gameSettings[$section] ?? []);
         $config['catalog']=[];
@@ -125,7 +133,11 @@ final class GameCatalog
         $definition['description']=$definition['tier_descriptions'][$tier]??$definition['description']??'';
         if(array_key_exists('base_attack',$definition)){
             $definition['tier']=$tier;
-            foreach(['hp','shield','base_attack','secondary_attack','speed_system','speed_galaxy','fuel_capacity','cargo_capacity'] as $stat)if(isset($definition[$stat])&&is_numeric($definition[$stat])&&(float)$definition[$stat]>0)$definition[$stat]=(int)ceil((float)$definition[$stat]*$factor);
+            $combatFactor=isset($definition['combat_tier_growth'])?(float)$definition['combat_tier_growth']**array_search($tier,self::TIERS,true):$factor;
+            foreach(['hp','shield','base_attack','secondary_attack','speed_system','speed_galaxy','fuel_capacity','cargo_capacity'] as $stat){
+                $statFactor=in_array($stat,['hp','shield','base_attack','secondary_attack'],true)?$combatFactor:$factor;
+                if(isset($definition[$stat])&&is_numeric($definition[$stat])&&(float)$definition[$stat]>0)$definition[$stat]=(int)ceil((float)$definition[$stat]*$statFactor);
+            }
         }
         return $definition;
     }
@@ -139,7 +151,9 @@ final class GameCatalog
         $base=is_array($profiles)?($profiles[$tier]??[]):($definition['costs_base']??$definition['costs']??[]);
         $factor=is_array($profiles)?1.0:self::tierFactor($tier);
         $curveKey=match($operationGroup){'buildings'=>'building_cost','technologies'=>'research_cost',default=>null};
+        if($operationGroup==='buildings'&&isset($definition['production_resource']))$curveKey='production_building_cost';
         $segments=$curveKey?($this->data['rules']['progression_curves'][$curveKey]??[]):[];
+        if($curveKey==='production_building_cost'&&$segments===[])$segments=$this->data['rules']['progression_curves']['building_cost']??[];
         $levelFactor=$segments!==[]?self::growthMultiplier($level,$segments):max(0.01,(float)($definition['costs_scaling']??1))**($level-1);
         $result=['metal'=>0,'nano'=>0,'antimatter'=>0,'hydrogen'=>0];
         foreach($base as $resource=>$amount){

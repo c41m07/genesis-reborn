@@ -2,22 +2,22 @@
   "slug": "bomber",
   "label": "Bombardier tactique",
   "category": "bomber",
-  "hp": 600,
-  "precision": 60,
-  "tracking": 72,
+  "hp": 632,
+  "precision": 65,
+  "tracking": 80,
   "evasion": 45,
   "signature": 40,
-  "base_attack": 150,
+  "base_attack": 145.5,
   "shots_min": 1,
   "shots_max": 2,
   "build_time_base": 1200,
   "costs": {},
-  "speed_system": 40,
-  "speed_galaxy": 400,
+  "speed_system": 112,
+  "speed_galaxy": 555,
   "fuel_travel_system": 0.5,
   "fuel_travel_galaxy": 2,
   "fuel_orbit": 0.3,
-  "cargo_capacity": 0,
+  "cargo_capacity": 200,
   "unlock_requirements": {
     "buildings": [
       {
@@ -40,11 +40,11 @@
     ]
   },
   "provisional": true,
-  "note": "Profil de mobilité et de combat différencié, équilibrage validé le 02/11/2026 et à mesurer en Alpha.",
-  "fuel_capacity": 1800,
+  "note": "Équilibrage R14 adopté pour la branche Alpha le 05/11/2026 ; validation en jeu à poursuivre.",
+  "fuel_capacity": 16000,
   "fuel_capacity_provisional": true,
-  "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 1800 H. Réservoir réservé au carburant, distinct de la soute de fret.",
-  "shield": 150,
+  "fuel_capacity_note": "Réservoir dédié de 16 000 H au rang basique, permettant le plus long aller-retour des cartes de référence sans utiliser la soute. Consommation maximale mesurée : environ 15 453,51 H hors stationnement.",
+  "shield": 158,
   "tier_unlock_requirements": {
     "intermediate": {
       "technologies": [
@@ -79,22 +79,25 @@
       ]
     }
   },
-  "economy_value_budget": 24000,
+  "economy_value_budget": 21502,
   "cost_profiles": {
     "basic": {
-      "metal": 10800,
-      "nano": 600,
-      "antimatter": 0
+      "metal": 6451,
+      "nano": 2150,
+      "antimatter": 0,
+      "hydrogen": 0
     },
     "intermediate": {
-      "metal": 9750,
-      "nano": 2250,
-      "antimatter": 188
+      "metal": 6049,
+      "nano": 3025,
+      "antimatter": 336,
+      "hydrogen": 0
     },
     "superior": {
-      "metal": 8438,
-      "nano": 3750,
-      "antimatter": 704
+      "metal": 5042,
+      "nano": 3781,
+      "antimatter": 840,
+      "hydrogen": 1680
     }
   },
   "tier_labels": {
@@ -107,5 +110,6 @@
     "intermediate": "Bombardier d’assaut conçu pour frapper les grandes coques à courte fenêtre d’exposition. Il menace les vaisseaux lourds mais dépend d’une escorte contre les intercepteurs. Armement visible : tubes lance-torpilles renforcés sous le fuselage, avec torpilles à fusion plus lumineuses.",
     "superior": "Bombardier de percée optimisé pour ouvrir les lignes lourdes ennemies. Il concentre ses frappes sur croiseurs, destroyers, cuirassés et capitaux. Armement visible : doubles tubes lance-torpilles lourds, lançant des torpilles à fusion à forte traînée énergétique."
   },
-  "description": "Vaisseau de frappe lourde conçu pour détruire les grandes coques. Il cible croiseurs, destroyers, cuirassés et vaisseaux capitaux avec deux tubes lance-torpilles à fusion, mais reste vulnérable aux intercepteurs."
+  "description": "Vaisseau de frappe lourde conçu pour détruire les grandes coques. Il cible croiseurs, destroyers, cuirassés et vaisseaux capitaux avec deux tubes lance-torpilles à fusion, mais reste vulnérable aux intercepteurs.",
+  "combat_tier_growth": 1.5
 }
