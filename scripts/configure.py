@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 from pathlib import Path
 import secrets
-p=Path(__file__).resolve().parents[1]/'.env.local'
+root=Path(__file__).resolve().parents[1]
+base=root/'.env'
+if not base.exists():
+    base.write_text((root/'.env.example').read_text())
+    print('.env créé depuis .env.example (sans secrets).')
+p=root/'.env.local'
 if p.exists():
     print('.env.local existe, conservé.')
 else:

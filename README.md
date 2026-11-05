@@ -32,7 +32,7 @@ Prérequis : Docker Compose, make, Python 3 et Node.js/npm. Le projet s’attend
     make migrate
     make import
 
-make configure génère les secrets locaux sans remplacer ceux déjà présents. make start ne lance ni migration, ni import, ni création de compte démo. make seed-demo est une commande facultative réservée à l’environnement local. Le compte de démonstration n’est pas requis pour créer un compte par l’interface.
+make configure crée le fichier .env depuis .env.example si nécessaire, puis génère les secrets locaux dans .env.local sans remplacer ceux déjà présents. make start ne lance ni migration, ni import, ni création de compte démo. make seed-demo est une commande facultative réservée à l’environnement local. Le compte de démonstration n’est pas requis pour créer un compte par l’interface.
 
 Pour les scripts exécutés depuis WSL si le domaine local ne se résout pas, utiliser 127.0.0.1 avec l’en-tête Host: genesis-reborn.localhost. La base MariaDB écoute par défaut sur 127.0.0.1:3309; son port est configurable dans .env.local, fichier local ignoré par Git.
 
