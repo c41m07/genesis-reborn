@@ -1,6 +1,6 @@
 import { test, expect } from './support/isolated-test.mjs';
 
-test('Les quatre sections de diplomatie restent accessibles sans guilde', async ({ page }) => {
+test('Les trois onglets des alliances restent accessibles sans guilde', async ({ page }) => {
   const id = crypto.randomUUID().slice(0, 8);
   const email = 'diplomacy-' + id + '@example.test';
   const password = 'Browser-test-2026!';
@@ -16,12 +16,13 @@ test('Les quatre sections de diplomatie restent accessibles sans guilde', async 
   await page.getByRole('button', { name: /Connexion/ }).click();
   await page.locator('article.universe-card').filter({ has: page.getByRole('heading', { name: /Turbo/ }) }).getByRole('button').click();
   await page.goto('/diplomatie');
-  await expect(page.locator('#alliance-overview')).toContainText('Diplomatie directe');
+  await expect(page.locator('.guild-hub-hero')).toContainText('Un empire se construit ensemble');
   const sections = page.getByRole('navigation', { name: 'Sections des alliances' });
-  for (const [label, id] of [['Vue d’ensemble', 'alliance-overview'], ['Membres', 'alliance-members'], ['Diplomatie', 'alliance-diplomacy'], ['Guildes', 'alliance-guilds']]) {
+  for (const [label, tab, heading] of [['Guildes', 'guilds', 'Un empire se construit ensemble'], ['Diplomatie', 'diplomacy', 'Relations entre guildes'], ['Relation', 'relations', 'Relations entre commandants']]) {
     await sections.getByRole('link', { name: label, exact: true }).click();
-    await expect(page).toHaveURL(new RegExp('#' + id + '$'));
-    await expect(page.locator('#' + id)).toBeVisible();
+    await expect(page).toHaveURL(url => url.searchParams.get('tab') === tab);
+    await expect(sections.getByRole('link', { name: label, exact: true })).toHaveAttribute('aria-current', 'page');
+    await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible();
   }
   await page.setViewportSize({ width: 390, height: 844 });
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);

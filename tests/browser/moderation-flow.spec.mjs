@@ -37,7 +37,9 @@ test('Modération : signaler un message, refuser un CSRF invalide et classer le 
 
   const body = 'Message de test à modérer ' + crypto.randomUUID();
   await page.goto('/messages');
-  await page.getByRole('link', { name: new RegExp(reporter.username) }).click();
+  await page.getByLabel('Rechercher un joueur').fill(reporter.username);
+  await page.getByRole('button', { name: 'Rechercher', exact: true }).click();
+  await page.getByRole('region', { name: 'Résultats de recherche' }).getByRole('link', { name: new RegExp(reporter.username) }).click();
   await page.getByLabel('Votre message').fill(body);
   await page.getByRole('button', { name: 'Envoyer', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('Message privé envoyé');

@@ -249,7 +249,7 @@ test('V2 : parcours complet au clavier, focus et retour sans canvas', async ({ p
   const context = await browser.newContext({ javaScriptEnabled: false, storageState: await page.context().storageState() });
   const fallback = await context.newPage();
   await fallback.goto('/carte-v2');
-  await fallback.getByRole('link', { name: 'Ouvrir la carte classique' }).click();
+  await fallback.getByRole('link', { name: 'Carte classique', exact: true }).click();
   await expect(fallback).toHaveURL(/carte(?:\?.*)?$/);
   await expect(fallback.getByRole('button', { name: 'Afficher le système' })).toBeVisible();
   await context.close();

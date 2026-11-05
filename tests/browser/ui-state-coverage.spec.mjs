@@ -68,9 +68,10 @@ test('Les écrans métier se chargent, restent stables et exposent un arbre acce
       await expect(page.getByRole('heading', { name: /horizon vous attend/ })).toBeVisible();
     }
     if (route === '/rapports') await expect(page.getByRole('heading', { name: 'Aucun rapport dans cette catégorie' })).toBeVisible();
-    if (route === '/messages') await expect(page.getByText('Aucune conversation pour le moment.')).toBeVisible();
+    if (route === '/messages') await expect(page.getByText('Aucune conversation privée pour le moment.')).toBeVisible();
     if (route === '/boosts') {
-      await expect(page.getByText('Aucun boost pour le moment. Les événements et missions à risque peuvent en attribuer.')).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Aucun bonus disponible', exact: true })).toBeVisible();
+      await expect(page.getByText('Les récompenses de vos missions et événements apparaîtront ici.')).toBeVisible();
     }
     expect(stuckBusy, label + ': aucun état de chargement bloqué').toBe(0);
     expect(brokenImages, label + ': aucune image cassée').toEqual([]);

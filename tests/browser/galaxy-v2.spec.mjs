@@ -35,10 +35,10 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   await expect(map).toBeVisible();
   await expect(page.locator('canvas.gv2-canvas--galaxy')).toBeVisible();
 
-  await expect(page.getByRole('link', {name:'V2 [WIP]', exact:true})).toHaveAttribute('aria-current', 'page');
-  await page.getByRole('link', {name:'Galaxie', exact:true}).last().click();
+  await expect(page.getByRole('link', {name:'Carte interactive (V2)', exact:true})).toHaveAttribute('aria-current', 'page');
+  await page.getByRole('link', {name:'Carte classique', exact:true}).click();
   await expect(page).toHaveURL(/\/carte(?:\?.*)?$/);
-  await page.getByRole('link', {name:'V2 [WIP]', exact:true}).click();
+  await page.getByRole('link', {name:'Carte interactive (V2)', exact:true}).click();
   await expect(page).toHaveURL(/\/carte-v2(?:\?.*)?$/);
 
   const data = JSON.parse(await map.getAttribute('data-galaxy-v2-map-value'));
@@ -68,6 +68,9 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   await expect(page.locator('.gv2-system-panel')).toBeHidden();
 
   await page.getByRole('navigation', {name:'Navigation principale'}).getByRole('link', { name: 'Galaxie', exact: true }).click();
+  await expect(page).toHaveURL(/\/carte-v2(?:\?.*)?$/);
+  await expect(page.locator('.galaxy-v2')).toBeVisible();
+  await page.getByRole('link', {name:'Carte classique', exact:true}).click();
   await expect(page).toHaveURL(/\/carte(?:\?.*)?$/);
   await expect(page.locator('.galaxy-v2')).toHaveCount(0);
 

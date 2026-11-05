@@ -161,7 +161,7 @@ test('Flottes actives : aller, retour, noms longs et thème clair', async ({ pag
     await expect(operations).toContainText('ALLER');
     await expect(operations).toContainText('RETOUR');
     if (route === '/flottes') {
-      const returningRoute = await page.locator('.mission-card[data-status="returning"] p:not(.eyebrow)').innerText();
+      const returningRoute = await page.locator('.mission-card[data-status="returning"] p:not(.eyebrow):not(.muted)').innerText();
       expect(returningRoute.trim().startsWith('DestinationInterstellaire')).toBe(true);
       expect(returningRoute.trim().endsWith('OrigineInterstellaireSansEspaceAvecUnNomTresLongPourLeTest')).toBe(true);
     }

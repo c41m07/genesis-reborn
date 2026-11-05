@@ -62,7 +62,7 @@ test('Les 150 fiches expliquent leurs effets, bonus, accès et limites sur ordin
     await expect(dialog).toContainText('armes principales et secondaires');
     await page.keyboard.press('Escape');
     dialog = await open('technologies', 'colonial_expansion');
-    await expect(dialog).toContainText('niveau 3');
+    await expect(dialog).toContainText('Laboratoire colonial · Basique · niveau 1 requis');
     await expect(dialog).toContainText('Limite après ce niveau');
     await page.keyboard.press('Escape');
     dialog = await open('ships', 'battleship');
