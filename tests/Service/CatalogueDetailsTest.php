@@ -161,7 +161,7 @@ final class CatalogueDetailsTest extends KernelTestCase
             $details=$this->describe($group,$base['slug'],$tier);
             if(array_filter($details['requirements'],static fn(array $r):bool=>$r['unreachable']))++$count;
         }
-        self::assertSame(10,$count);
+        self::assertSame(7,$count);
         $requirements=$this->describe('ships','probe','superior')['requirements'];
         $blocked=array_values(array_filter($requirements,static fn(array $r):bool=>$r['unreachable']));
         self::assertCount(1,$blocked);self::assertSame(10,$blocked[0]['required']);self::assertSame(5,$blocked[0]['maximum']);

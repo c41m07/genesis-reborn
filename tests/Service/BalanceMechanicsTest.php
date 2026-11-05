@@ -9,6 +9,8 @@ use PHPUnit\Framework\TestCase;
 
 final class BalanceMechanicsTest extends TestCase
 {
+    // Références : ln(1 + 2 × investissement pondéré) / ln(3), poids 1/1,25/1,5625.
+    // Plafonds communs aux trois rangs ; profils de combat R14 et coûts du 5 novembre.
     private function catalog(): GameCatalog
     {
         return new GameCatalog(dirname(__DIR__, 2) . '/config/game');
@@ -34,11 +36,11 @@ final class BalanceMechanicsTest extends TestCase
             $universe,
         )[0];
 
-        self::assertSame(79.8, $result['tracking']);
-        self::assertEqualsWithDelta(72.1, $result['precision'], 0.000001);
-        self::assertSame(52.5, $result['shield']);
-        self::assertSame(42.0, $result['base_attack']);
-        self::assertSame(52.5, $result['speed_system']);
+        self::assertEqualsWithDelta(76.0216757005253, $result['tracking'], 0.000001);
+        self::assertEqualsWithDelta(55.45844459862855, $result['precision'], 0.000001);
+        self::assertEqualsWithDelta(51.13519522280588, $result['shield'], 0.000001);
+        self::assertEqualsWithDelta(24.544893706946823, $result['base_attack'], 0.000001);
+        self::assertEqualsWithDelta(155.4509934773299, $result['speed_system'], 0.000001);
     }
 
     public function testSelectedShipyardAndFabricationResearchAffectQueuePlan(): void
@@ -56,8 +58,8 @@ final class BalanceMechanicsTest extends TestCase
             ['naval_engineering' => 5],
         );
 
-        self::assertSame(48, $plan['duration']);
-        self::assertSame(['metal'=>2565,'nano'=>143,'antimatter'=>0,'hydrogen'=>0],$plan['costs']);
+        self::assertSame(159, $plan['duration']);
+        self::assertSame(['metal'=>1735,'nano'=>579,'antimatter'=>0,'hydrogen'=>0],$plan['costs']);
     }
 
     public function testTierCostProfilesIncreaseRareValueShareWithoutPricingElectricity(): void
@@ -94,12 +96,12 @@ final class BalanceMechanicsTest extends TestCase
         foreach([$intermediate,$superior] as $unit){self::assertSame(2,$unit['shots_min']);self::assertSame(3,$unit['shots_max']);self::assertArrayNotHasKey('extra_shot_chances',$unit);}
     }
 
-    public function testRanksCompoundAndKeepExtraShotChancePerRank(): void
+    public function testRanksShareDiminishingBonusesAndOneExtraShotChance(): void
     {
         $catalog=$this->catalog();$universe=$this->universe();$fighter=$catalog->getForUniverse($universe,'ships','fighter');
         $result=(new TechnologyEffectCalculator($catalog))->applyToShips([$fighter],['weapon_calibration'=>['basic'=>10,'intermediate'=>5,'superior'=>5],'rapid_fire_cycle'=>['basic'=>25,'intermediate'=>25,'superior'=>25]],$universe)[0];
-        self::assertEqualsWithDelta(70*1.10*1.0625*1.078125,$result['precision'],0.000001);
-        self::assertSame([0.25,0.3125,0.390625],$result['extra_shot_chances']);
+        self::assertEqualsWithDelta(58.06941048336212,$result['precision'],0.000001);
+        self::assertSame([0.5],$result['extra_shot_chances']);
     }
 
     public function testTierDurationsScaleWithoutChangingResearchLevelGrowth(): void
@@ -146,7 +148,7 @@ final class BalanceMechanicsTest extends TestCase
 
     public function testTechnologyRankUnlocksRequireThePreviousRankThreshold(): void
     {
-        $catalog=$this->catalog();$checker=new \App\Service\Requirement\RequirementChecker($catalog);$definition=$catalog->get('technologies','vector_propulsion');$rankedTech=['engineering_foundations'=>['basic'=>4,'intermediate'=>10]];$rankedBuildings=['lab'=>['basic'=>4,'intermediate'=>10]];
+        $catalog=$this->catalog();$checker=new \App\Service\Requirement\RequirementChecker($catalog);$definition=$catalog->get('technologies','vector_propulsion');$rankedTech=['engineering_foundations'=>['basic'=>4,'intermediate'=>10],'naval_engineering'=>['basic'=>5]];$rankedBuildings=['lab'=>['basic'=>4,'intermediate'=>10]];
         self::assertNotEmpty($checker->check($checker->forTier($definition,'intermediate'),$rankedBuildings,$rankedTech));
         $rankedTech['engineering_foundations']['basic']=5;$rankedBuildings['lab']['basic']=5;self::assertSame([],$checker->check($checker->forTier($definition,'intermediate'),$rankedBuildings,$rankedTech));
         $rankedTech['engineering_foundations']['intermediate']=10;$rankedBuildings['lab']['intermediate']=10;self::assertSame([],$checker->check($checker->forTier($definition,'superior'),$rankedBuildings,$rankedTech));
@@ -158,14 +160,14 @@ final class BalanceMechanicsTest extends TestCase
         foreach($catalog->all('buildings') as $building)if(isset($building['production_resource'])||isset($building['storage_resource']))self::assertArrayNotHasKey('max_level',$building,$building['slug']);
     }
 
-    public function testLaboratoryLevelOneAppliesTwoPercentResearchTimeReduction(): void
+    public function testLaboratoryLevelOneAppliesTheSharedDiminishingResearchTimeReduction(): void
     {
         $catalog = $this->catalog();
         $universe = $catalog->forUniverse($this->universe());
         $research = $universe['catalog']['technologies']['colonial_expansion'];
         $plan = (new OperationCalculator($catalog))->calculate($research, 'technologies', 1, 1, ['lab' => 1], $universe);
 
-        self::assertSame(282240, $plan['duration']);
+        self::assertSame(284190, $plan['duration']);
     }
 
     public function testResearchNamesAreDistinctAndEveryCombatShipHasOneSpecialistTurret(): void
@@ -214,7 +216,7 @@ final class BalanceMechanicsTest extends TestCase
 
         $fighter = $catalog->getForUniverse($this->universe(), 'ships', 'fighter');
         $improved = (new TechnologyEffectCalculator($catalog))->applyToShips([$fighter], ['weapon_calibration' => ['basic' => 1]], $this->universe())[0];
-        self::assertEqualsWithDelta(70.7, $improved['precision'], .000001);
+        self::assertEqualsWithDelta(55.15594535470353, $improved['precision'], .000001);
     }
 
 }

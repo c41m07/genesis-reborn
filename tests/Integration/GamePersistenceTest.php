@@ -263,7 +263,7 @@ final class GamePersistenceTest extends KernelTestCase
     {
         $clock=$this->clock();$p=$this->player();$one=$this->join($p);$two=$this->secondPlanet($p);
         foreach([$one,$two] as $planet) { $lab=new PlanetBuilding();$lab->planet=$planet;$lab->slug='lab';$lab->level=1;$this->em->persist($lab); }$this->em->flush();
-        $q=self::getContainer()->get(QueueService::class);$q->add($p->currentPlayerUniverse,$one,'technologies','engineering_foundations',1,str_repeat('a',32));$q->add($p->currentPlayerUniverse,$two,'technologies','target_acquisition',1,str_repeat('b',32));
+        $q=self::getContainer()->get(QueueService::class);$q->add($p->currentPlayerUniverse,$one,'technologies','engineering_foundations',1,str_repeat('a',32));$q->add($p->currentPlayerUniverse,$two,'technologies','tactical_intelligence',1,str_repeat('b',32));
         $clock->sleep(60);$q->synchronize($p->currentPlayerUniverse);
         self::assertSame(2,$this->em->getRepository(PlayerTechnology::class)->count(['playerUniverse'=>$p->currentPlayerUniverse]));
         self::assertSame(0,$this->em->getRepository(QueueItem::class)->count());
@@ -280,7 +280,9 @@ final class GamePersistenceTest extends KernelTestCase
     public function testDefenseRanksPersistAndCompleteIndependently(): void
     {
         $clock=$this->clock();$p=$this->player();$planet=$this->join($p);
-        $fortress=new PlanetBuilding();$fortress->planet=$planet;$fortress->slug='fortress';$fortress->level=1;$this->em->persist($fortress);$this->em->flush();
+        $fortress=new PlanetBuilding();$fortress->planet=$planet;$fortress->slug='fortress';$fortress->level=1;$this->em->persist($fortress);
+        $advancedFortress=new PlanetBuilding();$advancedFortress->planet=$planet;$advancedFortress->slug='fortress';$advancedFortress->tier='intermediate';$advancedFortress->level=10;$this->em->persist($advancedFortress);
+        $technology=new PlayerTechnology();$technology->playerUniverse=$p->currentPlayerUniverse;$technology->slug='weapon_calibration';$technology->tier='intermediate';$technology->level=10;$this->em->persist($technology);$this->em->flush();
         $queue=self::getContainer()->get(QueueService::class);$queue->add($p->currentPlayerUniverse,$planet,'defenses','ground_turret_anti_light',2,str_repeat('a',32),'basic');$queue->add($p->currentPlayerUniverse,$planet,'defenses','ground_turret_anti_light',3,str_repeat('b',32),'superior');
         $clock->sleep(3600);$queue->synchronize($p->currentPlayerUniverse);
         $rows=$this->em->getRepository(\App\Entity\PlanetDefense::class)->findBy(['planet'=>$planet,'slug'=>'ground_turret_anti_light'],['tier'=>'ASC']);
@@ -292,6 +294,8 @@ final class GamePersistenceTest extends KernelTestCase
         $clock=$this->clock();$p=$this->player();$planet=$this->join($p,'omega-1');$q=self::getContainer()->get(QueueService::class);
         $q->add($p->currentPlayerUniverse,$planet,'buildings','mine_metal',1,str_repeat('a',32));$q->add($p->currentPlayerUniverse,$planet,'buildings','mine_nano',1,str_repeat('b',32));
         $items=$this->em->getRepository(QueueItem::class)->findBy([],['id'=>'ASC']);$head=$items[0];$next=$items[1];$token=$head->dispatchToken;$nextDuration=$next->durationSeconds;
+        // Durée contrôlée pour tester le redispatch, indépendamment de l’équilibrage des mines.
+        $head->durationSeconds=120;$next->durationSeconds=120;$nextDuration=120;$this->em->flush();
         $clock->sleep(30);$q->boost($p->currentPlayerUniverse,$head->id,2,str_repeat('c',32));$newToken=$head->dispatchToken;
         self::assertSame(75,$head->durationSeconds);self::assertNotSame($token,$newToken);self::assertSame($nextDuration,$next->durationSeconds);
         $q->boost($p->currentPlayerUniverse,$head->id,2,str_repeat('c',32));self::assertSame(75,$head->durationSeconds);
@@ -698,9 +702,9 @@ final class GamePersistenceTest extends KernelTestCase
         self::assertArrayNotHasKey('mine_energy',$catalog->all('buildings'));
         $benefit=$insights->benefits($catalog->get('buildings','power_plant'),'buildings',1,$planet,[],[])[0];
         $resources=self::getContainer()->get(ResourceService::class);self::assertEqualsWithDelta($resources->rate($planet,'electricity',0,['power_plant'=>1])*3600,$benefit['after'],.000001);self::assertGreaterThan($benefit['before'],$benefit['after']);
-        $unlocks=$insights->unlocks('technologies','engineering_foundations',2);self::assertContains('vector_propulsion',array_column($unlocks,'slug'));
-        $tree=$insights->tree(['lab'=>1],['engineering_foundations'=>2]);$nodes=array_merge(...array_values($tree));$propulsion=array_values(array_filter($nodes,fn($n)=>$n['definition']['slug']==='vector_propulsion'))[0];self::assertTrue($propulsion['available']);
-        $tree=$insights->tree([],['engineering_foundations'=>2]);$nodes=array_merge(...array_values($tree));$propulsion=array_values(array_filter($nodes,fn($n)=>$n['definition']['slug']==='vector_propulsion'))[0];self::assertFalse($propulsion['available']);
+        $unlocks=$insights->unlocks('technologies','engineering_foundations',5);self::assertContains('vector_propulsion',array_column($unlocks,'slug'));
+        $tree=$insights->tree(['lab'=>4],['engineering_foundations'=>5,'naval_engineering'=>5]);$nodes=array_merge(...array_values($tree));$propulsion=array_values(array_filter($nodes,fn($n)=>$n['definition']['slug']==='vector_propulsion'))[0];self::assertTrue($propulsion['available']);
+        $tree=$insights->tree([],['engineering_foundations'=>5,'naval_engineering'=>5]);$nodes=array_merge(...array_values($tree));$propulsion=array_values(array_filter($nodes,fn($n)=>$n['definition']['slug']==='vector_propulsion'))[0];self::assertFalse($propulsion['available']);
     }
 
     public function testTechnologyTreeIncludesEveryCategoryAndOrdersAllPrerequisites():void
