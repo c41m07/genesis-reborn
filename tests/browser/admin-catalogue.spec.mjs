@@ -38,10 +38,10 @@ test('Administration catalogue: accès, édition, sauvegarde et restauration res
   await page.getByRole('tab', { name: 'Univers', exact: true }).click();
   await expect(page.getByRole('link', { name: /Équilibrer les catalogues de cet univers/ }).first()).toBeVisible();
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.screenshot({ path: 'docs/validation/administration-theme.png', fullPage: true });
+
   await page.getByRole('link', { name: /Équilibrer les catalogues de cet univers/ }).first().click();
   await expect(page.getByRole('heading', { name: 'Équilibrage des catalogues', exact: true })).toBeVisible();
-  await page.screenshot({ path: 'docs/validation/admin-catalogue-theme.png', fullPage: true });
+
   const unnamed = await page.locator('a[href],button,input:not([type="hidden"]),select,textarea').evaluateAll(nodes => nodes.flatMap(element => {
     const style = getComputedStyle(element);
     const rect = element.getBoundingClientRect();

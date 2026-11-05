@@ -6,7 +6,7 @@ Audit initial : 31/10/2026. Réexamen du lancement Work V4 : 01/11/2026 (Europe/
 
 ## Périmètre contrôlé
 
-- Inventaire Git et historique : commit courant 6a2d483; commits récents incluent conquête JcE (a6ce231) et espionnage (6a2d483). Les fichiers docs/validation/*.png et .idea/ existaient hors des changements applicatifs; ils ont été préservés et exclus des commits.
+- Inventaire Git et historique : commit courant 6a2d483; commits récents incluent conquête JcE (a6ce231) et espionnage (6a2d483). Les fichiers captures de validation supprimees et .idea/ existaient hors des changements applicatifs; ils ont été préservés et exclus des commits.
 - Architecture réelle : Symfony 7.4, PHP 8.4, Doctrine ORM 3, Twig, Stimulus/Encore, MariaDB, RabbitMQ, Mercure et Docker Compose. Responsabilités contrôleur/service/repository, transactions métier et messages/outbox observés dans src/.
 - Documentation inventoriée : huit spécifications extraites des PDF, décisions et règles, roadmap, traçabilité, livraison/UI, recherche UI, historique de l’audit initial, notes agent et résultats de validation.
 - Fonctionnalités actuelles : comptes/profil, multi-univers, carte/découvertes, économie, bâtiments/recherches/files, exploration/colonisation/transport, défense/orbite, combat persistant/butin/rapports, conquête JcE PNJ et espionnage. Les fonctions non terminées figurent dans MASTER_PLAN.md et BLOCKERS.md.

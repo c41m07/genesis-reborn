@@ -34,7 +34,7 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   const map = page.locator('.galaxy-v2');
   await expect(map).toBeVisible();
   await expect(page.locator('canvas.gv2-canvas--galaxy')).toBeVisible();
-  await page.screenshot({ path: '/tmp/galaxy-v2-browser.png' });
+
   await expect(page.getByRole('link', {name:'V2 [WIP]', exact:true})).toHaveAttribute('aria-current', 'page');
   await page.getByRole('link', {name:'Galaxie', exact:true}).last().click();
   await expect(page).toHaveURL(/\/carte(?:\?.*)?$/);
@@ -75,5 +75,5 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   await page.goto('/carte-v2');
   await expect(page.locator('.galaxy-v2')).toBeVisible();
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
-  await page.screenshot({ path: '/tmp/galaxy-v2-mobile.png' });
+
 });

@@ -19,5 +19,5 @@ test('Les erreurs de connexion et d’inscription restent visibles', async ({ pa
   expect(response.status()).toBe(422);
   await expect(page.getByText('Les mots de passe ne correspondent pas.')).toBeVisible();
   await expect(page.getByRole('alert').filter({ hasText: 'Les mots de passe ne correspondent pas.' })).toBeVisible();
-  await page.screenshot({ path: 'docs/validation/inscription-erreur-mots-de-passe-20261101.png', fullPage: true });
+
 });

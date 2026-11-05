@@ -5,112 +5,28 @@
     <div>
         <p class="eyebrow">{{ membership.universe.name }}</p>
         <h1>Inventaire</h1>
-        <p>Chaque boost retire 25 % du temps restant d’une opération active. Les applications successives se cumulent.</p>
+        <p>Retrouvez ici les bonus attribués à votre joueur.</p>
     </div>
 </div>
 
 <section class="panel" aria-labelledby="boost-inventory-title">
     <div class="section-heading">
-        <h2 id="boost-inventory-title">Inventaire</h2>
-        <span class="badge">{{ boosts|filter(boost => boost.status == 'available')|length }} / {{ inventory_capacity }} disponibles</span>
+        <h2 id="boost-inventory-title">Bonus disponibles</h2>
+        <span class="badge">{{ boosts|length }} / {{ inventory_capacity }}</span>
     </div>
-    {% set available = boosts|filter(boost => boost.status == 'available') %}
-    {% set pending = boosts|filter(boost => boost.status == 'pending') %}
-    {% if available is empty and pending is empty %}
-        <p class="muted">Aucun boost pour le moment. Les événements et missions à risque peuvent en attribuer.</p>
+    {% if boosts is empty %}
+        <p class="muted">Aucun item disponible pour le moment.</p>
     {% else %}
-        <p>{{ available|length }} disponible{{ available|length == 1 ? '' : 's' }} · {{ pending|length }} en attente</p>
-        {% if pending is not empty %}
-            <p class="muted">Les boosts en attente sont transférés automatiquement dans l’ordre d’obtention lorsqu’une place se libère.</p>
-        {% endif %}
+        <article class="mission-card">
+            <div>
+                <h3>Boost de réduction de durée</h3>
+                <p>Bonus attribué à votre joueur.</p>
+            </div>
+            <span class="badge">Quantité : {{ boosts|length }}</span>
+        </article>
     {% endif %}
-</section>
-
-
-<section class="panel" aria-labelledby="boost-events-title">
-    <div class="section-heading">
-        <h2 id="boost-events-title">Événements de boosts</h2>
-        <span class="badge">{{ active_events|length }} actif{{ active_events|length == 1 ? '' : 's' }}</span>
-    </div>
-    {% if active_events is empty and scheduled_events is empty %}
-        <p class="muted">Aucun événement en cours. Le prochain cycle hebdomadaire démarre lundi à 00:00 UTC.</p>
-    {% else %}
-        {% for event in active_events %}
-            <article class="mission-card">
-                <div>
-                    <p class="eyebrow">{{ event.format|capitalize }} · {{ event.rewardMode|replace({'_': ' '})|capitalize }}</p>
-                    <h3>
-                        {% if event.templateKey == 'exploration' %}Exploration
-                        {% elseif event.templateKey == 'combat' %}Dégâts de combat
-                        {% elseif event.templateKey == 'transport' %}Transport de fret
-                        {% else %}{{ event.templateKey|replace({'_': ' '})|title }}{% endif %}
-                    </h3>
-                    <p>Votre contribution : {{ event_progress[event.id]|default(0)|round }}{% if event.templateKey == 'combat' %} dégâts{% elseif event.templateKey == 'transport' %} ressources livrées{% else %} systèmes{% endif %}</p>
-                    <p>
-                        {% if event.globalGoal %}
-                            Objectif collectif : {{ event.totalContribution|round }} / {{ event.globalGoal|round }}
-                        {% elseif event.rewardMode == 'threshold' %}
-                            Seuil individuel : {{ event_progress[event.id]|default(0)|round }} / {{ event.thresholdValue|round }} dégâts
-                        {% else %}
-                            Toute contribution positive est comptabilisée.
-                        {% endif %}
-                    </p>
-                    <p>Clôture prévue : {{ event.endsAt|date('d/m/Y H:i', 'UTC') }} UTC</p>
-                </div>
-            </article>
-        {% endfor %}
-        {% if scheduled_events is not empty %}
-            <h3>En attente de démarrage</h3>
-            {% for event in scheduled_events %}
-                <p>{{ event.templateKey|replace({'_': ' '})|title }} · prévu depuis le {{ event.scheduledAt|date('d/m/Y H:i', 'UTC') }} UTC</p>
-            {% endfor %}
-        {% endif %}
-    {% endif %}
-</section>
-
-<section class="panel" aria-labelledby="boost-operations-title">
-    <div class="section-heading">
-        <h2 id="boost-operations-title">Opérations actives</h2>
-    </div>
-    {% if available is empty %}
-        <p class="muted">Utilisez d’abord un boost disponible pour libérer une place.</p>
-    {% elseif queue_items is empty and active_fleets is empty %}
-        <p class="muted">Aucune opération chronométrée n’est actuellement active.</p>
-    {% else %}
-        <div class="mission-list">
-            {% for item in queue_items %}
-                <article class="mission-card">
-                    <div>
-                        <p class="eyebrow">FILE · {{ item.queueType }}</p>
-                        <h3>{{ item.itemSlug|replace({'_': ' '})|title }}</h3>
-                        <p>Fin prévue : {{ item.finishAt|date('d/m/Y H:i:s') }}</p>
-                    </div>
-                    <form method="post" action="{{ path('app_boost_use', {type: 'queue', id: item.id}) }}">
-                        <input type="hidden" name="_token" value="{{ csrf_token('boost-queue-' ~ item.id) }}">
-                        <input type="hidden" name="request_key" value="{{ request_key() }}">
-                        <button class="primary">Utiliser un boost</button>
-                    </form>
-                </article>
-            {% endfor %}
-            {% for fleet in active_fleets %}
-                <article class="mission-card">
-                    <div>
-                        <p class="eyebrow">MISSION · {{ fleet.status }}</p>
-                        <h3>{{ fleet.mission|replace({'_': ' '})|title }}</h3>
-                        <p>
-                            {{ fleet.homePlanet.name }}
-                            {% if fleet.destination %} → {{ fleet.destination.name }}{% elseif fleet.destinationSystem %} → {{ fleet.destinationSystem.name }}{% endif %}
-                        </p>
-                        <p>Échéance : {{ fleet.arrivalAt|date('d/m/Y H:i:s') }}</p>
-                    </div>
-                    <form method="post" action="{{ path('app_boost_use', {type: 'fleet', id: fleet.id}) }}">
-                        <input type="hidden" name="_token" value="{{ csrf_token('boost-fleet-' ~ fleet.id) }}">
-                        <input type="hidden" name="request_key" value="{{ request_key() }}">
-                        <button class="primary">Utiliser un boost</button>
-                    </form>
-                </article>
-            {% endfor %}
-        </div>
+    {% if pending_boost_count > 0 %}
+        <p class="muted">{{ pending_boost_count }} bonus en attente d’une place dans l’inventaire.</p>
     {% endif %}
 </section>
 {% endblock %}

@@ -11,9 +11,8 @@ final class RequirementChecker
             foreach ($requirements[$group]??[] as $r) {
                 $requiredTier=(string)($r['tier']??'basic');
                 if (($this->level($levels,$r['slug'],$requiredTier))<(int)$r['level']) {
-                    $label=$this->catalog->get($group,$r['slug'])['label'];
-                    $tierLabel=$this->catalog->tiers()[$requiredTier]['label']??$requiredTier;
-                    $failures[]=$label.' · '.$tierLabel.' niveau '.$r['level'];
+                    $label=$this->catalog->withTier($this->catalog->get($group,$r['slug']),$requiredTier)['label'];
+                    $failures[]=$label.' · niveau '.$r['level'];
                 }
             }
         }
@@ -31,7 +30,8 @@ final class RequirementChecker
     public function forLevel(array $definition,int $level): array
     {
         $requirements=$definition['unlock_requirements']??[];$best=0;
-        foreach ($definition['levels']??[] as $tier=>$data) if ((int)$tier<=$level && (int)$tier>$best) { $requirements=$data['unlock_requirements']??[];$best=(int)$tier; }
+        foreach ($definition['levels']??[] as $tier=>$data) if ((int)$tier<=$level && (int)$tier>$best) { $milestone=$data['unlock_requirements']??[];$best=(int)$tier; }
+        if($best>0)$requirements=$this->merge($requirements,$milestone);
         return $requirements;
     }
     public function forTier(array $definition,string $tier,int $level=1):array

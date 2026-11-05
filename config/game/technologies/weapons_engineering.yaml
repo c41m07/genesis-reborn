@@ -1,0 +1,105 @@
+{
+  "slug": "weapons_engineering",
+  "label": "Canons à énergie focalisée",
+  "max_level": 25,
+  "research_time_base": 21600,
+  "research_time_scaling": 1.8,
+  "costs_base": {
+    "metal": 10200,
+    "nano": 900,
+    "antimatter": 0
+  },
+  "costs_scaling": 2,
+  "unlock_requirements": {
+    "buildings": [
+      {
+        "slug": "lab",
+        "tier": "basic",
+        "level": 5
+      }
+    ],
+    "technologies": [
+      {
+        "slug": "vector_propulsion",
+        "tier": "basic",
+        "level": 3
+      },
+      {
+        "slug": "naval_engineering",
+        "tier": "basic",
+        "level": 8
+      }
+    ]
+  },
+  "effect": {
+    "type": "stat_bonus",
+    "targets": "all_ships",
+    "stat": "base_attack",
+    "formula": "percent",
+    "value_per_level": 0.01,
+    "max_bonus": 0.25
+  },
+  "tier_unlock_requirements": {
+    "intermediate": {
+      "technologies": [
+        {
+          "slug": "target_acquisition",
+          "tier": "basic",
+          "level": 5
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "basic",
+          "level": 5
+        }
+      ]
+    },
+    "superior": {
+      "technologies": [
+        {
+          "slug": "target_acquisition",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ]
+    }
+  },
+  "economy_value_budget": 24000,
+  "cost_profiles": {
+    "basic": {
+      "metal": 10200,
+      "nano": 900,
+      "antimatter": 0
+    },
+    "intermediate": {
+      "metal": 9000,
+      "nano": 2250,
+      "antimatter": 375
+    },
+    "superior": {
+      "metal": 7500,
+      "nano": 3750,
+      "antimatter": 938
+    }
+  },
+  "tier_labels": {
+    "basic": "Canons à énergie focalisée",
+    "intermediate": "Batteries à décharge concentrée",
+    "superior": "Artillerie de flotte synchronisée"
+  },
+  "tier_descriptions": {
+    "basic": "Améliore l’attaque des unités concernées. Une première méthode établit les bases de cette spécialité.",
+    "intermediate": "Améliore l’attaque des unités concernées. Une approche technique plus intégrée fait progresser cette spécialité.",
+    "superior": "Améliore l’attaque des unités concernées. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées."
+  },
+  "description": "Améliore l’attaque des unités concernées. Une première méthode établit les bases de cette spécialité."
+}

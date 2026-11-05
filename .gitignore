@@ -23,6 +23,7 @@ yarn-error.log
 /test-results/
 /playwright-report/
 /.demo-credentials
+/docs/validation/*.png
 
 # Fichiers d’environnement locaux potentiellement sensibles
 .env*
@@ -31,3 +32,18 @@ yarn-error.log
 # Configuration locale de l’IDE et de Codex
 /.idea/
 /.codex/
+
+# Fichiers système générés localement
+.DS_Store
+Thumbs.db
+
+# Illustrations du catalogue non utilisées par l’application
+/public/images/catalog/
+/docs/artwork/pilot-previews/*.png
+/docs/artwork/pilot-previews/**/*.png
+/docs/artwork/pilot-previews/*.jpg
+/docs/artwork/pilot-previews/**/*.jpg
+/docs/artwork/pilot-previews/*.webp
+/docs/artwork/pilot-previews/**/*.webp
+/docs/artwork/audit-2026-11-03/*.jpg
+/docs/artwork/audit-2026-11-03/**/*.jpg

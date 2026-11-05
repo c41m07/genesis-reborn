@@ -38,11 +38,11 @@ final class CatalogBalanceTest extends KernelTestCase
     public function testTechnologyAndDefenseValuesResolvePerUniverse():void
     {
         $service=static::getContainer()->get(CatalogBalanceService::class);$catalog=static::getContainer()->get(GameCatalog::class);$turbo=$this->universe();$omega=$this->universe('omega-1');
-        $tech=$this->values($service,$turbo,'technologies','precision_fire');$tech['effect.value_per_level']=0.07;$service->save($this->admin,$turbo->id,'technologies','precision_fire',$tech);
-        $ships=[$catalog->getForUniverse($turbo,'ships','fighter')];$boosted=static::getContainer()->get(\App\Service\Combat\TechnologyEffectCalculator::class)->applyToShips($ships,['precision_fire'=>1],$turbo);self::assertEqualsWithDelta(74.9,$boosted[0]['precision'],.000001);
-        self::assertSame(0.01,$catalog->getForUniverse($omega,'technologies','precision_fire')['effect']['value_per_level']);
-        $defense=$this->values($service,$turbo,'defenses','ground_turret');$defense['hp']=900;$service->save($this->admin,$turbo->id,'defenses','ground_turret',$defense);
-        self::assertSame(900.0,$catalog->getForUniverse($turbo,'defenses','ground_turret')['hp']);self::assertSame(600,$catalog->getForUniverse($omega,'defenses','ground_turret')['hp']);
+        $tech=$this->values($service,$turbo,'technologies','weapon_calibration');$tech['effect.value_per_level']=0.07;$service->save($this->admin,$turbo->id,'technologies','weapon_calibration',$tech);
+        $ships=[$catalog->getForUniverse($turbo,'ships','fighter')];$boosted=static::getContainer()->get(\App\Service\Combat\TechnologyEffectCalculator::class)->applyToShips($ships,['weapon_calibration'=>1],$turbo);self::assertEqualsWithDelta(74.9,$boosted[0]['precision'],.000001);
+        self::assertSame(0.01,$catalog->getForUniverse($omega,'technologies','weapon_calibration')['effect']['value_per_level']);
+        $defense=$this->values($service,$turbo,'defenses','ground_turret_anti_light');$defense['hp']=900;$service->save($this->admin,$turbo->id,'defenses','ground_turret_anti_light',$defense);
+        self::assertSame(900.0,$catalog->getForUniverse($turbo,'defenses','ground_turret_anti_light')['hp']);self::assertSame(430,$catalog->getForUniverse($omega,'defenses','ground_turret_anti_light')['hp']);
     }
     public function testEditorRejectsOutOfRangeValues():void
     {

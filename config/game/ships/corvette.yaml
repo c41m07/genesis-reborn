@@ -1,6 +1,6 @@
 {
   "slug": "corvette",
-  "label": "Corvette",
+  "label": "Corvette de patrouille",
   "category": "escort",
   "hp": 700,
   "precision": 70,
@@ -8,12 +8,12 @@
   "evasion": 40,
   "signature": 25,
   "base_attack": 160,
-  "shots_min": 1,
+  "shots_min": 2,
   "shots_max": 3,
-  "build_time_base": 300,
+  "build_time_base": 2700,
   "costs": {},
-  "speed_system": 50,
-  "speed_galaxy": 500,
+  "speed_system": 70,
+  "speed_galaxy": 700,
   "fuel_travel_system": 0.5,
   "fuel_travel_galaxy": 2,
   "fuel_orbit": 0.3,
@@ -22,12 +22,25 @@
     "buildings": [
       {
         "slug": "shipyard",
-        "level": 1
+        "tier": "basic",
+        "level": 4
+      }
+    ],
+    "technologies": [
+      {
+        "slug": "naval_engineering",
+        "tier": "basic",
+        "level": 4
+      },
+      {
+        "slug": "vector_propulsion",
+        "tier": "basic",
+        "level": 2
       }
     ]
   },
   "provisional": true,
-  "note": "Navigation et équilibrage provisoires ; fighter et stealth_fighter reprennent les stats de combat documentées.",
+  "note": "Profil de mobilité et de combat différencié, équilibrage validé le 02/11/2026 et à mesurer en Alpha.",
   "fuel_capacity": 2500,
   "fuel_capacity_provisional": true,
   "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 2500 H. Réservoir réservé au carburant, distinct de la soute de fret.",
@@ -36,7 +49,7 @@
     "intermediate": {
       "technologies": [
         {
-          "slug": "advanced_targeting",
+          "slug": "target_acquisition",
           "tier": "basic",
           "level": 5
         }
@@ -52,7 +65,7 @@
     "superior": {
       "technologies": [
         {
-          "slug": "advanced_targeting",
+          "slug": "target_acquisition",
           "tier": "intermediate",
           "level": 10
         }
@@ -83,5 +96,16 @@
       "nano": 4375,
       "antimatter": 821
     }
-  }
+  },
+  "tier_labels": {
+    "basic": "Corvette de patrouille",
+    "intermediate": "Corvette de piquetage",
+    "superior": "Corvette d’escorte rapprochée"
+  },
+  "tier_descriptions": {
+    "basic": "Petit vaisseau d’escorte et de combat. Une coque individuelle remplit ce rôle selon une conception conventionnelle.",
+    "intermediate": "Petit vaisseau d’escorte et de combat. Une nouvelle architecture de vaisseau adapte la coque à ce rôle.",
+    "superior": "Petit vaisseau d’escorte et de combat. Une conception spécialisée pousse plus loin le rôle du vaisseau."
+  },
+  "description": "Petit vaisseau d’escorte et de combat. Une coque individuelle remplit ce rôle selon une conception conventionnelle."
 }

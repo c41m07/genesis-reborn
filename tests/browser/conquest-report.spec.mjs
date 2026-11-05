@@ -25,7 +25,7 @@ function sql(project, query) {
   execFileSync('docker', ['compose', '--project-name', project, '--env-file', '.env.local', 'exec', '-T', 'app', 'php', 'bin/console', 'dbal:run-sql', query], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 }
 
-test('Conquête PNJ : rapport détaillé, résultat, responsive et confidentialité', async ({ page, browser }) => {
+test('Conquête PNJ : rapport détaillé, résultat, responsive et confidentialité', async ({ page, browser }, testInfo) => {
   test.setTimeout(180000);
   const email = await enter(page);
   const project = process.env.BROWSER_ROUTER;
@@ -72,7 +72,13 @@ test('Conquête PNJ : rapport détaillé, résultat, responsive et confidentiali
     await page.goto('/rapports');
     return reportLink.count();
   }, { timeout: 45000, intervals: [1000] }).toBe(1);
-  await page.screenshot({ path: 'docs/validation/rapports-combat-etat.png', fullPage: true });
+
+  await page.goto('/rapports?type=economy');
+  await expect(page.locator('a[href*="/rapports/combat/"]')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Aucun rapport économique' })).toBeVisible();
+  await page.goto('/rapports?type=combat');
+  await expect(reportLink).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath('reports-combat.png'), fullPage: true, animations: 'disabled' });
   const reportName = (await reportLink.textContent()).trim();
   await reportLink.click();
   const reportUrl = page.url();
@@ -85,16 +91,17 @@ test('Conquête PNJ : rapport détaillé, résultat, responsive et confidentiali
   await expect(losses).toBeFocused();
   await expect(page.getByRole('heading', { name: 'Conquête', exact: true })).toBeVisible();
   await losses.evaluate(element => element.blur());
-  await page.screenshot({ path: 'docs/validation/rapport-combat-detail.png', fullPage: true });
+
   await expect(page.locator('main')).toContainText(/Vous avez conquis cette planète PNJ|La conquête a échoué|la limite de colonies empêche|déjà été revendiquée|aucun vaisseau colonie n’a survécu/i);
   await expect(page.getByRole('link', { name: 'Tous les rapports' })).toBeVisible();
   for (const width of [1440, 768, 390]) {
     await page.setViewportSize({ width, height: 900 });
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
+  await page.screenshot({ path: testInfo.outputPath('combat-detail-390.png'), fullPage: true, animations: 'disabled' });
   await page.goto(reportUrl);
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: 'docs/validation/rapport-combat-mobile.png', fullPage: true });
+
   expect(reportName).toBeTruthy();
 
   const outsider = await browser.newPage();

@@ -14,7 +14,9 @@ async function signIn(page) {
   await page.getByLabel('Adresse email').fill(email);
   await page.getByLabel('Mot de passe', { exact: true }).fill(password);
   await page.getByRole('button', { name: /Connexion/ }).click();
-  await page.locator('article.universe-card').filter({ has: page.getByRole('heading', { name: /Turbo/ }) }).getByRole('button').click();
+  const universeCard = page.locator('article.universe-card').first();
+  await expect(universeCard).toBeVisible();
+  await universeCard.getByRole('button').click();
   await expect(page).toHaveURL(/planetes\/\d+$/);
 }
 
@@ -23,7 +25,7 @@ test('Routes de navigation utilisables sans débordement aux trois tailles', asy
   const routes = await page.locator('.sidebar nav a').evaluateAll(links => [...new Set(links.map(link => new URL(link.href).pathname + new URL(link.href).search))]);
   expect(routes.length).toBeGreaterThanOrEqual(10);
 
-  for (const width of [1440, 768, 390]) {
+  for (const width of [1440, 1280, 768, 390]) {
     await page.setViewportSize({ width, height: 900 });
     for (const route of routes) {
       const response = await page.goto(route);

@@ -1,6 +1,6 @@
 {
   "slug": "shipyard",
-  "label": "Chantier spatial",
+  "label": "Chantier d’assemblage",
   "max_level": 25,
   "base_build_time": 1800,
   "build_time_scaling": 1.6,
@@ -19,7 +19,7 @@
       "unlock_requirements": {
         "technologies": [
           {
-            "slug": "advanced_engineering",
+            "slug": "naval_engineering",
             "level": 1
           }
         ],
@@ -35,11 +35,11 @@
       "unlock_requirements": {
         "technologies": [
           {
-            "slug": "advanced_engineering",
+            "slug": "naval_engineering",
             "level": 3
           },
           {
-            "slug": "robotics",
+            "slug": "automated_defense_repair",
             "level": 1
           }
         ],
@@ -55,7 +55,7 @@
       "unlock_requirements": {
         "technologies": [
           {
-            "slug": "nano_construction",
+            "slug": "nanomaterial_synthesis",
             "level": 2
           }
         ]
@@ -63,12 +63,12 @@
     }
   },
   "source": "PDF 1 p.14–15",
-  "build_time_reduction_max_percent": 50,
+  "build_time_reduction_max_percent": 70,
   "tier_unlock_requirements": {
     "intermediate": {
       "technologies": [
         {
-          "slug": "advanced_engineering",
+          "slug": "naval_engineering",
           "tier": "basic",
           "level": 5
         }
@@ -77,7 +77,7 @@
     "superior": {
       "technologies": [
         {
-          "slug": "advanced_engineering",
+          "slug": "naval_engineering",
           "tier": "intermediate",
           "level": 10
         }
@@ -101,5 +101,16 @@
       "nano": 3125,
       "antimatter": 586
     }
-  }
+  },
+  "tier_labels": {
+    "basic": "Chantier d’assemblage",
+    "intermediate": "Docks orbitaux modulaires",
+    "superior": "Anneau industriel planétaire"
+  },
+  "tier_descriptions": {
+    "basic": "Réduit la durée de construction des vaisseaux. Une installation locale assure cette fonction sur la colonie.",
+    "intermediate": "Réduit la durée de construction des vaisseaux. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+    "superior": "Réduit la durée de construction des vaisseaux. Un maillage étendu porte cette fonction à l’échelle planétaire."
+  },
+  "description": "Réduit la durée de construction des vaisseaux. Une installation locale assure cette fonction sur la colonie."
 }

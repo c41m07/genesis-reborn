@@ -1,7 +1,7 @@
 <?php
 namespace App\Controller;
 
-use App\Entity\{AdminAuditLog, MessageReport, Player, Universe};
+use App\Entity\{AdminAuditLog, MessageReport, Player, PlayerUniverse, Universe};
 use App\Repository\GameRepository;
 use App\Service\Admin\AdminService;
 use App\Service\Admin\AdminOperationsService;
@@ -24,10 +24,18 @@ final class AdminController extends AbstractController
         $reports = $repo->all(MessageReport::class, ['status' => 'open'], ['createdAt' => 'DESC']);
         $admin->recordReportViews($this->getUser(), $reports);
         $universes = $repo->all(Universe::class, [], ['id' => 'ASC']);
+        $memberships = $repo->all(PlayerUniverse::class);
+        $universePlayerCounts = [];
+        foreach ($memberships as $membership) {
+            $universePlayerCounts[$membership->universe->id] = ($universePlayerCounts[$membership->universe->id] ?? 0) + 1;
+        }
         $universeConfigs = [];
         foreach ($universes as $universe) { $universeConfigs[$universe->id] = $catalog->forUniverse($universe); }
         $players = $repo->all(Player::class, [], ['id' => 'DESC']);
         $activeUniverseCount = count(array_filter($universes, static fn (Universe $universe): bool => $universe->status === 'active'));
+        $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+        $scheduledUniverseCount = count(array_filter($universes, static fn (Universe $universe): bool => $universe->status === 'active' && $universe->startsAt !== null && $universe->startsAt > $now));
+        $closedUniverseCount = count(array_filter($universes, static fn (Universe $universe): bool => $universe->status === 'closed'));
         $suspendedPlayerCount = count(array_filter($players, static fn (Player $player): bool => $player->lockedAt !== null));
         $auditLogs = $repo->all(AdminAuditLog::class, [], ['createdAt' => 'DESC']);
         $reviewedIncidentIds = [];
@@ -45,6 +53,9 @@ final class AdminController extends AbstractController
             'playerCount' => count($players),
             'suspendedPlayerCount' => $suspendedPlayerCount,
             'activeUniverseCount' => $activeUniverseCount,
+            'scheduledUniverseCount' => $scheduledUniverseCount,
+            'closedUniverseCount' => $closedUniverseCount,
+            'universePlayerCounts' => $universePlayerCounts,
             'openReportCount' => count($reports),
             'securityIncidents' => $securityIncidents,
             'securityIncidentCount' => count($securityIncidents),

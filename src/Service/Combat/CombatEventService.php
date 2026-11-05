@@ -420,8 +420,9 @@ final class CombatEventService
                     $fortressLevels = $this->repo->levelsByTier(PlanetBuilding::class, ['planet' => $event->planet])['fortress'] ?? [];
                     $fortress = $this->catalog->getForUniverse($event->planet->solarSystem->galaxy->universe, 'buildings', 'fortress')['effect'] ?? [];
                     if (($fortress['targets'] ?? null) === 'ground_defenses' && ($fortress['stat'] ?? null) === 'hp') {
-                        $remaining=1.0;foreach(\App\Service\Catalog\GameCatalog::TIERS as $rank){$rankLevel=(int)($fortressLevels[$rank]??0);$rankFactor=\App\Service\Catalog\GameCatalog::tierFactor($rank);$bonus=min((float)($fortress['max_bonus']??0)*$rankFactor,(float)($fortress['value_per_level']??0)*$rankLevel*$rankFactor)/100;$remaining*=1+$bonus;}
-                        $definition['hp'] *= $remaining;
+                        $fortressDefinition=$this->catalog->get('buildings','fortress');
+                        $fortressBonus=\App\Service\Catalog\GameCatalog::diminishingBonus($fortressLevels,(float)($fortress['max_bonus']??25),(int)($fortressDefinition['max_level']??25));
+                        $definition['hp'] *= 1+$fortressBonus/100;
                     }
                     $defenseSnapshots[] = $definition + [
                         'id' => (string) $defense->id,
@@ -718,10 +719,10 @@ final class CombatEventService
 
     private function planetLimit(PlayerUniverse $membership): int
     {
-        $config=$this->catalog->forUniverse($membership->universe);$definition=$config['catalog']['technologies']['colonization']??null;$effect=$definition['effect']??null;
+        $config=$this->catalog->forUniverse($membership->universe);$definition=$config['catalog']['technologies']['colonial_expansion']??null;$effect=$definition['effect']??null;
         if(!is_array($effect)||($effect['type']??null)!=='planet_limit')return (int)$config['limits']['max_planets'];
-        $ranks=$this->repo->levelsByTier(PlayerTechnology::class,['playerUniverse'=>$membership])['colonization']??[];$base=(int)($effect['base_planets']??1);$perLevel=(float)($effect['value_per_level']??1);$basicCap=max(0,(int)($effect['max_planets']??5)-$base);$extra=0.0;foreach(\App\Service\Catalog\GameCatalog::TIERS as $tier){$factor=\App\Service\Catalog\GameCatalog::tierFactor($tier);$level=min((int)($definition['max_level']??25),(int)($ranks[$tier]??0));$extra+=min($basicCap*$factor,$perLevel*$level*$factor);}
-        return max(1,min((int)$config['limits']['max_planets'],$base+(int)floor($extra)));
+        $ranks=$this->repo->levelsByTier(PlayerTechnology::class,['playerUniverse'=>$membership])['colonial_expansion']??[];
+        return max(1,min((int)$config['limits']['max_planets'],\App\Service\Catalog\GameCatalog::colonyLimit($ranks,$effect,(int)$config['limits']['max_planets'])));
     }
 
     private function arrivalRound(CombatEvent $event, \DateTimeImmutable $arrivalAt): int
@@ -780,10 +781,10 @@ final class CombatEventService
             $npcShip->quantity = max(0, $npcShip->quantity - $lost);
         }
         $rebuilt = [];
-        $robotics = $planet->owner ? ($this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $planet->owner])['robotics'] ?? []) : [];
+        $automated_defense_repair = $planet->owner ? ($this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $planet->owner])['automated_defense_repair'] ?? []) : [];
         $rules = $this->catalog->rules();
-        $remainingFailure=1.0;foreach(\App\Service\Catalog\GameCatalog::TIERS as $rank){$level=(int)($robotics[$rank]??0);$factor=\App\Service\Catalog\GameCatalog::tierFactor($rank);$chance=min((float)($rules['defense_rebuild_max_percent']??50)*$factor,(float)($rules['defense_rebuild_percent_per_robotics_level']??10)*$level*$factor)/100;$remainingFailure*=1-$chance;}
-        $rebuildPercent=(1-$remainingFailure)*100;
+        $repairDefinition=$this->catalog->get('technologies','automated_defense_repair');
+        $rebuildPercent=\App\Service\Catalog\GameCatalog::diminishingBonus($automated_defense_repair,(float)($rules['defense_rebuild_max_percent']??40),(int)($repairDefinition['max_level']??25));
         foreach ($defenseSnapshots as $snapshot) {
             $id = (int) $snapshot['id'];
             $defense = $this->repo->find(PlanetDefense::class, $id);
@@ -1000,3 +1001,4 @@ final class CombatEventService
         };
     }
 }
+

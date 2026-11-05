@@ -141,7 +141,7 @@ final class CombatEventTest extends KernelTestCase
 
         $turret = new PlanetDefense();
         $turret->planet = $target;
-        $turret->slug = 'ground_turret';
+        $turret->slug = 'ground_turret_anti_light';
         $turret->quantity = 1;
         $this->em->persist($turret);
         $this->em->flush();
@@ -361,7 +361,7 @@ final class CombatEventTest extends KernelTestCase
         foreach ([[$defender->currentPlayerUniverse, 1], [$attacker->currentPlayerUniverse, 2]] as [$membership, $level]) {
             $technology = new PlayerTechnology();
             $technology->playerUniverse = $membership;
-            $technology->slug = 'precision_fire';
+            $technology->slug = 'weapon_calibration';
             $technology->level = $level;
             $this->em->persist($technology);
         }
@@ -380,7 +380,7 @@ final class CombatEventTest extends KernelTestCase
 
         $turret = new PlanetDefense();
         $turret->planet = $target;
-        $turret->slug = 'ground_turret';
+        $turret->slug = 'ground_turret_anti_light';
         $turret->quantity = 1;
         $this->em->persist($turret);
         $this->em->flush();
@@ -402,11 +402,11 @@ final class CombatEventTest extends KernelTestCase
             $snapshots[$participant['fleet_id']] = $participant;
         }
         self::assertEqualsWithDelta(round(70.0 * (1.01 ** 2), 1), $snapshots[$fleet->id]['units'][0]['precision'], 0.000001);
-        self::assertSame(['precision_fire' => ['basic' => 2]], $snapshots[$fleet->id]['technology_levels']);
+        self::assertSame(['weapon_calibration' => ['basic' => 2]], $snapshots[$fleet->id]['technology_levels']);
         $defenderSnapshot = array_values(array_filter($snapshots, static fn (array $participant): bool => $participant['player_universe_id'] === $defender->currentPlayerUniverse->id))[0];
         self::assertEqualsWithDelta(70.0 * 1.01, $defenderSnapshot['units'][0]['precision'], 0.000001);
-        self::assertSame(['precision_fire' => ['basic' => 1]], $defenderSnapshot['technology_levels']);
-        self::assertSame(65, $log->snapshot['defenses'][0]['precision']);
+        self::assertSame(['weapon_calibration' => ['basic' => 1]], $defenderSnapshot['technology_levels']);
+        self::assertSame(72, $log->snapshot['defenses'][0]['precision']);
     }
 
     public function testBeginnerProtectionExpiresAndBlocksFiveToOneScoreAdvantage(): void
@@ -661,11 +661,11 @@ final class CombatEventTest extends KernelTestCase
         $clock = $this->clock();
         $attacker = $this->player('ConquestAttacker');
         $origin = $this->join($attacker);
-        $colonization = new PlayerTechnology();
-        $colonization->playerUniverse = $attacker->currentPlayerUniverse;
-        $colonization->slug = 'colonization';
-        $colonization->level = 1;
-        $this->em->persist($colonization);
+        $colonial_expansion = new PlayerTechnology();
+        $colonial_expansion->playerUniverse = $attacker->currentPlayerUniverse;
+        $colonial_expansion->slug = 'colonial_expansion';
+        $colonial_expansion->level = 1;
+        $this->em->persist($colonial_expansion);
         $this->em->flush();
         $universe = $attacker->currentPlayerUniverse->universe;
         $target = null;

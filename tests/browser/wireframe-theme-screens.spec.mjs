@@ -20,7 +20,7 @@ test('Le thème clair couvre les principaux écrans stratégiques sans débordem
   test.setTimeout(360000);
   await enter(page);
   await expect(page.locator('body')).toHaveAttribute('data-theme', 'dark');
-  await page.screenshot({ path: 'docs/validation/colonie-theme-dark.png', fullPage: true });
+
   const colonyPath = new URL(page.url()).pathname;
   await page.goto('/profil/preferences');
   await page.getByLabel('Thème de l’interface').selectOption('light');
@@ -58,7 +58,6 @@ test('Le thème clair couvre les principaux écrans stratégiques sans débordem
     if (route === '/flottes') await expect(page.getByRole('navigation', { name: 'Navigation principale' }).getByRole('link', { name: 'Flottes et missions' })).toHaveAttribute('aria-current', 'page');
     if (route === '/flottes?mission=spy') await expect(page.getByRole('navigation', { name: 'Navigation principale' }).getByRole('link', { name: 'Flottes et missions' })).toHaveAttribute('aria-current', 'page');
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1440);
-    await page.screenshot({ path: `docs/validation/${capture}`, fullPage: true });
     if (route === '/rapports') {
       for (const category of ['Combats', 'Économie', 'Espionnage', 'Tous']) {
         const tab = page.getByRole('navigation', { name: 'Filtrer les rapports' }).getByRole('link', { name: category, exact: true });
@@ -82,7 +81,7 @@ test('Le thème clair couvre les principaux écrans stratégiques sans débordem
       await expect(page.locator('#command-navigation')).toBeVisible();
       await page.keyboard.press('Escape');
     }
-    await page.screenshot({ path: 'docs/validation/' + capture, fullPage: false });
+
   }
 });
 
@@ -95,7 +94,7 @@ test('Les pages publiques utilisent le thème spatial sombre et gardent leurs fo
     expect(response?.status(), route).toBeLessThan(400);
     await expect(page.locator('main#main')).toBeVisible();
     await expect(page.locator('body')).toHaveAttribute('data-theme', 'dark');
-    await page.screenshot({ path: 'docs/validation/' + capture, fullPage: true });
+
   }
   await context.close();
 });

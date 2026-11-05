@@ -1,6 +1,6 @@
 {
   "slug": "colony_ship",
-  "label": "Vaisseau colonie",
+  "label": "Vaisseau colonisateur",
   "category": "support",
   "hp": 500,
   "precision": 70,
@@ -10,10 +10,10 @@
   "base_attack": 0,
   "shots_min": 1,
   "shots_max": 3,
-  "build_time_base": 600,
+  "build_time_base": 7200,
   "costs": {},
-  "speed_system": 50,
-  "speed_galaxy": 500,
+  "speed_system": 35,
+  "speed_galaxy": 350,
   "fuel_travel_system": 0.5,
   "fuel_travel_galaxy": 2,
   "fuel_orbit": 0.3,
@@ -27,7 +27,7 @@
     ]
   },
   "provisional": true,
-  "note": "Navigation et équilibrage provisoires ; fighter et stealth_fighter reprennent les stats de combat documentées.",
+  "note": "Profil de mobilité et de combat différencié, équilibrage validé le 02/11/2026 et à mesurer en Alpha.",
   "fuel_capacity": 2000,
   "fuel_capacity_provisional": true,
   "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 2000 H. Réservoir réservé au carburant, distinct de la soute de fret.",
@@ -36,7 +36,7 @@
     "intermediate": {
       "technologies": [
         {
-          "slug": "colonization",
+          "slug": "colonial_expansion",
           "tier": "basic",
           "level": 5
         }
@@ -52,7 +52,7 @@
     "superior": {
       "technologies": [
         {
-          "slug": "colonization",
+          "slug": "colonial_expansion",
           "tier": "intermediate",
           "level": 10
         }
@@ -83,5 +83,16 @@
       "nano": 6250,
       "antimatter": 1172
     }
-  }
+  },
+  "tier_labels": {
+    "basic": "Vaisseau colonisateur",
+    "intermediate": "Vaisseau pionnier",
+    "superior": "Arche de colonisation"
+  },
+  "tier_descriptions": {
+    "basic": "Vaisseau conçu pour fonder une colonie. Une coque individuelle remplit ce rôle selon une conception conventionnelle.",
+    "intermediate": "Vaisseau conçu pour fonder une colonie. Une nouvelle architecture de vaisseau adapte la coque à ce rôle.",
+    "superior": "Vaisseau conçu pour fonder une colonie. Une conception spécialisée pousse plus loin le rôle du vaisseau."
+  },
+  "description": "Vaisseau conçu pour fonder une colonie. Une coque individuelle remplit ce rôle selon une conception conventionnelle."
 }

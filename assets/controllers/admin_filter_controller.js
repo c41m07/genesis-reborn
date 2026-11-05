@@ -25,6 +25,11 @@ export default class extends Controller {
             this.countTarget.textContent = visibleCount + ' résultat' + (visibleCount === 1 ? '' : 's');
         }
         if (this.hasEmptyTarget) {
+            if (this.emptyTarget.dataset.defaultMessage) {
+                this.emptyTarget.textContent = query
+                    ? this.emptyTarget.dataset.noMatchesMessage
+                    : this.emptyTarget.dataset.defaultMessage;
+            }
             this.emptyTarget.hidden = visibleCount !== 0;
         }
     }

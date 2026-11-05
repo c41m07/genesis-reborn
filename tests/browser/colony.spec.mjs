@@ -24,10 +24,10 @@ test('Inscription, connexion, menus, ressources fixes et rendu responsive', asyn
   await page.getByRole('link',{name:'Bâtiments',exact:true}).click();await expect(page.locator('#panel-buildings')).toBeVisible();
   await page.evaluate(()=>window.scrollTo({top:1200,behavior:'instant'}));await expect.poll(()=>page.locator('.resource-strip').evaluate(el=>Math.round(el.getBoundingClientRect().top))).toBe(await page.locator('.topbar').evaluate(el=>Math.round(el.getBoundingClientRect().height)));
   await page.getByRole('link',{name:'Vue générale',exact:true}).click();await expect(page.locator('.section-tabs,.inventory-panel,.colony-catalog')).toHaveCount(0);
-  await page.evaluate(async()=>{await document.fonts.ready;document.activeElement?.blur();window.scrollTo({top:0,behavior:'instant'})});await page.screenshot({path:'docs/validation/colonie-desktop.png',fullPage:true});await page.screenshot({path:'test-results/colonie-apercu.png'});
+  await page.evaluate(async()=>{await document.fonts.ready;document.activeElement?.blur();window.scrollTo({top:0,behavior:'instant'})});
   await page.setViewportSize({width:390,height:844});await page.evaluate(()=>{document.activeElement?.blur();window.scrollTo({top:0,behavior:'instant'})});await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await expect.poll(()=>page.locator('.sidebar').evaluate(el=>el.getBoundingClientRect().right)).toBeLessThanOrEqual(0);
   for(const stock of await page.locator('[data-resource-target="stock"]').all()) {const r=await stock.boundingBox();expect(r.x).toBeGreaterThanOrEqual(0);expect(r.x+r.width).toBeLessThanOrEqual(390);}
-  await page.screenshot({path:'docs/validation/colonie-mobile.png',fullPage:true});await page.screenshot({path:'test-results/mobile-apercu.png'});
+
   await page.evaluate(()=>window.scrollTo({top:900,behavior:'instant'}));await expect.poll(()=>page.locator('.resource-strip').evaluate(el=>Math.round(el.getBoundingClientRect().top))).toBe(await page.locator('.topbar').evaluate(el=>Math.round(el.getBoundingClientRect().height)));await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
   await page.getByRole('navigation',{name:'Navigation mobile'}).getByRole('button',{name:'Plus'}).click();await page.keyboard.press('Shift+Tab');await expect(page.getByRole('button',{name:'Déconnexion'})).toBeFocused();await page.keyboard.press('Tab');await expect(page.locator('.brand').first()).toBeFocused();await page.keyboard.press('Escape');await expect(page.getByRole('navigation',{name:'Navigation mobile'}).getByRole('button',{name:'Plus'})).toHaveAttribute('aria-expanded','false');await page.getByRole('navigation',{name:'Navigation mobile'}).getByRole('button',{name:'Plus'}).click();await page.getByRole('navigation',{name:'Navigation principale'}).getByRole('link',{name:'Galaxie',exact:true}).click();await expect(page.getByRole('heading',{name:'Galaxie',exact:true})).toBeVisible();await page.getByText(/Parcourir les autres systèmes/).click();await expect(page.getByText('Signal non cartographié').first()).toBeVisible();await page.getByRole('navigation',{name:'Navigation mobile'}).getByRole('button',{name:'Plus'}).click();await page.getByRole('link',{name:'Rapports',exact:true}).click();await expect(page.getByRole('heading',{name:'Rapports',exact:true})).toBeVisible();await expect(page.getByRole('heading',{name:'Aucun rapport dans cette catégorie'})).toBeVisible();expect(errors).toEqual([]);
 });
@@ -80,10 +80,10 @@ test('Chantier, estimation, colonisation, transport et exploration réels', asyn
   await form.getByRole('button',{name:/Envoyer la flotte/}).click();await expect(page.locator('[data-status="traveling"]')).toHaveCount(1);
   await page.getByRole('link',{name:'Vue générale',exact:true}).click();await expect(page.locator('[data-active-fleet]')).toHaveCount(1);
   const bar=page.locator('[data-active-fleet] [role="progressbar"]');const progress=Number(await bar.getAttribute('aria-valuenow'));expect(Number.isFinite(progress)).toBe(true);expect(progress).toBeGreaterThanOrEqual(0);expect(progress).toBeLessThanOrEqual(100);accelerateTravelingMission(process.env.BROWSER_ROUTER,email,'transport');
-  await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));await page.screenshot({path:'test-results/colonie-multicolonies-vol.png',fullPage:true});
+  await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
   await expect.poll(()=>queryIsolatedSql(process.env.BROWSER_ROUTER,"SELECT status FROM fleet INNER JOIN player_universe membership ON membership.id = fleet.player_universe_id INNER JOIN player ON player.id = membership.player_id WHERE player.email = '"+email+"' AND mission = 'transport' ORDER BY fleet.id DESC LIMIT 1"),{timeout:45000,intervals:[1000]}).toBe('returning');await page.goto('/flottes');await expect(page.locator('[data-status="returning"]')).toHaveCount(1);accelerateTravelingMission(process.env.BROWSER_ROUTER,email,'transport');
   await page.getByRole('link',{name:'Flottes et missions',exact:true}).click();await expect.poll(async()=>{await page.reload();return page.locator('[data-status="completed"]').count();},{timeout:45000,intervals:[1000]}).toBe(3);
-  const discovered=queryIsolatedSql(process.env.BROWSER_ROUTER,"SELECT COUNT(*) FROM player_discovery discovery INNER JOIN player_universe membership ON membership.id = discovery.player_universe_id INNER JOIN player ON player.id = membership.player_id INNER JOIN solar_system system ON system.id = discovery.solar_system_id INNER JOIN galaxy ON galaxy.id = system.galaxy_id WHERE player.email = '"+email+"' AND CONCAT(REPLACE(galaxy.name, 'Galaxie ', ''), ':', FLOOR(system.coord_y / 3) * 10 + FLOOR(system.coord_x / 3) + 1) = '"+destinationCoordinates+"'");expect(discovered).toBe('1');await page.getByRole('link',{name:'Galaxie',exact:true}).click();await expect(page.getByText(/Parcourir les autres systèmes/)).toBeVisible();await page.screenshot({path:'test-results/carte.png',fullPage:true});
+  const discovered=queryIsolatedSql(process.env.BROWSER_ROUTER,"SELECT COUNT(*) FROM player_discovery discovery INNER JOIN player_universe membership ON membership.id = discovery.player_universe_id INNER JOIN player ON player.id = membership.player_id INNER JOIN solar_system system ON system.id = discovery.solar_system_id INNER JOIN galaxy ON galaxy.id = system.galaxy_id WHERE player.email = '"+email+"' AND CONCAT(REPLACE(galaxy.name, 'Galaxie ', ''), ':', FLOOR(system.coord_y / 3) * 10 + FLOOR(system.coord_x / 3) + 1) = '"+destinationCoordinates+"'");expect(discovered).toBe('1');await page.getByRole('link',{name:'Galaxie',exact:true}).click();await expect(page.getByText(/Parcourir les autres systèmes/)).toBeVisible();
 });
 test('Alliances réciproques, guilde, transfert et dissolution depuis deux comptes',async({browser})=>{
   test.setTimeout(90000);const a=await browser.newPage(),b=await browser.newPage();
@@ -98,7 +98,7 @@ test('Alliances réciproques, guilde, transfert et dissolution depuis deux compt
     await b.reload();await b.locator('.guild-card').filter({has:b.getByRole('heading',{name,exact:true})}).getByRole('button',{name:/Rejoindre/}).click();
     await a.reload();await a.getByText('Gérer le commandement',{exact:true}).click();await a.getByLabel('Nouveau commandant').selectOption({label:bob.username});await a.getByRole('button',{name:'Transférer le commandement'}).click();
     await expect(a.getByRole('button',{name:'Quitter la guilde'})).toBeVisible();await a.getByRole('button',{name:'Quitter la guilde'}).click();
-    await b.reload();await b.getByText('Gérer le commandement',{exact:true}).click();await b.screenshot({path:'test-results/diplomatie.png',fullPage:true});await b.getByRole('button',{name:'Dissoudre la guilde'}).click();
+    await b.reload();await b.getByText('Gérer le commandement',{exact:true}).click();await b.getByRole('button',{name:'Dissoudre la guilde'}).click();
     await expect(b.getByRole('button',{name:'Fonder une guilde'})).toBeVisible();await expect(commander(b,alice.username)).toContainText('Allié');
   } finally {await a.close();await b.close();}
 });
@@ -108,7 +108,7 @@ test('Files intégrées : commande active, supplément, durée totale et annulat
   const row=page.locator('.scene-operations [data-queue-type="building"]');await expect(row.locator('.queue-extra')).toHaveText('+1');
   const operation=row.locator('[data-controller="progress"]');const end=Date.parse(await operation.getAttribute('data-progress-end-value')),total=Date.parse(await operation.getAttribute('data-progress-total-value'));expect(total).toBeGreaterThan(end);
   await expect(row.getByText('File complète ·',{exact:false})).toBeVisible();const bar=row.getByRole('progressbar');const start=Number(await bar.getAttribute('aria-valuenow'));await expect.poll(async()=>Number(await bar.getAttribute('aria-valuenow')),{timeout:10000}).toBeGreaterThan(start);
-  await page.evaluate(()=>{document.activeElement?.blur();window.scrollTo({top:0,behavior:'instant'})});await page.screenshot({path:'test-results/files-integrees.png',fullPage:true});
+  await page.evaluate(()=>{document.activeElement?.blur();window.scrollTo({top:0,behavior:'instant'})});
   await row.locator('summary').click();await row.getByRole('button',{name:/Annuler Extracteur · Métal.*et ses dépendances/}).first().click();
   await expect(page.locator('.scene-operations [data-queue-type="building"]')).toContainText('Aucune commande en cours');await expect(page.locator('.queue-extra')).toHaveCount(0);
 });
@@ -116,8 +116,8 @@ test('Bénéfices des niveaux, arbre technologique et prérequis visuels',async(
   const {email}=await enter(page,'Info');prepareOwnedColony(process.env.BROWSER_ROUTER,email,{showLockedItems:true});await page.getByRole('link',{name:'Bâtiments',exact:true}).click();
   await expect(page.getByRole('heading',{name:'Extracteur · Énergie',exact:true})).toHaveCount(0);
   const central=page.locator('#item-power_plant-basic');await expect(central.locator('.card-benefits')).toContainText('Production');await expect(central.locator('.card-benefits')).toContainText('→');
-  await page.screenshot({path:'test-results/benefices-batiments.png',fullPage:true});
-  await page.getByRole('link',{name:'Recherche',exact:true}).click();await expect(page.locator('.technology-tree')).toHaveCount(0);await page.getByRole('link',{name:'Technologie',exact:true}).click();await expect(page.locator('.tech-node').first()).toBeVisible();await expect(page.locator('#tech-advanced_propulsion-basic .tech-prerequisites')).toContainText('Ingénierie');await expect(page.locator('#tech-advanced_propulsion-basic .tech-prerequisites')).toContainText('Laboratoire');await page.screenshot({path:'test-results/arbre-technologique.png',fullPage:true});
+
+  await page.getByRole('link',{name:'Recherche',exact:true}).click();await expect(page.locator('.technology-tree')).toHaveCount(0);await page.getByRole('link',{name:'Technologie',exact:true}).click();await expect(page.locator('.tech-node').first()).toBeVisible();const propulsion=page.locator('#tech-vector_propulsion-basic');await expect(propulsion.locator('summary')).toContainText('Niveau');await expect(propulsion.locator('summary')).toContainText('Verrouillée');await propulsion.locator('summary').click();await expect(propulsion.locator('.tech-node-details')).toContainText('Ingénierie');await expect(propulsion.locator('.tech-node-details')).toContainText('Laboratoire');
 });
 
 test('La préférence révèle les rangs verrouillés du catalogue', async ({page}) => {
@@ -136,17 +136,17 @@ test('La préférence révèle les rangs verrouillés du catalogue', async ({pag
   await page.goto(colonyUrl);
   await page.getByRole('link', {name: 'Recherche', exact: true}).click();
   await expect(page.locator('.catalog-visibility-note')).toHaveText('Éléments verrouillés affichés');
-  await expect(page.locator('#item-precision_fire-intermediate')).toBeVisible();
-  await expect(page.locator('#item-precision_fire-superior')).toBeVisible();
-  await expect(page.locator('#item-precision_fire-intermediate')).toHaveClass(/locked/);
-  await page.screenshot({path: 'docs/validation/progression-ranks-locked-ui-20261102.png', fullPage: true});
+  await expect(page.locator('#item-weapon_calibration-intermediate')).toBeVisible();
+  await expect(page.locator('#item-weapon_calibration-superior')).toBeVisible();
+  await expect(page.locator('#item-weapon_calibration-intermediate')).toHaveClass(/locked/);
+
   await page.getByRole('link', {name: 'Chantier spatial', exact: true}).click();
   await expect(page.locator('#item-fighter-intermediate')).toBeVisible();
   await expect(page.locator('#item-fighter-superior')).toBeVisible();
   await expect(page.locator('#item-fighter-intermediate')).toHaveClass(/locked/);
-  await page.screenshot({path: 'docs/validation/progression-ranks-ships-locked-ui-20261102.png', fullPage: true});
+
   await page.getByRole('link', {name: 'Bâtiments', exact: true}).click();
   await expect(page.locator('#item-mine_metal-intermediate')).toBeVisible();
   await expect(page.locator('#item-mine_metal-superior')).toBeVisible();
-  await page.screenshot({path: 'docs/validation/progression-ranks-buildings-locked-ui-20261102.png', fullPage: true});
+
 });

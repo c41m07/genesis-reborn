@@ -1,0 +1,105 @@
+{
+  "slug": "ground_turret_anti_light",
+  "label": "Canon laser anti-léger",
+  "countered_class_label": "anti-léger",
+  "countered_ships": [
+    "interceptor",
+    "fighter",
+    "heavy_fighter",
+    "stealth_fighter"
+  ],
+  "countered_ship_labels": [
+    "intercepteur",
+    "chasseur",
+    "chasseur lourd",
+    "chasseur furtif"
+  ],
+  "weapon_type": "laser",
+  "target_class": "light",
+  "hp": 430,
+  "shield": 95,
+  "precision": 78,
+  "tracking": 170,
+  "evasion": 0,
+  "signature": 70,
+  "base_attack": 45,
+  "build_time_base": 300,
+  "economy_value_budget": 5000,
+  "cost_profiles": {
+    "basic": {
+      "metal": 2250,
+      "nano": 125,
+      "antimatter": 0
+    },
+    "intermediate": {
+      "metal": 1625,
+      "nano": 375,
+      "antimatter": 31
+    },
+    "superior": {
+      "metal": 1125,
+      "nano": 500,
+      "antimatter": 94
+    }
+  },
+  "shots_min": 3,
+  "shots_max": 3,
+  "costs": {},
+  "costs_scaling": 1,
+  "unlock_requirements": {
+    "buildings": [
+      {
+        "slug": "fortress",
+        "tier": "basic",
+        "level": 1
+      }
+    ]
+  },
+  "provisional": true,
+  "display_order": 1,
+  "tier_labels": {
+    "basic": "Canon laser anti-léger",
+    "intermediate": "Canon à ions anti-léger",
+    "superior": "Canon à antimatière anti-léger"
+  },
+  "tier_descriptions": {
+    "basic": "Tourelle stationnaire ciblant les vaisseaux légers. Une tourelle individuelle protège la planète contre la classe visée.",
+    "intermediate": "Tourelle stationnaire ciblant les vaisseaux légers. Un canon individuel illustre une nouvelle étape technologique, en gardant la même classe de cible.",
+    "superior": "Tourelle stationnaire ciblant les vaisseaux légers. Un canon individuel évoque une technologie de pointe, sans changer sa classe de cible configurée."
+  },
+  "description": "Tourelle stationnaire ciblant les vaisseaux légers. Une tourelle individuelle protège la planète contre la classe visée.",
+  "tier_unlock_requirements": {
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "fortress",
+          "tier": "basic",
+          "level": 5
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "weapon_calibration",
+          "tier": "basic",
+          "level": 5
+        }
+      ]
+    },
+    "superior": {
+      "buildings": [
+        {
+          "slug": "fortress",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "weapon_calibration",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ]
+    }
+  }
+}

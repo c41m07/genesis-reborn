@@ -1,6 +1,6 @@
 {
   "slug": "storage_electricity",
-  "label": "Stockage · Électricité",
+  "label": "Batterie de colonie",
   "base_build_time": 180,
   "build_time_scaling": 1.6,
   "costs_base": {
@@ -13,6 +13,24 @@
   "levels": {
     "1": {
       "unlock_requirements": {}
+    },
+    "2": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "power_plant",
+            "tier": "basic",
+            "level": 4
+          }
+        ],
+        "technologies": [
+          {
+            "slug": "nanomaterial_synthesis",
+            "tier": "basic",
+            "level": 2
+          }
+        ]
+      }
     }
   },
   "provisional": true,
@@ -20,7 +38,7 @@
     "intermediate": {
       "technologies": [
         {
-          "slug": "advanced_engineering",
+          "slug": "naval_engineering",
           "tier": "basic",
           "level": 5
         }
@@ -36,7 +54,7 @@
     "superior": {
       "technologies": [
         {
-          "slug": "advanced_engineering",
+          "slug": "naval_engineering",
           "tier": "intermediate",
           "level": 10
         }
@@ -67,5 +85,16 @@
       "nano": 782,
       "antimatter": 147
     }
-  }
+  },
+  "tier_labels": {
+    "basic": "Batterie de colonie",
+    "intermediate": "Réseau d’accumulateurs",
+    "superior": "Grille planétaire de stockage"
+  },
+  "tier_descriptions": {
+    "basic": "Augmente la capacité de stockage de électricité. Une installation locale assure cette fonction sur la colonie.",
+    "intermediate": "Augmente la capacité de stockage de électricité. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+    "superior": "Augmente la capacité de stockage de électricité. Un maillage étendu porte cette fonction à l’échelle planétaire."
+  },
+  "description": "Augmente la capacité de stockage de électricité. Une installation locale assure cette fonction sur la colonie."
 }

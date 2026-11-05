@@ -1,6 +1,6 @@
 {
   "slug": "battleship",
-  "label": "Cuirassé",
+  "label": "Cuirassé de ligne",
   "category": "heavy",
   "hp": 4000,
   "precision": 75,
@@ -8,12 +8,12 @@
   "evasion": 20,
   "signature": 60,
   "base_attack": 800,
-  "shots_min": 1,
-  "shots_max": 3,
-  "build_time_base": 1500,
+  "shots_min": 4,
+  "shots_max": 5,
+  "build_time_base": 172800,
   "costs": {},
-  "speed_system": 50,
-  "speed_galaxy": 500,
+  "speed_system": 30,
+  "speed_galaxy": 300,
   "fuel_travel_system": 0.5,
   "fuel_travel_galaxy": 2,
   "fuel_orbit": 0.3,
@@ -22,12 +22,30 @@
     "buildings": [
       {
         "slug": "shipyard",
-        "level": 1
+        "tier": "basic",
+        "level": 14
+      }
+    ],
+    "technologies": [
+      {
+        "slug": "weapons_engineering",
+        "tier": "basic",
+        "level": 10
+      },
+      {
+        "slug": "shield_harmonics",
+        "tier": "basic",
+        "level": 8
+      },
+      {
+        "slug": "rapid_fire_cycle",
+        "tier": "basic",
+        "level": 5
       }
     ]
   },
   "provisional": true,
-  "note": "Navigation et équilibrage provisoires ; fighter et stealth_fighter reprennent les stats de combat documentées.",
+  "note": "Profil de mobilité et de combat différencié, équilibrage validé le 02/11/2026 et à mesurer en Alpha.",
   "fuel_capacity": 8000,
   "fuel_capacity_provisional": true,
   "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 8000 H. Réservoir réservé au carburant, distinct de la soute de fret.",
@@ -36,7 +54,7 @@
     "intermediate": {
       "technologies": [
         {
-          "slug": "shield_technology",
+          "slug": "shield_harmonics",
           "tier": "basic",
           "level": 5
         }
@@ -52,7 +70,7 @@
     "superior": {
       "technologies": [
         {
-          "slug": "shield_technology",
+          "slug": "shield_harmonics",
           "tier": "intermediate",
           "level": 10
         }
@@ -83,5 +101,21 @@
       "nano": 22500,
       "antimatter": 4219
     }
-  }
+  },
+  "secondary_attack": 100,
+  "secondary_shots_min": 1,
+  "secondary_shots_max": 1,
+  "secondary_target_category": "light",
+  "secondary_precision_modifier": 30,
+  "tier_labels": {
+    "basic": "Cuirassé de ligne",
+    "intermediate": "Cuirassé d’artillerie",
+    "superior": "Cuirassé de bataille"
+  },
+  "tier_descriptions": {
+    "basic": "Forteresse de combat capable d’encaisser énormément de dégâts et de dominer les affrontements entre grandes flottes. Il cible destroyers, cuirassés, vaisseaux capitaux et défenses orbitales. Armement visible : trois tourelles d’artillerie lourde à accélération magnétique sur le dessus de la coque.",
+    "intermediate": "Cuirassé d’artillerie renforcé pour les duels lourds et le bombardement de positions orbitales. Il impose sa puissance dans les grandes batailles. Armement visible : trois tourelles lourdes à accélération magnétique, avec canons massifs sur la coque supérieure.",
+    "superior": "Cuirassé de bataille conçu pour absorber les salves ennemies et briser les lignes lourdes adverses. Il menace destroyers, cuirassés, capitaux et défenses orbitales. Armement visible : tourelles géantes d’artillerie magnétique, avec recul et éclairs d’accélération."
+  },
+  "description": "Artillerie lourde de flotte, extrêmement résistante et dominante dans les affrontements majeurs. Le cuirassé cible destroyers, cuirassés, vaisseaux capitaux et défenses orbitales avec trois tourelles d’artillerie lourde à accélération magnétique."
 }

@@ -1,7 +1,7 @@
 {
   "slug": "mine_metal",
-  "label": "Extracteur · Métal",
-  "base_build_time": 120,
+  "label": "Mine à ciel ouvert",
+  "base_build_time": 20,
   "build_time_scaling": 1.6,
   "costs_base": {
     "metal": 800,
@@ -20,7 +20,7 @@
     "intermediate": {
       "technologies": [
         {
-          "slug": "basic_engineering",
+          "slug": "engineering_foundations",
           "tier": "basic",
           "level": 5
         }
@@ -36,7 +36,7 @@
     "superior": {
       "technologies": [
         {
-          "slug": "basic_engineering",
+          "slug": "engineering_foundations",
           "tier": "intermediate",
           "level": 10
         }
@@ -68,5 +68,16 @@
       "nano": 0,
       "antimatter": 0
     }
-  }
+  },
+  "tier_labels": {
+    "basic": "Mine à ciel ouvert",
+    "intermediate": "Fonderie orbitale",
+    "superior": "Réseau d’extraction lithosphérique"
+  },
+  "tier_descriptions": {
+    "basic": "Produit métal. Une installation locale assure cette fonction sur la colonie.",
+    "intermediate": "Produit métal. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+    "superior": "Produit métal. Un maillage étendu porte cette fonction à l’échelle planétaire."
+  },
+  "description": "Produit métal. Une installation locale assure cette fonction sur la colonie."
 }

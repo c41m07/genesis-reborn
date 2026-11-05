@@ -69,10 +69,10 @@ final class FleetService
     }
     private function planetLimit(PlayerUniverse $membership,array $config): int
     {
-        $definition=$config['catalog']['technologies']['colonization']??null;$effect=$definition['effect']??null;
+        $definition=$config['catalog']['technologies']['colonial_expansion']??null;$effect=$definition['effect']??null;
         if(!is_array($effect)||($effect['type']??null)!=='planet_limit')return (int)$config['limits']['max_planets'];
-        $ranks=$this->repo->levelsByTier(PlayerTechnology::class,['playerUniverse'=>$membership])['colonization']??[];$base=(int)($effect['base_planets']??1);$perLevel=(float)($effect['value_per_level']??1);$basicCap=max(0,(int)($effect['max_planets']??5)-$base);$extra=0.0;foreach(GameCatalog::TIERS as $tier){$factor=GameCatalog::tierFactor($tier);$level=min((int)($definition['max_level']??25),(int)($ranks[$tier]??0));$extra+=min($basicCap*$factor,$perLevel*$level*$factor);}
-        return max(1,min((int)$config['limits']['max_planets'],$base+(int)floor($extra)));
+        $ranks=$this->repo->levelsByTier(PlayerTechnology::class,['playerUniverse'=>$membership])['colonial_expansion']??[];
+        return GameCatalog::colonyLimit($ranks,$effect,(int)$config['limits']['max_planets']);
     }
 
     public function preview(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo=[],float $orbitHours=0): array
@@ -236,3 +236,4 @@ final class FleetService
         $ships=$this->repo->all(FleetShip::class,['fleet'=>$f,'slug'=>$slug]);usort($ships,static fn($a,$b)=>array_search($a->tier,GameCatalog::TIERS,true)<=>array_search($b->tier,GameCatalog::TIERS,true));foreach($ships as $ship)if($ship->quantity>0){--$ship->quantity;return;}throw new \LogicException('Vaisseau de mission absent.');
     }
 }
+

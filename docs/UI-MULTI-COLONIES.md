@@ -1,5 +1,7 @@
 # Navigation multi-colonies, files et vols
 
+> **Statut :** description d’interface toujours utile; les résultats de tests ci-dessous sont historiques et ne constituent pas une preuve courante. Pour l’état actuel, voir [la matrice d’écrans](agent/UI_SCREEN_MATRIX.md) et [le statut des tests](agent/TEST_STATUS.md).
+
 La carte Commandant du menu a été remplacée par la liste des colonies du joueur dans l’univers courant. Le choix est conservé pendant la navigation, y compris en revenant à Vue générale. Le menu comporte trois groupes : Colonie (Bâtiments, Chantier spatial, Défenses), Empire (Vue générale, Recherche, Carte stellaire, Flottes, Diplomatie), Commandement (Univers, Profil). Les liens ouvrent directement leur catégorie : les anciens onglets « Gestion de la colonie » et le bloc inventaire ont été supprimés. Les quantités restent visibles sur les cartes des vaisseaux et défenses. Changer de colonie conserve la section ouverte.
 
 La scène regroupe trois files : bâtiment, recherche, vaisseaux/défenses. Chaque ligne affiche la commande active, sa progression et son temps restant, ainsi que la durée restante pour terminer toutes les commandes de la file. `+x` compte les commandes supplémentaires, pas le nombre d’unités du lot. « Gérer la file » expose les commandes et leur annulation ; les dépendants sont toujours supprimés sans remboursement, conformément à la décision documentée.
@@ -15,7 +17,7 @@ Les dates et opérations restent calculées par Symfony. Les barres visuelles et
 - Le parcours complet de missions vérifie deux colonies obtenues par colonisation, changement de colonie en conservant Recherche, retour à Vue générale, et vol réel visible sur cette vue avec une barre qui avance.
 - Compilation Encore, lint PHP/YAML/Twig/conteneur et schéma Doctrine réussis. Aucune migration nécessaire.
 
-Captures : [Vue générale](validation/colonie-apercu.png), [mobile](validation/mobile-apercu.png), [file active](validation/files-integrees.png), [plusieurs colonies et vol actif](validation/colonie-multicolonies-vol.png).
+Captures : Vue générale (capture raster retiree: capture de validation supprimee), mobile (capture raster retiree: capture de validation supprimee), file active (capture raster retiree: capture de validation supprimee), plusieurs colonies et vol actif (capture raster retiree: capture de validation supprimee).
 
 ## Ressources toujours visibles
 

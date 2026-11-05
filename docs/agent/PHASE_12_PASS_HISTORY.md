@@ -32,7 +32,7 @@ Le test fleet-empty-state.spec.mjs ouvre l’état Espionnage sans flotte sur mo
 - le lien du chantier est atteignable par Tab, reçoit le focus-visible et affiche son contour;
 - Entrée suit le lien vers le chantier spatial réel de la colonie.
 
-Résultat du runner isolé : 1/1. Capture du lien avec focus visible : docs/validation/espionnage-chantier-focus-mobile-20261101.png. Les captures de l’état normal restent dans le journal STATE_PASS_03.
+Résultat du runner isolé : 1/1. Capture du lien avec focus visible : docs/capture de validation supprimee. Les captures de l’état normal restent dans le journal STATE_PASS_03.
 
 ## Limite
 
@@ -55,7 +55,7 @@ Le test Playwright isolé fleet-empty-state.spec.mjs vérifie désormais à 390 
 - le focus revient sur « Plus »;
 - le CTA d’état vide reste atteignable au clavier et ouvre le vrai chantier de la colonie.
 
-Résultat : runner Docker isolé, 1 test / 1 réussi. La capture du menu ouvert est docs/validation/espionnage-menu-plus-mobile-20261101.png. Le test s’exécute dans un projet temporaire dédié, nettoyé par son runner.
+Résultat : runner Docker isolé, 1 test / 1 réussi. La capture du menu ouvert est docs/capture de validation supprimee. Le test s’exécute dans un projet temporaire dédié, nettoyé par son runner.
 
 ## Portée
 
@@ -84,9 +84,9 @@ La barre de navigation fixe à 390 px masquait la partie basse du formulaire Par
 
 ## Captures
 
-- docs/validation/preferences-route-fixed-20261101-desktop.png
-- docs/validation/preferences-route-fixed-20261101-tablet.png
-- docs/validation/preferences-route-fixed-20261101-mobile-action.png
+- docs/capture de validation supprimee
+- docs/capture de validation supprimee
+- docs/capture de validation supprimee
 
 ## Limites
 
@@ -157,8 +157,8 @@ Quand aucune flotte disponible n’existe, l’écran Espionnage affiche désorm
 - Le compte de test sans flotte ouvre /flottes?mission=spy, voit l’état attendu, suit le lien vers /planetes/{id}?section=ships et y trouve le titre du chantier spatial.
 - À 390×844, la barre latérale est fermée après sa transition et le document ne dépasse pas la largeur du viewport.
 - Captures prises après stabilisation :
-  - docs/validation/espionnage-sans-flotte-20261101.png
-  - docs/validation/espionnage-sans-flotte-mobile-20261101.png
+  - docs/capture de validation supprimee
+  - docs/capture de validation supprimee
 
 ## Limite
 
@@ -180,7 +180,7 @@ Le contrôle navigateur a confirmé que le refus d’identifiants était déjà 
 - auth-validation-states.spec.mjs : runner Docker isolé, 1 test / 1 réussi.
 - Identifiants invalides : le message générique de connexion est visible dans une alerte.
 - Confirmation différente : réponse 422, erreur lisible et rendue dans role=alert.
-- Capture : docs/validation/inscription-erreur-mots-de-passe-20261101.png.
+- Capture : docs/capture de validation supprimee.
 
 Cette passe couvre deux erreurs d’accès. Les autres formulaires, erreurs réseau/métier, états de chargement, retours des écrans protégés et la vérification par lecteur d’écran restent à auditer; P12-STATE-01 et P12-A11Y-01 demeurent partiels.
 
@@ -200,7 +200,7 @@ Quand une estimation est demandée ou que la composition change, la région de r
 - fleet-preview-submit-state.spec.mjs : runner Docker isolé, 1 test / 1 réussi.
 - La réponse d’estimation est suspendue pour contrôler le chargement et le bouton verrouillé, puis relâchée pour vérifier le succès. Le même scénario couvre l’erreur métier sonde requise et l’échec réseau.
 - À 390 × 844 px : navigation fermée après transition, document sans débordement horizontal et état de chargement visible.
-- Capture : docs/validation/flottes-estimation-chargement-mobile-20261101.png.
+- Capture : docs/capture de validation supprimee.
 
 La couverture reste limitée au wizard de flotte. Les autres états des routes et services, ainsi que l’audit complet des erreurs et chargements, restent ouverts; P12-STATE-01 demeure partiel.
 
@@ -220,7 +220,7 @@ La page Planètes possédait déjà un catalogue réel avec les colonies du joue
 - Twig : lint réussi sur templates/colony/planets.html.twig.
 - Edge + Playwright : /planetes renvoie HTTP 200 aux largeurs 1440, 768 et 390; aucun débordement horizontal.
 - Dans l’univers de démonstration (0 position libre), le CTA « Explorer la galaxie » est visible aux trois formats; le clic ouvre /carte.
-- Captures post-correction : docs/validation/planetes-empty-space-20261101-1440.png, -768.png et -390.png.
+- Captures post-correction : docs/capture de validation supprimee, -768.png et -390.png.
 - Le site de référence publié répond HTTP 200; le tableau de bord de référence a été inspecté à 1440 px, sans erreur JavaScript. Ses noms et chiffres de démonstration ne sont pas réutilisés.
 
 ## Suite
@@ -266,7 +266,7 @@ La navigation Diplomatie présentait un lien « Vue d’ensemble » vers une cib
 - Twig : lint réussi sur templates/player/diplomacy.html.twig.
 - Test Playwright isolé du parcours diplomatique : 1/1; quatre ancres vérifiées sur un commandant sans guilde avant de poursuivre les contrats réciproques, création/adhésion, transfert et dissolution.
 - Edge local, état guildes désactivées : /diplomatie répond 200 à 1440/768/390 px, aucune largeur de document supérieure au viewport; chaque lien modifie le hash et cible un élément présent.
-- Captures : docs/validation/diplomatie-empty-guilds-20261101-1440.png, -768.png et -390.png.
+- Captures : docs/capture de validation supprimee, -768.png et -390.png.
 
 ## Limites
 
@@ -294,9 +294,9 @@ Les actions de contact du tableau prenaient la largeur complète de la colonne. 
 
 ## Captures
 
-- docs/validation/classement-compact-actions-20261101-1440.png
-- docs/validation/classement-compact-actions-20261101-768.png
-- docs/validation/classement-compact-actions-20261101-390.png
+- docs/capture de validation supprimee
+- docs/capture de validation supprimee
+- docs/capture de validation supprimee
 
 Cette passe valide uniquement la présentation des actions du classement; elle ne clôt pas l’audit de toute la phase 12 ni les phases suivantes.
 
@@ -324,11 +324,11 @@ Aucun message n’a été envoyé; la conversation ouverte pour contrôle était
 
 ## Captures
 
-- docs/validation/messagerie-scrollable-20261101-1440.png
-- docs/validation/messagerie-scrollable-20261101-768.png
-- docs/validation/messagerie-scrollable-20261101-390.png
-- docs/validation/messagerie-fil-scrollable-20261101-1440.png
-- docs/validation/messagerie-liste-defilement-mobile-20261101.png
+- docs/capture de validation supprimee
+- docs/capture de validation supprimee
+- docs/capture de validation supprimee
+- docs/capture de validation supprimee
+- docs/capture de validation supprimee
 
 Cette passe valide la disposition et le défilement de la boîte de réception. Elle ne clôt pas la phase 12 ni l’audit complet des fonctionnalités.
 
@@ -354,10 +354,10 @@ Le contenu local reste fourni par les données de l’univers. Le système 0:0 c
 
 ## Captures
 
-- docs/validation/galaxie-audit-20261101-1440.png
-- docs/validation/galaxie-audit-20261101-768.png
-- docs/validation/galaxie-audit-20261101-390.png
-- docs/validation/galaxie-systeme-14-20261101-390.png
+- docs/capture de validation supprimee
+- docs/capture de validation supprimee
+- docs/capture de validation supprimee
+- docs/capture de validation supprimee
 
 Cette revue ne clôt pas l’audit visuel global ni la phase 12.
 
@@ -383,10 +383,10 @@ Les cartes supplémentaires par rapport aux six exemples Figma viennent du catal
 
 ## Captures
 
-- docs/validation/batiments-audit-20261101-1440.png
-- docs/validation/batiments-audit-20261101-768.png
-- docs/validation/batiments-audit-20261101-390.png
-- docs/validation/batiments-stockage-filtre-20261101-1440.png
+- docs/capture de validation supprimee
+- docs/capture de validation supprimee
+- docs/capture de validation supprimee
+- docs/capture de validation supprimee
 
 Cette revue confirme la présentation et le filtre de catégorie; elle ne valide pas les règles économiques ni la file backend.
 
@@ -411,13 +411,13 @@ Les deux vues utilisent le gabarit commun catalogue à gauche / activités de co
 
 ## Captures
 
-- docs/validation/chantier-audit-20261101-1440.png
-- docs/validation/chantier-audit-20261101-768.png
-- docs/validation/chantier-audit-20261101-390.png
-- docs/validation/chantier-utilitaires-filtre-20261101-1440.png
-- docs/validation/defenses-audit-20261101-1440.png
-- docs/validation/defenses-audit-20261101-768.png
-- docs/validation/defenses-audit-20261101-390.png
+- docs/capture de validation supprimee
+- docs/capture de validation supprimee
+- docs/capture de validation supprimee
+- docs/capture de validation supprimee
+- docs/capture de validation supprimee
+- docs/capture de validation supprimee
+- docs/capture de validation supprimee
 
 La revue couvre la présentation et le filtrage, pas l’équilibrage ni la file de production backend.
 
@@ -438,10 +438,10 @@ Date : 2026-11-01. Parcours observé dans le navigateur sur l’application loca
 
 ## Preuves
 
-- docs/validation/technologies-audit-20261101-1440.png
-- docs/validation/technologies-audit-20261101-768.png
-- docs/validation/technologies-audit-20261101-390.png
-- docs/validation/technologies-arbre-ouvert-20261101-1440.png
+- docs/capture de validation supprimee
+- docs/capture de validation supprimee
+- docs/capture de validation supprimee
+- docs/capture de validation supprimee
 
 ## État
 
@@ -465,11 +465,11 @@ Date : 2026-11-01. Parcours observé dans le navigateur sur la route réelle **/
 
 ## Preuves
 
-- docs/validation/flottes-audit-20261101-1440.png
-- docs/validation/flottes-confirmation-20261101-1440.png
-- docs/validation/flottes-confirmation-20261101-768.png
-- docs/validation/flottes-confirmation-20261101-390.png
-- docs/validation/flottes-audit-mobile-confirm-20261101-390.png
+- docs/capture de validation supprimee
+- docs/capture de validation supprimee
+- docs/capture de validation supprimee
+- docs/capture de validation supprimee
+- docs/capture de validation supprimee
 
 ## État
 
@@ -491,9 +491,9 @@ Date : 2026-11-01. Vérification du thème sur le shell d’accueil et dans les 
 
 ## Preuves visuelles
 
-- docs/validation/colonie-theme-dark.png — mode sombre spatial
-- docs/validation/colonie-desktop.png — mode clair préservé
-- docs/validation/colonie-theme-dark-mobile.png — mode sombre à 390 px
+- docs/capture de validation supprimee — mode sombre spatial
+- docs/capture de validation supprimee — mode clair préservé
+- docs/capture de validation supprimee — mode sombre à 390 px
 
 ## État
 

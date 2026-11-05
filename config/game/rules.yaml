@@ -31,7 +31,7 @@
   "combat_loot_protected_storage_ratio": 0.1,
   "max_combat_rounds": 10,
   "provisional": true,
-  "note": "Valeurs choisies lors du QCM d’équilibrage des 01–02/11/2026. Les indicateurs provisional restent internes et ne doivent pas apparaître dans les textes visibles par les joueurs.",
+  "note": "Courbes de progression proposées le 02/11/2026 : croissance par phase et rendements décroissants, avec plafonds globaux tous rangs confondus.",
   "colony_initial_stock": {
     "metal": 8000,
     "electricity": 3000,
@@ -63,9 +63,9 @@
     }
   },
   "research_time_reduction_percent_per_lab_level": 10,
-  "research_time_reduction_max_percent": 50,
-  "defense_rebuild_percent_per_robotics_level": 10,
-  "defense_rebuild_max_percent": 50,
+  "research_time_reduction_max_percent": 70,
+  "defense_rebuild_percent_per_automated_defense_repair_level": 10,
+  "defense_rebuild_max_percent": 40,
   "shield_recharge_percent_per_round": 5,
   "restore_survivor_shields_after_combat": true,
   "new_player_protection": {
@@ -80,5 +80,85 @@
   },
   "factory_electricity_use_per_level": 0.05,
   "antimatter_hydrogen_per_unit": 8,
-  "minimum_factory_efficiency": 0.1
+  "minimum_factory_efficiency": 0.1,
+  "time_reduction_max_percent": 70,
+  "cost_reduction_max_percent": 40,
+  "progression_curves": {
+    "building_cost": [
+      {
+        "max_level": 20,
+        "multiplier": 1.12
+      },
+      {
+        "max_level": 80,
+        "multiplier": 1.09
+      },
+      {
+        "max_level": 120,
+        "multiplier": 1.03
+      },
+      {
+        "multiplier": 1.02
+      }
+    ],
+    "research_cost": [
+      {
+        "max_level": 5,
+        "multiplier": 1.35
+      },
+      {
+        "max_level": 10,
+        "multiplier": 1.25
+      },
+      {
+        "max_level": 15,
+        "multiplier": 1.18
+      },
+      {
+        "multiplier": 1.12
+      }
+    ],
+    "building_duration": [
+      {
+        "max_level": 20,
+        "multiplier": 1.1225
+      },
+      {
+        "max_level": 40,
+        "multiplier": 1.122
+      },
+      {
+        "max_level": 80,
+        "multiplier": 1.0643
+      },
+      {
+        "max_level": 100,
+        "multiplier": 1.0353
+      },
+      {
+        "max_level": 120,
+        "multiplier": 1.0353
+      },
+      {
+        "multiplier": 1.0373
+      }
+    ],
+    "research_duration": [
+      {
+        "max_level": 5,
+        "multiplier": 1.35
+      },
+      {
+        "max_level": 10,
+        "multiplier": 1.25
+      },
+      {
+        "max_level": 15,
+        "multiplier": 1.18
+      },
+      {
+        "multiplier": 1.12
+      }
+    ]
+  }
 }

@@ -99,6 +99,17 @@ final class GamePersistenceTest extends KernelTestCase
         $this->expectException(\DomainException::class);
         self::getContainer()->get(QueueService::class)->add($b->currentPlayerUniverse,$planet,'buildings','mine_metal',1,str_repeat('a',32));
     }
+    public function testDirectQueueRequestCannotBuildLockedShip(): void
+    {
+        $player=$this->player();$planet=$this->join($player);$queue=self::getContainer()->get(QueueService::class);
+        try {
+            $queue->add($player->currentPlayerUniverse,$planet,'ships','cruiser',1,str_repeat('e',32));
+            self::fail('Un vaisseau verrouillé ne doit pas pouvoir être commandé directement.');
+        } catch (\DomainException $exception) {
+            self::assertStringContainsString('Prérequis',$exception->getMessage());
+        }
+        self::assertSame(0,$this->em->getRepository(QueueItem::class)->count());
+    }
     public function testCrossUniverseOwnershipRejected(): void
     {
         $a=$this->player();$planet=$this->join($a,'omega-1');$this->join($a,'turbo-1');
@@ -182,7 +193,7 @@ final class GamePersistenceTest extends KernelTestCase
     }
     public function testSoloColonyShipCanColonizeKnownPlanet(): void
     {
-        $p=$this->player();$origin=$this->join($p);$this->ships($origin,['colony_ship'=>1]);$m=$p->currentPlayerUniverse;$colonization=new PlayerTechnology();$colonization->playerUniverse=$m;$colonization->slug='colonization';$colonization->level=1;$this->em->persist($colonization);$this->em->flush();
+        $p=$this->player();$origin=$this->join($p);$this->ships($origin,['colony_ship'=>1]);$m=$p->currentPlayerUniverse;$colonial_expansion=new PlayerTechnology();$colonial_expansion->playerUniverse=$m;$colonial_expansion->slug='colonial_expansion';$colonial_expansion->level=1;$this->em->persist($colonial_expansion);$this->em->flush();
         $target=$this->em->getRepository(Planet::class)->findOneBy(['solarSystem'=>$origin->solarSystem,'owner'=>null]);$target->npcPlanet=false;
         $service=self::getContainer()->get(\App\Service\Fleet\FleetService::class);
         $service->send($m,$origin,'colonize',$target->id,['colony_ship'=>1],1,[],str_repeat('a',32));
@@ -234,14 +245,14 @@ final class GamePersistenceTest extends KernelTestCase
     {
         $this->clock();$p=$this->player();$one=$this->join($p);$two=$this->secondPlanet($p);
         foreach([$one,$two] as $planet) { $lab=new PlanetBuilding();$lab->planet=$planet;$lab->slug='lab';$lab->level=1;$this->em->persist($lab); }$this->em->flush();
-        $q=self::getContainer()->get(QueueService::class);$q->add($p->currentPlayerUniverse,$one,'technologies','basic_engineering',1,str_repeat('a',32));
-        $this->expectException(\DomainException::class);$q->add($p->currentPlayerUniverse,$two,'technologies','basic_engineering',1,str_repeat('b',32));
+        $q=self::getContainer()->get(QueueService::class);$q->add($p->currentPlayerUniverse,$one,'technologies','engineering_foundations',1,str_repeat('a',32));
+        $this->expectException(\DomainException::class);$q->add($p->currentPlayerUniverse,$two,'technologies','engineering_foundations',1,str_repeat('b',32));
     }
     public function testDifferentResearchQueuesCanCompleteOnDifferentPlanets(): void
     {
         $clock=$this->clock();$p=$this->player();$one=$this->join($p);$two=$this->secondPlanet($p);
         foreach([$one,$two] as $planet) { $lab=new PlanetBuilding();$lab->planet=$planet;$lab->slug='lab';$lab->level=1;$this->em->persist($lab); }$this->em->flush();
-        $q=self::getContainer()->get(QueueService::class);$q->add($p->currentPlayerUniverse,$one,'technologies','basic_engineering',1,str_repeat('a',32));$q->add($p->currentPlayerUniverse,$two,'technologies','advanced_targeting',1,str_repeat('b',32));
+        $q=self::getContainer()->get(QueueService::class);$q->add($p->currentPlayerUniverse,$one,'technologies','engineering_foundations',1,str_repeat('a',32));$q->add($p->currentPlayerUniverse,$two,'technologies','target_acquisition',1,str_repeat('b',32));
         $clock->sleep(60);$q->synchronize($p->currentPlayerUniverse);
         self::assertSame(2,$this->em->getRepository(PlayerTechnology::class)->count(['playerUniverse'=>$p->currentPlayerUniverse]));
         self::assertSame(0,$this->em->getRepository(QueueItem::class)->count());
@@ -250,7 +261,7 @@ final class GamePersistenceTest extends KernelTestCase
     {
         $clock=$this->clock();$p=$this->player();$planet=$this->join($p);
         foreach(['shipyard','fortress'] as $slug) { $b=new PlanetBuilding();$b->planet=$planet;$b->slug=$slug;$b->level=1;$this->em->persist($b); }$this->em->flush();
-        $q=self::getContainer()->get(QueueService::class);$q->add($p->currentPlayerUniverse,$planet,'ships','fighter',2,str_repeat('a',32));$q->add($p->currentPlayerUniverse,$planet,'defenses','ground_turret',3,str_repeat('b',32));
+        $q=self::getContainer()->get(QueueService::class);$q->add($p->currentPlayerUniverse,$planet,'ships','fighter',2,str_repeat('a',32));$q->add($p->currentPlayerUniverse,$planet,'defenses','ground_turret_anti_light',3,str_repeat('b',32));
         $clock->sleep(3600);$q->synchronize($p->currentPlayerUniverse);$q->synchronize($p->currentPlayerUniverse);
         self::assertSame(2,$this->em->getRepository(\App\Entity\FleetShip::class)->findOneBy(['slug'=>'fighter'])->quantity);
         self::assertSame(3,$this->em->getRepository(\App\Entity\PlanetDefense::class)->findOneBy(['planet'=>$planet])->quantity);
@@ -259,9 +270,9 @@ final class GamePersistenceTest extends KernelTestCase
     {
         $clock=$this->clock();$p=$this->player();$planet=$this->join($p);
         $fortress=new PlanetBuilding();$fortress->planet=$planet;$fortress->slug='fortress';$fortress->level=1;$this->em->persist($fortress);$this->em->flush();
-        $queue=self::getContainer()->get(QueueService::class);$queue->add($p->currentPlayerUniverse,$planet,'defenses','ground_turret',2,str_repeat('a',32),'basic');$queue->add($p->currentPlayerUniverse,$planet,'defenses','ground_turret',3,str_repeat('b',32),'superior');
+        $queue=self::getContainer()->get(QueueService::class);$queue->add($p->currentPlayerUniverse,$planet,'defenses','ground_turret_anti_light',2,str_repeat('a',32),'basic');$queue->add($p->currentPlayerUniverse,$planet,'defenses','ground_turret_anti_light',3,str_repeat('b',32),'superior');
         $clock->sleep(3600);$queue->synchronize($p->currentPlayerUniverse);
-        $rows=$this->em->getRepository(\App\Entity\PlanetDefense::class)->findBy(['planet'=>$planet,'slug'=>'ground_turret'],['tier'=>'ASC']);
+        $rows=$this->em->getRepository(\App\Entity\PlanetDefense::class)->findBy(['planet'=>$planet,'slug'=>'ground_turret_anti_light'],['tier'=>'ASC']);
         self::assertCount(2,$rows);self::assertSame('basic',$rows[0]->tier);self::assertSame(2,$rows[0]->quantity);self::assertSame('superior',$rows[1]->tier);self::assertSame(3,$rows[1]->quantity);
     }
 
@@ -461,7 +472,7 @@ final class GamePersistenceTest extends KernelTestCase
         $this->em->persist($building);
         $technology = new PlayerTechnology();
         $technology->playerUniverse = $player->currentPlayerUniverse;
-        $technology->slug = 'precision_fire';
+        $technology->slug = 'weapon_calibration';
         $technology->level = 1;
         $this->em->persist($technology);
 
@@ -478,7 +489,7 @@ final class GamePersistenceTest extends KernelTestCase
         $this->em->persist($ship);
         $defense = new PlanetDefense();
         $defense->planet = $planet;
-        $defense->slug = 'ground_turret';
+        $defense->slug = 'ground_turret_anti_light';
         $defense->quantity = 2;
         $this->em->persist($defense);
         $this->em->flush();
@@ -486,9 +497,9 @@ final class GamePersistenceTest extends KernelTestCase
         $catalog = self::getContainer()->get(GameCatalog::class);
         $buildingCost = array_sum($catalog->costs($catalog->get('buildings', 'mine_metal'), 1))
             + array_sum($catalog->costs($catalog->get('buildings', 'mine_metal'), 2));
-        $researchCost = array_sum($catalog->costs($catalog->get('technologies', 'precision_fire'), 1));
+        $researchCost = array_sum($catalog->costs($catalog->get('technologies', 'weapon_calibration'), 1));
         $fleetCost = array_sum($catalog->costs($catalog->get('ships', 'fighter'), 1, 3))
-            + array_sum($catalog->costs($catalog->get('defenses', 'ground_turret'), 1, 2));
+            + array_sum($catalog->costs($catalog->get('defenses', 'ground_turret_anti_light'), 1, 2));
         $leaderboard = self::getContainer()->get(LeaderboardService::class);
         $rows = $leaderboard->forUniverse($player->currentPlayerUniverse);
         $own = array_values(array_filter($rows, static fn (array $row): bool => $row['membership']->id === $player->currentPlayerUniverse->id))[0];
@@ -559,15 +570,61 @@ final class GamePersistenceTest extends KernelTestCase
         $item=$this->em->getRepository(QueueItem::class)->findOneBy([]);$metal=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$planet,'resourceType'=>'metal']);$metal->currentStock=199999;$this->em->flush();
         $q->cancel($p->currentPlayerUniverse,$item->id,str_repeat('b',32));self::assertSame(200000.0,$metal->currentStock);
     }
+    public function testCatalogueSheetsUseDiscountedCostsAndSeparateDefenseStocksByRank():void
+    {
+        $player=$this->player();$planet=$this->join($player);
+        foreach(['nanomaterial_synthesis','naval_engineering'] as $slug)foreach(GameCatalog::TIERS as $tier){
+            $tech=new PlayerTechnology();$tech->playerUniverse=$player->currentPlayerUniverse;$tech->slug=$slug;$tech->tier=$tier;$tech->level=25;$this->em->persist($tech);
+        }
+        foreach(['basic'=>3,'intermediate'=>7] as $tier=>$quantity){
+            $defense=new PlanetDefense();$defense->planet=$planet;$defense->slug='ground_turret_anti_light';$defense->tier=$tier;$defense->quantity=$quantity;$this->em->persist($defense);
+        }
+        $this->em->flush();$data=self::getContainer()->get(\App\Service\Colony\ColonyView::class)->data($player->currentPlayerUniverse,$planet);
+        $catalog=self::getContainer()->get(GameCatalog::class);
+        foreach($data['cards']['buildings'] as $card)if($card['definition']['slug']==='mine_metal'&&$card['tier']==='basic'){
+            $base=$catalog->costs($card['definition'],1,1,'buildings');
+            self::assertSame((int)ceil($base['metal']*.6),$card['costs']['metal']);
+        }
+        // These ranks can be locked: enable the catalogue preference before reading them.
+        $player->preferences['showLockedItems']=true;$this->em->flush();$data=self::getContainer()->get(\App\Service\Colony\ColonyView::class)->data($player->currentPlayerUniverse,$planet);
+        $quantities=[];foreach($data['cards']['defenses'] as $card)if($card['definition']['slug']==='ground_turret_anti_light')$quantities[$card['tier']]=$card['quantity'];
+        self::assertSame(['basic'=>3,'intermediate'=>7,'superior'=>0],$quantities);
+    }
+
+    public function testResourceStripMetadataReflectsProtectionAndActualFactoryProductivity():void
+    {
+        $this->clock();$player=$this->player();$planet=$this->join($player);
+        foreach(['mine_metal'=>100,'mine_nano'=>2,'mine_hydrogen'=>2,'mine_antimatter'=>10,'storage_metal'=>1] as $slug=>$level){
+            $building=new PlanetBuilding();$building->planet=$planet;$building->slug=$slug;$building->level=$level;$this->em->persist($building);
+        }
+        $storage=new PlanetBuilding();$storage->planet=$planet;$storage->slug='storage_metal';$storage->tier='intermediate';$storage->level=2;$this->em->persist($storage);
+        $this->em->flush();$service=self::getContainer()->get(ResourceService::class);
+        $snapshot=$service->snapshot($planet);
+        self::assertEqualsWithDelta(55000,$snapshot['metal']['protectedCapacity'],.000001);
+        self::assertSame(100.0,$snapshot['metal']['productivity']);
+        self::assertSame(100.0,$snapshot['antimatter']['productivity']);
+        self::assertNull($snapshot['electricity']['productivity']);
+        $electricity=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$planet,'resourceType'=>'electricity']);
+        $electricity->currentStock=0;$this->em->flush();$snapshot=$service->snapshot($planet);
+        self::assertLessThan(100,$snapshot['metal']['productivity']);
+        self::assertEqualsWithDelta($snapshot['metal']['productivity'],$snapshot['nano']['productivity'],.000001);
+        self::assertLessThan($service->rate($planet,'metal',0,['mine_metal'=>['basic'=>100]]),$snapshot['metal']['rate']);
+        $power=new PlanetBuilding();$power->planet=$planet;$power->slug='power_plant';$power->level=100;$this->em->persist($power);
+        $hydrogen=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$planet,'resourceType'=>'hydrogen']);$hydrogen->currentStock=0;
+        $this->em->flush();$snapshot=$service->snapshot($planet);
+        self::assertSame(100.0,$snapshot['metal']['productivity']);
+        self::assertLessThan(100,$snapshot['antimatter']['productivity']);
+    }
+
     public function testCatalogueBenefitsMatchActualProductionAndResearchDependencies():void
     {
         $p=$this->player();$planet=$this->join($p);$insights=self::getContainer()->get(\App\Service\Colony\CatalogueInsights::class);$catalog=self::getContainer()->get(\App\Service\Catalog\GameCatalog::class);
         self::assertArrayNotHasKey('mine_energy',$catalog->all('buildings'));
         $benefit=$insights->benefits($catalog->get('buildings','power_plant'),'buildings',1,$planet,[],[])[0];
         $resources=self::getContainer()->get(ResourceService::class);self::assertEqualsWithDelta($resources->rate($planet,'electricity',0,['power_plant'=>1])*3600,$benefit['after'],.000001);self::assertGreaterThan($benefit['before'],$benefit['after']);
-        $unlocks=$insights->unlocks('technologies','basic_engineering',2);self::assertContains('advanced_propulsion',array_column($unlocks,'slug'));
-        $tree=$insights->tree(['lab'=>1],['basic_engineering'=>2]);$nodes=array_merge(...array_values($tree));$propulsion=array_values(array_filter($nodes,fn($n)=>$n['definition']['slug']==='advanced_propulsion'))[0];self::assertTrue($propulsion['available']);
-        $tree=$insights->tree([],['basic_engineering'=>2]);$nodes=array_merge(...array_values($tree));$propulsion=array_values(array_filter($nodes,fn($n)=>$n['definition']['slug']==='advanced_propulsion'))[0];self::assertFalse($propulsion['available']);
+        $unlocks=$insights->unlocks('technologies','engineering_foundations',2);self::assertContains('vector_propulsion',array_column($unlocks,'slug'));
+        $tree=$insights->tree(['lab'=>1],['engineering_foundations'=>2]);$nodes=array_merge(...array_values($tree));$propulsion=array_values(array_filter($nodes,fn($n)=>$n['definition']['slug']==='vector_propulsion'))[0];self::assertTrue($propulsion['available']);
+        $tree=$insights->tree([],['engineering_foundations'=>2]);$nodes=array_merge(...array_values($tree));$propulsion=array_values(array_filter($nodes,fn($n)=>$n['definition']['slug']==='vector_propulsion'))[0];self::assertFalse($propulsion['available']);
     }
 
     public function testSpyMissionConsumesAllProbesAndKeepsReportPrivate(): void
@@ -585,7 +642,7 @@ final class GamePersistenceTest extends KernelTestCase
         $fleetStock = $this->ships($origin, ['probe' => 1]);
         $discovery = $this->em->getRepository(\App\Entity\PlayerDiscovery::class)->findOneBy(['playerUniverse' => $sender->currentPlayerUniverse, 'solarSystem' => $target->solarSystem]);
         if (!$discovery) { $discovery = new \App\Entity\PlayerDiscovery(); $discovery->playerUniverse = $sender->currentPlayerUniverse; $discovery->solarSystem = $target->solarSystem; $this->em->persist($discovery); }
-        foreach ([['espionage_technology', 2], ['stealth_technology', 5]] as [$slug, $level]) {
+        foreach ([['tactical_intelligence', 2], ['signature_masking', 5]] as [$slug, $level]) {
             $technology = new PlayerTechnology();
             $technology->playerUniverse = $sender->currentPlayerUniverse;
             $technology->slug = $slug;
@@ -635,7 +692,7 @@ final class GamePersistenceTest extends KernelTestCase
         if (!$discovery) { $discovery = new \App\Entity\PlayerDiscovery(); $discovery->playerUniverse = $sender->currentPlayerUniverse; $discovery->solarSystem = $target->solarSystem; $this->em->persist($discovery); }
         $counter = new PlayerTechnology();
         $counter->playerUniverse = $targetOwner->currentPlayerUniverse;
-        $counter->slug = 'counter_espionage';
+        $counter->slug = 'intelligence_countermeasures';
         $counter->level = 5;
         $this->em->persist($counter);
         $this->em->flush();

@@ -1,0 +1,99 @@
+{
+  "slug": "target_acquisition",
+  "label": "Télémétrie de poursuite",
+  "max_level": 25,
+  "research_time_base": 600,
+  "research_time_scaling": 1.8,
+  "costs_base": {
+    "metal": 1700,
+    "nano": 150,
+    "antimatter": 0
+  },
+  "costs_scaling": 2,
+  "unlock_requirements": {
+    "technologies": [
+      {
+        "slug": "weapon_calibration",
+        "tier": "basic",
+        "level": 2
+      },
+      {
+        "slug": "naval_engineering",
+        "tier": "basic",
+        "level": 3
+      }
+    ]
+  },
+  "effect": {
+    "type": "stat_bonus",
+    "targets": "all_ships",
+    "stat": "tracking",
+    "formula": "percent",
+    "value_per_level": 0.01,
+    "max_bonus": 0.15
+  },
+  "provisional": true,
+  "tier_unlock_requirements": {
+    "intermediate": {
+      "technologies": [
+        {
+          "slug": "weapon_calibration",
+          "tier": "basic",
+          "level": 5
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "basic",
+          "level": 5
+        }
+      ]
+    },
+    "superior": {
+      "technologies": [
+        {
+          "slug": "weapon_calibration",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ]
+    }
+  },
+  "economy_value_budget": 4000,
+  "cost_profiles": {
+    "basic": {
+      "metal": 1700,
+      "nano": 150,
+      "antimatter": 0
+    },
+    "intermediate": {
+      "metal": 1500,
+      "nano": 375,
+      "antimatter": 63
+    },
+    "superior": {
+      "metal": 1250,
+      "nano": 625,
+      "antimatter": 157
+    }
+  },
+  "tier_labels": {
+    "basic": "Télémétrie de poursuite",
+    "intermediate": "Calculateur d’interception",
+    "superior": "Fusion tactique des trajectoires"
+  },
+  "tier_descriptions": {
+    "basic": "Améliore le suivi des cibles des unités concernées. Une première méthode établit les bases de cette spécialité.",
+    "intermediate": "Améliore le suivi des cibles des unités concernées. Une approche technique plus intégrée fait progresser cette spécialité.",
+    "superior": "Améliore le suivi des cibles des unités concernées. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées."
+  },
+  "description": "Améliore le suivi des cibles des unités concernées. Une première méthode établit les bases de cette spécialité."
+}

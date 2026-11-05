@@ -7,13 +7,13 @@
   "tracking": 83.4,
   "evasion": 90,
   "signature": 8,
-  "base_attack": 60,
-  "shots_min": 1,
+  "base_attack": 85,
+  "shots_min": 2,
   "shots_max": 2,
-  "build_time_base": 240,
+  "build_time_base": 900,
   "costs": {},
-  "speed_system": 50,
-  "speed_galaxy": 500,
+  "speed_system": 75,
+  "speed_galaxy": 800,
   "fuel_travel_system": 0.5,
   "fuel_travel_galaxy": 2,
   "fuel_orbit": 0.3,
@@ -21,11 +21,11 @@
   "unlock_requirements": {
     "technologies": [
       {
-        "slug": "stealth_technology",
+        "slug": "signature_masking",
         "level": 2
       },
       {
-        "slug": "advanced_propulsion",
+        "slug": "vector_propulsion",
         "level": 1
       }
     ],
@@ -40,7 +40,7 @@
     ]
   },
   "provisional": true,
-  "note": "Navigation et équilibrage provisoires ; fighter et stealth_fighter reprennent les stats de combat documentées.",
+  "note": "Profil de mobilité et de combat différencié, équilibrage validé le 02/11/2026 et à mesurer en Alpha.",
   "fuel_capacity": 1200,
   "fuel_capacity_provisional": true,
   "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 1200 H. Réservoir réservé au carburant, distinct de la soute de fret.",
@@ -49,7 +49,7 @@
     "intermediate": {
       "technologies": [
         {
-          "slug": "stealth_technology",
+          "slug": "signature_masking",
           "tier": "basic",
           "level": 5
         }
@@ -65,7 +65,7 @@
     "superior": {
       "technologies": [
         {
-          "slug": "stealth_technology",
+          "slug": "signature_masking",
           "tier": "intermediate",
           "level": 10
         }
@@ -96,5 +96,16 @@
       "nano": 3813,
       "antimatter": 715
     }
-  }
+  },
+  "tier_labels": {
+    "basic": "Chasseur furtif",
+    "intermediate": "Chasseur d’approche silencieuse",
+    "superior": "Intercepteur à spectre effacé"
+  },
+  "tier_descriptions": {
+    "basic": "Chasseur léger à signature réduite. Une coque individuelle remplit ce rôle selon une conception conventionnelle.",
+    "intermediate": "Chasseur léger à signature réduite. Une nouvelle architecture de vaisseau adapte la coque à ce rôle.",
+    "superior": "Chasseur léger à signature réduite. Une conception spécialisée pousse plus loin le rôle du vaisseau."
+  },
+  "description": "Chasseur léger à signature réduite. Une coque individuelle remplit ce rôle selon une conception conventionnelle."
 }

@@ -14,18 +14,18 @@ async function signIn(page) {
   await page.getByLabel('Adresse email').fill(email);
   await page.getByLabel('Mot de passe', { exact: true }).fill(password);
   await page.getByRole('button', { name: /Connexion/ }).click();
-  await page.locator('article.universe-card').filter({ has: page.getByRole('heading', { name: /Turbo/ }) }).getByRole('button').click();
+  const universeCard = page.locator('article.universe-card').first();
+  await expect(universeCard).toBeVisible();
+  await universeCard.getByRole('button').click();
   await expect(page).toHaveURL(/planetes\/\d+$/);
 }
 
 test('Application sans débordement aux breakpoints desktop, tablette et mobile', async ({ page }) => {
   await signIn(page);
-  await page.screenshot({ path: 'test-results/genesis-emblem-preview.png' });
   await expect.poll(() => page.locator('.brand-mark img').evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
   await page.goto('/planetes');
-  await expect.poll(() => page.locator('.planet-index-art img').first().evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
 
-  for (const width of [1440, 768]) {
+  for (const width of [1440, 1280, 768]) {
     await page.setViewportSize({ width, height: 900 });
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     await expect(page.locator('.sidebar')).toBeVisible();

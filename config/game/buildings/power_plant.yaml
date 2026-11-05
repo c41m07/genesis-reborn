@@ -1,6 +1,6 @@
 {
   "slug": "power_plant",
-  "label": "Centrale énergétique",
+  "label": "Centrale nucléaire",
   "base_build_time": 360,
   "build_time_scaling": 1.6,
   "costs_base": {
@@ -22,7 +22,7 @@
     "intermediate": {
       "technologies": [
         {
-          "slug": "basic_engineering",
+          "slug": "engineering_foundations",
           "tier": "basic",
           "level": 5
         }
@@ -38,7 +38,7 @@
     "superior": {
       "technologies": [
         {
-          "slug": "basic_engineering",
+          "slug": "engineering_foundations",
           "tier": "intermediate",
           "level": 10
         }
@@ -69,5 +69,16 @@
       "nano": 1641,
       "antimatter": 0
     }
-  }
+  },
+  "tier_labels": {
+    "basic": "Centrale nucléaire",
+    "intermediate": "Complexe énergétique à antimatière",
+    "superior": "Maillage énergétique planétaire"
+  },
+  "tier_descriptions": {
+    "basic": "Produit électricité. Une installation locale assure cette fonction sur la colonie.",
+    "intermediate": "Produit électricité. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+    "superior": "Produit électricité. Un maillage étendu porte cette fonction à l’échelle planétaire."
+  },
+  "description": "Produit électricité. Une installation locale assure cette fonction sur la colonie."
 }

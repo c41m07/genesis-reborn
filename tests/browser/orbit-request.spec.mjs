@@ -58,7 +58,7 @@ test('Orbite alliée : demande entrante, accord du propriétaire et stationnemen
     await expect(senderGuildCardForHost.locator('.badge')).toContainText('Alliés');
     await senderPage.reload();
     await expect(senderPage.locator('.guild-card').filter({ has: senderPage.getByRole('heading', { name: hostGuild, exact: true }) }).locator('.badge')).toContainText('Alliés');
-    await senderPage.screenshot({ path: 'docs/validation/diplomatie-guildes-etats.png', fullPage: true });
+
 
     const project = process.env.BROWSER_ROUTER;
     expect(project).toMatch(/^genesis-browser-test-[0-9]+-[0-9]+$/);
@@ -81,12 +81,12 @@ test('Orbite alliée : demande entrante, accord du propriétaire et stationnemen
     await form.getByRole('button', { name: 'Estimer le trajet' }).click();
     await expect(form.locator('.flight-estimate')).toContainText('Carburant aller-retour');
     await senderPage.evaluate(() => window.scrollTo(0, 0));
-    await senderPage.screenshot({ path: 'docs/validation/flottes-mission-orbite.png', fullPage: true });
+
     await form.getByRole('button', { name: /Envoyer la flotte/ }).click();
     await expect(senderPage.getByRole('status')).toContainText('Flotte envoyée');
     await expect(senderPage.locator('[data-status="traveling"]')).toHaveCount(1);
     await senderPage.evaluate(() => window.scrollTo(0, 0));
-    await senderPage.screenshot({ path: 'docs/validation/flottes-en-route.png', fullPage: true });
+
 
     const accelerate = "UPDATE fleet f INNER JOIN player_universe pu ON pu.id=f.player_universe_id INNER JOIN player p ON p.id=pu.player_id SET f.arrival_at=UTC_TIMESTAMP()-INTERVAL 2 SECOND WHERE p.email='" + sender.email + "' AND f.mission='orbit' AND f.status='traveling' AND f.destination_id=" + host.planetId;
     const expediteExisting = "UPDATE outbox_message o INNER JOIN fleet f ON o.kind='fleet' AND o.target_id=f.id AND o.token=f.dispatch_token INNER JOIN player_universe pu ON pu.id=f.player_universe_id INNER JOIN player p ON p.id=pu.player_id SET o.due_at=UTC_TIMESTAMP()-INTERVAL 2 SECOND WHERE p.email='" + sender.email + "' AND f.mission='orbit' AND f.destination_id=" + host.planetId;

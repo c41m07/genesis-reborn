@@ -30,11 +30,12 @@ final class QueueService
             if(in_array($group,['buildings','technologies'],true)) {
                 $quantity=1;$level=(int)($group==='buildings'?($buildings[$slug][$tier]??0):($techs[$slug][$tier]??0))+1;
                 foreach($queue as $item) if($item->itemSlug===$slug&&$item->tier===$tier) {$level=($item->itemLevel??0)+1;$depends=$item;}
-                if(isset($d['max_level'])&&$level>$d['max_level']) throw new \DomainException('Niveau maximum atteint.');
+                $maxLevel=(int)($d['effect']['tier_max_levels'][$tier]??$d['max_level']??PHP_INT_MAX);
+                if($level>$maxLevel) throw new \DomainException('Niveau maximum atteint.');
             }
             if($group==='technologies')foreach($this->repo->all(QueueItem::class,['playerUniverse'=>$m,'queueType'=>'research','itemSlug'=>$slug,'tier'=>$tier]) as $item)if($item->planet->id!==$planet->id)throw new \DomainException('Ce rang de technologie est déjà en recherche sur une autre planète.');
             $failures=$this->requirements->check($this->requirements->forTier($d,$tier,$level),$buildings,$techs);
-            if($group==='ships'&&$slug!=='fighter'&&($buildings['shipyard']['basic']??0)<1)$failures[]='Chantier spatial · Basique niveau 1';
+            if($group==='ships'&&$slug!=='fighter'&&($buildings['shipyard']['basic']??0)<1)$failures[]=$this->catalog->withTier($config['catalog']['buildings']['shipyard'],'basic')['label'].' · niveau 1';
             if($failures) throw new \DomainException('Prérequis : '.implode(', ',array_unique($failures)).'.');
             $plan=$this->calculator->calculate($d,$group,$level,$quantity,$buildings,$config,$techs);$duration=$plan['duration'];
             $this->resources->consume($planet,$plan['costs']);
@@ -98,7 +99,7 @@ final class QueueService
         }
         foreach($this->repo->all(QueueItem::class,['dependsOn'=>$item]) as $dependent) $dependent->dependsOn=null;
         $group=match($item->queueType){'building'=>'buildings','research'=>'technologies',default=>isset($this->catalog->all('defenses')[$item->itemSlug])?'defenses':'ships'};
-        $this->notifications->enqueue($m,'Terminé : '.$this->catalog->getTierForUniverse($m->universe,$group,$item->itemSlug,$item->tier)['label'].' · '.$this->catalog->tiers()[$item->tier]['label'].' sur '.$planet->name.'.');
+        $this->notifications->enqueue($m,'Terminé : '.$this->catalog->getTierForUniverse($m->universe,$group,$item->itemSlug,$item->tier)['label'].' sur '.$planet->name.'.');
         $type=$item->queueType;$this->manager->remove($item);$this->manager->flush();
         $next=$this->repo->queue($planet,$type)[0]??null;
         if($next) $this->start($next,$finish);else { $field=$type.'QueueStartedAt';$planet->$field=null; }
@@ -157,8 +158,9 @@ final class QueueService
     {
         foreach($this->repo->all(QueueItem::class,['dependsOn'=>$item]) as $dependent) $this->removeTree($dependent);
         $group=match($item->queueType){'building'=>'buildings','research'=>'technologies',default=>isset($this->catalog->all('defenses')[$item->itemSlug])?'defenses':'ships'};
-        $paid=$item->paidCosts??$this->catalog->costs($this->catalog->getTierForUniverse($item->playerUniverse->universe,$group,$item->itemSlug,$item->tier),$item->itemLevel??1,$item->quantity);
+        $paid=$item->paidCosts??$this->catalog->costs($this->catalog->getTierForUniverse($item->playerUniverse->universe,$group,$item->itemSlug,$item->tier),$item->itemLevel??1,$item->quantity,$group);
         $this->resources->refund($item->planet,$paid,$this->catalog->rules()['cancellation_refund_ratio']);
         $this->manager->remove($item);
     }
 }
+

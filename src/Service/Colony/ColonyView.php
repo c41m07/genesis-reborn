@@ -6,7 +6,7 @@ use App\Service\Catalog\GameCatalog;
 use App\Service\Requirement\RequirementChecker;
 final class ColonyView
 {
-    public function __construct(private GameRepository $repo,private GameCatalog $catalog,private RequirementChecker $requirements,private ResourceService $resources,private \App\Service\Queue\QueueService $queueService,private \App\Service\Queue\OperationCalculator $calculator,private CatalogueInsights $insights) {}
+    public function __construct(private GameRepository $repo,private GameCatalog $catalog,private RequirementChecker $requirements,private ResourceService $resources,private \App\Service\Queue\QueueService $queueService,private \App\Service\Queue\OperationCalculator $calculator,private CatalogueInsights $insights,private CatalogueDetails $details) {}
     public function data(PlayerUniverse $m,Planet $planet): array
     {
         $this->queueService->synchronize($m);
@@ -18,7 +18,8 @@ final class ColonyView
                 $sum+=$q->durationSeconds;$field=$type.'QueueStartedAt';$start=$planet->$field;
                 $group=match($type){'building'=>'buildings','research'=>'technologies',default=>isset($definitions['defenses'][$q->itemSlug])?'defenses':'ships'};
                 $base=$definitions[$group][$q->itemSlug]??$this->catalog->get($group,$q->itemSlug);
-                $queues[$type][]=['item'=>$q,'label'=>$base['label'].' · '.$this->catalog->tiers()[$q->tier]['label'],'finish'=>$start?->modify('+'.$sum.' seconds')];
+                $tierDefinition=$this->catalog->getTierForUniverse($m->universe,$group,$q->itemSlug,$q->tier);
+                $queues[$type][]=['item'=>$q,'label'=>$tierDefinition['label'],'finish'=>$start?->modify('+'.$sum.' seconds')];
             }
         }
         foreach(['buildings','technologies','ships','defenses'] as $group) {
@@ -26,7 +27,7 @@ final class ColonyView
             if(in_array($group,['buildings','technologies'],true)) {
                 $order=match($group) {
                     'buildings'=>array_flip(['power_plant','mine_metal','mine_nano','mine_hydrogen','mine_antimatter','storage_metal','storage_nano','storage_hydrogen','storage_electricity','storage_antimatter','lab','shipyard','fortress']),
-                    'technologies'=>array_flip(['basic_engineering','advanced_engineering','robotics','nano_construction','advanced_propulsion','precision_fire','advanced_targeting','hull_reinforcement','shield_technology','evasion_systems','signature_dampening','ballistic_overdrive','auxiliary_fuel_tanks','cargo_optimization','espionage_technology','counter_espionage','stealth_technology']),
+                    'technologies'=>array_flip(['engineering_foundations','naval_engineering','automated_defense_repair','nanomaterial_synthesis','vector_propulsion','weapon_calibration','target_acquisition','structural_armor','shield_harmonics','evasive_navigation','signature_reduction','rapid_fire_cycle','cryogenic_reserves','modular_cargo_bays','tactical_intelligence','intelligence_countermeasures','signature_masking']),
                 };
                 uksort($groupDefinitions,static fn(string $a,string $b): int => ($order[$a]??PHP_INT_MAX)<=>($order[$b]??PHP_INT_MAX));
             } elseif($group==='ships') {
@@ -48,10 +49,11 @@ final class ColonyView
                     $queued=null;
                     foreach($this->repo->queue($planet) as $q)if($q->itemSlug===$slug&&$q->tier===$tier&&$q->itemLevel){$queued=$q;$target=max($target,$q->itemLevel+1);}
                     $failures=$this->requirements->check($this->requirements->forTier($d,$tier,$target),$buildings,$tech);
-                    if($group==='ships'&&($buildings['shipyard']['basic']??0)<1&&$slug!=='fighter')$failures[]='Chantier spatial · Basique niveau 1';
-                    if($group==='technologies'&&($buildings['lab']['basic']??0)<1)$failures[]='Laboratoire · Basique niveau 1';
+                    if($group==='ships'&&($buildings['shipyard']['basic']??0)<1&&$slug!=='fighter')$failures[]=$this->catalog->withTier($definitions['buildings']['shipyard'],'basic')['label'].' · niveau 1';
+                    if($group==='technologies'&&($buildings['lab']['basic']??0)<1)$failures[]=$this->catalog->withTier($definitions['buildings']['lab'],'basic')['label'].' · niveau 1';
                     if($group==='defenses')$level=0;
-                    $cards[$group][]=['benefits'=>$this->insights->benefits($d,$group,$target,$planet,$buildings,$tech),'unlocks'=>$this->insights->unlocks($group,$slug,$target),'definition'=>$d,'tier'=>$tier,'level'=>$level,'target'=>$target,'quantity'=>$group==='ships'?($this->repo->one(FleetShip::class,['fleet'=>$this->repo->one(Fleet::class,['homePlanet'=>$planet,'playerUniverse'=>$m,'status'=>'idle']),'slug'=>$slug,'tier'=>$tier])?->quantity??0):($group==='defenses'?($this->repo->one(PlanetDefense::class,['planet'=>$planet,'slug'=>$slug,'tier'=>$tier])?->quantity??0):0),'duration'=>$this->calculator->calculate($d,$group,$target,1,$buildings,$universeConfig,$tech)['duration'],'costs'=>$this->catalog->costs($d,$target),'failures'=>array_values(array_unique($failures)),'maximum'=>isset($d['max_level'])&&$target>$d['max_level'],'queued'=>$queued!==null];
+                    $operation=$this->calculator->calculate($d,$group,$target,1,$buildings,$universeConfig,$tech);
+                    $cards[$group][]=['details'=>$this->details->describe($d,$group,$target,$planet,$buildings,$tech),'benefits'=>$this->insights->benefits($d,$group,$target,$planet,$buildings,$tech),'unlocks'=>$this->insights->unlocks($group,$slug,$target),'definition'=>$d,'tier'=>$tier,'level'=>$level,'target'=>$target,'quantity'=>$group==='ships'?($this->repo->one(FleetShip::class,['fleet'=>$this->repo->one(Fleet::class,['homePlanet'=>$planet,'playerUniverse'=>$m,'status'=>'idle']),'slug'=>$slug,'tier'=>$tier])?->quantity??0):($group==='defenses'?($this->repo->one(PlanetDefense::class,['planet'=>$planet,'slug'=>$slug,'tier'=>$tier])?->quantity??0):0),'duration'=>$operation['duration'],'costs'=>$operation['costs'],'failures'=>array_values(array_unique($failures)),'maximum'=>isset($d['max_level'])&&$target>$d['max_level'],'queued'=>$queued!==null];
                 }
             }
         }

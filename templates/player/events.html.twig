@@ -1,0 +1,6 @@
+{% extends 'base.html.twig' %}
+{% block title %}Événements · Genesis Reborn{% endblock %}
+{% block body %}
+<section class="page-heading"><p class="eyebrow">UNIVERS {{ membership.universe.name }}</p><h1>Événements</h1><p>Événements à venir et en cours dans votre univers.</p></section>
+{% for event in events %}<article class="panel"><p class="eyebrow">{{ event.startsAt > date() ? 'À venir' : 'En cours' }} · {{ event.type|replace({'_':' '})|capitalize }} · {{ event.universe ? event.universe.name : 'Tous les univers' }}</p><h2>{{ event.name }}</h2><p>{{ event.description }}</p>{% if event.type=='production_bonus' %}<p>Production : +{{ event.parameters.percentage }} %</p>{% endif %}{% if event.startsAt > date() %}<p>Débute le {{ event.startsAt|date('d/m/Y à H:i') }} UTC</p>{% else %}<p>Se termine le {{ event.endsAt|date('d/m/Y à H:i') }} UTC</p>{% endif %}</article>{% else %}<p class="panel">Aucun événement à venir ou en cours.</p>{% endfor %}
+{% endblock %}

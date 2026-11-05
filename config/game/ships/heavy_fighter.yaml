@@ -9,11 +9,11 @@
   "signature": 35,
   "base_attack": 70,
   "shots_min": 1,
-  "shots_max": 3,
-  "build_time_base": 120,
+  "shots_max": 2,
+  "build_time_base": 600,
   "costs": {},
-  "speed_system": 50,
-  "speed_galaxy": 500,
+  "speed_system": 55,
+  "speed_galaxy": 550,
   "fuel_travel_system": 0.5,
   "fuel_travel_galaxy": 2,
   "fuel_orbit": 0.3,
@@ -22,12 +22,20 @@
     "buildings": [
       {
         "slug": "shipyard",
+        "tier": "basic",
+        "level": 3
+      }
+    ],
+    "technologies": [
+      {
+        "slug": "weapon_calibration",
+        "tier": "basic",
         "level": 1
       }
     ]
   },
   "provisional": true,
-  "note": "Navigation et équilibrage provisoires ; fighter et stealth_fighter reprennent les stats de combat documentées.",
+  "note": "Profil de mobilité et de combat différencié, équilibrage validé le 02/11/2026 et à mesurer en Alpha.",
   "fuel_capacity": 1000,
   "fuel_capacity_provisional": true,
   "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 1000 H. Réservoir réservé au carburant, distinct de la soute de fret.",
@@ -36,7 +44,7 @@
     "intermediate": {
       "technologies": [
         {
-          "slug": "weapon_technology",
+          "slug": "weapons_engineering",
           "tier": "basic",
           "level": 5
         }
@@ -52,7 +60,7 @@
     "superior": {
       "technologies": [
         {
-          "slug": "weapon_technology",
+          "slug": "weapons_engineering",
           "tier": "intermediate",
           "level": 10
         }
@@ -83,5 +91,16 @@
       "nano": 1875,
       "antimatter": 352
     }
-  }
+  },
+  "tier_labels": {
+    "basic": "Chasseur lourd",
+    "intermediate": "Chasseur-bombardier lourd",
+    "superior": "Chasseur d’appui blindé"
+  },
+  "tier_descriptions": {
+    "basic": "Chasseur plus résistant qu’un modèle classique, mais moins rapide. Il sert à percer les défenses légères et à attaquer les petites unités de guerre comme chasseurs, bombardiers et frégates. Armement visible : deux canons rotatifs à plasma sous les ailes, projetant des tirs énergétiques verts.",
+    "intermediate": "Chasseur-bombardier lourd renforcé pour les assauts rapprochés contre les petites coques militaires. Il conserve une bonne pression contre chasseurs et bombardiers, tout en menaçant les frégates. Armement visible : canons rotatifs à plasma verts sous les ailes, avec cadence accrue.",
+    "superior": "Chasseur d’appui blindé destiné à ouvrir des brèches dans les escortes légères. Sa résistance et ses armes à plasma en font une menace directe pour les frégates isolées. Armement visible : doubles canons rotatifs à plasma lourd, tirant des projectiles verts concentrés."
+  },
+  "description": "Vaisseau d’assaut rapproché plus résistant qu’un chasseur classique, mais moins rapide. Il attaque chasseurs, bombardiers et frégates avec deux canons rotatifs à plasma sous les ailes."
 }

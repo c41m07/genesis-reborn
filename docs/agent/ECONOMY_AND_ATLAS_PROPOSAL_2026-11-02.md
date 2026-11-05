@@ -3,6 +3,8 @@
 Date : 2 novembre 2026
 Statut : implémentation terminée sur `feature/economy-rare-resources`.
 
+> **Statut documentaire :** note issue d’une branche de travail datée, conservée comme historique de proposition et d’implémentation. Les règles confirmées actuellement sont dans [BALANCING_IMPLEMENTATION_2026-11-02.md](BALANCING_IMPLEMENTATION_2026-11-02.md) et [REGLES.md](../REGLES.md); les illustrations matricielles évoquées plus bas ont depuis été supprimées.
+
 ## Règles retenues et livrées
 
 - La chaîne des ressources est maintenant métal, électricité, antimatière, hydrogène et nano. Carbone devient nano et énergie devient électricité par migration 1:1 des stocks existants; aucune valeur de construction ne dépend de l’électricité.
@@ -30,7 +32,7 @@ Les valeurs sont arrondies ressource par ressource. Les coûts effectifs par niv
 - Lint projet : PHP, YAML (74 fichiers), Twig (39 fichiers), conteneur Symfony et schéma Doctrine réussis.
 - Compilation de production des assets réussie.
 - Test navigateur dédié : **1/1** réussi. Il vérifie l’image, les trois rangs, leur cadrage CSS et l’absence de débordement à 1440 px et 390 px.
-- Captures : [desktop](../validation/defense-tiers-atlas-desktop.png) · [mobile](../validation/defense-tiers-atlas-mobile.png).
+- Captures : desktop (capture raster retiree: capture de validation supprimee) · mobile (capture raster retiree: capture de validation supprimee).
 
 ## À mesurer pendant l’Alpha
 

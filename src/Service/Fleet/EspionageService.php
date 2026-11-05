@@ -21,14 +21,14 @@ final class EspionageService
         if ($probeCount < 1) throw new \LogicException('Une mission d’espionnage doit transporter une sonde.');
         $this->npcSeeder->seed($target);
         $this->manager->flush();
-        $senderTech = $this->techLevel($fleet->playerUniverse, 'espionage_technology');
-        $senderStealth = $this->techLevel($fleet->playerUniverse, 'stealth_technology');
-        $targetTech = $target->owner ? $this->techLevel($target->owner, 'espionage_technology') : $this->npcResearch($target, 'espionage_technology');
-        $targetCounter = $target->owner ? $this->techLevel($target->owner, 'counter_espionage') : $this->npcResearch($target, 'counter_espionage');
+        $senderTech = $this->techLevel($fleet->playerUniverse, 'tactical_intelligence');
+        $senderStealth = $this->techLevel($fleet->playerUniverse, 'signature_masking');
+        $targetTech = $target->owner ? $this->techLevel($target->owner, 'tactical_intelligence') : $this->npcResearch($target, 'tactical_intelligence');
+        $targetCounter = $target->owner ? $this->techLevel($target->owner, 'intelligence_countermeasures') : $this->npcResearch($target, 'intelligence_countermeasures');
         $settings = $this->catalog->all('espionage');
         $detectionChance = (int) round(max((int) ($settings['min_detection_chance'] ?? 5), min((int) ($settings['max_detection_chance'] ?? 95),
             (int) ($settings['base_detection_chance'] ?? 50)
-            + (int) ($settings['counter_espionage_weight'] ?? 10) * $targetCounter
+            + (int) ($settings['intelligence_countermeasures_weight'] ?? 10) * $targetCounter
             - (int) ($settings['stealth_weight'] ?? 10) * $senderStealth
             + (int) ($settings['extra_probe_weight'] ?? 1) * max(0, $probeCount - 1)
             + (int) ($settings['local_probe_weight'] ?? 1) * $this->localProbeCount($target)
@@ -92,26 +92,26 @@ final class EspionageService
     private function snapshot(Planet $planet): array
     {
         $buildings = [];
-        foreach ($this->repo->all(PlanetBuilding::class, ['planet' => $planet]) as $building) if($building->level>0)$buildings[$building->slug][$building->tier]=['label'=>$this->catalog->get('buildings',$building->slug)['label'].' · '.$this->catalog->tiers()[$building->tier]['label'],'level'=>$building->level];
+        foreach ($this->repo->all(PlanetBuilding::class, ['planet' => $planet]) as $building) if($building->level>0)$buildings[$building->slug][$building->tier]=['label'=>$this->catalog->getTierForUniverse($planet->universe,'buildings',$building->slug,$building->tier)['label'],'level'=>$building->level];
         $research = [];
         if ($planet->owner) {
-            foreach ($this->repo->all(PlayerTechnology::class, ['playerUniverse' => $planet->owner]) as $tech) if($tech->level>0)$research[$tech->slug][$tech->tier]=['label'=>$this->catalog->get('technologies',$tech->slug)['label'].' · '.$this->catalog->tiers()[$tech->tier]['label'],'level'=>$tech->level];
+            foreach ($this->repo->all(PlayerTechnology::class, ['playerUniverse' => $planet->owner]) as $tech) if($tech->level>0)$research[$tech->slug][$tech->tier]=['label'=>$this->catalog->getTierForUniverse($planet->universe,'technologies',$tech->slug,$tech->tier)['label'],'level'=>$tech->level];
         } elseif ($planet->npcPlanet) {
-            foreach ($this->catalog->all('planet_conquest')['levels'][$planet->conquestLevel]['research'] ?? [] as $slug => $level) if ($level > 0) $research[$slug] = ['label' => $this->catalog->get('technologies', $slug)['label'] ?? $slug, 'level' => $level];
+            foreach ($this->catalog->all('planet_conquest')['levels'][$planet->conquestLevel]['research'] ?? [] as $slug => $level) if ($level > 0) $research[$slug] = ['label' => $this->catalog->withTier($this->catalog->get('technologies', $slug), 'basic')['label'] ?? $slug, 'level' => $level];
         }
         $fleets = [];
         if ($planet->npcPlanet && !$planet->owner) {
-            foreach ($this->repo->all(PlanetNpcShip::class, ['planet' => $planet]) as $ship) if ($ship->quantity > 0) $fleets[$ship->slug] = ['label' => $this->catalog->get('ships', $ship->slug)['label'] ?? $ship->slug, 'quantity' => $ship->quantity];
+            foreach ($this->repo->all(PlanetNpcShip::class, ['planet' => $planet]) as $ship) if ($ship->quantity > 0) $fleets[$ship->slug] = ['label' => $this->catalog->withTier($this->catalog->get('ships', $ship->slug), 'basic')['label'] ?? $ship->slug, 'quantity' => $ship->quantity];
         } else {
             $present = $this->repo->all(Fleet::class, ['homePlanet' => $planet, 'status' => 'idle']);
             foreach (['orbiting', 'defending'] as $status) $present = array_merge($present, $this->repo->all(Fleet::class, ['destination' => $planet, 'status' => $status]));
             foreach ($present as $fleet) foreach ($this->repo->all(FleetShip::class, ['fleet' => $fleet]) as $ship) if ($ship->quantity > 0) {
-                $key=$ship->slug.':'.$ship->tier;$fleets[$key]['label']=$this->catalog->get('ships',$ship->slug)['label'].' · '.$this->catalog->tiers()[$ship->tier]['label'];
+                $key=$ship->slug.':'.$ship->tier;$fleets[$key]['label']=$this->catalog->getTierForUniverse($planet->universe,'ships',$ship->slug,$ship->tier)['label'];
                 $fleets[$key]['quantity']=($fleets[$key]['quantity']??0)+$ship->quantity;
             }
         }
         $defenses = [];
-        foreach ($this->repo->all(PlanetDefense::class, ['planet' => $planet]) as $defense) if ($defense->quantity > 0) $defenses[$defense->slug . ':' . $defense->tier] = ['label' => ($this->catalog->get('defenses', $defense->slug)['label'] ?? $defense->slug) . ' · ' . $this->catalog->tiers()[$defense->tier]['label'], 'quantity' => $defense->quantity];
+        foreach ($this->repo->all(PlanetDefense::class, ['planet' => $planet]) as $defense) if ($defense->quantity > 0) $defenses[$defense->slug . ':' . $defense->tier] = ['label' => $this->catalog->getTierForUniverse($planet->universe,'defenses',$defense->slug,$defense->tier)['label'], 'quantity' => $defense->quantity];
         return ['resources' => $this->resources->snapshot($planet), 'buildings' => $buildings, 'research' => $research, 'fleets' => $fleets, 'defenses' => $defenses];
     }
 

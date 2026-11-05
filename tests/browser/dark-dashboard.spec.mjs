@@ -26,7 +26,7 @@ test('Thème sombre par défaut : dashboard structuré et navigation responsive'
   await expect(metrics.nth(3)).toContainText('Alliance');
   await expect(metrics.nth(3)).toHaveAttribute('href', '/diplomatie');
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.screenshot({ path: 'docs/validation/colonie-theme-dark.png' });
+
   await page.goto(colonyPath + '?section=buildings');
   await page.getByRole('button', { name: 'Production' }).click();
   await expect(page.locator('.catalog-card[data-category="economy"]:visible').first()).toBeVisible();
@@ -38,5 +38,5 @@ test('Thème sombre par défaut : dashboard structuré et navigation responsive'
   await expect(page.locator('#command-navigation')).toHaveAttribute('aria-hidden', 'true');
   await expect.poll(() => page.locator('#command-navigation').evaluate(el => el.getBoundingClientRect().right)).toBeLessThanOrEqual(0);
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
-  await page.screenshot({ path: 'docs/validation/colonie-theme-dark-mobile.png' });
+
 });

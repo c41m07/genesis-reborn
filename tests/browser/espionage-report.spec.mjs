@@ -55,17 +55,17 @@ test('Espionnage PNJ : envoyer une sonde et consulter le rapport privé', async 
   await page.getByRole('link', { name: 'Rapports', exact: true }).click();
   const reportLink = page.locator('a[href*="/rapports/espionnage/"]').first();
   await expect(reportLink).toBeVisible();
-  await page.screenshot({ path: 'docs/validation/rapports-espionnage-etat.png', fullPage: true });
+
   const reportName = (await reportLink.locator('.report-copy strong').textContent()).replace('Renseignements · ', '').trim();
   await reportLink.click();
   await expect(page.getByRole('heading', { name: reportName, exact: true })).toBeVisible();
   await expect(page.getByRole('status')).toContainText(/Sondes détectées|catégorie.*renseignements obtenue/);
   await expect(page.getByRole('link', { name: 'Retour aux rapports' })).toBeVisible();
-  await page.screenshot({ path: 'docs/validation/rapport-espionnage-detail.png', fullPage: true });
+
   const reportUrl = page.url();
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(reportUrl);
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: 'docs/validation/rapport-espionnage-mobile.png', fullPage: true });
+
 });

@@ -1,0 +1,99 @@
+{
+  "slug": "naval_engineering",
+  "label": "Architecture navale",
+  "max_level": 25,
+  "research_time_base": 600,
+  "research_time_scaling": 1.8,
+  "costs_base": {
+    "metal": 1700,
+    "nano": 150,
+    "antimatter": 0
+  },
+  "costs_scaling": 2,
+  "unlock_requirements": {
+    "buildings": [
+      {
+        "slug": "lab",
+        "tier": "basic",
+        "level": 2
+      }
+    ],
+    "technologies": [
+      {
+        "slug": "engineering_foundations",
+        "tier": "basic",
+        "level": 2
+      }
+    ]
+  },
+  "effect": {
+    "type": "cost_discount",
+    "targets": "ships",
+    "value_per_level": 1,
+    "max_bonus": 40
+  },
+  "provisional": true,
+  "tier_unlock_requirements": {
+    "intermediate": {
+      "technologies": [
+        {
+          "slug": "engineering_foundations",
+          "tier": "basic",
+          "level": 5
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "basic",
+          "level": 5
+        }
+      ]
+    },
+    "superior": {
+      "technologies": [
+        {
+          "slug": "engineering_foundations",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ]
+    }
+  },
+  "economy_value_budget": 4000,
+  "cost_profiles": {
+    "basic": {
+      "metal": 1700,
+      "nano": 150,
+      "antimatter": 0
+    },
+    "intermediate": {
+      "metal": 1500,
+      "nano": 375,
+      "antimatter": 63
+    },
+    "superior": {
+      "metal": 1250,
+      "nano": 625,
+      "antimatter": 157
+    }
+  },
+  "tier_labels": {
+    "basic": "Architecture navale",
+    "intermediate": "Conception modulaire de flotte",
+    "superior": "Standardisation des coques impériales"
+  },
+  "tier_descriptions": {
+    "basic": "Réduit les coûts en ressources des vaisseaux. Une première méthode établit les bases de cette spécialité.",
+    "intermediate": "Réduit les coûts en ressources des vaisseaux. Une approche technique plus intégrée fait progresser cette spécialité.",
+    "superior": "Réduit les coûts en ressources des vaisseaux. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées."
+  },
+  "description": "Réduit les coûts en ressources des vaisseaux. Une première méthode établit les bases de cette spécialité."
+}

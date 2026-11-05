@@ -1,0 +1,109 @@
+{
+  "slug": "vector_propulsion",
+  "label": "Propulseurs vectoriels",
+  "max_level": 25,
+  "research_time_base": 3600,
+  "research_time_scaling": 1.8,
+  "costs_base": {
+    "metal": 4250,
+    "nano": 375,
+    "antimatter": 0
+  },
+  "costs_scaling": 2,
+  "unlock_requirements": {
+    "buildings": [
+      {
+        "slug": "lab",
+        "tier": "basic",
+        "level": 4
+      }
+    ],
+    "technologies": [
+      {
+        "slug": "naval_engineering",
+        "tier": "basic",
+        "level": 5
+      },
+      {
+        "slug": "engineering_foundations",
+        "tier": "basic",
+        "level": 5
+      }
+    ]
+  },
+  "effect": {
+    "type": "stat_bonus",
+    "targets": "all_ships",
+    "stats": [
+      "speed_system",
+      "speed_galaxy"
+    ],
+    "formula": "percent",
+    "value_per_level": 0.01,
+    "max_bonus": 0.25
+  },
+  "source": "PDF 1 p.15",
+  "tier_unlock_requirements": {
+    "intermediate": {
+      "technologies": [
+        {
+          "slug": "engineering_foundations",
+          "tier": "basic",
+          "level": 5
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "basic",
+          "level": 5
+        }
+      ]
+    },
+    "superior": {
+      "technologies": [
+        {
+          "slug": "engineering_foundations",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ]
+    }
+  },
+  "economy_value_budget": 10000,
+  "cost_profiles": {
+    "basic": {
+      "metal": 4250,
+      "nano": 375,
+      "antimatter": 0
+    },
+    "intermediate": {
+      "metal": 3750,
+      "nano": 938,
+      "antimatter": 157
+    },
+    "superior": {
+      "metal": 3125,
+      "nano": 1563,
+      "antimatter": 391
+    }
+  },
+  "tier_labels": {
+    "basic": "Propulseurs vectoriels",
+    "intermediate": "Navigation à poussée distribuée",
+    "superior": "Réseau de propulsion interstellaire"
+  },
+  "tier_descriptions": {
+    "basic": "Améliore les capacités des unités concernées. Une première méthode établit les bases de cette spécialité.",
+    "intermediate": "Améliore les capacités des unités concernées. Une approche technique plus intégrée fait progresser cette spécialité.",
+    "superior": "Améliore les capacités des unités concernées. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées."
+  },
+  "description": "Améliore les capacités des unités concernées. Une première méthode établit les bases de cette spécialité."
+}

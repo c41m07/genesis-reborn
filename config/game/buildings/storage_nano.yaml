@@ -1,6 +1,6 @@
 {
   "slug": "storage_nano",
-  "label": "Entrepôt · Nano",
+  "label": "Coffre de nanomatériaux",
   "base_build_time": 180,
   "build_time_scaling": 1.6,
   "costs_base": {
@@ -13,6 +13,24 @@
   "levels": {
     "1": {
       "unlock_requirements": {}
+    },
+    "2": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "mine_nano",
+            "tier": "basic",
+            "level": 3
+          }
+        ],
+        "technologies": [
+          {
+            "slug": "nanomaterial_synthesis",
+            "tier": "basic",
+            "level": 2
+          }
+        ]
+      }
     }
   },
   "provisional": true,
@@ -20,7 +38,7 @@
     "intermediate": {
       "technologies": [
         {
-          "slug": "basic_engineering",
+          "slug": "engineering_foundations",
           "tier": "basic",
           "level": 5
         }
@@ -36,7 +54,7 @@
     "superior": {
       "technologies": [
         {
-          "slug": "basic_engineering",
+          "slug": "engineering_foundations",
           "tier": "intermediate",
           "level": 10
         }
@@ -67,5 +85,16 @@
       "nano": 782,
       "antimatter": 147
     }
-  }
+  },
+  "tier_labels": {
+    "basic": "Coffre de nanomatériaux",
+    "intermediate": "Banque de matière synthétique",
+    "superior": "Réserve planétaire de nanostructures"
+  },
+  "tier_descriptions": {
+    "basic": "Augmente la capacité de stockage de nanomatériaux. Une installation locale assure cette fonction sur la colonie.",
+    "intermediate": "Augmente la capacité de stockage de nanomatériaux. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+    "superior": "Augmente la capacité de stockage de nanomatériaux. Un maillage étendu porte cette fonction à l’échelle planétaire."
+  },
+  "description": "Augmente la capacité de stockage de nanomatériaux. Une installation locale assure cette fonction sur la colonie."
 }

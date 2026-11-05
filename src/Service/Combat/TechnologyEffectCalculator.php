@@ -3,7 +3,7 @@ namespace App\Service\Combat;
 use App\Entity\Universe;
 use App\Service\Catalog\GameCatalog;
 
-/** Applique les bonus des technologies actives de tous les rangs aux statistiques des unités. */
+/** Applique une progression commune et décroissante pour les trois rangs technologiques. */
 final class TechnologyEffectCalculator
 {
     public function __construct(private GameCatalog $catalog) {}
@@ -21,29 +21,28 @@ final class TechnologyEffectCalculator
             if(!is_string($slug))continue;
             if(is_numeric($rankLevels))$rankLevels=['basic'=>(int)$rankLevels];
             if(!is_array($rankLevels))continue;
-            foreach(GameCatalog::TIERS as $tier){
-                $level=(int)($rankLevels[$tier]??0);if($level<1)continue;
-                $definition=$this->catalog->getTierForUniverse($universe,'technologies',$slug,$tier);$effect=$definition['effect']??null;
-                if(!is_array($effect)||!in_array($effect['targets']??null,$targets,true))continue;
-                $factor=GameCatalog::tierFactor($tier);$maxLevel=max(1,(int)($definition['max_level']??$level));$effectiveLevel=min($level,$maxLevel);
-                if(($effect['type']??null)==='extra_shot_chance'){
-                    $chance=min((float)($effect['max_bonus']??1)*$factor,(float)($effect['value_per_level']??0)*$effectiveLevel*$factor);
-                    foreach($units as &$unit){if((float)($unit['base_attack']??0)<=0)continue;$unit['extra_shot_chances'][]=max(0.0,min(1.0,$chance));}unset($unit);continue;
-                }
-                if(($effect['type']??null)!=='stat_bonus')continue;
-                $stats=$effect['stats']??[$effect['stat']??null];$stats=array_values(array_filter($stats,'is_string'));
-                $per=$effect['value_per_level']??null;$formula=$effect['formula']??'flat';
-                if(!is_numeric($per)||!is_finite((float)$per)||!in_array($formula,['flat','percent'],true))throw new \DomainException('Effet technologique invalide : '.$slug.'.');
-                $bonus=(float)$per*$effectiveLevel*$factor;
-                if(isset($effect['max_bonus']))$bonus=min($bonus,(float)$effect['max_bonus']*$factor);
-                foreach($units as &$unit){
-                    if(($effect['targets']??null)==='combat_ships'&&(float)($unit['base_attack']??0)<=0)continue;
-                    foreach($stats as $stat){
-                        if(!array_key_exists($stat,$unit)||!is_numeric($unit[$stat]))throw new \DomainException('Statistique absente pour l’effet technologique : '.$slug.'.');
-                        if($formula==='percent'){$direction=($effect['direction']??'increase')==='decrease'?-1:1;$unit[$stat]=(float)$unit[$stat]*(1+$direction*$bonus);}else{$unit[$stat]=(float)$unit[$stat]+$bonus;}
-                    }
-                }unset($unit);
+            $definition=$this->catalog->getForUniverse($universe,'technologies',$slug);$effect=$definition['effect']??null;
+            if(!is_array($effect)||!in_array($effect['targets']??null,$targets,true))continue;
+            $maxLevel=max(1,(int)($definition['max_level']??25));
+            if(($effect['type']??null)==='extra_shot_chance'){
+                $cap=(float)($effect['max_bonus']??0.5);
+                $chance=GameCatalog::diminishingBonus($rankLevels,$cap,$maxLevel);
+                foreach($units as &$unit){if((float)($unit['base_attack']??0)>0)$unit['extra_shot_chances'][]=max(0.0,min(1.0,$chance));}unset($unit);
+                continue;
             }
+            if(($effect['type']??null)!=='stat_bonus')continue;
+            $stats=$effect['stats']??[$effect['stat']??null];$stats=array_values(array_filter($stats,'is_string'));
+            $cap=$effect['max_bonus']??null;$formula=$effect['formula']??'flat';
+            if(!is_numeric($cap)||!is_finite((float)$cap)||!in_array($formula,['flat','percent'],true))throw new \DomainException('Effet technologique invalide : '.$slug.'.');
+            $bonus=GameCatalog::diminishingBonus($rankLevels,(float)$cap,$maxLevel);
+            foreach($units as &$unit){
+                if(($effect['targets']??null)==='combat_ships'&&(float)($unit['base_attack']??0)<=0)continue;
+                foreach($stats as $stat){
+                    if(!array_key_exists($stat,$unit)||!is_numeric($unit[$stat]))throw new \DomainException('Statistique absente pour l’effet technologique : '.$slug.'.');
+                    if($formula==='percent'){$direction=($effect['direction']??'increase')==='decrease'?-1:1;$unit[$stat]=(float)$unit[$stat]*(1+$direction*$bonus);}else{$unit[$stat]=(float)$unit[$stat]+$bonus;}
+                }
+                if(in_array('base_attack',$stats,true)&&isset($unit['secondary_attack']))$unit['secondary_attack']=(float)$unit['secondary_attack']*(1+$bonus);
+            }unset($unit);
         }
         return $units;
     }

@@ -108,7 +108,7 @@ final class LeaderboardService
         $definition=$this->catalog->getTierForUniverse($universe,$group,$slug,$tier);
         $total = 0;
         for ($currentLevel = 1; $currentLevel <= $level; ++$currentLevel) {
-            $total += array_sum($this->catalog->costs($definition, $currentLevel));
+            $total += array_sum($this->catalog->costs($definition, $currentLevel, 1, $group));
         }
 
         return $total;

@@ -11,7 +11,7 @@ Mise à jour : 2 novembre 2026. L’application et les principaux parcours sont 
 - Rapports : titre explicite « Rapports de combat et d’espionnage »; assertions navigateur alignées sur le libellé.
 
 ## Vérifications
-- Capture mobile à 390 px inspectée : ressources et contenu restent dans la largeur de l’écran; menu latéral fermé; parcours de navigation testé dans Chromium avant l’étape finale du scénario. Capture : docs/validation/mobile-apercu.png.
+- Capture mobile à 390 px inspectée : ressources et contenu restent dans la largeur de l’écran; menu latéral fermé; parcours de navigation testé dans Chromium avant l’étape finale du scénario. Capture : docs/capture de validation supprimee.
 - Historique : 78 tests / 406 assertions au 31/10; la suite actuelle complète passe 93 tests / 477 assertions (01/11), avec les tests du reset catalogue et des accès admin.
 - Lint actuel : 25 Twig, 63 YAML, conteneur Symfony et schéma Doctrine valides (01/11).
 - make validate : configuration Compose valide.
@@ -47,7 +47,7 @@ Mise à jour : 2 novembre 2026. L’application et les principaux parcours sont 
 
 - Écart de direction identifié par comparaison réelle : la référence publique est claire, avec surfaces blanches, navigation latérale claire et cartes sobres; l’application avait un thème bleu nuit. Un thème clair partagé est maintenant appliqué et compilé.
 - La page d’accueil a été restructurée autour d’un bandeau planétaire, de quatre indicateurs alimentés par les vraies données, de files d’opérations, de colonies cliquables, des flottes en mouvement et du journal des notifications. Les données affichées proviennent des services et entités existants.
-- Captures UI vérifiées : docs/validation/colonie-desktop.png et docs/validation/colonie-mobile.png. Le parcours d’accueil passe 1/1, les routes responsive 1/1 à 1440/768/390 et le contraste échantillonné repasse 1/1 après ajustement des couleurs.
+- Captures UI vérifiées : docs/capture de validation supprimee et docs/capture de validation supprimee. Le parcours d’accueil passe 1/1, les routes responsive 1/1 à 1440/768/390 et le contraste échantillonné repasse 1/1 après ajustement des couleurs.
 - Cette livraison démarre l’alignement visuel; elle ne valide pas la refonte complète. Les vues restantes doivent être comparées et travaillées individuellement, sans retirer les fonctions du brief.
 
 - wireframe-theme-screens.spec.mjs passe 1/1 pour carte, flottes, diplomatie, messages et rapports sous le thème clair à 1440 px; les captures servent de base au contrôle écran par écran.
@@ -58,7 +58,7 @@ Mise à jour : 2 novembre 2026. L’application et les principaux parcours sont 
 - Le shell partagé suit davantage la hiérarchie du wireframe : Commandement, Développement, Opérations, Communauté et Compte; liens conservés vers les fonctionnalités et routes existantes.
 - Barre de ressources compacte sur grand écran et transformée en grille à deux colonnes sur mobile. La sélection de colonie, les cinq ressources du jeu, l’horloge et le profil restent présents.
 - Les titres, espacements, cartes et navigation utilisent désormais les surfaces claires et les bordures neutres du prototype. Espionnage mène à /flottes?mission=spy.
-- Captures Playwright étendues : Carte, Flottes, Diplomatie, Messages, Rapports, Classement, Univers, Profil, Préférences, quatre sections de colonie, Connexion, Inscription, mot de passe oublié, Administration et catalogue admin. Voir docs/validation/*-theme.png.
+- Captures Playwright étendues : Carte, Flottes, Diplomatie, Messages, Rapports, Classement, Univers, Profil, Préférences, quatre sections de colonie, Connexion, Inscription, mot de passe oublié, Administration et catalogue admin. Voir captures de validation supprimees.
 - Preuves : make assets; make lint; wireframe-theme-screens.spec.mjs 2/2; admin-catalogue.spec.mjs 1/1; ui-routes-responsive.spec.mjs 1/1 sur 1440/768/390; ui-contrast-sampled.spec.mjs 1/1. Un débordement à 390 px a été localisé sur les ressources et corrigé.
 - Phase 12 reste EN COURS : la cohérence globale est renforcée, mais l’audit et l’ajustement visuel de chaque état métier, rapport détaillé et branche d’erreur ne sont pas achevés. Pas de commit créé.
 
@@ -103,7 +103,7 @@ Après correction des droits du cache de test généré (répertoire Twig test r
 - Visite Playwright de la maquette publiée : les écrans Rapports, Galaxie, Classements, Messages, Architecture du prototype et Paramètres ont été observés.
 - La page Rapports est réorganisée en centre unique avec filtres Tous, Combats, Économie et Espionnage, lignes ouvrables et états vides; les rapports de combat et d’espionnage existants restent accessibles. Le filtre Économie signale sans inventer de données tant que le jeu n’a pas de rapport économique persistant.
 - La barre mobile partagée propose Accueil, Planètes, Galaxie, Flottes et Plus, avec ouverture clavier du menu complet. Ressources réparties sur deux colonnes.
-- Le test wireframe passe 2/2 après vérification de chaque écran applicatif à 390 px, sans débordement, et de l’ouverture du menu Plus. Les filtres rapports sont parcourus par le test. Captures desktop et mobile régénérées dans docs/validation/*-theme.png.
+- Le test wireframe passe 2/2 après vérification de chaque écran applicatif à 390 px, sans débordement, et de l’ouverture du menu Plus. Les filtres rapports sont parcourus par le test. Captures desktop et mobile régénérées dans captures de validation supprimees.
 - npm run build, make lint réussis. Phase 12 EN COURS : architecture spécifique des pages Galaxie, Flottes, Alliances, Messages et Paramètres encore à rapprocher; états métier restants non exhaustivement vérifiés.
 
 - Les routes Flottes et Espionnage ont désormais des intitulés et un lien actif distincts; si aucune sonde n’est disponible, l’écran explique le prérequis. Les libellés Alliances et Messages suivent aussi ceux du prototype. Les captures sont incluses dans le nouveau contrôle complet.
@@ -114,7 +114,7 @@ Après correction des droits du cache de test généré (répertoire Twig test r
 **État strict au 2 novembre : PARTIELLE (phase 12/15).** La refonte visuelle des vues principales est livrée selon les preuves listées ci-dessous. À la mise à jour du 01/11/2026, P12-STATE-01 et P12-ART-01 sont techniquement validées; P12-A11Y-01 reste partielle jusqu’à un audit manuel RGAA/WCAG avec lecteur d’écran. La phase 12 reste donc ouverte. Les fonctions existantes restent accessibles; les écrans sans données métier affichent un état vide explicite. Le prototype public a été parcouru pour ses vues disponibles et ses structures visuelles ont guidé les routes correspondantes.
 
 Preuves de validation :
-- Captures Playwright desktop et mobile dans docs/validation/, incluant états de rapport, navigation et catalogue admin.
+- Captures Playwright historiques supprimées le 02/11/2026; les tests fonctionnels et responsive restent exécutables.
 - wireframe-theme-screens.spec.mjs 2/2; ui-routes-responsive.spec.mjs 1/1 à 1440/768/390; responsive-breakpoints.spec.mjs 1/1; fleet-wizard.spec.mjs 1/1.
 - conquest-report.spec.mjs 1/1; espionage-report.spec.mjs 1/1; orbit-request.spec.mjs 1/1; moderation-flow.spec.mjs 1/1; leaderboard-contact.spec.mjs 1/1; colony.spec.mjs (chantier, estimation, colonisation) réussi.
 - keyboard-navigation.spec.mjs 1/1; ui-accessibility-smoke.spec.mjs 1/1; ui-contrast-sampled.spec.mjs 1/1 après corrections; preferences-accessibility.spec.mjs 1/1; navigation responsive, focus retour et aria-expanded couverts.

@@ -1,0 +1,88 @@
+{
+  "slug": "signature_masking",
+  "label": "Écran de brouillage",
+  "max_level": 5,
+  "research_time_base": 600,
+  "research_time_scaling": 1.8,
+  "costs_base": {
+    "metal": 1700,
+    "nano": 150,
+    "antimatter": 0
+  },
+  "costs_scaling": 2,
+  "unlock_requirements": {
+    "buildings": [
+      {
+        "slug": "lab",
+        "level": 1
+      }
+    ]
+  },
+  "effect": {
+    "type": "unlock"
+  },
+  "provisional": true,
+  "tier_unlock_requirements": {
+    "intermediate": {
+      "technologies": [
+        {
+          "slug": "tactical_intelligence",
+          "tier": "basic",
+          "level": 5
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "basic",
+          "level": 5
+        }
+      ]
+    },
+    "superior": {
+      "technologies": [
+        {
+          "slug": "tactical_intelligence",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ]
+    }
+  },
+  "economy_value_budget": 4000,
+  "cost_profiles": {
+    "basic": {
+      "metal": 1700,
+      "nano": 150,
+      "antimatter": 0
+    },
+    "intermediate": {
+      "metal": 1500,
+      "nano": 375,
+      "antimatter": 63
+    },
+    "superior": {
+      "metal": 1250,
+      "nano": 625,
+      "antimatter": 157
+    }
+  },
+  "tier_labels": {
+    "basic": "Écran de brouillage",
+    "intermediate": "Leurres de signature",
+    "superior": "Voile spectral coordonné"
+  },
+  "tier_descriptions": {
+    "basic": "Ouvre l’accès à la capacité de renseignement indiquée par cette recherche. Une première méthode établit les bases de cette spécialité.",
+    "intermediate": "Ouvre l’accès à la capacité de renseignement indiquée par cette recherche. Une approche technique plus intégrée fait progresser cette spécialité.",
+    "superior": "Ouvre l’accès à la capacité de renseignement indiquée par cette recherche. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées."
+  },
+  "description": "Ouvre l’accès à la capacité de renseignement indiquée par cette recherche. Une première méthode établit les bases de cette spécialité."
+}

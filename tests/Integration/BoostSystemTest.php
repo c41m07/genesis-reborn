@@ -59,6 +59,7 @@ final class BoostSystemTest extends KernelTestCase
         }
         self::assertSame(3, $this->em->getRepository(PlayerBoost::class)->count(['playerUniverse' => $membership, 'status' => 'available']));
         self::assertSame(1, $this->em->getRepository(PlayerBoost::class)->count(['playerUniverse' => $membership, 'status' => 'pending']));
+        self::assertCount(3, $grants->inventory($membership), 'Seuls les boosts disponibles appartiennent à l’inventaire utilisable.');
 
         $queues = self::getContainer()->get(QueueService::class);
         $queues->add($membership, $planet, 'buildings', 'mine_metal', 1, str_repeat('a', 32));
@@ -72,6 +73,22 @@ final class BoostSystemTest extends KernelTestCase
         self::assertSame(3, $this->em->getRepository(PlayerBoost::class)->count(['playerUniverse' => $membership, 'status' => 'available']), json_encode(array_map(static fn(PlayerBoost $b) => [$b->status, $b->sourceKey], $this->em->getRepository(PlayerBoost::class)->findBy(['playerUniverse' => $membership]))));
         self::assertSame(0, $this->em->getRepository(PlayerBoost::class)->count(['playerUniverse' => $membership, 'status' => 'pending']));
         self::assertLessThan($initialFinish, $item->finishAt());
+    }
+
+    public function testPendingBoostIsHiddenAndUnavailableBoostCannotBeUsedDirectly(): void
+    {
+        [$player, $planet] = $this->playerAndPlanet('HiddenPending');
+        $membership = $player->currentPlayerUniverse;
+        $grants = self::getContainer()->get(BoostGrantService::class);
+        for ($i = 1; $i <= 4; ++$i) $grants->awardEvent($membership, 'pending-' . $i);
+        self::assertCount(3, $grants->inventory($membership));
+        foreach ($grants->inventory($membership) as $boost) $boost->status = 'pending';
+        $this->em->flush();
+        self::getContainer()->get(QueueService::class)->add($membership, $planet, 'buildings', 'mine_metal', 1, str_repeat('q', 32));
+        $queue = $this->em->getRepository(QueueItem::class)->findOneBy(['planet' => $planet]);
+
+        $this->expectException(\DomainException::class);
+        self::getContainer()->get(BoostUseService::class)->useOnQueue($membership, $queue->id, str_repeat('z', 32));
     }
 
     public function testWeeklyExplorationEventUsesTiedTopThreeAndGlobalGoal(): void

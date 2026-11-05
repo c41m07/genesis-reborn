@@ -20,7 +20,7 @@ final class CatalogBalanceService
         foreach(self::GROUPS as $group) foreach($config['catalog'][$group] as $slug=>$definition){
             $fields=[];
             foreach($this->fieldSchema($group,$definition) as $path=>$schema){$value=$this->read($definition,$path);$fields[$path]=$schema+['path'=>$path,'value'=>$value];}
-            $result[$group][]=['slug'=>$slug,'label'=>$definition['label'],'fields'=>$fields];
+            $result[$group][]=['slug'=>$slug,'label'=>$definition['tier_labels']['basic']??$definition['label'],'tier_labels'=>$definition['tier_labels']??[],'fields'=>$fields];
         }
         return $result;
     }

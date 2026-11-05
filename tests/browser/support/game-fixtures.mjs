@@ -111,7 +111,7 @@ export function grantSecondColony(project, email) {
   const emailValue = quoteSql(email);
   runIsolatedSql(project, `
     INSERT INTO player_technology (player_universe_id, slug, level)
-    SELECT membership.id, 'colonization', 1
+    SELECT membership.id, 'colonial_expansion', 1
     FROM player_universe membership
     INNER JOIN player ON player.id = membership.player_id
     WHERE player.email = ${emailValue}

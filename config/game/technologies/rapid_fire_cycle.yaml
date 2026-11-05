@@ -1,0 +1,96 @@
+{
+  "slug": "rapid_fire_cycle",
+  "label": "Séquenceur de salves",
+  "max_level": 25,
+  "research_time_base": 21600,
+  "research_time_scaling": 1.8,
+  "costs_base": {
+    "metal": 10200,
+    "nano": 900,
+    "antimatter": 0
+  },
+  "costs_scaling": 2,
+  "unlock_requirements": {
+    "technologies": [
+      {
+        "slug": "weapons_engineering",
+        "tier": "basic",
+        "level": 7
+      },
+      {
+        "slug": "target_acquisition",
+        "tier": "basic",
+        "level": 4
+      }
+    ]
+  },
+  "effect": {
+    "type": "extra_shot_chance",
+    "targets": "combat_ships",
+    "value_per_level": 0.01,
+    "max_bonus": 0.5
+  },
+  "tier_unlock_requirements": {
+    "intermediate": {
+      "technologies": [
+        {
+          "slug": "target_acquisition",
+          "tier": "basic",
+          "level": 5
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "basic",
+          "level": 5
+        }
+      ]
+    },
+    "superior": {
+      "technologies": [
+        {
+          "slug": "target_acquisition",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ]
+    }
+  },
+  "economy_value_budget": 24000,
+  "cost_profiles": {
+    "basic": {
+      "metal": 10200,
+      "nano": 900,
+      "antimatter": 0
+    },
+    "intermediate": {
+      "metal": 9000,
+      "nano": 2250,
+      "antimatter": 375
+    },
+    "superior": {
+      "metal": 7500,
+      "nano": 3750,
+      "antimatter": 938
+    }
+  },
+  "tier_labels": {
+    "basic": "Séquenceur de salves",
+    "intermediate": "Cadence de tir recalculée",
+    "superior": "Synchronisation des salves de flotte"
+  },
+  "tier_descriptions": {
+    "basic": "Accroît la possibilité de tir supplémentaire des vaisseaux de combat. Une première méthode établit les bases de cette spécialité.",
+    "intermediate": "Accroît la possibilité de tir supplémentaire des vaisseaux de combat. Une approche technique plus intégrée fait progresser cette spécialité.",
+    "superior": "Accroît la possibilité de tir supplémentaire des vaisseaux de combat. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées."
+  },
+  "description": "Accroît la possibilité de tir supplémentaire des vaisseaux de combat. Une première méthode établit les bases de cette spécialité."
+}

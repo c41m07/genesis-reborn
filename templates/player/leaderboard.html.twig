@@ -8,7 +8,7 @@
 <div class="panel table-scroll" role="region" tabindex="0" aria-label="Classement défilant horizontalement">
 <table class="data-table">
     <caption>Classement de l’univers {{ membership.universe.name }}</caption>
-    <thead><tr><th scope="col">Rang</th><th scope="col">Commandant</th><th scope="col" aria-sort="{{ sort=='points'?'descending':'none' }}"><a href="{{ path('app_leaderboard',{by:'points'}) }}">Points</a></th><th scope="col" aria-sort="{{ sort=='fleet'?'descending':'none' }}"><a href="{{ path('app_leaderboard',{by:'fleet'}) }}">Flotte et défenses</a></th><th scope="col" aria-sort="{{ sort=='planets'?'descending':'none' }}"><a href="{{ path('app_leaderboard',{by:'planets'}) }}">Planètes</a></th><th scope="col">Action</th></tr></thead>
+    <thead><tr><th scope="col">Rang</th><th scope="col">Commandant</th><th scope="col" aria-sort="{{ sort=='points'?'descending':'none' }}"><a href="{{ path('app_leaderboard',{by:'points'}) }}">Points <span class="sort-indicator" aria-hidden="true">{{ sort=='points'?'↓':'↕' }}</span></a></th><th scope="col" aria-sort="{{ sort=='fleet'?'descending':'none' }}"><a href="{{ path('app_leaderboard',{by:'fleet'}) }}">Flotte et défenses <span class="sort-indicator" aria-hidden="true">{{ sort=='fleet'?'↓':'↕' }}</span></a></th><th scope="col" aria-sort="{{ sort=='planets'?'descending':'none' }}"><a href="{{ path('app_leaderboard',{by:'planets'}) }}">Planètes <span class="sort-indicator" aria-hidden="true">{{ sort=='planets'?'↓':'↕' }}</span></a></th><th scope="col">Action</th></tr></thead>
     <tbody>
     {% for row in rows %}
         <tr{% if row.membership.id==membership.id %} aria-current="true"{% endif %}>

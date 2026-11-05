@@ -1,0 +1,25 @@
+{% import 'ui/macros.html.twig' as ui %}
+<section class="resource-strip" aria-label="Ressources de {{ chrome.planet.name }}" data-live-region="resources" data-controller="resource-strip" data-resource-strip-url-value="{{ path('app_resources',{id:chrome.planet.id}) }}">
+    <div class="resource-planet"><span class="tiny-planet"></span><div><small>COLONIE ACTIVE</small><strong>{{ chrome.planet.name }}</strong><small class="resource-protection-legend">Vert : protégé du pillage</small></div></div>
+    {% for slug in ['metal','nano','hydrogen','antimatter','electricity'] %}
+        {% set r=chrome.resources[slug]|default(null) %}
+        {% if r %}
+            {% set protection = 'Stock : '~(r.stock|number_format(0,',',' '))~' / '~(r.capacity|number_format(0,',',' '))~'. Zone verte : jusqu’à '~(r.protectedCapacity|number_format(0,',',' '))~' protégés du pillage ; actuellement '~(min(r.stock,r.protectedCapacity)|number_format(0,',',' '))~' protégés.' %}
+            <div class="resource resource--{{ slug }} {{ slug in ['electricity','hydrogen'] and r.rate < 0 ? 'resource--deficit' : '' }}" data-controller="resource" data-resource-slug="{{ slug }}" data-action="resource:update->resource#update" data-resource-stock-value="{{ r.stock }}" data-resource-rate-value="{{ r.rate }}" data-resource-cap-value="{{ r.capacity }}" data-resource-protected-cap-value="{{ r.protectedCapacity }}">
+                {{ ui.icon(slug,'resource-icon') }}
+                <div class="resource-values">
+                    <span class="resource-name">{{ r.label }}</span>
+                    <strong data-resource-target="stock">{{ r.stock|number_format(0,',',' ') }}</strong>
+                    <div class="resource-rate-line">
+                        <small class="resource-rate" data-resource-target="rate">{{ r.rate >= 0 ? '+' : '' }}{{ (r.rate*3600)|number_format(0,',',' ') }} / h</small>
+                        <small class="resource-productivity {{ r.productivity is not null and r.productivity < 99.999999 ? 'resource-productivity--reduced' : '' }}" data-resource-target="productivity" {{ r.productivity is null ? 'hidden' : '' }} title="Productivité des usines : 100 % au régime nominal. Elle baisse en cas de pénurie d’électricité et, pour l’antimatière, d’hydrogène. Le débit horaire affiché tient compte de ces pénuries.">{{ r.productivity is not null and r.productivity < 99.999999 ? '↓ ' : '' }}{{ r.productivity|default(100)|number_format(1,',',' ') }} %</small>
+                    </div>
+                </div>
+                <div class="storage-meter" data-resource-target="meter" role="img" tabindex="0" aria-label="{{ protection }}" title="{{ protection }}">
+                    <span class="storage-meter-stock" data-resource-target="fill" style="width:{{ min(100,r.stock/r.capacity*100) }}%"></span>
+                    <span class="storage-meter-protected" style="width:{{ min(100,r.protectedCapacity/r.capacity*100) }}%" aria-hidden="true"></span>
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+</section>

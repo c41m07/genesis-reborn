@@ -1,0 +1,98 @@
+{
+  "slug": "shield_harmonics",
+  "label": "Générateurs de bouclier accordés",
+  "max_level": 25,
+  "research_time_base": 14400,
+  "research_time_scaling": 1.8,
+  "costs_base": {
+    "metal": 6800,
+    "nano": 600,
+    "antimatter": 0
+  },
+  "costs_scaling": 2,
+  "unlock_requirements": {
+    "technologies": [
+      {
+        "slug": "structural_armor",
+        "tier": "basic",
+        "level": 3
+      },
+      {
+        "slug": "weapons_engineering",
+        "tier": "basic",
+        "level": 5
+      }
+    ]
+  },
+  "effect": {
+    "type": "stat_bonus",
+    "targets": "all_combat_units",
+    "stat": "shield",
+    "formula": "percent",
+    "value_per_level": 0.01,
+    "max_bonus": 0.25
+  },
+  "tier_unlock_requirements": {
+    "intermediate": {
+      "technologies": [
+        {
+          "slug": "naval_engineering",
+          "tier": "basic",
+          "level": 5
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "basic",
+          "level": 5
+        }
+      ]
+    },
+    "superior": {
+      "technologies": [
+        {
+          "slug": "naval_engineering",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ]
+    }
+  },
+  "economy_value_budget": 16000,
+  "cost_profiles": {
+    "basic": {
+      "metal": 6800,
+      "nano": 600,
+      "antimatter": 0
+    },
+    "intermediate": {
+      "metal": 6000,
+      "nano": 1500,
+      "antimatter": 250
+    },
+    "superior": {
+      "metal": 5000,
+      "nano": 2500,
+      "antimatter": 625
+    }
+  },
+  "tier_labels": {
+    "basic": "Générateurs de bouclier accordés",
+    "intermediate": "Boucliers à résonance distribuée",
+    "superior": "Dôme de protection harmonique"
+  },
+  "tier_descriptions": {
+    "basic": "Améliore les boucliers des unités concernées. Une première méthode établit les bases de cette spécialité.",
+    "intermediate": "Améliore les boucliers des unités concernées. Une approche technique plus intégrée fait progresser cette spécialité.",
+    "superior": "Améliore les boucliers des unités concernées. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées."
+  },
+  "description": "Améliore les boucliers des unités concernées. Une première méthode établit les bases de cette spécialité."
+}

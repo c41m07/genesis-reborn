@@ -1,7 +1,7 @@
 {
   "slug": "mine_antimatter",
-  "label": "Extracteur · Antimatière",
-  "base_build_time": 120,
+  "label": "Piège à antimatière",
+  "base_build_time": 20,
   "build_time_scaling": 1.6,
   "costs_base": {
     "metal": 480,
@@ -13,6 +13,29 @@
   "levels": {
     "1": {
       "unlock_requirements": {}
+    },
+    "2": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "mine_hydrogen",
+            "tier": "basic",
+            "level": 5
+          },
+          {
+            "slug": "lab",
+            "tier": "basic",
+            "level": 3
+          }
+        ],
+        "technologies": [
+          {
+            "slug": "naval_engineering",
+            "tier": "basic",
+            "level": 5
+          }
+        ]
+      }
     }
   },
   "provisional": true,
@@ -20,7 +43,7 @@
     "intermediate": {
       "technologies": [
         {
-          "slug": "advanced_engineering",
+          "slug": "naval_engineering",
           "tier": "basic",
           "level": 5
         }
@@ -36,7 +59,7 @@
     "superior": {
       "technologies": [
         {
-          "slug": "advanced_engineering",
+          "slug": "naval_engineering",
           "tier": "intermediate",
           "level": 10
         }
@@ -69,5 +92,16 @@
       "nano": 219,
       "antimatter": 79
     }
-  }
+  },
+  "tier_labels": {
+    "basic": "Piège à antimatière",
+    "intermediate": "Réacteur de conversion matière-antimatière",
+    "superior": "Confinement planétaire d’antimatière"
+  },
+  "tier_descriptions": {
+    "basic": "Produit antimatière en consommant de l’hydrogène. Une installation locale assure cette fonction sur la colonie.",
+    "intermediate": "Produit antimatière en consommant de l’hydrogène. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+    "superior": "Produit antimatière en consommant de l’hydrogène. Un maillage étendu porte cette fonction à l’échelle planétaire."
+  },
+  "description": "Produit antimatière en consommant de l’hydrogène. Une installation locale assure cette fonction sur la colonie."
 }

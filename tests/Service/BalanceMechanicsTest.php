@@ -30,7 +30,7 @@ final class BalanceMechanicsTest extends TestCase
         $fighter = $catalog->getForUniverse($universe, 'ships', 'fighter');
         $result = (new TechnologyEffectCalculator($catalog))->applyToShips(
             [$fighter],
-            ['advanced_targeting' => 5, 'precision_fire' => 3, 'shield_technology' => 5, 'weapon_technology' => 5, 'advanced_propulsion' => 5],
+            ['target_acquisition' => 5, 'weapon_calibration' => 3, 'shield_harmonics' => 5, 'weapons_engineering' => 5, 'vector_propulsion' => 5],
             $universe,
         )[0];
 
@@ -53,7 +53,7 @@ final class BalanceMechanicsTest extends TestCase
             1,
             ['shipyard' => 10],
             $universe,
-            ['advanced_engineering' => 5],
+            ['naval_engineering' => 5],
         );
 
         self::assertSame(48, $plan['duration']);
@@ -96,7 +96,7 @@ final class BalanceMechanicsTest extends TestCase
     public function testRanksCompoundAndKeepExtraShotChancePerRank(): void
     {
         $catalog=$this->catalog();$universe=$this->universe();$fighter=$catalog->getForUniverse($universe,'ships','fighter');
-        $result=(new TechnologyEffectCalculator($catalog))->applyToShips([$fighter],['precision_fire'=>['basic'=>10,'intermediate'=>5,'superior'=>5],'ballistic_overdrive'=>['basic'=>25,'intermediate'=>25,'superior'=>25]],$universe)[0];
+        $result=(new TechnologyEffectCalculator($catalog))->applyToShips([$fighter],['weapon_calibration'=>['basic'=>10,'intermediate'=>5,'superior'=>5],'rapid_fire_cycle'=>['basic'=>25,'intermediate'=>25,'superior'=>25]],$universe)[0];
         self::assertEqualsWithDelta(70*1.10*1.0625*1.078125,$result['precision'],0.000001);
         self::assertSame([0.25,0.3125,0.390625],$result['extra_shot_chances']);
     }
@@ -108,7 +108,7 @@ final class BalanceMechanicsTest extends TestCase
         $calculator = new OperationCalculator($catalog);
         $operations = [
             ['buildings', 'mine_metal'],
-            ['technologies', 'advanced_propulsion'],
+            ['technologies', 'vector_propulsion'],
             ['ships', 'fighter'],
         ];
         $factors = ['intermediate' => 1.25, 'superior' => 1.5625];
@@ -137,7 +137,7 @@ final class BalanceMechanicsTest extends TestCase
             }
         }
 
-        $research = $universe['catalog']['technologies']['advanced_propulsion'];
+        $research = $universe['catalog']['technologies']['vector_propulsion'];
         self::assertSame(3600, $calculator->calculate($catalog->withTier($research, 'basic'), 'technologies', 1, 1, [], $universe)['duration']);
         self::assertSame(4500, $calculator->calculate($catalog->withTier($research, 'intermediate'), 'technologies', 1, 1, [], $universe)['duration']);
         self::assertSame(5625, $calculator->calculate($catalog->withTier($research, 'superior'), 'technologies', 1, 1, [], $universe)['duration']);
@@ -145,10 +145,10 @@ final class BalanceMechanicsTest extends TestCase
 
     public function testTechnologyRankUnlocksRequireThePreviousRankThreshold(): void
     {
-        $catalog=$this->catalog();$checker=new \App\Service\Requirement\RequirementChecker($catalog);$definition=$catalog->get('technologies','advanced_propulsion');$rankedTech=['basic_engineering'=>['basic'=>4,'intermediate'=>10]];$rankedBuildings=['lab'=>['basic'=>4,'intermediate'=>10]];
+        $catalog=$this->catalog();$checker=new \App\Service\Requirement\RequirementChecker($catalog);$definition=$catalog->get('technologies','vector_propulsion');$rankedTech=['engineering_foundations'=>['basic'=>4,'intermediate'=>10]];$rankedBuildings=['lab'=>['basic'=>4,'intermediate'=>10]];
         self::assertNotEmpty($checker->check($checker->forTier($definition,'intermediate'),$rankedBuildings,$rankedTech));
-        $rankedTech['basic_engineering']['basic']=5;$rankedBuildings['lab']['basic']=5;self::assertSame([],$checker->check($checker->forTier($definition,'intermediate'),$rankedBuildings,$rankedTech));
-        $rankedTech['basic_engineering']['intermediate']=10;$rankedBuildings['lab']['intermediate']=10;self::assertSame([],$checker->check($checker->forTier($definition,'superior'),$rankedBuildings,$rankedTech));
+        $rankedTech['engineering_foundations']['basic']=5;$rankedBuildings['lab']['basic']=5;self::assertSame([],$checker->check($checker->forTier($definition,'intermediate'),$rankedBuildings,$rankedTech));
+        $rankedTech['engineering_foundations']['intermediate']=10;$rankedBuildings['lab']['intermediate']=10;self::assertSame([],$checker->check($checker->forTier($definition,'superior'),$rankedBuildings,$rankedTech));
     }
 
     public function testResourceAndStorageBuildingsHaveNoConfiguredLevelCap(): void
@@ -161,9 +161,59 @@ final class BalanceMechanicsTest extends TestCase
     {
         $catalog = $this->catalog();
         $universe = $catalog->forUniverse($this->universe());
-        $research = $universe['catalog']['technologies']['colonization'];
+        $research = $universe['catalog']['technologies']['colonial_expansion'];
         $plan = (new OperationCalculator($catalog))->calculate($research, 'technologies', 1, 1, ['lab' => 1], $universe);
 
         self::assertSame(282240, $plan['duration']);
     }
+
+    public function testResearchNamesAreDistinctAndEveryCombatShipHasOneSpecialistTurret(): void
+    {
+        $catalog = $this->catalog();
+        $researchLabels = array_column($catalog->all('technologies'), 'label');
+        self::assertCount(count(array_unique($researchLabels)), $researchLabels, 'Les libellés de recherche doivent être distincts.');
+
+        $expected = [
+            'ground_turret_anti_light' => ['interceptor','fighter','heavy_fighter','stealth_fighter'],
+            'ground_turret_anti_escort' => ['corvette','frigate','destroyer'],
+            'ground_turret_anti_heavy' => ['cruiser','battleship'],
+            'ground_turret_anti_capital' => ['capital'],
+        ];
+        $defenses = $catalog->all('defenses');
+        $combat = $catalog->get('combat_modifiers', 'modifiers');
+        self::assertCount(4, $defenses);
+        self::assertSame([], array_diff(array_keys($expected), array_keys($defenses)));
+        foreach ($expected as $slug => $ships) {
+            self::assertSame($ships, $defenses[$slug]['countered_ships']);
+            self::assertContains($defenses[$slug]['weapon_type'], ['laser','plasma']);
+            foreach ($ships as $ship) self::assertSame(1.3, $combat[$slug][$ship]);
+        }
+    }
+
+
+    public function testFirstResearchLevelChangesOperationDurationCostsAndShipStats(): void
+    {
+        $catalog = $this->catalog();
+        $universe = $catalog->forUniverse($this->universe());
+        $calculator = new OperationCalculator($catalog);
+
+        $building = $universe['catalog']['buildings']['mine_metal'];
+        $baseBuild = $calculator->calculate($building, 'buildings', 1, 1, [], $universe);
+        $fasterBuild = $calculator->calculate($building, 'buildings', 1, 1, [], $universe, ['engineering_foundations' => ['basic' => 1]]);
+        self::assertSame((int) ceil($baseBuild['duration'] * .99), $fasterBuild['duration']);
+
+        $baseBuildingCosts = $baseBuild['costs'];
+        $discountedBuildingCosts = $calculator->calculate($building, 'buildings', 1, 1, [], $universe, ['nanomaterial_synthesis' => ['basic' => 1]])['costs'];
+        self::assertLessThan(array_sum($baseBuildingCosts), array_sum($discountedBuildingCosts));
+
+        $ship = $universe['catalog']['ships']['fighter'];
+        $baseShipCosts = $calculator->calculate($ship, 'ships', 1, 1, [], $universe)['costs'];
+        $discountedShipCosts = $calculator->calculate($ship, 'ships', 1, 1, [], $universe, ['naval_engineering' => ['basic' => 1]])['costs'];
+        self::assertLessThan(array_sum($baseShipCosts), array_sum($discountedShipCosts));
+
+        $fighter = $catalog->getForUniverse($this->universe(), 'ships', 'fighter');
+        $improved = (new TechnologyEffectCalculator($catalog))->applyToShips([$fighter], ['weapon_calibration' => ['basic' => 1]], $this->universe())[0];
+        self::assertEqualsWithDelta(70.7, $improved['precision'], .000001);
+    }
+
 }

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aperçu des illustrations pilotes — Genesis Reborn</title>
+  <style>
+    :root{color-scheme:dark;font:14px/1.5 system-ui,sans-serif;background:#090f1b;color:#e7eef6}
+    *{box-sizing:border-box}body{margin:0;padding:24px;background:radial-gradient(ellipse at 75% 0,#18263d66,transparent 55%),#090f1b}
+    main{max-width:1100px;margin:auto}h1{font-size:1.6rem}h2{font-size:1.1rem;color:#b4c4d8}p{color:#9aabc2}
+    .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin:20px 0 36px}
+    article{overflow:hidden;border:1px solid #243247;border-radius:10px;background:#121f30;min-width:0}
+    img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#10151b}
+    .body{padding:14px}.tier{color:#60d9e1;font-size:.75rem;text-transform:uppercase;letter-spacing:.08em}h3{font-size:.95rem;margin:.25rem 0 .5rem}p{margin:.4rem 0 0;font-size:.8rem}
+    @media(max-width:700px){body{padding:14px}.cards{grid-template-columns:1fr;gap:12px}h1{font-size:1.3rem}}
+  </style>
+</head>
+<body><main>
+  <h1>Illustrations pilotes — aperçu des cartes</h1>
+  <p>Chaque illustration est affichée dans le cadre 4:3 prévu pour les cartes.</p>
+  <div id="preview"></div>
+  <script>
+    const groups = [
+      {title:'Recherche · Réparation automatisée',slug:'automated_defense_repair',family:'technologies',labels:['Drones réparateurs','Atelier robotisé de défense','Réseau autonome de remise en état']},
+      {title:'Recherche · Expansion coloniale',slug:'colonial_expansion',family:'technologies',labels:['Protocoles de colonisation','Flottes d’établissement','Réseau de colonisation interstellaire']},
+      {title:'Recherche · Réserves cryogéniques',slug:'cryogenic_reserves',family:'technologies',labels:['Réservoirs cryogéniques','Soutes à ergols réfrigérées','Logistique cryogénique de flotte']},
+      {title:'Mine · Hydrogène',slug:'mine_hydrogen',family:'buildings',labels:['Raffinerie d’hydrogène','Complexe de séparation isotopique','Réseau planétaire de récolte gazeuse']},
+      {title:'Mine · Métal',slug:'mine_metal',family:'buildings',labels:['Mine à ciel ouvert','Fonderie orbitale','Réseau d’extraction lithosphérique']},
+      {title:'Mine · Nanomatériaux',slug:'mine_nano',family:'buildings',labels:['Atelier de nanofabrication','Usine de synthèse moléculaire','Trame de matière programmable']},
+      {title:'Bâtiment · Bunker défensif',slug:'fortress',family:'buildings',labels:['Bunker de défense','Bastion cuirassé','Ceinture défensive planétaire']},
+      {title:'Bâtiment · Laboratoire',slug:'lab',family:'buildings',labels:['Laboratoire colonial','Institut de recherche orbitale','Complexe scientifique planétaire']},
+      {title:'Bâtiment · Antimatière',slug:'mine_antimatter',family:'buildings',labels:['Piège à antimatière','Réacteur de conversion matière-antimatière','Confinement planétaire d’antimatière']},
+      {title:'Bâtiment · Centrale énergétique',slug:'power_plant',family:'buildings',labels:['Centrale nucléaire','Complexe énergétique à antimatière','Maillage énergétique planétaire']},
+      {title:'Bâtiment · Chantier naval',slug:'shipyard',family:'buildings',labels:['Chantier d’assemblage','Docks orbitaux modulaires','Anneau industriel planétaire']},
+      {title:'Stockage · Antimatière',slug:'storage_antimatter',family:'buildings',labels:['Cage magnétique','Complexe de confinement magnétique','Enceinte planétaire de confinement']},
+      {title:'Stockage · Électricité',slug:'storage_electricity',family:'buildings',labels:['Batterie de colonie','Réseau d’accumulateurs','Grille planétaire de stockage']},
+      {title:'Stockage · Hydrogène',slug:'storage_hydrogen',family:'buildings',labels:['Réservoir cryogénique','Parc de cuves pressurisées','Réseau planétaire de stockage gazeux']},
+      {title:'Stockage · Métal',slug:'storage_metal',family:'buildings',labels:['Dépôt de minerais','Silo industriel de métal','Réserve planétaire de métal']},
+      {title:'Stockage · Nanomatériaux',slug:'storage_nano',family:'buildings',labels:['Coffre de nanomatériaux','Banque de matière synthétique','Réserve planétaire de nanostructures']},
+      {title:'Recherche · Génie civil',slug:'engineering_foundations',family:'technologies',labels:['Génie civil colonial','Ingénierie de chantier automatisée','Planification industrielle intégrée']},
+      {title:'Recherche · Navigation évasive',slug:'evasive_navigation',family:'technologies',labels:['Manœuvres d’évitement','Pilotage prédictif','Navigation adaptative de combat']},
+      {title:'Recherche · Contre-mesures',slug:'intelligence_countermeasures',family:'technologies',labels:['Discipline du secret','Leurres et procédures de déception','Contre-renseignement distribué']},
+      {title:'Recherche · Soutes modulaires',slug:'modular_cargo_bays',family:'technologies',labels:['Soute compartimentée','Conteneurs à assemblage variable','Architecture logistique de flotte']},
+      {title:'Recherche · Synthèse des nanomatériaux',slug:'nanomaterial_synthesis',family:'technologies',labels:['Métallurgie des nanomatériaux','Assemblage moléculaire des structures','Architecture de matière programmable']},
+      {title:'Recherche · Ingénierie navale',slug:'naval_engineering',family:'technologies',labels:['Architecture navale','Conception modulaire de flotte','Standardisation des coques impériales']},
+      {title:'Recherche · Cadence de tir',slug:'rapid_fire_cycle',family:'technologies',labels:["Séquenceur de salves", "Cadence de tir recalculée", "Synchronisation des salves de flotte"]},
+      {title:'Recherche · Harmoniques de bouclier',slug:'shield_harmonics',family:'technologies',labels:["Générateurs de bouclier accordés", "Boucliers à résonance distribuée", "Dôme de protection harmonique"]},
+      {title:'Recherche · Masquage de signature',slug:'signature_masking',family:'technologies',labels:["Écran de brouillage", "Leurres de signature", "Voile spectral coordonné"]},
+      {title:'Recherche · Réduction de signature',slug:'signature_reduction',family:'technologies',labels:["Revêtement absorbant", "Dissipation des émissions", "Camouflage spectral intégré"]},
+      {title:'Recherche · Blindage structurel',slug:'structural_armor',family:'technologies',labels:["Blindage multicouche", "Coque à treillis composite", "Carapace structurelle intégrée"]},
+      {title:'Recherche · Renseignement tactique',slug:'tactical_intelligence',family:'technologies',labels:["Analyse tactique", "Cartographie des opérations", "Réseau de connaissance du champ de bataille"]},
+      {title:'Recherche · Acquisition de cibles',slug:'target_acquisition',family:'technologies',labels:["Télémétrie de poursuite", "Calculateur d’interception", "Fusion tactique des trajectoires"]},
+      {title:'Recherche · Propulsion',slug:'vector_propulsion',family:'technologies',labels:['Propulseurs vectoriels','Navigation à poussée distribuée','Réseau de propulsion interstellaire']},
+      {title:'Recherche · Calibration des armes',slug:'weapon_calibration',family:'technologies',labels:["Viseurs balistiques", "Conduite de tir assistée", "Réseau de visée coordonnée"]},
+      {title:'Recherche · Ingénierie des armes',slug:'weapons_engineering',family:'technologies',labels:["Canons à énergie focalisée", "Batteries à décharge concentrée", "Artillerie de flotte synchronisée"]},
+      {title:'Vaisseau · Cuirassé',slug:'battleship',family:'ships',labels:["Cuirassé de ligne", "Cuirassé d’artillerie", "Cuirassé de bataille"]},
+      {title:'Vaisseau · Bombardier',slug:'bomber',family:'ships',labels:["Bombardier tactique", "Bombardier d’assaut", "Bombardier de percée"]},
+      {title:'Vaisseau · Capital',slug:'capital',family:'ships',labels:["Vaisseau capital", "Dreadnought", "Vaisseau amiral"]},
+      {title:'Vaisseau · Colonisateur',slug:'colony_ship',family:'ships',labels:["Vaisseau colonisateur", "Vaisseau pionnier", "Arche de colonisation"]},
+      {title:'Vaisseau · Corvette',slug:'corvette',family:'ships',labels:["Corvette de patrouille", "Corvette de piquetage", "Corvette d’escorte rapprochée"]},
+      {title:'Vaisseau · Croiseur',slug:'cruiser',family:'ships',labels:["Croiseur de combat", "Croiseur d’artillerie", "Croiseur de bataille"]},
+      {title:'Vaisseau · Destroyer',slug:'destroyer',family:'ships',labels:["Destroyer d’escorte", "Destroyer de ligne", "Destroyer de rupture"]},
+      {title:'Vaisseau · Frégate',slug:'frigate',family:'ships',labels:["Frégate d’escorte", "Frégate de ligne", "Frégate de bataille"]},
+      {title:'Vaisseau · Chasseur lourd',slug:'heavy_fighter',family:'ships',labels:["Chasseur lourd", "Chasseur-bombardier lourd", "Chasseur d’appui blindé"]},
+      {title:'Vaisseau · Intercepteur',slug:'interceptor',family:'ships',labels:["Intercepteur atmosphérique", "Chasseur d’interdiction vectorielle", "Intercepteur de supériorité"]},
+      {title:'Vaisseau · Sonde',slug:'probe',family:'ships',labels:["Sonde de reconnaissance", "Drone d’observation", "Sonde d’exploration lointaine"]},
+      {title:'Vaisseau · Chasseur furtif',slug:'stealth_fighter',family:'ships',labels:["Chasseur furtif", "Chasseur d’approche silencieuse", "Intercepteur à spectre effacé"]},
+      {title:'Vaisseau · Chasseur',slug:'fighter',family:'ships',labels:['Chasseur de patrouille','Chasseur multirôle','Chasseur d’assaut orbital']},
+      {title:'Vaisseau · Transporteur',slug:'transport',family:'ships',labels:["Cargo de ligne", "Transporteur de fret", "Cargo interstellaire"]},
+      {title:'Défense · Anti-escorteur',slug:'ground_turret_anti_escort',family:'defenses',labels:["Canon laser anti-escorteur", "Canon à ions anti-escorteur", "Canon à antimatière anti-escorteur"]},
+      {title:'Défense · Anti-lourd',slug:'ground_turret_anti_heavy',family:'defenses',labels:["Canon laser anti-lourd", "Canon à ions anti-lourd", "Canon à antimatière anti-lourd"]},
+      {title:'Défense · Anti-capital',slug:'ground_turret_anti_capital',family:'defenses',labels:["Canon laser anti-capital", "Canon à ions anti-capital", "Canon à antimatière anti-capital"]},
+      {title:'Défense · Anti-légère',slug:'ground_turret_anti_light',family:'defenses',labels:['Canon laser anti-léger','Canon à ions anti-léger','Canon à antimatière anti-léger']}
+    ];
+    const tiers=['basic','intermediate','superior'];
+    document.querySelector('#preview').innerHTML=groups.map(group=>`<section><h2>${group.title}</h2><div class="cards">${tiers.map((tier,index)=>`<article><img src="../../../public/images/catalog/${group.family}/${group.slug}__${tier}.webp" alt=""><div class="body"><span class="tier">${['Basique','Intermédiaire','Supérieur'][index]}</span><h3>${group.labels[index]}</h3></div></article>`).join('')}</div></section>`).join('');
+  </script>
+</main></body></html>

@@ -32,9 +32,40 @@ final class GameRulesTest extends TestCase
         $d=$c->get('buildings','shipyard');
         self::assertSame([], $checker->check($checker->forLevel($d,2),[],[]));
         self::assertNotEmpty($checker->check($checker->forLevel($d,4),[],[]));
-        self::assertSame([], $checker->check($checker->forLevel($d,4),['mine_metal'=>2],['advanced_engineering'=>1]));
+        self::assertSame([], $checker->check($checker->forLevel($d,4),['mine_metal'=>2],['naval_engineering'=>1]));
         self::assertSame([], $checker->check(['ships'=>['fighter']],[],[]));
         self::assertSame(['metal'=>8100,'nano'=>450,'antimatter'=>0,'hydrogen'=>0],$c->costs($c->get('ships','fighter'),1,3));
+    }
+    public function testCatalogueUnlockRequirementsForBuildingsAndTechnologies(): void
+    {
+        $catalog=new GameCatalog(dirname(__DIR__,2).'/config/game');$checker=new RequirementChecker($catalog);
+        $plain=['buildings'=>[],'technologies'=>[]];
+        self::assertSame([],$checker->check($plain,[],[]));
+
+        $buildingGate=['buildings'=>[['slug'=>'mine_metal','tier'=>'basic','level'=>2]]];
+        self::assertNotEmpty($checker->check($buildingGate,[],[]));
+        self::assertSame([],$checker->check($buildingGate,['mine_metal'=>['basic'=>2]],[]));
+
+        $technologyGate=['technologies'=>[['slug'=>'engineering_foundations','tier'=>'basic','level'=>1]]];
+        self::assertNotEmpty($checker->check($technologyGate,[],[]));
+        self::assertSame([],$checker->check($technologyGate,[],['engineering_foundations'=>['basic'=>1]]));
+    }
+    public function testBuildingMilestonesAndDefenseRanksAreActuallyGated(): void
+    {
+        $catalog=new GameCatalog(dirname(__DIR__,2).'/config/game');$checker=new RequirementChecker($catalog);
+        $lab=$catalog->get('buildings','lab');$labLevelTwo=$checker->forTier($lab,'basic',2);
+        self::assertNotEmpty($checker->check($labLevelTwo,[],[]));
+        self::assertSame([],$checker->check($labLevelTwo,[
+            'power_plant'=>['basic'=>3],'mine_nano'=>['basic'=>2],
+        ],['engineering_foundations'=>['basic'=>2]]));
+
+        $defense=$catalog->get('defenses','ground_turret_anti_capital');
+        self::assertNotEmpty($checker->check($checker->forTier($defense,'basic'),[],[]));
+        self::assertSame([],$checker->check($checker->forTier($defense,'basic'),['fortress'=>['basic'=>5]],[
+            'rapid_fire_cycle'=>['basic'=>5],'weapons_engineering'=>['basic'=>8],
+        ]));
+        $advanced=$checker->forTier($defense,'intermediate');
+        self::assertNotEmpty($checker->check($advanced,['fortress'=>['basic'=>10]],[]));
     }
     public function testClosedAndFutureUniverses(): void
     {

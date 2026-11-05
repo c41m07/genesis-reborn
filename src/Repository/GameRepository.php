@@ -1,6 +1,6 @@
 <?php
 namespace App\Repository;
-use App\Entity\{Player,PlayerUniverse,Universe,Galaxy,SolarSystem,Planet,PlanetResource,PlanetBuilding,PlayerTechnology,Fleet,FleetShip,PlayerDiscovery,QueueItem,OutboxMessage,CombatLog,CombatParticipant,PlayerBoost,BoostEvent,BoostEventContribution};
+use App\Entity\{Player,PlayerUniverse,Universe,Galaxy,SolarSystem,Planet,PlanetResource,PlanetBuilding,PlayerTechnology,Fleet,FleetShip,PlayerDiscovery,QueueItem,OutboxMessage,CombatLog,CombatParticipant,PlayerBoost,BoostEvent,BoostEventContribution,GameEvent};
 use Doctrine\ORM\EntityManagerInterface;
 final class GameRepository
 {
@@ -8,6 +8,14 @@ final class GameRepository
     public function find(string $class, int $id): ?object { return $this->em->find($class, $id); }
     public function one(string $class, array $criteria): ?object { return $this->em->getRepository($class)->findOneBy($criteria); }
     public function all(string $class, array $criteria = [], array $order = ['id' => 'ASC']): array { return $this->em->getRepository($class)->findBy($criteria, $order); }
+    /** @return list<GameEvent> */
+    public function visibleGameEvents(PlayerUniverse $membership, \DateTimeImmutable $now): array
+    {
+        return $this->em->createQueryBuilder()->select('e')->from(GameEvent::class, 'e')
+            ->where('e.status IN (:statuses)')->andWhere('e.visibleToPlayers = true')->andWhere('e.endsAt > :now')
+            ->andWhere('(e.universe IS NULL OR e.universe = :universe)')->setParameter('statuses', ['active', 'planned'])->setParameter('now', $now)->setParameter('universe', $membership->universe)
+            ->orderBy('e.endsAt', 'ASC')->getQuery()->getResult();
+    }
     public function espionageReportsFor(PlayerUniverse $membership, int $limit = 50): array
     {
         return $this->em->createQueryBuilder()->select('r')->from(\App\Entity\EspionageReport::class, 'r')

@@ -1,0 +1,96 @@
+{
+  "slug": "colonial_expansion",
+  "label": "Protocoles de colonisation",
+  "max_level": 15,
+  "research_time_base": 288000,
+  "research_time_scaling": 1.8,
+  "costs_base": {
+    "metal": 9350,
+    "nano": 825,
+    "antimatter": 0
+  },
+  "costs_scaling": 2,
+  "unlock_requirements": {
+    "buildings": [
+      {
+        "slug": "lab",
+        "level": 1
+      }
+    ]
+  },
+  "effect": {
+    "type": "planet_limit",
+    "base_planets": 1,
+    "value_per_level": 1,
+    "max_planets": 31,
+    "tier_max_levels": {
+      "basic": 5,
+      "intermediate": 10,
+      "superior": 15
+    }
+  },
+  "provisional": true,
+  "tier_unlock_requirements": {
+    "intermediate": {
+      "technologies": [
+        {
+          "slug": "vector_propulsion",
+          "tier": "basic",
+          "level": 5
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "basic",
+          "level": 5
+        }
+      ]
+    },
+    "superior": {
+      "technologies": [
+        {
+          "slug": "vector_propulsion",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ],
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ]
+    }
+  },
+  "economy_value_budget": 22000,
+  "cost_profiles": {
+    "basic": {
+      "metal": 9350,
+      "nano": 825,
+      "antimatter": 0
+    },
+    "intermediate": {
+      "metal": 8250,
+      "nano": 2063,
+      "antimatter": 344
+    },
+    "superior": {
+      "metal": 6875,
+      "nano": 3438,
+      "antimatter": 860
+    }
+  },
+  "tier_labels": {
+    "basic": "Protocoles de colonisation",
+    "intermediate": "Flottes d’établissement",
+    "superior": "Réseau de colonisation interstellaire"
+  },
+  "tier_descriptions": {
+    "basic": "Chaque niveau ajoute directement +1 emplacement de colonie. Limites : Basique 5, Intermédiaire 10, Supérieur 15. Maximum : 31 planètes au total, planète de départ incluse.",
+    "intermediate": "Chaque niveau ajoute directement +1 emplacement de colonie. Limites : Basique 5, Intermédiaire 10, Supérieur 15. Maximum : 31 planètes au total, planète de départ incluse.",
+    "superior": "Chaque niveau ajoute directement +1 emplacement de colonie. Limites : Basique 5, Intermédiaire 10, Supérieur 15. Maximum : 31 planètes au total, planète de départ incluse."
+  },
+  "description": "Chaque niveau ajoute directement +1 emplacement de colonie. Limites : Basique 5, Intermédiaire 10, Supérieur 15. Maximum : 31 planètes au total, planète de départ incluse."
+}

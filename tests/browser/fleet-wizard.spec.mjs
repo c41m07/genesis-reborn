@@ -48,13 +48,13 @@ test('Le parcours de flotte guide de la composition à la confirmation', async (
   await expect(form.locator('[data-fleet-wizard-target="summary"]')).toContainText('Chasseur');
   await expect(form.locator('[data-fleet-wizard-target="summary"]')).toContainText('Exploration');
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
-  await page.screenshot({ path: 'docs/validation/flottes-wizard-desktop.png', fullPage: true });
+
   await page.setViewportSize({ width: 390, height: 844 });
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await page.keyboard.press('Escape');
   await page.evaluate(() => { document.activeElement?.blur(); window.scrollTo({ top: 0, behavior: 'instant' }); });
   await expect.poll(() => page.locator('.sidebar').evaluate(el => el.getBoundingClientRect().right)).toBeLessThanOrEqual(0);
-  await page.screenshot({ path: 'docs/validation/flottes-wizard-mobile.png', fullPage: true });
+
   await form.getByRole('button', { name: /Modifier la destination/ }).click();
   await expect(steps.nth(1)).toBeVisible();
   await expect(form.locator('[name="ships[fighter]"]')).toHaveValue('1');

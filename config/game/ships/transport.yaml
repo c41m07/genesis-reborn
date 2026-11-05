@@ -1,6 +1,6 @@
 {
   "slug": "transport",
-  "label": "Transporteur",
+  "label": "Cargo de ligne",
   "category": "support",
   "hp": 400,
   "precision": 70,
@@ -10,10 +10,10 @@
   "base_attack": 0,
   "shots_min": 1,
   "shots_max": 3,
-  "build_time_base": 180,
+  "build_time_base": 3600,
   "costs": {},
-  "speed_system": 50,
-  "speed_galaxy": 500,
+  "speed_system": 45,
+  "speed_galaxy": 450,
   "fuel_travel_system": 0.5,
   "fuel_travel_galaxy": 2,
   "fuel_orbit": 0.3,
@@ -22,12 +22,20 @@
     "buildings": [
       {
         "slug": "shipyard",
-        "level": 1
+        "tier": "basic",
+        "level": 2
+      }
+    ],
+    "technologies": [
+      {
+        "slug": "naval_engineering",
+        "tier": "basic",
+        "level": 2
       }
     ]
   },
   "provisional": true,
-  "note": "Navigation et équilibrage provisoires ; fighter et stealth_fighter reprennent les stats de combat documentées.",
+  "note": "Profil de mobilité et de combat différencié, équilibrage validé le 02/11/2026 et à mesurer en Alpha.",
   "fuel_capacity": 3000,
   "fuel_capacity_provisional": true,
   "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 3000 H. Réservoir réservé au carburant, distinct de la soute de fret.",
@@ -36,7 +44,7 @@
     "intermediate": {
       "technologies": [
         {
-          "slug": "cargo_optimization",
+          "slug": "modular_cargo_bays",
           "tier": "basic",
           "level": 5
         }
@@ -52,7 +60,7 @@
     "superior": {
       "technologies": [
         {
-          "slug": "cargo_optimization",
+          "slug": "modular_cargo_bays",
           "tier": "intermediate",
           "level": 10
         }
@@ -83,5 +91,16 @@
       "nano": 3750,
       "antimatter": 704
     }
-  }
+  },
+  "tier_labels": {
+    "basic": "Cargo de ligne",
+    "intermediate": "Transporteur de fret",
+    "superior": "Cargo interstellaire"
+  },
+  "tier_descriptions": {
+    "basic": "Vaisseau doté d’une soute pour transporter des ressources. Une coque individuelle remplit ce rôle selon une conception conventionnelle.",
+    "intermediate": "Vaisseau doté d’une soute pour transporter des ressources. Une nouvelle architecture de vaisseau adapte la coque à ce rôle.",
+    "superior": "Vaisseau doté d’une soute pour transporter des ressources. Une conception spécialisée pousse plus loin le rôle du vaisseau."
+  },
+  "description": "Vaisseau doté d’une soute pour transporter des ressources. Une coque individuelle remplit ce rôle selon une conception conventionnelle."
 }

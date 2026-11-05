@@ -1,6 +1,6 @@
 # Équilibrage de Genesis Reborn — décisions du QCM
 
-Date de clôture : 2 novembre 2026. Orientation retenue : stratégie modérée, progression régulière, gains et pertes contrôlés, sans obligation de rester connecté en continu.
+Date de clôture : 2 novembre 2026. Ce QCM conserve les décisions initiales de l’Alpha. Les paramètres de progression, combat, mobilité et tirs supersédés ont été remplacés par la validation du 2 novembre ; voir BALANCING_IMPLEMENTATION_2026-11-02.md. Les autres choix restent des hypothèses à mesurer.
 
 Ce document consigne les valeurs choisies par Kévin pendant le QCM. Les durées cibles sont des repères à mesurer auprès des joueurs pendant l’Alpha; elles ne sont pas présentées comme des résultats atteints. Les retours et mesures guideront les ajustements après les sessions.
 

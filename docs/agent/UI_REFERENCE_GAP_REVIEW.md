@@ -1,6 +1,6 @@
 # Revue comparative UI — maquette publiée / application
 
-Date : 01/11/2026. Référence inspectée avec Chromium/Playwright : https://chili-sunset-36220944.figma.site/ (15 vues interactives, captures de référence conservées dans /tmp/figma-*.png). Comparaison app : captures Playwright de docs/validation/*-theme*.png et lecture des templates/routes.
+Date : 01/11/2026. Référence inspectée avec Chromium/Playwright : https://chili-sunset-36220944.figma.site/ (15 vues interactives, captures de référence conservées dans /tmp/figma-*.png). Comparaison app : captures Playwright de captures de validation supprimees et lecture des templates/routes.
 
 ## Inventaire écran par écran
 

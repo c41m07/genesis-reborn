@@ -42,60 +42,49 @@ final class CombatSimulator
             $shots = [];
 
             foreach ($order as $attackerKey) {
-                if ($units[$attackerKey]['hp'] <= 0) {
+                if ($units[$attackerKey]['hp'] <= 0 || (float) ($units[$attackerKey]['base_attack'] ?? 0) <= 0) {
                     continue;
                 }
                 $targets = $this->targetsFor($attackerKey, $units, $roundNumber);
                 if ($targets === []) {
                     continue;
                 }
-                $targetKey = $targets[$random->getInt(0, count($targets) - 1)];
                 $attacker = $units[$attackerKey];
-                $target = $units[$targetKey];
-                $chance = $this->hitChance($attacker, $target);
                 $baseShotCount = $random->getInt($attacker['shots_min'], $attacker['shots_max']);
                 $shotSchedule = [];
                 for ($baseShot = 0; $baseShot < $baseShotCount; ++$baseShot) {
                     $shotSchedule[] = false;
                     foreach ($attacker['extra_shot_chances'] ?? [] as $extraChance) {
-                        if ($random->getInt(1, 10000) <= max(0, min(1, (float) $extraChance)) * 10000) {
-                            $shotSchedule[] = true;
-                        }
+                        if ($random->getInt(1, 10000) <= max(0, min(1, (float) $extraChance)) * 10000) $shotSchedule[] = true;
                     }
                 }
-
+                $targetKey = null;
                 foreach ($shotSchedule as $shotIndex => $isExtraShot) {
-                    $shotNumber = $shotIndex + 1;
-                    $hit = $random->getInt(1, 10000) <= ($chance * 100);
-                    $damage = 0.0;
-                    $shieldDamage = 0.0;
-                    $structureDamage = 0.0;
-                    $destroyed = false;
+                    $availableTargets = $this->targetsFor($attackerKey, $units, $roundNumber);
+                    if ($targetKey === null || !isset($units[$targetKey]) || $units[$targetKey]['hp'] <= 0) $targetKey = $this->selectTarget($random, $availableTargets, $units);
+                    if ($targetKey === null) break;
+                    $target = $units[$targetKey];$modifier=$this->counterMultiplier($attacker,$target,$modifiers);$chance = $this->hitChance($attacker, $target, 0, $modifier);
+                    $hit = $random->getInt(1, 10000) <= ($chance * 100);$damage = 0.0;$shieldDamage = 0.0;$structureDamage = 0.0;$destroyed = false;
                     if ($hit && $units[$targetKey]['hp'] > 0) {
-                        $modifier = $modifiers[$attacker['slug']][$target['slug']] ?? 1.0;
                         $damage = $attacker['base_attack'] * $modifier;
-                        $shieldDamage = min($units[$targetKey]['shield'], $damage);
-                        $units[$targetKey]['shield'] -= $shieldDamage;
-                        $remainingDamage = max(0.0, $damage - $shieldDamage);
-                        $structureDamage = min($units[$targetKey]['hp'], $remainingDamage);
-                        $units[$targetKey]['hp'] = max(0.0, $units[$targetKey]['hp'] - $structureDamage);
-                        $damage = $shieldDamage + $structureDamage;
-                        $destroyed = $units[$targetKey]['hp'] <= 0;
+                        $shieldDamage = min($units[$targetKey]['shield'], $damage);$units[$targetKey]['shield'] -= $shieldDamage;
+                        $remainingDamage = max(0.0, $damage - $shieldDamage);$structureDamage = min($units[$targetKey]['hp'], $remainingDamage);$units[$targetKey]['hp'] = max(0.0, $units[$targetKey]['hp'] - $structureDamage);
+                        $damage = $shieldDamage + $structureDamage;$destroyed = $units[$targetKey]['hp'] <= 0;
                     }
-                    $shots[] = [
-                        'attacker' => $attackerKey,
-                        'target' => $targetKey,
-                        'shot' => $shotNumber,
-                        'extra_shot' => $isExtraShot,
-                        'hit' => $hit,
-                        'chance' => $chance,
-                        'damage' => $damage,
-                        'shield_damage' => $shieldDamage,
-                        'structure_damage' => $structureDamage,
-                        'target_hp' => $units[$targetKey]['hp'],
-                        'target_shield' => $units[$targetKey]['shield'],
-                        'destroyed' => $destroyed,
-                    ];
+                    $shots[] = ['attacker'=>$attackerKey,'target'=>$targetKey,'weapon'=>'primary','shot'=>$shotIndex+1,'extra_shot'=>$isExtraShot,'hit'=>$hit,'chance'=>$chance,'damage'=>$damage,'shield_damage'=>$shieldDamage,'structure_damage'=>$structureDamage,'target_hp'=>$units[$targetKey]['hp'],'target_shield'=>$units[$targetKey]['shield'],'destroyed'=>$destroyed];
+                }
+                $secondaryCount=max(0,(int)($attacker['secondary_shots_min']??0));$secondaryMax=max($secondaryCount,(int)($attacker['secondary_shots_max']??$secondaryCount));
+                if($secondaryMax>0 && (float)($attacker['secondary_attack']??0)>0){
+                    $secondaryCount=$random->getInt($secondaryCount,$secondaryMax);
+                    for($secondaryShot=0;$secondaryShot<$secondaryCount;$secondaryShot++){
+                        $availableTargets=$this->targetsFor($attackerKey,$units,$roundNumber);$targetCategory=$attacker['secondary_target_category']??null;
+                        $availableTargets=array_values(array_filter($availableTargets,static fn(string $key):bool=>($units[$key]['category']??null)===$targetCategory));
+                        $secondaryTarget=$this->selectTarget($random,$availableTargets,$units);if($secondaryTarget===null)break;
+                        $target=$units[$secondaryTarget];$modifier=$this->counterMultiplier($attacker,$target,$modifiers);$chance=$this->hitChance($attacker,$target,(int)($attacker['secondary_precision_modifier']??0),$modifier);
+                        $hit=$random->getInt(1,10000)<=($chance*100);$damage=0.0;$shieldDamage=0.0;$structureDamage=0.0;$destroyed=false;
+                        if($hit&&$units[$secondaryTarget]['hp']>0){$damage=(float)$attacker['secondary_attack']*$modifier;$shieldDamage=min($units[$secondaryTarget]['shield'],$damage);$units[$secondaryTarget]['shield']-=$shieldDamage;$remainingDamage=max(0.0,$damage-$shieldDamage);$structureDamage=min($units[$secondaryTarget]['hp'],$remainingDamage);$units[$secondaryTarget]['hp']=max(0.0,$units[$secondaryTarget]['hp']-$structureDamage);$damage=$shieldDamage+$structureDamage;$destroyed=$units[$secondaryTarget]['hp']<=0;}
+                        $shots[]=['attacker'=>$attackerKey,'target'=>$secondaryTarget,'weapon'=>'anti_light','shot'=>$secondaryShot+1,'extra_shot'=>false,'hit'=>$hit,'chance'=>$chance,'damage'=>$damage,'shield_damage'=>$shieldDamage,'structure_damage'=>$structureDamage,'target_hp'=>$units[$secondaryTarget]['hp'],'target_shield'=>$units[$secondaryTarget]['shield'],'destroyed'=>$destroyed];
+                    }
                 }
             }
 
@@ -144,14 +133,33 @@ final class CombatSimulator
         ];
     }
 
-    public function hitChance(array $attacker, array $target): float
+    public function hitChance(array $attacker, array $target, int $precisionModifier = 0, float $counterMultiplier = 1.0): float
     {
+        if(!is_finite($counterMultiplier)||$counterMultiplier<=0||$counterMultiplier>10)throw new \DomainException('Coefficient de contre invalide.');
         $tierFactors = ['basic' => 1, 'intermediate' => 2, 'superior' => 3];
         $attackerTier = $tierFactors[$attacker['tier'] ?? 'basic'] ?? 1;
         $targetTier = $tierFactors[$target['tier'] ?? 'basic'] ?? 1;
-        $value = $attacker['precision'] + $attacker['tracking'] - $target['evasion'] + ($target['signature'] / 5) - 15 + 10 * ($attackerTier - $targetTier);
+        $value = $attacker['precision'] + $attacker['tracking'] + $precisionModifier - $target['evasion'] - 15 + 10 * ($attackerTier - $targetTier);
 
-        return max(15.0, min(95.0, $value));
+        // Le contre multiplie la chance déjà bornée, puis les bornes finales sont réappliquées.
+        $baseChance=max(15.0,min(95.0,$value));
+        return max(15.0,min(95.0,$baseChance*$counterMultiplier));
+    }
+
+    private function counterMultiplier(array $attacker,array $target,array $modifiers):float
+    {
+        $relations=$modifiers[$attacker['slug']]??[];
+        // Une relation précise prime ; les défenses partagent sinon leur famille générique.
+        return (float)($relations[$target['slug']]??(($target['role']??'')==='static_defense'?($relations['ground_defense']??1.0):1.0));
+    }
+
+    /** La signature modifie la probabilité de sélection, pas la chance de toucher. */
+    private function selectTarget(Randomizer $random,array $targets,array $units):?string
+    {
+        if($targets===[])return null;$weights=[];$total=0;
+        foreach($targets as $key){$weight=max(1,(int)round(max(1.0,(float)($units[$key]['signature']??50))*100));$weights[$key]=$weight;$total+=$weight;}
+        $draw=$random->getInt(1,$total);foreach($weights as $key=>$weight){$draw-=$weight;if($draw<=0)return $key;}
+        return array_key_first($weights);
     }
 
     private function snapshot(array $participants, array $stationaryDefenses, int $maxRounds): array
@@ -215,6 +223,14 @@ final class CombatSimulator
             if (!is_int($shotsMin) || !is_int($shotsMax) || $shotsMin < 1 || $shotsMax < $shotsMin || $shotsMax > 100) {
                 throw new \DomainException('Nombre de tirs invalide.');
             }
+            $secondary=[];
+            if(isset($definition['secondary_attack'])){
+                $attack=$definition['secondary_attack'];
+                $min=$definition['secondary_shots_min']??0;$max=$definition['secondary_shots_max']??$min;
+                $precision=$definition['secondary_precision_modifier']??0;$category=$definition['secondary_target_category']??null;
+                if(!is_numeric($attack)||!is_finite((float)$attack)||$attack<0||!is_int($min)||!is_int($max)||$min<0||$max<$min||$max>100||!is_int($precision)||!is_string($category)||$category==='')throw new \DomainException('Arme secondaire invalide.');
+                $secondary=['secondary_attack'=>(float)$attack,'secondary_shots_min'=>$min,'secondary_shots_max'=>$max,'secondary_precision_modifier'=>$precision,'secondary_target_category'=>$category];
+            }
             for ($index = 1; $index <= $quantity; ++$index) {
                 $tier=(string)($definition['tier']??'basic');
                 $tierSuffix=$tier==='basic'?'':':'.$tier;
@@ -222,7 +238,8 @@ final class CombatSimulator
                 if (isset($units[$key])) {
                     throw new \DomainException('Identifiant d’unité de combat dupliqué.');
                 }
-                $units[$key] = $stats + [
+                $units[$key] = $stats + $secondary + [
+                    'category' => (string)($definition['category']??''),
                     'shield' => (float) $shield,
                     'max_shield' => (float) $shield,
                     'owner' => $owner,
@@ -253,7 +270,7 @@ final class CombatSimulator
             }
             foreach ($byAttacker as $modifier) {
                 if (!is_numeric($modifier) || !is_finite((float) $modifier) || $modifier <= 0 || $modifier > 10) {
-                    throw new \DomainException('Modificateur de dégâts invalide.');
+                    throw new \DomainException('Coefficient de contre invalide.');
                 }
             }
         }

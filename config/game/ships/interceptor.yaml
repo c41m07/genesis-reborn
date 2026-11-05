@@ -1,6 +1,6 @@
 {
   "slug": "interceptor",
-  "label": "Intercepteur",
+  "label": "Intercepteur atmosphérique",
   "category": "light",
   "hp": 180,
   "precision": 75,
@@ -10,10 +10,10 @@
   "base_attack": 35,
   "shots_min": 1,
   "shots_max": 3,
-  "build_time_base": 75,
+  "build_time_base": 240,
   "costs": {},
-  "speed_system": 50,
-  "speed_galaxy": 500,
+  "speed_system": 100,
+  "speed_galaxy": 1000,
   "fuel_travel_system": 0.5,
   "fuel_travel_galaxy": 2,
   "fuel_orbit": 0.3,
@@ -22,12 +22,20 @@
     "buildings": [
       {
         "slug": "shipyard",
+        "tier": "basic",
+        "level": 2
+      }
+    ],
+    "technologies": [
+      {
+        "slug": "naval_engineering",
+        "tier": "basic",
         "level": 1
       }
     ]
   },
   "provisional": true,
-  "note": "Navigation et équilibrage provisoires ; fighter et stealth_fighter reprennent les stats de combat documentées.",
+  "note": "Profil de mobilité et de combat différencié, équilibrage validé le 02/11/2026 et à mesurer en Alpha.",
   "fuel_capacity": 800,
   "fuel_capacity_provisional": true,
   "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 800 H. Réservoir réservé au carburant, distinct de la soute de fret.",
@@ -36,7 +44,7 @@
     "intermediate": {
       "technologies": [
         {
-          "slug": "advanced_targeting",
+          "slug": "target_acquisition",
           "tier": "basic",
           "level": 5
         }
@@ -52,7 +60,7 @@
     "superior": {
       "technologies": [
         {
-          "slug": "advanced_targeting",
+          "slug": "target_acquisition",
           "tier": "intermediate",
           "level": 10
         }
@@ -83,5 +91,16 @@
       "nano": 1094,
       "antimatter": 206
     }
-  }
+  },
+  "tier_labels": {
+    "basic": "Intercepteur atmosphérique",
+    "intermediate": "Chasseur d’interdiction vectorielle",
+    "superior": "Intercepteur de supériorité"
+  },
+  "tier_descriptions": {
+    "basic": "Vaisseau léger de supériorité, le plus rapide de sa catégorie. Il poursuit et détruit les unités légères, avec une priorité contre les bombardiers. Armement visible : quatre lance-missiles à tête chercheuse intégrés autour du cockpit, laissant des traînées lumineuses.",
+    "intermediate": "Intercepteur d’interdiction capable de verrouiller rapidement les bombardiers et chasseurs adverses. Sa vitesse élevée lui permet de contrôler les engagements légers. Armement visible : quatre lance-missiles guidés avec traînées lumineuses plus longues et verrouillage renforcé.",
+    "superior": "Intercepteur de supériorité conçu pour dominer les combats rapides et empêcher les bombardiers d’atteindre les grandes unités. Armement visible : batteries de missiles à tête chercheuse autour du cockpit, avec traînées lumineuses multiples."
+  },
+  "description": "Vaisseau le plus rapide, spécialisé dans la poursuite et la destruction des unités légères, particulièrement des bombardiers. Il utilise quatre lance-missiles à tête chercheuse intégrés autour du cockpit."
 }

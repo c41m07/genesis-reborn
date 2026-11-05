@@ -1,6 +1,6 @@
 {
   "slug": "frigate",
-  "label": "Frégate",
+  "label": "Frégate d’escorte",
   "category": "escort",
   "hp": 1100,
   "precision": 70,
@@ -8,12 +8,12 @@
   "evasion": 35,
   "signature": 35,
   "base_attack": 220,
-  "shots_min": 1,
+  "shots_min": 2,
   "shots_max": 3,
-  "build_time_base": 420,
+  "build_time_base": 7200,
   "costs": {},
-  "speed_system": 50,
-  "speed_galaxy": 500,
+  "speed_system": 55,
+  "speed_galaxy": 550,
   "fuel_travel_system": 0.5,
   "fuel_travel_galaxy": 2,
   "fuel_orbit": 0.3,
@@ -22,12 +22,25 @@
     "buildings": [
       {
         "slug": "shipyard",
-        "level": 1
+        "tier": "basic",
+        "level": 6
+      }
+    ],
+    "technologies": [
+      {
+        "slug": "weapons_engineering",
+        "tier": "basic",
+        "level": 5
+      },
+      {
+        "slug": "naval_engineering",
+        "tier": "basic",
+        "level": 7
       }
     ]
   },
   "provisional": true,
-  "note": "Navigation et équilibrage provisoires ; fighter et stealth_fighter reprennent les stats de combat documentées.",
+  "note": "Profil de mobilité et de combat différencié, équilibrage validé le 02/11/2026 et à mesurer en Alpha.",
   "fuel_capacity": 3500,
   "fuel_capacity_provisional": true,
   "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 3500 H. Réservoir réservé au carburant, distinct de la soute de fret.",
@@ -36,7 +49,7 @@
     "intermediate": {
       "technologies": [
         {
-          "slug": "weapon_technology",
+          "slug": "weapons_engineering",
           "tier": "basic",
           "level": 5
         }
@@ -52,7 +65,7 @@
     "superior": {
       "technologies": [
         {
-          "slug": "weapon_technology",
+          "slug": "weapons_engineering",
           "tier": "intermediate",
           "level": 10
         }
@@ -83,5 +96,16 @@
       "nano": 6875,
       "antimatter": 1290
     }
-  }
+  },
+  "tier_labels": {
+    "basic": "Frégate d’escorte",
+    "intermediate": "Frégate de ligne",
+    "superior": "Frégate de bataille"
+  },
+  "tier_descriptions": {
+    "basic": "Vaisseau d’escorte destiné à protéger les grandes unités contre chasseurs, bombardiers, missiles et torpilles. Armement visible : tourelles antiaériennes à fragmentation réparties sur la coque, produisant des explosions défensives.",
+    "intermediate": "Frégate de ligne renforcée pour former l’écran rapproché d’une flotte. Elle intercepte les unités légères et couvre les bâtiments lourds contre les attaques de bombardiers. Armement visible : réseaux de tourelles antiaériennes à fragmentation sur la coque.",
+    "superior": "Frégate de bataille spécialisée dans la défense rapprochée des groupes lourds. Elle sature l’espace autour de la flotte contre chasseurs, bombardiers et projectiles entrants. Armement visible : tourelles défensives à fragmentation réparties sur toute la coque, avec explosions rapprochées."
+  },
+  "description": "Vaisseau de défense et d’escorte protégeant les grandes unités contre chasseurs, bombardiers, missiles et torpilles grâce à des tourelles antiaériennes à fragmentation réparties sur la coque."
 }

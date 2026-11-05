@@ -20,12 +20,12 @@ test('L’état Espionnage sans flotte conduit au chantier réel', async ({ page
   await page.goto('/flottes?mission=spy');
   await expect(page.getByRole('heading', { name: 'Espionnage', level: 1 })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Aucune sonde exploratrice disponible' })).toBeVisible();
-  await page.screenshot({ path: 'docs/validation/espionnage-sans-flotte-20261101.png', fullPage: true });
+
   await page.setViewportSize({ width: 390, height: 844 });
   await expect.poll(() => page.locator('.sidebar').evaluate(element => element.getBoundingClientRect().right)).toBeLessThanOrEqual(0);
   await expect(page.locator('.sidebar')).toHaveAttribute('aria-hidden', 'true');
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
-  await page.screenshot({ path: 'docs/validation/espionnage-sans-flotte-mobile-20261101.png', fullPage: true });
+
   const shipyard = page.getByRole('link', { name: /Accéder au chantier spatial/ });
   await expect(shipyard).toHaveAttribute('href', /planetes\/\d+\?section=ships/);
   let shipyardFocused = false;
@@ -39,7 +39,7 @@ test('L’état Espionnage sans flotte conduit au chantier réel', async ({ page
   expect(shipyardFocused).toBe(true);
   await expect(shipyard).toBeFocused();
   await expect.poll(() => shipyard.evaluate(element => element.matches(':focus-visible'))).toBe(true);
-  await page.screenshot({ path: 'docs/validation/espionnage-chantier-focus-mobile-20261101.png', fullPage: true });
+
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/planetes\/\d+\?section=ships/);
   await expect(page.getByRole('heading', { name: /Chantier spatial/ })).toBeVisible();
@@ -49,7 +49,7 @@ test('L’état Espionnage sans flotte conduit au chantier réel', async ({ page
   await expect(menuToggle).toHaveAttribute('aria-expanded', 'true');
   await expect(page.locator('.sidebar')).toHaveAttribute('aria-hidden', 'false');
   await expect.poll(() => page.locator('.sidebar').evaluate(element => element.getBoundingClientRect().left)).toBe(0);
-  await page.screenshot({ path: 'docs/validation/espionnage-menu-plus-mobile-20261101.png', fullPage: false });
+
   await page.keyboard.press('Escape');
   await expect(menuToggle).toHaveAttribute('aria-expanded', 'false');
   await expect(page.locator('.sidebar')).toHaveAttribute('aria-hidden', 'true');

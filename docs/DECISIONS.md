@@ -87,8 +87,33 @@ Les univers temporaires utilisent le modèle Outbox et le transport Messenger ex
 Kévin choisit une stratégie modérée et fixe les valeurs de départ des cinq ressources, leur production, le stockage, les coefficients de coûts/durées, les statistiques et coûts des unités, les règles de bouclier, l’espionnage, les planètes PNJ et les protections après pertes. Les valeurs complètes sont consignées dans docs/agent/BALANCING_QCM_2026-11-02.md. Les décisions de combat déjà confirmées (round/minute, dix minutes, butin 1,0 et protection de stockage 0,1) restent inchangées. Pour la matrice de combat, les coefficients explicites du PDF priment; le cycle de rôles complète uniquement les paires sans valeur documentée. La table PNJ multiplie uniquement les stocks initiaux.
 
 
+## Rythme des déblocages — 4 novembre 2026
+
+Décision utilisateur : renforcer les prérequis, car les vaisseaux et recherches de base se débloquaient trop tôt. Les jalons visés sont : early game, première colonie en 3–5 jours ; mid game, flotte spécialisée en 4–6 semaines ; late game, cuirassé en 2–3 mois ; very late game, premier vaisseau capital en 4–6 mois. Les catalogues ajoutent des chaînes progressives pour les bâtiments, les recherches, les vaisseaux et les quatre familles de défenses ; les niveaux supérieurs des bâtiments et les rangs de défense ont leurs propres seuils. Les coûts, statistiques et durées existants restent inchangés. Ces durées restent des cibles à mesurer en Alpha, pas des garanties : l’économie, les bonus de planète et la recherche parallèle influencent le temps réel.
+
 ## Progression par rangs — 2 novembre 2026
 
 Décision confirmée : Basique, Intermédiaire et Supérieur sont des pistes indépendantes et simultanées. Les données historiques deviennent Basique. Les multiplicateurs de rang sont 1×, 1,25× et 1,5625×, appliqués cumulativement à la puissance, à chaque ressource du coût et aux durées d’opération. La recherche conserve ×1,8 de temps et ×2 de coût par niveau; les durées de construction ×1,6. Les technologies précédemment à +5 % par niveau deviennent +1 % avec niveau maximum 25; laboratoire et chantier spatial sont à +2 % avec niveau maximum 25. Mines, centrale et stockage n’ont pas de niveau maximum. Les déblocages Intermédiaire/Supérieur sont thématiques, aux seuils 5 Basique puis 10 Intermédiaire.
 
 La puissance de vaisseau suit sa fonction et ses statistiques de base. Les nombres de tirs restent entiers grâce à une chance de tir supplémentaire par tir de base. L’arrondi des ressources positives et des statistiques entières dérivées est vers le haut; zéro reste zéro.
+
+
+## Contres sur les chances de toucher et tirs secondaires — 4 novembre 2026
+
+Décision explicite de Kévin : un même coefficient de contre ou de faiblesse multiplie à la fois les dégâts d’un impact et la chance de toucher calculée. Il s’agit d’une multiplication relative : ×1,30 transforme 50 % en 65 %, et non en 80 %. Le coefficient est appliqué une fois à chacune des deux grandeurs, pour les tirs principaux, supplémentaires, secondaires et les défenses.
+
+La chance de base est calculée avec précision, suivi, esquive, correction de l’arme et écart de rang, puis bornée à 15–95 %. Le coefficient multiplie cette chance ; le résultat est à nouveau borné à 15–95 %. Les dégâts utilisent le même coefficient, sans second cumul de faiblesse réciproque.
+
+Les armes secondaires des destroyers, croiseurs, cuirassés et vaisseaux capitaux reçoivent toutes une correction de précision de **+30 points**, en remplacement des anciens −20 / −25. Leur nombre de tirs, leurs dégâts de base et leur filtre de cible restent ceux du catalogue. Les caractéristiques secondaires et la catégorie sont conservées dans l’instantané du simulateur pour que les tirs soient réellement exécutés.
+
+
+Les contres affichés dans les fiches utilisent des noms de famille génériques et stables (Corvette, Capital, Chasseur furtif, etc.), communs à tous leurs rangs. Le nom d’illustration ou de variante (Dreadnought, Vaisseau amiral, etc.) ne détermine pas la relation. La matrice existante est indexée par les familles de coque. Une relation générique envers les défenses au sol s’applique à toutes les tourelles ; une relation explicite envers une tourelle reste prioritaire.
+
+
+## Classe de contre Chasseur — 4 novembre 2026
+
+Kévin précise explicitement : **Chasseur = Chasseur standard, Chasseur furtif et Intercepteur**. Le Chasseur lourd est exclu de ce regroupement. La classe cible couvre les trois rangs de chacun de ses membres. Les coques, statistiques, spécialisations offensives et catégories de ciblage des armes secondaires restent distinctes.
+
+La matrice de référence exprime ses relations vers cette classe une seule fois, puis le catalogue les développe vers les trois types pour les calculs et les instantanés du simulateur. Pour un même tireur, les anciens coefficients vers ces membres sont consolidés par leur valeur la plus forte : notamment +15 % et +30 % deviennent un seul +30 %, sans addition ni cumul. Les coefficients neutres identiques et les faiblesses identiques restent inchangés.
+
+La Corvette applique ainsi ×1,30 contre les trois membres de Chasseur et garde ×1,15 contre Capital. Les fiches affichent « Chasseur » et détaillent ses membres. Les contres continuent de multiplier les dégâts et les chances de toucher selon la décision précédente.

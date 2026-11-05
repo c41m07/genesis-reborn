@@ -42,7 +42,7 @@ final class FleetController extends AbstractController
         return $this->render('fleet/index.html.twig',['prefill'=>['mission'=>$mission,'system'=>$systemId,'planet'=>$planetId,'coordinates'=>$prefillCoordinates],'active_fleets'=>$activeFleets,'combat_events'=>$combatEvents,'membership'=>$m,'fleets'=>$repo->all(Fleet::class,['playerUniverse'=>$m],['id'=>'DESC']),'idle'=>$idle,'systems'=>$systems,'targets'=>$targets,'catalog'=>$catalog->all('ships'),'resources'=>$catalog->rules()['resources'],'fuel_pending'=>$catalog->rules()['fuel_ratio_policy']==='pending','orbit_requests'=>$orbitRequests,'conquest_enabled'=>$conquestEnabled]);
     }
     #[Route('/flottes/mission-rapide',name:'app_fleet_quick_send',methods:['POST'])]
-    public function quickSend(Request $request,UniverseContext $context,GameRepository $repo,FleetService $service,PreferencesService $preferences): Response
+    public function quickSend(Request $request,UniverseContext $context,GameRepository $repo,FleetService $service,PreferencesService $preferences,GameCatalog $catalog): Response
     {
         $membership=$context->membership();$mission=(string)$request->request->get('mission','');$targetId=filter_var($request->request->get('target'),FILTER_VALIDATE_INT);
         if(!in_array($mission,['explore','spy','colonize'],true) || $targetId===false || $targetId<1) throw $this->createNotFoundException('Mission directe invalide.');
@@ -60,7 +60,8 @@ final class FleetController extends AbstractController
             $savedPreferences=$preferences->for($membership->player);
             $defaultSpeed=match($mission){'spy'=>(float)$savedPreferences['galaxySpySpeed'],'colonize'=>(float)$savedPreferences['galaxyColonizeSpeed'],default=>1.0};
             $service->send($membership,$origin,$mission,$targetId,$composition,$defaultSpeed,[],(string)$request->request->get('request_key'));
-            $this->addFlash('success',match($mission){'explore'=>'Sonde envoyée en exploration.','spy'=>'Sondes d’espionnage envoyées.','colonize'=>'Vaisseau colonie envoyé.'});
+            $shipSlug=$mission==='colonize'?'colony_ship':'probe';$shipLabel=$catalog->getTierForUniverse($membership->universe,'ships',$shipSlug,'basic')['label'];
+            $this->addFlash('success',match($mission){'explore'=>$shipLabel.' envoyée en exploration.','spy'=>$shipLabel.' envoyée en espionnage.','colonize'=>$shipLabel.' envoyé.'});
         } catch(\DomainException $e) { $this->addFlash('error',$e->getMessage()); }
         $redirectSystem=$destinationSystem && $destinationSystem->galaxy->universe->id===$membership->universe->id?$destinationSystem:null;$parameters=$redirectSystem?['galaxy'=>$redirectSystem->galaxy->id,'system'=>$redirectSystem->id]:[];
         $returnRoute=(string)$request->request->get('return_to','app_map');

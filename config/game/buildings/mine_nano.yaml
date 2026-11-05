@@ -1,7 +1,7 @@
 {
   "slug": "mine_nano",
-  "label": "Extracteur · Nano",
-  "base_build_time": 120,
+  "label": "Atelier de nanofabrication",
+  "base_build_time": 20,
   "build_time_scaling": 1.6,
   "costs_base": {
     "metal": 560,
@@ -13,6 +13,22 @@
   "levels": {
     "1": {
       "unlock_requirements": {}
+    },
+    "2": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "mine_metal",
+            "tier": "basic",
+            "level": 3
+          },
+          {
+            "slug": "power_plant",
+            "tier": "basic",
+            "level": 2
+          }
+        ]
+      }
     }
   },
   "provisional": true,
@@ -20,7 +36,7 @@
     "intermediate": {
       "technologies": [
         {
-          "slug": "nano_construction",
+          "slug": "nanomaterial_synthesis",
           "tier": "basic",
           "level": 5
         }
@@ -36,7 +52,7 @@
     "superior": {
       "technologies": [
         {
-          "slug": "nano_construction",
+          "slug": "nanomaterial_synthesis",
           "tier": "intermediate",
           "level": 10
         }
@@ -68,5 +84,16 @@
       "nano": 313,
       "antimatter": 0
     }
-  }
+  },
+  "tier_labels": {
+    "basic": "Atelier de nanofabrication",
+    "intermediate": "Usine de synthèse moléculaire",
+    "superior": "Trame de matière programmable"
+  },
+  "tier_descriptions": {
+    "basic": "Produit nanomatériaux. Une installation locale assure cette fonction sur la colonie.",
+    "intermediate": "Produit nanomatériaux. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+    "superior": "Produit nanomatériaux. Un maillage étendu porte cette fonction à l’échelle planétaire."
+  },
+  "description": "Produit nanomatériaux. Une installation locale assure cette fonction sur la colonie."
 }

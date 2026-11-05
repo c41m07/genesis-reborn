@@ -1,0 +1,1354 @@
+{
+  "pilot": [
+    {
+      "family": "buildings",
+      "slug": "power_plant",
+      "tier": "basic",
+      "label": "Centrale nucléaire",
+      "description": "Produit électricité. Une installation locale assure cette fonction sur la colonie.",
+      "file": "public/images/catalog/buildings/power_plant__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "power_plant",
+      "tier": "intermediate",
+      "label": "Complexe énergétique à antimatière",
+      "description": "Produit électricité. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+      "file": "public/images/catalog/buildings/power_plant__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "power_plant",
+      "tier": "superior",
+      "label": "Maillage énergétique planétaire",
+      "description": "Produit électricité. Un maillage étendu porte cette fonction à l’échelle planétaire.",
+      "file": "public/images/catalog/buildings/power_plant__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "vector_propulsion",
+      "tier": "basic",
+      "label": "Propulseurs vectoriels",
+      "description": "Améliore les capacités des unités concernées. Une première méthode établit les bases de cette spécialité.",
+      "file": "public/images/catalog/technologies/vector_propulsion__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "vector_propulsion",
+      "tier": "intermediate",
+      "label": "Navigation à poussée distribuée",
+      "description": "Améliore les capacités des unités concernées. Une approche technique plus intégrée fait progresser cette spécialité.",
+      "file": "public/images/catalog/technologies/vector_propulsion__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "vector_propulsion",
+      "tier": "superior",
+      "label": "Réseau de propulsion interstellaire",
+      "description": "Améliore les capacités des unités concernées. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées.",
+      "file": "public/images/catalog/technologies/vector_propulsion__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "fighter",
+      "tier": "basic",
+      "label": "Chasseur de patrouille",
+      "description": "Vaisseau léger de combat polyvalent. Une coque individuelle remplit ce rôle selon une conception conventionnelle.",
+      "file": "public/images/catalog/ships/fighter__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "fighter",
+      "tier": "intermediate",
+      "label": "Chasseur multirôle",
+      "description": "Vaisseau léger de combat polyvalent. Une nouvelle architecture de vaisseau adapte la coque à ce rôle.",
+      "file": "public/images/catalog/ships/fighter__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "fighter",
+      "tier": "superior",
+      "label": "Chasseur d’assaut orbital",
+      "description": "Vaisseau léger de combat polyvalent. Une conception spécialisée pousse plus loin le rôle du vaisseau.",
+      "file": "public/images/catalog/ships/fighter__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "defenses",
+      "slug": "ground_turret_anti_light",
+      "tier": "basic",
+      "label": "Canon laser anti-léger",
+      "description": "Tourelle stationnaire ciblant les vaisseaux légers. Une tourelle individuelle protège la planète contre la classe visée.",
+      "file": "public/images/catalog/defenses/ground_turret_anti_light__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "defenses",
+      "slug": "ground_turret_anti_light",
+      "tier": "intermediate",
+      "label": "Canon à ions anti-léger",
+      "description": "Tourelle stationnaire ciblant les vaisseaux légers. Un canon individuel illustre une nouvelle étape technologique, en gardant la même classe de cible.",
+      "file": "public/images/catalog/defenses/ground_turret_anti_light__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "defenses",
+      "slug": "ground_turret_anti_light",
+      "tier": "superior",
+      "label": "Canon à antimatière anti-léger",
+      "description": "Tourelle stationnaire ciblant les vaisseaux légers. Un canon individuel évoque une technologie de pointe, sans changer sa classe de cible configurée.",
+      "file": "public/images/catalog/defenses/ground_turret_anti_light__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "status": "integrated",
+      "family": "buildings",
+      "label": "Chantier d’assemblage",
+      "tier": "basic",
+      "description": "Réduit la durée de construction des vaisseaux. Une installation locale assure cette fonction sur la colonie.",
+      "file": "public/images/catalog/buildings/shipyard__basic.webp",
+      "slug": "shipyard"
+    },
+    {
+      "status": "integrated",
+      "family": "buildings",
+      "label": "Docks orbitaux modulaires",
+      "tier": "intermediate",
+      "description": "Réduit la durée de construction des vaisseaux. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+      "file": "public/images/catalog/buildings/shipyard__intermediate.webp",
+      "slug": "shipyard"
+    },
+    {
+      "status": "integrated",
+      "family": "buildings",
+      "label": "Anneau industriel planétaire",
+      "tier": "superior",
+      "description": "Réduit la durée de construction des vaisseaux. Un maillage étendu porte cette fonction à l’échelle planétaire.",
+      "file": "public/images/catalog/buildings/shipyard__superior.webp",
+      "slug": "shipyard"
+    },
+    {
+      "status": "integrated",
+      "family": "buildings",
+      "label": "Cage magnétique",
+      "tier": "basic",
+      "description": "Augmente la capacité de stockage de antimatière. Une installation locale assure cette fonction sur la colonie.",
+      "file": "public/images/catalog/buildings/storage_antimatter__basic.webp",
+      "slug": "storage_antimatter"
+    },
+    {
+      "status": "integrated",
+      "family": "buildings",
+      "label": "Complexe de confinement magnétique",
+      "tier": "intermediate",
+      "description": "Augmente la capacité de stockage de antimatière. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+      "file": "public/images/catalog/buildings/storage_antimatter__intermediate.webp",
+      "slug": "storage_antimatter"
+    },
+    {
+      "status": "integrated",
+      "family": "buildings",
+      "label": "Enceinte planétaire de confinement",
+      "tier": "superior",
+      "description": "Augmente la capacité de stockage de antimatière. Un maillage étendu porte cette fonction à l’échelle planétaire.",
+      "file": "public/images/catalog/buildings/storage_antimatter__superior.webp",
+      "slug": "storage_antimatter"
+    },
+    {
+      "status": "integrated",
+      "family": "buildings",
+      "label": "Batterie de colonie",
+      "tier": "basic",
+      "description": "Augmente la capacité de stockage de électricité. Une installation locale assure cette fonction sur la colonie.",
+      "file": "public/images/catalog/buildings/storage_electricity__basic.webp",
+      "slug": "storage_electricity"
+    },
+    {
+      "status": "integrated",
+      "family": "buildings",
+      "label": "Réseau d’accumulateurs",
+      "tier": "intermediate",
+      "description": "Augmente la capacité de stockage de électricité. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+      "file": "public/images/catalog/buildings/storage_electricity__intermediate.webp",
+      "slug": "storage_electricity"
+    },
+    {
+      "status": "integrated",
+      "family": "buildings",
+      "label": "Grille planétaire de stockage",
+      "tier": "superior",
+      "description": "Augmente la capacité de stockage de électricité. Un maillage étendu porte cette fonction à l’échelle planétaire.",
+      "file": "public/images/catalog/buildings/storage_electricity__superior.webp",
+      "slug": "storage_electricity"
+    },
+    {
+      "family": "buildings",
+      "slug": "storage_hydrogen",
+      "tier": "basic",
+      "label": "Réservoir cryogénique",
+      "description": "Augmente la capacité de stockage de hydrogène. Une installation locale assure cette fonction sur la colonie.",
+      "file": "public/images/catalog/buildings/storage_hydrogen__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "storage_hydrogen",
+      "tier": "intermediate",
+      "label": "Parc de cuves pressurisées",
+      "description": "Augmente la capacité de stockage de hydrogène. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+      "file": "public/images/catalog/buildings/storage_hydrogen__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "storage_hydrogen",
+      "tier": "superior",
+      "label": "Réseau planétaire de stockage gazeux",
+      "description": "Augmente la capacité de stockage de hydrogène. Un maillage étendu porte cette fonction à l’échelle planétaire.",
+      "file": "public/images/catalog/buildings/storage_hydrogen__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "storage_metal",
+      "tier": "basic",
+      "label": "Dépôt de minerais",
+      "description": "Augmente la capacité de stockage de métal. Une installation locale assure cette fonction sur la colonie.",
+      "file": "public/images/catalog/buildings/storage_metal__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "storage_metal",
+      "tier": "intermediate",
+      "label": "Silo industriel de métal",
+      "description": "Augmente la capacité de stockage de métal. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+      "file": "public/images/catalog/buildings/storage_metal__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "storage_metal",
+      "tier": "superior",
+      "label": "Réserve planétaire de métal",
+      "description": "Augmente la capacité de stockage de métal. Un maillage étendu porte cette fonction à l’échelle planétaire.",
+      "file": "public/images/catalog/buildings/storage_metal__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "storage_nano",
+      "tier": "basic",
+      "label": "Coffre de nanomatériaux",
+      "description": "Augmente la capacité de stockage de nanomatériaux. Une installation locale assure cette fonction sur la colonie.",
+      "file": "public/images/catalog/buildings/storage_nano__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "storage_nano",
+      "tier": "intermediate",
+      "label": "Banque de matière synthétique",
+      "description": "Augmente la capacité de stockage de nanomatériaux. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+      "file": "public/images/catalog/buildings/storage_nano__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "storage_nano",
+      "tier": "superior",
+      "label": "Réserve planétaire de nanostructures",
+      "description": "Augmente la capacité de stockage de nanomatériaux. Un maillage étendu porte cette fonction à l’échelle planétaire.",
+      "file": "public/images/catalog/buildings/storage_nano__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "fortress",
+      "tier": "basic",
+      "label": "Bunker de défense",
+      "description": "Renforce la structure des défenses au sol. Une installation locale assure cette fonction sur la colonie.",
+      "file": "public/images/catalog/buildings/fortress__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "fortress",
+      "tier": "intermediate",
+      "label": "Bastion cuirassé",
+      "description": "Renforce la structure des défenses au sol. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+      "file": "public/images/catalog/buildings/fortress__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "fortress",
+      "tier": "superior",
+      "label": "Ceinture défensive planétaire",
+      "description": "Renforce la structure des défenses au sol. Un maillage étendu porte cette fonction à l’échelle planétaire.",
+      "file": "public/images/catalog/buildings/fortress__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "lab",
+      "tier": "basic",
+      "label": "Laboratoire colonial",
+      "description": "Réduit la durée des recherches. Une installation locale assure cette fonction sur la colonie.",
+      "file": "public/images/catalog/buildings/lab__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "lab",
+      "tier": "intermediate",
+      "label": "Institut de recherche orbitale",
+      "description": "Réduit la durée des recherches. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+      "file": "public/images/catalog/buildings/lab__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "lab",
+      "tier": "superior",
+      "label": "Complexe scientifique planétaire",
+      "description": "Réduit la durée des recherches. Un maillage étendu porte cette fonction à l’échelle planétaire.",
+      "file": "public/images/catalog/buildings/lab__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "mine_antimatter",
+      "tier": "basic",
+      "label": "Piège à antimatière",
+      "description": "Produit antimatière en consommant de l’hydrogène. Une installation locale assure cette fonction sur la colonie.",
+      "file": "public/images/catalog/buildings/mine_antimatter__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "mine_antimatter",
+      "tier": "intermediate",
+      "label": "Réacteur de conversion matière-antimatière",
+      "description": "Produit antimatière en consommant de l’hydrogène. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+      "file": "public/images/catalog/buildings/mine_antimatter__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "mine_antimatter",
+      "tier": "superior",
+      "label": "Confinement planétaire d’antimatière",
+      "description": "Produit antimatière en consommant de l’hydrogène. Un maillage étendu porte cette fonction à l’échelle planétaire.",
+      "file": "public/images/catalog/buildings/mine_antimatter__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "mine_hydrogen",
+      "tier": "basic",
+      "label": "Raffinerie d’hydrogène",
+      "description": "Produit hydrogène. Une installation locale assure cette fonction sur la colonie.",
+      "file": "public/images/catalog/buildings/mine_hydrogen__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "mine_hydrogen",
+      "tier": "intermediate",
+      "label": "Complexe de séparation isotopique",
+      "description": "Produit hydrogène. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+      "file": "public/images/catalog/buildings/mine_hydrogen__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "mine_hydrogen",
+      "tier": "superior",
+      "label": "Réseau planétaire de récolte gazeuse",
+      "description": "Produit hydrogène. Un maillage étendu porte cette fonction à l’échelle planétaire.",
+      "file": "public/images/catalog/buildings/mine_hydrogen__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "mine_metal",
+      "tier": "basic",
+      "label": "Mine à ciel ouvert",
+      "description": "Produit métal. Une installation locale assure cette fonction sur la colonie.",
+      "file": "public/images/catalog/buildings/mine_metal__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "mine_metal",
+      "tier": "intermediate",
+      "label": "Fonderie orbitale",
+      "description": "Produit métal. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+      "file": "public/images/catalog/buildings/mine_metal__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "mine_metal",
+      "tier": "superior",
+      "label": "Réseau d’extraction lithosphérique",
+      "description": "Produit métal. Un maillage étendu porte cette fonction à l’échelle planétaire.",
+      "file": "public/images/catalog/buildings/mine_metal__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "mine_nano",
+      "tier": "basic",
+      "label": "Atelier de nanofabrication",
+      "description": "Produit nanomatériaux. Une installation locale assure cette fonction sur la colonie.",
+      "file": "public/images/catalog/buildings/mine_nano__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "mine_nano",
+      "tier": "intermediate",
+      "label": "Usine de synthèse moléculaire",
+      "description": "Produit nanomatériaux. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+      "file": "public/images/catalog/buildings/mine_nano__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "buildings",
+      "slug": "mine_nano",
+      "tier": "superior",
+      "label": "Trame de matière programmable",
+      "description": "Produit nanomatériaux. Un maillage étendu porte cette fonction à l’échelle planétaire.",
+      "file": "public/images/catalog/buildings/mine_nano__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "automated_defense_repair",
+      "tier": "basic",
+      "label": "Drones réparateurs",
+      "description": "Permet la reconstruction d’une partie des défenses détruites. Une première méthode établit les bases de cette spécialité.",
+      "file": "public/images/catalog/technologies/automated_defense_repair__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "automated_defense_repair",
+      "tier": "intermediate",
+      "label": "Atelier robotisé de défense",
+      "description": "Permet la reconstruction d’une partie des défenses détruites. Une approche technique plus intégrée fait progresser cette spécialité.",
+      "file": "public/images/catalog/technologies/automated_defense_repair__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "automated_defense_repair",
+      "tier": "superior",
+      "label": "Réseau autonome de remise en état",
+      "description": "Permet la reconstruction d’une partie des défenses détruites. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées.",
+      "file": "public/images/catalog/technologies/automated_defense_repair__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "colonial_expansion",
+      "tier": "basic",
+      "label": "Protocoles de colonisation",
+      "description": "Augmente la limite de planètes colonisables. Une première méthode établit les bases de cette spécialité.",
+      "file": "public/images/catalog/technologies/colonial_expansion__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "colonial_expansion",
+      "tier": "intermediate",
+      "label": "Flottes d’établissement",
+      "description": "Augmente la limite de planètes colonisables. Une approche technique plus intégrée fait progresser cette spécialité.",
+      "file": "public/images/catalog/technologies/colonial_expansion__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "colonial_expansion",
+      "tier": "superior",
+      "label": "Réseau de colonisation interstellaire",
+      "description": "Augmente la limite de planètes colonisables. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées.",
+      "file": "public/images/catalog/technologies/colonial_expansion__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "cryogenic_reserves",
+      "tier": "basic",
+      "label": "Réservoirs cryogéniques",
+      "description": "Améliore la capacité des réservoirs des unités concernées. Une première méthode établit les bases de cette spécialité.",
+      "file": "public/images/catalog/technologies/cryogenic_reserves__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "cryogenic_reserves",
+      "tier": "intermediate",
+      "label": "Soutes à ergols réfrigérées",
+      "description": "Améliore la capacité des réservoirs des unités concernées. Une approche technique plus intégrée fait progresser cette spécialité.",
+      "file": "public/images/catalog/technologies/cryogenic_reserves__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "cryogenic_reserves",
+      "tier": "superior",
+      "label": "Logistique cryogénique de flotte",
+      "description": "Améliore la capacité des réservoirs des unités concernées. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées.",
+      "file": "public/images/catalog/technologies/cryogenic_reserves__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "engineering_foundations",
+      "tier": "basic",
+      "label": "Génie civil colonial",
+      "description": "Réduit la durée de construction des bâtiments. Une première méthode établit les bases de cette spécialité.",
+      "file": "public/images/catalog/technologies/engineering_foundations__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "engineering_foundations",
+      "tier": "intermediate",
+      "label": "Ingénierie de chantier automatisée",
+      "description": "Réduit la durée de construction des bâtiments. Une approche technique plus intégrée fait progresser cette spécialité.",
+      "file": "public/images/catalog/technologies/engineering_foundations__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "engineering_foundations",
+      "tier": "superior",
+      "label": "Planification industrielle intégrée",
+      "description": "Réduit la durée de construction des bâtiments. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées.",
+      "file": "public/images/catalog/technologies/engineering_foundations__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "evasive_navigation",
+      "tier": "basic",
+      "label": "Manœuvres d’évitement",
+      "description": "Améliore l’esquive des unités concernées. Une première méthode établit les bases de cette spécialité.",
+      "file": "public/images/catalog/technologies/evasive_navigation__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "evasive_navigation",
+      "tier": "intermediate",
+      "label": "Pilotage prédictif",
+      "description": "Améliore l’esquive des unités concernées. Une approche technique plus intégrée fait progresser cette spécialité.",
+      "file": "public/images/catalog/technologies/evasive_navigation__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "evasive_navigation",
+      "tier": "superior",
+      "label": "Navigation adaptative de combat",
+      "description": "Améliore l’esquive des unités concernées. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées.",
+      "file": "public/images/catalog/technologies/evasive_navigation__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "intelligence_countermeasures",
+      "tier": "basic",
+      "label": "Discipline du secret",
+      "description": "Ouvre l’accès à la capacité de renseignement indiquée par cette recherche. Une première méthode établit les bases de cette spécialité.",
+      "file": "public/images/catalog/technologies/intelligence_countermeasures__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "intelligence_countermeasures",
+      "tier": "intermediate",
+      "label": "Leurres et procédures de déception",
+      "description": "Ouvre l’accès à la capacité de renseignement indiquée par cette recherche. Une approche technique plus intégrée fait progresser cette spécialité.",
+      "file": "public/images/catalog/technologies/intelligence_countermeasures__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "intelligence_countermeasures",
+      "tier": "superior",
+      "label": "Contre-renseignement distribué",
+      "description": "Ouvre l’accès à la capacité de renseignement indiquée par cette recherche. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées.",
+      "file": "public/images/catalog/technologies/intelligence_countermeasures__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "modular_cargo_bays",
+      "tier": "basic",
+      "label": "Soute compartimentée",
+      "description": "Améliore la capacité de fret des unités concernées. Une première méthode établit les bases de cette spécialité.",
+      "file": "public/images/catalog/technologies/modular_cargo_bays__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "modular_cargo_bays",
+      "tier": "intermediate",
+      "label": "Conteneurs à assemblage variable",
+      "description": "Améliore la capacité de fret des unités concernées. Une approche technique plus intégrée fait progresser cette spécialité.",
+      "file": "public/images/catalog/technologies/modular_cargo_bays__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "modular_cargo_bays",
+      "tier": "superior",
+      "label": "Architecture logistique de flotte",
+      "description": "Améliore la capacité de fret des unités concernées. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées.",
+      "file": "public/images/catalog/technologies/modular_cargo_bays__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "nanomaterial_synthesis",
+      "tier": "basic",
+      "label": "Métallurgie des nanomatériaux",
+      "description": "Réduit les coûts en ressources des bâtiments. Une première méthode établit les bases de cette spécialité.",
+      "file": "public/images/catalog/technologies/nanomaterial_synthesis__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "nanomaterial_synthesis",
+      "tier": "intermediate",
+      "label": "Assemblage moléculaire des structures",
+      "description": "Réduit les coûts en ressources des bâtiments. Une approche technique plus intégrée fait progresser cette spécialité.",
+      "file": "public/images/catalog/technologies/nanomaterial_synthesis__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "nanomaterial_synthesis",
+      "tier": "superior",
+      "label": "Architecture de matière programmable",
+      "description": "Réduit les coûts en ressources des bâtiments. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées.",
+      "file": "public/images/catalog/technologies/nanomaterial_synthesis__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "naval_engineering",
+      "tier": "basic",
+      "label": "Architecture navale",
+      "description": "Réduit les coûts en ressources des vaisseaux. Une première méthode établit les bases de cette spécialité.",
+      "file": "public/images/catalog/technologies/naval_engineering__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "naval_engineering",
+      "tier": "intermediate",
+      "label": "Conception modulaire de flotte",
+      "description": "Réduit les coûts en ressources des vaisseaux. Une approche technique plus intégrée fait progresser cette spécialité.",
+      "file": "public/images/catalog/technologies/naval_engineering__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "naval_engineering",
+      "tier": "superior",
+      "label": "Standardisation des coques impériales",
+      "description": "Réduit les coûts en ressources des vaisseaux. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées.",
+      "file": "public/images/catalog/technologies/naval_engineering__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "rapid_fire_cycle",
+      "tier": "basic",
+      "label": "Séquenceur de salves",
+      "description": "Accroît la possibilité de tir supplémentaire des vaisseaux de combat. Une première méthode établit les bases de cette spécialité.",
+      "file": "public/images/catalog/technologies/rapid_fire_cycle__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "rapid_fire_cycle",
+      "tier": "intermediate",
+      "label": "Cadence de tir recalculée",
+      "description": "Accroît la possibilité de tir supplémentaire des vaisseaux de combat. Une approche technique plus intégrée fait progresser cette spécialité.",
+      "file": "public/images/catalog/technologies/rapid_fire_cycle__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "rapid_fire_cycle",
+      "tier": "superior",
+      "label": "Synchronisation des salves de flotte",
+      "description": "Accroît la possibilité de tir supplémentaire des vaisseaux de combat. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées.",
+      "file": "public/images/catalog/technologies/rapid_fire_cycle__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "shield_harmonics",
+      "tier": "basic",
+      "label": "Générateurs de bouclier accordés",
+      "description": "Améliore les boucliers des unités concernées. Une première méthode établit les bases de cette spécialité.",
+      "file": "public/images/catalog/technologies/shield_harmonics__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "shield_harmonics",
+      "tier": "intermediate",
+      "label": "Boucliers à résonance distribuée",
+      "description": "Améliore les boucliers des unités concernées. Une approche technique plus intégrée fait progresser cette spécialité.",
+      "file": "public/images/catalog/technologies/shield_harmonics__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "shield_harmonics",
+      "tier": "superior",
+      "label": "Dôme de protection harmonique",
+      "description": "Améliore les boucliers des unités concernées. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées.",
+      "file": "public/images/catalog/technologies/shield_harmonics__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "signature_masking",
+      "tier": "basic",
+      "label": "Écran de brouillage",
+      "description": "Ouvre l’accès à la capacité de renseignement indiquée par cette recherche. Une première méthode établit les bases de cette spécialité.",
+      "file": "public/images/catalog/technologies/signature_masking__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "signature_masking",
+      "tier": "intermediate",
+      "label": "Leurres de signature",
+      "description": "Ouvre l’accès à la capacité de renseignement indiquée par cette recherche. Une approche technique plus intégrée fait progresser cette spécialité.",
+      "file": "public/images/catalog/technologies/signature_masking__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "signature_masking",
+      "tier": "superior",
+      "label": "Voile spectral coordonné",
+      "description": "Ouvre l’accès à la capacité de renseignement indiquée par cette recherche. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées.",
+      "file": "public/images/catalog/technologies/signature_masking__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "signature_reduction",
+      "tier": "basic",
+      "label": "Revêtement absorbant",
+      "description": "Améliore la signature des unités concernées. Une première méthode établit les bases de cette spécialité.",
+      "file": "public/images/catalog/technologies/signature_reduction__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "signature_reduction",
+      "tier": "intermediate",
+      "label": "Dissipation des émissions",
+      "description": "Améliore la signature des unités concernées. Une approche technique plus intégrée fait progresser cette spécialité.",
+      "file": "public/images/catalog/technologies/signature_reduction__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "signature_reduction",
+      "tier": "superior",
+      "label": "Camouflage spectral intégré",
+      "description": "Améliore la signature des unités concernées. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées.",
+      "file": "public/images/catalog/technologies/signature_reduction__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "structural_armor",
+      "tier": "basic",
+      "label": "Blindage multicouche",
+      "description": "Améliore la structure des unités concernées. Une première méthode établit les bases de cette spécialité.",
+      "file": "public/images/catalog/technologies/structural_armor__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "structural_armor",
+      "tier": "intermediate",
+      "label": "Coque à treillis composite",
+      "description": "Améliore la structure des unités concernées. Une approche technique plus intégrée fait progresser cette spécialité.",
+      "file": "public/images/catalog/technologies/structural_armor__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "structural_armor",
+      "tier": "superior",
+      "label": "Carapace structurelle intégrée",
+      "description": "Améliore la structure des unités concernées. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées.",
+      "file": "public/images/catalog/technologies/structural_armor__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "tactical_intelligence",
+      "tier": "basic",
+      "label": "Analyse tactique",
+      "description": "Ouvre l’accès à la capacité de renseignement indiquée par cette recherche. Une première méthode établit les bases de cette spécialité.",
+      "file": "public/images/catalog/technologies/tactical_intelligence__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "tactical_intelligence",
+      "tier": "intermediate",
+      "label": "Cartographie des opérations",
+      "description": "Ouvre l’accès à la capacité de renseignement indiquée par cette recherche. Une approche technique plus intégrée fait progresser cette spécialité.",
+      "file": "public/images/catalog/technologies/tactical_intelligence__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "tactical_intelligence",
+      "tier": "superior",
+      "label": "Réseau de connaissance du champ de bataille",
+      "description": "Ouvre l’accès à la capacité de renseignement indiquée par cette recherche. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées.",
+      "file": "public/images/catalog/technologies/tactical_intelligence__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "target_acquisition",
+      "tier": "basic",
+      "label": "Télémétrie de poursuite",
+      "description": "Améliore le suivi des cibles des unités concernées. Une première méthode établit les bases de cette spécialité.",
+      "file": "public/images/catalog/technologies/target_acquisition__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "target_acquisition",
+      "tier": "intermediate",
+      "label": "Calculateur d’interception",
+      "description": "Améliore le suivi des cibles des unités concernées. Une approche technique plus intégrée fait progresser cette spécialité.",
+      "file": "public/images/catalog/technologies/target_acquisition__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "target_acquisition",
+      "tier": "superior",
+      "label": "Fusion tactique des trajectoires",
+      "description": "Améliore le suivi des cibles des unités concernées. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées.",
+      "file": "public/images/catalog/technologies/target_acquisition__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "weapon_calibration",
+      "tier": "basic",
+      "label": "Viseurs balistiques",
+      "description": "Améliore la précision des unités concernées. Une première méthode établit les bases de cette spécialité.",
+      "file": "public/images/catalog/technologies/weapon_calibration__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "weapon_calibration",
+      "tier": "intermediate",
+      "label": "Conduite de tir assistée",
+      "description": "Améliore la précision des unités concernées. Une approche technique plus intégrée fait progresser cette spécialité.",
+      "file": "public/images/catalog/technologies/weapon_calibration__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "weapon_calibration",
+      "tier": "superior",
+      "label": "Réseau de visée coordonnée",
+      "description": "Améliore la précision des unités concernées. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées.",
+      "file": "public/images/catalog/technologies/weapon_calibration__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "weapons_engineering",
+      "tier": "basic",
+      "label": "Canons à énergie focalisée",
+      "description": "Améliore l’attaque des unités concernées. Une première méthode établit les bases de cette spécialité.",
+      "file": "public/images/catalog/technologies/weapons_engineering__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "weapons_engineering",
+      "tier": "intermediate",
+      "label": "Batteries à décharge concentrée",
+      "description": "Améliore l’attaque des unités concernées. Une approche technique plus intégrée fait progresser cette spécialité.",
+      "file": "public/images/catalog/technologies/weapons_engineering__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "technologies",
+      "slug": "weapons_engineering",
+      "tier": "superior",
+      "label": "Artillerie de flotte synchronisée",
+      "description": "Améliore l’attaque des unités concernées. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées.",
+      "file": "public/images/catalog/technologies/weapons_engineering__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "battleship",
+      "tier": "basic",
+      "label": "Cuirassé de ligne",
+      "description": "Vaisseau lourd doté d’une forte structure et puissance d’attaque. Une coque individuelle remplit ce rôle selon une conception conventionnelle.",
+      "file": "public/images/catalog/ships/battleship__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "battleship",
+      "tier": "intermediate",
+      "label": "Cuirassé d’artillerie",
+      "description": "Vaisseau lourd doté d’une forte structure et puissance d’attaque. Une nouvelle architecture de vaisseau adapte la coque à ce rôle.",
+      "file": "public/images/catalog/ships/battleship__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "battleship",
+      "tier": "superior",
+      "label": "Cuirassé de bataille",
+      "description": "Vaisseau lourd doté d’une forte structure et puissance d’attaque. Une conception spécialisée pousse plus loin le rôle du vaisseau.",
+      "file": "public/images/catalog/ships/battleship__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "bomber",
+      "tier": "basic",
+      "label": "Bombardier tactique",
+      "description": "Vaisseau de combat spécialisé dans les frappes. Une coque individuelle remplit ce rôle selon une conception conventionnelle.",
+      "file": "public/images/catalog/ships/bomber__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "bomber",
+      "tier": "intermediate",
+      "label": "Bombardier d’assaut",
+      "description": "Vaisseau de combat spécialisé dans les frappes. Une nouvelle architecture de vaisseau adapte la coque à ce rôle.",
+      "file": "public/images/catalog/ships/bomber__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "bomber",
+      "tier": "superior",
+      "label": "Bombardier de percée",
+      "description": "Vaisseau de combat spécialisé dans les frappes. Une conception spécialisée pousse plus loin le rôle du vaisseau.",
+      "file": "public/images/catalog/ships/bomber__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "capital",
+      "tier": "basic",
+      "label": "Vaisseau capital",
+      "description": "Vaisseau de combat de classe capitale. Une coque individuelle remplit ce rôle selon une conception conventionnelle.",
+      "file": "public/images/catalog/ships/capital__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "capital",
+      "tier": "intermediate",
+      "label": "Dreadnought",
+      "description": "Vaisseau de combat de classe capitale. Une nouvelle architecture de vaisseau adapte la coque à ce rôle.",
+      "file": "public/images/catalog/ships/capital__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "capital",
+      "tier": "superior",
+      "label": "Vaisseau amiral",
+      "description": "Vaisseau de combat de classe capitale. Une conception spécialisée pousse plus loin le rôle du vaisseau.",
+      "file": "public/images/catalog/ships/capital__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "colony_ship",
+      "tier": "basic",
+      "label": "Vaisseau colonisateur",
+      "description": "Vaisseau conçu pour fonder une colonie. Une coque individuelle remplit ce rôle selon une conception conventionnelle.",
+      "file": "public/images/catalog/ships/colony_ship__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "colony_ship",
+      "tier": "intermediate",
+      "label": "Vaisseau pionnier",
+      "description": "Vaisseau conçu pour fonder une colonie. Une nouvelle architecture de vaisseau adapte la coque à ce rôle.",
+      "file": "public/images/catalog/ships/colony_ship__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "colony_ship",
+      "tier": "superior",
+      "label": "Arche de colonisation",
+      "description": "Vaisseau conçu pour fonder une colonie. Une conception spécialisée pousse plus loin le rôle du vaisseau.",
+      "file": "public/images/catalog/ships/colony_ship__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "corvette",
+      "tier": "basic",
+      "label": "Corvette de patrouille",
+      "description": "Petit vaisseau d’escorte et de combat. Une coque individuelle remplit ce rôle selon une conception conventionnelle.",
+      "file": "public/images/catalog/ships/corvette__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "corvette",
+      "tier": "intermediate",
+      "label": "Corvette de piquetage",
+      "description": "Petit vaisseau d’escorte et de combat. Une nouvelle architecture de vaisseau adapte la coque à ce rôle.",
+      "file": "public/images/catalog/ships/corvette__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "corvette",
+      "tier": "superior",
+      "label": "Corvette d’escorte rapprochée",
+      "description": "Petit vaisseau d’escorte et de combat. Une conception spécialisée pousse plus loin le rôle du vaisseau.",
+      "file": "public/images/catalog/ships/corvette__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "cruiser",
+      "tier": "basic",
+      "label": "Croiseur de combat",
+      "description": "Vaisseau lourd conçu pour les engagements prolongés. Une coque individuelle remplit ce rôle selon une conception conventionnelle.",
+      "file": "public/images/catalog/ships/cruiser__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "cruiser",
+      "tier": "intermediate",
+      "label": "Croiseur d’artillerie",
+      "description": "Vaisseau lourd conçu pour les engagements prolongés. Une nouvelle architecture de vaisseau adapte la coque à ce rôle.",
+      "file": "public/images/catalog/ships/cruiser__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "cruiser",
+      "tier": "superior",
+      "label": "Croiseur de bataille",
+      "description": "Vaisseau lourd conçu pour les engagements prolongés. Une conception spécialisée pousse plus loin le rôle du vaisseau.",
+      "file": "public/images/catalog/ships/cruiser__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "destroyer",
+      "tier": "basic",
+      "label": "Destroyer d’escorte",
+      "description": "Vaisseau d’escorte armé pour le combat. Une coque individuelle remplit ce rôle selon une conception conventionnelle.",
+      "file": "public/images/catalog/ships/destroyer__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "destroyer",
+      "tier": "intermediate",
+      "label": "Destroyer de ligne",
+      "description": "Vaisseau d’escorte armé pour le combat. Une nouvelle architecture de vaisseau adapte la coque à ce rôle.",
+      "file": "public/images/catalog/ships/destroyer__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "destroyer",
+      "tier": "superior",
+      "label": "Destroyer de rupture",
+      "description": "Vaisseau d’escorte armé pour le combat. Une conception spécialisée pousse plus loin le rôle du vaisseau.",
+      "file": "public/images/catalog/ships/destroyer__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "frigate",
+      "tier": "basic",
+      "label": "Frégate d’escorte",
+      "description": "Vaisseau d’escorte destiné à protéger les autres unités. Une coque individuelle remplit ce rôle selon une conception conventionnelle.",
+      "file": "public/images/catalog/ships/frigate__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "frigate",
+      "tier": "intermediate",
+      "label": "Frégate de ligne",
+      "description": "Vaisseau d’escorte destiné à protéger les autres unités. Une nouvelle architecture de vaisseau adapte la coque à ce rôle.",
+      "file": "public/images/catalog/ships/frigate__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "frigate",
+      "tier": "superior",
+      "label": "Frégate de bataille",
+      "description": "Vaisseau d’escorte destiné à protéger les autres unités. Une conception spécialisée pousse plus loin le rôle du vaisseau.",
+      "file": "public/images/catalog/ships/frigate__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "heavy_fighter",
+      "tier": "basic",
+      "label": "Chasseur lourd",
+      "description": "Vaisseau de combat lourd. Une coque individuelle remplit ce rôle selon une conception conventionnelle.",
+      "file": "public/images/catalog/ships/heavy_fighter__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "heavy_fighter",
+      "tier": "intermediate",
+      "label": "Chasseur-bombardier lourd",
+      "description": "Vaisseau de combat lourd. Une nouvelle architecture de vaisseau adapte la coque à ce rôle.",
+      "file": "public/images/catalog/ships/heavy_fighter__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "heavy_fighter",
+      "tier": "superior",
+      "label": "Chasseur d’appui blindé",
+      "description": "Vaisseau de combat lourd. Une conception spécialisée pousse plus loin le rôle du vaisseau.",
+      "file": "public/images/catalog/ships/heavy_fighter__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "interceptor",
+      "tier": "basic",
+      "label": "Intercepteur atmosphérique",
+      "description": "Vaisseau léger dédié à l’interception. Une coque individuelle remplit ce rôle selon une conception conventionnelle.",
+      "file": "public/images/catalog/ships/interceptor__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "interceptor",
+      "tier": "intermediate",
+      "label": "Chasseur d’interdiction vectorielle",
+      "description": "Vaisseau léger dédié à l’interception. Une nouvelle architecture de vaisseau adapte la coque à ce rôle.",
+      "file": "public/images/catalog/ships/interceptor__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "interceptor",
+      "tier": "superior",
+      "label": "Intercepteur de supériorité",
+      "description": "Vaisseau léger dédié à l’interception. Une conception spécialisée pousse plus loin le rôle du vaisseau.",
+      "file": "public/images/catalog/ships/interceptor__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "probe",
+      "tier": "basic",
+      "label": "Sonde de reconnaissance",
+      "description": "Vaisseau de reconnaissance et d’espionnage. Une coque individuelle remplit ce rôle selon une conception conventionnelle.",
+      "file": "public/images/catalog/ships/probe__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "probe",
+      "tier": "intermediate",
+      "label": "Drone d’observation",
+      "description": "Vaisseau de reconnaissance et d’espionnage. Une nouvelle architecture de vaisseau adapte la coque à ce rôle.",
+      "file": "public/images/catalog/ships/probe__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "probe",
+      "tier": "superior",
+      "label": "Sonde d’exploration lointaine",
+      "description": "Vaisseau de reconnaissance et d’espionnage. Une conception spécialisée pousse plus loin le rôle du vaisseau.",
+      "file": "public/images/catalog/ships/probe__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "stealth_fighter",
+      "tier": "basic",
+      "label": "Chasseur furtif",
+      "description": "Chasseur léger à signature réduite. Une coque individuelle remplit ce rôle selon une conception conventionnelle.",
+      "file": "public/images/catalog/ships/stealth_fighter__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "stealth_fighter",
+      "tier": "intermediate",
+      "label": "Chasseur d’approche silencieuse",
+      "description": "Chasseur léger à signature réduite. Une nouvelle architecture de vaisseau adapte la coque à ce rôle.",
+      "file": "public/images/catalog/ships/stealth_fighter__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "stealth_fighter",
+      "tier": "superior",
+      "label": "Intercepteur à spectre effacé",
+      "description": "Chasseur léger à signature réduite. Une conception spécialisée pousse plus loin le rôle du vaisseau.",
+      "file": "public/images/catalog/ships/stealth_fighter__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "transport",
+      "tier": "basic",
+      "label": "Cargo de ligne",
+      "description": "Vaisseau doté d’une soute pour transporter des ressources. Une coque individuelle remplit ce rôle selon une conception conventionnelle.",
+      "file": "public/images/catalog/ships/transport__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "transport",
+      "tier": "intermediate",
+      "label": "Transporteur de fret",
+      "description": "Vaisseau doté d’une soute pour transporter des ressources. Une nouvelle architecture de vaisseau adapte la coque à ce rôle.",
+      "file": "public/images/catalog/ships/transport__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "ships",
+      "slug": "transport",
+      "tier": "superior",
+      "label": "Cargo interstellaire",
+      "description": "Vaisseau doté d’une soute pour transporter des ressources. Une conception spécialisée pousse plus loin le rôle du vaisseau.",
+      "file": "public/images/catalog/ships/transport__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "defenses",
+      "slug": "ground_turret_anti_escort",
+      "tier": "basic",
+      "label": "Canon laser anti-escorteur",
+      "description": "Tourelle stationnaire ciblant les vaisseaux d’escorte. Une tourelle individuelle protège la planète contre la classe visée.",
+      "file": "public/images/catalog/defenses/ground_turret_anti_escort__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "defenses",
+      "slug": "ground_turret_anti_escort",
+      "tier": "intermediate",
+      "label": "Canon à ions anti-escorteur",
+      "description": "Tourelle stationnaire ciblant les vaisseaux d’escorte. Un canon individuel illustre une nouvelle étape technologique, en gardant la même classe de cible.",
+      "file": "public/images/catalog/defenses/ground_turret_anti_escort__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "defenses",
+      "slug": "ground_turret_anti_escort",
+      "tier": "superior",
+      "label": "Canon à antimatière anti-escorteur",
+      "description": "Tourelle stationnaire ciblant les vaisseaux d’escorte. Un canon individuel évoque une technologie de pointe, sans changer sa classe de cible configurée.",
+      "file": "public/images/catalog/defenses/ground_turret_anti_escort__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "defenses",
+      "slug": "ground_turret_anti_heavy",
+      "tier": "basic",
+      "label": "Canon laser anti-lourd",
+      "description": "Tourelle stationnaire ciblant les vaisseaux lourds. Une tourelle individuelle protège la planète contre la classe visée.",
+      "file": "public/images/catalog/defenses/ground_turret_anti_heavy__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "defenses",
+      "slug": "ground_turret_anti_heavy",
+      "tier": "intermediate",
+      "label": "Canon à ions anti-lourd",
+      "description": "Tourelle stationnaire ciblant les vaisseaux lourds. Un canon individuel illustre une nouvelle étape technologique, en gardant la même classe de cible.",
+      "file": "public/images/catalog/defenses/ground_turret_anti_heavy__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "defenses",
+      "slug": "ground_turret_anti_heavy",
+      "tier": "superior",
+      "label": "Canon à antimatière anti-lourd",
+      "description": "Tourelle stationnaire ciblant les vaisseaux lourds. Un canon individuel évoque une technologie de pointe, sans changer sa classe de cible configurée.",
+      "file": "public/images/catalog/defenses/ground_turret_anti_heavy__superior.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "defenses",
+      "slug": "ground_turret_anti_capital",
+      "tier": "basic",
+      "label": "Canon laser anti-capital",
+      "description": "Tourelle stationnaire ciblant les vaisseaux capitaux. Une tourelle individuelle protège la planète contre la classe visée.",
+      "file": "public/images/catalog/defenses/ground_turret_anti_capital__basic.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "defenses",
+      "slug": "ground_turret_anti_capital",
+      "tier": "intermediate",
+      "label": "Canon à ions anti-capital",
+      "description": "Tourelle stationnaire ciblant les vaisseaux capitaux. Un canon individuel illustre une nouvelle étape technologique, en gardant la même classe de cible.",
+      "file": "public/images/catalog/defenses/ground_turret_anti_capital__intermediate.webp",
+      "status": "integrated"
+    },
+    {
+      "family": "defenses",
+      "slug": "ground_turret_anti_capital",
+      "tier": "superior",
+      "label": "Canon à antimatière anti-capital",
+      "description": "Tourelle stationnaire ciblant les vaisseaux capitaux. Un canon individuel évoque une technologie de pointe, sans changer sa classe de cible configurée.",
+      "file": "public/images/catalog/defenses/ground_turret_anti_capital__superior.webp",
+      "status": "integrated"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "slug": "storage_hydrogen",
-  "label": "Entrepôt · Hydrogène",
+  "label": "Réservoir cryogénique",
   "base_build_time": 180,
   "build_time_scaling": 1.6,
   "costs_base": {
@@ -13,6 +13,24 @@
   "levels": {
     "1": {
       "unlock_requirements": {}
+    },
+    "2": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "mine_hydrogen",
+            "tier": "basic",
+            "level": 3
+          }
+        ],
+        "technologies": [
+          {
+            "slug": "nanomaterial_synthesis",
+            "tier": "basic",
+            "level": 2
+          }
+        ]
+      }
     }
   },
   "provisional": true,
@@ -20,7 +38,7 @@
     "intermediate": {
       "technologies": [
         {
-          "slug": "advanced_propulsion",
+          "slug": "vector_propulsion",
           "tier": "basic",
           "level": 5
         }
@@ -36,7 +54,7 @@
     "superior": {
       "technologies": [
         {
-          "slug": "advanced_propulsion",
+          "slug": "vector_propulsion",
           "tier": "intermediate",
           "level": 10
         }
@@ -67,5 +85,16 @@
       "nano": 782,
       "antimatter": 147
     }
-  }
+  },
+  "tier_labels": {
+    "basic": "Réservoir cryogénique",
+    "intermediate": "Parc de cuves pressurisées",
+    "superior": "Réseau planétaire de stockage gazeux"
+  },
+  "tier_descriptions": {
+    "basic": "Augmente la capacité de stockage de hydrogène. Une installation locale assure cette fonction sur la colonie.",
+    "intermediate": "Augmente la capacité de stockage de hydrogène. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+    "superior": "Augmente la capacité de stockage de hydrogène. Un maillage étendu porte cette fonction à l’échelle planétaire."
+  },
+  "description": "Augmente la capacité de stockage de hydrogène. Une installation locale assure cette fonction sur la colonie."
 }

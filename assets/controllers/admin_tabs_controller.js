@@ -48,6 +48,13 @@ export default class extends Controller {
             tab.tabIndex = selected ? 0 : -1;
         }
 
+        for (const link of document.querySelectorAll('[data-admin-panel-link]')) {
+            const selected = link.dataset.adminPanelLink === panelId;
+            link.classList.toggle('active', selected);
+            if (selected) link.setAttribute('aria-current', 'page');
+            else link.removeAttribute('aria-current');
+        }
+
         if (updateHash && window.location.hash !== '#' + panelId) {
             window.history.replaceState(null, '', '#' + panelId);
         }

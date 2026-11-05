@@ -2,6 +2,14 @@
 
 ## Derniers résultats
 
+Les résultats ci-dessous sont des exécutions historiques du 02/11/2026 et ne prouvent pas l’état actuel. Lors du nettoyage, avant ses changements applicatifs, les commandes `make test` et `make test-browser` ont été relancées sur l’arbre de travail alors déjà modifié; elles ont révélé des échecs. Les journaux détaillés de cette exécution sont dans l’historique de la session Codex, pas archivés comme preuves dans le dépôt.
+
+| Vérification au début du nettoyage (02/11/2026) | Résultat |
+|---|---|
+| make test | 126 tests, 2 303 assertions, 3 erreurs et 14 échecs; conflits d’attentes avec les valeurs et comportements présents dans l’arbre de travail. |
+| make test-browser | 30/36 scénarios réussis. Six échecs liés aux attentes du catalogue, des prérequis, de la colonisation et à une assertion d’image ensuite retirée. Le test responsive corrigé a ensuite passé seul (1/1). |
+| make validate, make lint, npm run build | Réussite avant et après le retrait des images et l’adaptation des vues. |
+
 | Vérification | Résultat |
 |---|---|
 | make test (02/11/2026) | Réussite — 118 tests, 1 696 assertions, après recréation de la base de test éphémère devenue incohérente. |

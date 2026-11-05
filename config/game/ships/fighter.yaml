@@ -1,6 +1,6 @@
 {
   "slug": "fighter",
-  "label": "Chasseur",
+  "label": "Chasseur de patrouille",
   "category": "light",
   "hp": 150,
   "precision": 70,
@@ -9,18 +9,18 @@
   "signature": 20,
   "base_attack": 40,
   "shots_min": 1,
-  "shots_max": 3,
-  "build_time_base": 60,
+  "shots_max": 2,
+  "build_time_base": 180,
   "costs": {},
-  "speed_system": 50,
-  "speed_galaxy": 500,
+  "speed_system": 65,
+  "speed_galaxy": 650,
   "fuel_travel_system": 0.5,
   "fuel_travel_galaxy": 2,
   "fuel_orbit": 0.3,
   "cargo_capacity": 0,
   "unlock_requirements": {},
   "provisional": true,
-  "note": "Navigation et équilibrage provisoires ; fighter et stealth_fighter reprennent les stats de combat documentées.",
+  "note": "Profil de mobilité et de combat différencié, équilibrage validé le 02/11/2026 et à mesurer en Alpha.",
   "fuel_capacity": 700,
   "fuel_capacity_provisional": true,
   "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 700 H. Réservoir réservé au carburant, distinct de la soute de fret.",
@@ -29,7 +29,7 @@
     "intermediate": {
       "technologies": [
         {
-          "slug": "advanced_propulsion",
+          "slug": "vector_propulsion",
           "tier": "basic",
           "level": 5
         }
@@ -45,7 +45,7 @@
     "superior": {
       "technologies": [
         {
-          "slug": "advanced_propulsion",
+          "slug": "vector_propulsion",
           "tier": "intermediate",
           "level": 10
         }
@@ -76,5 +76,16 @@
       "nano": 938,
       "antimatter": 176
     }
-  }
+  },
+  "tier_labels": {
+    "basic": "Chasseur de patrouille",
+    "intermediate": "Chasseur multirôle",
+    "superior": "Chasseur d’assaut orbital"
+  },
+  "tier_descriptions": {
+    "basic": "Vaisseau de combat standard, rapide et peu coûteux. Il sert à affronter les chasseurs ennemis, intercepteurs et bombardiers, tout en protégeant les unités plus importantes. Armement visible : deux canons laser à impulsions montés sur les ailes, tirant des faisceaux rouges.",
+    "intermediate": "Chasseur multirôle plus réactif, conçu pour escorter les flottes et maintenir la pression sur les unités légères adverses. Il reste efficace contre chasseurs, intercepteurs et bombardiers. Armement visible : deux canons laser à impulsions renforcés sur les ailes, avec tirs rouges plus soutenus.",
+    "superior": "Chasseur d’assaut orbital optimisé pour le combat léger intensif. Il protège les bâtiments majeurs et harcèle les bombardiers avant leur approche. Armement visible : double système de canons laser à impulsions rouges, intégré aux ailes et stabilisé pour les poursuites rapides."
+  },
+  "description": "Unité de combat standard, rapide et peu coûteuse. Le chasseur affronte les chasseurs ennemis, intercepteurs et bombardiers, et protège les unités plus importantes grâce à deux canons laser à impulsions montés sur les ailes."
 }

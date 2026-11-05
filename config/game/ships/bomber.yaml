@@ -1,6 +1,6 @@
 {
   "slug": "bomber",
-  "label": "Bombardier",
+  "label": "Bombardier tactique",
   "category": "bomber",
   "hp": 600,
   "precision": 60,
@@ -10,10 +10,10 @@
   "base_attack": 150,
   "shots_min": 1,
   "shots_max": 2,
-  "build_time_base": 240,
+  "build_time_base": 1200,
   "costs": {},
-  "speed_system": 50,
-  "speed_galaxy": 500,
+  "speed_system": 40,
+  "speed_galaxy": 400,
   "fuel_travel_system": 0.5,
   "fuel_travel_galaxy": 2,
   "fuel_orbit": 0.3,
@@ -22,12 +22,25 @@
     "buildings": [
       {
         "slug": "shipyard",
-        "level": 1
+        "tier": "basic",
+        "level": 4
+      }
+    ],
+    "technologies": [
+      {
+        "slug": "weapons_engineering",
+        "tier": "basic",
+        "level": 3
+      },
+      {
+        "slug": "structural_armor",
+        "tier": "basic",
+        "level": 2
       }
     ]
   },
   "provisional": true,
-  "note": "Navigation et équilibrage provisoires ; fighter et stealth_fighter reprennent les stats de combat documentées.",
+  "note": "Profil de mobilité et de combat différencié, équilibrage validé le 02/11/2026 et à mesurer en Alpha.",
   "fuel_capacity": 1800,
   "fuel_capacity_provisional": true,
   "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 1800 H. Réservoir réservé au carburant, distinct de la soute de fret.",
@@ -36,7 +49,7 @@
     "intermediate": {
       "technologies": [
         {
-          "slug": "weapon_technology",
+          "slug": "weapons_engineering",
           "tier": "basic",
           "level": 5
         }
@@ -52,7 +65,7 @@
     "superior": {
       "technologies": [
         {
-          "slug": "weapon_technology",
+          "slug": "weapons_engineering",
           "tier": "intermediate",
           "level": 10
         }
@@ -83,5 +96,16 @@
       "nano": 3750,
       "antimatter": 704
     }
-  }
+  },
+  "tier_labels": {
+    "basic": "Bombardier tactique",
+    "intermediate": "Bombardier d’assaut",
+    "superior": "Bombardier de percée"
+  },
+  "tier_descriptions": {
+    "basic": "Vaisseau spécialisé dans la destruction des bâtiments lourds. Il inflige d’importants dégâts aux croiseurs, destroyers, cuirassés et vaisseaux capitaux, mais reste vulnérable aux intercepteurs. Armement visible : deux tubes lance-torpilles sous le fuselage, lançant des torpilles à fusion.",
+    "intermediate": "Bombardier d’assaut conçu pour frapper les grandes coques à courte fenêtre d’exposition. Il menace les vaisseaux lourds mais dépend d’une escorte contre les intercepteurs. Armement visible : tubes lance-torpilles renforcés sous le fuselage, avec torpilles à fusion plus lumineuses.",
+    "superior": "Bombardier de percée optimisé pour ouvrir les lignes lourdes ennemies. Il concentre ses frappes sur croiseurs, destroyers, cuirassés et capitaux. Armement visible : doubles tubes lance-torpilles lourds, lançant des torpilles à fusion à forte traînée énergétique."
+  },
+  "description": "Vaisseau de frappe lourde conçu pour détruire les grandes coques. Il cible croiseurs, destroyers, cuirassés et vaisseaux capitaux avec deux tubes lance-torpilles à fusion, mais reste vulnérable aux intercepteurs."
 }

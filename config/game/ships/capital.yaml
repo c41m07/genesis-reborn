@@ -8,12 +8,12 @@
   "evasion": 15,
   "signature": 70,
   "base_attack": 1600,
-  "shots_min": 1,
-  "shots_max": 3,
-  "build_time_base": 3600,
+  "shots_min": 5,
+  "shots_max": 6,
+  "build_time_base": 259200,
   "costs": {},
-  "speed_system": 50,
-  "speed_galaxy": 500,
+  "speed_system": 22,
+  "speed_galaxy": 220,
   "fuel_travel_system": 0.5,
   "fuel_travel_galaxy": 2,
   "fuel_orbit": 0.3,
@@ -22,12 +22,35 @@
     "buildings": [
       {
         "slug": "shipyard",
-        "level": 1
+        "tier": "basic",
+        "level": 18
+      }
+    ],
+    "technologies": [
+      {
+        "slug": "weapons_engineering",
+        "tier": "basic",
+        "level": 12
+      },
+      {
+        "slug": "shield_harmonics",
+        "tier": "basic",
+        "level": 12
+      },
+      {
+        "slug": "rapid_fire_cycle",
+        "tier": "basic",
+        "level": 10
+      },
+      {
+        "slug": "vector_propulsion",
+        "tier": "basic",
+        "level": 10
       }
     ]
   },
   "provisional": true,
-  "note": "Navigation et équilibrage provisoires ; fighter et stealth_fighter reprennent les stats de combat documentées.",
+  "note": "Profil de mobilité et de combat différencié, équilibrage validé le 02/11/2026 et à mesurer en Alpha.",
   "fuel_capacity": 15000,
   "fuel_capacity_provisional": true,
   "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 15000 H. Réservoir réservé au carburant, distinct de la soute de fret.",
@@ -36,7 +59,7 @@
     "intermediate": {
       "technologies": [
         {
-          "slug": "weapon_technology",
+          "slug": "weapons_engineering",
           "tier": "basic",
           "level": 5
         }
@@ -52,7 +75,7 @@
     "superior": {
       "technologies": [
         {
-          "slug": "weapon_technology",
+          "slug": "weapons_engineering",
           "tier": "intermediate",
           "level": 10
         }
@@ -83,5 +106,21 @@
       "nano": 50000,
       "antimatter": 9375
     }
-  }
+  },
+  "secondary_attack": 160,
+  "secondary_shots_min": 1,
+  "secondary_shots_max": 1,
+  "secondary_target_category": "light",
+  "secondary_precision_modifier": 30,
+  "tier_labels": {
+    "basic": "Vaisseau capital",
+    "intermediate": "Dreadnought",
+    "superior": "Vaisseau amiral"
+  },
+  "tier_descriptions": {
+    "basic": "Vaisseau amiral stratégique formant le centre de commandement d’une flotte. Extrêmement résistant, il soutient les alliés et menace les plus grandes structures ennemies. Armement visible : lance énergétique Titan intégré à la proue, avec longue phase de charge avant un rayon dévastateur.",
+    "intermediate": "Dreadnought de commandement capable de concentrer la puissance stratégique d’une flotte. Il menace cuirassés, autres capitaux, stations spatiales et forteresses orbitales. Armement visible : émetteur énergétique Titan renforcé dans la proue, avec charge lumineuse prolongée.",
+    "superior": "Vaisseau amiral ultime, centre de commandement et arme stratégique de flotte. Il domine les engagements contre cuirassés, capitaux et grandes structures orbitales. Armement visible : lance énergétique Titan massif, traversant la proue avec un rayon de charge dévastateur."
+  },
+  "description": "Vaisseau amiral stratégique, extrêmement résistant, servant de centre de commandement de flotte. Il soutient les alliés et menace cuirassés, capitaux, stations spatiales et forteresses orbitales avec un lance énergétique Titan intégré à la proue."
 }

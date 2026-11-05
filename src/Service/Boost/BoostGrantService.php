@@ -51,7 +51,15 @@ final class BoostGrantService
 
     public function inventory(PlayerUniverse $membership): array
     {
-        return $this->repo->boostsFor($membership);
+        return array_values(array_filter(
+            $this->repo->boostsFor($membership),
+            static fn (PlayerBoost $boost): bool => $boost->status === 'available',
+        ));
+    }
+
+    public function pendingCount(PlayerUniverse $membership): int
+    {
+        return $this->repo->countBoosts($membership, 'pending');
     }
 
     public function inventoryCapacity(): int

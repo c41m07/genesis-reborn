@@ -1,6 +1,6 @@
 {
   "slug": "cruiser",
-  "label": "Croiseur",
+  "label": "Croiseur de combat",
   "category": "heavy",
   "hp": 2500,
   "precision": 75,
@@ -8,12 +8,12 @@
   "evasion": 25,
   "signature": 50,
   "base_attack": 500,
-  "shots_min": 1,
-  "shots_max": 3,
-  "build_time_base": 900,
+  "shots_min": 3,
+  "shots_max": 4,
+  "build_time_base": 57600,
   "costs": {},
-  "speed_system": 50,
-  "speed_galaxy": 500,
+  "speed_system": 38,
+  "speed_galaxy": 380,
   "fuel_travel_system": 0.5,
   "fuel_travel_galaxy": 2,
   "fuel_orbit": 0.3,
@@ -22,12 +22,30 @@
     "buildings": [
       {
         "slug": "shipyard",
-        "level": 1
+        "tier": "basic",
+        "level": 10
+      }
+    ],
+    "technologies": [
+      {
+        "slug": "weapons_engineering",
+        "tier": "basic",
+        "level": 8
+      },
+      {
+        "slug": "vector_propulsion",
+        "tier": "basic",
+        "level": 5
+      },
+      {
+        "slug": "structural_armor",
+        "tier": "basic",
+        "level": 5
       }
     ]
   },
   "provisional": true,
-  "note": "Navigation et équilibrage provisoires ; fighter et stealth_fighter reprennent les stats de combat documentées.",
+  "note": "Profil de mobilité et de combat différencié, équilibrage validé le 02/11/2026 et à mesurer en Alpha.",
   "fuel_capacity": 6000,
   "fuel_capacity_provisional": true,
   "fuel_capacity_note": "Capacité différenciée proposée, provisoire : 6000 H. Réservoir réservé au carburant, distinct de la soute de fret.",
@@ -36,7 +54,7 @@
     "intermediate": {
       "technologies": [
         {
-          "slug": "advanced_propulsion",
+          "slug": "vector_propulsion",
           "tier": "basic",
           "level": 5
         }
@@ -52,7 +70,7 @@
     "superior": {
       "technologies": [
         {
-          "slug": "advanced_propulsion",
+          "slug": "vector_propulsion",
           "tier": "intermediate",
           "level": 10
         }
@@ -83,5 +101,21 @@
       "nano": 14063,
       "antimatter": 2637
     }
-  }
+  },
+  "secondary_attack": 70,
+  "secondary_shots_min": 1,
+  "secondary_shots_max": 1,
+  "secondary_target_category": "light",
+  "secondary_precision_modifier": 30,
+  "tier_labels": {
+    "basic": "Croiseur de combat",
+    "intermediate": "Croiseur d’artillerie",
+    "superior": "Croiseur de bataille"
+  },
+  "tier_descriptions": {
+    "basic": "Vaisseau de ligne polyvalent formant la colonne vertébrale des flottes. Il offre un bon équilibre entre puissance de feu, résistance et portée, et combat efficacement frégates, croiseurs et destroyers. Armement visible : batteries de canons à plasma disposées sur les deux flancs.",
+    "intermediate": "Croiseur d’artillerie capable de soutenir durablement une ligne de bataille. Il échange de larges bordées contre frégates, croiseurs et destroyers. Armement visible : batteries latérales de canons à plasma renforcées.",
+    "superior": "Croiseur de bataille optimisé pour les affrontements prolongés. Il conserve une grande polyvalence de ligne et peut tenir le centre d’une flotte. Armement visible : longues batteries de canons à plasma sur les flancs, capables de tirer des bordées coordonnées."
+  },
+  "description": "Vaisseau de ligne polyvalent, équilibré en puissance, résistance et portée. Il forme la colonne vertébrale des flottes et cible frégates, croiseurs et destroyers avec des batteries latérales de canons à plasma."
 }
