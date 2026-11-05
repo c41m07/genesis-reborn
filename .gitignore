@@ -37,8 +37,7 @@ yarn-error.log
 .DS_Store
 Thumbs.db
 
-# Illustrations du catalogue non utilisées par l’application
-/public/images/catalog/
+# Brouillons d’illustrations et aperçus locaux
 /docs/artwork/pilot-previews/*.png
 /docs/artwork/pilot-previews/**/*.png
 /docs/artwork/pilot-previews/*.jpg
