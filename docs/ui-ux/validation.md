@@ -1,5 +1,15 @@
 # Validation UI/UX
 
+## Lot 9 — messagerie et formulaires de compte
+
+- Paramètres actuels observés dans Edge, fenêtre 954×710, avant regroupement. Aucun réglage local soumis.
+- `make assets` et lint des 49 gabarits Twig réussis.
+- Projet isolé `genesis-browser-test-1793843439-145563` : contact et échange privés réussis; signalement replié puis ouvert au clavier, motif envoyé, CSRF invalide refusé, dossier classé et message masqué; profil avec erreur de mot de passe explicite, identifiants conservés, pseudo enregistré, session fermée et reconnexion réussie. Champs de nouveau mot de passe laissés vides.
+- Profil sans débordement à 1920/1440/1280/768/390; messagerie sans débordement à 390. Captures du profil, des paramètres sombres et de la messagerie à 390 px inspectées et conservées.
+- Première exécution des préférences : persistance thème/fuseau/mouvement/alertes réussie, mais largeur document mesurée à 477 px immédiatement après redimensionnement à 390. Nouveau contrôle après capture stabilisée dans `genesis-browser-test-1793843600-147129` : largeur conforme et retour au thème sombre réussi. Cause exacte de la mesure transitoire non identifiée; aucune correction CSS additionnelle revendiquée.
+- Capture finale claire à 390 px inspectée. Images conservées dans `docs/ui-ux/captures/2026-11-05/` sous le préfixe `lot9-`.
+- Non couverts : changement réel de mot de passe, conversation de guilde, historique long et toutes les erreurs de préférences. Aucune page marquée VALIDÉE intégralement.
+
 ## Lot 8 — rapports et suivi admin
 
 - Observation native Edge du détail du retour existant : contexte et formulaire visibles dans une fenêtre 954×710; textarea gris natif confirmé. Aucun statut ni note locale modifié; journalisation de consultation conservée.

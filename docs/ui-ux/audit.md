@@ -1,5 +1,13 @@
 # Audit UI/UX — Genesis Reborn
 
+## Lot 9 — conversations et compte
+
+| Page | Problème | Impact | Cause | Amélioration | Critère de réussite | Gravité / fréquence |
+|---|---|---|---|---|---|---|
+| Messagerie | Formulaire de signalement déployé sous chaque message reçu; textarea sans surface thématique dédiée | Lecture chargée et rédaction peu lisible | Formulaire répété dans les deux branches; style natif du textarea | Composant Twig commun dans un volet natif et textarea basé sur les tokens | Lecture sans champs de signalement ouverts; ouverture clavier et signalement fonctionnels; envoi privé préservé | Modérée / régulière |
+| Profil | Identifiants, mots de passe et confirmation sans regroupement; erreur générale sans résumé annoncé | Modification et correction difficiles à comprendre | `form_widget` global sans hiérarchie métier visible | Trois fieldsets, explication du mot de passe facultatif et de la déconnexion, résumé d’erreur | Champs conservés après erreur; modification sans nouveau mot de passe et reconnexion possibles | Modérée / occasionnelle |
+| Préférences | Réglages hétérogènes empilés; message d’erreur au tutoiement et contenu d’erreur imbriqué dans un paragraphe | Repérage et correction moins clairs | Regroupement incomplet dans le gabarit | Groupes affichage/horloge, raccourcis, confort; erreur en bloc d’alerte et vouvoiement | Préférences persistantes, cases associées aux labels, rendu sombre/clair et responsive | Modérée / occasionnelle |
+
 ## Lot 8 — rapports et traitement d’un retour
 
 | Page | Problème | Impact | Cause | Amélioration | Critère de réussite | Gravité / fréquence |

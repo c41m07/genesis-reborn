@@ -1,5 +1,13 @@
 # Design system — Genesis Reborn
 
+## Formulaires de compte et conversations
+
+- `account-panel` : panneau de compte borné à 900 px, champs organisés en deux colonnes puis une sous 600 px.
+- `account-section` : fieldset et legend pour regrouper les champs associés; espacement et séparateur communs. La confirmation du profil explique la déconnexion existante.
+- Résumé d’erreur dans un bloc `role="alert"`; erreurs natives Symfony et identifiants des champs conservés.
+- `ui/message_report.html.twig` reçoit `message` et `peer_id` : même formulaire de signalement pour privé et guilde, dans un `details` natif. Le champ de motif ne s’affiche qu’après ouverture; jeton, action et identifiant du message conservés.
+- La rédaction emploie les tokens `--bg`, `--text` et `--line`, qui suivent le thème. Les noms longs peuvent revenir à la ligne dans l’en-tête de conversation.
+
 ## Rapports et suivi administrateur
 
 - Données numériques comparables : chiffres tabulaires, séparateurs de milliers et alignement à droite dans le tableau des pertes; l’unité est un en-tête de ligne.

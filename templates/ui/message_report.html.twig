@@ -1,0 +1,12 @@
+<details class="message-report">
+    <summary>Signaler ce message</summary>
+    <form method="post">
+        <input type="hidden" name="_token" value="{{ csrf_token('private_message_report') }}">
+        <input type="hidden" name="action" value="report">
+        <input type="hidden" name="message_id" value="{{ message.id }}">
+        {% if peer_id %}<input type="hidden" name="with" value="{{ peer_id }}">{% endif %}
+        <label for="message-reason-{{ message.id }}">Motif du signalement</label>
+        <input id="message-reason-{{ message.id }}" name="reason" maxlength="500" required>
+        <button class="secondary">Signaler</button>
+    </form>
+</details>

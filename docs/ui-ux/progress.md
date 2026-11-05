@@ -5,8 +5,8 @@
 | Indicateur | Valeur actuelle |
 |---|---:|
 | Pages découvertes (gabarits/surfaces) | 35 |
-| Pages auditées | 25 (14 visuelles navigateur, 11 statiques) |
-| Pages modifiées dans le cadre UI/UX de cette mission | 11 |
+| Pages auditées | 28 (16 visuelles navigateur, 12 statiques) |
+| Pages modifiées dans le cadre UI/UX de cette mission | 14 |
 | Pages conservées après audit | 0 |
 | Pages validées selon les critères exhaustifs | 0 |
 | Pages bloquées | 0 |
@@ -56,11 +56,11 @@
 - Breakpoints étendus à 1280 px. Vérifications locales réussies à 1440, 1280, 768 et 390 px; elles ont été rejouées dans un environnement réellement isolé au lot 7.
 - Aucun changement de mise en page jugé nécessaire sur la seule observation desktop; les captures compactes et l’audit clavier de la carte restent à faire.
 
-Le dépôt comporte déjà de nombreuses modifications préexistantes, non attribuées à cette mission. Les compteurs ne les assimilent pas à des pages traitées. Couverture d’audit : **71 %** (25/35), dont onze audits uniquement statiques. Ce pourcentage ne mesure pas la fin de la refonte.
+Le dépôt comporte déjà de nombreuses modifications préexistantes, non attribuées à cette mission. Les compteurs ne les assimilent pas à des pages traitées. Couverture d’audit : **80 %** (28/35), dont douze audits uniquement statiques. Le décompte visuel a été réconcilié au lot 9 pour retirer un doublon avant/après. Ce pourcentage ne mesure pas la fin de la refonte.
 
 ## Couverture
 
-- Joueur : 20 surfaces découvertes; 12 auditées (10 avec rendu réel, 2 statiques), aucune validée selon les critères exhaustifs.
+- Joueur : 20 surfaces découvertes; 15 auditées (12 avec rendu réel, 3 statiques), aucune validée selon les critères exhaustifs.
 - Administration : 6 surfaces découvertes; 4 auditées, aucune validée.
 - Authentification/erreurs : 9 surfaces découvertes (dont 2 états du lien de réinitialisation); 9 auditées statiquement, aucune vérifiée visuellement.
 - Accès de test : la session navigateur déjà connectée a accès aux écrans joueur et à `/admin` en rôle administrateur. Aucun compte de test créé; le compte joueur distinct reste non vérifié.
@@ -69,7 +69,16 @@ Le dépôt comporte déjà de nombreuses modifications préexistantes, non attri
 
 ## Prochaine action concrète
 
-Auditer la messagerie et les écrans de profil/préférences; traiter ensuite la navigation admin mobile volumineuse. Les écarts de schéma locaux restent à diagnostiquer séparément.
+Traiter la navigation admin mobile volumineuse et auditer les notes de version joueur/admin, puis les dernières surfaces découvertes. Les écarts de schéma locaux et l’attente asynchrone du rapport restent ouverts.
+
+## Lot 9 — messagerie, profil et préférences
+
+- Messagerie : signalement dans un volet natif accessible au clavier, même composant Twig en privé/guilde; rédaction thématique et noms longs sécables.
+- Profil : groupes identifiants/mot de passe facultatif/confirmation, avertissement sur la déconnexion existante et résumé d’erreur.
+- Préférences : groupes affichage/horloge, raccourcis et confort, présentation sombre/claire partagée et erreur en bloc d’alerte.
+- Build et lint des 49 gabarits réussis. Dans `genesis-browser-test-1793843439-145563`, contact privé, modération clavier/CSRF et profil erreur/sauvegarde/reconnexion réussis; mesure initiale du thème clair à 477 px pour un viewport de 390 px.
+- Contrôle clair rejoué dans `genesis-browser-test-1793843600-147129` : succès après stabilisation par la capture, sans changement CSS supplémentaire. Cause de la première mesure transitoire non établie. Quatre captures à 390 px conservées et revues sous le préfixe `lot9-`.
+- Aucun compte local ni réglage utilisateur existant modifié. Tests réalisés avec des comptes jetables; nouveau mot de passe laissé vide lors du test de profil.
 
 ## Lot 7 — classement et filtres des retours administrateur
 

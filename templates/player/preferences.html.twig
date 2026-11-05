@@ -1,3 +1,18 @@
 {% extends 'base.html.twig' %}
 {% block title %}Paramètres · Genesis Reborn{% endblock %}
-{% block body %}<section class="panel narrow"><p class="eyebrow">PERSONNALISATION</p><h1>Paramètres</h1><p>Ces réglages s’appliquent à votre compte et à cette interface.</p>{{ form_start(form) }}{% if form.vars.submitted and not form.vars.valid %}<p class="form-error" role="alert"><strong>Paramètres non enregistrés.</strong> Corrige les champs signalés puis réessaie.{{ form_errors(form) }}</p>{% endif %}{{ form_row(form.theme) }}{{ form_row(form.timezone) }}<h2>Raccourcis de la galaxie</h2><p>Choisissez la vitesse initiale des missions rapides. Vous pourrez encore l’ajuster depuis l’écran des flottes.</p>{{ form_row(form.galaxySpySpeed) }}{{ form_row(form.galaxyColonizeSpeed) }}<div class="preference-toggle">{{ form_widget(form.reducedMotion) }}{{ form_label(form.reducedMotion) }}{{ form_errors(form.reducedMotion) }}</div><div class="preference-toggle">{{ form_widget(form.realtimeNotifications) }}{{ form_label(form.realtimeNotifications) }}{{ form_errors(form.realtimeNotifications) }}</div><div class="preference-toggle">{{ form_widget(form.showLockedItems) }}{{ form_label(form.showLockedItems) }}{{ form_errors(form.showLockedItems) }}</div><button class="primary full">Enregistrer les paramètres</button>{{ form_end(form) }}<p><a class="profile-preferences-link" href="{{ path('app_profile') }}">Retour au profil</a></p></section>{% endblock %}
+{% block body %}
+<section class="panel account-panel">
+    <p class="eyebrow">PERSONNALISATION</p><h1>Paramètres</h1><p>Ces réglages s’appliquent à votre compte et à cette interface.</p>
+    {{ form_start(form) }}
+    {% if form.vars.submitted and not form.vars.valid %}<div class="form-error" role="alert"><strong>Paramètres non enregistrés.</strong><p>Corrigez les champs signalés puis réessayez.</p>{{ form_errors(form) }}</div>{% endif %}
+    <fieldset class="account-section"><legend>Affichage et horloge</legend><div class="account-grid">{{ form_row(form.theme) }}{{ form_row(form.timezone) }}</div></fieldset>
+    <fieldset class="account-section"><legend>Raccourcis de la galaxie</legend><p>Choisissez la vitesse initiale des missions rapides. Vous pourrez encore l’ajuster depuis l’écran des flottes.</p><div class="account-grid">{{ form_row(form.galaxySpySpeed) }}{{ form_row(form.galaxyColonizeSpeed) }}</div></fieldset>
+    <fieldset class="account-section"><legend>Confort de lecture</legend>
+        <div class="preference-toggle">{{ form_widget(form.reducedMotion) }}{{ form_label(form.reducedMotion) }}{{ form_errors(form.reducedMotion) }}</div>
+        <div class="preference-toggle">{{ form_widget(form.realtimeNotifications) }}{{ form_label(form.realtimeNotifications) }}{{ form_errors(form.realtimeNotifications) }}</div>
+        <div class="preference-toggle">{{ form_widget(form.showLockedItems) }}{{ form_label(form.showLockedItems) }}{{ form_errors(form.showLockedItems) }}</div>
+    </fieldset>
+    <button class="primary full">Enregistrer les paramètres</button>{{ form_end(form) }}
+    <p class="account-footer"><a class="profile-preferences-link" href="{{ path('app_profile') }}">Retour au profil</a></p>
+</section>
+{% endblock %}

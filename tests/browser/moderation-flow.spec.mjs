@@ -29,7 +29,7 @@ async function login(page, credentials) {
   await page.getByRole('button', { name: /Connexion/ }).click();
 }
 
-test('Modération : signaler un message, refuser un CSRF invalide et classer le dossier', async ({ page, browser }) => {
+test('Modération : signaler un message, refuser un CSRF invalide et classer le dossier', async ({ page, browser }, testInfo) => {
   test.setTimeout(120000);
   const reporterPage = await browser.newPage();
   const sender = await registerAndJoin(page, 'Moderateur');
@@ -46,7 +46,14 @@ test('Modération : signaler un message, refuser un CSRF invalide et classer le 
   await reporterPage.getByRole('link', { name: new RegExp(sender.username) }).click();
   const message = reporterPage.locator('.message-thread article').filter({ hasText: body });
   await expect(message).toBeVisible();
-  await message.getByLabel('Signaler ce message').fill('Vérification du parcours de modération');
+  await reporterPage.setViewportSize({ width: 390, height: 900 });
+  expect(await reporterPage.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await expect(message.locator('.message-report')).not.toHaveAttribute('open', '');
+  await reporterPage.screenshot({ path: testInfo.outputPath('messages-390.png'), fullPage: true, animations: 'disabled' });
+  await message.locator('.message-report summary').focus();
+  await reporterPage.keyboard.press('Enter');
+  await expect(message.getByLabel('Motif du signalement')).toBeVisible();
+  await message.getByLabel('Motif du signalement').fill('Vérification du parcours de modération');
   await message.getByRole('button', { name: 'Signaler', exact: true }).click();
   await expect(reporterPage.getByRole('status')).toContainText('Signalement transmis à la modération');
 
@@ -80,7 +87,8 @@ test('Modération : signaler un message, refuser un CSRF invalide et classer le 
   await reporterPage.goto('/messages');
   await reporterPage.getByRole('link', { name: new RegExp(sender.username) }).click();
   const secondMessage = reporterPage.locator('.message-thread article').filter({ hasText: body });
-  await secondMessage.getByLabel('Signaler ce message').fill('Vérification du masquage après modération');
+  await secondMessage.locator('.message-report summary').click();
+  await secondMessage.getByLabel('Motif du signalement').fill('Vérification du masquage après modération');
   await secondMessage.getByRole('button', { name: 'Signaler', exact: true }).click();
   await expect(reporterPage.getByRole('status')).toContainText('Signalement transmis à la modération');
   await page.reload();
@@ -93,6 +101,6 @@ test('Modération : signaler un message, refuser un CSRF invalide et classer le 
 
   await reporterPage.reload();
   await expect(reporterPage.locator('.message-thread')).toContainText('[Message masqué après modération]');
-  await expect(reporterPage.getByLabel('Signaler ce message')).toHaveCount(0);
+  await expect(reporterPage.getByLabel('Motif du signalement')).toHaveCount(0);
   await reporterPage.close();
 });

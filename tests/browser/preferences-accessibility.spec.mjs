@@ -1,6 +1,6 @@
 import { test, expect } from './support/isolated-test.mjs';
 
-test('Préférences accessibles : mouvement réduit, alertes désactivées et fuseau persistant', async ({ page }) => {
+test('Préférences accessibles : mouvement réduit, alertes désactivées et fuseau persistant', async ({ page }, testInfo) => {
   const id = crypto.randomUUID().slice(0, 8);
   const email = 'preferences-ui-' + id + '@example.test';
   const password = 'Browser-test-2026!';
@@ -36,6 +36,14 @@ test('Préférences accessibles : mouvement réduit, alertes désactivées et fu
   await expect(page.locator('.server-clock small')).toContainText('Europe/Paris');
   await expect(page.getByLabel('Réduire les animations de l’interface')).toBeChecked();
   await expect(page.getByLabel('Afficher les alertes de jeu en temps réel')).not.toBeChecked();
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.screenshot({ path: testInfo.outputPath('preferences-light-390.png'), fullPage: true, animations: 'disabled' });
+  const layout = await page.evaluate(() => ({ width: document.documentElement.scrollWidth,
+    offenders: [...document.querySelectorAll('body *')].map(element => {
+      const bounds = element.getBoundingClientRect();
+      return { tag: element.tagName, class: typeof element.className === 'string' ? element.className : '', right: bounds.right, width: bounds.width };
+    }).filter(element => element.width > 0 && element.right > innerWidth + 1).slice(0, 12) }));
+  expect(layout.width, JSON.stringify(layout.offenders)).toBeLessThanOrEqual(390);
   await page.getByLabel('Thème de l’interface').selectOption('dark');
   await page.getByRole('button', { name: 'Enregistrer les paramètres' }).click();
   await expect(page.locator('body')).toHaveAttribute('data-theme', 'dark');
