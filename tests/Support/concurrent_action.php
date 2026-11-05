@@ -1,6 +1,7 @@
 <?php
 require dirname(__DIR__,2).'/tests/bootstrap.php';
 $kernel=new App\Kernel('test',true);$kernel->boot();$container=$kernel->getContainer()->get('test.service_container');
+$container->set('clock',new Symfony\Component\Clock\MockClock($argv[4]));
 $em=$container->get(Doctrine\ORM\EntityManagerInterface::class);$params=$em->getConnection()->getParams();
 if(($params['host']??'')!=='database-test'||($params['dbname']??'')!=='genesis_v2_test') exit(99);
 try {

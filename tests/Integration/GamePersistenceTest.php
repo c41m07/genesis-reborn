@@ -139,7 +139,9 @@ final class GamePersistenceTest extends KernelTestCase
     {
         $clock = new \Symfony\Component\Clock\MockClock('2026-11-02T00:00:00Z');self::getContainer()->set('clock',$clock);
         $p=$this->player();$planet=$this->join($p);$this->ships($planet,['probe'=>1]);$m=$p->currentPlayerUniverse;
-        $systems=$this->em->getRepository(\App\Entity\SolarSystem::class)->findBy(['galaxy'=>$planet->solarSystem->galaxy],['id'=>'ASC']);$target=$systems[1];
+        $systems=$this->em->getRepository(\App\Entity\SolarSystem::class)->findBy(['galaxy'=>$planet->solarSystem->galaxy],['id'=>'ASC']);
+        $unknownSystems=array_values(array_filter($systems,fn($system)=>!$this->em->getRepository(\App\Entity\PlayerDiscovery::class)->count(['playerUniverse'=>$m,'solarSystem'=>$system])));
+        self::assertNotEmpty($unknownSystems);$target=$unknownSystems[0];
         $eventService=self::getContainer()->get(\App\Service\Boost\BoostEventService::class);$eventService->tick();
         $service=self::getContainer()->get(\App\Service\Fleet\FleetService::class);
         $quote=$service->quote($m,$planet,'explore',$target->id,['probe'=>1],.5);
@@ -609,7 +611,9 @@ final class GamePersistenceTest extends KernelTestCase
     private function concurrentProcesses(Player $p,Planet $planet,array $keys): array
     {
         $processes=[];
-        foreach($keys as $key) { $process=new \Symfony\Component\Process\Process([PHP_BINARY,dirname(__DIR__).'/Support/concurrent_action.php',(string)$p->currentPlayerUniverse->id,(string)$planet->id,$key]);$process->setTimeout(30);$process->start();$processes[]=$process; }
+        // Les processus restent concurrents, mais leur temps métier n'avance pas pendant leur démarrage.
+        $instant=(new \DateTimeImmutable())->format('Y-m-d H:i:s.uP');
+        foreach($keys as $key) { $process=new \Symfony\Component\Process\Process([PHP_BINARY,dirname(__DIR__).'/Support/concurrent_action.php',(string)$p->currentPlayerUniverse->id,(string)$planet->id,$key,$instant]);$process->setTimeout(30);$process->start();$processes[]=$process; }
         return array_map(fn($process)=>$process->wait(),$processes);
     }
     public function testConcurrentDoubleSubmissionChargesAndCreatesOnlyOnce(): void
