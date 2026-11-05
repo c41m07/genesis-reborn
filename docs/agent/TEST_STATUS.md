@@ -1,4 +1,32 @@
-# Validation du projet — 2 novembre 2026
+# Validation du projet
+
+## État vérifié — 5 novembre 2026
+
+L’utilisateur a confirmé la conservation des règles et valeurs actuelles. Aucun fichier de `config/game/` n’est modifié par ces corrections.
+
+| Vérification | Résultat final |
+|---|---|
+| `make validate` | Réussite — configuration Compose. |
+| `make lint` | Réussite — PHP, YAML, Twig, conteneur et schéma Doctrine synchronisé. |
+| `make assets` (`npm run build`) | Réussite — compilation de production Encore. |
+| `make test` | **192 tests, 202 850 assertions, aucune erreur ni aucun échec.** |
+| Playwright, lots isolés et reprises ciblées | **87 scénarios actuels sur 87 ont chacun réussi.** |
+| `node --check` sur les tests navigateur modifiés et `git diff --check` | Réussite. |
+
+Le résultat Playwright est une couverture consolidée de plusieurs exécutions, et non une exécution unique entièrement verte de `make test-browser`. Le lot de 75 scénarios a terminé avec 65 réussites et dix échecs ; les dix scénarios concernés ont ensuite passé après correction dans des reprises isolées. Les douze autres scénarios ont également passé dans les lots dédiés au catalogue, à la colonie et aux comptes/flottes. La correspondance des noms de fichiers et de scénarios a été vérifiée avec les 87 entrées de `npx playwright test --list`. Les lots et reprises utilisent `bash scripts/test-browser-isolated.sh <fichiers>`, éventuellement avec `--grep`, chacun dans une base temporaire distincte. Tous ces environnements temporaires ont été retirés à leur arrêt.
+
+Corrections applicatives :
+
+- Espionnage : accès à l’univers par le système solaire et la galaxie de la planète, dans les quatre catégories de l’instantané. Un nouveau test déterministe vérifie les libellés surchargés par univers ; les trois tests ciblés passent (31 assertions). Le parcours navigateur PNJ passe également. Le worker local a été redémarré après validation.
+- Schéma : migration `Version20261105181020` appliquée en local, retirant les commentaires de type hérités sur les dates de `patch_note` et `user_feedback`, et alignant deux noms d’index. Aucune table ni colonne supprimée. Les nouvelles bases navigateur ont également exécuté cette migration.
+- Catalogue administrateur : les technologies de statistiques et de cadence exposent le plafond commun réellement utilisé, à la place de l’ancien effet par niveau ignoré. Le test d’intégration vérifie la modification effective du bonus et l’isolation entre univers.
+- Accessibilité : le nom accessible du résumé « Renommer cette planète » inclut désormais son texte visible et le nom de la colonie. L’audit axe des écrans applicatifs passe à 1440 et 390 px.
+
+Les tests obsolètes ont été adaptés aux prérequis achevés, aux rendements décroissants, aux statistiques R14, aux coûts actuels, au ratio de protection et aux durées contrôlées des scénarios de boost. Les parcours navigateur utilisent les libellés et sélecteurs actuels, les recherches de joueurs/guildes et les trois onglets d’alliances. La consultation du laboratoire et du chantier dans les scénarios utilise l’option existante d’affichage des éléments verrouillés ; leur visibilité dans le jeu n’a pas été modifiée.
+
+La campagne PHP avant correction comptait 191 tests, douze échecs et quatre erreurs. La première campagne navigateur avait été arrêtée pour corriger les attentes obsolètes : 22 réussites, six échecs, un scénario interrompu et 58 non exécutés. Ces résultats sont remplacés par le bilan consolidé ci-dessus. Les journaux bruts et captures des nouvelles exécutions restent dans les temporaires locaux, sans ajout d’illustrations au dépôt.
+
+Les résultats du 2 novembre ci-dessous sont conservés comme historique.
 
 ## Derniers résultats
 
