@@ -1,5 +1,12 @@
 # Design system — Genesis Reborn
 
+## Navigation admin et édition de notes
+
+- Menu admin inline : sous 760 px, bouton de 44 px minimum, panneau replié initialement, états ARIA synchronisés, Échap et retour de focus. Navigation permanente au-dessus; tous les liens restent visibles sans JavaScript.
+- Le panneau n’est pas une modale et ne piège pas le focus. La destination principale accepte un focus programmatique pour les liens internes.
+- Notes : création et édition en `details` natifs; résumé titre/version/statut, formulaire de contenu pleine largeur et suppression dans une zone séparée. Lecture joueur via un `details` avec nom contextualisé.
+- Token destructif admin `--danger` : `#ff8f8f` en sombre, `#9f2936` en clair. Contrastes calculés sur les panneaux prévus, non mesure globale du rendu.
+
 ## Formulaires de compte et conversations
 
 - `account-panel` : panneau de compte borné à 900 px, champs organisés en deux colonnes puis une sous 600 px.

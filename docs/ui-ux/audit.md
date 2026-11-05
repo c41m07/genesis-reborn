@@ -1,5 +1,14 @@
 # Audit UI/UX — Genesis Reborn
 
+## Lot 10 — navigation mobile et notes de version
+
+| Page | Problème | Impact | Cause | Amélioration | Critère de réussite | Gravité / fréquence |
+|---|---|---|---|---|---|---|
+| Layout admin | Navigation entière empilée avant le contenu sur mobile | Défilement important avant toute tâche | Sidebar desktop simplement empilée | Menu inline repliable sous 760 px avec bouton, Échap et gestion du focus; fallback sans JS | Titre de page avant 250 px au chargement, liens accessibles et état annoncé | Modérée / régulière — corrigé et testé |
+| Notes joueur/admin | En-tête composé de trois enfants flex indépendants; titres longs | Hiérarchie et retours de ligne irréguliers | Structure différente des pages principales | Regroupement commun et retour de mots longs | Titre et description dans le même flux sans débordement | Modérée / occasionnelle — captures revues |
+| Notes admin | Création et toutes les éditions déployées, textarea natif, suppression peu distincte | Liste longue et opérations difficiles à distinguer | Formulaires toujours ouverts et styles incomplets | Volets natifs, résumé titre/version/statut, champs thématiques et zone destructive séparée | Création, édition, publication et lecture préservées; confirmation de suppression conservée | Modérée / occasionnelle — parcours réussis, suppression non déclenchée |
+| Création après erreur | Statut et date saisis réinitialisés dans le formulaire | Risque de devoir ressaisir ou de changer le statut involontairement | Options et valeur de date non liées au brouillon | Restituer statut/date et rouvrir le volet après POST | Statut publié et date conservés lors d’un titre vide | Modérée / occasionnelle — test isolé réussi |
+
 ## Lot 9 — conversations et compte
 
 | Page | Problème | Impact | Cause | Amélioration | Critère de réussite | Gravité / fréquence |

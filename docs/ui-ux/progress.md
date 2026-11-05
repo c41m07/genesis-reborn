@@ -5,8 +5,8 @@
 | Indicateur | Valeur actuelle |
 |---|---:|
 | Pages découvertes (gabarits/surfaces) | 35 |
-| Pages auditées | 28 (16 visuelles navigateur, 12 statiques) |
-| Pages modifiées dans le cadre UI/UX de cette mission | 14 |
+| Pages auditées | 30 (18 visuelles navigateur, 12 statiques) |
+| Pages modifiées dans le cadre UI/UX de cette mission | 16 |
 | Pages conservées après audit | 0 |
 | Pages validées selon les critères exhaustifs | 0 |
 | Pages bloquées | 0 |
@@ -56,12 +56,12 @@
 - Breakpoints étendus à 1280 px. Vérifications locales réussies à 1440, 1280, 768 et 390 px; elles ont été rejouées dans un environnement réellement isolé au lot 7.
 - Aucun changement de mise en page jugé nécessaire sur la seule observation desktop; les captures compactes et l’audit clavier de la carte restent à faire.
 
-Le dépôt comporte déjà de nombreuses modifications préexistantes, non attribuées à cette mission. Les compteurs ne les assimilent pas à des pages traitées. Couverture d’audit : **80 %** (28/35), dont douze audits uniquement statiques. Le décompte visuel a été réconcilié au lot 9 pour retirer un doublon avant/après. Ce pourcentage ne mesure pas la fin de la refonte.
+Le dépôt comporte déjà de nombreuses modifications préexistantes, non attribuées à cette mission. Les compteurs ne les assimilent pas à des pages traitées. Couverture d’audit : **86 %** (30/35), dont douze audits uniquement statiques. Le décompte visuel a été réconcilié au lot 9 pour retirer un doublon avant/après. Ce pourcentage ne mesure pas la fin de la refonte.
 
 ## Couverture
 
-- Joueur : 20 surfaces découvertes; 15 auditées (12 avec rendu réel, 3 statiques), aucune validée selon les critères exhaustifs.
-- Administration : 6 surfaces découvertes; 4 auditées, aucune validée.
+- Joueur : 20 surfaces découvertes; 16 auditées (13 avec rendu réel, 3 statiques), aucune validée selon les critères exhaustifs.
+- Administration : 6 surfaces découvertes; 5 auditées, aucune validée.
 - Authentification/erreurs : 9 surfaces découvertes (dont 2 états du lien de réinitialisation); 9 auditées statiquement, aucune vérifiée visuellement.
 - Accès de test : la session navigateur déjà connectée a accès aux écrans joueur et à `/admin` en rôle administrateur. Aucun compte de test créé; le compte joueur distinct reste non vérifié.
 - Scénarios navigateur isolés : breakpoints généraux, routes joueur, catalogue admin, formulaire événements, parcours flotte, carte V2, état vide de diplomatie et ancres diplomatiques réussis. Les scénarios V2 et diplomatie couvrent aussi le débordement à 390 px. Cela n’élève pas les pages à VALIDÉE sans audit visuel et accessibilité complets.
@@ -69,7 +69,16 @@ Le dépôt comporte déjà de nombreuses modifications préexistantes, non attri
 
 ## Prochaine action concrète
 
-Traiter la navigation admin mobile volumineuse et auditer les notes de version joueur/admin, puis les dernières surfaces découvertes. Les écarts de schéma locaux et l’attente asynchrone du rapport restent ouverts.
+Auditer le catalogue admin et les écrans joueur encore découverts : inventaire de boosts, événements, envoi de retour et choix d’univers. Puis confirmer les audits statiques et les variantes non testées. Les écarts de schéma locaux et l’attente asynchrone du rapport restent ouverts.
+
+## Lot 10 — navigation admin et notes de version
+
+- Navigation admin inline repliable sous 760 px : bouton explicite, Échap, restitution du focus et fermeture après navigation; permanente sur desktop. Sans JavaScript, les liens restent accessibles.
+- Notes joueur : en-tête harmonisé, titres longs sécables, détail natif contextualisé.
+- Notes admin : création/édition en volets, champs sombres lisibles, statut/date conservés après erreur et suppression séparée avec confirmation existante. Aucun contrôleur ni règle de publication modifié.
+- Build et 49 gabarits Twig valides. Trois scénarios réussis dans `genesis-browser-test-1793844166-148637` : événements responsive, navigation clavier/sans JS, notes brouillon/publication/lecture. Notes rejouées après finition visuelle destructive dans `genesis-browser-test-1793844344-149941` : succès.
+- Trois captures 390 px revues et conservées sous `lot10-`. Contrastes théoriques du bouton destructif : 7,89:1 en sombre et 7,38:1 en clair avec les fonds prévus; rendu clair admin non inspecté.
+- Les templates de notes appartiennent à une fonctionnalité préexistante non suivie par Git. Leurs modifications restent dans l’arbre de travail; les fichiers métier associés ne sont pas absorbés dans le commit UI.
 
 ## Lot 9 — messagerie, profil et préférences
 

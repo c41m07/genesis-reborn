@@ -1,5 +1,15 @@
 # Validation UI/UX
 
+## Lot 10 — navigation admin et notes
+
+- Build et vérification des 49 gabarits Twig réussis. Projet temporaire `genesis-browser-test-1793844166-148637` : trois scénarios réussis (événements responsive, navigation admin, notes de version).
+- Navigation à 390 px : titre principal avant 250 px, menu fermé initialement, ouverture Entrée, fermeture Échap avec focus restitué, ancre Modération activée et menu fermé après navigation vers les notes. À 1920/1440/1280/768, liens permanents et aucun débordement. Sans JS, navigation et liens toujours visibles.
+- Notes : joueur refusé à l’admin, état public vide, erreur de création avec statut/date conservés, création brouillon invisible au joueur, édition/publication, lecture détaillée au clavier et absence de débordement aux cinq largeurs.
+- Après séparation visuelle de la suppression, scénario de notes rejoué dans `genesis-browser-test-1793844344-149941` : succès. Bouton non activé; confirmation `confirm` existante conservée.
+- Captures à 390 px revues et conservées dans `docs/ui-ux/captures/2026-11-05/` : `lot10-admin-nav-closed-390.png`, `lot10-patchnotes-player-390.png`, `lot10-patchnotes-admin-390.png`.
+- Contrastes calculés : destructif sombre sur panneau sombre 7,89:1; destructif clair sur blanc 7,38:1. Ce calcul ne remplace pas l’inspection du thème clair admin, non effectuée ici.
+- Restent : suppression effective, publication programmée, recherche/filtrage complet et nombreux univers dans le menu. Aucun compte ni contenu réel modifié par les tests.
+
 ## Lot 9 — messagerie et formulaires de compte
 
 - Paramètres actuels observés dans Edge, fenêtre 954×710, avant regroupement. Aucun réglage local soumis.
