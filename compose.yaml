@@ -3,6 +3,9 @@ x-app: &app
   build:
     context: .
     dockerfile: docker/dev/Dockerfile
+    args:
+      LOCAL_UID: ${LOCAL_UID:-1000}
+      LOCAL_GID: ${LOCAL_GID:-1000}
   image: genesis-reborn-v2-app:local
   working_dir: /app
   volumes: [".:/app"]
