@@ -83,7 +83,7 @@ test('Modération : signaler un message, refuser un CSRF invalide et classer le 
   expect(invalidDecision.html).toContain('role="alert"');
   expect(invalidDecision.html).toContain('Décision de modération inconnue.');
   await report.getByRole('button', { name: 'Classer sans suite' }).click();
-  await page.reload();
+  await expect(page.locator('#admin-reports [data-admin-filter-target="row"]')).toHaveCount(0);
   await expect(page.locator('main')).toContainText('Aucun signalement à traiter.');
 
   await reporterPage.goto('/messages');
@@ -98,7 +98,7 @@ test('Modération : signaler un message, refuser un CSRF invalide et classer le 
   const secondReport = page.locator('article.panel').filter({ hasText: body }).last();
   await expect(secondReport).toContainText('Vérification du masquage après modération');
   await secondReport.getByRole('button', { name: 'Masquer le message' }).click();
-  await page.reload();
+  await expect(page.locator('#admin-reports [data-admin-filter-target="row"]')).toHaveCount(0);
   await expect(page.locator('main')).toContainText('Aucun signalement à traiter.');
 
   await reporterPage.reload();
