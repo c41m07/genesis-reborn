@@ -63,7 +63,8 @@ test('Conquête PNJ : rapport détaillé, résultat, responsive et confidentiali
     return page.locator('[data-status="attacking"]').count();
   }, { timeout: 45000, intervals: [1000] }).toBe(1);
 
-  const expireCombat = "UPDATE combat_event SET started_at=UTC_TIMESTAMP()-INTERVAL 2 MINUTE, resolve_at=UTC_TIMESTAMP()-INTERVAL 2 SECOND WHERE status='pending' AND planet_id=" + targetId;
+  // Dépasser les dix rounds d'une minute, même si le combat ne finit pas dès les premiers rounds.
+  const expireCombat = "UPDATE combat_event SET started_at=UTC_TIMESTAMP()-INTERVAL 11 MINUTE, resolve_at=UTC_TIMESTAMP()-INTERVAL 2 SECOND WHERE status='pending' AND planet_id=" + targetId;
   sql(project, expireCombat);
   const dispatchCombatNow = "INSERT INTO outbox_message (kind, target_id, token, due_at) SELECT 'combat', id, dispatch_token, UTC_TIMESTAMP()-INTERVAL 2 SECOND FROM combat_event WHERE status='pending' AND planet_id=" + targetId;
   sql(project, dispatchCombatNow);
