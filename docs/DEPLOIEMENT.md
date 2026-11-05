@@ -6,6 +6,20 @@ après leur réussite, le job `publish` construit `docker/prod/Dockerfile` et pu
 Le résumé du job indique aussi la référence immuable avec digest.
 Les pull requests ne publient aucune image.
 
+La validation utilise cinq jobs en parallèle : un pour PHP et le lint, quatre
+pour les tests navigateur répartis avec `--shard=N/4`. Chaque lot navigateur
+conserve un seul worker, son runner et sa base jetable ; tous les lots doivent
+réussir avant la publication. Les 87 scénarios sont conservés. Les couches de
+l'image PHP de test, les dépendances PHP verrouillées et les téléchargements npm
+sont mis en cache. Le premier passage remplit les caches ; la durée dépend aussi
+de la disponibilité des runners GitHub.
+
+Pour exécuter un lot localement :
+
+```bash
+make test-browser BROWSER_ARGS='--shard=1/4'
+```
+
 Le workflow `Deploy Genesis Reborn` est manuel par défaut. Il transfère le Compose
 de production et le script par SSH, télécharge l'image, arrête les processus
 applicatifs, applique les migrations puis démarre et vérifie les services.

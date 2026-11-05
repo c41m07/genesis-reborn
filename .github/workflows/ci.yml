@@ -11,9 +11,34 @@ concurrency:
 jobs:
   quality:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - suite: php
+            shard: 0
+          - suite: browser
+            shard: 1
+          - suite: browser
+            shard: 2
+          - suite: browser
+            shard: 3
+          - suite: browser
+            shard: 4
+    name: quality (${{ matrix.suite }}, lot ${{ matrix.shard }})
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Set up Node.js and npm cache
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Cache locked PHP dependencies
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php84-vendor-${{ hashFiles('composer.json', 'composer.lock', 'symfony.lock') }}
       - name: Prepare isolated Docker networks and local secrets
         run: |
           echo "LOCAL_UID=$(id -u)" >> "$GITHUB_ENV"
@@ -22,26 +47,46 @@ jobs:
           docker network create mail_network || true
           docker run -d --name genesis-ci-traefik --network traefik_network -p 80:80 -v /var/run/docker.sock:/var/run/docker.sock traefik:v3.7.17@sha256:321153f6f732f912cf5c6f0597fe38743fc7895d482d7d8804a479ae0403e151 --providers.docker=true --providers.docker.exposedbydefault=false --entrypoints.web.address=:80
           make configure
-      - name: Validate Compose and build containers
-        run: make validate build
+      - name: Validate Compose
+        run: make validate
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
+      - name: Build and cache PHP image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
+        with:
+          context: .
+          file: docker/dev/Dockerfile
+          load: true
+          tags: genesis-reborn-v2-app:local
+          build-args: |
+            LOCAL_UID=${{ env.LOCAL_UID }}
+            LOCAL_GID=${{ env.LOCAL_GID }}
+          cache-from: type=gha,scope=genesis-ci-php
+          cache-to: type=gha,scope=genesis-ci-php,mode=max
       - name: Install locked PHP and frontend dependencies
         run: make install
       - name: Build production assets
         run: make assets
       - name: Start infrastructure and web application
+        if: matrix.suite == 'php'
         run: docker compose --env-file .env.local up -d --wait app database rabbitmq mercure
       - name: Apply migrations and import reference universe
+        if: matrix.suite == 'php'
         run: make migrate import
       - name: Start consumers after database initialization
+        if: matrix.suite == 'php'
         run: make start
       - name: PHP test suite
+        if: matrix.suite == 'php'
         run: make test
       - name: Static and schema checks
+        if: matrix.suite == 'php'
         run: make lint
       - name: Browser suite in disposable project
+        if: matrix.suite == 'browser'
         run: |
           npx playwright install --with-deps chromium
-          make test-browser
+          make test-browser BROWSER_ARGS="--shard=${{ matrix.shard }}/4"
       - name: Show service diagnostics on failure
         if: failure()
         run: |
@@ -62,7 +107,7 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - name: Define image
         id: image
         env:

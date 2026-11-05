@@ -52,7 +52,7 @@ lint: ## Vérifier PHP, Twig, YAML, conteneur et schéma
 	$(EXEC) php bin/console doctrine:schema:validate
 
 test-browser: ## Vérifier les parcours navigateur dans une base MariaDB éphémère isolée
-	bash scripts/test-browser-isolated.sh
+	bash scripts/test-browser-isolated.sh $(BROWSER_ARGS)
 verify-install: ## Vérifier une installation vierge isolée et la persistance après redémarrage
 	bash scripts/verify-install.sh
 backup: ## Sauvegarder la base active en archive gzip avec checksum
