@@ -1,6 +1,6 @@
 # Image et déploiement GitHub Actions
 
-La CI existante exécute les contrôles et les tests. Sur la branche par défaut,
+La CI existante exécute les contrôles et les tests. Sur la branche `alpha` ou la branche par défaut,
 après leur réussite, le job `publish` construit `docker/prod/Dockerfile` et publie
 `ghcr.io/<propriétaire>/<dépôt>:<commit>` avec le `GITHUB_TOKEN` du workflow.
 Le résumé du job indique aussi la référence immuable avec digest.
@@ -55,7 +55,7 @@ Autoriser GitHub Actions à publier des packages et créer l'environnement
 La clé publique correspondante doit figurer dans `authorized_keys` du serveur.
 SSH utilise le port 22. Le répertoire distant est `/opt/docker-compose/genesis-reborn`.
 
-Après une CI réussie sur la branche par défaut, lancer `Deploy Genesis Reborn`
+Après une CI réussie sur `alpha` ou la branche par défaut, lancer `Deploy Genesis Reborn`
 depuis Actions sur cette même branche, et fournir seulement le digest
 `sha256:...` indiqué par la CI. Utiliser l'image construite pour la version du
 Compose sélectionnée. La référence du dernier déploiement réussi est conservée
@@ -68,6 +68,11 @@ Au premier déploiement uniquement, importer les univers de référence :
 cd /opt/docker-compose/genesis-reborn
 docker compose --env-file .env.prod -f compose.prod.yaml run --rm --no-deps --user www-data app php bin/console app:universe:import
 ```
+
+Le workflow manuel doit également exister sur la branche par défaut pour être
+visible et déclenchable depuis GitHub. Si la branche par défaut est encore
+`Main`, y intégrer le workflow ou choisir `alpha` comme branche par défaut
+dans les paramètres du dépôt. Les noms de branches sont sensibles à la casse.
 
 ## Données, échecs et retour arrière
 
