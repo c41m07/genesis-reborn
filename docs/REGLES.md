@@ -180,3 +180,7 @@ Le carburant des missions est séparé des coûts de construction, qui n’ajout
 Cette grille remplace les anciennes répartitions des ressources pour tous les bâtiments, vaisseaux, défenses et recherches : **T1 M60/N40 ; T2 M45/N45/A10 ; T3 M30/N45/A20/H5**, en parts de valeur économique, avec M×2, N×4, A×8 et H×1. Les quantités sont entières, et la valeur réelle de chaque profil de rang de base est conservée. Les prix réels aux niveaux suivants ou après recherche suivent les mêmes courbes et arrondis par ressource qu’auparavant ; de petits écarts de valeur dus à ces arrondis sont possibles.
 
 L’hydrogène industriel est payé à la commande et ne remplit pas un réservoir de vaisseau. Les carburants de mission et les consommations d’hydrogène du réacteur restent des dépenses distinctes. Les profils, contrôles et effets sur la progression sont détaillés dans [COMMON_COSTS_2026-11-05.md](COMMON_COSTS_2026-11-05.md). Les coûts déjà payés en file restent enregistrés et les réglages personnalisés d’univers restent prioritaires.
+
+### Prérequis initial du Fighter
+
+Le Fighter basique (Chasseur de patrouille) nécessite un chantier spatial basique niveau 1 pour son déblocage initial. Les accès déjà acquis sont conservés selon les règles du registre de déblocage.

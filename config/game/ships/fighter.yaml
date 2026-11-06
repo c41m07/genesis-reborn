@@ -18,7 +18,15 @@
   "fuel_travel_galaxy": 2,
   "fuel_orbit": 0.3,
   "cargo_capacity": 200,
-  "unlock_requirements": {},
+  "unlock_requirements": {
+    "buildings": [
+      {
+        "slug": "shipyard",
+        "tier": "basic",
+        "level": 1
+      }
+    ]
+  },
   "provisional": true,
   "note": "Équilibrage R14 adopté pour la branche Alpha le 05/11/2026 ; validation en jeu à poursuivre.",
   "fuel_capacity": 16000,

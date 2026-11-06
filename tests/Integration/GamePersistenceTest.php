@@ -781,7 +781,7 @@ final class GamePersistenceTest extends KernelTestCase
         self::assertEqualsCanonicalizing(['buildings','technologies','ships','defenses'],array_values(array_unique(array_column($nodes,'group'))));
         self::assertContains('buildings:lab-basic',$byKey['technologies:vector_propulsion-basic']['parents']);
         self::assertContains('buildings:shipyard-basic',$byKey['ships:cruiser-basic']['parents']);
-        self::assertNotContains('buildings:shipyard-basic',$byKey['ships:fighter-basic']['parents']);
+        self::assertContains('buildings:shipyard-basic',$byKey['ships:fighter-basic']['parents']);
         foreach($byKey as $node)foreach($node['parents'] as $parent){
             self::assertArrayHasKey($parent,$byKey);
             self::assertLessThan($node['depth'],$byKey[$parent]['depth']);
