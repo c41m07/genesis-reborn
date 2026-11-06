@@ -26,3 +26,5 @@ services:
     Psr\Clock\ClockInterface: '@clock'
 
     App\Integration\Mercure\PublisherInterface: '@App\Integration\Mercure\MercurePublisher'
+
+    Random\Randomizer: ~

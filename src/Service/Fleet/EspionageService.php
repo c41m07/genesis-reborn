@@ -12,7 +12,7 @@ use Psr\Clock\ClockInterface;
 
 final class EspionageService
 {
-    public function __construct(private GameRepository $repo, private GameManager $manager, private GameCatalog $catalog, private ResourceService $resources, private PlanetNpcSeeder $npcSeeder, private NotificationService $notifications, private ClockInterface $clock) {}
+    public function __construct(private GameRepository $repo, private GameManager $manager, private GameCatalog $catalog, private ResourceService $resources, private PlanetNpcSeeder $npcSeeder, private NotificationService $notifications, private ClockInterface $clock, private \Random\Randomizer $randomizer) {}
 
     /** Résout une mission d'espionnage dans la transaction d'arrivée de flotte. */
     public function resolve(Fleet $fleet, int $probeCount): EspionageReport
@@ -33,7 +33,7 @@ final class EspionageService
             + (int) ($settings['extra_probe_weight'] ?? 1) * max(0, $probeCount - 1)
             + (int) ($settings['local_probe_weight'] ?? 1) * $this->localProbeCount($target)
         )));
-        $detected = random_int(1, 100) <= $detectionChance;
+        $detected = $this->randomizer->getInt(1, 100) <= $detectionChance;
         $report = new EspionageReport();
         $report->sender = $fleet->playerUniverse;
         $report->target = $target;

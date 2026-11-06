@@ -754,6 +754,8 @@ final class GamePersistenceTest extends KernelTestCase
         }
         $this->em->flush();
         $hydrogen=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$origin,'resourceType'=>'hydrogen']);$hydrogen->currentStock=1000000;$this->em->flush();
+        // Le succès doit être déterministe sans modifier les 5 % de détection du jeu.
+        self::getContainer()->set(\Random\Randomizer::class, new \Random\Randomizer(new \Random\Engine\Mt19937(0)));
         $service = self::getContainer()->get(\App\Service\Fleet\FleetService::class);
         $service->send($sender->currentPlayerUniverse, $origin, 'spy', $target->id, ['probe' => 1], 1, [], str_repeat('e', 32));
         $spyFleet = $this->em->getRepository(\App\Entity\Fleet::class)->findOneBy(['playerUniverse' => $sender->currentPlayerUniverse, 'status' => 'traveling', 'mission' => 'spy']);

@@ -2,7 +2,7 @@
 
 ## État en cours
 
-- Branche courante : `feature/admin-operation-signals`, créée depuis le nouveau `origin/dev` au commit `abae47d`, après fusion du chantier B. Aucun code du chantier C modifié à ce stade.
+- Branche courante : `feature/admin-operation-signals`, créée depuis le nouveau `origin/dev` au commit `abae47d`, après fusion du chantier B. Chantier C publié au commit `c4deb3f`, [PR #4](https://github.com/c41m07/genesis-reborn/pull/4) ouverte vers `dev`, CI en cours.
   Elle a ensuite été avancée sans réécriture vers `366acab`, qui intègre les nouvelles consignes AGENTS.
 - Worktree : `/home/caim/Projets/Genesis_Reborn-account-email`.
 - Les changements du propriétaire dans le checkout original sont préservés.
@@ -80,3 +80,11 @@ Correction C préparée sur `feature/admin-operation-signals` depuis `dev` actua
 Contrôles locaux : validation, lint, construction des assets et suite PHP complète réussis (**210 tests, 205 505 assertions**). Configuration Compose rendue vérifiée. Un volume jetable a aussi été initialisé par le montage applicatif en lecture seule ; les trois processus ont écrit sous `www-data`, puis le service réel de collecte a affiché trois signaux récents avec la base locale isolée. Aucune donnée ni configuration de l’Alpha n’a été utilisée.
 
 Navigateur : les deux lots complets donnent 87 réussites sur 88 ; le retour galaxie du scénario GalaxieV2 échoue lors de transitions animées puis le scénario complet repasse isolément (21,1 secondes), sans modification du code, des assertions ou des délais. Résultat consolidé : 88 scénarios uniques réussis ; la première exécution complète reste en échec et la CI doit être examinée séparément. Aucun commit, push ou PR du chantier C à ce stade. Prochaine action : expliquer cet échec, terminer les contrôles, examiner le diff puis publier le lot et vérifier sa CI avant fusion.
+
+Publication C : commit `c4deb3f`, PR #4 vérifiée avec base `dev`, neuf fichiers attendus dans le diff, aucune revue ni discussion au premier examen. Les onze contrôles GitHub ont démarré ; aucun résultat final de CI annoncé. Cette note de suivi reste locale jusqu’au prochain lot documentaire.
+
+Première CI C sur `c4deb3f` : une exécution PHP réussit, l’autre révèle le caractère aléatoire du test `testSpyMissionConsumesAllProbesAndKeepsReportPrivate` (résultat détecté avec un risque attendu de 5 %). Correction ciblée de testabilité : `EspionageService` reçoit le générateur PHP natif `Randomizer`, sécurisé par défaut ; seul ce test injecte un moteur reproductible dont le premier tirage vaut 45. Le risque de détection reste de 5 %, les assertions de succès, de contenu, de consommation et de confidentialité sont conservées. Aucun paramètre d’équilibrage modifié ni dépendance installée. Les 210 tests PHP et 205 505 assertions, validation, lint et construction passent après ce changement ; une nouvelle exécution navigateur est en cours avant publication.
+
+Une exécution navigateur GitHub du lot 2 échoue après colonisation : la fixture accélère l’arrivée immédiatement après le clic d’envoi, avant que l’écran de suivi ne soit prêt. Comme pour les missions d’exploration et de transport du même scénario, le test attend désormais l’affichage d’une flotte en trajet avant accélération. Le délai de 45 secondes, l’achèvement, les mouvements et les assertions de progression restent inchangés. Reprise du fichier requise avant publication.
+
+Contrôles après corrections de CI : **88 tests navigateur réussis sur deux lots complets de 44** (15,0 et 16,2 minutes), sans reprise ciblée ni échec dans cette exécution. Le scénario de colonisation inclut l’attente supplémentaire. Les 210 tests PHP et 205 505 assertions passent intégralement, ainsi que `make validate`, `make lint`, `npm run build` et `git diff --check`. Le diff supplémentaire se limite à l’injection du générateur natif, sa préparation de test, l’attente de trajet et ce suivi. Nouvelle CI requise avant fusion ; aucun déploiement.
