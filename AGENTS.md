@@ -6,7 +6,18 @@
 - Ne pas changer les règles de jeu ou les valeurs d’équilibrage sans décision explicite ; le code décrit le comportement, les décisions produit sont consignées dans [docs/DECISIONS.md](docs/DECISIONS.md) et les règles actuelles dans [docs/REGLES.md](docs/REGLES.md).
 - Lancer d’abord les commandes disponibles dans le [Makefile](Makefile). Vérifications validées : `make validate`, `make lint`, `npm run build`, `make test`, `make test-browser`.
 - Le périmètre livré et les objectifs sont dans [README.md](README.md), [docs/README.md](docs/README.md) et [docs/ROADMAP.md](docs/ROADMAP.md). Les audits dans `docs/agent/` sont historiques, sauf mention contraire.
-- Conserver les logos et les SVG d’identité. Les illustrations matricielles du projet sont absentes volontairement ; les prompts de recréation sont dans [docs/ARTWORK_PROMPTS.md](docs/ARTWORK_PROMPTS.md) et [docs/agent/ASSET_GENERATION_PROMPTS.md](docs/agent/ASSET_GENERATION_PROMPTS.md).
+- Conserver les logos et les SVG d’identité.
+
+## Accessibilité (RGAA) et SEO
+
+- Pour toute modification d’interface, vérifier les points RGAA concernés : structure des titres, libellés des champs, messages d’erreur compréhensibles, navigation au clavier, visibilité du focus et contrastes. Ces vérifications ciblées ne constituent pas à elles seules un audit de conformité RGAA.
+- Donner aux images informatives un texte alternatif pertinent. Pour le logo, utiliser `alt="Genesis Reborn"` ; pour un emblème purement décoratif, utiliser `alt=""` afin qu’il soit ignoré par les lecteurs d’écran. Adapter l’alternative si l’image porte une information ou constitue seule un lien ou un bouton.
+- Prévoir dans le `<head>` une meta description adaptée au contenu de chaque page publique indexable. Pour l’accueil, utiliser : `<meta name="description" content="Genesis Reborn, jeu de stratégie spatiale par navigateur : bâtis ta colonie, explore des systèmes inconnus et forge ton empire.">`.
+- Mettre la page de connexion en `noindex` avec `<meta name="robots" content="noindex">`. Conserver l’indexation de l’accueil et de la page d’inscription. Ne pas bloquer la connexion dans `robots.txt` si cela empêche les moteurs de lire sa directive `noindex`.
+- Renseigner `og:title`, `og:description` et `og:image` pour les pages publiques partageables, avec des valeurs cohérentes avec leur contenu et une URL absolue publiquement accessible pour l’image, afin de permettre les aperçus de liens notamment sur Discord.
+- Maintenir un `robots.txt` et un `sitemap.xml` cohérents avec le domaine de production et les règles d’indexation. Le sitemap doit référencer uniquement les URL canoniques, publiques et indexables ; exclure la connexion et les pages privées.
+- Lors de la mise en production, prévoir la vérification du domaine et la soumission du sitemap dans Google Search Console avec un accès autorisé au compte propriétaire. Ne pas annoncer cette étape comme réalisée sans en avoir vérifié le résultat.
+- Lors d’un changement de template ou de routage concerné, contrôler le HTML rendu (alternatives, métadonnées et directives d’indexation), ainsi que les réponses de `robots.txt` et `sitemap.xml` si elles sont modifiées.
 
 ## Vérifications avant commit ou push
 

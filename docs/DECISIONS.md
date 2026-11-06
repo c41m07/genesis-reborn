@@ -241,3 +241,7 @@ Travail sur dev, sans fusion sur alpha ni déploiement. Migration additive et co
 ### Application locale validée — 6 novembre 2026
 
 Après accord explicite de l’utilisateur, la migration du registre des déblocages est appliquée sur la base locale utilisée par dev, précédée d’une sauvegarde. Les 5 participations existantes sont reprises, puis le contrôle indique zéro participation restante. Les empreintes des données de progression et des files sont identiques avant/après. `make validate` et `make lint` réussissent. Aucun déploiement ni fusion vers Alpha. Voir le [bilan d’application](INITIAL_UNLOCKS_2026-11-06.md#application-locale--6-novembre-2026).
+
+### Fighter : chantier spatial requis — 6 novembre 2026
+
+À la demande explicite de l’utilisateur, le déblocage initial du Fighter basique exige désormais un chantier spatial basique niveau 1. Les conditions des rangs intermédiaire et supérieur restent conservées. Les accès déjà acquis restent régis par le registre persistant existant.
