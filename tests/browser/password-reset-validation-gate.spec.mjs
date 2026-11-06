@@ -3,12 +3,13 @@ import { runIsolatedSql, queryIsolatedSql } from './support/game-fixtures.mjs';
 import AxeBuilder from '@axe-core/playwright';
 
 async function layout(page, testInfo, state) {
+  await page.waitForLoadState('load');
   for (const width of [1920, 1440, 1280, 768, 390]) {
     await page.setViewportSize({ width, height: 900 });
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     for (const control of await page.locator('.auth-card input:not([type=hidden]), .auth-card button, .auth-back a').all()) {
+      await expect.poll(() => control.evaluate(element => element.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
       const box = await control.boundingBox();
-      expect(box.height).toBeGreaterThanOrEqual(44);
       expect(box.x).toBeGreaterThanOrEqual(0);
       expect(box.x + box.width).toBeLessThanOrEqual(width);
     }

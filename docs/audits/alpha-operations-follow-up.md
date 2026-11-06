@@ -2,7 +2,7 @@
 
 ## État en cours
 
-- Branche courante : `feature/pending-relays`, créée depuis `origin/dev` au commit `a372a9d`, après fusion vérifiée du chantier C. Chantier D corrigé et vérifié localement ; PR à créer, aucun déploiement.
+- Branche courante : `feature/pending-relays`, créée depuis `origin/dev` au commit `a372a9d`, après fusion vérifiée du chantier C. Chantier D publié au commit `9771855`, [PR #5](https://github.com/c41m07/genesis-reborn/pull/5) ouverte vers `dev`, CI en cours ; aucun déploiement.
 - Worktree : `/home/caim/Projets/Genesis_Reborn-account-email`.
 - Les changements du propriétaire dans le checkout original sont préservés.
 - Implémentation publiée : commit `2d09960` sur `feature/account-email`.
@@ -121,3 +121,7 @@ La reprise ciblée du nouveau tableau passe aux trois largeurs après correction
 Dernière reprise du nouveau scénario réussie (20,3 secondes), incluant défilement horizontal au clavier et captures cadrées sur la ligne aux trois largeurs. Un autre scénario du lot complet (`research-flow`) a reçu une page 500 pendant une recompilation effectuée par l’agent : le journal du conteneur isolé établit l’absence transitoire de `public/build/entrypoints.json`. Il s’agit d’une interférence de la vérification locale ; aucune recompilation supplémentaire pendant les lots, puis reprise du scénario concerné après leur fin. Ce résultat ne sera pas présenté comme une exécution navigateur complète sans échec.
 
 Contrôles D avant publication : `make validate`, `make lint`, `npm run build` et `git diff --check` réussis ; suite PHP complète finale **215 tests, 205 539 assertions**. Les deux lots navigateur complets totalisent 87 réussites et deux échecs expliqués. Le nouveau diagnostic admin passe après correction CSS, avec défilement clavier et captures aux trois tailles (20,3 secondes) ; la recherche repasse après la fin des lots et de la recompilation (29,0 secondes). Résultat : **89 scénarios uniques validés par résultats consolidés**, et non une première exécution complète sans échec. Les preuves sont locales, pas une validation de l’Alpha ni de la CI. Aucune migration, suppression de message, installation ou opération serveur.
+
+Publication D vérifiée : PR #5, base `dev`, commit `977185589eb2961846be3383de7d13ddeb40ec81`, treize fichiers attendus dans le diff. Aucune revue, commentaire ou discussion au premier examen. Les contrôles GitHub ont démarré ; attendre leur résultat et revérifier le SHA et les discussions avant fusion. Cette note reste locale et accompagnera le lot suivant.
+
+Première CI D : les deux suites PHP passent ; une exécution du lot navigateur 3 échoue sur une mesure immédiate de hauteur après le retour d’un formulaire de réinitialisation et redimensionnement (41 px mesurés pour un seuil de 44), tandis que l’autre exécution de ce lot passe. Le test attend désormais la fin du chargement et interroge la hauteur et la largeur jusqu’à stabilisation, avec les mêmes seuils, les vérifications de position conservées et le délai global inchangé. Le scénario complet repasse localement (24,1 secondes), avec les contrôles fonctionnels et axe ; aucune assertion supprimée ou assouplie. Les autres contrôles locaux réussis portent sur les mêmes fichiers applicatifs, inchangés par cette correction de test. `git diff --check` est relancé avant publication. Nouvelle CI requise avant fusion.
