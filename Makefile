@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 DC = docker compose --env-file .env.local
 EXEC = $(DC) exec -T --user $(shell id -u):$(shell id -g) app
-.PHONY: help configure doctor validate build start stop down status logs shell console install migrate import seed-demo test lint assets watch verify-install test-browser backup restore
+.PHONY: help configure doctor validate build start stop down status logs shell console install migrate import seed-demo test lint assets watch verify-install test-browser backup restore ops-check
 help: ## Afficher les commandes
 	@awk 'BEGIN {FS = ":.*## "} /^[a-z-]+:.*## / {printf "%-16s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 configure: ## Générer les secrets locaux sans écraser l'existant
@@ -59,3 +59,6 @@ backup: ## Sauvegarder la base active en archive gzip avec checksum
 	bash scripts/db-backup.sh
 restore: ## Restaurer BACKUP_FILE après confirmation RESTORE_CONFIRM=<projet Compose>
 	bash scripts/db-restore.sh
+
+ops-check: ## Contrôler les alertes depuis l’hôte (simulation ; OPS_ARGS=--send pour envoyer si activé)
+	bash scripts/operations-check.sh $(OPS_ARGS)

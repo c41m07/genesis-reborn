@@ -28,6 +28,6 @@ RUN composer dump-autoload --no-dev --classmap-authoritative --no-scripts \
  && touch .env \
  && php bin/console assets:install public --no-interaction \
  && rm -rf var/cache/* \
- && mkdir -p var/cache var/log var/run var/sessions \
+ && mkdir -p var/cache var/log var/run var/sessions var/operations \
  && chown -R www-data:www-data var \
  && printf 'date.timezone=UTC\nexpose_php=Off\ndisplay_errors=Off\nlog_errors=On\n' > /usr/local/etc/php/conf.d/genesis.ini
