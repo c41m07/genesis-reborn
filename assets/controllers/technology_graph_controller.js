@@ -4,6 +4,14 @@ export default class extends Controller {
     static targets = ['links', 'node'];
 
     connect() {
+        // Un défilement clavier natif animé peut reprendre après la remise à zéro du filtre.
+        this.handleScrollKey = (event) => {
+            if (event.target !== this.element || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+            if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+            event.preventDefault();
+            this.element.scrollBy({ left: event.key === 'ArrowRight' ? 40 : -40, behavior: 'instant' });
+        };
+        this.element.addEventListener('keydown', this.handleScrollKey);
         this.observer = new ResizeObserver(() => this.draw());
         this.observer.observe(this.element);
         this.nodeTargets.forEach((node) => this.observer.observe(node));
@@ -18,6 +26,7 @@ export default class extends Controller {
     }
 
     disconnect() {
+        this.element.removeEventListener('keydown', this.handleScrollKey);
         this.observer?.disconnect();
         this.filterObserver?.disconnect();
         window.cancelAnimationFrame(this.resetFrame);

@@ -1,5 +1,9 @@
 # Décisions et ambiguïtés — 21 octobre 2026
 
+## Comptes — décision du 6 novembre 2026
+
+Le propriétaire demande un mail de bienvenue et une vérification d’adresse avant l’accès pour les nouveaux comptes. Les comptes déjà présents conservent leur accès lors de la migration. Le parcours, la configuration et les limites sont décrits dans [ACCOUNT_EMAIL.md](ACCOUNT_EMAIL.md).
+
 Les huit PDF (108 pages) sont conservés dans `docs/technic`, avec extraction intégrale paginée par sauts de page dans `docs/specifications`.
 
 ## Références techniques vérifiées

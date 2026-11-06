@@ -10,6 +10,9 @@ final class PlayerUserChecker implements UserCheckerInterface
 {
     public function checkPreAuth(UserInterface $user): void
     {
+        if ($user instanceof Player && $user->emailVerifiedAt === null) {
+            throw new CustomUserMessageAccountStatusException('Confirmez votre adresse email avant de vous connecter.');
+        }
         if ($user instanceof Player && $user->lockedAt !== null) {
             throw new CustomUserMessageAccountStatusException('Ce compte est temporairement suspendu.');
         }

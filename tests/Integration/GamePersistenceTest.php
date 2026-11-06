@@ -896,7 +896,8 @@ final class GamePersistenceTest extends KernelTestCase
             self::assertSame([], $report->snapshot);
             self::assertSame(0, $report->intelCategories);
         } else {
-            self::assertGreaterThan(0, $report->intelCategories);
+            self::assertSame(0, $report->intelCategories);
+            self::assertSame([], $report->snapshot);
         }
         self::assertTrue($target->npcGarrisonInitialized);
         self::assertGreaterThan(0, $this->em->getRepository(\App\Entity\PlanetNpcShip::class)->count(['planet' => $target]));

@@ -12,6 +12,8 @@ Le jeu comprend les comptes et profils, univers et colonies, économie, bâtimen
 
 ## Documentation
 
+Les nouveaux comptes reçoivent un message de bienvenue et un lien de vérification d’adresse valable 24 heures. L’accès nécessite cette vérification ; un renvoi est proposé depuis la connexion. Les comptes antérieurs à cette fonctionnalité conservent leur accès. Le transport (`MAILER_DSN`), l’expéditeur (`MAILER_FROM`) et l’URL publique (`DEFAULT_URI`) doivent être configurés sur chaque environnement. Voir le [parcours de confirmation](docs/ACCOUNT_EMAIL.md).
+
 - [Déploiement GitHub Actions et image GHCR](docs/DEPLOIEMENT.md) : préparation du serveur, secrets et déploiement manuel.
 - [Index documentaire](docs/README.md) : règles, décisions, fonctionnement, audits, validation et limites.
 - [Règles de jeu](docs/REGLES.md) et [décisions confirmées](docs/DECISIONS.md).
