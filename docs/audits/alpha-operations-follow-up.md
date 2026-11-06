@@ -2,7 +2,8 @@
 
 ## État en cours
 
-- Branche courante : `feature/password-reset`, créée depuis le nouveau `origin/dev` au commit `15e8d43`, après fusion du chantier A. Chantier B publié au commit `6316b87`, [PR #3](https://github.com/c41m07/genesis-reborn/pull/3) ouverte vers `dev`, CI en cours.
+- Branche courante : `feature/admin-operation-signals`, créée depuis le nouveau `origin/dev` au commit `abae47d`, après fusion du chantier B. Aucun code du chantier C modifié à ce stade.
+  Elle a ensuite été avancée sans réécriture vers `366acab`, qui intègre les nouvelles consignes AGENTS.
 - Worktree : `/home/caim/Projets/Genesis_Reborn-account-email`.
 - Les changements du propriétaire dans le checkout original sont préservés.
 - Implémentation publiée : commit `2d09960` sur `feature/account-email`.
@@ -36,7 +37,11 @@ Première CI sur `557fc26` : les deux exécutions PHP réussissent (205 tests, 2
 
 Vérification supplémentaire de migration : sur le projet isolé `genesis-account-email`, retour arrière de cette seule migration, insertion d’un compte fictif, puis réapplication réussie. L’adresse et le pseudo sont conservés et `email_verified_at` est bien renseigné. La base de développement du propriétaire et le serveur ne sont pas concernés.
 
-## Chantier B — PR ouverte, CI en cours
+## Chantier B — intégré à dev, non déployé
+
+Conclusion : [PR #3](https://github.com/c41m07/genesis-reborn/pull/3) fusionnée et vérifiée le 6 novembre 2026 à 13 h 52 (Europe/Paris), commit d’intégration `abae47d`. Tous les contrôles GitHub sont réussis sur son dernier commit `f9d11c4` (les deux exécutions PHP et les huit lots navigateur, plus GitGuardian). La PR était `clean`, sans commentaire ni discussion ouverte avant fusion. `origin/dev` a été récupérée au commit d’intégration ; le checkout d’origine et ses 14 changements du propriétaire restent intacts.
+
+Les résultats intermédiaires ci-dessous sont historiques et ne remplacent pas cette conclusion. Le prochain chantier est C : vérifier production, stockage et affichage des signaux d’exploitation. Cette note finale reste locale sur la branche C pour être intégrée à son lot documentaire. Aucun déploiement ni contrôle de réception sur le serveur Alpha réalisé.
 
 Le parcours existait déjà : réponse publique neutre, jeton haché valable une heure, expiration, usage unique et remplacement du mot de passe. Deux défauts de code sont corrigés : expéditeur local codé en dur et URL fondée sur l’hôte de la requête. Le parcours utilise désormais `MAILER_FROM` et `DEFAULT_URI`, comme la confirmation de compte.
 
@@ -56,4 +61,22 @@ CI suivante sur `520bbb3` : une mesure responsive du formulaire d’univers est 
 
 ## Ordre prévu
 
+### Reprise du chantier C
+
+Complexité provisoire : 3/5. État Git vérifié avant examen ; seuls le suivi local et les fichiers générés précédemment sont modifiés dans le worktree. Les trois documents Work nommés dans les nouvelles consignes n’ont pas été trouvés dans les emplacements locaux examinés ; ils n’ont pas été lus et leur contenu ne doit pas être supposé.
+
+Défaut de configuration démontré dans le dépôt : `ProcessHeartbeat` écrit dans `/app/var/run`, et `AdminOperationsService` lit ce même chemin dans le conteneur app. `compose.prod.yaml` ne partage pas ce répertoire entre app, worker, relay et notifier ; seul le volume des sessions est monté sur app. Les healthchecks peuvent donc lire les signaux locaux des processus tandis que l’admin ne les voit pas. Ce constat n’est pas une inspection du serveur Alpha.
+
+Prochaine action : vérifier les droits et l’initialisation du répertoire dans l’image de production, préparer un partage de runtime compatible entre les quatre services, tester cette visibilité et distinguer absence/inconnu/signal périmé sans présenter une absence de fichier comme preuve d’un processus arrêté. Aucune correction applicative ni publication du chantier C à ce stade.
+
 A (comptes/mails), B (réinitialisation), C/D (signaux/relais), E (alertes : canal et seuils à confirmer), F (sauvegardes), G (parcours serveur : accès requis), H (mesures), I (documentation hébergement), J (wiki), K (fermeture). Le README accompagne les changements puis reçoit une vérification finale.
+
+### Sources Work désormais accessibles et avancement C
+
+Les trois sources fournies par le propriétaire ont été lues intégralement le 6 novembre 2026 : prompt maître Work V4, brief Figma Work V2 et protocole de développement adaptatif. Le constat antérieur d’indisponibilité reste historique. Ces références cadrent le programme en quinze phases ; la mission explicite A–K, les branches `feature/*` vers `dev`, la préservation des logos et les décisions métier validées restent applicables. Ce lot contribue aux diagnostics administrateur et à l’exploitation sans prétendre valider une phase complète.
+
+Correction C préparée sur `feature/admin-operation-signals` depuis `dev` actualisé à `366acab` : volume runtime partagé, application en lecture seule et états distincts sans déduire un arrêt de la seule absence de signal. La documentation de diagnostic et deux tests unitaires sont ajoutés.
+
+Contrôles locaux : validation, lint, construction des assets et suite PHP complète réussis (**210 tests, 205 505 assertions**). Configuration Compose rendue vérifiée. Un volume jetable a aussi été initialisé par le montage applicatif en lecture seule ; les trois processus ont écrit sous `www-data`, puis le service réel de collecte a affiché trois signaux récents avec la base locale isolée. Aucune donnée ni configuration de l’Alpha n’a été utilisée.
+
+Navigateur : les deux lots complets donnent 87 réussites sur 88 ; le retour galaxie du scénario GalaxieV2 échoue lors de transitions animées puis le scénario complet repasse isolément (21,1 secondes), sans modification du code, des assertions ou des délais. Résultat consolidé : 88 scénarios uniques réussis ; la première exécution complète reste en échec et la CI doit être examinée séparément. Aucun commit, push ou PR du chantier C à ce stade. Prochaine action : expliquer cet échec, terminer les contrôles, examiner le diff puis publier le lot et vérifier sa CI avant fusion.
