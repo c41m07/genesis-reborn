@@ -11,3 +11,5 @@ Les 12 liens locaux du README et le lien local de ce rapport ont été vérifié
 Chantier B : ajout de la durée et de l’usage unique du lien de réinitialisation, de l’invalidation lors d’une nouvelle demande et du renvoi vers la documentation partagée des mails. Aucune commande, dépendance ou section existante supprimée. Aucun résultat de réception en production annoncé.
 
 Après cet ajout, les 13 liens locaux du README ont été vérifiés sans fichier manquant. Les résultats du chantier B sont consignés dans le suivi Alpha : 208 tests PHP réussis sur une exécution complète et 88 scénarios navigateur validés avec reprises ciblées.
+
+Chantier C : ajout de l’observation des signaux des processus, du partage du runtime en production et de la fréquence de lecture dans l’admin, avec renvoi au nouveau guide de diagnostic. Aucune section supprimée ; l’accès au serveur et son état effectif restent distingués de la configuration versionnée.

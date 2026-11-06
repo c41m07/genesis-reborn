@@ -48,11 +48,13 @@ final class AdminOperationsService
         $processes = [];
         foreach (['worker' => 'Worker de jeu', 'relay' => 'Relais d’événements', 'notifier' => 'Relais de notifications'] as $name => $label) {
             $file = $this->heartbeatDirectory.'/'.$name.'.heartbeat';
+            clearstatcache(true, $file);
             $mtime = is_file($file) ? filemtime($file) : false;
             $ageSeconds = $mtime === false ? null : max(0, $now->getTimestamp() - $mtime);
+            $unknown = is_file($file) && (!is_readable($file) || $mtime === false || $mtime > $now->getTimestamp());
             $processes[] = [
                 'name' => $label,
-                'status' => $ageSeconds === null ? 'missing' : ($ageSeconds <= 45 ? 'healthy' : 'stale'),
+                'status' => $unknown ? 'unknown' : ($ageSeconds === null ? 'missing' : ($ageSeconds < 45 ? 'healthy' : 'stale')),
                 'age_seconds' => $ageSeconds,
                 'last_seen' => $mtime === false ? null : (new \DateTimeImmutable('@'.$mtime))->setTimezone(new \DateTimeZone('UTC')),
             ];

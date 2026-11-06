@@ -8,10 +8,11 @@ x-app: &app
     APP_ENV: prod
     APP_DEBUG: "0"
   networks: [backend]
+  volumes: ["process_runtime:/app/var/run"]
 services:
   app:
     <<: *app
-    volumes: ["sessions:/app/var/sessions"]
+    volumes: ["sessions:/app/var/sessions", "process_runtime:/app/var/run:ro"]
     networks: [backend, traefik]
     depends_on:
       database: {condition: service_healthy}
@@ -128,6 +129,7 @@ services:
       retries: 20
 
 volumes:
+  process_runtime:
   sessions:
   database_data:
   rabbitmq_data:

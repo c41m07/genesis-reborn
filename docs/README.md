@@ -14,6 +14,8 @@ Les objectifs de durée début/milieu/fin, les gains et pertes et les profils PN
 
 ## État et exploitation
 
+- [Signaux des processus](OPERATIONS_SIGNALS.md) : partage du dossier en production, états affichés et diagnostic.
+
 - [Création de compte et confirmation d’adresse](ACCOUNT_EMAIL.md) : configuration des mails, jetons et migration.
 
 - [Déploiement GitHub Actions / GHCR](DEPLOIEMENT.md) : image autonome et déploiement serveur par SSH, à valider sur l'infrastructure cible.
