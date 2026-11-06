@@ -10,6 +10,8 @@ class Player implements UserInterface, PasswordAuthenticatedUserInterface
     public ?int $id = null;
     #[ORM\Column(length: 180, unique: true)]
     public string $email;
+    #[ORM\Column(name: 'email_verified_at', nullable: true)]
+    public ?\DateTimeImmutable $emailVerifiedAt = null;
     #[ORM\Column(length: 40, unique: true)]
     public string $username;
     #[ORM\Column(length: 255)]

@@ -52,6 +52,8 @@ final class PasswordResetTest extends WebTestCase
         $service=static::getContainer()->get(PasswordResetService::class);
         $service->request(' CAPTAIN@example.test ');
         self::assertInstanceOf(Email::class,$message);
+        self::assertSame($_ENV['MAILER_FROM']??'no-reply@genesis-reborn.local',$message->getFrom()[0]->getAddress());
+        self::assertStringContainsString(rtrim($_ENV['DEFAULT_URI'],'/').'/mot-de-passe/reinitialiser/',$message->getTextBody());
         self::assertStringContainsString('valable une heure',$message->getTextBody());
         self::assertMatchesRegularExpression('#https?://[^\s]+/mot-de-passe/reinitialiser/[A-Za-z0-9_-]{40,50}#',$message->getTextBody());
 
@@ -79,6 +81,7 @@ final class PasswordResetTest extends WebTestCase
         $player=$currentEm->find(Player::class,$playerId);
         self::assertTrue(static::getContainer()->get('security.user_password_hasher')->isPasswordValid($player,'Replacement-Password-2026'));
         self::assertFalse(static::getContainer()->get('security.user_password_hasher')->isPasswordValid($player,'Original-Password-2026'));
+        self::assertNull($player->emailVerifiedAt);
     }
 
     public function testUnknownAddressDoesNotSendMailOrRevealAccountExistence():void
@@ -130,6 +133,61 @@ final class PasswordResetTest extends WebTestCase
         $crawler=$this->client->followRedirect();
         self::assertSame($genericMessage,$crawler->filter('.flash.success')->text());
         self::assertCount(1,$this->em->getRepository(PasswordResetToken::class)->findAll());
+    }
+
+    public function testNewRequestInvalidatesPreviousLinkAndIgnoresRequestHost(): void
+    {
+        $this->createPlayer();
+        static::getContainer()->get('router')->getContext()->setHost('untrusted.example.test');
+        $messages=[];
+        $mailer=$this->createMock(MailerInterface::class);
+        $mailer->expects(self::exactly(2))->method('send')->willReturnCallback(function(Email $email)use(&$messages):void{$messages[]=$email;});
+        $container=static::getContainer();
+        $service=new PasswordResetService(
+            $container->get(\App\Manager\GameManager::class),
+            $container->get(\App\Repository\GameRepository::class),
+            $mailer,$container->get('router'),$container->get('security.user_password_hasher'),
+            $container->get('clock'),$container->get('logger'),
+            'https://accounts.example.test','accounts@example.test',
+        );
+        $service->request('captain@example.test');
+        $service->request('captain@example.test');
+        foreach($messages as $message) {
+            self::assertStringNotContainsString('untrusted.example.test',$message->getTextBody());
+            self::assertStringContainsString('https://accounts.example.test/mot-de-passe/reinitialiser/',$message->getTextBody());
+            self::assertSame('accounts@example.test',$message->getFrom()[0]->getAddress());
+        }
+        preg_match('#/reinitialiser/([A-Za-z0-9_-]+)#',$messages[0]->getTextBody(),$first);
+        preg_match('#/reinitialiser/([A-Za-z0-9_-]+)#',$messages[1]->getTextBody(),$second);
+        self::assertFalse($service->isValid($first[1]));
+        self::assertTrue($service->isValid($second[1]));
+        self::assertFalse($service->reset($first[1],'Replacement-Password-2026'));
+    }
+
+    public function testFailedMailPreservesPasswordAndPendingToken(): void
+    {
+        $player=$this->createPlayer();
+        $mailer=$this->createMock(MailerInterface::class);
+        $mailer->expects(self::once())->method('send')->willThrowException(new \Symfony\Component\Mailer\Exception\TransportException('Transport de test indisponible'));
+        static::getContainer()->set(MailerInterface::class,$mailer);
+        static::getContainer()->get(PasswordResetService::class)->request($player->email);
+        self::assertSame(1,$this->em->getRepository(PasswordResetToken::class)->count(['player'=>$player]));
+        self::assertTrue(static::getContainer()->get('security.user_password_hasher')->isPasswordValid($player,'Original-Password-2026'));
+    }
+
+    public function testLockedLookupSeesTokenInvalidatedByAnotherConnection(): void
+    {
+        $player=$this->createPlayer();
+        $token=new PasswordResetToken();$token->player=$player;$token->tokenHash=hash('sha256',str_repeat('a',43));$token->createdAt=new \DateTimeImmutable();$token->expiresAt=new \DateTimeImmutable('+1 hour');
+        $this->em->persist($token);$this->em->flush();
+        $connection=$this->em->getConnection();
+        $other=\Doctrine\DBAL\DriverManager::getConnection($connection->getParams());
+        $connection->beginTransaction();
+        try {
+            self::assertNotNull($this->em->getRepository(PasswordResetToken::class)->findOneBy(['tokenHash'=>$token->tokenHash]));
+            $other->executeStatement('DELETE FROM player_password_reset_token WHERE id = ?',[$token->id]);
+            self::assertNull(static::getContainer()->get(\App\Repository\GameRepository::class)->passwordResetTokenForUpdate($token->tokenHash));
+        } finally { $connection->rollBack();$other->close(); }
     }
 
 }

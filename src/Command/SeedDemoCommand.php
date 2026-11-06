@@ -13,14 +13,14 @@ use Symfony\Component\Console\Output\OutputInterface;
 #[AsCommand(name:'app:seed-demo',description:'Créer explicitement un compte de démonstration (développement local seulement).')]
 final class SeedDemoCommand extends Command
 {
-    public function __construct(private GameRepository $repo,private RegistrationService $registration,private UniverseService $universes,#[Autowire('%kernel.environment%')] private string $environment) { parent::__construct(); }
+    public function __construct(private GameRepository $repo,private RegistrationService $registration,private UniverseService $universes,private \App\Manager\GameManager $manager,#[Autowire('%kernel.environment%')] private string $environment) { parent::__construct(); }
     protected function execute(InputInterface $input,OutputInterface $output): int
     {
         if($this->environment!=='dev') { $output->writeln('Commande réservée à APP_ENV=dev.');return Command::FAILURE; }
         $u=$this->repo->one(Universe::class,['slug'=>'turbo-1']);
         if(!$u) { $output->writeln('Lancer app:universe:import avant le seed.');return Command::FAILURE; }
         $email='explorateur@genesis.local';$p=$this->repo->one(Player::class,['email'=>$email]);
-        if(!$p) { $d=new RegistrationData();$d->email=$email;$d->username='Explorateur';$d->plainPassword='Genesis-Demo-2026!';$p=$this->registration->register($d);$output->writeln('Compte créé : '.$email.' / Genesis-Demo-2026!'); }
+        if(!$p) { $d=new RegistrationData();$d->email=$email;$d->username='Explorateur';$d->plainPassword='Genesis-Demo-2026!';$p=$this->registration->register($d);$p->emailVerifiedAt=new \DateTimeImmutable();$this->manager->flush();$output->writeln('Compte créé : '.$email.' / Genesis-Demo-2026!'); }
         else $output->writeln('Compte existant conservé (mot de passe inchangé).');
         if(!$p->currentPlayerUniverse) $this->universes->select($p,$u->id);
         return Command::SUCCESS;

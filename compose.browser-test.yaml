@@ -2,6 +2,7 @@ services:
   app:
     environment:
       APP_DEBUG: "0"
+      MAILER_DSN: "null://null"
       MERCURE_PUBLIC_URL: "http://${BROWSER_HOST}/.well-known/mercure"
     networks: !override [backend, traefik]
     labels: !override
