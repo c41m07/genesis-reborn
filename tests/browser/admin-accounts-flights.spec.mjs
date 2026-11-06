@@ -186,3 +186,30 @@ test('Flottes actives : aller, retour, noms longs et thème clair', async ({ pag
   await page.locator('.flight-operations').scrollIntoViewIfNeeded();
   await page.screenshot({ path: testInfo.outputPath('fleets-active-light-390.png'), animations: 'disabled' });
 });
+
+
+test('Relais admin : échéance, retard, nature inconnue et lecture mobile sans jeton', async ({page}, testInfo) => {
+  await enter(page, true);
+  const token=crypto.randomUUID();
+  runIsolatedSql(process.env.BROWSER_ROUTER, `INSERT INTO outbox_message (kind,target_id,token,due_at) VALUES ('diagnostic_test',987654,'${token}',UTC_TIMESTAMP()-INTERVAL 5 MINUTE)`);
+  await page.goto('/admin');
+  const details=page.locator('.admin-operations details');
+  await details.locator('summary').focus();await page.keyboard.press('Enter');
+  const row=details.getByRole('row').filter({hasText:'diagnostic_test'});
+  await expect(row).toContainText('#987654');
+  await expect(row).toContainText(/3\d{2} s/);
+  await expect(details).toContainText('ne sont pas enregistrées');
+  await expect(details).not.toContainText(token);
+  for(const width of [1440,768,390]) {
+    await page.setViewportSize({width,height:900});
+    await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    await expect(row).toBeVisible();
+    await row.scrollIntoViewIfNeeded();
+    if(width===390) {
+      const region=details.getByRole('region',{name:'Relais en attente, tableau défilant'});
+      await region.focus();await page.keyboard.press('ArrowRight');
+      await expect.poll(()=>region.evaluate(el=>el.scrollLeft)).toBeGreaterThan(0);
+    }
+    await page.screenshot({path:testInfo.outputPath(`pending-relays-${width}.png`),animations:'disabled'});
+  }
+});

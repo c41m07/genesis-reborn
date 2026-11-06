@@ -13,3 +13,7 @@ Chantier B : ajout de la durée et de l’usage unique du lien de réinitialisat
 Après cet ajout, les 13 liens locaux du README ont été vérifiés sans fichier manquant. Les résultats du chantier B sont consignés dans le suivi Alpha : 208 tests PHP réussis sur une exécution complète et 88 scénarios navigateur validés avec reprises ciblées.
 
 Chantier C : ajout de l’observation des signaux des processus, du partage du runtime en production et de la fréquence de lecture dans l’admin, avec renvoi au nouveau guide de diagnostic. Aucune section supprimée ; l’accès au serveur et son état effectif restent distingués de la configuration versionnée.
+
+Chantier D : ajout du lien vers le diagnostic des relais et des limites des données. La collecte indisponible n’est plus présentée comme une file vide. Aucun paramètre d’équilibrage, commande d’installation ou dépendance changé. La documentation distingue retard après échéance, âge inconnu et tentatives du worker.
+
+Les 15 liens locaux du README existent. Le guide des relais, l’index et la ROADMAP ont aussi leurs liens vérifiés. Contrôles D : 215 tests PHP sur une suite complète, 89 scénarios navigateur validés après reprises ciblées ; les limites de consultation des échecs AMQP et l’absence de vérification des messages réels de l’Alpha sont documentées.

@@ -16,6 +16,7 @@ framework:
         routing:
             'App\Message\QueueItemFinished': async
             'App\Message\FleetArrived': async
+            'App\Message\CombatEventDue': async
             'App\Message\UniverseClosureDue': async
 when@test:
     framework:

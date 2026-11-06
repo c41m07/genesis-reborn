@@ -36,3 +36,7 @@ Les valeurs en configuration sont l’état initial du test. Leur présence ne s
 - Réaliser la revue manuelle d’accessibilité avec lecteur d’écran et cadrer la conformité RGAA/WCAG.
 
 Les critères, preuves et limites sont suivis dans [BLOCKERS.md](agent/BLOCKERS.md), [REQUIREMENTS_MATRIX.md](agent/REQUIREMENTS_MATRIX.md) et [PHASE_15_FINAL_AUDIT.md](agent/PHASE_15_FINAL_AUDIT.md).
+
+## Suivi des relais
+
+Les échéances et retards des publications en attente sont consultables dans l’admin, avec collecte indisponible distinguée d’une file vide. Les tests locaux de reprise et de double livraison sont décrits dans [le guide des relais](OUTBOX.md). Les tentatives et erreurs de publication ne sont pas historisées ; les constats sur les données réelles de l’Alpha restent à établir sur le serveur.
