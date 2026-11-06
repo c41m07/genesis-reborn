@@ -9,6 +9,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
@@ -22,6 +23,8 @@ final class PasswordResetService
         private UserPasswordHasherInterface $hasher,
         private ClockInterface $clock,
         private LoggerInterface $logger,
+        #[Autowire('%env(DEFAULT_URI)%')] private string $baseUrl,
+        #[Autowire('%env(MAILER_FROM)%')] private string $sender,
     ) {}
 
     public function request(string $email):void
@@ -41,9 +44,9 @@ final class PasswordResetService
             $this->manager->save($token);
         });
 
-        $url=$this->urls->generate('app_password_reset',['token'=>$plainToken],UrlGeneratorInterface::ABSOLUTE_URL);
+        $url=rtrim($this->baseUrl,'/').$this->urls->generate('app_password_reset',['token'=>$plainToken]);
         $message=(new Email())
-            ->from('no-reply@genesis-reborn.local')
+            ->from($this->sender)
             ->to($player->email)
             ->subject('Réinitialisation de votre mot de passe Genesis Reborn')
             ->text("Une demande de réinitialisation de mot de passe a été effectuée pour votre compte Genesis Reborn.\n\nCe lien est valable une heure et ne peut être utilisé qu'une fois :\n$url\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez ce message.");
@@ -68,10 +71,11 @@ final class PasswordResetService
         return $this->manager->transaction(function()use($hash,$newPassword):bool{
             $token=$this->repo->one(PasswordResetToken::class,['tokenHash'=>$hash]);
             if(!$token instanceof PasswordResetToken) return false;
-            $this->manager->lock($token);
-            if($token->expiresAt<=$this->clock->now()) return false;
             $player=$token->player;
             $this->manager->lock($player);
+            $token=$this->repo->passwordResetTokenForUpdate($hash);
+            if(!$token instanceof PasswordResetToken) return false;
+            if($token->expiresAt<=$this->clock->now()) return false;
             $player->password=$this->hasher->hashPassword($player,$newPassword);
             foreach($this->repo->all(PasswordResetToken::class,['player'=>$player]) as $playerToken) $this->manager->remove($playerToken);
             return true;

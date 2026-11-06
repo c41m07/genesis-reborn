@@ -86,7 +86,7 @@ test('Univers : création, brouillons conservés, calendrier UTC et univers ferm
   await expect(creation.locator('.admin-draft-notice')).toContainText('déjà ce code');
   for (const width of [1920, 1440, 1280, 768, 390]) {
     await page.setViewportSize({ width, height: 900 });
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
   await creation.scrollIntoViewIfNeeded();
   await page.screenshot({ path: testInfo.outputPath('universe-creation-error-390.png'), animations: 'disabled' });
@@ -129,7 +129,7 @@ test('Univers : création, brouillons conservés, calendrier UTC et univers ferm
   await expect(page.locator('#admin-universes .admin-universe-card:visible')).toHaveCount(1);
   for (const width of [1920, 1440, 1280, 768, 390]) {
     await page.setViewportSize({ width, height: 900 });
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
   await calendar.scrollIntoViewIfNeeded();
   await page.screenshot({ path: testInfo.outputPath('universe-calendar-saved-390.png'), animations: 'disabled' });
@@ -160,7 +160,7 @@ test('Colonies : noms longs, renommage, sélection, raccourcis et état vide', a
   const card = page.locator('#planet-' + extra);
   for (const width of [1920, 1440, 1280, 768, 390]) {
     await page.setViewportSize({ width, height: 900 });
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     for (const title of await page.locator('.planet-index-title h2').all()) expect(await title.evaluate(element => element.scrollWidth - element.clientWidth)).toBeLessThanOrEqual(1);
   }
   await expect(page.locator('.planet-index-card.is-current')).toHaveCount(1);
