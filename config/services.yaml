@@ -8,6 +8,11 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
     env(MAILER_FROM): 'no-reply@genesis-reborn.local'
+    env(OPS_ALERT_ENABLED): '0'
+    env(OPS_ALERT_TO): ''
+    env(OPS_ALERT_SIGNAL_SECONDS): '120'
+    env(OPS_ALERT_RELAY_SECONDS): '300'
+    env(OPS_ALERT_REMINDER_SECONDS): '3600'
 
 services:
     # default configuration for services in *this* file
