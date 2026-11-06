@@ -50,6 +50,8 @@ Pour les scripts exécutés depuis WSL si le domaine local ne se résout pas, ut
 
 ## Commandes principales
 
+Les [scénarios de validation et de reprise](docs/SERVER_SCENARIOS.md) décrivent les essais locaux isolés, la progression sans client connecté et les vérifications restant à mener sur serveur de test. Ils ne constituent pas une validation de l’Alpha hébergée.
+
     make help
     make start
     make stop

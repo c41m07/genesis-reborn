@@ -25,3 +25,7 @@ Vérification E : 16 liens locaux du README, 34 de l’index, 8 de la ROADMAP et
 Chantier F : README complété avec les garanties et limites des sauvegardes, la rétention par défaut, les prérequis des scripts et les commandes backup-status/test-backup. Le test Python est maintenant inclus dans make test et une restauration isolée est prévue dans le lot PHP de la CI. Le guide actif remplace la référence de déploiement à un runbook historique sans réécrire ce dernier.
 
 Vérification F : 17 liens du README, 35 de l’index, 1 du guide de sauvegarde, 3 du guide d’alertes, 2 du déploiement et 9 de la ROADMAP existent. Les nouveaux caches Python et les archives générées sont exclus de Git et du contexte Docker. Les scripts sont validés par tests unitaires et une restauration effective sur deux projets isolés ; ce résultat n’est pas présenté comme un PRA de production.
+
+Chantier G : ajout au README d’un lien vers la matrice active des scénarios serveur. Les preuves locales de progression sans client et de reprise des processus sont séparées des procédures préparées et des validations de l’Alpha restant à exécuter. Aucune commande, dépendance ou règle de jeu modifiée.
+
+Vérification G : 18 liens du README, 36 de l’index, 10 de la ROADMAP et 1 du guide des scénarios existent. Le mode de test à volumes persistants est exécuté localement, avec nettoyage de ses propres volumes vérifié. Les 92 scénarios réussissent en deux lots complets sans reprise ciblée ; les résultats hébergés restent distincts.

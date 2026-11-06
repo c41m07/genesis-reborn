@@ -7,6 +7,7 @@ function resetGameDatabase() {
     throw new Error('La remise à zéro Playwright est autorisée uniquement dans le projet Docker de test isolé.');
   }
   const compose = ['compose', '--project-name', project, '--env-file', '.env.local', '-f', 'compose.yaml', '-f', 'compose.browser-test.yaml'];
+  if (process.env.BROWSER_PERSISTENCE === '1') compose.push('-f', 'compose.browser-persistence.yaml');
   const run = (service, args) => execFileSync('docker', [...compose, 'exec', '-T', service, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
   run('database', ['sh', '-lc', 'mariadb -uroot -p"$MARIADB_ROOT_PASSWORD" -e "DROP DATABASE IF EXISTS genesis_v2; CREATE DATABASE genesis_v2 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; GRANT ALL PRIVILEGES ON genesis_v2.* TO \'genesis\'@\'%\';"']);
   run('app', ['php', 'bin/console', 'doctrine:migrations:migrate', '--no-interaction']);
