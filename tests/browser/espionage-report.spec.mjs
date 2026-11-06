@@ -1,5 +1,5 @@
 import { test, expect } from './support/isolated-test.mjs';
-import { prepareOwnedColony, revealNpcPlanet, accelerateQueuedItem, accelerateTravelingMission } from './support/game-fixtures.mjs';
+import { prepareOwnedColony, revealNpcPlanet, accelerateQueuedItem, accelerateTravelingMission, runIsolatedSql } from './support/game-fixtures.mjs';
 
 async function enter(page) {
   const id = crypto.randomUUID().slice(0, 8);
@@ -24,6 +24,10 @@ test('Espionnage PNJ : envoyer une sonde et consulter le rapport privé', async 
   test.setTimeout(180000);
   const email=await enter(page);
   prepareOwnedColony(process.env.BROWSER_ROUTER,email);
+  // Conditions initiales du chantier ; la construction et la mission restent jouées dans l’interface.
+  const planet = Number(new URL(page.url()).pathname.split('/').pop());
+  runIsolatedSql(process.env.BROWSER_ROUTER, `INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'mine_metal','basic',2)`);
+  runIsolatedSql(process.env.BROWSER_ROUTER, `INSERT INTO player_technology (player_universe_id,slug,tier,level) SELECT owner_id,'naval_engineering','basic',1 FROM planet WHERE id=${planet}`);
   const target = revealNpcPlanet(process.env.BROWSER_ROUTER,email);
   const card = slug => page.locator('#item-'+slug+'-basic');
   await page.getByRole('link', { name: 'Bâtiments', exact: true }).click();

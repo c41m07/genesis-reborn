@@ -1,5 +1,16 @@
 # Validation du projet
 
+## Correction des tests navigateur après les déblocages initiaux — 6 novembre 2026
+
+Sur `dev`, les lots 2/4 et 4/4 ont été reproduits après le commit `db6e374`. Le lot 2 termine à 21 réussites et trois échecs ; le lot 4 à 20 réussites et un échec. Les quatre scénarios concernés passent ensuite dans des reprises ciblées après correction :
+
+- Fiches du catalogue : titre « Déblocage initial de ce rang » ; conditions atteignables de la sonde Supérieure (Cartographie des opérations Intermédiaire niveau 5 et Docks orbitaux modulaires Intermédiaire niveau 10), sans avertissement de condition impossible.
+- Arbre technologique : titre « Déblocage initial » ; navigation clavier, filtres et chaînes de dépendances conservés.
+- Parcours chantier/flottes : ajout de la mine de métal Basique niveau 2 aux données de préparation du chantier.
+- Espionnage PNJ : préparation de la mine de métal Basique niveau 2 et d’Architecture navale Basique niveau 1 avant construction du chantier dans l’interface.
+
+Bilan consolidé : les 45 scénarios des deux lots ont chacun réussi, dont quatre lors de reprises ciblées (2 + 1 + 1). Ce bilan ne représente pas une exécution unique entièrement verte des deux lots. Les lots 1/4 et 3/4 ne sont pas relancés ici. Aucun contrôle n’est supprimé, aucune règle de jeu modifiée. Syntaxe des quatre fichiers MJS et `git diff --check` réussis. Les bases et conteneurs des reprises sont isolés et jetables. Aucune nouvelle CI distante n’est revendiquée.
+
 ## État vérifié — 5 novembre 2026
 
 L’utilisateur a confirmé la conservation des règles et valeurs actuelles. Aucun fichier de `config/game/` n’est modifié par ces corrections.

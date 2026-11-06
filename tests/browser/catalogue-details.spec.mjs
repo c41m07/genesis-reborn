@@ -38,7 +38,7 @@ test('Les 150 fiches expliquent leurs effets, bonus, accès et limites sur ordin
             await expect(dialog).toBeVisible();
             await expect(dialog.locator('.catalog-info-intro')).not.toBeEmpty();
             await expect(dialog.locator('.catalog-info-scope')).toContainText('Portée');
-            await expect(dialog.getByRole('heading', { name: /Conditions d’accès/ })).toBeVisible();
+            await expect(dialog.getByRole('heading', { name: 'Déblocage initial de ce rang', exact: true })).toBeVisible();
             expect(await dialog.locator('.catalog-info-section').count()).toBeGreaterThan(0);
             await expect(dialog.locator('.catalog-info-content')).not.toContainText('[object Object]');
             if (group === 'defenses' && index < 3) {
@@ -86,7 +86,10 @@ test('Les 150 fiches expliquent leurs effets, bonus, accès et limites sur ordin
     await page.keyboard.press('Escape');
 
     dialog = await open('ships', 'probe', 'superior');
-    await expect(dialog).toContainText('Prérequis actuellement inatteignable : le maximum de ce rang est 5.');
+    const access = dialog.getByRole('region', { name: 'Conditions d’accès', exact: true });
+    await expect(access).toContainText('Cartographie des opérations · Intermédiaire · niveau 5 requis');
+    await expect(access).toContainText('Docks orbitaux modulaires · Intermédiaire · niveau 10 requis');
+    await expect(access.locator('.catalog-info-unreachable')).toHaveCount(0);
     await page.keyboard.press('Escape');
 
     for (const width of [768, 390]) {

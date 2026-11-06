@@ -60,7 +60,7 @@ test('Arbre : éléments verrouillés, chaîne de prérequis, filtres, clavier e
   await first.locator('summary').focus();
   await page.keyboard.press('Enter');
   await expect(first).toHaveAttribute('open', '');
-  await expect(first.getByRole('heading', { name: 'Prérequis' })).toBeVisible();
+  await expect(first.getByRole('heading', { name: 'Déblocage initial', exact: true })).toBeVisible();
   const selectedPath = await nodes.evaluateAll(rows => {
     const target = rows.find(row => row.classList.contains('is-search-match'));
     const byKey = new Map(rows.map(row => [row.dataset.nodeKey, row]));
