@@ -45,6 +45,7 @@ Les secrets ne sont jamais copiés dans l'image ni envoyés depuis GitHub.
 Configurer `SYMFONY_TRUSTED_PROXIES` avec le sous-réseau réel de Traefik
 (`docker network inspect traefik_network`), afin que Symfony reconnaisse HTTPS.
 Les URL publiques et `DEFAULT_URI` doivent utiliser le domaine HTTPS retenu.
+Pour les nouvelles inscriptions, configurer aussi `MAILER_FROM` avec un expéditeur autorisé par le fournisseur de `MAILER_DSN`. Le domaine de repli local ne convient pas au serveur. Vérifier la réception et le lien de confirmation avec un compte de test après application de la migration autorisée ; voir [le parcours des mails de compte](ACCOUNT_EMAIL.md).
 L'image et les services ne publient aucun port MariaDB/RabbitMQ sur l'hôte.
 
 Si le package GHCR est privé, authentifier Docker sur le serveur avec un compte
