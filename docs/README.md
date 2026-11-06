@@ -14,6 +14,8 @@ Les objectifs de durée début/milieu/fin, les gains et pertes et les profils PN
 
 ## État et exploitation
 
+- [Sauvegardes et restauration isolée](BACKUPS.md) : conservation, état des jobs, preuve de restauration et limites de reprise.
+
 - [Alertes d’exploitation](OPERATIONS_ALERTS.md) : courriel, seuils, état persistant et job hôte à configurer.
 
 - [Relais en attente et reprise](OUTBOX.md) : échéances, retard, doublons, tentatives et diagnostic.

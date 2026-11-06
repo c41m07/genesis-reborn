@@ -1,5 +1,8 @@
 import { test, expect } from './support/isolated-test.mjs';
 import { execFileSync, spawnSync } from 'node:child_process';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 test('Alertes : arrêt réel du worker isolé, signal récent et simulation sans mail', async () => {
   const project=process.env.BROWSER_ROUTER;
@@ -24,4 +27,19 @@ test('Alertes : arrêt réel du worker isolé, signal récent et simulation sans
     expect(stopped.delivery).toEqual({mode:'simulation',sent:0});
   } finally { execFileSync('docker',[...compose,'up','-d','--wait','worker'],{stdio:'pipe'}); }
   await expect.poll(()=>check().conditions.worker.status).toBe('ok');
+});
+
+
+test('Sauvegarde : échec relayé au contrôle des alertes sans mail réel', async () => {
+  const project=process.env.BROWSER_ROUTER;
+  if(!/^genesis-browser-test-[0-9]+-[0-9]+$/.test(project)) throw new Error('Projet isolé requis.');
+  const directory=mkdtempSync(join(tmpdir(),'genesis-backup-alert-test-'));
+  try {
+    execFileSync('python3',['scripts/backup-tools.py','record','--directory',directory,'--project',project,'--status','failed']);
+    const result=spawnSync('bash',['scripts/operations-check.sh','--send'],{encoding:'utf8',env:{...process.env,COMPOSE_PROJECT_NAME:project,OPS_ENV_FILE:'.env.local',OPS_COMPOSE_FILE:'compose.yaml',GENESIS_PROJECT:project,BACKUP_DIR:directory}});
+    expect(result.status).toBe(1);
+    const snapshot=JSON.parse(result.stdout);
+    expect(snapshot.delivery).toEqual({mode:'simulation',sent:0});
+    expect(snapshot.conditions.backup.status).toBe('alert');
+  } finally { rmSync(directory,{recursive:true,force:true}); }
 });

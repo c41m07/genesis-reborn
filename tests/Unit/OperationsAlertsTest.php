@@ -44,6 +44,16 @@ final class OperationsAlertsTest extends TestCase
         self::assertSame('unknown',$evaluator->evaluate($snapshot,$states,null)['outbox']['status']);
         self::assertSame('unknown',$evaluator->evaluate($snapshot,$states,null)['failed']['status']);
     }
+    public function testBackupFailureAndUnknownCollectionUseExistingAlertChannel(): void
+    {
+        $evaluator=new AlertEvaluator();$states=['worker'=>'running','relay'=>'running','notifier'=>'running'];
+        self::assertSame('alert',$evaluator->evaluate($this->snapshot(),$states,0,'failed')['backup']['status']);
+        self::assertSame('unknown',$evaluator->evaluate($this->snapshot(),$states,0,'unknown')['backup']['status']);
+        self::assertSame('alert',$evaluator->evaluate($this->snapshot(),$states,0,'unknown')['collection']['status']);
+        self::assertSame('ok',$evaluator->evaluate($this->snapshot(),$states,0,'ok')['backup']['status']);
+        self::assertSame('pending',$evaluator->evaluate($this->snapshot(),$states,0,'running')['backup']['status']);
+        self::assertSame('ok',$evaluator->evaluate($this->snapshot(),$states,0,'running')['collection']['status']);
+    }
     public function testGraceReminderRestartUnknownAndRecovery(): void
     {
         $clock=new MockClock('2030-01-01T00:00:00Z');$subjects=[];
@@ -56,6 +66,7 @@ final class OperationsAlertsTest extends TestCase
         $clock->sleep(1);self::assertSame(1,$notifier->run($alert,true)['sent']);
         $notifier=new AlertNotifier($mailer,$clock,$this->directory,true,'ops@example.test','app@example.test','https://game.example.test');
         self::assertSame(0,$notifier->run(['worker'=>['status'=>'unknown','message'=>'Collecte indisponible']],true)['sent']);
+        self::assertSame(0,$notifier->run(['worker'=>['status'=>'pending','message'=>'En cours']],true)['sent']);
         $clock->sleep(3599);self::assertSame(0,$notifier->run($alert,true)['sent']);
         $clock->sleep(1);self::assertSame(1,$notifier->run($alert,true)['sent']);
         $clear=['worker'=>['status'=>'ok','message'=>'Signal revenu']];

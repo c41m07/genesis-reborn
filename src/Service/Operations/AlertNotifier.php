@@ -34,7 +34,7 @@ final class AlertNotifier
             }
             $now=$this->clock->now()->getTimestamp();$sent=0;
             foreach ($conditions as $key=>$condition) {
-                if ($condition['status']==='unknown') continue;
+                if (in_array($condition['status'],['unknown','pending'],true)) continue;
                 $previous=$state[$key]??['since'=>$now,'active'=>false,'last_sent'=>null];
                 if ($condition['status']==='ok') {
                     if ($previous['active']) {

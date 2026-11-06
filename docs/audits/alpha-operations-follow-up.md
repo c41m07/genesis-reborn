@@ -2,8 +2,8 @@
 
 ## État en cours
 
-- Branche courante : `feature/operation-alerts`, créée depuis `origin/dev` au commit `68c8a29`, après fusion vérifiée de D. Chantier E implémenté et contrôlé localement ; publication vers dev à préparer, aucun envoi externe activé.
-- Avancement demandé par le propriétaire : **33 %**, quatre lots intégrés sur douze (A–K et refonte finale du README). Le pourcentage compte les lots fusionnés, pas le temps ni les déploiements.
+- Branche courante : `feature/automated-backups`, créée depuis `origin/dev` au commit `766f2cb`, après fusion vérifiée d’E. Chantier F en audit uniquement ; aucun changement de script ni restauration F exécutée.
+- Avancement demandé par le propriétaire : **42 %**, cinq lots intégrés sur douze (A–K et refonte finale du README). Le pourcentage compte les lots fusionnés, pas le temps ni les déploiements.
 - Worktree : `/home/caim/Projets/Genesis_Reborn-account-email`.
 - Les changements du propriétaire dans le checkout original sont préservés.
 - Implémentation publiée : commit `2d09960` sur `feature/account-email`.
@@ -162,3 +162,41 @@ Construction complète de l’image de production tentée hors réseau : impossi
 Prochaine action : contrôles obligatoires sur le lot figé, puis revue du diff, commit et PR vers dev. Aucun code de jeu, migration ou traitement de message modifié.
 
 Contrôles E finaux sur le lot figé : make validate, make lint, make test (**224 tests, 205 582 assertions**), npm run build, make test-browser (**90 scénarios, deux lots complets de 45 réussis, 15,7 et 16,8 minutes**) et git diff --check réussis. Aucun échec dans cette validation finale complète ; les essais de mise au point précédents restent décrits séparément. Script validé par bash -n ; configuration Compose de production rendue avec volume d’état en écriture. Liens locaux vérifiés : README 16, index 34, ROADMAP 8 et guide 2, aucun absent. La construction complète de l’image de production hors réseau reste non validée pour la raison indiquée ; le runtime dérivé et les droits ont une preuve séparée.
+
+Publication E : PR #6 vérifiée avec base dev et head `d56cc4f949f51182f0c02a2a21d52ef1e61d209b`. Dix-neuf fichiers attendus dans le diff, aucune revue ni discussion au premier examen. Contrôle des secrets réussi ; suites PHP et navigateur en cours. L’adresse privée est absente des fichiers publiés et .env.local est bien ignoré. Aucune action workflow_dispatch de déploiement lancée. Cette note reste locale pour le prochain lot documentaire.
+
+CI E sur d56cc4f : dix contrôles réussis, dernier lot navigateur 2 toujours en cours ; aucun échec. La destination et les seuils sont définis, mais les envois restent désactivés et aucun job n’est installé sur l’Alpha. Attendre le dernier contrôle, revérifier SHA/discussions, puis fusionner uniquement vers dev.
+
+## Chantier E — intégré à dev, non déployé
+
+[PR #6](https://github.com/c41m07/genesis-reborn/pull/6) fusionnée et vérifiée le 6 novembre 2026 à 20 h 38 (Europe/Paris), commit d’intégration `766f2cbe11e7c6a74904f304491719d2fa8d4b73`. Les onze contrôles GitHub réussissent sur `d56cc4f949f51182f0c02a2a21d52ef1e61d209b` : deux suites PHP, huit lots navigateur et GitGuardian. PR `clean`, sans revue, commentaire ni discussion avant fusion. Aucun correctif de CI nécessaire pour E. `origin/dev` récupérée après fusion ; les résultats intermédiaires ci-dessus restent historiques.
+
+Alertes par courriel avec seuils choisis, rappels limités, rétablissement et état persistant préparées. La destination est conservée hors dépôt et les envois restent désactivés. Aucun cron installé, courriel réel envoyé ou déploiement effectué. Le guide décrit activation, droits, observation périodique et limites (surveillance extérieure nécessaire en cas d’indisponibilité globale). La construction complète de l’image de production reste à vérifier dans un environnement autorisé disposant des paquets ; les preuves limitées sur le runtime dérivé ne la remplacent pas.
+
+## Chantier F — audit commencé
+
+Complexité : 5/5, compte tenu des données personnelles, des suppressions de conservation, de la restauration destructive et de la reprise des opérations asynchrones. Branche `feature/automated-backups` créée depuis le nouveau dev `766f2cb`. État Git vérifié, fichiers du propriétaire préservés. Les scripts du worktree sont lus sans modification de contenu.
+
+Existant vérifié : db-backup.sh produit un dump MariaDB transactionnel avec routines/événements/déclencheurs, compression gzip, contrôle gzip et fichier SHA-256 ; droits restrictifs. db-restore.sh exige une confirmation du projet, vérifie gzip et un manifeste SHA-256 puis importe. Aucun mécanisme de planification ou de conservation dans ces scripts. Les erreurs remontent par les codes de sortie et pipefail ; pas encore de preuve de restauration F.
+
+Le runbook trouvé sous docs/agent/RUNBOOK_OPERATIONS.md est une référence historique : il laisse stockage distant, chiffrement et rétention à l’opérateur et affirme que les messages de transport peuvent être reconstruits. L’analyse D n’a trouvé aucune commande générale de réconciliation ; ne pas reprendre cette affirmation sans vérification du code et test. Préserver son contexte historique, créer une procédure active vérifiée dans le lot F.
+
+Prochaine action : comparer en lecture seule les changements locaux des scripts du propriétaire avec la base pour les préserver, définir source et cible de test strictement séparées, reproduire les problèmes de concurrence/nommage et de liaison du checksum à l’archive avant correction, préciser la conservation et les traces d’échec. Tester sauvegarde puis restauration sur une nouvelle instance isolée, sans worker, notifications ou mails réels, et comparer effectivement comptes et progression. Examiner les événements en cours : restaurer la base seule ne prouve pas une reprise des messages déjà publiés dans RabbitMQ. Aucun accès serveur, emplacement distant ou résultat de restauration ne doit être inventé.
+
+Cette conclusion E et cet audit F restent locaux pour accompagner le prochain lot documentaire. F–K et audit final du README restent incomplets.
+
+### F — défauts reproduits et correction préparée
+
+Avant modification, deux défauts démontrés avec faux appels Docker et fichiers temporaires : deux sauvegardes à la même seconde n’en conservaient qu’une ; un manifeste pointant vers un autre gzip permettait l’appel d’import de l’archive non vérifiée. Aucun import réel durant ces reproductions.
+
+La branche F a été avancée sans réécriture de 766f2cb à cb9646e, intégrant la PR propriétaire #7 (consignes RGAA/SEO et prérequis Fighter déjà décidé). AGENTS et changements métier consultés, aucune règle annulée ou modifiée par F. Les modifications originales des deux scripts sont uniquement de mode, sans changement de contenu ; elles restent dans le checkout propriétaire.
+
+Corrections : suffixe unique, verrou de job, manifeste strictement lié au fichier, rétention de 14 jours configurable après nouveau succès seulement, statut atomique conservant dernier succès, contrôle d’ancienneté/intégrité et extension facultative du canal d’alertes existant. Un job normalement en cours ne doit ni échouer artificiellement ni effacer l’incident précédent : le défaut de classification a été reproduit par test puis corrigé avec un état pending, une limite de durée et protection contre les faux rétablissements.
+
+Treize tests Python des scripts et dix tests PHP d’alertes réussis en ciblé. Deux restaurations réelles passent sur des projets neufs générés, avec 38 tables identiques, compte/mot de passe, stocks, bâtiments, recherche, vaisseaux et file en attente vérifiés. Sources inchangées, event_scheduler OFF, aucun consommateur, aucun mail réel. Test permanent ajouté à la CI PHP ; reprise finale sur le code figé et contrôles obligatoires encore à exécuter.
+
+La reprise des messages déjà publiés dans RabbitMQ reste un point distinct, explicitement documenté pour G ; ne pas présenter le test de données restaurées comme un PRA complet. Aucun cron installé, archive de production créée ou restauration de production exécutée.
+
+Contrôles F sur le lot figé : make validate, make lint, npm run build, make test (**225 tests PHP, 205 599 assertions et 13 tests Python**), make test-browser (**91 scénarios, deux lots complets réussis : 48 et 43**, sans reprise sur cette exécution), git diff --check réussis. make test-backup repasse avec 38 tables comparées, compte/mot de passe et progression contrôlés ; nettoyage réussi des seuls projets générés. Bash et YAML du workflow validés, liens actifs vérifiés. Les nouveaux caches Python et archives générées sont ignorés par Git ; archives, manifestes et caches sont également exclus du contexte Docker.
+
+Le propriétaire confirme qu’il n’existe pas de préproduction séparée : seulement l’Alpha et son local. Pour G, préparer puis exécuter les scénarios perturbateurs dans des projets locaux jetables ; ne pas les présenter comme validation du serveur hébergé et ne pas redémarrer la production.

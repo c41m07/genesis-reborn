@@ -9,7 +9,7 @@ final class AlertEvaluator
         #[Autowire('%env(int:OPS_ALERT_SIGNAL_SECONDS)%')] private int $signalSeconds=120,
         #[Autowire('%env(int:OPS_ALERT_RELAY_SECONDS)%')] private int $relaySeconds=300,
     ) { if ($signalSeconds<1 || $relaySeconds<1) throw new \InvalidArgumentException('Seuil d’alerte invalide.'); }
-    public function evaluate(array $snapshot, array $states, ?int $failedCount): array
+    public function evaluate(array $snapshot, array $states, ?int $failedCount, ?string $backupStatus=null): array
     {
         $conditions=[];$unknown=false;
         foreach ($snapshot['processes'] as $index=>$process) {
@@ -35,7 +35,11 @@ final class AlertEvaluator
         }
         $conditions['failed']=['status'=>$failedCount===null?'unknown':($failedCount>0?'alert':'ok'),'message'=>$failedCount===null?'Transport d’échecs indisponible.':$failedCount.' message(s) dans le transport d’échecs.','grace'=>0];
         $unknown=$unknown||$failedCount===null||!$snapshot['database_healthy'];
-        $conditions['collection']=['status'=>$unknown?'alert':'ok','message'=>$unknown?'Un relevé de supervision, de base ou de transport est indisponible ; les états inconnus ne prouvent pas un rétablissement.':'Toutes les collectes sont disponibles.','grace'=>0];
+        if ($backupStatus!==null) {
+            $unknown=$unknown||$backupStatus==='unknown';
+            $conditions['backup']=['status'=>$backupStatus==='running'?'pending':($backupStatus==='unknown'?'unknown':($backupStatus==='ok'?'ok':'alert')),'message'=>$backupStatus==='running'?'Sauvegarde en cours, réussite pas encore confirmée.':($backupStatus==='ok'?'Sauvegarde récente et intégrité vérifiée.':'Sauvegarde échouée, trop ancienne ou contrôle indisponible.'),'grace'=>0];
+        }
+        $conditions['collection']=['status'=>$unknown?'alert':'ok','message'=>$unknown?'Un relevé d’exploitation (processus, base, transport ou sauvegarde) est indisponible ; les états inconnus ne prouvent pas un rétablissement.':'Toutes les collectes sont disponibles.','grace'=>0];
         return $conditions;
     }
 }
