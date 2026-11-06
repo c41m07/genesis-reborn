@@ -130,13 +130,13 @@ final class CatalogueDetailsTest extends KernelTestCase
         self::assertSame(9,GameCatalog::colonyLimit(['basic'=>5,'intermediate'=>10,'superior'=>15],$effect,9));
     }
 
-    public function testUnlocksMatchTheExactResearchRankAndShowFutureMilestones():void
+    public function testInitialUnlocksMatchTheExactResearchRank():void
     {
         $basic=$this->describe('technologies','signature_masking')['unlocks'];
         self::assertNotEmpty(array_filter($basic,static fn(array $u):bool=>$u['slug']==='signature_reduction'&&$u['tier']==='intermediate'&&$u['requiredLevel']===5));
         $intermediate=$this->describe('technologies','signature_masking','intermediate')['unlocks'];
         self::assertEmpty(array_filter($intermediate,static fn(array $u):bool=>$u['slug']==='signature_reduction'&&$u['tier']==='intermediate'));
-        self::assertNotEmpty(array_filter($intermediate,static fn(array $u):bool=>$u['slug']==='signature_reduction'&&$u['tier']==='superior'&&$u['requiredLevel']===10));
+        self::assertNotEmpty(array_filter($intermediate,static fn(array $u):bool=>$u['slug']==='signature_reduction'&&$u['tier']==='superior'&&$u['requiredLevel']===5));
     }
 
     public function testCounterTargetNamesAreGenericAndIndependentOfShipRank():void
@@ -154,20 +154,15 @@ final class CatalogueDetailsTest extends KernelTestCase
         }
     }
 
-    public function testImpossibleRequirementsAreReportedWithoutChangingTheirLevels():void
+    public function testAllInitialRequirementsAreReachableWithinRankCaps():void
     {
-        $count=0;
         foreach(['buildings','technologies','ships','defenses'] as $group)foreach($this->catalog->all($group) as $base)foreach(GameCatalog::TIERS as $tier){
             $details=$this->describe($group,$base['slug'],$tier);
-            if(array_filter($details['requirements'],static fn(array $r):bool=>$r['unreachable']))++$count;
+            self::assertEmpty(array_filter($details['requirements'],static fn(array $r):bool=>$r['unreachable']),$group.'/'.$base['slug'].'/'.$tier);
+            self::assertSame($details['requirements'],$this->describe($group,$base['slug'],$tier,25)['requirements']);
         }
-        self::assertSame(7,$count);
-        $requirements=$this->describe('ships','probe','superior')['requirements'];
-        $blocked=array_values(array_filter($requirements,static fn(array $r):bool=>$r['unreachable']));
-        self::assertCount(1,$blocked);self::assertSame(10,$blocked[0]['required']);self::assertSame(5,$blocked[0]['maximum']);
-        $this->planet->solarSystem->galaxy->universe->gameSettings=['catalog_overrides'=>['technologies'=>['tactical_intelligence'=>['max_level'=>10]]]];
-        $requirements=$this->describe('ships','probe','superior')['requirements'];
-        self::assertEmpty(array_filter($requirements,static fn(array $r):bool=>$r['unreachable']));
+        $blocked=$this->describe('ships','probe','superior')['requirements'];
+        self::assertContains(5,array_column($blocked,'required'));
     }
 
     public function testStorageShowsActualProtectionAndProbeDocumentsMissionConsumption():void

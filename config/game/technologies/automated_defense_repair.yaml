@@ -85,9 +85,9 @@
     "superior": "Réseau autonome de remise en état"
   },
   "tier_descriptions": {
-    "basic": "Permet la reconstruction d’une partie des défenses détruites. Une première méthode établit les bases de cette spécialité.",
-    "intermediate": "Permet la reconstruction d’une partie des défenses détruites. Une approche technique plus intégrée fait progresser cette spécialité.",
-    "superior": "Permet la reconstruction d’une partie des défenses détruites. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées."
+    "basic": "Permet la reconstruction d’une partie des défenses détruites. Une première méthode établit les bases de cette spécialité. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux.",
+    "intermediate": "Permet la reconstruction d’une partie des défenses détruites. Une approche technique plus intégrée fait progresser cette spécialité. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux.",
+    "superior": "Permet la reconstruction d’une partie des défenses détruites. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux."
   },
-  "description": "Permet la reconstruction d’une partie des défenses détruites. Une première méthode établit les bases de cette spécialité."
+  "description": "Permet la reconstruction d’une partie des défenses détruites. Une première méthode établit les bases de cette spécialité. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux."
 }

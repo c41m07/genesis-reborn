@@ -10,34 +10,6 @@
     "antimatter": 0
   },
   "costs_scaling": 1.8,
-  "levels": {
-    "1": {
-      "unlock_requirements": {}
-    },
-    "2": {
-      "unlock_requirements": {
-        "buildings": [
-          {
-            "slug": "power_plant",
-            "tier": "basic",
-            "level": 3
-          },
-          {
-            "slug": "mine_nano",
-            "tier": "basic",
-            "level": 2
-          }
-        ],
-        "technologies": [
-          {
-            "slug": "engineering_foundations",
-            "tier": "basic",
-            "level": 2
-          }
-        ]
-      }
-    }
-  },
   "provisional": true,
   "research_time_reduction_percent_per_level": 2,
   "research_time_reduction_max_percent": 70,
@@ -92,5 +64,6 @@
     "intermediate": "Réduit la durée des recherches. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
     "superior": "Réduit la durée des recherches. Un maillage étendu porte cette fonction à l’échelle planétaire."
   },
-  "description": "Réduit la durée des recherches. Une installation locale assure cette fonction sur la colonie."
+  "description": "Réduit la durée des recherches. Une installation locale assure cette fonction sur la colonie.",
+  "unlock_requirements": {}
 }

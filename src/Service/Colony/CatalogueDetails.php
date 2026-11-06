@@ -19,6 +19,7 @@ final class CatalogueDetails
     public function describe(array $d,string $group,int $target,Planet $planet,array $buildings,array $tech):array
     {
         $details=['intro'=>'','scope'=>'','sections'=>[],'performance'=>[],
+            'acquired'=>$planet->owner!==null && isset($planet->owner->catalogUnlocks[\App\Service\Requirement\CatalogAccess::key($planet,$group,$d['slug'],$d['_tier'])]),
             'requirements'=>$this->accessRequirements($d,$group,$target,$planet,$buildings,$tech),
             'unlocks'=>$this->relatedUnlocks($d,$group,$planet)];
         if($group==='buildings')return array_replace($details,$this->building($d,$target,$planet,$buildings));
@@ -260,8 +261,6 @@ final class CatalogueDetails
     private function accessRequirements(array $d,string $group,int $target,Planet $planet,array $buildings,array $tech):array
     {
         $requirements=$this->requirements->forTier($d,$d['_tier'],$target);
-        if($group==='technologies')$requirements['buildings'][]=['slug'=>'lab','tier'=>'basic','level'=>1];
-        if($group==='ships'&&$d['slug']!=='fighter')$requirements['buildings'][]=['slug'=>'shipyard','tier'=>'basic','level'=>1];
         $result=[];
         foreach(['buildings'=>$buildings,'technologies'=>$tech] as $kind=>$owned)foreach($requirements[$kind]??[] as $r){
             $tier=$r['tier']??'basic';$definition=$this->catalog->getTierForUniverse($planet->solarSystem->galaxy->universe,$kind,$r['slug'],$tier);
@@ -271,8 +270,8 @@ final class CatalogueDetails
             $result[$key]=['label'=>$definition['label'],'tier'=>$definition['_tier_label'],'required'=>(int)$r['level'],'current'=>$current,'met'=>$current>=(int)$r['level'],'maximum'=>$definition['max_level']??null,'unreachable'=>isset($definition['max_level'])&&(int)$r['level']>(int)$definition['max_level']];
         }
         foreach($requirements['ships']??[] as $r){
-            $slug=is_array($r)?$r['slug']:$r;$tier=is_array($r)?($r['tier']??'basic'):'basic';$definition=$this->catalog->withTier($this->catalog->get('ships',$slug),$tier);
-            $result[]=['label'=>'Accès à '.$definition['label'],'tier'=>$definition['_tier_label'],'required'=>null,'current'=>null,'met'=>$this->requirements->check(['ships'=>[$r]],$buildings,$tech)===[],'maximum'=>null,'unreachable'=>false];
+            $slug=is_array($r)?$r['slug']:$r;$tier=is_array($r)?($r['tier']??'basic'):'basic';$definition=$this->catalog->getTierForUniverse($planet->solarSystem->galaxy->universe,'ships',$slug,$tier);
+            $result[]=['label'=>'Accès à '.$definition['label'],'tier'=>$definition['_tier_label'],'required'=>null,'current'=>null,'met'=>$this->requirements->check(['ships'=>[$r]],$buildings,$tech,[],$this->catalog->forUniverse($planet->solarSystem->galaxy->universe)['catalog'])===[],'maximum'=>null,'unreachable'=>false];
         }
         return array_values($result);
     }
@@ -282,8 +281,8 @@ final class CatalogueDetails
         if(!in_array($group,['buildings','technologies'],true))return [];
         $result=[];$universe=$this->catalog->forUniverse($planet->solarSystem->galaxy->universe);
         foreach($universe['catalog'] as $kind=>$definitions)foreach($definitions as $base)foreach(GameCatalog::TIERS as $tier){
-            $definition=$this->catalog->withTier($base,$tier);$milestones=[1,...array_keys($definition['levels']??[])];
-            foreach($milestones as $level)foreach($this->requirements->forTier($definition,$tier,(int)$level)[$group]??[] as $r){
+            $definition=$this->catalog->withTier($base,$tier);
+            foreach($this->requirements->forTier($definition,$tier)[$group]??[] as $r){
                 if($r['slug']!==$d['slug']||($r['tier']??'basic')!==$d['_tier'])continue;
                 $key=$kind.':'.$base['slug'].':'.$tier.':'.$r['level'];
                 $result[$key]=['label'=>$definition['label'],'group'=>$kind,'slug'=>$base['slug'],'tier'=>$tier,'tierLabel'=>$definition['_tier_label'],'requiredLevel'=>(int)$r['level'],'unreachable'=>isset($d['max_level'])&&(int)$r['level']>(int)$d['max_level']];

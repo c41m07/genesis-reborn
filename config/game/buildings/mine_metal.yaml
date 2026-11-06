@@ -10,11 +10,6 @@
   },
   "costs_scaling": 1.8,
   "production_resource": "metal",
-  "levels": {
-    "1": {
-      "unlock_requirements": {}
-    }
-  },
   "provisional": true,
   "tier_unlock_requirements": {
     "intermediate": {
@@ -82,5 +77,6 @@
     "intermediate": "Produit métal. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
     "superior": "Produit métal. Un maillage étendu porte cette fonction à l’échelle planétaire."
   },
-  "description": "Produit métal. Une installation locale assure cette fonction sur la colonie."
+  "description": "Produit métal. Une installation locale assure cette fonction sur la colonie.",
+  "unlock_requirements": {}
 }

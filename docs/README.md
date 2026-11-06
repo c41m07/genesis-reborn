@@ -38,3 +38,5 @@ Les objectifs de durée début/milieu/fin, les gains et pertes et les profils PN
 - Les captures raster de validation ont été retirées le 02/11/2026; les rapports historiques indiquent quand leurs preuves visuelles ne sont plus disponibles.
 
 Les rapports conservés dans ce dépôt sont des preuves ou des spécifications de référence. Les notes de session et bilans remplacés ne constituent pas une source de règles.
+
+- [Déblocages initiaux permanents — 6 novembre 2026](INITIAL_UNLOCKS_2026-11-06.md) : 50 éléments, prérequis par rang, raisons et compatibilité.

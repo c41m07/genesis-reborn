@@ -17,6 +17,12 @@
         "tier": "basic",
         "level": 2
       }
+    ],
+    "buildings": [
+      {
+        "slug": "lab",
+        "level": 1
+      }
     ]
   },
   "effect": {
@@ -89,9 +95,9 @@
     "superior": "Réseau de visée coordonnée"
   },
   "tier_descriptions": {
-    "basic": "Améliore la précision des unités concernées. Une première méthode établit les bases de cette spécialité.",
-    "intermediate": "Améliore la précision des unités concernées. Une approche technique plus intégrée fait progresser cette spécialité.",
-    "superior": "Améliore la précision des unités concernées. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées."
+    "basic": "Améliore la précision des unités concernées. Une première méthode établit les bases de cette spécialité. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux.",
+    "intermediate": "Améliore la précision des unités concernées. Une approche technique plus intégrée fait progresser cette spécialité. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux.",
+    "superior": "Améliore la précision des unités concernées. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux."
   },
-  "description": "Améliore la précision des unités concernées. Une première méthode établit les bases de cette spécialité."
+  "description": "Améliore la précision des unités concernées. Une première méthode établit les bases de cette spécialité. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux."
 }

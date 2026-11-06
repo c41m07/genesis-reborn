@@ -11,57 +11,6 @@
   },
   "costs_scaling": 1.8,
   "build_time_reduction_percent_per_level": 2,
-  "levels": {
-    "1": {
-      "unlock_requirements": {}
-    },
-    "3": {
-      "unlock_requirements": {
-        "technologies": [
-          {
-            "slug": "naval_engineering",
-            "level": 1
-          }
-        ],
-        "buildings": [
-          {
-            "slug": "mine_metal",
-            "level": 2
-          }
-        ]
-      }
-    },
-    "6": {
-      "unlock_requirements": {
-        "technologies": [
-          {
-            "slug": "naval_engineering",
-            "level": 3
-          },
-          {
-            "slug": "automated_defense_repair",
-            "level": 1
-          }
-        ],
-        "buildings": [
-          {
-            "slug": "power_plant",
-            "level": 4
-          }
-        ]
-      }
-    },
-    "10": {
-      "unlock_requirements": {
-        "technologies": [
-          {
-            "slug": "nanomaterial_synthesis",
-            "level": 2
-          }
-        ]
-      }
-    }
-  },
   "source": "PDF 1 p.14–15",
   "build_time_reduction_max_percent": 70,
   "tier_unlock_requirements": {
@@ -115,5 +64,19 @@
     "intermediate": "Réduit la durée de construction des vaisseaux. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
     "superior": "Réduit la durée de construction des vaisseaux. Un maillage étendu porte cette fonction à l’échelle planétaire."
   },
-  "description": "Réduit la durée de construction des vaisseaux. Une installation locale assure cette fonction sur la colonie."
+  "description": "Réduit la durée de construction des vaisseaux. Une installation locale assure cette fonction sur la colonie.",
+  "unlock_requirements": {
+    "buildings": [
+      {
+        "slug": "mine_metal",
+        "level": 2
+      }
+    ],
+    "technologies": [
+      {
+        "slug": "naval_engineering",
+        "level": 1
+      }
+    ]
+  }
 }

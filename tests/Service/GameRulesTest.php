@@ -30,7 +30,7 @@ final class GameRulesTest extends TestCase
     {
         $c=new GameCatalog(dirname(__DIR__,2).'/config/game');$checker=new RequirementChecker($c);
         $d=$c->get('buildings','shipyard');
-        self::assertSame([], $checker->check($checker->forLevel($d,2),[],[]));
+        self::assertNotEmpty($checker->check($checker->forLevel($d,1),[],[]));
         self::assertNotEmpty($checker->check($checker->forLevel($d,4),[],[]));
         self::assertSame([], $checker->check($checker->forLevel($d,4),['mine_metal'=>2],['naval_engineering'=>1]));
         self::assertSame([], $checker->check(['ships'=>['fighter']],[],[]));
@@ -50,11 +50,11 @@ final class GameRulesTest extends TestCase
         self::assertNotEmpty($checker->check($technologyGate,[],[]));
         self::assertSame([],$checker->check($technologyGate,[],['engineering_foundations'=>['basic'=>1]]));
     }
-    public function testBuildingMilestonesAndDefenseRanksAreActuallyGated(): void
+    public function testBuildingAccessIsFixedAndDefenseRanksAreInitiallyGated(): void
     {
         $catalog=new GameCatalog(dirname(__DIR__,2).'/config/game');$checker=new RequirementChecker($catalog);
         $lab=$catalog->get('buildings','lab');$labLevelTwo=$checker->forTier($lab,'basic',2);
-        self::assertNotEmpty($checker->check($labLevelTwo,[],[]));
+        self::assertSame([],$checker->check($labLevelTwo,[],[]));
         self::assertSame([],$checker->check($labLevelTwo,[
             'power_plant'=>['basic'=>3],'mine_nano'=>['basic'=>2],
         ],['engineering_foundations'=>['basic'=>2]]));

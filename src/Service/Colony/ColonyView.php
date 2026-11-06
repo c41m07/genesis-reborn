@@ -6,7 +6,7 @@ use App\Service\Catalog\GameCatalog;
 use App\Service\Requirement\RequirementChecker;
 final class ColonyView
 {
-    public function __construct(private GameRepository $repo,private GameCatalog $catalog,private RequirementChecker $requirements,private ResourceService $resources,private \App\Service\Queue\QueueService $queueService,private \App\Service\Queue\OperationCalculator $calculator,private CatalogueInsights $insights,private CatalogueDetails $details) {}
+    public function __construct(private GameRepository $repo,private GameCatalog $catalog,private RequirementChecker $requirements,private ResourceService $resources,private \App\Service\Queue\QueueService $queueService,private \App\Service\Queue\OperationCalculator $calculator,private CatalogueInsights $insights,private CatalogueDetails $details,private \App\Service\Requirement\CatalogAccess $access) {}
     public function data(PlayerUniverse $m,Planet $planet,bool $revealLockedItems=false): array
     {
         $this->queueService->synchronize($m);
@@ -48,17 +48,15 @@ final class ColonyView
                     $level=match($group){'buildings'=>(int)($buildings[$slug][$tier]??0),'technologies'=>(int)($tech[$slug][$tier]??0),default=>0};$target=$level+1;
                     $queued=null;
                     foreach($this->repo->queue($planet) as $q)if($q->itemSlug===$slug&&$q->tier===$tier&&$q->itemLevel){$queued=$q;$target=max($target,$q->itemLevel+1);}
-                    $failures=$this->requirements->check($this->requirements->forTier($d,$tier,$target),$buildings,$tech);
-                    if($group==='ships'&&($buildings['shipyard']['basic']??0)<1&&$slug!=='fighter')$failures[]=$this->catalog->withTier($definitions['buildings']['shipyard'],'basic')['label'].' · niveau 1';
-                    if($group==='technologies'&&($buildings['lab']['basic']??0)<1)$failures[]=$this->catalog->withTier($definitions['buildings']['lab'],'basic')['label'].' · niveau 1';
+                    $failures=$this->access->failures($m,$planet,$group,$d,$tier,$buildings,$tech);
                     if($group==='defenses')$level=0;
                     $operation=$this->calculator->calculate($d,$group,$target,1,$buildings,$universeConfig,$tech);
-                    $cards[$group][]=['details'=>$this->details->describe($d,$group,$target,$planet,$buildings,$tech),'benefits'=>$this->insights->benefits($d,$group,$target,$planet,$buildings,$tech),'unlocks'=>$this->insights->unlocks($group,$slug,$target),'definition'=>$d,'tier'=>$tier,'level'=>$level,'target'=>$target,'quantity'=>$group==='ships'?($this->repo->one(FleetShip::class,['fleet'=>$this->repo->one(Fleet::class,['homePlanet'=>$planet,'playerUniverse'=>$m,'status'=>'idle']),'slug'=>$slug,'tier'=>$tier])?->quantity??0):($group==='defenses'?($this->repo->one(PlanetDefense::class,['planet'=>$planet,'slug'=>$slug,'tier'=>$tier])?->quantity??0):0),'duration'=>$operation['duration'],'costs'=>$operation['costs'],'failures'=>array_values(array_unique($failures)),'maximum'=>isset($d['max_level'])&&$target>$d['max_level'],'queued'=>$queued!==null];
+                    $cards[$group][]=['details'=>$this->details->describe($d,$group,$target,$planet,$buildings,$tech),'benefits'=>$this->insights->benefits($d,$group,$target,$planet,$buildings,$tech),'unlocks'=>$this->insights->unlocks($group,$slug,$target,$tier,$m->universe),'definition'=>$d,'tier'=>$tier,'level'=>$level,'target'=>$target,'quantity'=>$group==='ships'?($this->repo->one(FleetShip::class,['fleet'=>$this->repo->one(Fleet::class,['homePlanet'=>$planet,'playerUniverse'=>$m,'status'=>'idle']),'slug'=>$slug,'tier'=>$tier])?->quantity??0):($group==='defenses'?($this->repo->one(PlanetDefense::class,['planet'=>$planet,'slug'=>$slug,'tier'=>$tier])?->quantity??0):0),'duration'=>$operation['duration'],'costs'=>$operation['costs'],'failures'=>array_values(array_unique($failures)),'maximum'=>isset($d['max_level'])&&$target>$d['max_level'],'queued'=>$queued!==null];
                 }
             }
         }
         if(!$showLockedItems) foreach($cards as $group=>$items) $cards[$group]=array_values(array_filter($items,static fn(array $card): bool=>$card['failures']===[]||$card['maximum']));
-        $technologyTree=$this->insights->tree($buildings,$tech);
+        $technologyTree=$this->insights->tree($buildings,$tech,$m,$planet);
         $activeFleets=$this->repo->all(Fleet::class,['playerUniverse'=>$m,'status'=>['traveling','returning','attacking','defending']],['arrivalAt'=>'ASC']);
         $combatEvents=[];
         foreach($activeFleets as $activeFleet) { $participant=$this->repo->one(CombatParticipant::class,['fleet'=>$activeFleet]); if($participant && $participant->combatEvent->status==='pending') $combatEvents[$activeFleet->id]=$participant->combatEvent; }

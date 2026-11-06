@@ -19,7 +19,7 @@ final class UniverseService
             if (!$m) {
                 $planets=array_values(array_filter($this->repo->planets($u,null,true), static fn (Planet $planet): bool => !$planet->npcPlanet));
                 if (!$planets) throw new \DomainException('Cet univers ne dispose plus de planète libre.');
-                $m=new PlayerUniverse();$m->player=$player;$m->universe=$u;$m->joinedAt=$this->clock->now();$this->manager->save($m);
+                $m=new PlayerUniverse();$m->catalogUnlocks=[];$m->player=$player;$m->universe=$u;$m->joinedAt=$this->clock->now();$this->manager->save($m);
                 shuffle($planets);
                 $planet = null;
                 foreach ($planets as $candidate) {

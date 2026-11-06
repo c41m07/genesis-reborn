@@ -17,4 +17,6 @@ class PlayerUniverse
     public ?\DateTimeImmutable $recoveryProtectedUntil = null;
     #[ORM\Column(nullable: true)]
     public ?\DateTimeImmutable $lastRecoveryProtectionAt = null;
+    #[ORM\Column(type: 'json', nullable: true)]
+    public ?array $catalogUnlocks = null;
 }

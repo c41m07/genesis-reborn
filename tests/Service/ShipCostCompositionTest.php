@@ -36,7 +36,9 @@ final class ShipCostCompositionTest extends TestCase
         foreach($fixture['ships'] as $slug=>$expected){
             $definition=$catalog->get('ships',$slug);$nonCost=$definition;unset($nonCost['cost_profiles']);
             // JSON peut sérialiser une valeur flottante entière sans sa partie décimale.
-            self::assertEquals($expected['non_cost_fields'],$nonCost,$slug.' : caractéristiques hors coûts');
+            $historical=$expected['non_cost_fields'];
+                foreach(['levels','unlock_requirements','tier_unlock_requirements','description','tier_descriptions'] as $field){unset($historical[$field],$nonCost[$field]);}
+                self::assertEquals($historical,$nonCost,$slug.' : caractéristiques hors coûts');
             foreach(self::SHARES as $tier=>$shares){
                 $costs=$catalog->costs($catalog->withTier($definition,$tier));$budget=$this->value($expected['old_profiles'][$tier]);
                 self::assertSame($budget,$this->value($costs),"$slug/$tier : budget économique");

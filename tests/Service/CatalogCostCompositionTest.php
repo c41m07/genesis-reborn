@@ -29,7 +29,9 @@ final class CatalogCostCompositionTest extends TestCase
             self::assertCount($expectedCount,$catalog->all($group));
             foreach($fixture['entries'][$group] as $slug=>$expected){
                 $definition=$catalog->get($group,$slug);$nonCost=$definition;unset($nonCost['cost_profiles']);
-                self::assertEquals($expected['non_cost_fields'],$nonCost,"$group/$slug : hors coûts");
+                $historical=$expected['non_cost_fields'];
+                foreach(['levels','unlock_requirements','tier_unlock_requirements','description','tier_descriptions'] as $field){unset($historical[$field],$nonCost[$field]);}
+                self::assertEquals($historical,$nonCost,"$group/$slug : hors coûts");
                 foreach(self::SHARES as $tier=>$shares){
                     ++$count;$costs=$catalog->costs($catalog->withTier($definition,$tier));$budget=$this->value($expected['old_profiles'][$tier]);
                     self::assertSame($budget,$this->value($costs),"$group/$slug/$tier : budget");

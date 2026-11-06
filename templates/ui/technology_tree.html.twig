@@ -1,7 +1,7 @@
 {% set nodeCount = 0 %}{% for nodes in technology_tree %}{% set nodeCount = nodeCount + nodes|length %}{% endfor %}
 <details class="panel technology-tree" data-controller="admin-filter" data-admin-filter-include-ancestors-value="true" {{ tree_standalone|default(false) ? 'open' : '' }}>
     <summary>Arbre technologique <span>{{ nodeCount }} élément{{ nodeCount > 1 ? 's' : '' }} affiché{{ nodeCount > 1 ? 's' : '' }}</span></summary>
-    <p>Identifiez les prérequis nécessaires pour débloquer un élément, y compris ceux encore verrouillés. Lisez les déblocages de gauche à droite, avec les rangs basique, intermédiaire et supérieur de haut en bas : bâtiments, recherches, vaisseaux et défenses sont reliés à leurs prérequis de déblocage. Les niveaux requis sont détaillés dans chaque fiche.</p>
+    <p>Identifiez les prérequis nécessaires pour débloquer un élément, y compris ceux encore verrouillés. Lisez les déblocages de gauche à droite, avec les rangs basique, intermédiaire et supérieur de haut en bas : bâtiments, recherches, vaisseaux et défenses sont reliés à leurs prérequis de déblocage. Les niveaux requis sont détaillés dans chaque fiche. Ils servent uniquement au déblocage initial du rang : aucun nouveau prérequis pendant ses améliorations. Les recherches restent débloquées dans cet univers ; les autres accès sont conservés sur la colonie concernée.</p>
     {% if nodeCount == 0 %}
         <div class="empty-state"><h2>Aucun élément affiché</h2><p>Aucun élément à afficher actuellement.</p></div>
     {% else %}
@@ -34,7 +34,8 @@
                         </summary>
                         <div class="tech-node-details">
                             {% if node.prerequisites %}
-                                <h3>Prérequis</h3>
+                                <h3>Déblocage initial</h3>
+                                {% if node.acquired %}<p>Accès acquis définitivement dans ce périmètre.</p>{% endif %}
                                 <ul>{% for requirement in node.prerequisites %}
                                     <li class="{{ requirement.met ? 'met' : 'missing' }}">
                                         <a href="{{ path('app_colony',{id:planet.id,section:requirement.group,showLockedItems:1}) }}#item-{{ requirement.slug }}-{{ requirement.tier }}">{{ requirement.met ? '✓' : '○' }} {{ requirement.label }}{% if requirement.level is not null %} · niveau {{ requirement.level }} requis (actuel : {{ requirement.current }}){% else %} · prérequis de déblocage{% endif %}</a>

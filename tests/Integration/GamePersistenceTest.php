@@ -106,7 +106,7 @@ final class GamePersistenceTest extends KernelTestCase
             $queue->add($player->currentPlayerUniverse,$planet,'ships','cruiser',1,str_repeat('e',32));
             self::fail('Un vaisseau verrouillé ne doit pas pouvoir être commandé directement.');
         } catch (\DomainException $exception) {
-            self::assertStringContainsString('Prérequis',$exception->getMessage());
+            self::assertStringContainsString('Déblocage initial',$exception->getMessage());
         }
         self::assertSame(0,$this->em->getRepository(QueueItem::class)->count());
     }
@@ -120,7 +120,7 @@ final class GamePersistenceTest extends KernelTestCase
     {
         $p=$this->player();$planet=$this->join($p);
         foreach($this->em->getRepository(PlanetResource::class)->findBy(['planet'=>$planet]) as $r) { $r->currentStock=0;$r->productionRate=0; }$this->em->flush();
-        try { self::getContainer()->get(QueueService::class)->add($p->currentPlayerUniverse,$planet,'buildings','shipyard',1,str_repeat('a',32));self::fail('Ressources insuffisantes attendues.'); }
+        try { self::getContainer()->get(QueueService::class)->add($p->currentPlayerUniverse,$planet,'buildings','lab',1,str_repeat('a',32));self::fail('Ressources insuffisantes attendues.'); }
         catch(\DomainException $e) { self::assertStringContainsString('Ressources insuffisantes',$e->getMessage()); }
         $connection=$this->em->getConnection();self::assertSame(0,(int)$connection->fetchOne('SELECT COUNT(*) FROM queue_item'));self::assertSame(0,(int)$connection->fetchOne('SELECT COUNT(*) FROM action_receipt'));
     }

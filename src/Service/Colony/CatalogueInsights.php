@@ -69,36 +69,42 @@ final class CatalogueInsights
         if($type==='planet_limit'){$limit=(int)$this->catalog->forUniverse($planet->solarSystem->galaxy->universe)['limits']['max_planets'];$before=GameCatalog::colonyLimit($ranks,$effect,$limit);$after=GameCatalog::colonyLimit($afterRanks,$effect,$limit);return [['label'=>'Limite totale de planètes','before'=>$before,'after'=>$after,'unit'=>'planètes']];}
         return [];
     }
-    public function unlocks(string $group,string $slug,int $target):array
+    public function unlocks(string $group,string $slug,int $target,string $sourceTier='basic',?\App\Entity\Universe $universe=null):array
     {
-        if(!in_array($group,['buildings','technologies'],true))return [];$result=[];
-        foreach(['buildings','technologies','ships','defenses'] as $candidateGroup)foreach($this->catalog->all($candidateGroup) as $candidate){$requirements=$candidate['unlock_requirements']??[];foreach($candidate['levels']??[] as $n=>$level)$requirements=$this->merge($requirements,$level['unlock_requirements']??[]);foreach($candidate['tier_unlock_requirements']??[] as $rank=>$rankRequirements)$requirements=$this->merge($requirements,$rankRequirements);foreach($requirements[$group]??[] as $r)if(($r['slug']??'')===$slug&&(int)($r['level']??1)<=$target){$tier=$r['tier']??'basic';$key=$candidateGroup.':'.$candidate['slug'].':'.$tier;$tierDefinition=$this->catalog->withTier($candidate,$tier);$result[$key]=['group'=>$candidateGroup,'slug'=>$candidate['slug'],'tier'=>$tier,'label'=>$tierDefinition['label'],'requiredLevel'=>$r['level']??1];}}
+        if(!in_array($group,['buildings','technologies'],true))return [];
+        $result=[];$catalog=$universe?$this->catalog->forUniverse($universe)['catalog']:[];
+        foreach(['buildings','technologies','ships','defenses'] as $kind)foreach($catalog[$kind]??$this->catalog->all($kind) as $candidate)foreach(GameCatalog::TIERS as $tier){
+            foreach($this->requirements->forTier($candidate,$tier)[$group]??[] as $r){
+                if($r['slug']!==$slug||($r['tier']??'basic')!==$sourceTier||(int)$r['level']>$target)continue;
+                $definition=$this->catalog->withTier($candidate,$tier);
+                $result[$kind.':'.$candidate['slug'].':'.$tier]=['group'=>$kind,'slug'=>$candidate['slug'],'tier'=>$tier,'tierLabel'=>$definition['_tier_label'],'label'=>$definition['label'],'requiredLevel'=>$r['level']];
+            }
+        }
         return array_values($result);
     }
-    public function tree(array $levels,array $tech):array
+    public function tree(array $levels,array $tech,?\App\Entity\PlayerUniverse $membership=null,?Planet $planet=null):array
     {
-        $nodes=[];$depths=[];$visiting=[];
+        $nodes=[];$depths=[];$visiting=[];$catalog=$membership?$this->catalog->forUniverse($membership->universe)['catalog']:[];
         foreach(['buildings','technologies','ships','defenses'] as $kind)
-        foreach(GameCatalog::TIERS as $tier)foreach($this->catalog->all($kind) as $slug=>$base){
+        foreach(GameCatalog::TIERS as $tier)foreach($catalog[$kind]??$this->catalog->all($kind) as $slug=>$base){
             $key=$kind.':'.$slug.'-'.$tier;$definition=$this->catalog->withTier($base,$tier);$requirements=$this->requirements->forTier($definition,$tier,1);
-            if($kind==='technologies'&&!array_filter($requirements['buildings']??[],static fn($r)=>$r['slug']==='lab'))$requirements['buildings'][]=['slug'=>'lab','level'=>1,'tier'=>'basic'];
-            if($kind==='ships'&&$slug!=='fighter')$requirements['buildings'][]=['slug'=>'shipyard','level'=>1,'tier'=>'basic'];
             $prerequisites=[];$parents=[];
             foreach(['buildings'=>$levels,'technologies'=>$tech] as $group=>$owned)foreach($requirements[$group]??[] as $requirement){
-                $requiredTier=$requirement['tier']??'basic';$have=(int)($owned[$requirement['slug']][$requiredTier]??(is_numeric($owned[$requirement['slug']]??null)?$owned[$requirement['slug']]:0));
-                $requiredDefinition=$this->catalog->withTier($this->catalog->get($group,$requirement['slug']),$requiredTier);
+                $requiredTier=$requirement['tier']??'basic';$have=(int)($owned[$requirement['slug']][$requiredTier]??($requiredTier==='basic'&&is_numeric($owned[$requirement['slug']]??null)?$owned[$requirement['slug']]:0));
+                $requiredDefinition=$this->catalog->withTier($catalog[$group][$requirement['slug']]??$this->catalog->get($group,$requirement['slug']),$requiredTier);
                 $prerequisites[]=['group'=>$group,'slug'=>$requirement['slug'],'tier'=>$requiredTier,'label'=>$requiredDefinition['label'],'level'=>$requirement['level'],'current'=>$have,'met'=>$have>=(int)$requirement['level']];
                 $parents[]=$group.':'.$requirement['slug'].'-'.$requiredTier;
             }
             foreach($requirements['ships']??[] as $entry){
                 $shipSlug=is_array($entry)?$entry['slug']:$entry;$shipTier=is_array($entry)?($entry['tier']??'basic'):'basic';
                 $parents[]='ships:'.$shipSlug.'-'.$shipTier;
-                $ship=$this->catalog->withTier($this->catalog->get('ships',$shipSlug),$shipTier);
-                $met=!$this->requirements->check($this->requirements->forTier($ship,$shipTier),$levels,$tech);
+                $ship=$this->catalog->withTier($catalog['ships'][$shipSlug]??$this->catalog->get('ships',$shipSlug),$shipTier);
+                $met=!$this->requirements->check($this->requirements->forTier($ship,$shipTier),$levels,$tech,[],$catalog?:null);
                 $prerequisites[]=['group'=>'ships','slug'=>$shipSlug,'tier'=>$shipTier,'label'=>$ship['label'],'level'=>null,'current'=>null,'met'=>$met];
             }
             $owned=$kind==='buildings'?$levels:($kind==='technologies'?$tech:[]);$value=$owned[$slug]??0;
-            $nodes[$key]=['group'=>$kind,'key'=>$key,'definition'=>$definition,'tier'=>$tier,'slug'=>$slug,'level'=>is_array($value)?(int)($value[$tier]??0):(int)$value,'prerequisites'=>$prerequisites,'parents'=>array_values(array_unique($parents)),'available'=>!$this->requirements->check($requirements,$levels,$tech)];
+            $acquired=$membership&&$planet&&isset($membership->catalogUnlocks[\App\Service\Requirement\CatalogAccess::key($planet,$kind,$slug,$tier)]);
+            $nodes[$key]=['group'=>$kind,'key'=>$key,'definition'=>$definition,'tier'=>$tier,'slug'=>$slug,'level'=>is_array($value)?(int)($value[$tier]??0):($tier==='basic'?(int)$value:0),'prerequisites'=>$prerequisites,'parents'=>array_values(array_unique($parents)),'acquired'=>(bool)$acquired,'available'=>$acquired||!$this->requirements->check($requirements,$levels,$tech,[],$catalog?:null)];
         }
         $depth=function(string $key)use(&$depth,&$depths,&$visiting,$nodes):int{
             if(isset($depths[$key]))return $depths[$key];

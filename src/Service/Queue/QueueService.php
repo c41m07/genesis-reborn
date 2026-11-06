@@ -10,7 +10,7 @@ use Psr\Clock\ClockInterface;
 use Symfony\Component\Uid\Uuid;
 final class QueueService
 {
-    public function __construct(private GameManager $manager,private GameRepository $repo,private GameCatalog $catalog,private RequirementChecker $requirements,private ResourceService $resources,private ActionGuard $guard,private ClockInterface $clock,private \App\Service\Notification\NotificationService $notifications,private OperationCalculator $calculator) {}
+    public function __construct(private GameManager $manager,private GameRepository $repo,private GameCatalog $catalog,private RequirementChecker $requirements,private ResourceService $resources,private ActionGuard $guard,private ClockInterface $clock,private \App\Service\Notification\NotificationService $notifications,private OperationCalculator $calculator,private \App\Service\Requirement\CatalogAccess $access) {}
     public function add(PlayerUniverse $m,Planet $planet,string $group,string $slug,int $quantity,string $requestKey,string $tier='basic'): void
     {
         $this->manager->transaction(function()use($m,$planet,$group,$slug,$quantity,$requestKey,$tier){
@@ -34,9 +34,8 @@ final class QueueService
                 if($level>$maxLevel) throw new \DomainException('Niveau maximum atteint.');
             }
             if($group==='technologies')foreach($this->repo->all(QueueItem::class,['playerUniverse'=>$m,'queueType'=>'research','itemSlug'=>$slug,'tier'=>$tier]) as $item)if($item->planet->id!==$planet->id)throw new \DomainException('Ce rang de technologie est déjà en recherche sur une autre planète.');
-            $failures=$this->requirements->check($this->requirements->forTier($d,$tier,$level),$buildings,$techs);
-            if($group==='ships'&&$slug!=='fighter'&&($buildings['shipyard']['basic']??0)<1)$failures[]=$this->catalog->withTier($config['catalog']['buildings']['shipyard'],'basic')['label'].' · niveau 1';
-            if($failures) throw new \DomainException('Prérequis : '.implode(', ',array_unique($failures)).'.');
+            $failures=$this->access->failures($m,$planet,$group,$d,$tier,$buildings,$techs);
+            if($failures) throw new \DomainException('Déblocage initial : '.implode(', ',array_unique($failures)).'.');
             $plan=$this->calculator->calculate($d,$group,$level,$quantity,$buildings,$config,$techs);$duration=$plan['duration'];
             $this->resources->consume($planet,$plan['costs']);
             $item=new QueueItem();$item->planet=$planet;$item->playerUniverse=$m;$item->queueType=$type;$item->itemSlug=$slug;$item->tier=$tier;$item->itemLevel=in_array($group,['buildings','technologies'],true)?$level:null;$item->quantity=$quantity;$item->paidCosts=$plan['costs'];$item->durationSeconds=$duration;$item->queuedAt=$this->clock->now();$item->dependsOn=$depends;$item->dispatchToken=Uuid::v4()->toRfc4122();
@@ -59,9 +58,11 @@ final class QueueService
     }
     private function settleMembershipLocked(PlayerUniverse $m): void
     {
+        $this->access->captureLocked($m);
         foreach($this->repo->planets($m->universe,$m) as $planet) {
             $this->manager->lock($planet);$this->settlePlanetLocked($planet,$this->clock->now());
         }
+        $this->access->captureLocked($m);
     }
     private function settlePlanetLocked(Planet $planet,\DateTimeImmutable $until): void
     {

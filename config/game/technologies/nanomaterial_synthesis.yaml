@@ -94,9 +94,9 @@
     "superior": "Architecture de matière programmable"
   },
   "tier_descriptions": {
-    "basic": "Réduit les coûts en ressources des bâtiments. Une première méthode établit les bases de cette spécialité.",
-    "intermediate": "Réduit les coûts en ressources des bâtiments. Une approche technique plus intégrée fait progresser cette spécialité.",
-    "superior": "Réduit les coûts en ressources des bâtiments. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées."
+    "basic": "Réduit les coûts en ressources des bâtiments. Une première méthode établit les bases de cette spécialité. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux.",
+    "intermediate": "Réduit les coûts en ressources des bâtiments. Une approche technique plus intégrée fait progresser cette spécialité. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux.",
+    "superior": "Réduit les coûts en ressources des bâtiments. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux."
   },
-  "description": "Réduit les coûts en ressources des bâtiments. Une première méthode établit les bases de cette spécialité."
+  "description": "Réduit les coûts en ressources des bâtiments. Une première méthode établit les bases de cette spécialité. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux."
 }

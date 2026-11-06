@@ -1,0 +1,2645 @@
+{
+  "buildings": {
+    "fortress": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "shipyard",
+            "tier": "basic",
+            "level": 3
+          },
+          {
+            "slug": "lab",
+            "tier": "basic",
+            "level": 2
+          }
+        ],
+        "technologies": [
+          {
+            "slug": "structural_armor",
+            "tier": "basic",
+            "level": 2
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "weapons_engineering",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "weapons_engineering",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      },
+      "levels": {
+        "1": {
+          "unlock_requirements": {}
+        },
+        "2": {
+          "unlock_requirements": {
+            "technologies": [
+              {
+                "slug": "structural_armor",
+                "tier": "basic",
+                "level": 5
+              },
+              {
+                "slug": "automated_defense_repair",
+                "tier": "basic",
+                "level": 3
+              }
+            ]
+          }
+        }
+      }
+    },
+    "lab": {
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "engineering_foundations",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "engineering_foundations",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      },
+      "levels": {
+        "1": {
+          "unlock_requirements": {}
+        },
+        "2": {
+          "unlock_requirements": {
+            "buildings": [
+              {
+                "slug": "power_plant",
+                "tier": "basic",
+                "level": 3
+              },
+              {
+                "slug": "mine_nano",
+                "tier": "basic",
+                "level": 2
+              }
+            ],
+            "technologies": [
+              {
+                "slug": "engineering_foundations",
+                "tier": "basic",
+                "level": 2
+              }
+            ]
+          }
+        }
+      }
+    },
+    "mine_antimatter": {
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "naval_engineering",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "naval_engineering",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      },
+      "levels": {
+        "1": {
+          "unlock_requirements": {}
+        },
+        "2": {
+          "unlock_requirements": {
+            "buildings": [
+              {
+                "slug": "mine_hydrogen",
+                "tier": "basic",
+                "level": 5
+              },
+              {
+                "slug": "lab",
+                "tier": "basic",
+                "level": 3
+              }
+            ],
+            "technologies": [
+              {
+                "slug": "naval_engineering",
+                "tier": "basic",
+                "level": 5
+              }
+            ]
+          }
+        }
+      }
+    },
+    "mine_hydrogen": {
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "vector_propulsion",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "vector_propulsion",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      },
+      "levels": {
+        "1": {
+          "unlock_requirements": {}
+        },
+        "2": {
+          "unlock_requirements": {
+            "buildings": [
+              {
+                "slug": "mine_nano",
+                "tier": "basic",
+                "level": 4
+              },
+              {
+                "slug": "power_plant",
+                "tier": "basic",
+                "level": 4
+              }
+            ],
+            "technologies": [
+              {
+                "slug": "naval_engineering",
+                "tier": "basic",
+                "level": 2
+              }
+            ]
+          }
+        }
+      }
+    },
+    "mine_metal": {
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "engineering_foundations",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "engineering_foundations",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      },
+      "levels": {
+        "1": {
+          "unlock_requirements": {}
+        }
+      }
+    },
+    "mine_nano": {
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "nanomaterial_synthesis",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "nanomaterial_synthesis",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      },
+      "levels": {
+        "1": {
+          "unlock_requirements": {}
+        },
+        "2": {
+          "unlock_requirements": {
+            "buildings": [
+              {
+                "slug": "mine_metal",
+                "tier": "basic",
+                "level": 3
+              },
+              {
+                "slug": "power_plant",
+                "tier": "basic",
+                "level": 2
+              }
+            ]
+          }
+        }
+      }
+    },
+    "power_plant": {
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "engineering_foundations",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "engineering_foundations",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      },
+      "levels": {
+        "1": {
+          "unlock_requirements": {}
+        }
+      }
+    },
+    "shipyard": {
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "naval_engineering",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "naval_engineering",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      },
+      "levels": {
+        "1": {
+          "unlock_requirements": {}
+        },
+        "3": {
+          "unlock_requirements": {
+            "technologies": [
+              {
+                "slug": "naval_engineering",
+                "level": 1
+              }
+            ],
+            "buildings": [
+              {
+                "slug": "mine_metal",
+                "level": 2
+              }
+            ]
+          }
+        },
+        "6": {
+          "unlock_requirements": {
+            "technologies": [
+              {
+                "slug": "naval_engineering",
+                "level": 3
+              },
+              {
+                "slug": "automated_defense_repair",
+                "level": 1
+              }
+            ],
+            "buildings": [
+              {
+                "slug": "power_plant",
+                "level": 4
+              }
+            ]
+          }
+        },
+        "10": {
+          "unlock_requirements": {
+            "technologies": [
+              {
+                "slug": "nanomaterial_synthesis",
+                "level": 2
+              }
+            ]
+          }
+        }
+      }
+    },
+    "storage_antimatter": {
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "nanomaterial_synthesis",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "nanomaterial_synthesis",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      },
+      "levels": {
+        "1": {
+          "unlock_requirements": {}
+        },
+        "2": {
+          "unlock_requirements": {
+            "buildings": [
+              {
+                "slug": "mine_antimatter",
+                "tier": "basic",
+                "level": 2
+              }
+            ],
+            "technologies": [
+              {
+                "slug": "nanomaterial_synthesis",
+                "tier": "basic",
+                "level": 2
+              }
+            ]
+          }
+        }
+      }
+    },
+    "storage_electricity": {
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "naval_engineering",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "naval_engineering",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      },
+      "levels": {
+        "1": {
+          "unlock_requirements": {}
+        },
+        "2": {
+          "unlock_requirements": {
+            "buildings": [
+              {
+                "slug": "power_plant",
+                "tier": "basic",
+                "level": 4
+              }
+            ],
+            "technologies": [
+              {
+                "slug": "nanomaterial_synthesis",
+                "tier": "basic",
+                "level": 2
+              }
+            ]
+          }
+        }
+      }
+    },
+    "storage_hydrogen": {
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "vector_propulsion",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "vector_propulsion",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      },
+      "levels": {
+        "1": {
+          "unlock_requirements": {}
+        },
+        "2": {
+          "unlock_requirements": {
+            "buildings": [
+              {
+                "slug": "mine_hydrogen",
+                "tier": "basic",
+                "level": 3
+              }
+            ],
+            "technologies": [
+              {
+                "slug": "nanomaterial_synthesis",
+                "tier": "basic",
+                "level": 2
+              }
+            ]
+          }
+        }
+      }
+    },
+    "storage_metal": {
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "nanomaterial_synthesis",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "nanomaterial_synthesis",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      },
+      "levels": {
+        "1": {
+          "unlock_requirements": {}
+        },
+        "2": {
+          "unlock_requirements": {
+            "buildings": [
+              {
+                "slug": "mine_metal",
+                "tier": "basic",
+                "level": 2
+              }
+            ],
+            "technologies": [
+              {
+                "slug": "nanomaterial_synthesis",
+                "tier": "basic",
+                "level": 2
+              }
+            ]
+          }
+        }
+      }
+    },
+    "storage_nano": {
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "engineering_foundations",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "engineering_foundations",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      },
+      "levels": {
+        "1": {
+          "unlock_requirements": {}
+        },
+        "2": {
+          "unlock_requirements": {
+            "buildings": [
+              {
+                "slug": "mine_nano",
+                "tier": "basic",
+                "level": 3
+              }
+            ],
+            "technologies": [
+              {
+                "slug": "nanomaterial_synthesis",
+                "tier": "basic",
+                "level": 2
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "technologies": {
+    "automated_defense_repair": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "lab",
+            "level": 1
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "naval_engineering",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "naval_engineering",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "colonial_expansion": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "lab",
+            "level": 1
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "vector_propulsion",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "vector_propulsion",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "cryogenic_reserves": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "lab",
+            "level": 1
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "vector_propulsion",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "vector_propulsion",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "engineering_foundations": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "lab",
+            "level": 1
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "naval_engineering",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "naval_engineering",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "evasive_navigation": {
+      "unlock_requirements": {
+        "technologies": [
+          {
+            "slug": "vector_propulsion",
+            "tier": "basic",
+            "level": 3
+          },
+          {
+            "slug": "target_acquisition",
+            "tier": "basic",
+            "level": 2
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "vector_propulsion",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "vector_propulsion",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "intelligence_countermeasures": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "lab",
+            "level": 1
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "tactical_intelligence",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "tactical_intelligence",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "modular_cargo_bays": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "lab",
+            "level": 1
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "colonial_expansion",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "colonial_expansion",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "nanomaterial_synthesis": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "lab",
+            "tier": "basic",
+            "level": 3
+          }
+        ],
+        "technologies": [
+          {
+            "slug": "engineering_foundations",
+            "tier": "basic",
+            "level": 3
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "engineering_foundations",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "engineering_foundations",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "naval_engineering": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "lab",
+            "tier": "basic",
+            "level": 2
+          }
+        ],
+        "technologies": [
+          {
+            "slug": "engineering_foundations",
+            "tier": "basic",
+            "level": 2
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "engineering_foundations",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "engineering_foundations",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "rapid_fire_cycle": {
+      "unlock_requirements": {
+        "technologies": [
+          {
+            "slug": "weapons_engineering",
+            "tier": "basic",
+            "level": 7
+          },
+          {
+            "slug": "target_acquisition",
+            "tier": "basic",
+            "level": 4
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "target_acquisition",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "target_acquisition",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "shield_harmonics": {
+      "unlock_requirements": {
+        "technologies": [
+          {
+            "slug": "structural_armor",
+            "tier": "basic",
+            "level": 3
+          },
+          {
+            "slug": "weapons_engineering",
+            "tier": "basic",
+            "level": 5
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "naval_engineering",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "naval_engineering",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "signature_masking": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "lab",
+            "level": 1
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "tactical_intelligence",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "tactical_intelligence",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "signature_reduction": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "lab",
+            "level": 1
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "signature_masking",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "signature_masking",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "structural_armor": {
+      "unlock_requirements": {
+        "technologies": [
+          {
+            "slug": "nanomaterial_synthesis",
+            "tier": "basic",
+            "level": 3
+          },
+          {
+            "slug": "weapons_engineering",
+            "tier": "basic",
+            "level": 3
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "weapons_engineering",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "weapons_engineering",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "tactical_intelligence": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "lab",
+            "level": 1
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "signature_masking",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "signature_masking",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "target_acquisition": {
+      "unlock_requirements": {
+        "technologies": [
+          {
+            "slug": "weapon_calibration",
+            "tier": "basic",
+            "level": 2
+          },
+          {
+            "slug": "naval_engineering",
+            "tier": "basic",
+            "level": 3
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "weapon_calibration",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "weapon_calibration",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "vector_propulsion": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "lab",
+            "tier": "basic",
+            "level": 4
+          }
+        ],
+        "technologies": [
+          {
+            "slug": "naval_engineering",
+            "tier": "basic",
+            "level": 5
+          },
+          {
+            "slug": "engineering_foundations",
+            "tier": "basic",
+            "level": 5
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "engineering_foundations",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "engineering_foundations",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "weapon_calibration": {
+      "unlock_requirements": {
+        "technologies": [
+          {
+            "slug": "weapons_engineering",
+            "tier": "basic",
+            "level": 2
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "target_acquisition",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "target_acquisition",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "weapons_engineering": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "lab",
+            "tier": "basic",
+            "level": 5
+          }
+        ],
+        "technologies": [
+          {
+            "slug": "vector_propulsion",
+            "tier": "basic",
+            "level": 3
+          },
+          {
+            "slug": "naval_engineering",
+            "tier": "basic",
+            "level": 8
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "target_acquisition",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "target_acquisition",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    }
+  },
+  "ships": {
+    "battleship": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "shipyard",
+            "tier": "basic",
+            "level": 14
+          }
+        ],
+        "technologies": [
+          {
+            "slug": "weapons_engineering",
+            "tier": "basic",
+            "level": 10
+          },
+          {
+            "slug": "shield_harmonics",
+            "tier": "basic",
+            "level": 8
+          },
+          {
+            "slug": "rapid_fire_cycle",
+            "tier": "basic",
+            "level": 5
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "shield_harmonics",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "shield_harmonics",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "bomber": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "shipyard",
+            "tier": "basic",
+            "level": 4
+          }
+        ],
+        "technologies": [
+          {
+            "slug": "weapons_engineering",
+            "tier": "basic",
+            "level": 3
+          },
+          {
+            "slug": "structural_armor",
+            "tier": "basic",
+            "level": 2
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "weapons_engineering",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "weapons_engineering",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "capital": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "shipyard",
+            "tier": "basic",
+            "level": 18
+          }
+        ],
+        "technologies": [
+          {
+            "slug": "weapons_engineering",
+            "tier": "basic",
+            "level": 12
+          },
+          {
+            "slug": "shield_harmonics",
+            "tier": "basic",
+            "level": 12
+          },
+          {
+            "slug": "rapid_fire_cycle",
+            "tier": "basic",
+            "level": 10
+          },
+          {
+            "slug": "vector_propulsion",
+            "tier": "basic",
+            "level": 10
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "weapons_engineering",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "weapons_engineering",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "colony_ship": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "shipyard",
+            "level": 1
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "colonial_expansion",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "colonial_expansion",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "corvette": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "shipyard",
+            "tier": "basic",
+            "level": 4
+          }
+        ],
+        "technologies": [
+          {
+            "slug": "naval_engineering",
+            "tier": "basic",
+            "level": 4
+          },
+          {
+            "slug": "vector_propulsion",
+            "tier": "basic",
+            "level": 2
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "target_acquisition",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "target_acquisition",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "cruiser": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "shipyard",
+            "tier": "basic",
+            "level": 10
+          }
+        ],
+        "technologies": [
+          {
+            "slug": "weapons_engineering",
+            "tier": "basic",
+            "level": 8
+          },
+          {
+            "slug": "vector_propulsion",
+            "tier": "basic",
+            "level": 5
+          },
+          {
+            "slug": "structural_armor",
+            "tier": "basic",
+            "level": 5
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "vector_propulsion",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "vector_propulsion",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "destroyer": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "shipyard",
+            "tier": "basic",
+            "level": 9
+          }
+        ],
+        "technologies": [
+          {
+            "slug": "weapons_engineering",
+            "tier": "basic",
+            "level": 9
+          },
+          {
+            "slug": "shield_harmonics",
+            "tier": "basic",
+            "level": 5
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "weapons_engineering",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "weapons_engineering",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "fighter": {
+      "unlock_requirements": {},
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "vector_propulsion",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "vector_propulsion",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "frigate": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "shipyard",
+            "tier": "basic",
+            "level": 6
+          }
+        ],
+        "technologies": [
+          {
+            "slug": "weapons_engineering",
+            "tier": "basic",
+            "level": 5
+          },
+          {
+            "slug": "naval_engineering",
+            "tier": "basic",
+            "level": 7
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "weapons_engineering",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "weapons_engineering",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "heavy_fighter": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "shipyard",
+            "tier": "basic",
+            "level": 3
+          }
+        ],
+        "technologies": [
+          {
+            "slug": "weapon_calibration",
+            "tier": "basic",
+            "level": 1
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "weapons_engineering",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "weapons_engineering",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "interceptor": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "shipyard",
+            "tier": "basic",
+            "level": 2
+          }
+        ],
+        "technologies": [
+          {
+            "slug": "naval_engineering",
+            "tier": "basic",
+            "level": 1
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "target_acquisition",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "target_acquisition",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "probe": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "shipyard",
+            "level": 1
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "tactical_intelligence",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "tactical_intelligence",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "stealth_fighter": {
+      "unlock_requirements": {
+        "technologies": [
+          {
+            "slug": "signature_masking",
+            "level": 2
+          },
+          {
+            "slug": "vector_propulsion",
+            "level": 1
+          }
+        ],
+        "buildings": [
+          {
+            "slug": "shipyard",
+            "level": 4
+          }
+        ],
+        "ships": [
+          "fighter"
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "signature_masking",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "signature_masking",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "transport": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "shipyard",
+            "tier": "basic",
+            "level": 2
+          }
+        ],
+        "technologies": [
+          {
+            "slug": "naval_engineering",
+            "tier": "basic",
+            "level": 2
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "modular_cargo_bays",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "modular_cargo_bays",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "shipyard",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    }
+  },
+  "defenses": {
+    "ground_turret_anti_capital": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "fortress",
+            "tier": "basic",
+            "level": 5
+          }
+        ],
+        "technologies": [
+          {
+            "slug": "rapid_fire_cycle",
+            "tier": "basic",
+            "level": 5
+          },
+          {
+            "slug": "weapons_engineering",
+            "tier": "basic",
+            "level": 8
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "buildings": [
+            {
+              "slug": "fortress",
+              "tier": "basic",
+              "level": 10
+            }
+          ],
+          "technologies": [
+            {
+              "slug": "rapid_fire_cycle",
+              "tier": "basic",
+              "level": 10
+            }
+          ]
+        },
+        "superior": {
+          "buildings": [
+            {
+              "slug": "fortress",
+              "tier": "intermediate",
+              "level": 15
+            }
+          ],
+          "technologies": [
+            {
+              "slug": "rapid_fire_cycle",
+              "tier": "intermediate",
+              "level": 15
+            }
+          ]
+        }
+      }
+    },
+    "ground_turret_anti_escort": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "fortress",
+            "tier": "basic",
+            "level": 2
+          }
+        ],
+        "technologies": [
+          {
+            "slug": "target_acquisition",
+            "tier": "basic",
+            "level": 2
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "buildings": [
+            {
+              "slug": "fortress",
+              "tier": "basic",
+              "level": 6
+            }
+          ],
+          "technologies": [
+            {
+              "slug": "target_acquisition",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "buildings": [
+            {
+              "slug": "fortress",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "technologies": [
+            {
+              "slug": "target_acquisition",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "ground_turret_anti_heavy": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "fortress",
+            "tier": "basic",
+            "level": 3
+          }
+        ],
+        "technologies": [
+          {
+            "slug": "structural_armor",
+            "tier": "basic",
+            "level": 3
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "buildings": [
+            {
+              "slug": "fortress",
+              "tier": "basic",
+              "level": 7
+            }
+          ],
+          "technologies": [
+            {
+              "slug": "weapons_engineering",
+              "tier": "basic",
+              "level": 7
+            }
+          ]
+        },
+        "superior": {
+          "buildings": [
+            {
+              "slug": "fortress",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "technologies": [
+            {
+              "slug": "weapons_engineering",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    },
+    "ground_turret_anti_light": {
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "fortress",
+            "tier": "basic",
+            "level": 1
+          }
+        ]
+      },
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "buildings": [
+            {
+              "slug": "fortress",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "technologies": [
+            {
+              "slug": "weapon_calibration",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "buildings": [
+            {
+              "slug": "fortress",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "technologies": [
+            {
+              "slug": "weapon_calibration",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      }
+    }
+  }
+}

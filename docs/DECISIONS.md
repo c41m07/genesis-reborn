@@ -223,3 +223,17 @@ Les réductions de recherche continuent d’arrondir chaque ressource : de petit
 L’utilisateur valide la progression T1 métal/nano, T2 ajout d’antimatière, T3 ajout d’hydrogène, et demande son application aux bâtiments, chantier spatial, défenses et recherches. Les parts en valeur retenues sont T1 M60/N40 ; T2 M45/N45/A10 ; T3 M30/N45/A20/H5. Les 50 fiches et 150 profils conservent exactement leur valeur économique de base réelle (M×2, N×4, A×8, H×1), avec des quantités entières. Les courbes de niveau et les réductions restent inchangées ; les coûts réels après leurs arrondis peuvent légèrement différer, et sont vérifiés séparément.
 
 L’hydrogène de construction/recherche est une dépense industrielle, distincte du carburant réservé au départ des missions et des consommations des usines. Les coûts enregistrés des commandes déjà payées restent conservés. Les surcharges d’univers sont préservées champ par champ. L’étude et les vérifications de démarrage, progression et conservation sont consignées dans [COMMON_COSTS_2026-11-05.md](COMMON_COSTS_2026-11-05.md). Aucun prix d’asset premium ni réglage d’univers n’est modifié par cette décision.
+
+
+## Déblocages initiaux permanents — décision du 6 novembre 2026
+
+Les prérequis pendant les niveaux sont supprimés dans les quatre catégories. Chaque rang conserve des conditions initiales puis un accès acquis : colonie pour constructions et unités, univers pour recherches. Le laboratoire devient une condition initiale explicite de toutes les recherches, commune au serveur et à l’interface. Coûts, durées, ressources, plafonds et conditions des missions restent appliqués.
+
+Le choix livré garde un démarrage accessible, retire les anciens paliers sans les cumuler, reprend un jalon léger pour le chantier et un développement hydrogène/naval pour le réacteur. Le stockage s’ouvre au réacteur 1. Les conditions militaires restent graduelles. Huit accès hors plafond sont corrigés sans augmenter les bonus. Le [tableau des 50 éléments et 150 profils](INITIAL_UNLOCKS_2026-11-06.md) explique chaque choix et la conservation historique par registre.
+
+Travail sur dev, sans fusion sur alpha ni déploiement. Migration additive et commande de reprise préparées ; exécution sur la base active soumise à validation selon les consignes du projet.
+
+
+### Application locale validée — 6 novembre 2026
+
+Après accord explicite de l’utilisateur, la migration du registre des déblocages est appliquée sur la base locale utilisée par dev, précédée d’une sauvegarde. Les 5 participations existantes sont reprises, puis le contrôle indique zéro participation restante. Les empreintes des données de progression et des files sont identiques avant/après. `make validate` et `make lint` réussissent. Aucun déploiement ni fusion vers Alpha. Voir le [bilan d’application](INITIAL_UNLOCKS_2026-11-06.md#application-locale--6-novembre-2026).

@@ -22,6 +22,12 @@
         "tier": "basic",
         "level": 3
       }
+    ],
+    "buildings": [
+      {
+        "slug": "lab",
+        "level": 1
+      }
     ]
   },
   "effect": {
@@ -94,9 +100,9 @@
     "superior": "Fusion tactique des trajectoires"
   },
   "tier_descriptions": {
-    "basic": "Améliore le suivi des cibles des unités concernées. Une première méthode établit les bases de cette spécialité.",
-    "intermediate": "Améliore le suivi des cibles des unités concernées. Une approche technique plus intégrée fait progresser cette spécialité.",
-    "superior": "Améliore le suivi des cibles des unités concernées. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées."
+    "basic": "Améliore le suivi des cibles des unités concernées. Une première méthode établit les bases de cette spécialité. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux.",
+    "intermediate": "Améliore le suivi des cibles des unités concernées. Une approche technique plus intégrée fait progresser cette spécialité. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux.",
+    "superior": "Améliore le suivi des cibles des unités concernées. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux."
   },
-  "description": "Améliore le suivi des cibles des unités concernées. Une première méthode établit les bases de cette spécialité."
+  "description": "Améliore le suivi des cibles des unités concernées. Une première méthode établit les bases de cette spécialité. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux."
 }

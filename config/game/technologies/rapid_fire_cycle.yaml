@@ -22,6 +22,12 @@
         "tier": "basic",
         "level": 4
       }
+    ],
+    "buildings": [
+      {
+        "slug": "lab",
+        "level": 1
+      }
     ]
   },
   "effect": {
@@ -91,9 +97,9 @@
     "superior": "Synchronisation des salves de flotte"
   },
   "tier_descriptions": {
-    "basic": "Accroît la possibilité de tir supplémentaire des vaisseaux de combat. Une première méthode établit les bases de cette spécialité.",
-    "intermediate": "Accroît la possibilité de tir supplémentaire des vaisseaux de combat. Une approche technique plus intégrée fait progresser cette spécialité.",
-    "superior": "Accroît la possibilité de tir supplémentaire des vaisseaux de combat. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées."
+    "basic": "Accroît la possibilité de tir supplémentaire des vaisseaux de combat. Une première méthode établit les bases de cette spécialité. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux.",
+    "intermediate": "Accroît la possibilité de tir supplémentaire des vaisseaux de combat. Une approche technique plus intégrée fait progresser cette spécialité. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux.",
+    "superior": "Accroît la possibilité de tir supplémentaire des vaisseaux de combat. Une doctrine systémique applique cette spécialité à l’ensemble des unités concernées. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux."
   },
-  "description": "Accroît la possibilité de tir supplémentaire des vaisseaux de combat. Une première méthode établit les bases de cette spécialité."
+  "description": "Accroît la possibilité de tir supplémentaire des vaisseaux de combat. Une première méthode établit les bases de cette spécialité. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux."
 }

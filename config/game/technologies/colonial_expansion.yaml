@@ -91,9 +91,9 @@
     "superior": "Réseau de colonisation interstellaire"
   },
   "tier_descriptions": {
-    "basic": "Chaque niveau ajoute directement +1 emplacement de colonie. Limites : Basique 5, Intermédiaire 10, Supérieur 15. Maximum : 31 planètes au total, planète de départ incluse.",
-    "intermediate": "Chaque niveau ajoute directement +1 emplacement de colonie. Limites : Basique 5, Intermédiaire 10, Supérieur 15. Maximum : 31 planètes au total, planète de départ incluse.",
-    "superior": "Chaque niveau ajoute directement +1 emplacement de colonie. Limites : Basique 5, Intermédiaire 10, Supérieur 15. Maximum : 31 planètes au total, planète de départ incluse."
+    "basic": "Chaque niveau ajoute directement +1 emplacement de colonie. Limites : Basique 5, Intermédiaire 10, Supérieur 15. Maximum : 31 planètes au total, planète de départ incluse. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux.",
+    "intermediate": "Chaque niveau ajoute directement +1 emplacement de colonie. Limites : Basique 5, Intermédiaire 10, Supérieur 15. Maximum : 31 planètes au total, planète de départ incluse. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux.",
+    "superior": "Chaque niveau ajoute directement +1 emplacement de colonie. Limites : Basique 5, Intermédiaire 10, Supérieur 15. Maximum : 31 planètes au total, planète de départ incluse. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux."
   },
-  "description": "Chaque niveau ajoute directement +1 emplacement de colonie. Limites : Basique 5, Intermédiaire 10, Supérieur 15. Maximum : 31 planètes au total, planète de départ incluse."
+  "description": "Chaque niveau ajoute directement +1 emplacement de colonie. Limites : Basique 5, Intermédiaire 10, Supérieur 15. Maximum : 31 planètes au total, planète de départ incluse. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux."
 }

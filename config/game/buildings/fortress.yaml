@@ -10,27 +10,6 @@
     "antimatter": 0
   },
   "costs_scaling": 1.8,
-  "levels": {
-    "1": {
-      "unlock_requirements": {}
-    },
-    "2": {
-      "unlock_requirements": {
-        "technologies": [
-          {
-            "slug": "structural_armor",
-            "tier": "basic",
-            "level": 5
-          },
-          {
-            "slug": "automated_defense_repair",
-            "tier": "basic",
-            "level": 3
-          }
-        ]
-      }
-    }
-  },
   "provisional": true,
   "effect": {
     "type": "stat_bonus",
