@@ -14,6 +14,8 @@ Les objectifs de durée début/milieu/fin, les gains et pertes et les profils PN
 
 ## État et exploitation
 
+- [Relais en attente et reprise](OUTBOX.md) : échéances, retard, doublons, tentatives et diagnostic.
+
 - [Signaux des processus](OPERATIONS_SIGNALS.md) : partage du dossier en production, états affichés et diagnostic.
 
 - [Création de compte et confirmation d’adresse](ACCOUNT_EMAIL.md) : configuration des mails, jetons et migration.

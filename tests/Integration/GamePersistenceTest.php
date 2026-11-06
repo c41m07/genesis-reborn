@@ -318,6 +318,68 @@ final class GamePersistenceTest extends KernelTestCase
         self::assertSame(0,(int)$this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM outbox_message WHERE kind='queue'"));
     }
 
+    public function testCombatRelayPublishesDelayedEventInsteadOfHandlingItImmediately(): void
+    {
+        $clock=$this->clock();$message=new OutboxMessage();$message->kind='combat';$message->targetId=987654;
+        $message->token=str_repeat('b',32);$message->dueAt=$clock->now()->modify('+60 seconds');
+        $this->em->persist($message);$this->em->flush();
+        self::assertSame(1,self::getContainer()->get(OutboxRelay::class)->run());
+        $sent=self::getContainer()->get('messenger.transport.async')->getSent();
+        self::assertCount(1,$sent);
+        self::assertInstanceOf(\App\Message\CombatEventDue::class,$sent[0]->getMessage());
+        self::assertSame(987654,$sent[0]->getMessage()->combatEventId);
+        self::assertSame(60000,$sent[0]->last(\Symfony\Component\Messenger\Stamp\DelayStamp::class)->getDelay());
+    }
+
+    public function testAdminListsTwentyOldestDeadlinesIncludingUnsupportedKinds(): void
+    {
+        $clock=$this->clock();$ids=[];
+        for($index=0;$index<21;++$index) {
+            $message=new OutboxMessage();$message->kind='diagnostic_test';$message->targetId=900000+$index;
+            $message->token=bin2hex(random_bytes(16));$message->dueAt=new \DateTimeImmutable('2020-01-01T00:00:00Z');
+            $this->em->persist($message);$this->em->flush();$ids[]=$message->id;
+        }
+        $snapshot=self::getContainer()->get(\App\Service\Admin\AdminOperationsService::class)->snapshot();
+        self::assertTrue($snapshot['outbox_available']);
+        self::assertSame(21,$snapshot['outbox']['other']);
+        self::assertSame(array_slice($ids,0,20),array_column($snapshot['outbox_pending'],'id'));
+        self::assertSame('UTC',$snapshot['outbox_pending'][0]['due_at']->getTimezone()->getName());
+        self::assertSame($clock->now()->getTimestamp()-(new \DateTimeImmutable('2020-01-01T00:00:00Z'))->getTimestamp(),$snapshot['outbox_pending'][0]['overdue_seconds']);
+    }
+
+    public function testOutboxRestartsAfterPublishFailureAndDuplicateDeliveryIsHarmless(): void
+    {
+        $clock=$this->clock();$player=$this->player('RelayRestart');$planet=$this->join($player);
+        self::getContainer()->get(QueueService::class)->add($player->currentPlayerUniverse,$planet,'buildings','mine_metal',1,str_repeat('a',32));
+        $item=$this->em->getRepository(QueueItem::class)->findOneBy([]);$itemId=$item->id;$planetId=$planet->id;
+        $clock->sleep($item->durationSeconds+1);$restartAt=$clock->now();
+        $bus=self::getContainer()->get(\Symfony\Component\Messenger\MessageBusInterface::class);
+        $crashingBus=new class($bus) implements \Symfony\Component\Messenger\MessageBusInterface {
+            public function __construct(private \Symfony\Component\Messenger\MessageBusInterface $inner) {}
+            public function dispatch(object $message,array $stamps=[]): \Symfony\Component\Messenger\Envelope
+            {
+                $this->inner->dispatch($message,$stamps);
+                throw new \RuntimeException('Interruption après publication');
+            }
+        };
+        $relay=new OutboxRelay(self::getContainer()->get(\App\Manager\GameManager::class),self::getContainer()->get(\App\Repository\GameRepository::class),$crashingBus,self::getContainer()->get(\App\Integration\Mercure\PublisherInterface::class),$clock);
+        try { $relay->run();self::fail('Interruption attendue'); } catch(\RuntimeException $error) { self::assertSame('Interruption après publication',$error->getMessage()); }
+        self::assertFalse($this->em->isOpen());
+        self::assertSame(1,(int)$this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM outbox_message WHERE kind='queue'"));
+        $sent=self::getContainer()->get('messenger.transport.async')->getSent();self::assertCount(1,$sent);$first=$sent[0]->getMessage();
+        self::ensureKernelShutdown();self::bootKernel();
+        self::getContainer()->set('clock',new \Symfony\Component\Clock\MockClock($restartAt));
+        $this->em=self::getContainer()->get(EntityManagerInterface::class);
+        self::assertSame(1,self::getContainer()->get(OutboxRelay::class)->run());
+        $replayed=self::getContainer()->get('messenger.transport.async')->getSent();self::assertCount(1,$replayed);
+        self::assertEquals($first,$replayed[0]->getMessage());
+        self::assertSame(0,(int)$this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM outbox_message WHERE kind='queue'"));
+        $handler=self::getContainer()->get(\App\MessageHandler\QueueItemFinishedHandler::class);
+        $handler($first);$handler($replayed[0]->getMessage());
+        self::assertNull($this->em->find(QueueItem::class,$itemId));
+        self::assertSame(1,$this->em->getRepository(PlanetBuilding::class)->findOneBy(['planet'=>$planetId,'slug'=>'mine_metal'])->level);
+    }
+
     public function testPrivateMessagesStayInUniverseAndBecomeReadForRecipient(): void
     {
         $sender = $this->player('PrivateSender');

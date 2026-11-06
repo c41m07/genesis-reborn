@@ -43,4 +43,42 @@ final class AdminOperationsServiceTest extends TestCase
             rmdir($directory);
         }
     }
+    public function testFailedOutboxCollectionIsUnknownRatherThanEmpty(): void
+    {
+        $db=$this->createStub(Connection::class);
+        $db->method('fetchOne')->willReturn(1);
+        $db->method('fetchAllAssociative')->willThrowException(new \RuntimeException('Table indisponible'));
+        $snapshot=(new AdminOperationsService($db,new MockClock('2030-01-01T00:00:00Z'),sys_get_temp_dir().'/absent-signals'))->snapshot();
+        self::assertTrue($snapshot['database_healthy']);
+        self::assertFalse($snapshot['outbox_available']);
+        self::assertNull($snapshot['outbox_total']);
+        self::assertNull($snapshot['outbox_overdue']);
+    }
+
+    public function testPendingDiagnosticsIncludeUnknownKindsButNeverTokens(): void
+    {
+        $db=$this->createStub(Connection::class);
+        $db->method('fetchOne')->willReturn(1);
+        $db->method('fetchAllAssociative')->willReturnCallback(static function(string $sql):array {
+            if(str_contains($sql,'GROUP BY')) return [
+                ['kind'=>'queue','total'=>2,'overdue'=>1],
+                ['kind'=>'unexpected','total'=>1,'overdue'=>1],
+            ];
+            self::assertStringContainsString('LIMIT 20',$sql);
+            self::assertStringNotContainsString('token',$sql);
+            return [
+                ['id'=>9,'kind'=>'unexpected','target_id'=>42,'due_at'=>'2029-12-31 23:55:30'],
+                ['id'=>10,'kind'=>'queue','target_id'=>43,'due_at'=>'2030-01-01 00:00:10'],
+            ];
+        });
+        $snapshot=(new AdminOperationsService($db,new MockClock('2030-01-01T00:00:00Z'),sys_get_temp_dir().'/absent-signals'))->snapshot();
+        self::assertTrue($snapshot['outbox_available']);
+        self::assertSame(3,$snapshot['outbox_total']);
+        self::assertSame(2,$snapshot['outbox_overdue']);
+        self::assertSame(1,$snapshot['outbox']['other']);
+        self::assertSame(270,$snapshot['outbox_pending'][0]['overdue_seconds']);
+        self::assertSame(0,$snapshot['outbox_pending'][1]['overdue_seconds']);
+        self::assertSame('unexpected',$snapshot['outbox_pending'][0]['kind']);
+        self::assertArrayNotHasKey('token',$snapshot['outbox_pending'][0]);
+    }
 }

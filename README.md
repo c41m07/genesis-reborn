@@ -12,6 +12,8 @@ Le jeu comprend les comptes et profils, univers et colonies, économie, bâtimen
 
 ## Documentation
 
+L’admin permet de consulter les relais en attente et leurs échéances ; une collecte indisponible est distinguée d’une file vide. Les limites des données, les tentatives du worker et la reprise après interruption sont détaillées dans [le guide des relais](docs/OUTBOX.md).
+
 L’administration affiche les signaux récents, anciens, absents ou incohérents des processus. En production, les trois processus partagent leur dossier de signaux avec l’application en lecture seule. L’état est relu à chaque chargement de l’admin ; voir [le diagnostic des signaux](docs/OPERATIONS_SIGNALS.md).
 
 Les nouveaux comptes reçoivent un message de bienvenue et un lien de vérification d’adresse valable 24 heures. L’accès nécessite cette vérification ; un renvoi est proposé depuis la connexion. Les comptes antérieurs à cette fonctionnalité conservent leur accès. Le transport (`MAILER_DSN`), l’expéditeur (`MAILER_FROM`) et l’URL publique (`DEFAULT_URI`) doivent être configurés sur chaque environnement. Voir le [parcours de confirmation](docs/ACCOUNT_EMAIL.md).
