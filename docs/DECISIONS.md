@@ -253,3 +253,7 @@ Décision explicite du propriétaire : courriel vers une adresse conservée en c
 ### Fighter : chantier spatial requis — 6 novembre 2026
 
 À la demande explicite de l’utilisateur, le déblocage initial du Fighter basique exige désormais un chantier spatial basique niveau 1. Les conditions des rangs intermédiaire et supérieur restent conservées. Les accès déjà acquis restent régis par le registre persistant existant.
+
+## Alertes d’exploitation — 6 novembre 2026
+
+Décision explicite du propriétaire : courriel vers une adresse conservée en configuration privée ; profil modéré, signal absent 120 secondes, relais en retard de 300 secondes, rappel au maximum chaque heure, échec définitif dès détection et message de rétablissement. Le contrôle d’arrêt confirmé reste distinct de la seule absence d’un signal. Ce choix ne modifie aucune règle de jeu et ne vaut pas preuve d’activation sur l’Alpha.
