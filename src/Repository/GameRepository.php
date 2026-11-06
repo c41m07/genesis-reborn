@@ -8,6 +8,13 @@ final class GameRepository
     public function find(string $class, int $id): ?object { return $this->em->find($class, $id); }
     public function one(string $class, array $criteria): ?object { return $this->em->getRepository($class)->findOneBy($criteria); }
     public function all(string $class, array $criteria = [], array $order = ['id' => 'ASC']): array { return $this->em->getRepository($class)->findBy($criteria, $order); }
+    public function passwordResetTokenForUpdate(string $hash): ?\App\Entity\PasswordResetToken
+    {
+        return $this->em->getRepository(\App\Entity\PasswordResetToken::class)->createQueryBuilder('t')
+            ->where('t.tokenHash = :hash')->setParameter('hash', $hash)->getQuery()
+            ->setLockMode(\Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE)
+            ->setHint(\Doctrine\ORM\Query::HINT_REFRESH, true)->getOneOrNullResult();
+    }
     /** @return list<GameEvent> */
     public function visibleGameEvents(PlayerUniverse $membership, \DateTimeImmutable $now): array
     {
