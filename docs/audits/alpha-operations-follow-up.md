@@ -2,7 +2,7 @@
 
 ## État en cours
 
-- Branche courante : `feature/password-reset`, créée depuis le nouveau `origin/dev` au commit `15e8d43`, après fusion du chantier A. Chantier B validé localement, publication en préparation.
+- Branche courante : `feature/password-reset`, créée depuis le nouveau `origin/dev` au commit `15e8d43`, après fusion du chantier A. Chantier B publié au commit `6316b87`, [PR #3](https://github.com/c41m07/genesis-reborn/pull/3) ouverte vers `dev`, CI en cours.
 - Worktree : `/home/caim/Projets/Genesis_Reborn-account-email`.
 - Les changements du propriétaire dans le checkout original sont préservés.
 - Implémentation publiée : commit `2d09960` sur `feature/account-email`.
@@ -36,7 +36,7 @@ Première CI sur `557fc26` : les deux exécutions PHP réussissent (205 tests, 2
 
 Vérification supplémentaire de migration : sur le projet isolé `genesis-account-email`, retour arrière de cette seule migration, insertion d’un compte fictif, puis réapplication réussie. L’adresse et le pseudo sont conservés et `email_verified_at` est bien renseigné. La base de développement du propriétaire et le serveur ne sont pas concernés.
 
-## Chantier B — validé localement, publication en préparation
+## Chantier B — PR ouverte, CI en cours
 
 Le parcours existait déjà : réponse publique neutre, jeton haché valable une heure, expiration, usage unique et remplacement du mot de passe. Deux défauts de code sont corrigés : expéditeur local codé en dur et URL fondée sur l’hôte de la requête. Le parcours utilise désormais `MAILER_FROM` et `DEFAULT_URI`, comme la confirmation de compte.
 
@@ -46,9 +46,11 @@ Le cache Symfony local de test conservait l’ancien constructeur ; sa reconstru
 
 Les quatre lots navigateur complets totalisent 86 réussites et deux dépassements de délai (inventaire et routes) sous exécution locale concurrente. Les trois scénarios des fichiers concernés repassent isolément, sans changement de délai ni d’assertion : **88 scénarios uniques validés par résultats consolidés**. Ce résultat local ne constitue pas une validation de la CI ou de la production.
 
-Les 13 liens locaux du README existent. Prochaine action : commit ciblé, push et PR vers `dev`, puis examen du diff publié, de la CI et des discussions avant toute fusion.
+Les 13 liens locaux du README existent. Le commit `6316b87` est poussé et la [PR #3](https://github.com/c41m07/genesis-reborn/pull/3) est vérifiée avec base `dev`. Le diff publié contient les 7 fichiers attendus. Aucune discussion ouverte au premier contrôle. Prochaine action : examiner la fin de la CI sur ce commit et les discussions avant toute fusion. Cette actualisation du suivi reste locale pendant la CI et sera intégrée au lot documentaire suivant.
 
 Les valeurs SMTP et la réception sur l’Alpha restent des points de configuration et de vérification serveur, non démontrés par les tests locaux. Aucun envoi externe ni déploiement effectué.
+
+Première CI du chantier B sur `6316b87` : les deux lots PHP et toutes les autres exécutions navigateur réussissent ; une exécution du lot 2 échoue lors du second changement de colonie, effectué juste après l’ouverture de Recherche. Le scénario attend désormais le chargement de cette page avant l’interaction, comme pour le premier changement déjà stabilisé au chantier A. Reprise locale réussie du scénario complet (47,8 secondes), sans modification d’assertion ou de délai. La nouvelle CI sur ce correctif doit réussir avant fusion.
 
 ## Ordre prévu
 
