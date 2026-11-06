@@ -28,6 +28,10 @@ L’échec intermittent PNJ était une attente incorrecte du test : une mission 
 
 Le diff publié a été contrôlé : 28 fichiers, sans les changements du propriétaire ni les dépendances locales. Aucune discussion ouverte au premier contrôle de la PR. Prochaine action : examiner la fin de la CI sur le dernier commit, corriger ses éventuels échecs, puis fusionner uniquement si les contrôles et discussions le permettent. Le SMTP, l’expéditeur et l’URL de l’Alpha doivent être vérifiés séparément sur le serveur ; aucun déploiement effectué.
 
+Première CI sur `557fc26` : les deux exécutions PHP réussissent (205 tests, 205 477 assertions), avec lint et schéma valides. Les lots navigateur 1 et 3 réussissent ; l’exécution PR des lots 2 et 4 révèle quatre attentes faites avant stabilisation de la page. Les tests attendent désormais la fin du chargement avant mesure de la barre, changement de colonie et recherche GalaxieV2 ; la mesure responsive de la carte classique est interrogée jusqu’à stabilisation avec le même seuil et le même délai. Les 8 scénarios colonie/GalaxieV2 et les 4 scénarios technologiques repassent localement. Aucune assertion retirée ou délai augmenté. La nouvelle CI doit réussir avant fusion.
+
+Vérification supplémentaire de migration : sur le projet isolé `genesis-account-email`, retour arrière de cette seule migration, insertion d’un compte fictif, puis réapplication réussie. L’adresse et le pseudo sont conservés et `email_verified_at` est bien renseigné. La base de développement du propriétaire et le serveur ne sont pas concernés.
+
 ## Ordre prévu
 
 A (comptes/mails), B (réinitialisation), C/D (signaux/relais), E (alertes : canal et seuils à confirmer), F (sauvegardes), G (parcours serveur : accès requis), H (mesures), I (documentation hébergement), J (wiki), K (fermeture). Le README accompagne les changements puis reçoit une vérification finale.

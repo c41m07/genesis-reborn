@@ -156,7 +156,7 @@ test('Carte classique : systèmes connu/inconnu, tableau défilant et sans JS', 
   const knownUrl = page.url();
   for (const width of [1920, 1440, 1280, 768, 390]) {
     await page.setViewportSize({ width, height: 900 });
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
   const scroll = page.getByRole('region', { name: 'Positions du système, défilement horizontal' });
   await scroll.focus();

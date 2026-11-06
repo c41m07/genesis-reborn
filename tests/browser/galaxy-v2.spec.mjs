@@ -40,6 +40,7 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   await expect(page).toHaveURL(/\/carte(?:\?.*)?$/);
   await page.getByRole('link', {name:'Carte interactive (V2)', exact:true}).click();
   await expect(page).toHaveURL(/\/carte-v2(?:\?.*)?$/);
+  await page.waitForLoadState('load');
 
   const data = JSON.parse(await map.getAttribute('data-galaxy-v2-map-value'));
   const homeSystem = data.systems.find(system => system.known && system.planets.some(planet => planet.ownedByCurrentPlayer));
