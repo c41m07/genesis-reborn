@@ -14,6 +14,8 @@ Les objectifs de durée début/milieu/fin, les gains et pertes et les profils PN
 
 ## État et exploitation
 
+- [Scénarios serveur et reprise](SERVER_SCENARIOS.md) : essais locaux isolés, preuves hors connexion et limites de validation de l’Alpha.
+
 - [Sauvegardes et restauration isolée](BACKUPS.md) : conservation, état des jobs, preuve de restauration et limites de reprise.
 
 - [Alertes d’exploitation](OPERATIONS_ALERTS.md) : courriel, seuils, état persistant et job hôte à configurer.

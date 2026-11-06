@@ -2,8 +2,8 @@
 
 ## État en cours
 
-- Branche courante : `feature/automated-backups`, créée depuis `origin/dev` au commit `766f2cb`, après fusion vérifiée d’E. Chantier F en audit uniquement ; aucun changement de script ni restauration F exécutée.
-- Avancement demandé par le propriétaire : **42 %**, cinq lots intégrés sur douze (A–K et refonte finale du README). Le pourcentage compte les lots fusionnés, pas le temps ni les déploiements.
+- Branche courante : `feature/server-scenarios`, créée depuis `origin/dev` au commit `c51484f`, après fusion vérifiée de F. Chantier G validé localement ; publication et CI GitHub à effectuer, aucune validation de l’Alpha.
+- Avancement demandé par le propriétaire : **50 %**, six lots intégrés sur douze (A–K et refonte finale du README). Le pourcentage compte les lots fusionnés, pas les déploiements.
 - Worktree : `/home/caim/Projets/Genesis_Reborn-account-email`.
 - Les changements du propriétaire dans le checkout original sont préservés.
 - Implémentation publiée : commit `2d09960` sur `feature/account-email`.
@@ -200,3 +200,35 @@ La reprise des messages déjà publiés dans RabbitMQ reste un point distinct, e
 Contrôles F sur le lot figé : make validate, make lint, npm run build, make test (**225 tests PHP, 205 599 assertions et 13 tests Python**), make test-browser (**91 scénarios, deux lots complets réussis : 48 et 43**, sans reprise sur cette exécution), git diff --check réussis. make test-backup repasse avec 38 tables comparées, compte/mot de passe et progression contrôlés ; nettoyage réussi des seuls projets générés. Bash et YAML du workflow validés, liens actifs vérifiés. Les nouveaux caches Python et archives générées sont ignorés par Git ; archives, manifestes et caches sont également exclus du contexte Docker.
 
 Le propriétaire confirme qu’il n’existe pas de préproduction séparée : seulement l’Alpha et son local. Pour G, préparer puis exécuter les scénarios perturbateurs dans des projets locaux jetables ; ne pas les présenter comme validation du serveur hébergé et ne pas redémarrer la production.
+
+Publication F : [PR #8](https://github.com/c41m07/genesis-reborn/pull/8), base dev, head b39871f8be04752929f4544544e8c1e305091db5, 23 fichiers attendus. Diff examiné, aucune revue, commentaire ou discussion au premier contrôle. CI distante en cours, incluant désormais la restauration isolée dans les deux lots PHP. Attendre les contrôles et revérifier les discussions/SHA avant fusion. Cette note reste locale pour le lot suivant.
+
+## Chantier F — intégré à dev, non déployé
+
+[PR #8](https://github.com/c41m07/genesis-reborn/pull/8) fusionnée et vérifiée le 6 novembre 2026 à 21 h 50 (Europe/Paris), commit d’intégration `c51484fe2ed4250ac420d5c68951a826a5bc0f20`. Les onze contrôles GitHub réussissent sur `b39871f8be04752929f4544544e8c1e305091db5` : deux suites PHP/scripts/restauration, huit lots navigateur et GitGuardian. Les journaux des deux jobs PHP confirment 225 tests PHP, 13 tests Python et la restauration des 38 tables avec compte/mot de passe et progression vérifiés, sans consommateur ni mail réel. PR clean, sans revue, commentaire ou discussion avant fusion. Aucun correctif de CI nécessaire. Origin/dev récupérée après fusion ; les statuts antérieurs ci-dessus restent historiques.
+
+Résultat : archives uniques, verrou, checksum lié au bon fichier, conservation après succès, contrôle d’âge/intégrité et alertes facultatives sans faux rétablissement pendant un job. Documentation active et exclusion des fichiers générés livrées. Contrôles locaux complets : 225 tests PHP, 205 599 assertions, 13 tests Python, 91 navigateurs et restauration réelle isolée, sans reprise ciblée dans la validation finale. Aucun cron ou stockage distant configuré, sauvegarde de production créée ou restauration de production exécutée. La reprise des événements déjà dans RabbitMQ reste distincte de la restauration des données.
+
+## Chantier G — préparation sur le local uniquement
+
+Le propriétaire confirme : pas de préproduction séparée, seulement production et local. Ne pas redemander cette information et ne pas utiliser la production pour les essais perturbateurs. Branche feature/server-scenarios créée depuis le nouveau dev c51484f. Complexité initiale 4/5, à réévaluer en cas de défaut de reprise ou risque de données. Aucun nouveau code G.
+
+Lectures ciblées commencées : scénarios navigateur existants de construction/notification, recherche, flottes et conquête. Le scénario de conquête exécute déjà un combat réel accéléré via les dates de la fixture, pas seulement un affichage de rapport. Les suites précédentes sont des preuves de ces parcours locaux, pas de la déconnexion et du redémarrage demandés en G.
+
+Prochaine action : lire les helpers d’isolation et les scénarios concernés, compléter une matrice des six cas (construction hors connexion, recherche hors connexion, départ/retour, combat, notification, redémarrage). Vérifier effectivement l’absence de client connecté et la progression côté serveur, puis reconnexion et consultation. Pour le redémarrage, utiliser un projet local généré et protégé ; choisir une persistance représentative pour MariaDB/RabbitMQ plutôt que confondre perte d’un tmpfs de test avec panne de production. Aucune règle de jeu modifiée. Consigner conditions, résultats exécutés et procédures seulement préparées ; ne jamais présenter un résultat local comme validation de l’Alpha.
+
+Point de livraison à conserver pour I : le workflow de déploiement manuel ne transfère actuellement que compose.prod.yaml et deploy.sh. Les scripts d’exploitation hôte et leur utilitaire Python doivent donc être installés séparément avec la bonne version, comme les jobs et variables privées ; ne pas annoncer leur installation automatique sur l’Alpha. Aucun transfert SSH ni déploiement lancé.
+
+Cette conclusion F et la préparation G restent locales pour accompagner le prochain lot documentaire. G–K et refonte finale du README restent incomplets.
+
+### G — premiers essais locaux
+
+Nouveau scénario tests/browser/offline-progression.spec.mjs : fermeture de tous les contextes navigateur, contrôle SQL des niveaux et files avant toute reconnexion, puis consultation dans une nouvelle session. Deux essais ciblés réussissent : reprise depuis outbox (46,1 s), puis extension avec recherche déjà publiée avant redémarrage du relais/notificateur et relance du worker (55,2 s). La base et RabbitMQ restent actifs, leur tmpfs de test ne permettant pas de conclure à une persistance après redémarrage complet. Aucun serveur hébergé sollicité.
+
+Documentation active SERVER_SCENARIOS.md ajoutée avec matrice des six cas et limites ; README, index, ROADMAP et rapport de nettoyage actualisés. Renforcement final de l’assertion de notification (exactement une par commande) à vérifier. Les six contrôles et la publication G restent à effectuer.
+
+Extension G vérifiée : mode BROWSER_PERSISTENCE=1, volumes MariaDB/RabbitMQ propres au projet généré, arrêt ordonné complet application/base/transport/Mercure et traitements. Le scénario passe en environ 2 minutes, y compris recherche déjà publiée avant arrêt et exactement une notification par commande. Aucun arrêt brutal de l’hôte simulé. La CI navigateur sélectionne ce mode ; aucune configuration de production modifiée. Contrôles configuration/lint relancés après ajout YAML et script : réussis. PHP 225/205599 assertions, Python 13 et compilation réussissent ; suite navigateur complète à exécuter sur le code figé.
+
+### G — validation locale finale
+
+Six contrôles réussis : make validate, make lint, make test (225 PHP, 205599 assertions et 13 Python), npm run build, make test-browser (92 scénarios : lots complets de 48 en 22,5 min et 44 en 23,8 min, sans reprise ciblée) et git diff --check. Configuration/lint repris après ajout du mode persistant ; aucune correction d’échec. Les six cas de la matrice sont exécutés localement. Constructions et recherches terminées avec zéro contexte navigateur ; notifications persistées exactement une fois ; reprise depuis outbox puis message déjà publié après arrêt ordonné complet des services à volumes persistants. Flotte aller/retour, combat et notification en direct également réussis. Aucun résultat sur l’Alpha. Publication et CI G à effectuer ; H–K et refonte finale du README restent ouverts.

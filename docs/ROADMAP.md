@@ -48,3 +48,7 @@ Le canal courriel et les seuils modérés sont retenus. La surveillance prépar�
 ## Sauvegardes vérifiées localement
 
 Les scripts proposent une conservation configurable, un suivi des échecs et un contrôle relié aux alertes. La restauration de comptes et de progression a été testée sur des instances jetables distinctes. Planification, stockage distant et reprise après perte de RabbitMQ ne sont pas déclarés validés sur l’Alpha ; voir [la procédure active](BACKUPS.md).
+
+## Parcours hors connexion et reprise locale
+
+Les scénarios et leurs limites sont décrits dans [la matrice active](SERVER_SCENARIOS.md). Les redémarrages de processus utilisent uniquement des projets locaux jetables ; aucune validation de l’Alpha ni reprise après perte de MariaDB/RabbitMQ n’en est déduite.

@@ -89,7 +89,7 @@ jobs:
         if: matrix.suite == 'browser'
         run: |
           npx playwright install --with-deps chromium
-          make test-browser BROWSER_ARGS="--shard=${{ matrix.shard }}/4"
+          BROWSER_PERSISTENCE=1 make test-browser BROWSER_ARGS="--shard=${{ matrix.shard }}/4"
       - name: Show service diagnostics on failure
         if: failure()
         run: |
