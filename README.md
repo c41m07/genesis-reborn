@@ -12,6 +12,8 @@ Le jeu comprend les comptes et profils, univers et colonies, économie, bâtimen
 
 ## Documentation
 
+Les sauvegardes disposent de noms uniques, d’un contrôle d’intégrité lié à l’archive, d’une conservation configurable de 14 jours et d’un suivi des échecs. `make test-backup` vérifie une restauration sur deux instances jetables, sans mail réel ; voir [sauvegardes, automatisation et limites de reprise](docs/BACKUPS.md). Les scripts hôte demandent Python 3 et les utilitaires GNU, dont `flock`.
+
 Des alertes d’exploitation par courriel sont préparées, désactivées par défaut : arrêt confirmé, signal absent pendant 2 minutes, retard de relais de 5 minutes et échecs définitifs. Rappels espacés d’au moins une heure et notification de rétablissement ; voir [configuration et automatisation des alertes](docs/OPERATIONS_ALERTS.md).
 
 L’admin permet de consulter les relais en attente et leurs échéances ; une collecte indisponible est distinguée d’une file vide. Les limites des données, les tentatives du worker et la reprise après interruption sont détaillées dans [le guide des relais](docs/OUTBOX.md).
@@ -57,8 +59,12 @@ Pour les scripts exécutés depuis WSL si le domaine local ne se résout pas, ut
     npm run build
     make test-browser
     make verify-install
+    make backup-status
+    make test-backup
 
-make help affiche les commandes. make stop arrête sans supprimer les volumes. make test utilise la base de test isolée. make test-browser lance Chromium avec une stack et une base jetables; installer Chromium avec npx playwright install chromium. make verify-install vérifie une installation propre dans un projet Compose distinct et supprime uniquement ses propres volumes temporaires. make console CMD='about' lance une commande Symfony.
+make backup-status ne crée rien et signale un état inconnu si aucune sauvegarde n’est disponible ; make test-backup utilise uniquement ses instances jetables.
+
+make help affiche les commandes. make stop arrête sans supprimer les volumes. make test utilise la base de test isolée et lance aussi les tests Python des scripts de sauvegarde. make test-browser lance Chromium avec une stack et une base jetables; installer Chromium avec npx playwright install chromium. make verify-install vérifie une installation propre dans un projet Compose distinct et supprime uniquement ses propres volumes temporaires. make console CMD='about' lance une commande Symfony.
 
 Après modification des services consommés par des processus persistants, redémarrer les services concernés avec docker compose --env-file .env.local restart worker relay notifier.
 

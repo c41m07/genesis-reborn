@@ -93,7 +93,7 @@ dans les paramètres du dépôt. Les noms de branches sont sensibles à la casse
 
 MariaDB, RabbitMQ, Mercure et les sessions PHP utilisent des volumes persistants.
 Ne pas utiliser `down --volumes`. Préparer une sauvegarde vérifiée de MariaDB avant
-une migration et organiser les sauvegardes distantes selon le runbook existant.
+une migration ; consulter le [guide actif des sauvegardes](BACKUPS.md) pour les paramètres, la conservation et les vérifications de restauration. Le stockage distant reste à configurer par l’opérateur.
 Les journaux des conteneurs sont accessibles via `docker compose logs`.
 
 Une migration échouée arrête le déploiement et laisse les processus applicatifs

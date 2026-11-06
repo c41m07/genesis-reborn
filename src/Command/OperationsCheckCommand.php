@@ -16,7 +16,7 @@ final class OperationsCheckCommand extends Command
     public function __construct(private AdminOperationsService $operations,private AlertEvaluator $evaluator,private AlertNotifier $notifier,#[Autowire(service:'messenger.transport.failed')] private ReceiverInterface $failed) { parent::__construct(); }
     protected function configure(): void
     {
-        $this->addOption('processes-stdin',null,InputOption::VALUE_NONE)->addOption('send',null,InputOption::VALUE_NONE);
+        $this->addOption('processes-stdin',null,InputOption::VALUE_NONE)->addOption('send',null,InputOption::VALUE_NONE)->addOption('backup-status',null,InputOption::VALUE_REQUIRED);
     }
     protected function execute(InputInterface $input,OutputInterface $output): int
     {
@@ -26,7 +26,9 @@ final class OperationsCheckCommand extends Command
             if (strlen($raw)>65536) throw new \InvalidArgumentException('Relevé de supervision trop volumineux.');
             $states=self::parseProcesses($raw);
             try { $failedCount=$this->failed instanceof MessageCountAwareInterface?$this->failed->getMessageCount():null; } catch(\Throwable) { $failedCount=null; }
-            $conditions=$this->evaluator->evaluate($this->operations->snapshot(),$states,$failedCount);
+            $backupStatus=$input->getOption('backup-status');
+            if ($backupStatus!==null && !in_array($backupStatus,['ok','failed','unknown','running'],true)) throw new \InvalidArgumentException('État de sauvegarde invalide.');
+            $conditions=$this->evaluator->evaluate($this->operations->snapshot(),$states,$failedCount,$backupStatus);
             $result=$this->notifier->run($conditions,(bool)$input->getOption('send'));
             $output->writeln(json_encode(['delivery'=>$result,'conditions'=>$conditions],JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE));
             return in_array('alert',array_column($conditions,'status'),true)?Command::FAILURE:Command::SUCCESS;

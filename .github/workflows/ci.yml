@@ -82,6 +82,9 @@ jobs:
       - name: Static and schema checks
         if: matrix.suite == 'php'
         run: make lint
+      - name: Backup and restore in isolated instances
+        if: matrix.suite == 'php'
+        run: make test-backup
       - name: Browser suite in disposable project
         if: matrix.suite == 'browser'
         run: |

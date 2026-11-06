@@ -8,6 +8,6 @@ compose_file="${GENESIS_COMPOSE_FILE:-compose.yaml}"; env_file="${GENESIS_ENV_FI
 case "$archive" in *.sql.gz) ;; *) echo "Refusing non .sql.gz backup." >&2; exit 2;; esac
 gzip -t "$archive"
 [[ -f "$archive.sha256" ]] || { echo "Backup checksum file is required." >&2; exit 2; }
-(cd "$(dirname "$archive")" && sha256sum -c "$(basename "$archive").sha256")
+python3 scripts/backup-tools.py verify --archive "$archive"
 gzip -dc -- "$archive" | docker compose -p "$project" --env-file "$env_file" -f "$compose_file" exec -T database sh -ec 'mariadb --user=root --password="$MARIADB_ROOT_PASSWORD"'
 printf "Restore completed for Compose project %s from %s\n" "$project" "$archive"

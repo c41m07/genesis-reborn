@@ -44,3 +44,7 @@ Les échéances et retards des publications en attente sont consultables dans l�
 ## Alertes d’exploitation
 
 Le canal courriel et les seuils modérés sont retenus. La surveillance préparée est désactivée par défaut ; son activation, son automatisation et la réception doivent être vérifiées sur le serveur. Voir [le guide des alertes](OPERATIONS_ALERTS.md).
+
+## Sauvegardes vérifiées localement
+
+Les scripts proposent une conservation configurable, un suivi des échecs et un contrôle relié aux alertes. La restauration de comptes et de progression a été testée sur des instances jetables distinctes. Planification, stockage distant et reprise après perte de RabbitMQ ne sont pas déclarés validés sur l’Alpha ; voir [la procédure active](BACKUPS.md).

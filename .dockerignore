@@ -15,4 +15,6 @@ docs
 .demo-credentials
 *.tar
 *.sql
-*.sql.gz
+**/*.sql.gz
+**/*.sql.gz.sha256
+**/__pycache__
