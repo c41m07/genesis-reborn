@@ -242,6 +242,10 @@ Travail sur dev, sans fusion sur alpha ni déploiement. Migration additive et co
 
 Après accord explicite de l’utilisateur, la migration du registre des déblocages est appliquée sur la base locale utilisée par dev, précédée d’une sauvegarde. Les 5 participations existantes sont reprises, puis le contrôle indique zéro participation restante. Les empreintes des données de progression et des files sont identiques avant/après. `make validate` et `make lint` réussissent. Aucun déploiement ni fusion vers Alpha. Voir le [bilan d’application](INITIAL_UNLOCKS_2026-11-06.md#application-locale--6-novembre-2026).
 
+## Alertes d’exploitation — 6 novembre 2026
+
+Décision explicite du propriétaire : courriel vers une adresse conservée en configuration privée ; profil modéré, signal absent 120 secondes, relais en retard de 300 secondes, rappel au maximum chaque heure, échec définitif dès détection et message de rétablissement. Le contrôle d’arrêt confirmé reste distinct de la seule absence d’un signal. Ce choix ne modifie aucune règle de jeu et ne vaut pas preuve d’activation sur l’Alpha.
+
 ### Fighter : chantier spatial requis — 6 novembre 2026
 
 À la demande explicite de l’utilisateur, le déblocage initial du Fighter basique exige désormais un chantier spatial basique niveau 1. Les conditions des rangs intermédiaire et supérieur restent conservées. Les accès déjà acquis restent régis par le registre persistant existant.

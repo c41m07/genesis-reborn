@@ -17,3 +17,7 @@ Chantier C : ajout de l’observation des signaux des processus, du partage du r
 Chantier D : ajout du lien vers le diagnostic des relais et des limites des données. La collecte indisponible n’est plus présentée comme une file vide. Aucun paramètre d’équilibrage, commande d’installation ou dépendance changé. La documentation distingue retard après échéance, âge inconnu et tentatives du worker.
 
 Les 15 liens locaux du README existent. Le guide des relais, l’index et la ROADMAP ont aussi leurs liens vérifiés. Contrôles D : 215 tests PHP sur une suite complète, 89 scénarios navigateur validés après reprises ciblées ; les limites de consultation des échecs AMQP et l’absence de vérification des messages réels de l’Alpha sont documentées.
+
+Chantier E : README complété avec les alertes par courriel, leurs seuils, leur état désactivé et le guide central de configuration. Ajout de la commande `make ops-check` et des variables `OPS_ALERT_*`, sans destination personnelle ni secret versionné. La procédure serveur et la construction de production restant à vérifier sont distinguées des preuves locales.
+
+Vérification E : 16 liens locaux du README, 34 de l’index, 8 de la ROADMAP et 2 du guide d’alertes existent. Commande du Makefile et syntaxe du script vérifiées ; simulation et arrêt réel d’un worker de test validés. La suite PHP finale et les deux lots navigateur complets réussissent, sans validation de réception ou d’activation sur le serveur.

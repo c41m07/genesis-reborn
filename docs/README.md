@@ -14,6 +14,8 @@ Les objectifs de durée début/milieu/fin, les gains et pertes et les profils PN
 
 ## État et exploitation
 
+- [Alertes d’exploitation](OPERATIONS_ALERTS.md) : courriel, seuils, état persistant et job hôte à configurer.
+
 - [Relais en attente et reprise](OUTBOX.md) : échéances, retard, doublons, tentatives et diagnostic.
 
 - [Signaux des processus](OPERATIONS_SIGNALS.md) : partage du dossier en production, états affichés et diagnostic.

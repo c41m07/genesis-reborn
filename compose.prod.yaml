@@ -12,7 +12,7 @@ x-app: &app
 services:
   app:
     <<: *app
-    volumes: ["sessions:/app/var/sessions", "process_runtime:/app/var/run:ro"]
+    volumes: ["sessions:/app/var/sessions", "process_runtime:/app/var/run:ro", "operations_state:/app/var/operations"]
     networks: [backend, traefik]
     depends_on:
       database: {condition: service_healthy}
@@ -129,6 +129,7 @@ services:
       retries: 20
 
 volumes:
+  operations_state:
   process_runtime:
   sessions:
   database_data:

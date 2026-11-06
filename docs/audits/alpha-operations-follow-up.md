@@ -2,7 +2,8 @@
 
 ## État en cours
 
-- Branche courante : `feature/pending-relays`, créée depuis `origin/dev` au commit `a372a9d`, après fusion vérifiée du chantier C. Chantier D publié au commit `9771855`, [PR #5](https://github.com/c41m07/genesis-reborn/pull/5) ouverte vers `dev`, CI en cours ; aucun déploiement.
+- Branche courante : `feature/operation-alerts`, créée depuis `origin/dev` au commit `68c8a29`, après fusion vérifiée de D. Chantier E implémenté et contrôlé localement ; publication vers dev à préparer, aucun envoi externe activé.
+- Avancement demandé par le propriétaire : **33 %**, quatre lots intégrés sur douze (A–K et refonte finale du README). Le pourcentage compte les lots fusionnés, pas le temps ni les déploiements.
 - Worktree : `/home/caim/Projets/Genesis_Reborn-account-email`.
 - Les changements du propriétaire dans le checkout original sont préservés.
 - Implémentation publiée : commit `2d09960` sur `feature/account-email`.
@@ -125,3 +126,39 @@ Contrôles D avant publication : `make validate`, `make lint`, `npm run build` e
 Publication D vérifiée : PR #5, base `dev`, commit `977185589eb2961846be3383de7d13ddeb40ec81`, treize fichiers attendus dans le diff. Aucune revue, commentaire ou discussion au premier examen. Les contrôles GitHub ont démarré ; attendre leur résultat et revérifier le SHA et les discussions avant fusion. Cette note reste locale et accompagnera le lot suivant.
 
 Première CI D : les deux suites PHP passent ; une exécution du lot navigateur 3 échoue sur une mesure immédiate de hauteur après le retour d’un formulaire de réinitialisation et redimensionnement (41 px mesurés pour un seuil de 44), tandis que l’autre exécution de ce lot passe. Le test attend désormais la fin du chargement et interroge la hauteur et la largeur jusqu’à stabilisation, avec les mêmes seuils, les vérifications de position conservées et le délai global inchangé. Le scénario complet repasse localement (24,1 secondes), avec les contrôles fonctionnels et axe ; aucune assertion supprimée ou assouplie. Les autres contrôles locaux réussis portent sur les mêmes fichiers applicatifs, inchangés par cette correction de test. `git diff --check` est relancé avant publication. Nouvelle CI requise avant fusion.
+
+Suivi de la CI sur `6601b8eebd56eedf8c4a439c40750f0da9d436f2` : dix contrôles réussis, dernier lot navigateur 2 encore en cours. Le diff final contient quatorze fichiers attendus et aucune discussion ouverte au dernier examen.
+
+Point serveur à conserver : la route de combat corrige les nouvelles publications mais ne démontre pas l’état des combats déjà concernés sur l’Alpha. Aucune commande de réconciliation globale n’a été trouvée dans les commandes actuelles ; le worker est `messenger:consume async`, supervisé par Compose. Lors d’une intervention autorisée, examiner les combats persistants, l’outbox et le transport avant toute décision de reprise. Aucun rejeu, effacement ou redémarrage de l’Alpha exécuté. Cette limite est une vérification serveur restante, pas un résultat de test local.
+
+## Chantier D — intégré à dev, non déployé
+
+[PR #5](https://github.com/c41m07/genesis-reborn/pull/5) fusionnée et vérifiée le 6 novembre 2026 à 19 h 14 (Europe/Paris), commit d’intégration `68c8a2946e3259c9fdfe56ab81446ec5409602d0`. Les onze contrôles GitHub réussissent sur `6601b8eebd56eedf8c4a439c40750f0da9d436f2` : deux suites PHP, huit lots navigateur et GitGuardian. PR `clean`, sans commentaire, revue ni discussion avant fusion. `origin/dev` récupérée après fusion. Les étapes et résultats intermédiaires ci-dessus sont historiques.
+
+Résultat : routage différé des combats rétabli, diagnostic de vingt échéances en attente et de leur retard, natures inconnues visibles, collecte indisponible distinguée d’une file vide et affichage clavier/mobile vérifié. Contrôles locaux : 215 tests PHP et 205 539 assertions sur une suite complète ; 89 scénarios navigateur validés après les reprises décrites ; validation, lint, construction et diff réussis. Aucun déploiement, migration, installation ou effacement de messages. L’état des messages et des combats déjà concernés sur l’Alpha reste à examiner lors d’une intervention serveur autorisée.
+
+## Chantier E — préparation et choix indispensables
+
+Branche `feature/operation-alerts` créée depuis le nouveau `dev` à `68c8a29`, sans développement sur une ancienne branche. Complexité : 4/5 (supervision réelle, distinction des états inconnus, canal externe, déduplication persistante et sécurité). État Git vérifié avant reprise ; changements du propriétaire et fichiers générés exclus préservés. Aucun code E modifié.
+
+Premières recherches dans la configuration, les scripts, les workflows et les documents actifs : aucun canal ni seuil d’alerte d’exploitation trouvé. Le mail utilise déjà Symfony Mailer, `MAILER_DSN` et `MAILER_FROM`. Les notifications du jeu passent par leur propre outbox/Mercure ; elles ne doivent pas devenir des alertes envoyées aux joueurs. Les signaux et l’outbox sont observables par `AdminOperationsService` ; le compteur `failed` peut être obtenu avec le receiver AMQP, mais pas sa liste détaillée via la commande Messenger actuelle.
+
+Questions ciblées envoyées au propriétaire : canal et destination (courriel recommandé via le transport du projet, ou webhook hors dépôt) ; profils de seuils proposés. Profil modéré proposé : signal absent 2 minutes, retard de relais 5 minutes, échec définitif dès détection, rappel au plus une fois par heure et notification de rétablissement. Aucun choix considéré accepté en l’absence de réponse, aucun envoi externe activé.
+
+Plan de reprise E : confirmer les choix ; concevoir un relevé qui distingue arrêt confirmé par supervision, signal manquant/ancien, collecte indisponible et fonctionnement récent ; prévoir un état persistant de déduplication et tester les frontières de seuil, rappels, rétablissement et panne de transport. Une vérification locale ne prouvera pas la supervision de l’Alpha. Préserver l’absence d’accès Docker depuis l’application : la confirmation d’arrêt doit venir d’un contrôleur côté hôte ou d’une source de supervision autorisée. Documenter exécution automatisable, configuration sans secret et diagnostic. Réutiliser le mail et les mesures existantes si le canal retenu le permet ; ne pas ajouter de migration sans nécessité démontrée et validation.
+
+Cette conclusion D et cette préparation E restent locales pour accompagner le prochain lot documentaire. E–K et audit final du README restent incomplets.
+
+### Choix E reçus et implémentation préparée
+
+Le propriétaire a choisi le courriel et les seuils modérés, puis fourni l’adresse destinataire. Elle est conservée uniquement dans `.env.local` ignoré, avec `OPS_ALERT_ENABLED=0`, jamais dans les valeurs publiées. Aucune activation sur un serveur.
+
+Implémentation : évaluateur de conditions, mails réutilisant Symfony Mailer, état JSON atomique sous verrou, volume persistant dédié, commande CLI alimentée par le relevé Docker et script hôte automatisable. Les signaux manquants ont un délai d’observation ; l’arrêt confirmé prime sur un signal récent. Les états inconnus ne déclenchent pas de faux rétablissement. Les compteurs d’échec AMQP restent agrégés et les indisponibilités globales nécessitent une surveillance extérieure.
+
+Neuf tests unitaires passent (43 assertions). La première suite PHP complète passe avec 224 tests et 205 582 assertions. Après reconstruction du cache local dev ancien, la commande et le script fonctionnent en simulation, même avec --send lorsque les envois sont désactivés. Le test d’arrêt réel du worker éphémère passe après préparation explicite d’un signal côté collecteur (tmpfs séparés par conteneur) ; aucun mail réel.
+
+Construction complète de l’image de production tentée hors réseau : impossible faute de paquets APT en cache, pas un résultat applicatif réussi. Aucune installation réseau effectuée pour contourner ce prérequis. Vérification plus limitée sur une image dérivée du runtime existant, code/configuration actuels : volume initialisé sous www-data, alerte avec transport null, nouveau conteneur sans doublon, rétablissement (1,0,1). Le premier essai de ce runtime manquait de DEFAULT_URI ; la reprise fournit les variables de l’application isolée sans afficher les secrets. Cette preuve ne remplace ni une construction complète ni une réception de mail en production.
+
+Prochaine action : contrôles obligatoires sur le lot figé, puis revue du diff, commit et PR vers dev. Aucun code de jeu, migration ou traitement de message modifié.
+
+Contrôles E finaux sur le lot figé : make validate, make lint, make test (**224 tests, 205 582 assertions**), npm run build, make test-browser (**90 scénarios, deux lots complets de 45 réussis, 15,7 et 16,8 minutes**) et git diff --check réussis. Aucun échec dans cette validation finale complète ; les essais de mise au point précédents restent décrits séparément. Script validé par bash -n ; configuration Compose de production rendue avec volume d’état en écriture. Liens locaux vérifiés : README 16, index 34, ROADMAP 8 et guide 2, aucun absent. La construction complète de l’image de production hors réseau reste non validée pour la raison indiquée ; le runtime dérivé et les droits ont une preuve séparée.
