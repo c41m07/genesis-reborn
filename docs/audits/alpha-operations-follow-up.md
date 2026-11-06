@@ -52,6 +52,8 @@ Les valeurs SMTP et la réception sur l’Alpha restent des points de configurat
 
 Première CI du chantier B sur `6316b87` : les deux lots PHP et toutes les autres exécutions navigateur réussissent ; une exécution du lot 2 échoue lors du second changement de colonie, effectué juste après l’ouverture de Recherche. Le scénario attend désormais le chargement de cette page avant l’interaction, comme pour le premier changement déjà stabilisé au chantier A. Reprise locale réussie du scénario complet (47,8 secondes), sans modification d’assertion ou de délai. La nouvelle CI sur ce correctif doit réussir avant fusion.
 
+CI suivante sur `520bbb3` : une mesure responsive du formulaire d’univers est exécutée trop tôt après redimensionnement (466 px mesurés pour une fenêtre de 390 px). Les trois mesures identiques du fichier attendent désormais la stabilisation via `expect.poll`, avec les mêmes seuils et le délai global des scénarios inchangé. Les trois scénarios du fichier passent localement (59,6 secondes au total). Nouvelle validation GitHub requise avant fusion.
+
 ## Ordre prévu
 
 A (comptes/mails), B (réinitialisation), C/D (signaux/relais), E (alertes : canal et seuils à confirmer), F (sauvegardes), G (parcours serveur : accès requis), H (mesures), I (documentation hébergement), J (wiki), K (fermeture). Le README accompagne les changements puis reçoit une vérification finale.
