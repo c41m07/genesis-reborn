@@ -5,11 +5,12 @@
 - Branche : `feature/account-email`, issue de `origin/dev` au commit `d2e90aa`.
 - Worktree : `/home/caim/Projets/Genesis_Reborn-account-email`.
 - Les changements du propriétaire dans le checkout original sont préservés.
-- Aucun commit, push, PR ou merge effectué à ce stade.
+- Implémentation publiée : commit `2d09960` sur `feature/account-email`.
+- [PR #2](https://github.com/c41m07/genesis-reborn/pull/2), base `dev`, créée et vérifiée. CI distante en cours ; aucune fusion ni mise en ligne à ce stade.
 - Décision du propriétaire : envoyer un mail de bienvenue et vérifier l’adresse avant accès pour les nouveaux comptes. Les comptes existants gardent leur accès.
 - Migration autorisée uniquement dans les bases locales de test ; aucune intervention serveur autorisée par cette validation.
 
-## Chantier A — validé localement, publication en préparation
+## Chantier A — validé localement, PR ouverte
 
 Statut d’adresse vérifiée, jetons hachés valables 24 heures, confirmation par POST protégé contre les CSRF, deux mails et formulaire de renvoi préparés. L’expéditeur utilise `MAILER_FROM` (valeur locale par défaut) et les liens utilisent `DEFAULT_URI`.
 
@@ -25,7 +26,7 @@ L’échec intermittent PNJ était une attente incorrecte du test : une mission 
 
 `make test-browser` : **88 scénarios uniques réussis par résultats consolidés**. Les quatre lots complets ont donné 84 réussites et 4 échecs. Après correction des droits du dossier local `var`, les 3 tests catalogue/inventaire passent. La reprise du scénario des routes passe sans augmenter son délai. Le défilement natif animé du clavier pouvait reprendre après un filtre technologique : un traitement limité aux flèches horizontales sur le graphe corrige ce défaut, puis les 4 tests de cette page passent après recompilation. Aucun test supprimé ni assertion assouplie. Les autres fonctionnalités utilisent des comptes vérifiés via la fixture navigateur ; le scénario de confirmation désactive cette préparation. Le transport navigateur est forcé à `null://null`.
 
-Prochaine action : commit ciblé, push, PR avec base `dev`, contrôle du diff et de la CI, puis fusion seulement si tous les contrôles et discussions le permettent. Le SMTP, l’expéditeur et l’URL de l’Alpha doivent être vérifiés séparément sur le serveur ; aucun déploiement effectué.
+Le diff publié a été contrôlé : 28 fichiers, sans les changements du propriétaire ni les dépendances locales. Aucune discussion ouverte au premier contrôle de la PR. Prochaine action : examiner la fin de la CI sur le dernier commit, corriger ses éventuels échecs, puis fusionner uniquement si les contrôles et discussions le permettent. Le SMTP, l’expéditeur et l’URL de l’Alpha doivent être vérifiés séparément sur le serveur ; aucun déploiement effectué.
 
 ## Ordre prévu
 
