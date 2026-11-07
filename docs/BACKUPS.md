@@ -44,7 +44,7 @@ Aucun job n’est installé sur un serveur par ce chantier. Protéger et faire t
 
 `BACKUP_DIR=... GENESIS_PROJECT=... make backup-status` contrôle le statut et, pour un succès récent, la présence et le checksum de l’archive. L’outil Python renvoie 0 pour un succès récent vérifié, 1 pour un échec/ancienneté excessive/job trop long, 2 si les données sont inconnues ou invalides, et 3 pour un job normalement en cours. Make traduit les retours non nuls en son propre code d’erreur : consulter aussi le relevé JSON.
 
-Pour réutiliser les [alertes par courriel](OPERATIONS_ALERTS.md), fournir `BACKUP_DIR` et `GENESIS_PROJECT` au job hôte `operations-check.sh`, avec les limites ci-dessus si nécessaire. Un échec ou un succès trop ancien devient une alerte de sauvegarde, un état invalide reste inconnu avec alerte de diagnostic. Un job normalement en cours ne déclenche ni alerte ni rétablissement prématuré ; l’incident précédent est conservé jusqu’à un succès vérifié. Les règles existantes de rappels horaires, rétablissement, simulation et activation privée restent applicables.
+Pour réutiliser les [alertes par courriel](EXPLOITATION.md), fournir `BACKUP_DIR` et `GENESIS_PROJECT` au job hôte `operations-check.sh`, avec les limites ci-dessus si nécessaire. Un échec ou un succès trop ancien devient une alerte de sauvegarde, un état invalide reste inconnu avec alerte de diagnostic. Un job normalement en cours ne déclenche ni alerte ni rétablissement prématuré ; l’incident précédent est conservé jusqu’à un succès vérifié. Les règles existantes de rappels horaires, rétablissement, simulation et activation privée restent applicables.
 
 ## Restaurer uniquement sur une instance séparée pour vérifier
 

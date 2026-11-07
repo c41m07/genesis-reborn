@@ -67,7 +67,7 @@ Les secrets ne sont jamais copiés dans l'image ni envoyés depuis GitHub.
 Configurer `SYMFONY_TRUSTED_PROXIES` avec le sous-réseau réel de Traefik
 (`docker network inspect traefik_network`), afin que Symfony reconnaisse HTTPS.
 Les URL publiques et `DEFAULT_URI` doivent utiliser le domaine HTTPS retenu.
-Pour les nouvelles inscriptions, configurer aussi `MAILER_FROM` avec un expéditeur autorisé par le fournisseur de `MAILER_DSN`. Le domaine de repli local ne convient pas au serveur. Vérifier la réception et le lien de confirmation avec un compte de test après application de la migration autorisée ; voir [le parcours des mails de compte](ACCOUNT_EMAIL.md).
+Pour les nouvelles inscriptions, configurer aussi `MAILER_FROM` avec un expéditeur autorisé par le fournisseur de `MAILER_DSN`. Le domaine de repli local ne convient pas au serveur. Vérifier la réception et le lien de confirmation avec un compte de test après application de la migration autorisée ; voir [le parcours des mails de compte](ARCHITECTURE.md).
 L'image et les services ne publient aucun port MariaDB/RabbitMQ sur l'hôte.
 
 Si le package GHCR est privé, authentifier Docker sur le serveur avec un compte
@@ -89,15 +89,15 @@ cohérente de `scripts/db-backup.sh`, `scripts/db-restore.sh`,
 `scripts/backup-tools.py` et `scripts/operations-check.sh`, en conservant leur
 arborescence et leurs chemins configurés. Vérifier leurs prérequis (Python 3,
 Bash, outils GNU et `flock`), droits, configuration privée et codes de sortie.
-Consulter les guides [sauvegardes](BACKUPS.md), [alertes](OPERATIONS_ALERTS.md) et
-[signaux](OPERATIONS_SIGNALS.md) avant de créer les jobs de l’hôte. Aucun cron,
+Consulter les guides [sauvegardes](BACKUPS.md), [alertes](EXPLOITATION.md) et
+[signaux](EXPLOITATION.md) avant de créer les jobs de l’hôte. Aucun cron,
 destinataire privé ou secret n’est installé par la seule livraison de l’image.
 Les envois externes restent désactivés tant que leur configuration n’est pas
 explicitement activée et leur réception vérifiée par l’opérateur.
 
 Ne pas appliquer au serveur les valeurs d’exemple ou les résultats des instances
 jetables comme s’ils avaient été vérifiés sur l’Alpha. Les essais perturbateurs
-restent décrits dans les [scénarios isolés](SERVER_SCENARIOS.md).
+restent décrits dans les [scénarios isolés](EXPLOITATION.md).
 
 ## Configurer GitHub
 

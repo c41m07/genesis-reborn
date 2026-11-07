@@ -1,5 +1,9 @@
 # Genesis Reborn — matrice de traçabilité des exigences
 
+> Archive : texte conservé dans son contexte d’origine, sans validation nouvelle.
+> Les règles actuelles sont dans [REGLES](../REGLES.md),
+> [DECISIONS](../DECISIONS.md) et [ROADMAP](../ROADMAP.md).
+
 Mise à jour : 02/11/2026 (UTC). Source principale : mission Work V4 et brief Figma Work V2 fournis par Kévin. Les lignes des phases 01–11 renvoient aux audits détaillés existants ; une phase n'est validée que selon les preuves de son audit, et non par cette ligne de synthèse.
 
 États : VALIDÉE = critères attestés par l’audit référencé ; PARTIELLE = exigences applicables ouvertes ; EN COURS = vérification ou livraison inachevée ; À FAIRE = non commencée ; IMPLÉMENTÉE NON VALIDÉE = code présent, preuves insuffisantes.

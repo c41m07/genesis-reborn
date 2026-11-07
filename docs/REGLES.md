@@ -34,9 +34,9 @@ Guildes : recrutement ouvert provisoire, adhésion exclusive dans chaque univers
 
 Conquête JcE : seules les planètes neutres marquées PNJ sont attaquables; une victoire avec un vaisseau colonie survivant capture la planète. Bâtiments, stocks et développement sont conservés; flotte et défenses PNJ disparaissent. Les planètes vierges restent colonisables et aucune planète détenue par un joueur n’est conquérable.
 
-Espionnage : une mission cible une planète connue du même univers autre que celles de l’émetteur. Elle transporte uniquement des sondes, détruites à l’arrivée. La détection avertit le propriétaire et bloque le rapport; les renseignements et rapports suivent les niveaux et règles résumés dans docs/agent/PHASE_02_DECISIONS.md.
+Espionnage : une mission cible une planète connue du même univers autre que celles de l’émetteur. Elle transporte uniquement des sondes, détruites à l’arrivée. La détection avertit le propriétaire et bloque le rapport; les renseignements et rapports suivent les niveaux et règles résumés dans docs/archives/DECISIONS_INITIALES.md.
 
-Les classements, l’administration, les combats, les missions avancées et l’espionnage sont livrés. Les choix chiffrés de base figurent dans docs/agent/BALANCING_QCM_2026-11-02.md; leur effet sur le rythme et la difficulté sera mesuré avec les joueurs Alpha.
+Les classements, l’administration, les combats, les missions avancées et l’espionnage sont livrés. Les choix chiffrés de base figurent dans docs/archives/QCM_2026-11-02.md; leur effet sur le rythme et la difficulté sera mesuré avec les joueurs Alpha.
 
 
 ## Fermeture d’univers temporaires
@@ -80,7 +80,7 @@ Les 19 recherches ont reçu des libellés français distincts et des slugs dédi
 
 ## Rééquilibrage progression et combat — 02/11/2026
 
-Les courbes, bonus communs entre rangs, profils de mobilité, ciblage furtif, retarget après destruction et matrice de contres sont décrits dans [BALANCING_IMPLEMENTATION_2026-11-02.md](agent/BALANCING_IMPLEMENTATION_2026-11-02.md). Ces choix sont validés pour l’implémentation ; les jalons économiques demeurent des objectifs à mesurer en Alpha.
+Les courbes, bonus communs entre rangs, profils de mobilité, ciblage furtif, retarget après destruction et matrice de contres sont décrits dans [BALANCING_IMPLEMENTATION_2026-11-02.md](archives/PROGRESSION_2026-11-02.md). Ces choix sont validés pour l’implémentation ; les jalons économiques demeurent des objectifs à mesurer en Alpha.
 
 Pour les bonus et les courbes, ce rééquilibrage remplace les formules historiques de la section précédente : les bonus de recherche ne se composent plus par rang. L’investissement pondéré vaut la somme des niveaux de chaque rang, plafonnés à leur maximum et pondérés par 1 / 1,25 / 1,5625, divisée par le maximum pondéré des trois rangs. La progression commune vaut `ln(1 + 2 × investissement) / ln(3)` ; le bonus vaut cette progression multipliée par le plafond configuré. Les plafonds de réduction de durée et de coût sont respectivement 70 % et 40 %. La cadence accorde une seule chance supplémentaire commune, plafonnée à 50 % par tir de base. Les coûts et durées utilisent les courbes par phase de `config/game/rules.yaml`, sous réserve des décisions plus récentes sur les producteurs. Les statistiques de combat R14 et les compositions de coûts du 5 novembre restent prioritaires sur les anciens exemples chiffrés.
 
@@ -103,14 +103,14 @@ Les dégâts d’un tour sont multipliés par ((HP + bouclier restants)/(HP + bo
 
 Les neuf classes R14 ont une croissance de combat 1/1,5/2,25 ; les coûts par rang et les autres facteurs de mobilité/construction restent séparés. Une escorte est une composition financée par remplacement, sans interception ou interposition automatique. Un round reste une minute, dix rounds au maximum ; si les camps subsistent à la limite, le défenseur gagne officiellement. Les HP individuels ne sont pas persistés entre batailles.
 
-Les statistiques, prix, coefficients, preuves de transposition et précautions de déploiement R14 sont détaillés dans [BALANCING_R14.md](BALANCING_R14.md).
+Les statistiques, prix, coefficients, preuves de transposition et précautions de déploiement R14 sont détaillés dans [BALANCING_R14.md](EQUILIBRAGE.md#combat-r14).
 
 
 ## Vitesses de voyage — 5 novembre 2026
 
 Le Capital est la classe la plus lente à rang et recherches comparables. La durée dépend des distances réelles de la carte, de la position de départ et d’arrivée, des deux vitesses minimales de la flotte (dans le système et entre systèmes), des recherches, du rang, du pourcentage de départ et du multiplicateur de l’univers. Elle est arrondie à la seconde supérieure. Le retour utilise la même durée de trajet enregistrée à l’aller ; les stationnements, combats et temps de traitement sont supplémentaires.
 
-Un trajet prend au minimum 60 secondes, même dans un univers accéléré ou avec des recherches. Une flotte exclusivement composée de sondes voyageant dans le même système dispose d’un minimum de 30 secondes. Ajouter un autre type de vaisseau rétablit le minimum de 60 secondes et la vitesse du plus lent. Au rang basique sans recherche et à 100 %, le trajet local le plus long (position 1 → 9) prend 60 secondes en Sonde et 3 600 secondes en Capital. Sur les cartes du projet et la grille générée maximale de 100 systèmes, les trajets intersystèmes de référence ne dépassent pas 3 minutes en Sonde et 12 heures en Capital. Les bonus réduisent ces durées ; un départ à vitesse réduite peut les dépasser. Les vitesses et exemples intersystèmes sont détaillés dans [SPEED_BALANCE_2026-11-05.md](SPEED_BALANCE_2026-11-05.md).
+Un trajet prend au minimum 60 secondes, même dans un univers accéléré ou avec des recherches. Une flotte exclusivement composée de sondes voyageant dans le même système dispose d’un minimum de 30 secondes. Ajouter un autre type de vaisseau rétablit le minimum de 60 secondes et la vitesse du plus lent. Au rang basique sans recherche et à 100 %, le trajet local le plus long (position 1 → 9) prend 60 secondes en Sonde et 3 600 secondes en Capital. Sur les cartes du projet et la grille générée maximale de 100 systèmes, les trajets intersystèmes de référence ne dépassent pas 3 minutes en Sonde et 12 heures en Capital. Les bonus réduisent ces durées ; un départ à vitesse réduite peut les dépasser. Les vitesses et exemples intersystèmes sont détaillés dans [SPEED_BALANCE_2026-11-05.md](EQUILIBRAGE.md#vitesses-et-autonomie).
 
 
 Ordre de vitesse adopté : Capital → Cuirassé → Colonie → Transport → Bombardier → Destroyer → Croiseur → Frégate → Chasseur lourd → Chasseur → Corvette → Furtif → Intercepteur → Sonde. Chaque classe possède un réservoir dédié de 16 000 H au rang basique, suffisant pour le plus long aller-retour des cartes de référence à 100 %, sans utiliser la soute. Les consommations par distance sont inchangées ; les recherches et rangs peuvent augmenter le réservoir. Le carburant nécessaire doit toujours être présent et chargé au départ ; le stationnement consomme en supplément.
@@ -153,7 +153,7 @@ Les coûts des seuls producteurs croissent par niveau de ×1,12 jusqu’à 20, �
 
 Une usine dont la production ne peut plus être stockée suspend ses consommations inutiles. Les raffineries et centrales continuent de fournir les besoins immédiats des autres usines lorsque leurs propres stocks sont pleins. Les pénuries et remplissages sont calculés pendant toute la période écoulée ; les petites erreurs numériques ne doivent pas interrompre ce calcul. Les débits nets affichés excluent les excédents impossibles à stocker.
 
-Les valeurs et résultats de référence, la distinction entre délai d’accès et remboursement, les données existantes et les vérifications sont détaillés dans [BUILDING_BALANCE_2026-11-05.md](BUILDING_BALANCE_2026-11-05.md). Les surcharges d’univers peuvent toujours remplacer les valeurs de base. Les coûts et durées déjà payés en file restent conservés.
+Les valeurs et résultats de référence, la distinction entre délai d’accès et remboursement, les données existantes et les vérifications sont détaillés dans [BUILDING_BALANCE_2026-11-05.md](EQUILIBRAGE.md#production-des-batiments). Les surcharges d’univers peuvent toujours remplacer les valeurs de base. Les coûts et durées déjà payés en file restent conservés.
 
 ### Limites par défaut des univers — 5 novembre 2026
 
@@ -172,7 +172,7 @@ Le classement des guildes additionne les points actuels de bâtiments, recherche
 
 Les 14 classes utilisent les parts de valeur économique suivantes : T1 60 % métal / 40 % nano ; T2 45 % métal / 45 % nano / 10 % antimatière ; T3 30 % métal / 50 % nano / 20 % antimatière. Le calcul pondère M×2, N×4, A×8 et H×1. Ces pourcentages ne représentent pas les quantités brutes. Les arrondis des trois ressources sont répartis pour conserver exactement la valeur de chaque profil de rang avant recherche ; les profils réels font foi.
 
-Le carburant des missions est séparé des coûts de construction, qui n’ajoutent pas d’hydrogène. Les recherches de réduction des coûts s’appliquent ensuite avec leurs arrondis par ressource. Les nouvelles commandes utilisent les nouveaux prix ; les coûts déjà payés restent enregistrés. Les profils, budgets conservés et limites sont détaillés dans [SHIP_COSTS_2026-11-05.md](SHIP_COSTS_2026-11-05.md).
+Le carburant des missions est séparé des coûts de construction, qui n’ajoutent pas d’hydrogène. Les recherches de réduction des coûts s’appliquent ensuite avec leurs arrondis par ressource. Les nouvelles commandes utilisent les nouveaux prix ; les coûts déjà payés restent enregistrés. Les profils, budgets conservés et limites sont détaillés dans [SHIP_COSTS_2026-11-05.md](COMMON_COSTS_2026-11-05.md).
 
 
 ## Grille commune des prix — 5 novembre 2026

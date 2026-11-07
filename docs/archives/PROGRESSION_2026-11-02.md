@@ -1,5 +1,9 @@
 # Rééquilibrage progression et combat — 2 novembre 2026
 
+> Archive : texte conservé dans son contexte d’origine, sans validation nouvelle.
+> Les règles actuelles sont dans [REGLES](../REGLES.md),
+> [DECISIONS](../DECISIONS.md) et [ROADMAP](../ROADMAP.md).
+
 **Statut :** validé par Kévin, intégré aux règles du projet. Les jalons de campagne sont des objectifs de conception ; leur atteinte dépendra des retours de l’Alpha.
 
 ## Progression économique

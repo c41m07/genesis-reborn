@@ -1,5 +1,9 @@
 # Validation UI/UX
 
+> Archive : texte conservé dans son contexte d’origine, sans validation nouvelle.
+> Les règles actuelles sont dans [REGLES](../REGLES.md),
+> [DECISIONS](../DECISIONS.md) et [ROADMAP](../ROADMAP.md).
+
 ## Lot 20 — refus dédié et 403 générique
 
 - Avant : trois scénarios dans `/tmp/genesis-lot20-before-captures`, deux réussis (joueur et 403 générique), un échec pertinent après un vrai CSRF admin invalide : la carte réservait encore la console aux administrateurs et ne proposait pas de retour console. Configuration de l’univers inchangée.

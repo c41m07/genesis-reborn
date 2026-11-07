@@ -1,63 +1,29 @@
 # Documentation Genesis Reborn
 
-Cette page oriente vers les documents de référence. L’Alpha est hébergée selon le propriétaire ; son état serveur n’est pas attesté par les contrôles locaux ou GitHub. Pour l’état courant, consulter le [déploiement](DEPLOIEMENT.md) et le [suivi Alpha](audits/alpha-operations-follow-up.md). Les audits de phase dans `docs/agent/` restent historiques.
+Lire le README du dépôt pour installer et démarrer le jeu. Cet index donne
+une seule référence par sujet ; les anciens bilans ne décrivent pas l’état courant.
 
-## Règles et décisions de jeu
+| Besoin | Référence |
+| --- | --- |
+| Comprendre les règles actuelles | [REGLES](REGLES.md) |
+| Retrouver un arbitrage produit | [DECISIONS](DECISIONS.md) |
+| Voir les objectifs et vérifications restantes | [ROADMAP](ROADMAP.md) |
+| Comprendre les dossiers, .env, comptes, wiki et interfaces | [ARCHITECTURE](ARCHITECTURE.md) |
+| Installer et livrer sur le serveur | [DEPLOIEMENT](DEPLOIEMENT.md) |
+| Sauvegarder, contrôler et restaurer | [BACKUPS](BACKUPS.md) |
+| Diagnostiquer processus, outbox, alertes et mesures | [EXPLOITATION](EXPLOITATION.md) |
+| Régler le référencement et Search Console | [SEO](SEO.md) |
+| Consulter les profils de combat, production et vitesse | [EQUILIBRAGE](EQUILIBRAGE.md) |
+| Consulter les 150 profils de coûts | [Grille commune](COMMON_COSTS_2026-11-05.md) |
+| Comprendre les déblocages par rang | [Déblocages initiaux](INITIAL_UNLOCKS_2026-11-06.md) |
+| Modifier l’interface | [Guide UI](ui-ux/design-system.md) |
+| Recréer une illustration | [Prompts](ARTWORK_PROMPTS.md) |
+| Consulter une preuve ou décision historique | [Archives et liste de consolidation](archives/README.md) |
 
-- [Maintenance du wiki](WIKI.md) : contenu unique, références embarquées et vérifications.
+`wiki.json` reste le contenu unique du wiki. `CATALOGUE_LABELS.csv` conserve les
+150 libellés, descriptions et utilités de jeu ; la copie Markdown a été retirée.
+Les spécifications textuelles et PDF d’origine restent dans specifications/ et technic/.
 
-- [Règles de base](REGLES.md) : fonctionnement retenu et règles confirmées.
-- [Décisions](DECISIONS.md) : arbitrages utilisateur et adaptations aux spécifications.
-- [Rééquilibrage progression et combat](agent/BALANCING_IMPLEMENTATION_2026-11-02.md) : décision de balance intégrée; le [QCM](agent/BALANCING_QCM_2026-11-02.md) distingue les objectifs encore à mesurer.
-- [Audit des recherches maximisées](audits/audit-equilibrage-recherches-max-2026-11-02.md) : simulation historique, sans statut de décision.
-- [Spécifications textuelles](specifications/) et [PDF techniques](technic/).
-
-Les objectifs de durée début/milieu/fin, les gains et pertes et les profils PNJ sont à mesurer pendant l’Alpha. La cadence de combat confirmée pour cette phase est un round par minute, jusqu’à dix rounds.
-
-- [SEO et Search Console](SEO.md) : métadonnées, exploration et actions manuelles restantes.
-
-## État et exploitation
-
-- [Scénarios serveur et reprise](SERVER_SCENARIOS.md) : essais locaux isolés, preuves hors connexion et limites de validation de l’Alpha.
-- [Mesures par univers](UNIVERSE_METRICS.md) : définitions, couverture des ressources, attentes actuelles et limites des historiques.
-
-- [Sauvegardes et restauration isolée](BACKUPS.md) : conservation, état des jobs, preuve de restauration et limites de reprise.
-
-- [Alertes d’exploitation](OPERATIONS_ALERTS.md) : courriel, seuils, état persistant et job hôte à configurer.
-
-- [Relais en attente et reprise](OUTBOX.md) : échéances, retard, doublons, tentatives et diagnostic.
-
-- [Signaux des processus](OPERATIONS_SIGNALS.md) : partage du dossier en production, états affichés et diagnostic.
-
-- [Création de compte et confirmation d’adresse](ACCOUNT_EMAIL.md) : configuration des mails, jetons et migration.
-
-- [Déploiement GitHub Actions / GHCR](DEPLOIEMENT.md) : Alpha hébergée selon le propriétaire, chaîne versionnée, preuves et vérifications serveur restantes.
-- [État Alpha](agent/ALPHA_READINESS.md) : critères, preuves récentes et limites des tests.
-- [Audit final](agent/PHASE_15_FINAL_AUDIT.md) : verdict production et critères encore ouverts.
-- [Roadmap](ROADMAP.md) et [plan maître](agent/MASTER_PLAN.md).
-- [Matrice des exigences](agent/REQUIREMENTS_MATRIX.md) et [couverture des écrans](agent/UI_SCREEN_MATRIX.md).
-- [Runbook d’exploitation](agent/RUNBOOK_OPERATIONS.md).
-
-## Détails techniques et historique utile
-
-- [Vérification finale des contres du 4 novembre](audits/contres-verification-finale-2026-11-04.md) : contrôle exhaustif des types, rangs, recherches, tirs et relations affichées.
-
-- [Calcul des tirs secondaires du 4 novembre](audits/tirs-secondaires-2026-11-04.md) et [matrice CSV des 504 confrontations](audits/tirs-secondaires-2026-11-04.csv) : bonus +30, contres sur les dégâts et les chances de toucher, admissibilité des cibles et écarts de rang.
-
-- [Revue des fiches du catalogue du 4 novembre](audits/catalogue-fiches-2026-11-04.md) : contenu des 150 variantes, calcul des valeurs affichées et contrôles de la refonte.
-
-- [Résultats de validation](agent/TEST_STATUS.md) : dernier état des suites et commandes.
-- [Audits des phases](agent/) : architecture, comptes, économie, missions, combat, administration, interface et exploitation.
-- [Passes UI consolidées](agent/PHASE_12_PASS_HISTORY.md) : relevé des ajustements et preuves UI du 1er novembre.
-- [Inventaire des assets](agent/ASSET_MANIFEST.md) et [références UI](agent/UI_REFERENCE_GAP_REVIEW.md).
-- [Recherche UI](UI-RECHERCHE.md), [navigation multi-colonies](UI-MULTI-COLONIES.md) et [GalaxieV2](agent/GALAXY_V2.md) : descriptions de fonctionnalités et vérifications historiques.
-- [Prompts d’illustration](ARTWORK_PROMPTS.md) et [anciens prompts d’atlas](agent/ASSET_GENERATION_PROMPTS.md) : guide actuel et référence créative historique, respectivement.
-- Certaines anciennes captures ne sont plus conservées ; les rapports concernés signalent leurs preuves absentes. Les captures encore versionnées restent sous `docs/ui-ux/captures/`.
-
-Les rapports conservés dans ce dépôt sont des preuves ou des spécifications de référence. Les notes de session et bilans remplacés ne constituent pas une source de règles.
-
-- [Déblocages initiaux permanents — 6 novembre 2026](INITIAL_UNLOCKS_2026-11-06.md) : 50 éléments, prérequis par rang, raisons et compatibilité.
-
-## Compte à rebours de fermeture
-
-Affichage dans les dernières 24 heures, date serveur et rafraîchissement sans changement de règle ; voir [le guide](UNIVERSE_CLOSING.md). Livraison et contrôles : [suivi Alpha](audits/alpha-operations-follow-up.md).
+La documentation comporte 14 références actives et 8 documents historiques,
+au lieu de 72 Markdown. Les regroupements et retraits sont expliqués dans
+l’index des archives.

@@ -170,9 +170,9 @@ montées en lecture seule en développement et copiées dans `/docs` en producti
 - `app/src/Controller/`, [templates/](app/templates) et [assets/](app/assets) : requêtes HTTP, rendu Twig et comportements Stimulus ; [public/](app/public) sert les fichiers accessibles au navigateur.
 - `app/src/Service/`, `app/src/Entity/`, `app/src/Repository/` et `app/src/Manager/` : logique de jeu, données Doctrine et transactions.
 - [config/game/](app/config/game) et [config/universes/](app/config/universes) : catalogues, règles configurées et données d’univers ; les décisions produit restent dans la documentation de référence.
-- [compose.yaml](compose.yaml), point d’entrée vers [docker/compose.yaml](docker/compose.yaml) : application PHP/Apache, MariaDB, RabbitMQ, Mercure, consommateur `worker`, relais `relay` et notificateur `notifier` ; Traefik et SMTP locaux sont fournis séparément.
+- [compose.yaml](docker/compose.yaml), point d’entrée vers [docker/compose.yaml](docker/compose.yaml) : application PHP/Apache, MariaDB, RabbitMQ, Mercure, consommateur `worker`, relais `relay` et notificateur `notifier` ; Traefik et SMTP locaux sont fournis séparément.
 - Les événements persistés dans l’outbox sont transmis aux traitements asynchrones et aux notifications ; les files et états serveur permettent la progression sans navigateur ouvert.
-- [scripts/](scripts/) : configuration, exploitation et validations isolées ; [tests/](app/tests) : tests PHP, scripts et parcours Playwright.
+- [scripts/](scripts) : configuration, exploitation et validations isolées ; [tests/](app/tests) : tests PHP, scripts et parcours Playwright.
 
 ## Accueil public et référencement
 
@@ -183,15 +183,14 @@ robots.txt et sitemap.xml sont générés côté serveur. `DEFAULT_URI` doit cor
 
 ## Documentation de référence
 
-[docs/README.md](docs/README.md) est l’index complet. Points d’entrée actifs :
+[docs/README.md](docs/README.md) oriente vers une référence par sujet :
+règles et décisions, roadmap, architecture, exploitation, déploiement/sauvegardes,
+SEO, interface et données d’équilibrage. Les anciens bilans et leur contexte
+restent accessibles depuis [l’index des archives](docs/archives/README.md).
 
-- [Règles](docs/REGLES.md), [décisions](docs/DECISIONS.md) et [roadmap](docs/ROADMAP.md).
-- [Mails de compte et récupération](docs/ACCOUNT_EMAIL.md), [wiki](docs/WIKI.md) et [compte à rebours](docs/UNIVERSE_CLOSING.md).
-- [Signaux](docs/OPERATIONS_SIGNALS.md), [relais en attente](docs/OUTBOX.md), [alertes](docs/OPERATIONS_ALERTS.md) et [mesures par univers](docs/UNIVERSE_METRICS.md).
-- [Sauvegardes](docs/BACKUPS.md), [scénarios de reprise](docs/SERVER_SCENARIOS.md) et [déploiement](docs/DEPLOIEMENT.md).
-- [Suivi des chantiers](docs/audits/alpha-operations-follow-up.md) et [audit du nettoyage et du README](docs/audits/project-cleanup-report.md).
-
-Les audits de [docs/agent/](docs/agent/) conservent leur contexte historique. Les spécifications sont dans [docs/specifications/](docs/specifications/) et les PDF techniques dans [docs/technic/](docs/technic/). Le wiki explique le jeu sans recopier les valeurs du catalogue : son contenu unique est [docs/wiki.json](docs/wiki.json), avec accès près de Feedback et sur la vue générale.
+Le wiki utilise les sources uniques `docs/wiki.json`, `docs/REGLES.md` et
+`docs/DECISIONS.md`. Les PDF d’origine et leurs extractions textuelles sont
+conservés ; les libellés du catalogue restent dans `docs/CATALOGUE_LABELS.csv`.
 
 ## Contribution et conventions
 

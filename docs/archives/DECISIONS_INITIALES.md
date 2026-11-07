@@ -1,5 +1,9 @@
 # Phase 02 — décisions de gameplay et critères de combat
 
+> Archive : texte conservé dans son contexte d’origine, sans validation nouvelle.
+> Les règles actuelles sont dans [REGLES](../REGLES.md),
+> [DECISIONS](../DECISIONS.md) et [ROADMAP](../ROADMAP.md).
+
 Mis à jour : 2 novembre 2026. Les règles et choix utilisateurs ci-dessous ont été conservés. Les valeurs chiffrées du QCM appliquées à la configuration et les mesures attendues pendant l’Alpha sont dans BALANCING_QCM_2026-11-02.md.
 
 ## Orientation d’équilibrage confirmée — 01/11/2026

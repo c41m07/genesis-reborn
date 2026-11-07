@@ -1,5 +1,9 @@
 # Contrôle visuel du catalogue — 3 novembre 2026
 
+> Archive : texte conservé dans son contexte d’origine, sans validation nouvelle.
+> Les règles actuelles sont dans [REGLES](../REGLES.md),
+> [DECISIONS](../DECISIONS.md) et [ROADMAP](../ROADMAP.md).
+
 ## Périmètre et méthode
 
 Inspection des 150 WebP actifs sous forme de planches comparatives, une ligne par slug et trois colonnes (Basique, Intermédiaire, Supérieur). Les planches permettent une comparaison visuelle de chaque illustration et de sa famille. Les fichiers sources PNG ont été trouvés dans `source/`. Les aperçus réduisent les images à 360 × 270 : les détails fins (artefacts locaux, inscriptions minuscules, défauts géométriques subtils) restent à contrôler à taille native.
