@@ -1012,10 +1012,6 @@ export default class extends Controller {
     }
 
     toGalaxy() {
-        if (this.mode === 'planet') {
-            this.toSystem();
-            return;
-        }
         this.mode = this.motionReduced ? 'galaxy' : 'transition-to-galaxy';
         this.setCanvasMode('galaxy');
         this.systemPanelTarget.hidden = true;
@@ -1079,15 +1075,7 @@ export default class extends Controller {
     }
 
     closePlanet() {
-        const id = this.selectedPlanet?.id;
-        this.selectedPlanet = null;
-        this.planetPanelTarget.hidden = true;
-        if (!this.planetBackTarget.hidden) this.planetBackTarget.focus({ preventScroll: true });
-        else {
-            this.systemPanelTarget.hidden = false;
-            this.systemContentTarget.querySelector('[data-planet-id="' + id + '"]')?.focus({ preventScroll: true });
-        }
-        this.drawFrame(0);
+        this.toGalaxy();
     }
 
     focusPanel(panel) {
@@ -1101,7 +1089,7 @@ export default class extends Controller {
     navigateBack(event) {
         if (event.key !== 'Escape' || event.defaultPrevented || event.target.closest('input, select, textarea')) return;
         if (!this.planetBackTarget.hidden) this.toSystem();
-        else if (!this.planetPanelTarget.hidden) this.closePlanet();
+        else if (!this.planetPanelTarget.hidden) this.toSystem();
         else if (!this.systemPanelTarget.hidden) this.toGalaxy();
         else return;
         event.preventDefault();

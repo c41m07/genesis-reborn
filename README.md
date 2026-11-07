@@ -11,6 +11,8 @@ L’orientation confirmée est une stratégie au rythme modéré ; les durées d
 Le code comprend :
 
 - Comptes, connexion, profils et préférences ; bienvenue et vérification d’adresse pour les nouveaux comptes, renvoi du lien et réinitialisation du mot de passe.
+  - Session expirée après 24 h sans requête au serveur ; case « Se souvenir de moi » facultative pendant 30 jours, annulée à la déconnexion. Un cookie de mémorisation valide permet de retrouver sa connexion après expiration de la session.
+  - Mots de passe masqués par défaut, avec un bouton œil pour afficher ou masquer chaque champ.
 - Univers, colonies et ressources ; bâtiments, recherches, rangs et files de production ; progression traitée pendant la déconnexion.
 - Flottes, exploration, transport, colonisation, attaque, défense, orbite et espionnage ; combats persistés, conquête de planètes PNJ et rapports privés.
 - Diplomatie, guildes, messages, notifications, inventaire de boosts et événements.

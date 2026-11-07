@@ -42,3 +42,47 @@ test('Les fins d’animation de la carte respectent une navigation plus récente
     else globalThis.window = previousWindow;
   }
 });
+
+test('Échap conserve le retour au système depuis la fiche planète', () => {
+  let returnedToSystem = false;
+  let prevented = false;
+  const state = {
+    planetBackTarget: { hidden: true }, planetPanelTarget: { hidden: false },
+    toSystem() { returnedToSystem = true; },
+  };
+  GalaxyController.prototype.navigateBack.call(state, {
+    key: 'Escape', defaultPrevented: false, target: { closest: () => null },
+    preventDefault() { prevented = true; },
+  });
+  expect(returnedToSystem).toBe(true);
+  expect(prevented).toBe(true);
+});
+
+for (const motionReduced of [false, true]) {
+  for (const mode of ['system', 'planet', 'transition-to-planet']) {
+    test(`La croix planète revient à la galaxie depuis ${mode}, mouvement réduit ${motionReduced}`, () => {
+      const target = () => ({ hidden: false, textContent: '' });
+      const state = {
+        mode, motionReduced, selectedPlanet: { id: 1 }, selectedSystem: { id: 2 },
+        systemPanelTarget: target(), planetPanelTarget: target(), systemBackTarget: target(), planetBackTarget: target(),
+        minimapWrapTarget: { hidden: true }, fleetLogTarget: { parentElement: { hidden: true } },
+        locationTarget: target(), coordinatesTarget: target(), mapHelpTarget: target(),
+        gameMap: { galaxy: '1' }, searchInputTarget: { focus() {} },
+        baseCamera: { x: 0, y: 0 }, baseZoom: 1, savedCamera: { camera: { x: 12, y: 24 }, zoom: 0.8 },
+        setCanvasMode(value) { this.canvasMode = value; }, drawFrame() {},
+        animateCamera(x, y, zoom, duration, done) { this.camera = { x, y }; this.targetZoom = zoom; done(); },
+        toGalaxy: GalaxyController.prototype.toGalaxy,
+      };
+      GalaxyController.prototype.closePlanet.call(state);
+      expect(state.mode).toBe('galaxy');
+      expect(state.canvasMode).toBe('galaxy');
+      expect(state.planetPanelTarget.hidden).toBe(true);
+      expect(state.systemPanelTarget.hidden).toBe(true);
+      expect(state.minimapWrapTarget.hidden).toBe(false);
+      expect(state.selectedPlanet).toBeNull();
+      expect(state.selectedSystem).toBeNull();
+      expect(state.camera).toEqual({ x: 12, y: 24 });
+      expect(state.targetZoom).toBe(0.8);
+    });
+  }
+}

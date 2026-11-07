@@ -44,10 +44,26 @@ async function signup(page, email, username, password, confirmation = password) 
   await page.keyboard.press('ControlOrMeta+A');
   await page.keyboard.type(password);
   await page.keyboard.press('Tab');
+  const passwordToggle = page.locator('[aria-controls="registration_plainPassword_first"]');
+  if (await passwordToggle.isVisible()) {
+    await expect(passwordToggle).toBeFocused();
+    await page.keyboard.press('Space');
+    await expect(page.getByLabel('Mot de passe (12 caractères minimum)', { exact: true })).toHaveAttribute('type', 'text');
+    await expect(passwordToggle.locator('.password-toggle-slash')).toBeHidden();
+    await page.keyboard.press('Space');
+    await expect(page.getByLabel('Mot de passe (12 caractères minimum)', { exact: true })).toHaveAttribute('type', 'password');
+    await expect(passwordToggle.locator('.password-toggle-slash')).toBeVisible();
+    await page.keyboard.press('Tab');
+  }
   await expect(page.getByLabel('Confirmer le mot de passe')).toBeFocused();
   await page.keyboard.press('ControlOrMeta+A');
   await page.keyboard.type(confirmation);
   await page.keyboard.press('Tab');
+  const confirmationToggle = page.locator('[aria-controls="registration_plainPassword_second"]');
+  if (await confirmationToggle.isVisible()) {
+    await expect(confirmationToggle).toBeFocused();
+    await page.keyboard.press('Tab');
+  }
   await expect(page.getByRole('button', { name: 'Créer mon compte' })).toBeFocused();
   await page.keyboard.press('Enter');
 }

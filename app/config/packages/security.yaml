@@ -23,6 +23,13 @@ security:
             login_throttling:
                 max_attempts: 5
                 interval: '1 minute'
+            remember_me:
+                secret: '%kernel.secret%'
+                lifetime: 2592000
+                path: /
+                secure: auto
+                httponly: true
+                samesite: lax
             logout:
                 path: app_logout
                 target: app_login

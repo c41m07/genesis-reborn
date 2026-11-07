@@ -13,6 +13,7 @@ framework:
             limit: 5
             interval: '1 hour'
     session:
+        gc_maxlifetime: 86400
         cookie_httponly: true
         cookie_samesite: lax
         cookie_secure: auto
