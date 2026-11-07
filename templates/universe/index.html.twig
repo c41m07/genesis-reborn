@@ -35,6 +35,7 @@
       <h2 id="universe-{{ u.id }}-title">{{ u.name }}</h2>
       <p>Consultez les vitesses, les limites et les fonctionnalités avant de rejoindre cet univers.</p>
 
+      {% include 'universe/_closing.html.twig' with {universe: u} %}
       <section class="universe-rules" aria-label="Règles de {{ u.name }}">
         <h3>Vitesses de jeu</h3>
         <dl>

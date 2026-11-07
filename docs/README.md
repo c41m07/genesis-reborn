@@ -55,3 +55,7 @@ Les objectifs de durée début/milieu/fin, les gains et pertes et les profils PN
 Les rapports conservés dans ce dépôt sont des preuves ou des spécifications de référence. Les notes de session et bilans remplacés ne constituent pas une source de règles.
 
 - [Déblocages initiaux permanents — 6 novembre 2026](INITIAL_UNLOCKS_2026-11-06.md) : 50 éléments, prérequis par rang, raisons et compatibilité.
+
+## Compte à rebours de fermeture
+
+Affichage dans les dernières 24 heures, date serveur et rafraîchissement sans changement de règle ; voir [le guide](UNIVERSE_CLOSING.md). Livraison et contrôles : [suivi Alpha](audits/alpha-operations-follow-up.md).
