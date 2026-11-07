@@ -4,7 +4,7 @@
     {% for slug in ['metal','nano','hydrogen','antimatter','electricity'] %}
         {% set r=chrome.resources[slug]|default(null) %}
         {% if r %}
-            {% set protection = 'Stock : '~(r.stock|number_format(0,',',' '))~' / '~(r.capacity|number_format(0,',',' '))~'. Zone verte : jusqu’à '~(r.protectedCapacity|number_format(0,',',' '))~' protégés du pillage ; actuellement '~(min(r.stock,r.protectedCapacity)|number_format(0,',',' '))~' protégés.' %}
+            {% set protection = 'Stock : '~(r.stock|number_format(0,',',' '))~' / '~(r.capacity|number_format(0,',',' '))~'. Repère : jusqu’à '~(r.protectedCapacity|number_format(0,',',' '))~' protégés du pillage ; zone verte : '~(min(r.stock,r.protectedCapacity)|number_format(0,',',' '))~' actuellement protégés.' %}
             <div class="resource resource--{{ slug }} {{ slug in ['electricity','hydrogen'] and r.rate < 0 ? 'resource--deficit' : '' }}" data-controller="resource" data-resource-slug="{{ slug }}" data-action="resource:update->resource#update" data-resource-stock-value="{{ r.stock }}" data-resource-rate-value="{{ r.rate }}" data-resource-cap-value="{{ r.capacity }}" data-resource-protected-cap-value="{{ r.protectedCapacity }}">
                 {{ ui.icon(slug,'resource-icon') }}
                 <div class="resource-values">
@@ -17,7 +17,8 @@
                 </div>
                 <div class="storage-meter" data-resource-target="meter" role="img" tabindex="0" aria-label="{{ protection }}" title="{{ protection }}">
                     <span class="storage-meter-stock" data-resource-target="fill" style="width:{{ min(100,r.stock/r.capacity*100) }}%"></span>
-                    <span class="storage-meter-protected" style="width:{{ min(100,r.protectedCapacity/r.capacity*100) }}%" aria-hidden="true"></span>
+                    <span class="storage-meter-protected" data-resource-target="protectedFill" style="width:{{ min(r.stock,r.protectedCapacity)/r.capacity*100 }}%" aria-hidden="true"></span>
+                    <span class="storage-meter-limit" data-resource-target="protectedLimit" style="left:{{ r.protectedCapacity/r.capacity*100 }}%" aria-hidden="true"></span>
                 </div>
             </div>
         {% endif %}

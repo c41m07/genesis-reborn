@@ -56,6 +56,8 @@ Les [scénarios de validation et de reprise](docs/SERVER_SCENARIOS.md) décriven
 
 L’admin propose des [mesures par univers](docs/UNIVERSE_METRICS.md) : ancienneté, niveaux actuels, attentes des files, ressources et protections après pertes. Les données manquantes et la couverture des observations sont explicites ; aucun délai historique de progression ou de récupération n’est inventé et aucun équilibrage n’est modifié.
 
+Les jauges de ressources suivent le stock réel : le remplissage est vert jusqu’au seuil protégé du pillage (10 % de la capacité), puis doré au-delà. Un repère fixe indique ce seuil, même à stock nul.
+
     make help
     make start
     make stop
