@@ -1,0 +1,10 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ pageTitle }} · Genesis Reborn{% endblock %}
+{% block body %}
+<article class="wiki-guide legal-page" aria-labelledby="legal-title">
+  <header><h1 id="legal-title">{{ pageTitle }}</h1><p>Dernière mise à jour : <time datetime="2026-11-07">7 novembre 2026</time>.</p></header>
+  <aside class="panel" aria-label="État de cette information"><h2>Information provisoire et incomplète</h2><p>Cette page présente les informations disponibles à ce jour. Certains éléments obligatoires restent à compléter : cette publication ne signifie pas que les mentions légales ou l’information sur les données personnelles sont complètes.</p><p>Pour une question ou une demande : <a href="mailto:contact@genesis-reborn.fr">contact@genesis-reborn.fr</a>.</p></aside>
+  {% include 'legal/_navigation.html.twig' %}
+  <div class="panel">{% include 'legal/' ~ page ~ '.html.twig' %}</div>
+</article>
+{% endblock %}

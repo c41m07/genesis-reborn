@@ -35,6 +35,7 @@ security:
                 target: app_login
                 enable_csrf: true
     access_control:
+        - {path: ^/(mentions-legales|cgu|confidentialite|cookies)$, roles: PUBLIC_ACCESS}
         - {path: ^/$, roles: PUBLIC_ACCESS}
         - {path: ^/(robots\.txt|sitemap\.xml)$, roles: PUBLIC_ACCESS}
         - {path: ^/(connexion|inscription|mot-de-passe|acces-refuse|health)(/|$), roles: PUBLIC_ACCESS}

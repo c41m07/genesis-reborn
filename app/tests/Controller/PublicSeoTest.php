@@ -27,6 +27,56 @@ final class PublicSeoTest extends WebTestCase
         self::assertSelectorExists('meta[name="description"][content="Genesis Reborn, jeu de stratégie spatiale par navigateur : bâtis ta colonie, explore des systèmes inconnus et forge ton empire."]');
     }
 
+    public function testProvisionalLegalPagesArePublicLinkedAndNoindex(): void
+    {
+        $client = static::createClient([], ['HTTP_HOST' => 'untrusted.example.test']);
+        $origin = rtrim($_ENV['DEFAULT_URI'], '/');
+        foreach (['/mentions-legales', '/cgu', '/confidentialite', '/cookies'] as $path) {
+            $crawler = $client->request('GET', $path);
+            self::assertResponseIsSuccessful();
+            self::assertSelectorCount(1, 'h1');
+            self::assertSelectorTextContains('main', 'Information provisoire et incomplète');
+            self::assertSelectorCount(1, 'meta[name="robots"][content="noindex"]');
+            self::assertResponseHeaderSame('X-Robots-Tag', 'noindex, follow');
+            self::assertSame($origin.$path, $crawler->filter('link[rel="canonical"]')->attr('href'));
+            self::assertSelectorExists('meta[name="description"]');
+            self::assertSelectorExists('meta[property="og:title"]');
+            self::assertSelectorExists('meta[property="og:description"]');
+            self::assertSame($origin.'/art/genesis-reborn-emblem.webp', $crawler->filter('meta[property="og:image"]')->attr('content'));
+            self::assertSelectorCount(4, 'footer nav[aria-label="Informations juridiques"] a');
+            self::assertSelectorCount(1, 'main nav[aria-label="Informations juridiques"] a[aria-current="page"]');
+            self::assertSelectorTextNotContains('body', 'Note de préparation');
+            self::assertSelectorTextNotContains('body', 'MENTION_EDITEUR_ET_DIRECTION_PUBLICATION_A_VALIDER');
+        }
+        $client->request('GET', '/confidentialite');
+        self::assertSelectorTextContains('main', 'Google Fonts');
+        $client->request('GET', '/inscription');
+        self::assertSelectorExists('footer a[href="/confidentialite"]');
+        $client->request('GET', '/');
+        self::assertSelectorExists('footer a[href="/mentions-legales"]');
+    }
+
+    public function testPublisherNameComesFromPrivateConfigurationAndIsEscaped(): void
+    {
+        $previous = $_ENV['LEGAL_PUBLISHER_NAME'] ?? null;
+        $previousServer = $_SERVER['LEGAL_PUBLISHER_NAME'] ?? null;
+        $_ENV['LEGAL_PUBLISHER_NAME'] = $_SERVER['LEGAL_PUBLISHER_NAME'] = '<publisher>Nom de test</publisher>';
+        try {
+            $client = static::createClient();
+            foreach (['/mentions-legales', '/confidentialite'] as $path) {
+                $client->request('GET', $path);
+                self::assertResponseIsSuccessful();
+                self::assertSelectorTextContains('main', '<publisher>Nom de test</publisher>');
+                self::assertSelectorNotExists('publisher');
+            }
+        } finally {
+            if ($previous === null) unset($_ENV['LEGAL_PUBLISHER_NAME']);
+            else $_ENV['LEGAL_PUBLISHER_NAME'] = $previous;
+            if ($previousServer === null) unset($_SERVER['LEGAL_PUBLISHER_NAME']);
+            else $_SERVER['LEGAL_PUBLISHER_NAME'] = $previousServer;
+        }
+    }
+
     public function testLoginIsNoindexAndPrivatePagesStillRequireAuthentication(): void
     {
         $client = static::createClient();

@@ -87,3 +87,7 @@ html{scroll-padding-top:180px}@media(max-width:740px){html{scroll-padding-top:22
 .universe-closing[hidden] { display: none; }
 .universe-closing p { margin: .3rem 0; }
 .universe-closing [role="timer"] { font-variant-numeric: tabular-nums; font-weight: 700; }
+
+.legal-links{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center}.legal-links a{display:inline-flex;align-items:center;min-height:32px;text-decoration:underline}.footer:has(.legal-links){flex-wrap:wrap;gap:12px 24px}.legal-page{overflow-wrap:anywhere}.legal-page h1{margin-bottom:16px}.legal-page h2{margin-top:24px}.legal-page .panel{padding:24px}.legal-page li{margin-block:8px;line-height:1.7}.legal-page .legal-links{margin-block:20px}.legal-page p{color:var(--text)}
+
+.footer .legal-links{font-size:12px;letter-spacing:normal}.legal-links a[aria-current="page"]{font-weight:700}

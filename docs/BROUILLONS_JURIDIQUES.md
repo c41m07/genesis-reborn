@@ -1,5 +1,13 @@
 # Brouillons des pages juridiques de Genesis Reborn
 
+## État de l’intégration au 7 novembre 2026
+
+Décisions complémentaires du propriétaire : publier uniquement son nom pour le moment, sans adresse ni téléphone ; conserver sa valeur dans `LEGAL_PUBLISHER_NAME`, hors Git. Le propriétaire confirme être aussi le directeur de publication et traiter manuellement les demandes de droits, de fermeture et les contestations reçues à contact@genesis-reborn.fr. Le propriétaire confirme le stockage du serveur et des sauvegardes en France et l’utilisation d’une boîte OVHcloud/Zimbra indépendante pour le contact principal. Ces informations déclaratives remplacent les inconnues correspondantes dans les textes publics ; les paragraphes de préparation ci-dessous conservent l’historique et ne décrivent pas tous l’état actuel.
+
+Quatre pages publiques provisoires sont préparées sur `dev`, à la demande du propriétaire malgré les informations manquantes. Elles utilisent des textes distincts, signalent leurs limites, restent en `noindex` et hors sitemap ; les brouillons complets ci-dessous restent privés, consultables par les administrateurs dans `/admin/juridique`. Aucun déploiement, changement du formulaire, purge ni mise en application des règles préparées n’est réalisé par ce lot.
+
+Correction technique vérifiée : `app/assets/styles/app.css` charge Google Fonts. L’absence de contenus externes précédemment déclarée ne décrit donc pas tous les fichiers de l’application ; les textes publics le précisent, sans prétendre avoir relevé les requêtes de production.
+
 Document de travail du 7 novembre 2026. Ces textes préparent quatre pages publiques, sans les intégrer au site. Ils ne sont pas prêts à être publiés tant que les champs entre crochets et les décisions de la section finale ne sont pas résolus. Leur préparation ne constitue pas une validation juridique de l'ensemble du service.
 
 Décisions du propriétaire : exploitation à titre particulier, accès gratuit actuellement, inscription à partir de 15 ans. Contact principal : contact@genesis-reborn.fr. Contact secondaire communiqué : xdarkcaim@gmail.com. Hébergeur déclaré : HostMyServers. Le propriétaire souhaite examiner la possibilité de ne pas publier son identité personnelle.

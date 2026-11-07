@@ -75,9 +75,16 @@ final class TransportTest extends WebTestCase
         $tool->dropSchema([$this->em->getClassMetadata(TransportReport::class)]);
         require_once dirname(__DIR__, 2).'/migrations/Version20261107150000.php';
         $migration = new \DoctrineMigrations\Version20261107150000($this->em->getConnection(), new \Psr\Log\NullLogger());
-        $migration->up(new \Doctrine\DBAL\Schema\Schema());
-        foreach ($migration->getSql() as $query) $this->em->getConnection()->executeStatement($query->getStatement());
-        self::assertSame([], $tool->getUpdateSchemaSql($this->em->getMetadataFactory()->getAllMetadata()));
+        try {
+            $migration->up(new \Doctrine\DBAL\Schema\Schema());
+            foreach ($migration->getSql() as $query) $this->em->getConnection()->executeStatement($query->getStatement());
+            self::assertSame([], $tool->getUpdateSchemaSql($this->em->getMetadataFactory()->getAllMetadata()));
+        } finally {
+            // Restaurer les noms de contraintes Doctrine pour les tests suivants.
+            $metadata = [$this->em->getClassMetadata(TransportReport::class)];
+            $tool->dropSchema($metadata);
+            $tool->createSchema($metadata);
+        }
     }
 
     public function testReceptionDefaultsToAlliesAndOwnColoniesRemainAllowed(): void

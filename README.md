@@ -18,6 +18,8 @@ Le code comprend :
 - Flottes, exploration, transport, colonisation, attaque, défense, orbite et espionnage ; combats persistés, conquête de planètes PNJ et rapports privés.
 - Diplomatie, guildes, messages, notifications, inventaire de boosts et événements.
 - Administration des comptes et univers, retours utilisateur, patchnotes, signaux des processus, relais en attente et mesures par univers.
+- Quatre pages juridiques publiques provisoires (`/mentions-legales`, `/cgu`, `/confidentialite`, `/cookies`), accessibles depuis le pied de page, avec métadonnées et `noindex` tant qu’elles sont incomplètes ; exclues du sitemap. Leur présence ne vaut pas conformité juridique.
+- Aperçu privé des quatre brouillons juridiques dans l’administration (`/admin/juridique`), réservé aux administrateurs ; ces textes ne sont pas encore publiés.
 - Wiki connecté et compte à rebours dans les dernières 24 heures avant la fermeture d’un univers.
 
 Les jauges distinguent le stock protégé du stock exposé au pillage : remplissage vert jusqu’au seuil protégé, puis doré, avec un repère fixe. Le seuil actuellement documenté est de 10 % de la capacité. Les règles et leurs décisions restent centralisées dans [REGLES.md](docs/REGLES.md) et [DECISIONS.md](docs/DECISIONS.md).
@@ -213,3 +215,7 @@ L’expéditeur fournit ressources, vaisseaux et carburant aller-retour. L’aut
 Les dons entre joueurs ne donnent aucun boost et ne font progresser aucun objectif. La protection débutant reste inchangée. Aucun plafond de dons, taxe ou sanction automatique sur une adresse IP n’est ajouté. Les deux participants disposent du rapport économique ; l’administration dispose de l’historique paginé des transports pour une vérification humaine.
 
 Installation ou mise à jour : la migration `Version20261107150000` crée l’historique des transports ; son application sur chaque base active nécessite une validation explicite. Elle a été appliquée à la base locale le 7 novembre 2026 après sauvegarde vérifiée. Les anciens transports déjà en vol restent limités au propriétaire initial (l’expéditeur).
+
+## Pages juridiques provisoires
+
+Le nom public de l’éditeur et du responsable des données se renseigne avec `LEGAL_PUBLISHER_NAME` dans `.env.local` (local) ou `.env.prod` (serveur), hors Git. En son absence, les pages restent disponibles et signalent l’identité manquante. Adresse et téléphone de publication restent à compléter ; ne pas annoncer une conformité juridique sur la seule présence de ces pages.
