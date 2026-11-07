@@ -47,6 +47,10 @@ final class EmailVerificationTest extends WebTestCase
         $service->sendWelcomeAndVerification($player);
         preg_match('#/inscription/confirmer/([A-Za-z0-9_-]+)#', $messages[0]->getTextBody(), $matches);
         $plainToken = $matches[1];
+        self::assertStringContainsString('/inscription/confirmer/' . $plainToken . '"', $messages[0]->getHtmlBody());
+        self::assertStringContainsString('Ce lien est valable pendant 24 heures.', $messages[0]->getHtmlBody());
+        self::assertStringContainsString('Les étoiles vous attendent.', $messages[1]->getHtmlBody());
+        self::assertStringNotContainsString('/inscription/confirmer/', $messages[1]->getHtmlBody());
         $stored = $em->getRepository(EmailVerificationToken::class)->findOneBy(['player' => $player]);
         self::assertSame(hash('sha256', $plainToken), $stored->tokenHash);
         self::assertNotSame($plainToken, $stored->tokenHash);

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <title>{{ subject }}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#091322;color:#d4deee;font-family:Arial,Helvetica,sans-serif;line-height:1.6;">
+    <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">{{ preheader }}</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#091322;">
+        <tr><td align="center" style="padding:24px 12px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;background-color:#101c2e;border:1px solid #2b3b52;border-radius:14px;">
+                <tr><td style="padding:30px 24px;background-color:#0b192b;border-bottom:1px solid #2b3b52;border-radius:14px 14px 0 0;">
+                    <div style="color:#ffffff;font-size:22px;letter-spacing:3px;">GENESIS <span style="color:#77dfec;">REBORN</span></div>
+                    <div style="margin-top:7px;color:#aabbd0;font-size:11px;letter-spacing:2px;">VOTRE EMPIRE COMMENCE ICI</div>
+                </td></tr>
+                <tr><td style="padding:32px 24px;font-size:14px;">
+                    <p style="margin:0;color:#80dfe8;font-size:11px;letter-spacing:2px;">{{ category }}</p>
+                    <h1 style="margin:12px 0 25px;color:#f2f6ff;font-size:26px;line-height:1.25;font-weight:normal;">{{ heading }}</h1>
+                    <p style="margin:0 0 12px;color:#f2f6ff;">Bonjour {{ username }},</p>
+                    <p style="margin:0;">{{ message }}</p>
+                    {% if actionLabel is defined %}
+                        <table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0 18px;">
+                            <tr><td bgcolor="#7de0e9" style="background-color:#7de0e9;border-radius:6px;text-align:center;mso-padding-alt:14px 20px;">
+                                <a href="{{ actionUrl }}" style="display:inline-block;padding:14px 20px;color:#08222c;font-size:14px;text-decoration:none;font-weight:bold;">{{ actionLabel }} &rarr;</a>
+                            </td></tr>
+                        </table>
+                    {% endif %}
+                    <p style="margin:{{ actionLabel is defined ? '0' : '24px' }} 0 0;color:#b9cce0;font-size:12px;">{{ notice }}</p>
+                    {% if actionLabel is defined %}
+                        <div style="margin-top:24px;padding-top:24px;border-top:1px solid #2b3b52;font-size:12px;">
+                            <p style="margin:0;color:#aebed1;">Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur :</p>
+                            <p style="margin:6px 0 0;overflow-wrap:anywhere;word-break:break-all;"><a href="{{ actionUrl }}" style="color:#8ce4eb;text-decoration:underline;">{{ actionUrl }}</a></p>
+                        </div>
+                    {% endif %}
+                    <p style="margin:20px 0 0;color:#aebed1;font-size:12px;">{{ security }}</p>
+                    <p style="margin:28px 0 0;font-size:13px;">À bientôt parmi les étoiles,<br><span style="color:#eef5ff;">L’équipe Genesis Reborn</span></p>
+                </td></tr>
+                <tr><td align="center" style="padding:23px;background-color:#0b1524;border-radius:0 0 14px 14px;color:#9baec5;font-size:11px;">
+                    <div style="color:#d0deec;font-size:11px;letter-spacing:2px;">GENESIS REBORN</div>
+                    <p style="margin:7px 0 0;">Bâtissez votre colonie. Forgez votre empire.</p>
+                    <p style="margin:7px 0 0;">Message automatique lié à votre compte.</p>
+                </td></tr>
+            </table>
+        </td></tr>
+    </table>
+</body>
+</html>
