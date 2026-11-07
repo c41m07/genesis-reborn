@@ -4,7 +4,9 @@ Jeu de stratégie spatiale multijoueur construit avec PHP 8.4, Symfony 7.4, Doct
 
 ## État du projet
 
-Les quinze phases de travail ont été auditées. Quatorze sont validées; la phase 12 reste partielle pour la revue manuelle d’accessibilité exhaustive. Au 5 novembre 2026, les contrôles de configuration, lint et compilation passent, ainsi que les 192 tests PHP. Les 87 scénarios navigateur ont chacun réussi dans des lots isolés et reprises ciblées ; consulter [le bilan détaillé des tests](docs/agent/TEST_STATUS.md). Le projet reste une Alpha contrôlée, pas une validation complète. Les points ouverts incluent aussi les mesures d’équilibrage pendant l’Alpha, la CI distante, les tests de charge, le PRA et l’audit manuel avec lecteur d’écran. Les preuves figurent dans [l’audit final](docs/agent/PHASE_15_FINAL_AUDIT.md).
+**L’Alpha est hébergée, selon le propriétaire.** Son URL, sa version exécutée et sa configuration serveur n’ont pas été vérifiées pendant cette mission. Les lots intégrés dans `dev` ne sont pas déclarés déployés. Consulter [l’état du déploiement et ses preuves](docs/DEPLOIEMENT.md).
+
+Les quinze phases ont fait l’objet d’audits historiques ; la revue manuelle d’accessibilité exhaustive reste ouverte. Le lot H a validé localement les six contrôles obligatoires, 228 tests PHP, 13 tests des scripts et 93 scénarios navigateur en deux lots complets. Ses 11 contrôles GitHub ont également réussi dans la [PR #10](https://github.com/c41m07/genesis-reborn/pull/10). Ces résultats ne valident pas l’Alpha hébergée. Les mesures d’équilibrage auprès des joueurs, les tests de charge, le PRA complet et la revue avec lecteur d’écran restent à réaliser. Les audits dans `docs/agent/` conservent leur contexte daté ; le [suivi des chantiers Alpha](docs/audits/alpha-operations-follow-up.md) retrace les livraisons récentes.
 
 L’orientation confirmée pour le rythme est **stratégie modérée**. Les objectifs de durée de progression et les valeurs économiques/combat seront mesurés pendant l’Alpha auprès des joueurs, puis ajustés à partir de ces retours; ils ne sont pas présentés comme des valeurs déjà validées.
 

@@ -1,4 +1,26 @@
-# Image et déploiement GitHub Actions
+# Hébergement de l’Alpha et déploiement GitHub Actions
+
+## État connu au 7 novembre 2026
+
+Le propriétaire confirme que **l’Alpha est déjà hébergée**. Ce fait ne constitue
+pas une vérification technique du serveur. Cette mission n’a effectué ni accès
+SSH, ni déploiement, ni redémarrage de production. Les changements intégrés dans
+`dev` ne sont pas réputés déployés sur l’Alpha.
+
+| Élément | Preuve disponible | À confirmer sur le serveur |
+| --- | --- | --- |
+| Hébergement Alpha | Information du propriétaire | URL publique, version et digest réellement exécutés |
+| CI GitHub | Contrôles réussis des PR [#9](https://github.com/c41m07/genesis-reborn/pull/9) et [#10](https://github.com/c41m07/genesis-reborn/pull/10) : PHP, scripts, restauration isolée et navigateurs | Aucun résultat de CI ne valide la production |
+| Publication et livraison | Workflows versionnés de construction GHCR et déploiement SSH manuel | Exécution effective, protections GitHub et image installée |
+| Configuration d’exploitation | Compose, scripts et guides présents dans le dépôt | Variables privées, SMTP, signaux partagés, jobs et réception des alertes |
+| Sauvegardes et reprise | Restauration SQL vérifiée sur instances jetables et en CI | Planification, stockage distant, protection des archives et reprise du transport |
+
+Les audits sous `docs/agent/` décrivent leur état à leur date de rédaction. Leur
+mention « aucun déploiement » ne décrit pas l’hébergement actuel. De même, un
+compte rendu indiquant qu’une migration locale précise n’a pas été déployée
+conserve son sens : il ne doit pas être transformé en preuve de livraison.
+
+## Chaîne versionnée
 
 La CI existante exécute les contrôles et les tests. Sur la branche `alpha` ou la branche par défaut,
 après leur réussite, le job `publish` construit `docker/prod/Dockerfile` et publie
@@ -9,7 +31,7 @@ Les pull requests ne publient aucune image.
 La validation utilise cinq jobs en parallèle : un pour PHP et le lint, quatre
 pour les tests navigateur répartis avec `--shard=N/4`. Chaque lot navigateur
 conserve un seul worker, son runner et sa base jetable ; tous les lots doivent
-réussir avant la publication. Les 87 scénarios sont conservés. Les couches de
+réussir avant la publication. Le nombre de scénarios évolue avec le dépôt ; le lot H a validé 93 scénarios localement, puis ses contrôles GitHub. Les nombres datés des anciens audits ne décrivent pas la suite courante. Les couches de
 l'image PHP de test, les dépendances PHP verrouillées et les téléchargements npm
 sont mis en cache. Le premier passage remplit les caches ; la durée dépend aussi
 de la disponibilité des runners GitHub.
@@ -32,7 +54,7 @@ Prérequis : serveur Linux amd64, Docker avec Compose v2, Bash et `flock`.
 Un Traefik existant doit être connecté au réseau `traefik_network`, avec
 l'entrypoint `websecure` sur 443 et un résolveur de certificats opérationnel.
 Configurer le DNS du domaine vers le serveur et l'accès HTTPS dans le pare-feu.
-Le serveur SMTP est externe ; aucun réseau Mailhog n'est requis.
+Le Compose de production attend un transport SMTP configuré hors du dépôt ; le fournisseur et le transport réellement utilisés par l’Alpha restent à confirmer. Aucun réseau Mailhog n’est requis par ce Compose.
 
 Créer `/opt/docker-compose/genesis-reborn`, accessible en écriture par l'utilisateur SSH de
 déploiement, qui doit pouvoir utiliser Docker. Copier `.env.prod.example` vers
@@ -54,6 +76,28 @@ ayant accès au package et un token limité à `read:packages` :
 ```bash
 docker login ghcr.io -u UTILISATEUR_GITHUB
 ```
+
+## Installer les outils d’exploitation séparément
+
+Le workflow SSH transfère **uniquement** `compose.prod.yaml` et `scripts/deploy.sh`
+(installé comme `deploy.sh` dans le répertoire distant). Il ne synchronise pas un
+checkout complet, le Makefile ou les autres scripts hôte. La présence de commandes
+dans le dépôt ne signifie donc pas leur installation sur l’Alpha.
+
+Pour activer sauvegardes et alertes, l’opérateur doit installer une version
+cohérente de `scripts/db-backup.sh`, `scripts/db-restore.sh`,
+`scripts/backup-tools.py` et `scripts/operations-check.sh`, en conservant leur
+arborescence et leurs chemins configurés. Vérifier leurs prérequis (Python 3,
+Bash, outils GNU et `flock`), droits, configuration privée et codes de sortie.
+Consulter les guides [sauvegardes](BACKUPS.md), [alertes](OPERATIONS_ALERTS.md) et
+[signaux](OPERATIONS_SIGNALS.md) avant de créer les jobs de l’hôte. Aucun cron,
+destinataire privé ou secret n’est installé par la seule livraison de l’image.
+Les envois externes restent désactivés tant que leur configuration n’est pas
+explicitement activée et leur réception vérifiée par l’opérateur.
+
+Ne pas appliquer au serveur les valeurs d’exemple ou les résultats des instances
+jetables comme s’ils avaient été vérifiés sur l’Alpha. Les essais perturbateurs
+restent décrits dans les [scénarios isolés](SERVER_SCENARIOS.md).
 
 ## Configurer GitHub
 
@@ -84,10 +128,10 @@ cd /opt/docker-compose/genesis-reborn
 docker compose --env-file .env.prod -f compose.prod.yaml run --rm --no-deps --user www-data app php bin/console app:universe:import
 ```
 
-Le workflow manuel doit également exister sur la branche par défaut pour être
-visible et déclenchable depuis GitHub. Si la branche par défaut est encore
-`Main`, y intégrer le workflow ou choisir `alpha` comme branche par défaut
-dans les paramètres du dépôt. Les noms de branches sont sensibles à la casse.
+La visibilité du workflow manuel et la branche sélectionnée doivent être
+vérifiées dans GitHub avant une intervention autorisée. Ne pas supposer le nom
+de la branche par défaut : les noms sont sensibles à la casse. Cette mission
+ne change pas la branche par défaut et ne fusionne rien vers `main`.
 
 ## Données, échecs et retour arrière
 
