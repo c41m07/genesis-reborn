@@ -22,8 +22,8 @@ des 15 phases ni d’une certification de production.
 | État serveur | Relever domaine, version/digest exécutés, HTTPS et configuration : [déploiement](DEPLOIEMENT.md). |
 | Mails de compte | Vérifier SMTP, expéditeur, liens HTTPS et réception réelle. Les tests utilisent un transport nul : [architecture](ARCHITECTURE.md). |
 | Processus et alertes | Vérifier les volumes partagés, signaux, relais, destinataire privé et réception ; installer/superviser le job autorisé : [exploitation](EXPLOITATION.md). |
-| Sauvegarde et reprise | Planifier, externaliser et protéger les archives ; tester la restauration distante et la reprise du transport RabbitMQ : [sauvegardes](BACKUPS.md). |
-| Référencement | Vérifier le vrai domaine, les réponses publiques et Search Console : [SEO](SEO.md). |
+| Sauvegarde et reprise | Planifier, externaliser et protéger les archives ; tester la restauration distante et la reprise du transport RabbitMQ : [sauvegardes](SAUVEGARDES.md). |
+| Référencement | Vérifier le vrai domaine, les réponses publiques et Search Console : [SEO](REFERENCEMENT.md). |
 | Charge | Mesurer la capacité, la contention des verrous et définir supervision/SLA. Aucun résultat local ne fixe une capacité de production. |
 | Accessibilité | Effectuer la revue manuelle avec lecteur d’écran et contrôles RGAA complets ; les tests axe et les contrastes échantillonnés ne la remplacent pas. |
 | Équilibrage | Collecter les durées réelles, attentes, gains/pertes et reconstitution des forces. Soumettre toute évolution des paramètres à décision explicite. |
@@ -36,7 +36,7 @@ complets ; combats/défense/orbite et fin réelle des trajets ; clavier/thème c
 de l’inventaire ; transitions temporelles des événements ; suppression d’univers
 en administration et erreur 500 réelle. Les tests ultérieurs ne suffisent pas à
 clore automatiquement chacune de ces grilles manuelles. Leur trace datée est dans
-[la validation UI](archives/VALIDATION_UI_2026-11-05.md) et l’historique Git.
+[la validation UI](archives/VALIDATION_INTERFACE_2026-11-05.md) et l’historique Git.
 
 ## Mesures Alpha
 

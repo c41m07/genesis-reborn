@@ -89,7 +89,7 @@ cohérente de `scripts/db-backup.sh`, `scripts/db-restore.sh`,
 `scripts/backup-tools.py` et `scripts/operations-check.sh`, en conservant leur
 arborescence et leurs chemins configurés. Vérifier leurs prérequis (Python 3,
 Bash, outils GNU et `flock`), droits, configuration privée et codes de sortie.
-Consulter les guides [sauvegardes](BACKUPS.md), [alertes](EXPLOITATION.md) et
+Consulter les guides [sauvegardes](SAUVEGARDES.md), [alertes](EXPLOITATION.md) et
 [signaux](EXPLOITATION.md) avant de créer les jobs de l’hôte. Aucun cron,
 destinataire privé ou secret n’est installé par la seule livraison de l’image.
 Les envois externes restent désactivés tant que leur configuration n’est pas
@@ -137,7 +137,7 @@ ne change pas la branche par défaut et ne fusionne rien vers `main`.
 
 MariaDB, RabbitMQ, Mercure et les sessions PHP utilisent des volumes persistants.
 Ne pas utiliser `down --volumes`. Préparer une sauvegarde vérifiée de MariaDB avant
-une migration ; consulter le [guide actif des sauvegardes](BACKUPS.md) pour les paramètres, la conservation et les vérifications de restauration. Le stockage distant reste à configurer par l’opérateur.
+une migration ; consulter le [guide actif des sauvegardes](SAUVEGARDES.md) pour les paramètres, la conservation et les vérifications de restauration. Le stockage distant reste à configurer par l’opérateur.
 Les journaux des conteneurs sont accessibles via `docker compose logs`.
 
 Une migration échouée arrête le déploiement et laisse les processus applicatifs
@@ -166,4 +166,4 @@ Le contexte de construction reste la racine. Le Dockerfile copie le code depuis
 `app/` et les sources uniques du wiki depuis `docs/`. Les définitions Compose
 sont sous `docker/`, avec des liens de compatibilité à la racine. Le transfert
 SSH lit directement `docker/compose.prod.yaml` : le serveur reçoit `compose.prod.yaml`, fichier ordinaire,
-sans dépendance au clone. Suivre [les contrôles SEO](SEO.md) avant ouverture publique.
+sans dépendance au clone. Suivre [les contrôles SEO](REFERENCEMENT.md) avant ouverture publique.

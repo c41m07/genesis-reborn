@@ -110,7 +110,7 @@ La transposition de R14 est contrôlée ; la branche complète ne peut pas être
 
 ### Bâtiments — cadence A et centrale ×2
 
-> Historique : la répartition des ressources et les délais de progression de ce bilan sont remplacés, lorsqu’ils diffèrent, par la [grille commune avec hydrogène T3](COMMON_COSTS_2026-11-05.md). Les moteurs, courbes et statistiques restent conservés.
+> Historique : la répartition des ressources et les délais de progression de ce bilan sont remplacés, lorsqu’ils diffèrent, par la [grille commune avec hydrogène T3](COUTS.md). Les moteurs, courbes et statistiques restent conservés.
 
 La décision utilisateur valide une cadence de remboursement d’environ 2–3 semaines pour une amélioration de mine de métal T1 vers le niveau 80 en univers normal, puis la centrale ×2 avec intérêt à développer ses rangs T2/T3. Les paramètres ci-dessous sont intégrés pour les tests Alpha.
 
@@ -188,7 +188,7 @@ Les simulations ne valident pas encore le métajeu complet : plusieurs planètes
 - Tests : `tests/Service/BuildingBalanceTest.php`, `tests/Fixtures/building-balance-a.json`, `tests/Service/FactoryEconomyTest.php`, `tests/Service/CatalogueDetailsTest.php`, `tests/Integration/CatalogBalanceTest.php`, `tests/Integration/GamePersistenceTest.php`.
 - Documentation : `docs/DECISIONS.md`, `docs/REGLES.md`, le présent document.
 
-Les profils de ressources des vaisseaux ont ensuite été modifiés par décision distincte, à budget économique avant recherche conservé : voir [SHIP_COSTS_2026-11-05.md](COMMON_COSTS_2026-11-05.md). Les références historiques des tests restent figées ; leurs assertions de prix naval utilisent le nouveau fichier de référence.
+Les profils de ressources des vaisseaux ont ensuite été modifiés par décision distincte, à budget économique avant recherche conservé : voir [SHIP_COSTS_2026-11-05.md](COUTS.md). Les références historiques des tests restent figées ; leurs assertions de prix naval utilisent le nouveau fichier de référence.
 
 ## Vitesses et autonomie
 

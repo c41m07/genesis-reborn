@@ -2,7 +2,7 @@
 
 > Archive : texte conservé dans son contexte d’origine, sans validation nouvelle.
 > Les règles actuelles sont dans [REGLES](../REGLES.md),
-> [DECISIONS](../DECISIONS.md) et [ROADMAP](../ROADMAP.md).
+> [DECISIONS](../DECISIONS.md) et [ROADMAP](../FEUILLE_DE_ROUTE.md).
 
 Date de clôture : 2 novembre 2026. Ce QCM conserve les décisions initiales de l’Alpha. Les paramètres de progression, combat, mobilité et tirs supersédés ont été remplacés par la validation du 2 novembre ; voir BALANCING_IMPLEMENTATION_2026-11-02.md. Les autres choix restent des hypothèses à mesurer.
 

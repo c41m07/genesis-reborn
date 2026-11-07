@@ -87,7 +87,7 @@ Les fichiers `.env`, `.env.local`, `.env.prod` et les secrets sont exclus par [.
 | `LOCAL_UID`, `LOCAL_GID` | Identifiants utilisés lors de la construction et par les processus locaux ; défaut 1000. |
 | `OPS_ALERT_*` | Activation, destination privée et seuils des alertes ; envois désactivés par défaut. |
 
-Les variables de l’image et du proxy de production (`APP_IMAGE`, `APP_DOMAIN`, `TRAEFIK_CERTRESOLVER`, `SYMFONY_TRUSTED_PROXIES`) sont documentées dans [DEPLOIEMENT.md](docs/DEPLOIEMENT.md). Les paramètres de sauvegarde sont maintenus dans [BACKUPS.md](docs/BACKUPS.md). Aucun fournisseur SMTP de production ni destinataire privé n’est imposé par ce README.
+Les variables de l’image et du proxy de production (`APP_IMAGE`, `APP_DOMAIN`, `TRAEFIK_CERTRESOLVER`, `SYMFONY_TRUSTED_PROXIES`) sont documentées dans [DEPLOIEMENT.md](docs/DEPLOIEMENT.md). Les paramètres de sauvegarde sont maintenus dans [SAUVEGARDES.md](docs/SAUVEGARDES.md). Aucun fournisseur SMTP de production ni destinataire privé n’est imposé par ce README.
 
 ## Démarrage et travail quotidien
 
@@ -116,7 +116,7 @@ Compiler avant les tests navigateur : la compilation remplace les fichiers de `a
 
 `make import` importe explicitement les cartes et univers de référence. `make seed-demo` est facultatif et réservé à `APP_ENV=dev` : il crée un compte de démonstration connu, ou conserve le compte existant et son mot de passe. Il ne remplace pas les migrations ni l’import. Les jeux de données de test sont sous [tests/Fixtures](app/tests/Fixtures) et dans les scénarios.
 
-[Le guide des sauvegardes](docs/BACKUPS.md) décrit `make backup`, `make restore`, la conservation de 14 jours par défaut, les contrôles d’échec et la restauration isolée. `make backup-status` consulte l’état sans créer de sauvegarde. `make test-backup` vérifie les comptes et la progression sur deux instances jetables distinctes.
+[Le guide des sauvegardes](docs/SAUVEGARDES.md) décrit `make backup`, `make restore`, la conservation de 14 jours par défaut, les contrôles d’échec et la restauration isolée. `make backup-status` consulte l’état sans créer de sauvegarde. `make test-backup` vérifie les comptes et la progression sur deux instances jetables distinctes.
 
 ## Tests et qualité
 
@@ -137,7 +137,7 @@ git diff --check
 - `make test-browser` prépare un projet Docker et une base jetables propres à l’exécution. `BROWSER_PERSISTENCE=1` ajoute la persistance temporaire nécessaire aux essais de redémarrage complet ; les volumes sont retirés en fin de test. Les mails et alertes externes y sont neutralisés. Le script npm `test:browser` seul ne prépare pas cet environnement.
 - `make verify-install` prépare une installation temporaire, réinstalle les dépendances et vérifie le redémarrage. Son existence ne vaut pas preuve d’une exécution récente ; consulter le suivi pour les commandes réellement exécutées.
 
-Preuve de référence sur `dev` après le lot K, le 7 novembre 2026 : [PR #13](https://github.com/c41m07/genesis-reborn/pull/13), six contrôles locaux réussis, **229 tests PHP**, **13 tests Python**, **97 scénarios Playwright** (95 parcours et 2 tests JavaScript déterministes). La suite complète locale a réussi en deux lots ; une reprise ciblée finale de trois cas a aussi réussi. Les **11 contrôles GitHub** ont réussi et la restauration CI a vérifié 38 tables, les comptes et la progression. Les résultats détaillés et les livraisons suivantes sont dans [le suivi Alpha](docs/audits/alpha-operations-follow-up.md).
+Preuve de référence sur `dev` après le lot K, le 7 novembre 2026 : [PR #13](https://github.com/c41m07/genesis-reborn/pull/13), six contrôles locaux réussis, **229 tests PHP**, **13 tests Python**, **97 scénarios Playwright** (95 parcours et 2 tests JavaScript déterministes). La suite complète locale a réussi en deux lots ; une reprise ciblée finale de trois cas a aussi réussi. Les **11 contrôles GitHub** ont réussi et la restauration CI a vérifié 38 tables, les comptes et la progression. Les résultats détaillés et les livraisons suivantes sont dans [le suivi Alpha](docs/audits/SUIVI_ALPHA.md).
 
 La réception SMTP réelle, la configuration et les parcours sur l’Alpha, la planification des sauvegardes et le stockage distant restent à vérifier sur serveur. Les essais perturbateurs utilisent les instances locales isolées. Les mesures d’équilibrage, les tests de charge et la revue d’accessibilité exhaustive restent ouverts ; les contrôles ciblés avec axe ne constituent pas une certification RGAA.
 
@@ -179,7 +179,7 @@ montées en lecture seule en développement et copiées dans `/docs` en producti
 Les visiteurs disposent d’un accueil public sur `/` ; les joueurs connectés
 conservent l’accès à leur colonie. Titres, descriptions, URL canoniques, Open Graph,
 robots.txt et sitemap.xml sont générés côté serveur. `DEFAULT_URI` doit correspondre
-à l’origine HTTPS réelle ; voir [SEO et Search Console](docs/SEO.md).
+à l’origine HTTPS réelle ; voir [SEO et Search Console](docs/REFERENCEMENT.md).
 
 ## Documentation de référence
 

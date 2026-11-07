@@ -5,14 +5,14 @@
 Ces documents gardent leur date, leurs limites et leurs décisions. Ils ne sont
 pas une certification de l’état courant. REGLES et DECISIONS restent prioritaires.
 
-- [QCM_2026-11-02.md](QCM_2026-11-02.md) : source historique `docs/agent/BALANCING_QCM_2026-11-02.md`.
+- [CHOIX_EQUILIBRAGE_2026-11-02.md](CHOIX_EQUILIBRAGE_2026-11-02.md) : source historique `docs/agent/BALANCING_QCM_2026-11-02.md`.
 - [PROGRESSION_2026-11-02.md](PROGRESSION_2026-11-02.md) : source historique `docs/agent/BALANCING_IMPLEMENTATION_2026-11-02.md`.
 - [DECISIONS_INITIALES.md](DECISIONS_INITIALES.md) : source historique `docs/agent/PHASE_02_DECISIONS.md`.
 - [EXIGENCES_WORK.md](EXIGENCES_WORK.md) : source historique `docs/agent/REQUIREMENTS_MATRIX.md`.
-- [VALIDATION_UI_2026-11-05.md](VALIDATION_UI_2026-11-05.md) : source historique `docs/ui-ux/validation.md`.
+- [VALIDATION_INTERFACE_2026-11-05.md](VALIDATION_INTERFACE_2026-11-05.md) : source historique `docs/ui-ux/validation.md`.
 - [ILLUSTRATIONS_2026-11-03.md](ILLUSTRATIONS_2026-11-03.md) : source historique `docs/artwork/audit-2026-11-03/RAPPORT.md`.
 
-Les [notes Alpha locales](../audits/alpha-operations-follow-up.md) sont conservées.
+Les [notes Alpha locales](../audits/SUIVI_ALPHA.md) sont conservées.
 Leur modification préexistante est préservée ; seules les destinations de liens
 sont adaptées. Elles ne constituent pas une preuve de déploiement de ce lot.
 
@@ -37,7 +37,7 @@ consultables dans le [snapshot Git publié](https://github.com/c41m07/genesis-re
 | `docs/OPERATIONS_SIGNALS.md` | Regroupé/remplacé par `docs/EXPLOITATION.md`. |
 | `docs/OUTBOX.md` | Regroupé/remplacé par `docs/EXPLOITATION.md`. |
 | `docs/SERVER_SCENARIOS.md` | Regroupé/remplacé par `docs/EXPLOITATION.md`. |
-| `docs/SHIP_COSTS_2026-11-05.md` | Regroupé/remplacé par `docs/COMMON_COSTS_2026-11-05.md`. |
+| `docs/SHIP_COSTS_2026-11-05.md` | Regroupé/remplacé par `docs/COUTS.md`. |
 | `docs/SPEED_BALANCE_2026-11-05.md` | Regroupé/remplacé par `docs/EQUILIBRAGE.md`. |
 | `docs/UI-MULTI-COLONIES.md` | Regroupé/remplacé par `docs/ARCHITECTURE.md`. |
 | `docs/UI-RECHERCHE.md` | Regroupé/remplacé par `docs/ARCHITECTURE.md`. |
@@ -45,10 +45,10 @@ consultables dans le [snapshot Git publié](https://github.com/c41m07/genesis-re
 | `docs/UNIVERSE_METRICS.md` | Regroupé/remplacé par `docs/EXPLOITATION.md`. |
 | `docs/WIKI.md` | Regroupé/remplacé par `docs/ARCHITECTURE.md`. |
 | `docs/agent/ALPHA_READINESS.md` | Bilan daté remplacé par les références actuelles ; [original publié](https://github.com/c41m07/genesis-reborn/blob/453c414cf5694afd249bd462279f37050dd36452/docs/agent/ALPHA_READINESS.md). |
-| `docs/agent/ASSET_GENERATION_PROMPTS.md` | Regroupé/remplacé par `docs/ARTWORK_PROMPTS.md`. |
+| `docs/agent/ASSET_GENERATION_PROMPTS.md` | Regroupé/remplacé par `docs/ILLUSTRATIONS.md`. |
 | `docs/agent/ASSET_MANIFEST.md` | Bilan daté remplacé par les références actuelles ; [original publié](https://github.com/c41m07/genesis-reborn/blob/453c414cf5694afd249bd462279f37050dd36452/docs/agent/ASSET_MANIFEST.md). |
 | `docs/agent/BALANCING_IMPLEMENTATION_2026-11-02.md` | Copie historique conservée dans `docs/archives/PROGRESSION_2026-11-02.md`. |
-| `docs/agent/BALANCING_QCM_2026-11-02.md` | Copie historique conservée dans `docs/archives/QCM_2026-11-02.md`. |
+| `docs/agent/BALANCING_QCM_2026-11-02.md` | Copie historique conservée dans `docs/archives/CHOIX_EQUILIBRAGE_2026-11-02.md`. |
 | `docs/agent/BLOCKERS.md` | Bilan daté remplacé par les références actuelles ; [original publié](https://github.com/c41m07/genesis-reborn/blob/453c414cf5694afd249bd462279f37050dd36452/docs/agent/BLOCKERS.md). |
 | `docs/agent/CLEANUP_STATUS.md` | Bilan daté remplacé par les références actuelles ; [original publié](https://github.com/c41m07/genesis-reborn/blob/453c414cf5694afd249bd462279f37050dd36452/docs/agent/CLEANUP_STATUS.md). |
 | `docs/agent/ECONOMY_AND_ATLAS_PROPOSAL_2026-11-02.md` | Bilan daté remplacé par les références actuelles ; [original publié](https://github.com/c41m07/genesis-reborn/blob/453c414cf5694afd249bd462279f37050dd36452/docs/agent/ECONOMY_AND_ATLAS_PROPOSAL_2026-11-02.md). |
@@ -88,7 +88,7 @@ consultables dans le [snapshot Git publié](https://github.com/c41m07/genesis-re
 | `docs/ui-ux/audit.md` | Bilan daté remplacé par les références actuelles ; [original publié](https://github.com/c41m07/genesis-reborn/blob/453c414cf5694afd249bd462279f37050dd36452/docs/ui-ux/audit.md). |
 | `docs/ui-ux/page-inventory.md` | Bilan daté remplacé par les références actuelles ; [original publié](https://github.com/c41m07/genesis-reborn/blob/453c414cf5694afd249bd462279f37050dd36452/docs/ui-ux/page-inventory.md). |
 | `docs/ui-ux/progress.md` | Bilan daté remplacé par les références actuelles ; [original publié](https://github.com/c41m07/genesis-reborn/blob/453c414cf5694afd249bd462279f37050dd36452/docs/ui-ux/progress.md). |
-| `docs/ui-ux/validation.md` | Copie historique conservée dans `docs/archives/VALIDATION_UI_2026-11-05.md`. |
+| `docs/ui-ux/validation.md` | Copie historique conservée dans `docs/archives/VALIDATION_INTERFACE_2026-11-05.md`. |
 
 ## Principes de conservation
 

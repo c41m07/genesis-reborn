@@ -117,8 +117,8 @@ repli sans canvas/JavaScript. L’arbre technologique conserve les éléments ve
 pour expliquer leurs prérequis, indépendamment du masquage du catalogue.
 
 Les conventions de composants et d’accessibilité sont dans
-[le guide UI](ui-ux/design-system.md). Les limites encore ouvertes sont dans
-[ROADMAP.md](ROADMAP.md) ; un test automatisé ne clôt pas un audit RGAA complet.
+[le guide UI](ui-ux/GUIDE_INTERFACE.md). Les limites encore ouvertes sont dans
+[FEUILLE_DE_ROUTE.md](FEUILLE_DE_ROUTE.md) ; un test automatisé ne clôt pas un audit RGAA complet.
 
 ## Vérification ciblée
 

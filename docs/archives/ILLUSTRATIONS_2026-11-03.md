@@ -2,13 +2,13 @@
 
 > Archive : texte conservé dans son contexte d’origine, sans validation nouvelle.
 > Les règles actuelles sont dans [REGLES](../REGLES.md),
-> [DECISIONS](../DECISIONS.md) et [ROADMAP](../ROADMAP.md).
+> [DECISIONS](../DECISIONS.md) et [ROADMAP](../FEUILLE_DE_ROUTE.md).
 
 ## Périmètre et méthode
 
 Inspection des 150 WebP actifs sous forme de planches comparatives, une ligne par slug et trois colonnes (Basique, Intermédiaire, Supérieur). Les planches permettent une comparaison visuelle de chaque illustration et de sa famille. Les fichiers sources PNG ont été trouvés dans `source/`. Les aperçus réduisent les images à 360 × 270 : les détails fins (artefacts locaux, inscriptions minuscules, défauts géométriques subtils) restent à contrôler à taille native.
 
-Le manifeste détecté est `public/images/catalog/technologies/manifest.json` (entrée `vector_propulsion`). Aucun manifeste global concurrent n’a été créé. La source attendue pour les textes est `docs/CATALOGUE_LABELS.csv`; l’utilité de jeu y est commune aux rangs. Les mécaniques sont configurées dans `config/game/`. La documentation `docs/ARTWORK_PROMPTS.md` et `docs/agent/ASSET_GENERATION_PROMPTS.md` contient des nombres et conventions historiques qui ne correspondent plus au dépôt présent.
+Le manifeste détecté est `public/images/catalog/technologies/manifest.json` (entrée `vector_propulsion`). Aucun manifeste global concurrent n’a été créé. La source attendue pour les textes est `docs/CATALOGUE_LABELS.csv`; l’utilité de jeu y est commune aux rangs. Les mécaniques sont configurées dans `config/game/`. La documentation `docs/ILLUSTRATIONS.md` et `docs/agent/ASSET_GENERATION_PROMPTS.md` contient des nombres et conventions historiques qui ne correspondent plus au dépôt présent.
 
 Contrôles techniques : 150 WebP actifs présents et lisibles ; tous mesurent 1200 × 900 (4:3). Le gabarit de carte est conditionné par l’appartenance au catalogue, place l’image au-dessus du contenu, utilise `alt=""`, `loading="lazy"`, `decoding="async"` et masque proprement le conteneur en cas d’échec. Le CSS applique le ratio de carte et `object-fit: cover`. Le rendu a été ouvert dans le navigateur sur ordinateur, dans le catalogue du chantier spatial : les images apparaissent au-dessus des cartes, avec recadrage cohérent à l’écran observé. L’affichage mobile n’a pas pu être contrôlé dans un viewport dédié.
 
