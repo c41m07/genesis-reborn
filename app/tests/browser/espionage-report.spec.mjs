@@ -62,7 +62,8 @@ test('Espionnage PNJ : envoyer une sonde et consulter le rapport privé', async 
 
   const reportName = (await reportLink.locator('.report-copy strong').textContent()).replace('Renseignements · ', '').trim();
   await reportLink.click();
-  await expect(page.getByRole('heading', { name: reportName, exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Rapport d’espionnage', exact: true })).toBeVisible();
+  await expect(page.locator('.report-heading')).toContainText(reportName);
   await expect(page.getByRole('status')).toContainText(/Sondes détectées|catégorie.*renseignements obtenue/);
   await expect(page.getByRole('link', { name: 'Retour aux rapports' })).toBeVisible();
 
