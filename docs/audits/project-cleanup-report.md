@@ -41,3 +41,9 @@ Chantier I — Audit et mise à jour du README : section État du projet actuali
 Chantier J : README complété avec le wiki connecté, son contenu unique docs/wiki.json et les références embarquées. Aucune dépendance Markdown ajoutée ; trois fichiers documentaires explicitement inclus dans le contexte et l’image de production. Validation fonctionnelle et six contrôles finaux encore en cours.
 
 Vérification J : 20 liens locaux README, 40 index et 12 ROADMAP existent ; le guide de maintenance n’ajoute aucun lien local. Trois sources exportées via Docker scratch identiques aux originaux. Validation locale consolidée après correction démontrée d’une course de navigation, aucun test affaibli ; contrôles ciblés mobile/clavier/axe et sources exactes réussis. Aucun déploiement ni validation de l’Alpha.
+
+### Compte à rebours de fermeture (K)
+
+README et index reliés à UNIVERSE_CLOSING.md : date serveur, seuil inclusif 24h, synchronisation et limites à l’échéance. Aucun changement de durée des univers. Vérifications et statut de publication consignés dans le suivi Alpha.
+
+Vérification K : liens README22/index42/ROADMAP14/guide1 présents. Suite locale complète229 PHP,13 Python et97 scénarios navigateur réussie ; aucune règle ni dépendance modifiée. La refonte finale du README reste distincte, après intégration de K.

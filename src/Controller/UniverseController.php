@@ -21,6 +21,15 @@ final class UniverseController extends AbstractController
 
         return $this->render('universe/index.html.twig', ['universes' => $universes, 'configs' => $configs, 'now' => $clock->now()]);
     }
+    #[Route('/univers/{id}/fermeture', name: 'app_universe_closing', methods: ['GET'], requirements: ['id' => '\\d+'])]
+    public function closing(int $id, GameRepository $repo, \App\Service\Universe\UniverseClosingClock $clock): Response
+    {
+        $universe = $repo->find(Universe::class, $id);
+        if (!$universe instanceof Universe) throw $this->createNotFoundException('Univers introuvable.');
+        $response = $this->json($clock->snapshot($universe));
+        $response->headers->set('Cache-Control', 'private, no-store');
+        return $response;
+    }
     #[Route('/univers/{id}/rejoindre',name:'app_universe_join',methods:['POST'],requirements:['id'=>'\d+'])]
     public function join(int $id,Request $request,UniverseService $service): Response
     {

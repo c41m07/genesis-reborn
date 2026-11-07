@@ -12,6 +12,8 @@ L’orientation confirmée pour le rythme est **stratégie modérée**. Les obje
 
 Le jeu comprend les comptes et profils, univers et colonies, économie, bâtiments et recherches, files de production, flottes et missions (exploration, colonisation, transport, attaque, défense, orbite, espionnage), combats persistés, conquête de planètes PNJ, rapports privés, diplomatie, guildes, messages, boosts/événements et outils d’administration. Le combat exécute jusqu’à dix rounds, à raison d’un round par minute; ces règles sont conservées pour l’Alpha.
 
+Le compte à rebours de fermeture apparaît dans les dernières 24 heures, à partir de la date et de l’heure du serveur ; voir [son fonctionnement et ses limites](docs/UNIVERSE_CLOSING.md).
+
 ## Documentation
 
 Les sauvegardes disposent de noms uniques, d’un contrôle d’intégrité lié à l’archive, d’une conservation configurable de 14 jours et d’un suivi des échecs. `make test-backup` vérifie une restauration sur deux instances jetables, sans mail réel ; voir [sauvegardes, automatisation et limites de reprise](docs/BACKUPS.md). Les scripts hôte demandent Python 3 et les utilitaires GNU, dont `flock`.

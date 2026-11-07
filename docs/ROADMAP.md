@@ -61,3 +61,7 @@ La page de mesures admin présente les données existantes sans changer l’équ
 ## Wiki du jeu
 
 Guide explicatif et références de règles préparés pour les comptes connectés, depuis Feedback et la vue générale. Maintenance décrite dans [WIKI.md](WIKI.md). Les sources détaillées correspondent à la version embarquée ; aucun équilibrage modifié. Le statut de livraison est suivi dans le document de reprise.
+
+## Compte à rebours de fermeture
+
+Affichage dans les dernières 24 heures, date serveur et rafraîchissement sans changement de règle ; voir [le guide](UNIVERSE_CLOSING.md). Livraison et contrôles : [suivi Alpha](audits/alpha-operations-follow-up.md).

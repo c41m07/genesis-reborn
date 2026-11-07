@@ -1,0 +1,10 @@
+{% set closing = universe_closing(universe) %}
+<div class="universe-closing" data-controller="universe-closing"
+     data-universe-closing-url-value="{{ path('app_universe_closing', {id: universe.id}) }}"
+     data-universe-closing-state-value="{{ closing|json_encode|e('html_attr') }}" {% if not closing.visible %}hidden{% endif %}>
+  <p><strong>{{ universe.name }}</strong> · <span data-universe-closing-target="label">{{ closing.remaining == 0 ? 'Échéance de fermeture atteinte' : 'Fermeture dans' }}</span>
+    <span role="timer" aria-live="off" aria-label="Temps restant avant la fermeture" data-universe-closing-target="time">{{ closing.remaining is not null ? duration_label(closing.remaining) : '' }}</span></p>
+  <p data-universe-closing-target="date">{% if universe.endsAt %}Échéance : <time datetime="{{ closing.endsAt }}">{{ universe.endsAt|date('d/m/Y à H:i:s', 'UTC') }} UTC</time>.{% endif %}</p>
+  <p data-universe-closing-target="error" hidden>Actualisation indisponible : dernière échéance connue affichée.</p>
+  <noscript><p>Actualisez la page pour mettre à jour le temps restant.</p></noscript>
+</div>

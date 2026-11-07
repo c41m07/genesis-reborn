@@ -72,3 +72,8 @@ html{scroll-padding-top:180px}@media(max-width:740px){html{scroll-padding-top:22
 .header-account{display:flex;align-items:center;gap:10px}.settings-link{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:32px;height:32px;border:1px solid transparent;border-radius:50%;color:var(--muted)}.settings-link:hover,.settings-link[aria-current=page]{color:var(--accent);background:var(--panel);border-color:var(--line);text-decoration:none}.settings-link .icon{width:18px;height:18px}
 
 .wiki-guide{max-width:960px;min-width:0;margin-inline:auto}.wiki-guide .panel{margin-block:16px}.wiki-guide p{line-height:1.7}.wiki-summary a,.wiki-guide section>a{display:inline-flex;align-items:center;min-height:24px;padding-block:4px}.wiki-reference{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;line-height:1.7}.wiki-guide section{scroll-margin-top:90px}
+
+.universe-closing { margin: 1rem; padding: .8rem 1rem; border: 1px solid currentColor; border-radius: .6rem; overflow-wrap: anywhere; }
+.universe-closing[hidden] { display: none; }
+.universe-closing p { margin: .3rem 0; }
+.universe-closing [role="timer"] { font-variant-numeric: tabular-nums; font-weight: 700; }
