@@ -1,91 +1,169 @@
 # Genesis Reborn
 
-Jeu de stratégie spatiale multijoueur construit avec PHP 8.4, Symfony 7.4, Doctrine, Twig, MariaDB et Docker Compose. Le projet est au stade **Alpha jouable contrôlée** : la boucle principale fonctionne et peut être testée; la production publique n’est pas déclarée prête.
+Genesis Reborn est un jeu de stratégie spatiale multijoueur par navigateur. Chaque joueur développe ses colonies, organise sa production et ses recherches, explore la galaxie et conduit des opérations de flotte dans des univers indépendants. L’Alpha sert aussi à observer la progression et les retours des joueurs avant de futures décisions d’équilibrage.
+
+L’orientation confirmée est une stratégie au rythme modéré ; les durées de progression restent des objectifs à mesurer pendant l’Alpha.
 
 ## État du projet
 
-**L’Alpha est hébergée, selon le propriétaire.** Son URL, sa version exécutée et sa configuration serveur n’ont pas été vérifiées pendant cette mission. Les lots intégrés dans `dev` ne sont pas déclarés déployés. Consulter [l’état du déploiement et ses preuves](docs/DEPLOIEMENT.md).
+**L’Alpha est hébergée, selon le propriétaire.** Son URL publique, sa version exécutée et sa configuration serveur restent à confirmer. Les changements intégrés à `dev` ne sont pas déclarés déployés : consulter [l’état du déploiement](docs/DEPLOIEMENT.md).
 
-Les quinze phases ont fait l’objet d’audits historiques ; la revue manuelle d’accessibilité exhaustive reste ouverte. Le lot H a validé localement les six contrôles obligatoires, 228 tests PHP, 13 tests des scripts et 93 scénarios navigateur en deux lots complets. Ses 11 contrôles GitHub ont également réussi dans la [PR #10](https://github.com/c41m07/genesis-reborn/pull/10). Ces résultats ne valident pas l’Alpha hébergée. Les mesures d’équilibrage auprès des joueurs, les tests de charge, le PRA complet et la revue avec lecteur d’écran restent à réaliser. Les audits dans `docs/agent/` conservent leur contexte daté ; le [suivi des chantiers Alpha](docs/audits/alpha-operations-follow-up.md) retrace les livraisons récentes.
+Le code comprend :
 
-L’orientation confirmée pour le rythme est **stratégie modérée**. Les objectifs de durée de progression et les valeurs économiques/combat seront mesurés pendant l’Alpha auprès des joueurs, puis ajustés à partir de ces retours; ils ne sont pas présentés comme des valeurs déjà validées.
+- Comptes, connexion, profils et préférences ; bienvenue et vérification d’adresse pour les nouveaux comptes, renvoi du lien et réinitialisation du mot de passe.
+- Univers, colonies et ressources ; bâtiments, recherches, rangs et files de production ; progression traitée pendant la déconnexion.
+- Flottes, exploration, transport, colonisation, attaque, défense, orbite et espionnage ; combats persistés, conquête de planètes PNJ et rapports privés.
+- Diplomatie, guildes, messages, notifications, inventaire de boosts et événements.
+- Administration des comptes et univers, retours utilisateur, patchnotes, signaux des processus, relais en attente et mesures par univers.
+- Wiki connecté et compte à rebours dans les dernières 24 heures avant la fermeture d’un univers.
 
-Le jeu comprend les comptes et profils, univers et colonies, économie, bâtiments et recherches, files de production, flottes et missions (exploration, colonisation, transport, attaque, défense, orbite, espionnage), combats persistés, conquête de planètes PNJ, rapports privés, diplomatie, guildes, messages, boosts/événements et outils d’administration. Le combat exécute jusqu’à dix rounds, à raison d’un round par minute; ces règles sont conservées pour l’Alpha.
+Les jauges distinguent le stock protégé du stock exposé au pillage : remplissage vert jusqu’au seuil protégé, puis doré, avec un repère fixe. Le seuil actuellement documenté est de 10 % de la capacité. Les règles et leurs décisions restent centralisées dans [REGLES.md](docs/REGLES.md) et [DECISIONS.md](docs/DECISIONS.md).
 
-Le compte à rebours de fermeture apparaît dans les dernières 24 heures, à partir de la date et de l’heure du serveur ; voir [son fonctionnement et ses limites](docs/UNIVERSE_CLOSING.md).
+## Technologies et versions
 
-## Documentation
+Les contraintes déclarées, les versions verrouillées et les observations d’exécution sont distinctes.
 
-Les sauvegardes disposent de noms uniques, d’un contrôle d’intégrité lié à l’archive, d’une conservation configurable de 14 jours et d’un suivi des échecs. `make test-backup` vérifie une restauration sur deux instances jetables, sans mail réel ; voir [sauvegardes, automatisation et limites de reprise](docs/BACKUPS.md). Les scripts hôte demandent Python 3 et les utilitaires GNU, dont `flock`.
+| Élément | Déclaration ou verrouillage vérifié |
+| --- | --- |
+| PHP / Composer | `composer.json` annonce PHP `>=8.2`, mais DoctrineBundle verrouillé exige `^8.4` et PHPUnit `>=8.4.1`. Les images fournies utilisent PHP 8.4 et Composer 2. |
+| Symfony | Contrainte `7.4.*`, FrameworkBundle verrouillé en `7.4.21`. |
+| Doctrine / Twig | ORM `3.7.5`, DoctrineBundle `3.3.2`, Twig `3.30.0` dans `composer.lock`. |
+| Interface | Twig, Stimulus `3.2.2`, Webpack Encore `7.2.0` et Babel `8.0.7` verrouillés. |
+| Node.js | La CI et l’étape de compilation de l’image utilisent la branche 24. Pour cette branche, les contraintes Encore/Babel demandent au moins 24.11.0. |
+| Services Docker | Images MariaDB `11.8`, RabbitMQ `4.3-management-alpine`, Mercure `v0.18`, avec références de digest dans Compose. Le proxy Traefik local est externe au projet. |
+| Tests | PHPUnit `13.4.5`, Playwright `1.64.1`, axe et tests Python des scripts. |
 
-Des alertes d’exploitation par courriel sont préparées, désactivées par défaut : arrêt confirmé, signal absent pendant 2 minutes, retard de relais de 5 minutes et échecs définitifs. Rappels espacés d’au moins une heure et notification de rétablissement ; voir [configuration et automatisation des alertes](docs/OPERATIONS_ALERTS.md).
+Sources : [Composer](composer.json), [verrou PHP](composer.lock), [npm](package.json), [verrou JavaScript](package-lock.json), [Docker de développement](docker/dev/Dockerfile), [Docker de production](docker/prod/Dockerfile) et [CI](.github/workflows/ci.yml).
 
-L’admin permet de consulter les relais en attente et leurs échéances ; une collecte indisponible est distinguée d’une file vide. Les limites des données, les tentatives du worker et la reprise après interruption sont détaillées dans [le guide des relais](docs/OUTBOX.md).
+Observation locale du 7 novembre 2026 : PHP **8.4.26**, Symfony **7.4.21**, Composer **2.10.3**, Python **3.13.5**, plugin Compose **5.6.0** ; l’image Node disponible contient **24.21.0 / npm 11.19.0**. Le poste hôte contient aussi Node **20.19.2 / npm 9.2.0** : une compilation réussie sur ce poste ne le rend pas conforme aux contraintes actuelles d’Encore/Babel. Ces observations ne décrivent pas les versions de l’Alpha hébergée.
 
-L’administration affiche les signaux récents, anciens, absents ou incohérents des processus. En production, les trois processus partagent leur dossier de signaux avec l’application en lecture seule. L’état est relu à chaque chargement de l’admin ; voir [le diagnostic des signaux](docs/OPERATIONS_SIGNALS.md).
+## Prérequis locaux
 
-Les nouveaux comptes reçoivent un message de bienvenue et un lien de vérification d’adresse valable 24 heures. L’accès nécessite cette vérification ; un renvoi est proposé depuis la connexion. Les comptes antérieurs à cette fonctionnalité conservent leur accès. Le transport (`MAILER_DSN`), l’expéditeur (`MAILER_FROM`) et l’URL publique (`DEFAULT_URI`) doivent être configurés sur chaque environnement. Voir le [parcours de confirmation](docs/ACCOUNT_EMAIL.md).
+Le parcours documenté vise Linux ou Debian sous WSL, avec Git, un accès au dépôt et aux registres de dépendances, Docker accessible, le plugin `docker compose`, GNU Make, Bash, Python 3 et les utilitaires GNU utilisés par les scripts, dont `flock`. Utiliser Node **24.11 ou plus récent dans la branche 24**, avec npm. PHP et Composer sont fournis par le conteneur ; ils ne sont pas requis sur l’hôte pour les commandes Make ci-dessous.
 
-Le mot de passe oublié utilise un lien valable une heure, à usage unique. Une nouvelle demande invalide le précédent lien ; la réponse publique reste neutre. Les mails utilisent les mêmes variables de configuration que la confirmation de compte. Voir le [parcours de réinitialisation](docs/ACCOUNT_EMAIL.md#réinitialisation-du-mot-de-passe).
+Le Compose local attend deux réseaux externes, `traefik_network` et `mail_network`. Il ne crée ni Traefik ni le serveur SMTP : préparer un proxy Traefik avec fournisseur Docker et point d’entrée `web`, ainsi qu’un SMTP de développement joignable. L’exemple mail vise `mailhog:1025` ; adapter `MAILER_DSN` à votre installation. `make doctor` contrôle la présence des réseaux, pas le fonctionnement du proxy ou du SMTP.
 
-- [Déploiement GitHub Actions et image GHCR](docs/DEPLOIEMENT.md) : préparation du serveur, secrets et déploiement manuel.
-- [Index documentaire](docs/README.md) : règles, décisions, fonctionnement, audits, validation et limites.
-- [Règles de jeu](docs/REGLES.md) et [décisions confirmées](docs/DECISIONS.md).
-- [Roadmap](docs/ROADMAP.md), [plan maître](docs/agent/MASTER_PLAN.md) et [matrice de couverture](docs/agent/REQUIREMENTS_MATRIX.md).
-- [État de préparation Alpha](docs/agent/ALPHA_READINESS.md) et [audit final](docs/agent/PHASE_15_FINAL_AUDIT.md).
+## Installation d’un nouveau développeur
 
-## Environnement local Debian/WSL
+Exécuter cette séquence dans un **nouveau clone et une nouvelle base locale** :
 
-Prérequis : Docker Compose, make, Python 3 et Node.js/npm. Le projet s’attend aux réseaux locaux partagés traefik_network et mail_network.
+```bash
+git clone https://github.com/c41m07/genesis-reborn.git
+cd genesis-reborn
+git switch dev
+make configure
+```
 
-    cd /home/caim/Projets/Genesis_Reborn
-    make configure
-    make doctor
-    make build
-    make install
-    make assets
-    make start
-    make migrate
-    make import
+`make configure` crée `.env` depuis [.env.example](.env.example) s’il manque et génère les secrets privés dans `.env.local`. Il conserve les valeurs existantes et ajoute une clé Mercure si nécessaire. Vérifier ensuite la configuration privée, le SMTP et, si nécessaire, `LOCAL_UID` / `LOCAL_GID` avant de construire l’image.
 
-make configure crée le fichier .env depuis .env.example si nécessaire, puis génère les secrets locaux dans .env.local sans remplacer ceux déjà présents. make start ne lance ni migration, ni import, ni création de compte démo. make seed-demo est une commande facultative réservée à l’environnement local. Le compte de démonstration n’est pas requis pour créer un compte par l’interface.
+```bash
+make doctor
+make validate
+make build
+make install
+make assets
+docker compose --env-file .env.local up -d --wait app database rabbitmq mercure
+make migrate
+make import
+make start
+```
 
-Pour les scripts exécutés depuis WSL si le domaine local ne se résout pas, utiliser 127.0.0.1 avec l’en-tête Host: genesis-reborn.localhost. La base MariaDB écoute par défaut sur 127.0.0.1:3309; son port est configurable dans .env.local, fichier local ignoré par Git.
+La première commande de démarrage prépare l’infrastructure et l’application. Les migrations et l’import précèdent le lancement des consommateurs : c’est aussi l’ordre utilisé en CI. `make start` démarre ensuite tous les services ; il n’applique aucune migration et ne charge aucune donnée automatiquement.
 
-## Commandes principales
+Ouvrir [l’adresse locale du jeu](http://genesis-reborn.localhost), puis créer un compte et suivre le lien reçu dans le SMTP de développement. Le proxy doit être configuré pour cette adresse. La base écoute sur `127.0.0.1:3309` par défaut depuis l’hôte ; les conteneurs utilisent `database:3306`.
 
-Les [scénarios de validation et de reprise](docs/SERVER_SCENARIOS.md) décrivent les essais locaux isolés, la progression sans client connecté et les vérifications restant à mener sur serveur de test. Ils ne constituent pas une validation de l’Alpha hébergée.
+## Configuration et variables d’environnement
 
-L’admin propose des [mesures par univers](docs/UNIVERSE_METRICS.md) : ancienneté, niveaux actuels, attentes des files, ressources et protections après pertes. Les données manquantes et la couverture des observations sont explicites ; aucun délai historique de progression ou de récupération n’est inventé et aucun équilibrage n’est modifié.
+Les fichiers `.env`, `.env.local`, `.env.prod` et les secrets sont exclus par [.gitignore](.gitignore) ; seuls les modèles sont versionnés. Ne pas publier leur contenu. Le modèle serveur est [.env.prod.example](.env.prod.example) ; sa préparation est décrite dans le guide de déploiement.
 
-Les jauges de ressources suivent le stock réel : le remplissage est vert jusqu’au seuil protégé du pillage (10 % de la capacité), puis doré au-delà. Un repère fixe indique ce seuil, même à stock nul.
+| Variables | Usage |
+| --- | --- |
+| `APP_ENV`, `APP_DEBUG`, `APP_SECRET` | Environnement Symfony, débogage et secret applicatif. |
+| `DATABASE_URL`, `DB_PASSWORD`, `DB_ROOT_PASSWORD`, `DB_HOST_PORT` | Connexion MariaDB, secrets du service local et port d’accès depuis l’hôte. |
+| `MESSENGER_TRANSPORT_DSN`, `RABBITMQ_PASSWORD` | Transport des traitements asynchrones. |
+| `MAILER_DSN`, `MAILER_FROM`, `DEFAULT_URI` | Transport SMTP, expéditeur et URL absolue des liens, notamment ceux des mails. |
+| `MERCURE_URL`, `MERCURE_PUBLIC_URL` | Adresse interne de publication et adresse accessible au navigateur. |
+| `MERCURE_JWT_SECRET`, `MERCURE_JWT_ISSUER` | Signature et émetteur des jetons Mercure. |
+| `LOCAL_UID`, `LOCAL_GID` | Identifiants utilisés lors de la construction et par les processus locaux ; défaut 1000. |
+| `OPS_ALERT_*` | Activation, destination privée et seuils des alertes ; envois désactivés par défaut. |
 
-    make help
-    make start
-    make stop
-    make test
-    make lint
-    make validate
-    npm run build
-    make test-browser
-    make verify-install
-    make backup-status
-    make test-backup
+Les variables de l’image et du proxy de production (`APP_IMAGE`, `APP_DOMAIN`, `TRAEFIK_CERTRESOLVER`, `SYMFONY_TRUSTED_PROXIES`) sont documentées dans [DEPLOIEMENT.md](docs/DEPLOIEMENT.md). Les paramètres de sauvegarde sont maintenus dans [BACKUPS.md](docs/BACKUPS.md). Aucun fournisseur SMTP de production ni destinataire privé n’est imposé par ce README.
 
-make backup-status ne crée rien et signale un état inconnu si aucune sauvegarde n’est disponible ; make test-backup utilise uniquement ses instances jetables.
+## Démarrage et travail quotidien
 
-make help affiche les commandes. make stop arrête sans supprimer les volumes. make test utilise la base de test isolée et lance aussi les tests Python des scripts de sauvegarde. make test-browser lance Chromium avec une stack et une base jetables; installer Chromium avec npx playwright install chromium. make verify-install vérifie une installation propre dans un projet Compose distinct et supprime uniquement ses propres volumes temporaires. make console CMD='about' lance une commande Symfony.
+Après l’initialisation : `make start`. Utiliser `make status`, `make logs`, `make stop` pour suivre ou arrêter les services. `make stop` conserve les conteneurs et les données ; `make down` retire les conteneurs du projet et conserve les volumes de données.
 
-Après modification des services consommés par des processus persistants, redémarrer les services concernés avec docker compose --env-file .env.local restart worker relay notifier.
+| Commande | Fonction |
+| --- | --- |
+| `make help` | Liste des cibles réellement disponibles dans le [Makefile](Makefile). |
+| `make console CMD=about` | Console Symfony dans l’application ; remplacer `about` par la commande voulue. |
+| `make shell` | Terminal dans le conteneur applicatif. |
+| `make assets` / `npm run build` | Compilation des fichiers de production dans `public/build/`. |
+| `make watch` / `npm run watch` | Recompilation de développement ; actualiser ensuite le navigateur. |
+| `npm run dev` | Compilation de développement ponctuelle ; `npm run` liste les scripts déclarés. |
 
-## Structure du dépôt
+Après modification d’un service consommé par les processus persistants locaux, les redémarrer :
 
-- src/, templates/, public/ : application Symfony et interface.
-- config/, migrations/, compose*.yaml : configuration et évolution du schéma.
-- tests/, tests/browser/ : tests serveur, intégration et navigateurs.
-- docs/specifications/, docs/technic/ : sources du jeu; docs/agent/ : audits, plans et preuves techniques.
-- scripts/ : configuration locale, validation, sauvegarde et tests isolés.
+```bash
+docker compose --env-file .env.local restart worker relay notifier
+```
 
-Les dépendances PHP et JavaScript sont verrouillées par composer.lock et package-lock.json. Aucun déploiement ou publication n’est effectué par les commandes locales décrites ici.
+Compiler avant les tests navigateur : la compilation remplace les fichiers de `public/build/`. Les dépendances et résultats générés (`vendor/`, `node_modules/`, `var/`, `public/build/`, `test-results/`, `playwright-report/`) sont ignorés par Git.
 
-Le wiki du jeu est accessible sur `/wiki` pour les comptes connectés, avec accès près de Feedback et sur la vue générale. Son texte explicatif est maintenu une seule fois dans `docs/wiki.json` ; les règles et décisions détaillées sont embarquées dans l’image depuis leurs fichiers de référence. Voir [la maintenance et les sources du wiki](docs/WIKI.md).
+## Base de données et données de développement
+
+[Les migrations](migrations/) décrivent l’évolution du schéma. `make migrate` les applique à la base configurée : utiliser cette commande lors de l’initialisation locale ou après une évolution autorisée du schéma. Sauvegarder une base contenant des données avant une migration ; la procédure serveur est distincte.
+
+`make import` importe explicitement les cartes et univers de référence. `make seed-demo` est facultatif et réservé à `APP_ENV=dev` : il crée un compte de démonstration connu, ou conserve le compte existant et son mot de passe. Il ne remplace pas les migrations ni l’import. Les jeux de données de test sont sous [tests/Fixtures](tests/Fixtures/) et dans les scénarios.
+
+[Le guide des sauvegardes](docs/BACKUPS.md) décrit `make backup`, `make restore`, la conservation de 14 jours par défaut, les contrôles d’échec et la restauration isolée. `make backup-status` consulte l’état sans créer de sauvegarde. `make test-backup` vérifie les comptes et la progression sur deux instances jetables distinctes.
+
+## Tests et qualité
+
+Préparer Chromium pour les tests avec `npx playwright install --with-deps chromium` : cette commande installe le navigateur et ses dépendances système. Les six contrôles avant commit ou publication sont :
+
+```bash
+make validate
+make lint
+make test
+npm run build
+BROWSER_PERSISTENCE=1 make test-browser
+git diff --check
+```
+
+- `make validate` valide Compose sans afficher les secrets.
+- `make lint` contrôle PHP, Twig, YAML, le conteneur Symfony et le schéma Doctrine de la base configurée.
+- `make test` utilise `database-test` et `genesis_v2_test` en mémoire, un transport Messenger en mémoire et un transport mail nul ; il lance aussi les tests Python des sauvegardes. Lancer une seule suite PHP à la fois sur cette base.
+- `make test-browser` prépare un projet Docker et une base jetables propres à l’exécution. `BROWSER_PERSISTENCE=1` ajoute la persistance temporaire nécessaire aux essais de redémarrage complet ; les volumes sont retirés en fin de test. Les mails et alertes externes y sont neutralisés. Le script npm `test:browser` seul ne prépare pas cet environnement.
+- `make verify-install` prépare une installation temporaire, réinstalle les dépendances et vérifie le redémarrage. Son existence ne vaut pas preuve d’une exécution récente ; consulter le suivi pour les commandes réellement exécutées.
+
+Preuve de référence sur `dev` après le lot K, le 7 novembre 2026 : [PR #13](https://github.com/c41m07/genesis-reborn/pull/13), six contrôles locaux réussis, **229 tests PHP**, **13 tests Python**, **97 scénarios Playwright** (95 parcours et 2 tests JavaScript déterministes). La suite complète locale a réussi en deux lots ; une reprise ciblée finale de trois cas a aussi réussi. Les **11 contrôles GitHub** ont réussi et la restauration CI a vérifié 38 tables, les comptes et la progression. Les résultats détaillés et les livraisons suivantes sont dans [le suivi Alpha](docs/audits/alpha-operations-follow-up.md).
+
+La réception SMTP réelle, la configuration et les parcours sur l’Alpha, la planification des sauvegardes et le stockage distant restent à vérifier sur serveur. Les essais perturbateurs utilisent les instances locales isolées. Les mesures d’équilibrage, les tests de charge et la revue d’accessibilité exhaustive restent ouverts ; les contrôles ciblés avec axe ne constituent pas une certification RGAA.
+
+## Architecture générale
+
+- `src/Controller/`, [templates/](templates/) et [assets/](assets/) : requêtes HTTP, rendu Twig et comportements Stimulus ; [public/](public/) sert les fichiers accessibles au navigateur.
+- `src/Service/`, `src/Entity/`, `src/Repository/` et `src/Manager/` : logique de jeu, données Doctrine et transactions.
+- [config/game/](config/game/) et [config/universes/](config/universes/) : catalogues, règles configurées et données d’univers ; les décisions produit restent dans la documentation de référence.
+- [compose.yaml](compose.yaml) : application PHP/Apache, MariaDB, RabbitMQ, Mercure, consommateur `worker`, relais `relay` et notificateur `notifier` ; Traefik et SMTP locaux sont fournis séparément.
+- Les événements persistés dans l’outbox sont transmis aux traitements asynchrones et aux notifications ; les files et états serveur permettent la progression sans navigateur ouvert.
+- [scripts/](scripts/) : configuration, exploitation et validations isolées ; [tests/](tests/) : tests PHP, scripts et parcours Playwright.
+
+## Documentation de référence
+
+[docs/README.md](docs/README.md) est l’index complet. Points d’entrée actifs :
+
+- [Règles](docs/REGLES.md), [décisions](docs/DECISIONS.md) et [roadmap](docs/ROADMAP.md).
+- [Mails de compte et récupération](docs/ACCOUNT_EMAIL.md), [wiki](docs/WIKI.md) et [compte à rebours](docs/UNIVERSE_CLOSING.md).
+- [Signaux](docs/OPERATIONS_SIGNALS.md), [relais en attente](docs/OUTBOX.md), [alertes](docs/OPERATIONS_ALERTS.md) et [mesures par univers](docs/UNIVERSE_METRICS.md).
+- [Sauvegardes](docs/BACKUPS.md), [scénarios de reprise](docs/SERVER_SCENARIOS.md) et [déploiement](docs/DEPLOIEMENT.md).
+- [Suivi des chantiers](docs/audits/alpha-operations-follow-up.md) et [audit du nettoyage et du README](docs/audits/project-cleanup-report.md).
+
+Les audits de [docs/agent/](docs/agent/) conservent leur contexte historique. Les spécifications sont dans [docs/specifications/](docs/specifications/) et les PDF techniques dans [docs/technic/](docs/technic/). Le wiki explique le jeu sans recopier les valeurs du catalogue : son contenu unique est [docs/wiki.json](docs/wiki.json), avec accès près de Feedback et sur la vue générale.
+
+## Contribution et conventions
+
+Lire [AGENTS.md](AGENTS.md), examiner l’état Git et préserver les changements présents. Partir du dernier `dev`, créer une branche `feature/<chantier>`, puis proposer une PR vers `dev`. Utiliser des commits courts et explicites en français, des noms de variables en anglais et les conventions du code existant.
+
+Mettre à jour le README dans le même lot lorsque changent l’architecture, les dépendances, les commandes ou les fonctionnalités documentées. Ne pas changer les règles ou l’équilibrage sans décision explicite, et conserver les logos et SVG d’identité. Distinguer dans chaque livraison ce qui a été vérifié localement, validé en CI, intégré à `dev` et effectivement déployé.

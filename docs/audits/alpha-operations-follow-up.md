@@ -2,11 +2,11 @@
 
 ## État en cours
 
-- Branche courante : `feature/universe-closing-countdown`, créée depuis `origin/dev` au commit `66f2e01`, après fusion vérifiée de J. Chantier K validé localement ; publication et CI à vérifier.
-- Avancement demandé par le propriétaire : **83 %**, dix lots intégrés sur douze (A–K et refonte finale du README). Le pourcentage compte les lots fusionnés, pas les déploiements.
+- Branche courante : `feature/readme-audit`, créée depuis `origin/dev` au commit `484537d`, après fusion vérifiée de K. Dernier lot : audit final du README.
+- Avancement demandé par le propriétaire : **92 %**, onze lots intégrés sur douze (A–K et refonte finale du README). Le pourcentage compte les lots fusionnés, pas les déploiements.
 - Worktree : `/home/caim/Projets/Genesis_Reborn-account-email`.
 - Les changements du propriétaire dans le checkout original sont préservés.
-- Dernier lot intégré : J, PR #12, commit `66f2e01`. K est préparé sur sa branche dédiée.
+- Dernier lot intégré : K, PR #13, commit `484537d`. README final en préparation.
 - [PR #2](https://github.com/c41m07/genesis-reborn/pull/2), base `dev`, **fusionnée et vérifiée le 6 novembre 2026 à 12 h 50 (Europe/Paris)**, commit d’intégration `15e8d43`. Aucun déploiement effectué.
 - Décision du propriétaire : envoyer un mail de bienvenue et vérifier l’adresse avant accès pour les nouveaux comptes. Les comptes existants gardent leur accès.
 - Migration autorisée uniquement dans les bases locales de test ; aucune intervention serveur autorisée par cette validation.
@@ -368,3 +368,35 @@ Les six contrôles ont réussi : validate, lint (PHP/Twig/YAML/conteneur/schéma
 Incidents préalables expliqués et résolus : argument Compose perdu au passage PowerShell/WSL, relance avec arguments structurés ; cache Symfony sans debug conservant l’ancienne signature Twig, vidé via cache:clear sans réécriture du code ; client HTTP Node du nouveau test ne résolvant pas le domaine Docker local, remplacé par navigation/fetch dans le navigateur. Reprise ciblée2/2 réussie avant la suite complète97 entièrement verte. Aucun test affaibli. Aucun nouvel accès serveur, mail réel, migration métier ou réglage de jeu modifié.
 
 Liens locaux vérifiés : README22, index42, ROADMAP14, guide1, aucun fichier introuvable. Quatre projets navigateur jetables ; nettoyage des quatre vérifié (zéro conteneur/volume restant). Référence distante dev toujours66f2e01 après nouvelle récupération pendant les tests. Les changements étrangers identifiés restent hors staging. Publication/CI et fusion à vérifier ensuite, sans assimiler le local à GitHub ou à la production.
+
+## Chantier K — intégré à dev, non déployé
+
+PR #13 https://github.com/c41m07/genesis-reborn/pull/13 fusionnée le7 novembre2026 à12h23 (Europe/Paris), commit484537d971a394903d2e601b240fef3b6f238378. Head2b98d24718fa1fbef111cb4135489b3bff303def ;17 fichiers323 ajouts6 retraits. Base dev66f2e01, diff/base/head/discussions revérifiés avant merge, état clean et aucune revue/commentaire/discussion bloquante. Fusion relue merged=true puis origin/dev récupéré ; branche README créée depuis ce nouveau dev.
+
+Local : six contrôles réussis,229 PHP/205648 assertions,13 Python et suite Playwright complète97/97 en2 lots50+47, puis contrôles rapides repris et3 cas ciblés réussis après finalisation documentaire. Les97 comprennent95 parcours réels et2 tests JS déterministes. Les cinq projets navigateur du lot, dont le dernier ciblé, ont zéro conteneur/volume restant. CI sur head final :11 succès,2 publications ignorées ; journaux PR25+25+23+24=97 complets, compteur20,5s et test seuil12ms. PHP229/205648,13 Python ; restauration38 tables, mot de passe et progression(resources/buildings/research/ships/pending_queue/outbox) vérifiés, sans consommateur ni mail réel.
+
+Livré : échéance serveur, seuil24h inclusif, compteur global et cartes, synchronisation chaque minute/retour onglet, temps civil du poste ignoré, UTC explicite, échéance non négative et erreur réseau visible. Ni règle de fermeture, ni migration, ni dépendance changée. Aucun déploiement, mail réel ou accès serveur. Fichiers étrangers excluent toujours config/reference.php, deux scripts sans diff de contenu et node_modules. Le checkout propriétaire présente les mêmes13 chemins selon Git Windows, tandis que Git Linux le lit propre ; aucune normalisation ni réparation n’a été effectuée.
+
+## Dernier lot — audit final du README, en cours
+
+Branche feature/readme-audit depuis dev484537d. Complexité3/5. Relecture ciblée manifestes/verrous, Makefile, Docker, Compose, CI, configuration, scripts d’amorçage, tests et guides actifs. AGENTS contient déjà la règle de maintenance du README ajoutée au lotA, conservée. Pas de fichier d’instructions redondant. Aucun changement métier ou de dépendance prévu.
+
+Constats vérifiés : manifeste PHP>=8.2 insuffisant pour décrire le verrouillage(DoctrineBundle^8.4, PHPUnit>=8.4.1) ; Encore7.2/Babel8.0.7 demandent notamment Node24>=24.11, alors que l’hôte est en20.19.2. Image Node24 déjà disponible lue hors réseau :24.21.0/npm11.19.0. PHP local8.4.26, Symfony7.4.21, Composer2.10.3, Python3.13.5, Compose5.6.0. Aucun changement de version installé. Ordre initial du README corrigé : infrastructure/app puis migration/import, puis consommateurs, comme la CI réelle PR13. Traefik et SMTP externes au Compose sont explicités. Aucune licence ajoutée : aucun fichier de licence, métadonnées Composer proprietary et npm UNLICENSED/private.
+
+README réorganisé en français : fonctionnalités, technologies/contraintes/preuves, prérequis, nouveau clone, configuration privée, démarrage quotidien, données/import/démo, commandes, tests, architecture, docs et contribution. Les descriptions des jauges du propriétaire sont conservées. La preuve du lotK est datée et ne décrit pas l’Alpha. Liens et commandes sûres à vérifier, puis six contrôles sur le contenu final. Compilation supplémentaire prévue avec l’image Node24 existante hors réseau, sans installation. Suite navigateur finale prévue en quatre lots isolés(12CPU et12,5Go disponibles observés). Aucun commit/PR README à ce stade.
+
+README — vérifications documentaires :49 liens locaux README,1 rapport et6 AGENTS présents ;16 dossiers sources supplémentaires contrôlés ; modèles versionnés exactement .env.example et .env.prod.example. make doctor/validate/help/console about exécutés ; recettes de23 cibles Make examinées en simulation, sans installation ni migration de la base propriétaire. L’ordre de première installation est confirmé par la CI de K. make verify-install n’est pas exécuté dans ce lot ; sa réinstallation de dépendances reste explicitée.
+
+Contrôles du dernier lot : validate/lint et test229 PHP/205648+13 Python réussis. npm run(liste), npm run dev et npm run build réussis sousNode24.21.0/npm11.19.0, dans l’image déjà disponible, --network none et --pull=never ; node_modules existant monté en lecture seule, aucune dépendance installée ni configuration globale changée. Les valeurs des jauges sont recoupées avec config/game/rules.yaml(0,1), et UniverseImporter confirme config/universes/*.json. Aucun fichier applicatif modifié.
+
+Prochaine vérification : git diff --check, puis suite Playwright complète en4 projets isolés avec BROWSER_PERSISTENCE=1, logs /tmp/genesis-readme-full-1.log à-4.log et sorties test-results/readme-full-N. Assets figés avant les navigateurs. Après succès : revue du diff des3 documents, commit/push/PR versdev, CI et discussions avant fusion, puis contrôle des liens du README réellement intégré àdev. Avancement reste92 % tant que la PR finale n’est pas fusionnée.
+
+README — incidents de validation finale et réévaluation : complexité3/5 conservée, correction limitée au banc de tests isolé, aucune donnée utilisateur ni logique métier. Inventaire : délai global60000ms dépassé (durée réelle1,6min),100 insertions disponibles+2attente+1utilisée via commandes synchrones ; capture d’erreur confirme état100/100,2en attente eteffet25%. Le même scénario avait réussi47,9s dans la suite K àdeux lots. Charge relevée20,68 pour12CPU ; quatre lots créent une contention, à confirmer par reprise seule avec délais/assertions inchangés.
+
+Autre échec : préparation du scénario sauvegarde/alertes, worker unhealthy après recréation DB/Rabbit. operations-alerts.spec.mjs construisait un compose sans compose.browser-persistence.yaml, contrairement au lanceur/fixture. Lecture des configurations effectives confirme tmpfs sans complément, volumes avec. Une ligne conditionnelle ajoutée pour aligner la commande ; les assertions persistentMounts avant/après restent identiques. Les autres résultats de la suite en cours restent exploitables, puis les deux fichiers concernés seront rejoués seuls. Ce défaut de préparation n’est pas présenté comme une panne de l’Alpha.
+
+Périmètre final : README et deux audits, plus cette ligne dans operations-alerts.spec.mjs. Aucun changement de règle, dépendance, schéma, délai ou assertion. Après fin des quatre lots : contrôles rapides repris, compilation Node24 hors réseau, diff-check et reprise des deux fichiers navigateur àun seul worker/projet ; consigner les résultats consolidés précisément avant publication.
+
+README — fin de première suite :97 scénarios exécutés,94 réussis/3 échoués (25/25,24/25,22/23,23/24 ;15,7/16,8/16,6/17,6min). Erreurs consultées : inventaire global60000ms ; routes responsive global60000ms lors du parcours àtrois tailles ; préparation sauvegarde/alertes avec recréation DB/Rabbit puis worker unhealthy. Le compteur et le wiki réussissent dans cette suite. Les quatre projets sont effectivement nettoyés(zéro conteneur/volume). Ce n’est pas une suite97 entièrement verte.
+
+Une seule ligne de code de test change : ajout conditionnel du fichier Compose de persistance dans operations-alerts.spec.mjs. Reprise finale prévue sur catalogue-inventory, operations-alerts et ui-routes-responsive (5cas), un seul projet/worker ; délais et assertions inchangés. Contrôles rapides et compilation Node24 repris avant. Le bilan publié devra distinguer les94 succès initiaux, la reprise ciblée et la CI complète. Aucune production ni donnée réelle concernée.
