@@ -1,0 +1,7 @@
+{% extends 'admin/layout.html.twig' %}
+{% block title %}Historique des transports · Genesis Reborn{% endblock %}
+{% block body %}
+<h1>Historique des transports</h1><p>Dons entre joueurs et livraisons entre colonies. Ces données permettent une vérification humaine ; aucune sanction automatique n’est appliquée.</p>
+{% for report in reports %}<section class="panel"><h2>Transport n° {{ report.id }} · {{ report.sender.universe.name }}</h2>{% include 'transport/_details.html.twig' %}</section>{% else %}<p>Aucun transport enregistré.</p>{% endfor %}
+<nav aria-label="Pages de l’historique des transports">{% if page > 1 %}<a class="secondary" href="{{ path('app_admin_transports', {page:page-1}) }}">Page précédente</a>{% endif %}<span>Page {{ page }}</span>{% if reports|length == 50 %}<a class="secondary" href="{{ path('app_admin_transports', {page:page+1}) }}">Page suivante</a>{% endif %}</nav>
+{% endblock %}

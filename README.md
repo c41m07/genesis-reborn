@@ -201,3 +201,14 @@ conservés ; les libellés du catalogue restent dans `docs/CATALOGUE_LABELS.csv`
 Lire [AGENTS.md](AGENTS.md), examiner l’état Git et préserver les changements présents. Partir du dernier `dev`, créer une branche `feature/<chantier>`, puis proposer une PR vers `dev`. Utiliser des commits courts et explicites en français, des noms de variables en anglais et les conventions du code existant.
 
 Mettre à jour le README dans le même lot lorsque changent l’architecture, les dépendances, les commandes ou les fonctionnalités documentées. Ne pas changer les règles ou l’équilibrage sans décision explicite, et conserver les logos et SVG d’identité. Distinguer dans chaque livraison ce qui a été vérifié localement, validé en CI, intégré à `dev` et effectivement déployé.
+
+
+## Transports entre joueurs — décision validée le 7 novembre 2026
+
+Les transports peuvent viser une colonie connue du même univers et de la même galaxie, appartenant au joueur ou à un destinataire qui les autorise. Le réglage de compte accepte tout le monde, les alliés uniquement (défaut) ou personne ; les propres colonies restent autorisées. Les alliances suivent les relations existantes (guilde ou contrat accepté, hors relation ennemie).
+
+L’expéditeur fournit ressources, vaisseaux et carburant aller-retour. L’autorisation est contrôlée au départ et à l’arrivée. Un changement de propriétaire ou un refus à l’arrivée entraîne le retour de la cargaison. La livraison respecte chaque capacité de stockage ; le surplus revient, y compris entre les propres colonies. Au retour, le dépôt reste soumis au stockage de la colonie de départ : un éventuel dépassement y est perdu et indiqué dans le rapport.
+
+Les dons entre joueurs ne donnent aucun boost et ne font progresser aucun objectif. La protection débutant reste inchangée. Aucun plafond de dons, taxe ou sanction automatique sur une adresse IP n’est ajouté. Les deux participants disposent du rapport économique ; l’administration dispose de l’historique paginé des transports pour une vérification humaine.
+
+Installation ou mise à jour : la migration `Version20261107150000` crée l’historique des transports ; son application sur chaque base active nécessite une validation explicite. Elle a été appliquée à la base locale le 7 novembre 2026 après sauvegarde vérifiée. Les anciens transports déjà en vol restent limités au propriétaire initial (l’expéditeur).

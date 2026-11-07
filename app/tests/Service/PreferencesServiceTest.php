@@ -20,6 +20,7 @@ final class PreferencesServiceTest extends TestCase
 
         self::assertSame('Europe/Paris', $data->timezone);
         self::assertSame('dark', $data->theme);
+        self::assertSame('allies', $data->transportReception);
         self::assertFalse($data->reducedMotion);
         self::assertTrue($data->realtimeNotifications);
     }

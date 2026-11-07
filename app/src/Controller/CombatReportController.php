@@ -13,11 +13,12 @@ use Symfony\Component\Routing\Attribute\Route;
 final class CombatReportController extends AbstractController
 {
     #[Route('/rapports', name: 'app_combat_reports', methods: ['GET'])]
-    public function index(Request $request, UniverseContext $context, CombatReportReader $reader, \App\Service\Fleet\EspionageReportReader $espionageReader): Response
+    public function index(Request $request, UniverseContext $context, CombatReportReader $reader, \App\Service\Fleet\EspionageReportReader $espionageReader, \App\Repository\GameRepository $repo): Response
     {
         $membership = $context->membership();
         $combatReports = $reader->list($membership);
         $espionageReports = $espionageReader->list($membership);
+        $transportReports = $repo->transportReportsFor($membership);
         $filter = $request->query->getString('type', 'all');
         if (!in_array($filter, ['all', 'combat', 'economy', 'espionage'], true)) {
             $filter = 'all';
@@ -27,8 +28,9 @@ final class CombatReportController extends AbstractController
             'membership' => $membership,
             'reports' => in_array($filter, ['all', 'combat'], true) ? $combatReports : [],
             'espionage_reports' => in_array($filter, ['combat', 'economy'], true) ? [] : $espionageReports,
+            'transport_reports' => in_array($filter, ['all', 'economy'], true) ? $transportReports : [],
             'filter' => $filter,
-            'report_count' => count($combatReports) + count($espionageReports),
+            'report_count' => count($combatReports) + count($espionageReports) + count($transportReports),
         ]);
     }
 

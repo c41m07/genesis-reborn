@@ -7,6 +7,7 @@
     {% if form.vars.submitted and not form.vars.valid %}<div class="form-error" role="alert"><strong>Paramètres non enregistrés.</strong><p>Corrigez les champs signalés puis réessayez.</p>{{ form_errors(form) }}</div>{% endif %}
     <fieldset class="account-section"><legend>Affichage et horloge</legend><div class="account-grid">{{ form_row(form.theme) }}{{ form_row(form.timezone) }}</div></fieldset>
     <fieldset class="account-section"><legend>Raccourcis de la galaxie</legend><p>Choisissez la vitesse initiale des missions rapides. Vous pourrez encore l’ajuster depuis l’écran des flottes.</p><div class="account-grid">{{ form_row(form.galaxySpySpeed) }}{{ form_row(form.galaxyColonizeSpeed) }}</div></fieldset>
+    <fieldset class="account-section"><legend>Réception des transports</legend>{{ form_row(form.transportReception) }}</fieldset>
     <fieldset class="account-section"><legend>Confort de lecture</legend>
         <div class="preference-toggle">{{ form_widget(form.reducedMotion) }}{{ form_label(form.reducedMotion) }}{{ form_errors(form.reducedMotion) }}</div>
         <div class="preference-toggle">{{ form_widget(form.realtimeNotifications) }}{{ form_label(form.realtimeNotifications) }}{{ form_errors(form.realtimeNotifications) }}</div>

@@ -31,7 +31,7 @@ final class FleetController extends AbstractController
         if(!in_array($mission,['explore','colonize','transport','attack','conquer','defend','orbit','spy'],true)) throw $this->createNotFoundException('Mission indisponible.');
         $systemId=$request->query->getInt('system');$planetId=$request->query->getInt('planet');
         if($systemId&&!array_filter($systems,fn($s)=>$s->id===$systemId)) throw $this->createNotFoundException('Système inaccessible.');
-        if($planetId&&!array_filter($targets,fn($p)=>$p->id===$planetId&&($mission!=='transport'||$p->owner?->id===$m->id)&&($mission!=='colonize'||($p->owner===null&&!$p->npcPlanet)))) throw $this->createNotFoundException('Destination inaccessible.');
+        if($planetId&&!array_filter($targets,fn($p)=>$p->id===$planetId&&($mission!=='colonize'||($p->owner===null&&!$p->npcPlanet)))) throw $this->createNotFoundException('Destination inaccessible.');
         $prefillCoordinates='';
         if($mission==='explore' && $systemId) { foreach($systems as $s) if($s->id===$systemId) { $prefillCoordinates=$s->galaxy->coordinateCode().':'.$s->number();break; } }
         elseif($planetId) { foreach($targets as $p) if($p->id===$planetId) { $prefillCoordinates=$p->coordinates();break; } }
