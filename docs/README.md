@@ -1,6 +1,6 @@
 # Documentation Genesis Reborn
 
-Cette page oriente vers les documents de référence. Les notes d’audit de phase conservent les preuves détaillées; pour l’état courant, commencer par l’état Alpha et l’audit final, pas par un ancien compte rendu daté.
+Cette page oriente vers les documents de référence. L’Alpha est hébergée selon le propriétaire ; son état serveur n’est pas attesté par les contrôles locaux ou GitHub. Pour l’état courant, consulter le [déploiement](DEPLOIEMENT.md) et le [suivi Alpha](audits/alpha-operations-follow-up.md). Les audits de phase dans `docs/agent/` restent historiques.
 
 ## Règles et décisions de jeu
 
@@ -27,7 +27,7 @@ Les objectifs de durée début/milieu/fin, les gains et pertes et les profils PN
 
 - [Création de compte et confirmation d’adresse](ACCOUNT_EMAIL.md) : configuration des mails, jetons et migration.
 
-- [Déploiement GitHub Actions / GHCR](DEPLOIEMENT.md) : image autonome et déploiement serveur par SSH, à valider sur l'infrastructure cible.
+- [Déploiement GitHub Actions / GHCR](DEPLOIEMENT.md) : Alpha hébergée selon le propriétaire, chaîne versionnée, preuves et vérifications serveur restantes.
 - [État Alpha](agent/ALPHA_READINESS.md) : critères, preuves récentes et limites des tests.
 - [Audit final](agent/PHASE_15_FINAL_AUDIT.md) : verdict production et critères encore ouverts.
 - [Roadmap](ROADMAP.md) et [plan maître](agent/MASTER_PLAN.md).
