@@ -5,6 +5,7 @@ use App\Entity\{AdminAuditLog, MessageReport, Player, PlayerUniverse, Universe};
 use App\Repository\GameRepository;
 use App\Service\Admin\AdminService;
 use App\Service\Admin\AdminOperationsService;
+use App\Service\Admin\UniverseMetricsService;
 use App\Service\Admin\CatalogBalanceService;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Universe\UniverseLifecycleService;
@@ -69,6 +70,19 @@ final class AdminController extends AbstractController
             'universeSettingsDraft' => $request->getSession()->remove('admin_universe_settings_draft') ?? [],
             'reports' => $reports,
             'auditLogs' => $auditLogs,
+        ]);
+    }
+
+    #[Route('/universes/{id}/mesures', name: '_universe_metrics', methods: ['GET'])]
+    public function metrics(int $id, Request $request, GameRepository $repo, UniverseMetricsService $metrics): Response
+    {
+        $universe = $repo->find(Universe::class, $id);
+        if (!$universe instanceof Universe) {
+            throw $this->createNotFoundException('Univers introuvable.');
+        }
+        return $this->render('admin/universe_metrics.html.twig', [
+            'universe' => $universe,
+            'metrics' => $metrics->snapshot($universe, $request->query->getInt('page', 1)),
         ]);
     }
 

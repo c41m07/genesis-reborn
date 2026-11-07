@@ -1,0 +1,81 @@
+import { test, expect } from './support/isolated-test.mjs';
+import { execFileSync } from 'node:child_process';
+import AxeBuilder from '@axe-core/playwright';
+import { prepareOwnedColony, queryIsolatedSql, runIsolatedSql } from './support/game-fixtures.mjs';
+
+test('Mesures par univers : accès admin, lecture seule, données manquantes et mobile', async ({ page, browser }, testInfo) => {
+  test.setTimeout(150000);
+  const project = process.env.BROWSER_ROUTER;
+  expect(project).toMatch(/^genesis-browser-test-[0-9]+-[0-9]+$/);
+  const id = crypto.randomUUID().slice(0, 8);
+  const email = `metrics-${id}@example.test`;
+  const password = 'Browser-test-2026!';
+  await page.goto('/inscription');
+  await page.getByLabel('Adresse email').fill(email);
+  await page.getByLabel('Nom de commandant').fill(`Metrics-${id}`);
+  await page.getByLabel('Mot de passe (12 caractères minimum)', { exact: true }).fill(password);
+  await page.getByLabel('Confirmer le mot de passe').fill(password);
+  await page.getByRole('button', { name: 'Créer mon compte' }).click();
+  await expect(page).toHaveURL(/connexion/);
+  const login = async () => {
+    await page.goto('/connexion');
+    await page.getByLabel('Adresse email').fill(email);
+    await page.getByLabel('Mot de passe', { exact: true }).fill(password);
+    await page.getByRole('button', { name: /Connexion/ }).click();
+    await expect(page).not.toHaveURL(/connexion/);
+  };
+  await login();
+  await page.locator('article.universe-card').first().getByRole('button').click();
+  await expect(page).toHaveURL(/planetes\/\d+$/);
+  prepareOwnedColony(project, email);
+  const universe = Number(queryIsolatedSql(project, `SELECT pu.universe_id FROM player_universe pu JOIN player p ON p.id=pu.player_id WHERE p.email='${email}'`));
+  const url = `/admin/universes/${universe}/mesures`;
+  await page.goto(url);
+  await expect(page).toHaveURL(/acces-refuse/);
+  const anonymous = await browser.newContext();
+  const anonymousPage = await anonymous.newPage();
+  await anonymousPage.goto(url);
+  await expect(anonymousPage).toHaveURL(/connexion/);
+  await anonymous.close();
+  execFileSync('docker', ['compose', '-p', project, '--env-file', '.env.local', 'exec', '-T', 'app', 'php', 'bin/console', 'app:admin:grant', email], { stdio: 'pipe' });
+  await page.context().clearCookies();
+  await login();
+  await page.goto('/admin');
+  await page.getByRole('tab', { name: 'Univers', exact: true }).click();
+  const stocks = () => queryIsolatedSql(project, `SELECT r.resource_type, r.current_stock, r.last_updated_at FROM planet_resource r JOIN planet ON planet.id=r.planet_id JOIN player_universe pu ON pu.id=planet.owner_id JOIN player p ON p.id=pu.player_id WHERE p.email='${email}' ORDER BY r.id`);
+  const before = stocks();
+  await page.locator(`a[href="${url}"]`).click();
+  await expect(page.getByRole('heading', { name: 'Mesures de l’univers', exact: true })).toBeVisible();
+  await expect(page.locator('h1')).toHaveCount(1);
+  await expect(page.locator('#metrics-progression')).toContainText('Temps pour atteindre un jalon : non disponible.');
+  await expect(page.locator('#metrics-resources')).toContainText('1 colonie observée');
+  await expect(page.locator('#metrics-recovery')).toContainText('Durée pour reconstituer les forces après une défaite : non disponible.');
+  await page.reload();
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('link', { name: 'Aller au contenu', exact: true })).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#admin-main')).toBeFocused();
+  const table = page.getByRole('region', { name: 'Ressources des colonies observées, tableau défilant' });
+  await table.focus();
+  await expect(table).toBeFocused();
+  for (const theme of ['dark', 'light']) {
+    runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END, '$.theme', '${theme}') WHERE email='${email}'`);
+    await page.reload();
+    await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
+    for (const width of [1440, 768, 390]) {
+      await page.setViewportSize({ width, height: 900 });
+      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    }
+    const audit = await new AxeBuilder({ page }).include('#admin-main').analyze();
+    expect(audit.violations).toEqual([]);
+  }
+  expect(stocks()).toBe(before);
+  runIsolatedSql(project, `UPDATE universe SET status='closed' WHERE id=${universe}`);
+  await page.reload();
+  await expect(page.locator('main')).toContainText('Univers fermé.');
+  await expect(table).toContainText('Non applicable');
+  expect(stocks()).toBe(before);
+  await page.screenshot({ path: testInfo.outputPath('mesures-mobile.png'), fullPage: true });
+  const missing = await page.goto('/admin/universes/2147483647/mesures');
+  expect(missing.status()).toBe(404);
+});

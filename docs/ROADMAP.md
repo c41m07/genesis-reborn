@@ -52,3 +52,7 @@ Les scripts proposent une conservation configurable, un suivi des échecs et un 
 ## Parcours hors connexion et reprise locale
 
 Les scénarios et leurs limites sont décrits dans [la matrice active](SERVER_SCENARIOS.md). Les redémarrages de processus utilisent uniquement des projets locaux jetables ; aucune validation de l’Alpha ni reprise après perte de MariaDB/RabbitMQ n’en est déduite.
+
+## Observation par univers
+
+La page de mesures admin présente les données existantes sans changer l’équilibrage : ancienneté, niveaux actuels, attentes conservées, stocks/productivité et protections après pertes. Les temps d’atteinte de jalons et de reconstitution des forces restent indisponibles faute d’historique adapté. La couverture et les définitions sont précisées dans [le guide des mesures](UNIVERSE_METRICS.md).

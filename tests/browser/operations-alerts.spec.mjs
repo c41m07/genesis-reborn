@@ -8,6 +8,15 @@ test('Alertes : arrêt réel du worker isolé, signal récent et simulation sans
   const project=process.env.BROWSER_ROUTER;
   if(!/^genesis-browser-test-[0-9]+-[0-9]+$/.test(project)) throw new Error('Projet de test isolé requis.');
   const compose=['compose','-p',project,'--env-file','.env.local','-f','compose.yaml','-f','compose.browser-test.yaml'];
+  const persistentMounts = () => ['database', 'rabbitmq'].map(service => {
+    const id = execFileSync('docker', [...compose, 'ps', '-q', service], { encoding: 'utf8' }).trim();
+    const mounts = JSON.parse(execFileSync('docker', ['inspect', '--format', '{{json .Mounts}}', id], { encoding: 'utf8' }));
+    const destination = service === 'database' ? '/var/lib/mysql' : '/var/lib/rabbitmq';
+    const mount = mounts.find(value => value.Destination === destination);
+    return { service, type: mount?.Type, name: mount?.Name };
+  });
+  const mountsBefore = process.env.BROWSER_PERSISTENCE === '1' ? persistentMounts() : null;
+  if (mountsBefore) expect(mountsBefore.map(mount => mount.type)).toEqual(['volume', 'volume']);
   const check=()=>{
     const result=spawnSync('bash',['scripts/operations-check.sh','--send'],{encoding:'utf8',env:{...process.env,COMPOSE_PROJECT_NAME:project,OPS_ENV_FILE:'.env.local',OPS_COMPOSE_FILE:'compose.yaml',OPS_ALERT_ENABLED:'0'}});
     if(![0,1].includes(result.status)) throw new Error(result.stderr+result.stdout);
@@ -26,6 +35,7 @@ test('Alertes : arrêt réel du worker isolé, signal récent et simulation sans
     expect(stopped.conditions.worker.message).toContain('supervision : exited');
     expect(stopped.delivery).toEqual({mode:'simulation',sent:0});
   } finally { execFileSync('docker',[...compose,'up','-d','--wait','worker'],{stdio:'pipe'}); }
+  if (mountsBefore) expect(persistentMounts()).toEqual(mountsBefore);
   await expect.poll(()=>check().conditions.worker.status).toBe('ok');
 });
 
