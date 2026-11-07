@@ -14,6 +14,8 @@ Cette page oriente vers les documents de référence. L’Alpha est hébergée s
 
 Les objectifs de durée début/milieu/fin, les gains et pertes et les profils PNJ sont à mesurer pendant l’Alpha. La cadence de combat confirmée pour cette phase est un round par minute, jusqu’à dix rounds.
 
+- [SEO et Search Console](SEO.md) : métadonnées, exploration et actions manuelles restantes.
+
 ## État et exploitation
 
 - [Scénarios serveur et reprise](SERVER_SCENARIOS.md) : essais locaux isolés, preuves hors connexion et limites de validation de l’Alpha.
@@ -49,8 +51,8 @@ Les objectifs de durée début/milieu/fin, les gains et pertes et les profils PN
 - [Passes UI consolidées](agent/PHASE_12_PASS_HISTORY.md) : relevé des ajustements et preuves UI du 1er novembre.
 - [Inventaire des assets](agent/ASSET_MANIFEST.md) et [références UI](agent/UI_REFERENCE_GAP_REVIEW.md).
 - [Recherche UI](UI-RECHERCHE.md), [navigation multi-colonies](UI-MULTI-COLONIES.md) et [GalaxieV2](agent/GALAXY_V2.md) : descriptions de fonctionnalités et vérifications historiques.
-- [Prompts d’illustration](ARTWORK_PROMPTS.md) et [prompts de génération d’assets](agent/ASSET_GENERATION_PROMPTS.md) : conservés pour une recréation ultérieure.
-- Les captures raster de validation ont été retirées le 02/11/2026; les rapports historiques indiquent quand leurs preuves visuelles ne sont plus disponibles.
+- [Prompts d’illustration](ARTWORK_PROMPTS.md) et [anciens prompts d’atlas](agent/ASSET_GENERATION_PROMPTS.md) : guide actuel et référence créative historique, respectivement.
+- Certaines anciennes captures ne sont plus conservées ; les rapports concernés signalent leurs preuves absentes. Les captures encore versionnées restent sous `docs/ui-ux/captures/`.
 
 Les rapports conservés dans ce dépôt sont des preuves ou des spécifications de référence. Les notes de session et bilans remplacés ne constituent pas une source de règles.
 

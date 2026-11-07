@@ -159,3 +159,11 @@ APP_IMAGE=genesis-reborn-prod:check APP_ENV_FILE=.env.prod.example docker compos
 La construction compile les assets et installe les dépendances PHP sans celles
 de développement. `.dockerignore` exclut les secrets, dépendances locales et Git.
 Le Compose local et le Makefile continuent à utiliser `docker/dev/Dockerfile`.
+
+## Organisation du dépôt — 7 novembre 2026
+
+Le contexte de construction reste la racine. Le Dockerfile copie le code depuis
+`app/` et les sources uniques du wiki depuis `docs/`. Les définitions Compose
+sont sous `docker/`, avec des liens de compatibilité à la racine. Le transfert
+SSH lit directement `docker/compose.prod.yaml` : le serveur reçoit `compose.prod.yaml`, fichier ordinaire,
+sans dépendance au clone. Suivre [les contrôles SEO](SEO.md) avant ouverture publique.

@@ -1,7 +1,0 @@
-/* WCAG 2.2 AA : liens de retour des formulaires publics, cible tactile minimale. */
-.narrow > p:last-child > a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 24px;
-    padding-block: 4px;
-}

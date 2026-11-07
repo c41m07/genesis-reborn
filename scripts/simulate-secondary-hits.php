@@ -1,11 +1,11 @@
 <?php
 /** php scripts/simulate-secondary-hits.php [--csv] : calcul exact, sans recherche. */
-require dirname(__DIR__).'/vendor/autoload.php';
+require dirname(__DIR__).'/app/vendor/autoload.php';
 
 use App\Service\Catalog\GameCatalog;
 use App\Service\Combat\CombatSimulator;
 
-$catalog=new GameCatalog(dirname(__DIR__).'/config/game');$simulator=new CombatSimulator();
+$catalog=new GameCatalog(dirname(__DIR__).'/app/config/game');$simulator=new CombatSimulator();
 $matrix=$catalog->all('combat_modifiers')['modifiers'];
 $attackers=array_filter($catalog->all('ships'),static fn(array $d):bool=>isset($d['secondary_attack']));
 $targets=$catalog->all('ships');

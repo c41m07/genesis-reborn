@@ -1,5 +1,120 @@
 # Suivi du nettoyage documentaire
 
+## Réorganisation, nettoyage et SEO — 7 novembre 2026
+
+Travail sur `codex/app-organisation-seo`. Après les vérifications, le propriétaire
+autorise le commit et l’envoi vers dev. Le changement local préexistant du suivi
+Alpha est conservé hors du commit. Le fichier fighter.yaml est déplacé
+sans modification de son contenu. Aucune règle de jeu, donnée ou volume existant
+n’est modifié ou supprimé.
+
+### Étapes et complexité
+
+- Organisation, 4/5 : inspection des points d’entrée, dépendances et chemins ;
+  application regroupée dans `app/`, définitions Docker sous `docker/`.
+  Makefile, scripts d’exploitation, CI et points d’entrée Compose restent à la racine.
+- Nettoyage, 2/5 : doublons prouvés par empreinte, consolidation des décisions,
+  retrait des exemples Encore désactivés et de la déclaration npm directe axe-core.
+  Le moteur axe reste une dépendance de @axe-core/playwright ; seul le manifeste
+  racine du verrou change, aucune version verrouillée ne change.
+- Documentation, 2/5 : README, index, roadmap, wiki et déploiement mis à jour ;
+  chemins actuels du guide des illustrations corrigés. Les audits restent datés.
+- Accessibilité et SEO, 3/5 : accueil public, métadonnées centralisées,
+  exploration, règles d’indexation et tests HTTP/navigateur. Réévaluation à 4/5
+  pendant la correction des options Symfony et des chemins des outils.
+  Les contrôles d’accès privés et les protections de formulaire restent actifs.
+
+### Nettoyage justifié et conservation
+
+Les doublons stricts des décisions Fighter et alertes ont été retirés une seule
+fois. Les captures historiques PNG strictement identiques sont consolidées vers
+un exemplaire de référence, avec mise à jour des mentions documentaires :
+16 fichiers redondants retirés ; aucune image applicative supprimée.
+
+- `lot20-after-generic-403-1440.png` → `lot13-after-error-403-1440.png`
+- `lot20-before-generic-403-1440.png` → `lot13-after-error-403-1440.png`
+- `lot20-after-generic-403-390.png` → `lot13-after-error-403-390.png`
+- `lot20-after-generic-403-in-universe-390.png` → `lot13-after-error-403-390.png`
+- `lot20-after-generic-403-nojs-390.png` → `lot13-after-error-403-390.png`
+- `lot20-before-generic-403-390.png` → `lot13-after-error-403-390.png`
+- `lot20-before-generic-403-in-universe-390.png` → `lot13-after-error-403-390.png`
+- `lot17-after-validated-404-1440.png` → `lot13-after-error-404-1440.png`
+- `lot17-after-validated-404-390.png` → `lot13-after-error-404-390.png`
+- `lot18-after-login-1440.png` → `lot13-after-login-1440.png`
+- `lot18-after-login-390.png` → `lot13-after-login-390.png`
+- `lot19-after-universe-settings-390.png` → `lot17-after-universe-settings-390.png`
+- `lot19-after-universe-settings-saved-390.png` → `lot17-after-universe-settings-saved-390.png`
+- `lot18-after-login-throttled-390.png` → `lot18-after-login-suspended-390.png`
+- `lot19-after-reset-error-390.png` → `lot18-after-reset-valid-error-390.png`
+- `lot19-before-settings-closed-390.png` → `lot19-after-settings-closed-390.png`
+
+Les services Symfony, routes, formulaires, commandes, contrôleurs Stimulus,
+templates, migrations, tests et scripts d’exploitation suivent les conventions
+de chargement : leur absence d’appel textuel ne démontre pas leur inutilité.
+Les autres dépendances sont conservées, notamment Maker comme outil de console,
+Babel/core-js et les paquets Symfony déclarés. Aucun test de non-régression retiré.
+Les 150 WebP du catalogue sont chargés par chemins Twig dynamiques ; toutes les
+images applicatives, logos et SVG sont préservés. Les PDF, extractions textuelles,
+rapports d’équilibrage et audits conservent des décisions ou preuves uniques ;
+aucune suppression documentaire supplémentaire n’est justifiée.
+
+Références courantes : README et docs/README pour l’orientation, REGLES et DECISIONS
+pour le métier, ROADMAP pour les objectifs, guides spécialisés pour l’exploitation,
+SEO pour le domaine public et Search Console. Les trois documents Work nommés
+dans AGENTS n’ont été trouvés ni localement ni dans les recherches Drive accessibles.
+
+### Limites
+
+Aucun domaine de production ni accès propriétaire Search Console vérifié.
+Aucun déploiement, aucune réception Discord et aucune indexation Google attestés.
+Les tests ciblés d’accessibilité ne constituent pas une conformité RGAA globale.
+### Résultats finaux locaux
+
+- `make validate` : réussite ; configuration production également validée avec
+  `APP_ENV_FILE=.env.prod.example` et le modèle non secret.
+- `make lint` : réussite complète, PHP, 65 templates Twig, YAML, conteneur et schéma.
+- `make test` : réussite complète finale, 232 tests PHP / 205 688 assertions,
+  puis 13 tests Python. Les fins de ligne CRLF de db-restore.sh ont été corrigées
+  et les exécutables protégés par .gitattributes, sans modifier la configuration globale.
+- `npm run build` depuis `app/` : réussite avec Node 24.21.0, image locale existante,
+  hors réseau et sans installation de dépendances.
+- `BROWSER_PERSISTENCE=1 make test-browser` : exécution complète de 98 cas,
+  97 réussites et 1 échec expliqué, en 40,7 minutes. Le test du retour 404 attendait
+  encore la connexion au lieu du nouvel accueil public. Il vérifie désormais
+  l’accueil puis le lien vers la connexion, en conservant ses contrôles existants.
+  Reprise de `public-validation-gates.spec.mjs` et `public-seo.spec.mjs` :
+  3/3 réussis en 59,5 secondes. Les 98 cas sont couverts par des résultats
+  consolidés ; il ne s’agit pas d’une unique exécution complète verte.
+- `git diff --check` : réussite ; espaces des sources déplacées et nouvelles
+  également contrôlés sans modifier l’index.
+
+Les premiers essais ont détecté une syntaxe Encore incorrecte pendant le retrait
+des commentaires et un nom d’option Symfony incorrect ; ces erreurs sont corrigées
+avant les contrôles finaux. Les assertions et délais des tests n’ont pas été affaiblis.
+
+Contrôles complémentaires : tous les liens Markdown locaux existent ; les deux
+workflows ont une syntaxe YAML valide ; `make help` et `make console CMD=about`
+réussissent ; configurateur vérifié sur une copie vierge et réexécuté sans écrasement.
+651 fichiers suivis déplacés dans app/. Les 60 fichiers de catalogues et d’univers,
+les 150 images WebP du catalogue et les points d’entrée exécutables sont préservés.
+
+Les réponses HTTP locales de robots.txt, du sitemap et de l’image sont 200 avec
+les types attendus ; XML analysé et limité aux deux URL publiques. Les pages
+publiques ont été vues à 1440 et 390 px. Un packaging de production hors réseau,
+basé sur l’image existante possédant le même verrou PHP, embarque correctement
+l’application et les sources du wiki. Une sonde de cette image en APP_ENV=prod
+vérifie les cinq routes publiques à 200, les métadonnées et l’absence de noindex
+global. La reconstruction complète des couches d’installation, l’installation
+vierge des dépendances, la CI GitHub et le déploiement ne sont pas exécutés.
+
+Les cinq projets navigateur créés par cette mission ne laissent aucun conteneur
+ni volume jetable restant. Les services et volumes du projet principal restent
+présents.
+
+Aucune déclaration Search Console, aucun envoi réel de mail ni aucune validation
+du serveur Alpha. Les actions manuelles précises restent dans [SEO.md](../SEO.md).
+
+
 ## Audit et mise à jour du README
 
 ### Refonte finale — 7 novembre 2026

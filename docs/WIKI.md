@@ -22,12 +22,13 @@ sources de référence dans le même lot. Ne pas créer une deuxième copie chif
 des règles dans une vue Twig. Les paragraphes du guide sont rendus avec
 l’échappement normal de Twig ; ne pas ajouter `raw`.
 
-L’image de production copie seulement les trois fichiers de contenu du wiki ;
+Le contrôleur lit `../docs/` depuis `app/` : montage `/docs` en développement
+et copie `/docs` en production. L’image de production copie seulement les trois fichiers de contenu du wiki ;
 les exceptions de `.dockerignore` doivent être conservées. Les autres documents
 restent exclus du contexte. Une compilation d’image et son déploiement restent
 distincts des tests locaux du wiki.
 
-Vérifications : scénario `tests/browser/wiki.spec.mjs` (accès anonyme, liens,
+Vérifications : scénario `app/tests/browser/wiki.spec.mjs` (accès anonyme, liens,
 sommaire clavier, contenu des sources, référence inconnue, trois largeurs et deux
 thèmes), puis six contrôles obligatoires avant publication. Ces contrôles ciblés
 ne constituent pas un audit RGAA complet. Aucun déploiement n’est effectué par

@@ -29,11 +29,11 @@ console: ## Console Symfony, ex. make console CMD=about
 	$(EXEC) php bin/console $(CMD)
 install: ## Installer les dépendances PHP et frontend verrouillées
 	$(DC) run --rm --no-deps --user $(shell id -u):$(shell id -g) app composer install --no-interaction
-	npm ci
+	cd app && npm ci
 assets: ## Compiler les assets Encore
-	npm run build
+	cd app && npm run build
 watch: ## Recompiler les assets à chaque modification (actualiser le navigateur)
-	npm run watch
+	cd app && npm run watch
 migrate: ## Appliquer les migrations sur la nouvelle base
 	$(EXEC) php bin/console doctrine:migrations:migrate --no-interaction
 import: ## Importer les cartes et univers de référence
@@ -44,7 +44,7 @@ test: ## Tests unitaires, HTTP et MariaDB isolée en mémoire
 	$(DC) --profile test up -d --wait database-test
 	$(DC) exec -T --user root app chown -R $(shell id -u):$(shell id -g) var/cache
 	$(EXEC) php bin/phpunit
-	python3 -m unittest discover -s tests/scripts -p "test_backup*.py"
+	python3 -m unittest discover -s app/tests/scripts -p "test_backup*.py"
 lint: ## Vérifier PHP, Twig, YAML, conteneur et schéma
 	$(EXEC) sh -c 'find src tests migrations -name "*.php" -print0 | xargs -0 -n1 php -l >/dev/null'
 	$(EXEC) php bin/console lint:yaml config

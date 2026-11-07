@@ -36,5 +36,5 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
           trap 'rm -f ~/.ssh/id_ed25519' EXIT
-          scp -o BatchMode=yes compose.prod.yaml scripts/deploy.sh "$DEPLOY_USER@$DEPLOY_HOST:/opt/docker-compose/genesis-reborn/"
+          scp -o BatchMode=yes docker/compose.prod.yaml scripts/deploy.sh "$DEPLOY_USER@$DEPLOY_HOST:/opt/docker-compose/genesis-reborn/"
           ssh -o BatchMode=yes "$DEPLOY_USER@$DEPLOY_HOST" "cd /opt/docker-compose/genesis-reborn && bash deploy.sh 'ghcr.io/${REPOSITORY,,}@$DIGEST'"

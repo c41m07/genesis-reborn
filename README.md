@@ -33,7 +33,7 @@ Les contraintes déclarées, les versions verrouillées et les observations d’
 | Services Docker | Images MariaDB `11.8`, RabbitMQ `4.3-management-alpine`, Mercure `v0.18`, avec références de digest dans Compose. Le proxy Traefik local est externe au projet. |
 | Tests | PHPUnit `13.4.5`, Playwright `1.64.1`, axe et tests Python des scripts. |
 
-Sources : [Composer](composer.json), [verrou PHP](composer.lock), [npm](package.json), [verrou JavaScript](package-lock.json), [Docker de développement](docker/dev/Dockerfile), [Docker de production](docker/prod/Dockerfile) et [CI](.github/workflows/ci.yml).
+Sources : [Composer](app/composer.json), [verrou PHP](app/composer.lock), [npm](app/package.json), [verrou JavaScript](app/package-lock.json), [Docker de développement](docker/dev/Dockerfile), [Docker de production](docker/prod/Dockerfile) et [CI](.github/workflows/ci.yml).
 
 Observation locale du 7 novembre 2026 : PHP **8.4.26**, Symfony **7.4.21**, Composer **2.10.3**, Python **3.13.5**, plugin Compose **5.6.0** ; l’image Node disponible contient **24.21.0 / npm 11.19.0**. Le poste hôte contient aussi Node **20.19.2 / npm 9.2.0** : une compilation réussie sur ce poste ne le rend pas conforme aux contraintes actuelles d’Encore/Babel. Ces observations ne décrivent pas les versions de l’Alpha hébergée.
 
@@ -98,9 +98,9 @@ Après l’initialisation : `make start`. Utiliser `make status`, `make logs`, `
 | `make help` | Liste des cibles réellement disponibles dans le [Makefile](Makefile). |
 | `make console CMD=about` | Console Symfony dans l’application ; remplacer `about` par la commande voulue. |
 | `make shell` | Terminal dans le conteneur applicatif. |
-| `make assets` / `npm run build` | Compilation des fichiers de production dans `public/build/`. |
-| `make watch` / `npm run watch` | Recompilation de développement ; actualiser ensuite le navigateur. |
-| `npm run dev` | Compilation de développement ponctuelle ; `npm run` liste les scripts déclarés. |
+| `make assets` / `cd app && npm run build` | Compilation de production dans `app/public/build/` ; Make reste lancé à la racine. |
+| `make watch` / `cd app && npm run watch` | Recompilation de développement ; actualiser ensuite le navigateur. |
+| `cd app && npm run dev` | Compilation de développement ponctuelle ; `npm run` liste les scripts déclarés. |
 
 Après modification d’un service consommé par les processus persistants locaux, les redémarrer :
 
@@ -108,25 +108,25 @@ Après modification d’un service consommé par les processus persistants locau
 docker compose --env-file .env.local restart worker relay notifier
 ```
 
-Compiler avant les tests navigateur : la compilation remplace les fichiers de `public/build/`. Les dépendances et résultats générés (`vendor/`, `node_modules/`, `var/`, `public/build/`, `test-results/`, `playwright-report/`) sont ignorés par Git.
+Compiler avant les tests navigateur : la compilation remplace les fichiers de `app/public/build/`. Les dépendances et résultats générés (`app/vendor/`, `app/node_modules/`, `app/var/`, `app/public/build/`, `app/test-results/`, `app/playwright-report/`) sont ignorés par Git.
 
 ## Base de données et données de développement
 
-[Les migrations](migrations/) décrivent l’évolution du schéma. `make migrate` les applique à la base configurée : utiliser cette commande lors de l’initialisation locale ou après une évolution autorisée du schéma. Sauvegarder une base contenant des données avant une migration ; la procédure serveur est distincte.
+[Les migrations](app/migrations) décrivent l’évolution du schéma. `make migrate` les applique à la base configurée : utiliser cette commande lors de l’initialisation locale ou après une évolution autorisée du schéma. Sauvegarder une base contenant des données avant une migration ; la procédure serveur est distincte.
 
-`make import` importe explicitement les cartes et univers de référence. `make seed-demo` est facultatif et réservé à `APP_ENV=dev` : il crée un compte de démonstration connu, ou conserve le compte existant et son mot de passe. Il ne remplace pas les migrations ni l’import. Les jeux de données de test sont sous [tests/Fixtures](tests/Fixtures/) et dans les scénarios.
+`make import` importe explicitement les cartes et univers de référence. `make seed-demo` est facultatif et réservé à `APP_ENV=dev` : il crée un compte de démonstration connu, ou conserve le compte existant et son mot de passe. Il ne remplace pas les migrations ni l’import. Les jeux de données de test sont sous [tests/Fixtures](app/tests/Fixtures) et dans les scénarios.
 
 [Le guide des sauvegardes](docs/BACKUPS.md) décrit `make backup`, `make restore`, la conservation de 14 jours par défaut, les contrôles d’échec et la restauration isolée. `make backup-status` consulte l’état sans créer de sauvegarde. `make test-backup` vérifie les comptes et la progression sur deux instances jetables distinctes.
 
 ## Tests et qualité
 
-Préparer Chromium pour les tests avec `npx playwright install --with-deps chromium` : cette commande installe le navigateur et ses dépendances système. Les six contrôles avant commit ou publication sont :
+Depuis `app/`, préparer Chromium pour les tests avec `npx playwright install --with-deps chromium` : cette commande installe le navigateur et ses dépendances système. Les six contrôles avant commit ou publication sont :
 
 ```bash
 make validate
 make lint
 make test
-npm run build
+(cd app && npm run build)
 BROWSER_PERSISTENCE=1 make test-browser
 git diff --check
 ```
@@ -141,14 +141,45 @@ Preuve de référence sur `dev` après le lot K, le 7 novembre 2026 : [PR #13](h
 
 La réception SMTP réelle, la configuration et les parcours sur l’Alpha, la planification des sauvegardes et le stockage distant restent à vérifier sur serveur. Les essais perturbateurs utilisent les instances locales isolées. Les mesures d’équilibrage, les tests de charge et la revue d’accessibilité exhaustive restent ouverts ; les contrôles ciblés avec axe ne constituent pas une certification RGAA.
 
+## Organisation des fichiers
+
+```text
+app/       sources, configuration Symfony, templates, assets, public,
+           migrations, tests, manifestes/verrous et outils applicatifs
+docker/    Dockerfiles, Apache et définitions Compose
+docs/      règles, décisions, exploitation, conception et historique
+scripts/   outils du dépôt, sauvegarde, déploiement et vérification
+var/       archives opérationnelles privées (ignorées)
+.github/   CI et déploiement
+```
+
+Les quatre fichiers `compose*.yaml` à la racine sont des liens vers `docker/`.
+Les commandes existantes continuent de fonctionner depuis la racine ; les chemins
+Compose sont relatifs à celle-ci. Pour viser directement `docker/compose.yaml`,
+ajouter `--project-directory .`. Projets, réseaux et volumes gardent leurs noms.
+
+Les modèles et secrets d’environnement restent à la racine pour Compose et Symfony.
+`make configure` prépare les liens locaux `app/.env` et `app/.env.local` ; Compose
+monte ces fichiers en lecture seule. Le runtime est dans `app/var/`, les sauvegardes
+dans `var/backups/`. Les ressources de conception sont sous `docs/artwork/`,
+les images servies sous `app/public/`. Le wiki lit les sources uniques de `docs/`,
+montées en lecture seule en développement et copiées dans `/docs` en production.
+
 ## Architecture générale
 
-- `src/Controller/`, [templates/](templates/) et [assets/](assets/) : requêtes HTTP, rendu Twig et comportements Stimulus ; [public/](public/) sert les fichiers accessibles au navigateur.
-- `src/Service/`, `src/Entity/`, `src/Repository/` et `src/Manager/` : logique de jeu, données Doctrine et transactions.
-- [config/game/](config/game/) et [config/universes/](config/universes/) : catalogues, règles configurées et données d’univers ; les décisions produit restent dans la documentation de référence.
-- [compose.yaml](compose.yaml) : application PHP/Apache, MariaDB, RabbitMQ, Mercure, consommateur `worker`, relais `relay` et notificateur `notifier` ; Traefik et SMTP locaux sont fournis séparément.
+- `app/src/Controller/`, [templates/](app/templates) et [assets/](app/assets) : requêtes HTTP, rendu Twig et comportements Stimulus ; [public/](app/public) sert les fichiers accessibles au navigateur.
+- `app/src/Service/`, `app/src/Entity/`, `app/src/Repository/` et `app/src/Manager/` : logique de jeu, données Doctrine et transactions.
+- [config/game/](app/config/game) et [config/universes/](app/config/universes) : catalogues, règles configurées et données d’univers ; les décisions produit restent dans la documentation de référence.
+- [compose.yaml](compose.yaml), point d’entrée vers [docker/compose.yaml](docker/compose.yaml) : application PHP/Apache, MariaDB, RabbitMQ, Mercure, consommateur `worker`, relais `relay` et notificateur `notifier` ; Traefik et SMTP locaux sont fournis séparément.
 - Les événements persistés dans l’outbox sont transmis aux traitements asynchrones et aux notifications ; les files et états serveur permettent la progression sans navigateur ouvert.
-- [scripts/](scripts/) : configuration, exploitation et validations isolées ; [tests/](tests/) : tests PHP, scripts et parcours Playwright.
+- [scripts/](scripts/) : configuration, exploitation et validations isolées ; [tests/](app/tests) : tests PHP, scripts et parcours Playwright.
+
+## Accueil public et référencement
+
+Les visiteurs disposent d’un accueil public sur `/` ; les joueurs connectés
+conservent l’accès à leur colonie. Titres, descriptions, URL canoniques, Open Graph,
+robots.txt et sitemap.xml sont générés côté serveur. `DEFAULT_URI` doit correspondre
+à l’origine HTTPS réelle ; voir [SEO et Search Console](docs/SEO.md).
 
 ## Documentation de référence
 

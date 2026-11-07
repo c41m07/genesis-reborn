@@ -34,8 +34,8 @@ cd "$verify_dir"
 python3 scripts/configure.py
 compose_verify config --quiet
 compose_verify run --rm --no-deps --user "$(id -u):$(id -g)" app composer install --no-interaction
-npm ci --no-audit
-npm run build
+npm --prefix app ci --no-audit
+npm --prefix app run build
 compose_verify up -d app database rabbitmq mercure
 compose_verify exec -T --user "$(id -u):$(id -g)" app php bin/console doctrine:migrations:migrate --no-interaction
 compose_verify exec -T --user "$(id -u):$(id -g)" app php bin/console app:universe:import

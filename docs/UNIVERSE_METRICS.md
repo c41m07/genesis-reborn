@@ -40,7 +40,7 @@ jour est postérieure au début du relevé ou si sa propriété a changé pendan
 lecture. Les absences ne sont pas transformées en stocks nuls.
 
 Pour les univers ouverts, le service réutilise la
-[projection du moteur de ressources](../src/Service/Colony/ResourceService.php),
+[projection du moteur de ressources](../app/src/Service/Colony/ResourceService.php),
 avec les stocks, capacités, consommations et bonus connus. Il n’appelle pas
 `materialize` et n’enregistre pas les stocks calculés. Un débit négatif indique
 une consommation nette ; une productivité réduite indique une limitation de

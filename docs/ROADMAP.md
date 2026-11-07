@@ -65,3 +65,10 @@ Guide explicatif et références de règles préparés pour les comptes connect�
 ## Compte à rebours de fermeture
 
 Affichage dans les dernières 24 heures, date serveur et rafraîchissement sans changement de règle ; voir [le guide](UNIVERSE_CLOSING.md). Livraison et contrôles : [suivi Alpha](audits/alpha-operations-follow-up.md).
+
+## Organisation et référencement — 7 novembre 2026
+
+Application regroupée dans `app/`, infrastructure sous `docker/`, points d’entrée
+Compose et Make conservés à la racine. Accueil public et exploration sont implémentés.
+Les vérifications sur le vrai domaine et Search Console restent à effectuer après
+déploiement selon [le guide SEO](SEO.md).

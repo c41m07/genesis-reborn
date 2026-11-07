@@ -1,5 +1,8 @@
 # Prompts de génération des illustrations du catalogue
 
+> Document historique du 2 novembre 2026 : atlas et noms anciens. Le guide actuel
+> est [ARTWORK_PROMPTS.md](../ARTWORK_PROMPTS.md) ; ce relevé ne décrit pas les assets chargés.
+
 Mise à jour : 02/11/2026. Les listes ci-dessous sont relevées dans config/game. Les bâtiments, vaisseaux et technologies suivent l’ordre des fichiers YAML (ordre lexical utilisé par GameCatalog). Les défenses suivent leur champ display_order.
 
 ## État du raccordement dans le projet

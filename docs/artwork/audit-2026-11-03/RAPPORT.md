@@ -201,10 +201,10 @@ Contrôles techniques : 150 WebP actifs présents et lisibles ; tous mesurent 12
 
 ## Planches comparatives
 
-- [Bâtiments — 13 × 3](buildings-comparaison.jpg)
-- [Recherches — 19 × 3](technologies-comparaison.jpg)
-- [Vaisseaux — 14 × 3](ships-comparaison.jpg)
-- [Défenses — 4 × 3](defenses-comparaison.jpg)
+- Bâtiments — 13 × 3 (`buildings-comparaison.jpg`, aperçu non conservé)
+- Recherches — 19 × 3 (`technologies-comparaison.jpg`, aperçu non conservé)
+- Vaisseaux — 14 × 3 (`ships-comparaison.jpg`, aperçu non conservé)
+- Défenses — 4 × 3 (`defenses-comparaison.jpg`, aperçu non conservé)
 
 ## Priorités proposées
 

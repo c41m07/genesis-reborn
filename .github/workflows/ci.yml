@@ -34,11 +34,12 @@ jobs:
         with:
           node-version: '24'
           cache: npm
+          cache-dependency-path: app/package-lock.json
       - name: Cache locked PHP dependencies
         uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
-          path: vendor
-          key: ${{ runner.os }}-php84-vendor-${{ hashFiles('composer.json', 'composer.lock', 'symfony.lock') }}
+          path: app/vendor
+          key: ${{ runner.os }}-php84-vendor-${{ hashFiles('app/composer.json', 'app/composer.lock', 'app/symfony.lock') }}
       - name: Prepare isolated Docker networks and local secrets
         run: |
           echo "LOCAL_UID=$(id -u)" >> "$GITHUB_ENV"
@@ -88,7 +89,7 @@ jobs:
       - name: Browser suite in disposable project
         if: matrix.suite == 'browser'
         run: |
-          npx playwright install --with-deps chromium
+          (cd app && npx playwright install --with-deps chromium)
           BROWSER_PERSISTENCE=1 make test-browser BROWSER_ARGS="--shard=${{ matrix.shard }}/4"
       - name: Show service diagnostics on failure
         if: failure()
