@@ -8,6 +8,7 @@ test('Alertes : arrêt réel du worker isolé, signal récent et simulation sans
   const project=process.env.BROWSER_ROUTER;
   if(!/^genesis-browser-test-[0-9]+-[0-9]+$/.test(project)) throw new Error('Projet de test isolé requis.');
   const compose=['compose','-p',project,'--env-file','.env.local','-f','compose.yaml','-f','compose.browser-test.yaml'];
+  if (process.env.BROWSER_PERSISTENCE === '1') compose.push('-f', 'compose.browser-persistence.yaml');
   const persistentMounts = () => ['database', 'rabbitmq'].map(service => {
     const id = execFileSync('docker', [...compose, 'ps', '-q', service], { encoding: 'utf8' }).trim();
     const mounts = JSON.parse(execFileSync('docker', ['inspect', '--format', '{{json .Mounts}}', id], { encoding: 'utf8' }));
