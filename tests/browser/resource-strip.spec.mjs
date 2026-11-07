@@ -30,6 +30,15 @@ test('Stock protégé et productivité réelle, pénuries et reprise sans rechar
     await expect.poll(() => metal.locator('.storage-meter').evaluate(el => el.offsetHeight)).toBe(7);
     const ratio = await metal.locator('.storage-meter-protected').evaluate(el => el.getBoundingClientRect().width / el.parentElement.getBoundingClientRect().width);
     expect(ratio).toBeCloseTo(0.1, 2);
+    for (const [stock, capacity] of [[0, 200000], [10000, 200000], [20000, 200000], [100000, 200000], [200000, 200000], [100000, 300000]]) {
+        await metal.evaluate((element, resource) => element.dispatchEvent(new CustomEvent('resource:update', { detail: resource })), {
+            stock, capacity, rate: 0, protectedCapacity: capacity * 0.1, productivity: 100,
+        });
+        expect(await metal.locator('.storage-meter-stock').evaluate(element => parseFloat(element.style.width))).toBeCloseTo(stock / capacity * 100, 4);
+        expect(await metal.locator('.storage-meter-protected').evaluate(element => parseFloat(element.style.width))).toBeCloseTo(Math.min(stock, capacity * 0.1) / capacity * 100, 4);
+        expect(await metal.locator('.storage-meter-limit').evaluate(element => parseFloat(element.style.left))).toBeCloseTo(10, 4);
+    }
+    await page.reload();
     sql(`UPDATE planet_resource SET current_stock=0, last_updated_at=UTC_TIMESTAMP() WHERE planet_id=${planet} AND resource_type='electricity'`);
     await expect(metal.locator('.resource-productivity')).toHaveClass(/resource-productivity--reduced/, { timeout: 20000 });
     await expect(metal.locator('.resource-productivity')).toContainText('↓');

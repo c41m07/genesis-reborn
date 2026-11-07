@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-    static targets = ['stock', 'rate', 'productivity', 'meter', 'fill'];
+    static targets = ['stock', 'rate', 'productivity', 'meter', 'fill', 'protectedFill', 'protectedLimit'];
     static values = { stock: Number, rate: Number, cap: Number, protectedCap: Number };
     connect() { this.started = Date.now(); this.tick(); this.timer = setInterval(() => this.tick(), 1000); }
     disconnect() { clearInterval(this.timer); }
@@ -24,8 +24,10 @@ export default class extends Controller {
         const format = value => Math.floor(value).toLocaleString('fr-FR');
         this.stockTarget.textContent = format(stock);
         if (this.hasFillTarget) this.fillTarget.style.width = `${this.capValue > 0 ? stock / this.capValue * 100 : 0}%`;
+        if (this.hasProtectedFillTarget) this.protectedFillTarget.style.width = `${this.capValue > 0 ? Math.min(stock, this.protectedCapValue) / this.capValue * 100 : 0}%`;
+        if (this.hasProtectedLimitTarget) this.protectedLimitTarget.style.left = `${this.capValue > 0 ? this.protectedCapValue / this.capValue * 100 : 0}%`;
         if (this.hasMeterTarget) {
-            const description = `Stock : ${format(stock)} / ${format(this.capValue)}. Zone verte : jusqu’à ${format(this.protectedCapValue)} protégés du pillage ; actuellement ${format(Math.min(stock, this.protectedCapValue))} protégés.`;
+            const description = `Stock : ${format(stock)} / ${format(this.capValue)}. Repère : jusqu’à ${format(this.protectedCapValue)} protégés du pillage ; zone verte : ${format(Math.min(stock, this.protectedCapValue))} actuellement protégés.`;
             this.meterTarget.title = description;
             this.meterTarget.setAttribute('aria-label', description);
         }
