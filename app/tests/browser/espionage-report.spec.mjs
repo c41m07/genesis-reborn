@@ -34,12 +34,12 @@ test('Espionnage PNJ : envoyer une sonde et consulter le rapport privé', async 
   await card('shipyard').getByRole('button', { name: /Améliorer .* niveau 1/ }).click();
   accelerateQueuedItem(process.env.BROWSER_ROUTER, email, 'building', 'shipyard');
   await page.reload();
-  await expect(card('shipyard').locator('.badge')).toContainText('NIVEAU 1', { timeout: 30000 });
+  await expect(page.locator('#building-tab-shipyard-basic .building-rank-level')).toHaveText('1', { timeout: 30000 });
   await page.getByRole('link', { name: 'Chantier spatial', exact: true }).click();
   await card('probe').getByRole('button', { name: /Construire/ }).click();
   accelerateQueuedItem(process.env.BROWSER_ROUTER, email, 'shipyard', 'probe');
   await page.reload();
-  await expect(card('probe').locator('.badge')).toContainText('1 EN RÉSERVE', { timeout: 60000 });
+  await expect(page.locator('#building-tab-probe-basic .building-rank-level')).toHaveText('1', { timeout: 60000 });
 
   await page.getByRole('link', { name: 'Flottes et missions', exact: true }).click();
   const form = page.locator('.fleet-form form').first();

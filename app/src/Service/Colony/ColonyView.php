@@ -55,7 +55,7 @@ final class ColonyView
                 }
             }
         }
-        if(!$showLockedItems) foreach($cards as $group=>$items) $cards[$group]=array_values(array_filter($items,static fn(array $card): bool=>$card['failures']===[]||$card['maximum']));
+        // Les rangs restent disponibles pour le filtre local des catalogues regroupés.
         $technologyTree=$this->insights->tree($buildings,$tech,$m,$planet);
         $activeFleets=$this->repo->all(Fleet::class,['playerUniverse'=>$m,'status'=>['traveling','returning','attacking','defending']],['arrivalAt'=>'ASC']);
         $combatEvents=[];

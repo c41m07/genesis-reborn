@@ -29,10 +29,11 @@ test('Les 150 fiches expliquent leurs effets, bonus, accès et limites sur ordin
     let inspected = 0;
     for (const [group, count] of [['buildings', 39], ['technologies', 57], ['ships', 42], ['defenses', 12]]) {
         await page.goto(`${path}?section=${group}`);
-        const cards = page.locator('.catalog-card');
+        const cards = page.locator('.building-rank');
         await expect(cards).toHaveCount(count);
         for (let index = 0; index < count; index++) {
             const card = cards.nth(index), trigger = card.locator('.catalog-info-trigger'), dialog = card.locator('dialog');
+            await page.locator('#' + await card.getAttribute('aria-labelledby')).click();
             await trigger.evaluate(element => element.scrollIntoView({ block: 'center', behavior: 'instant' }));
             await trigger.click();
             await expect(dialog).toBeVisible();
@@ -55,6 +56,7 @@ test('Les 150 fiches expliquent leurs effets, bonus, accès et limites sur ordin
     async function open(group, slug, tier = 'basic') {
         await page.goto(`${path}?section=${group}`);
         const card = page.locator(`#item-${slug}-${tier}`);
+        await page.locator(`#building-tab-${slug}-${tier}`).click();
         await card.locator('.catalog-info-trigger').click();
         return card.locator('dialog');
     }

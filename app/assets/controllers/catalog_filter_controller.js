@@ -10,7 +10,7 @@ export default class extends Controller {
             button.setAttribute('aria-pressed', String(active));
         });
         this.cardTargets.forEach((card) => {
-            card.hidden = category !== 'all' && card.dataset.category !== category;
+            card.hidden = card.dataset.catalogVisible === 'false' || (category !== 'all' && card.dataset.category !== category);
         });
     }
 }

@@ -29,7 +29,7 @@ test('Le catalogue affiche les gains par niveau, consommations et tourelles spé
   await expect(metalBenefits).toContainText('Consommation électrique');
   await expect(metalBenefits.locator('.card-benefit-consumption')).toContainText(/−\d[\d ,]* \/ h/);
   await expect(metalBenefits.locator('.card-benefit-consumption strong')).toHaveCSS('color','rgb(240, 139, 139)');
-  await expect(page.locator('#item-mine_metal-basic .costs [title="Antimatière"]')).toHaveCount(0);
+  await expect(page.locator('#item-mine_metal-basic .costs [title^="Antimatière :"]')).toHaveCount(0);
   await metalBenefits.locator('summary').click();
   const antimatterBenefits=page.locator('#item-mine_antimatter-basic .card-benefits');
   await antimatterBenefits.locator('summary').click();
@@ -38,7 +38,7 @@ test('Le catalogue affiche les gains par niveau, consommations et tourelles spé
   for(const slug of ['lab','shipyard','fortress'])await expect(page.locator('#item-'+slug+'-basic .card-benefits')).toContainText(/[+]\d+(?:,\d+)? %/);
 
   await page.goto(planetPath+'?section=technologies');
-  await expect(page.locator('.catalog-card')).toHaveCount(57);
+  await expect(page.locator('.building-rank')).toHaveCount(57);
   await expect(page.locator('#item-engineering_foundations-basic .card-benefits')).toContainText('Réduction du temps de construction des bâtiments');
   await expect(page.locator('#item-nanomaterial_synthesis-basic .card-benefits')).toContainText('Réduction du coût de construction des bâtiments');
   await expect(page.locator('#item-naval_engineering-basic .card-benefits')).toContainText('Réduction du coût de construction des vaisseaux');
@@ -48,9 +48,9 @@ test('Le catalogue affiche les gains par niveau, consommations et tourelles spé
   await page.goto(planetPath+'?section=ships');
   await page.goto(planetPath+'?section=defenses');
   const groups={ground_turret_anti_light:['anti-léger','intercepteur, chasseur, chasseur lourd, chasseur furtif'],ground_turret_anti_escort:['anti-escorteur','corvette, frégate, destroyer'],ground_turret_anti_heavy:['anti-lourd','croiseur, cuirassé'],ground_turret_anti_capital:['anti-capital','vaisseau capital']};
-  await expect(page.locator('.catalog-card')).toHaveCount(12);
+  await expect(page.locator('.building-rank')).toHaveCount(12);
   for(const [slug,[label,targets]] of Object.entries(groups)){
-    const card=page.locator('article[id^="item-'+slug+'-"]').first();
+    const card=page.locator('.building-rank[id^="item-'+slug+'-"]').first();
     await expect(card).toBeVisible();
     await expect(card.locator('.catalog-card-heading > h3')).toHaveText('Canon laser '+label);
     await card.locator('.catalog-info-trigger').click();

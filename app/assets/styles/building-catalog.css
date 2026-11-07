@@ -1,0 +1,56 @@
+:is(#panel-buildings,#panel-technologies,#panel-ships,#panel-defenses) .building-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.building-card{min-width:0;padding:0;overflow:hidden;container-type:inline-size}
+.building-rank-tabs{display:flex;align-items:stretch;background:var(--bg)}
+.building-rank-tab{display:flex;flex:1 1 auto;align-items:center;justify-content:center;gap:5px;min-width:0;min-height:48px;padding:10px 4px;border-right:1px solid var(--line);border-bottom:3px solid transparent;color:var(--text);background:var(--panel);font-size:11px;white-space:nowrap;text-decoration:none}
+.building-rank-tab:last-child{border-right:0}
+.building-rank-tab:hover{text-decoration:none;background:color-mix(in srgb,var(--accent) 12%,var(--panel))}
+.building-rank-tab[aria-selected="true"]{background:color-mix(in srgb,var(--accent) 15%,var(--panel));border-bottom-color:var(--accent)}
+.building-rank-tab.is-locked{color:var(--muted);background:color-mix(in srgb,var(--muted) 10%,var(--bg))}
+.building-rank-tab.is-locked[aria-selected="true"]{border-bottom-color:#f08b8b}
+.building-rank-tab:focus-visible{outline-offset:-3px}
+.building-rank-indicators{display:flex;align-items:center;gap:3px;flex-shrink:0}
+.building-rank-level{display:inline-flex;justify-content:center;align-items:center;min-width:23px;height:23px;padding:0 4px;border:1px solid var(--accent);border-radius:50%;font-variant-numeric:tabular-nums}
+.building-rank-up{color:var(--green);font-size:20px;line-height:1;font-weight:800}
+.building-rank-cross{color:#f08b8b;font-size:25px;line-height:1}
+.building-rank{display:flex;flex-direction:column;flex:1;scroll-margin-top:200px}
+/* Préserver la disposition malgré le repli des anciens onglets du catalogue. */
+:is(#panel-buildings,#panel-technologies,#panel-ships,#panel-defenses) .building-rank[role="tabpanel"]{display:flex;margin:0}
+.building-card .catalog-card-art{flex-shrink:0}
+.building-card .catalog-card-art img{object-fit:cover;object-position:center}
+.building-card .card-body{display:flex;flex-direction:column;flex:1;min-width:0}
+.building-card .card-body>form{margin-top:auto;margin-bottom:0;padding-top:14px}
+.building-card .card-body>form>.secondary{min-height:44px}
+.building-card .catalog-card-heading{display:grid;grid-template-columns:25px minmax(0,1fr) 25px;align-items:start}
+.building-card .catalog-card-heading h3{grid-column:2;text-align:center;margin:0 0 8px}
+.building-card .catalog-info{grid-column:3}
+.building-card .building-costs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;justify-content:center;text-align:center}
+.building-card .building-costs>span{display:flex;flex-direction:column;align-items:center;justify-content:start;gap:5px;min-width:0;font-size:11px;font-variant-numeric:tabular-nums}
+.building-card .building-costs>span>span{white-space:nowrap}
+.building-card .building-costs small{display:block;margin:4px 0 0;font-size:10px}
+.building-card .building-costs .icon{width:15px;height:15px}
+.building-card .building-costs:has(>span:nth-child(2):last-child){grid-template-columns:repeat(2,minmax(0,1fr))}
+.building-card .building-costs:has(>span:nth-child(3):last-child){grid-template-columns:repeat(3,minmax(0,1fr))}
+.building-visibility{margin:0}
+.building-visibility button{display:flex;align-items:center;gap:9px;min-height:44px;padding:4px 0;border:0;background:transparent;color:var(--text);font-size:11px}
+.building-switch-track{display:block;flex:none;width:38px;height:22px;padding:3px;border-radius:15px;background:var(--muted)}
+.building-switch-track::after{content:"";display:block;width:16px;height:16px;border-radius:50%;background:var(--bg)}
+[aria-checked="true"] .building-switch-track{background:var(--green)}
+[aria-checked="true"] .building-switch-track::after{transform:translateX(16px)}
+.building-visibility [aria-hidden="true"]:last-child{min-width:22px}
+:is(#panel-buildings,#panel-technologies,#panel-ships,#panel-defenses) .catalog-section-title{flex-wrap:wrap}
+.building-card [hidden]{display:none!important}
+body[data-theme="light"] .building-rank-cross{color:#b72a38}
+body[data-theme="light"] .building-rank-up{color:#21633e}
+@media(max-width:380px){.building-rank-tab{gap:3px;padding-inline:2px;letter-spacing:-.3px}.building-rank-indicators{gap:2px}.building-rank-level{min-width:21px;height:21px;padding-inline:2px}.building-card .card-body{padding-inline:12px}.building-card .building-costs{gap:3px}}
+@media(max-width:1799px){:is(#panel-buildings,#panel-technologies,#panel-ships,#panel-defenses) .building-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:1499px){:is(#panel-buildings,#panel-technologies,#panel-ships,#panel-defenses) .building-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:1199px){:is(#panel-buildings,#panel-technologies,#panel-ships,#panel-defenses) .building-grid{grid-template-columns:1fr}}
+@container(max-width:310px){.building-rank-tab{gap:3px;padding-inline:2px;letter-spacing:-.3px}.building-rank-indicators{gap:2px}.building-rank-level{min-width:21px;height:21px;padding-inline:2px}.building-card .card-body{padding-inline:12px}}
+
+.building-card .catalog-card-art{aspect-ratio:16/9}
+.building-rank-short{display:none}
+.building-card .card-body>form>label{display:block;margin-bottom:6px}
+.building-card .card-body>form>input[type="number"]{width:100%;margin-bottom:10px}
+@container(max-width:340px){:is(.card--ships,.card--defenses) .building-rank-full{display:none}:is(.card--ships,.card--defenses) .building-rank-short{display:inline}}
+
+.building-rank-up .icon{width:11px;height:18px;transform:rotate(-90deg)}

@@ -14,6 +14,7 @@ Le code comprend :
   - Session expirée après 24 h sans requête au serveur ; case « Se souvenir de moi » facultative pendant 30 jours, annulée à la déconnexion. Un cookie de mémorisation valide permet de retrouver sa connexion après expiration de la session.
   - Mots de passe masqués par défaut, avec un bouton œil pour afficher ou masquer chaque champ.
 - Univers, colonies et ressources ; bâtiments, recherches, rangs et files de production ; progression traitée pendant la déconnexion.
+  - Bâtiments, recherches, vaisseaux et défenses regroupés par famille avec trois onglets de rang, niveau ou quantité possédée dans l’onglet, indicateurs de verrouillage et d’action disponible, interrupteur local des éléments verrouillés et coûts abrégés en k/M (valeur exacte accessible). Quatre cartes par ligne sur grand écran, avec adaptation aux écrans plus étroits ; illustrations d’origine en couleur, cadrées en 16/9 et affichées bord à bord sans bandes ; boutons d’amélioration, de recherche et de construction alignés en bas des cartes d’une même ligne. Les quantités à construire restent propres à chaque rang (1 à 100).
 - Flottes, exploration, transport, colonisation, attaque, défense, orbite et espionnage ; combats persistés, conquête de planètes PNJ et rapports privés.
 - Diplomatie, guildes, messages, notifications, inventaire de boosts et événements.
 - Administration des comptes et univers, retours utilisateur, patchnotes, signaux des processus, relais en attente et mesures par univers.

@@ -73,7 +73,7 @@ test('Construction puis recherche sans client connecté, après redémarrage des
     await login();
     await page.goto(planetUrl);
     await page.getByRole('link', { name: link, exact: true }).click();
-    await expect(page.locator(`#item-${slug}-basic .badge`)).toContainText('NIVEAU 1');
+    await expect(page.locator(`#building-tab-${slug}-basic .building-rank-level`)).toHaveText('1');
   }
   await context.close();
   await testInfo.attach('preuves-hors-connexion.json', { body: JSON.stringify(proofs, null, 2), contentType: 'application/json' });

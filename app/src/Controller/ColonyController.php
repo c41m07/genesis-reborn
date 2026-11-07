@@ -45,6 +45,7 @@ final class ColonyController extends AbstractController
     public function show(int $id,Request $request,ColonyView $view,LeaderboardService $leaderboard,RelationResolver $relations,GameCatalog $catalog): Response
     {
         $p=$this->owned($id);$m=$this->context->membership();$section=$this->section((string)$request->query->get('section','overview'));$data=$view->data($m,$p,$request->query->getBoolean('showLockedItems'));
+        if($section!=='overview' && $request->query->has('showLockedItems')) $data['show_locked_items']=$request->query->getBoolean('showLockedItems');
         if($section==='overview') {
             $points=['building_points'=>0,'research_points'=>0,'fleet_points'=>0,'total_points'=>0];
             $rank=null;foreach($leaderboard->forUniverse($m) as $row) if($row['membership']->id===$m->id) {$rank=$row['ranks']['points'];$points=array_intersect_key($row,$points);break;}

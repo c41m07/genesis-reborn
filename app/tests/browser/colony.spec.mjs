@@ -35,7 +35,7 @@ test('Construction réelle, notification privée et actualisation sans rechargem
   const eventRequests=[];page.on('requestfailed',r=>{if(r.url().includes('mercure')||r.url().includes('notifications'))eventRequests.push({url:r.url(),failure:r.failure()?.errorText});});page.on('response',r=>{if(r.url().includes('mercure')||r.url().includes('notifications'))eventRequests.push({url:r.url(),status:r.status()});});
   const {email}=await enter(page,'Live');prepareOwnedColony(process.env.BROWSER_ROUTER,email);await page.getByRole('link',{name:'Bâtiments',exact:true}).click();const card=()=>page.locator('article.catalog-card').filter({has:page.getByRole('heading',{name:'Mine à ciel ouvert',exact:true})});
   await card().getByRole('button',{name:/Améliorer .* niveau 1/}).click();accelerateQueuedItem(process.env.BROWSER_ROUTER,email,'building','mine_metal');await expect(page.locator('.event-toast')).toBeVisible({timeout:20000}).catch(error=>{console.log('Flux temps réel:',JSON.stringify(eventRequests));throw error;});
-  await expect(card().locator('.badge')).toContainText('NIVEAU 1',{timeout:15000});
+  await expect(page.locator('#building-tab-mine_metal-basic .building-rank-level')).toHaveText('1',{timeout:15000});
 });
 test('Chantier, estimation, colonisation, transport et exploration réels', async ({page}) => {
   test.setTimeout(320000);page.setDefaultTimeout(15000);const {email}=await enter(page,'Fleet');prepareOwnedColony(process.env.BROWSER_ROUTER,email,{showLockedItems:true});grantSecondColony(process.env.BROWSER_ROUTER,email);const origin=Number(page.url().split('/').pop());await page.getByRole('link',{name:'Bâtiments',exact:true}).click();
@@ -43,15 +43,15 @@ test('Chantier, estimation, colonisation, transport et exploration réels', asyn
   runIsolatedSql(process.env.BROWSER_ROUTER, `INSERT INTO player_technology (player_universe_id,slug,tier,level) SELECT owner_id,'engineering_foundations','basic',5 FROM planet WHERE id=${origin} UNION ALL SELECT owner_id,'naval_engineering','basic',5 FROM planet WHERE id=${origin}`);
   await page.reload();
   const card=slug=>page.locator('#item-'+slug+'-basic');
-  await card('shipyard').getByRole('button',{name:/Améliorer .* niveau 1/}).click();accelerateQueuedItem(process.env.BROWSER_ROUTER,email,'building','shipyard');await page.reload();await expect(card('shipyard').locator('.badge')).toContainText('NIVEAU 1',{timeout:30000});
-  await card('shipyard').getByRole('button',{name:/Améliorer .* niveau 2/}).click();accelerateQueuedItem(process.env.BROWSER_ROUTER,email,'building','shipyard');await page.reload();await expect(card('shipyard').locator('.badge')).toContainText('NIVEAU 2',{timeout:30000});
+  await card('shipyard').getByRole('button',{name:/Améliorer .* niveau 1/}).click();accelerateQueuedItem(process.env.BROWSER_ROUTER,email,'building','shipyard');await page.reload();await expect(page.locator('#building-tab-shipyard-basic .building-rank-level')).toHaveText('1',{timeout:30000});
+  await card('shipyard').getByRole('button',{name:/Améliorer .* niveau 2/}).click();accelerateQueuedItem(process.env.BROWSER_ROUTER,email,'building','shipyard');await page.reload();await expect(page.locator('#building-tab-shipyard-basic .building-rank-level')).toHaveText('2',{timeout:30000});
   for(const name of ['probe','colony_ship','transport']) {
     await page.getByRole('link',{name:'Chantier spatial',exact:true}).click();await card(name).getByRole('button',{name:/Construire/}).click();
   }
   await page.getByRole('link',{name:'Chantier spatial',exact:true}).click();
   accelerateShipyard(process.env.BROWSER_ROUTER,email);
   await page.reload();
-  for(const name of ['probe','colony_ship','transport']) await expect(card(name).locator('.badge')).toContainText('1 EN RÉSERVE',{timeout:90000});
+  for(const name of ['probe','colony_ship','transport']) await expect(page.locator('#building-tab-'+name+'-basic .building-rank-level')).toHaveText('1',{timeout:90000});
   await page.getByRole('link',{name:'Flottes et missions',exact:true}).click();
   let form=page.locator('.fleet-form form').first();
   await form.locator('[name="ships[probe]"]').fill('1');
@@ -139,18 +139,30 @@ test('La préférence révèle les rangs verrouillés du catalogue', async ({pag
   await expect(page.getByRole('checkbox', {name: /Afficher les bâtiments, technologies, vaisseaux et défenses verrouillés/})).toBeChecked();
   await page.goto(colonyUrl);
   await page.getByRole('link', {name: 'Recherche', exact: true}).click();
-  await expect(page.locator('.catalog-visibility-note')).toHaveText('Éléments verrouillés affichés');
+  await expect(page.getByRole('switch', {name:'Afficher les éléments verrouillés'})).toHaveAttribute('aria-checked','true');
+  await expect(page.locator('#building-tab-weapon_calibration-intermediate')).toBeVisible();
+  await page.locator('#building-tab-weapon_calibration-intermediate').click();
   await expect(page.locator('#item-weapon_calibration-intermediate')).toBeVisible();
+  await expect(page.locator('#building-tab-weapon_calibration-superior')).toBeVisible();
+  await page.locator('#building-tab-weapon_calibration-superior').click();
   await expect(page.locator('#item-weapon_calibration-superior')).toBeVisible();
   await expect(page.locator('#item-weapon_calibration-intermediate')).toHaveClass(/locked/);
 
   await page.getByRole('link', {name: 'Chantier spatial', exact: true}).click();
+  await expect(page.locator('#building-tab-fighter-intermediate')).toBeVisible();
+  await page.locator('#building-tab-fighter-intermediate').click();
   await expect(page.locator('#item-fighter-intermediate')).toBeVisible();
+  await expect(page.locator('#building-tab-fighter-superior')).toBeVisible();
+  await page.locator('#building-tab-fighter-superior').click();
   await expect(page.locator('#item-fighter-superior')).toBeVisible();
   await expect(page.locator('#item-fighter-intermediate')).toHaveClass(/locked/);
 
   await page.getByRole('link', {name: 'Bâtiments', exact: true}).click();
+  await expect(page.locator('#building-tab-mine_metal-intermediate')).toBeVisible();
+  await page.locator('#building-tab-mine_metal-intermediate').click();
   await expect(page.locator('#item-mine_metal-intermediate')).toBeVisible();
+  await expect(page.locator('#building-tab-mine_metal-superior')).toBeVisible();
+  await page.locator('#building-tab-mine_metal-superior').click();
   await expect(page.locator('#item-mine_metal-superior')).toBeVisible();
 
 });

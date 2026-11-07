@@ -1,0 +1,66 @@
+{% import 'ui/macros.html.twig' as ui %}
+{% set families = {} %}
+{% set leveled = group in ['buildings', 'technologies'] %}
+{% set queueType = group == 'buildings' ? 'building' : (group == 'technologies' ? 'research' : 'shipyard') %}
+{% for card in items %}
+    {% set slug = card.definition.slug %}
+    {% set families = families|merge({(slug): (families[slug]|default([]))|merge([card])}) %}
+{% endfor %}
+{% for slug, ranks in families %}
+    {% set definition = (ranks|first).definition %}
+    {% set category = group=='buildings' ? (definition.production_resource is defined ? 'economy' : (definition.storage_resource is defined ? 'storage' : (slug=='fortress' ? 'defense' : 'infrastructure'))) : (group=='technologies' ? (slug in ['weapon_calibration','target_acquisition','weapons_engineering','shield_harmonics','structural_armor','evasive_navigation','signature_reduction','rapid_fire_cycle','cryogenic_reserves','modular_cargo_bays'] ? 'combat' : (slug=='vector_propulsion' ? 'propulsion' : (slug in ['tactical_intelligence','intelligence_countermeasures','signature_masking'] ? 'espionage' : 'infrastructure'))) : (group=='ships' ? ((definition.cargo_capacity|default(0)) > 0 ? 'transport' : (definition.category=='support' ? 'utility' : 'combat')) : 'combat')) %}
+    {% set accessible = ranks|filter(card => not card.failures or card.maximum) %}
+    <article class="panel catalog-card card--{{ group }} building-card" data-building-catalog-target="family" data-slug="{{ slug }}" data-catalog-filter-target="card" data-category="{{ category }}" data-catalog-visible="{{ show_locked_items or accessible ? 'true' : 'false' }}" {% if not show_locked_items and not accessible %}hidden{% endif %}>
+        <nav class="building-rank-tabs" aria-label="Rangs de {{ definition.label }}">
+            {% for card in ranks %}
+                {% set locked = card.failures and not card.maximum %}
+                {% set affordable = true %}
+                {% for resource, cost in card.costs %}{% if cost > resources[resource].stock %}{% set affordable = false %}{% endif %}{% endfor %}
+                {% set queueFull = queues[queueType]|default([])|length >= 30 %}
+                {% set count = leveled ? card.level : card.quantity %}
+                {% set countDivisor = count >= 1000000 ? 1000000 : (count >= 1000 ? 1000 : 1) %}
+                {% set compactCount = countDivisor == 1 ? count|number_format(0, ',', ' ') : (count / countDivisor)|number_format(1, ',', '')|trim('0', 'right')|trim(',', 'right')~(countDivisor == 1000000 ? ' M' : ' k') %}
+                {% set upgradeable = not locked and not card.maximum and affordable and not queueFull %}
+                {% set tabId = 'building-tab-'~slug~'-'~card.tier %}
+                <a id="{{ tabId }}" href="#item-{{ slug }}-{{ card.tier }}" class="building-rank-tab {{ locked ? 'is-locked' : '' }}" data-building-catalog-target="tab" data-tier="{{ card.tier }}" data-locked="{{ locked ? 'true' : 'false' }}" data-action="building-catalog#select keydown->building-catalog#navigate" aria-labelledby="{{ tabId }}-name {{ tabId }}-count" aria-describedby="{{ tabId }}-status" {% if locked and not show_locked_items %}hidden{% endif %}>
+                    <span id="{{ tabId }}-name"><span class="building-rank-full">{{ card.definition._tier_label }}</span><span class="building-rank-short" aria-hidden="true">{{ {basic:'Basique',intermediate:'Interm.',superior:'Sup.'}[card.tier] }}</span></span>
+                    <span class="building-rank-indicators" aria-hidden="true">{% if locked %}<span id="{{ tabId }}-count" class="building-rank-cross">×</span>{% else %}{% if upgradeable %}<span class="building-rank-up">{{ ui.icon('arrow') }}</span>{% endif %}<span id="{{ tabId }}-count" class="building-rank-level" title="{{ count|number_format(0, ',', ' ') }} {{ leveled ? 'niveaux' : 'unités possédées' }}">{{ compactCount }}</span>{% endif %}</span>
+                    <span id="{{ tabId }}-status" hidden>{{ card.definition._tier_label }} · {{ locked ? 'Rang verrouillé, consulter les prérequis' : (leveled ? 'Niveau '~card.level : card.quantity|number_format(0, ',', ' ')~' unités possédées')~(upgradeable ? (group=='buildings' ? ' · Amélioration disponible' : (group=='technologies' ? ' · Recherche disponible' : ' · Construction d’une unité disponible')) : (card.maximum ? ' · Niveau maximum atteint' : (queueFull ? ' · File pleine' : ' · Ressources insuffisantes'))) }}</span>
+                </a>
+            {% endfor %}
+        </nav>
+        {% for card in ranks %}
+            {% set d = card.definition %}
+            <div id="item-{{ slug }}-{{ card.tier }}" class="building-rank {{ card.failures ? 'is-locked' : '' }}" data-building-catalog-target="panel" data-tier="{{ card.tier }}" {% if card.failures and not card.maximum and not show_locked_items %}hidden{% endif %}>
+                <div class="catalog-card-art"><img src="{{ asset('images/catalog/'~group~'/'~slug~'__'~card.tier~'.webp') }}" alt="{{ d.label }}" loading="lazy" decoding="async"></div>
+                <div class="card-body">
+                    <div class="catalog-card-heading"><h3>{{ d.label }}</h3>{% include 'ui/catalogue_info.html.twig' %}</div>
+                    <div class="build-duration">{{ ui.icon('clock') }} {{ duration_label(card.duration) }}</div>
+                    <div class="costs building-costs" aria-label="{{ leveled ? 'Coût du prochain niveau' : 'Coût d’une unité' }}">
+                        {% for resource, cost in card.costs %}{% if cost > 0 %}
+                            {% set divisor = cost >= 1000000 ? 1000000 : (cost >= 1000 ? 1000 : 1) %}
+                            {% set suffix = divisor == 1000000 ? ' M' : (divisor == 1000 ? ' k' : '') %}
+                            {% set formatted = divisor == 1 ? cost|number_format(0, ',', ' ') : (cost / divisor)|number_format(2, ',', ' ')|trim('0', 'right')|trim(',', 'right') %}
+                            <span class="{{ cost > resources[resource].stock ? 'insufficient' : '' }}" title="{{ resources[resource].label }} : {{ cost|number_format(0, ',', ' ') }}{{ cost > resources[resource].stock ? ' · Ressources insuffisantes' : '' }}" aria-label="{{ resources[resource].label }} : {{ cost|number_format(0, ',', ' ') }}{{ cost > resources[resource].stock ? ' · Ressources insuffisantes' : '' }}">{{ ui.icon(resource) }}<span>{{ formatted }}{{ suffix }}<small>{{ resources[resource].label }}</small></span></span>
+                        {% endif %}{% endfor %}
+                    </div>
+                    {% include 'ui/catalogue_benefits.html.twig' %}
+                    {% if card.maximum %}<p class="requirement complete">{{ ui.icon('check') }} Niveau maximum atteint</p>
+                    {% elseif card.failures %}<p class="requirement">{{ ui.icon('diplomacy') }} <span>Nécessite : {{ card.failures|join(', ') }}</span></p>
+                    {% else %}
+                        <form method="post" action="{{ path('app_queue_add', {id: planet.id}) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('build'~planet.id) }}">
+                            <input type="hidden" name="request_key" value="{{ request_key() }}">
+                            <input type="hidden" name="group" value="{{ group }}">
+                            <input type="hidden" name="section" value="{{ group }}">
+                            <input type="hidden" name="slug" value="{{ slug }}">
+                            <input type="hidden" name="tier" value="{{ card.tier }}">
+                            {% if not leveled %}<label for="quantity-{{ slug }}-{{ card.tier }}">Quantité</label><input id="quantity-{{ slug }}-{{ card.tier }}" name="quantity" type="number" min="1" max="100" value="1">{% endif %}
+                            <button class="secondary full">{{ group=='buildings' ? 'Améliorer au niveau '~card.target : (group=='technologies' ? 'Rechercher le niveau '~card.target : 'Construire') }} {{ ui.icon('arrow') }}</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </article>
+{% endfor %}

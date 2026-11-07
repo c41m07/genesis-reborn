@@ -17,3 +17,4 @@ import './styles/technology-tree.css';
 import './styles/empire-overview.css';
 
 import './styles/tabs.css';
+import './styles/building-catalog.css';
