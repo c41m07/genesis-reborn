@@ -3,7 +3,6 @@
 <div class="page-heading"><div><h1>{{ {overview:'Vue générale',buildings:'Bâtiments',technologies:'Recherche',ships:'Chantier spatial',defenses:'Défenses'}[section] }}<span>.</span></h1></div><a class="quiet-button" href="{{ path('app_map') }}">{{ ui.icon('galaxy') }} Explorer la galaxie {{ ui.icon('arrow') }}</a></div>
 <div class="colony-layout colony-layout--integrated"><div class="colony-content">
 {% if section=='overview' %}
-<p><a class="secondary" href="{{ path('app_wiki') }}">Comprendre le jeu : consulter le wiki</a></p>
 <section class="colony-banner panel empire-banner"><img class="colony-scene" src="{{ asset('art/colony-overview.png') }}" alt="" aria-hidden="true"><div class="hero-content"><span class="badge"><i class="connection-dot"></i> COLONIE OPÉRATIONNELLE</span><h2>{{ planet.name }}</h2><p>{{ ui.icon('galaxy') }} {{ planet.coordinates() }}</p>
 <dl class="empire-points" aria-label="Points de votre empire dans cet univers">
 {% for key,label in {building_points:'Planètes',research_points:'Recherche',fleet_points:'Flotte',total_points:'Total'} %}

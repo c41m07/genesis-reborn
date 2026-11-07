@@ -191,7 +191,9 @@ SEO, interface et données d’équilibrage. Les anciens bilans et leur contexte
 restent accessibles depuis [l’index des archives](docs/archives/README.md).
 
 Le wiki utilise les sources uniques `docs/wiki.json`, `docs/REGLES.md` et
-`docs/DECISIONS.md`. Les PDF d’origine et leurs extractions textuelles sont
+`docs/DECISIONS.md`. Il présente un manuel du joueur en un document avec sommaire,
+premiers pas, règles et calculs expliqués par des formules et exemples dépliables,
+accessibles au clavier et sans JavaScript. Les PDF d’origine et leurs extractions textuelles sont
 conservés ; les libellés du catalogue restent dans `docs/CATALOGUE_LABELS.csv`.
 
 ## Contribution et conventions
