@@ -2,11 +2,11 @@
 
 ## État en cours
 
-- Branche courante : `feature/readme-audit`, créée depuis `origin/dev` au commit `484537d`, après fusion vérifiée de K. Dernier lot : audit final du README.
-- Avancement demandé par le propriétaire : **92 %**, onze lots intégrés sur douze (A–K et refonte finale du README). Le pourcentage compte les lots fusionnés, pas les déploiements.
+- Livraison finale : `dev` au commit `16480fb`, PR #14 fusionnée et copie locale principale actualisée. La branche `feature/readme-audit` est conservée dans le worktree dédié après fusion.
+- Avancement demandé par le propriétaire : **100 %**, douze lots intégrés sur douze (A–K et refonte finale du README). Le pourcentage compte les lots fusionnés, pas les déploiements.
 - Worktree : `/home/caim/Projets/Genesis_Reborn-account-email`.
 - Les changements du propriétaire dans le checkout original sont préservés.
-- Dernier lot intégré : K, PR #13, commit `484537d`. README final en préparation.
+- Dernier lot intégré : README, PR #14, commit `16480fb`. Aucun chantier de code en cours ; opérations serveur listées en clôture.
 - [PR #2](https://github.com/c41m07/genesis-reborn/pull/2), base `dev`, **fusionnée et vérifiée le 6 novembre 2026 à 12 h 50 (Europe/Paris)**, commit d’intégration `15e8d43`. Aucun déploiement effectué.
 - Décision du propriétaire : envoyer un mail de bienvenue et vérifier l’adresse avant accès pour les nouveaux comptes. Les comptes existants gardent leur accès.
 - Migration autorisée uniquement dans les bases locales de test ; aucune intervention serveur autorisée par cette validation.
@@ -400,3 +400,17 @@ Périmètre final : README et deux audits, plus cette ligne dans operations-aler
 README — fin de première suite :97 scénarios exécutés,94 réussis/3 échoués (25/25,24/25,22/23,23/24 ;15,7/16,8/16,6/17,6min). Erreurs consultées : inventaire global60000ms ; routes responsive global60000ms lors du parcours àtrois tailles ; préparation sauvegarde/alertes avec recréation DB/Rabbit puis worker unhealthy. Le compteur et le wiki réussissent dans cette suite. Les quatre projets sont effectivement nettoyés(zéro conteneur/volume). Ce n’est pas une suite97 entièrement verte.
 
 Une seule ligne de code de test change : ajout conditionnel du fichier Compose de persistance dans operations-alerts.spec.mjs. Reprise finale prévue sur catalogue-inventory, operations-alerts et ui-routes-responsive (5cas), un seul projet/worker ; délais et assertions inchangés. Contrôles rapides et compilation Node24 repris avant. Le bilan publié devra distinguer les94 succès initiaux, la reprise ciblée et la CI complète. Aucune production ni donnée réelle concernée.
+
+## Clôture des lots du dépôt — 7 novembre 2026
+
+Les12 lots(A–K et refonte finale README) sont intégrés àdev ;100 % porte uniquement sur ces livraisons de code/documentation, pas sur un déploiement ni une validation de production. PR13(compteur) et PR14(README) sont fusionnées et relues. PR14 https://github.com/c41m07/genesis-reborn/pull/14 : head8e03d67423c2077d587bea5a685899c805fc8aea, base484537d, merge16480fbb0c6bc8a6bb5efe93bb1d5df7d658d1af le7 novembre à13h19(Paris). Quatre fichiers188 ajouts60 retraits, dont une ligne dans le banc de test ; aucun métier/dépendance/schéma/équilibrage changé.
+
+Résultats finaux README : six contrôles réussis après reprises. Local initial97 exécutés :94 réussis/3 échecs expliqués ; correction du fichier Compose de test, reprise séquentielle5/5 en2,6min. Inventaire45,8s et routes41,4s, délais globaux60000ms inchangés ; alertes28,4s et sauvegarde16,8s. Contrôles rapides repris :229 PHP/205648 assertions,13 Python, validate/lint/build Node24/diff-check verts. Les cinq projets jetables ont zéro conteneur/volume restant. Ne pas présenter ce local comme une unique suite97 verte.
+
+CI PR14 sur head exact :11 succès,2 publications ignorées. Journaux quatre lots25+25+23+24=97 complets ; inventaire30,6s, arrêt worker27,6s, sauvegarde10,4s, routes36,7s. PHP229/205648,13 Python et restauration38 tables, mot de passe et progression vérifiés, consumers_started=false et real_mail_sent=false. Base/head/diff/discussions relus, clean, aucune revue/commentaire/discussion bloquante ; fusion merged=true confirmée. Le bilan final est aussi conservé dans la description de la PR14.
+
+Vérification finale de dev effectivement livré : origin/dev16480fb récupéré, branche dev du checkout principal actualisée par avance rapide ; README identique au fichier du commit,49 liens locaux présents, règle AGENTS maintenue. Assets locaux recompilés sousNode24.21.0 hors réseau avec les dépendances existantes en lecture seule. Les13 fichiers du propriétaire (bin,PDF et scripts de sauvegarde/restauration) sont identiques en contenu, mode et date avant/après actualisation et compilation. Aucun reset, nettoyage du travail propriétaire, force push, merge versmain ou déploiement.
+
+Restent les opérations serveur : établir URL/version/digest et configuration réellement exécutés sur l’Alpha ; configurer/vérifier SMTP, expéditeur et liens de compte ; contrôler les signaux et relais réels après livraison ; installer/planifier les outils hôte, activer les alertes vers la destination privée après validation du transport ; automatiser et externaliser les sauvegardes, tester le PRA/transport. Les scripts et procédures sont prêts, restauration SQL locale/CI prouvée. Le propriétaire ne dispose pas de préproduction : les essais perturbateurs ont utilisé des instances locales jetables, aucun redémarrage de production. Mesures de rythme, charge et revue RGAA exhaustive restent ouvertes comme documenté.
+
+Continuité : aucune modification applicative non publiée. Les notes présentes dans cette section et la mise àjour du résumé sont une clôture locale postérieure àla fusion ; elles ne sont pas encore dans le commit16480fb. Elles sont conservées dans les deux copies pour la reprise, àpublier lors d’un prochain lot documentaire si nécessaire. Les quatre éléments étrangers du worktree dédié(config/reference.php, modes de deux scripts et lien node_modules) restent exclus des commits. Les branches fusionnées sont conservées. Prochaine action utile : préparation d’une intervention serveur autorisée àpartir de DEPLOIEMENT/BACKUPS/OPERATIONS_ALERTS et SERVER_SCENARIOS, sans assimiler les tests locaux àl’Alpha.
