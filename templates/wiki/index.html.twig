@@ -1,0 +1,9 @@
+{% extends 'base.html.twig' %}
+{% block title %}Wiki du jeu · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="wiki-guide" id="wiki-top"><div class="page-heading"><h1>Wiki du jeu</h1></div>
+<p>Comprendre votre colonie, préparer vos missions et retrouver les règles. Les fiches du jeu affichent les valeurs propres à votre univers.</p>
+<nav class="panel wiki-summary" aria-label="Sommaire du wiki"><h2>Par où commencer ?</h2><ul>{% for section in sections %}<li><a href="#wiki-{{ section.id }}">{{ section.title }}</a></li>{% endfor %}</ul></nav>
+{% for section in sections %}<section class="panel" id="wiki-{{ section.id }}" aria-labelledby="wiki-title-{{ section.id }}"><h2 id="wiki-title-{{ section.id }}">{{ section.title }}</h2>{% for paragraph in section.paragraphs %}<p>{{ paragraph }}</p>{% endfor %}<a href="#wiki-top">Retour au début du guide</a></section>{% endfor %}
+<section class="panel"><h2>Sources et points à vérifier</h2><p>Ce guide explique les mécanismes sans recopier les tableaux de coûts ou de statistiques. Consultez les sources embarquées avec cette version :</p><ul><li><a href="{{ path('app_wiki_reference',{source:'regles'}) }}">Règles de référence</a></li><li><a href="{{ path('app_wiki_reference',{source:'decisions'}) }}">Décisions du projet</a></li></ul><p>Les sources conservent leur historique. Certains paragraphes anciens sur la composition des bonus et les courbes sont remplacés par des décisions datées plus récentes ; les répartitions de prix des vaisseaux sont également remplacées par la grille commune. Ces écarts ne doivent pas être lus comme des règles cumulatives. En cas de contradiction non résolue, signalez-la via Feedback ; aucune règle nouvelle n’est déduite ici.</p></section></div>
+{% endblock %}

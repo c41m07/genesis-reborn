@@ -57,3 +57,7 @@ Les scénarios et leurs limites sont décrits dans [la matrice active](SERVER_SC
 ## Observation par univers
 
 La page de mesures admin présente les données existantes sans changer l’équilibrage : ancienneté, niveaux actuels, attentes conservées, stocks/productivité et protections après pertes. Les temps d’atteinte de jalons et de reconstitution des forces restent indisponibles faute d’historique adapté. La couverture et les définitions sont précisées dans [le guide des mesures](UNIVERSE_METRICS.md).
+
+## Wiki du jeu
+
+Guide explicatif et références de règles préparés pour les comptes connectés, depuis Feedback et la vue générale. Maintenance décrite dans [WIKI.md](WIKI.md). Les sources détaillées correspondent à la version embarquée ; aucun équilibrage modifié. Le statut de livraison est suivi dans le document de reprise.

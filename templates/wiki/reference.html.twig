@@ -1,0 +1,3 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ referenceTitle }} · Wiki · Genesis Reborn{% endblock %}
+{% block body %}<div class="wiki-guide"><h1>{{ referenceTitle }}</h1><p><a class="secondary" href="{{ path('app_wiki') }}">Retour au wiki</a></p><p>Document source conservé avec son historique, affiché en texte brut. Les décisions datées signalent les remplacements de règles ; les anciens exemples ne sont pas des réglages supplémentaires.</p><pre class="panel wiki-reference">{{ referenceText }}</pre></div>{% endblock %}
