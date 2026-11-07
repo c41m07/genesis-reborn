@@ -1,0 +1,143 @@
+name: genesis_reborn_prod
+x-app: &app
+  image: ${APP_IMAGE:?Set immutable GHCR image reference}
+  restart: unless-stopped
+  working_dir: /app
+  env_file: ${APP_ENV_FILE:-.env.prod}
+  environment:
+    APP_ENV: prod
+    APP_DEBUG: "0"
+  networks: [backend]
+  volumes: ["process_runtime:/app/var/run"]
+services:
+  app:
+    <<: *app
+    volumes: ["sessions:/app/var/sessions", "process_runtime:/app/var/run:ro", "operations_state:/app/var/operations"]
+    networks: [backend, traefik]
+    depends_on:
+      database: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: traefik_network
+      traefik.http.routers.genesis-reborn-prod.rule: Host(`${APP_DOMAIN:?Set application domain}`)
+      traefik.http.routers.genesis-reborn-prod.entrypoints: websecure
+      traefik.http.routers.genesis-reborn-prod.tls: "true"
+      traefik.http.routers.genesis-reborn-prod.tls.certresolver: ${TRAEFIK_CERTRESOLVER:?Set certificate resolver}
+      traefik.http.routers.genesis-reborn-prod.service: genesis-reborn-prod
+      traefik.http.services.genesis-reborn-prod.loadbalancer.server.port: "80"
+    healthcheck:
+      test: [CMD, php, -r, "exit(@file_get_contents('http://127.0.0.1/health') === 'ok' ? 0 : 1);"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+  worker:
+    <<: *app
+    user: www-data
+    command: [php, bin/console, messenger:consume, async, --time-limit=3600, --memory-limit=192M, --no-interaction]
+    restart: unless-stopped
+    depends_on:
+      database: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+    networks: [backend]
+    healthcheck:
+      test: [CMD, php, -r, "exit(is_file('var/run/worker.heartbeat') && time()-filemtime('var/run/worker.heartbeat')<45 ? 0 : 1);"]
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      retries: 6
+  relay:
+    <<: *app
+    user: www-data
+    command: [php, bin/console, app:outbox:relay, --loop]
+    restart: unless-stopped
+    depends_on:
+      database: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, php, -r, "exit(is_file('var/run/relay.heartbeat') && time()-filemtime('var/run/relay.heartbeat')<45 ? 0 : 1);"]
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      retries: 6
+  notifier:
+    <<: *app
+    user: www-data
+    command: [php, bin/console, app:outbox:relay, --kind=notifications, --loop]
+    restart: unless-stopped
+    depends_on:
+      database: {condition: service_healthy}
+      mercure: {condition: service_started}
+    healthcheck:
+      test: [CMD, php, -r, "exit(is_file('var/run/notifier.heartbeat') && time()-filemtime('var/run/notifier.heartbeat')<45 ? 0 : 1);"]
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      retries: 6
+  mercure:
+    restart: unless-stopped
+    image: dunglas/mercure:v0.18@sha256:39f809705671c2f70dbd0f5aeb2dee1e26fc6338e1a0ae50581b51eb6e5ab2a2
+    environment:
+      SERVER_NAME: ':80'
+      MERCURE_PUBLISHER_JWT_KEY: ${MERCURE_JWT_SECRET:?Configure Mercure key}
+      MERCURE_SUBSCRIBER_JWT_KEY: ${MERCURE_JWT_SECRET:?Configure Mercure key}
+      MERCURE_EXTRA_DIRECTIVES: 'cors_origins https://${APP_DOMAIN}'
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, http://127.0.0.1/healthz]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    volumes: ['mercure_data:/data', 'mercure_config:/config']
+    networks: [backend, traefik]
+    labels:
+      traefik.enable: 'true'
+      traefik.docker.network: traefik_network
+      traefik.http.routers.genesis-reborn-prod-events.rule: 'Host(`${APP_DOMAIN:?Set application domain}`) && PathPrefix(`/.well-known/mercure`)'
+      traefik.http.routers.genesis-reborn-prod-events.entrypoints: websecure
+      traefik.http.routers.genesis-reborn-prod-events.tls: 'true'
+      traefik.http.routers.genesis-reborn-prod-events.tls.certresolver: ${TRAEFIK_CERTRESOLVER:?Set certificate resolver}
+      traefik.http.routers.genesis-reborn-prod-events.service: genesis-reborn-prod-events
+      traefik.http.routers.genesis-reborn-prod-events.priority: '100'
+      traefik.http.services.genesis-reborn-prod-events.loadbalancer.server.port: '80'
+  database:
+    restart: unless-stopped
+    image: mariadb:11.8@sha256:f16d7a344413e519dff518f27bdb221388f84b0d274c97c4fb5f2cb0dc1b34fa
+    environment:
+      MARIADB_DATABASE: genesis_v2
+      MARIADB_USER: genesis
+      MARIADB_PASSWORD: ${DB_PASSWORD:?Configure server .env.prod}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Configure server .env.prod}
+    volumes: ["database_data:/var/lib/mysql"]
+    networks: [backend]
+    healthcheck:
+      test: [CMD, healthcheck.sh, --connect, --innodb_initialized]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  rabbitmq:
+    restart: unless-stopped
+    image: rabbitmq:4.3-management-alpine@sha256:3505b6096cdbc083bcc363e74366f575ecd0c1a55be4dadcbc60fa08e34647e1
+    environment:
+      RABBITMQ_DEFAULT_USER: genesis
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Configure server .env.prod}
+    volumes: ["rabbitmq_data:/var/lib/rabbitmq"]
+    networks: [backend]
+    healthcheck:
+      test: [CMD, rabbitmq-diagnostics, -q, ping]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  operations_state:
+  process_runtime:
+  sessions:
+  database_data:
+  rabbitmq_data:
+  mercure_data:
+  mercure_config:
+networks:
+  backend:
+  traefik:
+    external: true
+    name: traefik_network

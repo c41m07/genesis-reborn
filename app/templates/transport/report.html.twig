@@ -1,0 +1,7 @@
+{% extends 'base.html.twig' %}
+{% block title %}Rapport de transport · Genesis Reborn{% endblock %}
+{% block body %}
+<section class="panel"><h1>Rapport de transport n° {{ report.id }}</h1>
+{% include 'transport/_details.html.twig' %}
+<a class="secondary" href="{{ path('app_combat_reports', {type:'economy'}) }}">Retour aux rapports économiques</a></section>
+{% endblock %}

@@ -18,7 +18,11 @@ if [[ ! "$project_name" =~ ^genesis-browser-test-[0-9]+-[0-9]+$ ]]; then
 fi
 
 compose() {
-    docker compose -p "$project_name" --env-file .env.local -f compose.yaml -f compose.browser-test.yaml "$@"
+    local files=(-f compose.yaml -f compose.browser-test.yaml)
+    if [[ "${BROWSER_PERSISTENCE:-0}" == "1" ]]; then
+        files+=(-f compose.browser-persistence.yaml)
+    fi
+    docker compose -p "$project_name" --env-file .env.local "${files[@]}" "$@"
 }
 
 if [[ -n "$(compose ps -q 2>/dev/null || true)" ]]; then
@@ -37,4 +41,4 @@ compose exec -T --user "$(id -u):$(id -g)" app php bin/console doctrine:migratio
 compose exec -T --user "$(id -u):$(id -g)" app php bin/console app:universe:import
 compose up -d --wait worker relay notifier
 
-PLAYWRIGHT_RESET_DB=1 PLAYWRIGHT_WORKERS=1 PLAYWRIGHT_BASE_URL="http://$BROWSER_HOST" npx playwright test "$@" --workers=1
+PLAYWRIGHT_RESET_DB=1 PLAYWRIGHT_WORKERS=1 PLAYWRIGHT_BASE_URL="http://$BROWSER_HOST" app/node_modules/.bin/playwright test --config app/playwright.config.mjs "$@" --workers=1

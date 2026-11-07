@@ -1,0 +1,24 @@
+{
+    "devDependencies": {
+        "@axe-core/playwright": "^4.14.0",
+        "@babel/core": "^8.0.0",
+        "@babel/preset-env": "^8.0.0",
+        "@hotwired/stimulus": "^3.0.0",
+        "@playwright/test": "^1.64.1",
+        "@symfony/stimulus-bridge": "^4.0.2",
+        "@symfony/webpack-encore": "^7.0.0",
+        "babel-plugin-polyfill-corejs3": "^1.0.0",
+        "core-js": "^3.49.0",
+        "webpack": "^5.82",
+        "webpack-cli": "^7.0.0"
+    },
+    "license": "UNLICENSED",
+    "private": true,
+    "scripts": {
+        "dev-server": "encore dev-server --config webpack.config.mjs",
+        "dev": "encore dev --config webpack.config.mjs",
+        "watch": "encore dev --watch --config webpack.config.mjs",
+        "build": "encore production --progress --config webpack.config.mjs",
+        "test:browser": "cd .. && app/node_modules/.bin/playwright test --config app/playwright.config.mjs"
+    }
+}

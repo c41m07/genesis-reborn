@@ -1,0 +1,3 @@
+{% extends 'base.html.twig' %}
+{% block title %}Confirmer mon adresse — Genesis Reborn{% endblock %}
+{% block body %}<section class="panel narrow auth-card"><h1>Confirmer mon adresse email</h1><form method="post"><input type="hidden" name="_token" value="{{ csrf_token('email_verify') }}"><button class="primary">Confirmer mon adresse</button></form></section>{% endblock %}

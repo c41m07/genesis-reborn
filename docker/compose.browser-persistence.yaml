@@ -1,0 +1,8 @@
+# Réservé aux projets jetables du lanceur navigateur.
+services:
+  database:
+    tmpfs: !reset []
+    volumes: !override ["database_data:/var/lib/mysql"]
+  rabbitmq:
+    tmpfs: !reset []
+    volumes: !override ["rabbitmq_data:/var/lib/rabbitmq"]

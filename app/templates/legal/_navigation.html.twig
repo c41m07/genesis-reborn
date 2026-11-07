@@ -1,0 +1,5 @@
+<nav class="legal-links" aria-label="Informations juridiques">
+{% for routeName, label in {'app_legal_mentions': 'Mentions légales', 'app_legal_terms': 'CGU', 'app_legal_privacy': 'Confidentialité', 'app_legal_cookies': 'Cookies'} %}
+<a href="{{ path(routeName) }}" {% if app.request.attributes.get('_route') == routeName %}aria-current="page"{% endif %}>{{ label }}</a>
+{% endfor %}
+</nav>

@@ -1,0 +1,234 @@
+[
+  {
+    "id": "debuter",
+    "part": "1. Bien débuter",
+    "title": "Vos premiers jours",
+    "paragraphs": [
+      "Genesis Reborn est un jeu de stratégie spatiale : vous développez des colonies, débloquez des recherches et préparez des missions. Votre compte est commun, mais chaque univers possède sa progression et ses réglages. Vos actions et vos relations restent dans l’univers choisi.",
+      "Au départ, cherchez une économie qui fonctionne avant de multiplier les dépenses militaires. L’ordre ci-dessous est un conseil de découverte, pas une obligation ni une promesse de progression en un nombre de jours précis."
+    ],
+    "steps": [
+      "Repérez votre colonie active et les cinq ressources en haut de l’écran. Les stocks et les bâtiments appartiennent à cette planète.",
+      "Ouvrez une fiche de production : comparez le prix, le gain et les prérequis. Développez progressivement vos ressources en surveillant l’alimentation électrique.",
+      "Surveillez vos capacités de stockage avant une longue absence : une ressource au plafond ne s’accumule plus.",
+      "Consultez les prérequis du laboratoire et du chantier pour préparer les recherches et les premiers vaisseaux qui vous intéressent.",
+      "Avant votre première mission, vérifiez la destination, les vaisseaux, le carburant, le fret et les horaires de l’aperçu. Lisez ensuite le rapport pour comprendre le résultat."
+    ]
+  },
+  {
+    "id": "economie",
+    "part": "1. Bien débuter",
+    "title": "Lire votre économie",
+    "paragraphs": [
+      "Chaque planète stocke du métal, de l’électricité, de l’antimatière, de l’hydrogène et du nano. Le stock est la quantité disponible ; le débit est sa variation par unité de temps ; la capacité est le plafond que vous pouvez conserver. Un débit négatif signifie que la consommation dépasse la production.",
+      "L’électricité alimente les usines. Quand sa réserve est épuisée, le rendement industriel s’adapte à l’alimentation disponible avec un secours minimal de 10 %. Ce secours ne crée pas l’hydrogène nécessaire à l’antimatière : le réacteur consomme 8 unités d’hydrogène par unité produite et reste limité par cet approvisionnement.",
+      "Les bâtiments producteurs des trois rangs contribuent ensemble. La position de la planète et les réglages de l’univers influencent la production ; un événement actif peut aussi la modifier. La barre de ressources affiche le résultat net de ces effets et des consommations.",
+      "Sur la jauge, le vert représente votre stock dans la zone protégée, le repère marque le seuil de protection et l’or montre le surplus exposé au pillage. Le seuil dépend de la capacité du stockage, pas d’un pourcentage du stock présent."
+    ]
+  },
+  {
+    "id": "progression",
+    "part": "2. Les règles du jeu",
+    "title": "Prérequis, niveaux et rangs",
+    "paragraphs": [
+      "Les rangs Basique, Intermédiaire et Supérieur sont des progressions distinctes. Améliorer un rang ne remplace pas les niveaux ni les unités des autres rangs. Les noms peuvent varier d’un rang à l’autre : vérifiez la famille et le rang dans la fiche.",
+      "Les prérequis servent à débloquer initialement chaque rang. L’accès acquis est ensuite conservé : pour les bâtiments, vaisseaux et défenses dans la colonie concernée ; pour les recherches dans votre participation à l’univers. Une nouvelle colonie n’hérite donc pas automatiquement de tous les accès locaux de la première.",
+      "Les recherches sont partagées entre vos colonies d’un même univers. Le laboratoire local fait partie des conditions de déblocage initial. Après acquisition de l’accès, vous devez toujours respecter les coûts, durées, plafonds et conditions des missions.",
+      "L’arbre technologique aide à suivre les liens entre recherches. Les conditions complètes, notamment les bâtiments requis, restent dans les fiches. Ne confondez pas accès débloqué et ressources suffisantes pour commander."
+    ]
+  },
+  {
+    "id": "files",
+    "part": "2. Les règles du jeu",
+    "title": "Commandes et temps hors connexion",
+    "paragraphs": [
+      "Chaque planète possède des files indépendantes pour la construction, la recherche et le chantier. Les opérations d’une même file se succèdent ; les autres files peuvent avancer en parallèle. Un même rang de recherche ne peut pas être lancé simultanément sur plusieurs colonies.",
+      "Les ressources sont payées à la commande. Les coûts et durées déjà enregistrés restent attachés à cette commande. Un bonus d’accélération retire 25 % du temps restant de l’opération active : deux applications successives laissent 56,25 % du temps initial restant, et non 50 %. Les opérations en attente ne sont pas accélérées.",
+      "Fermer le navigateur ne suspend ni la production ni les opérations. Les stocks sont recalculés avec les pénuries et les plafonds rencontrés pendant votre absence. Un stockage plein suspend la production industrielle inutile ; l’électricité et l’hydrogène peuvent encore alimenter les consommateurs locaux.",
+      "Un compte à rebours arrivé à zéro annonce une échéance, mais le traitement peut demander un court délai. Vérifiez l’état de la file ou le rapport avant de considérer l’opération comme terminée."
+    ]
+  },
+  {
+    "id": "colonisation",
+    "part": "2. Les règles du jeu",
+    "title": "Explorer et fonder une colonie",
+    "paragraphs": [
+      "Explorez les systèmes pour découvrir de nouvelles destinations. Pour fonder une colonie, choisissez une planète vierge, préparez un vaisseau colonisateur et vérifiez que vous disposez encore d’un emplacement. La limite est contrôlée à l’arrivée : plusieurs départs ne garantissent pas plusieurs places.",
+      "Chaque niveau de la recherche de colonisation ajoute un emplacement : jusqu’à 5 niveaux en Basique, 10 en Intermédiaire et 15 en Supérieur. La planète de départ compte dans le total. Le maximum de référence est donc 31 planètes, avec priorité à une limite d’univers plus basse.",
+      "La fondation consomme un colonisateur. Le kit de ressources initiales dépend de son rang : ×1, ×1,25 ou ×1,5625. Si plusieurs rangs sont disponibles, le plus bas est consommé en priorité ; les autres colonisateurs ne cumulent pas leurs kits.",
+      "Une planète PNJ se conquiert après une victoire et avec un colonisateur survivant, sous réserve de place disponible. Son développement et ses stocks sont conservés. Une planète détenue par un joueur ne peut pas être conquise. Fondation et conquête sont donc deux missions différentes."
+    ]
+  },
+  {
+    "id": "missions",
+    "part": "2. Les règles du jeu",
+    "title": "Flottes et exploration",
+    "paragraphs": [
+      "Une flotte se déplace à la vitesse de son vaisseau le plus lent, séparément pour le trajet local et l’hyperespace. Ajouter un transport ou un vaisseau lourd peut donc allonger le voyage de tout le groupe. Le pourcentage de départ se règle entre 10 % et 100 %.",
+      "Le carburant est réservé au départ pour l’aller, le stationnement prévu et le retour. Les réservoirs dédiés servent au carburant ; si nécessaire, le carburant supplémentaire utilise de la place en soute et réduit le fret transportable. L’hydrogène payé pour construire un vaisseau ne constitue pas son carburant de mission.",
+      "Ralentir réduit la consommation de voyage selon la règle proportionnelle actuelle, mais augmente la durée jusqu’au minimum applicable. Le stationnement a sa propre consommation horaire. Le retour reprend la durée de voyage enregistrée à l’aller ; stationnement et combat s’ajoutent.",
+      "Un aller dure au minimum 60 secondes. Seule une flotte exclusivement composée de sondes dans le même système bénéficie d’un minimum de 30 secondes. Les voyages entre galaxies sont refusés actuellement.",
+      "Le transport livre des ressources. L’espionnage utilise uniquement des sondes, consommées à l’arrivée ; une détection avertit le propriétaire et empêche le rapport. Vérifiez les conditions de la mission dans son aperçu avant l’envoi."
+    ]
+  },
+  {
+    "id": "combat",
+    "part": "2. Les règles du jeu",
+    "title": "Combat, victoire et pillage",
+    "paragraphs": [
+      "Une bataille avance à raison d’un round par minute, dix rounds au maximum. Le premier round se produit une minute après l’ouverture. Un renfort arrivé à temps peut participer au prochain round non résolu ; une flotte arrivée après la clôture repart sans rejoindre la bataille.",
+      "Les unités tirent individuellement dans un ordre aléatoire. Une unité détruite avant son tour ne tire pas. La précision, le suivi, l’esquive, les contres et l’écart de rang interviennent dans la chance de toucher, toujours bornée entre 15 % et 95 %. La signature pondère le ciblage ; les cibles déjà endommagées sont prioritaires.",
+      "Un contre agit sur la chance de toucher et les dégâts. Les dommages réduisent aussi la puissance offensive de l’unité blessée. Le bouclier absorbe d’abord les impacts ; tant qu’il reste positif, il récupère 5 % de son maximum par round. Une fois à zéro, il ne recharge plus pendant cette bataille.",
+      "Les armes secondaires ont leurs propres catégories de cibles. La recherche de cadence peut accorder un tir supplémentaire pour chaque tir de base, y compris secondaire, sans chaîne de tirs supplémentaires. Sous 25 % de structure, un tir qui touche peut provoquer une explosion avant ses dégâts. Un tir raté ne provoque pas cette explosion.",
+      "La bataille s’arrête lorsqu’un camp est éliminé. Si plusieurs camps subsistent à la limite des rounds, le défenseur gagne officiellement. Les points de structure individuels ne sont pas conservés d’une bataille à l’autre. Une composition favorable améliore vos chances ; elle ne garantit pas le résultat d’un combat aléatoire.",
+      "Après une victoire offensive sur une planète détenue, le butin est prélevé au-delà du seuil protégé de chaque ressource, dans la limite de la capacité de chargement calculée pour les survivants. Quand la place manque, les ressources sont réparties au prorata des stocks pillables. Consultez le rapport pour le butin effectivement embarqué.",
+      "Au retour, le stockage disponible sur la planète d’origine plafonne le dépôt. Le surplus est perdu : gagner une bataille ne garantit donc pas que toutes les ressources embarquées seront conservées."
+    ]
+  },
+  {
+    "id": "relations",
+    "part": "2. Les règles du jeu",
+    "title": "Alliances, rapports et univers",
+    "paragraphs": [
+      "Les alliances personnelles et les alliances entre guildes exigent un accord réciproque. Vous ne pouvez appartenir qu’à une guilde dans un univers. Les relations influencent les camps et les missions autorisées ; elles restent propres à cet univers.",
+      "Les rapports et notifications sont privés selon les droits de leurs destinataires. Leur absence immédiate ne signifie pas qu’une mission s’est arrêtée : consultez aussi son état dans la liste des flottes.",
+      "Un univers temporaire peut avoir une date de fermeture. Une fois fermé, il devient inaccessible et ses données sont conservées. Les objectifs de progression de l’Alpha restent des repères à mesurer, pas des délais garantis pour obtenir une colonie ou un vaisseau."
+    ]
+  },
+  {
+    "id": "calcul-production",
+    "part": "3. Comprendre les calculs",
+    "title": "Production et stockage en chiffres",
+    "paragraphs": [
+      "Les débits du moteur sont exprimés par seconde. Pour obtenir une valeur horaire, multipliez par 3 600. Les formules suivantes séparent la production nominale, les consommations et les plafonds : c’est cette distinction qui explique les variations du débit affiché."
+    ],
+    "calculations": [
+      {
+        "title": "Calculer la production nominale d’un bâtiment",
+        "explanation": "Les niveaux producteurs des trois rangs sont additionnés avec leurs facteurs de production, puis les modificateurs sont appliqués. Le débit net tient ensuite compte de la production de base, du rendement et des consommations locales.",
+        "formula": "N = B + 1,5 × I + 2,25 × S\nProduction nominale par seconde = N × p × f × u × e\nProduction horaire = production par seconde × 3 600",
+        "variables": ["B, I, S : niveaux Basique, Intermédiaire et Supérieur du même producteur.", "p : production par niveau ; f : facteur de position ; u : multiplicateur de production de l’univers ; e : multiplicateur d’événement (1 en son absence)."],
+        "example": "Une centrale de niveau 10 Basique et 4 Intermédiaire a N = 16. Avec p = 0,2 et f = u = e = 1, elle produit 3,2 électricité/s, soit 11 520/h, avant déduction des consommations. La production de base de la planète se compte séparément."
+      },
+      {
+        "title": "Comprendre le stockage et une absence",
+        "explanation": "Le stockage utilise des facteurs distincts de ceux de la production. Le calcul du stock ci-dessous s’applique à un intervalle où le débit net reste constant ; le serveur recommence le calcul à chaque changement de rendement ou de plafond.",
+        "formula": "Capacité = C₀ + c × (B + 1,25 × I + 1,5625 × S)\nStock final = min(capacité, max(0, stock initial + débit net × secondes))",
+        "variables": ["C₀ : capacité de base, 200 000 dans les règles de référence ; c : ajout par niveau pondéré, 100 000.", "B, I, S : niveaux du stockage de la ressource ; le débit net est exprimé en unités par seconde."],
+        "example": "Un stockage Basique niveau 2 donne 400 000 de capacité. Avec 390 000 unités et un débit constant de +2/s pendant 2 heures, le calcul brut donne 404 400 ; vous conservez 400 000. La simulation adapte les consommations lorsqu’une production atteint son plafond."
+      }
+    ]
+  },
+  {
+    "id": "calcul-progression",
+    "part": "3. Comprendre les calculs",
+    "title": "Coûts, durées et bonus de recherche",
+    "paragraphs": [
+      "Les coûts viennent du profil propre à l’élément et au rang. Une courbe fait évoluer ce profil avec le niveau ; les réductions éventuelles et les arrondis s’appliquent ensuite. Les pourcentages de composition économique ne représentent pas des pourcentages de quantités brutes.",
+      "Dans les références actuelles, une réduction de durée est plafonnée à 70 % et une réduction de coût à 40 %. Le laboratoire réduit la durée des recherches, le chantier celle des vaisseaux ; ces effets ne s’appliquent pas indistinctement à toutes les commandes."
+    ],
+    "calculations": [
+      {
+        "title": "Calculer un coût et comprendre les arrondis",
+        "explanation": "Pour chaque ressource positive, le prix de base du profil est multiplié par la courbe du niveau et la quantité, puis arrondi au supérieur. Si une réduction de coût s’applique, un second arrondi supérieur est effectué. Une ressource à zéro reste à zéro.",
+        "formula": "Coût brut = plafond(prix du profil × G(n) × quantité)\nCoût payé = plafond(coût brut × (1 − réduction / 100))",
+        "variables": ["plafond(x) : plus petit entier supérieur ou égal à x ; G(n) : produit des multiplicateurs de chaque passage de niveau de 2 à n ; G(1) = 1.", "Pour un producteur : ×1,12 jusqu’à 20, ×1,09 de 21 à 40, ×1,035 de 41 à 80, ×1,015 de 81 à 120, puis ×1,01. Les autres bâtiments et recherches ont leurs propres courbes."],
+        "example": "Exemple pédagogique : un profil exige 101 métal au niveau 1. Au niveau 2 avec une croissance de 1,12, le coût brut vaut plafond(113,12) = 114. Avec une réduction applicable de 10 %, le prix payé vaut plafond(102,6) = 103 métal."
+      },
+      {
+        "title": "Calculer une durée d’opération",
+        "explanation": "La durée dépend de son propre profil et de sa propre courbe, distincts du prix. La réduction s’applique avant l’arrondi à la seconde supérieure, avec un minimum d’une seconde.",
+        "formula": "Durée = max(1, plafond(T₀ × Gtemps(n) × quantité × u × r × (1 − réduction / 100)))",
+        "variables": ["T₀ : durée de base en secondes ; Gtemps(n) : croissance de durée jusqu’au niveau visé ; u : multiplicateur de durée de l’univers.", "r : facteur de rang, 1 / 1,25 / 1,5625. La quantité concerne les commandes d’unités ; pour une amélioration de niveau, elle vaut 1."],
+        "example": "Avec une base fictive de 100 secondes, sans croissance supplémentaire, une unité Intermédiaire, u = 1 et une réduction applicable de 20 %, la durée vaut plafond(100 × 1,25 × 0,8) = 100 secondes. Un multiplicateur de durée inférieur à 1 accélère l’opération."
+      },
+      {
+        "title": "Comprendre les rendements décroissants",
+        "explanation": "Les recherches à bonus progressif et les effets de réduction du laboratoire et du chantier utilisent un investissement commun aux trois rangs. Le gain initial est plus rapide ; les niveaux suivants rapprochent progressivement du plafond. Cette formule ne s’applique pas à la limite de colonies.",
+        "formula": "x = (B + 1,25 × I + 1,5625 × S) / (m × (1 + 1,25 + 1,5625))\nProgression = ln(1 + 2 × x) / ln(3)\nBonus = plafond du bonus × progression",
+        "variables": ["B, I, S : niveaux de chaque rang, chacun borné entre 0 et m ; m : niveau maximal de la progression concernée, généralement 25.", "ln : logarithme naturel ; le plafond du bonus dépend de l’effet. Ici, « plafond du bonus » désigne la limite maximale, pas un arrondi."],
+        "example": "Avec 25 niveaux dans chacun des trois rangs et m = 25, x = 1 : la progression vaut 100 %. À moitié de l’investissement pondéré, x = 0,5 : la progression vaut environ 63,09 %. Pour un plafond de réduction de 70 %, cela donne environ 44,17 % de réduction."
+      },
+      {
+        "title": "Calculer votre limite de planètes",
+        "explanation": "La colonisation est linéaire et ne pondère pas les rangs. Chaque niveau apporte un emplacement, dans la limite de son rang et du plafond de l’univers.",
+        "formula": "Limite = min(plafond univers, 31, 1 + min(B, 5) + min(I, 10) + min(S, 15))",
+        "variables": ["B, I, S : niveaux de la recherche de colonisation par rang ; le 1 représente la planète de départ.", "La limite compte toutes vos planètes dans l’univers, y compris celles obtenues par conquête."],
+        "example": "Avec 5 niveaux Basique, 3 Intermédiaire et aucun Supérieur, vous pouvez posséder 1 + 5 + 3 = 9 planètes. Si votre univers limite les empires à 6 planètes, la limite effective est 6."
+      }
+    ]
+  },
+  {
+    "id": "calcul-voyage",
+    "part": "3. Comprendre les calculs",
+    "title": "Distances, temps de vol et carburant",
+    "paragraphs": [
+      "Les distances utilisent les positions des planètes et les coordonnées réelles des systèmes. Un numéro de système n’est pas une distance. Les segments locaux et hyperspatiaux utilisent chacun la vitesse minimale correspondante de votre flotte."
+    ],
+    "calculations": [
+      {
+        "title": "Calculer la distance et la durée d’un aller",
+        "explanation": "Dans un même système, seule la différence de position compte. Entre systèmes de la même galaxie, on ajoute la sortie, la distance géométrique en hyperespace et l’entrée. Une exploration vise la bordure du système cible, sans segment d’entrée vers une planète.",
+        "formula": "Même système : Dlocal = |position arrivée − position départ| × 10 ; Dhyper = 0\nEntre systèmes : Dlocal = (100 − 10 × position départ) + (100 − 10 × position arrivée)\nDhyper = 100 × √((x₂ − x₁)² + (y₂ − y₁)²)\nSecondes = max(minimum, plafond((Dlocal / (vlocal × ratio) + Dhyper / (vhyper × ratio)) × 3 600 × u))",
+        "variables": ["vlocal et vhyper : vitesses minimales de flotte en unités de distance par heure, bonus déjà appliqués ; ratio : 0,1 à 1 ; u : multiplicateur de durée de voyage.", "minimum : 60 secondes, ou 30 pour des sondes seules dans le même système. Pour une exploration, le terme d’entrée est nul ; dans le même système, la bordure est traitée comme la position 10."],
+        "example": "Entre les positions 2 et 7 du même système, Dlocal = 50. Avec une vitesse fictive de 100 unités/h, à 100 % et u = 1, le voyage dure 1 800 secondes, soit 30 minutes. À 50 %, il dure 60 minutes, hors stationnement."
+      },
+      {
+        "title": "Calculer le carburant réservé et le fret disponible",
+        "explanation": "La règle actuelle rend la consommation de voyage proportionnelle au ratio de vitesse. Le stationnement s’ajoute séparément. La place en soute n’est utilisée pour le carburant que si les réservoirs dédiés ne suffisent pas.",
+        "formula": "Aller = (Dlocal × Σ consommation locale + Dhyper × Σ consommation hyper) × ratio\nStationnement = heures × Σ consommation horaire\nCarburant réservé = 2 × aller + stationnement\nFret disponible = max(0, soutes − max(0, carburant réservé − réservoirs))",
+        "variables": ["Les sommes Σ comptent chaque vaisseau de la flotte : consommation du modèle × quantité.", "Soutes et réservoirs : capacités totales de la flotte, bonus applicables inclus. Le carburant est de l’hydrogène."],
+        "example": "Deux vaisseaux consommant chacun 0,5 H par unité locale parcourent 50 unités à 100 % : l’aller coûte 50 H et l’aller-retour 100 H, sans stationnement. Avec 80 H de réservoir et 1 000 de soute au total, 20 de soute servent au carburant ; le fret disponible est 980. Ces capacités sont pédagogiques."
+      }
+    ]
+  },
+  {
+    "id": "calcul-combat",
+    "part": "3. Comprendre les calculs",
+    "title": "Probabilités et dégâts en combat",
+    "paragraphs": [
+      "Les pourcentages décrivent une probabilité par tir. Une chance de 65 % ne garantit pas 65 impacts sur une bataille de 100 tirs. Les exemples ci-dessous isolent les mécanismes ; ils ne prédisent pas à eux seuls l’issue d’une composition de flotte."
+    ],
+    "calculations": [
+      {
+        "title": "Calculer la chance de toucher",
+        "explanation": "Le serveur borne successivement la chance de base, l’effet du contre puis l’écart de rang. Un écart de rang ajoute ou retire 30 points de pourcentage après le contre.",
+        "formula": "base = borne(précision + suivi + correction arme − esquive cible − 15)\naprès contre = borne(base × coefficient de contre)\nchance finale = borne(après contre + 30 × (rang tireur − rang cible))",
+        "variables": ["borne(x) = min(95, max(15, x)) ; les chances sont exprimées en pourcentage.", "Les rangs valent 1, 2 et 3. La correction de l’arme principale est normalement 0 ; celle des secondaires concernées est +50. Sans relation de contre, le coefficient vaut 1."],
+        "example": "Avec précision 60, suivi 20, esquive cible 15 et correction 0, la base vaut 50 %. Un contre ×1,3 donne 65 %. À rang égal, la chance finale est 65 % ; avec un rang d’avance, elle devient 95 % ; avec un rang de retard, elle devient 35 %."
+      },
+      {
+        "title": "Comprendre la perte de puissance et les explosions",
+        "explanation": "Les dégâts d’un impact dépendent aussi de l’état du tireur au moment de son tour. Les impacts touchent d’abord le bouclier puis la structure ; leur surplus ne passe pas à une autre unité. Le test d’explosion concerne une cible déjà sous 25 % de structure lorsqu’un tir la touche.",
+        "formula": "État du tireur = (structure restante + bouclier restant) / (structure initiale + bouclier initial)\nDégâts = attaque × coefficient de contre × état²\nProbabilité d’explosion = max(0, 1 − structure cible / (0,25 × structure initiale cible))",
+        "variables": ["L’attaque est celle de l’arme utilisée, bonus déjà appliqués. L’état est recalculé pour le tour du tireur.", "La probabilité d’explosion est comprise entre 0 et 1 et n’est testée que sur un tir qui touche, avant l’application de ses dégâts."],
+        "example": "Un tireur à 50 % de son total initial structure + bouclier conserve 0,5² = 25 % de sa puissance : une attaque de 100 avec un contre ×1,3 produit 32,5 dégâts avant limitation aux points disponibles. Une cible à 10 % de sa structure initiale a une probabilité d’explosion de 1 − 0,10/0,25 = 60 % au prochain tir qui la touche."
+      }
+    ]
+  },
+  {
+    "id": "calcul-pillage",
+    "part": "3. Comprendre les calculs",
+    "title": "Stock protégé et partage du butin",
+    "paragraphs": [
+      "La protection se calcule ressource par ressource à partir de la capacité de stockage. Dans les règles de référence, le seuil protégé vaut 10 % de cette capacité. Seule la quantité présente au-delà du seuil peut être prélevée après une victoire offensive ouvrant droit au pillage.",
+      "Le butin disponible et la place de chargement sont deux limites différentes. Les fractions sont arrondies vers le bas, puis les unités restantes sont distribuées à partir des plus grandes fractions pour respecter le total embarquable. Entre plusieurs flottes, la répartition tient aussi compte de leur place disponible."
+    ],
+    "calculations": [
+      {
+        "title": "Calculer la quantité pillable d’une ressource",
+        "explanation": "Le taux de pillage multiplie uniquement la part au-delà du seuil. Le calcul de référence utilise un taux de 100 %, puis la capacité de chargement peut encore limiter le prélèvement.",
+        "formula": "Seuil protégé = capacité × taux de protection\nPillable = plancher(max(0, stock − seuil protégé) × taux de pillage)",
+        "variables": ["plancher(x) : plus grand entier inférieur ou égal à x ; taux de protection de référence : 0,1 ; taux de pillage de référence : 1.", "Le seuil n’est pas une réserve créée automatiquement : si le stock est inférieur au seuil, seul le stock présent existe et rien n’est pillable."],
+        "example": "Avec une capacité de 200 000 et un stock de 50 000 métal, le seuil protégé est 20 000 et le montant pillable 30 000. Avec seulement 15 000 en stock, le montant pillable est zéro. Agrandir le stockage augmente le seuil de protection."
+      },
+      {
+        "title": "Comprendre le partage quand la place manque",
+        "explanation": "Le serveur limite le total au minimum entre le butin disponible et la place calculée pour les survivants, puis répartit les ressources proportionnellement à leur quantité pillable. Ce calcul n’utilise pas les valeurs économiques des ressources.",
+        "formula": "Total embarqué = min(place disponible, somme des ressources pillables)\nPart théorique d’une ressource = quantité pillable × total embarqué / somme pillable\nDépôt au retour = min(quantité ramenée, place restante dans le stockage d’origine)",
+        "variables": ["La place disponible est celle retenue par le serveur après la bataille ; les pertes peuvent modifier le chargement possible.", "Le dépôt est plafonné séparément pour chaque ressource. Les unités ramenées au-delà de la place restante sont perdues."],
+        "example": "Si 30 000 métal et 10 000 nano sont pillables pour 8 000 de place disponible, le chargement contient 6 000 métal et 2 000 nano. Si le stockage d’origine ne peut accueillir que 1 500 nano au retour, 500 nano sont perdus."
+      }
+    ]
+  }
+]

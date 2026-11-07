@@ -1,0 +1,17 @@
+{% extends 'base.html.twig' %}
+{% import 'ui/macros.html.twig' as ui %}
+{% block title %}Rapports · Genesis Reborn{% endblock %}
+{% block body %}
+{% set reportFilters = {all: 'Tous', combat: 'Combats', economy: 'Économie', espionage: 'Espionnage'} %}
+<div class="page-heading"><div><h1>Rapports</h1><p>L’information au service de vos décisions.</p></div></div>
+<section class="panel report-center" aria-labelledby="report-center-title">
+    <div class="report-center-heading"><h2 id="report-center-title">Centre de rapports</h2><span class="badge">{{ report_count|default(0) }} disponible{{ (report_count|default(0)) == 1 ? '' : 's' }}</span></div>
+    <nav class="report-tabs" aria-label="Filtrer les rapports">{% for key,label in reportFilters %}<a href="{{ path('app_combat_reports', {type:key}) }}" class="{{ filter|default('all') == key ? 'active' : '' }}" {{ filter|default('all') == key ? 'aria-current="page"' : '' }}>{{ label }}</a>{% endfor %}</nav>
+    <div class="report-list">
+    {% for report in reports %}<a class="report-row" href="{{ path('app_combat_report',{id:report.id}) }}"><span class="report-kind report-kind--combat">{{ ui.icon('fleet') }}</span><span class="report-copy"><strong>Combat · {{ report.combatEvent.planet.name }}</strong><small>{{ report.resolvedAt|date('d/m/Y H:i') }} · {{ report.combatEvent.planet.coordinates() }} · {{ report.snapshot.participants|length }} flottes impliquées</small></span><span class="badge">{{ report.outcome=='attacker_wins'?'Victoire attaquants':(report.outcome=='defender_wins'?'Victoire défense':'Égalité') }}</span><span class="report-chevron" aria-hidden="true">›</span></a>{% endfor %}
+    {% for report in espionage_reports %}<a class="report-row" href="{{ path('app_espionage_report',{id:report.id}) }}"><span class="report-kind report-kind--spy">{{ ui.icon('diplomacy') }}</span><span class="report-copy"><strong>Renseignements · {{ report.target.name }}</strong><small>{{ report.createdAt|date('d/m/Y H:i') }} · {{ report.target.coordinates() }}</small></span><span class="badge">{{ report.result == 'detected' ? 'Sondes détectées' : report.intelCategories ~ ' catégorie(s)' }}</span><span class="report-chevron" aria-hidden="true">›</span></a>{% endfor %}
+    {% for report in transport_reports %}<a class="report-row" href="{{ path('app_transport_report',{id:report.id}) }}"><span class="report-kind">{{ ui.icon('storage') }}</span><span class="report-copy"><strong>Transport · {{ report.snapshot.sender }} → {{ report.snapshot.recipient }}</strong><small>{{ report.createdAt|date('d/m/Y H:i') }} · {{ report.snapshot.destination }}</small></span><span class="badge">{{ {traveling:'En route', delivered:'Livré', refused:'Refusé'}[report.status]|default(report.status) }}</span></a>{% endfor %}
+    </div>
+    {% if transport_reports is empty and reports is empty and espionage_reports is empty %}<div class="report-empty"><span class="report-kind">{{ ui.icon(filter|default('all') == 'economy' ? 'storage' : 'clock') }}</span><div><h3>{% if filter|default('all') == 'economy' %}Aucun rapport économique{% else %}Aucun rapport dans cette catégorie{% endif %}</h3><p>{% if filter|default('all') == 'economy' %}Les comptes rendus de transport et de production seront présentés ici.{% else %}Les rapports apparaîtront ici après la résolution de vos missions et combats.{% endif %}</p></div></div>{% endif %}
+</section>
+{% endblock %}

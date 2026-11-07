@@ -1,0 +1,17 @@
+{% use 'form_div_layout.html.twig' with form_start as base_form_start %}
+{% use 'form/password_visibility.html.twig' %}
+{% block form_start %}
+    {% if form.vars.submitted and not form.vars.valid %}
+        {% set attr = attr|merge({autofocus: true, tabindex: '-1', 'aria-label': 'Formulaire à corriger'}) %}
+    {% endif %}
+    {{ block('base_form_start') }}
+{% endblock form_start %}
+{% block form_errors %}
+    {% if errors|length > 0 %}
+        <div class="auth-field-errors" id="{{ id }}_errors" role="alert"><ul>
+            {% for error in errors %}
+                <li id="{{ id ~ '_error' ~ loop.index }}">{{ error.message }}</li>
+            {% endfor %}
+        </ul></div>
+    {% endif %}
+{% endblock form_errors %}

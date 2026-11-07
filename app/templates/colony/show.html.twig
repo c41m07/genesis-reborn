@@ -1,0 +1,59 @@
+{% extends 'base.html.twig' %}{% import 'ui/macros.html.twig' as ui %}{% block title %}{{ planet.name }} · Genesis Reborn{% endblock %}
+{% block body %}<div data-controller="colony-live" data-colony-live-url-value="{{ path('app_colony',{id:planet.id}) }}">
+<div class="page-heading"><div><h1>{{ {overview:'Vue générale',buildings:'Bâtiments',technologies:'Recherche',ships:'Chantier spatial',defenses:'Défenses'}[section] }}<span>.</span></h1></div><a class="quiet-button" href="{{ path('app_map') }}">{{ ui.icon('galaxy') }} Explorer la galaxie {{ ui.icon('arrow') }}</a></div>
+<div class="colony-layout colony-layout--integrated"><div class="colony-content">
+{% if section=='overview' %}
+<section class="colony-banner panel empire-banner"><img class="colony-scene" src="{{ asset('art/colony-overview.png') }}" alt="" aria-hidden="true"><div class="hero-content"><span class="badge"><i class="connection-dot"></i> COLONIE OPÉRATIONNELLE</span><h2>{{ planet.name }}</h2><p>{{ ui.icon('galaxy') }} {{ planet.coordinates() }}</p>
+<dl class="empire-points" aria-label="Points de votre empire dans cet univers">
+{% for key,label in {building_points:'Planètes',research_points:'Recherche',fleet_points:'Flotte',total_points:'Total'} %}
+<div><dt>{{ label }}</dt><dd>{{ empire_points[key]|number_format(0, ',', ' ') }} <small>pts</small></dd></div>
+{% endfor %}
+</dl>
+
+</div>{% if section!='overview' %}{% include 'ui/colony_queues.html.twig' %}{% endif %}<span class="hero-sector">SECTEUR {{ planet.coordinates() }}</span><section class="dashboard-metrics" aria-label="Résumé de votre empire">
+<a class="metric-card" href="{{ path('app_planets') }}"><span class="metric-symbol">{{ ui.icon('galaxy') }}</span><span><small>Planètes</small><strong>{{ planets|length }}/{{ chrome.colonyLimit }}</strong><span class="metric-caption">dans cet univers</span></span><span class="metric-arrow" aria-hidden="true">→</span></a>
+<a class="metric-card" href="{{ path('app_leaderboard') }}"><span class="metric-symbol">{{ ui.icon('universe') }}</span><span><small>Classement</small><strong>{{ empire_rank ? '#'~empire_rank : '—' }}</strong><span class="metric-caption">par points dans cet univers</span></span><span class="metric-arrow" aria-hidden="true">→</span></a>
+<a class="metric-card" href="{{ path('app_fleets') }}"><span class="metric-symbol">{{ ui.icon('fleet') }}</span><span><small>Flottes en vol</small><strong>{{ active_fleets|length }}</strong><span class="metric-caption">toutes colonies confondues</span></span><span class="metric-arrow" aria-hidden="true">→</span></a>
+<a class="metric-card" href="{{ path('app_diplomacy') }}"><span class="metric-symbol">{{ ui.icon('diplomacy') }}</span><span><small>Alliance</small><strong>{{ empire_guild ? empire_guild.name : (guilds_enabled ? 'Sans alliance' : 'Désactivée') }}</strong><span class="metric-caption">{{ empire_guild ? 'Gérer les relations' : (guilds_enabled ? 'Découvrir la diplomatie' : 'Dans cet univers') }}</span></span><span class="metric-arrow" aria-hidden="true">→</span></a>
+</section></section>
+
+{% if section=='overview' %}
+
+<div class="dashboard-layout">
+<div class="dashboard-primary">
+<section class="dashboard-activity" aria-label="Activité et files de la colonie active">{% include 'ui/colony_queues.html.twig' %}</section>
+
+</div>
+<aside class="dashboard-secondary">
+{% include 'ui/flights.html.twig' %}
+<section class="panel dashboard-journal" aria-labelledby="dashboard-journal-title">
+<div class="dashboard-section-heading"><div><h2 id="dashboard-journal-title">Journal de bord</h2><p>Dernières notifications de votre empire</p></div><span aria-hidden="true">{{ ui.icon('clock') }}</span></div>
+{% if chrome.notifications|default([]) is not empty %}<ol class="dashboard-notifications">{% for notification in chrome.notifications %}<li><span class="journal-mark" aria-hidden="true">{{ ui.icon('notifications') }}</span><span><strong>{{ notification.message }}</strong><small>{{ notification.createdAt|date('d/m/Y · H:i',preferences.timezone) }}</small></span></li>{% endfor %}</ol>{% else %}<p class="dashboard-empty">Aucune activité récente. Les nouvelles étapes de votre empire apparaîtront ici.</p>{% endif %}
+<a class="dashboard-journal-link" href="{{ path('app_combat_reports') }}">Ouvrir les rapports <span aria-hidden="true">→</span></a>
+</section>
+</aside>
+</div>
+{% endif %}
+{% else %}
+<div class="colony-catalog-workspace"><div class="workspace colony-catalog" data-live-region="catalog" aria-label="Catalogue et opérations de la colonie" data-controller="catalog-filter">
+{% for group,items in cards %}{% if group==section %}
+<section id="panel-{{ group }}" data-controller="building-catalog" data-building-catalog-show-locked-value="{{ show_locked_items ? 'true' : 'false' }}" data-action="hashchange@window->building-catalog#followHash click->building-catalog#rememberFilter" aria-label="{{ {buildings:'Bâtiments',technologies:'Recherche',ships:'Chantier spatial',defenses:'Défenses'}[group] }}">
+    <div class="catalog-section-title">
+        <h2>{{ {buildings:'Développer la colonie',technologies:'Repousser les frontières',ships:'Préparer vos prochaines missions',defenses:'Protéger la planète'}[group] }}</h2>
+        <span>{{ items|length / 3 }} {{ {buildings:'bâtiments',technologies:'recherches',ships:'familles de vaisseaux',defenses:'familles de défenses'}[group] }}</span>
+        <form method="get" class="building-visibility">
+            <input type="hidden" name="section" value="{{ group }}">
+            <input type="hidden" name="showLockedItems" value="{{ show_locked_items ? '0' : '1' }}" data-building-catalog-target="visibilityInput">
+            <button type="submit" role="switch" aria-checked="{{ show_locked_items ? 'true' : 'false' }}" data-building-catalog-target="visibilitySwitch" data-action="building-catalog#toggleLocked"><span>Afficher les éléments verrouillés</span><span class="building-switch-track" aria-hidden="true"></span><span data-building-catalog-target="visibilityLabel" aria-hidden="true">{{ show_locked_items ? 'ON' : 'OFF' }}</span></button>
+        </form>
+    </div>
+    <nav class="catalog-filters ui-tabs" aria-label="Filtrer le catalogue">
+        {% set filter_options = group=='buildings' ? {all:'Tous',economy:'Production',infrastructure:'Infrastructures',storage:'Stockage',defense:'Défense'} : (group=='technologies' ? {all:'Toutes',combat:'Combat',propulsion:'Propulsion',infrastructure:'Infrastructures',espionage:'Espionnage'} : (group=='ships' ? {all:'Tous',combat:'Combat',transport:'Transport',utility:'Utilitaires'} : {all:'Toutes',combat:'Défense'})) %}
+        {% for key,label in filter_options %}<button type="button" data-action="click->catalog-filter#apply" data-category="{{ key }}" aria-pressed="{{ key=='all'?'true':'false' }}">{{ label }}</button>{% endfor %}
+    </nav>
+    <div class="catalog-grid building-grid">{% include 'ui/building_cards.html.twig' %}</div>
+</section>
+{% endif %}{% endfor %}</div><aside class="colony-catalog-aside">{% include 'ui/colony_queues.html.twig' %}{% include 'ui/flights.html.twig' %}</aside></div>
+{% endif %}
+
+</div></div></div>{% endblock %}

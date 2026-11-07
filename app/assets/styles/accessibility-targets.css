@@ -1,0 +1,18 @@
+/* WCAG 2.2 AA : liens de retour des formulaires publics, cible tactile minimale. */
+.narrow > p:last-child > a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding-block: 4px;
+}
+
+/* Parcours publics : focus contrasté, texte lisible et accueil adaptable. */
+.public-page a:focus-visible, .public-page button:focus-visible, .public-page input:focus-visible {
+    outline: 3px solid #f5ce80;
+    outline-offset: 4px;
+}
+.public-page .intro p, .public-page .auth-note, .public-page .auth-back { color: #b9c7dc; }
+.public-page .public-intro { max-width: 850px; margin-inline: auto; }
+.public-page .public-intro h1 { font-size: clamp(2rem, 5vw, 3.5rem); }
+.public-page .public-intro p { line-height: 1.7; }
+.public-page .public-intro .primary { display: inline-flex; }

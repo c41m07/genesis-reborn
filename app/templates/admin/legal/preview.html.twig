@@ -1,0 +1,12 @@
+{% extends 'admin/layout.html.twig' %}
+{% block title %}Aperçu privé · {{ pageTitle }} · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="wiki-guide">
+  <header><h1>{{ pageTitle }}</h1><p class="flash">Aperçu privé réservé aux administrateurs. Brouillon du 7 novembre 2026 : texte non publié, champs à compléter et engagements à vérifier avant publication.</p></header>
+  <nav class="panel" aria-label="Brouillons juridiques">
+    <ul>{% for slug, label in pages %}<li><a href="{{ path('app_admin_legal_preview', {page: slug}) }}" {% if page == slug %}aria-current="page"{% endif %}>{{ label }}</a></li>{% endfor %}</ul>
+  </nav>
+  <article class="panel">{% include 'admin/legal/' ~ page ~ '.html.twig' %}</article>
+  <p>Les mentions entre crochets et les notes de préparation restent à résoudre. Cet aperçu ne modifie ni les règles du jeu, ni l’inscription, ni les durées de conservation effectivement appliquées.</p>
+</div>
+{% endblock %}

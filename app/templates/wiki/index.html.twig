@@ -1,0 +1,55 @@
+{% extends 'base.html.twig' %}
+{% block title %}Wiki du jeu · Genesis Reborn{% endblock %}
+{% block body %}
+<article class="wiki-guide wiki-manual" id="wiki-top" aria-labelledby="wiki-title">
+  <header class="wiki-intro">
+    <p class="wiki-eyebrow">Le manuel du joueur</p>
+    <h1 id="wiki-title">Wiki du jeu</h1>
+    <p class="wiki-lead">De votre première colonie aux calculs d’une bataille : comprendre vos choix, préparer votre empire.</p>
+    <p>Commencez par les premiers chapitres ou choisissez un sujet dans le sommaire. Les règles se lisent directement ; les formules et leurs exemples se déplient à votre rythme.</p>
+    <p>Les chiffres indiqués sont des références ou des exemples dont les hypothèses sont précisées. Les fiches et aperçus de votre univers donnent les coûts, bonus et durées applicables à vos actions.</p>
+  </header>
+  <nav class="wiki-summary" aria-label="Sommaire du wiki">
+    <h2>Sommaire</h2>
+    {% set currentPart = '' %}
+    {% for section in sections %}
+      {% if section.part != currentPart %}
+        {% if not loop.first %}</ol>{% endif %}
+        <h3>{{ section.part }}</h3><ol>
+        {% set currentPart = section.part %}
+      {% endif %}
+      <li><a href="#wiki-{{ section.id }}">{{ section.title }}</a></li>
+      {% if loop.last %}</ol>{% endif %}
+    {% endfor %}
+  </nav>
+  {% set currentPart = '' %}
+  {% for section in sections %}
+    <section class="wiki-chapter" id="wiki-{{ section.id }}" aria-labelledby="wiki-title-{{ section.id }}">
+      {% if section.part != currentPart %}<p class="wiki-eyebrow">{{ section.part }}</p>{% set currentPart = section.part %}{% endif %}
+      <h2 id="wiki-title-{{ section.id }}">{{ section.title }}</h2>
+      {% for paragraph in section.paragraphs %}<p>{{ paragraph }}</p>{% endfor %}
+      {% if section.steps is defined %}<ol>{% for step in section.steps %}<li>{{ step }}</li>{% endfor %}</ol>{% endif %}
+      {% for calculation in section.calculations|default([]) %}
+        <details class="wiki-calculation">
+          <summary>{{ calculation.title }}</summary>
+          <div class="wiki-calculation-body">
+            <p>{{ calculation.explanation }}</p>
+            <pre class="wiki-formula">{{ calculation.formula }}</pre>
+            <ul>{% for variable in calculation.variables %}<li>{{ variable }}</li>{% endfor %}</ul>
+            <h3>Exemple chiffré</h3><p>{{ calculation.example }}</p>
+          </div>
+        </details>
+      {% endfor %}
+      <a class="wiki-back" href="#wiki-top">Retour au sommaire</a>
+    </section>
+  {% endfor %}
+  <footer class="wiki-sources">
+    <h2>Pour aller plus loin</h2>
+    <p>Un terme vous semble ambigu ou un résultat vous surprend ? Indiquez l’univers, les niveaux et la situation dans un feedback pour permettre sa vérification.</p>
+    <details class="wiki-calculation"><summary>Consulter les documents de référence</summary><div class="wiki-calculation-body">
+      <p>Ces documents conservent aussi l’historique du projet. Les décisions récentes remplacent les anciens réglages ; leurs anciennes formules ne s’ajoutent pas à celles de ce manuel.</p>
+      <ul><li><a href="{{ path('app_wiki_reference',{source:'regles'}) }}">Règles de référence</a></li><li><a href="{{ path('app_wiki_reference',{source:'decisions'}) }}">Décisions du projet</a></li></ul>
+    </div></details>
+  </footer>
+</article>
+{% endblock %}

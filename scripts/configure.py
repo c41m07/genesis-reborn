@@ -16,3 +16,9 @@ else:
     print('.env.local créé avec secrets aléatoires.')
 if 'MERCURE_JWT_SECRET=' not in p.read_text():
     with p.open('a') as f: f.write('MERCURE_JWT_SECRET='+secrets.token_hex(32)+'\n')
+
+application = Path(__file__).resolve().parents[1] / "app"
+for name in [".env", ".env.local"]:
+    link = application / name
+    if not link.exists() and not link.is_symlink():
+        link.symlink_to("../" + name)
