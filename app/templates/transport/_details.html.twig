@@ -1,0 +1,14 @@
+{% set snapshot = report.snapshot %}
+<dl>
+    <dt>Expéditeur</dt><dd>{{ snapshot.sender }}</dd>
+    <dt>Destinataire</dt><dd>{{ snapshot.recipient }}</dd>
+    <dt>Départ</dt><dd>{{ snapshot.origin }}</dd>
+    <dt>Destination</dt><dd>{{ snapshot.destination }}</dd>
+    <dt>État</dt><dd>{{ {traveling:'En route', delivered:'Livraison effectuée', refused:'Livraison refusée'}[report.status]|default(report.status) }}</dd>
+    <dt>Départ de la mission</dt><dd>{{ report.createdAt|date('d/m/Y H:i') }}</dd>
+    {% if report.resolvedAt %}<dt>Résolution de la livraison</dt><dd>{{ report.resolvedAt|date('d/m/Y H:i') }}</dd>{% endif %}
+</dl>
+{% for slug, amount in snapshot.sent %}
+<p><strong>{{ resources[slug]|default(slug) }}</strong> : envoyé {{ amount|number_format(2, ',', ' ') }} · livré {{ snapshot.delivered[slug]|default(0)|number_format(2, ',', ' ') }} · retour prévu {{ snapshot.returned[slug]|default(0)|number_format(2, ',', ' ') }}{% if snapshot.returned_at is defined %} · déposé au retour {{ snapshot.returned_deposited[slug]|default(0)|number_format(2, ',', ' ') }} · perdu faute de stockage au retour {{ snapshot.return_overflow[slug]|default(0)|number_format(2, ',', ' ') }}{% endif %}</p>
+{% else %}<p>Aucune ressource chargée.</p>{% endfor %}
+{% if snapshot.returned_at is defined %}<p>Flotte rentrée le {{ snapshot.returned_at|date('d/m/Y H:i') }}.</p>{% endif %}

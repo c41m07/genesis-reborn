@@ -23,6 +23,15 @@ final class GameRepository
             ->andWhere('(e.universe IS NULL OR e.universe = :universe)')->setParameter('statuses', ['active', 'planned'])->setParameter('now', $now)->setParameter('universe', $membership->universe)
             ->orderBy('e.endsAt', 'ASC')->getQuery()->getResult();
     }
+    public function transportReportsFor(?PlayerUniverse $membership, int $page = 1): array
+    {
+        $query = $this->em->createQueryBuilder()->select('r', 's', 'p')->from(\App\Entity\TransportReport::class, 'r')
+            ->join('r.sender', 's')->join('r.recipient', 'p');
+        if ($membership) $query->where('r.sender = :member OR r.recipient = :member')->setParameter('member', $membership);
+        return $query->orderBy('r.createdAt', 'DESC')->addOrderBy('r.id', 'DESC')
+            ->setFirstResult((max(1, $page) - 1) * 50)->setMaxResults(50)->getQuery()->getResult();
+    }
+
     public function espionageReportsFor(PlayerUniverse $membership, int $limit = 50): array
     {
         return $this->em->createQueryBuilder()->select('r')->from(\App\Entity\EspionageReport::class, 'r')

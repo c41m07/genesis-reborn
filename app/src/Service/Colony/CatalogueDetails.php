@@ -115,7 +115,7 @@ final class CatalogueDetails
                 'shield'=>['Le bonus augmente la réserve maximale de bouclier. Les dégâts sont d’abord retirés au bouclier, puis à la structure.','La recharge entre deux rounds représente '.$this->number((float)($rules['shield_recharge_percent_per_round']??5)).' % du bouclier maximal ; une capacité plus élevée augmente donc aussi la quantité rechargée.'],
                 'signature'=>['La signature intervient dans le choix de la cible par les armes ennemies. Une faible signature réduit le poids de l’unité dans ce choix, sans garantir qu’elle sera épargnée.','Elle ne modifie pas les chances de toucher une fois la cible choisie. La discrétion des sondes en mission d’espionnage dépend de l’Écran de brouillage.'],
                 'fuel_capacity'=>['Les réservoirs dédiés transportent uniquement du carburant. Ils ne peuvent pas servir de soute à marchandises.','Le carburant aller-retour et le stationnement prévu sont réservés au départ. Si les réservoirs ne suffisent pas, le carburant supplémentaire utilise la soute disponible.','Cette recherche augmente la capacité, sans réduire la consommation du trajet.'],
-                'cargo_capacity'=>['La soute transporte les ressources d’une mission de transport ou le butin d’un combat. Le fret volontaire est réservé aux transports entre vos colonies.','Le carburant qui dépasse la capacité des réservoirs dédiés occupe une partie de la soute. La place restante dépend donc de la mission.','Les vaisseaux dont la capacité de soute est nulle ne gagnent pas de soute avec ce bonus.'],
+                'cargo_capacity'=>['La soute transporte les ressources d’une mission de transport ou le butin d’un combat. Le fret volontaire est réservé aux missions de transport vers vos colonies ou un joueur qui accepte vos livraisons.','Le carburant qui dépasse la capacité des réservoirs dédiés occupe une partie de la soute. La place restante dépend donc de la mission.','Les vaisseaux dont la capacité de soute est nulle ne gagnent pas de soute avec ce bonus.'],
                 default=>['Les deux indices de vitesse progressent : trajet dans le système et trajet entre systèmes.','Une flotte est limitée par son vaisseau le plus lent pour chaque type de trajet. Le gain de temps dépend donc de toute sa composition, de la route et de la vitesse choisie au départ.','Cette recherche ne réduit pas directement la consommation de carburant.']};
             $sections[]=$this->section('Utilisation du bonus',$paragraphs);
         }elseif($type==='extra_shot_chance'){
@@ -245,7 +245,7 @@ final class CatalogueDetails
                 'Pour conquérir une planète PNJ, au moins un vaisseau colonie doit survivre au combat. Les planètes détenues par d’autres joueurs ne peuvent pas être conquises.'
             ]);
             elseif((float)($d['cargo_capacity']??0)>0)$sections[]=$this->section('Transport',[
-                'Transporte volontairement des ressources entre vos propres colonies connues. Les ressources livrées au-delà de la capacité de stockage de la destination sont perdues.',
+                'Transporte des ressources vers vos colonies ou celles des joueurs qui acceptent vos livraisons, dans la même galaxie et un système connu. Le surplus de stockage revient avec la flotte. Les dons ne donnent aucun boost et ne font progresser aucun objectif.',
                 'Une soute plus grande augmente aussi la capacité disponible pour le butin si le vaisseau survit au combat. La capacité de fret réelle est calculée après réservation du carburant.'
             ]);
         }

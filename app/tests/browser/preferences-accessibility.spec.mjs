@@ -21,6 +21,8 @@ test('Préférences accessibles : mouvement réduit, alertes désactivées et fu
   await expect(page.locator('link[href*=wireframe-theme]')).toHaveCount(0);
   await page.goto('/profil/preferences');
   await expect(page.getByRole('heading', { name: 'Paramètres', exact: true })).toBeVisible();
+  await expect(page.getByLabel('Accepter les ressources envoyées par')).toHaveValue('allies');
+  await page.getByLabel('Accepter les ressources envoyées par').selectOption('none');
   await page.getByLabel('Thème de l’interface').selectOption('light');
 
   const timezone = page.getByLabel('Fuseau horaire de l’horloge');
@@ -29,6 +31,7 @@ test('Préférences accessibles : mouvement réduit, alertes désactivées et fu
   await page.getByLabel('Afficher les alertes de jeu en temps réel').uncheck();
   await page.getByRole('button', { name: 'Enregistrer les paramètres' }).click();
   await expect(page.getByRole('status')).toContainText('Préférences enregistrées');
+  await expect(page.getByLabel('Accepter les ressources envoyées par')).toHaveValue('none');
   await expect(page.locator('body')).toHaveClass(/reduced-motion/);
   await expect(page.locator('body')).toHaveAttribute('data-theme', 'light');
   await expect(page.locator('link[href*=wireframe-theme]')).toHaveCount(1);
