@@ -11,7 +11,10 @@ public/build
 public/bundles
 test-results
 playwright-report
-docs
+docs/**
+!docs/REGLES.md
+!docs/DECISIONS.md
+!docs/wiki.json
 .demo-credentials
 *.tar
 *.sql

@@ -1,0 +1,69 @@
+[
+  {
+    "id": "debuter",
+    "title": "Débuter dans un univers",
+    "paragraphs": [
+      "Votre compte est global, mais votre progression appartient à chaque univers. Choisissez un univers, puis développez votre première colonie. Les interactions restent dans cet univers.",
+      "Les coûts, durées et prérequis affichés par le jeu dépendent de la configuration de l’univers. Consultez les fiches avant de commander."
+    ]
+  },
+  {
+    "id": "economie",
+    "title": "Ressources et production",
+    "paragraphs": [
+      "Chaque planète possède ses propres ressources : métal, électricité, antimatière, hydrogène et nano. Le stockage plafonne les stocks disponibles.",
+      "Les usines dépendent de leur alimentation. Une pénurie électrique réduit leur rendement ; la production d’antimatière dépend aussi de l’hydrogène. La simulation prend en compte votre absence."
+    ]
+  },
+  {
+    "id": "progression",
+    "title": "Bâtiments, recherches et rangs",
+    "paragraphs": [
+      "Bâtiments, recherches, vaisseaux et défenses disposent de rangs distincts. Les prérequis servent au déblocage initial ; les accès déjà acquis sont conservés dans leur périmètre.",
+      "Les recherches sont partagées dans votre participation à l’univers, et le laboratoire local intervient dans leur déblocage initial. Un même rang d’une recherche ne peut pas être mené simultanément sur plusieurs colonies."
+    ]
+  },
+  {
+    "id": "files",
+    "title": "Files et déconnexion",
+    "paragraphs": [
+      "Construction, recherche et chantier utilisent des files indépendantes sur chaque planète. Les commandes d’une même file se succèdent.",
+      "Fermer le navigateur ne suspend pas une commande : les traitements du serveur poursuivent les opérations. À la reconnexion, les stocks et les résultats sont recalculés. Un affichage arrivé à zéro n’est pas à lui seul la preuve que le traitement serveur est terminé.",
+      "Les bonus de temps concernent l’opération active. Les coûts déjà payés restent attachés à la commande."
+    ]
+  },
+  {
+    "id": "missions",
+    "title": "Flottes et exploration",
+    "paragraphs": [
+      "Composez une flotte, choisissez une mission et une destination, puis vérifiez le trajet et son carburant avant envoi. La vitesse du groupe dépend de son vaisseau le plus lent et du ratio choisi.",
+      "Le carburant du trajet et du stationnement est distinct du fret. Les réserves nécessaires au retour sont prévues au départ. Les réservoirs dédiés et la soute n’ont pas le même usage.",
+      "Explorez pour découvrir des systèmes. Une planète vierge peut être colonisée ; une planète PNJ relève de la conquête. Une planète détenue par un joueur n’est pas conquérable."
+    ]
+  },
+  {
+    "id": "combat",
+    "title": "Combat et rapports",
+    "paragraphs": [
+      "Les combats se déroulent en plusieurs rounds calculés par le serveur. Les arrivées et les renforts sont pris en compte selon leur horaire ; un combat peut se terminer avant sa limite de rounds.",
+      "La conquête d’une planète PNJ exige une victoire et un vaisseau colonisateur survivant. Consultez ensuite le rapport pour connaître le résultat, les pertes et le butin éventuel.",
+      "L’espionnage utilise uniquement des sondes, consommées à l’arrivée. Une détection avertit le propriétaire et empêche le rapport."
+    ]
+  },
+  {
+    "id": "relations",
+    "title": "Diplomatie et notifications",
+    "paragraphs": [
+      "Les alliances personnelles et les alliances de guildes exigent un accord réciproque. L’adhésion à une guilde est exclusive dans un univers.",
+      "Les notifications et rapports sont privés selon les droits du destinataire. Si une notification n’apparaît pas immédiatement, consultez aussi la file et le rapport : son absence ne signifie pas que votre opération s’est arrêtée."
+    ]
+  },
+  {
+    "id": "fermeture",
+    "title": "Fermeture et conservation",
+    "paragraphs": [
+      "Un univers peut avoir une date de fermeture. Sa fermeture est contrôlée par le serveur ; ses données sont conservées, mais il devient inaccessible.",
+      "Les objectifs de durée de progression restent des objectifs d’observation de l’Alpha, pas des garanties. Ce wiki ne modifie aucun réglage."
+    ]
+  }
+]

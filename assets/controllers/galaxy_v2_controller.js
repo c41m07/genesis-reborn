@@ -1124,7 +1124,7 @@ export default class extends Controller {
             this.mode = 'planet';
             this.drawFrame(0);
         } else {
-            window.setTimeout(() => { this.mode = 'planet'; this.drawFrame(0); }, 420);
+            window.setTimeout(() => { if (this.mode !== 'transition-to-planet') return; this.mode = 'planet'; this.drawFrame(0); }, 420);
         }
     }
 
@@ -1148,7 +1148,7 @@ export default class extends Controller {
             this.mode = 'system';
             this.drawFrame(0);
         } else {
-            window.setTimeout(() => { this.mode = 'system'; this.drawFrame(0); }, 420);
+            window.setTimeout(() => { if (this.mode !== 'transition-to-system-from-planet') return; this.mode = 'system'; this.drawFrame(0); }, 420);
         }
     }
 

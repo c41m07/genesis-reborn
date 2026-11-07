@@ -21,6 +21,7 @@ COPY config ./config
 COPY migrations ./migrations
 COPY src ./src
 COPY templates ./templates
+COPY docs/REGLES.md docs/DECISIONS.md docs/wiki.json ./docs/
 COPY public ./public
 COPY --from=assets /app/public/build ./public/build
 COPY docker/dev/apache.conf /etc/apache2/sites-available/000-default.conf

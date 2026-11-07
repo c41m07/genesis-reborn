@@ -85,3 +85,5 @@ Après modification des services consommés par des processus persistants, redé
 - scripts/ : configuration locale, validation, sauvegarde et tests isolés.
 
 Les dépendances PHP et JavaScript sont verrouillées par composer.lock et package-lock.json. Aucun déploiement ou publication n’est effectué par les commandes locales décrites ici.
+
+Le wiki du jeu est accessible sur `/wiki` pour les comptes connectés, avec accès près de Feedback et sur la vue générale. Son texte explicatif est maintenu une seule fois dans `docs/wiki.json` ; les règles et décisions détaillées sont embarquées dans l’image depuis leurs fichiers de référence. Voir [la maintenance et les sources du wiki](docs/WIKI.md).

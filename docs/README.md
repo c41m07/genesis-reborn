@@ -4,6 +4,8 @@ Cette page oriente vers les documents de référence. L’Alpha est hébergée s
 
 ## Règles et décisions de jeu
 
+- [Maintenance du wiki](WIKI.md) : contenu unique, références embarquées et vérifications.
+
 - [Règles de base](REGLES.md) : fonctionnement retenu et règles confirmées.
 - [Décisions](DECISIONS.md) : arbitrages utilisateur et adaptations aux spécifications.
 - [Rééquilibrage progression et combat](agent/BALANCING_IMPLEMENTATION_2026-11-02.md) : décision de balance intégrée; le [QCM](agent/BALANCING_QCM_2026-11-02.md) distingue les objectifs encore à mesurer.
