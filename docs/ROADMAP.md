@@ -26,11 +26,12 @@ Pendant les sessions Alpha, relever notamment le temps pour atteindre les premie
 
 Les valeurs en configuration sont l’état initial du test. Leur présence ne signifie pas qu’elles sont validées comme équilibre final.
 
-## Portes avant production
+## Vérifications restantes pour l’Alpha hébergée
+
+Le propriétaire confirme son hébergement. Les points suivants concernent sa qualification et son exploitation ; ils ne signifient pas qu’aucun hébergement n’existe.
 
 - Compléter une feuille de balance à partir des résultats Alpha et valider les changements associés.
-- Exécuter la CI sur l’hébergeur distant retenu.
-  La publication GHCR après validation et le déploiement SSH manuel sont configurés ; leur exécution distante reste à vérifier (voir [déploiement](DEPLOIEMENT.md)).
+- La CI GitHub a réussi sur les lots intégrés récents. La publication GHCR et le déploiement SSH manuel sont configurés ; leur usage effectif et la version exécutée sur le serveur restent à confirmer (voir [déploiement](DEPLOIEMENT.md)).
 - Mesurer la capacité sous charge et définir supervision/SLA.
 - Compléter les sauvegardes distantes, leur protection et le plan de reprise.
 - Réaliser la revue manuelle d’accessibilité avec lecteur d’écran et cadrer la conformité RGAA/WCAG.
