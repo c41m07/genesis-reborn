@@ -15,6 +15,7 @@ Les objectifs de durée début/milieu/fin, les gains et pertes et les profils PN
 ## État et exploitation
 
 - [Scénarios serveur et reprise](SERVER_SCENARIOS.md) : essais locaux isolés, preuves hors connexion et limites de validation de l’Alpha.
+- [Mesures par univers](UNIVERSE_METRICS.md) : définitions, couverture des ressources, attentes actuelles et limites des historiques.
 
 - [Sauvegardes et restauration isolée](BACKUPS.md) : conservation, état des jobs, preuve de restauration et limites de reprise.
 

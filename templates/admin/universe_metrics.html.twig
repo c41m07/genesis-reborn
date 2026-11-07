@@ -1,0 +1,65 @@
+{% extends 'admin/layout.html.twig' %}
+{% macro duration(value) %}{% if value is null %}Non disponible{% else %}{{ value|number_format(0, ',', ' ') }} s{% endif %}{% endmacro %}
+{% import _self as measure %}
+{% block title %}Mesures · {{ universe.name }} · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="universe-observations">
+<div class="page-heading"><div><h1>Mesures de l’univers</h1><p>{{ universe.name }} · Relevé du {{ metrics.observedAt|date('d/m/Y H:i:s', 'UTC') }} UTC.</p></div></div>
+<p><a class="secondary" href="{{ path('app_admin_index') }}#admin-universe-{{ universe.id }}">Retour aux univers</a> <a class="secondary" href="{{ path('app_admin_universe_metrics', {id: universe.id, page: metrics.resources.page}) }}">Actualiser le relevé</a></p>
+<p>Observation en lecture seule. Ces mesures n’appliquent aucun changement d’équilibrage. Elles représentent les données encore conservées, pas un historique complet.</p>
+{% if metrics.closed %}<p role="status"><strong>Univers fermé.</strong> Les stocks conservés sont affichés sans simuler une production après fermeture. Les files restantes ne constituent pas un incident d’exploitation.</p>{% endif %}
+<nav class="ui-tabs" aria-label="Mesures de l’univers"><a href="#metrics-progression">Progression</a> <a href="#metrics-wait">Attentes</a> <a href="#metrics-resources">Ressources</a> <a href="#metrics-recovery">Après les pertes</a></nav>
+
+<section class="panel" id="metrics-progression" aria-labelledby="progression-title">
+<h2 id="progression-title">Progression et ancienneté</h2>
+<dl>
+  <dt>Participations à cet univers</dt><dd>{{ metrics.progression.members }}</dd>
+  <dt>Ancienneté médiane depuis l’entrée dans l’univers</dt><dd>{{ measure.duration(metrics.progression.age.median) }} · {{ metrics.progression.age.count }} dates exploitables</dd>
+  <dt>Somme des niveaux actuels de bâtiments</dt><dd>{{ metrics.progression.buildingLevels }}</dd>
+  <dt>Somme des niveaux actuels de recherches</dt><dd>{{ metrics.progression.researchLevels }}</dd>
+</dl>
+<p>L’ancienneté est un temps calendaire, pas un temps de jeu actif ni le délai pour atteindre ces niveaux. Les niveaux de tous les rangs sont additionnés ; ce total n’est pas un score comparable entre univers.</p>
+<p><strong>Temps pour atteindre un jalon : non disponible.</strong> Les dates des déblocages et des constructions terminées ne sont pas conservées sous une forme permettant ce calcul.</p>
+{% if metrics.progression.invalidDates %}<p role="status">{{ metrics.progression.invalidDates }} date(s) d’entrée future(s) exclue(s) du calcul d’ancienneté.</p>{% endif %}
+</section>
+
+<section class="panel" id="metrics-wait" aria-labelledby="wait-title">
+<h2 id="wait-title">Attentes des commandes actuelles</h2>
+<dl>
+  <dt>Commandes conservées dans les files</dt><dd>{{ metrics.queues.total }}</dd>
+  <dt>Commandes non démarrées</dt><dd>{{ metrics.queues.pending.count }}</dd>
+  <dt>Âge médian des commandes non démarrées</dt><dd>{{ measure.duration(metrics.queues.pending.median) }}</dd>
+  <dt>Âge de la plus ancienne commande non démarrée</dt><dd>{{ measure.duration(metrics.queues.pending.max) }}</dd>
+  <dt>Attente médiane avant démarrage des commandes actives</dt><dd>{{ measure.duration(metrics.queues.startWait.median) }} · {{ metrics.queues.startWait.count }} commandes</dd>
+  <dt>Plus grand temps restant d’une commande active</dt><dd>{{ measure.duration(metrics.queues.remaining.max) }}</dd>
+  <dt>Commandes actives dont l’échéance est atteinte</dt><dd>{{ metrics.queues.overdue }}</dd>
+</dl>
+<p>Les commandes terminées ou annulées disparaissent de ces mesures. Une échéance atteinte indique un traitement à vérifier ; elle ne prouve pas une panne. Les files parallèles ne sont pas additionnées en un temps d’attente global.</p>
+{% if metrics.queues.invalidDates %}<p role="status">{{ metrics.queues.invalidDates }} commande(s) avec dates ou durée incohérentes exclue(s) des calculs temporels.</p>{% endif %}
+</section>
+
+<section class="panel" id="metrics-resources" aria-labelledby="resources-title">
+<h2 id="resources-title">Ressources et productivité</h2>
+<p>{{ metrics.resources.observed }} colonie{{ metrics.resources.observed == 1 ? '' : 's' }} observée{{ metrics.resources.observed == 1 ? '' : 's' }} sur cette page ; {{ metrics.resources.total }} colonie{{ metrics.resources.total == 1 ? '' : 's' }} possédée{{ metrics.resources.total == 1 ? '' : 's' }} dans l’univers. Page {{ metrics.resources.page }} sur {{ metrics.resources.pages }}.</p>
+<p>{{ metrics.closed ? 'Stocks conservés, sans projection de production.' : 'Projection actuelle du moteur de production, sans enregistrer les stocks.' }} Les décomptes ci-dessous concernent uniquement les colonies observées de cette page, classées par identifiant ; ce n’est pas un échantillon aléatoire.</p>
+{% if metrics.resources.unavailable %}<p role="status">{{ metrics.resources.unavailable }} colonie(s) non exploitable(s) sur cette page : données de ressources incomplètes ou datées dans le futur, ou propriété modifiée pendant le relevé.</p>{% endif %}
+{% if metrics.resources.observed %}
+<div class="table-wrap" role="region" tabindex="0" aria-label="Ressources des colonies observées, tableau défilant"><table><caption>Indicateurs de tension économique sur les colonies observées</caption><thead><tr><th scope="col">Ressource</th><th scope="col">Stock médian (% de capacité)</th><th scope="col">Colonies à stock nul</th><th scope="col">Production nette négative</th><th scope="col">Productivité inférieure à 100 %</th></tr></thead><tbody>
+{% for row in metrics.resources.rows %}<tr><th scope="row">{{ row.label }}</th><td>{{ row.stockPercent is null ? 'Non disponible' : row.stockPercent|number_format(1, ',', ' ') ~ ' %' }}</td><td>{{ row.empty }} / {{ metrics.resources.observed }}</td><td>{% if row.rateObserved %}{{ row.negativeRate }} / {{ row.rateObserved }}{% else %}Non applicable{% endif %}</td><td>{% if row.productivityObserved %}{{ row.reducedProductivity }} / {{ row.productivityObserved }}{% else %}Non applicable{% endif %}</td></tr>{% endfor %}
+</tbody></table></div>
+{% else %}<p>Aucune colonie exploitable sur cette page. Les valeurs ne sont pas assimilées à des stocks nuls.</p>{% endif %}
+<p>Un stock nul ou une productivité réduite signale une tension à examiner, pas une commande refusée démontrée. Les demandes impossibles faute de ressources ne sont pas historisées. La productivité n’est définie que pour les ressources produites par des usines présentes ; l’électricité n’a pas cet indicateur.</p>
+<nav aria-label="Pages des observations de ressources">{% if metrics.resources.page > 1 %}<a class="secondary" href="{{ path('app_admin_universe_metrics', {id: universe.id, page: metrics.resources.page - 1}) }}#metrics-resources">Page précédente</a>{% endif %} {% if metrics.resources.page < metrics.resources.pages %}<a class="secondary" href="{{ path('app_admin_universe_metrics', {id: universe.id, page: metrics.resources.page + 1}) }}#metrics-resources">Page suivante</a>{% endif %}</nav>
+</section>
+
+<section class="panel" id="metrics-recovery" aria-labelledby="recovery-title">
+<h2 id="recovery-title">Récupération après des pertes</h2>
+<dl><dt>Participations actuellement protégées après fortes pertes</dt><dd>{{ metrics.recovery.protected }}</dd><dt>Participations ayant une dernière activation conservée</dt><dd>{{ metrics.recovery.membersWithRecordedProtection }}</dd></dl>
+<p>La protection est liée aux pertes militaires, même dans une bataille gagnée. Ce n’est ni un compteur de défaites ni le nombre total d’activations.</p>
+<h3>Verdicts des rapports de combat conservés</h3>
+{% set outcomeLabels = {'attacker_wins': 'Victoire des attaquants', 'defender_wins': 'Victoire de la défense', 'draw': 'Égalité'} %}
+<ul>{% for outcome, count in metrics.recovery.outcomes %}<li>{{ outcomeLabels[outcome]|default('Verdict non reconnu') }} : {{ count }}</li>{% else %}<li>Aucun rapport de combat enregistré dans cet univers.</li>{% endfor %}</ul>
+<p><strong>Durée pour reconstituer les forces après une défaite : non disponible.</strong> Il manque un historique des forces et des productions. Les dates de départ des flottes peuvent être réécrites au retour et ne mesurent pas cette récupération.</p>
+</section>
+</div>
+{% endblock %}

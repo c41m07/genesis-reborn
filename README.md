@@ -52,6 +52,8 @@ Pour les scripts exécutés depuis WSL si le domaine local ne se résout pas, ut
 
 Les [scénarios de validation et de reprise](docs/SERVER_SCENARIOS.md) décrivent les essais locaux isolés, la progression sans client connecté et les vérifications restant à mener sur serveur de test. Ils ne constituent pas une validation de l’Alpha hébergée.
 
+L’admin propose des [mesures par univers](docs/UNIVERSE_METRICS.md) : ancienneté, niveaux actuels, attentes des files, ressources et protections après pertes. Les données manquantes et la couverture des observations sont explicites ; aucun délai historique de progression ou de récupération n’est inventé et aucun équilibrage n’est modifié.
+
     make help
     make start
     make stop

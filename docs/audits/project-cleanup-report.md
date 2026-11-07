@@ -29,3 +29,9 @@ Vérification F : 17 liens du README, 35 de l’index, 1 du guide de sauvegarde,
 Chantier G : ajout au README d’un lien vers la matrice active des scénarios serveur. Les preuves locales de progression sans client et de reprise des processus sont séparées des procédures préparées et des validations de l’Alpha restant à exécuter. Aucune commande, dépendance ou règle de jeu modifiée.
 
 Vérification G : 18 liens du README, 36 de l’index, 10 de la ROADMAP et 1 du guide des scénarios existent. Le mode de test à volumes persistants est exécuté localement, avec nettoyage de ses propres volumes vérifié. Les 92 scénarios réussissent en deux lots complets sans reprise ciblée ; les résultats hébergés restent distincts.
+
+Chantier H : README complété par le guide des mesures par univers. Les indicateurs existants, leur couverture et les durées historiques indisponibles sont distingués ; aucune cible de progression n’est déclarée atteinte. Nouvelle page admin en lecture seule, sans migration ni modification d’équilibrage. Documentation de référence conservée sans dupliquer les règles.
+
+Vérification documentaire H : 19 liens locaux du README, 37 de l’index, 11 de la ROADMAP et 3 du guide des mesures existent. Les limites d’historique, les dénominateurs de productivité, la pagination et le traitement des univers fermés sont documentés sans annoncer de validation de l’Alpha.
+
+Validation H : les six contrôles réussissent, avec 228 tests PHP/205638 assertions, 13 tests Python et 93 scénarios navigateur en deux lots complets sans reprise finale. Les corrections de contraste ciblées antérieures sont tracées ; aucun test n’a été affaibli. Observation mobile et contrôles automatiques ciblés réalisés, sans revendiquer un audit RGAA complet ni une validation de production.

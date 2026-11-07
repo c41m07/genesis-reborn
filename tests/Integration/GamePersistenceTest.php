@@ -997,6 +997,168 @@ final class GamePersistenceTest extends KernelTestCase
             self::fail('Une escorte ne doit pas être acceptée pour l’espionnage.');
         } catch (\DomainException) {}
     }
+    public function testUniverseMetricsSeparateUniversesAndNeverMaterializeProgression(): void
+    {
+        $clock = $this->clock();
+        $first = $this->player('MetricsOne');
+        $planet = $this->join($first);
+        $second = $this->player('MetricsTwo');
+        $this->join($second);
+        $membership = $first->currentPlayerUniverse;
+        $membership->joinedAt = $clock->now()->modify('-1 hour');
+        $membership->lastRecoveryProtectionAt = $clock->now()->modify('-10 minutes');
+        $membership->recoveryProtectedUntil = $clock->now()->modify('+1 hour');
+        $second->currentPlayerUniverse->joinedAt = $clock->now()->modify('-3 hours');
+        $foreign = new PlayerUniverse();
+        $foreign->player = $first;
+        $foreign->universe = $this->em->getRepository(Universe::class)->findOneBy(['slug' => 'omega-1']);
+        $foreign->joinedAt = $clock->now()->modify('-1 year');
+        $foreign->recoveryProtectedUntil = $clock->now()->modify('+1 day');
+        $this->em->persist($foreign);
+        $foreignPlanet = self::getContainer()->get(\App\Repository\GameRepository::class)->planets($foreign->universe, null, true)[0];
+        $foreignPlanet->owner = $foreign;
+        $building = new PlanetBuilding();
+        $building->planet = $planet;
+        $building->slug = 'lab';
+        $building->level = 2;
+        $this->em->persist($building);
+        $technology = new PlayerTechnology();
+        $technology->playerUniverse = $membership;
+        $technology->slug = 'engineering_foundations';
+        $technology->level = 3;
+        $this->em->persist($technology);
+        $foreignBuilding = clone $building;
+        $foreignBuilding->planet = $foreignPlanet;
+        $foreignBuilding->level = 99;
+        $this->em->persist($foreignBuilding);
+        $foreignTechnology = clone $technology;
+        $foreignTechnology->playerUniverse = $foreign;
+        $foreignTechnology->level = 77;
+        $this->em->persist($foreignTechnology);
+        foreach ([['building', null, 60, 100], ['research', 30, 120, 100], ['shipyard', 90, 180, 60]] as $index => [$type, $started, $queued, $duration]) {
+            $item = new QueueItem();
+            $item->planet = $planet;
+            $item->playerUniverse = $membership;
+            $item->queueType = $type;
+            $item->itemSlug = 'metrics-fixture';
+            $item->durationSeconds = $duration;
+            $item->queuedAt = $clock->now()->modify('-'.$queued.' seconds');
+            $item->startedAt = $started === null ? null : $clock->now()->modify('-'.$started.' seconds');
+            $item->dispatchToken = sprintf('00000000-0000-4000-8000-%012d', $index);
+            $this->em->persist($item);
+        }
+        $foreignItem = clone $item;
+        $foreignItem->planet = $foreignPlanet;
+        $foreignItem->playerUniverse = $foreign;
+        $foreignItem->startedAt = null;
+        $foreignItem->queuedAt = $clock->now()->modify('-1 day');
+        $foreignItem->dispatchToken = '00000000-0000-4000-8000-000000000099';
+        $this->em->persist($foreignItem);
+        $futureItem = clone $item;
+        $futureItem->startedAt = null;
+        $futureItem->queuedAt = $clock->now()->modify('+1 second');
+        $futureItem->dispatchToken = '00000000-0000-4000-8000-000000000100';
+        $this->em->persist($futureItem);
+        foreach ([[$planet, 'defender_wins'], [$foreignPlanet, 'attacker_wins']] as [$combatPlanet, $outcome]) {
+            $event = new \App\Entity\CombatEvent();
+            $event->planet = $combatPlanet;
+            $event->startedAt = $clock->now()->modify('-1 minute');
+            $event->resolveAt = $clock->now();
+            $event->seed = 1;
+            $event->status = 'resolved';
+            $log = new \App\Entity\CombatLog();
+            $log->combatEvent = $event;
+            $log->outcome = $outcome;
+            $log->resolvedAt = $clock->now();
+            $this->em->persist($event);
+            $this->em->persist($log);
+        }
+        $metal = $this->em->getRepository(PlanetResource::class)->findOneBy(['planet' => $planet, 'resourceType' => 'metal']);
+        $metal->currentStock = 0;
+        $metal->lastUpdatedAt = $clock->now();
+        $this->em->flush();
+        $connection = $this->em->getConnection();
+        $tables = ['player_universe', 'queue_item', 'planet_resource', 'planet_building', 'player_technology', 'combat_log'];
+        $before = [];
+        foreach ($tables as $table) $before[$table] = $connection->fetchAllAssociative('SELECT * FROM '.$table.' ORDER BY id');
+        $service = self::getContainer()->get(\App\Service\Admin\UniverseMetricsService::class);
+        $metrics = $service->snapshot($membership->universe);
+        self::assertSame(2, $metrics['progression']['members']);
+        self::assertEquals(7200, $metrics['progression']['age']['median']);
+        self::assertSame(2, $metrics['progression']['buildingLevels']);
+        self::assertSame(3, $metrics['progression']['researchLevels']);
+        self::assertSame(4, $metrics['queues']['total']);
+        self::assertSame(1, $metrics['queues']['invalidDates']);
+        self::assertSame(60, $metrics['queues']['pending']['median']);
+        self::assertSame(70, $metrics['queues']['remaining']['max']);
+        self::assertSame(1, $metrics['queues']['overdue']);
+        self::assertSame(1, $metrics['recovery']['protected']);
+        self::assertSame(['defender_wins' => 1], $metrics['recovery']['outcomes']);
+        self::assertSame(1, $metrics['resources']['rows']['metal']['empty']);
+        self::assertSame(0, $metrics['resources']['rows']['electricity']['productivityObserved']);
+        self::assertSame(1, $service->snapshot($foreign->universe)['progression']['members']);
+        $this->em->flush();
+        foreach ($tables as $table) self::assertSame($before[$table], $connection->fetchAllAssociative('SELECT * FROM '.$table.' ORDER BY id'), $table.' doit rester inchangée.');
+    }
 
+    public function testUniverseResourceMetricsBoundPagesAndDistinguishMissingData(): void
+    {
+        $clock = $this->clock();
+        $player = $this->player('MetricsPages');
+        $home = $this->join($player);
+        $universe = $player->currentPlayerUniverse->universe;
+        $planets = self::getContainer()->get(\App\Repository\GameRepository::class)->planets($universe, null, true);
+        self::assertGreaterThanOrEqual(25, count($planets));
+        foreach (array_slice($planets, 0, 25) as $planet) $planet->owner = $player->currentPlayerUniverse;
+        $metal = $this->em->getRepository(PlanetResource::class)->findOneBy(['planet' => $home, 'resourceType' => 'metal']);
+        $metal->lastUpdatedAt = $clock->now()->modify('+1 second');
+        $this->em->flush();
+        $resourceCount = $this->em->getRepository(PlanetResource::class)->count();
+        $service = self::getContainer()->get(\App\Service\Admin\UniverseMetricsService::class);
+        $first = $service->snapshot($universe, -10)['resources'];
+        $last = $service->snapshot($universe, PHP_INT_MAX)['resources'];
+        self::assertSame(26, $first['total']);
+        self::assertSame(1, $first['page']);
+        self::assertSame(2, $last['page']);
+        self::assertSame(0, $first['observed'] + $last['observed']);
+        self::assertSame(26, $first['unavailable'] + $last['unavailable']);
+        self::assertNull($first['rows']['metal']['stockPercent']);
+        self::assertSame($resourceCount, $this->em->getRepository(PlanetResource::class)->count());
+        foreach ($this->em->getRepository(PlanetResource::class)->findBy(['planet' => $home]) as $resource) $resource->lastUpdatedAt = $clock->now()->modify('-1 day');
+        $metal->currentStock = 1234;
+        $mine = new PlanetBuilding();
+        $mine->planet = $home;
+        $mine->slug = 'mine_metal';
+        $mine->level = 1;
+        $this->em->persist($mine);
+        $this->em->flush();
+        $activePages = [$service->snapshot($universe, 1)['resources'], $service->snapshot($universe, 2)['resources']];
+        $active = array_values(array_filter($activePages, static fn (array $page): bool => $page['observed'] === 1))[0];
+        $universe->status = 'closed';
+        $this->em->flush();
+        $closedPages = [$service->snapshot($universe, 1)['resources'], $service->snapshot($universe, 2)['resources']];
+        $closed = array_values(array_filter($closedPages, static fn (array $page): bool => $page['observed'] === 1))[0];
+        $capacity = self::getContainer()->get(ResourceService::class)->capacity($home, 'metal', ['mine_metal' => ['basic' => 1]]);
+        self::assertEqualsWithDelta(100 * 1234 / $capacity, $closed['rows']['metal']['stockPercent'], 1e-8);
+        self::assertGreaterThan($closed['rows']['metal']['stockPercent'], $active['rows']['metal']['stockPercent']);
+        self::assertSame(0, $closed['rows']['metal']['rateObserved']);
+        self::assertSame(0, $closed['rows']['metal']['productivityObserved']);
+    }
+
+    public function testEmptyUniverseMetricsKeepUnknownDurationsDistinctFromZeroCounts(): void
+    {
+        $universe = new Universe();
+        $universe->slug = 'metrics-empty';
+        $universe->name = 'Univers vide de test';
+        $this->em->persist($universe);
+        $this->em->flush();
+        $metrics = self::getContainer()->get(\App\Service\Admin\UniverseMetricsService::class)->snapshot($universe);
+        self::assertSame(0, $metrics['progression']['members']);
+        self::assertNull($metrics['progression']['age']['median']);
+        self::assertSame(0, $metrics['queues']['total']);
+        self::assertNull($metrics['queues']['pending']['median']);
+        self::assertSame([], $metrics['recovery']['outcomes']);
+        self::assertSame(0, $metrics['resources']['observed']);
+    }
 
 }
