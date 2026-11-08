@@ -24,3 +24,13 @@
 @media(max-width:500px){.admin-home-actions{grid-template-columns:1fr}.admin-monitor-toolbar{align-items:stretch;flex-direction:column}}
 
 .admin-console--organized[data-theme=light] .admin-event-row :is(time,span){color:#535f66}
+.admin-intervention-form{display:grid;gap:10px;max-width:720px;margin-top:16px}
+.admin-intervention-form :is(label,input,select,textarea){font-size:13px;margin:0}
+.admin-intervention-form label{color:var(--text)}
+.admin-intervention-form button{min-height:44px;font-size:13px}
+.admin-intervention-form textarea{min-height:90px;padding:12px;border:1px solid var(--line);background:var(--bg);color:var(--text)}
+.admin-intervention-confirm{display:flex;align-items:center;gap:10px;line-height:1.5}
+.admin-intervention-confirm input{flex:none;width:22px;min-height:44px}
+.admin-resource-intervention{margin-top:12px}
+.admin-resource-intervention>summary{min-height:44px;cursor:pointer;color:var(--accent);padding:10px 0}
+.admin-resource-intervention>summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}

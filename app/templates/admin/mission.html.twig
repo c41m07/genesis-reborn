@@ -4,6 +4,15 @@
 <a class="inline-link" href="{{ path('app_admin_missions') }}">← Surveillance des missions</a>
 <div class="page-heading"><div><h1>Flotte n° {{ fleet.id }}</h1><p>{{ missions[fleet.mission]|default(fleet.mission) }} · {{ fleet.playerUniverse.universe.name }} · {{ fleet.playerUniverse.displayName }}</p></div><a class="secondary" href="{{ path('app_admin_mission', {id:fleet.id}) }}">Actualiser le contrôle</a></div>
 <p class="admin-monitor-note">État observé le {{ captured_at|date('d/m/Y H:i:s', preferences.timezone) }}. Les données actuelles ne reconstituent pas la composition ou la cargaison du départ.</p>
+{% if fleet.status in ['traveling','returning','orbiting','orbit_pending'] %}<section class="panel"><h2>Intervention administrative</h2>
+<p>Un motif et une confirmation sont obligatoires. Les missions dont l’échéance est atteinte ou engagées dans un combat ne peuvent pas être modifiées ici. La composition et la cargaison ne sont pas éditables.</p>
+<form method="post" action="{{ path('app_admin_mission_intervention',{id:fleet.id}) }}" class="admin-intervention-form">
+<input type="hidden" name="_token" value="{{ csrf_token('admin_fleet_'~fleet.id) }}"><input type="hidden" name="request_key" value="{{ request_key }}"><input type="hidden" name="expected_version" value="{{ fleet_version }}">
+<label for="fleet-intervention">Action</label><select id="fleet-intervention" name="operation">{% if fleet.status != 'orbit_pending' %}<option value="reschedule">Changer le délai restant</option>{% endif %}{% if fleet.status != 'returning' %}<option value="recall">Rappeler vers la colonie de départ</option>{% endif %}</select>
+<label for="fleet-seconds">Nouveau délai restant en secondes (pour un changement d’échéance)</label><input id="fleet-seconds" name="seconds" type="number" min="1" max="31536000" step="1" value="300"><p>Une seconde à un an. Le rappel conserve la durée de retour de référence et traite le carburant consommé.</p>
+<label for="fleet-reason">Motif de l’intervention (obligatoire)</label><textarea id="fleet-reason" name="reason" required maxlength="1000"></textarea>
+<label class="admin-intervention-confirm"><input type="checkbox" name="confirmed" value="1" required> Je confirme cette intervention sur la flotte n° {{ fleet.id }}.</label><button class="secondary" type="submit">Appliquer l’intervention</button>
+</form></section>{% endif %}
 <section class="panel"><h2>Situation de la mission</h2><dl class="report-facts">
 <div><dt>État</dt><dd>{{ statuses[fleet.status]|default(fleet.status) }}</dd></div>
 <div><dt>Commandant</dt><dd>{{ fleet.playerUniverse.displayName }}</dd></div>

@@ -204,3 +204,32 @@ tests de suivi après correction d’une comparaison de dates ; 13 tests des scr
 et six scénarios navigateur réussis. HTML de confidentialité contrôlé, captures
 bureau/mobile et contrastes vérifiés. Migration appliquée uniquement sur les
 bases jetables de vérification, pas sur une base existante du jeu.
+## Lot interventions — vérifié localement
+
+Complexité 5/5 : écritures sur les stocks et les missions, sans nouveau schéma.
+Les corrections par colonie sont relatives (ajout ou retrait) et atomiques pour
+l’ensemble des ressources demandées. Les droits, la propriété, l’univers et
+les stocks produits sont contrôlés sous verrou avant application. Un dépassement
+de capacité ou un solde négatif annule toute l’opération. Un identifiant de
+requête empêche de réappliquer un envoi doublé.
+
+Les flottes en aller, retour ou orbite peuvent recevoir un nouveau délai restant,
+entre une seconde et un an (borne de saisie administrative). Le rappel concerne
+l’aller, l’orbite et les demandes d’orbite en attente ; le retour utilise la durée
+de référence et les règles existantes de carburant. Aucun combat, occupation,
+mission terminée ou traitement déjà échu n’est modifié ici. Une empreinte de
+version refuse une fiche devenue périmée sans exposer le jeton du traitement.
+La replanification remplace ce jeton et crée une nouvelle tâche fiable ; l’ancienne
+tâche devient inopérante. Les rapports de transport identifient le rappel admin.
+
+Chaque intervention exige motif et confirmation explicite, avec contrôle des
+droits administrateur actuels et journal des valeurs avant/après. Les écritures
+sont testées uniquement sur les bases jetables ; aucune correction sur un joueur
+réel n’est effectuée pendant le développement.
+Contrôles réussis : validation, lint, compilation, 486 tests PHP et 13 tests des
+scripts. Huit scénarios navigateur réussissent par consolidation : les deux
+nouveaux parcours ont été repris après correction des appels à l’hôte isolé et
+du décodage SQL de leurs assertions. La revue mobile a conduit à agrandir les
+boutons, puis les deux parcours ont réussi à nouveau. Les contrats de transport,
+les jetons de tâche périmés, le refus des combats, l’atomicité et les doubles
+soumissions sont couverts. Aucun nouveau schéma dans ce lot.

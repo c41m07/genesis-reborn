@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use App\Entity\{Fleet, CombatLog, CombatParticipant, EspionageReport};
 use App\Service\Admin\AdminMissionMonitoring;
+use App\Service\Admin\AdminInterventionService;
 use App\Service\Combat\{CombatReportPresenter, OccupationReportState};
 use App\Service\Catalog\GameCatalog;
 use Doctrine\ORM\EntityManagerInterface;
@@ -27,7 +28,20 @@ final class AdminMissionController extends AbstractController
     {
         $fleet = $this->mission($id, $em);
         $monitor->recordView($this->getUser(), $fleet);
-        return $this->render('admin/mission.html.twig', $monitor->inspect($fleet));
+        return $this->render('admin/mission.html.twig', $monitor->inspect($fleet) + ['request_key'=>bin2hex(random_bytes(16)), 'fleet_version'=>hash('sha256', $fleet->dispatchToken)]);
+    }
+
+    #[Route('/admin/flottes/{id}/intervention', name: 'app_admin_mission_intervention', requirements: ['id'=>'\d+'], methods: ['POST'])]
+    public function intervene(int $id, Request $request, EntityManagerInterface $em, AdminInterventionService $interventions): Response
+    {
+        if (!$this->isCsrfTokenValid('admin_fleet_'.$id, $request->request->get('_token'))) throw $this->createAccessDeniedException('Formulaire expiré.');
+        $fleet = $this->mission($id, $em);
+        try {
+            if (!$request->request->getBoolean('confirmed')) throw new \DomainException('Confirmez explicitement l’intervention avant de l’appliquer.');
+            $changed = $interventions->fleet($this->getUser(), $fleet, (string) $request->request->get('operation'), $request->request->getInt('seconds', 0), (string) $request->request->get('reason'), (string) $request->request->get('expected_version'), (string) $request->request->get('request_key'));
+            $this->addFlash('success', $changed ? 'Intervention sur la flotte enregistrée.' : 'Cette intervention a déjà été traitée.');
+        } catch (\DomainException $error) { $this->addFlash('error', $error->getMessage()); }
+        return $this->redirectToRoute('app_admin_mission', ['id'=>$id]);
     }
 
     #[Route('/admin/flottes/{id}/combat/{reportId}', name: 'app_admin_mission_combat', requirements: ['id'=>'\d+', 'reportId'=>'\d+'], methods: ['GET'])]
