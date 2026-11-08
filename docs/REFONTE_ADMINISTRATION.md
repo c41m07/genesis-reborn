@@ -28,7 +28,7 @@ conservés. Les six contrôles ont été repris sur l’intégration : validatio
 exécution complète et contrôle des différences réussis. Les rapports de conquête
 et d’espionnage des joueurs avaient également été vérifiés sur le premier lot.
 
-Les dossiers, les alertes répétitives, la présence et le temps de jeu, les
+Les dossiers, les alertes répétitives, les
 interventions, l’assistant complet d’événements et les boîtes ne sont pas encore
 implémentés dans ce lot. Aucune migration de ce lot sur une base existante.
 
@@ -175,3 +175,32 @@ boosts issus des missions à risque reste inchangé.
 
 Toute migration nécessaire doit être préparée puis soumise à validation avant
 application sur une base existante, conformément aux consignes du dépôt.
+
+## Lot présence et temps de jeu — vérifié localement
+
+Complexité 4/5 : suivi concurrent et permissions, sans modification des règles
+économiques ou des seuils d’inactivité des empires. Une table dédiée par
+participation conserve le début du suivi, le dernier échantillon, la dernière
+interaction estimée, le total et les compteurs quotidiens récents. Un verrou sur
+la participation sérialise les onglets. Aucun temps n’est crédité pour un
+intervalle entre deux échantillons supérieur à cinq minutes. Les intervalles
+qui passent minuit sont répartis entre les journées UTC concernées ; les journées
+anciennes sont écartées lors du prochain échantillon, le total est conservé.
+
+Les visites de pages du jeu et un échantillon par minute dans une page visible
+alimentent ce suivi. Le client s’arrête après cinq minutes sans interaction,
+et au changement de participation. Les requêtes de suivi vérifient le jeton de
+formulaire et la participation courante ; elles ne modifient pas les règles
+existantes de vacances ou de conversion des empires oubliés.
+
+La fiche est accessible dans Administration → Joueurs → nom du compte.
+Ses lectures sont journalisées ; son accès reste réservé aux administrateurs.
+La migration préparée est Version20261109010000 (nouvelle table player_activity,
+sans modification des données existantes). Son application sur une base existante
+attend une validation distincte et une sauvegarde vérifiée.
+Contrôles : validation, lint, compilation et différences propres ; 478 tests PHP
+réussis par consolidation de l’exécution complète et de la reprise des trois
+tests de suivi après correction d’une comparaison de dates ; 13 tests des scripts
+et six scénarios navigateur réussis. HTML de confidentialité contrôlé, captures
+bureau/mobile et contrastes vérifiés. Migration appliquée uniquement sur les
+bases jetables de vérification, pas sur une base existante du jeu.

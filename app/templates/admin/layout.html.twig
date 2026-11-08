@@ -23,7 +23,7 @@
 <a href="{{ path('app_admin_missions') }}" {% if missionPage %}class="active" aria-current="page"{% endif %}>{{ ui.icon('fleet') }} Flottes et transports</a>
 <a href="{{ path('app_admin_security') }}" {% if currentRoute=='app_admin_security' %}class="active" aria-current="page"{% endif %}>{{ ui.icon('clock') }} Sécurité{% include 'ui/admin_notification_badge.html.twig' with {category:'security',count:adminNotifications.security} only %}</a>
 <span class="admin-nav-group">Gestion</span>
-<a href="{{ path('app_admin_players') }}" {% if currentRoute=='app_admin_players' %}class="active" aria-current="page"{% endif %}>{{ ui.icon('user') }} Joueurs</a>
+<a href="{{ path('app_admin_players') }}" {% if currentRoute in ['app_admin_players','app_admin_player'] %}class="active" aria-current="page"{% endif %}>{{ ui.icon('user') }} Joueurs</a>
 <a href="{{ path('app_admin_universes') }}" {% if currentRoute in ['app_admin_universes','app_admin_universe_metrics','app_admin_catalogue'] %}class="active" aria-current="page"{% endif %}>{{ ui.icon('universe') }} Univers</a>
 <span class="admin-nav-group">Événements et communication</span>
 <a href="{{ path('app_admin_game_events') }}" {% if currentRoute starts with 'app_admin_game_event' %}class="active" aria-current="page"{% endif %}>{{ ui.icon('notifications') }} Événements</a>

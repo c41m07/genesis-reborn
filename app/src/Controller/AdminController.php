@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use App\Entity\{AdminAuditLog, GameEvent, MessageReport, Player, PlayerUniverse, Universe};
 use App\Service\Admin\AdminMissionMonitoring;
+use App\Service\Player\PlayerActivityService;
 use App\Repository\GameRepository;
 use App\Service\Admin\AdminService;
 use App\Service\Admin\AdminOperationsService;
@@ -28,7 +29,7 @@ final class AdminController extends AbstractController
     #[Route('/securite', name: '_security', methods: ['GET'], defaults: ['screen'=>'security'])]
     #[Route('/exploitation', name: '_operations', methods: ['GET'], defaults: ['screen'=>'operations'])]
     #[Route('/journal', name: '_audit', methods: ['GET'], defaults: ['screen'=>'audit'])]
-    public function index(Request $request, GameRepository $repo, GameCatalog $catalog, AdminService $admin, AdminOperationsService $operations, AdminNotificationService $notifications, AdminMissionMonitoring $monitor, string $screen = 'overview'): Response
+    public function index(Request $request, GameRepository $repo, GameCatalog $catalog, AdminService $admin, AdminOperationsService $operations, AdminNotificationService $notifications, AdminMissionMonitoring $monitor, PlayerActivityService $presence, string $screen = 'overview'): Response
     {
         $titles = ['overview'=>'Accueil', 'players'=>'Joueurs', 'universes'=>'Univers', 'reports'=>'Modération', 'security'=>'Sécurité', 'operations'=>'Exploitation', 'audit'=>'Journal des actions'];
         if (!isset($titles[$screen])) throw $this->createNotFoundException();
@@ -66,6 +67,7 @@ final class AdminController extends AbstractController
             'fleetOverview'=>$screen === 'overview' ? $monitor->search(['universe'=>0, 'mission'=>'', 'status'=>'active', 'q'=>''], 1) : [],
             'upcomingEvents'=>$screen === 'overview' ? array_slice(array_filter($repo->all(GameEvent::class, ['status'=>['planned', 'active']], ['startsAt'=>'ASC']), static fn (GameEvent $event): bool => $event->endsAt > $now), 0, 5) : [],
             'players' => $players,
+            'playerPresence' => $screen === 'players' ? $presence->forPlayers($players) : [],
             'playerCount' => count($players),
             'suspendedPlayerCount' => $suspendedPlayerCount,
             'activeUniverseCount' => $activeUniverseCount,
