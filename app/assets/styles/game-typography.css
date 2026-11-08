@@ -14,6 +14,8 @@ body.authenticated .mission-report :is(.data-table,.round-table){font-size:12px}
 body.authenticated .message-bubble>p{font-size:13px;line-height:1.65;overflow-wrap:anywhere}
 body.authenticated .message-meta{font-size:11px;flex-wrap:wrap}
 body.authenticated .message-compose textarea{font-size:14px;line-height:1.5}
+body.authenticated .boost-operation{padding-block:16px;border-top:1px solid var(--line);overflow-wrap:anywhere}
+body.authenticated .boost-operation .secondary{font-size:12px;white-space:normal}
 
 @media(max-width:1050px){
     body.authenticated :is(input:not([type="hidden"],[type="checkbox"],[type="radio"],[type="submit"],[type="button"]),select,textarea),
