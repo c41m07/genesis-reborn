@@ -23,6 +23,7 @@ final class BoostUseService
         private QueueService $queues,
         private FleetService $fleets,
         private ClockInterface $clock,
+        private \App\Service\Player\VacationCalendar $vacations,
     ) {}
 
     public function useOnQueue(PlayerUniverse $membership, int $queueId, string $requestKey): void
@@ -50,6 +51,7 @@ final class BoostUseService
     {
         $this->manager->transaction(function () use ($membership, $fleetId, $requestKey): void {
             $this->guard->lockMembership($membership);
+            $this->vacations->assertCanSendFleet($membership);
             if (!$this->guard->receipt($membership, $requestKey)) {
                 return;
             }

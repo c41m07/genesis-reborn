@@ -90,7 +90,7 @@ test('Conquête PNJ : rapport détaillé, résultat, responsive et confidentiali
   expect(await page.locator('main table tbody tr').count()).toBeGreaterThan(0);
   await losses.focus();
   await expect(losses).toBeFocused();
-  await expect(page.getByRole('heading', { name: 'Conquête', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Conquête JcE', exact: true })).toBeVisible();
   await losses.evaluate(element => element.blur());
 
   await expect(page.locator('main')).toContainText(/Vous avez conquis cette planète PNJ|La conquête a échoué|la limite de colonies empêche|déjà été revendiquée|aucun vaisseau colonie n’a survécu/i);

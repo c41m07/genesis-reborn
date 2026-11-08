@@ -8,13 +8,14 @@ use App\Service\Requirement\RequirementChecker;
 use App\Service\Colony\{ResourceService,ActionGuard};
 use Psr\Clock\ClockInterface;
 use Symfony\Component\Uid\Uuid;
+use App\Service\Player\VacationCalendar;
 final class QueueService
 {
-    public function __construct(private GameManager $manager,private GameRepository $repo,private GameCatalog $catalog,private RequirementChecker $requirements,private ResourceService $resources,private ActionGuard $guard,private ClockInterface $clock,private \App\Service\Notification\NotificationService $notifications,private OperationCalculator $calculator,private \App\Service\Requirement\CatalogAccess $access) {}
+    public function __construct(private GameManager $manager,private GameRepository $repo,private GameCatalog $catalog,private RequirementChecker $requirements,private ResourceService $resources,private ActionGuard $guard,private ClockInterface $clock,private \App\Service\Notification\NotificationService $notifications,private OperationCalculator $calculator,private \App\Service\Requirement\CatalogAccess $access,private VacationCalendar $vacations) {}
     public function add(PlayerUniverse $m,Planet $planet,string $group,string $slug,int $quantity,string $requestKey,string $tier='basic'): void
     {
         $this->manager->transaction(function()use($m,$planet,$group,$slug,$quantity,$requestKey,$tier){
-            $this->guard->lock($m,$planet);$this->settleMembershipLocked($m);
+            $this->guard->lock($m,$planet);$this->vacations->assertCanManageQueues($m);$this->settleMembershipLocked($m);
             if(!$this->guard->receipt($m,$requestKey)) return;
             if(!in_array($group,['buildings','technologies','ships','defenses'],true)) throw new \DomainException('Type de construction invalide.');
             if(!in_array($tier,GameCatalog::TIERS,true)) throw new \DomainException('Rang de progression invalide.');
@@ -53,19 +54,20 @@ final class QueueService
     public function synchronize(PlayerUniverse $m): void
     {
         $this->manager->transaction(function()use($m){
-            $this->guard->lockMembership($m);$this->settleMembershipLocked($m);
+            $this->guard->lockMembershipForProcessing($m);$this->settleMembershipLocked($m);
         });
     }
-    private function settleMembershipLocked(PlayerUniverse $m): void
+    private function settleMembershipLocked(PlayerUniverse $m,?\DateTimeImmutable $until=null): void
     {
         $this->access->captureLocked($m);
         foreach($this->repo->planets($m->universe,$m) as $planet) {
-            $this->manager->lock($planet);$this->settlePlanetLocked($planet,$this->clock->now());
+            $this->manager->lock($planet);$this->settlePlanetLocked($planet,$until??$this->clock->now());
         }
         $this->access->captureLocked($m);
     }
     private function settlePlanetLocked(Planet $planet,\DateTimeImmutable $until): void
     {
+        if ($planet->owner !== null && $this->vacations->isActive($planet->owner,$until)) return;
         while(true) {
             $due=[];
             foreach(['building','research','shipyard'] as $type) {
@@ -109,7 +111,7 @@ final class QueueService
     {
         $this->manager->transaction(function()use($id,$token){
             $item=$this->repo->find(QueueItem::class,$id);if(!$item) return;
-            $planet=$item->planet;$this->guard->lock($item->playerUniverse,$planet);
+            $planet=$item->planet;$this->guard->lockForCompletion($item->playerUniverse,$planet);
             $head=$this->repo->queue($planet,$item->queueType)[0]??null;
             if(!$head || $head->id!==$id || !hash_equals($head->dispatchToken,$token) || !$head->startedAt) return;
             $this->settleMembershipLocked($item->playerUniverse);
@@ -117,6 +119,7 @@ final class QueueService
     }
     public function applyPlayerBoost(QueueItem $item, float $divisor): void
     {
+        $this->vacations->assertCanManageQueues($item->playerUniverse);
         if (!$item->startedAt || $divisor <= 1) {
             throw new \DomainException('Opération active introuvable.');
         }
@@ -130,6 +133,7 @@ final class QueueService
     {
         $this->manager->transaction(function()use($m,$id,$divisor,$key){
             $this->guard->lockMembership($m);
+            $this->vacations->assertCanManageQueues($m);
             if(!$this->guard->receipt($m,$key)) return;
             $this->settleMembershipLocked($m);$item=$this->repo->find(QueueItem::class,$id);
             if(!$item || $item->playerUniverse->id!==$m->id || !$item->startedAt) throw new \DomainException('Opération active introuvable.');
@@ -143,7 +147,7 @@ final class QueueService
         $this->manager->transaction(function()use($m,$id,$key){
             $item=$this->repo->find(QueueItem::class,$id);
             if(!$item) return;
-            $this->guard->lock($m,$item->planet);$this->settleMembershipLocked($m);
+            $this->guard->lock($m,$item->planet);$this->vacations->assertCanManageQueues($m);$this->settleMembershipLocked($m);
             $item=$this->repo->find(QueueItem::class,$id);if(!$item) return;
             if(!$this->guard->receipt($m,$key)) return;
             if($item->playerUniverse->id!==$m->id) throw new \DomainException('Commande inaccessible.');
@@ -155,6 +159,27 @@ final class QueueService
             }
         });
     }
+    /** Appelé avec la participation verrouillée par le service de vacances. */
+    public function pauseForVacationLocked(PlayerUniverse $membership,\DateTimeImmutable $at,\DateTimeImmutable $until): void
+    {
+        $this->settleMembershipLocked($membership,$at);
+        $this->shiftVacationHeadsLocked($membership,$until->getTimestamp()-$at->getTimestamp());
+    }
+
+    /** Annule seulement la partie inutilisée des 90 jours déjà reportés. */
+    public function resumeAfterVacationLocked(PlayerUniverse $membership,int $unusedSeconds): void
+    {
+        if($unusedSeconds>0) $this->shiftVacationHeadsLocked($membership,-$unusedSeconds);
+    }
+
+    private function shiftVacationHeadsLocked(PlayerUniverse $membership,int $seconds): void
+    {
+        foreach($this->repo->all(QueueItem::class,['playerUniverse'=>$membership]) as $item) {
+            if($item->startedAt===null) continue;
+            $this->start($item,$item->startedAt->setTimestamp($item->startedAt->getTimestamp()+$seconds));
+        }
+    }
+
     private function removeTree(QueueItem $item): void
     {
         foreach($this->repo->all(QueueItem::class,['dependsOn'=>$item]) as $dependent) $this->removeTree($dependent);
@@ -162,6 +187,30 @@ final class QueueService
         $paid=$item->paidCosts??$this->catalog->costs($this->catalog->getTierForUniverse($item->playerUniverse->universe,$group,$item->itemSlug,$item->tier),$item->itemLevel??1,$item->quantity,$group);
         $this->resources->refund($item->planet,$paid,$this->catalog->rules()['cancellation_refund_ratio']);
         $this->manager->remove($item);
+    }
+    /** Annulation de capture sans remboursement ; les commandes échues ont déjà été traitées sous verrou. */
+    public function cancelForCaptureLocked(Planet $planet,?PlayerUniverse $formerOwner): array
+    {
+        $items=[];$collect=function(QueueItem $item)use(&$collect,&$items,$formerOwner): void {
+            if(isset($items[$item->id])) return;
+            if($formerOwner===null || $item->playerUniverse->id!==$formerOwner->id) throw new \DomainException('Une commande de cette planète appartient à un autre empire.');
+            $items[$item->id]=$item;
+            foreach($this->repo->all(QueueItem::class,['dependsOn'=>$item]) as $dependent) $collect($dependent);
+        };
+        foreach($this->repo->queue($planet) as $item) $collect($item);
+        $journal=[];$planets=[$planet->id=>$planet];
+        foreach($items as $item) {
+            $journal[]=['id'=>$item->id,'planet_id'=>$item->planet->id,'type'=>$item->queueType,'slug'=>$item->itemSlug,'tier'=>$item->tier,
+                'level'=>$item->itemLevel,'quantity'=>$item->quantity,'paid_costs'=>$item->paidCosts];
+            $planets[$item->planet->id]=$item->planet;$this->manager->remove($item);
+        }
+        $this->manager->flush();
+        foreach($planets as $affected) foreach(['building','research','shipyard'] as $type) {
+            $head=$this->repo->queue($affected,$type)[0]??null;
+            if($head!==null && $head->startedAt===null) $this->start($head,$this->clock->now());
+            $field=$type.'QueueStartedAt';$affected->$field=$head?->startedAt;
+        }
+        return $journal;
     }
 }
 

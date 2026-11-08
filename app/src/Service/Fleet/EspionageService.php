@@ -9,15 +9,18 @@ use App\Service\Colony\ResourceService;
 use App\Service\Notification\NotificationService;
 use App\Service\Universe\PlanetNpcSeeder;
 use Psr\Clock\ClockInterface;
+use App\Service\Player\VacationCalendar;
 
 final class EspionageService
 {
-    public function __construct(private GameRepository $repo, private GameManager $manager, private GameCatalog $catalog, private ResourceService $resources, private PlanetNpcSeeder $npcSeeder, private NotificationService $notifications, private ClockInterface $clock, private \Random\Randomizer $randomizer) {}
+    public function __construct(private GameRepository $repo, private GameManager $manager, private GameCatalog $catalog, private ResourceService $resources, private PlanetNpcSeeder $npcSeeder, private NotificationService $notifications, private ClockInterface $clock, private \Random\Randomizer $randomizer, private VacationCalendar $vacations) {}
 
     /** Résout une mission d'espionnage dans la transaction d'arrivée de flotte. */
     public function resolve(Fleet $fleet, int $probeCount): EspionageReport
     {
         $target = $fleet->destination ?? throw new \LogicException('Destination d’espionnage absente.');
+        $this->vacations->assertCanSendFleet($fleet->playerUniverse);
+        if ($target->owner!==null && $this->vacations->isActive($target->owner)) throw new \DomainException('Cet empire est protégé par le mode vacances.');
         if ($probeCount < 1) throw new \LogicException('Une mission d’espionnage doit transporter une sonde.');
         $this->npcSeeder->seed($target);
         $this->manager->flush();
@@ -121,7 +124,7 @@ final class EspionageService
         $owner = $target->owner;
         if (!$owner) return;
         $known = (bool) $this->repo->one(PlayerDiscovery::class, ['playerUniverse' => $owner, 'solarSystem' => $fleet->homePlanet->solarSystem]);
-        $identity = $known ? ' par ' . $fleet->playerUniverse->player->username : '';
+        $identity = $known ? ' par ' . $fleet->playerUniverse->getDisplayName() : '';
         $this->notifications->enqueue($owner, 'Sondes d’espionnage détectées sur ' . $target->name . ' depuis ' . $fleet->homePlanet->coordinates() . $identity . '.');
     }
 }

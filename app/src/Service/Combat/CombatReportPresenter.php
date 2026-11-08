@@ -7,11 +7,19 @@ final class CombatReportPresenter
     public function present(array $snapshot, array $rounds, int $membershipId): array
     {
         $viewerCamp = 'defenders';
+        $viewerDefends=true;$participates=false;
         foreach ($snapshot['participants'] ?? [] as $participant) {
             if ((int) ($participant['player_universe_id'] ?? 0) === $membershipId) {
                 $viewerCamp = $participant['camp'] ?? (($participant['role'] ?? '') === 'attacker' ? 'attackers' : 'defenders');
+                $viewerDefends=($participant['role']??null)==='defender';$participates=true;
                 break;
             }
+        }
+        $viewerVerdict=null;$occupationResult=$snapshot['occupation_result']??null;
+        if($participates && is_array($occupationResult)) {
+            $winner=$occupationResult['winner_camp']??null;
+            $viewerVerdict=$winner!==null?($viewerCamp===$winner?'win':'loss'):
+                (($occupationResult['holding_camp']??null)===$viewerCamp?'hold':(($occupationResult['outcome']??null)==='draw'?'draw':'loss'));
         }
         $groups = [];
         $units = [];
@@ -79,7 +87,7 @@ final class CombatReportPresenter
         }
         unset($row);
 
-        return ['rows' => array_values($groups), 'round_details' => $details, 'reconstruction' => array_values($reconstruction), 'viewer_defends' => $viewerCamp === 'defenders'];
+        return ['rows' => array_values($groups), 'round_details' => $details, 'reconstruction' => array_values($reconstruction), 'viewer_defends' => $viewerDefends, 'viewer_verdict'=>$viewerVerdict];
     }
 
     private function addGroup(array &$groups, array &$units, array $unit, string $owner, string $role, string $side, string $label, int $round, array $snapshot): void

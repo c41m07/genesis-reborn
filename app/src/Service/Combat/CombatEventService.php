@@ -28,6 +28,8 @@ use App\Service\Colony\ResourceService;
 use App\Service\Notification\NotificationService;
 use App\Service\Player\RelationResolver;
 use App\Service\Player\LeaderboardService;
+use App\Service\Player\PlayerProtection;
+use App\Service\Player\VacationCalendar;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\Uid\Uuid;
 
@@ -48,47 +50,77 @@ final class CombatEventService
         private PlanetNameGenerator $planetNames,
         private BoostGrantService $boostGrants,
         private BoostEventService $boostEvents,
+        private PlayerProtection $playerProtection,
+        private VacationCalendar $vacations,
+        private OccupationService $occupations,
     ) {}
 
     public function canAttack(PlayerUniverse $attacker, Planet $target): bool
     {
         $defender = $target->owner;
+        if(!$attacker->isPlayerControlled()) return false;
+        $occupation=$this->occupations->activeFor($target);
+        if($occupation!==null) {
+            if(!$this->occupations->isEnabled() || !$this->occupations->canOccupy($attacker) || $attacker->universe->id!==$occupation->occupant->universe->id) return false;
+            $friendly=$attacker->id===$occupation->occupant->id || $this->relations->allied($attacker,$occupation->occupant);
+            return !$friendly || $this->occupationHasHostiles($target,$occupation->occupant);
+        }
+        if($this->occupations->isEnabled() && !$this->occupations->canOccupy($attacker)) return false;
         if ($defender === null || $defender->universe->id !== $attacker->universe->id || $this->relations->allied($attacker, $defender)) return false;
+        if ($this->vacations->isActive($attacker) || $this->vacations->isActive($defender)) return false;
+        if($defender->isForgotten()) return true;
         $rules = $this->catalog->rules();
-        $now = $this->clock->now();
-        if ($defender->recoveryProtectedUntil !== null && $defender->recoveryProtectedUntil > $now) return false;
         $scores = [];
         foreach ($this->leaderboard->forUniverse($attacker) as $row) $scores[$row['membership']->id] = (int) $row['total_points'];
         $attackerScore = $scores[$attacker->id] ?? 0;
         $defenderScore = $scores[$defender->id] ?? 0;
         $protection = $rules['new_player_protection'] ?? [];
-        $duration = max(0, (int) ($protection['duration_seconds'] ?? 0));
-        $scoreLimit = max(0, (int) ($protection['score_limit'] ?? 0));
-        $stillNew = $duration > 0 && $defender->joinedAt->modify('+' . $duration . ' seconds') > $now && $defenderScore < $scoreLimit;
-        if ($stillNew) return false;
+        if ($this->playerProtection->status($defender, $defenderScore)['active']) return false;
         $ratio = max(1.0, (float) ($protection['attacker_score_ratio'] ?? 5));
         return $attackerScore <= max(1, $defenderScore) * $ratio;
     }
 
     public function canConquer(PlayerUniverse $attacker, ?Planet $target): bool
     {
+        if($target!==null && ($occupation=$this->occupations->activeFor($target))!==null) return $this->occupations->isEnabled()
+            && $this->occupations->canOccupy($attacker) && $attacker->universe->id===$occupation->occupant->universe->id
+            && $attacker->id!==$occupation->occupant->id && !$this->relations->allied($attacker,$occupation->occupant)
+            && (bool)($this->catalog->forUniverse($attacker->universe)['features']['planet_conquest']??false);
+        if($this->occupations->isEnabled()) return $target!==null && $this->occupations->canStartOn($attacker,$target)
+            && (bool)($this->catalog->forUniverse($attacker->universe)['features']['planet_conquest']??false);
         return $target !== null
             && $target->owner === null
             && $target->npcPlanet
             && $target->solarSystem->galaxy->universe->id === $attacker->universe->id
+            && !$this->vacations->isActive($attacker)
             && (bool) ($this->catalog->forUniverse($attacker->universe)['features']['planet_conquest'] ?? false);
     }
 
     public function canDefend(PlayerUniverse $defender, ?Planet $target): bool
     {
+        if($target!==null && $this->occupations->activeFor($target)!==null) return $this->occupations->canReinforce($defender,$target);
         return $target !== null && $target->owner !== null
-            && $target->owner->universe->id === $defender->universe->id;
+            && $target->owner->universe->id === $defender->universe->id
+            && !$this->vacations->isActive($defender) && !$this->vacations->isActive($target->owner);
     }
 
     /** Place une flotte en défense pour une fenêtre, ou l'ajoute au combat déjà ouvert. */
     public function arriveDefender(Fleet $fleet): bool
     {
         $planet = $fleet->destination;
+        if($planet!==null && ($occupation=$this->occupations->activeFor($planet))!==null) {
+            $this->manager->lock($planet);
+            if(!$this->occupations->acceptsReinforcement($fleet)) return false;
+            if($fleet->status==='occupying') return true;
+            $pending=$this->repo->one(CombatEvent::class,['planet'=>$planet,'status'=>'pending']);
+            if(($pending!==null || $this->occupationHasHostiles($planet,$occupation->occupant)) && !$this->joinAttack($fleet)) return false;
+            if(!$this->occupations->stationReinforcementLocked($fleet)) return false;
+            if($pending===null) $pending=$this->repo->one(CombatEvent::class,['planet'=>$planet,'status'=>'pending']);
+            if($pending!==null) { $ids=$pending->combatSnapshot['occupation']['fleet_ids']??[];$ids[]=$fleet->id;$pending->combatSnapshot['occupation']['fleet_ids']=array_values(array_unique($ids)); }
+            $this->notifications->enqueue($fleet->playerUniverse,'Votre flotte renforce l’occupation de '.$planet->name.'. Son échéance reste inchangée.');
+            return true;
+        }
+        if($fleet->mission==='defend' && $fleet->orbitDurationSeconds>0) return false;
         if (!$planet || !$planet->owner || !$this->canDefend($fleet->playerUniverse, $planet)) {
             return false;
         }
@@ -146,6 +178,7 @@ final class CombatEventService
         return $target !== null && $target->owner !== null
             && $target->owner->id !== $sender->id
             && $target->owner->universe->id === $sender->universe->id
+            && !$this->vacations->isActive($sender) && !$this->vacations->isActive($target->owner)
             && $this->relations->allied($sender, $target->owner);
     }
 
@@ -171,7 +204,7 @@ final class CombatEventService
         ]);
         $origin = $fleet->homePlanet->coordinates();
         $message = $discovered
-            ? 'Demande d’orbite sur ' . $planet->name . ' par ' . $fleet->playerUniverse->player->username . ' depuis ' . $origin . '.'
+            ? 'Demande d’orbite sur ' . $planet->name . ' par ' . $fleet->playerUniverse->getDisplayName() . ' depuis ' . $origin . '.'
             : 'Demande d’orbite sur ' . $planet->name . ' depuis ' . $origin . ' ; identité à confirmer.';
         $this->notifications->enqueue($host, $message);
     }
@@ -218,8 +251,9 @@ final class CombatEventService
             return false;
         }
         if ($fleet->mission === 'conquer') {
+            if(!$this->occupations->isEnabled() && $fleet->orbitDurationSeconds===OccupationPolicy::DURATION_SECONDS) return false;
             if (!$this->canConquer($fleet->playerUniverse, $planet)) return false;
-        } elseif (!$planet->owner || !$this->canAttack($fleet->playerUniverse, $planet)) {
+        } elseif (!$this->canAttack($fleet->playerUniverse, $planet)) {
             return false;
         }
 
@@ -259,6 +293,8 @@ final class CombatEventService
             $event->resolveAt = $event->startedAt->modify('+' . $window . ' seconds');
             $event->seed = random_int(0, 0xffffffff);
             $event->dispatchToken = Uuid::v4()->toRfc4122();
+            $occupation=$this->occupations->activeFor($planet);
+            if($occupation!==null) $event->combatSnapshot['occupation']=['id'=>$occupation->id,'occupant_id'=>$occupation->occupant->id,'fleet_ids'=>[]];
             $this->manager->save($event);
             $this->manager->flush();
         } else {
@@ -273,7 +309,10 @@ final class CombatEventService
         $participant->combatEvent = $event;
         $participant->fleet = $fleet;
         $participant->playerUniverse = $fleet->playerUniverse;
-        $participant->role = 'attacker';
+        $context=$event->combatSnapshot['occupation']??null;
+        $holder=$context!==null?$this->repo->find(PlayerUniverse::class,$context['occupant_id']):null;
+        $friendly=$holder!==null && ($holder->id===$fleet->playerUniverse->id || $this->relations->allied($holder,$fleet->playerUniverse));
+        $participant->role = $friendly?'defender':'attacker';
         $participant->arrivalAt = $fleet->arrivalAt ?? $now;
         $participant->arrivalRound = $isNew ? 1 : $this->arrivalRound($event, $participant->arrivalAt);
         $this->manager->save($participant);
@@ -286,7 +325,10 @@ final class CombatEventService
             $outbox->token = $event->dispatchToken;
             $outbox->dueAt = $event->startedAt->modify('+60 seconds');
             $this->manager->save($outbox);
-            if ($planet->owner) {
+            if(isset($event->combatSnapshot['occupation'])) {
+                $this->registerOccupationForces($event);
+                $this->notifications->enqueue($holder,'Combat ouvert autour de votre occupation sur '.$planet->name.'.');
+            } elseif ($planet->owner) {
                 $this->registerGarrison($event, $planet->owner);
                 $this->notifyAttack($planet, $fleet);
             }
@@ -320,10 +362,11 @@ final class CombatEventService
                     return;
                 }
             }
+            if(isset($event->combatSnapshot['occupation'])) { $this->registerOccupationForces($event);$this->manager->flush(); }
             $participants = $this->repo->all(CombatParticipant::class, ['combatEvent' => $event], ['id' => 'ASC']);
             $conquestOwners = [];
             foreach ($participants as $participant) {
-                if ($participant->role === 'attacker' && $participant->fleet->mission === 'conquer') {
+                if (isset($event->combatSnapshot['occupation']) || ($participant->role === 'attacker' && $participant->fleet->mission === 'conquer')) {
                     $conquestOwners[$participant->playerUniverse->id] = $participant->playerUniverse;
                 }
             }
@@ -342,6 +385,7 @@ final class CombatEventService
             $elapsedSeconds = max(0, $this->clock->now()->getTimestamp() - $event->startedAt->getTimestamp());
             $targetRound = min($maxRounds, max($event->currentRound + 1, intdiv($elapsedSeconds, 60)));
             $state = $event->combatSnapshot;
+            $occupationContext=$state['occupation']??null;
             $snapshot = $state['participants'] ?? [];
             $combatParticipants = $state['combat_participants'] ?? [];
             $snapshotParticipantIds = [];
@@ -370,6 +414,7 @@ final class CombatEventService
                 $units = $this->technologyEffects->applyToShips($units, $technologyLevels[$membershipId], $participant->playerUniverse->universe);
                 $role = $participant->role;
                 $camp = $role === 'attacker' ? ($campByMembership[$membershipId] ?? 'attacker-' . $membershipId) : 'defenders';
+                if($occupationContext!==null) $camp=$this->occupationCamp($participant->playerUniverse,$occupationContext,$camp);
                 $arrivalRound = $participant->arrivalRound ?? 1;
                 $combatParticipants[] = ['id' => (string) $fleet->id, 'role' => $role, 'camp' => $camp, 'arrival_round' => $arrivalRound, 'units' => $units];
                 $snapshot[] = [
@@ -393,7 +438,7 @@ final class CombatEventService
             }
 
             $hasNpcSnapshot = (bool) array_filter($snapshot, static fn (array $entry): bool => ($entry['pve_npc'] ?? false) === true);
-            if (!$hasNpcSnapshot) {
+            if (!$hasNpcSnapshot && !($occupationContext!==null && ($state['npc_snapshot_initialized']??false))) {
                 $npcUnits = [];
                 foreach ($this->repo->all(PlanetNpcShip::class, ['planet' => $event->planet], ['id' => 'ASC']) as $npcShip) {
                     if ($npcShip->quantity > 0) $npcUnits[] = $this->catalog->getForUniverse($event->planet->solarSystem->galaxy->universe, 'ships', $npcShip->slug) + ['quantity' => $npcShip->quantity];
@@ -402,8 +447,8 @@ final class CombatEventService
                     $npcResearch = $this->catalog->all('planet_conquest')['levels'][$event->planet->conquestLevel]['research'] ?? [];
                     $npcUnits = $this->technologyEffects->applyToShips($npcUnits, $npcResearch, $event->planet->solarSystem->galaxy->universe);
                     $npcId = 'npc:' . $event->planet->id;
-                    $combatParticipants[] = ['id' => $npcId, 'role' => 'defender', 'camp' => 'defenders', 'arrival_round' => 1, 'units' => $npcUnits];
-                    $snapshot[] = ['participant_id' => null, 'fleet_id' => null, 'player_universe_id' => null, 'role' => 'defender', 'camp' => 'defenders', 'arrival_at' => $event->startedAt->format(DATE_ATOM), 'arrival_round' => 1, 'units' => $npcUnits, 'technology_levels' => $npcResearch, 'pve_npc' => true, 'planet_id' => $event->planet->id];
+                    $combatParticipants[] = ['id' => $npcId, 'role' => 'defender', 'camp' => $this->occupationNpcCamp($event,$occupationContext), 'arrival_round' => 1, 'units' => $npcUnits];
+                    $snapshot[] = ['participant_id' => null, 'fleet_id' => null, 'player_universe_id' => null, 'role' => 'defender', 'camp' => $this->occupationNpcCamp($event,$occupationContext), 'arrival_at' => $event->startedAt->format(DATE_ATOM), 'arrival_round' => 1, 'units' => $npcUnits, 'technology_levels' => $npcResearch, 'pve_npc' => true, 'planet_id' => $event->planet->id];
                 }
             }
 
@@ -426,7 +471,7 @@ final class CombatEventService
                     }
                     $defenseSnapshots[] = $definition + [
                         'id' => (string) $defense->id,
-                        'camp' => 'defenders',
+                        'camp' => $this->occupationNpcCamp($event,$occupationContext),
                         'quantity' => $defense->quantity,
                         'tier' => $defense->tier,
                     ];
@@ -434,10 +479,12 @@ final class CombatEventService
             }
             $modifiers = $state['modifiers'] ?? ($this->catalog->all('combat_modifiers')['modifiers'] ?? []);
             $event->combatSnapshot = ['participants' => $snapshot, 'combat_participants' => $combatParticipants, 'defenses' => $defenseSnapshots, 'modifiers' => $modifiers];
+            if($occupationContext!==null) { $event->combatSnapshot['occupation']=$occupationContext;$event->combatSnapshot['npc_snapshot_initialized']=true; }
             $result = $this->simulator->simulate(
                 $combatParticipants, $defenseSnapshots, $modifiers, $maxRounds, $event->seed, $targetRound,
                 (float) ($rules['shield_recharge_percent_per_round'] ?? 5),
                 (bool) ($rules['restore_survivor_shields_after_combat'] ?? true),
+                $occupationContext!==null,
             );
             $roundHistory = $state['round_history'] ?? [];
             foreach ($result['rounds'] as $round) {
@@ -487,14 +534,20 @@ final class CombatEventService
             $defenseRebuilt = $this->persistLosses($participants, $defenseSnapshots, $result['losses'], $event->planet);
             $recoveryProtection = $this->applyRecoveryProtection($snapshot, $result['losses'], $participants);
             $loot = $this->collectLoot($participants, $result['outcome'], $event);
-            $capture = $this->capturePlanet($participants, $result['outcome'], $event, $result['losses']);
+            $capture = $occupationContext!==null?$this->resolveOccupationBattle($participants,$result,$event):$this->capturePlanet($participants, $result['outcome'], $event, $result['losses']);
             $winningAttackerCamps = [];
+            $occupationRewardCamp=$occupationContext!==null?($result['winner_camp']??null):null;
+            $participantCamps=[];
+            foreach($snapshot as $entry) if(isset($entry['fleet_id'])) $participantCamps[$entry['fleet_id']]=$entry['camp'];
             foreach ($result['survivors'] as $survivor) {
+                if($occupationContext!==null && $occupationRewardCamp===null && $result['outcome']==='defender_wins'
+                    && $survivor['camp']==='occupant-'.$occupationContext['occupant_id']) $occupationRewardCamp=$survivor['camp'];
                 if ($survivor['role'] === 'attacker') {
                     $winningAttackerCamps[$survivor['camp']] = true;
                 }
             }
             foreach ($participants as $participant) {
+                if($occupationContext!==null && ($occupationRewardCamp===null || ($participantCamps[$participant->fleet->id]??null)!==$occupationRewardCamp)) continue;
                 if ($participant->role === 'attacker' && $participant->fleet->mission === 'attack' && $result['outcome'] === 'attacker_wins') {
                     $camp = $campByMembership[$participant->playerUniverse->id] ?? null;
                     if ($camp !== null && isset($winningAttackerCamps[$camp])) {
@@ -512,8 +565,14 @@ final class CombatEventService
                 }
             }
             foreach ($participants as $participant) {
-                $this->consumeOrbitFuel($participant->fleet);
-                $this->sendFleetHome($participant);
+                if($participant->fleet->status!=='occupying') {
+                    if(in_array($participant->fleet->id,$occupationContext['fleet_ids']??[],true)) $this->releaseOccupationFuel($participant->fleet);
+                    elseif($participant->fleet->mission==='conquer' && ($this->occupations->isEnabled() || $participant->fleet->orbitDurationSeconds===OccupationPolicy::DURATION_SECONDS)) {
+                        $participant->fleet->reservedFuel=max(0,$participant->fleet->reservedFuel-$participant->fleet->orbitFuel);
+                        $participant->fleet->orbitFuel=0;
+                    } else $this->consumeOrbitFuel($participant->fleet);
+                    $this->sendFleetHome($participant);
+                }
                 $this->notifications->enqueue(
                     $participant->playerUniverse,
                     'Combat terminé sur ' . $event->planet->name . ' : ' . $this->outcomeLabel($result['outcome']) . '.',
@@ -536,6 +595,10 @@ final class CombatEventService
                 'recovery_protection' => $recoveryProtection,
                 'loot' => $loot,
                 'capture' => $capture,
+            ];
+            if($occupationContext!==null) $log->snapshot['occupation_result']=[
+                'winner_camp'=>$result['winner_camp']??null,
+                'holding_camp'=>($result['winner_camp']??null)===null?$occupationRewardCamp:null,'outcome'=>$result['outcome'],
             ];
             $log->resolvedAt = $this->clock->now();
             $this->manager->save($log);
@@ -560,6 +623,7 @@ final class CombatEventService
             if ($participant->role !== 'attacker') {
                 continue;
             }
+            if($participant->fleet->mission==='conquer' && ($this->occupations->isEnabled() || $participant->fleet->orbitDurationSeconds===OccupationPolicy::DURATION_SECONDS)) continue;
             $capacity = 0.0;
             foreach ($this->repo->all(FleetShip::class, ['fleet' => $participant->fleet], ['id' => 'ASC']) as $ship) {
                 if ($ship->quantity < 1) {
@@ -687,6 +751,16 @@ final class CombatEventService
             $colonyShips=$this->repo->all(FleetShip::class,['fleet'=>$fleet,'slug'=>'colony_ship']);
             $colonyShip=null;foreach($colonyShips as $candidate)if($candidate->quantity>0){$colonyShip=$candidate;break;}
             if(!$colonyShip)continue;
+            if(!$this->occupations->isEnabled() && $fleet->orbitDurationSeconds===OccupationPolicy::DURATION_SECONDS) { $reason='occupation_disabled';continue; }
+            if($this->occupations->isEnabled()) {
+                $occupation=$this->occupations->beginAfterVictoryLocked($event,$fleet);
+                if($occupation!==null) {
+                    $this->notifications->enqueue($participant->playerUniverse,'Occupation JcE commencée sur '.$event->planet->name.'. Votre flotte reste sur place pendant 24 heures ; la planète ne vous appartient pas encore.');
+                    return ['status'=>'occupying','reason'=>null,'fleet_id'=>$fleet->id,'captor_player_universe_id'=>$participant->playerUniverse->id,
+                        'occupation_id'=>$occupation->id,'capture_at'=>$occupation->captureAt->format(DATE_ATOM)];
+                }
+                $reason=$this->occupations->activeFor($event->planet)!==null?'target_claimed':'planet_limit';continue;
+            }
             if ($event->planet->owner !== null) { $reason = 'target_claimed'; continue; }
             $config = $this->catalog->forUniverse($participant->playerUniverse->universe);
             if (count($this->repo->planets($participant->playerUniverse->universe, $participant->playerUniverse)) >= $this->planetLimit($participant->playerUniverse)) {
@@ -708,6 +782,7 @@ final class CombatEventService
 
         foreach ($candidates as $participant) {
             $message = match ($reason) {
+                'occupation_disabled' => 'Combat gagné, mais les nouvelles occupations sont suspendues. Votre flotte rentre.',
                 'planet_limit' => 'Combat gagné, mais la limite de colonies empêche la conquête.',
                 'target_claimed' => 'Combat gagné, mais la planète a déjà été revendiquée.',
                 default => 'Combat gagné, mais aucun vaisseau colonie n’a survécu pour prendre la planète.',
@@ -825,6 +900,7 @@ final class CombatEventService
         $protected = [];
         foreach ($engaged as $id => $quantity) {
             $membership = $memberships[$id];
+            if (!$membership->isPlayerControlled() || $this->playerProtection->suspendedForInactivity($membership)) continue;
             if ($quantity < 1 || ($lost[$id] ?? 0) / $quantity < $threshold) continue;
             if ($membership->lastRecoveryProtectionAt !== null && $membership->lastRecoveryProtectionAt->modify('+' . $cooldown . ' seconds') > $now) continue;
             $membership->lastRecoveryProtectionAt = $now;
@@ -889,6 +965,74 @@ final class CombatEventService
         $this->manager->save($outbox);
     }
 
+    private function occupationHasHostiles(Planet $planet,PlayerUniverse $holder): bool
+    {
+        if($this->repo->hasPlanetHostileUnits($planet)) return true;
+        foreach($this->repo->fleetsPresentForOccupation($planet) as $fleet) {
+            if($fleet->playerUniverse->id!==$holder->id && !$this->relations->allied($holder,$fleet->playerUniverse)) return true;
+        }
+        return false;
+    }
+    private function occupationCamp(PlayerUniverse $member,array $context,string $fallback): string
+    {
+        $holder=$this->repo->find(PlayerUniverse::class,$context['occupant_id']);
+        if($member->id===$holder->id || $this->relations->allied($holder,$member)) return 'occupant-'.$holder->id;
+        return $member->isForgotten()?'npc-owner-'.$member->id:$fallback;
+    }
+    private function occupationNpcCamp(CombatEvent $event,?array $context): string
+    {
+        return $context===null?'defenders':($event->planet->owner!==null?'npc-owner-'.$event->planet->owner->id:'npc:'.$event->planet->id);
+    }
+    private function registerOccupationForces(CombatEvent $event): void
+    {
+        $ids=$event->combatSnapshot['occupation']['fleet_ids']??[];
+        foreach($this->repo->fleetsPresentForOccupation($event->planet) as $fleet) {
+            if($this->repo->one(CombatParticipant::class,['combatEvent'=>$event,'fleet'=>$fleet])!==null) continue;
+            $participant=new CombatParticipant();$participant->combatEvent=$event;$participant->fleet=$fleet;$participant->playerUniverse=$fleet->playerUniverse;
+            $participant->role='defender';$participant->arrivalAt=$this->clock->now();$participant->arrivalRound=max(1,$event->currentRound+1);
+            $this->manager->save($participant);
+            if($fleet->status==='occupying') $ids[]=$fleet->id;
+            else { $fleet->status='defending';$fleet->arrivalAt=null;$fleet->dispatchToken=Uuid::v4()->toRfc4122(); }
+        }
+        $event->combatSnapshot['occupation']['fleet_ids']=array_values(array_unique($ids));
+    }
+    private function resolveOccupationBattle(array $participants,array $result,CombatEvent $event): array
+    {
+        $context=$event->combatSnapshot['occupation'];$occupation=$this->repo->find(\App\Entity\PlanetOccupation::class,$context['id']);
+        $holder=$occupation->occupant;$winner=$result['winner_camp']??null;$heldColonies=0;$heldShips=0;
+        foreach($this->repo->all(Fleet::class,['destination'=>$event->planet,'playerUniverse'=>$holder,'status'=>'occupying']) as $fleet) {
+            foreach($this->repo->all(FleetShip::class,['fleet'=>$fleet]) as $ship) { $heldShips+=$ship->quantity;if($ship->slug==='colony_ship') $heldColonies+=$ship->quantity; }
+        }
+        $retained=($winner===null || $winner==='occupant-'.$holder->id) && $heldShips>0 && $heldColonies>0 && $this->occupations->canOccupy($holder);
+        if($retained) {
+            $this->occupations->retainAfterBattleLocked($occupation,$event);
+        } else {
+            $new=null;
+            if($this->occupations->isEnabled() && $winner!==null && $result['outcome']==='attacker_wins') foreach($participants as $participant) {
+                if($participant->role!=='attacker' || $participant->fleet->mission!=='conquer') continue;
+                $entry=array_filter($event->combatSnapshot['participants'],static fn(array $row): bool=>($row['fleet_id']??null)===$participant->fleet->id && $row['camp']===$winner);
+                if($entry===[]) continue;
+                $new=$this->occupations->beginAfterVictoryLocked($event,$participant->fleet);
+                if($new!==null) break;
+            }
+            if($new===null) $this->occupations->failAfterBattleLocked($occupation,$heldColonies<1?'colony_ship_destroyed':'abandoned');
+        }
+        foreach($participants as $participant) {
+            if(!in_array($participant->fleet->id,$context['fleet_ids'],true)) continue;
+            $quantity=array_sum(array_map(static fn(FleetShip $ship): int=>$ship->quantity,$this->repo->all(FleetShip::class,['fleet'=>$participant->fleet])));
+            if(!$retained || $quantity<1) $participant->fleet->status='defending';
+        }
+        if(!$occupation->reservesSlot()) return ['status'=>'failed','reason'=>$occupation->endReason,'occupation_id'=>$occupation->id];
+        return ['status'=>'occupying','reason'=>null,'fleet_id'=>$occupation->fleet->id,'captor_player_universe_id'=>$occupation->occupant->id,
+            'occupation_id'=>$occupation->id,'capture_at'=>$occupation->captureAt->format(DATE_ATOM)];
+    }
+    private function releaseOccupationFuel(Fleet $fleet): void
+    {
+        $duration=max(1,$fleet->orbitDurationSeconds);
+        $elapsed=$fleet->departureAt===null?0:max(0,$this->clock->now()->getTimestamp()-$fleet->departureAt->getTimestamp());
+        $spent=$fleet->orbitFuel*min(1,$elapsed/$duration);
+        $fleet->cargo['hydrogen']=max(0,($fleet->cargo['hydrogen']??0)-$spent);$fleet->reservedFuel=max(0,$fleet->reservedFuel-$fleet->orbitFuel);$fleet->orbitFuel=0;
+    }
     private function registerGarrison(CombatEvent $event, PlayerUniverse $defender): void
     {
         $waitingDefenders = [
@@ -965,7 +1109,7 @@ final class CombatEventService
         ]);
         $origin = $fleet->homePlanet->coordinates();
         $message = $discovered
-            ? 'Attaque détectée sur ' . $planet->name . ' par ' . $fleet->playerUniverse->player->username . ' depuis ' . $origin . '.'
+            ? 'Attaque détectée sur ' . $planet->name . ' par ' . $fleet->playerUniverse->getDisplayName() . ' depuis ' . $origin . '.'
             : 'Attaque détectée sur ' . $planet->name . '. Origine repérée : ' . $origin . ' ; identité inconnue.';
         foreach ($recipients as $recipient) {
             if ($this->relations->allied($recipient, $fleet->playerUniverse)) {
@@ -987,7 +1131,7 @@ final class CombatEventService
         ]);
         $origin = $fleet->homePlanet->coordinates();
         $message = $discovered
-            ? 'Renfort détecté par ' . $fleet->playerUniverse->player->username . ' depuis ' . $origin . '.'
+            ? 'Renfort détecté par ' . $fleet->playerUniverse->getDisplayName() . ' depuis ' . $origin . '.'
             : 'Renfort détecté depuis ' . $origin . ' ; identité inconnue.';
         $this->notifications->enqueue($defender, $message);
     }

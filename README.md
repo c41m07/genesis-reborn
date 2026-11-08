@@ -25,6 +25,118 @@ Le code comprend :
 
 Les jauges distinguent le stock protégé du stock exposé au pillage : remplissage vert jusqu’au seuil protégé, puis doré, avec un repère fixe. Le seuil actuellement documenté est de 10 % de la capacité. Les règles et leurs décisions restent centralisées dans [REGLES.md](docs/REGLES.md) et [DECISIONS.md](docs/DECISIONS.md).
 
+Chantier en développement : empires oubliés après 30 jours d'inactivité,
+mode vacances et occupation de 24 heures avant capture JcE. Le premier lot ajoute
+la dernière visite par univers et le calcul des échéances à 14 et 30 jours ; la
+migration `Version20261107180000` a été appliquée sur la base locale le 7 novembre
+2026 après accord et sauvegarde ; son application reste explicite sur les autres
+environnements.
+Les visites réussies de pages de jeu comptent comme activité ; les actualisations
+automatiques de ressources, requêtes JSON et pages de compte n'y contribuent pas.
+Les anciennes participations sans date connue restent non initialisées jusqu'à
+leur première visite ; elles sont exclues du traitement tant que cette date est inconnue.
+Les avertissements par courriel à J14/J27 sont préparés avec un historique
+par univers et période ; leurs deux textes ont été validés le 7 novembre 2026. La commande
+`make empires-warn` prévisualise les éligibles sans écriture ni envoi, après
+application de la migration `Version20261107220000` (appliquée localement le
+7 novembre 2026 après accord et sauvegarde).
+Les envois sont désactivés par défaut dans les exemples. En local, le cycle complet
+et les avertissements sont activés après accord le 8 novembre 2026 ; la crontab de
+`caim` exécute leur traitement quotidien à 00 h, heure de Paris.
+La suspension des protections débutant/après pertes dès J14 est préparée derrière
+`FORGOTTEN_EMPIRES_ENABLED` : elle est activée localement ; les exemples restent à `0`. Une reprise d'activité rétablit uniquement
+les protections encore valables, sans renouveler leurs échéances. Les alliances,
+la limite d'écart de score et le stock protégé restent applicables.
+Le socle des vacances prépare les périodes et les limites de 48 h minimum,
+90 jours maximum et 15 jours entre activations. La migration d'historique
+`Version20261107230000` a été appliquée localement après accord et sauvegarde
+le 7 novembre 2026. La suspension/reprise économique est raccordée au service
+interne : stocks et consommations figés, files reportées sans perte du travail
+acquis, reprise au terme réel ou à l'expiration des 90 jours. Les préférences
+proposent l'activation avec confirmation, les dates de sortie et le délai entre
+deux périodes. Les files affichent leur progression figée et les catalogues
+retirent les commandes de construction pendant la pause. Le mode reste masqué
+et indisponible tant que `FORGOTTEN_EMPIRES_ENABLED=0`.
+Le service exige le retour de toutes les flottes avant les vacances et bloque
+les nouveaux départs. Les empires en vacances sont protégés contre attaques,
+espionnage et nouveaux stationnements ; un transport refusé revient avec sa
+cargaison. Les stations alliées déjà acceptées terminent leur durée normale,
+et les demandes d'orbite en attente sont renvoyées à l'activation.
+L'inactivité et les avertissements déduisent les vacances réelles : consulter le
+jeu pendant une pause ne remet pas le compteur à zéro, et les courriels reprennent
+aux seuils ajustés sans répéter J14. `make empires-preview` liste sans écriture
+les empires arrivés à J30, leurs flottes, files, combats et liens sociaux à traiter.
+Le traitement se parcourt par lots avec `PREVIEW_ARGS="--limit=100 --after-id=0"`.
+La commande n'exécute aucune transformation et ne fournit aucune option d'application.
+Le détachement de l'identité est préparé : l'empire oublié n'a plus de joueur
+propriétaire, mais garde son identifiant et une référence historique à l'ancien
+propriétaire. Une nouvelle inscription démarre sans hériter de ses recherches
+ou déblocages. La migration `Version20261108010000` a été appliquée sur la base
+locale le 8 novembre 2026 après accord et vérification de la sauvegarde ; elle
+reste nécessaire avant utilisation de cette version sur les autres environnements.
+Les anciens accès sont refusés et les commandes déjà payées peuvent se terminer
+automatiquement. Un service interne prépare désormais la conversion J30 sous
+verrou, avec report en cas de combat, rappel des flottes et fin des liens sociaux.
+Il conserve un journal unique, transmet la direction des guildes au plus ancien
+membre actif ou archive leur historique. La migration `Version20261108020000`
+a été appliquée localement le 8 novembre 2026 après accord et vérification de la
+sauvegarde, sans conversion ni archivage réel. La commande `make empires-convert`
+prévisualise désormais les conversions par lots, sans écriture ni envoi par défaut.
+Le mode `CONVERT_ARGS="--apply --all"` permet un passage complet après activation
+explicitement autorisée ; il reste refusé avec le drapeau désactivé. Les combats
+reportés n'empêchent pas de traiter les lots suivants. Chaque empire est revérifié
+sous verrou ; une erreur interrompt le lot et indique le curseur de reprise, tout
+en conservant les conversions précédentes. La planification quotidienne est installée localement depuis le 8 novembre 2026.
+Le parcours complet est couvert par les tests isolés. Le socle d'occupation
+prépare les états, le délai fixe de 24 heures, le comptage des réservations et
+l'historique des changements d'occupant. Le démarrage après victoire est raccordé
+derrière le drapeau d'activation : flotte maintenue sur place, vaisseau de colonisation
+non consommé et place réservée dans les limites de colonisation/conquête.
+Le devis prévoit 24 heures de carburant de stationnement ; une conquête non
+occupante libère cette réserve pour son retour. Le transfert définitif est codé
+dans un service déclenché par les tâches différées, derrière le drapeau d'activation : il attend la fin des
+combats et la défaite des forces PNJ restantes ou de retour, puis conserve
+bâtiments et stocks, annule les commandes non terminées sans remboursement et
+consomme un seul vaisseau de colonisation. Les recherches et déblocages de l'ancien
+empire ne sont pas transmis. Les renforts de l'occupant et de ses alliés sont
+raccordés, sans remise à zéro du délai. Ils réservent le carburant du temps
+restant, avec au minimum une fenêtre de combat, puis récupèrent la part inutilisée.
+Les occupations peuvent être contestées sans protection débutant ni limite
+d'écart de score, en respectant les alliances. PNJ, occupant et rivaux combattent
+dans des camps distincts avec leurs recherches propres. Un occupant victorieux
+conserve son délai ; une reprise par conquête recommence 24 heures.
+Les cartes classique et interactive proposent désormais la conquête des empires
+oubliés, affichent l'échéance des occupations et les liens de renfort/contestation
+selon les alliances. Les liens de conquête et de colonisation tiennent compte
+des places réellement disponibles, y compris celles réservées par une occupation.
+La migration de suivi des renforts `Version20261108040000` a été appliquée localement
+après accord et vérification de la sauvegarde le 8 novembre 2026, sans déplacer de
+flotte. Le début d'occupation programme son contrôle à l'échéance ; une victoire
+conservant l'occupation programme un nouvel examen sans modifier son délai.
+Un combat ouvert ou des forces hostiles empêchent toujours la capture.
+`make occupations-resume` prévisualise les occupations actives, sans écriture.
+Après activation explicitement autorisée, `RESUME_ARGS=--apply` permet de
+reprogrammer leurs contrôles après interruption ; les messages périmés et rejoués
+ne peuvent pas capturer deux fois. Aucun nouveau processus n'est lancé par ce lot.
+Le passage quotidien est fixé à 00 h, heure de Paris, avec adaptation été/hiver.
+Après 30 jours effectifs, la conversion devient éligible au premier minuit suivant
+(ou au même instant si le seuil tombe déjà à minuit). Le joueur conserve l'accès
+jusqu'à la transformation effective ; une visite préalable réinitialise l'inactivité.
+Le mode d'envoi quotidien utilise `--send --all` pour traiter tous les lots.
+Le traitement J30 et les avertissements sont activés et planifiés localement ;
+aucune mise en service distante n'est réalisée.
+La [procédure de mise en service](docs/EXPLOITATION.md#empires-oubliés--procédure-de-mise-en-service-préparée-le-8-novembre-2026)
+précise les prévisualisations, les services à recharger et le passage quotidien à minuit,
+avec les précautions d'activation. Les rapports suivent les fins et remplacements
+d'occupation depuis leur historique ; le verdict et les récompenses distinguent
+le camp du joueur du camp PNJ.
+Sans activation, la capture immédiate actuelle est
+conservée. La migration `Version20261108030000` a été appliquée localement le
+8 novembre 2026 après accord et vérification de la sauvegarde, sans créer
+d'occupation. Les règles à développer
+et les lots sont consignés dans les [décisions](docs/DECISIONS.md#empires-oubliés-vacances-et-occupation-jce--décisions-du-7-novembre-2026)
+et la [feuille de route](docs/FEUILLE_DE_ROUTE.md#empires-oubliés--chantier-validé-le-7-novembre-2026).
+
 ## Technologies et versions
 
 Les contraintes déclarées, les versions verrouillées et les observations d’exécution sont distinctes.
@@ -88,6 +200,8 @@ Les fichiers `.env`, `.env.local`, `.env.prod` et les secrets sont exclus par [.
 | `DATABASE_URL`, `DB_PASSWORD`, `DB_ROOT_PASSWORD`, `DB_HOST_PORT` | Connexion MariaDB, secrets du service local et port d’accès depuis l’hôte. |
 | `MESSENGER_TRANSPORT_DSN`, `RABBITMQ_PASSWORD` | Transport des traitements asynchrones. |
 | `MAILER_DSN`, `MAILER_FROM`, `DEFAULT_URI` | Transport SMTP, expéditeur et URL absolue des liens, notamment ceux des mails. |
+| `EMPIRE_INACTIVITY_WARNINGS_ENABLED` | `0` par défaut ; interdit les envois d'inactivité, même avec `--send`. Textes révisés validés et valeur `1` autorisée localement le 8 novembre 2026. Voir [EXPLOITATION.md](docs/EXPLOITATION.md#avertissements-dinactivité-j14j27). |
+| `FORGOTTEN_EMPIRES_ENABLED` | `0` par défaut ; active le cycle d'inactivité, les vacances, la conversion PNJ et les occupations JcE. Valeur `1` autorisée localement le 8 novembre 2026. |
 | `MERCURE_URL`, `MERCURE_PUBLIC_URL` | Adresse interne de publication et adresse accessible au navigateur. |
 | `MERCURE_JWT_SECRET`, `MERCURE_JWT_ISSUER` | Signature et émetteur des jetons Mercure. |
 | `LOCAL_UID`, `LOCAL_GID` | Identifiants utilisés lors de la construction et par les processus locaux ; défaut 1000. |

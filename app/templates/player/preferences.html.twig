@@ -14,5 +14,41 @@
         <div class="preference-toggle">{{ form_widget(form.showLockedItems) }}{{ form_label(form.showLockedItems) }}{{ form_errors(form.showLockedItems) }}</div>
     </fieldset>
     <button class="primary full">Enregistrer les paramètres</button>{{ form_end(form) }}
+    {% if vacation_state and (vacation_state.enabled or vacation_state.active) %}
+    <section id="vacances" class="account-section" aria-labelledby="vacation-heading" tabindex="-1">
+        <h2 id="vacation-heading">Mode vacances</h2>
+        <p>Ces commandes concernent uniquement votre empire dans l’univers <strong>{{ vacation_membership.universe.name }}</strong>.</p>
+        <ul id="vacation-rules">
+            <li>Production et files suspendues ; missions indisponibles ; protection contre les attaques et l’espionnage.</li>
+            <li>48 heures minimum avant une sortie volontaire et 90 jours maximum.</li>
+            <li>Après la fin des vacances, attendez 15 jours avant une nouvelle activation.</li>
+            <li>Toutes vos flottes doivent être rentrées. Les demandes d’orbite en attente seront refusées ; les stations alliées déjà acceptées garderont leur échéance.</li>
+            <li>Le compteur d’inactivité est suspendu. Consulter le jeu pendant les vacances ne le remet pas à zéro.</li>
+        </ul>
+        {% if vacation_state.active %}
+            <p class="badge">Vacances actives</p>
+            <dl class="account-grid">
+                <div><dt>Début</dt><dd><time datetime="{{ vacation_state.active.startedAt|date('c') }}">{{ vacation_state.active.startedAt|date('d/m/Y à H:i',preferences.timezone) }}</time></dd></div>
+                <div><dt>Fin automatique</dt><dd><time datetime="{{ vacation_state.active.scheduledEndAt|date('c') }}">{{ vacation_state.active.scheduledEndAt|date('d/m/Y à H:i',preferences.timezone) }}</time></dd></div>
+            </dl>
+            <p id="vacation-end-help">La sortie met fin immédiatement à la protection et reprend la production et les files. Fuseau horaire : {{ preferences.timezone }}.</p>
+            {% if not vacation_state.can_finish %}<p id="vacation-minimum">Sortie possible à partir du <time datetime="{{ vacation_state.earliest_end_at|date('c') }}">{{ vacation_state.earliest_end_at|date('d/m/Y à H:i',preferences.timezone) }}</time>.</p>{% endif %}
+            <form method="post" action="{{ path('app_vacation_finish') }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('vacation-finish-'~vacation_membership.id) }}">
+                <input type="hidden" name="membership_id" value="{{ vacation_membership.id }}">
+                <button class="secondary full" aria-describedby="vacation-end-help{{ not vacation_state.can_finish ? ' vacation-minimum' : '' }}" {% if not vacation_state.can_finish %}disabled{% endif %}>Terminer mes vacances dans cet univers</button>
+            </form>
+        {% else %}
+            {% if vacation_state.cooldown %}<p>Nouvelle activation possible le <time datetime="{{ vacation_state.next_activation_at|date('c') }}">{{ vacation_state.next_activation_at|date('d/m/Y à H:i',preferences.timezone) }}</time> ({{ preferences.timezone }}).</p>{% endif %}
+            {% if vacation_state.start_blocker %}<p id="vacation-start-blocker">{{ vacation_state.start_blocker }}</p>{% endif %}
+            <form method="post" action="{{ path('app_vacation_start') }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('vacation-start-'~vacation_membership.id) }}">
+                <input type="hidden" name="membership_id" value="{{ vacation_membership.id }}">
+                {% if vacation_state.can_start %}<p><input id="vacation-confirm" type="checkbox" name="confirm" value="1" required aria-describedby="vacation-rules"><label for="vacation-confirm">J’ai lu ces conditions et je souhaite activer les vacances pour cet univers.</label></p>{% endif %}
+                <button class="primary full" {% if not vacation_state.can_start %}disabled aria-describedby="vacation-start-blocker"{% else %}aria-describedby="vacation-rules"{% endif %}>Activer le mode vacances dans cet univers</button>
+            </form>
+        {% endif %}
+    </section>
+    {% endif %}
 </section>
 {% endblock %}

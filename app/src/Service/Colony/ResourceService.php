@@ -5,9 +5,10 @@ use App\Repository\GameRepository;
 use App\Manager\GameManager;
 use App\Service\Catalog\GameCatalog;
 use Psr\Clock\ClockInterface;
+use App\Service\Player\VacationCalendar;
 final class ResourceService
 {
-    public function __construct(private GameRepository $repo,private GameManager $manager,private GameCatalog $catalog,private ClockInterface $clock,private \App\Service\Event\GameEventService $events) {}
+    public function __construct(private GameRepository $repo,private GameManager $manager,private GameCatalog $catalog,private ClockInterface $clock,private \App\Service\Event\GameEventService $events,private VacationCalendar $vacations) {}
     public static function stock(float $stock,float $rate,\DateTimeImmutable $last,\DateTimeImmutable $now,float $cap): float
     {
         return min($cap,max(0,$stock)+max(0,$now->getTimestamp()-$last->getTimestamp())*$rate);
@@ -34,6 +35,7 @@ final class ResourceService
     }
     public function rate(Planet $planet,string $slug,int $mineLevel,?array $levels=null):float
     {
+        if ($planet->owner !== null && $this->vacations->isActive($planet->owner)) return 0.0;
         $levels??=['mine_'.$slug=>['basic'=>$mineLevel]];$input=$this->operatingInput($planet,$levels);$rate=(float)($input['base'][$slug]??0.0);
         foreach($input['factories'] as $factory)if($factory['resource']===$slug)$rate+=$factory['rate'];
         return $rate;
@@ -79,6 +81,7 @@ final class ResourceService
 
     public function factoryConsumption(Planet $planet,string $buildingSlug,array $levels):array
     {
+        if ($planet->owner !== null && $this->vacations->isActive($planet->owner)) return ['electricity'=>0.0,'hydrogen'=>0.0];
         $input=$this->operatingInput($planet,$levels);$result=['electricity'=>0.0,'hydrogen'=>0.0];
         foreach($input['factories'] as $factory)if($factory['slug']===$buildingSlug){$result['electricity']+=(float)$factory['electricity'];$result['hydrogen']+=(float)$factory['hydrogen'];}
         return $result;
@@ -94,8 +97,18 @@ final class ResourceService
     {
         $universe=$planet->solarSystem->galaxy->universe;$cursor=$from;
         $points=$this->events->productionChangePoints($universe,$from,$to);$points[]=$to;
-        foreach($points as $point){$seconds=max(0,$point->getTimestamp()-$cursor->getTimestamp());if($seconds>0)$stocks=$this->simulate($planet,$levels,$stocks,$seconds,$cursor)['stocks'];$cursor=$point;}
-        return $this->simulate($planet,$levels,$stocks,0,$to);
+        $periods=$planet->owner !== null ? $this->vacations->periods($planet->owner) : [];
+        foreach($periods as $period) foreach([$period->startedAt,$period->effectiveEndAt()] as $boundary) {
+            if($boundary>$from && $boundary<$to) $points[]=$boundary;
+        }
+        usort($points,static fn(\DateTimeImmutable $a,\DateTimeImmutable $b):int=>$a<=>$b);
+        foreach($points as $point){$seconds=max(0,$point->getTimestamp()-$cursor->getTimestamp());if($seconds>0 && !$this->vacations->activeAt($periods,$cursor))$stocks=$this->simulate($planet,$levels,$stocks,$seconds,$cursor)['stocks'];$cursor=$point;}
+        $result=$this->simulate($planet,$levels,$stocks,0,$to);
+        if($this->vacations->activeAt($periods,$to)) {
+            $result['rates']=array_fill_keys(array_keys($result['rates']),0.0);
+            foreach(['efficiency','antimatter_efficiency','electricity_consumption','hydrogen_consumption'] as $key) $result[$key]=0.0;
+        }
+        return $result;
     }
 
     public function snapshot(Planet $planet): array

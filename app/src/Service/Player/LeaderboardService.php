@@ -65,6 +65,7 @@ final class LeaderboardService
 
         $result = [];
         foreach ($rows as $row) {
+            if(!$row['membership']->isPlayerControlled()) continue;
             $row['fleet_units'] = $row['ship_units'] + $row['defense_units'];
             $row['building_points'] = intdiv($row['building_resources'], 100);
             $row['research_points'] = intdiv($row['research_resources'], 100);
@@ -109,7 +110,7 @@ final class LeaderboardService
     {
         $scores = [];
         foreach ($playerRows ?? $this->forUniverse($viewer) as $row) $scores[$row['membership']->id] = $row;
-        $guilds = $this->repo->all(\App\Entity\Guild::class, ['universe' => $viewer->universe]);
+        $guilds = $this->repo->all(\App\Entity\Guild::class, ['universe' => $viewer->universe,'archivedAt'=>null]);
         $rows = [];
         foreach ($guilds as $guild) {
             $row = ['guild' => $guild, 'members' => 0, 'building_points' => 0, 'research_points' => 0, 'fleet_points' => 0, 'total_points' => 0, 'median_points' => 0];

@@ -6,6 +6,20 @@ use PHPUnit\Framework\TestCase;
 
 final class CombatReportPresenterTest extends TestCase
 {
+    public function testOccupationVerdictUsesTheActualCampRatherThanTheDefenderRole(): void
+    {
+        $snapshot=['participants'=>[
+            ['fleet_id'=>10,'player_universe_id'=>7,'role'=>'defender','camp'=>'occupant-7','units'=>[]],
+            ['fleet_id'=>20,'player_universe_id'=>8,'role'=>'defender','camp'=>'npc-owner-8','units'=>[]],
+        ]];
+        $presenter=new CombatReportPresenter();
+        $snapshot['occupation_result']=['winner_camp'=>'npc-owner-8','holding_camp'=>null,'outcome'=>'defender_wins'];
+        $view=$presenter->present($snapshot,[],7);self::assertTrue($view['viewer_defends']);self::assertSame('loss',$view['viewer_verdict']);
+        $snapshot['occupation_result']['winner_camp']='occupant-7';self::assertSame('win',$presenter->present($snapshot,[],7)['viewer_verdict']);
+        $snapshot['occupation_result']=['winner_camp'=>null,'holding_camp'=>'occupant-7','outcome'=>'defender_wins'];
+        self::assertSame('hold',$presenter->present($snapshot,[],7)['viewer_verdict']);
+        unset($snapshot['occupation_result']);self::assertNull($presenter->present($snapshot,[],7)['viewer_verdict']);
+    }
     public function testRoundsKeepTiersReinforcementsAndDestructionsSeparate(): void
     {
         $snapshot = ['participants' => [

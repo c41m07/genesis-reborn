@@ -36,7 +36,7 @@ final class CombatReportController extends AbstractController
     }
 
     #[Route('/rapports/combat/{id}', name: 'app_combat_report', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function show(int $id, UniverseContext $context, CombatReportReader $reader, GameCatalog $catalog, CombatReportPresenter $presenter): Response
+    public function show(int $id, UniverseContext $context, CombatReportReader $reader, GameCatalog $catalog, CombatReportPresenter $presenter, \App\Service\Combat\OccupationReportState $occupations): Response
     {
         $membership = $context->membership();
         $log = $reader->findVisible($membership, $id);
@@ -61,6 +61,6 @@ final class CombatReportController extends AbstractController
             }
         }
 
-        return $this->render('combat/report.html.twig', ['report' => $log, 'loot_rows' => $lootRows, 'membership' => $membership] + $presentation);
+        return $this->render('combat/report.html.twig', ['report' => $log, 'loot_rows' => $lootRows, 'membership' => $membership, 'capture_state' => $occupations->forReport($log)] + $presentation);
     }
 }

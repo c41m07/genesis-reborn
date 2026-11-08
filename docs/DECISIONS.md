@@ -251,6 +251,562 @@ Après accord explicite de l’utilisateur, la migration du registre des débloc
 Décision explicite du propriétaire : courriel vers une adresse conservée en configuration privée ; profil modéré, signal absent 120 secondes, relais en retard de 300 secondes, rappel au maximum chaque heure, échec définitif dès détection et message de rétablissement. Le contrôle d’arrêt confirmé reste distinct de la seule absence d’un signal. Ce choix ne modifie aucune règle de jeu et ne vaut pas preuve d’activation sur l’Alpha.
 
 
+## Empires oubliés, vacances et occupation JcE — décisions du 7 novembre 2026
+
+**Statut : règles validées ; premier socle de suivi d'activité préparé, système
+complet non activé.** Le code enregistre la dernière visite par univers et calcule
+les échéances de 14 et 30 jours. La migration additive `Version20261107180000`
+a été appliquée sur la base locale après accord explicite et sauvegarde le
+7 novembre 2026 ; elle laisse les anciennes dates inconnues à `NULL`, sans reprise
+rétroactive. Les courriels J14/J27 sont préparés et testés sans envoi réel ;
+l'utilisateur a validé leurs deux textes le 7 novembre 2026. Cet accord porte
+sur le contenu, sans autoriser l'activation, les envois réels ou une nouvelle
+migration. Leur journal nécessite la migration
+`Version20261107220000`, appliquée localement après un accord distinct et
+sauvegarde le 7 novembre 2026. Les envois restent désactivés en
+configuration et sans planification automatique. La suspension des protections
+à J14 est préparée derrière `FORGOTTEN_EMPIRES_ENABLED=0`, sans activation.
+Les vacances sont raccordées derrière le drapeau désactivé ; un service interne
+de conversion PNJ est préparé et testé, sans point d'entrée d'application ni
+planification. L'occupation reste à développer. Une prévisualisation J30 sans
+écriture est disponible pour préparer les conversions.
+La conquête immédiate décrite dans REGLES.md reste le comportement actuel jusqu'à
+la livraison du nouveau système. Le suivi des lots figure dans
+[FEUILLE_DE_ROUTE.md](FEUILLE_DE_ROUTE.md#empires-oubliés--chantier-validé-le-7-novembre-2026).
+
+### Activité et perte de l'empire
+
+- L'inactivité se mesure par joueur et par univers. Une visite authentifiée dans
+  cet univers remet le compteur à zéro ; les traitements automatiques ne le font pas.
+- À 14 jours sans activité, l'empire devient inactif. Un courriel et un avertissement
+  visible annoncent le risque de perte définitive à 30 jours. Un second courriel
+  est prévu à 27 jours.
+- De 14 à 30 jours, les protections contre le pillage liées au statut du joueur
+  sont neutralisées pendant l'inactivité. Une reconnexion avant 30 jours rétablit
+  le fonctionnement normal, sans renouveler les protections déjà expirées.
+  Les autres règles de combat restent applicables.
+- À 30 jours, l'empire devient définitivement un empire oublié PNJ. Le propriétaire
+  perd l'accès à cet empire, mais conserve son compte, ses préférences et son
+  historique. À son retour, il peut recommencer de zéro dans cet univers selon les
+  règles de départ ; il ne récupère pas son ancien empire.
+- Les colonies, bâtiments, stocks, flottes, défenses et recherches existants sont
+  conservés. Les recherches sont figées et continuent de déterminer les effets de
+  l'empire PNJ ; aucune garnison standard ne remplace ses véritables forces.
+
+### Mode vacances
+
+- Complément validé le 7 novembre 2026 : la production et les files sont suspendues,
+  les nouvelles missions interdites et la consultation reste autorisée. Une sortie
+  volontaire n'est possible qu'après 48 heures. L'interface est raccordée mais
+  masquée derrière le drapeau désactivé ; le mode n'est pas ouvert aux joueurs.
+- Le mode est accessible depuis les options ou préférences et s'applique à l'empire
+  de l'univers concerné. Une activation dure au maximum 90 jours.
+- Une nouvelle activation est possible au plus tôt 15 jours après la fin de la
+  précédente période.
+- Le compteur d'inactivité est suspendu, puis reprend à sa valeur antérieure ;
+  l'activation ne le remet pas à zéro. L'expiration est annoncée au joueur.
+- Complément validé : toutes les flottes du joueur doivent être rentrées avant
+  activation, y compris transports, explorations, colonisations, sondes et
+  stationnements. Une attaque entrante ou un combat en cours bloque aussi l'entrée.
+- Les défenses et orbites d'autres joueurs déjà acceptées conservent leur échéance
+  normale ; les demandes d'orbite encore en attente sont refusées automatiquement
+  à l'activation. Aucun nouveau stationnement n'est autorisé pendant les vacances.
+- Un transport d'un autre joueur encore en route est refusé s'il arrive pendant
+  les vacances ; sa cargaison et ses vaisseaux reviennent selon les règles de retour
+  et de stockage existantes.
+
+Le premier socle prépare `VacationPeriod` et `VacationPolicy` : période planifiée
+de 90 jours, sortie au plus tôt après 48 heures, puis 15 jours de délai depuis
+la fin réelle. Une expiration traitée tardivement conserve sa date prévue comme
+fin effective ; elle ne repousse pas artificiellement la prochaine activation.
+Le calcul du temps suspendu borne chaque période à l'intervalle demandé et
+fusionne les chevauchements pour ne pas déduire deux fois la même durée.
+Il ne remet pas à zéro l'inactivité acquise avant les vacances.
+
+Le socle économique peut désormais enregistrer une période et coordonner la
+production et les files via un service interne. Les routes POST des préférences
+permettent désormais de l'activer ou le terminer avec contrôles d'accès et CSRF,
+sous réserve du drapeau d'activation pour une nouvelle période.
+L'activité et les avertissements sont désormais suspendus sur les périodes enregistrées.
+La migration additive `Version20261107230000` prépare uniquement l'historique des
+périodes, avec une relation à la participation dans l'univers ; elle a été
+appliquée sur la base locale le 7 novembre 2026 après accord et sauvegarde.
+Le raccordement des préférences et des files en pause est réalisé le 8 novembre
+2026. Le cycle complet reste à terminer avant activation.
+
+### Application locale de l'historique des vacances — 7 novembre 2026
+
+Après accord explicite, une sauvegarde locale a été créée dans
+`var/backups/vacation-before-20261107230000/` :
+`genesis-genesis_reborn_v2-20261107T220948Z-TN2wPJrCETzV.sql.gz`.
+L'intégrité gzip et le manifeste SHA-256 sont vérifiés ; aucun essai de
+restauration n'est annoncé.
+
+Une seule migration était en attente : `Version20261107230000`. Elle a exécuté
+deux requêtes, créant `vacation_period` puis sa clé étrangère vers la participation
+à l'univers. `make validate` et `make lint` réussissent, schéma actif compris.
+Les 288 tests PHP et 13 tests Python avaient déjà réussi sur ce code dans la
+base isolée ; ils n'ont pas été relancés sans changement applicatif.
+
+Cette opération ne crée aucune période de vacances et n'active pas le mode.
+La pause/reprise de production et des files, les missions et l'interface restent
+à raccorder. Aucun envoi réel, commit ni push n'a été réalisé.
+
+### Pause et reprise économiques des vacances — 7 novembre 2026
+
+Le service interne `VacationEconomyService` prépare une activation transactionnelle
+en verrouillant la participation et l'univers. Les opérations arrivées à terme
+avant l'entrée en vacances sont terminées ; les ressources acquises à cet instant
+sont matérialisées avant l'enregistrement de la période.
+
+Pendant la période, production et consommations industrielles sont nulles. Les
+stocks et les coûts déjà payés restent conservés, dans les limites de stockage
+habituelles. Les événements de production sont appliqués à leur date réelle,
+uniquement pendant les intervalles hors vacances.
+
+Les têtes des trois files sont reportées de 90 jours par décalage de leur date
+de départ. Durée de travail, quantité, coût payé et dépendances sont conservés.
+Leurs jetons changent et de nouveaux messages sont programmés ; les anciens
+messages devenus obsolètes sont ignorés. Une sortie volontaire après 48 heures
+retire uniquement la partie inutilisée du report, sans redémarrer le travail.
+Une seconde demande de sortie ne décale pas une nouvelle fois les files.
+
+L'expiration à 90 jours ne nécessite pas de reconnexion : le calendrier reprend
+la production après la date prévue et les échéances des files incluent déjà le
+report. Un traitement tardif termine chaque commande à sa véritable date de fin,
+avec les anciens niveaux de production jusqu'à cette date. Les ajouts, annulations
+et accélérations de files sont interdits pendant les vacances.
+
+Le service refuse l'entrée en présence d'attaque/conquête entrante, d'un combat
+en attente sur une colonie ou d'une flotte du joueur encore déployée, quelle que
+soit sa mission (retour et attente d'orbite compris). Les contrôles de départ et
+d'arrivée sont raccordés dans le sous-lot militaire décrit ci-dessous.
+
+L'activation interne exige `FORGOTTEN_EMPIRES_ENABLED=1`, toujours désactivé sur
+la base locale. Une période déjà enregistrée reste respectée et peut être
+terminée même si de nouvelles activations sont désactivées. Aucun endpoint,
+activation réelle, migration supplémentaire ni envoi de mail dans ce sous-lot.
+
+### Compteur et avertissements suspendus pendant les vacances — 7 novembre 2026
+
+La date de dernière visite reste conservée pendant les vacances, y compris lors
+d'une consultation HTML authentifiée. Une visite après la fin de la période
+redevient une activité normale. Une activité historiquement inconnue n'est pas
+initialisée par une simple consultation pendant les vacances.
+
+Les durées hors vacances déterminent les seuils J14, J27 et J30. Les échéances
+sont calculées sur les périodes effectivement enregistrées, avec leur fin réelle
+ou prévue. Une période commençant après un seuil déjà atteint ne réécrit pas
+l'ancienne date de ce seuil. Le statut d'activité vaut `vacation` pendant une
+période active et aucune conversion n'y est déclarée exigible. Le service de
+démarrage refuse désormais une entrée en vacances lorsque l'échéance J30 est
+déjà atteinte ; les vacances ne permettent pas de récupérer un empire perdu.
+
+Le traitement des courriels exclut les vacances actives et déduit aussi les
+périodes terminées. La sélection et l'exclusion des avertissements déjà envoyés
+sont faites avant la limite du lot, afin qu'un empire en pause ne bloque pas les
+autres. Le calcul SQL utilise les fonctions temporelles de MariaDB, backend du
+projet ; il additionne les périodes non chevauchantes garanties par le service
+d'activation sous verrou.
+
+Le journal reste attaché à la véritable dernière visite, sans date artificielle
+de reprise : un J14 déjà envoyé ne se répète pas à la fin des vacances. J27 est
+envoyé uniquement lorsque ce nouveau seuil d'inactivité effective est atteint.
+La date limite insérée dans le texte validé suit l'échéance J30 ajustée. La
+condition d'inactivité est revérifiée sous verrou avant envoi ; une entrée en
+vacances survenue depuis la sélection annule cet envoi.
+
+Aucune modification de schéma, activation réelle ni envoi de courriel dans ce
+sous-lot. L'interface reste à raccorder avant
+ouverture du mode aux joueurs. La conversion PNJ à J30 n'est pas implémentée ici.
+
+### Missions et protection des vacances — 8 novembre 2026
+
+Décisions explicites complémentaires : attendre le retour de toutes les flottes
+du joueur avant activation, conserver jusqu'à leur terme les défenses/orbites
+alliées déjà acceptées et renvoyer les demandes d'orbite en attente à l'entrée.
+
+Le devis et le départ des huit types de mission sont bloqués depuis un empire
+en vacances. Attaques, espionnage, défenses, orbites et transports ne peuvent
+pas cibler un empire en vacances. Les contrôles sont revérifiés à l'arrivée ;
+une mission militaire devenue interdite repart avec ses vaisseaux, sans combat,
+renseignement ni récompense de mission. Les sondes ne sont pas consommées dans
+ce cas. Les retours déjà engagés restent traités normalement pour préserver
+les vaisseaux et cargaisons, même en présence d'un état ancien incohérent.
+
+La protection commune indique « Mode vacances » et sa date de fin effective,
+indépendamment du score. Elle disparaît à l'échéance, sans prolonger les autres
+protections. Les accélérations de flotte sont interdites pendant les vacances,
+avant toute consommation d'un boost.
+
+Le refus automatique des demandes d'orbite a lieu dans la transaction d'entrée
+en vacances. Leur propriétaire reçoit un retour programmé, avec le carburant
+de stationnement inutilisé libéré. Les acceptations manuelles sont sérialisées
+avec l'activation pour éviter un nouveau stationnement pendant la transition.
+Les flottes alliées déjà stationnées conservent leur durée et repartent à son terme.
+
+Un transport lancé avant l'entrée de son destinataire en vacances est marqué
+refusé à l'arrivée et sa cargaison revient sans livraison à la colonie protégée.
+Les capacités de stockage et pertes de débordement habituelles restent appliquées
+au retour : aucune nouvelle règle d'équilibrage n'est ajoutée.
+
+Aucun changement de schéma ni activation réelle. Les préférences et leurs
+contrôles d'accès, CSRF et validations d'interface restent à livrer avant ouverture.
+
+### Préférences et files en pause — 8 novembre 2026
+
+L'interface est désormais raccordée : activation confirmée dans l'univers courant,
+sortie après 48 heures, raisons des blocages et date de prochaine activation.
+Les routes POST vérifient l'accès à l'univers et le jeton CSRF ; le service conserve
+ses validations transactionnelles. Les files montrent une progression figée et
+les actions de construction, recherche et annulation sont retirées pendant la pause.
+Le drapeau `FORGOTTEN_EMPIRES_ENABLED=0` masque les commandes et interdit toute
+nouvelle activation ; la sortie d'une période enregistrée reste possible.
+Aucune activation réelle ni modification des règles d'équilibrage dans ce lot.
+
+### Vie des PNJ
+
+
+- Les PNJ compatibles produisent des ressources dans la limite du stockage et
+  peuvent reconstruire des défenses détruites, avec un coût en ressources, un délai
+  et un plafond. La reconstruction ne fait pas réapparaître gratuitement des forces
+  pendant un combat. Les paramètres de reconstruction restent à arbitrer.
+- Les empires oubliés défendent leurs territoires sans lancer d'attaques, de
+  nouvelles colonisations ou de nouvelles recherches. Les autres catégories de PNJ
+  conservent leurs comportements particuliers.
+- La disparition automatique des colonies PNJ anciennes est hors de ce premier
+  périmètre : transformer ou conquérir un empire ne libère pas automatiquement
+  d'emplacements dans la galaxie.
+
+### Conquête JcE et occupation de 24 heures
+
+- Réutiliser la mission existante, renommée « Conquête JcE », pour les planètes PNJ
+  actuelles et les colonies d'empires oubliés. Les empires de joueurs encore actifs
+  ou simplement inactifs restent exclus de la conquête.
+- Une victoire avec un vaisseau de colonisation survivant démarre une occupation
+  de 24 heures. La planète n'appartient pas encore à l'occupant.
+- Complément validé le 8 novembre 2026 : les 24 heures sont fixes et ne peuvent
+  pas être raccourcies par un boost. Le carburant des 24 heures de stationnement
+  est prévu au départ ; la part inutilisée est restituée si l'occupation cesse
+  avant son terme.
+- Complément validé le 8 novembre 2026 : un combat ouvert à l'échéance retarde
+  la capture jusqu'à son résultat. Un occupant victorieux conserve son temps
+  acquis ; un nouveau conquérant repart pour 24 heures.
+- Une place de colonie est réservée pendant l'occupation, dans le respect des
+  prérequis et plafonds actuels. Elle est libérée si l'occupation échoue.
+- Le vaisseau de colonisation reste sur place avec la flotte d'occupation ; il est
+  consommé à la capture définitive. L'occupant peut renforcer sa défense. Retirer
+  toutes ses forces ou perdre le dernier vaisseau de colonisation fait échouer
+  l'occupation.
+- Un concurrent peut attaquer l'occupant. Pour lancer sa propre occupation, il
+  doit gagner et disposer lui aussi d'un vaisseau de colonisation. Chaque nouvel
+  occupant recommence un délai complet de 24 heures.
+- Pendant l'occupation, la planète continue de produire, dans la limite du
+  stockage, et reste pillable selon les règles habituelles. Les stocks restent
+  sur place ; l'occupant ne peut ni construire ni transférer ces stocks avant la
+  capture définitive.
+- Les recherches et déblocages permanents de l'ancien propriétaire ne sont pas
+  transmis au conquérant. Ses propres technologies s'appliquent après capture.
+  Les bâtiments hérités restent soumis à ses règles d'utilisation et d'amélioration.
+  Complément validé le 8 novembre 2026 : les bâtiments et stocks sont conservés
+  sans dégâts supplémentaires de capture. Toute force PNJ hostile encore présente
+  ou reconstruite pendant l'occupation doit être vaincue avant le transfert ;
+  aucune force ennemie n'est offerte au conquérant. L'occupant qui reste vainqueur
+  conserve le temps déjà acquis.
+
+### Socle d'occupation — préparé le 8 novembre 2026
+
+`PlanetOccupation` conserve un état courant unique par planète ; ses changements
+sont gardés dans `OccupationEvent`. Chaque combat ne peut produire qu'un seul
+événement de démarrage, maintien ou remplacement, grâce à une contrainte unique.
+La répétition du combat d'origine ne redémarre pas l'état courant. Le futur
+coordinateur devra consulter le journal avant une transition et traiter toute
+la capture dans une transaction ; un ancien combat déjà journalisé ne peut pas
+réécrire l'occupant en base, même après un remplacement.
+
+`OccupationPolicy` prépare uniquement des transitions en mémoire. Elle fixe
+24 heures, conserve la date d'un occupant qui se maintient et repart de zéro
+pour son remplaçant. Les échecs (abandon, vaisseau perdu, capacité perdue,
+occupant devenu indisponible, planète reprise) libèrent la réservation d'état.
+Un combat ouvert suspend la décision de capture. Les planètes ordinaires vides,
+les empires de joueurs simplement inactifs et les autres univers sont exclus.
+
+La politique seule ne déplace ni flotte, ne consomme ni carburant ni vaisseau et
+ne transfère pas la planète. Le démarrage après victoire est désormais raccordé
+par le coordinateur décrit ci-dessous ; la capture physique reste à développer. La capture
+instantanée actuelle reste inchangée jusqu'au branchement complet et à son
+activation validée. `Version20261108030000` prépare uniquement les deux tables
+et leurs contraintes, sans occupation réelle ; elle a été appliquée localement
+le 8 novembre 2026 après accord et vérification de la sauvegarde. Ses huit
+requêtes ont réussi, le schéma est synchronisé, validation et lint réussissent.
+Son retour arrière refuse de supprimer des états ou historiques existants.
+
+### Démarrage d'occupation après victoire — 8 novembre 2026
+
+`OccupationService` est raccordé à la victoire JcE derrière le drapeau désactivé.
+Le résolveur vérifie les vaisseaux survivants après pertes et la capacité sous
+verrou des conquérants et de la planète. Le journal par combat est consulté avant
+création ; une répétition ne crée pas de réservation supplémentaire. La flotte
+retenue prend le statut `occupying` et garde son vaisseau de colonisation,
+son carburant de stationnement et la planète à son propriétaire actuel.
+La conquête d'une colonie oubliée n'embarque pas de butin ; les recherches et
+stocks existants ne sont pas transférés. La récompense de capture n'est pas
+attribuée au simple début d'occupation.
+
+Les places actives sont déduites des capacités de colonisation au devis et à
+l'arrivée, ainsi qu'à la nouvelle victoire de conquête. Une flotte non retenue
+rentre sans consommer sa réserve de stationnement inutilisée. Les nouvelles
+missions d'occupation prévoient 24 heures de carburant au départ et portent cette
+durée dans la mission. Une désactivation pendant le trajet ou le combat renvoie
+ces missions, sans les transformer en captures immédiates. Les occupations et
+réservations déjà enregistrées restent prises en compte même après désactivation.
+
+Les affichages de flottes et de rapports distinguent le statut d'occupation et
+son échéance ; les libellés de mission deviennent « Conquête JcE ». L'occupation
+est comptée comme flotte déployée : elle interdit l'entrée en vacances et ne peut
+être accélérée comme un trajet. Une conversion J30 annule ses réservations et
+renvoie sa flotte en libérant le carburant inutilisé selon le temps effectué.
+
+Ce lot ne déclenche pas de capture à l'échéance et ne permet pas encore renforts
+ou affrontements contre l'occupant. Pour empêcher un contournement par l'ancien
+résolveur, attaques et conquêtes d'une planète déjà occupée sont temporairement
+refusées dans ce mode de développement. Ce n'est pas la règle finale validée :
+le drapeau doit rester désactivé jusqu'à intégration des combats de concurrence,
+de la capture physique et de leurs traitements d'échéance. Aucune nouvelle
+migration n'est nécessaire et aucune occupation réelle n'est créée par ce lot.
+
+### Contrôle des forces avant capture — 8 novembre 2026
+
+`OccupationReadiness` lit les forces présentes avant toute future décision de
+transfert : vaisseaux PNJ, défenses positives et flottes ennemies sur place.
+Les alliés ne sont pas comptés comme hostiles. L'occupant doit garder ses propres
+forces et au moins un vaisseau de colonisation ; la présence de troupes alliées
+seules ne suffit pas. Les quantités nulles ne bloquent pas la capture.
+Le contrôle des combats ouverts reste prioritaire et les attentes ne modifient
+ni l'échéance, ni le jeton, ni les réservations. L'état `hostile_forces` n'est pas
+un échec : il impose un nouveau combat avant de pouvoir transférer la planète.
+
+Cette lecture ne transfère pas de planète, ne consomme aucun vaisseau et n'écrit
+pas d'historique. Le coordinateur de capture la refait sous verrou, après
+traitement des commandes arrivées à échéance. Compléments validés le 8 novembre
+2026 : les flottes PNJ encore en retour doivent revenir et être vaincues avant
+la capture ; les commandes restant sur la planète sont annulées lors du transfert,
+sans transmission ni remboursement au conquérant. Cette exception de capture
+complète la conservation des commandes payées à J30. Leurs chaînes dépendantes
+sont aussi annulées pour ne pas produire des niveaux devenus impossibles.
+
+### Transfert définitif interne après occupation — 8 novembre 2026
+
+`OccupationCaptureService` vérifie sous verrou l'état courant et son jeton, les
+participations concernées, l'univers et la planète. Un ancien message, une capture
+déjà terminée ou un univers fermé ne peuvent provoquer un nouveau transfert.
+Il traite les commandes échues de l'ancien empire avant de rechercher les forces
+restantes : une défense qui vient d'être terminée impose donc un nouveau combat.
+Attente du délai, combat ouvert, forces hostiles et flottes ennemies en retour
+conservent l'échéance et la réservation. Abandon, perte du vaisseau, capacité perdue
+ou occupant indisponible mettent fin à la tentative et renvoient ses survivants,
+en libérant le carburant de stationnement inutilisé.
+
+Une capture validée consomme un seul vaisseau de colonisation, conserve les
+bâtiments et stocks matérialisés à l'instant du transfert, change le propriétaire
+et journalise les commandes annulées sans remboursement. Elle applique les
+recherches du conquérant, sans copier celles ni les déblocages de l'ancien empire.
+Les bâtiments hérités ne suffisent pas à hériter d'un accès permanent de rang :
+les conditions propres au nouveau propriétaire restent vérifiées. La planète
+reçoit un nom selon la règle de conquête existante. Les forces survivantes
+rentrent comme lors de la conquête actuelle ; une flotte vide après consommation
+du dernier vaisseau de colonisation est terminée, sans retour fictif.
+
+La récompense de conquête est déclenchée à la capture, sans doublon et selon
+les plafonds existants. Le résumé
+du rapport de combat d'origine est alors mis à jour sans ajouter la consommation
+du vaisseau aux pertes du combat. Le journal d'occupation conserve la transition,
+les commandes annulées et les flottes renvoyées. Toute erreur annule ensemble
+propriété, consommation, annulations, récompense et historique.
+Le service reste interne et désactivé, sans traitement automatique d'échéance.
+Les renforts et combats de concurrence doivent être raccordés avant activation.
+
+### Intégrité et arbitrages à terminer
+
+- Complément validé le 8 novembre 2026 : les commandes déjà payées à J30 vont
+  à leur terme, sans nouvelles commandes PNJ ; leurs résultats restent dans
+  l'empire oublié. Les recherches sont ensuite figées.
+- Complément validé le 8 novembre 2026 : les propres flottes déployées sont
+  renvoyées avec leurs vaisseaux et cargaisons, sans nouvelle action offensive.
+  Un combat déjà ouvert retarde la conversion jusqu'à sa résolution.
+- Complément validé le 8 novembre 2026 : les flottes alliées stationnées sur les
+  colonies oubliées sont également renvoyées ; les attaques déjà en route continuent.
+  Les comptes verrouillés ou non vérifiés suivent la même échéance lorsque leur
+  dernière activité est connue. Les dates inconnues restent exclues.
+- Complément validé le 8 novembre 2026 : la conversion met fin aux alliances
+  et à l'appartenance à une guilde. Si l'ancien joueur dirige la guilde, le membre
+  le plus ancien encore actif reprend sa direction. Sans successeur actif,
+  la guilde est archivée en conservant son historique. Ces transitions restent
+  à implémenter ; la prévisualisation ne les exécute pas.
+- Préserver et traiter explicitement les missions, combats, échanges et files en
+  cours lors de la transformation, sans duplication ni disparition accidentelle.
+- Prévoir un historique des transformations, occupations et transferts pour les
+  vérifications contre les abus. Les limites de fréquence des conquêtes et les
+  sanctions ne sont pas chiffrées ni automatisées par cette décision.
+- Définir avant activation le point de départ des compteurs des comptes existants,
+  sans déduire une ancienne activité d'une simple date de création ou de session.
+- Préciser le traitement des combats encore ouverts à l'échéance des 24 heures,
+  des occupations simultanées, des boosts de mission et du carburant d'occupation.
+  Le report pendant un combat, le temps conservé par l'occupant victorieux,
+  l'absence de boost du délai et le carburant prépayé sont désormais validés
+  ci-dessus ; le traitement concret reste à raccorder.
+- Toute migration ou application aux empires existants demande une validation
+  distincte. Seule la migration du suivi d'activité décrite ci-dessus a été
+  exécutée localement ; aucun empire n'a été transformé par cette opération.
+
+### Prévisualisation des échéances J30 — 8 novembre 2026
+
+`make empires-preview` est une lecture préparatoire, pas un convertisseur. Elle
+déduit les périodes de vacances réelles avant de limiter le lot et exclut les
+univers inaccessibles ainsi que les dates d'activité inconnues. Le curseur
+`--after-id` permet de parcourir tous les empires à échéance, même lorsqu'un
+premier lot comporte des situations à traiter. Les comptes verrouillés ou non
+vérifiés sont signalés pour examen, sans décider ici de leur conversion.
+La décision complémentaire ci-dessous soumet désormais aussi les comptes verrouillés
+ou non vérifiés à J30 ; leur signalement dans le relevé n'est pas une exemption.
+Le relevé compte colonies, flottes déployées et accueillies, commandes, recherches,
+combats ouverts sur place ou ailleurs, alliances et responsabilités de guilde.
+Il ne garantit pas qu'un empire soit immédiatement transformable : les conditions
+devront être revérifiées sous verrou par le futur service de conversion.
+Les courriels, états des flottes, files et dates d'activité restent inchangés.
+
+### Identité des empires oubliés — 8 novembre 2026
+
+Après comparaison des deux solutions, décision explicite : détacher le joueur
+comme propriétaire actuel. `PlayerUniverse.player` devient nullable ;
+`formerPlayer` conserve uniquement la provenance historique, sans droit d'accès.
+`forgottenAt` marque le détachement. Les colonies, flottes, recherches et historiques
+gardent leur inscription d'origine et leurs identifiants, sans transfert au nouvel
+empire. La contrainte unique joueur/univers est conservée : le joueur ne peut
+posséder qu'un empire actif, tandis que plusieurs anciens empires sans propriétaire
+peuvent rester présents. Les accès et actions de l'ancien joueur sont refusés,
+même si une ancienne sélection pointe encore sur cet empire.
+
+La méthode de détachement prépare uniquement l'identité ; aucun bouton, commande
+ou traitement automatique ne l'exécute sur les vrais empires. Le futur service
+de conversion doit d'abord coordonner seuil J30, combats, retours et liens sociaux.
+Les commandes déjà payées peuvent encore être terminées par les traitements
+automatiques. L'empire oublié ne participe plus au classement des joueurs et ne
+peut plus recevoir de nouveaux messages privés ni transports de joueur.
+Ses anciens échanges restent affichables à leurs interlocuteurs, sans lui envoyer
+de nouveaux messages. La référence historique ne donne pas accès aux conversations
+de l'ancien empire depuis une nouvelle inscription.
+
+La migration `Version20261108010000` ajoute les champs historiques et autorise
+un propriétaire absent, sans détacher ni modifier les empires existants. Elle est
+testée dans la base isolée et a été appliquée localement après accord distinct
+et vérification de la sauvegarde le 8 novembre 2026. Trois requêtes ont préparé
+la structure, sans conversion. `make validate`, `make lint` (schéma compris)
+et `git diff --check` réussissent ; les deux drapeaux restent désactivés.
+Le retour arrière est refusé dès qu'un empire oublié ou sans propriétaire existe,
+pour empêcher une perte de l'historique.
+
+### Conversion J30 interne — préparée le 8 novembre 2026
+
+`EmpireConversionService` revalide l'échéance effective sous verrou de l'empire et
+de l'univers. Un combat ouvert sur ses colonies ou impliquant ses flottes ailleurs
+reporte toute la conversion. Une activité modifiée avant la prise du verrou est
+rechargée et empêche une conversion prématurée. Lorsque le cycle sera activé,
+une visite à partir de J30 ne remettra plus le compteur à zéro et les accès seront
+refusés pendant l'attente de conversion. Avant J30, le retour reste normal.
+
+Les flottes propres sorties et les alliées stationnées rentrent avec leurs forces
+et cargaisons. Les retours déjà engagés et les attaques étrangères en route sont
+conservés. Les anciens jetons des missions rappelées sont invalidés ; la durée de
+retour réutilise le trajet connu et le carburant de stationnement inutilisé est
+libéré (consommation au prorata pour l'orbite déjà effectuée). Les transports
+rappelés ou arrivant chez un empire converti sont refusés sans livraison.
+Les colonies, recherches et véritables forces restent attachées à l'ancien empire,
+sans garnison PNJ standard. Les commandes payées peuvent toujours se terminer.
+Le pillage d'un empire effectivement converti relève du JcE, sans protection ou
+limite de score de joueur ; les joueurs actifs et simplement inactifs gardent les
+contrôles de combat existants. La conquête avec occupation reste à raccorder.
+
+Les alliances prennent le statut historique `ended`. La succession d'une guilde
+utilise l'ordre des adhésions (identifiants croissants) parmi les membres encore
+joueurs, non verrouillés et à moins de 14 jours d'inactivité effective. Les vacances
+comptent selon leur temps réellement suspendu. Sans successeur, la guilde est
+archivée, ses relations neutralisées et ses adhésions libérées ; ses messages,
+son ancien commandement et son nom restent conservés. La composition antérieure
+est gardée dans le journal, permettant aux anciens membres de rejoindre une
+autre guilde sans perdre cette trace. Les guildes archivées ne sont plus proposées
+au recrutement ni au classement. Leurs noms restent réservés.
+
+Un seul journal `EmpireConversion` est possible par empire. Il garde la dernière
+activité, l'échéance, la date de traitement et les effets (inventaire avant,
+flottes rappelées, alliances et guildes). Toute erreur annule la transaction,
+y compris rappels et changements sociaux. La migration additive
+`Version20261108020000` prépare ce journal et la date d'archivage des guildes ;
+son retour arrière refuse d'effacer des conversions ou archives existantes.
+Elle a été appliquée localement après accord explicite et vérification de la
+sauvegarde le 8 novembre 2026 : trois requêtes, aucun empire converti ni guilde
+archivée. Le schéma est synchronisé ; validation et lint réussissent.
+Le service est désactivé, sans commande
+d'application ni planification automatique ; aucun empire réel n'a été converti.
+
+### Application locale du socle d'activité — 7 novembre 2026
+
+Après l'accord explicite de l'utilisateur, la sauvegarde locale
+`genesis-genesis_reborn_v2-20261107T212518Z-0ffS00FEGKab.sql.gz` a été créée dans
+`var/backups`, avec intégrité gzip et manifeste SHA-256 vérifiés. Cette vérification
+ne constitue pas un essai de restauration.
+
+Le contrôle des versions indiquait une seule migration en attente :
+`Version20261107180000`. Son application a exécuté une seule requête, ajoutant
+la colonne nullable `player_universe.last_activity_at`. `make validate` puis
+`make lint` réussissent ; le schéma actif est synchronisé avec le mapping.
+Les 260 tests PHP et 13 tests Python avaient déjà réussi sur ce code avant
+l'application, dans la base isolée ; ils n'ont pas été relancés sans changement
+applicatif. Aucun commit, push ou déploiement n'est réalisé par cette opération.
+
+### Suspension des protections à J14 — préparée le 7 novembre 2026
+
+Le contrôle des attaques et l'état de protection utilisé par le classement et
+l'interface utilisent le même service. Lorsque le cycle sera activé, une activité
+connue datant d'au moins 14 jours suspendra les protections débutant et après
+pertes. Une activité inconnue ne déclenche aucune suspension.
+
+Pendant l'inactivité, de lourdes pertes n'accordent pas de nouvelle protection
+de récupération et ne consomment pas son délai entre activations. Les dates
+existantes ne sont pas effacées ni prolongées : une visite avant J30 rétablit les
+protections encore valables, sans renouveler une protection expirée.
+
+Alliances, interdiction d'attaquer ses propres colonies, séparation des univers,
+limite d'écart de score et part de stockage protégée restent applicables. Une
+colonie de joueur inactif reste exclue de la conquête JcE jusqu'à sa future
+transformation PNJ.
+
+`FORGOTTEN_EMPIRES_ENABLED` vaut `0` par défaut. Le lot est testé avec activation
+limitée aux instances des tests ; aucun changement de la configuration privée
+ni aucune migration supplémentaire n'est nécessaire. L'activation réelle attend
+la livraison du cycle complet, la disponibilité des avertissements et un accord
+distinct. La perte d'accès à J30 n'est pas implémentée par ce lot.
+
+### Application locale du journal d'avertissements — 7 novembre 2026
+
+Après accord explicite distinct de la validation des textes, une sauvegarde
+locale a été créée et vérifiée :
+`var/backups/genesis-genesis_reborn_v2-20261107T214301Z-IsWwVDp84gF3.sql.gz`
+(intégrité gzip et manifeste SHA-256 ; aucun essai de restauration effectué).
+
+Le contrôle des versions indiquait une seule migration en attente,
+`Version20261107220000`. Son application a exécuté trois requêtes : création du
+journal `empire_inactivity_warning`, clé étrangère vers la participation et
+index de dernière activité. `make validate` et `make lint` réussissent ; le
+schéma actif est synchronisé.
+
+La commande `make empires-warn` a été exécutée en prévisualisation : zéro
+éligible, aucun envoi et aucune écriture du journal. La valeur traitée de
+`EMPIRE_INACTIVITY_WARNINGS_ENABLED` est `false` dans la console locale. Aucun
+job d'envoi n'est ajouté ; cette opération n'active ni courriels ni transformation
+PNJ. Le travail parallèle sur les modèles de courriels et sa branche courante
+`codex/design-emails` ont été préservés. Aucun commit ni push dans cette opération.
+
 ## Transports entre joueurs — décision validée le 7 novembre 2026
 
 Les transports peuvent viser une colonie connue du même univers et de la même galaxie, appartenant au joueur ou à un destinataire qui les autorise. Le réglage de compte accepte tout le monde, les alliés uniquement (défaut) ou personne ; les propres colonies restent autorisées. Les alliances suivent les relations existantes (guilde ou contrat accepté, hors relation ennemie).
@@ -258,3 +814,150 @@ Les transports peuvent viser une colonie connue du même univers et de la même 
 L’expéditeur fournit ressources, vaisseaux et carburant aller-retour. L’autorisation est contrôlée au départ et à l’arrivée. Un changement de propriétaire ou un refus à l’arrivée entraîne le retour de la cargaison. La livraison respecte chaque capacité de stockage ; le surplus revient, y compris entre les propres colonies. Au retour, le dépôt reste soumis au stockage de la colonie de départ : un éventuel dépassement y est perdu et indiqué dans le rapport.
 
 Les dons entre joueurs ne donnent aucun boost et ne font progresser aucun objectif. La protection débutant reste inchangée. Aucun plafond de dons, taxe ou sanction automatique sur une adresse IP n’est ajouté. Les deux participants disposent du rapport économique ; l’administration dispose de l’historique paginé des transports pour une vérification humaine.
+
+### Renforts et contestation des occupations — décisions du 8 novembre 2026
+
+Décisions explicites : les renforts de l'occupant et de ses alliés sont autorisés,
+sans recommencer les 24 heures. Les joueurs sans alliance ne peuvent pas défendre
+l'occupation. Le devis réserve le temps restant jusqu'à l'échéance, avec au minimum
+la fenêtre de combat existante ; le carburant de stationnement non consommé revient
+avec la flotte. Le renfort vise le titulaire présent à son départ : un changement
+de titulaire ou une occupation terminée provoque son retour.
+
+Uniquement sur le monde JcE occupé, la protection débutant et la limite d'écart de
+score ne bloquent pas une contestation. Les alliances et l'interdiction des vacances
+avec une flotte déployée restent applicables. Les autres colonies du joueur gardent
+leurs contrôles habituels. Chaque camp conserve ses recherches : les forces PNJ ne
+sont pas alliées de l'occupant contre ses rivaux.
+
+Le titulaire victorieux conserve son échéance. Un rival doit gagner avec une mission
+Conquête JcE, un vaisseau de colonisation survivant et une place disponible pour
+reprendre l'occupation et commencer ses propres 24 heures. Une attaque simple peut
+mettre fin à l'occupation, sans acquérir la planète. Le vaisseau d'un allié ne remplace
+pas le vaisseau de colonisation requis de l'occupant. La limite de rounds existante
+conserve le retrait des attaquants ; les forces PNJ restantes bloquent la capture.
+Les renforts alliés repartent aussi en fin d'occupation ou à la conversion J30 du
+titulaire, avec leurs survivants et cargaisons.
+
+Le raccordement reste derrière le drapeau désactivé. La migration
+`Version20261108040000` ajoute uniquement le suivi des renforts ; son application
+locale demande un accord distinct. Aucun courriel n'est modifié ni envoyé par ce lot.
+### Application du suivi des renforts et échéances différées — 8 novembre 2026
+
+L'utilisateur a autorisé l'application locale de `Version20261108040000`. La
+sauvegarde préalable a été revérifiée (gzip et SHA-256), la version en attente
+contrôlée, puis les trois requêtes appliquées. Le schéma est synchronisé ; aucune
+occupation, flotte de renfort ou conversion réelle n'a été créée.
+
+Le contrôle des captures est maintenant raccordé au relais existant par un message
+`OccupationDue`, programmé au début de l'occupation et à nouveau après une victoire
+conservant le titulaire. L'échéance de jeu reste inchangée. Un message prématuré
+reprogramme cette même échéance ; un message périmé ou répété ne permet pas une
+deuxième capture. Les combats ouverts, forces hostiles et retours PNJ empêchent
+la capture ; une nouvelle victoire relance son examen. Les échecs techniques suivent
+les reprises du transport existant. Aucun sondage permanent n'est ajouté pendant
+l'attente de forces à vaincre.
+
+La commande `app:occupations:resume`, accessible par `make occupations-resume`,
+prévisualise par défaut les occupations actives, sans écriture. Le mode explicite
+`--apply` remet leurs contrôles dans le relais et reste refusé si le drapeau est
+à zéro. Les univers inaccessibles sont ignorés. Les lots incluent les occupations
+futures comme échues et disposent d'un curseur pour pouvoir reprendre après une
+interruption. Ce raccordement ne change aucune règle ni valeur d'équilibrage, ne
+planifie pas les conversions J30 et n'active ni système ni courriel.
+### Traitement J30 par lots — raccordement du 8 novembre 2026
+
+Le service de conversion sous verrou est accessible par une commande dédiée,
+`app:empires:convert-forgotten` (`make empires-convert`). Le comportement par défaut
+reste une prévisualisation sans écriture ni envoi. L'application exige `--apply`
+et le drapeau `FORGOTTEN_EMPIRES_ENABLED` activé ; la commande n'active pas ce drapeau.
+La sélection reprend les échéances effectives existantes, après déduction des
+vacances et exclusion des dates inconnues et univers inaccessibles. Les comptes
+verrouillés/non vérifiés restent soumis à la règle validée, sans exemption ajoutée.
+
+Chaque empire est revérifié sous verrou dans une transaction distincte. Les combats
+ouverts reportent la conversion ; un passage `--all` continue les lots suivants,
+puis le prochain passage sans curseur réexamine les reports. Une erreur technique
+arrête le lot avec un code d'échec et un curseur précédant l'empire en erreur ;
+les conversions déjà validées ne sont pas annulées. Après correction, une reprise
+ne peut pas convertir deux fois le même empire. Les détails techniques sont dans
+les journaux, pas dans le tableau destiné à l'opérateur.
+
+Ce raccordement ne change aucune règle d'équilibrage, n'installe aucune tâche
+périodique et ne déclenche aucune conversion réelle dans cette session. La future
+planification et l'activation restent distinctes des tests de la commande.
+### Cartes et parcours complet des empires oubliés — 8 novembre 2026
+
+La vérification du parcours a relevé un écart d'interface : les liens de conquête
+des cartes visaient uniquement les planètes PNJ classiques, alors que le service
+accepte aussi les empires oubliés. Les deux cartes utilisent désormais les contrôles
+existants pour proposer la conquête de ces mondes, les renforts du titulaire/alliés
+et les contestations par les rivaux. L'échéance UTC et le caractère non définitif
+de l'occupation sont affichés. Un allié ne reçoit pas de lien de conquête ou d'attaque
+contre le titulaire ; s'il reste des forces hostiles, il peut préparer leur combat.
+Les liens tiennent compte des places de colonie réelles et des réservations en cours,
+sans modifier leurs limites ni les règles de déblocage.
+
+Ces corrections ne changent aucune règle ni aucun texte de courriel. Le parcours
+complet est vérifié dans la base de tests, avec une horloge et un transport de
+courriels simulés. Aucun empire réel n'est converti et aucun envoi SMTP réel n'est
+réalisé dans ce lot.
+### Revue finale des occupations — 8 novembre 2026
+
+Corrections de cohérence avec les règles déjà validées : une victoire du camp PNJ
+n'attribue pas de récompense au renfort humain vaincu ; le verdict du rapport tient
+compte du camp réel et distingue une position maintenue à la limite des rounds.
+Les rapports d'occupation consultent leur journal de fin/remplacement pour afficher
+l'état actuel de cette occupation sans altérer l'instantané historique de bataille.
+Une capture ultérieure par un rival ne fait pas apparaître l'ancien titulaire
+comme conquérant. Les données et fonctionnalités des autres rapports sont conservées.
+
+Une désactivation pendant un combat d'occupation ne doit pas bloquer sa résolution :
+le combat se termine, mais aucune nouvelle occupation n'est créée par la victoire
+d'un rival tant que le drapeau est à zéro. Il ne s'agit pas d'une modification des
+règles de combat ou d'une nouvelle valeur d'équilibrage.
+
+La procédure de mise en service est préparée dans EXPLOITATION.md. La cadence de
+cinq minutes y est une proposition d'exploitation, pas une planification installée
+ni une décision d'activation. Les contenus de courriel restent inchangés et validés ;
+leur réception SMTP réelle, l'activation et l'installation des passages périodiques
+nécessitent encore les accords correspondants.
+### Passage quotidien à minuit à Paris — décision validée le 8 novembre 2026
+
+L'utilisateur remplace la proposition de cinq minutes par une vérification quotidienne
+à 00 h, heure de Paris, et valide l'alignement de la perte d'accès sur la conversion
+effective. Les avertissements J14/J27 et les conversions utilisent ce passage ; les
+occupations conservent leurs 24 heures exactes et leur traitement Messenger distinct.
+
+L'échéance après 30 jours effectifs, vacances déduites, est arrondie au premier
+minuit `Europe/Paris` qui lui est supérieur ou égal. Elle reste stockée en UTC et
+suit le calendrier civil, y compris les journées de 23 ou 25 heures. La sélection
+SQL applique le dernier minuit parisien avant LIMIT, pour qu'un empire dont le
+seuil brut tombe dans la journée ne masque pas un autre empire déjà éligible.
+Les univers et vacances actuellement inaccessibles restent exclus au moment du
+traitement, puis la conversion revalide sous verrou.
+
+Le passage du seuil ou de minuit n'interdit plus à lui seul le contrôle d'un empire
+encore humain. Un retard de traitement ou un combat reporté laisse l'accès jusqu'au
+détachement effectif ; une visite légitime avant ce détachement réinitialise la
+période d'inactivité. La visite et la conversion sont sérialisées par les verrous.
+La sélection d'univers, les actions, les vacances et les occupations suivent cette
+même règle ; un empire réellement converti reste inaccessible à son ancien joueur.
+
+Le passage quotidien des avertissements utilise `--send --all` pour traiter tous
+les lots, avec déduplication et arrêt sur échec de transport ou absence de progression.
+Les seuils de protections J14 et les autres règles de jeu ne changent pas.
+Deux formulations des courriels sont adaptées : l'empire « pourra être transformé »
+et le nouveau départ devient nécessaire « après cette transformation ». Les modèles
+révisés doivent être présentés à l'utilisateur avant activation ; aucun envoi réel
+n'est effectué pendant ce lot.
+
+### Mise en service locale — accord du 8 novembre 2026
+
+L'utilisateur valide les deux courriels révisés et l'activation locale du cycle
+complet, avec avertissements et conversions à 00 h Europe/Paris. Les deux drapeaux
+sont activés dans la configuration privée locale et le passage quotidien est
+installé dans la crontab de `caim`. Les occupations gardent leur échéance de 24 h
+indépendante. Les participations sans activité connue restent exclues, sans
+initialisation inventée. Aucun envoi ou conversion manuel ni déploiement distant.
+Les descriptions précédentes de drapeaux désactivés sont des états historiques.

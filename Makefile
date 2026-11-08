@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 DC = docker compose --env-file .env.local
 EXEC = $(DC) exec -T --user $(shell id -u):$(shell id -g) app
-.PHONY: help configure doctor validate build start stop down status logs shell console install migrate import seed-demo test lint assets watch verify-install test-browser backup restore ops-check backup-status test-backup
+.PHONY: help configure doctor validate build start stop down status logs shell console install migrate import seed-demo test lint assets watch verify-install test-browser backup restore ops-check backup-status test-backup empires-warn empires-preview empires-convert occupations-resume
 help: ## Afficher les commandes
 	@awk 'BEGIN {FS = ":.*## "} /^[a-z-]+:.*## / {printf "%-16s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 configure: ## Générer les secrets locaux sans écraser l'existant
@@ -63,6 +63,18 @@ restore: ## Restaurer BACKUP_FILE après confirmation RESTORE_CONFIRM=<projet Co
 
 ops-check: ## Contrôler les alertes depuis l’hôte (simulation ; OPS_ARGS=--send pour envoyer si activé)
 	bash scripts/operations-check.sh $(OPS_ARGS)
+
+empires-warn: ## Prévisualiser les avertissements d’inactivité J14/J27 sans envoi
+	$(EXEC) php bin/console app:empires:warn-inactive $(WARN_ARGS)
+
+empires-preview: ## Prévisualiser les empires à J30 et les opérations à traiter, sans écriture
+	$(EXEC) php bin/console app:empires:preview-forgotten $(PREVIEW_ARGS)
+
+empires-convert: ## Prévisualiser les conversions J30 ; CONVERT_ARGS=--apply pour appliquer si activées
+	$(EXEC) php bin/console app:empires:convert-forgotten $(CONVERT_ARGS)
+
+occupations-resume: ## Prévisualiser les contrôles à reprendre ; RESUME_ARGS=--apply pour reprogrammer si activé
+	$(EXEC) php bin/console app:occupations:resume $(RESUME_ARGS)
 
 backup-status: ## Détecter échec ou succès de sauvegarde vieux de plus de 36 heures
 	python3 scripts/backup-tools.py check

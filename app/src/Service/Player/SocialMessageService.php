@@ -19,6 +19,7 @@ final class SocialMessageService
         private GameCatalog $catalog,
         private NotificationService $notifications,
         private ClockInterface $clock,
+        private EmpireActivityService $activity,
         #[Autowire(service: 'limiter.social_message')] private RateLimiterFactory $messageLimiter,
     ) {}
 
@@ -27,7 +28,7 @@ final class SocialMessageService
         $this->manager->transaction(function () use ($sender, $recipientId, $content): void {
             $this->lockUniverse($sender);
             $recipient = $this->repo->find(PlayerUniverse::class, $recipientId);
-            if (!$recipient || $recipient->universe->id !== $sender->universe->id || $recipient->id === $sender->id) {
+            if (!$recipient || !$recipient->isPlayerControlled() || $recipient->universe->id !== $sender->universe->id || $recipient->id === $sender->id) {
                 throw new \DomainException('Destinataire inaccessible dans cet univers.');
             }
             $content = $this->validateContent($content);
@@ -129,6 +130,7 @@ final class SocialMessageService
     private function lockUniverse(PlayerUniverse $membership): void
     {
         $this->manager->lock($membership);
+        $this->activity->assertCanControl($membership);
         $this->manager->lock($membership->universe);
         if (!$membership->universe->isAccessible($this->clock->now())) {
             throw new \DomainException('Univers inaccessible.');

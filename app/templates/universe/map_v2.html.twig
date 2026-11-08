@@ -76,7 +76,7 @@
                 <ul class="gv2-planet-list">{% for p in row.planets|sort((a,b)=>a.position<=>b.position) %}
                     <li><button type="button" class="gv2-planet-choice" data-action="click->galaxy-v2#selectPlanet" data-planet-id="{{ p.id }}">
                         <span class="gv2-planet-number">{{ '%02d'|format(p.position) }}</span><span class="gv2-planet-choice-name">{{ p.name }}</span>
-                        <span class="gv2-planet-owner">{% if p.owner and p.owner.id==membership.id %}Votre monde{% elseif p.owner %}{{ p.owner.player.username }}{% elseif p.npcPlanet %}Faction PNJ · niv. {{ p.conquestLevel }}{% else %}Inhabitée{% endif %}</span>
+                        <span class="gv2-planet-owner">{% if p.owner and p.owner.id==membership.id %}Votre monde{% elseif p.owner %}{{ p.owner.displayName }}{% elseif p.npcPlanet %}Faction PNJ · niv. {{ p.conquestLevel }}{% else %}Inhabitée{% endif %}</span>
                     </button></li>
                 {% endfor %}</ul>
             {% else %}
@@ -86,15 +86,15 @@
         </template>
         {% if row.known %}{% for p in row.planets %}
         <template data-gv2-planet="{{ p.id }}">
-            <header class="gv2-panel-heading"><div><span class="muted">PLANÈTE · {{ p.coordinates() }}</span><h2>{{ p.name }}</h2><p>{% if p.owner and p.owner.id==membership.id %}Votre colonie{% elseif p.owner %}Monde de {{ p.owner.player.username }}{% elseif p.npcPlanet %}Monde PNJ · niveau {{ p.conquestLevel }}{% else %}Monde inhabité{% endif %}</p></div><button type="button" aria-label="Fermer les informations de la planète" data-action="click->galaxy-v2#closePlanet">×</button></header>
+            <header class="gv2-panel-heading"><div><span class="muted">PLANÈTE · {{ p.coordinates() }}</span><h2>{{ p.name }}</h2><p>{% if p.owner and p.owner.id==membership.id %}Votre colonie{% elseif p.owner %}Monde de {{ p.owner.displayName }}{% elseif p.npcPlanet %}Monde PNJ · niveau {{ p.conquestLevel }}{% else %}Monde inhabité{% endif %}</p></div><button type="button" aria-label="Fermer les informations de la planète" data-action="click->galaxy-v2#closePlanet">×</button></header>
             <div class="gv2-visual-note">REPRÉSENTATION VISUELLE · DONNÉES DE JEU CI-DESSOUS</div>
-            <dl class="gv2-facts"><div><dt>Coordonnées</dt><dd>{{ p.coordinates() }}</dd></div><div><dt>Statut</dt><dd>{% if p.owner and p.owner.id==membership.id %}Votre colonie{% elseif p.owner %}Occupée par {{ p.owner.player.username }}{% elseif p.npcPlanet %}Faction PNJ{% else %}Inhabitée{% endif %}</dd></div>{% if p.npcPlanet %}<div><dt>Niveau PNJ</dt><dd>{{ p.conquestLevel }}</dd></div>{% endif %}</dl>
+            <dl class="gv2-facts"><div><dt>Coordonnées</dt><dd>{{ p.coordinates() }}</dd></div><div><dt>Statut</dt><dd>{% if p.owner and p.owner.id==membership.id %}Votre colonie{% elseif p.owner %}Occupée par {{ p.owner.displayName }}{% elseif p.npcPlanet %}Faction PNJ{% else %}Inhabitée{% endif %}</dd></div>{% if p.npcPlanet %}<div><dt>Niveau PNJ</dt><dd>{{ p.conquestLevel }}</dd></div>{% endif %}</dl>
             <button type="button" class="gv2-primary-action" data-action="click->galaxy-v2#enterPlanetView">◉ Vue rapprochée</button>
             <div class="gv2-action-list">
                 {% if p.owner and p.owner.id==membership.id %}<a class="gv2-action-link" href="{{ path('app_colony',{id:p.id}) }}">Gérer cette planète →</a>
                 {% elseif p.owner or p.npcPlanet %}
                     {% if map_can_spy %}{% include 'ui/map_quick_mission.html.twig' with {quick_mission:'spy',quick_target:p.id,quick_return_to:'app_map_v2'} %}{% else %}<p class="gv2-panel-note">Aucune sonde d’espionnage disponible.</p>{% endif %}
-                    {% if p.npcPlanet and map_can_conquer %}<a class="gv2-action-link gv2-action-link--amber" href="{{ path('app_fleets',{mission:'conquer',planet:p.id}) }}">Préparer la conquête →</a>{% endif %}
+                    {% include 'ui/map_conquest_actions.html.twig' with {map_action_class:'gv2-action-link gv2-action-link--amber',map_note_class:'gv2-panel-note'} %}
                 {% elseif map_can_colonize %}{% include 'ui/map_quick_mission.html.twig' with {quick_mission:'colonize',quick_target:p.id,quick_return_to:'app_map_v2'} %}
                 {% else %}<p class="gv2-panel-note">Colonisation indisponible : vaisseau colonie absent ou limite atteinte.</p>{% endif %}
             </div>

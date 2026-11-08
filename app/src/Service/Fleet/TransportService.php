@@ -7,17 +7,18 @@ use App\Repository\GameRepository;
 use App\Service\Boost\BoostEventService;
 use App\Service\Colony\ResourceService;
 use App\Service\Notification\NotificationService;
-use App\Service\Player\{PreferencesService, RelationResolver};
+use App\Service\Player\{PreferencesService, RelationResolver, VacationCalendar};
 use Psr\Clock\ClockInterface;
 
 final class TransportService
 {
-    public function __construct(private GameRepository $repo, private GameManager $manager, private ResourceService $resources, private PreferencesService $preferences, private RelationResolver $relations, private NotificationService $notifications, private BoostEventService $boostEvents, private ClockInterface $clock) {}
+    public function __construct(private GameRepository $repo, private GameManager $manager, private ResourceService $resources, private PreferencesService $preferences, private RelationResolver $relations, private NotificationService $notifications, private BoostEventService $boostEvents, private ClockInterface $clock, private VacationCalendar $vacations) {}
 
     public function canReceive(PlayerUniverse $sender, ?Planet $target): bool
     {
         $recipient = $target?->owner;
-        if (!$recipient || $recipient->universe->id !== $sender->universe->id) return false;
+        if (!$recipient || !$sender->isPlayerControlled() || !$recipient->isPlayerControlled() || $recipient->universe->id !== $sender->universe->id) return false;
+        if ($this->vacations->isActive($sender) || $this->vacations->isActive($recipient)) return false;
         if ($recipient->id === $sender->id) return true;
         return match ($this->preferences->for($recipient->player)['transportReception']) {
             'all' => true,
@@ -34,8 +35,8 @@ final class TransportService
         $report->recipient = $fleet->destination->owner;
         $report->createdAt = $this->clock->now();
         $report->snapshot = [
-            'sender' => $report->sender->player->username,
-            'recipient' => $report->recipient->player->username,
+            'sender' => $report->sender->getDisplayName(),
+            'recipient' => $report->recipient->getDisplayName(),
             'origin' => $fleet->homePlanet->name.' ['.$fleet->homePlanet->coordinates().']',
             'destination' => $fleet->destination->name.' ['.$fleet->destination->coordinates().']',
             'sent' => $freight, 'delivered' => [], 'returned' => [],
@@ -50,7 +51,7 @@ final class TransportService
         $report = $this->repo->one(TransportReport::class, ['fleet' => $fleet]);
         // Les transports déjà en vol avant cette évolution visaient uniquement le propriétaire.
         $recipient = $report?->recipient ?? $fleet->playerUniverse;
-        if ($target?->owner) $this->manager->lock($target->owner->player);
+        if ($target?->owner?->player!==null) $this->manager->lock($target->owner->player);
         $allowed = $target?->owner?->id === $recipient->id && $this->canReceive($fleet->playerUniverse, $target);
         $freight = $fleet->cargo;
         $freight['hydrogen'] = max(0, ($freight['hydrogen'] ?? 0) - $fleet->reservedFuel);
@@ -79,5 +80,15 @@ final class TransportService
         $report->snapshot['returned_deposited'] = $result['delivered'];
         $report->snapshot['return_overflow'] = $result['overflow'];
         $report->snapshot['returned_at'] = $this->clock->now()->format(DATE_ATOM);
+    }
+    public function recordConversionRecall(Fleet $fleet): void
+    {
+        if($fleet->mission!=='transport') return;
+        $report=$this->repo->one(TransportReport::class,['fleet'=>$fleet]);
+        if($report===null || $report->status!=='traveling') return;
+        $report->status='refused';$report->resolvedAt=$this->clock->now();
+        $freight=$fleet->cargo;$freight['hydrogen']=max(0,($freight['hydrogen']??0)-$fleet->reservedFuel);
+        $report->snapshot['delivered']=[];$report->snapshot['returned']=$freight;
+        $report->snapshot['refusal_reason']='empire_conversion';
     }
 }

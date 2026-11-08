@@ -27,14 +27,14 @@ final class DiplomacyController extends AbstractController
         $own=$relations->guild($m);
         $players=[];$searchPlayers=[];
         foreach($repo->all(PlayerUniverse::class,['universe'=>$m->universe]) as $pu) {
-            if($pu->id===$m->id) continue;
+            if($pu->id===$m->id || !$pu->isPlayerControlled()) continue;
             $contract=$relations->contract($m,$pu);
             $allied=$relations->allied($m,$pu);
             $enemy=$relations->guildStatus($own,$relations->guild($pu))==='enemies';
             if($contract || $allied || $enemy) $players[]=['player'=>$pu,'contract'=>$contract,'allied'=>$allied,'enemy'=>$enemy];
         }
         foreach($repo->searchMessageRecipients($m,$search) as $pu) $searchPlayers[]=['player'=>$pu,'contract'=>$relations->contract($m,$pu),'allied'=>$relations->allied($m,$pu),'enemy'=>$relations->guildStatus($own,$relations->guild($pu))==='enemies'];
-        $own=$relations->guild($m);$guilds=[];foreach($repo->all(Guild::class,['universe'=>$m->universe]) as $g) $guilds[]=['guild'=>$g,'status'=>$relations->guildStatus($own,$g),'members'=>$repo->all(GuildMember::class,['guild'=>$g])];
+        $own=$relations->guild($m);$guilds=[];foreach($repo->all(Guild::class,['universe'=>$m->universe,'archivedAt'=>null]) as $g) $guilds[]=['guild'=>$g,'status'=>$relations->guildStatus($own,$g),'members'=>$repo->all(GuildMember::class,['guild'=>$g])];
         $guildRelations=[];$guildSearchResults=[];
         foreach($guilds as $row) {
             if($own && $row['guild']->id===$own->id) continue;

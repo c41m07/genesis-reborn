@@ -7,10 +7,11 @@ use App\Service\Catalog\GameCatalog;
 use Psr\Clock\ClockInterface;
 final class DiplomacyService
 {
-    public function __construct(private GameRepository $repo,private GameManager $manager,private RelationResolver $relations,private GameCatalog $catalog,private ClockInterface $clock) {}
+    public function __construct(private GameRepository $repo,private GameManager $manager,private RelationResolver $relations,private GameCatalog $catalog,private ClockInterface $clock,private EmpireActivityService $activity) {}
     private function lock(PlayerUniverse $m,bool $guildFeature=false): void
     {
         $this->manager->lock($m);$this->manager->lock($m->universe);
+        $this->activity->assertCanControl($m);
         if(!$m->universe->isAccessible($this->clock->now())) throw new \DomainException('Univers inaccessible.');
         if($guildFeature && !$this->catalog->forUniverse($m->universe)['features']['guilds_enabled']) throw new \DomainException('Les guildes sont désactivées dans cet univers.');
     }
@@ -29,7 +30,7 @@ final class DiplomacyService
     {
         $this->manager->transaction(function()use($m,$guildId){
             $this->lock($m,true);$g=$this->repo->find(Guild::class,$guildId);
-            if(!$g || $g->universe->id!==$m->universe->id) throw new \DomainException('Guilde inaccessible.');
+            if(!$g || $g->archivedAt!==null || $g->universe->id!==$m->universe->id) throw new \DomainException('Guilde inaccessible.');
             if($this->relations->guild($m)) throw new \DomainException('Quittez votre guilde avant d’en rejoindre une autre.');
             // Open recruitment is a documented provisional policy.
             $member=new GuildMember();$member->guild=$g;$member->playerUniverse=$m;$this->manager->save($member);
@@ -49,7 +50,7 @@ final class DiplomacyService
     {
         $this->manager->transaction(function()use($m,$targetId){
             $this->lock($m,true);$g=$this->relations->guild($m);$target=$this->repo->find(PlayerUniverse::class,$targetId);
-            if(!$g || $g->leader->id!==$m->id || !$target || $target->id===$m->id || $this->relations->guild($target)?->id!==$g->id) throw new \DomainException('Choisissez un autre membre de votre guilde.');
+            if(!$g || $g->leader->id!==$m->id || !$target || !$target->isPlayerControlled() || $target->id===$m->id || $this->relations->guild($target)?->id!==$g->id) throw new \DomainException('Choisissez un autre membre de votre guilde.');
             $g->leader=$target;
         });
     }
@@ -67,7 +68,7 @@ final class DiplomacyService
     {
         $this->manager->transaction(function()use($m,$targetId,$action){
             $this->lock($m);$target=$this->repo->find(PlayerUniverse::class,$targetId);
-            if(!$target || $target->universe->id!==$m->universe->id || $target->id===$m->id) throw new \DomainException('Commandant inaccessible.');
+            if(!$target || !$target->isPlayerControlled() || $target->universe->id!==$m->universe->id || $target->id===$m->id) throw new \DomainException('Commandant inaccessible.');
             $contract=$this->relations->contract($m,$target);
             if($action==='break') { if($contract) $this->manager->remove($contract);return; }
             if($this->relations->guildStatus($this->relations->guild($m),$this->relations->guild($target))==='enemies') throw new \DomainException('Les contrats sont interdits entre guildes ennemies.');
@@ -82,7 +83,7 @@ final class DiplomacyService
     {
         $this->manager->transaction(function()use($m,$targetId,$status){
             $this->lock($m,true);$g=$this->relations->guild($m);$target=$this->repo->find(Guild::class,$targetId);
-            if(!$g || $g->leader->id!==$m->id || !$target || $target->id===$g->id || $target->universe->id!==$m->universe->id) throw new \DomainException('Relation inaccessible ou commandement requis.');
+            if(!$g || $g->leader->id!==$m->id || !$target || $target->archivedAt!==null || $target->id===$g->id || $target->universe->id!==$m->universe->id) throw new \DomainException('Relation inaccessible ou commandement requis.');
             if(!in_array($status,['allies','enemies','neutral'],true)) throw new \DomainException('Relation invalide.');
             [$a,$b]=$g->id<$target->id?[$g,$target]:[$target,$g];
             $r=$this->repo->one(GuildRelation::class,['guildA'=>$a,'guildB'=>$b]);

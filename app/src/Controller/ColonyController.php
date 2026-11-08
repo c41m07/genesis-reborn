@@ -14,7 +14,8 @@ use Symfony\Component\Routing\Attribute\Route;
 use Psr\Clock\ClockInterface;
 final class ColonyController extends AbstractController
 {
-    public function __construct(private UniverseContext $context,private GameRepository $repo,private QueueService $queueService) {}
+    public function __construct(private UniverseContext $context,private GameRepository $repo,private QueueService $queueService,
+        private \App\Service\Combat\CombatEventService $combats,private \App\Service\Combat\OccupationService $occupations) {}
     private function owned(int $id): Planet
     {
         $m=$this->context->membership();$p=$this->repo->find(Planet::class,$id);
@@ -191,6 +192,15 @@ final class ColonyController extends AbstractController
 
         $galaxyV2Json = '';
         $flights = [];
+        $mapOccupations=[];$mapConquerable=[];$mapReinforceable=[];$mapContestable=[];
+        foreach($systems as $row) foreach($row['planets'] as $planet) {
+            if($planet->npcPlanet || $planet->owner?->isForgotten()) $mapConquerable[$planet->id]=$this->combats->canConquer($m,$planet);
+            $occupation=$this->occupations->activeFor($planet);
+            if($occupation===null) continue;
+            $mapOccupations[$planet->id]=$occupation;
+            $mapReinforceable[$planet->id]=$this->combats->canDefend($m,$planet);
+            $mapContestable[$planet->id]=$this->combats->canAttack($m,$planet);
+        }
         if ($interactive) {
             $mapSystems = [];
             foreach ($systems as $row) {
@@ -210,15 +220,15 @@ final class ColonyController extends AbstractController
                         'position' => $planet->position,
                         'coordinates' => $planet->coordinates(),
                         'ownedByCurrentPlayer' => $planet->owner?->id === $m->id,
-                        'ownerName' => $planet->owner?->player->username,
-                        'npc' => $planet->npcPlanet,
+                        'ownerName' => $planet->owner?->getDisplayName(),
+                        'npc' => $planet->npcPlanet || $planet->owner?->isForgotten(),
                         'conquestLevel' => $planet->conquestLevel,
                     ], $row['planets']),
                 ];
             }
 
-            $missionLabels = ['explore' => 'Exploration', 'spy' => 'Espionnage', 'colonize' => 'Colonisation', 'transport' => 'Transport', 'attack' => 'Attaque', 'conquer' => 'Conquête', 'defend' => 'Défense', 'orbit' => 'Orbite'];
-            $statusLabels = ['traveling' => 'En vol', 'returning' => 'Retour', 'attacking' => 'Combat', 'defending' => 'Défense', 'orbiting' => 'En orbite', 'orbit_pending' => 'Demande d’orbite'];
+            $missionLabels = ['explore' => 'Exploration', 'spy' => 'Espionnage', 'colonize' => 'Colonisation', 'transport' => 'Transport', 'attack' => 'Attaque', 'conquer' => 'Conquête JcE', 'defend' => 'Défense', 'orbit' => 'Orbite'];
+            $statusLabels = ['traveling' => 'En vol', 'returning' => 'Retour', 'attacking' => 'Combat', 'defending' => 'Défense', 'orbiting' => 'En orbite', 'occupying' => 'Occupation JcE', 'orbit_pending' => 'Demande d’orbite'];
             $relatedOwnerCache = [];
             foreach ($this->repo->activeFleetsInUniverse($m->universe) as $fleet) {
                 if (!isset($statusLabels[$fleet->status])) continue;
@@ -247,7 +257,7 @@ final class ColonyController extends AbstractController
                     'status' => $fleet->status,
                     'statusLabel' => $statusLabels[$fleet->status],
                     'relationLabel' => $relationLabel,
-                    'ownerName' => $fleet->playerUniverse->player->username,
+                    'ownerName' => $fleet->playerUniverse->getDisplayName(),
                     'originSystemId' => $originSystem->id,
                     'originGalaxy' => $originSystem->galaxy->coordinateCode(),
                     'originX' => $originSystem->coordX,
@@ -284,6 +294,7 @@ final class ColonyController extends AbstractController
             ], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_THROW_ON_ERROR);
         }
 
+        $hasColonySlot=count($ownedPlanets)+$this->occupations->reservedSlots($m)<$this->occupations->colonyLimit($m);
         return [
             'membership' => $m,
             'map_origin' => $mapOrigin,
@@ -295,10 +306,14 @@ final class ColonyController extends AbstractController
             'selected_galaxy' => $selectedGalaxy,
             'galaxy_v2_json' => $galaxyV2Json,
             'galaxy_v2_flights' => $flights,
-            'map_can_colonize' => count($ownedPlanets) < (int) ($catalog->forUniverse($m->universe)['limits']['max_planets'] ?? 31) && ($mapStock['colony_ship'] ?? 0) > 0,
+            'map_occupations' => $mapOccupations,
+            'map_conquerable' => $mapConquerable,
+            'map_reinforceable' => $mapReinforceable,
+            'map_contestable' => $mapContestable,
+            'map_can_colonize' => $hasColonySlot && ($mapStock['colony_ship'] ?? 0) > 0,
             'map_can_spy' => ($mapStock['probe'] ?? 0) > 0,
             'map_can_explore' => ($mapStock['probe'] ?? 0) > 0,
-            'map_can_conquer' => (bool) ($catalog->forUniverse($m->universe)['features']['planet_conquest'] ?? false) && count($ownedPlanets) < (int) ($catalog->forUniverse($m->universe)['limits']['max_planets'] ?? 31) && ($mapStock['colony_ship'] ?? 0) > 0,
+            'map_can_conquer' => (bool) ($catalog->forUniverse($m->universe)['features']['planet_conquest'] ?? false) && $hasColonySlot && ($mapStock['colony_ship'] ?? 0) > 0,
         ];
     }
 }

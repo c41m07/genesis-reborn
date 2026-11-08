@@ -59,8 +59,8 @@
 <div class="admin-search"><label for="report-search">Rechercher</label><input id="report-search" type="search" placeholder="Joueur, guilde, motif…" data-admin-filter-target="query" data-action="input->admin-filter#filter"><output data-admin-filter-target="count"></output></div>
 {% for report in reports %}
 <article class="panel" data-admin-filter-target="row">
-<p><strong>Signalement #{{ report.id }}</strong> · {{ report.createdAt|date('d/m/Y H:i') }} · {{ report.reporter.player.username }}</p>
-<p>{% if report.message.recipient %}Message privé de {{ report.message.sender.player.username }} à {{ report.message.recipient.player.username }}{% else %}Message de la guilde {{ report.message.guild.name }} par {{ report.message.sender.player.username }}{% endif %} · {{ report.message.createdAt|date('d/m/Y H:i') }}</p>
+<p><strong>Signalement #{{ report.id }}</strong> · {{ report.createdAt|date('d/m/Y H:i') }} · {{ report.reporter.displayName }}</p>
+<p>{% if report.message.recipient %}Message privé de {{ report.message.sender.displayName }} à {{ report.message.recipient.displayName }}{% else %}Message de la guilde {{ report.message.guild.name }} par {{ report.message.sender.displayName }}{% endif %} · {{ report.message.createdAt|date('d/m/Y H:i') }}</p>
 <blockquote>{{ report.message.content }}</blockquote><p>Motif : {{ report.reason }}</p>
 <form method="post" action="{{ path('app_admin_report_review',{id:report.id}) }}">
 <input type="hidden" name="_token" value="{{ csrf_token('admin_report_'~report.id) }}">
