@@ -6,6 +6,11 @@ use App\Entity\QueueItem;
 use App\Service\Boost\BoostGrantService;
 use App\Service\Boost\BoostUseService;
 use App\Service\Universe\UniverseContext;
+use App\Repository\GameRepository;
+use App\Service\Catalog\GameCatalog;
+use App\Service\Queue\QueueService;
+use App\Service\Player\VacationCalendar;
+use Psr\Clock\ClockInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,8 +22,24 @@ final class BoostController extends AbstractController
     public function index(
         UniverseContext $context,
         BoostGrantService $grants,
+        GameRepository $repo,
+        GameCatalog $catalog,
+        QueueService $queues,
+        VacationCalendar $vacations,
+        ClockInterface $clock,
     ): Response {
         $membership = $context->membership();
+        $queues->synchronize($membership);
+        $vacation = $vacations->currentPeriod($membership);
+        $definitions = array_merge($catalog->all('buildings'), $catalog->all('technologies'), $catalog->all('ships'), $catalog->all('defenses'));
+        $activeQueues = [];
+        foreach ($repo->activeQueueItemsFor($membership) as $item) {
+            if ($item->finishAt() > $clock->now()) {
+                $definition = $definitions[$item->itemSlug] ?? null;
+                $activeQueues[] = ['item' => $item, 'label' => $definition ? $catalog->withTier($definition, $item->tier)['label'] : $item->itemSlug];
+            }
+        }
+        $activeFleets = array_values(array_filter($repo->activeFleetsForBoost($membership), static fn (Fleet $fleet): bool => $fleet->arrivalAt > $clock->now()));
 
         return $this->render('boosts/index.html.twig', [
             'membership' => $membership,
@@ -26,6 +47,9 @@ final class BoostController extends AbstractController
             'pending_boost_count' => $grants->pendingCount($membership),
             'inventory_capacity' => $grants->inventoryCapacity(),
             'duration_reduction_percent' => $grants->durationReductionRatio() * 100,
+            'active_queues' => $activeQueues,
+            'active_fleets' => $activeFleets,
+            'vacation' => $vacation,
         ]);
     }
 
@@ -36,6 +60,7 @@ final class BoostController extends AbstractController
         Request $request,
         UniverseContext $context,
         BoostUseService $boosts,
+        BoostGrantService $grants,
     ): Response {
         if (!$this->isCsrfTokenValid('boost-' . $type . '-' . $id, $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Formulaire expiré.');
@@ -49,7 +74,7 @@ final class BoostController extends AbstractController
             } else {
                 $boosts->useOnFleet($membership, $id, $requestKey);
             }
-            $this->addFlash('success', 'Boost appliqué : 25 % du temps restant a été retiré.');
+            $this->addFlash('success', 'Boost appliqué : ' . number_format($grants->durationReductionRatio() * 100, 2, ',', ' ') . ' % du temps restant a été retiré.');
         } catch (\DomainException $exception) {
             $this->addFlash('error', $exception->getMessage());
         }

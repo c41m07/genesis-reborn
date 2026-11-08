@@ -5,6 +5,12 @@ body.authenticated .catalog-card :is(.card-detail,.card-benefits p){font-size:12
 body.authenticated .catalog-card .secondary{font-size:12px;white-space:normal}
 body.authenticated .catalog-card .requirement{font-size:11px;line-height:1.6}
 body.authenticated .progress-times{font-size:11px;line-height:1.5}
+body.authenticated .queue-details{font-size:13px;line-height:1.6}
+body.authenticated .queue-details>summary{font-size:13px;padding-block:8px}
+body.authenticated .queue-detail-item strong{font-size:13px}
+body.authenticated .queue-detail-item small,
+body.authenticated .queue-detail-list>p{font-size:12px;line-height:1.6}
+body.authenticated .queue-detail-item .text-button{font-size:12px;min-height:36px}
 body.authenticated .ui-tabs.ui-tabs>:is(a,button),
 body.authenticated .building-rank-tab{font-size:12px}
 body.authenticated :is(label,.catalog-card label,.map-quick-mission label,.planet-rename label,.message-bubble form label){font-size:12px}
@@ -14,6 +20,8 @@ body.authenticated .mission-report :is(.data-table,.round-table){font-size:12px}
 body.authenticated .message-bubble>p{font-size:13px;line-height:1.65;overflow-wrap:anywhere}
 body.authenticated .message-meta{font-size:11px;flex-wrap:wrap}
 body.authenticated .message-compose textarea{font-size:14px;line-height:1.5}
+body.authenticated .boost-operation{padding-block:16px;border-top:1px solid var(--line);overflow-wrap:anywhere}
+body.authenticated .boost-operation .secondary{font-size:12px;white-space:normal}
 
 @media(max-width:1050px){
     body.authenticated :is(input:not([type="hidden"],[type="checkbox"],[type="radio"],[type="submit"],[type="button"]),select,textarea),

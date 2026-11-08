@@ -6,10 +6,10 @@
 <div data-controller="admin-tabs" data-action="hashchange@window->admin-tabs#sync">
 <nav class="admin-tabs ui-tabs" role="tablist" aria-label="Sections d’administration" data-action="keydown->admin-tabs#onKeydown">
   <button id="tab-overview" type="button" role="tab" aria-controls="admin-overview" aria-selected="true" data-admin-tabs-target="tab" data-panel-id="admin-overview" data-action="click->admin-tabs#select">Vue d’ensemble</button>
-  <button id="tab-reports" type="button" role="tab" aria-controls="admin-reports" aria-selected="false" data-admin-tabs-target="tab" data-panel-id="admin-reports" data-action="click->admin-tabs#select">Modération</button>
+  <button id="tab-reports" type="button" role="tab" aria-controls="admin-reports" aria-selected="false" data-admin-tabs-target="tab" data-panel-id="admin-reports" data-action="click->admin-tabs#select">Modération{% include 'ui/admin_notification_badge.html.twig' with {category:'reports', count:adminNotifications.reports} only %}</button>
   <button id="tab-players" type="button" role="tab" aria-controls="admin-players" aria-selected="false" data-admin-tabs-target="tab" data-panel-id="admin-players" data-action="click->admin-tabs#select">Joueurs</button>
   <button id="tab-universes" type="button" role="tab" aria-controls="admin-universes" aria-selected="false" data-admin-tabs-target="tab" data-panel-id="admin-universes" data-action="click->admin-tabs#select">Univers</button>
-  <button id="tab-security" type="button" role="tab" aria-controls="admin-security" aria-selected="false" data-admin-tabs-target="tab" data-panel-id="admin-security" data-action="click->admin-tabs#select">Sécurité</button>
+  <button id="tab-security" type="button" role="tab" aria-controls="admin-security" aria-selected="false" data-admin-tabs-target="tab" data-panel-id="admin-security" data-action="click->admin-tabs#select">Sécurité{% include 'ui/admin_notification_badge.html.twig' with {category:'security', count:adminNotifications.security} only %}</button>
   <button id="tab-audit" type="button" role="tab" aria-controls="admin-audit" aria-selected="false" data-admin-tabs-target="tab" data-panel-id="admin-audit" data-action="click->admin-tabs#select">Journal</button>
 </nav>
 <section class="panel admin-tab-panel" id="admin-overview" role="tabpanel" aria-labelledby="tab-overview" data-admin-tabs-target="panel">
