@@ -1,4 +1,5 @@
 import { test, expect } from './support/isolated-test.mjs';
+import { runIsolatedSql } from './support/game-fixtures.mjs';
 
 async function registerAndJoin(page, prefix, universe = 'Turbo') {
   const id = crypto.randomUUID().slice(0, 8);
@@ -58,6 +59,21 @@ test('Classement : tris, contact direct et échange de messages privés', async 
   await page.getByRole('button', { name: 'Envoyer', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('Message privé envoyé');
   await expect(page.locator('.message-thread')).toContainText(body);
+
+  const conversationUrl = page.url();
+  for (const theme of ['dark', 'light']) {
+    runIsolatedSql(process.env.BROWSER_ROUTER, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END, '$.theme', '${theme}') WHERE username='${senderName}'`);
+    for (const width of [1440, 834, 390, 320]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(conversationUrl);
+      await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
+      await expect(page.locator('.message-bubble>p').first()).toHaveCSS('font-size', '13px');
+      await expect(page.locator('.message-meta').first()).toHaveCSS('font-size', '11px');
+      await expect(page.getByLabel('Votre message')).toHaveCSS('font-size', width <= 1050 ? '16px' : '14px');
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+      await page.screenshot({ path: `output/playwright/typography-messages-${theme}-${width}.png`, animations: 'disabled' });
+    }
+  }
 
   await recipientPage.goto('/messages');
   await expect(recipientPage.getByRole('link', { name: new RegExp(senderName) })).toBeVisible();

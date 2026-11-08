@@ -19,3 +19,4 @@ import './styles/empire-overview.css';
 import './styles/tabs.css';
 import './styles/building-catalog.css';
 import './styles/mission-reports.css';
+import './styles/game-typography.css';

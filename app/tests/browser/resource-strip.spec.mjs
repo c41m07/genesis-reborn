@@ -60,11 +60,48 @@ test('Stock protégé et productivité réelle, pénuries et reprise sans rechar
             expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
         }
     }
-    await page.screenshot({ path: 'var/resource-strip-mobile.png' });
+    const toggle = page.getByRole('button', { name: /Ressources de .* afficher ou masquer les détails/ });
+    for (const width of [320, 390]) {
+        await page.setViewportSize({ width, height: 900 });
+        await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+        await expect(page.locator('#resource-details')).toBeHidden();
+        await expect(page.locator('.resource-summary-item')).toHaveCount(5);
+        expect((await page.locator('.resource-strip').boundingBox()).height).toBeLessThanOrEqual(64);
+        const stocks = await page.locator('.resource-summary-item strong').evaluateAll(elements => elements.map(element => {
+            const { top, left, right } = element.getBoundingClientRect();
+            return { top, left, right };
+        }));
+        expect(new Set(stocks.map(stock => Math.round(stock.top))).size).toBe(1);
+        for (let index = 1; index < stocks.length; index++) expect(stocks[index].left).toBeGreaterThanOrEqual(stocks[index - 1].right);
+        await toggle.focus();
+        await page.keyboard.press('Enter');
+        await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+        await expect(metal.locator('.storage-meter')).toBeVisible();
+        await metal.evaluate(element => element.dispatchEvent(new CustomEvent('resource:update', { detail: {
+            stock: 123456, capacity: 300000, rate: 0, protectedCapacity: 30000, productivity: 100,
+        } })));
+        await expect(page.locator('[data-compact-resource="metal"] strong')).toHaveText(/123,5/);
+        await expect(metal.locator('[data-resource-target="stock"]')).toHaveText(/123\s456/);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+        await toggle.focus();
+        await page.keyboard.press('Space');
+        await expect(page.locator('#resource-details')).toBeHidden();
+        expect(await toggle.evaluate(element => document.activeElement === element)).toBe(true);
+    }
+    await page.screenshot({ path: 'output/playwright/resource-strip-mobile.png' });
+    await toggle.click();
+    await page.screenshot({ path: 'output/playwright/resource-strip-mobile-expanded.png' });
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.screenshot({ path: 'var/resource-strip-desktop.png' });
     sql(`UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END, '$.theme', 'light') WHERE email='${email}'`);
     await page.reload();
     await expect(page.locator('body')).toHaveAttribute('data-theme', 'light');
     await expect(metal.locator('.storage-meter-protected')).toHaveCSS('background-color', 'rgb(39, 132, 84)');
+    await page.setViewportSize({ width: 390, height: 900 });
+    await expect(page.locator('#resource-details')).toBeHidden();
+    expect((await page.locator('.resource-strip').boundingBox()).height).toBeLessThanOrEqual(80);
+    await expect(page.locator('.resource-strip')).toHaveCSS('grid-template-columns', '112px 278px');
+    await toggle.click();
+    await expect(metal.locator('.storage-meter')).toBeVisible();
+    await page.screenshot({ path: 'output/playwright/resource-strip-mobile-light.png', animations: 'disabled' });
 });

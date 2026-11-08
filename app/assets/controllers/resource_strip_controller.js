@@ -2,9 +2,19 @@ import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
     static values = { url: String };
-    static targets = ['protection', 'protectionLabel', 'protectionTime'];
-    connect() { this.tickProtection(); this.protectionTimer = setInterval(() => this.tickProtection(), 1000); this.timer = setInterval(() => this.refresh(), 10000); }
-    disconnect() { clearInterval(this.protectionTimer); clearInterval(this.timer); this.abort?.abort(); }
+    static targets = ['protection', 'protectionLabel', 'protectionTime', 'toggle', 'compactStock'];
+    connect() { this.element.classList.add('resource-strip--collapsible'); this.tickProtection(); this.protectionTimer = setInterval(() => this.tickProtection(), 1000); this.timer = setInterval(() => this.refresh(), 10000); }
+    disconnect() { this.element.classList.remove('resource-strip--collapsible'); clearInterval(this.protectionTimer); clearInterval(this.timer); this.abort?.abort(); }
+    toggleDetails() {
+        const expanded = this.element.classList.toggle('resource-strip--expanded');
+        this.toggleTarget.setAttribute('aria-expanded', String(expanded));
+    }
+    updateSummary({ detail: { slug, stock, deficit } }) {
+        const target = this.compactStockTargets.find(element => element.dataset.slug === slug);
+        if (!target) return;
+        target.textContent = Math.floor(stock).toLocaleString('fr-FR', { notation: 'compact', maximumFractionDigits: 1 });
+        target.closest('.resource-summary-item').classList.toggle('resource-summary-item--deficit', deficit);
+    }
     tickProtection() {
         if (!this.hasProtectionTarget) return;
         const end = Date.parse(this.protectionTarget.dataset.until);

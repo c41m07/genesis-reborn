@@ -1,0 +1,35 @@
+/* Tailles communes au jeu, indépendantes du thème et sans modifier les grands titres. */
+body.authenticated .page-heading>div>p:not(.eyebrow){font-size:13px}
+body.authenticated .catalog-card h3{font-size:14px;line-height:1.4}
+body.authenticated .catalog-card :is(.card-detail,.card-benefits p){font-size:12px;line-height:1.6}
+body.authenticated .catalog-card .secondary{font-size:12px;white-space:normal}
+body.authenticated .catalog-card .requirement{font-size:11px;line-height:1.6}
+body.authenticated .progress-times{font-size:11px;line-height:1.5}
+body.authenticated .ui-tabs.ui-tabs>:is(a,button),
+body.authenticated .building-rank-tab{font-size:12px}
+body.authenticated :is(label,.catalog-card label,.map-quick-mission label,.planet-rename label,.message-bubble form label){font-size:12px}
+body.authenticated :is(input:not([type="hidden"],[type="checkbox"],[type="radio"],[type="submit"],[type="button"]),select,textarea){font-size:14px}
+body.authenticated .sidebar nav>a{font-size:12px}
+body.authenticated .mission-report :is(.data-table,.round-table){font-size:12px}
+body.authenticated .message-bubble>p{font-size:13px;line-height:1.65;overflow-wrap:anywhere}
+body.authenticated .message-meta{font-size:11px;flex-wrap:wrap}
+body.authenticated .message-compose textarea{font-size:14px;line-height:1.5}
+
+@media(max-width:1050px){
+    body.authenticated :is(input:not([type="hidden"],[type="checkbox"],[type="radio"],[type="submit"],[type="button"]),select,textarea),
+    body.authenticated .message-compose textarea{font-size:16px}
+}
+
+@media(max-width:740px){
+    body.authenticated .catalog-card h3{font-size:13px}
+    body.authenticated .catalog-card .secondary,
+    body.authenticated .ui-tabs.ui-tabs>:is(a,button),
+    body.authenticated .building-rank-tab{font-size:11px}
+    body.authenticated .mobile-bottom-nav>:is(a,button){font-size:10px}
+}
+
+/* Les noms abrégés évitent de réduire la police des rangs dans les cartes étroites. */
+@container(max-width:340px){
+    body.authenticated .building-rank-full{display:inline;position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+    body.authenticated .building-rank-short{display:inline}
+}
