@@ -1,6 +1,6 @@
 # Roadmap Genesis Reborn
 
-Mise à jour documentaire : 7 novembre 2026. [REGLES](REGLES.md) et
+Mise à jour documentaire : 8 novembre 2026. [REGLES](REGLES.md) et
 [DECISIONS](DECISIONS.md) restent les sources des arbitrages de jeu.
 
 ## État connu
@@ -15,6 +15,18 @@ manuelle restant partielle. Il s’agit de leur verdict historique, conservé av
 [la matrice d’exigences](archives/EXIGENCES_WORK.md), pas d’une validation nouvelle
 des 15 phases ni d’une certification de production.
 
+## Refonte de l’administration — 8 novembre 2026
+
+Le premier lot sépare l’accueil et les rubriques et regroupe la surveillance
+et les transports, avec fiches détaillées et lectures journalisées.
+Ses contrôles locaux sont décrits dans le [cadrage de la refonte](REFONTE_ADMINISTRATION.md).
+La publication ne vaut pas déploiement ni validation de la CI.
+
+Restent à développer selon les décisions validées : présence et temps de jeu
+estimés par univers, fiches et dossiers, alertes configurables, interventions
+sur les ressources et échéances de flottes, création guidée d’événements et
+boîtes de ressources. Les changements de schéma nécessaires seront préparés
+avant toute demande d’application sur une base existante.
 ## Priorités restantes
 
 | Priorité | Travail et preuve attendue |

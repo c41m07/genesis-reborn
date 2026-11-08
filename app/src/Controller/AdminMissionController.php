@@ -1,7 +1,10 @@
 <?php
 namespace App\Controller;
 
-use App\Entity\{Fleet, Universe};
+use App\Entity\{Fleet, CombatLog, CombatParticipant, EspionageReport};
+use App\Service\Admin\AdminMissionMonitoring;
+use App\Service\Combat\{CombatReportPresenter, OccupationReportState};
+use App\Service\Catalog\GameCatalog;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{Request, Response};
@@ -11,29 +14,55 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_ADMIN')]
 final class AdminMissionController extends AbstractController
 {
-    private const MISSIONS = ['explore'=>'Exploration', 'transport'=>'Transport', 'colonize'=>'Colonisation', 'attack'=>'Attaque', 'spy'=>'Espionnage', 'defend'=>'Défense alliée', 'orbit'=>'Orbite alliée', 'conquer'=>'Conquête JcE'];
-    private const STATUSES = ['traveling'=>'Aller', 'returning'=>'Retour', 'attacking'=>'Combat', 'defending'=>'Défense', 'orbiting'=>'Orbite', 'orbit_pending'=>'En attente d’accord', 'occupying'=>'Occupation JcE', 'completed'=>'Terminée'];
-
     #[Route('/admin/flottes', name: 'app_admin_missions', methods: ['GET'])]
-    public function index(Request $request, EntityManagerInterface $em): Response
+    public function index(Request $request, AdminMissionMonitoring $monitor): Response
     {
         $universeId = $request->query->get('universe', '');
-        $filters = ['universe'=>$universeId === '' ? 0 : $request->query->getInt('universe'), 'mission'=>(string) $request->query->get('mission', ''), 'status'=>(string) $request->query->get('status', '')];
-        $query = $em->createQueryBuilder()->select('f', 'm', 'p', 'u', 'h', 'd', 's')->from(Fleet::class, 'f')
-            ->join('f.playerUniverse', 'm')->leftJoin('m.player', 'p')->join('m.universe', 'u')
-            ->join('f.homePlanet', 'h')->leftJoin('f.destination', 'd')->leftJoin('f.destinationSystem', 's')
-            ->where('f.mission <> :idle')->setParameter('idle', 'idle');
-        foreach (['universe'=>'u.id', 'mission'=>'f.mission', 'status'=>'f.status'] as $filter => $field) {
-            if ($filters[$filter] !== '' && $filters[$filter] !== 0) $query->andWhere($field.' = :'.$filter)->setParameter($filter, $filters[$filter]);
-        }
-        $total = (int) (clone $query)->select('COUNT(f.id)')->getQuery()->getSingleScalarResult();
-        $pages = max(1, (int) ceil($total / 50));
-        $page = min($pages, max(1, $request->query->getInt('page', 1)));
-        return $this->render('admin/missions.html.twig', [
-            'fleets'=>$query->orderBy('f.id', 'DESC')->setFirstResult(($page - 1) * 50)->setMaxResults(50)->getQuery()->getResult(),
-            'universes'=>$em->getRepository(Universe::class)->findBy([], ['name'=>'ASC']),
-            'missions'=>self::MISSIONS, 'statuses'=>self::STATUSES, 'filters'=>$filters,
-            'total'=>$total, 'page'=>$page, 'pages'=>$pages,
+        $filters = ['universe'=>$universeId === '' ? 0 : $request->query->getInt('universe'), 'mission'=>(string) $request->query->get('mission', ''), 'status'=>(string) $request->query->get('status', 'active'), 'q'=>mb_substr(trim((string) $request->query->get('q', '')), 0, 120)];
+        return $this->render('admin/missions.html.twig', $monitor->search($filters, $request->query->getInt('page', 1)));
+    }
+
+    #[Route('/admin/flottes/{id}', name: 'app_admin_mission', requirements: ['id'=>'\d+'], methods: ['GET'])]
+    public function show(int $id, EntityManagerInterface $em, AdminMissionMonitoring $monitor): Response
+    {
+        $fleet = $this->mission($id, $em);
+        $monitor->recordView($this->getUser(), $fleet);
+        return $this->render('admin/mission.html.twig', $monitor->inspect($fleet));
+    }
+
+    #[Route('/admin/flottes/{id}/combat/{reportId}', name: 'app_admin_mission_combat', requirements: ['id'=>'\d+', 'reportId'=>'\d+'], methods: ['GET'])]
+    public function combat(int $id, int $reportId, EntityManagerInterface $em, AdminMissionMonitoring $monitor, CombatReportPresenter $presenter, OccupationReportState $occupations, GameCatalog $catalog): Response
+    {
+        $fleet = $this->mission($id, $em);
+        $report = $em->find(CombatLog::class, $reportId);
+        if (!$report || !$em->getRepository(CombatParticipant::class)->findOneBy(['fleet'=>$fleet, 'combatEvent'=>$report->combatEvent])) throw $this->createNotFoundException();
+        $monitor->recordView($this->getUser(), $fleet, 'combat_report', $reportId);
+        $loot = [];
+        foreach ($report->snapshot['loot']['fleets'][$fleet->id] ?? [] as $slug=>$amount) if ($amount > 0) $loot[] = ['label'=>$catalog->rules()['resources'][$slug] ?? $slug, 'amount'=>$amount];
+        return $this->render('combat/report.html.twig', [
+            'report'=>$report, 'membership'=>$fleet->playerUniverse, 'loot_rows'=>$loot, 'capture_state'=>$occupations->forReport($report),
+            'report_layout'=>'admin/layout.html.twig', 'report_back_url'=>$this->generateUrl('app_admin_mission', ['id'=>$id]),
+            'monitoring_context'=>'Vue administrative de l’empire '.$fleet->playerUniverse->getDisplayName().' · Flotte n° '.$id,
+        ] + $presenter->present($report->snapshot, $report->rounds, $fleet->playerUniverse->id));
+    }
+
+    #[Route('/admin/flottes/{id}/renseignement/{reportId}', name: 'app_admin_mission_espionage', requirements: ['id'=>'\d+', 'reportId'=>'\d+'], methods: ['GET'])]
+    public function espionage(int $id, int $reportId, EntityManagerInterface $em, AdminMissionMonitoring $monitor): Response
+    {
+        $fleet = $this->mission($id, $em);
+        $report = $em->find(EspionageReport::class, $reportId);
+        if (!$report || $fleet->mission !== 'spy' || $report->sender->id !== $fleet->playerUniverse->id || $report->target->id !== $fleet->destination?->id) throw $this->createNotFoundException();
+        $monitor->recordView($this->getUser(), $fleet, 'espionage_report', $reportId);
+        return $this->render('espionage/report.html.twig', ['report'=>$report, 'report_layout'=>'admin/layout.html.twig',
+            'report_back_url'=>$this->generateUrl('app_admin_mission', ['id'=>$id]),
+            'monitoring_context'=>'Renseignement de '.$fleet->playerUniverse->getDisplayName().' sur cette cible ; la mission d’origine n’est pas identifiée dans le rapport.',
         ]);
+    }
+
+    private function mission(int $id, EntityManagerInterface $em): Fleet
+    {
+        $fleet = $em->find(Fleet::class, $id);
+        if (!$fleet || $fleet->mission === 'idle') throw $this->createNotFoundException('Mission introuvable.');
+        return $fleet;
     }
 }

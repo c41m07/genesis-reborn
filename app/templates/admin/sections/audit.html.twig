@@ -1,0 +1,9 @@
+<section class="panel admin-section" id="admin-audit" aria-labelledby="admin-audit-title" data-controller="admin-filter">
+<h2 id="admin-audit-title">Journal d’audit</h2>
+<div class="admin-search"><label for="audit-search">Rechercher dans le journal</label><input id="audit-search" type="search" placeholder="Administrateur, cible ou détails…" data-admin-filter-target="query" data-action="input->admin-filter#filter"><label for="audit-action-filter">Action</label><select id="audit-action-filter" data-admin-filter-target="filter" data-filter-key="action" data-action="change->admin-filter#filter"><option value="">Toutes les actions</option>{% for action in auditActions %}<option value="{{ action }}">{{ action }}</option>{% endfor %}</select><output data-admin-filter-target="count"></output></div>
+<div class="admin-audit-actions"><button type="button" class="secondary" data-action="click->admin-filter#exportCsv">Exporter les lignes visibles en CSV</button></div>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Tableau défilant horizontalement"><table><caption>Journal des actions administratives</caption><thead><tr><th scope="col">Date</th><th scope="col">Administrateur</th><th scope="col">Action</th><th scope="col">Cible</th><th scope="col">Détails</th></tr></thead><tbody>
+{% for entry in auditLogs %}<tr data-admin-filter-target="row" data-filter-action="{{ entry.action }}"><td>{{ entry.createdAt|date('d/m/Y H:i:s') }}</td><td>{{ entry.actor ? entry.actor.username : 'Compte supprimé' }}</td><td>{{ entry.action }}</td><td>{{ entry.targetType }} #{{ entry.targetId }}</td><td>{{ entry.details|json_encode }}</td></tr>{% endfor %}
+</tbody></table></div>
+<p {% if auditLogs %}hidden{% endif %} data-admin-filter-target="empty">{{ auditLogs ? 'Aucune entrée ne correspond à cette recherche.' : 'Aucune action consignée.' }}</p>
+</section>

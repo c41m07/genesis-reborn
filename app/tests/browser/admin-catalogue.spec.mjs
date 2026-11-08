@@ -35,7 +35,7 @@ test('Administration catalogue: accès, édition, sauvegarde et restauration res
   await expect(page.locator('#command-navigation')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Administration', exact: true })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Console d’administration' })).toBeVisible();
-  await page.getByRole('tab', { name: 'Univers', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Console d’administration' }).getByRole('link', { name: 'Univers', exact: true }).click();
   await expect(page.getByRole('link', { name: /Équilibrer les catalogues de cet univers/ }).first()).toBeVisible();
   await page.setViewportSize({ width: 1440, height: 1000 });
 

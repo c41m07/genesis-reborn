@@ -116,7 +116,7 @@ test('403 générique : formulaire invalide, retour avant et après entrée en u
 test('Refus administrateur : jeton invalide expliqué et retour à la console', async ({ page }, testInfo) => {
   test.setTimeout(90000);
   await signIn(page, true);
-  await expect(page.getByRole('link', { name: 'Admin : ouvrir la console', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: /^Admin/ })).toBeVisible();
   expect((await new AxeBuilder({ page }).include('.topbar').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations).toEqual([]);
   await page.goto('/admin#admin-universes');
   const card = page.locator('.admin-universe-card').first();

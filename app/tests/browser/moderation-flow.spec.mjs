@@ -64,7 +64,7 @@ test('Modération : signaler un message, refuser un CSRF invalide et classer le 
   execFileSync('docker', ['compose', '--project-name', project, '--env-file', '.env.local', 'exec', '-T', 'app', 'php', 'bin/console', 'app:admin:grant', sender.email], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
   await login(page, sender);
   await page.goto('/admin');
-  await page.getByRole('tab', { name: 'Modération', exact: true }).click();
+  await page.goto('/admin/moderation');
   await expect(page.getByRole('heading', { name: 'Signalements de messages', exact: true })).toBeVisible();
   const report = page.locator('article.panel').filter({ hasText: body }).last();
   await expect(report).toContainText('Vérification du parcours de modération');
@@ -94,7 +94,7 @@ test('Modération : signaler un message, refuser un CSRF invalide et classer le 
   await secondMessage.getByRole('button', { name: 'Signaler', exact: true }).click();
   await expect(reporterPage.getByRole('status')).toContainText('Signalement transmis à la modération');
   await page.reload();
-  await page.getByRole('tab', { name: 'Modération', exact: true }).click();
+  await page.goto('/admin/moderation');
   const secondReport = page.locator('article.panel').filter({ hasText: body }).last();
   await expect(secondReport).toContainText('Vérification du masquage après modération');
   await secondReport.getByRole('button', { name: 'Masquer le message' }).click();

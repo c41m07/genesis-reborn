@@ -1,8 +1,9 @@
-{% extends 'base.html.twig' %}
+{% extends report_layout|default('base.html.twig') %}
 {% block title %}Rapport de combat · Genesis Reborn{% endblock %}
 {% block body %}
 <div class="mission-report">
-<a class="inline-link report-back" href="{{ path('app_combat_reports') }}">← Tous les rapports</a>
+{% if monitoring_context|default(null) %}<p class="admin-monitor-note">{{ monitoring_context }}</p>{% endif %}
+<a class="inline-link report-back" href="{{ report_back_url|default(path('app_combat_reports')) }}">← {{ monitoring_context|default(null) ? 'Retour à la surveillance' : 'Tous les rapports' }}</a>
 <header class="report-heading"><p class="report-eyebrow">COMBAT · N° {{ report.id }}</p><h1>Rapport de combat</h1><p>{{ report.combatEvent.planet.name }} · {{ report.combatEvent.planet.coordinates() }} · {{ report.resolvedAt|date('d/m/Y H:i') }}</p></header>
 {% set defeated = viewer_verdict|default(null) ? viewer_verdict == 'loss' : ((viewer_defends and report.outcome == 'attacker_wins') or (not viewer_defends and report.outcome == 'defender_wins')) %}
 <section class="panel report-summary {{ defeated ? 'report-summary--defeat' : '' }}" aria-labelledby="combat-result"><h2 id="combat-result">{% if viewer_verdict|default(null) %}{{ {win:'Victoire de votre camp',loss:'Défaite de votre camp',hold:'Position maintenue',draw:'Égalité'}[viewer_verdict] }}{% else %}{{ {attacker_wins:'Victoire des attaquants', defender_wins:'Victoire de la défense', draw:'Égalité'}[report.outcome]|default('Combat terminé') }}{% endif %}</h2><p>Le combat sur {{ report.combatEvent.planet.name }} est terminé.{% if defeated %} Votre camp a perdu le combat.{% endif %}</p><p class="muted">{{ report.rounds|length }} round(s) enregistré(s){% if report.snapshot.max_rounds is defined %} · Limite : {{ report.snapshot.max_rounds }} rounds{% endif %}</p></section>

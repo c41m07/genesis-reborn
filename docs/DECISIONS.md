@@ -961,3 +961,50 @@ installé dans la crontab de `caim`. Les occupations gardent leur échéance de 
 indépendante. Les participations sans activité connue restent exclues, sans
 initialisation inventée. Aucun envoi ou conversion manuel ni déploiement distant.
 Les descriptions précédentes de drapeaux désactivés sont des états historiques.
+
+## Refonte de l’administration et boîtes de ressources — choix du 8 novembre 2026
+
+Évolution validée à développer ; ces décisions ne signifient pas que les nouveaux
+écrans ou objets sont déjà implémentés. Le périmètre détaillé et les propositions
+encore en attente sont dans [le cadrage de l’administration](REFONTE_ADMINISTRATION.md).
+
+- Accueil synthétique et rubriques séparées : Surveillance, Joueurs, Univers,
+  Événements, Modération et Exploitation.
+- Surveillance détaillée des missions avec fiches joueurs, alertes à examiner,
+  notes et suivi des dossiers ; les transports sont regroupés dans ce suivi.
+- Alertes techniques et activités inhabituelles, notamment missions en retard,
+  transferts ou attaques répétés et sécurité ; ce sont des indications à examiner.
+- Création guidée de bonus temporaires, annonces et défis collectifs avec suivi
+  des contributions individuelles. Les mécanismes existants restent conservés.
+- Récompenses demandées : boosts et boîtes de ressources. Les distinctions de
+  profil proposées ne sont pas encore validées.
+- Boîtes petite, moyenne et grande : assortiment annoncé, montants fixes
+  plafonnés par univers, stockage dans l’inventaire et ouverture manuelle.
+- Le joueur choisit une de ses colonies du même univers ; si son stockage ne
+  suffit pas pour tout le contenu, l’ouverture est refusée et la boîte reste intacte.
+- Inventaire commun de 100 objets disponibles, boosts et boîtes confondus,
+  par participation à l’univers ; récompenses supplémentaires conservées en attente.
+
+Les quantités initiales sont validées : petite = 4 000 métal, 1 000 nano,
+1 000 hydrogène, 200 antimatière et 2 000 électricité ; moyenne = ces montants
+×2,5 ; grande = ×5. Elles restent réglables et plafonnées par univers.
+Chaque participant éligible reçoit au maximum un objet par événement : un boost
+ou une boîte, sans cumul des deux. Ces règles concernent le futur système et
+ne décrivent pas encore des récompenses distribuées par le code actuel.
+
+Les alertes de surveillance sont des indices à examiner, avec ces valeurs
+initiales réglables par univers : retard de mission supérieur à 5 minutes,
+5 transports entre deux joueurs distincts en 24 h, ou 10 attaques contre un même
+joueur en 24 h, PNJ exclus. L’ouverture d’une boîte est bloquée pendant le mode
+vacances et la boîte est conservée. Le plafond des boosts issus des missions
+à risque n’est pas modifié par l’ajout des boîtes aux récompenses d’événements.
+
+### Présence et interventions administratives — choix validés le 8 novembre 2026
+
+À développer dans la refonte, sans annonce d’activation à ce stade :
+
+- Présence estimée si activité depuis moins de cinq minutes, avec date de dernière activité.
+- Temps de jeu estimé par univers : aujourd’hui, sept derniers jours et total depuis le début du suivi ; suspension après cinq minutes sans activité, sans historique antérieur inventé.
+- Ajout ou retrait de ressources sur une colonie choisie du joueur, dans les capacités de stockage et sans solde négatif ; motif obligatoire.
+- Ajustement des échéances de flottes et rappel quand leur état permet un retour ; pas de modification de la composition ou cargaison en vol dans ce périmètre.
+- Confirmation et journal des interventions : administrateur, motif, valeurs avant/après ; respect des verrous et des tâches planifiées.
