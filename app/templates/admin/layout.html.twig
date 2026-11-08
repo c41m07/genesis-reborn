@@ -20,6 +20,8 @@
 <nav aria-label="Console d’administration">
 <a href="{{ path('app_admin_index') }}" {% if currentRoute=='app_admin_index' %}class="active" aria-current="page"{% endif %}>{{ ui.icon('overview') }} Accueil</a>
 <span class="admin-nav-group">Surveillance</span>
+<a href="{{ path('app_admin_surveillance') }}" {% if currentRoute=='app_admin_surveillance' %}class="active" aria-current="page"{% endif %}>{{ ui.icon('notifications') }} Alertes</a>
+<a href="{{ path('app_admin_cases') }}" {% if currentRoute starts with 'app_admin_case' %}class="active" aria-current="page"{% endif %}>{{ ui.icon('overview') }} Dossiers</a>
 <a href="{{ path('app_admin_missions') }}" {% if missionPage %}class="active" aria-current="page"{% endif %}>{{ ui.icon('fleet') }} Flottes et transports</a>
 <a href="{{ path('app_admin_security') }}" {% if currentRoute=='app_admin_security' %}class="active" aria-current="page"{% endif %}>{{ ui.icon('clock') }} Sécurité{% include 'ui/admin_notification_badge.html.twig' with {category:'security',count:adminNotifications.security} only %}</a>
 <span class="admin-nav-group">Gestion</span>

@@ -271,7 +271,7 @@ final class AdminService
             }
             $this->manager->lock($universe);
             $settings['catalog_overrides']=$universe->gameSettings['catalog_overrides']??[];
-            $universe->gameSettings = $settings;
+            $universe->gameSettings = array_replace($universe->gameSettings, $settings);
             $this->audit($admin, 'universe_settings_change', 'universe', $universeId, $settings);
             $this->manager->flush();
         });

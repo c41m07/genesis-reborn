@@ -34,3 +34,5 @@
 .admin-resource-intervention{margin-top:12px}
 .admin-resource-intervention>summary{min-height:44px;cursor:pointer;color:var(--accent);padding:10px 0}
 .admin-resource-intervention>summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.admin-case-text{white-space:pre-wrap;overflow-wrap:anywhere}
+.admin-console--organized[data-theme=light] .admin-sidebar nav>a:not([aria-current]){color:#535f66}

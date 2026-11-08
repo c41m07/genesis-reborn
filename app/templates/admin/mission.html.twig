@@ -4,6 +4,8 @@
 <a class="inline-link" href="{{ path('app_admin_missions') }}">← Surveillance des missions</a>
 <div class="page-heading"><div><h1>Flotte n° {{ fleet.id }}</h1><p>{{ missions[fleet.mission]|default(fleet.mission) }} · {{ fleet.playerUniverse.universe.name }} · {{ fleet.playerUniverse.displayName }}</p></div><a class="secondary" href="{{ path('app_admin_mission', {id:fleet.id}) }}">Actualiser le contrôle</a></div>
 <p class="admin-monitor-note">État observé le {{ captured_at|date('d/m/Y H:i:s', preferences.timezone) }}. Les données actuelles ne reconstituent pas la composition ou la cargaison du départ.</p>
+<p><a href="{{ path('app_admin_cases',{fleet:fleet.id}) }}">Dossiers de cette mission</a> · <a href="{{ path('app_admin_case_new',{fleet_id:fleet.id}) }}">Ouvrir un dossier</a></p>
+{% include 'admin/_mission_departure_trace.html.twig' %}
 {% if fleet.status in ['traveling','returning','orbiting','orbit_pending'] %}<section class="panel"><h2>Intervention administrative</h2>
 <p>Un motif et une confirmation sont obligatoires. Les missions dont l’échéance est atteinte ou engagées dans un combat ne peuvent pas être modifiées ici. La composition et la cargaison ne sont pas éditables.</p>
 <form method="post" action="{{ path('app_admin_mission_intervention',{id:fleet.id}) }}" class="admin-intervention-form">

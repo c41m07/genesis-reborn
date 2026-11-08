@@ -58,9 +58,9 @@ test('Fiche joueur : présence, temps par univers, refus des accès et responsiv
   await expect(page.locator('.admin-player-membership')).toContainText('En ligne');
   for (const key of ['today','week','total']) await expect(page.locator(`[data-playtime=${key}]`)).toContainText('1 h');
   for (const theme of ['dark','light']) {
-    runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(preferences,'$.theme','${theme}') WHERE id<>${user.playerId}`);
+    runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE id<>${user.playerId}`);
     for (const width of [1440,390]) {
-      await page.setViewportSize({width,height:900});await page.reload();
+      await page.setViewportSize({width,height:900});await page.reload();await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
       expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
       await page.screenshot({path:testInfo.outputPath(`player-${theme}-${width}.png`),fullPage:true});

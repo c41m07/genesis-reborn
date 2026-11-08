@@ -1,7 +1,7 @@
 <?php
 namespace App\Service\Admin;
 
-use App\Entity\{AdminAuditLog, CombatLog, CombatParticipant, EspionageReport, Fleet, FleetShip, Player, TransportReport, Universe};
+use App\Entity\{AdminAuditLog, CombatLog, CombatParticipant, EspionageReport, Fleet, FleetMissionTrace, FleetShip, Player, TransportReport, Universe};
 use App\Service\Catalog\GameCatalog;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
@@ -75,7 +75,7 @@ final class AdminMissionMonitoring
         }
         $pending = $this->pendingCombats([$fleet]);
         return [
-            'fleet'=>$fleet, 'units'=>$units, 'combats'=>$combats, 'missions'=>self::MISSIONS, 'statuses'=>self::STATUSES,
+            'fleet'=>$fleet, 'departure_trace'=>$this->em->getRepository(FleetMissionTrace::class)->findOneBy(['fleet'=>$fleet]), 'units'=>$units, 'combats'=>$combats, 'missions'=>self::MISSIONS, 'statuses'=>self::STATUSES,
             'captured_at'=>$this->clock->now(), 'deadline'=>$pending[$fleet->id]->resolveAt ?? $fleet->arrivalAt,
             'transport_report'=>$this->em->getRepository(TransportReport::class)->findOneBy(['fleet'=>$fleet]),
             'espionage_reports'=>$fleet->mission === 'spy' && $fleet->destination ? $this->em->getRepository(EspionageReport::class)->findBy(['sender'=>$fleet->playerUniverse, 'target'=>$fleet->destination], ['id'=>'DESC'], 10) : [],

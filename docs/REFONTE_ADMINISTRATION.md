@@ -233,3 +233,38 @@ du décodage SQL de leurs assertions. La revue mobile a conduit à agrandir les
 boutons, puis les deux parcours ont réussi à nouveau. Les contrats de transport,
 les jetons de tâche périmés, le refus des combats, l’atomicité et les doubles
 soumissions sont couverts. Aucun nouveau schéma dans ce lot.
+## Lot dossiers et alertes — vérifié localement
+
+Complexité 5/5 : nouveau schéma, instantanés, permissions et protection des
+modifications concurrentes. Chaque futur départ de flotte conserve son univers,
+son expéditeur, son destinataire au départ et un instantané des unités, cargaison,
+carburant et coordonnées. Les missions plus anciennes ne sont pas reconstituées.
+
+Les alertes comparent les échéances au retard autorisé, regroupent les transports
+entre deux joueurs dans les deux sens et comptent les attaques contre un même
+joueur, tous attaquants confondus, dans une fenêtre de 24 heures. Les cibles PNJ,
+les transports à soi-même et les traces hors fenêtre sont exclus. Jusqu’à cent
+signaux par catégorie sont présentés par univers, avec liens vers les missions,
+les joueurs et les dossiers. Les incidents de sécurité gardent leur rubrique.
+Les seuils sont réglables par univers et conservés lors de l’édition des autres
+paramètres ; leur modification est journalisée.
+
+Un dossier peut concerner la plateforme, un univers, une participation ou une
+flotte. Il dispose d’un titre, d’observations initiales et d’un état ouvert,
+en examen ou clos. Les notes datées sont ajoutées sans réécriture de l’historique.
+Les formulaires doublés ne créent pas de doublons et un ancien état ne peut pas
+écraser un changement concurrent. Les lectures sont journalisées. La liste est
+filtrable et paginée ; les dossiers clos restent accessibles dans l’historique.
+Un dossier déjà lié à un signal est réutilisé, sans clôture ni réouverture automatiques.
+
+La migration préparée Version20261109020000 crée admin_case, admin_case_note et
+fleet_mission_trace. Elle est vérifiée sur des bases jetables ; toute application
+sur une base existante reste soumise à validation et sauvegarde vérifiée.
+Contrôles réussis : validation, lint, compilation, 494 tests PHP et 13 tests des
+scripts. Quatorze scénarios navigateur réussissent par consolidation. La revue
+des captures a révélé que certains tests de thèmes ne transformaient pas les
+préférences vides en objet JSON ; ces tests vérifient désormais explicitement
+le thème appliqué. Leur reprise réelle a conduit à renforcer le contraste des
+liens latéraux en thème clair, puis les dossiers, fiches et interventions ont
+réussi les contrôles concernés. Le HTML public de confidentialité a été contrôlé.
+La migration reste limitée aux bases jetables pour cette vérification.

@@ -12,6 +12,7 @@
 <div class="admin-home-grid">
 <section class="panel"><h2>À examiner</h2><ul class="admin-priority-list">
 <li><a href="{{ path('app_admin_security') }}">{{ securityIncidentCount }} incident(s) de sécurité en attente</a></li>
+<li><a href="{{ path('app_admin_surveillance') }}">Examiner les alertes des univers</a> · <a href="{{ path('app_admin_cases') }}">{{ activeCaseCount }} dossier(s) actif(s)</a></li>
 <li><a href="{{ path('app_admin_reports') }}">{{ openReportCount }} signalement(s) de messages ouverts</a></li>
 <li><a href="{{ path('app_admin_feedbacks') }}">{{ adminNotifications.feedbacks }} nouveau(x) feedback(s) depuis votre dernière visite</a></li>
 <li><a href="{{ path('app_admin_operations') }}">{% if operations.outbox_available %}{{ operations.outbox_overdue }} relais à échéance atteinte{% else %}État des relais à vérifier{% endif %}</a></li>

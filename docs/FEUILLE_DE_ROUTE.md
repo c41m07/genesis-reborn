@@ -22,11 +22,14 @@ et les transports, avec fiches détaillées et lectures journalisées.
 Ses contrôles locaux sont décrits dans le [cadrage de la refonte](REFONTE_ADMINISTRATION.md).
 La publication ne vaut pas déploiement ni validation de la CI.
 
-Restent à développer selon les décisions validées : présence et temps de jeu
-estimés par univers, fiches et dossiers, alertes configurables, interventions
-sur les ressources et échéances de flottes, création guidée d’événements et
-boîtes de ressources. Les changements de schéma nécessaires seront préparés
-avant toute demande d’application sur une base existante.
+Les lots suivants préparent les fiches joueurs, la présence et le temps de jeu
+estimés par univers, les interventions sur les ressources et échéances de flottes,
+puis les dossiers et alertes configurables. Le cadrage décrit les vérifications
+et les migrations préparées ; leur présence dans Dev ne vaut pas activation sur
+une base existante.
+
+Restent à développer la création guidée d’événements et les boîtes de ressources.
+Les migrations seront soumises à validation avant application hors bases jetables.
 ## Priorités restantes
 
 | Priorité | Travail et preuve attendue |

@@ -63,7 +63,7 @@ test('Ressources admin : confirmation, ajout, répétition et refus sans perte',
   const log = JSON.parse(queryIsolatedSql(project,`SELECT details FROM admin_audit_log WHERE action='admin_resources_adjust' AND target_id=${user.planetId}`));
   expect(queryIsolatedSql(project,`SELECT JSON_UNQUOTE(JSON_EXTRACT(details,'$.reason')) FROM admin_audit_log WHERE action='admin_resources_adjust' AND target_id=${user.planetId}`)).toBe('Réparation du ticket 123');
   expect(log.after.metal-log.before.metal).toBeCloseTo(100,4);
-  runIsolatedSql(project,`UPDATE player SET preferences=JSON_SET(preferences,'$.theme','light') WHERE id<>${user.playerId}`);
+  runIsolatedSql(project,`UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','light') WHERE id<>${user.playerId}`);
   await page.reload();await details.locator('summary').click();
   expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
   await userPage.close();

@@ -13,7 +13,7 @@ use Psr\Clock\ClockInterface;
 use App\Service\Player\VacationCalendar;
 final class FleetService
 {
-    public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues,private \App\Service\Combat\CombatEventService $combats,private EspionageService $espionage,private BoostGrantService $boostGrants,private BoostEventService $boostEvents,private \App\Service\Universe\PlanetNameGenerator $planetNames,private \App\Service\Combat\TechnologyEffectCalculator $technologyEffects,private TransportService $transports,private VacationCalendar $vacations,private \App\Service\Combat\OccupationService $occupations) {}
+    public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues,private \App\Service\Combat\CombatEventService $combats,private EspionageService $espionage,private BoostGrantService $boostGrants,private BoostEventService $boostEvents,private \App\Service\Universe\PlanetNameGenerator $planetNames,private \App\Service\Combat\TechnologyEffectCalculator $technologyEffects,private TransportService $transports,private VacationCalendar $vacations,private \App\Service\Combat\OccupationService $occupations, private \App\Service\Admin\FleetMissionTraceService $traces) {}
     private function coords(SolarSystem $s,?int $position): array { return [$s->id,$s->galaxy->id,$s->coordX,$s->coordY,$position]; }
     public function quote(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo=[],float $orbitHours=0): array
     {
@@ -101,6 +101,7 @@ final class FleetService
                 $ship=new FleetShip();$ship->fleet=$f;$ship->slug=$slug;$ship->tier=$tier;$ship->quantity=$quantity;$this->manager->save($ship);
             }
             if($mission==='transport') $this->transports->recordDeparture($f,$q['freight']);
+            $this->traces->recordDeparture($f, $q['composition'], $q['freight']);
             $this->occupations->recordReinforcementDeparture($f);
             $this->schedule($f);
         });
