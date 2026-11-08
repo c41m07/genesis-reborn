@@ -1,0 +1,9 @@
+.admin-notification-count{display:inline-flex;align-items:center;justify-content:center;min-width:22px;min-height:22px;padding:2px 6px;margin-left:6px;border-radius:999px;background:#e7b76b;color:#20212a;font-size:12px;font-weight:800;line-height:1.2;flex-shrink:0}
+.admin-header-link{position:relative}
+.admin-header-link .admin-notification-count{position:absolute;top:-8px;right:-8px;display:inline-flex;margin:0;min-width:20px;min-height:20px;font-size:11px;border:1px solid var(--bg)}
+.admin-mission-table{max-width:100%;overflow-x:auto;border:1px solid var(--line);border-radius:6px}
+.admin-mission-table:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.admin-mission-table table{min-width:950px;width:100%;font-size:12px}
+.admin-mission-table :is(th,td){max-width:260px;overflow-wrap:anywhere;white-space:normal}
+.admin-mission-pages{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-block:20px}
+.admin-console[data-theme=light] .feedback-admin-filters label{color:#535f66}

@@ -5,6 +5,7 @@ use App\Entity\{AdminAuditLog, MessageReport, Player, PlayerUniverse, Universe};
 use App\Repository\GameRepository;
 use App\Service\Admin\AdminService;
 use App\Service\Admin\AdminOperationsService;
+use App\Service\Admin\AdminNotificationService;
 use App\Service\Admin\UniverseMetricsService;
 use App\Service\Admin\CatalogBalanceService;
 use App\Service\Catalog\GameCatalog;
@@ -20,7 +21,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class AdminController extends AbstractController
 {
     #[Route('', name: '_index', methods: ['GET'])]
-    public function index(Request $request, GameRepository $repo, GameCatalog $catalog, AdminService $admin, AdminOperationsService $operations): Response
+    public function index(Request $request, GameRepository $repo, GameCatalog $catalog, AdminService $admin, AdminOperationsService $operations, AdminNotificationService $notifications): Response
     {
         $reports = $repo->all(MessageReport::class, ['status' => 'open'], ['createdAt' => 'DESC']);
         $admin->recordReportViews($this->getUser(), $reports);
@@ -46,6 +47,10 @@ final class AdminController extends AbstractController
             }
         }
         $securityIncidents = array_values(array_filter($auditLogs, static fn (AdminAuditLog $entry): bool => $entry->action === 'admin_access_denied' && !isset($reviewedIncidentIds[$entry->id])));
+        $notifications->markVisited($this->getUser(), [
+            'reports'=>max([0, ...array_map(static fn (MessageReport $report): int => $report->id, $reports)]),
+            'security'=>max([0, ...array_map(static fn (AdminAuditLog $entry): int => $entry->id, $securityIncidents)]),
+        ]);
         $auditActions = array_values(array_unique(array_map(static fn (AdminAuditLog $entry): string => $entry->action, $auditLogs)));
         sort($auditActions);
         $operationsSnapshot = $operations->snapshot();
