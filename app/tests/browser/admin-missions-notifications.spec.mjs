@@ -43,6 +43,7 @@ test('Admin : nouveautés personnelles, total, actualisation et archives masqué
   const totalBadge = target => target.locator('.admin-header-link [data-category="total"]');
   await page.goto('/');
   await expect(totalBadge(page)).toHaveText('3');
+  await expect(page.locator('.admin-header-link')).toHaveAccessibleName('Admin 3 : ouvrir la console');
   for (const width of [1440,768,390]) {
     await page.setViewportSize({width, height:900});
     await page.goto('/');
@@ -66,6 +67,7 @@ test('Admin : nouveautés personnelles, total, actualisation et archives masqué
   await page.goto('/admin/securite');
   await page.goto('/');
   await expect(totalBadge(page)).toHaveText('2');
+  await expect(page.locator('.admin-header-link')).toHaveAccessibleName('Admin 2 : ouvrir la console');
   await second.goto('/');
   await expect(totalBadge(second)).toHaveText('4');
   await page.goto('/admin/feedbacks');
@@ -80,10 +82,12 @@ test('Admin : nouveautés personnelles, total, actualisation et archives masqué
   await expect(page.locator('.feedback-admin-card')).toHaveCount(3);
   await page.goto('/');
   await expect(totalBadge(page)).toBeHidden();
+  await expect(page.locator('.admin-header-link')).toHaveAccessibleName('Admin : ouvrir la console');
   await expect(page.locator('.mobile-bottom-nav .menu-unread-dot')).toBeHidden();
   runIsolatedSql(project, `INSERT INTO user_feedback (player_id,type,priority,title,description,status,created_at) VALUES (${regular.playerId},'other','low','Retour après lecture','Nouveauté réelle','open',UTC_TIMESTAMP())`);
   await page.evaluate(() => window.dispatchEvent(new CustomEvent('genesis:refresh')));
   await expect(totalBadge(page)).toHaveText('1');
+  await expect(page.locator('.admin-header-link')).toHaveAccessibleName('Admin 1 : ouvrir la console');
   await expect(page.locator('.mobile-bottom-nav .menu-unread-dot')).toBeVisible();
   for (const route of ['/admin/flottes', '/admin/notifications']) {
     await visitor.goto(route);

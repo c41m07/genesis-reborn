@@ -1008,3 +1008,43 @@ vacances et la boîte est conservée. Le plafond des boosts issus des missions
 - Ajout ou retrait de ressources sur une colonie choisie du joueur, dans les capacités de stockage et sans solde négatif ; motif obligatoire.
 - Ajustement des échéances de flottes et rappel quand leur état permet un retour ; pas de modification de la composition ou cargaison en vol dans ce périmètre.
 - Confirmation et journal des interventions : administrateur, motif, valeurs avant/après ; respect des verrous et des tâches planifiées.
+### 8 novembre 2026 — Présentation de l’arbre technologique
+
+Décision utilisateur : organiser l’arbre en sections par domaines (économie,
+recherche, flotte, défense), avec de vraies branches de prérequis et les déblocages
+à droite. Tous les éléments restent consultables. La sélection éclaire le chemin
+complet entre domaines et les déblocages directs ; les autres cartes restent
+présentes. Les liens entre domaines sont affichés pour le parcours sélectionné.
+Le panneau de détail, latéral sur ordinateur et plein écran sur mobile, indique
+les niveaux réels requis, les accès acquis et la prochaine étape conseillée.
+Un objectif peut être mémorisé localement dans le navigateur, séparément pour
+chaque participation et colonie. Les rangs gardent leurs règles indépendantes,
+les accès permanents restent acquis et aucune valeur de gameplay ne change.
+Les recherches et filtres conservent les prérequis directs et indirects associés.
+
+
+### 8 novembre 2026 — Lisibilité des parcours technologiques
+
+Après vérification d’utilisation, décision utilisateur : conserver les filtres
+à la sélection et ajouter seulement les cartes nécessaires au parcours consulté.
+La sélection affiche les prérequis en priorité ; un bouton affiche séparément
+les déblocages directs. Les flèches indiquent le sens des dépendances et les
+conditions remplies, manquantes ou historiques restent distinguées par du texte
+et des tracés. Les anciens prérequis d’un accès acquis ne sont pas à refaire.
+Des accès rapides aux domaines et un recentrage facilitent la navigation. Sur mobile, fermer les détails conserve le parcours sélectionné.
+Le détail conserve un seul parcours de prérequis et regroupe les déblocages dans
+des sections repliables par domaine. Les règles et niveaux requis sont conservés.
+
+### 8 novembre 2026 — Guide technologique, un domaine à la fois
+
+L’utilisateur juge encore le graphe brouillon et illisible, puis choisit
+explicitement l’aperçu « Un domaine à la fois ». Cette décision remplace les
+présentations graphiques précédentes : plus de lignes ni de zone de graphe,
+quatre boutons de domaines, six cartes initiales et les suivantes à la demande,
+avec rang basique par défaut. La recherche parcourt tous les domaines ;
+les filtres par rang et état restent conservés à la sélection. Les prérequis
+ne sont plus ajoutés comme cartes dans les résultats : ils restent consultables
+dans la fiche, avec leurs étapes précédentes repliables et les déblocages
+regroupés par domaine. L’objectif local et la prochaine étape sont conservés,
+avec un panneau latéral sur ordinateur et une fiche plein écran sur mobile.
+Les règles de déblocage et les accès permanents ne changent pas.

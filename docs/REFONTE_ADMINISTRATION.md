@@ -22,6 +22,12 @@ Les contrôles portent aussi sur les autorisations, les rapports privés des jou
 les formulaires conservés et les thèmes clair/sombre aux tailles bureau et mobile.
 Cela ne constitue pas une validation de la CI ni un audit RGAA complet.
 
+Intégration avec Dev : guide technologique et correction concurrente du compteur
+conservés. Les six contrôles ont été repris sur l’intégration : validation, lint,
+475 tests PHP, 13 tests des scripts, compilation, 19 scénarios navigateur en une
+exécution complète et contrôle des différences réussis. Les rapports de conquête
+et d’espionnage des joueurs avaient également été vérifiés sur le premier lot.
+
 Les dossiers, les alertes répétitives, la présence et le temps de jeu, les
 interventions, l’assistant complet d’événements et les boîtes ne sont pas encore
 implémentés dans ce lot. Aucune migration de ce lot sur une base existante.
