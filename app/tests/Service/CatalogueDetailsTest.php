@@ -66,6 +66,39 @@ final class CatalogueDetailsTest extends KernelTestCase
         self::assertEqualsWithDelta(405,$rows['Consommation électrique']['after']-$rows['Consommation électrique']['before'],1e-8);
     }
 
+    public function testFactoryBenefitsExcludeLevelsAlreadyQueued():void
+    {
+        $insights=self::getContainer()->get(CatalogueInsights::class);
+        $twig=self::getContainer()->get(\Twig\Environment::class);
+        $universe=$this->planet->solarSystem->galaxy->universe;
+        $levels=['mine_metal'=>['basic'=>10,'intermediate'=>4,'superior'=>2]];
+        foreach(['basic'=>[360,180],'intermediate'=>[540,270],'superior'=>[810,405]] as $tier=>[$production,$consumption]){
+            $definition=$this->catalog->getTierForUniverse($universe,'buildings','mine_metal',$tier);
+            $rows=array_column($insights->benefits($definition,'buildings',$levels['mine_metal'][$tier]+3,$this->planet,$levels,[]),null,'label');
+            $output=$rows['Production de métal'];$use=$rows['Consommation électrique'];
+            self::assertEqualsWithDelta($production,$output['after']-$output['before'],1e-8,$tier);
+            self::assertEqualsWithDelta($consumption,$use['after']-$use['before'],1e-8,$tier);
+            self::assertSame('+'.$production.' / h',trim($twig->render('ui/catalogue_benefit_value.html.twig',['benefit'=>$output])));
+            self::assertSame('−'.$consumption.' / h',trim($twig->render('ui/catalogue_benefit_value.html.twig',['benefit'=>$use])));
+        }
+        self::assertSame(['mine_metal'=>['basic'=>10,'intermediate'=>4,'superior'=>2]],$levels);
+    }
+
+    public function testResearchBenefitsExcludeLevelsAlreadyQueued():void
+    {
+        $insights=self::getContainer()->get(CatalogueInsights::class);
+        $universe=$this->planet->solarSystem->galaxy->universe;
+        foreach($this->catalog->all('technologies') as $slug=>$base)foreach(GameCatalog::TIERS as $tier){
+            $definition=$this->catalog->getTierForUniverse($universe,'technologies',$slug,$tier);
+            $levels=[$slug=>['basic'=>1,'intermediate'=>1,'superior'=>1]];
+            $completed=$levels;$completed[$slug][$tier]=3;
+            $expected=$insights->benefits($definition,'technologies',4,$this->planet,[],$completed);
+            $queued=$insights->benefits($definition,'technologies',4,$this->planet,[],$levels);
+            self::assertNotEmpty($expected,$slug.'/'.$tier);
+            self::assertSame($expected,$queued,$slug.'/'.$tier.' : seul le passage de 3 à 4 doit être affiché.');
+        }
+    }
+
     public function testShipCharacteristicsIncludeResearchForTheSelectedRank():void
     {
         $max=['basic'=>25,'intermediate'=>25,'superior'=>25];
