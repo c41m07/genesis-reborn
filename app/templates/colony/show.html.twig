@@ -40,7 +40,6 @@
 <section id="panel-{{ group }}" data-controller="building-catalog" data-building-catalog-show-locked-value="{{ show_locked_items ? 'true' : 'false' }}" data-action="hashchange@window->building-catalog#followHash click->building-catalog#rememberFilter" aria-label="{{ {buildings:'Bâtiments',technologies:'Recherche',ships:'Chantier spatial',defenses:'Défenses'}[group] }}">
     <div class="catalog-section-title">
         <h2>{{ {buildings:'Développer la colonie',technologies:'Repousser les frontières',ships:'Préparer vos prochaines missions',defenses:'Protéger la planète'}[group] }}</h2>
-        <span>{{ items|length / 3 }} {{ {buildings:'bâtiments',technologies:'recherches',ships:'familles de vaisseaux',defenses:'familles de défenses'}[group] }}</span>
         <form method="get" class="building-visibility">
             <input type="hidden" name="section" value="{{ group }}">
             <input type="hidden" name="showLockedItems" value="{{ show_locked_items ? '0' : '1' }}" data-building-catalog-target="visibilityInput">
