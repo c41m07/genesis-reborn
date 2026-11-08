@@ -128,12 +128,19 @@ final class GameplayAccessTest extends WebTestCase
     {
         [$a,$own]=$this->player('Alpha');[$b,$foreign]=$this->player('Beta');
         $free=$this->em->getRepository(Planet::class)->findOneBy(['solarSystem'=>$own->solarSystem,'owner'=>null]);$free->npcPlanet=false;
-        $otherSystems=array_values(array_filter($this->em->getRepository(\App\Entity\SolarSystem::class)->findBy(['galaxy'=>$own->solarSystem->galaxy]),static fn(\App\Entity\SolarSystem $system):bool=>$system->id!==$own->solarSystem->id));
+        $otherSystems=array_values(array_filter($this->em->getRepository(\App\Entity\SolarSystem::class)->findBy(['galaxy'=>$own->solarSystem->galaxy]),static fn(\App\Entity\SolarSystem $system):bool=>$system->id!==$own->solarSystem->id && $system->id!==$foreign->solarSystem->id));
         self::assertNotEmpty($otherSystems,'Le système de test doit contenir une destination non découverte.');
         $unknown=$this->em->getRepository(Planet::class)->findOneBy(['solarSystem'=>$otherSystems[0]]);
+        $discovery=$this->em->getRepository(\App\Entity\PlayerDiscovery::class)->findOneBy(['playerUniverse'=>$a->currentPlayerUniverse,'solarSystem'=>$foreign->solarSystem]);
+        if(!$discovery){$discovery=new \App\Entity\PlayerDiscovery();$discovery->playerUniverse=$a->currentPlayerUniverse;$discovery->solarSystem=$foreign->solarSystem;$this->em->persist($discovery);}
+        $this->em->flush();
+        $outsideId=(int)$this->em->getConnection()->fetchOne('SELECT p.id FROM planet p JOIN solar_system s ON s.id=p.solar_system_id JOIN galaxy g ON g.id=s.galaxy_id WHERE g.universe_id <> ? LIMIT 1',[$a->currentPlayerUniverse->universe->id]);
+        self::assertGreaterThan(0,$outsideId);
         $freeId=$free->id;$foreignId=$foreign->id;$unknownId=$unknown->id;$this->client->loginUser($a);
         $crawler=$this->client->request('GET','/flottes?mission=colonize&planet='.$freeId);self::assertResponseIsSuccessful();self::assertSame('colonize',$crawler->filter('select[name="mission"] option[selected]')->first()->attr('value'));self::assertSame($free->coordinates(),$crawler->filter('input[name="coordinates"]')->attr('value'));
-        $this->client->request('GET','/flottes?mission=transport&planet='.$foreignId);self::assertResponseStatusCodeSame(404);
+        $this->client->request('GET','/flottes?mission=transport&planet='.$foreignId);self::assertResponseIsSuccessful();
+        $this->client->request('GET','/flottes?mission=colonize&planet='.$foreignId);self::assertResponseStatusCodeSame(404);
+        $this->client->request('GET','/flottes?mission=transport&planet='.$outsideId);self::assertResponseStatusCodeSame(404);
         $this->client->request('GET','/flottes?mission=colonize&planet='.$unknownId);self::assertResponseStatusCodeSame(404);
     }
 
