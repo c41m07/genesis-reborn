@@ -161,7 +161,28 @@ Le nombre maximum de vaisseaux par flotte est fixé par défaut à **1 000 000**
 
 ### Capacité d’inventaire — 5 novembre 2026
 
-L’inventaire peut contenir **100 bonus disponibles** par joueur et par univers. Les récompenses supplémentaires restent en attente et rejoignent l’inventaire lorsqu’une place se libère. Cette capacité remplace la limite précédente de 3 emplacements.
+L’inventaire peut contenir **100 objets disponibles** par joueur et par univers, boosts et boîtes de ressources confondus. Les récompenses supplémentaires restent en attente et rejoignent l’inventaire de la plus ancienne à la plus récente lorsqu’une place se libère. Cette capacité remplace la limite précédente de 3 emplacements.
+
+#### Boîtes de ressources — décisions du 8 novembre, réalisation du 9 novembre 2026
+
+Le contenu annoncé est fixe, sans tirage aléatoire, et reste figé dans chaque
+boîte attribuée. Les modèles et plafonds sont réglables par univers. Valeurs
+initiales :
+
+| Format | Métal | Nano | Hydrogène | Antimatière | Électricité |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Petite | 4 000 | 1 000 | 1 000 | 200 | 2 000 |
+| Moyenne | 10 000 | 2 500 | 2 500 | 500 | 5 000 |
+| Grande | 20 000 | 5 000 | 5 000 | 1 000 | 10 000 |
+
+Les plafonds initiaux par boîte correspondent au grand format. Le joueur ouvre
+manuellement la boîte sur une colonie lui appartenant dans le même univers.
+L’ouverture est refusée pendant les vacances ou si un seul des entrepôts manque
+de place ; aucune ressource n’est déposée et la boîte est conservée intacte.
+Une même ouverture ne peut pas être appliquée deux fois.
+
+Un événement attribue au maximum un objet par participant éligible : un boost
+ou une boîte. Le plafond quotidien des boosts de missions à risque est conservé.
 
 ### Classement des guildes — 5 novembre 2026
 

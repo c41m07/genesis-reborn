@@ -36,3 +36,4 @@
 .admin-resource-intervention>summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .admin-case-text{white-space:pre-wrap;overflow-wrap:anywhere}
 .admin-console--organized[data-theme=light] .admin-sidebar nav>a:not([aria-current]){color:#535f66}
+.resource-box-settings fieldset{min-width:0;display:grid;gap:10px}

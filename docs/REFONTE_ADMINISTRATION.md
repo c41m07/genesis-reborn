@@ -268,3 +268,31 @@ le thème appliqué. Leur reprise réelle a conduit à renforcer le contraste de
 liens latéraux en thème clair, puis les dossiers, fiches et interventions ont
 réussi les contrôles concernés. Le HTML public de confidentialité a été contrôlé.
 La migration reste limitée aux bases jetables pour cette vérification.
+## Lot boîtes et inventaire commun — en vérification
+
+Complexité 5/5 : migration compatible et opérations économiques atomiques.
+La table existante d’objets distingue les boosts des boîtes et conserve un
+contenu figé. L’attribution d’un événement utilise toujours une clé unique par
+participation : attribuer ensuite l’autre type d’objet ne donne pas une seconde
+récompense pour le même événement. Les anciens boosts restent des boosts.
+
+Les cent places disponibles sont partagées. Le plus ancien objet en attente,
+boîte ou boost, rejoint l’inventaire lorsqu’un objet est consommé. Les boîtes
+identiques sont regroupées visuellement, mais occupent chacune une place.
+L’utilisation d’un boost sélectionne exclusivement un objet de type boost.
+
+L’ouverture vérifie sous verrou la participation, la colonie, l’univers, le mode
+vacances, l’objet disponible et la place pour chaque ressource. Le dépôt entier
+est annulé au moindre dépassement ; le contenu et la boîte sont conservés.
+Un identifiant de requête évite un double dépôt.
+
+Les modèles petite/moyenne/grande reprennent les montants validés. Les plafonds
+initiaux correspondent aux montants du grand format et restent réglables par
+univers, avec motif, confirmation et journal avant/après. Les nouveaux réglages
+ne modifient pas les boîtes déjà attribuées. L’interface se trouve dans
+Administration → Univers → réglages de l’univers → modèles de boîtes.
+
+La migration Version20261109030000 ajoute le type (boost par défaut) et un
+contenu JSON facultatif aux objets existants, sans supprimer d’objet. Son retour
+en arrière est bloqué si des boîtes ou contenus doivent être conservés. Elle
+reste testée uniquement sur des bases jetables avant validation d’application.

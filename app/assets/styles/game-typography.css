@@ -41,3 +41,10 @@ body.authenticated .boost-operation .secondary{font-size:12px;white-space:normal
     body.authenticated .building-rank-full{display:inline;position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
     body.authenticated .building-rank-short{display:inline}
 }
+.resource-box-form{display:grid;gap:10px;margin-top:16px}
+.resource-box-form :is(label,select){font-size:13px}
+.resource-box-form button{min-height:44px}
+.resource-box-card>div{width:100%;min-width:0}
+.resource-box-card h3{font-size:16px;line-height:1.4;letter-spacing:normal}
+.resource-box-card p,.resource-box-form button{font-size:13px;line-height:1.6}
+body.authenticated[data-theme=light] .patchnote-shortcut>span{color:#535f66}

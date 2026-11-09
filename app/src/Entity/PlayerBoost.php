@@ -24,6 +24,10 @@ class PlayerBoost
 
     #[ORM\Column(length: 16)]
     public string $status = 'available';
+    #[ORM\Column(length: 16, options: ['default'=>'boost'])]
+    public string $kind = 'boost';
+    #[ORM\Column(type: 'json', nullable: true)]
+    public ?array $payload = null;
 
     #[ORM\Column]
     public \DateTimeImmutable $earnedAt;

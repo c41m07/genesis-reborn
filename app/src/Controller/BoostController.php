@@ -3,6 +3,8 @@ namespace App\Controller;
 
 use App\Entity\Fleet;
 use App\Entity\QueueItem;
+use App\Entity\Planet;
+use App\Service\Boost\ResourceBoxUseService;
 use App\Service\Boost\BoostGrantService;
 use App\Service\Boost\BoostUseService;
 use App\Service\Universe\UniverseContext;
@@ -40,10 +42,18 @@ final class BoostController extends AbstractController
             }
         }
         $activeFleets = array_values(array_filter($repo->activeFleetsForBoost($membership), static fn (Fleet $fleet): bool => $fleet->arrivalAt > $clock->now()));
+        $inventory=$grants->inventory($membership);$boostCount=0;$boxes=[];
+        foreach ($inventory as $item) {
+            if ($item->kind==='boost') { ++$boostCount;continue; }
+            if ($item->kind!=='resource_box') continue;
+            $key=hash('sha256',json_encode($item->payload));
+            $boxes[$key] ??= ['item'=>$item,'quantity'=>0];++$boxes[$key]['quantity'];
+        }
 
         return $this->render('boosts/index.html.twig', [
             'membership' => $membership,
-            'boosts' => $grants->inventory($membership),
+            'boosts' => $inventory,
+            'box_resources'=>$catalog->rules()['resources'], 'boost_count'=>$boostCount, 'resource_boxes'=>array_values($boxes), 'available_colonies'=>$repo->all(Planet::class,['owner'=>$membership],['id'=>'ASC']),
             'pending_boost_count' => $grants->pendingCount($membership),
             'inventory_capacity' => $grants->inventoryCapacity(),
             'duration_reduction_percent' => $grants->durationReductionRatio() * 100,
@@ -51,6 +61,17 @@ final class BoostController extends AbstractController
             'active_fleets' => $activeFleets,
             'vacation' => $vacation,
         ]);
+    }
+
+    #[Route('/inventaire/boites/{id}/ouvrir', name:'app_resource_box_open', requirements:['id'=>'\d+'], methods:['POST'])]
+    public function openBox(int $id, Request $request, UniverseContext $context, ResourceBoxUseService $boxes): Response
+    {
+        if (!$this->isCsrfTokenValid('box_open_'.$id,$request->request->get('_token'))) throw $this->createAccessDeniedException('Formulaire expiré.');
+        try {
+            $changed=$boxes->open($context->membership(),$id,$request->request->getInt('planet_id'),(string)$request->request->get('request_key'));
+            $this->addFlash('success',$changed ? 'Boîte ouverte : toutes les ressources ont été déposées sur la colonie choisie.' : 'Cette ouverture a déjà été traitée.');
+        } catch (\DomainException $error) { $this->addFlash('error',$error->getMessage()); }
+        return $this->redirectToRoute('app_boosts');
     }
 
     #[Route('/boosts/utiliser/{type}/{id}', name: 'app_boost_use', methods: ['POST'], requirements: ['type' => 'queue|fleet', 'id' => '\\d+'])]

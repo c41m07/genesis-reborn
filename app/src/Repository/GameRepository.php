@@ -422,10 +422,10 @@ SQL;
             ->setParameter('membership', $membership)->setParameter('status', $status)->getQuery()->getSingleScalarResult();
     }
 
-    public function oldestBoost(PlayerUniverse $membership, string $status): ?PlayerBoost
+    public function oldestBoost(PlayerUniverse $membership, string $status, ?string $kind = null): ?PlayerBoost
     {
         return $this->em->getRepository(PlayerBoost::class)->findOneBy(
-            ['playerUniverse' => $membership, 'status' => $status],
+            ['playerUniverse' => $membership, 'status' => $status] + ($kind === null ? [] : ['kind'=>$kind]),
             ['earnedAt' => 'ASC', 'id' => 'ASC'],
         );
     }
