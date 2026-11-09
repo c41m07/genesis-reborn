@@ -2,7 +2,7 @@
 {% block title %}Accueil de l’administration · Genesis Reborn{% endblock %}
 {% block body %}
 <div data-controller="admin-legacy-links" data-admin-legacy-links-routes-value="{{ {players:path('app_admin_players'),universes:path('app_admin_universes'),reports:path('app_admin_reports'),security:path('app_admin_security'),audit:path('app_admin_audit')}|json_encode|e('html_attr') }}">
-<div class="page-heading" id="admin-heading"><div><p class="eyebrow">Centre de contrôle</p><h1>Administration</h1><p>L’activité des univers et les éléments à examiner, réunis sur cet accueil.</p></div></div>
+<div class="page-heading admin-home-heading" id="admin-heading"><div><p class="eyebrow">Centre de contrôle</p><h1>Administration</h1><p>L’activité des univers et les éléments à examiner, réunis sur cet accueil.</p></div><a class="primary" href="{{ path('app_admin_event_wizard') }}">Préparer un événement</a></div>
 <section class="admin-metrics" aria-label="Indicateurs de la plateforme">
 <a class="admin-metric" href="{{ path('app_admin_players') }}"><span>COMPTES</span><strong>{{ playerCount }}</strong><small>{{ suspendedPlayerCount }} suspendu{{ suspendedPlayerCount == 1 ? '' : 's' }}</small></a>
 <a class="admin-metric" href="{{ path('app_admin_universes') }}"><span>UNIVERS</span><strong>{{ universes|length }}</strong><small>{{ activeUniverseCount }} ouverts · {{ scheduledUniverseCount }} planifiés · {{ closedUniverseCount }} fermés</small></a>

@@ -17,32 +17,10 @@
 <a class="admin-brand" href="{{ path('app_admin_index') }}"><img src="{{ asset('art/genesis-reborn-emblem.webp') }}" alt=""><span>GENESIS<br><strong>OPERATIONS</strong></span></a>
 <button type="button" class="secondary admin-menu-toggle" data-admin-navigation-target="toggle" data-action="admin-navigation#toggle" aria-controls="admin-navigation-panel" aria-expanded="true" hidden>Menu d’administration</button>
 <div id="admin-navigation-panel" class="admin-navigation-panel" data-admin-navigation-target="panel">
-<nav aria-label="Console d’administration">
-<a href="{{ path('app_admin_index') }}" {% if currentRoute=='app_admin_index' %}class="active" aria-current="page"{% endif %}>{{ ui.icon('overview') }} Accueil</a>
-<span class="admin-nav-group">Surveillance</span>
-<a href="{{ path('app_admin_surveillance') }}" {% if currentRoute=='app_admin_surveillance' %}class="active" aria-current="page"{% endif %}>{{ ui.icon('notifications') }} Alertes</a>
-<a href="{{ path('app_admin_cases') }}" {% if currentRoute starts with 'app_admin_case' %}class="active" aria-current="page"{% endif %}>{{ ui.icon('overview') }} Dossiers</a>
-<a href="{{ path('app_admin_missions') }}" {% if missionPage %}class="active" aria-current="page"{% endif %}>{{ ui.icon('fleet') }} Flottes et transports</a>
-<a href="{{ path('app_admin_security') }}" {% if currentRoute=='app_admin_security' %}class="active" aria-current="page"{% endif %}>{{ ui.icon('clock') }} Sécurité{% include 'ui/admin_notification_badge.html.twig' with {category:'security',count:adminNotifications.security} only %}</a>
-<span class="admin-nav-group">Gestion</span>
-<a href="{{ path('app_admin_players') }}" {% if currentRoute in ['app_admin_players','app_admin_player'] %}class="active" aria-current="page"{% endif %}>{{ ui.icon('user') }} Joueurs</a>
-<a href="{{ path('app_admin_universes') }}" {% if currentRoute in ['app_admin_universes','app_admin_universe_metrics','app_admin_catalogue','app_admin_resource_boxes'] %}class="active" aria-current="page"{% endif %}>{{ ui.icon('universe') }} Univers</a>
-<span class="admin-nav-group">Événements et communication</span>
-<a href="{{ path('app_admin_weekly_rotations') }}" {% if currentRoute starts with 'app_admin_weekly_rotation' %}class="active" aria-current="page"{% endif %}>{{ ui.icon('clock') }} Rotations hebdomadaires</a>
-<a href="{{ path('app_admin_challenges') }}" {% if currentRoute starts with 'app_admin_challenge' %}class="active" aria-current="page"{% endif %}>{{ ui.icon('notifications') }} Défis collectifs</a>
-<a href="{{ path('app_admin_game_events') }}" {% if currentRoute starts with 'app_admin_game_event' or currentRoute starts with 'app_admin_event_' %}class="active" aria-current="page"{% endif %}>{{ ui.icon('notifications') }} Événements</a>
-<a href="{{ path('app_admin_patchnotes') }}" {% if currentRoute starts with 'app_admin_patchnote' %}class="active" aria-current="page"{% endif %}>{{ ui.icon('overview') }} Patchnotes</a>
-<span class="admin-nav-group">Modération</span>
-<a href="{{ path('app_admin_reports') }}" {% if currentRoute=='app_admin_reports' %}class="active" aria-current="page"{% endif %}>{{ ui.icon('notifications') }} Signalements{% include 'ui/admin_notification_badge.html.twig' with {category:'reports',count:adminNotifications.reports} only %}</a>
-<a href="{{ path('app_admin_feedbacks') }}" {% if currentRoute starts with 'app_admin_feedback' %}class="active" aria-current="page"{% endif %}>{{ ui.icon('notifications') }} Feedbacks{% include 'ui/admin_notification_badge.html.twig' with {category:'feedbacks',count:adminNotifications.feedbacks} only %}</a>
-<span class="admin-nav-group">Exploitation</span>
-<a href="{{ path('app_admin_operations') }}" {% if currentRoute=='app_admin_operations' %}class="active" aria-current="page"{% endif %}>{{ ui.icon('clock') }} État des traitements</a>
-<a href="{{ path('app_admin_audit') }}" {% if currentRoute=='app_admin_audit' %}class="active" aria-current="page"{% endif %}>{{ ui.icon('overview') }} Journal des actions</a>
-<a href="{{ path('app_admin_legal_preview') }}" {% if currentRoute=='app_admin_legal_preview' %}class="active" aria-current="page"{% endif %}>{{ ui.icon('overview') }} Brouillons juridiques</a>
-</nav>
+{% include 'admin/_navigation.html.twig' with {placement:'sidebar'} %}
 {% if adminUniverses is not empty %}<details class="admin-universe-switcher"><summary>Catalogues des univers</summary>{% for universe in adminUniverses %}<a href="{{ path('app_admin_catalogue',{id:universe.id}) }}">{{ universe.name }} <span>Catalogue ↗</span></a>{% endfor %}</details>{% endif %}
 <div class="admin-sidebar-footer"><a class="secondary" href="{{ path('app_home') }}">← Retour au jeu</a><form method="post" action="{{ path('app_logout') }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}"><button class="secondary">Déconnexion</button></form><small>Accès administrateur · actions consignées</small></div>
 </div></aside>
 <div class="admin-main"><header class="admin-topbar"><span>CONSOLE SÉCURISÉE <i class="connection-dot"></i></span><span>{{ app.user.username }} · ADMIN</span></header>
-<main id="admin-main" class="admin-content" tabindex="-1">{% for type,messages in app.flashes %}{% for message in messages %}<div class="flash {{ type }}" role="{{ type=='error'?'alert':'status' }}">{{ message }}</div>{% endfor %}{% endfor %}{% block body %}{% endblock %}</main>
+<main id="admin-main" class="admin-content" tabindex="-1">{% for type,messages in app.flashes %}{% for message in messages %}<div class="flash {{ type }}" role="{{ type=='error'?'alert':'status' }}">{{ message }}</div>{% endfor %}{% endfor %}{% include 'admin/_navigation.html.twig' with {placement:'content'} %}{% block body %}{% endblock %}</main>
 </div></div></body></html>

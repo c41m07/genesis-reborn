@@ -89,12 +89,14 @@ test('Administration : rubriques clavier, comptes protégés, confirmations et j
   const playersLink = navigation.getByRole('link', { name: 'Joueurs', exact: true });
   await playersLink.focus();
   await page.keyboard.press('Tab');
-  await expect(navigation.getByRole('link', { name: 'Univers', exact: true })).toBeFocused();
+  await expect(navigation.getByRole('link', { name: 'Signalements', exact: true })).toBeFocused();
   await page.keyboard.press('Shift+Tab');
   await expect(playersLink).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/admin\/joueurs$/);
   await expect(navigation.getByRole('link', { name: 'Joueurs', exact: true })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByRole('navigation', { name: 'Fil d’Ariane' })).toContainText('Joueurs et modération');
+  await expect(page.getByRole('navigation', { name: 'Joueurs et modération' }).getByRole('link', { name: 'Joueurs', exact: true })).toHaveAttribute('aria-current', 'page');
   const panel = page.locator('#admin-players');
   const ownRow = panel.locator('tr').filter({ hasText: admin.email });
   const targetRow = panel.locator('tr').filter({ hasText: target.email });

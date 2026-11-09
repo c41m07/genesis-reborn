@@ -43,13 +43,13 @@ test('Dossiers : création depuis joueur, notes immuables, clôture, historique 
   expect(Number(queryIsolatedSql(project,`SELECT COUNT(*) FROM admin_case WHERE creation_key='${creation.request_key}'`))).toBe(1);
   const form=page.locator('main form');await page.getByLabel('État du dossier').selectOption('investigating');await page.getByLabel('Nouvelle note').fill('Première observation conservée.');
   const update=await form.evaluate(f=>Object.fromEntries(new FormData(f)));await page.getByRole('button',{name:'Enregistrer le suivi'}).click();
-  await expect(page.locator('ol li')).toHaveCount(1);await post(page,`/admin/dossiers/${id}/suivi`,update);
+  await expect(page.locator('ol.admin-monitor-report-list > li')).toHaveCount(1);await post(page,`/admin/dossiers/${id}/suivi`,update);
   expect(Number(queryIsolatedSql(project,`SELECT COUNT(*) FROM admin_case_note WHERE case_file_id=${id}`))).toBe(1);
   const stale=await form.evaluate(f=>Object.fromEntries(new FormData(f)));
   await post(page,`/admin/dossiers/${id}/suivi`,{...stale,status:'open',expected_status:'open',body:'Ancienne fiche'});
   expect(queryIsolatedSql(project,`SELECT status FROM admin_case WHERE id=${id}`)).toBe('investigating');
   await page.getByLabel('État du dossier').selectOption('closed');await page.getByLabel('Nouvelle note').fill('Examen terminé, dossier clos.');await page.getByRole('button',{name:'Enregistrer le suivi'}).click();
-  await expect(page.locator('ol li')).toHaveCount(2);await expect(page.locator('ol')).toContainText('Première observation conservée.');
+  await expect(page.locator('ol.admin-monitor-report-list > li')).toHaveCount(2);await expect(page.locator('ol.admin-monitor-report-list')).toContainText('Première observation conservée.');
   expect(await post(page,`/admin/dossiers/${id}/suivi`,{...update,_token:'invalid'})).toBe(403);
   expect((await visitor.goto(`/admin/dossiers/${id}`)).status()).toBe(403);
   await page.goto('/admin/dossiers');await expect(page.locator(`a[href='/admin/dossiers/${id}']`)).toHaveCount(0);

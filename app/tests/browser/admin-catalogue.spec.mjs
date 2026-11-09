@@ -41,6 +41,11 @@ test('Administration catalogue: accès, édition, sauvegarde et restauration res
 
   await page.getByRole('link', { name: /Équilibrer les catalogues de cet univers/ }).first().click();
   await expect(page.getByRole('heading', { name: 'Équilibrage des catalogues', exact: true })).toBeVisible();
+  const breadcrumbs = page.getByRole('navigation', { name: 'Fil d’Ariane' });
+  await expect(breadcrumbs).toContainText('Univers et activité');
+  await expect(breadcrumbs.locator('[aria-current="page"]')).toHaveText('Catalogue');
+  await expect(page.locator('.admin-universe-navigation a')).toHaveCount(3);
+  await expect(breadcrumbs.getByRole('link', { name: 'Univers', exact: true })).toHaveAttribute('href', '/admin/univers');
 
   const unnamed = await page.locator('a[href],button,input:not([type="hidden"]),select,textarea').evaluateAll(nodes => nodes.flatMap(element => {
     const style = getComputedStyle(element);
