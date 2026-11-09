@@ -213,6 +213,15 @@ final class GameplayAccessTest extends WebTestCase
             $this->em->getRepository(Planet::class)->findBy(['solarSystem' => $home->solarSystem]),
             static fn (Planet $planet): bool => $planet->id !== $home->id,
         ));
+        $nextPosition = max(array_map(static fn (Planet $planet): int => $planet->position, [$home, ...$targets])) + 1;
+        while (count($targets) < 5) {
+            $planet = new Planet();
+            $planet->solarSystem = $home->solarSystem;
+            $planet->name = 'MapFixture'.$nextPosition;
+            $planet->position = $nextPosition++;
+            $this->em->persist($planet);
+            $targets[] = $planet;
+        }
         foreach ([$ally, $enemy, $neutral] as $index => $owner) {
             $targets[$index]->owner = $owner->currentPlayerUniverse;
             $targets[$index]->npcPlanet = false;
