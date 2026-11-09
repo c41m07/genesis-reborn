@@ -166,7 +166,9 @@ test('Catalogues : filtres actuels par rôle, classe et effet, sans résumé des
     ['technologies','Défense',['automated_defense_repair']],['ships','Transport',['transport']],['ships','Colonisation',['colony_ship']],['ships','Espionnage',['probe']],
     ['ships','Légers',['fighter','interceptor','stealth_fighter']],['ships','Capitaux',['capital']],['defenses','Anti-légers',['ground_turret_anti_light']],['defenses','Anti-capitaux',['ground_turret_anti_capital']]];
   for (const [group,label,expected] of cases) {
-    await page.goto(`${path}?section=${group}`);await page.locator('.catalog-filters').getByRole('button',{name:label,exact:true}).click();
+    await page.goto(`${path}?section=${group}`);
+    await expect(page.locator(`#panel-${group}`)).toHaveClass(/building-catalog-ready/);
+    await page.locator('.catalog-filters').getByRole('button',{name:label,exact:true}).click();
     await expect.poll(async()=>await page.locator('.building-card:visible').evaluateAll(cards=>cards.map(card=>card.dataset.slug).sort())).toEqual([...expected].sort());
     await expect(page.locator('.catalog-filters').getByRole('button',{name:label,exact:true})).toHaveAttribute('aria-pressed','true');
   }

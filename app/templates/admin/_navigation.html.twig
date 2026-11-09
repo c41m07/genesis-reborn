@@ -1,33 +1,34 @@
 {% import 'ui/macros.html.twig' as ui %}
 {# Les liens restent disponibles sans JavaScript, y compris sur mobile. #}
 {% set navigationGroups = [
-    {label:'Joueurs et modération', icon:'user', items:[
-        {route:'app_admin_players', label:'Joueurs', matches:['app_admin_players','app_admin_player']},
-        {route:'app_admin_reports', label:'Signalements', matches:['app_admin_reports'], category:'reports'},
-        {route:'app_admin_feedbacks', label:'Feedbacks', prefix:'app_admin_feedback', category:'feedbacks'},
-        {route:'app_admin_cases', label:'Dossiers', prefix:'app_admin_case'}
+    {key:'players', label:'Joueurs et modération', description:'Les comptes, les retours et leur suivi au même endroit.', icon:'user', items:[
+        {route:'app_admin_players', label:'Joueurs', description:'Comptes, activité et fiches individuelles.', matches:['app_admin_players','app_admin_player']},
+        {route:'app_admin_reports', label:'Signalements', description:'Messages signalés et décisions de modération.', matches:['app_admin_reports'], category:'reports'},
+        {route:'app_admin_feedbacks', label:'Feedbacks', description:'Retours des joueurs et suivi des réponses.', prefix:'app_admin_feedback', category:'feedbacks'},
+        {route:'app_admin_cases', label:'Dossiers', description:'Enquêtes et notes de suivi.', prefix:'app_admin_case'}
     ]},
-    {label:'Univers et activité', icon:'universe', items:[
-        {route:'app_admin_universes', label:'Univers', matches:['app_admin_universes','app_admin_universe_metrics','app_admin_catalogue','app_admin_resource_boxes']},
-        {route:'app_admin_surveillance', label:'Alertes', matches:['app_admin_surveillance']},
-        {route:'app_admin_missions', label:'Flottes et transports', prefix:'app_admin_mission'}
+    {key:'universe', label:'Univers et activité', description:'La gestion des univers et le suivi de leur activité.', icon:'universe', items:[
+        {route:'app_admin_universes', label:'Univers', description:'Ouverture, planification, mesures, catalogues et caisses de ressources.', matches:['app_admin_universes','app_admin_universe_metrics','app_admin_catalogue','app_admin_resource_boxes']},
+        {route:'app_admin_surveillance', label:'Alertes', description:'Surveillance des anomalies dans les univers.', matches:['app_admin_surveillance']},
+        {route:'app_admin_missions', label:'Flottes et transports', description:'Missions actives, transports et rapports détaillés.', prefix:'app_admin_mission'}
     ]},
-    {label:'Animation', icon:'notifications', items:[
-        {route:'app_admin_game_events', label:'Événements', matches:['app_admin_game_events','app_admin_event_wizard','app_admin_event_preview']},
-        {route:'app_admin_challenges', label:'Défis collectifs', prefix:'app_admin_challenge'},
-        {route:'app_admin_weekly_rotations', label:'Rotations hebdomadaires', prefix:'app_admin_weekly_rotation'},
-        {route:'app_admin_patchnotes', label:'Patchnotes', prefix:'app_admin_patchnote'}
+    {key:'events', label:'Animation', description:'Préparer les temps forts et les annonces aux joueurs.', icon:'notifications', items:[
+        {route:'app_admin_game_events', label:'Événements', description:'Programmation et assistant de préparation.', matches:['app_admin_game_events','app_admin_event_wizard','app_admin_event_preview']},
+        {route:'app_admin_challenges', label:'Défis collectifs', description:'Objectifs communs et suivi des contributions.', prefix:'app_admin_challenge'},
+        {route:'app_admin_weekly_rotations', label:'Rotations hebdomadaires', description:'Modèles, activation et occurrences hebdomadaires.', prefix:'app_admin_weekly_rotation'},
+        {route:'app_admin_patchnotes', label:'Patchnotes', description:'Rédaction et publication des nouveautés.', prefix:'app_admin_patchnote'}
     ]},
-    {label:'Exploitation', icon:'clock', items:[
-        {route:'app_admin_security', label:'Sécurité', matches:['app_admin_security'], category:'security'},
-        {route:'app_admin_operations', label:'État des traitements', matches:['app_admin_operations']},
-        {route:'app_admin_audit', label:'Journal des actions', matches:['app_admin_audit']},
-        {route:'app_admin_legal_preview', label:'Brouillons juridiques', matches:['app_admin_legal_preview']}
+    {key:'ops', label:'Exploitation', description:'Sécurité, fonctionnement et traçabilité de la plateforme.', icon:'clock', items:[
+        {route:'app_admin_security', label:'Sécurité', description:'Incidents d’accès et éléments à examiner.', matches:['app_admin_security'], category:'security'},
+        {route:'app_admin_operations', label:'État des traitements', description:'Traitements et relais à contrôler.', matches:['app_admin_operations']},
+        {route:'app_admin_audit', label:'Journal des actions', description:'Historique des interventions administratives.', matches:['app_admin_audit']},
+        {route:'app_admin_legal_preview', label:'Brouillons juridiques', description:'Prévisualisation des documents existants.', matches:['app_admin_legal_preview']}
     ]}
 ] %}
 {% set activeGroup = null %}
 {% set activeItem = null %}
 {% for group in navigationGroups %}
+    {% if currentRoute == 'app_admin_group' and navigationGroup == group.key %}{% set activeGroup = group %}{% endif %}
     {% for item in group.items %}
         {% if currentRoute in item.matches|default([]) or (item.prefix is defined and currentRoute starts with item.prefix) %}
             {% set activeGroup = group %}
@@ -37,23 +38,35 @@
 {% endfor %}
 {% if placement == 'sidebar' %}
     <nav aria-label="Console d’administration">
-        <a href="{{ path('app_admin_index') }}" {% if currentRoute == 'app_admin_index' %}class="active" aria-current="page"{% endif %}>{{ ui.icon('overview') }} Vue d’ensemble</a>
+        <a class="admin-primary-link" href="{{ path('app_admin_index') }}" {% if currentRoute == 'app_admin_index' %}aria-current="page"{% endif %}>{{ ui.icon('overview') }} <span>Vue d’ensemble</span></a>
         {% for group in navigationGroups %}
-            <details class="admin-navigation-group" open>
-                <summary>{{ ui.icon(group.icon) }} {{ group.label }}</summary>
+            <a class="admin-primary-link" href="{{ path('app_admin_group',{group:group.key}) }}" {% if activeGroup and activeGroup.key == group.key %}aria-current="{{ activeItem ? 'location' : 'page' }}"{% endif %}>
+                {{ ui.icon(group.icon) }} <span>{{ group.label }}</span>
+                {% set categories = group.key == 'players' ? 'reports feedbacks' : (group.key == 'ops' ? 'security' : '') %}
+                {% if categories %}
+                    {% set count = group.key == 'players' ? adminNotifications.reports + adminNotifications.feedbacks : adminNotifications.security %}
+                    <span class="admin-notification-count" data-admin-notifications-target="badge" data-category="{{ group.key }}" data-categories="{{ categories }}" data-label="nouveautés dans {{ group.label }}" role="img" aria-label="{{ count }} nouveautés dans {{ group.label }}" {% if count == 0 %}hidden{% endif %}>{{ count > 99 ? '99+' : count }}</span>
+                {% endif %}
+            </a>
+            {% if activeGroup and activeGroup.key == group.key %}
                 <div class="admin-navigation-links">
                     {% for item in group.items %}
-                        <a href="{{ path(item.route) }}" {% if activeItem and activeItem.route == item.route %}class="active" aria-current="{{ currentRoute == item.route ? 'page' : 'location' }}"{% endif %}>
-                            {{ item.label }}
-                            {% if item.category is defined %}{% include 'ui/admin_notification_badge.html.twig' with {category:item.category, count:attribute(adminNotifications,item.category)} only %}{% endif %}
-                        </a>
+                        <a href="{{ path(item.route) }}" {% if activeItem and activeItem.route == item.route %}aria-current="{{ currentRoute == item.route ? 'page' : 'location' }}"{% endif %}>{{ item.label }}{% if item.category is defined %}{% include 'ui/admin_notification_badge.html.twig' with {category:item.category, count:attribute(adminNotifications,item.category)} only %}{% endif %}</a>
                     {% endfor %}
                 </div>
-            </details>
+            {% endif %}
         {% endfor %}
     </nav>
+{% elseif placement == 'landing' and activeGroup %}
+    <div class="page-heading admin-home-heading"><div><p class="eyebrow">Centre de contrôle</p><h1>{{ activeGroup.label }}</h1><p>{{ activeGroup.description }}</p></div>{% if activeGroup.key == 'events' %}<a class="primary" href="{{ path('app_admin_event_wizard') }}">Préparer un événement</a>{% endif %}</div>
+    <div class="admin-module-grid">
+        {% for item in activeGroup.items %}
+            <a class="admin-module-card" href="{{ path(item.route) }}"><div class="admin-module-heading"><h2>{{ item.label }}</h2>{% if item.category is defined %}{% include 'ui/admin_notification_badge.html.twig' with {category:item.category, count:attribute(adminNotifications,item.category)} only %}{% endif %}</div><p>{{ item.description }}</p><span class="admin-module-open">Ouvrir <span aria-hidden="true">→</span></span></a>
+        {% endfor %}
+    </div>
 {% elseif activeGroup %}
-    {% set breadcrumbs = [{label:'Vue d’ensemble', url:path('app_admin_index')}, {label:activeGroup.label, url:null}] %}
+    {% set breadcrumbs = [{label:'Vue d’ensemble', url:path('app_admin_index')}, {label:activeGroup.label, url:activeItem ? path('app_admin_group',{group:activeGroup.key}) : null}] %}
+    {% if activeItem %}
     {% set detailLabel = null %}
     {% if currentRoute == 'app_admin_player' %}{% set detailLabel = player.username %}
     {% elseif currentRoute == 'app_admin_feedback' %}{% set detailLabel = feedback.title %}
@@ -76,9 +89,11 @@
         {% set breadcrumbs = breadcrumbs|merge([{label:activeItem.label, url:detailLabel ? path(activeItem.route) : null}]) %}
     {% endif %}
     {% if detailLabel %}{% set breadcrumbs = breadcrumbs|merge([{label:detailLabel, url:null}]) %}{% endif %}
+    {% endif %}
     <nav class="admin-breadcrumbs" aria-label="Fil d’Ariane">
         <ol>{% for crumb in breadcrumbs %}<li>{% if crumb.url %}<a href="{{ crumb.url }}">{{ crumb.label }}</a>{% else %}<span {% if loop.last %}aria-current="page"{% endif %}>{{ crumb.label }}</span>{% endif %}</li>{% endfor %}</ol>
     </nav>
+    {% if activeItem %}
     <nav class="admin-section-navigation" aria-label="{{ activeGroup.label }}">
         {% for item in activeGroup.items %}<a href="{{ path(item.route) }}" {% if activeItem.route == item.route %}aria-current="{{ currentRoute == item.route ? 'page' : 'location' }}"{% endif %}>{{ item.label }}</a>{% endfor %}
     </nav>
@@ -87,5 +102,6 @@
             <span>{{ universe.name }}</span>
             {% for route,label in {app_admin_universe_metrics:'Mesures',app_admin_catalogue:'Catalogue',app_admin_resource_boxes:'Boîtes de ressources'} %}<a href="{{ path(route,{id:universe.id}) }}" {% if currentRoute == route %}aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}
         </nav>
+    {% endif %}
     {% endif %}
 {% endif %}

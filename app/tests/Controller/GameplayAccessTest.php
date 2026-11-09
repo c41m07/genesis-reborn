@@ -34,7 +34,11 @@ final class GameplayAccessTest extends WebTestCase
         $this->client->loginUser($player);
         $this->client->request('GET', '/admin');
         self::assertResponseRedirects('/acces-refuse');
+        $this->client->request('GET', '/admin/rubriques/players');
+        self::assertResponseRedirects('/acces-refuse');
 
+        $this->em = static::getContainer()->get(EntityManagerInterface::class);
+        $player = $this->em->find(Player::class, $player->id);
         $player->lockedAt = new \DateTimeImmutable();
         $this->em->flush();
         $this->client->request('GET', '/profil');
@@ -47,7 +51,11 @@ final class GameplayAccessTest extends WebTestCase
         $this->client->loginUser($admin);
         $crawler = $this->client->request('GET', '/admin');
         self::assertResponseIsSuccessful();
-        self::assertStringContainsString('Administration', $crawler->filter('h1')->text());
+        self::assertSame('Vue d’ensemble', $crawler->filter('h1')->text());
+        self::assertCount(5, $crawler->filter('.admin-primary-link'));
+        $this->client->request('GET', '/admin/rubriques/players');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextSame('h1', 'Joueurs et modération');
     }
 
     public function testOtherPlayerPlanetResourcesAndActionsAreInaccessible():void

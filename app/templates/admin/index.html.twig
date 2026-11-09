@@ -1,33 +1,32 @@
 {% extends 'admin/layout.html.twig' %}
-{% block title %}Accueil de l’administration · Genesis Reborn{% endblock %}
+{% block title %}Vue d’ensemble · Administration · Genesis Reborn{% endblock %}
 {% block body %}
-<div data-controller="admin-legacy-links" data-admin-legacy-links-routes-value="{{ {players:path('app_admin_players'),universes:path('app_admin_universes'),reports:path('app_admin_reports'),security:path('app_admin_security'),audit:path('app_admin_audit')}|json_encode|e('html_attr') }}">
-<div class="page-heading admin-home-heading" id="admin-heading"><div><p class="eyebrow">Centre de contrôle</p><h1>Administration</h1><p>L’activité des univers et les éléments à examiner, réunis sur cet accueil.</p></div><a class="primary" href="{{ path('app_admin_event_wizard') }}">Préparer un événement</a></div>
-<section class="admin-metrics" aria-label="Indicateurs de la plateforme">
-<a class="admin-metric" href="{{ path('app_admin_players') }}"><span>COMPTES</span><strong>{{ playerCount }}</strong><small>{{ suspendedPlayerCount }} suspendu{{ suspendedPlayerCount == 1 ? '' : 's' }}</small></a>
-<a class="admin-metric" href="{{ path('app_admin_universes') }}"><span>UNIVERS</span><strong>{{ universes|length }}</strong><small>{{ activeUniverseCount }} ouverts · {{ scheduledUniverseCount }} planifiés · {{ closedUniverseCount }} fermés</small></a>
-<a class="admin-metric" href="{{ path('app_admin_missions') }}"><span>MISSIONS EN COURS</span><strong>{{ fleetOverview.summary.active }}</strong><small>{{ fleetOverview.summary.combat }} engagées au combat</small></a>
-<a class="admin-metric" href="{{ path('app_admin_reports') }}"><span>SIGNALEMENTS</span><strong>{{ openReportCount }}</strong><small>à examiner</small></a>
-</section>
-<div class="admin-home-grid">
-<section class="panel"><h2>À examiner</h2><ul class="admin-priority-list">
-<li><a href="{{ path('app_admin_security') }}">{{ securityIncidentCount }} incident(s) de sécurité en attente</a></li>
-<li><a href="{{ path('app_admin_surveillance') }}">Examiner les alertes des univers</a> · <a href="{{ path('app_admin_cases') }}">{{ activeCaseCount }} dossier(s) actif(s)</a></li>
-<li><a href="{{ path('app_admin_reports') }}">{{ openReportCount }} signalement(s) de messages ouverts</a></li>
-<li><a href="{{ path('app_admin_feedbacks') }}">{{ adminNotifications.feedbacks }} nouveau(x) feedback(s) depuis votre dernière visite</a></li>
-<li><a href="{{ path('app_admin_operations') }}">{% if operations.outbox_available %}{{ operations.outbox_overdue }} relais à échéance atteinte{% else %}État des relais à vérifier{% endif %}</a></li>
-</ul><p class="muted">Les rubriques ne sont marquées comme consultées qu’à leur ouverture.</p></section>
-<section class="panel"><h2>Accès rapides</h2><div class="admin-home-actions">
-<a class="secondary" href="{{ path('app_admin_missions') }}">Ouvrir la surveillance</a>
-<a class="secondary" href="{{ path('app_admin_event_wizard') }}">Préparer un événement</a>
-<a class="secondary" href="{{ path('app_admin_universes') }}#admin-universe-create">Créer un univers</a>
-<a class="secondary" href="{{ path('app_admin_operations') }}">Contrôler les traitements</a>
-</div></section>
-<section class="panel"><div class="admin-section-heading"><h2>Dernières missions actives</h2><a href="{{ path('app_admin_missions') }}">Toutes les missions</a></div>
-<ul class="admin-monitor-report-list">{% for fleet in fleetOverview.fleets|slice(0,5) %}<li><a href="{{ path('app_admin_mission',{id:fleet.id}) }}">Flotte n° {{ fleet.id }} · {{ fleetOverview.missions[fleet.mission]|default(fleet.mission) }}</a><small>{{ fleet.playerUniverse.displayName }} · {{ fleet.playerUniverse.universe.name }} · {{ fleetOverview.statuses[fleet.status]|default(fleet.status) }}</small></li>{% else %}<li>Aucune mission en cours.</li>{% endfor %}</ul></section>
-<section class="panel"><div class="admin-section-heading"><h2>Prochains événements</h2><a href="{{ path('app_admin_game_events') }}">Gérer les événements</a></div>
-<ul class="admin-monitor-report-list">{% for event in upcomingEvents %}<li><strong>{{ event.name }}</strong><small>{{ event.universe ? event.universe.name : 'Tous les univers' }} · {{ event.startsAt|date('d/m/Y H:i', preferences.timezone) }} → {{ event.endsAt|date('d/m/Y H:i', preferences.timezone) }}</small></li>{% else %}<li>Aucun événement planifié ou en cours.</li>{% endfor %}</ul></section>
-</div>
-{% include 'admin/sections/recent.html.twig' %}
+<div class="admin-overview" data-controller="admin-legacy-links" data-admin-legacy-links-routes-value="{{ {players:path('app_admin_players'),universes:path('app_admin_universes'),reports:path('app_admin_reports'),security:path('app_admin_security'),audit:path('app_admin_audit')}|json_encode|e('html_attr') }}">
+    <div class="page-heading admin-home-heading" id="admin-heading"><div><p class="eyebrow">Centre de contrôle</p><h1>Vue d’ensemble</h1><p>Les priorités du jour, puis l’activité de vos univers.</p></div><a class="primary" href="{{ path('app_admin_event_wizard') }}">Préparer un événement</a></div>
+    <section class="admin-metrics" aria-label="Indicateurs de la plateforme">
+        <a class="admin-metric" href="{{ path('app_admin_players') }}"><span>Comptes</span><strong>{{ playerCount }}</strong><small>{{ suspendedPlayerCount }} suspendu{{ suspendedPlayerCount == 1 ? '' : 's' }}</small></a>
+        <a class="admin-metric" href="{{ path('app_admin_universes') }}"><span>Univers</span><strong>{{ universes|length }}</strong><small>{{ activeUniverseCount }} ouverts · {{ scheduledUniverseCount }} planifiés · {{ closedUniverseCount }} fermés</small></a>
+        <a class="admin-metric" href="{{ path('app_admin_missions') }}"><span>Missions actives</span><strong>{{ fleetOverview.summary.active }}</strong><small>{{ fleetOverview.summary.combat }} engagées au combat</small></a>
+        <a class="admin-metric" href="{{ path('app_admin_reports') }}"><span>Signalements</span><strong>{{ openReportCount }}</strong><small>À examiner</small></a>
+    </section>
+    <div class="admin-home-grid">
+        <section class="panel"><div class="admin-section-heading"><h2>À traiter en priorité</h2></div><ul class="admin-priority-list">
+            <li><a href="{{ path('app_admin_security') }}"><span><strong>{{ securityIncidentCount }} incident(s) de sécurité</strong><small>Examiner les accès signalés</small></span><span aria-hidden="true">→</span></a></li>
+            <li><a href="{{ path('app_admin_reports') }}"><span><strong>{{ openReportCount }} signalement(s) ouvert(s)</strong><small>Consulter les messages concernés</small></span><span aria-hidden="true">→</span></a></li>
+            <li><a href="{{ path('app_admin_feedbacks') }}"><span><strong>{{ adminNotifications.feedbacks }} nouveau(x) feedback(s)</strong><small>Retours reçus depuis votre dernière visite</small></span><span aria-hidden="true">→</span></a></li>
+        </ul><p class="admin-home-followup"><a href="{{ path('app_admin_cases') }}">{{ activeCaseCount }} dossier(s) actif(s)</a><span aria-hidden="true"> · </span><a href="{{ path('app_admin_operations') }}">{% if operations.outbox_available %}{{ operations.outbox_overdue }} relais à contrôler{% else %}Relais à vérifier{% endif %}</a></p></section>
+        <section class="panel"><div class="admin-section-heading"><h2>Accès rapides</h2></div><div class="admin-home-actions">
+            <a class="secondary" href="{{ path('app_admin_missions') }}">Surveiller les flottes <span aria-hidden="true">→</span></a>
+            <a class="secondary" href="{{ path('app_admin_players') }}">Consulter les joueurs <span aria-hidden="true">→</span></a>
+            <a class="secondary" href="{{ path('app_admin_operations') }}">Contrôler les traitements <span aria-hidden="true">→</span></a>
+        </div><p class="admin-home-note">Les actions courantes restent accessibles sans parcourir toutes les rubriques.</p></section>
+        <section class="panel"><div class="admin-section-heading"><h2>Missions en cours</h2><a href="{{ path('app_admin_missions') }}">Tout voir →</a></div><ul class="admin-monitor-report-list">
+            {% for fleet in fleetOverview.fleets|slice(0,5) %}<li><a href="{{ path('app_admin_mission',{id:fleet.id}) }}"><strong>Flotte n° {{ fleet.id }} · {{ fleetOverview.missions[fleet.mission]|default(fleet.mission) }}</strong><small>{{ fleet.playerUniverse.displayName }} · {{ fleet.playerUniverse.universe.name }} · {{ fleetOverview.statuses[fleet.status]|default(fleet.status) }}</small></a></li>{% else %}<li class="admin-home-empty">Aucune mission en cours.</li>{% endfor %}
+        </ul></section>
+        <section class="panel"><div class="admin-section-heading"><h2>Prochains événements</h2><a href="{{ path('app_admin_game_events') }}">Gérer →</a></div><ul class="admin-monitor-report-list">
+            {% for event in upcomingEvents %}<li><a href="{{ path('app_admin_game_events') }}"><strong>{{ event.name }}</strong><small>{{ event.universe ? event.universe.name : 'Tous les univers' }} · {{ event.startsAt|date('d/m/Y H:i', preferences.timezone) }} → {{ event.endsAt|date('d/m/Y H:i', preferences.timezone) }}</small></a></li>{% else %}<li class="admin-home-empty">Aucun événement planifié ou en cours.</li>{% endfor %}
+        </ul></section>
+    </div>
+    <details class="admin-home-audit"><summary>Dernières actions administratives</summary>{% include 'admin/sections/recent.html.twig' %}</details>
 </div>
 {% endblock %}

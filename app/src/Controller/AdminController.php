@@ -92,6 +92,12 @@ final class AdminController extends AbstractController
         ]);
     }
 
+    #[Route('/rubriques/{group}', name: '_group', requirements: ['group'=>'players|universe|events|ops'], methods: ['GET'])]
+    public function group(string $group): Response
+    {
+        return $this->render('admin/group.html.twig', ['navigationGroup'=>$group]);
+    }
+
     #[Route('/universes/{id}/mesures', name: '_universe_metrics', methods: ['GET'])]
     public function metrics(int $id, Request $request, GameRepository $repo, UniverseMetricsService $metrics): Response
     {
