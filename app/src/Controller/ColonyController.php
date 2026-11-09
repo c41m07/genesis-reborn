@@ -201,7 +201,27 @@ final class ColonyController extends AbstractController
             $mapReinforceable[$planet->id]=$this->combats->canDefend($m,$planet);
             $mapContestable[$planet->id]=$this->combats->canAttack($m,$planet);
         }
+        $mapPlanetRelations = [];
         if ($interactive) {
+            $ownerRelations = [];
+            foreach ($systems as $row) {
+                foreach ($row['planets'] as $planet) {
+                    $owner = $planet->owner;
+                    if ($owner?->id === $m->id) {
+                        $mapPlanetRelations[$planet->id] = 'own';
+                    } elseif ($planet->npcPlanet || $owner?->isForgotten()) {
+                        $mapPlanetRelations[$planet->id] = 'npc';
+                    } elseif ($owner === null) {
+                        $mapPlanetRelations[$planet->id] = 'uninhabited';
+                    } else {
+                        if (!isset($ownerRelations[$owner->id])) {
+                            $ownerRelations[$owner->id] = $relations->allied($m, $owner) ? 'allied'
+                                : ($relations->guildStatus($relations->guild($m), $relations->guild($owner)) === 'enemies' ? 'enemy' : 'neutral');
+                        }
+                        $mapPlanetRelations[$planet->id] = $ownerRelations[$owner->id];
+                    }
+                }
+            }
             $mapSystems = [];
             foreach ($systems as $row) {
                 $system = $row['system'];
@@ -221,6 +241,7 @@ final class ColonyController extends AbstractController
                         'coordinates' => $planet->coordinates(),
                         'ownedByCurrentPlayer' => $planet->owner?->id === $m->id,
                         'ownerName' => $planet->owner?->getDisplayName(),
+                        'relation' => $mapPlanetRelations[$planet->id],
                         'npc' => $planet->npcPlanet || $planet->owner?->isForgotten(),
                         'conquestLevel' => $planet->conquestLevel,
                     ], $row['planets']),
@@ -305,6 +326,7 @@ final class ColonyController extends AbstractController
             'galaxies' => $galaxies,
             'selected_galaxy' => $selectedGalaxy,
             'galaxy_v2_json' => $galaxyV2Json,
+            'map_planet_relations' => $mapPlanetRelations,
             'galaxy_v2_flights' => $flights,
             'map_occupations' => $mapOccupations,
             'map_conquerable' => $mapConquerable,
