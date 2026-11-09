@@ -28,7 +28,8 @@
 <a href="{{ path('app_admin_players') }}" {% if currentRoute in ['app_admin_players','app_admin_player'] %}class="active" aria-current="page"{% endif %}>{{ ui.icon('user') }} Joueurs</a>
 <a href="{{ path('app_admin_universes') }}" {% if currentRoute in ['app_admin_universes','app_admin_universe_metrics','app_admin_catalogue','app_admin_resource_boxes'] %}class="active" aria-current="page"{% endif %}>{{ ui.icon('universe') }} Univers</a>
 <span class="admin-nav-group">Événements et communication</span>
-<a href="{{ path('app_admin_game_events') }}" {% if currentRoute starts with 'app_admin_game_event' %}class="active" aria-current="page"{% endif %}>{{ ui.icon('notifications') }} Événements</a>
+<a href="{{ path('app_admin_challenges') }}" {% if currentRoute starts with 'app_admin_challenge' %}class="active" aria-current="page"{% endif %}>{{ ui.icon('notifications') }} Défis collectifs</a>
+<a href="{{ path('app_admin_game_events') }}" {% if currentRoute starts with 'app_admin_game_event' or currentRoute starts with 'app_admin_event_' %}class="active" aria-current="page"{% endif %}>{{ ui.icon('notifications') }} Événements</a>
 <a href="{{ path('app_admin_patchnotes') }}" {% if currentRoute starts with 'app_admin_patchnote' %}class="active" aria-current="page"{% endif %}>{{ ui.icon('overview') }} Patchnotes</a>
 <span class="admin-nav-group">Modération</span>
 <a href="{{ path('app_admin_reports') }}" {% if currentRoute=='app_admin_reports' %}class="active" aria-current="page"{% endif %}>{{ ui.icon('notifications') }} Signalements{% include 'ui/admin_notification_badge.html.twig' with {category:'reports',count:adminNotifications.reports} only %}</a>

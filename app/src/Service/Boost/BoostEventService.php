@@ -46,6 +46,11 @@ final class BoostEventService
                     if ($event->scheduledAt > $now) {
                         break;
                     }
+                    if (($event->configuration['guided'] ?? false) && $event->endsAt && $event->endsAt <= $now) {
+                        $this->manager->lock($event);
+                        if ($event->status === 'scheduled' && $event->endsAt <= $now) { $event->status='cancelled';$event->closedAt=$now;$this->manager->flush(); }
+                        continue;
+                    }
                     if (count($this->repo->boostEventsForUniverse('active', $universe)) >= $limit) {
                         break;
                     }
@@ -55,7 +60,7 @@ final class BoostEventService
                     }
                     $event->status = 'active';
                     $event->startedAt = $now;
-                    $event->endsAt = $now->modify('+' . $event->durationSeconds . ' seconds');
+                    if (!($event->configuration['guided'] ?? false)) $event->endsAt = $now->modify('+' . $event->durationSeconds . ' seconds');
                     $this->manager->flush();
                     ++$started;
                 }
@@ -172,8 +177,14 @@ final class BoostEventService
             'top3' => $this->topThree($scores, $event),
             default => [],
         };
+        if ($event->configuration['guided'] ?? false) {
+            $minimum=(float)($event->configuration['minimum_contribution'] ?? 0);
+            $winners=$event->globalGoal!==null && $event->totalContribution >= $event->globalGoal
+                ? array_values(array_filter($winners,static fn(array $winner):bool=>$winner['value'] >= $minimum && $winner['value']>0)) : [];
+        }
         foreach ($winners as $winner) {
-            $this->grants->awardEvent($winner['membership'], $event->eventKey);
+            $reward=$event->configuration['reward'] ?? ['kind'=>'boost'];
+            $this->grants->awardEvent($winner['membership'], $event->eventKey, ($reward['kind'] ?? 'boost') === 'resource_box' ? $reward['box'] : null);
         }
     }
 

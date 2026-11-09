@@ -184,6 +184,39 @@ Une même ouverture ne peut pas être appliquée deux fois.
 Un événement attribue au maximum un objet par participant éligible : un boost
 ou une boîte. Le plafond quotidien des boosts de missions à risque est conservé.
 
+#### Défis collectifs guidés — 9 novembre 2026
+
+L’administration planifie un défi dans un univers précis, après aperçu des
+dates UTC, de l’objectif et de la récompense. Les objectifs utilisent les
+mécanismes existants : découvertes personnelles de nouveaux systèmes, dégâts
+en combat ou ressources livrées entre ses propres colonies. Les dons entre
+joueurs restent exclus des contributions de transport.
+
+La récompense est attribuée à la clôture uniquement si l’objectif collectif
+est atteint. Chaque bénéficiaire doit avoir contribué positivement et atteint
+le minimum individuel configuré ; zéro comme minimum signifie toute contribution
+positive. Chaque bénéficiaire gagne un boost ou une boîte, sans cumul des deux.
+Le contenu de la boîte est annoncé et figé dès la planification du défi.
+
+Le démarrage respecte la limite existante de deux événements de boosts simultanés
+par univers. Une attente ne décale pas la fin annoncée ; un défi dont la fenêtre
+est entièrement passée ne démarre pas tardivement. Les rotations hebdomadaires
+conservent leurs règles et récompenses existantes.
+
+#### Bonus et annonces guidés — 9 novembre 2026
+
+Les modèles guidés permettent une annonce ou un bonus temporaire de production,
+global ou limité à un univers. Les dates de début doivent être à venir lors de
+la confirmation ; aucune production rétroactive ne peut être créée par ce parcours.
+Les bonus reprennent les bornes existantes, de 0,01 à 500 %, et leur cumul reste
+multiplicatif. La définition annoncée est conservée après publication ; son
+remplacement passe par une annulation motivée et un nouvel aperçu.
+
+L’annulation d’un bonus guidé arrête ses effets futurs, tout en conservant la
+production acquise avant l’annulation, y compris pour un joueur qui ne s’est
+pas connecté pendant cette période. Une annulation de défi ne retire aucun
+objet déjà gagné et interrompt aussi l’annonce qui l’accompagne.
+
 ### Classement des guildes — 5 novembre 2026
 
 Le classement des guildes additionne les points actuels de bâtiments, recherches et flotte de leurs membres. Le total détermine le rang. La médiane des scores individuels complète le total : pour un effectif pair, elle est la moyenne des deux scores centraux. Une guilde sans membre compte zéro point et une médiane de zéro. Le classement joueur reste fondé sur les points totaux ; sa présentation détaille bâtiments, recherches, flotte et total.

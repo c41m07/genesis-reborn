@@ -42,7 +42,7 @@ final class AdminGameEventController extends AbstractController
     public function cancel(int $id, Request $request, GameEventService $events): Response
     {
         if (!$this->isCsrfTokenValid('game_event_cancel_'.$id, $request->request->get('_token'))) throw $this->createAccessDeniedException('Formulaire expiré.');
-        try { $events->cancel($this->admin(), $id); $this->addFlash('success', 'Événement annulé.'); } catch (\DomainException $error) { $this->addFlash('error', $error->getMessage()); }
+        try { $events->cancel($this->admin(), $id, (string)$request->request->get('reason',''),$request->request->getBoolean('confirmed')); $this->addFlash('success', 'Événement annulé.'); } catch (\DomainException $error) { $this->addFlash('error', $error->getMessage()); }
         return $this->redirectToRoute('app_admin_game_events');
     }
 

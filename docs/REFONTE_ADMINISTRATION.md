@@ -3,7 +3,10 @@
 La refonte vise une console organisée autour de la surveillance des univers,
 de la gestion des joueurs et de la création guidée d’événements. Les choix
 produit ci-dessous sont issus des réponses de l’utilisateur du 8 novembre 2026.
-Ils décrivent une évolution à développer, pas le fonctionnement déjà livré.
+Le document distingue les décisions validées, les lots réalisés et l’activation
+sur une base existante. Le périmètre demandé est maintenant codé et vérifié
+localement ; l’application des migrations hors bases jetables attend une
+validation explicite et une sauvegarde vérifiée.
 
 ## Premier lot vérifié localement
 
@@ -154,9 +157,11 @@ déjà gagnée. Vérifier la propriété, l’univers et toute la place nécessa
 verrou avant de consommer la boîte ; une double soumission ne doit pas produire
 un second dépôt.
 
-## Points encore à trancher
+## Contrôles d’édition des plafonds
 
-- Les contrôles d’édition des plafonds configurables par univers.
+- Réservés au rôle administrateur existant, avec motif, confirmation explicite,
+  contrôle des valeurs et journal avant/après. Un modèle ne peut dépasser les
+  plafonds de son univers ; un changement ne modifie pas les contenus déjà figés.
 
 Les boîtes sont une nouvelle récompense d’événement. Le plafond existant des
 boosts issus des missions à risque reste inchangé.
@@ -268,7 +273,7 @@ le thème appliqué. Leur reprise réelle a conduit à renforcer le contraste de
 liens latéraux en thème clair, puis les dossiers, fiches et interventions ont
 réussi les contrôles concernés. Le HTML public de confidentialité a été contrôlé.
 La migration reste limitée aux bases jetables pour cette vérification.
-## Lot boîtes et inventaire commun — en vérification
+## Lot boîtes et inventaire commun — vérifié localement
 
 Complexité 5/5 : migration compatible et opérations économiques atomiques.
 La table existante d’objets distingue les boosts des boîtes et conserve un
@@ -296,3 +301,77 @@ La migration Version20261109030000 ajoute le type (boost par défaut) et un
 contenu JSON facultatif aux objets existants, sans supprimer d’objet. Son retour
 en arrière est bloqué si des boîtes ou contenus doivent être conservés. Elle
 reste testée uniquement sur des bases jetables avant validation d’application.
+
+Contrôles du lot boîtes : validation, lint, compilation et différences propres ;
+504 tests PHP réussis par consolidation de l’exécution complète et de la reprise
+des dix tests de boîtes, avec deux protections supplémentaires. La fixture de
+vacances a été ajustée sans activer globalement cette fonctionnalité. Les 13 tests
+des scripts et les six parcours navigateur concernés réussissent. Les cartes ont
+été agrandies après revue mobile et le contraste du lien Patchnotes partagé a été
+corrigé en vrai thème clair ; les trois parcours de boîtes ont réussi à nouveau.
+
+## Lot événements guidés — vérifié localement
+
+Complexité 5/5 : planification, récompenses et production différée. L’assistant
+propose un bonus temporaire de production, une annonce ou un défi collectif par
+univers. Les réglages sont conservés lorsqu’on revient depuis l’aperçu. Cet
+aperçu ne publie rien ; la confirmation réutilise une clé unique et les valeurs
+conservées côté serveur. Les dates affichées sont en UTC.
+
+Les défis suivent les découvertes de systèmes, les dégâts de combat ou les
+ressources livrées entre ses propres colonies, sans compter les dons entre
+joueurs. Ils possèdent une échéance fixe, un objectif collectif et un minimum
+individuel. Le relais existant les ouvre et les clôture automatiquement. Chaque
+participant éligible reçoit au maximum un boost OU une boîte au contenu figé,
+avec mise en attente si l’inventaire est plein. Un défi expiré avant son ouverture
+est annulé plutôt que démarré tardivement. Les rotations hebdomadaires existantes
+conservent leurs règles.
+
+Les contributions et récompenses sont consultables dans Administration → Défis
+collectifs ; le joueur voit son propre résultat depuis Événements. Les listes
+sont filtrées par univers et paginées. Les consultations et interventions sont
+journalisées ; les accès entre univers sont refusés.
+
+Une définition publiée ne se réécrit pas par l’ancien formulaire avancé. Son
+annulation exige un motif et une confirmation. Annuler un bonus conserve la
+production déjà gagnée, y compris lorsqu’un joueur revient après son annulation.
+Annuler un défi annule également son annonce, sans retirer d’objet déjà attribué.
+
+Contrôles : 516 tests PHP et 13 tests des scripts sur l’ensemble du code ;
+validation, lint, compilation et contrôle des différences. Onze parcours
+navigateur concernés réussissent par consolidation, après correction du
+contraste des en-têtes de contributions en thème clair. Les trois parcours de
+l’assistant réussissent ensuite intégralement, y compris sans JavaScript, au
+clavier et après modification d’un aperçu. Les thèmes clair/sombre et les vues
+mobile/bureau sont couverts. Ces résultats locaux ne valent pas validation de
+la CI GitHub ni déploiement.
+
+## Activation sur une base existante
+
+| Migration | Changements additifs |
+| --- | --- |
+| `Version20261109010000` | Table `player_activity` pour la présence et le temps estimé. |
+| `Version20261109020000` | Tables `admin_case`, `admin_case_note`, `fleet_mission_trace`. |
+| `Version20261109030000` | Colonnes `kind` et `payload` dans `player_boost` ; les anciens objets restent des boosts. |
+| `Version20261109040000` | Colonne facultative `configuration` dans `boost_event` ; les anciennes rotations restent inchangées. |
+
+Ces quatre migrations ont été exécutées uniquement sur des bases jetables de
+vérification. Elles ne suppriment ni ne réinitialisent de donnée. Leur application
+sur une base existante exige un accord explicite et une sauvegarde vérifiée.
+Le temps de jeu commence au début de ce suivi, sans reconstituer le passé.
+
+## Principaux fichiers par rubrique
+
+- Présence et temps de jeu : `PlayerActivityService`, `PlayerActivityController`,
+  `AdminPlayerController` et `templates/admin/player.html.twig`.
+- Interventions : `AdminInterventionService` et les opérations administratives
+  dédiées de `FleetService`.
+- Surveillance et dossiers : `AdminSurveillanceService`, `AdminCaseService`,
+  `AdminCaseController` et `FleetMissionTraceService`.
+- Boîtes : `ResourceBoxPolicy`, `ResourceBoxUseService`, `BoostGrantService`,
+  `AdminResourceBoxController` et les vues d’inventaire.
+- Événements : `AdminEventPlanner`, `AdminEventWizardController`,
+  `AdminChallengeController`, `ChallengeQueryService`, `BoostEventService`,
+  `GameEventService` et les vues d’aperçu et de défis.
+- Vérifications : tests d’intégration des services et parcours navigateur ciblés
+  dans `app/tests/Integration` et `app/tests/browser`.

@@ -37,3 +37,6 @@
 .admin-case-text{white-space:pre-wrap;overflow-wrap:anywhere}
 .admin-console--organized[data-theme=light] .admin-sidebar nav>a:not([aria-current]){color:#535f66}
 .resource-box-settings fieldset{min-width:0;display:grid;gap:10px}
+.admin-confirm-plan{min-height:44px;font-size:13px}
+.admin-event-models>a{display:flex;align-items:center;min-height:44px;font-size:13px}
+.admin-console--organized[data-theme=light] .admin-challenge-contributions :is(caption,thead th){color:#535f66}

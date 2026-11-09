@@ -28,7 +28,10 @@ puis les dossiers et alertes configurables. Le cadrage décrit les vérification
 et les migrations préparées ; leur présence dans Dev ne vaut pas activation sur
 une base existante.
 
-Restent à développer la création guidée d’événements et les boîtes de ressources.
+Les boîtes, les 100 places partagées et la création guidée des événements sont
+réalisées et vérifiées localement. Le périmètre fonctionnel validé de la refonte
+est préparé sur Dev. L’activation sur une base existante reste distincte :
+quatre migrations additives, sauvegarde vérifiée et validation explicite.
 Les migrations seront soumises à validation avant application hors bases jetables.
 ## Priorités restantes
 
