@@ -186,7 +186,8 @@ test('Hub de guilde : création, équipage et discussion commune', async ({ page
   await expect(page.locator('.guild-message-preview')).toContainText('Préparons notre prochaine expédition.');
   await expect(page.getByRole('link', { name: 'Messages', exact: false }).filter({ has: page.locator('.message-unread-dot') })).toHaveCount(1);
   await page.getByRole('link', { name: 'Ouvrir le canal de guilde' }).click();
-  await expect(page.getByRole('navigation', { name: 'Conversations' }).getByRole('link').first()).toContainText(guildName);
+  await expect(page.getByRole('navigation', { name: 'Conversations' }).getByRole('link').nth(0)).toContainText('Global');
+  await expect(page.getByRole('navigation', { name: 'Conversations' }).getByRole('link').nth(1)).toContainText(guildName);
   await page.goto('/classement');
   await expect(page.getByRole('row').filter({ hasText: member })).toHaveClass(/ranking-row--guild/);
   await page.getByRole('navigation', { name: 'Classements' }).getByRole('link', { name: 'Guildes', exact: true }).click();

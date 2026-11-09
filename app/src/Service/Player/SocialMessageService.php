@@ -44,6 +44,29 @@ final class SocialMessageService
         });
     }
 
+    public function sendGlobal(PlayerUniverse $sender, string $content): void
+    {
+        $this->manager->transaction(function () use ($sender, $content): void {
+            $this->lockUniverse($sender);
+            $content = $this->validateContent($content);
+            $this->consumeRateLimit($sender);
+
+            $message = new SocialMessage();
+            $message->sender = $sender;
+            $message->content = $content;
+            $message->createdAt = $this->clock->now();
+            $this->manager->save($message);
+        });
+    }
+
+    public function globalConversation(PlayerUniverse $viewer): array
+    {
+        return $this->manager->transaction(function () use ($viewer): array {
+            $this->lockUniverse($viewer);
+            return $this->repo->globalConversation($viewer->universe);
+        });
+    }
+
     public function sendGuild(PlayerUniverse $sender, string $content): void
     {
         $this->manager->transaction(function () use ($sender, $content): void {
