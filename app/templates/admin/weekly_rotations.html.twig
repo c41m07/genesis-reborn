@@ -1,0 +1,26 @@
+{% extends 'admin/layout.html.twig' %}
+{% block title %}Rotations hebdomadaires · Console{% endblock %}
+{% block body %}
+<h1>Rotations hebdomadaires</h1>
+<p>Une occurrence par univers et par semaine, le lundi à 00 h UTC. Les modèles actifs alternent dans l’ordre ci-dessous. Les changements concernent les semaines non encore programmées ; les occurrences existantes gardent leurs règles et récompenses.</p>
+<form method="get" class="feedback-admin-filters"><label for="rotation-universe">Univers à gérer</label><select id="rotation-universe" name="universe">{% for item in universes %}<option value="{{ item.id }}"{{ item.id==universe.id?' selected':'' }}>{{ item.name }}</option>{% endfor %}</select><button class="secondary">Afficher cet univers</button></form>
+<p><a href="{{ path('app_admin_challenges',{universe:universe.id}) }}">Occurrences et historique de cet univers</a></p>
+<section class="panel"><h2>Modèles de {{ universe.name }}</h2>
+{% for definition in definitions %}<article class="account-section"><h3>{{ definition.name }}</h3><p>{{ definition.enabled ? 'Actif' : 'Désactivé' }} · {{ objectives[definition.objective].label }} · {{ formats[definition.format] }} · {{ definition.duration_seconds / 3600 }} h</p>
+<p>{{ reward_modes[definition.reward_mode] }}{% if definition.global_goal|default(null) %} · Objectif global : {{ definition.global_goal|number_format(2,',',' ') }}{% endif %}{% if definition.threshold_value|default(null) %} · Seuil individuel : {{ definition.threshold_value|number_format(2,',',' ') }}{% endif %} · Un boost par participant éligible.</p>
+<form method="post" action="{{ path('app_admin_weekly_rotation_toggle',{id:universe.id}) }}" class="admin-intervention-form"><input type="hidden" name="_token" value="{{ csrf_token('weekly_rotation_toggle_'~universe.id) }}"><input type="hidden" name="key" value="{{ definition.key }}"><input type="hidden" name="enabled" value="{{ definition.enabled?'0':'1' }}">
+<label for="rotation-reason-{{ definition.key }}">Motif du changement</label><input id="rotation-reason-{{ definition.key }}" name="reason" maxlength="1000" required><button class="secondary">{{ definition.enabled ? 'Désactiver ce modèle' : 'Activer ce modèle' }}</button></form></article>{% else %}<p>Aucun modèle.</p>{% endfor %}
+<p>Désactiver un modèle ne supprime et n’annule aucune occurrence déjà programmée. L’annulation d’une occurrence se fait depuis sa fiche et conserve contributions et récompenses acquises.</p></section>
+<section class="panel"><h2>Créer un modèle hebdomadaire</h2><form method="post" class="form-grid admin-event-form"><input type="hidden" name="_token" value="{{ csrf_token('weekly_rotation_create_'~universe.id) }}"><input type="hidden" name="universe" value="{{ universe.id }}">
+<label for="rotation-name">Nom de la rotation</label><input id="rotation-name" name="name" maxlength="120" value="{{ draft.name|default('') }}" required>
+<label for="rotation-description">Consignes pour les joueurs</label><textarea id="rotation-description" name="description" maxlength="2000">{{ draft.description|default('') }}</textarea>
+<label for="rotation-objective">Objectif suivi</label><select id="rotation-objective" name="objective">{% for key,objective in objectives %}<option value="{{ key }}"{{ draft.objective|default('')==key?' selected':'' }}>{{ objective.label }}</option>{% endfor %}</select>
+<label for="rotation-format">Format de la rotation</label><select id="rotation-format" name="format">{% for key,label in formats %}<option value="{{ key }}"{{ draft.format|default('')==key?' selected':'' }}>{{ label }}</option>{% endfor %}</select>
+<label for="rotation-reward">Attribution du boost</label><select id="rotation-reward" name="reward_mode" aria-describedby="rotation-reward-help">{% for key,label in reward_modes %}<option value="{{ key }}"{{ draft.reward_mode|default('')==key?' selected':'' }}>{{ label }}</option>{% endfor %}</select>
+<p id="rotation-reward-help">Top 3 : objectif global obligatoire et atteint. Seuil : atteindre le minimum individuel suffit. Tous les contributeurs : toute contribution positive suffit. Attribution à la clôture, un boost maximum par joueur.</p>
+<label for="rotation-goal">Objectif global (obligatoire pour le Top 3)</label><input id="rotation-goal" name="global_goal" type="number" min="1" max="1000000000000" step="any" value="{{ draft.global_goal|default('') }}">
+<label for="rotation-threshold">Seuil individuel (obligatoire en mode seuil)</label><input id="rotation-threshold" name="threshold_value" type="number" min="1" max="1000000000000" step="any" value="{{ draft.threshold_value|default('') }}">
+<label for="rotation-duration">Durée en heures</label><input id="rotation-duration" name="duration_hours" type="number" min="1" max="720" step="any" value="{{ draft.duration_hours }}" required>
+<label class="admin-intervention-confirm"><input name="enabled" type="checkbox" value="1"{{ draft.enabled|default(false)?' checked':'' }}> Activer ce modèle dès sa création</label>
+<label for="rotation-create-reason">Motif de création</label><textarea id="rotation-create-reason" name="reason" maxlength="1000" required>{{ draft.reason|default('') }}</textarea><button class="primary">Créer la rotation hebdomadaire</button></form></section>
+{% endblock %}

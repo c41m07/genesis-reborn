@@ -1062,3 +1062,82 @@ Les facteurs existants de production/consommation 1/1,5/2,25 et de durée 1/1,25
 ### Publication de l’équilibrage sur dev — 9 novembre 2026
 
 L’utilisateur demande explicitement le commit et le push sur dev. Le lot est préparé sur le dernier dev intégré (1b02f4f), en conservant ses nouveaux travaux d’administration et d’événements, sans inclure les autres documents ou captures locaux. Les [résultats de publication](EQUILIBRAGE.md#publication-sur-dev--9-novembre-2026) distinguent suite PHP complète et contrôles navigateur consolidés après correction d’une ancienne attente de prix. Aucune publication sur Alpha ni déploiement demandé.
+
+## Suppressions et visibilité des événements — 9 novembre 2026
+
+Décisions validées par l’utilisateur : conserver le texte « Événements » et le
+compteur lorsque l’encart est fermé, sur PC et mobile. Les événements et défis
+déjà démarrés sont retirés des listes courantes et conservés dans l’historique ;
+les contributions et récompenses acquises ne sont pas supprimées. Un retrait
+en cours arrête les effets futurs et conserve les effets déjà acquis. Seuls les
+éléments jamais démarrés, sans contribution ni récompense, sont supprimés
+réellement ; les rotations automatiques restent en lecture seule.
+
+La suppression volontaire du compte concerne tous les univers : confirmation
+explicite et mot de passe actuel, conversion des empires en empires oubliés,
+effacement des identifiants et préférences, révocation des jetons de confirmation
+et de réinitialisation, fermeture de l’accès. Une ligne technique anonymisée est
+conservée pour les références historiques ; ce mécanisme ne purge pas les
+messages, journaux, feedbacks ou sauvegardes. La politique de confidentialité
+précise le canal des demandes complémentaires. Un combat en cours bloque la
+suppression complète sans modification partielle ; le dernier administrateur
+actif doit désigner un successeur. Les vacances prennent fin à la suppression.
+La conversion volontaire ne dépend ni des trente jours d’inactivité, ni du
+drapeau des conversions automatiques. Dans un univers fermé, les files restent
+figées ; l’identité est détachée. Aucun changement de schéma n’est nécessaire.
+
+## Administration des rotations et panneau joueur — 9 novembre 2026
+
+À la demande explicite de l’utilisateur, la restriction de lecture seule des
+rotations hebdomadaires est remplacée par la gestion de modèles par univers :
+création, activation et désactivation. Les trois modèles historiques et leur
+séquence restent les valeurs par défaut. Les modèles actifs alternent dans leur
+ordre enregistré, selon l’indice de semaine existant. Chaque univers conserve
+au plus une occurrence hebdomadaire par semaine, indépendamment du modèle.
+Les changements de modèles concernent uniquement les semaines non encore
+programmées ; une occurrence existante garde un instantané de ses règles.
+
+Une annulation explicite conserve l’enregistrement, sa clé de semaine, les
+contributions et récompenses acquises. Elle arrête les nouvelles contributions
+et attributions de cette occurrence, sans annuler les autres semaines. Une
+rotation terminée reste consultable ; une occurrence échue attend sa clôture
+pour préserver les récompenses dues. Le lundi à 00 h UTC, le plafond simultané
+et les modalités historiques de récompense restent inchangés. Les réglages
+utilisent `Universe.gameSettings`, sans migration.
+
+Les joueurs voient aussi les rotations de leur univers dans Événements et dans
+le panneau sous les ressources : objectif, contribution, progression, place
+lorsqu’un classement existe, récompense et durée. Les événements globaux
+applicables à cet univers restent inclus. Le nom de l’univers n’est plus répété
+dans le panneau. L’ouverture superpose le contenu sans agrandir la barre.
+Le bloc `planet-index-summary panel` est retiré à la demande de l’utilisateur.
+
+Les filtres des quatre catalogues sont alignés sur les rôles et effets actuels.
+Les vaisseaux de combat avec soute restent dans leur classe de combat ; les
+rôles transport, colonisation et espionnage sont distincts. Réservoirs, soutes
+et propulsion relèvent de la logistique ; extension coloniale et réparation
+des défenses possèdent leur filtre. Aucun coût, prérequis ou effet n’est modifié.
+
+
+### Contrôles du lot avant publication sur dev — 9 novembre 2026
+
+Publication demandée explicitement par l’utilisateur. Copie isolée issue de
+`dev` à `621cd11`, incluant le correctif Quality d’Alpha ; changements parallèles
+de navigation et d’envoi des mails exclus de ce lot.
+
+- `make validate`, `make lint`, `npm run build` via `make assets` et
+  `git diff --check` : réussis.
+- `make test` : exécution complète finale réussie, 545 tests PHP et
+  209104 assertions, puis 13 tests Python. Le domaine Mercure du conteneur de
+  test est aligné sur celui des requêtes de la suite HTTP.
+- `make test-browser` : les 129 scénarios ont été exécutés en quatre lots
+  isolés ; 128 succès au premier passage et un succès en reprise ciblée après
+  regroupement de la préparation des données d’inventaire. Il s’agit de
+  résultats consolidés, pas d’une exécution unique intégralement verte.
+- Le test de migration d’activité nettoie sa table temporaire : sa contrainte
+  nommée différemment de celle générée par l’ORM bloquait parfois le nettoyage
+  du test suivant. Les assertions et les migrations livrées restent inchangées.
+
+Ces contrôles sont locaux ; ils ne constituent ni une validation de la CI
+GitHub, ni un déploiement. Les migrations de vérification concernent uniquement
+les bases jetables ; aucune migration de la base de jeu existante n’est appliquée.

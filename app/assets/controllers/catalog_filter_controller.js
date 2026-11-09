@@ -12,5 +12,7 @@ export default class extends Controller {
         this.cardTargets.forEach((card) => {
             card.hidden = card.dataset.catalogVisible === 'false' || (category !== 'all' && card.dataset.category !== category);
         });
+        const empty = this.element.querySelector('[data-catalog-empty]');
+        if (empty) empty.hidden = this.cardTargets.some(card => !card.hidden);
     }
 }

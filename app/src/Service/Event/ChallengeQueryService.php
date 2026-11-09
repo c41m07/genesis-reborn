@@ -20,7 +20,11 @@ final class ChallengeQueryService
         $status=self::STATUSES[$event->status] ?? $event->status;
         if ($event->status==='scheduled' && $event->scheduledAt<=$this->clock->now()) $status='En attente de démarrage';
         if ($event->status==='active' && $event->endsAt && $event->endsAt<=$this->clock->now()) $status='Clôture en cours';
-        return ['event'=>$event,'guided'=>$guided,'name'=>$event->configuration['name'] ?? 'Rotation hebdomadaire · '.$objective['label'],
+        $rank=null;
+        if ($membership && $score>0 && $event->rewardMode==='top3') {
+            $rank=1+(int)$this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM (SELECT SUM(value) AS score FROM boost_event_contribution WHERE event_id=:event GROUP BY player_universe_id HAVING SUM(value)>:score) ranked',['event'=>$event->id,'score'=>$score]);
+        }
+        return ['event'=>$event,'guided'=>$guided,'weekly'=>str_starts_with($event->eventKey,'weekly-'),'rank'=>$rank,'name'=>$event->configuration['name'] ?? 'Rotation hebdomadaire · '.$objective['label'],
             'description'=>$event->configuration['description'] ?? '', 'objective'=>$objective,'status_label'=>$status,
             'goal'=>$event->globalGoal,'minimum'=>(float)($event->configuration['minimum_contribution'] ?? 0),'score'=>$score,
             'reward'=>$reward,'reward_label'=>($reward['kind'] ?? 'boost')==='resource_box' ? $reward['box']['label'] : 'Un boost de réduction de durée',
@@ -32,19 +36,20 @@ final class ChallengeQueryService
 
     public function forPlayer(PlayerUniverse $membership): array
     {
-        $events=$this->em->createQueryBuilder()->select('e')->from(BoostEvent::class,'e')->where('e.universe=:universe')->andWhere('e.configuration IS NOT NULL')
+        $events=$this->em->createQueryBuilder()->select('e')->from(BoostEvent::class,'e')->where('e.universe=:universe')->andWhere('(e.configuration IS NULL OR e.configuration NOT LIKE :archived)')->setParameter('archived','%"archived_at"%')
             ->andWhere('e.status IN (:states)')->setParameter('universe',$membership->universe)->setParameter('states',['scheduled','active','closed','cancelled'])->orderBy('e.scheduledAt','DESC')->setMaxResults(50)->getQuery()->getResult();
-        return array_map(fn(BoostEvent $event):array=>$this->view($event),array_values(array_filter($events,static fn(BoostEvent $event):bool=>(bool)($event->configuration['guided'] ?? false))));
+        return array_map(fn(BoostEvent $event):array=>$this->view($event),array_values(array_filter($events,static fn(BoostEvent $event):bool=>(bool)($event->configuration['guided'] ?? false) || str_starts_with($event->eventKey,'weekly-'))));
     }
 
-    public function search(int $universe,string $status,int $page): array
+    public function search(int $universe,string $status,int $page,bool $archived=false): array
     {
         $query=$this->em->createQueryBuilder()->select('e','u')->from(BoostEvent::class,'e')->join('e.universe','u');
+        $query->andWhere($archived ? 'e.configuration LIKE :archived' : '(e.configuration IS NULL OR e.configuration NOT LIKE :archived)')->setParameter('archived','%"archived_at"%');
         if ($universe>0) $query->andWhere('e.universe=:universe')->setParameter('universe',$universe);
         if ($status!=='') $query->andWhere('e.status=:status')->setParameter('status',$status);
         $total=(int)(clone $query)->select('COUNT(e.id)')->getQuery()->getSingleScalarResult();$pages=max(1,(int)ceil($total/50));$page=min($pages,max(1,$page));
         $events=$query->orderBy('e.scheduledAt','DESC')->addOrderBy('e.id','DESC')->setFirstResult(($page-1)*50)->setMaxResults(50)->getQuery()->getResult();
-        return ['rows'=>array_map(fn(BoostEvent $event):array=>$this->view($event),$events),'total'=>$total,'page'=>$page,'pages'=>$pages,'selected_universe'=>$universe,'selected_status'=>$status,'statuses'=>self::STATUSES];
+        return ['rows'=>array_map(fn(BoostEvent $event):array=>$this->view($event),$events),'total'=>$total,'page'=>$page,'pages'=>$pages,'archived'=>$archived,'selected_universe'=>$universe,'selected_status'=>$status,'statuses'=>self::STATUSES];
     }
 
     public function contributors(BoostEvent $event,int $page): array

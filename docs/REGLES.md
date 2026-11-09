@@ -11,6 +11,16 @@
 ## Monde et comptes
 Univers → galaxie → système (x,y) → planète position 1..9. Comptes globaux, état par inscription à un univers. Aucune interaction entre univers. Univers fermés conservés mais inaccessibles. Cartes JSON distinctes de la configuration YAML et import explicite idempotent. Carte statique, planètes masquées hors systèmes découverts.
 
+### Suppression volontaire du compte
+
+Depuis le profil, le joueur peut supprimer son compte dans tous les univers
+après saisie du mot de passe et confirmation explicite. Les identifiants et
+préférences sont effacés et les accès fermés. Les empires deviennent oubliés
+immédiatement, sans attendre le délai d’inactivité ; leurs colonies et les
+historiques de jeu restent présents. Les vacances prennent fin. Un combat en
+cours bloque l’opération entière jusqu’à sa résolution. Le dernier administrateur
+actif doit désigner un successeur avant de supprimer son compte.
+
 ## Colonie
 Métal, électricité, antimatière, hydrogène et nano par planète. La simulation intègre les stocks par segments entre épuisement et capacité. Les usines adaptent leur rendement à l’électricité disponible avec un plancher de 10 % ; l’antimatière exige aussi de l’hydrogène. Coûts et durées sont autoritaires côté serveur. Les coûts des trois rangs suivent des profils par catégorie avec budgets de valeur constants. Technologies par PlayerUniverse avec laboratoire local. Même technologie interdite simultanément sur des planètes différentes.
 
@@ -247,3 +257,16 @@ Les transports peuvent viser une colonie connue du même univers et de la même 
 L’expéditeur fournit ressources, vaisseaux et carburant aller-retour. L’autorisation est contrôlée au départ et à l’arrivée. Un changement de propriétaire ou un refus à l’arrivée entraîne le retour de la cargaison. La livraison respecte chaque capacité de stockage ; le surplus revient, y compris entre les propres colonies. Au retour, le dépôt reste soumis au stockage de la colonie de départ : un éventuel dépassement y est perdu et indiqué dans le rapport.
 
 Les dons entre joueurs ne donnent aucun boost et ne font progresser aucun objectif. La protection débutant reste inchangée. Aucun plafond de dons, taxe ou sanction automatique sur une adresse IP n’est ajouté. Les deux participants disposent du rapport économique ; l’administration dispose de l’historique paginé des transports pour une vérification humaine.
+
+
+### Administration des rotations hebdomadaires
+
+Les administrateurs gèrent les modèles par univers dans `/admin/rotations`.
+Les modèles actifs alternent selon l’indice hebdomadaire du moteur. Une seule
+occurrence est réservée par univers et semaine ; une occurrence annulée conserve
+cette réservation et ne peut pas être recréée cette semaine. Désactiver un modèle
+empêche ses nouvelles programmations mais n’annule pas les occurrences déjà
+créées. Leurs règles sont figées ; contributions et récompenses acquises restent
+conservées lors d’une annulation, sans nouvelle attribution après annulation.
+Le plafond simultané, le lundi à 00 h UTC et les règles de récompense historiques
+s’appliquent toujours. Les joueurs retrouvent les rotations dans Événements.

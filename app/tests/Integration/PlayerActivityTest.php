@@ -77,8 +77,13 @@ final class PlayerActivityTest extends WebTestCase
         $schema->dropSchema([$this->em->getClassMetadata(PlayerActivity::class)]);
         require_once dirname(__DIR__, 2).'/migrations/Version20261109010000.php';
         $migration = new \DoctrineMigrations\Version20261109010000($this->em->getConnection(), new \Psr\Log\NullLogger());
-        $migration->up(new \Doctrine\DBAL\Schema\Schema());
-        foreach ($migration->getSql() as $query) $this->em->getConnection()->executeStatement($query->getStatement());
-        self::assertSame([], $schema->getUpdateSchemaSql($this->em->getMetadataFactory()->getAllMetadata()));
+        try {
+            $migration->up(new \Doctrine\DBAL\Schema\Schema());
+            foreach ($migration->getSql() as $query) $this->em->getConnection()->executeStatement($query->getStatement());
+            self::assertSame([], $schema->getUpdateSchemaSql($this->em->getMetadataFactory()->getAllMetadata()));
+        } finally {
+            // La contrainte de la migration porte un nom différent de celle générée par l’ORM.
+            $this->em->getConnection()->executeStatement('DROP TABLE IF EXISTS player_activity');
+        }
     }
 }

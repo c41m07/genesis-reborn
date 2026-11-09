@@ -19,7 +19,7 @@ final class AdminChallengeController extends AbstractController
     public function index(Request $request,EntityManagerInterface $em,ChallengeQueryService $query): Response
     {
         $universe=$request->query->get('universe','')==='' ? 0 : $request->query->getInt('universe');
-        return $this->render('admin/challenges.html.twig',$query->search($universe,(string)$request->query->get('status',''),$request->query->getInt('page',1))+['universes'=>$em->getRepository(Universe::class)->findBy([],['name'=>'ASC'])]);
+        return $this->render('admin/challenges.html.twig',$query->search($universe,(string)$request->query->get('status',''),$request->query->getInt('page',1),$request->query->getBoolean('archived'))+['universes'=>$em->getRepository(Universe::class)->findBy([],['name'=>'ASC'])]);
     }
 
     #[Route('/admin/defis/{id}',name:'app_admin_challenge',requirements:['id'=>'\d+'],methods:['GET'])]
@@ -41,4 +41,17 @@ final class AdminChallengeController extends AbstractController
         } catch (\DomainException $error) { $this->addFlash('error',$error->getMessage()); }
         return $this->redirectToRoute('app_admin_challenge',['id'=>$id]);
     }
+    #[Route('/admin/defis/{id}/retirer',name:'app_admin_challenge_remove',requirements:['id'=>'\d+'],methods:['POST'])]
+    public function remove(int $id,Request $request,EntityManagerInterface $em,\App\Service\Admin\AdminEventRemovalService $removal): Response
+    {
+        if (!$this->isCsrfTokenValid('admin_challenge_remove_'.$id,$request->request->get('_token'))) throw $this->createAccessDeniedException('Formulaire expiré.');
+        $event=$em->find(BoostEvent::class,$id);if (!$event) throw $this->createNotFoundException();
+        try {
+            if (!$request->request->getBoolean('confirmed')) throw new \DomainException('Confirmez explicitement la suppression.');
+            $deleted=$removal->remove($this->getUser(),$event,(string)$request->request->get('reason'));
+            $this->addFlash('success',$deleted?'Défi et annonce supprimés.':'Défi retiré des listes courantes. Contributions et récompenses conservées.');
+        } catch (\DomainException $error) { $this->addFlash('error',$error->getMessage()); }
+        return $this->redirectToRoute('app_admin_challenges');
+    }
+
 }

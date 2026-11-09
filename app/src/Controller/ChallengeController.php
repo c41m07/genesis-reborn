@@ -16,7 +16,7 @@ final class ChallengeController extends AbstractController
     public function show(int $id,UniverseContext $context,EntityManagerInterface $em,ChallengeQueryService $query,GameCatalog $catalog): Response
     {
         $membership=$context->membership();$event=$em->find(BoostEvent::class,$id);
-        if (!$event || $event->universe->id!==$membership->universe->id || !($event->configuration['guided'] ?? false)) throw $this->createNotFoundException('Défi introuvable dans cet univers.');
+        if (!$event || $event->universe->id!==$membership->universe->id || (!($event->configuration['guided'] ?? false) && !str_starts_with($event->eventKey,'weekly-'))) throw $this->createNotFoundException('Défi introuvable dans cet univers.');
         return $this->render('player/challenge.html.twig',['challenge'=>$query->view($event,$membership),'resources'=>$catalog->rules()['resources']]);
     }
 }

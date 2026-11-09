@@ -11,6 +11,7 @@ export default class extends Controller {
         this.stateKey = `${location.pathname}:${this.element.id}`;
         const previous = catalogStates.get(this.stateKey);
         this.state = previous ?? { showLocked: this.showLockedValue, tiers: {}, category: 'all' };
+        if (!this.element.querySelector(`[data-category="${this.state.category}"][aria-pressed]`)) this.state.category = 'all';
         this.showLockedValue = this.state.showLocked;
         this.element.classList.add('building-catalog-ready');
         this.element.querySelectorAll('.building-rank-tabs').forEach(list => list.setAttribute('role', 'tablist'));
@@ -100,6 +101,8 @@ export default class extends Controller {
                 document.getElementById(tab.hash.slice(1)).hidden = !active;
             });
         });
+        const empty = this.element.querySelector('[data-catalog-empty]');
+        if (empty) empty.hidden = this.familyTargets.some(family => !family.hidden);
         this.state.showLocked = this.showLockedValue;
         catalogStates.set(this.stateKey, this.state);
     }

@@ -339,6 +339,12 @@ SQL;
         return $this->all(Universe::class, ['status' => 'active'], ['id' => 'ASC']);
     }
 
+    public function weeklyBoostEventFor(Universe $universe,\DateTimeImmutable $monday): ?BoostEvent
+    {
+        return $this->em->createQueryBuilder()->select('e')->from(BoostEvent::class,'e')->where('e.universe = :universe')->andWhere('e.eventKey LIKE :prefix')
+            ->setParameter('universe',$universe)->setParameter('prefix','weekly-'.$monday->format('Ymd').'-u'.$universe->id.'-%')->setMaxResults(1)->getQuery()->getOneOrNullResult();
+    }
+
     public function boostEventByKey(string $eventKey): ?BoostEvent
     {
         $event = $this->one(BoostEvent::class, ['eventKey' => $eventKey]);
