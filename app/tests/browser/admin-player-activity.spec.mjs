@@ -75,6 +75,7 @@ test('Fiche joueur : présence, temps par univers, refus des accès et responsiv
 test('Suivi client : onglet masqué et inactivité interrompent les échantillons', async ({page}) => {
   await page.clock.install();
   await enter(page);
+  await page.waitForLoadState('load');
   const statuses = [];
   await page.route('**/activite/presence', async route => { statuses.push(route.request().postData());await route.fulfill({status:204}); });
   await page.clock.fastForward(301000);
