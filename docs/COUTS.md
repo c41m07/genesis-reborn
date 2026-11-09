@@ -14,6 +14,8 @@ Il s’agit de parts de **valeur économique** : métal ×2, nano ×4, antimati�
 
 La grille couvre **50 fiches et 150 profils** : 13 bâtiments, 19 recherches, 14 vaisseaux et 4 défenses. Les profils réels sont lus et conservés en JSON malgré leur extension `.yaml`. Les budgets déclaratifs ne remplacent pas leurs coûts arrondis effectifs.
 
+La décision du 9 novembre 2026 révise volontairement les budgets du réacteur et de la centrale : 1 200 / 1 500 / 1 875 et 4 800 / 6 000 / 7 500. La conservation des budgets de la redistribution du 5 novembre reste une référence historique ; les nouveaux budgets et leurs parts de ressources font désormais foi pour ces deux familles. Voir [EQUILIBRAGE](EQUILIBRAGE.md#production-des-batiments).
+
 ## Coûts de base appliqués
 
 Chaque cellule indique **métal / nano / antimatière / hydrogène** pour le niveau 1 ou une unité, sans réduction de recherche.
@@ -22,11 +24,11 @@ Chaque cellule indique **métal / nano / antimatière / hydrogène** pour le niv
 |---|---|---|---|---|
 | buildings | Bunker de défense | 3 600 / 1 200 / 0 / 0 | 3 375 / 1 687 / 188 / 0 | 2 813 / 2 110 / 469 / 936 |
 | buildings | Laboratoire colonial | 3 000 / 1 000 / 0 / 0 | 2 815 / 1 408 / 156 / 0 | 2 344 / 1 758 / 391 / 780 |
-| buildings | Piège à antimatière | 480 / 160 / 0 / 0 | 450 / 225 / 25 / 0 | 376 / 282 / 63 / 124 |
+| buildings | Piège à antimatière | 360 / 120 / 0 / 0 | 338 / 168 / 19 / 0 | 281 / 211 / 47 / 93 |
 | buildings | Raffinerie d’hydrogène | 480 / 160 / 0 / 0 | 450 / 225 / 25 / 0 | 375 / 281 / 63 / 124 |
 | buildings | Mine à ciel ouvert | 480 / 160 / 0 / 0 | 450 / 225 / 25 / 0 | 374 / 281 / 63 / 124 |
 | buildings | Atelier de nanofabrication | 480 / 160 / 0 / 0 | 450 / 225 / 25 / 0 | 375 / 281 / 63 / 124 |
-| buildings | Centrale nucléaire | 3 600 / 1 200 / 0 / 0 | 3 376 / 1 688 / 187 / 0 | 2 813 / 2 109 / 469 / 938 |
+| buildings | Centrale nucléaire | 1 440 / 480 / 0 / 0 | 1 350 / 675 / 75 / 0 | 1 126 / 844 / 187 / 376 |
 | buildings | Chantier d’assemblage | 6 000 / 2 000 / 0 / 0 | 5 625 / 2 813 / 313 / 0 | 4 688 / 3 516 / 781 / 1 564 |
 | buildings | Cage magnétique | 1 501 / 500 / 0 / 0 | 1 410 / 704 / 78 / 0 | 1 174 / 880 / 195 / 392 |
 | buildings | Batterie de colonie | 1 501 / 500 / 0 / 0 | 1 410 / 704 / 78 / 0 | 1 174 / 880 / 195 / 392 |
@@ -87,7 +89,9 @@ Les durées de tous les devis sont identiques. Les caractéristiques et tous les
 
 Les stocks de départ actuels permettent de payer les premiers extracteurs T1 de métal, nano, hydrogène et antimatière sans rareté préalable : ces quatre premiers achats ne demandent ni antimatière ni hydrogène. Une nouvelle colonie ne peut pas nécessairement acheter les quatre extracteurs et la centrale immédiatement ; la centrale devient finançable avec la production. Les tests reproduisent les achats, les temps de construction et la production aux positions 1, 5 et 9 avec les deux kits de départ réels. La production gratuite de métal et nano reste positive, même sans usine.
 
-Les quatre trajectoires financées de progression sont également recalculées avec les prix réellement appliqués, y compris l’hydrogène du T3. Elles n’utilisent pas de marché, de raid ou d’aide extérieure. Une politique déterministe alterne les mines métal/nano/hydrogène jusqu’à 80, ajoute l’énergie et les stockages nécessaires, et débloque les centrales T3 à l’étape 20 dans la stratégie avancée.
+**Référence historique du 5 novembre : les délais ci-dessous précèdent la décision du 9 novembre et ne valident pas le candidat courant.**
+
+Les quatre trajectoires financées de progression avaient été recalculées avec les prix réellement appliqués, y compris l’hydrogène du T3. Elles n’utilisent pas de marché, de raid ou d’aide extérieure. Une politique déterministe alterne les mines métal/nano/hydrogène jusqu’à 80, ajoute l’énergie et les stockages nécessaires, et débloque les centrales T3 à l’étape 20 dans la stratégie avancée.
 
 | Stratégie | Atteindre les trois mines niveau 80 en normal | Alpha ×40 |
 |---|---:|---:|

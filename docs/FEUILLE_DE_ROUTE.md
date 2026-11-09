@@ -3,6 +3,10 @@
 Mise à jour documentaire : 8 novembre 2026. [REGLES](REGLES.md) et
 [DECISIONS](DECISIONS.md) restent les sources des arbitrages de jeu.
 
+## Équilibrage des producteurs — 9 novembre 2026
+
+Candidat confirmé après simulations, appliqué sur `codex/equilibrage-production-basique` issue de `dev`. Débits, ratio 4 H/A, prix et durées révisés ; courbes, rangs et files conservés. Les [mesures et limites](EQUILIBRAGE.md#production-des-batiments) distinguent construction cumulée et progression financée. Publication sur dev demandée et préparée depuis 1b02f4f, sans fusion vers Alpha ni déploiement. Autres travaux locaux exclus. Contrôles : validate, lint, suite complète de 522 tests PHP et 13 Python, compilation et diff. Navigateur : 121/122 en exécution complète, seul échec corrigé sans affaiblir le test, puis onglets 2/2 et intégration finale 15/15 ; résultats consolidés, pas une suite complète verte d’un seul passage sur la dernière base. CI GitHub non déclarée validée.
+
 ## État connu
 
 L’Alpha est hébergée selon le propriétaire ; son domaine, sa version, son digest

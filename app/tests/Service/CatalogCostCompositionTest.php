@@ -22,9 +22,9 @@ final class CatalogCostCompositionTest extends TestCase
     {
         $value=0;foreach(self::WEIGHTS as $resource=>$weight)$value+=($costs[$resource]??0)*$weight;return $value;
     }
-    public function testAllFamiliesKeepTheirBaseBudgetsAndOnlyCostProfilesChange():void
+    public function testHistoricalResourceRedistributionKeepsThePreviousBaseBudgets():void
     {
-        $catalog=new GameCatalog(dirname(__DIR__,2).'/config/game');$fixture=$this->fixture();$count=0;
+        $catalog=\App\Tests\Support\ProducerBalanceReference::historicalCatalog();$fixture=$this->fixture();$count=0;
         foreach(['buildings'=>13,'technologies'=>19,'ships'=>14,'defenses'=>4] as $group=>$expectedCount){
             self::assertCount($expectedCount,$catalog->all($group));
             foreach($fixture['entries'][$group] as $slug=>$expected){
@@ -44,9 +44,9 @@ final class CatalogCostCompositionTest extends TestCase
         }
         self::assertSame(150,$count);
     }
-    public function testRealCostsAtCurveBoundariesAndAfterResearchMatchFrozenQuotes():void
+    public function testHistoricalCostsAtCurveBoundariesAndAfterResearchMatchFrozenQuotes():void
     {
-        $catalog=new GameCatalog(dirname(__DIR__,2).'/config/game');$operation=new OperationCalculator($catalog);$fixture=$this->fixture();
+        $catalog=\App\Tests\Support\ProducerBalanceReference::historicalCatalog();$operation=new OperationCalculator($catalog);$fixture=$this->fixture();
         $universe=new Universe();$universe->slug='common-cost-study';$universe->name='Grille économique commune';$count=0;$maxima=[];
         foreach($fixture['entries'] as $group=>$entries)foreach($entries as $slug=>$entry)foreach($entry['costs'] as $tier=>$profiles)foreach($profiles as $profile=>$levels){
             $ranks=match($profile){'none'=>[],'mid'=>['basic'=>10,'intermediate'=>5,'superior'=>0],'max'=>['basic'=>25,'intermediate'=>25,'superior'=>25]};

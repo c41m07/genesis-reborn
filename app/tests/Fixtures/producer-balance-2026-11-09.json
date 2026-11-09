@@ -1,0 +1,5605 @@
+{
+  "provenance": {
+    "date": "2026-11-09",
+    "scope": "Candidat Basique confirmé après 648 simulations ; autres rangs déclinés avec les facteurs existants, sans prétendre à une étude complète I/S.",
+    "study_source_hashes": {
+      "config/game/rules.yaml": "0980e13a9a7acd918bdc5926cf0c2d460a26d0c251f92972f53d04420674660c",
+      "src/Service/Colony/FactoryEconomy.php": "baff6d0ffb497c3ad92e48d01f4b2654577d08ebb585951eee762487e4ac6c3b",
+      "src/Service/Colony/ResourceService.php": "a3c37a0a630b50dc3601acc5e11741df32be14e24ad1ef8214e011fc38ed16be",
+      "src/Service/Queue/OperationCalculator.php": "3af26649064d26be392fe41907ac766726f5fae85bb2de2544636b6cc1f836a1",
+      "src/Service/Catalog/GameCatalog.php": "99ac33a64ad8a516f26dc1435476749d50c83e67130061e8640711136407c636",
+      "config/game/buildings/mine_metal.yaml": "98476ca4d18fcd1c2abe0d3e74df44484678a9153d4abdd7ff4bd812a8029f6d",
+      "config/game/buildings/mine_nano.yaml": "b4ed8811344ece70b5f3ab9d553281bfce1ab0899806741467474f1663c9772c",
+      "config/game/buildings/mine_hydrogen.yaml": "22f35afd5edf37216d0b9d2292a55b42bd13047cb6bed0ad553bfb7369c6db05",
+      "config/game/buildings/mine_antimatter.yaml": "d919e5940cba2a07b56f1b318d5cf1fa81f9fac5d1b6fd4dd2e0174783afe9ea",
+      "config/game/buildings/power_plant.yaml": "47ffa0ad045e27182a6c23ae10b56a1f648566f95ffaba964cbdc28b8e15ac8e"
+    },
+    "study_results_sha256": "e674108dfe67c4650dfb1feaacdbc2e4c0b051e65cc136d6058dce9add810c4d"
+  },
+  "historical_definitions": {
+    "mine_metal": {
+      "slug": "mine_metal",
+      "label": "Mine à ciel ouvert",
+      "base_build_time": 20,
+      "build_time_scaling": 1.6,
+      "costs_base": {
+        "metal": 800,
+        "nano": 0,
+        "antimatter": 0
+      },
+      "costs_scaling": 1.8,
+      "production_resource": "metal",
+      "provisional": true,
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "engineering_foundations",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "engineering_foundations",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      },
+      "electricity_use_per_level": 0.05,
+      "economy_value_budget": 1600,
+      "cost_profiles": {
+        "basic": {
+          "metal": 480,
+          "nano": 160,
+          "antimatter": 0,
+          "hydrogen": 0
+        },
+        "intermediate": {
+          "metal": 450,
+          "nano": 225,
+          "antimatter": 25,
+          "hydrogen": 0
+        },
+        "superior": {
+          "metal": 374,
+          "nano": 281,
+          "antimatter": 63,
+          "hydrogen": 124
+        }
+      },
+      "tier_labels": {
+        "basic": "Mine à ciel ouvert",
+        "intermediate": "Fonderie orbitale",
+        "superior": "Réseau d’extraction lithosphérique"
+      },
+      "tier_descriptions": {
+        "basic": "Produit métal. Une installation locale assure cette fonction sur la colonie.",
+        "intermediate": "Produit métal. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+        "superior": "Produit métal. Un maillage étendu porte cette fonction à l’échelle planétaire."
+      },
+      "description": "Produit métal. Une installation locale assure cette fonction sur la colonie.",
+      "unlock_requirements": {}
+    },
+    "mine_nano": {
+      "slug": "mine_nano",
+      "label": "Atelier de nanofabrication",
+      "base_build_time": 20,
+      "build_time_scaling": 1.6,
+      "costs_base": {
+        "metal": 560,
+        "nano": 120,
+        "antimatter": 0
+      },
+      "costs_scaling": 1.8,
+      "production_resource": "nano",
+      "provisional": true,
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "nanomaterial_synthesis",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "nanomaterial_synthesis",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      },
+      "electricity_use_per_level": 0.05,
+      "economy_value_budget": 1600,
+      "cost_profiles": {
+        "basic": {
+          "metal": 480,
+          "nano": 160,
+          "antimatter": 0,
+          "hydrogen": 0
+        },
+        "intermediate": {
+          "metal": 450,
+          "nano": 225,
+          "antimatter": 25,
+          "hydrogen": 0
+        },
+        "superior": {
+          "metal": 375,
+          "nano": 281,
+          "antimatter": 63,
+          "hydrogen": 124
+        }
+      },
+      "tier_labels": {
+        "basic": "Atelier de nanofabrication",
+        "intermediate": "Usine de synthèse moléculaire",
+        "superior": "Trame de matière programmable"
+      },
+      "tier_descriptions": {
+        "basic": "Produit nanomatériaux. Une installation locale assure cette fonction sur la colonie.",
+        "intermediate": "Produit nanomatériaux. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+        "superior": "Produit nanomatériaux. Un maillage étendu porte cette fonction à l’échelle planétaire."
+      },
+      "description": "Produit nanomatériaux. Une installation locale assure cette fonction sur la colonie.",
+      "unlock_requirements": {}
+    },
+    "mine_hydrogen": {
+      "slug": "mine_hydrogen",
+      "label": "Raffinerie d’hydrogène",
+      "base_build_time": 20,
+      "build_time_scaling": 1.6,
+      "costs_base": {
+        "metal": 800,
+        "nano": 0,
+        "antimatter": 0
+      },
+      "costs_scaling": 1.8,
+      "production_resource": "hydrogen",
+      "provisional": true,
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "vector_propulsion",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "vector_propulsion",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      },
+      "electricity_use_per_level": 0.05,
+      "economy_value_budget": 1600,
+      "cost_profiles": {
+        "basic": {
+          "metal": 480,
+          "nano": 160,
+          "antimatter": 0,
+          "hydrogen": 0
+        },
+        "intermediate": {
+          "metal": 450,
+          "nano": 225,
+          "antimatter": 25,
+          "hydrogen": 0
+        },
+        "superior": {
+          "metal": 375,
+          "nano": 281,
+          "antimatter": 63,
+          "hydrogen": 124
+        }
+      },
+      "tier_labels": {
+        "basic": "Raffinerie d’hydrogène",
+        "intermediate": "Complexe de séparation isotopique",
+        "superior": "Réseau planétaire de récolte gazeuse"
+      },
+      "tier_descriptions": {
+        "basic": "Produit hydrogène. Une installation locale assure cette fonction sur la colonie.",
+        "intermediate": "Produit hydrogène. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+        "superior": "Produit hydrogène. Un maillage étendu porte cette fonction à l’échelle planétaire."
+      },
+      "description": "Produit hydrogène. Une installation locale assure cette fonction sur la colonie.",
+      "unlock_requirements": {}
+    },
+    "mine_antimatter": {
+      "slug": "mine_antimatter",
+      "label": "Piège à antimatière",
+      "base_build_time": 20,
+      "build_time_scaling": 1.6,
+      "costs_base": {
+        "metal": 480,
+        "nano": 100,
+        "antimatter": 30
+      },
+      "costs_scaling": 1.8,
+      "production_resource": "antimatter",
+      "provisional": true,
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "naval_engineering",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "naval_engineering",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      },
+      "hydrogen_per_output": 8,
+      "electricity_use_per_level": 0.05,
+      "economy_value_budget": 1600,
+      "cost_profiles": {
+        "basic": {
+          "metal": 480,
+          "nano": 160,
+          "antimatter": 0,
+          "hydrogen": 0
+        },
+        "intermediate": {
+          "metal": 450,
+          "nano": 225,
+          "antimatter": 25,
+          "hydrogen": 0
+        },
+        "superior": {
+          "metal": 376,
+          "nano": 282,
+          "antimatter": 63,
+          "hydrogen": 124
+        }
+      },
+      "tier_labels": {
+        "basic": "Piège à antimatière",
+        "intermediate": "Réacteur de conversion matière-antimatière",
+        "superior": "Confinement planétaire d’antimatière"
+      },
+      "tier_descriptions": {
+        "basic": "Produit antimatière en consommant de l’hydrogène. Une installation locale assure cette fonction sur la colonie.",
+        "intermediate": "Produit antimatière en consommant de l’hydrogène. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+        "superior": "Produit antimatière en consommant de l’hydrogène. Un maillage étendu porte cette fonction à l’échelle planétaire."
+      },
+      "description": "Produit antimatière en consommant de l’hydrogène. Une installation locale assure cette fonction sur la colonie.",
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "mine_hydrogen",
+            "level": 3
+          },
+          {
+            "slug": "lab",
+            "level": 2
+          }
+        ],
+        "technologies": [
+          {
+            "slug": "naval_engineering",
+            "level": 2
+          }
+        ]
+      }
+    },
+    "power_plant": {
+      "slug": "power_plant",
+      "label": "Centrale nucléaire",
+      "base_build_time": 360,
+      "build_time_scaling": 1.6,
+      "costs_base": {
+        "metal": 6000,
+        "nano": 0,
+        "antimatter": 0
+      },
+      "costs_scaling": 1.8,
+      "provisional": true,
+      "production_resource": "electricity",
+      "production_per_level": 0.2,
+      "effect_note": "Production d’énergie : +0,1 énergie/s par niveau avant facteur de position et multiplicateur d’univers.",
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "engineering_foundations",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "engineering_foundations",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      },
+      "economy_value_budget": 12000,
+      "cost_profiles": {
+        "basic": {
+          "metal": 3600,
+          "nano": 1200,
+          "antimatter": 0,
+          "hydrogen": 0
+        },
+        "intermediate": {
+          "metal": 3376,
+          "nano": 1688,
+          "antimatter": 187,
+          "hydrogen": 0
+        },
+        "superior": {
+          "metal": 2813,
+          "nano": 2109,
+          "antimatter": 469,
+          "hydrogen": 938
+        }
+      },
+      "tier_labels": {
+        "basic": "Centrale nucléaire",
+        "intermediate": "Complexe énergétique à antimatière",
+        "superior": "Maillage énergétique planétaire"
+      },
+      "tier_descriptions": {
+        "basic": "Produit électricité. Une installation locale assure cette fonction sur la colonie.",
+        "intermediate": "Produit électricité. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+        "superior": "Produit électricité. Un maillage étendu porte cette fonction à l’échelle planétaire."
+      },
+      "description": "Produit électricité. Une installation locale assure cette fonction sur la colonie.",
+      "unlock_requirements": {}
+    }
+  },
+  "historical_rules": {
+    "resources": {
+      "metal": "Métal",
+      "electricity": "Électricité",
+      "antimatter": "Antimatière",
+      "hydrogen": "Hydrogène",
+      "nano": "Nano"
+    },
+    "initial_stock": {
+      "metal": 40000,
+      "electricity": 20000,
+      "antimatter": 2000,
+      "hydrogen": 10000,
+      "nano": 10000
+    },
+    "base_production": {
+      "metal": 0.15,
+      "electricity": 0.15,
+      "antimatter": 0.015,
+      "hydrogen": 0.075,
+      "nano": 0.1
+    },
+    "mine_production_per_level": 0.1,
+    "base_storage_capacity": 200000,
+    "storage_capacity_per_level": 100000,
+    "building_time_multiplier_key": "building_time",
+    "cancellation_refund_ratio": 0.25,
+    "fuel_ratio_policy": "proportional",
+    "combat_window_seconds": 600,
+    "combat_loot_ratio": 1,
+    "combat_loot_protected_storage_ratio": 0.1,
+    "max_combat_rounds": 10,
+    "provisional": true,
+    "note": "Courbes de progression proposées le 02/11/2026 : croissance par phase et rendements décroissants, avec plafonds globaux tous rangs confondus.",
+    "colony_initial_stock": {
+      "metal": 8000,
+      "electricity": 3000,
+      "antimatter": 0,
+      "hydrogen": 1500,
+      "nano": 1000
+    },
+    "colony_kit_provisional": false,
+    "colony_kit_note": "Kit limité et stocks de départ validés lors du QCM d’équilibrage.",
+    "position_production_factors": {
+      "metal": {
+        "position_1": 1.2,
+        "position_9": 0.8
+      },
+      "electricity": {
+        "position_1": 1.2,
+        "position_9": 0.8
+      },
+      "nano": {
+        "position_1": 1.2,
+        "position_9": 0.8
+      },
+      "hydrogen": {
+        "position_1": 0.8,
+        "position_9": 1.2
+      },
+      "antimatter": {
+        "all_positions": 1
+      }
+    },
+    "research_time_reduction_percent_per_lab_level": 10,
+    "research_time_reduction_max_percent": 70,
+    "defense_rebuild_percent_per_automated_defense_repair_level": 10,
+    "defense_rebuild_max_percent": 40,
+    "shield_recharge_percent_per_round": 5,
+    "restore_survivor_shields_after_combat": true,
+    "new_player_protection": {
+      "duration_seconds": 604800,
+      "score_limit": 5000,
+      "attacker_score_ratio": 5
+    },
+    "recovery_protection": {
+      "duration_seconds": 86400,
+      "military_loss_ratio": 0.7,
+      "cooldown_seconds": 604800
+    },
+    "factory_electricity_use_per_level": 0.05,
+    "antimatter_hydrogen_per_unit": 8,
+    "minimum_factory_efficiency": 0.1,
+    "time_reduction_max_percent": 70,
+    "cost_reduction_max_percent": 40,
+    "progression_curves": {
+      "building_cost": [
+        {
+          "max_level": 20,
+          "multiplier": 1.12
+        },
+        {
+          "max_level": 80,
+          "multiplier": 1.09
+        },
+        {
+          "max_level": 120,
+          "multiplier": 1.03
+        },
+        {
+          "multiplier": 1.02
+        }
+      ],
+      "research_cost": [
+        {
+          "max_level": 5,
+          "multiplier": 1.35
+        },
+        {
+          "max_level": 10,
+          "multiplier": 1.25
+        },
+        {
+          "max_level": 15,
+          "multiplier": 1.18
+        },
+        {
+          "multiplier": 1.12
+        }
+      ],
+      "building_duration": [
+        {
+          "max_level": 20,
+          "multiplier": 1.1225
+        },
+        {
+          "max_level": 40,
+          "multiplier": 1.122
+        },
+        {
+          "max_level": 80,
+          "multiplier": 1.0643
+        },
+        {
+          "max_level": 100,
+          "multiplier": 1.0353
+        },
+        {
+          "max_level": 120,
+          "multiplier": 1.0353
+        },
+        {
+          "multiplier": 1.0373
+        }
+      ],
+      "research_duration": [
+        {
+          "max_level": 5,
+          "multiplier": 1.35
+        },
+        {
+          "max_level": 10,
+          "multiplier": 1.25
+        },
+        {
+          "max_level": 15,
+          "multiplier": 1.18
+        },
+        {
+          "multiplier": 1.12
+        }
+      ],
+      "production_building_cost": [
+        {
+          "max_level": 20,
+          "multiplier": 1.12
+        },
+        {
+          "max_level": 40,
+          "multiplier": 1.09
+        },
+        {
+          "max_level": 80,
+          "multiplier": 1.035
+        },
+        {
+          "max_level": 120,
+          "multiplier": 1.015
+        },
+        {
+          "multiplier": 1.01
+        }
+      ]
+    },
+    "building_production_tier_factors": {
+      "basic": 1.0,
+      "intermediate": 1.5,
+      "superior": 2.25
+    }
+  },
+  "definitions": {
+    "mine_metal": {
+      "slug": "mine_metal",
+      "label": "Mine à ciel ouvert",
+      "base_build_time": 60,
+      "build_time_scaling": 1.6,
+      "costs_base": {
+        "metal": 800,
+        "nano": 0,
+        "antimatter": 0
+      },
+      "costs_scaling": 1.8,
+      "production_resource": "metal",
+      "provisional": true,
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "engineering_foundations",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "engineering_foundations",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      },
+      "electricity_use_per_level": 0.05,
+      "economy_value_budget": 1600,
+      "cost_profiles": {
+        "basic": {
+          "metal": 480,
+          "nano": 160,
+          "antimatter": 0,
+          "hydrogen": 0
+        },
+        "intermediate": {
+          "metal": 450,
+          "nano": 225,
+          "antimatter": 25,
+          "hydrogen": 0
+        },
+        "superior": {
+          "metal": 374,
+          "nano": 281,
+          "antimatter": 63,
+          "hydrogen": 124
+        }
+      },
+      "tier_labels": {
+        "basic": "Mine à ciel ouvert",
+        "intermediate": "Fonderie orbitale",
+        "superior": "Réseau d’extraction lithosphérique"
+      },
+      "tier_descriptions": {
+        "basic": "Produit métal. Une installation locale assure cette fonction sur la colonie.",
+        "intermediate": "Produit métal. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+        "superior": "Produit métal. Un maillage étendu porte cette fonction à l’échelle planétaire."
+      },
+      "description": "Produit métal. Une installation locale assure cette fonction sur la colonie.",
+      "unlock_requirements": {},
+      "production_per_level": 0.1
+    },
+    "mine_nano": {
+      "slug": "mine_nano",
+      "label": "Atelier de nanofabrication",
+      "base_build_time": 60,
+      "build_time_scaling": 1.6,
+      "costs_base": {
+        "metal": 560,
+        "nano": 120,
+        "antimatter": 0
+      },
+      "costs_scaling": 1.8,
+      "production_resource": "nano",
+      "provisional": true,
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "nanomaterial_synthesis",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "nanomaterial_synthesis",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      },
+      "electricity_use_per_level": 0.05,
+      "economy_value_budget": 1600,
+      "cost_profiles": {
+        "basic": {
+          "metal": 480,
+          "nano": 160,
+          "antimatter": 0,
+          "hydrogen": 0
+        },
+        "intermediate": {
+          "metal": 450,
+          "nano": 225,
+          "antimatter": 25,
+          "hydrogen": 0
+        },
+        "superior": {
+          "metal": 375,
+          "nano": 281,
+          "antimatter": 63,
+          "hydrogen": 124
+        }
+      },
+      "tier_labels": {
+        "basic": "Atelier de nanofabrication",
+        "intermediate": "Usine de synthèse moléculaire",
+        "superior": "Trame de matière programmable"
+      },
+      "tier_descriptions": {
+        "basic": "Produit nanomatériaux. Une installation locale assure cette fonction sur la colonie.",
+        "intermediate": "Produit nanomatériaux. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+        "superior": "Produit nanomatériaux. Un maillage étendu porte cette fonction à l’échelle planétaire."
+      },
+      "description": "Produit nanomatériaux. Une installation locale assure cette fonction sur la colonie.",
+      "unlock_requirements": {},
+      "production_per_level": 0.05
+    },
+    "mine_hydrogen": {
+      "slug": "mine_hydrogen",
+      "label": "Raffinerie d’hydrogène",
+      "base_build_time": 60,
+      "build_time_scaling": 1.6,
+      "costs_base": {
+        "metal": 800,
+        "nano": 0,
+        "antimatter": 0
+      },
+      "costs_scaling": 1.8,
+      "production_resource": "hydrogen",
+      "provisional": true,
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "vector_propulsion",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "vector_propulsion",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      },
+      "electricity_use_per_level": 0.05,
+      "economy_value_budget": 1600,
+      "cost_profiles": {
+        "basic": {
+          "metal": 480,
+          "nano": 160,
+          "antimatter": 0,
+          "hydrogen": 0
+        },
+        "intermediate": {
+          "metal": 450,
+          "nano": 225,
+          "antimatter": 25,
+          "hydrogen": 0
+        },
+        "superior": {
+          "metal": 375,
+          "nano": 281,
+          "antimatter": 63,
+          "hydrogen": 124
+        }
+      },
+      "tier_labels": {
+        "basic": "Raffinerie d’hydrogène",
+        "intermediate": "Complexe de séparation isotopique",
+        "superior": "Réseau planétaire de récolte gazeuse"
+      },
+      "tier_descriptions": {
+        "basic": "Produit hydrogène. Une installation locale assure cette fonction sur la colonie.",
+        "intermediate": "Produit hydrogène. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+        "superior": "Produit hydrogène. Un maillage étendu porte cette fonction à l’échelle planétaire."
+      },
+      "description": "Produit hydrogène. Une installation locale assure cette fonction sur la colonie.",
+      "unlock_requirements": {},
+      "production_per_level": 0.2
+    },
+    "mine_antimatter": {
+      "slug": "mine_antimatter",
+      "label": "Piège à antimatière",
+      "base_build_time": 120,
+      "build_time_scaling": 1.6,
+      "costs_base": {
+        "metal": 480,
+        "nano": 100,
+        "antimatter": 30
+      },
+      "costs_scaling": 1.8,
+      "production_resource": "antimatter",
+      "provisional": true,
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "naval_engineering",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "naval_engineering",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      },
+      "hydrogen_per_output": 4,
+      "electricity_use_per_level": 0.05,
+      "economy_value_budget": 1200,
+      "cost_profiles": {
+        "basic": {
+          "metal": 360,
+          "nano": 120,
+          "antimatter": 0,
+          "hydrogen": 0
+        },
+        "intermediate": {
+          "metal": 338,
+          "nano": 168,
+          "antimatter": 19,
+          "hydrogen": 0
+        },
+        "superior": {
+          "metal": 281,
+          "nano": 211,
+          "antimatter": 47,
+          "hydrogen": 93
+        }
+      },
+      "tier_labels": {
+        "basic": "Piège à antimatière",
+        "intermediate": "Réacteur de conversion matière-antimatière",
+        "superior": "Confinement planétaire d’antimatière"
+      },
+      "tier_descriptions": {
+        "basic": "Produit antimatière en consommant de l’hydrogène. Une installation locale assure cette fonction sur la colonie.",
+        "intermediate": "Produit antimatière en consommant de l’hydrogène. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+        "superior": "Produit antimatière en consommant de l’hydrogène. Un maillage étendu porte cette fonction à l’échelle planétaire."
+      },
+      "description": "Produit antimatière en consommant de l’hydrogène. Une installation locale assure cette fonction sur la colonie.",
+      "unlock_requirements": {
+        "buildings": [
+          {
+            "slug": "mine_hydrogen",
+            "level": 3
+          },
+          {
+            "slug": "lab",
+            "level": 2
+          }
+        ],
+        "technologies": [
+          {
+            "slug": "naval_engineering",
+            "level": 2
+          }
+        ]
+      },
+      "production_per_level": 0.025
+    },
+    "power_plant": {
+      "slug": "power_plant",
+      "label": "Centrale nucléaire",
+      "base_build_time": 120,
+      "build_time_scaling": 1.6,
+      "costs_base": {
+        "metal": 6000,
+        "nano": 0,
+        "antimatter": 0
+      },
+      "costs_scaling": 1.8,
+      "provisional": true,
+      "production_resource": "electricity",
+      "production_per_level": 0.3,
+      "effect_note": "Production d’électricité : +0,3/s par niveau basique avant facteur de position et multiplicateur d’univers.",
+      "tier_unlock_requirements": {
+        "intermediate": {
+          "technologies": [
+            {
+              "slug": "engineering_foundations",
+              "tier": "basic",
+              "level": 5
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "basic",
+              "level": 5
+            }
+          ]
+        },
+        "superior": {
+          "technologies": [
+            {
+              "slug": "engineering_foundations",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ],
+          "buildings": [
+            {
+              "slug": "lab",
+              "tier": "intermediate",
+              "level": 10
+            }
+          ]
+        }
+      },
+      "economy_value_budget": 4800,
+      "cost_profiles": {
+        "basic": {
+          "metal": 1440,
+          "nano": 480,
+          "antimatter": 0,
+          "hydrogen": 0
+        },
+        "intermediate": {
+          "metal": 1350,
+          "nano": 675,
+          "antimatter": 75,
+          "hydrogen": 0
+        },
+        "superior": {
+          "metal": 1126,
+          "nano": 844,
+          "antimatter": 187,
+          "hydrogen": 376
+        }
+      },
+      "tier_labels": {
+        "basic": "Centrale nucléaire",
+        "intermediate": "Complexe énergétique à antimatière",
+        "superior": "Maillage énergétique planétaire"
+      },
+      "tier_descriptions": {
+        "basic": "Produit électricité. Une installation locale assure cette fonction sur la colonie.",
+        "intermediate": "Produit électricité. Un complexe spécialisé rassemble cette fonction dans une infrastructure industrielle.",
+        "superior": "Produit électricité. Un maillage étendu porte cette fonction à l’échelle planétaire."
+      },
+      "description": "Produit électricité. Une installation locale assure cette fonction sur la colonie.",
+      "unlock_requirements": {}
+    }
+  },
+  "quotes": [
+    {
+      "variant": "candidate",
+      "level": 20,
+      "building": "mine_metal",
+      "research": "none",
+      "costs": {
+        "metal": 4135,
+        "nano": 1379,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 13786.0,
+      "duration_seconds": 540,
+      "marginal_net_value_per_hour": 720.0,
+      "payback_hours": 19.147222222222222,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "building": "mine_metal",
+      "research": "basic25",
+      "costs": {
+        "metal": 3501,
+        "nano": 1168,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 11674.0,
+      "duration_seconds": 395,
+      "marginal_net_value_per_hour": 720.0,
+      "payback_hours": 16.21388888888889,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "building": "mine_nano",
+      "research": "none",
+      "costs": {
+        "metal": 4135,
+        "nano": 1379,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 13786.0,
+      "duration_seconds": 540,
+      "marginal_net_value_per_hour": 720.0,
+      "payback_hours": 19.147222222222222,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "building": "mine_nano",
+      "research": "basic25",
+      "costs": {
+        "metal": 3501,
+        "nano": 1168,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 11674.0,
+      "duration_seconds": 395,
+      "marginal_net_value_per_hour": 720.0,
+      "payback_hours": 16.21388888888889,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "building": "mine_hydrogen",
+      "research": "none",
+      "costs": {
+        "metal": 4135,
+        "nano": 1379,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 13786.0,
+      "duration_seconds": 540,
+      "marginal_net_value_per_hour": 720.0,
+      "payback_hours": 19.147222222222222,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "building": "mine_hydrogen",
+      "research": "basic25",
+      "costs": {
+        "metal": 3501,
+        "nano": 1168,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 11674.0,
+      "duration_seconds": 395,
+      "marginal_net_value_per_hour": 720.0,
+      "payback_hours": 16.21388888888889,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "building": "mine_antimatter",
+      "research": "none",
+      "costs": {
+        "metal": 3101,
+        "nano": 1034,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 10338.0,
+      "duration_seconds": 1079,
+      "marginal_net_value_per_hour": 360.0,
+      "payback_hours": 28.716666666666665,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "building": "mine_antimatter",
+      "research": "basic25",
+      "costs": {
+        "metal": 2625,
+        "nano": 876,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 8754.0,
+      "duration_seconds": 789,
+      "marginal_net_value_per_hour": 360.0,
+      "payback_hours": 24.316666666666666,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "building": "power_plant",
+      "research": "none",
+      "costs": {
+        "metal": 12403,
+        "nano": 4135,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 41346.0,
+      "duration_seconds": 1079,
+      "marginal_net_value_per_hour": 0.0,
+      "payback_hours": null,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "building": "power_plant",
+      "research": "basic25",
+      "costs": {
+        "metal": 10499,
+        "nano": 3501,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 35002.0,
+      "duration_seconds": 789,
+      "marginal_net_value_per_hour": 0.0,
+      "payback_hours": null,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "building": "mine_metal",
+      "research": "none",
+      "costs": {
+        "metal": 23170,
+        "nano": 7724,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 77236.0,
+      "duration_seconds": 5390,
+      "marginal_net_value_per_hour": 720.0000000000146,
+      "payback_hours": 107.27222222222005,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "building": "mine_metal",
+      "research": "basic25",
+      "costs": {
+        "metal": 19613,
+        "nano": 6538,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 65378.0,
+      "duration_seconds": 3942,
+      "marginal_net_value_per_hour": 720.0000000000146,
+      "payback_hours": 90.80277777777594,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "building": "mine_nano",
+      "research": "none",
+      "costs": {
+        "metal": 23170,
+        "nano": 7724,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 77236.0,
+      "duration_seconds": 5390,
+      "marginal_net_value_per_hour": 720.0000000000146,
+      "payback_hours": 107.27222222222005,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "building": "mine_nano",
+      "research": "basic25",
+      "costs": {
+        "metal": 19613,
+        "nano": 6538,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 65378.0,
+      "duration_seconds": 3942,
+      "marginal_net_value_per_hour": 720.0000000000146,
+      "payback_hours": 90.80277777777594,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "building": "mine_hydrogen",
+      "research": "none",
+      "costs": {
+        "metal": 23170,
+        "nano": 7724,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 77236.0,
+      "duration_seconds": 5390,
+      "marginal_net_value_per_hour": 720.0000000000146,
+      "payback_hours": 107.27222222222005,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "building": "mine_hydrogen",
+      "research": "basic25",
+      "costs": {
+        "metal": 19613,
+        "nano": 6538,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 65378.0,
+      "duration_seconds": 3942,
+      "marginal_net_value_per_hour": 720.0000000000146,
+      "payback_hours": 90.80277777777594,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "building": "mine_antimatter",
+      "research": "none",
+      "costs": {
+        "metal": 17378,
+        "nano": 5793,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 57928.0,
+      "duration_seconds": 10780,
+      "marginal_net_value_per_hour": 360.00000000001455,
+      "payback_hours": 160.91111111110462,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "building": "mine_antimatter",
+      "research": "basic25",
+      "costs": {
+        "metal": 14710,
+        "nano": 4904,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 49036.0,
+      "duration_seconds": 7883,
+      "marginal_net_value_per_hour": 360.00000000001455,
+      "payback_hours": 136.2111111111056,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "building": "power_plant",
+      "research": "none",
+      "costs": {
+        "metal": 69509,
+        "nano": 23170,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 231698.0,
+      "duration_seconds": 10780,
+      "marginal_net_value_per_hour": 0.0,
+      "payback_hours": null,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "building": "power_plant",
+      "research": "basic25",
+      "costs": {
+        "metal": 58836,
+        "nano": 19613,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 196124.0,
+      "duration_seconds": 7883,
+      "marginal_net_value_per_hour": 0.0,
+      "payback_hours": null,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "building": "mine_metal",
+      "research": "none",
+      "costs": {
+        "metal": 91734,
+        "nano": 30578,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 305780.0,
+      "duration_seconds": 65180,
+      "marginal_net_value_per_hour": 720.0,
+      "payback_hours": 424.69444444444446,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "building": "mine_metal",
+      "research": "basic25",
+      "costs": {
+        "metal": 77649,
+        "nano": 25883,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 258830.0,
+      "duration_seconds": 47666,
+      "marginal_net_value_per_hour": 720.0,
+      "payback_hours": 359.4861111111111,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "building": "mine_nano",
+      "research": "none",
+      "costs": {
+        "metal": 91734,
+        "nano": 30578,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 305780.0,
+      "duration_seconds": 65180,
+      "marginal_net_value_per_hour": 720.0,
+      "payback_hours": 424.69444444444446,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "building": "mine_nano",
+      "research": "basic25",
+      "costs": {
+        "metal": 77649,
+        "nano": 25883,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 258830.0,
+      "duration_seconds": 47666,
+      "marginal_net_value_per_hour": 720.0,
+      "payback_hours": 359.4861111111111,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "building": "mine_hydrogen",
+      "research": "none",
+      "costs": {
+        "metal": 91734,
+        "nano": 30578,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 305780.0,
+      "duration_seconds": 65180,
+      "marginal_net_value_per_hour": 720.0,
+      "payback_hours": 424.69444444444446,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "building": "mine_hydrogen",
+      "research": "basic25",
+      "costs": {
+        "metal": 77649,
+        "nano": 25883,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 258830.0,
+      "duration_seconds": 47666,
+      "marginal_net_value_per_hour": 720.0,
+      "payback_hours": 359.4861111111111,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "building": "mine_antimatter",
+      "research": "none",
+      "costs": {
+        "metal": 68801,
+        "nano": 22934,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 229338.0,
+      "duration_seconds": 130360,
+      "marginal_net_value_per_hour": 360.0000000000291,
+      "payback_hours": 637.0499999999485,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "building": "mine_antimatter",
+      "research": "basic25",
+      "costs": {
+        "metal": 58237,
+        "nano": 19413,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 194126.0,
+      "duration_seconds": 95331,
+      "marginal_net_value_per_hour": 360.0000000000291,
+      "payback_hours": 539.2388888888453,
+      "minimum_basic_storage_levels": {
+        "metal": 0,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "building": "power_plant",
+      "research": "none",
+      "costs": {
+        "metal": 275201,
+        "nano": 91734,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 917338.0,
+      "duration_seconds": 130360,
+      "marginal_net_value_per_hour": 0.0,
+      "payback_hours": null,
+      "minimum_basic_storage_levels": {
+        "metal": 1,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "building": "power_plant",
+      "research": "basic25",
+      "costs": {
+        "metal": 232945,
+        "nano": 77649,
+        "antimatter": 0,
+        "hydrogen": 0
+      },
+      "value": 776486.0,
+      "duration_seconds": 95331,
+      "marginal_net_value_per_hour": 0.0,
+      "payback_hours": null,
+      "minimum_basic_storage_levels": {
+        "metal": 1,
+        "nano": 0,
+        "antimatter": 0,
+        "hydrogen": 0
+      }
+    }
+  ],
+  "economy": [
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 1,
+      "speed": 1,
+      "shape": "equal",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 11447.999999999996,
+      "average_stock_gain_per_hour": {
+        "metal": 9288.0,
+        "electricity": 11447.999999999995,
+        "antimatter": 1854.0,
+        "hydrogen": 4536.000000000001,
+        "nano": 4751.999999999999
+      },
+      "final_stocks": {
+        "metal": 222912.0,
+        "electricity": 274751.9999999999,
+        "antimatter": 44496.0,
+        "hydrogen": 108864.00000000001,
+        "nano": 114047.99999999999
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 9288.0,
+        "electricity": 11447.999999999996,
+        "antimatter": 1854.0,
+        "hydrogen": 4536.000000000001,
+        "nano": 4751.999999999999
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 1,
+      "speed": 1,
+      "shape": "equal",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 11447.999999999996,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 1854.0,
+        "hydrogen": 4536.000000000001,
+        "nano": 4751.999999999999
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 44496.0,
+        "hydrogen": 108864.00000000003,
+        "nano": 114047.99999999997
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 1854.0,
+        "hydrogen": 4536.000000000001,
+        "nano": 4751.999999999999
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 1,
+      "speed": 1,
+      "shape": "half_power",
+      "capacities": "unlimited",
+      "initial_efficiency": 0.9099999999999987,
+      "initial_antimatter_efficiency": 0.9099999999999987,
+      "nominal_electricity_balance_per_hour": -1512.0000000000014,
+      "average_stock_gain_per_hour": {
+        "metal": 8510.399999999989,
+        "electricity": 0.0,
+        "antimatter": 1691.9999999999975,
+        "hydrogen": 4147.199999999994,
+        "nano": 4363.199999999994
+      },
+      "final_stocks": {
+        "metal": 204249.59999999971,
+        "electricity": 0.0,
+        "antimatter": 40607.99999999994,
+        "hydrogen": 99532.79999999987,
+        "nano": 104716.79999999986
+      },
+      "final_efficiency": 0.9099999999999987,
+      "final_antimatter_efficiency": 0.9099999999999987,
+      "final_rates_per_hour": {
+        "metal": 8510.399999999989,
+        "electricity": 2.078337502098293e-11,
+        "antimatter": 1691.9999999999977,
+        "hydrogen": 4147.199999999995,
+        "nano": 4363.199999999994
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 1,
+      "speed": 1,
+      "shape": "half_power",
+      "capacities": "real_storage",
+      "initial_efficiency": 0.9099999999999987,
+      "initial_antimatter_efficiency": 0.9099999999999987,
+      "nominal_electricity_balance_per_hour": -1512.0000000000014,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 58.423011844328016,
+        "antimatter": 1695.370558375632,
+        "hydrogen": 4155.289340101517,
+        "nano": 4371.289340101516
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 1402.1522842638724,
+        "antimatter": 40688.89340101517,
+        "hydrogen": 99726.94416243641,
+        "nano": 104910.9441624364
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 2807.999999999999,
+        "antimatter": 1854.0,
+        "hydrogen": 4536.000000000001,
+        "nano": 4751.999999999999
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 1,
+      "speed": 1,
+      "shape": "double_reactor",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 0.8150000000000001,
+      "nominal_electricity_balance_per_hour": 7847.999999999995,
+      "average_stock_gain_per_hour": {
+        "metal": 9288.0,
+        "electricity": 9327.999999999995,
+        "antimatter": 2988.0,
+        "hydrogen": 0.0,
+        "nano": 4751.999999999999
+      },
+      "final_stocks": {
+        "metal": 222912.0,
+        "electricity": 223871.99999999985,
+        "antimatter": 71712.0,
+        "hydrogen": 0.0,
+        "nano": 114047.99999999999
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 0.8150000000000001,
+      "final_rates_per_hour": {
+        "metal": 9288.0,
+        "electricity": 9327.999999999995,
+        "antimatter": 2988.0000000000005,
+        "hydrogen": 0.0,
+        "nano": 4751.999999999999
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 1,
+      "speed": 1,
+      "shape": "double_reactor",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 0.8150000000000001,
+      "nominal_electricity_balance_per_hour": 7847.999999999995,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 2988.0,
+        "hydrogen": 0.0,
+        "nano": 4751.999999999999
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 71712.0,
+        "hydrogen": 0.0,
+        "nano": 114047.99999999999
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 0.8150000000000001,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 2988.0000000000005,
+        "hydrogen": 0.0,
+        "nano": 4751.999999999999
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 1,
+      "speed": 40,
+      "shape": "equal",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 457919.99999999994,
+      "average_stock_gain_per_hour": {
+        "metal": 371520.0,
+        "electricity": 457919.99999999994,
+        "antimatter": 74160.00000000001,
+        "hydrogen": 181440.00000000003,
+        "nano": 190080.0
+      },
+      "final_stocks": {
+        "metal": 8916480.0,
+        "electricity": 10990079.999999998,
+        "antimatter": 1779840.0000000002,
+        "hydrogen": 4354560.000000001,
+        "nano": 4561920.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 371520.0,
+        "electricity": 457919.99999999994,
+        "antimatter": 74160.0,
+        "hydrogen": 181440.00000000003,
+        "nano": 190080.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 1,
+      "speed": 40,
+      "shape": "equal",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 457919.99999999994,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 1,
+      "speed": 40,
+      "shape": "half_power",
+      "capacities": "unlimited",
+      "initial_efficiency": 0.9099999999999987,
+      "initial_antimatter_efficiency": 0.9099999999999987,
+      "nominal_electricity_balance_per_hour": -60480.000000000044,
+      "average_stock_gain_per_hour": {
+        "metal": 340415.99999999953,
+        "electricity": 0.0,
+        "antimatter": 67679.99999999991,
+        "hydrogen": 165887.9999999998,
+        "nano": 174527.99999999977
+      },
+      "final_stocks": {
+        "metal": 8169983.999999989,
+        "electricity": 0.0,
+        "antimatter": 1624319.999999998,
+        "hydrogen": 3981311.999999995,
+        "nano": 4188671.9999999944
+      },
+      "final_efficiency": 0.9099999999999987,
+      "final_antimatter_efficiency": 0.9099999999999987,
+      "final_rates_per_hour": {
+        "metal": 340415.99999999953,
+        "electricity": 8.185452315956354e-10,
+        "antimatter": 67679.99999999991,
+        "hydrogen": 165887.9999999998,
+        "nano": 174527.99999999977
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 1,
+      "speed": 40,
+      "shape": "half_power",
+      "capacities": "real_storage",
+      "initial_efficiency": 0.9099999999999987,
+      "initial_antimatter_efficiency": 0.9099999999999987,
+      "nominal_electricity_balance_per_hour": -60480.000000000044,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 1,
+      "speed": 40,
+      "shape": "double_reactor",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 0.8150000000000001,
+      "nominal_electricity_balance_per_hour": 313919.99999999994,
+      "average_stock_gain_per_hour": {
+        "metal": 371520.0,
+        "electricity": 373120.0,
+        "antimatter": 119520.00000000001,
+        "hydrogen": 0.0,
+        "nano": 190080.0
+      },
+      "final_stocks": {
+        "metal": 8916480.0,
+        "electricity": 8954880.0,
+        "antimatter": 2868480.0000000005,
+        "hydrogen": 0.0,
+        "nano": 4561920.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 0.8150000000000001,
+      "final_rates_per_hour": {
+        "metal": 371520.0,
+        "electricity": 373120.0,
+        "antimatter": 119520.00000000001,
+        "hydrogen": 0.0,
+        "nano": 190080.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 1,
+      "speed": 40,
+      "shape": "double_reactor",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 0.8150000000000001,
+      "nominal_electricity_balance_per_hour": 313919.99999999994,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 5,
+      "speed": 1,
+      "shape": "equal",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 7740.000000000001,
+      "average_stock_gain_per_hour": {
+        "metal": 7740.0,
+        "electricity": 7740.000000000001,
+        "antimatter": 1854.0,
+        "hydrogen": 7470.000000000001,
+        "nano": 3960.0000000000005
+      },
+      "final_stocks": {
+        "metal": 185760.0,
+        "electricity": 185760.00000000003,
+        "antimatter": 44496.0,
+        "hydrogen": 179280.00000000003,
+        "nano": 95040.00000000001
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 7740.0,
+        "electricity": 7740.000000000001,
+        "antimatter": 1854.0,
+        "hydrogen": 7470.000000000001,
+        "nano": 3960.0000000000005
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 5,
+      "speed": 1,
+      "shape": "equal",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 7740.000000000001,
+      "average_stock_gain_per_hour": {
+        "metal": 7740.0,
+        "electricity": 7740.000000000001,
+        "antimatter": 1854.0,
+        "hydrogen": 7470.000000000001,
+        "nano": 3960.0000000000005
+      },
+      "final_stocks": {
+        "metal": 185760.0,
+        "electricity": 185760.00000000003,
+        "antimatter": 44496.0,
+        "hydrogen": 179280.00000000003,
+        "nano": 95040.00000000001
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 7740.0,
+        "electricity": 7740.000000000001,
+        "antimatter": 1854.0,
+        "hydrogen": 7470.000000000001,
+        "nano": 3960.0000000000005
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 5,
+      "speed": 1,
+      "shape": "half_power",
+      "capacities": "unlimited",
+      "initial_efficiency": 0.8087499999999981,
+      "initial_antimatter_efficiency": 0.8087499999999981,
+      "nominal_electricity_balance_per_hour": -3060.0000000000005,
+      "average_stock_gain_per_hour": {
+        "metal": 6362.999999999985,
+        "electricity": 0.0,
+        "antimatter": 1509.7499999999966,
+        "hydrogen": 6092.999999999986,
+        "nano": 3271.4999999999927
+      },
+      "final_stocks": {
+        "metal": 152711.99999999965,
+        "electricity": 0.0,
+        "antimatter": 36233.99999999992,
+        "hydrogen": 146231.99999999968,
+        "nano": 78515.99999999983
+      },
+      "final_efficiency": 0.8087499999999981,
+      "final_antimatter_efficiency": 0.8087499999999981,
+      "final_rates_per_hour": {
+        "metal": 6362.999999999985,
+        "electricity": 3.037570195374428e-11,
+        "antimatter": 1509.7499999999966,
+        "hydrogen": 6092.999999999987,
+        "nano": 3271.499999999993
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 5,
+      "speed": 1,
+      "shape": "half_power",
+      "capacities": "real_storage",
+      "initial_efficiency": 0.8087499999999981,
+      "initial_antimatter_efficiency": 0.8087499999999981,
+      "nominal_electricity_balance_per_hour": -3060.0000000000005,
+      "average_stock_gain_per_hour": {
+        "metal": 6362.999999999985,
+        "electricity": 0.0,
+        "antimatter": 1509.7499999999966,
+        "hydrogen": 6092.999999999986,
+        "nano": 3271.4999999999927
+      },
+      "final_stocks": {
+        "metal": 152711.99999999965,
+        "electricity": 0.0,
+        "antimatter": 36233.99999999992,
+        "hydrogen": 146231.99999999968,
+        "nano": 78515.99999999983
+      },
+      "final_efficiency": 0.8087499999999981,
+      "final_antimatter_efficiency": 0.8087499999999981,
+      "final_rates_per_hour": {
+        "metal": 6362.999999999985,
+        "electricity": 3.037570195374428e-11,
+        "antimatter": 1509.7499999999966,
+        "hydrogen": 6092.999999999987,
+        "nano": 3271.499999999993
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 5,
+      "speed": 1,
+      "shape": "double_reactor",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 4140.000000000001,
+      "average_stock_gain_per_hour": {
+        "metal": 7740.0,
+        "electricity": 4140.000000000001,
+        "antimatter": 3653.9999999999995,
+        "hydrogen": 270.0000000000006,
+        "nano": 3960.0000000000005
+      },
+      "final_stocks": {
+        "metal": 185760.0,
+        "electricity": 99360.00000000003,
+        "antimatter": 87695.99999999999,
+        "hydrogen": 6480.0000000000155,
+        "nano": 95040.00000000001
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 7740.0,
+        "electricity": 4140.000000000001,
+        "antimatter": 3653.9999999999995,
+        "hydrogen": 270.0000000000006,
+        "nano": 3960.0000000000005
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 5,
+      "speed": 1,
+      "shape": "double_reactor",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 4140.000000000001,
+      "average_stock_gain_per_hour": {
+        "metal": 7740.0,
+        "electricity": 4140.000000000001,
+        "antimatter": 3653.9999999999995,
+        "hydrogen": 270.0000000000006,
+        "nano": 3960.0000000000005
+      },
+      "final_stocks": {
+        "metal": 185760.0,
+        "electricity": 99360.00000000003,
+        "antimatter": 87695.99999999999,
+        "hydrogen": 6480.0000000000155,
+        "nano": 95040.00000000001
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 7740.0,
+        "electricity": 4140.000000000001,
+        "antimatter": 3653.9999999999995,
+        "hydrogen": 270.0000000000006,
+        "nano": 3960.0000000000005
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 5,
+      "speed": 40,
+      "shape": "equal",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 309600.0,
+      "average_stock_gain_per_hour": {
+        "metal": 309600.0,
+        "electricity": 309600.0,
+        "antimatter": 74160.00000000001,
+        "hydrogen": 298800.0,
+        "nano": 158400.0
+      },
+      "final_stocks": {
+        "metal": 7430400.0,
+        "electricity": 7430400.0,
+        "antimatter": 1779840.0000000002,
+        "hydrogen": 7171200.0,
+        "nano": 3801600.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 309600.0,
+        "electricity": 309600.0,
+        "antimatter": 74160.0,
+        "hydrogen": 298800.0,
+        "nano": 158400.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 5,
+      "speed": 40,
+      "shape": "equal",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 309600.0,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 5,
+      "speed": 40,
+      "shape": "half_power",
+      "capacities": "unlimited",
+      "initial_efficiency": 0.8087499999999981,
+      "initial_antimatter_efficiency": 0.8087499999999981,
+      "nominal_electricity_balance_per_hour": -122400.0,
+      "average_stock_gain_per_hour": {
+        "metal": 254519.99999999945,
+        "electricity": 0.0,
+        "antimatter": 60389.99999999986,
+        "hydrogen": 243719.99999999945,
+        "nano": 130859.99999999972
+      },
+      "final_stocks": {
+        "metal": 6108479.999999987,
+        "electricity": 0.0,
+        "antimatter": 1449359.9999999967,
+        "hydrogen": 5849279.999999987,
+        "nano": 3140639.9999999935
+      },
+      "final_efficiency": 0.8087499999999981,
+      "final_antimatter_efficiency": 0.8087499999999981,
+      "final_rates_per_hour": {
+        "metal": 254519.99999999945,
+        "electricity": 1.2278178473934531e-09,
+        "antimatter": 60389.99999999987,
+        "hydrogen": 243719.99999999945,
+        "nano": 130859.99999999972
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 5,
+      "speed": 40,
+      "shape": "half_power",
+      "capacities": "real_storage",
+      "initial_efficiency": 0.8087499999999981,
+      "initial_antimatter_efficiency": 0.8087499999999981,
+      "nominal_electricity_balance_per_hour": -122400.0,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 5,
+      "speed": 40,
+      "shape": "double_reactor",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 165600.0,
+      "average_stock_gain_per_hour": {
+        "metal": 309600.0,
+        "electricity": 165600.0,
+        "antimatter": 146160.0,
+        "hydrogen": 10800.0,
+        "nano": 158400.0
+      },
+      "final_stocks": {
+        "metal": 7430400.0,
+        "electricity": 3974400.0,
+        "antimatter": 3507840.0,
+        "hydrogen": 259200.0,
+        "nano": 3801600.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 309600.0,
+        "electricity": 165600.0,
+        "antimatter": 146160.0,
+        "hydrogen": 10800.0,
+        "nano": 158400.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 5,
+      "speed": 40,
+      "shape": "double_reactor",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 165600.0,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 9,
+      "speed": 1,
+      "shape": "equal",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 4032.0000000000036,
+      "average_stock_gain_per_hour": {
+        "metal": 6192.000000000001,
+        "electricity": 4032.0000000000036,
+        "antimatter": 1854.0,
+        "hydrogen": 10403.999999999998,
+        "nano": 3168.0000000000005
+      },
+      "final_stocks": {
+        "metal": 148608.00000000003,
+        "electricity": 96768.00000000009,
+        "antimatter": 44496.0,
+        "hydrogen": 249695.99999999997,
+        "nano": 76032.00000000001
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 6192.000000000001,
+        "electricity": 4032.0000000000036,
+        "antimatter": 1854.0,
+        "hydrogen": 10403.999999999998,
+        "nano": 3168.0000000000005
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 9,
+      "speed": 1,
+      "shape": "equal",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 4032.0000000000036,
+      "average_stock_gain_per_hour": {
+        "metal": 6192.000000000001,
+        "electricity": 4549.666666666671,
+        "antimatter": 1854.0,
+        "hydrogen": 8333.333333333334,
+        "nano": 3168.0
+      },
+      "final_stocks": {
+        "metal": 148608.00000000003,
+        "electricity": 109192.00000000009,
+        "antimatter": 44496.0,
+        "hydrogen": 200000.0,
+        "nano": 76032.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 6192.000000000001,
+        "electricity": 6633.000000000004,
+        "antimatter": 1854.0,
+        "hydrogen": -7.993605777301127e-13,
+        "nano": 3168.0000000000005
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 9,
+      "speed": 1,
+      "shape": "half_power",
+      "capacities": "unlimited",
+      "initial_efficiency": 0.6968421052631569,
+      "initial_antimatter_efficiency": 0.6968421052631569,
+      "nominal_electricity_balance_per_hour": -4607.999999999997,
+      "average_stock_gain_per_hour": {
+        "metal": 4445.810526315784,
+        "electricity": 0.0,
+        "antimatter": 1308.3157894736826,
+        "hydrogen": 7348.168421052622,
+        "nano": 2294.905263157892
+      },
+      "final_stocks": {
+        "metal": 106699.45263157881,
+        "electricity": 0.0,
+        "antimatter": 31399.57894736838,
+        "hydrogen": 176356.04210526292,
+        "nano": 55077.726315789405
+      },
+      "final_efficiency": 0.6968421052631569,
+      "final_antimatter_efficiency": 0.6968421052631569,
+      "final_rates_per_hour": {
+        "metal": 4445.810526315784,
+        "electricity": 1.5987211554602254e-11,
+        "antimatter": 1308.3157894736826,
+        "hydrogen": 7348.168421052622,
+        "nano": 2294.905263157892
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 9,
+      "speed": 1,
+      "shape": "half_power",
+      "capacities": "real_storage",
+      "initial_efficiency": 0.6968421052631569,
+      "initial_antimatter_efficiency": 0.6968421052631569,
+      "nominal_electricity_balance_per_hour": -4607.999999999997,
+      "average_stock_gain_per_hour": {
+        "metal": 4445.810526315784,
+        "electricity": 0.0,
+        "antimatter": 1308.3157894736826,
+        "hydrogen": 7348.168421052622,
+        "nano": 2294.905263157892
+      },
+      "final_stocks": {
+        "metal": 106699.45263157881,
+        "electricity": 0.0,
+        "antimatter": 31399.57894736838,
+        "hydrogen": 176356.04210526292,
+        "nano": 55077.726315789405
+      },
+      "final_efficiency": 0.6968421052631569,
+      "final_antimatter_efficiency": 0.6968421052631569,
+      "final_rates_per_hour": {
+        "metal": 4445.810526315784,
+        "electricity": 1.5987211554602254e-11,
+        "antimatter": 1308.3157894736826,
+        "hydrogen": 7348.168421052622,
+        "nano": 2294.905263157892
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 9,
+      "speed": 1,
+      "shape": "double_reactor",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 432.0000000000036,
+      "average_stock_gain_per_hour": {
+        "metal": 6192.000000000001,
+        "electricity": 432.0000000000036,
+        "antimatter": 3653.9999999999995,
+        "hydrogen": 3203.9999999999986,
+        "nano": 3168.0000000000005
+      },
+      "final_stocks": {
+        "metal": 148608.00000000003,
+        "electricity": 10368.000000000085,
+        "antimatter": 87695.99999999999,
+        "hydrogen": 76895.99999999997,
+        "nano": 76032.00000000001
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 6192.000000000001,
+        "electricity": 432.0000000000036,
+        "antimatter": 3653.9999999999995,
+        "hydrogen": 3203.9999999999986,
+        "nano": 3168.0000000000005
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 9,
+      "speed": 1,
+      "shape": "double_reactor",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 432.0000000000036,
+      "average_stock_gain_per_hour": {
+        "metal": 6192.000000000001,
+        "electricity": 432.0000000000036,
+        "antimatter": 3653.9999999999995,
+        "hydrogen": 3203.9999999999986,
+        "nano": 3168.0000000000005
+      },
+      "final_stocks": {
+        "metal": 148608.00000000003,
+        "electricity": 10368.000000000085,
+        "antimatter": 87695.99999999999,
+        "hydrogen": 76895.99999999997,
+        "nano": 76032.00000000001
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 6192.000000000001,
+        "electricity": 432.0000000000036,
+        "antimatter": 3653.9999999999995,
+        "hydrogen": 3203.9999999999986,
+        "nano": 3168.0000000000005
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 9,
+      "speed": 40,
+      "shape": "equal",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 161280.00000000015,
+      "average_stock_gain_per_hour": {
+        "metal": 247680.0,
+        "electricity": 161280.00000000015,
+        "antimatter": 74160.00000000001,
+        "hydrogen": 416160.0,
+        "nano": 126720.00000000001
+      },
+      "final_stocks": {
+        "metal": 5944320.0,
+        "electricity": 3870720.0000000033,
+        "antimatter": 1779840.0000000002,
+        "hydrogen": 9987840.0,
+        "nano": 3041280.0000000005
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 247680.0,
+        "electricity": 161280.00000000015,
+        "antimatter": 74160.0,
+        "hydrogen": 416160.0,
+        "nano": 126720.00000000001
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 9,
+      "speed": 40,
+      "shape": "equal",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 161280.00000000015,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 9,
+      "speed": 40,
+      "shape": "half_power",
+      "capacities": "unlimited",
+      "initial_efficiency": 0.6968421052631569,
+      "initial_antimatter_efficiency": 0.6968421052631569,
+      "nominal_electricity_balance_per_hour": -184319.99999999997,
+      "average_stock_gain_per_hour": {
+        "metal": 177832.42105263134,
+        "electricity": 0.0,
+        "antimatter": 52332.6315789473,
+        "hydrogen": 293926.7368421048,
+        "nano": 91796.21052631567
+      },
+      "final_stocks": {
+        "metal": 4267978.105263152,
+        "electricity": 0.0,
+        "antimatter": 1255983.1578947352,
+        "hydrogen": 7054241.684210516,
+        "nano": 2203109.052631576
+      },
+      "final_efficiency": 0.6968421052631569,
+      "final_antimatter_efficiency": 0.6968421052631569,
+      "final_rates_per_hour": {
+        "metal": 177832.42105263134,
+        "electricity": 6.139089236967266e-10,
+        "antimatter": 52332.6315789473,
+        "hydrogen": 293926.7368421048,
+        "nano": 91796.21052631567
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 9,
+      "speed": 40,
+      "shape": "half_power",
+      "capacities": "real_storage",
+      "initial_efficiency": 0.6968421052631569,
+      "initial_antimatter_efficiency": 0.6968421052631569,
+      "nominal_electricity_balance_per_hour": -184319.99999999997,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 9,
+      "speed": 40,
+      "shape": "double_reactor",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 17280.000000000142,
+      "average_stock_gain_per_hour": {
+        "metal": 247680.0,
+        "electricity": 17280.000000000142,
+        "antimatter": 146160.0,
+        "hydrogen": 128159.99999999999,
+        "nano": 126720.00000000001
+      },
+      "final_stocks": {
+        "metal": 5944320.0,
+        "electricity": 414720.00000000343,
+        "antimatter": 3507840.0,
+        "hydrogen": 3075839.9999999995,
+        "nano": 3041280.0000000005
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 247680.0,
+        "electricity": 17280.000000000142,
+        "antimatter": 146160.0,
+        "hydrogen": 128159.99999999999,
+        "nano": 126720.00000000001
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "position": 9,
+      "speed": 40,
+      "shape": "double_reactor",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 17280.000000000142,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 1,
+      "speed": 1,
+      "shape": "equal",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 22247.999999999993,
+      "average_stock_gain_per_hour": {
+        "metal": 17927.999999999996,
+        "electricity": 22247.99999999999,
+        "antimatter": 3653.9999999999995,
+        "hydrogen": 8856.0,
+        "nano": 9072.0
+      },
+      "final_stocks": {
+        "metal": 430271.99999999994,
+        "electricity": 533951.9999999998,
+        "antimatter": 87695.99999999999,
+        "hydrogen": 212544.0,
+        "nano": 217728.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 17928.0,
+        "electricity": 22247.999999999993,
+        "antimatter": 3653.9999999999995,
+        "hydrogen": 8856.0,
+        "nano": 9072.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 1,
+      "speed": 1,
+      "shape": "equal",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 22247.999999999993,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 3654.0,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 87696.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 3653.9999999999995,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 1,
+      "speed": 1,
+      "shape": "half_power",
+      "capacities": "unlimited",
+      "initial_efficiency": 0.8907142857142837,
+      "initial_antimatter_efficiency": 0.8907142857142837,
+      "nominal_electricity_balance_per_hour": -3672.000000000005,
+      "average_stock_gain_per_hour": {
+        "metal": 16039.54285714282,
+        "electricity": 0.0,
+        "antimatter": 3260.5714285714216,
+        "hydrogen": 7911.77142857141,
+        "nano": 8127.77142857141
+      },
+      "final_stocks": {
+        "metal": 384949.0285714277,
+        "electricity": 0.0,
+        "antimatter": 78253.71428571412,
+        "hydrogen": 189882.51428571384,
+        "nano": 195066.51428571384
+      },
+      "final_efficiency": 0.8907142857142837,
+      "final_antimatter_efficiency": 0.8907142857142837,
+      "final_rates_per_hour": {
+        "metal": 16039.542857142818,
+        "electricity": 6.394884621840902e-11,
+        "antimatter": 3260.571428571421,
+        "hydrogen": 7911.77142857141,
+        "nano": 8127.77142857141
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 1,
+      "speed": 1,
+      "shape": "half_power",
+      "capacities": "real_storage",
+      "initial_efficiency": 0.8907142857142837,
+      "initial_antimatter_efficiency": 0.8907142857142837,
+      "nominal_electricity_balance_per_hour": -3672.000000000005,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 2631.1817976388757,
+        "antimatter": 3449.5944594074595,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 63148.363143333016,
+        "antimatter": 82790.26702577903,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 15821.999999999998,
+        "antimatter": 3653.9999999999995,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 1,
+      "speed": 1,
+      "shape": "double_reactor",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 0.8075,
+      "nominal_electricity_balance_per_hour": 15047.999999999993,
+      "average_stock_gain_per_hour": {
+        "metal": 17927.999999999996,
+        "electricity": 18127.999999999996,
+        "antimatter": 5868.0,
+        "hydrogen": 0.0,
+        "nano": 9072.0
+      },
+      "final_stocks": {
+        "metal": 430271.99999999994,
+        "electricity": 435071.9999999999,
+        "antimatter": 140832.0,
+        "hydrogen": 0.0,
+        "nano": 217728.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 0.8075,
+      "final_rates_per_hour": {
+        "metal": 17928.0,
+        "electricity": 18127.999999999993,
+        "antimatter": 5868.0,
+        "hydrogen": 0.0,
+        "nano": 9072.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 1,
+      "speed": 1,
+      "shape": "double_reactor",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 0.8075,
+      "nominal_electricity_balance_per_hour": 15047.999999999993,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 5868.0,
+        "hydrogen": 0.0,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 140832.0,
+        "hydrogen": 0.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 0.8075,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 5868.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 1,
+      "speed": 40,
+      "shape": "equal",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 889920.0000000001,
+      "average_stock_gain_per_hour": {
+        "metal": 717120.0,
+        "electricity": 889920.0000000001,
+        "antimatter": 146160.0,
+        "hydrogen": 354239.99999999994,
+        "nano": 362880.0
+      },
+      "final_stocks": {
+        "metal": 17210880.0,
+        "electricity": 21358080.000000004,
+        "antimatter": 3507840.0,
+        "hydrogen": 8501759.999999998,
+        "nano": 8709120.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 717120.0,
+        "electricity": 889920.0000000001,
+        "antimatter": 146160.0,
+        "hydrogen": 354239.99999999994,
+        "nano": 362880.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 1,
+      "speed": 40,
+      "shape": "equal",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 889920.0000000001,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 1,
+      "speed": 40,
+      "shape": "half_power",
+      "capacities": "unlimited",
+      "initial_efficiency": 0.8907142857142837,
+      "initial_antimatter_efficiency": 0.8907142857142837,
+      "nominal_electricity_balance_per_hour": -146880.00000000003,
+      "average_stock_gain_per_hour": {
+        "metal": 641581.7142857128,
+        "electricity": 0.0,
+        "antimatter": 130422.85714285685,
+        "hydrogen": 316470.85714285646,
+        "nano": 325110.8571428564
+      },
+      "final_stocks": {
+        "metal": 15397961.142857108,
+        "electricity": 0.0,
+        "antimatter": 3130148.5714285644,
+        "hydrogen": 7595300.571428555,
+        "nano": 7802660.571428554
+      },
+      "final_efficiency": 0.8907142857142837,
+      "final_antimatter_efficiency": 0.8907142857142837,
+      "final_rates_per_hour": {
+        "metal": 641581.7142857128,
+        "electricity": 2.660272002685815e-09,
+        "antimatter": 130422.85714285685,
+        "hydrogen": 316470.85714285646,
+        "nano": 325110.8571428564
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 1,
+      "speed": 40,
+      "shape": "half_power",
+      "capacities": "real_storage",
+      "initial_efficiency": 0.8907142857142837,
+      "initial_antimatter_efficiency": 0.8907142857142837,
+      "nominal_electricity_balance_per_hour": -146880.00000000003,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 1,
+      "speed": 40,
+      "shape": "double_reactor",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 0.8074999999999999,
+      "nominal_electricity_balance_per_hour": 601920.0000000001,
+      "average_stock_gain_per_hour": {
+        "metal": 717120.0,
+        "electricity": 725120.0000000001,
+        "antimatter": 234719.99999999997,
+        "hydrogen": 0.0,
+        "nano": 362880.0
+      },
+      "final_stocks": {
+        "metal": 17210880.0,
+        "electricity": 17402880.000000004,
+        "antimatter": 5633279.999999999,
+        "hydrogen": 0.0,
+        "nano": 8709120.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 0.8074999999999999,
+      "final_rates_per_hour": {
+        "metal": 717120.0,
+        "electricity": 725120.0000000002,
+        "antimatter": 234719.99999999997,
+        "hydrogen": 0.0,
+        "nano": 362880.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 1,
+      "speed": 40,
+      "shape": "double_reactor",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 0.8074999999999999,
+      "nominal_electricity_balance_per_hour": 601920.0000000001,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 5,
+      "speed": 1,
+      "shape": "equal",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 14940.000000000002,
+      "average_stock_gain_per_hour": {
+        "metal": 14940.000000000002,
+        "electricity": 14940.000000000002,
+        "antimatter": 3653.9999999999995,
+        "hydrogen": 14669.999999999998,
+        "nano": 7560.0
+      },
+      "final_stocks": {
+        "metal": 358560.00000000006,
+        "electricity": 358560.00000000006,
+        "antimatter": 87695.99999999999,
+        "hydrogen": 352079.99999999994,
+        "nano": 181440.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 14940.000000000002,
+        "electricity": 14940.000000000002,
+        "antimatter": 3653.9999999999995,
+        "hydrogen": 14669.999999999998,
+        "nano": 7560.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 5,
+      "speed": 1,
+      "shape": "equal",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 14940.000000000002,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 3653.9999999999995,
+        "hydrogen": 8333.333333333334,
+        "nano": 7560.0
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 87695.99999999999,
+        "hydrogen": 200000.0,
+        "nano": 181440.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 3653.9999999999995,
+        "hydrogen": 0.0,
+        "nano": 7560.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 5,
+      "speed": 1,
+      "shape": "half_power",
+      "capacities": "unlimited",
+      "initial_efficiency": 0.7918749999999974,
+      "initial_antimatter_efficiency": 0.7918749999999974,
+      "nominal_electricity_balance_per_hour": -6659.999999999999,
+      "average_stock_gain_per_hour": {
+        "metal": 11942.999999999964,
+        "electricity": 0.0,
+        "antimatter": 2904.749999999991,
+        "hydrogen": 11672.999999999964,
+        "nano": 6061.499999999982
+      },
+      "final_stocks": {
+        "metal": 286631.9999999991,
+        "electricity": 0.0,
+        "antimatter": 69713.99999999978,
+        "hydrogen": 280151.9999999991,
+        "nano": 145475.99999999956
+      },
+      "final_efficiency": 0.7918749999999974,
+      "final_antimatter_efficiency": 0.7918749999999974,
+      "final_rates_per_hour": {
+        "metal": 11942.999999999964,
+        "electricity": 8.313350008393172e-11,
+        "antimatter": 2904.749999999991,
+        "hydrogen": 11672.999999999964,
+        "nano": 6061.499999999982
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 5,
+      "speed": 1,
+      "shape": "half_power",
+      "capacities": "real_storage",
+      "initial_efficiency": 0.7918749999999974,
+      "initial_antimatter_efficiency": 0.7918749999999974,
+      "nominal_electricity_balance_per_hour": -6659.999999999999,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 1224.5811353931083,
+        "antimatter": 3131.2042200452065,
+        "hydrogen": 8333.333333333334,
+        "nano": 6514.408440090413
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 29389.947249434597,
+        "antimatter": 75148.90128108495,
+        "hydrogen": 200000.0,
+        "nano": 156345.8025621699
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 4207.500000000001,
+        "antimatter": 3653.9999999999995,
+        "hydrogen": 0.0,
+        "nano": 7560.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 5,
+      "speed": 1,
+      "shape": "double_reactor",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 7740.000000000001,
+      "average_stock_gain_per_hour": {
+        "metal": 14940.000000000002,
+        "electricity": 7740.000000000001,
+        "antimatter": 7254.0,
+        "hydrogen": 269.99999999999744,
+        "nano": 7560.0
+      },
+      "final_stocks": {
+        "metal": 358560.00000000006,
+        "electricity": 185760.00000000003,
+        "antimatter": 174096.0,
+        "hydrogen": 6479.999999999938,
+        "nano": 181440.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 14940.000000000002,
+        "electricity": 7740.000000000001,
+        "antimatter": 7254.0,
+        "hydrogen": 269.99999999999744,
+        "nano": 7560.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 5,
+      "speed": 1,
+      "shape": "double_reactor",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 7740.000000000001,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 7254.0,
+        "hydrogen": 269.99999999999744,
+        "nano": 7560.0
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 174096.0,
+        "hydrogen": 6479.999999999939,
+        "nano": 181440.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 7254.0,
+        "hydrogen": 269.99999999999744,
+        "nano": 7560.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 5,
+      "speed": 40,
+      "shape": "equal",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 597600.0,
+      "average_stock_gain_per_hour": {
+        "metal": 597600.0,
+        "electricity": 597600.0,
+        "antimatter": 146160.0,
+        "hydrogen": 586800.0,
+        "nano": 302400.0
+      },
+      "final_stocks": {
+        "metal": 14342400.0,
+        "electricity": 14342400.0,
+        "antimatter": 3507840.0,
+        "hydrogen": 14083200.0,
+        "nano": 7257600.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 597600.0,
+        "electricity": 597600.0,
+        "antimatter": 146160.0,
+        "hydrogen": 586800.0,
+        "nano": 302400.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 5,
+      "speed": 40,
+      "shape": "equal",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 597600.0,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 5,
+      "speed": 40,
+      "shape": "half_power",
+      "capacities": "unlimited",
+      "initial_efficiency": 0.7918749999999974,
+      "initial_antimatter_efficiency": 0.7918749999999974,
+      "nominal_electricity_balance_per_hour": -266400.0,
+      "average_stock_gain_per_hour": {
+        "metal": 477719.99999999854,
+        "electricity": 0.0,
+        "antimatter": 116189.99999999964,
+        "hydrogen": 466919.99999999854,
+        "nano": 242459.99999999927
+      },
+      "final_stocks": {
+        "metal": 11465279.999999965,
+        "electricity": 0.0,
+        "antimatter": 2788559.999999991,
+        "hydrogen": 11206079.999999965,
+        "nano": 5819039.999999982
+      },
+      "final_efficiency": 0.7918749999999974,
+      "final_antimatter_efficiency": 0.7918749999999974,
+      "final_rates_per_hour": {
+        "metal": 477719.99999999854,
+        "electricity": 3.2741809263825417e-09,
+        "antimatter": 116189.99999999964,
+        "hydrogen": 466919.99999999854,
+        "nano": 242459.99999999927
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 5,
+      "speed": 40,
+      "shape": "half_power",
+      "capacities": "real_storage",
+      "initial_efficiency": 0.7918749999999974,
+      "initial_antimatter_efficiency": 0.7918749999999974,
+      "nominal_electricity_balance_per_hour": -266400.0,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 5,
+      "speed": 40,
+      "shape": "double_reactor",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 309600.0,
+      "average_stock_gain_per_hour": {
+        "metal": 597600.0,
+        "electricity": 309600.0,
+        "antimatter": 290159.99999999994,
+        "hydrogen": 10800.0,
+        "nano": 302400.0
+      },
+      "final_stocks": {
+        "metal": 14342400.0,
+        "electricity": 7430400.0,
+        "antimatter": 6963839.999999999,
+        "hydrogen": 259200.0,
+        "nano": 7257600.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 597600.0,
+        "electricity": 309600.0,
+        "antimatter": 290160.0,
+        "hydrogen": 10800.0,
+        "nano": 302400.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 5,
+      "speed": 40,
+      "shape": "double_reactor",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 309600.0,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 9,
+      "speed": 1,
+      "shape": "equal",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 7632.000000000004,
+      "average_stock_gain_per_hour": {
+        "metal": 11952.0,
+        "electricity": 7632.000000000004,
+        "antimatter": 3653.9999999999995,
+        "hydrogen": 20483.999999999996,
+        "nano": 6048.0
+      },
+      "final_stocks": {
+        "metal": 286848.0,
+        "electricity": 183168.0000000001,
+        "antimatter": 87695.99999999999,
+        "hydrogen": 491615.99999999994,
+        "nano": 145152.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 11952.000000000002,
+        "electricity": 7632.000000000004,
+        "antimatter": 3653.9999999999995,
+        "hydrogen": 20484.0,
+        "nano": 6048.000000000001
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 9,
+      "speed": 1,
+      "shape": "equal",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 7632.000000000004,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 3654.0,
+        "hydrogen": 8333.333333333334,
+        "nano": 6048.000000000001
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 87696.0,
+        "hydrogen": 200000.0,
+        "nano": 145152.00000000003
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 3653.9999999999995,
+        "hydrogen": 0.0,
+        "nano": 6048.000000000001
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 9,
+      "speed": 1,
+      "shape": "half_power",
+      "capacities": "unlimited",
+      "initial_efficiency": 0.6826315789473665,
+      "initial_antimatter_efficiency": 0.6826315789473665,
+      "nominal_electricity_balance_per_hour": -9647.999999999996,
+      "average_stock_gain_per_hour": {
+        "metal": 8295.915789473662,
+        "electricity": 0.0,
+        "antimatter": 2511.4736842105194,
+        "hydrogen": 14085.852631578908,
+        "nano": 4219.957894736831
+      },
+      "final_stocks": {
+        "metal": 199101.9789473679,
+        "electricity": 0.0,
+        "antimatter": 60275.368421052466,
+        "hydrogen": 338060.4631578938,
+        "nano": 101278.98947368395
+      },
+      "final_efficiency": 0.6826315789473665,
+      "final_antimatter_efficiency": 0.6826315789473665,
+      "final_rates_per_hour": {
+        "metal": 8295.915789473662,
+        "electricity": 6.394884621840902e-11,
+        "antimatter": 2511.4736842105194,
+        "hydrogen": 14085.852631578908,
+        "nano": 4219.957894736831
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 9,
+      "speed": 1,
+      "shape": "half_power",
+      "capacities": "real_storage",
+      "initial_efficiency": 0.6826315789473665,
+      "initial_antimatter_efficiency": 0.6826315789473665,
+      "nominal_electricity_balance_per_hour": -9647.999999999996,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 74.6846381304247,
+        "antimatter": 2749.4011544340115,
+        "hydrogen": 8333.333333333334,
+        "nano": 4600.641847094418
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 1792.4313151301928,
+        "antimatter": 65985.62770641627,
+        "hydrogen": 200000.0,
+        "nano": 110415.40433026603
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 1233.000000000001,
+        "antimatter": 3653.9999999999995,
+        "hydrogen": 0.0,
+        "nano": 6048.000000000001
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 9,
+      "speed": 1,
+      "shape": "double_reactor",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 432.0000000000036,
+      "average_stock_gain_per_hour": {
+        "metal": 11952.0,
+        "electricity": 432.0000000000036,
+        "antimatter": 7254.0,
+        "hydrogen": 6083.999999999999,
+        "nano": 6048.0
+      },
+      "final_stocks": {
+        "metal": 286848.0,
+        "electricity": 10368.000000000085,
+        "antimatter": 174096.0,
+        "hydrogen": 146015.99999999997,
+        "nano": 145152.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 11952.000000000002,
+        "electricity": 432.0000000000036,
+        "antimatter": 7254.0,
+        "hydrogen": 6083.999999999998,
+        "nano": 6048.000000000001
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 9,
+      "speed": 1,
+      "shape": "double_reactor",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 432.0000000000036,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 2175.935742971891,
+        "antimatter": 7254.0,
+        "hydrogen": 6083.999999999997,
+        "nano": 6048.0
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 52222.45783132539,
+        "antimatter": 174096.0,
+        "hydrogen": 146015.99999999994,
+        "nano": 145152.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 6192.000000000003,
+        "antimatter": 7254.0,
+        "hydrogen": 6083.999999999998,
+        "nano": 6048.000000000001
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 9,
+      "speed": 40,
+      "shape": "equal",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 305280.00000000023,
+      "average_stock_gain_per_hour": {
+        "metal": 478080.00000000006,
+        "electricity": 305280.00000000023,
+        "antimatter": 146160.0,
+        "hydrogen": 819360.0000000001,
+        "nano": 241920.0
+      },
+      "final_stocks": {
+        "metal": 11473920.000000002,
+        "electricity": 7326720.000000006,
+        "antimatter": 3507840.0,
+        "hydrogen": 19664640.000000004,
+        "nano": 5806080.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 478080.00000000006,
+        "electricity": 305280.00000000023,
+        "antimatter": 146160.0,
+        "hydrogen": 819360.0000000001,
+        "nano": 241920.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 9,
+      "speed": 40,
+      "shape": "equal",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 305280.00000000023,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 9,
+      "speed": 40,
+      "shape": "half_power",
+      "capacities": "unlimited",
+      "initial_efficiency": 0.6826315789473665,
+      "initial_antimatter_efficiency": 0.6826315789473665,
+      "nominal_electricity_balance_per_hour": -385919.9999999999,
+      "average_stock_gain_per_hour": {
+        "metal": 331836.6315789464,
+        "electricity": 0.0,
+        "antimatter": 100458.94736842078,
+        "hydrogen": 563434.1052631565,
+        "nano": 168798.31578947324
+      },
+      "final_stocks": {
+        "metal": 7964079.157894715,
+        "electricity": 0.0,
+        "antimatter": 2411014.7368420986,
+        "hydrogen": 13522418.526315756,
+        "nano": 4051159.578947358
+      },
+      "final_efficiency": 0.6826315789473665,
+      "final_antimatter_efficiency": 0.6826315789473665,
+      "final_rates_per_hour": {
+        "metal": 331836.6315789465,
+        "electricity": 2.5579538487363607e-09,
+        "antimatter": 100458.94736842078,
+        "hydrogen": 563434.1052631566,
+        "nano": 168798.31578947324
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 9,
+      "speed": 40,
+      "shape": "half_power",
+      "capacities": "real_storage",
+      "initial_efficiency": 0.6826315789473665,
+      "initial_antimatter_efficiency": 0.6826315789473665,
+      "nominal_electricity_balance_per_hour": -385919.9999999999,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 9,
+      "speed": 40,
+      "shape": "double_reactor",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 17280.000000000247,
+      "average_stock_gain_per_hour": {
+        "metal": 478080.00000000006,
+        "electricity": 17280.000000000244,
+        "antimatter": 290159.99999999994,
+        "hydrogen": 243360.0000000001,
+        "nano": 241920.0
+      },
+      "final_stocks": {
+        "metal": 11473920.000000002,
+        "electricity": 414720.0000000059,
+        "antimatter": 6963839.999999999,
+        "hydrogen": 5840640.000000002,
+        "nano": 5806080.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 478080.00000000006,
+        "electricity": 17280.000000000247,
+        "antimatter": 290160.0,
+        "hydrogen": 243360.0000000001,
+        "nano": 241920.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "position": 9,
+      "speed": 40,
+      "shape": "double_reactor",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 17280.000000000247,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 1,
+      "speed": 1,
+      "shape": "equal",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 43847.999999999985,
+      "average_stock_gain_per_hour": {
+        "metal": 35208.0,
+        "electricity": 43847.99999999999,
+        "antimatter": 7254.0,
+        "hydrogen": 17496.000000000004,
+        "nano": 17712.0
+      },
+      "final_stocks": {
+        "metal": 844992.0,
+        "electricity": 1052351.9999999998,
+        "antimatter": 174096.0,
+        "hydrogen": 419904.0000000001,
+        "nano": 425088.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 35208.0,
+        "electricity": 43847.999999999985,
+        "antimatter": 7254.0,
+        "hydrogen": 17496.000000000004,
+        "nano": 17712.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 1,
+      "speed": 1,
+      "shape": "equal",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 43847.999999999985,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 7254.0,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 174096.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 7254.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 1,
+      "speed": 1,
+      "shape": "half_power",
+      "capacities": "unlimited",
+      "initial_efficiency": 0.8810714285714262,
+      "initial_antimatter_efficiency": 0.8810714285714262,
+      "nominal_electricity_balance_per_hour": -7992.000000000009,
+      "average_stock_gain_per_hour": {
+        "metal": 31097.828571428483,
+        "electricity": 0.0,
+        "antimatter": 6397.714285714268,
+        "hydrogen": 15440.914285714249,
+        "nano": 15656.914285714243
+      },
+      "final_stocks": {
+        "metal": 746347.8857142836,
+        "electricity": 0.0,
+        "antimatter": 153545.14285714243,
+        "hydrogen": 370581.94285714196,
+        "nano": 375765.94285714184
+      },
+      "final_efficiency": 0.8810714285714262,
+      "final_antimatter_efficiency": 0.8810714285714262,
+      "final_rates_per_hour": {
+        "metal": 31097.828571428483,
+        "electricity": 1.5347723092418164e-10,
+        "antimatter": 6397.714285714268,
+        "hydrogen": 15440.914285714247,
+        "nano": 15656.914285714243
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 1,
+      "speed": 1,
+      "shape": "half_power",
+      "capacities": "real_storage",
+      "initial_efficiency": 0.8810714285714262,
+      "initial_antimatter_efficiency": 0.8810714285714262,
+      "nominal_electricity_balance_per_hour": -7992.000000000009,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 7024.539789640796,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 168588.9549513791,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 7254.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 1,
+      "speed": 1,
+      "shape": "double_reactor",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 0.8037500000000001,
+      "nominal_electricity_balance_per_hour": 29447.999999999985,
+      "average_stock_gain_per_hour": {
+        "metal": 35208.0,
+        "electricity": 35727.999999999985,
+        "antimatter": 11628.000000000002,
+        "hydrogen": 0.0,
+        "nano": 17712.0
+      },
+      "final_stocks": {
+        "metal": 844992.0,
+        "electricity": 857471.9999999997,
+        "antimatter": 279072.00000000006,
+        "hydrogen": 0.0,
+        "nano": 425088.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 0.8037500000000001,
+      "final_rates_per_hour": {
+        "metal": 35208.0,
+        "electricity": 35727.999999999985,
+        "antimatter": 11628.000000000002,
+        "hydrogen": 0.0,
+        "nano": 17712.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 1,
+      "speed": 1,
+      "shape": "double_reactor",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 0.8037500000000001,
+      "nominal_electricity_balance_per_hour": 29447.999999999985,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 1,
+      "speed": 40,
+      "shape": "equal",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 1753920.0000000002,
+      "average_stock_gain_per_hour": {
+        "metal": 1408320.0,
+        "electricity": 1753920.0000000002,
+        "antimatter": 290159.99999999994,
+        "hydrogen": 699839.9999999999,
+        "nano": 708480.0
+      },
+      "final_stocks": {
+        "metal": 33799680.0,
+        "electricity": 42094080.00000001,
+        "antimatter": 6963839.999999999,
+        "hydrogen": 16796159.999999996,
+        "nano": 17003520.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 1408320.0,
+        "electricity": 1753920.0000000002,
+        "antimatter": 290160.0,
+        "hydrogen": 699839.9999999999,
+        "nano": 708480.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 1,
+      "speed": 40,
+      "shape": "equal",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 1753920.0000000002,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 1,
+      "speed": 40,
+      "shape": "half_power",
+      "capacities": "unlimited",
+      "initial_efficiency": 0.8810714285714262,
+      "initial_antimatter_efficiency": 0.8810714285714262,
+      "nominal_electricity_balance_per_hour": -319679.9999999998,
+      "average_stock_gain_per_hour": {
+        "metal": 1243913.1428571395,
+        "electricity": 6.548361852765083e-09,
+        "antimatter": 255908.57142857075,
+        "hydrogen": 617636.5714285696,
+        "nano": 626276.5714285698
+      },
+      "final_stocks": {
+        "metal": 29853915.428571347,
+        "electricity": 1.57160684466362e-07,
+        "antimatter": 6141805.714285698,
+        "hydrogen": 14823277.714285672,
+        "nano": 15030637.714285675
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 1408320.0,
+        "electricity": -319679.9999999998,
+        "antimatter": 290160.0,
+        "hydrogen": 699839.9999999999,
+        "nano": 708480.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 1,
+      "speed": 40,
+      "shape": "half_power",
+      "capacities": "real_storage",
+      "initial_efficiency": 0.8810714285714262,
+      "initial_antimatter_efficiency": 0.8810714285714262,
+      "nominal_electricity_balance_per_hour": -319679.9999999998,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 1,
+      "speed": 40,
+      "shape": "double_reactor",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 0.80375,
+      "nominal_electricity_balance_per_hour": 1177920.0000000002,
+      "average_stock_gain_per_hour": {
+        "metal": 1408320.0,
+        "electricity": 1429120.0000000002,
+        "antimatter": 465119.99999999994,
+        "hydrogen": 0.0,
+        "nano": 708480.0
+      },
+      "final_stocks": {
+        "metal": 33799680.0,
+        "electricity": 34298880.00000001,
+        "antimatter": 11162879.999999998,
+        "hydrogen": 0.0,
+        "nano": 17003520.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 0.80375,
+      "final_rates_per_hour": {
+        "metal": 1408320.0,
+        "electricity": 1429120.0000000002,
+        "antimatter": 465119.99999999994,
+        "hydrogen": 0.0,
+        "nano": 708480.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 1,
+      "speed": 40,
+      "shape": "double_reactor",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 0.80375,
+      "nominal_electricity_balance_per_hour": 1177920.0000000002,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 5,
+      "speed": 1,
+      "shape": "equal",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 29339.999999999996,
+      "average_stock_gain_per_hour": {
+        "metal": 29340.0,
+        "electricity": 29339.999999999996,
+        "antimatter": 7254.0,
+        "hydrogen": 29069.999999999996,
+        "nano": 14759.999999999998
+      },
+      "final_stocks": {
+        "metal": 704160.0,
+        "electricity": 704159.9999999999,
+        "antimatter": 174096.0,
+        "hydrogen": 697679.9999999999,
+        "nano": 354239.99999999994
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 29340.0,
+        "electricity": 29339.999999999996,
+        "antimatter": 7254.0,
+        "hydrogen": 29069.999999999996,
+        "nano": 14759.999999999998
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 5,
+      "speed": 1,
+      "shape": "equal",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 29339.999999999996,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 7254.0,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 174096.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 7254.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 5,
+      "speed": 1,
+      "shape": "half_power",
+      "capacities": "unlimited",
+      "initial_efficiency": 0.7834374999999987,
+      "initial_antimatter_efficiency": 0.7834374999999987,
+      "nominal_electricity_balance_per_hour": -13859.999999999998,
+      "average_stock_gain_per_hour": {
+        "metal": 23102.99999999996,
+        "electricity": 0.0,
+        "antimatter": 5694.74999999999,
+        "hydrogen": 22832.99999999996,
+        "nano": 11641.49999999998
+      },
+      "final_stocks": {
+        "metal": 554471.9999999991,
+        "electricity": 0.0,
+        "antimatter": 136673.99999999977,
+        "hydrogen": 547991.9999999991,
+        "nano": 279395.99999999953
+      },
+      "final_efficiency": 0.7834374999999987,
+      "final_antimatter_efficiency": 0.7834374999999987,
+      "final_rates_per_hour": {
+        "metal": 23102.999999999964,
+        "electricity": 8.313350008393172e-11,
+        "antimatter": 5694.74999999999,
+        "hydrogen": 22832.99999999996,
+        "nano": 11641.499999999982
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 5,
+      "speed": 1,
+      "shape": "half_power",
+      "capacities": "real_storage",
+      "initial_efficiency": 0.7834374999999987,
+      "initial_antimatter_efficiency": 0.7834374999999987,
+      "nominal_electricity_balance_per_hour": -13859.999999999998,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 6691.573042462013,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 160597.75301908833,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 7254.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 5,
+      "speed": 1,
+      "shape": "double_reactor",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 14939.999999999995,
+      "average_stock_gain_per_hour": {
+        "metal": 29340.0,
+        "electricity": 14939.999999999995,
+        "antimatter": 14454.0,
+        "hydrogen": 269.99999999999744,
+        "nano": 14759.999999999998
+      },
+      "final_stocks": {
+        "metal": 704160.0,
+        "electricity": 358559.9999999999,
+        "antimatter": 346896.0,
+        "hydrogen": 6479.999999999938,
+        "nano": 354239.99999999994
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 29340.0,
+        "electricity": 14939.999999999995,
+        "antimatter": 14453.999999999998,
+        "hydrogen": 269.99999999999744,
+        "nano": 14759.999999999998
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 5,
+      "speed": 1,
+      "shape": "double_reactor",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 14939.999999999995,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 5,
+      "speed": 40,
+      "shape": "equal",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 1173600.0,
+      "average_stock_gain_per_hour": {
+        "metal": 1173600.0,
+        "electricity": 1173600.0,
+        "antimatter": 290159.99999999994,
+        "hydrogen": 1162800.0,
+        "nano": 590400.0
+      },
+      "final_stocks": {
+        "metal": 28166400.0,
+        "electricity": 28166400.0,
+        "antimatter": 6963839.999999999,
+        "hydrogen": 27907200.0,
+        "nano": 14169600.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 1173600.0,
+        "electricity": 1173600.0,
+        "antimatter": 290160.0,
+        "hydrogen": 1162800.0,
+        "nano": 590400.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 5,
+      "speed": 40,
+      "shape": "equal",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 1173600.0,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 5,
+      "speed": 40,
+      "shape": "half_power",
+      "capacities": "unlimited",
+      "initial_efficiency": 0.7834374999999987,
+      "initial_antimatter_efficiency": 0.7834374999999987,
+      "nominal_electricity_balance_per_hour": -554400.0,
+      "average_stock_gain_per_hour": {
+        "metal": 924119.9999999986,
+        "electricity": 0.0,
+        "antimatter": 227789.99999999965,
+        "hydrogen": 913319.9999999986,
+        "nano": 465659.9999999993
+      },
+      "final_stocks": {
+        "metal": 22178879.999999966,
+        "electricity": 0.0,
+        "antimatter": 5466959.999999992,
+        "hydrogen": 21919679.999999966,
+        "nano": 11175839.999999983
+      },
+      "final_efficiency": 0.7834374999999987,
+      "final_antimatter_efficiency": 0.7834374999999987,
+      "final_rates_per_hour": {
+        "metal": 924119.9999999985,
+        "electricity": 3.2741809263825417e-09,
+        "antimatter": 227789.99999999965,
+        "hydrogen": 913319.9999999985,
+        "nano": 465659.99999999924
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 5,
+      "speed": 40,
+      "shape": "half_power",
+      "capacities": "real_storage",
+      "initial_efficiency": 0.7834374999999987,
+      "initial_antimatter_efficiency": 0.7834374999999987,
+      "nominal_electricity_balance_per_hour": -554400.0,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 5,
+      "speed": 40,
+      "shape": "double_reactor",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 597600.0,
+      "average_stock_gain_per_hour": {
+        "metal": 1173600.0,
+        "electricity": 597600.0,
+        "antimatter": 578160.0,
+        "hydrogen": 10800.0,
+        "nano": 590400.0
+      },
+      "final_stocks": {
+        "metal": 28166400.0,
+        "electricity": 14342400.0,
+        "antimatter": 13875840.0,
+        "hydrogen": 259200.0,
+        "nano": 14169600.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 1173600.0,
+        "electricity": 597600.0,
+        "antimatter": 578160.0,
+        "hydrogen": 10800.0,
+        "nano": 590400.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 5,
+      "speed": 40,
+      "shape": "double_reactor",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 597600.0,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 9,
+      "speed": 1,
+      "shape": "equal",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 14832.000000000016,
+      "average_stock_gain_per_hour": {
+        "metal": 23472.0,
+        "electricity": 14832.000000000016,
+        "antimatter": 7254.0,
+        "hydrogen": 40643.99999999999,
+        "nano": 11808.0
+      },
+      "final_stocks": {
+        "metal": 563328.0,
+        "electricity": 355968.0000000004,
+        "antimatter": 174096.0,
+        "hydrogen": 975455.9999999999,
+        "nano": 283392.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 23472.0,
+        "electricity": 14832.000000000016,
+        "antimatter": 7254.0,
+        "hydrogen": 40644.0,
+        "nano": 11808.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 9,
+      "speed": 1,
+      "shape": "equal",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 14832.000000000016,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 7254.0,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 174096.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 7254.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 9,
+      "speed": 1,
+      "shape": "half_power",
+      "capacities": "unlimited",
+      "initial_efficiency": 0.6755263157894728,
+      "initial_antimatter_efficiency": 0.6755263157894728,
+      "nominal_electricity_balance_per_hour": -19727.999999999996,
+      "average_stock_gain_per_hour": {
+        "metal": 15996.126315789455,
+        "electricity": 0.0,
+        "antimatter": 4917.789473684204,
+        "hydrogen": 27561.221052631536,
+        "nano": 8070.063157894728
+      },
+      "final_stocks": {
+        "metal": 383907.0315789469,
+        "electricity": 0.0,
+        "antimatter": 118026.94736842088,
+        "hydrogen": 661469.3052631569,
+        "nano": 193681.51578947346
+      },
+      "final_efficiency": 0.6755263157894728,
+      "final_antimatter_efficiency": 0.6755263157894728,
+      "final_rates_per_hour": {
+        "metal": 15996.126315789454,
+        "electricity": 5.7553961596568115e-11,
+        "antimatter": 4917.789473684204,
+        "hydrogen": 27561.22105263154,
+        "nano": 8070.063157894727
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 9,
+      "speed": 1,
+      "shape": "half_power",
+      "capacities": "real_storage",
+      "initial_efficiency": 0.6755263157894728,
+      "initial_antimatter_efficiency": 0.6755263157894728,
+      "nominal_electricity_balance_per_hour": -19727.999999999996,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 2892.372643799909,
+        "antimatter": 6292.345716176261,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 69416.94345119782,
+        "antimatter": 151016.29718823027,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 13473.000000000002,
+        "antimatter": 7254.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 9,
+      "speed": 1,
+      "shape": "double_reactor",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 432.00000000001637,
+      "average_stock_gain_per_hour": {
+        "metal": 23472.0,
+        "electricity": 432.00000000001637,
+        "antimatter": 14454.0,
+        "hydrogen": 11843.999999999998,
+        "nano": 11808.0
+      },
+      "final_stocks": {
+        "metal": 563328.0,
+        "electricity": 10368.000000000393,
+        "antimatter": 346896.0,
+        "hydrogen": 284255.99999999994,
+        "nano": 283392.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 23472.0,
+        "electricity": 432.00000000001637,
+        "antimatter": 14453.999999999998,
+        "hydrogen": 11843.999999999996,
+        "nano": 11808.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 9,
+      "speed": 1,
+      "shape": "double_reactor",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 432.00000000001637,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 9,
+      "speed": 40,
+      "shape": "equal",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 593280.0000000002,
+      "average_stock_gain_per_hour": {
+        "metal": 938880.0,
+        "electricity": 593280.0000000002,
+        "antimatter": 290159.99999999994,
+        "hydrogen": 1625760.0,
+        "nano": 472319.99999999994
+      },
+      "final_stocks": {
+        "metal": 22533120.0,
+        "electricity": 14238720.000000006,
+        "antimatter": 6963839.999999999,
+        "hydrogen": 39018240.0,
+        "nano": 11335679.999999998
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 938880.0,
+        "electricity": 593280.0000000002,
+        "antimatter": 290160.0,
+        "hydrogen": 1625760.0,
+        "nano": 472319.99999999994
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 9,
+      "speed": 40,
+      "shape": "equal",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 593280.0000000002,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 9,
+      "speed": 40,
+      "shape": "half_power",
+      "capacities": "unlimited",
+      "initial_efficiency": 0.6755263157894728,
+      "initial_antimatter_efficiency": 0.6755263157894728,
+      "nominal_electricity_balance_per_hour": -789119.9999999998,
+      "average_stock_gain_per_hour": {
+        "metal": 639845.0526315781,
+        "electricity": 0.0,
+        "antimatter": 196711.57894736817,
+        "hydrogen": 1102448.8421052617,
+        "nano": 322802.52631578903
+      },
+      "final_stocks": {
+        "metal": 15356281.263157874,
+        "electricity": 0.0,
+        "antimatter": 4721077.894736836,
+        "hydrogen": 26458772.21052628,
+        "nano": 7747260.631578937
+      },
+      "final_efficiency": 0.6755263157894728,
+      "final_antimatter_efficiency": 0.6755263157894728,
+      "final_rates_per_hour": {
+        "metal": 639845.0526315782,
+        "electricity": 2.4556356947869062e-09,
+        "antimatter": 196711.57894736817,
+        "hydrogen": 1102448.8421052615,
+        "nano": 322802.52631578903
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 9,
+      "speed": 40,
+      "shape": "half_power",
+      "capacities": "real_storage",
+      "initial_efficiency": 0.6755263157894728,
+      "initial_antimatter_efficiency": 0.6755263157894728,
+      "nominal_electricity_balance_per_hour": -789119.9999999998,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 9,
+      "speed": 40,
+      "shape": "double_reactor",
+      "capacities": "unlimited",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 17280.000000000247,
+      "average_stock_gain_per_hour": {
+        "metal": 938880.0,
+        "electricity": 17280.000000000244,
+        "antimatter": 578160.0,
+        "hydrogen": 473760.00000000006,
+        "nano": 472319.99999999994
+      },
+      "final_stocks": {
+        "metal": 22533120.0,
+        "electricity": 414720.0000000059,
+        "antimatter": 13875840.0,
+        "hydrogen": 11370240.000000002,
+        "nano": 11335679.999999998
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 938880.0,
+        "electricity": 17280.000000000247,
+        "antimatter": 578160.0,
+        "hydrogen": 473760.00000000006,
+        "nano": 472319.99999999994
+      }
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "position": 9,
+      "speed": 40,
+      "shape": "double_reactor",
+      "capacities": "real_storage",
+      "initial_efficiency": 1.0,
+      "initial_antimatter_efficiency": 1.0,
+      "nominal_electricity_balance_per_hour": 17280.000000000247,
+      "average_stock_gain_per_hour": {
+        "metal": 8333.333333333334,
+        "electricity": 8333.333333333334,
+        "antimatter": 8333.333333333334,
+        "hydrogen": 8333.333333333334,
+        "nano": 8333.333333333334
+      },
+      "final_stocks": {
+        "metal": 200000.0,
+        "electricity": 200000.0,
+        "antimatter": 200000.0,
+        "hydrogen": 200000.0,
+        "nano": 200000.0
+      },
+      "final_efficiency": 1.0,
+      "final_antimatter_efficiency": 1.0,
+      "final_rates_per_hour": {
+        "metal": 0.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 0.0
+      }
+    }
+  ],
+  "schedules": [
+    {
+      "variant": "candidate",
+      "level": 20,
+      "speed": 1,
+      "research": "none",
+      "duration_seconds": 31204,
+      "costs": {
+        "metal": 233502.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 77858.0
+      },
+      "value": 778436.0,
+      "scope": "5 bâtiments montés chacun depuis 0 ; une file ; hors attentes de ressources, stockage, recherches, prérequis. Recherches supposées constantes si profil basic25."
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "speed": 1,
+      "research": "basic25",
+      "duration_seconds": 22838,
+      "costs": {
+        "metal": 197701.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 65955.0
+      },
+      "value": 659222.0,
+      "scope": "5 bâtiments montés chacun depuis 0 ; une file ; hors attentes de ressources, stockage, recherches, prérequis. Recherches supposées constantes si profil basic25."
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "speed": 40,
+      "research": "none",
+      "duration_seconds": 832,
+      "costs": {
+        "metal": 233502.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 77858.0
+      },
+      "value": 778436.0,
+      "scope": "5 bâtiments montés chacun depuis 0 ; une file ; hors attentes de ressources, stockage, recherches, prérequis. Recherches supposées constantes si profil basic25."
+    },
+    {
+      "variant": "candidate",
+      "level": 20,
+      "speed": 40,
+      "research": "basic25",
+      "duration_seconds": 612,
+      "costs": {
+        "metal": 197701.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 65955.0
+      },
+      "value": 659222.0,
+      "scope": "5 bâtiments montés chacun depuis 0 ; une file ; hors attentes de ressources, stockage, recherches, prérequis. Recherches supposées constantes si profil basic25."
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "speed": 1,
+      "research": "none",
+      "duration_seconds": 343504,
+      "costs": {
+        "metal": 1789677.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 596618.0
+      },
+      "value": 5965826.0,
+      "scope": "5 bâtiments montés chacun depuis 0 ; une file ; hors attentes de ressources, stockage, recherches, prérequis. Recherches supposées constantes si profil basic25."
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "speed": 1,
+      "research": "basic25",
+      "duration_seconds": 251239,
+      "costs": {
+        "metal": 1514972.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 505102.0
+      },
+      "value": 5050352.0,
+      "scope": "5 bâtiments montés chacun depuis 0 ; une file ; hors attentes de ressources, stockage, recherches, prérequis. Recherches supposées constantes si profil basic25."
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "speed": 40,
+      "research": "none",
+      "duration_seconds": 8689,
+      "costs": {
+        "metal": 1789677.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 596618.0
+      },
+      "value": 5965826.0,
+      "scope": "5 bâtiments montés chacun depuis 0 ; une file ; hors attentes de ressources, stockage, recherches, prérequis. Recherches supposées constantes si profil basic25."
+    },
+    {
+      "variant": "candidate",
+      "level": 40,
+      "speed": 40,
+      "research": "basic25",
+      "duration_seconds": 6374,
+      "costs": {
+        "metal": 1514972.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 505102.0
+      },
+      "value": 5050352.0,
+      "scope": "5 bâtiments montés chacun depuis 0 ; une file ; hors attentes de ressources, stockage, recherches, prérequis. Recherches supposées constantes si profil basic25."
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "speed": 1,
+      "research": "none",
+      "duration_seconds": 7271156,
+      "costs": {
+        "metal": 15475664.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 5158673.0
+      },
+      "value": 51586020.0,
+      "scope": "5 bâtiments montés chacun depuis 0 ; une file ; hors attentes de ressources, stockage, recherches, prérequis. Recherches supposées constantes si profil basic25."
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "speed": 1,
+      "research": "basic25",
+      "duration_seconds": 5317388,
+      "costs": {
+        "metal": 13099599.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 4366764.0
+      },
+      "value": 43666254.0,
+      "scope": "5 bâtiments montés chacun depuis 0 ; une file ; hors attentes de ressources, stockage, recherches, prérequis. Recherches supposées constantes si profil basic25."
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "speed": 40,
+      "research": "none",
+      "duration_seconds": 181971,
+      "costs": {
+        "metal": 15475664.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 5158673.0
+      },
+      "value": 51586020.0,
+      "scope": "5 bâtiments montés chacun depuis 0 ; une file ; hors attentes de ressources, stockage, recherches, prérequis. Recherches supposées constantes si profil basic25."
+    },
+    {
+      "variant": "candidate",
+      "level": 80,
+      "speed": 40,
+      "research": "basic25",
+      "duration_seconds": 133126,
+      "costs": {
+        "metal": 13099599.0,
+        "electricity": 0.0,
+        "antimatter": 0.0,
+        "hydrogen": 0.0,
+        "nano": 4366764.0
+      },
+      "value": 43666254.0,
+      "scope": "5 bâtiments montés chacun depuis 0 ; une file ; hors attentes de ressources, stockage, recherches, prérequis. Recherches supposées constantes si profil basic25."
+    }
+  ]
+}

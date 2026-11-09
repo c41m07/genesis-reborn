@@ -58,11 +58,11 @@ final class CatalogueDetailsTest extends KernelTestCase
         $universe=$this->planet->solarSystem->galaxy->universe;
         $plant=$this->catalog->getTierForUniverse($universe,'buildings','power_plant','superior');
         $rows=array_column($insights->benefits($plant,'buildings',1,$this->planet,[],[]),null,'label');
-        self::assertEqualsWithDelta(1620,$rows['Production de électricité']['after']-$rows['Production de électricité']['before'],1e-8);
+        self::assertEqualsWithDelta(2430,$rows['Production de électricité']['after']-$rows['Production de électricité']['before'],1e-8);
         $reactor=$this->catalog->getTierForUniverse($universe,'buildings','mine_antimatter','superior');
         $rows=array_column($insights->benefits($reactor,'buildings',1,$this->planet,[],[]),null,'label');
-        self::assertEqualsWithDelta(810,$rows['Production de antimatière']['after']-$rows['Production de antimatière']['before'],1e-8);
-        self::assertEqualsWithDelta(6480,$rows['Consommation d’hydrogène']['after']-$rows['Consommation d’hydrogène']['before'],1e-8);
+        self::assertEqualsWithDelta(202.5,$rows['Production de antimatière']['after']-$rows['Production de antimatière']['before'],1e-8);
+        self::assertEqualsWithDelta(810,$rows['Consommation d’hydrogène']['after']-$rows['Consommation d’hydrogène']['before'],1e-8);
         self::assertEqualsWithDelta(405,$rows['Consommation électrique']['after']-$rows['Consommation électrique']['before'],1e-8);
     }
 

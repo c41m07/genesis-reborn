@@ -1048,3 +1048,17 @@ dans la fiche, avec leurs étapes précédentes repliables et les déblocages
 regroupés par domaine. L’objectif local et la prochaine étape sont conservés,
 avec un panneau latéral sur ordinateur et une fiche plein écran sur mobile.
 Les règles de déblocage et les accès permanents ne changent pas.
+
+
+## Production et consommation des usines — décision du 9 novembre 2026
+
+Après 648 simulations déterministes aux niveaux 20/40/80, l’utilisateur confirme les valeurs proposées et le rythme de construction de 84,16 jours cumulés à ×1 pour cinq bâtiments chacun jusqu’à 80, contre 88,16 précédemment, hors attente de ressources, prérequis, stockages et recherches. La branche demandée est créée depuis dev : `codex/equilibrage-production-basique`. Aucune fusion ni publication n’est demandée.
+
+Production Basique par niveau et par heure (×1, position 5, sans passif) : M360, N180, H720, A90, centrale E1080. Électricité : 180/h par extracteur. Réacteur : 4 H/A. Prix niveau 1 : producteurs directs 480 M + 160 N ; réacteur 360 M + 120 N ; centrale 1 440 M + 480 N. Durées initiales : 60 s pour les producteurs directs, 120 s pour réacteur et centrale. Courbes, bonus de position, recherches, stockages et règles de pénurie sont conservés.
+
+Les facteurs existants de production/consommation 1/1,5/2,25 et de durée 1/1,25/1,5625 restent appliqués. Les nouveaux budgets des deux bâtiments moins chers sont déclinés mécaniquement avec les facteurs de coût existants : réacteur 1 200/1 500/1 875, centrale 4 800/6 000/7 500 ; recettes par rang inchangées en parts économiques. Cela ne constitue pas une étude de progression complète des rangs I/S. Les files conservent leurs prix payés et leurs durées enregistrées, les surcharges d’univers restent prioritaires et aucun changement de base ni déploiement n’est effectué. Le [bilan et ses limites](EQUILIBRAGE.md#production-des-batiments) et les nouvelles fixtures distinguent le candidat livré des anciennes références.
+
+
+### Publication de l’équilibrage sur dev — 9 novembre 2026
+
+L’utilisateur demande explicitement le commit et le push sur dev. Le lot est préparé sur le dernier dev intégré (1b02f4f), en conservant ses nouveaux travaux d’administration et d’événements, sans inclure les autres documents ou captures locaux. Les [résultats de publication](EQUILIBRAGE.md#publication-sur-dev--9-novembre-2026) distinguent suite PHP complète et contrôles navigateur consolidés après correction d’une ancienne attente de prix. Aucune publication sur Alpha ni déploiement demandé.
