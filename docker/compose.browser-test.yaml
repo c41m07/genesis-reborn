@@ -1,6 +1,10 @@
+x-empire-test-env: &empire-test-env
+  FORGOTTEN_EMPIRES_ENABLED: "0"
+  EMPIRE_INACTIVITY_WARNINGS_ENABLED: "0"
 services:
   app:
     environment:
+      <<: *empire-test-env
       APP_DEBUG: "0"
       MAILER_DSN: "null://null"
       OPS_ALERT_ENABLED: "0"
@@ -15,10 +19,13 @@ services:
       - "traefik.http.services.${BROWSER_ROUTER}.loadbalancer.server.port=80"
     tmpfs: ["/app/var:mode=1777"]
   worker:
+    environment: *empire-test-env
     tmpfs: ["/app/var:mode=1777"]
   relay:
+    environment: *empire-test-env
     tmpfs: ["/app/var:mode=1777"]
   notifier:
+    environment: *empire-test-env
     tmpfs: ["/app/var:mode=1777"]
   database:
     ports: !reset []

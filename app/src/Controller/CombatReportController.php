@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use App\Entity\CombatLog;
 use App\Service\Combat\CombatReportReader;
+use App\Service\Combat\CombatReportPresenter;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Universe\UniverseContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -35,40 +36,14 @@ final class CombatReportController extends AbstractController
     }
 
     #[Route('/rapports/combat/{id}', name: 'app_combat_report', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function show(int $id, UniverseContext $context, CombatReportReader $reader, GameCatalog $catalog): Response
+    public function show(int $id, UniverseContext $context, CombatReportReader $reader, GameCatalog $catalog, CombatReportPresenter $presenter, \App\Service\Combat\OccupationReportState $occupations): Response
     {
         $membership = $context->membership();
         $log = $reader->findVisible($membership, $id);
         if (!$log) {
             throw $this->createNotFoundException();
         }
-        $rows = [];
-        foreach ($log->snapshot['participants'] ?? [] as $participant) {
-            $own = (int) ($participant['player_universe_id'] ?? 0) === $membership->id;
-            $isNpc = (bool) ($participant['pve_npc'] ?? false);
-            foreach ($participant['units'] ?? [] as $unit) {
-                $slug = (string) ($unit['slug'] ?? '');
-                $key = ($isNpc ? 'npc:' . (string) ($participant['planet_id'] ?? '') : (string) ($participant['fleet_id'] ?? '')) . ':' . $slug;
-                $rows[] = [
-                    'label' => $isNpc ? 'Flotte PNJ' : ($own ? 'Votre flotte' : ($participant['role'] === 'defender' ? 'Garnison engagée' : 'Autre flotte engagée')),
-                    'unit' => (string) ($unit['label'] ?? $slug),
-                    'initial' => (int) ($unit['quantity'] ?? 0),
-                    'lost' => (int) ($log->snapshot['losses'][$key] ?? 0),
-                    'round' => (int) ($participant['arrival_round'] ?? 1),
-                ];
-            }
-        }
-        foreach ($log->snapshot['defenses'] ?? [] as $defense) {
-            $slug = (string) ($defense['slug'] ?? '');
-            $key = 'planet:' . (string) ($defense['id'] ?? '') . ':' . $slug;
-            $rows[] = [
-                'label' => 'Défense planétaire',
-                'unit' => (string) ($defense['label'] ?? $slug),
-                'initial' => (int) ($defense['quantity'] ?? 0),
-                'lost' => (int) ($log->snapshot['losses'][$key] ?? 0),
-                'round' => 1,
-            ];
-        }
+        $presentation = $presenter->present($log->snapshot, $log->rounds, $membership->id);
         $ownLoot = [];
         foreach ($log->snapshot['loot']['fleets'] ?? [] as $fleetId => $resources) {
             foreach ($log->snapshot['participants'] ?? [] as $participant) {
@@ -86,6 +61,6 @@ final class CombatReportController extends AbstractController
             }
         }
 
-        return $this->render('combat/report.html.twig', ['report' => $log, 'rows' => $rows, 'loot_rows' => $lootRows, 'membership' => $membership]);
+        return $this->render('combat/report.html.twig', ['report' => $log, 'loot_rows' => $lootRows, 'membership' => $membership, 'capture_state' => $occupations->forReport($log)] + $presentation);
     }
 }

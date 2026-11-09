@@ -1,0 +1,2 @@
+{% set label = {reports:'nouveaux signalements',security:'nouveaux incidents de sécurité',feedbacks:'nouveaux feedbacks',total:'nouveautés dans l’administration'}[category] %}
+<span class="admin-notification-count" {% if id|default('') %}id="{{ id }}"{% endif %} data-admin-notifications-target="badge" data-category="{{ category }}" data-label="{{ label }}" role="img" aria-label="{{ count }} {{ label }}" {% if count == 0 %}hidden{% endif %}>{{ count > 99 ? '99+' : count }}</span>

@@ -1,7 +1,7 @@
 {
   "slug": "mine_nano",
   "label": "Atelier de nanofabrication",
-  "base_build_time": 20,
+  "base_build_time": 60,
   "build_time_scaling": 1.6,
   "costs_base": {
     "metal": 560,
@@ -78,5 +78,6 @@
     "superior": "Produit nanomatériaux. Un maillage étendu porte cette fonction à l’échelle planétaire."
   },
   "description": "Produit nanomatériaux. Une installation locale assure cette fonction sur la colonie.",
-  "unlock_requirements": {}
+  "unlock_requirements": {},
+  "production_per_level": 0.05
 }

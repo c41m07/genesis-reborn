@@ -85,7 +85,7 @@ test('Combats : filtre économique, pertes lisibles et défilement clavier', asy
   await expect(page.getByRole('rowheader', { name: 'Escadre de défense' })).toBeVisible();
   await expect(page.getByRole('cell', { name: '12 000', exact: true })).toBeVisible();
   await expect(page.getByRole('cell', { name: '1 234', exact: true })).toBeVisible();
-  const losses = page.getByRole('region', { name: 'Tableau des pertes, défilant horizontalement' });
+  const losses = page.getByRole('region', { name: 'Bilan des pertes, défilement horizontal' });
   await losses.focus();
   await expect(losses).toBeFocused();
   for (const width of [1280, 768, 390]) {
@@ -93,6 +93,45 @@ test('Combats : filtre économique, pertes lisibles et défilement clavier', asy
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
   await page.screenshot({ path: testInfo.outputPath('combat-detail-390.png'), fullPage: true, animations: 'disabled' });
+  await expect(page.getByText('Le détail des rounds n’est pas disponible pour ce rapport historique.')).toBeVisible();
+
+  snapshot.participants[0].camp = 'defenders';
+  snapshot.participants[0].units.push(
+    { slug: 'fighter', tier: 'intermediate', label: 'Chasseur intermédiaire', quantity: 2 },
+    { slug: 'fighter', tier: 'superior', label: 'Chasseur supérieur', quantity: 1 },
+  );
+  snapshot.participants.push({ player_universe_id: 0, fleet_id: 2, role: 'attacker', camp: 'enemy',
+    units: [{ slug: 'frigate', label: 'Frégate ennemie', quantity: 3 }] });
+  snapshot.defenses = [{ id: '77', slug: 'laser', tier: 'intermediate', label: 'Tourelle ionique', quantity: 10 }];
+  snapshot.losses = { '1:fighter:intermediate': 1, '2:frigate': 1, 'planet:77:laser:intermediate': 10 };
+  snapshot.defense_rebuilt = { 'laser:intermediate': 3 };
+  const rounds = [{ number: 1, shots: [
+    { attacker: '1:defender:fighter:intermediate:1', target: '2:attacker:frigate:1', hit: true, destroyed: true },
+    { attacker: '2:attacker:frigate:2', target: '1:defender:fighter:intermediate:1', hit: true, destroyed: true },
+    ...Array.from({ length: 10 }, (_, i) => ({ attacker: '2:attacker:frigate:3',
+      target: `planet:77:static_defense:laser:intermediate:${i + 1}`, hit: true, destroyed: true })),
+  ] }];
+  const logId = queryIsolatedSql(project, `SELECT id FROM combat_log WHERE combat_event_id=${eventId}`);
+  runIsolatedSql(project, `UPDATE combat_log SET snapshot=${quote(JSON.stringify(snapshot))}, rounds=${quote(JSON.stringify(rounds))} WHERE id=${Number(logId)}`);
+  await page.reload();
+  const own = page.getByRole('table', { name: 'Votre camp · Round 1', exact: true });
+  const enemy = page.getByRole('table', { name: 'Camp adverse · Round 1', exact: true });
+  await expect(own.getByRole('row')).toHaveCount(5);
+  await expect(enemy.getByRole('row')).toHaveCount(2);
+  const intermediate = own.getByRole('row').filter({ hasText: 'Chasseur intermédiaire' });
+  await expect(intermediate.getByRole('cell')).toHaveText(['2', '1', '1', '1', '1', '0', '100 %']);
+  const rebuilt = page.getByRole('table', { name: 'Bilan des défenses planétaires par type et par rang', exact: true });
+  await expect(rebuilt.getByRole('row').filter({ hasText: 'Tourelle ionique' }).getByRole('cell')).toHaveText(['Intermédiaire', '10', '3', '7']);
+  const versus = page.getByRole('region', { name: 'Round 1, comparaison des camps, défilement horizontal', exact: true });
+  for (const width of [1440, 768, 390, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  await versus.focus();
+  await expect(versus).toBeFocused();
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(() => versus.evaluate(element => element.scrollLeft)).toBeGreaterThan(0);
+  await page.screenshot({ path: testInfo.outputPath('combat-versus-320.png'), fullPage: true, animations: 'disabled' });
 });
 
 test('Retour admin : titre long, note lisible et sauvegarde du suivi', async ({ page }, testInfo) => {

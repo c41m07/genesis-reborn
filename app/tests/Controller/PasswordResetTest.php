@@ -55,6 +55,8 @@ final class PasswordResetTest extends WebTestCase
         self::assertSame($_ENV['MAILER_FROM']??'no-reply@genesis-reborn.local',$message->getFrom()[0]->getAddress());
         self::assertStringContainsString(rtrim($_ENV['DEFAULT_URI'],'/').'/mot-de-passe/reinitialiser/',$message->getTextBody());
         self::assertStringContainsString('valable une heure',$message->getTextBody());
+        self::assertStringContainsString('Choisir un nouveau mot de passe', $message->getHtmlBody());
+        self::assertStringContainsString('Ce lien est valable 1 heure et utilisable une seule fois.', $message->getHtmlBody());
         self::assertMatchesRegularExpression('#https?://[^\s]+/mot-de-passe/reinitialiser/[A-Za-z0-9_-]{40,50}#',$message->getTextBody());
 
         $token=$this->em->getRepository(PasswordResetToken::class)->findOneBy(['player'=>$player]);
@@ -149,12 +151,15 @@ final class PasswordResetTest extends WebTestCase
             $mailer,$container->get('router'),$container->get('security.user_password_hasher'),
             $container->get('clock'),$container->get('logger'),
             'https://accounts.example.test','accounts@example.test',
+            $container->get('twig'),
         );
         $service->request('captain@example.test');
         $service->request('captain@example.test');
         foreach($messages as $message) {
             self::assertStringNotContainsString('untrusted.example.test',$message->getTextBody());
             self::assertStringContainsString('https://accounts.example.test/mot-de-passe/reinitialiser/',$message->getTextBody());
+            self::assertStringNotContainsString('untrusted.example.test', $message->getHtmlBody());
+            self::assertStringContainsString('href="https://accounts.example.test/mot-de-passe/reinitialiser/', $message->getHtmlBody());
             self::assertSame('accounts@example.test',$message->getFrom()[0]->getAddress());
         }
         preg_match('#/reinitialiser/([A-Za-z0-9_-]+)#',$messages[0]->getTextBody(),$first);

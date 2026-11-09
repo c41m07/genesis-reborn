@@ -6,7 +6,7 @@ use App\Repository\GameRepository;
 use Psr\Clock\ClockInterface;
 final class ActionGuard
 {
-    public function __construct(private GameManager $manager,private GameRepository $repo,private ClockInterface $clock) {}
+    public function __construct(private GameManager $manager,private GameRepository $repo,private ClockInterface $clock,private \App\Service\Player\EmpireActivityService $activity) {}
     // Every caller is inside a database transaction. Membership serializes research across planets.
     public function lock(PlayerUniverse $m,Planet $planet): void
     {
@@ -15,8 +15,19 @@ final class ActionGuard
     }
     public function lockMembership(PlayerUniverse $m): void
     {
+        $this->lockMembershipForProcessing($m);
+        $this->activity->assertCanControl($m);
+    }
+    // Les traitements automatiques peuvent terminer les commandes déjà payées d'un empire oublié.
+    public function lockMembershipForProcessing(PlayerUniverse $m): void
+    {
         $this->manager->lock($m);$this->manager->lock($m->universe);
         if(!$m->universe->isAccessible($this->clock->now())) throw new \DomainException('Univers inaccessible.');
+    }
+    public function lockForCompletion(PlayerUniverse $m,Planet $planet): void
+    {
+        $this->lockMembershipForProcessing($m);$this->manager->lock($planet);
+        if($planet->owner?->id!==$m->id || $planet->solarSystem->galaxy->universe->id!==$m->universe->id) throw new \DomainException('Cette planète ne correspond plus à la commande.');
     }
     public function receipt(PlayerUniverse $m,string $key): bool
     {

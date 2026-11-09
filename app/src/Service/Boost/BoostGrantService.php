@@ -18,6 +18,7 @@ final class BoostGrantService
         private GameRepository $repo,
         private GameCatalog $catalog,
         private ClockInterface $clock,
+        private ResourceBoxPolicy $boxes,
     ) {}
 
     public function awardRiskMission(PlayerUniverse $membership, Fleet $fleet): bool
@@ -34,7 +35,7 @@ final class BoostGrantService
         ));
     }
 
-    public function awardEvent(PlayerUniverse $membership, string $eventKey): bool
+    public function awardEvent(PlayerUniverse $membership, string $eventKey, ?array $boxPayload = null): bool
     {
         $eventKey = trim($eventKey);
         if ($eventKey === '' || strlen($eventKey) > 80) {
@@ -46,6 +47,7 @@ final class BoostGrantService
             'event',
             'event-' . $eventKey . '-player-' . $membership->id,
             false,
+            $boxPayload,
         ));
     }
 
@@ -77,7 +79,7 @@ final class BoostGrantService
         return $ratio;
     }
 
-    private function grant(PlayerUniverse $membership, string $sourceType, string $sourceKey, bool $riskMission): bool
+    private function grant(PlayerUniverse $membership, string $sourceType, string $sourceKey, bool $riskMission, ?array $boxPayload = null): bool
     {
         $this->manager->lock($membership);
 
@@ -94,6 +96,8 @@ final class BoostGrantService
         $boost->playerUniverse = $membership;
         $boost->sourceType = $sourceType;
         $boost->sourceKey = $sourceKey;
+        $boost->kind = $boxPayload === null ? 'boost' : 'resource_box';
+        $boost->payload = $boxPayload === null ? null : $this->boxes->validatePayload($boxPayload);
         $boost->earnedAt = $now;
         $boost->status = $this->repo->countBoosts($membership, 'available') < $this->inventoryCapacity()
             ? 'available'
@@ -103,6 +107,17 @@ final class BoostGrantService
         $this->manager->flush();
 
         return true;
+    }
+
+    /** La participation est déjà verrouillée dans la transaction de consommation. */
+    public function promoteOldestPendingLocked(PlayerUniverse $membership): void
+    {
+        if ($this->repo->countBoosts($membership,'available') >= $this->inventoryCapacity()) return;
+        $pending=$this->repo->oldestBoost($membership,'pending');
+        if ($pending) {
+            $this->manager->lock($pending);
+            if ($pending->status==='pending') $pending->status='available';
+        }
     }
 
     private function riskMissionDailyLimitReached(PlayerUniverse $membership, \DateTimeImmutable $now): bool

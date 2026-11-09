@@ -70,7 +70,7 @@ Les coûts de recherche par niveau conservent la croissance ×2 et les durées d
 
 Les technologies de combat couvrent structure, bouclier, attaque, précision, suivi, esquive, signature, cadence de tir, vitesse, réservoir et soute. Le tir supplémentaire est une chance indépendante par tir de base pour conserver une résolution entière et éviter des valeurs de tirs fractionnaires.
 
-Pour les effets discrets de colonisation, chaque rang contribue son quota pondéré, puis les fractions de colonies sont arrondies vers le bas; la limite de colonies configurée par l’univers reste prioritaire. Les productions et capacités de stockage de plusieurs bâtiments-rangs s’additionnent, car chaque rang fonctionne comme une installation distincte. Les coûts des ressources non énergétiques suivent les budgets de valeur par famille; l’électricité n’est pas facturée lors de la construction. Les usines reçoivent un rendement de secours minimal de 10 % en déficit électrique, selon une simulation segmentée hors connexion; la production d’antimatière est limitée par l’hydrogène et s’arrête sans apport. La consommation électrique nominale des extracteurs est configurée à 0,05/s/niveau; l’usine d’antimatière consomme 8 H par A produite.
+Pour les effets discrets de colonisation, chaque rang contribue son quota pondéré, puis les fractions de colonies sont arrondies vers le bas; la limite de colonies configurée par l’univers reste prioritaire. Les productions et capacités de stockage de plusieurs bâtiments-rangs s’additionnent, car chaque rang fonctionne comme une installation distincte. Les coûts des ressources non énergétiques suivent les budgets de valeur par famille; l’électricité n’est pas facturée lors de la construction. Les usines reçoivent un rendement de secours minimal de 10 % en déficit électrique, selon une simulation segmentée hors connexion; la production d’antimatière est limitée par l’hydrogène et s’arrête sans apport. La consommation électrique nominale des extracteurs est configurée à 0,05/s/niveau; depuis la décision du 9 novembre, l’usine d’antimatière consomme 4 H par A produite.
 
 
 ### Research et art temporaire
@@ -147,7 +147,7 @@ Les rangs multiplient ces capacités par 1 / 1,25 / 1,5625 avec arrondi supérie
 
 ## Production des bâtiments — cadence A, 5 novembre 2026
 
-Cette section remplace les anciennes références de puissance pour les producteurs. La production et les consommations industrielles suivent **1 / 1,5 / 2,25** aux rangs T1/T2/T3. Les rangs s’additionnent. La centrale produit **0,2 électricité/s/niveau basique**, soit 720/h en univers normal à la position de référence. Métal, nano, hydrogène et antimatière conservent leurs productions unitaires de base ; le réacteur convertit toujours 8 H par A.
+Depuis la décision confirmée du 9 novembre 2026, les productions Basiques par niveau à vitesse ×1 et position 5 sont : métal 360/h, nano 180/h, hydrogène 720/h, antimatière 90/h et centrale 1 080 électricité/h. Chaque extracteur consomme 180 électricité/h ; le réacteur consomme aussi 4 H par A produite. Les rangs s’additionnent et gardent les facteurs de production et consommation **1 / 1,5 / 2,25**. Les bonus de position et la production passive restent appliqués séparément. Les prix du niveau 1 sont 480 M + 160 N pour les trois producteurs directs, 360 M + 120 N pour le réacteur et 1 440 M + 480 N pour la centrale. Les durées du niveau 1 Basique sont respectivement 1 min, 2 min et 2 min ; les courbes de niveaux et les réductions sont conservées. Les budgets du réacteur et de la centrale sont déclinés sur les autres rangs avec les facteurs de coût existants, sans changer les parts de ressources. Le [bilan courant](EQUILIBRAGE.md#production-des-batiments) précise les 84,16 jours cumulés jusqu’à 80 confirmés par l’utilisateur, leur périmètre et leurs limites.
 
 Les coûts des seuls producteurs croissent par niveau de ×1,12 jusqu’à 20, ×1,09 jusqu’à 40, ×1,035 jusqu’à 80, ×1,015 jusqu’à 120, puis ×1,01. Les premiers prix, profils de ressources par rang et arrondis par ressource restent utilisés. Les durées et les effets des laboratoires, chantiers, bunkers et stockages ne reçoivent pas le nouveau facteur de production ; leur calcul reste séparé.
 
@@ -161,7 +161,61 @@ Le nombre maximum de vaisseaux par flotte est fixé par défaut à **1 000 000**
 
 ### Capacité d’inventaire — 5 novembre 2026
 
-L’inventaire peut contenir **100 bonus disponibles** par joueur et par univers. Les récompenses supplémentaires restent en attente et rejoignent l’inventaire lorsqu’une place se libère. Cette capacité remplace la limite précédente de 3 emplacements.
+L’inventaire peut contenir **100 objets disponibles** par joueur et par univers, boosts et boîtes de ressources confondus. Les récompenses supplémentaires restent en attente et rejoignent l’inventaire de la plus ancienne à la plus récente lorsqu’une place se libère. Cette capacité remplace la limite précédente de 3 emplacements.
+
+#### Boîtes de ressources — décisions du 8 novembre, réalisation du 9 novembre 2026
+
+Le contenu annoncé est fixe, sans tirage aléatoire, et reste figé dans chaque
+boîte attribuée. Les modèles et plafonds sont réglables par univers. Valeurs
+initiales :
+
+| Format | Métal | Nano | Hydrogène | Antimatière | Électricité |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Petite | 4 000 | 1 000 | 1 000 | 200 | 2 000 |
+| Moyenne | 10 000 | 2 500 | 2 500 | 500 | 5 000 |
+| Grande | 20 000 | 5 000 | 5 000 | 1 000 | 10 000 |
+
+Les plafonds initiaux par boîte correspondent au grand format. Le joueur ouvre
+manuellement la boîte sur une colonie lui appartenant dans le même univers.
+L’ouverture est refusée pendant les vacances ou si un seul des entrepôts manque
+de place ; aucune ressource n’est déposée et la boîte est conservée intacte.
+Une même ouverture ne peut pas être appliquée deux fois.
+
+Un événement attribue au maximum un objet par participant éligible : un boost
+ou une boîte. Le plafond quotidien des boosts de missions à risque est conservé.
+
+#### Défis collectifs guidés — 9 novembre 2026
+
+L’administration planifie un défi dans un univers précis, après aperçu des
+dates UTC, de l’objectif et de la récompense. Les objectifs utilisent les
+mécanismes existants : découvertes personnelles de nouveaux systèmes, dégâts
+en combat ou ressources livrées entre ses propres colonies. Les dons entre
+joueurs restent exclus des contributions de transport.
+
+La récompense est attribuée à la clôture uniquement si l’objectif collectif
+est atteint. Chaque bénéficiaire doit avoir contribué positivement et atteint
+le minimum individuel configuré ; zéro comme minimum signifie toute contribution
+positive. Chaque bénéficiaire gagne un boost ou une boîte, sans cumul des deux.
+Le contenu de la boîte est annoncé et figé dès la planification du défi.
+
+Le démarrage respecte la limite existante de deux événements de boosts simultanés
+par univers. Une attente ne décale pas la fin annoncée ; un défi dont la fenêtre
+est entièrement passée ne démarre pas tardivement. Les rotations hebdomadaires
+conservent leurs règles et récompenses existantes.
+
+#### Bonus et annonces guidés — 9 novembre 2026
+
+Les modèles guidés permettent une annonce ou un bonus temporaire de production,
+global ou limité à un univers. Les dates de début doivent être à venir lors de
+la confirmation ; aucune production rétroactive ne peut être créée par ce parcours.
+Les bonus reprennent les bornes existantes, de 0,01 à 500 %, et leur cumul reste
+multiplicatif. La définition annoncée est conservée après publication ; son
+remplacement passe par une annulation motivée et un nouvel aperçu.
+
+L’annulation d’un bonus guidé arrête ses effets futurs, tout en conservant la
+production acquise avant l’annulation, y compris pour un joueur qui ne s’est
+pas connecté pendant cette période. Une annulation de défi ne retire aucun
+objet déjà gagné et interrompt aussi l’annonce qui l’accompagne.
 
 ### Classement des guildes — 5 novembre 2026
 

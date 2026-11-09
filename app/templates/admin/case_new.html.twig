@@ -1,0 +1,9 @@
+{% extends 'admin/layout.html.twig' %}
+{% block title %}Nouveau dossier · Console{% endblock %}
+{% block body %}
+<a class="inline-link" href="{{ path('app_admin_cases') }}">← Dossiers de surveillance</a><h1>Nouveau dossier</h1>
+<section class="panel"><h2>Contexte et observations</h2>{% if membership %}<p>Commandant : {{ membership.displayName }} · {{ membership.universe.name }}</p>{% endif %}{% if fleet %}<p>Flotte n° {{ fleet.id }}</p>{% endif %}
+<form method="post" class="admin-intervention-form"><input type="hidden" name="_token" value="{{ csrf_token('admin_case_create') }}"><input type="hidden" name="request_key" value="{{ draft.request_key }}"><input type="hidden" name="membership_id" value="{{ draft.membership_id }}"><input type="hidden" name="fleet_id" value="{{ draft.fleet_id }}"><input type="hidden" name="alert_key" value="{{ draft.alert_key }}">
+<label for="case-universe">Univers concerné</label><select id="case-universe" name="universe_id"><option value="0">Plateforme entière</option>{% for universe in universes %}<option value="{{ universe.id }}" {{ draft.universe_id==universe.id ? 'selected' : '' }}>{{ universe.name }}</option>{% endfor %}</select>
+<label for="case-title">Titre du dossier</label><input id="case-title" name="title" value="{{ draft.title }}" maxlength="120" required><label for="case-description">Observations initiales</label><textarea id="case-description" name="description" maxlength="10000">{{ draft.description }}</textarea><p>Décrire les faits observés. Une alerte seule ne constitue pas une preuve de triche.</p><button class="secondary">Créer le dossier</button></form></section>
+{% endblock %}

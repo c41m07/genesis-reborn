@@ -46,6 +46,7 @@ final class CatalogAccess
         unset($entries,$entry);
         $tech=$this->repo->levelsByTier(PlayerTechnology::class,['playerUniverse'=>$membership]);
         foreach($this->repo->planets($membership->universe,$membership) as $planet){
+            $conquered=$this->repo->one(\App\Entity\PlanetOccupation::class,['planet'=>$planet,'occupant'=>$membership,'status'=>'captured'])!==null;
             $buildings=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);
             $owned=['buildings'=>$buildings,'technologies'=>$tech];
             // Une commande déjà acceptée conserve aussi son accès, même après annulation.
@@ -63,8 +64,8 @@ final class CatalogAccess
             foreach($definitions as $group=>$entries)foreach($entries as $slug=>$definition)foreach(GameCatalog::TIERS as $tier){
                 $key=self::key($planet,$group,$slug,$tier);
                 if(isset($membership->catalogUnlocks[$key]))continue;
-                $preserved=(int)($owned[$group][$slug][$tier]??0)>0;
-                if($legacy&&!$preserved){
+                $preserved=(int)($owned[$group][$slug][$tier]??0)>0 && !($conquered && $group==='buildings');
+                if($legacy&&!$preserved&&!$conquered){
                     $old=$legacyDefinitions[$group][$slug]??[];
                     $conditions=$old['unlock_requirements']??[];
                     foreach($old['levels'][1]['unlock_requirements']??[] as $kind=>$items)$conditions[$kind]=[...($conditions[$kind]??[]),...$items];

@@ -13,4 +13,6 @@ class Guild
     public PlayerUniverse $leader;
     #[ORM\Column(length: 60)]
     public string $name;
+    #[ORM\Column(nullable:true)]
+    public ?\DateTimeImmutable $archivedAt=null;
 }

@@ -40,7 +40,8 @@ test('Navigation admin mobile : contenu immédiat, clavier, ancres et repli prog
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
   await toggle.click();
   await navigation.getByRole('link', { name: 'Signalements', exact: true }).click();
-  await expect(page.getByRole('tab', { name: 'Modération', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await expect(page).toHaveURL(/admin\/moderation$/);
+  await expect(page.getByRole('heading', { name: 'Signalements de messages', exact: true })).toBeVisible();
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
   expect(await page.evaluate(() => Boolean(document.activeElement.closest('[hidden]')))).toBe(false);
   for (const width of [1920, 1440, 1280, 768]) {

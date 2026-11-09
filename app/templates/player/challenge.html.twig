@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ challenge.name }} · Défi collectif{% endblock %}
+{% block body %}
+<a class="inline-link" href="{{ path('app_game_events') }}">← Événements</a><div class="page-heading"><div><h1>{{ challenge.name }}</h1><p>Défi collectif de votre univers.</p></div></div>
+<section class="panel collective-challenge"><h2>Objectif et récompense</h2>{% include 'events/_challenge_summary.html.twig' %}</section>
+<section class="panel"><h2>Votre participation</h2><p>Contribution personnelle : <strong>{{ challenge.score|number_format(2,',',' ') }}</strong></p>
+{% if challenge.earned %}<p>Récompense : {{ {available:'disponible dans votre inventaire',pending:'en attente d’une place dans votre inventaire',used:'déjà utilisée'}[challenge.earned.status]|default(challenge.earned.status) }}.</p><a class="secondary" href="{{ path('app_boosts') }}">Ouvrir mon inventaire</a>
+{% elseif challenge.event.status=='cancelled' %}<p>Ce défi a été annulé. Aucune nouvelle récompense n’est attribuée.</p>
+{% elseif challenge.event.status=='closed' %}<p>{{ not challenge.goal_reached ? 'L’objectif collectif n’a pas été atteint.' : 'Vous n’avez pas rempli les conditions de contribution de ce défi.' }}</p>
+{% else %}<p>Les contributions sont comptées pendant le défi. La récompense éventuelle sera attribuée à sa clôture.</p>{% endif %}</section>
+{% endblock %}

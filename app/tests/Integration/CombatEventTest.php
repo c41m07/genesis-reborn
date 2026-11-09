@@ -438,6 +438,129 @@ final class CombatEventTest extends KernelTestCase
         self::assertFalse($combat->canAttack($attacker->currentPlayerUniverse, $target));
     }
 
+    public function testInactiveProtectionsAreSuspendedAndAVisitRestoresTheOriginalDeadline(): void
+    {
+        $clock = $this->clock();
+        $this->enableForgottenEmpires($clock);
+        $defender = $this->player('InactiveDefender');
+        $target = $this->join($defender);
+        $attacker = $this->player('InactiveAttacker');
+        $this->join($attacker);
+        $membership = $defender->currentPlayerUniverse;
+        $membership->joinedAt = $clock->now()->modify('-40 days');
+        $membership->lastActivityAt = $clock->now()->modify('-14 days +1 second');
+        $deadline = $clock->now()->modify('+1 day');
+        $membership->recoveryProtectedUntil = $deadline;
+        $this->em->flush();
+        $combat = self::getContainer()->get(CombatEventService::class);
+        $protection = self::getContainer()->get(\App\Service\Player\PlayerProtection::class);
+        self::assertFalse($combat->canAttack($attacker->currentPlayerUniverse, $target));
+        $clock->sleep(1);
+        self::assertTrue($combat->canAttack($attacker->currentPlayerUniverse, $target));
+        self::assertFalse($protection->status($membership, 0)['active']);
+        $rows = self::getContainer()->get(\App\Service\Player\LeaderboardService::class)->forUniverse($membership);
+        $row = array_values(array_filter($rows, static fn (array $row): bool => $row['membership']->id === $membership->id))[0];
+        self::assertFalse($row['protection']['active']);
+        self::getContainer()->get(\App\Service\Player\EmpireActivityService::class)->recordVisit($membership);
+        self::assertFalse($combat->canAttack($attacker->currentPlayerUniverse, $target));
+        self::assertTrue($protection->status($membership, 0)['active']);
+        self::assertEquals($deadline, $membership->recoveryProtectedUntil);
+        $clock->sleep(86400);
+        self::assertTrue($combat->canAttack($attacker->currentPlayerUniverse, $target));
+    }
+
+    public function testInactiveTargetsKeepTheScoreLimitAndAllianceRules(): void
+    {
+        $clock = $this->clock();
+        $this->enableForgottenEmpires($clock);
+        $defender = $this->player('InactiveScoreDefender');
+        $target = $this->join($defender);
+        $attacker = $this->player('InactiveScoreAttacker');
+        $origin = $this->join($attacker);
+        $membership = $defender->currentPlayerUniverse;
+        $membership->joinedAt = $clock->now()->modify('-40 days');
+        $membership->lastActivityAt = $clock->now()->modify('-20 days');
+        $membership->recoveryProtectedUntil = $clock->now()->modify('+1 day');
+        $this->em->flush();
+        $combat = self::getContainer()->get(CombatEventService::class);
+        self::assertTrue($combat->canAttack($attacker->currentPlayerUniverse, $target));
+        self::assertFalse($combat->canAttack($membership, $target));
+        self::assertFalse($combat->canConquer($attacker->currentPlayerUniverse, $target));
+        $fleet = new Fleet();
+        $fleet->playerUniverse = $attacker->currentPlayerUniverse;
+        $fleet->homePlanet = $origin;
+        $this->em->persist($fleet);
+        $ship = new FleetShip();
+        $ship->fleet = $fleet;
+        $ship->slug = 'capital';
+        $ship->quantity = 1;
+        $this->em->persist($ship);
+        $this->em->flush();
+        self::assertFalse($combat->canAttack($attacker->currentPlayerUniverse, $target));
+        $ship->quantity = 0;
+        $contract = new \App\Entity\AllianceContract();
+        $contract->playerA = $membership;
+        $contract->playerB = $attacker->currentPlayerUniverse;
+        $contract->proposer = $membership;
+        $contract->status = 'accepted';
+        $this->em->persist($contract);
+        $this->em->flush();
+        self::assertFalse($combat->canAttack($attacker->currentPlayerUniverse, $target));
+    }
+
+    public function testHeavyLossesDoNotGrantANewProtectionWhileInactive(): void
+    {
+        [$membership, $log] = $this->resolveHeavyLosses(true);
+        self::assertNull($membership->recoveryProtectedUntil);
+        self::assertNull($membership->lastRecoveryProtectionAt);
+        self::assertNotContains($membership->id, $log->snapshot['recovery_protection']);
+    }
+
+    public function testHeavyLossesStillGrantProtectionToAnActivePlayer(): void
+    {
+        [$membership, $log] = $this->resolveHeavyLosses(false);
+        self::assertNotNull($membership->recoveryProtectedUntil);
+        self::assertNotNull($membership->lastRecoveryProtectionAt);
+        self::assertContains($membership->id, $log->snapshot['recovery_protection']);
+    }
+
+    private function resolveHeavyLosses(bool $inactive): array
+    {
+        $clock = $this->clock();
+        $this->enableForgottenEmpires($clock);
+        $defender = $this->player('HeavyLossDefender');
+        $target = $this->join($defender);
+        $attacker = $this->player('HeavyLossAttacker');
+        $origin = $this->join($attacker);
+        $membership = $attacker->currentPlayerUniverse;
+        $membership->joinedAt = $clock->now()->modify('-40 days');
+        $membership->lastActivityAt = $inactive ? $clock->now()->modify('-20 days') : $clock->now();
+        $turret = new PlanetDefense();
+        $turret->planet = $target;
+        $turret->slug = 'ground_turret_anti_light';
+        $turret->quantity = 100;
+        $this->em->persist($turret);
+        $fleet = $this->attackFleet($attacker, $origin, $target, 'heavy-loss');
+        $combat = self::getContainer()->get(CombatEventService::class);
+        self::assertTrue(self::getContainer()->get(GameManager::class)->transaction(fn (): bool => $combat->joinAttack($fleet)));
+        $event = $this->em->getRepository(CombatEvent::class)->findOneBy(['planet' => $target, 'status' => 'pending']);
+        self::assertNotNull($event);
+        $clock->sleep(600);
+        $combat->resolve($event->id, $event->dispatchToken);
+        $log = $this->em->getRepository(CombatLog::class)->findOneBy(['combatEvent' => $event]);
+        self::assertNotNull($log);
+        self::assertSame(1, $log->snapshot['losses'][$fleet->id . ':fighter'] ?? 0);
+        return [$membership, $log];
+    }
+
+    private function enableForgottenEmpires(MockClock $clock): void
+    {
+        self::getContainer()->set(\App\Service\Player\PlayerProtection::class, new \App\Service\Player\PlayerProtection(
+            self::getContainer()->get(\App\Service\Catalog\GameCatalog::class), $clock,
+            self::getContainer()->get(\App\Service\Player\EmpireActivityService::class), self::getContainer()->get(\App\Service\Player\VacationCalendar::class), true,
+        ));
+    }
+
     public function testDefenseWithoutCombatReturnsAfterItsStationingWindow(): void
     {
         $clock = $this->clock();

@@ -19,14 +19,15 @@ final class BuildingBalanceTest extends TestCase
 
     protected function setUp():void
     {
-        $this->catalog=new GameCatalog(dirname(__DIR__,2).'/config/game');
+        $this->catalog=\App\Tests\Support\ProducerBalanceReference::historicalCatalog();
         $entityRepository=$this->createStub(EntityRepository::class);
         $entityRepository->method('findBy')->willReturn([]);
         $em=$this->createStub(EntityManagerInterface::class);
         $em->method('getRepository')->willReturn($entityRepository);
         $repository=new GameRepository($em);$manager=new GameManager($em);$clock=new MockClock('2026-11-05 12:00:00 UTC');
         $events=new GameEventService($repository,$manager,$clock);
-        $this->resources=new ResourceService($repository,$manager,$this->catalog,$clock,$events);
+        $vacations=new \App\Service\Player\VacationCalendar($repository,$clock);
+        $this->resources=new ResourceService($repository,$manager,$this->catalog,$clock,$events,$vacations);
     }
 
     private function planet(int $position=5,float $speed=1):Planet
@@ -42,7 +43,7 @@ final class BuildingBalanceTest extends TestCase
         return json_decode(file_get_contents(dirname(__DIR__).'/Fixtures/building-balance-a.json'),true,512,JSON_THROW_ON_ERROR);
     }
 
-    public function testCostsAndNominalGainsMatchTheValidatedStudyAcrossRanksAndPositions():void
+    public function testHistoricalCostsAndNominalGainsMatchThePreviousStudyAcrossRanksAndPositions():void
     {
         $operation=new OperationCalculator($this->catalog);
         $prices=json_decode(file_get_contents(dirname(__DIR__).'/Fixtures/catalog-costs-2026-11-05.json'),true,512,JSON_THROW_ON_ERROR);
@@ -78,7 +79,7 @@ final class BuildingBalanceTest extends TestCase
         self::assertSame(356250.0,$this->resources->capacity($planet,'metal',['storage_metal'=>['superior'=>1]]));
     }
 
-    public function testProductionAndStocksMatchTheStudyAndHourlyMaterialization():void
+    public function testHistoricalProductionAndStocksMatchThePreviousStudyAndHourlyMaterialization():void
     {
         $inputMethod=new \ReflectionMethod(ResourceService::class,'operatingInput');
         foreach($this->fixture()['economy'] as $row){

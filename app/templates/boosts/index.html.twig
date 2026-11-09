@@ -18,18 +18,51 @@
     {% if boosts|length >= inventory_capacity %}<p class="muted">Inventaire plein. Les nouvelles récompenses sont conservées en attente.</p>{% endif %}
     {% if boosts is empty %}
         <div class="empty-state"><h3>Aucun bonus disponible</h3><p>Les récompenses de vos missions et événements apparaîtront ici.</p></div>
-    {% else %}
+    {% elseif boost_count > 0 %}
         <article class="mission-card">
             <div>
                 <h3>Boost de réduction de durée</h3>
                 <p>Réduit de {{ duration_reduction_percent|number_format(2, ',', ' ') }} % le temps restant d’une opération active.</p>
             </div>
-            <span class="badge">Quantité : {{ boosts|length }}</span>
+            <span class="badge">Quantité : {{ boost_count }}</span>
         </article>
     {% endif %}
+    {% include 'boosts/_resource_boxes.html.twig' %}
     {% if pending_boost_count > 0 %}
         <p class="boost-pending" role="status">{{ pending_boost_count }} bonus en attente. Dès qu’une place se libère, la récompense la plus ancienne rejoint votre inventaire.</p>
     {% endif %}
 </section>
-<section class="panel boost-information"><h2>Comprendre vos bonus</h2><p>Un boost s’applique au temps restant d’une opération active, et non aux opérations encore en attente. Les réductions successives se calculent sur le nouveau temps restant.</p><p>Les bonus gagnés restent disponibles jusqu’à leur utilisation. La capacité ci-dessus concerne les bonus disponibles; les récompenses en attente sont conservées séparément.</p></section>
+<section class="panel boost-information" aria-labelledby="boost-use-title">
+    <h2 id="boost-use-title">Utiliser un boost</h2>
+    {% if vacation %}<p role="status">Les accélérations sont indisponibles pendant les vacances.</p>
+    {% elseif boost_count == 0 %}<p>Aucun boost de réduction de durée disponible pour accélérer une opération.</p>
+    {% else %}
+        <p>Choisissez l’opération à accélérer. Chaque utilisation consomme un bonus.</p>
+        {% for row in active_queues %}
+            {% set item = row.item %}
+            <article class="boost-operation">
+                <h3>{{ row.label }} · {{ item.planet.name }}</h3>
+                <p>{{ item.itemLevel ? 'Niveau ' ~ item.itemLevel : 'Quantité : ' ~ item.quantity }} · Fin prévue : <time datetime="{{ item.finishAt|date('c') }}">{{ item.finishAt|date('d/m/Y H:i:s', preferences.timezone) }}</time></p>
+                <form method="post" action="{{ path('app_boost_use', {type:'queue', id:item.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('boost-queue-' ~ item.id) }}">
+                    <input type="hidden" name="request_key" value="{{ request_key() }}">
+                    <button class="secondary">Accélérer {{ row.label }} avec un boost</button>
+                </form>
+            </article>
+        {% endfor %}
+        {% for fleet in active_fleets %}
+            <article class="boost-operation">
+                <h3>Flotte n° {{ fleet.id }} · {{ {attack:'Attaque',transport:'Transport',explore:'Exploration',colonize:'Colonisation',conquer:'Conquête',spy:'Espionnage',defend:'Défense',orbit:'Orbite'}[fleet.mission]|default(fleet.mission) }}</h3>
+                <p>{{ fleet.status == 'returning' ? (fleet.destination ? fleet.destination.name : fleet.destinationSystem.name|default('Destination inconnue')) : fleet.homePlanet.name }} → {{ fleet.status == 'returning' ? fleet.homePlanet.name : (fleet.destination ? fleet.destination.name : fleet.destinationSystem.name|default('Destination inconnue')) }} · {{ {traveling:'Aller',returning:'Retour',defending:'Défense',orbiting:'Orbite'}[fleet.status] }} · Échéance : <time datetime="{{ fleet.arrivalAt|date('c') }}">{{ fleet.arrivalAt|date('d/m/Y H:i:s', preferences.timezone) }}</time></p>
+                <form method="post" action="{{ path('app_boost_use', {type:'fleet', id:fleet.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('boost-fleet-' ~ fleet.id) }}">
+                    <input type="hidden" name="request_key" value="{{ request_key() }}">
+                    <button class="secondary">Accélérer la flotte n° {{ fleet.id }} avec un boost</button>
+                </form>
+            </article>
+        {% endfor %}
+        {% if active_queues is empty and active_fleets is empty %}<p>Aucune opération active à accélérer. Les commandes en attente et les occupations ne peuvent pas être accélérées.</p>{% endif %}
+    {% endif %}
+</section>
+<section class="panel boost-information"><h2>Comprendre vos bonus</h2><p>Un boost s’applique au temps restant d’une opération active, et non aux opérations encore en attente. Les réductions successives se calculent sur le nouveau temps restant.</p><p>Les bonus gagnés restent disponibles jusqu’à leur utilisation. La capacité ci-dessus concerne les boosts et boîtes disponibles ; les récompenses en attente sont conservées séparément.</p></section>
 {% endblock %}

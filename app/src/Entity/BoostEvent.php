@@ -55,4 +55,6 @@ class BoostEvent
 
     #[ORM\Column]
     public float $totalContribution = 0.0;
+    #[ORM\Column(type: 'json', nullable: true)]
+    public ?array $configuration = null;
 }

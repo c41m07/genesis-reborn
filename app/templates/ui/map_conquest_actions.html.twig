@@ -1,0 +1,16 @@
+{% set occupation = map_occupations[p.id]|default(null) %}
+{% if occupation %}
+    <p class="{{ map_note_class|default('muted') }}">Occupation JcE par {{ occupation.occupant.displayName }}.
+        Échéance : <time datetime="{{ occupation.captureAt|date('c', 'UTC') }}">{{ occupation.captureAt|date('d/m/Y à H:i', 'UTC') }} UTC</time>.
+        La planète n’est pas encore acquise.
+    </p>
+{% endif %}
+{% if map_conquerable[p.id]|default(false) and map_can_conquer %}
+    <a class="{{ map_action_class|default('map-mission') }}" href="{{ path('app_fleets',{mission:'conquer',planet:p.id}) }}">{{ occupation ? 'Reprendre par conquête' : 'Préparer la conquête' }} →</a>
+{% endif %}
+{% if map_reinforceable[p.id]|default(false) %}
+    <a class="{{ map_action_class|default('map-mission') }}" href="{{ path('app_fleets',{mission:'defend',planet:p.id}) }}">Renforcer l’occupation →</a>
+{% endif %}
+{% if map_contestable[p.id]|default(false) %}
+    <a class="{{ map_action_class|default('map-mission') }}" href="{{ path('app_fleets',{mission:'attack',planet:p.id}) }}">{{ map_reinforceable[p.id]|default(false) ? 'Combattre les forces restantes' : 'Contester l’occupation' }} →</a>
+{% endif %}

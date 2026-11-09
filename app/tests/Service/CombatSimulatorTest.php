@@ -31,6 +31,37 @@ final class CombatSimulatorTest extends TestCase
         ];
     }
 
+    public function testOccupationCampsFightEachOtherWithoutFriendlyFire(): void
+    {
+        $participants=[
+            ['id'=>'holder','role'=>'defender','camp'=>'occupation','arrival_round'=>1,'units'=>[$this->unit('fighter',100000,10)]],
+            ['id'=>'ally','role'=>'defender','camp'=>'occupation','arrival_round'=>1,'units'=>[$this->unit('fighter',100000,10)]],
+            ['id'=>'npc','role'=>'defender','camp'=>'npc','arrival_round'=>1,'units'=>[$this->unit('fighter',100000,10)]],
+            ['id'=>'rival','role'=>'attacker','camp'=>'rival','arrival_round'=>1,'units'=>[$this->unit('fighter',100000,10)]],
+        ];
+        $simulator=new CombatSimulator();$result=$simulator->simulate($participants,[],[],3,42,independentCamps:true);
+        self::assertSame($result,$simulator->simulate($participants,[],[],3,42,independentCamps:true));
+        self::assertSame('defender_wins',$result['outcome']);self::assertNull($result['winner_camp']);
+        $camps=['holder'=>'occupation','ally'=>'occupation','npc'=>'npc','rival'=>'rival'];$npcFired=false;
+        foreach($result['rounds'] as $round) foreach($round['shots'] as $shot) {
+            $attacker=explode(':',$shot['attacker'])[0];$target=explode(':',$shot['target'])[0];
+            self::assertNotSame($camps[$attacker],$camps[$target]);
+            if($attacker==='npc') $npcFired=true;
+        }
+        self::assertTrue($npcFired);
+    }
+
+    public function testOccupationKeepsWaitingForFutureEnemyCampAndIdentifiesTheWinner(): void
+    {
+        $participants=[
+            ['id'=>'holder','role'=>'defender','camp'=>'occupation','arrival_round'=>1,'units'=>[$this->unit('fighter',10000,10000)]],
+            ['id'=>'npc','role'=>'defender','camp'=>'npc','arrival_round'=>3,'units'=>[$this->unit('fighter',1,0)]],
+        ];
+        $result=(new CombatSimulator())->simulate($participants,[],[],5,42,independentCamps:true);
+        self::assertSame([],$result['rounds'][0]['shots']);self::assertSame([],$result['rounds'][1]['shots']);
+        self::assertSame('occupation',$result['winner_camp']);self::assertSame('defender_wins',$result['outcome']);
+    }
+
     public function testSameSnapshotAndSeedProduceIdenticalCombatLog(): void
     {
         $simulator = new CombatSimulator();

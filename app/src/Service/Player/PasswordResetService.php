@@ -12,6 +12,7 @@ use Symfony\Component\Mime\Email;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Twig\Environment;
 
 final class PasswordResetService
 {
@@ -25,6 +26,7 @@ final class PasswordResetService
         private LoggerInterface $logger,
         #[Autowire('%env(DEFAULT_URI)%')] private string $baseUrl,
         #[Autowire('%env(MAILER_FROM)%')] private string $sender,
+        private Environment $twig,
     ) {}
 
     public function request(string $email):void
@@ -49,7 +51,8 @@ final class PasswordResetService
             ->from($this->sender)
             ->to($player->email)
             ->subject('Réinitialisation de votre mot de passe Genesis Reborn')
-            ->text("Une demande de réinitialisation de mot de passe a été effectuée pour votre compte Genesis Reborn.\n\nCe lien est valable une heure et ne peut être utilisé qu'une fois :\n$url\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez ce message.");
+            ->text("Une demande de réinitialisation de mot de passe a été effectuée pour votre compte Genesis Reborn.\n\nCe lien est valable une heure et ne peut être utilisé qu'une fois :\n$url\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez ce message.")
+            ->html($this->twig->render('emails/password_reset.html.twig', ['username' => $player->username, 'actionUrl' => $url]));
         try {
             $this->mailer->send($message);
         } catch(TransportExceptionInterface $exception) {

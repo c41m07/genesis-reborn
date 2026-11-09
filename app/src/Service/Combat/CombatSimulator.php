@@ -19,7 +19,7 @@ final class CombatSimulator
      * Les participants doivent déjà être regroupés dans leurs camps par l'appelant.
      * Chaque entrée de participant contient id, role, camp, arrival_round et units.
      */
-    public function simulate(array $participants, array $stationaryDefenses, array $modifiers, int $maxRounds, int $seed, ?int $roundLimit = null, float $shieldRechargePercent = 5.0, bool $restoreSurvivorShields = true): array
+    public function simulate(array $participants, array $stationaryDefenses, array $modifiers, int $maxRounds, int $seed, ?int $roundLimit = null, float $shieldRechargePercent = 5.0, bool $restoreSurvivorShields = true, bool $independentCamps = false): array
     {
         if ($maxRounds < 1 || $maxRounds > 100) {
             throw new \DomainException('Nombre de rounds invalide.');
@@ -36,6 +36,7 @@ final class CombatSimulator
         $random = new Randomizer(new Mt19937($seed));
         $rounds = [];
         $outcome = 'draw';
+        $winnerCamp=null;
 
         for ($roundNumber = 1; $roundNumber <= $roundLimit; ++$roundNumber) {
             $order = [];
@@ -51,7 +52,7 @@ final class CombatSimulator
                 if ($units[$attackerKey]['hp'] <= 0 || (float) ($units[$attackerKey]['base_attack'] ?? 0) <= 0) {
                     continue;
                 }
-                $targets = $this->targetsFor($attackerKey, $units, $roundNumber);
+                $targets = $this->targetsFor($attackerKey, $units, $roundNumber, $independentCamps);
                 if ($targets === []) {
                     continue;
                 }
@@ -66,7 +67,7 @@ final class CombatSimulator
                 }
                 $targetKey = null;
                 foreach ($shotSchedule as $shotIndex => $isExtraShot) {
-                    $availableTargets = $this->targetsFor($attackerKey, $units, $roundNumber);
+                    $availableTargets = $this->targetsFor($attackerKey, $units, $roundNumber, $independentCamps);
                     if ($targetKey === null || !isset($units[$targetKey]) || $units[$targetKey]['hp'] <= 0) $targetKey = $this->selectTarget($random, $availableTargets, $units);
                     if ($targetKey === null) break;
                     $target = $units[$targetKey];$modifier=$this->counterMultiplier($attacker,$target,$modifiers);$chance = $this->hitChance($attacker, $target, 0, $modifier);
@@ -95,7 +96,7 @@ final class CombatSimulator
                     $secondaryCount=count($secondarySchedule);
 
                     for($secondaryShot=0;$secondaryShot<$secondaryCount;$secondaryShot++){
-                        $availableTargets=$this->targetsFor($attackerKey,$units,$roundNumber);$targetCategory=$attacker['secondary_target_category']??null;
+                        $availableTargets=$this->targetsFor($attackerKey,$units,$roundNumber,$independentCamps);$targetCategory=$attacker['secondary_target_category']??null;
                         $availableTargets=array_values(array_filter($availableTargets,static fn(string $key):bool=>($units[$key]['category']??null)===$targetCategory));
                         $secondaryTarget=$this->selectTarget($random,$availableTargets,$units);if($secondaryTarget===null)break;
                         $target=$units[$secondaryTarget];$modifier=$this->counterMultiplier($attacker,$target,$modifiers);$chance=$this->hitChance($attacker,$target,(int)($attacker['secondary_precision_modifier']??0),$modifier);
@@ -124,6 +125,19 @@ final class CombatSimulator
             }
             unset($unit);
             $rounds[] = ['number' => $roundNumber, 'shots' => $shots];
+            if($independentCamps) {
+                $camps=[];
+                foreach($units as $unit) if($unit['hp']>0) $camps[$unit['camp']][]=$unit['role'];
+                if(count($camps)<=1) {
+                    $winnerCamp=$camps===[]?null:array_key_first($camps);
+                    $roles=$winnerCamp===null?[]:$camps[$winnerCamp];
+                    $outcome=$winnerCamp===null?'draw':((in_array('defender',$roles,true)||in_array('static_defense',$roles,true))?'defender_wins':'attacker_wins');
+                    break;
+                }
+                // À la limite existante, les attaquants se retirent ; aucun camp unique n'est déclaré vainqueur.
+                $outcome=$roundNumber===$maxRounds?'defender_wins':'ongoing';
+                continue;
+            }
             $aliveAttackers = $this->countAlive($units, 'attacker', $roundNumber);
             $aliveDefenders = $this->countAlive($units, 'defender', $roundNumber) + $this->countAlive($units, 'static_defense', $roundNumber);
             $futureAttackers = $this->countFuture($units, 'attacker', $roundNumber);
@@ -144,7 +158,7 @@ final class CombatSimulator
             }
         }
 
-        return [
+        $result = [
             'seed' => $seed,
             'outcome' => $outcome,
             'rounds_played' => count($rounds),
@@ -160,6 +174,8 @@ final class CombatSimulator
             ], array_filter($units, static fn (array $unit): bool => $unit['hp'] > 0)),
             'losses' => $this->losses($units),
         ];
+        if($independentCamps) $result['winner_camp']=$winnerCamp;
+        return $result;
     }
 
     public function hitChance(array $attacker, array $target, int $precisionModifier = 0, float $counterMultiplier = 1.0): float
@@ -310,7 +326,7 @@ final class CombatSimulator
         }
     }
 
-    private function targetsFor(string $attackerKey, array $units, int $roundNumber): array
+    private function targetsFor(string $attackerKey, array $units, int $roundNumber, bool $independentCamps = false): array
     {
         $attacker = $units[$attackerKey];
         $targets = [];
@@ -318,7 +334,7 @@ final class CombatSimulator
             if ($key === $attackerKey || $target['hp'] <= 0 || $target['arrival_round'] > $roundNumber) {
                 continue;
             }
-            $hostile = match ($attacker['role']) {
+            $hostile = $independentCamps ? $target['camp'] !== $attacker['camp'] : match ($attacker['role']) {
                 'static_defense' => $target['role'] === 'attacker',
                 'attacker' => $target['role'] === 'defender' || $target['role'] === 'static_defense' || ($target['role'] === 'attacker' && $target['camp'] !== $attacker['camp']),
                 default => $target['role'] === 'attacker',

@@ -83,14 +83,14 @@ test('Conquête PNJ : rapport détaillé, résultat, responsive et confidentiali
   const reportName = (await reportLink.textContent()).trim();
   await reportLink.click();
   const reportUrl = page.url();
-  await expect(page.getByRole('heading', { name: /Rapport ·/ })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Pertes constatées', exact: true })).toBeVisible();
-  const losses = page.getByRole('region', { name: 'Tableau des pertes, défilant horizontalement' });
+  await expect(page.getByRole('heading', { name: 'Rapport de combat', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Effectifs et pertes', exact: true })).toBeVisible();
+  const losses = page.getByRole('region', { name: 'Bilan des pertes, défilement horizontal' });
   await expect(losses).toBeVisible();
   expect(await page.locator('main table tbody tr').count()).toBeGreaterThan(0);
   await losses.focus();
   await expect(losses).toBeFocused();
-  await expect(page.getByRole('heading', { name: 'Conquête', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Conquête JcE', exact: true })).toBeVisible();
   await losses.evaluate(element => element.blur());
 
   await expect(page.locator('main')).toContainText(/Vous avez conquis cette planète PNJ|La conquête a échoué|la limite de colonies empêche|déjà été revendiquée|aucun vaisseau colonie n’a survécu/i);

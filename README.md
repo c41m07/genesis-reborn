@@ -11,18 +11,143 @@ L’orientation confirmée est une stratégie au rythme modéré ; les durées d
 Le code comprend :
 
 - Comptes, connexion, profils et préférences ; bienvenue et vérification d’adresse pour les nouveaux comptes, renvoi du lien et réinitialisation du mot de passe.
+  - Ces trois mails disposent d’une présentation HTML sombre adaptée aux mobiles, avec une version texte de secours. Les modèles communs et leurs contenus sont dans `app/templates/emails/` ; les liens de confirmation (24 h) et de réinitialisation (1 h, usage unique) conservent leur fonctionnement.
   - Session expirée après 24 h sans requête au serveur ; case « Se souvenir de moi » facultative pendant 30 jours, annulée à la déconnexion. Un cookie de mémorisation valide permet de retrouver sa connexion après expiration de la session.
   - Mots de passe masqués par défaut, avec un bouton œil pour afficher ou masquer chaque champ.
 - Univers, colonies et ressources ; bâtiments, recherches, rangs et files de production ; progression traitée pendant la déconnexion.
+  - Production des usines rééquilibrée le 9 novembre : débits Basiques M360/N180/H720/A90 par heure et par niveau à position de référence, réacteur à 4 H/A et centrale à 1 080 électricité/h/niveau. Prix et temps de base révisés ; courbes et rangs conservés. Voir les [valeurs, simulations et limites](docs/EQUILIBRAGE.md#production-des-batiments). Cette intégration sur branche de travail ne vaut pas déploiement de l’Alpha.
+  - Guide technologique sans graphe : un domaine à la fois (économie, recherche, flotte, défense), six cartes initiales puis affichage des suivantes à la demande. Rang basique par défaut, recherche dans tous les domaines, filtres par rang et état. La sélection conserve les filtres ; les prérequis réels et étapes précédentes sont consultables dans la fiche, avec les déblocages regroupés par domaine et la prochaine étape conseillée. Un objectif peut être suivi dans ce navigateur, séparément par participation et colonie. Les accès permanents et les fiches sans JavaScript restent conservés.
+  - Sur mobile, les cinq stocks restent visibles sur une seule ligne à droite de « Colonie active » sous forme compacte. Un clic sur la colonie déplie les stocks exacts, débits, rendements et jauges de stockage ; un second clic les replie.
+  - Typographie du jeu harmonisée entre les thèmes : petits textes des catalogues et des files agrandis, champs de saisie à 16 px sur mobile et tablette, messages à 13 px. Les grands titres et les stocks mobiles compacts conservent leurs tailles.
   - Bâtiments, recherches, vaisseaux et défenses regroupés par famille avec trois onglets de rang, niveau ou quantité possédée dans l’onglet, indicateurs de verrouillage et d’action disponible, interrupteur local des éléments verrouillés et coûts abrégés en k/M (valeur exacte accessible). Quatre cartes par ligne sur grand écran, avec adaptation aux écrans plus étroits ; illustrations d’origine en couleur, cadrées en 16/9 et affichées bord à bord sans bandes ; boutons d’amélioration, de recherche et de construction alignés en bas des cartes d’une même ligne. Les quantités à construire restent propres à chaque rang (1 à 100).
-- Flottes, exploration, transport, colonisation, attaque, défense, orbite et espionnage ; combats persistés, conquête de planètes PNJ et rapports privés.
-- Diplomatie, guildes, messages, notifications, inventaire de boosts et événements.
-- Administration des comptes et univers, retours utilisateur, patchnotes, signaux des processus, relais en attente et mesures par univers.
+- Flottes, exploration, transport, colonisation, attaque, défense, orbite et espionnage ; combats persistés, conquête de planètes PNJ et rapports privés. Les rapports présentent un résumé puis les détails : tableaux de combat en vis-à-vis par round et type d’unité (effectifs, pertes et tirs), reconstruction des défenses après le verdict, renseignements d’espionnage en cadres par catégorie et bilan des transports. Les anciens combats sans historique de rounds conservent leur bilan disponible.
+- Diplomatie, guildes, messages, notifications, inventaire de boosts et événements. Les conversations privées et de guilde s’ouvrent sur le dernier message ; les messages envoyés et reçus se distinguent par leur alignement, leur couleur et un libellé. Les deux boutons du menu mobile signalent les nouveautés d’administration, les messages et patchnotes non lus, ainsi que les nouvelles activités du journal jusqu’à la consultation de la vue générale sur cet appareil.
+- Depuis l’inventaire, un boost peut accélérer une construction, recherche, production ou mission chronométrée active de l’empire ; les opérations en attente, les occupations et les vacances restent exclues.
+- Console d’administration avec accueil synthétique et rubriques séparées. Les nouveautés des signalements, de la sécurité et des feedbacks sont comptées par administrateur ; ouvrir l’accueil ne les marque pas comme consultées. Les feedbacks archivés sont masqués par défaut.
+- Surveillance `/admin/flottes` : missions actives et historique, recherche par joueur ou cible, filtres, actualisation et fiches détaillées. Les transports y sont réunis ; les rapports et consultations sont journalisés. Les nouveaux départs conservent un instantané sans reconstruire les anciennes missions.
+- Alertes `/admin/surveillance` et dossiers `/admin/dossiers` : seuils par univers, notes conservées, états ouvert/en examen/clos, recherche et pagination. Les alertes restent des indices à examiner, sans sanction automatique.
+- Fiches `/admin/joueurs` : présence estimée depuis moins de cinq minutes, dernière activité et temps de jeu par univers (aujourd’hui, sept jours UTC, total depuis le début du suivi). Aucun historique antérieur n’est inventé ; les onglets concurrents ne multiplient pas le temps.
+- Interventions administratives : ajout/retrait de ressources par colonie dans les capacités de stockage, ajustement des échéances et rappel des flottes éligibles. Motif, confirmation, contrôle des doubles envois et journal avant/après ; les combats et occupations restent protégés.
+- Assistant `/admin/events/assistant` : bonus temporaires de production, annonces et défis collectifs par univers, avec réglages conservés, aperçu et confirmation. Les objectifs suivent les découvertes, dégâts ou livraisons entre ses propres colonies. L’administration suit les contributions individuelles dans `/admin/defis` ; les joueurs consultent leurs défis depuis `/evenements`.
+- Inventaire commun de 100 objets, boosts et boîtes confondus, avec attente dans l’ordre d’attribution. Un défi donne au maximum un objet par participant éligible : boost OU boîte. Le contenu annoncé est figé ; le joueur choisit une colonie du même univers. Vacances ou stockage insuffisant refusent l’ouverture sans perte. Les modèles et plafonds de boîtes sont réglables par univers.
+- Le [cadrage de l’administration](docs/REFONTE_ADMINISTRATION.md) précise les règles, accès et contrôles. Quatre migrations additives, Version20261109010000 à Version20261109040000, préparent ces fonctions. Leur publication sur Dev ne vaut pas application sur une base existante ni déploiement.
 - Quatre pages juridiques publiques provisoires (`/mentions-legales`, `/cgu`, `/confidentialite`, `/cookies`), accessibles depuis le pied de page, avec métadonnées et `noindex` tant qu’elles sont incomplètes ; exclues du sitemap. Leur présence ne vaut pas conformité juridique.
 - Aperçu privé des quatre brouillons juridiques dans l’administration (`/admin/juridique`), réservé aux administrateurs ; ces textes ne sont pas encore publiés.
 - Wiki connecté et compte à rebours dans les dernières 24 heures avant la fermeture d’un univers.
 
 Les jauges distinguent le stock protégé du stock exposé au pillage : remplissage vert jusqu’au seuil protégé, puis doré, avec un repère fixe. Le seuil actuellement documenté est de 10 % de la capacité. Les règles et leurs décisions restent centralisées dans [REGLES.md](docs/REGLES.md) et [DECISIONS.md](docs/DECISIONS.md).
+
+Chantier en développement : empires oubliés après 30 jours d'inactivité,
+mode vacances et occupation de 24 heures avant capture JcE. Le premier lot ajoute
+la dernière visite par univers et le calcul des échéances à 14 et 30 jours ; la
+migration `Version20261107180000` a été appliquée sur la base locale le 7 novembre
+2026 après accord et sauvegarde ; son application reste explicite sur les autres
+environnements.
+Les visites réussies de pages de jeu comptent comme activité ; les actualisations
+automatiques de ressources, requêtes JSON et pages de compte n'y contribuent pas.
+Les anciennes participations sans date connue restent non initialisées jusqu'à
+leur première visite ; elles sont exclues du traitement tant que cette date est inconnue.
+Les avertissements par courriel à J14/J27 sont préparés avec un historique
+par univers et période ; leurs deux textes ont été validés le 7 novembre 2026. La commande
+`make empires-warn` prévisualise les éligibles sans écriture ni envoi, après
+application de la migration `Version20261107220000` (appliquée localement le
+7 novembre 2026 après accord et sauvegarde).
+Les envois sont désactivés par défaut dans les exemples. En local, le cycle complet
+et les avertissements sont activés après accord le 8 novembre 2026 ; la crontab de
+`caim` exécute leur traitement quotidien à 00 h, heure de Paris.
+La suspension des protections débutant/après pertes dès J14 est préparée derrière
+`FORGOTTEN_EMPIRES_ENABLED` : elle est activée localement ; les exemples restent à `0`. Une reprise d'activité rétablit uniquement
+les protections encore valables, sans renouveler leurs échéances. Les alliances,
+la limite d'écart de score et le stock protégé restent applicables.
+Le socle des vacances prépare les périodes et les limites de 48 h minimum,
+90 jours maximum et 15 jours entre activations. La migration d'historique
+`Version20261107230000` a été appliquée localement après accord et sauvegarde
+le 7 novembre 2026. La suspension/reprise économique est raccordée au service
+interne : stocks et consommations figés, files reportées sans perte du travail
+acquis, reprise au terme réel ou à l'expiration des 90 jours. Les préférences
+proposent l'activation avec confirmation, les dates de sortie et le délai entre
+deux périodes. Les files affichent leur progression figée et les catalogues
+retirent les commandes de construction pendant la pause. Le mode reste masqué
+et indisponible tant que `FORGOTTEN_EMPIRES_ENABLED=0`.
+Le service exige le retour de toutes les flottes avant les vacances et bloque
+les nouveaux départs. Les empires en vacances sont protégés contre attaques,
+espionnage et nouveaux stationnements ; un transport refusé revient avec sa
+cargaison. Les stations alliées déjà acceptées terminent leur durée normale,
+et les demandes d'orbite en attente sont renvoyées à l'activation.
+L'inactivité et les avertissements déduisent les vacances réelles : consulter le
+jeu pendant une pause ne remet pas le compteur à zéro, et les courriels reprennent
+aux seuils ajustés sans répéter J14. `make empires-preview` liste sans écriture
+les empires arrivés à J30, leurs flottes, files, combats et liens sociaux à traiter.
+Le traitement se parcourt par lots avec `PREVIEW_ARGS="--limit=100 --after-id=0"`.
+La commande n'exécute aucune transformation et ne fournit aucune option d'application.
+Le détachement de l'identité est préparé : l'empire oublié n'a plus de joueur
+propriétaire, mais garde son identifiant et une référence historique à l'ancien
+propriétaire. Une nouvelle inscription démarre sans hériter de ses recherches
+ou déblocages. La migration `Version20261108010000` a été appliquée sur la base
+locale le 8 novembre 2026 après accord et vérification de la sauvegarde ; elle
+reste nécessaire avant utilisation de cette version sur les autres environnements.
+Les anciens accès sont refusés et les commandes déjà payées peuvent se terminer
+automatiquement. Un service interne prépare désormais la conversion J30 sous
+verrou, avec report en cas de combat, rappel des flottes et fin des liens sociaux.
+Il conserve un journal unique, transmet la direction des guildes au plus ancien
+membre actif ou archive leur historique. La migration `Version20261108020000`
+a été appliquée localement le 8 novembre 2026 après accord et vérification de la
+sauvegarde, sans conversion ni archivage réel. La commande `make empires-convert`
+prévisualise désormais les conversions par lots, sans écriture ni envoi par défaut.
+Le mode `CONVERT_ARGS="--apply --all"` permet un passage complet après activation
+explicitement autorisée ; il reste refusé avec le drapeau désactivé. Les combats
+reportés n'empêchent pas de traiter les lots suivants. Chaque empire est revérifié
+sous verrou ; une erreur interrompt le lot et indique le curseur de reprise, tout
+en conservant les conversions précédentes. La planification quotidienne est installée localement depuis le 8 novembre 2026.
+Le parcours complet est couvert par les tests isolés. Le socle d'occupation
+prépare les états, le délai fixe de 24 heures, le comptage des réservations et
+l'historique des changements d'occupant. Le démarrage après victoire est raccordé
+derrière le drapeau d'activation : flotte maintenue sur place, vaisseau de colonisation
+non consommé et place réservée dans les limites de colonisation/conquête.
+Le devis prévoit 24 heures de carburant de stationnement ; une conquête non
+occupante libère cette réserve pour son retour. Le transfert définitif est codé
+dans un service déclenché par les tâches différées, derrière le drapeau d'activation : il attend la fin des
+combats et la défaite des forces PNJ restantes ou de retour, puis conserve
+bâtiments et stocks, annule les commandes non terminées sans remboursement et
+consomme un seul vaisseau de colonisation. Les recherches et déblocages de l'ancien
+empire ne sont pas transmis. Les renforts de l'occupant et de ses alliés sont
+raccordés, sans remise à zéro du délai. Ils réservent le carburant du temps
+restant, avec au minimum une fenêtre de combat, puis récupèrent la part inutilisée.
+Les occupations peuvent être contestées sans protection débutant ni limite
+d'écart de score, en respectant les alliances. PNJ, occupant et rivaux combattent
+dans des camps distincts avec leurs recherches propres. Un occupant victorieux
+conserve son délai ; une reprise par conquête recommence 24 heures.
+Les cartes classique et interactive proposent désormais la conquête des empires
+oubliés, affichent l'échéance des occupations et les liens de renfort/contestation
+selon les alliances. Les liens de conquête et de colonisation tiennent compte
+des places réellement disponibles, y compris celles réservées par une occupation.
+La migration de suivi des renforts `Version20261108040000` a été appliquée localement
+après accord et vérification de la sauvegarde le 8 novembre 2026, sans déplacer de
+flotte. Le début d'occupation programme son contrôle à l'échéance ; une victoire
+conservant l'occupation programme un nouvel examen sans modifier son délai.
+Un combat ouvert ou des forces hostiles empêchent toujours la capture.
+`make occupations-resume` prévisualise les occupations actives, sans écriture.
+Après activation explicitement autorisée, `RESUME_ARGS=--apply` permet de
+reprogrammer leurs contrôles après interruption ; les messages périmés et rejoués
+ne peuvent pas capturer deux fois. Aucun nouveau processus n'est lancé par ce lot.
+Le passage quotidien est fixé à 00 h, heure de Paris, avec adaptation été/hiver.
+Après 30 jours effectifs, la conversion devient éligible au premier minuit suivant
+(ou au même instant si le seuil tombe déjà à minuit). Le joueur conserve l'accès
+jusqu'à la transformation effective ; une visite préalable réinitialise l'inactivité.
+Le mode d'envoi quotidien utilise `--send --all` pour traiter tous les lots.
+Le traitement J30 et les avertissements sont activés et planifiés localement ;
+aucune mise en service distante n'est réalisée.
+La [procédure de mise en service](docs/EXPLOITATION.md#empires-oubliés--procédure-de-mise-en-service-préparée-le-8-novembre-2026)
+précise les prévisualisations, les services à recharger et le passage quotidien à minuit,
+avec les précautions d'activation. Les rapports suivent les fins et remplacements
+d'occupation depuis leur historique ; le verdict et les récompenses distinguent
+le camp du joueur du camp PNJ.
+Sans activation, la capture immédiate actuelle est
+conservée. La migration `Version20261108030000` a été appliquée localement le
+8 novembre 2026 après accord et vérification de la sauvegarde, sans créer
+d'occupation. Les règles à développer
+et les lots sont consignés dans les [décisions](docs/DECISIONS.md#empires-oubliés-vacances-et-occupation-jce--décisions-du-7-novembre-2026)
+et la [feuille de route](docs/FEUILLE_DE_ROUTE.md#empires-oubliés--chantier-validé-le-7-novembre-2026).
 
 ## Technologies et versions
 
@@ -87,6 +212,8 @@ Les fichiers `.env`, `.env.local`, `.env.prod` et les secrets sont exclus par [.
 | `DATABASE_URL`, `DB_PASSWORD`, `DB_ROOT_PASSWORD`, `DB_HOST_PORT` | Connexion MariaDB, secrets du service local et port d’accès depuis l’hôte. |
 | `MESSENGER_TRANSPORT_DSN`, `RABBITMQ_PASSWORD` | Transport des traitements asynchrones. |
 | `MAILER_DSN`, `MAILER_FROM`, `DEFAULT_URI` | Transport SMTP, expéditeur et URL absolue des liens, notamment ceux des mails. |
+| `EMPIRE_INACTIVITY_WARNINGS_ENABLED` | `0` par défaut ; interdit les envois d'inactivité, même avec `--send`. Textes révisés validés et valeur `1` autorisée localement le 8 novembre 2026. Voir [EXPLOITATION.md](docs/EXPLOITATION.md#avertissements-dinactivité-j14j27). |
+| `FORGOTTEN_EMPIRES_ENABLED` | `0` par défaut ; active le cycle d'inactivité, les vacances, la conversion PNJ et les occupations JcE. Valeur `1` autorisée localement le 8 novembre 2026. |
 | `MERCURE_URL`, `MERCURE_PUBLIC_URL` | Adresse interne de publication et adresse accessible au navigateur. |
 | `MERCURE_JWT_SECRET`, `MERCURE_JWT_ISSUER` | Signature et émetteur des jetons Mercure. |
 | `LOCAL_UID`, `LOCAL_GID` | Identifiants utilisés lors de la construction et par les processus locaux ; défaut 1000. |

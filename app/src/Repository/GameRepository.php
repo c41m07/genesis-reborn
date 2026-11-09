@@ -7,7 +7,171 @@ final class GameRepository
     public function __construct(private EntityManagerInterface $em) {}
     public function find(string $class, int $id): ?object { return $this->em->find($class, $id); }
     public function one(string $class, array $criteria): ?object { return $this->em->getRepository($class)->findOneBy($criteria); }
+    public function occupationReservations(PlayerUniverse $membership): int
+    {
+        return $this->em->getRepository(\App\Entity\PlanetOccupation::class)->count(['occupant'=>$membership,'status'=>'active']);
+    }
+    /** @return list<\App\Entity\PlanetOccupation> */
+    public function occupationResumeCandidates(int $limit,int $afterId): array
+    {
+        return $this->em->createQueryBuilder()->select('o')->from(\App\Entity\PlanetOccupation::class,'o')
+            ->where('o.status = :status')->andWhere('o.id > :after')->setParameter('status','active')->setParameter('after',$afterId)
+            ->orderBy('o.id','ASC')->setMaxResults($limit)->getQuery()->getResult();
+    }
+    /** @return list<Fleet> */
+    public function fleetsPresentForOccupation(Planet $planet): array
+    {
+        return $this->em->createQueryBuilder()->select('DISTINCT f')->from(Fleet::class,'f')->join(FleetShip::class,'s','WITH','s.fleet = f')
+            ->where('s.quantity > 0')->andWhere('(f.homePlanet = :planet AND f.status = :idle) OR (f.destination = :planet AND f.status IN (:stationed))')
+            ->setParameter('planet',$planet)->setParameter('idle','idle')->setParameter('stationed',['attacking','defending','orbiting','orbit_pending','occupying'])
+            ->orderBy('f.id','ASC')->getQuery()->getResult();
+    }
+    /** @return list<Fleet> */
+    public function fleetsAwayFromOccupation(Planet $planet): array
+    {
+        return $this->em->createQueryBuilder()->select('DISTINCT f')->from(Fleet::class,'f')->join(FleetShip::class,'s','WITH','s.fleet = f')
+            ->where('f.homePlanet = :planet')->andWhere('s.quantity > 0')->andWhere('f.status IN (:away)')
+            ->setParameter('planet',$planet)->setParameter('away',['traveling','returning','attacking','defending','orbiting','orbit_pending'])
+            ->orderBy('f.id','ASC')->getQuery()->getResult();
+    }
+    public function hasPlanetHostileUnits(Planet $planet): bool
+    {
+        foreach([\App\Entity\PlanetDefense::class,\App\Entity\PlanetNpcShip::class] as $class) {
+            if($this->em->createQueryBuilder()->select('u.id')->from($class,'u')->where('u.planet = :planet')->andWhere('u.quantity > 0')
+                ->setParameter('planet',$planet)->setMaxResults(1)->getQuery()->getOneOrNullResult()!==null) return true;
+        }
+        return false;
+    }
     public function all(string $class, array $criteria = [], array $order = ['id' => 'ASC']): array { return $this->em->getRepository($class)->findBy($criteria, $order); }
+    /** @return list<PlayerUniverse> */
+    public function forgottenEmpirePreviewCandidates(\DateTimeImmutable $now, int $conversionSeconds, int $limit, int $afterId, \DateTimeImmutable $cutoff): array
+    {
+        // Déduire les vacances avant LIMIT, comme pour les avertissements J14/J27.
+        $sql = <<<'SQL'
+SELECT candidate.id FROM (
+    SELECT m.id, TIMESTAMPDIFF(SECOND, m.last_activity_at, :cutoff) - COALESCE((
+        SELECT SUM(GREATEST(0, TIMESTAMPDIFF(SECOND,
+            GREATEST(v.started_at, m.last_activity_at),
+            LEAST(COALESCE(v.ended_at, v.scheduled_end_at), v.scheduled_end_at, :cutoff)
+        ))) FROM vacation_period v
+        WHERE v.membership_id = m.id AND v.started_at < :cutoff AND v.scheduled_end_at > m.last_activity_at
+    ), 0) AS inactive_seconds
+    FROM player_universe m JOIN universe u ON u.id = m.universe_id
+    WHERE m.id > :afterId AND m.player_id IS NOT NULL AND m.forgotten_at IS NULL AND m.last_activity_at <= :inactiveBefore
+        AND u.status = 'active' AND (u.starts_at IS NULL OR u.starts_at <= :now)
+        AND (u.ends_at IS NULL OR u.ends_at > :now)
+        AND NOT EXISTS (SELECT 1 FROM vacation_period active_v
+            WHERE active_v.membership_id = m.id AND active_v.started_at <= :now
+                AND LEAST(COALESCE(active_v.ended_at, active_v.scheduled_end_at), active_v.scheduled_end_at) > :now)
+) candidate WHERE candidate.inactive_seconds >= :conversionSeconds
+ORDER BY candidate.id ASC LIMIT :limit
+SQL;
+        $ids=array_map('intval',$this->em->getConnection()->executeQuery($sql,[
+            'now'=>$now,'cutoff'=>$cutoff,'inactiveBefore'=>$cutoff->modify('-'.$conversionSeconds.' seconds'),
+            'conversionSeconds'=>$conversionSeconds,'limit'=>$limit,'afterId'=>$afterId,
+        ],['now'=>\Doctrine\DBAL\Types\Types::DATETIME_IMMUTABLE,'cutoff'=>\Doctrine\DBAL\Types\Types::DATETIME_IMMUTABLE,'inactiveBefore'=>\Doctrine\DBAL\Types\Types::DATETIME_IMMUTABLE,
+            'limit'=>\Doctrine\DBAL\ParameterType::INTEGER,'afterId'=>\Doctrine\DBAL\ParameterType::INTEGER])->fetchFirstColumn());
+        if($ids===[]) return [];
+        return $this->em->createQueryBuilder()->select('m','p','u')->from(PlayerUniverse::class,'m')
+            ->join('m.player','p')->join('m.universe','u')->where('m.id IN (:ids)')->setParameter('ids',$ids)
+            ->orderBy('m.id','ASC')->getQuery()->getResult();
+    }
+
+    /** @return array<string,int> */
+    public function forgottenEmpirePreviewInventory(PlayerUniverse $membership): array
+    {
+        $sql = <<<'SQL'
+SELECT
+    (SELECT COUNT(*) FROM planet WHERE owner_id = :membership) AS colonies,
+    (SELECT COUNT(*) FROM fleet WHERE player_universe_id = :membership AND status IN ('traveling','returning','attacking','defending','orbiting','orbit_pending','occupying')) AS deployed_fleets,
+    (SELECT COUNT(*) FROM fleet f JOIN planet p ON p.id = f.destination_id
+        WHERE p.owner_id = :membership AND f.player_universe_id <> :membership AND f.status IN ('traveling','attacking','defending','orbiting','orbit_pending','occupying')) AS incoming_or_stationed_fleets,
+    (SELECT COUNT(*) FROM queue_item WHERE player_universe_id = :membership) AS queued_orders,
+    (SELECT COUNT(*) FROM player_technology WHERE player_universe_id = :membership) AS technologies,
+    (SELECT COUNT(*) FROM combat_event e JOIN planet p ON p.id = e.planet_id WHERE e.status = 'pending'
+        AND (p.owner_id = :membership OR EXISTS (SELECT 1 FROM combat_participant cp WHERE cp.combat_event_id = e.id AND cp.player_universe_id = :membership))) AS open_combats,
+    (SELECT COUNT(*) FROM alliance_contract WHERE (player_a_id = :membership OR player_b_id = :membership) AND status IN ('pending','accepted')) AS alliances,
+    (SELECT COUNT(*) FROM guild_member WHERE player_universe_id = :membership) AS guild_memberships,
+    (SELECT COUNT(*) FROM guild WHERE leader_id = :membership) AS led_guilds
+SQL;
+        return array_map('intval',$this->em->getConnection()->fetchAssociative($sql,['membership'=>$membership->id],['membership'=>\Doctrine\DBAL\ParameterType::INTEGER]));
+    }
+
+    public function hasVacationFleetBlocker(PlayerUniverse $membership): bool
+    {
+        $fleet = $this->em->createQueryBuilder()->select('f.id')->from(Fleet::class, 'f')
+            ->leftJoin('f.destination', 'p')
+            ->where('(f.playerUniverse = :membership AND f.status IN (:active)) OR (p.owner = :membership AND f.mission IN (:hostile) AND f.status IN (:incoming))')
+            ->setParameter('membership', $membership)
+            ->setParameter('active', ['traveling', 'returning', 'attacking', 'defending', 'orbiting', 'orbit_pending', 'occupying'])
+            ->setParameter('hostile', ['attack', 'conquer'])->setParameter('incoming', ['traveling', 'attacking'])
+            ->setMaxResults(1)->getQuery()->getOneOrNullResult();
+        if ($fleet !== null) return true;
+        return $this->em->createQueryBuilder()->select('e.id')->from(\App\Entity\CombatEvent::class, 'e')
+            ->join('e.planet', 'p')->where('p.owner = :membership')->andWhere('e.status = :pending')
+            ->setParameter('membership', $membership)->setParameter('pending', 'pending')
+            ->setMaxResults(1)->getQuery()->getOneOrNullResult() !== null;
+    }
+    /** @return list<Fleet> */
+    public function fleetsForEmpireConversion(PlayerUniverse $membership): array
+    {
+        return $this->em->createQueryBuilder()->select('f')->from(Fleet::class,'f')->leftJoin('f.destination','p')
+            ->where('(f.playerUniverse = :membership AND f.status IN (:ownStatuses)) OR (p.owner = :membership AND f.playerUniverse != :membership AND f.status IN (:guestStatuses))')
+            ->setParameter('membership',$membership)->setParameter('ownStatuses',['traveling','attacking','defending','orbiting','orbit_pending','occupying'])
+            ->setParameter('guestStatuses',['defending','orbiting','orbit_pending'])->orderBy('f.id','ASC')->getQuery()->getResult();
+    }
+    /** @return list<Fleet> */
+    public function pendingOrbitsFor(PlayerUniverse $host): array
+    {
+        return $this->em->createQueryBuilder()->select('f')->from(Fleet::class, 'f')->join('f.destination', 'p')
+            ->where('p.owner = :host')->andWhere('f.status = :pending')
+            ->setParameter('host', $host)->setParameter('pending', 'orbit_pending')->orderBy('f.id', 'ASC')->getQuery()->getResult();
+    }
+    /** @return list<PlayerUniverse> */
+    public function inactivityWarningCandidates(\DateTimeImmutable $now, int $inactiveSeconds, int $reminderSeconds, int $conversionSeconds, int $limit): array
+    {
+        // Filtrer avant LIMIT évite qu'un lot soit rempli d'empires dont le compteur est suspendu.
+        // Les périodes sont non chevauchantes grâce au démarrage sous verrou de participation.
+        $sql = <<<'SQL'
+SELECT candidate.id FROM (
+    SELECT m.id, m.last_activity_at,
+        TIMESTAMPDIFF(SECOND, m.last_activity_at, :now) - COALESCE((
+            SELECT SUM(GREATEST(0, TIMESTAMPDIFF(SECOND,
+                GREATEST(v.started_at, m.last_activity_at),
+                LEAST(COALESCE(v.ended_at, v.scheduled_end_at), v.scheduled_end_at, :now)
+            ))) FROM vacation_period v
+            WHERE v.membership_id = m.id AND v.started_at < :now
+                AND v.scheduled_end_at > m.last_activity_at
+        ), 0) AS inactive_seconds
+    FROM player_universe m JOIN player p ON p.id = m.player_id JOIN universe u ON u.id = m.universe_id
+    WHERE m.forgotten_at IS NULL AND m.last_activity_at <= :inactiveBefore AND p.email_verified_at IS NOT NULL AND p.locked_at IS NULL
+        AND u.status = 'active' AND (u.starts_at IS NULL OR u.starts_at <= :now)
+        AND (u.ends_at IS NULL OR u.ends_at > :now)
+        AND NOT EXISTS (SELECT 1 FROM vacation_period active_v
+            WHERE active_v.membership_id = m.id AND active_v.started_at <= :now
+                AND LEAST(COALESCE(active_v.ended_at, active_v.scheduled_end_at), active_v.scheduled_end_at) > :now)
+) candidate
+WHERE candidate.inactive_seconds >= :inactiveSeconds AND candidate.inactive_seconds < :conversionSeconds
+    AND NOT EXISTS (SELECT 1 FROM empire_inactivity_warning w
+        WHERE w.membership_id = candidate.id AND w.activity_at = candidate.last_activity_at AND w.sent_at IS NOT NULL
+            AND w.threshold_days = CASE WHEN candidate.inactive_seconds >= :reminderSeconds THEN 27 ELSE 14 END)
+ORDER BY candidate.last_activity_at ASC, candidate.id ASC LIMIT :limit
+SQL;
+        $ids = array_map('intval', $this->em->getConnection()->executeQuery($sql, [
+            'now'=>$now, 'inactiveBefore'=>$now->modify('-'.$inactiveSeconds.' seconds'),
+            'inactiveSeconds'=>$inactiveSeconds, 'reminderSeconds'=>$reminderSeconds,
+            'conversionSeconds'=>$conversionSeconds, 'limit'=>$limit,
+        ], ['now'=>\Doctrine\DBAL\Types\Types::DATETIME_IMMUTABLE, 'inactiveBefore'=>\Doctrine\DBAL\Types\Types::DATETIME_IMMUTABLE,
+            'limit'=>\Doctrine\DBAL\ParameterType::INTEGER])->fetchFirstColumn());
+        if ($ids === []) return [];
+        $memberships = $this->em->createQueryBuilder()->select('m', 'p', 'u')->from(PlayerUniverse::class, 'm')
+            ->join('m.player', 'p')->join('m.universe', 'u')->where('m.id IN (:ids)')->setParameter('ids', $ids)->getQuery()->getResult();
+        $byId = [];
+        foreach ($memberships as $membership) $byId[$membership->id] = $membership;
+        $ordered = [];
+        foreach ($ids as $id) if (isset($byId[$id])) $ordered[] = $byId[$id];
+        return $ordered;
+    }
     public function passwordResetTokenForUpdate(string $hash): ?\App\Entity\PasswordResetToken
     {
         return $this->em->getRepository(\App\Entity\PasswordResetToken::class)->createQueryBuilder('t')
@@ -77,7 +241,7 @@ final class GameRepository
             ->where('pu.universe = :universe')
             ->andWhere('f.status IN (:statuses)')
             ->setParameter('universe', $universe)
-            ->setParameter('statuses', ['traveling', 'returning', 'attacking', 'defending', 'orbiting', 'orbit_pending'])
+            ->setParameter('statuses', ['traveling', 'returning', 'attacking', 'defending', 'orbiting', 'orbit_pending', 'occupying'])
             ->orderBy('f.arrivalAt', 'ASC')
             ->getQuery()
             ->getResult();
@@ -223,7 +387,7 @@ final class GameRepository
     public function outbox(bool $notifications): array
     {
         return $this->em->createQueryBuilder()->select('o')->from(OutboxMessage::class,'o')
-            ->where($notifications?'o.kind = :kind':'o.kind IN (:kind)')->setParameter('kind',$notifications?'notification':['queue','fleet','combat','universe'])
+            ->where($notifications?'o.kind = :kind':'o.kind IN (:kind)')->setParameter('kind',$notifications?'notification':['queue','fleet','combat','universe','occupation'])
             ->orderBy('o.id','ASC')->setMaxResults(100)->getQuery()->getResult();
     }
     public function activeQueueItems(): array
@@ -258,10 +422,10 @@ final class GameRepository
             ->setParameter('membership', $membership)->setParameter('status', $status)->getQuery()->getSingleScalarResult();
     }
 
-    public function oldestBoost(PlayerUniverse $membership, string $status): ?PlayerBoost
+    public function oldestBoost(PlayerUniverse $membership, string $status, ?string $kind = null): ?PlayerBoost
     {
         return $this->em->getRepository(PlayerBoost::class)->findOneBy(
-            ['playerUniverse' => $membership, 'status' => $status],
+            ['playerUniverse' => $membership, 'status' => $status] + ($kind === null ? [] : ['kind'=>$kind]),
             ['earnedAt' => 'ASC', 'id' => 'ASC'],
         );
     }
