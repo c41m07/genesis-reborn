@@ -173,7 +173,7 @@ final class PasswordResetTest extends WebTestCase
     {
         $player=$this->createPlayer();
         $mailer=$this->createMock(MailerInterface::class);
-        $mailer->expects(self::once())->method('send')->willThrowException(new \Symfony\Component\Mailer\Exception\TransportException('Transport de test indisponible'));
+        $mailer->expects(self::exactly(3))->method('send')->willThrowException(new \Symfony\Component\Mailer\Exception\TransportException('Transport de test indisponible'));
         static::getContainer()->set(MailerInterface::class,$mailer);
         static::getContainer()->get(PasswordResetService::class)->request($player->email);
         self::assertSame(1,$this->em->getRepository(PasswordResetToken::class)->count(['player'=>$player]));

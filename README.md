@@ -12,6 +12,7 @@ Le code comprend :
 
 - Comptes, connexion, profils et préférences ; suppression définitive depuis `/profil`, avec mot de passe et confirmation, effacement des identifiants et conversion des empires en empires oubliés (historiques conservés) ; bienvenue et vérification d’adresse pour les nouveaux comptes, renvoi du lien et réinitialisation du mot de passe.
   - Ces trois mails disposent d’une présentation HTML sombre adaptée aux mobiles, avec une version texte de secours. Les modèles communs et leurs contenus sont dans `app/templates/emails/` ; les liens de confirmation (24 h) et de réinitialisation (1 h, usage unique) conservent leur fonctionnement.
+  - Les échecs de transport des mails de compte sont retentés trois fois au total pendant la requête. Après échec de confirmation à l’inscription, le compte est conservé et le formulaire de renvoi est proposé. Les états et alertes sont journalisés sans adresse ni jeton ; voir [le diagnostic des emails](docs/DIAGNOSTIC_EMAILS.md).
   - Session expirée après 24 h sans requête au serveur ; case « Se souvenir de moi » facultative pendant 30 jours, annulée à la déconnexion. Un cookie de mémorisation valide permet de retrouver sa connexion après expiration de la session.
   - Mots de passe masqués par défaut, avec un bouton œil pour afficher ou masquer chaque champ.
 - Univers, colonies et ressources ; bâtiments, recherches, rangs et files de production ; progression traitée pendant la déconnexion.

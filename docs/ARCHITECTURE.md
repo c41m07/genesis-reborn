@@ -25,6 +25,13 @@ Les nouveaux comptes reçoivent deux messages : bienvenue et confirmation. Seul 
 
 Les jetons aléatoires de 256 bits ne sont stockés que sous forme de hachage SHA-256. Ils expirent après 24 heures, sont à usage unique et un renvoi invalide le précédent. Le formulaire de renvoi utilise une réponse neutre et une limite de cinq demandes par heure et par IP. Le compte reste non vérifié si le transport échoue ; une trace sans adresse ni jeton est journalisée, et le renvoi permet de réessayer.
 
+Les emails de compte disposent de trois tentatives synchrones au total après
+exception de transport. L’échec final déclenche une trace critical sans données
+sensibles. À l’inscription, un échec de confirmation conserve le compte et
+redirige vers le formulaire de renvoi avec un avertissement. Les états de
+transport sont journalisés ; aucune file durable ni preuve de réception n’est
+fournie par ce mécanisme. Limites et diagnostic : [DIAGNOSTIC_EMAILS.md](DIAGNOSTIC_EMAILS.md).
+
 ### Configuration
 
 - `MAILER_DSN` : transport Symfony Mailer. La valeur locale de `.env.example` cible MailHog ; elle ne prouve aucun transport en production.
