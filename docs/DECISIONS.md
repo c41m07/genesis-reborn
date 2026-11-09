@@ -184,6 +184,13 @@ L’intégration et ses vérifications sont détaillées dans [BUILDING_BALANCE_
 - L’ouverture d’une conversation marque les messages affichés comme lus. La lecture du canal de guilde est suivie séparément pour chaque joueur et chaque guilde.
 - La page Alliances s’ouvre sur « Guildes ». Les liens sont ordonnés « Guildes », « Diplomatie », « Relation » et seul le panneau sélectionné est affiché. « Diplomatie » regroupe les relations entre guildes, « Relation » les contrats entre commandants.
 
+### Canal Global — 9 novembre 2026
+
+- Le canal « Global » est accessible aux joueurs connectés de l’univers courant, avec ou sans guilde, et se place au-dessus du canal de guilde. Cette décision remplace l’ordre des canaux défini le 5 novembre.
+- La lecture et l’envoi réutilisent les contrôles d’accès de la messagerie ; les messages suivent la validation de 1 à 2 000 caractères et la limitation partagée des envois.
+- Les messages Global ne déclenchent aucune notification et ne participent à aucun badge ni compteur de non-lus, y compris dans les totaux et la navigation. Leur consultation ne marque pas les autres conversations comme lues.
+- Les 100 derniers messages sont affichés dans l’ordre chronologique. Les conversations privées et de guilde conservent leur comportement.
+
 ### Limites par défaut des univers — 5 novembre 2026
 
 Le nombre maximum de vaisseaux par flotte est fixé par défaut à **1 000 000** et le plafond de planètes à **31**. Ces valeurs s’appliquent aux profils de référence et aux nouveaux univers. Les réglages personnalisés d’un univers restent prioritaires. Le plafond de planètes ne modifie pas les prérequis de recherche de colonisation.

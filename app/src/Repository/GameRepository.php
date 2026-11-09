@@ -267,7 +267,7 @@ SQL;
     {
         $rows = $this->em->createQueryBuilder()
             ->select('IDENTITY(m.sender) AS senderId, IDENTITY(m.recipient) AS recipientId, MAX(m.id) AS latest, SUM(CASE WHEN m.recipient = :viewer AND m.readAt IS NULL THEN 1 ELSE 0 END) AS unread')
-            ->from(\App\Entity\SocialMessage::class, 'm')->where('m.guild IS NULL')
+            ->from(\App\Entity\SocialMessage::class, 'm')->where('m.guild IS NULL')->andWhere('m.recipient IS NOT NULL')
             ->andWhere('(m.sender = :viewer OR m.recipient = :viewer)')->setParameter('viewer', $viewer)
             ->groupBy('m.sender, m.recipient')->getQuery()->getArrayResult();
         $contacts = [];
@@ -323,6 +323,19 @@ SQL;
             ->where('m.recipient = :recipient')->andWhere('m.readAt IS NULL')
             ->setParameter('recipient', $recipient)->getQuery()->getSingleScalarResult();
     }
+    public function globalConversation(Universe $universe, int $limit = 100): array
+    {
+        $rows = $this->em->createQueryBuilder()->select('m', 'sender', 'player')
+            ->from(\App\Entity\SocialMessage::class, 'm')
+            ->join('m.sender', 'sender')->leftJoin('sender.player', 'player')
+            ->where('m.guild IS NULL')->andWhere('m.recipient IS NULL')
+            ->andWhere('sender.universe = :universe')->setParameter('universe', $universe)
+            ->orderBy('m.createdAt', 'DESC')->addOrderBy('m.id', 'DESC')
+            ->setMaxResults(max(1, min(500, $limit)))->getQuery()->getResult();
+
+        return array_reverse($rows);
+    }
+
     public function guildConversation(\App\Entity\Guild $guild, int $limit = 100): array
     {
         $rows = $this->em->createQueryBuilder()->select('m')->from(\App\Entity\SocialMessage::class, 'm')
