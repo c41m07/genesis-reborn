@@ -8,10 +8,10 @@
             {% if event.description %}<p class="event-drawer-objective">{{ event.description }}</p>{% endif %}
             {% if event.bonus %}<p class="event-drawer-objective">Production des ressources : +{{ event.bonus }} %</p>{% endif %}
             {% if event.challenge %}{% set challenge=event.challenge %}
-                <dl class="event-drawer-stats"><div><dt>Votre contribution</dt><dd>{{ challenge.score|number_format(2,',',' ') }}</dd></div>
+                <dl class="event-drawer-stats"><div><dt>Votre contribution</dt><dd>{{ challenge.score|quantity(2) }}</dd></div>
                 {% if challenge.event.rewardMode=='top3' %}<div><dt>Votre place</dt><dd>{{ challenge.rank ? '#'~challenge.rank : 'Non classé' }}</dd></div>{% endif %}
-                {% if challenge.goal %}<div><dt>Objectif global</dt><dd>{{ challenge.event.totalContribution|number_format(2,',',' ') }} / {{ challenge.goal|number_format(2,',',' ') }}</dd></div>{% endif %}
-                {% if challenge.event.rewardMode=='threshold' or (challenge.guided and challenge.minimum>0) %}<div><dt>Minimum individuel</dt><dd>{{ (challenge.guided ? challenge.minimum : challenge.event.thresholdValue)|number_format(2,',',' ') }}</dd></div>{% endif %}</dl>
+                {% if challenge.goal %}<div><dt>Objectif global</dt><dd>{{ challenge.event.totalContribution|quantity(2) }} / {{ challenge.goal|quantity(2) }}</dd></div>{% endif %}
+                {% if challenge.event.rewardMode=='threshold' or (challenge.guided and challenge.minimum>0) %}<div><dt>Minimum individuel</dt><dd>{{ (challenge.guided ? challenge.minimum : challenge.event.thresholdValue)|quantity(2) }}</dd></div>{% endif %}</dl>
                 {% if challenge.goal %}<progress class="challenge-progress" max="100" value="{{ challenge.progress }}" aria-label="Progression de {{ event.name }}">{{ challenge.progress|number_format(0) }} %</progress>{% endif %}
                 <p class="event-drawer-reward">{{ challenge.reward_label }} · {{ challenge.guided ? 'Objectif global et participation requis' : (challenge.event.rewardMode=='top3' ? 'Top 3 si l’objectif global est atteint' : (challenge.event.rewardMode=='threshold' ? 'Seuil individuel à atteindre' : 'Toute contribution positive')) }}</p>
                 <a class="event-drawer-link" href="{{ path('app_challenge',{id:challenge.event.id}) }}">Objectif et récompenses<span class="visually-hidden"> : {{ event.name }}</span></a>

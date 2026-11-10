@@ -42,7 +42,7 @@
             {% set item = row.item %}
             <article class="boost-operation">
                 <h3>{{ row.label }} · {{ item.planet.name }}</h3>
-                <p>{{ item.itemLevel ? 'Niveau ' ~ item.itemLevel : 'Quantité : ' ~ item.quantity }} · Fin prévue : <time datetime="{{ item.finishAt|date('c') }}">{{ item.finishAt|date('d/m/Y H:i:s', preferences.timezone) }}</time></p>
+                <p>{% if item.itemLevel %}Niveau {{ item.itemLevel }}{% else %}Quantité : {{ item.quantity|quantity }}{% endif %} · Fin prévue : <time datetime="{{ item.finishAt|date('c') }}">{{ item.finishAt|date('d/m/Y H:i:s', preferences.timezone) }}</time></p>
                 <form method="post" action="{{ path('app_boost_use', {type:'queue', id:item.id}) }}">
                     <input type="hidden" name="_token" value="{{ csrf_token('boost-queue-' ~ item.id) }}">
                     <input type="hidden" name="request_key" value="{{ request_key() }}">

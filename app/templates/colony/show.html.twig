@@ -6,7 +6,7 @@
 <section class="colony-banner panel empire-banner"><img class="colony-scene" src="{{ asset('art/colony-overview.png') }}" alt="" aria-hidden="true"><div class="hero-content"><span class="badge"><i class="connection-dot"></i> COLONIE OPÉRATIONNELLE</span><h2>{{ planet.name }}</h2><p>{{ ui.icon('galaxy') }} {{ planet.coordinates() }}</p>
 <dl class="empire-points" aria-label="Points de votre empire dans cet univers">
 {% for key,label in {building_points:'Planètes',research_points:'Recherche',fleet_points:'Flotte',total_points:'Total'} %}
-<div><dt>{{ label }}</dt><dd>{{ empire_points[key]|number_format(0, ',', ' ') }} <small>pts</small></dd></div>
+<div><dt>{{ label }}</dt><dd>{{ empire_points[key]|quantity(0) }} <small>pts</small></dd></div>
 {% endfor %}
 </dl>
 

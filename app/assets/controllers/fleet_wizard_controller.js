@@ -1,4 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
+import { compactNumber, exactNumber } from '../quantity.js';
 
 export default class extends Controller {
     static targets = ['step', 'indicator', 'counter', 'quantity', 'error', 'summary'];
@@ -51,9 +52,10 @@ export default class extends Controller {
             .filter(input => Number(input.value) > 0)
             .map(input => {
                 const label = input.closest('label')?.querySelector('.fleet-ship-info strong')?.textContent.trim() || 'Vaisseau';
-                return input.value + ' × ' + label;
+                return compactNumber(Number(input.value)) + ' × ' + label;
             });
         this.summaryTarget.textContent = mission + ' · ' + destination + ' · ' + ships.join(', ');
+        this.summaryTarget.title = this.quantityTargets.filter(input => Number(input.value) > 0).map(input => exactNumber(Number(input.value)) + ' × ' + (input.closest('label')?.querySelector('strong')?.textContent.trim() || 'Vaisseau')).join(', ');
     }
 
     showError(message) {

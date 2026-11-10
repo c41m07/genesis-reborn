@@ -27,17 +27,17 @@
                         </ul>
                         {% if group == 'technologies' or d.slug in ['lab','shipyard','fortress'] %}
                             <div class="catalog-info-table-wrap"><table class="catalog-info-table"><caption>Effet cumulé des rangs</caption><thead><tr><th scope="col">Effet</th><th scope="col">Actuellement</th><th scope="col">Après ce niveau</th></tr></thead><tbody>
-                                {% for benefit in card.benefits %}{% if benefit.before is defined %}<tr><th scope="row">{{ benefit.label }}</th><td>{{ benefit.before|number_format(2,',',' ')|trim('0','right')|trim(',','right') }} {{ benefit.unit }}</td><td>{{ benefit.after|number_format(2,',',' ')|trim('0','right')|trim(',','right') }} {{ benefit.unit }}</td></tr>{% endif %}{% endfor %}
+                                {% for benefit in card.benefits %}{% if benefit.before is defined %}<tr><th scope="row">{{ benefit.label }}</th><td>{{ (benefit.unit in ['%', 's', 'UA/s'] ? benefit.before|number_format(2,',',' ')|trim('0','right')|trim(',','right') : benefit.before|quantity(2, true)) }} {{ benefit.unit }}</td><td>{{ (benefit.unit in ['%', 's', 'UA/s'] ? benefit.after|number_format(2,',',' ')|trim('0','right')|trim(',','right') : benefit.after|quantity(2, true)) }} {{ benefit.unit }}</td></tr>{% endif %}{% endfor %}
                             </tbody></table></div>
                         {% endif %}
                     {% endif %}
                 </section>
             {% else %}
-                <p class="catalog-info-stock">{{ group == 'ships' ? 'En réserve sur cette colonie' : 'Déployées sur cette planète' }} · {{ d._tier_label }} : <strong>{{ card.quantity|number_format(0,',',' ') }}</strong></p>
+                <p class="catalog-info-stock">{{ group == 'ships' ? 'En réserve sur cette colonie' : 'Déployées sur cette planète' }} · {{ d._tier_label }} : <strong>{{ card.quantity|quantity }}</strong></p>
                 <section aria-label="Performances">
                     <h3>Performances de ce rang</h3>
                     <div class="catalog-info-table-wrap"><table class="catalog-info-table"><caption>Valeurs par unité, avec vos bonus actuels</caption><thead><tr><th scope="col">Statistique</th><th scope="col">Base du rang</th><th scope="col">Avec vos bonus</th></tr></thead><tbody>
-                        {% for stat in info.performance %}<tr><th scope="row">{{ stat.label }}</th><td>{{ stat.base|number_format(2,',',' ')|trim('0','right')|trim(',','right') }} {{ stat.unit }}</td><td>{{ stat.effective|number_format(2,',',' ')|trim('0','right')|trim(',','right') }} {{ stat.unit }}</td></tr>{% endfor %}
+                        {% for stat in info.performance %}<tr><th scope="row">{{ stat.label }}</th><td>{{ (stat.unit in ['%', 's', 'UA/s'] ? stat.base|number_format(2,',',' ')|trim('0','right')|trim(',','right') : stat.base|quantity(2, true)) }} {{ stat.unit }}</td><td>{{ (stat.unit in ['%', 's', 'UA/s'] ? stat.effective|number_format(2,',',' ')|trim('0','right')|trim(',','right') : stat.effective|quantity(2, true)) }} {{ stat.unit }}</td></tr>{% endfor %}
                     </tbody></table></div>
                 </section>
             {% endif %}
@@ -47,7 +47,7 @@
                     <h3>{{ detail.title }}</h3>
                     {% for paragraph in detail.paragraphs %}<p>{{ paragraph }}</p>{% endfor %}
                     {% if detail.rows %}<dl class="catalog-info-stats">
-                        {% for row in detail.rows %}<div><dt>{{ row.label }}</dt><dd>{% if row.text is defined %}{{ row.text }}{% else %}{{ row.value|number_format(2,',',' ')|trim('0','right')|trim(',','right') }} {{ row.unit }}{% endif %}</dd></div>{% endfor %}
+                        {% for row in detail.rows %}<div><dt>{{ row.label }}</dt><dd>{% if row.text is defined %}{{ row.text }}{% else %}{{ (row.unit in ['%', 's', 'UA/s'] ? row.value|number_format(2,',',' ')|trim('0','right')|trim(',','right') : row.value|quantity(2, true)) }} {{ row.unit }}{% endif %}</dd></div>{% endfor %}
                     </dl>{% endif %}
                 </section>
             {% endfor %}
@@ -74,7 +74,7 @@
                     <h3>{{ group in ['ships','defenses'] ? 'Construire une unité de ce rang' : (group == 'buildings' ? 'Améliorer au niveau '~card.target : 'Rechercher le niveau '~card.target) }}</h3>
                     <p>Durée : <strong>{{ duration_label(card.duration) }}</strong>{% if group in ['ships','defenses'] %} par unité{% endif %}.</p>
                     <ul class="catalog-info-costs" aria-label="Coût avec vos réductions actuelles">
-                        {% for resource,cost in card.costs %}{% if cost>0 %}<li>{{ resources[resource].label|default(resource) }} <strong>{{ cost|number_format(0,',',' ') }}</strong></li>{% endif %}{% endfor %}
+                        {% for resource,cost in card.costs %}{% if cost>0 %}<li>{{ resources[resource].label|default(resource) }} <strong>{{ cost|quantity }}</strong></li>{% endif %}{% endfor %}
                     </ul>
                     <p class="catalog-info-note">Coût et durée calculés avec vos bonus actuels et les réglages de cet univers. Le temps d’attente des opérations déjà en file s’ajoute à cette durée.</p>
                 </section>
