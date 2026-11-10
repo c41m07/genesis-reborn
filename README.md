@@ -244,7 +244,7 @@ Après modification d’un service consommé par les processus persistants locau
 docker compose --env-file .env.local restart worker relay notifier
 ```
 
-Compiler avant les tests navigateur : la compilation remplace les fichiers de `app/public/build/`. Les dépendances et résultats générés (`app/vendor/`, `app/node_modules/`, `app/var/`, `app/public/build/`, `app/test-results/`, `app/playwright-report/`) sont ignorés par Git.
+Compiler avant les tests navigateur : la compilation remplace les fichiers de `app/public/build/`. Les dépendances et résultats générés (`app/vendor/`, `app/node_modules/`, `app/var/`, `app/public/build/`, `app/test-results/`, `app/playwright-report/`, `output/` et les rapports de couverture) sont ignorés par Git. Les captures conservées comme documentation restent dans `docs/ui-ux/captures/`.
 
 ## Base de données et données de développement
 
@@ -289,7 +289,7 @@ var/       archives opérationnelles privées (ignorées)
 .github/   CI et déploiement
 ```
 
-Les quatre fichiers `compose*.yaml` à la racine sont des liens vers `docker/`.
+Les quatre fichiers Compose de base à la racine sont des liens vers `docker/`.
 Les commandes existantes continuent de fonctionner depuis la racine ; les chemins
 Compose sont relatifs à celle-ci. Pour viser directement `docker/compose.yaml`,
 ajouter `--project-directory .`. Projets, réseaux et volumes gardent leurs noms.
@@ -350,3 +350,8 @@ Installation ou mise à jour : la migration `Version20261107150000` crée l’hi
 ## Pages juridiques provisoires
 
 Le nom public de l’éditeur et du responsable des données se renseigne avec `LEGAL_PUBLISHER_NAME` dans `.env.local` (local) ou `.env.prod` (serveur), hors Git. En son absence, les pages restent disponibles et signalent l’identité manquante. Adresse et téléphone de publication restent à compléter ; ne pas annoncer une conformité juridique sur la seule présence de ces pages.
+
+## Noms Docker locaux
+
+Conteneurs : `genesis-web`, `genesis-worker`, `genesis-relay`, `genesis-notifications`, `genesis-database`, `genesis-database-test`, `genesis-rabbitmq`, `genesis-mercure`. Image applicative : `local/genesis-web:dev`. Les identifiants des projets Compose et les volumes existants sont conservés.
+Le fichier local `compose.override.yaml`, ignoré par Git, applique ces noms avec les commandes habituelles (`make start`, `make status`). Il reste propre au poste de développement ; un clone neuf utilise les noms générés par Compose. Les tests et installations isolés utilisent leurs fichiers `-f` explicites et conservent leurs propres noms.
