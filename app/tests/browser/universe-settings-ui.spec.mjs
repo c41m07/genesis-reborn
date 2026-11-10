@@ -137,6 +137,7 @@ test('Paramètres hérités : valeurs hors plage conservées, refus expliqué et
   await expect(form.locator('.admin-draft-notice')).toContainText('Chaque vitesse doit être comprise');
   await expect(form.getByLabel('Vitesse bâtiments (×)', { exact: true })).toHaveValue('100');
   expect(load()).toBe(original);
+  await page.waitForLoadState('load');
   await form.getByLabel('Profil de vitesse').selectOption('alpha');
   for (const input of await form.locator('[data-admin-speed-target="multiplier"]').all()) await expect(input).toHaveValue('40');
   expect(load()).toBe(original);
