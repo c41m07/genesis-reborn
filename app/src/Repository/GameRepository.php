@@ -250,6 +250,12 @@ SQL;
     {
         return $this->all(QueueItem::class, $type ? ['planet'=>$p,'queueType'=>$type] : ['planet'=>$p]);
     }
+    /** @return list<QueueItem> */
+    public function researchQueue(PlayerUniverse $membership): array
+    {
+        return $this->all(QueueItem::class, ['playerUniverse' => $membership, 'queueType' => 'research'], ['id' => 'ASC']);
+    }
+
     public function levels(string $class, array $criteria): array
     {
         $levels=[];
