@@ -59,6 +59,7 @@ test('Assistant : défi, aperçu sans publication, contributions et boîte attri
   await page.reload();await expect(page.locator('table')).toContainText('Boîte');await expect(page.locator('table tbody tr')).toHaveCount(2);
   await peer.goto(`/evenements/defis/${id}`);await expect(peer.locator('main')).toContainText('Vous n’avez pas rempli');
   await page.goto(`/evenements/defis/${id}`);await expect(page.locator('main')).toContainText('disponible dans votre inventaire');await page.setViewportSize({width:390,height:900});expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);await page.screenshot({path:testInfo.outputPath('player-challenge-390.png'),fullPage:true});
+  runIsolatedSql(project,`UPDATE planet_resource SET current_stock=1000,last_updated_at=UTC_TIMESTAMP() WHERE planet_id=${own.planetId}`);
   await page.goto('/boosts');const box=page.locator('.resource-box-card');await box.getByLabel('Colonie de destination').selectOption(String(own.planetId));await box.getByRole('button').click();await expect(page.locator('.flash.success')).toContainText('Boîte ouverte');expect(queryIsolatedSql(project,`SELECT status FROM player_boost WHERE source_key='${rewardKey}'`)).toBe('used');
   const foreign=await browser.newPage();await enter(foreign,false,'Turbo');expect((await foreign.goto(`/evenements/defis/${id}`)).status()).toBe(404);await foreign.close();await peer.close();
 });

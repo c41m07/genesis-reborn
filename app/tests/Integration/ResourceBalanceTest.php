@@ -3,7 +3,7 @@ namespace App\Tests\Integration;
 
 use App\Entity\{GameEvent,Planet,PlanetBuilding,PlanetResource,Universe};
 use App\Service\Catalog\GameCatalog;
-use App\Service\Colony\{ResourceBalance,ResourceService};
+use App\Service\Colony\ResourceService;
 use App\Service\Player\RegistrationService;
 use App\Service\Universe\{UniverseImporter,UniverseService};
 use App\Validator\DTO\RegistrationData;
@@ -30,9 +30,8 @@ final class ResourceBalanceTest extends KernelTestCase
         self::getContainer()->get(UniverseImporter::class)->import();
     }
 
-    private function planet(string $cutover='2000-01-01T00:00:00Z'): Planet
+    private function planet(): Planet
     {
-        self::getContainer()->set(ResourceBalance::class,new ResourceBalance(self::getContainer()->get(GameCatalog::class),$cutover));
         $data=new RegistrationData();$data->email='balance@example.test';$data->username='Balance';$data->plainPassword='A-test-password-2026';
         $player=self::getContainer()->get(RegistrationService::class)->register($data);
         $universe=$this->em->getRepository(Universe::class)->findOneBy(['slug'=>'omega-1']);
@@ -76,13 +75,13 @@ final class ResourceBalanceTest extends KernelTestCase
         foreach($rows as $row) self::assertSame(0.0,$row->currentStock);
     }
 
-    public function testCutoverSplitsOldAndNewProductionWithoutRetroactivity(): void
+    public function testOfflinePeriodUsesCurrentRatesWithoutAnActivationDate(): void
     {
-        $planet=$this->planet('2026-11-02T12:00:00Z');$resources=self::getContainer()->get(ResourceService::class);
+        $planet=$this->planet();$resources=self::getContainer()->get(ResourceService::class);
         $rows=$this->rows($planet);
         foreach($rows as $row) $row->currentStock=0;
         $this->em->flush();$this->clock->sleep(7200);
-        $expected=['metal'=>580,'electricity'=>540,'antimatter'=>64,'hydrogen'=>350,'nano'=>380];
+        $expected=['metal'=>80,'electricity'=>0,'antimatter'=>20,'hydrogen'=>160,'nano'=>40];
         $snapshot=$resources->snapshot($planet);
         foreach($expected as $slug=>$stock) {
             self::assertEqualsWithDelta($stock,$snapshot[$slug]['stock'],1e-7,$slug);
@@ -92,27 +91,27 @@ final class ResourceBalanceTest extends KernelTestCase
         $resources->materialize($planet);
         foreach($expected as $slug=>$stock) self::assertEqualsWithDelta($stock,$rows[$slug]->currentStock,1e-7);
         $this->clock->sleep(3600);
-        self::assertEqualsWithDelta(620,$resources->snapshot($planet)['metal']['stock'],1e-7);
+        self::assertEqualsWithDelta(120,$resources->snapshot($planet)['metal']['stock'],1e-7);
     }
 
     public function testSurplusRemainsSpendableAndCannotBeErasedByRefundsOrDeposits(): void
     {
-        $planet=$this->planet('2026-11-02T12:00:00Z');$resources=self::getContainer()->get(ResourceService::class);
+        $planet=$this->planet();$resources=self::getContainer()->get(ResourceService::class);
         foreach($this->rows($planet) as $row) $row->currentStock=25000;
         $this->em->flush();$this->clock->sleep(7200);
         $snapshot=$resources->snapshot($planet);
-        self::assertEqualsWithDelta(25540,$snapshot['metal']['stock'],1e-7);
+        self::assertEqualsWithDelta(25000,$snapshot['metal']['stock'],1e-7);
         foreach($snapshot as $row) {self::assertGreaterThan(10000,$row['stock']);self::assertSame(0.0,$row['rate']);}
         $rows=$resources->materialize($planet);$this->em->flush();
         $resources->consume($planet,['metal'=>1000]);
-        self::assertEqualsWithDelta(24540,$rows['metal']->currentStock,1e-7);
+        self::assertEqualsWithDelta(24000,$rows['metal']->currentStock,1e-7);
         $resources->refund($planet,['metal'=>1000],1);
-        self::assertEqualsWithDelta(24540,$rows['metal']->currentStock,1e-7);
+        self::assertEqualsWithDelta(24000,$rows['metal']->currentStock,1e-7);
         $deposit=$resources->deposit($planet,['metal'=>500]);
         self::assertSame(0.0,$deposit['delivered']['metal']);self::assertSame(500.0,$deposit['overflow']['metal']);
-        self::assertEqualsWithDelta(24540,$rows['metal']->currentStock,1e-7);
+        self::assertEqualsWithDelta(24000,$rows['metal']->currentStock,1e-7);
         $resources->consume($planet,['metal'=>15000]);$this->em->flush();$this->clock->sleep(3600);
-        self::assertEqualsWithDelta(9580,$resources->snapshot($planet)['metal']['stock'],1e-7);
+        self::assertEqualsWithDelta(9040,$resources->snapshot($planet)['metal']['stock'],1e-7);
     }
 
     public function testStorageBuildingBonusesKeepTheirExistingTierFactors(): void
@@ -133,12 +132,12 @@ final class ResourceBalanceTest extends KernelTestCase
         foreach(['metal'=>144,'electricity'=>0,'antimatter'=>30,'hydrogen'=>192,'nano'=>72] as $slug=>$hourly) self::assertEqualsWithDelta($hourly,$resources->rate($planet,$slug,0,[])*3600,1e-7,$slug);
     }
 
-    public function testNoActivationDateKeepsTheCurrentRegimeAndDoesNotResetExistingRows(): void
+    public function testDefaultRulesApplyImmediatelyAndDoNotResetExistingRows(): void
     {
-        $planet=$this->planet('');$resources=self::getContainer()->get(ResourceService::class);$rows=$this->rows($planet);
-        self::assertSame(40000.0,$rows['metal']->currentStock);
-        self::assertSame(200000.0,$resources->capacity($planet,'metal',[]));
-        self::assertEqualsWithDelta(540,$resources->rate($planet,'metal',0,[])*3600,1e-8);
+        $planet=$this->planet();$resources=self::getContainer()->get(ResourceService::class);$rows=$this->rows($planet);
+        self::assertSame(10000.0,$rows['metal']->currentStock);
+        self::assertSame(10000.0,$resources->capacity($planet,'metal',[]));
+        self::assertEqualsWithDelta(40,$resources->rate($planet,'metal',0,[])*3600,1e-8);
         $rows['metal']->currentStock=12345;$this->em->flush();$resources->initialize($planet);
         self::assertSame(12345.0,$rows['metal']->currentStock);
     }

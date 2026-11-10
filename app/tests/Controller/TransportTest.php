@@ -41,6 +41,8 @@ final class TransportTest extends WebTestCase
         $this->target = $this->em->getRepository(Planet::class)->findOneBy(['solarSystem' => $this->origin->solarSystem, 'owner' => null]);
         $this->target->owner = $this->recipient->currentPlayerUniverse;
         self::getContainer()->get(ResourceService::class)->initialize($this->target);
+        $this->em->flush();
+        foreach ($this->em->getRepository(PlanetResource::class)->findAll() as $row) $row->currentStock = 1000;
         $this->recipient->preferences['transportReception'] = 'all';
         $fleet = new Fleet();$fleet->homePlanet = $this->origin;$fleet->playerUniverse = $this->sender->currentPlayerUniverse;
         $this->em->persist($fleet);

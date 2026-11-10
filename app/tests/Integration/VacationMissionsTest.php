@@ -134,6 +134,8 @@ final class VacationMissionsTest extends KernelTestCase
 
     public function testTransportAlreadySentIsRefusedAndItsCargoReturns(): void
     {
+        foreach($this->em->getRepository(\App\Entity\PlanetResource::class)->findBy(['planet'=>$this->origin,'resourceType'=>'metal']) as $row)$row->currentStock=1000;
+        $this->em->flush();
         $fleets = self::getContainer()->get(FleetService::class);
         $fleets->send($this->visitor->currentPlayerUniverse, $this->origin, 'transport', $this->target->id, ['transport'=>1], 1, ['metal'=>100], str_repeat('a',32));
         $fleet = $this->em->getRepository(Fleet::class)->findOneBy(['status'=>'traveling']);

@@ -69,6 +69,7 @@ final class AdminInterventionTest extends WebTestCase
     {
         $service = self::getContainer()->get(AdminInterventionService::class);
         $resource = $this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$this->target, 'resourceType'=>'metal']);
+        $resource->currentStock=5000;$this->em->flush();
         $stock = $resource->currentStock;
         self::assertTrue($service->resources($this->sender, $this->recipient->id, $this->target, 'add', ['metal'=>'500.25'], 'Réparation ticket 42', str_repeat('b',32)));
         self::assertEqualsWithDelta($stock+500.25, $resource->currentStock, .001);

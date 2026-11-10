@@ -186,29 +186,5 @@
     "basic": 1.0,
     "intermediate": 1.5,
     "superior": 2.25
-  },
-  "resource_balance_previous": {
-    "initial_stock": {
-      "metal": 40000,
-      "electricity": 20000,
-      "antimatter": 2000,
-      "hydrogen": 10000,
-      "nano": 10000
-    },
-    "colony_initial_stock": {
-      "metal": 8000,
-      "electricity": 3000,
-      "antimatter": 0,
-      "hydrogen": 1500,
-      "nano": 1000
-    },
-    "base_production": {
-      "metal": 0.15,
-      "electricity": 0.15,
-      "antimatter": 0.015,
-      "hydrogen": 0.075,
-      "nano": 0.1
-    },
-    "base_storage_capacity": 200000
   }
 }

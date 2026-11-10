@@ -167,6 +167,8 @@ final class GamePersistenceTest extends KernelTestCase
         $target=$this->em->getRepository(Planet::class)->findOneBy(['solarSystem'=>$origin->solarSystem,'owner'=>null]);$target->owner=$m;
         self::getContainer()->get(ResourceService::class)->initialize($target);$this->em->flush();
         foreach($this->em->getRepository(PlanetResource::class)->findBy(['planet'=>$target]) as $r) $r->productionRate=0;$this->em->flush();
+        foreach($this->em->getRepository(PlanetResource::class)->findBy(['planet'=>$target]) as $r)$r->currentStock=1000;
+        $this->em->flush();
         $resource=fn($planet,$slug)=>$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$planet,'resourceType'=>$slug]);
         $targetMetal=$resource($target,'metal')->currentStock;$targetHydrogen=$resource($target,'hydrogen')->currentStock;
         $sourceHydrogen=$resource($origin,'hydrogen')->currentStock;
@@ -207,7 +209,6 @@ final class GamePersistenceTest extends KernelTestCase
     #[\PHPUnit\Framework\Attributes\DataProvider('colonyShipKits')]
     public function testSoloColonyShipCanColonizeKnownPlanet(array $ranks,float $factor,string $consumedTier): void
     {
-        self::getContainer()->set(\App\Service\Colony\ResourceBalance::class,new \App\Service\Colony\ResourceBalance(self::getContainer()->get(GameCatalog::class),'2000-01-01T00:00:00Z'));
         $p=$this->player();$origin=$this->join($p);$idle=$this->ships($origin,[]);foreach($ranks as $tier=>$quantity){$ship=new FleetShip();$ship->fleet=$idle;$ship->slug='colony_ship';$ship->tier=$tier;$ship->quantity=$quantity;$this->em->persist($ship);}$m=$p->currentPlayerUniverse;$colonial_expansion=new PlayerTechnology();$colonial_expansion->playerUniverse=$m;$colonial_expansion->slug='colonial_expansion';$colonial_expansion->level=1;$this->em->persist($colonial_expansion);$this->em->flush();
         $target=$this->em->getRepository(Planet::class)->findOneBy(['solarSystem'=>$origin->solarSystem,'owner'=>null]);$target->npcPlanet=false;
         $service=self::getContainer()->get(\App\Service\Fleet\FleetService::class);
@@ -252,10 +253,10 @@ final class GamePersistenceTest extends KernelTestCase
         $clock=$this->clock();$p=$this->player();$planet=$this->join($p);$q=self::getContainer()->get(QueueService::class);$r=self::getContainer()->get(ResourceService::class);
         $q->add($p->currentPlayerUniverse,$planet,'buildings','storage_metal',1,str_repeat('a',32));
         $item=$this->em->getRepository(QueueItem::class)->findOneBy(['planet'=>$planet]);$duration=$item->durationSeconds;
-        $metal=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$planet,'resourceType'=>'metal']);$metal->currentStock=200000;$rate=$metal->productionRate;$this->em->flush();
+        $metal=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$planet,'resourceType'=>'metal']);$metal->currentStock=10000;$rate=$metal->productionRate;$this->em->flush();
         $clock->sleep(3600);$q->synchronize($p->currentPlayerUniverse);
-        self::assertEqualsWithDelta(200000+$rate*(3600-$duration),$r->snapshot($planet)['metal']['stock'],.000001);
-        self::assertSame(300000.0,$r->snapshot($planet)['metal']['capacity']);
+        self::assertEqualsWithDelta(10000+$rate*(3600-$duration),$r->snapshot($planet)['metal']['stock'],.000001);
+        self::assertSame(110000.0,$r->snapshot($planet)['metal']['capacity']);
     }
     public function testResearchLevelsAndCancellationAreSharedAcrossColonies(): void
     {
@@ -623,7 +624,7 @@ final class GamePersistenceTest extends KernelTestCase
 
     public function testPowerPlantActuallyIncreasesEnergyProduction(): void
     {
-        $clock=$this->clock();$a=$this->player();$planet=$this->join($a);$resources=self::getContainer()->get(ResourceService::class);$before=$resources->snapshot($planet)['electricity']['rate'];
+        $clock=$this->clock();$a=$this->player();$planet=$this->join($a);$resources=self::getContainer()->get(ResourceService::class);$resources->consume($planet,['electricity'=>1000]);$before=$resources->snapshot($planet)['electricity']['rate'];
         $q=self::getContainer()->get(QueueService::class);$q->add($a->currentPlayerUniverse,$planet,'buildings','power_plant',1,str_repeat('a',32));$clock->sleep(60);$q->synchronize($a->currentPlayerUniverse);
         self::assertGreaterThan($before,$resources->snapshot($planet)['electricity']['rate']);
     }
@@ -734,8 +735,8 @@ final class GamePersistenceTest extends KernelTestCase
     public function testCancellationRefundRespectsStorageCapacity():void
     {
         $this->clock();$p=$this->player();$planet=$this->join($p,'omega-1');$q=self::getContainer()->get(QueueService::class);$q->add($p->currentPlayerUniverse,$planet,'buildings','mine_metal',1,str_repeat('a',32));
-        $item=$this->em->getRepository(QueueItem::class)->findOneBy([]);$metal=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$planet,'resourceType'=>'metal']);$metal->currentStock=199999;$this->em->flush();
-        $q->cancel($p->currentPlayerUniverse,$item->id,str_repeat('b',32));self::assertSame(200000.0,$metal->currentStock);
+        $item=$this->em->getRepository(QueueItem::class)->findOneBy([]);$metal=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$planet,'resourceType'=>'metal']);$metal->currentStock=9999;$this->em->flush();
+        $q->cancel($p->currentPlayerUniverse,$item->id,str_repeat('b',32));self::assertSame(10000.0,$metal->currentStock);
     }
     public function testCatalogueSheetsUseDiscountedCostsAndSeparateDefenseStocksByRank():void
     {
@@ -765,9 +766,10 @@ final class GamePersistenceTest extends KernelTestCase
             $building=new PlanetBuilding();$building->planet=$planet;$building->slug=$slug;$building->level=$level;$this->em->persist($building);
         }
         $storage=new PlanetBuilding();$storage->planet=$planet;$storage->slug='storage_metal';$storage->tier='intermediate';$storage->level=2;$this->em->persist($storage);
+        $antimatter=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$planet,'resourceType'=>'antimatter']);$antimatter->currentStock=1000;
         $this->em->flush();$service=self::getContainer()->get(ResourceService::class);
         $snapshot=$service->snapshot($planet);
-        self::assertEqualsWithDelta(55000,$snapshot['metal']['protectedCapacity'],.000001);
+        self::assertEqualsWithDelta(36000,$snapshot['metal']['protectedCapacity'],.000001);
         self::assertSame(100.0,$snapshot['metal']['productivity']);
         self::assertSame(100.0,$snapshot['antimatter']['productivity']);
         self::assertNull($snapshot['electricity']['productivity']);

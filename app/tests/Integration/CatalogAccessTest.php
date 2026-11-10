@@ -34,7 +34,7 @@ final class CatalogAccessTest extends KernelTestCase
         }
         $this->em->flush();
         foreach([$this->planet,$this->other] as $planet){
-            self::getContainer()->get(ResourceService::class)->initialize($planet);
+            self::getContainer()->get(ResourceService::class)->initialize($planet);$this->em->flush();
             foreach($this->em->getRepository(PlanetResource::class)->findBy(['planet'=>$planet]) as $resource)$resource->currentStock=100000000;
         }
         $this->em->flush();
@@ -99,6 +99,8 @@ final class CatalogAccessTest extends KernelTestCase
         $weapon=$this->level('technologies','weapon_calibration',1);
         $queue=self::getContainer()->get(QueueService::class);$queue->synchronize($this->membership);
         foreach([$yard,$lab,$fortress,$weapon] as $row)$this->em->remove($row);$this->em->flush();
+        $stocks=self::getContainer()->get(ResourceService::class)->snapshot($this->planet);
+        foreach($stocks as $slug=>$row)self::assertGreaterThan(10000,$row['stock'],$slug.' : surplus disponible pour la construction');
         $queue->add($this->membership,$this->planet,'ships','heavy_fighter',2,str_repeat('c',32));
         $queue->add($this->membership,$this->planet,'defenses','ground_turret_anti_light',3,str_repeat('d',32));
         $items=$this->em->getRepository(QueueItem::class)->findBy([],['id'=>'ASC']);self::assertCount(2,$items);

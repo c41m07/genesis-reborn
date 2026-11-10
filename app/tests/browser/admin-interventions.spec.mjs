@@ -36,6 +36,7 @@ test('Ressources admin : confirmation, ajout, répétition et refus sans perte',
   test.setTimeout(120000);
   const userPage = await browser.newPage();const user = await enter(userPage);await enter(page,true);
   const project = process.env.BROWSER_ROUTER;
+  runIsolatedSql(project,`UPDATE planet_resource SET current_stock=5000,last_updated_at=UTC_TIMESTAMP() WHERE planet_id=${user.planetId} AND resource_type='metal'`);
   const stock = () => Number(queryIsolatedSql(project,`SELECT current_stock FROM planet_resource WHERE planet_id=${user.planetId} AND resource_type='metal'`));
   await page.goto(`/admin/joueurs/${user.playerId}`);
   const details = page.locator(`#colony-${user.planetId}`);await details.locator('summary').click();

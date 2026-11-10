@@ -24,7 +24,7 @@ final class ProducerBalanceTest extends TestCase
         $repository=$this->createStub(EntityRepository::class);$repository->method('findBy')->willReturn([]);
         $em=$this->createStub(EntityManagerInterface::class);$em->method('getRepository')->willReturn($repository);
         $repo=new GameRepository($em);$manager=new GameManager($em);$clock=new MockClock('2026-11-09T12:00:00Z');
-        $this->resources=new ResourceService($repo,$manager,$this->catalog,$clock,new GameEventService($repo,$manager,$clock),new VacationCalendar($repo,$clock),new \App\Service\Colony\ResourceBalance($this->catalog,''));
+        $this->resources=new ResourceService($repo,$manager,$this->catalog,$clock,new GameEventService($repo,$manager,$clock),new VacationCalendar($repo,$clock));
     }
     private function planet(int $position=5,int $speed=1):Planet
     {
@@ -45,10 +45,11 @@ final class ProducerBalanceTest extends TestCase
             foreach(['base_build_time','production_per_level','electricity_use_per_level','hydrogen_per_output','cost_profiles','economy_value_budget','effect_note'] as $field)unset($old[$field],$actual[$field]);
             self::assertSame($old,$actual,$slug.' : identité et prérequis conservés');
         }
-        $rules=(new \App\Service\Colony\ResourceBalance($this->catalog,''))->rulesAt(new \DateTimeImmutable('2026-11-09T12:00:00Z'));
-        unset($rules['resource_balance_previous']);
+        $rules=$this->catalog->rules();
         self::assertSame(4,$rules['antimatter_hydrogen_per_unit']);
-        $old=$fixture['historical_rules'];unset($rules['antimatter_hydrogen_per_unit'],$old['antimatter_hydrogen_per_unit']);self::assertSame($old,$rules);
+        $old=$fixture['historical_rules'];
+        foreach(['antimatter_hydrogen_per_unit','initial_stock','colony_initial_stock','base_production','base_storage_capacity'] as $field)unset($rules[$field],$old[$field]);
+        self::assertSame($old,$rules);
     }
     public function testApprovedBasicPricesAndDerivedRankBudgetsAreExact():void
     {
@@ -67,6 +68,10 @@ final class ProducerBalanceTest extends TestCase
     }
     public function testNetStocksAndDepletedResourcesMatch108FrozenScenariosAndHourlyReplay():void
     {
+        $historicalRules=ProducerBalanceReference::fixture()['historical_rules'];
+        $historicalRules['antimatter_hydrogen_per_unit']=$this->catalog->rules()['antimatter_hydrogen_per_unit'];
+        $property=new \ReflectionProperty(GameCatalog::class,'data');$data=$property->getValue($this->catalog);
+        $data['rules']=$historicalRules;$property->setValue($this->catalog,$data);
         $method=new \ReflectionMethod(ResourceService::class,'operatingInput');$count=0;
         foreach(ProducerBalanceReference::fixture()['economy'] as $row){
             $p=$this->planet($row['position'],$row['speed']);$levels=array_fill_keys(array_keys(ProducerBalanceReference::fixture()['definitions']),['basic'=>$row['level']]);

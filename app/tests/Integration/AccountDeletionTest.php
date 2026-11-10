@@ -118,6 +118,8 @@ final class AccountDeletionTest extends KernelTestCase
         $head=new \App\Entity\QueueItem();$head->playerUniverse=$membership;$head->planet=$planet;$head->queueType='building';$head->itemSlug='mine_metal';$head->itemLevel=4;
         $head->quantity=1;$head->durationSeconds=600;$head->queuedAt=$this->clock->now();$head->startedAt=$this->clock->now();$head->dispatchToken='delete-vacation-queue';
         $planet->buildingQueueStartedAt=$head->startedAt;$this->em->persist($head);$this->em->flush();
+        foreach($this->em->getRepository(\App\Entity\PlanetResource::class)->findBy(['planet'=>$planet]) as $row)$row->currentStock=1000;
+        $this->em->flush();
         $before=$resources->snapshot($planet);
         $vacation=new \App\Entity\VacationPeriod();$vacation->membership=$membership;$vacation->startedAt=$this->clock->now();$vacation->scheduledEndAt=$this->clock->now()->modify('+90 days');
         $manager->transaction(function () use ($manager,$queues,$resources,$membership,$planet,$vacation): void {
