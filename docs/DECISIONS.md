@@ -184,6 +184,13 @@ L’intégration et ses vérifications sont détaillées dans [BUILDING_BALANCE_
 - L’ouverture d’une conversation marque les messages affichés comme lus. La lecture du canal de guilde est suivie séparément pour chaque joueur et chaque guilde.
 - La page Alliances s’ouvre sur « Guildes ». Les liens sont ordonnés « Guildes », « Diplomatie », « Relation » et seul le panneau sélectionné est affiché. « Diplomatie » regroupe les relations entre guildes, « Relation » les contrats entre commandants.
 
+### Canal Global — 9 novembre 2026
+
+- Le canal « Global » est accessible aux joueurs connectés de l’univers courant, avec ou sans guilde, et se place au-dessus du canal de guilde. Cette décision remplace l’ordre des canaux défini le 5 novembre.
+- La lecture et l’envoi réutilisent les contrôles d’accès de la messagerie ; les messages suivent la validation de 1 à 2 000 caractères et la limitation partagée des envois.
+- Les messages Global ne déclenchent aucune notification et ne participent à aucun badge ni compteur de non-lus, y compris dans les totaux et la navigation. Leur consultation ne marque pas les autres conversations comme lues.
+- Les 100 derniers messages sont affichés dans l’ordre chronologique. Les conversations privées et de guilde conservent leur comportement.
+
 ### Limites par défaut des univers — 5 novembre 2026
 
 Le nombre maximum de vaisseaux par flotte est fixé par défaut à **1 000 000** et le plafond de planètes à **31**. Ces valeurs s’appliquent aux profils de référence et aux nouveaux univers. Les réglages personnalisés d’un univers restent prioritaires. Le plafond de planètes ne modifie pas les prérequis de recherche de colonisation.
@@ -961,3 +968,183 @@ installé dans la crontab de `caim`. Les occupations gardent leur échéance de 
 indépendante. Les participations sans activité connue restent exclues, sans
 initialisation inventée. Aucun envoi ou conversion manuel ni déploiement distant.
 Les descriptions précédentes de drapeaux désactivés sont des états historiques.
+
+## Refonte de l’administration et boîtes de ressources — choix du 8 novembre 2026
+
+Évolution validée à développer ; ces décisions ne signifient pas que les nouveaux
+écrans ou objets sont déjà implémentés. Le périmètre détaillé et les propositions
+encore en attente sont dans [le cadrage de l’administration](REFONTE_ADMINISTRATION.md).
+
+- Accueil synthétique et rubriques séparées : Surveillance, Joueurs, Univers,
+  Événements, Modération et Exploitation.
+- Surveillance détaillée des missions avec fiches joueurs, alertes à examiner,
+  notes et suivi des dossiers ; les transports sont regroupés dans ce suivi.
+- Alertes techniques et activités inhabituelles, notamment missions en retard,
+  transferts ou attaques répétés et sécurité ; ce sont des indications à examiner.
+- Création guidée de bonus temporaires, annonces et défis collectifs avec suivi
+  des contributions individuelles. Les mécanismes existants restent conservés.
+- Récompenses demandées : boosts et boîtes de ressources. Les distinctions de
+  profil proposées ne sont pas encore validées.
+- Boîtes petite, moyenne et grande : assortiment annoncé, montants fixes
+  plafonnés par univers, stockage dans l’inventaire et ouverture manuelle.
+- Le joueur choisit une de ses colonies du même univers ; si son stockage ne
+  suffit pas pour tout le contenu, l’ouverture est refusée et la boîte reste intacte.
+- Inventaire commun de 100 objets disponibles, boosts et boîtes confondus,
+  par participation à l’univers ; récompenses supplémentaires conservées en attente.
+
+Les quantités initiales sont validées : petite = 4 000 métal, 1 000 nano,
+1 000 hydrogène, 200 antimatière et 2 000 électricité ; moyenne = ces montants
+×2,5 ; grande = ×5. Elles restent réglables et plafonnées par univers.
+Chaque participant éligible reçoit au maximum un objet par événement : un boost
+ou une boîte, sans cumul des deux. Ces règles concernent le futur système et
+ne décrivent pas encore des récompenses distribuées par le code actuel.
+
+Les alertes de surveillance sont des indices à examiner, avec ces valeurs
+initiales réglables par univers : retard de mission supérieur à 5 minutes,
+5 transports entre deux joueurs distincts en 24 h, ou 10 attaques contre un même
+joueur en 24 h, PNJ exclus. L’ouverture d’une boîte est bloquée pendant le mode
+vacances et la boîte est conservée. Le plafond des boosts issus des missions
+à risque n’est pas modifié par l’ajout des boîtes aux récompenses d’événements.
+
+### Présence et interventions administratives — choix validés le 8 novembre 2026
+
+À développer dans la refonte, sans annonce d’activation à ce stade :
+
+- Présence estimée si activité depuis moins de cinq minutes, avec date de dernière activité.
+- Temps de jeu estimé par univers : aujourd’hui, sept derniers jours et total depuis le début du suivi ; suspension après cinq minutes sans activité, sans historique antérieur inventé.
+- Ajout ou retrait de ressources sur une colonie choisie du joueur, dans les capacités de stockage et sans solde négatif ; motif obligatoire.
+- Ajustement des échéances de flottes et rappel quand leur état permet un retour ; pas de modification de la composition ou cargaison en vol dans ce périmètre.
+- Confirmation et journal des interventions : administrateur, motif, valeurs avant/après ; respect des verrous et des tâches planifiées.
+### 8 novembre 2026 — Présentation de l’arbre technologique
+
+Décision utilisateur : organiser l’arbre en sections par domaines (économie,
+recherche, flotte, défense), avec de vraies branches de prérequis et les déblocages
+à droite. Tous les éléments restent consultables. La sélection éclaire le chemin
+complet entre domaines et les déblocages directs ; les autres cartes restent
+présentes. Les liens entre domaines sont affichés pour le parcours sélectionné.
+Le panneau de détail, latéral sur ordinateur et plein écran sur mobile, indique
+les niveaux réels requis, les accès acquis et la prochaine étape conseillée.
+Un objectif peut être mémorisé localement dans le navigateur, séparément pour
+chaque participation et colonie. Les rangs gardent leurs règles indépendantes,
+les accès permanents restent acquis et aucune valeur de gameplay ne change.
+Les recherches et filtres conservent les prérequis directs et indirects associés.
+
+
+### 8 novembre 2026 — Lisibilité des parcours technologiques
+
+Après vérification d’utilisation, décision utilisateur : conserver les filtres
+à la sélection et ajouter seulement les cartes nécessaires au parcours consulté.
+La sélection affiche les prérequis en priorité ; un bouton affiche séparément
+les déblocages directs. Les flèches indiquent le sens des dépendances et les
+conditions remplies, manquantes ou historiques restent distinguées par du texte
+et des tracés. Les anciens prérequis d’un accès acquis ne sont pas à refaire.
+Des accès rapides aux domaines et un recentrage facilitent la navigation. Sur mobile, fermer les détails conserve le parcours sélectionné.
+Le détail conserve un seul parcours de prérequis et regroupe les déblocages dans
+des sections repliables par domaine. Les règles et niveaux requis sont conservés.
+
+### 8 novembre 2026 — Guide technologique, un domaine à la fois
+
+L’utilisateur juge encore le graphe brouillon et illisible, puis choisit
+explicitement l’aperçu « Un domaine à la fois ». Cette décision remplace les
+présentations graphiques précédentes : plus de lignes ni de zone de graphe,
+quatre boutons de domaines, six cartes initiales et les suivantes à la demande,
+avec rang basique par défaut. La recherche parcourt tous les domaines ;
+les filtres par rang et état restent conservés à la sélection. Les prérequis
+ne sont plus ajoutés comme cartes dans les résultats : ils restent consultables
+dans la fiche, avec leurs étapes précédentes repliables et les déblocages
+regroupés par domaine. L’objectif local et la prochaine étape sont conservés,
+avec un panneau latéral sur ordinateur et une fiche plein écran sur mobile.
+Les règles de déblocage et les accès permanents ne changent pas.
+
+
+## Production et consommation des usines — décision du 9 novembre 2026
+
+Après 648 simulations déterministes aux niveaux 20/40/80, l’utilisateur confirme les valeurs proposées et le rythme de construction de 84,16 jours cumulés à ×1 pour cinq bâtiments chacun jusqu’à 80, contre 88,16 précédemment, hors attente de ressources, prérequis, stockages et recherches. La branche demandée est créée depuis dev : `codex/equilibrage-production-basique`. Aucune fusion ni publication n’est demandée.
+
+Production Basique par niveau et par heure (×1, position 5, sans passif) : M360, N180, H720, A90, centrale E1080. Électricité : 180/h par extracteur. Réacteur : 4 H/A. Prix niveau 1 : producteurs directs 480 M + 160 N ; réacteur 360 M + 120 N ; centrale 1 440 M + 480 N. Durées initiales : 60 s pour les producteurs directs, 120 s pour réacteur et centrale. Courbes, bonus de position, recherches, stockages et règles de pénurie sont conservés.
+
+Les facteurs existants de production/consommation 1/1,5/2,25 et de durée 1/1,25/1,5625 restent appliqués. Les nouveaux budgets des deux bâtiments moins chers sont déclinés mécaniquement avec les facteurs de coût existants : réacteur 1 200/1 500/1 875, centrale 4 800/6 000/7 500 ; recettes par rang inchangées en parts économiques. Cela ne constitue pas une étude de progression complète des rangs I/S. Les files conservent leurs prix payés et leurs durées enregistrées, les surcharges d’univers restent prioritaires et aucun changement de base ni déploiement n’est effectué. Le [bilan et ses limites](EQUILIBRAGE.md#production-des-batiments) et les nouvelles fixtures distinguent le candidat livré des anciennes références.
+
+
+### Publication de l’équilibrage sur dev — 9 novembre 2026
+
+L’utilisateur demande explicitement le commit et le push sur dev. Le lot est préparé sur le dernier dev intégré (1b02f4f), en conservant ses nouveaux travaux d’administration et d’événements, sans inclure les autres documents ou captures locaux. Les [résultats de publication](EQUILIBRAGE.md#publication-sur-dev--9-novembre-2026) distinguent suite PHP complète et contrôles navigateur consolidés après correction d’une ancienne attente de prix. Aucune publication sur Alpha ni déploiement demandé.
+
+## Suppressions et visibilité des événements — 9 novembre 2026
+
+Décisions validées par l’utilisateur : conserver le texte « Événements » et le
+compteur lorsque l’encart est fermé, sur PC et mobile. Les événements et défis
+déjà démarrés sont retirés des listes courantes et conservés dans l’historique ;
+les contributions et récompenses acquises ne sont pas supprimées. Un retrait
+en cours arrête les effets futurs et conserve les effets déjà acquis. Seuls les
+éléments jamais démarrés, sans contribution ni récompense, sont supprimés
+réellement ; les rotations automatiques restent en lecture seule.
+
+La suppression volontaire du compte concerne tous les univers : confirmation
+explicite et mot de passe actuel, conversion des empires en empires oubliés,
+effacement des identifiants et préférences, révocation des jetons de confirmation
+et de réinitialisation, fermeture de l’accès. Une ligne technique anonymisée est
+conservée pour les références historiques ; ce mécanisme ne purge pas les
+messages, journaux, feedbacks ou sauvegardes. La politique de confidentialité
+précise le canal des demandes complémentaires. Un combat en cours bloque la
+suppression complète sans modification partielle ; le dernier administrateur
+actif doit désigner un successeur. Les vacances prennent fin à la suppression.
+La conversion volontaire ne dépend ni des trente jours d’inactivité, ni du
+drapeau des conversions automatiques. Dans un univers fermé, les files restent
+figées ; l’identité est détachée. Aucun changement de schéma n’est nécessaire.
+
+## Administration des rotations et panneau joueur — 9 novembre 2026
+
+À la demande explicite de l’utilisateur, la restriction de lecture seule des
+rotations hebdomadaires est remplacée par la gestion de modèles par univers :
+création, activation et désactivation. Les trois modèles historiques et leur
+séquence restent les valeurs par défaut. Les modèles actifs alternent dans leur
+ordre enregistré, selon l’indice de semaine existant. Chaque univers conserve
+au plus une occurrence hebdomadaire par semaine, indépendamment du modèle.
+Les changements de modèles concernent uniquement les semaines non encore
+programmées ; une occurrence existante garde un instantané de ses règles.
+
+Une annulation explicite conserve l’enregistrement, sa clé de semaine, les
+contributions et récompenses acquises. Elle arrête les nouvelles contributions
+et attributions de cette occurrence, sans annuler les autres semaines. Une
+rotation terminée reste consultable ; une occurrence échue attend sa clôture
+pour préserver les récompenses dues. Le lundi à 00 h UTC, le plafond simultané
+et les modalités historiques de récompense restent inchangés. Les réglages
+utilisent `Universe.gameSettings`, sans migration.
+
+Les joueurs voient aussi les rotations de leur univers dans Événements et dans
+le panneau sous les ressources : objectif, contribution, progression, place
+lorsqu’un classement existe, récompense et durée. Les événements globaux
+applicables à cet univers restent inclus. Le nom de l’univers n’est plus répété
+dans le panneau. L’ouverture superpose le contenu sans agrandir la barre.
+Le bloc `planet-index-summary panel` est retiré à la demande de l’utilisateur.
+
+Les filtres des quatre catalogues sont alignés sur les rôles et effets actuels.
+Les vaisseaux de combat avec soute restent dans leur classe de combat ; les
+rôles transport, colonisation et espionnage sont distincts. Réservoirs, soutes
+et propulsion relèvent de la logistique ; extension coloniale et réparation
+des défenses possèdent leur filtre. Aucun coût, prérequis ou effet n’est modifié.
+
+
+### Contrôles du lot avant publication sur dev — 9 novembre 2026
+
+Publication demandée explicitement par l’utilisateur. Copie isolée issue de
+`dev` à `621cd11`, incluant le correctif Quality d’Alpha ; changements parallèles
+de navigation et d’envoi des mails exclus de ce lot.
+
+- `make validate`, `make lint`, `npm run build` via `make assets` et
+  `git diff --check` : réussis.
+- `make test` : exécution complète finale réussie, 545 tests PHP et
+  209104 assertions, puis 13 tests Python. Le domaine Mercure du conteneur de
+  test est aligné sur celui des requêtes de la suite HTTP.
+- `make test-browser` : les 129 scénarios ont été exécutés en quatre lots
+  isolés ; 128 succès au premier passage et un succès en reprise ciblée après
+  regroupement de la préparation des données d’inventaire. Il s’agit de
+  résultats consolidés, pas d’une exécution unique intégralement verte.
+- Le test de migration d’activité nettoie sa table temporaire : sa contrainte
+  nommée différemment de celle générée par l’ORM bloquait parfois le nettoyage
+  du test suivant. Les assertions et les migrations livrées restent inchangées.
+
+Ces contrôles sont locaux ; ils ne constituent ni une validation de la CI
+GitHub, ni un déploiement. Les migrations de vérification concernent uniquement
+les bases jetables ; aucune migration de la base de jeu existante n’est appliquée.

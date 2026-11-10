@@ -25,4 +25,19 @@ final class ProfileController extends AbstractController
         }
         return $this->render('player/profile.html.twig',['form'=>$form],new Response(status:$form->isSubmitted()?422:200));
     }
+    #[Route('/profil/supprimer',name:'app_account_delete',methods:['POST'])]
+    public function delete(Request $request,\App\Service\Player\AccountDeletionService $deletion,Security $security): Response
+    {
+        if (!$this->isCsrfTokenValid('account_delete',$request->request->get('_token'))) throw $this->createAccessDeniedException('Formulaire expiré.');
+        try {
+            $deletion->delete($this->getUser(),(string)$request->request->get('password'),$request->request->getBoolean('confirmed'));
+        } catch (\DomainException $error) {
+            $this->addFlash('error',$error->getMessage());
+            return $this->redirectToRoute('app_profile');
+        }
+        $response=$security->logout(false);
+        $request->getSession()->getFlashBag()->add('success','Votre compte a été supprimé. Vos empires sont devenus des empires oubliés.');
+        return $response??$this->redirectToRoute('app_login');
+    }
+
 }

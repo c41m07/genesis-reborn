@@ -3,6 +3,7 @@ namespace App\EventListener;
 
 use App\Entity\{Player, PlayerUniverse};
 use App\Service\Player\EmpireActivityService;
+use App\Service\Player\PlayerActivityService;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
@@ -15,6 +16,7 @@ final class EmpireActivitySubscriber implements EventSubscriberInterface
         private TokenStorageInterface $tokens,
         private EmpireActivityService $activity,
         private ClockInterface $clock,
+        private PlayerActivityService $presence,
     ) {}
 
     public static function getSubscribedEvents(): array
@@ -40,5 +42,6 @@ final class EmpireActivitySubscriber implements EventSubscriberInterface
             || !$membership->universe->isAccessible($this->clock->now())) return;
 
         $this->activity->recordVisit($membership);
+        $this->presence->record($membership);
     }
 }

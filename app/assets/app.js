@@ -9,6 +9,8 @@ import './styles/layout-alignment.css';
 import './styles/dark-components.css';
 
 import './styles/admin-dashboard.css';
+import './styles/admin-notifications.css';
+import './styles/admin-console.css';
 import './styles/galaxy-v2.css';
 import './styles/resource-strip.css';
 import './styles/catalogue-details.css';

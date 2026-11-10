@@ -6,7 +6,6 @@ use App\Manager\GameManager;
 use App\Repository\GameRepository;
 use Psr\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -53,11 +52,7 @@ final class PasswordResetService
             ->subject('Réinitialisation de votre mot de passe Genesis Reborn')
             ->text("Une demande de réinitialisation de mot de passe a été effectuée pour votre compte Genesis Reborn.\n\nCe lien est valable une heure et ne peut être utilisé qu'une fois :\n$url\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez ce message.")
             ->html($this->twig->render('emails/password_reset.html.twig', ['username' => $player->username, 'actionUrl' => $url]));
-        try {
-            $this->mailer->send($message);
-        } catch(TransportExceptionInterface $exception) {
-            $this->logger->warning('Envoi du lien de réinitialisation impossible.', ['exception'=>$exception::class]);
-        }
+        (new AccountMailDelivery($this->mailer, $this->logger))->send($message, 'password_reset');
     }
 
     public function isValid(string $plainToken):bool

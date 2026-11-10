@@ -72,29 +72,46 @@ async function decide(page, button, accept, name) {
   await clicking;
 }
 
-test('Administration : onglets clavier, comptes protégés, confirmations et journal', async ({ page, browser }, testInfo) => {
+async function visitAdminLink(page, name) {
+  const toggle = page.getByRole('button', { name: 'Menu d’administration' });
+  const navigation = page.getByRole('navigation', { name: 'Console d’administration' });
+  const openMenu = async () => {
+    if (page.viewportSize().width <= 760) {
+      await expect(toggle).toBeVisible();
+      if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
+    }
+    await expect(navigation).toBeVisible();
+  };
+  await openMenu();
+  if (await navigation.getByRole('link', { name }).count() === 0) {
+    await navigation.getByRole('link', { name: /^Exploitation/ }).click();
+    await openMenu();
+  }
+  await navigation.getByRole('link', { name }).click();
+}
+
+test('Administration : rubriques clavier, comptes protégés, confirmations et journal', async ({ page, browser }, testInfo) => {
   const admin = await enter(page, true);
   const player = await browser.newPage();
   const target = await enter(player);
   await player.goto('/admin');
   await expect(player).toHaveURL(/acces-refuse/);
   await page.goto('/admin');
-  const tabs = page.getByRole('tablist', { name: 'Sections d’administration' });
-  await tabs.getByRole('tab', { name: 'Joueurs', exact: true }).focus();
-  await page.keyboard.press('ArrowRight');
-  await expect(tabs.getByRole('tab', { name: 'Univers', exact: true })).toBeFocused();
-  await expect(page.locator('#admin-universes')).toBeVisible();
-  await page.keyboard.press('ArrowLeft');
-  await expect(tabs.getByRole('tab', { name: 'Joueurs', exact: true })).toBeFocused();
-  await page.keyboard.press('End');
-  await expect(tabs.getByRole('tab', { name: 'Journal', exact: true })).toBeFocused();
-  await page.keyboard.press('ArrowRight');
-  await expect(tabs.getByRole('tab', { name: 'Vue d’ensemble', exact: true })).toBeFocused();
-  await page.keyboard.press('ArrowLeft');
-  await expect(tabs.getByRole('tab', { name: 'Journal', exact: true })).toBeFocused();
-  await page.keyboard.press('Home');
-  await expect(tabs.getByRole('tab', { name: 'Vue d’ensemble', exact: true })).toBeFocused();
-  await tabs.getByRole('tab', { name: 'Joueurs', exact: true }).click();
+  const navigation = page.getByRole('navigation', { name: 'Console d’administration' });
+  await navigation.getByRole('link', { name: /^Joueurs et modération/ }).click();
+  await expect(page).toHaveURL(/admin\/rubriques\/players$/);
+  await expect(page.locator('.admin-module-card')).toHaveCount(4);
+  const playersLink = navigation.getByRole('link', { name: 'Joueurs', exact: true });
+  await playersLink.focus();
+  await page.keyboard.press('Tab');
+  await expect(navigation.getByRole('link', { name: 'Signalements', exact: true })).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(playersLink).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/admin\/joueurs$/);
+  await expect(navigation.getByRole('link', { name: 'Joueurs', exact: true })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByRole('navigation', { name: 'Fil d’Ariane' })).toContainText('Joueurs et modération');
+  await expect(page.getByRole('navigation', { name: 'Joueurs et modération' }).getByRole('link', { name: 'Joueurs', exact: true })).toHaveAttribute('aria-current', 'page');
   const panel = page.locator('#admin-players');
   const ownRow = panel.locator('tr').filter({ hasText: admin.email });
   const targetRow = panel.locator('tr').filter({ hasText: target.email });
@@ -105,16 +122,16 @@ test('Administration : onglets clavier, comptes protégés, confirmations et jou
   await expect(targetRow).toHaveAttribute('data-filter-role', 'player');
   expect(queryIsolatedSql(process.env.BROWSER_ROUTER, "SELECT COUNT(*) FROM admin_audit_log WHERE action='player_promote_admin'")).toBe('0');
   await decide(page, promote, true, target.username);
-  await page.goto('/admin#admin-players');
+  await page.goto('/admin/joueurs');
   await expect(targetRow).toHaveAttribute('data-filter-role', 'admin');
   await expect(targetRow.getByRole('button', { name: /Suspendre/ })).toHaveCount(0);
   await decide(page, targetRow.getByRole('button', { name: 'Retirer les droits d’administration à ' + target.username }), true, target.username);
-  await page.goto('/admin#admin-players');
+  await page.goto('/admin/joueurs');
   await expect(targetRow).toHaveAttribute('data-filter-role', 'player');
   await decide(page, targetRow.getByRole('button', { name: 'Suspendre le compte ' + target.username }), false, target.username);
   await expect(targetRow).toHaveAttribute('data-filter-status', 'active');
   await decide(page, targetRow.getByRole('button', { name: 'Suspendre le compte ' + target.username }), true, target.username);
-  await page.goto('/admin#admin-players');
+  await page.goto('/admin/joueurs');
   await expect(targetRow).toHaveAttribute('data-filter-status', 'suspended');
   await panel.getByLabel('État', { exact: true }).selectOption('suspended');
   await expect(panel.locator('tr[data-admin-filter-target="row"]:visible')).toHaveCount(1);
@@ -124,19 +141,19 @@ test('Administration : onglets clavier, comptes protégés, confirmations et jou
   }
   await page.screenshot({ path: testInfo.outputPath('admin-suspended-390.png'), fullPage: true, animations: 'disabled' });
   await targetRow.getByRole('button', { name: 'Réactiver le compte ' + target.username }).click();
-  await page.goto('/admin#admin-players');
+  await page.goto('/admin/joueurs');
   await expect(targetRow).toHaveAttribute('data-filter-status', 'active');
 
-  await tabs.getByRole('tab', { name: 'Sécurité', exact: true }).click();
+  await visitAdminLink(page, /^Sécurité/);
   const security = page.locator('#admin-security');
   await security.getByRole('searchbox', { name: 'Rechercher', exact: true }).fill('zz-aucun-compte');
   await expect(security.getByText('Aucun incident ne correspond à cette recherche.')).toBeVisible();
   await security.getByRole('searchbox', { name: 'Rechercher', exact: true }).fill(target.username);
   await security.getByRole('button', { name: 'Marquer examinée' }).click();
-  await page.goto('/admin#admin-security');
+  await page.goto('/admin/securite');
   await expect(security.getByText('Aucune tentative refusée en attente d’examen.')).toHaveCount(1);
   await expect(security.getByText('Aucun incident ne correspond à cette recherche.')).toHaveCount(0);
-  await tabs.getByRole('tab', { name: 'Journal', exact: true }).click();
+  await visitAdminLink(page, 'Journal des actions');
   const audit = page.locator('#admin-audit');
   await audit.getByLabel('Action', { exact: true }).selectOption('admin_access_reviewed');
   await expect(audit.locator('tr[data-admin-filter-target="row"]:visible')).toHaveCount(1);
@@ -192,7 +209,7 @@ test('Relais admin : échéance, retard, nature inconnue et lecture mobile sans 
   await enter(page, true);
   const token=crypto.randomUUID();
   runIsolatedSql(process.env.BROWSER_ROUTER, `INSERT INTO outbox_message (kind,target_id,token,due_at) VALUES ('diagnostic_test',987654,'${token}',UTC_TIMESTAMP()-INTERVAL 5 MINUTE)`);
-  await page.goto('/admin');
+  await page.goto('/admin/exploitation');
   const details=page.locator('.admin-operations details');
   await details.locator('summary').focus();await page.keyboard.press('Enter');
   const row=details.getByRole('row').filter({hasText:'diagnostic_test'});

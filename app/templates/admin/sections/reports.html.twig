@@ -1,0 +1,19 @@
+<section class="panel admin-section" id="admin-reports" aria-labelledby="admin-reports-title" data-controller="admin-filter">
+
+<h2 id="admin-reports-title">Signalements de messages</h2>
+<p>Seuls les messages ayant été signalés par un participant apparaissent ici.</p>
+<div class="admin-search"><label for="report-search">Rechercher</label><input id="report-search" type="search" placeholder="Joueur, guilde, motif…" data-admin-filter-target="query" data-action="input->admin-filter#filter"><output data-admin-filter-target="count"></output></div>
+{% for report in reports %}
+<article class="panel" data-admin-filter-target="row">
+<p><strong>Signalement #{{ report.id }}</strong> · {{ report.createdAt|date('d/m/Y H:i') }} · {{ report.reporter.displayName }}</p>
+<p>{% if report.message.recipient %}Message privé de {{ report.message.sender.displayName }} à {{ report.message.recipient.displayName }}{% else %}Message de la guilde {{ report.message.guild.name }} par {{ report.message.sender.displayName }}{% endif %} · {{ report.message.createdAt|date('d/m/Y H:i') }}</p>
+<blockquote>{{ report.message.content }}</blockquote><p>Motif : {{ report.reason }}</p>
+<form method="post" action="{{ path('app_admin_report_review',{id:report.id}) }}">
+<input type="hidden" name="_token" value="{{ csrf_token('admin_report_'~report.id) }}">
+<button name="decision" value="dismiss">Classer sans suite</button>
+<button class="primary" name="decision" value="redact">Masquer le message</button>
+</form>
+</article>
+{% endfor %}
+<p hidden data-admin-filter-target="empty" data-default-message="Aucun signalement à traiter." data-no-matches-message="Aucun signalement ne correspond à cette recherche.">Aucun signalement à traiter.</p>
+</section>

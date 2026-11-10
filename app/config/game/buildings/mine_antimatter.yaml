@@ -1,7 +1,7 @@
 {
   "slug": "mine_antimatter",
   "label": "Piège à antimatière",
-  "base_build_time": 20,
+  "base_build_time": 120,
   "build_time_scaling": 1.6,
   "costs_base": {
     "metal": 480,
@@ -45,27 +45,27 @@
       ]
     }
   },
-  "hydrogen_per_output": 8,
+  "hydrogen_per_output": 4,
   "electricity_use_per_level": 0.05,
-  "economy_value_budget": 1600,
+  "economy_value_budget": 1200,
   "cost_profiles": {
     "basic": {
-      "metal": 480,
-      "nano": 160,
+      "metal": 360,
+      "nano": 120,
       "antimatter": 0,
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 450,
-      "nano": 225,
-      "antimatter": 25,
+      "metal": 338,
+      "nano": 168,
+      "antimatter": 19,
       "hydrogen": 0
     },
     "superior": {
-      "metal": 376,
-      "nano": 282,
-      "antimatter": 63,
-      "hydrogen": 124
+      "metal": 281,
+      "nano": 211,
+      "antimatter": 47,
+      "hydrogen": 93
     }
   },
   "tier_labels": {
@@ -96,5 +96,6 @@
         "level": 2
       }
     ]
-  }
+  },
+  "production_per_level": 0.025
 }

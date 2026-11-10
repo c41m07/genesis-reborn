@@ -1,10 +1,14 @@
 <?php
 namespace App\Controller;
 
-use App\Entity\{AdminAuditLog, MessageReport, Player, PlayerUniverse, Universe};
+use App\Entity\{AdminAuditLog, GameEvent, MessageReport, Player, PlayerUniverse, Universe};
+use App\Service\Admin\AdminMissionMonitoring;
+use App\Service\Admin\AdminCaseService;
+use App\Service\Player\PlayerActivityService;
 use App\Repository\GameRepository;
 use App\Service\Admin\AdminService;
 use App\Service\Admin\AdminOperationsService;
+use App\Service\Admin\AdminNotificationService;
 use App\Service\Admin\UniverseMetricsService;
 use App\Service\Admin\CatalogBalanceService;
 use App\Service\Catalog\GameCatalog;
@@ -20,10 +24,18 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class AdminController extends AbstractController
 {
     #[Route('', name: '_index', methods: ['GET'])]
-    public function index(Request $request, GameRepository $repo, GameCatalog $catalog, AdminService $admin, AdminOperationsService $operations): Response
+    #[Route('/joueurs', name: '_players', methods: ['GET'], defaults: ['screen'=>'players'])]
+    #[Route('/univers', name: '_universes', methods: ['GET'], defaults: ['screen'=>'universes'])]
+    #[Route('/moderation', name: '_reports', methods: ['GET'], defaults: ['screen'=>'reports'])]
+    #[Route('/securite', name: '_security', methods: ['GET'], defaults: ['screen'=>'security'])]
+    #[Route('/exploitation', name: '_operations', methods: ['GET'], defaults: ['screen'=>'operations'])]
+    #[Route('/journal', name: '_audit', methods: ['GET'], defaults: ['screen'=>'audit'])]
+    public function index(Request $request, GameRepository $repo, GameCatalog $catalog, AdminService $admin, AdminOperationsService $operations, AdminNotificationService $notifications, AdminMissionMonitoring $monitor, PlayerActivityService $presence, AdminCaseService $caseFiles, string $screen = 'overview'): Response
     {
+        $titles = ['overview'=>'Accueil', 'players'=>'Joueurs', 'universes'=>'Univers', 'reports'=>'Modération', 'security'=>'Sécurité', 'operations'=>'Exploitation', 'audit'=>'Journal des actions'];
+        if (!isset($titles[$screen])) throw $this->createNotFoundException();
         $reports = $repo->all(MessageReport::class, ['status' => 'open'], ['createdAt' => 'DESC']);
-        $admin->recordReportViews($this->getUser(), $reports);
+        if ($screen === 'reports') $admin->recordReportViews($this->getUser(), $reports);
         $universes = $repo->all(Universe::class, [], ['id' => 'ASC']);
         $memberships = $repo->all(PlayerUniverse::class);
         $universePlayerCounts = [];
@@ -46,11 +58,18 @@ final class AdminController extends AbstractController
             }
         }
         $securityIncidents = array_values(array_filter($auditLogs, static fn (AdminAuditLog $entry): bool => $entry->action === 'admin_access_denied' && !isset($reviewedIncidentIds[$entry->id])));
+        if ($screen === 'reports') $notifications->markVisited($this->getUser(), ['reports'=>max([0, ...array_map(static fn (MessageReport $report): int => $report->id, $reports)])]);
+        if ($screen === 'security') $notifications->markVisited($this->getUser(), ['security'=>max([0, ...array_map(static fn (AdminAuditLog $entry): int => $entry->id, $securityIncidents)])]);
         $auditActions = array_values(array_unique(array_map(static fn (AdminAuditLog $entry): string => $entry->action, $auditLogs)));
         sort($auditActions);
         $operationsSnapshot = $operations->snapshot();
-        return $this->render('admin/index.html.twig', [
+        return $this->render($screen === 'overview' ? 'admin/index.html.twig' : 'admin/section.html.twig', [
+            'screen'=>$screen, 'screenTitle'=>$titles[$screen],
+            'activeCaseCount'=>$screen === 'overview' ? $caseFiles->activeCount() : 0,
+            'fleetOverview'=>$screen === 'overview' ? $monitor->search(['universe'=>0, 'mission'=>'', 'status'=>'active', 'q'=>''], 1) : [],
+            'upcomingEvents'=>$screen === 'overview' ? array_slice(array_filter($repo->all(GameEvent::class, ['status'=>['planned', 'active']], ['startsAt'=>'ASC']), static fn (GameEvent $event): bool => $event->endsAt > $now), 0, 5) : [],
             'players' => $players,
+            'playerPresence' => $screen === 'players' ? $presence->forPlayers($players) : [],
             'playerCount' => count($players),
             'suspendedPlayerCount' => $suspendedPlayerCount,
             'activeUniverseCount' => $activeUniverseCount,
@@ -65,12 +84,18 @@ final class AdminController extends AbstractController
             'universes' => $universes,
             'universeConfigs' => $universeConfigs,
             'universeProfiles' => UniverseCreationService::profiles(),
-            'universeCreationDraft' => $request->getSession()->remove('admin_universe_creation_draft') ?? [],
-            'universeScheduleDraft' => $request->getSession()->remove('admin_universe_schedule_draft') ?? [],
-            'universeSettingsDraft' => $request->getSession()->remove('admin_universe_settings_draft') ?? [],
+            'universeCreationDraft' => $screen === 'universes' ? ($request->getSession()->remove('admin_universe_creation_draft') ?? []) : [],
+            'universeScheduleDraft' => $screen === 'universes' ? ($request->getSession()->remove('admin_universe_schedule_draft') ?? []) : [],
+            'universeSettingsDraft' => $screen === 'universes' ? ($request->getSession()->remove('admin_universe_settings_draft') ?? []) : [],
             'reports' => $reports,
             'auditLogs' => $auditLogs,
         ]);
+    }
+
+    #[Route('/rubriques/{group}', name: '_group', requirements: ['group'=>'players|universe|events|ops'], methods: ['GET'])]
+    public function group(string $group): Response
+    {
+        return $this->render('admin/group.html.twig', ['navigationGroup'=>$group]);
     }
 
     #[Route('/universes/{id}/mesures', name: '_universe_metrics', methods: ['GET'])]
@@ -118,7 +143,7 @@ final class AdminController extends AbstractController
             $this->addFlash('error', $error->getMessage());
         }
 
-        return $this->redirectToRoute('app_admin_index', ['_fragment' => 'admin-security']);
+        return $this->redirectToRoute('app_admin_security', ['_fragment' => 'admin-security']);
     }
 
     #[Route('/players/{id}/role', name: '_player_role', methods: ['POST'])]
@@ -143,7 +168,7 @@ final class AdminController extends AbstractController
             $this->addFlash('error', $error->getMessage());
         }
 
-        return $this->redirectToRoute('app_admin_index', ['_fragment' => 'admin-players']);
+        return $this->redirectToRoute('app_admin_players', ['_fragment' => 'admin-players']);
     }
 
     #[Route('/players/{id}/suspension', name: '_player_suspend', methods: ['POST'])]
@@ -154,7 +179,7 @@ final class AdminController extends AbstractController
         }
         try { $admin->setPlayerSuspended($this->getUser(), $id, $request->request->getBoolean('suspend')); }
         catch (\DomainException $error) { $this->addFlash('error', $error->getMessage()); }
-        return $this->redirectToRoute('app_admin_index');
+        return $this->redirectToRoute('app_admin_players');
     }
 
     #[Route('/reports/{id}', name: '_report_review', methods: ['POST'])]
@@ -165,7 +190,7 @@ final class AdminController extends AbstractController
         }
         try { $admin->reviewReport($this->getUser(), $id, (string) $request->request->get('decision')); }
         catch (\DomainException $error) { $this->addFlash('error', $error->getMessage()); }
-        return $this->redirectToRoute('app_admin_index');
+        return $this->redirectToRoute('app_admin_reports');
     }
 
 
@@ -189,7 +214,7 @@ final class AdminController extends AbstractController
             }
             $request->getSession()->set('admin_universe_settings_draft', $draft);
         }
-        return $this->redirectToRoute('app_admin_index', ['_fragment' => 'admin-universe-'.$id]);
+        return $this->redirectToRoute('app_admin_universes', ['_fragment' => 'admin-universe-'.$id]);
     }
 
     #[Route('/universes', name: '_universe_create', methods: ['POST'])]
@@ -222,7 +247,7 @@ final class AdminController extends AbstractController
             $request->getSession()->set('admin_universe_creation_draft', $draft);
         }
 
-        return $this->redirectToRoute('app_admin_index', ['_fragment' => $fragment]);
+        return $this->redirectToRoute('app_admin_universes', ['_fragment' => $fragment]);
     }
 
     #[Route('/universes/{id}/delete', name: '_universe_delete', methods: ['POST'])]
@@ -239,7 +264,7 @@ final class AdminController extends AbstractController
             $this->addFlash('error', $error->getMessage());
         }
 
-        return $this->redirectToRoute('app_admin_index');
+        return $this->redirectToRoute('app_admin_universes');
     }
 
     #[Route('/universes/{id}/schedule', name: '_universe_schedule', methods: ['POST'])]
@@ -264,6 +289,6 @@ final class AdminController extends AbstractController
             $draft['error'] = $error->getMessage();
             $request->getSession()->set('admin_universe_schedule_draft', $draft);
         }
-        return $this->redirectToRoute('app_admin_index', ['_fragment' => 'admin-universe-'.$id]);
+        return $this->redirectToRoute('app_admin_universes', ['_fragment' => 'admin-universe-'.$id]);
     }
 }

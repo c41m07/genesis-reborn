@@ -5,6 +5,12 @@ body.authenticated .catalog-card :is(.card-detail,.card-benefits p){font-size:12
 body.authenticated .catalog-card .secondary{font-size:12px;white-space:normal}
 body.authenticated .catalog-card .requirement{font-size:11px;line-height:1.6}
 body.authenticated .progress-times{font-size:11px;line-height:1.5}
+body.authenticated .queue-details{font-size:13px;line-height:1.6}
+body.authenticated .queue-details>summary{font-size:13px;padding-block:8px}
+body.authenticated .queue-detail-item strong{font-size:13px}
+body.authenticated .queue-detail-item small,
+body.authenticated .queue-detail-list>p{font-size:12px;line-height:1.6}
+body.authenticated .queue-detail-item .text-button{font-size:12px;min-height:36px}
 body.authenticated .ui-tabs.ui-tabs>:is(a,button),
 body.authenticated .building-rank-tab{font-size:12px}
 body.authenticated :is(label,.catalog-card label,.map-quick-mission label,.planet-rename label,.message-bubble form label){font-size:12px}
@@ -14,6 +20,8 @@ body.authenticated .mission-report :is(.data-table,.round-table){font-size:12px}
 body.authenticated .message-bubble>p{font-size:13px;line-height:1.65;overflow-wrap:anywhere}
 body.authenticated .message-meta{font-size:11px;flex-wrap:wrap}
 body.authenticated .message-compose textarea{font-size:14px;line-height:1.5}
+body.authenticated .boost-operation{padding-block:16px;border-top:1px solid var(--line);overflow-wrap:anywhere}
+body.authenticated .boost-operation .secondary{font-size:12px;white-space:normal}
 
 @media(max-width:1050px){
     body.authenticated :is(input:not([type="hidden"],[type="checkbox"],[type="radio"],[type="submit"],[type="button"]),select,textarea),
@@ -33,3 +41,13 @@ body.authenticated .message-compose textarea{font-size:14px;line-height:1.5}
     body.authenticated .building-rank-full{display:inline;position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
     body.authenticated .building-rank-short{display:inline}
 }
+.resource-box-form{display:grid;gap:10px;margin-top:16px}
+.resource-box-form :is(label,select){font-size:13px}
+.resource-box-form button{min-height:44px}
+.resource-box-card>div{width:100%;min-width:0}
+.resource-box-card h3{font-size:16px;line-height:1.4;letter-spacing:normal}
+.resource-box-card p,.resource-box-form button{font-size:13px;line-height:1.6}
+body.authenticated[data-theme=light] .patchnote-shortcut>span{color:#535f66}
+.challenge-progress{width:100%;height:20px}
+.challenge-list{list-style:none;padding:0;display:grid;gap:16px}
+.challenge-list li{display:grid;gap:6px;font-size:14px;line-height:1.6}

@@ -218,6 +218,7 @@ final class TransportTest extends WebTestCase
         $this->client->request('GET', '/rapports/transport/'.$id);self::assertResponseStatusCodeSame(404);
         $this->client->request('GET', '/admin/transports');self::assertResponseRedirects('/acces-refuse');
         $em = self::getContainer()->get(EntityManagerInterface::class);$outsider = $em->find(Player::class, $outsider->id);$outsider->roles = ['ROLE_ADMIN'];$em->flush();
-        $this->client->loginUser($outsider);$this->client->request('GET', '/admin/transports');self::assertResponseIsSuccessful();self::assertSelectorTextContains('h1', 'Historique des transports');
+        $this->client->loginUser($outsider);$this->client->request('GET', '/admin/transports');self::assertResponseRedirects('/admin/flottes?mission=transport&status=&page=1');
+        $this->client->followRedirect();self::assertResponseIsSuccessful();self::assertSelectorTextContains('h1', 'Surveillance des missions');
     }
 }

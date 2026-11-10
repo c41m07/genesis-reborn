@@ -24,6 +24,7 @@ final class BoostUseService
         private FleetService $fleets,
         private ClockInterface $clock,
         private \App\Service\Player\VacationCalendar $vacations,
+        private BoostGrantService $grants,
     ) {}
 
     public function useOnQueue(PlayerUniverse $membership, int $queueId, string $requestKey): void
@@ -42,7 +43,7 @@ final class BoostUseService
             $boost = $this->takeAvailableBoost($membership, 'queue', $queueId);
             $this->queues->applyPlayerBoost($item, $this->divisor());
             $this->manager->flush();
-            $this->promoteOldestPending($membership);
+            $this->grants->promoteOldestPendingLocked($membership);
             $this->manager->flush();
         });
     }
@@ -66,14 +67,14 @@ final class BoostUseService
             $newRemaining = max(1, (int) ceil($remaining * (1 - $this->ratio())));
             $newArrivalAt = $this->clock->now()->modify('+' . $newRemaining . ' seconds');
             $this->fleets->reschedulePlayerBoost($fleet, $newArrivalAt);
-            $this->promoteOldestPending($membership);
+            $this->grants->promoteOldestPendingLocked($membership);
             $this->manager->flush();
         });
     }
 
     private function takeAvailableBoost(PlayerUniverse $membership, string $operationType, int $operationId): PlayerBoost
     {
-        $boost = $this->repo->oldestBoost($membership, 'available');
+        $boost = $this->repo->oldestBoost($membership, 'available', 'boost');
         if (!$boost) {
             throw new \DomainException('Aucun boost disponible dans votre inventaire.');
         }
@@ -87,25 +88,6 @@ final class BoostUseService
         $boost->operationId = $operationId;
 
         return $boost;
-    }
-
-    private function promoteOldestPending(PlayerUniverse $membership): void
-    {
-        if ($this->repo->countBoosts($membership, 'available') >= $this->inventoryCapacity()) {
-            return;
-        }
-        $pending = $this->repo->oldestBoost($membership, 'pending');
-        if ($pending) {
-            $this->manager->lock($pending);
-            if ($pending->status === 'pending') {
-                $pending->status = 'available';
-            }
-        }
-    }
-
-    private function inventoryCapacity(): int
-    {
-        return max(1, min(100, (int) ($this->catalog->all('boosts')['inventory_capacity'] ?? 100)));
     }
 
     private function ratio(): float

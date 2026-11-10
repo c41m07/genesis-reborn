@@ -13,7 +13,7 @@ use Psr\Clock\ClockInterface;
 use App\Service\Player\VacationCalendar;
 final class FleetService
 {
-    public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues,private \App\Service\Combat\CombatEventService $combats,private EspionageService $espionage,private BoostGrantService $boostGrants,private BoostEventService $boostEvents,private \App\Service\Universe\PlanetNameGenerator $planetNames,private \App\Service\Combat\TechnologyEffectCalculator $technologyEffects,private TransportService $transports,private VacationCalendar $vacations,private \App\Service\Combat\OccupationService $occupations) {}
+    public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues,private \App\Service\Combat\CombatEventService $combats,private EspionageService $espionage,private BoostGrantService $boostGrants,private BoostEventService $boostEvents,private \App\Service\Universe\PlanetNameGenerator $planetNames,private \App\Service\Combat\TechnologyEffectCalculator $technologyEffects,private TransportService $transports,private VacationCalendar $vacations,private \App\Service\Combat\OccupationService $occupations, private \App\Service\Admin\FleetMissionTraceService $traces) {}
     private function coords(SolarSystem $s,?int $position): array { return [$s->id,$s->galaxy->id,$s->coordX,$s->coordY,$position]; }
     public function quote(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo=[],float $orbitHours=0): array
     {
@@ -101,6 +101,7 @@ final class FleetService
                 $ship=new FleetShip();$ship->fleet=$f;$ship->slug=$slug;$ship->tier=$tier;$ship->quantity=$quantity;$this->manager->save($ship);
             }
             if($mission==='transport') $this->transports->recordDeparture($f,$q['freight']);
+            $this->traces->recordDeparture($f, $q['composition'], $q['freight']);
             $this->occupations->recordReinforcementDeparture($f);
             $this->schedule($f);
         });
@@ -118,6 +119,35 @@ final class FleetService
     private function schedule(Fleet $f): void
     {
         $f->dispatchToken=Uuid::v4()->toRfc4122();$o=new OutboxMessage();$o->kind='fleet';$o->targetId=$f->id;$o->token=$f->dispatchToken;$o->dueAt=$f->arrivalAt;$this->manager->save($o);
+    }
+
+    /** Appelé sous les verrous de participation, univers, planète et flotte. */
+    public function rescheduleForAdministrationLocked(Fleet $fleet, \DateTimeImmutable $arrival): void
+    {
+        if (!in_array($fleet->status, ['traveling', 'returning', 'orbiting'], true) || !$fleet->arrivalAt) throw new \DomainException('Cette mission ne permet pas un changement d’échéance.');
+        $fleet->arrivalAt = $arrival;
+        $this->schedule($fleet);
+    }
+
+    /** Rappel sans livraison ; le carburant aller est consommé comme au traitement normal. */
+    public function recallForAdministrationLocked(Fleet $fleet): void
+    {
+        if (!in_array($fleet->status, ['traveling', 'orbiting', 'orbit_pending'], true)) throw new \DomainException('Cette mission ne peut plus être rappelée dans son état courant.');
+        if ($fleet->status === 'traveling') {
+            $oneWay = max(0, ($fleet->reservedFuel - $fleet->orbitFuel) / 2);
+            $fleet->cargo['hydrogen'] = max(0, ($fleet->cargo['hydrogen'] ?? 0) - $oneWay);
+            $fleet->reservedFuel -= $oneWay;
+        } elseif ($fleet->status === 'orbiting' && $fleet->orbitFuel > 0 && $fleet->departureAt && $fleet->arrivalAt) {
+            $duration = max(1, $fleet->arrivalAt->getTimestamp() - $fleet->departureAt->getTimestamp());
+            $fraction = min(1, max(0, ($this->clock->now()->getTimestamp() - $fleet->departureAt->getTimestamp()) / $duration));
+            $spent = $fleet->orbitFuel * $fraction;
+            $fleet->cargo['hydrogen'] = max(0, ($fleet->cargo['hydrogen'] ?? 0) - $spent);
+            $fleet->reservedFuel = max(0, $fleet->reservedFuel - $spent);
+            $fleet->orbitFuel -= $spent;
+        }
+        $this->releaseOrbitFuel($fleet);
+        $this->transports->recordConversionRecall($fleet, 'admin_recall');
+        $this->startReturn($fleet);
     }
     public function arrive(int $id,string $token): void
     {
