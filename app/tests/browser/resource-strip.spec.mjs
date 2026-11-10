@@ -18,14 +18,32 @@ test('Stock protégé et productivité réelle, pénuries et reprise sans rechar
     await expect(page).toHaveURL(/planetes\/\d+$/);
     const planet = Number(new URL(page.url()).pathname.split('/').pop());
     const sql = query => runIsolatedSql(process.env.BROWSER_ROUTER, query);
+    sql("INSERT INTO game_event (name,description,type,status,starts_at,ends_at,parameters,visible_to_players) VALUES ('Vérification bandeau','','production_bonus','active',UTC_TIMESTAMP()-INTERVAL 1 HOUR,UTC_TIMESTAMP()+INTERVAL 1 HOUR,'{\"percentage\":0}',1)");
+
     for (const [slug, level] of [['mine_metal', 100], ['mine_antimatter', 10], ['storage_metal', 1]]) {
         sql(`INSERT INTO planet_building (planet_id, slug, tier, level) VALUES (${planet}, '${slug}', 'basic', ${level}) ON DUPLICATE KEY UPDATE level=${level}`);
     }
-    sql(`UPDATE planet_resource SET current_stock=100000, last_updated_at=UTC_TIMESTAMP() WHERE planet_id=${planet}`);
+    sql(`UPDATE planet_resource SET current_stock=CASE WHEN resource_type='metal' THEN 100000 ELSE 1000 END, last_updated_at=UTC_TIMESTAMP() WHERE planet_id=${planet}`);
     await page.reload();
     const metal = page.locator('.resource--metal'), antimatter = page.locator('.resource--antimatter');
+    const strip = page.locator('.resource-strip');
+    const events = page.getByRole('region', { name: 'Événements de l’univers' });
+    await expect(events).toBeVisible();
+    await expect(page.locator('.resource-event-stack .event-drawer-wrap')).toHaveCount(0);
+    const stackBox = await page.locator('.resource-event-stack').boundingBox();
+    const stripBox = await strip.boundingBox();
+    expect(stackBox.height).toBeCloseTo(stripBox.height, 0);
+    const eventBox = await events.boundingBox();
+    expect(eventBox.y).toBeGreaterThanOrEqual(stripBox.y + stripBox.height - 1);
+    await expect(events).toHaveCSS('position', 'relative');
+    await events.locator('summary').focus();
+    await page.keyboard.press('Enter');
+    await expect(events.locator('details')).toHaveAttribute('open', '');
+    await page.keyboard.press('Escape');
+    await expect(events.locator('details')).not.toHaveAttribute('open', '');
+
     await expect(metal.locator('.resource-productivity')).toHaveText('100,0 %');
-    await expect(metal.locator('.storage-meter')).toHaveAttribute('aria-label', /30\s000 protégés du pillage/);
+    await expect(metal.locator('.storage-meter')).toHaveAttribute('aria-label', /11\s000 protégés du pillage/);
     await expect(page.locator('.storage-meter-protected')).toHaveCount(5);
     await expect.poll(() => metal.locator('.storage-meter').evaluate(el => el.offsetHeight)).toBe(7);
     const ratio = await metal.locator('.storage-meter-protected').evaluate(el => el.getBoundingClientRect().width / el.parentElement.getBoundingClientRect().width);
@@ -38,6 +56,9 @@ test('Stock protégé et productivité réelle, pénuries et reprise sans rechar
         expect(await metal.locator('.storage-meter-protected').evaluate(element => parseFloat(element.style.width))).toBeCloseTo(Math.min(stock, capacity * 0.1) / capacity * 100, 4);
         expect(await metal.locator('.storage-meter-limit').evaluate(element => parseFloat(element.style.left))).toBeCloseTo(10, 4);
     }
+    await metal.evaluate(element => element.dispatchEvent(new CustomEvent('resource:update', { detail: { stock: 25000, capacity: 10000, rate: 0, protectedCapacity: 1000, productivity: null } })));
+    await expect(metal.locator('[data-resource-target="stock"]')).toHaveAttribute('title', '25 000');
+    expect(await metal.locator('.storage-meter-stock').evaluate(element => parseFloat(element.style.width))).toBe(100);
     await page.reload();
     sql(`UPDATE planet_resource SET current_stock=0, last_updated_at=UTC_TIMESTAMP() WHERE planet_id=${planet} AND resource_type='electricity'`);
     await expect(metal.locator('.resource-productivity')).toHaveClass(/resource-productivity--reduced/, { timeout: 20000 });
@@ -80,8 +101,10 @@ test('Stock protégé et productivité réelle, pénuries et reprise sans rechar
         await metal.evaluate(element => element.dispatchEvent(new CustomEvent('resource:update', { detail: {
             stock: 123456, capacity: 300000, rate: 0, protectedCapacity: 30000, productivity: 100,
         } })));
-        await expect(page.locator('[data-compact-resource="metal"] strong')).toHaveText(/123,5/);
-        await expect(metal.locator('[data-resource-target="stock"]')).toHaveText(/123\s456/);
+        await expect(page.locator('[data-compact-resource="metal"] strong')).toHaveText('123,46 k');
+        await expect(metal.locator('[data-resource-target="stock"]')).toHaveText('123,46 k');
+        await expect(page.locator('[data-compact-resource="metal"] strong')).toHaveAttribute('title', '123 456');
+        await expect(metal.locator('[data-resource-target="stock"]')).toHaveAttribute('title', '123 456');
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
         await toggle.focus();
         await page.keyboard.press('Space');

@@ -6,6 +6,11 @@ final class OperationCalculator
     public function __construct(private GameCatalog $catalog) {}
     public function calculate(array $d,string $group,int $level,int $quantity,array $buildings,array $universe,array $technologies=[]):array
     {
+        $plan = $this->plan($d, $group, $level, $quantity, $buildings, $universe, $technologies);
+        return ['duration' => $plan['duration'], 'costs' => $plan['costs']];
+    }
+    private function plan(array $d,string $group,int $level,int $quantity,array $buildings,array $universe,array $technologies=[]):array
+    {
         if($level<1||$quantity<1)throw new \InvalidArgumentException('Niveau ou quantité invalide.');
         $tier=(string)($d['_tier']??'basic');$tierFactor=GameCatalog::tierFactor($tier);
         $base=(float)($d['base_build_time']??$d['research_time_base']??$d['build_time_base']??1);
@@ -20,12 +25,33 @@ final class OperationCalculator
             default=>0.0,
         };
         $mult=(float)($universe['multipliers'][match($group){'buildings'=>'building_time','technologies'=>'research_time',default=>'ship_build_time'}]??1);
-        $duration=max(1,(int)ceil($base*$levelFactor*$quantity*$mult*$tierFactor*(1-$timeReduction/100)));
+        $rawDuration=$base*$levelFactor*$quantity*$mult*$tierFactor*(1-$timeReduction/100);
+        $duration=max(1,(int)ceil($rawDuration));
         $costs=$this->catalog->costs($d,$level,$quantity,$group);
         $discountSlug=match($group){'buildings'=>'nanomaterial_synthesis','ships'=>'naval_engineering',default=>null};
         if($discountSlug!==null){$costCap=(float)($this->catalog->rules()['cost_reduction_max_percent']??40);$discount=$this->discountProduct($universe,$discountSlug,$technologies[$discountSlug]??[],'cost_discount',$costCap);foreach($costs as $resource=>$amount)$costs[$resource]=$amount>0?max(1,(int)ceil($amount*(1-$discount/100))):0;}
-        return ['duration'=>$duration,'costs'=>$costs];
+        return ['duration'=>$duration,'costs'=>$costs,'raw_duration'=>$rawDuration];
     }
+    public function maximum(array $definition, string $group, array $stocks, array $buildings, array $universe, array $technologies = [], int $limit = 2147483647): int
+    {
+        if (!in_array($group, ['ships', 'defenses'], true)) throw new \InvalidArgumentException('Seules les unités se construisent par lot.');
+        $unit = $this->plan($definition, $group, 1, 1, $buildings, $universe, $technologies);
+        // Respecte la capacité des entiers enregistrés, sans modifier les coûts ni les durées.
+        $high = (int) min(max(0, $limit), 2147483647, 2147483647 / max(1e-9, $unit['raw_duration']), PHP_INT_MAX / max(1, max($unit['costs']) * 2));
+        $low = 0;
+        while ($low < $high) {
+            $quantity = $low + intdiv($high - $low + 1, 2);
+            $plan = $this->plan($definition, $group, 1, $quantity, $buildings, $universe, $technologies);
+            $affordable = is_finite($plan['raw_duration']) && ceil($plan['raw_duration']) <= 2147483647;
+            foreach ($plan['costs'] as $slug => $cost) {
+                if ($cost < 0 || $cost > ($stocks[$slug]['stock'] ?? 0) + 1e-6) $affordable = false;
+            }
+            if ($affordable) $low = $quantity;
+            else $high = $quantity - 1;
+        }
+        return $low;
+    }
+
     private function rankedBuildingBonus(array $definition,array|int $levels,string $perField,float $cap):float
     {
         if(is_int($levels)||is_numeric($levels))$levels=['basic'=>(int)$levels];

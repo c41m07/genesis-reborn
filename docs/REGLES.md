@@ -11,6 +11,16 @@
 ## Monde et comptes
 Univers → galaxie → système (x,y) → planète position 1..9. Comptes globaux, état par inscription à un univers. Aucune interaction entre univers. Univers fermés conservés mais inaccessibles. Cartes JSON distinctes de la configuration YAML et import explicite idempotent. Carte statique, planètes masquées hors systèmes découverts.
 
+### Suppression volontaire du compte
+
+Depuis le profil, le joueur peut supprimer son compte dans tous les univers
+après saisie du mot de passe et confirmation explicite. Les identifiants et
+préférences sont effacés et les accès fermés. Les empires deviennent oubliés
+immédiatement, sans attendre le délai d’inactivité ; leurs colonies et les
+historiques de jeu restent présents. Les vacances prennent fin. Un combat en
+cours bloque l’opération entière jusqu’à sa résolution. Le dernier administrateur
+actif doit désigner un successeur avant de supprimer son compte.
+
 ## Colonie
 Métal, électricité, antimatière, hydrogène et nano par planète. La simulation intègre les stocks par segments entre épuisement et capacité. Les usines adaptent leur rendement à l’électricité disponible avec un plancher de 10 % ; l’antimatière exige aussi de l’hydrogène. Coûts et durées sont autoritaires côté serveur. Les coûts des trois rangs suivent des profils par catégorie avec budgets de valeur constants. Technologies par PlayerUniverse avec laboratoire local. Même technologie interdite simultanément sur des planètes différentes.
 
@@ -247,3 +257,61 @@ Les transports peuvent viser une colonie connue du même univers et de la même 
 L’expéditeur fournit ressources, vaisseaux et carburant aller-retour. L’autorisation est contrôlée au départ et à l’arrivée. Un changement de propriétaire ou un refus à l’arrivée entraîne le retour de la cargaison. La livraison respecte chaque capacité de stockage ; le surplus revient, y compris entre les propres colonies. Au retour, le dépôt reste soumis au stockage de la colonie de départ : un éventuel dépassement y est perdu et indiqué dans le rapport.
 
 Les dons entre joueurs ne donnent aucun boost et ne font progresser aucun objectif. La protection débutant reste inchangée. Aucun plafond de dons, taxe ou sanction automatique sur une adresse IP n’est ajouté. Les deux participants disposent du rapport économique ; l’administration dispose de l’historique paginé des transports pour une vérification humaine.
+
+
+### Administration des rotations hebdomadaires
+
+Les administrateurs gèrent les modèles par univers dans `/admin/rotations`.
+Les modèles actifs alternent selon l’indice hebdomadaire du moteur. Une seule
+occurrence est réservée par univers et semaine ; une occurrence annulée conserve
+cette réservation et ne peut pas être recréée cette semaine. Désactiver un modèle
+empêche ses nouvelles programmations mais n’annule pas les occurrences déjà
+créées. Leurs règles sont figées ; contributions et récompenses acquises restent
+conservées lors d’une annulation, sans nouvelle attribution après annulation.
+Le plafond simultané, le lundi à 00 h UTC et les règles de récompense historiques
+s’appliquent toujours. Les joueurs retrouvent les rotations dans Événements.
+
+## Saisie des quantités et boutons Max
+
+- Construction de vaisseaux et défenses : Max utilise les ressources disponibles et le coût réel du lot, sans limite fixe de 100. La limite de 30 commandes par file reste applicable.
+- Composition d’une flotte : Max sélectionne les unités disponibles d’un type et d’un rang, dans la place restante sous le plafond de flotte de l’univers.
+- Fret : un Max par ressource conserve les autres chargements et tient compte du stock, du carburant réservé et de la soute libre. La limite de saisie de 100 000 000 par ressource est conservée.
+- Les quantités excessives sont réduites automatiquement, avec un message d’ajustement et une vérification serveur au moment de l’action. Les entrées négatives, non entières ou inconnues restent refusées ; un maximum nul ne permet pas d’achat ni de départ sans vaisseau.
+
+## File de recherche commune
+
+Dans un même univers, toutes les colonies d’un joueur partagent une file de recherche de 30 commandes maximum. Chaque ajout paie ses coûts sur la colonie choisie et utilise son laboratoire pour calculer la durée à cet instant. Les niveaux déjà en file sont pris en compte depuis toutes les colonies ; les commandes sont exécutées successivement, sans nouveau calcul de leurs coûts ou durées au démarrage.
+
+Les recherches historiquement actives en parallèle terminent leur travail sans être annulées. La suite de la file attend la fin de toutes ces recherches, puis fonctionne avec une seule recherche active. Les univers restent indépendants. Annulations, remboursements, vacances et captures conservent leurs règles ; la colonie d’origine de chaque commande reste enregistrée.
+
+
+## Classements quotidiens — 10 novembre 2026
+
+Tous les classements (points des joueurs, flotte, nombre de colonies et guildes) sont figés entre deux calculs quotidiens, à 00 h en Europe/Paris, en tenant compte des changements d’heure. Les points affichés dans l’aperçu de colonie et l’API utilisent le même instantané. Le calcul des points reste inchangé ; les scores utilisés pour les protections et combats restent en temps réel.
+
+Les évolutions comparent les deux derniers calculs persistés : points actuels moins points précédents ; rang précédent moins rang actuel (une place gagnée est positive). Gains et pertes sont signés ; une valeur inchangée s’affiche « = ». Sans référence précédente (initialisation, nouveau joueur ou nouvelle guilde), l’évolution s’affiche « = ». Les nouveaux inscrits et guildes entrent au prochain calcul. Les noms, relations diplomatiques et protections restent actuels ; les joueurs supprimés ou devenus empires oubliés et les guildes archivées ne sont plus affichés, sans renuméroter les rangs avant l’échéance suivante.
+
+Le relais existant déclenche les calculs même sans visite. Les lectures rattrapent une échéance manquée ; après interruption, le calcul utilise l’état disponible à la reprise et indique son heure réelle, sans inventer les états des jours manqués. Les constructions et recherches déjà terminées sont réconciliées avant le calcul. Les instantanés et leurs dernières évolutions sont conservés en base, avec uniquement des identifiants et valeurs de classement, sans copie des identités.
+
+
+## Ressources initiales et production passive — décision du 10 novembre 2026
+
+Les valeurs suivantes s’appliquent après activation du nouvel équilibrage. La production horaire de référence est celle d’une position 5, dans un univers ×1, sans bâtiment ni événement.
+
+| Ressource | Première planète | Colonie basique | Intermédiaire | Supérieure | Stockage de base | Production / h |
+|---|---:|---:|---:|---:|---:|---:|
+| Métal | 10 000 | 5 000 | 6 250 | 7 812,5 | 10 000 | 40 |
+| Électricité | 10 000 | 0 | 0 | 0 | 10 000 | 0 |
+| Antimatière | 10 000 | 5 000 | 6 250 | 7 812,5 | 10 000 | 10 |
+| Hydrogène | 10 000 | 5 000 | 6 250 | 7 812,5 | 10 000 | 80 |
+| Nano | 10 000 | 5 000 | 6 250 | 7 812,5 | 10 000 | 20 |
+
+Le rang du vaisseau réellement consommé détermine le kit : ×1, ×1,25 ou ×1,5625 ; les fractions sont conservées et l’électricité reste nulle. Les stocks initiaux ne sont attribués qu’à la création des ressources. Aucun stock existant n’est redistribué ou remis à zéro.
+
+Les capacités et productions de base concernent aussi les planètes existantes. Les usines, consommations, bonus de stockage, modificateurs de position, multiplicateurs d’univers et événements gardent leurs règles. Les taux du fichier de règles sont stockés par seconde (valeur horaire / 3 600).
+
+Transition validée : tout surplus déjà présent au-dessus de la capacité est conservé et utilisable pour les dépenses. Aucun apport positif supplémentaire n’est crédité tant que la ressource dépasse la capacité ; la production reprend sous le plafond. Les remboursements et dépôts ne doivent jamais écrêter le stock déjà présent. Les consommations industrielles continuent selon les règles existantes. Les jauges restent bornées à 100 %, mais la quantité affichée montre tout le stock.
+
+Clarification validée le 10 novembre 2026 : les règles courantes s’appliquent directement à toute la période de production non encore matérialisée, depuis le dernier calcul enregistré, y compris lorsque cette période précède le déploiement. Ce recalcul rétroactif des gains en attente est accepté ; il peut augmenter ou réduire ces gains selon les nouveaux taux. Il ne réinitialise pas les stocks déjà enregistrés. Les frontières d’événements et de vacances restent prises en compte. Cette décision remplace le mécanisme initial de bascule par date : `RESOURCE_BALANCE_EFFECTIVE_AT` n’est plus utilisée et aucun ancien régime n’est maintenu.
+
+Aucune migration ni réécriture globale des stocks n’est requise. Les nouvelles valeurs sont actives dès que le nouveau code est exécuté, pour les univers existants comme pour les nouveaux. Lors du déploiement, arrêter les anciens processus applicatifs puis démarrer tous les services avec la même version ; aucun paramètre d’activation supplémentaire n’est nécessaire.

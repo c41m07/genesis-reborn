@@ -18,6 +18,7 @@ final class GameEventService
     {
         $event = $id === null ? new GameEvent() : $this->repo->find(GameEvent::class, $id);
         if (!$event instanceof GameEvent) throw new \DomainException('Événement introuvable.');
+        if (!empty($event->parameters['archived_at'])) throw new \DomainException('Cet événement est archivé et conservé en lecture seule.');
         if ($id !== null && !empty($event->parameters['guided_key'])) throw new \DomainException('Un événement guidé publié garde sa définition annoncée. Annulez-le puis préparez un nouvel aperçu pour le remplacer.');
         $previousStatus = $event->status;
         $name = trim((string) ($data['name'] ?? ''));

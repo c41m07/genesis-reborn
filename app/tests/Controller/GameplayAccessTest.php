@@ -34,7 +34,11 @@ final class GameplayAccessTest extends WebTestCase
         $this->client->loginUser($player);
         $this->client->request('GET', '/admin');
         self::assertResponseRedirects('/acces-refuse');
+        $this->client->request('GET', '/admin/rubriques/players');
+        self::assertResponseRedirects('/acces-refuse');
 
+        $this->em = static::getContainer()->get(EntityManagerInterface::class);
+        $player = $this->em->find(Player::class, $player->id);
         $player->lockedAt = new \DateTimeImmutable();
         $this->em->flush();
         $this->client->request('GET', '/profil');
@@ -47,7 +51,11 @@ final class GameplayAccessTest extends WebTestCase
         $this->client->loginUser($admin);
         $crawler = $this->client->request('GET', '/admin');
         self::assertResponseIsSuccessful();
-        self::assertStringContainsString('Administration', $crawler->filter('h1')->text());
+        self::assertSame('Vue d’ensemble', $crawler->filter('h1')->text());
+        self::assertCount(5, $crawler->filter('.admin-primary-link'));
+        $this->client->request('GET', '/admin/rubriques/players');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextSame('h1', 'Joueurs et modération');
     }
 
     public function testOtherPlayerPlanetResourcesAndActionsAreInaccessible():void
@@ -64,7 +72,10 @@ final class GameplayAccessTest extends WebTestCase
         $payload=['_token'=>$token,'origin'=>$own->id,'mission'=>'explore','coordinates'=>$own->solarSystem->galaxy->coordinateCode().':'.$own->solarSystem->number(),'ratio'=>'0.5','ships'=>['probe'=>1],'cargo'=>[],'total_fuel'=>0,'seconds'=>0];
         $this->client->request('POST','/flottes/estimer',$payload);self::assertResponseIsSuccessful();$q=json_decode($this->client->getResponse()->getContent(),true);self::assertGreaterThan(0,$q['total_fuel']);self::assertGreaterThan(0,$q['seconds']);
         $payload['origin']=$foreign->id;$this->client->request('POST','/flottes/estimer',$payload);self::assertResponseStatusCodeSame(422);
-        $payload['origin']=$own->id;$payload['ships']=['probe'=>999];$this->client->request('POST','/flottes/estimer',$payload);self::assertResponseStatusCodeSame(422);
+        $payload['origin']=$own->id;$payload['ships']=['probe'=>999];$this->client->request('POST','/flottes/estimer',$payload);self::assertResponseIsSuccessful();$adjusted=json_decode($this->client->getResponse()->getContent(),true);self::assertSame(1,$adjusted['composition']['probe']['basic']);self::assertTrue($adjusted['adjusted']);
+        foreach([['unknown'=>1,'probe'=>1],['probe'=>-1],['probe'=>'1.5']] as $invalid) {
+            $payload['ships']=$invalid;$this->client->request('POST','/flottes/estimer',$payload);self::assertResponseStatusCodeSame(422);
+        }
         $this->client->request('POST','/flottes/estimer',['_token'=>'invalid']);self::assertResponseStatusCodeSame(403);
     }
     public function testNotificationCookieAuthorizesOnlyCurrentMembership():void
@@ -192,5 +203,84 @@ final class GameplayAccessTest extends WebTestCase
 
         $this->client->request('GET', '/carte');
         self::assertResponseIsSuccessful();
+    }
+
+    public function testGalaxyV2ClassifiesDiscoveredPlanetsWithoutRevealingUnknownSystems(): void
+    {
+        [$player, $home] = $this->player('MapRelations');
+        [$ally] = $this->player('MapAlly');
+        [$enemy] = $this->player('MapEnemy');
+        [$neutral] = $this->player('MapNeutral');
+        $membership = $player->currentPlayerUniverse;
+        $targets = array_values(array_filter(
+            $this->em->getRepository(Planet::class)->findBy(['solarSystem' => $home->solarSystem]),
+            static fn (Planet $planet): bool => $planet->id !== $home->id,
+        ));
+        $nextPosition = max(array_map(static fn (Planet $planet): int => $planet->position, [$home, ...$targets])) + 1;
+        while (count($targets) < 5) {
+            $planet = new Planet();
+            $planet->solarSystem = $home->solarSystem;
+            $planet->name = 'MapFixture'.$nextPosition;
+            $planet->position = $nextPosition++;
+            $this->em->persist($planet);
+            $targets[] = $planet;
+        }
+        foreach ([$ally, $enemy, $neutral] as $index => $owner) {
+            $targets[$index]->owner = $owner->currentPlayerUniverse;
+            $targets[$index]->npcPlanet = false;
+        }
+        $targets[3]->owner = null;
+        $targets[3]->npcPlanet = true;
+        $targets[3]->conquestLevel = 4;
+        $targets[4]->owner = null;
+        $targets[4]->npcPlanet = false;
+        $guilds = [];
+        foreach ([$membership, $enemy->currentPlayerUniverse] as $index => $member) {
+            $guild = new \App\Entity\Guild();
+            $guild->name = 'MapGuild'.$index;
+            $guild->universe = $membership->universe;
+            $guild->leader = $member;
+            $this->em->persist($guild);
+            $entry = new \App\Entity\GuildMember();
+            $entry->guild = $guild;
+            $entry->playerUniverse = $member;
+            $this->em->persist($entry);
+            $guilds[] = $guild;
+        }
+        $this->em->flush();
+        $war = new \App\Entity\GuildRelation();
+        $war->guildA = $guilds[0];
+        $war->guildB = $guilds[1];
+        $war->proposer = $guilds[0];
+        $war->status = 'enemies';
+        $this->em->persist($war);
+        foreach ([$ally, $enemy] as $partner) {
+            $contract = new \App\Entity\AllianceContract();
+            $contract->playerA = $membership;
+            $contract->playerB = $partner->currentPlayerUniverse;
+            $contract->proposer = $membership;
+            $contract->status = 'accepted';
+            $this->em->persist($contract);
+        }
+        $this->em->flush();
+        $this->client->loginUser($player);
+        $crawler = $this->client->request('GET', '/carte-v2');
+        self::assertResponseIsSuccessful();
+        $map = json_decode($crawler->filter('.galaxy-v2')->attr('data-galaxy-v2-map-value'), true, 512, JSON_THROW_ON_ERROR);
+        $homeRow = current(array_filter($map['systems'], static fn (array $row): bool => $row['id'] === $home->solarSystem->id));
+        $relations = array_column($homeRow['planets'], 'relation', 'id');
+        self::assertSame('own', $relations[$home->id]);
+        self::assertSame('allied', $relations[$targets[0]->id]);
+        self::assertSame('enemy', $relations[$targets[1]->id]);
+        self::assertSame('neutral', $relations[$targets[2]->id]);
+        self::assertSame('npc', $relations[$targets[3]->id]);
+        self::assertSame('uninhabited', $relations[$targets[4]->id]);
+        $unknown = array_filter($map['systems'], static fn (array $row): bool => !$row['known']);
+        self::assertNotEmpty($unknown);
+        foreach ($unknown as $row) {
+            self::assertSame([], $row['planets']);
+            self::assertSame(0, $crawler->filter('template[data-gv2-system="'.$row['id'].'"] .gv2-planet-choice')->count());
+        }
+        self::assertSelectorCount(3, '.gv2-map-modes button');
     }
 }

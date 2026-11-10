@@ -1,4 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
+import { compactNumber, exactNumber } from '../quantity.js';
 
 export default class extends Controller {
     static targets = ['result'];
@@ -45,6 +46,7 @@ export default class extends Controller {
         this.abort = new AbortController();
 
         try {
+            const submitted = new URLSearchParams(new FormData(this.element)).toString();
             const response = await fetch(this.urlValue, {
                 method: 'POST',
                 body: new FormData(this.element),
@@ -57,13 +59,16 @@ export default class extends Controller {
             }
 
             const preview = await response.json();
+            if (submitted !== new URLSearchParams(new FormData(this.element)).toString()) return;
             if (!response.ok) {
                 throw new Error(preview.error || 'Estimation indisponible.');
             }
 
-            const format = value => Math.ceil(value).toLocaleString('fr-FR');
-            this.resultTarget.textContent = `${format(preview.distance)} UA · ${Math.floor(preview.seconds / 3600)} h ${Math.floor(preview.seconds % 3600 / 60)} min ${preview.seconds % 60} s · Carburant aller-retour : ${format(preview.total_fuel)} H · Fret disponible : ${format(preview.freight_capacity)}`;
+            const format = value => compactNumber(Math.ceil(value));
+            this.resultTarget.textContent = `${exactNumber(Math.ceil(preview.distance))} UA · ${Math.floor(preview.seconds / 3600)} h ${Math.floor(preview.seconds % 3600 / 60)} min ${preview.seconds % 60} s · Carburant aller-retour : ${format(preview.total_fuel)} H · Fret disponible : ${format(preview.freight_capacity)}`;
+            this.resultTarget.title = `Carburant aller-retour : ${exactNumber(Math.ceil(preview.total_fuel))} H · Fret disponible : ${exactNumber(Math.ceil(preview.freight_capacity))}`;
             this.resultTarget.classList.remove('error');
+            this.dispatch('quoted', { detail: preview });
             if (this.submitButton) {
                 this.submitButton.disabled = this.submitLocked;
             }

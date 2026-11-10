@@ -46,6 +46,7 @@
 ## Continuité et protection du projet
 
 - Vérifier `git status`, la branche et les modifications locales avant toute intervention ; ne pas écraser le travail existant. Utiliser une branche dédiée pour la mission, sauf consigne explicite contraire.
+- Nomenclature des branches : utiliser `feature/<sujet>` pour une fonctionnalité, `fix/<sujet>` pour un correctif, `refactor/<sujet>` pour une refactorisation, `docs/<sujet>` pour la documentation et `chore/<sujet>` pour la maintenance. Le sujet doit être explicite, en minuscules, sans accents et séparé par des tirets. Ne pas utiliser de préfixe `codex/`. Chaque nouveau lot part de `dev` actualisée ; après validation, créer une PR vers `dev` et la fusionner avant de démarrer le lot suivant.
 - Préserver les fonctionnalités et décisions existantes. Toute suppression ou modification incompatible doit être justifiée, documentée et, si elle touche le gameplay, soumise à décision explicite.
 - Actualiser la documentation pertinente, notamment README, ROADMAP, décisions et suivi de reprise lorsque les changements le justifient ; ne pas réécrire des audits historiques comme s'ils décrivaient automatiquement l'état courant.
 - Ne pas promettre d'exécution hors session, de contournement de quotas ou d'accès à des outils non vérifiés.

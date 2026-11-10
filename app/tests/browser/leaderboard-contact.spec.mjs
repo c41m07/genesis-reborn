@@ -44,6 +44,8 @@ test('Classement : tris, contact direct et échange de messages privés', async 
   await expect(page.locator('#alliance-members .commander-card')).toContainText('Proposition envoyée');
   await page.getByRole('link', { name: 'Fermer la recherche' }).click();
   await expect(page.locator('#alliance-members .commander-card')).toContainText(recipientName);
+  // Simuler la nouvelle échéance après la création des deux joueurs.
+  runIsolatedSql(process.env.BROWSER_ROUTER, "UPDATE leaderboard_snapshot SET updated_at=DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 DAY)");
   await page.goto('/classement');
   await expect(page.getByRole('table', { name: /Classement de l’univers Turbo/ })).toBeVisible();
   const recipientRow = page.getByRole('row').filter({ hasText: recipientName });
@@ -186,7 +188,9 @@ test('Hub de guilde : création, équipage et discussion commune', async ({ page
   await expect(page.locator('.guild-message-preview')).toContainText('Préparons notre prochaine expédition.');
   await expect(page.getByRole('link', { name: 'Messages', exact: false }).filter({ has: page.locator('.message-unread-dot') })).toHaveCount(1);
   await page.getByRole('link', { name: 'Ouvrir le canal de guilde' }).click();
-  await expect(page.getByRole('navigation', { name: 'Conversations' }).getByRole('link').first()).toContainText(guildName);
+  await expect(page.getByRole('navigation', { name: 'Conversations' }).getByRole('link').nth(0)).toContainText('Global');
+  await expect(page.getByRole('navigation', { name: 'Conversations' }).getByRole('link').nth(1)).toContainText(guildName);
+  runIsolatedSql(process.env.BROWSER_ROUTER, "UPDATE leaderboard_snapshot SET updated_at=DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 DAY)");
   await page.goto('/classement');
   await expect(page.getByRole('row').filter({ hasText: member })).toHaveClass(/ranking-row--guild/);
   await page.getByRole('navigation', { name: 'Classements' }).getByRole('link', { name: 'Guildes', exact: true }).click();
@@ -204,6 +208,7 @@ test('Hub de guilde : création, équipage et discussion commune', async ({ page
   const result = page.getByRole('region', { name: 'Résultats de recherche de guildes' });
   await result.getByLabel('Relation réciproque').selectOption('enemies');
   await result.getByRole('button', { name: 'Mettre à jour' }).click();
+  runIsolatedSql(process.env.BROWSER_ROUTER, "UPDATE leaderboard_snapshot SET updated_at=DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 DAY)");
   await page.goto('/classement?tab=guilds');
   await expect(page.getByRole('row').filter({ hasText: enemyGuild })).toHaveClass(/ranking-row--enemy/);
   await expect(page.getByRole('row').filter({ hasText: enemyGuild })).toContainText('Guilde ennemie');
@@ -213,4 +218,50 @@ test('Hub de guilde : création, équipage et discussion commune', async ({ page
   await page.getByRole('link', { name: 'Paramètres', exact: true }).click();
   await expect(page.getByRole('link', { name: 'Paramètres', exact: true })).toHaveAttribute('aria-current', 'page');
   await memberPage.close();
+});
+
+
+test('Classement quotidien : points figés, gains, pertes et signe égal accessibles', async ({ page }, testInfo) => {
+  test.setTimeout(120000);
+  const name = await registerAndJoin(page, 'Daily');
+  const colonyUrl = page.url();
+  const project = process.env.BROWSER_ROUTER;
+  const membership = Number(queryIsolatedSql(project, `SELECT m.id FROM player_universe m JOIN player p ON p.id=m.player_id WHERE p.username='${name}'`));
+  const planet = Number(new URL(colonyUrl).pathname.split('/').pop());
+  const universe = Number(queryIsolatedSql(project, `SELECT universe_id FROM player_universe WHERE id=${membership}`));
+  const expire = () => runIsolatedSql(project, `UPDATE leaderboard_snapshot SET updated_at=DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 DAY) WHERE universe_id=${universe}`);
+  await page.goto('/classement');
+  const row = page.getByRole('row').filter({ hasText: name });
+  await expect(row).toContainText('Points : =');
+  const initial = await page.evaluate(() => fetch('/api/classement').then(response => response.json()));
+  const before = initial.players.find(player => player.username === name).total_points;
+  runIsolatedSql(project, `INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'mine_metal','basic',5) ON DUPLICATE KEY UPDATE level=5`);
+  await page.reload();
+  const frozen = await page.evaluate(() => fetch('/api/classement').then(response => response.json()));
+  expect(frozen.players.find(player => player.username === name).total_points).toBe(before);
+  expect(frozen.timezone).toBe('Europe/Paris');
+  await expect(row.locator('strong')).toHaveText(String(before));
+  expire();
+  await page.reload();
+  await expect(row).toContainText('Points : +');
+  await expect(row).toContainText('Places : =');
+  await expect(page.getByText('Actualisation chaque jour à 00 h', { exact: false })).toBeVisible();
+  const gained = await page.evaluate(() => fetch('/api/classement').then(response => response.json()));
+  expect(gained.players.find(player => player.username === name).score_changes.points).toBeGreaterThan(0);
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    await page.screenshot({ path: testInfo.outputPath(`daily-ranking-${width}.png`), animations: 'disabled' });
+  }
+  expire();
+  await page.reload();
+  await expect(row).toContainText('Points : =');
+  await expect(row).toContainText('Places : =');
+  runIsolatedSql(project, `UPDATE planet_building SET level=1 WHERE planet_id=${planet} AND slug='mine_metal' AND tier='basic'`);
+  expire();
+  await page.reload();
+  await expect(row).toContainText('Points : −');
+  await page.goto(colonyUrl);
+  await expect(page.locator('.empire-points')).toContainText('Points : −');
+  await expect(page.locator('.metric-card').filter({ hasText: 'Classement' })).toContainText('Places : =');
 });

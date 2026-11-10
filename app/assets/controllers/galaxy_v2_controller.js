@@ -5,6 +5,20 @@ const missionColors = {
     explore: '#00d4ff', spy: '#a78bfa', colonize: '#2dd4a0', transport: '#34d399',
     attack: '#f43f5e', conquer: '#ffb040', defend: '#60a5fa', orbit: '#f472b6',
 };
+const mapMarkers = {
+    unknown: { symbol: '?', color: '#ffda66', label: 'Inexploré' },
+    own: { symbol: '⌂', color: '#66deff', label: 'Vos planètes' },
+    allied: { symbol: '⬟', color: '#00e676', label: 'Joueur allié' },
+    enemy: { symbol: '⚔', color: '#ff3344', label: 'Joueur ennemi' },
+    neutral: { symbol: '⬟', color: '#b4c2d2', label: 'Joueur neutre' },
+    npc: { symbol: '◆', color: '#ff8a00', label: 'PNJ' },
+    uninhabited: { symbol: '○', color: '#b4c2d2', label: 'Inhabitée' },
+};
+const npcLevels = [
+    { symbol: '◆', color: '#3399ff', label: 'PNJ · niveaux 1–3' },
+    { symbol: '◆', color: '#9555ff', label: 'PNJ · niveaux 4–6' },
+    { symbol: '◆', color: '#ee33ff', label: 'PNJ · niveau 7 et plus' },
+];
 const starColors = ['#7190ff', '#9db9ff', '#d1dcff', '#fff1c5', '#ffe28c', '#ffbd70', '#ff775f'];
 const planetPalettes = [
     { land: [61, 126, 150], sea: [22, 54, 104], cloud: [229, 238, 246], glow: '#67c9ff' },
@@ -19,14 +33,16 @@ export default class extends Controller {
     static targets = [
         'scene', 'galaxyCanvas', 'systemCanvas', 'planetCanvas', 'location', 'coordinates',
         'searchInput', 'searchResults', 'searchClear', 'searchStatus', 'tooltip', 'systemBack', 'planetBack',
-        'systemPanel', 'systemContent', 'planetPanel', 'planetContent', 'minimapWrap',
+        'systemPanel', 'systemContent', 'systemPanelToggle', 'planetPanel', 'planetContent', 'minimapWrap',
         'minimapCanvas', 'fleetLog', 'motionToggle', 'galaxySelect', 'mapHelp',
+        'mapMode', 'mapModeLabel', 'legend', 'filterToggle', 'mapSettings',
     ];
 
     static values = { map: Object, reducedMotion: Boolean };
 
     connect() {
         this.gameMap = this.mapValue;
+        this.solarLayoutCache = null;
         this.systems = this.gameMap.systems.filter((system) => Number(system.number) <= 80).map((system) => ({ ...system, planets: system.planets || [] }));
         this.systemById = new Map(this.systems.map((system) => [Number(system.id), system]));
         this.flights = (this.gameMap.flights || []).map((flight) => ({
@@ -39,6 +55,10 @@ export default class extends Controller {
         this.selectedSystem = null;
         this.selectedPlanet = null;
         this.mode = 'galaxy';
+        this.mapMode = 'exploration';
+        this.hiddenMarkers = new Set();
+        this.updateLegend();
+        this.element.querySelector('.gv2-legend').open = false;
         this.drag = null;
         this.hoveredSystem = null;
         this.frameId = null;
@@ -115,7 +135,7 @@ export default class extends Controller {
             const arm = Math.floor(random() * 8);
             const radial = Math.sqrt(random());
             const distance = 80 + radial * this.galaxyExtentX * .96;
-            const angle = arm * Math.PI / 4 + radial * .82 + (random() - .5) * (.13 + radial * .32);
+            const angle = arm * Math.PI / 4 + radial * 1.8 + (random() - .5) * (.13 + radial * .32);
             return {
                 x: Math.cos(angle) * distance,
                 y: Math.sin(angle) * distance,
@@ -128,7 +148,7 @@ export default class extends Controller {
             const arm = Math.floor(random() * 8);
             const radial = .12 + random() * .82;
             const distance = 140 + radial * this.galaxyExtentX * .9;
-            const angle = arm * Math.PI / 4 + radial * .82 + (random() - .5) * .42;
+            const angle = arm * Math.PI / 4 + radial * 1.8 + (random() - .5) * .42;
             return {
                 x: Math.cos(angle) * distance, y: Math.sin(angle) * distance,
                 radius: 180 + random() * 420, hue: random() < .52 ? [55, 130, 222] : [163, 93, 209],
@@ -139,8 +159,8 @@ export default class extends Controller {
 
     galaxyArmPoint(arm, progress) {
         const t = clamp(progress, 0, 1);
-        const radius = .07 + t * .828;
-        const angle = arm * Math.PI / 4 + t * .82;
+        const radius = .09 + t * .86;
+        const angle = arm * Math.PI / 4 + t * 1.8;
         return {
             wx: Math.cos(angle) * radius * this.galaxyExtentX,
             wy: Math.sin(angle) * radius * this.galaxyExtentY,
@@ -148,12 +168,14 @@ export default class extends Controller {
     }
 
     galaxySystemPosition(branch, slot) {
-        return this.galaxyArmPoint(branch, slot / 9);
+        const progress = .26 + slot / 9 * .74;
+        // Le fond et les systèmes suivent exactement la même courbe.
+        return this.galaxyArmPoint(branch, progress);
     }
 
     projectSystems() {
         if (!this.systems.length) return;
-        // Vue du dessus : huit bras circulaires avec dix emplacements chacun.
+        // Chaque bras porte dix numéros consécutifs, sans modifier les coordonnées de jeu.
         this.layoutScale = clamp(Math.sqrt(this.systems.length / 24), .7, 1.8);
         this.galaxyExtentX = 2100 * this.layoutScale;
         this.galaxyExtentY = 2100 * this.layoutScale;
@@ -225,7 +247,7 @@ export default class extends Controller {
         this.pointerMoveHandler = (event) => this.pointerMove(event);
         this.pointerUpHandler = (event) => this.pointerUp(event);
         this.wheelHandler = (event) => {
-            if (event.target.closest('button, input, select, textarea, a, .gv2-hud, .gv2-map-controls, .gv2-minimap, .gv2-flight-log, .gv2-system-panel, .gv2-planet-panel')) return;
+            if (event.target.closest('button, input, select, textarea, a, .gv2-hud, .gv2-map-settings, .gv2-map-controls, .gv2-minimap, .gv2-flight-log, .gv2-system-panel, .gv2-planet-panel')) return;
             this.wheel(event);
         };
         this.systemClickHandler = (event) => this.systemCanvasClick(event);
@@ -237,6 +259,8 @@ export default class extends Controller {
 
         this.sceneTarget.addEventListener('pointerdown', this.pointerDownHandler);
         this.sceneTarget.addEventListener('pointermove', this.pointerMoveHandler);
+        this.pointerLeaveHandler = () => this.pointerLeave();
+        this.sceneTarget.addEventListener('pointerleave', this.pointerLeaveHandler);
         this.sceneTarget.addEventListener('pointerup', this.pointerUpHandler);
         this.sceneTarget.addEventListener('pointercancel', this.pointerUpHandler);
         this.sceneTarget.addEventListener('wheel', this.wheelHandler, { passive: false });
@@ -259,6 +283,7 @@ export default class extends Controller {
     unbindEvents() {
         this.sceneTarget.removeEventListener('pointerdown', this.pointerDownHandler);
         this.sceneTarget.removeEventListener('pointermove', this.pointerMoveHandler);
+        this.sceneTarget.removeEventListener('pointerleave', this.pointerLeaveHandler);
         this.sceneTarget.removeEventListener('pointerup', this.pointerUpHandler);
         this.sceneTarget.removeEventListener('pointercancel', this.pointerUpHandler);
         this.sceneTarget.removeEventListener('wheel', this.wheelHandler);
@@ -293,18 +318,41 @@ export default class extends Controller {
     }
 
     fitGalaxy() {
-        const extentX = this.galaxyExtentX || 2100;
-        const extentY = this.galaxyExtentY || 780;
-        const bounds = this.systemBounds || { minX: -extentX, maxX: extentX, minY: -extentY, maxY: extentY };
-        const paddingX = Math.max(180, extentX * .1);
-        const paddingY = Math.max(150, extentY * .16);
-        const spanX = Math.max(extentX * 2 + paddingX * 2, bounds.maxX - bounds.minX + paddingX * 2);
-        const spanY = Math.max(extentY * 2 + paddingY * 2, bounds.maxY - bounds.minY + paddingY * 2);
-        this.baseCamera = {
-            x: (bounds.minX + bounds.maxX) / 2,
-            y: (bounds.minY + bounds.maxY) / 2,
+        const extent = this.galaxyExtentX || 2100;
+        const points = this.systems || [];
+        const bounds = points.length ? {
+            minX: Math.min(...points.map((system) => system.wx)),
+            maxX: Math.max(...points.map((system) => system.wx)),
+            minY: Math.min(...points.map((system) => system.wy)),
+            maxY: Math.max(...points.map((system) => system.wy)),
+        } : (this.systemBounds || { minX: -extent, maxX: extent, minY: -extent, maxY: extent });
+        const mobile = this.width <= 720;
+        const viewport = {
+            left: mobile ? 24 : (this.width >= 900 ? 350 : this.width * .23),
+            right: this.width - (mobile ? 24 : 54),
+            top: mobile ? 160 : 76,
+            bottom: this.height - (mobile ? 112 : 54),
         };
-        this.baseZoom = clamp(Math.min((this.width - 100) / spanX, (this.height - 100) / spanY), .045, .8);
+        const availableWidth = Math.max(160, viewport.right - viewport.left);
+        const availableHeight = Math.max(160, viewport.bottom - viewport.top);
+        const spanX = Math.max(extent * .9, bounds.maxX - bounds.minX + extent * .22);
+        const spanY = Math.max(extent * .9, bounds.maxY - bounds.minY + extent * .22);
+        let closest = Infinity;
+        points.forEach((point, index) => {
+            for (const other of points.slice(index + 1)) closest = Math.min(closest, Math.hypot(point.wx - other.wx, point.wy - other.wy));
+        });
+        const readingZoom = Number.isFinite(closest) && closest > 0 ? 32 / closest : 0;
+        this.baseZoom = clamp(Math.max(Math.min(availableWidth / spanX, availableHeight / spanY), readingZoom), .025, .8);
+        let centerX = (bounds.minX + bounds.maxX) / 2;
+        let centerY = (bounds.minY + bounds.maxY) / 2;
+        if ((bounds.maxX - bounds.minX) * this.baseZoom > availableWidth * 1.15 || (bounds.maxY - bounds.minY) * this.baseZoom > availableHeight * 1.15) {
+            const home = points.find((system) => system.known && system.planets.some((planet) => planet.ownedByCurrentPlayer));
+            if (home) { centerX = home.wx; centerY = home.wy; }
+        }
+        this.baseCamera = {
+            x: centerX - ((viewport.left + viewport.right) / 2 - this.width / 2) / this.baseZoom,
+            y: centerY - ((viewport.top + viewport.bottom) / 2 - this.height / 2) / this.baseZoom,
+        };
         if (!this.hasUserCamera) {
             this.camera = { ...this.baseCamera };
             this.zoom = this.targetZoom = this.baseZoom;
@@ -422,19 +470,18 @@ export default class extends Controller {
         }
         ctx.globalAlpha = 1;
 
-        const showLabels = this.systems.length <= 48 || this.zoom > Math.max(.08, this.baseZoom * .72);
         for (const placeholder of this.decorativeSystems || []) {
             const point = this.galaxyPoint(placeholder);
             if (point.x < -34 || point.x > this.width + 34 || point.y < -34 || point.y > this.height + 34) continue;
             ctx.save();
-            ctx.globalAlpha = .38;
+            ctx.globalAlpha = .18;
             const halo = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, 18);
             halo.addColorStop(0, 'rgba(155,184,213,.62)');
             halo.addColorStop(1, 'rgba(155,184,213,0)');
             ctx.fillStyle = halo;
             ctx.fillRect(point.x - 18, point.y - 18, 36, 36);
             ctx.beginPath();
-            ctx.arc(point.x, point.y, 4.1, 0, Math.PI * 2);
+            ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
             ctx.fillStyle = '#9fb5cc';
             ctx.shadowColor = '#9fb5cc';
             ctx.shadowBlur = 7;
@@ -445,51 +492,29 @@ export default class extends Controller {
             ctx.strokeStyle = 'rgba(190,211,230,.78)';
             ctx.lineWidth = 1.2;
             ctx.stroke();
-            if (showLabels) {
-                const label = this.gameMap.galaxy + ':' + placeholder.number;
-                ctx.font = '9px "JetBrains Mono", monospace';
-                ctx.textAlign = 'center';
-                ctx.lineWidth = 3;
-                ctx.strokeStyle = 'rgba(3,8,15,.96)';
-                ctx.strokeText(label, point.x, point.y + 19);
-                ctx.fillStyle = '#a9bfd5';
-                ctx.fillText(label, point.x, point.y + 19);
-            }
             ctx.restore();
         }
         for (const system of this.systems) {
             const point = this.galaxyPoint(system);
             if (point.x < -32 || point.x > this.width + 32 || point.y < -32 || point.y > this.height + 32) continue;
-            const pulse = 1 + .09 * Math.sin(this.elapsed * .9 + system.pulse);
             const hasOwnedPlanet = system.planets.some((planet) => planet.ownedByCurrentPlayer);
-            const markerColor = hasOwnedPlanet ? '#49e0ad' : (system.known ? system.starColor : '#a4bdd7');
             const isHovered = system === this.hoveredSystem;
             const radius = (isHovered ? 4.2 : (hasOwnedPlanet ? 3.8 : (system.known ? 3.4 : 3.1))) + system.starRadius * .42;
             {
                 const haloRadius = isHovered ? 38 : (hasOwnedPlanet ? 31 : (system.known ? 25 : 21));
                 const halo = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, haloRadius);
-                const haloColor = hasOwnedPlanet ? '45,212,160' : (system.known ? '0,212,255' : '120,157,196');
+                const haloColor = '120,157,196';
                 const haloAlpha = isHovered ? '.48' : (hasOwnedPlanet ? '.42' : (system.known ? '.32' : '.25'));
                 halo.addColorStop(0, 'rgba(' + haloColor + ',' + haloAlpha + ')');
                 halo.addColorStop(1, 'rgba(' + haloColor + ',0)');
                 ctx.fillStyle = halo;
                 ctx.fillRect(point.x - haloRadius, point.y - haloRadius, haloRadius * 2, haloRadius * 2);
             }
-            ctx.beginPath();
-            ctx.arc(point.x, point.y, Math.max(1.1, radius * pulse), 0, Math.PI * 2);
-            ctx.fillStyle = markerColor;
-            ctx.shadowColor = markerColor;
-            ctx.shadowBlur = isHovered ? 20 : (hasOwnedPlanet ? 16 : (system.known ? 13 : 10));
-            ctx.fill();
-            ctx.shadowBlur = 0;
-            ctx.beginPath();
-            ctx.arc(point.x, point.y, radius + (isHovered ? 8 : 5), 0, Math.PI * 2);
-            ctx.strokeStyle = isHovered ? 'rgba(255,255,255,.9)' : (hasOwnedPlanet ? 'rgba(73,224,173,.76)' : 'rgba(157,202,239,.58)');
-            ctx.lineWidth = isHovered ? 1.8 : 1.2;
-            ctx.stroke();
-            if (showLabels || isHovered) {
+            const diskRadius = radius + (isHovered ? 8 : 5);
+            this.drawSystemDisk(ctx, system, point, diskRadius, isHovered);
+            if (isHovered || system === this.focusedSystem) {
                 const label = system.galaxy + ':' + system.number;
-                ctx.font = isHovered || this.systems.length <= 48 ? '600 11px "JetBrains Mono", monospace' : '10px "JetBrains Mono", monospace';
+                ctx.font = isHovered || this.systems.length <= 48 ? '600 13px "JetBrains Mono", monospace' : '12px "JetBrains Mono", monospace';
                 ctx.textAlign = 'center';
                 ctx.lineWidth = 3.5;
                 ctx.lineJoin = 'round';
@@ -498,6 +523,7 @@ export default class extends Controller {
                 ctx.fillStyle = isHovered || hasOwnedPlanet ? '#e4fff4' : '#d5e8fa';
                 ctx.fillText(label, point.x, point.y + 22);
             }
+            this.drawSystemMarkers(ctx, system, point, isHovered);
             system.sx = point.x;
             system.sy = point.y;
         }
@@ -505,6 +531,163 @@ export default class extends Controller {
         this.drawFlights(ctx);
         if (this.hoveredSystem) this.drawSelection(ctx, this.hoveredSystem, '#00d4ff');
         if (this.selectedSystem && this.mode !== 'galaxy') this.drawSelection(ctx, this.selectedSystem, '#ffb040');
+    }
+
+    toggleMapFilters() {
+        const collapsed = this.mapSettingsTarget.classList.toggle('is-collapsed');
+        this.filterToggleTarget.setAttribute('aria-expanded', String(!collapsed));
+        this.mapSettingsTarget.querySelector('.gv2-legend').open = !collapsed;
+        this.hoveredSystem = null;
+        this.tooltipTarget.hidden = true;
+        this.coordinatesTarget.textContent = this.gameMap.galaxy || '—';
+        this.drawFrame(0);
+    }
+
+    changeMapMode(event) {
+        const mode = event.currentTarget.dataset.mapMode;
+        if (!['exploration', 'npc', 'players'].includes(mode)) return;
+        this.mapMode = mode;
+        this.updateLegend();
+        this.drawFrame(0);
+    }
+
+    updateLegend() {
+        const labels = { exploration: 'Exploration', npc: 'PNJ', players: 'Joueurs' };
+        this.mapModeTargets.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.mapMode === this.mapMode)));
+        this.mapModeLabelTargets.forEach((label) => { label.textContent = labels[this.mapMode]; });
+        const types = this.mapMode === 'npc' ? ['unknown', 'npc-low', 'npc-medium', 'npc-high', 'own']
+            : this.mapMode === 'players' ? ['unknown', 'allied', 'neutral', 'enemy', 'own']
+                : ['unknown', 'npc', 'allied', 'neutral', 'enemy', 'own'];
+        this.legendTarget.replaceChildren(...types.map((type) => {
+            const marker = type.startsWith('npc-') ? npcLevels[['npc-low', 'npc-medium', 'npc-high'].indexOf(type)] : mapMarkers[type];
+            const item = document.createElement('li');
+            const label = document.createElement('label');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = !this.hiddenMarkers.has(type);
+            checkbox.dataset.markerType = type;
+            checkbox.dataset.action = 'change->galaxy-v2#toggleMarker';
+            const symbol = document.createElement('span');
+            const quarter = type.startsWith('npc') ? 0 : { allied: 1, neutral: 2, enemy: 3 }[type];
+            let text = marker.label;
+            if (quarter !== undefined) {
+                const start = quarter * 90;
+                symbol.className = 'gv2-quarter-key';
+                symbol.style.background = 'conic-gradient(from 270deg, #718094 0deg ' + start + 'deg, ' + marker.color + ' ' + start + 'deg ' + (start + 90) + 'deg, #718094 ' + (start + 90) + 'deg 360deg)';
+                text = type === 'neutral' ? 'Neutre / vierge' : text;
+                label.title = ['Haut gauche', 'Haut droite', 'Bas droite', 'Bas gauche'][quarter];
+            } else {
+                symbol.textContent = marker.symbol;
+                symbol.style.color = marker.color;
+                if (type === 'own') label.title = 'Maison au survol de vos systèmes';
+            }
+            symbol.setAttribute('aria-hidden', 'true');
+            label.append(checkbox, symbol, document.createTextNode(text));
+            item.append(label);
+            return item;
+        }));
+    }
+
+    toggleMarker(event) {
+        const checkbox = event.currentTarget;
+        if (checkbox.checked) this.hiddenMarkers.delete(checkbox.dataset.markerType);
+        else this.hiddenMarkers.add(checkbox.dataset.markerType);
+        this.drawFrame(0);
+    }
+
+    npcMarker(level) {
+        return npcLevels[level <= 3 ? 0 : level <= 6 ? 1 : 2];
+    }
+
+    systemQuarters(system) {
+        const gray = '#a4acb8';
+        const colors = [gray, gray, gray, gray];
+        if (!system.known) return colors;
+        const relations = new Set(system.planets.map((planet) => planet.relation));
+        if (this.mapMode !== 'players' && relations.has('npc')) {
+            if (this.mapMode === 'npc') {
+                const levels = system.planets.filter((planet) => planet.relation === 'npc')
+                    .map((planet) => Number(planet.conquestLevel))
+                    .filter((level) => !this.hiddenMarkers.has(level <= 3 ? 'npc-low' : level <= 6 ? 'npc-medium' : 'npc-high'));
+                if (levels.length) colors[0] = this.npcMarker(Math.max(...levels)).color;
+            } else if (!this.hiddenMarkers.has('npc')) colors[0] = mapMarkers.npc.color;
+        }
+        if (this.mapMode !== 'npc') {
+            if (relations.has('allied') && !this.hiddenMarkers.has('allied')) colors[1] = mapMarkers.allied.color;
+            if (relations.has('enemy') && !this.hiddenMarkers.has('enemy')) colors[3] = mapMarkers.enemy.color;
+        }
+        return colors;
+    }
+
+    drawSystemDisk(ctx, system, point, radius, isHovered) {
+        ctx.save();
+        const colors = this.systemQuarters(system);
+        colors.forEach((color, index) => {
+            ctx.beginPath();
+            ctx.moveTo(point.x, point.y);
+            ctx.arc(point.x, point.y, radius, -Math.PI + index * Math.PI / 2, -Math.PI + (index + 1) * Math.PI / 2);
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+        });
+        if (system.known) {
+            ctx.beginPath();
+            ctx.moveTo(point.x - radius, point.y);
+            ctx.lineTo(point.x + radius, point.y);
+            ctx.moveTo(point.x, point.y - radius);
+            ctx.lineTo(point.x, point.y + radius);
+            ctx.strokeStyle = 'rgba(5,9,16,.65)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = isHovered ? 'rgba(255,255,255,.9)' : 'rgba(157,202,239,.58)';
+        ctx.lineWidth = isHovered ? 1.8 : 1.2;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, radius + 3, 0, Math.PI * 2);
+        ctx.strokeStyle = isHovered ? 'rgba(202,232,255,.9)' : 'rgba(157,202,239,.5)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    systemMarkers(system) {
+        if (!system.known) return this.hiddenMarkers.has('unknown') ? [] : [mapMarkers.unknown];
+        return !this.hiddenMarkers.has('own') && system.planets.some((planet) => planet.ownedByCurrentPlayer || planet.relation === 'own')
+            ? [mapMarkers.own] : [];
+    }
+
+    drawSystemMarkers(ctx, system, point, isHovered) {
+        if (system.known && !isHovered) return;
+        const markers = this.systemMarkers(system);
+        if (markers.length) this.drawMarkers(ctx, markers, point.x, system.known ? point.y - 21 : point.y, !system.known);
+    }
+
+    drawMarkers(ctx, markers, x, y, centered = false) {
+        ctx.save();
+        if (centered) {
+            ctx.beginPath();
+            ctx.arc(x, y, 9, 0, Math.PI * 2);
+            ctx.fillStyle = '#050910';
+            ctx.fill();
+            ctx.textBaseline = 'middle';
+        }
+        ctx.font = '600 14px "Chakra Petch", sans-serif';
+        ctx.textAlign = 'center';
+        const widths = markers.map((marker) => Math.max(18, ctx.measureText(marker.symbol).width + 8));
+        let left = x - widths.reduce((sum, width) => sum + width, 0) / 2;
+        markers.forEach((marker, index) => {
+            const center = left + widths[index] / 2;
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#050910';
+            ctx.strokeText(marker.symbol, center, y);
+            ctx.fillStyle = marker.color;
+            ctx.fillText(marker.symbol, center, y);
+            left += widths[index];
+        });
+        ctx.restore();
     }
 
     drawSpiralArms(ctx) {
@@ -813,7 +996,7 @@ export default class extends Controller {
             const radius = system.known ? 2.8 : 2.2;
             ctx.beginPath();
             ctx.arc(x, y, radius, 0, Math.PI * 2);
-            ctx.fillStyle = system.known ? system.starColor : '#91a9c4';
+            ctx.fillStyle = '#a4bdd7';
             ctx.shadowColor = ctx.fillStyle;
             ctx.shadowBlur = 5;
             ctx.fill();
@@ -828,7 +1011,7 @@ export default class extends Controller {
 
     pointerDown(event) {
         if (event.button !== undefined && event.button !== 0) return;
-        if (event.target.closest('button, input, select, textarea, a, .gv2-hud, .gv2-map-controls, .gv2-minimap, .gv2-flight-log, .gv2-system-panel, .gv2-planet-panel')) return;
+        if (event.target.closest('button, input, select, textarea, a, .gv2-hud, .gv2-map-settings, .gv2-map-controls, .gv2-minimap, .gv2-flight-log, .gv2-system-panel, .gv2-planet-panel')) return;
         const point = this.canvasPoint(event);
         this.drag = {
             pointerId: event.pointerId,
@@ -839,8 +1022,24 @@ export default class extends Controller {
         event.currentTarget.setPointerCapture?.(event.pointerId);
     }
 
+    pointerLeave() {
+        if (this.mode !== 'galaxy') return;
+        this.hoveredSystem = null;
+        this.tooltipTarget.hidden = true;
+        this.coordinatesTarget.textContent = this.gameMap.galaxy || '—';
+        this.drawFrame(0);
+    }
+
     pointerMove(event) {
         const point = this.canvasPoint(event);
+        if (this.mode === 'galaxy' && !this.drag && event.target.closest('.gv2-hud, .gv2-map-settings, .gv2-map-controls, .gv2-minimap, .gv2-flight-log')) {
+            const hadHover = this.hoveredSystem !== null;
+            this.hoveredSystem = null;
+            if (hadHover) this.drawFrame(0);
+            this.tooltipTarget.hidden = true;
+            this.coordinatesTarget.textContent = this.gameMap.galaxy || '—';
+            return;
+        }
         if (this.drag && this.drag.pointerId === event.pointerId) {
             const dx = point.x - this.drag.startX, dy = point.y - this.drag.startY;
             if (Math.abs(dx) + Math.abs(dy) > 3) this.drag.moved = true;
@@ -855,6 +1054,8 @@ export default class extends Controller {
         if (this.mode === 'galaxy') {
             this.updateHover(point);
             this.galaxyCanvasTarget.style.cursor = this.hoveredSystem ? 'pointer' : (this.drag?.moved ? 'grabbing' : 'grab');
+        } else if (this.mode === 'system') {
+            this.systemCanvasTarget.style.cursor = this.nearestPlanet(point) ? 'pointer' : 'default';
         }
     }
 
@@ -869,7 +1070,10 @@ export default class extends Controller {
             if (system) this.focusSystem(system);
         } else if (this.mode === 'system') {
             const planet = this.nearestPlanet(point);
-            if (planet) this.selectPlanetById(planet.id);
+            if (planet) {
+                this.selectPlanetById(planet.id);
+                this.enterPlanetView();
+            }
         }
     }
 
@@ -897,23 +1101,79 @@ export default class extends Controller {
         if (!this.selectedSystem) return null;
         let nearest = null, distance = Infinity;
         for (const planet of this.selectedSystem.planets) {
-            if (!planet.sx || !planet.sy) continue;
-            const current = Math.hypot(planet.sx - point.x, planet.sy - point.y);
-            if (current < planet.visual.radius + 11 && current < distance) { nearest = planet; distance = current; }
+            const visual = planet.visual;
+            if (!Number.isFinite(visual?.sx) || !Number.isFinite(visual?.sy) || !Number.isFinite(visual?.screenRadius)) continue;
+            const current = Math.hypot(visual.sx - point.x, visual.sy - point.y);
+            if (current < Math.max(22, visual.screenRadius + 8) && current < distance) { nearest = planet; distance = current; }
         }
         return nearest;
+    }
+
+    systemSummary(system) {
+        if (!system.known) return [];
+        const labels = { own: 'Vos colonies', npc: 'Planètes PNJ', allied: 'Planètes alliées', neutral: 'Planètes neutres', enemy: 'Planètes ennemies', uninhabited: 'Planètes vierges' };
+        return Object.entries(labels).flatMap(([type, label]) => {
+            const planets = system.planets.filter((planet) => planet.relation === type);
+            if (!planets.length) return [];
+            let value = String(planets.length);
+            if (type === 'npc') {
+                const levels = planets.map((planet) => Number(planet.conquestLevel)).filter(Number.isFinite);
+                if (levels.length) {
+                    const low = Math.min(...levels), high = Math.max(...levels);
+                    value += low === high ? ' · niveau ' + low : ' · niveaux ' + low + ' à ' + high;
+                }
+            }
+            return [{ type, label, value }];
+        });
+    }
+
+    renderSystemHover(system, distanceLabel) {
+        const title = document.createElement('strong');
+        title.className = 'gv2-tooltip-title';
+        title.textContent = system.name;
+        const coordinates = document.createElement('span');
+        coordinates.className = 'gv2-tooltip-coordinates';
+        coordinates.textContent = system.galaxy + ':' + system.number;
+        const state = document.createElement('p');
+        state.className = 'gv2-tooltip-state';
+        state.textContent = system.known
+            ? 'Exploré · ' + system.planets.length + (system.planets.length === 1 ? ' planète cartographiée' : ' planètes cartographiées')
+            : 'Non exploré · contenu inconnu';
+        const facts = document.createElement('dl');
+        facts.className = 'gv2-tooltip-facts';
+        for (const row of this.systemSummary(system)) {
+            const entry = document.createElement('div');
+            const label = document.createElement('dt');
+            const value = document.createElement('dd');
+            label.textContent = row.label;
+            value.textContent = row.value;
+            entry.append(label, value);
+            facts.append(entry);
+        }
+        const hint = document.createElement('p');
+        hint.className = 'gv2-tooltip-hint';
+        hint.textContent = 'Cliquer pour ouvrir le système';
+        const nodes = [title, coordinates, state];
+        if (facts.childElementCount) nodes.push(facts);
+        if (distanceLabel) {
+            const distance = document.createElement('p');
+            distance.className = 'gv2-tooltip-distance';
+            distance.textContent = distanceLabel;
+            nodes.push(distance);
+        }
+        this.tooltipTarget.replaceChildren(...nodes, hint);
     }
 
     updateHover(point) {
         const system = this.nearestSystem(point);
         if (this.hoveredSystem === system) return;
         this.hoveredSystem = system;
+        this.drawFrame(0);
         if (!system) {
             this.tooltipTarget.hidden = true;
             this.coordinatesTarget.textContent = this.gameMap.galaxy || '—';
             return;
         }
-        const count = system.known ? system.planets.length + ' planètes cartographiées' : 'Système non exploré';
         const origin = this.gameMap.origin;
         let distanceLabel = '';
         if (origin) {
@@ -926,17 +1186,24 @@ export default class extends Controller {
                     : 100 - Number(origin.position) * 10;
                 const hyperDistance = sameSystem ? 0 : Math.hypot(Number(system.x) - Number(origin.x), Number(system.y) - Number(origin.y)) * 100;
                 const distanceAu = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(localDistance + hyperDistance);
-                distanceLabel = 'Depuis ' + origin.planetCoordinates + ' : ' + distanceAu + ' UA';
+                distanceLabel = sameSystem ? 'Système de votre colonie de départ' : 'Distance indicative depuis ' + origin.planetCoordinates + ' : ' + distanceAu + ' UA';
             }
         }
-        this.tooltipTarget.textContent = [system.name + ' · ' + system.galaxy + ':' + system.number, count, distanceLabel].filter(Boolean).join(' · ');
+        this.renderSystemHover(system, distanceLabel);
         this.tooltipTarget.hidden = false;
-        this.tooltipTarget.style.left = clamp(point.x + 18, 8, this.width - 240) + 'px';
-        this.tooltipTarget.style.top = clamp(point.y + 18, 40, this.height - 70) + 'px';
+        const hud = this.element.querySelector('.gv2-hud');
+        const minTop = Math.max(8, hud.getBoundingClientRect().bottom - this.sceneTarget.getBoundingClientRect().top + 10);
+        this.tooltipTarget.style.maxHeight = Math.max(80, this.height - minTop - 8) + 'px';
+        const width = this.tooltipTarget.offsetWidth, height = this.tooltipTarget.offsetHeight;
+        const left = point.x + 18 + width > this.width - 8 ? point.x - width - 18 : point.x + 18;
+        const top = point.y + 18 + height > this.height - 8 ? point.y - height - 18 : point.y + 18;
+        this.tooltipTarget.style.left = clamp(left, 8, Math.max(8, this.width - width - 8)) + 'px';
+        this.tooltipTarget.style.top = clamp(top, minTop, Math.max(minTop, this.height - height - 8)) + 'px';
         this.coordinatesTarget.textContent = system.galaxy + ':' + system.number;
     }
 
     wheel(event) {
+        if (event.target.closest('.gv2-map-settings, .gv2-search-results, .gv2-system-panel, .gv2-planet-panel, .gv2-flight-log')) return;
         event.preventDefault();
         const rect = this.sceneTarget.getBoundingClientRect();
         const x = event.clientX - rect.left, y = event.clientY - rect.top;
@@ -962,6 +1229,7 @@ export default class extends Controller {
         if (template) this.systemContentTarget.append(template.content.cloneNode(true));
         this.systemPanelTarget.hidden = false;
         this.planetPanelTarget.hidden = true;
+        this.systemPanelToggleTarget.textContent = system.galaxy + ':' + system.number + ' · ' + (system.known ? system.planets.length + ' planètes' : 'À explorer');
         this.focusPanel(this.systemPanelTarget);
         this.systemBackTarget.hidden = false;
         this.planetBackTarget.hidden = true;
@@ -969,7 +1237,7 @@ export default class extends Controller {
         this.fleetLogTarget.parentElement.hidden = true;
         this.locationTarget.textContent = system.name;
         this.coordinatesTarget.textContent = system.galaxy + ':' + system.number;
-        this.mapHelpTarget.textContent = system.known ? 'Sélectionnez une planète dans le système ou ouvrez sa vue rapprochée.' : 'Ce signal n’est pas cartographié. Une sonde peut l’explorer.';
+        this.mapHelpTarget.textContent = system.known ? 'Cliquez sur une planète pour sa vue rapprochée ; utilisez la liste pour sa fiche.' : 'Ce signal n’est pas cartographié. Une sonde peut l’explorer.';
         const destinationZoom = clamp(this.baseZoom * 2.9, .25, 1.25);
         this.mode = this.motionReduced ? 'system' : 'transition-to-system';
         this.setCanvasMode('system');
@@ -1078,7 +1346,18 @@ export default class extends Controller {
         this.toGalaxy();
     }
 
+    toggleSystemPanel() {
+        const collapsed = this.systemPanelTarget.classList.toggle('is-collapsed');
+        this.systemPanelToggleTarget.setAttribute('aria-expanded', String(!collapsed));
+        this.systemPanelToggleTarget.setAttribute('aria-label', (collapsed ? 'Afficher' : 'Replier') + ' les informations du système');
+    }
+
     focusPanel(panel) {
+        const toggle = panel.querySelector('.gv2-sheet-toggle');
+        if (toggle?.getClientRects().length && panel.classList.contains('is-collapsed')) {
+            toggle.focus({ preventScroll: true });
+            return;
+        }
         const heading = panel.querySelector('h2');
         if (!heading) return;
         panel.scrollTop = 0;
@@ -1088,8 +1367,8 @@ export default class extends Controller {
 
     navigateBack(event) {
         if (event.key !== 'Escape' || event.defaultPrevented || event.target.closest('input, select, textarea')) return;
-        if (!this.planetBackTarget.hidden) this.toSystem();
-        else if (!this.planetPanelTarget.hidden) this.toSystem();
+        if (!this.planetBackTarget.hidden) this.toSystem(true);
+        else if (!this.planetPanelTarget.hidden) this.toSystem(true);
         else if (!this.systemPanelTarget.hidden) this.toGalaxy();
         else return;
         event.preventDefault();
@@ -1116,7 +1395,7 @@ export default class extends Controller {
         }
     }
 
-    toSystem() {
+    toSystem(restoreChoice = false) {
         if (!this.selectedSystem) return;
         this.mode = this.motionReduced ? 'system' : 'transition-to-system-from-planet';
         this.setCanvasMode('system');
@@ -1125,13 +1404,17 @@ export default class extends Controller {
         this.systemBackTarget.hidden = false;
         this.planetBackTarget.hidden = true;
         const choice = this.systemContentTarget.querySelector('[data-planet-id="' + this.selectedPlanet?.id + '"]');
-        if (choice) choice.focus({ preventScroll: true });
+        if (restoreChoice === true && choice && this.hasSystemPanelToggleTarget
+            && this.systemPanelToggleTarget.getClientRects().length && this.systemPanelTarget.classList.contains('is-collapsed')) {
+            this.toggleSystemPanel();
+        }
+        if (choice?.getClientRects?.().length) choice.focus({ preventScroll: true });
         else this.focusPanel(this.systemPanelTarget);
         this.minimapWrapTarget.hidden = true;
         this.fleetLogTarget.parentElement.hidden = true;
         this.locationTarget.textContent = this.selectedSystem.name;
         this.coordinatesTarget.textContent = this.selectedSystem.galaxy + ':' + this.selectedSystem.number;
-        this.mapHelpTarget.textContent = 'Sélectionnez une planète dans le système ou ouvrez sa vue rapprochée.';
+        this.mapHelpTarget.textContent = 'Cliquez sur une planète pour sa vue rapprochée ; utilisez la liste pour sa fiche.';
         if (this.motionReduced) {
             this.mode = 'system';
             this.drawFrame(0);
@@ -1144,13 +1427,8 @@ export default class extends Controller {
         if (this.mode !== 'system') return;
         const planet = this.nearestPlanet(this.canvasPoint(event));
         if (!planet) return;
-        const now = performance.now();
-        if (this.lastPlanetClick && this.lastPlanetClick.id === planet.id && now - this.lastPlanetClick.time < 360) {
-            this.enterPlanetView();
-        } else {
-            this.selectPlanetById(planet.id);
-        }
-        this.lastPlanetClick = { id: planet.id, time: now };
+        this.selectPlanetById(planet.id);
+        this.enterPlanetView();
     }
 
     systemCanvasDoubleClick(event) {
@@ -1161,35 +1439,73 @@ export default class extends Controller {
         this.enterPlanetView();
     }
 
+    buildSolarLayout(planets, bounds) {
+        const centerX = (bounds.left + bounds.right) / 2;
+        const centerY = (bounds.top + bounds.bottom) / 2;
+        const radiusX = Math.max(60, (bounds.right - bounds.left) / 2 - 28);
+        const radiusY = Math.max(50, (bounds.bottom - bounds.top) / 2 - 28);
+        const aspect = Math.min(.85, radiusY / radiusX);
+        const positions = [];
+        [...planets].sort((a, b) => Number(a.position) - Number(b.position)).forEach((planet, index) => {
+            const progress = planets.length === 1 ? .75 : .42 + .58 * index / (planets.length - 1);
+            const radius = radiusX * progress;
+            let best = null;
+            for (let step = 0; step < 36; step += 1) {
+                const angle = planet.visual.angle + step * Math.PI / 18;
+                const x = centerX + Math.cos(angle) * radius;
+                const y = centerY + Math.sin(angle) * radius * aspect;
+                const clearance = Math.min(Math.hypot(x - centerX, y - centerY),
+                    ...positions.map((other) => Math.hypot(x - other.x, y - other.y)));
+                if (!best || clearance > best.clearance) best = { planet, x, y, radius, aspect, angle, clearance };
+            }
+            positions.push(best);
+        });
+        return { centerX, centerY, positions };
+    }
+
+    advanceSolarLayout(layout, dt) {
+        if (this.motionReduced || !(dt > 0)) return;
+        for (const point of layout.positions) {
+            point.angle += dt * point.planet.visual.speed;
+            point.x = layout.centerX + Math.cos(point.angle) * point.radius;
+            point.y = layout.centerY + Math.sin(point.angle) * point.radius * point.aspect;
+        }
+    }
+
     drawSystem(dt) {
         const ctx = this.systemCanvasTarget.getContext('2d');
         ctx.clearRect(0, 0, this.width, this.height);
         const system = this.selectedSystem;
         this.drawSystemBackdrop(ctx, system);
         if (!system) return;
-        const scale = clamp(Math.min(this.width / 1160, this.height / 740), .48, 1.05);
-        const centerX = Math.min(this.width * .43, this.width - 210);
-        const centerY = this.height * .53;
-        const starColor = system.starColor || '#ffe28c';
-        const orbitScale = scale * Math.min(1, (this.width * .38) / 510);
-        this.drawStar(ctx, centerX, centerY, starColor, this.elapsed);
-        const planets = [...system.planets].sort((a, b) => Math.sin(a.visual.angle) - Math.sin(b.visual.angle));
-        for (const planet of planets) {
+        const mobile = this.width <= 720;
+        const panelWidth = this.systemPanelTarget.hidden ? this.planetPanelTarget.offsetWidth : this.systemPanelTarget.offsetWidth;
+        const bounds = {
+            left: mobile ? 24 : 64,
+            right: mobile ? this.width - 24 : Math.max(260, this.width - panelWidth - 48),
+            top: mobile ? 150 : 96,
+            bottom: this.height - (mobile ? 88 : 46),
+        };
+        const key = [system.id, this.width, this.height, bounds.right].join(':');
+        if (this.solarLayoutCache?.key !== key) this.solarLayoutCache = { key, ...this.buildSolarLayout(system.planets, bounds) };
+        this.advanceSolarLayout(this.solarLayoutCache, dt);
+        const { centerX, centerY, positions } = this.solarLayoutCache;
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.scale(mobile ? .45 : .65, mobile ? .45 : .65);
+        this.drawStar(ctx, 0, 0, system.starColor || '#ffe28c', this.elapsed);
+        ctx.restore();
+        for (const { planet, x, y, radius, aspect } of positions) {
             const visual = planet.visual;
-            const radius = (66 + Number(planet.position) * 38) * orbitScale;
-            visual.angle += (dt || 0) * visual.speed;
-            const x = centerX + Math.cos(visual.angle) * radius;
-            const y = centerY + Math.sin(visual.angle) * radius * .38;
             visual.sx = x;
             visual.sy = y;
-            visual.screenRadius = visual.radius * scale;
             ctx.beginPath();
-            ctx.ellipse(centerX, centerY, radius, radius * .38, 0, 0, Math.PI * 2);
+            ctx.ellipse(centerX, centerY, radius, radius * aspect, 0, 0, Math.PI * 2);
             ctx.strokeStyle = 'rgba(209,225,246,.095)';
             ctx.lineWidth = .7;
             ctx.stroke();
-            const depth = .72 + .28 * (Math.sin(visual.angle) + 1) / 2;
-            const planetRadius = visual.radius * scale * depth;
+            const planetRadius = clamp(visual.radius * (mobile ? .75 : 1), mobile ? 10 : 12, mobile ? 16 : 21);
+            visual.screenRadius = planetRadius;
             if (visual.ring) this.drawRing(ctx, x, y, planetRadius, visual.palette.glow, true);
             const halo = ctx.createRadialGradient(x, y, 0, x, y, planetRadius * 3.4);
             halo.addColorStop(0, visual.palette.glow + '38');
@@ -1221,12 +1537,23 @@ export default class extends Controller {
                 ctx.stroke();
                 ctx.setLineDash([]);
             }
-            ctx.font = '11px "Chakra Petch", sans-serif';
+            ctx.font = '12px "JetBrains Mono", monospace';
             ctx.textAlign = 'center';
-            ctx.fillStyle = 'rgba(221,232,248,.82)';
-            ctx.fillText(planet.name, x, y + planetRadius + 14);
+            ctx.fillStyle = '#c3d5e6';
+            ctx.fillText(String(planet.position).padStart(2, '0'), x, y + planetRadius + 17);
+            if (this.selectedPlanet?.id === planet.id) {
+                ctx.font = '600 14px "Chakra Petch", sans-serif';
+                ctx.strokeStyle = '#050910';
+                ctx.lineWidth = 4;
+                const labelX = clamp(x, 80, this.width - 80);
+                ctx.strokeText(planet.name, labelX, y + planetRadius + 35);
+                ctx.fillStyle = '#f1f7ff';
+                ctx.fillText(planet.name, labelX, y + planetRadius + 35);
+            }
+            const marker = mapMarkers[planet.relation] || mapMarkers.uninhabited;
+            this.drawMarkers(ctx, [{ ...marker, symbol: marker.symbol + (planet.relation === 'npc' ? ' ' + planet.conquestLevel : '') }], x, y - planetRadius - 10);
         }
-        this.drawLocalFlights(ctx, system, centerX, centerY, orbitScale);
+        this.drawLocalFlights(ctx, system, centerX, centerY);
     }
 
     drawStar(ctx, x, y, color, time) {
@@ -1284,7 +1611,7 @@ export default class extends Controller {
         }
     }
 
-    drawLocalFlights(ctx, system, centerX, centerY, scale) {
+    drawLocalFlights(ctx, system, centerX, centerY) {
         const now = Date.now() + this.serverClockOffset;
         for (const flight of this.flights) {
             if (!flight.originSystem || !flight.destinationSystem) continue;
@@ -1293,8 +1620,8 @@ export default class extends Controller {
             const targetPlanet = this.findPlanetByName(flight.destinationName, flight.destinationSystem);
             const startPlanet = flight.originSystem.id === system.id ? originPlanet : null;
             const endPlanet = flight.destinationSystem.id === system.id ? targetPlanet : null;
-            const start = startPlanet?.visual ? { x: centerX + Math.cos(startPlanet.visual.angle) * startPlanet.visual.orbitRadius * scale, y: centerY + Math.sin(startPlanet.visual.angle) * startPlanet.visual.orbitRadius * scale * .38 } : { x: this.width * .04, y: centerY };
-            const end = endPlanet?.visual ? { x: centerX + Math.cos(endPlanet.visual.angle) * endPlanet.visual.orbitRadius * scale, y: centerY + Math.sin(endPlanet.visual.angle) * endPlanet.visual.orbitRadius * scale * .38 } : { x: this.width * .9, y: centerY };
+            const start = startPlanet?.visual ? { x: startPlanet.visual.sx, y: startPlanet.visual.sy } : { x: this.width * .04, y: centerY };
+            const end = endPlanet?.visual ? { x: endPlanet.visual.sx, y: endPlanet.visual.sy } : { x: this.width * .9, y: centerY };
             const departure = Date.parse(flight.departureAt || ''), arrival = Date.parse(flight.arrivalAt || '');
             if (flight.status === 'attacking' || flight.status === 'defending' || flight.status === 'orbiting' || flight.status === 'orbit_pending') {
                 const point = endPlanet?.visual ? end : { x: this.width * .9, y: centerY };
@@ -1619,6 +1946,10 @@ export default class extends Controller {
                 main.append(name, detail);
                 button.append(icon, main);
                 button.addEventListener('click', () => this.selectSearchResult(item));
+                if (item.type === 'system') {
+                    button.addEventListener('focus', () => { this.focusedSystem = item.system;this.drawFrame(0); });
+                    button.addEventListener('blur', () => { this.focusedSystem = null;this.drawFrame(0); });
+                }
                 this.searchResultsTarget.append(button);
             });
         }

@@ -56,10 +56,11 @@ test('Admin : nouveautés personnelles, total, actualisation et archives masqué
   await second.goto('/');
   await expect(totalBadge(second)).toHaveText('3');
   await page.goto('/admin/flottes');
-  for (const category of ['reports', 'security', 'feedbacks']) await expect(page.locator(`.admin-sidebar [data-category="${category}"]`)).toHaveText('1');
+  await expect(page.locator('.admin-sidebar [data-category="players"]')).toHaveText('2');
+  await expect(page.locator('.admin-sidebar [data-category="ops"]')).toHaveText('1');
   runIsolatedSql(project, `INSERT INTO user_feedback (player_id,type,priority,title,description,status,created_at) VALUES (${regular.playerId},'bug','high','Second nouveau feedback','Autre retour','open',UTC_TIMESTAMP())`);
   await page.evaluate(() => window.dispatchEvent(new CustomEvent('genesis:refresh')));
-  await expect(page.locator('.admin-sidebar [data-category="feedbacks"]')).toHaveText('2');
+  await expect(page.locator('.admin-sidebar [data-category="players"]')).toHaveText('3');
   await page.goto('/admin');
   await page.goto('/');
   await expect(totalBadge(page)).toHaveText('4');
@@ -232,7 +233,7 @@ test('Accueil admin : rubriques séparées, anciens liens, clavier et thèmes ac
     for (const width of [1440,768,390]) {
       await page.setViewportSize({width,height:900});
       await page.goto('/admin');
-      await expect(page.getByRole('heading', {name:'Administration',exact:true})).toBeVisible();
+      await expect(page.getByRole('heading', {name:'Vue d’ensemble',exact:true})).toBeVisible();
       await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content','noindex');
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
       await page.screenshot({path:testInfo.outputPath(`admin-home-${theme}-${width}.png`),fullPage:true});
@@ -242,6 +243,8 @@ test('Accueil admin : rubriques séparées, anciens liens, clavier et thèmes ac
   }
   await page.getByRole('button', {name:'Menu d’administration'}).focus();
   await page.keyboard.press('Enter');
+  await page.getByRole('navigation', {name:'Console d’administration'}).getByRole('link', {name:/^Joueurs et modération/}).click();
+  await page.getByRole('button', {name:'Menu d’administration'}).click();
   await page.getByRole('navigation', {name:'Console d’administration'}).getByRole('link', {name:'Joueurs',exact:true}).focus();
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/admin\/joueurs$/);

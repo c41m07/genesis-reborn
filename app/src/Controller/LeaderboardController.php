@@ -1,7 +1,7 @@
 <?php
 namespace App\Controller;
 
-use App\Service\Player\{LeaderboardService,RelationResolver};
+use App\Service\Player\{DailyLeaderboard,RelationResolver};
 use App\Service\Universe\UniverseContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{JsonResponse,Request,Response};
@@ -10,12 +10,13 @@ use Symfony\Component\Routing\Attribute\Route;
 final class LeaderboardController extends AbstractController
 {
     #[Route('/classement', name: 'app_leaderboard', methods: ['GET'])]
-    public function index(Request $request, UniverseContext $context, LeaderboardService $leaderboard, RelationResolver $relations): Response
+    public function index(Request $request, UniverseContext $context, DailyLeaderboard $leaderboard, RelationResolver $relations): Response
     {
         $membership = $context->membership();
         $tab = $request->query->getString('tab') === 'guilds' ? 'guilds' : 'players';
         $ownGuild = $relations->guild($membership);
-        $rows = $leaderboard->forUniverse($membership);
+        $daily = $leaderboard->forUniverse($membership);
+        $rows = $daily['players'];
         foreach ($rows as &$row) {
             $peer = $row['membership'];
             $guild = $relations->guild($peer);
@@ -24,7 +25,7 @@ final class LeaderboardController extends AbstractController
         }
         unset($row);
 
-        $guildRows = $tab === 'guilds' ? $leaderboard->guildsForUniverse($membership, $rows) : [];
+        $guildRows = $tab === 'guilds' ? $daily['guilds'] : [];
         foreach ($guildRows as &$row) {
             $status = $relations->guildStatus($ownGuild, $row['guild']);
             $row['relation'] = $status === 'enemies' ? 'enemy' : ($status === 'allies' ? 'guild' : 'neutral');
@@ -32,6 +33,7 @@ final class LeaderboardController extends AbstractController
         unset($row);
 
         return $this->render('player/leaderboard.html.twig', [
+            'daily' => $daily,
             'membership' => $membership,
             'rows' => $rows,
             'tab' => $tab,
@@ -41,10 +43,14 @@ final class LeaderboardController extends AbstractController
     }
 
     #[Route('/api/classement', name: 'api_leaderboard', methods: ['GET'])]
-    public function api(UniverseContext $context, LeaderboardService $leaderboard): JsonResponse
+    public function api(UniverseContext $context, DailyLeaderboard $leaderboard): JsonResponse
     {
+        $daily = $leaderboard->forUniverse($context->membership());
         $rows = array_map(static fn (array $row): array => [
             'rank' => $row['ranks']['points'],
+            'ranks' => $row['ranks'],
+            'score_changes' => $row['score_changes'],
+            'rank_changes' => $row['rank_changes'],
             'username' => $row['membership']->player->username,
             'total_points' => $row['total_points'],
             'research_points' => $row['research_points'],
@@ -54,8 +60,8 @@ final class LeaderboardController extends AbstractController
             'ship_units' => $row['ship_units'],
             'defense_units' => $row['defense_units'],
             'planets' => $row['planets'],
-        ], $leaderboard->forUniverse($context->membership()));
+        ], $daily['players']);
 
-        return $this->json(['universe' => $context->membership()->universe->slug, 'players' => $rows]);
+        return $this->json(['universe' => $context->membership()->universe->slug, 'players' => $rows, 'updated_at'=>$daily['updated_at']->format(DATE_ATOM), 'comparison_at'=>$daily['comparison_at']?->format(DATE_ATOM), 'next_update'=>$daily['next_update']->format(DATE_ATOM), 'timezone'=>DailyLeaderboard::TIMEZONE]);
     }
 }

@@ -19,7 +19,8 @@ export default class extends Controller {
 
     render(counts) {
         for (const badge of this.badgeTargets) {
-            const count = Number(counts[badge.dataset.category]) || 0;
+            const categories = (badge.dataset.categories || badge.dataset.category).split(' ');
+            const count = categories.reduce((total, category) => total + (Number(counts[category]) || 0), 0);
             badge.hidden = count === 0;
             badge.textContent = count > 99 ? '99+' : String(count);
             badge.setAttribute('aria-label', `${count} ${badge.dataset.label}`);

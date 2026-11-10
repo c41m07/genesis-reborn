@@ -184,6 +184,13 @@ L’intégration et ses vérifications sont détaillées dans [BUILDING_BALANCE_
 - L’ouverture d’une conversation marque les messages affichés comme lus. La lecture du canal de guilde est suivie séparément pour chaque joueur et chaque guilde.
 - La page Alliances s’ouvre sur « Guildes ». Les liens sont ordonnés « Guildes », « Diplomatie », « Relation » et seul le panneau sélectionné est affiché. « Diplomatie » regroupe les relations entre guildes, « Relation » les contrats entre commandants.
 
+### Canal Global — 9 novembre 2026
+
+- Le canal « Global » est accessible aux joueurs connectés de l’univers courant, avec ou sans guilde, et se place au-dessus du canal de guilde. Cette décision remplace l’ordre des canaux défini le 5 novembre.
+- La lecture et l’envoi réutilisent les contrôles d’accès de la messagerie ; les messages suivent la validation de 1 à 2 000 caractères et la limitation partagée des envois.
+- Les messages Global ne déclenchent aucune notification et ne participent à aucun badge ni compteur de non-lus, y compris dans les totaux et la navigation. Leur consultation ne marque pas les autres conversations comme lues.
+- Les 100 derniers messages sont affichés dans l’ordre chronologique. Les conversations privées et de guilde conservent leur comportement.
+
 ### Limites par défaut des univers — 5 novembre 2026
 
 Le nombre maximum de vaisseaux par flotte est fixé par défaut à **1 000 000** et le plafond de planètes à **31**. Ces valeurs s’appliquent aux profils de référence et aux nouveaux univers. Les réglages personnalisés d’un univers restent prioritaires. Le plafond de planètes ne modifie pas les prérequis de recherche de colonisation.
@@ -1062,3 +1069,136 @@ Les facteurs existants de production/consommation 1/1,5/2,25 et de durée 1/1,25
 ### Publication de l’équilibrage sur dev — 9 novembre 2026
 
 L’utilisateur demande explicitement le commit et le push sur dev. Le lot est préparé sur le dernier dev intégré (1b02f4f), en conservant ses nouveaux travaux d’administration et d’événements, sans inclure les autres documents ou captures locaux. Les [résultats de publication](EQUILIBRAGE.md#publication-sur-dev--9-novembre-2026) distinguent suite PHP complète et contrôles navigateur consolidés après correction d’une ancienne attente de prix. Aucune publication sur Alpha ni déploiement demandé.
+
+## Suppressions et visibilité des événements — 9 novembre 2026
+
+Décisions validées par l’utilisateur : conserver le texte « Événements » et le
+compteur lorsque l’encart est fermé, sur PC et mobile. Les événements et défis
+déjà démarrés sont retirés des listes courantes et conservés dans l’historique ;
+les contributions et récompenses acquises ne sont pas supprimées. Un retrait
+en cours arrête les effets futurs et conserve les effets déjà acquis. Seuls les
+éléments jamais démarrés, sans contribution ni récompense, sont supprimés
+réellement ; les rotations automatiques restent en lecture seule.
+
+La suppression volontaire du compte concerne tous les univers : confirmation
+explicite et mot de passe actuel, conversion des empires en empires oubliés,
+effacement des identifiants et préférences, révocation des jetons de confirmation
+et de réinitialisation, fermeture de l’accès. Une ligne technique anonymisée est
+conservée pour les références historiques ; ce mécanisme ne purge pas les
+messages, journaux, feedbacks ou sauvegardes. La politique de confidentialité
+précise le canal des demandes complémentaires. Un combat en cours bloque la
+suppression complète sans modification partielle ; le dernier administrateur
+actif doit désigner un successeur. Les vacances prennent fin à la suppression.
+La conversion volontaire ne dépend ni des trente jours d’inactivité, ni du
+drapeau des conversions automatiques. Dans un univers fermé, les files restent
+figées ; l’identité est détachée. Aucun changement de schéma n’est nécessaire.
+
+## Administration des rotations et panneau joueur — 9 novembre 2026
+
+À la demande explicite de l’utilisateur, la restriction de lecture seule des
+rotations hebdomadaires est remplacée par la gestion de modèles par univers :
+création, activation et désactivation. Les trois modèles historiques et leur
+séquence restent les valeurs par défaut. Les modèles actifs alternent dans leur
+ordre enregistré, selon l’indice de semaine existant. Chaque univers conserve
+au plus une occurrence hebdomadaire par semaine, indépendamment du modèle.
+Les changements de modèles concernent uniquement les semaines non encore
+programmées ; une occurrence existante garde un instantané de ses règles.
+
+Une annulation explicite conserve l’enregistrement, sa clé de semaine, les
+contributions et récompenses acquises. Elle arrête les nouvelles contributions
+et attributions de cette occurrence, sans annuler les autres semaines. Une
+rotation terminée reste consultable ; une occurrence échue attend sa clôture
+pour préserver les récompenses dues. Le lundi à 00 h UTC, le plafond simultané
+et les modalités historiques de récompense restent inchangés. Les réglages
+utilisent `Universe.gameSettings`, sans migration.
+
+Les joueurs voient aussi les rotations de leur univers dans Événements et dans
+le panneau sous les ressources : objectif, contribution, progression, place
+lorsqu’un classement existe, récompense et durée. Les événements globaux
+applicables à cet univers restent inclus. Le nom de l’univers n’est plus répété
+dans le panneau. L’ouverture superpose le contenu sans agrandir la barre.
+Le bloc `planet-index-summary panel` est retiré à la demande de l’utilisateur.
+
+Les filtres des quatre catalogues sont alignés sur les rôles et effets actuels.
+Les vaisseaux de combat avec soute restent dans leur classe de combat ; les
+rôles transport, colonisation et espionnage sont distincts. Réservoirs, soutes
+et propulsion relèvent de la logistique ; extension coloniale et réparation
+des défenses possèdent leur filtre. Aucun coût, prérequis ou effet n’est modifié.
+
+
+### Contrôles du lot avant publication sur dev — 9 novembre 2026
+
+Publication demandée explicitement par l’utilisateur. Copie isolée issue de
+`dev` à `621cd11`, incluant le correctif Quality d’Alpha ; changements parallèles
+de navigation et d’envoi des mails exclus de ce lot.
+
+- `make validate`, `make lint`, `npm run build` via `make assets` et
+  `git diff --check` : réussis.
+- `make test` : exécution complète finale réussie, 545 tests PHP et
+  209104 assertions, puis 13 tests Python. Le domaine Mercure du conteneur de
+  test est aligné sur celui des requêtes de la suite HTTP.
+- `make test-browser` : les 129 scénarios ont été exécutés en quatre lots
+  isolés ; 128 succès au premier passage et un succès en reprise ciblée après
+  regroupement de la préparation des données d’inventaire. Il s’agit de
+  résultats consolidés, pas d’une exécution unique intégralement verte.
+- Le test de migration d’activité nettoie sa table temporaire : sa contrainte
+  nommée différemment de celle générée par l’ORM bloquait parfois le nettoyage
+  du test suivant. Les assertions et les migrations livrées restent inchangées.
+
+Ces contrôles sont locaux ; ils ne constituent ni une validation de la CI
+GitHub, ni un déploiement. Les migrations de vérification concernent uniquement
+les bases jetables ; aucune migration de la base de jeu existante n’est appliquée.
+
+### Boutons Max et quantités — 10 novembre 2026
+
+L’utilisateur valide des boutons Max pour les vaisseaux et défenses à construire, la composition des flottes et chaque ressource de fret. Le plafond fixe de 100 unités par commande de construction est retiré : le maximum dépend des ressources et des coûts réels, réductions et arrondis compris. Les 30 commandes par file et les contraintes de stockage des entiers et durées sont conservées.
+
+Une quantité excessive est automatiquement réduite au maximum possible, avec un message compréhensible. Le serveur revérifie les limites sous verrou lors de la validation, même sans JavaScript. Une quantité nulle ne crée pas de commande ni de flotte.
+
+La composition respecte les vaisseaux disponibles et le plafond de flotte configuré dans l’univers ; la restriction historique de 100 par type ne doit pas empêcher l’application de cette limite déjà validée. Le fret possède un Max par ressource : les autres ressources déjà saisies sont conservées, l’hydrogène nécessaire au carburant est réservé, et la place restante en soute est respectée. Le plafond de saisie de fret existant de 100 000 000 par ressource est conservé. Si plusieurs valeurs soumises simultanément dépassent la capacité, elles sont ajustées dans l’ordre des champs envoyés ; la prévisualisation montre les quantités effectives avant confirmation.
+
+### File de recherche commune — 10 novembre 2026
+
+L’utilisateur valide une file de recherche commune au joueur dans chaque univers, accessible depuis toutes ses colonies. Un ajout depuis une autre colonie rejoint la même file, y compris pour le niveau suivant d’un rang déjà programmé. Les univers restent indépendants ; la limite de 30 commandes s’applique à cette file commune.
+
+Chaque recherche conserve sa colonie d’origine : elle y prélève ses ressources et utilise son laboratoire pour calculer la durée au moment de l’ajout. Coûts et durées déjà enregistrés ne sont pas recalculés au démarrage. Les recherches s’exécutent dans l’ordre des commandes, une à la fois.
+
+Les commandes historiques payées sont conservées. Si plusieurs recherches étaient déjà actives en parallèle, elles gardent leurs dates et durées ; les commandes en attente et les nouveaux ajouts attendent la fin de toutes ces recherches, puis utilisent la file commune. Aucune annulation ni migration de données n’est imposée pour cette transition.
+
+Les dépendances de niveaux suivent aussi les commandes ajoutées depuis d’autres colonies. Les règles existantes d’annulation, de remboursement, de vacances et de capture sont conservées ; les remboursements vont à la colonie qui a payé chaque commande. L’affichage commun montre les colonies d’origine et les états réellement actifs ou en attente.
+
+
+## Classements quotidiens — 10 novembre 2026
+
+Tous les classements (points des joueurs, flotte, nombre de colonies et guildes) sont figés entre deux calculs quotidiens, à 00 h en Europe/Paris, en tenant compte des changements d’heure. Les points affichés dans l’aperçu de colonie et l’API utilisent le même instantané. Le calcul des points reste inchangé ; les scores utilisés pour les protections et combats restent en temps réel.
+
+Les évolutions comparent les deux derniers calculs persistés : points actuels moins points précédents ; rang précédent moins rang actuel (une place gagnée est positive). Gains et pertes sont signés ; une valeur inchangée s’affiche « = ». Sans référence précédente (initialisation, nouveau joueur ou nouvelle guilde), l’évolution s’affiche « = ». Les nouveaux inscrits et guildes entrent au prochain calcul. Les noms, relations diplomatiques et protections restent actuels ; les joueurs supprimés ou devenus empires oubliés et les guildes archivées ne sont plus affichés, sans renuméroter les rangs avant l’échéance suivante.
+
+Le relais existant déclenche les calculs même sans visite. Les lectures rattrapent une échéance manquée ; après interruption, le calcul utilise l’état disponible à la reprise et indique son heure réelle, sans inventer les états des jours manqués. Les constructions et recherches déjà terminées sont réconciliées avant le calcul. Les instantanés et leurs dernières évolutions sont conservés en base, avec uniquement des identifiants et valeurs de classement, sans copie des identités.
+
+
+## Ressources initiales et production passive — décision du 10 novembre 2026
+
+Les valeurs suivantes s’appliquent après activation du nouvel équilibrage. La production horaire de référence est celle d’une position 5, dans un univers ×1, sans bâtiment ni événement.
+
+| Ressource | Première planète | Colonie basique | Intermédiaire | Supérieure | Stockage de base | Production / h |
+|---|---:|---:|---:|---:|---:|---:|
+| Métal | 10 000 | 5 000 | 6 250 | 7 812,5 | 10 000 | 40 |
+| Électricité | 10 000 | 0 | 0 | 0 | 10 000 | 0 |
+| Antimatière | 10 000 | 5 000 | 6 250 | 7 812,5 | 10 000 | 10 |
+| Hydrogène | 10 000 | 5 000 | 6 250 | 7 812,5 | 10 000 | 80 |
+| Nano | 10 000 | 5 000 | 6 250 | 7 812,5 | 10 000 | 20 |
+
+Le rang du vaisseau réellement consommé détermine le kit : ×1, ×1,25 ou ×1,5625 ; les fractions sont conservées et l’électricité reste nulle. Les stocks initiaux ne sont attribués qu’à la création des ressources. Aucun stock existant n’est redistribué ou remis à zéro.
+
+Les capacités et productions de base concernent aussi les planètes existantes. Les usines, consommations, bonus de stockage, modificateurs de position, multiplicateurs d’univers et événements gardent leurs règles. Les taux du fichier de règles sont stockés par seconde (valeur horaire / 3 600).
+
+Transition validée : tout surplus déjà présent au-dessus de la capacité est conservé et utilisable pour les dépenses. Aucun apport positif supplémentaire n’est crédité tant que la ressource dépasse la capacité ; la production reprend sous le plafond. Les remboursements et dépôts ne doivent jamais écrêter le stock déjà présent. Les consommations industrielles continuent selon les règles existantes. Les jauges restent bornées à 100 %, mais la quantité affichée montre tout le stock.
+
+Clarification validée le 10 novembre 2026 : les règles courantes s’appliquent directement à toute la période de production non encore matérialisée, depuis le dernier calcul enregistré, y compris lorsque cette période précède le déploiement. Ce recalcul rétroactif des gains en attente est accepté ; il peut augmenter ou réduire ces gains selon les nouveaux taux. Il ne réinitialise pas les stocks déjà enregistrés. Les frontières d’événements et de vacances restent prises en compte. Cette décision remplace le mécanisme initial de bascule par date : `RESOURCE_BALANCE_EFFECTIVE_AT` n’est plus utilisée et aucun ancien régime n’est maintenu.
+
+Aucune migration ni réécriture globale des stocks n’est requise. Les nouvelles valeurs sont actives dès que le nouveau code est exécuté, pour les univers existants comme pour les nouveaux. Lors du déploiement, arrêter les anciens processus applicatifs puis démarrer tous les services avec la même version ; aucun paramètre d’activation supplémentaire n’est nécessaire.
+
+### Disposition du suivi sur les catalogues — ajustement du 10 novembre 2026
+
+Sur Bâtiments, Recherche, Chantier spatial et Défenses : jusqu’à 740 px, l’activité reste en haut et les flottes en vol sont masquées. De 741 à 1 250 px, l’activité reste en haut et les flottes restent accessibles. À partir de 1 251 px, l’activité est à droite du catalogue, au-dessus des flottes en vol. La vue générale et la page Flottes gardent leur suivi. Le masquage mobile retire aussi les liens correspondants du parcours clavier ; aucune duplication de file n’est introduite.

@@ -164,4 +164,49 @@ final class AdminEventPlannerTest extends KernelTestCase
         require_once dirname(__DIR__,2).'/migrations/Version20261109040000.php';$migration=new \DoctrineMigrations\Version20261109040000($connection,new \Psr\Log\NullLogger());$migration->up(new \Doctrine\DBAL\Schema\Schema());foreach($migration->getSql() as $query) $connection->executeStatement($query->getStatement());
         self::assertNull($connection->fetchOne('SELECT configuration FROM boost_event WHERE id=?',[$event->id]));self::assertSame([], (new SchemaTool($this->em))->getUpdateSchemaSql($this->em->getMetadataFactory()->getAllMetadata()));
     }
+    public function testUnusedChallengeAndAnnouncementAreDeletedTogether(): void
+    {
+        [$admin]=$this->admin();$event=$this->event($admin);$id=$event->id;
+        self::assertTrue(self::getContainer()->get(\App\Service\Admin\AdminEventRemovalService::class)->remove($admin,$event,'Erreur de préparation'));
+        self::assertNull($this->em->find(BoostEvent::class,$id));self::assertSame(0,$this->em->getRepository(\App\Entity\GameEvent::class)->count([]));
+    }
+
+    public function testStartedChallengeIsArchivedWithContributionsAndRewardsIntact(): void
+    {
+        [$admin]=$this->admin();$membership=$admin->currentPlayerUniverse;$event=$this->event($admin);$this->clock->sleep(360);
+        $events=self::getContainer()->get(BoostEventService::class);$events->tick();
+        $systems=self::getContainer()->get(\App\Repository\GameRepository::class)->systems($event->universe);$events->recordExplorationDiscovery($membership,$systems[1]);
+        self::getContainer()->get(BoostGrantService::class)->awardEvent($membership,$event->eventKey);
+        self::assertFalse(self::getContainer()->get(\App\Service\Admin\AdminEventRemovalService::class)->remove($admin,$event,'Fin anticipée'));
+        self::assertSame('cancelled',$event->status);self::assertEquals(1,$event->totalContribution);
+        self::assertSame(1,$this->em->getRepository(PlayerBoost::class)->count(['playerUniverse'=>$membership]));
+        self::assertSame(1,$this->em->getRepository(\App\Entity\BoostEventContribution::class)->count(['event'=>$event]));
+        $query=self::getContainer()->get(\App\Service\Event\ChallengeQueryService::class);
+        self::assertNotContains($event->id,array_map(static fn(array $row):int=>$row['event']->id,$query->forPlayer($membership)));
+        self::assertNotContains($event->id,array_map(static fn(array $row):int=>$row['event']->id,$query->search(0,'',1)['rows']));
+        self::assertSame(1,$query->search(0,'',1,true)['total']);
+        self::assertSame([] ,self::getContainer()->get(GameEventService::class)->visibleFor($membership));
+    }
+
+    public function testRemovalPreservesAcquiredProductionBonusHistory(): void
+    {
+        [$admin]=$this->admin();$planner=self::getContainer()->get(AdminEventPlanner::class);
+        $draft=$planner->prepare('bonus',['name'=>'Bonus','starts_at'=>'2026-11-09T12:05','ends_at'=>'2026-11-09T13:00','universe_id'=>$admin->currentPlayerUniverse->universe->id,'percentage'=>25]);
+        $result=$planner->publish($admin,$draft,str_repeat('b',32));$event=$this->em->find(\App\Entity\GameEvent::class,$result['id']);$this->clock->sleep(600);
+        self::assertFalse(self::getContainer()->get(\App\Service\Admin\AdminEventRemovalService::class)->remove($admin,$event,'Arrêt du bonus'));
+        $events=self::getContainer()->get(GameEventService::class);$universe=$admin->currentPlayerUniverse->universe;
+        self::assertEquals(1.25,$events->productionMultiplier($universe,new \DateTimeImmutable('2026-11-09T12:07:00Z')));
+        self::assertEquals(1,$events->productionMultiplier($universe));self::assertNotEmpty($event->parameters['archived_at']);
+    }
+
+    public function testUnusedEventIsDeletedButNonAdminRemovalIsRefused(): void
+    {
+        [$admin]=$this->admin();$planner=self::getContainer()->get(AdminEventPlanner::class);
+        $draft=$planner->prepare('announcement',['name'=>'Annonce','starts_at'=>'2026-11-09T12:05','ends_at'=>'2026-11-09T13:00','universe_id'=>0]);
+        $result=$planner->publish($admin,$draft,str_repeat('b',32));$event=$this->em->find(\App\Entity\GameEvent::class,$result['id']);
+        self::assertTrue(self::getContainer()->get(\App\Service\Admin\AdminEventRemovalService::class)->remove($admin,$event,'Erreur de saisie'));
+        [$player]=$this->playerAndPlanet('NonAdmin');$event=$this->event($admin);
+        $this->expectException(\DomainException::class);self::getContainer()->get(\App\Service\Admin\AdminEventRemovalService::class)->remove($player,$event,'Interdit');
+    }
+
 }

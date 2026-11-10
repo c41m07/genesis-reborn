@@ -118,6 +118,8 @@ final class VacationEconomyTest extends KernelTestCase
     {
         $head = $this->queue('building', 'mine_metal', 600, 1);
         $this->queue('building', 'mine_metal', 900, 2, $head);
+        foreach($this->em->getRepository(\App\Entity\PlanetResource::class)->findBy(['planet'=>$this->planet]) as $row)$row->currentStock=1000;
+        $this->em->flush();
         $before = $this->resources->snapshot($this->planet)['metal'];
         $this->economy()->start($this->player->currentPlayerUniverse);
         $this->clock->sleep(90 * 86400 + 480 + 900 + 3600);

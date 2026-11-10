@@ -19,7 +19,8 @@
 .colony-catalog-workspace>.colony-catalog{min-width:0;margin-top:0}
 .colony-catalog-workspace .catalog-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .colony-catalog-aside{display:grid;gap:16px;min-width:0}
-.colony-catalog-aside .scene-operations{position:static;inset:auto;height:auto;min-height:0;display:block;padding:18px}
+.colony-catalog-activity{grid-column:1/-1;min-width:0}
+.colony-catalog-activity .scene-operations{position:static;inset:auto;height:auto;min-height:0;display:block;padding:18px}
 .colony-catalog-aside .flight-operations{margin:0}
 .colony-catalog-aside .flight-operation{padding-block:12px}
 .planet-index-summary{display:flex;align-items:center;justify-content:space-between;gap:20px;margin:20px 0 24px;padding:22px}
@@ -102,3 +103,11 @@ button,.primary,.secondary,summary,.galaxy-spy-link{min-height:24px}
 .planet-index-art:after{content:"";position:absolute;inset:45% 0 0;background:linear-gradient(transparent,#06101dcc);pointer-events:none}
 .planet-index-art>span{z-index:1;color:#fff;text-shadow:0 1px 5px #000}
 .password-field{position:relative;min-width:0}.password-field input{padding-right:54px}.password-field .password-toggle{position:absolute;right:0;top:0;display:flex;align-items:center;justify-content:center;width:44px;min-height:44px;padding:8px;margin:0;border:0;background:transparent;color:var(--text);cursor:pointer}.password-toggle[hidden]{display:none}.password-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.password-toggle-slash{display:block}.password-toggle[aria-pressed=true] .password-toggle-slash{display:none}.auth-form .preference-toggle{margin-top:0}.auth-form .preference-toggle input{min-height:44px}.auth-form .preference-toggle label{cursor:pointer}
+
+@media(min-width:1251px){
+    .colony-catalog-workspace{grid-template-rows:auto 1fr}
+    .colony-catalog-activity{grid-column:2;grid-row:1}
+    .colony-catalog-workspace>.colony-catalog{grid-column:1;grid-row:1/span 2}
+    .colony-catalog-aside{grid-column:2;grid-row:2}
+}
+@media(max-width:740px){.colony-catalog-aside{display:none}}

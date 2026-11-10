@@ -41,6 +41,8 @@ final class TransportTest extends WebTestCase
         $this->target = $this->em->getRepository(Planet::class)->findOneBy(['solarSystem' => $this->origin->solarSystem, 'owner' => null]);
         $this->target->owner = $this->recipient->currentPlayerUniverse;
         self::getContainer()->get(ResourceService::class)->initialize($this->target);
+        $this->em->flush();
+        foreach ($this->em->getRepository(PlanetResource::class)->findAll() as $row) $row->currentStock = 1000;
         $this->recipient->preferences['transportReception'] = 'all';
         $fleet = new Fleet();$fleet->homePlanet = $this->origin;$fleet->playerUniverse = $this->sender->currentPlayerUniverse;
         $this->em->persist($fleet);
@@ -157,7 +159,7 @@ final class TransportTest extends WebTestCase
     {
         $this->target->owner = $this->sender->currentPlayerUniverse;
         $rows = $this->em->getRepository(PlanetResource::class)->findBy(['planet' => $this->target]);
-        $capacity = self::getContainer()->get(\App\Service\Catalog\GameCatalog::class)->rules()['base_storage_capacity'];
+        $capacity = self::getContainer()->get(\App\Service\Colony\ResourceService::class)->snapshot($this->target)['metal']['capacity'];
         foreach ($rows as $row) {
             $row->currentStock = $row->resourceType === 'metal' ? $capacity - 50 : $capacity;
             $row->lastUpdatedAt = $this->clock->now()->modify('+1 hour');
@@ -220,5 +222,46 @@ final class TransportTest extends WebTestCase
         $em = self::getContainer()->get(EntityManagerInterface::class);$outsider = $em->find(Player::class, $outsider->id);$outsider->roles = ['ROLE_ADMIN'];$em->flush();
         $this->client->loginUser($outsider);$this->client->request('GET', '/admin/transports');self::assertResponseRedirects('/admin/flottes?mission=transport&status=&page=1');
         $this->client->followRedirect();self::assertResponseIsSuccessful();self::assertSelectorTextContains('h1', 'Surveillance des missions');
+    }
+
+    public function testExcessCargoIsReducedToTheRemainingBayWithoutUsingFuelTanks(): void
+    {
+        foreach($this->em->getRepository(PlanetResource::class)->findBy(['planet'=>$this->origin]) as $resource) {
+            $resource->currentStock=100000;$resource->lastUpdatedAt=$this->clock->now();
+        }
+        $this->em->flush();
+        $quote=self::getContainer()->get(FleetService::class)->preview($this->sender->currentPlayerUniverse,$this->origin,'transport',$this->target->id,['transport'=>1],.5,['metal'=>40000,'nano'=>40000,'hydrogen'=>100000]);
+        self::assertSame(40000,$quote['freight']['metal']);
+        self::assertSame(10000,$quote['freight']['nano']);
+        self::assertArrayNotHasKey('hydrogen',$quote['freight']);
+        self::assertLessThanOrEqual($quote['freight_capacity'],array_sum($quote['freight']));
+        self::assertTrue($quote['adjusted']);
+    }
+
+    public function testHydrogenMaximumReservesFuelAndSendingDoesNotOverspend(): void
+    {
+        $hydrogen=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$this->origin,'resourceType'=>'hydrogen']);
+        $hydrogen->currentStock=1000;$hydrogen->lastUpdatedAt=$this->clock->now();$this->em->flush();
+        $service=self::getContainer()->get(FleetService::class);
+        $quote=$service->preview($this->sender->currentPlayerUniverse,$this->origin,'transport',$this->target->id,['transport'=>1],.5,['hydrogen'=>100000]);
+        $expected=(int)floor(1000-$quote['total_fuel']);
+        self::assertSame($expected,$quote['freight']['hydrogen']);
+        self::assertSame($expected,$quote['cargo_maximum']['hydrogen']);
+        $fleet=$this->send(['hydrogen'=>100000]);
+        self::assertEqualsWithDelta($expected+$quote['total_fuel'],$fleet->cargo['hydrogen'],.000001);
+        self::assertGreaterThanOrEqual(0,$hydrogen->currentStock);
+        self::assertLessThan(1,$hydrogen->currentStock);
+    }
+
+    public function testFleetSelectionUsesOwnedStockInsteadOfTheOldOneHundredLimit(): void
+    {
+        $ship=$this->em->getRepository(FleetShip::class)->findOneBy(['slug'=>'transport']);
+        $ship->quantity=200;$this->em->flush();
+        $service=self::getContainer()->get(FleetService::class);
+        $quote=$service->preview($this->sender->currentPlayerUniverse,$this->origin,'transport',$this->target->id,['transport'=>150],.5,[]);
+        self::assertSame(150,$quote['composition']['transport']['basic']);
+        $quote=$service->preview($this->sender->currentPlayerUniverse,$this->origin,'transport',$this->target->id,['transport'=>300],.5,[]);
+        self::assertSame(200,$quote['composition']['transport']['basic']);
+        self::assertTrue($quote['adjusted']);
     }
 }

@@ -1,0 +1,25 @@
+<section class="event-drawer-wrap" aria-label="Événements de l’univers">
+<details class="event-drawer" data-controller="event-drawer" data-action="keydown.esc@window->event-drawer#close click@window->event-drawer#outside">
+    <summary><span class="event-drawer-title"><i aria-hidden="true"></i> Événements</span><span class="event-drawer-count">{{ chrome.events|length }}</span><span class="event-drawer-arrow" aria-hidden="true">⌄</span><span class="visually-hidden">Afficher ou masquer les événements</span></summary>
+    <div class="event-drawer-list">
+    {% for event in chrome.events %}
+        <article class="event-drawer-item"{% if not event.pending %} data-controller="event-countdown" data-event-countdown-start-value="{{ event.startsAt|date('c') }}" data-event-countdown-end-value="{{ event.endsAt|date('c') }}"{% endif %}>
+            <strong>{{ event.name }}</strong>
+            {% if event.description %}<p class="event-drawer-objective">{{ event.description }}</p>{% endif %}
+            {% if event.bonus %}<p class="event-drawer-objective">Production des ressources : +{{ event.bonus }} %</p>{% endif %}
+            {% if event.challenge %}{% set challenge=event.challenge %}
+                <dl class="event-drawer-stats"><div><dt>Votre contribution</dt><dd>{{ challenge.score|quantity(2) }}</dd></div>
+                {% if challenge.event.rewardMode=='top3' %}<div><dt>Votre place</dt><dd>{{ challenge.rank ? '#'~challenge.rank : 'Non classé' }}</dd></div>{% endif %}
+                {% if challenge.goal %}<div><dt>Objectif global</dt><dd>{{ challenge.event.totalContribution|quantity(2) }} / {{ challenge.goal|quantity(2) }}</dd></div>{% endif %}
+                {% if challenge.event.rewardMode=='threshold' or (challenge.guided and challenge.minimum>0) %}<div><dt>Minimum individuel</dt><dd>{{ (challenge.guided ? challenge.minimum : challenge.event.thresholdValue)|quantity(2) }}</dd></div>{% endif %}</dl>
+                {% if challenge.goal %}<progress class="challenge-progress" max="100" value="{{ challenge.progress }}" aria-label="Progression de {{ event.name }}">{{ challenge.progress|number_format(0) }} %</progress>{% endif %}
+                <p class="event-drawer-reward">{{ challenge.reward_label }} · {{ challenge.guided ? 'Objectif global et participation requis' : (challenge.event.rewardMode=='top3' ? 'Top 3 si l’objectif global est atteint' : (challenge.event.rewardMode=='threshold' ? 'Seuil individuel à atteindre' : 'Toute contribution positive')) }}</p>
+                <a class="event-drawer-link" href="{{ path('app_challenge',{id:challenge.event.id}) }}">Objectif et récompenses<span class="visually-hidden"> : {{ event.name }}</span></a>
+            {% endif %}
+            <div class="event-drawer-countdown">{% if event.pending %}<span>En attente de démarrage</span>{% else %}<span data-event-countdown-target="status">Calcul du compte à rebours…</span><time data-event-countdown-target="time"></time>{% endif %}</div>
+        </article>
+    {% endfor %}
+    <a href="{{ path('app_game_events') }}" class="event-drawer-link">Voir les événements</a>
+    </div>
+</details>
+</section>

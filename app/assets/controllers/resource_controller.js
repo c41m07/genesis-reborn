@@ -1,4 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
+import { exactNumber, displayQuantity } from '../quantity.js';
 
 export default class extends Controller {
     static targets = ['stock', 'rate', 'productivity', 'meter', 'fill', 'protectedFill', 'protectedLimit'];
@@ -11,7 +12,10 @@ export default class extends Controller {
         this.capValue = resource.capacity;
         this.protectedCapValue = resource.protectedCapacity;
         this.started = Date.now();
-        this.rateTarget.textContent = `${resource.rate >= 0 ? '+' : ''}${Math.round(resource.rate * 3600).toLocaleString('fr-FR')} / h`;
+        displayQuantity(this.rateTarget, Math.round(resource.rate * 3600));
+        this.rateTarget.textContent = `${resource.rate >= 0 ? '+' : ''}${this.rateTarget.textContent} / h`;
+        this.rateTarget.title += ' / h';
+        this.rateTarget.setAttribute('aria-label', this.rateTarget.title);
         const reduced = resource.productivity !== null && resource.productivity < 99.999999;
         this.productivityTarget.hidden = resource.productivity === null;
         this.productivityTarget.classList.toggle('resource-productivity--reduced', reduced);
@@ -20,11 +24,11 @@ export default class extends Controller {
         this.tick();
     }
     tick() {
-        const stock = Math.max(0, Math.min(this.capValue, this.stockValue + Math.max(0, Date.now() - this.started) / 1000 * this.rateValue));
-        const format = value => Math.floor(value).toLocaleString('fr-FR');
-        this.stockTarget.textContent = format(stock);
+        const stock = Math.max(0, Math.min(Math.max(this.capValue, this.stockValue), this.stockValue + Math.max(0, Date.now() - this.started) / 1000 * this.rateValue));
+        const format = value => exactNumber(Math.floor(value));
+        displayQuantity(this.stockTarget, Math.floor(stock));
         this.dispatch('stock', { detail: { slug: this.element.dataset.resourceSlug, stock, deficit: this.element.classList.contains('resource--deficit') } });
-        if (this.hasFillTarget) this.fillTarget.style.width = `${this.capValue > 0 ? stock / this.capValue * 100 : 0}%`;
+        if (this.hasFillTarget) this.fillTarget.style.width = `${this.capValue > 0 ? Math.min(100, stock / this.capValue * 100) : 0}%`;
         if (this.hasProtectedFillTarget) this.protectedFillTarget.style.width = `${this.capValue > 0 ? Math.min(stock, this.protectedCapValue) / this.capValue * 100 : 0}%`;
         if (this.hasProtectedLimitTarget) this.protectedLimitTarget.style.left = `${this.capValue > 0 ? this.protectedCapValue / this.capValue * 100 : 0}%`;
         if (this.hasMeterTarget) {

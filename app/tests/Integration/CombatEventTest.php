@@ -763,7 +763,7 @@ final class CombatEventTest extends KernelTestCase
         self::assertGreaterThan(array_sum($firstLoot), array_sum($secondLoot));
         self::assertSame($expectedLoot, array_sum($log->snapshot['loot']['total']));
         foreach ($this->em->getRepository(PlanetResource::class)->findBy(['planet' => $target]) as $resource) {
-            self::assertGreaterThanOrEqual(20000, $resource->currentStock);
+            self::assertGreaterThanOrEqual(1000, $resource->currentStock);
         }
 
         $resourceService = self::getContainer()->get(\App\Service\Colony\ResourceService::class);

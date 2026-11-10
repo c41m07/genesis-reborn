@@ -43,13 +43,14 @@ final class ColonyController extends AbstractController
         return $this->render('colony/planets.html.twig',['membership'=>$membership,'planets'=>$planets,'available_planets'=>$available,'position_modifiers'=>$positionModifiers]);
     }
     #[Route('/planetes/{id}',name:'app_colony',methods:['GET'],requirements:['id'=>'\d+'])]
-    public function show(int $id,Request $request,ColonyView $view,LeaderboardService $leaderboard,RelationResolver $relations,GameCatalog $catalog): Response
+    public function show(int $id,Request $request,ColonyView $view,\App\Service\Player\DailyLeaderboard $leaderboard,RelationResolver $relations,GameCatalog $catalog): Response
     {
         $p=$this->owned($id);$m=$this->context->membership();$section=$this->section((string)$request->query->get('section','overview'));$data=$view->data($m,$p,$request->query->getBoolean('showLockedItems'));
         if($section!=='overview' && $request->query->has('showLockedItems')) $data['show_locked_items']=$request->query->getBoolean('showLockedItems');
         if($section==='overview') {
             $points=['building_points'=>0,'research_points'=>0,'fleet_points'=>0,'total_points'=>0];
-            $rank=null;foreach($leaderboard->forUniverse($m) as $row) if($row['membership']->id===$m->id) {$rank=$row['ranks']['points'];$points=array_intersect_key($row,$points);break;}
+            $daily=$leaderboard->forUniverse($m);
+            $rank=null;foreach($daily['players'] as $row) if($row['membership']->id===$m->id) {$rank=$row['ranks']['points'];$points=array_intersect_key($row,$points);$data['ranking_changes']=$row;break;}
             $features=$catalog->forUniverse($m->universe)['features']??[];
             $data['empire_points']=$points;$data['empire_rank']=$rank;$data['empire_guild']=$relations->guild($m);$data['guilds_enabled']=(bool)($features['guilds_enabled']??false);
         }
@@ -97,6 +98,18 @@ final class ColonyController extends AbstractController
         foreach($leaderboard->forUniverse($this->context->membership()) as $row) if($row['membership']->id===$planet->owner->id) {$snapshot['_protection']=$row['protection'];break;}
         return $this->json($snapshot,200,['Cache-Control'=>'private, no-store']);
     }
+    #[Route('/planetes/{id}/construction-maximum', name: 'app_construction_maximum', methods: ['GET'], requirements: ['id' => '\\d+'])]
+    public function constructionMaximum(int $id, Request $request, QueueService $service): JsonResponse
+    {
+        $planet = $this->owned($id);
+        try {
+            $maximum = $service->maximum($this->context->membership(), $planet, (string) $request->query->get('group'), (string) $request->query->get('slug'), (string) $request->query->get('tier', 'basic'));
+            return $this->json(['maximum' => $maximum], 200, ['Cache-Control' => 'private, no-store']);
+        } catch (\DomainException $error) {
+            return $this->json(['error' => $error->getMessage()], 422, ['Cache-Control' => 'private, no-store']);
+        }
+    }
+
     #[Route('/planetes/{id}/construire',name:'app_queue_add',methods:['POST'],requirements:['id'=>'\d+'])]
     public function add(int $id,Request $request,QueueService $service): Response
     {
@@ -105,8 +118,8 @@ final class ColonyController extends AbstractController
         $quantity=filter_var($request->request->get('quantity',1),FILTER_VALIDATE_INT);
         try {
             if($quantity===false) throw new \DomainException('Quantité invalide.');
-            $service->add($this->context->membership(),$p,(string)$request->request->get('group'),(string)$request->request->get('slug'),$quantity,(string)$request->request->get('request_key'),(string)$request->request->get('tier','basic'));
-            $this->addFlash('success','Commande enregistrée dans la file.');
+            $actualQuantity=$service->add($this->context->membership(),$p,(string)$request->request->get('group'),(string)$request->request->get('slug'),$quantity,(string)$request->request->get('request_key'),(string)$request->request->get('tier','basic'));
+            $this->addFlash('success','Commande enregistrée dans la file.'.($actualQuantity>0 && $actualQuantity<$quantity?' Quantité ajustée au maximum constructible : '.$actualQuantity.'.':''));
         } catch(\DomainException $e) { $this->addFlash('error',$e->getMessage()); }
         return $this->redirectToRoute('app_colony',['id'=>$id,'section'=>$this->section((string)$request->request->get('section','overview')),'_fragment'=>'item-'.(string)$request->request->get('slug','').'-'.(string)$request->request->get('tier','basic')]);
     }
@@ -201,7 +214,27 @@ final class ColonyController extends AbstractController
             $mapReinforceable[$planet->id]=$this->combats->canDefend($m,$planet);
             $mapContestable[$planet->id]=$this->combats->canAttack($m,$planet);
         }
+        $mapPlanetRelations = [];
         if ($interactive) {
+            $ownerRelations = [];
+            foreach ($systems as $row) {
+                foreach ($row['planets'] as $planet) {
+                    $owner = $planet->owner;
+                    if ($owner?->id === $m->id) {
+                        $mapPlanetRelations[$planet->id] = 'own';
+                    } elseif ($planet->npcPlanet || $owner?->isForgotten()) {
+                        $mapPlanetRelations[$planet->id] = 'npc';
+                    } elseif ($owner === null) {
+                        $mapPlanetRelations[$planet->id] = 'uninhabited';
+                    } else {
+                        if (!isset($ownerRelations[$owner->id])) {
+                            $ownerRelations[$owner->id] = $relations->allied($m, $owner) ? 'allied'
+                                : ($relations->guildStatus($relations->guild($m), $relations->guild($owner)) === 'enemies' ? 'enemy' : 'neutral');
+                        }
+                        $mapPlanetRelations[$planet->id] = $ownerRelations[$owner->id];
+                    }
+                }
+            }
             $mapSystems = [];
             foreach ($systems as $row) {
                 $system = $row['system'];
@@ -221,6 +254,7 @@ final class ColonyController extends AbstractController
                         'coordinates' => $planet->coordinates(),
                         'ownedByCurrentPlayer' => $planet->owner?->id === $m->id,
                         'ownerName' => $planet->owner?->getDisplayName(),
+                        'relation' => $mapPlanetRelations[$planet->id],
                         'npc' => $planet->npcPlanet || $planet->owner?->isForgotten(),
                         'conquestLevel' => $planet->conquestLevel,
                     ], $row['planets']),
@@ -305,6 +339,7 @@ final class ColonyController extends AbstractController
             'galaxies' => $galaxies,
             'selected_galaxy' => $selectedGalaxy,
             'galaxy_v2_json' => $galaxyV2Json,
+            'map_planet_relations' => $mapPlanetRelations,
             'galaxy_v2_flights' => $flights,
             'map_occupations' => $mapOccupations,
             'map_conquerable' => $mapConquerable,

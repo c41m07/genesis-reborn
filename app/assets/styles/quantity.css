@@ -1,0 +1,33 @@
+.quantity-number {
+    position: relative;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: help;
+}
+.quantity-number:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+}
+.quantity-number:focus::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    z-index: 20;
+    padding: .25rem .5rem;
+    background: var(--panel, #101e2d);
+    color: var(--text, #e6edf5);
+    border: 1px solid currentColor;
+    border-radius: .25rem;
+    font-size: .875rem;
+}
+
+.quantity-input,.quantity-choice{display:flex;align-items:center;gap:.5rem;min-width:0}
+.quantity-input input,.quantity-choice .fleet-ship-choice{flex:1;min-width:0}
+.quantity-input input{margin-bottom:0}
+.quantity-max{flex:none;min-height:44px;padding:.45rem .7rem;white-space:nowrap}
+.quantity-status{display:block;margin:.4rem 0;color:var(--muted);font-size:.85rem}
+.quantity-status:empty{display:none}
+
+.fleet-page-layout>.fleet-workspace{grid-column:1/-1;min-width:0}
+.fleet-form [data-fleet-fields-target="cargo"] .resource-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr))}

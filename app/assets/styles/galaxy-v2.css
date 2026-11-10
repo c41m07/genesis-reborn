@@ -11,9 +11,9 @@
 .gv2-scanlines,.gv2-vignette{position:absolute;inset:0;pointer-events:none;z-index:1}
 .gv2-scanlines{opacity:.12;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(94,164,211,.055) 4px)}
 .gv2-vignette{box-shadow:inset 0 0 150px 35px rgba(0,0,0,.65);background:radial-gradient(ellipse at center,transparent 40%,rgba(2,5,10,.32) 100%)}
-.gv2-hud{position:absolute;z-index:5;top:20px;left:24px;right:24px;display:flex;align-items:center;gap:12px;pointer-events:none}
+.gv2-hud{position:absolute;z-index:9;top:20px;left:24px;right:24px;display:flex;align-items:center;gap:12px;pointer-events:none}
 .gv2-hud>*{pointer-events:auto}
-.gv2-locator{display:flex;align-items:center;gap:9px;color:#b3c8dc;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.09em;text-transform:uppercase;text-shadow:0 1px 8px #000;min-width:150px}
+.gv2-locator{display:flex;align-items:center;gap:9px;color:#b3c8dc;font:500 14px 'JetBrains Mono',monospace;letter-spacing:.09em;text-transform:uppercase;text-shadow:0 1px 8px #000;min-width:150px}
 .gv2-live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#72e1b1;box-shadow:0 0 9px #72e1b1;animation:gv2-pulse 2s infinite}
 @keyframes gv2-pulse{50%{opacity:.44;box-shadow:0 0 2px #72e1b1}}
 .gv2-galaxy-form{margin-left:auto}
@@ -24,16 +24,16 @@
 .gv2-search>span{font-size:22px;padding:0 9px}
 .gv2-search input{width:100%;min-width:0;border:0;background:transparent;height:36px;padding:0 30px 0 0}
 .gv2-search input::placeholder{color:#71869f}
-.gv2-search-clear{position:absolute;right:5px;border:0;background:transparent;color:#8ca4bd;font-size:18px;cursor:pointer;opacity:0;pointer-events:none}.gv2-search-clear.is-visible{opacity:1;pointer-events:auto}.gv2-search-empty{padding:12px;color:#8299b0;font-size:10px}
+.gv2-search-clear{position:absolute;right:5px;border:0;background:transparent;color:#8ca4bd;font-size:18px;cursor:pointer;opacity:0;pointer-events:none}.gv2-search-clear.is-visible{opacity:1;pointer-events:auto}.gv2-search-empty{padding:12px;color:#8299b0;font-size:13px}
 .gv2-search-results{position:absolute;top:calc(100% + 7px);left:0;right:0;max-height:330px;overflow:auto;border:1px solid var(--gv2-line);border-radius:5px;background:#091321f5;box-shadow:0 14px 40px #0009}
 .gv2-search-results button{display:flex;width:100%;gap:10px;justify-content:space-between;padding:10px 12px;border:0;border-bottom:1px solid #ffffff0d;text-align:left;color:#d9e8f8;background:transparent;cursor:pointer}
 .gv2-search-results button:hover,.gv2-search-results button:focus{background:#10263a}
-.gv2-search-results small{color:#7fa4c7;font:10px 'JetBrains Mono',monospace}
-.gv2-coordinate{color:#8db2d5;font:10px 'JetBrains Mono',monospace;letter-spacing:.04em;min-width:68px;text-align:right}
-.gv2-back{position:absolute;z-index:6;left:26px;top:77px;padding:9px 14px;border:1px solid #42bfe95c;border-radius:3px;background:#071321c9;color:#c4efff;font:11px 'Chakra Petch',sans-serif;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;backdrop-filter:blur(10px)}
+.gv2-search-results small{color:#7fa4c7;font:13px 'JetBrains Mono',monospace}
+.gv2-coordinate{color:#8db2d5;font:13px 'JetBrains Mono',monospace;letter-spacing:.04em;min-width:68px;text-align:right}
+.gv2-back{position:absolute;z-index:6;left:26px;top:77px;padding:9px 14px;border:1px solid #42bfe95c;border-radius:3px;background:#071321c9;color:#c4efff;font:14px 'Chakra Petch',sans-serif;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;backdrop-filter:blur(10px)}
 .gv2-back:hover{border-color:var(--gv2-cyan);box-shadow:0 0 18px #00d4ff28}
-.gv2-tooltip{position:absolute;z-index:8;pointer-events:none;max-width:230px;padding:9px 12px;border:1px solid #5cb9e566;border-radius:4px;background:#07111fe8;box-shadow:0 0 22px #00c9ff17;color:#e5f4ff;font-size:11px;backdrop-filter:blur(8px)}
-.gv2-system-panel,.gv2-planet-panel{position:absolute;z-index:5;top:78px;right:24px;width:min(365px,32vw);max-height:calc(100% - 190px);overflow:auto;padding:20px;border:1px solid #4e82a844;border-radius:5px;background:linear-gradient(145deg,rgba(11,23,39,.94),rgba(5,12,23,.91));box-shadow:0 18px 60px #0008,0 0 38px #00bfff0b;backdrop-filter:blur(13px);animation:gv2-panel-in .36s cubic-bezier(.2,.75,.2,1)}
+.gv2-tooltip{position:absolute;z-index:8;pointer-events:none;max-width:230px;padding:9px 12px;border:1px solid #5cb9e566;border-radius:4px;background:#07111fe8;box-shadow:0 0 22px #00c9ff17;color:#e5f4ff;font-size:14px;backdrop-filter:blur(8px)}
+.gv2-system-panel,.gv2-planet-panel{position:absolute;z-index:5;top:78px;right:24px;width:min(420px,38vw);max-height:calc(100% - 190px);overflow:auto;padding:20px;border:1px solid #4e82a844;border-radius:5px;background:linear-gradient(145deg,rgba(11,23,39,.94),rgba(5,12,23,.91));box-shadow:0 18px 60px #0008,0 0 38px #00bfff0b;backdrop-filter:blur(13px);animation:gv2-panel-in .36s cubic-bezier(.2,.75,.2,1)}
 .gv2-planet-panel{top:auto;bottom:24px;max-height:calc(100% - 120px)}
 @keyframes gv2-panel-in{from{opacity:0;transform:translateX(15px)}to{opacity:1;transform:translateX(0)}}
 .gv2-panel-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
@@ -41,46 +41,132 @@
 .gv2-panel-heading p{margin:0;color:#8fa9c3;font-size:12px}
 .gv2-panel-heading>button{width:28px;height:28px;border:1px solid #47617d66;border-radius:3px;background:#0b1827;color:#95aec7;font-size:18px;cursor:pointer}
 .gv2-panel-heading>button:hover{color:#fff;border-color:var(--gv2-cyan)}
-.gv2-eyebrow{color:#54c8ec;font:500 9px 'JetBrains Mono',monospace;letter-spacing:.16em}
-.gv2-system-state{display:flex;align-items:center;gap:8px;margin:17px 0 12px;padding:9px 10px;border:1px solid #ffffff10;background:#ffffff05;color:#a9bdd1;font-size:10px}
+.gv2-eyebrow{color:#54c8ec;font:500 12px 'JetBrains Mono',monospace;letter-spacing:.16em}
+.gv2-system-state{display:flex;align-items:center;gap:8px;margin:17px 0 12px;padding:9px 10px;border:1px solid #ffffff10;background:#ffffff05;color:#a9bdd1;font-size:13px}
 .gv2-state-dot{width:6px;height:6px;border-radius:50%;background:#8a9bb0;box-shadow:0 0 8px currentColor}
 .gv2-state-dot.is-known{background:#69dcb0;color:#69dcb0}
 .gv2-planet-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--gv2-line)}
 .gv2-planet-list li{border-bottom:1px solid #ffffff10}
-.gv2-planet-choice{display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:8px;width:100%;padding:11px 2px;border:0;background:transparent;color:#d8e7f5;text-align:left;cursor:pointer}
+.gv2-planet-choice{display:grid;grid-template-columns:26px minmax(0,1.5fr) minmax(0,1fr);align-items:center;gap:8px;width:100%;padding:11px 2px;border:0;background:transparent;color:#d8e7f5;text-align:left;cursor:pointer}
 .gv2-planet-choice:hover,.gv2-planet-choice:focus-visible{background:#0d2335}
-.gv2-planet-number{color:#58c5e8;font:11px 'JetBrains Mono',monospace}
-.gv2-planet-choice-name{font:500 13px 'Chakra Petch',sans-serif}
-.gv2-planet-owner{color:#839bb2;font-size:9px;text-align:right}
-.gv2-panel-note{margin:12px 0 0;color:#94a9bd;font-size:11px;line-height:1.5}
-.gv2-visual-note{margin:18px 0 5px;color:#6f8aa4;font:9px 'JetBrains Mono',monospace;letter-spacing:.08em}
+.gv2-planet-number{color:#58c5e8;font:14px 'JetBrains Mono',monospace}
+.gv2-planet-choice-name{font:500 15px 'Chakra Petch',sans-serif}
+.gv2-planet-owner{grid-column:3;min-width:0;color:#b4c5d6;font-size:13px;text-align:left;overflow-wrap:anywhere}
+.gv2-panel-note{margin:12px 0 0;color:#94a9bd;font-size:14px;line-height:1.5}
+.gv2-visual-note{margin:18px 0 5px;color:#6f8aa4;font:12px 'JetBrains Mono',monospace;letter-spacing:.08em}
 .gv2-facts{margin:8px 0 14px}
 .gv2-facts>div{display:flex;justify-content:space-between;gap:15px;padding:9px 0;border-bottom:1px solid #ffffff12}
-.gv2-facts dt{color:#89a1b8;font-size:10px}.gv2-facts dd{margin:0;color:#e0edf7;font-size:11px;text-align:right}
-.gv2-primary-action,.gv2-action-link{display:flex;justify-content:center;align-items:center;gap:7px;width:100%;min-height:38px;margin-top:10px;padding:9px 12px;border:1px solid #00d4ff55;border-radius:3px;background:#0b2635;color:#81e3ff;text-decoration:none;font:500 11px 'Chakra Petch',sans-serif;cursor:pointer}
+.gv2-facts dt{color:#89a1b8;font-size:13px}.gv2-facts dd{margin:0;color:#e0edf7;font-size:14px;text-align:right}
+.gv2-primary-action,.gv2-action-link{display:flex;justify-content:center;align-items:center;gap:7px;width:100%;min-height:38px;margin-top:10px;padding:9px 12px;border:1px solid #00d4ff55;border-radius:3px;background:#0b2635;color:#81e3ff;text-decoration:none;font:500 14px 'Chakra Petch',sans-serif;cursor:pointer}
 .gv2-primary-action:hover,.gv2-action-link:hover{border-color:var(--gv2-cyan);background:#103447;box-shadow:0 0 18px #00d4ff15}
 .gv2-action-link--amber{color:#ffd18a;border-color:#ffb84a44;background:#2a2014}
 .gv2-action-list{display:grid;gap:7px;margin-top:12px}
 .gv2-action-list .map-quick-mission{margin:0}
 .gv2-action-list .map-quick-mission button,.gv2-action-list .map-quick-mission input[type=submit]{min-height:36px}
 .gv2-minimap{pointer-events:none;position:absolute;z-index:4;left:24px;bottom:23px;width:190px;padding:9px;border:1px solid #5687a244;border-radius:4px;background:rgba(6,14,24,.82);box-shadow:0 8px 30px #0005;backdrop-filter:blur(8px)}
-.gv2-minimap>span{display:block;margin-bottom:7px;color:#7798b8;font:9px 'JetBrains Mono',monospace;letter-spacing:.1em}
+.gv2-minimap>span{display:block;margin-bottom:7px;color:#7798b8;font:12px 'JetBrains Mono',monospace;letter-spacing:.1em}
 .gv2-minimap canvas{display:block;width:100%;height:100px;cursor:crosshair;pointer-events:auto}
 .gv2-flight-log{pointer-events:auto;overscroll-behavior:contain;position:absolute;z-index:4;right:24px;bottom:22px;width:250px;max-height:190px;overflow:auto;padding:12px;border:1px solid #5687a233;border-radius:4px;background:rgba(6,14,24,.82);box-shadow:0 8px 30px #0005;backdrop-filter:blur(8px)}
-.gv2-flight-log h2{display:flex;align-items:center;gap:8px;margin:0 0 7px;color:#9fb5ca;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.07em;text-transform:uppercase}
+.gv2-flight-log h2{display:flex;align-items:center;gap:8px;margin:0 0 7px;color:#9fb5ca;font:500 13px 'JetBrains Mono',monospace;letter-spacing:.07em;text-transform:uppercase}
 .gv2-flight-log h2 .gv2-live-dot{width:5px;height:5px}
-.gv2-empty-log{margin:0;color:#70869c;font-size:10px}
-.gv2-flight-entry{display:grid;grid-template-columns:1fr auto;gap:3px 8px;padding:8px 0;border-top:1px solid #ffffff0f;font-size:10px}
-.gv2-flight-entry strong{color:#d6e7f6;font-weight:500}.gv2-flight-entry>span{color:#74d7ef;font-size:9px}.gv2-flight-entry small{grid-column:1/-1;color:#8198ae;font-size:9px}.gv2-flight-entry time{grid-column:1/-1;color:#ffca75;font:9px 'JetBrains Mono',monospace}
+.gv2-empty-log{margin:0;color:#70869c;font-size:13px}
+.gv2-flight-entry{display:grid;grid-template-columns:1fr auto;gap:3px 8px;padding:8px 0;border-top:1px solid #ffffff0f;font-size:13px}
+.gv2-flight-entry strong{color:#d6e7f6;font-weight:500}.gv2-flight-entry>span{color:#74d7ef;font-size:12px}.gv2-flight-entry small{grid-column:1/-1;color:#8198ae;font-size:12px}.gv2-flight-entry time{grid-column:1/-1;color:#ffca75;font:12px 'JetBrains Mono',monospace}
 .gv2-map-controls{position:absolute;z-index:5;right:24px;top:78px;display:grid;gap:5px}
 .gv2-map-controls button{width:34px;height:34px;border:1px solid #5486a244;border-radius:3px;background:#071321c7;color:#b9d2e6;font:18px 'Chakra Petch',sans-serif;cursor:pointer;backdrop-filter:blur(8px)}
 .gv2-map-controls button:hover,.gv2-map-controls button[aria-pressed=true]{color:var(--gv2-cyan);border-color:#00d4ff88}
-.gv2-map-help{position:absolute;z-index:3;left:50%;bottom:27px;transform:translateX(-50%);color:#738ba2;font:9px 'JetBrains Mono',monospace;white-space:nowrap;text-shadow:0 1px 4px #000}
+.gv2-map-help{position:absolute;z-index:3;left:50%;bottom:27px;transform:translateX(-50%);color:#738ba2;font:12px 'JetBrains Mono',monospace;white-space:nowrap;text-shadow:0 1px 4px #000}
 .galaxy-v2 [hidden]{display:none!important}
 @media(min-width:721px){.galaxy-v2:has(.gv2-system-panel:not([hidden]),.gv2-planet-panel:not([hidden])) .gv2-map-controls{left:24px;right:auto;top:130px}}
-@media(max-width:1000px){.gv2-system-panel,.gv2-planet-panel{width:min(330px,39vw)}.gv2-flight-log{width:220px}.gv2-minimap{width:160px}}
-@media(max-width:720px){.shell--galaxy-v2{min-height:0}.galaxy-v2{min-height:350px}.gv2-hud{top:12px;left:12px;right:12px;gap:7px;flex-wrap:wrap}.gv2-locator{min-width:0;flex:1;font-size:9px}.gv2-galaxy-form{margin:0}.gv2-galaxy-form select{max-width:120px;height:32px;font-size:10px}.gv2-search{order:4;width:100%;height:34px}.gv2-search input{height:32px}.gv2-coordinate{min-width:60px;font-size:9px}.gv2-back{left:12px;top:91px}.gv2-map-controls{right:12px;top:91px}.gv2-system-panel,.gv2-planet-panel{top:auto;left:10px;right:10px;bottom:10px;width:auto;max-height:48%;padding:14px}.gv2-planet-panel{max-height:53%}.gv2-panel-heading h2{font-size:21px}.gv2-minimap{left:10px;bottom:10px;width:130px;padding:7px}.gv2-minimap>span{font-size:8px}.gv2-minimap canvas{height:66px}.gv2-flight-log{right:10px;bottom:10px;width:calc(100% - 150px);max-height:126px;padding:8px}.gv2-flight-log h2{font-size:8px}.gv2-flight-entry{padding:5px 0;font-size:9px}.gv2-map-help{bottom:147px;font-size:7px}.gv2-vignette{box-shadow:inset 0 0 70px 15px #0009}}
+@media(max-width:1000px){.gv2-system-panel,.gv2-planet-panel{width:min(380px,43vw)}.gv2-flight-log{width:220px}.gv2-minimap{width:160px}}
+@media(max-width:720px){.shell--galaxy-v2{min-height:0}.galaxy-v2{min-height:350px}.gv2-hud{top:12px;left:12px;right:12px;gap:7px;flex-wrap:wrap}.gv2-locator{min-width:0;flex:1;font-size:12px}.gv2-galaxy-form{margin:0}.gv2-galaxy-form select{max-width:120px;height:32px;font-size:13px}.gv2-search{order:4;width:100%;height:34px}.gv2-search input{height:32px}.gv2-coordinate{min-width:60px;font-size:12px}.gv2-back{left:12px;top:91px}.gv2-map-controls{right:12px;top:91px}.gv2-system-panel,.gv2-planet-panel{top:auto;left:10px;right:10px;bottom:10px;width:auto;max-height:48%;padding:14px}.gv2-planet-panel{max-height:53%}.gv2-panel-heading h2{font-size:21px}.gv2-minimap{left:10px;bottom:10px;width:130px;padding:7px}.gv2-minimap>span{font-size:8px}.gv2-minimap canvas{height:66px}.gv2-flight-log{right:10px;bottom:10px;width:calc(100% - 150px);max-height:126px;padding:8px}.gv2-flight-log h2{font-size:8px}.gv2-flight-entry{padding:5px 0;font-size:12px}.gv2-map-help{bottom:147px;font-size:7px}.gv2-vignette{box-shadow:inset 0 0 70px 15px #0009}}
 @media(max-width:440px){.gv2-minimap{width:110px}.gv2-flight-log{width:calc(100% - 126px)}.gv2-system-panel,.gv2-planet-panel{max-height:55%}.gv2-map-help{display:none}}
 @media(max-width:720px){.gv2-map-controls{display:flex;flex-direction:row}}
 @media(prefers-reduced-motion:reduce){.galaxy-v2 *, .galaxy-v2 *::before,.galaxy-v2 *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
 body.reduced-motion .galaxy-v2 *,body.reduced-motion .galaxy-v2 *::before,body.reduced-motion .galaxy-v2 *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+
+.gv2-map-settings{position:absolute;z-index:7;top:72px;left:24px;width:330px;max-width:calc(100% - 48px);border:1px solid var(--gv2-line);border-radius:5px;background:#081321f5;color:#d9e8f8}
+.gv2-map-modes{display:flex;gap:4px;padding:5px}
+.gv2-map-modes button{flex:1;min-height:40px;padding:6px;border:1px solid transparent;border-radius:3px;background:transparent;color:#c5d6e7;font:500 14px 'Outfit',sans-serif;cursor:pointer}
+.gv2-map-modes button[aria-pressed=true]{background:#103447;border-color:#66deff;color:#b4f0ff}
+.gv2-legend{border-top:1px solid var(--gv2-line);font-size:13px}
+.gv2-legend summary{padding:10px 12px;min-height:40px;cursor:pointer;color:#e3eaf4}
+.gv2-legend ul{display:grid;grid-template-columns:1fr 1fr;gap:8px;list-style:none;margin:0;padding:6px 12px;max-height:180px;overflow:auto}
+.gv2-legend li{display:flex;align-items:center;gap:8px;overflow-wrap:anywhere}
+.gv2-legend li span{display:inline-block;min-width:20px;text-align:center;font-size:17px}
+.gv2-legend p{padding:4px 12px 10px;margin:0;color:#b4c5d6;font-size:12px;line-height:1.5}
+.gv2-marker{display:inline-block;min-width:18px;text-align:center;font-size:17px}
+.gv2-marker--unknown{color:#ffda66;font-weight:700}.gv2-marker--own{color:#66deff}.gv2-marker--allied{color:#00e676}.gv2-marker--enemy{color:#ff3344}.gv2-marker--neutral{color:#b4c2d2}.gv2-marker--npc{color:#ff8a00}.gv2-marker--uninhabited{color:#b4c2d2}
+.galaxy-v2 button:focus-visible,.gv2-legend summary:focus-visible,.gv2-galaxy-form select:focus-visible{outline:2px solid #66deff;outline-offset:2px}
+.gv2-map-help{font-size:12px;white-space:normal;text-align:center;max-width:calc(100% - 530px)}
+@media(max-width:720px){.gv2-map-settings{top:100px;left:12px;max-width:calc(100% - 24px);width:330px}.gv2-back,.gv2-map-controls{top:200px}.gv2-galaxy-form select,.gv2-search input{font-size:16px}.gv2-map-help{display:none}.gv2-locator{font-size:12px}.gv2-coordinate{font-size:12px}}
+
+@media(min-width:721px){.gv2-map-settings{max-height:calc(100% - 220px);overflow:auto}}
+.galaxy-v2:has(.gv2-system-panel:not([hidden]),.gv2-planet-panel:not([hidden])) .gv2-map-settings{display:none}
+@media(max-width:720px){.gv2-back,.gv2-map-controls{top:200px}.galaxy-v2:has(.gv2-system-panel:not([hidden]),.gv2-planet-panel:not([hidden])) .gv2-back,.galaxy-v2:has(.gv2-system-panel:not([hidden]),.gv2-planet-panel:not([hidden])) .gv2-map-controls{top:100px}.gv2-map-settings{max-height:calc(100% - 115px);overflow:auto}}
+
+.gv2-legend label{display:flex;align-items:center;gap:6px;min-height:36px;width:100%;margin:0;padding:0;font:inherit;line-height:1.4;cursor:pointer}
+.gv2-legend input[type=checkbox]{flex:0 0 17px;width:17px;height:17px;min-height:17px;margin:0;padding:0;accent-color:#66deff}
+.gv2-legend input:focus-visible{outline:2px solid #66deff;outline-offset:3px}
+
+.gv2-legend li .gv2-quarter-key{flex:0 0 18px;min-width:18px;width:18px;height:18px;border:1px solid #b4c2d2;border-radius:50%}
+
+.gv2-tooltip{width:300px;max-width:calc(100% - 16px);max-height:calc(100% - 16px);overflow:hidden;padding:14px;font-size:13px;line-height:1.5;background:#081321fa}
+.gv2-tooltip-title{display:block;color:#f1f7ff;font:600 17px 'Chakra Petch',sans-serif;overflow-wrap:anywhere}
+.gv2-tooltip-coordinates{display:block;margin-top:2px;color:#66deff;font:12px 'JetBrains Mono',monospace}
+.gv2-tooltip-state{margin:10px 0;color:#c3d5e6}
+.gv2-tooltip-facts{margin:0;padding-top:6px;border-top:1px solid var(--gv2-line)}
+.gv2-tooltip-facts>div{display:flex;justify-content:space-between;gap:12px;padding:3px 0}
+.gv2-tooltip-facts dt{color:#b4c5d6}.gv2-tooltip-facts dd{margin:0;text-align:right;color:#f1f7ff}
+.gv2-tooltip-distance{margin:9px 0 0;padding-top:8px;border-top:1px solid var(--gv2-line);color:#b4c5d6;font-size:12px}
+.gv2-tooltip-hint{margin:8px 0 0;color:#66deff;font-size:12px}
+.gv2-system-legend{margin:0 0 12px;border:1px solid var(--gv2-line);border-radius:4px;background:#081321}
+.gv2-system-legend summary{padding:8px 10px}.gv2-system-legend ul{padding:5px 10px 10px}.gv2-system-legend li{font-size:12px}
+
+.gv2-sheet-toggle{display:none}
+@media(min-width:721px){.gv2-system-panel,.gv2-planet-panel{width:min(340px,32vw);max-height:calc(100% - 110px);padding:16px}}
+.gv2-legend ul{gap:4px 8px;padding:4px 10px;max-height:156px}
+.gv2-legend label{min-height:30px;font-size:12px;gap:5px}
+.gv2-legend li span{min-width:18px;font-size:15px}
+.gv2-legend p{font-size:11px;padding:6px 10px 8px}
+.gv2-system-legend li{font-size:12px;gap:6px}
+@media(max-width:720px){
+.gv2-system-panel{padding:0;max-height:min(62%,calc(100% - 150px));overflow:hidden;display:flex;flex-direction:column}
+.gv2-sheet-toggle{display:flex;flex:0 0 auto;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:52px;padding:12px 16px;border:0;background:#0b1a2b;color:#d9e8f8;font:500 14px 'Chakra Petch',sans-serif;text-align:left;cursor:pointer}
+.gv2-sheet-toggle::after{content:'⌄';color:#66deff;font-size:20px}
+.gv2-system-panel.is-collapsed .gv2-sheet-toggle::after{content:'⌃'}
+.gv2-system-panel>[data-galaxy-v2-target=systemContent]{overflow:auto;padding:12px 14px;overscroll-behavior:contain}
+.gv2-system-panel.is-collapsed>[data-galaxy-v2-target=systemContent]{display:none}
+.gv2-system-panel .gv2-panel-heading h2{font-size:20px}
+.gv2-system-panel .gv2-system-state{margin:12px 0 10px}
+}
+
+.gv2-filter-toggle{display:none}
+.gv2-flight-log{padding:0}
+.gv2-flight-log>summary{display:flex;align-items:center;gap:8px;min-height:42px;padding:10px 12px;cursor:pointer;list-style:none;color:#bfd3e6;font:500 12px 'Outfit',sans-serif}
+.gv2-flight-log>summary::-webkit-details-marker{display:none}
+.gv2-flight-log>summary::after{content:'⌄';margin-left:auto;color:#66deff}
+.gv2-flight-log[open]>summary::after{content:'⌃'}
+.gv2-flight-log>[data-galaxy-v2-target=fleetLog]{padding:0 12px 12px}
+.gv2-flight-log.is-empty:not([open]){width:auto;min-width:172px;max-height:none}
+.gv2-flight-log>summary:focus-visible{outline:2px solid #66deff;outline-offset:-3px}
+@media(max-width:720px){
+.gv2-map-settings{top:auto;bottom:10px;left:10px;right:10px;width:auto;max-width:none;max-height:calc(100% - 130px);overflow:auto;display:flex;flex-direction:column}
+.gv2-filter-toggle{display:flex;align-items:center;gap:6px;flex:0 0 auto;min-height:50px;width:100%;padding:12px 16px;border:0;background:#0b1a2b;color:#d9e8f8;font:500 14px 'Chakra Petch',sans-serif;text-align:left;cursor:pointer}
+.gv2-filter-toggle::after{content:'⌄';margin-left:auto;color:#66deff}
+.gv2-map-settings.is-collapsed .gv2-filter-toggle::after{content:'⌃'}
+.gv2-map-settings.is-collapsed>#gv2-filter-content{display:none}
+.gv2-map-settings:not(.is-collapsed) .gv2-legend summary{display:none}
+.gv2-map-settings .gv2-legend ul{max-height:none}
+.gv2-flight-log,.gv2-flight-log.is-empty:not([open]){bottom:76px;right:10px;min-width:0;width:auto;max-width:calc(100% - 122px);max-height:160px}
+.gv2-flight-log>summary{min-height:40px;padding:8px 10px}
+.gv2-minimap{bottom:76px;left:10px;width:96px;padding:6px}
+.gv2-minimap canvas{height:50px}
+.galaxy-v2:has(.gv2-map-settings:not(.is-collapsed)) .gv2-minimap,.galaxy-v2:has(.gv2-map-settings:not(.is-collapsed)) .gv2-flight-log{visibility:hidden}
+.gv2-map-controls{top:100px}
+}
+
+@media(max-width:720px){.gv2-minimap{top:146px;bottom:auto}}
+
+.gv2-planet-choice:focus-visible{outline:2px solid #58c5e8;outline-offset:-2px}
+@media(max-width:740px){.gv2-planet-choice{grid-template-columns:26px minmax(0,1fr)}.gv2-planet-owner{grid-column:2}}

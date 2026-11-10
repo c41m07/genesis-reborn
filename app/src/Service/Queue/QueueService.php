@@ -12,18 +12,18 @@ use App\Service\Player\VacationCalendar;
 final class QueueService
 {
     public function __construct(private GameManager $manager,private GameRepository $repo,private GameCatalog $catalog,private RequirementChecker $requirements,private ResourceService $resources,private ActionGuard $guard,private ClockInterface $clock,private \App\Service\Notification\NotificationService $notifications,private OperationCalculator $calculator,private \App\Service\Requirement\CatalogAccess $access,private VacationCalendar $vacations) {}
-    public function add(PlayerUniverse $m,Planet $planet,string $group,string $slug,int $quantity,string $requestKey,string $tier='basic'): void
+    public function add(PlayerUniverse $m,Planet $planet,string $group,string $slug,int $quantity,string $requestKey,string $tier='basic'): int
     {
-        $this->manager->transaction(function()use($m,$planet,$group,$slug,$quantity,$requestKey,$tier){
+        return $this->manager->transaction(function()use($m,$planet,$group,$slug,$quantity,$requestKey,$tier){
             $this->guard->lock($m,$planet);$this->vacations->assertCanManageQueues($m);$this->settleMembershipLocked($m);
-            if(!$this->guard->receipt($m,$requestKey)) return;
+            if(!$this->guard->receipt($m,$requestKey)) return 0;
             if(!in_array($group,['buildings','technologies','ships','defenses'],true)) throw new \DomainException('Type de construction invalide.');
             if(!in_array($tier,GameCatalog::TIERS,true)) throw new \DomainException('Rang de progression invalide.');
-            if($quantity<1 || $quantity>100) throw new \DomainException('Quantité autorisée : 1 à 100.');
+            if($quantity<1) throw new \DomainException('La quantité doit être un entier positif.');
             if(!isset($this->catalog->all($group)[$slug])) throw new \DomainException('Élément indisponible.');
             $config=$this->catalog->forUniverse($m->universe);$base=$config['catalog'][$group][$slug]??$this->catalog->get($group,$slug);$d=$this->catalog->withTier($base,$tier);
             $type=match($group){'buildings'=>'building','technologies'=>'research',default=>'shipyard'};
-            $queue=$this->repo->queue($planet,$type);
+            $queue=$type==='research'?$this->repo->researchQueue($m):$this->repo->queue($planet,$type);
             if(count($queue)>=30) throw new \DomainException('File pleine (30 commandes maximum).');
             $buildings=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);
             $techs=$this->repo->levelsByTier(PlayerTechnology::class,['playerUniverse'=>$m]);
@@ -34,16 +34,48 @@ final class QueueService
                 $maxLevel=(int)($d['effect']['tier_max_levels'][$tier]??$d['max_level']??PHP_INT_MAX);
                 if($level>$maxLevel) throw new \DomainException('Niveau maximum atteint.');
             }
-            if($group==='technologies')foreach($this->repo->all(QueueItem::class,['playerUniverse'=>$m,'queueType'=>'research','itemSlug'=>$slug,'tier'=>$tier]) as $item)if($item->planet->id!==$planet->id)throw new \DomainException('Ce rang de technologie est déjà en recherche sur une autre planète.');
             $failures=$this->access->failures($m,$planet,$group,$d,$tier,$buildings,$techs);
             if($failures) throw new \DomainException('Déblocage initial : '.implode(', ',array_unique($failures)).'.');
+            if(in_array($group,['ships','defenses'],true)) {
+                $maximum=$this->unitMaximum($m,$planet,$group,$slug,$tier,$d,$buildings,$config,$techs);
+                if($maximum<1) throw new \DomainException('Ressources insuffisantes pour construire une unité.');
+                $quantity=min($quantity,$maximum);
+            }
             $plan=$this->calculator->calculate($d,$group,$level,$quantity,$buildings,$config,$techs);$duration=$plan['duration'];
             $this->resources->consume($planet,$plan['costs']);
             $item=new QueueItem();$item->planet=$planet;$item->playerUniverse=$m;$item->queueType=$type;$item->itemSlug=$slug;$item->tier=$tier;$item->itemLevel=in_array($group,['buildings','technologies'],true)?$level:null;$item->quantity=$quantity;$item->paidCosts=$plan['costs'];$item->durationSeconds=$duration;$item->queuedAt=$this->clock->now();$item->dependsOn=$depends;$item->dispatchToken=Uuid::v4()->toRfc4122();
             $this->manager->save($item);$this->manager->flush();
             if(!$queue) $this->start($item,$this->clock->now());
+            return $quantity;
         });
     }
+    public function maximum(PlayerUniverse $membership, Planet $planet, string $group, string $slug, string $tier): int
+    {
+        return $this->manager->transaction(function () use ($membership, $planet, $group, $slug, $tier) {
+            $this->guard->lock($membership, $planet);
+            $this->vacations->assertCanManageQueues($membership);
+            $this->settleMembershipLocked($membership);
+            if (!in_array($group, ['ships', 'defenses'], true) || !in_array($tier, GameCatalog::TIERS, true) || !isset($this->catalog->all($group)[$slug])) throw new \DomainException('Construction indisponible.');
+            $definition = $this->catalog->getTierForUniverse($membership->universe, $group, $slug, $tier);
+            $buildings = $this->repo->levelsByTier(PlanetBuilding::class, ['planet' => $planet]);
+            $technologies = $this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $membership]);
+            if (count($this->repo->queue($planet, 'shipyard')) >= 30 || $this->access->failures($membership, $planet, $group, $definition, $tier, $buildings, $technologies)) return 0;
+            return $this->unitMaximum($membership, $planet, $group, $slug, $tier, $definition, $buildings, $this->catalog->forUniverse($membership->universe), $technologies);
+        });
+    }
+
+    private function unitMaximum(PlayerUniverse $membership, Planet $planet, string $group, string $slug, string $tier, array $definition, array $buildings, array $config, array $technologies): int
+    {
+        $owned = $group === 'defenses'
+            ? ($this->repo->one(PlanetDefense::class, ['planet' => $planet, 'slug' => $slug, 'tier' => $tier])?->quantity ?? 0)
+            : ($this->repo->one(FleetShip::class, ['fleet' => $this->repo->one(Fleet::class, ['homePlanet' => $planet, 'playerUniverse' => $membership, 'status' => 'idle']), 'slug' => $slug, 'tier' => $tier])?->quantity ?? 0);
+        $limit = 2147483647 - $owned;
+        foreach ($this->repo->queue($planet, 'shipyard') as $item) {
+            if ($item->itemSlug === $slug && $item->tier === $tier) $limit -= $item->quantity;
+        }
+        return $this->calculator->maximum($definition, $group, $this->resources->snapshot($planet), $buildings, $config, $technologies, max(0, $limit));
+    }
+
     private function start(QueueItem $item,\DateTimeImmutable $at): void
     {
         $item->startedAt=$at;$field=$item->queueType.'QueueStartedAt';$item->planet->$field=$at;
@@ -60,25 +92,48 @@ final class QueueService
     private function settleMembershipLocked(PlayerUniverse $m,?\DateTimeImmutable $until=null): void
     {
         $this->access->captureLocked($m);
+        $planets=[];
         foreach($this->repo->planets($m->universe,$m) as $planet) {
-            $this->manager->lock($planet);$this->settlePlanetLocked($planet,$until??$this->clock->now());
+            $this->manager->lock($planet);$planets[$planet->id]=$planet;
+        }
+        $until??=$this->clock->now();
+        if(!$this->vacations->isActive($m,$until)) {
+            $this->startNextResearch($m,$until);
+            $items=[];
+            foreach($this->repo->all(QueueItem::class,['playerUniverse'=>$m],['id'=>'ASC']) as $item) {
+                if(isset($planets[$item->planet->id])) $items[$item->id]=$item;
+            }
+            // Les fins sont traitées dans l’ordre réel, même si la prochaine recherche vient d’une autre colonie.
+            while(true) {
+                $due=[];$heads=[];
+                foreach($items as $item) {
+                    if(!in_array($item->queueType,['building','research','shipyard'],true)) continue;
+                    if($item->queueType!=='research') {
+                        $key=$item->planet->id.':'.$item->queueType;
+                        if(isset($heads[$key])) continue;
+                        $heads[$key]=true;
+                    }
+                    if($item->startedAt!==null && $item->finishAt()<=$until) $due[]=$item;
+                }
+                if(!$due) break;
+                usort($due,fn($a,$b)=>($a->finishAt()<=>$b->finishAt())?:($a->id<=>$b->id));
+                $item=$due[0];$id=$item->id;$this->applyCompletion($item);unset($items[$id]);
+            }
         }
         $this->access->captureLocked($m);
     }
-    private function settlePlanetLocked(Planet $planet,\DateTimeImmutable $until): void
+
+    private function startNextResearch(PlayerUniverse $membership,\DateTimeImmutable $at): void
     {
-        if ($planet->owner !== null && $this->vacations->isActive($planet->owner,$until)) return;
-        while(true) {
-            $due=[];
-            foreach(['building','research','shipyard'] as $type) {
-                $head=$this->repo->queue($planet,$type)[0]??null;
-                if($head?->startedAt && $head->finishAt()<=$until) $due[]=$head;
-            }
-            if(!$due) return;
-            usort($due,fn($a,$b)=>($a->finishAt()<=>$b->finishAt())?:($a->id<=>$b->id));
-            $this->applyCompletion($due[0]);
+        if($this->vacations->isActive($membership,$at)) return;
+        $queue=$this->repo->researchQueue($membership);
+        foreach($queue as $item) if($item->startedAt!==null) return;
+        $next=$queue[0]??null;
+        if($next!==null && $next->planet->owner?->id===$membership->id) {
+            $this->start($next,$at<$next->queuedAt?$next->queuedAt:$at);
         }
     }
+
     private function applyCompletion(QueueItem $item): void
     {
         $planet=$item->planet;$m=$item->playerUniverse;$finish=$item->finishAt();
@@ -104,15 +159,20 @@ final class QueueService
         $group=match($item->queueType){'building'=>'buildings','research'=>'technologies',default=>isset($this->catalog->all('defenses')[$item->itemSlug])?'defenses':'ships'};
         $this->notifications->enqueue($m,'Terminé : '.$this->catalog->getTierForUniverse($m->universe,$group,$item->itemSlug,$item->tier)['label'].' sur '.$planet->name.'.');
         $type=$item->queueType;$this->manager->remove($item);$this->manager->flush();
-        $next=$this->repo->queue($planet,$type)[0]??null;
-        if($next) $this->start($next,$finish);else { $field=$type.'QueueStartedAt';$planet->$field=null; }
+        if($type==='research') {
+            $planet->researchQueueStartedAt=null;
+            $this->startNextResearch($m,$finish);
+        } else {
+            $next=$this->repo->queue($planet,$type)[0]??null;
+            if($next) $this->start($next,$finish);else { $field=$type.'QueueStartedAt';$planet->$field=null; }
+        }
     }
     public function complete(int $id,string $token): void
     {
         $this->manager->transaction(function()use($id,$token){
             $item=$this->repo->find(QueueItem::class,$id);if(!$item) return;
             $planet=$item->planet;$this->guard->lockForCompletion($item->playerUniverse,$planet);
-            $head=$this->repo->queue($planet,$item->queueType)[0]??null;
+            $head=$item->queueType==='research'?$item:($this->repo->queue($planet,$item->queueType)[0]??null);
             if(!$head || $head->id!==$id || !hash_equals($head->dispatchToken,$token) || !$head->startedAt) return;
             $this->settleMembershipLocked($item->playerUniverse);
         });
@@ -153,7 +213,10 @@ final class QueueService
             if($item->playerUniverse->id!==$m->id) throw new \DomainException('Commande inaccessible.');
             $planet=$item->planet;$type=$item->queueType;$active=$item->startedAt!==null;
             $this->removeTree($item);$this->manager->flush();
-            if($active) {
+            if($type==='research') {
+                if($active) $planet->researchQueueStartedAt=null;
+                $this->startNextResearch($m,$this->clock->now());
+            } elseif($active) {
                 $next=$this->repo->queue($planet,$type)[0]??null;
                 if($next) $this->start($next,$this->clock->now());else { $field=$type.'QueueStartedAt';$planet->$field=null; }
             }
@@ -205,11 +268,18 @@ final class QueueService
             $planets[$item->planet->id]=$item->planet;$this->manager->remove($item);
         }
         $this->manager->flush();
-        foreach($planets as $affected) foreach(['building','research','shipyard'] as $type) {
-            $head=$this->repo->queue($affected,$type)[0]??null;
-            if($head!==null && $head->startedAt===null) $this->start($head,$this->clock->now());
-            $field=$type.'QueueStartedAt';$affected->$field=$head?->startedAt;
+        foreach($planets as $affected) {
+            foreach(['building','shipyard'] as $type) {
+                $head=$this->repo->queue($affected,$type)[0]??null;
+                if($head!==null && $head->startedAt===null) $this->start($head,$this->clock->now());
+                $field=$type.'QueueStartedAt';$affected->$field=$head?->startedAt;
+            }
+            $affected->researchQueueStartedAt=null;
+            foreach($this->repo->queue($affected,'research') as $research) {
+                if($research->startedAt!==null) {$affected->researchQueueStartedAt=$research->startedAt;break;}
+            }
         }
+        if($formerOwner!==null) $this->startNextResearch($formerOwner,$this->clock->now());
         return $journal;
     }
 }
