@@ -259,6 +259,8 @@ export default class extends Controller {
 
         this.sceneTarget.addEventListener('pointerdown', this.pointerDownHandler);
         this.sceneTarget.addEventListener('pointermove', this.pointerMoveHandler);
+        this.pointerLeaveHandler = () => this.pointerLeave();
+        this.sceneTarget.addEventListener('pointerleave', this.pointerLeaveHandler);
         this.sceneTarget.addEventListener('pointerup', this.pointerUpHandler);
         this.sceneTarget.addEventListener('pointercancel', this.pointerUpHandler);
         this.sceneTarget.addEventListener('wheel', this.wheelHandler, { passive: false });
@@ -281,6 +283,7 @@ export default class extends Controller {
     unbindEvents() {
         this.sceneTarget.removeEventListener('pointerdown', this.pointerDownHandler);
         this.sceneTarget.removeEventListener('pointermove', this.pointerMoveHandler);
+        this.sceneTarget.removeEventListener('pointerleave', this.pointerLeaveHandler);
         this.sceneTarget.removeEventListener('pointerup', this.pointerUpHandler);
         this.sceneTarget.removeEventListener('pointercancel', this.pointerUpHandler);
         this.sceneTarget.removeEventListener('wheel', this.wheelHandler);
@@ -467,8 +470,6 @@ export default class extends Controller {
         }
         ctx.globalAlpha = 1;
 
-        const showLabels = this.zoom > this.baseZoom * 1.8;
-        const labelPositions = [];
         for (const placeholder of this.decorativeSystems || []) {
             const point = this.galaxyPoint(placeholder);
             if (point.x < -34 || point.x > this.width + 34 || point.y < -34 || point.y > this.height + 34) continue;
@@ -491,16 +492,6 @@ export default class extends Controller {
             ctx.strokeStyle = 'rgba(190,211,230,.78)';
             ctx.lineWidth = 1.2;
             ctx.stroke();
-            if (showLabels) {
-                const label = this.gameMap.galaxy + ':' + placeholder.number;
-                ctx.font = '9px "JetBrains Mono", monospace';
-                ctx.textAlign = 'center';
-                ctx.lineWidth = 3;
-                ctx.strokeStyle = 'rgba(3,8,15,.96)';
-                ctx.strokeText(label, point.x, point.y + 19);
-                ctx.fillStyle = '#a9bfd5';
-                ctx.fillText(label, point.x, point.y + 19);
-            }
             ctx.restore();
         }
         for (const system of this.systems) {
@@ -521,9 +512,7 @@ export default class extends Controller {
             }
             const diskRadius = radius + (isHovered ? 8 : 5);
             this.drawSystemDisk(ctx, system, point, diskRadius, isHovered);
-            const labelFits = !labelPositions.some((label) => Math.abs(label.x - point.x) < 82 && Math.abs(label.y - point.y) < 20);
-            if (isHovered || (labelFits && (showLabels || hasOwnedPlanet))) {
-                labelPositions.push(point);
+            if (isHovered || system === this.focusedSystem) {
                 const label = system.galaxy + ':' + system.number;
                 ctx.font = isHovered || this.systems.length <= 48 ? '600 13px "JetBrains Mono", monospace' : '12px "JetBrains Mono", monospace';
                 ctx.textAlign = 'center';
@@ -1033,10 +1022,20 @@ export default class extends Controller {
         event.currentTarget.setPointerCapture?.(event.pointerId);
     }
 
+    pointerLeave() {
+        if (this.mode !== 'galaxy') return;
+        this.hoveredSystem = null;
+        this.tooltipTarget.hidden = true;
+        this.coordinatesTarget.textContent = this.gameMap.galaxy || '—';
+        this.drawFrame(0);
+    }
+
     pointerMove(event) {
         const point = this.canvasPoint(event);
         if (this.mode === 'galaxy' && !this.drag && event.target.closest('.gv2-hud, .gv2-map-settings, .gv2-map-controls, .gv2-minimap, .gv2-flight-log')) {
+            const hadHover = this.hoveredSystem !== null;
             this.hoveredSystem = null;
+            if (hadHover) this.drawFrame(0);
             this.tooltipTarget.hidden = true;
             this.coordinatesTarget.textContent = this.gameMap.galaxy || '—';
             return;
@@ -1169,6 +1168,7 @@ export default class extends Controller {
         const system = this.nearestSystem(point);
         if (this.hoveredSystem === system) return;
         this.hoveredSystem = system;
+        this.drawFrame(0);
         if (!system) {
             this.tooltipTarget.hidden = true;
             this.coordinatesTarget.textContent = this.gameMap.galaxy || '—';
@@ -1946,6 +1946,10 @@ export default class extends Controller {
                 main.append(name, detail);
                 button.append(icon, main);
                 button.addEventListener('click', () => this.selectSearchResult(item));
+                if (item.type === 'system') {
+                    button.addEventListener('focus', () => { this.focusedSystem = item.system;this.drawFrame(0); });
+                    button.addEventListener('blur', () => { this.focusedSystem = null;this.drawFrame(0); });
+                }
                 this.searchResultsTarget.append(button);
             });
         }

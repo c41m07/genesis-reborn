@@ -19,7 +19,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await page.locator('article.universe-card').first().getByRole('button').click();
     await expect(page).toHaveURL(/planetes\/\d+$/);
     const path = new URL(page.url()).pathname, planet = Number(path.split('/').pop());
-    prepareOwnedColony(process.env.BROWSER_ROUTER, email, { stock: 999999999, showLockedItems: true });
+    prepareOwnedColony(process.env.BROWSER_ROUTER, email, { stock: 200000, showLockedItems: true });
     const sql = query => runIsolatedSql(process.env.BROWSER_ROUTER, query);
     // Le niveau 200 conserve un prix en millions malgré la baisse du coût de la centrale.
     sql(`INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'power_plant','basic',200),(${planet},'lab','basic',5)`);
@@ -74,6 +74,22 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await page.getByRole('button', { name: 'Tous', exact: true }).click();
     for (const [width, columns] of [[1920, 4], [1600, 3], [1440, 2], [768, 1], [390, 1], [320, 1]]) {
         await page.setViewportSize({ width, height: 1000 });
+        const activity = page.locator('.colony-catalog-activity');
+        const catalog = page.locator('.colony-catalog-workspace > .colony-catalog');
+        const flights = page.locator('.colony-catalog-aside');
+        const activityBox = await activity.boundingBox();
+        const catalogBox = await catalog.boundingBox();
+        if (width > 1250) {
+            const flightsBox = await flights.boundingBox();
+            expect(activityBox.x).toBeGreaterThan(catalogBox.x);
+            expect(flightsBox.y).toBeGreaterThanOrEqual(activityBox.y + activityBox.height);
+            expect(Math.abs(flightsBox.x - activityBox.x)).toBeLessThan(2);
+        } else {
+            expect(activityBox.y + activityBox.height).toBeLessThanOrEqual(catalogBox.y);
+        }
+        if (width <= 740) await expect(flights).toBeHidden();
+        else await expect(flights).toBeVisible();
+
         await tab('superior').click();
         const firstRow = await page.locator('.building-card:visible').evaluateAll(cards => {
             const top = Math.round(cards[0].getBoundingClientRect().top);

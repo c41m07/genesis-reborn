@@ -14,9 +14,9 @@ final class FactoryEconomy
         while($remaining>1e-9&&++$guard<=64){
             $stocks=self::normalizeStocks($stocks,$capacities);
             $point=self::operatingPoint($baseRates,$factories,$stocks,$capacities,$minimumEfficiency);$flows=$point['flows'];$step=$remaining;
-            foreach($flows as $resource=>$flow){$stock=$stocks[$resource]??0.0;$cap=(float)($capacities[$resource]??INF);if($flow>1e-12&&$stock<$cap-1e-9)$step=min($step,($cap-$stock)/$flow);elseif($flow< -1e-12&&$stock>1e-9)$step=min($step,$stock/-$flow);}
+            foreach($flows as $resource=>$flow){$stock=$stocks[$resource]??0.0;$cap=(float)($capacities[$resource]??INF);if($flow>1e-12&&$stock<$cap-1e-9)$step=min($step,($cap-$stock)/$flow);elseif($flow< -1e-12&&$stock>1e-9){$step=min($step,$stock/-$flow);if($stock>$cap+self::STOCK_EPSILON)$step=min($step,($stock-$cap)/-$flow);}}
             if($step<=0)throw new \LogicException('La simulation de production ne progresse plus.');
-            foreach($flows as $resource=>$flow){$cap=(float)($capacities[$resource]??INF);$stocks[$resource]=min($cap,max(0.0,($stocks[$resource]??0.0)+$flow*$step));}
+            foreach($flows as $resource=>$flow){$cap=(float)($capacities[$resource]??INF);$stocks[$resource]=min(max($cap,$stocks[$resource]??0.0),max(0.0,($stocks[$resource]??0.0)+$flow*$step));}
             $remaining-=$step;
         }
         if($remaining>1e-9)throw new \LogicException('La simulation de production n’a pas intégré toute la durée.');
@@ -30,7 +30,7 @@ final class FactoryEconomy
         foreach($stocks as $resource=>&$stock){
             if($stock<self::STOCK_EPSILON)$stock=0.0;
             $capacity=(float)($capacities[$resource]??INF);
-            if($capacity-$stock<=self::STOCK_EPSILON)$stock=$capacity;
+            if(abs($capacity-$stock)<=self::STOCK_EPSILON)$stock=$capacity;
         }
         unset($stock);return $stocks;
     }

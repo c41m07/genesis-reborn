@@ -27,7 +27,7 @@ final class BuildingBalanceTest extends TestCase
         $repository=new GameRepository($em);$manager=new GameManager($em);$clock=new MockClock('2026-11-05 12:00:00 UTC');
         $events=new GameEventService($repository,$manager,$clock);
         $vacations=new \App\Service\Player\VacationCalendar($repository,$clock);
-        $this->resources=new ResourceService($repository,$manager,$this->catalog,$clock,$events,$vacations);
+        $this->resources=new ResourceService($repository,$manager,$this->catalog,$clock,$events,$vacations,new \App\Service\Colony\ResourceBalance($this->catalog,''));
     }
 
     private function planet(int $position=5,float $speed=1):Planet

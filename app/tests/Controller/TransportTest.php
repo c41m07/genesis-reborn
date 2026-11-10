@@ -157,7 +157,7 @@ final class TransportTest extends WebTestCase
     {
         $this->target->owner = $this->sender->currentPlayerUniverse;
         $rows = $this->em->getRepository(PlanetResource::class)->findBy(['planet' => $this->target]);
-        $capacity = self::getContainer()->get(\App\Service\Catalog\GameCatalog::class)->rules()['base_storage_capacity'];
+        $capacity = self::getContainer()->get(\App\Service\Colony\ResourceService::class)->snapshot($this->target)['metal']['capacity'];
         foreach ($rows as $row) {
             $row->currentStock = $row->resourceType === 'metal' ? $capacity - 50 : $capacity;
             $row->lastUpdatedAt = $this->clock->now()->modify('+1 hour');

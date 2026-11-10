@@ -7,21 +7,21 @@
     "nano": "Nano"
   },
   "initial_stock": {
-    "metal": 40000,
-    "electricity": 20000,
-    "antimatter": 2000,
+    "metal": 10000,
+    "electricity": 10000,
+    "antimatter": 10000,
     "hydrogen": 10000,
     "nano": 10000
   },
   "base_production": {
-    "metal": 0.15,
-    "electricity": 0.15,
-    "antimatter": 0.015,
-    "hydrogen": 0.075,
-    "nano": 0.1
+    "metal": 0.011111111111111112,
+    "electricity": 0.0,
+    "antimatter": 0.002777777777777778,
+    "hydrogen": 0.022222222222222223,
+    "nano": 0.005555555555555556
   },
   "mine_production_per_level": 0.1,
-  "base_storage_capacity": 200000,
+  "base_storage_capacity": 10000,
   "storage_capacity_per_level": 100000,
   "building_time_multiplier_key": "building_time",
   "cancellation_refund_ratio": 0.25,
@@ -33,11 +33,11 @@
   "provisional": true,
   "note": "Courbes de progression proposées le 02/11/2026 : croissance par phase et rendements décroissants, avec plafonds globaux tous rangs confondus.",
   "colony_initial_stock": {
-    "metal": 8000,
-    "electricity": 3000,
-    "antimatter": 0,
-    "hydrogen": 1500,
-    "nano": 1000
+    "metal": 5000,
+    "electricity": 0,
+    "antimatter": 5000,
+    "hydrogen": 5000,
+    "nano": 5000
   },
   "colony_kit_provisional": false,
   "colony_kit_note": "Kit limité et stocks de départ validés lors du QCM d’équilibrage.",
@@ -186,5 +186,29 @@
     "basic": 1.0,
     "intermediate": 1.5,
     "superior": 2.25
+  },
+  "resource_balance_previous": {
+    "initial_stock": {
+      "metal": 40000,
+      "electricity": 20000,
+      "antimatter": 2000,
+      "hydrogen": 10000,
+      "nano": 10000
+    },
+    "colony_initial_stock": {
+      "metal": 8000,
+      "electricity": 3000,
+      "antimatter": 0,
+      "hydrogen": 1500,
+      "nano": 1000
+    },
+    "base_production": {
+      "metal": 0.15,
+      "electricity": 0.15,
+      "antimatter": 0.015,
+      "hydrogen": 0.075,
+      "nano": 0.1
+    },
+    "base_storage_capacity": 200000
   }
 }

@@ -79,4 +79,19 @@ final class FactoryEconomyTest extends TestCase
         self::assertEqualsWithDelta(10,$result['stocks']['metal'],1e-8);
         self::assertSame(0.0,$result['stocks']['electricity']);
     }
+    public function testSurplusIsPreservedAndCanBeConsumedAcrossTheNewCapacity():void
+    {
+        $base=['electricity'=>0,'metal'=>0];
+        $factories=[['resource'=>'metal','rate'=>1,'electricity'=>1,'hydrogen'=>0]];
+        $caps=['electricity'=>10000,'metal'=>100000];
+        $stocks=['electricity'=>15000,'metal'=>0];
+        $single=FactoryEconomy::simulate($base,$factories,$stocks,$caps,6000);
+        self::assertEqualsWithDelta(9000,$single['stocks']['electricity'],1e-7);
+        self::assertEqualsWithDelta(6000,$single['stocks']['metal'],1e-7);
+        $first=FactoryEconomy::simulate($base,$factories,$stocks,$caps,3000);
+        $split=FactoryEconomy::simulate($base,$factories,$first['stocks'],$caps,3000);
+        self::assertEqualsWithDelta($single['stocks']['electricity'],$split['stocks']['electricity'],1e-7);
+        $full=FactoryEconomy::simulate(['metal'=>1],[],['metal'=>15000],['metal'=>10000],3600);
+        self::assertSame(15000.0,$full['stocks']['metal']);self::assertSame(0.0,$full['rates']['metal']);
+    }
 }

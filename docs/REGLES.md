@@ -292,3 +292,26 @@ Tous les classements (points des joueurs, flotte, nombre de colonies et guildes)
 Les évolutions comparent les deux derniers calculs persistés : points actuels moins points précédents ; rang précédent moins rang actuel (une place gagnée est positive). Gains et pertes sont signés ; une valeur inchangée s’affiche « = ». Sans référence précédente (initialisation, nouveau joueur ou nouvelle guilde), l’évolution s’affiche « = ». Les nouveaux inscrits et guildes entrent au prochain calcul. Les noms, relations diplomatiques et protections restent actuels ; les joueurs supprimés ou devenus empires oubliés et les guildes archivées ne sont plus affichés, sans renuméroter les rangs avant l’échéance suivante.
 
 Le relais existant déclenche les calculs même sans visite. Les lectures rattrapent une échéance manquée ; après interruption, le calcul utilise l’état disponible à la reprise et indique son heure réelle, sans inventer les états des jours manqués. Les constructions et recherches déjà terminées sont réconciliées avant le calcul. Les instantanés et leurs dernières évolutions sont conservés en base, avec uniquement des identifiants et valeurs de classement, sans copie des identités.
+
+
+## Ressources initiales et production passive — décision du 10 novembre 2026
+
+Les valeurs suivantes s’appliquent après activation du nouvel équilibrage. La production horaire de référence est celle d’une position 5, dans un univers ×1, sans bâtiment ni événement.
+
+| Ressource | Première planète | Colonie basique | Intermédiaire | Supérieure | Stockage de base | Production / h |
+|---|---:|---:|---:|---:|---:|---:|
+| Métal | 10 000 | 5 000 | 6 250 | 7 812,5 | 10 000 | 40 |
+| Électricité | 10 000 | 0 | 0 | 0 | 10 000 | 0 |
+| Antimatière | 10 000 | 5 000 | 6 250 | 7 812,5 | 10 000 | 10 |
+| Hydrogène | 10 000 | 5 000 | 6 250 | 7 812,5 | 10 000 | 80 |
+| Nano | 10 000 | 5 000 | 6 250 | 7 812,5 | 10 000 | 20 |
+
+Le rang du vaisseau réellement consommé détermine le kit : ×1, ×1,25 ou ×1,5625 ; les fractions sont conservées et l’électricité reste nulle. Les stocks initiaux ne sont attribués qu’à la création des ressources. Aucun stock existant n’est redistribué ou remis à zéro.
+
+Les capacités et productions de base concernent aussi les planètes existantes. Les usines, consommations, bonus de stockage, modificateurs de position, multiplicateurs d’univers et événements gardent leurs règles. Les taux du fichier de règles sont stockés par seconde (valeur horaire / 3 600).
+
+Transition validée : tout surplus déjà présent au-dessus de la capacité est conservé et utilisable pour les dépenses. Aucun apport positif supplémentaire n’est crédité tant que la ressource dépasse la capacité ; la production reprend sous le plafond. Les remboursements et dépôts ne doivent jamais écrêter le stock déjà présent. Les consommations industrielles continuent selon les règles existantes. Les jauges restent bornées à 100 %, mais la quantité affichée montre tout le stock.
+
+La date commune de bascule est définie par `RESOURCE_BALANCE_EFFECTIVE_AT`, au format ISO 8601 avec fuseau. Sans date, l’ancien régime reste actif. La simulation sépare la période antérieure (anciens taux et ancienne capacité) et la période postérieure (nouvelles valeurs) ; elle conserve aussi les frontières d’événements et de vacances. La date ne doit jamais être retirée ou déplacée après activation. Les valeurs précédentes nécessaires à cette intégration restent dans `resource_balance_previous`.
+
+Aucune migration ni réécriture globale des stocks n’est requise. L’activation reste une opération distincte à faire valider : choisir une date future, déployer le même code et la même date sur tous les processus, puis recréer les conteneurs web et de traitement avant cette date pour recharger leur fichier d’environnement (un simple redémarrage ne recharge pas `env_file`). Une instance ancienne ne doit pas continuer à matérialiser des ressources après la bascule.

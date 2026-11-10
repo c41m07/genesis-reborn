@@ -207,6 +207,7 @@ final class GamePersistenceTest extends KernelTestCase
     #[\PHPUnit\Framework\Attributes\DataProvider('colonyShipKits')]
     public function testSoloColonyShipCanColonizeKnownPlanet(array $ranks,float $factor,string $consumedTier): void
     {
+        self::getContainer()->set(\App\Service\Colony\ResourceBalance::class,new \App\Service\Colony\ResourceBalance(self::getContainer()->get(GameCatalog::class),'2000-01-01T00:00:00Z'));
         $p=$this->player();$origin=$this->join($p);$idle=$this->ships($origin,[]);foreach($ranks as $tier=>$quantity){$ship=new FleetShip();$ship->fleet=$idle;$ship->slug='colony_ship';$ship->tier=$tier;$ship->quantity=$quantity;$this->em->persist($ship);}$m=$p->currentPlayerUniverse;$colonial_expansion=new PlayerTechnology();$colonial_expansion->playerUniverse=$m;$colonial_expansion->slug='colonial_expansion';$colonial_expansion->level=1;$this->em->persist($colonial_expansion);$this->em->flush();
         $target=$this->em->getRepository(Planet::class)->findOneBy(['solarSystem'=>$origin->solarSystem,'owner'=>null]);$target->npcPlanet=false;
         $service=self::getContainer()->get(\App\Service\Fleet\FleetService::class);
