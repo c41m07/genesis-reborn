@@ -5,6 +5,12 @@ function accelerateShipyard(project,email) {
   const query = "UPDATE queue_item q INNER JOIN player_universe pu ON pu.id=q.player_universe_id INNER JOIN player p ON p.id=pu.player_id SET q.duration_seconds=1, q.started_at=UTC_TIMESTAMP()-INTERVAL 10 SECOND WHERE p.email='"+email+"' AND q.queue_type='shipyard' AND q.item_slug IN ('probe','colony_ship','transport')";
   execFileSync('docker',['compose','--project-name',project,'--env-file','.env.local','exec','-T','app','php','bin/console','dbal:run-sql',query],{encoding:'utf8',stdio:['ignore','pipe','pipe']});
 }
+async function sendFleetWithRealtime(page, form) {
+  await Promise.all([
+    page.waitForResponse(response => new URL(response.url()).pathname === '/.well-known/mercure' && response.status() === 200),
+    form.getByRole('button', { name: /Envoyer la flotte/ }).click(),
+  ]);
+}
 async function enter(page,prefix='E2E') {
   const id=crypto.randomUUID().slice(0,8), email=`${prefix.toLowerCase()}-${id}@example.test`,password='Browser-test-2026!';
   await page.goto('/inscription');
@@ -71,7 +77,7 @@ test('Chantier, estimation, colonisation, transport et exploration réels', asyn
   await form.locator('[name="ships[probe]"]').fill('1');await form.getByRole('button',{name:/Choisir la destination/}).click();
   await form.locator('[name="mission"]').selectOption('explore');await form.locator('[name="coordinates"]').fill(destinationCoordinates);await form.locator('[name="ratio"]').selectOption('0.7');
   await form.getByRole('button',{name:/Vérifier la mission/}).click();await form.getByRole('button',{name:'Estimer le trajet'}).click();await expect(form.locator('.flight-estimate')).toContainText('Carburant aller-retour');
-  await form.getByRole('button',{name:/Envoyer la flotte/}).click();await expect(page.locator('[data-status="traveling"]')).toHaveCount(1);accelerateTravelingMission(process.env.BROWSER_ROUTER,email,'explore');
+  await sendFleetWithRealtime(page,form);await expect(page.locator('[data-status="traveling"]')).toHaveCount(1);accelerateTravelingMission(process.env.BROWSER_ROUTER,email,'explore');
   await expect.poll(async()=>await page.locator('[data-status="completed"]').count(),{timeout:45000,intervals:[1000]}).toBe(1);
 
   const target=revealVirginPlanet(process.env.BROWSER_ROUTER,email);
@@ -79,7 +85,7 @@ test('Chantier, estimation, colonisation, transport et exploration réels', asyn
   await form.locator('[name="ships[colony_ship]"]').fill('1');await form.getByRole('button',{name:/Choisir la destination/}).click();
   await form.locator('[name="mission"]').selectOption('colonize');await form.locator('[name="coordinates"]').fill(target.coordinates);await form.locator('[name="ratio"]').selectOption('0.1');
   await form.getByRole('button',{name:/Vérifier la mission/}).click();await form.getByRole('button',{name:'Estimer le trajet'}).click();await expect(form.locator('.flight-estimate')).toContainText('Carburant aller-retour');
-  await form.getByRole('button',{name:/Envoyer la flotte/}).click();await expect(page.locator('[data-status="traveling"]')).toHaveCount(1);accelerateTravelingMission(process.env.BROWSER_ROUTER,email,'colonize');await expect(page.locator('[data-status="completed"]')).toHaveCount(2,{timeout:45000});
+  await sendFleetWithRealtime(page,form);await expect(page.locator('[data-status="traveling"]')).toHaveCount(1);accelerateTravelingMission(process.env.BROWSER_ROUTER,email,'colonize');await expect(page.locator('[data-status="completed"]')).toHaveCount(2,{timeout:45000});
   await page.getByRole('link',{name:'Vue générale',exact:true}).click();await expect(page.getByLabel('Choisir une colonie')).toHaveValue(String(origin));
   await page.waitForLoadState('load');await expect(page.locator('#sidebar-colony option')).toHaveCount(2);await page.getByLabel('Choisir une colonie').selectOption(String(target.id));await expect(page).toHaveURL(new RegExp('/planetes/'+target.id+'$'));
   await page.getByRole('link',{name:'Recherche',exact:true}).click();await expect(page.locator('#panel-technologies')).toBeVisible();
