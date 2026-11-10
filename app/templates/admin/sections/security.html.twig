@@ -1,0 +1,11 @@
+<section class="panel admin-section" id="admin-security" aria-labelledby="admin-security-title" data-controller="admin-filter">
+  <h2 id="admin-security-title">Signalements de sécurité</h2>
+  <p>Les tentatives d’accès refusées sont à examiner ; les événements déjà examinés restent au journal.</p>
+  <div class="admin-search"><label for="security-search">Rechercher</label><input id="security-search" type="search" placeholder="Compte ou chemin…" data-admin-filter-target="query" data-action="input->admin-filter#filter"><label for="security-auth-filter">Origine</label><select id="security-auth-filter" data-admin-filter-target="filter" data-filter-key="authenticated" data-action="change->admin-filter#filter"><option value="">Toutes</option><option value="yes">Connectée</option><option value="no">Anonyme</option></select><output data-admin-filter-target="count"></output></div>
+  <div class="table-wrap" role="region" tabindex="0" aria-label="Tentatives d’accès administrateur refusées">
+    <table><caption>Accès à l’administration refusés</caption><thead><tr><th scope="col">Date</th><th scope="col">Compte</th><th scope="col">Méthode</th><th scope="col">Chemin demandé</th><th scope="col">Action</th></tr></thead><tbody>
+    {% for incident in securityIncidents|slice(0, 50) %}<tr data-admin-filter-target="row" data-filter-authenticated="{{ incident.details.authenticated|default(false) ? 'yes' : 'no' }}"><td>{{ incident.createdAt|date('d/m/Y H:i:s') }}</td><td>{{ incident.actor ? incident.actor.username : 'Visiteur non connecté' }}</td><td>{{ incident.details.method|default('—') }}</td><td><code>{{ incident.details.path|default('/admin') }}</code></td><td><form method="post" action="{{ path('app_admin_security_review',{id:incident.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('admin_security_review_'~incident.id) }}"><button class="secondary admin-security-review">Marquer examinée</button></form></td></tr>{% endfor %}
+    </tbody></table>
+  </div>
+  <p {% if securityIncidents %}hidden{% endif %} data-admin-filter-target="empty">{{ securityIncidents ? 'Aucun incident ne correspond à cette recherche.' : 'Aucune tentative refusée en attente d’examen.' }}</p>
+</section>

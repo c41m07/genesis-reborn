@@ -19,6 +19,7 @@ final class BoostEventService
         private GameCatalog $catalog,
         private BoostGrantService $grants,
         private ClockInterface $clock,
+        private WeeklyRotationService $rotations,
     ) {}
 
     public function tick(): array
@@ -46,6 +47,11 @@ final class BoostEventService
                     if ($event->scheduledAt > $now) {
                         break;
                     }
+                    if (($event->configuration['guided'] ?? false) && $event->endsAt && $event->endsAt <= $now) {
+                        $this->manager->lock($event);
+                        if ($event->status === 'scheduled' && $event->endsAt <= $now) { $event->status='cancelled';$event->closedAt=$now;$this->manager->flush(); }
+                        continue;
+                    }
                     if (count($this->repo->boostEventsForUniverse('active', $universe)) >= $limit) {
                         break;
                     }
@@ -55,7 +61,7 @@ final class BoostEventService
                     }
                     $event->status = 'active';
                     $event->startedAt = $now;
-                    $event->endsAt = $now->modify('+' . $event->durationSeconds . ' seconds');
+                    if (!($event->configuration['guided'] ?? false)) $event->endsAt = $now->modify('+' . $event->durationSeconds . ' seconds');
                     $this->manager->flush();
                     ++$started;
                 }
@@ -119,18 +125,19 @@ final class BoostEventService
     private function scheduleWeeklyInstances(\DateTimeImmutable $now): void
     {
         $settings = $this->eventSettings();
-        $templates = array_values(array_filter($settings['weekly_rotation'] ?? [], static fn (mixed $row): bool => is_array($row) && !empty($row['key'])));
-        if ($templates === []) {
-            return;
-        }
         $anchor = (new \DateTimeImmutable((string) ($settings['first_occurrence_at'] ?? 'next monday 00:00 UTC'), new \DateTimeZone('UTC')))->setTimezone(new \DateTimeZone('UTC'))->setTime(0, 0);
         $monday = $now->modify('monday this week')->setTime(0, 0);
         if ($anchor > $now || $monday < $anchor) {
             return;
         }
         $weekIndex = intdiv($monday->getTimestamp() - $anchor->getTimestamp(), 604800);
-        $template = $templates[$weekIndex % count($templates)];
         foreach ($this->repo->activeUniverses() as $universe) {
+            $this->manager->lock($universe);
+            // Le verrou d'univers réserve une seule occurrence par semaine, même si la liste des modèles change.
+            if ($this->repo->weeklyBoostEventFor($universe,$monday)!==null) continue;
+            $templates=array_values(array_filter($this->rotations->definitions($universe),static fn(array $row):bool=>(bool)($row['enabled'] ?? true)));
+            if ($templates===[]) continue;
+            $template=$templates[$weekIndex % count($templates)];
             $key = 'weekly-' . $monday->format('Ymd') . '-u' . $universe->id . '-' . $template['key'];
             if ($this->repo->boostEventByKey($key)) {
                 continue;
@@ -138,7 +145,8 @@ final class BoostEventService
             $duration = max(60, min(2592000, (int) ($template['duration_seconds'] ?? $settings['default_duration_seconds'] ?? 604800)));
             $event = new BoostEvent();
             $event->eventKey = $key;
-            $event->templateKey = (string) $template['key'];
+            $event->templateKey = (string) ($template['objective'] ?? $template['key']);
+            $event->configuration=['weekly'=>true,'weekly_template_key'=>$template['key'],'name'=>$template['name'],'description'=>$template['description'] ?? '', 'reward'=>['kind'=>'boost']];
             $event->universe = $universe;
             $event->status = 'scheduled';
             $event->format = (string) ($template['format'] ?? 'individual');
@@ -172,8 +180,14 @@ final class BoostEventService
             'top3' => $this->topThree($scores, $event),
             default => [],
         };
+        if ($event->configuration['guided'] ?? false) {
+            $minimum=(float)($event->configuration['minimum_contribution'] ?? 0);
+            $winners=$event->globalGoal!==null && $event->totalContribution >= $event->globalGoal
+                ? array_values(array_filter($winners,static fn(array $winner):bool=>$winner['value'] >= $minimum && $winner['value']>0)) : [];
+        }
         foreach ($winners as $winner) {
-            $this->grants->awardEvent($winner['membership'], $event->eventKey);
+            $reward=$event->configuration['reward'] ?? ['kind'=>'boost'];
+            $this->grants->awardEvent($winner['membership'], $event->eventKey, ($reward['kind'] ?? 'boost') === 'resource_box' ? $reward['box'] : null);
         }
     }
 
@@ -195,7 +209,7 @@ final class BoostEventService
             || $event->contributionMetric === ''
             || ($event->rewardMode === 'threshold' && ($event->thresholdValue === null || $event->thresholdValue <= 0))
             || ($event->rewardMode === 'top3' && ($event->globalGoal === null || $event->globalGoal <= 0))) {
-            throw new LogicException('Définition d’événement de boost invalide : ' . $event->templateKey);
+            throw new \LogicException('Définition d’événement de boost invalide : ' . $event->templateKey);
         }
     }
 
@@ -203,7 +217,7 @@ final class BoostEventService
     {
         $settings = $this->catalog->all('boosts')['events'] ?? [];
         if (($settings['timezone'] ?? 'UTC') !== 'UTC' || strtolower((string) ($settings['weekday'] ?? 'monday')) !== 'monday' || ($settings['start_time'] ?? '00:00') !== '00:00') {
-            throw new LogicException('Les événements de boost doivent démarrer le lundi à 00:00 UTC.');
+            throw new \LogicException('Les événements de boost doivent démarrer le lundi à 00:00 UTC.');
         }
 
         return $settings;

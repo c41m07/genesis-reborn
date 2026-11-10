@@ -41,7 +41,15 @@ final class SecurityController extends AbstractController
         if($this->getUser()) return $this->redirectToRoute('app_home');
         $form=$this->createForm(RegistrationType::class,new RegistrationData());$form->handleRequest($request);
         if($form->isSubmitted() && $form->isValid()) {
-            try { $player=$service->register($form->getData());$verification->sendWelcomeAndVerification($player);$this->addFlash('success','Compte créé. Consultez votre email pour confirmer votre adresse avant de vous connecter.');return $this->redirectToRoute('app_login'); }
+            try {
+                $player=$service->register($form->getData());
+                if (!$verification->sendWelcomeAndVerification($player)) {
+                    $this->addFlash('warning', 'Votre compte est créé, mais le mail de confirmation n’a pas pu être envoyé. Réessayez avec le formulaire de renvoi.');
+                    return $this->redirectToRoute('app_email_verify_request');
+                }
+                $this->addFlash('success','Compte créé. Consultez votre email pour confirmer votre adresse avant de vous connecter.');
+                return $this->redirectToRoute('app_login');
+            }
             catch(\DomainException|UniqueConstraintViolationException $e) { $form->addError(new FormError('Cette adresse email ou ce pseudo est déjà utilisé.')); }
         }
         return $this->render('security/register.html.twig',['form'=>$form],new Response(status:$form->isSubmitted()?422:200));

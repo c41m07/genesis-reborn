@@ -1,10 +1,11 @@
 {% extends 'base.html.twig' %}
 {% block title %}Événements · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="page-heading"><div><h1>Événements</h1><p>Les rendez-vous en cours et à venir dans votre univers. Horaires en UTC.</p></div><span class="badge">{{ events|length }} événement{{ events|length > 1 ? 's' : '' }}</span></div>
+<div class="page-heading"><div><h1>Événements</h1><p>Les rendez-vous en cours et à venir dans votre univers. Horaires en UTC.</p></div><span class="badge">{{ events|length + challenges|length }} événement{{ (events|length + challenges|length) > 1 ? 's' : '' }}</span></div>
 {% set typeLabels = {'production_bonus':'Bonus de production','construction_speed':'Vitesse de construction','research_speed':'Vitesse de recherche','fleet_speed':'Vitesse des flottes','special':'Événement spécial','reward':'Récompense','announcement':'Annonce'} %}
 {% set eventNow = date() %}
 <div class="event-list">
+{% if challenges %}<section class="panel"><h2>Défis et rotations hebdomadaires</h2><p>Objectifs de l’univers, contributions individuelles et récompenses annoncées. Les derniers défis et rotations sont accessibles ci-dessous.</p><ul class="challenge-list">{% for challenge in challenges %}<li><a href="{{ path('app_challenge',{id:challenge.event.id}) }}">{{ challenge.name }}</a><span>{{ challenge.status_label }} · {{ challenge.event.totalContribution|number_format(2,',',' ') }} / {{ challenge.goal|number_format(2,',',' ') }}</span></li>{% endfor %}</ul></section>{% endif %}
 {% for event in events %}
     {% set upcoming = event.startsAt > eventNow %}
     <article class="panel event-card" aria-labelledby="event-{{ event.id }}-title">
@@ -15,7 +16,7 @@
         <dl class="event-period"><div><dt>Début</dt><dd><time datetime="{{ event.startsAt|date('c', 'UTC') }}">{{ event.startsAt|date('d/m/Y à H:i', 'UTC') }} UTC</time></dd></div><div><dt>Fin</dt><dd><time datetime="{{ event.endsAt|date('c', 'UTC') }}">{{ event.endsAt|date('d/m/Y à H:i', 'UTC') }} UTC</time></dd></div></dl>
     </article>
 {% else %}
-    <section class="panel empty-state"><h2>Aucun événement annoncé</h2><p>Aucun événement à venir ou en cours dans cet univers. Les prochaines annonces apparaîtront ici.</p><a href="{{ path('app_home') }}">Retour à votre colonie</a></section>
+    {% if challenges is empty %}<section class="panel empty-state"><h2>Aucun événement annoncé</h2><p>Aucun événement à venir ou en cours dans cet univers. Les prochaines annonces apparaîtront ici.</p><a href="{{ path('app_home') }}">Retour à votre colonie</a></section>{% endif %}
 {% endfor %}
 </div>
 {% endblock %}

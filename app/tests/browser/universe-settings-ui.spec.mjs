@@ -150,7 +150,7 @@ test('Paramètres hérités : valeurs hors plage conservées, refus expliqué et
   await expect(form.locator('.admin-range-notice')).toHaveCount(0);
   const context = await browser.newContext({ storageState: await page.context().storageState(), javaScriptEnabled: false, viewport: { width: 390, height: 900 } });
   const fallback = await context.newPage();
-  await fallback.goto('/admin#admin-universe-' + id);
+  await fallback.goto('/admin/univers#admin-universe-' + id);
   const fallbackCard = fallback.locator('#admin-universe-' + id);
   await fallbackCard.locator('.admin-universe-settings>summary').click();
   const fallbackForm = fallbackCard.locator('form[action$="/settings"]');
@@ -203,7 +203,7 @@ test('Paramètres fermés : lecture clavier et sans JS, contrôles désactivés 
   expect(queryIsolatedSql(project, `SELECT status FROM universe WHERE id=${id}`)).toBe('closed');
   const context = await browser.newContext({ storageState: await page.context().storageState(), javaScriptEnabled: false, viewport: { width: 390, height: 900 } });
   const fallback = await context.newPage();
-  await fallback.goto('/admin#admin-universe-' + id);
+  await fallback.goto('/admin/univers#admin-universe-' + id);
   const fallbackCard = fallback.locator('#admin-universe-' + id);
   await fallbackCard.locator('.admin-universe-settings>summary').click();
   await expect(fallbackCard.getByText('Cet univers est fermé; ses paramètres ne peuvent plus être modifiés.')).toBeVisible();

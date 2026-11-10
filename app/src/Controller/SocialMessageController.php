@@ -16,7 +16,7 @@ final class SocialMessageController extends AbstractController
     public function unread(Request $request, UniverseContext $context, SocialMessageService $messages, RelationResolver $relations, GameRepository $repo): Response
     {
         $membership = $context->membership();
-        return $this->json(['unread' => $messages->unreadPrivateCount($membership) + $messages->unreadGuildCount($membership), 'conversations' => $this->renderView('player/_message_contacts.html.twig', ['contacts' => $repo->messageContacts($membership), 'guild' => $relations->guild($membership), 'unreadGuild' => $messages->unreadGuildCount($membership), 'peer' => $repo->find(PlayerUniverse::class, $request->query->getInt('with')), 'activeChannel' => $request->query->getString('channel')])], headers: ['Cache-Control' => 'no-store']);
+        return $this->json(['unread' => $messages->unreadPrivateCount($membership) + $messages->unreadGuildCount($membership), 'conversations' => $this->renderView('player/_message_contacts.html.twig', ['contacts' => $repo->messageContacts($membership), 'guild' => $relations->guild($membership), 'unreadGuild' => $messages->unreadGuildCount($membership), 'peer' => $repo->find(PlayerUniverse::class, $request->query->getInt('with')), 'activeChannel' => in_array($request->query->getString('channel'), ['global', 'guild'], true) ? $request->query->getString('channel') : 'private'])], headers: ['Cache-Control' => 'no-store']);
     }
 
     #[Route('/messages', name: 'app_messages', methods: ['GET', 'POST'])]
@@ -25,7 +25,7 @@ final class SocialMessageController extends AbstractController
         $membership = $context->membership();
         if ($request->isMethod('POST')) {
             $action = (string) $request->request->get('action');
-            $tokenId = match ($action) { 'guild' => 'guild_message', 'report' => 'private_message_report', default => 'private_message' };
+            $tokenId = match ($action) { 'global' => 'global_message', 'guild' => 'guild_message', 'report' => 'private_message_report', default => 'private_message' };
             if (!$this->isCsrfTokenValid($tokenId, $request->request->get('_token'))) {
                 throw $this->createAccessDeniedException('Formulaire expiré.');
             }
@@ -41,6 +41,10 @@ final class SocialMessageController extends AbstractController
                     $this->addFlash('success', 'Message privé envoyé.');
                     return $this->redirectToRoute('app_messages', ['with' => $peerId]);
                 }
+                if ($action === 'global') {
+                    $messages->sendGlobal($membership, (string) $request->request->get('content'));
+                    return $this->redirectToRoute('app_messages', ['channel' => 'global']);
+                }
                 if ($action === 'guild') {
                     $messages->sendGuild($membership, (string) $request->request->get('content'));
                     $this->addFlash('success', 'Message envoyé à la guilde.');
@@ -52,11 +56,11 @@ final class SocialMessageController extends AbstractController
                 $this->addFlash('error', $exception->getMessage());
             }
 
-            return $this->redirectToRoute('app_messages');
+            return $this->redirectToRoute('app_messages', $action === 'global' ? ['channel' => 'global'] : []);
         }
 
-        $activeChannel = $request->query->getString('channel') === 'guild' ? 'guild' : 'private';
-        $peerId = $activeChannel === 'guild' ? 0 : $request->query->getInt('with');
+        $activeChannel = in_array($request->query->getString('channel'), ['global', 'guild'], true) ? $request->query->getString('channel') : 'private';
+        $peerId = $activeChannel === 'private' ? $request->query->getInt('with') : 0;
         $peer = null;
         $conversation = [];
         if ($peerId > 0) {
@@ -82,6 +86,7 @@ final class SocialMessageController extends AbstractController
             'conversation' => $conversation,
             'guild' => $guild,
             'guildConversation' => $guildConversation,
+            'globalConversation' => $activeChannel === 'global' ? $messages->globalConversation($membership) : [],
             'unreadPrivate' => $messages->unreadPrivateCount($membership),
             'activeChannel' => $activeChannel,
         ]);

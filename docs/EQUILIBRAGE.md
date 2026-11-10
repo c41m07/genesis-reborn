@@ -108,7 +108,65 @@ La transposition de R14 est contrôlée ; la branche complète ne peut pas être
 
 ## Production des bâtiments
 
-### Bâtiments — cadence A et centrale ×2
+### Production confirmée — 9 novembre 2026
+
+L’utilisateur confirme le candidat et son rythme après comparaison avec le catalogue actuel. Le lot est préparé sur `codex/equilibrage-production-basique`, issue de `dev`, sans fusion ni déploiement. Valeurs à vitesse ×1, position 5, à plein rendement et hors production passive :
+
+| Producteur Basique | Production/h/niveau | Consommation/h/niveau | Prix niveau 1 | Durée niveau 1 |
+|---|---:|---|---|---:|
+| Métal | 360 M | 180 électricité | 480 M + 160 N | 1 min |
+| Nano | 180 N | 180 électricité | 480 M + 160 N | 1 min |
+| Hydrogène | 720 H | 180 électricité | 480 M + 160 N | 1 min |
+| Antimatière | 90 A | 180 électricité + 360 H | 360 M + 120 N | 2 min |
+| Centrale | 1 080 électricité | Aucune | 1 440 M + 480 N | 2 min |
+
+Le ratio nominal est métal / nano / antimatière / hydrogène = 4 / 2 / 1 / 8. Les pondérations économiques M2/N4/A8/H1 sont conservées. Le réacteur consomme **4 H par A produite**. Les bonus de position restent en place : les rapports bruts ne sont donc pas exacts à toutes les positions. Les coûts électriques suivent le facteur de position de la ressource produite, comme avant.
+
+Les facteurs existants sont conservés : production et consommations ×1 / ×1,5 / ×2,25 ; durées ×1 / ×1,25 / ×1,5625. Les prix séparés du réacteur et de la centrale sont déclinés depuis leur nouveau budget Basique avec ×1,25 et ×1,5625 pour maintenir l’intérêt des rangs. Les recettes gardent les parts économiques T1 M60/N40 ; T2 M45/N45/A10 ; T3 M30/N45/A20/H5, avec conservation exacte du budget entier et arrondis conjoints. Les autres profils de prix restent inchangés, y compris leurs anciens écarts d’arrondis.
+
+Budgets réacteur : 1 200 / 1 500 / 1 875. Budgets centrale : 4 800 / 6 000 / 7 500. Les détails par ressource sont dans [COUTS](COUTS.md). La vérification avancée est une déclinaison mécanique des facteurs existants ; elle ne prétend pas constituer une étude complète des stratégies Intermédiaires/Supérieures.
+
+Les courbes des coûts et des durées, les prérequis, les stockages et les bonus de recherche sont conservés. Les coûts et durées déjà enregistrés en file ne sont pas recalculés. Les surcharges d’univers restent prioritaires. Aucune migration, modification de compte, stock ou niveau n’est exécutée par ce lot. Lors d’une future bascule d’environnement, la production différée doit être prise en compte avant le changement de paramètres : cette étude ne simule pas une date d’activation au milieu d’une période hors connexion.
+
+#### Résultats de l’étude, avant implémentation
+
+648 cas déterministes sur 24 h : catalogue actuel/candidat, niveaux 20/40/80, neuf positions, vitesses ×1/×40, niveaux égaux/centrale à moitié/réacteur doublé, capacités réelles ou diagnostiques très grandes. Stocks initialement vides. Le moteur et les calculateurs originaux sont utilisés avec des surcharges en mémoire, sans base de données. Les 24 découpages horaires par cas concordent avec le calcul sur un jour (écart maximal 1,58×10⁻⁷ unité).
+
+À niveaux égaux, le candidat fonctionne à 100 % sur toutes les positions ; le catalogue précédent manque fortement d’hydrogène (réacteur vers 12,6–13 % en position 5 sans réserve). Au niveau 80, le candidat fournit notamment 29 070 H/h nets et 29 340 électricité/h nets en position 5, production passive incluse et sans plafond atteint. Une centrale sous-dimensionnée ralentit encore les usines ; un réacteur doublé peut être limité par l’hydrogène en position 1.
+
+| Objectif : cinq bâtiments chacun au niveau indiqué | Ancien ×1 | Nouveau ×1 | Nouveau ×40 |
+|---|---:|---:|---:|
+| 20 | 9 h 05 | 8 h 40 | 13 min 52 s |
+| 40 | 4,17 j | 3,98 j | 2 h 24 min 49 s |
+| 80 | 88,16 j | 84,16 j | 50 h 32 min 51 s |
+
+Ces temps cumulent les constructions dans une seule file, sans réduction, attente de ressources, recherche, prérequis ou stockage. Ils ne décrivent pas le délai réel d’une partie et ne supposent pas une stratégie optimisée de centrale. L’utilisateur confirme explicitement ce rythme, soit environ 4,5 % de moins qu’avant à 80. Avec le génie civil Basique 25 déjà disponible pendant tout le calcul, le cumul à 80 est d’environ 61,54 jours à ×1 ; l’acquisition de cette recherche n’est pas incluse.
+
+L’amortissement marginal en valeur au niveau 80, avant coût d’installation des soutiens et hors plafonnement, est d’environ 17,70 jours pour les trois producteurs directs et 26,54 jours pour le réacteur (hydrogène consommé déduit). Ce n’est pas un délai de financement en ressources identiques. Le prix de la centrale 80 exige au moins un dépôt de métal Basique 1 ; avec le seul stockage initial, métal et hydrogène saturent rapidement, surtout en ×40.
+
+#### Preuve de transposition
+
+`app/tests/Fixtures/producer-balance-2026-11-09.json` conserve les paramètres antérieurs et les résultats du candidat calculés avant l’application. Les nouveaux tests confrontent le catalogue livré à 30 devis, 108 cas économiques de bord (positions 1/5/9, deux vitesses, pénuries et capacités), leur rejeu horaire et 12 cumuls de construction. Les tests des études du 5 novembre rejouent leurs paramètres historiques avec le moteur courant via `ProducerBalanceReference` ; leurs assertions et leurs fixtures restent conservées. Les autres catalogues et profils de combat ne changent pas.
+
+Vérifications initiales du lot : `make validate`, `make lint`, `make test` (exécution complète : **481 tests PHP, 208 799 assertions, puis 13 tests Python**) et `cd app && npm run build` réussissent. Les 34 tests ciblés réussissent aussi (20 348 assertions), avant la suite complète. `make test-browser BROWSER_ARGS="catalogue-details.spec.mjs --output=/tmp/producer-browser-results"` réussit : **un scénario ciblé parcourant les 150 fiches sur ordinateur et mobile**, pas une exécution de toute la suite navigateur. Les contrôles concernés de contenu, ouverture/fermeture des dialogues, navigation clavier et adaptation aux tailles d’écran sont couverts par ce test ; aucun template, contrôle de formulaire ou contraste n’est changé. Cela ne constitue pas un audit RGAA. `git diff --check` réussit. Les résultats locaux ne constituent pas une validation de la CI GitHub.
+
+Fichiers du lot :
+
+- Catalogues : `app/config/game/buildings/mine_metal.yaml`, `mine_nano.yaml`, `mine_hydrogen.yaml`, `mine_antimatter.yaml`, `power_plant.yaml` et `app/config/game/rules.yaml` ; format JSON conservé.
+- Référence figée et tests : `app/tests/Fixtures/producer-balance-2026-11-09.json`, `app/tests/Support/ProducerBalanceReference.php`, `app/tests/Service/ProducerBalanceTest.php`, `BuildingBalanceTest.php`, `CatalogCostCompositionTest.php`, `CatalogueDetailsTest.php` et `app/tests/Integration/CatalogBalanceTest.php`.
+- Documentation : `README.md`, `docs/REGLES.md`, `docs/DECISIONS.md`, `docs/COUTS.md`, `docs/EQUILIBRAGE.md` et `docs/FEUILLE_DE_ROUTE.md`.
+
+Les travaux locaux présents avant ce lot (documents Work indexés et captures de l’interface) sont laissés en place. Aucun service applicatif, template, migration ou mécanisme de combat n’est modifié. La publication sur dev est ensuite demandée explicitement ; aucune fusion vers Alpha ni déploiement n’est effectué.
+
+#### Publication sur dev — 9 novembre 2026
+
+La publication est préparée dans une copie isolée depuis origin/dev (1b02f4f), incluant les nouveaux travaux d’administration et d’événements arrivés pendant les contrôles. Seuls les vingt fichiers de cet équilibrage, ses tests et sa documentation sont sélectionnés. Les autres documents locaux indexés et les captures sont exclus.
+
+Sur cette intégration finale, make validate, make lint, make test (**522 tests PHP, 208 936 assertions, puis 13 tests Python**), npm run build et git diff --check réussissent. Les contrôles PHP utilisent des bases jetables ; le domaine Mercure attendu par les tests HTTP est fourni explicitement sans modifier la configuration du jeu.
+
+La suite navigateur complète sur la base 9ac0033 termine avec **121 succès sur 122**. Son seul échec était l’attente d’un prix en millions pour une centrale 150, devenue moins chère. Le scénario prépare désormais une centrale 200 et conserve son assertion sur les millions, sans l’assouplir. Les deux scénarios d’onglets réussissent après correction. Sur la dernière base 1b02f4f, **15 scénarios ciblés supplémentaires réussissent**, couvrant événements, catalogue, onglets et parcours joueurs concernés. Ce sont des résultats consolidés après reprise ciblée, pas une suite complète réussie d’un seul passage sur la dernière base. Le test corrigé app/tests/browser/building-tabs.spec.mjs est inclus dans le commit. Ces vérifications locales ne constituent pas une validation de la CI GitHub.
+
+### Historique du 5 novembre — cadence A et centrale ×2
 
 > Historique : la répartition des ressources et les délais de progression de ce bilan sont remplacés, lorsqu’ils diffèrent, par la [grille commune avec hydrogène T3](COUTS.md). Les moteurs, courbes et statistiques restent conservés.
 

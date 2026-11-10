@@ -1,0 +1,11 @@
+<details class="account-section">
+    <summary>Supprimer {{ challengeRemoval ? 'ce défi' : 'cet événement' }}</summary>
+    <p>Un élément jamais démarré est supprimé définitivement. Sinon, il est retiré des listes courantes et arrêté s’il est encore en cours ; ses effets déjà acquis, contributions et récompenses restent dans l’historique.</p>
+    <form method="post" action="{{ path(challengeRemoval ? 'app_admin_challenge_remove' : 'app_admin_game_event_remove',{id:removalId}) }}" class="admin-intervention-form event-removal-form">
+        <input type="hidden" name="_token" value="{{ csrf_token((challengeRemoval ? 'admin_challenge_remove_' : 'game_event_remove_')~removalId) }}">
+        <label for="remove-reason-{{ removalId }}">Motif de suppression</label>
+        <textarea id="remove-reason-{{ removalId }}" name="reason" maxlength="1000" required></textarea>
+        <label for="remove-confirmed-{{ removalId }}"><input id="remove-confirmed-{{ removalId }}" type="checkbox" name="confirmed" value="1" required> Je confirme la suppression ou le retrait de cet élément.</label>
+        <button type="submit" class="danger">Supprimer {{ challengeRemoval ? 'le défi' : 'l’événement' }}</button>
+    </form>
+</details>

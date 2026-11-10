@@ -1,5 +1,5 @@
 import { test, expect } from './support/isolated-test.mjs';
-import { runIsolatedSql } from './support/game-fixtures.mjs';
+import { runIsolatedSql, queryIsolatedSql } from './support/game-fixtures.mjs';
 
 async function registerAndJoin(page, prefix, universe = 'Turbo') {
   const id = crypto.randomUUID().slice(0, 8);
@@ -85,6 +85,64 @@ test('Classement : tris, contact direct et échange de messages privés', async 
 });
 
 
+test('Conversations : dernier message, bulles distinctes et témoin mobile', async ({ page, browser }, testInfo) => {
+  test.setTimeout(90000);
+  const peerPage = await browser.newPage();
+  const ownName = await registerAndJoin(page, 'Thread-Own');
+  const peerName = await registerAndJoin(peerPage, 'Thread-Peer');
+  const project = process.env.BROWSER_ROUTER;
+  const membership = name => Number(queryIsolatedSql(project, `SELECT pu.id FROM player_universe pu JOIN player p ON p.id=pu.player_id WHERE p.username='${name}'`));
+  const ownId = membership(ownName), peerId = membership(peerName);
+  const values = Array.from({ length: 30 }, (_, index) => {
+    const sender = index % 2 === 0 ? peerId : ownId;
+    const recipient = sender === peerId ? ownId : peerId;
+    const content = index === 29 ? 'Dernier message du fil' : `Échange ${index} pour vérifier une conversation suffisamment longue.`;
+    return `(${sender},${recipient},'${content}',UTC_TIMESTAMP())`;
+  });
+  runIsolatedSql(project, `INSERT INTO social_message (sender_id,recipient_id,content,created_at) VALUES ${values.join(',')}`);
+  await page.setViewportSize({ width: 768, height: 900 });
+  await page.goto('/classement');
+  await expect(page.locator('.mobile-menu .menu-unread-dot')).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 900 });
+  await expect(page.locator('.mobile-bottom-nav .menu-unread-dot')).toBeVisible();
+  for (const theme of ['dark', 'light']) {
+    runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE username='${ownName}'`);
+    for (const width of [1440, 768, 390]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(`/messages?with=${peerId}`);
+      const thread = page.getByLabel('Historique de la conversation', { exact: true });
+      await expect.poll(() => thread.evaluate(node => node.scrollHeight - node.scrollTop - node.clientHeight)).toBeLessThan(2);
+      await expect(thread.getByText('Dernier message du fil', { exact: true })).toBeVisible();
+      await expect(thread.getByText('Dernier message du fil', { exact: true })).toBeInViewport({ ratio: 1 });
+      const geometry = await page.locator('.message-pane').evaluate(node => ({ pane: node.getBoundingClientRect().toJSON(), height: getComputedStyle(node).height, form: node.querySelector('form.message-compose').getBoundingClientRect().toJSON(), viewport: innerHeight, scroll: scrollY }));
+      await page.screenshot({ path: testInfo.outputPath(`viewport-${theme}-${width}.png`) });
+      await expect(page.getByLabel('Votre message', { exact: true }), `${theme}/${width}: ${JSON.stringify(geometry)}`).toBeInViewport({ ratio: 1 });
+      await expect(thread.locator('.message-bubble--own .message-direction').first()).toHaveText('Vous');
+      await expect(thread.locator('.message-bubble:not(.message-bubble--own) .message-direction').first()).toHaveText('Reçu');
+      const colors = await thread.evaluate(node => Array.from(node.querySelectorAll('.message-bubble')).slice(0, 2).map(bubble => getComputedStyle(bubble).backgroundColor));
+      expect(colors[0]).not.toBe(colors[1]);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+      if (width !== 768) await page.screenshot({ path: testInfo.outputPath(`thread-${theme}-${width}.png`), fullPage: true });
+    }
+  }
+  await expect(page.locator('.mobile-bottom-nav .menu-unread-dot')).toBeHidden();
+  const thread = page.getByLabel('Historique de la conversation', { exact: true });
+  await thread.focus();
+  await page.keyboard.press('Home');
+  await expect.poll(() => thread.evaluate(node => node.scrollTop)).toBe(0);
+  await page.keyboard.press('End');
+  await expect.poll(() => thread.evaluate(node => node.scrollHeight - node.scrollTop - node.clientHeight)).toBeLessThan(2);
+  runIsolatedSql(project, `INSERT INTO notification (recipient_id,message,created_at) VALUES (${ownId},'Construction terminée',UTC_TIMESTAMP())`);
+  const noticeId = Number(queryIsolatedSql(project, `SELECT MAX(id) FROM notification WHERE recipient_id=${ownId}`));
+  await page.evaluate(notificationId => window.dispatchEvent(new CustomEvent('genesis:refresh', { detail: { notificationId } })), noticeId);
+  await expect(page.locator('.mobile-bottom-nav .menu-unread-dot')).toBeVisible();
+  await page.goto('/');
+  await expect(page.locator('.mobile-bottom-nav .menu-unread-dot')).toBeHidden();
+  await page.goto(`/messages?with=${peerId}`);
+  await expect(page.locator('.mobile-bottom-nav .menu-unread-dot')).toBeHidden();
+  await peerPage.close();
+});
+
 test('Alliances : Guildes par défaut et panneaux séparés', async ({ page }) => {
   await registerAndJoin(page, 'Tabs');
   await page.goto('/diplomatie');
@@ -128,7 +186,8 @@ test('Hub de guilde : création, équipage et discussion commune', async ({ page
   await expect(page.locator('.guild-message-preview')).toContainText('Préparons notre prochaine expédition.');
   await expect(page.getByRole('link', { name: 'Messages', exact: false }).filter({ has: page.locator('.message-unread-dot') })).toHaveCount(1);
   await page.getByRole('link', { name: 'Ouvrir le canal de guilde' }).click();
-  await expect(page.getByRole('navigation', { name: 'Conversations' }).getByRole('link').first()).toContainText(guildName);
+  await expect(page.getByRole('navigation', { name: 'Conversations' }).getByRole('link').nth(0)).toContainText('Global');
+  await expect(page.getByRole('navigation', { name: 'Conversations' }).getByRole('link').nth(1)).toContainText(guildName);
   await page.goto('/classement');
   await expect(page.getByRole('row').filter({ hasText: member })).toHaveClass(/ranking-row--guild/);
   await page.getByRole('navigation', { name: 'Classements' }).getByRole('link', { name: 'Guildes', exact: true }).click();

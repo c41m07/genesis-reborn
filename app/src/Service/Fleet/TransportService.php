@@ -81,7 +81,7 @@ final class TransportService
         $report->snapshot['return_overflow'] = $result['overflow'];
         $report->snapshot['returned_at'] = $this->clock->now()->format(DATE_ATOM);
     }
-    public function recordConversionRecall(Fleet $fleet): void
+    public function recordConversionRecall(Fleet $fleet, string $reason = 'empire_conversion'): void
     {
         if($fleet->mission!=='transport') return;
         $report=$this->repo->one(TransportReport::class,['fleet'=>$fleet]);
@@ -89,6 +89,6 @@ final class TransportService
         $report->status='refused';$report->resolvedAt=$this->clock->now();
         $freight=$fleet->cargo;$freight['hydrogen']=max(0,($freight['hydrogen']??0)-$fleet->reservedFuel);
         $report->snapshot['delivered']=[];$report->snapshot['returned']=$freight;
-        $report->snapshot['refusal_reason']='empire_conversion';
+        $report->snapshot['refusal_reason']=$reason;
     }
 }

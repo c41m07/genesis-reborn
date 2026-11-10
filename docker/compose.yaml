@@ -6,7 +6,7 @@ x-app: &app
     args:
       LOCAL_UID: ${LOCAL_UID:-1000}
       LOCAL_GID: ${LOCAL_GID:-1000}
-  image: genesis-reborn-v2-app:local
+  image: local/genesis-web:dev
   working_dir: /app
   volumes: ["./app:/app", "./docs:/docs:ro", "./docker:/docker:ro", "./.env:/app/.env:ro", "./.env.local:/app/.env.local:ro"]
   env_file: .env.local

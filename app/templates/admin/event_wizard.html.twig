@@ -1,0 +1,21 @@
+{% extends 'admin/layout.html.twig' %}
+{% block title %}Créer un événement guidé · Console{% endblock %}
+{% block body %}
+<a class="inline-link" href="{{ path('app_admin_game_events') }}">← Événements</a><h1>Créer un événement guidé</h1>
+{% if model=='' %}<section class="panel"><h2>1. Choisir un modèle</h2><div class="admin-home-actions admin-event-models">{% for value,label in models %}<a class="secondary" href="{{ path('app_admin_event_wizard',{model:value}) }}">{{ label }}</a>{% endfor %}</div><p>Chaque modèle propose ses réglages, puis un aperçu avant la planification.</p></section>
+{% else %}<section class="panel"><h2>1. {{ models[model] }}</h2><p><a href="{{ path('app_admin_event_wizard') }}">Choisir un autre modèle</a></p>
+<form method="post" class="admin-intervention-form"><input type="hidden" name="_token" value="{{ csrf_token('admin_event_preview') }}">
+<label for="guided-name">Nom de l’événement</label><input id="guided-name" name="name" value="{{ draft.name|default('') }}" maxlength="120" required>
+<label for="guided-description">Description pour les joueurs</label><textarea id="guided-description" name="description" maxlength="5000">{{ draft.description|default('') }}</textarea>
+<label for="guided-universe">Univers concerné</label><select id="guided-universe" name="universe_id" required>{% if model!='challenge' %}<option value="0">Tous les univers</option>{% endif %}{% for universe in universes %}<option value="{{ universe.id }}" {{ draft.universe_id|default(0)==universe.id ? 'selected' : '' }}>{{ universe.name }}</option>{% endfor %}</select>
+<label for="guided-start">Début (UTC)</label><input id="guided-start" type="datetime-local" name="starts_at" value="{{ draft.starts_at|default(default_start) }}" required>
+<label for="guided-end">Fin (UTC)</label><input id="guided-end" type="datetime-local" name="ends_at" value="{{ draft.ends_at|default(default_end) }}" required><p>Le début doit encore être à venir lors de la confirmation. Les horaires sont en UTC.</p>
+{% if model=='bonus' %}<label for="guided-percentage">Bonus de production (%)</label><input id="guided-percentage" name="percentage" type="number" min="0.01" max="500" step="0.01" value="{{ draft.percentage|default(10) }}" required><p>Augmente temporairement la production des ressources. Les autres règles de l’univers sont conservées.</p>{% endif %}
+{% if model=='challenge' %}<label for="guided-objective">Objectif suivi</label><select id="guided-objective" name="objective">{% for value,objective in objectives %}<option value="{{ value }}" {{ draft.objective|default('exploration')==value ? 'selected' : '' }}>{{ objective.label }}</option>{% endfor %}</select>
+<label for="guided-goal">Objectif collectif à atteindre</label><input id="guided-goal" name="goal" type="number" min="1" max="1000000000000" step="any" value="{{ draft.goal|default(10) }}" required>
+<label for="guided-minimum">Contribution minimale par joueur</label><input id="guided-minimum" name="minimum_contribution" type="number" min="0" max="1000000000000" step="any" value="{{ draft.minimum_contribution|default(0) }}" required><p>Zéro signifie toute contribution positive. Les récompenses sont attribuées à la clôture si l’objectif collectif est atteint.</p>
+<label for="guided-reward">Un objet par participant éligible</label><select id="guided-reward" name="reward_kind"><option value="boost" {{ draft.reward_kind|default('boost')=='boost' ? 'selected' : '' }}>Un boost</option><option value="resource_box" {{ draft.reward_kind|default('boost')=='resource_box' ? 'selected' : '' }}>Une boîte de ressources</option></select>
+<label for="guided-box">Format si la récompense est une boîte</label><select id="guided-box" name="box_format">{% for value,label in formats %}<option value="{{ value }}" {{ draft.box_format|default('small')==value ? 'selected' : '' }}>{{ label }}</option>{% endfor %}</select>
+<p>Durée : une minute à trente jours. Une annonce accompagne la publication. La limite existante de défis simultanés s’applique : le démarrage peut attendre une place, sans décaler la fin annoncée.</p>{% endif %}
+<button class="secondary">Voir l’aperçu</button></form></section>{% endif %}
+{% endblock %}

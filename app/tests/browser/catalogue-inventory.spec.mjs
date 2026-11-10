@@ -77,11 +77,12 @@ test('Inventaire : état vide, capacité pleine, attente et effet configuré', a
   await expect(page.getByRole('heading', { name: 'Aucun bonus disponible' })).toBeVisible();
   const capacity = Number(await page.getByRole('progressbar', { name: 'Emplacements utilisés dans l’inventaire' }).getAttribute('max'));
   const membershipId = Number(queryIsolatedSql(project, `SELECT pu.id FROM player_universe pu JOIN player p ON p.id=pu.player_id WHERE p.email='${email}'`));
-  for (let index = 0; index < capacity + 3; index++) {
+  const rows = Array.from({ length: capacity + 3 }, (_, index) => {
     const status = index < capacity ? 'available' : index < capacity + 2 ? 'pending' : 'used';
-    runIsolatedSql(project, `INSERT INTO player_boost (player_universe_id,source_type,source_key,status,earned_at)
-      VALUES (${membershipId},'event','ui-${crypto.randomUUID()}','${status}',UTC_TIMESTAMP())`);
-  }
+    return `(${membershipId},'event','ui-${crypto.randomUUID()}','${status}',UTC_TIMESTAMP())`;
+  });
+  runIsolatedSql(project, `INSERT INTO player_boost (player_universe_id,source_type,source_key,status,earned_at)
+    VALUES ${rows.join(',')}`);
   await page.reload();
   await expect(page.locator('.mission-card')).toContainText(`Quantité : ${capacity}`);
   await expect(page.locator('.mission-card')).toContainText('25,00 %');
