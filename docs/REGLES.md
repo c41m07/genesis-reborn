@@ -277,3 +277,9 @@ s’appliquent toujours. Les joueurs retrouvent les rotations dans Événements.
 - Composition d’une flotte : Max sélectionne les unités disponibles d’un type et d’un rang, dans la place restante sous le plafond de flotte de l’univers.
 - Fret : un Max par ressource conserve les autres chargements et tient compte du stock, du carburant réservé et de la soute libre. La limite de saisie de 100 000 000 par ressource est conservée.
 - Les quantités excessives sont réduites automatiquement, avec un message d’ajustement et une vérification serveur au moment de l’action. Les entrées négatives, non entières ou inconnues restent refusées ; un maximum nul ne permet pas d’achat ni de départ sans vaisseau.
+
+## File de recherche commune
+
+Dans un même univers, toutes les colonies d’un joueur partagent une file de recherche de 30 commandes maximum. Chaque ajout paie ses coûts sur la colonie choisie et utilise son laboratoire pour calculer la durée à cet instant. Les niveaux déjà en file sont pris en compte depuis toutes les colonies ; les commandes sont exécutées successivement, sans nouveau calcul de leurs coûts ou durées au démarrage.
+
+Les recherches historiquement actives en parallèle terminent leur travail sans être annulées. La suite de la file attend la fin de toutes ces recherches, puis fonctionne avec une seule recherche active. Les univers restent indépendants. Annulations, remboursements, vacances et captures conservent leurs règles ; la colonie d’origine de chaque commande reste enregistrée.

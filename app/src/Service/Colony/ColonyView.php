@@ -12,7 +12,7 @@ final class ColonyView
         $this->queueService->synchronize($m);
         $buildings=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);$tech=$this->repo->levelsByTier(PlayerTechnology::class,['playerUniverse'=>$m]);
         $universeConfig=$this->catalog->forUniverse($m->universe);$definitions=$universeConfig['catalog'];$cards=[];$filterOptions=[];$queues=[];$showLockedItems=$revealLockedItems||(bool)($m->player->preferences['showLockedItems']??false);
-        foreach(['building','research','shipyard'] as $type) {
+        foreach(['building','shipyard'] as $type) {
             $sum=0;
             foreach($this->repo->queue($planet,$type) as $q) {
                 $sum+=$q->durationSeconds;$field=$type.'QueueStartedAt';$start=$planet->$field;
@@ -21,6 +21,20 @@ final class ColonyView
                 $tierDefinition=$this->catalog->getTierForUniverse($m->universe,$group,$q->itemSlug,$q->tier);
                 $queues[$type][]=['item'=>$q,'label'=>$tierDefinition['label'],'finish'=>$start?->modify('+'.$sum.' seconds')];
             }
+        }
+        $research=$this->repo->researchQueue($m);
+        $researchActive=array_values(array_filter($research,fn(\App\Entity\QueueItem $item)=>$item->startedAt!==null));
+        $researchWaiting=array_values(array_filter($research,fn(\App\Entity\QueueItem $item)=>$item->startedAt===null));
+        usort($researchActive,fn($a,$b)=>($a->finishAt()<=>$b->finishAt())?:($a->id<=>$b->id));
+        $latest=$researchActive?max(array_map(fn($item)=>$item->finishAt()->getTimestamp(),$researchActive)):null;
+        foreach([...$researchActive,...$researchWaiting] as $item) {
+            if($item->startedAt!==null) $finish=$item->finishAt();
+            else {
+                $latest=max($latest??$item->queuedAt->getTimestamp(),$item->queuedAt->getTimestamp())+$item->durationSeconds;
+                $finish=$item->queuedAt->setTimestamp($latest);
+            }
+            $definition=$this->catalog->getTierForUniverse($m->universe,'technologies',$item->itemSlug,$item->tier);
+            $queues['research'][]=['item'=>$item,'label'=>$definition['label'],'finish'=>$finish];
         }
         foreach(['buildings','technologies','ships','defenses'] as $group) {
             $groupDefinitions=$definitions[$group];$filterOptions[$group]=$this->filters->options($group,$groupDefinitions);
@@ -48,7 +62,7 @@ final class ColonyView
                     $d=$this->catalog->getTierForUniverse($m->universe,$group,$slug,$tier);
                     $level=match($group){'buildings'=>(int)($buildings[$slug][$tier]??0),'technologies'=>(int)($tech[$slug][$tier]??0),default=>0};$target=$level+1;
                     $queued=null;
-                    foreach($this->repo->queue($planet) as $q)if($q->itemSlug===$slug&&$q->tier===$tier&&$q->itemLevel){$queued=$q;$target=max($target,$q->itemLevel+1);}
+                    foreach(($group==='technologies'?$research:$this->repo->queue($planet)) as $q)if($q->itemSlug===$slug&&$q->tier===$tier&&$q->itemLevel){$queued=$q;$target=max($target,$q->itemLevel+1);}
                     $failures=$this->access->failures($m,$planet,$group,$d,$tier,$buildings,$tech);
                     if($group==='defenses')$level=0;
                     $operation=$this->calculator->calculate($d,$group,$target,1,$buildings,$universeConfig,$tech);
@@ -64,6 +78,6 @@ final class ColonyView
         $ships=[];
         foreach($this->repo->all(Fleet::class,['homePlanet'=>$planet,'playerUniverse'=>$m,'status'=>'idle']) as $f) foreach($this->repo->all(FleetShip::class,['fleet'=>$f]) as $s) $ships[$s->slug][$s->tier]=($ships[$s->slug][$s->tier]??0)+$s->quantity;
         $defenses=$this->repo->all(PlanetDefense::class,['planet'=>$planet]);$defenseQuantities=[];foreach($defenses as $defense) $defenseQuantities[$defense->slug][$defense->tier]=$defense->quantity;
-        return ['catalog_filter_options'=>$filterOptions,'technology_tree'=>$technologyTree,'show_locked_items'=>$showLockedItems,'combat_events'=>$combatEvents,'defense_quantities'=>$defenseQuantities,'active_fleets'=>$activeFleets,'membership'=>$m,'planet'=>$planet,'planets'=>$this->repo->planets($m->universe,$m),'resources'=>$this->resources->snapshot($planet),'cards'=>$cards,'queues'=>$queues,'ships'=>$ships,'defenses'=>$defenses,'defense_catalog'=>$definitions['defenses'],'ship_catalog'=>$definitions['ships']];
+        return ['catalog_filter_options'=>$filterOptions,'technology_tree'=>$technologyTree,'show_locked_items'=>$showLockedItems,'combat_events'=>$combatEvents,'defense_quantities'=>$defenseQuantities,'active_fleets'=>$activeFleets,'membership'=>$m,'planet'=>$planet,'planets'=>$this->repo->planets($m->universe,$m),'resources'=>$this->resources->snapshot($planet),'cards'=>$cards,'queues'=>$queues,'research_parallel_count'=>count($researchActive),'ships'=>$ships,'defenses'=>$defenses,'defense_catalog'=>$definitions['defenses'],'ship_catalog'=>$definitions['ships']];
     }
 }

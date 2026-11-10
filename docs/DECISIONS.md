@@ -1156,3 +1156,13 @@ L’utilisateur valide des boutons Max pour les vaisseaux et défenses à constr
 Une quantité excessive est automatiquement réduite au maximum possible, avec un message compréhensible. Le serveur revérifie les limites sous verrou lors de la validation, même sans JavaScript. Une quantité nulle ne crée pas de commande ni de flotte.
 
 La composition respecte les vaisseaux disponibles et le plafond de flotte configuré dans l’univers ; la restriction historique de 100 par type ne doit pas empêcher l’application de cette limite déjà validée. Le fret possède un Max par ressource : les autres ressources déjà saisies sont conservées, l’hydrogène nécessaire au carburant est réservé, et la place restante en soute est respectée. Le plafond de saisie de fret existant de 100 000 000 par ressource est conservé. Si plusieurs valeurs soumises simultanément dépassent la capacité, elles sont ajustées dans l’ordre des champs envoyés ; la prévisualisation montre les quantités effectives avant confirmation.
+
+### File de recherche commune — 10 novembre 2026
+
+L’utilisateur valide une file de recherche commune au joueur dans chaque univers, accessible depuis toutes ses colonies. Un ajout depuis une autre colonie rejoint la même file, y compris pour le niveau suivant d’un rang déjà programmé. Les univers restent indépendants ; la limite de 30 commandes s’applique à cette file commune.
+
+Chaque recherche conserve sa colonie d’origine : elle y prélève ses ressources et utilise son laboratoire pour calculer la durée au moment de l’ajout. Coûts et durées déjà enregistrés ne sont pas recalculés au démarrage. Les recherches s’exécutent dans l’ordre des commandes, une à la fois.
+
+Les commandes historiques payées sont conservées. Si plusieurs recherches étaient déjà actives en parallèle, elles gardent leurs dates et durées ; les commandes en attente et les nouveaux ajouts attendent la fin de toutes ces recherches, puis utilisent la file commune. Aucune annulation ni migration de données n’est imposée pour cette transition.
+
+Les dépendances de niveaux suivent aussi les commandes ajoutées depuis d’autres colonies. Les règles existantes d’annulation, de remboursement, de vacances et de capture sont conservées ; les remboursements vont à la colonie qui a payé chaque commande. L’affichage commun montre les colonies d’origine et les états réellement actifs ou en attente.

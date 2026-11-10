@@ -23,7 +23,7 @@ final class QueueService
             if(!isset($this->catalog->all($group)[$slug])) throw new \DomainException('Élément indisponible.');
             $config=$this->catalog->forUniverse($m->universe);$base=$config['catalog'][$group][$slug]??$this->catalog->get($group,$slug);$d=$this->catalog->withTier($base,$tier);
             $type=match($group){'buildings'=>'building','technologies'=>'research',default=>'shipyard'};
-            $queue=$this->repo->queue($planet,$type);
+            $queue=$type==='research'?$this->repo->researchQueue($m):$this->repo->queue($planet,$type);
             if(count($queue)>=30) throw new \DomainException('File pleine (30 commandes maximum).');
             $buildings=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);
             $techs=$this->repo->levelsByTier(PlayerTechnology::class,['playerUniverse'=>$m]);
@@ -34,7 +34,6 @@ final class QueueService
                 $maxLevel=(int)($d['effect']['tier_max_levels'][$tier]??$d['max_level']??PHP_INT_MAX);
                 if($level>$maxLevel) throw new \DomainException('Niveau maximum atteint.');
             }
-            if($group==='technologies')foreach($this->repo->all(QueueItem::class,['playerUniverse'=>$m,'queueType'=>'research','itemSlug'=>$slug,'tier'=>$tier]) as $item)if($item->planet->id!==$planet->id)throw new \DomainException('Ce rang de technologie est déjà en recherche sur une autre planète.');
             $failures=$this->access->failures($m,$planet,$group,$d,$tier,$buildings,$techs);
             if($failures) throw new \DomainException('Déblocage initial : '.implode(', ',array_unique($failures)).'.');
             if(in_array($group,['ships','defenses'],true)) {
@@ -93,25 +92,48 @@ final class QueueService
     private function settleMembershipLocked(PlayerUniverse $m,?\DateTimeImmutable $until=null): void
     {
         $this->access->captureLocked($m);
+        $planets=[];
         foreach($this->repo->planets($m->universe,$m) as $planet) {
-            $this->manager->lock($planet);$this->settlePlanetLocked($planet,$until??$this->clock->now());
+            $this->manager->lock($planet);$planets[$planet->id]=$planet;
+        }
+        $until??=$this->clock->now();
+        if(!$this->vacations->isActive($m,$until)) {
+            $this->startNextResearch($m,$until);
+            $items=[];
+            foreach($this->repo->all(QueueItem::class,['playerUniverse'=>$m],['id'=>'ASC']) as $item) {
+                if(isset($planets[$item->planet->id])) $items[$item->id]=$item;
+            }
+            // Les fins sont traitées dans l’ordre réel, même si la prochaine recherche vient d’une autre colonie.
+            while(true) {
+                $due=[];$heads=[];
+                foreach($items as $item) {
+                    if(!in_array($item->queueType,['building','research','shipyard'],true)) continue;
+                    if($item->queueType!=='research') {
+                        $key=$item->planet->id.':'.$item->queueType;
+                        if(isset($heads[$key])) continue;
+                        $heads[$key]=true;
+                    }
+                    if($item->startedAt!==null && $item->finishAt()<=$until) $due[]=$item;
+                }
+                if(!$due) break;
+                usort($due,fn($a,$b)=>($a->finishAt()<=>$b->finishAt())?:($a->id<=>$b->id));
+                $item=$due[0];$id=$item->id;$this->applyCompletion($item);unset($items[$id]);
+            }
         }
         $this->access->captureLocked($m);
     }
-    private function settlePlanetLocked(Planet $planet,\DateTimeImmutable $until): void
+
+    private function startNextResearch(PlayerUniverse $membership,\DateTimeImmutable $at): void
     {
-        if ($planet->owner !== null && $this->vacations->isActive($planet->owner,$until)) return;
-        while(true) {
-            $due=[];
-            foreach(['building','research','shipyard'] as $type) {
-                $head=$this->repo->queue($planet,$type)[0]??null;
-                if($head?->startedAt && $head->finishAt()<=$until) $due[]=$head;
-            }
-            if(!$due) return;
-            usort($due,fn($a,$b)=>($a->finishAt()<=>$b->finishAt())?:($a->id<=>$b->id));
-            $this->applyCompletion($due[0]);
+        if($this->vacations->isActive($membership,$at)) return;
+        $queue=$this->repo->researchQueue($membership);
+        foreach($queue as $item) if($item->startedAt!==null) return;
+        $next=$queue[0]??null;
+        if($next!==null && $next->planet->owner?->id===$membership->id) {
+            $this->start($next,$at<$next->queuedAt?$next->queuedAt:$at);
         }
     }
+
     private function applyCompletion(QueueItem $item): void
     {
         $planet=$item->planet;$m=$item->playerUniverse;$finish=$item->finishAt();
@@ -137,15 +159,20 @@ final class QueueService
         $group=match($item->queueType){'building'=>'buildings','research'=>'technologies',default=>isset($this->catalog->all('defenses')[$item->itemSlug])?'defenses':'ships'};
         $this->notifications->enqueue($m,'Terminé : '.$this->catalog->getTierForUniverse($m->universe,$group,$item->itemSlug,$item->tier)['label'].' sur '.$planet->name.'.');
         $type=$item->queueType;$this->manager->remove($item);$this->manager->flush();
-        $next=$this->repo->queue($planet,$type)[0]??null;
-        if($next) $this->start($next,$finish);else { $field=$type.'QueueStartedAt';$planet->$field=null; }
+        if($type==='research') {
+            $planet->researchQueueStartedAt=null;
+            $this->startNextResearch($m,$finish);
+        } else {
+            $next=$this->repo->queue($planet,$type)[0]??null;
+            if($next) $this->start($next,$finish);else { $field=$type.'QueueStartedAt';$planet->$field=null; }
+        }
     }
     public function complete(int $id,string $token): void
     {
         $this->manager->transaction(function()use($id,$token){
             $item=$this->repo->find(QueueItem::class,$id);if(!$item) return;
             $planet=$item->planet;$this->guard->lockForCompletion($item->playerUniverse,$planet);
-            $head=$this->repo->queue($planet,$item->queueType)[0]??null;
+            $head=$item->queueType==='research'?$item:($this->repo->queue($planet,$item->queueType)[0]??null);
             if(!$head || $head->id!==$id || !hash_equals($head->dispatchToken,$token) || !$head->startedAt) return;
             $this->settleMembershipLocked($item->playerUniverse);
         });
@@ -186,7 +213,10 @@ final class QueueService
             if($item->playerUniverse->id!==$m->id) throw new \DomainException('Commande inaccessible.');
             $planet=$item->planet;$type=$item->queueType;$active=$item->startedAt!==null;
             $this->removeTree($item);$this->manager->flush();
-            if($active) {
+            if($type==='research') {
+                if($active) $planet->researchQueueStartedAt=null;
+                $this->startNextResearch($m,$this->clock->now());
+            } elseif($active) {
                 $next=$this->repo->queue($planet,$type)[0]??null;
                 if($next) $this->start($next,$this->clock->now());else { $field=$type.'QueueStartedAt';$planet->$field=null; }
             }
@@ -238,11 +268,18 @@ final class QueueService
             $planets[$item->planet->id]=$item->planet;$this->manager->remove($item);
         }
         $this->manager->flush();
-        foreach($planets as $affected) foreach(['building','research','shipyard'] as $type) {
-            $head=$this->repo->queue($affected,$type)[0]??null;
-            if($head!==null && $head->startedAt===null) $this->start($head,$this->clock->now());
-            $field=$type.'QueueStartedAt';$affected->$field=$head?->startedAt;
+        foreach($planets as $affected) {
+            foreach(['building','shipyard'] as $type) {
+                $head=$this->repo->queue($affected,$type)[0]??null;
+                if($head!==null && $head->startedAt===null) $this->start($head,$this->clock->now());
+                $field=$type.'QueueStartedAt';$affected->$field=$head?->startedAt;
+            }
+            $affected->researchQueueStartedAt=null;
+            foreach($this->repo->queue($affected,'research') as $research) {
+                if($research->startedAt!==null) {$affected->researchQueueStartedAt=$research->startedAt;break;}
+            }
         }
+        if($formerOwner!==null) $this->startNextResearch($formerOwner,$this->clock->now());
         return $journal;
     }
 }
