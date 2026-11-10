@@ -35,7 +35,7 @@
 </div>
 {% endif %}
 {% else %}
-<div class="colony-catalog-workspace"><div class="workspace colony-catalog" data-live-region="catalog" aria-label="Catalogue et opérations de la colonie" data-controller="catalog-filter">
+<div class="colony-catalog-workspace"><section class="colony-catalog-activity dashboard-activity" aria-label="Activité et files de la colonie active">{% include 'ui/colony_queues.html.twig' %}</section><div class="workspace colony-catalog" data-live-region="catalog" aria-label="Catalogue et opérations de la colonie" data-controller="catalog-filter">
 {% for group,items in cards %}{% if group==section %}
 <section id="panel-{{ group }}" data-controller="building-catalog" data-building-catalog-show-locked-value="{{ show_locked_items ? 'true' : 'false' }}" data-action="hashchange@window->building-catalog#followHash click->building-catalog#rememberFilter" aria-label="{{ {buildings:'Bâtiments',technologies:'Recherche',ships:'Chantier spatial',defenses:'Défenses'}[group] }}">
     <div class="catalog-section-title">
@@ -53,7 +53,7 @@
     <p data-catalog-empty hidden role="status">Aucun élément accessible dans ce filtre. Activez l’affichage des éléments verrouillés pour explorer cette catégorie.</p>
     <div class="catalog-grid building-grid">{% include 'ui/building_cards.html.twig' %}</div>
 </section>
-{% endif %}{% endfor %}</div><aside class="colony-catalog-aside">{% include 'ui/colony_queues.html.twig' %}{% include 'ui/flights.html.twig' %}</aside></div>
+{% endif %}{% endfor %}</div><aside class="colony-catalog-aside">{% include 'ui/flights.html.twig' %}</aside></div>
 {% endif %}
 
 </div></div></div>{% endblock %}
