@@ -46,15 +46,15 @@
                     {% elseif card.failures %}<p class="requirement">{{ ui.icon('diplomacy') }} <span>Nécessite : {{ card.failures|join(', ') }}</span></p>
                     {% elseif vacation %}<p class="requirement">Mode vacances : les constructions et recherches sont suspendues.</p>
                     {% else %}
-                        <form method="post" action="{{ path('app_queue_add', {id: planet.id}) }}">
+                        <form method="post" action="{{ path('app_queue_add', {id: planet.id}) }}" {% if not leveled %}data-controller="construction-quantity" data-construction-quantity-url-value="{{ path('app_construction_maximum', {id: planet.id}) }}"{% endif %}>
                             <input type="hidden" name="_token" value="{{ csrf_token('build'~planet.id) }}">
                             <input type="hidden" name="request_key" value="{{ request_key() }}">
                             <input type="hidden" name="group" value="{{ group }}">
                             <input type="hidden" name="section" value="{{ group }}">
                             <input type="hidden" name="slug" value="{{ slug }}">
                             <input type="hidden" name="tier" value="{{ card.tier }}">
-                            {% if not leveled %}<label for="quantity-{{ slug }}-{{ card.tier }}">Quantité</label><input id="quantity-{{ slug }}-{{ card.tier }}" name="quantity" type="number" min="1" max="100" value="1">{% endif %}
-                            <button class="secondary full">{{ group=='buildings' ? 'Améliorer au niveau '~card.target : (group=='technologies' ? 'Rechercher le niveau '~card.target : 'Construire') }} {{ ui.icon('arrow') }}</button>
+                            {% if not leveled %}<label for="quantity-{{ slug }}-{{ card.tier }}">Quantité</label><div class="quantity-input"><input id="quantity-{{ slug }}-{{ card.tier }}" name="quantity" type="number" min="1" value="1" required data-construction-quantity-target="input" data-action="change->construction-quantity#change" aria-describedby="quantity-status-{{ slug }}-{{ card.tier }}"><button type="button" class="secondary quantity-max" data-construction-quantity-target="max" data-action="construction-quantity#maximum" aria-label="Quantité maximale de {{ d.label }}" hidden>Max</button></div><small id="quantity-status-{{ slug }}-{{ card.tier }}" class="quantity-status" role="status" data-construction-quantity-target="status"></small>{% endif %}
+                            <button class="secondary full" {% if not leveled %}data-construction-quantity-target="submit"{% endif %}>{{ group=='buildings' ? 'Améliorer au niveau '~card.target : (group=='technologies' ? 'Rechercher le niveau '~card.target : 'Construire') }} {{ ui.icon('arrow') }}</button>
                         </form>
                     {% endif %}
                 </div>
