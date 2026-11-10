@@ -79,7 +79,7 @@
     "cooldown_seconds": 604800
   },
   "factory_electricity_use_per_level": 0.05,
-  "antimatter_hydrogen_per_unit": 8,
+  "antimatter_hydrogen_per_unit": 4,
   "minimum_factory_efficiency": 0.1,
   "time_reduction_max_percent": 70,
   "cost_reduction_max_percent": 40,

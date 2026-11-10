@@ -1,0 +1,4 @@
+<section class="panel admin-recent-events" aria-labelledby="admin-recent-events-title">
+  <div class="admin-section-heading"><div><h2 id="admin-recent-events-title">Derniers événements administratifs</h2></div><a href="{{ path('app_admin_audit') }}">Ouvrir le journal</a></div>
+  {% for entry in auditLogs|slice(0, 5) %}<article class="admin-event-row"><time datetime="{{ entry.createdAt|date('c') }}">{{ entry.createdAt|date('d/m/Y H:i') }}</time><strong>{{ entry.action }}</strong><span>{{ entry.actor ? entry.actor.username : 'Compte supprimé' }} · {{ entry.targetType }} #{{ entry.targetId }}</span></article>{% else %}<p class="admin-empty-state">Aucun événement administratif enregistré.</p>{% endfor %}
+</section>

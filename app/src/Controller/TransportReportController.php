@@ -26,6 +26,6 @@ final class TransportReportController extends AbstractController
     public function admin(Request $request, GameRepository $repo, GameCatalog $catalog): Response
     {
         $page = max(1, $request->query->getInt('page', 1));
-        return $this->render('admin/transports.html.twig', ['reports' => $repo->transportReportsFor(null, $page), 'page' => $page, 'resources' => $catalog->rules()['resources']]);
+        return $this->redirectToRoute('app_admin_missions', ['mission'=>'transport', 'status'=>'', 'page'=>$page]);
     }
 }

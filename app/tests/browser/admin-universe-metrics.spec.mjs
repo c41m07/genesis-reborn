@@ -41,7 +41,8 @@ test('Mesures par univers : accès admin, lecture seule, données manquantes et 
   await page.context().clearCookies();
   await login();
   await page.goto('/admin');
-  await page.getByRole('tab', { name: 'Univers', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Console d’administration' }).getByRole('link', { name: 'Univers et activité', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Console d’administration' }).getByRole('link', { name: 'Univers', exact: true }).click();
   const stocks = () => queryIsolatedSql(project, `SELECT r.resource_type, r.current_stock, r.last_updated_at FROM planet_resource r JOIN planet ON planet.id=r.planet_id JOIN player_universe pu ON pu.id=planet.owner_id JOIN player p ON p.id=pu.player_id WHERE p.email='${email}' ORDER BY r.id`);
   const before = stocks();
   await page.locator(`a[href="${url}"]`).click();

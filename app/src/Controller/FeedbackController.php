@@ -88,22 +88,27 @@ final class FeedbackController extends AbstractController
 
     #[IsGranted('ROLE_ADMIN')]
     #[Route('/admin/feedbacks', name: 'app_admin_feedbacks', methods: ['GET'])]
-    public function index(Request $request, EntityManagerInterface $em): Response
+    public function index(Request $request, EntityManagerInterface $em, \App\Service\Admin\AdminNotificationService $notifications): Response
     {
         $qb=$em->createQueryBuilder()->select('f','p','u')->from(UserFeedback::class,'f')->join('f.player','p')->leftJoin('f.universe','u')->orderBy('f.createdAt','DESC');
-        foreach (['type','status','priority'] as $field) if ($value=$request->query->get($field)) $qb->andWhere('f.'.$field.' = :'.$field)->setParameter($field,$value);
+        foreach (['type','priority'] as $field) if ($value=$request->query->get($field)) $qb->andWhere('f.'.$field.' = :'.$field)->setParameter($field,$value);
+        $status=(string)$request->query->get('status','');
+        if ($status==='') $qb->andWhere('f.status <> :archived')->setParameter('archived','archived');
+        elseif ($status!=='all') $qb->andWhere('f.status = :status')->setParameter('status',$status);
         if ($universe=$request->query->get('universe')) $qb->andWhere('u.id = :universe')->setParameter('universe',(int)$universe);
         if ($search=trim((string)$request->query->get('q'))) $qb->andWhere('f.title LIKE :q OR p.username LIKE :q')->setParameter('q','%'.$search.'%');
         $feedbacks=$qb->getQuery()->getResult();
+        $notifications->markVisited($this->getUser(), ['feedbacks'=>max([0, ...array_map(static fn (UserFeedback $feedback): int => $feedback->id, $feedbacks)])]);
         return $this->render('admin/feedbacks.html.twig',['feedbacks'=>$feedbacks,'universes'=>$em->getRepository(\App\Entity\Universe::class)->findBy([],['name'=>'ASC']),'total'=>count($feedbacks),'openCount'=>count(array_filter($feedbacks,static fn(UserFeedback $f)=>$f->status==='open'))]);
     }
 
     #[IsGranted('ROLE_ADMIN')]
     #[Route('/admin/feedbacks/{id}', name: 'app_admin_feedback', methods: ['GET','POST'])]
-    public function detail(int $id, Request $request, EntityManagerInterface $em, GameManager $manager, ClockInterface $clock): Response
+    public function detail(int $id, Request $request, EntityManagerInterface $em, GameManager $manager, ClockInterface $clock, \App\Service\Admin\AdminNotificationService $notifications): Response
     {
         $feedback=$em->find(UserFeedback::class,$id); if (!$feedback) throw $this->createNotFoundException();
         $actor=$this->getUser(); if (!$actor instanceof Player) throw $this->createAccessDeniedException();
+        if ($request->isMethod('GET')) $notifications->markVisited($actor, ['feedbacks'=>$feedback->id]);
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('feedback_'.$id,$request->request->get('_token'))) throw $this->createAccessDeniedException('Formulaire expiré.');
             $status=(string)$request->request->get('status'); $note=trim((string)$request->request->get('internalNote'));

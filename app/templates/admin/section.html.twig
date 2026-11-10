@@ -1,0 +1,6 @@
+{% extends 'admin/layout.html.twig' %}
+{% block title %}{{ screenTitle }} · Administration{% endblock %}
+{% block body %}
+<div class="page-heading"><div><h1>{{ screenTitle }}</h1><p>Console de gestion et de surveillance des univers.</p></div></div>
+{% include 'admin/sections/' ~ screen ~ '.html.twig' %}
+{% endblock %}

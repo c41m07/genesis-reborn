@@ -77,11 +77,12 @@ test('Inventaire : état vide, capacité pleine, attente et effet configuré', a
   await expect(page.getByRole('heading', { name: 'Aucun bonus disponible' })).toBeVisible();
   const capacity = Number(await page.getByRole('progressbar', { name: 'Emplacements utilisés dans l’inventaire' }).getAttribute('max'));
   const membershipId = Number(queryIsolatedSql(project, `SELECT pu.id FROM player_universe pu JOIN player p ON p.id=pu.player_id WHERE p.email='${email}'`));
-  for (let index = 0; index < capacity + 3; index++) {
+  const rows = Array.from({ length: capacity + 3 }, (_, index) => {
     const status = index < capacity ? 'available' : index < capacity + 2 ? 'pending' : 'used';
-    runIsolatedSql(project, `INSERT INTO player_boost (player_universe_id,source_type,source_key,status,earned_at)
-      VALUES (${membershipId},'event','ui-${crypto.randomUUID()}','${status}',UTC_TIMESTAMP())`);
-  }
+    return `(${membershipId},'event','ui-${crypto.randomUUID()}','${status}',UTC_TIMESTAMP())`;
+  });
+  runIsolatedSql(project, `INSERT INTO player_boost (player_universe_id,source_type,source_key,status,earned_at)
+    VALUES ${rows.join(',')}`);
   await page.reload();
   await expect(page.locator('.mission-card')).toContainText(`Quantité : ${capacity}`);
   await expect(page.locator('.mission-card')).toContainText('25,00 %');
@@ -93,4 +94,44 @@ test('Inventaire : état vide, capacité pleine, attente et effet configuré', a
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
   await page.screenshot({ path: testInfo.outputPath('inventory-full-390.png'), fullPage: true, animations: 'disabled' });
+});
+
+test('Inventaire : appliquer un boost à une file puis à une flotte', async ({ page }, testInfo) => {
+  const email = await enter(page);
+  const project = process.env.BROWSER_ROUTER;
+  const membershipId = Number(queryIsolatedSql(project, `SELECT pu.id FROM player_universe pu JOIN player p ON p.id=pu.player_id WHERE p.email='${email}'`));
+  const planetId = Number(queryIsolatedSql(project, `SELECT id FROM planet WHERE owner_id=${membershipId} LIMIT 1`));
+  runIsolatedSql(project, `INSERT INTO player_boost (player_universe_id,source_type,source_key,status,earned_at) VALUES
+    (${membershipId},'event','use-queue','available',UTC_TIMESTAMP()),
+    (${membershipId},'event','use-fleet','pending',UTC_TIMESTAMP())`);
+  runIsolatedSql(project, `INSERT INTO queue_item (planet_id,player_universe_id,queue_type,item_slug,tier,item_level,quantity,duration_seconds,started_at,queued_at,dispatch_token,paid_costs)
+    VALUES (${planetId},${membershipId},'building','mine_metal','basic',1,1,3600,UTC_TIMESTAMP(),UTC_TIMESTAMP(),UUID(),'{}')`);
+  const queueId = Number(queryIsolatedSql(project, `SELECT id FROM queue_item WHERE player_universe_id=${membershipId}`));
+  runIsolatedSql(project, `INSERT INTO fleet (player_universe_id,home_planet_id,destination_system_id,status,mission,speed_ratio,cargo,reserved_fuel,orbit_fuel,orbit_duration_seconds,departure_at,arrival_at,travel_seconds,dispatch_token)
+    SELECT ${membershipId},${planetId},solar_system_id,'traveling','explore',1,'{}',0,0,0,UTC_TIMESTAMP(),DATE_ADD(UTC_TIMESTAMP(),INTERVAL 1 HOUR),3600,UUID() FROM planet WHERE id=${planetId}`);
+  const fleetId = Number(queryIsolatedSql(project, `SELECT id FROM fleet WHERE player_universe_id=${membershipId} AND status='traveling'`));
+  await page.goto('/boosts');
+  for (const width of [1440, 768, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  await page.screenshot({ path: testInfo.outputPath('boost-use-390.png'), fullPage: true });
+  const queueForm = page.locator(`form[action$="/queue/${queueId}"]`);
+  await expect(queueForm.getByRole('button')).toBeVisible();
+  await queueForm.locator('input[name="_token"]').evaluate(input => { input.value = 'invalid'; });
+  const deniedResponse = page.waitForResponse(response => response.url().endsWith(`/boosts/utiliser/queue/${queueId}`) && response.request().method() === 'POST');
+  await queueForm.getByRole('button').click();
+  expect((await deniedResponse).status()).toBe(403);
+  await expect(page.getByRole('heading', { name: 'Accès refusé' })).toBeVisible();
+  expect(queryIsolatedSql(project, `SELECT status FROM player_boost WHERE source_key='use-queue'`)).toBe('available');
+  await page.goto('/boosts');
+  await queueForm.getByRole('button').click();
+  await expect(page.getByRole('status')).toContainText('Boost appliqué');
+  expect(Number(queryIsolatedSql(project, `SELECT duration_seconds FROM queue_item WHERE id=${queueId}`))).toBeLessThan(3000);
+  expect(queryIsolatedSql(project, `SELECT status FROM player_boost WHERE source_key='use-fleet'`)).toBe('available');
+  await page.locator(`form[action$="/fleet/${fleetId}"]`).getByRole('button').click();
+  await expect(page.getByRole('status')).toContainText('Boost appliqué');
+  expect(Number(queryIsolatedSql(project, `SELECT TIMESTAMPDIFF(SECOND,UTC_TIMESTAMP(),arrival_at) FROM fleet WHERE id=${fleetId}`))).toBeLessThan(2800);
+  expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM player_boost WHERE player_universe_id=${membershipId} AND status='used'`)).toBe('2');
+  await expect(page.getByRole('heading', { name: 'Aucun bonus disponible' })).toBeVisible();
 });

@@ -91,14 +91,39 @@ final class EmailVerificationTest extends WebTestCase
     {
         [$em, $player] = $this->pendingAccount();
         $mailer = $this->createMock(MailerInterface::class);
-        $mailer->expects(self::exactly(3))->method('send')->willThrowException(new \Symfony\Component\Mailer\Exception\TransportException('Test transport indisponible'));
+        $mailer->expects(self::exactly(9))->method('send')->willThrowException(new \Symfony\Component\Mailer\Exception\TransportException('Test transport indisponible'));
         self::getContainer()->set(MailerInterface::class, $mailer);
         $service = self::getContainer()->get(EmailVerificationService::class);
-        $service->sendWelcomeAndVerification($player);
+        self::assertFalse($service->sendWelcomeAndVerification($player));
         self::assertNull($player->emailVerifiedAt);
         self::assertSame(1, $em->getRepository(EmailVerificationToken::class)->count(['player' => $player]));
         $service->sendWelcomeAndVerification($player, false);
         self::assertSame(1, $em->getRepository(EmailVerificationToken::class)->count(['player' => $player]));
+    }
+
+    public function testRegistrationFailureOffersResendAndPreservesPendingAccount(): void
+    {
+        $this->pendingAccount();
+        self::ensureKernelShutdown();
+        $client = self::createClient();
+        $client->disableReboot();
+        $mailer = $this->createMock(MailerInterface::class);
+        $mailer->expects(self::exactly(6))->method('send')->willThrowException(new \Symfony\Component\Mailer\Exception\TransportException('Transport indisponible'));
+        self::getContainer()->set(MailerInterface::class, $mailer);
+        $crawler = $client->request('GET', '/inscription');
+        $client->submit($crawler->selectButton('Créer mon compte')->form(), [
+            'registration[email]' => 'new@example.test',
+            'registration[username]' => 'NewCommander',
+            'registration[plainPassword][first]' => 'New-Password-2026',
+            'registration[plainPassword][second]' => 'New-Password-2026',
+        ]);
+        self::assertResponseRedirects('/inscription/renvoyer');
+        $player = self::getContainer()->get(EntityManagerInterface::class)->getRepository(Player::class)->findOneBy(['email' => 'new@example.test']);
+        self::assertNotNull($player);
+        self::assertNull($player->emailVerifiedAt);
+        $client->followRedirect();
+        self::assertSelectorTextContains('.flash.warning', 'Votre compte est créé');
+        self::assertSelectorExists('button');
     }
 
     public function testResendDoesNotDiscloseWhetherAccountExists(): void

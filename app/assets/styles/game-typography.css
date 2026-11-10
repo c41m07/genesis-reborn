@@ -20,6 +20,8 @@ body.authenticated .mission-report :is(.data-table,.round-table){font-size:12px}
 body.authenticated .message-bubble>p{font-size:13px;line-height:1.65;overflow-wrap:anywhere}
 body.authenticated .message-meta{font-size:11px;flex-wrap:wrap}
 body.authenticated .message-compose textarea{font-size:14px;line-height:1.5}
+body.authenticated .boost-operation{padding-block:16px;border-top:1px solid var(--line);overflow-wrap:anywhere}
+body.authenticated .boost-operation .secondary{font-size:12px;white-space:normal}
 
 @media(max-width:1050px){
     body.authenticated :is(input:not([type="hidden"],[type="checkbox"],[type="radio"],[type="submit"],[type="button"]),select,textarea),
@@ -39,3 +41,13 @@ body.authenticated .message-compose textarea{font-size:14px;line-height:1.5}
     body.authenticated .building-rank-full{display:inline;position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
     body.authenticated .building-rank-short{display:inline}
 }
+.resource-box-form{display:grid;gap:10px;margin-top:16px}
+.resource-box-form :is(label,select){font-size:13px}
+.resource-box-form button{min-height:44px}
+.resource-box-card>div{width:100%;min-width:0}
+.resource-box-card h3{font-size:16px;line-height:1.4;letter-spacing:normal}
+.resource-box-card p,.resource-box-form button{font-size:13px;line-height:1.6}
+body.authenticated[data-theme=light] .patchnote-shortcut>span{color:#535f66}
+.challenge-progress{width:100%;height:20px}
+.challenge-list{list-style:none;padding:0;display:grid;gap:16px}
+.challenge-list li{display:grid;gap:6px;font-size:14px;line-height:1.6}

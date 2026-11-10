@@ -11,4 +11,16 @@
     <fieldset class="account-section"><legend>Confirmer la modification</legend>{{ form_row(form.currentPassword, {help: 'Votre mot de passe actuel est nécessaire pour enregistrer le profil.'}) }}</fieldset>
     <button class="primary full">Enregistrer mon profil</button>{{ form_end(form) }}
 </section>
+<section class="panel account-panel" aria-labelledby="account-delete-title">
+    <h2 id="account-delete-title">Supprimer mon compte</h2>
+    <p>Cette action est définitive et concerne tous vos univers. Vos identifiants et préférences seront effacés, votre accès fermé et vos empires convertis en empires oubliés. Vos colonies restent dans le jeu et vous ne pourrez plus les contrôler.</p>
+    <p>Les historiques de jeu et messages sont conservés. Pour une demande complémentaire concernant vos données, contactez <a href="mailto:contact@genesis-reborn.fr">contact@genesis-reborn.fr</a>.</p>
+    <form method="post" action="{{ path('app_account_delete') }}" class="form-grid account-delete-form">
+        <input type="hidden" name="_token" value="{{ csrf_token('account_delete') }}">
+        <label for="account-delete-password">Mot de passe pour supprimer le compte</label>
+        <input id="account-delete-password" type="password" name="password" autocomplete="current-password" required>
+        <label class="account-delete-confirmation" for="account-delete-confirmed"><input id="account-delete-confirmed" type="checkbox" name="confirmed" value="1" required><span>Je confirme la suppression définitive de mon compte dans tous les univers.</span></label>
+        <button class="danger" type="submit">Supprimer définitivement mon compte</button>
+    </form>
+</section>
 {% endblock %}

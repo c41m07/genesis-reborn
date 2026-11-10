@@ -1,8 +1,9 @@
-{% extends 'base.html.twig' %}
+{% extends report_layout|default('base.html.twig') %}
 {% block title %}Rapport d’espionnage · Genesis Reborn{% endblock %}
 {% block body %}
 <div class="mission-report">
-<a class="inline-link report-back" href="{{ path('app_combat_reports') }}">← Retour aux rapports</a>
+{% if monitoring_context|default(null) %}<p class="admin-monitor-note">{{ monitoring_context }}</p>{% endif %}
+<a class="inline-link report-back" href="{{ report_back_url|default(path('app_combat_reports')) }}">← {{ monitoring_context|default(null) ? 'Retour à la surveillance' : 'Retour aux rapports' }}</a>
 <header class="report-heading"><p class="report-eyebrow">RENSEIGNEMENTS · N° {{ report.id }}</p><h1>Rapport d’espionnage</h1><p>{{ report.target.name }} · {{ report.target.coordinates() }} · {{ report.createdAt|date('d/m/Y H:i') }}</p></header>
 <section class="panel report-summary {{ report.result == 'detected' ? 'report-summary--detected' : '' }}" role="status"><h2>{{ report.result == 'detected' ? 'Sondes détectées' : 'Renseignements obtenus' }}</h2>
 {% if report.result == 'detected' %}<p>Le propriétaire a été averti et aucun renseignement n’a été obtenu.</p>{% else %}<p>{{ report.intelCategories }} catégorie(s) de renseignements obtenue(s).</p>{% endif %}<p class="muted">{{ report.probesSent }} sonde(s) envoyée(s) · Risque de détection estimé : {{ report.detectionChance }} %</p></section>

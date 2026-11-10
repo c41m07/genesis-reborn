@@ -45,7 +45,13 @@ test('Événements : périodes, portée et contenu visible au joueur', async ({ 
   const { email } = await enter(page);
   await join(page);
   await page.goto('/evenements');
-  await expect(page.getByRole('heading', { name: 'Aucun événement annoncé' })).toBeVisible();
+  await expect(page.locator('.event-card')).toHaveCount(0);
+  if (await page.locator('.challenge-list li').count()) {
+    await expect(page.getByRole('heading', { name: 'Défis et rotations hebdomadaires' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Aucun événement annoncé' })).toHaveCount(0);
+  } else {
+    await expect(page.getByRole('heading', { name: 'Aucun événement annoncé' })).toBeVisible();
+  }
   const project = process.env.BROWSER_ROUTER;
   const universeId = Number(queryIsolatedSql(project, `SELECT pu.universe_id FROM player_universe pu JOIN player p ON p.id=pu.player_id WHERE p.email=${quote(email)}`));
   const otherId = Number(queryIsolatedSql(project, `SELECT id FROM universe WHERE id<>${universeId} LIMIT 1`));
@@ -63,7 +69,23 @@ test('Événements : périodes, portée et contenu visible au joueur', async ({ 
       VALUES (${scope},${quote(name)},${quote(description)},${quote(type)},${quote(status)},DATE_ADD(UTC_TIMESTAMP(), INTERVAL ${start}),DATE_ADD(UTC_TIMESTAMP(), INTERVAL ${end}),'{"percentage":25}',${visible})`);
   }
   await page.reload();
+  const rotationCount=Number(queryIsolatedSql(project,`SELECT COUNT(*) FROM boost_event WHERE universe_id=${universeId} AND status IN ('scheduled','active')`));
   await expect(page.locator('.event-card')).toHaveCount(2);
+  const drawer = page.locator('.event-drawer');
+  const summary = drawer.locator('summary');
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect(drawer).not.toHaveAttribute('open', '');
+    await expect(drawer.locator('.event-drawer-title')).toBeVisible();
+    await expect(drawer.locator('.event-drawer-count')).toHaveText(String(rotationCount+2));
+    await expect(drawer.locator('.event-drawer-count')).toBeVisible();
+    await summary.focus();
+    await expect(summary).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(drawer.getByRole('link', { name: 'Voir les événements' })).toBeVisible();
+    await page.keyboard.press('Enter');
+    await expect(drawer.locator('.event-drawer-list')).not.toBeVisible();
+  }
   const active = page.getByRole('article', { name: title });
   await expect(active).toContainText('En cours');
   await expect(active).toContainText('Tous les univers');

@@ -12,6 +12,8 @@ final class CatalogueInsights
     {
         $tier=(string)($d['_tier']??'basic');$factor=GameCatalog::tierFactor($tier);$slug=$d['slug'];
         if($group==='buildings'){
+            // Exclut du gain les niveaux de production déjà programmés dans la file.
+            if(isset($d['production_resource']))$levels[$slug][$tier]=max(0,$target-1);
             $next=$levels;$next[$slug][$tier]=$target;
             if(isset($d['production_resource'])){$r=$d['production_resource'];$result=[['label'=>'Production de '.mb_strtolower($this->catalog->rules()['resources'][$r]),'before'=>$this->resources->rate($planet,$r,0,$levels)*3600,'after'=>$this->resources->rate($planet,$r,0,$next)*3600,'unit'=>'/ h']];$beforeUse=$this->resources->factoryConsumption($planet,$slug,$levels);$afterUse=$this->resources->factoryConsumption($planet,$slug,$next);foreach(['electricity'=>'Consommation électrique','hydrogen'=>'Consommation d’hydrogène'] as $resource=>$label)if(max($beforeUse[$resource],$afterUse[$resource])>0)$result[]=['label'=>$label,'before'=>$beforeUse[$resource]*3600,'after'=>$afterUse[$resource]*3600,'unit'=>'/ h','consumption'=>true];return $result;}
             if(isset($d['storage_resource'])){$r=$d['storage_resource'];return [['label'=>'Stockage de '.mb_strtolower($this->catalog->rules()['resources'][$r]),'before'=>$this->resources->capacity($planet,$r,$levels),'after'=>$this->resources->capacity($planet,$r,$next),'unit'=>'']];}
@@ -42,7 +44,10 @@ final class CatalogueInsights
     }
     private function technologyBenefits(array $d,int $target,array $levels,Planet $planet):array
     {
-        $effect=$d['effect']??[];$slug=$d['slug'];$tier=(string)($d['_tier']??'basic');$ranks=$levels[$slug]??[];if(is_numeric($ranks))$ranks=['basic'=>(int)$ranks];$target=min($target,(int)($effect['tier_max_levels'][$tier]??$d['max_level']??$target));$afterRanks=$ranks;$afterRanks[$tier]=$target;$maxLevel=max(1,(int)($d['max_level']??25));$type=$effect['type']??null;
+        $effect=$d['effect']??[];$slug=$d['slug'];$tier=(string)($d['_tier']??'basic');$ranks=$levels[$slug]??[];if(is_numeric($ranks))$ranks=['basic'=>(int)$ranks];$target=min($target,(int)($effect['tier_max_levels'][$tier]??$d['max_level']??$target));
+        // Compare uniquement le niveau proposé au dernier niveau déjà programmé.
+        $ranks[$tier]=max(0,$target-1);
+        $afterRanks=$ranks;$afterRanks[$tier]=$target;$maxLevel=max(1,(int)($d['max_level']??25));$type=$effect['type']??null;
         if(in_array($slug,['signature_masking','intelligence_countermeasures','tactical_intelligence'],true)){
             // L’espionnage arrondit la somme des niveaux pondérés des trois rangs.
             $effectiveLevel=static function(array $ranks):int {

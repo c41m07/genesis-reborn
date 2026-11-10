@@ -54,3 +54,14 @@ genesis-*.sql.gz
 genesis-*.sql.gz.sha256
 
 /var/
+
+# Captures, traces et rapports de tests générés localement
+/output/
+/test-results/
+/playwright-report/
+/coverage/
+/app/coverage/
+/.phpunit.cache/
+
+# Personnalisation Docker propre au poste de développement
+/compose.override.yaml

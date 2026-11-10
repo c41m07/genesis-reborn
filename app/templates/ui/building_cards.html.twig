@@ -9,7 +9,7 @@
 {% endfor %}
 {% for slug, ranks in families %}
     {% set definition = (ranks|first).definition %}
-    {% set category = group=='buildings' ? (definition.production_resource is defined ? 'economy' : (definition.storage_resource is defined ? 'storage' : (slug=='fortress' ? 'defense' : 'infrastructure'))) : (group=='technologies' ? (slug in ['weapon_calibration','target_acquisition','weapons_engineering','shield_harmonics','structural_armor','evasive_navigation','signature_reduction','rapid_fire_cycle','cryogenic_reserves','modular_cargo_bays'] ? 'combat' : (slug=='vector_propulsion' ? 'propulsion' : (slug in ['tactical_intelligence','intelligence_countermeasures','signature_masking'] ? 'espionage' : 'infrastructure'))) : (group=='ships' ? ((definition.cargo_capacity|default(0)) > 0 ? 'transport' : (definition.category=='support' ? 'utility' : 'combat')) : 'combat')) %}
+    {% set category = (ranks|first).filter_category %}
     {% set accessible = ranks|filter(card => not card.failures or card.maximum) %}
     <article class="panel catalog-card card--{{ group }} building-card" data-building-catalog-target="family" data-slug="{{ slug }}" data-catalog-filter-target="card" data-category="{{ category }}" data-catalog-visible="{{ show_locked_items or accessible ? 'true' : 'false' }}" {% if not show_locked_items and not accessible %}hidden{% endif %}>
         <nav class="building-rank-tabs" aria-label="Rangs de {{ definition.label }}">
