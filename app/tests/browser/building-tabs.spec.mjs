@@ -37,7 +37,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(tab('basic').locator('.building-rank-up')).toHaveCount(0);
     await expect(tab('basic')).toHaveAccessibleDescription(/Ressources insuffisantes/);
     await expect(family.locator('.card-stock-badge, .tier-label')).toHaveCount(0);
-    await expect(panel('basic').locator('.costs')).toContainText(/\d+(?:,\d+)? M/);
+    await expect(panel('basic').locator('.costs')).toContainText('1,12 M');
     await expect(panel('basic').locator('.costs > span').first()).toHaveAttribute('aria-label', /Métal : [\d ]+/);
     await expect(panel('basic').locator('form [name="tier"]')).toHaveValue('basic');
     await tab('intermediate').click();
@@ -46,7 +46,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(panel('intermediate').locator('img')).toHaveAttribute('src', /power_plant__intermediate.webp$/);
     await expect(panel('intermediate').locator('.catalog-card-heading > h3')).toHaveText('Complexe énergétique à antimatière');
     await expect(panel('intermediate').locator('form [name="tier"]')).toHaveValue('intermediate');
-    await expect(panel('intermediate').locator('.costs')).toContainText(/\d+(?:,\d+)? k/);
+    await expect(panel('intermediate').locator('.costs')).toContainText('1 350');
     await page.keyboard.press('ArrowRight');
     await expect(tab('superior')).toBeFocused();
     await expect(panel('superior')).toBeVisible();
@@ -164,13 +164,13 @@ test('Recherche, chantier et défenses partagent les onglets et préservent leur
         await expect(panel('basic').locator('form [name="group"]')).toHaveValue(group);
         await expect(panel('basic').locator('form [name="tier"]')).toHaveValue('basic');
         await expect(family.locator('.card-stock-badge, .tier-label')).toHaveCount(0);
-        await expect(tab('basic').locator('.building-rank-level')).toHaveText(group === 'technologies' ? '5' : group === 'ships' ? '125 k' : '1,3 M');
+        await expect(tab('basic').locator('.building-rank-level')).toHaveText(group === 'technologies' ? '5' : group === 'ships' ? '125,00 k' : '1,25 M');
         if (group !== 'technologies') {
             await expect(tab('basic')).toHaveAccessibleDescription(/unités possédées/);
             await panel('basic').getByLabel('Quantité', { exact: true }).fill('3');
             await tab('intermediate').click();
             if (group === 'ships') {
-                await expect(tab('intermediate').locator('.building-rank-level')).toHaveText('1,3 M');
+                await expect(tab('intermediate').locator('.building-rank-level')).toHaveText('1,25 M');
                 await expect(panel('intermediate').getByLabel('Quantité', { exact: true })).toHaveValue('1');
             }
             await tab('basic').click();

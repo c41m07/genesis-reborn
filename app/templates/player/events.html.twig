@@ -5,7 +5,7 @@
 {% set typeLabels = {'production_bonus':'Bonus de production','construction_speed':'Vitesse de construction','research_speed':'Vitesse de recherche','fleet_speed':'Vitesse des flottes','special':'Événement spécial','reward':'Récompense','announcement':'Annonce'} %}
 {% set eventNow = date() %}
 <div class="event-list">
-{% if challenges %}<section class="panel"><h2>Défis et rotations hebdomadaires</h2><p>Objectifs de l’univers, contributions individuelles et récompenses annoncées. Les derniers défis et rotations sont accessibles ci-dessous.</p><ul class="challenge-list">{% for challenge in challenges %}<li><a href="{{ path('app_challenge',{id:challenge.event.id}) }}">{{ challenge.name }}</a><span>{{ challenge.status_label }} · {{ challenge.event.totalContribution|number_format(2,',',' ') }} / {{ challenge.goal|number_format(2,',',' ') }}</span></li>{% endfor %}</ul></section>{% endif %}
+{% if challenges %}<section class="panel"><h2>Défis et rotations hebdomadaires</h2><p>Objectifs de l’univers, contributions individuelles et récompenses annoncées. Les derniers défis et rotations sont accessibles ci-dessous.</p><ul class="challenge-list">{% for challenge in challenges %}<li><a href="{{ path('app_challenge',{id:challenge.event.id}) }}">{{ challenge.name }}</a><span>{{ challenge.status_label }} · {{ challenge.event.totalContribution|quantity(2) }} / {{ challenge.goal|quantity(2) }}</span></li>{% endfor %}</ul></section>{% endif %}
 {% for event in events %}
     {% set upcoming = event.startsAt > eventNow %}
     <article class="panel event-card" aria-labelledby="event-{{ event.id }}-title">

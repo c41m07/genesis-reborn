@@ -80,8 +80,10 @@ test('Stock protégé et productivité réelle, pénuries et reprise sans rechar
         await metal.evaluate(element => element.dispatchEvent(new CustomEvent('resource:update', { detail: {
             stock: 123456, capacity: 300000, rate: 0, protectedCapacity: 30000, productivity: 100,
         } })));
-        await expect(page.locator('[data-compact-resource="metal"] strong')).toHaveText(/123,5/);
-        await expect(metal.locator('[data-resource-target="stock"]')).toHaveText(/123\s456/);
+        await expect(page.locator('[data-compact-resource="metal"] strong')).toHaveText('123,46 k');
+        await expect(metal.locator('[data-resource-target="stock"]')).toHaveText('123,46 k');
+        await expect(page.locator('[data-compact-resource="metal"] strong')).toHaveAttribute('title', '123 456');
+        await expect(metal.locator('[data-resource-target="stock"]')).toHaveAttribute('title', '123 456');
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
         await toggle.focus();
         await page.keyboard.press('Space');

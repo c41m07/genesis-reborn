@@ -1,4 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
+import { displayQuantity } from '../quantity.js';
 
 export default class extends Controller {
     static values = { url: String };
@@ -12,7 +13,7 @@ export default class extends Controller {
     updateSummary({ detail: { slug, stock, deficit } }) {
         const target = this.compactStockTargets.find(element => element.dataset.slug === slug);
         if (!target) return;
-        target.textContent = Math.floor(stock).toLocaleString('fr-FR', { notation: 'compact', maximumFractionDigits: 1 });
+        displayQuantity(target, Math.floor(stock));
         target.closest('.resource-summary-item').classList.toggle('resource-summary-item--deficit', deficit);
     }
     tickProtection() {

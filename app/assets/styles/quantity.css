@@ -1,0 +1,23 @@
+.quantity-number {
+    position: relative;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: help;
+}
+.quantity-number:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+}
+.quantity-number:focus::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    z-index: 20;
+    padding: .25rem .5rem;
+    background: var(--panel, #101e2d);
+    color: var(--text, #e6edf5);
+    border: 1px solid currentColor;
+    border-radius: .25rem;
+    font-size: .875rem;
+}

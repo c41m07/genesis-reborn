@@ -46,7 +46,8 @@ test('Renseignements : rangs actuels, ancien format, ressources et détection', 
   for (const [label, level] of [['Mine basique', 4], ['Mine orbitale', 2], ['Recherche historique', 3], ['Recherche supérieure', 5]]) {
     await expect(page.locator('.intel-card').filter({ hasText: label })).toContainText(`Niveau ${level}`);
   }
-  await expect(page.locator('.intel-card').filter({ hasText: 'Métal' })).toContainText('12 000');
+  await expect(page.locator('.intel-card').filter({ hasText: 'Métal' })).toContainText('12,00 k');
+  await expect(page.locator('.intel-card').filter({ hasText: 'Métal' }).locator('abbr').first()).toHaveAttribute('title', '12 000');
   await expect(page.locator('.intel-card').filter({ hasText: 'Escadre' })).toContainText('4 000');
   await expect(page.getByText('Aucun élément détecté dans cette catégorie.')).toBeVisible();
   for (const width of [1920, 1280, 768, 390]) {
@@ -83,7 +84,8 @@ test('Combats : filtre économique, pertes lisibles et défilement clavier', asy
   await page.screenshot({ path: testInfo.outputPath('reports-combat.png'), fullPage: true, animations: 'disabled' });
   await report.click();
   await expect(page.getByRole('rowheader', { name: 'Escadre de défense' })).toBeVisible();
-  await expect(page.getByRole('cell', { name: '12 000', exact: true })).toBeVisible();
+  await expect(page.getByRole('cell', { name: '12,00 k', exact: true })).toBeVisible();
+  await expect(page.getByRole('cell', { name: '12,00 k', exact: true }).locator('abbr')).toHaveAttribute('title', '12 000');
   await expect(page.getByRole('cell', { name: '1 234', exact: true })).toBeVisible();
   const losses = page.getByRole('region', { name: 'Bilan des pertes, défilement horizontal' });
   await losses.focus();
