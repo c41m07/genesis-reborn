@@ -8,7 +8,7 @@ use Psr\Clock\ClockInterface;
 use App\Service\Player\VacationCalendar;
 final class ResourceService
 {
-    public function __construct(private GameRepository $repo,private GameManager $manager,private GameCatalog $catalog,private ClockInterface $clock,private \App\Service\Event\GameEventService $events,private VacationCalendar $vacations,private ResourceBalance $balance) {}
+    public function __construct(private GameRepository $repo,private GameManager $manager,private GameCatalog $catalog,private ClockInterface $clock,private \App\Service\Event\GameEventService $events,private VacationCalendar $vacations) {}
     public static function stock(float $stock,float $rate,\DateTimeImmutable $last,\DateTimeImmutable $now,float $cap): float
     {
         return min(max($cap,$stock),max(0,$stock)+max(0,$now->getTimestamp()-$last->getTimestamp())*$rate);
@@ -19,7 +19,7 @@ final class ResourceService
         foreach ($this->catalog->rules()['resources'] as $slug=>$label) {
             if($this->repo->one(PlanetResource::class,['planet'=>$planet,'resourceType'=>$slug])) continue;
             $capacity=$this->capacity($planet,$slug,$levels);
-            $stock=$this->balance->rulesAt($this->clock->now())[$colony?'colony_initial_stock':'initial_stock'][$slug];
+            $stock=$this->catalog->rules()[$colony?'colony_initial_stock':'initial_stock'][$slug];
             $r=new PlanetResource();$r->planet=$planet;$r->resourceType=$slug;
             $r->currentStock=min($capacity,$stock*$stockMultiplier);
             $r->lastUpdatedAt=$this->clock->now();
@@ -31,7 +31,7 @@ final class ResourceService
     {
         $storedLevels=$buildings['storage_'.$slug]??0;$added=0.0;
         foreach(GameCatalog::TIERS as $tier)$added+=$this->tierLevel($storedLevels,$tier)*$this->catalog->tierFactor($tier)*$this->catalog->rules()['storage_capacity_per_level'];
-        return $this->balance->rulesAt($at??$this->clock->now())['base_storage_capacity']+$added;
+        return $this->catalog->rules()['base_storage_capacity']+$added;
     }
     public function rate(Planet $planet,string $slug,int $mineLevel,?array $levels=null):float
     {
@@ -70,7 +70,7 @@ final class ResourceService
 
     private function operatingInput(Planet $planet,array $levels,?\DateTimeImmutable $at=null):array
     {
-        $rules=$this->balance->rulesAt($at??$this->clock->now());$universe=$this->catalog->forUniverse($planet->solarSystem->galaxy->universe);$mult=(float)$universe['multipliers']['resource_production'];$base=[];
+        $rules=$this->catalog->rules();$universe=$this->catalog->forUniverse($planet->solarSystem->galaxy->universe);$mult=(float)$universe['multipliers']['resource_production'];$base=[];
         foreach($rules['resources'] as $slug=>$label)$base[$slug]=(float)($rules['base_production'][$slug]??0)*$this->positionFactor($planet,$slug)*$mult;
         $factories=[];
         $eventMultiplier=$this->events->productionMultiplier($planet->solarSystem->galaxy->universe,$at);
@@ -97,8 +97,6 @@ final class ResourceService
     {
         $universe=$planet->solarSystem->galaxy->universe;$cursor=$from;
         $points=$this->events->productionChangePoints($universe,$from,$to);$points[]=$to;
-        $cutover=$this->balance->effectiveAt();
-        if($cutover!==null && $cutover>$from && $cutover<$to) $points[]=$cutover;
         $periods=$planet->owner !== null ? $this->vacations->periods($planet->owner) : [];
         foreach($periods as $period) foreach([$period->startedAt,$period->effectiveEndAt()] as $boundary) {
             if($boundary>$from && $boundary<$to) $points[]=$boundary;

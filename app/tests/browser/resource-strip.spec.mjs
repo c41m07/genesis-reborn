@@ -23,7 +23,7 @@ test('Stock protégé et productivité réelle, pénuries et reprise sans rechar
     for (const [slug, level] of [['mine_metal', 100], ['mine_antimatter', 10], ['storage_metal', 1]]) {
         sql(`INSERT INTO planet_building (planet_id, slug, tier, level) VALUES (${planet}, '${slug}', 'basic', ${level}) ON DUPLICATE KEY UPDATE level=${level}`);
     }
-    sql(`UPDATE planet_resource SET current_stock=100000, last_updated_at=UTC_TIMESTAMP() WHERE planet_id=${planet}`);
+    sql(`UPDATE planet_resource SET current_stock=CASE WHEN resource_type='metal' THEN 100000 ELSE 1000 END, last_updated_at=UTC_TIMESTAMP() WHERE planet_id=${planet}`);
     await page.reload();
     const metal = page.locator('.resource--metal'), antimatter = page.locator('.resource--antimatter');
     const strip = page.locator('.resource-strip');
@@ -43,7 +43,7 @@ test('Stock protégé et productivité réelle, pénuries et reprise sans rechar
     await expect(events.locator('details')).not.toHaveAttribute('open', '');
 
     await expect(metal.locator('.resource-productivity')).toHaveText('100,0 %');
-    await expect(metal.locator('.storage-meter')).toHaveAttribute('aria-label', /30\s000 protégés du pillage/);
+    await expect(metal.locator('.storage-meter')).toHaveAttribute('aria-label', /11\s000 protégés du pillage/);
     await expect(page.locator('.storage-meter-protected')).toHaveCount(5);
     await expect.poll(() => metal.locator('.storage-meter').evaluate(el => el.offsetHeight)).toBe(7);
     const ratio = await metal.locator('.storage-meter-protected').evaluate(el => el.getBoundingClientRect().width / el.parentElement.getBoundingClientRect().width);

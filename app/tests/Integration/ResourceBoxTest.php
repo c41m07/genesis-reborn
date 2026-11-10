@@ -44,6 +44,8 @@ final class ResourceBoxTest extends KernelTestCase
         self::getContainer()->get(UniverseService::class)->select($player, $universe->id);
         $planet = $this->em->getRepository(Planet::class)->findOneBy(['owner' => $player->currentPlayerUniverse]);
 
+        foreach($this->em->getRepository(\App\Entity\PlanetResource::class)->findBy(['planet'=>$planet]) as $row)$row->currentStock=1000;
+        $this->em->flush();
         return [$player, $planet];
     }
 
