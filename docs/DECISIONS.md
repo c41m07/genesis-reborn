@@ -1148,3 +1148,11 @@ de navigation et d’envoi des mails exclus de ce lot.
 Ces contrôles sont locaux ; ils ne constituent ni une validation de la CI
 GitHub, ni un déploiement. Les migrations de vérification concernent uniquement
 les bases jetables ; aucune migration de la base de jeu existante n’est appliquée.
+
+### Boutons Max et quantités — 10 novembre 2026
+
+L’utilisateur valide des boutons Max pour les vaisseaux et défenses à construire, la composition des flottes et chaque ressource de fret. Le plafond fixe de 100 unités par commande de construction est retiré : le maximum dépend des ressources et des coûts réels, réductions et arrondis compris. Les 30 commandes par file et les contraintes de stockage des entiers et durées sont conservées.
+
+Une quantité excessive est automatiquement réduite au maximum possible, avec un message compréhensible. Le serveur revérifie les limites sous verrou lors de la validation, même sans JavaScript. Une quantité nulle ne crée pas de commande ni de flotte.
+
+La composition respecte les vaisseaux disponibles et le plafond de flotte configuré dans l’univers ; la restriction historique de 100 par type ne doit pas empêcher l’application de cette limite déjà validée. Le fret possède un Max par ressource : les autres ressources déjà saisies sont conservées, l’hydrogène nécessaire au carburant est réservé, et la place restante en soute est respectée. Le plafond de saisie de fret existant de 100 000 000 par ressource est conservé. Si plusieurs valeurs soumises simultanément dépassent la capacité, elles sont ajustées dans l’ordre des champs envoyés ; la prévisualisation montre les quantités effectives avant confirmation.

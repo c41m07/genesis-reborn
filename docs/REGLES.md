@@ -270,3 +270,10 @@ créées. Leurs règles sont figées ; contributions et récompenses acquises re
 conservées lors d’une annulation, sans nouvelle attribution après annulation.
 Le plafond simultané, le lundi à 00 h UTC et les règles de récompense historiques
 s’appliquent toujours. Les joueurs retrouvent les rotations dans Événements.
+
+## Saisie des quantités et boutons Max
+
+- Construction de vaisseaux et défenses : Max utilise les ressources disponibles et le coût réel du lot, sans limite fixe de 100. La limite de 30 commandes par file reste applicable.
+- Composition d’une flotte : Max sélectionne les unités disponibles d’un type et d’un rang, dans la place restante sous le plafond de flotte de l’univers.
+- Fret : un Max par ressource conserve les autres chargements et tient compte du stock, du carburant réservé et de la soute libre. La limite de saisie de 100 000 000 par ressource est conservée.
+- Les quantités excessives sont réduites automatiquement, avec un message d’ajustement et une vérification serveur au moment de l’action. Les entrées négatives, non entières ou inconnues restent refusées ; un maximum nul ne permet pas d’achat ni de départ sans vaisseau.

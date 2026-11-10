@@ -72,7 +72,10 @@ final class GameplayAccessTest extends WebTestCase
         $payload=['_token'=>$token,'origin'=>$own->id,'mission'=>'explore','coordinates'=>$own->solarSystem->galaxy->coordinateCode().':'.$own->solarSystem->number(),'ratio'=>'0.5','ships'=>['probe'=>1],'cargo'=>[],'total_fuel'=>0,'seconds'=>0];
         $this->client->request('POST','/flottes/estimer',$payload);self::assertResponseIsSuccessful();$q=json_decode($this->client->getResponse()->getContent(),true);self::assertGreaterThan(0,$q['total_fuel']);self::assertGreaterThan(0,$q['seconds']);
         $payload['origin']=$foreign->id;$this->client->request('POST','/flottes/estimer',$payload);self::assertResponseStatusCodeSame(422);
-        $payload['origin']=$own->id;$payload['ships']=['probe'=>999];$this->client->request('POST','/flottes/estimer',$payload);self::assertResponseStatusCodeSame(422);
+        $payload['origin']=$own->id;$payload['ships']=['probe'=>999];$this->client->request('POST','/flottes/estimer',$payload);self::assertResponseIsSuccessful();$adjusted=json_decode($this->client->getResponse()->getContent(),true);self::assertSame(1,$adjusted['composition']['probe']['basic']);self::assertTrue($adjusted['adjusted']);
+        foreach([['unknown'=>1,'probe'=>1],['probe'=>-1],['probe'=>'1.5']] as $invalid) {
+            $payload['ships']=$invalid;$this->client->request('POST','/flottes/estimer',$payload);self::assertResponseStatusCodeSame(422);
+        }
         $this->client->request('POST','/flottes/estimer',['_token'=>'invalid']);self::assertResponseStatusCodeSame(403);
     }
     public function testNotificationCookieAuthorizesOnlyCurrentMembership():void

@@ -41,11 +41,11 @@ final class FleetService
         if($mission==='colonize' && count($this->repo->planets($m->universe,$m)) >= $planetLimit) throw new \DomainException('Limite de colonies atteinte.');
         $idle=$this->repo->one(Fleet::class,['homePlanet'=>$origin,'playerUniverse'=>$m,'status'=>'idle']);$stock=[];
         if($idle) foreach($this->repo->all(FleetShip::class,['fleet'=>$idle]) as $s) $stock[$s->slug][$s->tier]=$s->quantity;
-        $ships=[];$valid=[];
-        foreach($composition as $slug=>$ranks){if(!is_array($ranks))$ranks=['basic'=>$ranks];foreach($ranks as $tier=>$amount){
+        $ships=[];$valid=[];$adjusted=false;$remaining=max(0,(int)$config['limits']['max_fleet_size']);
+        foreach($composition as $slug=>$ranks){if(!isset($config['catalog']['ships'][$slug]))throw new \DomainException('Vaisseau inconnu.');if(!is_array($ranks))$ranks=['basic'=>$ranks];foreach($ranks as $tier=>$amount){
             if(!in_array($tier,GameCatalog::TIERS,true))throw new \DomainException('Rang de vaisseau invalide.');
-            $n=filter_var($amount,FILTER_VALIDATE_INT);if($n===false||$n<0||$n>100)throw new \DomainException('Quantité de vaisseaux invalide.');if(!$n)continue;
-            if($n>($stock[$slug][$tier]??0))throw new \DomainException('Vaisseaux indisponibles.');
+            $requested=filter_var($amount,FILTER_VALIDATE_INT);if($requested===false||$requested<0)throw new \DomainException('Quantité de vaisseaux invalide.');
+            $n=min($requested,$stock[$slug][$tier]??0,$remaining);$remaining-=$n;$adjusted=$adjusted||$n!==$requested;if(!$n)continue;
             $ship=$this->catalog->getTierForUniverse($m->universe,'ships',(string)$slug,(string)$tier);$ship['quantity']=$n;$ship['tier']=$tier;$ships[]=$ship;$valid[$slug][$tier]=$n;
         }}
         $fleetSize=0;foreach($valid as $ranks)foreach($ranks as $amount)$fleetSize+=$amount;if($fleetSize>$config['limits']['max_fleet_size'])throw new \DomainException('Flotte trop grande.');
@@ -59,18 +59,30 @@ final class FleetService
         $techLevels=$this->repo->levelsByTier(PlayerTechnology::class,['playerUniverse'=>$m]);
         $ships=$this->technologyEffects->applyToShips($ships,$techLevels,$m->universe);
         $quote=$this->calculator->quote($this->coords($origin->solarSystem,$origin->position),$this->coords($system,$target instanceof Planet?$target->position:null),$ships,$ratio,$config['multipliers']['travel_time'],$this->catalog->rules()['fuel_ratio_policy'],$windowHours);
-        $freight=[];
+        $requestedCargo=[];
         foreach($cargo as $resource=>$amount) {
             if(!array_key_exists($resource,$this->catalog->rules()['resources'])) throw new \DomainException('Ressource inconnue.');
             $n=filter_var($amount,FILTER_VALIDATE_INT);
-            if($n===false || $n<0 || $n>100000000) throw new \DomainException('Fret invalide.');
-            if($n) $freight[$resource]=$n;
+            if($n===false || $n<0) throw new \DomainException('Fret invalide.');
+            $requestedCargo[$resource]=$n;
         }
-        if($mission!=='transport' && array_sum($freight)>0) throw new \DomainException('Le fret est réservé aux missions de transport.');
+        if($mission!=='transport' && array_sum($requestedCargo)>0) throw new \DomainException('Le fret est réservé aux missions de transport.');
         if($quote['total_fuel']>$quote['capacity']+1e-6) throw new \DomainException('Capacité insuffisante pour le carburant aller-retour. Réduisez la vitesse ou ajoutez un transporteur.');
-        if(array_sum($freight)>$quote['freight_capacity']+1e-6) throw new \DomainException('Soute de fret insuffisante. Les petits réservoirs sont réservés au carburant.');
-        return $quote+['target'=>$target,'system'=>$system,'composition'=>$valid,'freight'=>$freight,'idle'=>$idle];
+        $snapshot=$this->resources->snapshot($origin);$available=[];$freight=[];$space=$quote['freight_capacity'];
+        foreach($this->catalog->rules()['resources'] as $resource=>$label) {
+            $available[$resource]=(int)floor(min(100000000,max(0,($snapshot[$resource]['stock']??0)-($resource==='hydrogen'?$quote['total_fuel']:0))));
+        }
+        foreach($requestedCargo as $resource=>$requested) {
+            $n=(int)min($requested,$available[$resource],max(0,floor($space)));
+            $adjusted=$adjusted||$n!==$requested;
+            if($n) $freight[$resource]=$n;
+            $space-=$n;
+        }
+        $maximum=[];$loaded=array_sum($freight);
+        foreach($available as $resource=>$amount) $maximum[$resource]=(int)min($amount,max(0,floor($quote['freight_capacity']-$loaded+($freight[$resource]??0))));
+        return $quote+['target'=>$target,'system'=>$system,'composition'=>$valid,'freight'=>$freight,'idle'=>$idle,'cargo_available'=>$available,'cargo_maximum'=>$maximum,'ship_available'=>$stock,'adjusted'=>$adjusted];
     }
+
     private function planetLimit(PlayerUniverse $membership,array $config): int
     {
         $definition=$config['catalog']['technologies']['colonial_expansion']??null;$effect=$definition['effect']??null;
@@ -84,13 +96,13 @@ final class FleetService
         return $this->manager->transaction(function()use($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$orbitHours){
             $this->guard->lock($m,$origin);$this->queues->synchronize($m);
             $q=$this->quote($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$orbitHours);
-            return array_intersect_key($q,array_flip(['distance','normal_distance','hyper_distance','seconds','one_way_fuel','orbit_fuel','total_fuel','fuel_capacity','cargo_capacity','freight_capacity']));
+            return array_intersect_key($q,array_flip(['distance','normal_distance','hyper_distance','seconds','one_way_fuel','orbit_fuel','total_fuel','fuel_capacity','cargo_capacity','freight_capacity','composition','freight','cargo_available','cargo_maximum','ship_available','adjusted']));
         });
     }
-    public function send(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo,string $key,float $orbitHours=0): void
+    public function send(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo,string $key,float $orbitHours=0): bool
     {
-        $this->manager->transaction(function()use($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$key,$orbitHours){
-            $this->guard->lock($m,$origin);$this->queues->synchronize($m);if(!$this->guard->receipt($m,$key)) return;
+        return $this->manager->transaction(function()use($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$key,$orbitHours){
+            $this->guard->lock($m,$origin);$this->queues->synchronize($m);if(!$this->guard->receipt($m,$key)) return false;
             $q=$this->quote($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$orbitHours);
             if($q['target'] instanceof Planet) $this->manager->lock($q['target']);
             if($mission==='transport') { if(!$q['target']->owner) throw new \DomainException('Cette planète n’accepte plus vos transports.');$this->manager->lock($q['target']->owner->player);if(!$this->transports->canReceive($m,$q['target'])) throw new \DomainException('Cette planète n’accepte plus vos transports.'); }
@@ -102,6 +114,7 @@ final class FleetService
             }
             if($mission==='transport') $this->transports->recordDeparture($f,$q['freight']);
             $this->traces->recordDeparture($f, $q['composition'], $q['freight']);
+            return $q['adjusted'];
             $this->occupations->recordReinforcementDeparture($f);
             $this->schedule($f);
         });

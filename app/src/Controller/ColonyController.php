@@ -97,6 +97,18 @@ final class ColonyController extends AbstractController
         foreach($leaderboard->forUniverse($this->context->membership()) as $row) if($row['membership']->id===$planet->owner->id) {$snapshot['_protection']=$row['protection'];break;}
         return $this->json($snapshot,200,['Cache-Control'=>'private, no-store']);
     }
+    #[Route('/planetes/{id}/construction-maximum', name: 'app_construction_maximum', methods: ['GET'], requirements: ['id' => '\\d+'])]
+    public function constructionMaximum(int $id, Request $request, QueueService $service): JsonResponse
+    {
+        $planet = $this->owned($id);
+        try {
+            $maximum = $service->maximum($this->context->membership(), $planet, (string) $request->query->get('group'), (string) $request->query->get('slug'), (string) $request->query->get('tier', 'basic'));
+            return $this->json(['maximum' => $maximum], 200, ['Cache-Control' => 'private, no-store']);
+        } catch (\DomainException $error) {
+            return $this->json(['error' => $error->getMessage()], 422, ['Cache-Control' => 'private, no-store']);
+        }
+    }
+
     #[Route('/planetes/{id}/construire',name:'app_queue_add',methods:['POST'],requirements:['id'=>'\d+'])]
     public function add(int $id,Request $request,QueueService $service): Response
     {
@@ -105,8 +117,8 @@ final class ColonyController extends AbstractController
         $quantity=filter_var($request->request->get('quantity',1),FILTER_VALIDATE_INT);
         try {
             if($quantity===false) throw new \DomainException('Quantité invalide.');
-            $service->add($this->context->membership(),$p,(string)$request->request->get('group'),(string)$request->request->get('slug'),$quantity,(string)$request->request->get('request_key'),(string)$request->request->get('tier','basic'));
-            $this->addFlash('success','Commande enregistrée dans la file.');
+            $actualQuantity=$service->add($this->context->membership(),$p,(string)$request->request->get('group'),(string)$request->request->get('slug'),$quantity,(string)$request->request->get('request_key'),(string)$request->request->get('tier','basic'));
+            $this->addFlash('success','Commande enregistrée dans la file.'.($actualQuantity>0 && $actualQuantity<$quantity?' Quantité ajustée au maximum constructible : '.$actualQuantity.'.':''));
         } catch(\DomainException $e) { $this->addFlash('error',$e->getMessage()); }
         return $this->redirectToRoute('app_colony',['id'=>$id,'section'=>$this->section((string)$request->request->get('section','overview')),'_fragment'=>'item-'.(string)$request->request->get('slug','').'-'.(string)$request->request->get('tier','basic')]);
     }

@@ -190,8 +190,10 @@ final class GamePersistenceTest extends KernelTestCase
     {
         $p=$this->player();$origin=$this->join($p);$this->ships($origin,['probe'=>1]);$m=$p->currentPlayerUniverse;
         $target=$this->em->getRepository(Planet::class)->findOneBy(['solarSystem'=>$origin->solarSystem,'owner'=>null]);$target->owner=$m;$this->em->flush();
-        $this->expectException(\DomainException::class);
-        self::getContainer()->get(\App\Service\Fleet\FleetService::class)->quote($m,$origin,'transport',$target->id,['probe'=>1],1,['metal'=>1]);
+        $quote=self::getContainer()->get(\App\Service\Fleet\FleetService::class)->quote($m,$origin,'transport',$target->id,['probe'=>1],1,['metal'=>1]);
+        self::assertSame(0.0, (float) $quote['freight_capacity']);
+        self::assertSame([], $quote['freight']);
+        self::assertTrue($quote['adjusted']);
     }
     public static function colonyShipKits(): array
     {
@@ -1161,4 +1163,33 @@ final class GamePersistenceTest extends KernelTestCase
         self::assertSame(0, $metrics['resources']['observed']);
     }
 
+
+    public function testConstructionMaximumAndDirectPurchaseUseCurrentStocksBeyondOneHundred(): void
+    {
+        $clock=$this->clock();$player=$this->player('Maximum');$planet=$this->join($player);$membership=$player->currentPlayerUniverse;
+        $catalog=self::getContainer()->get(GameCatalog::class);$buildings=[];$technologies=[];
+        foreach($catalog->all('buildings') as $slug=>$definition) {
+            $row=$this->em->getRepository(PlanetBuilding::class)->findOneBy(['planet'=>$planet,'slug'=>$slug,'tier'=>'basic'])??new PlanetBuilding();
+            $row->planet=$planet;$row->slug=$slug;$row->level=25;$this->em->persist($row);$buildings[$slug]=['basic'=>25];
+        }
+        foreach($catalog->all('technologies') as $slug=>$definition) {
+            $row=new PlayerTechnology();$row->playerUniverse=$membership;$row->slug=$slug;$row->level=25;$this->em->persist($row);$technologies[$slug]=['basic'=>25];
+        }
+        $definition=$catalog->getTierForUniverse($membership->universe,'ships','probe','basic');
+        $plan=self::getContainer()->get(\App\Service\Queue\OperationCalculator::class)->calculate($definition,'ships',1,150,$buildings,$catalog->forUniverse($membership->universe),$technologies);
+        foreach($this->em->getRepository(PlanetResource::class)->findBy(['planet'=>$planet]) as $row) {
+            $row->currentStock=$plan['costs'][$row->resourceType]??0;$row->productionRate=0;$row->lastUpdatedAt=$clock->now();
+        }
+        $this->em->flush();
+        $service=self::getContainer()->get(QueueService::class);
+        self::assertSame(150,$service->maximum($membership,$planet,'ships','probe','basic'));
+        self::assertSame(150,$service->add($membership,$planet,'ships','probe',1000,str_repeat('e',32)));
+        $item=$this->em->getRepository(QueueItem::class)->findOneBy(['planet'=>$planet,'itemSlug'=>'probe']);
+        self::assertSame(150,$item->quantity);
+        self::assertSame($plan['costs'],$item->paidCosts);
+        self::assertSame($plan['duration'],$item->durationSeconds);
+        self::assertSame(0,$service->maximum($membership,$planet,'ships','probe','basic'));
+        self::assertSame(0,$service->add($membership,$planet,'ships','probe',1000,str_repeat('e',32)));
+        self::assertSame(1,$this->em->getRepository(QueueItem::class)->count(['planet'=>$planet]));
+    }
 }
