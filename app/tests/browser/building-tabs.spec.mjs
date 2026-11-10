@@ -21,7 +21,8 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     const path = new URL(page.url()).pathname, planet = Number(path.split('/').pop());
     prepareOwnedColony(process.env.BROWSER_ROUTER, email, { stock: 999999999, showLockedItems: true });
     const sql = query => runIsolatedSql(process.env.BROWSER_ROUTER, query);
-    sql(`INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'power_plant','basic',150),(${planet},'lab','basic',5)`);
+    // Le niveau 200 conserve un prix en millions malgré la baisse du coût de la centrale.
+    sql(`INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'power_plant','basic',200),(${planet},'lab','basic',5)`);
     sql(`INSERT INTO player_technology (player_universe_id,slug,tier,level) SELECT owner_id,'engineering_foundations','basic',5 FROM planet WHERE id=${planet}`);
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto(`${path}?section=buildings`);
@@ -32,7 +33,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(page.locator('.building-card')).toHaveCount(13);
     await expect(family.getByRole('tab')).toHaveCount(3);
     await expect(tab('basic')).toHaveAttribute('aria-selected', 'true');
-    await expect(tab('basic').locator('.building-rank-level')).toHaveText('150');
+    await expect(tab('basic').locator('.building-rank-level')).toHaveText('200');
     await expect(tab('basic').locator('.building-rank-up')).toHaveCount(0);
     await expect(tab('basic')).toHaveAccessibleDescription(/Ressources insuffisantes/);
     await expect(family.locator('.card-stock-badge, .tier-label')).toHaveCount(0);

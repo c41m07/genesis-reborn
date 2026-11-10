@@ -19,7 +19,7 @@ export default class extends Controller {
         this.toggleTarget.hidden = !this.viewport.matches;
         this.setOpen(!this.viewport.matches);
         if (toggleFocused && !this.viewport.matches) {
-            this.panelTarget.querySelector('[aria-current="page"], a[href]')?.focus();
+            this.panelTarget.querySelector('[aria-current], a[href]')?.focus();
         }
     }
 

@@ -1,7 +1,7 @@
 {
   "slug": "power_plant",
   "label": "Centrale nucléaire",
-  "base_build_time": 360,
+  "base_build_time": 120,
   "build_time_scaling": 1.6,
   "costs_base": {
     "metal": 6000,
@@ -11,8 +11,8 @@
   "costs_scaling": 1.8,
   "provisional": true,
   "production_resource": "electricity",
-  "production_per_level": 0.2,
-  "effect_note": "Production d’énergie : +0,1 énergie/s par niveau avant facteur de position et multiplicateur d’univers.",
+  "production_per_level": 0.3,
+  "effect_note": "Production d’électricité : +0,3/s par niveau basique avant facteur de position et multiplicateur d’univers.",
   "tier_unlock_requirements": {
     "intermediate": {
       "technologies": [
@@ -47,25 +47,25 @@
       ]
     }
   },
-  "economy_value_budget": 12000,
+  "economy_value_budget": 4800,
   "cost_profiles": {
     "basic": {
-      "metal": 3600,
-      "nano": 1200,
+      "metal": 1440,
+      "nano": 480,
       "antimatter": 0,
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 3376,
-      "nano": 1688,
-      "antimatter": 187,
+      "metal": 1350,
+      "nano": 675,
+      "antimatter": 75,
       "hydrogen": 0
     },
     "superior": {
-      "metal": 2813,
-      "nano": 2109,
-      "antimatter": 469,
-      "hydrogen": 938
+      "metal": 1126,
+      "nano": 844,
+      "antimatter": 187,
+      "hydrogen": 376
     }
   },
   "tier_labels": {

@@ -29,6 +29,7 @@ export default class extends Controller {
             if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) return;
             const data = await response.json();
             for (const badge of this.badgeTargets) badge.hidden = data.unread === 0;
+            window.dispatchEvent(new CustomEvent('genesis:message-count', { detail: { count: data.unread } }));
             if (this.hasConversationsTarget && !this.conversationsTarget.contains(document.activeElement)) {
                 this.conversationsTarget.innerHTML = data.conversations;
             }

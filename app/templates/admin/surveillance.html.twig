@@ -1,0 +1,19 @@
+{% extends 'admin/layout.html.twig' %}
+{% block title %}Alertes de surveillance · Console{% endblock %}
+{% block body %}
+<div class="page-heading"><div><h1>Alertes de surveillance</h1><p>Des signaux à examiner, sans conclusion automatique ni sanction.</p></div><a class="secondary" href="{{ path('app_admin_cases') }}">Ouvrir les dossiers</a></div>
+<form method="get" class="admin-intervention-form"><label for="surveillance-universe">Univers</label><select id="surveillance-universe" name="universe">{% for item in universes %}<option value="{{ item.id }}" {{ universe and item.id==universe.id ? 'selected' : '' }}>{{ item.name }}</option>{% endfor %}</select><button class="secondary">Afficher cet univers</button></form>
+{% if universe %}
+<p class="admin-monitor-note">Fenêtre de 24 heures pour les répétitions ; joueurs distincts et cibles PNJ exclues. Les transports dans les deux sens sont regroupés par paire. Les attaques contre une même cible sont comptées ensemble, tous attaquants confondus. Jusqu’à 100 signaux par catégorie sont affichés.</p>
+<p>{% if firstTrace %}Les départs sont tracés depuis le {{ firstTrace.departedAt|date('d/m/Y H:i',preferences.timezone) }}.{% else %}En attente des premiers départs tracés.{% endif %} Aucun historique antérieur n’est reconstitué.</p>
+<section class="panel"><h2>Signaux de cet univers</h2><ul class="admin-monitor-report-list">{% for alert in alerts %}{% set dossier=cases[alert.key]|default(null) %}<li><strong>{{ alert.type }} · {{ alert.title }}</strong><p>{{ alert.description }}</p>
+{% if alert.fleet %}<a href="{{ path('app_admin_mission',{id:alert.fleet.id}) }}">Inspecter la flotte</a> · {% endif %}{% if alert.membership.player|default(null) %}<a href="{{ path('app_admin_player',{id:alert.membership.player.id}) }}">Fiche joueur</a> · {% endif %}
+{% if dossier %}<a href="{{ path('app_admin_case',{id:dossier.id}) }}">Dossier n° {{ dossier.id }}</a> · {{ {open:'Ouvert',investigating:'En cours d’examen',closed:'Clos'}[dossier.status] }}{% if dossier.status=='closed' and alert.latest_at>dossier.updatedAt %} · Nouvel élément depuis la clôture{% endif %}
+{% else %}<a href="{{ path('app_admin_case_new',{universe_id:universe.id,alert_key:alert.key}) }}">Ouvrir un dossier pour ce signal</a>{% endif %}</li>{% else %}<li>Aucun signal ne dépasse les seuils de cet univers.</li>{% endfor %}</ul></section>
+<section class="panel"><h2>Seuils de {{ universe.name }}</h2><form method="post" action="{{ path('app_admin_surveillance_thresholds',{id:universe.id}) }}" class="admin-intervention-form"><input type="hidden" name="_token" value="{{ csrf_token('admin_surveillance_'~universe.id) }}">
+<label for="late-minutes">Retard de mission supérieur à (minutes)</label><input id="late-minutes" type="number" name="late_minutes" min="1" max="10080" value="{{ thresholds.late_minutes }}" required>
+<label for="transfer-count">Transports entre deux joueurs en 24 h</label><input id="transfer-count" type="number" name="transport_count" min="1" max="100000" value="{{ thresholds.transport_count }}" required>
+<label for="attack-count">Attaques contre un joueur en 24 h</label><input id="attack-count" type="number" name="attack_count" min="1" max="100000" value="{{ thresholds.attack_count }}" required><button class="secondary">Enregistrer les seuils</button></form></section>
+{% endif %}
+<section class="panel"><h2>Sécurité de la plateforme</h2><p>{{ securityIncidents|length }} incident(s) récent(s) non examiné(s), dans la limite des vingt derniers. <a href="{{ path('app_admin_security') }}">Examiner la sécurité</a></p></section>
+{% endblock %}

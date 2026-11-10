@@ -33,14 +33,20 @@ test('Administration catalogue: accès, édition, sauvegarde et restauration res
   await page.getByRole('button', { name: /Connexion/ }).click();
   await page.goto('/admin');
   await expect(page.locator('#command-navigation')).toHaveCount(0);
-  await expect(page.getByRole('heading', { name: 'Administration', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Vue d’ensemble', exact: true })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Console d’administration' })).toBeVisible();
-  await page.getByRole('tab', { name: 'Univers', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Console d’administration' }).getByRole('link', { name: 'Univers et activité', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Console d’administration' }).getByRole('link', { name: 'Univers', exact: true }).click();
   await expect(page.getByRole('link', { name: /Équilibrer les catalogues de cet univers/ }).first()).toBeVisible();
   await page.setViewportSize({ width: 1440, height: 1000 });
 
   await page.getByRole('link', { name: /Équilibrer les catalogues de cet univers/ }).first().click();
   await expect(page.getByRole('heading', { name: 'Équilibrage des catalogues', exact: true })).toBeVisible();
+  const breadcrumbs = page.getByRole('navigation', { name: 'Fil d’Ariane' });
+  await expect(breadcrumbs).toContainText('Univers et activité');
+  await expect(breadcrumbs.locator('[aria-current="page"]')).toHaveText('Catalogue');
+  await expect(page.locator('.admin-universe-navigation a')).toHaveCount(3);
+  await expect(breadcrumbs.getByRole('link', { name: 'Univers', exact: true })).toHaveAttribute('href', '/admin/univers');
 
   const unnamed = await page.locator('a[href],button,input:not([type="hidden"]),select,textarea').evaluateAll(nodes => nodes.flatMap(element => {
     const style = getComputedStyle(element);

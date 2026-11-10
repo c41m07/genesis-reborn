@@ -28,19 +28,25 @@ test('Navigation admin mobile : contenu immédiat, clavier, ancres et repli prog
   const navigation = page.getByRole('navigation', { name: 'Console d’administration' });
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
   await expect(navigation).not.toBeVisible();
-  expect((await page.getByRole('heading', { name: 'Administration', exact: true }).boundingBox()).y).toBeLessThan(250);
+  expect((await page.getByRole('heading', { name: 'Vue d’ensemble', exact: true }).boundingBox()).y).toBeLessThan(250);
   await page.screenshot({ path: testInfo.outputPath('admin-nav-closed-390.png'), fullPage: true, animations: 'disabled' });
   await toggle.focus();
   await page.keyboard.press('Enter');
   await expect(toggle).toHaveAttribute('aria-expanded', 'true');
   await expect(navigation).toBeVisible();
+  await navigation.getByRole('link', { name: 'Animation', exact: true }).click();
+  await expect(page).toHaveURL(/admin\/rubriques\/events$/);
+  await toggle.click();
   await navigation.getByRole('link', { name: 'Événements', exact: true }).focus();
   await page.keyboard.press('Escape');
   await expect(toggle).toBeFocused();
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
   await toggle.click();
+  await navigation.getByRole('link', { name: /^Joueurs et modération/ }).click();
+  await toggle.click();
   await navigation.getByRole('link', { name: 'Signalements', exact: true }).click();
-  await expect(page.getByRole('tab', { name: 'Modération', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await expect(page).toHaveURL(/admin\/moderation$/);
+  await expect(page.getByRole('heading', { name: 'Signalements de messages', exact: true })).toBeVisible();
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
   expect(await page.evaluate(() => Boolean(document.activeElement.closest('[hidden]')))).toBe(false);
   for (const width of [1920, 1440, 1280, 768]) {
@@ -51,6 +57,8 @@ test('Navigation admin mobile : contenu immédiat, clavier, ancres et repli prog
   }
   await page.setViewportSize({ width: 390, height: 900 });
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await toggle.click();
+  await navigation.getByRole('link', { name: 'Animation', exact: true }).click();
   await toggle.click();
   await navigation.getByRole('link', { name: 'Patchnotes', exact: true }).click();
   await expect(page).toHaveURL(/admin\/patchnotes$/);
@@ -113,5 +121,38 @@ test('Notes de version : brouillon privé, erreur conservée, publication et lec
   await editor.locator('summary').click();
   await expect(editor.getByLabel('Publication', { exact: true })).toHaveValue(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/);
   await page.screenshot({ path: testInfo.outputPath('patchnotes-admin-390.png'), fullPage: true, animations: 'disabled' });
+  await reader.close();
+});
+
+test('Maquette admin : cinq entrées, cartes de rubrique, fil d’Ariane et accès protégés', async ({ page, browser }) => {
+  test.setTimeout(120000);
+  const guest = await browser.newContext();
+  const guestPage = await guest.newPage();
+  await guestPage.goto('/admin/rubriques/players');
+  await expect(guestPage).toHaveURL(/connexion/);
+  await guest.close();
+  await enter(page, true);
+  await page.goto('/admin');
+  const navigation = page.getByRole('navigation', { name: 'Console d’administration' });
+  await expect(navigation.locator('.admin-primary-link')).toHaveCount(5);
+  await expect(navigation.locator('.admin-navigation-links')).toHaveCount(0);
+  await expect(page.locator('.admin-home-actions a')).toHaveCount(3);
+  for (const [group, label, cards] of [['players','Joueurs et modération',4],['universe','Univers et activité',3],['events','Animation',4],['ops','Exploitation',4]]) {
+    await navigation.getByRole('link', { name: new RegExp('^' + label) }).click();
+    await expect(page).toHaveURL(new RegExp('/admin/rubriques/' + group + '$'));
+    await expect(page.getByRole('heading', { name: label, exact: true })).toBeVisible();
+    await expect(page.locator('.admin-module-card')).toHaveCount(cards);
+    await expect(navigation.locator('.admin-navigation-links')).toHaveCount(1);
+    await expect(navigation.locator('.admin-primary-link[aria-current="page"]')).toHaveCount(1);
+    await page.locator('.admin-module-card').first().click();
+    const breadcrumbs = page.getByRole('navigation', { name: 'Fil d’Ariane' });
+    await breadcrumbs.getByRole('link', { name: label, exact: true }).click();
+    await expect(page).toHaveURL(new RegExp('/admin/rubriques/' + group + '$'));
+  }
+  const reader = await browser.newPage();
+  await enter(reader);
+  const denied = await reader.goto('/admin/rubriques/players');
+  await expect(reader).toHaveURL(/acces-refuse/);
+  expect(denied.status()).toBe(403);
   await reader.close();
 });

@@ -1,56 +1,69 @@
 {% set nodeCount = 0 %}{% for nodes in technology_tree %}{% set nodeCount = nodeCount + nodes|length %}{% endfor %}
-<details class="panel technology-tree" data-controller="admin-filter" data-admin-filter-include-ancestors-value="true" {{ tree_standalone|default(false) ? 'open' : '' }}>
-    <summary>Arbre technologique <span>{{ nodeCount }} élément{{ nodeCount > 1 ? 's' : '' }} affiché{{ nodeCount > 1 ? 's' : '' }}</span></summary>
-    <p>Identifiez les prérequis nécessaires pour débloquer un élément, y compris ceux encore verrouillés. Lisez les déblocages de gauche à droite, avec les rangs basique, intermédiaire et supérieur de haut en bas : bâtiments, recherches, vaisseaux et défenses sont reliés à leurs prérequis de déblocage. Les niveaux requis sont détaillés dans chaque fiche. Ils servent uniquement au déblocage initial du rang : aucun nouveau prérequis pendant ses améliorations. Les recherches restent débloquées dans cet univers ; les autres accès sont conservés sur la colonie concernée.</p>
+{% set tierLabels = {basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'} %}
+{% set kindLabels = {buildings:'Bâtiment',technologies:'Recherche',ships:'Vaisseau',defenses:'Défense'} %}
+{% set domains = {economy:'Économie',research:'Recherche',fleet:'Flotte',defense:'Défense'} %}
+{% set priority = {lab:0,engineering_foundations:1,naval_engineering:2,vector_propulsion:3} %}
+<section class="panel technology-tree" data-controller="technology-graph" data-technology-graph-storage-key-value="technology-goal:{{ membership.id }}:{{ planet.id }}" aria-label="Guide technologique">
+    <p>Choisissez un élément pour consulter ses prérequis et ses déblocages.</p>
     {% if nodeCount == 0 %}
         <div class="empty-state"><h2>Aucun élément affiché</h2><p>Aucun élément à afficher actuellement.</p></div>
     {% else %}
-    <div class="catalogue-search" role="search" aria-label="Rechercher dans l’arbre technologique" data-admin-filter-target="tools" hidden>
-        <div><label for="technology-query">Rechercher un élément</label><input id="technology-query" type="search" placeholder="Nom, identifiant ou rang" data-admin-filter-target="query" data-action="input->admin-filter#filter"></div>
-        <div><label for="technology-state">Disponibilité</label><select id="technology-state" data-admin-filter-target="filter" data-filter-key="state" data-action="change->admin-filter#filter"><option value="">Tous les éléments affichés</option><option value="available">Disponibles</option><option value="locked">Verrouillées</option></select></div>
-        <div><label for="technology-kind">Catégorie</label><select id="technology-kind" data-admin-filter-target="filter" data-filter-key="kind" data-action="change->admin-filter#filter"><option value="">Toutes les catégories</option><option value="buildings">Bâtiments</option><option value="technologies">Recherches</option><option value="ships">Vaisseaux · chantier spatial</option><option value="defenses">Défenses</option></select></div>
-        <button type="button" class="secondary" data-admin-filter-target="resetPath" data-action="admin-filter#clear" hidden>Afficher tout l’arbre</button>
-        <button type="button" class="secondary" data-action="admin-filter#clear">Effacer les filtres</button><output data-admin-filter-target="count" aria-live="polite"></output>
+    <div class="catalogue-search" role="search" aria-label="Rechercher dans le guide technologique" data-technology-graph-target="tools" hidden>
+        <div><label for="technology-query">Rechercher un élément</label><input id="technology-query" type="search" placeholder="Nom ou identifiant · tous les domaines" data-technology-graph-target="query" data-action="input->technology-graph#filter"></div>
+        <div><label for="technology-rank">Rang</label><select id="technology-rank" data-technology-graph-target="filter" data-filter-key="tier" data-action="change->technology-graph#filter">{% for tier,label in tierLabels %}<option value="{{ tier }}">{{ label }}</option>{% endfor %}<option value="">Tous les rangs</option></select></div>
+        <div><label for="technology-state">État</label><select id="technology-state" data-technology-graph-target="filter" data-filter-key="state" data-action="change->technology-graph#filter"><option value="">Tous les états</option><option value="developed">Développé</option><option value="available">Accessible</option><option value="locked">Verrouillé</option></select></div>
+        <button type="button" class="secondary" data-action="technology-graph#clear" data-technology-graph-target="clearButton" hidden>Effacer les filtres</button>
     </div>
-    <div class="technology-legend" aria-label="Légende des cartes">
-        <div><strong>Fond · catégorie</strong><ul>{% for kind,label in {buildings:'Bâtiment',technologies:'Recherche',ships:'Vaisseau',defenses:'Défense'} %}<li><span class="tech-kind-swatch" data-kind="{{ kind }}" aria-hidden="true"></span>{{ label }}</li>{% endfor %}</ul></div>
-        <div><strong>Cadre · rang</strong><ul>{% for tier,label in {basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'} %}<li><span class="tech-tier-swatch" data-tier="{{ tier }}" aria-hidden="true"></span>{{ label }}</li>{% endfor %}</ul></div>
+    <nav class="technology-navigation" aria-label="Domaines technologiques" data-technology-graph-target="tools" hidden>
+        {% for domain,label in domains %}<button type="button" class="secondary" data-domain="{{ domain }}" aria-pressed="false" aria-controls="technology-domain-{{ domain }}" data-technology-graph-target="domainButton" data-action="technology-graph#chooseDomain">{{ label }} <span data-domain-count></span></button>{% endfor %}
+    </nav>
+    <div class="technology-goal" data-technology-graph-target="tools goalBar" hidden>
+        <div><span>Objectif suivi dans ce navigateur</span><strong data-technology-graph-target="goal" aria-live="polite">Aucun objectif sélectionné</strong></div>
+        <button type="button" class="secondary" data-action="technology-graph#showGoal" data-technology-graph-target="goalButton" hidden>Voir mon objectif</button>
+        <button type="button" class="secondary" data-action="technology-graph#removeGoal" data-technology-graph-target="goalButton" hidden>Retirer l’objectif</button>
     </div>
-    <p class="technology-scroll-help" id="technology-scroll-help">Une recherche affiche les résultats et toute leur chaîne de prérequis, même dans les autres catégories. Les résultats sont encadrés en surbrillance. Les prérequis se trouvent à gauche des éléments qu’ils débloquent. Les rangs sont disposés de haut en bas : basique, intermédiaire, supérieur. Cliquez sur une carte pour la déplier et isoler son chemin de prérequis. Utilisez « Afficher tout l’arbre » pour revenir à la vue complète. La zone défile avec les flèches du clavier lorsqu’elle a le focus.</p>
-    <p class="empty-state" data-admin-filter-target="empty" hidden>Aucun élément ne correspond à ces filtres.</p>
-    <div class="technology-graph" data-controller="technology-graph" role="region" tabindex="0" aria-label="Arbre technologique de gauche à droite" aria-describedby="technology-scroll-help">
-        <svg class="technology-graph-links" data-technology-graph-target="links" aria-hidden="true"></svg>
-        {% for depth,nodes in technology_tree %}
-            {% for tier,label in {basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'} %}
-            <section class="technology-branch-column" style="grid-column:{{ depth + 1 }};grid-row:{{ loop.index }}" aria-label="{{ label }} · étape {{ depth + 1 }}" data-admin-filter-target="group">
-                <h2 class="technology-lane-heading" data-tier="{{ tier }}">{{ label }} <span>Étape {{ depth + 1 }}</span></h2>
-                {% for node in nodes %}{% if node.tier == tier %}
-                    <details id="tech-{{ node.group == 'technologies' ? '' : node.group ~ '-' }}{{ node.slug }}-{{ node.tier }}" class="tech-node {{ node.available ? 'available' : 'locked' }}" data-technology-graph-target="node" data-node-key="{{ node.key }}" data-tier="{{ node.tier }}" data-parents="{{ node.parents|json_encode|e('html_attr') }}" data-admin-filter-target="row" data-filter-kind="{{ node.group }}" data-filter-state="{{ node.available ? 'available' : 'locked' }}" data-search-text="{{ node.definition.label }} {{ node.slug }} {{ {basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'}[node.tier] }}">
-                        <summary data-action="click->admin-filter#selectPath">
-                            <span class="tech-node-tier tier-label--{{ node.tier }}">{{ {basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'}[node.tier] }}</span>
-                            <span class="tech-node-kind">{{ {buildings: 'Bâtiment', technologies: 'Recherche', ships: 'Vaisseau · chantier spatial', defenses: 'Défense'}[node.group] }}</span><strong>{{ node.definition.label }}</strong>
-                            {% if node.group in ['buildings','technologies'] %}<span class="badge">Niveau {{ node.level }}{% if node.definition.max_level is defined %} / {{ node.definition.max_level }}{% endif %}</span>{% endif %}
-                            <small>{{ node.available ? 'Disponible' : 'Verrouillée' }}</small>
+    <div class="technology-layout">
+        <div class="technology-overview" data-technology-graph-target="overview">
+            <output class="technology-count" data-technology-graph-target="count" aria-live="polite" hidden></output>
+            <p class="empty-state" data-technology-graph-target="empty" hidden>Aucun élément ne correspond à ces filtres.</p>
+            <section class="technology-results" data-technology-graph-target="results" hidden><h2>Résultats dans tous les domaines</h2><div class="technology-cards" data-technology-graph-target="resultCards"></div></section>
+            {% for domain,domainLabel in domains %}
+            {% set domainNodes = [] %}
+            {% for nodes in technology_tree %}{% for node in nodes %}
+                {% set nodeDomain = node.group == 'buildings' ? (node.slug == 'lab' ? 'research' : (node.slug == 'shipyard' ? 'fleet' : (node.slug == 'fortress' ? 'defense' : 'economy'))) : (node.group == 'technologies' ? 'research' : (node.group == 'ships' ? 'fleet' : 'defense')) %}
+                {% if nodeDomain == domain %}{% set domainNodes = domainNodes|merge([node]) %}{% endif %}
+            {% endfor %}{% endfor %}
+            <section id="technology-domain-{{ domain }}" class="technology-domain" data-technology-graph-target="domain" data-domain="{{ domain }}" aria-labelledby="technology-heading-{{ domain }}">
+                <h2 id="technology-heading-{{ domain }}">{{ domainLabel }}</h2>
+                <div class="technology-cards">
+                {% for node in domainNodes|sort((a,b) => ((priority[a.slug] ?? 10) <=> (priority[b.slug] ?? 10)) ?: (a.definition.label <=> b.definition.label)) %}
+                    {% set developed = node.group in ['buildings','technologies'] and node.level > 0 %}
+                    <details id="tech-{{ node.group == 'technologies' ? '' : node.group ~ '-' }}{{ node.slug }}-{{ node.tier }}" class="tech-node {{ node.available ? 'available' : 'locked' }}" data-technology-graph-target="node" data-node-key="{{ node.key }}" data-tier="{{ node.tier }}" data-domain="{{ domain }}" data-parents="{{ node.parents|json_encode|e('html_attr') }}" data-requirements="{{ node.prerequisites|json_encode|e('html_attr') }}" data-acquired="{{ node.acquired ? 'true' : 'false' }}" data-label="{{ node.definition.label }}" data-filter-state="{{ developed ? 'developed' : (node.available ? 'available' : 'locked') }}" data-search-text="{{ node.definition.label }} {{ node.slug }} {{ tierLabels[node.tier] }}">
+                        <summary data-action="click->technology-graph#select" aria-controls="technology-detail">
+                            <span class="tech-node-kind">{{ kindLabels[node.group] }} · {{ tierLabels[node.tier] }}</span>
+                            <strong>{{ node.definition.label }}</strong>
+                            <span class="tech-node-bottom">{% if node.group in ['buildings','technologies'] %}<span>Niveau {{ node.level }}{% if node.definition.max_level is defined %} / {{ node.definition.max_level }}{% endif %}</span>{% endif %}<small>{{ developed ? '✓ Développé' : (node.available ? '◇ Accessible' : '○ Verrouillé') }}</small></span>
                         </summary>
                         <div class="tech-node-details">
-                            {% if node.prerequisites %}
-                                <h3>Déblocage initial</h3>
-                                {% if node.acquired %}<p>Accès acquis définitivement dans ce périmètre.</p>{% endif %}
-                                <ul>{% for requirement in node.prerequisites %}
-                                    <li class="{{ requirement.met ? 'met' : 'missing' }}">
-                                        <a href="{{ path('app_colony',{id:planet.id,section:requirement.group,showLockedItems:1}) }}#item-{{ requirement.slug }}-{{ requirement.tier }}">{{ requirement.met ? '✓' : '○' }} {{ requirement.label }}{% if requirement.level is not null %} · niveau {{ requirement.level }} requis (actuel : {{ requirement.current }}){% else %} · prérequis de déblocage{% endif %}</a>
-                                    </li>
-                                {% endfor %}</ul>
-                            {% else %}
-                                <p>Accessible sans prérequis</p>
-                            {% endif %}
+                            <h3>Prérequis de déblocage</h3>
+                            <p>{{ node.group == 'technologies' ? 'Accès conservé dans cet univers.' : 'Accès conservé sur cette colonie.' }} Conditions du déblocage initial uniquement.</p>
+                            {% if node.acquired %}<p>Accès acquis définitivement dans ce périmètre. Les conditions ci-dessous sont historiques.</p>{% endif %}
+                            {% if node.prerequisites %}<ul>{% for requirement in node.prerequisites %}
+                                <li class="{{ requirement.met ? 'met' : 'missing' }}"><a href="{{ path('app_colony',{id:planet.id,section:requirement.group,showLockedItems:1}) }}#item-{{ requirement.slug }}-{{ requirement.tier }}">{{ requirement.met ? '✓' : '○' }} {{ requirement.label }}{% if requirement.level is not null %} · niveau {{ requirement.level }} requis (actuel : {{ requirement.current }}){% else %} · prérequis de déblocage{% endif %}</a></li>
+                            {% endfor %}</ul>{% else %}<p>Accessible sans prérequis</p>{% endif %}
                             <a class="tech-node-open" href="{{ path('app_colony',{id:planet.id,section:node.group,showLockedItems:1}) }}#item-{{ node.slug }}-{{ node.tier }}">Voir la fiche →</a>
                         </div>
                     </details>
-                {% endif %}{% endfor %}
+                {% endfor %}
+                </div>
             </section>
             {% endfor %}
-        {% endfor %}
+            <button type="button" class="technology-more" data-technology-graph-target="more" data-action="technology-graph#showMore" hidden></button>
+        </div>
+        <aside id="technology-detail" class="technology-detail" data-technology-graph-target="panel" aria-label="Détails de l’élément sélectionné" hidden>
+            <button type="button" class="secondary technology-detail-close" data-action="technology-graph#close">Fermer les détails</button>
+            <div data-technology-graph-target="detail" aria-live="polite"></div>
+        </aside>
     </div>
     {% endif %}
-</details>
+</section>

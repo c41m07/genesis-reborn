@@ -1,7 +1,11 @@
 # Roadmap Genesis Reborn
 
-Mise à jour documentaire : 7 novembre 2026. [REGLES](REGLES.md) et
+Mise à jour documentaire : 8 novembre 2026. [REGLES](REGLES.md) et
 [DECISIONS](DECISIONS.md) restent les sources des arbitrages de jeu.
+
+## Équilibrage des producteurs — 9 novembre 2026
+
+Candidat confirmé après simulations, appliqué sur `codex/equilibrage-production-basique` issue de `dev`. Débits, ratio 4 H/A, prix et durées révisés ; courbes, rangs et files conservés. Les [mesures et limites](EQUILIBRAGE.md#production-des-batiments) distinguent construction cumulée et progression financée. Publication sur dev demandée et préparée depuis 1b02f4f, sans fusion vers Alpha ni déploiement. Autres travaux locaux exclus. Contrôles : validate, lint, suite complète de 522 tests PHP et 13 Python, compilation et diff. Navigateur : 121/122 en exécution complète, seul échec corrigé sans affaiblir le test, puis onglets 2/2 et intégration finale 15/15 ; résultats consolidés, pas une suite complète verte d’un seul passage sur la dernière base. CI GitHub non déclarée validée.
 
 ## État connu
 
@@ -15,6 +19,24 @@ manuelle restant partielle. Il s’agit de leur verdict historique, conservé av
 [la matrice d’exigences](archives/EXIGENCES_WORK.md), pas d’une validation nouvelle
 des 15 phases ni d’une certification de production.
 
+## Refonte de l’administration — 8 novembre 2026
+
+Le premier lot sépare l’accueil et les rubriques et regroupe la surveillance
+et les transports, avec fiches détaillées et lectures journalisées.
+Ses contrôles locaux sont décrits dans le [cadrage de la refonte](REFONTE_ADMINISTRATION.md).
+La publication ne vaut pas déploiement ni validation de la CI.
+
+Les lots suivants préparent les fiches joueurs, la présence et le temps de jeu
+estimés par univers, les interventions sur les ressources et échéances de flottes,
+puis les dossiers et alertes configurables. Le cadrage décrit les vérifications
+et les migrations préparées ; leur présence dans Dev ne vaut pas activation sur
+une base existante.
+
+Les boîtes, les 100 places partagées et la création guidée des événements sont
+réalisées et vérifiées localement. Le périmètre fonctionnel validé de la refonte
+est préparé sur Dev. L’activation sur une base existante reste distincte :
+quatre migrations additives, sauvegarde vérifiée et validation explicite.
+Les migrations seront soumises à validation avant application hors bases jetables.
 ## Priorités restantes
 
 | Priorité | Travail et preuve attendue |

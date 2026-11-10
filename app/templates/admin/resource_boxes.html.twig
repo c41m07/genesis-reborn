@@ -1,0 +1,10 @@
+{% extends 'admin/layout.html.twig' %}
+{% block title %}Boîtes de ressources · {{ universe.name }}{% endblock %}
+{% block body %}
+<a class="inline-link" href="{{ path('app_admin_universes') }}">← Univers</a><div class="page-heading"><div><h1>Boîtes de ressources</h1><p>{{ universe.name }} · Modèles et plafonds par boîte.</p></div></div>
+<p class="admin-monitor-note">Le contenu d’une boîte attribuée est figé. Ces changements concernent les futures définitions de récompense ; les boîtes déjà gagnées et les récompenses déjà annoncées gardent leur contenu. Les quantités ci-dessous ne sont jamais aléatoires.</p>
+<form method="post" class="admin-intervention-form resource-box-settings"><input type="hidden" name="_token" value="{{ csrf_token('admin_boxes_'~universe.id) }}">
+<fieldset class="panel"><legend>Plafonds par boîte dans cet univers</legend>{% for slug,label in resources %}<label for="box-cap-{{ slug }}">{{ label }}</label><input id="box-cap-{{ slug }}" type="number" name="caps[{{ slug }}]" min="0" max="1000000000" step="0.01" value="{{ draft.caps[slug]|default(settings.caps[slug]) }}" required>{% endfor %}</fieldset>
+{% for format,label in formats %}<fieldset class="panel"><legend>{{ label }}</legend>{% for slug,resourceLabel in resources %}<label for="box-{{ format }}-{{ slug }}">{{ resourceLabel }}</label><input id="box-{{ format }}-{{ slug }}" type="number" name="templates[{{ format }}][{{ slug }}]" min="0" max="1000000000" step="0.01" value="{{ draft.templates[format][slug]|default(settings.templates[format][slug]) }}" required>{% endfor %}</fieldset>{% endfor %}
+<label for="box-settings-reason">Motif du changement</label><textarea id="box-settings-reason" name="reason" maxlength="1000" required>{{ draft.reason|default('') }}</textarea><label class="admin-intervention-confirm"><input type="checkbox" name="confirmed" value="1" required> Je confirme ces modèles et leurs plafonds pour {{ universe.name }}.</label><button class="secondary">Enregistrer les modèles de boîtes</button></form>
+{% endblock %}

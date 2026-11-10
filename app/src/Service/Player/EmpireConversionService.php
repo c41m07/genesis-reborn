@@ -20,18 +20,30 @@ final class EmpireConversionService
     public function convert(PlayerUniverse $membership): array
     {
         if(!$this->enabled) throw new \DomainException('Les conversions d’empires sont désactivées.');
-        return $this->manager->transaction(function()use($membership): array {
-            $this->guard->lockMembershipForProcessing($membership);
+        return $this->convertMembership($membership,false);
+    }
+
+    public function convertForAccountDeletion(PlayerUniverse $membership): array
+    {
+        return $this->convertMembership($membership,true);
+    }
+
+    private function convertMembership(PlayerUniverse $membership,bool $accountDeletion): array
+    {
+        return $this->manager->transaction(function()use($membership,$accountDeletion): array {
+            if ($accountDeletion) { $this->manager->lock($membership);$this->manager->lock($membership->universe); }
+            else $this->guard->lockMembershipForProcessing($membership);
             if($membership->isForgotten()) return ['status'=>'already_converted'];
             $now=$this->clock->now()->setTimezone(new \DateTimeZone('UTC'));
             $state=$this->activity->snapshot($membership,$now);
-            if(!$membership->isPlayerControlled() || !$state['conversion_due']) return ['status'=>'not_due'];
+            if(!$membership->isPlayerControlled() || (!$accountDeletion && !$state['conversion_due'])) return ['status'=>'not_due'];
             $inventory=$this->repo->forgottenEmpirePreviewInventory($membership);
             if($inventory['open_combats']>0) return ['status'=>'deferred_combat'];
             $this->manager->lock($membership->player);
-            $log=new EmpireConversion();$log->membership=$membership;$log->activityAt=$membership->lastActivityAt;
-            $log->dueAt=new \DateTimeImmutable($state['conversion_due_at']);$log->convertedAt=$now;
+            $log=new EmpireConversion();$log->membership=$membership;$log->activityAt=$membership->lastActivityAt??$membership->joinedAt;
+            $log->dueAt=$accountDeletion?$now:new \DateTimeImmutable($state['conversion_due_at']);$log->convertedAt=$now;
             $log->effects['inventory_before']=$inventory;
+            if ($accountDeletion) $log->effects['reason']='account_deletion';
             $supportReturns=[];
             foreach($this->repo->all(\App\Entity\PlanetOccupation::class,['occupant'=>$membership,'status'=>'active']) as $occupation) {
                 $this->manager->lock($occupation->planet);$this->manager->lock($occupation);
@@ -40,7 +52,15 @@ final class EmpireConversionService
             $log->effects['cancelled_occupation_ids']=$this->occupations->cancelForConversionLocked($membership);
             $log->effects['returned_fleet_ids']=array_values(array_unique([...$supportReturns,...$this->fleets->returnFleetsForEmpireConversionLocked($membership)]));
             $log->effects['social']=$this->leaveSocialLinks($membership,$now);
-            $this->queues->synchronize($membership);
+            if ($accountDeletion) {
+                foreach ($this->repo->all(\App\Entity\VacationPeriod::class,['membership'=>$membership,'endedAt'=>null]) as $vacation) {
+                    $this->manager->lock($vacation);
+                    $vacation->endedAt=min($now,$vacation->scheduledEndAt);
+                    $this->queues->resumeAfterVacationLocked($membership,$vacation->scheduledEndAt->getTimestamp()-$vacation->endedAt->getTimestamp());
+                }
+                $this->manager->flush();
+            }
+            if ($membership->universe->isAccessible($now)) $this->queues->synchronize($membership);
             $membership->detachPlayer($now);
             $this->manager->save($log);
             return ['status'=>'converted'];

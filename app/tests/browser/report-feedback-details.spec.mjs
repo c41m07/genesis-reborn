@@ -90,7 +90,7 @@ test('Combats : filtre économique, pertes lisibles et défilement clavier', asy
   await expect(losses).toBeFocused();
   for (const width of [1280, 768, 390]) {
     await page.setViewportSize({ width, height: 900 });
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
   await page.screenshot({ path: testInfo.outputPath('combat-detail-390.png'), fullPage: true, animations: 'disabled' });
   await expect(page.getByText('Le détail des rounds n’est pas disponible pour ce rapport historique.')).toBeVisible();

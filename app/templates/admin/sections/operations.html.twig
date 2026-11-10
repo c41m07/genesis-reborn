@@ -1,0 +1,27 @@
+<section class="panel admin-operations">
+  <h2>État des opérations</h2><p>État relevé le {{ operations.captured_at|date('d/m/Y H:i:s', 'UTC') }} UTC. Actualisez la page pour relire les signaux.</p>
+  <div class="admin-operations-grid">
+    <article class="admin-operation-card"><h3>Base de données</h3><span class="admin-operation-status {{ operations.database_healthy ? 'is-healthy' : 'is-missing' }}">{{ operations.database_healthy ? 'Disponible' : 'Indisponible' }}</span></article>
+    {% for process in operations.processes %}<article class="admin-operation-card"><h3>{{ process.name }}</h3><span class="admin-operation-status {{ process.status == 'healthy' ? 'is-healthy' : (process.status == 'stale' ? 'is-stale' : 'is-missing') }}">{% if process.status == 'healthy' %}Signal récent{% elseif process.status == 'unknown' %}État inconnu{% elseif process.status == 'stale' %}Signal ancien{% else %}Aucun signal{% endif %}</span><p>{% if process.status == 'unknown' %}Signal illisible ou horodatage incohérent{% elseif process.age_seconds is not null %}Dernier signal il y a {{ process.age_seconds }} s{% else %}Aucun battement de vie reçu{% endif %}</p></article>{% endfor %}
+    <article class="admin-operation-card"><h3>Relais en attente</h3>
+      {% if operations.outbox_available %}
+        <strong>{{ operations.outbox_total }}</strong><p>{{ operations.outbox_overdue }} à échéance atteinte</p>
+        <p>Files : {{ operations.outbox.queue }} · Flottes : {{ operations.outbox.fleet }} · Combats : {{ operations.outbox.combat }} · Univers : {{ operations.outbox.universe }} · Notifications : {{ operations.outbox.notification }} · Autres : {{ operations.outbox.other }}</p>
+      {% else %}<strong>État inconnu</strong><p>Collecte des relais indisponible. Vérifiez la base et les journaux.</p>{% endif %}
+    </article>
+  </div>
+  {% if operations.outbox_available %}
+  <details><summary>Consulter les relais en attente</summary>
+    <p>Une ligne attend sa publication vers le transport ou le canal de notification. Elle ne prouve pas un échec du traitement. Les 20 échéances les plus anciennes sont affichées au maximum ; actualisez la page pour un nouveau relevé.</p>
+    {% if operations.outbox_pending %}
+    <div class="table-wrap" role="region" tabindex="0" aria-label="Relais en attente, tableau défilant">
+      <table><caption>Relais classés par échéance, puis identifiant</caption>
+        <thead><tr><th scope="col">Identifiant</th><th scope="col">Nature</th><th scope="col">Cible</th><th scope="col">Échéance UTC</th><th scope="col">Attente après échéance</th></tr></thead>
+        <tbody>{% for message in operations.outbox_pending %}<tr><td>#{{ message.id }}</td><td>{{ message.kind }}</td><td>#{{ message.target_id }}</td><td><time datetime="{{ message.due_at|date('c', 'UTC') }}">{{ message.due_at|date('d/m/Y H:i:s', 'UTC') }}</time></td><td>{{ message.due ? message.overdue_seconds ~ ' s' : 'Échéance future' }}</td></tr>{% endfor %}</tbody>
+      </table>
+    </div>
+    {% else %}<p>Aucun relais en attente lors du relevé.</p>{% endif %}
+    <p>La date de création, les tentatives et la dernière erreur ne sont pas enregistrées dans cette file. Consultez les journaux des relais et la file des échecs du worker pour compléter le diagnostic.</p>
+  </details>
+  {% endif %}
+</section>
