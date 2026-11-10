@@ -8,10 +8,10 @@ use Psr\Clock\ClockInterface;
 use App\Service\Player\VacationCalendar;
 final class ResourceService
 {
-    public function __construct(private GameRepository $repo,private GameManager $manager,private GameCatalog $catalog,private ClockInterface $clock,private \App\Service\Event\GameEventService $events,private VacationCalendar $vacations) {}
+    public function __construct(private GameRepository $repo,private GameManager $manager,private GameCatalog $catalog,private ClockInterface $clock,private \App\Service\Event\GameEventService $events,private VacationCalendar $vacations,private ResourceBalance $balance) {}
     public static function stock(float $stock,float $rate,\DateTimeImmutable $last,\DateTimeImmutable $now,float $cap): float
     {
-        return min($cap,max(0,$stock)+max(0,$now->getTimestamp()-$last->getTimestamp())*$rate);
+        return min(max($cap,$stock),max(0,$stock)+max(0,$now->getTimestamp()-$last->getTimestamp())*$rate);
     }
     public function initialize(Planet $planet,bool $colony=false,?array $initialLevels=null,float $stockMultiplier=1): void
     {
@@ -19,7 +19,7 @@ final class ResourceService
         foreach ($this->catalog->rules()['resources'] as $slug=>$label) {
             if($this->repo->one(PlanetResource::class,['planet'=>$planet,'resourceType'=>$slug])) continue;
             $capacity=$this->capacity($planet,$slug,$levels);
-            $stock=$this->catalog->rules()[$colony?'colony_initial_stock':'initial_stock'][$slug];
+            $stock=$this->balance->rulesAt($this->clock->now())[$colony?'colony_initial_stock':'initial_stock'][$slug];
             $r=new PlanetResource();$r->planet=$planet;$r->resourceType=$slug;
             $r->currentStock=min($capacity,$stock*$stockMultiplier);
             $r->lastUpdatedAt=$this->clock->now();
@@ -27,11 +27,11 @@ final class ResourceService
             $this->manager->save($r);
         }
     }
-    public function capacity(Planet $planet,string $slug,array $buildings): float
+    public function capacity(Planet $planet,string $slug,array $buildings,?\DateTimeImmutable $at=null): float
     {
         $storedLevels=$buildings['storage_'.$slug]??0;$added=0.0;
         foreach(GameCatalog::TIERS as $tier)$added+=$this->tierLevel($storedLevels,$tier)*$this->catalog->tierFactor($tier)*$this->catalog->rules()['storage_capacity_per_level'];
-        return $this->catalog->rules()['base_storage_capacity']+$added;
+        return $this->balance->rulesAt($at??$this->clock->now())['base_storage_capacity']+$added;
     }
     public function rate(Planet $planet,string $slug,int $mineLevel,?array $levels=null):float
     {
@@ -70,7 +70,7 @@ final class ResourceService
 
     private function operatingInput(Planet $planet,array $levels,?\DateTimeImmutable $at=null):array
     {
-        $rules=$this->catalog->rules();$universe=$this->catalog->forUniverse($planet->solarSystem->galaxy->universe);$mult=(float)$universe['multipliers']['resource_production'];$base=[];
+        $rules=$this->balance->rulesAt($at??$this->clock->now());$universe=$this->catalog->forUniverse($planet->solarSystem->galaxy->universe);$mult=(float)$universe['multipliers']['resource_production'];$base=[];
         foreach($rules['resources'] as $slug=>$label)$base[$slug]=(float)($rules['base_production'][$slug]??0)*$this->positionFactor($planet,$slug)*$mult;
         $factories=[];
         $eventMultiplier=$this->events->productionMultiplier($planet->solarSystem->galaxy->universe,$at);
@@ -89,7 +89,7 @@ final class ResourceService
 
     private function simulate(Planet $planet,array $levels,array $stocks,int $elapsed,?\DateTimeImmutable $at=null):array
     {
-        $input=$this->operatingInput($planet,$levels,$at);$capacities=[];foreach($this->catalog->rules()['resources'] as $slug=>$label)$capacities[$slug]=$this->capacity($planet,$slug,$levels);
+        $input=$this->operatingInput($planet,$levels,$at);$capacities=[];foreach($this->catalog->rules()['resources'] as $slug=>$label)$capacities[$slug]=$this->capacity($planet,$slug,$levels,$at);
         return FactoryEconomy::simulate($input['base'],$input['factories'],$stocks,$capacities,$elapsed,(float)($this->catalog->rules()['minimum_factory_efficiency']??.1));
     }
 
@@ -97,6 +97,8 @@ final class ResourceService
     {
         $universe=$planet->solarSystem->galaxy->universe;$cursor=$from;
         $points=$this->events->productionChangePoints($universe,$from,$to);$points[]=$to;
+        $cutover=$this->balance->effectiveAt();
+        if($cutover!==null && $cutover>$from && $cutover<$to) $points[]=$cutover;
         $periods=$planet->owner !== null ? $this->vacations->periods($planet->owner) : [];
         foreach($periods as $period) foreach([$period->startedAt,$period->effectiveEndAt()] as $boundary) {
             if($boundary>$from && $boundary<$to) $points[]=$boundary;
@@ -125,7 +127,7 @@ final class ResourceService
         if($rows===[])return $result;
         $anchor=$rows['electricity']->lastUpdatedAt??array_values($rows)[0]->lastUpdatedAt;$now=$this->clock->now();$stocks=[];foreach($rows as $slug=>$resource)$stocks[$slug]=$resource->currentStock;$simulation=$this->simulateRange($planet,$levels,$stocks,$anchor<$now?$anchor:$now,$now);
         foreach($this->catalog->rules()['resources'] as $slug=>$label){
-            $result[$slug]['stock']=min($result[$slug]['capacity'],max(0.0,(float)($simulation['stocks'][$slug]??0)));
+            $result[$slug]['stock']=max(0.0,(float)($simulation['stocks'][$slug]??0));
             $result[$slug]['rate']=(float)($simulation['rates'][$slug]??0.0);
             if($slug!=='electricity'&&in_array($slug,$producedResources,true)){
                 $efficiency=(float)$simulation[$slug==='antimatter'?'antimatter_efficiency':'efficiency'];
@@ -139,7 +141,7 @@ final class ResourceService
     {
         $at??=$this->clock->now();$levels=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);$rows=[];foreach($this->repo->all(PlanetResource::class,['planet'=>$planet]) as $resource)$rows[$resource->resourceType]=$resource;if($rows===[])return [];
         $anchor=$rows['electricity']->lastUpdatedAt??array_values($rows)[0]->lastUpdatedAt;$effective=$at<$anchor?$anchor:$at;$stocks=[];foreach($rows as $slug=>$resource)$stocks[$slug]=$resource->currentStock;$simulation=$this->simulateRange($planet,$levels,$stocks,$anchor,$effective);
-        foreach($rows as $slug=>$resource){$resource->currentStock=min($this->capacity($planet,$slug,$levels),max(0.0,(float)($simulation['stocks'][$slug]??$resource->currentStock)));$resource->lastUpdatedAt=$effective;}return $rows;
+        foreach($rows as $slug=>$resource){$resource->currentStock=max(0.0,(float)($simulation['stocks'][$slug]??$resource->currentStock));$resource->lastUpdatedAt=$effective;}return $rows;
     }
 
     public function consume(Planet $planet,array $costs): void
@@ -156,7 +158,7 @@ final class ResourceService
         $rows=$this->materialize($planet);$levels=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);
         foreach($paid as $slug=>$amount) {
             if(!isset($rows[$slug]) || $amount<0 || !is_finite((float)$amount)) throw new \DomainException('Coût payé invalide.');
-            $rows[$slug]->currentStock=min($this->capacity($planet,$slug,$levels),$rows[$slug]->currentStock+$amount*$ratio);
+            $rows[$slug]->currentStock+=min(max(0.0,$this->capacity($planet,$slug,$levels)-$rows[$slug]->currentStock),$amount*$ratio);
         }
     }
     /** Décharge le fret sans dépasser le stockage de la planète et renvoie la part perdue. */

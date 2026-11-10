@@ -47,11 +47,11 @@
 .gv2-state-dot.is-known{background:#69dcb0;color:#69dcb0}
 .gv2-planet-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--gv2-line)}
 .gv2-planet-list li{border-bottom:1px solid #ffffff10}
-.gv2-planet-choice{display:grid;grid-template-columns:32px minmax(0,1fr);align-items:center;gap:8px;width:100%;padding:11px 2px;border:0;background:transparent;color:#d8e7f5;text-align:left;cursor:pointer}
+.gv2-planet-choice{display:grid;grid-template-columns:26px minmax(0,1.5fr) minmax(0,1fr);align-items:center;gap:8px;width:100%;padding:11px 2px;border:0;background:transparent;color:#d8e7f5;text-align:left;cursor:pointer}
 .gv2-planet-choice:hover,.gv2-planet-choice:focus-visible{background:#0d2335}
 .gv2-planet-number{color:#58c5e8;font:14px 'JetBrains Mono',monospace}
 .gv2-planet-choice-name{font:500 15px 'Chakra Petch',sans-serif}
-.gv2-planet-owner{grid-column:2;color:#b4c5d6;font-size:13px;text-align:left;overflow-wrap:anywhere}
+.gv2-planet-owner{grid-column:3;min-width:0;color:#b4c5d6;font-size:13px;text-align:left;overflow-wrap:anywhere}
 .gv2-panel-note{margin:12px 0 0;color:#94a9bd;font-size:14px;line-height:1.5}
 .gv2-visual-note{margin:18px 0 5px;color:#6f8aa4;font:12px 'JetBrains Mono',monospace;letter-spacing:.08em}
 .gv2-facts{margin:8px 0 14px}
@@ -167,3 +167,6 @@ body.reduced-motion .galaxy-v2 *,body.reduced-motion .galaxy-v2 *::before,body.r
 }
 
 @media(max-width:720px){.gv2-minimap{top:146px;bottom:auto}}
+
+.gv2-planet-choice:focus-visible{outline:2px solid #58c5e8;outline-offset:-2px}
+@media(max-width:740px){.gv2-planet-choice{grid-template-columns:26px minmax(0,1fr)}.gv2-planet-owner{grid-column:2}}

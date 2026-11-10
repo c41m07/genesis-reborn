@@ -24,7 +24,7 @@ final class ProducerBalanceTest extends TestCase
         $repository=$this->createStub(EntityRepository::class);$repository->method('findBy')->willReturn([]);
         $em=$this->createStub(EntityManagerInterface::class);$em->method('getRepository')->willReturn($repository);
         $repo=new GameRepository($em);$manager=new GameManager($em);$clock=new MockClock('2026-11-09T12:00:00Z');
-        $this->resources=new ResourceService($repo,$manager,$this->catalog,$clock,new GameEventService($repo,$manager,$clock),new VacationCalendar($repo,$clock));
+        $this->resources=new ResourceService($repo,$manager,$this->catalog,$clock,new GameEventService($repo,$manager,$clock),new VacationCalendar($repo,$clock),new \App\Service\Colony\ResourceBalance($this->catalog,''));
     }
     private function planet(int $position=5,int $speed=1):Planet
     {
@@ -45,7 +45,9 @@ final class ProducerBalanceTest extends TestCase
             foreach(['base_build_time','production_per_level','electricity_use_per_level','hydrogen_per_output','cost_profiles','economy_value_budget','effect_note'] as $field)unset($old[$field],$actual[$field]);
             self::assertSame($old,$actual,$slug.' : identité et prérequis conservés');
         }
-        $rules=$this->catalog->rules();self::assertSame(4,$rules['antimatter_hydrogen_per_unit']);
+        $rules=(new \App\Service\Colony\ResourceBalance($this->catalog,''))->rulesAt(new \DateTimeImmutable('2026-11-09T12:00:00Z'));
+        unset($rules['resource_balance_previous']);
+        self::assertSame(4,$rules['antimatter_hydrogen_per_unit']);
         $old=$fixture['historical_rules'];unset($rules['antimatter_hydrogen_per_unit'],$old['antimatter_hydrogen_per_unit']);self::assertSame($old,$rules);
     }
     public function testApprovedBasicPricesAndDerivedRankBudgetsAreExact():void

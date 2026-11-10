@@ -329,3 +329,7 @@ Cette couverture concerne les déplacements entre planètes de ces cartes et la 
 Les 14 fiches `config/game/ships/*.yaml` restent au format JSON ; seules leurs deux vitesses, leur capacité de carburant et la note de réservoir sont ajustées dans cette dernière décision. Les coûts, consommations, caractéristiques de combat R14, durées de construction, prérequis et assets sont conservés. Les capacités de fret font l’objet d’une décision ultérieure distincte dans [REGLES.md](REGLES.md).
 
 Tests : `tests/Service/MovementCalculatorTest.php`, `tests/Service/MovementMapCoverageTest.php`. Décisions et règles : `docs/DECISIONS.md`, `docs/REGLES.md` et le présent document. Le calculateur de déplacement conserve les minimums adoptés précédemment et ne nécessite pas de nouvelle modification.
+
+## Production passive et stocks — 10 novembre 2026
+
+Les nouveaux stocks, capacités de base et productions passives sont définis dans [les règles](REGLES.md#ressources-initiales-et-production-passive--décision-du-10-novembre-2026). Ils remplacent les valeurs de départ précédentes uniquement après une bascule explicite. Cette décision ne change pas les productions ni consommations des usines documentées ici. Aucun stock existant n’est réinitialisé ; les surplus sont conservés.

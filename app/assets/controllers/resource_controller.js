@@ -24,11 +24,11 @@ export default class extends Controller {
         this.tick();
     }
     tick() {
-        const stock = Math.max(0, Math.min(this.capValue, this.stockValue + Math.max(0, Date.now() - this.started) / 1000 * this.rateValue));
+        const stock = Math.max(0, Math.min(Math.max(this.capValue, this.stockValue), this.stockValue + Math.max(0, Date.now() - this.started) / 1000 * this.rateValue));
         const format = value => exactNumber(Math.floor(value));
         displayQuantity(this.stockTarget, Math.floor(stock));
         this.dispatch('stock', { detail: { slug: this.element.dataset.resourceSlug, stock, deficit: this.element.classList.contains('resource--deficit') } });
-        if (this.hasFillTarget) this.fillTarget.style.width = `${this.capValue > 0 ? stock / this.capValue * 100 : 0}%`;
+        if (this.hasFillTarget) this.fillTarget.style.width = `${this.capValue > 0 ? Math.min(100, stock / this.capValue * 100) : 0}%`;
         if (this.hasProtectedFillTarget) this.protectedFillTarget.style.width = `${this.capValue > 0 ? Math.min(stock, this.protectedCapValue) / this.capValue * 100 : 0}%`;
         if (this.hasProtectedLimitTarget) this.protectedLimitTarget.style.left = `${this.capValue > 0 ? this.protectedCapValue / this.capValue * 100 : 0}%`;
         if (this.hasMeterTarget) {
