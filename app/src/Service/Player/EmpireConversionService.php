@@ -15,7 +15,7 @@ final class EmpireConversionService
 {
     public function __construct(private GameManager $manager,private GameRepository $repo,private ActionGuard $guard,
         private EmpireActivityService $activity,private FleetService $fleets,private QueueService $queues,private ClockInterface $clock,private \App\Service\Combat\OccupationService $occupations,
-        #[Autowire('%env(bool:FORGOTTEN_EMPIRES_ENABLED)%')] private bool $enabled) {}
+        #[Autowire('%env(bool:FORGOTTEN_EMPIRES_ENABLED)%')] private bool $enabled, private GuildProjectService $projects) {}
 
     public function convert(PlayerUniverse $membership): array
     {
@@ -93,6 +93,7 @@ final class EmpireConversionService
                 $result['guilds'][]=['id'=>$guild->id,'successor_id'=>$successor->id,'archived'=>false];
             } else {
                 $guild->archivedAt=$now;
+                $this->projects->abandonForGuild($guild);
                 $roster=array_map(static fn(GuildMember $row): array=>['member_id'=>$row->id,'membership_id'=>$row->playerUniverse->id],$members);
                 $result['guilds'][]=['id'=>$guild->id,'successor_id'=>null,'archived'=>true,'roster'=>$roster];
                 foreach($members as $member) $this->manager->remove($member);

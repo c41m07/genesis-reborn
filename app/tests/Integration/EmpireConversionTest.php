@@ -349,7 +349,7 @@ final class EmpireConversionTest extends KernelTestCase
     }
     private function conversion(bool $enabled=true): EmpireConversionService
     {
-        return new EmpireConversionService(self::getContainer()->get(GameManager::class),self::getContainer()->get(GameRepository::class),self::getContainer()->get(ActionGuard::class),$this->activity(),self::getContainer()->get(FleetService::class),self::getContainer()->get(QueueService::class),$this->clock,self::getContainer()->get(\App\Service\Combat\OccupationService::class),$enabled);
+        return new EmpireConversionService(self::getContainer()->get(GameManager::class),self::getContainer()->get(GameRepository::class),self::getContainer()->get(ActionGuard::class),$this->activity(),self::getContainer()->get(FleetService::class),self::getContainer()->get(QueueService::class),$this->clock,self::getContainer()->get(\App\Service\Combat\OccupationService::class),$enabled,self::getContainer()->get(\App\Service\Player\GuildProjectService::class));
     }
     private function membership(string $name): PlayerUniverse
     {

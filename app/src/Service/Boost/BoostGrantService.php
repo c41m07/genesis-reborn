@@ -51,6 +51,26 @@ final class BoostGrantService
         ));
     }
 
+    public function awardGuildProject(PlayerUniverse $membership,int $definitionId): bool
+    {
+        if($definitionId<1) throw new \DomainException('Modèle de projet invalide.');
+        return $this->manager->transaction(fn(): bool=>$this->grant(
+            $membership,'guild_project',$this->guildProjectKey($membership,$definitionId),false
+        ));
+    }
+
+    public function hasGuildProjectReward(PlayerUniverse $membership,int $definitionId): bool
+    {
+        return $this->repo->one(PlayerBoost::class,['sourceKey'=>$this->guildProjectKey($membership,$definitionId)])!==null;
+    }
+
+    private function guildProjectKey(PlayerUniverse $membership,int $definitionId): string
+    {
+        $accountId=($membership->player??$membership->formerPlayer)?->id;
+        if($accountId===null) throw new \DomainException('Compte du contributeur introuvable.');
+        return 'guild-project-'.$definitionId.'-account-'.$accountId;
+    }
+
     public function inventory(PlayerUniverse $membership): array
     {
         return array_values(array_filter(

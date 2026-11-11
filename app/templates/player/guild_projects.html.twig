@@ -1,0 +1,46 @@
+{% extends 'base.html.twig' %}
+{% block title %}Projets collectifs · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="page-heading"><h1>Projets collectifs</h1><p>Financez les paliers avec votre guilde et gagnez un boost si vous remplissez les conditions.</p></div>
+<a class="inline-link" href="{{ path('app_diplomacy') }}">← Votre guilde</a>
+{% if not enabled %}<p class="panel">Les guildes sont désactivées dans cet univers.</p>
+{% elseif not guild %}<p class="panel">Rejoignez une guilde pour participer à ses projets collectifs.</p>
+{% else %}
+<p>Guilde : <strong>{{ guild.name }}</strong>. Les dons sont définitifs, y compris après un départ. Un projet ne peut être lancé qu’une fois par guilde.</p>
+{% if readOnly %}<p class="panel">Pendant les vacances, vous pouvez consulter les projets mais pas les lancer ni donner de ressources.</p>{% endif %}
+<section aria-labelledby="ongoing-projects-title"><h2 id="ongoing-projects-title">Projets de votre guilde</h2>
+{% for row in rows %}{% set project=row.project %}
+    <article class="panel guild-project" aria-labelledby="project-title-{{ project.id }}">
+        <h3 id="project-title-{{ project.id }}">{{ project.snapshot.name }}</h3><p>{{ project.snapshot.description }}</p>
+        <p class="badge">{{ project.status=='completed' ? 'Terminé' : (project.status=='abandoned' ? 'Abandonné' : 'En cours') }}</p>
+        {% if project.status=='active' %}
+            <h4>Palier {{ project.stageIndex+1 }} sur {{ project.snapshot.stages|length }} · {{ project.snapshot.stages[project.stageIndex].name }}</h4>
+            <ul>{% for resource,remaining in row.remaining %}<li>{{ resources[resource] }} : {{ project.progress[resource]|default(0) }} / {{ project.snapshot.stages[project.stageIndex].costs[resource] }} · reste {{ remaining }}</li>{% endfor %}</ul>
+            {% if not readOnly %}<form method="post" action="{{ path('app_guild_project_contribute',{id:project.id}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('guild_project_donation_'~project.id) }}"><input type="hidden" name="version" value="{{ project.version }}">
+                <label for="project-{{ project.id }}-planet">Colonie qui fournit les ressources<select id="project-{{ project.id }}-planet" name="planet_id" required>{% for planet in planets %}<option value="{{ planet.id }}">{{ planet.name }}</option>{% endfor %}</select></label>
+                <div class="form-grid">{% for resource,remaining in row.remaining %}{% if remaining>0 %}<label for="project-{{ project.id }}-{{ resource }}">Don {{ resources[resource] }}<input id="project-{{ project.id }}-{{ resource }}" name="resources[{{ resource }}]" type="number" min="0" max="{{ remaining }}" step="1" value="0"></label>{% endif %}{% endfor %}</div>
+                <p>Ces ressources seront prélevées définitivement sur la colonie choisie.</p><button class="primary">Donner ces ressources</button>
+            </form>{% endif %}
+        {% elseif project.status=='completed' %}
+            <p>{{ project.rewardsDeliveredAt ? 'Distribution des récompenses terminée.' : 'Récompenses en cours de distribution.' }}</p>
+            <p>{{ membership.id in project.eligibleIds ? 'Vous avez rempli les conditions à la clôture.' : 'Vous ne remplissiez pas les conditions à la clôture.' }}</p><a href="{{ path('app_boosts') }}">Consulter l’inventaire et sa file d’attente</a>
+        {% endif %}
+        <h4>Votre contribution et les minimums</h4>
+        <ul>{% for resource,minimum in project.snapshot.minimums %}<li>{{ resources[resource] }} : {{ row.own[resource]|default(0) }} / {{ minimum }}</li>{% endfor %}</ul>
+        {% if row.rewarded %}<p>Vous avez déjà gagné le boost de ce modèle de projet. Il ne peut pas être gagné une seconde fois, même après changement de guilde ou création d’un nouvel empire.</p>{% elseif project.status=='active' %}<p>{{ row.qualified ? 'Minimums atteints. Restez membre jusqu’à la fin pour recevoir le boost.' : 'Atteignez tous les minimums et restez membre jusqu’à la fin pour recevoir le boost.' }}</p>{% endif %}
+        <details><summary>Contributions des membres</summary><ul>{% for contribution in row.contributions %}<li>{{ contribution.name }} : {% for resource,amount in contribution.resources %}{{ resources[resource] }} {{ amount }}{{ not loop.last ? ', ' : '' }}{% endfor %}</li>{% else %}<li>Aucun don pour le moment.</li>{% endfor %}</ul></details>
+        <details><summary>Conditions et paliers figés au lancement</summary><ol>{% for stage in project.snapshot.stages %}<li>{{ stage.name }} : {% for resource,amount in stage.costs %}{{ resources[resource] }} {{ amount }}{{ not loop.last ? ', ' : '' }}{% endfor %}</li>{% endfor %}</ol></details>
+    </article>
+{% else %}<p class="panel">Aucun projet lancé par votre guilde.</p>{% endfor %}
+</section>
+<section aria-labelledby="available-projects-title"><h2 id="available-projects-title">Projets disponibles</h2>
+{% for row in available %}{% set definition=row.definition %}<article class="panel"><h3>{{ definition.name }}</h3><p>{{ definition.description }}</p>
+    <ol>{% for stage in definition.stages %}<li>{{ stage.name }} : {% for resource,amount in stage.costs %}{{ resources[resource] }} {{ amount }}{{ not loop.last ? ', ' : '' }}{% endfor %}</li>{% endfor %}</ol>
+    <p>Pour recevoir un boost : contribuer au moins {% for resource,amount in definition.minimums %}{{ amount }} {{ resources[resource] }}{{ not loop.last ? ' et ' : '' }}{% endfor %}, et rester membre jusqu’à la fin.</p>
+    {% if row.rewarded %}<p>Votre compte a déjà obtenu ce boost pour ce modèle ; vous pouvez aider sans gagner une nouvelle récompense.</p>{% endif %}
+    {% if canStart %}<form method="post" action="{{ path('app_guild_project_start',{id:definition.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('guild_project_start_'~definition.id) }}"><input type="hidden" name="version" value="{{ definition.version }}"><button class="primary">Lancer {{ definition.name }}</button></form>{% else %}<p>Le dirigeant ou un membre autorisé peut lancer ce projet.</p>{% endif %}
+</article>{% else %}<p class="panel">Aucun nouveau projet disponible dans cet univers.</p>{% endfor %}
+</section>
+{% endif %}
+{% endblock %}

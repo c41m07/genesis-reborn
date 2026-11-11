@@ -1,5 +1,16 @@
 # Gestion des guildes et alliances personnelles
 
+## État courant — 11 novembre 2026
+
+Les grades personnalisés, alliances/rivalités personnelles, trois traités de guilde (alliance complète, non-agression, défense) et projets collectifs sont implémentés sur `feature/gestion-guildes-alliances`. Les règles produit sont validées dans DECISIONS.md et REGLES.md. Les projets n’ajoutent aucun modèle actif ni montant économique par défaut.
+
+Validation locale finale : 670 tests PHP (209722 assertions), 13 tests Python et 156 scénarios navigateur validés par consolidation, avec compilation, Compose, lint et schéma réussis. Les reprises et leurs causes sont détaillées à la fin du document ; ce résultat n’est pas une validation de la CI GitHub.
+
+Les nouvelles migrations `Version20261111020000` et `Version20261111150933` sont testées uniquement sur bases jetables. La migration des grades `Version20261111010000` avait été appliquée antérieurement à la base locale sur autorisation. Aucune migration de ces deux nouveaux lots sur la base habituelle, fusion ou mise en production n’est réalisée.
+
+La PR #36 reste en brouillon. Avant intégration avec `feature/reconstruction-empires-oublies`, résoudre son numéro de migration `Version20261111010000`, également utilisé pour une autre opération : la migration des grades déjà exécutée ne doit pas être remplacée silencieusement. Les bilans plus anciens ci-dessous sont historiques.
+
+
 ## Périmètre validé
 
 - Grades personnalisés avec permissions détaillées pour les guildes.
@@ -156,3 +167,52 @@ Migration préparée : `Version20261111020000`. Ne pas appliquer à une base exi
 Point d’intégration à résoudre avant fusion : le chantier local parallèle `feature/reconstruction-empires-oublies` utilise aussi `Version20261111010000`, pour `empire_reconstruction`, alors que ce numéro appartient déjà à la migration des grades de cette branche, appliquée antérieurement à la base locale sur autorisation. Ne pas remplacer ni renuméroter silencieusement cette migration déjà exécutée. Aucun fichier du chantier parallèle n’a été modifié ici.
 
 Les projets collectifs restent le lot suivant. Décisions utilisateur reçues : dons de ressources définitifs, paliers communs, minimums de contribution par ressource, présence dans la guilde à la fin, un seul achèvement par guilde et un boost maximum par joueur et modèle de projet malgré un changement de guilde. Coûts et minimums administrables ; aucun modèle actif par défaut.
+
+## Projets collectifs — implémentation du 11 novembre 2026
+
+Complexité : 5/5. Les règles validées sont consignées dans DECISIONS.md et REGLES.md. Aucun coût, seuil économique ou modèle actif n’est fourni par défaut.
+
+### Données et concurrence
+
+- `GuildProjectDefinition` : univers, nom unique, description, paliers/coûts et minimums JSON, disponibilité, version et dates. Administration uniquement ; pas de suppression de modèle exposée.
+- `GuildProject` : guilde et nom conservés comme instantanés, univers, modèle, définition figée, palier courant, progression, état `active` / `completed` / `abandoned`, version, dates, liste des éligibles et jeton de distribution. Unicité guilde/modèle. L’identifiant de guilde sans FK permet de conserver le projet après dissolution.
+- `GuildProjectContribution` : unicité projet/participation, ressources cumulées, dernière colonie payeuse et date. Les contributions ne sont pas supprimées au départ du joueur.
+- La transaction verrouille participation, univers, appartenance, guilde, grade, projet et colonie. Les autorisations et l’appartenance sont recontrôlées ; les formulaires portent la version du projet ou du modèle. Le prélèvement et la progression réussissent ensemble ou sont annulés ensemble.
+- La clôture fige les éligibles présents dans la guilde. Elle ajoute un message `guild_project` au relais, sans verrouiller les inventaires des autres joueurs dans la transaction de don. Chaque boost est ensuite attribué dans sa propre transaction, avec une clé unique fondée sur modèle et compte joueur, même si une nouvelle participation remplace un empire oublié. Le jeton, les clés uniques et la date de livraison permettent les doublons et reprises sans double gain.
+- Le relais, son filtre de lecture, le suivi d’exploitation et la purge d’univers reconnaissent cette nouvelle nature. Une purge d’univers supprime les données rattachées par FK et les relais des projets concernés. Aucune purge n’est exécutée hors des bases de tests.
+
+### Droits, routes et interface
+
+| Action | Autorisation |
+| --- | --- |
+| Créer/modifier un modèle ou sa disponibilité | `ROLE_ADMIN`, contrôle serveur, CSRF, version et journal administratif |
+| Lancer un projet | Dirigeant ou grade avec `projects.start`, guilde active, univers accessible, hors vacances |
+| Donner des ressources | Membre actuel, projet actif de sa guilde et de son univers, colonie personnelle, hors vacances |
+| Distribuer un boost | Traitement interne, projet terminé, jeton attendu, éligibilité figée et unicité de récompense |
+
+Routes : `app_admin_guild_projects` (`/admin/projets-guilde`, GET/POST), `app_guild_projects` (`/guildes/projets`, GET), `app_guild_project_start` (POST `/guildes/projets/modeles/{id}/lancer`) et `app_guild_project_contribute` (POST `/guildes/projets/{id}/contribuer`).
+
+L’ajout et le retrait d’un palier administratif fonctionnent par formulaire, y compris sans JavaScript, en conservant la saisie. L’administration indique aussi le nombre maximal de récompenses permis par les coûts et minimums, sans garantir leur distribution. Les membres voient le besoin restant du palier, leurs minimums, les contributeurs, les conditions figées, la clôture et l’accès à l’inventaire. Les avertissements de départ/dissolution précisent le sort des dons. Les pages privées conservent le `noindex` existant.
+
+### Fichiers du lot
+
+- Entités : `app/src/Entity/GuildProjectDefinition.php`, `GuildProject.php`, `GuildProjectContribution.php`.
+- Services : `app/src/Service/Player/GuildProjectRules.php`, `GuildProjectDefinitionService.php`, `GuildProjectService.php`, `GuildProjectRewardService.php` ; raccordements dans `DiplomacyAccessPolicy`, `DiplomacyService`, `EmpireConversionService`, `BoostGrantService`, `GameRepository`, `OutboxRelay`, `AdminOperationsService` et `DatabaseScopePurger`.
+- Contrôleurs : `app/src/Controller/AdminGuildProjectController.php`, `GuildProjectController.php`.
+- Traitements : `app/src/Message/GuildProjectRewardsDue.php`, `app/src/MessageHandler/GuildProjectRewardsDueHandler.php`, `app/config/packages/messenger.yaml`.
+- Templates : `app/templates/admin/guild_projects.html.twig`, `admin/_navigation.html.twig`, `admin/sections/operations.html.twig`, `player/guild_projects.html.twig`, `player/_guild_hub.html.twig`, `boosts/index.html.twig`.
+- Migration : `app/migrations/Version20261111150933.php`, appliquée uniquement aux bases jetables. Retour refusé si des modèles/projets existent.
+- Tests : `app/tests/Unit/GuildProjectRulesTest.php`, `app/tests/Integration/GuildProjectTest.php`, `app/tests/Integration/EmpireConversionTest.php` et `app/tests/Integration/OccupationStartTest.php` (raccordement de la nouvelle dépendance), `app/tests/browser/guild-projects.spec.mjs`.
+- Documentation : README, DECISIONS, REGLES et ce suivi. Les validations complètes restent à terminer avant le commit de ce lot.
+
+### Validation finale des projets — 11 novembre 2026
+
+- `make validate`, `make lint` avec synchronisation du schéma et `make assets` / `npm run build` : réussites. Les actifs compilés restent identiques : aucune nouvelle dépendance ni nouveau JavaScript n’est nécessaire pour les formulaires de paliers.
+- `make test` final : exécution complète réussie de 670 tests PHP (209722 assertions), puis 13 tests Python. Les anciens appels directs au constructeur de conversion ont été raccordés dans deux fixtures, sans retirer leurs assertions. Une première campagne incomplète, interrompue pour ces raccordements et la protection du quota par compte, n’est pas comptée comme validation finale.
+- Les 155 scénarios hors parcours clavier général ont été répartis en quatre projets jetables (39, 48, 31 et 37 cas). Ils ont produit 152 réussites et trois échecs expliqués : ancien nombre de cartes administratives, ancien texte d’inventaire et mesure de largeur prise pendant le redimensionnement. Les attentes reflètent désormais le nouveau module et le texte des récompenses ; la mesure utilise l’attente standard `expect.poll`, avec la même largeur maximale.
+- Une reprise de cinq parcours a validé les trois scénarios d’administration, le parcours clavier général et les états des écrans métier. Les trois scénarios administratifs ont ensuite été rejoués sur leur attente finale et réussissent. Bilan : 156 scénarios couverts et réussis par consolidation, pas une exécution complète sans échec d’un seul passage.
+- Les parcours des projets vérifient la création de modèles à plusieurs paliers, la saisie conservée, l’ajout/retrait sans JavaScript, les droits administrateur/dirigeant/membre, les dons, les versions périmées, la clôture, le traitement réel des boosts, l’absence de double lancement, le clavier, le `noindex`, trois largeurs et des analyses axe ciblées. Les tests PHP couvrent aussi départ avant/après clôture, minimums, reprise de livraison, inventaire plein et quota persistant après changement de guilde ou création d’un nouvel empire.
+- Les quantités négatives, fractionnaires, inconnues, hors borne, supérieures aux besoins ou aux stocks sont refusées. Les contributions et l’historique survivent à la dissolution. Aucune hypothèse de conversion de valeur entre ressources n’a été ajoutée.
+- `git diff --check` et contrôle du contenu préparé avant commit : réussites. Les fichiers locaux de configuration, dépendances et résultats de tests sont exclus. `app/config/reference.php`, généré pendant les vérifications, est préservé hors commit : sa restauration a été refusée par le contrôle automatique, afin d’éviter d’écraser des modifications locales.
+
+Les coûts, minimums et disponibilités doivent être choisis dans l’administration avant activation ; cela ne constitue pas un réglage d’équilibrage livré par défaut. La PR reste en brouillon et aucun fichier d’un autre chantier n’a été modifié. Le conflit de numérotation avec la branche de reconstruction a été revérifié par lecture de cette branche, même après le changement de branche du dépôt principal.

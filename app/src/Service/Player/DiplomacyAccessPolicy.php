@@ -6,6 +6,7 @@ use App\Entity\{Guild,GuildMember,GuildRank,PlayerUniverse};
 final class DiplomacyAccessPolicy
 {
     public const PERMISSIONS = [
+        'projects.start' => 'Lancer les projets collectifs de guilde',
         'members.assign_rank' => 'Attribuer les grades inférieurs',
         'diplomacy.alliance' => 'Proposer et accepter les alliances de guilde',
         'diplomacy.non_aggression' => 'Proposer et signer les pactes de non-agression',

@@ -6,7 +6,7 @@
     <article class="admin-operation-card"><h3>Relais en attente</h3>
       {% if operations.outbox_available %}
         <strong>{{ operations.outbox_total }}</strong><p>{{ operations.outbox_overdue }} à échéance atteinte</p>
-        <p>Files : {{ operations.outbox.queue }} · Flottes : {{ operations.outbox.fleet }} · Combats : {{ operations.outbox.combat }} · Univers : {{ operations.outbox.universe }} · Notifications : {{ operations.outbox.notification }} · Autres : {{ operations.outbox.other }}</p>
+        <p>Files : {{ operations.outbox.queue }} · Flottes : {{ operations.outbox.fleet }} · Combats : {{ operations.outbox.combat }} · Univers : {{ operations.outbox.universe }} · Notifications : {{ operations.outbox.notification }} · Récompenses de guilde : {{ operations.outbox.guild_project|default(0) }} · Autres : {{ operations.outbox.other }}</p>
       {% else %}<strong>État inconnu</strong><p>Collecte des relais indisponible. Vérifiez la base et les journaux.</p>{% endif %}
     </article>
   </div>
@@ -17,7 +17,7 @@
     <div class="table-wrap" role="region" tabindex="0" aria-label="Relais en attente, tableau défilant">
       <table><caption>Relais classés par échéance, puis identifiant</caption>
         <thead><tr><th scope="col">Identifiant</th><th scope="col">Nature</th><th scope="col">Cible</th><th scope="col">Échéance UTC</th><th scope="col">Attente après échéance</th></tr></thead>
-        <tbody>{% for message in operations.outbox_pending %}<tr><td>#{{ message.id }}</td><td>{{ message.kind }}</td><td>#{{ message.target_id }}</td><td><time datetime="{{ message.due_at|date('c', 'UTC') }}">{{ message.due_at|date('d/m/Y H:i:s', 'UTC') }}</time></td><td>{{ message.due ? message.overdue_seconds ~ ' s' : 'Échéance future' }}</td></tr>{% endfor %}</tbody>
+        <tbody>{% for message in operations.outbox_pending %}<tr><td>#{{ message.id }}</td><td>{{ message.kind=='guild_project' ? 'Récompenses de guilde' : message.kind }}</td><td>#{{ message.target_id }}</td><td><time datetime="{{ message.due_at|date('c', 'UTC') }}">{{ message.due_at|date('d/m/Y H:i:s', 'UTC') }}</time></td><td>{{ message.due ? message.overdue_seconds ~ ' s' : 'Échéance future' }}</td></tr>{% endfor %}</tbody>
       </table>
     </div>
     {% else %}<p>Aucun relais en attente lors du relevé.</p>{% endif %}

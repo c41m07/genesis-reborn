@@ -71,7 +71,7 @@ test('Les écrans métier se chargent, restent stables et exposent un arbre acce
     if (route === '/messages') await expect(page.getByText('Aucune conversation privée pour le moment.')).toBeVisible();
     if (route === '/boosts') {
       await expect(page.getByRole('heading', { name: 'Aucun bonus disponible', exact: true })).toBeVisible();
-      await expect(page.getByText('Les récompenses de vos missions et événements apparaîtront ici.')).toBeVisible();
+      await expect(page.getByText('Les récompenses de vos missions, événements et projets de guilde apparaîtront ici.')).toBeVisible();
     }
     expect(stuckBusy, label + ': aucun état de chargement bloqué').toBe(0);
     expect(brokenImages, label + ': aucune image cassée').toEqual([]);
