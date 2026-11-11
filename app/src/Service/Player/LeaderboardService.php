@@ -77,6 +77,8 @@ final class LeaderboardService
 
         foreach ([
             'points' => 'total_points',
+            'buildings' => 'building_points',
+            'research' => 'research_points',
             'fleet' => 'fleet_points',
             'planets' => 'planets',
         ] as $sort => $field) {

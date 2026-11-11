@@ -65,7 +65,8 @@ test('Les écrans métier se chargent, restent stables et exposent un arbre acce
     if (route === '/flottes') {
       await expect(page.getByRole('heading', { name: 'Aucun vaisseau disponible' })).toBeVisible();
       await expect(page.getByText('Aucune demande d’orbite en attente.')).toBeVisible();
-      await expect(page.getByRole('heading', { name: /horizon vous attend/ })).toBeVisible();
+      await expect(page.getByText('Aucune flotte en vol. Les départs et les retours de toutes vos colonies apparaissent ici.')).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Journal des missions' })).toHaveCount(0);
     }
     if (route === '/rapports') await expect(page.getByRole('heading', { name: 'Aucun rapport dans cette catégorie' })).toBeVisible();
     if (route === '/messages') await expect(page.getByText('Aucune conversation privée pour le moment.')).toBeVisible();

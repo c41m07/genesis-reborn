@@ -18,6 +18,7 @@ test('L’état Espionnage sans flotte conduit au chantier réel', async ({ page
   await page.locator('article.universe-card').filter({ has: page.getByRole('heading', { name: /Turbo/ }) }).getByRole('button').click();
 
   await page.goto('/flottes?mission=spy');
+  await expect(page.getByRole('heading', { name: 'Journal des missions' })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Espionnage', level: 1 })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Aucune sonde exploratrice disponible' })).toBeVisible();
 

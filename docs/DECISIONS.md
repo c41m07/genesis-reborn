@@ -1277,3 +1277,85 @@ l'exécution. En cas de stocks insuffisants, le contrôle est reprogrammé aprè
 60 secondes ; ce délai technique ne remplace pas le délai de cinq minutes après
 combat. La migration de compatibilité `Version20261111173000` (ancien numéro partagé `Version20261111010000`, voir [le suivi](GESTION_GUILDES_ALLIANCES.md)) ne convertit aucun empire
 et demande une autorisation distincte avant application sur une base de jeu.
+
+
+## Évolutions des interfaces et flottes — décisions du 11 novembre 2026
+
+Cette demande remplace la présentation du classement joueur décidée le 5 novembre
+(points totaux seuls et absence de colonne planètes). Les cinq catégories ont leur
+rang, les variations sont sur la même ligne et le nombre de planètes précède les
+points totaux. Formules de points et échéance quotidienne inchangées.
+Dans ce tableau : « (= 0) » si inchangé, « (—) » sans comparaison.
+
+Décisions confirmées pour les lots suivants, non encore implémentées :
+- Ancienneté : acquisition par le propriétaire actuel, conquête incluse.
+- Journal : absence depuis la dernière ouverture de la vue générale ;
+  constructions/recherches terminées, arrivées et événements de combat,
+  transport, espionnage et conquête ; marquage explicite comme consultés.
+- Détails : vaisseaux et stocks des planètes ; composition et fret des flottes,
+  accessibles au clavier et au toucher.
+- Destinations : PNJ dans « Ennemis », neutres dans « Destination personnalisée » ;
+  suggestions initialement limitées à la destination par pseudonyme.
+- Points de flotte visible : somme des coûts des vaisseaux présents selon
+  l’univers et le rang, divisée par 100 ; sans défense fixe.
+- Rapports : archive personnelle consultable et restaurable, retrait individuel
+  ou par sélection ; preuves administratives conservées.
+- Guilde : tag de 2 à 5 lettres/chiffres majuscules, unique dans l’univers, choisi
+  par le commandant et obligatoire à la création. « [TAG] Commandant » au classement
+  uniquement ; pas de crochets vides sans guilde. Transition des anciennes guildes
+  précisée ci-dessous.
+
+Les précisions validées pour les rappels, la détection, les orbites, l’abandon et
+les signalements figurent ci-dessous. Voir le [suivi](EVOLUTIONS_INTERFACES_FLOTTES.md).
+
+
+### Précisions confirmées dans la même session
+
+- Préavis d’attaque : niveau effectif = somme simple des trois rangs pour ce seul
+  préavis. Formule validée : min(5 + 5 × niveau effectif, 120 minutes,
+  50 % de la durée totale du trajet). Les effets pondérés sur l’espionnage et la
+  détection à l’arrivée sont conservés. À la détection : planète ciblée et
+  compte à rebours ; aucun détail supplémentaire validé à ce stade.
+- Anciennes guildes : tag choisi par leur commandant, sans génération automatique.
+  Tant qu’il manque, aucun crochet n’est affiché. Les nouvelles créations exigent
+  immédiatement le tag validé.
+- Anciennes colonies : ordre actuel conservé comme approximation si aucune date
+  fiable ne peut être retrouvée. Enregistrer toutes les nouvelles acquisitions ;
+  ne créer aucune date historique fictive.
+
+Ces décisions restent à implémenter dans leurs lots ; elles ne décrivent pas
+une modification déployée.
+
+
+### Rappels, visibilité, orbite, abandon et signalements — validation utilisateur
+
+- Rappel : toutes les missions en trajet aller, espionnage et colonisation inclus,
+  ainsi que l’orbite et les demandes d’orbite. Retours, combats, résolutions
+  d’arrivée et occupations exclus. Retour sur le chemin déjà parcouru selon la
+  progression réelle, boosts compris. Carburant consommé au prorata ; fret et
+  carburant inutilisé conservés. Si l’origine est perdue, choisir une autre colonie
+  du joueur et recalculer temps/carburant. Sans repli possible, refuser sans
+  changer l’état de la flotte.
+- Déplacements non offensifs : propriétaire, destinataire et alliés uniquement,
+  dans les limites de découverte. Sondes en trajet visibles par leur seul
+  propriétaire ; détection à l’arrivée conservée.
+- Attaque détectée : cible, compte à rebours, commandant, total de vaisseaux et
+  points de flotte. Origine uniquement si déjà découverte ; jamais de composition
+  détaillée pour un tiers.
+- Orbite : demande au départ et valide jusqu’à l’arrivée. Alliance = accord
+  automatique ; neutralité = décision manuelle. Refus ou retrait = retour
+  immédiat ; silence à l’arrivée = retour, sans attente indéfinie. PNJ et mondes
+  sans propriétaire interdits. Propriété et relation revérifiées à l’arrivée ;
+  un accord invalidé entraîne le retour.
+- Abandon : planète redevenue vierge ; perte des bâtiments, ressources, défenses
+  et vaisseaux présents ; files annulées sans remboursement, historiques conservés.
+  Interdit pour la dernière planète, en présence de flottes en trajet liées à la
+  planète (aller/retour), d’orbites, d’attaques, d’occupation ou de combat.
+  La planète initiale est autorisée si une autre colonie reste. Confirmation en
+  retapant son nom, après présentation du bilan des pertes.
+- Signalement joueur : Pseudonyme inapproprié, Harcèlement, Suspicion de triche,
+  Autre ; commentaire. Contexte automatique : univers, joueur visé et pseudonyme
+  au signalement, auteur, date, catégorie/rang consultés. Modération seule habilitée.
+
+Décisions validées pour les futurs lots, non implémentées dans le lot A.
+Les refontes attendent encore la validation des maquettes.

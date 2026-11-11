@@ -29,6 +29,7 @@ test('Les 150 fiches expliquent leurs effets, bonus, accès et limites sur ordin
     let inspected = 0;
     for (const [group, count] of [['buildings', 39], ['technologies', 57], ['ships', 42], ['defenses', 12]]) {
         await page.goto(`${path}?section=${group}`);
+        await expect(page.getByText('Accès associés à ce rang', { exact: false })).toHaveCount(0);
         const cards = page.locator('.building-rank');
         await expect(cards).toHaveCount(count);
         for (let index = 0; index < count; index++) {
@@ -92,7 +93,13 @@ test('Les 150 fiches expliquent leurs effets, bonus, accès et limites sur ordin
     await expect(access).toContainText('Cartographie des opérations · Intermédiaire · niveau 5 requis');
     await expect(access).toContainText('Docks orbitaux modulaires · Intermédiaire · niveau 10 requis');
     await expect(access.locator('.catalog-info-unreachable')).toHaveCount(0);
-    await page.keyboard.press('Escape');
+    const prerequisite = access.getByRole('link', { name: 'Docks orbitaux modulaires', exact: true });
+    await prerequisite.focus();
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(/section=buildings.*#item-shipyard-intermediate/);
+    await expect(page.locator('#item-shipyard-intermediate')).toBeVisible();
+    await expect(page.locator('#building-tab-shipyard-intermediate')).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('#building-tab-shipyard-intermediate')).toBeFocused();
 
     for (const width of [768, 390]) {
         await page.setViewportSize({ width, height: 900 });

@@ -178,9 +178,10 @@ test('Flottes actives : aller, retour, noms longs et thème clair', async ({ pag
     await expect(operations).toContainText('ALLER');
     await expect(operations).toContainText('RETOUR');
     if (route === '/flottes') {
-      const returningRoute = await page.locator('.mission-card[data-status="returning"] p:not(.eyebrow):not(.muted)').innerText();
-      expect(returningRoute.trim().startsWith('DestinationInterstellaire')).toBe(true);
-      expect(returningRoute.trim().endsWith('OrigineInterstellaireSansEspaceAvecUnNomTresLongPourLeTest')).toBe(true);
+      const returning = operations.locator('.flight-operation').filter({ has: page.getByText('RETOUR', { exact: true }) });
+      await expect(returning.locator('.flight-route>span').first()).toHaveText(/^DestinationInterstellaire/);
+      await expect(returning.locator('.flight-route>span').last()).toHaveText('OrigineInterstellaireSansEspaceAvecUnNomTresLongPourLeTest');
+      await expect(page.getByRole('heading', { name: 'Journal des missions' })).toHaveCount(0);
     }
     for (const width of [1920, 1440, 1280, 768, 390]) {
       await page.setViewportSize({ width, height: 900 });

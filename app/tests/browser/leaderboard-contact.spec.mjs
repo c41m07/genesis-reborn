@@ -50,8 +50,18 @@ test('Classement : tris, contact direct et échange de messages privés', async 
   await expect(page.getByRole('table', { name: /Classement de l’univers Turbo/ })).toBeVisible();
   const recipientRow = page.getByRole('row').filter({ hasText: recipientName });
   await expect(recipientRow.getByRole('link', { name: 'Contacter ' + recipientName })).toBeVisible();
-  await expect(page.getByRole('columnheader')).toHaveText(['Rang', 'Commandant', 'Points bâtiments', 'Points recherches', 'Points flotte', 'Points totaux ↓', 'Action']);
+  await expect(page.getByRole('columnheader')).toHaveText(['Rang', 'Commandant', 'Points de bâtiments', 'Points de recherche', 'Points de flotte', 'Nombre de planètes', 'Points totaux ↓', 'Actions']);
   await expect(page.getByRole('columnheader', { name: 'Points totaux' })).toHaveAttribute('aria-sort', 'descending');
+
+  for (const [category, label] of [['buildings', 'Points de bâtiments'], ['research', 'Points de recherche'], ['fleet', 'Points de flotte'], ['planets', 'Nombre de planètes'], ['points', 'Points totaux']]) {
+    await page.getByLabel('Catégorie du classement').selectOption(category);
+    await page.getByRole('button', { name: 'Afficher', exact: true }).focus();
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('columnheader', { name: label, exact: true })).toHaveAttribute('aria-sort', 'descending');
+    await expect(page.getByLabel('Catégorie du classement')).toHaveValue(category);
+    const ranks = await page.locator('tbody tr td:first-child').allTextContents();
+    expect(ranks.map(text => Number(text.match(/#(\d+)/)[1]))).toEqual(ranks.map(text => Number(text.match(/#(\d+)/)[1])).sort((a, b) => a - b));
+  }
 
   const body = 'Message depuis le classement ' + crypto.randomUUID();
   await page.getByRole('link', { name: 'Contacter ' + recipientName }).click();
@@ -83,6 +93,12 @@ test('Classement : tris, contact direct et échange de messages privés', async 
   await recipientPage.getByRole('link', { name: new RegExp(senderName) }).click();
   await expect(recipientPage.getByRole('link', { name: new RegExp(senderName) }).getByRole('img', { name: 'Messages non lus' })).toHaveCount(0);
   await expect(recipientPage.locator('.message-thread')).toContainText(body);
+  const report = recipientPage.locator('.message-report summary').first();
+  await expect(report).toHaveAccessibleName('Signaler ce message');
+  await report.focus();
+  await recipientPage.keyboard.press('Enter');
+  await expect(recipientPage.getByLabel('Motif du signalement')).toBeVisible();
+  await expect(report).toHaveCSS('min-width', '44px');
   await recipientPage.close();
 });
 
@@ -232,7 +248,7 @@ test('Classement quotidien : points figés, gains, pertes et signe égal accessi
   const expire = () => runIsolatedSql(project, `UPDATE leaderboard_snapshot SET updated_at=DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 DAY) WHERE universe_id=${universe}`);
   await page.goto('/classement');
   const row = page.getByRole('row').filter({ hasText: name });
-  await expect(row).toContainText('Points : =');
+  await expect(row.locator('[data-category="points"] .ranking-change')).toHaveText(/\((—|= 0)\)/);
   const initial = await page.evaluate(() => fetch('/api/classement').then(response => response.json()));
   const before = initial.players.find(player => player.username === name).total_points;
   runIsolatedSql(project, `INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'mine_metal','basic',5) ON DUPLICATE KEY UPDATE level=5`);
@@ -240,11 +256,11 @@ test('Classement quotidien : points figés, gains, pertes et signe égal accessi
   const frozen = await page.evaluate(() => fetch('/api/classement').then(response => response.json()));
   expect(frozen.players.find(player => player.username === name).total_points).toBe(before);
   expect(frozen.timezone).toBe('Europe/Paris');
-  await expect(row.locator('strong')).toHaveText(String(before));
+  expect(await row.locator('[data-category="points"]').evaluate(node => node.firstChild.textContent.trim())).toBe(String(before));
   expire();
   await page.reload();
-  await expect(row).toContainText('Points : +');
-  await expect(row).toContainText('Places : =');
+  await expect(row.locator('[data-category="points"] .ranking-change')).toHaveText(/\(\+\d/);
+  await expect(row.locator('td').first().locator('.ranking-change')).toHaveText('(= 0)');
   await expect(page.getByText('Actualisation chaque jour à 00 h', { exact: false })).toBeVisible();
   const gained = await page.evaluate(() => fetch('/api/classement').then(response => response.json()));
   expect(gained.players.find(player => player.username === name).score_changes.points).toBeGreaterThan(0);
@@ -255,13 +271,47 @@ test('Classement quotidien : points figés, gains, pertes et signe égal accessi
   }
   expire();
   await page.reload();
-  await expect(row).toContainText('Points : =');
-  await expect(row).toContainText('Places : =');
+  await expect(row.locator('[data-category="points"] .ranking-change')).toHaveText(/\((—|= 0)\)/);
+  await expect(row.locator('td').first().locator('.ranking-change')).toHaveText('(= 0)');
   runIsolatedSql(project, `UPDATE planet_building SET level=1 WHERE planet_id=${planet} AND slug='mine_metal' AND tier='basic'`);
   expire();
   await page.reload();
-  await expect(row).toContainText('Points : −');
+  await expect(row.locator('[data-category="points"] .ranking-change')).toHaveText(/\(−\d/);
   await page.goto(colonyUrl);
   await expect(page.locator('.empire-points')).toContainText('Points : −');
   await expect(page.locator('.metric-card').filter({ hasText: 'Classement' })).toContainText('Places : =');
+});
+
+
+test('Classement : tri global avant pagination et catégorie conservée', async ({ page }) => {
+  test.setTimeout(120000);
+  const ownName = await registerAndJoin(page, 'Zpage');
+  const project = process.env.BROWSER_ROUTER;
+  const universe = Number(queryIsolatedSql(project, `SELECT m.universe_id FROM player_universe m JOIN player p ON p.id=m.player_id WHERE p.username='${ownName}'`));
+  const prefix = 'Apage-' + crypto.randomUUID().slice(0, 8);
+  const players = Array.from({ length: 51 }, (_, index) => {
+    const name = prefix + '-' + String(index).padStart(2, '0');
+    return `('${name}@example.test','${name}','!unused-test-password!','[]','{}')`;
+  });
+  runIsolatedSql(project, `INSERT INTO player (email,username,password,roles,preferences) VALUES ${players.join(',')};
+    INSERT INTO player_universe (player_id,universe_id,joined_at)
+      SELECT id,${universe},UTC_TIMESTAMP() FROM player WHERE username LIKE '${prefix}%';
+    INSERT INTO player_technology (player_universe_id,slug,tier,level)
+      SELECT m.id,'weapons_engineering','basic',1 FROM player_universe m JOIN player p ON p.id=m.player_id WHERE p.username LIKE '${prefix}%';
+    UPDATE leaderboard_snapshot SET updated_at=DATE_SUB(UTC_TIMESTAMP(),INTERVAL 2 DAY) WHERE universe_id=${universe}`);
+  await page.goto('/classement?category=research');
+  await expect(page.locator('tbody tr')).toHaveCount(50);
+  await expect(page.locator('tbody tr').first().locator('td').first()).toContainText('#1 ');
+  await expect(page.locator('tbody tr').last().locator('td').first()).toContainText('#50 ');
+  const next = page.getByRole('link', { name: 'Page suivante', exact: true });
+  await expect(next).toHaveAttribute('href', /category=research.*page=2/);
+  await next.click();
+  await expect(page.getByLabel('Catégorie du classement')).toHaveValue('research');
+  await expect(page.locator('tbody tr')).toHaveCount(2);
+  await expect(page.locator('tbody tr').first().locator('td').first()).toContainText('#51 ');
+  const ownRow = page.getByRole('row').filter({ hasText: ownName });
+  await expect(ownRow.locator('td').first()).toContainText('#52 ');
+  await page.getByRole('link', { name: 'Page précédente', exact: true }).click();
+  await expect(page.getByLabel('Catégorie du classement')).toHaveValue('research');
+  await expect(page.locator('tbody tr')).toHaveCount(50);
 });

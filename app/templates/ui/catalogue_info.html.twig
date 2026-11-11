@@ -57,17 +57,10 @@
                 <p>Ces conditions débloquent le rang dès le niveau 1. Aucun nouveau prérequis ne s’ajoute ensuite. Les coûts, durées et plafonds restent applicables.</p>
                 {% if info.acquired|default(false) %}<p class="catalog-info-ready">Accès acquis définitivement {{ group == 'technologies' ? 'dans cet univers' : 'sur cette colonie' }}, même si une condition initiale manque aujourd’hui.</p>{% endif %}
                 {% if info.requirements %}<ul class="catalog-info-access">
-                    {% for requirement in info.requirements %}<li class="{{ requirement.unreachable ? 'is-unreachable' : (requirement.met ? 'is-met' : 'is-missing') }}"><span>{{ requirement.met ? '✓ Rempli' : 'À obtenir' }}</span><strong>{{ requirement.label }}</strong> · {{ requirement.tier }}{% if requirement.required is not null %} · niveau {{ requirement.required }} requis (actuel : {{ requirement.current }}){% endif %}{% if requirement.unreachable %}<small class="catalog-info-unreachable">Prérequis actuellement inatteignable : le maximum de ce rang est {{ requirement.maximum }}.</small>{% endif %}</li>{% endfor %}
+                    {% for requirement in info.requirements %}<li class="{{ requirement.unreachable ? 'is-unreachable' : (requirement.met ? 'is-met' : 'is-missing') }}"><span>{{ requirement.met ? '✓ Rempli' : 'À obtenir' }}</span><a href="{{ path('app_colony',{id:planet.id,section:requirement.group,showLockedItems:1,focusItem:1}) }}#item-{{ requirement.slug }}-{{ requirement.rank }}"><strong>{{ requirement.label }}</strong></a> · {{ requirement.tier }}{% if requirement.required is not null %} · niveau {{ requirement.required }} requis (actuel : {{ requirement.current }}){% endif %}{% if requirement.unreachable %}<small class="catalog-info-unreachable">Prérequis actuellement inatteignable : le maximum de ce rang est {{ requirement.maximum }}.</small>{% endif %}</li>{% endfor %}
                 </ul>{% else %}<p>Aucun prérequis de bâtiment ou de recherche pour ce rang.</p>{% endif %}
                 {% if card.failures %}<p class="catalog-info-requirements"><strong>Accès bloqué :</strong> {{ card.failures|join(', ') }}</p>{% else %}<p class="catalog-info-ready">Rang débloqué</p>{% endif %}
             </section>
-
-            {% if info.unlocks %}
-                <details class="catalog-info-unlocks"><summary>Accès associés à ce rang · {{ info.unlocks|length }}</summary>
-                    <p>Ces niveaux participent au déblocage initial des éléments ci-dessous. Une fois acquis, leur accès est conservé.</p>{% if not show_locked_items %}<p>Les éléments verrouillés peuvent être masqués. <a href="{{ path('app_preferences') }}">Modifier leur affichage</a>.</p>{% endif %}
-                    <ul>{% for unlock in info.unlocks %}<li><a href="{{ path('app_colony',{id:planet.id,section:unlock.group}) }}#item-{{ unlock.slug }}-{{ unlock.tier }}">{{ unlock.label }}</a> · {{ unlock.tierLabel }}<small>Niveau {{ unlock.requiredLevel }} requis dans {{ d.label }}</small>{% if unlock.unreachable %}<small class="catalog-info-unreachable">Seuil supérieur au maximum actuel de ce rang.</small>{% endif %}</li>{% endfor %}</ul>
-                </details>
-            {% endif %}
 
             {% if not card.maximum %}
                 <section aria-label="Coût et durée">

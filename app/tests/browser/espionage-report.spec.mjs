@@ -1,5 +1,5 @@
 import { test, expect } from './support/isolated-test.mjs';
-import { prepareOwnedColony, revealNpcPlanet, accelerateQueuedItem, accelerateTravelingMission, runIsolatedSql, queryIsolatedSql, planetCoordinates } from './support/game-fixtures.mjs';
+import { prepareOwnedColony, completedFleetCount, revealNpcPlanet, accelerateQueuedItem, accelerateTravelingMission, runIsolatedSql, queryIsolatedSql, planetCoordinates } from './support/game-fixtures.mjs';
 
 async function enter(page) {
   const id = crypto.randomUUID().slice(0, 8);
@@ -54,7 +54,8 @@ test('Espionnage PNJ : envoyer une sonde et consulter le rapport privé', async 
   await form.getByRole('button', { name: /Envoyer la flotte/ }).click();
   await expect(page.locator('[data-status="traveling"]')).toHaveCount(1);
   accelerateTravelingMission(process.env.BROWSER_ROUTER, email, 'spy');
-  await expect.poll(() => page.locator('[data-status="completed"]').count(), { timeout: 90000, intervals: [1000] }).toBe(1);
+  await expect.poll(() => completedFleetCount(process.env.BROWSER_ROUTER, email), { timeout: 90000, intervals: [1000] }).toBe(1);
+  await expect(page.locator('[data-active-fleet]')).toHaveCount(0, { timeout: 15000 });
 
   await page.getByRole('link', { name: 'Rapports', exact: true }).click();
   const reportLink = page.locator('a[href*="/rapports/espionnage/"]').first();
@@ -103,6 +104,6 @@ test('Espionnage PNJ : envoyer une sonde et consulter le rapport privé', async 
    expect(queryIsolatedSql(project, `SELECT LENGTH(dispatch_token)>0 FROM fleet WHERE id=${fleet}`)).toBe('1');
    // Aucun événement n'est ajouté par le test : le relais et le worker traitent le départ réel.
    await expect.poll(() => queryIsolatedSql(project, `SELECT status FROM fleet WHERE id=${fleet}`), { timeout: 90000, intervals: [1000] }).toBe('completed');
-   await expect.poll(() => page.locator('[data-status="completed"]').count(), { timeout: 15000 }).toBe(1);
+   await expect(page.locator('[data-active-fleet]')).toHaveCount(0, { timeout: 15000 });
    expect(queryIsolatedSql(project, `SELECT quantity FROM fleet_ship WHERE fleet_id=${fleet} AND slug='probe'`)).toBe('0');
  });
