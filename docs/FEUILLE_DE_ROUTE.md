@@ -1,5 +1,9 @@
 # Roadmap Genesis Reborn
 
+## Guildes et alliances — intégration du 11 novembre 2026
+
+PR #36 fusionnée dans `dev` (`50e7f33`) après revue finale sans anomalie bloquante et CI verte : grades, relations personnelles, trois traités et projets collectifs. Le [guide](GUIDE_GUILDES_ALLIANCES.md) décrit l’utilisation et l’administration ; le [suivi](GESTION_GUILDES_ALLIANCES.md) conserve les preuves et les bilans historiques. Les nouvelles migrations sur base existante, le déploiement et les réglages/activations des modèles restent à réaliser séparément avec les autorisations prévues.
+
 Mise à jour documentaire : 8 novembre 2026. [REGLES](REGLES.md) et
 [DECISIONS](DECISIONS.md) restent les sources des arbitrages de jeu.
 
