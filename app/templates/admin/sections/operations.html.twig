@@ -10,6 +10,26 @@
       {% else %}<strong>État inconnu</strong><p>Collecte des relais indisponible. Vérifiez la base et les journaux.</p>{% endif %}
     </article>
   </div>
+  {% set health = operations.fleet_health %}
+  <h3>Voyages des flottes</h3>
+  {% if not health.available %}
+    <p class="admin-monitor-warning" role="status">État inconnu : collecte des voyages indisponible. Vérifiez les journaux.</p>
+  {% elseif health.total %}
+    <p class="admin-monitor-warning" role="status">{{ health.total }} flotte(s) à contrôler : {{ health.unscheduled }} sans planification et {{ health.overdue }} en retard. Une flotte peut cumuler les deux anomalies, même lorsque les processus tournent et qu’aucun relais n’attend.</p>
+    <div class="table-wrap" role="region" tabindex="0" aria-label="Voyages des flottes à contrôler">
+      <table><caption>Les 20 voyages anormaux les plus anciens</caption>
+        <thead><tr><th scope="col">Flotte</th><th scope="col">Mission</th><th scope="col">État</th><th scope="col">Échéance UTC</th><th scope="col">Anomalie</th></tr></thead>
+        <tbody>{% for fleet in health.pending %}<tr>
+          <th scope="row"><a href="{{ path('app_admin_mission', {id:fleet.id}) }}">Flotte n° {{ fleet.id }}</a></th>
+          <td>{{ {explore:'Exploration',spy:'Espionnage',transport:'Transport',attack:'Attaque',conquer:'Conquête',defend:'Défense',orbit:'Stationnement',colonize:'Colonisation'}[fleet.mission]|default(fleet.mission) }}</td>
+          <td>{{ fleet.status == 'returning' ? 'Retour' : 'Aller' }}</td>
+          <td>{{ fleet.due_at|date('d/m/Y H:i:s', 'UTC') }}</td>
+          <td>{% if fleet.unscheduled %}Planification absente{% endif %}{% if fleet.unscheduled and fleet.overdue %} · {% endif %}{% if fleet.overdue %}Retard supérieur à {{ fleet.late_minutes }} min{% endif %}</td>
+        </tr>{% endfor %}</tbody>
+      </table>
+    </div>
+  {% else %}<p>Aucun voyage sans planification ni en retard au-delà du seuil de son univers.</p>{% endif %}
+  <p>Contrôle en lecture seule des trajets aller et retour. Le seuil de retard reprend le réglage de surveillance de chaque univers (5 minutes par défaut). Aucune mission n’est relancée automatiquement.</p>
   {% if operations.outbox_available %}
   <details><summary>Consulter les relais en attente</summary>
     <p>Une ligne attend sa publication vers le transport ou le canal de notification. Elle ne prouve pas un échec du traitement. Les 20 échéances les plus anciennes sont affichées au maximum ; actualisez la page pour un nouveau relevé.</p>

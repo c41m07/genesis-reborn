@@ -151,6 +151,10 @@ final class GamePersistenceTest extends KernelTestCase
         $service->send($m,$planet,'explore',$target->id,['probe'=>1],.5,[],str_repeat('e',32));
         self::assertEqualsWithDelta($before-$quote['total_fuel'],$hydrogen->currentStock,.000001);
         $fleet=$this->em->getRepository(\App\Entity\Fleet::class)->findOneBy(['status'=>'traveling']);$old=$fleet->dispatchToken;
+        $arrival=$this->em->getRepository(OutboxMessage::class)->findOneBy(['kind'=>'fleet','targetId'=>$fleet->id,'token'=>$fleet->dispatchToken]);
+        self::assertNotNull($arrival,'Le départ doit programmer son arrivée.');
+        self::assertNotSame('',$fleet->dispatchToken);
+        self::assertEquals($fleet->arrivalAt,$arrival->dueAt);
         $clock->sleep($fleet->travelSeconds + 1);$service->arrive($fleet->id,$fleet->dispatchToken);self::assertSame('completed',$fleet->status);
         $service->arrive($fleet->id,$old);
         self::assertSame(1,$this->em->getRepository(\App\Entity\PlayerDiscovery::class)->count(['playerUniverse'=>$m,'solarSystem'=>$target]));
@@ -845,6 +849,10 @@ final class GamePersistenceTest extends KernelTestCase
         $service->send($sender->currentPlayerUniverse, $origin, 'spy', $target->id, ['probe' => 1], 1, [], str_repeat('e', 32));
         $spyFleet = $this->em->getRepository(\App\Entity\Fleet::class)->findOneBy(['playerUniverse' => $sender->currentPlayerUniverse, 'status' => 'traveling', 'mission' => 'spy']);
         self::assertNotNull($spyFleet);
+        $arrival=$this->em->getRepository(OutboxMessage::class)->findOneBy(['kind'=>'fleet','targetId'=>$spyFleet->id,'token'=>$spyFleet->dispatchToken]);
+        self::assertNotNull($arrival,'Le départ doit programmer son arrivée.');
+        self::assertNotSame('',$spyFleet->dispatchToken);
+        self::assertEquals($spyFleet->arrivalAt,$arrival->dueAt);
         $clock->sleep($spyFleet->travelSeconds + 1);
         $service->arrive($spyFleet->id, $spyFleet->dispatchToken);
 

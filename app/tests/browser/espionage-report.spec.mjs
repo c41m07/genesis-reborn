@@ -1,5 +1,5 @@
 import { test, expect } from './support/isolated-test.mjs';
-import { prepareOwnedColony, revealNpcPlanet, accelerateQueuedItem, accelerateTravelingMission, runIsolatedSql } from './support/game-fixtures.mjs';
+import { prepareOwnedColony, revealNpcPlanet, accelerateQueuedItem, accelerateTravelingMission, runIsolatedSql, queryIsolatedSql, planetCoordinates } from './support/game-fixtures.mjs';
 
 async function enter(page) {
   const id = crypto.randomUUID().slice(0, 8);
@@ -74,3 +74,35 @@ test('Espionnage PNJ : envoyer une sonde et consulter le rapport privé', async 
   await page.evaluate(() => window.scrollTo(0, 0));
 
 });
+
+ test('Exploration : le départ programme une arrivée réelle sans accélération', async ({ page }) => {
+   test.setTimeout(180000);
+   const email = await enter(page), project = process.env.BROWSER_ROUTER;
+   const planet = Number(new URL(page.url()).pathname.split('/').pop());
+   prepareOwnedColony(project, email);
+   runIsolatedSql(project, `INSERT INTO fleet (player_universe_id,home_planet_id,status,mission,speed_ratio,cargo,reserved_fuel,orbit_fuel,orbit_duration_seconds,travel_seconds,dispatch_token)
+     SELECT p.owner_id,p.id,'idle','idle',1,'{}',0,0,0,0,UUID() FROM planet p WHERE p.id=${planet}
+     AND NOT EXISTS (SELECT 1 FROM fleet WHERE home_planet_id=p.id AND status='idle')`);
+   runIsolatedSql(project, `INSERT INTO fleet_ship (fleet_id,slug,tier,quantity)
+     SELECT id,'probe','basic',1 FROM fleet WHERE home_planet_id=${planet} AND status='idle'
+     ON DUPLICATE KEY UPDATE quantity=1`);
+   const coordinates = planetCoordinates(project, planet).split(':').slice(0, 2).join(':');
+   await page.getByRole('link', { name: 'Flottes et missions', exact: true }).click();
+   const form = page.locator('.fleet-form form').first();
+   await form.locator('[name="ships[probe]"]').fill('1');
+   await form.getByRole('button', { name: /Choisir la destination/ }).click();
+   await form.locator('[name="mission"]').selectOption('explore');
+   await form.locator('[name="coordinates"]').fill(coordinates);
+   await form.locator('[name="ratio"]').selectOption('1');
+   await form.getByRole('button', { name: /Vérifier la mission/ }).click();
+   await form.getByRole('button', { name: 'Estimer le trajet' }).click();
+   await expect(form.locator('.flight-estimate')).toContainText('Carburant aller-retour');
+   await form.getByRole('button', { name: /Envoyer la flotte/ }).click();
+   await expect(page.locator('[data-status="traveling"]')).toHaveCount(1);
+   const fleet = Number(queryIsolatedSql(project, `SELECT id FROM fleet WHERE home_planet_id=${planet} AND mission='explore' ORDER BY id DESC LIMIT 1`));
+   expect(queryIsolatedSql(project, `SELECT LENGTH(dispatch_token)>0 FROM fleet WHERE id=${fleet}`)).toBe('1');
+   // Aucun événement n'est ajouté par le test : le relais et le worker traitent le départ réel.
+   await expect.poll(() => queryIsolatedSql(project, `SELECT status FROM fleet WHERE id=${fleet}`), { timeout: 90000, intervals: [1000] }).toBe('completed');
+   await expect.poll(() => page.locator('[data-status="completed"]').count(), { timeout: 15000 }).toBe(1);
+   expect(queryIsolatedSql(project, `SELECT quantity FROM fleet_ship WHERE fleet_id=${fleet} AND slug='probe'`)).toBe('0');
+ });

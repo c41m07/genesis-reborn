@@ -33,6 +33,12 @@ final class AlertEvaluator
             $delay=$snapshot['outbox_pending'][0]['overdue_seconds']??0;
             $conditions['outbox']=['status'=>$delay>=$this->relaySeconds?'alert':'ok','message'=>'Retard maximal des publications en attente : '.$delay.' secondes.','grace'=>0];
         }
+        $fleetHealth = $snapshot['fleet_health'] ?? [];
+        if (!($fleetHealth['available'] ?? false)) {
+            $conditions['missions']=['status'=>'unknown','message'=>'Collecte des voyages de flotte indisponible.'];$unknown=true;
+        } else {
+            $conditions['missions']=['status'=>$fleetHealth['total']>0?'alert':'ok','message'=>$fleetHealth['unscheduled'].' voyage(s) sans planification et '.$fleetHealth['overdue'].' en retard au-delà du seuil de leur univers.','grace'=>0];
+        }
         $conditions['failed']=['status'=>$failedCount===null?'unknown':($failedCount>0?'alert':'ok'),'message'=>$failedCount===null?'Transport d’échecs indisponible.':$failedCount.' message(s) dans le transport d’échecs.','grace'=>0];
         $unknown=$unknown||$failedCount===null||!$snapshot['database_healthy'];
         if ($backupStatus!==null) {
