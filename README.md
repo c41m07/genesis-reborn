@@ -365,3 +365,7 @@ Le nom public de l’éditeur et du responsable des données se renseigne avec `
 
 Conteneurs : `genesis-web`, `genesis-worker`, `genesis-relay`, `genesis-notifications`, `genesis-database`, `genesis-database-test`, `genesis-rabbitmq`, `genesis-mercure`. Image applicative : `local/genesis-web:dev`. Les identifiants des projets Compose et les volumes existants sont conservés.
 Le fichier local `compose.override.yaml`, ignoré par Git, applique ces noms avec les commandes habituelles (`make start`, `make status`). Il reste propre au poste de développement ; un clone neuf utilise les noms générés par Compose. Les tests et installations isolés utilisent leurs fichiers `-f` explicites et conservent leurs propres noms.
+
+### Gestion des guildes : extension en cours
+
+Les traités officiels distinguent alliance complète, non-agression et défense mutuelle, avec permissions séparées, signatures des deux guildes, paix bilatérale et historique. Les effets et l’état de validation sont détaillés dans [le suivi guildes/alliances](docs/GESTION_GUILDES_ALLIANCES.md). Cette extension nécessite la migration `Version20261111020000`, préparée sans application autorisée à une base existante. Les projets collectifs ne sont pas encore livrés.

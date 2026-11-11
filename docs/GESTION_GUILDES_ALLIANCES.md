@@ -32,7 +32,7 @@ Les recommandations de l'audit ne valent pas validation de ces règles. Les déc
 
 `DiplomacyAccessPolicyTest` couvre transfert d'autorité, archivage, isolation des univers, relations sans guilde et refus des empires détachés, oubliés ou non persistés. Les tests de diplomatie existants dans `GamePersistenceTest` restent nécessaires pour vérifier le raccordement aux mutations réelles.
 
-La suite porte sur les grades persistants, puis sur la formalisation conjointe des relations collectives et personnelles, et enfin sur les projets après arbitrage économique. Chaque lot validé doit être fusionné vers `dev` avant le suivant. L'application d'une migration à une base existante et la publication nécessitent les validations prévues dans AGENTS.md.
+La suite porte sur les grades persistants, puis sur la formalisation conjointe des relations collectives et personnelles, et enfin sur les projets après arbitrage économique. Décision utilisateur du 11 novembre 2026 : chaque fonctionnalité terminée est committée sur la même branche ; la PR #36 reste en brouillon jusqu’à la fin de tout le périmètre demandé. L'application d'une migration à une base existante et la publication nécessitent les validations prévues dans AGENTS.md.
 
 ## Grades personnalisés — implémentation en cours
 
@@ -133,3 +133,26 @@ La PR du premier commit n'a pas été créée automatiquement : le connecteur a 
 - `git diff --check` et `git diff --cached --check` : réussites.
 
 Ces résultats remplacent les vérifications partielles précédentes pour la publication de ce complément. Ils restent locaux et ne constituent pas une validation de la CI GitHub. Aucune nouvelle migration ni aucun déploiement n'est inclus.
+
+## Traités officiels — développement du 11 novembre 2026
+
+Les trois types et leurs effets sont validés dans DECISIONS.md et REGLES.md. Complexité : 5/5 pour les droits diplomatiques et leurs contrôles de flotte. Les propositions restent distinctes de la relation effective ; une signature reçue ne peut être acceptée par son auteur. Les versions et identifiants de formulaire empêchent d’appliquer une ancienne confirmation à une autre relation.
+
+`GuildRelation.proposal` stocke l’offre en cours ; `version` protège la concurrence. `GuildTreatyEvent` conserve chaque proposition, signature, refus/retrait, rupture et hostilité avec date UTC, identifiants des guildes et de l’acteur, états avant/après. Les identifiants sont des instantanés sans lien bloquant la dissolution ; aucune histoire antérieure n’est inventée. L’interface limite l’historique aux dix dernières actions de la paire et de l’univers du joueur. La conversion/archivage neutralise aussi les propositions.
+
+Route existante : `app_diplomacy`, GET/POST `/diplomatie`, action `relation`, sous-actions explicites `propose`, `accept`, `decline`, `break`, `hostile`. Chaque POST vérifie CSRF, univers, activité, appartenance, permission et version dans la transaction. L’adaptateur interne à trois arguments reste compatible avec les appels métier existants.
+
+Migration préparée : `Version20261111020000`. Ne pas appliquer à une base existante sans autorisation distincte. Les vérifications de développement utilisent uniquement le projet Docker jetable `genesis-alliances-work-20261111` et les projets navigateur isolés. Les validations complètes restent à exécuter ; aucun commit ni push de cette fonctionnalité à ce stade. La PR #36 reste en brouillon jusqu’à la fin des traités et projets collectifs.
+
+### Validation du lot des trois traités — 11 novembre 2026
+
+- `make validate`, `make lint`, schéma compris, et `make assets` / `npm run build` : réussites sur le contenu final.
+- `make test` final : 634 tests PHP, 209638 assertions et 13 tests Python réussis. Dans le projet jetable, l’URL publique Mercure est passée à l’exécution PHP pour correspondre au domaine attendu par les tests HTTP ; aucun changement de configuration du produit. La première exécution utilisait le domaine du navigateur isolé et faisait échouer le seul test de cookie Mercure. Celui-ci a ensuite réussi isolément puis dans la suite complète.
+- Suite navigateur globale : partitions de 39, 48, 30 et 37 scénarios. Les partitions 1, 2 et 4 sont intégralement vertes ; la partition 3 compte 29 réussites et un dépassement de son délai de 60 secondes dans le parcours clavier général. Ce scénario a réussi dans un projet neuf en 46,5 secondes, sans changement d’assertion ni de délai. Bilan : 154 scénarios validés par consolidation, pas une campagne complète sans échec d’un seul passage.
+- Le parcours des traités couvre les trois accords, les signatures, les termes inchangés pendant une offre, le refus de formulaire périmé, l’hostilité, le refus de paix, la paix bilatérale, l’historique limité, le clavier, trois largeurs et une analyse axe ciblée. Ces contrôles ne constituent pas un audit RGAA complet.
+- Les tests PHP vérifient notamment les droits séparés, la conservation des effets avant signature, la non-agression au départ et à l’arrivée, l’absence d’acceptation automatique du stationnement, les propositions concurrentes, la paix, les rivalités personnelles et la conservation de l’historique après dissolution.
+- Migration appliquée uniquement aux bases jetables, y compris depuis une installation vierge. Aucune application à la base existante ni aucun déploiement.
+
+Point d’intégration à résoudre avant fusion : le chantier local parallèle `feature/reconstruction-empires-oublies` utilise aussi `Version20261111010000`, pour `empire_reconstruction`, alors que ce numéro appartient déjà à la migration des grades de cette branche, appliquée antérieurement à la base locale sur autorisation. Ne pas remplacer ni renuméroter silencieusement cette migration déjà exécutée. Aucun fichier du chantier parallèle n’a été modifié ici.
+
+Les projets collectifs restent le lot suivant. Décisions utilisateur reçues : dons de ressources définitifs, paliers communs, minimums de contribution par ressource, présence dans la guilde à la fin, un seul achèvement par guilde et un boost maximum par joueur et modèle de projet malgré un changement de guilde. Coûts et minimums administrables ; aucun modèle actif par défaut.

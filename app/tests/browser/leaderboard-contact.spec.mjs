@@ -206,8 +206,8 @@ test('Hub de guilde : création, équipage et discussion commune', async ({ page
   await page.getByLabel('Rechercher une guilde').fill(enemyGuild);
   await page.getByRole('button', { name: 'Rechercher', exact: true }).click();
   const result = page.getByRole('region', { name: 'Résultats de recherche de guildes' });
-  await result.getByLabel('Relation réciproque').selectOption('enemies');
-  await result.getByRole('button', { name: 'Mettre à jour' }).click();
+  await result.getByText('Déclarer ennemis', { exact: true }).click();
+  await result.getByRole('button', { name: 'Confirmer l’hostilité' }).click();
   runIsolatedSql(process.env.BROWSER_ROUTER, "UPDATE leaderboard_snapshot SET updated_at=DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 DAY)");
   await page.goto('/classement?tab=guilds');
   await expect(page.getByRole('row').filter({ hasText: enemyGuild })).toHaveClass(/ranking-row--enemy/);

@@ -1186,3 +1186,10 @@ Les six contrôles requis réussissent : `make validate`, `make lint`, `make tes
 rejouée après l'alignement sur minuit et l'isolation des drapeaux de test.
 Ces contrôles locaux ne constituent pas une validation de la CI GitHub.
 La publication du code ne déploie pas le jeu et n'active pas le cycle à distance.
+
+
+## Gestion des guildes et alliances — 11 novembre 2026
+
+Sur `feature/gestion-guildes-alliances`, les grades et les rivalités personnelles sont complétés par les trois traités officiels : alliance complète, non-agression et défense mutuelle. Permissions séparées, propositions/signatures versionnées, paix bilatérale, historique et contrôles de flotte sont implémentés. La validation locale compte 634 tests PHP, 13 tests Python et 154 scénarios navigateur consolidés ; voir [le suivi détaillé](GESTION_GUILDES_ALLIANCES.md) pour les reprises et limites.
+
+Prochaine étape : projets collectifs à paliers avec dons définitifs et boosts, selon les décisions utilisateur du suivi. Chaque fonctionnalité terminée est committée ; la PR #36 reste en brouillon jusqu’à la fin du périmètre. Ni migration sur une base existante ni déploiement de ces extensions. Le conflit de numéro de migration avec le chantier de reconstruction doit être résolu avant intégration.

@@ -42,6 +42,14 @@ final class GameRepository
         }
         return false;
     }
+    public function guildTreatyHistory(\App\Entity\Guild $a,\App\Entity\Guild $b): array
+    {
+        if($a->universe->id!==$b->universe->id) return [];
+        if($a->id>$b->id) [$a,$b]=[$b,$a];
+        return $this->em->getRepository(\App\Entity\GuildTreatyEvent::class)->findBy(
+            ['universeId'=>$a->universe->id,'guildAId'=>$a->id,'guildBId'=>$b->id],['id'=>'DESC'],10
+        );
+    }
     public function all(string $class, array $criteria = [], array $order = ['id' => 'ASC']): array { return $this->em->getRepository($class)->findBy($criteria, $order); }
     /** @return list<PlayerUniverse> */
     public function forgottenEmpirePreviewCandidates(\DateTimeImmutable $now, int $conversionSeconds, int $limit, int $afterId, \DateTimeImmutable $cutoff): array

@@ -58,10 +58,11 @@ final class CombatEventService
     public function canAttack(PlayerUniverse $attacker, Planet $target): bool
     {
         $defender = $target->owner;
-        if(!$attacker->isPlayerControlled()) return false;
+        if(!$attacker->isPlayerControlled() || ($defender!==null && $this->relations->nonAggression($attacker,$defender))) return false;
         $occupation=$this->occupations->activeFor($target);
         if($occupation!==null) {
             if(!$this->occupations->isEnabled() || !$this->occupations->canOccupy($attacker) || $attacker->universe->id!==$occupation->occupant->universe->id) return false;
+            if($this->relations->nonAggression($attacker,$occupation->occupant)) return false;
             $friendly=$attacker->id===$occupation->occupant->id || $this->relations->allied($attacker,$occupation->occupant);
             return !$friendly || $this->occupationHasHostiles($target,$occupation->occupant);
         }
@@ -82,6 +83,8 @@ final class CombatEventService
 
     public function canConquer(PlayerUniverse $attacker, ?Planet $target): bool
     {
+        if($target!==null && (($target->owner!==null && $this->relations->nonAggression($attacker,$target->owner))
+            || (($holder=$this->occupations->activeFor($target)?->occupant)!==null && $this->relations->nonAggression($attacker,$holder)))) return false;
         if($target!==null && ($occupation=$this->occupations->activeFor($target))!==null) return $this->occupations->isEnabled()
             && $this->occupations->canOccupy($attacker) && $attacker->universe->id===$occupation->occupant->universe->id
             && $attacker->id!==$occupation->occupant->id && !$this->relations->allied($attacker,$occupation->occupant)
@@ -179,7 +182,7 @@ final class CombatEventService
             && $target->owner->id !== $sender->id
             && $target->owner->universe->id === $sender->universe->id
             && !$this->vacations->isActive($sender) && !$this->vacations->isActive($target->owner)
-            && $this->relations->allied($sender, $target->owner);
+            && $this->relations->canStationDefenders($sender, $target->owner);
     }
 
     public function orbitAutoAccepted(PlayerUniverse $sender, ?Planet $target): bool

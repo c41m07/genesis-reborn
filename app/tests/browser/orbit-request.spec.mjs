@@ -48,13 +48,12 @@ test('Orbite alliée : demande entrante, accord du propriétaire et stationnemen
 
     await senderPage.goto('/diplomatie?tab=diplomacy&q='+encodeURIComponent(hostGuild));
     const hostGuildCardForSender = senderPage.getByRole('region', { name: 'Résultats de recherche de guildes' }).locator('.guild-card').filter({ has: senderPage.getByRole('heading', { name: hostGuild, exact: true }) });
-    await hostGuildCardForSender.getByLabel('Relation réciproque').selectOption('allies');
-    await hostGuildCardForSender.getByRole('button', { name: 'Mettre à jour' }).click();
+    await hostGuildCardForSender.getByLabel('Traité à proposer').selectOption('allies');
+    await hostGuildCardForSender.getByRole('button', { name: 'Proposer le traité' }).click();
     await expect(hostGuildCardForSender.locator('.badge')).toContainText('Proposition en attente');
     await hostPage.goto('/diplomatie?tab=diplomacy');
     const senderGuildCardForHost = hostPage.locator('.guild-card').filter({ has: hostPage.getByRole('heading', { name: senderGuild, exact: true }) });
-    await senderGuildCardForHost.getByLabel('Relation réciproque').selectOption('allies');
-    await senderGuildCardForHost.getByRole('button', { name: 'Mettre à jour' }).click();
+    await senderGuildCardForHost.getByRole('button', { name: 'Accepter le traité' }).click();
     await expect(senderGuildCardForHost.locator('.badge')).toContainText('Alliés');
     await senderPage.goto('/diplomatie?tab=diplomacy');
     await expect(senderPage.locator('.guild-card').filter({ has: senderPage.getByRole('heading', { name: hostGuild, exact: true }) }).locator('.badge')).toContainText('Alliés');

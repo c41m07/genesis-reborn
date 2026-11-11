@@ -82,6 +82,49 @@ final class GuildRankTest extends KernelTestCase
         $diplomacy->relation($delegate, $otherGuild->id, 'neutral');
     }
 
+    public static function pactTypes(): array
+    {
+        return [['non_aggression'],['defense']];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('pactTypes')]
+    public function testAlliancePermissionDoesNotGrantPactPermissions(string $type): void
+    {
+        [$leader, $delegate, $outsider, $guild, $member, $rank, $ranks, $diplomacy] = $this->rankedGuild();
+        $diplomacy->create($outsider, 'Autre guilde');
+        $otherGuild = $this->em->getRepository(\App\Entity\Guild::class)->findOneBy(['leader' => $outsider]);
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('Permission de traité insuffisante');
+        $diplomacy->relation($delegate, $otherGuild->id, $type);
+    }
+
+    public function testGuildRelationRejectsAnOutdatedForm(): void
+    {
+        [$leader, $delegate, $outsider, $guild, $member, $rank, $ranks, $diplomacy] = $this->rankedGuild();
+        $diplomacy->create($outsider, 'Autre guilde');
+        $otherGuild = $this->em->getRepository(\App\Entity\Guild::class)->findOneBy(['leader' => $outsider]);
+        $diplomacy->relation($leader, $otherGuild->id, 'allies', 0, 0);
+        $relation = $this->em->getRepository(\App\Entity\GuildRelation::class)->findOneBy(['guildA' => $guild, 'guildB' => $otherGuild]);
+        $version = $relation->version;
+        $diplomacy->relation($outsider, $guild->id, 'allies', $relation->id, $version);
+        self::assertSame('allies', $relation->status);
+        self::assertGreaterThan($version, $relation->version);
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('La relation a changé');
+        $diplomacy->relation($leader, $otherGuild->id, 'neutral', $relation->id, $version);
+    }
+
+    public function testGuildRelationRejectsAFormFromBeforeItsCreation(): void
+    {
+        [$leader, $delegate, $outsider, $guild, $member, $rank, $ranks, $diplomacy] = $this->rankedGuild();
+        $diplomacy->create($outsider, 'Autre guilde');
+        $otherGuild = $this->em->getRepository(\App\Entity\Guild::class)->findOneBy(['leader' => $outsider]);
+        $diplomacy->relation($leader, $otherGuild->id, 'allies', 0, 0);
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('La relation a changé');
+        $diplomacy->relation($outsider, $guild->id, 'enemies', 0, 0);
+    }
+
     public function testRankPermissionRevocationPreventsNextDiplomaticAction(): void
     {
         [$leader, $delegate, $outsider, $guild, $member, $rank, $ranks, $diplomacy] = $this->rankedGuild();

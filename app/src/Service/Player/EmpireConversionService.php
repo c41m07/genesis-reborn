@@ -96,8 +96,8 @@ final class EmpireConversionService
                 $roster=array_map(static fn(GuildMember $row): array=>['member_id'=>$row->id,'membership_id'=>$row->playerUniverse->id],$members);
                 $result['guilds'][]=['id'=>$guild->id,'successor_id'=>null,'archived'=>true,'roster'=>$roster];
                 foreach($members as $member) $this->manager->remove($member);
-                foreach($this->repo->all(GuildRelation::class,['guildA'=>$guild]) as $relation) $relation->status='neutral';
-                foreach($this->repo->all(GuildRelation::class,['guildB'=>$guild]) as $relation) $relation->status='neutral';
+                foreach($this->repo->all(GuildRelation::class,['guildA'=>$guild]) as $relation) { $relation->status='neutral';$relation->proposal=null; }
+                foreach($this->repo->all(GuildRelation::class,['guildB'=>$guild]) as $relation) { $relation->status='neutral';$relation->proposal=null; }
             }
         }
         $member=$this->repo->one(GuildMember::class,['playerUniverse'=>$membership]);

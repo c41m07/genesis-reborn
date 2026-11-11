@@ -33,7 +33,7 @@ final class FleetService
         if($mission==='attack' && !$this->combats->canAttack($m,$target instanceof Planet?$target:null)) throw new \DomainException('Cette planète ne peut pas être attaquée.');
         if($mission==='conquer' && !$this->combats->canConquer($m,$target instanceof Planet?$target:null)) throw new \DomainException('La conquête n’est pas activée ou cette planète ne peut pas être prise.');
         if($mission==='defend' && !$this->combats->canDefend($m,$target instanceof Planet?$target:null)) throw new \DomainException('Cette planète ne peut pas être défendue depuis cet univers.');
-        if($mission==='orbit' && !$this->combats->canOrbit($m,$target instanceof Planet?$target:null)) throw new \DomainException('Une orbite est possible uniquement chez un allié de cet univers.');
+        if($mission==='orbit' && !$this->combats->canOrbit($m,$target instanceof Planet?$target:null)) throw new \DomainException('Une orbite nécessite une alliance ou un pacte de défense dans cet univers.');
         if(!is_finite($orbitHours) || $orbitHours<0 || $orbitHours>168 || ($mission==='orbit' && ($orbitHours<1 || floor($orbitHours)!==$orbitHours)) || ($mission!=='orbit' && $orbitHours!=0)) throw new \DomainException('Durée d’orbite invalide. Choisissez entre 1 et 168 heures.');
         if($mission==='colonize' && ($target->owner!==null || $target->npcPlanet)) throw new \DomainException('Cette planète doit être conquise ou n’est pas vierge.');
         $config=$this->catalog->forUniverse($m->universe);$planetLimit=$this->planetLimit($m,$config);

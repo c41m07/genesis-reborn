@@ -151,6 +151,8 @@ final class PersonalDiplomacyTest extends KernelTestCase
         $this->diplomacy->alliance($target, $actor->id, 'peace_accept');
         self::assertTrue($this->relations->enemy($actor, $target));
         $this->diplomacy->relation($actor, $targetGuild->id, 'neutral');
+        self::assertTrue($this->relations->enemy($actor, $target));
+        $this->diplomacy->relation($target, $actorGuild->id, 'neutral');
         self::assertFalse($this->relations->enemy($actor, $target));
     }
 

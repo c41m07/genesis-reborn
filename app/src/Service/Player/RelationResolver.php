@@ -17,6 +17,18 @@ final class RelationResolver
         if($a->id>$b->id) [$a,$b]=[$b,$a];
         return $this->repo->one(GuildRelation::class,['guildA'=>$a,'guildB'=>$b])?->status??'neutral';
     }
+    public function nonAggression(PlayerUniverse $a,PlayerUniverse $b): bool
+    {
+        return $a->isPlayerControlled() && $b->isPlayerControlled()
+            && $a->universe->id===$b->universe->id
+            && in_array($this->guildStatus($this->guild($a),$this->guild($b)),['non_aggression','defense'],true);
+    }
+    public function canStationDefenders(PlayerUniverse $a,PlayerUniverse $b): bool
+    {
+        return $this->allied($a,$b) || ($a->isPlayerControlled() && $b->isPlayerControlled()
+            && $a->universe->id===$b->universe->id
+            && $this->guildStatus($this->guild($a),$this->guild($b))==='defense');
+    }
     public function contract(PlayerUniverse $a,PlayerUniverse $b): ?AllianceContract
     {
         if(!$a->isPlayerControlled() || !$b->isPlayerControlled()) return null;

@@ -8,8 +8,10 @@ final class DiplomacyAccessPolicy
     public const PERMISSIONS = [
         'members.assign_rank' => 'Attribuer les grades inférieurs',
         'diplomacy.alliance' => 'Proposer et accepter les alliances de guilde',
+        'diplomacy.non_aggression' => 'Proposer et signer les pactes de non-agression',
+        'diplomacy.defense' => 'Proposer et signer les pactes de défense',
         'diplomacy.hostility' => 'Déclarer une hostilité de guilde',
-        'diplomacy.neutral' => 'Revenir à la neutralité entre guildes',
+        'diplomacy.neutral' => 'Rompre un traité et négocier la paix entre guildes',
     ];
 
     public function allows(?GuildMember $member, string $permission): bool

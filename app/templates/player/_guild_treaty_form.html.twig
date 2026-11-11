@@ -1,0 +1,9 @@
+<form method="post">
+    <input type="hidden" name="_token" value="{{ csrf_token('diplomacy') }}">
+    <input type="hidden" name="action" value="relation">
+    <input type="hidden" name="target" value="{{ g.id }}">
+    <input type="hidden" name="relation_id" value="{{ row.relation.id|default(0) }}">
+    <input type="hidden" name="relation_version" value="{{ row.relation.version|default(0) }}">
+    <input type="hidden" name="status" value="{{ treatyStatus }}">
+    <button class="secondary" name="treaty_action" value="{{ treatyAction }}">{{ treatyLabel }}</button>
+</form>

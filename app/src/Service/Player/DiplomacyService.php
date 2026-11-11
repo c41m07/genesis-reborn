@@ -135,29 +135,85 @@ final class DiplomacyService
         return $contract;
     }
 
-    public function relation(PlayerUniverse $m,int $targetId,string $status): void
+    public function relation(PlayerUniverse $actor,int $targetId,string $status,?int $expectedId=null,?int $expectedVersion=null,string $action='legacy'): void
     {
-        $this->manager->transaction(function()use($m,$targetId,$status){
-            $this->lock($m,true);$g=$this->relations->guild($m);$target=$this->repo->find(Guild::class,$targetId);
-            $member=$this->repo->one(GuildMember::class,['playerUniverse'=>$m]);
-            if($member) {
-                $this->manager->lock($member);
-                $this->manager->lock($member->guild);
-                if($member->rank) $this->manager->lock($member->rank);
+        $this->manager->transaction(function()use($actor,$targetId,$status,$expectedId,$expectedVersion,$action): void {
+            $this->lock($actor,true);
+            $member=$this->repo->one(GuildMember::class,['playerUniverse'=>$actor]);
+            if(!$member) throw new \DomainException('Vous devez appartenir à une guilde.');
+            $this->manager->lock($member);
+            $guild=$member->guild;
+            $this->manager->lock($guild);
+            if($member->rank) $this->manager->lock($member->rank);
+            $target=$this->repo->find(Guild::class,$targetId);
+            if(!$target || $target->id===$guild->id || $target->universe->id!==$actor->universe->id) throw new \DomainException('Guilde inaccessible.');
+            $this->manager->lock($target);
+            if($guild->archivedAt!==null || $target->archivedAt!==null) throw new \DomainException('Guilde archivée.');
+            [$a,$b]=$guild->id<$target->id?[$guild,$target]:[$target,$guild];
+            $relation=$this->repo->one(GuildRelation::class,['guildA'=>$a,'guildB'=>$b]);
+            if($relation) $this->manager->lock($relation);
+            if(($expectedId!==null && $expectedId!==($relation?->id??0)) || ($expectedVersion!==null && $expectedVersion!==($relation?->version??0))) {
+                throw new \DomainException('La relation a changé. Rechargez la page avant de confirmer.');
             }
-            $permission=match($status) {'allies'=>'diplomacy.alliance','enemies'=>'diplomacy.hostility','neutral'=>'diplomacy.neutral',default=>''};
-            if(!$g || !$this->access->allows($member,$permission) || !$target || $target->archivedAt!==null || $target->id===$g->id || $target->universe->id!==$m->universe->id) throw new \DomainException('Relation inaccessible ou commandement requis.');
-            if(!in_array($status,['allies','enemies','neutral'],true)) throw new \DomainException('Relation invalide.');
-            [$a,$b]=$g->id<$target->id?[$g,$target]:[$target,$g];
-            $r=$this->repo->one(GuildRelation::class,['guildA'=>$a,'guildB'=>$b]);
-            if($status==='neutral') { if($r) $this->manager->remove($r);return; }
-            if(!$r) { $r=new GuildRelation();$r->guildA=$a;$r->guildB=$b;$r->proposer=$g;$r->status='neutral';$this->manager->save($r); }
-            if($status==='allies') {
-                if($r->status==='enemies' && !$this->access->allows($member,'diplomacy.neutral')) throw new \DomainException('La sortie d’hostilité nécessite la permission de revenir à la neutralité.');
-                if($r->status==='allies') return;
-                if($r->status==='pending' && $r->proposer->id!==$g->id) $r->status='allies';else { $r->status='pending';$r->proposer=$g; }
-            } else { $r->status='enemies';$r->proposer=$g; }
-            $this->manager->flush();$this->breakHostileContracts($m->universe);
+            $proposal=$relation?->proposal ?? ($relation?->status==='pending'?'allies':null);
+            if($action==='legacy') {
+                $action=match($status) {
+                    'enemies'=>'hostile',
+                    'neutral'=>$relation?->status==='enemies' ? ($proposal==='neutral' && $relation->proposer->id!==$guild->id?'accept':'propose') : ($proposal!==null?'decline':'break'),
+                    'allies','non_aggression','defense'=>$proposal===$status && $relation->proposer->id!==$guild->id?'accept':'propose',
+                    default=>throw new \DomainException('Relation invalide.'),
+                };
+            }
+            if(!in_array($action,['propose','accept','decline','break','hostile'],true)) throw new \DomainException('Action de traité inconnue.');
+            $permission=match($action) {
+                'hostile'=>'diplomacy.hostility',
+                'break'=>'diplomacy.neutral',
+                default=>match(in_array($action,['accept','decline'],true)?$proposal:$status) {
+                    'allies'=>'diplomacy.alliance',
+                    'non_aggression'=>'diplomacy.non_aggression',
+                    'defense'=>'diplomacy.defense',
+                    'neutral'=>'diplomacy.neutral',
+                    default=>'',
+                },
+            };
+            if(!$this->access->allows($member,$permission)) throw new \DomainException('Permission de traité insuffisante.');
+            if(!$relation) {
+                if(!in_array($action,['propose','hostile'],true)) throw new \DomainException('Aucun traité à modifier.');
+                $relation=new GuildRelation();$relation->guildA=$a;$relation->guildB=$b;
+                $relation->status='neutral';$relation->proposer=$guild;
+                $this->manager->save($relation);
+            }
+            $before=$relation->status;
+            if($action==='propose') {
+                if($proposal!==null) throw new \DomainException('Une proposition existe déjà. Acceptez-la, refusez-la ou retirez-la.');
+                if($status==='neutral' && $relation->status!=='enemies') throw new \DomainException('La paix concerne une hostilité active.');
+                if($relation->status==='enemies' && $status!=='neutral') throw new \DomainException('Signez la paix avant de proposer un nouveau traité.');
+                if($relation->status===$status) throw new \DomainException('Ce traité est déjà actif.');
+                $relation->proposal=$status;$relation->proposer=$guild;
+                if($relation->status==='neutral' && $status==='allies') $relation->status='pending';
+            } elseif($action==='accept') {
+                if($proposal===null || $relation->proposer->id===$guild->id || $status!==$proposal) throw new \DomainException('Seule l’autre guilde peut accepter la proposition affichée.');
+                $relation->status=$proposal;$relation->proposal=null;
+            } elseif($action==='decline') {
+                if($proposal===null) throw new \DomainException('Aucune proposition en attente.');
+                $relation->proposal=null;
+                if($relation->status==='pending') $relation->status='neutral';
+            } elseif($action==='break') {
+                if($relation->status==='enemies') throw new \DomainException('La paix exige l’accord des deux guildes.');
+                if(!in_array($relation->status,['allies','non_aggression','defense'],true)) throw new \DomainException('Aucun traité actif à rompre.');
+                $relation->status='neutral';$relation->proposal=null;
+            } else {
+                if($relation->status==='enemies' && $proposal===null) throw new \DomainException('Cette hostilité existe déjà.');
+                $relation->status='enemies';$relation->proposal=null;$relation->proposer=$guild;
+            }
+            $event=new \App\Entity\GuildTreatyEvent();
+            $event->universeId=$actor->universe->id;$event->guildAId=$a->id;$event->guildBId=$b->id;
+            $event->actorId=$actor->id;$event->actorGuildId=$guild->id;$event->action=$action;
+            $event->previousStatus=$before;$event->status=$relation->status;$event->proposal=$relation->proposal;
+            $event->occurredAt=$this->clock->now();
+            $this->manager->save($event);
+            $this->manager->flush();
+            if($relation->status==='enemies') $this->breakHostileContracts($actor->universe);
         });
     }
     private function breakHostileContracts(\App\Entity\Universe $u): void
