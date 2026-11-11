@@ -1202,3 +1202,40 @@ Aucune migration ni réécriture globale des stocks n’est requise. Les nouvell
 ### Disposition du suivi sur les catalogues — ajustement du 10 novembre 2026
 
 Sur Bâtiments, Recherche, Chantier spatial et Défenses : jusqu’à 740 px, l’activité reste en haut et les flottes en vol sont masquées. De 741 à 1 250 px, l’activité reste en haut et les flottes restent accessibles. À partir de 1 251 px, l’activité est à droite du catalogue, au-dessus des flottes en vol. La vue générale et la page Flottes gardent leur suivi. Le masquage mobile retire aussi les liens correspondants du parcours clavier ; aucune duplication de file n’est introduite.
+
+## Reconstruction autonome des empires oubliés — décision du 11 novembre 2026
+
+L'utilisateur valide la reconstruction de tous les modèles de vaisseaux et de
+défenses des empires oubliés, sans inclure les PNJ classiques. Chaque planète
+possède une référence immuable des effectifs, modèles et rangs à la conversion,
+flottes rappelées/en retour comprises. Les commandes déjà payées restent acquises
+et peuvent dépasser cette référence sans la relever. Les empires antérieurement
+convertis sans référence sont exclus ; aucune estimation rétroactive n'est créée.
+
+Les coûts et durées normaux s'appliquent, avec prélèvement sur les stocks locaux
+et réutilisation du chantier partagé. La reconstruction complète seulement le
+manque après réparation partielle des défenses, survivants, retours et commandes
+existantes. Le choix privilégie le coût effectif unitaire croissant selon les poids
+économiques existants M=2, N=4, A=8, H=1, puis la durée croissante et un ordre stable
+par modèle, rang et groupe. Les modèles non finançables sont ignorés lors de ce
+choix. Cette règle favorise la quantité sans promettre un optimum combinatoire.
+
+Chaque nouvelle commande autonome porte sur une unité. Le début ou la reprise
+attend cinq minutes après la résolution du dernier combat local. Un nouveau combat
+suspend le travail, conserve l'avancement et le paiement, et invalide ses messages
+précédents. Aucun progrès ni livraison autonome pendant le combat.
+
+La reconstruction continue pendant l'occupation ; les forces hostiles doivent
+être vaincues avant transfert, et l'occupant victorieux garde son temps acquis.
+La capture définitive arrête le mécanisme de l'ancien empire et annule ses commandes
+restantes sans remboursement. Aucun mouvement offensif, nouvelle colonisation ou
+nouvelle recherche n'est ajouté. Cette décision autorise les nouvelles commandes
+de reconstruction et complète l'interdiction générale de nouvelles commandes PNJ
+consignée le 8 novembre ; les autres commandes autonomes restent exclues.
+
+Une table dédiée conserve référence et reprise, avec une commande en cours et
+un jeton invalidant les messages périmés. Le relais et le worker existants assurent
+l'exécution. En cas de stocks insuffisants, le contrôle est reprogrammé après
+60 secondes ; ce délai technique ne remplace pas le délai de cinq minutes après
+combat. La migration additive `Version20261111010000` ne convertit aucun empire
+et demande une autorisation distincte avant application sur une base de jeu.

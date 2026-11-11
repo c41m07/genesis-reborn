@@ -315,3 +315,41 @@ Transition validée : tout surplus déjà présent au-dessus de la capacité est
 Clarification validée le 10 novembre 2026 : les règles courantes s’appliquent directement à toute la période de production non encore matérialisée, depuis le dernier calcul enregistré, y compris lorsque cette période précède le déploiement. Ce recalcul rétroactif des gains en attente est accepté ; il peut augmenter ou réduire ces gains selon les nouveaux taux. Il ne réinitialise pas les stocks déjà enregistrés. Les frontières d’événements et de vacances restent prises en compte. Cette décision remplace le mécanisme initial de bascule par date : `RESOURCE_BALANCE_EFFECTIVE_AT` n’est plus utilisée et aucun ancien régime n’est maintenu.
 
 Aucune migration ni réécriture globale des stocks n’est requise. Les nouvelles valeurs sont actives dès que le nouveau code est exécuté, pour les univers existants comme pour les nouveaux. Lors du déploiement, arrêter les anciens processus applicatifs puis démarrer tous les services avec la même version ; aucun paramètre d’activation supplémentaire n’est nécessaire.
+
+## Reconstruction des empires oubliés — 11 novembre 2026
+
+Seuls les nouveaux empires convertis avec une référence enregistrée sont concernés.
+Les PNJ classiques et les empires déjà oubliés sans cette référence sont exclus.
+
+- Chaque planète conserve ses effectifs à la conversion par modèle et rang,
+  y compris ses propres flottes rappelées ou déjà en retour. Les commandes payées
+  antérieures terminent normalement ; elles ne relèvent pas la référence, même
+  si leurs résultats la dépassent.
+- Le manque est calculé après réparation partielle des défenses, en déduisant les
+  survivants, les retours et les unités déjà commandées. Le chantier existant est
+  conservé : les anciennes commandes passent avant les nouvelles reconstructions.
+- Tous les modèles de défenses et de vaisseaux sont reconstructibles à leur rang
+  d'origine, sans croissance autonome au-delà de la référence.
+- La reconstruction commence au plus tôt cinq minutes après la résolution du
+  dernier combat sur cette planète. Un nouveau combat suspend le travail payé,
+  conserve son avancement et invalide les anciennes échéances ; aucun progrès
+  ni livraison autonome pendant le combat. La reprise attend à nouveau cinq minutes
+  après sa résolution, sans second prélèvement.
+- Une unité est commandée à la fois au chantier partagé, avec les coûts et durées
+  normaux, les réductions acquises et les paramètres de l'univers. Les stocks de
+  la planète paient la commande. S'ils sont insuffisants, la production locale
+  peut permettre une nouvelle commande ultérieure.
+- Les modèles finançables sont classés par coût effectif unitaire croissant :
+  métal × 2 + nano × 4 + antimatière × 8 + hydrogène. À égalité, priorité à la durée
+  la plus courte, puis à l'identifiant du modèle, du rang et du groupe. Un modèle
+  non finançable n'empêche pas d'en reconstruire un autre. Cette priorité favorise
+  la quantité sans garantir une optimisation combinatoire de toutes les ressources.
+- La reconstruction continue pendant l'occupation, hors combat. Les forces hostiles
+  reconstruites doivent être vaincues avant capture, sans remise à zéro du temps
+  acquis par l'occupant victorieux. Aucun départ offensif n'est créé.
+- La capture définitive arrête la reconstruction de l'ancien empire et annule
+  ses commandes restantes sans remboursement. Les références historiques restent
+  conservées et ne s'appliquent jamais au nouveau propriétaire.
+
+Aucune attaque automatique, nouvelle colonisation ou nouvelle recherche n'est
+ajoutée. Les recherches déjà payées à la conversion peuvent finir, puis restent figées.

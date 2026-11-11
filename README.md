@@ -142,6 +142,21 @@ Un combat ouvert ou des forces hostiles empêchent toujours la capture.
 Après activation explicitement autorisée, `RESUME_ARGS=--apply` permet de
 reprogrammer leurs contrôles après interruption ; les messages périmés et rejoués
 ne peuvent pas capturer deux fois. Aucun nouveau processus n'est lancé par ce lot.
+La reconstruction autonome concerne uniquement les empires convertis après
+l'installation de la migration additive `Version20261111010000`. Une référence
+par planète conserve les modèles, rangs et effectifs à la conversion, retours
+compris, hors commandes déjà payées. Après chaque combat, le chantier reprend au
+bout de cinq minutes, avec les coûts et durées normaux prélevés sur les stocks
+locaux. La réparation partielle des défenses est déduite du manque ; aucune
+croissance autonome au-delà de la référence. Les unités finançables les moins
+coûteuses en valeur économique sont prioritaires, puis les plus rapides.
+Le travail payé est suspendu en combat, sans progression, puis repris sans second
+paiement. La reconstruction continue sous occupation ; les forces hostiles doivent
+être vaincues avant capture. La capture arrête le mécanisme et annule le travail
+restant sans remboursement. Les messages utilisent le relais et le worker existants,
+sans nouveau processus. Les PNJ classiques et les empires déjà oubliés sans référence
+sont exclus. Cette migration doit être appliquée avant de charger cette version des
+services ; aucune synchronisation globale du schéma n'est nécessaire.
 Le passage quotidien est fixé à 00 h, heure de Paris, avec adaptation été/hiver.
 Après 30 jours effectifs, la conversion devient éligible au premier minuit suivant
 (ou au même instant si le seuil tombe déjà à minuit). Le joueur conserve l'accès
