@@ -1,10 +1,31 @@
+{% set status = row.contract ? row.contract.status : 'none' %}
+{% set rival = status in ['enemies','peace_pending'] %}
+{% set guildStatus = row.guildStatus|default('neutral') %}
 <article class="panel commander-card">
     <span class="avatar" aria-hidden="true">{{ row.player.player.username|first|upper }}</span>
     <h3>{{ row.player.player.username }}</h3>
-    <p>{{ row.enemy ? 'Ennemi · diplomatie de guilde' : (row.allied ? 'Allié' : (row.contract ? (row.contract.proposer.id==membership.id ? 'Proposition envoyée' : 'Proposition reçue') : 'Neutre')) }}</p>
+    <p>{{ row.enemy ? (guildStatus=='enemies' ? 'Ennemi · diplomatie de guilde' : 'Rival personnel') : (row.allied ? 'Allié' : (status=='pending' ? (row.contract.proposer.id==membership.id ? 'Proposition envoyée' : 'Proposition reçue') : (status=='ended' ? 'Relation personnelle terminée' : 'Neutre'))) }}</p>
+    {% if rival and guildStatus=='allies' %}<p>Rivalité personnelle sans effet sur les combats : les liens de guilde sont prioritaires.</p>{% endif %}
+    {% if status=='peace_pending' %}<p>{{ row.contract.proposer.id==membership.id ? 'Proposition de paix envoyée' : 'Proposition de paix reçue' }} · la rivalité continue jusqu’à acceptation.</p>{% endif %}
+    {% if status=='ended' and (row.allied or row.enemy) %}<p>Ancien contrat personnel terminé.</p>{% endif %}
     <a href="{{ path('app_messages',{with:row.player.id}) }}">Envoyer un message</a>
-    <form method="post"><input type="hidden" name="_token" value="{{ csrf_token('diplomacy') }}"><input type="hidden" name="target" value="{{ row.player.id }}">
-        {% if not row.contract %}{% if not row.allied and not row.enemy %}<button class="secondary" name="action" value="propose">Proposer une alliance</button>{% endif %}
-        {% else %}{% if row.contract.status=='pending' and row.contract.proposer.id!=membership.id %}<button class="primary" name="action" value="accept">Accepter l'alliance</button>{% endif %}<button class="text-button" name="action" value="break">{{ row.contract.status=='accepted'?'Rompre le contrat':'Annuler / refuser' }}</button>{% endif %}
+    <form method="post">
+        <input type="hidden" name="_token" value="{{ csrf_token('diplomacy') }}">
+        <input type="hidden" name="target" value="{{ row.player.id }}">
+        {% if rival %}
+            {% if status=='enemies' %}<button class="secondary" name="action" value="peace_propose">Proposer la paix</button>
+            {% else %}
+                {% if row.contract.proposer.id!=membership.id %}<button class="primary" name="action" value="peace_accept">Accepter la paix</button>{% endif %}
+                <button class="text-button" name="action" value="peace_reject">{{ row.contract.proposer.id==membership.id ? 'Retirer la proposition de paix' : 'Refuser la paix' }}</button>
+            {% endif %}
+        {% else %}
+            {% if status in ['none','ended'] and not row.allied and not row.enemy %}<button class="secondary" name="action" value="propose">Proposer une alliance</button>{% endif %}
+            {% if status=='pending' and row.contract.proposer.id!=membership.id %}<button class="primary" name="action" value="accept">Accepter l'alliance</button>{% endif %}
+            {% if status in ['pending','accepted'] %}<button class="text-button" name="action" value="break">{{ status=='accepted' ? 'Rompre le contrat' : 'Annuler / refuser' }}</button>{% endif %}
+            <details><summary>Déclarer une rivalité</summary>
+                <p>La rivalité est réciproque et met fin à l’alliance personnelle éventuelle. La paix devra être acceptée par les deux joueurs. Elle ne permet pas d’attaquer les membres de votre guilde ou d’une guilde alliée.</p>
+                <button class="secondary" name="action" value="rival">Confirmer la rivalité</button>
+            </details>
+        {% endif %}
     </form>
 </article>

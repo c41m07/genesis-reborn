@@ -147,7 +147,7 @@ final class OccupationStartTest extends WebTestCase
         $service=new \App\Service\Player\EmpireConversionService(static::getContainer()->get(GameManager::class),static::getContainer()->get(GameRepository::class),
             static::getContainer()->get(\App\Service\Colony\ActionGuard::class),static::getContainer()->get(\App\Service\Player\EmpireActivityService::class),
             static::getContainer()->get(FleetService::class),static::getContainer()->get(\App\Service\Queue\QueueService::class),$this->clock,
-            static::getContainer()->get(OccupationService::class),true,static::getContainer()->get(\App\Service\Player\EmpireReconstructionScheduler::class));
+            static::getContainer()->get(OccupationService::class),true,static::getContainer()->get(\App\Service\Player\GuildProjectService::class),static::getContainer()->get(\App\Service\Player\EmpireReconstructionScheduler::class));
         self::assertSame('converted',$service->convert($membership)['status']);
         self::assertSame('failed',$occupation->status);self::assertSame('occupant_unavailable',$occupation->endReason);
         self::assertSame('returning',$fleet->status);self::assertEquals(20,$fleet->reservedFuel);self::assertEquals(500,$fleet->cargo['hydrogen']);

@@ -27,7 +27,7 @@ final class AdminOperationsService
         }
 
         $now = $this->clock->now();
-        $outbox = ['queue' => 0, 'fleet' => 0, 'combat' => 0, 'universe' => 0, 'notification' => 0, 'other' => 0];
+        $outbox = ['queue' => 0, 'fleet' => 0, 'combat' => 0, 'universe' => 0, 'notification' => 0, 'guild_project' => 0, 'other' => 0];
         $overdue = 0;
         $outboxAvailable = false;
         $pending = [];

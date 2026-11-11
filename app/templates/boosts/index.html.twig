@@ -17,7 +17,7 @@
     <progress class="boost-capacity" value="{{ boosts|length }}" max="{{ inventory_capacity }}" aria-label="Emplacements utilisés dans l’inventaire">{{ boosts|length }} / {{ inventory_capacity }}</progress>
     {% if boosts|length >= inventory_capacity %}<p class="muted">Inventaire plein. Les nouvelles récompenses sont conservées en attente.</p>{% endif %}
     {% if boosts is empty %}
-        <div class="empty-state"><h3>Aucun bonus disponible</h3><p>Les récompenses de vos missions et événements apparaîtront ici.</p></div>
+        <div class="empty-state"><h3>Aucun bonus disponible</h3><p>Les récompenses de vos missions, événements et projets de guilde apparaîtront ici.</p></div>
     {% elseif boost_count > 0 %}
         <article class="mission-card">
             <div>

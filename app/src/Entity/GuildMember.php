@@ -9,6 +9,8 @@ class GuildMember
     public ?int $id = null;
     #[ORM\ManyToOne, ORM\JoinColumn(nullable: false)]
     public Guild $guild;
+    #[ORM\ManyToOne, ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    public ?GuildRank $rank = null;
     #[ORM\ManyToOne, ORM\JoinColumn(nullable: false, unique: true)]
     public PlayerUniverse $playerUniverse;
 }

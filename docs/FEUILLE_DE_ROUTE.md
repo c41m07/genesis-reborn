@@ -1187,6 +1187,20 @@ rejouée après l'alignement sur minuit et l'isolation des drapeaux de test.
 Ces contrôles locaux ne constituent pas une validation de la CI GitHub.
 La publication du code ne déploie pas le jeu et n'active pas le cycle à distance.
 
+
+## Gestion des guildes et alliances — 11 novembre 2026
+
+Sur `feature/gestion-guildes-alliances`, les grades et les rivalités personnelles sont complétés par les trois traités officiels : alliance complète, non-agression et défense mutuelle. Permissions séparées, propositions/signatures versionnées, paix bilatérale, historique et contrôles de flotte sont implémentés. La validation locale compte 634 tests PHP, 13 tests Python et 154 scénarios navigateur consolidés ; voir [le suivi détaillé](GESTION_GUILDES_ALLIANCES.md) pour les reprises et limites.
+
+Prochaine étape : projets collectifs à paliers avec dons définitifs et boosts, selon les décisions utilisateur du suivi. Chaque fonctionnalité terminée est committée ; la PR #36 reste en brouillon jusqu’à la fin du périmètre. Ni migration sur une base existante ni déploiement de ces extensions. Le conflit de numéro de migration avec le chantier de reconstruction doit être résolu avant intégration.
+
+
+### Complément terminé localement : projets collectifs — 11 novembre 2026
+
+Les projets de guilde sont implémentés avec paliers successifs, dons atomiques définitifs, coûts/minimums figés au lancement, permission de lancement déléguable et un boost maximum par compte et modèle. L’administration configure chaque univers, sans modèle actif par défaut. La distribution asynchrone est reprenable et respecte l’inventaire existant ; départ, dissolution et archivage ont un traitement explicite.
+
+Validation finale locale : `make validate`, `make lint`, compilation, 670 tests PHP (209722 assertions), 13 tests Python et 156 scénarios navigateur consolidés ; les reprises sont expliquées dans [le suivi](GESTION_GUILDES_ALLIANCES.md). Aucun déploiement ni nouvelle migration de la base habituelle. La PR #36 reste en brouillon, notamment pour coordonner le numéro de migration déjà utilisé par le chantier de reconstruction. Les fonctionnalités demandées sont implémentées ; l’intégration des deux branches et l’activation des modèles restent distinctes.
+
 ### Reconstruction ciblée des empires oubliés — 11 novembre 2026
 
 Implémentation sur `feature/reconstruction-empires-oublies`, depuis `dev`
@@ -1218,3 +1232,8 @@ de jeu reste non appliquée, sans conversion rétroactive ni déploiement distan
 Ces contrôles locaux ne constituent pas une validation de la CI GitHub.
 Un commit pour cette fonctionnalité terminée, puis une seule PR vers `dev`
 pour le périmètre complet.
+
+
+Réconciliation du 11 novembre 2026 : `dev` intégré à la branche guildes ; le numéro historique partagé est pris en charge par `Version20261111173000`, sans modifier la migration originale des grades ni appliquer les migrations à la base habituelle. Voir [le suivi](GESTION_GUILDES_ALLIANCES.md). PR #36 toujours en brouillon.
+
+Validation locale de la réconciliation : installation vierge isolée, 23 tests ciblés (205 assertions), 701 tests PHP (209981 assertions), 13 tests Python, 158 scénarios navigateur consolidés après reprise clavier inchangée, lint/schéma, compilation et contrôles Git réussis. Aucune migration de la base habituelle ; détails et limites dans [le suivi](GESTION_GUILDES_ALLIANCES.md).

@@ -15,4 +15,8 @@ class GuildRelation
     public Guild $proposer;
     #[ORM\Column(length: 20)]
     public string $status;
+    #[ORM\Column(length: 20, nullable: true)]
+    public ?string $proposal = null;
+    #[ORM\Version, ORM\Column(type: 'integer')]
+    public int $version = 1;
 }

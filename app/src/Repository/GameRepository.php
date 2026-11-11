@@ -42,6 +42,14 @@ final class GameRepository
         }
         return false;
     }
+    public function guildTreatyHistory(\App\Entity\Guild $a,\App\Entity\Guild $b): array
+    {
+        if($a->universe->id!==$b->universe->id) return [];
+        if($a->id>$b->id) [$a,$b]=[$b,$a];
+        return $this->em->getRepository(\App\Entity\GuildTreatyEvent::class)->findBy(
+            ['universeId'=>$a->universe->id,'guildAId'=>$a->id,'guildBId'=>$b->id],['id'=>'DESC'],10
+        );
+    }
     public function all(string $class, array $criteria = [], array $order = ['id' => 'ASC']): array { return $this->em->getRepository($class)->findBy($criteria, $order); }
     /** @return list<PlayerUniverse> */
     public function forgottenEmpirePreviewCandidates(\DateTimeImmutable $now, int $conversionSeconds, int $limit, int $afterId, \DateTimeImmutable $cutoff): array
@@ -90,7 +98,7 @@ SELECT
     (SELECT COUNT(*) FROM player_technology WHERE player_universe_id = :membership) AS technologies,
     (SELECT COUNT(*) FROM combat_event e JOIN planet p ON p.id = e.planet_id WHERE e.status = 'pending'
         AND (p.owner_id = :membership OR EXISTS (SELECT 1 FROM combat_participant cp WHERE cp.combat_event_id = e.id AND cp.player_universe_id = :membership))) AS open_combats,
-    (SELECT COUNT(*) FROM alliance_contract WHERE (player_a_id = :membership OR player_b_id = :membership) AND status IN ('pending','accepted')) AS alliances,
+    (SELECT COUNT(*) FROM alliance_contract WHERE (player_a_id = :membership OR player_b_id = :membership) AND status IN ('pending','accepted','enemies','peace_pending')) AS alliances,
     (SELECT COUNT(*) FROM guild_member WHERE player_universe_id = :membership) AS guild_memberships,
     (SELECT COUNT(*) FROM guild WHERE leader_id = :membership) AS led_guilds
 SQL;
@@ -412,7 +420,7 @@ SQL;
     public function outbox(bool $notifications): array
     {
         return $this->em->createQueryBuilder()->select('o')->from(OutboxMessage::class,'o')
-            ->where($notifications?'o.kind = :kind':'o.kind IN (:kind)')->setParameter('kind',$notifications?'notification':['queue','fleet','combat','universe','occupation','reconstruction'])
+            ->where($notifications?'o.kind = :kind':'o.kind IN (:kind)')->setParameter('kind',$notifications?'notification':['queue','fleet','combat','universe','occupation','guild_project','reconstruction'])
             ->orderBy('o.id','ASC')->setMaxResults(100)->getQuery()->getResult();
     }
     public function activeQueueItems(): array

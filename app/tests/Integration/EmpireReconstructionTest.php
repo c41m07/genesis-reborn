@@ -256,13 +256,13 @@ final class EmpireReconstructionTest extends KernelTestCase
     public function testMigrationCreatesOnlyTheReferenceTableAndRefusesToLoseReferences(): void
     {
         $connection=$this->em->getConnection();$connection->executeStatement('DROP TABLE empire_reconstruction');
-        require_once dirname(__DIR__,2).'/migrations/Version20261111010000.php';
-        $migration=new \DoctrineMigrations\Version20261111010000($connection,new \Psr\Log\NullLogger());
+        require_once dirname(__DIR__,2).'/migrations/Version20261111173000.php';
+        $migration=new \DoctrineMigrations\Version20261111173000($connection,new \Psr\Log\NullLogger());
         $migration->up(new \Doctrine\DBAL\Schema\Schema());
         foreach($migration->getSql() as $query) $connection->executeStatement($query->getStatement());
         self::assertSame([], (new SchemaTool($this->em))->getUpdateSchemaSql($this->em->getMetadataFactory()->getAllMetadata()));
-        $this->convert();$down=new \DoctrineMigrations\Version20261111010000($connection,new \Psr\Log\NullLogger());
-        $this->expectException(\Doctrine\Migrations\Exception\AbortMigration::class);$down->down(new \Doctrine\DBAL\Schema\Schema());
+        $this->convert();$down=new \DoctrineMigrations\Version20261111173000($connection,new \Psr\Log\NullLogger());
+        $this->expectException(\Doctrine\Migrations\Exception\IrreversibleMigration::class);$down->down(new \Doctrine\DBAL\Schema\Schema());
     }
 
     private function member(string $name,Universe $universe): PlayerUniverse

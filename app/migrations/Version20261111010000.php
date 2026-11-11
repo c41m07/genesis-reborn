@@ -6,20 +6,26 @@ use Doctrine\Migrations\AbstractMigration;
 
 final class Version20261111010000 extends AbstractMigration
 {
-    public function getDescription(): string { return 'Conserve la référence et la reprise de reconstruction des nouveaux empires oubliés.'; }
+    public function getDescription(): string
+    {
+        return 'Ajoute les grades de guilde et leur affectation facultative, sans changer les contrats personnels.';
+    }
 
     public function up(Schema $schema): void
     {
-        $this->addSql('CREATE TABLE empire_reconstruction (id INT AUTO_INCREMENT NOT NULL, reference JSON NOT NULL, next_at DATETIME DEFAULT NULL, dispatch_token VARCHAR(36) NOT NULL, planet_id INT NOT NULL, membership_id INT NOT NULL, queue_item_id INT DEFAULT NULL, INDEX IDX_C745BE92A25E9820 (planet_id), UNIQUE INDEX UNIQ_C745BE92F0EDC960 (queue_item_id), INDEX IDX_C745BE921FB354CD (membership_id), UNIQUE INDEX reconstruction_membership_planet (membership_id, planet_id), PRIMARY KEY (id)) DEFAULT CHARACTER SET utf8mb4');
-        $this->addSql('ALTER TABLE empire_reconstruction ADD CONSTRAINT FK_C745BE92A25E9820 FOREIGN KEY (planet_id) REFERENCES planet (id)');
-        $this->addSql('ALTER TABLE empire_reconstruction ADD CONSTRAINT FK_C745BE921FB354CD FOREIGN KEY (membership_id) REFERENCES player_universe (id)');
-        $this->addSql('ALTER TABLE empire_reconstruction ADD CONSTRAINT FK_C745BE92F0EDC960 FOREIGN KEY (queue_item_id) REFERENCES queue_item (id) ON DELETE SET NULL');
+        $this->addSql('CREATE TABLE guild_rank (id INT AUTO_INCREMENT NOT NULL, name VARCHAR(60) NOT NULL, position INT NOT NULL, permissions JSON NOT NULL, version INT DEFAULT 1 NOT NULL, guild_id INT NOT NULL, INDEX IDX_692C4E4B5F2131EF (guild_id), UNIQUE INDEX guild_rank_name_unique (guild_id, name), PRIMARY KEY (id)) DEFAULT CHARACTER SET utf8mb4');
+        $this->addSql('ALTER TABLE guild_rank ADD CONSTRAINT FK_692C4E4B5F2131EF FOREIGN KEY (guild_id) REFERENCES guild (id) ON DELETE CASCADE');
+        $this->addSql('ALTER TABLE guild_member ADD rank_id INT DEFAULT NULL');
+        $this->addSql('CREATE INDEX IDX_7FD58C977616678F ON guild_member (rank_id)');
+        $this->addSql('ALTER TABLE guild_member ADD CONSTRAINT FK_7FD58C977616678F FOREIGN KEY (rank_id) REFERENCES guild_rank (id) ON DELETE SET NULL');
     }
 
     public function down(Schema $schema): void
     {
-        $this->abortIf((int)$this->connection->fetchOne('SELECT COUNT(*) FROM empire_reconstruction')>0,
-            'Retour impossible : les références de reconstruction doivent être conservées.');
-        $this->addSql('DROP TABLE empire_reconstruction');
+        $this->abortIf((int) $this->connection->fetchOne('SELECT COUNT(*) FROM guild_rank') > 0, 'Retour refusé : des grades existants doivent être conservés.');
+        $this->addSql('ALTER TABLE guild_member DROP FOREIGN KEY FK_7FD58C977616678F');
+        $this->addSql('DROP INDEX IDX_7FD58C977616678F ON guild_member');
+        $this->addSql('ALTER TABLE guild_member DROP rank_id');
+        $this->addSql('DROP TABLE guild_rank');
     }
 }

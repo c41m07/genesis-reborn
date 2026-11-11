@@ -1203,6 +1203,44 @@ Aucune migration ni réécriture globale des stocks n’est requise. Les nouvell
 
 Sur Bâtiments, Recherche, Chantier spatial et Défenses : jusqu’à 740 px, l’activité reste en haut et les flottes en vol sont masquées. De 741 à 1 250 px, l’activité reste en haut et les flottes restent accessibles. À partir de 1 251 px, l’activité est à droite du catalogue, au-dessus des flottes en vol. La vue générale et la page Flottes gardent leur suivi. Le masquage mobile retire aussi les liens correspondants du parcours clavier ; aucune duplication de file n’est introduite.
 
+### Rivalités personnelles — décisions du 11 novembre 2026
+
+Décisions explicites de l'utilisateur : une hostilité personnelle est réciproque et peut être déclenchée par un seul joueur, comme entre guildes. Elle est accessible sans appartenance à une guilde.
+
+Les liens collectifs priment : entre membres de la même guilde ou de guildes alliées, une rivalité personnelle reste sans effet sur les autorisations de combat. Elle ne permet pas de contourner l'interdiction d'attaquer ces alliés.
+
+La fin d'une rivalité exige l'accord des deux joueurs : l'un propose la paix et l'autre l'accepte. Une proposition, son retrait ou son refus ne suffit pas à terminer l'hostilité.
+
+Ces décisions ne valident aucun bonus de combat, accès à des renseignements privés, récompense de rivalité ou modification des protections existantes.
+
+### Traités entre guildes — décisions du 11 novembre 2026
+
+Décisions explicites de l’utilisateur : trois traités réciproques, signés par deux guildes du même univers. Une proposition conserve les effets du traité actif jusqu’à acceptation par l’autre guilde.
+
+| Traité | Effets |
+| --- | --- |
+| Alliance complète | Conserve les effets existants : liens alliés pour les camps, stationnement défensif et préférences de transport. Aucune ressource ni flotte envoyée automatiquement. |
+| Non-agression | Bloque les attaques et conquêtes directes entre les deux guildes au départ et à l’arrivée. Aucun droit supplémentaire de défense ou de transport. L’espionnage reste permis et les tirs entre camps d’un combat impliquant des tiers restent possibles. |
+| Défense | Non-agression et possibilité de stationner des flottes défensives chez l’autre guilde avec accord du propriétaire. Aucun droit supplémentaire de transport ni regroupement offensif automatique. La défense ponctuelle déjà ouverte reste inchangée. |
+
+Le dirigeant possède les droits ; chaque grade peut déléguer séparément alliance, non-agression, défense, hostilité et neutralité/paix. Les nouvelles permissions ne sont pas attribuées automatiquement aux grades existants. Les grades n’accordent aucun droit sur les relations personnelles des autres joueurs.
+
+Une rupture est immédiate et unilatérale avec le droit de neutralité ; une déclaration d’hostilité rompt immédiatement le traité et ses propositions. La paix nécessite une proposition puis la signature de l’autre guilde : proposer, retirer ou refuser une offre maintient l’hostilité. Une alliance ou un pacte ne peut pas être proposé pour contourner une hostilité : signer la paix d’abord. Aucun préavis, coût, durée imposée, bonus économique ou engagement automatique n’est ajouté.
+
+Les pactes ne fusionnent pas les camps offensifs. Le pacte de défense concerne le stationnement chez les propriétaires de colonies ; il ne donne pas à lui seul le droit de renforcer une occupation offensive. Une flotte déjà engagée est contrôlée à l’arrivée selon les règles en vigueur ; un combat déjà ouvert conserve ses règles de composition des camps. Les alliances et rivalités personnelles restent indépendantes et ne sont pas effacées par un pacte ou sa rupture.
+
+### Projets collectifs de guilde — décisions du 11 novembre 2026
+
+- Les membres donnent des ressources de leurs propres colonies pour financer des paliers successifs. Les dons sont définitifs et ne sont pas remboursés lors d’un départ, d’une dissolution ou d’un abandon.
+- Chaque projet peut être lancé une seule fois par guilde. Le dirigeant ou un membre ayant la permission explicite `projects.start` choisit le modèle. Tous les membres peuvent contribuer sans grade particulier. Les vacances interdisent lancement et dons, mais permettent la consultation.
+- L’administration définit, pour chaque univers, les coûts des paliers et les minimums de contribution par ressource. Aucun modèle n’est créé ou activé automatiquement. Les coûts et minimums sont figés dans chaque projet au lancement ; les modifications administratives et la désactivation du modèle ne changent pas les projets déjà financés.
+- Un participant doit atteindre tous les minimums positifs, cumulés sur l’ensemble des paliers, et encore appartenir à la guilde à la clôture. Aucun taux de conversion entre ressources n’est inventé. Les personnes éligibles sont figées à cette clôture ; un départ ultérieur ne retire pas une récompense acquise.
+- Chaque participant reçoit au maximum un boost standard pour le même modèle, même après changement de guilde, utilisation du boost ou création d’un nouvel empire dans le même univers. L’effet, la capacité et la file d’attente de l’inventaire existant sont conservés. Il n’y a ni bonus permanent, ni coefficient de puissance, ni récompense proportionnelle au volume donné.
+- Le don est enregistré avec son prélèvement dans une transaction. Une quantité négative, fractionnaire, inconnue, excessive ou supérieure au besoin restant est refusée, sans débit partiel. Un ancien formulaire ne peut pas payer deux fois. Un palier se termine uniquement lorsque toutes ses ressources sont financées.
+- Les récompenses sont distribuées après clôture par le relais existant. Une interruption peut être reprise sans doubler les boosts ; une récompense attend si l’inventaire est plein. La dissolution ou l’archivage d’une guilde abandonne les projets encore actifs et conserve leur historique ; les projets terminés gardent leurs récompenses acquises.
+
+Bornes techniques des formulaires, sans montant d’équilibrage par défaut : 1 à 10 paliers, quantités entières, au plus un milliard d’unités par ressource et palier, et minimums ne dépassant jamais le coût total. Les coûts et seuils réels restent à choisir par l’administration avant activation. Les projets et grades appartiennent aux guildes ; aucune guilde n’est requise pour les alliances et rivalités personnelles, dont les règles restent indépendantes.
+
 ## Reconstruction autonome des empires oubliés — décision du 11 novembre 2026
 
 L'utilisateur valide la reconstruction de tous les modèles de vaisseaux et de
@@ -1237,5 +1275,5 @@ Une table dédiée conserve référence et reprise, avec une commande en cours e
 un jeton invalidant les messages périmés. Le relais et le worker existants assurent
 l'exécution. En cas de stocks insuffisants, le contrôle est reprogrammé après
 60 secondes ; ce délai technique ne remplace pas le délai de cinq minutes après
-combat. La migration additive `Version20261111010000` ne convertit aucun empire
+combat. La migration de compatibilité `Version20261111173000` (ancien numéro partagé `Version20261111010000`, voir [le suivi](GESTION_GUILDES_ALLIANCES.md)) ne convertit aucun empire
 et demande une autorisation distincte avant application sur une base de jeu.
