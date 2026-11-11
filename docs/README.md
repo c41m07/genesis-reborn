@@ -13,6 +13,7 @@ une seule référence par sujet ; les anciens bilans ne décrivent pas l’état
 | Installer et livrer sur le serveur | [DEPLOIEMENT](DEPLOIEMENT.md) |
 | Sauvegarder, contrôler et restaurer | [BACKUPS](SAUVEGARDES.md) |
 | Diagnostiquer processus, outbox, alertes et mesures | [EXPLOITATION](EXPLOITATION.md) |
+| Comprendre le worker, le notifier et les garanties de livraison | [Worker et notifier](WORKER_NOTIFIER.md) |
 | Régler le référencement et Search Console | [SEO](REFERENCEMENT.md) |
 | Consulter les profils de combat, production et vitesse | [EQUILIBRAGE](EQUILIBRAGE.md) |
 | Consulter les 150 profils de coûts | [Grille commune](COUTS.md) |
@@ -25,9 +26,9 @@ une seule référence par sujet ; les anciens bilans ne décrivent pas l’état
 150 libellés, descriptions et utilités de jeu ; la copie Markdown a été retirée.
 Les spécifications textuelles et PDF d’origine restent dans specifications/ et technic/.
 
-La documentation comporte 14 références actives et 8 documents historiques,
-au lieu de 72 Markdown. Les regroupements et retraits sont expliqués dans
-l’index des archives.
+Les regroupements et retraits de l’ancienne documentation sont expliqués dans
+l’index des archives. Le guide du worker et du notifier complète les procédures
+d’exploitation par une description technique de la chaîne asynchrone.
 
 
 ## Noms des documents
