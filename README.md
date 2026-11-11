@@ -388,6 +388,8 @@ Le fichier local `compose.override.yaml`, ignoré par Git, applique ces noms ave
 
 ### Gestion des guildes et projets collectifs
 
+Fonctionnalité intégrée dans `dev` par la [PR #36](https://github.com/c41m07/genesis-reborn/pull/36), sans déploiement ni nouvelle migration de la base habituelle. Consulter le [guide d’utilisation et d’administration](docs/GUIDE_GUILDES_ALLIANCES.md) pour les grades, les trois traités, les alliances personnelles et les projets.
+
 Les traités officiels distinguent alliance complète, non-agression et défense mutuelle, avec permissions séparées, signatures des deux guildes, paix bilatérale et historique. Les effets et l’état de validation sont détaillés dans [le suivi guildes/alliances](docs/GESTION_GUILDES_ALLIANCES.md). Cette extension nécessite la migration `Version20261111020000`, préparée sans application autorisée à une base existante. Les projets collectifs ajoutent des paliers financés par les membres, des conditions de contribution administrables et une récompense de boost unique. Leur migration `Version20261111150933` est préparée ; aucun modèle n’est actif par défaut. Le suivi détaille les validations locales et les migrations restant à appliquer aux bases existantes avec autorisation.
 
 La migration de compatibilité `Version20261111173000` réconcilie les bases ayant enregistré `Version20261111010000` pour les grades ou pour la reconstruction. Elle conserve les données et l’historique ; son application sur une base existante exige une sauvegarde et une autorisation distinctes. Voir [le suivi des guildes](docs/GESTION_GUILDES_ALLIANCES.md).

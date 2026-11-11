@@ -1,15 +1,14 @@
 # Gestion des guildes et alliances personnelles
 
-## État courant — 11 novembre 2026
+## État courant — fusion du 11 novembre 2026
 
-Les grades personnalisés, alliances/rivalités personnelles, trois traités de guilde (alliance complète, non-agression, défense) et projets collectifs sont implémentés sur `feature/gestion-guildes-alliances`. Les règles produit sont validées dans DECISIONS.md et REGLES.md. Les projets n’ajoutent aucun modèle actif ni montant économique par défaut.
+La [PR #36](https://github.com/c41m07/genesis-reborn/pull/36) a été revue puis fusionnée dans `dev` au commit `50e7f33b96fa2e03cfa5e5114e9b6b99f04efbb7`. Les grades, relations personnelles, trois traités entre guildes et projets collectifs sont intégrés. Le [guide joueur, administrateur et développeur](GUIDE_GUILDES_ALLIANCES.md) décrit le fonctionnement livré et la préparation des migrations.
 
-Validation locale finale : 670 tests PHP (209722 assertions), 13 tests Python et 156 scénarios navigateur validés par consolidation, avec compilation, Compose, lint et schéma réussis. Les reprises et leurs causes sont détaillées à la fin du document ; ce résultat n’est pas une validation de la CI GitHub.
+Revue finale : aucune anomalie bloquante relevée sur les contrôles d’accès, les consentements, les effets de flotte, les dons, les récompenses et la compatibilité des deux historiques de migration. Aucun commentaire de revue ouvert au moment de la fusion. Les [contrôles GitHub du commit 00bcb98](https://github.com/c41m07/genesis-reborn/actions/runs/43076241165) sont verts, y compris les quatre lots navigateur et le contrôle de secrets, sans relance. La publication est ignorée normalement sur cette branche.
 
-Les nouvelles migrations `Version20261111020000` et `Version20261111150933` sont testées uniquement sur bases jetables. La migration des grades `Version20261111010000` avait été appliquée antérieurement à la base locale sur autorisation. Aucune migration de ces deux nouveaux lots sur la base habituelle, fusion ou mise en production n’est réalisée.
+Validation locale du contenu fusionné : 701 tests PHP (209981 assertions), 13 tests Python, 158 scénarios navigateur consolidés après reprise clavier inchangée, Compose, lint avec schéma, compilation et contrôles Git réussis. Le fichier original des grades `Version20261111010000` est conservé ; `Version20261111173000` prend en charge les deux historiques en conservant les données et en refusant les schémas partiels et un retour destructeur.
 
-La PR #36 reste en brouillon. La reconstruction est désormais intégrée depuis `dev`. Le conflit historique du numéro `Version20261111010000` est résolu par `Version20261111173000` : la migration originale des grades reste inchangée ; la nouvelle migration crée uniquement les structures manquantes des grades et de la reconstruction, refuse les schémas partiels et ne supprime aucune donnée ni entrée d’historique. Les bilans plus anciens ci-dessous sont historiques.
-
+Aucune nouvelle migration sur la base habituelle ni aucun déploiement n’est réalisé pendant la revue, la fusion ou cette documentation. Les modèles de projets restent à configurer par l’administration, sans modèle actif par défaut. Les entrées suivantes sont des bilans historiques datés ; leurs mentions « en cours », « brouillon » ou « conflit à résoudre » ne remplacent pas cet état courant.
 
 ## Périmètre validé
 

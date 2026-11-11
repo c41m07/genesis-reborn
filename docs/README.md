@@ -7,6 +7,8 @@ une seule référence par sujet ; les anciens bilans ne décrivent pas l’état
 | --- | --- |
 | Comprendre les règles actuelles | [REGLES](REGLES.md) |
 | Retrouver un arbitrage produit | [DECISIONS](DECISIONS.md) |
+| Utiliser les guildes, les relations personnelles, les traités et les projets collectifs | [Guide guildes et alliances](GUIDE_GUILDES_ALLIANCES.md) |
+| Retrouver la revue, la fusion et les validations du chantier guildes | [Suivi guildes et alliances](GESTION_GUILDES_ALLIANCES.md) |
 | Préparer la refonte de la console et ses récompenses | [Cadrage de l’administration, brouillon](REFONTE_ADMINISTRATION.md) |
 | Voir les objectifs et vérifications restantes | [ROADMAP](FEUILLE_DE_ROUTE.md) |
 | Comprendre les dossiers, .env, comptes, wiki et interfaces | [ARCHITECTURE](ARCHITECTURE.md) |
