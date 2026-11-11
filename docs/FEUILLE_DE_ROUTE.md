@@ -1186,3 +1186,35 @@ Les six contrôles requis réussissent : `make validate`, `make lint`, `make tes
 rejouée après l'alignement sur minuit et l'isolation des drapeaux de test.
 Ces contrôles locaux ne constituent pas une validation de la CI GitHub.
 La publication du code ne déploie pas le jeu et n'active pas le cycle à distance.
+
+### Reconstruction ciblée des empires oubliés — 11 novembre 2026
+
+Implémentation sur `feature/reconstruction-empires-oublies`, depuis `dev`
+synchronisée. Le périmètre validé comprend les références par planète à la conversion,
+les vaisseaux et défenses de tous rangs, la réparation partielle déduite, le paiement
+et les durées normaux au chantier partagé, la priorité aux unités finançables les
+moins coûteuses et la suspension/reprise cinq minutes après combat. La reconstruction
+continue sous occupation et cesse à la capture, sans modifier les PNJ classiques.
+Les anciennes commandes payées restent acquises sans relever le plafond ; les
+anciens empires oubliés sans référence sont exclus.
+
+La migration additive `Version20261111010000` est préparée pour une seule nouvelle
+table. Elle ne doit pas être remplacée par une synchronisation globale du schéma,
+notamment lorsque la base locale contient des éléments d'autres branches.
+Les tests couvrent conversion, rangs et modèles, coûts/durées, priorité et ressources
+manquantes, retours, commandes préexistantes, réparation partielle, interruptions,
+occupation, capture, messages rejoués et migration sur base isolée.
+Validation locale finale : `make validate`, `npm run build`, `make test`
+(607 tests PHP, 209 704 assertions et 13 tests Python), `make lint` avec la
+connexion de test isolée (schéma compris), et `git diff --check` réussissent.
+Les 153 tests navigateur passent en deux lots complets indépendants (89 et 64),
+avec application de la migration finale dans leurs bases jetables. Les reprises
+antérieures interrompues ne sont pas comptées comme des exécutions complètes.
+
+Le lint lancé sur la base de jeu signale un écart expliqué : la nouvelle table
+n'y est pas appliquée, et cette base conserve le schéma de guildes d'un autre
+chantier. Aucun élément de ce schéma n'a été supprimé ni modifié. La migration
+de jeu reste non appliquée, sans conversion rétroactive ni déploiement distant.
+Ces contrôles locaux ne constituent pas une validation de la CI GitHub.
+Un commit pour cette fonctionnalité terminée, puis une seule PR vers `dev`
+pour le périmètre complet.

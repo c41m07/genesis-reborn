@@ -11,7 +11,7 @@ use Symfony\Component\Uid\Uuid;
 use App\Service\Player\VacationCalendar;
 final class QueueService
 {
-    public function __construct(private GameManager $manager,private GameRepository $repo,private GameCatalog $catalog,private RequirementChecker $requirements,private ResourceService $resources,private ActionGuard $guard,private ClockInterface $clock,private \App\Service\Notification\NotificationService $notifications,private OperationCalculator $calculator,private \App\Service\Requirement\CatalogAccess $access,private VacationCalendar $vacations) {}
+    public function __construct(private GameManager $manager,private GameRepository $repo,private GameCatalog $catalog,private RequirementChecker $requirements,private ResourceService $resources,private ActionGuard $guard,private ClockInterface $clock,private \App\Service\Notification\NotificationService $notifications,private OperationCalculator $calculator,private \App\Service\Requirement\CatalogAccess $access,private VacationCalendar $vacations,private \App\Service\Player\EmpireReconstructionScheduler $reconstruction) {}
     public function add(PlayerUniverse $m,Planet $planet,string $group,string $slug,int $quantity,string $requestKey,string $tier='basic'): int
     {
         return $this->manager->transaction(function()use($m,$planet,$group,$slug,$quantity,$requestKey,$tier){
@@ -49,6 +49,28 @@ final class QueueService
             return $quantity;
         });
     }
+    /** Réservé au traitement autonome, avec propriétaire et planète verrouillés. */
+    public function addReconstructionLocked(PlayerUniverse $membership,Planet $planet,string $group,string $slug,string $tier): QueueItem
+    {
+        if(!$membership->isForgotten() || $planet->owner?->id!==$membership->id || !in_array($group,['ships','defenses'],true)
+            || $this->repo->queue($planet,'shipyard')!==[]) throw new \DomainException('Reconstruction indisponible.');
+        $definition=$this->catalog->getTierForUniverse($membership->universe,$group,$slug,$tier);
+        $buildings=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);
+        $technologies=$this->repo->levelsByTier(PlayerTechnology::class,['playerUniverse'=>$membership]);
+        $plan=$this->calculator->calculate($definition,$group,1,1,$buildings,$this->catalog->forUniverse($membership->universe),$technologies);
+        $this->resources->consume($planet,$plan['costs']);
+        $item=new QueueItem();$item->planet=$planet;$item->playerUniverse=$membership;$item->queueType='shipyard';
+        $item->itemSlug=$slug;$item->tier=$tier;$item->quantity=1;$item->paidCosts=$plan['costs'];$item->durationSeconds=$plan['duration'];
+        $item->queuedAt=$this->clock->now();$item->dispatchToken=Uuid::v4()->toRfc4122();
+        $this->manager->save($item);$this->manager->flush();$this->start($item,$this->clock->now());
+        return $item;
+    }
+
+    public function resumeReconstructionLocked(QueueItem $item): void
+    {
+        if($item->startedAt===null) $this->start($item,$this->clock->now());
+    }
+
     public function maximum(PlayerUniverse $membership, Planet $planet, string $group, string $slug, string $tier): int
     {
         return $this->manager->transaction(function () use ($membership, $planet, $group, $slug, $tier) {
@@ -83,10 +105,10 @@ final class QueueService
         $o=new OutboxMessage();$o->kind='queue';$o->targetId=$item->id;$o->token=$item->dispatchToken;$o->dueAt=$item->finishAt();$this->manager->save($o);
     }
     /** Reconcile all elapsed work before any spending, preview or gameplay read. */
-    public function synchronize(PlayerUniverse $m): void
+    public function synchronize(PlayerUniverse $m,?\DateTimeImmutable $until=null): void
     {
-        $this->manager->transaction(function()use($m){
-            $this->guard->lockMembershipForProcessing($m);$this->settleMembershipLocked($m);
+        $this->manager->transaction(function()use($m,$until){
+            $this->guard->lockMembershipForProcessing($m);$this->settleMembershipLocked($m,$until);
         });
     }
     private function settleMembershipLocked(PlayerUniverse $m,?\DateTimeImmutable $until=null): void
@@ -158,6 +180,7 @@ final class QueueService
         foreach($this->repo->all(QueueItem::class,['dependsOn'=>$item]) as $dependent) $dependent->dependsOn=null;
         $group=match($item->queueType){'building'=>'buildings','research'=>'technologies',default=>isset($this->catalog->all('defenses')[$item->itemSlug])?'defenses':'ships'};
         $this->notifications->enqueue($m,'Terminé : '.$this->catalog->getTierForUniverse($m->universe,$group,$item->itemSlug,$item->tier)['label'].' sur '.$planet->name.'.');
+        $this->reconstruction->afterCompletionLocked($item);
         $type=$item->queueType;$this->manager->remove($item);$this->manager->flush();
         if($type==='research') {
             $planet->researchQueueStartedAt=null;
@@ -254,6 +277,7 @@ final class QueueService
     /** Annulation de capture sans remboursement ; les commandes échues ont déjà été traitées sous verrou. */
     public function cancelForCaptureLocked(Planet $planet,?PlayerUniverse $formerOwner): array
     {
+        $this->reconstruction->stopLocked($planet);
         $items=[];$collect=function(QueueItem $item)use(&$collect,&$items,$formerOwner): void {
             if(isset($items[$item->id])) return;
             if($formerOwner===null || $item->playerUniverse->id!==$formerOwner->id) throw new \DomainException('Une commande de cette planète appartient à un autre empire.');

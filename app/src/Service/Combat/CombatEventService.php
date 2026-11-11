@@ -53,6 +53,8 @@ final class CombatEventService
         private PlayerProtection $playerProtection,
         private VacationCalendar $vacations,
         private OccupationService $occupations,
+        private \App\Service\Player\EmpireReconstructionScheduler $reconstruction,
+        private \App\Service\Queue\QueueService $queues,
     ) {}
 
     public function canAttack(PlayerUniverse $attacker, Planet $target): bool
@@ -319,6 +321,10 @@ final class CombatEventService
         $fleet->status = 'attacking';
 
         if ($isNew) {
+            if($planet->owner?->isForgotten()) {
+                $this->queues->synchronize($planet->owner,$event->startedAt);
+                $this->reconstruction->pauseLocked($planet,$event->startedAt);
+            }
             $outbox = new OutboxMessage();
             $outbox->kind = 'combat';
             $outbox->targetId = $event->id;
@@ -377,6 +383,7 @@ final class CombatEventService
             $this->manager->lock($event->planet);
             if ($participants === []) {
                 $event->status = 'resolved';
+                $this->reconstruction->afterCombatLocked($event->planet);
                 return;
             }
 
@@ -603,6 +610,7 @@ final class CombatEventService
             $log->resolvedAt = $this->clock->now();
             $this->manager->save($log);
             $event->status = 'resolved';
+            $this->reconstruction->afterCombatLocked($event->planet);
         });
     }
 
