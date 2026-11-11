@@ -391,3 +391,21 @@ Les PNJ classiques et les empires déjà oubliés sans cette référence sont ex
 
 Aucune attaque automatique, nouvelle colonisation ou nouvelle recherche n'est
 ajoutée. Les recherches déjà payées à la conversion peuvent finir, puis restent figées.
+
+
+## Carte V2 : confidentialité des flottes
+
+Les trajets d’espionnage, aller comme retour, sont visibles uniquement par le
+propriétaire des sondes. Cette restriction ne modifie pas la détection éventuelle
+à l’arrivée. Les flottes tierces déjà visibles sur la carte montrent leur nombre
+total de vaisseaux et leurs points, sans composition détaillée. Le propriétaire
+conserve les types, quantités et rangs de ses propres flottes.
+
+Les points d’une flotte sont la somme des coûts de ses vaisseaux présents,
+selon le catalogue de son univers et de chaque rang, divisée par 100 après
+totalisation. Les défenses fixes et le fret ne contribuent pas à ces points.
+Ce résumé courant d’une flotte est distinct du classement quotidien des joueurs.
+
+Le cercle extérieur d’un système possédé est vert, avec les informations
+intérieures conservées. Un bouton de la fiche planète revient à son système ;
+la croix permet toujours de revenir à la galaxie.

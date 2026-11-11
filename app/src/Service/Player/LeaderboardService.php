@@ -135,6 +135,15 @@ final class LeaderboardService
         return $rows;
     }
 
+    public function fleetPoints(Fleet $fleet, array $ships): int
+    {
+        $resources = 0;
+        foreach ($ships as $ship) {
+            if ($ship->quantity > 0) $resources += $this->unitCost($fleet->playerUniverse->universe, 'ships', $ship->slug, $ship->quantity, $ship->tier);
+        }
+        return intdiv($resources, 100);
+    }
+
     private function cumulativeCost(\App\Entity\Universe $universe,string $group,string $slug,int $level,string $tier='basic'):int
     {
         $definition=$this->catalog->getTierForUniverse($universe,$group,$slug,$tier);

@@ -400,3 +400,13 @@ Les traités officiels distinguent alliance complète, non-agression et défense
 La migration de compatibilité `Version20261111173000` réconcilie les bases ayant enregistré `Version20261111010000` pour les grades ou pour la reconstruction. Elle conserve les données et l’historique ; son application sur une base existante exige une sauvegarde et une autorisation distinctes. Voir [le suivi des guildes](docs/GESTION_GUILDES_ALLIANCES.md).
 
 Évolutions en cours : [lots, décisions et points ouverts](docs/EVOLUTIONS_INTERFACES_FLOTTES.md). Le journal des missions est retiré de Flotte ; suivi des vols, rapports et traces administratives restent disponibles. Les prérequis des cartes ouvrent la bonne page et le bon rang dans la colonie active. Les sections « Accès associés à ce rang » sont retirées des cartes et fiches, sans changer les déblocages. Le signalement des messages privés et de guilde utilise un triangle jaune accessible au clavier et au toucher.
+
+
+Carte V2 : le cercle extérieur est vert dans les systèmes possédés. La fiche
+planète propose un retour à son système, au clavier et au toucher ; sa croix
+garde le retour galaxie. Les sondes en trajet sont réservées à leur propriétaire.
+Pour une flotte tierce déjà visible, seuls le nombre total de vaisseaux et les
+points remplacent sa composition ; les types et rangs restent accessibles au
+propriétaire. Le calcul reprend les coûts de vaisseaux de l’univers, sans défense
+fixe, avec division par 100 après totalisation. Ces restrictions sont appliquées
+avant l’envoi des données au navigateur.
