@@ -1359,3 +1359,13 @@ une modification déployée.
 
 Décisions validées pour les futurs lots, non implémentées dans le lot A.
 Les refontes attendent encore la validation des maquettes.
+
+
+### Validation des maquettes et précision du retour système
+
+Les trois maquettes locales Diplomatie, Profil et Inventaire sont validées par
+l’utilisateur pour leur future intégration. Le blocage de quota Figma reste
+distinct : aucune maquette n’y a été composée.
+La croix de la fiche planète renvoie à la galaxie. La demande porte sur l’ajout
+d’un bouton distinct dans cette fiche pour revenir au système de la planète
+consultée ; le retour galaxie existant est conservé.

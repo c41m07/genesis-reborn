@@ -15,7 +15,7 @@ use Psr\Clock\ClockInterface;
 final class ColonyController extends AbstractController
 {
     public function __construct(private UniverseContext $context,private GameRepository $repo,private QueueService $queueService,
-        private \App\Service\Combat\CombatEventService $combats,private \App\Service\Combat\OccupationService $occupations) {}
+        private \App\Service\Combat\CombatEventService $combats,private \App\Service\Combat\OccupationService $occupations,private LeaderboardService $leaderboard) {}
     private function owned(int $id): Planet
     {
         $m=$this->context->membership();$p=$this->repo->find(Planet::class,$id);
@@ -270,6 +270,7 @@ final class ColonyController extends AbstractController
                 $destinationSystem = $fleet->destination?->solarSystem ?? $fleet->destinationSystem;
                 if (!$destinationSystem) continue;
                 $isOwnFleet = $fleet->playerUniverse->id === $m->id;
+                if ($fleet->mission === 'spy' && !$isOwnFleet) continue;
                 $targetsOwnColony = $fleet->destination?->owner?->id === $m->id;
                 $ownerId = (int) $fleet->playerUniverse->id;
                 if (!array_key_exists($ownerId, $relatedOwnerCache)) {
@@ -282,7 +283,7 @@ final class ColonyController extends AbstractController
                 if (!$originInGalaxy && !$destinationInGalaxy) continue;
 
                 $ships = array_values(array_filter($this->repo->all(FleetShip::class, ['fleet' => $fleet]), static fn (FleetShip $ship): bool => $ship->quantity > 0));
-                $shipsSummary = implode(' · ', array_map(static fn (FleetShip $ship): string => $ship->quantity.' × '.str_replace('_', ' ', $ship->slug), $ships));
+                $shipsSummary = $isOwnFleet ? implode(' · ', array_map(fn (FleetShip $ship): string => $ship->quantity.' × '.str_replace('_', ' ', $ship->slug).' ('.$catalog->tiers()[$ship->tier]['label'].')', $ships)) : null;
                 $relationLabel = $isOwnFleet ? 'Votre empire' : ($targetsOwnColony ? 'Flotte entrante' : 'Allié');
                 $flights[] = [
                     'id' => $fleet->id,
@@ -305,6 +306,9 @@ final class ColonyController extends AbstractController
                     'destinationCoordinates' => $fleet->destination?->coordinates() ?? ($destinationSystem->galaxy->coordinateCode().':'.$destinationSystem->number()),
                     'departureAt' => $fleet->departureAt?->format(\DateTimeInterface::ATOM),
                     'arrivalAt' => $fleet->arrivalAt?->format(\DateTimeInterface::ATOM),
+                    'ownedByCurrentPlayer' => $isOwnFleet,
+                    'shipCount' => array_sum(array_map(static fn (FleetShip $ship): int => $ship->quantity, $ships)),
+                    'fleetPoints' => $this->leaderboard->fleetPoints($fleet, $ships),
                     'ships' => $shipsSummary,
                 ];
             }

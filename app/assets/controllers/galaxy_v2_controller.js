@@ -647,7 +647,8 @@ export default class extends Controller {
         ctx.stroke();
         ctx.beginPath();
         ctx.arc(point.x, point.y, radius + 3, 0, Math.PI * 2);
-        ctx.strokeStyle = isHovered ? 'rgba(202,232,255,.9)' : 'rgba(157,202,239,.5)';
+        const hasOwnedPlanet = system.planets.some((planet) => planet.ownedByCurrentPlayer);
+        ctx.strokeStyle = hasOwnedPlanet ? '#00e676' : (isHovered ? 'rgba(202,232,255,.9)' : 'rgba(157,202,239,.5)');
         ctx.lineWidth = 1;
         ctx.stroke();
         ctx.restore();
@@ -1344,6 +1345,19 @@ export default class extends Controller {
 
     closePlanet() {
         this.toGalaxy();
+    }
+
+    returnToPlanetSystem() {
+        const planet = this.selectedPlanet;
+        const system = this.systems.find((candidate) => candidate.planets.some((item) => Number(item.id) === Number(planet?.id)));
+        if (!system) return;
+        if (system !== this.selectedSystem) {
+            const savedCamera = this.savedCamera;
+            this.focusSystem(system);
+            this.savedCamera = savedCamera;
+            this.selectedPlanet = planet;
+        }
+        this.toSystem(true);
     }
 
     toggleSystemPanel() {

@@ -1250,9 +1250,8 @@ Premier lot : catégories et présentation du classement, prérequis navigables,
 signalement privé, colonnes de surveillance et retrait du journal des missions.
 Aucune migration ni modification des règles de déplacement dans ce lot.
 Le [suivi](EVOLUTIONS_INTERFACES_FLOTTES.md) donne les complexités, décisions,
-dépendances et vérifications réelles. Les lots suivants attendent l’intégration
-du premier selon les consignes du dépôt. Diplomatie, Profil et Inventaire
-restent à valider sur maquette avant intégration.
+dépendances et vérifications réelles. Le premier lot est désormais intégré ; les trois maquettes Diplomatie, Profil
+et Inventaire sont validées, leur intégration reste prévue dans le lot K.
 
 
 ### Validation locale du premier lot
@@ -1268,4 +1267,24 @@ commande de test du Makefile après un épuisement initial à 128 Mo.
 Ces résultats ne constituent ni une validation de CI GitHub ni un déploiement.
 Le [suivi](EVOLUTIONS_INTERFACES_FLOTTES.md) détaille les reprises, les fichiers et
 les décisions métier désormais confirmées pour les lots suivants. Les trois
-maquettes restent à valider avant intégration.
+maquettes sont validées avant leur intégration.
+
+### Intégration du lot A et démarrage du lot B
+
+Le lot A est fusionné dans dev par la [PR #41](https://github.com/c41m07/genesis-reborn/pull/41),
+au commit b58b3b41ca121649093248ba0539921ae30da3ab. La CI complète
+[43107155705](https://github.com/c41m07/genesis-reborn/actions/runs/43107155705)
+est réussie : cinq jobs quality, y compris les contrôles de sauvegarde/restauration
+isolés. La protection de dev impose la PR et ces cinq jobs. Aucun déploiement Alpha.
+
+Le lot B part de cette dev sur feature/carte-confidentialite-flottes :
+cercle extérieur vert des systèmes possédés, bouton distinct de retour au système
+dans la fiche planète (la croix conserve le retour galaxie), sondes étrangères
+masquées côté serveur et résumé des autres flottes visibles par nombre et points.
+Aucun élargissement de visibilité ni migration de la base de jeu.
+Validation locale terminée le 12 novembre : six contrôles exécutés, 706 tests PHP
+(210052 assertions), 13 tests Python et 161 scénarios navigateur distincts réussis.
+Le parcours clavier général a nécessité une reprise seule après dépassement de
+durée en parallèle ; aucun test assoupli. Le [suivi](EVOLUTIONS_INTERFACES_FLOTTES.md)
+détaille les preuves. Publication du lot B en attente d’autorisation ; aucune
+CI GitHub ni intégration dans dev du lot B, aucun déploiement Alpha.

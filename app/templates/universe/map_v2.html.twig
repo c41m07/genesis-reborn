@@ -45,6 +45,7 @@
                 <summary>Légende · <span data-galaxy-v2-target="mapModeLabel">Exploration</span></summary>
                 <ul data-galaxy-v2-target="legend"></ul>
                 <p>Quarts : PNJ ↖ · allié ↗ · neutre/vierge ↘ · ennemi ↙. Gris : absent ou masqué.</p>
+                <p>Cercle extérieur vert : au moins une de vos planètes.</p>
             </details>
             </div>
         </section>
@@ -71,7 +72,8 @@
                         <strong>{{ flight.missionLabel }}</strong><span>{{ flight.statusLabel }}</span>
                         <small>{{ flight.relationLabel }} · {{ flight.ownerName }}</small>
                         <small>{{ flight.originName }} → {{ flight.destinationName }}</small>
-                        {% if flight.ships %}<small>{{ flight.ships }}</small>{% endif %}
+                        <small>{{ flight.shipCount|quantity(0) }} vaisseau{{ flight.shipCount == 1 ? '' : 'x' }} · {{ flight.fleetPoints|quantity(0) }} point{{ flight.fleetPoints == 1 ? '' : 's' }}</small>
+                        {% if flight.ownedByCurrentPlayer and flight.ships %}<small>{{ flight.ships }}</small>{% endif %}
                         {% if flight.arrivalAt %}<time datetime="{{ flight.arrivalAt }}" data-galaxy-v2-countdown="{{ flight.arrivalAt }}">Calcul du temps…</time>{% endif %}
                     </article>{% endfor %}
                 {% endif %}
@@ -114,6 +116,7 @@
         <template data-gv2-planet="{{ p.id }}">
             {% set relation = map_planet_relations[p.id] %}
             <header class="gv2-panel-heading"><div><span class="muted">PLANÈTE · {{ p.coordinates() }}</span><h2>{{ p.name }}</h2><p><span class="gv2-marker gv2-marker--{{ relation }}" aria-hidden="true">{{ relation_symbols[relation] }}</span> {{ relation_labels[relation] }}{% if relation == 'npc' %} · niveau {{ p.conquestLevel }}{% elseif p.owner and relation != 'own' %} · {{ p.owner.displayName }}{% endif %}</p></div><button type="button" aria-label="Fermer les informations de la planète" data-action="click->galaxy-v2#closePlanet">×</button></header>
+            <button type="button" class="gv2-action-link gv2-system-return" data-action="click->galaxy-v2#returnToPlanetSystem">‹ Revenir au système {{ p.solarSystem.galaxy.coordinateCode() }}:{{ p.solarSystem.number() }}</button>
             <div class="gv2-visual-note">REPRÉSENTATION VISUELLE · DONNÉES DE JEU CI-DESSOUS</div>
             <dl class="gv2-facts"><div><dt>Coordonnées</dt><dd>{{ p.coordinates() }}</dd></div><div><dt>Statut</dt><dd>{{ relation_labels[relation] }}</dd></div>{% if relation == 'npc' %}<div><dt>Niveau PNJ</dt><dd>{{ p.conquestLevel }}</dd></div>{% endif %}</dl>
             <button type="button" class="gv2-primary-action" data-action="click->galaxy-v2#enterPlanetView">◉ Vue rapprochée</button>

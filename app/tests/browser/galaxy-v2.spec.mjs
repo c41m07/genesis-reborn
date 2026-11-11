@@ -8,17 +8,23 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   await page.addInitScript(() => {
     window.galaxyDrawnLabels = {};
     window.galaxyCoordinateLabels = [];
+    window.galaxyOwnedRings = [];
     const circles = new WeakMap();
     const arc = CanvasRenderingContext2D.prototype.arc;
     const fillText = CanvasRenderingContext2D.prototype.fillText;
     const clearRect = CanvasRenderingContext2D.prototype.clearRect;
+    const stroke = CanvasRenderingContext2D.prototype.stroke;
     CanvasRenderingContext2D.prototype.clearRect = function(...args) {
-      if (this.canvas.classList.contains('gv2-canvas--galaxy')) { window.galaxyUnknownMarkers = [];window.galaxyCoordinateLabels = []; }
+      if (this.canvas.classList.contains('gv2-canvas--galaxy')) { window.galaxyUnknownMarkers = [];window.galaxyCoordinateLabels = [];window.galaxyOwnedRings = []; }
       return clearRect.apply(this, args);
     };
     CanvasRenderingContext2D.prototype.arc = function(x, y, radius, ...args) {
       circles.set(this, { x, y, radius });
       return arc.call(this, x, y, radius, ...args);
+    };
+    CanvasRenderingContext2D.prototype.stroke = function(...args) {
+      if (this.canvas.classList.contains('gv2-canvas--galaxy') && this.strokeStyle === '#00e676') window.galaxyOwnedRings.push(circles.get(this));
+      return stroke.apply(this, args);
     };
     CanvasRenderingContext2D.prototype.fillText = function(text, ...args) {
       const circle = circles.get(this);
@@ -80,6 +86,7 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
 
   for (const system of data.systems.filter(system => !system.known)) expect(system.planets).toEqual([]);
   expect(homePlanet.relation).toBe('own');
+  await expect.poll(() => page.evaluate(() => window.galaxyOwnedRings.length)).toBeGreaterThan(0);
   const emptyJournal = page.locator('.gv2-flight-log.is-empty');
   await expect(emptyJournal).toBeVisible();
   await expect(emptyJournal).not.toHaveAttribute('open', '');
@@ -199,8 +206,13 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   await page.locator('.gv2-primary-action').click();
   await expect(page.locator('canvas.gv2-canvas--planet')).toHaveClass(/is-active/);
   await expect(page.locator('.gv2-planet-panel')).toBeVisible();
-  await page.locator('[data-galaxy-v2-target="planetBack"]').click();
+  const systemReturn = page.locator('.gv2-planet-panel').getByRole('button', { name: /Revenir au système/ });
+  await expect(systemReturn).toContainText(homeSystem.galaxy + ':' + homeSystem.number);
+  await systemReturn.focus();
+  await page.keyboard.press('Enter');
   await expect(page.locator('.gv2-system-panel')).toBeVisible();
+  await expect(page.locator('.gv2-system-panel')).toContainText(homeSystem.name);
+  await expect(page.locator('.gv2-system-panel [data-planet-id="' + homePlanet.id + '"]')).toBeFocused();
   await page.locator('[data-galaxy-v2-target="systemBack"]').click();
   await expect(page.locator('.gv2-system-panel')).toBeHidden();
 
@@ -266,6 +278,11 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   await page.touchscreen.tap(mobilePlanet.x, mobilePlanet.y);
   await expect(page.locator('.gv2-canvas--planet')).toHaveClass(/is-active/);
   await expect(page.locator('.gv2-planet-panel')).toContainText(mobilePlanet.name);
+  await page.locator('.gv2-planet-panel').getByRole('button', { name: /Revenir au système/ }).tap();
+  await expect(page.locator('.gv2-canvas--system')).toHaveClass(/is-active/);
+  await expect(sheet).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.locator('.gv2-system-panel .gv2-panel-heading')).toContainText(homeSystem.name);
+  await expect(page.locator('.gv2-planet-choice').filter({ hasText: mobilePlanet.name })).toBeFocused();
 
   expect(pageErrors).toEqual([]);
 
