@@ -81,4 +81,18 @@ final class AdminOperationsServiceTest extends TestCase
         self::assertSame('unexpected',$snapshot['outbox_pending'][0]['kind']);
         self::assertArrayNotHasKey('token',$snapshot['outbox_pending'][0]);
     }
+    public function testFleetCollectionFailureIsUnknownRatherThanZero(): void
+    {
+        $db=$this->createStub(Connection::class);
+        $db->method('fetchOne')->willReturn(1);
+        $db->method('fetchAllAssociative')->willReturn([]);
+        $db->method('fetchAssociative')->willThrowException(new \RuntimeException('Collecte indisponible'));
+        $health=(new AdminOperationsService($db,new MockClock('2030-01-01T00:00:00Z'),sys_get_temp_dir().'/absent-signals'))->snapshot()['fleet_health'];
+        self::assertFalse($health['available']);
+        self::assertNull($health['total']);
+        self::assertNull($health['unscheduled']);
+        self::assertNull($health['overdue']);
+        self::assertSame([],$health['pending']);
+    }
+
 }

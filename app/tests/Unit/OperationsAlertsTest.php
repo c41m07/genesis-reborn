@@ -17,7 +17,16 @@ final class OperationsAlertsTest extends TestCase
     }
     private function snapshot(): array
     {
-        return ['processes'=>array_fill(0,3,['status'=>'healthy','age_seconds'=>0]),'database_healthy'=>true,'outbox_available'=>true,'outbox_pending'=>[]];
+        return ['processes'=>array_fill(0,3,['status'=>'healthy','age_seconds'=>0]),'database_healthy'=>true,'outbox_available'=>true,'outbox_pending'=>[],'fleet_health'=>['available'=>true,'total'=>0,'unscheduled'=>0,'overdue'=>0]];
+    }
+    public function testUnscheduledMissionsAlertEvenWithHealthyProcessesAndEmptyOutbox(): void
+    {
+        $snapshot=$this->snapshot();$snapshot['fleet_health']=['available'=>true,'total'=>1,'unscheduled'=>1,'overdue'=>0];
+        $evaluator=new AlertEvaluator();$states=['worker'=>'running','relay'=>'running','notifier'=>'running'];
+        self::assertSame('alert',$evaluator->evaluate($snapshot,$states,0)['missions']['status']);
+        $snapshot['fleet_health']=['available'=>false];
+        self::assertSame('unknown',$evaluator->evaluate($snapshot,$states,0)['missions']['status']);
+        self::assertSame('alert',$evaluator->evaluate($snapshot,$states,0)['collection']['status']);
     }
     public function testThresholdsAndSupervisionAreDistinct(): void
     {

@@ -8,6 +8,16 @@
 - Le périmètre livré et les objectifs sont dans [README.md](README.md), [docs/README.md](docs/README.md) et [docs/FEUILLE_DE_ROUTE.md](docs/FEUILLE_DE_ROUTE.md). Les documents de `docs/archives/` sont historiques, sauf mention contraire ; leur index distingue les références conservées des bilans remplacés.
 - Conserver les logos et les SVG d’identité.
 
+## Format des patchnotes
+
+- Lorsqu’un patchnote est demandé, fournir quatre champs distincts, prêts à copier dans le formulaire d’administration : **Titre**, **Version**, **Résumé** et **Contenu**.
+- Titre : `Mise à jour Alpha-X.Y.Z — Thèmes principaux`. Reprendre la version donnée ; si elle est inconnue, annoncer clairement une version proposée, sans la présenter comme publiée.
+- Résumé : un seul paragraphe court présentant les principaux changements, dans un français clair destiné aux joueurs.
+- Contenu : texte brut, sans syntaxe Markdown nécessaire au rendu. Utiliser les sections en majuscules utiles au lot : `NOUVEAUTÉS`, `ÉQUILIBRAGE`, `AMÉLIORATIONS ET CORRECTIONS`, `ADMINISTRATION`, `INFORMATIONS`. Ne pas ajouter de section vide.
+- Chaque point commence par `• Fonction : explication concrète pour le joueur`. Séparer les points par une ligne blanche et les sections par deux lignes blanches. Réserver les informations générales à de courts paragraphes dans `INFORMATIONS`, avec un rappel du bouton Feedback si pertinent.
+- Décrire uniquement les changements vérifiés du lot à livrer, sans reprendre les anciennes annonces comme des nouveautés. Préciser les conditions utiles (univers, position de référence, nouveaux empires ou stocks existants) et éviter les détails internes tels que commits, commandes ou variables de configuration.
+- Distinguer clairement une note proposée d’une version déjà publiée ; ne pas annoncer un déploiement sans en avoir vérifié le résultat.
+
 ## Accessibilité (RGAA) et SEO
 
 - Pour toute modification d’interface, vérifier les points RGAA concernés : structure des titres, libellés des champs, messages d’erreur compréhensibles, navigation au clavier, visibilité du focus et contrastes. Ces vérifications ciblées ne constituent pas à elles seules un audit de conformité RGAA.

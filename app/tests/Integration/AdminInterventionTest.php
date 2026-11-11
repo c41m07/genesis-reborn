@@ -149,4 +149,120 @@ final class AdminInterventionTest extends WebTestCase
         $this->expectException(\DomainException::class);
         self::getContainer()->get(AdminInterventionService::class)->fleet($this->sender,$fleet,'reschedule',30,'Mission engagée',hash('sha256',$fleet->dispatchToken),str_repeat('b',32));
     }
+    public function testForcedReturnOfExpiredOrphanKeepsFreightAndInvalidatesArrival(): void
+    {
+        $fleet = $this->send();
+        $fleet->dispatchToken = '';
+        $this->clock->sleep($fleet->travelSeconds + 600);
+        $this->em->flush();
+        $service = self::getContainer()->get(AdminInterventionService::class);
+        $targetStock = $this->em->getConnection()->fetchAllAssociative('SELECT resource_type,current_stock FROM planet_resource WHERE planet_id=? ORDER BY resource_type', [$this->target->id]);
+        $key = str_repeat('1', 32);
+        self::assertTrue($service->fleet($this->sender, $fleet, 'force_return', 0, 'Retour du voyage bloqué', hash('sha256',''), $key));
+        self::assertSame('returning', $fleet->status);
+        self::assertNotSame('', $fleet->dispatchToken);
+        self::assertEquals($this->clock->now()->modify('+'.$fleet->travelSeconds.' seconds'), $fleet->arrivalAt);
+        self::assertEqualsWithDelta(123, $fleet->cargo['metal'], .001);
+        $fuel = $fleet->reservedFuel;
+        self::assertFalse($service->fleet($this->sender, $fleet, 'force_return', 0, 'Retour du voyage bloqué', hash('sha256',''), $key));
+        self::getContainer()->get(FleetService::class)->arrive($fleet->id, '');
+        self::assertSame('returning', $fleet->status);
+        self::assertSame($targetStock, $this->em->getConnection()->fetchAllAssociative('SELECT resource_type,current_stock FROM planet_resource WHERE planet_id=? ORDER BY resource_type', [$this->target->id]));
+        self::assertCount(1, $this->em->getRepository(\App\Entity\AdminAuditLog::class)->findBy(['action'=>'admin_fleet_force_return']));
+        self::assertSame(1, (int) $this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM outbox_message WHERE kind='fleet' AND target_id=? AND token=?", [$fleet->id, $fleet->dispatchToken]));
+        // Un retour lui-même bloqué peut être reprogrammé sans consommer deux fois le carburant.
+        $this->clock->sleep($fleet->travelSeconds + 1);
+        $token = $fleet->dispatchToken;
+        self::assertTrue($service->fleet($this->sender, $fleet, 'force_return', 0, 'Retour non traité', hash('sha256',$token), str_repeat('2',32)));
+        self::assertSame($fuel, $fleet->reservedFuel);
+        self::getContainer()->get(FleetService::class)->arrive($fleet->id, $token);
+        self::assertSame('returning', $fleet->status);
+        $this->clock->sleep($fleet->travelSeconds + 1);
+        $returnToken = $fleet->dispatchToken;
+        self::getContainer()->get(FleetService::class)->arrive($fleet->id, $returnToken);
+        self::assertSame('completed', $fleet->status);
+        self::assertSame([], $fleet->cargo);
+        $stock = $this->em->getConnection()->fetchAllAssociative('SELECT resource_type,current_stock FROM planet_resource WHERE planet_id=? ORDER BY resource_type', [$this->origin->id]);
+        self::getContainer()->get(FleetService::class)->arrive($fleet->id, $returnToken);
+        self::assertSame($stock, $this->em->getConnection()->fetchAllAssociative('SELECT resource_type,current_stock FROM planet_resource WHERE planet_id=? ORDER BY resource_type', [$this->origin->id]));
+    }
+
+    public function testForcedReturnBeforeDeadlineIsRefused(): void
+    {
+        $fleet = $this->send();
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('réservé aux missions dont l’échéance est atteinte');
+        self::getContainer()->get(AdminInterventionService::class)->fleet($this->sender,$fleet,'force_return',0,'Essai prématuré',hash('sha256',$fleet->dispatchToken),str_repeat('1',32));
+    }
+
+    public function testExpiredNormalRecallStillRequiresExplicitForcedReturn(): void
+    {
+        $fleet = $this->send();
+        $this->clock->sleep($fleet->travelSeconds + 1);
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('retour forcé');
+        self::getContainer()->get(AdminInterventionService::class)->fleet($this->sender,$fleet,'recall',0,'Essai rappel normal',hash('sha256',$fleet->dispatchToken),str_repeat('1',32));
+    }
+
+    public function testForcedReturnCannotBypassPendingCombat(): void
+    {
+        $fleet = $this->send();
+        $event = new \App\Entity\CombatEvent();$event->planet=$this->target;$event->startedAt=$this->clock->now();$event->resolveAt=$this->clock->now()->modify('+1 day');$event->seed=1;
+        $participant = new \App\Entity\CombatParticipant();$participant->fleet=$fleet;$participant->playerUniverse=$fleet->playerUniverse;$participant->combatEvent=$event;$participant->role='attacker';$participant->arrivalAt=$this->clock->now();
+        $this->em->persist($event);$this->em->persist($participant);$this->em->flush();
+        $this->clock->sleep($fleet->travelSeconds + 1);
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('combat en cours');
+        self::getContainer()->get(AdminInterventionService::class)->fleet($this->sender,$fleet,'force_return',0,'Essai combat',hash('sha256',$fleet->dispatchToken),str_repeat('1',32));
+    }
+
+    public function testFleetHealthDetectsOrphanAndLateReturnWithEmptyOutboxReadOnly(): void
+    {
+        $fleet = $this->send();
+        $fleet->dispatchToken = '';
+        $fleet->arrivalAt = $this->clock->now()->modify('+1 hour');
+        $this->em->flush();
+        $db = $this->em->getConnection();
+        $db->executeStatement('DELETE FROM outbox_message');
+        $operations = self::getContainer()->get(\App\Service\Admin\AdminOperationsService::class);
+        $before = $db->fetchAllAssociative('SELECT * FROM fleet ORDER BY id');
+        $snapshot = $operations->snapshot();
+        self::assertSame(0, $snapshot['outbox_total']);
+        self::assertTrue($snapshot['fleet_health']['available']);
+        self::assertSame(1, $snapshot['fleet_health']['total']);
+        self::assertSame(1, $snapshot['fleet_health']['unscheduled']);
+        self::assertSame(0, $snapshot['fleet_health']['overdue']);
+        self::assertSame($before, $db->fetchAllAssociative('SELECT * FROM fleet ORDER BY id'));
+        self::assertArrayNotHasKey('dispatch_token', $snapshot['fleet_health']['pending'][0]);
+        $fleet->dispatchToken = 'scheduled-token';$fleet->status='returning';
+        $fleet->arrivalAt=$this->clock->now()->modify('-5 minutes');$this->em->flush();
+        self::assertSame(0, $operations->snapshot()['fleet_health']['total']);
+        $this->clock->sleep(1);
+        self::assertSame(1, $operations->snapshot()['fleet_health']['overdue']);
+        $universe=$fleet->playerUniverse->universe;
+        $universe->gameSettings['admin_surveillance']['late_minutes']=10;$this->em->flush();
+        self::assertSame(0, $operations->snapshot()['fleet_health']['total']);
+        $this->clock->sleep(300);
+        self::assertSame(1, $operations->snapshot()['fleet_health']['overdue']);
+        $fleet->status='completed';$this->em->flush();
+        self::assertSame(0, $operations->snapshot()['fleet_health']['total']);
+        $fleet->status='attacking';$this->em->flush();
+        self::assertSame(0, $operations->snapshot()['fleet_health']['total']);
+    }
+
+    public function testFleetHealthLimitsDetailsWithoutTruncatingCounters(): void
+    {
+        for ($i=0;$i<23;$i++) {
+            $fleet=new Fleet();$fleet->playerUniverse=$this->sender->currentPlayerUniverse;$fleet->homePlanet=$this->origin;
+            $fleet->status='traveling';$fleet->arrivalAt=$this->clock->now()->modify('-10 minutes');$this->em->persist($fleet);
+        }
+        $this->em->flush();
+        $health=self::getContainer()->get(\App\Service\Admin\AdminOperationsService::class)->snapshot()['fleet_health'];
+        self::assertTrue($health['available']);
+        self::assertSame(23,$health['total']);
+        self::assertSame(23,$health['unscheduled']);
+        self::assertSame(23,$health['overdue']);
+        self::assertCount(20,$health['pending']);
+    }
+
 }
