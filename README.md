@@ -281,17 +281,22 @@ Compiler avant les tests navigateur : la compilation remplace les fichiers de `a
 
 ## Tests et qualité
 
-Depuis `app/`, préparer Chromium pour les tests avec `npx playwright install --with-deps chromium` : cette commande installe le navigateur et ses dépendances système. Les six contrôles avant commit ou publication sont :
+Pendant le développement, lancer les contrôles locaux adaptés au changement et `git diff --check` avant commit ou push. Une branche de travail peut être poussée sans exécuter toute la suite ; signaler les échecs et vérifications restant à faire.
+
+La CI complète se lance sur les PR vers `dev` et `alpha`, y compris à chaque correction. Attendre sa réussite sur la dernière version avant fusion. Les push seuls sur une branche de travail ou sur `dev` ne relancent pas la CI. Les push sur `alpha` (aussi branche par défaut actuellement) conservent la validation avant publication de l’image ; le lancement manuel reste disponible. Les [règles GitHub à vérifier pour protéger `dev`](docs/DEPLOIEMENT.md#protection-de-dev) sont distinctes du workflow.
+
+Pour reproduire les six contrôles localement, préparer Chromium depuis `app/` avec `npx playwright install --with-deps chromium`, puis lancer depuis la racine :
 
 ```bash
 make validate
 make lint
 make test
-(cd app && npm run build)
+make assets
 BROWSER_PERSISTENCE=1 make test-browser
 git diff --check
 ```
 
+- `make assets` compile les assets de production en lançant `npm run build` depuis `app/`.
 - `make validate` valide Compose sans afficher les secrets.
 - `make lint` contrôle PHP, Twig, YAML, le conteneur Symfony et le schéma Doctrine de la base configurée.
 - `make test` utilise `database-test` et `genesis_v2_test` en mémoire, un transport Messenger en mémoire et un transport mail nul ; il lance aussi les tests Python des sauvegardes. Lancer une seule suite PHP à la fois sur cette base.

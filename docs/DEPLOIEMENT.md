@@ -22,11 +22,21 @@ conserve son sens : il ne doit pas être transformé en preuve de livraison.
 
 ## Chaîne versionnée
 
-La CI existante exécute les contrôles et les tests. Sur la branche `alpha` ou la branche par défaut,
-après leur réussite, le job `publish` construit `docker/prod/Dockerfile` et publie
+La CI exécute les contrôles et les tests à l’ouverture, à la réouverture et à chaque
+mise à jour d’une PR vers `dev` ou `alpha`. Les push seuls sur les branches de
+travail et sur `dev`, y compris après fusion, ne lancent pas de seconde validation.
+Le déclenchement manuel reste disponible.
+
+Les push sur `alpha`, actuellement aussi branche par défaut, conservent la
+validation complète. Après sa réussite, le job `publish` construit `docker/prod/Dockerfile` et publie
 `ghcr.io/<propriétaire>/<dépôt>:<commit>` avec le `GITHUB_TOKEN` du workflow.
 Le résumé du job indique aussi la référence immuable avec digest.
-Les pull requests ne publient aucune image.
+Les pull requests ne publient aucune image. Si la branche par défaut change,
+adapter les filtres `push.branches` et `pull_request.branches` du workflow ; la
+condition du job `publish` ne suffit pas à déclencher une exécution.
+Le job PHP vérifie aussi les espaces du diff avec `git diff --check HEAD^ HEAD` :
+sur une PR, il compare le commit de fusion testé à son premier parent (la base) ;
+sur un push de livraison, il compare le commit livré à son parent.
 
 La validation utilise cinq jobs en parallèle : un pour PHP et le lint, quatre
 pour les tests navigateur répartis avec `--shard=N/4`. Chaque lot navigateur
@@ -98,6 +108,29 @@ explicitement activée et leur réception vérifiée par l’opérateur.
 Ne pas appliquer au serveur les valeurs d’exemple ou les résultats des instances
 jetables comme s’ils avaient été vérifiés sur l’Alpha. Les essais perturbateurs
 restent décrits dans les [scénarios isolés](EXPLOITATION.md).
+
+## Protection de dev
+
+Le workflow ne rend pas ses contrôles obligatoires à lui seul. Dans les paramètres
+GitHub du dépôt, protéger `dev` en imposant une PR avant fusion et les cinq
+contrôles suivants sur la dernière version de la PR :
+
+- `quality (php, lot 0)`
+- `quality (browser, lot 1)`
+- `quality (browser, lot 2)`
+- `quality (browser, lot 3)`
+- `quality (browser, lot 4)`
+
+Ne pas exiger le job `publish`, qui ne s’exécute pas sur les PR. Demander une
+branche à jour avant fusion pour revalider les changements avec le dernier `dev`
+et appliquer les exigences aux administrateurs pour éviter les push directs.
+Conserver toute protection existante plus stricte.
+
+État de vérification de ce lot : la lecture de la protection de `dev` via le
+connecteur GitHub a répondu HTTP 403 (`Resource not accessible by integration`).
+Ce connecteur ne propose pas de modification des protections. Leur activation
+reste donc à vérifier et, si nécessaire, à configurer avec un accès autorisé aux
+paramètres du dépôt ; elle n’est pas annoncée comme réalisée.
 
 ## Configurer GitHub
 

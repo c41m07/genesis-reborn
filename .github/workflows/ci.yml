@@ -1,7 +1,10 @@
 name: Genesis Reborn CI
 on:
+  # alpha est aussi la branche par défaut ; adapter ce filtre si elle change.
   push:
+    branches: [alpha]
   pull_request:
+    branches: [dev, alpha]
   workflow_dispatch:
 permissions:
   contents: read
@@ -29,6 +32,11 @@ jobs:
     name: quality (${{ matrix.suite }}, lot ${{ matrix.shard }})
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 2
+      - name: Check patch whitespace
+        if: matrix.suite == 'php'
+        run: git diff --check HEAD^ HEAD
       - name: Set up Node.js and npm cache
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
