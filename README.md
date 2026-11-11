@@ -348,6 +348,10 @@ règles et décisions, roadmap, architecture, exploitation, déploiement/sauvega
 SEO, interface et données d’équilibrage. Les anciens bilans et leur contexte
 restent accessibles depuis [l’index des archives](docs/archives/README.md).
 
+Le [guide technique du worker et du notifier](docs/WORKER_NOTIFIER.md) détaille
+la chaîne outbox → RabbitMQ → traitements métier → Mercure, les transactions,
+les contrats de messages, les abonnements privés et les scénarios de panne.
+
 Le wiki utilise les sources uniques `docs/wiki.json`, `docs/REGLES.md` et
 `docs/DECISIONS.md`. Il présente un manuel du joueur en un document avec sommaire,
 premiers pas, règles et calculs expliqués par des formules et exemples dépliables,
