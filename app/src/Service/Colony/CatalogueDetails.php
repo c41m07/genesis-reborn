@@ -267,11 +267,11 @@ final class CatalogueDetails
             $current=$owned[$r['slug']]??[];$current=is_numeric($current)?($tier==='basic'?(int)$current:0):(int)($current[$tier]??0);
             $key=$kind.':'.$r['slug'].':'.$tier;
             if(isset($result[$key])&&$result[$key]['required']>=(int)$r['level'])continue;
-            $result[$key]=['label'=>$definition['label'],'tier'=>$definition['_tier_label'],'required'=>(int)$r['level'],'current'=>$current,'met'=>$current>=(int)$r['level'],'maximum'=>$definition['max_level']??null,'unreachable'=>isset($definition['max_level'])&&(int)$r['level']>(int)$definition['max_level']];
+            $result[$key]=['group'=>$kind,'slug'=>$r['slug'],'rank'=>$tier,'label'=>$definition['label'],'tier'=>$definition['_tier_label'],'required'=>(int)$r['level'],'current'=>$current,'met'=>$current>=(int)$r['level'],'maximum'=>$definition['max_level']??null,'unreachable'=>isset($definition['max_level'])&&(int)$r['level']>(int)$definition['max_level']];
         }
         foreach($requirements['ships']??[] as $r){
             $slug=is_array($r)?$r['slug']:$r;$tier=is_array($r)?($r['tier']??'basic'):'basic';$definition=$this->catalog->getTierForUniverse($planet->solarSystem->galaxy->universe,'ships',$slug,$tier);
-            $result[]=['label'=>'Accès à '.$definition['label'],'tier'=>$definition['_tier_label'],'required'=>null,'current'=>null,'met'=>$this->requirements->check(['ships'=>[$r]],$buildings,$tech,[],$this->catalog->forUniverse($planet->solarSystem->galaxy->universe)['catalog'])===[],'maximum'=>null,'unreachable'=>false];
+            $result[]=['group'=>'ships','slug'=>$slug,'rank'=>$tier,'label'=>'Accès à '.$definition['label'],'tier'=>$definition['_tier_label'],'required'=>null,'current'=>null,'met'=>$this->requirements->check(['ships'=>[$r]],$buildings,$tech,[],$this->catalog->forUniverse($planet->solarSystem->galaxy->universe)['catalog'])===[],'maximum'=>null,'unreachable'=>false];
         }
         return array_values($result);
     }

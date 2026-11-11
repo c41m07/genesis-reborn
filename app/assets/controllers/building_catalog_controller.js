@@ -27,7 +27,7 @@ export default class extends Controller {
             button.setAttribute('aria-pressed', String(button.dataset.category === this.state.category));
         });
         this.update();
-        if (!previous) this.followHash();
+        if (!previous || previous.followedHash !== location.hash) this.followHash();
     }
 
     toggleLocked(event) {
@@ -78,7 +78,14 @@ export default class extends Controller {
             button.setAttribute('aria-pressed', String(button.dataset.category === 'all'));
         });
         this.activate(tab);
-        document.getElementById(tab.hash.slice(1))?.scrollIntoView({ block: 'nearest' });
+        this.state.followedHash = location.hash;
+        const panel = document.getElementById(tab.hash.slice(1));
+        panel?.scrollIntoView({ block: 'nearest' });
+        if (new URLSearchParams(location.search).get('focusItem') === '1') {
+            requestAnimationFrame(() => {
+                if (tab.isConnected) tab.focus({ preventScroll: true });
+            });
+        }
     }
 
     update() {

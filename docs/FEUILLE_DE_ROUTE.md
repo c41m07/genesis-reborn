@@ -1241,3 +1241,31 @@ pour le périmètre complet.
 Réconciliation du 11 novembre 2026 : `dev` intégré à la branche guildes ; le numéro historique partagé est pris en charge par `Version20261111173000`, sans modifier la migration originale des grades ni appliquer les migrations à la base habituelle. Voir [le suivi](GESTION_GUILDES_ALLIANCES.md). PR #36 toujours en brouillon.
 
 Validation locale de la réconciliation : installation vierge isolée, 23 tests ciblés (205 assertions), 701 tests PHP (209981 assertions), 13 tests Python, 158 scénarios navigateur consolidés après reprise clavier inchangée, lint/schéma, compilation et contrôles Git réussis. Aucune migration de la base habituelle ; détails et limites dans [le suivi](GESTION_GUILDES_ALLIANCES.md).
+
+
+## Interfaces et flottes — lot démarré le 11 novembre 2026
+
+Branche feature/interfaces-classements, depuis dev actualisée (68ca8d9).
+Premier lot : catégories et présentation du classement, prérequis navigables,
+signalement privé, colonnes de surveillance et retrait du journal des missions.
+Aucune migration ni modification des règles de déplacement dans ce lot.
+Le [suivi](EVOLUTIONS_INTERFACES_FLOTTES.md) donne les complexités, décisions,
+dépendances et vérifications réelles. Les lots suivants attendent l’intégration
+du premier selon les consignes du dépôt. Diplomatie, Profil et Inventaire
+restent à valider sur maquette avant intégration.
+
+
+### Validation locale du premier lot
+
+Les six contrôles locaux sont réussis : validation Compose, lint/schéma,
+compilation, make test (703 tests PHP, 209995 assertions et 13 tests Python),
+159 scénarios navigateur distincts consolidés après reprises et contrôle du diff.
+Le focus des prérequis préserve les mises à jour automatiques ; les tests de
+missions suivent l’historique conservé après retrait du journal. Le wiki est
+synchronisé et vérifié. La limite de PHPUnit est fixée à 512 Mo dans la seule
+commande de test du Makefile après un épuisement initial à 128 Mo.
+
+Ces résultats ne constituent ni une validation de CI GitHub ni un déploiement.
+Le [suivi](EVOLUTIONS_INTERFACES_FLOTTES.md) détaille les reprises, les fichiers et
+les décisions métier désormais confirmées pour les lots suivants. Les trois
+maquettes restent à valider avant intégration.

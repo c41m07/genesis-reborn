@@ -13,3 +13,9 @@ body.authenticated[data-theme=light] .message-bubble--own{background:#fff1d6;col
 .mobile-menu,.mobile-bottom-nav>button{position:relative}
 .menu-unread-dot{position:absolute;top:5px;right:5px;width:10px;height:10px;border-radius:50%;background:#e7b76b;border:2px solid #101b2b;box-shadow:0 0 0 1px #e7b76b}
 @media(max-width:740px){body.authenticated .message-thread{max-height:50vh}body.authenticated .message-bubble{max-width:92%;padding:12px}}
+
+body.authenticated .message-report{display:grid;justify-items:end;border-top:0;padding-top:0}
+body.authenticated .message-report summary{display:grid;place-items:center;min-width:44px;min-height:44px;border:1px solid var(--line);border-radius:6px;list-style:none}
+body.authenticated .message-report summary::-webkit-details-marker{display:none}
+body.authenticated .message-report summary:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+body.authenticated .message-report form{width:100%}

@@ -177,6 +177,51 @@ final class DailyLeaderboardTest extends KernelTestCase
         self::assertGreaterThan($first['guilds'][0]['total_points'], $after['guilds'][0]['total_points']);
     }
 
+    public function testBuildingAndResearchCategoriesHaveIndependentFrozenRanksAndChanges(): void
+    {
+        $a = $this->join('Builder');$b = $this->join('Researcher');
+        $planet = $this->em->getRepository(Planet::class)->findOneBy(['owner'=>$a]);
+        $building = new \App\Entity\PlanetBuilding();$building->planet=$planet;$building->slug='mine_metal';$building->level=8;
+        $technology = new \App\Entity\PlayerTechnology();$technology->playerUniverse=$b;$technology->slug='weapons_engineering';$technology->level=4;
+        $this->em->persist($building);$this->em->persist($technology);$this->em->flush();
+        $service = self::getContainer()->get(DailyLeaderboard::class);
+        $first = $service->forUniverse($a);
+        self::assertSame(1, $this->row($first,$a)['ranks']['buildings']);
+        self::assertSame(2, $this->row($first,$a)['ranks']['research']);
+        self::assertSame(1, $this->row($first,$b)['ranks']['research']);
+        $building->level=0;$technology->level=0;$this->em->flush();
+        self::assertSame($this->row($first,$a)['building_points'], $this->row($service->forUniverse($a),$a)['building_points']);
+        $this->clock->sleep(2);
+        $next=$service->forUniverse($a);
+        self::assertLessThan(0,$this->row($next,$a)['score_changes']['buildings']);
+        self::assertLessThan(0,$this->row($next,$b)['score_changes']['research']);
+        // Les scores égaux reprennent le départage existant par pseudonyme.
+        self::assertSame(1,$this->row($next,$a)['ranks']['research']);
+        self::assertSame(1,$this->row($next,$a)['rank_changes']['research']);
+    }
+
+    public function testOldSnapshotsGainNewCategoriesWithoutInventingHistoricalChanges(): void
+    {
+        $a=$this->join('Legacy');
+        $service=self::getContainer()->get(DailyLeaderboard::class);
+        $first=$service->forUniverse($a);
+        $snapshot=$this->em->getRepository(LeaderboardSnapshot::class)->findOneBy(['universe'=>$a->universe]);
+        foreach($snapshot->players as &$row) foreach(['buildings','research'] as $category) {
+            unset($row['ranks'][$category],$row['score_changes'][$category],$row['rank_changes'][$category]);
+        }
+        unset($row);$this->em->flush();
+        $legacy=$service->forUniverse($a);
+        self::assertEquals($first['updated_at'],$legacy['updated_at']);
+        self::assertSame(1,$legacy['players'][0]['ranks']['buildings']);
+        self::assertNull($legacy['players'][0]['rank_changes']['research']);
+        $this->clock->sleep(2);
+        $next=$service->forUniverse($a);
+        self::assertNull($next['players'][0]['rank_changes']['buildings']);
+        self::assertSame(0,$next['players'][0]['score_changes']['buildings']);
+        $this->clock->sleep(86400);
+        self::assertSame(0,$service->forUniverse($a)['players'][0]['rank_changes']['research']);
+    }
+
     public function testNextUpdateFollowsParisDaylightSavingAndNotFixedTwentyFourHours(): void
     {
         $a = $this->join('Summer');

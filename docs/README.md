@@ -10,6 +10,7 @@ une seule référence par sujet ; les anciens bilans ne décrivent pas l’état
 | Utiliser les guildes, les relations personnelles, les traités et les projets collectifs | [Guide guildes et alliances](GUIDE_GUILDES_ALLIANCES.md) |
 | Retrouver la revue, la fusion et les validations du chantier guildes | [Suivi guildes et alliances](GESTION_GUILDES_ALLIANCES.md) |
 | Préparer la refonte de la console et ses récompenses | [Cadrage de l’administration, brouillon](REFONTE_ADMINISTRATION.md) |
+| Suivre les évolutions des interfaces et flottes | [Lots et décisions ouvertes](EVOLUTIONS_INTERFACES_FLOTTES.md) |
 | Voir les objectifs et vérifications restantes | [ROADMAP](FEUILLE_DE_ROUTE.md) |
 | Comprendre les dossiers, .env, comptes, wiki et interfaces | [ARCHITECTURE](ARCHITECTURE.md) |
 | Installer et livrer sur le serveur | [DEPLOIEMENT](DEPLOIEMENT.md) |

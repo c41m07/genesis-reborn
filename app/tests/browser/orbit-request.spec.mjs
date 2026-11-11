@@ -107,7 +107,7 @@ test('Orbite alliée : demande entrante, accord du propriétaire et stationnemen
       await senderPage.reload();
       return senderPage.locator('[data-status="orbiting"]').count();
     }, { timeout: 15000, intervals: [500] }).toBe(1);
-    await expect(senderPage.locator('[data-status="orbiting"]')).toContainText('En orbite');
+    await expect(senderPage.locator('[data-status="orbiting"]')).toContainText(/en orbite/i);
     await expect(senderPage.locator('[data-active-fleet] [role="progressbar"]')).toHaveAttribute('aria-label', /Fin d’orbite/);
   } finally {
     await senderPage.close();

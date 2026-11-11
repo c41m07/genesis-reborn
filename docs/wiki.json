@@ -34,7 +34,8 @@
       "Les rangs Basique, Intermédiaire et Supérieur sont des progressions distinctes. Améliorer un rang ne remplace pas les niveaux ni les unités des autres rangs. Les noms peuvent varier d’un rang à l’autre : vérifiez la famille et le rang dans la fiche.",
       "Les prérequis servent à débloquer initialement chaque rang. L’accès acquis est ensuite conservé : pour les bâtiments, vaisseaux et défenses dans la colonie concernée ; pour les recherches dans votre participation à l’univers. Une nouvelle colonie n’hérite donc pas automatiquement de tous les accès locaux de la première.",
       "Les recherches sont partagées entre vos colonies d’un même univers. Le laboratoire local fait partie des conditions de déblocage initial. Après acquisition de l’accès, vous devez toujours respecter les coûts, durées, plafonds et conditions des missions.",
-      "L’arbre technologique aide à suivre les liens entre recherches. Les conditions complètes, notamment les bâtiments requis, restent dans les fiches. Ne confondez pas accès débloqué et ressources suffisantes pour commander."
+      "L’arbre technologique aide à suivre les liens entre recherches. Les conditions complètes, notamment les bâtiments requis, restent dans les fiches. Ne confondez pas accès débloqué et ressources suffisantes pour commander.",
+      "Les prérequis des cartes et des fiches sont des liens : ils ouvrent la bonne page, dans votre colonie active, avec le rang requis sélectionné. Ils restent consultables même lorsque le rang est verrouillé ; ses règles de déblocage ne changent pas."
     ]
   },
   {
@@ -42,7 +43,7 @@
     "part": "2. Les règles du jeu",
     "title": "Commandes et temps hors connexion",
     "paragraphs": [
-      "Chaque planète possède des files indépendantes pour la construction, la recherche et le chantier. Les opérations d’une même file se succèdent ; les autres files peuvent avancer en parallèle. Un même rang de recherche ne peut pas être lancé simultanément sur plusieurs colonies.",
+      "Chaque planète possède ses files de construction et de chantier. La recherche utilise une file commune à toutes vos colonies du même univers. Les opérations d’une même file se succèdent ; construction, recherche et chantier peuvent avancer en parallèle. Un même rang de recherche ne peut pas être lancé simultanément sur plusieurs colonies.",
       "Les ressources sont payées à la commande. Les coûts et durées déjà enregistrés restent attachés à cette commande. Un bonus d’accélération retire 25 % du temps restant de l’opération active : deux applications successives laissent 56,25 % du temps initial restant, et non 50 %. Les opérations en attente ne sont pas accélérées.",
       "Fermer le navigateur ne suspend ni la production ni les opérations. Les stocks sont recalculés avec les pénuries et les plafonds rencontrés pendant votre absence. Un stockage plein suspend la production industrielle inutile ; l’électricité et l’hydrogène peuvent encore alimenter les consommateurs locaux.",
       "Un compte à rebours arrivé à zéro annonce une échéance, mais le traitement peut demander un court délai. Vérifiez l’état de la file ou le rapport avant de considérer l’opération comme terminée."
@@ -68,7 +69,8 @@
       "Le carburant est réservé au départ pour l’aller, le stationnement prévu et le retour. Les réservoirs dédiés servent au carburant ; si nécessaire, le carburant supplémentaire utilise de la place en soute et réduit le fret transportable. L’hydrogène payé pour construire un vaisseau ne constitue pas son carburant de mission.",
       "Ralentir réduit la consommation de voyage selon la règle proportionnelle actuelle, mais augmente la durée jusqu’au minimum applicable. Le stationnement a sa propre consommation horaire. Le retour reprend la durée de voyage enregistrée à l’aller ; stationnement et combat s’ajoutent.",
       "Un aller dure au minimum 60 secondes. Seule une flotte exclusivement composée de sondes dans le même système bénéficie d’un minimum de 30 secondes. Les voyages entre galaxies sont refusés actuellement.",
-      "Le transport livre des ressources. L’espionnage utilise uniquement des sondes, consommées à l’arrivée ; une détection avertit le propriétaire et empêche le rapport. Vérifiez les conditions de la mission dans son aperçu avant l’envoi."
+      "Le transport livre des ressources. L’espionnage utilise uniquement des sondes, consommées à l’arrivée ; une détection avertit le propriétaire et empêche le rapport. Vérifiez les conditions de la mission dans son aperçu avant l’envoi.",
+      "La page Flotte conserve le suivi de vos vols actifs et les demandes d’orbite. Le journal de mission n’y est plus affiché ; vos rapports et les historiques nécessaires restent conservés."
     ]
   },
   {
@@ -92,7 +94,18 @@
     "paragraphs": [
       "Les alliances personnelles et les alliances entre guildes exigent un accord réciproque. Vous ne pouvez appartenir qu’à une guilde dans un univers. Les relations influencent les camps et les missions autorisées ; elles restent propres à cet univers.",
       "Les rapports et notifications sont privés selon les droits de leurs destinataires. Leur absence immédiate ne signifie pas qu’une mission s’est arrêtée : consultez aussi son état dans la liste des flottes.",
-      "Un univers temporaire peut avoir une date de fermeture. Une fois fermé, il devient inaccessible et ses données sont conservées. Les objectifs de progression de l’Alpha restent des repères à mesurer, pas des délais garantis pour obtenir une colonie ou un vaisseau."
+      "Un univers temporaire peut avoir une date de fermeture. Une fois fermé, il devient inaccessible et ses données sont conservées. Les objectifs de progression de l’Alpha restent des repères à mesurer, pas des délais garantis pour obtenir une colonie ou un vaisseau.",
+      "Dans les messages privés et le canal de guilde, le triangle jaune à droite d’un message signalable ouvre le formulaire de motif. Il est utilisable au clavier et sur écran tactile."
+    ]
+  },
+  {
+    "id": "classements",
+    "part": "2. Les règles du jeu",
+    "title": "Classements quotidiens",
+    "paragraphs": [
+      "Le sélecteur du classement propose les points totaux, les points de bâtiments, de recherche, de flotte et le nombre de planètes. Chaque catégorie possède son ordre et son rang ; les valeurs les plus élevées arrivent en premier. La catégorie reste sélectionnée entre les pages. Les points de flotte du classement incluent les vaisseaux et les défenses fixes.",
+      "Les scores et rangs sont calculés chaque jour à minuit, heure de Paris, et restent figés jusqu’au calcul suivant. La page indique les heures du dernier calcul, de sa comparaison et de la prochaine actualisation. Les nouveaux joueurs rejoignent le classement au prochain calcul ; les protections de combat restent calculées en temps réel.",
+      "Les variations comparent les deux derniers calculs. Une progression de rang compte comme un gain. Dans le tableau joueur, les écarts apparaissent entre parenthèses sur la même ligne : (+N) en vert pour un gain, (−N) en rouge pour une perte, (= 0) si la valeur ne change pas et (—) si aucune comparaison n’est disponible. Les anciens instantanés sans rang bâtiments ou recherche ne produisent pas de variation de rang inventée."
     ]
   },
   {

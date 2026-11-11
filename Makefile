@@ -43,7 +43,7 @@ seed-demo: ## Créer le compte de démonstration local
 test: ## Tests unitaires, HTTP et MariaDB isolée en mémoire
 	$(DC) --profile test up -d --wait database-test
 	$(DC) exec -T --user root app chown -R $(shell id -u):$(shell id -g) var/cache
-	$(EXEC) php bin/phpunit
+	$(EXEC) php -d memory_limit=512M bin/phpunit
 	python3 -m unittest discover -s app/tests/scripts -p "test_backup*.py"
 lint: ## Vérifier PHP, Twig, YAML, conteneur et schéma
 	$(EXEC) sh -c 'find src tests migrations -name "*.php" -print0 | xargs -0 -n1 php -l >/dev/null'
