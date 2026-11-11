@@ -23,6 +23,17 @@ final class RelationResolver
         if($a->id>$b->id) [$a,$b]=[$b,$a];
         return $this->repo->one(AllianceContract::class,['playerA'=>$a,'playerB'=>$b]);
     }
+    public function enemy(PlayerUniverse $actor, PlayerUniverse $target): bool
+    {
+        if (!$actor->isPlayerControlled() || !$target->isPlayerControlled()
+            || $actor->universe->id !== $target->universe->id || $actor->id === $target->id) return false;
+        $status = $this->guildStatus($this->guild($actor), $this->guild($target));
+        if ($status === 'enemies') return true;
+        if ($status === 'allies') return false;
+
+        return in_array($this->contract($actor, $target)?->status, AllianceContract::HOSTILE_STATUSES, true);
+    }
+
     public function allied(PlayerUniverse $a,PlayerUniverse $b): bool
     {
         if(!$a->isPlayerControlled() || !$b->isPlayerControlled()) return false;

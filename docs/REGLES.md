@@ -315,3 +315,11 @@ Transition validée : tout surplus déjà présent au-dessus de la capacité est
 Clarification validée le 10 novembre 2026 : les règles courantes s’appliquent directement à toute la période de production non encore matérialisée, depuis le dernier calcul enregistré, y compris lorsque cette période précède le déploiement. Ce recalcul rétroactif des gains en attente est accepté ; il peut augmenter ou réduire ces gains selon les nouveaux taux. Il ne réinitialise pas les stocks déjà enregistrés. Les frontières d’événements et de vacances restent prises en compte. Cette décision remplace le mécanisme initial de bascule par date : `RESOURCE_BALANCE_EFFECTIVE_AT` n’est plus utilisée et aucun ancien régime n’est maintenu.
 
 Aucune migration ni réécriture globale des stocks n’est requise. Les nouvelles valeurs sont actives dès que le nouveau code est exécuté, pour les univers existants comme pour les nouveaux. Lors du déploiement, arrêter les anciens processus applicatifs puis démarrer tous les services avec la même version ; aucun paramètre d’activation supplémentaire n’est nécessaire.
+
+### Rivalités personnelles et paix — 11 novembre 2026
+
+Une déclaration personnelle suffit à rendre deux joueurs rivaux, sans obligation de guilde. La déclaration remplace leur alliance personnelle éventuelle. La paix exige une proposition puis l'acceptation de l'autre joueur : proposer, retirer ou refuser une offre ne met pas fin à l'hostilité.
+
+L'appartenance à une même guilde ou à des guildes alliées prime : la rivalité personnelle reste enregistrée mais n'autorise pas les combats entre ces alliés. Elle reprend ses effets si ces liens collectifs cessent, tant qu'une paix personnelle n'a pas été acceptée. Inversement, une paix personnelle ne neutralise pas une hostilité entre guildes.
+
+Après la paix, les joueurs sont neutres au niveau personnel et peuvent proposer une nouvelle alliance, avec consentement réciproque. Aucun bonus, butin supplémentaire ou renseignement privé n'est accordé par une rivalité. Les restrictions de combat et les préférences de réception des transports restent applicables. La conversion d'un empire termine aussi les rivalités et offres de paix.

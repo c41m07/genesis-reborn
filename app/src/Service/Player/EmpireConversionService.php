@@ -74,7 +74,7 @@ final class EmpireConversionService
         foreach($this->repo->all(AllianceContract::class,['playerB'=>$membership]) as $contract) $ended[$contract->id]=$contract;
         $allianceIds=[];
         foreach($ended as $contract) {
-            if(!in_array($contract->status,['pending','accepted'],true)) continue;
+            if(!in_array($contract->status,AllianceContract::ACTIVE_STATUSES,true)) continue;
             $contract->status='ended';$allianceIds[]=$contract->id;
         }
         $result=['ended_alliance_ids'=>$allianceIds,'guilds'=>[]];

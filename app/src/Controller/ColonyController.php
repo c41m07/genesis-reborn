@@ -229,7 +229,7 @@ final class ColonyController extends AbstractController
                     } else {
                         if (!isset($ownerRelations[$owner->id])) {
                             $ownerRelations[$owner->id] = $relations->allied($m, $owner) ? 'allied'
-                                : ($relations->guildStatus($relations->guild($m), $relations->guild($owner)) === 'enemies' ? 'enemy' : 'neutral');
+                                : ($relations->enemy($m, $owner) ? 'enemy' : 'neutral');
                         }
                         $mapPlanetRelations[$planet->id] = $ownerRelations[$owner->id];
                     }

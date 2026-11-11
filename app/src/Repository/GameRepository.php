@@ -90,7 +90,7 @@ SELECT
     (SELECT COUNT(*) FROM player_technology WHERE player_universe_id = :membership) AS technologies,
     (SELECT COUNT(*) FROM combat_event e JOIN planet p ON p.id = e.planet_id WHERE e.status = 'pending'
         AND (p.owner_id = :membership OR EXISTS (SELECT 1 FROM combat_participant cp WHERE cp.combat_event_id = e.id AND cp.player_universe_id = :membership))) AS open_combats,
-    (SELECT COUNT(*) FROM alliance_contract WHERE (player_a_id = :membership OR player_b_id = :membership) AND status IN ('pending','accepted')) AS alliances,
+    (SELECT COUNT(*) FROM alliance_contract WHERE (player_a_id = :membership OR player_b_id = :membership) AND status IN ('pending','accepted','enemies','peace_pending')) AS alliances,
     (SELECT COUNT(*) FROM guild_member WHERE player_universe_id = :membership) AS guild_memberships,
     (SELECT COUNT(*) FROM guild WHERE leader_id = :membership) AS led_guilds
 SQL;

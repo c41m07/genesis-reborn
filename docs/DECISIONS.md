@@ -1202,3 +1202,13 @@ Aucune migration ni réécriture globale des stocks n’est requise. Les nouvell
 ### Disposition du suivi sur les catalogues — ajustement du 10 novembre 2026
 
 Sur Bâtiments, Recherche, Chantier spatial et Défenses : jusqu’à 740 px, l’activité reste en haut et les flottes en vol sont masquées. De 741 à 1 250 px, l’activité reste en haut et les flottes restent accessibles. À partir de 1 251 px, l’activité est à droite du catalogue, au-dessus des flottes en vol. La vue générale et la page Flottes gardent leur suivi. Le masquage mobile retire aussi les liens correspondants du parcours clavier ; aucune duplication de file n’est introduite.
+
+### Rivalités personnelles — décisions du 11 novembre 2026
+
+Décisions explicites de l'utilisateur : une hostilité personnelle est réciproque et peut être déclenchée par un seul joueur, comme entre guildes. Elle est accessible sans appartenance à une guilde.
+
+Les liens collectifs priment : entre membres de la même guilde ou de guildes alliées, une rivalité personnelle reste sans effet sur les autorisations de combat. Elle ne permet pas de contourner l'interdiction d'attaquer ces alliés.
+
+La fin d'une rivalité exige l'accord des deux joueurs : l'un propose la paix et l'autre l'accepte. Une proposition, son retrait ou son refus ne suffit pas à terminer l'hostilité.
+
+Ces décisions ne valident aucun bonus de combat, accès à des renseignements privés, récompense de rivalité ou modification des protections existantes.

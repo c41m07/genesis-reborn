@@ -64,21 +64,77 @@ final class DiplomacyService
             $this->manager->remove($g);
         });
     }
-    public function alliance(PlayerUniverse $m,int $targetId,string $action): void
+    public function alliance(PlayerUniverse $actor, int $targetId, string $action): void
     {
-        $this->manager->transaction(function()use($m,$targetId,$action){
-            $this->lock($m);$target=$this->repo->find(PlayerUniverse::class,$targetId);
-            if(!$target || !$this->access->canRelateToPlayer($m,$target)) throw new \DomainException('Commandant inaccessible.');
-            $contract=$this->relations->contract($m,$target);
-            if($action==='break') { if($contract) $this->manager->remove($contract);return; }
-            if($this->relations->guildStatus($this->relations->guild($m),$this->relations->guild($target))==='enemies') throw new \DomainException('Les contrats sont interdits entre guildes ennemies.');
-            if($action==='accept') {
-                if(!$contract || $contract->status!=='pending' || $contract->proposer->id===$m->id) throw new \DomainException('Aucune proposition reçue.');$contract->status='accepted';return;
+        $this->manager->transaction(function () use ($actor, $targetId, $action): void {
+            $this->lock($actor);
+            $target = $this->repo->find(PlayerUniverse::class, $targetId);
+            if (!$target || !$this->access->canRelateToPlayer($actor, $target)) throw new \DomainException('Commandant inaccessible.');
+            if (!in_array($action, ['propose','accept','break','rival','peace_propose','peace_accept','peace_reject'], true)) {
+                throw new \DomainException('Action personnelle inconnue.');
             }
-            if($action!=='propose' || $contract) throw new \DomainException('Proposition déjà existante ou action invalide.');
-            $contract=new AllianceContract();[$a,$b]=$m->id<$target->id?[$m,$target]:[$target,$m];$contract->playerA=$a;$contract->playerB=$b;$contract->proposer=$m;$this->manager->save($contract);
+            $contract = $this->relations->contract($actor, $target);
+            if ($contract !== null) $this->manager->lock($contract);
+            if ($action === 'rival') {
+                if ($contract !== null && in_array($contract->status, AllianceContract::HOSTILE_STATUSES, true)) {
+                    throw new \DomainException('Cette rivalité existe déjà.');
+                }
+                $contract ??= $this->newPersonalContract($actor, $target);
+                $contract->status = 'enemies';
+                $contract->proposer = $actor;
+                return;
+            }
+            if (in_array($action, ['peace_propose','peace_accept','peace_reject'], true)) {
+                if ($contract === null || !in_array($contract->status, AllianceContract::HOSTILE_STATUSES, true)) {
+                    throw new \DomainException('Aucune rivalité personnelle active.');
+                }
+                if ($action === 'peace_propose') {
+                    if ($contract->status === 'peace_pending') throw new \DomainException('Une proposition de paix est déjà en attente.');
+                    $contract->status = 'peace_pending';
+                    $contract->proposer = $actor;
+                } else {
+                    if ($contract->status !== 'peace_pending') throw new \DomainException('Aucune proposition de paix en attente.');
+                    if ($action === 'peace_accept' && $contract->proposer->id === $actor->id) {
+                        throw new \DomainException('L’autre joueur doit accepter votre proposition de paix.');
+                    }
+                    $contract->status = $action === 'peace_accept' ? 'ended' : 'enemies';
+                }
+                return;
+            }
+            if ($action === 'break') {
+                if ($contract !== null && in_array($contract->status, AllianceContract::HOSTILE_STATUSES, true)) {
+                    throw new \DomainException('La rivalité ne peut se terminer que par une paix acceptée par les deux joueurs.');
+                }
+                if ($contract !== null && in_array($contract->status, ['pending','accepted'], true)) $this->manager->remove($contract);
+                return;
+            }
+            if ($this->relations->guildStatus($this->relations->guild($actor), $this->relations->guild($target)) === 'enemies') {
+                throw new \DomainException('Les contrats sont interdits entre guildes ennemies.');
+            }
+            if ($action === 'accept') {
+                if ($contract === null || $contract->status !== 'pending' || $contract->proposer->id === $actor->id) {
+                    throw new \DomainException('Aucune proposition reçue.');
+                }
+                $contract->status = 'accepted';
+                return;
+            }
+            if ($contract !== null && $contract->status !== 'ended') throw new \DomainException('Terminez la relation actuelle avant de proposer une alliance.');
+            $contract ??= $this->newPersonalContract($actor, $target);
+            $contract->status = 'pending';
+            $contract->proposer = $actor;
         });
     }
+
+    private function newPersonalContract(PlayerUniverse $actor, PlayerUniverse $target): AllianceContract
+    {
+        $contract = new AllianceContract();
+        [$contract->playerA, $contract->playerB] = $actor->id < $target->id ? [$actor, $target] : [$target, $actor];
+        $contract->proposer = $actor;
+        $this->manager->save($contract);
+
+        return $contract;
+    }
+
     public function relation(PlayerUniverse $m,int $targetId,string $status): void
     {
         $this->manager->transaction(function()use($m,$targetId,$status){
@@ -107,6 +163,6 @@ final class DiplomacyService
     private function breakHostileContracts(\App\Entity\Universe $u): void
     {
         $this->manager->flush();
-        foreach($this->repo->all(AllianceContract::class) as $c) if($c->playerA->universe->id===$u->id && $this->relations->guildStatus($this->relations->guild($c->playerA),$this->relations->guild($c->playerB))==='enemies') $this->manager->remove($c);
+        foreach($this->repo->all(AllianceContract::class) as $c) if(in_array($c->status,['pending','accepted'],true) && $c->playerA->universe->id===$u->id && $this->relations->guildStatus($this->relations->guild($c->playerA),$this->relations->guild($c->playerB))==='enemies') $this->manager->remove($c);
     }
 }

@@ -91,3 +91,45 @@ Cette étape lève le blocage local indiqué dans le bilan précédent. Les grad
 - `git diff --check` et contrôle du diff préparé : réussites.
 
 Ces résultats sont locaux et ne constituent pas une validation de la CI GitHub. Le lot publié concerne les grades et permissions de guilde, avec conservation et tests des contrats personnels ; les traités enrichis, rivalités personnelles et projets restent hors de ce lot.
+
+## Complément personnel en cours — 11 novembre 2026
+
+Décisions utilisateur : rivalité réciproque sur déclaration d'un joueur, priorité des liens de guilde et fin par paix bilatérale. La source métier est consignée dans DECISIONS.md. Ce complément est développé sur la même branche, à la demande de l'utilisateur ; aucun nouveau commit ni push n'est implicite.
+
+Le stockage existant AllianceContract porte les états `enemies` et `peace_pending`, sans nouvelle migration. Le proposant identifie l'auteur de l'offre en attente. Une paix acceptée passe à `ended` ; une nouvelle proposition d'alliance réutilise ensuite la paire unique. Ce stockage ne constitue pas un journal détaillé des anciens accords.
+
+Les grades ne donnent aucun droit sur les relations personnelles des autres membres. Les calculs effectifs sont partagés par la diplomatie, la carte et le classement. La conversion termine également ces états ; une hostilité de guilde invalide les alliances incompatibles sans effacer une rivalité personnelle.
+
+Le contrat terminé n'est plus présenté comme une invitation et ne propose pas d'acceptation/refus erroné. La paix en attente ne propose jamais de rupture unilatérale de la rivalité. Les refus de paix et retraits de proposition maintiennent l'hostilité.
+
+La PR du premier commit n'a pas été créée automatiquement : le connecteur a affiché un formulaire de soumission ; une vérification ultérieure n'a trouvé aucune PR pour cette branche.
+
+### Vérifications du complément personnel
+
+- `make validate` : réussite.
+- Tests ciblés initiaux : 18 réussites, 54 assertions.
+- `make test` : 617 tests PHP, 209563 assertions, puis 13 tests Python réussis. La redirection des nouvelles actions a ensuite été corrigée et vérifiée par le parcours navigateur final ; la suite PHP complète n'a pas été relancée pour cette seule correction de navigation.
+- `make lint` final et `git diff --check` : réussites, schéma local synchronisé.
+- Navigateur ciblé : huit parcours existants de colonie et de grades réussis, puis le nouveau parcours personnel réussi après reprises. Résultat consolidé de neuf scénarios, pas une nouvelle exécution globale de la suite navigateur.
+- Le nouveau parcours vérifie l'alliance initiale, la déclaration au clavier, la rivalité réciproque, la classe ennemi du classement, le refus d'une rupture unilatérale, le refus d'une paix, la paix acceptée par l'autre joueur, une nouvelle alliance, le responsive et une analyse axe ciblée.
+- Les reprises ont corrigé l'attente après validation au clavier, la redirection vers Relation et la préparation de l'instantané quotidien dans la seule base de test. Aucune règle de classement ni assertion de rivalité n'a été affaiblie.
+- Aucune nouvelle migration, installation, modification d'équilibrage, création de commit ou publication de ce complément. La compilation frontend et la suite navigateur globale restent à compléter avant un futur commit/push suivant les consignes du dépôt.
+
+### Fichiers du complément personnel
+
+- Calcul et transitions : `app/src/Entity/AllianceContract.php`, `app/src/Service/Player/RelationResolver.php`, `app/src/Service/Player/DiplomacyService.php`.
+- Affichage : `app/src/Controller/DiplomacyController.php`, `app/src/Controller/ColonyController.php`, `app/src/Controller/LeaderboardController.php`, `app/templates/player/_relation_card.html.twig`.
+- Conversion et compteurs : `app/src/Service/Player/EmpireConversionService.php`, `app/src/Repository/GameRepository.php`.
+- Tests : `app/tests/Integration/PersonalDiplomacyTest.php`, `app/tests/Unit/PersonalRelationCardTest.php`, `app/tests/browser/personal-rivalries.spec.mjs`.
+- Documentation : `README.md`, `docs/DECISIONS.md`, `docs/REGLES.md`, `docs/GESTION_GUILDES_ALLIANCES.md`.
+
+### Validation finale du complément avant publication — 11 novembre 2026
+
+- `make validate` et `make lint` : réussites conservées sur le même contenu final ; aucun changement de configuration ni de schéma supplémentaire.
+- `make test` final : 617 tests PHP, 209563 assertions et 13 tests Python réussis, après la correction de redirection.
+- `make assets` / `npm run build` : compilation de production réussie.
+- Suite navigateur intégrale répartie par `--shard=1/4` à `--shard=4/4` : 39, 48, 29 et 37 réussites, soit 153 scénarios, sans échec ni reprise dans cette campagne finale.
+- Chaque partition a utilisé son propre projet Docker, sa base jetable, ses caches et son dossier de résultats, avec un seul worker par partition. Aucun test ni délai n'a été modifié pour cette répartition.
+- `git diff --check` et `git diff --cached --check` : réussites.
+
+Ces résultats remplacent les vérifications partielles précédentes pour la publication de ce complément. Ils restent locaux et ne constituent pas une validation de la CI GitHub. Aucune nouvelle migration ni aucun déploiement n'est inclus.

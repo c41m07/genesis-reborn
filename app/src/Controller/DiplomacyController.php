@@ -19,10 +19,10 @@ final class DiplomacyController extends AbstractController
             if(!$this->isCsrfTokenValid('diplomacy',$request->request->get('_token'))) throw $this->createAccessDeniedException('Formulaire expiré.');
             try {
                 $action=(string)$request->request->get('action');$target=(int)$request->request->get('target');
-                match($action){'rank_save'=>$rankService->save($m,$target,$request->request->getString('name'),$request->request->getInt('position'),$request->request->all('permissions'),$request->request->getInt('version')),'rank_assign'=>$rankService->assign($m,$target,$request->request->getInt('rank'),$request->request->getInt('expected_rank')),'create'=>$service->create($m,(string)$request->request->get('name')),'join'=>$service->join($m,$target),'leave'=>$service->leave($m),'transfer'=>$service->transfer($m,$target),'disband'=>$service->disband($m),'relation'=>$service->relation($m,$target,(string)$request->request->get('status')),'propose','accept','break'=>$service->alliance($m,$target,$action),default=>throw new \DomainException('Action inconnue.')};
+                match($action){'rank_save'=>$rankService->save($m,$target,$request->request->getString('name'),$request->request->getInt('position'),$request->request->all('permissions'),$request->request->getInt('version')),'rank_assign'=>$rankService->assign($m,$target,$request->request->getInt('rank'),$request->request->getInt('expected_rank')),'create'=>$service->create($m,(string)$request->request->get('name')),'join'=>$service->join($m,$target),'leave'=>$service->leave($m),'transfer'=>$service->transfer($m,$target),'disband'=>$service->disband($m),'relation'=>$service->relation($m,$target,(string)$request->request->get('status')),'propose','accept','break','rival','peace_propose','peace_accept','peace_reject'=>$service->alliance($m,$target,$action),default=>throw new \DomainException('Action inconnue.')};
                 $this->addFlash('success','Diplomatie mise à jour.');
             } catch(\DomainException $e) { $this->addFlash('error',$e->getMessage()); }
-            return $this->redirectToRoute('app_diplomacy', ['q' => $search, 'tab' => match ($action) { 'relation' => 'diplomacy', 'propose', 'accept', 'break' => 'relations', default => 'guilds' }]);
+            return $this->redirectToRoute('app_diplomacy', ['q' => $search, 'tab' => match ($action) { 'relation' => 'diplomacy', 'propose', 'accept', 'break', 'rival', 'peace_propose', 'peace_accept', 'peace_reject' => 'relations', default => 'guilds' }]);
         }
         $own=$relations->guild($m);
         $players=[];$searchPlayers=[];
@@ -30,10 +30,10 @@ final class DiplomacyController extends AbstractController
             if($pu->id===$m->id || !$pu->isPlayerControlled()) continue;
             $contract=$relations->contract($m,$pu);
             $allied=$relations->allied($m,$pu);
-            $enemy=$relations->guildStatus($own,$relations->guild($pu))==='enemies';
-            if($contract || $allied || $enemy) $players[]=['player'=>$pu,'contract'=>$contract,'allied'=>$allied,'enemy'=>$enemy];
+            $enemy=$relations->enemy($m,$pu);
+            if($contract || $allied || $enemy) $players[]=['player'=>$pu,'contract'=>$contract,'allied'=>$allied,'enemy'=>$enemy,'guildStatus'=>$relations->guildStatus($own,$relations->guild($pu))];
         }
-        foreach($repo->searchMessageRecipients($m,$search) as $pu) $searchPlayers[]=['player'=>$pu,'contract'=>$relations->contract($m,$pu),'allied'=>$relations->allied($m,$pu),'enemy'=>$relations->guildStatus($own,$relations->guild($pu))==='enemies'];
+        foreach($repo->searchMessageRecipients($m,$search) as $pu) $searchPlayers[]=['player'=>$pu,'contract'=>$relations->contract($m,$pu),'allied'=>$relations->allied($m,$pu),'enemy'=>$relations->enemy($m,$pu),'guildStatus'=>$relations->guildStatus($own,$relations->guild($pu))];
         $own=$relations->guild($m);$guilds=[];foreach($repo->all(Guild::class,['universe'=>$m->universe,'archivedAt'=>null]) as $g) $guilds[]=['guild'=>$g,'status'=>$relations->guildStatus($own,$g),'members'=>$repo->all(GuildMember::class,['guild'=>$g])];
         $guildRelations=[];$guildSearchResults=[];
         foreach($guilds as $row) {

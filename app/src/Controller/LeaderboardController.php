@@ -21,7 +21,7 @@ final class LeaderboardController extends AbstractController
             $peer = $row['membership'];
             $guild = $relations->guild($peer);
             $guildStatus = $relations->guildStatus($ownGuild, $guild);
-            $row['relation'] = $peer->id === $membership->id ? 'self' : ($guildStatus === 'enemies' ? 'enemy' : ($guildStatus === 'allies' ? 'guild' : ($relations->contract($membership, $peer)?->status === 'accepted' ? 'commander' : 'neutral')));
+            $row['relation'] = $peer->id === $membership->id ? 'self' : ($relations->enemy($membership, $peer) ? 'enemy' : ($guildStatus === 'allies' ? 'guild' : ($relations->contract($membership, $peer)?->status === 'accepted' ? 'commander' : 'neutral')));
         }
         unset($row);
 
