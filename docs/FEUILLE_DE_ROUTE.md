@@ -72,7 +72,7 @@ en cours et des opérations concurrentes. Les lots prévus sont :
 | 3 — Empire PNJ | Transformation transactionnelle, retrait de l'accès de l'ancien joueur, conservation des forces et recherches, gestion des opérations en cours et nouveau départ. | Aucun transfert partiel ou doublon ; compte et historique conservés ; aucune reprise de l'ancien empire ; pas de garnison standard injectée. |
 | 4 — Vie des PNJ | Production plafonnée et reconstruction limitée ; conservation des comportements particuliers des PNJ existants. | Stockage et consommations respectés, coût/délai/plafond de reconstruction, pas de reconstruction en combat. |
 | 5 — Occupation JcE | Extension de `FleetService` et `CombatEventService`, occupation persistée, place réservée, défense et capture après 24 h. | Rival et remise à zéro, perte/retrait de flotte, colonisateur consommé une seule fois, limites de colonies, production/pillage sans gestion anticipée et courses à l'échéance. |
-| 6 — Interface et livraison | Libellé « Conquête JcE », statuts, échéances, avertissements, rapports, wiki et règles actuelles. | HTML rendu, clavier/focus/libellés/contrastes concernés ; contrôles complets avant commit ou push. |
+| 6 — Interface et livraison | Libellé « Conquête JcE », statuts, échéances, avertissements, rapports, wiki et règles actuelles. | HTML rendu, clavier/focus/libellés/contrastes concernés ; contrôles locaux ciblés pendant le développement et CI complète réussie avant fusion. |
 
 Le socle du lot 1 ajoute `PlayerUniverse.lastActivityAt`, un calcul des échéances
 à 14/30 jours et l'enregistrement transactionnel des visites HTML réussies dans

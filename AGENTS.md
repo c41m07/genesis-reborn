@@ -4,9 +4,25 @@
 
 - Répondre en français. Faire des changements ciblés et préserver tout travail déjà présent dans le dépôt.
 - Ne pas changer les règles de jeu ou les valeurs d’équilibrage sans décision explicite ; le code décrit le comportement, les décisions produit sont consignées dans [docs/DECISIONS.md](docs/DECISIONS.md) et les règles actuelles dans [docs/REGLES.md](docs/REGLES.md).
-- Lancer d’abord les commandes disponibles dans le [Makefile](Makefile). Vérifications validées : `make validate`, `make lint`, `npm run build`, `make test`, `make test-browser`.
+- Lancer d’abord les commandes disponibles dans le [Makefile](Makefile). Vérifications validées : `make validate`, `make lint`, `make assets` (équivalent à `npm run build` depuis `app/`), `make test`, `make test-browser`.
 - Le périmètre livré et les objectifs sont dans [README.md](README.md), [docs/README.md](docs/README.md) et [docs/FEUILLE_DE_ROUTE.md](docs/FEUILLE_DE_ROUTE.md). Les documents de `docs/archives/` sont historiques, sauf mention contraire ; leur index distingue les références conservées des bilans remplacés.
 - Conserver les logos et les SVG d’identité.
+
+## Protection des données, sécurité et fiabilité
+
+- Protection des données : distinguer la création d’une migration de son application. Sur une base existante, exiger une autorisation explicite et une sauvegarde vérifiée avant migration, restauration ou import modifiant les données.
+- Secrets et données personnelles : ne jamais versionner ni afficher de mots de passe, jetons, fichiers d’environnement privés ou données personnelles dans les journaux et comptes rendus.
+- Isolation des univers et permissions : vérifier côté serveur le propriétaire, la participation et l’univers de chaque ressource manipulée, même si l’interface masque déjà l’action.
+- Concurrence et traitements différés : préserver les transactions, verrous et jetons existants ; vérifier qu’un message reçu plusieurs fois ou devenu obsolète ne produit aucun double effet.
+- Tests de régression : pour un correctif métier, ajouter un test reproduisant le problème lorsque pertinent ; couvrir les refus d’accès et les cas limites concernés.
+
+## Maintenance continue de la documentation
+
+- Tenir la documentation à jour au fur et à mesure du développement, dans le même lot que les changements concernés : README, documentation de `docs/`, wiki lorsqu’il est accessible, guides d’installation et d’utilisation, références techniques, feuille de route et suivi de reprise.
+- À chaque ajout, modification ou suppression de fonctionnalité, commande, dépendance ou élément d’architecture, examiner les documents concernés et les synchroniser avec le comportement réellement vérifié. Ajouter les explications des nouveautés et retirer ou corriger celles qui ne s’appliquent plus.
+- Supprimer les contenus et fichiers documentaires devenus inutilisés, redondants ou orphelins après avoir vérifié leurs références et leur utilité. L’absence de lien entrant ne suffit pas à justifier une suppression ; préserver les décisions validées et les références historiques utiles, en les archivant et en les identifiant clairement lorsque nécessaire.
+- Après un ajout, déplacement ou retrait de document, actualiser les index, sommaires et liens concernés pour éviter les références cassées et garder un point d’entrée clair vers l’information à jour.
+- Si une source documentaire externe, notamment le wiki, est inaccessible, signaler précisément ce qui reste à synchroniser sans prétendre l’avoir mis à jour.
 
 ## Format des patchnotes
 
@@ -29,13 +45,16 @@
 - Lors de la mise en production, prévoir la vérification du domaine et la soumission du sitemap dans Google Search Console avec un accès autorisé au compte propriétaire. Ne pas annoncer cette étape comme réalisée sans en avoir vérifié le résultat.
 - Lors d’un changement de template ou de routage concerné, contrôler le HTML rendu (alternatives, métadonnées et directives d’indexation), ainsi que les réponses de `robots.txt` et `sitemap.xml` si elles sont modifiées.
 
-## Vérifications avant commit ou push
+## Vérifications pendant le développement et avant fusion
 
-- Avant tout commit ou push, lancer `make validate`, `make lint`, `make test`, `npm run build`, `make test-browser` et `git diff --check`.
-- Attendre la fin de chaque vérification et examiner son résultat. Si ces contrôles ont déjà réussi sur le contenu à publier pendant la tâche, ne pas les relancer sans changement ou problème justifiant une nouvelle exécution.
-- Corriger les échecs sans supprimer ni affaiblir les tests, puis relancer les contrôles concernés.
-- Ne pas effectuer de commit ni de push tant qu’un échec reste inexpliqué. Si une vérification est impossible, indiquer clairement laquelle et pourquoi.
-- Présenter les résultats avant de déclarer le travail terminé. Distinguer une exécution complète réussie des réussites consolidées par reprises ciblées, et ne pas présenter les contrôles locaux comme une validation de la CI GitHub.
+- Pendant le développement, lancer les contrôles locaux adaptés aux fichiers modifiés et aux risques identifiés, ainsi que `git diff --check` avant commit ou push. Les six contrôles complets ne sont pas exigés à chaque commit ou push sur une branche de travail.
+- Avant fusion vers `dev` ou `alpha`, attendre la réussite de la CI complète sur la dernière version de la PR : validation Compose, lint, tests PHP et Python, compilation des assets, tests navigateur et vérification du diff ; la CI vérifie aussi la sauvegarde et la restauration isolées.
+- Pour reproduire les six contrôles localement : `make validate`, `make lint`, `make test`, `make assets`, `BROWSER_PERSISTENCE=1 make test-browser` et `git diff --check`. Une CI complète réussie ne nécessite pas de relancer systématiquement toute la suite locale.
+- La CI automatique se lance sur les PR vers `dev` et `alpha`, puis à chaque mise à jour de ces PR. Les push seuls sur les branches de travail et sur `dev` ne la déclenchent pas. Conserver la validation avant publication sur `alpha` (actuellement aussi branche par défaut) et le lancement manuel ; adapter les filtres si la branche par défaut change.
+- Les règles GitHub de `dev` doivent imposer une PR et les cinq jobs `quality` réussis avant fusion. Vérifier leur activation ; le workflow seul ne protège pas la branche et le job `publish`, absent des PR, ne doit pas être requis.
+- Attendre la fin de chaque vérification lancée et examiner son résultat. Ne pas répéter un contrôle déjà réussi sur un contenu inchangé sans problème justifiant une nouvelle exécution.
+- Corriger les échecs sans supprimer ni affaiblir les tests, puis relancer les contrôles concernés. Une branche de travail peut être poussée pour diagnostic en signalant les échecs ou contrôles impossibles ; ne pas fusionner tant qu’un contrôle requis échoue, manque ou reste inexpliqué.
+- Présenter les résultats avant de déclarer le travail terminé. Distinguer contrôles ciblés, suite complète locale, CI GitHub, intégration et déploiement ; ne pas présenter les contrôles locaux comme une validation de la CI GitHub.
 
 ## Documents de pilotage et périmètre d'application
 
@@ -51,7 +70,7 @@
 - **Niveaux 1–2** : analyse rapide, modification ciblée et tests pertinents. **Niveau 3** : analyse des dépendances et tests adaptés. **Niveaux 4–5** : planification détaillée, analyse d'architecture, vérifications renforcées et revue des risques.
 - Réévaluer la complexité après deux corrections ciblées infructueuses, une dépendance inattendue, un changement de périmètre ou un risque de perte de données/sécurité. Ne pas répéter indéfiniment la même tentative.
 - Si l'environnement autorise explicitement une sélection de modèle **entre sous-tâches**, envisager Sol Mini (simple), Sol Moyen (intermédiaire) et Astra (critique, si disponible). Ne jamais affirmer qu'un changement de modèle a eu lieu sans preuve de l'outil. À défaut, adapter uniquement la profondeur d'analyse.
-- Le protocole adaptatif ne dispense **jamais** des six contrôles avant commit/push, ni des validations de phase du prompt maître V4.
+- Le protocole adaptatif ne dispense **jamais** de la CI complète avant fusion, ni des validations de phase du prompt maître V4. Les contrôles locaux pendant le développement suivent la section de vérification ci-dessus.
 
 ## Continuité et protection du projet
 
