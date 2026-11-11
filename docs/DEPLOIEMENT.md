@@ -126,11 +126,13 @@ branche à jour avant fusion pour revalider les changements avec le dernier `dev
 et appliquer les exigences aux administrateurs pour éviter les push directs.
 Conserver toute protection existante plus stricte.
 
-État de vérification de ce lot : la lecture de la protection de `dev` via le
-connecteur GitHub a répondu HTTP 403 (`Resource not accessible by integration`).
-Ce connecteur ne propose pas de modification des protections. Leur activation
-reste donc à vérifier et, si nécessaire, à configurer avec un accès autorisé aux
-paramètres du dépôt ; elle n’est pas annoncée comme réalisée.
+Protection activée et relue via l’API GitHub le 11 novembre 2026 avec les
+identifiants Git autorisés : PR obligatoire, cinq jobs requis, branche à jour et
+exigences appliquées aux administrateurs. Aucun avis humain n’est obligatoire
+(zéro approbation requise) ; force-push et suppression de `dev` sont interdits.
+Le connecteur GitHub seul refuse l’accès administratif (HTTP 403) ; cette limite
+n’a pas empêché la vérification par l’accès Git existant. Revérifier les paramètres
+si les noms des jobs ou la stratégie de fusion changent.
 
 ## Configurer GitHub
 
