@@ -7,7 +7,7 @@ use App\Service\Catalog\GameCatalog;
 use Psr\Clock\ClockInterface;
 final class DiplomacyService
 {
-    public function __construct(private GameRepository $repo,private GameManager $manager,private RelationResolver $relations,private GameCatalog $catalog,private ClockInterface $clock,private EmpireActivityService $activity) {}
+    public function __construct(private GameRepository $repo,private GameManager $manager,private RelationResolver $relations,private GameCatalog $catalog,private ClockInterface $clock,private EmpireActivityService $activity,private DiplomacyAccessPolicy $access) {}
     private function lock(PlayerUniverse $m,bool $guildFeature=false): void
     {
         $this->manager->lock($m);$this->manager->lock($m->universe);
@@ -50,7 +50,7 @@ final class DiplomacyService
     {
         $this->manager->transaction(function()use($m,$targetId){
             $this->lock($m,true);$g=$this->relations->guild($m);$target=$this->repo->find(PlayerUniverse::class,$targetId);
-            if(!$g || $g->leader->id!==$m->id || !$target || !$target->isPlayerControlled() || $target->id===$m->id || $this->relations->guild($target)?->id!==$g->id) throw new \DomainException('Choisissez un autre membre de votre guilde.');
+            if(!$this->access->canCommand($m,$g) || !$target || !$target->isPlayerControlled() || $target->id===$m->id || $this->relations->guild($target)?->id!==$g->id) throw new \DomainException('Choisissez un autre membre de votre guilde.');
             $g->leader=$target;
         });
     }
@@ -58,7 +58,7 @@ final class DiplomacyService
     {
         $this->manager->transaction(function()use($m){
             $this->lock($m,true);$g=$this->relations->guild($m);
-            if(!$g || $g->leader->id!==$m->id) throw new \DomainException('Seul le fondateur peut dissoudre la guilde.');
+            if(!$this->access->canCommand($m,$g)) throw new \DomainException('Seul le fondateur peut dissoudre la guilde.');
             foreach($this->repo->all(GuildRelation::class) as $r) if($r->guildA->id===$g->id || $r->guildB->id===$g->id) $this->manager->remove($r);
             foreach($this->repo->all(GuildMember::class,['guild'=>$g]) as $member) $this->manager->remove($member);
             $this->manager->remove($g);
@@ -68,7 +68,7 @@ final class DiplomacyService
     {
         $this->manager->transaction(function()use($m,$targetId,$action){
             $this->lock($m);$target=$this->repo->find(PlayerUniverse::class,$targetId);
-            if(!$target || !$target->isPlayerControlled() || $target->universe->id!==$m->universe->id || $target->id===$m->id) throw new \DomainException('Commandant inaccessible.');
+            if(!$target || !$this->access->canRelateToPlayer($m,$target)) throw new \DomainException('Commandant inaccessible.');
             $contract=$this->relations->contract($m,$target);
             if($action==='break') { if($contract) $this->manager->remove($contract);return; }
             if($this->relations->guildStatus($this->relations->guild($m),$this->relations->guild($target))==='enemies') throw new \DomainException('Les contrats sont interdits entre guildes ennemies.');
@@ -83,13 +83,21 @@ final class DiplomacyService
     {
         $this->manager->transaction(function()use($m,$targetId,$status){
             $this->lock($m,true);$g=$this->relations->guild($m);$target=$this->repo->find(Guild::class,$targetId);
-            if(!$g || $g->leader->id!==$m->id || !$target || $target->archivedAt!==null || $target->id===$g->id || $target->universe->id!==$m->universe->id) throw new \DomainException('Relation inaccessible ou commandement requis.');
+            $member=$this->repo->one(GuildMember::class,['playerUniverse'=>$m]);
+            if($member) {
+                $this->manager->lock($member);
+                $this->manager->lock($member->guild);
+                if($member->rank) $this->manager->lock($member->rank);
+            }
+            $permission=match($status) {'allies'=>'diplomacy.alliance','enemies'=>'diplomacy.hostility','neutral'=>'diplomacy.neutral',default=>''};
+            if(!$g || !$this->access->allows($member,$permission) || !$target || $target->archivedAt!==null || $target->id===$g->id || $target->universe->id!==$m->universe->id) throw new \DomainException('Relation inaccessible ou commandement requis.');
             if(!in_array($status,['allies','enemies','neutral'],true)) throw new \DomainException('Relation invalide.');
             [$a,$b]=$g->id<$target->id?[$g,$target]:[$target,$g];
             $r=$this->repo->one(GuildRelation::class,['guildA'=>$a,'guildB'=>$b]);
             if($status==='neutral') { if($r) $this->manager->remove($r);return; }
             if(!$r) { $r=new GuildRelation();$r->guildA=$a;$r->guildB=$b;$r->proposer=$g;$r->status='neutral';$this->manager->save($r); }
             if($status==='allies') {
+                if($r->status==='enemies' && !$this->access->allows($member,'diplomacy.neutral')) throw new \DomainException('La sortie d’hostilité nécessite la permission de revenir à la neutralité.');
                 if($r->status==='allies') return;
                 if($r->status==='pending' && $r->proposer->id!==$g->id) $r->status='allies';else { $r->status='pending';$r->proposer=$g; }
             } else { $r->status='enemies';$r->proposer=$g; }
