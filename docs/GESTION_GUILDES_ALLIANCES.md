@@ -8,7 +8,7 @@ Validation locale finale : 670 tests PHP (209722 assertions), 13 tests Python et
 
 Les nouvelles migrations `Version20261111020000` et `Version20261111150933` sont testées uniquement sur bases jetables. La migration des grades `Version20261111010000` avait été appliquée antérieurement à la base locale sur autorisation. Aucune migration de ces deux nouveaux lots sur la base habituelle, fusion ou mise en production n’est réalisée.
 
-La PR #36 reste en brouillon. Avant intégration avec `feature/reconstruction-empires-oublies`, résoudre son numéro de migration `Version20261111010000`, également utilisé pour une autre opération : la migration des grades déjà exécutée ne doit pas être remplacée silencieusement. Les bilans plus anciens ci-dessous sont historiques.
+La PR #36 reste en brouillon. La reconstruction est désormais intégrée depuis `dev`. Le conflit historique du numéro `Version20261111010000` est résolu par `Version20261111173000` : la migration originale des grades reste inchangée ; la nouvelle migration crée uniquement les structures manquantes des grades et de la reconstruction, refuse les schémas partiels et ne supprime aucune donnée ni entrée d’historique. Les bilans plus anciens ci-dessous sont historiques.
 
 
 ## Périmètre validé
@@ -216,3 +216,22 @@ L’ajout et le retrait d’un palier administratif fonctionnent par formulaire,
 - `git diff --check` et contrôle du contenu préparé avant commit : réussites. Les fichiers locaux de configuration, dépendances et résultats de tests sont exclus. `app/config/reference.php`, généré pendant les vérifications, est préservé hors commit : sa restauration a été refusée par le contrôle automatique, afin d’éviter d’écraser des modifications locales.
 
 Les coûts, minimums et disponibilités doivent être choisis dans l’administration avant activation ; cela ne constitue pas un réglage d’équilibrage livré par défaut. La PR reste en brouillon et aucun fichier d’un autre chantier n’a été modifié. Le conflit de numérotation avec la branche de reconstruction a été revérifié par lecture de cette branche, même après le changement de branche du dépôt principal.
+
+
+### Réconciliation des migrations — 11 novembre 2026
+
+`dev` a intégré la reconstruction sous `Version20261111010000`, déjà utilisé ici pour les grades. La fusion conserve le fichier original des grades à l’identique et porte la création de la reconstruction sous le numéro distinct `Version20261111173000`. Cette migration de compatibilité inspecte aussi les grades : une base provenant de `dev`, où le numéro ancien signifie reconstruction, reçoit les grades manquants ; une base provenant de cette branche conserve ses grades et reçoit la reconstruction. Une installation vierge exécute l’ancienne migration des grades puis la réconciliation. Une base possédant déjà les deux structures ne reçoit aucun DDL supplémentaire.
+
+Les colonnes et relations attendues sont contrôlées avant toute requête SQL. Un schéma partiel est refusé ; aucun `IF NOT EXISTS` ne masque une structure incompatible. Les grades, affectations et références de reconstruction existants restent en place ; aucune ligne de `doctrine_migration_versions` n’est supprimée ou renommée. Le retour de cette réconciliation est volontairement irréversible car il ne peut pas déterminer quelles tables préexistaient. Une application future sur base existante nécessite sauvegarde et autorisation distinctes. Aucune commande de ce lot ne vise la base habituelle.
+
+Les raccordements communs sont fusionnés en conservant les messages `guild_project` et `reconstruction`, l’abandon des projets à la conversion et l’enregistrement des références de reconstruction. La PR reste en brouillon ; cette correction ne fusionne pas la PR et ne déploie rien.
+
+
+Validation de la réconciliation sur le contenu intégré :
+
+- `make validate` réussi ; vérification préalable du projet Compose `genesis-alliances-work-20261111`, de son réseau privé et de sa base en mémoire sans volume persistant. L’installation vierge par `make migrate` et l’import réussissent uniquement dans cette pile jetable.
+- 23 tests ciblés / 205 assertions réussis : reconstruction et `MigrationHistoryCompatibilityTest`. Les sept nouveaux scénarios couvrent grades avec affectation préservée, référence de reconstruction préservée, coexistence sans requête supplémentaire, structures absentes, refus des grades partiels, refus de reconstruction partielle avant tout SQL et refus de retour destructeur. Le fichier original `Version20261111010000.php` reste identique au commit précédent de cette branche.
+- `make lint` réussi, y compris la synchronisation du schéma ; `make test` complet réussi : 701 tests PHP / 209981 assertions et 13 tests Python.
+- `make test-browser` réparti en quatre projets jetables : lots 1, 2 et 4 entièrement réussis (40, 49 et 39 scénarios), lot 3 avec 29 réussites et un dépassement du délai de 60 secondes du parcours clavier général lors de `keyboard.press('Tab')`. Le parcours est rejoué seul après les lots et réussit, sans changer ses assertions ni son délai. Bilan : 158 scénarios validés par consolidation, pas une campagne unique sans échec.
+- `make assets` / `npm run build` et `git diff --check` réussis. La compilation a attendu la fin des quatre lots pour préserver les actifs utilisés pendant leurs vérifications. Contrôle du contenu préparé et des exclusions avant commit : les configurations locales, dépendances et résultats restent ignorés ; `app/config/reference.php` reste préservé hors commit.
+- La pile PHP jetable est arrêtée et les projets navigateur se nettoient par le script existant. La PR #36 a été vérifiée ouverte et en brouillon ; aucun changement de sa disponibilité pour revue. Aucune nouvelle validation CI n’est revendiquée pour cette correction locale. Aucune écriture, migration ou lecture de données sur la base habituelle.

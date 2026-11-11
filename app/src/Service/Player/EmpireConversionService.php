@@ -15,7 +15,7 @@ final class EmpireConversionService
 {
     public function __construct(private GameManager $manager,private GameRepository $repo,private ActionGuard $guard,
         private EmpireActivityService $activity,private FleetService $fleets,private QueueService $queues,private ClockInterface $clock,private \App\Service\Combat\OccupationService $occupations,
-        #[Autowire('%env(bool:FORGOTTEN_EMPIRES_ENABLED)%')] private bool $enabled, private GuildProjectService $projects) {}
+        #[Autowire('%env(bool:FORGOTTEN_EMPIRES_ENABLED)%')] private bool $enabled, private GuildProjectService $projects,private EmpireReconstructionScheduler $reconstruction) {}
 
     public function convert(PlayerUniverse $membership): array
     {
@@ -61,6 +61,7 @@ final class EmpireConversionService
                 $this->manager->flush();
             }
             if ($membership->universe->isAccessible($now)) $this->queues->synchronize($membership);
+            $this->reconstruction->captureReferenceLocked($membership);
             $membership->detachPlayer($now);
             $this->manager->save($log);
             return ['status'=>'converted'];

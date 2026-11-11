@@ -51,7 +51,7 @@ final class AdminInterventionService
     public function fleet(Player $actor, Fleet $fleet, string $operation, int $seconds, string $reason, string $expectedVersion, string $requestKey): bool
     {
         $reason = $this->reason($reason);
-        if (!in_array($operation, ['reschedule', 'recall'], true)) throw new \DomainException('Intervention inconnue.');
+        if (!in_array($operation, ['reschedule', 'recall', 'force_return'], true)) throw new \DomainException('Intervention inconnue.');
         if ($operation === 'reschedule' && ($seconds < 1 || $seconds > 31536000)) throw new \DomainException('Le délai doit être compris entre une seconde et un an.');
         return $this->manager->transaction(function () use ($actor, $fleet, $operation, $seconds, $reason, $expectedVersion, $requestKey): bool {
             $this->authorize($actor);
@@ -62,9 +62,12 @@ final class AdminInterventionService
             $pending = $this->em->createQueryBuilder()->select('COUNT(p.id)')->from(CombatParticipant::class, 'p')->join('p.combatEvent', 'e')
                 ->where('p.fleet = :fleet')->andWhere('e.status = :status')->setParameter('fleet', $fleet)->setParameter('status', 'pending')->getQuery()->getSingleScalarResult();
             if ($pending > 0) throw new \DomainException('Intervention refusée : cette flotte participe à un combat en cours.');
-            if ($fleet->arrivalAt && $fleet->arrivalAt <= $this->clock->now()) throw new \DomainException('L’échéance est déjà atteinte. Vérifiez les traitements avant toute intervention.');
+            $expired = $fleet->arrivalAt && $fleet->arrivalAt <= $this->clock->now();
+            if ($operation === 'force_return' && !$expired) throw new \DomainException('Le retour forcé est réservé aux missions dont l’échéance est atteinte.');
+            if ($operation !== 'force_return' && $expired) throw new \DomainException('L’échéance est déjà atteinte. Vérifiez les traitements ou utilisez le retour forcé après contrôle.');
             $before = $this->fleetState($fleet);
-            if ($operation === 'recall') $this->fleets->recallForAdministrationLocked($fleet);
+            if ($operation === 'force_return') $this->fleets->forceReturnForAdministrationLocked($fleet);
+            elseif ($operation === 'recall') $this->fleets->recallForAdministrationLocked($fleet);
             else $this->fleets->rescheduleForAdministrationLocked($fleet, $this->clock->now()->modify('+'.$seconds.' seconds'));
             $this->audit($actor, 'admin_fleet_'.$operation, 'fleet', $fleet->id, $reason, ['universe_id'=>$fleet->playerUniverse->universe->id, 'before'=>$before, 'after'=>$this->fleetState($fleet)]);
             return true;

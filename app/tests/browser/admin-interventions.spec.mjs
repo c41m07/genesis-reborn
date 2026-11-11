@@ -94,3 +94,52 @@ test('Flotte admin : accélération, formulaire périmé, rappel et journal', as
   expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
   await page.screenshot({path:testInfo.outputPath('fleet-intervention-390.png'),fullPage:true});
 });
+
+
+test('Flotte bloquée : alerte de traitement, retour forcé protégé et journal', async ({page,browser},testInfo) => {
+  test.setTimeout(150000);
+  const user=await enter(page,true),project=process.env.BROWSER_ROUTER;
+  runIsolatedSql(project,`INSERT INTO fleet (player_universe_id,home_planet_id,destination_id,mission,status,speed_ratio,cargo,reserved_fuel,orbit_fuel,orbit_duration_seconds,departure_at,arrival_at,travel_seconds,dispatch_token) VALUES (${user.memberId},${user.planetId},${user.planetId},'transport','traveling',1,'{"metal":100,"hydrogen":200}',100,0,0,UTC_TIMESTAMP()-INTERVAL 2 HOUR,UTC_TIMESTAMP()-INTERVAL 1 HOUR,3600,'')`);
+  const id=Number(queryIsolatedSql(project,`SELECT MAX(id) FROM fleet WHERE player_universe_id=${user.memberId}`));
+  runIsolatedSql(project,`INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) VALUES (${id},'transport','basic',1)`);
+  const state=()=>queryIsolatedSql(project,`SELECT status,cargo,reserved_fuel,dispatch_token FROM fleet WHERE id=${id}`);
+  const before=state();
+  await page.goto('/admin/exploitation');
+  const health=page.getByRole('region',{name:'Voyages des flottes à contrôler'});
+  await expect(health.getByRole('link',{name:`Flotte n° ${id}`,exact:true})).toBeVisible();
+  await expect(health).toContainText('Planification absente');
+  expect(state()).toBe(before);
+  for (const width of [1440,390]) {
+    await page.setViewportSize({width,height:900});
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
+    await page.screenshot({path:testInfo.outputPath(`fleet-health-${width}.png`),fullPage:true});
+  }
+  const link=health.getByRole('link',{name:`Flotte n° ${id}`,exact:true});
+  await link.focus();await expect(link).toBeFocused();await page.keyboard.press('Enter');
+  const form=page.locator('.admin-intervention-form');
+  await form.getByLabel('Action',{exact:true}).selectOption('force_return');
+  await form.getByLabel('Motif de l’intervention (obligatoire)').fill('Retour du transport bloqué');
+  await form.getByRole('button').click();expect(state()).toBe(before);
+  await form.getByRole('checkbox').check();
+  const payload=await form.evaluate(f=>Object.fromEntries(new FormData(f)));
+  const endpoint=await form.getAttribute('action');
+  expect(await post(page,endpoint,{...payload,_token:'invalid'})).toBe(403);
+  const other=await browser.newPage();await enter(other);
+  expect(await post(other,endpoint,payload)).toBe(403);await other.close();
+  expect(state()).toBe(before);
+  await form.getByRole('button').click();
+  await expect(page.locator('.flash.success')).toContainText('Intervention sur la flotte');
+  expect(queryIsolatedSql(project,`SELECT status FROM fleet WHERE id=${id}`)).toBe('returning');
+  expect(Number(queryIsolatedSql(project,`SELECT JSON_EXTRACT(cargo,'$.metal') FROM fleet WHERE id=${id}`))).toBe(100);
+  expect(Number(queryIsolatedSql(project,`SELECT reserved_fuel FROM fleet WHERE id=${id}`))).toBe(50);
+  const after=state();
+  await post(page,endpoint,payload);expect(state()).toBe(after);
+  expect(Number(queryIsolatedSql(project,`SELECT COUNT(*) FROM admin_audit_log WHERE action='admin_fleet_force_return' AND target_id=${id}`))).toBe(1);
+  expect(Number(queryIsolatedSql(project,`SELECT COUNT(*) FROM outbox_message WHERE kind='fleet' AND target_id=${id}`))).toBeLessThanOrEqual(1);
+  await page.goto('/admin/exploitation');
+  await expect(page.getByRole('region',{name:'Voyages des flottes à contrôler'}).getByRole('link',{name:`Flotte n° ${id}`,exact:true})).toHaveCount(0);
+  await page.goto(`/admin/flottes/${id}`);
+  expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
+  await page.screenshot({path:testInfo.outputPath('forced-return-390.png'),fullPage:true});
+});

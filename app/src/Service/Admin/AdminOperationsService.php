@@ -84,7 +84,36 @@ final class AdminOperationsService
             'outbox_total' => $outboxAvailable ? array_sum($outbox) : null,
             'outbox_overdue' => $outboxAvailable ? $overdue : null,
             'outbox_pending' => $pending,
+            'fleet_health' => $this->fleetHealth($now),
             'captured_at' => $now,
         ];
     }
+
+    private function fleetHealth(\DateTimeImmutable $now): array
+    {
+        $unknown = ['available'=>false, 'total'=>null, 'unscheduled'=>null, 'overdue'=>null, 'pending'=>[]];
+        try {
+            $threshold = "GREATEST(1, COALESCE(NULLIF(CAST(JSON_UNQUOTE(JSON_EXTRACT(u.game_settings, '$.admin_surveillance.late_minutes')) AS SIGNED), 0), :late_minutes))";
+            $missing = "(f.dispatch_token IS NULL OR TRIM(f.dispatch_token) = '')";
+            $late = "(f.arrival_at < TIMESTAMPADD(MINUTE, -($threshold), :now))";
+            $from = " FROM fleet f INNER JOIN player_universe m ON m.id=f.player_universe_id INNER JOIN universe u ON u.id=m.universe_id WHERE f.status IN ('traveling','returning') AND f.arrival_at IS NOT NULL";
+            $parameters = ['now'=>$now->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d H:i:s'), 'late_minutes'=>AdminSurveillanceService::DEFAULTS['late_minutes']];
+            $totals = $this->connection->fetchAssociative("SELECT COALESCE(SUM($missing OR $late),0) AS total, COALESCE(SUM($missing),0) AS unscheduled, COALESCE(SUM($late),0) AS overdue".$from, $parameters);
+            if ($totals === false || !isset($totals['total'], $totals['unscheduled'], $totals['overdue'])) return $unknown;
+            $pending = [];
+            if ((int) $totals['total'] > 0) {
+                $rows = $this->connection->fetchAllAssociative("SELECT f.id, f.mission, f.status, f.arrival_at, $missing AS unscheduled, $late AS overdue, $threshold AS late_minutes".$from." AND ($missing OR $late) ORDER BY f.arrival_at, f.id LIMIT 20", $parameters);
+                foreach ($rows as $row) {
+                    $pending[] = ['id'=>(int) $row['id'], 'mission'=>$row['mission'], 'status'=>$row['status'],
+                        'due_at'=>new \DateTimeImmutable($row['arrival_at'], new \DateTimeZone('UTC')),
+                        'unscheduled'=>(bool) $row['unscheduled'], 'overdue'=>(bool) $row['overdue'], 'late_minutes'=>(int) $row['late_minutes']];
+                }
+            }
+            return ['available'=>true, 'total'=>(int) $totals['total'], 'unscheduled'=>(int) $totals['unscheduled'], 'overdue'=>(int) $totals['overdue'], 'pending'=>$pending];
+        } catch (\Throwable) {
+            // Ne pas présenter une collecte indisponible comme une absence de missions bloquées.
+            return $unknown;
+        }
+    }
+
 }

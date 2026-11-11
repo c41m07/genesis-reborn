@@ -1200,3 +1200,40 @@ Prochaine étape : projets collectifs à paliers avec dons définitifs et boosts
 Les projets de guilde sont implémentés avec paliers successifs, dons atomiques définitifs, coûts/minimums figés au lancement, permission de lancement déléguable et un boost maximum par compte et modèle. L’administration configure chaque univers, sans modèle actif par défaut. La distribution asynchrone est reprenable et respecte l’inventaire existant ; départ, dissolution et archivage ont un traitement explicite.
 
 Validation finale locale : `make validate`, `make lint`, compilation, 670 tests PHP (209722 assertions), 13 tests Python et 156 scénarios navigateur consolidés ; les reprises sont expliquées dans [le suivi](GESTION_GUILDES_ALLIANCES.md). Aucun déploiement ni nouvelle migration de la base habituelle. La PR #36 reste en brouillon, notamment pour coordonner le numéro de migration déjà utilisé par le chantier de reconstruction. Les fonctionnalités demandées sont implémentées ; l’intégration des deux branches et l’activation des modèles restent distinctes.
+
+### Reconstruction ciblée des empires oubliés — 11 novembre 2026
+
+Implémentation sur `feature/reconstruction-empires-oublies`, depuis `dev`
+synchronisée. Le périmètre validé comprend les références par planète à la conversion,
+les vaisseaux et défenses de tous rangs, la réparation partielle déduite, le paiement
+et les durées normaux au chantier partagé, la priorité aux unités finançables les
+moins coûteuses et la suspension/reprise cinq minutes après combat. La reconstruction
+continue sous occupation et cesse à la capture, sans modifier les PNJ classiques.
+Les anciennes commandes payées restent acquises sans relever le plafond ; les
+anciens empires oubliés sans référence sont exclus.
+
+La migration additive `Version20261111010000` est préparée pour une seule nouvelle
+table. Elle ne doit pas être remplacée par une synchronisation globale du schéma,
+notamment lorsque la base locale contient des éléments d'autres branches.
+Les tests couvrent conversion, rangs et modèles, coûts/durées, priorité et ressources
+manquantes, retours, commandes préexistantes, réparation partielle, interruptions,
+occupation, capture, messages rejoués et migration sur base isolée.
+Validation locale finale : `make validate`, `npm run build`, `make test`
+(607 tests PHP, 209 704 assertions et 13 tests Python), `make lint` avec la
+connexion de test isolée (schéma compris), et `git diff --check` réussissent.
+Les 153 tests navigateur passent en deux lots complets indépendants (89 et 64),
+avec application de la migration finale dans leurs bases jetables. Les reprises
+antérieures interrompues ne sont pas comptées comme des exécutions complètes.
+
+Le lint lancé sur la base de jeu signale un écart expliqué : la nouvelle table
+n'y est pas appliquée, et cette base conserve le schéma de guildes d'un autre
+chantier. Aucun élément de ce schéma n'a été supprimé ni modifié. La migration
+de jeu reste non appliquée, sans conversion rétroactive ni déploiement distant.
+Ces contrôles locaux ne constituent pas une validation de la CI GitHub.
+Un commit pour cette fonctionnalité terminée, puis une seule PR vers `dev`
+pour le périmètre complet.
+
+
+Réconciliation du 11 novembre 2026 : `dev` intégré à la branche guildes ; le numéro historique partagé est pris en charge par `Version20261111173000`, sans modifier la migration originale des grades ni appliquer les migrations à la base habituelle. Voir [le suivi](GESTION_GUILDES_ALLIANCES.md). PR #36 toujours en brouillon.
+
+Validation locale de la réconciliation : installation vierge isolée, 23 tests ciblés (205 assertions), 701 tests PHP (209981 assertions), 13 tests Python, 158 scénarios navigateur consolidés après reprise clavier inchangée, lint/schéma, compilation et contrôles Git réussis. Aucune migration de la base habituelle ; détails et limites dans [le suivi](GESTION_GUILDES_ALLIANCES.md).

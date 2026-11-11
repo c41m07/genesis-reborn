@@ -19,6 +19,7 @@ framework:
             'App\Message\CombatEventDue': async
             'App\Message\GuildProjectRewardsDue': async
             'App\Message\OccupationDue': async
+            'App\Message\EmpireReconstructionDue': async
             'App\Message\UniverseClosureDue': async
 when@test:
     framework:

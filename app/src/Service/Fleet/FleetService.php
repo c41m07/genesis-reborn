@@ -114,9 +114,9 @@ final class FleetService
             }
             if($mission==='transport') $this->transports->recordDeparture($f,$q['freight']);
             $this->traces->recordDeparture($f, $q['composition'], $q['freight']);
-            return $q['adjusted'];
             $this->occupations->recordReinforcementDeparture($f);
             $this->schedule($f);
+            return $q['adjusted'];
         });
     }
     public function reschedulePlayerBoost(Fleet $fleet, \DateTimeImmutable $arrivalAt): void
@@ -162,6 +162,20 @@ final class FleetService
         $this->transports->recordConversionRecall($fleet, 'admin_recall');
         $this->startReturn($fleet);
     }
+    /** Retour d’une mission échue, sous les mêmes verrous et contrôles que le rappel administratif. */
+    public function forceReturnForAdministrationLocked(Fleet $fleet): void
+    {
+        if (!$fleet->arrivalAt || $fleet->arrivalAt > $this->clock->now() || !in_array($fleet->status, ['traveling', 'returning', 'orbiting'], true)) {
+            throw new \DomainException('Cette mission ne permet pas un retour forcé.');
+        }
+        if ($fleet->status === 'returning') {
+            // Le carburant aller a déjà été consommé : reprogrammer sans le prélever à nouveau.
+            $this->startReturn($fleet);
+            return;
+        }
+        $this->recallForAdministrationLocked($fleet);
+    }
+
     public function arrive(int $id,string $token): void
     {
         $this->manager->transaction(function()use($id,$token){
