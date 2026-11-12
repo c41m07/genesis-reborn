@@ -261,6 +261,8 @@ verrou du signalement, sans sanction ni suppression du contexte.
 AdminNotificationService conserve un curseur player_reports séparé du curseur
 messages, puis agrège seulement le badge reports : aucun conflit d’identifiants.
 
-Version20261112030000 est préparée, non appliquée à la base locale à ce stade.
-Accord explicite et sauvegarde vérifiée requis avant application sur base existante.
-Les migrations des scénarios isolés ne concernent aucune base de jeu ni Alpha.
+Version20261112030000 est appliquée sur la seule base locale après accord
+explicite et sauvegarde vérifiée deux fois (var/backups/lot-f-20261112).
+Les comptages des onze tables suivies sont inchangés ; l’unique ancienne guilde
+garde son tag NULL, aucun signalement inventé. make lint confirme aussi le schéma
+local migré. Aucun serveur Alpha n’est concerné.

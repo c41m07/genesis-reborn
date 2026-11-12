@@ -860,3 +860,21 @@ aucun wiki distant ni fichier Figma modifié.
 - docs/FEUILLE_DE_ROUTE.md
 - docs/REGLES.md
 - docs/wiki.json
+
+### Migration locale du lot F autorisée et vérifiée — 12 novembre 2026
+
+Les deux accords explicites sont reçus : sauvegarde/migration locales et
+publication du lot F, fusion uniquement après CI complète verte, puis lot G.
+La sauvegarde dédiée var/backups/lot-f-20261112 est créée sans purge d’ancien
+backup (0 paire retirée) ; archive gzip et manifeste vérifiés deux fois avant
+make migrate. Seule Version20261112030000 était en attente.
+
+Comptages inchangés avant/après : 720 planètes, 40 ressources, 15 flottes,
+12 lignes de vaisseaux, 3 combats, 4 espionnages, 1 transport, 6 participations,
+1 guilde, 1 adhésion et 0 archive personnelle. L’ancienne guilde conserve tag NULL ;
+aucun nouveau signalement (0), aucun tag inventé. Aucun Alpha.
+make lint est maintenant aussi réussi sur la base locale migrée, mapping et schéma
+inclus : /tmp/genesis-lot-f-lint-local-final.log. Logs de sauvegarde/migration
+/tmp/genesis-lot-f-backup.log et -migrate.log, comptages -counts-before.json.
+Les suites serveur/navigateur déjà réussies portent sur le code applicatif inchangé ;
+seul ce suivi documentaire est actualisé. Publication autorisée, CI à vérifier.

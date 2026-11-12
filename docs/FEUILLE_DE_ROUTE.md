@@ -1378,3 +1378,9 @@ explicitement la configuration et la base des tests PHP, schéma compris.
 Code prêt à publier sous réserve d’accord. La base locale de jeu n’est pas
 migrée : sauvegarde vérifiée et autorisation de Version20261112030000 encore
 requises, puis vérification du schéma local. Aucun push/PR/CI du lot F ni Alpha.
+
+Migration locale F explicitement autorisée, sauvegarde vérifiée deux fois et
+Version20261112030000 appliquée : onze comptages inchangés, ancienne guilde sans
+tag inventé. make lint complet réussit aussi sur la base locale migrée.
+Publication F autorisée ; fusion conditionnée à la CI complète, puis lot G.
+Aucun serveur Alpha concerné.
