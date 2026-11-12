@@ -26,7 +26,7 @@ test('Le dirigeant crée un grade, le délègue et les droits restent contrôlé
     await page.setViewportSize({ width: 1440, height: 900 });
     await register(page, 'Leader-' + id, 'leader-' + id + '@example.test');
     await page.goto('/diplomatie');
-    await page.getByLabel('Nom de votre nouvelle guilde').fill(guildName);
+    await page.getByLabel('Nom de votre nouvelle guilde').fill(guildName);await page.getByLabel('Tag de la guilde', { exact:true }).fill(crypto.randomUUID().replaceAll('-', '').slice(0,5).toUpperCase());
     await page.getByRole('button', { name: 'Fonder une guilde' }).click();
     await page.getByText('Créer un grade', { exact: true }).click();
     const create = page.locator('form').filter({ has: page.getByLabel('Nom du grade', { exact: true }) }).last();

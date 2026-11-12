@@ -51,7 +51,7 @@ final class GuildProjectTest extends KernelTestCase
     {
         $a=$this->player('ProjectAlpha');$b=$this->player('ProjectBeta');
         $a->player->roles=['ROLE_ADMIN'];$this->em->flush();
-        $this->diplomacy->create($a,'Bâtisseurs');
+        $this->diplomacy->create($a,'Bâtisseurs', 'BAT');
         $guild=self::getContainer()->get(RelationResolver::class)->guild($a);
         $this->diplomacy->join($b,$guild->id);
         $definition=self::getContainer()->get(GuildProjectDefinitionService::class)->save($a->player,0,$this->draft($a->universe->id),0);
@@ -105,7 +105,7 @@ final class GuildProjectTest extends KernelTestCase
 
     public function testAPlayerInAnotherGuildCannotFundTheProject(): void
     {
-        [$a,$b,$definition,$project]=$this->fixture();$this->diplomacy->leave($b);$this->diplomacy->create($b,'Autre guilde');
+        [$a,$b,$definition,$project]=$this->fixture();$this->diplomacy->leave($b);$this->diplomacy->create($b,'Autre guilde', 'AUTRE');
         $this->expectException(\DomainException::class);$this->expectExceptionMessage('inaccessible à votre guilde');
         $this->donate($b,$project,['metal'=>1]);
     }
@@ -132,7 +132,7 @@ final class GuildProjectTest extends KernelTestCase
         [$a,$b,$definition,$project]=$this->fixture();$draft=$this->draft($a->universe->id);$draft['enabled']=false;
         self::getContainer()->get(GuildProjectDefinitionService::class)->save($a->player,$definition->id,$draft,$definition->version);
         $this->donate($a,$project,['metal'=>10]);self::assertSame(1,$project->stageIndex);
-        $this->diplomacy->leave($b);$this->diplomacy->create($b,'Autre équipe');
+        $this->diplomacy->leave($b);$this->diplomacy->create($b,'Autre équipe', 'EQUI');
         $this->expectException(\DomainException::class);$this->expectExceptionMessage('plus disponible');
         $this->projects->start($b,$definition->id,$definition->version);
     }
@@ -267,7 +267,7 @@ final class GuildProjectTest extends KernelTestCase
     public function testChangingGuildCannotEarnTheSameProjectBoostAgain(): void
     {
         $fixture=$this->fixture();[$a,$b,$definition,$project]=$fixture;$this->finish($fixture);$this->deliver($project);
-        $this->diplomacy->leave($b);$this->diplomacy->create($b,'Nouvelle équipe');
+        $this->diplomacy->leave($b);$this->diplomacy->create($b,'Nouvelle équipe', 'NEW');
         $other=$this->projects->start($b,$definition->id,$definition->version);
         $this->donate($b,$other,['metal'=>10]);$this->donate($b,$other,['hydrogen'=>4]);$this->deliver($other);
         self::assertCount(1,$this->rewards($b));self::assertNotNull($other->rewardsDeliveredAt);

@@ -155,7 +155,7 @@ final class EmpireConversionTest extends KernelTestCase
         $log=$this->em->getRepository(EmpireConversion::class)->findOneBy(['membership'=>$this->old]);
         self::assertCount(2,$log->effects['social']['guilds'][0]['roster']);
         self::assertNull(self::getContainer()->get(RelationResolver::class)->guild($inactive));
-        self::getContainer()->get(\App\Service\Player\DiplomacyService::class)->create($inactive,'Une nouvelle guilde');
+        self::getContainer()->get(\App\Service\Player\DiplomacyService::class)->create($inactive,'Une nouvelle guilde', 'NEW2');
         self::assertNotNull(self::getContainer()->get(RelationResolver::class)->guild($inactive));
     }
 

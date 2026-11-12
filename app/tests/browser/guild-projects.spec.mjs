@@ -77,7 +77,7 @@ test('Les membres financent deux paliers et le traitement attribue les boosts un
   try {
     await register(page, 'ProjLeader-' + id, 'proj-leader-' + id + '@example.test');
     await page.goto('/diplomatie');
-    await page.getByLabel('Nom de votre nouvelle guilde').fill(guildName);
+    await page.getByLabel('Nom de votre nouvelle guilde').fill(guildName);await page.getByLabel('Tag de la guilde', { exact:true }).fill(crypto.randomUUID().replaceAll('-', '').slice(0,5).toUpperCase());
     await page.getByRole('button', { name: 'Fonder une guilde' }).click();
     await register(other, 'ProjMember-' + id, 'proj-member-' + id + '@example.test');
     await other.goto('/diplomatie?tab=diplomacy&q=' + encodeURIComponent(guildName));

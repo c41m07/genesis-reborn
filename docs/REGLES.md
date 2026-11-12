@@ -482,3 +482,21 @@ audit avant/après et protection contre une double soumission. Le joueur, la
 propriété et l’univers sont revérifiés sous verrou ; l’opération entière est
 refusée si le stock entier dépasse sa capacité technique (2147483647 par ligne).
 Aucun vaisseau d’une mission active, ressource, coût ou prérequis n’est modifié.
+
+## Tags et signalements depuis le classement — lot F
+
+Le tag de guilde comprend 2 à 5 lettres/chiffres, normalisés en majuscules. Il
+est obligatoire à la création et unique dans chaque univers. Seul le commandant
+actuel peut le choisir ou le mettre à jour. Aucun tag ancien n’est inventé.
+Le préfixe [TAG] Commandant s’affiche uniquement au classement ; une ancienne
+guilde sans tag et un joueur sans guilde ne produisent pas de crochets vides.
+
+Le classement permet de signaler un autre joueur du même univers. Motifs :
+Pseudonyme inapproprié, Harcèlement, Suspicion de triche ou Autre. Commentaire
+facultatif limité à 1000 caractères. Les informations jointes sont le joueur et
+son pseudonyme au moment de l’envoi, l’univers, l’auteur/date et le contexte
+catégorie/rang consulté. Le serveur ne reprend pas un rang soumis par le navigateur.
+Seule la modération consulte ces signalements et peut les classer ou les marquer
+traités ; aucune sanction n’est automatique. Les preuves restent conservées,
+y compris après une identité devenue indisponible. Le rejeu du même formulaire
+ne crée pas de nouveau signalement. Les signalements de messages sont préservés.

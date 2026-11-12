@@ -235,3 +235,32 @@ La route d’attribution n’accepte qu’un POST CSRF avec confirmation explici
 Version20261112020000 est additive. Accord explicite reçu ; sauvegarde locale
 dans var/backups/lot-e-20261112, archive/manifeste vérifiés deux fois avant make
 migrate. Comptages des huit tables suivies inchangés ; aucun serveur Alpha touché.
+
+## Tags et signalements joueurs (lot F)
+
+Guild.tag est nullable pour les anciennes guildes, avec unicité (universe_id, tag).
+DiplomacyService normalise/valide tout nouveau tag et sérialise choix/création
+avec les verrous participation/univers existants. setTag rafraîchit la guilde
+sous verrou et contrôle canCommand. LeaderboardController enrichit seulement
+la présentation HTML avec le tag courant ; ni pseudonyme ni score modifiés.
+
+PlayerReportService est distinct de la modération des messages. Le formulaire
+conserve en session un contexte serveur (20 derniers formulaires maximum) avec
+participation/cible/univers, catégorie/rang et date du calcul. Aucun champ de rang
+du POST n’est accepté. Le pseudonyme courant et celui consulté sont conservés.
+POST /classement/signaler/{id} vérifie CSRF et le contexte de la session ; les
+participations sont verrouillées par identifiant croissant, puis les droits et
+l’univers revérifiés. L’unicité auteur/request_key protège contre les doublons.
+player_report conserve motif, commentaire, contexte, statut et dates/relecteur ;
+liens auteur/cible/relecteur nullables, contexte conservé comme preuve.
+
+La rubrique Modération expose les joueurs dans une section séparée, avec audit
+de lecture et traitement. La route POST admin vérifie ROLE_ADMIN/CSRF et le
+service revérifie le rôle actif sous verrou. Le traitement est idempotent sous
+verrou du signalement, sans sanction ni suppression du contexte.
+AdminNotificationService conserve un curseur player_reports séparé du curseur
+messages, puis agrège seulement le badge reports : aucun conflit d’identifiants.
+
+Version20261112030000 est préparée, non appliquée à la base locale à ce stade.
+Accord explicite et sauvegarde vérifiée requis avant application sur base existante.
+Les migrations des scénarios isolés ne concernent aucune base de jeu ni Alpha.

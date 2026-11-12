@@ -41,7 +41,7 @@ final class GuildTreatyTest extends KernelTestCase
             $member=$player->currentPlayerUniverse;
             $member->joinedAt=self::getContainer()->get(\Psr\Clock\ClockInterface::class)->now()->modify('-8 days');
             $this->em->flush();
-            $this->diplomacy->create($member,$name);
+            $this->diplomacy->create($member,$name,$name==='TreatyAlpha'?'TA':'TB');
             $players[]=$member;
         }
         return [$players[0],$players[1],$this->relations->guild($players[0]),$this->relations->guild($players[1])];

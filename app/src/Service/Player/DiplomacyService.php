@@ -15,17 +15,40 @@ final class DiplomacyService
         if(!$m->universe->isAccessible($this->clock->now())) throw new \DomainException('Univers inaccessible.');
         if($guildFeature && !$this->catalog->forUniverse($m->universe)['features']['guilds_enabled']) throw new \DomainException('Les guildes sont désactivées dans cet univers.');
     }
-    public function create(PlayerUniverse $m,string $name): void
+    public function create(PlayerUniverse $m,string $name,string $tag = ''): void
     {
-        $this->manager->transaction(function()use($m,$name){
+        $tag=$this->normalizeTag($tag);
+        $this->manager->transaction(function()use($m,$name,$tag){
             $this->lock($m,true);$name=trim($name);
             if(mb_strlen($name)<3 || mb_strlen($name)>60) throw new \DomainException('Nom de guilde : 3 à 60 caractères.');
             if($this->relations->guild($m)) throw new \DomainException('Vous êtes déjà membre d’une guilde.');
             if($this->repo->one(Guild::class,['universe'=>$m->universe,'name'=>$name])) throw new \DomainException('Ce nom de guilde existe déjà.');
-            $g=new Guild();$g->name=$name;$g->universe=$m->universe;$g->leader=$m;$this->manager->save($g);
+            if($this->repo->one(Guild::class,['universe'=>$m->universe,'tag'=>$tag])) throw new \DomainException('Ce tag est déjà utilisé dans cet univers.');
+            $g=new Guild();$g->tag=$tag;$g->name=$name;$g->universe=$m->universe;$g->leader=$m;$this->manager->save($g);
             $member=new GuildMember();$member->guild=$g;$member->playerUniverse=$m;$this->manager->save($member);
         });
     }
+    public function setTag(PlayerUniverse $m,string $tag): void
+    {
+        $tag=$this->normalizeTag($tag);
+        $this->manager->transaction(function()use($m,$tag){
+            $this->lock($m,true);$guild=$this->relations->guild($m);
+            if(!$guild) throw new \DomainException('Guilde inaccessible.');
+            $this->manager->lock($guild);
+            if(!$this->access->canCommand($m,$guild)) throw new \DomainException('Seul le commandant de la guilde peut choisir son tag.');
+            $existing=$this->repo->one(Guild::class,['universe'=>$m->universe,'tag'=>$tag]);
+            if($existing && $existing->id!==$guild->id) throw new \DomainException('Ce tag est déjà utilisé dans cet univers.');
+            $guild->tag=$tag;
+        });
+    }
+
+    private function normalizeTag(string $tag): string
+    {
+        $tag=strtoupper(trim($tag));
+        if(!preg_match('/^[A-Z0-9]{2,5}$/D',$tag)) throw new \DomainException('Tag obligatoire : 2 à 5 lettres ou chiffres, affichés en majuscules.');
+        return $tag;
+    }
+
     public function join(PlayerUniverse $m,int $guildId): void
     {
         $this->manager->transaction(function()use($m,$guildId){

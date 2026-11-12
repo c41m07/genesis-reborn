@@ -9,6 +9,7 @@ final class AdminNotificationService
 {
     private const SOURCES = [
         'reports' => ['message_report', "n.status = 'open'"],
+        'player_reports' => ['player_report', "n.status = 'open'"],
         'security' => ['admin_audit_log', "n.action = 'admin_access_denied' AND NOT EXISTS (SELECT 1 FROM admin_audit_log r WHERE r.action = 'admin_access_reviewed' AND r.target_type = 'admin_access_incident' AND r.target_id = n.id)"],
         'feedbacks' => ['user_feedback', "n.status <> 'archived'"],
     ];
@@ -27,6 +28,8 @@ final class AdminNotificationService
             );
             $counts['total'] += $counts[$category];
         }
+        $counts['reports'] += $counts['player_reports'] ?? 0;
+        unset($counts['player_reports']);
         return $counts;
     }
 

@@ -30,3 +30,5 @@ import './styles/empire-details.css';
 import './styles/fleet-destinations.css';
 
 import './styles/report-archives.css';
+
+import './styles/player-reports.css';

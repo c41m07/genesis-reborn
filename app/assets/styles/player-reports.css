@@ -1,0 +1,6 @@
+.leaderboard-report{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;vertical-align:middle;margin-left:6px}
+.leaderboard-report:focus-visible,.player-report-form :is(input,select,textarea,button,a):focus-visible,.guild-tag-settings summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.player-report-form{max-width:760px}.player-report-form form{display:grid;gap:10px}.player-report-form form label{margin:8px 0 0;font-size:14px}.player-report-form :is(select,textarea){width:100%;max-width:100%;font-size:16px}.player-report-form button{font-size:14px;min-height:44px;justify-self:start}
+.player-report-comment{white-space:pre-wrap;overflow-wrap:anywhere}.guild-tag-settings{margin:16px 0}.guild-tag-settings summary{min-height:44px;cursor:pointer}.guild-tag-settings form{display:grid;gap:8px;max-width:420px}.guild-tag-settings label{font-size:14px}
+.guild-tag-settings .secondary{font-size:14px;min-height:44px}.guild-tag-settings :is(input,button):focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.player-report-form textarea{background:var(--panel);color:var(--text);border:1px solid var(--line);padding:12px;border-radius:6px;min-height:140px;resize:vertical}
