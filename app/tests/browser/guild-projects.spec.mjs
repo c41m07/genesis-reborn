@@ -90,7 +90,7 @@ test('Les membres financent deux paliers et le traitement attribue les boosts un
     await other.goto('/guildes/projets');
     await expect(other.getByRole('button', { name: 'Lancer ' + projectName })).toHaveCount(0);
     await page.goto('/diplomatie');
-    await page.getByRole('link', { name: 'Projets collectifs', exact: true }).click();
+    await page.getByRole('link', { name: 'Consulter les projets', exact: true }).click();
     await page.getByRole('button', { name: 'Lancer ' + projectName, exact: true }).click();
     const card = page.locator('.guild-project');
     await expect(card.getByRole('heading', { name: /Palier 1 sur 2/ })).toBeVisible();

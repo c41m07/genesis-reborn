@@ -1522,3 +1522,164 @@ et cinq largeurs, avec toutes les assertions conservées. Il porte la couverture
 locale pertinente à 31 scénarios distincts réussis. Les autres contrôles locaux
 restent valables sur le code produit inchangé ; seul le test et le suivi sont
 corrigés avant de relancer la CI sur la nouvelle version.
+
+## Retouches après recette — infobulles et Diplomatie
+
+Branche fix/infobulles-colonies-flottes, depuis dev actualisée 78e1aa1.
+Travail existant propre et préservé. Complexités : retrait de la phrase de
+Recherche (1), infobulles sur noms des colonies et encadrés de flotte (3),
+nouvelle proposition de Diplomatie par onglets (3, validation avant intégration).
+Aucune migration ou règle de jeu modifiée.
+
+La phrase technique sur la somme des rangs, le plafond de deux heures et la moitié
+du trajet est retirée de la présentation de Recherche à la demande de l’utilisateur.
+Les valeurs de préavis affichées et leur calcul restent inchangés.
+
+Retouches complémentaires demandées pendant la recette : cases de rapports
+alignées et libellés conservés seulement pour les lecteurs d’écran (complexité 2) ;
+retrait du paragraphe explicatif des archives, sans changer leur fonctionnement (1) ;
+classements sélectionnés par les en-têtes plutôt que par le menu (2).
+Les cinq classements restent décroissants, calculés globalement avant pagination.
+
+Première vérification : 23 tests PHP (catalogue et détection) et dix parcours
+navigateur ciblés réussis. La reprise avec vaisseaux présents et thème clair
+a relevé un contraste insuffisant des libellés hérités du tableau Planètes.
+Les styles sont désormais limités à la bulle avec textes agrandis et contraste
+corrigé ; nouvelle vérification ciblée avant clôture.
+La proposition Diplomatie a été contrôlée sur 1024/834/390/320 px : cinq onglets
+avec guilde, trois sans guilde, changement de grade et recherche locale de démonstration.
+Le fichier Figma accessible a été consulté : page vide. Aucune nouvelle maquette
+n’y a été créée ; l’aperçu interactif est présenté dans le chat pour validation.
+Référence publique consultée : guide d’alliance OGame (création, membres et droits).
+
+Bilan local après correction : validation Compose, lint complet, compilation,
+23 tests PHP et dix parcours navigateur distincts réussis ; le cas des bulles
+a été repris avec succès après ajout de vaisseaux et correction du thème clair
+(1/1, sans compter cette reprise comme un nouveau parcours).
+Les bulles sont lues au survol, au focus et au toucher, restent dans la fenêtre,
+ne changent pas la hauteur de la carte et se ferment avec Échap ou leur bouton.
+Les captures réelles sont conservées hors versionnement dans var/screenshots/retouches.
+La proposition Diplomatie reste extérieure aux templates du jeu et en attente
+de validation. Pas de commit, de push, de nouvelle CI ni de déploiement pour
+ces retouches à ce stade.
+
+Fichiers de ce lot de retouches :
+
+- README.md
+- app/assets/app.js
+- app/assets/controllers/hover_details_controller.js
+- app/assets/styles/empire-details.css
+- app/assets/styles/ranking-sort.css
+- app/assets/styles/report-archives.css
+- app/src/Service/Colony/CatalogueInsights.php
+- app/templates/colony/planets.html.twig
+- app/templates/combat/reports.html.twig
+- app/templates/player/diplomacy.html.twig
+- app/templates/player/leaderboard.html.twig
+- app/templates/ui/colony_summaries.html.twig
+- app/templates/ui/empire_details.html.twig
+- app/templates/ui/empire_details_trigger.html.twig
+- app/templates/ui/flights.html.twig
+- app/tests/browser/empire-details.spec.mjs
+- app/tests/browser/leaderboard-contact.spec.mjs
+- app/tests/browser/report-archives-ships.spec.mjs
+- docs/ARCHITECTURE.md
+- docs/DECISIONS.md
+- docs/EVOLUTIONS_INTERFACES_FLOTTES.md
+- docs/FEUILLE_DE_ROUTE.md
+- docs/RECETTE_EVOLUTIONS_INTERFACES.md
+- docs/wiki.json
+
+## Intégration Diplomatie validée — 12 novembre 2026
+
+L’utilisateur valide deux onglets sans guilde : Créer ou rejoindre une guilde,
+Relations commandants ; cinq avec guilde : Ma guilde, Membres, Grades et permissions,
+Relations guildes, Relations commandants. Recherche et adhésion restent dans le
+premier onglet sans guilde. L’ancienne URL tab=diplomacy reste utilisable pour
+retrouver une guilde sans en posséder une.
+
+Complexités : navigation selon appartenance et retours après formulaire (3),
+déplacement de l’équipage/attributions vers Membres (3), édition et consultation
+des grades dans leur onglet (3), accueil/gestion/recherche et présentation
+adaptative (3), contrôles des droits et régressions (3).
+Services métier, CSRF, versions de grades et contrats, univers, accès et fonctions
+existants conservés. Aucun changement de schéma ou migration.
+Les retouches locales précédentes restent présentes sur la branche dédiée.
+
+Présence ajoutée à la demande de l’utilisateur (complexité 3) : En ligne vert,
+Hors ligne rouge, toujours accompagnés du texte. Le seuil existant de cinq minutes
+de PlayerActivityService est réutilisé, sans nouveau suivi ni migration.
+La lecture est bornée côté serveur à la guilde actuelle et à l’univers consulté ;
+l’activité dans un autre univers, les heures et les durées ne sont pas exposées.
+L’état est calculé lors de l’ouverture/actualisation de l’onglet Membres.
+
+
+### Vérifications de la nouvelle Diplomatie et de la présence
+
+La complexité de la présence est réévaluée à 4 : l’activité administrative
+pouvait être agrégée entre univers. GuildPresence utilise une lecture dédiée,
+limitée à la guilde et à l’univers, avec appartenance du lecteur revérifiée
+dans la requête. La réponse est privée et non stockable. Tests des frontières
+299/300 secondes, de l’activité dans un autre univers, d’un lecteur extérieur,
+d’une guilde archivée et des refus de modification de grades.
+
+Résultats locaux :
+- make validate réussi ; make lint réussi ; make assets réussi ; git diff --check réussi.
+- 76 tests PHP ciblés / 298 assertions réussis ; les deux tests HTTP concernés
+  ont aussi été repris après ajout des en-têtes privés (2 tests / 34 assertions).
+- 18 scénarios navigateur distincts concernés réussis après reprises, sans
+  échec restant : création/adhésion, deux ou cinq onglets, grades et droits,
+  traités, projets et récompenses, tag/signalements, contact/classement, commandement,
+  navigation adaptative et pages joueur. États vert/rouge vérifiés dans les
+  deux thèmes, contrôles ciblés Axe et absence de débordement jusqu’à 320 px.
+- Les échecs initiaux provenaient d’une fixture d’univers sans guildes et
+  de parcours de test encore liés à l’ancien lien de projets ou à l’ancienne
+  position de la gestion. Les sélecteurs et la fixture ont été adaptés ;
+  aucune assertion métier retirée ni délai augmenté.
+- Captures réelles conservées hors versionnement dans var/screenshots/diplomatie.
+  Le rétablissement des fichiers de développement après les tests préserve
+  le processus de surveillance existant.
+
+Aucune migration, installation ou modification des permissions, valeurs de jeu,
+logos ou SVG. Aucun commit, push, fusion, CI GitHub ou déploiement de ces retouches
+annoncé : elles sont locales. Les lots A à K déjà livrés restent distincts.
+Les trois sources Work externes précédemment signalées restent inaccessibles ;
+aucune nouvelle maquette Figma n’a été créée pendant cette intégration.
+
+Fichiers ajoutés ou modifiés pour l’intégration Diplomatie (en plus des
+retouches précédentes déjà listées) :
+- app/src/Controller/DiplomacyController.php
+- app/src/Service/Player/GuildPresence.php
+- app/assets/styles/diplomacy-tabs.css
+- app/assets/app.js
+- app/templates/player/diplomacy.html.twig
+- app/templates/player/_guild_hub.html.twig
+- app/templates/player/_guild_create.html.twig
+- app/templates/player/_guild_search.html.twig
+- app/templates/player/_guild_management.html.twig
+- app/templates/player/_guild_members.html.twig
+- app/templates/player/_guild_ranks.html.twig
+- app/tests/Controller/GuildTagPlayerReportTest.php
+- app/tests/browser/diplomacy-overview-anchors.spec.mjs
+- app/tests/browser/leaderboard-contact.spec.mjs
+- app/tests/browser/guild-ranks.spec.mjs
+- app/tests/browser/guild-tags-player-reports.spec.mjs
+- app/tests/browser/guild-projects.spec.mjs
+- app/tests/browser/colony.spec.mjs
+- app/tests/browser/player-pages-refinement.spec.mjs
+- app/tests/browser/ui-routes-responsive.spec.mjs
+- README.md
+- docs/ARCHITECTURE.md
+- docs/DECISIONS.md
+- docs/REGLES.md
+- docs/FEUILLE_DE_ROUTE.md
+- docs/RECETTE_EVOLUTIONS_INTERFACES.md
+- docs/wiki.json
+
+### Publication des retouches autorisée
+
+L’utilisateur autorise la publication vers dev pour tester l’ensemble des retouches.
+Complexité 3 : vérification du périmètre et de la base dev, publication de la branche,
+PR puis fusion conditionnée à la réussite des cinq jobs quality sur la dernière version.
+Activation locale vérifiée après fusion ; aucun déploiement Alpha ni migration.
+Les mentions de retouches locales ci-dessus décrivent l’état avant cette publication.

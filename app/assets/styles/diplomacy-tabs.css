@@ -1,0 +1,64 @@
+/* Les rubriques conservent les liens et formulaires serveur, sans dépendre de JavaScript. */
+body.authenticated .diplomacy-page .diplomacy-tabs.ui-tabs.ui-tabs{gap:0;align-items:stretch;padding:0;margin:24px 0;background:var(--panel);border-bottom:1px solid var(--line)}
+body.authenticated .diplomacy-page .diplomacy-tabs.ui-tabs.ui-tabs>a{flex:1 1 135px;min-height:54px;padding:14px 10px;border:0;border-bottom:3px solid transparent;border-radius:0;background:transparent;color:var(--muted);font-size:14px;text-align:center}
+body.authenticated .diplomacy-page .diplomacy-tabs.ui-tabs.ui-tabs>a[aria-current=page]{border-bottom-color:var(--gold);background:color-mix(in srgb,var(--gold) 7%,var(--panel));color:var(--text);font-weight:600}
+body.authenticated .diplomacy-page .diplomacy-tabs.ui-tabs.ui-tabs>a:hover{background:color-mix(in srgb,var(--accent) 7%,var(--panel));color:var(--text)}
+body.authenticated .diplomacy-page .diplomacy-tabs.ui-tabs.ui-tabs>a:focus-visible{outline:3px solid var(--gold);outline-offset:-3px}
+.diplomacy-page .guild-hub-hero{border-left:3px solid var(--gold)}
+.diplomacy-page .guild-hub-stats{display:block;margin:0;font-size:14px;line-height:1.6;color:var(--muted)}
+.diplomacy-home-columns{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:18px;align-items:start}
+.diplomacy-page .guild-hub-management{margin:0}
+.diplomacy-page .guild-create{grid-template-columns:minmax(0,1fr);gap:14px}
+.diplomacy-page .guild-create form{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:10px 20px}
+.diplomacy-page .guild-create form>input[type=hidden]{display:none}
+.diplomacy-page .guild-create form>label[for=guild-name]{grid-column:1;grid-row:1}
+.diplomacy-page .guild-create form>#guild-name{grid-column:1;grid-row:2}
+.diplomacy-page .guild-create form>label[for=guild-tag]{grid-column:2;grid-row:1}
+.diplomacy-page .guild-create form>#guild-tag{grid-column:2;grid-row:2}
+.diplomacy-page .guild-create form>small{grid-column:1/-1}
+.diplomacy-page .guild-create form>button{justify-self:start;grid-column:1/-1}
+.diplomacy-page #guild-search,.diplomacy-page #guild-search-form{scroll-margin-top:160px}
+.guild-members-table{width:100%;border-collapse:collapse}
+.guild-members-table :is(th,td){padding:14px 10px;text-align:left;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+.guild-members-table thead th{font-size:13px;color:var(--muted);font-weight:400}
+.guild-members-table :is(th,td):last-child{text-align:right}
+.guild-rank-layout{display:grid;grid-template-columns:minmax(160px,.6fr) minmax(0,1.5fr);gap:24px;align-items:start}
+.guild-rank-navigation{display:grid;gap:8px;min-width:0}
+.guild-rank-navigation a{justify-content:flex-start;text-align:left;overflow-wrap:anywhere}
+.guild-rank-navigation a[aria-current=page]{border-left:3px solid var(--gold);background:color-mix(in srgb,var(--gold) 7%,var(--panel))}
+.guild-rank-editor{min-width:0}
+.guild-rank-editor form,.guild-rank-assignments form{display:grid;gap:12px;min-width:0}
+.guild-rank-editor fieldset{padding:16px;border:1px solid var(--line);min-width:0}
+.guild-rank-editor fieldset label{display:flex;align-items:center;gap:12px;min-height:44px;margin-block:4px}
+.guild-rank-editor input[type=checkbox]{width:20px;min-height:20px;flex:0 0 20px;margin:0}
+.guild-rank-editor :is(input:not([type=checkbox]),select),.guild-rank-assignments select{width:100%;min-width:0}
+.guild-rank-editor button,.guild-rank-assignments button{justify-self:start}
+.guild-rank-assignments form+form{border-top:1px solid var(--line);padding-top:18px;margin-top:18px}
+.diplomacy-page .relation-results .catalog-grid,.diplomacy-page #alliance-members,.diplomacy-page .guild-relations-list{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.diplomacy-page :is(.guild-card,.commander-card){border-radius:6px;box-shadow:none;min-width:0}
+.diplomacy-page .commander-card>form{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.diplomacy-page .commander-card>form>details{flex-basis:100%}
+@media(max-width:760px){
+.diplomacy-home-columns,.guild-rank-layout{grid-template-columns:minmax(0,1fr)}
+.guild-rank-navigation{grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))}
+}
+@media(max-width:540px){
+.diplomacy-page .guild-create form{grid-template-columns:minmax(0,1fr)}
+.diplomacy-page .guild-create form>:is(label,input,small,button){grid-column:1!important;grid-row:auto!important}
+.guild-members-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.guild-members-table tr{display:grid;grid-template-columns:minmax(0,1fr) auto;border-bottom:1px solid var(--line);padding-block:12px}
+.guild-members-table :is(th,td){border:0;padding:5px 0;min-width:0}
+.guild-members-table th{grid-column:1;grid-row:1}
+.guild-members-table td:nth-child(2){grid-column:1;grid-row:2}
+.guild-members-table td:nth-child(3){grid-column:1;grid-row:3}
+.guild-members-table td:last-child{grid-column:2;grid-row:1/4;align-self:center}
+}
+
+.guild-presence{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;white-space:nowrap}
+.guild-presence::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.guild-presence--online{color:#87d8b4}
+.guild-presence--offline{color:#ffb0b0}
+body[data-theme=light] .guild-presence--online{color:#256347}
+body[data-theme=light] .guild-presence--offline{color:#9a2929}
+
+.diplomacy-page .diplomacy-home-columns>section>a.secondary{display:inline-flex;width:auto}

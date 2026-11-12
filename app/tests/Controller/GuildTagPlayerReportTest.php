@@ -185,4 +185,96 @@ final class GuildTagPlayerReportTest extends WebTestCase
         try { self::getContainer()->get(PlayerReportService::class)->review($this->reporter,$report->id,'dismiss'); }
         finally { self::assertSame('open',$connection->fetchOne('SELECT status FROM player_report WHERE id=?',[$report->id])); }
     }
+    public function testGuildlessNavigationHasTwoTabsAndKeepsScopedLegacySearch(): void
+    {
+        $service=self::getContainer()->get(DiplomacyService::class);
+        $service->create($this->target->currentPlayerUniverse,'GuildPublicLocal','LOC');
+        $this->foreign->currentPlayerUniverse->universe->gameSettings['features']['guilds_enabled']=true;$this->em->flush();
+        $service->create($this->foreign->currentPlayerUniverse,'GuildPublicForeign','EXT');
+        $crawler=$this->client->request('GET','/diplomatie?tab=diplomacy&q=GuildPublic');
+        self::assertResponseIsSuccessful();
+        self::assertSame(['Créer ou rejoindre une guilde','Relations commandants'],$crawler->filter('nav[aria-label="Sections de diplomatie"] a')->each(fn($node)=>$node->text()));
+        self::assertCount(1,$crawler->filter('.guild-card'));
+        self::assertSelectorNotExists('.guild-presence');
+        self::assertSelectorTextContains('.guild-card','GuildPublicLocal');
+        self::assertStringNotContainsString('GuildPublicForeign',$this->client->getResponse()->getContent());
+        $this->client->request('GET','/diplomatie?tab=ranks');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorNotExists('#guild-ranks-title');
+        self::assertSelectorExists('#guild-name');
+        $this->client->request('GET','/diplomatie?tab=relations');
+        self::assertSelectorTextContains('h2','Relations entre commandants');
+    }
+
+    public function testGuildNavigationSeparatesMembersAndRanksWithoutGrantingPermissions(): void
+    {
+        $service=self::getContainer()->get(DiplomacyService::class);
+        $service->create($this->reporter->currentPlayerUniverse,'Guilde navigation','NAV');
+        $guild=self::getContainer()->get(RelationResolver::class)->guild($this->reporter->currentPlayerUniverse);
+        $service->join($this->target->currentPlayerUniverse,$guild->id);
+        self::getContainer()->get(\App\Service\Player\GuildRankService::class)->save($this->reporter->currentPlayerUniverse,0,'Diplomate',10,[],0);
+        $connection=$this->em->getConnection();
+        $crawler=$this->client->request('GET','/diplomatie');
+        self::assertResponseIsSuccessful();
+        self::assertSame(['Ma guilde','Membres','Grades et permissions','Relations guildes','Relations commandants'],$crawler->filter('nav[aria-label="Sections de diplomatie"] a')->each(fn($node)=>$node->text()));
+        self::assertSelectorNotExists('.guild-members-table');
+        self::assertSelectorNotExists('#guild-ranks-title');
+        $this->client->request('GET','/diplomatie?tab=members');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.guild-members-table','ReportTarget');
+        self::assertStringContainsString('private',$this->client->getResponse()->headers->get('Cache-Control'));
+        self::assertStringContainsString('no-store',$this->client->getResponse()->headers->get('Cache-Control'));
+        self::assertSelectorExists('input[name="expected_rank"]');
+        self::assertSelectorNotExists('input[name="action"][value="rank_save"]');
+        $this->client->request('GET','/diplomatie?tab=ranks');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('input[name="action"][value="rank_save"]');
+        self::assertSelectorExists('input[name="version"]');
+        self::assertSelectorNotExists('input[name="action"][value="rank_assign"]');
+
+        $this->client->loginUser($this->target);
+        $crawler=$this->client->request('GET','/diplomatie');
+        $token=$crawler->filter('input[name="_token"]')->first()->attr('value');
+        $this->client->request('GET','/diplomatie?tab=ranks');
+        self::assertSelectorTextContains('#guild-ranks-title','Grades et permissions');
+        self::assertSelectorNotExists('input[name="action"][value="rank_save"]');
+        $this->client->request('POST','/diplomatie',['_token'=>$token,'action'=>'rank_save','target'=>0,'name'=>'Interdit','position'=>1,'version'=>0,'permissions'=>[]]);
+        self::assertResponseRedirects();
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('[role="alert"]','Seul le dirigeant');
+        self::assertSame(0,(int)$connection->fetchOne("SELECT COUNT(*) FROM guild_rank WHERE name='Interdit'"));
+    }
+
+    public function testGuildPresenceIsScopedAndDoesNotRevealActivityInAnotherUniverse(): void
+    {
+        $guilds=self::getContainer()->get(DiplomacyService::class);
+        $viewer=$this->reporter->currentPlayerUniverse;$member=$this->target->currentPlayerUniverse;
+        $guilds->create($viewer,'Guilde présence','PRE');
+        $guild=self::getContainer()->get(RelationResolver::class)->guild($viewer);
+        $guilds->join($member,$guild->id);
+        $activity=self::getContainer()->get(\App\Service\Player\PlayerActivityService::class);
+        $presence=self::getContainer()->get(\App\Service\Player\GuildPresence::class);
+        $clock=self::getContainer()->get('clock');
+        $activity->record($viewer);$activity->record($member);
+        self::assertTrue($presence->forMember($viewer)[$member->id]);
+        $clock->sleep(299);
+        self::assertTrue($presence->forMember($viewer)[$member->id]);
+        $clock->sleep(1);
+        self::assertFalse($presence->forMember($viewer)[$member->id]);
+        $activity->record($viewer);
+        $activity->record($this->foreign->currentPlayerUniverse);
+        $turbo=$this->em->getRepository(Universe::class)->findOneBy(['slug'=>'turbo-1']);
+        self::getContainer()->get(UniverseService::class)->select($this->target,$turbo->id);
+        $otherMembership=$this->target->currentPlayerUniverse;
+        $activity->record($otherMembership);
+        $states=$presence->forMember($viewer);
+        self::assertTrue($states[$viewer->id]);
+        self::assertFalse($states[$member->id]);
+        self::assertArrayNotHasKey($otherMembership->id,$states);
+        self::assertArrayNotHasKey($this->foreign->currentPlayerUniverse->id,$states);
+        self::assertSame([],$presence->forMember($this->foreign->currentPlayerUniverse));
+        $guild->archivedAt=$clock->now();$this->em->flush();
+        self::assertSame([],$presence->forMember($viewer));
+    }
+
 }

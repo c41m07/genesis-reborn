@@ -14,7 +14,7 @@ Cette liste sert à notre revue ensemble sur dev. Cocher après essai et noter l
 - [ ] La mention de mise à jour à minuit a disparu de la vue générale ; le classement continue son calcul quotidien.
 - [ ] L’ordre des colonies est identique dans la vue générale et le menu latéral. Les acquisitions nouvelles suivent leur date réelle ; les anciennes dates inconnues ne sont pas inventées.
 - [ ] Après une première ouverture servant de départ au suivi, quitter la vue générale, provoquer un événement puis revenir : seuls les événements de l’absence apparaissent. Vérifier la consultation explicite et la conservation des notifications historiques.
-- [ ] Ouvrir les détails de ressources et de vaisseaux au survol, au clavier et au toucher. Vérifier les données de sa propre colonie et le contexte de la flotte.
+- [ ] Survoler le nom d’une colonie puis un encadré de flotte : une bulle flottante montre ressources/vaisseaux ou composition/fret, sans agrandir la carte. Vérifier aussi focus clavier, toucher, fermeture et Échap.
 
 ## Galaxie et confidentialité
 
@@ -51,9 +51,9 @@ Cette liste sert à notre revue ensemble sur dev. Cocher après essai et noter l
 
 ## Rapports, messages et classements
 
-- [ ] Rapports récents en premier ; archivage individuel et par sélection, consultation des archives et restauration. Les preuves ne sont pas supprimées.
+- [ ] Rapports récents en premier ; case, résumé et action sont alignés, sans texte de sélection visible. Tester archivage individuel/par sélection, consultation des archives et restauration ; les preuves restent conservées.
 - [ ] Le triangle jaune des messages est utilisable au clavier et au toucher et ouvre les motifs de signalement.
-- [ ] Les cinq classements changent leur ordre et leur rang ; la pagination conserve la catégorie et porte sur le classement global.
+- [ ] Cliquer les cinq en-têtes du classement joueur : ordre et rang changent ; la colonne active est indiquée et la pagination conserve la catégorie sur le classement global.
 - [ ] Les valeurs et leurs variations sont sur la même ligne, y compris le nombre de planètes avant les points totaux.
 - [ ] Gains « + » verts, pertes « − » rouges, stabilité « (= 0) », comparaison absente « (—) ». Une progression de place est un gain.
 - [ ] Le tag apparaît sous la forme [TAG] Commandant au classement uniquement ; aucune paire de crochets vide.
@@ -92,3 +92,11 @@ Cette liste sert à notre revue ensemble sur dev. Cocher après essai et noter l
 | À compléter après les essais | | | | |
 
 Le déploiement Alpha et un audit complet de conformité RGAA ne sont pas inclus dans cette recette.
+
+### Retouche Diplomatie approuvée
+
+- [ ] Sans guilde : seulement Créer ou rejoindre une guilde et Relations commandants ; recherche et adhésion dans le premier onglet.
+- [ ] Avec guilde : Ma guilde, Membres, Grades et permissions, Relations guildes, Relations commandants ; tester chaque onglet au clavier et sur mobile.
+- [ ] Membres : noms, grades, messagerie et attributions autorisées ; état En ligne vert / Hors ligne rouge, avec texte, thèmes clair et sombre.
+- [ ] Deux comptes de la même guilde : actualiser la liste après cinq minutes sans activité du second ; son activité dans un autre univers ne doit pas changer cet état. Aucune heure ou durée ne doit être affichée.
+- [ ] Ma guilde : aperçu sans marquer lu, canal, projets, tag, transfert, dissolution ou départ selon le rôle ; grades et relations gardent leurs contrôles de droits.

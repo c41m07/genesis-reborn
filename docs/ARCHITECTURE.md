@@ -392,9 +392,18 @@ d’audit. La page indique le besoin de ravitaillement avant confirmation.
 
 Les pages Diplomatie, Profil et Inventaire utilisent les styles limités
 à .page-refinement dans player-pages.css et les couleurs du thème existant.
-Les onglets de diplomatie restent des liens GET ; les actions et permissions
-de DiplomacyController ne changent pas. L’accès à la gestion est une ancre
-vers les grades et le commandement déjà présents ; l’aperçu du canal reste en lecture.
+Les onglets de diplomatie restent des liens GET : deux sans guilde, cinq avec guilde.
+Le contrôleur normalise les anciens onglets indisponibles vers la création/recherche,
+conserve les recherches et redirige les enregistrements vers le panneau concerné.
+Les attributions sont dans Membres, l’édition dans Grades et permissions, le tag et
+le commandement dans Ma guilde. Les services métier, CSRF et versions restent identiques ;
+l’aperçu du canal reste en lecture. Les styles complémentaires sont dans diplomacy-tabs.css.
+
+GuildPresence lit uniquement les PlayerActivity de la guilde actuelle dans l’univers
+consulté. Une sous-requête EXISTS revérifie l’appartenance du lecteur lors de la lecture.
+Le booléen de présence réutilise le seuil existant de PlayerActivityService (< cinq minutes) ;
+aucune agrégation par compte entre univers, ni heure ou durée, n’est transmise à la vue.
+La page est private, no-store. Pas de nouvelle requête périodique, table ou migration.
 
 Le profil utilise des détails natifs, y compris sans JavaScript. Les erreurs
 de modification rouvrent le changement de mot de passe ; une erreur de suppression
@@ -409,3 +418,17 @@ propriété, univers, vacances, opération active et stockage. Le contenu du dia
 est écrit avec textContent. Sans JavaScript ou sans showModal, les formulaires
 restent visibles et fonctionnent selon leur comportement serveur habituel.
 Aucune migration, dépendance ou modification des valeurs d’équilibrage.
+
+### Bulles de détails de l’empire
+
+hover_details_controller pilote maintenant des popovers natifs, ouverts depuis
+les noms des colonies ou l’encadré de flotte. La couche supérieure du navigateur
+évite la découpe par les cartes ; le placement tient compte de la fenêtre et du
+défilement. Un déplacement du pointeur vers la bulle conserve sa lecture ; clic,
+focus, toucher, Échap, fermeture explicite et fermeture extérieure sont gérés.
+Les données viennent des mêmes vues propriétaires qu’avant : aucun chargement
+supplémentaire, aucune extension des permissions ni exposition de flottes tierces.
+
+Les classements utilisent des liens GET dans les cinq en-têtes, avec aria-sort,
+sans changer les calculs, rangs ou pagination côté serveur. Les libellés des
+cases d’archivage restent dans le nom accessible, hors de l’affichage visuel.

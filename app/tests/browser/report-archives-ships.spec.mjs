@@ -38,6 +38,18 @@ test('Archives personnelles : sélection, restauration, ordre mixte, clavier et 
   const entries = page.locator('.report-archive-entry');
   await expect(entries).toHaveCount(2);
   await expect(entries.first().locator('.report-row')).toContainText('Transport');
+  const checkbox = entries.first().getByRole('checkbox', { name: /Sélectionner le rapport/ });
+  await expect(checkbox).toBeVisible();
+  expect(await entries.first().locator('.report-select span').evaluate(el=>getComputedStyle(el).position)).toBe('absolute');
+  const alignment = await entries.first().evaluate(el=>{
+    const box=el.querySelector('input[type=checkbox]').getBoundingClientRect();
+    const row=el.querySelector('.report-row').getBoundingClientRect();
+    return {box:box.y+box.height/2,row:row.y+row.height/2};
+  });
+  expect(Math.abs(alignment.box-alignment.row)).toBeLessThanOrEqual(2);
+  await expect(page.getByText('Les archives sont personnelles et restaurables.', { exact:false })).toHaveCount(0);
+  await page.screenshot({path:testInfo.outputPath('reports-aligned-desktop.png'),fullPage:true});
+
   await entries.first().getByRole('checkbox').focus();
   await expect(entries.first().getByRole('checkbox')).toBeFocused();
   await page.keyboard.press('Space');

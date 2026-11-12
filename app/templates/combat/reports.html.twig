@@ -8,7 +8,6 @@
 <section class="panel report-center" aria-labelledby="report-center-title">
 <div class="report-center-heading"><h2 id="report-center-title">Centre de rapports</h2><span class="badge">{{ report_count }} disponible{{ report_count == 1 ? '' : 's' }}</span></div>
 <nav class="report-tabs" aria-label="Liste ou archives des rapports"><a href="{{ path('app_combat_reports',{type:filter}) }}" {{ not archived ? 'aria-current="page"' : '' }}>Rapports actifs</a><a href="{{ path('app_combat_reports',{type:filter,view:'archives'}) }}" {{ archived ? 'aria-current="page"' : '' }}>Archives personnelles</a></nav>
-<p>Les archives sont personnelles et restaurables. Les rapports d’origine restent conservés ; les autres participants gardent leur propre liste.</p>
 <nav class="report-tabs" aria-label="Filtrer les rapports">{% for key,label in reportFilters %}<a href="{{ path('app_combat_reports',{type:key,view:view}) }}" class="{{ filter == key ? 'active' : '' }}" {{ filter == key ? 'aria-current="page"' : '' }}>{{ label }}</a>{% endfor %}</nav>
 {% if entries is not empty %}
 <form method="post" action="{{ path('app_report_archive_change') }}" aria-label="{{ archived ? 'Restaurer des rapports' : 'Archiver des rapports' }}">
@@ -18,7 +17,7 @@
 <div class="report-list">
 {% for entry in entries %}{% set report = entry.report %}
 <div class="report-archive-entry">
-<label class="report-select" for="report-select-{{ entry.key }}"><input type="checkbox" id="report-select-{{ entry.key }}" name="selected[]" value="{{ entry.key }}"><span>Sélectionner le rapport {{ reportFilters[entry.kind] }} n° {{ report.id }}</span></label>
+<label class="report-select" for="report-select-{{ entry.key }}"><input type="checkbox" id="report-select-{{ entry.key }}" name="selected[]" value="{{ entry.key }}"><span class="visually-hidden">Sélectionner le rapport {{ reportFilters[entry.kind] }} n° {{ report.id }}</span></label>
 {% if entry.kind == 'combat' %}
 <a class="report-row" href="{{ path('app_combat_report',{id:report.id}) }}"><span class="report-kind report-kind--combat">{{ ui.icon('fleet') }}</span><span class="report-copy"><strong>Combat · {{ report.combatEvent.planet.name }}</strong><small>{{ report.resolvedAt|date('d/m/Y H:i') }} · {{ report.combatEvent.planet.coordinates() }} · {{ report.snapshot.participants|length }} flottes impliquées</small></span><span class="badge">{{ report.outcome=='attacker_wins'?'Victoire attaquants':(report.outcome=='defender_wins'?'Victoire défense':'Égalité') }}</span><span class="report-chevron" aria-hidden="true">›</span></a>
 {% elseif entry.kind == 'espionage' %}

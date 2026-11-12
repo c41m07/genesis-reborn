@@ -631,3 +631,11 @@ restent communs au compte, avec fermeture de session après enregistrement.
 L’inventaire permet d’examiner et d’annuler l’utilisation avant confirmation ;
 seule la soumission effective peut consommer un objet, sous les contrôles
 habituels de propriété, univers, vacances, opération active et stockage.
+
+### Présence des membres de guilde
+
+La liste Membres affiche En ligne en vert si le membre a été actif depuis moins
+de cinq minutes dans l’univers courant, sinon Hors ligne en rouge. Les libellés
+restent affichés. Cette information est réservée à sa propre guilde et actualisée
+lors de l’ouverture ou du rechargement de la liste. Une activité dans un autre
+univers ne rend pas ce membre en ligne ici ; heures et durées ne sont pas révélées.

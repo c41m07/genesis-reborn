@@ -1,0 +1,8 @@
+{% import 'ui/macros.html.twig' as ui %}
+<section class="panel guild-hub-hero" aria-label="Centre de guilde"><span class="guild-hub-emblem" aria-hidden="true">{{ ui.icon('diplomacy') }}</span><div><h2>Un empire se construit ensemble</h2><p>Fondez votre guilde ou découvrez celles de cet univers.</p></div></section>
+<section class="panel guild-create"><div><h2>Fondez votre guilde</h2><p>Rassemblez des commandants autour de votre bannière. Vous en prendrez le commandement.</p></div><form method="post"><input type="hidden" name="_token" value="{{ csrf_token('diplomacy') }}"><input type="hidden" name="action" value="create"><label for="guild-name">Nom de votre nouvelle guilde</label><input id="guild-name" name="name" minlength="3" maxlength="60" required><label for="guild-tag">Tag de la guilde</label><input id="guild-tag" name="tag" minlength="2" maxlength="5" pattern="[A-Za-z0-9]{2,5}" autocomplete="off" aria-describedby="guild-tag-help" required><small id="guild-tag-help">2 à 5 lettres ou chiffres, affichés en majuscules. Unique dans cet univers.</small><button class="primary">Fonder une guilde</button></form></section>
+<section class="panel" id="guild-search" aria-labelledby="guild-search-title">
+<div class="section-heading"><h2 id="guild-search-title">Rejoignez une guilde</h2><a href="#guild-search-form">Rechercher une guilde</a></div>
+<p>Consultez les membres d’une guilde, contactez son commandant ou rejoignez son équipage.</p>
+{% include 'player/_guild_search.html.twig' %}
+</section>

@@ -1,13 +1,24 @@
-.empire-details{margin-top:12px;border:1px solid var(--line);border-radius:6px;min-width:0;background:var(--panel)}
-.empire-details>summary{box-sizing:border-box;min-height:44px;padding:12px;cursor:pointer;overflow-wrap:anywhere;color:var(--text)}
-.empire-details>summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.empire-details-content{padding:0 12px 12px;max-height:360px;overflow:auto}
+.empire-details[popover]{position:fixed;inset:auto;margin:0;width:min(360px,calc(100vw - 24px));max-height:calc(100dvh - 24px);overflow:auto;border:1px solid var(--line);border-radius:10px;min-width:0;background:var(--panel);color:var(--text);padding:0;box-shadow:0 12px 36px #0005}
+.empire-details-heading{display:flex;align-items:center;gap:12px;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel)}
+.empire-details-heading strong{font-size:14px;overflow-wrap:anywhere}
+.empire-details-heading button{background:transparent;border:1px solid var(--line);border-radius:5px;min-width:44px;min-height:44px;color:var(--text);font-size:22px;flex-shrink:0}
+.empire-details-content{padding:0 14px 14px}
 .empire-details h3{font-size:14px;margin:12px 0 8px}
 .empire-details dl{margin:0}.empire-details dl>div{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:5px 0;min-width:0}
 .empire-details dt{min-width:0;overflow-wrap:anywhere}.empire-details dd{margin:0;text-align:right;flex-shrink:0}
 .empire-details p{font-size:13px;color:var(--muted)}
+.empire-name{display:inline-flex;align-items:center;text-align:left;max-width:100%;min-height:44px;padding:4px 0;background:transparent;color:var(--text);border:0;border-bottom:1px dotted var(--muted);font:inherit;cursor:pointer;overflow-wrap:anywhere}
+.empire-name:hover{color:var(--accent)}
+.empire-name:focus-visible,.empire-details button:focus-visible,.empire-details-manage:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.empire-details-manage{display:flex;align-items:center;min-height:44px;padding:10px 14px;border-top:1px solid var(--line);text-decoration:underline}
+.flight-details-control{display:flex;justify-content:flex-end}
+.flight-details-control .empire-name{font-size:13px;color:var(--accent)}
 .dashboard-colonies{margin-top:18px;padding:18px}.dashboard-colonies>p{color:var(--muted);font-size:13px}
 .dashboard-colony-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:14px}
 .dashboard-colony{min-width:0;padding:12px;border:1px solid var(--line);border-radius:6px}
 .dashboard-colony h3,.dashboard-colony p{margin:0 0 8px;overflow-wrap:anywhere}.dashboard-colony>p{font-size:13px}
 .dashboard-journal form button{min-height:44px;white-space:normal}
+
+body.authenticated .empire-details dt{font-size:13px;color:var(--muted)}
+body.authenticated .empire-details dd{font-size:13px}
+body[data-theme=light] .empire-details{--muted:#535f66}

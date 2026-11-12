@@ -40,7 +40,7 @@ test('Routes de navigation utilisables sans débordement aux trois tailles', asy
       expect(overflow.document, `${route} déborde à ${width}px : ${JSON.stringify(overflow.offenders)}`).toBeLessThanOrEqual(width);
       await expect(page.locator('main#main')).toBeVisible();
       await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
-      if (route.startsWith('/diplomatie')) await expect(page.locator('.diplomacy-page .alliance-tabs>a')).toHaveCount(3);
+      if (route.startsWith('/diplomatie')) await expect(page.locator('.diplomacy-page .alliance-tabs>a')).toHaveCount(2);
       const checks = [
         ['.sidebar nav>a', 12],
         ['.catalog-card h3', width <= 740 ? 13 : 14],

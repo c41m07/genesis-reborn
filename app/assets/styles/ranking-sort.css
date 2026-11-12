@@ -1,0 +1,5 @@
+.ranking-table .ranking-sort-heading{padding:0}
+.ranking-sort{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;padding:12px 14px;color:var(--text);text-decoration:none}
+.ranking-sort:hover{text-decoration:underline;background:color-mix(in srgb,var(--accent) 8%,var(--panel))}
+.ranking-sort[aria-current=page]{background:color-mix(in srgb,var(--accent) 12%,var(--panel))}
+.ranking-sort:focus-visible{outline:3px solid var(--gold);outline-offset:-3px}
