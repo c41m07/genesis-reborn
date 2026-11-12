@@ -1433,11 +1433,25 @@ la base après soumission. Attente de la même valeur persistée ajoutée, repri
 locale réussie. Nouvelle CI complète requise ; H non fusionné, I non commencé.
 
 
-### Lot I — demandes d’orbite (prêt localement)
+### Lot I — demandes d’orbite (fusionné, PR #49)
 Demandes au départ, accord allié automatique, réponse neutre avant arrivée,
 refus/retrait par retour partiel, accord revérifié et retour sans réponse.
 Transition des anciennes missions et défense des hôtes neutres validées.
 Suivi privé dans le JSON des trajets existant ; aucune migration.
 Vérifications locales réussies : 835 tests PHP, 13 Python et 176 scénarios
-navigateur distincts, avec compléments ciblés après revue. Publication et PR
-vers dev en attente d’autorisation ; aucune CI du lot I ni aucun déploiement annoncés.
+navigateur distincts, avec compléments ciblés après revue. PR #49 fusionnée
+vers dev après CI complète 43260133554 verte sur 03aad13 ; sauvegarde/restauration
+et cinq jobs quality examinés. Aucun déploiement Alpha lancé.
+
+
+### Lot J — abandon (vérifié localement)
+Bilan, confirmation par nom et contenu courant, dernière planète par univers,
+blocages des opérations et dépendances entre colonies ; perte des actifs présents,
+annulation sans remboursement, trace et conservation des historiques.
+Kit non renouvelé pour le compte qui a abandonné cette même planète ; kit normal
+conservé pour un autre propriétaire (décision explicite).
+Compatibilité des orbites rétablie pour les anciennes planètes PNJ actuellement
+contrôlées par un joueur, selon la définition déjà validée au lot D.
+Vérifications locales : 868 tests PHP, 13 Python et 181 scénarios navigateur
+distincts réussis après corrections/reprises. Publication autorisée par
+l’utilisateur ; PR et CI complète requises avant fusion vers dev. Aucune migration.

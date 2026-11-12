@@ -349,3 +349,41 @@ parties concernées dans l’univers actif ; une origine non découverte est omi
 La surveillance privée existante actualise ces cartes toutes les cinq secondes
 en premier plan, avec horloge serveur et report du remplacement lorsqu’un
 contrôle possède le focus. Les clés privées ne sont pas ajoutées à la carte.
+
+
+### Abandon : transition transactionnelle sans migration
+ColonyAbandonmentService verrouille participation, univers et planète, puis
+synchronise les files avant le bilan. planetHasActiveFleet contrôle toutes les
+références d’origine, destination et repli sans filtrage de visibilité ; seul un
+motif générique est transmis. Les combats et occupations actifs bloquent aussi.
+L’analyse récursive des dépendances interdit l’abandon si une commande d’une
+autre colonie est concernée. Les files locales sont annulées sans remboursement
+via le traitement existant cancelForCaptureLocked ; les autres files démarrent
+normalement. Tous les états de reconstruction de la planète, y compris ceux des anciens
+propriétaires, conservent leur référence historique mais perdent commande,
+échéance et jeton actifs avant la suppression des files.
+Une empreinte des actifs discrets et commandes empêche une confirmation périmée ;
+les stocks variables sont exclus de cette empreinte mais enregistrés à leur valeur
+matérialisée avant la perte. La confirmation est liée au nom, à la participation,
+au CSRF et à un reçu de requête.
+Les lignes d’actifs sont retirées, les flottes inactives du propriétaire vidées
+et terminées ; Planet et les historiques restent en place. Un AdminAuditLog
+player_colony_abandoned conserve propriétaire, univers, planète, pertes et
+commandes annulées, sans attribuer de droits administrateur au joueur. Ce journal
+sert déjà à tracer la suppression d’un compte par son propriétaire.
+Les messages visant les commandes retirées sont obsolètes ; aucune ressource ne
+peut être déposée à distance et une nouvelle colonisation réutilise les règles
+existantes. La colonie active en session est conservée si elle est encore détenue,
+sinon remplacée par une colonie restante.
+
+ColonizationKitPolicy utilise la trace durable player_colony_abandoned pour le
+couple compte joueur / planète. L’identifiant de planète est global et son univers
+est vérifié. Une ancienne participation ou un changement de pseudonyme ne permet
+pas de réclamer de nouveau le kit du même compte. Les traces d’abandon doivent
+donc être conservées : aucune suppression automatique de ce journal n’est présente
+dans les services ou scripts examinés. Le kit configuré et le multiplicateur de
+rang sont conservés pour un nouveau propriétaire ; seuls les stocks initiaux
+de la recolonisation par l’auteur de l’abandon sont à zéro. Une version de règle
+dans l’empreinte du bilan invalide une confirmation antérieure à cette décision.
+Le reçu de requête reste dans ActionReceipt et n’est pas recopié dans le journal
+d’audit. La page indique le besoin de ravitaillement avant confirmation.

@@ -84,3 +84,7 @@ body[data-theme="light"] .player-protection-shield{color:#226344}
 body[data-theme="light"] .event-drawer-item p,body[data-theme="light"] .event-drawer-stats dt,body[data-theme="light"] .event-drawer-countdown{color:#365b60}
 body[data-theme="light"] .event-drawer-stats dd{color:#174d4b}
 body[data-theme="light"] .event-drawer-link,body[data-theme="light"] .event-drawer-countdown time{color:#175c64}
+
+.resource-strip .resource-planet{min-width:0}
+.resource-strip .resource-planet>div{flex:1;min-width:0;max-width:100%}
+.resource-strip .resource-planet strong{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
