@@ -438,3 +438,17 @@ Les attaques classiques des PNJ sont possibles sans capture ni nouveau butin PNJ
 Conquête JcE conserve ses règles de capture et d’occupation existantes.
 Aucune migration, dépendance ou activation globale supplémentaire pour ce lot D,
 qui n’est pas encore publié ni déployé sur Alpha.
+
+### Rapports personnels et attribution administrative
+
+Le centre de rapports mélange combats, renseignements et transports du plus récent
+au plus ancien, avant pagination (50 par page). Les filtres et le choix
+Rapports actifs / Archives personnelles restent conservés en navigation.
+L’archivage individuel ou par sélection est personnel et restaurable ; les preuves
+et l’accès autorisé aux rapports restent conservés.
+
+La fiche administrative d’un joueur permet d’attribuer des vaisseaux au stock
+au sol d’une colonie choisie : type, rang, quantité entière, motif et confirmation.
+L’attribution est contrôlée côté serveur, journalisée et protégée contre le rejeu.
+La migration additive Version20261112020000 mémorise seulement les choix d’archive ;
+sur base existante, son application exige accord explicite et sauvegarde vérifiée.

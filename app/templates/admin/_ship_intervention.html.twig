@@ -1,0 +1,10 @@
+<details class="admin-resource-intervention" id="ships-{{ planet.id }}"><summary>Attribuer des vaisseaux à {{ planet.name }}</summary>
+<p>Destination : {{ planet.name }} · {{ planet.coordinates() }} · {{ row.membership.universe.name }}. Ajout au stock au sol ; aucune flotte en mission n’est modifiée.</p>
+<form method="post" action="{{ path('app_admin_player_ships',{id:player.id,planetId:planet.id}) }}" class="admin-intervention-form">
+<input type="hidden" name="_token" value="{{ csrf_token('admin_ships_'~planet.id) }}"><input type="hidden" name="request_key" value="{{ stocks[planet.id].ships_request_key }}">
+<label for="ship-type-{{ planet.id }}">Type de vaisseau</label><select id="ship-type-{{ planet.id }}" name="slug" required>{% for slug,ship in ship_catalog %}<option value="{{ slug }}">{{ ship.label }}</option>{% endfor %}</select>
+<label for="ship-tier-{{ planet.id }}">Rang</label><select id="ship-tier-{{ planet.id }}" name="tier" required>{% for tier,definition in ship_tiers %}<option value="{{ tier }}">{{ definition.label }}</option>{% endfor %}</select>
+<label for="ship-quantity-{{ planet.id }}">Quantité à attribuer</label><input id="ship-quantity-{{ planet.id }}" name="quantity" type="number" min="1" max="2147483647" step="1" value="1" required>
+<label for="ship-reason-{{ planet.id }}">Motif de l’attribution (obligatoire)</label><textarea id="ship-reason-{{ planet.id }}" name="reason" maxlength="1000" required></textarea>
+<label class="admin-intervention-confirm"><input type="checkbox" name="confirmed" value="1" required> Je confirme le joueur, la colonie, le type, le rang et la quantité indiqués.</label>
+<button class="secondary" type="submit">Attribuer les vaisseaux</button></form></details>

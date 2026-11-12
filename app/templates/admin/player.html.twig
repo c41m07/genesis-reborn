@@ -12,7 +12,7 @@
 <div><dt>Aujourd’hui (UTC)</dt><dd data-playtime="today">{{ duration_label(activity.today) }}</dd></div>
 <div><dt>7 derniers jours (UTC)</dt><dd data-playtime="week">{{ duration_label(activity.week) }}</dd></div>
 <div><dt>Total depuis le début du suivi</dt><dd data-playtime="total">{{ duration_label(activity.total) }}</dd></div></dl>
-<h3>Colonies</h3><ul class="admin-monitor-report-list">{% for planet in row.planets %}<li>{{ planet.name }} · {{ planet.coordinates() }}{% include 'admin/_resource_intervention.html.twig' %}</li>{% else %}<li>Aucune colonie.</li>{% endfor %}</ul>
+<h3>Colonies</h3><ul class="admin-monitor-report-list">{% for planet in row.planets %}<li>{{ planet.name }} · {{ planet.coordinates() }}{% include 'admin/_resource_intervention.html.twig' %}{% include 'admin/_ship_intervention.html.twig' %}</li>{% else %}<li>Aucune colonie.</li>{% endfor %}</ul>
 <p><a href="{{ path('app_admin_cases',{membership:row.membership.id}) }}">Dossiers de cette participation</a> · <a href="{{ path('app_admin_case_new',{membership_id:row.membership.id}) }}">Ouvrir un dossier pour ce joueur</a></p>
 <p><a href="{{ path('app_admin_missions',{universe:row.membership.universe.id,q:player.username}) }}">Surveiller les missions de ce joueur</a></p></section>
 {% else %}<section class="panel"><h2>Participations aux univers</h2><p>Ce joueur ne participe à aucun univers.</p></section>{% endfor %}

@@ -14,25 +14,32 @@ use Symfony\Component\Routing\Attribute\Route;
 final class CombatReportController extends AbstractController
 {
     #[Route('/rapports', name: 'app_combat_reports', methods: ['GET'])]
-    public function index(Request $request, UniverseContext $context, CombatReportReader $reader, \App\Service\Fleet\EspionageReportReader $espionageReader, \App\Repository\GameRepository $repo): Response
+    public function index(Request $request, UniverseContext $context, \App\Service\Combat\ReportArchiveService $archives): Response
     {
         $membership = $context->membership();
-        $combatReports = $reader->list($membership);
-        $espionageReports = $espionageReader->list($membership);
-        $transportReports = $repo->transportReportsFor($membership);
         $filter = $request->query->getString('type', 'all');
-        if (!in_array($filter, ['all', 'combat', 'economy', 'espionage'], true)) {
-            $filter = 'all';
-        }
+        if (!in_array($filter, ['all', 'combat', 'economy', 'espionage'], true)) $filter = 'all';
+        $archived = $request->query->getString('view') === 'archives';
+        $data = $archives->page($membership, $filter, $archived, $request->query->getInt('page', 1));
+        return $this->render('combat/reports.html.twig', $data + ['membership'=>$membership, 'filter'=>$filter, 'archived'=>$archived]);
+    }
 
-        return $this->render('combat/reports.html.twig', [
-            'membership' => $membership,
-            'reports' => in_array($filter, ['all', 'combat'], true) ? $combatReports : [],
-            'espionage_reports' => in_array($filter, ['combat', 'economy'], true) ? [] : $espionageReports,
-            'transport_reports' => in_array($filter, ['all', 'economy'], true) ? $transportReports : [],
-            'filter' => $filter,
-            'report_count' => count($combatReports) + count($espionageReports) + count($transportReports),
-        ]);
+    #[Route('/rapports/archives', name: 'app_report_archive_change', methods: ['POST'])]
+    public function archive(Request $request, UniverseContext $context, \App\Service\Combat\ReportArchiveService $archives): Response
+    {
+        if (!$this->isCsrfTokenValid('report_archive', $request->request->get('_token'))) throw $this->createAccessDeniedException('Formulaire expiré.');
+        $member = $context->membership();
+        $filter = $request->request->getString('type', 'all');
+        if (!in_array($filter, ['all', 'combat', 'economy', 'espionage'], true)) $filter = 'all';
+        $view = $request->request->getString('view') === 'archives' ? 'archives' : '';
+        try {
+            $operation = $request->request->getString('operation');
+            if (!in_array($operation, ['archive', 'restore'], true)) throw new \DomainException('Action sur les rapports invalide.');
+            $keys = $request->request->has('single') ? [$request->request->getString('single')] : $request->request->all('selected');
+            $archives->change($member, $keys, $operation === 'archive');
+            $this->addFlash('success', $operation === 'archive' ? 'Rapports archivés. Vous pouvez les restaurer depuis les archives.' : 'Rapports restaurés dans votre liste.');
+        } catch (\DomainException $error) { $this->addFlash('error', $error->getMessage()); }
+        return $this->redirectToRoute('app_combat_reports', ['type'=>$filter, 'view'=>$view, 'page'=>max(1, $request->request->getInt('page', 1))]);
     }
 
     #[Route('/rapports/combat/{id}', name: 'app_combat_report', requirements: ['id' => '\d+'], methods: ['GET'])]
