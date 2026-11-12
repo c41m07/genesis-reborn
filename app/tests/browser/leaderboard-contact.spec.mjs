@@ -166,16 +166,16 @@ test('Conversations : dernier message, bulles distinctes et témoin mobile', asy
 test('Alliances : Guildes par défaut et panneaux séparés', async ({ page }) => {
   await registerAndJoin(page, 'Tabs');
   await page.goto('/diplomatie');
-  const tabs = page.getByRole('navigation', { name: 'Sections des alliances' });
-  await expect(tabs.getByRole('link')).toHaveText(['Guildes', 'Diplomatie', 'Relation']);
-  await expect(tabs.getByRole('link', { name: 'Guildes', exact: true })).toHaveAttribute('aria-current', 'page');
+  const tabs = page.getByRole('navigation', { name: 'Sections de diplomatie' });
+  await expect(tabs.getByRole('link')).toHaveText(['Ma guilde', 'Entre guildes', 'Commandants']);
+  await expect(tabs.getByRole('link', { name: 'Ma guilde', exact: true })).toHaveAttribute('aria-current', 'page');
   await expect(page.getByRole('region', { name: 'Centre de guilde' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Guildes de l’univers' })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Relations entre commandants' })).toHaveCount(0);
-  await tabs.getByRole('link', { name: 'Diplomatie', exact: true }).click();
+  await tabs.getByRole('link', { name: 'Entre guildes', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Relations entre guildes' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Guildes de l’univers' })).toHaveCount(0);
-  await tabs.getByRole('link', { name: 'Relation', exact: true }).click();
+  await tabs.getByRole('link', { name: 'Commandants', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Relations entre commandants' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Relations entre guildes' })).toHaveCount(0);
 });

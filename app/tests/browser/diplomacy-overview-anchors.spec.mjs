@@ -17,8 +17,8 @@ test('Les trois onglets des alliances restent accessibles sans guilde', async ({
   await page.locator('article.universe-card').filter({ has: page.getByRole('heading', { name: /Turbo/ }) }).getByRole('button').click();
   await page.goto('/diplomatie');
   await expect(page.locator('.guild-hub-hero')).toContainText('Un empire se construit ensemble');
-  const sections = page.getByRole('navigation', { name: 'Sections des alliances' });
-  for (const [label, tab, heading] of [['Guildes', 'guilds', 'Un empire se construit ensemble'], ['Diplomatie', 'diplomacy', 'Relations entre guildes'], ['Relation', 'relations', 'Relations entre commandants']]) {
+  const sections = page.getByRole('navigation', { name: 'Sections de diplomatie' });
+  for (const [label, tab, heading] of [['Ma guilde', 'guilds', 'Un empire se construit ensemble'], ['Entre guildes', 'diplomacy', 'Relations entre guildes'], ['Commandants', 'relations', 'Relations entre commandants']]) {
     await sections.getByRole('link', { name: label, exact: true }).click();
     await expect(page).toHaveURL(url => url.searchParams.get('tab') === tab);
     await expect(sections.getByRole('link', { name: label, exact: true })).toHaveAttribute('aria-current', 'page');

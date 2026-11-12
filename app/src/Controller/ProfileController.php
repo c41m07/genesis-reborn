@@ -33,7 +33,7 @@ final class ProfileController extends AbstractController
             $deletion->delete($this->getUser(),(string)$request->request->get('password'),$request->request->getBoolean('confirmed'));
         } catch (\DomainException $error) {
             $this->addFlash('error',$error->getMessage());
-            return $this->redirectToRoute('app_profile');
+            return $this->redirectToRoute('app_profile', ['delete' => '1']);
         }
         $response=$security->logout(false);
         $request->getSession()->getFlashBag()->add('success','Votre compte a été supprimé. Vos empires sont devenus des empires oubliés.');

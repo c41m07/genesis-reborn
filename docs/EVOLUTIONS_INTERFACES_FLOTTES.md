@@ -36,8 +36,8 @@ Une complexité 4 ou 5 impose l’analyse détaillée des transitions et risques
 | G — rappel | Missions, trajet partiel, carburant/fret, verrouillage, origine perdue | 5 | Fusionné dans dev, PR #47 |
 | H — détection | Analyse tactique, visibilité des mouvements et détection à l’arrivée | 5 | Fusionné dans dev, PR #48 |
 | I — orbites | Demande au départ, accords, attente et changements diplomatiques | 5 | Fusionné dans dev, PR #49 |
-| J — abandon | Dernière colonie, actifs/files, restrictions et confirmation | 5 | Vérifié localement ; publication autorisée |
-| K — refontes | Diplomatie, Profil, Inventaire : maquettes adaptatives, puis validation | 3 | Maquettes validées ; intégration non commencée |
+| J — abandon | Dernière colonie, actifs/files, restrictions et confirmation | 5 | Fusionné dans dev, PR #50 |
+| K — refontes | Diplomatie, Profil, Inventaire : maquettes adaptatives, puis validation | 3 | Implémenté et vérifié localement ; CI complète avant fusion |
 | Chaque lot | Documentation, contrôles adaptés, six contrôles avant commit/push, CI avant fusion | 3 | À appliquer |
 
 ## Existant et conflits identifiés
@@ -64,7 +64,7 @@ Une complexité 4 ou 5 impose l’analyse détaillée des transitions et risques
 - Analyse tactique : catalogue de base à 5 niveaux par rang. L’espionnage pondère
   les niveaux par 1, 1,25 et 1,5625 avant arrondi. À 5/5/5 : 19 effectifs,
   et donc 100 minutes avec la formule proposée, avant limite de 50 % du trajet.
-  Une somme simple donnerait 80 minutes. La somme simple est désormais validée pour le préavis uniquement ; elle reste à implémenter.
+  Une somme simple donnerait 80 minutes. La somme simple a été validée pour le préavis uniquement, puis implémentée dans le lot H.
   Les surcharges de catalogue par univers existent : vérifier les plafonds
   effectifs de l’univers choisi avant implémentation. Lecture locale effectuée :
   abc-1 actif, plafonds effectifs 5/5/5, surcharges incluses. Alpha non vérifiée.
@@ -96,7 +96,7 @@ Les décisions détaillées restent dans DECISIONS ; elles ne sont pas implémen
 par cette seule consignation.
 
 Les maquettes Diplomatie, Profil et Inventaire sont validées par l’utilisateur ;
-leur intégration n’a pas commencé.
+leur intégration dans les templates est terminée dans le lot K.
 Les migrations futures seront préparées séparément de leur application :
 base existante uniquement après autorisation explicite et sauvegarde vérifiée.
 
@@ -111,8 +111,8 @@ aucune maquette créée dans Figma.
 Prévisualisation interactive locale des trois pages proposée dans le chat,
 navigation et modes ordinateur/mobile, données d’exemple. Contrôles à 1024, 834,
 768, 390 et 320 px : pas de débordement, navigation et dialogue fonctionnels.
-Captures Diplomatie ordinateur, Profil mobile et Inventaire tablette examinées. Les trois refontes ne sont
-pas intégrées aux templates du jeu.
+Captures Diplomatie ordinateur, Profil mobile et Inventaire tablette examinées.
+Cette étape décrivait les maquettes seules ; leur intégration est suivie dans le lot K ci-dessous.
 
 ## Vérifications du lot A
 
@@ -1406,3 +1406,119 @@ et testée dans les deux sens. Aucun coût, quota ou multiplicateur n’est chan
 - L’utilisateur autorise désormais l’intégration de la suite des lots vers dev,
   avec PR et CI complète verte, et demande une checklist de vérification du
   prompt complet après K, puis une revue commune des retouches.
+
+
+## Lot J intégré et lot K en cours — 12 novembre 2026
+
+Lot J fusionné par PR [#50](https://github.com/c41m07/genesis-reborn/pull/50),
+commit d08dda6799df47a9e18d06b1af3d4cf34846165e.
+La [CI complète](https://github.com/c41m07/genesis-reborn/actions/runs/43284045964)
+réussit sur la dernière version 7a29a3d : cinq jobs quality, compilation,
+tests, sauvegarde/restauration isolées et vérification du diff ; GitGuardian
+réussit également. Les protections de dev ont été vérifiées avant la fusion.
+Aucun déploiement Alpha.
+
+Lot K part de cette dev actualisée, branche
+feature/refonte-diplomatie-profil-inventaire. Prévisualisation approuvée relue :
+interfaces-genesis.html, dans le dossier local des visualisations du chat.
+Lors de l’étape initiale, seul un fichier Figma vide a été créé avant le quota
+rencontré ; l’intégration s’appuie sur les maquettes locales approuvées.
+
+| Sous-tâche K | Complexité | Dépendances et précautions |
+| --- | --- | --- |
+| Diplomatie : titres, trois périmètres, accès à la gestion, recherche et lisibilité | 3 | Conserver toutes les actions et permissions, grades, projets, historiques et canal non marqué lu par son aperçu |
+| Profil : identifiants, changement facultatif, confirmation et section destructive | 2 | Conserver validation, erreurs, contrôles du mot de passe, CSRF et fermeture de session |
+| Inventaire : capacité, bonus, choix d’opération, examen avant consommation | 3 | Garder les formulaires serveur, requêtes idempotentes, contrôles de stockage/vacances et fonctionnement sans JavaScript |
+| Rendu réel, clavier/tactile, thèmes et documentation de recette | 3 | Essais ciblés puis vérifications complètes ; maquettes déjà validées |
+
+Aucune migration ni changement de règle de jeu prévu dans K.
+La publication et la fusion après CI complète verte sont autorisées par
+l’instruction de finaliser l’ensemble sur dev. Une recette manuelle sera fournie
+pour décider des retouches ensemble.
+
+### Vérifications intermédiaires K
+
+Première passe ciblée : 10 scénarios, 8 réussis et 2 échecs de présentation.
+Les annulations de boost et boîte ne consomment rien ; confirmation, contrôles
+CSRF/stockage/vacances et ouverture sans JavaScript réussissent.
+Les deux échecs concernent le contraste de textes du thème clair
+et le lien de contact non souligné dans la suppression du compte.
+Correction limitée aux styles des trois pages ; aucun contrôle affaibli.
+
+La méthode locale suit les consignes AGENTS actualisées : contrôles adaptés,
+sans réexécuter une suite complète inchangée par principe. Les résultats
+locaux ciblés et la CI complète seront présentés séparément.
+
+La reprise après correction des contrastes valide le parcours visuel des trois
+pages et la modification du profil. Le test de suppression atteint ensuite
+une attente d’URL incorrecte : une case obligatoire non cochée bloque le
+formulaire dans le navigateur et ne provoque donc aucune redirection serveur.
+L’assertion conserve cette protection native sur /profil ; delete=1 est vérifié
+après la véritable soumission avec un mot de passe erroné.
+
+Passe locale finale élargie : 30 parcours concernés, 29 réussis, un échec
+de navigation inverse dans le dialogue de boost. Le navigateur pouvait faire
+sortir le focus à la première tabulation inverse. Le dialogue boucle maintenant
+explicitement entre ses deux boutons ; Tab, Maj+Tab, Échap et le retour au
+déclencheur sont vérifiés. Ajustement de l’espacement des statistiques à 320 px
+après examen des captures réelles. La compilation est restée stable pendant
+les trente parcours ; les contrôles PHP/lint n’ont pas tourné en parallèle.
+
+### Bilan local du lot K — 12 novembre 2026
+
+- make validate : réussi, configuration Compose vérifiée sans afficher les secrets.
+- make lint : réussi ; dernière reprise complète après correction du dialogue,
+  puis lint Twig ciblé du lien de gestion conditionnel.
+- make test : réussi, 868 tests PHP et 210925 assertions, puis 13 tests Python.
+- make assets (npm run build) : réussi après les dernières corrections JS/CSS.
+- Navigateur ciblé : 30 scénarios distincts concernés réussissent après reprises.
+  La passe de trente comportait 29 succès et l’échec de boucle de focus ; la
+  reprise de huit cas réussit entièrement. Le parcours des trois pages est
+  ensuite repris avec le cas d’une guilde existante désactivée dans l’univers :
+  l’accès à une gestion absente est masqué, les commandants restent accessibles.
+  La première préparation JSON ne créait pas l’objet features absent ; corrigée
+  avec une fusion JSON et une assertion de préparation. Dernière reprise 1/1.
+- La consolidation est comparée aux trente cas sélectionnés dans le manifeste ;
+  aucun doublon n’est compté comme un nouveau scénario. Le manifeste complet
+  comporte 183 scénarios, destinés à la CI complète avant fusion.
+- Clavier : sélection, boucle Tab/Maj+Tab, Échap, annulation et restitution du
+  focus. Confirmation réelle, contrôles serveur et actions sans JavaScript vérifiés.
+- Rendus réels examinés : trois pages, deux thèmes, 320/390/768/834/1440 px ;
+  dialogues, boîtes, états vides/pleins, erreurs, gestion et désactivation de guilde.
+  Les contrôles axe ciblés et applicatifs passent ; ce n’est pas un audit RGAA complet.
+- git diff --check : réussi avant commit et publication.
+
+Preuves locales : /tmp/genesis-lot-k-local-proof.json et rapports
+/tmp/genesis-lot-k-final-browser.json, /tmp/genesis-lot-k-dialog-browser.json,
+/tmp/genesis-lot-k-guild-reviewed-browser.json. Captures ignorées par Git :
+var/screenshots/lot-k/. Les manifestes de compilation et leurs fichiers ont été
+vérifiés. Le watch existant est préservé.
+
+Documentation du lot : README, architecture, décisions, règles, feuille de route,
+index, wiki intégré et [recette manuelle A à K](RECETTE_EVOLUTIONS_INTERFACES.md).
+Aucune migration, dépendance ni règle de jeu modifiée. Les sources Work V4/V2/V1
+restent non consultées, faute de fichiers accessibles ; aucun wiki distant mis à jour.
+La réussite locale n’est pas une validation de la CI GitHub. Cette dernière et
+les protections de dev doivent être vérifiées sur la version exacte de la PR
+avant fusion. Aucun déploiement Alpha.
+
+### Première CI K — correction du contrat typographique
+
+PR [#51](https://github.com/c41m07/genesis-reborn/pull/51), version ced85ff.
+La [première CI](https://github.com/c41m07/genesis-reborn/actions/runs/43297259592)
+réussit pour PHP/Python et trois groupes navigateur ; le quatrième relève une
+attente ancienne du test ui-routes-responsive : 12 px pour tous les onglets
+sur ordinateur, alors que les onglets de Diplomatie sont maintenant à 14 px
+conformément à la refonte. Ce groupe compte 44 succès et ce seul échec.
+
+Le contrat est séparé explicitement : trois onglets Diplomatie obligatoires
+à 14 px, tailles 12/11 px conservées pour les autres onglets et rangs.
+Toutes les vérifications de routes, thèmes, débordement et typographie sont
+maintenues. Aucun code produit modifié dans cette reprise ; la dernière
+version de la PR doit repasser la CI complète avant fusion.
+
+Le contrôle local corrigé réussit sur toutes les routes dans les deux thèmes
+et cinq largeurs, avec toutes les assertions conservées. Il porte la couverture
+locale pertinente à 31 scénarios distincts réussis. Les autres contrôles locaux
+restent valables sur le code produit inchangé ; seul le test et le suivi sont
+corrigés avant de relancer la CI sur la nouvelle version.

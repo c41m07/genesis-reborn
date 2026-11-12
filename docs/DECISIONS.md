@@ -1474,3 +1474,12 @@ le kit normal. Les autres coûts, conditions, quotas et consommations restent
 inchangés. Cette règle empêche la récupération répétée du kit après vidage,
 abandon et recolonisation. Le bilan d’abandon annonce l’absence de nouveau kit
 et le besoin de ravitaillement pour le joueur qui abandonne.
+
+### Lot K — présentation approuvée
+
+Les trois maquettes locales Diplomatie, Profil et Inventaire ont été approuvées
+avant intégration. La séparation des périmètres, le rangement des actions
+sensibles et l’examen annulable d’un bonus sont des changements de présentation.
+Ils ne retirent aucune fonction et ne modifient aucune règle de jeu ou permission.
+La revue finale sur dev s’appuie sur la recette A à K ; les retouches sont à
+décider avec l’utilisateur.

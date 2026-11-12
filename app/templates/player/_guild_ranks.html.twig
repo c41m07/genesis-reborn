@@ -1,7 +1,7 @@
 <section class="panel" aria-labelledby="guild-ranks-title">
     <h2 id="guild-ranks-title">Grades et permissions</h2>
     <p>Une priorité plus petite indique un grade supérieur. Sans grade personnalisé, un membre ne dispose d'aucune permission déléguée. Le commandement reste distinct des grades.</p>
-    <p>Les grades concernent votre guilde. Vos alliances personnelles restent gérées dans <a href="{{ path('app_diplomacy',{tab:'relations'}) }}">Relation</a>.</p>
+    <p>Les grades concernent votre guilde. Vos alliances personnelles restent gérées dans <a href="{{ path('app_diplomacy',{tab:'relations'}) }}">Commandants</a>.</p>
     {% for rank in ranks %}
         <details>
             <summary>{{ rank.name }} · priorité {{ rank.position }}</summary>
