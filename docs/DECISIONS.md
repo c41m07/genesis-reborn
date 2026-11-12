@@ -1511,3 +1511,12 @@ L’utilisateur demande un onglet Rejoindre une guilde à côté de Créer une g
 Cette décision remplace l’organisation précédente à deux onglets sans guilde :
 il y en a désormais trois (Créer une guilde, Rejoindre une guilde, Relations commandants).
 Les cinq onglets avec guilde et les règles d’adhésion restent identiques.
+
+### Dernières retouches de recette validées
+
+À la demande de l’utilisateur : bulles sans croix et fermeture automatique à la
+sortie du pointeur, avec Échap/sortie du focus/toucher extérieur ; trois actions
+Projets, Galaxie et Classement regroupées et raccourci Relations guildes redondant
+retiré du bloc. L’onglet Relations guildes reste présent. Aperçu limité aux trois
+derniers messages, sans lecture implicite. Départ/dissolution rendus directement
+visibles selon le rôle, sans modifier les permissions ni leurs conséquences.

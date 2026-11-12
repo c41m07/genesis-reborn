@@ -61,4 +61,4 @@ body.authenticated .diplomacy-page .diplomacy-tabs.ui-tabs.ui-tabs>a:focus-visib
 body[data-theme=light] .guild-presence--online{color:#256347}
 body[data-theme=light] .guild-presence--offline{color:#9a2929}
 
-.diplomacy-page .diplomacy-home-columns>section>a.secondary{display:inline-flex;width:auto}
+.diplomacy-page .guild-hub-actions>a.secondary{display:inline-flex;width:auto}

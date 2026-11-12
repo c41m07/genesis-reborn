@@ -280,4 +280,27 @@ final class GuildTagPlayerReportTest extends WebTestCase
         self::assertSame([],$presence->forMember($viewer));
     }
 
+    public function testGuildPreviewKeepsOnlyThreeLatestMessagesWithoutMarkingRead(): void
+    {
+        $service=self::getContainer()->get(DiplomacyService::class);
+        $reader=$this->reporter->currentPlayerUniverse;
+        $service->create($reader,'Trois derniers messages','TROIS');
+        $guild=self::getContainer()->get(RelationResolver::class)->guild($reader);
+        $service->join($this->target->currentPlayerUniverse,$guild->id);
+        for($i=1;$i<=5;$i++) {
+            $message=new \App\Entity\SocialMessage();
+            $message->sender=$this->target->currentPlayerUniverse;$message->guild=$guild;
+            $message->content='Échange numéro '.$i;$message->createdAt=new \DateTimeImmutable('2026-11-12T11:00:00Z');
+            $this->em->persist($message);
+        }
+        $this->em->flush();
+        self::assertSame(5,self::getContainer()->get(\App\Service\Player\SocialMessageService::class)->unreadGuildCount($reader));
+        $crawler=$this->client->request('GET','/diplomatie');
+        self::assertResponseIsSuccessful();
+        self::assertSame(['Échange numéro 3','Échange numéro 4','Échange numéro 5'],$crawler->filter('.guild-message-preview p')->each(fn($node)=>$node->text()));
+        $fresh=self::getContainer()->get(EntityManagerInterface::class)->find(Player::class,$this->reporter->id)->currentPlayerUniverse;
+        self::assertSame(5,self::getContainer()->get(\App\Service\Player\SocialMessageService::class)->unreadGuildCount($fresh));
+        self::assertSelectorExists('a[href="/messages?channel=guild"]');
+    }
+
 }

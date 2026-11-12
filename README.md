@@ -38,7 +38,10 @@ Le code comprend :
   sans guilde, trois onglets « Créer une guilde », « Rejoindre une guilde » et « Relations commandants » ;
   avec guilde, cinq onglets « Ma guilde », « Membres », « Grades et permissions »,
   « Relations guildes » et « Relations commandants ». Les attributions de grades sont
-  dans Membres ; le tag et le commandement restent dans Ma guilde. Les membres voient
+  dans Membres ; le tag et le commandement restent dans Ma guilde. Dissoudre (commandant)
+  ou quitter (membre) sont directement visibles dans Gestion de la guilde. Les projets,
+  la galaxie et le classement sont regroupés ; Derniers échanges présente seulement
+  les trois messages les plus récents sans les marquer lus. Les membres voient
   leur présence dans cet univers : En ligne en vert (activité depuis moins de cinq minutes),
   Hors ligne en rouge, à l’ouverture ou à l’actualisation de la liste. Le profil distingue
   les identifiants, le mot de passe facultatif et la suppression définitive.
@@ -555,7 +558,8 @@ accessible dans le sélecteur de colonie, le texte accessible et l’infobulle.
 Les noms des colonies de la vue générale et de Planètes ouvrent une bulle
 flottante avec vaisseaux et ressources. Les encadrés des flottes ouvrent leur
 composition et leur fret. Survol, focus clavier et toucher sont pris en charge ;
-Échap et le bouton de fermeture ferment la bulle sans déplacer les cartes.
+La bulle, sans croix, se ferme quand le pointeur quitte le nom ou l’encadré et la bulle,
+quand le focus sort, avec Échap ou par toucher extérieur, sans déplacer les cartes.
 La navigation vers la colonie reste disponible depuis la bulle de l’aperçu
 et les commandes existantes de Planètes.
 

@@ -1701,3 +1701,22 @@ et affichage adaptatif). Le premier passage CI a révélé le sélecteur histori
 .empire-details summary ; remplacé par les contrôles du popover et du bouton
 lié, tout en conservant les assertions de propriété et de stocks inchangés.
 Une CI complète sur la nouvelle version reste obligatoire avant fusion.
+
+### Dernières retouches avant fusion
+
+Complexités : fermeture des bulles souris/clavier/toucher (3), actions de guilde
+regroupées et départ/dissolution visibles (2), vérification des trois derniers
+messages et des non-lus (2). Suppression de la croix et du blocage au clic souris ;
+la bulle reste lisible au passage du pointeur puis se ferme automatiquement.
+Les réglages tag/commandement restent repliables, les actions Dissoudre/ Quitter
+sont visibles selon le rôle. Aucun changement des services métier.
+L’aperçu était déjà limité à trois messages ; un test avec cinq messages valide
+la sélection, le départage par identifiant et la conservation des non-lus.
+
+Vérifications : lint et compilation réussis ; 28 tests PHP / 155 assertions ;
+3 scénarios navigateur réussis (bulles, pages joueur/deux thèmes/mobile,
+transfert/départ/dissolution). Une première reprise du test des bulles nécessitait
+une vraie transition de focus après le clic souris ; scénario corrigé sans retirer
+les assertions de focus visible et de fermeture. git diff --check réussi.
+Tous les ajustements sont inclus dans la même PR 52 vers dev, à fusionner
+uniquement après CI complète réussie sur la dernière version.

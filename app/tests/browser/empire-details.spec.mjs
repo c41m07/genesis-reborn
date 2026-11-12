@@ -42,8 +42,17 @@ test('Les détails des colonies sont accessibles au survol, au clavier et au tou
     expect((await card.boundingBox()).height).toBe(before.height);
     await expect(panel).toContainText('Stocks de ressources');
     await expect(panel).toContainText('Cargo de ligne');
+    await expect(panel.getByRole('button',{name:/Fermer/})).toHaveCount(0);
+    await panel.hover();
+    await expect(panel).toBeVisible();
     await page.mouse.move(0,0);
     await expect(panel).toBeHidden();
+    await trigger.click();
+    await expect(panel).toBeVisible();
+    await page.mouse.move(0,0);
+    await expect(panel).toBeHidden();
+    await page.getByRole('link',{name:'Aller au contenu',exact:true}).focus();
+    await page.keyboard.press('Tab');
     await trigger.focus();
     await expect(panel).toBeVisible();
     expect(await trigger.evaluate(el=>el.matches(':focus-visible'))).toBe(true);
@@ -53,7 +62,7 @@ test('Les détails des colonies sont accessibles au survol, au clavier et au tou
     await page.keyboard.press('Space');
     await expect(panel).toBeVisible();
     expect((await new AxeBuilder({page}).include('.empire-details:popover-open').withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
-    await panel.getByRole('button',{name:/Fermer/}).click();
+    await page.getByRole('link',{name:'Aller au contenu',exact:true}).focus();
     await expect(panel).toBeHidden();
     await page.setViewportSize({width:390,height:844});
     await trigger.tap();
@@ -64,7 +73,8 @@ test('Les détails des colonies sont accessibles au survol, au clavier et au tou
     expect(bounds.x).toBeGreaterThanOrEqual(0);
     expect(bounds.x+bounds.width).toBeLessThanOrEqual(390);
     await page.screenshot({path:testInfo.outputPath(route==='/planetes'?'planet-popover-mobile.png':'overview-popover-mobile.png'),fullPage:false,animations:'disabled'});
-    await panel.getByRole('button',{name:/Fermer/}).tap();
+    await page.touchscreen.tap(2,2);
+    await expect(panel).toBeHidden();
   }
   const fleet=page.locator('[data-active-fleet="'+fleetId+'"]');
   const panel=fleet.locator('.empire-details');
@@ -72,6 +82,12 @@ test('Les détails des colonies sont accessibles au survol, au clavier et au tou
   await expect(panel).toBeVisible();
   await expect(panel).toContainText('Fret transporté');
   await expect(panel).toContainText('120');
+  await panel.hover();
+  await expect(panel).toBeVisible();
+  await page.mouse.move(0,0);
+  await expect(panel).toBeHidden();
+  await fleet.locator('.operation-heading').click();
+  await expect(panel).toBeVisible();
   await page.mouse.move(0,0);
   await expect(panel).toBeHidden();
   await fleet.getByRole('button',{name:/Détails de la flotte/}).focus();
@@ -82,7 +98,8 @@ test('Les détails des colonies sont accessibles au survol, au clavier et au tou
   await expect(panel).toBeHidden();
   await fleet.locator('.operation-heading').tap();
   await expect(panel).toBeVisible();
-  await panel.getByRole('button',{name:/Fermer/}).tap();
+  await page.touchscreen.tap(2,2);
+    await expect(panel).toBeHidden();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   runIsolatedSql(project,`UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','light') WHERE email='${email}'`);
   await page.goto('/planetes');

@@ -45,6 +45,13 @@ test('Pages validées : diplomatie, profil et inventaire, thèmes, clavier et é
   await page.getByLabel('Nom de votre nouvelle guilde').fill('Refonte-'+suffix);
   await page.getByLabel('Tag de la guilde',{exact:true}).fill(suffix.slice(0,5));
   await page.getByRole('button',{name:'Fonder une guilde'}).click();
+  await page.setViewportSize({width:1440,height:900});
+  const guildActions=page.locator('.guild-hub-actions');
+  await expect(guildActions.getByRole('link')).toHaveText(['Consulter les projets','Ouvrir la galaxie','Classement']);
+  const actionTops=await guildActions.getByRole('link').evaluateAll(links=>links.map(link=>link.getBoundingClientRect().top));
+  expect(Math.max(...actionTops)-Math.min(...actionTops)).toBeLessThan(2);
+  await expect(page.getByRole('button',{name:'Dissoudre la guilde',exact:true})).toBeVisible();
+
   const navigation=page.getByRole('navigation',{name:'Sections de diplomatie'});
   await expect(navigation.getByRole('link')).toHaveText(['Ma guilde','Membres','Grades et permissions','Relations guildes','Relations commandants']);
   const ranks=navigation.getByRole('link',{name:'Grades et permissions',exact:true});

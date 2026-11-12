@@ -1480,3 +1480,8 @@ trois sans guilde (Créer une guilde, Rejoindre une guilde, Relations commandant
 affichent En ligne en vert ou Hors ligne en rouge selon l’activité récente dans cet univers.
 Les fonctions et droits existants sont conservés ; publication et CI de cette retouche
 restent distinctes de la livraison A à K déjà fusionnée.
+
+Dernières retouches locales : bulles sans croix avec fermeture automatique ;
+adhésion dans un onglet distinct ; trois actions de guilde regroupées ; aperçu
+de trois messages vérifié ; départ/dissolution directement visibles selon le rôle.
+Tests ciblés réussis ; CI complète sur cette dernière version avant fusion.

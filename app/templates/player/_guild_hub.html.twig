@@ -7,9 +7,17 @@
 <a class="primary" href="{{ path('app_messages',{channel:'guild'}) }}">Ouvrir le canal de guilde {{ ui.icon('arrow') }}</a>
 </section>
 <div class="diplomacy-home-columns">
-<section class="panel"><h2>Projets collectifs</h2><p>Retrouvez les paliers, contributions et récompenses de votre guilde.</p><a class="secondary" href="{{ path('app_guild_projects') }}">Consulter les projets</a><div class="guild-hub-actions"><a class="secondary" href="{{ path('app_map_v2') }}">Ouvrir la galaxie</a><a class="secondary" href="{{ path('app_leaderboard',{tab:'guilds'}) }}">Classement</a><a href="{{ path('app_diplomacy',{tab:'diplomacy'}) }}">Relations guildes</a></div></section>
+<section class="panel"><h2>Projets collectifs</h2><p>Retrouvez les paliers, contributions et récompenses de votre guilde.</p><div class="guild-hub-actions"><a class="secondary" href="{{ path('app_guild_projects') }}">Consulter les projets</a><a class="secondary" href="{{ path('app_map_v2') }}">Ouvrir la galaxie</a><a class="secondary" href="{{ path('app_leaderboard',{tab:'guilds'}) }}">Classement</a></div></section>
 <section class="panel"><div class="section-heading"><h2>Derniers échanges</h2><a href="{{ path('app_messages',{channel:'guild'}) }}">Tout lire</a></div>
 {% for message in guildPreview %}<article class="guild-message-preview"><div><strong>{{ message.sender.displayName }}</strong><time datetime="{{ message.createdAt|date('c') }}">{{ message.createdAt|date('d/m H:i',preferences.timezone) }}</time></div><p>{{ message.content|length > 160 ? message.content|slice(0,160) ~ '…' : message.content }}</p></article>{% else %}<p>Le canal est prêt. Lancez la première discussion avec votre guilde.</p>{% endfor %}
 <small>Consulter cet aperçu ne marque pas le canal comme lu.</small></section>
 </div>
-<details class="panel" id="guild-management"><summary>{{ own.leader.id==membership.id ? 'Tag et commandement' : 'Gestion de la guilde' }}</summary>{% include 'player/_guild_management.html.twig' %}</details>
+<section class="panel" id="guild-management" aria-labelledby="guild-management-title">
+<h2 id="guild-management-title">Gestion de la guilde</h2>
+{% if own.leader.id==membership.id %}<details><summary>Tag et commandement</summary>{% include 'player/_guild_management.html.twig' %}</details>
+<p>Dissoudre la guilde abandonne ses projets en cours, sans rembourser les dons. Les contrats personnels sont conservés.</p>
+<form method="post"><input type="hidden" name="_token" value="{{ csrf_token('diplomacy') }}"><button class="text-button" name="action" value="disband">Dissoudre la guilde</button></form>
+{% else %}<p>Les dons de projet restent définitifs après votre départ. Pour recevoir une récompense, vous devez appartenir à la guilde à la clôture du projet.</p>
+<form method="post"><input type="hidden" name="_token" value="{{ csrf_token('diplomacy') }}"><button class="text-button" name="action" value="leave">Quitter la guilde</button></form>
+{% endif %}
+</section>

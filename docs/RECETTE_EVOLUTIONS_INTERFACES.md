@@ -100,3 +100,8 @@ Le déploiement Alpha et un audit complet de conformité RGAA ne sont pas inclus
 - [ ] Membres : noms, grades, messagerie et attributions autorisées ; état En ligne vert / Hors ligne rouge, avec texte, thèmes clair et sombre.
 - [ ] Deux comptes de la même guilde : actualiser la liste après cinq minutes sans activité du second ; son activité dans un autre univers ne doit pas changer cet état. Aucune heure ou durée ne doit être affichée.
 - [ ] Ma guilde : aperçu sans marquer lu, canal, projets, tag, transfert, dissolution ou départ selon le rôle ; grades et relations gardent leurs contrôles de droits.
+
+- [ ] Bulles sans croix : passage du nom/encadré à la bulle possible ; sortie du pointeur ferme même après un clic souris. Vérifier Échap, sortie du focus et toucher extérieur.
+- [ ] Ma guilde : trois actions Projets, Galaxie et Classement sur une ligne sur ordinateur, retour à la ligne sur mobile ; aucun raccourci Relations guildes en doublon dans ce bloc.
+- [ ] Avec au moins cinq messages, Derniers échanges montre seulement les trois plus récents ; Tout lire ouvre la conversation complète et le simple aperçu conserve les non-lus.
+- [ ] Dissoudre est visible pour le commandant, Quitter pour un membre, sans déplier les réglages ; les autres rôles ne reçoivent aucun droit supplémentaire.

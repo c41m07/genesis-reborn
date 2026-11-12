@@ -44,11 +44,12 @@ export default class extends Controller {
 
     focus() { if (!this.restoringFocus) this.show(); }
 
-    leave() {
+    leave(event) {
+        if (event.pointerType !== 'mouse') return;
         clearTimeout(this.timer);
         this.timer = setTimeout(() => {
-            if (this.pinned || this.panelTarget.matches(':hover') || this.triggerTarget.matches(':hover')) return;
-            if (this.panelTarget.contains(document.activeElement) || document.activeElement === this.triggerTarget) return;
+            const anchor = this.element.matches('.flight-operation') ? this.element : this.triggerTarget;
+            if (this.panelTarget.matches(':hover') || anchor.matches(':hover')) return;
             this.hide();
         }, 180);
     }
@@ -82,17 +83,8 @@ export default class extends Controller {
 
     blur() {
         queueMicrotask(() => {
-            if (!this.pinned && !this.element.contains(document.activeElement)) this.hide();
+            if (!this.panelTarget.contains(document.activeElement) && document.activeElement !== this.triggerTarget) this.hide();
         });
-    }
-
-    dismiss(event) {
-        event.preventDefault();
-        event.stopPropagation();
-        this.hide();
-        this.restoringFocus = true;
-        this.triggerTarget.focus();
-        this.restoringFocus = false;
     }
 
     escape(event) {

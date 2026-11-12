@@ -425,10 +425,17 @@ hover_details_controller pilote maintenant des popovers natifs, ouverts depuis
 les noms des colonies ou l’encadré de flotte. La couche supérieure du navigateur
 évite la découpe par les cartes ; le placement tient compte de la fenêtre et du
 défilement. Un déplacement du pointeur vers la bulle conserve sa lecture ; clic,
-focus, toucher, Échap, fermeture explicite et fermeture extérieure sont gérés.
+focus, toucher et Échap sont gérés. Sans croix : sortie du pointeur de l’ancre et
+de la bulle (délai de passage 180 ms), sortie du focus ou toucher extérieur ferment
+la bulle. Un clic souris ne bloque pas la fermeture automatique.
 Les données viennent des mêmes vues propriétaires qu’avant : aucun chargement
 supplémentaire, aucune extension des permissions ni exposition de flottes tierces.
 
 Les classements utilisent des liens GET dans les cinq en-têtes, avec aria-sort,
 sans changer les calculs, rangs ou pagination côté serveur. Les libellés des
 cases d’archivage restent dans le nom accessible, hors de l’affichage visuel.
+
+L’aperçu de guilde appelle guildConversation(guild, 3), qui limite les résultats
+en base aux trois plus récents (date puis identifiant), affichés dans leur ordre
+chronologique. Il ne marque pas le canal lu. Les boutons de départ/dissolution
+sont visibles dans Ma guilde avec leurs services et jetons CSRF existants.
