@@ -245,6 +245,14 @@ SQL;
     }
 
     /** @return list<Fleet> */
+    public function planetHasActiveFleet(Planet $planet): bool
+    {
+        return (int)$this->em->createQueryBuilder()->select('COUNT(f.id)')->from(Fleet::class,'f')
+            ->where('(f.homePlanet = :planet OR f.destination = :planet OR f.returnPlanet = :planet)')
+            ->andWhere('f.status NOT IN (:finished)')->setParameter('planet',$planet)
+            ->setParameter('finished',['idle','completed','failed'])->getQuery()->getSingleScalarResult()>0;
+    }
+
     /** @return list<Fleet> */
     public function orbitRequestsFor(PlayerUniverse $viewer): array
     {

@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+{% block title %}Abandonner {{ planet.name }} · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="page-heading colony-abandon-heading"><div><h1>Abandonner {{ planet.name }}</h1><p>{{ planet.coordinates() }} · {{ membership.universe.name }}</p></div></div>
+<section class="panel colony-abandon-panel" aria-labelledby="abandon-consequences">
+    <h2 id="abandon-consequences">Un abandon définitif</h2>
+    <p>Cette planète redeviendra vierge et pourra être colonisée selon les règles habituelles. Tous ses bâtiments, ressources, défenses et vaisseaux présents seront perdus. Ses files seront annulées sans remboursement.</p>
+    <p>Si vous recolonisez vous-même cette planète dans cet univers, aucun nouveau kit de ressources ne vous sera attribué. Prévoyez son ravitaillement depuis une autre colonie. Un nouveau propriétaire conserve le kit normal.</p>
+    <p>Vos recherches déjà acquises dans l’univers et vos historiques sont conservés. Aucune ressource ni unité n’est transférée vers une autre colonie.</p>
+    <p>Les stocks peuvent évoluer jusqu’à la confirmation et seront entièrement perdus. Si les bâtiments, vaisseaux ou commandes changent, vous devrez relire le bilan avant de confirmer.</p>
+    {% if preview.blockers %}
+    <div class="abandon-blockers" role="alert"><h2>Abandon indisponible</h2><ul>{% for reason in preview.blockers %}<li>{{ reason }}</li>{% endfor %}</ul></div>
+    {% endif %}
+    {% if preview.dependencies %}
+    <h2>Commandes dépendantes d’autres colonies</h2>
+    <p>Gérez ces commandes avant de revenir au bilan. Elles ne seront pas annulées automatiquement.</p>
+    <ul>{% for order in preview.dependencies %}<li><a href="{{ path('app_colony',{id:order.planet_id,section:order.type=='research'?'technologies':(order.type=='building'?'buildings':'ships')}) }}">{{ order.planet_name }} : {{ order.label }} · {{ tiers[order.tier].label|default(order.tier) }}{% if order.level %} · niveau {{ order.level }}{% else %} · {{ order.quantity }} unité(s){% endif %}</a></li>{% endfor %}</ul>
+    {% endif %}
+    <h2>Bilan des pertes</h2>
+    <div class="abandon-loss-grid">
+        <section aria-labelledby="abandon-resources"><h3 id="abandon-resources">Ressources</h3><dl>{% for row in preview.losses.resources %}<div><dt>{{ row.label }}</dt><dd>{{ row.quantity|number_format(2,',',' ') }}</dd></div>{% endfor %}</dl></section>
+        {% for group,title in {buildings:'Bâtiments',defenses:'Défenses',ships:'Vaisseaux présents'} %}
+        <section aria-labelledby="abandon-{{ group }}"><h3 id="abandon-{{ group }}">{{ title }}</h3>
+            <ul>{% for row in preview.losses[group] %}<li>{{ row.label }} · {{ tiers[row.tier].label|default(row.tier) }} · {{ group=='buildings'?'niveau ':'' }}{{ row.quantity }}</li>{% else %}<li>Aucun élément.</li>{% endfor %}</ul>
+        </section>
+        {% endfor %}
+    </div>
+    {% if preview.losses.fleet_cargo %}<h3>Ressources embarquées présentes</h3><ul>{% for fleet in preview.losses.fleet_cargo %}{% for slug,quantity in fleet.cargo %}<li>Flotte {{ fleet.fleet_id }} · {{ resources[slug]|default(slug) }} : {{ quantity|number_format(2,',',' ') }}</li>{% endfor %}{% endfor %}</ul>{% endif %}
+    <h3>Commandes annulées sans remboursement</h3>
+    <ul>{% for order in preview.orders %}<li>{{ order.label }} · {{ tiers[order.tier].label|default(order.tier) }}{% if order.level %} · niveau {{ order.level }}{% else %} · {{ order.quantity }} unité(s){% endif %}</li>{% else %}<li>Aucune commande.</li>{% endfor %}</ul>
+    {% if not preview.blockers %}
+    <form method="post" action="{{ path('app_planet_abandon',{id:planet.id}) }}" class="abandon-confirmation">
+        <input type="hidden" name="_token" value="{{ csrf_token('abandon-'~membership.id~'-'~planet.id) }}">
+        <input type="hidden" name="membership" value="{{ membership.id }}">
+        <input type="hidden" name="request_key" value="{{ request_key }}">
+        <input type="hidden" name="version" value="{{ preview.version }}">
+        <label for="abandon-name">Retapez le nom de la colonie pour confirmer</label>
+        <p id="abandon-name-help">Nom attendu : <strong>{{ planet.name }}</strong>. Cette action est irréversible.</p>
+        <input id="abandon-name" name="name" type="text" maxlength="160" required autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="abandon-name-help">
+        <div class="abandon-actions"><a class="secondary" href="{{ path('app_colony',{id:planet.id}) }}">Conserver cette colonie</a><button class="danger" type="submit">Abandonner définitivement {{ planet.name }}</button></div>
+    </form>
+    {% else %}<a class="secondary" href="{{ path('app_colony',{id:planet.id}) }}">Retour à la colonie</a>{% endif %}
+</section>
+{% endblock %}

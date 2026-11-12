@@ -1458,3 +1458,19 @@ Si le carburant manque, le rappel est refusé sans changement d’état.
 - Refus ou retrait : retour immédiat depuis la position atteinte, avec le calcul
   validé du rappel. Sans accord valide à l’arrivée : retour, sans attente indéfinie.
   Propriétaire et diplomatie sont revérifiés à l’arrivée.
+
+
+### Abandon — dépendances entre colonies, validation du 12 novembre 2026
+L’abandon est bloqué si une commande d’une autre colonie dépend d’une commande
+de la planète abandonnée. Le bilan indique les commandes à gérer ; aucune
+commande d’une autre colonie n’est annulée implicitement. Cette décision
+complète les conséquences d’abandon déjà validées.
+
+
+### Abandon — kit de recolonisation, validation du 12 novembre 2026
+Un joueur qui abandonne une planète ne reçoit plus de kit de colonisation s’il
+recolonise cette même planète dans cet univers. Un nouveau propriétaire conserve
+le kit normal. Les autres coûts, conditions, quotas et consommations restent
+inchangés. Cette règle empêche la récupération répétée du kit après vidage,
+abandon et recolonisation. Le bilan d’abandon annonce l’absence de nouveau kit
+et le besoin de ravitaillement pour le joueur qui abandonne.

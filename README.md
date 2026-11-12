@@ -517,3 +517,22 @@ depuis la position atteinte ; sans accord valide à l’arrivée, elle rentre.
 Les planètes ennemies, PNJ et sans propriétaire ne peuvent pas être ciblées.
 Une orbite acceptée participe à la défense de l’hôte. Les missions déjà parties
 avant cette évolution gardent leur ancien processus pour ce voyage.
+
+
+### Abandon d’une colonie
+Depuis Planètes, « Préparer l’abandon » ouvre un bilan avant toute action.
+La confirmation exige de retaper son nom. La planète redevient vierge ; bâtiments,
+ressources, défenses et vaisseaux présents sont perdus, et les files sont annulées
+sans remboursement. Les recherches acquises et historiques restent conservés.
+La dernière planète de l’univers ne peut pas être abandonnée, même s’il existe
+des colonies dans un autre univers. Les flottes actives liées, orbites, attaques,
+combats et occupations bloquent l’abandon. Une commande dépendante d’une autre
+colonie le bloque aussi ; les commandes à gérer sont indiquées dans le bilan.
+Si les actifs ou commandes changent après le bilan, il faut le relire.
+Les stocks peuvent évoluer jusqu’à la confirmation. Aucune migration nécessaire.
+
+Après abandon, une recolonisation par le même joueur sur cette planète dans le
+même univers ne donne aucun nouveau kit de ressources. Il doit prévoir le
+ravitaillement ; un nouveau propriétaire conserve le kit normal.
+Le bandeau tronque visuellement les noms très longs ; le nom complet reste
+accessible dans le sélecteur de colonie, le texte accessible et l’infobulle.

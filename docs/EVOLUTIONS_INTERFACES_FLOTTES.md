@@ -35,8 +35,8 @@ Une complexité 4 ou 5 impose l’analyse détaillée des transitions et risques
 | F | Signalement d’un joueur depuis le classement | 4 | Fusionné dans dev, PR #46 |
 | G — rappel | Missions, trajet partiel, carburant/fret, verrouillage, origine perdue | 5 | Fusionné dans dev, PR #47 |
 | H — détection | Analyse tactique, visibilité des mouvements et détection à l’arrivée | 5 | Fusionné dans dev, PR #48 |
-| I — orbites | Demande au départ, accords, attente et changements diplomatiques | 5 | Prêt localement ; publication à autoriser |
-| J — abandon | Dernière colonie, actifs/files, restrictions et confirmation | 5 | Décisions validées, à réaliser |
+| I — orbites | Demande au départ, accords, attente et changements diplomatiques | 5 | Fusionné dans dev, PR #49 |
+| J — abandon | Dernière colonie, actifs/files, restrictions et confirmation | 5 | Vérifié localement ; publication autorisée |
 | K — refontes | Diplomatie, Profil, Inventaire : maquettes adaptatives, puis validation | 3 | Maquettes validées ; intégration non commencée |
 | Chaque lot | Documentation, contrôles adaptés, six contrôles avant commit/push, CI avant fusion | 3 | À appliquer |
 
@@ -1302,3 +1302,107 @@ Aucune modification des règles ni du code métier pour cette correction.
 
 Vérification locale de la correction : 29 tests / 233 assertions réussis
 (CombatEventTest et OrbitDepartureRequestTest) ; git diff --check réussi.
+
+
+### Reprise après fusion du lot I
+PR #49 fusionnée au commit ed01c4f9b7c089fcb1799467381897674a821d05,
+après CI complète 43260133554 verte sur 03aad138a9b876f77840710a1eddb630cf6e3f1a :
+cinq jobs quality, étapes de sauvegarde/restauration et GitGuardian examinés.
+La première CI 43258172057 a été remplacée et annulée après son échec PHP.
+La protection stricte de dev et la PR obligatoire ont été revérifiées.
+Aucun déploiement Alpha lancé.
+
+### Lot J — plan détaillé et analyse des risques (complexité 5/5)
+Branche feature/abandon-colonie, issue de dev actualisée après fusion de I.
+
+1. Contrôles d’accès, univers et dernière colonie, sous verrous : 5.
+2. Blocage de toute flotte active liée (origine, destination, repli), orbite,
+   combat ou occupation ; aucun détail sur les missions invisibles : 5.
+3. Dépendances de files : blocage validé par l’utilisateur si une commande
+   d’une autre colonie dépend des commandes abandonnées ; bilan ciblé : 5.
+4. Confirmation par nom et bilan des ressources, bâtiments, défenses, vaisseaux
+   et commandes ; clavier, tactile, messages et conservation du contexte : 4.
+5. Annulation sans remboursement, perte des actifs présents, monde vierge,
+   historique et trace via AdminAuditLog déjà utilisé pour des actions joueur :
+   5 ; aucune migration prévue.
+6. Tests des refus et rejouements, anciennes échéances, recolonisation normale,
+   isolation des univers, documentation et vérifications requises : 5.
+
+Point de compatibilité I identifié pendant cette analyse : OccupationCaptureService
+conserve le drapeau historique npcPlanet lors d’une capture. REGLES (lot D)
+confirme que le propriétaire actuel prime sur ce drapeau. Le filtre I qui
+refusait aussi une ancienne planète PNJ contrôlée par un joueur était donc trop
+strict ; la seule correction de préparation du test en 03aad13 ne couvrait
+pas ce cas métier. J rétablit cette compatibilité, sans autoriser une orbite sur
+un véritable PNJ ou un empire oublié, et ajoute une régression correspondante.
+
+Le risque de répétition du kit de fondation a été identifié dans le catalogue
+(kit recréé lors d’une fondation sur une planète redevenue vierge). L’utilisateur
+a validé l’absence de nouveau kit pour le compte qui a abandonné cette même
+planète dans cet univers ; le nouveau propriétaire conserve le kit normal.
+Cette exception est annoncée dans le bilan, protégée par une nouvelle empreinte
+et testée dans les deux sens. Aucun coût, quota ou multiplicateur n’est changé.
+
+
+### Lot J — bilan local et reprise
+- Abandon transactionnel avec confirmation par nom et bilan actualisé ; dernière
+  planète par univers protégée, y compris deux confirmations simultanées.
+- Tous les liens de flottes actifs, combats et occupations bloquent l’action,
+  sans divulgation des opérations invisibles. Les dépendances de commandes
+  d’autres colonies bloquent également, conformément au choix validé.
+- Ressources, bâtiments, défenses et unités présentes perdus ; files annulées
+  sans remboursement. Traces et planète conservées. Les anciennes reconstructions
+  sont neutralisées avant retrait des commandes, y compris leurs références
+  historiques ; leurs inventaires de référence restent conservés.
+- Recolonisation par le même compte sur la même planète : pas de nouveau kit ;
+  autre propriétaire : kit normal. Coûts, temps, carburant, vaisseau consommé et
+  quotas habituels conservés. La conséquence est affichée avant confirmation.
+- Blocage des bilans périmés sur les actifs discrets ; stocks variables annoncés.
+  Compte verrouillé, autre propriétaire, univers changé, CSRF absent et
+  répétitions refusés. La colonie active et l’univers sont préservés ou ajustés
+  vers une colonie restante.
+- Compatibilité des orbites corrigée pour les colonies conquises dont le
+  marqueur de provenance PNJ subsiste : le propriétaire actuel prime.
+- Nom long du bandeau limité visuellement, avec texte complet conservé dans le
+  sélecteur, le texte accessible et le titre. Identité et SVG inchangés.
+- Six contrôles locaux examinés : make validate, make lint, make test,
+  make assets (npm run build), BROWSER_PERSISTENCE=1 make test-browser,
+  git diff --check. Suite finale : 868 tests PHP / 210927 assertions et
+  13 tests Python. Ciblés de transition et kit : 48 tests / 184 assertions ;
+  complément d’audit et colonie conquise : 1 test / 22 assertions.
+- Navigateur : couverture comparée au manifeste complet, 181 scénarios distincts
+  réussis après reprises. Contrôles des modes sombre/clair, erreurs, clavier,
+  tactile, noms longs, stockage, historique, dépendances et concurrence.
+- Premier passage général : 167 réussites / 7 échecs sur 174 scénarios.
+  Trois dépassements de délais, un écart réel label/contenu accessible du
+  nouveau lien, et trois échecs de navigation/confirmation, dont HTTP 500 sur
+  Préférences. Le libellé visible a été aligné sur le nom accessible.
+  Les logs serveur initiaux n’ont pas été conservés par le lanceur ; la cause
+  exacte du 500 n’est pas établie. Les sources évoluaient pendant ce passage,
+  notamment après validation de la règle du kit : ce passage n’était pas
+  une vérification d’un contenu figé. Il ne doit pas être présenté comme vert.
+- Sur contenu figé, reprise isolée des sept scénarios, confirmations ordinateur
+  et tactile, concurrence, clavier et wiki : 12 réussites. Aucun des échecs de
+  navigation ne s’est reproduit ; collecte ciblée des exceptions prévue en cas
+  de nouvel échec. Ni assertions supprimées ni délais augmentés.
+  La CI complète sur le dernier commit reste indispensable avant fusion.
+- La reprise de géométrie mobile a comparé le nom à sa propre cellule :
+  la cellule de ressource détaillée choisie initialement est masquée en mode
+  compact. Le contrôle conserve la vérification de non-chevauchement.
+- Un test de reconstruction a révélé une référence de commande à neutraliser
+  avant annulation ; correction vérifiée. Les préparations de tests de
+  recolonisation et production ont été ajustées pour fournir du carburant
+  suffisant et une marge de stockage, sans changement des valeurs du jeu.
+- Preuves locales : /tmp/genesis-lot-j-browser-proof.json,
+  /tmp/genesis-lot-j-full-test-kit-final.log, /tmp/genesis-lot-j-kit-policy.log,
+  /tmp/genesis-lot-j-lint-kit-final.log, /tmp/genesis-lot-j-assets-reviewed.log.
+  Captures examinées dans var/screenshots/lot-j, ignorées par Git.
+- Compilation de production inchangée pendant les scénarios ; compilation
+  de développement restaurée ensuite, fichiers référencés vérifiés, watcher
+  existant préservé. Aucune migration ni opération sur la base Alpha.
+- README, règles, décisions, architecture, wiki local et feuille de route
+  synchronisés. Les trois sources Work externes signalées au début de ce suivi
+  restent inaccessibles ; aucune nouvelle opération Figma.
+- L’utilisateur autorise désormais l’intégration de la suite des lots vers dev,
+  avec PR et CI complète verte, et demande une checklist de vérification du
+  prompt complet après K, puis une revue commune des retouches.

@@ -591,3 +591,33 @@ Pour les vacances de l’hôte, les stations déjà acceptées continuent leur d
 normale. Les anciennes demandes en attente après l’arrivée sont renvoyées
 à l’activation des vacances ; les nouvelles demandes en trajet sont
 revérifiées à l’arrivée et ne peuvent pas commencer une orbite pendant les vacances.
+
+
+### Abandon d’une colonie — lot J
+L’abandon exige une confirmation par le nom exact de la planète, après bilan des
+pertes. La planète initiale peut être abandonnée si une autre colonie reste dans
+le même univers ; une planète située dans un autre univers ne compte pas.
+La planète redevient vierge : bâtiments, ressources, défenses et vaisseaux présents
+sont perdus. Les files locales et leurs dépendances locales sont annulées sans
+remboursement. Une commande d’une autre colonie dépendante bloque l’abandon,
+sans annulation implicite sur cette autre colonie. Les autres files continuent.
+Aucun actif ni stock n’est transféré vers une autre planète. Les recherches
+acquises et les accès déjà acquis de la participation conservent leur portée
+existante ; ils ne sont pas transmis à un autre propriétaire.
+Toute flotte active liée par son origine, sa destination ou son repli bloque
+l’abandon, ainsi que les orbites, demandes d’orbite, attaques, occupations et
+combats encore ouverts. Un refus ne révèle aucun détail d’une mission invisible.
+Une modification des bâtiments, défenses, vaisseaux ou commandes impose de relire
+le bilan. Les stocks évoluent jusqu’à la confirmation et sont perdus à cet instant.
+La planète et les rapports historiques sont conservés. Les anciennes échéances
+ne peuvent pas recréer les commandes ou actifs supprimés. Une recolonisation
+reste soumise aux règles normales, dont le vaisseau colonisateur et le quota.
+
+Précision de compatibilité des orbites : une planète autrefois PNJ, actuellement
+contrôlée par un joueur actif, est une colonie de ce joueur. Son propriétaire
+actuel prime sur le drapeau historique PNJ, comme pour les destinations (lot D).
+
+Après abandon, aucun nouveau kit de ressources n’est attribué si le même joueur
+recolonise cette planète dans cet univers, y compris depuis une autre participation
+du même compte. Un autre propriétaire conserve le kit normal. Vaisseau colonisateur,
+carburant, durée, quota et multiplicateurs des autres fondations restent inchangés.
