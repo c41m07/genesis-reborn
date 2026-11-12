@@ -1501,3 +1501,24 @@ restent non consultées, faute de fichiers accessibles ; aucun wiki distant mis 
 La réussite locale n’est pas une validation de la CI GitHub. Cette dernière et
 les protections de dev doivent être vérifiées sur la version exacte de la PR
 avant fusion. Aucun déploiement Alpha.
+
+### Première CI K — correction du contrat typographique
+
+PR [#51](https://github.com/c41m07/genesis-reborn/pull/51), version ced85ff.
+La [première CI](https://github.com/c41m07/genesis-reborn/actions/runs/43297259592)
+réussit pour PHP/Python et trois groupes navigateur ; le quatrième relève une
+attente ancienne du test ui-routes-responsive : 12 px pour tous les onglets
+sur ordinateur, alors que les onglets de Diplomatie sont maintenant à 14 px
+conformément à la refonte. Ce groupe compte 44 succès et ce seul échec.
+
+Le contrat est séparé explicitement : trois onglets Diplomatie obligatoires
+à 14 px, tailles 12/11 px conservées pour les autres onglets et rangs.
+Toutes les vérifications de routes, thèmes, débordement et typographie sont
+maintenues. Aucun code produit modifié dans cette reprise ; la dernière
+version de la PR doit repasser la CI complète avant fusion.
+
+Le contrôle local corrigé réussit sur toutes les routes dans les deux thèmes
+et cinq largeurs, avec toutes les assertions conservées. Il porte la couverture
+locale pertinente à 31 scénarios distincts réussis. Les autres contrôles locaux
+restent valables sur le code produit inchangé ; seul le test et le suivi sont
+corrigés avant de relancer la CI sur la nouvelle version.

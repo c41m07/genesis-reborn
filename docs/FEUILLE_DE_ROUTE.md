@@ -1468,4 +1468,4 @@ La recette manuelle A à K est dans [RECETTE_EVOLUTIONS_INTERFACES](RECETTE_EVOL
 La fusion vers dev nécessite la CI complète de la dernière version.
 Aucun déploiement Alpha prévu ; les retouches seront décidées avec l’utilisateur.
 
-Vérifications K : validation et lint réussis, 868 tests PHP, 13 Python, compilation et 30 parcours navigateur concernés réussis après reprises. Le manifeste complet comporte 183 scénarios ; la CI complète reste obligatoire avant fusion. Voir le suivi Interfaces et flottes pour les preuves et les limites.
+Vérifications K : validation et lint réussis, 868 tests PHP, 13 Python, compilation et 31 parcours navigateur concernés réussis après reprises. Le manifeste complet comporte 183 scénarios ; la CI complète reste obligatoire avant fusion. Voir le suivi Interfaces et flottes pour les preuves et les limites.
