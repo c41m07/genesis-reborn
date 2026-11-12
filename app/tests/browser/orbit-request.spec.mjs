@@ -73,7 +73,7 @@ test('Orbite alliée : demande entrante, accord du propriétaire et stationnemen
     await form.locator('[name="ships[probe]"]').fill('1');
     await form.getByRole('button', { name: /Choisir la destination/ }).click();
     await form.locator('[name="mission"]').selectOption('orbit');
-    await form.locator('[name="coordinates"]').fill(planetCoordinates(project, host.planetId));
+    await form.getByLabel('Destination personnalisée', { exact: true }).check();await form.locator('[name="coordinates"]').fill(planetCoordinates(project, host.planetId));
     await form.locator('[name="orbit_hours"]').fill('1');
     await form.locator('[name="ratio"]').selectOption('0.1');
     await form.getByRole('button', { name: /Vérifier la mission/ }).click();

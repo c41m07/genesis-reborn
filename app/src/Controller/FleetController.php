@@ -3,8 +3,7 @@ namespace App\Controller;
 use App\Entity\{Fleet,FleetShip,Planet,PlayerDiscovery,SolarSystem,CombatParticipant};
 use App\Repository\GameRepository;
 use App\Service\Universe\UniverseContext;
-use App\Service\Universe\CoordinateResolver;
-use App\Service\Fleet\FleetService;
+use App\Service\Fleet\{FleetService,DestinationCatalogue};
 use App\Service\Player\PreferencesService;
 use App\Service\Combat\CombatEventService;
 use App\Service\Catalog\GameCatalog;
@@ -14,33 +13,43 @@ use Symfony\Component\Routing\Attribute\Route;
 final class FleetController extends AbstractController
 {
     #[Route('/flottes',name:'app_fleets',methods:['GET'])]
-    public function index(Request $request,UniverseContext $context,GameRepository $repo,GameCatalog $catalog,\App\Service\Queue\QueueService $queues,CombatEventService $combats,\App\Service\Colony\EmpireDetails $details): Response
+    public function index(Request $request,UniverseContext $context,GameRepository $repo,GameCatalog $catalog,\App\Service\Queue\QueueService $queues,CombatEventService $combats,\App\Service\Colony\EmpireDetails $details,DestinationCatalogue $destinations): Response
     {
         $m=$context->membership();$queues->synchronize($m);$idle=[];
         foreach($repo->all(Fleet::class,['playerUniverse'=>$m,'status'=>'idle']) as $f) { $ships=array_filter($repo->all(FleetShip::class,['fleet'=>$f]),fn($s)=>$s->quantity>0);if($ships) $idle[]=['fleet'=>$f,'ships'=>$ships]; }
         $systems=$repo->systems($m->universe);$mission=(string)$request->query->get('mission','explore');$universeConfig=$catalog->forUniverse($m->universe);$conquestEnabled=(bool)($universeConfig['features']['planet_conquest']??false);
-        $known=[];foreach($repo->all(PlayerDiscovery::class,['playerUniverse'=>$m]) as $d) $known[$d->solarSystem->id]=true;
-        $targets=array_filter($repo->planets($m->universe),fn($p)=>isset($known[$p->solarSystem->id]));
-        if($mission==='spy') $targets=array_filter($targets,fn($p)=>$p->owner?->id!==$m->id);
-        if($mission==='attack') $targets=array_filter($targets,fn($p)=>$combats->canAttack($m,$p));
-        if($mission==='colonize') $targets=array_filter($targets,fn($p)=>$p->owner===null&&!$p->npcPlanet);
-        if($mission==='conquer') $targets=array_filter($targets,fn($p)=>$conquestEnabled&&$combats->canConquer($m,$p));
-        if($mission==='defend') $targets=array_filter($targets,fn($p)=>$combats->canDefend($m,$p));
-        if($mission==='orbit') $targets=array_filter($targets,fn($p)=>$combats->canOrbit($m,$p));
-        if($mission==='conquer'&&count($repo->planets($m->universe,$m))>=$universeConfig['limits']['max_planets']) $targets=[];
-        if(!in_array($mission,['explore','colonize','transport','attack','conquer','defend','orbit','spy'],true)) throw $this->createNotFoundException('Mission indisponible.');
+        if(!in_array($mission,DestinationCatalogue::MISSIONS,true)) throw $this->createNotFoundException('Mission indisponible.');
+        $destinationChoices=$destinations->choices($m,$mission);
         $systemId=$request->query->getInt('system');$planetId=$request->query->getInt('planet');
-        if($systemId&&!array_filter($systems,fn($s)=>$s->id===$systemId)) throw $this->createNotFoundException('Système inaccessible.');
-        if($planetId&&!array_filter($targets,fn($p)=>$p->id===$planetId&&($mission!=='colonize'||($p->owner===null&&!$p->npcPlanet)))) throw $this->createNotFoundException('Destination inaccessible.');
-        $prefillCoordinates='';
-        if($mission==='explore' && $systemId) { foreach($systems as $s) if($s->id===$systemId) { $prefillCoordinates=$s->galaxy->coordinateCode().':'.$s->number();break; } }
-        elseif($planetId) { foreach($targets as $p) if($p->id===$planetId) { $prefillCoordinates=$p->coordinates();break; } }
+        if($systemId&&!array_filter($systems,fn($system)=>$system->id===$systemId)) throw $this->createNotFoundException('Système inaccessible.');
+        $planet=$planetId?$repo->find(Planet::class,$planetId):null;
+        if($planetId && (!$planet instanceof Planet || !$destinations->canPrefill($m,$planet,$mission))) throw $this->createNotFoundException('Destination inaccessible.');
+        $prefillCoordinates='';$mode='friendly';
+        if($mission==='explore' && $systemId) {
+            foreach($systems as $system) if($system->id===$systemId) {$prefillCoordinates=$system->galaxy->coordinateCode().':'.$system->number();break;}
+            $mode='custom';
+        } elseif($planet) {
+            $prefillCoordinates=$mission==='explore'?$planet->solarSystem->galaxy->coordinateCode().':'.$planet->solarSystem->number():$planet->coordinates();$mode=$destinations->allows($m,$planet,$mission)?$destinations->category($m,$planet):'custom';
+        }
         $origin=$request->getSession()->get('selected_planet_'.$m->id,0);
         usort($idle,fn($a,$b)=>(($a['fleet']->homePlanet->id===$planetId?2:($a['fleet']->homePlanet->id===$origin?0:1)))<=>(($b['fleet']->homePlanet->id===$planetId?2:($b['fleet']->homePlanet->id===$origin?0:1))));
         $activeFleets=$repo->all(Fleet::class,['playerUniverse'=>$m,'status'=>['traveling','returning','attacking','defending','orbiting','orbit_pending','occupying']],['arrivalAt'=>'ASC']);$combatEvents=[];foreach($activeFleets as $activeFleet){$participant=$repo->one(CombatParticipant::class,['fleet'=>$activeFleet]);if($participant && $participant->combatEvent->status==='pending')$combatEvents[$activeFleet->id]=$participant->combatEvent;}
         $orbitRequests=[];foreach($repo->planets($m->universe,$m) as $p) foreach($repo->all(Fleet::class,['destination'=>$p,'status'=>'orbit_pending','mission'=>'orbit'],['id'=>'ASC']) as $f) $orbitRequests[]=$f;
-        return $this->render('fleet/index.html.twig',['fleet_details'=>$details->fleets($m,$activeFleets),'prefill'=>['mission'=>$mission,'system'=>$systemId,'planet'=>$planetId,'coordinates'=>$prefillCoordinates],'active_fleets'=>$activeFleets,'combat_events'=>$combatEvents,'membership'=>$m,'fleets'=>$repo->all(Fleet::class,['playerUniverse'=>$m],['id'=>'DESC']),'idle'=>$idle,'systems'=>$systems,'targets'=>$targets,'catalog'=>$catalog->all('ships'),'resources'=>$catalog->rules()['resources'],'fuel_pending'=>$catalog->rules()['fuel_ratio_policy']==='pending','orbit_requests'=>$orbitRequests,'fleet_limit'=>(int)$universeConfig['limits']['max_fleet_size'],'conquest_enabled'=>$conquestEnabled]);
+        return $this->render('fleet/index.html.twig',['fleet_details'=>$details->fleets($m,$activeFleets),'prefill'=>['mission'=>$mission,'system'=>$systemId,'planet'=>$planetId,'coordinates'=>$prefillCoordinates,'mode'=>$mode],'active_fleets'=>$activeFleets,'combat_events'=>$combatEvents,'membership'=>$m,'fleets'=>$repo->all(Fleet::class,['playerUniverse'=>$m],['id'=>'DESC']),'idle'=>$idle,'systems'=>$systems,'destination_choices'=>$destinationChoices,'catalog'=>$catalog->all('ships'),'resources'=>$catalog->rules()['resources'],'fuel_pending'=>$catalog->rules()['fuel_ratio_policy']==='pending','orbit_requests'=>$orbitRequests,'fleet_limit'=>(int)$universeConfig['limits']['max_fleet_size'],'conquest_enabled'=>$conquestEnabled]);
     }
+    #[Route('/flottes/destinations',name:'app_fleet_destinations',methods:['GET'])]
+    public function destinations(Request $request,UniverseContext $context,DestinationCatalogue $destinations): Response
+    {
+        $membership=$context->membership();
+        try {
+            $data=$destinations->choices($membership,$request->query->getString('mission','explore'),
+                $request->query->has('q')?$request->query->getString('q'):null);
+            return $this->json($data,200,['Cache-Control'=>'private, no-store']);
+        } catch(\DomainException $error) {
+            return $this->json(['error'=>$error->getMessage()],422,['Cache-Control'=>'private, no-store']);
+        }
+    }
+
     #[Route('/flottes/mission-rapide',name:'app_fleet_quick_send',methods:['POST'])]
     public function quickSend(Request $request,UniverseContext $context,GameRepository $repo,FleetService $service,PreferencesService $preferences,GameCatalog $catalog): Response
     {
@@ -70,7 +79,7 @@ final class FleetController extends AbstractController
     }
 
     #[Route('/flottes/estimer',name:'app_fleet_preview',methods:['POST'])]
-    public function preview(Request $request,UniverseContext $context,GameRepository $repo,FleetService $service,CoordinateResolver $coordinates): Response
+    public function preview(Request $request,UniverseContext $context,GameRepository $repo,FleetService $service,DestinationCatalogue $destinations): Response
     {
         if(!$this->isCsrfTokenValid('fleet',$request->request->get('_token'))) throw $this->createAccessDeniedException('Formulaire expiré.');
         try {
@@ -83,7 +92,8 @@ final class FleetController extends AbstractController
                 $orbitHours=filter_var($request->request->get('orbit_hours',0),FILTER_VALIDATE_FLOAT);
                 if($orbitHours===false) throw new \DomainException('Durée d’orbite invalide.');
             }
-            $destination=$mission==='explore'?$coordinates->system($m->universe,(string)$request->request->get('coordinates','')):$coordinates->planet($m->universe,(string)$request->request->get('coordinates',''));
+            $mode=(string)$request->request->get('destination_mode','custom');
+            $destination=$destinations->resolve($m,$mission,$mode,(string)$request->request->get('coordinates',''),$request->request->get($mode.'_destination'));
             $result=$service->preview($m,$origin,$mission,(int)$destination->id,$request->request->all('ships'),$ratio,$request->request->all('cargo'),$orbitHours);
             return $this->json($result,200,['Cache-Control'=>'private, no-store']);
         } catch(\DomainException $e) { return $this->json(['error'=>$e->getMessage()],422,['Cache-Control'=>'private, no-store']); }
@@ -108,7 +118,7 @@ final class FleetController extends AbstractController
     }
 
     #[Route('/flottes/envoyer',name:'app_fleet_send',methods:['POST'])]
-    public function send(Request $request,UniverseContext $context,GameRepository $repo,FleetService $service,CoordinateResolver $coordinates): Response
+    public function send(Request $request,UniverseContext $context,GameRepository $repo,FleetService $service,DestinationCatalogue $destinations): Response
     {
         if(!$this->isCsrfTokenValid('fleet',$request->request->get('_token'))) throw $this->createAccessDeniedException('Formulaire expiré.');
         $m=$context->membership();
@@ -116,7 +126,8 @@ final class FleetController extends AbstractController
             $origin=$repo->find(Planet::class,(int)$request->request->get('origin'));
             if(!$origin || $origin->owner?->id!==$m->id) throw new \DomainException('Origine inaccessible.');
             $mission=(string)$request->request->get('mission');
-            $destination=$mission==='explore'?$coordinates->system($m->universe,(string)$request->request->get('coordinates','')):$coordinates->planet($m->universe,(string)$request->request->get('coordinates',''));$target=(int)$destination->id;
+            $mode=(string)$request->request->get('destination_mode','custom');
+            $destination=$destinations->resolve($m,$mission,$mode,(string)$request->request->get('coordinates',''),$request->request->get($mode.'_destination'));$target=(int)$destination->id;
             $ratio=filter_var($request->request->get('ratio'),FILTER_VALIDATE_FLOAT);
             if($ratio===false) throw new \DomainException('Vitesse invalide.');
             $orbitHours=0.0;

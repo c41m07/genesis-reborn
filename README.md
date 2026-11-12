@@ -426,3 +426,15 @@ La migration additive Version20261112010000 est appliquée sur la seule base loc
 après accord et sauvegarde vérifiée. Les autres installations nécessitent leur
 propre sauvegarde vérifiée et autorisation avant migration, puis le redémarrage
 des consommateurs. Aucun déploiement Alpha de ce lot n’est annoncé.
+
+Destinations des flottes : trois modes sont proposés, Mes planètes et alliés
+par défaut, Ennemis (dont PNJ connus), et Destination personnalisée. Les joueurs
+neutres restent dans le mode personnalisé. La recherche de pseudonyme propose
+au plus 20 planètes déjà découvertes de l’univers actif, compatibles avec la
+mission. Les suggestions se sélectionnent au clavier et au toucher ; les
+coordonnées restent disponibles pour les destinations personnalisées, notamment
+l’exploration d’un système inconnu. Les liens de la carte conservent leur cible.
+Les attaques classiques des PNJ sont possibles sans capture ni nouveau butin PNJ.
+Conquête JcE conserve ses règles de capture et d’occupation existantes.
+Aucune migration, dépendance ou activation globale supplémentaire pour ce lot D,
+qui n’est pas encore publié ni déployé sur Alpha.

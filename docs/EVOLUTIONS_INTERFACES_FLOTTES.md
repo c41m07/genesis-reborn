@@ -25,10 +25,10 @@ Une complexité 4 ou 5 impose l’analyse détaillée des transitions et risques
 | A | Retirer le journal de mission en conservant suivi et historiques | 1 | Fusionné dans dev, PR #41 |
 | B — carte/confidentialité | Cercle vert des systèmes possédés ; retour planète vers son système | 2 | Fusionné dans dev, PR #42 |
 | B | Masquer les sondes entrantes au serveur ; résumé des flottes tierces visibles | 4 | Fusionné dans dev, PR #42 |
-| C — colonies/journal | Acquisition sur toutes les voies de transfert ; ordre commun | 4 | Validé localement, publication à autoriser |
-| C | Journal d’absence, consultation explicite, détails clavier/tactiles | 4 | Validé localement, publication à autoriser |
-| D — destinations | Trois modes, découvertes, univers, suggestions de pseudonyme | 3 | Répartition confirmée, à réaliser |
-| D | Attaque PNJ, départ/arrivée et liens depuis la carte | 4 | Dépendances métier à traiter |
+| C — colonies/journal | Acquisition sur toutes les voies de transfert ; ordre commun | 4 | Fusionné dans dev, PR #43 |
+| C | Journal d’absence, consultation explicite, détails clavier/tactiles | 4 | Fusionné dans dev, PR #43 |
+| D — destinations | Trois modes, découvertes, univers, suggestions de pseudonyme | 4 | Validé localement, publication à autoriser |
+| D | Attaque PNJ, départ/arrivée et liens depuis la carte | 4 | Validé localement, publication à autoriser |
 | E — administration/rapports | Attribution auditée de vaisseaux, planète/type/rang/quantité | 4 | À réaliser |
 | E | Archive/restauration personnelle, sélection et conservation des preuves | 4 | Choix confirmés, à réaliser |
 | F — guildes/signalements | Tag obligatoire à la création, unicité par univers et classement | 3 | Transition confirmée, à réaliser |
@@ -482,3 +482,134 @@ base avec comptages inchangés. Worker, relay et notifier sont rechargés sur le
 code final et tous les services locaux sont healthy.
 Le lot est validé localement. Aucun push, PR, CI GitHub du lot C ni déploiement
 Alpha n’est réalisé ; publication soumise à l’accord explicite du dépôt.
+
+## Lot C intégré et analyse du lot D — 12 novembre 2026
+
+Le lot C est fusionné dans dev via PR #43 au commit
+607971469628ca4155c821b18a370c4be53b43ff. La CI complète 43134524413 est réussie
+sur 86978c21699873e92909b28af2251c1b9ff2c725 : cinq jobs quality, sauvegarde/
+restauration isolées, Compose, diff, assets, tests et lint/schéma vérifiés.
+Protection de dev avec PR et cinq jobs obligatoires revérifiée. Aucun Alpha.
+
+Le lot D part de dev actualisée, branche feature/destinations-flottes-pnj.
+- Catalogue et suggestions : complexité 4 (confidentialité et dépendances de mission).
+  Seulement les planètes découvertes dans l’univers actif, avec propriétaire/
+  diplomatie et conditions de mission existantes. Mes planètes/alliés par défaut,
+  ennemis/PNJ dans Ennemis, joueurs neutres dans Destination personnalisée.
+  Suggestions limitées à la recherche de pseudonyme de destination, 20 résultats.
+- Formulaire et accessibilité : complexité 4. Trois positions, parcours clavier et
+  tactile, annonces des résultats et gestion des requêtes obsolètes ; maintien de
+  la prévisualisation, du fret, des rangs et du contexte prérempli depuis la carte.
+  Compatibilité des soumissions historiques sans mode explicite conservée.
+- Attaques PNJ : complexité 4. Besoin absent côté serveur, pas seulement inaccessible
+  dans l’interface. Choix explicite confirmé : deux missions ; Attaque sans capture
+  ni nouveau butin PNJ, Conquête JcE avec ses règles actuelles. Initialiser la garnison
+  une seule fois sous verrou, revérifier l’autorisation à l’arrivée, conserver les
+  gardes de rejeu et la distinction entre attaque et conquête après combat.
+- Données : aucune migration prévue. Conserver les transactions, protections,
+  coûts, règles de carburant, cargaison, slots et conquête existants.
+- Risques ciblés : suggestions d’un autre univers ou de planètes inconnues, recherche
+  générique réutilisée sans filtre de découverte, destination ancienne après changement
+  de mode/mission, UI autorisant une capture via Attaque, réinitialisation de garnison,
+  sélection d’une origine ou d’un allié incompatible, rupture du wizard/preview.
+
+Le contrôle GameplayAccess a identifié une dépendance à préserver : l’ouverture
+d’un formulaire prérempli de transport vers une planète connue reste autorisée,
+même si son destinataire refuse actuellement les livraisons. canPrefill conserve
+cet accès en lecture ; allows filtre les listes/suggestions et la prévisualisation/
+l’envoi vérifient toujours les droits métier. Le préremplissage incompatible reste
+visible en mode personnalisé pour expliquer le refus, sans donner de droit d’envoi.
+Le test existant n’est pas assoupli.
+
+### Implémentation et premiers contrôles du lot D
+
+Catalogue serveur et route JSON privés, trois positions natives et contrôleur
+de suggestions ; wizard/preview/envoi utilisent le champ du mode actif.
+Compatibilité coordinates des anciens clients conservée. Les profils neutres
+restent personnalisés, y compris les mondes d’origine PNJ déjà capturés.
+Une relation incohérente entre propriétaire et univers est filtrée avant données.
+
+Les contrôles ciblés passent :
+- 32 tests combat/occupation, 314 assertions : victoire classique avec colonie
+  survivante sans capture/occupation/butin, garnison initialisée une fois,
+  arrivée et résolution rejouées sans duplication ; conquêtes existantes préservées.
+- 14 tests de destinations/accès, 154 assertions : groupes, recherches littérales,
+  découverte, univers, modes forgés, accès anonyme, préremplissages historiques.
+- Wizard et état du bouton de prévisualisation : réussis après choix explicite
+  du mode personnalisé dans les parcours de coordonnées.
+- Deux nouveaux parcours : trois modes + suggestions clavier/toucher avec rejet
+  de l’ancienne liste après changement de mission ; envoi d’une attaque PNJ via
+  Ennemis avec nombre total de vaisseaux conservé et aucune capture déclenchée.
+- Build et lint ciblés réussis. Suites complètes non encore annoncées.
+
+Les anciens parcours qui saisissent des coordonnées choisissent désormais
+Destination personnalisée avant la saisie ; leurs actions d’envoi et assertions
+métier restent conservées. Aucun test de protection n’est supprimé ou affaibli.
+
+La première suite complète a relevé une anomalie du montage négatif : le propriétaire
+d’un autre univers était injecté dans tous les cas, déclenchant le classement
+partagé lors des rendus HTML (données volontairement incohérentes). L’injection
+est limitée au test JSON de confidentialité, où le catalogue doit la rejeter.
+Les contrôles positifs utilisent les relations valides du jeu ; la garde du
+catalogue reste testée et aucun code de classement hors périmètre n’est modifié.
+Aucune anomalie similaire n’est annoncée comme constatée dans la base de jeu.
+### Validation finale locale du lot D — 12 novembre 2026
+
+Les six contrôles sont exécutés et examinés :
+- make validate : réussi.
+- make lint : réussi, mapping et schéma inclus ; relancé avec succès après
+  l’ajustement final du template.
+- make assets (npm run build) : réussi, recompilé après l’ajustement visuel.
+- make test : 718 tests PHP, 210198 assertions et 13 tests Python réussis.
+- BROWSER_PERSISTENCE=1 make test-browser : 165 scénarios distincts réussis.
+  Quatre groupes principaux de 41 cas chacun ; puis cinq parcours sans
+  concurrence sur la présentation finale (deux destinations/PNJ, preview,
+  wizard et clavier général). Quatre cas sont revérifiés après le seul
+  ajustement CSS/template. Rapprochement des cinq rapports : exactement
+  165 cas attendus, aucun manquant ou supplémentaire.
+- git diff --check : réussi, puis contrôle des fichiers préparés avant commit.
+
+Rapports locaux : /tmp/genesis-lot-d-batch-1.json à -5.json ; couverture
+/tmp/genesis-lot-d-coverage.json ; suites /tmp/genesis-lot-d-php-final.log,
+-lint-final.log et -assets-final.log. La suite initiale a échoué sur la fixture
+négative décrite ci-dessus ; la suite finale complète réussit après sa correction.
+
+Relecture réelle de destinations-mobile.png à 390 px : choix alignés, texte
+lisible, focus visible, suggestions tactiles et absence de débordement.
+Les contrôles ciblés de noms accessibles, navigation clavier, focus, contrastes,
+annonces et toucher sont vérifiés ; ils ne constituent pas un audit complet RGAA.
+Aucune migration ni dépendance du lot D ; aucune modification des logos/SVG.
+Aucun push, PR, CI GitHub du lot D ni déploiement Alpha : publication à autoriser.
+Les trois documents Work externes cités en début de suivi restent inaccessibles ;
+aucun wiki distant ni fichier Figma modifié. Les références et le wiki intégrés
+sont synchronisés ; leur parcours navigateur réussit.
+
+
+### Fichiers du lot D
+
+- README.md
+- app/assets/app.js
+- app/assets/controllers/fleet_destination_controller.js
+- app/assets/controllers/fleet_wizard_controller.js
+- app/assets/styles/fleet-destinations.css
+- app/src/Controller/FleetController.php
+- app/src/Service/Combat/CombatEventService.php
+- app/src/Service/Fleet/DestinationCatalogue.php
+- app/templates/fleet/index.html.twig
+- app/templates/ui/fleet_destination.html.twig
+- app/tests/Controller/FleetDestinationTest.php
+- app/tests/Integration/OccupationStartTest.php
+- app/tests/browser/colony.spec.mjs
+- app/tests/browser/conquest-report.spec.mjs
+- app/tests/browser/espionage-report.spec.mjs
+- app/tests/browser/fleet-destinations.spec.mjs
+- app/tests/browser/fleet-preview-submit-state.spec.mjs
+- app/tests/browser/fleet-wizard.spec.mjs
+- app/tests/browser/orbit-request.spec.mjs
+- app/tests/browser/quantity-max.spec.mjs
+- docs/ARCHITECTURE.md
+- docs/DECISIONS.md
+- docs/EVOLUTIONS_INTERFACES_FLOTTES.md
+- docs/FEUILLE_DE_ROUTE.md
+- docs/REGLES.md
+- docs/wiki.json
