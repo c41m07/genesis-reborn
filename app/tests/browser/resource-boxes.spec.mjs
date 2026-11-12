@@ -54,7 +54,14 @@ test('Boîte : contenu annoncé, choix de colonie, protection et ouverture uniqu
   expect(await post(page,action,{...data,_token:'invalid'})).toBe(403);
   await post(page,action,{...data,planet_id:String(other.planetId)});expect(queryIsolatedSql(project,`SELECT status FROM player_boost WHERE id=${id}`)).toBe('available');
   const stock=planet=>Number(queryIsolatedSql(project,`SELECT current_stock FROM planet_resource WHERE planet_id=${planet} AND resource_type='metal'`));const home=stock(own.planetId),before=stock(second);
-  await form.getByRole('button').click();await expect(page.locator('.flash.success')).toContainText('Boîte ouverte');expect(stock(own.planetId)).toBe(home);const after=stock(second);expect(after).toBeGreaterThanOrEqual(before+4000);expect(after).toBeLessThan(before+4010);
+  await form.getByRole('button').click();
+  await expect(page.getByRole('dialog')).toContainText('Colonie des boites');
+  await expect(page.getByRole('dialog')).toContainText('4 000,00');
+  await page.getByRole('dialog').getByRole('button',{name:'Revenir à l’inventaire'}).click();
+  await expect(form.getByRole('button')).toBeFocused();
+  expect(stock(second)).toBe(before);
+  expect(queryIsolatedSql(project,`SELECT status FROM player_boost WHERE id=${id}`)).toBe('available');
+  await form.getByRole('button').click();await expect(page.getByRole('dialog')).toContainText('Colonie des boites');await page.getByRole('dialog').getByRole('button',{name:'Ouvrir cette boîte'}).click();await expect(page.locator('.flash.success')).toContainText('Boîte ouverte');expect(stock(own.planetId)).toBe(home);const after=stock(second);expect(after).toBeGreaterThanOrEqual(before+4000);expect(after).toBeLessThan(before+4010);
   await post(page,action,data);expect(stock(second)).toBe(after);expect(queryIsolatedSql(project,`SELECT status FROM player_boost WHERE id=${id}`)).toBe('used');await peer.close();
 });
 
@@ -64,7 +71,7 @@ test('Boîte : stockage insuffisant et vacances conservent objet et ressources',
   await page.goto('/boosts');const card=page.locator('.resource-box-card');await card.getByLabel('Colonie de destination').selectOption(String(own.planetId));
   const data=await card.locator('form').evaluate(f=>Object.fromEntries(new FormData(f)));const action=await card.locator('form').getAttribute('action');
   const before=queryIsolatedSql(project,`SELECT current_stock FROM planet_resource WHERE planet_id=${own.planetId} ORDER BY resource_type`);
-  await card.getByRole('button').click();await expect(page.locator('.flash.error')).toContainText('La boîte reste intacte');expect(queryIsolatedSql(project,`SELECT status FROM player_boost WHERE id=${id}`)).toBe('available');expect(queryIsolatedSql(project,`SELECT current_stock FROM planet_resource WHERE planet_id=${own.planetId} ORDER BY resource_type`)).toBe(before);
+  await card.getByRole('button').click();await page.getByRole('dialog').getByRole('button',{name:'Ouvrir cette boîte'}).click();await expect(page.locator('.flash.error')).toContainText('La boîte reste intacte');expect(queryIsolatedSql(project,`SELECT status FROM player_boost WHERE id=${id}`)).toBe('available');expect(queryIsolatedSql(project,`SELECT current_stock FROM planet_resource WHERE planet_id=${own.planetId} ORDER BY resource_type`)).toBe(before);
   runIsolatedSql(project,`INSERT INTO vacation_period (membership_id,started_at,scheduled_end_at,ended_at) VALUES (${own.memberId},UTC_TIMESTAMP()-INTERVAL 1 MINUTE,UTC_TIMESTAMP()+INTERVAL 1 DAY,NULL)`);
   await page.reload();await expect(card).toContainText('Ouverture bloquée pendant les vacances');await expect(card.getByRole('button')).toHaveCount(0);
   await post(page,action,data);expect(queryIsolatedSql(project,`SELECT status FROM player_boost WHERE id=${id}`)).toBe('available');expect(queryIsolatedSql(project,`SELECT current_stock FROM planet_resource WHERE planet_id=${own.planetId} ORDER BY resource_type`)).toBe(before);
@@ -76,4 +83,29 @@ test('Admin : formats plafonnés, saisie conservée et modification journalisée
   await expect(page.locator('.flash.error')).toContainText('dépasse le plafond');await expect(metal).toHaveValue('20001');await metal.fill('4500');await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Enregistrer les modèles de boîtes'}).click();
   await expect(page.locator('.flash.success')).toContainText('Modèles et plafonds enregistrés');await expect(metal).toHaveValue('4500');expect(Number(queryIsolatedSql(project,`SELECT COUNT(*) FROM admin_audit_log WHERE action='resource_box_settings' AND target_id=${own.universeId}`))).toBe(1);
   await page.setViewportSize({width:390,height:900});expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);await page.screenshot({path:testInfo.outputPath('box-settings-390.png'),fullPage:true});
+});
+
+
+test('Inventaire sans JavaScript : ouverture native et contrôles serveur conservés', async ({ page, browser }) => {
+  const own = await enter(page);
+  const project = process.env.BROWSER_ROUTER;
+  const id = addBox(project, own, 'no-js-box');
+  runIsolatedSql(project, `INSERT INTO player_boost (player_universe_id,source_type,source_key,status,earned_at) VALUES (${own.memberId},'event','no-js-boost','available',UTC_TIMESTAMP())`);
+  runIsolatedSql(project, `INSERT INTO queue_item (planet_id,player_universe_id,queue_type,item_slug,tier,item_level,quantity,duration_seconds,started_at,queued_at,dispatch_token,paid_costs) VALUES (${own.planetId},${own.memberId},'building','mine_metal','basic',1,1,3600,UTC_TIMESTAMP(),UTC_TIMESTAMP(),UUID(),'{}')`);
+  const queueId = Number(queryIsolatedSql(project, `SELECT id FROM queue_item WHERE player_universe_id=${own.memberId}`));
+  runIsolatedSql(project, `UPDATE planet_resource SET current_stock=0,last_updated_at=UTC_TIMESTAMP() WHERE planet_id=${own.planetId}`);
+  const context = await browser.newContext({ javaScriptEnabled: false, storageState: await page.context().storageState() });
+  try {
+    const fallback = await context.newPage();
+    await fallback.goto('/boosts');
+    const card = fallback.locator(`.resource-box-card[data-box-id="${id}"]`);
+    await card.getByLabel('Colonie de destination').selectOption(String(own.planetId));
+    await card.getByRole('button', { name: 'Ouvrir cette boîte' }).click();
+    await expect(fallback.locator('.flash.success')).toContainText('Boîte ouverte');
+    expect(queryIsolatedSql(project, `SELECT status FROM player_boost WHERE id=${id}`)).toBe('used');
+    await expect(fallback.locator('#inventory-operation')).toBeHidden();
+    await fallback.locator(`form[action$="/queue/${queueId}"]`).getByRole('button').click();
+    await expect(fallback.locator('.flash.success')).toContainText('Boost appliqué');
+    expect(queryIsolatedSql(project, "SELECT status FROM player_boost WHERE source_key='no-js-boost'")).toBe('used');
+  } finally { await context.close(); }
 });

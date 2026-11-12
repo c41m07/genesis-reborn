@@ -1,5 +1,8 @@
 # Documentation Genesis Reborn
 
+
+[Recette manuelle des évolutions A à K](RECETTE_EVOLUTIONS_INTERFACES.md) — parcours à essayer sur dev avant les retouches finales.
+
 Lire le README du dépôt pour installer et démarrer le jeu. Cet index donne
 une seule référence par sujet ; les anciens bilans ne décrivent pas l’état courant.
 

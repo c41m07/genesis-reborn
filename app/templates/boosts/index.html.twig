@@ -1,7 +1,7 @@
 {% extends 'base.html.twig' %}
 {% block title %}Inventaire · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="page-heading">
+<div class="page-refinement inventory-page" data-controller="inventory-review"><div class="page-heading">
     <div>
         
         <h1>Inventaire</h1>
@@ -11,58 +11,82 @@
 
 <section class="panel" aria-labelledby="boost-inventory-title">
     <div class="section-heading">
-        <h2 id="boost-inventory-title">Bonus disponibles</h2>
+        <h2 id="boost-inventory-title">Emplacements utilisés</h2>
         <span class="badge">{{ boosts|length }} / {{ inventory_capacity }} emplacements</span>
     </div>
     <progress class="boost-capacity" value="{{ boosts|length }}" max="{{ inventory_capacity }}" aria-label="Emplacements utilisés dans l’inventaire">{{ boosts|length }} / {{ inventory_capacity }}</progress>
     {% if boosts|length >= inventory_capacity %}<p class="muted">Inventaire plein. Les nouvelles récompenses sont conservées en attente.</p>{% endif %}
-    {% if boosts is empty %}
-        <div class="empty-state"><h3>Aucun bonus disponible</h3><p>Les récompenses de vos missions, événements et projets de guilde apparaîtront ici.</p></div>
-    {% elseif boost_count > 0 %}
-        <article class="mission-card">
-            <div>
-                <h3>Boost de réduction de durée</h3>
-                <p>Réduit de {{ duration_reduction_percent|number_format(2, ',', ' ') }} % le temps restant d’une opération active.</p>
-            </div>
-            <span class="badge">Quantité : {{ boost_count }}</span>
-        </article>
-    {% endif %}
-    {% include 'boosts/_resource_boxes.html.twig' %}
-    {% if pending_boost_count > 0 %}
-        <p class="boost-pending" role="status">{{ pending_boost_count }} bonus en attente. Dès qu’une place se libère, la récompense la plus ancienne rejoint votre inventaire.</p>
-    {% endif %}
 </section>
-<section class="panel boost-information" aria-labelledby="boost-use-title">
+<div class="inventory-grid">
+<section class="panel inventory-bonuses" aria-labelledby="available-bonuses-title">
+    <h2 id="available-bonuses-title">Bonus disponibles</h2>
+    {% if boosts is empty %}<div class="empty-state"><h3>Aucun bonus disponible</h3><p>Les récompenses de vos missions, événements et projets de guilde apparaîtront ici.</p></div>{% endif %}
+    {% if boost_count > 0 %}
+        <article class="mission-card"><div><h3>Boost de réduction de durée</h3><p>Réduit de {{ duration_reduction_percent|number_format(2, ',', ' ') }} % le temps restant d’une opération active.</p></div><span class="badge">Quantité : {{ boost_count }}</span></article>
+    {% endif %}
+<section class="boost-information" aria-labelledby="boost-use-title">
     <h2 id="boost-use-title">Utiliser un boost</h2>
     {% if vacation %}<p role="status">Les accélérations sont indisponibles pendant les vacances.</p>
     {% elseif boost_count == 0 %}<p>Aucun boost de réduction de durée disponible pour accélérer une opération.</p>
     {% else %}
         <p>Choisissez l’opération à accélérer. Chaque utilisation consomme un bonus.</p>
+        {% if active_queues is not empty or active_fleets is not empty %}
+        <div data-inventory-review-target="picker" hidden>
+            <label for="inventory-operation">Opération à accélérer</label>
+            <select id="inventory-operation" data-inventory-review-target="selection" data-action="change->inventory-review#choose">
+                <option value="">Choisir une opération active</option>
+                <optgroup label="Commandes">{% for row in active_queues %}<option value="queue-{{ row.item.id }}">{{ row.label }} · {{ row.item.planet.name }}</option>{% endfor %}</optgroup>
+                <optgroup label="Flottes">{% for fleet in active_fleets %}<option value="fleet-{{ fleet.id }}">Flotte n° {{ fleet.id }} · {{ fleet.status == 'returning' ? 'Retour' : 'Aller' }}</option>{% endfor %}</optgroup>
+            </select>
+        </div>
+        {% endif %}
         {% for row in active_queues %}
             {% set item = row.item %}
-            <article class="boost-operation">
+            <article class="boost-operation" data-inventory-review-target="operation" data-operation="queue-{{ item.id }}">
                 <h3>{{ row.label }} · {{ item.planet.name }}</h3>
                 <p>{% if item.itemLevel %}Niveau {{ item.itemLevel }}{% else %}Quantité : {{ item.quantity|quantity }}{% endif %} · Fin prévue : <time datetime="{{ item.finishAt|date('c') }}">{{ item.finishAt|date('d/m/Y H:i:s', preferences.timezone) }}</time></p>
-                <form method="post" action="{{ path('app_boost_use', {type:'queue', id:item.id}) }}">
+                <form method="post" action="{{ path('app_boost_use', {type:'queue', id:item.id}) }}" data-action="submit->inventory-review#review" data-review-title="Vérifier l’accélération" data-review-copy="{{ row.label }} · {{ item.planet.name }} : utiliser un boost pour retirer {{ duration_reduction_percent|number_format(2, ',', ' ') }} % du temps restant." data-review-confirm="Utiliser un boost">
                     <input type="hidden" name="_token" value="{{ csrf_token('boost-queue-' ~ item.id) }}">
                     <input type="hidden" name="request_key" value="{{ request_key() }}">
-                    <button class="secondary">Accélérer {{ row.label }} avec un boost</button>
+                    <button class="secondary">Utiliser un boost pour {{ row.label }}</button>
                 </form>
             </article>
         {% endfor %}
         {% for fleet in active_fleets %}
-            <article class="boost-operation">
+            <article class="boost-operation" data-inventory-review-target="operation" data-operation="fleet-{{ fleet.id }}">
                 <h3>Flotte n° {{ fleet.id }} · {{ {attack:'Attaque',transport:'Transport',explore:'Exploration',colonize:'Colonisation',conquer:'Conquête',spy:'Espionnage',defend:'Défense',orbit:'Orbite'}[fleet.mission]|default(fleet.mission) }}</h3>
-                <p>{{ fleet.status == 'returning' ? (fleet.destination ? fleet.destination.name : fleet.destinationSystem.name|default('Destination inconnue')) : fleet.homePlanet.name }} → {{ fleet.status == 'returning' ? fleet.homePlanet.name : (fleet.destination ? fleet.destination.name : fleet.destinationSystem.name|default('Destination inconnue')) }} · {{ {traveling:'Aller',returning:'Retour',defending:'Défense',orbiting:'Orbite'}[fleet.status] }} · Échéance : <time datetime="{{ fleet.arrivalAt|date('c') }}">{{ fleet.arrivalAt|date('d/m/Y H:i:s', preferences.timezone) }}</time></p>
-                <form method="post" action="{{ path('app_boost_use', {type:'fleet', id:fleet.id}) }}">
+                <p>{{ fleet.status == 'returning' ? (fleet.destination ? fleet.destination.name : fleet.destinationSystem.name|default('Destination inconnue')) : fleet.homePlanet.name }} → {{ fleet.status == 'returning' ? (fleet.returnPlanet ? fleet.returnPlanet.name : fleet.homePlanet.name) : (fleet.destination ? fleet.destination.name : fleet.destinationSystem.name|default('Destination inconnue')) }} · {{ {traveling:'Aller',returning:'Retour',defending:'Défense',orbiting:'Orbite'}[fleet.status] }} · Échéance : <time datetime="{{ fleet.arrivalAt|date('c') }}">{{ fleet.arrivalAt|date('d/m/Y H:i:s', preferences.timezone) }}</time></p>
+                <form method="post" action="{{ path('app_boost_use', {type:'fleet', id:fleet.id}) }}" data-action="submit->inventory-review#review" data-review-title="Vérifier l’accélération" data-review-copy="Flotte n° {{ fleet.id }} : utiliser un boost pour retirer {{ duration_reduction_percent|number_format(2, ',', ' ') }} % du temps restant." data-review-confirm="Utiliser un boost">
                     <input type="hidden" name="_token" value="{{ csrf_token('boost-fleet-' ~ fleet.id) }}">
                     <input type="hidden" name="request_key" value="{{ request_key() }}">
-                    <button class="secondary">Accélérer la flotte n° {{ fleet.id }} avec un boost</button>
+                    <button class="secondary">Utiliser un boost pour la flotte n° {{ fleet.id }}</button>
                 </form>
             </article>
         {% endfor %}
         {% if active_queues is empty and active_fleets is empty %}<p>Aucune opération active à accélérer. Les commandes en attente et les occupations ne peuvent pas être accélérées.</p>{% endif %}
     {% endif %}
 </section>
-<section class="panel boost-information"><h2>Comprendre vos bonus</h2><p>Un boost s’applique au temps restant d’une opération active, et non aux opérations encore en attente. Les réductions successives se calculent sur le nouveau temps restant.</p><p>Les bonus gagnés restent disponibles jusqu’à leur utilisation. La capacité ci-dessus concerne les boosts et boîtes disponibles ; les récompenses en attente sont conservées séparément.</p></section>
+</section>
+<section class="panel inventory-boxes" aria-labelledby="inventory-boxes-title">
+    <h2 id="inventory-boxes-title">Boîtes de ressources</h2>
+    {% include 'boosts/_resource_boxes.html.twig' %}
+    {% if resource_boxes is empty %}<p>Aucune boîte de ressources disponible.</p>{% endif %}
+</section>
+</div>
+<section class="panel inventory-pending" aria-labelledby="inventory-pending-title">
+    <div class="section-heading"><h2 id="inventory-pending-title">Récompenses en attente</h2><span class="badge">{{ pending_boost_count }}</span></div>
+    {% if pending_boost_count > 0 %}<p class="boost-pending" role="status">{{ pending_boost_count }} bonus en attente. Dès qu’une place se libère, la récompense la plus ancienne rejoint votre inventaire.</p>
+    {% else %}<p>Aucune récompense en attente. Les récompenses gagnées restent conservées même si l’inventaire est plein.</p>{% endif %}
+</section>
+<details class="panel boost-information"><summary>Comprendre vos bonus</summary><p>Un boost s’applique au temps restant d’une opération active, et non aux opérations encore en attente. Les réductions successives se calculent sur le nouveau temps restant.</p><p>Les bonus gagnés restent disponibles jusqu’à leur utilisation. La capacité ci-dessus concerne les boosts et boîtes disponibles ; les récompenses en attente sont conservées séparément.</p></details>
+<dialog class="inventory-review-dialog" data-inventory-review-target="dialog" data-action="cancel->inventory-review#cancel close->inventory-review#closed keydown->inventory-review#navigate" aria-labelledby="inventory-review-title" aria-describedby="inventory-review-copy">
+    <h2 id="inventory-review-title" data-inventory-review-target="title">Vérifier l’utilisation</h2>
+    <p id="inventory-review-copy" data-inventory-review-target="copy"></p>
+    <p>L’état de l’opération et les conditions d’utilisation seront revérifiés lors de la confirmation.</p>
+    <div class="inventory-review-actions">
+        <button type="button" class="secondary" data-action="inventory-review#cancel" autofocus>Revenir à l’inventaire</button>
+        <button type="button" class="primary" data-inventory-review-target="confirm" data-action="inventory-review#confirm">Confirmer</button>
+    </div>
+</dialog>
+</div>
 {% endblock %}

@@ -78,7 +78,7 @@ test('Le dirigeant crée un grade, le délègue et les droits restent contrôlé
         .analyze();
       expect(result.violations).toEqual([]);
     }
-    await expect(memberPage.getByRole('navigation', { name: 'Sections des alliances' }).getByRole('link', { name: 'Relation', exact: true })).toBeVisible();
+    await expect(memberPage.getByRole('navigation', { name: 'Sections de diplomatie' }).getByRole('link', { name: 'Commandants', exact: true })).toBeVisible();
   } finally {
     await memberContext.close();
   }

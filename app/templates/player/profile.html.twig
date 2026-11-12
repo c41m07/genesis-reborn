@@ -1,18 +1,20 @@
 {% extends 'base.html.twig' %}
 {% block title %}Profil · Genesis Reborn{% endblock %}
 {% block body %}
-<section class="panel account-panel">
-    <h1>Mon profil</h1>
-    <p>Vos colonies restent rattachées au même compte. Toute modification enregistrée ferme cette session : reconnectez-vous ensuite avec vos identifiants.</p>
+<div class="page-refinement profile-page">
+<div class="page-heading"><div><h1>Mon profil</h1><p>Les identifiants de votre compte sont communs à tous vos univers.</p></div></div>
+<p class="profile-notice">Toute modification enregistrée ferme cette session : reconnectez-vous ensuite avec vos identifiants.</p>
+<section class="panel account-panel" aria-label="Modifier mon profil">
     {{ form_start(form) }}
     {% if form.vars.submitted and not form.vars.valid %}<div class="form-error" role="alert"><strong>Profil non enregistré.</strong><p>Vérifiez les champs signalés puis réessayez.</p>{{ form_errors(form) }}</div>{% endif %}
     <fieldset class="account-section"><legend>Identifiants</legend><div class="account-grid">{{ form_row(form.email) }}{{ form_row(form.username) }}</div></fieldset>
-    <fieldset class="account-section"><legend>Changer de mot de passe</legend><p>Facultatif. Laissez ces deux champs vides pour conserver votre mot de passe.</p>{{ form_errors(form.newPassword) }}<div class="account-grid">{{ form_row(form.newPassword.first) }}{{ form_row(form.newPassword.second) }}</div></fieldset>
+    <details class="profile-password" {% if form.vars.submitted and not form.vars.valid %}open{% endif %}><summary>Changer de mot de passe — facultatif</summary><fieldset class="account-section"><legend class="visually-hidden">Changer de mot de passe</legend><p>Facultatif. Laissez ces deux champs vides pour conserver votre mot de passe.</p>{{ form_errors(form.newPassword) }}<div class="account-grid">{{ form_row(form.newPassword.first) }}{{ form_row(form.newPassword.second) }}</div></fieldset></details>
     <fieldset class="account-section"><legend>Confirmer la modification</legend>{{ form_row(form.currentPassword, {help: 'Votre mot de passe actuel est nécessaire pour enregistrer le profil.'}) }}</fieldset>
     <button class="primary full">Enregistrer mon profil</button>{{ form_end(form) }}
 </section>
 <section class="panel account-panel" aria-labelledby="account-delete-title">
-    <h2 id="account-delete-title">Supprimer mon compte</h2>
+    <h2 id="account-delete-title">Suppression du compte</h2>
+    <details class="profile-delete" {% if app.request.query.get('delete') == '1' %}open{% endif %}><summary>Supprimer mon compte</summary>
     <p>Cette action est définitive et concerne tous vos univers. Vos identifiants et préférences seront effacés, votre accès fermé et vos empires convertis en empires oubliés. Vos colonies restent dans le jeu et vous ne pourrez plus les contrôler.</p>
     <p>Les historiques de jeu et messages sont conservés. Pour une demande complémentaire concernant vos données, contactez <a href="mailto:contact@genesis-reborn.fr">contact@genesis-reborn.fr</a>.</p>
     <form method="post" action="{{ path('app_account_delete') }}" class="form-grid account-delete-form">
@@ -21,6 +23,7 @@
         <input id="account-delete-password" type="password" name="password" autocomplete="current-password" required>
         <label class="account-delete-confirmation" for="account-delete-confirmed"><input id="account-delete-confirmed" type="checkbox" name="confirmed" value="1" required><span>Je confirme la suppression définitive de mon compte dans tous les univers.</span></label>
         <button class="danger" type="submit">Supprimer définitivement mon compte</button>
-    </form>
+    </form></details>
 </section>
+</div>
 {% endblock %}

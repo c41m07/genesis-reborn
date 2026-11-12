@@ -32,7 +32,7 @@ test('Le thème clair couvre les principaux écrans stratégiques sans débordem
     ['/carte', 'Galaxie', 'carte-theme.png'],
     ['/flottes', 'Flottes et missions', 'flottes-theme.png'],
     ['/flottes?mission=spy', 'Espionnage', 'espionnage-composer-theme.png'],
-    ['/diplomatie', 'Alliances', 'diplomatie-theme.png'],
+    ['/diplomatie', 'Diplomatie', 'diplomatie-theme.png'],
     ['/messages', 'Messages', 'messages-theme.png'],
     ['/rapports', 'Rapports', 'rapports-theme.png'],
     ['/classement', 'Classement', 'classement-theme.png'],

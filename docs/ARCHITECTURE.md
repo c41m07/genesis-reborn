@@ -387,3 +387,25 @@ de la recolonisation par l’auteur de l’abandon sont à zéro. Une version de
 dans l’empreinte du bilan invalide une confirmation antérieure à cette décision.
 Le reçu de requête reste dans ActionReceipt et n’est pas recopié dans le journal
 d’audit. La page indique le besoin de ravitaillement avant confirmation.
+
+### Présentation des pages joueur — lot K
+
+Les pages Diplomatie, Profil et Inventaire utilisent les styles limités
+à .page-refinement dans player-pages.css et les couleurs du thème existant.
+Les onglets de diplomatie restent des liens GET ; les actions et permissions
+de DiplomacyController ne changent pas. L’accès à la gestion est une ancre
+vers les grades et le commandement déjà présents ; l’aperçu du canal reste en lecture.
+
+Le profil utilise des détails natifs, y compris sans JavaScript. Les erreurs
+de modification rouvrent le changement de mot de passe ; une erreur de suppression
+redirige avec delete=1 pour garder sa section ouverte. Ce paramètre ne donne
+aucun droit et ne change ni les validations ni la confirmation serveur.
+
+inventory_review_controller sélectionne la carte de l’opération et intercepte
+uniquement la présentation de sa soumission pour ouvrir un dialogue natif.
+L’annulation ne lance aucune requête métier. La confirmation resoumet le formulaire
+existant avec son jeton CSRF et sa clé de requête ; les services revérifient
+propriété, univers, vacances, opération active et stockage. Le contenu du dialogue
+est écrit avec textContent. Sans JavaScript ou sans showModal, les formulaires
+restent visibles et fonctionnent selon leur comportement serveur habituel.
+Aucune migration, dépendance ou modification des valeurs d’équilibrage.

@@ -1251,7 +1251,7 @@ signalement privé, colonnes de surveillance et retrait du journal des missions.
 Aucune migration ni modification des règles de déplacement dans ce lot.
 Le [suivi](EVOLUTIONS_INTERFACES_FLOTTES.md) donne les complexités, décisions,
 dépendances et vérifications réelles. Le premier lot est désormais intégré ; les trois maquettes Diplomatie, Profil
-et Inventaire sont validées, leur intégration reste prévue dans le lot K.
+et Inventaire sont validées ; leur intégration est terminée dans le lot K.
 
 
 ### Validation locale du premier lot
@@ -1444,7 +1444,7 @@ vers dev après CI complète 43260133554 verte sur 03aad13 ; sauvegarde/restaura
 et cinq jobs quality examinés. Aucun déploiement Alpha lancé.
 
 
-### Lot J — abandon (vérifié localement)
+### Lot J — abandon (intégré dans dev, PR #50)
 Bilan, confirmation par nom et contenu courant, dernière planète par univers,
 blocages des opérations et dépendances entre colonies ; perte des actifs présents,
 annulation sans remboursement, trace et conservation des historiques.
@@ -1455,3 +1455,17 @@ contrôlées par un joueur, selon la définition déjà validée au lot D.
 Vérifications locales : 868 tests PHP, 13 Python et 181 scénarios navigateur
 distincts réussis après corrections/reprises. Publication autorisée par
 l’utilisateur ; PR et CI complète requises avant fusion vers dev. Aucune migration.
+
+### Lot K — interfaces validées (implémenté)
+
+Intégration des maquettes approuvées de Diplomatie, Profil et Inventaire :
+périmètres explicites, gestion de guilde conservée, changement de mot de passe
+facultatif repliable et actions destructives distinctes ; inventaire par usage,
+choix d’opération et examen annulable avant consommation. Les permissions,
+formulaires sécurisés, clés idempotentes et règles de jeu restent identiques.
+
+La recette manuelle A à K est dans [RECETTE_EVOLUTIONS_INTERFACES](RECETTE_EVOLUTIONS_INTERFACES.md).
+La fusion vers dev nécessite la CI complète de la dernière version.
+Aucun déploiement Alpha prévu ; les retouches seront décidées avec l’utilisateur.
+
+Vérifications K : validation et lint réussis, 868 tests PHP, 13 Python, compilation et 30 parcours navigateur concernés réussis après reprises. Le manifeste complet comporte 183 scénarios ; la CI complète reste obligatoire avant fusion. Voir le suivi Interfaces et flottes pour les preuves et les limites.

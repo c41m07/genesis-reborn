@@ -5,7 +5,7 @@
     "title": "Vos premiers jours",
     "paragraphs": [
       "Genesis Reborn est un jeu de stratégie spatiale : vous développez des colonies, débloquez des recherches et préparez des missions. Votre compte est commun, mais chaque univers possède sa progression et ses réglages. Vos actions et vos relations restent dans l’univers choisi.",
-      "Au départ, cherchez une économie qui fonctionne avant de multiplier les dépenses militaires. L’ordre ci-dessous est un conseil de découverte, pas une obligation ni une promesse de progression en un nombre de jours précis."
+      "Au départ, cherchez une économie qui fonctionne avant de multiplier les dépenses militaires. L’ordre ci-dessous est un conseil de découverte, pas une obligation ni une promesse de progression en un nombre de jours précis. Votre profil distingue les identifiants, le mot de passe facultatif et la suppression du compte. L’inventaire regroupe capacité, boosts, boîtes et récompenses en attente ; vous pouvez examiner puis annuler l’utilisation d’un bonus avant de confirmer."
     ],
     "steps": [
       "Repérez votre colonie active et les cinq ressources en haut de l’écran. Les stocks et les bâtiments appartiennent à cette planète.",
@@ -101,7 +101,7 @@
       "Les alliances personnelles et les alliances entre guildes exigent un accord réciproque. Vous ne pouvez appartenir qu’à une guilde dans un univers. Les relations influencent les camps et les missions autorisées ; elles restent propres à cet univers.",
       "Les rapports et notifications sont privés selon les droits de leurs destinataires. Leur absence immédiate ne signifie pas qu’une mission s’est arrêtée : consultez aussi son état dans la liste des flottes.",
       "Un univers temporaire peut avoir une date de fermeture. Une fois fermé, il devient inaccessible et ses données sont conservées. Les objectifs de progression de l’Alpha restent des repères à mesurer, pas des délais garantis pour obtenir une colonie ou un vaisseau.",
-      "Dans les messages privés et le canal de guilde, le triangle jaune à droite d’un message signalable ouvre le formulaire de motif. Il est utilisable au clavier et sur écran tactile."
+      "Dans les messages privés et le canal de guilde, le triangle jaune à droite d’un message signalable ouvre le formulaire de motif. Il est utilisable au clavier et sur écran tactile. Dans Diplomatie, les sections Ma guilde, Entre guildes et Commandants séparent votre équipage, les traités et les relations personnelles. Le lien Gérer la guilde retrouve les grades et le commandement ; l’aperçu des échanges ne marque pas le canal comme lu."
     ]
   },
   {

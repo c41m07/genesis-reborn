@@ -22,6 +22,7 @@ test('Profil : erreur explicite, champs conservés, confirmation et reconnexion'
   await login();
   await page.goto('/profil');
   await expect(page.getByRole('group', { name: 'Identifiants', exact: true })).toBeVisible();
+  await page.getByText('Changer de mot de passe — facultatif', { exact: true }).click();
   await expect(page.getByRole('group', { name: 'Changer de mot de passe', exact: true })).toBeVisible();
   for (const width of [1920, 1440, 1280, 768, 390]) {
     await page.setViewportSize({ width, height: 900 });
@@ -61,6 +62,7 @@ test('Compte : suppression confirmée, mot de passe, empires oubliés et session
   const playerId=Number(queryIsolatedSql(project,`SELECT id FROM player WHERE email='${email}'`));
   const second=await browser.newPage();await login(second);await second.goto('/profil');
   await page.goto('/profil');
+  await page.getByText('Supprimer mon compte', { exact: true }).click();
   const form=page.locator('form[action="/profil/supprimer"]');
   for (const width of [1440,390]) {
     await page.setViewportSize({width,height:900});await expect(form.getByRole('button')).toBeVisible();
@@ -78,6 +80,8 @@ test('Compte : suppression confirmée, mot de passe, empires oubliés et session
   await form.getByLabel('Je confirme la suppression définitive',{exact:false}).check();
   await form.getByLabel('Mot de passe pour supprimer le compte').fill('Wrong-password-2026!');await form.getByRole('button').click();
   await expect(page.getByRole('alert')).toContainText('Mot de passe actuel incorrect');
+  await expect(page).toHaveURL(/profil\?delete=1$/);
+  await expect(form.getByRole('button')).toBeVisible();
   expect(queryIsolatedSql(project,`SELECT email FROM player WHERE id=${playerId}`)).toBe(email);
   await form.getByLabel('Mot de passe pour supprimer le compte').fill(password);await form.getByLabel('Je confirme la suppression définitive',{exact:false}).check();
   await form.getByRole('button').focus();await page.keyboard.press('Enter');await expect(page).toHaveURL(/connexion/);

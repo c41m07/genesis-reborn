@@ -621,3 +621,13 @@ Après abandon, aucun nouveau kit de ressources n’est attribué si le même jo
 recolonise cette planète dans cet univers, y compris depuis une autre participation
 du même compte. Un autre propriétaire conserve le kit normal. Vaisseau colonisateur,
 carburant, durée, quota et multiplicateurs des autres fondations restent inchangés.
+
+### Présentation des pages Diplomatie, Profil et Inventaire
+
+Le lot K réorganise les pages sans changer les règles ci-dessus.
+La diplomatie garde les périmètres guilde, traités et commandants ; les grades,
+permissions et actions existants sont conservés. Les identifiants du profil
+restent communs au compte, avec fermeture de session après enregistrement.
+L’inventaire permet d’examiner et d’annuler l’utilisation avant confirmation ;
+seule la soumission effective peut consommer un objet, sous les contrôles
+habituels de propriété, univers, vacances, opération active et stockage.
