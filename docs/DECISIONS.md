@@ -1504,3 +1504,10 @@ des permissions ou règles de relations.
 Hors ligne en rouge avec texte. Le seuil d’activité existant (< cinq minutes) est
 réutilisé dans le même univers, uniquement pour les membres de la même guilde.
 L’état est calculé à l’ouverture/actualisation ; les heures et durées restent privées.
+
+### Précision de recette — adhésion distincte
+
+L’utilisateur demande un onglet Rejoindre une guilde à côté de Créer une guilde.
+Cette décision remplace l’organisation précédente à deux onglets sans guilde :
+il y en a désormais trois (Créer une guilde, Rejoindre une guilde, Relations commandants).
+Les cinq onglets avec guilde et les règles d’adhésion restent identiques.

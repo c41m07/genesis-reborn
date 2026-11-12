@@ -35,7 +35,7 @@ Le code comprend :
 - Diplomatie, guildes, messages, notifications, inventaire de boosts et événements. Le canal « Global », placé avant la guilde, permet aux joueurs de l’univers courant de discuter sans notifications, badges ni compteurs de messages non lus. Les conversations privées et de guilde s’ouvrent sur le dernier message ; les messages envoyés et reçus se distinguent par leur alignement, leur couleur et un libellé. Les deux boutons du menu mobile signalent les nouveautés d’administration, les messages et patchnotes non lus, ainsi que les nouvelles activités du journal jusqu’à la consultation de la vue générale sur cet appareil.
 - Le contrôle des traitements signale aussi les voyages sans planification ou en retard au-delà du seuil de leur univers, même si les processus fonctionnent et la file est vide. Sur la fiche d’une flotte échue, un retour forcé avec motif et confirmation programme son retour sans exécuter la mission à destination ; les combats en cours restent protégés. Aucun rattrapage automatique n’est effectué.
 - Interfaces Diplomatie, Profil et Inventaire réorganisées pour ordinateur et mobile :
-  sans guilde, deux onglets « Créer ou rejoindre une guilde » et « Relations commandants » ;
+  sans guilde, trois onglets « Créer une guilde », « Rejoindre une guilde » et « Relations commandants » ;
   avec guilde, cinq onglets « Ma guilde », « Membres », « Grades et permissions »,
   « Relations guildes » et « Relations commandants ». Les attributions de grades sont
   dans Membres ; le tag et le commandement restent dans Ma guilde. Les membres voient

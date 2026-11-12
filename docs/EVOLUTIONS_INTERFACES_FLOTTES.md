@@ -1683,3 +1683,21 @@ Complexité 3 : vérification du périmètre et de la base dev, publication de l
 PR puis fusion conditionnée à la réussite des cinq jobs quality sur la dernière version.
 Activation locale vérifiée après fusion ; aucun déploiement Alpha ni migration.
 Les mentions de retouches locales ci-dessus décrivent l’état avant cette publication.
+
+### Adhésion dans un onglet séparé — précision utilisateur
+
+Complexité 2 : séparer la création et l’adhésion sans changer les services métier.
+Trois onglets sans guilde : Créer une guilde, Rejoindre une guilde, Relations commandants.
+Cinq avec guilde inchangés. Le service d’adhésion existait déjà ; recherche et résultat
+restent limités à l’univers courant. Les anciennes adresses de recherche sont
+compatibles et ouvrent l’onglet Rejoindre ; un échec d’adhésion y revient également.
+Nouveau template player/_guild_join.html.twig, navigation et tests adaptés.
+Les bulles demandées restent incluses dans la même PR, avec toutes les autres retouches.
+
+Vérifications du complément : lint réussi, 26 tests PHP / 130 assertions pour
+les guildes et signalements, 1 test PHP / 20 assertions pour les bulles privées,
+4 scénarios navigateur concernés réussis (onglets, adhésion réelle, navigation
+et affichage adaptatif). Le premier passage CI a révélé le sélecteur historique
+.empire-details summary ; remplacé par les contrôles du popover et du bouton
+lié, tout en conservant les assertions de propriété et de stocks inchangés.
+Une CI complète sur la nouvelle version reste obligatoire avant fusion.

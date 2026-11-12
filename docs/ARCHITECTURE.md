@@ -392,8 +392,8 @@ d’audit. La page indique le besoin de ravitaillement avant confirmation.
 
 Les pages Diplomatie, Profil et Inventaire utilisent les styles limités
 à .page-refinement dans player-pages.css et les couleurs du thème existant.
-Les onglets de diplomatie restent des liens GET : deux sans guilde, cinq avec guilde.
-Le contrôleur normalise les anciens onglets indisponibles vers la création/recherche,
+Les onglets de diplomatie restent des liens GET : trois sans guilde, cinq avec guilde.
+Le contrôleur normalise les anciens onglets indisponibles vers la création et les anciennes adresses de recherche vers Rejoindre une guilde,
 conserve les recherches et redirige les enregistrements vers le panneau concerné.
 Les attributions sont dans Membres, l’édition dans Grades et permissions, le tag et
 le commandement dans Ma guilde. Les services métier, CSRF et versions restent identiques ;

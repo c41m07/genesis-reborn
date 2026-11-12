@@ -24,7 +24,7 @@ final class DiplomacyController extends AbstractController
                 $updated=true;
                 $this->addFlash('success','Diplomatie mise à jour.');
             } catch(\DomainException $e) { $this->addFlash('error',$e->getMessage()); }
-            $redirect=['q'=>$search,'tab'=>match($action){'rank_save'=>'ranks','rank_assign'=>'members','relation'=>'diplomacy','propose','accept','break','rival','peace_propose','peace_accept','peace_reject'=>'relations',default=>'guilds'}];
+            $redirect=['q'=>$search,'tab'=>match($action){'rank_save'=>'ranks','rank_assign'=>'members','join'=>$updated ? 'guilds' : 'join','relation'=>'diplomacy','propose','accept','break','rival','peace_propose','peace_accept','peace_reject'=>'relations',default=>'guilds'}];
             if($action==='rank_save') {
                 $redirect['rank']=$target;
                 if($updated) {
@@ -61,8 +61,9 @@ final class DiplomacyController extends AbstractController
         }
         $ownRow=null;
         foreach($guilds as $row) if($own && $row['guild']->id===$own->id) $ownRow=$row;
-        $tabs=$own ? ['guilds'=>'Ma guilde','members'=>'Membres','ranks'=>'Grades et permissions','diplomacy'=>'Relations guildes','relations'=>'Relations commandants'] : ['guilds'=>'Créer ou rejoindre une guilde','relations'=>'Relations commandants'];
+        $tabs=$own ? ['guilds'=>'Ma guilde','members'=>'Membres','ranks'=>'Grades et permissions','diplomacy'=>'Relations guildes','relations'=>'Relations commandants'] : ['guilds'=>'Créer une guilde','join'=>'Rejoindre une guilde','relations'=>'Relations commandants'];
         $tab=$request->query->getString('tab','guilds');
+        if(!$own && ($tab==='diplomacy' || ($tab==='guilds' && $search!==''))) $tab='join';
         if(!isset($tabs[$tab])) $tab='guilds';
         $selectedRank=$ranks[0]??null;
         if($request->query->has('rank')) {

@@ -54,9 +54,16 @@ final class EmpireDetailsTest extends WebTestCase
         $em->flush();
         self::assertSame($before,$em->getConnection()->fetchAllAssociative('SELECT id, current_stock, last_updated_at FROM planet_resource WHERE planet_id = ? ORDER BY id',[$home->id]));
         $client->loginUser($owner->player);
-        $client->request('GET','/planetes');
+        $crawler=$client->request('GET','/planetes');
         self::assertResponseIsSuccessful();
-        self::assertSelectorExists('.empire-details summary');
+        self::assertSelectorExists('.empire-details[popover="auto"][role="region"]');
+        self::assertSelectorExists('button.empire-name[popovertarget]');
+        self::assertSelectorNotExists('.empire-details summary');
+        $trigger=$crawler->filter('button.empire-name[popovertarget]')->first();
+        $panel=$crawler->filter('#'.$trigger->attr('popovertarget'));
+        self::assertCount(1,$panel);
+        self::assertSame('Vaisseaux et ressources de '.$home->name,$panel->attr('aria-label'));
+        self::assertStringContainsString($home->name,$trigger->text());
         self::assertSelectorTextNotContains('.empire-details','9999');
         $client->request('GET','/planetes/'.$away->id);
         self::assertResponseStatusCodeSame(404);

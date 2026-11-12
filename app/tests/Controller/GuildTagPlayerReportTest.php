@@ -185,7 +185,7 @@ final class GuildTagPlayerReportTest extends WebTestCase
         try { self::getContainer()->get(PlayerReportService::class)->review($this->reporter,$report->id,'dismiss'); }
         finally { self::assertSame('open',$connection->fetchOne('SELECT status FROM player_report WHERE id=?',[$report->id])); }
     }
-    public function testGuildlessNavigationHasTwoTabsAndKeepsScopedLegacySearch(): void
+    public function testGuildlessNavigationHasThreeTabsAndKeepsScopedLegacySearch(): void
     {
         $service=self::getContainer()->get(DiplomacyService::class);
         $service->create($this->target->currentPlayerUniverse,'GuildPublicLocal','LOC');
@@ -193,7 +193,9 @@ final class GuildTagPlayerReportTest extends WebTestCase
         $service->create($this->foreign->currentPlayerUniverse,'GuildPublicForeign','EXT');
         $crawler=$this->client->request('GET','/diplomatie?tab=diplomacy&q=GuildPublic');
         self::assertResponseIsSuccessful();
-        self::assertSame(['Créer ou rejoindre une guilde','Relations commandants'],$crawler->filter('nav[aria-label="Sections de diplomatie"] a')->each(fn($node)=>$node->text()));
+        self::assertSame(['Créer une guilde','Rejoindre une guilde','Relations commandants'],$crawler->filter('nav[aria-label="Sections de diplomatie"] a')->each(fn($node)=>$node->text()));
+        self::assertSame('page',$crawler->filter('nav a[href="/diplomatie?tab=join"]')->attr('aria-current'));
+        self::assertSelectorNotExists('#guild-name');
         self::assertCount(1,$crawler->filter('.guild-card'));
         self::assertSelectorNotExists('.guild-presence');
         self::assertSelectorTextContains('.guild-card','GuildPublicLocal');
@@ -202,6 +204,7 @@ final class GuildTagPlayerReportTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorNotExists('#guild-ranks-title');
         self::assertSelectorExists('#guild-name');
+        self::assertSelectorNotExists('#guild-search-query');
         $this->client->request('GET','/diplomatie?tab=relations');
         self::assertSelectorTextContains('h2','Relations entre commandants');
     }

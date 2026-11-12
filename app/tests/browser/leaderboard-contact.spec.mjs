@@ -168,7 +168,7 @@ test('Alliances : Guildes par défaut et panneaux séparés', async ({ page }) =
   await registerAndJoin(page, 'Tabs');
   await page.goto('/diplomatie');
   const tabs = page.getByRole('navigation', { name: 'Sections de diplomatie' });
-  await expect(tabs.getByRole('link')).toHaveText(['Créer ou rejoindre une guilde', 'Relations commandants']);
+  await expect(tabs.getByRole('link')).toHaveText(['Créer une guilde', 'Rejoindre une guilde', 'Relations commandants']);
   await expect(tabs.getByRole('link').first()).toHaveAttribute('aria-current', 'page');
   await expect(page.getByRole('region', { name: 'Centre de guilde' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Relations entre commandants' })).toHaveCount(0);

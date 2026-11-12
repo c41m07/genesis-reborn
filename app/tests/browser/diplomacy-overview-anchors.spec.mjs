@@ -1,6 +1,6 @@
 import { test, expect } from './support/isolated-test.mjs';
 
-test('Deux onglets sans guilde, recherche conservée et anciennes adresses compatibles', async ({ page }) => {
+test('Trois onglets sans guilde, recherche conservée et anciennes adresses compatibles', async ({ page }) => {
   const id = crypto.randomUUID().slice(0, 8);
   const email = 'diplomacy-' + id + '@example.test';
   const password = 'Browser-test-2026!';
@@ -18,15 +18,20 @@ test('Deux onglets sans guilde, recherche conservée et anciennes adresses compa
   await page.goto('/diplomatie');
   await expect(page.locator('.guild-hub-hero')).toContainText('Un empire se construit ensemble');
   const sections = page.getByRole('navigation', { name: 'Sections de diplomatie' });
-  await expect(sections.getByRole('link')).toHaveText(['Créer ou rejoindre une guilde','Relations commandants']);
-  for (const [label, tab, heading] of [['Créer ou rejoindre une guilde', 'guilds', 'Un empire se construit ensemble'], ['Relations commandants', 'relations', 'Relations entre commandants']]) {
+  await expect(sections.getByRole('link')).toHaveText(['Créer une guilde','Rejoindre une guilde','Relations commandants']);
+  for (const [label, tab, heading] of [['Créer une guilde', 'guilds', 'Un empire se construit ensemble'], ['Rejoindre une guilde', 'join', 'Rejoignez une guilde'], ['Relations commandants', 'relations', 'Relations entre commandants']]) {
     await sections.getByRole('link', { name: label, exact: true }).click();
     await expect(page).toHaveURL(url => url.searchParams.get('tab') === tab);
     await expect(sections.getByRole('link', { name: label, exact: true })).toHaveAttribute('aria-current', 'page');
     await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible();
   }
+  await sections.getByRole('link', { name: 'Créer une guilde', exact: true }).click();
+  await expect(page.getByLabel('Rechercher une guilde', {exact:true})).toHaveCount(0);
+  await sections.getByRole('link', { name: 'Rejoindre une guilde', exact: true }).click();
+  await expect(page.getByLabel('Nom de votre nouvelle guilde')).toHaveCount(0);
   await page.goto('/diplomatie?tab=diplomacy&q=introuvable');
-  await expect(sections.getByRole('link')).toHaveCount(2);
+  await expect(sections.getByRole('link', {name:'Rejoindre une guilde',exact:true})).toHaveAttribute('aria-current','page');
+  await expect(sections.getByRole('link')).toHaveCount(3);
   await expect(page.getByLabel('Rechercher une guilde', {exact:true})).toHaveValue('introuvable');
   await expect(page.getByRole('status')).toContainText('Aucune guilde');
   await page.goto('/diplomatie?tab=ranks');

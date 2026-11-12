@@ -28,6 +28,8 @@
 <p class="panel">Les guildes sont désactivées dans cet univers. Les relations entre commandants restent accessibles dans l’onglet Relations commandants.</p>
 {% elseif tab=='guilds' %}
     {% if own and ownRow %}{% include 'player/_guild_hub.html.twig' %}{% else %}{% include 'player/_guild_create.html.twig' %}{% endif %}
+{% elseif tab=='join' and not own %}
+    {% include 'player/_guild_join.html.twig' %}
 {% elseif tab=='members' and own and ownRow %}
     {% include 'player/_guild_members.html.twig' %}
 {% elseif tab=='ranks' and own %}

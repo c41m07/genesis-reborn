@@ -95,7 +95,7 @@ Le déploiement Alpha et un audit complet de conformité RGAA ne sont pas inclus
 
 ### Retouche Diplomatie approuvée
 
-- [ ] Sans guilde : seulement Créer ou rejoindre une guilde et Relations commandants ; recherche et adhésion dans le premier onglet.
+- [ ] Sans guilde : Créer une guilde, Rejoindre une guilde et Relations commandants ; formulaire de création dans le premier, recherche et adhésion dans le second. Vérifier une adhésion effective et la disparition des deux onglets après adhésion.
 - [ ] Avec guilde : Ma guilde, Membres, Grades et permissions, Relations guildes, Relations commandants ; tester chaque onglet au clavier et sur mobile.
 - [ ] Membres : noms, grades, messagerie et attributions autorisées ; état En ligne vert / Hors ligne rouge, avec texte, thèmes clair et sombre.
 - [ ] Deux comptes de la même guilde : actualiser la liste après cinq minutes sans activité du second ; son activité dans un autre univers ne doit pas changer cet état. Aucune heure ou durée ne doit être affichée.
