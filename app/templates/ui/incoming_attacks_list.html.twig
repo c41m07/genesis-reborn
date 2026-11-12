@@ -1,0 +1,15 @@
+{% if attacks is not empty %}
+<section class="incoming-attack-panel" aria-labelledby="incoming-attacks-heading">
+<h2 id="incoming-attacks-heading">Attaques détectées · {{ attacks|length }}</h2>
+<p>Organisez votre défense et vos renforts avant l’impact.</p>
+<div class="incoming-attack-grid">
+{% for attack in attacks %}<article data-incoming-attack="{{ attack.id }}">
+<h3>{{ attack.destinationName }} · {{ attack.destinationCoordinates }}</h3>
+<p><strong>{{ attack.ownerName }}</strong> · {{ attack.shipCount|quantity(0) }} vaisseau{{ attack.shipCount == 1 ? '' : 'x' }} · {{ attack.fleetPoints|quantity(0) }} point{{ attack.fleetPoints == 1 ? '' : 's' }}</p>
+<p>Impact dans <time datetime="{{ attack.arrivalAt }}" data-incoming-impact="{{ attack.arrivalAt }}" aria-live="off">{{ attack.arrivalAt|date('d/m/Y H:i:s',preferences.timezone|default(app.user.preferences.timezone|default('Europe/Paris'))) }}</time></p>
+<p>{{ attack.originName }}{% if attack.originCoordinates %} · {{ attack.originCoordinates }}{% endif %}</p>
+<a class="secondary" href="{{ path('app_colony',{id:attack.destinationPlanetId}) }}">Ouvrir la colonie {{ attack.destinationName }}</a>
+</article>{% endfor %}
+</div>
+</section>
+{% endif %}

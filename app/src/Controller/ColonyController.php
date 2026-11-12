@@ -15,7 +15,7 @@ use Psr\Clock\ClockInterface;
 final class ColonyController extends AbstractController
 {
     public function __construct(private UniverseContext $context,private GameRepository $repo,private QueueService $queueService,
-        private \App\Service\Combat\CombatEventService $combats,private \App\Service\Combat\OccupationService $occupations,private LeaderboardService $leaderboard) {}
+        private \App\Service\Combat\CombatEventService $combats,private \App\Service\Combat\OccupationService $occupations,private LeaderboardService $leaderboard,private \App\Service\Fleet\FleetVisibility $visibility) {}
     private function owned(int $id): Planet
     {
         $m=$this->context->membership();$p=$this->repo->find(Planet::class,$id);
@@ -276,70 +276,7 @@ final class ColonyController extends AbstractController
                 ];
             }
 
-            $missionLabels = ['explore' => 'Exploration', 'spy' => 'Espionnage', 'colonize' => 'Colonisation', 'transport' => 'Transport', 'attack' => 'Attaque', 'conquer' => 'Conquête JcE', 'defend' => 'Défense', 'orbit' => 'Orbite'];
-            $statusLabels = ['traveling' => 'En vol', 'returning' => 'Retour', 'attacking' => 'Combat', 'defending' => 'Défense', 'orbiting' => 'En orbite', 'occupying' => 'Occupation JcE', 'orbit_pending' => 'Demande d’orbite'];
-            $relatedOwnerCache = [];
-            foreach ($this->repo->activeFleetsInUniverse($m->universe) as $fleet) {
-                if (!isset($statusLabels[$fleet->status])) continue;
-                $originSystem = $fleet->homePlanet->solarSystem;
-                $destinationSystem = $fleet->destination?->solarSystem ?? $fleet->destinationSystem;
-                if (!$destinationSystem) continue;
-                $isOwnFleet = $fleet->playerUniverse->id === $m->id;
-                if ($fleet->mission === 'spy' && !$isOwnFleet) continue;
-                $targetsOwnColony = $fleet->destination?->owner?->id === $m->id;
-                $ownerId = (int) $fleet->playerUniverse->id;
-                if (!array_key_exists($ownerId, $relatedOwnerCache)) {
-                    $relatedOwnerCache[$ownerId] = $isOwnFleet || ($relations?->allied($m, $fleet->playerUniverse) ?? false);
-                }
-                $isAlliedFleet = !$isOwnFleet && $relatedOwnerCache[$ownerId];
-                if (!$isOwnFleet && !$targetsOwnColony && !$isAlliedFleet) continue;
-                $originInGalaxy = $selectedGalaxy && $originSystem->galaxy->id === $selectedGalaxy->id;
-                $destinationInGalaxy = $selectedGalaxy && $destinationSystem->galaxy->id === $selectedGalaxy->id;
-                if (!$originInGalaxy && !$destinationInGalaxy) continue;
-
-                $ships = array_values(array_filter($this->repo->all(FleetShip::class, ['fleet' => $fleet]), static fn (FleetShip $ship): bool => $ship->quantity > 0));
-                $shipsSummary = $isOwnFleet ? implode(' · ', array_map(fn (FleetShip $ship): string => $ship->quantity.' × '.str_replace('_', ' ', $ship->slug).' ('.$catalog->tiers()[$ship->tier]['label'].')', $ships)) : null;
-                $relationLabel = $isOwnFleet ? 'Votre empire' : ($targetsOwnColony ? 'Flotte entrante' : 'Allié');
-                $recallRoute=null;
-                if(isset($fleet->navigation['recall']) && $fleet->status==='returning') {
-                    $returnPlanet=$fleet->returnPlanet??$fleet->homePlanet;
-                    $canSeeRoute=$isOwnFleet || (isset($known[$originSystem->id],$known[$destinationSystem->id],$known[$returnPlanet->solarSystem->id]));
-                    $recallRoute=$canSeeRoute?['startProgress'=>(float)$fleet->navigation['recall']['progress'],
-                        'returnSystemId'=>$returnPlanet->solarSystem->id,'returnName'=>$returnPlanet->name,
-                        'returnPosition'=>$returnPlanet->position]:['hidden'=>true];
-                }
-                $progressState=($fleet->navigation['active']['status']??null)===$fleet->status?$fleet->navigation['active']:null;
-
-                $flights[] = [
-                    'id' => $fleet->id,
-                    'mission' => $fleet->mission,
-                    'missionLabel' => $missionLabels[$fleet->mission] ?? 'Mission',
-                    'status' => $fleet->status,
-                    'statusLabel' => $statusLabels[$fleet->status],
-                    'relationLabel' => $relationLabel,
-                    'ownerName' => $fleet->playerUniverse->getDisplayName(),
-                    'originSystemId' => $originSystem->id,
-                    'originGalaxy' => $originSystem->galaxy->coordinateCode(),
-                    'originX' => $originSystem->coordX,
-                    'originY' => $originSystem->coordY,
-                    'originName' => $fleet->homePlanet->name,
-                    'destinationSystemId' => $destinationSystem->id,
-                    'destinationGalaxy' => $destinationSystem->galaxy->coordinateCode(),
-                    'destinationX' => $destinationSystem->coordX,
-                    'destinationY' => $destinationSystem->coordY,
-                    'destinationName' => $fleet->destination?->name ?? $destinationSystem->name,
-                    'destinationCoordinates' => $fleet->destination?->coordinates() ?? ($destinationSystem->galaxy->coordinateCode().':'.$destinationSystem->number()),
-                    'recallRoute'=>$recallRoute,
-                    'progressBase'=>$progressState['progress']??null,
-                    'progressAt'=>$progressState['at']??null,
-                    'departureAt' => $fleet->departureAt?->format(\DateTimeInterface::ATOM),
-                    'arrivalAt' => $fleet->arrivalAt?->format(\DateTimeInterface::ATOM),
-                    'ownedByCurrentPlayer' => $isOwnFleet,
-                    'shipCount' => array_sum(array_map(static fn (FleetShip $ship): int => $ship->quantity, $ships)),
-                    'fleetPoints' => $this->leaderboard->fleetPoints($fleet, $ships),
-                    'ships' => $shipsSummary,
-                ];
-            }
+            $flights=$this->visibility->forMap($m,$selectedGalaxy);
 
             $galaxyV2Json = json_encode([
                 'systems' => $mapSystems,

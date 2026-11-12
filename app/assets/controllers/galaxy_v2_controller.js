@@ -94,6 +94,8 @@ export default class extends Controller {
         this.updateMotionButton();
         this.timerInterval = this.flights.length ? window.setInterval(() => this.updateFlightTimers(), 1000) : null;
         this.updateFlightTimers();
+        this.fleetRefreshHandler = event => this.refreshVisibleFleets(event.detail);
+        window.addEventListener('genesis:visible-fleets', this.fleetRefreshHandler);
         this.startLoop();
     }
 
@@ -102,7 +104,26 @@ export default class extends Controller {
         if (this.timerInterval) window.clearInterval(this.timerInterval);
         this.resizeObserver?.disconnect();
         document.removeEventListener('visibilitychange', this.visibilityHandler);
+        window.removeEventListener('genesis:visible-fleets', this.fleetRefreshHandler);
         this.unbindEvents();
+    }
+
+    refreshVisibleFleets(data) {
+        if (Number(data.galaxy) !== Number(this.element.dataset.surveillanceGalaxy)) return;
+        this.serverClockOffset = Date.parse(data.serverNow) - Date.now();
+        this.flights = data.flights.map(flight => ({
+            ...flight,
+            originSystem: this.systemById.get(Number(flight.originSystemId)),
+            destinationSystem: this.systemById.get(Number(flight.destinationSystemId)),
+            trail: [],
+        }));
+        this.fleetLogTarget.innerHTML = data.fleetLog;
+        this.element.querySelector('[data-galaxy-v2-empty-label]').hidden = this.flights.length > 0;
+        this.element.querySelector('.gv2-flight-log')?.classList.toggle('is-empty', !this.flights.length);
+        if (this.flights.length && !this.timerInterval && !document.hidden)
+            this.timerInterval = window.setInterval(() => this.updateFlightTimers(), 1000);
+        this.updateFlightTimers();
+        this.drawFrame(0);
     }
 
     seededRandom(seed) {

@@ -1,0 +1,10 @@
+{% if galaxy_v2_flights is empty %}<p class="gv2-empty-log">Aucune flotte en mission actuellement.</p>{% else %}
+                    {% for flight in galaxy_v2_flights %}<article class="gv2-flight-entry" data-flight-id="{{ flight.id }}">
+                        <strong>{{ flight.missionLabel }}</strong><span>{{ flight.statusLabel }}</span>
+                        <small>{{ flight.relationLabel }} · {{ flight.ownerName }}</small>
+                        <small>{{ flight.originName }} → {{ flight.destinationName }}</small>
+                        <small>{{ flight.shipCount|quantity(0) }} vaisseau{{ flight.shipCount == 1 ? '' : 'x' }} · {{ flight.fleetPoints|quantity(0) }} point{{ flight.fleetPoints == 1 ? '' : 's' }}</small>
+                        {% if flight.ownedByCurrentPlayer and flight.ships %}<small>{{ flight.ships }}</small>{% endif %}
+                        {% if flight.arrivalAt %}<time datetime="{{ flight.arrivalAt }}" data-galaxy-v2-countdown="{{ flight.arrivalAt }}">Calcul du temps…</time>{% endif %}
+                    </article>{% endfor %}
+                {% endif %}

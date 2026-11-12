@@ -7,7 +7,7 @@
 {% include 'ui/galaxy_tabs.html.twig' %}
 <h1 class="visually-hidden">Carte interactive de la galaxie</h1>
 
-<div class="galaxy-v2" data-controller="galaxy-v2" data-action="keydown->galaxy-v2#navigateBack"
+<div class="galaxy-v2" data-controller="galaxy-v2" data-surveillance-galaxy="{{ selected_galaxy.id|default(0) }}" data-action="keydown->galaxy-v2#navigateBack"
      data-galaxy-v2-map-value="{{ galaxy_v2_json|e('html_attr') }}"
      data-galaxy-v2-reduced-motion-value="{{ preferences.reducedMotion|default(false)?'true':'false' }}">
     <div class="gv2-scene" data-galaxy-v2-target="scene">
@@ -65,18 +65,9 @@
             <span>CARTE LOCALE</span><canvas data-galaxy-v2-target="minimapCanvas" aria-label="Mini-carte interactive ; cliquez pour déplacer la caméra"></canvas>
         </div>
         <details class="gv2-flight-log {{ galaxy_v2_flights is empty?'is-empty':'' }}" {{ galaxy_v2_flights is not empty?'open':'' }}>
-            <summary><span class="gv2-live-dot" aria-hidden="true"></span>Journal de flotte{% if galaxy_v2_flights is empty %}<span class="visually-hidden"> · aucune mission</span>{% endif %}</summary>
+            <summary><span class="gv2-live-dot" aria-hidden="true"></span>Journal de flotte<span class="visually-hidden" data-galaxy-v2-empty-label {% if galaxy_v2_flights is not empty %}hidden{% endif %}> · aucune mission</span></summary>
             <div data-galaxy-v2-target="fleetLog">
-                {% if galaxy_v2_flights is empty %}<p class="gv2-empty-log">Aucune flotte en mission actuellement.</p>{% else %}
-                    {% for flight in galaxy_v2_flights %}<article class="gv2-flight-entry" data-flight-id="{{ flight.id }}">
-                        <strong>{{ flight.missionLabel }}</strong><span>{{ flight.statusLabel }}</span>
-                        <small>{{ flight.relationLabel }} · {{ flight.ownerName }}</small>
-                        <small>{{ flight.originName }} → {{ flight.destinationName }}</small>
-                        <small>{{ flight.shipCount|quantity(0) }} vaisseau{{ flight.shipCount == 1 ? '' : 'x' }} · {{ flight.fleetPoints|quantity(0) }} point{{ flight.fleetPoints == 1 ? '' : 's' }}</small>
-                        {% if flight.ownedByCurrentPlayer and flight.ships %}<small>{{ flight.ships }}</small>{% endif %}
-                        {% if flight.arrivalAt %}<time datetime="{{ flight.arrivalAt }}" data-galaxy-v2-countdown="{{ flight.arrivalAt }}">Calcul du temps…</time>{% endif %}
-                    </article>{% endfor %}
-                {% endif %}
+                {% include 'universe/_fleet_log.html.twig' %}
             </div>
         </details>
         <div class="gv2-map-controls">

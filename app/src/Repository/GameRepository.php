@@ -233,6 +233,18 @@ SQL;
     }
 
     /** @return list<Fleet> */
+    public function incomingAttackFleets(PlayerUniverse $viewer): array
+    {
+        return $this->em->createQueryBuilder()->select('f','target')
+            ->from(Fleet::class,'f')->join('f.destination','target')->join('f.playerUniverse','sender')
+            ->where('target.owner = :viewer')->andWhere('sender.universe = :universe')->andWhere('f.playerUniverse <> :viewer')
+            ->andWhere('f.status = :status')->andWhere('f.mission IN (:missions)')
+            ->setParameter('viewer',$viewer)->setParameter('universe',$viewer->universe)
+            ->setParameter('status','traveling')->setParameter('missions',['attack','conquer'])
+            ->orderBy('f.arrivalAt','ASC')->addOrderBy('f.id','ASC')->getQuery()->getResult();
+    }
+
+    /** @return list<Fleet> */
     public function activeFleetsInUniverse(Universe $universe): array
     {
         return $this->em->createQueryBuilder()->select('f', 'pu', 'home', 'homeSystem', 'homeGalaxy', 'destination', 'destinationSystem', 'destinationGalaxy', 'directSystem', 'directGalaxy')
