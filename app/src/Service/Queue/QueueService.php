@@ -179,7 +179,7 @@ final class QueueService
         }
         foreach($this->repo->all(QueueItem::class,['dependsOn'=>$item]) as $dependent) $dependent->dependsOn=null;
         $group=match($item->queueType){'building'=>'buildings','research'=>'technologies',default=>isset($this->catalog->all('defenses')[$item->itemSlug])?'defenses':'ships'};
-        $this->notifications->enqueue($m,'Terminé : '.$this->catalog->getTierForUniverse($m->universe,$group,$item->itemSlug,$item->tier)['label'].' sur '.$planet->name.'.');
+        $this->notifications->enqueue($m,'Terminé : '.$this->catalog->getTierForUniverse($m->universe,$group,$item->itemSlug,$item->tier)['label'].' sur '.$planet->name.'.',journalKind:'queue');
         $this->reconstruction->afterCompletionLocked($item);
         $type=$item->queueType;$this->manager->remove($item);$this->manager->flush();
         if($type==='research') {

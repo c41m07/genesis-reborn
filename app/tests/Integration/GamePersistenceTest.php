@@ -218,7 +218,7 @@ final class GamePersistenceTest extends KernelTestCase
         $service=self::getContainer()->get(\App\Service\Fleet\FleetService::class);
         $service->send($m,$origin,'colonize',$target->id,['colony_ship'=>$ranks],1,[],str_repeat('a',32));
         $fleet=$this->em->getRepository(\App\Entity\Fleet::class)->findOneBy(['status'=>'traveling']);$this->land($fleet,$service);
-        self::assertSame($m->id,$target->owner->id);
+        self::assertSame($m->id,$target->owner->id);self::assertNotNull($target->acquiredAt);
         $kit=self::getContainer()->get(\App\Service\Catalog\GameCatalog::class)->rules()['colony_initial_stock'];
         foreach($this->em->getRepository(PlanetResource::class)->findBy(['planet'=>$target]) as $resource) self::assertEquals($kit[$resource->resourceType]*$factor,$resource->currentStock);
         if(isset($ranks['superior']) && $consumedTier!=='superior') self::assertSame(1,$this->em->getRepository(FleetShip::class)->findOneBy(['fleet'=>$fleet,'slug'=>'colony_ship','tier'=>'superior'])->quantity);

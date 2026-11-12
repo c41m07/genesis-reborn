@@ -223,7 +223,7 @@ SQL;
     public function planets(Universe $u, ?PlayerUniverse $owner = null, bool $freeOnly = false): array
     {
         $q = $this->em->createQueryBuilder()->select('p', 's', 'g')->from(Planet::class, 'p')->join('p.solarSystem','s')->join('s.galaxy','g')->where('g.universe = :u')->setParameter('u',$u)->orderBy('p.id','ASC');
-        if ($owner) $q->andWhere('p.owner = :owner')->setParameter('owner',$owner);
+        if ($owner) $q->andWhere('p.owner = :owner')->setParameter('owner',$owner)->orderBy('p.acquiredAt','ASC')->addOrderBy('p.id','ASC');
         if ($freeOnly) $q->andWhere('p.owner IS NULL');
         return $q->getQuery()->getResult();
     }

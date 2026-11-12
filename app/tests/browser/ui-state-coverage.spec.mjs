@@ -61,7 +61,7 @@ test('Les écrans métier se chargent, restent stables et exposent un arbre acce
     const unnamed = tree.nodes.filter(node => !node.ignored && interactiveRoles.has(node.role?.value) && !(node.name?.value ?? '').trim()).map(node => node.role.value);
     findings.push({ label, route, status, stuckBusy, brokenImages, unnamed });
     expect(status, label + ': réponse HTTP').toBe(200);
-    if (route === '/') await expect(page.getByText('Aucune activité récente. Les nouvelles étapes de votre empire apparaîtront ici.')).toBeVisible();
+    if (route === '/') await expect(page.locator('.dashboard-journal .dashboard-empty')).toContainText('Aucun événement d’absence à consulter');
     if (route === '/flottes') {
       await expect(page.getByRole('heading', { name: 'Aucun vaisseau disponible' })).toBeVisible();
       await expect(page.getByText('Aucune demande d’orbite en attente.')).toBeVisible();

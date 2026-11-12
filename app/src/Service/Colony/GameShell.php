@@ -6,7 +6,7 @@ use Psr\Clock\ClockInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 final class GameShell
 {
-    public function __construct(private GameRepository $repo,private ResourceService $resources,private ClockInterface $clock,private RequestStack $requests,private \App\Service\Event\EventPanelService $eventPanel,private \App\Service\Player\LeaderboardService $leaderboard,private \App\Service\Player\SocialMessageService $messages,private \App\Service\Catalog\GameCatalog $catalog,private \App\Service\Player\VacationCalendar $vacations,private \App\Service\Player\EmpireActivityService $activity) {}
+    public function __construct(private GameRepository $repo,private ResourceService $resources,private ClockInterface $clock,private RequestStack $requests,private \App\Service\Event\EventPanelService $eventPanel,private \App\Service\Player\LeaderboardService $leaderboard,private \App\Service\Player\SocialMessageService $messages,private \App\Service\Catalog\GameCatalog $catalog,private \App\Service\Player\VacationCalendar $vacations,private \App\Service\Player\EmpireActivityService $activity,private \App\Service\Notification\JournalService $journal) {}
     public function get(?Player $player,?Planet $selected=null):array
     {
         $m=$player?->currentPlayerUniverse;
@@ -25,6 +25,6 @@ final class GameShell
             $levels=$this->repo->levelsByTier(\App\Entity\PlayerTechnology::class,['playerUniverse'=>$m])['colonial_expansion']??[];
             $colonyLimit=\App\Service\Catalog\GameCatalog::colonyLimit($levels,$effect,$colonyLimit);
         }
-        return ['vacation'=>$this->vacations->currentPeriod($m),'colonyLimit'=>$colonyLimit,'unreadMessages'=>$this->messages->unreadPrivateCount($m)+$this->messages->unreadGuildCount($m),'protection'=>$protection,'membership'=>$m,'planet'=>$selected,'planets'=>$planets,'resources'=>$selected?$this->resources->snapshot($selected):[],'notifications'=>$notifications,'events'=>$this->eventPanel->forPlayer($m)];
+        return ['journal'=>$this->journal->data($m),'vacation'=>$this->vacations->currentPeriod($m),'colonyLimit'=>$colonyLimit,'unreadMessages'=>$this->messages->unreadPrivateCount($m)+$this->messages->unreadGuildCount($m),'protection'=>$protection,'membership'=>$m,'planet'=>$selected,'planets'=>$planets,'resources'=>$selected?$this->resources->snapshot($selected):[],'notifications'=>$notifications,'events'=>$this->eventPanel->forPlayer($m)];
     }
 }

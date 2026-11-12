@@ -122,7 +122,7 @@ final class CombatEventService
             if(!$this->occupations->stationReinforcementLocked($fleet)) return false;
             if($pending===null) $pending=$this->repo->one(CombatEvent::class,['planet'=>$planet,'status'=>'pending']);
             if($pending!==null) { $ids=$pending->combatSnapshot['occupation']['fleet_ids']??[];$ids[]=$fleet->id;$pending->combatSnapshot['occupation']['fleet_ids']=array_values(array_unique($ids)); }
-            $this->notifications->enqueue($fleet->playerUniverse,'Votre flotte renforce l’occupation de '.$planet->name.'. Son échéance reste inchangée.');
+            $this->notifications->enqueue($fleet->playerUniverse,'Votre flotte renforce l’occupation de '.$planet->name.'. Son échéance reste inchangée.',journalKind:'combat');
             return true;
         }
         if($fleet->mission==='defend' && $fleet->orbitDurationSeconds>0) return false;
@@ -211,7 +211,7 @@ final class CombatEventService
         $message = $discovered
             ? 'Demande d’orbite sur ' . $planet->name . ' par ' . $fleet->playerUniverse->getDisplayName() . ' depuis ' . $origin . '.'
             : 'Demande d’orbite sur ' . $planet->name . ' depuis ' . $origin . ' ; identité à confirmer.';
-        $this->notifications->enqueue($host, $message);
+        $this->notifications->enqueue($host, $message,journalKind:'combat');
     }
 
     public function joinOpenDefense(Fleet $fleet): bool
@@ -336,7 +336,7 @@ final class CombatEventService
             $this->manager->save($outbox);
             if(isset($event->combatSnapshot['occupation'])) {
                 $this->registerOccupationForces($event);
-                $this->notifications->enqueue($holder,'Combat ouvert autour de votre occupation sur '.$planet->name.'.');
+                $this->notifications->enqueue($holder,'Combat ouvert autour de votre occupation sur '.$planet->name.'.',journalKind:'combat');
             } elseif ($planet->owner) {
                 $this->registerGarrison($event, $planet->owner);
                 $this->notifyAttack($planet, $fleet);
@@ -586,6 +586,7 @@ final class CombatEventService
                 $this->notifications->enqueue(
                     $participant->playerUniverse,
                     'Combat terminé sur ' . $event->planet->name . ' : ' . $this->outcomeLabel($result['outcome']) . '.',
+                    journalKind: 'combat',
                 );
             }
 
@@ -766,7 +767,7 @@ final class CombatEventService
             if($this->occupations->isEnabled()) {
                 $occupation=$this->occupations->beginAfterVictoryLocked($event,$fleet);
                 if($occupation!==null) {
-                    $this->notifications->enqueue($participant->playerUniverse,'Occupation JcE commencée sur '.$event->planet->name.'. Votre flotte reste sur place pendant 24 heures ; la planète ne vous appartient pas encore.');
+                    $this->notifications->enqueue($participant->playerUniverse,'Occupation JcE commencée sur '.$event->planet->name.'. Votre flotte reste sur place pendant 24 heures ; la planète ne vous appartient pas encore.',journalKind:'combat');
                     return ['status'=>'occupying','reason'=>null,'fleet_id'=>$fleet->id,'captor_player_universe_id'=>$participant->playerUniverse->id,
                         'occupation_id'=>$occupation->id,'capture_at'=>$occupation->captureAt->format(DATE_ATOM)];
                 }
@@ -782,11 +783,11 @@ final class CombatEventService
             $lossKey = $fleet->id . ':colony_ship';
             $losses[$lossKey] = ($losses[$lossKey] ?? 0) + 1;
             $event->planet->name = $this->planetNames->generate($participant->playerUniverse);
-            $event->planet->owner = $participant->playerUniverse;
+            $event->planet->acquireBy($participant->playerUniverse,$this->clock->now());
             foreach ($this->repo->all(PlanetNpcShip::class, ['planet' => $event->planet]) as $npcShip) $this->manager->remove($npcShip);
             foreach ($this->repo->all(PlanetDefense::class, ['planet' => $event->planet]) as $defense) $this->manager->remove($defense);
             if ($this->repo->all(\App\Entity\PlanetResource::class, ['planet' => $event->planet]) === []) $this->resources->initialize($event->planet, true);
-            $this->notifications->enqueue($participant->playerUniverse, 'Planète PNJ conquise : ' . $event->planet->name . '. Ses bâtiments et ressources sont conservés.');
+            $this->notifications->enqueue($participant->playerUniverse, 'Planète PNJ conquise : ' . $event->planet->name . '. Ses bâtiments et ressources sont conservés.',journalKind:'combat');
 
             return ['status' => 'captured', 'reason' => null, 'fleet_id' => $fleet->id, 'captor_player_universe_id' => $participant->playerUniverse->id];
         }
@@ -798,7 +799,7 @@ final class CombatEventService
                 'target_claimed' => 'Combat gagné, mais la planète a déjà été revendiquée.',
                 default => 'Combat gagné, mais aucun vaisseau colonie n’a survécu pour prendre la planète.',
             };
-            $this->notifications->enqueue($participant->playerUniverse, $message);
+            $this->notifications->enqueue($participant->playerUniverse, $message,journalKind:'combat');
         }
         return ['status' => 'failed', 'reason' => $reason];
     }
@@ -917,7 +918,7 @@ final class CombatEventService
             $membership->lastRecoveryProtectionAt = $now;
             $membership->recoveryProtectedUntil = $now->modify('+' . $duration . ' seconds');
             $protected[] = (int) $id;
-            $this->notifications->enqueue($membership, 'Protection de récupération activée pendant 24 heures après de lourdes pertes.');
+            $this->notifications->enqueue($membership, 'Protection de récupération activée pendant 24 heures après de lourdes pertes.',journalKind:'combat');
         }
         sort($protected);
         return $protected;
@@ -1126,7 +1127,7 @@ final class CombatEventService
             if ($this->relations->allied($recipient, $fleet->playerUniverse)) {
                 continue;
             }
-            $this->notifications->enqueue($recipient, $message);
+            $this->notifications->enqueue($recipient, $message,journalKind:'combat');
         }
     }
 
@@ -1144,7 +1145,7 @@ final class CombatEventService
         $message = $discovered
             ? 'Renfort détecté par ' . $fleet->playerUniverse->getDisplayName() . ' depuis ' . $origin . '.'
             : 'Renfort détecté depuis ' . $origin . ' ; identité inconnue.';
-        $this->notifications->enqueue($defender, $message);
+        $this->notifications->enqueue($defender, $message,journalKind:'combat');
     }
 
     private function outcomeLabel(string $outcome): string

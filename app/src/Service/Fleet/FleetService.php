@@ -196,7 +196,7 @@ final class FleetService
                     $stock=$this->repo->one(FleetShip::class,['fleet'=>$idle,'slug'=>$s->slug,'tier'=>$s->tier])??new FleetShip();$stock->fleet=$idle;$stock->slug=$s->slug;$stock->tier=$s->tier;$stock->quantity+=$s->quantity;$this->manager->save($stock);$this->manager->remove($s);
                 }
                 $f->cargo=[];$f->reservedFuel=0;$f->status='completed';$f->arrivalAt=null;$f->dispatchToken=Uuid::v4()->toRfc4122();
-                $this->notifications->enqueue($m,'Votre flotte est rentrée sur '.$f->homePlanet->name.'.');return;
+                $this->notifications->enqueue($m,'Votre flotte est rentrée sur '.$f->homePlanet->name.'.',journalKind:'arrival');return;
             }
             $oneWay=max(0,($f->reservedFuel-$f->orbitFuel)/2);$f->cargo['hydrogen']=max(0,($f->cargo['hydrogen']??0)-$oneWay);$f->reservedFuel-=$oneWay;
             if($m->isForgotten()) {
@@ -204,22 +204,22 @@ final class FleetService
             }
             if($f->mission!=='transport' && ($this->vacations->isActive($m) || ($f->destination?->owner!==null && $this->vacations->isActive($f->destination->owner)))) {
                 $this->releaseOrbitFuel($f);$this->startReturn($f,$f->arrivalAt);
-                $this->notifications->enqueue($m,'Mission annulée : un empire concerné est en vacances. Votre flotte rentre.');
+                $this->notifications->enqueue($m,'Mission annulée : un empire concerné est en vacances. Votre flotte rentre.',journalKind:'arrival');
                 return;
             }
             if(in_array($f->mission,['attack','conquer'],true)) {
                 if($this->combats->joinAttack($f)) return;
-                $this->releaseOrbitFuel($f);$this->notifications->enqueue($m,'La fenêtre de combat était déjà close. Votre flotte repart.');
+                $this->releaseOrbitFuel($f);$this->notifications->enqueue($m,'La fenêtre de combat était déjà close. Votre flotte repart.',journalKind:'arrival');
             } elseif($f->mission==='defend') {
                 if($this->combats->arriveDefender($f)) return;
-                $this->releaseOrbitFuel($f);$this->notifications->enqueue($m,'La fenêtre de combat était close. Votre flotte repart.');
+                $this->releaseOrbitFuel($f);$this->notifications->enqueue($m,'La fenêtre de combat était close. Votre flotte repart.',journalKind:'arrival');
             } elseif($f->mission==='orbit') {
                 if(!$this->combats->canOrbit($m,$f->destination)) { $this->releaseOrbitFuel($f);$this->startReturn($f,$f->arrivalAt);return; }
                 if($this->combats->orbitAutoAccepted($m,$f->destination)) {
                     if($this->combats->joinOpenDefense($f)) return;
                     $this->startOrbit($f);
-                    $this->notifications->enqueue($m,'Votre flotte est acceptée automatiquement en orbite sur '.$f->destination->name.'.');
-                    $this->notifications->enqueue($f->destination->owner,'Flotte alliée en orbite sur '.$f->destination->name.'.');
+                    $this->notifications->enqueue($m,'Votre flotte est acceptée automatiquement en orbite sur '.$f->destination->name.'.',journalKind:'arrival');
+                    $this->notifications->enqueue($f->destination->owner,'Flotte alliée en orbite sur '.$f->destination->name.'.',journalKind:'arrival');
                     return;
                 }
                 $f->status='orbit_pending';$f->arrivalAt=null;$f->dispatchToken=Uuid::v4()->toRfc4122();$this->combats->notifyOrbitRequest($f);
@@ -235,13 +235,13 @@ final class FleetService
                 $d=$this->repo->one(PlayerDiscovery::class,['playerUniverse'=>$m,'solarSystem'=>$f->destinationSystem]);
                 $newDiscovery = !$d;
                 if(!$d) { $d=new PlayerDiscovery();$d->playerUniverse=$m;$d->solarSystem=$f->destinationSystem;$this->manager->save($d); }
-                $this->consumeShip($f,'probe');$this->notifications->enqueue($m,'Système découvert : '.$f->destinationSystem->name.'.');
+                $this->consumeShip($f,'probe');$this->notifications->enqueue($m,'Système découvert : '.$f->destinationSystem->name.'.',journalKind:'arrival');
                 if ($newDiscovery) { $this->boostGrants->awardRiskMission($m,$f); $this->boostEvents->recordExplorationDiscovery($m,$f->destinationSystem); }
             } elseif($f->mission==='colonize') {
                 $target=$f->destination;$this->manager->lock($target);
                 $limit=$this->planetLimit($m,$this->catalog->forUniverse($m->universe));
-                if(!$target->owner && !$target->npcPlanet && count($this->repo->planets($m->universe,$m))<$limit) { $target->name=$this->planetNames->generate($m);$target->owner=$m;$colonyTier=$this->consumeShip($f,'colony_ship');$this->resources->initialize($target,true,stockMultiplier:GameCatalog::tierFactor($colonyTier));$this->notifications->enqueue($m,'Nouvelle colonie : '.$target->name.'.'); }
-                else $this->notifications->enqueue($m,'Colonisation impossible à l’arrivée. Votre flotte revient.');
+                if(!$target->owner && !$target->npcPlanet && count($this->repo->planets($m->universe,$m))<$limit) { $target->name=$this->planetNames->generate($m);$target->acquireBy($m,$this->clock->now());$colonyTier=$this->consumeShip($f,'colony_ship');$this->resources->initialize($target,true,stockMultiplier:GameCatalog::tierFactor($colonyTier));$this->notifications->enqueue($m,'Nouvelle colonie : '.$target->name.'.',journalKind:'arrival'); }
+                else $this->notifications->enqueue($m,'Colonisation impossible à l’arrivée. Votre flotte revient.',journalKind:'arrival');
             } elseif($f->mission==='transport') {
                 $this->transports->deliver($f);
             }

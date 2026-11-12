@@ -1287,7 +1287,7 @@ rang, les variations sont sur la même ligne et le nombre de planètes précède
 points totaux. Formules de points et échéance quotidienne inchangées.
 Dans ce tableau : « (= 0) » si inchangé, « (—) » sans comparaison.
 
-Décisions confirmées pour les lots suivants, non encore implémentées :
+Décisions confirmées pour les lots suivants, avec état d’implémentation dans le suivi :
 - Ancienneté : acquisition par le propriétaire actuel, conquête incluse.
 - Journal : absence depuis la dernière ouverture de la vue générale ;
   constructions/recherches terminées, arrivées et événements de combat,
@@ -1323,8 +1323,8 @@ les signalements figurent ci-dessous. Voir le [suivi](EVOLUTIONS_INTERFACES_FLOT
   fiable ne peut être retrouvée. Enregistrer toutes les nouvelles acquisitions ;
   ne créer aucune date historique fictive.
 
-Ces décisions restent à implémenter dans leurs lots ; elles ne décrivent pas
-une modification déployée.
+L’état d’implémentation est décrit dans le suivi de chaque lot ; ces décisions
+ne constituent pas une preuve de déploiement.
 
 
 ### Rappels, visibilité, orbite, abandon et signalements — validation utilisateur
@@ -1369,3 +1369,28 @@ distinct : aucune maquette n’y a été composée.
 La croix de la fiche planète renvoie à la galaxie. La demande porte sur l’ajout
 d’un bouton distinct dans cette fiche pour revenir au système de la planète
 consultée ; le retour galaxie existant est conservé.
+
+### Lot C — précisions validées et intégration locale du 12 novembre 2026
+
+Accord explicite pour sauvegarder, vérifier puis appliquer la seule migration
+locale Version20261112010000. Accord sur le démarrage du journal à la première
+ouverture après mise à jour : aucune visite historique inventée, notifications
+antérieures conservées ; seuls les événements suivants des catégories validées
+alimentent le suivi d’absence.
+
+Acquisitions enregistrées à la date réelle pour l’univers initial, colonisation,
+conquête et capture après occupation. Les anciens propriétaires déjà enregistrés
+ne reçoivent pas de date fictive ; les colonies inconnues gardent leur ordre par
+identifiant, signalé comme approximatif, avant les acquisitions datées. Les dates
+connues sont triées par ordre croissant, puis par identifiant en cas d’égalité.
+Le même ordre s’applique aux cartes de la vue générale, à la page Planètes et
+au sélecteur latéral.
+
+Journal : ouverture explicite de la vue générale, requêtes automatiques exclues.
+Les événements proposés restent non consultés entre visites jusqu’au bouton de
+consultation. Une action ne marque que les identifiants effectivement affichés ;
+un événement arrivé après l’affichage reste à consulter. Conservation des données,
+50 événements affichés au maximum puis accès aux suivants après consultation.
+Les détails privés des planètes (unités au repos et ressources) et flottes
+(composition et fret) conservent survol, clavier et toucher.
+Ces éléments sont locaux sur la branche du lot C, pas une annonce de déploiement.

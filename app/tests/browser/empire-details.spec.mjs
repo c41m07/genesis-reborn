@@ -1,0 +1,42 @@
+import { test, expect } from './support/isolated-test.mjs';
+
+test.use({ hasTouch: true });
+
+test('Les détails des colonies sont accessibles au survol, au clavier et au toucher', async ({ page }) => {
+  const id = crypto.randomUUID().slice(0, 8);
+  const email = 'details-' + id + '@example.test';
+  const password = 'Browser-test-2026!';
+  await page.goto('/inscription');
+  await page.getByLabel('Adresse email').fill(email);
+  await page.getByLabel('Nom de commandant').fill('Details-' + id);
+  await page.getByLabel('Mot de passe (12 caractères minimum)', { exact: true }).fill(password);
+  await page.getByLabel('Confirmer le mot de passe').fill(password);
+  await page.getByRole('button', { name: 'Créer mon compte' }).click();
+  await expect(page).toHaveURL(/connexion/);
+  await page.getByLabel('Adresse email').fill(email);
+  await page.getByLabel('Mot de passe', { exact: true }).fill(password);
+  await page.getByRole('button', { name: /Connexion/ }).click();
+  await page.locator('article.universe-card').filter({ has: page.getByRole('heading', { name: /Turbo/ }) }).getByRole('button').click();
+  await expect(page).toHaveURL(/planetes\/\d+$/);
+  await page.goto('/planetes');
+  const details = page.locator('.empire-details').first();
+  const summary = details.locator('summary');
+  await summary.hover();
+  await expect(details).toHaveAttribute('open', '');
+  await page.mouse.move(0, 0);
+  await expect(details).not.toHaveAttribute('open', '');
+  await summary.focus();
+  await page.keyboard.press('Space');
+  await expect(details).toHaveAttribute('open', '');
+  await expect(details).toContainText('Stocks de ressources');
+  expect(await summary.evaluate(el => el.matches(':focus-visible'))).toBe(true);
+  await page.keyboard.press('Escape');
+  await expect(details).not.toHaveAttribute('open', '');
+  await expect(summary).toBeFocused();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await summary.tap();
+  await expect(details).toHaveAttribute('open', '');
+  await expect(details).toContainText('Vaisseaux présents');
+  expect(await summary.evaluate(el => el.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});

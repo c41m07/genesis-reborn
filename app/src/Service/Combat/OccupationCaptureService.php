@@ -52,7 +52,7 @@ final class OccupationCaptureService
             $this->queues->synchronize($member);
             $cancelled=$this->queues->cancelForCaptureLocked($planet,$former);
             $this->resources->materialize($planet,$this->clock->now());
-            --$colony->quantity;$planet->owner=$member;$planet->name=$this->planetNames->generate($member);
+            --$colony->quantity;$planet->acquireBy($member,$this->clock->now());$planet->name=$this->planetNames->generate($member);
             $event=$this->policy->finish($occupation,'ready');
             $event->snapshot['capture']=['former_owner_id'=>$former?->id,'colony_ship_id'=>$colony->id,'cancelled_orders'=>$cancelled];
             $this->manager->save($event);$this->manager->flush();
@@ -64,7 +64,7 @@ final class OccupationCaptureService
             }
             $this->boosts->awardRiskMission($member,$colony->fleet);
             $event->snapshot['returned_fleet_ids']=$this->fleets->returnOccupationFleetsLocked($planet,$member,$token);
-            $this->notifications->enqueue($member,'Planète conquise après occupation : '.$planet->name.'. Bâtiments et stocks conservés.');
+            $this->notifications->enqueue($member,'Planète conquise après occupation : '.$planet->name.'. Bâtiments et stocks conservés.',journalKind:'conquest');
             return ['status'=>'captured','planet_id'=>$planet->id];
         });
     }

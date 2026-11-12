@@ -150,11 +150,13 @@ test('Conversations : dernier message, bulles distinctes et témoin mobile', asy
   await expect.poll(() => thread.evaluate(node => node.scrollTop)).toBe(0);
   await page.keyboard.press('End');
   await expect.poll(() => thread.evaluate(node => node.scrollHeight - node.scrollTop - node.clientHeight)).toBeLessThan(2);
-  runIsolatedSql(project, `INSERT INTO notification (recipient_id,message,created_at) VALUES (${ownId},'Construction terminée',UTC_TIMESTAMP())`);
+  runIsolatedSql(project, `INSERT INTO notification (recipient_id,message,created_at,journal_kind) VALUES (${ownId},'Construction terminée',UTC_TIMESTAMP(),'queue')`);
   const noticeId = Number(queryIsolatedSql(project, `SELECT MAX(id) FROM notification WHERE recipient_id=${ownId}`));
-  await page.evaluate(notificationId => window.dispatchEvent(new CustomEvent('genesis:refresh', { detail: { notificationId } })), noticeId);
+  await page.evaluate(notificationId => window.dispatchEvent(new CustomEvent('genesis:refresh', { detail: { notificationId, journal: true } })), noticeId);
   await expect(page.locator('.mobile-bottom-nav .menu-unread-dot')).toBeVisible();
   await page.goto('/');
+  await expect(page.locator('.mobile-bottom-nav .menu-unread-dot')).toBeVisible();
+  await page.getByRole('button', { name: 'Marquer ces événements comme consultés' }).click();
   await expect(page.locator('.mobile-bottom-nav .menu-unread-dot')).toBeHidden();
   await page.goto(`/messages?with=${peerId}`);
   await expect(page.locator('.mobile-bottom-nav .menu-unread-dot')).toBeHidden();
