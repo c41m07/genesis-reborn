@@ -1445,3 +1445,16 @@ Après perte de l’origine, le repli vers la colonie choisie utilise les calcul
 normaux de l’univers au moment du rappel. Seul le carburant encore disponible
 est utilisable : le fret d’hydrogène et les stocks des planètes sont préservés.
 Si le carburant manque, le rappel est refusé sans changement d’état.
+
+
+### Orbites — transition validée le 12 novembre 2026
+- Les missions déjà parties sans demande versionnée conservent leur processus
+  d’acceptation à l’arrivée pour ce voyage ; aucune échéance n’est inventée.
+- Les nouveaux départs créent une demande valable jusqu’à l’arrivée :
+  accord automatique entre alliés, décision manuelle pour un joueur neutre,
+  refus pour une planète ennemie, PNJ ou sans propriétaire.
+- Une orbite neutre acceptée participe à la défense de la planète d’accueil,
+  comme une orbite alliée. Les permissions de la mission Défense restent inchangées.
+- Refus ou retrait : retour immédiat depuis la position atteinte, avec le calcul
+  validé du rappel. Sans accord valide à l’arrivée : retour, sans attente indéfinie.
+  Propriétaire et diplomatie sont revérifiés à l’arrivée.

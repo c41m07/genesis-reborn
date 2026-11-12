@@ -566,3 +566,28 @@ Les trois plafonds de référence sont 5/5/5, soit 15 niveaux et 80 minutes de p
 théorique ; le plafond de 2 heures n’est pas atteint dans cette configuration.
 Les surcharges propres à l’univers sont résolues comme dans la file de recherche.
 La somme pour le préavis n’altère pas la pondération actuelle de l’espionnage.
+
+
+### Demandes d’orbite au départ — lot I
+Pour les nouveaux départs, l’orbite cible uniquement une planète d’un autre
+joueur actif du même univers, allié ou neutre, dans un système déjà découvert.
+Les planètes ennemies, PNJ ou sans propriétaire sont interdites. L’accord allié
+est automatique ; le propriétaire neutre doit accepter avant l’arrivée.
+La demande expire à l’arrivée réelle, y compris après un boost ou un changement
+autorisé d’échéance. Accepter ne déplace pas la flotte : elle poursuit son trajet.
+Refuser ou retirer la demande déclenche le retour depuis la position atteinte,
+selon les règles de rappel (carburant réservé uniquement, fret protégé).
+Sans réponse à l’arrivée, la flotte rentre ; aucune attente indéfinie n’est créée.
+Le propriétaire initial et les relations sont revérifiés à l’arrivée. Un accord
+automatique exige toujours une alliance ; un accord manuel reste valable entre
+joueurs neutres ou alliés, jamais ennemis. Un changement de propriétaire invalide
+l’accord. Les protections existantes, dont les vacances, restent appliquées.
+Une orbite neutre acceptée défend son hôte comme une orbite alliée ; cela
+n’élargit pas les permissions de la mission Défense envoyée directement.
+Les missions antérieures, sans demande versionnée enregistrée au départ,
+conservent pour ce voyage leur acceptation à l’arrivée, sans échéance inventée.
+
+Pour les vacances de l’hôte, les stations déjà acceptées continuent leur durée
+normale. Les anciennes demandes en attente après l’arrivée sont renvoyées
+à l’activation des vacances ; les nouvelles demandes en trajet sont
+revérifiées à l’arrivée et ne peuvent pas commencer une orbite pendant les vacances.

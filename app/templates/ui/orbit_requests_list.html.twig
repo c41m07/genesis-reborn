@@ -1,0 +1,26 @@
+{% set labels={pending:'En attente de réponse',accepted_auto:'Accord automatique',accepted_manual:'Accord confirmé',due:'Échéance atteinte · arrivée à résoudre'} %}
+{% for request in orbit_requests %}
+<article class="mission-card" data-orbit-request="{{ request.id }}">
+    <div>
+        <h3>{{ request.outgoing ? 'Demande envoyée' : 'Demande reçue' }} · flotte {{ request.id }}</h3>
+        <p>{{ request.sender }} → {{ request.target }} · {{ request.hours }} h</p>
+        <p>Origine : {{ request.origin ?? 'système non découvert' }}.</p>
+        <p><strong>{{ labels[request.status]|default(request.status) }}</strong></p>
+        {% if request.legacy %}<p>Ancienne mission : réponse après l’arrivée, sans échéance ajoutée.</p>
+        {% elseif request.deadline %}<p>Arrivée et fin de validité : <time datetime="{{ request.deadline }}">{{ request.deadline|date('d/m/Y H:i:s', 'Europe/Paris') }} (Paris)</time> · <span data-orbit-deadline="{{ request.deadline }}"></span></p>{% endif %}
+    </div>
+    <div class="mission-state">
+    {% if request.can_respond %}
+        <form method="post" action="{{ path('app_orbit_decision',{id:request.id}) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('orbit-' ~ request.id) }}">
+            <input type="hidden" name="request_key" value="{{ request.key }}">
+            <button class="primary" name="decision" value="accept" aria-label="Accepter l’orbite de la flotte {{ request.id }}">Accepter</button>
+            <button class="secondary" name="decision" value="reject" aria-label="Refuser l’orbite de la flotte {{ request.id }}">Refuser</button>
+        </form>
+    {% endif %}
+    {% if request.outgoing and request.status != 'due' %}
+        <a class="secondary fleet-recall-link" href="{{ path('app_fleet_recall',{id:request.id}) }}">Retirer la demande et rappeler la flotte {{ request.id }}</a>
+    {% endif %}
+    </div>
+</article>
+{% else %}<p class="muted">Aucune demande d’orbite envoyée ou reçue en cours.</p>{% endfor %}

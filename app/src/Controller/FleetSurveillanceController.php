@@ -13,11 +13,16 @@ use Symfony\Component\Routing\Attribute\Route;
 final class FleetSurveillanceController extends AbstractController
 {
     #[Route('/flottes/surveillance',name:'app_fleet_surveillance',methods:['GET'])]
-    public function surveillance(Request $request,UniverseContext $context,GameRepository $repo,FleetVisibility $visibility,ClockInterface $clock): Response
+    public function surveillance(Request $request,UniverseContext $context,GameRepository $repo,FleetVisibility $visibility,ClockInterface $clock,\App\Service\Fleet\OrbitRequestView $orbits): Response
     {
         $member=$context->membership();
         $payload=['membership'=>$member->id,'serverNow'=>$clock->now()->format(DATE_ATOM),
             'html'=>$this->renderView('ui/incoming_attacks_list.html.twig',['attacks'=>$visibility->incoming($member)])];
+        if($request->query->getBoolean('orbits')) {
+            $rows=$orbits->forMember($member);
+            $payload+=['orbitVersion'=>hash('sha256',json_encode($rows,JSON_THROW_ON_ERROR)),
+                'orbitHtml'=>$this->renderView('ui/orbit_requests_list.html.twig',['orbit_requests'=>$rows])];
+        }
         if($request->query->has('galaxy')) {
             $galaxy=$repo->find(Galaxy::class,$request->query->getInt('galaxy'));
             if(!$galaxy || $galaxy->universe->id!==$member->universe->id) throw $this->createNotFoundException('Galaxie inaccessible dans cet univers.');

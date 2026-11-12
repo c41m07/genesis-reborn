@@ -126,7 +126,7 @@ final class FleetRecallTest extends WebTestCase
 
     public function testArrivedPendingOrbitCanBeRecalledWithoutBurningOrbitFuel(): void
     {
-        $f=$this->send('orbit');$this->clock->sleep($f->travelSeconds+1);
+        $f=$this->send('orbit');unset($f->navigation['orbit_request']);$this->em->flush();$this->clock->sleep($f->travelSeconds+1);
         self::getContainer()->get(FleetService::class)->arrive($f->id,$f->dispatchToken);
         self::assertSame('orbit_pending',$f->status);$hydrogen=$f->cargo['hydrogen'];
         $service=self::getContainer()->get(FleetRecallService::class);$q=$service->preview($this->player->currentPlayerUniverse,$f);
@@ -136,7 +136,7 @@ final class FleetRecallTest extends WebTestCase
 
     public function testPendingOrbitRoundingNeverCreatesFuelOrRefusesAnOtherwiseFundedReturn(): void
     {
-        $f=$this->send('orbit');$this->clock->sleep($f->travelSeconds+1);
+        $f=$this->send('orbit');unset($f->navigation['orbit_request']);$this->em->flush();$this->clock->sleep($f->travelSeconds+1);
         self::getContainer()->get(FleetService::class)->arrive($f->id,$f->dispatchToken);
         self::assertSame('orbit_pending',$f->status);
         $f->orbitFuel=0;$f->reservedFuel=$f->cargo['hydrogen']+5e-10;$this->em->flush();

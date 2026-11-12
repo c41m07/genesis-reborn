@@ -212,7 +212,7 @@ final class CombatEventService
         $origin = $fleet->homePlanet->coordinates();
         $message = $discovered
             ? 'Demande d’orbite sur ' . $planet->name . ' par ' . $fleet->playerUniverse->getDisplayName() . ' depuis ' . $origin . '.'
-            : 'Demande d’orbite sur ' . $planet->name . ' depuis ' . $origin . ' ; identité à confirmer.';
+            : 'Demande d’orbite sur ' . $planet->name . ' depuis un système non découvert ; identité à confirmer.';
         $this->notifications->enqueue($host, $message,journalKind:'combat');
     }
 

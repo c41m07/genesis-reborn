@@ -32,6 +32,7 @@ export default class extends Controller {
         const timeout = setTimeout(() => this.abort.abort(), 10000);
         try {
             const url = new URL(this.urlValue, location.origin);
+            if (document.querySelector('[data-controller~="orbit-requests"]')) url.searchParams.set('orbits', '1');
             const galaxy = document.querySelector('[data-surveillance-galaxy]')?.dataset.surveillanceGalaxy;
             if (Number(galaxy) > 0) url.searchParams.set('galaxy', galaxy);
             const response = await fetch(url, { signal: this.abort.signal, headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, cache: 'no-store' });
@@ -50,6 +51,7 @@ export default class extends Controller {
                 this.signature = signature;
             }
             this.tick();
+            if (data.orbitHtml !== undefined) window.dispatchEvent(new CustomEvent('genesis:orbit-requests', { detail: data }));
             if (data.flights) window.dispatchEvent(new CustomEvent('genesis:visible-fleets', { detail: data }));
         } catch { if (this.active) this.unavailable(); }
         finally { clearTimeout(timeout); this.pending = false; }
