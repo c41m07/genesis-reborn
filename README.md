@@ -15,7 +15,7 @@ Le code comprend :
   - Les échecs de transport des mails de compte sont retentés trois fois au total pendant la requête. Après échec de confirmation à l’inscription, le compte est conservé et le formulaire de renvoi est proposé. Les états et alertes sont journalisés sans adresse ni jeton ; voir [le diagnostic des emails](docs/DIAGNOSTIC_EMAILS.md).
   - Session expirée après 24 h sans requête au serveur ; case « Se souvenir de moi » facultative pendant 30 jours, annulée à la déconnexion. Un cookie de mémorisation valide permet de retrouver sa connexion après expiration de la session.
   - Mots de passe masqués par défaut, avec un bouton œil pour afficher ou masquer chaque champ.
-- Classements joueurs : sélecteur points totaux (par défaut), bâtiments, recherche, flotte et nombre de planètes ; rang et variation propres à chaque catégorie, tri global avant pagination de 50 lignes, catégorie conservée entre pages. Scores et guildes figés jusqu’au prochain minuit, heure de Paris (été/hiver inclus). Les écarts comparent les deux derniers calculs : dans le tableau joueur, (+N) en vert, (−N) en rouge, (= 0) si inchangé, (—) sans comparaison. Les signes et libellés accessibles complètent les couleurs. Les protections de combat restent en temps réel. Le relais existant initialise et actualise les instantanés persistés ; une lecture rattrape aussi une échéance manquée. Nouveaux joueurs et guildes apparaissent au prochain calcul.
+- Classements joueurs : en-têtes cliquables pour les points totaux (par défaut), bâtiments, recherche, flotte et nombre de planètes ; rang et variation propres à chaque catégorie, tri global avant pagination de 50 lignes, catégorie conservée entre pages. Scores et guildes figés jusqu’au prochain minuit, heure de Paris (été/hiver inclus). Les écarts comparent les deux derniers calculs : dans le tableau joueur, (+N) en vert, (−N) en rouge, (= 0) si inchangé, (—) sans comparaison. Les signes et libellés accessibles complètent les couleurs. Les protections de combat restent en temps réel. Le relais existant initialise et actualise les instantanés persistés ; une lecture rattrape aussi une échéance manquée. Nouveaux joueurs et guildes apparaissent au prochain calcul.
 - Équilibrage des ressources : première planète à 10 000 de chaque ressource, colonies à 5 000 hors électricité selon le rang, stockage de base à 10 000 ; productions passives M40/E0/A10/H80/N20 par heure à position 5, univers ×1. Les règles s’appliquent directement au déploiement, sans date à configurer, y compris à toute la production en attente depuis le dernier calcul enregistré. Les stocks existants et leurs surplus sont conservés. Voir [les règles et la transition](docs/REGLES.md#ressources-initiales-et-production-passive--décision-du-10-novembre-2026).
 - Interface partagée : les événements occupent leur propre zone sous la barre de ressources et défilent avec la page. Carte V2 : numéro, nom et statut des planètes alignés selon l’espace disponible ; les coordonnées des systèmes restent dans les panneaux et ne sont dessinées sur la carte qu’au survol ou au focus clavier d’un résultat de recherche de système.
 - Suivi des pages Bâtiments, Recherche, Chantier spatial et Défenses : activité en haut sur mobile et tablette ; flottes en vol masquées sur mobile (jusqu’à 740 px), conservées sur tablette. À partir de 1 251 px, activité et flottes sont regroupées à droite, activité au-dessus. L’ordre de lecture et l’actualisation en direct sont conservés.
@@ -35,8 +35,15 @@ Le code comprend :
 - Diplomatie, guildes, messages, notifications, inventaire de boosts et événements. Le canal « Global », placé avant la guilde, permet aux joueurs de l’univers courant de discuter sans notifications, badges ni compteurs de messages non lus. Les conversations privées et de guilde s’ouvrent sur le dernier message ; les messages envoyés et reçus se distinguent par leur alignement, leur couleur et un libellé. Les deux boutons du menu mobile signalent les nouveautés d’administration, les messages et patchnotes non lus, ainsi que les nouvelles activités du journal jusqu’à la consultation de la vue générale sur cet appareil.
 - Le contrôle des traitements signale aussi les voyages sans planification ou en retard au-delà du seuil de leur univers, même si les processus fonctionnent et la file est vide. Sur la fiche d’une flotte échue, un retour forcé avec motif et confirmation programme son retour sans exécuter la mission à destination ; les combats en cours restent protégés. Aucun rattrapage automatique n’est effectué.
 - Interfaces Diplomatie, Profil et Inventaire réorganisées pour ordinateur et mobile :
-  « Ma guilde », « Entre guildes » et « Commandants » séparent les périmètres ;
-  l’accès « Gérer la guilde » mène aux grades et au commandement. Le profil distingue
+  sans guilde, trois onglets « Créer une guilde », « Rejoindre une guilde » et « Relations commandants » ;
+  avec guilde, cinq onglets « Ma guilde », « Membres », « Grades et permissions »,
+  « Relations guildes » et « Relations commandants ». Les attributions de grades sont
+  dans Membres ; le tag et le commandement restent dans Ma guilde. Dissoudre (commandant)
+  ou quitter (membre) sont directement visibles dans Gestion de la guilde. Les projets,
+  la galaxie et le classement sont regroupés ; Derniers échanges présente seulement
+  les trois messages les plus récents sans les marquer lus. Les membres voient
+  leur présence dans cet univers : En ligne en vert (activité depuis moins de cinq minutes),
+  Hors ligne en rouge, à l’ouverture ou à l’actualisation de la liste. Le profil distingue
   les identifiants, le mot de passe facultatif et la suppression définitive.
   L’inventaire sépare capacité, boosts, boîtes et récompenses en attente ; un sélecteur
   choisit l’opération et un dialogue permet d’examiner, annuler ou confirmer l’utilisation.
@@ -544,3 +551,19 @@ même univers ne donne aucun nouveau kit de ressources. Il doit prévoir le
 ravitaillement ; un nouveau propriétaire conserve le kit normal.
 Le bandeau tronque visuellement les noms très longs ; le nom complet reste
 accessible dans le sélecteur de colonie, le texte accessible et l’infobulle.
+
+
+### Retouches de présentation après recette
+
+Les noms des colonies de la vue générale et de Planètes ouvrent une bulle
+flottante avec vaisseaux et ressources. Les encadrés des flottes ouvrent leur
+composition et leur fret. Survol, focus clavier et toucher sont pris en charge ;
+La bulle, sans croix, se ferme quand le pointeur quitte le nom ou l’encadré et la bulle,
+quand le focus sort, avec Échap ou par toucher extérieur, sans déplacer les cartes.
+La navigation vers la colonie reste disponible depuis la bulle de l’aperçu
+et les commandes existantes de Planètes.
+
+Les listes de rapports alignent sélection, résumé et action ; les noms des
+cases sont conservés pour les lecteurs d’écran. Le paragraphe explicatif des
+archives et la phrase technique sur le calcul du préavis en Recherche sont
+retirés des pages concernées. Les règles d’archive et de détection ne changent pas.

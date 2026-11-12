@@ -40,3 +40,7 @@ import './styles/incoming-attacks.css';
 import './styles/colony-abandon.css';
 
 import './styles/player-pages.css';
+
+import './styles/ranking-sort.css';
+
+import './styles/diplomacy-tabs.css';

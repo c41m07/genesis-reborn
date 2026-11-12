@@ -1483,3 +1483,40 @@ sensibles et l’examen annulable d’un bonus sont des changements de présenta
 Ils ne retirent aucune fonction et ne modifient aucune règle de jeu ou permission.
 La revue finale sur dev s’appuie sur la recette A à K ; les retouches sont à
 décider avec l’utilisateur.
+
+### Retouches de recette — présentation
+
+À la demande de l’utilisateur : les détails propriétaires des colonies et flottes
+passent dans des bulles au survol, au clavier et au toucher ; les cases de rapports
+restent nommées pour les lecteurs d’écran mais sans texte visible et sur la ligne
+du rapport ; les cinq catégories du classement joueur se choisissent par les
+en-têtes cliquables, sans modifier les rangs, le tri décroissant ou les calculs
+quotidiens. Deux phrases explicatives sont retirées de Recherche et Rapports,
+sans modifier les mécanismes décrits dans les règles.
+
+La nouvelle organisation de Diplomatie est validée avant intégration : deux onglets
+sans guilde (Créer ou rejoindre une guilde, Relations commandants), cinq avec guilde
+(Ma guilde, Membres, Grades et permissions, Relations guildes, Relations commandants).
+Recherche et adhésion restent dans le premier onglet sans guilde. Aucun changement
+des permissions ou règles de relations.
+
+À la demande de l’utilisateur, la liste des membres affiche En ligne en vert et
+Hors ligne en rouge avec texte. Le seuil d’activité existant (< cinq minutes) est
+réutilisé dans le même univers, uniquement pour les membres de la même guilde.
+L’état est calculé à l’ouverture/actualisation ; les heures et durées restent privées.
+
+### Précision de recette — adhésion distincte
+
+L’utilisateur demande un onglet Rejoindre une guilde à côté de Créer une guilde.
+Cette décision remplace l’organisation précédente à deux onglets sans guilde :
+il y en a désormais trois (Créer une guilde, Rejoindre une guilde, Relations commandants).
+Les cinq onglets avec guilde et les règles d’adhésion restent identiques.
+
+### Dernières retouches de recette validées
+
+À la demande de l’utilisateur : bulles sans croix et fermeture automatique à la
+sortie du pointeur, avec Échap/sortie du focus/toucher extérieur ; trois actions
+Projets, Galaxie et Classement regroupées et raccourci Relations guildes redondant
+retiré du bloc. L’onglet Relations guildes reste présent. Aperçu limité aux trois
+derniers messages, sans lecture implicite. Départ/dissolution rendus directement
+visibles selon le rôle, sans modifier les permissions ni leurs conséquences.

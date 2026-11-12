@@ -43,7 +43,10 @@ test('Tag obligatoire, choix du commandant et préfixe limité au classement', a
   const ownRow=page.getByRole('row').filter({hasText:author.username});
   await expect(ownRow.locator('th')).toContainText('[ALPHA] '+author.username);
   await page.goto('/diplomatie');
-  await expect(page.locator('.guild-member-list')).not.toContainText('[ALPHA]');
+  await page.goto('/diplomatie?tab=members');
+  await expect(page.locator('.guild-members-table')).not.toContainText('[ALPHA]');
+  await page.goto('/diplomatie');
+  await page.getByText('Tag et commandement',{exact:true}).click();
   await page.getByText('Modifier le tag de la guilde',{exact:true}).click();
   await page.getByLabel('Tag de la guilde',{exact:true}).fill('BETA');
   await page.getByRole('button',{name:'Enregistrer le tag',exact:true}).click();
@@ -60,12 +63,14 @@ test('Ancienne guilde : aucun tag inventé et choix accessible au commandant', a
   runIsolatedSql(project,"INSERT INTO guild (universe_id,leader_id,name,tag) VALUES ("+user.universeId+","+user.memberId+",'Guilde ancienne',NULL)");
   runIsolatedSql(project,"INSERT INTO guild_member (guild_id,player_universe_id) SELECT id,"+user.memberId+" FROM guild WHERE leader_id="+user.memberId);
   await page.goto('/diplomatie');
+  await page.getByText('Tag et commandement',{exact:true}).click();
   const summary=page.getByText('Choisir le tag de la guilde',{exact:true});
   await summary.focus();await page.keyboard.press('Enter');
   await page.getByLabel('Tag de la guilde',{exact:true}).fill('OLD');
   await page.getByRole('button',{name:'Enregistrer le tag',exact:true}).click();
   expect(queryIsolatedSql(project,'SELECT tag FROM guild WHERE leader_id='+user.memberId).trim()).toBe('OLD');
   await page.setViewportSize({width:390,height:844});
+  await page.getByText('Tag et commandement',{exact:true}).click();
   await page.getByText('Modifier le tag de la guilde',{exact:true}).click();
   await page.screenshot({path:testInfo.outputPath('tag-ancien-mobile.png'),fullPage:true,animations:'disabled'});
 });

@@ -1,0 +1,29 @@
+<section class="panel" aria-labelledby="guild-members-title">
+<div class="section-heading"><h2 id="guild-members-title">Membres de la guilde</h2><span class="badge">{{ ownRow.members|length }} {{ ownRow.members|length > 1 ? 'membres' : 'membre' }}</span></div>
+<table class="guild-members-table"><caption class="visually-hidden">Équipage de {{ own.name }}</caption>
+<thead><tr><th scope="col">Commandant</th><th scope="col">Grade</th><th scope="col">État</th><th scope="col">Actions</th></tr></thead>
+<tbody>{% for member in ownRow.members %}<tr>
+<th scope="row">{{ member.playerUniverse.displayName }}{% if member.playerUniverse.id==membership.id %} <small>· Vous</small>{% endif %}</th>
+<td>{{ member.playerUniverse.id==own.leader.id ? 'Commandant' : (member.rank.name|default('Membre')) }}</td>
+<td>{% set online=memberPresence[member.playerUniverse.id]|default(false) %}<span class="guild-presence guild-presence--{{ online ? 'online' : 'offline' }}">{{ online ? 'En ligne' : 'Hors ligne' }}</span></td>
+<td>{% if member.playerUniverse.id!=membership.id %}<a class="secondary" href="{{ path('app_messages',{with:member.playerUniverse.id}) }}" aria-label="Écrire à {{ member.playerUniverse.displayName }}">Écrire</a>{% else %}<span class="muted">Vous</span>{% endif %}</td>
+</tr>{% endfor %}</tbody></table>
+</section>
+{% if rankAssignments %}<details class="panel guild-rank-assignments"><summary>Attribuer un grade</summary>
+<p>Les membres et grades proposés suivent vos permissions actuelles.</p>
+    {% for assignment in rankAssignments %}
+        {% set member=assignment.member %}
+        <form method="post">
+            <input type="hidden" name="_token" value="{{ csrf_token('diplomacy') }}">
+            <input type="hidden" name="action" value="rank_assign">
+            <input type="hidden" name="target" value="{{ member.id }}">
+            <input type="hidden" name="expected_rank" value="{{ member.rank.id|default(0) }}">
+            <label for="member-rank-{{ member.id }}">Grade de {{ member.playerUniverse.displayName }}</label>
+            <select id="member-rank-{{ member.id }}" name="rank">
+                <option value="0" {% if not member.rank %}selected{% endif %}>Membre · sans permission déléguée</option>
+                {% for rank in assignment.choices %}<option value="{{ rank.id }}" {% if member.rank and member.rank.id==rank.id %}selected{% endif %}>{{ rank.name }}</option>{% endfor %}
+            </select>
+            <button class="secondary">Attribuer le grade à {{ member.playerUniverse.displayName }}</button>
+        </form>
+    {% endfor %}
+</details>{% endif %}

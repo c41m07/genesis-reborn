@@ -2,10 +2,11 @@
 <h2 id="dashboard-colonies-title">Vos colonies</h2>
 <p>De la plus ancienne à la plus récente. Les dates inconnues conservent leur ordre historique approximatif.</p>
 <div class="dashboard-colony-grid">{% for world in planets %}
-<article class="dashboard-colony" data-colony-summary="{{ world.id }}">
-<h3><a href="{{ path('app_colony',{id:world.id}) }}">{{ world.name }}</a></h3>
+{% set detail_id='overview-colony-details-'~world.id %}{% set detail_label='Vaisseaux et ressources de '~world.name %}
+<article class="dashboard-colony" data-colony-summary="{{ world.id }}" data-controller="hover-details" data-action="focusout->hover-details#blur keydown->hover-details#escape">
+<h3 aria-label="{{ world.name }}">{% include 'ui/empire_details_trigger.html.twig' with {detail_name:world.name} %}</h3>
 <p>{{ world.coordinates() }}</p>
 <p class="muted">{% if world.acquiredAt %}Acquise le {{ world.acquiredAt|date('d/m/Y · H:i',preferences.timezone) }}{% else %}Ancienneté approximative · ordre historique{% endif %}</p>
-{% include 'ui/empire_details.html.twig' with {detail:planet_details[world.id],detail_label:'Vaisseaux et ressources de '~world.name} only %}
+{% include 'ui/empire_details.html.twig' with {detail:planet_details[world.id],detail_label:detail_label,detail_id:detail_id,detail_url:path('app_colony',{id:world.id})} only %}
 </article>{% endfor %}</div>
 </section>

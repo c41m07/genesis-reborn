@@ -45,13 +45,36 @@ test('Pages validées : diplomatie, profil et inventaire, thèmes, clavier et é
   await page.getByLabel('Nom de votre nouvelle guilde').fill('Refonte-'+suffix);
   await page.getByLabel('Tag de la guilde',{exact:true}).fill(suffix.slice(0,5));
   await page.getByRole('button',{name:'Fonder une guilde'}).click();
-  const manage=page.getByRole('link',{name:'Gérer la guilde',exact:true});
-  await manage.focus();
-  await page.keyboard.press('Enter');
-  await expect(page).toHaveURL(/#guild-management$/);
-  await expect(page.locator('#guild-management')).toBeFocused();
-  await expect(page.getByRole('heading',{name:'Grades et permissions'})).toBeVisible();
+  await page.setViewportSize({width:1440,height:900});
+  const guildActions=page.locator('.guild-hub-actions');
+  await expect(guildActions.getByRole('link')).toHaveText(['Consulter les projets','Ouvrir la galaxie','Classement']);
+  const actionTops=await guildActions.getByRole('link').evaluateAll(links=>links.map(link=>link.getBoundingClientRect().top));
+  expect(Math.max(...actionTops)-Math.min(...actionTops)).toBeLessThan(2);
+  await expect(page.getByRole('button',{name:'Dissoudre la guilde',exact:true})).toBeVisible();
+
+  const navigation=page.getByRole('navigation',{name:'Sections de diplomatie'});
+  await expect(navigation.getByRole('link')).toHaveText(['Ma guilde','Membres','Grades et permissions','Relations guildes','Relations commandants']);
+  const ranks=navigation.getByRole('link',{name:'Grades et permissions',exact:true});
+  await ranks.focus();await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/tab=ranks/);
+  await expect(page.getByRole('heading',{name:'Grades et permissions',exact:true})).toBeVisible();
+  await navigation.getByRole('link',{name:'Ma guilde',exact:true}).click();
   await expect(page.getByText('Consulter cet aperçu ne marque pas le canal comme lu.')).toBeVisible();
+  for(const theme of ['dark','light']) {
+    runIsolatedSql(process.env.BROWSER_ROUTER, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
+    for(const tab of ['guilds','members','ranks','diplomacy','relations']) {
+      await page.goto('/diplomatie?tab='+tab);
+      await expect(page.getByRole('navigation',{name:'Sections de diplomatie'}).getByRole('link')).toHaveCount(5);
+      for(const width of [1440,834,390,320]) {
+        await page.setViewportSize({width,height:900});
+        expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+        if(width===1440 || width===390) await page.screenshot({path:testInfo.outputPath(`diplomatie-${tab}-${theme}-${width}.png`),fullPage:true,animations:'disabled'});
+      }
+      expect((await new AxeBuilder({page}).include('.diplomacy-page').withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
+    }
+  }
+  await page.goto('/diplomatie');
+
   expect((await new AxeBuilder({page}).include('.page-refinement').withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
   await page.evaluate(()=>{document.activeElement?.blur();window.scrollTo({top:0,behavior:'instant'});});
   await page.screenshot({path:testInfo.outputPath('guilde-light-320.png'),fullPage:true});
@@ -60,6 +83,6 @@ test('Pages validées : diplomatie, profil et inventaire, thèmes, clavier et é
   await page.goto('/diplomatie');
   await expect(page.getByText('Les guildes sont désactivées dans cet univers.',{exact:false})).toBeVisible();
   await expect(page.getByRole('link',{name:'Gérer la guilde',exact:true})).toHaveCount(0);
-  await page.getByRole('navigation',{name:'Sections de diplomatie'}).getByRole('link',{name:'Commandants',exact:true}).click();
+  await page.getByRole('navigation',{name:'Sections de diplomatie'}).getByRole('link',{name:'Relations commandants',exact:true}).click();
   await expect(page.getByRole('heading',{name:'Relations entre commandants',exact:true})).toBeVisible();
 });

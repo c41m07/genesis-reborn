@@ -1,9 +1,10 @@
-<details class="empire-details" data-controller="hover-details" data-action="pointerenter->hover-details#enter pointerleave->hover-details#leave focusout->hover-details#blur keydown->hover-details#escape">
-<summary data-action="click->hover-details#pin">{{ detail_label }}</summary>
+<div class="empire-details" id="{{ detail_id }}" popover="auto" role="region" aria-label="{{ detail_label }}" data-hover-details-target="panel" data-action="pointerenter->hover-details#enter pointerleave->hover-details#leave toggle->hover-details#changed">
+<div class="empire-details-heading"><strong>{{ detail_label }}</strong></div>
 <div class="empire-details-content">
 <h3>{{ fleet_detail|default(false) ? 'Composition de la flotte' : 'Vaisseaux présents' }}</h3>
 {% if detail.ships %}<dl>{% for ship in detail.ships %}<div><dt>{{ ship.label }} · {{ ship.tier }}</dt><dd>{{ ship.quantity|quantity(0) }}</dd></div>{% endfor %}</dl>{% else %}<p>Aucun vaisseau présent.</p>{% endif %}
 <h3>{{ fleet_detail|default(false) ? 'Fret transporté' : 'Stocks de ressources' }}</h3>
 {% if detail.resources %}<dl>{% for resource in detail.resources %}<div><dt>{{ resource.label }}</dt><dd>{{ resource.stock|quantity(0) }}</dd></div>{% endfor %}</dl>{% else %}<p>Aucun fret transporté.</p>{% endif %}
 </div>
-</details>
+{% if detail_url|default(null) %}<a class="empire-details-manage" href="{{ detail_url }}">Gérer cette colonie</a>{% endif %}
+</div>

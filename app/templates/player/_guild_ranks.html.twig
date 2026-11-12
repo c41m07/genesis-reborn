@@ -1,30 +1,16 @@
 <section class="panel" aria-labelledby="guild-ranks-title">
-    <h2 id="guild-ranks-title">Grades et permissions</h2>
-    <p>Une priorité plus petite indique un grade supérieur. Sans grade personnalisé, un membre ne dispose d'aucune permission déléguée. Le commandement reste distinct des grades.</p>
-    <p>Les grades concernent votre guilde. Vos alliances personnelles restent gérées dans <a href="{{ path('app_diplomacy',{tab:'relations'}) }}">Commandants</a>.</p>
-    {% for rank in ranks %}
-        <details>
-            <summary>{{ rank.name }} · priorité {{ rank.position }}</summary>
-            <ul>{% for permission in rank.permissions %}<li>{{ rankPermissionLabels[permission]|default(permission) }}</li>{% else %}<li>Aucune permission déléguée.</li>{% endfor %}</ul>
-            {% if own.leader.id==membership.id %}{% include 'player/_guild_rank_form.html.twig' with {rank:rank, formKey:'rank-'~rank.id} %}{% endif %}
-        </details>
-    {% else %}<p>Aucun grade personnalisé.</p>{% endfor %}
-    {% if own.leader.id==membership.id %}
-        <details><summary>Créer un grade</summary>{% include 'player/_guild_rank_form.html.twig' with {rank:null, formKey:'rank-new'} %}</details>
-    {% endif %}
-    {% for assignment in rankAssignments %}
-        {% set member=assignment.member %}
-        <form method="post">
-            <input type="hidden" name="_token" value="{{ csrf_token('diplomacy') }}">
-            <input type="hidden" name="action" value="rank_assign">
-            <input type="hidden" name="target" value="{{ member.id }}">
-            <input type="hidden" name="expected_rank" value="{{ member.rank.id|default(0) }}">
-            <label for="member-rank-{{ member.id }}">Grade de {{ member.playerUniverse.displayName }}</label>
-            <select id="member-rank-{{ member.id }}" name="rank">
-                <option value="0" {% if not member.rank %}selected{% endif %}>Membre · sans permission déléguée</option>
-                {% for rank in assignment.choices %}<option value="{{ rank.id }}" {% if member.rank and member.rank.id==rank.id %}selected{% endif %}>{{ rank.name }}</option>{% endfor %}
-            </select>
-            <button class="secondary">Attribuer le grade à {{ member.playerUniverse.displayName }}</button>
-        </form>
-    {% endfor %}
+<h2 id="guild-ranks-title">Grades et permissions</h2>
+<p>Une priorité plus petite indique un grade supérieur. Sans grade personnalisé, un membre ne dispose d’aucune permission déléguée. Le commandement reste distinct des grades.</p>
+<p>Les attributions se trouvent dans <a href="{{ path('app_diplomacy',{tab:'members'}) }}">Membres</a> ; les alliances personnelles dans <a href="{{ path('app_diplomacy',{tab:'relations'}) }}">Relations commandants</a>.</p>
+<div class="guild-rank-layout">
+<nav class="guild-rank-navigation" aria-label="Grades de la guilde">
+{% for rank in ranks %}<a class="secondary" href="{{ path('app_diplomacy',{tab:'ranks',rank:rank.id}) }}"{% if selectedRank and selectedRank.id==rank.id %} aria-current="page"{% endif %}>{{ rank.name }} · priorité {{ rank.position }}</a>{% endfor %}
+{% if own.leader.id==membership.id %}<a class="secondary" href="{{ path('app_diplomacy',{tab:'ranks',rank:0}) }}"{% if not selectedRank %} aria-current="page"{% endif %}>Créer un grade</a>{% endif %}
+</nav>
+<div class="guild-rank-editor">
+{% if own.leader.id==membership.id %}<h3>{{ selectedRank ? selectedRank.name : 'Nouveau grade' }}</h3>{% include 'player/_guild_rank_form.html.twig' with {rank:selectedRank,formKey:selectedRank ? 'rank-'~selectedRank.id : 'rank-new'} %}
+{% elseif selectedRank %}<h3>{{ selectedRank.name }}</h3><ul>{% for permission in selectedRank.permissions %}<li>{{ rankPermissionLabels[permission]|default(permission) }}</li>{% else %}<li>Aucune permission déléguée.</li>{% endfor %}</ul>
+{% else %}<p>Aucun grade personnalisé.</p>{% endif %}
+</div>
+</div>
 </section>

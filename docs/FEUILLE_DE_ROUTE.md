@@ -1469,3 +1469,19 @@ La fusion vers dev nécessite la CI complète de la dernière version.
 Aucun déploiement Alpha prévu ; les retouches seront décidées avec l’utilisateur.
 
 Vérifications K : validation et lint réussis, 868 tests PHP, 13 Python, compilation et 31 parcours navigateur concernés réussis après reprises. Le manifeste complet comporte 183 scénarios ; la CI complète reste obligatoire avant fusion. Voir le suivi Interfaces et flottes pour les preuves et les limites.
+
+### Retouches de recette — en cours de vérification locale
+
+Bulles flottantes des colonies et flottes, rapports en lignes compactes,
+en-têtes du classement cliquables et retrait de deux textes explicatifs.
+La nouvelle organisation Diplomatie est validée et intégrée localement : cinq onglets
+avec guilde (Ma guilde, Membres, Grades et permissions, Relations guildes, Relations commandants),
+trois sans guilde (Créer une guilde, Rejoindre une guilde, Relations commandants). Les membres
+affichent En ligne en vert ou Hors ligne en rouge selon l’activité récente dans cet univers.
+Les fonctions et droits existants sont conservés ; publication et CI de cette retouche
+restent distinctes de la livraison A à K déjà fusionnée.
+
+Dernières retouches locales : bulles sans croix avec fermeture automatique ;
+adhésion dans un onglet distinct ; trois actions de guilde regroupées ; aperçu
+de trois messages vérifié ; départ/dissolution directement visibles selon le rôle.
+Tests ciblés réussis ; CI complète sur cette dernière version avant fusion.
