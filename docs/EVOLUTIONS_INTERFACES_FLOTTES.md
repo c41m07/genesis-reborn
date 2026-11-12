@@ -1720,3 +1720,12 @@ une vraie transition de focus après le clic souris ; scénario corrigé sans re
 les assertions de focus visible et de fermeture. git diff --check réussi.
 Tous les ajustements sont inclus dans la même PR 52 vers dev, à fusionner
 uniquement après CI complète réussie sur la dernière version.
+
+### Reprise du parcours de recherche sans guilde
+
+La CI complète du code da2d5b6 valide 872 tests PHP et 13 Python ; le lot
+navigateur 2 signale un seul sélecteur obsolète dans diplomacy-empty-state :
+le parcours doit passer par Rejoindre une guilde au lieu du raccourci de recherche
+de l’ancien panneau commun. Correction du test uniquement (complexité 1),
+sans retrait d’assertion ni changement de délai ; scénario repris localement,
+1/1 réussi. Les contrôles complets sont relancés sur le commit corrigé.
