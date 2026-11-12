@@ -13,7 +13,7 @@ use Psr\Clock\ClockInterface;
 use App\Service\Player\VacationCalendar;
 final class FleetService
 {
-    public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues,private \App\Service\Combat\CombatEventService $combats,private EspionageService $espionage,private BoostGrantService $boostGrants,private BoostEventService $boostEvents,private \App\Service\Universe\PlanetNameGenerator $planetNames,private \App\Service\Combat\TechnologyEffectCalculator $technologyEffects,private TransportService $transports,private VacationCalendar $vacations,private \App\Service\Combat\OccupationService $occupations, private \App\Service\Admin\FleetMissionTraceService $traces,private FleetNavigation $navigation) {}
+    public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues,private \App\Service\Combat\CombatEventService $combats,private EspionageService $espionage,private BoostGrantService $boostGrants,private BoostEventService $boostEvents,private \App\Service\Universe\PlanetNameGenerator $planetNames,private \App\Service\Combat\TechnologyEffectCalculator $technologyEffects,private TransportService $transports,private VacationCalendar $vacations,private \App\Service\Combat\OccupationService $occupations, private \App\Service\Admin\FleetMissionTraceService $traces,private FleetNavigation $navigation,private OrbitPolicy $orbitPolicy,private OrbitRequestState $orbitRequests,private FleetRecallPlanner $recallPlanner) {}
     private function coords(SolarSystem $s,?int $position): array { return [$s->id,$s->galaxy->id,$s->coordX,$s->coordY,$position]; }
     public function quote(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo=[],float $orbitHours=0): array
     {
@@ -33,7 +33,7 @@ final class FleetService
         if($mission==='attack' && !$this->combats->canAttack($m,$target instanceof Planet?$target:null)) throw new \DomainException('Cette planète ne peut pas être attaquée.');
         if($mission==='conquer' && !$this->combats->canConquer($m,$target instanceof Planet?$target:null)) throw new \DomainException('La conquête n’est pas activée ou cette planète ne peut pas être prise.');
         if($mission==='defend' && !$this->combats->canDefend($m,$target instanceof Planet?$target:null)) throw new \DomainException('Cette planète ne peut pas être défendue depuis cet univers.');
-        if($mission==='orbit' && !$this->combats->canOrbit($m,$target instanceof Planet?$target:null)) throw new \DomainException('Une orbite nécessite une alliance ou un pacte de défense dans cet univers.');
+        if($mission==='orbit' && !$this->orbitPolicy->canRequest($m,$target instanceof Planet?$target:null)) throw new \DomainException('L’orbite nécessite une planète alliée ou neutre appartenant à un joueur actif de cet univers.');
         if(!is_finite($orbitHours) || $orbitHours<0 || $orbitHours>168 || ($mission==='orbit' && ($orbitHours<1 || floor($orbitHours)!==$orbitHours)) || ($mission!=='orbit' && $orbitHours!=0)) throw new \DomainException('Durée d’orbite invalide. Choisissez entre 1 et 168 heures.');
         if($mission==='colonize' && ($target->owner!==null || $target->npcPlanet)) throw new \DomainException('Cette planète doit être conquise ou n’est pas vierge.');
         $config=$this->catalog->forUniverse($m->universe);$planetLimit=$this->planetLimit($m,$config);
@@ -112,6 +112,15 @@ final class FleetService
                 $stock=$this->repo->one(FleetShip::class,['fleet'=>$q['idle'],'slug'=>$slug,'tier'=>$tier]);$stock->quantity-=$quantity;
                 $ship=new FleetShip();$ship->fleet=$f;$ship->slug=$slug;$ship->tier=$tier;$ship->quantity=$quantity;$this->manager->save($ship);
             }
+            if($mission==='orbit') {
+                if(!$this->orbitPolicy->canRequest($m,$f->destination)) throw new \DomainException('Cette planète n’accepte plus les demandes d’orbite.');
+                $automatic=$this->orbitPolicy->automatic($m,$f->destination);
+                $this->orbitRequests->open($f,$automatic);
+                $this->notifications->enqueue($f->destination->owner,
+                    $automatic?'Une flotte alliée de '.$m->getDisplayName().' se dirige vers '.$f->destination->name.'. Son orbite est acceptée automatiquement.'
+                        :'Demande d’orbite de '.$m->getDisplayName().' vers '.$f->destination->name.'. Répondez depuis Flottes avant son arrivée.',
+                    journalKind:'combat');
+            }
             if($mission==='transport') $this->transports->recordDeparture($f,$q['freight']);
             $this->traces->recordDeparture($f, $q['composition'], $q['freight']);
             $this->occupations->recordReinforcementDeparture($f);
@@ -132,6 +141,7 @@ final class FleetService
 
     private function schedule(Fleet $f): void
     {
+        $this->orbitRequests->reschedule($f);
         $f->dispatchToken=Uuid::v4()->toRfc4122();$o=new OutboxMessage();$o->kind='fleet';$o->targetId=$f->id;$o->token=$f->dispatchToken;$o->dueAt=$f->arrivalAt;$this->manager->save($o);
     }
 
@@ -150,6 +160,7 @@ final class FleetService
         $fleet->cargo['hydrogen']=max(0.0,($fleet->cargo['hydrogen']??0)-$quote['spent_now']);
         $fleet->reservedFuel=$quote['return_fuel'];$fleet->orbitFuel=0;
         $fleet->returnPlanet=$returnPlanet;$fleet->navigation=$quote['navigation'];
+        $this->orbitRequests->close($fleet,'withdrawn',$quote['at']);
         $fleet->navigation['recall']=['at'=>$quote['at']->format(DATE_ATOM),'progress'=>$quote['progress'],
             'position'=>$quote['position'],'return_planet_id'=>$returnPlanet->id,'origin_planet_id'=>$fleet->homePlanet->id,
             'spent_now'=>$quote['spent_now'],'return_fuel'=>$quote['return_fuel'],'seconds'=>$quote['seconds']];
@@ -234,6 +245,23 @@ final class FleetService
                 if($this->combats->arriveDefender($f)) return;
                 $this->releaseOrbitFuel($f);$this->notifications->enqueue($m,'La fenêtre de combat était close. Votre flotte repart.',journalKind:'arrival');
             } elseif($f->mission==='orbit') {
+                if(($request=$this->orbitRequests->read($f))!==null) {
+                    $this->manager->lock($f->destination);
+                    if(!$this->orbitPolicy->consentValid($m,$f->destination,$request)) {
+                        $reason=$this->orbitPolicy->canRequest($m,$f->destination)
+                            && ($request['recipient_id']??null)===$f->destination->owner->id
+                            && ($request['status']??null)==='pending'?'expired':'invalid';
+                        $this->orbitRequests->close($f,$reason,$this->clock->now());
+                        $this->releaseOrbitFuel($f);$this->startReturn($f,$f->arrivalAt);
+                        $this->notifications->enqueue($m,'Orbite impossible sur '.$f->destination->name.' : aucun accord valide à l’arrivée. Votre flotte rentre.',journalKind:'arrival');
+                        return;
+                    }
+                    $this->orbitRequests->close($f,'arrived',$this->clock->now());
+                    if(!$this->combats->joinOpenDefense($f)) $this->startOrbit($f);
+                    $this->notifications->enqueue($m,'Votre flotte rejoint l’orbite autorisée de '.$f->destination->name.'.',journalKind:'arrival');
+                    $this->notifications->enqueue($f->destination->owner,'Une flotte autorisée de '.$m->getDisplayName().' est arrivée sur '.$f->destination->name.'.',journalKind:'arrival');
+                    return;
+                }
                 if(!$this->combats->canOrbit($m,$f->destination)) { $this->releaseOrbitFuel($f);$this->startReturn($f,$f->arrivalAt);return; }
                 if($this->combats->orbitAutoAccepted($m,$f->destination)) {
                     if($this->combats->joinOpenDefense($f)) return;
@@ -273,12 +301,33 @@ final class FleetService
             $f->status='returning';$f->departureAt=$f->arrivalAt;$f->arrivalAt=$f->departureAt->modify('+'.$f->travelSeconds.' seconds');$this->navigation->beginLeg($f,$f->departureAt);$this->schedule($f);
         });
     }
-    public function decideOrbit(PlayerUniverse $host, int $fleetId, bool $accept): void
+    public function decideOrbit(PlayerUniverse $host, int $fleetId, bool $accept, string $requestKey=''): void
     {
-        $this->manager->transaction(function () use ($host, $fleetId, $accept): void {
+        $this->manager->transaction(function () use ($host, $fleetId, $accept, $requestKey): void {
             $this->guard->lockMembership($host);
             $this->vacations->assertCanSendFleet($host);
             $fleet = $this->repo->find(Fleet::class, $fleetId);
+            if(!$fleet || !$fleet->destination || $fleet->destination->owner?->id!==$host->id
+                || $fleet->playerUniverse->universe->id!==$host->universe->id
+                || $fleet->destination->solarSystem->galaxy->universe->id!==$host->universe->id) {
+                throw new \DomainException('Cette demande d’orbite n’est plus disponible.');
+            }
+            if($this->orbitRequests->read($fleet)!==null) {
+                $this->manager->lock($fleet->destination);$this->manager->lock($fleet->homePlanet);$this->manager->lock($fleet);
+                $this->orbitRequests->assertDecision($fleet,$host->id,$requestKey,$this->clock->now());
+                if($accept && !$this->orbitPolicy->canRequest($fleet->playerUniverse,$fleet->destination)) throw new \DomainException('Cette flotte ne peut plus être acceptée en orbite.');
+                $quote=$accept?null:$this->recallPlanner->plan($fleet->playerUniverse,$fleet,null,$this->clock->now());
+                $this->orbitRequests->decide($fleet,$host->id,$requestKey,$accept,$this->clock->now());
+                if(!$accept) {
+                    // Le plan a été calculé avant la réponse ; préserver la décision dans son état privé.
+                    $quote['navigation']=$fleet->navigation;
+                    $this->startPlayerRecallLocked($fleet,$quote['return_planet'],$quote);
+                }
+                $this->notifications->enqueue($fleet->playerUniverse,$accept
+                    ?'Votre demande d’orbite sur '.$fleet->destination->name.' est acceptée. La flotte poursuit son trajet.'
+                    :'Votre demande d’orbite sur '.$fleet->destination->name.' est refusée. La flotte rentre.',journalKind:'combat');
+                return;
+            }
             if (!$fleet || $fleet->status !== 'orbit_pending' || !$fleet->destination || $fleet->destination->owner?->id !== $host->id) {
                 throw new \DomainException('Cette demande d’orbite n’est plus disponible.');
             }
@@ -350,6 +399,7 @@ final class FleetService
 
     private function startReturn(Fleet $fleet, ?\DateTimeImmutable $at = null): void
     {
+        $this->orbitRequests->close($fleet,'invalid',$this->clock->now());
         $fleet->status = 'returning';
         $fleet->departureAt = $at ?? $this->clock->now();
         $fleet->arrivalAt = $fleet->departureAt->modify('+' . $fleet->travelSeconds . ' seconds');

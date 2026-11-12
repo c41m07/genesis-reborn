@@ -13,7 +13,7 @@ final class DestinationCatalogue
 
     public function __construct(private GameRepository $repo,private CombatEventService $combats,
         private TransportService $transports,private RelationResolver $relations,
-        private VacationCalendar $vacations,private CoordinateResolver $coordinates) {}
+        private VacationCalendar $vacations,private CoordinateResolver $coordinates,private OrbitPolicy $orbitPolicy) {}
 
     public function choices(PlayerUniverse $viewer,string $mission,?string $query=null): array
     {
@@ -65,7 +65,7 @@ final class DestinationCatalogue
             'attack'=>$this->combats->canAttack($viewer,$planet),
             'conquer'=>$this->combats->canConquer($viewer,$planet),
             'defend'=>$this->combats->canDefend($viewer,$planet),
-            'orbit'=>$this->combats->canOrbit($viewer,$planet),
+            'orbit'=>$this->orbitPolicy->canRequest($viewer,$planet),
             'spy'=>$planet->owner?->id!==$viewer->id,
         };
     }

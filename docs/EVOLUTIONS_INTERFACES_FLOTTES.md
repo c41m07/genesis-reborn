@@ -34,8 +34,8 @@ Une complexité 4 ou 5 impose l’analyse détaillée des transitions et risques
 | F — guildes/signalements | Tag obligatoire à la création, unicité par univers et classement | 3 | Fusionné dans dev, PR #46 |
 | F | Signalement d’un joueur depuis le classement | 4 | Fusionné dans dev, PR #46 |
 | G — rappel | Missions, trajet partiel, carburant/fret, verrouillage, origine perdue | 5 | Fusionné dans dev, PR #47 |
-| H — détection | Analyse tactique, visibilité des mouvements et détection à l’arrivée | 5 | Publié, CI en reprise, PR #48 |
-| I — orbites | Demande au départ, accords, attente et changements diplomatiques | 5 | Décisions validées, à réaliser |
+| H — détection | Analyse tactique, visibilité des mouvements et détection à l’arrivée | 5 | Fusionné dans dev, PR #48 |
+| I — orbites | Demande au départ, accords, attente et changements diplomatiques | 5 | Prêt localement ; publication à autoriser |
 | J — abandon | Dernière colonie, actifs/files, restrictions et confirmation | 5 | Décisions validées, à réaliser |
 | K — refontes | Diplomatie, Profil, Inventaire : maquettes adaptatives, puis validation | 3 | Maquettes validées ; intégration non commencée |
 | Chaque lot | Documentation, contrôles adaptés, six contrôles avant commit/push, CI avant fusion | 3 | À appliquer |
@@ -1187,3 +1187,118 @@ cette reprise ; journaux /tmp/genesis-lot-h-ci-fix-assets.log et
 Les suites serveur et les autres parcours déjà validés portent sur le même code
 applicatif. Publication du correctif autorisée dans le périmètre de H ; nouvelle
 CI complète avant toute fusion. Aucun Alpha.
+
+## Lot H intégré et plan du lot I — 12 novembre 2026
+
+PR #48 fusionnée au commit 0a7a96d55e409cc9541254b9206ec857294d0400 après CI
+43240025765 intégralement verte sur 04370e6d4af493e6d743f2c6ce9924dd16529c5d.
+Cinq quality, leurs étapes attendues et GitGuardian examinés ; protection stricte
+de dev revérifiée, fusion avec garde du SHA. Aucun Alpha.
+Lot I depuis dev actualisée, branche feature/demandes-orbite-au-depart.
+
+Analyse ciblée : demande actuellement créée à l’arrivée, attente orbit_pending
+sans date limite, alliés personnels seuls acceptés automatiquement. La base
+locale ne contient aucune flotte de mission orbit ; aucun constat sur Alpha.
+Toute orbite autorisée participe actuellement à la défense de l’hôte, sans
+condition diplomatique supplémentaire dans registerGarrison/joinOpenDefense.
+
+Sous-tâches et complexités :
+1. Réutiliser sans changement le calcul G de retour partiel/fuel dans un planificateur
+   indépendant, commun au rappel et au refus d’orbite en trajet : 5.
+2. Suivi privé de demande versionné dans Fleet.navigation, déjà disponible depuis G :
+   départ, destinataire initial, décision, échéance réelle et fermeture : 4.
+   Aucun schéma ni historique ancien modifié, aucune migration prévue.
+3. Demandes au départ, auto-accord allié, décision neutre, interdits PNJ/ennemi :
+   5 ; transactions/verrous/reçus et nouveaux jetons sur les retours.
+4. Échéances après boosts, absence de réponse, retrait, propriétaire/diplomatie
+   revérifiés à l’arrivée, aucune duplication ni livraison pendant le retour : 5.
+5. Présentation envoyées/reçues avec échéance, focus/clavier/tactile et données
+   privées filtrées avant sérialisation, rafraîchissement sans perte du focus : 4.
+6. Tests serveur/navigateur, cas limites et refus, documentation et contrôles : 5.
+
+Deux choix complémentaires ont été validés par l’utilisateur le 12 novembre 2026 :
+- Conserver pour ce voyage le traitement des départs antérieurs, sans date fictive.
+- Conserver la participation normale à la défense pour une orbite neutre acceptée,
+  sans élargir les droits de la mission Défense envoyée directement.
+Ces deux choix sont consignés dans docs/DECISIONS.md et intégrés aux tests du lot I.
+
+
+### Lot I — préparation initiale, puis intégration après validation
+
+- Calcul du rappel extrait à comportement inchangé dans `FleetRecallPlanner`,
+  partagé avec le futur refus d’orbite en trajet. Vérification ciblée :
+  31 tests / 225 assertions réussis (rappel et navigation).
+- `OrbitRequestState` prépare un état privé versionné dans `Fleet.navigation`,
+  sans modification du schéma et sans reprise automatique des anciennes flottes.
+  Le composant a ensuite été branché sur les nouveaux départs après validation
+  explicite des deux transitions.
+- Les 11 tests / 20 assertions du composant couvrent l’accord automatique,
+  l’échéance avancée par un boost, les réponses expirées ou non autorisées,
+  le changement de propriétaire/destination, l’impossibilité de réaccepter un
+  refus et la conservation de son historique.
+- Transitions validées : ancien processus conservé pour les missions antérieures ;
+  orbites neutres acceptées participantes à la défense de l’hôte.
+
+
+### Lot I — bilan local du 12 novembre 2026
+
+- Nouveaux départs : demande privée persistée immédiatement, accord allié
+  automatique ou réponse du propriétaire neutre avant l’arrivée réelle.
+  PNJ, planètes sans propriétaire, ennemis et autres univers refusés.
+- Réponse liée à la planète et à son propriétaire initiaux, clé de demande et
+  CSRF. Participation, univers, destination, origine et flotte verrouillés ;
+  réponse périmée ou rejouée sans effet supplémentaire.
+- Refus et retrait : calcul partagé du rappel G depuis la position atteinte,
+  sans consommer le fret ni débiter des stocks à distance. Nouveaux jetons
+  d’arrivée ; conservation du refus dans l’historique privé.
+- Sans réponse ou accord devenu invalide à l’arrivée : retour sans attente
+  indéfinie. Réévaluation des relations, propriétaire et protections existantes.
+  Orbite neutre acceptée participante à la défense ; mission Défense inchangée.
+- Anciennes missions sans demande au départ : processus conservé pour ce voyage.
+  Aucune migration, aucun schéma ni historique ancien modifié.
+- Cartes envoyées/reçues, date de Paris et compte à rebours sur horloge serveur ;
+  origine non découverte omise. Actualisation privée et respect du focus.
+  Boutons nommés, cibles tactiles de 44 px et focus visible.
+- Contrôles : make validate, make lint, make test, make assets
+  (npm run build), BROWSER_PERSISTENCE=1 make test-browser et git diff --check.
+  Suite complète : 835 tests PHP / 210803 assertions et 13 tests Python.
+  Complément après revue des verrous et permissions : 54 tests / 289 assertions.
+- Navigateur : 176 scénarios distincts couverts, comparés au manifeste complet.
+  Quatre groupes : 44, 43, 43, puis 42 réussites et un ancien libellé d’état
+  vide attendu à tort. Ce contrôle a été corrigé et repris avec le clavier
+  et l’orbite neutre : trois réussites. Les deux parcours d’orbite ont aussi
+  réussi dans leur exécution ciblée initiale.
+- Échec initial de la suite PHP : univers supposé présent dans une nouvelle
+  préparation de test. La préparation crée désormais explicitement l’univers
+  isolé ; suite complète relancée et réussie. Aucune assertion supprimée
+  ni aucun délai augmenté pour ces corrections.
+- Axe ciblé du panneau sous les réglages sombre et clair : aucune violation
+  grave ou critique. Clavier, maintien du focus lors de l’actualisation,
+  retrait tactile, absence de débordement et captures ordinateur/mobile
+  examinés. Ces vérifications ne constituent pas un audit RGAA complet.
+- Preuves locales : /tmp/genesis-lot-i-browser-proof.json,
+  /tmp/genesis-lot-i-full-test-final.log, /tmp/genesis-lot-i-locked-final.log,
+  /tmp/genesis-lot-i-lint-reviewed.log et /tmp/genesis-lot-i-assets.log.
+  Captures ignorées par Git dans var/screenshots/lot-i.
+- Les fichiers compilés de production sont restés inchangés pendant les
+  contrôles navigateur. La compilation de développement a ensuite été
+  restaurée pour le watcher existant, sans arrêter ni relancer celui-ci.
+- README, règles, décisions, architecture, feuille de route et wiki local
+  synchronisés. Les documents Work externes signalés en introduction restent
+  inaccessibles ; aucune modification de Figma ni de serveur Alpha dans ce lot.
+- Prochaine étape : autorisation de publication, PR vers dev et fusion
+  exclusivement après CI complète verte sur sa dernière version, puis lot J.
+
+
+### Lot I — publication et correction de préparation CI
+PR #49 ouverte vers dev sur 6f183028012e67dd49eba1d290f14c7b861420cd.
+Le contrôle PHP de la CI 43258172057 a révélé une préparation aléatoire ancienne :
+CombatEventTest attribuait au joueur une planète choisie sans filtrer son état PNJ.
+La préparation l’identifie désormais explicitement comme colonie de joueur ;
+le scénario est nommé « Legacy » pour distinguer son acceptation à l’arrivée.
+Les assertions de carburant et de transition restent identiques. Le refus
+des véritables planètes PNJ reste couvert séparément par OrbitDepartureRequestTest.
+Aucune modification des règles ni du code métier pour cette correction.
+
+Vérification locale de la correction : 29 tests / 233 assertions réussis
+(CombatEventTest et OrbitDepartureRequestTest) ; git diff --check réussi.

@@ -329,3 +329,23 @@ Les délais utilisent serverNow, sans dépendre de l’heure du poste.
 La carte reçoit seulement les DTO filtrés ; elle actualise vols et journal sans
 recréer la caméra, la sélection ou le zoom. Les annonces accessibles portent
 sur les changements de menaces, pas sur chaque seconde du compte à rebours.
+
+
+### Orbites : demandes au départ
+Le lot I utilise le sous-objet privé versionné `Fleet.navigation.orbit_request`
+(clé de demande, destinataire et planète initiaux, dates et décision). Aucune
+migration ni reprise des trajets anciens n’est nécessaire. `OrbitPolicy`
+sépare les permissions des nouveaux départs du processus historique conservé.
+`OrbitRequestState` contrôle les réponses périmées et conserve l’état final.
+`FleetRecallPlanner` partage le calcul du retour partiel avec le rappel G,
+sans utiliser le fret d’hydrogène ni prélever de stock à distance.
+Le refus se traite dans la transaction verrouillant la participation de l’hôte,
+l’univers, la destination, l’origine et la flotte ; un nouveau jeton rend l’ancien message
+d’arrivée obsolète. L’accord ne modifie pas la date ni le jeton du trajet.
+À l’arrivée, une demande nouvelle ne passe jamais en attente indéfinie :
+accord revérifié et orbite/défense, ou retour.
+`OrbitRequestView` et la requête `orbitRequestsFor` limitent les données aux
+parties concernées dans l’univers actif ; une origine non découverte est omise.
+La surveillance privée existante actualise ces cartes toutes les cinq secondes
+en premier plan, avec horloge serveur et report du remplacement lorsqu’un
+contrôle possède le focus. Les clés privées ne sont pas ajoutées à la carte.

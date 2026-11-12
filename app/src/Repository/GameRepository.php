@@ -245,6 +245,18 @@ SQL;
     }
 
     /** @return list<Fleet> */
+    /** @return list<Fleet> */
+    public function orbitRequestsFor(PlayerUniverse $viewer): array
+    {
+        return $this->em->createQueryBuilder()->select('f','sender','target')
+            ->from(Fleet::class,'f')->join('f.playerUniverse','sender')->join('f.destination','target')
+            ->where('sender.universe = :universe')->andWhere('f.mission = :mission')
+            ->andWhere('f.status IN (:statuses)')->andWhere('(sender = :viewer OR target.owner = :viewer)')
+            ->setParameter('universe',$viewer->universe)->setParameter('viewer',$viewer)
+            ->setParameter('mission','orbit')->setParameter('statuses',['traveling','orbit_pending'])
+            ->orderBy('f.arrivalAt','ASC')->addOrderBy('f.id','ASC')->getQuery()->getResult();
+    }
+
     public function activeFleetsInUniverse(Universe $universe): array
     {
         return $this->em->createQueryBuilder()->select('f', 'pu', 'home', 'homeSystem', 'homeGalaxy', 'destination', 'destinationSystem', 'destinationGalaxy', 'directSystem', 'directGalaxy')

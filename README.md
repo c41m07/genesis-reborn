@@ -86,8 +86,9 @@ et indisponible tant que `FORGOTTEN_EMPIRES_ENABLED=0`.
 Le service exige le retour de toutes les flottes avant les vacances et bloque
 les nouveaux départs. Les empires en vacances sont protégés contre attaques,
 espionnage et nouveaux stationnements ; un transport refusé revient avec sa
-cargaison. Les stations alliées déjà acceptées terminent leur durée normale,
-et les demandes d'orbite en attente sont renvoyées à l'activation.
+cargaison. Les stations déjà acceptées terminent leur durée normale. Les anciennes
+demandes d’orbite en attente après l’arrivée sont renvoyées à l’activation ;
+les nouvelles demandes encore en trajet sont revérifiées à l’arrivée.
 L'inactivité et les avertissements déduisent les vacances réelles : consulter le
 jeu pendant une pause ne remet pas le compteur à zéro, et les courriels reprennent
 aux seuils ajustés sans répéter J14. `make empires-preview` liste sans écriture
@@ -505,3 +506,14 @@ le focus et la sélection de carte. Sans JavaScript, actualiser la page.
 Les sondes en trajet restent visibles seulement par leur propriétaire.
 Les autres mouvements restent réservés au propriétaire, au destinataire et aux
 alliés, dans les limites des découvertes, avec contrôles avant sérialisation.
+
+
+### Demandes d’orbite
+Une nouvelle mission Orbite envoie sa demande dès le départ. Les alliés sont
+acceptés automatiquement ; un joueur neutre répond depuis Flottes avant
+l’arrivée. La page affiche les demandes envoyées/reçues et leur échéance
+(heure de Paris et compte à rebours). Le refus ou le retrait rappelle la flotte
+depuis la position atteinte ; sans accord valide à l’arrivée, elle rentre.
+Les planètes ennemies, PNJ et sans propriétaire ne peuvent pas être ciblées.
+Une orbite acceptée participe à la défense de l’hôte. Les missions déjà parties
+avant cette évolution gardent leur ancien processus pour ce voyage.

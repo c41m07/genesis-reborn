@@ -1431,3 +1431,13 @@ Publication de H autorisée, PR #48 ouverte. La CI 43235864806 réussit côté
 serveur et sur trois groupes navigateur ; un test de calendrier lit trop tôt
 la base après soumission. Attente de la même valeur persistée ajoutée, reprise
 locale réussie. Nouvelle CI complète requise ; H non fusionné, I non commencé.
+
+
+### Lot I — demandes d’orbite (prêt localement)
+Demandes au départ, accord allié automatique, réponse neutre avant arrivée,
+refus/retrait par retour partiel, accord revérifié et retour sans réponse.
+Transition des anciennes missions et défense des hôtes neutres validées.
+Suivi privé dans le JSON des trajets existant ; aucune migration.
+Vérifications locales réussies : 835 tests PHP, 13 Python et 176 scénarios
+navigateur distincts, avec compléments ciblés après revue. Publication et PR
+vers dev en attente d’autorisation ; aucune CI du lot I ni aucun déploiement annoncés.
