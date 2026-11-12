@@ -500,3 +500,34 @@ Seule la modération consulte ces signalements et peut les classer ou les marque
 traités ; aucune sanction n’est automatique. Les preuves restent conservées,
 y compris après une identité devenue indisponible. Le rejeu du même formulaire
 ne crée pas de nouveau signalement. Les signalements de messages sont préservés.
+
+## Rappel volontaire des flottes — lot G
+
+Le propriétaire peut rappeler les huit missions à l’aller, y compris espionnage
+et colonisation, ainsi qu’une flotte en orbite ou en attente de décision d’orbite.
+Les retours, occupations, combats et arrivées dont l’échéance est atteinte sont
+exclus. Un combat en cours interdit le rappel même si le statut de flotte est ancien.
+
+Lorsque l’origine appartient toujours au joueur, le retour suit le chemin déjà
+parcouru. La progression réelle tient compte des changements d’échéance et boosts ;
+les coûts et temps du trajet de référence sont conservés pour la portion de retour.
+Le carburant de l’aller est consommé au prorata des portions parcourues.
+En orbite, le carburant de stationnement est consommé au prorata du séjour effectué.
+
+Lorsque l’origine est perdue, le joueur choisit une autre colonie du même univers.
+Le retour est recalculé depuis la position atteinte avec les vaisseaux, technologies
+et paramètres courants de l’univers. Seul le carburant réservé restant est utilisable :
+aucun prélèvement dans le fret d’hydrogène ni à distance dans les stocks de colonies.
+Le refus est sans effet si le carburant ou une destination autorisée manque.
+
+Le rappel n’exécute pas la mission initiale et préserve les vaisseaux, le fret
+et le carburant inutilisé. Une nouvelle programmation invalide les anciens messages ;
+une double confirmation ne crée aucun double retour. L’origine historique reste
+conservée ; propriété et univers de la colonie de retour sont revérifiés à l’arrivée.
+Le dépôt applique les capacités de stockage habituelles, avec débordement tracé.
+
+Aucune donnée ancienne n’est inventée : sans progression et paramètres fiables,
+le rappel est indisponible avec explication et la mission continue normalement.
+Les rappels administratifs et de conversion conservent leurs règles distinctes.
+La carte n’élargit pas les droits de visibilité et masque aux tiers la route
+d’un repli vers une colonie dont le système n’a pas été découvert.

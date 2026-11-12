@@ -470,3 +470,22 @@ conserve les preuves et journalise consultation/traitement, sans sanction automa
 Migration additive Version20261112030000 : tag nullable pour l’historique,
 unicité univers/tag et table player_report. L’application à une base existante
 nécessite accord explicite et sauvegarde vérifiée.
+
+### Rappel des flottes
+
+Depuis ses flottes en vol, le joueur peut préparer puis confirmer le rappel
+d’une mission à l’aller, en orbite ou en attente d’accord d’orbite. L’aperçu
+présente la colonie de retour, la durée et le carburant. Les retours, combats,
+résolutions d’arrivée et occupations sont exclus. Le fret et les vaisseaux
+restent à bord ; le dépôt conserve les règles habituelles de stockage.
+
+Le retour tient compte du chemin parcouru et des boosts. Si l’origine est
+perdue, une autre colonie du même univers doit être choisie explicitement :
+seul le carburant réservé encore disponible sert au repli, sans prendre dans
+le fret d’hydrogène ni dans les stocks des planètes. Si le calcul est impossible
+ou le carburant insuffisant, le refus laisse la mission inchangée. Les anciennes
+flottes ne sont rappelables que lorsque leurs données suffisent à un calcul fiable.
+
+Migration additive Version20261112040000 : suivi nullable du trajet et colonie
+de retour distincte de l’origine historique. Toute application sur base existante
+nécessite accord explicite et sauvegarde vérifiée ; aucun déploiement Alpha.

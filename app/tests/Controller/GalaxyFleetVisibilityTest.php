@@ -139,4 +139,20 @@ final class GalaxyFleetVisibilityTest extends WebTestCase
         $this->client->request('GET','/carte-v2?galaxy='.$otherHome->solarSystem->galaxy->id);
         self::assertResponseStatusCodeSame(404);
     }
+    public function testUnknownFallbackColonyIsNeverExposedByARecalledFleet(): void
+    {
+        [$viewer,$target]=$this->player('RecallViewer');[$owner,$home]=$this->player('RecallOwner');
+        $known=array_map(fn($d)=>$d->solarSystem->id,$this->em->getRepository(\App\Entity\PlayerDiscovery::class)->findBy(['playerUniverse'=>$viewer->currentPlayerUniverse]));
+        $fallback=null;
+        foreach($this->em->getRepository(Planet::class)->findAll() as $planet) if($planet->solarSystem->galaxy->id===$target->solarSystem->galaxy->id
+            && !in_array($planet->solarSystem->id,$known,true)) { $fallback=$planet;break; }
+        self::assertNotNull($fallback);$fallback->owner=$owner->currentPlayerUniverse;$fallback->name='REPLI_CONFIDENTIEL';
+        $fleet=$this->fleet($owner,$home,$target,'transport','returning');$fleet->returnPlanet=$fallback;$fleet->navigation=['recall'=>['progress'=>.5]];
+        $this->ship($fleet,'transport','basic',2);$this->em->flush();
+        $data=$this->map($viewer,$target);$row=array_values(array_filter($data['flights'],fn($f)=>$f['id']===$fleet->id))[0];
+        self::assertSame(['hidden'=>true],$row['recallRoute']);self::assertStringNotContainsString('REPLI_CONFIDENTIEL',json_encode($row));
+        $data=$this->map($owner,$home);$row=array_values(array_filter($data['flights'],fn($f)=>$f['id']===$fleet->id))[0];
+        self::assertSame('REPLI_CONFIDENTIEL',$row['recallRoute']['returnName']);self::assertSame($fallback->solarSystem->id,$row['recallRoute']['returnSystemId']);
+    }
+
 }

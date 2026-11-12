@@ -13,6 +13,15 @@ final class MovementCalculator
         $same=$origin[0]===$target[0];
         $normal=$same ? abs(($target[4]??10)-$origin[4])*10 : (100-$origin[4]*10)+($target[4]===null?0:100-$target[4]*10);
         $hyper=$same ? 0 : hypot($target[2]-$origin[2],$target[3]-$origin[3])*100;
+        return $this->quoteDistances($normal,$hyper,$same,$ships,$ratio,$timeMultiplier,$fuelPolicy,$orbitHours);
+    }
+
+    public function quoteDistances(int|float $normal,int|float $hyper,bool $same,array $ships,float $ratio,float $timeMultiplier,string $fuelPolicy,float $orbitHours=0): array
+    {
+        if(!is_finite($normal) || !is_finite($hyper) || $normal<0 || $hyper<0) throw new \DomainException('Distance invalide.');
+        if(!is_finite($ratio) || $ratio<.1 || $ratio>1 || !is_finite($timeMultiplier) || $timeMultiplier<=0 || !is_finite($orbitHours) || $orbitHours<0) throw new \DomainException('Vitesse ou durée invalide.');
+        if(!$ships) throw new \DomainException('Sélectionnez au moins un vaisseau.');
+        if(!in_array($fuelPolicy,['proportional','inverse'],true)) throw new \DomainException('Départs en attente du choix de la règle de carburant.');
         $systemSpeed=INF;$galaxySpeed=INF;$fuelNormal=0;$fuelHyper=0;$orbit=0;$cargoCapacity=0;$fuelCapacity=0;$probeOnly=true;
         foreach($ships as $ship) {
             $n=$ship['quantity'];if(!is_int($n)||$n<1||$ship['speed_system']<=0||$ship['speed_galaxy']<=0) throw new \DomainException('Composition de flotte invalide.');

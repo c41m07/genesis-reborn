@@ -845,6 +845,17 @@ export default class extends Controller {
         return { wx: Math.cos(angle) * extentX * 1.06, wy: Math.sin(angle) * extentY * 1.06 };
     }
 
+    flightProgress(flight, now) {
+        const arrival = Date.parse(flight.arrivalAt || '');
+        const checkpoint = Number(flight.progressAt) * 1000;
+        if (flight.progressAt != null && flight.progressBase != null && arrival > checkpoint) {
+            const base = Number(flight.progressBase);
+            return clamp(base + (1 - base) * Math.max(0, now - checkpoint) / (arrival - checkpoint), base, 1);
+        }
+        const departure = Date.parse(flight.departureAt || '');
+        return clamp((now - departure) / (arrival - departure), 0, 1);
+    }
+
     drawFlights(ctx) {
         const now = Date.now() + this.serverClockOffset;
         for (const flight of this.flights) {
@@ -872,14 +883,25 @@ export default class extends Controller {
             const departure = Date.parse(flight.departureAt || '');
             const arrival = Date.parse(flight.arrivalAt || '');
             if (!Number.isFinite(departure) || !Number.isFinite(arrival) || arrival <= departure) continue;
-            let progress = clamp((now - departure) / (arrival - departure), 0, 1);
+            let progress = this.flightProgress(flight, now);
             let from = origin, to = destination;
-            if (flight.status === 'returning') {
+            if (flight.status === 'returning' && !flight.recallRoute) {
                 progress = 1 - progress;
                 from = destination;
                 to = origin;
             }
-            const a = this.galaxyPoint(from), b = this.galaxyPoint(to);
+            let a = this.galaxyPoint(from), b = this.galaxyPoint(to);
+            if (flight.recallRoute) {
+                if (flight.recallRoute.hidden) continue;
+                const returnSystem = this.systemById.get(Number(flight.recallRoute.returnSystemId));
+                if (!returnSystem) continue;
+                const p = clamp(Number(flight.recallRoute.startProgress), 0, 1), inv = 1 - p;
+                const odx = b.x - a.x, ody = b.y - a.y, olen = Math.max(1, Math.hypot(odx, ody));
+                const obend = Math.min(85, Math.max(14, olen * .16));
+                const ocx = (a.x + b.x) / 2 - ody / olen * obend, ocy = (a.y + b.y) / 2 + odx / olen * obend;
+                a = { x: inv * inv * a.x + 2 * inv * p * ocx + p * p * b.x, y: inv * inv * a.y + 2 * inv * p * ocy + p * p * b.y };
+                b = this.galaxyPoint(returnSystem);
+            }
             const bend = Math.min(85, Math.max(14, Math.hypot(b.x - a.x, b.y - a.y) * .16));
             const dx = b.x - a.x, dy = b.y - a.y, length = Math.max(1, Math.hypot(dx, dy));
             const cx = (a.x + b.x) / 2 - dy / length * bend;
@@ -1629,7 +1651,7 @@ export default class extends Controller {
         const now = Date.now() + this.serverClockOffset;
         for (const flight of this.flights) {
             if (!flight.originSystem || !flight.destinationSystem) continue;
-            if (flight.originSystem.id !== system.id && flight.destinationSystem.id !== system.id) continue;
+            if (flight.originSystem.id !== system.id && flight.destinationSystem.id !== system.id && Number(flight.recallRoute?.returnSystemId) !== system.id) continue;
             const originPlanet = this.findPlanetByName(flight.originName, flight.originSystem);
             const targetPlanet = this.findPlanetByName(flight.destinationName, flight.destinationSystem);
             const startPlanet = flight.originSystem.id === system.id ? originPlanet : null;
@@ -1649,10 +1671,19 @@ export default class extends Controller {
                 continue;
             }
             if (!Number.isFinite(departure) || !Number.isFinite(arrival) || arrival <= departure) continue;
-            let progress = clamp((now - departure) / (arrival - departure), 0, 1);
-            if (flight.status === 'returning') progress = 1 - progress;
-            const x = start.x + (end.x - start.x) * progress;
-            const y = start.y + (end.y - start.y) * progress - Math.sin(progress * Math.PI) * 36;
+            let progress = this.flightProgress(flight, now);
+            let routeStart = start, routeEnd = end;
+            if (flight.recallRoute) {
+                if (flight.recallRoute.hidden) continue;
+                const p = clamp(Number(flight.recallRoute.startProgress), 0, 1);
+                routeStart = { x: start.x + (end.x - start.x) * p, y: start.y + (end.y - start.y) * p - Math.sin(p * Math.PI) * 36 };
+                const returnSystem = this.systemById.get(Number(flight.recallRoute.returnSystemId));
+                const returnPlanet = returnSystem ? this.findPlanetByName(flight.recallRoute.returnName, returnSystem) : null;
+                routeEnd = Number(flight.recallRoute.returnSystemId) === system.id && returnPlanet?.visual
+                    ? { x: returnPlanet.visual.sx, y: returnPlanet.visual.sy } : { x: this.width * .04, y: centerY };
+            } else if (flight.status === 'returning') progress = 1 - progress;
+            const x = routeStart.x + (routeEnd.x - routeStart.x) * progress;
+            const y = routeStart.y + (routeEnd.y - routeStart.y) * progress - Math.sin(progress * Math.PI) * 36;
             ctx.beginPath();
             ctx.arc(x, y, 4, 0, Math.PI * 2);
             ctx.fillStyle = missionColors[flight.mission] || '#00d4ff';

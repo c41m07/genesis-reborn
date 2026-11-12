@@ -1384,3 +1384,24 @@ Version20261112030000 appliquée : onze comptages inchangés, ancienne guilde sa
 tag inventé. make lint complet réussit aussi sur la base locale migrée.
 Publication F autorisée ; fusion conditionnée à la CI complète, puis lot G.
 Aucun serveur Alpha concerné.
+
+## Lot F intégré et rappel du lot G — 12 novembre 2026
+
+PR #46 fusionnée dans dev (1818e8e) après CI complète 43189015280 verte.
+Lot G sur feature/rappel-flottes-et-repli, complexité 5 : navigation figée,
+progression réelle après boosts, rappel transactionnel des missions éligibles,
+repli explicite après perte de l’origine, fret protégé et anciens messages sans effet.
+Anciennes flottes conservées : refus expliqué si les données ne permettent pas
+de retour fiable. Les règles validées de combat et stockage restent applicables.
+
+Migration locale Version20261112040000 autorisée puis appliquée après sauvegarde
+vérifiée deux fois ; onze comptages et valeurs historiques des flottes inchangés.
+71 tests ciblés passent (543 assertions). Contrôles complets en cours.
+Publication du lot G non autorisée à ce stade ; aucun push, PR ou déploiement Alpha.
+
+Validation locale finale de G : six contrôles réussis, 793 tests PHP
+(210610 assertions), 13 Python et couverture exacte de 173 scénarios navigateur
+distincts après reprise ciblée du test d’estimation. Le rappel est disponible
+localement, avec contrôles clavier/tactile et confidentialité du repli.
+Documentation et wiki intégré synchronisés. Publication en attente d’accord ;
+aucune PR/CI GitHub G ni fusion ou déploiement Alpha. H à K restent à réaliser.

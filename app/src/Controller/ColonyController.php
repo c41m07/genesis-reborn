@@ -300,6 +300,16 @@ final class ColonyController extends AbstractController
                 $ships = array_values(array_filter($this->repo->all(FleetShip::class, ['fleet' => $fleet]), static fn (FleetShip $ship): bool => $ship->quantity > 0));
                 $shipsSummary = $isOwnFleet ? implode(' · ', array_map(fn (FleetShip $ship): string => $ship->quantity.' × '.str_replace('_', ' ', $ship->slug).' ('.$catalog->tiers()[$ship->tier]['label'].')', $ships)) : null;
                 $relationLabel = $isOwnFleet ? 'Votre empire' : ($targetsOwnColony ? 'Flotte entrante' : 'Allié');
+                $recallRoute=null;
+                if(isset($fleet->navigation['recall']) && $fleet->status==='returning') {
+                    $returnPlanet=$fleet->returnPlanet??$fleet->homePlanet;
+                    $canSeeRoute=$isOwnFleet || (isset($known[$originSystem->id],$known[$destinationSystem->id],$known[$returnPlanet->solarSystem->id]));
+                    $recallRoute=$canSeeRoute?['startProgress'=>(float)$fleet->navigation['recall']['progress'],
+                        'returnSystemId'=>$returnPlanet->solarSystem->id,'returnName'=>$returnPlanet->name,
+                        'returnPosition'=>$returnPlanet->position]:['hidden'=>true];
+                }
+                $progressState=($fleet->navigation['active']['status']??null)===$fleet->status?$fleet->navigation['active']:null;
+
                 $flights[] = [
                     'id' => $fleet->id,
                     'mission' => $fleet->mission,
@@ -319,6 +329,9 @@ final class ColonyController extends AbstractController
                     'destinationY' => $destinationSystem->coordY,
                     'destinationName' => $fleet->destination?->name ?? $destinationSystem->name,
                     'destinationCoordinates' => $fleet->destination?->coordinates() ?? ($destinationSystem->galaxy->coordinateCode().':'.$destinationSystem->number()),
+                    'recallRoute'=>$recallRoute,
+                    'progressBase'=>$progressState['progress']??null,
+                    'progressAt'=>$progressState['at']??null,
                     'departureAt' => $fleet->departureAt?->format(\DateTimeInterface::ATOM),
                     'arrivalAt' => $fleet->arrivalAt?->format(\DateTimeInterface::ATOM),
                     'ownedByCurrentPlayer' => $isOwnFleet,

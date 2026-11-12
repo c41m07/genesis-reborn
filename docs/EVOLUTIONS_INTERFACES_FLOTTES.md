@@ -31,9 +31,9 @@ Une complexité 4 ou 5 impose l’analyse détaillée des transitions et risques
 | D | Attaque PNJ, départ/arrivée et liens depuis la carte | 4 | Fusionné dans dev, PR #44 |
 | E — administration/rapports | Attribution auditée de vaisseaux, planète/type/rang/quantité | 4 | Fusionné dans dev, PR #45 |
 | E | Archive/restauration personnelle, sélection et conservation des preuves | 4 | Fusionné dans dev, PR #45 |
-| F — guildes/signalements | Tag obligatoire à la création, unicité par univers et classement | 3 | Vérifié sur bases isolées, publication à autoriser |
-| F | Signalement d’un joueur depuis le classement | 4 | Vérifié sur bases isolées, publication à autoriser |
-| G — rappel | Missions, trajet partiel, carburant/fret, verrouillage, origine perdue | 5 | Décisions validées, à réaliser |
+| F — guildes/signalements | Tag obligatoire à la création, unicité par univers et classement | 3 | Fusionné dans dev, PR #46 |
+| F | Signalement d’un joueur depuis le classement | 4 | Fusionné dans dev, PR #46 |
+| G — rappel | Missions, trajet partiel, carburant/fret, verrouillage, origine perdue | 5 | Prêt localement, publication en attente d’accord |
 | H — détection | Analyse tactique, visibilité des mouvements et détection à l’arrivée | 5 | Décisions validées, à réaliser |
 | I — orbites | Demande au départ, accords, attente et changements diplomatiques | 5 | Décisions validées, à réaliser |
 | J — abandon | Dernière colonie, actifs/files, restrictions et confirmation | 5 | Décisions validées, à réaliser |
@@ -878,3 +878,145 @@ inclus : /tmp/genesis-lot-f-lint-local-final.log. Logs de sauvegarde/migration
 /tmp/genesis-lot-f-backup.log et -migrate.log, comptages -counts-before.json.
 Les suites serveur/navigateur déjà réussies portent sur le code applicatif inchangé ;
 seul ce suivi documentaire est actualisé. Publication autorisée, CI à vérifier.
+
+## Lot F intégré et plan détaillé du lot G — 12 novembre 2026
+
+PR #46 fusionnée dans dev au commit 1818e8e8cf9ecb0279212a374889ef108e04783c.
+CI complète 43189015280 réussie sur fa178723ddc48b8672bd9aaf816026db2740d1cb :
+cinq quality et GitGuardian verts, étapes Compose/assets/PHP/lint/schéma/
+sauvegarde-restauration/navigateur examinées. Protection stricte de dev et PR
+obligatoire revérifiées. Aucun Alpha.
+Lot G depuis dev actualisée, branche feature/rappel-flottes-et-repli.
+
+Complexité 5 : rappel, progression et repli (transactions, unités et ressources).
+1. Examiner les effets existants : arrivée, consommation du carburant, boosts,
+   combats, orbites, transports, rapports, traces et représentation des vols.
+   Les rappels administratifs/conversion existants gardent leurs règles distinctes.
+2. Figer le trajet et suivre sa progression au départ et lors des changements
+   d’échéance. Les boosts agissent sur l’opération en cours, sans réécrire le
+   chemin déjà parcouru. Préserver les coûts, vitesses, minimums et multiplicateurs
+   du calcul de départ ; aucun changement de catalogue ou d’équilibrage.
+3. Préparer le retour depuis le point atteint : prévisualisation, droits actuels,
+   choix d’une colonie de repli si l’origine est perdue, carburant disponible
+   uniquement et fret protégé. Refus entier si route/carburant/droits invalides.
+4. Exécuter sous les verrous participation/univers/planètes/flotte, vérifier
+   l’absence de combat et l’échéance, reçu idempotent et nouvelle programmation
+   invalidant les anciens messages. Ne livrer, espionner ou coloniser lors
+   d’aucun rappel ; conserver vaisseaux, fret, carburant inutilisé et historiques.
+5. Retour à la colonie autorisée, avec nouveau contrôle de propriété/univers,
+   dépôt et stockage existants ; atomicité des crédits et des suppressions de
+   lignes de vaisseaux, rejeu sans effet.
+6. UI clavier/tactile et affichage privé de la route de repli, sans révéler une
+   colonie de repli inconnue aux tiers. Ne pas étendre la visibilité des flottes.
+7. Tests de calcul, boosts successifs, missions, refus, arrivée/rappel concurrents,
+   ancien jeton, transport et stocks/vaisseaux ; puis contrôles complets et documents.
+
+Décisions complémentaires reçues après reformulation :
+- Anciennes flottes : rappel uniquement si le retour peut être calculé avec
+  certitude ; sinon message explicite, mission poursuivie sans modification.
+  Ne pas inventer de progression ou de paramètres historiques.
+- Repli : calculs normaux de l’univers au rappel, carburant disponible seulement,
+  fret d’hydrogène et stocks des planètes préservés. Refus sans changement
+  si le carburant manque ; aucun prélèvement distant.
+Données prévues : navigation nullable (trajet/progression/rappel), colonie de retour
+nullable distincte de l’origine historique. Migration additive à préparer ;
+l’accord de migration du lot F n’autorise pas celle du lot G.
+
+### Application locale et vérifications du lot G — 12 novembre 2026
+
+Accord explicite reçu pour sauvegarder, vérifier puis appliquer
+Version20261112040000 sur la base locale uniquement.
+Archive : var/backups/lot-g-20261112/genesis-genesis_reborn_v2-20261112T093735Z-mYBfYtxefrsi.sql.gz.
+Archive gzip/manifeste vérifiés deux fois avant migration. Comptages inchangés :
+720 planètes, 40 ressources, 15 flottes, 12 lignes de vaisseaux, 3 combats,
+4 renseignements, 1 transport, 6 participations, 1 guilde, 1 adhésion,
+0 signalement joueur. Empreinte des données historiques de flotte inchangée ;
+navigation/return_planet_id des anciennes flottes restent NULL.
+Logs : /tmp/genesis-lot-g-backup.log, -migrate.log et -counts-before.json.
+
+Implémentation ciblée : FleetNavigation, FleetRecallService, route privée avec
+confirmation et choix de repli, réemploi des verrous/reçus/outbox et du dépôt
+existant. Checkpoints avant boosts/ajustements, ancienne origine conservée,
+carburant réservé seulement, aucune exécution de la mission annulée.
+La carte protège la colonie de repli non découverte et conserve les droits actuels.
+
+71 tests ciblés réussis, 543 assertions : huit missions, orbite/demande, boosts
+successifs, ancien message après nouvelle échéance, reçus, repli et livraison,
+carburant et stocks protégés, anciennes données fiables ou insuffisantes, combat,
+permissions/CSRF et confidentialité. Le premier contrôle navigateur a révélé
+une lecture de base avant la fin de la navigation : attente de confirmation
+ajoutée au test ; aucune correction métier nécessaire pour ce cas.
+Contrôles complets en cours, publication G non autorisée, aucun Alpha.
+
+La première suite complète serveur (792 tests) a identifié un refus d’orbite
+en attente dû à un écart d’arrondi entre JSON et DOUBLE après relecture sous verrou.
+La comparaison tolère désormais uniquement l’arrondi numérique ; les coûts sont
+ensuite plafonnés au carburant réellement présent, sans création d’hydrogène.
+Un cas déterministe reproduit ce défaut ; les 28 tests de rappel passent
+(209 assertions). Suite complète relancée après cette correction.
+
+Suite complète serveur après correction : make test réussi, 793 tests PHP et
+210610 assertions, puis 13 tests Python. make lint réussi sur la base locale
+migrée après correction ; mapping et schéma synchronisés. make validate et
+make assets réussis ; aucun asset source n’a changé depuis la compilation.
+Logs : /tmp/genesis-lot-g-test-final.log, -lint-after-rounding.log,
+-assets.log et -validate.log.
+
+Le scénario navigateur existant fleet-preview-submit-state a révélé une course
+entre l’estimation automatique et l’estimation dont le test simule la panne réseau.
+Le test attend maintenant le résultat initial avant d’intercepter la demande ;
+aucun contrôle n’est retiré ni délai augmenté. Reprise ciblée prévue avec le
+parcours général au clavier, après les quatre groupes de la suite complète.
+
+Fichiers du lot G (25, aucun fichier généré ni sauvegarde) :
+
+- README.md
+- app/assets/app.js
+- app/assets/controllers/galaxy_v2_controller.js
+- app/assets/styles/fleet-recall.css
+- app/migrations/Version20261112040000.php
+- app/src/Controller/ColonyController.php
+- app/src/Controller/FleetRecallController.php
+- app/src/Entity/Fleet.php
+- app/src/Service/Fleet/FleetNavigation.php
+- app/src/Service/Fleet/FleetRecallService.php
+- app/src/Service/Fleet/FleetService.php
+- app/src/Service/Fleet/MovementCalculator.php
+- app/templates/fleet/recall.html.twig
+- app/templates/ui/flights.html.twig
+- app/tests/Controller/GalaxyFleetVisibilityTest.php
+- app/tests/Integration/FleetRecallTest.php
+- app/tests/Service/FleetNavigationTest.php
+- app/tests/browser/fleet-preview-submit-state.spec.mjs
+- app/tests/browser/fleet-recall.spec.mjs
+- docs/ARCHITECTURE.md
+- docs/DECISIONS.md
+- docs/EVOLUTIONS_INTERFACES_FLOTTES.md
+- docs/FEUILLE_DE_ROUTE.md
+- docs/REGLES.md
+- docs/wiki.json
+
+Continuité Git : le contrôle final a relevé un passage sur dev au même SHA 1818e8e. Retour sur feature/rappel-flottes-et-repli sans modification des fichiers ni commit sur dev.
+
+### Validation locale finale du lot G
+
+Les six contrôles ont été exécutés et examinés : make validate, make lint,
+make test, make assets (npm run build), BROWSER_PERSISTENCE=1 make test-browser
+et git diff --check réussis. 793 tests PHP, 210610 assertions, 13 tests Python.
+La couverture des rapports JSON est comparée au manifeste : 173 scénarios
+navigateur distincts réussis, aucun scénario manquant ou supplémentaire.
+Les quatre groupes initiaux comprennent 201 réussites et l’échec du test
+d’estimation avant correction ; le dernier groupe isolé passe ses trois cas :
+estimation corrigée, rappel avec focus réellement visible et navigation générale
+au clavier. Aucun délai ni assertion existante n’a été affaibli.
+Logs/JSON : /tmp/genesis-lot-g-batch-{1..5}.log et .json ;
+manifeste /tmp/genesis-lot-g-manifest.json. Captures privées dans output/playwright.
+Contrôles ciblés d’accessibilité : titres, labels/alertes, focus visible, clavier,
+tactile, absence de débordement à 390 px et axe du panneau (aucun défaut
+grave/critique). Ces vérifications ne constituent pas un audit RGAA complet.
+
+Aucune décision produit bloquante restante pour G. Lots H à K non implémentés.
+Les trois sources Work citées en introduction restent indisponibles ; aucun wiki
+distant ni fichier Figma modifié pour ce lot. Documentation locale et wiki intégré
+synchronisés. Aucun push, PR, CI GitHub du lot G, fusion ni déploiement Alpha.
+Publication G soumise à l’accord utilisateur, puis CI complète avant toute fusion.

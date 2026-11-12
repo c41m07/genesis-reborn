@@ -78,6 +78,7 @@ test('La prévisualisation valide autorise l’envoi, les erreurs backend et ré
   await form.locator('[name="ships[probe]"]').fill('1');
   await form.getByRole('button', { name: /Choisir la destination/ }).click();
   await form.getByRole('button', { name: /Vérifier la mission/ }).click();
+  await expect(send).toBeEnabled();
   await page.route('**/flottes/estimer', route => route.abort(), { times: 1 });
   await form.getByRole('button', { name: 'Estimer le trajet' }).click();
   await expect(estimate).toHaveClass(/error/, { timeout: 10000 });
