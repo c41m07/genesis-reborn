@@ -42,7 +42,7 @@ test('Le parcours de flotte guide de la composition à la confirmation', async (
   await form.getByRole('button', { name: /Choisir la destination/ }).click();
   await expect(steps.nth(1)).toBeVisible();
   await expect(form.getByRole('heading', { name: 'Choisissez la destination' })).toBeVisible();
-  await form.locator('[name="coordinates"]').fill('Alpha:2');
+  await form.getByLabel('Destination personnalisée', { exact: true }).check();await form.locator('[name="coordinates"]').fill('Alpha:2');
   await form.getByRole('button', { name: /Vérifier la mission/ }).click();
   await expect(steps.nth(2)).toBeVisible();
   await expect(form.locator('[data-fleet-wizard-target="summary"]')).toContainText('Chasseur');

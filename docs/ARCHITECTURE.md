@@ -176,3 +176,39 @@ EmpireDetails ne produit que les données des planètes et flottes du propriéta
 dans son univers. Les snapshots de stocks restent calculés en lecture seule.
 La migration Version20261112010000 ajoute six colonnes nullables et deux index ;
 elle n’effectue aucune datation ni reprise de notification historique.
+
+## Catalogue des destinations — lot D
+
+DestinationCatalogue regroupe les planètes connues de la participation active
+selon la diplomatie et la mission. Une relation de propriétaire appartenant à un
+autre univers est rejetée, même si le monde se trouve dans l’univers courant.
+canPrefill conserve l’accès en lecture aux liens de cibles connues ; allows filtre
+les menus et suggestions selon les droits de mission. Le propriétaire actuel
+détermine la catégorie d’une ancienne planète PNJ capturée.
+
+GET /flottes/destinations accepte mission et q (facultatif, pseudonyme). Réponse
+JSON privée sans cache : groupes friendly/enemies et suggestions limitées à 20.
+Recherche littérale insensible à la casse, au moins deux caractères, limitée à
+40 caractères. Les planètes inconnues et les autres univers sont filtrés avant
+construction des données. Seuls identifiant, nom, propriétaire, coordonnées et
+libellé utiles sont transmis ; aucun stock ou détail militaire supplémentaire.
+
+Preview et send passent par resolve : destination_mode=custom conserve le contrat
+coordinates historique (mode par défaut pour les anciens clients sans paramètre).
+friendly/enemies utilisent leurs identifiants de planète, revérifiés en base avec
+catégorie, univers, découverte et mission ; une exploration utilise le système
+de la planète sélectionnée. FleetService::quote/send reste l’autorité métier,
+avec transactions, reçus, carburant et contrôles existants.
+
+Le contrôleur fleet-destination gère radio-boutons, listes et combobox clavier/
+tactile. Il désactive les champs des modes inactifs et ignore les réponses de
+recherche devenues obsolètes. Une ancienne liste ne peut pas être rouverte après
+changement de mission. Le wizard et l’estimation utilisent le champ actif.
+Sans JavaScript, les champs restent accessibles et le mode envoyé est validé
+côté serveur. Aucun nouveau schéma ni dépendance.
+
+canAttack autorise maintenant les PNJ sans propriétaire dans le même univers,
+avec contrôles de participation, vacances et occupation existants. joinAttack
+revérifie l’autorisation sous verrou et initialise la garnison PNJ une seule fois.
+capturePlanet continue à ne considérer que les missions conquer ; collectLoot
+continue à exclure les planètes sans propriétaire. Aucun coût ou durée modifié.

@@ -1,0 +1,9 @@
+.fleet-destination-modes{border:0;padding:0;margin:12px 0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;min-width:0}
+.fleet-destination-modes legend{font-weight:700;margin-bottom:8px}.fleet-wizard-panel .fleet-destination-modes label{display:flex;flex-direction:row;align-items:center;gap:8px;min-height:48px;padding:10px;font-size:14px;line-height:1.4;border:1px solid var(--line);border-radius:6px;cursor:pointer;overflow-wrap:anywhere}
+.fleet-destination-modes input[type="radio"]{width:24px;min-width:24px;height:24px;min-height:24px;max-height:24px;flex:0 0 24px;margin:0;padding:0}.fleet-destination-modes label>span{min-width:0}.fleet-destination-modes label:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--panel))}
+.fleet-destination-modes label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.fleet-destination-search{position:relative}.fleet-destination-suggestions{list-style:none;margin:0;padding:4px;position:absolute;top:100%;left:0;right:0;z-index:30;max-height:240px;overflow:auto;border:1px solid var(--line);border-radius:6px;background:var(--panel);box-shadow:0 8px 20px #0004}
+.fleet-destination-suggestions li{color:var(--text);font-size:14px;line-height:1.5;padding:12px;min-height:44px;cursor:pointer;overflow-wrap:anywhere}
+.fleet-destination-suggestions li[aria-selected="true"],.fleet-destination-suggestions li:hover{background:color-mix(in srgb,var(--accent) 18%,var(--panel));color:var(--text)}
+.fleet-pnj-help{grid-column:1/-1;font-size:12px}
+@media(max-width:740px){.fleet-destination-modes{grid-template-columns:1fr}}

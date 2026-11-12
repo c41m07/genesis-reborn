@@ -26,3 +26,5 @@ import './styles/game-typography.css';
 import './styles/messaging.css';
 
 import './styles/empire-details.css';
+
+import './styles/fleet-destinations.css';

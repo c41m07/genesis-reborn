@@ -60,7 +60,8 @@ final class CombatEventService
     public function canAttack(PlayerUniverse $attacker, Planet $target): bool
     {
         $defender = $target->owner;
-        if(!$attacker->isPlayerControlled() || ($defender!==null && $this->relations->nonAggression($attacker,$defender))) return false;
+        if(!$attacker->isPlayerControlled() || $target->solarSystem->galaxy->universe->id!==$attacker->universe->id) return false;
+        if($defender!==null && $this->relations->nonAggression($attacker,$defender)) return false;
         $occupation=$this->occupations->activeFor($target);
         if($occupation!==null) {
             if(!$this->occupations->isEnabled() || !$this->occupations->canOccupy($attacker) || $attacker->universe->id!==$occupation->occupant->universe->id) return false;
@@ -69,7 +70,8 @@ final class CombatEventService
             return !$friendly || $this->occupationHasHostiles($target,$occupation->occupant);
         }
         if($this->occupations->isEnabled() && !$this->occupations->canOccupy($attacker)) return false;
-        if ($defender === null || $defender->universe->id !== $attacker->universe->id || $this->relations->allied($attacker, $defender)) return false;
+        if($defender===null) return $target->npcPlanet && !$this->vacations->isActive($attacker);
+        if ($defender->universe->id !== $attacker->universe->id || $this->relations->allied($attacker, $defender)) return false;
         if ($this->vacations->isActive($attacker) || $this->vacations->isActive($defender)) return false;
         if($defender->isForgotten()) return true;
         $rules = $this->catalog->rules();
@@ -265,8 +267,10 @@ final class CombatEventService
         $this->manager->lock($planet);
         if ($fleet->mission === 'conquer') {
             if (!$this->canConquer($fleet->playerUniverse, $planet)) return false;
-            $this->npcSeeder->seed($planet);
+        } elseif(!$this->canAttack($fleet->playerUniverse,$planet)) {
+            return false;
         }
+        if($planet->owner===null && $planet->npcPlanet) $this->npcSeeder->seed($planet);
         $now = $this->clock->now();
         $events = $this->repo->all(CombatEvent::class, ['planet' => $planet, 'status' => 'pending'], ['id' => 'DESC']);
         $latestEvent = $this->repo->all(CombatEvent::class, ['planet' => $planet], ['id' => 'DESC'])[0] ?? null;

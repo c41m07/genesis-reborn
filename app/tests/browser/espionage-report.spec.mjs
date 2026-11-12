@@ -46,7 +46,7 @@ test('Espionnage PNJ : envoyer une sonde et consulter le rapport privé', async 
   await form.locator('[name="ships[probe]"]').fill('1');
   await form.getByRole('button', { name: /Choisir la destination/ }).click();
   await form.locator('[name="mission"]').selectOption('spy');
-  await form.locator('[name="coordinates"]').fill(target.coordinates);
+  await form.getByLabel('Destination personnalisée', { exact: true }).check();await form.locator('[name="coordinates"]').fill(target.coordinates);
   await form.locator('[name="ratio"]').selectOption('0.1');
   await form.getByRole('button', { name: /Vérifier la mission/ }).click();
   await form.getByRole('button', { name: 'Estimer le trajet' }).click();
@@ -93,7 +93,7 @@ test('Espionnage PNJ : envoyer une sonde et consulter le rapport privé', async 
    await form.locator('[name="ships[probe]"]').fill('1');
    await form.getByRole('button', { name: /Choisir la destination/ }).click();
    await form.locator('[name="mission"]').selectOption('explore');
-   await form.locator('[name="coordinates"]').fill(coordinates);
+   await form.getByLabel('Destination personnalisée', { exact: true }).check();await form.locator('[name="coordinates"]').fill(coordinates);
    await form.locator('[name="ratio"]').selectOption('1');
    await form.getByRole('button', { name: /Vérifier la mission/ }).click();
    await form.getByRole('button', { name: 'Estimer le trajet' }).click();

@@ -50,7 +50,7 @@ test('Conquête PNJ : rapport détaillé, résultat, responsive et confidentiali
   await form.getByRole('button', { name: /Choisir la destination/ }).click();
   await form.locator('[name="mission"]').selectOption('conquer');
   const targetId = target.id;
-  await form.locator('[name="coordinates"]').fill(target.coordinates);
+  await form.getByLabel('Destination personnalisée', { exact: true }).check();await form.locator('[name="coordinates"]').fill(target.coordinates);
   await form.locator('[name="ratio"]').selectOption('0.1');
   await form.getByRole('button', { name: /Vérifier la mission/ }).click();
   await form.getByRole('button', { name: 'Estimer le trajet' }).click();

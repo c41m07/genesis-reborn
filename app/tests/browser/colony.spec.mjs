@@ -68,14 +68,14 @@ test('Chantier, estimation, colonisation, transport et exploration réels', asyn
   let form=page.locator('.fleet-form form').first();
   await form.locator('[name="ships[probe]"]').fill('1');
   await form.getByRole('button',{name:/Choisir la destination/}).click();
-  await form.locator('[name="mission"]').selectOption('defend');await expect(form.locator('[name="coordinates"]')).toBeVisible();
+  await form.locator('[name="mission"]').selectOption('defend');await form.getByLabel('Destination personnalisée', { exact: true }).check();await expect(form.locator('[name="coordinates"]')).toBeVisible();
   await form.locator('[name="mission"]').selectOption('orbit');await expect(form.locator('[name="orbit_hours"]')).toBeVisible();
   await page.goto('/carte');await page.getByText(/Parcourir les autres systèmes/).click();
   const unknownSystem=page.locator('.system-card.unknown-system').first();
   const destinationCoordinates=(await unknownSystem.locator(':scope > p.muted').first().innerText()).trim();
   await page.goto('/flottes');form=page.locator('.fleet-form form').first();
   await form.locator('[name="ships[probe]"]').fill('1');await form.getByRole('button',{name:/Choisir la destination/}).click();
-  await form.locator('[name="mission"]').selectOption('explore');await form.locator('[name="coordinates"]').fill(destinationCoordinates);await form.locator('[name="ratio"]').selectOption('0.7');
+  await form.locator('[name="mission"]').selectOption('explore');await form.getByLabel('Destination personnalisée', { exact: true }).check();await form.locator('[name="coordinates"]').fill(destinationCoordinates);await form.locator('[name="ratio"]').selectOption('0.7');
   await form.getByRole('button',{name:/Vérifier la mission/}).click();await form.getByRole('button',{name:'Estimer le trajet'}).click();await expect(form.locator('.flight-estimate')).toContainText('Carburant aller-retour');
   await sendFleetWithRealtime(page,form);await expect(page.locator('[data-status="traveling"]')).toHaveCount(1);accelerateTravelingMission(process.env.BROWSER_ROUTER,email,'explore');
   await expect.poll(async()=>completedFleetCount(process.env.BROWSER_ROUTER,email),{timeout:45000,intervals:[1000]}).toBe(1);
@@ -84,7 +84,7 @@ test('Chantier, estimation, colonisation, transport et exploration réels', asyn
   const target=revealVirginPlanet(process.env.BROWSER_ROUTER,email);
   await page.getByRole('link',{name:'Flottes et missions',exact:true}).click();form=page.locator('.fleet-form form').first();
   await form.locator('[name="ships[colony_ship]"]').fill('1');await form.getByRole('button',{name:/Choisir la destination/}).click();
-  await form.locator('[name="mission"]').selectOption('colonize');await form.locator('[name="coordinates"]').fill(target.coordinates);await form.locator('[name="ratio"]').selectOption('0.1');
+  await form.locator('[name="mission"]').selectOption('colonize');await form.getByLabel('Destination personnalisée', { exact: true }).check();await form.locator('[name="coordinates"]').fill(target.coordinates);await form.locator('[name="ratio"]').selectOption('0.1');
   await form.getByRole('button',{name:/Vérifier la mission/}).click();await form.getByRole('button',{name:'Estimer le trajet'}).click();await expect(form.locator('.flight-estimate')).toContainText('Carburant aller-retour');
   await sendFleetWithRealtime(page,form);await expect(page.locator('[data-status="traveling"]')).toHaveCount(1);accelerateTravelingMission(process.env.BROWSER_ROUTER,email,'colonize');await expect.poll(()=>completedFleetCount(process.env.BROWSER_ROUTER,email),{timeout:45000,intervals:[1000]}).toBe(2);await expect(page.locator('[data-active-fleet]')).toHaveCount(0);
   await page.getByRole('link',{name:'Vue générale',exact:true}).click();await expect(page.getByLabel('Choisir une colonie')).toHaveValue(String(origin));
@@ -93,7 +93,7 @@ test('Chantier, estimation, colonisation, transport et exploration réels', asyn
   await page.waitForLoadState('load');await page.getByLabel('Choisir une colonie').selectOption(String(origin));await expect(page).toHaveURL(url=>url.pathname==='/planetes/'+origin&&url.search==='?section=technologies');await expect(page.locator('#panel-technologies')).toBeVisible();
   await page.getByRole('link',{name:'Vue générale',exact:true}).click();await expect(page).toHaveURL(new RegExp('/planetes/'+origin+'$'));
   await page.getByRole('link',{name:'Flottes et missions',exact:true}).click();form=page.locator('.fleet-form form').first();
-  await form.locator('[name="ships[transport]"]').fill('1');await form.getByRole('button',{name:/Choisir la destination/}).click();await form.locator('[name="mission"]').selectOption('transport');await form.locator('[name="coordinates"]').fill(target.coordinates);await form.locator('[name="ratio"]').selectOption('0.1');await form.locator('summary').click();await form.locator('[name="cargo[metal]"]').fill('123');await form.getByRole('button',{name:/Vérifier la mission/}).click();
+  await form.locator('[name="ships[transport]"]').fill('1');await form.getByRole('button',{name:/Choisir la destination/}).click();await form.locator('[name="mission"]').selectOption('transport');await form.getByLabel('Destination personnalisée', { exact: true }).check();await form.locator('[name="coordinates"]').fill(target.coordinates);await form.locator('[name="ratio"]').selectOption('0.1');await form.locator('summary').click();await form.locator('[name="cargo[metal]"]').fill('123');await form.getByRole('button',{name:/Vérifier la mission/}).click();
   await form.getByRole('button',{name:/Envoyer la flotte/}).click();await expect(page.locator('[data-status="traveling"]')).toHaveCount(1);
   await page.getByRole('link',{name:'Vue générale',exact:true}).click();await expect(page.locator('[data-active-fleet]')).toHaveCount(1);
   const bar=page.locator('[data-active-fleet] [role="progressbar"]');const progress=Number(await bar.getAttribute('aria-valuenow'));expect(Number.isFinite(progress)).toBe(true);expect(progress).toBeGreaterThanOrEqual(0);expect(progress).toBeLessThanOrEqual(100);accelerateTravelingMission(process.env.BROWSER_ROUTER,email,'transport');

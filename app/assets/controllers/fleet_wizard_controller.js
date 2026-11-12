@@ -19,6 +19,7 @@ export default class extends Controller {
         }
         if (this.currentStep === 2 && !this.hasDestination()) {
             this.showError('Choisissez une destination pour cette mission.');
+            this.destinationField()?.focus();
             return;
         }
         this.errorTarget.hidden = true;
@@ -38,16 +39,22 @@ export default class extends Controller {
         return this.quantityTargets.some(input => Number(input.value) > 0);
     }
 
+    destinationField() {
+        const mode = this.element.querySelector('[name="destination_mode"]:checked')?.value || 'custom';
+        return this.element.querySelector(mode === 'custom' ? '[name="coordinates"]' : '[name="' + mode + '_destination"]');
+    }
+
     hasDestination() {
-        const field = this.element.querySelector('[name="coordinates"]');
+        const field = this.destinationField();
         return Boolean(field && !field.disabled && field.value);
     }
 
     updateSummary() {
         const missionField = this.element.querySelector('[name="mission"]');
         const mission = missionField?.selectedOptions[0]?.textContent.trim() || 'Mission';
-        const targetField = this.element.querySelector('[name="coordinates"]');
-        const destination = targetField?.value.trim() || 'destination à confirmer';
+        const targetField = this.destinationField();
+        const option = targetField?.selectedOptions?.[0];
+        const destination = (option ? (missionField.value === 'explore' ? option.dataset.systemCoordinates : option.textContent.trim()) : targetField?.value.trim()) || 'destination à confirmer';
         const ships = this.quantityTargets
             .filter(input => Number(input.value) > 0)
             .map(input => {

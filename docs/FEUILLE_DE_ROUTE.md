@@ -1329,3 +1329,21 @@ cela ne constitue pas un audit complet RGAA.
 Consommateurs locaux rechargés, tous healthy. Lot validé localement ;
 publication, PR et CI GitHub du lot C non effectuées, aucune intégration de C
 dans dev ni déploiement Alpha. Voir le suivi pour les résultats détaillés.
+
+## Lot C intégré et lot D validé localement — 12 novembre 2026
+
+Le lot C est intégré via PR #43, commit 607971469628ca4155c821b18a370c4be53b43ff,
+après CI complète 43134524413 verte. Aucun déploiement Alpha.
+Le lot D part de cette dev actualisée sur feature/destinations-flottes-pnj.
+Trois modes, suggestions privées de pseudonyme et contexte prérempli sont
+implémentés. Décision PNJ confirmée : Attaque pour combattre, Conquête JcE
+pour capturer ; aucun nouveau butin PNJ ni modification d’équilibrage.
+Les 32 tests combat/occupation passent (314 assertions) et 14 tests d’accès
+(154 assertions) après maintien du préremplissage de transport en lecture.
+Les parcours ciblés des trois modes, suggestions clavier/toucher, envoi PNJ,
+wizard et verrouillage de prévisualisation réussissent. Les six contrôles locaux
+réussissent : 718 tests PHP (210198 assertions), 13 Python et 165 scénarios
+navigateur distincts ; validation, lint/schéma, assets et diff vérifiés.
+Relecture mobile et reprise clavier sur le template final réussies ; détails
+et rapports dans le suivi. Publication à autoriser avant le lot E.
+Aucune migration ou dépendance supplémentaire ; aucun push/PR/CI du lot D.

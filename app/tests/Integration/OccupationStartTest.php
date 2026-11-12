@@ -48,6 +48,40 @@ final class OccupationStartTest extends WebTestCase
         putenv($this->environment[2]===false?$name:$name.'='.$this->environment[2]);
     }
 
+    public function testClassicNpcAttackWinsWithoutCaptureOccupationOrLootEvenWithColonyShip(): void
+    {
+        $fleet=$this->fleet($this->target);$fleet->mission='attack';$fleet->orbitFuel=0;$this->em->flush();
+        $colony=$this->em->getRepository(FleetShip::class)->findOneBy(['fleet'=>$fleet,'slug'=>'colony_ship']);
+        $log=$this->win($fleet);
+        self::assertNull($this->target->owner);self::assertNull($this->target->acquiredAt);
+        self::assertSame(0,$this->em->getRepository(PlanetOccupation::class)->count([]));
+        self::assertSame(1,$colony->quantity);self::assertSame('returning',$fleet->status);
+        self::assertNull($log->snapshot['capture']);self::assertSame([],$log->snapshot['loot']['total']);
+        self::assertNotEmpty(array_filter($log->snapshot['participants'],static fn(array $p):bool=>($p['pve_npc']??false)===true));
+        $event=$log->combatEvent;$reports=$this->em->getRepository(CombatLog::class)->count([]);
+        static::getContainer()->get(CombatEventService::class)->resolve($event->id,$event->dispatchToken);
+        self::assertSame($reports,$this->em->getRepository(CombatLog::class)->count([]));
+        self::assertSame(1,$colony->quantity);self::assertNull($this->target->owner);
+    }
+
+    public function testNpcAttackSeedsGarrisonOnceAndArrivalReplayDoesNotDuplicateParticipants(): void
+    {
+        $target=null;
+        foreach(static::getContainer()->get(GameRepository::class)->planets($this->player->currentPlayerUniverse->universe,null,true) as $candidate) if(!$candidate->npcPlanet) {$target=$candidate;break;}
+        self::assertNotNull($target);$target->npcPlanet=true;$target->conquestLevel=1;
+        self::assertFalse($target->npcGarrisonInitialized);
+        $fleet=$this->fleet($target);$fleet->mission='attack';$fleet->orbitFuel=0;$this->em->flush();
+        $token=$fleet->dispatchToken;$service=static::getContainer()->get(FleetService::class);
+        $service->arrive($fleet->id,$token);
+        self::assertSame('attacking',$fleet->status);self::assertTrue($target->npcGarrisonInitialized);
+        $ships=$this->em->getRepository(\App\Entity\PlanetNpcShip::class)->findBy(['planet'=>$target]);
+        self::assertNotEmpty($ships);$quantities=array_column($ships,'quantity','id');
+        $service->arrive($fleet->id,$token);
+        self::assertSame($quantities,array_column($this->em->getRepository(\App\Entity\PlanetNpcShip::class)->findBy(['planet'=>$target]),'quantity','id'));
+        self::assertSame(1,$this->em->getRepository(\App\Entity\CombatParticipant::class)->count(['fleet'=>$fleet]));
+        self::assertSame(1,$this->em->getRepository(CombatEvent::class)->count(['planet'=>$target]));
+    }
+
     public function testVictoryStartsOccupationWithoutCaptureConsumptionLootOrImmediateReward(): void
     {
         $fleet=$this->fleet($this->target);$colony=$this->em->getRepository(FleetShip::class)->findOneBy(['fleet'=>$fleet,'slug'=>'colony_ship']);

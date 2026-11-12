@@ -42,7 +42,7 @@ Les opérations en retard sont rejouées à leurs dates théoriques avant dépen
 
 Guildes : recrutement ouvert provisoire, adhésion exclusive dans chaque univers, transfert du commandement à un autre membre, départ après transfert, dissolution par le dirigeant. Alliances personnelles et alliances de guildes exigent le consentement réciproque. Une hostilité de guilde invalide les contrats personnels incompatibles.
 
-Conquête JcE : seules les planètes neutres marquées PNJ sont attaquables; une victoire avec un vaisseau colonie survivant capture la planète. Bâtiments, stocks et développement sont conservés; flotte et défenses PNJ disparaissent. Les planètes vierges restent colonisables et aucune planète détenue par un joueur n’est conquérable.
+PNJ : les planètes PNJ découvertes du même univers peuvent être combattues par la mission Attaque, sans capture ni butin de ressources PNJ. Leur capture reste réservée à Conquête JcE, avec vaisseau colonie survivant, place disponible et règles d’occupation existantes (24 heures lorsque ce mécanisme est activé). Les bâtiments et stocks suivent les règles de conservation de la capture. Les planètes vierges restent colonisables ; les joueurs actifs ou simplement inactifs ne sont pas conquérables. Les empires déjà oubliés suivent les règles spécifiques détaillées ci-dessous.
 
 Espionnage : une mission cible une planète connue du même univers autre que celles de l’émetteur. Elle transporte uniquement des sondes, détruites à l’arrivée. La détection avertit le propriétaire et bloque le rapport; les renseignements et rapports suivent les niveaux et règles résumés dans docs/archives/DECISIONS_INITIALES.md.
 
@@ -443,3 +443,26 @@ Le bouton « Marquer ces événements comme consultés » porte uniquement sur l
 après consultation, sans suppression d’historique ; les arrivées ultérieures ne
 sont jamais marquées par une ancienne sélection. L’état est conservé côté serveur
 par participation à l’univers et protégé contre les accès tiers et formulaires expirés.
+
+### Destinations et suggestions des flottes — lot D
+
+Mes planètes et alliés est sélectionné par défaut sur un nouveau formulaire.
+Ce menu regroupe ses colonies et les mondes alliés découverts, compatibles avec
+la mission. Ennemis regroupe les planètes ennemies, PNJ et empires oubliés connus.
+Une ancienne planète PNJ détenue par un joueur neutre relève de la destination
+personnalisée, car son propriétaire actuel prime sur son ancien drapeau PNJ.
+
+Destination personnalisée conserve les coordonnées et propose une recherche de
+pseudonyme : deux caractères minimum, au plus 20 résultats, sans planète inconnue
+ni donnée d’un autre univers. Les joueurs neutres sont accessibles dans ce mode.
+L’exploration d’un système inconnu garde sa saisie personnalisée habituelle.
+Les liens préremplis de la carte conservent le contexte de leur cible ; une cible
+connue peut rester consultable en formulaire même si la prévisualisation refuse
+actuellement l’envoi, notamment un destinataire qui refuse les transports.
+
+Les listes et suggestions respectent les droits de mission existants. Une liste
+ne remplace jamais les contrôles de la prévisualisation et de l’envoi : découverte,
+origine, univers, diplomatie, vacances, composition, carburant et capacités restent
+appliqués. La garnison PNJ est initialisée une seule fois, sous verrou à l’arrivée.
+Une attaque classique n’engage aucune capture, même avec un vaisseau colonie.
+Les récompenses générales de combat et les valeurs de jeu restent inchangées.

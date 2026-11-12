@@ -1394,3 +1394,13 @@ un événement arrivé après l’affichage reste à consulter. Conservation des
 Les détails privés des planètes (unités au repos et ressources) et flottes
 (composition et fret) conservent survol, clavier et toucher.
 Ces éléments sont locaux sur la branche du lot C, pas une annonce de déploiement.
+
+### Lot D — choix PNJ confirmé le 12 novembre 2026
+
+Le besoin dépasse l’interface : canAttack refusait les PNJ sans propriétaire,
+tandis que Conquête JcE existait déjà. Décision explicite : proposer deux missions
+sur les PNJ découverts, Attaque pour combattre et Conquête JcE pour capturer.
+Une attaque classique ne capture pas la planète et n’ajoute aucun butin PNJ.
+La capture conserve vaisseau colonie survivant, emplacement disponible et occupation
+de 24 heures selon le fonctionnement validé de l’univers. Aucun coût, préavis,
+niveau de garnison, calcul de butin ou valeur d’équilibrage n’est modifié.
