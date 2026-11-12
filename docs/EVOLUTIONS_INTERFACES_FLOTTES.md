@@ -34,7 +34,7 @@ Une complexité 4 ou 5 impose l’analyse détaillée des transitions et risques
 | F — guildes/signalements | Tag obligatoire à la création, unicité par univers et classement | 3 | Fusionné dans dev, PR #46 |
 | F | Signalement d’un joueur depuis le classement | 4 | Fusionné dans dev, PR #46 |
 | G — rappel | Missions, trajet partiel, carburant/fret, verrouillage, origine perdue | 5 | Fusionné dans dev, PR #47 |
-| H — détection | Analyse tactique, visibilité des mouvements et détection à l’arrivée | 5 | Prêt localement, publication en attente d’accord |
+| H — détection | Analyse tactique, visibilité des mouvements et détection à l’arrivée | 5 | Publié, CI en reprise, PR #48 |
 | I — orbites | Demande au départ, accords, attente et changements diplomatiques | 5 | Décisions validées, à réaliser |
 | J — abandon | Dernière colonie, actifs/files, restrictions et confirmation | 5 | Décisions validées, à réaliser |
 | K — refontes | Diplomatie, Profil, Inventaire : maquettes adaptatives, puis validation | 3 | Maquettes validées ; intégration non commencée |
@@ -1169,3 +1169,21 @@ Fichiers du lot H (26, aucun artefact généré) :
 - docs/FEUILLE_DE_ROUTE.md
 - docs/REGLES.md
 - docs/wiki.json
+
+### Reprise de la CI du lot H
+
+Publication autorisée ; PR #48 créée vers dev sur 24e6f081fc14ca373a5ab89847c7eb23b606c44e.
+CI 43235864806 : PHP et trois groupes navigateur verts ; groupe 4 en échec sur
+un seul scénario administratif (41 autres réussis). La lecture SQL immédiate
+de ends_at après un clic pouvait précéder la fin de la soumission. L’assertion
+attend désormais la même valeur persistée avec expect.poll, sans augmenter le
+délai du scénario ni retirer un contrôle. Aucun code métier modifié.
+Fusion non effectuée ; nouvelle CI complète exigée sur le correctif.
+
+Reprise locale du scénario calendrier réussie : 1 test navigateur, sans modification
+des assets sources ni du code métier. Compilation de production réussie pour
+cette reprise ; journaux /tmp/genesis-lot-h-ci-fix-assets.log et
+/tmp/genesis-lot-h-ci-fix-browser.log.
+Les suites serveur et les autres parcours déjà validés portent sur le même code
+applicatif. Publication du correctif autorisée dans le périmètre de H ; nouvelle
+CI complète avant toute fusion. Aucun Alpha.

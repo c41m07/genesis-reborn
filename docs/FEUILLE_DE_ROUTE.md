@@ -1426,3 +1426,8 @@ sur compilation stable, puis clavier général et variantes H. Le mode de
 développement est rétabli après les contrôles, sans modifier les sources.
 Aucune migration ni publication H ; accord utilisateur requis pour push/PR,
 puis CI complète verte avant fusion et passage à I. Aucun déploiement Alpha.
+
+Publication de H autorisée, PR #48 ouverte. La CI 43235864806 réussit côté
+serveur et sur trois groupes navigateur ; un test de calendrier lit trop tôt
+la base après soumission. Attente de la même valeur persistée ajoutée, reprise
+locale réussie. Nouvelle CI complète requise ; H non fusionné, I non commencé.

@@ -135,7 +135,7 @@ test('Univers : création, brouillons conservés, calendrier UTC et univers ferm
   await page.screenshot({ path: testInfo.outputPath('universe-calendar-saved-390.png'), animations: 'disabled' });
   await calendar.getByLabel('Fermeture planifiée (UTC)').fill('');
   await calendar.getByRole('button', { name: 'Enregistrer le calendrier' }).click();
-  expect(queryIsolatedSql(project, `SELECT ends_at IS NULL FROM universe WHERE id=${id}`)).toBe('1');
+  await expect.poll(() => queryIsolatedSql(project, `SELECT ends_at IS NULL FROM universe WHERE id=${id}`)).toBe('1');
   expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM outbox_message WHERE kind='universe' AND target_id=${id}`)).toBe('0');
   expect(queryIsolatedSql(project, `SELECT game_settings FROM universe WHERE id=${id}`)).toBe(config);
   runIsolatedSql(project, `UPDATE universe SET status='closed' WHERE id=${id}`);
