@@ -1288,3 +1288,17 @@ Ces deux choix sont consignés dans docs/DECISIONS.md et intégrés aux tests du
   inaccessibles ; aucune modification de Figma ni de serveur Alpha dans ce lot.
 - Prochaine étape : autorisation de publication, PR vers dev et fusion
   exclusivement après CI complète verte sur sa dernière version, puis lot J.
+
+
+### Lot I — publication et correction de préparation CI
+PR #49 ouverte vers dev sur 6f183028012e67dd49eba1d290f14c7b861420cd.
+Le contrôle PHP de la CI 43258172057 a révélé une préparation aléatoire ancienne :
+CombatEventTest attribuait au joueur une planète choisie sans filtrer son état PNJ.
+La préparation l’identifie désormais explicitement comme colonie de joueur ;
+le scénario est nommé « Legacy » pour distinguer son acceptation à l’arrivée.
+Les assertions de carburant et de transition restent identiques. Le refus
+des véritables planètes PNJ reste couvert séparément par OrbitDepartureRequestTest.
+Aucune modification des règles ni du code métier pour cette correction.
+
+Vérification locale de la correction : 29 tests / 233 assertions réussis
+(CombatEventTest et OrbitDepartureRequestTest) ; git diff --check réussi.
