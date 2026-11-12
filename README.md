@@ -489,3 +489,19 @@ flottes ne sont rappelables que lorsque leurs données suffisent à un calcul fi
 Migration additive Version20261112040000 : suivi nullable du trajet et colonie
 de retour distincte de l’origine historique. Toute application sur base existante
 nécessite accord explicite et sauvegarde vérifiée ; aucun déploiement Alpha.
+
+### Détection des attaques et confidentialité des déplacements
+
+Analyse tactique additionne les niveaux de ses trois rangs pour le seul préavis
+d’attaque : min(5 + 5 × niveaux, 120 minutes, 50 % du trajet). L’espionnage et
+la détection des sondes à l’arrivée conservent leurs effets pondérés actuels.
+Les plafonds du catalogue de l’univers sont pris en compte pour les informations
+de progression ; à 5/5/5, le préavis théorique atteint 80 minutes.
+
+Les attaques détectées sont affichées sur les pages de jeu avec cible, commandant,
+vaisseaux, points et compte à rebours. Une origine non découverte reste masquée.
+La surveillance se met à jour sans rechargement, avec horloge serveur, et conserve
+le focus et la sélection de carte. Sans JavaScript, actualiser la page.
+Les sondes en trajet restent visibles seulement par leur propriétaire.
+Les autres mouvements restent réservés au propriétaire, au destinataire et aux
+alliés, dans les limites des découvertes, avec contrôles avant sérialisation.

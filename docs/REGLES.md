@@ -531,3 +531,38 @@ le rappel est indisponible avec explication et la mission continue normalement.
 Les rappels administratifs et de conversion conservent leurs règles distinctes.
 La carte n’élargit pas les droits de visibilité et masque aux tiers la route
 d’un repli vers une colonie dont le système n’a pas été découvert.
+
+## Préavis d’attaque et visibilité — lot H
+
+Pour le défenseur, une attaque en trajet aller n’est visible qu’à partir de sa
+détection. Niveau effectif = somme simple des niveaux d’Analyse tactique,
+Cartographie des opérations et Réseau de connaissance du champ de bataille.
+Préavis = min(300 + 300 × niveau effectif, 7200, moitié de la durée du trajet),
+en secondes entières, arrondi vers le bas pour ne pas dépasser 50 % du trajet.
+Le trajet pris en compte va du départ enregistré à l’arrivée actuelle ;
+un boost ou un ajustement d’échéance recalcule donc immédiatement ce seuil.
+Aucun coût, temps de voyage ou effet de boost n’est modifié par cette lecture.
+
+La cible, l’échéance/compte à rebours, le commandant, le nombre de vaisseaux
+et leurs points sont visibles dès détection. L’origine n’est affichée que si son
+système est découvert ; aucun identifiant, nom ou coordonnée d’origine inconnue
+n’est transmis. La composition, le fret, le suivi technique et l’heure de départ
+d’une attaque entrante restent privés. Une arrivée en retard de traitement reste
+signalée comme imminente tant que la flotte est encore à l’aller.
+Une flotte rappelée ou passée en combat n’est plus une attaque entrante en trajet ;
+les affichages existants du combat et des retours sont conservés.
+
+Le propriétaire suit ses missions complètes. Les sondes sont privées à leur
+propriétaire à l’aller comme au retour ; leur détection à l’arrivée est inchangée.
+Les mouvements non offensifs sont visibles au propriétaire, au destinataire
+et aux alliés du propriétaire dans les limites de découverte. Le destinataire
+voit sa propre cible, mais une origine inconnue reste masquée. Pour les alliés
+observateurs, les systèmes d’origine et de destination doivent être découverts.
+Leur périmètre préexistant de suivi des attaques alliées reste soumis à ces
+découvertes ; le seuil protège le destinataire d’une attaque.
+Aucun changement aux relations ou conditions d’attaque, défense et stationnement.
+
+Les trois plafonds de référence sont 5/5/5, soit 15 niveaux et 80 minutes de préavis
+théorique ; le plafond de 2 heures n’est pas atteint dans cette configuration.
+Les surcharges propres à l’univers sont résolues comme dans la file de recherche.
+La somme pour le préavis n’altère pas la pondération actuelle de l’espionnage.

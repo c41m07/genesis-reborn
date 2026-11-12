@@ -1,0 +1,5 @@
+<div class="incoming-attacks" data-controller="incoming-attacks" data-incoming-attacks-url-value="{{ path('app_fleet_surveillance') }}" data-incoming-attacks-membership-value="{{ chrome.membership.id }}" data-incoming-attacks-now-value="{{ chrome.serverNow }}">
+<div data-incoming-attacks-target="content">{% include 'ui/incoming_attacks_list.html.twig' with {attacks:chrome.incomingAttacks|default([])} %}</div>
+<p class="visually-hidden" aria-live="polite" aria-atomic="true" data-incoming-attacks-target="status"></p>
+<noscript><p>Actualisez la page pour vérifier les attaques détectées et leurs échéances.</p></noscript>
+</div>

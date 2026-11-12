@@ -297,3 +297,35 @@ sauvegarde gzip/manifeste vérifiée deux fois dans var/backups/lot-g-20261112.
 Les onze comptages suivis et l’empreinte des valeurs historiques de flotte sont
 inchangés ; navigation et return_planet_id des anciennes flottes restent NULL.
 Aucun serveur Alpha concerné.
+
+## Surveillance et détection — lot H
+
+AttackDetection sépare la somme simple pour le préavis des effets pondérés
+d’EspionageService, laissé inchangé. Le seuil est calculé à la lecture depuis
+departureAt/arrivalAt et les recherches du défenseur ; aucune migration, nouvelle
+notification persistante ou modification des missions. warningSeconds borne
+à 7200 s et à la moitié du trajet en secondes entières. maxLevels réutilise la
+résolution du catalogue de l’univers, y compris effect.tier_max_levels.
+
+FleetVisibility centralise les autorisations et les DTO cartographiques avant
+sérialisation : participation contrôlée, univers accessible, propriétaire,
+relations, découvertes, sonde privée et seuil de l’attaque ciblant le lecteur.
+Le JSON contient uniquement les données autorisées ; les colonnes d’origine
+inconnue et les données techniques des attaques entrantes sont nulles.
+Le calcul des points conserve LeaderboardService::fleetPoints.
+Le repli non découvert du lot G conserve sa protection.
+
+GameRepository::incomingAttackFleets limite la requête aux attaques/conquêtes
+en trajet visant une planète du lecteur dans son univers. GameShell produit
+l’affichage initial. GET /flottes/surveillance utilise exclusivement la session
+courante ; une galaxie optionnelle est revérifiée dans cet univers avant de
+renvoyer les vols autorisés et leur journal HTML. Réponse JSON private, no-store :
+aucun accès anonyme ni choix de lecteur par paramètre. Aucun crédit, consommation,
+résolution, journal consulté ou activité d’empire modifiés par cette lecture.
+
+incoming-attacks interroge ce point toutes les 5 s, suspend la surveillance dans
+un onglet masqué, borne les requêtes à 10 s et conserve le contenu en cas d’erreur.
+Les délais utilisent serverNow, sans dépendre de l’heure du poste.
+La carte reçoit seulement les DTO filtrés ; elle actualise vols et journal sans
+recréer la caméra, la sélection ou le zoom. Les annonces accessibles portent
+sur les changements de menaces, pas sur chaque seconde du compte à rebours.

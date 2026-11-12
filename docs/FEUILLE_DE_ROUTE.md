@@ -1405,3 +1405,24 @@ distincts après reprise ciblée du test d’estimation. Le rappel est disponibl
 localement, avec contrôles clavier/tactile et confidentialité du repli.
 Documentation et wiki intégré synchronisés. Publication en attente d’accord ;
 aucune PR/CI GitHub G ni fusion ou déploiement Alpha. H à K restent à réaliser.
+
+## Lot G intégré et lot H en validation locale — 12 novembre 2026
+
+PR #47 fusionnée dans dev (30f548b), CI complète 43205470072 verte sur f627c9c,
+cinq quality et GitGuardian vérifiés. Aucun déploiement Alpha.
+
+Lot H sur feature/detection-attaques-visibilite : politique serveur centralisée,
+préavis validé par somme simple, alertes actualisées sur les pages de jeu et carte
+synchronisée, origine inconnue et sondes masquées. Espionnage et règles de mission
+conservés. Univers local abc-1 : aucun remplacement des plafonds tactiques,
+5/5/5 et préavis théorique maximal de 80 minutes avant limite du demi-trajet.
+20 tests ciblés passent (177 assertions) ; suites complètes en cours.
+Aucune migration requise, publication H non autorisée à ce stade. I à K restent à réaliser.
+
+Validation finale de H : six contrôles locaux réussis, 809 tests PHP
+(210723 assertions), 13 Python et couverture exacte de 175 scénarios navigateur.
+Conflit du watch local identifié et références rétablies ; 30 reprises vertes
+sur compilation stable, puis clavier général et variantes H. Le mode de
+développement est rétabli après les contrôles, sans modifier les sources.
+Aucune migration ni publication H ; accord utilisateur requis pour push/PR,
+puis CI complète verte avant fusion et passage à I. Aucun déploiement Alpha.

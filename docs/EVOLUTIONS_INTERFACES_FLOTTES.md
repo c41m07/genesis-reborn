@@ -33,8 +33,8 @@ Une complexité 4 ou 5 impose l’analyse détaillée des transitions et risques
 | E | Archive/restauration personnelle, sélection et conservation des preuves | 4 | Fusionné dans dev, PR #45 |
 | F — guildes/signalements | Tag obligatoire à la création, unicité par univers et classement | 3 | Fusionné dans dev, PR #46 |
 | F | Signalement d’un joueur depuis le classement | 4 | Fusionné dans dev, PR #46 |
-| G — rappel | Missions, trajet partiel, carburant/fret, verrouillage, origine perdue | 5 | Prêt localement, publication en attente d’accord |
-| H — détection | Analyse tactique, visibilité des mouvements et détection à l’arrivée | 5 | Décisions validées, à réaliser |
+| G — rappel | Missions, trajet partiel, carburant/fret, verrouillage, origine perdue | 5 | Fusionné dans dev, PR #47 |
+| H — détection | Analyse tactique, visibilité des mouvements et détection à l’arrivée | 5 | Prêt localement, publication en attente d’accord |
 | I — orbites | Demande au départ, accords, attente et changements diplomatiques | 5 | Décisions validées, à réaliser |
 | J — abandon | Dernière colonie, actifs/files, restrictions et confirmation | 5 | Décisions validées, à réaliser |
 | K — refontes | Diplomatie, Profil, Inventaire : maquettes adaptatives, puis validation | 3 | Maquettes validées ; intégration non commencée |
@@ -1020,3 +1020,152 @@ Les trois sources Work citées en introduction restent indisponibles ; aucun wik
 distant ni fichier Figma modifié pour ce lot. Documentation locale et wiki intégré
 synchronisés. Aucun push, PR, CI GitHub du lot G, fusion ni déploiement Alpha.
 Publication G soumise à l’accord utilisateur, puis CI complète avant toute fusion.
+
+## Lot G intégré et plan du lot H — 12 novembre 2026
+
+PR #47 fusionnée dans dev au commit 30f548b1a0621d75081e1c49a0ef24e05677f199.
+CI 43205470072 complète réussie sur f627c9c1e845ddc3063aad82c9f94dd955db452d :
+cinq quality, toutes leurs étapes attendues et GitGuardian verts. Protection stricte,
+PR obligatoire et cinq contextes imposés revérifiés avant fusion avec garde du SHA.
+publish ignoré comme attendu pour une PR ; déploiement uniquement manuel, aucun Alpha.
+Lot H depuis cette dev actualisée, branche feature/detection-attaques-visibilite.
+
+Sous-tâches et complexités :
+1. Politique commune de visibilité/DTO privés, univers/propriétaire/découvertes : 5.
+2. Préavis min(300 + 300 × somme des trois rangs, 7200, moitié du trajet) : 4.
+   Somme distincte des pondérations d’espionnage ; plafonds réels du catalogue
+   surchargé vérifiés selon la même résolution que QueueService.
+3. Alertes des attaques détectées, compte à rebours et rafraîchissement léger
+   sur les pages de jeu, avec carte synchronisée sans changer sa sélection : 4.
+4. Relectures sans mutation : pas de notification persistante, de journal consulté,
+   ni de présence/inactivité réinitialisée par les appels de surveillance : 4.
+5. Tests des seuils, boosts/retours, droits/univers/découvertes, absence de fuite,
+   espionnage inchangé et clavier/tactile ; contrôles et documents : 5.
+
+Les attaques du propriétaire restent suivies ; le préavis protège leur destinataire.
+Les alliés conservent leur périmètre existant, limité aux systèmes découverts.
+Pour le destinataire, une origine inconnue reste masquée, même après détection.
+Aucune modification des coûts, vitesses, combats ou détection des sondes à l’arrivée.
+Aucune migration prévue : lecture des trajets et recherches existants.
+
+### Premières vérifications du lot H
+
+Lecture locale uniquement : abc-1 actif, aucun remplacement de max_level ou des
+plafonds par rang pour tactical_intelligence ; référence 5/5/5 = 15 niveaux,
+80 minutes avant limite du demi-trajet. Aucun constat sur un catalogue Alpha.
+
+20 tests ciblés réussis (177 assertions). Les premiers échecs étaient dans les
+nouvelles fixtures HTTP : objets Doctrine détachés après requête et valeur
+attendue de pondération mal arrondie (17,5 → 18). Fixtures corrigées, aucune
+modification de cascade ni du calcul d’espionnage. Le parcours de recherche de
+planète ouvre d’abord sa fiche ; le nouveau test tactile clique désormais le
+bouton « Vue rapprochée » existant avant de vérifier la conservation de cette vue.
+Aucun délai ni contrôle existant affaibli. Contrôles complets en cours.
+
+Suite serveur complète réussie : 809 tests PHP, 210723 assertions et 13 tests
+Python (/tmp/genesis-lot-h-test.log). Les deux parcours navigateur ciblés passent,
+dont le tactile avec poste décalé de deux heures ; la sélection de planète est
+conservée et les sondes sont retirées du suivi tiers. Après deux erreurs du
+nouveau scénario tactile, complexité de sa vérification réévaluée à 5 : analyse
+du parcours recherche → fiche → vue rapprochée et du journal hors accès direct
+dans cette vue, plutôt qu’allonger le délai ou changer la navigation du jeu.
+Aucun changement de règle résultant de ces ajustements du test.
+
+Les captures réelles révèlent un libellé de lien de colonie trop petit hérité
+du style secondaire. Correctif ciblé à 14 px avec retour à la ligne ; compilation
+différée après les quatre groupes navigateur pour préserver leurs assets chargés,
+puis reprise des deux parcours concernés et du parcours général au clavier.
+
+Conflit de vérification identifié pendant la suite navigateur : un webpack watch
+déjà actif sur ce dépôt remplace public/build/entrypoints.json par les chemins de
+développement (/build/runtime.js, /build/app.js), alors que le journal de make
+assets confirme des fichiers de production versionnés. Plusieurs premiers tests
+échouent au chargement JS, à la connexion ou à la navigation admin. Aucun changement
+d’authentification ou d’administration dans H ; ne pas les réécrire sans preuve.
+Le processus existant est préservé. Les groupes lancés sont laissés terminer ;
+recompilation prévue ensuite, sans édition d’asset pendant les reprises. Les
+rapports JSON permettront de reprendre chaque échec et de contrôler les 175
+scénarios distincts. Aucun échec inexpliqué ne sera présenté comme validé.
+
+Diagnostic confirmé : les trois chemins JavaScript du fichier d’entrées de
+développement n’existent plus, tandis que les fichiers versionnés du dernier
+make assets sont toujours présents. Les métadonnées générées (ignorées par Git)
+ont été sauvegardées dans var/lot-h-*-before-repair.json puis rétablies à partir
+des quatre noms vérifiés dans le journal de compilation. Aucun script chargé
+n’est modifié ni supprimé, aucun test ou code d’authentification/admin changé.
+Les groupes continuent ; tous les échecs resteront à reprendre. Une compilation
+canonique finale regénérera les métadonnées, puis les parcours concernés seront
+revérifiés sans nouvelle édition d’asset.
+
+La compilation canonique finale a été exécutée après les quatre groupes.
+Empreintes des métadonnées et des quatre assets enregistrées puis vérifiées
+inchangées pendant toutes les reprises (/tmp/genesis-lot-h-stable-assets.json).
+Les 30 échecs de l’exécution perturbée passent en quatre reprises (8/8/7/7),
+sans changer leurs tests ni leurs délais. Couverture déjà confirmée par les JSON :
+174 scénarios distincts réussis ; le seul manquant est le parcours général au clavier.
+Dernier groupe en cours : clavier général et deux scénarios H avec contraste
+clair/sombre, focus visible, nouveau libellé lisible et poste décalé de deux heures.
+
+Aucun processus watch existant arrêté ni configuration globale modifiée. Après
+les contrôles, une compilation de développement ponctuelle est prévue pour
+rétablir les fichiers attendus par ce watch, sans lancer de second processus.
+
+### Validation locale finale du lot H
+
+Six contrôles exécutés et examinés avec succès : make validate, make lint,
+make test, make assets (npm run build), BROWSER_PERSISTENCE=1 make test-browser,
+git diff --check. 809 tests PHP, 210723 assertions et 13 tests Python.
+Les rapports JSON comparés au manifeste attestent 175 scénarios navigateur
+distincts réussis, aucun manquant ni supplémentaire. Les 30 échecs liés aux
+références de compilation sont tous repris avec succès ; le dernier groupe
+réussit clavier général et deux parcours H, dont le contraste clair/sombre.
+Aucun test navigateur existant modifié pour résoudre ce conflit, aucun délai augmenté ni assertion affaiblie. Les tests serveur couvrent les nouvelles conditions de découverte et de préavis.
+
+La compilation de production et ses métadonnées sont restées identiques pendant
+les quatre reprises et le groupe final (empreintes vérifiées). Après fin des
+tests, npm run dev réussit et restaure tous les fichiers attendus par le watch
+préexistant : toutes ses références JS/CSS existent, aucun second watch lancé,
+aucun arrêt de processus ni changement de configuration globale.
+Les résultats de production précédents restent ceux des sources inchangées.
+
+Logs : /tmp/genesis-lot-h-test.log, -lint-final.log, -validate.log,
+-assets-stable.log, -dev-restore.log ; rapports -batch-{1..5}.json et
+-retry-{1..4}.json ; manifeste -manifest.json ; empreintes -stable-assets.json.
+Captures dans output/playwright/lot-h-5, libellé à 14 px, mobile sans débordement,
+focus visible et navigation tactile vérifiés. Axe du panneau : aucun défaut
+grave/critique en mode clair ou sombre. Vérifications ciblées, aucun audit RGAA complet.
+
+Aucune décision produit bloquante ni migration requise pour H.
+Publication en attente d’accord ; aucune PR/CI GitHub H, fusion ou Alpha.
+I, J et K restent à réaliser après intégration de H. Les trois sources Work
+précisément listées en introduction restent indisponibles ; aucun wiki distant
+ni fichier Figma modifié. Documentation locale et wiki intégré synchronisés.
+
+Fichiers du lot H (26, aucun artefact généré) :
+
+- README.md
+- app/assets/app.js
+- app/assets/controllers/galaxy_v2_controller.js
+- app/assets/controllers/incoming_attacks_controller.js
+- app/assets/styles/incoming-attacks.css
+- app/config/game/technologies/tactical_intelligence.yaml
+- app/src/Controller/ColonyController.php
+- app/src/Controller/FleetSurveillanceController.php
+- app/src/Repository/GameRepository.php
+- app/src/Service/Colony/CatalogueInsights.php
+- app/src/Service/Colony/GameShell.php
+- app/src/Service/Fleet/AttackDetection.php
+- app/src/Service/Fleet/FleetVisibility.php
+- app/templates/base.html.twig
+- app/templates/ui/incoming_attacks.html.twig
+- app/templates/ui/incoming_attacks_list.html.twig
+- app/templates/universe/_fleet_log.html.twig
+- app/templates/universe/map_v2.html.twig
+- app/tests/Controller/GalaxyFleetVisibilityTest.php
+- app/tests/Service/AttackDetectionTest.php
+- app/tests/browser/fleet-surveillance.spec.mjs
+- docs/ARCHITECTURE.md
+- docs/EVOLUTIONS_INTERFACES_FLOTTES.md
+- docs/FEUILLE_DE_ROUTE.md
+- docs/REGLES.md
+- docs/wiki.json

@@ -59,7 +59,9 @@ final class CatalogueInsights
             $settings=$this->catalog->all('espionage');
             if($slug==='tactical_intelligence')return [
                 ['label'=>'Score de renseignement de vos sondes','before'=>$before,'after'=>$after,'unit'=>'points'],
-                ['label'=>'Score de renseignement des sondes adverses','before'=>-$before,'after'=>-$after,'unit'=>'points']
+                ['label'=>'Score de renseignement des sondes adverses','before'=>-$before,'after'=>-$after,'unit'=>'points'],
+                ['label'=>'Préavis théorique des attaques entrantes','before'=>\App\Service\Fleet\AttackDetection::warningSeconds(array_sum($ranks),PHP_INT_MAX)/60,'after'=>\App\Service\Fleet\AttackDetection::warningSeconds(array_sum($afterRanks),PHP_INT_MAX)/60,'unit'=>'min'],
+                ['text'=>'Le préavis additionne les trois rangs sans pondération, avec un plafond de 2 h et de 50 % du trajet ennemi.']
             ];
             $weight=(int)($settings[$slug==='signature_masking'?'stealth_weight':'intelligence_countermeasures_weight']??10);
             $sign=$slug==='signature_masking'?-1:1;
