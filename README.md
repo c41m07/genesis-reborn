@@ -452,3 +452,21 @@ au sol d’une colonie choisie : type, rang, quantité entière, motif et confir
 L’attribution est contrôlée côté serveur, journalisée et protégée contre le rejeu.
 La migration additive Version20261112020000 mémorise seulement les choix d’archive ;
 sur base existante, son application exige accord explicite et sauvegarde vérifiée.
+
+### Tags de guilde et signalements de joueurs
+
+La création d’une guilde exige un tag de 2 à 5 lettres/chiffres, normalisé en
+majuscules et unique dans l’univers. Le commandant choisit ou met à jour ce tag ;
+les anciennes guildes restent sans tag jusqu’à son choix. Le classement affiche
+[TAG] Commandant ; aucun autre écran ne préfixe le pseudonyme.
+
+Dans Actions du classement, le triangle de signalement ouvre les quatre motifs
+validés avec un commentaire facultatif (1000 caractères maximum). Le contexte
+serveur joint univers, cible/pseudonyme, auteur/date et catégorie/rang consultés.
+Le signalement reste privé à la modération ; une double soumission du formulaire
+ne crée pas de doublon. La rubrique Modération distingue messages et joueurs,
+conserve les preuves et journalise consultation/traitement, sans sanction automatique.
+
+Migration additive Version20261112030000 : tag nullable pour l’historique,
+unicité univers/tag et table player_report. L’application à une base existante
+nécessite accord explicite et sauvegarde vérifiée.

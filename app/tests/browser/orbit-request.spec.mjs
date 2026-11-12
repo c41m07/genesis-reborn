@@ -39,10 +39,10 @@ test('Orbite alliée : demande entrante, accord du propriétaire et stationnemen
     await hostPage.goto('/diplomatie');
     const senderGuild = 'Orbite-Sender-' + crypto.randomUUID().slice(0, 6);
     const hostGuild = 'Orbite-Host-' + crypto.randomUUID().slice(0, 6);
-    await senderPage.getByLabel('Nom de votre nouvelle guilde').fill(senderGuild);
+    await senderPage.getByLabel('Nom de votre nouvelle guilde').fill(senderGuild);await senderPage.getByLabel('Tag de la guilde', { exact:true }).fill(crypto.randomUUID().replaceAll('-', '').slice(0,5).toUpperCase());
     await senderPage.getByRole('button', { name: 'Fonder une guilde' }).click();
     await expect(senderPage.locator('.guild-hub-hero')).toContainText(senderGuild);
-    await hostPage.getByLabel('Nom de votre nouvelle guilde').fill(hostGuild);
+    await hostPage.getByLabel('Nom de votre nouvelle guilde').fill(hostGuild);await hostPage.getByLabel('Tag de la guilde', { exact:true }).fill(crypto.randomUUID().replaceAll('-', '').slice(0,5).toUpperCase());
     await hostPage.getByRole('button', { name: 'Fonder une guilde' }).click();
     await expect(hostPage.locator('.guild-hub-hero')).toContainText(hostGuild);
 

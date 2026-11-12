@@ -187,7 +187,7 @@ test('Hub de guilde : création, équipage et discussion commune', async ({ page
   const member = await registerAndJoin(memberPage, 'Hub-Member', 'Omega');
   await page.goto('/diplomatie');
   const guildName = 'Hub-' + crypto.randomUUID().slice(0, 8);
-  await page.getByLabel('Nom de votre nouvelle guilde').fill(guildName);
+  await page.getByLabel('Nom de votre nouvelle guilde').fill(guildName);await page.getByLabel('Tag de la guilde', { exact:true }).fill(crypto.randomUUID().replaceAll('-', '').slice(0,5).toUpperCase());
   await page.getByRole('button', { name: 'Fonder une guilde' }).click();
   await expect(page.getByRole('heading', { name: 'Équipage', exact: true })).toBeVisible();
   await expect(page.locator('.guild-member-list')).toContainText(leader);
@@ -218,7 +218,7 @@ test('Hub de guilde : création, équipage et discussion commune', async ({ page
   await memberPage.goto('/diplomatie');
   await memberPage.getByRole('button', { name: 'Quitter la guilde' }).click();
   const enemyGuild = 'Enemy-' + crypto.randomUUID().slice(0, 8);
-  await memberPage.getByLabel('Nom de votre nouvelle guilde').fill(enemyGuild);
+  await memberPage.getByLabel('Nom de votre nouvelle guilde').fill(enemyGuild);await memberPage.getByLabel('Tag de la guilde', { exact:true }).fill(crypto.randomUUID().replaceAll('-', '').slice(0,5).toUpperCase());
   await memberPage.getByRole('button', { name: 'Fonder une guilde' }).click();
   await page.goto('/diplomatie?tab=diplomacy');
   await page.getByLabel('Rechercher une guilde').fill(enemyGuild);

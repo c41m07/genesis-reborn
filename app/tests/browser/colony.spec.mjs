@@ -111,7 +111,7 @@ test('Alliances réciproques, guilde, transfert et dissolution depuis deux compt
     await commander(a,bob.username).getByRole('button',{name:'Proposer une alliance'}).click();
     await b.reload();await commander(b,alice.username).getByRole('button',{name:"Accepter l'alliance"}).click();
     await expect(commander(b,alice.username)).toContainText('Allié');await a.goto('/diplomatie?tab=relations');await expect(commander(a,bob.username)).toContainText('Allié');
-    await a.goto('/diplomatie');const name=`Orbite-${crypto.randomUUID().slice(0,8)}`;await a.getByLabel('Nom de votre nouvelle guilde').fill(name);await a.getByRole('button',{name:'Fonder une guilde'}).click();
+    await a.goto('/diplomatie');const name=`Orbite-${crypto.randomUUID().slice(0,8)}`;await a.getByLabel('Nom de votre nouvelle guilde').fill(name);await a.getByLabel('Tag de la guilde', { exact:true }).fill(crypto.randomUUID().replaceAll('-', '').slice(0,5).toUpperCase());await a.getByRole('button',{name:'Fonder une guilde'}).click();
     await b.goto('/diplomatie?tab=diplomacy&q='+encodeURIComponent(name));await b.locator('.guild-card').filter({has:b.getByRole('heading',{name,exact:true})}).getByRole('button',{name:/Rejoindre/}).click();
     await a.goto('/diplomatie');await a.getByText('Gérer le commandement',{exact:true}).click();await a.getByLabel('Nouveau commandant').selectOption({label:bob.username});await a.getByRole('button',{name:'Transférer le commandement'}).click();
     await expect(a.getByRole('button',{name:'Quitter la guilde'})).toBeVisible();await a.getByRole('button',{name:'Quitter la guilde'}).click();

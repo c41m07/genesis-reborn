@@ -54,7 +54,7 @@ final class MigrationHistoryCompatibilityTest extends KernelTestCase
         $universe=$this->em->getRepository(Universe::class)->findOneBy(['slug'=>'omega-1']);
         self::getContainer()->get(UniverseService::class)->select($player,$universe->id);
         $member=$player->currentPlayerUniverse;
-        self::getContainer()->get(DiplomacyService::class)->create($member,'Historique');
+        self::getContainer()->get(DiplomacyService::class)->create($member,'Historique', 'HIST');
         return [$member,self::getContainer()->get(RelationResolver::class)->guild($member),$this->em->getRepository(Planet::class)->findOneBy(['owner'=>$member])];
     }
 

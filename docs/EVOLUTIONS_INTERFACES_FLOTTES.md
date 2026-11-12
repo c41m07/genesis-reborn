@@ -29,10 +29,10 @@ Une complexité 4 ou 5 impose l’analyse détaillée des transitions et risques
 | C | Journal d’absence, consultation explicite, détails clavier/tactiles | 4 | Fusionné dans dev, PR #43 |
 | D — destinations | Trois modes, découvertes, univers, suggestions de pseudonyme | 4 | Fusionné dans dev, PR #44 |
 | D | Attaque PNJ, départ/arrivée et liens depuis la carte | 4 | Fusionné dans dev, PR #44 |
-| E — administration/rapports | Attribution auditée de vaisseaux, planète/type/rang/quantité | 4 | Validé localement, publication à autoriser |
-| E | Archive/restauration personnelle, sélection et conservation des preuves | 4 | Validé localement, publication à autoriser |
-| F — guildes/signalements | Tag obligatoire à la création, unicité par univers et classement | 3 | Transition confirmée, à réaliser |
-| F | Signalement d’un joueur depuis le classement | 3 | Motifs et contexte validés |
+| E — administration/rapports | Attribution auditée de vaisseaux, planète/type/rang/quantité | 4 | Fusionné dans dev, PR #45 |
+| E | Archive/restauration personnelle, sélection et conservation des preuves | 4 | Fusionné dans dev, PR #45 |
+| F — guildes/signalements | Tag obligatoire à la création, unicité par univers et classement | 3 | Vérifié sur bases isolées, publication à autoriser |
+| F | Signalement d’un joueur depuis le classement | 4 | Vérifié sur bases isolées, publication à autoriser |
 | G — rappel | Missions, trajet partiel, carburant/fret, verrouillage, origine perdue | 5 | Décisions validées, à réaliser |
 | H — détection | Analyse tactique, visibilité des mouvements et détection à l’arrivée | 5 | Décisions validées, à réaliser |
 | I — orbites | Demande au départ, accords, attente et changements diplomatiques | 5 | Décisions validées, à réaliser |
@@ -726,3 +726,155 @@ Aucun wiki distant ni Figma modifié.
 - docs/FEUILLE_DE_ROUTE.md
 - docs/REGLES.md
 - docs/wiki.json
+
+## Lot E intégré et plan du lot F — 12 novembre 2026
+
+Lot E fusionné via PR #45, commit bbbd72ed7e67904eb69c467d2b7bc1fae3886fbe.
+CI complète 43177729961 réussie sur c964de8f7f8f5c12f84b020e6494a25491383a44 :
+cinq jobs quality et GitGuardian verts, Compose, assets, tests, lint/schéma,
+sauvegarde/restauration isolées vérifiés. Protection stricte et PR obligatoire
+revérifiées. Aucun déploiement Alpha.
+
+Lot F depuis cette dev actualisée : feature/tags-guildes-signalements-joueurs.
+- Tags de guilde : complexité 3. Champ nullable pour les guildes anciennes,
+  obligatoire à toute création, normalisé en majuscules (2 à 5 lettres/chiffres),
+  unique par univers. Choix/mise à jour par le commandant, permissions existantes
+  et verrou d’univers. Aucun tag historique inventé. [TAG] Commandant uniquement
+  dans le classement ; pseudonymes et autres écrans préservés.
+- Signalement joueur : complexité 4. Quatre motifs validés, commentaire, contexte
+  serveur de la catégorie/rang consultés, univers, cible/pseudonyme, auteur/date.
+  Contexte mémorisé en session au formulaire, non accepté depuis des champs forgés.
+  POST CSRF, droits de participation/univers, reçu propre au formulaire pour éviter
+  le doublon. Accès aux signalements réservé à la modération ; audit de consultation
+  et traitement, preuves et contexte conservés. Aucune sanction automatique.
+- Données : complexité 4. Ajouter guild.tag et une unicité univers/tag ; nouvelle
+  table player_report distincte de message_report. Liens auteur/cible/modérateur
+  nullables après suppression avec contexte conservé. Migration additive à préparer,
+  puis accord local et sauvegarde vérifiée requis avant application.
+- Risques/tests : créations anciennes sans tag, unicité et concurrence, rôles de
+  guilde/transfert, tag vide/invalide, confidentialité, faux rang/catégorie/univers,
+  rejeu, traitement concurrent et conservation des preuves. Adapter uniquement
+  les fixtures de création aux nouvelles données obligatoires ; conserver leurs
+  assertions métier. Vérifier clavier, focus, contrastes et toucher.
+
+### État de reprise du lot F
+
+Services, formulaires et modération ajoutés. Fixtures des huit fichiers PHP et
+six parcours navigateur de création complétées avec un tag explicite, sans retrait
+d’assertion. Le premier test de préfixe sélectionnait le premier commandant du
+classement ; il cible maintenant la ligne du commandant concerné et conserve
+l’exigence exacte [TAG] Commandant. Reprise : 64 tests, 207 assertions réussis.
+
+make validate et make assets réussissent. Syntaxe PHP et trois templates ciblés
+valides. Suites complètes serveur et parcours navigateur isolés en cours.
+Aucune application de Version20261112030000 à la base locale : accord demandé,
+encore attendu à ce stade. Aucun accord de migration des lots C/E n’est réutilisé.
+Sources Work V4/V2/V1 toujours inaccessibles ; aucun wiki distant ni Figma modifié.
+
+### Validation du lot F sur bases isolées — 12 novembre 2026
+
+Les six contrôles sont exécutés et examinés :
+- make validate : réussi.
+- make lint : réussi sur database-test avec APP_ENV=test et la configuration de
+  connexion des tests PHP, transmise seulement à cette commande. Syntaxe PHP,
+  YAML, Twig, conteneur, mapping et synchronisation du schéma vérifiés.
+  Les contrôles YAML/Twig/conteneur ont aussi réussi dans l’environnement habituel.
+  Le premier essai isolé héritait encore de la connexion Compose : accès refusé
+  au suffixe de base de test ; configuration explicite reprise depuis .env.test,
+  sans changement de configuration globale ni migration sur la base de jeu.
+- make assets (npm run build) : réussi sur les styles finaux, avant la suite navigateur.
+- make test : suite complète réussie, 761 tests PHP, 210374 assertions, 13 tests Python.
+  Complément final : 23 tests ciblés, 84 assertions ; quatre assertions ajoutées
+  vérifient l’indépendance des curseurs de signalements messages/joueurs et
+  l’absence de compteur privé pour un joueur ordinaire. Aucun code applicatif
+  modifié après la suite serveur complète.
+- BROWSER_PERSISTENCE=1 make test-browser : 170 scénarios distincts réussis.
+  Groupes principaux 43/43, 42/42, 42/42, 42/42 ; clavier général seul 1/1.
+  Les trois nouveaux parcours passent sur les styles finaux. Rapprochement exact
+  des 170 cas attendus, sans scénario manquant ou supplémentaire.
+- git diff --check : réussi ; contrôle des fichiers préparés avant commit.
+
+Rapports : /tmp/genesis-lot-f-batch-1.json à -5.json,
+-coverage.json, -php-final.log, -context-notifications.log,
+-lint-isolated-final.log et -assets-final.log.
+Le scénario de signalement attendait initialement un nouveau joueur absent de
+l’instantané quotidien. Sa fixture expire l’instantané comme les tests de classement
+existants ; aucun calcul quotidien ni assertion métier n’est modifié ou affaibli.
+
+Relecture réelle à 390 px des captures de tag ancien et signalement : libellés,
+boutons lisibles (14 px, hauteur minimale 44 px), focus et navigation clavier,
+commentaire cohérent avec les couleurs du jeu et utilisation tactile vérifiés.
+Les contrôles ciblés d’accessibilité ne constituent pas un audit complet RGAA.
+Grades, traités, signalements de messages et wiki intégré restent vérifiés par
+leurs scénarios existants.
+
+Version20261112030000 est appliquée uniquement dans les bases jetables des tests.
+Aucune sauvegarde/migration du lot F sur la base de jeu locale : l’autorisation
+explicite demandée reste attendue. Son application devra être précédée d’une
+sauvegarde vérifiée et suivie du contrôle du schéma local. Les anciennes guildes
+devront garder tag NULL ; aucun tag ne sera inventé. Aucun Alpha concerné.
+
+Code du lot F vérifié sur bases isolées ; aucun push, PR ou CI GitHub du lot F.
+La publication et la migration de la base de jeu restent deux actions à autoriser.
+Les documents Work V4/V2/V1 restent inaccessibles (noms en début de suivi) ;
+aucun wiki distant ni fichier Figma modifié.
+
+### Fichiers du lot F
+
+- README.md
+- app/assets/app.js
+- app/assets/styles/player-reports.css
+- app/migrations/Version20261112030000.php
+- app/src/Controller/AdminController.php
+- app/src/Controller/DiplomacyController.php
+- app/src/Controller/LeaderboardController.php
+- app/src/Controller/PlayerReportController.php
+- app/src/Entity/Guild.php
+- app/src/Entity/PlayerReport.php
+- app/src/Service/Admin/AdminNotificationService.php
+- app/src/Service/Player/DiplomacyService.php
+- app/src/Service/Player/PlayerReportService.php
+- app/templates/admin/sections/reports.html.twig
+- app/templates/player/_guild_hub.html.twig
+- app/templates/player/leaderboard.html.twig
+- app/templates/player/report.html.twig
+- app/tests/Controller/GlobalMessageTest.php
+- app/tests/Controller/GuildTagPlayerReportTest.php
+- app/tests/Integration/EmpireConversionTest.php
+- app/tests/Integration/GamePersistenceTest.php
+- app/tests/Integration/GuildProjectTest.php
+- app/tests/Integration/GuildRankTest.php
+- app/tests/Integration/GuildTreatyTest.php
+- app/tests/Integration/MigrationHistoryCompatibilityTest.php
+- app/tests/Integration/PersonalDiplomacyTest.php
+- app/tests/browser/colony.spec.mjs
+- app/tests/browser/guild-projects.spec.mjs
+- app/tests/browser/guild-ranks.spec.mjs
+- app/tests/browser/guild-tags-player-reports.spec.mjs
+- app/tests/browser/guild-treaties.spec.mjs
+- app/tests/browser/leaderboard-contact.spec.mjs
+- app/tests/browser/orbit-request.spec.mjs
+- docs/ARCHITECTURE.md
+- docs/DECISIONS.md
+- docs/EVOLUTIONS_INTERFACES_FLOTTES.md
+- docs/FEUILLE_DE_ROUTE.md
+- docs/REGLES.md
+- docs/wiki.json
+
+### Migration locale du lot F autorisée et vérifiée — 12 novembre 2026
+
+Les deux accords explicites sont reçus : sauvegarde/migration locales et
+publication du lot F, fusion uniquement après CI complète verte, puis lot G.
+La sauvegarde dédiée var/backups/lot-f-20261112 est créée sans purge d’ancien
+backup (0 paire retirée) ; archive gzip et manifeste vérifiés deux fois avant
+make migrate. Seule Version20261112030000 était en attente.
+
+Comptages inchangés avant/après : 720 planètes, 40 ressources, 15 flottes,
+12 lignes de vaisseaux, 3 combats, 4 espionnages, 1 transport, 6 participations,
+1 guilde, 1 adhésion et 0 archive personnelle. L’ancienne guilde conserve tag NULL ;
+aucun nouveau signalement (0), aucun tag inventé. Aucun Alpha.
+make lint est maintenant aussi réussi sur la base locale migrée, mapping et schéma
+inclus : /tmp/genesis-lot-f-lint-local-final.log. Logs de sauvegarde/migration
+/tmp/genesis-lot-f-backup.log et -migrate.log, comptages -counts-before.json.
+Les suites serveur/navigateur déjà réussies portent sur le code applicatif inchangé ;
+seul ce suivi documentaire est actualisé. Publication autorisée, CI à vérifier.

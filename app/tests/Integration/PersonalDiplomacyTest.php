@@ -122,7 +122,7 @@ final class PersonalDiplomacyTest extends KernelTestCase
     public function testSameGuildOverridesPersonalRivalryUntilDeparture(): void
     {
         [$actor, $target] = $this->pair('omega-1');
-        $this->diplomacy->create($actor, 'Même guilde');
+        $this->diplomacy->create($actor, 'Même guilde', 'MEME');
         $guild = $this->relations->guild($actor);
         $this->diplomacy->join($target, $guild->id);
         $this->diplomacy->alliance($actor, $target->id, 'rival');
@@ -136,8 +136,8 @@ final class PersonalDiplomacyTest extends KernelTestCase
     public function testAlliedGuildsOverrideRivalryAndGuildHostilityDoesNotEraseIt(): void
     {
         [$actor, $target] = $this->pair('omega-1');
-        $this->diplomacy->create($actor, 'Guilde Alpha');
-        $this->diplomacy->create($target, 'Guilde Beta');
+        $this->diplomacy->create($actor, 'Guilde Alpha', 'ALPHA');
+        $this->diplomacy->create($target, 'Guilde Beta', 'BETA');
         $actorGuild = $this->relations->guild($actor);
         $targetGuild = $this->relations->guild($target);
         $this->diplomacy->relation($actor, $targetGuild->id, 'allies');

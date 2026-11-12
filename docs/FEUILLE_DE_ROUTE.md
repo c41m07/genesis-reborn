@@ -1361,3 +1361,26 @@ Validation locale finale du lot E : six contrôles réussis, 738 tests PHP
 Clavier général et deux nouveaux parcours revérifiés après l’ajustement CSS final.
 Sauvegarde locale et migration vérifiées ; documentation et wiki intégré synchronisés.
 Lot prêt localement, publication à autoriser ; aucune CI GitHub du lot E ni Alpha.
+
+## Lot E intégré, lot F en préparation — 12 novembre 2026
+
+PR #45 fusionnée dans dev (bbbd72e), après CI complète 43177729961 verte.
+Lot F sur feature/tags-guildes-signalements-joueurs : tags obligatoires à la
+création, reprise sans tag fictif, préfixe au classement et signalements privés
+de joueurs avec contexte serveur. 64 tests ciblés réussissent (207 assertions).
+Migration Version20261112030000 préparée ; application locale en attente d’accord.
+Suites complètes isolées en cours ; aucun commit/push/PR du lot F ni Alpha.
+
+Validation du lot F sur bases isolées : 761 tests PHP (210374 assertions),
+13 Python, complément de 23 tests ciblés (84 assertions) et 170 scénarios
+navigateur distincts réussis. Les six contrôles passent ; make lint utilise
+explicitement la configuration et la base des tests PHP, schéma compris.
+Code prêt à publier sous réserve d’accord. La base locale de jeu n’est pas
+migrée : sauvegarde vérifiée et autorisation de Version20261112030000 encore
+requises, puis vérification du schéma local. Aucun push/PR/CI du lot F ni Alpha.
+
+Migration locale F explicitement autorisée, sauvegarde vérifiée deux fois et
+Version20261112030000 appliquée : onze comptages inchangés, ancienne guilde sans
+tag inventé. make lint complet réussit aussi sur la base locale migrée.
+Publication F autorisée ; fusion conditionnée à la CI complète, puis lot G.
+Aucun serveur Alpha concerné.

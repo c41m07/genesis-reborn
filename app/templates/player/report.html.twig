@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+{% block title %}Signaler un commandant · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="page-heading"><div><h1>Signaler un commandant</h1><p>Votre signalement sera accessible uniquement à la modération.</p></div></div>
+<section class="panel player-report-form" aria-labelledby="player-report-title">
+<h2 id="player-report-title">{{ target.player.username }}</h2>
+<p>Univers : {{ membership.universe.name }} · {{ categories[context.category] }} · rang #{{ context.rank }}.</p>
+<p>Le signalement joint automatiquement le joueur visé, son pseudonyme au moment de l’envoi, votre identité, la date et le contexte du classement.</p>
+{% if error %}<p role="alert" class="flash error" id="player-report-error">{{ error }}</p>{% endif %}
+<form method="post">
+<input type="hidden" name="_token" value="{{ csrf_token('player_report_'~target.id) }}"><input type="hidden" name="request_key" value="{{ request_key }}">
+<label for="player-report-reason">Motif du signalement</label><select id="player-report-reason" name="reason" required><option value="">Choisir un motif</option>{% for key,label in reasons %}<option value="{{ key }}" {{ draft.reason==key ? 'selected' : '' }}>{{ label }}</option>{% endfor %}</select>
+<label for="player-report-comment">Commentaire (facultatif)</label><textarea id="player-report-comment" name="comment" maxlength="1000" rows="5" aria-describedby="player-report-comment-help">{{ draft.comment }}</textarea><small id="player-report-comment-help">1000 caractères maximum.</small>
+<button class="secondary" type="submit">Transmettre le signalement</button>
+</form>
+<p><a href="{{ path('app_leaderboard',{category:context.category,page:context.page}) }}">Revenir au classement</a></p>
+</section>
+{% endblock %}

@@ -1417,3 +1417,19 @@ ressources : administrateur actif, planète explicitement choisie sur la fiche d
 joueur, type/rang du catalogue, quantité entière, motif et confirmation, trace
 avant/après et reçu de requête. Elle crédite uniquement le stock au sol.
 Les limites d’entier sont des gardes techniques, pas un nouvel équilibrage.
+
+### Mise en œuvre des choix du lot F
+
+Le commandant actuel choisit le tag obligatoire à la création et celui des guildes
+anciennes, sans reprise fictive. Normalisation en majuscules, unicité par univers ;
+préfixe des commandants uniquement au classement. Les autres pseudonymes restent
+inchangés. Les fixtures de création ajoutent explicitement la nouvelle donnée
+obligatoire ; aucun tag automatique n’est ajouté au jeu.
+
+Les quatre motifs et le contexte du signalement sont ceux validés dans cette
+session. Le contexte de classement est mémorisé côté serveur au formulaire ;
+l’envoi conserve le pseudonyme courant et, s’il diffère, celui consulté.
+Le commentaire est facultatif, borné techniquement à 1000 caractères. La modération
+classe ou marque le signalement traité avec audit, sans nouvelle sanction automatique.
+L’idempotence concerne le même formulaire ; aucun quota de signalements ni règle
+d’équilibrage supplémentaire n’est introduit.

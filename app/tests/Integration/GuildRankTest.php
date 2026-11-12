@@ -51,7 +51,7 @@ final class GuildRankTest extends KernelTestCase
         $outsider = $this->player('GradeOutsider');
         foreach ([$leader, $delegate, $outsider] as $player) $this->join($player, 'omega-1');
         $diplomacy = self::getContainer()->get(\App\Service\Player\DiplomacyService::class);
-        $diplomacy->create($leader->currentPlayerUniverse, 'Grades');
+        $diplomacy->create($leader->currentPlayerUniverse, 'Grades', 'GRD');
         $guild = $this->em->getRepository(\App\Entity\Guild::class)->findOneBy(['leader' => $leader->currentPlayerUniverse]);
         $diplomacy->join($delegate->currentPlayerUniverse, $guild->id);
         $member = $this->em->getRepository(\App\Entity\GuildMember::class)->findOneBy(['playerUniverse' => $delegate->currentPlayerUniverse]);
@@ -66,7 +66,7 @@ final class GuildRankTest extends KernelTestCase
     public function testCustomRankDelegatesGuildAllianceWithoutControllingPersonalContracts(): void
     {
         [$leader, $delegate, $outsider, $guild, $member, $rank, $ranks, $diplomacy] = $this->rankedGuild();
-        $diplomacy->create($outsider, 'Autre guilde');
+        $diplomacy->create($outsider, 'Autre guilde', 'AUTRE');
         $otherGuild = $this->em->getRepository(\App\Entity\Guild::class)->findOneBy(['leader' => $outsider]);
         $diplomacy->relation($delegate, $otherGuild->id, 'allies');
         $diplomacy->relation($outsider, $guild->id, 'allies');
@@ -91,7 +91,7 @@ final class GuildRankTest extends KernelTestCase
     public function testAlliancePermissionDoesNotGrantPactPermissions(string $type): void
     {
         [$leader, $delegate, $outsider, $guild, $member, $rank, $ranks, $diplomacy] = $this->rankedGuild();
-        $diplomacy->create($outsider, 'Autre guilde');
+        $diplomacy->create($outsider, 'Autre guilde', 'AUTRE');
         $otherGuild = $this->em->getRepository(\App\Entity\Guild::class)->findOneBy(['leader' => $outsider]);
         $this->expectException(\DomainException::class);
         $this->expectExceptionMessage('Permission de traité insuffisante');
@@ -101,7 +101,7 @@ final class GuildRankTest extends KernelTestCase
     public function testGuildRelationRejectsAnOutdatedForm(): void
     {
         [$leader, $delegate, $outsider, $guild, $member, $rank, $ranks, $diplomacy] = $this->rankedGuild();
-        $diplomacy->create($outsider, 'Autre guilde');
+        $diplomacy->create($outsider, 'Autre guilde', 'AUTRE');
         $otherGuild = $this->em->getRepository(\App\Entity\Guild::class)->findOneBy(['leader' => $outsider]);
         $diplomacy->relation($leader, $otherGuild->id, 'allies', 0, 0);
         $relation = $this->em->getRepository(\App\Entity\GuildRelation::class)->findOneBy(['guildA' => $guild, 'guildB' => $otherGuild]);
@@ -117,7 +117,7 @@ final class GuildRankTest extends KernelTestCase
     public function testGuildRelationRejectsAFormFromBeforeItsCreation(): void
     {
         [$leader, $delegate, $outsider, $guild, $member, $rank, $ranks, $diplomacy] = $this->rankedGuild();
-        $diplomacy->create($outsider, 'Autre guilde');
+        $diplomacy->create($outsider, 'Autre guilde', 'AUTRE');
         $otherGuild = $this->em->getRepository(\App\Entity\Guild::class)->findOneBy(['leader' => $outsider]);
         $diplomacy->relation($leader, $otherGuild->id, 'allies', 0, 0);
         $this->expectException(\DomainException::class);
@@ -128,7 +128,7 @@ final class GuildRankTest extends KernelTestCase
     public function testRankPermissionRevocationPreventsNextDiplomaticAction(): void
     {
         [$leader, $delegate, $outsider, $guild, $member, $rank, $ranks, $diplomacy] = $this->rankedGuild();
-        $diplomacy->create($outsider, 'Autre guilde');
+        $diplomacy->create($outsider, 'Autre guilde', 'AUTRE');
         $otherGuild = $this->em->getRepository(\App\Entity\Guild::class)->findOneBy(['leader' => $outsider]);
         $ranks->save($leader, $rank->id, 'Diplomate', 10, [], $rank->version);
         $this->expectException(\DomainException::class);
@@ -155,7 +155,7 @@ final class GuildRankTest extends KernelTestCase
     public function testRankAssignmentRejectsAnotherGuildRank(): void
     {
         [$leader, $delegate, $outsider, $guild, $member, $rank, $ranks, $diplomacy] = $this->rankedGuild();
-        $diplomacy->create($outsider, 'Autre guilde');
+        $diplomacy->create($outsider, 'Autre guilde', 'AUTRE');
         $ranks->save($outsider, 0, 'Étranger', 1, [], 0);
         $foreignRank = $this->em->getRepository(\App\Entity\GuildRank::class)->findOneBy(['name' => 'Étranger']);
         $this->expectException(\DomainException::class);
@@ -205,7 +205,7 @@ final class GuildRankTest extends KernelTestCase
     public function testAllianceDelegateCannotClearHostilityWithoutNeutralityPermission(): void
     {
         [$leader, $delegate, $outsider, $guild, $member, $rank, $ranks, $diplomacy] = $this->rankedGuild();
-        $diplomacy->create($outsider, 'Autre guilde');
+        $diplomacy->create($outsider, 'Autre guilde', 'AUTRE');
         $otherGuild = $this->em->getRepository(\App\Entity\Guild::class)->findOneBy(['leader' => $outsider]);
         $diplomacy->relation($outsider, $guild->id, 'enemies');
         $this->expectException(\DomainException::class);
