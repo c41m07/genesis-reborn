@@ -1404,3 +1404,16 @@ Une attaque classique ne capture pas la planète et n’ajoute aucun butin PNJ.
 La capture conserve vaisseau colonie survivant, emplacement disponible et occupation
 de 24 heures selon le fonctionnement validé de l’univers. Aucun coût, préavis,
 niveau de garnison, calcul de butin ou valeur d’équilibrage n’est modifié.
+
+### Mise en œuvre du lot E — choix déjà validés
+
+Archive personnelle consultable/restaurable, actions individuelles ou par sélection,
+sans suppression des preuves ni changement des droits d’accès. Le tri devient
+commun aux trois types de rapports avant pagination. Les états d’archive sont
+isolés par participation, type et rapport ; restauration sans effacement du rapport.
+
+L’attribution de vaisseaux demandée reprend les protections de la correction de
+ressources : administrateur actif, planète explicitement choisie sur la fiche du
+joueur, type/rang du catalogue, quantité entière, motif et confirmation, trace
+avant/après et reçu de requête. Elle crédite uniquement le stock au sol.
+Les limites d’entier sont des gardes techniques, pas un nouvel équilibrage.

@@ -466,3 +466,19 @@ origine, univers, diplomatie, vacances, composition, carburant et capacités res
 appliqués. La garnison PNJ est initialisée une seule fois, sous verrou à l’arrivée.
 Une attaque classique n’engage aucune capture, même avec un vaisseau colonie.
 Les récompenses générales de combat et les valeurs de jeu restent inchangées.
+
+## Rapports personnels et corrections administratives — lot E
+
+Les rapports visibles (combat, espionnage et transport) sont présentés ensemble,
+du plus récent au plus ancien, avec 50 résultats par page après tri et filtrage.
+L’archive est personnelle à la participation dans l’univers : retirer un rapport
+de sa liste n’affecte pas celle d’un autre participant. Archive/restauration
+individuelle ou par sélection, sans supprimer ni altérer les rapports d’origine.
+L’archivage n’accorde aucun droit de consultation supplémentaire.
+
+Un administrateur actif peut attribuer un type/rang de vaisseaux existant au
+stock au sol d’une colonie du joueur désigné. Motif et confirmation obligatoires,
+audit avant/après et protection contre une double soumission. Le joueur, la
+propriété et l’univers sont revérifiés sous verrou ; l’opération entière est
+refusée si le stock entier dépasse sa capacité technique (2147483647 par ligne).
+Aucun vaisseau d’une mission active, ressource, coût ou prérequis n’est modifié.

@@ -212,3 +212,26 @@ avec contrôles de participation, vacances et occupation existants. joinAttack
 revérifie l’autorisation sous verrou et initialise la garnison PNJ une seule fois.
 capturePlanet continue à ne considérer que les missions conquer ; collectLoot
 continue à exclure les planètes sans propriétaire. Aucun coût ou durée modifié.
+
+## Archives des rapports et attribution de vaisseaux (lot E)
+
+ReportArchiveService compose les trois sources autorisées (UNION ALL DBAL avec
+paramètres liés) et filtre les états personnels avant COUNT/tri/pagination.
+L’ordre commun utilise date décroissante, identifiant décroissant, puis type.
+Les mutations vérifient tous les éléments avant écriture, dans une transaction
+sérialisée sur la participation ; archive/restauration rejouées sont idempotentes.
+POST /rapports/archives est protégé par session, CSRF et permissions de lecture.
+La table report_archive est unique sur participation/type/id ; archived_at nullable
+conserve l’état restauré. Aucun rapport source supprimé ou modifié. Les vues
+administratives et preuves restent indépendantes de ce filtrage personnel.
+
+AdminInterventionService::ships utilise rôle actif, verrous administrateur puis
+participation/univers/planète, reçu ActionGuard et catalogue. Le stock idle est
+créé si nécessaire ; chaque quantité reste dans l’entier SQL signé. L’audit
+admin_ships_grant est enregistré dans la même transaction (motif, acteur,
+joueur/univers/planète/flotte, type/rang, quantité, avant/après).
+La route d’attribution n’accepte qu’un POST CSRF avec confirmation explicite.
+
+Version20261112020000 est additive. Accord explicite reçu ; sauvegarde locale
+dans var/backups/lot-e-20261112, archive/manifeste vérifiés deux fois avant make
+migrate. Comptages des huit tables suivies inchangés ; aucun serveur Alpha touché.

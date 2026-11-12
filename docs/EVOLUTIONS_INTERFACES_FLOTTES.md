@@ -27,10 +27,10 @@ Une complexité 4 ou 5 impose l’analyse détaillée des transitions et risques
 | B | Masquer les sondes entrantes au serveur ; résumé des flottes tierces visibles | 4 | Fusionné dans dev, PR #42 |
 | C — colonies/journal | Acquisition sur toutes les voies de transfert ; ordre commun | 4 | Fusionné dans dev, PR #43 |
 | C | Journal d’absence, consultation explicite, détails clavier/tactiles | 4 | Fusionné dans dev, PR #43 |
-| D — destinations | Trois modes, découvertes, univers, suggestions de pseudonyme | 4 | Validé localement, publication à autoriser |
-| D | Attaque PNJ, départ/arrivée et liens depuis la carte | 4 | Validé localement, publication à autoriser |
-| E — administration/rapports | Attribution auditée de vaisseaux, planète/type/rang/quantité | 4 | À réaliser |
-| E | Archive/restauration personnelle, sélection et conservation des preuves | 4 | Choix confirmés, à réaliser |
+| D — destinations | Trois modes, découvertes, univers, suggestions de pseudonyme | 4 | Fusionné dans dev, PR #44 |
+| D | Attaque PNJ, départ/arrivée et liens depuis la carte | 4 | Fusionné dans dev, PR #44 |
+| E — administration/rapports | Attribution auditée de vaisseaux, planète/type/rang/quantité | 4 | Validé localement, publication à autoriser |
+| E | Archive/restauration personnelle, sélection et conservation des preuves | 4 | Validé localement, publication à autoriser |
 | F — guildes/signalements | Tag obligatoire à la création, unicité par univers et classement | 3 | Transition confirmée, à réaliser |
 | F | Signalement d’un joueur depuis le classement | 3 | Motifs et contexte validés |
 | G — rappel | Missions, trajet partiel, carburant/fret, verrouillage, origine perdue | 5 | Décisions validées, à réaliser |
@@ -607,6 +607,119 @@ sont synchronisés ; leur parcours navigateur réussit.
 - app/tests/browser/fleet-wizard.spec.mjs
 - app/tests/browser/orbit-request.spec.mjs
 - app/tests/browser/quantity-max.spec.mjs
+- docs/ARCHITECTURE.md
+- docs/DECISIONS.md
+- docs/EVOLUTIONS_INTERFACES_FLOTTES.md
+- docs/FEUILLE_DE_ROUTE.md
+- docs/REGLES.md
+- docs/wiki.json
+
+## Lot D intégré et plan du lot E — 12 novembre 2026
+
+Lot D fusionné via PR #44, commit 63e380f41d9ce6a55a0f8ef86dc3000a9d25b199.
+CI complète 43169578878 réussie sur 760662195248847bd78c3791bd570a2ec0475cf3 :
+cinq jobs quality et GitGuardian verts, sauvegarde/restauration isolées vérifiées.
+Protection stricte de dev et PR obligatoire vérifiées. Aucun déploiement Alpha.
+
+Lot E depuis cette dev actualisée, branche feature/administration-vaisseaux-archives.
+- Attribution administrative : complexité 4. Réutiliser les verrous et reçus
+  existants ; contrôler rôle administrateur actif, joueur/propriétaire/univers,
+  type/rang du catalogue et limites de stockage entier. Créditer seulement le
+  stock au sol, avec motif, confirmation, audit avant/après et rejeu sans effet.
+  Aucun coût ni prérequis de construction modifié.
+- Rapports : complexité 4. Archive personnelle distincte des preuves conservées.
+  Vérifier les droits existants de chaque rapport et l’univers côté serveur.
+  Transactions et verrou de participation pour archive/restauration idempotentes.
+  Tri chronologique commun aux trois types avant pagination ; filtres et vues
+  archives conservés en navigation ; actions individuelles ou par sélection.
+- Données : table additive report_archive (participation, type, identifiant,
+  date d’archivage nullable), unicité par participation/type/rapport. Aucune
+  suppression de rapport. Préparer la migration avant de demander l’application
+  locale, avec sauvegarde vérifiée ; aucun accord local du lot C réutilisé.
+- Tests : autorisations, propriété changée, rang/type/quantité invalides,
+  dépassement entier, rejeu et audit ; archives isolées par destinataire/univers,
+  refus partiel atomique, restauration, tri mixte/pagination et preuves intactes.
+  Vérifier clavier, focus, libellés, états vides et toucher.
+
+### État de reprise du lot E
+
+Les routes, services, formulaires et styles sont ajoutés. L’archive se filtre avant
+le tri/pagination communs aux trois types ; les rapports source restent intacts.
+La migration locale est autorisée, puis appliquée après deux vérifications de
+l’archive/manifeste : var/backups/lot-e-20261112 (ignoré par Git).
+Comptages avant/après identiques : 720 planètes, 40 ressources, 15 flottes,
+12 lignes de vaisseaux, 3 combats, 4 espionnages, 1 transport et 6 participations.
+make lint initial (schéma compris), make assets et make validate réussis.
+Tests ciblés en cours. Les deux reprises du montage de test concernent la flotte
+obligatoire d’un participant, la redirection CSRF existante et la soumission
+de cases à cocher groupées par le client de test ; les contrôles ne sont pas affaiblis.
+Les documents Work V4/V2/V1 restent inaccessibles ; aucun wiki distant ni Figma modifié.
+
+Après les reprises du client de test, complexité réévaluée et maintenue à 4 :
+les dépendances session/CSRF et les fixtures complètes sont désormais vérifiées.
+34 tests ciblés réussissent (162 assertions). Le parcours navigateur des archives
+réussit ; celui d’attribution/rejeu réussit après remplacement de la requête HTTP
+Node (résolution *.localhost absente) par fetch dans le navigateur configuré.
+Les assertions de stock inchangé et d’un seul audit restent exigées.
+
+Suite serveur finale : 738 tests PHP, 210294 assertions, 13 tests Python réussis.
+make lint final réussit avec schéma à jour ; make assets final et make validate
+réussissent. Suites navigateur complètes en cours ; aucun commit/push du lot E.
+
+### Validation finale locale du lot E — 12 novembre 2026
+
+Les six contrôles sont exécutés et leurs résultats examinés :
+- make validate : réussi.
+- make lint : réussi, mapping et schéma de la base locale migrée inclus.
+- make assets (npm run build) : réussi, recompilé après le seul ajustement final
+  de taille du texte et de hauteur des boutons des archives.
+- make test : 738 tests PHP, 210294 assertions et 13 tests Python réussis.
+- BROWSER_PERSISTENCE=1 make test-browser : 167 scénarios distincts réussis.
+  Quatre groupes principaux : 42/42, 42/42, 41/41 et 41/41.
+  Dernier groupe sans concurrence : clavier général et les deux parcours du lot E,
+  tous réussis sur les styles finaux (3/3). Les deux parcours répétés ne sont pas
+  comptés deux fois ; rapprochement exact des 167 cas attendus, sans manquant ni extra.
+- git diff --check : réussi ; contrôle des fichiers préparés avant commit.
+
+Rapports locaux : /tmp/genesis-lot-e-batch-1.json à -5.json et
+/tmp/genesis-lot-e-coverage.json. Suites serveur/lint/assets finales :
+/tmp/genesis-lot-e-php-final.log, -lint-final.log et -assets-final.log.
+Les reprises ciblées initiales sont décrites ci-dessus ; aucune assertion métier
+n’a été supprimée ou affaiblie, la suite finale complète réussit.
+
+Relecture des captures mobiles à 390 px : formulaire d’attribution lisible,
+archives sans débordement, boutons avec texte de 14 px et hauteur minimale 44 px.
+Navigation clavier générale, noms accessibles, focus, contraste et parcours tactiles
+vérifiés de façon ciblée ; aucun audit complet RGAA n’est revendiqué.
+Les archives restent accessibles via les mêmes permissions, les preuves intactes,
+et l’attribution/rejeu ne produit qu’un crédit et une trace d’audit.
+Le wiki intégré et les vues dans les deux thèmes passent leurs parcours.
+
+Migration locale autorisée, sauvegarde/manifeste vérifiés deux fois avant
+application, comptages inchangés. Aucun serveur Alpha touché, aucune dépendance
+ajoutée, aucun logo ou SVG d’identité modifié.
+Lot E prêt localement ; aucun push, PR ou CI GitHub du lot E.
+Publication à autoriser avant le démarrage du lot F.
+Les documents Work externes V4/V2/V1 restent inaccessibles (noms en début de suivi).
+Aucun wiki distant ni Figma modifié.
+
+### Fichiers du lot E
+
+- README.md
+- app/assets/app.js
+- app/assets/styles/report-archives.css
+- app/migrations/Version20261112020000.php
+- app/src/Controller/AdminPlayerController.php
+- app/src/Controller/CombatReportController.php
+- app/src/Entity/ReportArchive.php
+- app/src/Service/Admin/AdminInterventionService.php
+- app/src/Service/Combat/ReportArchiveService.php
+- app/templates/admin/_ship_intervention.html.twig
+- app/templates/admin/player.html.twig
+- app/templates/combat/reports.html.twig
+- app/tests/Controller/ReportArchiveTest.php
+- app/tests/Integration/AdminInterventionTest.php
+- app/tests/browser/report-archives-ships.spec.mjs
 - docs/ARCHITECTURE.md
 - docs/DECISIONS.md
 - docs/EVOLUTIONS_INTERFACES_FLOTTES.md

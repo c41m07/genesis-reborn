@@ -112,6 +112,82 @@ final class AdminInterventionTest extends WebTestCase
         self::getContainer()->get(AdminInterventionService::class)->resources($this->recipient, $this->recipient->id, $this->target, 'add', ['metal'=>'1'], 'Contrôle droits', str_repeat('f',32));
     }
 
+    public function testShipGrantCreatesIdleStockIsAuditedAndCannotBeReplayed(): void
+    {
+        $service = self::getContainer()->get(AdminInterventionService::class);
+        $before = $this->em->getConnection()->fetchAllAssociative('SELECT resource_type,current_stock FROM planet_resource WHERE planet_id=? ORDER BY resource_type', [$this->target->id]);
+        self::assertTrue($service->ships($this->sender, $this->recipient->id, $this->target, 'fighter', 'intermediate', '12', 'Compensation ticket 56', str_repeat('a',32)));
+        $fleet = $this->em->getRepository(Fleet::class)->findOneBy(['homePlanet'=>$this->target, 'playerUniverse'=>$this->recipient->currentPlayerUniverse, 'status'=>'idle']);
+        $ship = $this->em->getRepository(FleetShip::class)->findOneBy(['fleet'=>$fleet, 'slug'=>'fighter', 'tier'=>'intermediate']);
+        self::assertSame(12, $ship->quantity);
+        self::assertFalse($service->ships($this->sender, $this->recipient->id, $this->target, 'fighter', 'intermediate', '12', 'Compensation ticket 56', str_repeat('a',32)));
+        self::assertSame(12, $ship->quantity);
+        self::assertSame($before, $this->em->getConnection()->fetchAllAssociative('SELECT resource_type,current_stock FROM planet_resource WHERE planet_id=? ORDER BY resource_type', [$this->target->id]));
+        $logs = $this->em->getRepository(\App\Entity\AdminAuditLog::class)->findBy(['action'=>'admin_ships_grant']);
+        self::assertCount(1, $logs);self::assertSame(0, $logs[0]->details['before']);self::assertSame(12, $logs[0]->details['after']);
+        self::assertSame('intermediate', $logs[0]->details['tier']);self::assertSame($this->target->id, $logs[0]->targetId);
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('invalidShipGrants')]
+    public function testInvalidShipGrantHasNoEffect(string $slug, string $tier, string $quantity, string $scenario): void
+    {
+        if ($scenario === 'non_admin') $this->sender->roles = [];
+        if ($scenario === 'locked') $this->sender->lockedAt = $this->clock->now();
+        $this->em->flush();
+        $connection = $this->em->getConnection();
+        $before = (int) $connection->fetchOne('SELECT COALESCE(SUM(quantity),0) FROM fleet_ship');
+        $this->expectException(\DomainException::class);
+        try {
+            self::getContainer()->get(AdminInterventionService::class)->ships($this->sender,
+                $scenario === 'owner' ? $this->sender->id : $this->recipient->id, $this->target,
+                $slug, $tier, $quantity, 'Contrôle attribution', str_repeat('b',32));
+        } finally {
+            self::assertSame($before, (int) $connection->fetchOne('SELECT COALESCE(SUM(quantity),0) FROM fleet_ship'));
+            self::assertSame(0, (int) $connection->fetchOne("SELECT COUNT(*) FROM admin_audit_log WHERE action='admin_ships_grant'"));
+            self::assertSame(0, (int) $connection->fetchOne('SELECT COUNT(*) FROM action_receipt WHERE request_key=?', [str_repeat('b',32)]));
+        }
+    }
+
+    public static function invalidShipGrants(): array
+    {
+        return [
+            ['unknown','basic','1','catalog'], ['fighter','unknown','1','tier'],
+            ['fighter','basic','0','quantity'], ['fighter','basic','-1','quantity'],
+            ['fighter','basic','1.5','quantity'], ['fighter','basic','2147483648','quantity'],
+            ['fighter','basic','1','non_admin'], ['fighter','basic','1','locked'],
+            ['fighter','basic','1','owner'],
+        ];
+    }
+
+    public function testShipStockOverflowRollsBackAttribution(): void
+    {
+        $fleet = $this->em->getRepository(Fleet::class)->findOneBy(['homePlanet'=>$this->origin, 'status'=>'idle']);
+        $ship = $this->em->getRepository(FleetShip::class)->findOneBy(['fleet'=>$fleet]);
+        $ship->quantity=2147483647;$this->em->flush();
+        $connection=$this->em->getConnection();$id=$ship->id;
+        $this->expectException(\DomainException::class);
+        try {
+            self::getContainer()->get(AdminInterventionService::class)->ships($this->sender, $this->sender->id, $this->origin, $ship->slug, $ship->tier, '1', 'Contrôle dépassement', str_repeat('b',32));
+        } finally {
+            self::assertSame(2147483647,(int)$connection->fetchOne('SELECT quantity FROM fleet_ship WHERE id=?',[$id]));
+            self::assertSame(0,(int)$connection->fetchOne('SELECT COUNT(*) FROM action_receipt WHERE request_key=?',[str_repeat('b',32)]));
+        }
+    }
+
+    public function testShipFormUsesCsrfAndExplicitConfirmation(): void
+    {
+        $this->client->loginUser($this->sender);
+        $crawler=$this->client->request('GET','/admin/joueurs/'.$this->recipient->id);
+        self::assertResponseIsSuccessful();
+        $form=$crawler->filter('form[action$="/vaisseaux"]')->form(['slug'=>'fighter','tier'=>'superior','quantity'=>'3','reason'=>'Correction vérifiée','confirmed'=>'1']);
+        $this->client->submit($form);self::assertResponseRedirects();
+        $em=self::getContainer()->get(EntityManagerInterface::class);
+        $log=$em->getRepository(\App\Entity\AdminAuditLog::class)->findOneBy(['action'=>'admin_ships_grant']);
+        self::assertSame(3,$log->details['after']);self::assertSame('superior',$log->details['tier']);
+        $this->client->request('POST','/admin/joueurs/'.$this->recipient->id.'/colonies/'.$this->target->id.'/vaisseaux',['_token'=>'forged','confirmed'=>'1']);
+        self::assertResponseRedirects('/acces-refuse');$this->client->followRedirect();self::assertResponseStatusCodeSame(403);
+    }
+
     public function testRescheduleInvalidatesOldWorkerAndRecallKeepsFreight(): void
     {
         $fleet = $this->send();$oldToken = $fleet->dispatchToken;

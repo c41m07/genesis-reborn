@@ -1347,3 +1347,17 @@ navigateur distincts ; validation, lint/schéma, assets et diff vérifiés.
 Relecture mobile et reprise clavier sur le template final réussies ; détails
 et rapports dans le suivi. Publication à autoriser avant le lot E.
 Aucune migration ou dépendance supplémentaire ; aucun push/PR/CI du lot D.
+
+## Lot D intégré, lot E en validation — 12 novembre 2026
+
+PR #44 fusionnée dans dev (63e380f), après CI complète 43169578878 verte.
+Lot E sur feature/administration-vaisseaux-archives : attribution auditée au sol,
+archives personnelles restaurables, tri mixte avant pagination. Tests en cours,
+aucun commit/push/PR du lot E. Migration locale autorisée après sauvegarde vérifiée,
+comptages inchangés ; aucun déploiement Alpha.
+
+Validation locale finale du lot E : six contrôles réussis, 738 tests PHP
+(210294 assertions), 13 tests Python et 167 scénarios navigateur distincts.
+Clavier général et deux nouveaux parcours revérifiés après l’ajustement CSS final.
+Sauvegarde locale et migration vérifiées ; documentation et wiki intégré synchronisés.
+Lot prêt localement, publication à autoriser ; aucune CI GitHub du lot E ni Alpha.
