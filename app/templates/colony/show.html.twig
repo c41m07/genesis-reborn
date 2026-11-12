@@ -22,13 +22,25 @@
 <div class="dashboard-layout">
 <div class="dashboard-primary">
 <section class="dashboard-activity" aria-label="Activité et files de la colonie active">{% include 'ui/colony_queues.html.twig' %}</section>
+{% include 'ui/colony_summaries.html.twig' %}
 
 </div>
 <aside class="dashboard-secondary">
 {% include 'ui/flights.html.twig' %}
-<section class="panel dashboard-journal" aria-labelledby="dashboard-journal-title">
-<div class="dashboard-section-heading"><div><h2 id="dashboard-journal-title">Journal de bord</h2><p>Dernières notifications de votre empire</p></div><span aria-hidden="true">{{ ui.icon('clock') }}</span></div>
-{% if chrome.notifications|default([]) is not empty %}<ol class="dashboard-notifications">{% for notification in chrome.notifications %}<li><span class="journal-mark" aria-hidden="true">{{ ui.icon('notifications') }}</span><span><strong>{{ notification.message }}</strong><small>{{ notification.createdAt|date('d/m/Y · H:i',preferences.timezone) }}</small></span></li>{% endfor %}</ol>{% else %}<p class="dashboard-empty">Aucune activité récente. Les nouvelles étapes de votre empire apparaîtront ici.</p>{% endif %}
+<section class="panel dashboard-journal" data-live-region="journal" aria-labelledby="dashboard-journal-title">
+<div class="dashboard-section-heading"><div><h2 id="dashboard-journal-title">Journal de bord</h2><p>Événements survenus depuis votre précédente ouverture, conservés jusqu’à consultation explicite.</p></div><span aria-hidden="true">{{ ui.icon('clock') }}</span></div>
+{% if chrome.journal.notifications|default([]) is not empty %}
+<ol class="dashboard-notifications">{% for notification in chrome.journal.notifications %}
+<li data-journal-notice="{{ notification.id }}"><span class="journal-mark" aria-hidden="true">{{ ui.icon('notifications') }}</span><span><strong>{{ notification.message }}</strong><small>{{ notification.createdAt|date('d/m/Y · H:i',preferences.timezone) }}</small></span></li>
+{% endfor %}</ol>
+{% if chrome.journal.availableCount > chrome.journal.notifications|length %}<p>{{ chrome.journal.notifications|length }} événements affichés sur {{ chrome.journal.availableCount }}. Les suivants seront proposés après consultation.</p>{% endif %}
+<form method="post" action="{{ path('app_journal_consult',{id:planet.id}) }}">
+<input type="hidden" name="_token" value="{{ csrf_token('journal-'~membership.id) }}">
+<input type="hidden" name="membership" value="{{ membership.id }}">
+{% for notification in chrome.journal.notifications %}<input type="hidden" name="notice_ids[]" value="{{ notification.id }}">{% endfor %}
+<button class="secondary">Marquer ces événements comme consultés</button>
+</form>
+{% else %}<p class="dashboard-empty">Aucun événement d’absence à consulter. Le suivi commence à votre première ouverture de la vue générale ; les nouvelles activités seront proposées lors d’une prochaine ouverture.</p>{% endif %}
 <a class="dashboard-journal-link" href="{{ path('app_combat_reports') }}">Ouvrir les rapports <span aria-hidden="true">→</span></a>
 </section>
 </aside>

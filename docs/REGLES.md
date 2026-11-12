@@ -409,3 +409,37 @@ Ce résumé courant d’une flotte est distinct du classement quotidien des joue
 Le cercle extérieur d’un système possédé est vert, avec les informations
 intérieures conservées. Un bouton de la fiche planète revient à son système ;
 la croix permet toujours de revenir à la galaxie.
+
+### Détails privés des colonies et flottes — lot C
+
+Les panneaux de la page Planètes affichent les vaisseaux au repos par rang et
+les stocks calculés de ses colonies dans l’univers actif. Le suivi de ses vols
+affiche leur composition et leur fret. Les données d’un autre empire ne sont
+pas jointes à ces panneaux. Survol, ouverture au clavier et au toucher, fermeture
+par Échap ; la lecture des stocks ne les matérialise pas et ne les consomme pas.
+Les règles de capacité, production, déplacement et confidentialité restent inchangées.
+
+### Ordre des colonies et journal d’absence — lot C
+
+Une acquisition est datée lors de l’attribution initiale, d’une colonisation,
+d’une conquête ou d’une capture après occupation par le propriétaire actuel.
+Les anciennes dates inconnues ne sont pas inventées : les colonies concernées
+conservent un ordre par identifiant indiqué comme approximatif, avant les
+acquisitions datées. Les dates connues vont de la plus ancienne à la plus récente,
+avec départage par identifiant. Vue générale, page Planètes et sélecteur latéral
+partagent cet ordre ; à l’écran, la lecture va de gauche à droite ou de haut en bas.
+
+Le suivi du journal commence à la première ouverture de la vue générale après
+la mise à jour. Les anciennes notifications sont conservées sans être présentées
+comme une absence connue. Pour les ouvertures suivantes, le journal propose les
+constructions/recherches terminées, arrivées, combats, transports, espionnages
+et conquêtes survenus depuis la précédente ouverture, avec maintien des événements
+non consultés des absences antérieures. Une actualisation automatique ne constitue
+ni une nouvelle ouverture ni une consultation. Les notifications instantanées
+restent distinctes du journal d’absence.
+
+Le bouton « Marquer ces événements comme consultés » porte uniquement sur les
+événements affichés, au plus 50 par affichage. Les suivants deviennent accessibles
+après consultation, sans suppression d’historique ; les arrivées ultérieures ne
+sont jamais marquées par une ancienne sélection. L’état est conservé côté serveur
+par participation à l’univers et protégé contre les accès tiers et formulaires expirés.

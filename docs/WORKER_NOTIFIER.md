@@ -86,7 +86,7 @@ L’outbox stocke une référence vers la cible, pas un JSON métier complet. El
 
 ### Création d’une notification
 
-`NotificationService::enqueue(PlayerUniverse $recipient, string $message): void` :
+`NotificationService::enqueue(PlayerUniverse $recipient, string $message, ?string $journalKind = null): void` :
 
 1. Crée et persiste une `Notification` avec l’heure courante.
 2. Appelle `flush()` pour obtenir son identifiant.
@@ -153,7 +153,7 @@ Pour chaque ligne, dans sa propre transaction :
 
 1. Verrouiller et recharger l’`OutboxMessage`.
 2. Charger la `Notification` référencée par `targetId`.
-3. Si elle existe, publier sur le topic de son destinataire avec le payload `{"message": "…", "id": 123}` et l’identifiant SSE `notification-123`.
+3. Si elle existe, publier sur le topic de son destinataire avec le payload `{"message": "…", "id": 123, "journal": true}` et l’identifiant SSE `notification-123`.
 4. Supprimer la ligne d’outbox et valider la transaction.
 
 Une cible `Notification` absente entraîne la suppression de la ligne d’outbox sans publication. Une notification publiée reste en base ; seul son ordre de publication est supprimé. Ce passage ne définit aucune politique de rétention des notifications.
@@ -351,3 +351,14 @@ En environnement `test`, `async` et `failed` sont des transports `in-memory://`.
 7. [MercurePublisher.php](../app/src/Integration/Mercure/MercurePublisher.php), [mercure.yaml](../app/config/packages/mercure.yaml) et [NotificationController.php](../app/src/Controller/NotificationController.php) : publication privée et abonnement autorisé.
 8. [events_controller.js](../app/assets/controllers/events_controller.js), [colony_live_controller.js](../app/assets/controllers/colony_live_controller.js) et [base.html.twig](../app/templates/base.html.twig) : réception, affichage et invalidation des vues.
 9. [ProcessHeartbeat.php](../app/src/Service/ProcessHeartbeat.php), [WorkerHeartbeatListener.php](../app/src/EventListener/WorkerHeartbeatListener.php) et [AdminOperationsService.php](../app/src/Service/Admin/AdminOperationsService.php) : observation des processus.
+
+### Indication du journal d’absence
+
+Le champ booléen journal du payload Mercure indique si la notification appartient
+au suivi d’absence déjà commencé par son destinataire. Le toast instantané reste
+affiché pour toute notification ; ce booléen sert seulement au témoin du journal.
+Une publication n’ouvre pas la vue générale et ne marque aucun événement comme
+consulté. Les garanties de transaction, outbox et déduplication restent inchangées.
+Après migration et mise à jour du code, redémarrer worker, relay et notifier pour
+recharger les modèles et le service de notification. Le lot C a été migré seulement
+sur la base locale autorisée, après sauvegarde vérifiée ; l’Alpha n’est pas déployée.

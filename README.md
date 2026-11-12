@@ -410,3 +410,19 @@ points remplacent sa composition ; les types et rangs restent accessibles au
 propriétaire. Le calcul reprend les coûts de vaisseaux de l’univers, sans défense
 fixe, avec division par 100 après totalisation. Ces restrictions sont appliquées
 avant l’envoi des données au navigateur.
+
+Détails privés des colonies et flottes : la page Planètes présente les vaisseaux
+disponibles par rang et les stocks calculés de chaque colonie ; le suivi des vols
+présente la composition et le fret de ses propres flottes. Ces panneaux s’ouvrent
+au survol et restent utilisables au clavier et au toucher. Leur lecture ne
+matérialise pas les stocks. La vue générale et le sélecteur latéral partagent
+l’ordre d’acquisition par le propriétaire actuel. Les anciennes dates inconnues
+restent nulles, avec un ordre historique signalé comme approximatif.
+Le journal commence à la première ouverture après mise à jour. Les événements
+validés des absences suivantes restent visibles jusqu’au bouton de consultation ;
+les actualisations automatiques ne changent pas cet état. Au-delà de 50 événements,
+les suivants sont proposés après consultation, sans effacer l’historique.
+La migration additive Version20261112010000 est appliquée sur la seule base locale
+après accord et sauvegarde vérifiée. Les autres installations nécessitent leur
+propre sauvegarde vérifiée et autorisation avant migration, puis le redémarrage
+des consommateurs. Aucun déploiement Alpha de ce lot n’est annoncé.

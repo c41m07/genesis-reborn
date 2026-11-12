@@ -1286,5 +1286,46 @@ Validation locale terminée le 12 novembre : six contrôles exécutés, 706 test
 (210052 assertions), 13 tests Python et 161 scénarios navigateur distincts réussis.
 Le parcours clavier général a nécessité une reprise seule après dépassement de
 durée en parallèle ; aucun test assoupli. Le [suivi](EVOLUTIONS_INTERFACES_FLOTTES.md)
-détaille les preuves. Publication du lot B en attente d’autorisation ; aucune
-CI GitHub ni intégration dans dev du lot B, aucun déploiement Alpha.
+détaille les preuves. Lot B désormais fusionné dans dev par la PR #42 au commit fe39a001340548e32ad0b52ef00f686f5a004bd6,
+après CI complète verte 43120982563 (cinq jobs quality et sauvegarde/restauration
+isolées vérifiés). Aucun déploiement Alpha.
+
+### Lot C — branche démarrée depuis dev actualisée
+
+Branche feature/colonies-journal-absence, issue de fe39a00.
+Les détails privés des colonies et flottes sont intégrés ; tests ciblés réussis :
+1 test serveur (15 assertions), 1 parcours survol/clavier/toucher, et 25 tests de
+transition pendant la vérification de la migration sur base jetable.
+Lint/schéma et compilation réussissent. Le lot complet n’est pas encore validé.
+La migration additive des acquisitions et du journal est préparée, non appliquée
+à la base de jeu locale. Accord de sauvegarde/migration et choix du point de départ
+du journal demandés, en attente. Ordre par acquisition et journal restent à réaliser.
+Voir le [suivi](EVOLUTIONS_INTERFACES_FLOTTES.md) ; aucun commit/push/PR du lot C.
+
+### Suite du lot C après décisions
+
+Le démarrage du journal à la première ouverture est confirmé. La migration locale
+Version20261112010000 est appliquée après sauvegarde vérifiée (intégrité gzip et
+manifeste). Les nombres de planètes, ressources, flottes et notifications restent
+identiques avant/après. Aucun serveur Alpha concerné.
+L’acquisition est désormais enregistrée sur les quatre voies, et les trois listes
+de colonies partagent l’ordre avec reprise approximative explicite. Le journal
+filtre les catégories validées et conserve les non-consultés ; POST contrôlé par
+participation, propriété, CSRF et identifiants affichés. Les mises à jour automatiques
+ne visitent ni ne consultent le journal. Les 16 tests ciblés passent (127 assertions).
+Les vérifications complètes du lot C restent à exécuter avant tout commit.
+
+### Validation locale finale du lot C
+
+Les six contrôles sont exécutés et examinés : make validate, make lint (mapping/
+schéma compris), make assets, make test (713 tests PHP, 210134 assertions et
+13 tests Python), make test-browser et contrôle du diff.
+163 scénarios navigateur distincts réussis, couverture exacte consolidée après
+adaptation de trois parcours à la consultation explicite et au nouvel état vide.
+Le clavier est exécuté sans concurrence, ainsi qu’une reprise du journal et de
+la notification de construction réelle sur la version finale. Aucun test assoupli.
+La capture mobile des colonies et les contrôles ciblés d’accessibilité sont relus ;
+cela ne constitue pas un audit complet RGAA.
+Consommateurs locaux rechargés, tous healthy. Lot validé localement ;
+publication, PR et CI GitHub du lot C non effectuées, aucune intégration de C
+dans dev ni déploiement Alpha. Voir le suivi pour les résultats détaillés.

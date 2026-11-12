@@ -18,7 +18,7 @@ final class OutboxRelay
                 $this->manager->lock($o);
                 if($notifications) {
                     $n=$this->repo->find(Notification::class,$o->targetId);
-                    if($n) $this->publisher->publish(NotificationService::topic($n->recipient),['message'=>$n->message,'id'=>$n->id],'notification-'.$n->id);
+                    if($n) $this->publisher->publish(NotificationService::topic($n->recipient),['message'=>$n->message,'id'=>$n->id,'journal'=>$n->journalKind!==null && $n->recipient->journalStartedAt!==null],'notification-'.$n->id);
                 } else {
                     $message=match($o->kind){'queue'=>new QueueItemFinished($o->targetId,$o->token),'fleet'=>new FleetArrived($o->targetId,$o->token),'combat'=>new CombatEventDue($o->targetId,$o->token),'reconstruction'=>new EmpireReconstructionDue($o->targetId,$o->token),'guild_project'=>new GuildProjectRewardsDue($o->targetId,$o->token),'occupation'=>new OccupationDue($o->targetId,$o->token),'universe'=>new UniverseClosureDue($o->targetId,$o->token),default=>throw new \LogicException('Événement inconnu.')};
                     $delay=max(0,($o->dueAt->getTimestamp()-$this->clock->now()->getTimestamp())*1000);

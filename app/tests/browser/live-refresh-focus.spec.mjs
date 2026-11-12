@@ -22,7 +22,7 @@ async function signIn(page) {
 test('Le rafraîchissement live conserve le focus puis reprend quand il quitte la zone', async ({ page }) => {
   const planetId = await signIn(page);
   await page.goto('/');
-  await expect(page.getByText('Aucune activité récente. Les nouvelles étapes de votre empire apparaîtront ici.')).toBeVisible();
+  await expect(page.locator('.dashboard-journal .dashboard-empty')).toContainText('Aucun événement d’absence à consulter');
   await page.waitForTimeout(300);
 
   const liveRoute = '/planetes/' + planetId;

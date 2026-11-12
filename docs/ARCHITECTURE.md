@@ -142,3 +142,37 @@ une vérification séparée sur un serveur autorisé.
 Le tableau documentaire `docs/CATALOGUE_LABELS.csv` conserve les 150 libellés,
 descriptions et utilités de jeu. Les valeurs d’exécution restent celles du catalogue
 applicatif ; ce fichier documentaire n’est pas importé dans la base.
+
+## Colonies et journal d’absence — lot C
+
+Planet.acquiredAt est nullable : les quatre transferts de propriété existants
+appellent acquireBy dans leurs transactions et gardes de rejeu. Une attribution
+inchangée ne redéfinit pas la date. GameRepository::planets trie les seuls résultats
+filtrés par propriétaire par acquiredAt puis id (NULL en premier dans MariaDB).
+Les autres listes gardent leur ordre existant.
+
+JournalService verrouille PlayerUniverse pour ouvrir ou consulter son journal.
+journalStartedAt initialise la reprise sans inventer de visite ; overviewVisitedAt
+n’est actualisée que par l’ouverture de la vue générale. Le client colony-live
+envoie X-Genesis-Live: 1 afin que sa récupération HTML ne constitue pas une visite.
+NotificationService reçoit une catégorie optionnelle : queue, arrival, combat,
+transport, spy ou conquest. La catégorie est enregistrée
+à la création de la notification. À la première ouverture, JournalService retire
+cette seule catégorie des notifications déjà présentes et non disponibles, sans
+les supprimer ni définir consultedAt. Les nouvelles notifications alimentent
+ensuite les absences. Cette reprise évite une lecture d’état de suivi périmée
+dans une transaction métier ancienne et n’ajoute aucun verrou à ces traitements.
+Les autres catégories restent conservées hors du journal.
+
+À l’ouverture, les notifications suivies deviennent disponibles dans le journal ;
+journalAvailableAt les maintient lors des visites suivantes. L’état consultedAt
+n’est défini qu’au POST protégé par CSRF et participation, après vérification
+des identifiants disponibles du destinataire. UPDATE conditionnel, verrou de
+participation et sélection bornée à 50 rendent les répétitions sans double effet.
+Les événements non affichés ne sont pas consultés. Le témoin mobile repose sur
+cet état serveur et ne valide plus le journal par un stockage local automatique.
+
+EmpireDetails ne produit que les données des planètes et flottes du propriétaire
+dans son univers. Les snapshots de stocks restent calculés en lecture seule.
+La migration Version20261112010000 ajoute six colonnes nullables et deux index ;
+elle n’effectue aucune datation ni reprise de notification historique.

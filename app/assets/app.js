@@ -24,3 +24,5 @@ import './styles/building-catalog.css';
 import './styles/mission-reports.css';
 import './styles/game-typography.css';
 import './styles/messaging.css';
+
+import './styles/empire-details.css';

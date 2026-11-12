@@ -28,6 +28,11 @@ class PlayerUniverse
     #[ORM\Column(type: 'json', nullable: true)]
     public ?array $catalogUnlocks = null;
 
+    #[ORM\Column(nullable: true)]
+    public ?\DateTimeImmutable $journalStartedAt = null;
+    #[ORM\Column(nullable: true)]
+    public ?\DateTimeImmutable $overviewVisitedAt = null;
+
     public function isForgotten(): bool { return $this->forgottenAt !== null; }
     public function isPlayerControlled(): bool { return $this->player !== null && !$this->isForgotten(); }
     public function getDisplayName(): string
