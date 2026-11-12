@@ -13,7 +13,7 @@ final class OrbitPolicy
         $host=$target?->owner;
         return $sender->isPlayerControlled() && $sender->player->lockedAt===null
             && $host!==null && $host->isPlayerControlled() && $host->player->lockedAt===null
-            && !$target->npcPlanet && $host->id!==$sender->id
+            && $host->id!==$sender->id
             && $host->universe->id===$sender->universe->id
             && $target->solarSystem->galaxy->universe->id===$sender->universe->id
             && !$this->vacations->isActive($sender) && !$this->vacations->isActive($host)

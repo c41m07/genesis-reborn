@@ -151,11 +151,11 @@ final class OrbitDepartureRequestTest extends WebTestCase
         self::assertSame('returning',$f->status);self::assertSame('invalid',$f->navigation['orbit_request']['status']);
     }
 
-    public function testNpcAndUnownedWorldsCannotReceiveOrbitRequests(): void
+    public function testNpcWorldsAreRefusedButCapturedPlayerColoniesRemainEligible(): void
     {
         $policy=self::getContainer()->get(\App\Service\Fleet\OrbitPolicy::class);$m=$this->player->currentPlayerUniverse;
         self::assertFalse($policy->canRequest($m,$this->npc));self::assertFalse($policy->canRequest($m,$this->virgin));self::assertFalse($policy->canRequest($m,$this->home));
-        $this->target->npcPlanet=true;self::assertFalse($policy->canRequest($m,$this->target));
+        $this->target->npcPlanet=true;self::assertTrue($policy->canRequest($m,$this->target));
     }
 
     public function testRequestViewIsPrivateAndHidesUnknownOriginIncludingSurveillance(): void
@@ -207,6 +207,15 @@ final class OrbitDepartureRequestTest extends WebTestCase
         self::assertSame([],self::getContainer()->get(\App\Service\Fleet\OrbitRequestView::class)->forMember($foreign));
         self::assertFalse(self::getContainer()->get(\App\Service\Fleet\OrbitPolicy::class)->canRequest($foreign,$this->target));
         $this->expectException(\DomainException::class);self::getContainer()->get(FleetService::class)->decideOrbit($foreign,$f->id,true,$key);
+    }
+
+    public function testCapturedNpcColonyUsesItsCurrentOwnerForOrbitConsent(): void
+    {
+        $this->target->npcPlanet=true;$this->em->flush();
+        $f=$this->send('orbit');self::assertSame('pending',$this->request()['status']);
+        self::getContainer()->get(FleetService::class)->decideOrbit($this->peer->currentPlayerUniverse,$f->id,true,$this->request()['key']);
+        $this->clock->sleep($f->travelSeconds+1);self::getContainer()->get(FleetService::class)->arrive($f->id,$f->dispatchToken);
+        self::assertSame('orbiting',$f->status);
     }
 
 }
