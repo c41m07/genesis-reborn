@@ -266,3 +266,34 @@ explicite et sauvegarde vérifiée deux fois (var/backups/lot-f-20261112).
 Les comptages des onze tables suivies sont inchangés ; l’unique ancienne guilde
 garde son tag NULL, aucun signalement inventé. make lint confirme aussi le schéma
 local migré. Aucun serveur Alpha n’est concerné.
+
+## Navigation et rappel volontaire — lot G
+
+FleetNavigation fige au départ les coordonnées, portions système/hyperespace,
+durées et carburant du devis existant. Son checkpoint active est enregistré avant
+tout changement d’échéance (boost ou intervention administrative) ; chaque nouvelle
+phase repart de zéro. Fleet.navigation reste nullable pour les anciens trajets.
+
+FleetRecallService calcule un aperçu sans mutation, puis revérifie sous transaction
+les droits, l’univers, la propriété, le combat, l’échéance, la version du dispatch
+et le carburant. ActionGuard verrouille la participation, puis les planètes et
+la flotte ; un reçu idempotent protège la confirmation. FleetService programme
+le retour avec un nouveau jeton via l’outbox existante. Un ancien message est
+ignoré avant tout traitement de dépôt, y compris après la nouvelle échéance.
+
+Fleet.returnPlanet est une destination de retour facultative distincte de
+homePlanet, qui reste l’origine historique. L’arrivée choisit returnPlanet pour
+un retour rappelé, puis applique les verrous/permissions et le dépôt existants.
+Aucun prélèvement distant ni modification des coûts de mission.
+
+GET/POST /flottes/{id}/rappel : propriétaire et univers vérifiés côté serveur,
+CSRF et version de dispatch à la confirmation. En cas de perte de l’origine,
+le choix de repli est explicite et revérifié ; aucun choix automatique.
+Le JSON cartographique expose seulement le checkpoint et la route de rappel
+autorisés, jamais les paramètres techniques internes du trajet.
+
+Version20261112040000 est appliquée sur la seule base locale après accord explicite,
+sauvegarde gzip/manifeste vérifiée deux fois dans var/backups/lot-g-20261112.
+Les onze comptages suivis et l’empreinte des valeurs historiques de flotte sont
+inchangés ; navigation et return_planet_id des anciennes flottes restent NULL.
+Aucun serveur Alpha concerné.

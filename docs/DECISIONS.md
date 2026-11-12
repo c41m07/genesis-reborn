@@ -1433,3 +1433,15 @@ Le commentaire est facultatif, borné techniquement à 1000 caractères. La mod�
 classe ou marque le signalement traité avec audit, sans nouvelle sanction automatique.
 L’idempotence concerne le même formulaire ; aucun quota de signalements ni règle
 d’équilibrage supplémentaire n’est introduit.
+
+### Précisions du rappel et du repli — 12 novembre 2026
+
+Pour les anciennes flottes, le rappel est autorisé quand son calcul est fiable.
+Si les données sont insuffisantes, le rappel est indisponible avec explication
+et la mission continue normalement ; aucune progression historique n’est inventée.
+Les nouveaux départs enregistrent les informations nécessaires.
+
+Après perte de l’origine, le repli vers la colonie choisie utilise les calculs
+normaux de l’univers au moment du rappel. Seul le carburant encore disponible
+est utilisable : le fret d’hydrogène et les stocks des planètes sont préservés.
+Si le carburant manque, le rappel est refusé sans changement d’état.

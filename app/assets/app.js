@@ -32,3 +32,5 @@ import './styles/fleet-destinations.css';
 import './styles/report-archives.css';
 
 import './styles/player-reports.css';
+
+import './styles/fleet-recall.css';
