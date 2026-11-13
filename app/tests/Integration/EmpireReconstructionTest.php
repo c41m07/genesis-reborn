@@ -120,7 +120,7 @@ final class EmpireReconstructionTest extends KernelTestCase
         $probe=$this->ship('probe',1);$fighter=$this->ship('fighter',1);$this->convert();$probe->quantity=$fighter->quantity=0;
         $this->em->flush();$this->afterCombat();$this->clock->sleep(300);$this->stocks(0);
         $metal=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$this->planet,'resourceType'=>'metal']);$metal->currentStock=1000;
-        $electricity=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$this->planet,'resourceType'=>'electricity']);$electricity->currentStock=100;
+        $electricity=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$this->planet,'resourceType'=>'electricity']);$electricity->currentStock=300;
         $this->em->flush();
         self::assertSame('started',$this->rebuild());self::assertSame('fighter',$this->state()->queueItem->itemSlug);
     }

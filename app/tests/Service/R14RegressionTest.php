@@ -37,7 +37,7 @@ final class R14RegressionTest extends TestCase
                 $price = $prices['ships'][$slug]['costs'][$tier][$research][1];
                 self::assertSame($expected['cost'], $price['old']['costs'], "$slug/$tier/$research/référence historique R14");
                 $quote=$commonPrices['entries']['ships'][$slug]['costs'][$tier][$research][1][1]['new'];
-                $quote['costs']['electricity']=(int)ceil($quote['duration']/60);
+                $quote['costs']['electricity']=100*(int)ceil($quote['duration']/60);
                 self::assertSame($quote['costs'], $costs, "$slug/$tier/$research/nouvelle répartition réelle");
                 if ($research === 'none') {
                     $value = static fn(array $c): int => 2*$c['metal']+4*$c['nano']+8*$c['antimatter']+$c['hydrogen'];

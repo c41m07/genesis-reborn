@@ -7,7 +7,7 @@ L’orientation confirmée est une stratégie au rythme modéré ; les durées d
 ## État du projet
 
 - Parcours : rubriques liées par des ancres dans Flottes, Inventaire, Projets et Rapports ; confirmations d’annulation avec dépendances et remboursements estimés ; retours aux rapports conservant catégorie, archives et page. Profil, Préférences et Vacances sont reliés ; l’accueil public présente des captures d’un compte de démonstration. [Suivi du lot](docs/PARCOURS_UI_UX.md).
-- Opérations : recherches, vaisseaux et défenses paient une fois `ceil(durée effective / 60)` en électricité. Les accélérations ne recalculent pas le coût ; les annulations remboursent 25 % du paiement conservé, dans la place disponible. Les reconstructions automatiques suivent aussi cette règle.
+- Opérations : recherches, vaisseaux et défenses paient une fois `100 × ceil(durée effective / 60)` en électricité. Soit 100 E par minute entamée sur la commande entière ; un lot est arrondi une seule fois. Les accélérations ne recalculent pas le coût ; les annulations remboursent 25 % du paiement conservé, dans la place disponible. Les reconstructions automatiques suivent aussi cette règle.
 - Catalogues : interrupteur « Vue condensée » mémorisé sur cet appareil, sans modifier les actions ni les prérequis. Les coûts insuffisants indiquent les quantités manquantes. Le wiki propose une recherche par chapitre utilisable sans JavaScript et des liens directs. Les points totaux suivent immédiatement le commandant dans le classement.
 - Colonies : comparaison par tableau (stocks / capacités, solde net horaire, commandes en file), avec accès direct à chaque colonie. La vue générale affiche le bilan économique et des estimations au rythme actuel, issues du moteur de production. Bases métal et nano : 10/h chacun avant multiplicateurs ; production suspendue en vacances.
 - Navigation : les raccourcis « Explorer la galaxie » ouvrent la carte interactive ; la liste des systèmes reste accessible. Le guide technologique se trouve dans Développement et les événements restent accessibles depuis Opérations, même sans événement actif.
@@ -574,4 +574,4 @@ cases sont conservés pour les lecteurs d’écran. Le paragraphe explicatif des
 archives et la phrase technique sur le calcul du préavis en Recherche sont
 retirés des pages concernées. Les règles d’archive et de détection ne changent pas.
 
-- [Étude du coût électrique des opérations](docs/ETUDE_COUT_ELECTRIQUE.md) : coefficient de 1 E/minute validé, hypothèses et effets des lots, rangs et vitesses.
+- [Étude du coût électrique des opérations](docs/ETUDE_COUT_ELECTRIQUE.md) : coût de 100 E par minute entamée validé, hypothèses et effets des lots, rangs et vitesses.

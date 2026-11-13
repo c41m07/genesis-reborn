@@ -1529,8 +1529,10 @@ Le revenu de base total est désormais de **10 métal/h et 10 nano/h**, à vites
 
 ### Électricité ponctuelle des opérations — décision du 13 novembre 2026
 
-Les recherches, vaisseaux et défenses paient une fois à l’ajout de chaque commande : **arrondi supérieur de la durée effective en secondes / 60**. La durée retenue inclut les réductions et multiplicateurs applicables au moment de l’ajout ; les quantités sont calculées comme une commande entière, avec un seul arrondi final. Ce coût s’ajoute aux autres ressources et à un éventuel coût électrique défini par le catalogue. Les bâtiments ne paient pas ce nouveau coût. Ce n’est pas une consommation horaire continue.
+Les recherches, vaisseaux et défenses paient une fois à l’ajout de chaque commande : **100 × arrondi supérieur de la durée effective en secondes / 60**. La durée retenue inclut les réductions et multiplicateurs applicables au moment de l’ajout ; les quantités sont calculées comme une commande entière, avec un seul arrondi final. Ce coût s’ajoute aux autres ressources et à un éventuel coût électrique défini par le catalogue. Les bâtiments ne paient pas ce nouveau coût. Ce n’est pas une consommation horaire continue.
 
 Les coûts payés sont figés avec la commande. Une accélération ultérieure ne recalcule pas le prix et ne rembourse aucune électricité. Une annulation rembourse 25 % des coûts effectivement payés, électricité comprise, pour la commande et chaque dépendance annulée, dans la capacité disponible de chaque colonie payeuse. La capture conserve sa règle d’annulation sans remboursement. Les reconstructions automatiques des empires oubliés paient aussi ce coût ; leurs conditions de ressources restent applicables.
 
 Les aperçus et maxima constructibles utilisent le même calculateur que les prélèvements serveur. Les commandes déjà enregistrées gardent leurs coûts payés : aucune taxe rétroactive ni migration. L’[étude chiffrée](ETUDE_COUT_ELECTRIQUE.md) conserve les hypothèses et les risques de blocage des gros lots.
+
+Précision validée le 13 novembre 2026 : le coût électrique initialement approuvé à 1 E par minute entamée est multiplié par 100. L’arrondi porte toujours une seule fois sur la durée entière de la commande, avant multiplication. Une commande de 60 s paie 100 E ; 61 s paient 200 E. Les coûts déjà payés ne sont pas recalculés rétroactivement.

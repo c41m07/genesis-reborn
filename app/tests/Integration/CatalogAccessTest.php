@@ -106,7 +106,7 @@ final class CatalogAccessTest extends KernelTestCase
         $items=$this->em->getRepository(QueueItem::class)->findBy([],['id'=>'ASC']);self::assertCount(2,$items);
         self::assertSame(2,$items[0]->quantity);self::assertSame(3,$items[1]->quantity);
         $catalog=self::getContainer()->get(\App\Service\Catalog\GameCatalog::class);
-        self::assertSame($catalog->costs($catalog->get('ships','heavy_fighter'),1,2)+['electricity'=>20],$items[0]->paidCosts);
+        self::assertSame($catalog->costs($catalog->get('ships','heavy_fighter'),1,2)+['electricity'=>2000],$items[0]->paidCosts);
         $items[0]->startedAt=new \DateTimeImmutable('-1 day');$this->em->flush();$queue->synchronize($this->membership);
         self::assertSame(0,$this->em->getRepository(QueueItem::class)->count());
         self::assertSame(2,$this->em->getRepository(FleetShip::class)->findOneBy(['slug'=>'heavy_fighter','tier'=>'basic'])->quantity);

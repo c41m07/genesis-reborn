@@ -53,7 +53,7 @@ final class CatalogCostCompositionTest extends TestCase
             $tech=$ranks?($group==='buildings'?['nanomaterial_synthesis'=>$ranks,'engineering_foundations'=>$ranks]:['naval_engineering'=>$ranks]):[];
             foreach($levels as $level=>$quantities)foreach($quantities as $quantity=>$expected){
                 ++$count;$actual=$operation->calculate($catalog->getTierForUniverse($universe,$group,$slug,$tier),$group,(int)$level,(int)$quantity,[],$catalog->forUniverse($universe),$tech);
-                if($group!=='buildings') $expected['new']['costs']['electricity']=(int)ceil($expected['new']['duration']/60);
+                if($group!=='buildings') $expected['new']['costs']['electricity']=100*(int)ceil($expected['new']['duration']/60);
                 self::assertSame($expected['new'],$actual,"$group/$slug/$tier/$profile/$level/$quantity");
                 self::assertSame($expected['old']['duration'],$actual['duration']);
                 $delta=$this->value($actual['costs'])-$this->value($expected['old']['costs']);

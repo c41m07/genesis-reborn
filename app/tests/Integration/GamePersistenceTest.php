@@ -77,7 +77,7 @@ final class GamePersistenceTest extends KernelTestCase
         $service->add($member,$planet,'technologies','engineering_foundations',1,$secondKey);
         $items=$this->em->getRepository(QueueItem::class)->findBy(['playerUniverse'=>$member,'queueType'=>'research'],['id'=>'ASC']);
         self::assertCount(2,$items);
-        foreach($items as $item) self::assertSame((int)ceil($item->durationSeconds/60),$item->paidCosts['electricity']);
+        foreach($items as $item) self::assertSame(100*(int)ceil($item->durationSeconds/60),$item->paidCosts['electricity']);
         $electricity=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$planet,'resourceType'=>'electricity']);
         $paid=array_sum(array_map(fn($item)=>$item->paidCosts['electricity'],$items));
         self::assertEqualsWithDelta(10000-$paid,$electricity->currentStock,1e-7);
@@ -94,6 +94,24 @@ final class GamePersistenceTest extends KernelTestCase
         self::assertEqualsWithDelta(10000-$paid*.75,$electricity->currentStock,1e-7);
         $service->cancel($member,$itemId,str_repeat('f',32));
         self::assertEqualsWithDelta(10000-$paid*.75,$electricity->currentStock,1e-7);
+    }
+
+    public function testElectricityIncreaseRefusesResearchWithoutSpendingOtherResources(): void
+    {
+        $this->clock();$player=$this->player('ElectricityLimit');$planet=$this->join($player,'omega-1');
+        $lab=new PlanetBuilding();$lab->planet=$planet;$lab->slug='lab';$lab->level=1;$this->em->persist($lab);
+        $electricity=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$planet,'resourceType'=>'electricity']);
+        $electricity->currentStock=999;$this->em->flush();
+        $metal=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$planet,'resourceType'=>'metal']);$before=$metal->currentStock;
+        try {
+            self::getContainer()->get(QueueService::class)->add($player->currentPlayerUniverse,$planet,'technologies','engineering_foundations',1,str_repeat('9',32));
+            self::fail('Le coût de 1 000 E doit être refusé avec 999 E.');
+        } catch(\DomainException $error) {
+            self::assertStringContainsString('Ressources insuffisantes',$error->getMessage());
+        }
+        self::assertSame(0,$this->em->getRepository(QueueItem::class)->count());
+        self::assertEqualsWithDelta($before,$metal->currentStock,1e-7);
+        self::assertEqualsWithDelta(999,$electricity->currentStock,1e-7);
     }
 
     public function testCancellationPreviewRefusesAnotherEmpire(): void
