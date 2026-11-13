@@ -220,7 +220,10 @@ test('Hub de guilde : création, équipage et discussion commune', async ({ page
   await expect(page.getByRole('columnheader')).toHaveText(['Rang', 'Guilde', 'Joueurs', 'Points bâtiments', 'Points recherches', 'Points flotte', 'Points totaux ↓', 'Médiane des points joueurs']);
   await expect(page.getByRole('row').filter({ hasText: guildName })).toHaveClass(/ranking-row--guild/);
   await memberPage.goto('/diplomatie');
-  await memberPage.getByText('Gestion de la guilde', { exact: true }).click();
+  await memberPage.getByRole('link', { name: 'Gestion de la guilde', exact: true }).focus();
+  await memberPage.keyboard.press('Enter');
+  await expect(memberPage).toHaveURL(/#guild-management-title$/);
+  await expect(memberPage.getByRole('heading', { name: 'Gestion de la guilde', exact: true })).toBeVisible();
   await memberPage.getByRole('button', { name: 'Quitter la guilde' }).click();
   const enemyGuild = 'Enemy-' + crypto.randomUUID().slice(0, 8);
   await memberPage.getByLabel('Nom de votre nouvelle guilde').fill(enemyGuild);await memberPage.getByLabel('Tag de la guilde', { exact:true }).fill(crypto.randomUUID().replaceAll('-', '').slice(0,5).toUpperCase());
