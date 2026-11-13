@@ -4,7 +4,7 @@
 
 Cadrage commencé le 13 novembre 2026 sur `feature/outils-strategiques-et-recherche`, depuis `dev` au commit `f3b9623`, après fusion autorisée de la [PR #54](https://github.com/c41m07/genesis-reborn/pull/54). Sa CI complète a réussi sur `e473255` : 883 tests PHP, 13 tests Python et 184 scénarios navigateur. Cela valide le lot 1, pas les fonctionnalités du lot 2.
 
-La PR [#55](https://github.com/c41m07/genesis-reborn/pull/55), distincte vers `dev`, contient maintenant les trois fonctionnalités. Les vérifications sont en cours ; aucune fusion ni aucun déploiement du lot 2. La migration des compositions a été appliquée uniquement à la base locale, avec accord explicite après sauvegarde et vérification d’intégrité. Aucune application sur Alpha.
+La PR [#55](https://github.com/c41m07/genesis-reborn/pull/55) a intégré les trois fonctionnalités dans `dev` après CI complète réussie sur `8559445` : 900 tests PHP, 13 tests Python et 188 scénarios navigateur. La préparation de l’Alpha est suivie dans la PR #56 ; aucun déploiement n’est effectué. La migration des compositions a été appliquée uniquement à la base locale, avec accord explicite après sauvegarde et vérification d’intégrité. Aucune application sur Alpha.
 
 ## Décisions confirmées par le propriétaire
 
