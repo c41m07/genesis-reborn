@@ -36,6 +36,7 @@
 
 ## Accessibilité (RGAA) et SEO
 
+- Textes d’aide dans l’interface : ajouter uniquement des précisions utiles, courtes et placées au bon endroit. Éviter les explications évidentes ou répétitives et les mentions qui surchargent les libellés, débordent des menus ou gênent la lecture. Conserver les informations nécessaires pour comprendre une action, ses conditions ou ses conséquences.
 - Pour toute modification d’interface, vérifier les points RGAA concernés : structure des titres, libellés des champs, messages d’erreur compréhensibles, navigation au clavier, visibilité du focus et contrastes. Ces vérifications ciblées ne constituent pas à elles seules un audit de conformité RGAA.
 - Donner aux images informatives un texte alternatif pertinent. Pour le logo, utiliser `alt="Genesis Reborn"` ; pour un emblème purement décoratif, utiliser `alt=""` afin qu’il soit ignoré par les lecteurs d’écran. Adapter l’alternative si l’image porte une information ou constitue seule un lien ou un bouton.
 - Prévoir dans le `<head>` une meta description adaptée au contenu de chaque page publique indexable. Pour l’accueil, utiliser : `<meta name="description" content="Genesis Reborn, jeu de stratégie spatiale par navigateur : bâtis ta colonie, explore des systèmes inconnus et forge ton empire.">`.
