@@ -38,6 +38,11 @@ test('Les détails des colonies sont accessibles au survol, au clavier et au tou
   const trigger=card.getByRole('button',{name:/Oreaiel — Vaisseaux et ressources/});
   const colonyPanel=card.locator('.empire-details');
   await expect(colonyPanel).toBeHidden();
+  await trigger.scrollIntoViewIfNeeded();
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    await Promise.all([...document.querySelectorAll('.planet-index-card img')].map(image => image.decode().catch(() => {})));
+  });
   const before=await card.boundingBox();
   await trigger.hover();
   await expect(colonyPanel).toBeVisible();
