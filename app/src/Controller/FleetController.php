@@ -13,7 +13,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final class FleetController extends AbstractController
 {
     #[Route('/flottes',name:'app_fleets',methods:['GET'])]
-    public function index(Request $request,UniverseContext $context,GameRepository $repo,GameCatalog $catalog,\App\Service\Queue\QueueService $queues,CombatEventService $combats,\App\Service\Colony\EmpireDetails $details,DestinationCatalogue $destinations,\App\Service\Fleet\OrbitRequestView $orbitView): Response
+    public function index(Request $request,UniverseContext $context,GameRepository $repo,GameCatalog $catalog,\App\Service\Queue\QueueService $queues,CombatEventService $combats,\App\Service\Colony\EmpireDetails $details,DestinationCatalogue $destinations,\App\Service\Fleet\OrbitRequestView $orbitView,\App\Service\Fleet\FleetCompositionService $compositions): Response
     {
         $m=$context->membership();$queues->synchronize($m);$idle=[];
         foreach($repo->all(Fleet::class,['playerUniverse'=>$m,'status'=>'idle']) as $f) { $ships=array_filter($repo->all(FleetShip::class,['fleet'=>$f]),fn($s)=>$s->quantity>0);if($ships) $idle[]=['fleet'=>$f,'ships'=>$ships]; }
@@ -34,8 +34,22 @@ final class FleetController extends AbstractController
         $origin=$request->getSession()->get('selected_planet_'.$m->id,0);
         usort($idle,fn($a,$b)=>(($a['fleet']->homePlanet->id===$planetId?2:($a['fleet']->homePlanet->id===$origin?0:1)))<=>(($b['fleet']->homePlanet->id===$planetId?2:($b['fleet']->homePlanet->id===$origin?0:1))));
         $activeFleets=$repo->all(Fleet::class,['playerUniverse'=>$m,'status'=>['traveling','returning','attacking','defending','orbiting','orbit_pending','occupying']],['arrivalAt'=>'ASC']);$combatEvents=[];foreach($activeFleets as $activeFleet){$participant=$repo->one(CombatParticipant::class,['fleet'=>$activeFleet]);if($participant && $participant->combatEvent->status==='pending')$combatEvents[$activeFleet->id]=$participant->combatEvent;}
+        $loaded=[];$loadedOrigin=0;
+        if($request->query->getInt('composition')) {
+            try {
+                $saved=$compositions->owned($m,$request->query->getInt('composition'));
+                $source=$repo->find(Planet::class,$request->query->getInt('origin'));
+                if(!$source) throw new \DomainException('Colonie inaccessible.');
+                $plan=$compositions->plan($m,$saved,$source);
+                if(!hash_equals($plan['fingerprint'],$request->query->getString('confirmation')) || ($plan['missing'] && !$request->query->getBoolean('adjust'))) {
+                    $this->addFlash('error','Les disponibilités ou la composition ont changé. Vérifiez les quantités avant de charger.');
+                    return $this->redirectToRoute('app_fleet_composition_load',['id'=>$saved->id,'origin'=>$source->id]);
+                }
+                $loaded=$plan['missing']?$plan['available']:$saved->ships;$loadedOrigin=$source->id;
+            } catch(\DomainException) {throw $this->createNotFoundException('Composition ou colonie inaccessible.');}
+        }
         $orbitRequests=$orbitView->forMember($m);
-        return $this->render('fleet/index.html.twig',['fleet_details'=>$details->fleets($m,$activeFleets),'prefill'=>['mission'=>$mission,'system'=>$systemId,'planet'=>$planetId,'coordinates'=>$prefillCoordinates,'mode'=>$mode],'active_fleets'=>$activeFleets,'combat_events'=>$combatEvents,'membership'=>$m,'fleets'=>$repo->all(Fleet::class,['playerUniverse'=>$m],['id'=>'DESC']),'idle'=>$idle,'systems'=>$systems,'destination_choices'=>$destinationChoices,'catalog'=>$catalog->all('ships'),'resources'=>$catalog->rules()['resources'],'fuel_pending'=>$catalog->rules()['fuel_ratio_policy']==='pending','orbit_requests'=>$orbitRequests,'fleet_limit'=>(int)$universeConfig['limits']['max_fleet_size'],'conquest_enabled'=>$conquestEnabled]);
+        return $this->render('fleet/index.html.twig',['loaded_composition'=>$loaded,'loaded_origin'=>$loadedOrigin,'fleet_details'=>$details->fleets($m,$activeFleets),'prefill'=>['mission'=>$mission,'system'=>$systemId,'planet'=>$planetId,'coordinates'=>$prefillCoordinates,'mode'=>$mode],'active_fleets'=>$activeFleets,'combat_events'=>$combatEvents,'membership'=>$m,'fleets'=>$repo->all(Fleet::class,['playerUniverse'=>$m],['id'=>'DESC']),'idle'=>$idle,'systems'=>$systems,'destination_choices'=>$destinationChoices,'catalog'=>$catalog->all('ships'),'resources'=>$catalog->rules()['resources'],'fuel_pending'=>$catalog->rules()['fuel_ratio_policy']==='pending','orbit_requests'=>$orbitRequests,'fleet_limit'=>(int)$universeConfig['limits']['max_fleet_size'],'conquest_enabled'=>$conquestEnabled]);
     }
     #[Route('/flottes/destinations',name:'app_fleet_destinations',methods:['GET'])]
     public function destinations(Request $request,UniverseContext $context,DestinationCatalogue $destinations): Response
@@ -95,6 +109,7 @@ final class FleetController extends AbstractController
             $mode=(string)$request->request->get('destination_mode','custom');
             $destination=$destinations->resolve($m,$mission,$mode,(string)$request->request->get('coordinates',''),$request->request->get($mode.'_destination'));
             $result=$service->preview($m,$origin,$mission,(int)$destination->id,$request->request->all('ships'),$ratio,$request->request->all('cargo'),$orbitHours);
+            if($request->request->getBoolean('require_exact_composition') && $result['ship_adjusted']) throw new \DomainException('La composition n’est plus disponible exactement. Modifiez vos quantités ou vérifiez à nouveau la composition enregistrée.');
             return $this->json($result,200,['Cache-Control'=>'private, no-store']);
         } catch(\DomainException $e) { return $this->json(['error'=>$e->getMessage()],422,['Cache-Control'=>'private, no-store']); }
     }
@@ -135,7 +150,7 @@ final class FleetController extends AbstractController
                 $orbitHours=filter_var($request->request->get('orbit_hours',0),FILTER_VALIDATE_FLOAT);
                 if($orbitHours===false) throw new \DomainException('Durée d’orbite invalide.');
             }
-            $adjusted=$service->send($m,$origin,$mission,$target,$request->request->all('ships'),$ratio,$request->request->all('cargo'),(string)$request->request->get('request_key'),$orbitHours);
+            $adjusted=$service->send($m,$origin,$mission,$target,$request->request->all('ships'),$ratio,$request->request->all('cargo'),(string)$request->request->get('request_key'),$orbitHours,$request->request->getBoolean('require_exact_composition'));
             $this->addFlash('success','Flotte envoyée. Carburant aller-retour réservé.'.($adjusted?' Quantités ajustées aux stocks et capacités disponibles.':''));
         } catch(\DomainException $e) { $this->addFlash('error',$e->getMessage()); }
         return $this->redirectToRoute('app_fleets');

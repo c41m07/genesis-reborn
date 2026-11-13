@@ -657,3 +657,35 @@ Les coûts payés sont figés avec la commande. Une accélération ultérieure n
 Les aperçus et maxima constructibles utilisent le même calculateur que les prélèvements serveur. Les commandes déjà enregistrées gardent leurs coûts payés : aucune taxe rétroactive ni migration. L’[étude chiffrée](ETUDE_COUT_ELECTRIQUE.md) conserve les hypothèses et les risques de blocage des gros lots.
 
 Précision validée le 13 novembre 2026 : le coût électrique initialement approuvé à 1 E par minute entamée est multiplié par 100. L’arrondi porte toujours une seule fois sur la durée entière de la commande, avant multiplication. Une commande de 60 s paie 100 E ; 61 s paient 200 E. Les coûts déjà payés ne sont pas recalculés rétroactivement.
+
+
+## Outils stratégiques personnels (lot 2)
+
+Le simulateur utilise les statistiques du catalogue de l’univers actif, les rangs,
+recherches, bonus de forteresse et le moteur des combats réels. Le résultat est
+un tirage illustratif reproductible avec la même graine et les mêmes paramètres,
+pas une probabilité ni une garantie de victoire. Les deux camps, leurs arrivées
+et les défenses sont saisis ; occupations, interventions non saisies, voyages,
+butin et reconstruction ne sont pas estimés. Aucun ordre, perte ou paiement
+réel n’est appliqué. Les limites de calcul sont décrites dans le
+[suivi technique](CADRAGE_OUTILS_STRATEGIQUES.md).
+
+Seuls ses vaisseaux disponibles et un rapport d’espionnage encore accessible
+peuvent être repris automatiquement. Le rapport est daté ; ses catégories absentes
+restent inconnues, même si le formulaire propose des hypothèses à zéro. Une
+modification de ses valeurs est présentée comme une hypothèse.
+
+Un empire peut enregistrer 20 compositions au maximum dans son univers, avec
+nom, types, rangs et quantités, puis les charger depuis une de ses colonies.
+Les manques sont présentés avant toute acceptation explicite des quantités
+disponibles. Charger ne construit ni n’envoie de flotte. Le contrôle final
+d’envoi conserve les disponibilités, permissions et protections habituelles ;
+une composition chargée devenue indisponible n’est pas réduite silencieusement.
+
+La recherche dans les messages reste limitée aux conversations privées du
+joueur, à sa guilde actuelle et au Global de son univers. Lire un résultat de
+recherche ne marque pas la conversation comme lue ; l’ouverture de la
+conversation normale conserve son comportement de lecture. La recherche dans
+les rapports conserve leurs droits et archives personnelles. Les filtres par
+nom portent sur les noms actuellement conservés, sans reconstituer un historique
+absent. Les résultats sont paginés par 50 et les dates utilisent le fuseau choisi.

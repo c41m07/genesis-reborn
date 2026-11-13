@@ -1,7 +1,7 @@
 {% extends 'base.html.twig' %}
 {% import 'ui/macros.html.twig' as ui %}
 {% block title %}Messages · Genesis Reborn{% endblock %}
-{% block body %}
+{% block body %}<p><a class="secondary" href="{{ path('app_message_search') }}">Rechercher dans les messages</a>{% if peer %} <a class="secondary" href="{{ path('app_message_search',{channel:'private',with:peer.id}) }}">Chercher dans cette conversation</a>{% endif %}</p>
 <div class="page-heading"><div><h1>Messages</h1><p>Votre centre de communication dans cet univers.</p></div></div>
 <div class="inbox-layout">
     <aside class="panel inbox-sidebar" aria-label="Boîte de réception">

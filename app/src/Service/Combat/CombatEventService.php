@@ -42,6 +42,7 @@ final class CombatEventService
         private ResourceService $resources,
         private CombatSimulator $simulator,
         private TechnologyEffectCalculator $technologyEffects,
+        private CombatUnitFactory $unitFactory,
         private RelationResolver $relations,
         private LeaderboardService $leaderboard,
         private NotificationService $notifications,
@@ -418,14 +419,9 @@ final class CombatEventService
                 $fleet = $participant->fleet;
                 $membershipId = $participant->playerUniverse->id;
                 $technologyLevels[$membershipId] ??= $this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $participant->playerUniverse]);
-                $units = [];
-                foreach ($this->repo->all(FleetShip::class, ['fleet' => $fleet], ['id' => 'ASC']) as $fleetShip) {
-                    if ($fleetShip->quantity < 1) {
-                        continue;
-                    }
-                    $units[] = $this->catalog->getTierForUniverse($participant->playerUniverse->universe, 'ships', $fleetShip->slug, $fleetShip->tier) + ['quantity' => $fleetShip->quantity, 'tier' => $fleetShip->tier];
-                }
-                $units = $this->technologyEffects->applyToShips($units, $technologyLevels[$membershipId], $participant->playerUniverse->universe);
+                $composition=[];
+                foreach($this->repo->all(FleetShip::class,['fleet'=>$fleet],['id'=>'ASC']) as $fleetShip) if($fleetShip->quantity>0) $composition[$fleetShip->slug][$fleetShip->tier]=$fleetShip->quantity;
+                $units=$this->unitFactory->ships($participant->playerUniverse->universe,$composition,$technologyLevels[$membershipId]);
                 $role = $participant->role;
                 $camp = $role === 'attacker' ? ($campByMembership[$membershipId] ?? 'attacker-' . $membershipId) : 'defenders';
                 if($occupationContext!==null) $camp=$this->occupationCamp($participant->playerUniverse,$occupationContext,$camp);
@@ -472,17 +468,9 @@ final class CombatEventService
                     if ($defense->quantity < 1) {
                         continue;
                     }
-                    $definition = $this->catalog->getTierForUniverse($event->planet->solarSystem->galaxy->universe, 'defenses', $defense->slug, $defense->tier);
-                    $defender = $event->planet->owner;
-                    $defenderLevels = $defender ? $this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $defender]) : [];
-                    $definition = $this->technologyEffects->applyToDefenses([$definition], $defenderLevels, $event->planet->solarSystem->galaxy->universe)[0];
-                    $fortressLevels = $this->repo->levelsByTier(PlanetBuilding::class, ['planet' => $event->planet])['fortress'] ?? [];
-                    $fortress = $this->catalog->getForUniverse($event->planet->solarSystem->galaxy->universe, 'buildings', 'fortress')['effect'] ?? [];
-                    if (($fortress['targets'] ?? null) === 'ground_defenses' && ($fortress['stat'] ?? null) === 'hp') {
-                        $fortressDefinition=$this->catalog->get('buildings','fortress');
-                        $fortressBonus=\App\Service\Catalog\GameCatalog::diminishingBonus($fortressLevels,(float)($fortress['max_bonus']??25),(int)($fortressDefinition['max_level']??25));
-                        $definition['hp'] *= 1+$fortressBonus/100;
-                    }
+                    $defender=$event->planet->owner;
+                    $defenderLevels=$defender?$this->repo->levelsByTier(PlayerTechnology::class,['playerUniverse'=>$defender]):[];
+                    $definition=$this->unitFactory->defense($event->planet->solarSystem->galaxy->universe,$defense->slug,$defense->tier,$defenderLevels,$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$event->planet])['fortress']??[]);
                     $defenseSnapshots[] = $definition + [
                         'id' => (string) $defense->id,
                         'camp' => $this->occupationNpcCamp($event,$occupationContext),

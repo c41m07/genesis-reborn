@@ -50,6 +50,10 @@ export default class extends Controller {
         for (const button of this.cargoMaxTargets) button.disabled = true;
     }
     quote({ detail }) {
+        if (this.element.querySelector('[name="require_exact_composition"][value="1"]') && detail.ship_adjusted) {
+            this.statusTarget.textContent = 'Composition devenue indisponible : vérifiez les quantités avant envoi.';
+            return;
+        }
         this.capacity = detail.freight_capacity;
         this.available = detail.cargo_available;
         for (const input of this.shipTargets) {

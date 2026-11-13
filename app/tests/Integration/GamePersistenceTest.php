@@ -249,6 +249,21 @@ final class GamePersistenceTest extends KernelTestCase
         $sourceBeforeLanding=self::getContainer()->get(ResourceService::class)->snapshot($origin)['hydrogen']['stock'];$returnHydrogen=max(0.0,($fleet->cargo['hydrogen']??0)-$fleet->reservedFuel);$this->land($fleet,$service);self::assertSame('completed',$fleet->status);
         self::assertEqualsWithDelta($sourceBeforeLanding+$returnHydrogen,$resource($origin,'hydrogen')->currentStock,.000001);
     }
+    public function testExactSavedCompositionRejectsLostAvailabilityWithoutEffects(): void
+    {
+        $p=$this->player();$origin=$this->join($p);$idle=$this->ships($origin,['transport'=>2]);$m=$p->currentPlayerUniverse;
+        $target=$this->em->getRepository(Planet::class)->findOneBy(['solarSystem'=>$origin->solarSystem,'owner'=>null]);$target->owner=$m;
+        self::getContainer()->get(ResourceService::class)->initialize($target);$this->em->flush();
+        $before=$this->em->getConnection()->fetchAllAssociative('SELECT * FROM planet_resource ORDER BY id');
+        try {
+            self::getContainer()->get(\App\Service\Fleet\FleetService::class)->send($m,$origin,'transport',$target->id,['transport'=>3],.5,[],str_repeat('d',32),0,true);
+            self::fail('Une composition périmée ne doit pas être réduite silencieusement.');
+        } catch(\DomainException $e) {self::assertStringContainsString('plus disponible exactement',$e->getMessage());}
+        self::assertSame($before,$this->em->getConnection()->fetchAllAssociative('SELECT * FROM planet_resource ORDER BY id'));
+        self::assertSame(2,(int)$this->em->getConnection()->fetchOne('SELECT quantity FROM fleet_ship WHERE fleet_id=?',[$idle->id]));
+        self::assertSame(0,(int)$this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM fleet WHERE status='traveling'"));
+        self::assertSame(0,(int)$this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM action_receipt'));
+    }
     public function testDedicatedFuelTankDoesNotProvideFreightCapacity(): void
     {
         $p=$this->player();$origin=$this->join($p);$this->ships($origin,['probe'=>1]);$m=$p->currentPlayerUniverse;
@@ -257,6 +272,7 @@ final class GamePersistenceTest extends KernelTestCase
         self::assertSame(0.0, (float) $quote['freight_capacity']);
         self::assertSame([], $quote['freight']);
         self::assertTrue($quote['adjusted']);
+        self::assertFalse($quote['ship_adjusted'],'Un fret ajusté ne doit pas être confondu avec des vaisseaux manquants.');
     }
     public static function colonyShipKits(): array
     {
