@@ -1,6 +1,6 @@
 {% extends report_layout|default('base.html.twig') %}
 {% block title %}Rapport d’espionnage · Genesis Reborn{% endblock %}
-{% block body %}
+{% block body %}{% if not monitoring_context|default(null) %}<p><a class="secondary" href="{{ path('app_combat_simulation',{report:report.id}) }}">Reprendre ces renseignements dans le simulateur</a></p>{% endif %}
 <div class="mission-report">
 {% if monitoring_context|default(null) %}<p class="admin-monitor-note">{{ monitoring_context }}</p>{% endif %}
 {% include 'ui/report_back_link.html.twig' %}

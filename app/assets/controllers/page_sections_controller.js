@@ -3,7 +3,7 @@ import { Controller } from '@hotwired/stimulus';
 export default class extends Controller {
     connect() {
         const main = this.element.querySelector('main');
-        if (!main || ['vue-generale', 'flottes', 'wiki', 'projet-detail', 'accueil-public'].includes(this.element.dataset.uiPage)) return;
+        if (!main || ['vue-generale', 'flottes', 'wiki', 'projet-detail', 'accueil-public', 'recherche-messages'].includes(this.element.dataset.uiPage)) return;
         if (main.querySelector('.page-contents, nav a[href^="#"]')) return;
         const seen = new Set();
         const headings = [...main.querySelectorAll('h2')].filter(heading => {
