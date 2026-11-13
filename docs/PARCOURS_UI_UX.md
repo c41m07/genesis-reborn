@@ -1,6 +1,6 @@
 # Parcours UI/UX — suivi du 13 novembre 2026
 
-Branche unique : `feature/amelioration-parcours-ui-ux`, créée depuis `origin/dev` vérifiée à `7189f45`. Aucun push, PR publiée, fusion ou déploiement. Les captures `docs/PGimg` restent locales, intactes et exclues des commits. Les trois documents Work nommés dans AGENTS.md ne sont pas présents dans les fichiers du dépôt examinés ; aucune validation des phases Work n’est revendiquée.
+Branche unique : `feature/amelioration-parcours-ui-ux`, créée depuis `origin/dev` vérifiée à `7189f45`. Branche publiée et [PR #54 ouverte vers dev](https://github.com/c41m07/genesis-reborn/pull/54). Aucune fusion ni aucun déploiement. Les captures `docs/PGimg` restent locales, intactes et exclues des commits. Les trois documents Work nommés dans AGENTS.md ne sont pas présents dans les fichiers du dépôt examinés ; aucune validation des phases Work n’est revendiquée.
 
 ## Périmètre réalisé
 
@@ -37,4 +37,4 @@ Résultats examinés :
 
 ## Limites
 
-Aucune CI GitHub exécutée dans ce lot local ; la CI complète de la dernière PR reste requise avant fusion. Aucun accès externe au wiki documentaire n’a été utilisé : le manuel livré avec le jeu et ses sources locales sont synchronisés. Les vérifications ciblées d’accessibilité ne constituent pas un audit RGAA complet. Aucun simulateur, composition enregistrée ou recherche avancée des rapports n’est ajouté.
+CI GitHub lancée sur la PR #54 ; consulter ses résultats sur la dernière version de la branche. La réussite complète reste requise avant fusion, qui nécessite l’accord explicite du propriétaire. Aucun accès externe au wiki documentaire n’a été utilisé : le manuel livré avec le jeu et ses sources locales sont synchronisés. Les vérifications ciblées d’accessibilité ne constituent pas un audit RGAA complet. Aucun simulateur, composition enregistrée ou recherche avancée des rapports n’est ajouté.
