@@ -137,6 +137,8 @@ final class VacationPreferencesTest extends WebTestCase
         $this->client->request('GET','/profil/preferences');
         self::assertResponseIsSuccessful();
         self::assertSelectorNotExists('#vacances');
+        self::assertSelectorExists('#vacances-info');
+        self::assertSelectorNotExists('form[action$="/vacances/activer"]');
         $this->client->request('POST','/profil/preferences/vacances/activer',['confirm'=>'1']);
         self::assertResponseStatusCodeSame(403);
     }
@@ -168,6 +170,8 @@ final class VacationPreferencesTest extends WebTestCase
         $this->client->request('GET','/profil/preferences');
         self::assertResponseIsSuccessful();
         self::assertSelectorNotExists('#vacances');
+        self::assertSelectorExists('#vacances-info');
+        self::assertSelectorNotExists('form[action$="/vacances/activer"]');
         $id=$this->player->currentPlayerUniverse->id;
         $request=$this->client->getRequest();
         $stack=static::getContainer()->get('request_stack');

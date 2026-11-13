@@ -23,7 +23,7 @@ test('Thème sombre par défaut : dashboard structuré et navigation responsive'
   await expect(metrics).toHaveCount(4);
   await expect(metrics.nth(1)).toContainText('Classement');
   await expect(metrics.nth(1).locator('strong')).toHaveText(/^#\d+$/);
-  await expect(metrics.nth(3)).toContainText('Alliance');
+  await expect(metrics.nth(3)).toContainText('Guilde');
   await expect(metrics.nth(3)).toHaveAttribute('href', '/diplomatie');
   await page.setViewportSize({ width: 1440, height: 900 });
 

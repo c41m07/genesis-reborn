@@ -1,0 +1,17 @@
+<div id="resource-economy-{{ slug }}" class="empire-details resource-economy" popover="auto" role="region" aria-label="Bilan économique : {{ resource.label }}" data-hover-details-target="panel" data-action="pointerenter->hover-details#enter pointerleave->hover-details#leave toggle->hover-details#changed toggle->resource-strip#syncEconomy">
+<div class="empire-details-heading"><strong>{{ resource.label }} · {{ chrome.planet.name }}</strong><button type="button" class="resource-economy-close" popovertarget="resource-economy-{{ slug }}" popovertargetaction="hide" aria-label="Fermer les détails de {{ resource.label }}">×</button></div>
+<div class="empire-details-content">
+<dl>
+<div><dt>Stock / capacité</dt><dd><span data-resource-target="economyStock">{{ resource.stock|round(0,'floor')|quantity(0) }}</span> / <span data-resource-target="economyCapacity">{{ resource.capacity|quantity(0) }}</span></dd></div>
+<div><dt>Production brute / h</dt><dd data-resource-target="gross">{{ (resource.gross*3600)|quantity(2) }}</dd></div>
+<div><dt>Consommation / h</dt><dd data-resource-target="consumption">{{ (resource.consumption*3600)|quantity(2) }}</dd></div>
+<div><dt>Solde net / h</dt><dd><strong data-resource-target="net">{{ (resource.rate*3600)|quantity(2) }}</strong></dd></div>
+<div data-resource-target="uncreditedRow"{% if resource.uncredited <= 0 %} hidden{% endif %}><dt>Non stocké / h</dt><dd data-resource-target="uncredited">{{ (resource.uncredited*3600)|quantity(2) }}</dd></div>
+</dl>
+<p class="resource-economy-estimate" data-resource-target="estimate">{% if chrome.vacation %}Production suspendue pendant les vacances{% elseif resource.stock >= resource.capacity and resource.rate >= 0 %}Stockage plein{% elseif resource.estimateSeconds is not null %}{{ resource.rate > 0 ? 'Saturation' : 'Épuisement' }} dans {{ duration_label(resource.estimateSeconds) }}{% else %}Stock stable{% endif %}</p>
+<p>Estimation au rythme actuel.</p>
+<h3>Sources de production</h3><ul data-resource-target="productionSources">{% for source,rate in resource.sources %}<li>{{ source=='base' ? 'Revenu de base' : chrome.resourceSourceLabels[source]|default(source) }} : {{ (rate*3600)|quantity(2) }} / h</li>{% else %}<li>Aucune production.</li>{% endfor %}</ul>
+<h3>Consommations continues</h3><ul data-resource-target="consumptionSources">{% for source,rate in resource.consumptionSources|filter(rate => rate > 0) %}<li>{{ chrome.resourceSourceLabels[source]|default(source) }} : {{ (rate*3600)|quantity(2) }} / h</li>{% else %}<li>Aucune consommation continue.</li>{% endfor %}</ul>
+{% if slug=='electricity' %}<p>Les recherches, vaisseaux et défenses paient leur coût électrique à l’ajout dans la file ; il n’est pas déduit de ce solde horaire.</p>{% endif %}
+</div>
+</div>

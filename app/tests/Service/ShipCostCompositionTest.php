@@ -62,6 +62,7 @@ final class ShipCostCompositionTest extends TestCase
             $ranks=match($profile){'none'=>[],'mid'=>['basic'=>10,'intermediate'=>5,'superior'=>0],'max'=>['basic'=>25,'intermediate'=>25,'superior'=>25]};
             foreach($quantities as $quantity=>$expected){
                 $actual=$calculator->calculate($catalog->getTierForUniverse($universe,'ships',$slug,$tier),'ships',1,(int)$quantity,[],$catalog->forUniverse($universe),$ranks?['naval_engineering'=>$ranks]:[]);
+                $expected['new']['costs']['electricity']=100*(int)ceil($expected['new']['duration']/60);
                 self::assertSame($expected['new'],$actual,"$slug/$tier/$profile/$quantity");
                 self::assertSame($expected['old']['duration'],$actual['duration']);
                 $difference=$this->value($actual['costs'])-$this->value($expected['old']['costs']);

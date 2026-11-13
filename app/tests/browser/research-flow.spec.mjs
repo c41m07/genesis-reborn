@@ -24,7 +24,7 @@ test('Laboratoire débloque une recherche, la file progresse et le résultat est
   const bar = queue.getByRole('progressbar'), first = Number(await bar.getAttribute('aria-valuenow'));
   await expect.poll(async () => Number(await bar.getAttribute('aria-valuenow')), { timeout: 10000 }).toBeGreaterThan(first);
   await expect.poll(async () => { await page.reload(); return page.locator('#building-tab-engineering_foundations-basic .building-rank-level').textContent(); }, { timeout: 30000, intervals: [500, 1000, 2000] }).toBe('1');
-  await expect(queue.locator('.operation-idle')).toContainText('Aucune commande en cours'); await page.getByRole('link', { name: 'Technologie', exact: true }).click(); await expect(page.locator('#tech-engineering_foundations-basic')).toContainText('Niveau 1 / 25');
+  await expect(queue.locator('.operation-idle')).toContainText('Aucune commande en cours'); await page.getByRole('link', { name: 'Guide technologique', exact: true }).click(); await expect(page.locator('#tech-engineering_foundations-basic')).toContainText('Niveau 1 / 25');
   await page.setViewportSize({ width: 390, height: 844 });
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await expect(page.locator('.technology-tree')).toBeVisible();

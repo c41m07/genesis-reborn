@@ -12,10 +12,6 @@
 .empire-details-manage{display:flex;align-items:center;min-height:44px;padding:10px 14px;border-top:1px solid var(--line);text-decoration:underline}
 .flight-details-control{display:flex;justify-content:flex-end}
 .flight-details-control .empire-name{font-size:13px;color:var(--accent)}
-.dashboard-colonies{margin-top:18px;padding:18px}.dashboard-colonies>p{color:var(--muted);font-size:13px}
-.dashboard-colony-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:14px}
-.dashboard-colony{min-width:0;padding:12px;border:1px solid var(--line);border-radius:6px}
-.dashboard-colony h3,.dashboard-colony p{margin:0 0 8px;overflow-wrap:anywhere}.dashboard-colony>p{font-size:13px}
 .dashboard-journal form button{min-height:44px;white-space:normal}
 
 body.authenticated .empire-details dt{font-size:13px;color:var(--muted)}

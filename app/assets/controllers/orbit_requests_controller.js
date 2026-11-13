@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-    static targets = ['content'];
+    static targets = ['content', 'details', 'count'];
     static values = { now: String };
 
     connect() {
@@ -30,6 +30,11 @@ export default class extends Controller {
     update() {
         if (!this.next || this.contentTarget.contains(document.activeElement)) return;
         this.contentTarget.innerHTML = this.next.orbitHtml;
+        if (this.hasDetailsTarget) {
+            const count = this.contentTarget.querySelectorAll('[data-orbit-request]').length;
+            this.countTarget.textContent = count;
+            if (count > 0) this.detailsTarget.open = true;
+        }
         this.version = this.next.orbitVersion; this.next = null; this.tick();
     }
 

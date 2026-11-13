@@ -1,0 +1,1 @@
+<nav class="ui-tabs" aria-label="Compte et préférences"><a href="{{ path('app_profile') }}" {% if route=='app_profile' %}aria-current="page"{% endif %}>Profil</a><a href="{{ path('app_preferences') }}" {% if route=='app_preferences' %}aria-current="page"{% endif %}>Préférences</a><a href="{{ path('app_preferences',{_fragment:'vacances-info'}) }}">Vacances</a></nav>

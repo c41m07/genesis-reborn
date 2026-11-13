@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+{% block title %}Vérifier l’annulation · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="page-heading"><h1>Vérifier l’annulation</h1></div>
+<section class="panel sensitive-actions"><h2>Commandes concernées</h2>
+<p>La commande sélectionnée et ses niveaux dépendants seront supprimés. Estimation : 25 % des ressources payées, dans la place disponible sur chaque colonie. L’état sera revérifié à la confirmation.</p>
+<ul>{% for row in rows %}<li><strong>{{ row.label }}</strong> · {{ row.item.planet.name }} · {{ row.item.itemLevel ? 'Niveau '~row.item.itemLevel : 'Quantité '~row.item.quantity }}{% if row.item.id != item.id %} · Dépendance annulée{% endif %}<ul>{% for slug,amount in row.refund|filter(amount => amount > 0) %}<li>{{ resource_labels[slug] }} : {{ amount|quantity(2) }} remboursés</li>{% else %}<li>Aucun remboursement.</li>{% endfor %}</ul></li>{% endfor %}</ul>
+<form method="post" action="{{ path('app_queue_cancel',{id:planet.id,itemId:item.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('cancel'~item.id) }}"><input type="hidden" name="request_key" value="{{ request_key() }}"><input type="hidden" name="section" value="{{ section }}"><button class="primary">Confirmer l’annulation de ces {{ rows|length }} commandes</button></form>
+<a class="secondary" href="{{ path('app_colony',{id:planet.id,section:section}) }}">Conserver les commandes</a>
+</section>
+{% endblock %}

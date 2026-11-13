@@ -116,7 +116,7 @@ test('Retour joueur : erreur, saisies conservées, pièce jointe et suivi admin'
   await page.getByLabel('Priorité ressentie').selectOption('high');
   await page.getByLabel('Description détaillée').fill('Comparer plus facilement les trajectoires de flotte.');
   await form.evaluate(element => { element.noValidate = true; });
-  await page.getByRole('button', { name: 'Envoyer', exact: true }).click();
+  await page.getByRole('button', { name: 'Envoyer mon retour', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('Le titre est obligatoire');
   await expect(page.getByLabel('Lien de la page concernée')).toHaveValue(contextUrl);
   await expect(page.getByLabel('Type', { exact: true })).toHaveValue('suggestion');
@@ -127,11 +127,11 @@ test('Retour joueur : erreur, saisies conservées, pièce jointe et suivi admin'
   const title = 'Trajectoires UI ' + crypto.randomUUID().slice(0, 8);
   await page.getByLabel('Titre', { exact: true }).fill(title);
   await page.getByLabel('Joindre une capture').setInputFiles({ name: 'capture.txt', mimeType: 'text/plain', buffer: Buffer.from('format refusé') });
-  await page.getByRole('button', { name: 'Envoyer', exact: true }).click();
+  await page.getByRole('button', { name: 'Envoyer mon retour', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('Format refusé');
   await expect(page.getByLabel('Titre', { exact: true })).toHaveValue(title);
   await page.getByLabel('Joindre une capture').setInputFiles({ name: 'capture.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j0ioAAAAASUVORK5CYII=', 'base64') });
-  await page.getByRole('button', { name: 'Envoyer', exact: true }).click();
+  await page.getByRole('button', { name: 'Envoyer mon retour', exact: true }).click();
   await expect(page.locator('.flash.success')).toContainText('a bien été envoyé');
   const project = process.env.BROWSER_ROUTER;
   const id = Number(queryIsolatedSql(project, `SELECT id FROM user_feedback WHERE title=${quote(title)}`));
@@ -158,7 +158,7 @@ test('Univers : sélection actuelle, ouverture datée sans JS et accès fermé',
   runIsolatedSql(project, `UPDATE universe SET starts_at=DATE_ADD(UTC_TIMESTAMP(),INTERVAL 2 DAY),status='active' WHERE id=${otherId}`);
   await page.goto('/univers');
   await expect(page.locator('.universe-card--current')).toContainText('Univers actuel');
-  await expect(page.locator('.universe-card--current').getByRole('button')).toContainText('Continuer');
+  await expect(page.locator('.universe-card--current').getByRole('button')).toContainText('Reprendre mon empire');
   const planned = page.locator('.universe-card').filter({ has: page.getByRole('timer') });
   await expect(planned).toContainText('OUVERTURE PROGRAMMÉE');
   await expect(planned.locator('time')).toContainText('UTC');

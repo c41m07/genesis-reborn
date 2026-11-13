@@ -1,0 +1,10 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ project.snapshot.name }} · Projets collectifs · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="page-heading"><div><h1>{{ project.snapshot.name }}</h1><p>Projet collectif de {{ guild.name }}</p></div><a class="secondary" href="{{ path('app_guild_projects') }}">Retour aux projets</a></div>
+{% if readOnly %}<p class="panel">Pendant les vacances, vous pouvez consulter ce projet mais pas donner de ressources.</p>{% endif %}
+<div class="guild-project-detail guild-project">
+{% include 'player/_guild_project.html.twig' %}
+{% if project.status=='active' %}<section aria-labelledby="project-donation-title"><h2 id="project-donation-title">Contribuer au palier</h2>{% include 'player/_guild_project_donation.html.twig' %}</section>{% endif %}
+</div>
+{% endblock %}

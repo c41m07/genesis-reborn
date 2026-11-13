@@ -39,6 +39,8 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(family.locator('.card-stock-badge, .tier-label')).toHaveCount(0);
     await expect(panel('basic').locator('.costs')).toContainText('1,12 M');
     await expect(panel('basic').locator('.costs > span').first()).toHaveAttribute('aria-label', /Métal : [\d ]+/);
+    await expect(panel('basic').getByRole('button',{name:/^Manque [\d ]+ Métal/})).toBeDisabled();
+    await expect(panel('basic').locator('.catalog-card-art img')).toHaveCSS('filter','none');
     await expect(panel('basic').locator('form [name="tier"]')).toHaveValue('basic');
     await tab('intermediate').click();
     await expect(tab('intermediate').locator('.building-rank-up')).toBeVisible();
@@ -53,7 +55,8 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(tab('superior').locator('.building-rank-cross')).toBeVisible();
     await expect(panel('superior').locator('img')).toHaveAttribute('src', /power_plant__superior.webp$/);
     await expect(panel('superior').locator('.requirement')).toContainText('Nécessite');
-    await expect(panel('superior').locator('form[action*="file"]')).toHaveCount(0);
+    await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('filter','grayscale(1)');
+    await expect(panel('superior').locator('.card-body>form')).toHaveCount(0);
     await toggle.click();
     await expect(toggle).toHaveAttribute('aria-checked', 'false');
     await expect(tab('superior')).toBeHidden();
@@ -63,6 +66,12 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(page.locator('.building-card[data-category="storage"]').first()).toBeHidden();
     await tab('intermediate').click();
     await page.locator('h1').click();
+    await expect(page).toHaveURL(/#item-power_plant-intermediate$/);
+    await page.goBack();
+    await expect(panel('superior')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Production', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await page.goForward();
+    await expect(panel('intermediate')).toBeVisible();
     const previousFamily = await family.elementHandle();
     const refreshed = page.waitForResponse(response => response.url().includes('?section=buildings') && response.request().method() === 'GET');
     await page.evaluate(() => window.dispatchEvent(new CustomEvent('genesis:refresh')));
@@ -138,7 +147,29 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(fallback.locator('#item-power_plant-superior')).toBeHidden();
     await fallback.getByRole('switch', { name: 'Afficher les éléments verrouillés' }).click();
     await expect(fallback.locator('#item-power_plant-superior')).toBeVisible();
+    await expect(fallback.locator('#item-power_plant-superior .catalog-card-art img')).toHaveCSS('filter','grayscale(1)');
+    await expect(fallback.locator('#item-power_plant-basic').getByRole('button',{name:/^Manque/})).toBeDisabled();
     await noScript.close();
+    for (const theme of ['dark','light']) {
+        sql(`UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
+        for (const width of [1440,390]) {
+            await page.setViewportSize({width,height:1000});
+            await page.goto(`${path}?section=buildings#item-power_plant-basic`);
+            await page.reload();
+            await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
+            await expect(panel('basic').getByRole('button',{name:/^Manque/})).toBeDisabled();
+            expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+            await family.screenshot({path:`output/playwright/catalogue-bloque-${theme}-${width}.png`});
+            await tab('superior').click();
+            await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('filter','grayscale(1)');
+        }
+    }
+    sql(`INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'lab','intermediate',10)`);
+    sql(`INSERT INTO player_technology (player_universe_id,slug,tier,level) SELECT owner_id,'engineering_foundations','intermediate',10 FROM planet WHERE id=${planet}`);
+    await page.goto(`${path}?section=buildings#item-power_plant-superior`);
+    await page.reload();
+    await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('filter','none');
+    await expect(panel('superior').locator('.card-body>form')).toHaveCount(1);
     expect(errors).toEqual([]);
 });
 
@@ -200,11 +231,37 @@ test('Recherche, chantier et défenses partagent les onglets et préservent leur
         await expect(tab('superior')).toBeHidden();
         await expect(panel('basic')).toBeVisible();
         await toggle.click();
+        await tab('superior').click();
         for (const width of [1920, 1440, 390, 320]) {
             await page.setViewportSize({ width, height: 1000 });
             expect(await family.getByRole('tab').evaluateAll(tabs => tabs.every(tab => tab.scrollWidth <= tab.clientWidth))).toBe(true);
+            const costRows = await panel('superior').locator('.building-costs > span').evaluateAll(costs => costs.map(cost => Math.round(cost.getBoundingClientRect().top)));
+            if (group === 'ships') expect(costRows).toHaveLength(5);
+            expect(new Set(costRows).size, `${group} : ressources sur une ligne à ${width} px`).toBe(1);
             expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+            if (group === 'ships') await family.screenshot({path:`output/playwright/couts-cinq-ressources-${width}.png`});
         }
+        if (group === 'ships') {
+            const condensedToggle = page.getByRole('switch', { name: 'Vue condensée' });
+            await condensedToggle.click();
+            await expect(condensedToggle).toHaveAttribute('aria-checked', 'true');
+            const costValues = panel('superior').locator('.building-costs > span > span');
+            const originalAmounts = await costValues.evaluateAll(values => values.map(value => value.firstChild.textContent));
+            await costValues.evaluateAll(values => values.forEach(value => { value.firstChild.textContent = '999,99 M'; }));
+            for (const width of [320, 390, 1440, 1920]) {
+                await page.setViewportSize({ width, height: 1000 });
+                const sizes = await costValues.evaluateAll(values => values.map(value => ({
+                    amount: value.getBoundingClientRect().width,
+                    column: value.parentElement.getBoundingClientRect().width,
+                    top: Math.round(value.parentElement.getBoundingClientRect().top),
+                })));
+                expect(new Set(sizes.map(size => size.top)).size).toBe(1);
+                expect(sizes.every(size => size.amount <= size.column + 1), `Coûts longs sans chevauchement en vue condensée à ${width} px`).toBe(true);
+            }
+            await costValues.evaluateAll((values, amounts) => values.forEach((value, index) => { value.firstChild.textContent = amounts[index]; }), originalAmounts);
+            await condensedToggle.click();
+        }
+        await tab('basic').click();
         await page.setViewportSize({ width: 1920, height: 1000 });
         await page.screenshot({ path: `output/playwright/catalogue-${group}-tabs.png`, fullPage: true });
         if (group === 'defenses') {

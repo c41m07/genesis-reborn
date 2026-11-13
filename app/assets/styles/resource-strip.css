@@ -75,7 +75,10 @@ body[data-theme="light"] .player-protection-shield{color:#226344}
     .resource-summary-item--deficit strong{color:#ff9c9c}
     body[data-theme="light"] .resource-summary-item--deficit strong{color:#a62332}
     .resource-strip--collapsible .resource-details{display:grid;grid-column:1/-1;grid-template-columns:repeat(2,minmax(0,1fr));border-top:1px solid var(--line);max-height:50vh;overflow-y:auto}
-    .resource-strip--collapsible:not(.resource-strip--expanded) .resource-details{display:none}
+    /* Les fiches restent accessibles depuis le résumé mobile replié. */
+    .resource-strip--collapsible:not(.resource-strip--expanded) .resource-details{display:contents}
+    .resource-strip--collapsible:not(.resource-strip--expanded) .resource-details>.resource{display:contents}
+    .resource-strip--collapsible:not(.resource-strip--expanded) .resource-details>.resource>:not(.resource-economy){display:none}
 }
 
 .event-drawer-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px;margin:8px 0;font-size:11px}
@@ -88,3 +91,18 @@ body[data-theme="light"] .event-drawer-link,body[data-theme="light"] .event-draw
 .resource-strip .resource-planet{min-width:0}
 .resource-strip .resource-planet>div{flex:1;min-width:0;max-width:100%}
 .resource-strip .resource-planet strong{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.resource-info-trigger{position:absolute;inset:0 0 12px;width:100%;min-height:44px;padding:0;background:none;border:0;color:inherit}
+.resource:has(.resource-info-trigger:hover) .resource-name{text-decoration:underline;text-underline-offset:3px}
+.resource-info-trigger:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.resource-summary-item{position:relative;min-height:44px}
+.resource-summary-trigger{position:absolute;inset:0;width:100%;height:100%;padding:0;border:0;background:none;color:inherit}
+.resource-strip .resource-economy[popover]{top:20vh;left:max(12px,calc(50vw - 180px));font-size:14px;line-height:1.5}
+.resource-economy .empire-details-content{padding-top:12px}
+.resource-economy dl>div{flex-wrap:wrap;gap:4px 12px}
+.resource-economy dd{font-variant-numeric:tabular-nums;overflow-wrap:anywhere;max-width:100%}
+.resource-economy h3{margin-top:16px}
+.resource-economy ul{margin:0;padding-left:18px}
+.resource-economy li{margin:6px 0;overflow-wrap:anywhere}
+.resource-economy .resource-economy-estimate{margin:14px 0 4px;color:var(--text);font-weight:700}
+.resource-economy-close{width:44px;min-height:44px;flex-shrink:0;border:0;background:transparent;color:var(--text);font-size:24px}

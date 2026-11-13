@@ -2,7 +2,7 @@
 {% block title %}Rapport de transport · Genesis Reborn{% endblock %}
 {% block body %}
 <div class="mission-report">
-<a class="inline-link report-back" href="{{ path('app_combat_reports', {type:'economy'}) }}">← Rapports économiques</a>
+{% include 'ui/report_back_link.html.twig' %}
 <header class="report-heading"><p class="report-eyebrow">ÉCONOMIE · N° {{ report.id }}</p><h1>Rapport de transport</h1><p>{{ report.snapshot.origin }} → {{ report.snapshot.destination }} · {{ report.createdAt|date('d/m/Y H:i') }}</p></header>
 <section class="panel report-summary"><h2>{{ {traveling:'Transport en route',delivered:'Livraison effectuée',refused:'Livraison refusée'}[report.status]|default(report.status) }}</h2><p>{{ report.snapshot.sender }} → {{ report.snapshot.recipient }}</p>{% if report.snapshot.returned_at is defined %}<p class="muted">Flotte rentrée le {{ report.snapshot.returned_at|date('d/m/Y H:i') }}.</p>{% endif %}</section>
 {% include 'transport/_details.html.twig' %}

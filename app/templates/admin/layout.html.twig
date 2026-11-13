@@ -10,7 +10,7 @@
 <link rel="icon" href="{{ asset('art/genesis-reborn-emblem.webp') }}" type="image/png">{{ encore_entry_link_tags('app') }}
 {% if app.user.preferences.theme|default('dark')=='light' %}<link rel="stylesheet" href="{{ asset('styles/wireframe-theme.css') }}">{% endif %}
 {{ encore_entry_script_tags('app',attributes={defer:true}) }}
-</head><body class="admin-console admin-console--organized" data-theme="{{ app.user.preferences.theme|default('dark') }}" data-controller="admin-notifications" data-admin-notifications-url-value="{{ path('app_admin_notifications') }}" data-admin-notifications-initial-value="{{ adminNotifications|json_encode|e('html_attr') }}">
+</head><body class="admin-console admin-console--organized ui-refined" data-ui-page="admin-{{ currentRoute }}" data-theme="{{ app.user.preferences.theme|default('dark') }}" data-controller="admin-notifications page-sections{% if currentRoute in ['app_admin_catalogue','app_admin_guild_projects','app_admin_game_events','app_admin_weekly_rotations','app_admin_resource_boxes','app_admin_universes','app_admin_patchnotes'] %} admin-editors{% endif %}" data-admin-notifications-url-value="{{ path('app_admin_notifications') }}" data-admin-notifications-initial-value="{{ adminNotifications|json_encode|e('html_attr') }}">
 <a class="skip" href="#admin-main">Aller au contenu</a>
 <div class="admin-shell">
 <aside class="admin-sidebar" data-controller="admin-navigation" data-action="keydown.esc->admin-navigation#close click->admin-navigation#navigate">

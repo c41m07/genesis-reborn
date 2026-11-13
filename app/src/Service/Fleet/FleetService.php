@@ -96,7 +96,7 @@ final class FleetService
         return $this->manager->transaction(function()use($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$orbitHours){
             $this->guard->lock($m,$origin);$this->queues->synchronize($m);
             $q=$this->quote($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$orbitHours);
-            return array_intersect_key($q,array_flip(['distance','normal_distance','hyper_distance','seconds','one_way_fuel','orbit_fuel','total_fuel','fuel_capacity','cargo_capacity','freight_capacity','composition','freight','cargo_available','cargo_maximum','ship_available','adjusted']));
+            return ['arrival_at'=>$this->clock->now()->modify('+'.$q['seconds'].' seconds')->format(DATE_ATOM)]+array_intersect_key($q,array_flip(['distance','normal_distance','hyper_distance','seconds','one_way_fuel','orbit_fuel','total_fuel','fuel_capacity','cargo_capacity','freight_capacity','composition','freight','cargo_available','cargo_maximum','ship_available','adjusted']));
         });
     }
     public function send(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo,string $key,float $orbitHours=0): bool

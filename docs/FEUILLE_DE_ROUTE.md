@@ -1,5 +1,9 @@
 # Roadmap Genesis Reborn
 
+## Parcours UI/UX et économie — 13 novembre 2026
+
+Lot local sur `feature/amelioration-parcours-ui-ux`, depuis `dev` 7189f45. Navigation, comparatif des colonies, catalogues condensés, recherche du manuel, rubriques des pages et bilan économique : voir le [suivi courant](PARCOURS_UI_UX.md). Le revenu métal/nano total de 10/h et le coût ponctuel de 100 E par minute entamée sont validés explicitement ; [règles](REGLES.md) et [étude](ETUDE_COUT_ELECTRIQUE.md). La branche est publiée avec la [PR #54 vers dev](https://github.com/c41m07/genesis-reborn/pull/54), sans fusion ni déploiement. Les résultats locaux et limites sont consignés dans le suivi ; la CI complète sur PR reste obligatoire avant fusion.
+
 ## Guildes et alliances — intégration du 11 novembre 2026
 
 PR #36 fusionnée dans `dev` (`50e7f33`) après revue finale sans anomalie bloquante et CI verte : grades, relations personnelles, trois traités et projets collectifs. Le [guide](GUIDE_GUILDES_ALLIANCES.md) décrit l’utilisation et l’administration ; le [suivi](GESTION_GUILDES_ALLIANCES.md) conserve les preuves et les bilans historiques. Les nouvelles migrations sur base existante, le déploiement et les réglages/activations des modèles restent à réaliser séparément avec les autorisations prévues.

@@ -30,6 +30,7 @@ final class OperationCalculator
         $costs=$this->catalog->costs($d,$level,$quantity,$group);
         $discountSlug=match($group){'buildings'=>'nanomaterial_synthesis','ships'=>'naval_engineering',default=>null};
         if($discountSlug!==null){$costCap=(float)($this->catalog->rules()['cost_reduction_max_percent']??40);$discount=$this->discountProduct($universe,$discountSlug,$technologies[$discountSlug]??[],'cost_discount',$costCap);foreach($costs as $resource=>$amount)$costs[$resource]=$amount>0?max(1,(int)ceil($amount*(1-$discount/100))):0;}
+        if(in_array($group,['technologies','ships','defenses'],true)) $costs['electricity']=($costs['electricity']??0)+100*(int)ceil($duration/60);
         return ['duration'=>$duration,'costs'=>$costs,'raw_duration'=>$rawDuration];
     }
     public function maximum(array $definition, string $group, array $stocks, array $buildings, array $universe, array $technologies = [], int $limit = 2147483647): int

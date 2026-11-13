@@ -58,6 +58,36 @@ final class GameplayAccessTest extends WebTestCase
         self::assertSelectorTextSame('h1', 'Joueurs et modération');
     }
 
+    public function testProjectDetailIsRestrictedToOwnGuildAndActiveUniverse(): void
+    {
+        $this->client->disableReboot();
+        [$owner]=$this->player('ProjectDetailOwner');[$other]=$this->player('ProjectDetailOther');
+        $universes=static::getContainer()->get(UniverseService::class);
+        $omega=$this->em->getRepository(Universe::class)->findOneBy(['slug'=>'omega-1']);
+        $universes->select($owner,$omega->id);$universes->select($other,$omega->id);
+        $owner->roles=['ROLE_ADMIN'];$this->em->flush();
+        $diplomacy=static::getContainer()->get(\App\Service\Player\DiplomacyService::class);
+        $diplomacy->create($owner->currentPlayerUniverse,'Projet privé','PRIV');
+        $definition=static::getContainer()->get(\App\Service\Player\GuildProjectDefinitionService::class)->save($owner,0,[
+            'universe_id'=>$omega->id,'name'=>'Station privée','description'=>'Projet réservé à la guilde.','enabled'=>true,
+            'stages'=>[['name'=>'Structure','costs'=>['metal'=>10]]],'minimums'=>['metal'=>2],
+        ],0);
+        $project=static::getContainer()->get(\App\Service\Player\GuildProjectService::class)->start($owner->currentPlayerUniverse,$definition->id,$definition->version);
+        $path='/guildes/projets/'.$project->id;
+        $this->client->loginUser($owner);$this->client->request('GET',$path);
+        self::assertResponseIsSuccessful();self::assertSelectorTextSame('h1','Station privée');
+        self::assertSelectorExists('form input[name="version"]');self::assertSelectorTextContains('.guild-project','Votre contribution');
+        $this->client->loginUser($other);$this->client->request('GET',$path);self::assertResponseStatusCodeSame(404);
+        $other=$this->em->find(Player::class,$other->id);
+        $diplomacy->create($other->currentPlayerUniverse,'Autre projet','AUTR');
+        $this->client->request('GET',$path);self::assertResponseStatusCodeSame(404);
+        $this->client->loginUser($owner);
+        $owner=$this->em->find(Player::class,$owner->id);
+        $turbo=$this->em->getRepository(Universe::class)->findOneBy(['slug'=>'turbo-1']);$universes->select($owner,$turbo->id);
+        $this->client->request('GET',$path);self::assertResponseStatusCodeSame(404);
+        $owner=$this->em->find(Player::class,$owner->id);$universes->select($owner,$omega->id);$this->client->request('GET','/guildes/projets/999999999');self::assertResponseStatusCodeSame(404);
+    }
+
     public function testOtherPlayerPlanetResourcesAndActionsAreInaccessible():void
     {
         [$a,$own]=$this->player('Alpha');[$b,$foreign]=$this->player('Beta');$this->client->loginUser($a);
@@ -65,6 +95,23 @@ final class GameplayAccessTest extends WebTestCase
         $this->client->request('POST','/planetes/'.$foreign->id.'/construire',['group'=>'buildings','slug'=>'mine_metal','_token'=>'forged']);self::assertResponseStatusCodeSame(404);
         $this->client->request('POST','/planetes/'.$own->id.'/construire',['group'=>'buildings','slug'=>'mine_metal','_token'=>'forged']);self::assertResponseStatusCodeSame(403);
     }
+    public function testResourceEconomyRemainsPrivateAndScopedToTheActiveUniverse(): void
+    {
+        $this->client->disableReboot();
+        [$player,$planet]=$this->player('EconomyOwner');$this->client->loginUser($player);
+        $this->client->request('GET','/planetes/'.$planet->id.'/ressources');self::assertResponseIsSuccessful();
+        $data=json_decode($this->client->getResponse()->getContent(),true,512,JSON_THROW_ON_ERROR);
+        self::assertStringContainsString('private',$this->client->getResponse()->headers->get('Cache-Control'));
+        foreach(['metal','nano','hydrogen','antimatter','electricity'] as $slug) {
+            foreach(['gross','consumption','sources','consumptionSources','estimateSeconds'] as $field) self::assertArrayHasKey($field,$data[$slug]);
+        }
+        self::assertGreaterThan(0,$data['metal']['sources']['base']);
+        foreach(['electricity','antimatter','hydrogen'] as $slug) self::assertEqualsWithDelta(0,$data[$slug]['sources']['base'],1e-9);
+        $otherUniverse=$this->em->getRepository(Universe::class)->findOneBy(['slug'=>'omega-1']);
+        static::getContainer()->get(UniverseService::class)->select($player,$otherUniverse->id);
+        $this->client->request('GET','/planetes/'.$planet->id.'/ressources');self::assertResponseStatusCodeSame(404);
+    }
+
     public function testFleetPreviewIsServerAuthoritativeAndCannotUseForeignOrigin():void
     {
         [$a,$own]=$this->player('Alpha');[$b,$foreign]=$this->player('Beta');$this->client->loginUser($a);

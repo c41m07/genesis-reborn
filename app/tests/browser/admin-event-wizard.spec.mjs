@@ -95,7 +95,7 @@ test('Suppression : défi inutilisé supprimé, événement commencé archivé e
   runIsolatedSql(project,`INSERT INTO game_event (universe_id,name,description,type,status,starts_at,ends_at,parameters,visible_to_players) VALUES (${own.universeId},'Annonce à retirer','Test','announcement','active',UTC_TIMESTAMP()-INTERVAL 1 HOUR,UTC_TIMESTAMP()+INTERVAL 1 DAY,'{}',1)`);
   const eventId=Number(queryIsolatedSql(project,"SELECT id FROM game_event WHERE name='Annonce à retirer'"));
   await page.goto('/admin/events');const article=page.locator('article').filter({has:page.locator(`form[action='/admin/events/${eventId}/retirer']`)});
-  await article.locator('summary').click();await article.getByLabel('Motif de suppression').fill('Nettoyage');await article.getByLabel('Je confirme la suppression ou le retrait de cet élément.').check();
+  await article.getByText('Supprimer cet événement',{exact:true}).focus();await page.keyboard.press('Enter');await article.getByLabel('Motif de suppression').fill('Nettoyage');await article.getByLabel('Je confirme la suppression ou le retrait de cet élément.').check();
   await page.setViewportSize({width:390,height:900});expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
   await article.getByRole('button',{name:'Supprimer l’événement',exact:true}).click();await expect(page.locator('article')).toHaveCount(0);
   await page.getByRole('link',{name:'Historique des retraits',exact:true}).click();await expect(page.locator('main')).toContainText('Annonce à retirer');

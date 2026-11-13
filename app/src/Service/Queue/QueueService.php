@@ -86,6 +86,29 @@ final class QueueService
         });
     }
 
+    public function constructionPreview(PlayerUniverse $membership,Planet $planet,string $group,string $slug,string $tier,int $requested): array
+    {
+        $maximum=$this->maximum($membership,$planet,$group,$slug,$tier);
+        $quantity=min(max(1,$requested),$maximum);
+        $config=$this->catalog->forUniverse($membership->universe);
+        $definition=$this->catalog->getTierForUniverse($membership->universe,$group,$slug,$tier);
+        $buildings=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);
+        $technologies=$this->repo->levelsByTier(PlayerTechnology::class,['playerUniverse'=>$membership]);
+        $plan=$this->calculator->calculate($definition,$group,1,max(1,$quantity),$buildings,$config,$technologies);
+        $reason='';$missing=[];
+        if($maximum===0) {
+            $failures=$this->access->failures($membership,$planet,$group,$definition,$tier,$buildings,$technologies);
+            if(count($this->repo->queue($planet,'shipyard'))>=30) $reason='File pleine (30 commandes maximum).';
+            elseif($failures) $reason='Prérequis manquants : '.implode(', ',$failures).'.';
+            else {
+                $stocks=$this->resources->snapshot($planet);
+                foreach($plan['costs'] as $resource=>$amount) if($amount>($stocks[$resource]['stock']??0)) $missing[]=number_format((int)ceil($amount-($stocks[$resource]['stock']??0)),0,',',' ').' '.$this->catalog->rules()['resources'][$resource];
+                $reason=$missing?'Ressources manquantes : '.implode(', ',$missing).'.':'Limite de quantité atteinte.';
+            }
+        }
+        return ['maximum'=>$maximum,'quantity'=>$quantity,'costs'=>$quantity>0?$plan['costs']:[],'duration'=>$quantity>0?$plan['duration']:0,'reason'=>$reason,'unavailableLabel'=>$maximum===0?($missing?'Manque '.implode(' · ',$missing):$reason):''];
+    }
+
     private function unitMaximum(PlayerUniverse $membership, Planet $planet, string $group, string $slug, string $tier, array $definition, array $buildings, array $config, array $technologies): int
     {
         $owned = $group === 'defenses'
@@ -225,6 +248,34 @@ final class QueueService
             $this->start($item,$item->startedAt);
         });
     }
+    public function cancellationPreview(PlayerUniverse $membership,int $id): array
+    {
+        return $this->manager->transaction(function()use($membership,$id){
+            $item=$this->repo->find(QueueItem::class,$id);
+            if(!$item || $item->playerUniverse->id!==$membership->id || $item->playerUniverse->universe->id!==$membership->universe->id) throw new \DomainException('Commande inaccessible.');
+            $this->guard->lock($membership,$item->planet);$this->vacations->assertCanManageQueues($membership);$this->settleMembershipLocked($membership);
+            $item=$this->repo->find(QueueItem::class,$id);
+            if(!$item) throw new \DomainException('Cette commande est déjà terminée.');
+            $rows=[];$rooms=[];
+            $collect=function(QueueItem $command)use(&$collect,&$rows,&$rooms,$membership):void{
+                if($command->playerUniverse->id!==$membership->id || $command->planet->owner?->id!==$membership->id) throw new \DomainException('Commande inaccessible.');
+                foreach($this->repo->all(QueueItem::class,['dependsOn'=>$command]) as $dependent) $collect($dependent);
+                $group=match($command->queueType){'building'=>'buildings','research'=>'technologies',default=>isset($this->catalog->all('defenses')[$command->itemSlug])?'defenses':'ships'};
+                $definition=$this->catalog->getTierForUniverse($membership->universe,$group,$command->itemSlug,$command->tier);
+                $paid=$command->paidCosts??$this->catalog->costs($definition,$command->itemLevel??1,$command->quantity,$group);
+                if(!isset($rooms[$command->planet->id])) foreach($this->resources->snapshot($command->planet) as $slug=>$resource) $rooms[$command->planet->id][$slug]=max(0.0,$resource['capacity']-$resource['stock']);
+                $refund=[];
+                foreach($paid as $slug=>$amount) {
+                    $refund[$slug]=min($rooms[$command->planet->id][$slug]??0,$amount*$this->catalog->rules()['cancellation_refund_ratio']);
+                    $rooms[$command->planet->id][$slug]-=$refund[$slug];
+                }
+                $rows[]=['item'=>$command,'label'=>$definition['label'],'refund'=>$refund];
+            };
+            $collect($item);
+            return ['item'=>$item,'rows'=>$rows,'resource_labels'=>$this->catalog->rules()['resources']];
+        });
+    }
+
     public function cancel(PlayerUniverse $m,int $id,string $key): void
     {
         $this->manager->transaction(function()use($m,$id,$key){

@@ -22,7 +22,7 @@ final class FactoryEconomy
         if($remaining>1e-9)throw new \LogicException('La simulation de production n’a pas intégré toute la durée.');
         $stocks=self::normalizeStocks($stocks,$capacities);
         $point=self::operatingPoint($baseRates,$factories,$stocks,$capacities,$minimumEfficiency);
-        return ['stocks'=>$stocks,'rates'=>$point['flows'],'efficiency'=>$point['efficiency'],'antimatter_efficiency'=>$point['antimatter_efficiency'],'electricity_consumption'=>$point['electricity_consumption'],'hydrogen_consumption'=>$point['hydrogen_consumption']];
+        return ['production'=>$point['production'],'consumption'=>$point['consumption'],'sources'=>$point['sources'],'consumption_sources'=>$point['consumption_sources'],'uncredited'=>$point['uncredited'],'stocks'=>$stocks,'rates'=>$point['flows'],'efficiency'=>$point['efficiency'],'antimatter_efficiency'=>$point['antimatter_efficiency'],'electricity_consumption'=>$point['electricity_consumption'],'hydrogen_consumption'=>$point['hydrogen_consumption']];
     }
 
     private static function normalizeStocks(array $stocks,array $capacities):array
@@ -49,20 +49,33 @@ final class FactoryEconomy
             $efficiency=$floor+(1-$floor)*$poweredFraction;$hydrogenBase=max(0.0,(float)($base['hydrogen']??0));$hydrogenFactory=0.0;$hydrogenNeed=0.0;
             foreach($factories as $factory){if(($factory['resource']??null)==='hydrogen')$hydrogenFactory+=(float)$factory['rate']*$efficiency;$hydrogenNeed+=(float)($factory['hydrogen']??0);}
             $hydrogenCover=($stocks['hydrogen']??0)>1e-9?1.0:($hydrogenNeed>0?min(1.0,($hydrogenBase+$hydrogenFactory)/$hydrogenNeed):1.0);
-            $antimatterEfficiency=min($efficiency,$hydrogenCover);$electricUse=0.0;$hydrogenUse=0.0;$flows=$base;
+            $antimatterEfficiency=min($efficiency,$hydrogenCover);$electricUse=0.0;$hydrogenUse=0.0;$flows=$base;$production=$base;$sources=[];$consumptionSources=[];
+            foreach($base as $resource=>$rate) $sources[$resource]['base']=(float)$rate;
             foreach($factories as $factory){
                 $resource=$factory['resource'];$factor=$resource==='antimatter'?$antimatterEfficiency:($resource==='electricity'?1.0:$efficiency);
                 if($resource==='hydrogen'&&$hydrogenFull&&$hydrogenFactory>0)$factor*=min(1.0,max(0.0,$hydrogenNeed*$antimatterEfficiency-$hydrogenBase)/$hydrogenFactory);
-                $flows[$resource]=($flows[$resource]??0.0)+(float)$factory['rate']*$factor;
+                $output=(float)$factory['rate']*$factor;
+                $flows[$resource]=($flows[$resource]??0.0)+$output;
+                $production[$resource]=($production[$resource]??0.0)+$output;
+                $source=$factory['slug']??$resource;
+                $sources[$resource][$source]=($sources[$resource][$source]??0.0)+$output;
                 $draw=(float)($factory['electricity']??0);
                 if($resource==='antimatter')$draw*=max(0.0,min(1.0,($factor-$floor)/max(1e-9,1-$floor)));else $draw*=$poweredFraction;
                 if($resource==='hydrogen'&&$hydrogenFull&&$efficiency>0)$draw*=$factor/$efficiency;
-                $electricUse+=$draw;if($resource==='antimatter')$hydrogenUse+=(float)($factory['hydrogen']??0)*$factor;
+                $electricUse+=$draw;
+                $consumptionSources['electricity'][$source]=($consumptionSources['electricity'][$source]??0.0)+$draw;
+                if($resource==='antimatter') {
+                    $hydrogenDraw=(float)($factory['hydrogen']??0)*$factor;$hydrogenUse+=$hydrogenDraw;
+                    $consumptionSources['hydrogen'][$source]=($consumptionSources['hydrogen'][$source]??0.0)+$hydrogenDraw;
+                }
             }
             $flows['electricity']=($flows['electricity']??0.0)-$electricUse;$flows['hydrogen']=($flows['hydrogen']??0.0)-$hydrogenUse;
+            $uncredited=[];$consumption=array_fill_keys(array_keys($flows),0.0);$consumption['electricity']=$electricUse;$consumption['hydrogen']=$hydrogenUse;
+            $beforeCaps=$flows;
             foreach($flows as $resource=>&$flow)if(($stocks[$resource]??0)>=($capacities[$resource]??INF)-self::STOCK_EPSILON)$flow=min(0.0,(float)$flow);
             unset($flow);
-            return ['flows'=>$flows,'electricity_consumption'=>$electricUse,'hydrogen_consumption'=>$hydrogenUse,'efficiency'=>$efficiency,'antimatter_efficiency'=>$antimatterEfficiency];
+            foreach($flows as $resource=>$flow) $uncredited[$resource]=max(0.0,$beforeCaps[$resource]-$flow);
+            return ['production'=>$production,'consumption'=>$consumption,'sources'=>$sources,'consumption_sources'=>$consumptionSources,'uncredited'=>$uncredited,'flows'=>$flows,'electricity_consumption'=>$electricUse,'hydrogen_consumption'=>$hydrogenUse,'efficiency'=>$efficiency,'antimatter_efficiency'=>$antimatterEfficiency];
         };
         $x=1.0;if(($stocks['electricity']??0.0)<=1e-9&&$nominalPower>0){$full=$resolve(1.0);if($full['electricity_consumption']>$power+1e-12){$low=0.0;$high=1.0;for($i=0;$i<48;++$i){$mid=($low+$high)/2;if($resolve($mid)['electricity_consumption']<=$power)$low=$mid;else $high=$mid;}$x=$low;}}
         return $resolve($x);

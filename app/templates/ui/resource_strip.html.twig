@@ -9,10 +9,11 @@
         {% for slug in ['metal','nano','hydrogen','antimatter','electricity'] %}
             {% set r = chrome.resources[slug]|default(null) %}
             {% if r %}
-                <span class="resource-summary-item" data-compact-resource="{{ slug }}" title="{{ r.label }}">
+                <span class="resource-summary-item" data-compact-resource="{{ slug }}">
                     {{ ui.icon(slug, 'resource-summary-icon') }}
                     <span class="visually-hidden">{{ r.label }} : </span>
                     <strong data-resource-strip-target="compactStock" data-slug="{{ slug }}" title="{{ r.stock|round(0, 'floor')|number_format(0,',',' ') }}">{{ r.stock|round(0, 'floor')|compact_number }}</strong>
+                    <button type="button" class="resource-summary-trigger" popovertarget="resource-economy-{{ slug }}" aria-label="Détails économiques : {{ r.label }}" aria-expanded="false"></button>
                 </span>
             {% endif %}
         {% endfor %}
@@ -22,21 +23,23 @@
         {% set r=chrome.resources[slug]|default(null) %}
         {% if r %}
             {% set protection = 'Stock : '~(r.stock|number_format(0,',',' '))~' / '~(r.capacity|number_format(0,',',' '))~'. Repère : jusqu’à '~(r.protectedCapacity|number_format(0,',',' '))~' protégés du pillage ; zone verte : '~(min(r.stock,r.protectedCapacity)|number_format(0,',',' '))~' actuellement protégés.' %}
-            <div class="resource resource--{{ slug }} {{ slug in ['electricity','hydrogen'] and r.rate < 0 ? 'resource--deficit' : '' }}" data-controller="resource" data-resource-slug="{{ slug }}" data-action="resource:update->resource#update" data-resource-stock-value="{{ r.stock }}" data-resource-rate-value="{{ r.rate }}" data-resource-cap-value="{{ r.capacity }}" data-resource-protected-cap-value="{{ r.protectedCapacity }}">
+            <div class="resource resource--{{ slug }} {{ slug in ['electricity','hydrogen'] and r.rate < 0 ? 'resource--deficit' : '' }}" data-controller="resource hover-details" data-resource-estimate-seconds-value="{{ r.estimateSeconds is null ? -1 : r.estimateSeconds }}" data-resource-vacation-value="{{ chrome.vacation ? 'true' : 'false' }}" data-resource-source-labels-value="{{ chrome.resourceSourceLabels|json_encode|e('html_attr') }}" data-resource-slug="{{ slug }}" data-action="resource:update->resource#update resource:economy->hover-details#refresh pointerenter->hover-details#enter pointerleave->hover-details#leave focusout->hover-details#blur keydown->hover-details#escape" data-resource-stock-value="{{ r.stock }}" data-resource-rate-value="{{ r.rate }}" data-resource-cap-value="{{ r.capacity }}" data-resource-protected-cap-value="{{ r.protectedCapacity }}">
                 {{ ui.icon(slug,'resource-icon') }}
                 <div class="resource-values">
                     <span class="resource-name">{{ r.label }}</span>
-                    <strong data-resource-target="stock" title="{{ r.stock|round(0, 'floor')|number_format(0,',',' ') }}">{{ r.stock|round(0, 'floor')|compact_number }}</strong>
-                    <div class="resource-rate-line">
+                    <span class="resource-stock-capacity"><strong data-resource-target="stock" title="{{ r.stock|round(0, 'floor')|number_format(0,',',' ') }}">{{ r.stock|round(0, 'floor')|compact_number }}</strong><small><span class="visually-hidden">Capacité maximale : </span><span aria-hidden="true"> / </span><span data-resource-target="capacity" title="{{ r.capacity|number_format(0,',',' ') }}">{{ r.capacity|compact_number }}</span></small></span>
+                    <span class="resource-rate-line">
                         <small class="resource-rate" data-resource-target="rate" title="{{ (r.rate*3600)|compact_number }} / h">{{ r.rate >= 0 ? '+' : '' }}{{ (r.rate*3600)|compact_number }} / h</small>
                         <small class="resource-productivity {{ r.productivity is not null and r.productivity < 99.999999 ? 'resource-productivity--reduced' : '' }}" data-resource-target="productivity" {{ r.productivity is null ? 'hidden' : '' }} title="Productivité des usines : 100 % au régime nominal. Elle baisse en cas de pénurie d’électricité et, pour l’antimatière, d’hydrogène. Le débit horaire affiché tient compte de ces pénuries.">{{ r.productivity is not null and r.productivity < 99.999999 ? '↓ ' : '' }}{{ r.productivity|default(100)|number_format(1,',',' ') }} %</small>
-                    </div>
+                    </span>
                 </div>
+                <button type="button" class="resource-info-trigger" popovertarget="resource-economy-{{ slug }}" aria-label="Détails économiques : {{ r.label }}" aria-expanded="false" data-hover-details-target="trigger" data-action="focus->hover-details#focus click->hover-details#pin"></button>
                 <div class="storage-meter" data-resource-target="meter" role="img" tabindex="0" aria-label="{{ protection }}" title="{{ protection }}">
                     <span class="storage-meter-stock" data-resource-target="fill" style="width:{{ min(100,r.stock/r.capacity*100) }}%"></span>
                     <span class="storage-meter-protected" data-resource-target="protectedFill" style="width:{{ min(r.stock,r.protectedCapacity)/r.capacity*100 }}%" aria-hidden="true"></span>
                     <span class="storage-meter-limit" data-resource-target="protectedLimit" style="left:{{ r.protectedCapacity/r.capacity*100 }}%" aria-hidden="true"></span>
                 </div>
+                {% include 'ui/economy_balance.html.twig' with {resource:r} %}
             </div>
         {% endif %}
     {% endfor %}

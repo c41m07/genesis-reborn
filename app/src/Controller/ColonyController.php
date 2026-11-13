@@ -33,14 +33,15 @@ final class ColonyController extends AbstractController
         return $planet ? $this->redirectToRoute('app_colony',array_filter(['id'=>$planet->id,'section'=>$section==='overview'?null:$section])) : $this->redirectToRoute('app_universes');
     }
     #[Route('/planetes',name:'app_planets',methods:['GET'])]
-    public function planets(ResourceService $resources,\App\Service\Colony\EmpireDetails $details): Response
+    public function planets(Request $request,ResourceService $resources,\App\Service\Colony\EmpireDetails $details): Response
     {
         $membership=$this->context->membership();
         $planets=$this->repo->planets($membership->universe,$membership);
         $available=array_values(array_filter($this->repo->planets($membership->universe,null,true),static fn(Planet $planet): bool => !$planet->npcPlanet));
-        $positionModifiers=[];
+        $positionModifiers=[];$activities=[];
+        foreach($planets as $planet) $activities[$planet->id]=count($this->repo->queue($planet));
         foreach($planets as $planet) $positionModifiers[$planet->id]=$resources->positionProductionModifiers($planet);
-        return $this->render('colony/planets.html.twig',['membership'=>$membership,'planets'=>$planets,'available_planets'=>$available,'position_modifiers'=>$positionModifiers,'planet_details'=>$details->planets($membership)]);
+        return $this->render('colony/planets.html.twig',['membership'=>$membership,'planets'=>$planets,'available_planets'=>$available,'position_modifiers'=>$positionModifiers,'activities'=>$activities,'table_view'=>$request->query->get('view')==='table','comparison_resource'=>in_array($request->query->getString('resource'),['metal','nano','hydrogen','antimatter','electricity'],true)?$request->query->getString('resource'):'metal','planet_details'=>$details->planets($membership)]);
     }
     #[Route('/planetes/{id}',name:'app_colony',methods:['GET'],requirements:['id'=>'\d+'])]
     public function show(int $id,Request $request,ColonyView $view,\App\Service\Player\DailyLeaderboard $leaderboard,RelationResolver $relations,GameCatalog $catalog,\App\Service\Notification\JournalService $journal,\App\Service\Colony\EmpireDetails $details): Response
@@ -49,7 +50,6 @@ final class ColonyController extends AbstractController
         if($section!=='overview' && $request->query->has('showLockedItems')) $data['show_locked_items']=$request->query->getBoolean('showLockedItems');
         if($section==='overview') {
             if($request->headers->get('X-Genesis-Live')!=='1') $journal->open($m);
-            $data['planet_details']=$details->planets($m);
             $points=['building_points'=>0,'research_points'=>0,'fleet_points'=>0,'total_points'=>0];
             $daily=$leaderboard->forUniverse($m);
             $rank=null;foreach($daily['players'] as $row) if($row['membership']->id===$m->id) {$rank=$row['ranks']['points'];$points=array_intersect_key($row,$points);$data['ranking_changes']=$row;break;}
@@ -106,10 +106,11 @@ final class ColonyController extends AbstractController
         return $this->redirectToRoute('app_planets',['_fragment'=>'planet-'.$id]);
     }
     #[Route('/planetes/{id}/ressources',name:'app_resources',methods:['GET'],requirements:['id'=>'\d+'])]
-    public function resources(int $id,ResourceService $resources,LeaderboardService $leaderboard): JsonResponse
+    public function resources(int $id,ResourceService $resources,LeaderboardService $leaderboard,\App\Service\Player\VacationCalendar $vacations): JsonResponse
     {
         $planet=$this->owned($id);$this->queueService->synchronize($this->context->membership());
-        $snapshot=$resources->snapshot($planet);
+        $snapshot=$resources->snapshot($planet,true);
+        $snapshot['_vacation']=$vacations->isActive($this->context->membership());
         foreach($leaderboard->forUniverse($this->context->membership()) as $row) if($row['membership']->id===$planet->owner->id) {$snapshot['_protection']=$row['protection'];break;}
         return $this->json($snapshot,200,['Cache-Control'=>'private, no-store']);
     }
@@ -118,8 +119,8 @@ final class ColonyController extends AbstractController
     {
         $planet = $this->owned($id);
         try {
-            $maximum = $service->maximum($this->context->membership(), $planet, (string) $request->query->get('group'), (string) $request->query->get('slug'), (string) $request->query->get('tier', 'basic'));
-            return $this->json(['maximum' => $maximum], 200, ['Cache-Control' => 'private, no-store']);
+            $preview = $service->constructionPreview($this->context->membership(), $planet, (string) $request->query->get('group'), (string) $request->query->get('slug'), (string) $request->query->get('tier', 'basic'),max(1,$request->query->getInt('quantity',1)));
+            return $this->json($preview, 200, ['Cache-Control' => 'private, no-store']);
         } catch (\DomainException $error) {
             return $this->json(['error' => $error->getMessage()], 422, ['Cache-Control' => 'private, no-store']);
         }
@@ -138,6 +139,15 @@ final class ColonyController extends AbstractController
         } catch(\DomainException $e) { $this->addFlash('error',$e->getMessage()); }
         return $this->redirectToRoute('app_colony',['id'=>$id,'section'=>$this->section((string)$request->request->get('section','overview')),'_fragment'=>'item-'.(string)$request->request->get('slug','').'-'.(string)$request->request->get('tier','basic')]);
     }
+    #[Route('/planetes/{id}/file/{itemId}/annulation',name:'app_queue_cancel_preview',methods:['GET'],requirements:['id'=>'\\d+','itemId'=>'\\d+'])]
+    public function cancellationPreview(int $id,int $itemId,QueueService $service,Request $request): Response
+    {
+        $planet=$this->owned($id);
+        try { $preview=$service->cancellationPreview($this->context->membership(),$itemId); }
+        catch(\DomainException $error) { throw $this->createNotFoundException($error->getMessage()); }
+        return $this->render('colony/cancel.html.twig',$preview+['planet'=>$planet,'section'=>$this->section($request->query->getString('section','overview'))]);
+    }
+
     #[Route('/planetes/{id}/file/{itemId}/annuler',name:'app_queue_cancel',methods:['POST'],requirements:['id'=>'\d+','itemId'=>'\d+'])]
     public function cancel(int $id,int $itemId,Request $request,QueueService $service): Response
     {
