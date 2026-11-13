@@ -59,7 +59,7 @@ final class BalanceMechanicsTest extends TestCase
         );
 
         self::assertSame(159, $plan['duration']);
-        self::assertSame(['metal'=>1735,'nano'=>579,'antimatter'=>0,'hydrogen'=>0],$plan['costs']);
+        self::assertSame(['metal'=>1735,'nano'=>579,'antimatter'=>0,'hydrogen'=>0,'electricity'=>3],$plan['costs']);
     }
 
     public function testTierCostProfilesIncreaseRareValueShareWithoutPricingElectricity(): void

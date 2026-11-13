@@ -44,7 +44,7 @@
     "title": "Commandes et temps hors connexion",
     "paragraphs": [
       "Chaque planète possède ses files de construction et de chantier. La recherche utilise une file commune à toutes vos colonies du même univers. Les opérations d’une même file se succèdent ; construction, recherche et chantier peuvent avancer en parallèle. Un même rang de recherche ne peut pas être lancé simultanément sur plusieurs colonies. Le journal de la vue générale commence à la première ouverture après la mise à jour. Il conserve les événements de vos absences jusqu’au bouton « Marquer ces événements comme consultés ». Une actualisation automatique ne vaut pas consultation ; au-delà de 50 événements, les suivants sont proposés ensuite, sans effacer l’historique.",
-      "Les ressources sont payées à la commande. Les coûts et durées déjà enregistrés restent attachés à cette commande. Un bonus d’accélération retire 25 % du temps restant de l’opération active : deux applications successives laissent 56,25 % du temps initial restant, et non 50 %. Les opérations en attente ne sont pas accélérées.",
+      "Les ressources sont payées à la commande. Les coûts et durées déjà enregistrés restent attachés à cette commande. Un bonus d’accélération retire 25 % du temps restant de l’opération active : deux applications successives laissent 56,25 % du temps initial restant, et non 50 %. Les opérations en attente ne sont pas accélérées. Les recherches, vaisseaux et défenses coûtent aussi une électricité par minute de durée effective, arrondie au supérieur pour la commande entière et payée une seule fois à l’ajout. Les bâtiments ne paient pas ce coût. Une accélération ne recalcule jamais l’électricité payée. Une annulation rembourse 25 % des ressources réellement payées, électricité comprise, pour la commande et ses dépendances, dans la place de stockage disponible. Le bilan d’annulation permet de vérifier les commandes et les montants avant confirmation.",
       "Fermer le navigateur ne suspend ni la production ni les opérations. Les stocks sont recalculés avec les pénuries et les plafonds rencontrés pendant votre absence. Un stockage plein suspend la production industrielle inutile ; l’électricité et l’hydrogène peuvent encore alimenter les consommateurs locaux.",
       "Un compte à rebours arrivé à zéro annonce une échéance, mais le traitement peut demander un court délai. Vérifiez l’état de la file ou le rapport avant de considérer l’opération comme terminée."
     ]
@@ -119,7 +119,7 @@
     "part": "3. Comprendre les calculs",
     "title": "Production et stockage en chiffres",
     "paragraphs": [
-      "Les débits du moteur sont exprimés par seconde. Pour obtenir une valeur horaire, multipliez par 3 600. Les formules suivantes séparent la production nominale, les consommations et les plafonds : c’est cette distinction qui explique les variations du débit affiché."
+      "Les débits du moteur sont exprimés par seconde. Pour obtenir une valeur horaire, multipliez par 3 600. Les formules suivantes séparent la production nominale, les consommations et les plafonds : c’est cette distinction qui explique les variations du débit affiché. La production de base totale est de 10 métal et 10 nano par heure en position 5 et univers ×1, avant les modificateurs existants ; les vacances suspendent la production. Le bilan économique de la colonie présente les sources, les consommations et les estimations de saturation ou d’épuisement au rythme actuel, sans reconstituer un historique."
     ],
     "calculations": [
       {

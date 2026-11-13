@@ -6,6 +6,21 @@ use PHPUnit\Framework\TestCase;
 
 final class FactoryEconomyTest extends TestCase
 {
+    public function testBalanceReconcilesGrossConsumptionAndUncreditedProduction():void
+    {
+        foreach([0,50,100] as $stock) {
+            $result=FactoryEconomy::simulate(['electricity'=>.2,'hydrogen'=>.1,'metal'=>.01],
+                [['slug'=>'mine_metal','resource'=>'metal','rate'=>1,'electricity'=>.5,'hydrogen'=>0]],
+                ['electricity'=>$stock,'hydrogen'=>$stock,'metal'=>$stock],
+                ['electricity'=>100,'hydrogen'=>100,'metal'=>100],0);
+            foreach($result['rates'] as $resource=>$rate) {
+                self::assertEqualsWithDelta($rate,$result['production'][$resource]-$result['consumption'][$resource]-$result['uncredited'][$resource],1e-9);
+                self::assertEqualsWithDelta($result['production'][$resource],array_sum($result['sources'][$resource]??[]),1e-9);
+                self::assertEqualsWithDelta($result['consumption'][$resource],array_sum($result['consumption_sources'][$resource]??[]),1e-9);
+            }
+        }
+    }
+
     public function testZeroElectricityStockDoesNotThrottleSufficientSupply():void
     {
         $result=FactoryEconomy::simulate(['electricity'=>.5,'hydrogen'=>0,'metal'=>0], [['resource'=>'metal','rate'=>1,'electricity'=>.5,'hydrogen'=>0]], ['electricity'=>0,'hydrogen'=>0,'metal'=>0],['electricity'=>100,'hydrogen'=>100,'metal'=>100],10);

@@ -71,7 +71,9 @@ final class BuildingBalanceTest extends TestCase
         foreach($this->fixture()['preserved_costs'] as $row){
             $definition=$this->catalog->getTierForUniverse($universe,$row['group'],$row['slug'],$row['tier']);
             $actual=$operation->calculate($definition,$row['group'],$row['level'],1,[],$this->catalog->forUniverse($universe));
-            self::assertSame($prices['entries'][$row['group']][$row['slug']]['costs'][$row['tier']]['none'][$row['level']][1]['new'],$actual);
+            $expected=$prices['entries'][$row['group']][$row['slug']]['costs'][$row['tier']]['none'][$row['level']][1]['new'];
+            if($row['group']!=='buildings') $expected['costs']['electricity']=(int)ceil($expected['duration']/60);
+            self::assertSame($expected,$actual);
             self::assertSame($row['plan']['duration'],$actual['duration']);
         }
         self::assertSame(1.5625,GameCatalog::tierFactor('superior'));

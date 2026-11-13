@@ -14,11 +14,11 @@
     "nano": 10000
   },
   "base_production": {
-    "metal": 0.011111111111111112,
+    "metal": 0.002777777777777778,
     "electricity": 0.0,
     "antimatter": 0.002777777777777778,
     "hydrogen": 0.022222222222222223,
-    "nano": 0.005555555555555556
+    "nano": 0.002777777777777778
   },
   "mine_production_per_level": 0.1,
   "base_storage_capacity": 10000,

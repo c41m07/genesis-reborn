@@ -639,3 +639,17 @@ de cinq minutes dans l’univers courant, sinon Hors ligne en rouge. Les libell�
 restent affichés. Cette information est réservée à sa propre guilde et actualisée
 lors de l’ouverture ou du rechargement de la liste. Une activité dans un autre
 univers ne rend pas ce membre en ligne ici ; heures et durées ne sont pas révélées.
+
+### Revenu de base métal et nano — décision du 13 novembre 2026
+
+Le revenu de base total est désormais de **10 métal/h et 10 nano/h**, à vitesse ×1 en position 5, au lieu de 40 métal/h et 20 nano/h. Ce sont des taux de remplacement, pas un revenu additionnel. Les modificateurs de position, d’univers et d’événement existants s’appliquent ; les vacances suspendent toujours la production. Les autres ressources, stocks et capacités restent inchangés. Le calcul des gains non matérialisés suit la règle courante déjà validée, sans migration.
+
+À stocks nuls, sans usine, à vitesse ×1 en position 5, 48 h fournissent 480 métal et 480 nano : assez pour les 480 métal et 160 nano d’un premier producteur direct. Cela ne produit aucune électricité et ne garantit pas la résolution de tous les blocages. Le coût électrique ponctuel suit la décision validée ci-dessous.
+
+### Électricité ponctuelle des opérations — décision du 13 novembre 2026
+
+Les recherches, vaisseaux et défenses paient une fois à l’ajout de chaque commande : **arrondi supérieur de la durée effective en secondes / 60**. La durée retenue inclut les réductions et multiplicateurs applicables au moment de l’ajout ; les quantités sont calculées comme une commande entière, avec un seul arrondi final. Ce coût s’ajoute aux autres ressources et à un éventuel coût électrique défini par le catalogue. Les bâtiments ne paient pas ce nouveau coût. Ce n’est pas une consommation horaire continue.
+
+Les coûts payés sont figés avec la commande. Une accélération ultérieure ne recalcule pas le prix et ne rembourse aucune électricité. Une annulation rembourse 25 % des coûts effectivement payés, électricité comprise, pour la commande et chaque dépendance annulée, dans la capacité disponible de chaque colonie payeuse. La capture conserve sa règle d’annulation sans remboursement. Les reconstructions automatiques des empires oubliés paient aussi ce coût ; leurs conditions de ressources restent applicables.
+
+Les aperçus et maxima constructibles utilisent le même calculateur que les prélèvements serveur. Les commandes déjà enregistrées gardent leurs coûts payés : aucune taxe rétroactive ni migration. L’[étude chiffrée](ETUDE_COUT_ELECTRIQUE.md) conserve les hypothèses et les risques de blocage des gros lots.

@@ -67,6 +67,45 @@ final class GamePersistenceTest extends KernelTestCase
         $preserved=$this->em->find(Planet::class,$planetId);self::assertSame($membershipId,$preserved->owner->id);
         self::assertEqualsWithDelta($stock,$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$preserved,'resourceType'=>'metal'])->currentStock,.000001);
     }
+    public function testElectricityIsPaidOnceAndCancellationPreviewMatchesDependentRefunds(): void
+    {
+        $clock=$this->clock();$player=$this->player('Electricity');$planet=$this->join($player);$member=$player->currentPlayerUniverse;
+        $service=self::getContainer()->get(QueueService::class);
+        $lab=new PlanetBuilding();$lab->planet=$planet;$lab->slug='lab';$lab->level=1;$this->em->persist($lab);$this->em->flush();
+        $firstKey=str_repeat('c',32);$secondKey=str_repeat('d',32);
+        $service->add($member,$planet,'technologies','engineering_foundations',1,$firstKey);
+        $service->add($member,$planet,'technologies','engineering_foundations',1,$secondKey);
+        $items=$this->em->getRepository(QueueItem::class)->findBy(['playerUniverse'=>$member,'queueType'=>'research'],['id'=>'ASC']);
+        self::assertCount(2,$items);
+        foreach($items as $item) self::assertSame((int)ceil($item->durationSeconds/60),$item->paidCosts['electricity']);
+        $electricity=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$planet,'resourceType'=>'electricity']);
+        $paid=array_sum(array_map(fn($item)=>$item->paidCosts['electricity'],$items));
+        self::assertEqualsWithDelta(10000-$paid,$electricity->currentStock,1e-7);
+        $service->add($member,$planet,'technologies','engineering_foundations',1,$firstKey);
+        self::assertEqualsWithDelta(10000-$paid,$electricity->currentStock,1e-7);
+        $first=$items[0];$before=$first->paidCosts;
+        $service->boost($member,$first->id,2,str_repeat('e',32));
+        self::assertSame($before,$first->paidCosts);
+        $preview=$service->cancellationPreview($member,$first->id);
+        self::assertCount(2,$preview['rows']);
+        self::assertEqualsWithDelta($paid*.25,array_sum(array_map(fn($row)=>$row['refund']['electricity'],$preview['rows'])),1e-7);
+        $itemId=$first->id;
+        $service->cancel($member,$itemId,str_repeat('f',32));
+        self::assertEqualsWithDelta(10000-$paid*.75,$electricity->currentStock,1e-7);
+        $service->cancel($member,$itemId,str_repeat('f',32));
+        self::assertEqualsWithDelta(10000-$paid*.75,$electricity->currentStock,1e-7);
+    }
+
+    public function testCancellationPreviewRefusesAnotherEmpire(): void
+    {
+        [$clock,$player,$one,$two,$service]=$this->researchColonies();
+        $service->add($player->currentPlayerUniverse,$one,'technologies','engineering_foundations',1,str_repeat('1',32));
+        $item=$this->em->getRepository(QueueItem::class)->findOneBy(['playerUniverse'=>$player->currentPlayerUniverse]);
+        $other=$this->player('ForeignPreview');$this->join($other);
+        $this->expectException(\DomainException::class);
+        $service->cancellationPreview($other->currentPlayerUniverse,$item->id);
+    }
+
     public function testQueuedLevelDependenciesCancellationAndDuplicateRequest(): void
     {
         $p=$this->player();$planet=$this->join($p);$s=self::getContainer()->get(QueueService::class);$m=$p->currentPlayerUniverse;
