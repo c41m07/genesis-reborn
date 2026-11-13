@@ -231,11 +231,17 @@ test('Recherche, chantier et défenses partagent les onglets et préservent leur
         await expect(tab('superior')).toBeHidden();
         await expect(panel('basic')).toBeVisible();
         await toggle.click();
+        await tab('superior').click();
         for (const width of [1920, 1440, 390, 320]) {
             await page.setViewportSize({ width, height: 1000 });
             expect(await family.getByRole('tab').evaluateAll(tabs => tabs.every(tab => tab.scrollWidth <= tab.clientWidth))).toBe(true);
+            const costRows = await panel('superior').locator('.building-costs > span').evaluateAll(costs => costs.map(cost => Math.round(cost.getBoundingClientRect().top)));
+            if (group === 'ships') expect(costRows).toHaveLength(5);
+            expect(new Set(costRows).size, `${group} : ressources sur une ligne à ${width} px`).toBe(1);
             expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+            if (group === 'ships') await family.screenshot({path:`output/playwright/couts-cinq-ressources-${width}.png`});
         }
+        await tab('basic').click();
         await page.setViewportSize({ width: 1920, height: 1000 });
         await page.screenshot({ path: `output/playwright/catalogue-${group}-tabs.png`, fullPage: true });
         if (group === 'defenses') {
