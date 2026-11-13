@@ -302,11 +302,13 @@ Les valeurs suivantes s’appliquent après activation du nouvel équilibrage. L
 
 | Ressource | Première planète | Colonie basique | Intermédiaire | Supérieure | Stockage de base | Production / h |
 |---|---:|---:|---:|---:|---:|---:|
-| Métal | 10 000 | 5 000 | 6 250 | 7 812,5 | 10 000 | 40 |
+| Métal | 10 000 | 5 000 | 6 250 | 7 812,5 | 10 000 | 10 |
 | Électricité | 10 000 | 0 | 0 | 0 | 10 000 | 0 |
 | Antimatière | 10 000 | 5 000 | 6 250 | 7 812,5 | 10 000 | 10 |
 | Hydrogène | 10 000 | 5 000 | 6 250 | 7 812,5 | 10 000 | 80 |
-| Nano | 10 000 | 5 000 | 6 250 | 7 812,5 | 10 000 | 20 |
+| Nano | 10 000 | 5 000 | 6 250 | 7 812,5 | 10 000 | 10 |
+
+Les taux métal et nano du tableau intègrent la décision du 13 novembre 2026 : 10/h chacun. Les anciennes valeurs 40/20 restent conservées dans l’historique des décisions.
 
 Le rang du vaisseau réellement consommé détermine le kit : ×1, ×1,25 ou ×1,5625 ; les fractions sont conservées et l’électricité reste nulle. Les stocks initiaux ne sont attribués qu’à la création des ressources. Aucun stock existant n’est redistribué ou remis à zéro.
 

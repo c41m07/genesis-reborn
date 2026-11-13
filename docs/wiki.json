@@ -127,7 +127,7 @@
         "explanation": "Les niveaux producteurs des trois rangs sont additionnés avec leurs facteurs de production, puis les modificateurs sont appliqués. Le débit net tient ensuite compte de la production de base, du rendement et des consommations locales.",
         "formula": "N = B + 1,5 × I + 2,25 × S\nProduction nominale par seconde = N × p × f × u × e\nProduction horaire = production par seconde × 3 600",
         "variables": ["B, I, S : niveaux Basique, Intermédiaire et Supérieur du même producteur.", "p : production par niveau ; f : facteur de position ; u : multiplicateur de production de l’univers ; e : multiplicateur d’événement (1 en son absence)."],
-        "example": "Une centrale de niveau 10 Basique et 4 Intermédiaire a N = 16. Avec p = 0,2 et f = u = e = 1, elle produit 3,2 électricité/s, soit 11 520/h, avant déduction des consommations. La production de base de la planète se compte séparément."
+        "example": "Une centrale de niveau 10 Basique et 4 Intermédiaire a N = 16. Avec p = 0,3 et f = u = e = 1, elle produit 4,8 électricité/s, soit 17 280/h, avant déduction des consommations. La production de base de la planète se compte séparément."
       },
       {
         "title": "Comprendre le stockage et une absence",

@@ -6,7 +6,7 @@ Statut : coefficient, remboursement à 25 % et application aux reconstructions a
 
 Calculs exécutés avec `GameCatalog` et `OperationCalculator` actuels, sans base de données. Univers configurés Omega et Turbo ; trois rangs et quantités 1 et 100. Début : niveau de recherche 1 et laboratoire/chantier Basique 1 ; milieu : 10/10 ; fin : recherche 25 et laboratoire/chantier Basique 80. Les installations des autres rangs sont absentes. Ces paliers servent de comparaison ; ce ne sont pas des historiques de joueurs, ni une garantie que tous les prérequis sont remplis. Les autres réductions et les paramètres personnalisés des univers ne sont pas supposés actifs.
 
-La proposition est `coût E = ceil(durée effective en secondes / 60)` pour la commande entière. Paiement une fois à l’ajout, durée calculée avec les bonus présents. Une accélération ultérieure ne modifie ni le paiement ni le remboursement. Aucun coût sur les bâtiments. Le service actuel n’applique pas de réduction de temps aux défenses ; cette étude conserve ce comportement.
+La règle validée est `coût E = ceil(durée effective en secondes / 60)` pour la commande entière. Paiement une fois à l’ajout, durée calculée avec les bonus présents. Une accélération ultérieure ne modifie ni le paiement ni le remboursement. Aucun coût sur les bâtiments. Le service actuel n’applique pas de réduction de temps aux défenses ; cette étude conserve ce comportement.
 
 ## Exemples calculés
 
@@ -71,10 +71,23 @@ En fin de comparaison, 100 cuirassés Supérieurs demanderaient 329 081 E, au-de
 
 Turbo réduit les durées à 1 % : les coûts suivent la durée réduite, sans seconde multiplication par la vitesse de production. Les arrondis des petites commandes limitent cette proportion. Par exemple le colonisateur initial passe de 119 E à 2 E. Les bonus de laboratoire/chantier sont déjà inclus dans les durées ci-dessus. Une durée réduite de 70 % doit réduire l’assiette du coût de 70 %, sous réserve d’arrondi ; aucune réduction après mise en file ne le recalcule.
 
-## Annulation et lots : décisions à confirmer
+## Annulation et lots : décisions confirmées
 
-L’annulation actuelle rembourse 25 % de chaque ressource effectivement payée pour la commande et tous ses descendants, dans la place disponible sur chaque planète payeuse. L’électricité pourrait suivre cette règle via les coûts enregistrés, mais son application au nouveau coût doit être confirmée. Une capture suit une autre règle : annulation sans remboursement.
+L’annulation actuelle rembourse 25 % de chaque ressource effectivement payée pour la commande et tous ses descendants, dans la place disponible sur chaque planète payeuse. L’électricité pourrait suivre cette règle via les coûts enregistrés, et son application au nouveau coût a été confirmée explicitement. Une capture suit une autre règle : annulation sans remboursement.
 
-Proposition : appliquer aussi les 25 % à l’électricité payée, y compris aux dépendances, et conserver la limite de stockage. Les quantités restent payées et annulées par commande complète. Arrondir le coût électrique une seule fois sur la durée totale du lot ; le fractionnement en petites commandes peut augmenter le total à cause des arrondis. Ne jamais calculer le remboursement depuis la durée accélérée.
+Décision validée : appliquer aussi les 25 % à l’électricité payée, y compris aux dépendances, et conserver la limite de stockage. Les quantités restent payées et annulées par commande complète. Arrondir le coût électrique une seule fois sur la durée totale du lot ; le fractionnement en petites commandes peut augmenter le total à cause des arrondis. Ne jamais calculer le remboursement depuis la durée accélérée.
 
-Après validation : tests serveur de paiement, aperçu, maximum constructible, double soumission, dépendances, remboursement plafonné, vacances, univers et accélération. Examiner aussi le chemin automatique de reconstruction des empires oubliés, qui partage le calculateur, pour éviter un effet métier non décidé.
+Vérifications de l’intégration : tests serveur de paiement, aperçu, maximum constructible, double soumission, dépendances, remboursement plafonné, vacances, univers et accélération. Examiner aussi le chemin automatique de reconstruction des empires oubliés, qui partage le calculateur, pour éviter un effet métier non décidé.
+
+## Complément : expansion coloniale et opérations longues
+
+Mêmes hypothèses que le tableau principal, univers Omega, rang Supérieur. Ces coûts soulignent aussi le besoin de stockage pour les recherches longues, indépendamment des lots.
+
+| Phase | Opération | Niveau / quantité | Durée (s) | E |
+|---|---|---:|---:|---:|
+| début | colonial_expansion | 1 | 444046 | 7401 |
+| début | weapons_engineering | 1 | 33304 | 556 |
+| début | capital | 100 | 39964116 | 666069 |
+| fin | colonial_expansion | 15 | 7631281 | 127189 |
+| fin | weapons_engineering | 25 | 1777620 | 29627 |
+| fin | capital | 100 | 29617252 | 493621 |
