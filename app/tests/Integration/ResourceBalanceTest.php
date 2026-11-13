@@ -65,7 +65,7 @@ final class ResourceBalanceTest extends KernelTestCase
             $row->currentStock=0;
         }
         $this->em->flush();
-        $rates=['metal'=>10,'electricity'=>0,'antimatter'=>10,'hydrogen'=>80,'nano'=>10];
+        $rates=['metal'=>10,'electricity'=>0,'antimatter'=>0,'hydrogen'=>0,'nano'=>10];
         foreach($resources->snapshot($planet) as $slug=>$row) self::assertEqualsWithDelta($rates[$slug],$row['rate']*3600,1e-8);
         $this->clock->sleep(3600);
         foreach($resources->snapshot($planet) as $slug=>$row) self::assertEqualsWithDelta($rates[$slug],$row['stock'],1e-8);
@@ -84,7 +84,10 @@ final class ResourceBalanceTest extends KernelTestCase
         self::assertArrayNotHasKey('sources',$resources->snapshot($planet)['metal']);
         self::assertEqualsWithDelta(480,$snapshot['metal']['stock'],1e-7);
         self::assertEqualsWithDelta(480,$snapshot['nano']['stock'],1e-7);
-        self::assertSame(0.0,$snapshot['electricity']['stock']);
+        foreach(['electricity','antimatter','hydrogen'] as $slug) {
+            self::assertSame(0.0,$snapshot[$slug]['stock']);
+            self::assertSame(0.0,$snapshot[$slug]['rate']);
+        }
         $resources->consume($planet,['metal'=>480,'nano'=>160]);
         self::assertEqualsWithDelta(10,$snapshot['metal']['sources']['base']*3600,1e-7);
     }
@@ -95,7 +98,7 @@ final class ResourceBalanceTest extends KernelTestCase
         $rows=$this->rows($planet);
         foreach($rows as $row) $row->currentStock=0;
         $this->em->flush();$this->clock->sleep(7200);
-        $expected=['metal'=>20,'electricity'=>0,'antimatter'=>20,'hydrogen'=>160,'nano'=>20];
+        $expected=['metal'=>20,'electricity'=>0,'antimatter'=>0,'hydrogen'=>0,'nano'=>20];
         $snapshot=$resources->snapshot($planet);
         foreach($expected as $slug=>$stock) {
             self::assertEqualsWithDelta($stock,$snapshot[$slug]['stock'],1e-7,$slug);
@@ -143,7 +146,7 @@ final class ResourceBalanceTest extends KernelTestCase
         $event->startsAt=$this->clock->now()->modify('-1 hour');$event->endsAt=$this->clock->now()->modify('+1 hour');$event->parameters=['percentage'=>50];
         $this->em->persist($event);$this->em->flush();
         $resources=self::getContainer()->get(ResourceService::class);
-        foreach(['metal'=>36,'electricity'=>0,'antimatter'=>30,'hydrogen'=>192,'nano'=>36] as $slug=>$hourly) self::assertEqualsWithDelta($hourly,$resources->rate($planet,$slug,0,[])*3600,1e-7,$slug);
+        foreach(['metal'=>36,'electricity'=>0,'antimatter'=>0,'hydrogen'=>0,'nano'=>36] as $slug=>$hourly) self::assertEqualsWithDelta($hourly,$resources->rate($planet,$slug,0,[])*3600,1e-7,$slug);
     }
 
     public function testDefaultRulesApplyImmediatelyAndDoNotResetExistingRows(): void

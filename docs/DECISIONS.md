@@ -1523,7 +1523,7 @@ visibles selon le rôle, sans modifier les permissions ni leurs conséquences.
 
 ### Revenu de base métal et nano — décision du 13 novembre 2026
 
-Le revenu de base total est désormais de **10 métal/h et 10 nano/h**, à vitesse ×1 en position 5, au lieu de 40 métal/h et 20 nano/h. Ce sont des taux de remplacement, pas un revenu additionnel. Les modificateurs de position, d’univers et d’événement existants s’appliquent ; les vacances suspendent toujours la production. Les autres ressources, stocks et capacités restent inchangés. Le calcul des gains non matérialisés suit la règle courante déjà validée, sans migration.
+Le revenu de base total est désormais de **10 métal/h et 10 nano/h**, à vitesse ×1 en position 5, au lieu de 40 métal/h et 20 nano/h. Ce sont des taux de remplacement, pas un revenu additionnel. Les modificateurs de position, d’univers et d’événement existants s’appliquent ; les vacances suspendent toujours la production. Le revenu de base est nul pour l’électricité, l’antimatière et l’hydrogène, conformément à la précision validée le 13 novembre 2026. Les productions des bâtiments, stocks et capacités restent inchangés. Le calcul des gains non matérialisés suit la règle courante déjà validée, sans migration.
 
 À stocks nuls, sans usine, à vitesse ×1 en position 5, 48 h fournissent 480 métal et 480 nano : assez pour les 480 métal et 160 nano d’un premier producteur direct. Cela ne produit aucune électricité et ne garantit pas la résolution de tous les blocages. Le coût électrique ponctuel suit la décision validée ci-dessous.
 
