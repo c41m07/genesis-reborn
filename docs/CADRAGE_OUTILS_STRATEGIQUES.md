@@ -156,7 +156,10 @@ Les quatre nouveaux scénarios navigateur passent : ordinateur 1 440 px,
 mobile 390/320 px, thèmes clair/sombre réellement enregistrés dans les
 préférences, contrôles axe ciblés, clavier et fonctionnement sans JavaScript.
 Les cinq scénarios existants ciblés de flotte, fret et archives passent aussi.
-Les captures ont été examinées ; ces vérifications ne constituent pas un audit
+Les noms de composition de 80 caractères sans espace et les messages longs
+(dépliage sans marquage) sont couverts. Les liens des compositions reviennent à
+la ligne pour éviter un débordement mobile. Les captures ont été examinées ;
+ces vérifications ne constituent pas un audit
 RGAA complet. La reprise des anciens instantanés sans rang de forteresse a son
 test dédié, réussi avec le contrôle de provenance (2 tests, 9 assertions).
 
