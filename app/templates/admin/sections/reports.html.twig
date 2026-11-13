@@ -17,3 +17,23 @@
 {% endfor %}
 <p hidden data-admin-filter-target="empty" data-default-message="Aucun signalement à traiter." data-no-matches-message="Aucun signalement ne correspond à cette recherche.">Aucun signalement à traiter.</p>
 </section>
+
+<section class="panel admin-section" id="admin-player-reports" aria-labelledby="admin-player-reports-title">
+<h2 id="admin-player-reports-title">Signalements de joueurs</h2>
+<p>Contexte conservé au moment du signalement. Le traitement ne déclenche aucune sanction automatique.</p>
+{% for report in playerReports %}
+<article class="panel">
+<h3>Signalement joueur #{{ report.id }} · {{ report.context.target_username }}</h3>
+<p>{{ report.createdAt|date('d/m/Y H:i') }} · Univers {{ report.context.universe_name }} (#{{ report.context.universe_id }})</p>
+<p>Auteur : {{ report.context.reporter_username }} (#{{ report.context.reporter_id }}) · Joueur visé : {{ report.context.target_username }} (#{{ report.context.target_id }})</p>
+<p>Classement consulté : {{ playerReportCategories[report.context.category] }} · rang #{{ report.context.rank }} · calcul du {{ report.context.leaderboard_at|date('d/m/Y H:i') }}.</p>
+{% if report.context.target_username_seen != report.context.target_username %}<p>Pseudonyme lors de la consultation : {{ report.context.target_username_seen }}</p>{% endif %}
+<p>Motif : {{ playerReportReasons[report.reason] }}</p>{% if report.comment %}<p class="player-report-comment">Commentaire : {{ report.comment }}</p>{% endif %}
+<form method="post" action="{{ path('app_admin_player_report_review',{id:report.id}) }}">
+<input type="hidden" name="_token" value="{{ csrf_token('admin_player_report_'~report.id) }}">
+<button class="secondary" name="decision" value="dismiss">Classer sans suite</button>
+<button class="primary" name="decision" value="actioned">Marquer comme traité</button>
+</form>
+</article>
+{% else %}<p>Aucun signalement de joueur à traiter.</p>{% endfor %}
+</section>

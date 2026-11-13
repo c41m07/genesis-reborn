@@ -1,0 +1,37 @@
+{% extends 'admin/layout.html.twig' %}
+{% block title %}Projets de guilde · Console d’administration{% endblock %}
+{% block body %}
+<div class="page-heading"><h1>Projets de guilde</h1><p>Des paliers financés par les membres, avec une récompense unique par joueur et modèle de projet.</p></div>
+<section class="panel" aria-labelledby="project-definition-title">
+    <h2 id="project-definition-title">{{ editing ? 'Modifier le modèle' : 'Créer un modèle' }}</h2>
+    <p>Aucun modèle n’est actif par défaut. Les projets déjà lancés conservent leurs conditions, même si vous modifiez ou désactivez leur modèle.</p>
+    <form method="post" class="admin-event-form">
+        <input type="hidden" name="_token" value="{{ csrf_token('guild_project_definition_'~(editing.id|default(0))) }}"><input type="hidden" name="version" value="{{ draft.version }}">
+        <div class="form-grid">
+            <label for="project-name">Nom du projet<input id="project-name" name="name" maxlength="120" required value="{{ draft.name }}"></label>
+            <label for="project-universe">Univers<select id="project-universe" name="universe_id" required{% if editing %} disabled{% endif %}><option value="">Choisir</option>{% for universe in universes %}<option value="{{ universe.id }}"{% if draft.universe_id==universe.id %} selected{% endif %}>{{ universe.name }}</option>{% endfor %}</select></label>
+            {% if editing %}<input type="hidden" name="universe_id" value="{{ draft.universe_id }}">{% endif %}
+        </div>
+        <label for="project-description">Description<textarea id="project-description" name="description" maxlength="2000">{{ draft.description }}</textarea></label>
+        <h3>Paliers successifs</h3>
+        <p>Les membres financent un palier à la fois. Une quantité à zéro signifie que cette ressource n’est pas demandée.</p>
+        {% for stage in draft.stages %}
+            <fieldset><legend>Palier {{ loop.index }}</legend>
+                <label for="stage-{{ loop.index0 }}-name">Nom du palier {{ loop.index }}<input id="stage-{{ loop.index0 }}-name" name="stages[{{ loop.index0 }}][name]" required maxlength="80" value="{{ stage.name|default('') }}"{% if focusStage is same as(loop.index0) %} autofocus{% endif %}></label>
+                <div class="form-grid">{% for resource,label in resources %}<label for="stage-{{ loop.parent.loop.index0 }}-{{ resource }}">{{ label }} · palier {{ loop.parent.loop.index }}<input id="stage-{{ loop.parent.loop.index0 }}-{{ resource }}" type="number" name="stages[{{ loop.parent.loop.index0 }}][costs][{{ resource }}]" min="0" max="1000000000" step="1" value="{{ stage.costs[resource]|default(0) }}"></label>{% endfor %}</div>
+            </fieldset>
+        {% endfor %}
+        <div class="guild-hub-actions"><button class="secondary" name="intent" value="add_stage" formnovalidate{% if draft.stages|length>=10 %} disabled{% endif %}>Ajouter un palier</button><button class="secondary" name="intent" value="remove_stage" formnovalidate{% if draft.stages|length<=1 %} disabled{% endif %}>Retirer le dernier palier</button></div>
+        <fieldset><legend>Minimums pour gagner le boost</legend>
+            <p>Chaque minimum positif doit être atteint par le joueur sur l’ensemble des paliers. Il doit encore appartenir à la guilde à la fin. Une valeur à zéro n’ajoute pas de condition sur cette ressource.</p>
+            <div class="form-grid">{% for resource,label in resources %}<label for="minimum-{{ resource }}">Minimum {{ label }}<input id="minimum-{{ resource }}" type="number" name="minimums[{{ resource }}]" min="0" max="10000000000" step="1" value="{{ draft.minimums[resource]|default(0) }}"></label>{% endfor %}</div>
+        </fieldset>
+        <label><input type="checkbox" name="enabled" value="1"{% if draft.enabled %} checked{% endif %}> Disponible pour de nouveaux lancements</label>
+        <p>Un seul boost standard par joueur et modèle, même après changement de guilde. Les dons ne sont pas remboursés. Aucun bonus permanent n’est accordé.</p>
+        <button class="primary" name="intent" value="save">Enregistrer le modèle</button>{% if editing %} <a href="{{ path('app_admin_guild_projects') }}">Annuler la modification</a>{% endif %}
+    </form>
+</section>
+<section aria-labelledby="project-models-title"><h2 id="project-models-title">Modèles enregistrés</h2>
+{% for definition in definitions %}<article class="panel"><h3>{{ definition.name }}</h3><p>{{ definition.universe.name }} · {{ definition.enabled ? 'Disponible' : 'Désactivé pour les nouveaux lancements' }} · {{ definition.stages|length }} palier(s)</p><p>Les coûts et minimums permettent au maximum {{ projectRules.maximumRecipients(definition.stages,definition.minimums) }} récompense(s) dans une guilde, selon la répartition des dons.</p><a href="{{ path('app_admin_guild_projects',{edit:definition.id}) }}">Modifier {{ definition.name }}</a></article>{% else %}<p class="panel">Aucun modèle de projet. Aucun coût ni récompense de projet n’est actif.</p>{% endfor %}
+</section>
+{% endblock %}

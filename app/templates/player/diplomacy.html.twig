@@ -1,19 +1,17 @@
-{% extends 'base.html.twig' %}{% block title %}Diplomatie · Genesis Reborn{% endblock %}{% block body %}{% import 'ui/macros.html.twig' as ui %}{% set relation_labels={allies:'Alliés',enemies:'Ennemis',neutral:'Neutre',pending:'Proposition en attente'} %}<div class="page-heading"><div><h1>Alliances</h1><p>Les alliances directes sont réciproques et nécessitent l'accord des deux commandants.</p></div></div>{% set tab = app.request.query.get('tab') in ['guilds','diplomacy','relations'] ? app.request.query.get('tab') : 'guilds' %}
-<nav class="alliance-tabs ui-tabs" aria-label="Sections des alliances">{% for key, label in {guilds:'Guildes',diplomacy:'Diplomatie',relations:'Relation'} %}<a href="{{ path('app_diplomacy', {tab:key}) }}" {% if tab==key %}aria-current="page" class="active"{% endif %}>{{ label }}</a>{% endfor %}</nav>
-{% if tab=='guilds' %}{% include 'player/_guild_hub.html.twig' %}{% endif %}
-{% if tab=='diplomacy' %}<section aria-label="Diplomatie des guildes">
-<div class="relation-heading"><div><h2>Relations entre guildes</h2><p>Vos alliances, propositions et hostilités de guilde.</p></div>
-{% if enabled %}<form method="get" action="{{ path('app_diplomacy') }}" class="relation-search" role="search"><input type="hidden" name="tab" value="diplomacy"><label class="visually-hidden" for="guild-search">Rechercher une guilde</label><input id="guild-search" type="search" name="q" value="{{ search }}" minlength="2" maxlength="60" placeholder="Rechercher une guilde…" required><button class="secondary">Rechercher</button></form>{% endif %}</div>
-{% if not enabled %}<p class="panel">Les guildes sont désactivées dans cet univers.</p>{% else %}
-{% if search %}<section class="relation-results" aria-label="Résultats de recherche de guildes"><div class="section-heading"><h3>Résultats pour « {{ search }} »</h3><a href="{{ path('app_diplomacy',{tab:'diplomacy'}) }}">Fermer la recherche</a></div><div class="catalog-grid">{% for row in guildSearchResults %}{% include 'player/_guild_diplomacy_card.html.twig' with {cardContext:'search'} %}{% else %}<p role="status">{{ search|length < 2 ? 'Saisissez au moins deux caractères.' : 'Aucune guilde trouvée dans cet univers.' }}</p>{% endfor %}</div></section>{% endif %}
-<div class="section-heading"><h3>Relations de votre guilde</h3><span class="badge">{{ guildRelations|length }}</span></div><div class="catalog-grid">{% for row in guildRelations %}{% include 'player/_guild_diplomacy_card.html.twig' with {cardContext:'existing'} %}{% else %}<div class="panel"><h3>{{ own ? 'Aucune relation de guilde établie' : 'Rejoignez une guilde' }}</h3><p>{{ own ? 'Recherchez une guilde pour consulter son équipage et établir une relation diplomatique.' : 'Recherchez une guilde pour découvrir ses membres, contacter son commandant ou la rejoindre.' }}</p></div>{% endfor %}</div>
-{% endif %}</section>{% endif %}
+{% extends 'base.html.twig' %}
+{% block title %}Diplomatie · Genesis Reborn{% endblock %}
+{% block body %}
+{% import 'ui/macros.html.twig' as ui %}
+{% set relation_labels={allies:'Alliés',enemies:'Ennemis',neutral:'Neutre',pending:'Proposition en attente',non_aggression:'Pacte de non-agression',defense:'Pacte de défense'} %}
+<div class="page-refinement diplomacy-page">
+<div class="page-heading"><div><h1>Diplomatie</h1><p>Votre guilde, ses membres et vos relations dans cet univers.</p></div></div>
+<nav class="alliance-tabs ui-tabs diplomacy-tabs" aria-label="Sections de diplomatie">{% for key,label in tabs %}<a href="{{ path('app_diplomacy',{tab:key}) }}"{% if tab==key %} aria-current="page" class="active"{% endif %}>{{ label }}</a>{% endfor %}</nav>
 {% if tab=='relations' %}
 <section aria-label="Relations entre commandants">
-    <div class="relation-heading"><div><h2>Relations entre commandants</h2><p>Vos alliances et propositions en cours.</p></div>
+    <div class="relation-heading"><div><h2>Relations entre commandants</h2><p>Vos alliances et propositions en cours. Une alliance personnelle nécessite l’accord des deux commandants.</p></div>
         <form method="get" action="{{ path('app_diplomacy') }}" class="relation-search" role="search">
             <input type="hidden" name="tab" value="relations">
-            <label class="visually-hidden" for="relation-player-search">Rechercher un joueur</label>
+            <label for="relation-player-search">Rechercher un joueur</label>
             <input id="relation-player-search" type="search" name="q" value="{{ search }}" minlength="2" maxlength="40" placeholder="Rechercher un joueur…" required>
             <button class="secondary">Rechercher</button>
         </form>
@@ -24,5 +22,24 @@
     <div class="section-heading"><h3>Vos relations</h3><span class="badge">{{ players|length }}</span></div>
     <div class="catalog-grid" id="alliance-members">{% for row in players %}{% include 'player/_relation_card.html.twig' %}{% else %}<div class="panel"><h3>Aucune relation établie</h3><p>Recherchez un commandant pour lui proposer une alliance. Vos propositions et alliances apparaîtront ici.</p></div>{% endfor %}</div>
 </section>
+
+{% elseif not enabled %}
+<section class="panel guild-hub-hero" aria-label="Centre de guilde"><span class="guild-hub-emblem" aria-hidden="true">{{ ui.icon('diplomacy') }}</span><div><h2>{{ own ? own.name : 'Un empire se construit ensemble' }}</h2><p>Vos relations personnelles restent disponibles dans cet univers.</p></div>{% if own %}<a class="primary" href="{{ path('app_messages',{channel:'guild'}) }}">Ouvrir le canal de guilde</a>{% endif %}</section>
+<p class="panel">Les guildes sont désactivées dans cet univers. Les relations entre commandants restent accessibles dans l’onglet Relations commandants.</p>
+{% elseif tab=='guilds' %}
+    {% if own and ownRow %}{% include 'player/_guild_hub.html.twig' %}{% else %}{% include 'player/_guild_create.html.twig' %}{% endif %}
+{% elseif tab=='join' and not own %}
+    {% include 'player/_guild_join.html.twig' %}
+{% elseif tab=='members' and own and ownRow %}
+    {% include 'player/_guild_members.html.twig' %}
+{% elseif tab=='ranks' and own %}
+    {% include 'player/_guild_ranks.html.twig' %}
+{% elseif tab=='diplomacy' and own %}
+<section aria-label="Diplomatie des guildes">
+<section class="panel"><h2>Relations entre guildes</h2><p>Vos alliances, propositions et hostilités de guilde.</p>{% include 'player/_guild_search.html.twig' %}</section>
+<div class="section-heading"><h3>Relations de votre guilde</h3><span class="badge">{{ guildRelations|length }}</span></div>
+<div class="guild-relations-list">{% for row in guildRelations %}{% include 'player/_guild_diplomacy_card.html.twig' with {cardContext:'existing'} %}{% else %}<section class="panel"><h3>Aucune relation de guilde établie</h3><p>Recherchez une guilde pour consulter son équipage et établir une relation diplomatique.</p></section>{% endfor %}</div>
+</section>
 {% endif %}
+</div>
 {% endblock %}

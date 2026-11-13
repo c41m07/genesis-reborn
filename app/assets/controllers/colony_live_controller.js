@@ -6,7 +6,7 @@ export default class extends Controller {
     async refresh(){
         this.abort?.abort();this.abort=new AbortController();
         try {
-            const r=await fetch((location.pathname.startsWith('/planetes/')||location.pathname==='/flottes') ? location.href : this.urlValue,{signal:this.abort.signal});if(!r.ok) return;
+            const r=await fetch((location.pathname.startsWith('/planetes/')||location.pathname==='/flottes') ? location.href : this.urlValue,{signal:this.abort.signal,headers:{"X-Genesis-Live":"1"}});if(!r.ok) return;
             const doc=new DOMParser().parseFromString(await r.text(),'text/html');
             let deferred=false;
             for(const region of document.querySelectorAll('[data-live-region]')) {

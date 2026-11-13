@@ -77,6 +77,8 @@ final class LeaderboardService
 
         foreach ([
             'points' => 'total_points',
+            'buildings' => 'building_points',
+            'research' => 'research_points',
             'fleet' => 'fleet_points',
             'planets' => 'planets',
         ] as $sort => $field) {
@@ -131,6 +133,15 @@ final class LeaderboardService
         foreach ($rows as $index => &$row) $row['rank'] = $index + 1;
         unset($row);
         return $rows;
+    }
+
+    public function fleetPoints(Fleet $fleet, array $ships): int
+    {
+        $resources = 0;
+        foreach ($ships as $ship) {
+            if ($ship->quantity > 0) $resources += $this->unitCost($fleet->playerUniverse->universe, 'ships', $ship->slug, $ship->quantity, $ship->tier);
+        }
+        return intdiv($resources, 100);
     }
 
     private function cumulativeCost(\App\Entity\Universe $universe,string $group,string $slug,int $level,string $tier='basic'):int

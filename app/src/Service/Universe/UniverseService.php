@@ -34,7 +34,7 @@ final class UniverseService
                     throw new \DomainException('Cet univers ne dispose plus de planète libre.');
                 }
                 $planet->name = $this->planetNames->generate($m);
-                $planet->owner = $m;
+                $planet->acquireBy($m,$this->clock->now());
                 $this->resources->initialize($planet);
                 $d=new PlayerDiscovery();$d->playerUniverse=$m;$d->solarSystem=$planet->solarSystem;$this->manager->save($d);
             }

@@ -83,9 +83,9 @@
     "superior": "Réseau de connaissance du champ de bataille"
   },
   "tier_descriptions": {
-    "basic": "Améliore le score de renseignement de vos sondes et réduit celui des sondes adverses. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux.",
-    "intermediate": "Améliore le score de renseignement de vos sondes et réduit celui des sondes adverses. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux.",
-    "superior": "Améliore le score de renseignement de vos sondes et réduit celui des sondes adverses. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux."
+    "basic": "Améliore le score de renseignement de vos sondes et réduit celui des sondes adverses. Détecte aussi les attaques entrantes : 5 min de base + 5 min par niveau cumulé des trois rangs, dans la limite de 2 h et de 50 % du trajet ennemi. Les effets d’espionnage conservent leur pondération actuelle.",
+    "intermediate": "Améliore le score de renseignement de vos sondes et réduit celui des sondes adverses. Détecte aussi les attaques entrantes : 5 min de base + 5 min par niveau cumulé des trois rangs, dans la limite de 2 h et de 50 % du trajet ennemi. Les effets d’espionnage conservent leur pondération actuelle.",
+    "superior": "Améliore le score de renseignement de vos sondes et réduit celui des sondes adverses. Détecte aussi les attaques entrantes : 5 min de base + 5 min par niveau cumulé des trois rangs, dans la limite de 2 h et de 50 % du trajet ennemi. Les effets d’espionnage conservent leur pondération actuelle."
   },
-  "description": "Améliore le score de renseignement de vos sondes et réduit celui des sondes adverses. Les accès associés sont des déblocages initiaux permanents, sans condition supplémentaire pendant la montée en niveaux."
+  "description": "Améliore le score de renseignement de vos sondes et réduit celui des sondes adverses. Détecte aussi les attaques entrantes : 5 min de base + 5 min par niveau cumulé des trois rangs, dans la limite de 2 h et de 50 % du trajet ennemi. Les effets d’espionnage conservent leur pondération actuelle."
 }

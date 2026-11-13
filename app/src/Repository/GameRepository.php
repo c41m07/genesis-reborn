@@ -42,6 +42,14 @@ final class GameRepository
         }
         return false;
     }
+    public function guildTreatyHistory(\App\Entity\Guild $a,\App\Entity\Guild $b): array
+    {
+        if($a->universe->id!==$b->universe->id) return [];
+        if($a->id>$b->id) [$a,$b]=[$b,$a];
+        return $this->em->getRepository(\App\Entity\GuildTreatyEvent::class)->findBy(
+            ['universeId'=>$a->universe->id,'guildAId'=>$a->id,'guildBId'=>$b->id],['id'=>'DESC'],10
+        );
+    }
     public function all(string $class, array $criteria = [], array $order = ['id' => 'ASC']): array { return $this->em->getRepository($class)->findBy($criteria, $order); }
     /** @return list<PlayerUniverse> */
     public function forgottenEmpirePreviewCandidates(\DateTimeImmutable $now, int $conversionSeconds, int $limit, int $afterId, \DateTimeImmutable $cutoff): array
@@ -90,7 +98,7 @@ SELECT
     (SELECT COUNT(*) FROM player_technology WHERE player_universe_id = :membership) AS technologies,
     (SELECT COUNT(*) FROM combat_event e JOIN planet p ON p.id = e.planet_id WHERE e.status = 'pending'
         AND (p.owner_id = :membership OR EXISTS (SELECT 1 FROM combat_participant cp WHERE cp.combat_event_id = e.id AND cp.player_universe_id = :membership))) AS open_combats,
-    (SELECT COUNT(*) FROM alliance_contract WHERE (player_a_id = :membership OR player_b_id = :membership) AND status IN ('pending','accepted')) AS alliances,
+    (SELECT COUNT(*) FROM alliance_contract WHERE (player_a_id = :membership OR player_b_id = :membership) AND status IN ('pending','accepted','enemies','peace_pending')) AS alliances,
     (SELECT COUNT(*) FROM guild_member WHERE player_universe_id = :membership) AS guild_memberships,
     (SELECT COUNT(*) FROM guild WHERE leader_id = :membership) AS led_guilds
 SQL;
@@ -215,7 +223,7 @@ SQL;
     public function planets(Universe $u, ?PlayerUniverse $owner = null, bool $freeOnly = false): array
     {
         $q = $this->em->createQueryBuilder()->select('p', 's', 'g')->from(Planet::class, 'p')->join('p.solarSystem','s')->join('s.galaxy','g')->where('g.universe = :u')->setParameter('u',$u)->orderBy('p.id','ASC');
-        if ($owner) $q->andWhere('p.owner = :owner')->setParameter('owner',$owner);
+        if ($owner) $q->andWhere('p.owner = :owner')->setParameter('owner',$owner)->orderBy('p.acquiredAt','ASC')->addOrderBy('p.id','ASC');
         if ($freeOnly) $q->andWhere('p.owner IS NULL');
         return $q->getQuery()->getResult();
     }
@@ -225,6 +233,38 @@ SQL;
     }
 
     /** @return list<Fleet> */
+    public function incomingAttackFleets(PlayerUniverse $viewer): array
+    {
+        return $this->em->createQueryBuilder()->select('f','target')
+            ->from(Fleet::class,'f')->join('f.destination','target')->join('f.playerUniverse','sender')
+            ->where('target.owner = :viewer')->andWhere('sender.universe = :universe')->andWhere('f.playerUniverse <> :viewer')
+            ->andWhere('f.status = :status')->andWhere('f.mission IN (:missions)')
+            ->setParameter('viewer',$viewer)->setParameter('universe',$viewer->universe)
+            ->setParameter('status','traveling')->setParameter('missions',['attack','conquer'])
+            ->orderBy('f.arrivalAt','ASC')->addOrderBy('f.id','ASC')->getQuery()->getResult();
+    }
+
+    /** @return list<Fleet> */
+    public function planetHasActiveFleet(Planet $planet): bool
+    {
+        return (int)$this->em->createQueryBuilder()->select('COUNT(f.id)')->from(Fleet::class,'f')
+            ->where('(f.homePlanet = :planet OR f.destination = :planet OR f.returnPlanet = :planet)')
+            ->andWhere('f.status NOT IN (:finished)')->setParameter('planet',$planet)
+            ->setParameter('finished',['idle','completed','failed'])->getQuery()->getSingleScalarResult()>0;
+    }
+
+    /** @return list<Fleet> */
+    public function orbitRequestsFor(PlayerUniverse $viewer): array
+    {
+        return $this->em->createQueryBuilder()->select('f','sender','target')
+            ->from(Fleet::class,'f')->join('f.playerUniverse','sender')->join('f.destination','target')
+            ->where('sender.universe = :universe')->andWhere('f.mission = :mission')
+            ->andWhere('f.status IN (:statuses)')->andWhere('(sender = :viewer OR target.owner = :viewer)')
+            ->setParameter('universe',$viewer->universe)->setParameter('viewer',$viewer)
+            ->setParameter('mission','orbit')->setParameter('statuses',['traveling','orbit_pending'])
+            ->orderBy('f.arrivalAt','ASC')->addOrderBy('f.id','ASC')->getQuery()->getResult();
+    }
+
     public function activeFleetsInUniverse(Universe $universe): array
     {
         return $this->em->createQueryBuilder()->select('f', 'pu', 'home', 'homeSystem', 'homeGalaxy', 'destination', 'destinationSystem', 'destinationGalaxy', 'directSystem', 'directGalaxy')
@@ -412,7 +452,7 @@ SQL;
     public function outbox(bool $notifications): array
     {
         return $this->em->createQueryBuilder()->select('o')->from(OutboxMessage::class,'o')
-            ->where($notifications?'o.kind = :kind':'o.kind IN (:kind)')->setParameter('kind',$notifications?'notification':['queue','fleet','combat','universe','occupation'])
+            ->where($notifications?'o.kind = :kind':'o.kind IN (:kind)')->setParameter('kind',$notifications?'notification':['queue','fleet','combat','universe','occupation','guild_project','reconstruction'])
             ->orderBy('o.id','ASC')->setMaxResults(100)->getQuery()->getResult();
     }
     public function activeQueueItems(): array

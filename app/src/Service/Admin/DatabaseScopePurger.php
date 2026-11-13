@@ -96,7 +96,7 @@ final class DatabaseScopePurger
             }
 
             if (isset($tables['outbox_message'])) {
-                $outboxTargets = ['queue_item' => 'queue', 'fleet' => 'fleet', 'combat_event' => 'combat', 'universe' => 'universe', 'notification' => 'notification'];
+                $outboxTargets = ['queue_item' => 'queue', 'fleet' => 'fleet', 'combat_event' => 'combat', 'universe' => 'universe', 'notification' => 'notification', 'guild_project' => 'guild_project'];
                 foreach ($outboxTargets as $targetTable => $kind) {
                     if (!isset($idsByTable[$targetTable])) {
                         continue;

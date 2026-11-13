@@ -43,7 +43,7 @@
                     </div>
                     {% include 'ui/catalogue_benefits.html.twig' %}
                     {% if card.maximum %}<p class="requirement complete">{{ ui.icon('check') }} Niveau maximum atteint</p>
-                    {% elseif card.failures %}<p class="requirement">{{ ui.icon('diplomacy') }} <span>Nécessite : {{ card.failures|join(', ') }}</span></p>
+                    {% elseif card.failures %}<p class="requirement">{{ ui.icon('diplomacy') }} <span>Nécessite : {% for requirement in card.details.requirements|filter(requirement => not requirement.met) %}<a href="{{ path('app_colony',{id:planet.id,section:requirement.group,showLockedItems:1,focusItem:1}) }}#item-{{ requirement.slug }}-{{ requirement.rank }}">{{ requirement.label }} · {{ requirement.tier }}{% if requirement.required is not null %} · niveau {{ requirement.required }}{% endif %}</a>{% if not loop.last %}, {% endif %}{% else %}{{ card.failures|join(', ') }}{% endfor %}</span></p>
                     {% elseif vacation %}<p class="requirement">Mode vacances : les constructions et recherches sont suspendues.</p>
                     {% else %}
                         <form method="post" action="{{ path('app_queue_add', {id: planet.id}) }}" {% if not leveled %}data-controller="construction-quantity" data-construction-quantity-url-value="{{ path('app_construction_maximum', {id: planet.id}) }}"{% endif %}>

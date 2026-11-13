@@ -1,0 +1,10 @@
+<form id="guild-search-form" method="get" action="{{ path('app_diplomacy') }}" class="relation-search" role="search" aria-label="Recherche de guildes">
+<input type="hidden" name="tab" value="{{ own ? 'diplomacy' : 'join' }}">
+<label for="guild-search-query">Rechercher une guilde</label>
+<input id="guild-search-query" type="search" name="q" value="{{ search }}" minlength="2" maxlength="60" placeholder="Nom de guilde…" required>
+<button class="secondary">Rechercher</button>
+</form>
+{% if search %}<section class="relation-results" aria-label="Résultats de recherche de guildes">
+<div class="section-heading"><h3>Résultats pour « {{ search }} »</h3><a href="{{ path('app_diplomacy',{tab:own ? 'diplomacy' : 'join'}) }}">Fermer la recherche</a></div>
+<div class="catalog-grid">{% for row in guildSearchResults %}{% include 'player/_guild_diplomacy_card.html.twig' with {cardContext:'search'} %}{% else %}<p role="status">{{ search|length < 2 ? 'Saisissez au moins deux caractères.' : 'Aucune guilde trouvée dans cet univers.' }}</p>{% endfor %}</div>
+</section>{% endif %}

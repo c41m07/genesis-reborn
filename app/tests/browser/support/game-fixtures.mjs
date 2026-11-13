@@ -157,3 +157,10 @@ export function revealVirginPlanet(project, email) {
     "INSERT IGNORE INTO player_discovery (player_universe_id, solar_system_id) SELECT membership.id, solar_system.id FROM player_universe membership INNER JOIN player ON player.id = membership.player_id INNER JOIN planet target ON target.id = " + Number(id) + " INNER JOIN solar_system ON solar_system.id = target.solar_system_id WHERE player.email = " + emailValue);
   return { id: Number(id), coordinates };
 }
+
+
+export function completedFleetCount(project, email) {
+  return Number(queryIsolatedSql(project,
+    "SELECT COUNT(*) FROM fleet f INNER JOIN player_universe m ON m.id=f.player_universe_id INNER JOIN player p ON p.id=m.player_id " +
+    "WHERE p.email=" + quoteSql(email) + " AND f.status='completed'"));
+}

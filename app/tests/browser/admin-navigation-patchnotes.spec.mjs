@@ -53,7 +53,7 @@ test('Navigation admin mobile : contenu immédiat, clavier, ancres et repli prog
     await page.setViewportSize({ width, height: 900 });
     await expect(navigation).toBeVisible();
     await expect(toggle).toBeHidden();
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
   await page.setViewportSize({ width: 390, height: 900 });
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
@@ -114,8 +114,8 @@ test('Notes de version : brouillon privé, erreur conservée, publication et lec
   for (const width of [1920, 1440, 1280, 768, 390]) {
     await reader.setViewportSize({ width, height: 900 });
     await page.setViewportSize({ width, height: 900 });
-    expect(await reader.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    await expect.poll(() => reader.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
   await reader.screenshot({ path: testInfo.outputPath('patchnotes-player-390.png'), fullPage: true, animations: 'disabled' });
   await editor.locator('summary').click();
@@ -137,11 +137,12 @@ test('Maquette admin : cinq entrées, cartes de rubrique, fil d’Ariane et acc�
   await expect(navigation.locator('.admin-primary-link')).toHaveCount(5);
   await expect(navigation.locator('.admin-navigation-links')).toHaveCount(0);
   await expect(page.locator('.admin-home-actions a')).toHaveCount(3);
-  for (const [group, label, cards] of [['players','Joueurs et modération',4],['universe','Univers et activité',3],['events','Animation',4],['ops','Exploitation',4]]) {
+  for (const [group, label, cards] of [['players','Joueurs et modération',4],['universe','Univers et activité',3],['events','Animation',5],['ops','Exploitation',4]]) {
     await navigation.getByRole('link', { name: new RegExp('^' + label) }).click();
     await expect(page).toHaveURL(new RegExp('/admin/rubriques/' + group + '$'));
     await expect(page.getByRole('heading', { name: label, exact: true })).toBeVisible();
     await expect(page.locator('.admin-module-card')).toHaveCount(cards);
+    if (group === 'events') await expect(page.locator('.admin-module-card').filter({ hasText: 'Projets de guilde' })).toHaveAttribute('href', '/admin/projets-guilde');
     await expect(navigation.locator('.admin-navigation-links')).toHaveCount(1);
     await expect(navigation.locator('.admin-primary-link[aria-current="page"]')).toHaveCount(1);
     await page.locator('.admin-module-card').first().click();

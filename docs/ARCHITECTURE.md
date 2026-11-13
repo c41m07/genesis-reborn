@@ -142,3 +142,300 @@ une vérification séparée sur un serveur autorisé.
 Le tableau documentaire `docs/CATALOGUE_LABELS.csv` conserve les 150 libellés,
 descriptions et utilités de jeu. Les valeurs d’exécution restent celles du catalogue
 applicatif ; ce fichier documentaire n’est pas importé dans la base.
+
+## Colonies et journal d’absence — lot C
+
+Planet.acquiredAt est nullable : les quatre transferts de propriété existants
+appellent acquireBy dans leurs transactions et gardes de rejeu. Une attribution
+inchangée ne redéfinit pas la date. GameRepository::planets trie les seuls résultats
+filtrés par propriétaire par acquiredAt puis id (NULL en premier dans MariaDB).
+Les autres listes gardent leur ordre existant.
+
+JournalService verrouille PlayerUniverse pour ouvrir ou consulter son journal.
+journalStartedAt initialise la reprise sans inventer de visite ; overviewVisitedAt
+n’est actualisée que par l’ouverture de la vue générale. Le client colony-live
+envoie X-Genesis-Live: 1 afin que sa récupération HTML ne constitue pas une visite.
+NotificationService reçoit une catégorie optionnelle : queue, arrival, combat,
+transport, spy ou conquest. La catégorie est enregistrée
+à la création de la notification. À la première ouverture, JournalService retire
+cette seule catégorie des notifications déjà présentes et non disponibles, sans
+les supprimer ni définir consultedAt. Les nouvelles notifications alimentent
+ensuite les absences. Cette reprise évite une lecture d’état de suivi périmée
+dans une transaction métier ancienne et n’ajoute aucun verrou à ces traitements.
+Les autres catégories restent conservées hors du journal.
+
+À l’ouverture, les notifications suivies deviennent disponibles dans le journal ;
+journalAvailableAt les maintient lors des visites suivantes. L’état consultedAt
+n’est défini qu’au POST protégé par CSRF et participation, après vérification
+des identifiants disponibles du destinataire. UPDATE conditionnel, verrou de
+participation et sélection bornée à 50 rendent les répétitions sans double effet.
+Les événements non affichés ne sont pas consultés. Le témoin mobile repose sur
+cet état serveur et ne valide plus le journal par un stockage local automatique.
+
+EmpireDetails ne produit que les données des planètes et flottes du propriétaire
+dans son univers. Les snapshots de stocks restent calculés en lecture seule.
+La migration Version20261112010000 ajoute six colonnes nullables et deux index ;
+elle n’effectue aucune datation ni reprise de notification historique.
+
+## Catalogue des destinations — lot D
+
+DestinationCatalogue regroupe les planètes connues de la participation active
+selon la diplomatie et la mission. Une relation de propriétaire appartenant à un
+autre univers est rejetée, même si le monde se trouve dans l’univers courant.
+canPrefill conserve l’accès en lecture aux liens de cibles connues ; allows filtre
+les menus et suggestions selon les droits de mission. Le propriétaire actuel
+détermine la catégorie d’une ancienne planète PNJ capturée.
+
+GET /flottes/destinations accepte mission et q (facultatif, pseudonyme). Réponse
+JSON privée sans cache : groupes friendly/enemies et suggestions limitées à 20.
+Recherche littérale insensible à la casse, au moins deux caractères, limitée à
+40 caractères. Les planètes inconnues et les autres univers sont filtrés avant
+construction des données. Seuls identifiant, nom, propriétaire, coordonnées et
+libellé utiles sont transmis ; aucun stock ou détail militaire supplémentaire.
+
+Preview et send passent par resolve : destination_mode=custom conserve le contrat
+coordinates historique (mode par défaut pour les anciens clients sans paramètre).
+friendly/enemies utilisent leurs identifiants de planète, revérifiés en base avec
+catégorie, univers, découverte et mission ; une exploration utilise le système
+de la planète sélectionnée. FleetService::quote/send reste l’autorité métier,
+avec transactions, reçus, carburant et contrôles existants.
+
+Le contrôleur fleet-destination gère radio-boutons, listes et combobox clavier/
+tactile. Il désactive les champs des modes inactifs et ignore les réponses de
+recherche devenues obsolètes. Une ancienne liste ne peut pas être rouverte après
+changement de mission. Le wizard et l’estimation utilisent le champ actif.
+Sans JavaScript, les champs restent accessibles et le mode envoyé est validé
+côté serveur. Aucun nouveau schéma ni dépendance.
+
+canAttack autorise maintenant les PNJ sans propriétaire dans le même univers,
+avec contrôles de participation, vacances et occupation existants. joinAttack
+revérifie l’autorisation sous verrou et initialise la garnison PNJ une seule fois.
+capturePlanet continue à ne considérer que les missions conquer ; collectLoot
+continue à exclure les planètes sans propriétaire. Aucun coût ou durée modifié.
+
+## Archives des rapports et attribution de vaisseaux (lot E)
+
+ReportArchiveService compose les trois sources autorisées (UNION ALL DBAL avec
+paramètres liés) et filtre les états personnels avant COUNT/tri/pagination.
+L’ordre commun utilise date décroissante, identifiant décroissant, puis type.
+Les mutations vérifient tous les éléments avant écriture, dans une transaction
+sérialisée sur la participation ; archive/restauration rejouées sont idempotentes.
+POST /rapports/archives est protégé par session, CSRF et permissions de lecture.
+La table report_archive est unique sur participation/type/id ; archived_at nullable
+conserve l’état restauré. Aucun rapport source supprimé ou modifié. Les vues
+administratives et preuves restent indépendantes de ce filtrage personnel.
+
+AdminInterventionService::ships utilise rôle actif, verrous administrateur puis
+participation/univers/planète, reçu ActionGuard et catalogue. Le stock idle est
+créé si nécessaire ; chaque quantité reste dans l’entier SQL signé. L’audit
+admin_ships_grant est enregistré dans la même transaction (motif, acteur,
+joueur/univers/planète/flotte, type/rang, quantité, avant/après).
+La route d’attribution n’accepte qu’un POST CSRF avec confirmation explicite.
+
+Version20261112020000 est additive. Accord explicite reçu ; sauvegarde locale
+dans var/backups/lot-e-20261112, archive/manifeste vérifiés deux fois avant make
+migrate. Comptages des huit tables suivies inchangés ; aucun serveur Alpha touché.
+
+## Tags et signalements joueurs (lot F)
+
+Guild.tag est nullable pour les anciennes guildes, avec unicité (universe_id, tag).
+DiplomacyService normalise/valide tout nouveau tag et sérialise choix/création
+avec les verrous participation/univers existants. setTag rafraîchit la guilde
+sous verrou et contrôle canCommand. LeaderboardController enrichit seulement
+la présentation HTML avec le tag courant ; ni pseudonyme ni score modifiés.
+
+PlayerReportService est distinct de la modération des messages. Le formulaire
+conserve en session un contexte serveur (20 derniers formulaires maximum) avec
+participation/cible/univers, catégorie/rang et date du calcul. Aucun champ de rang
+du POST n’est accepté. Le pseudonyme courant et celui consulté sont conservés.
+POST /classement/signaler/{id} vérifie CSRF et le contexte de la session ; les
+participations sont verrouillées par identifiant croissant, puis les droits et
+l’univers revérifiés. L’unicité auteur/request_key protège contre les doublons.
+player_report conserve motif, commentaire, contexte, statut et dates/relecteur ;
+liens auteur/cible/relecteur nullables, contexte conservé comme preuve.
+
+La rubrique Modération expose les joueurs dans une section séparée, avec audit
+de lecture et traitement. La route POST admin vérifie ROLE_ADMIN/CSRF et le
+service revérifie le rôle actif sous verrou. Le traitement est idempotent sous
+verrou du signalement, sans sanction ni suppression du contexte.
+AdminNotificationService conserve un curseur player_reports séparé du curseur
+messages, puis agrège seulement le badge reports : aucun conflit d’identifiants.
+
+Version20261112030000 est appliquée sur la seule base locale après accord
+explicite et sauvegarde vérifiée deux fois (var/backups/lot-f-20261112).
+Les comptages des onze tables suivies sont inchangés ; l’unique ancienne guilde
+garde son tag NULL, aucun signalement inventé. make lint confirme aussi le schéma
+local migré. Aucun serveur Alpha n’est concerné.
+
+## Navigation et rappel volontaire — lot G
+
+FleetNavigation fige au départ les coordonnées, portions système/hyperespace,
+durées et carburant du devis existant. Son checkpoint active est enregistré avant
+tout changement d’échéance (boost ou intervention administrative) ; chaque nouvelle
+phase repart de zéro. Fleet.navigation reste nullable pour les anciens trajets.
+
+FleetRecallService calcule un aperçu sans mutation, puis revérifie sous transaction
+les droits, l’univers, la propriété, le combat, l’échéance, la version du dispatch
+et le carburant. ActionGuard verrouille la participation, puis les planètes et
+la flotte ; un reçu idempotent protège la confirmation. FleetService programme
+le retour avec un nouveau jeton via l’outbox existante. Un ancien message est
+ignoré avant tout traitement de dépôt, y compris après la nouvelle échéance.
+
+Fleet.returnPlanet est une destination de retour facultative distincte de
+homePlanet, qui reste l’origine historique. L’arrivée choisit returnPlanet pour
+un retour rappelé, puis applique les verrous/permissions et le dépôt existants.
+Aucun prélèvement distant ni modification des coûts de mission.
+
+GET/POST /flottes/{id}/rappel : propriétaire et univers vérifiés côté serveur,
+CSRF et version de dispatch à la confirmation. En cas de perte de l’origine,
+le choix de repli est explicite et revérifié ; aucun choix automatique.
+Le JSON cartographique expose seulement le checkpoint et la route de rappel
+autorisés, jamais les paramètres techniques internes du trajet.
+
+Version20261112040000 est appliquée sur la seule base locale après accord explicite,
+sauvegarde gzip/manifeste vérifiée deux fois dans var/backups/lot-g-20261112.
+Les onze comptages suivis et l’empreinte des valeurs historiques de flotte sont
+inchangés ; navigation et return_planet_id des anciennes flottes restent NULL.
+Aucun serveur Alpha concerné.
+
+## Surveillance et détection — lot H
+
+AttackDetection sépare la somme simple pour le préavis des effets pondérés
+d’EspionageService, laissé inchangé. Le seuil est calculé à la lecture depuis
+departureAt/arrivalAt et les recherches du défenseur ; aucune migration, nouvelle
+notification persistante ou modification des missions. warningSeconds borne
+à 7200 s et à la moitié du trajet en secondes entières. maxLevels réutilise la
+résolution du catalogue de l’univers, y compris effect.tier_max_levels.
+
+FleetVisibility centralise les autorisations et les DTO cartographiques avant
+sérialisation : participation contrôlée, univers accessible, propriétaire,
+relations, découvertes, sonde privée et seuil de l’attaque ciblant le lecteur.
+Le JSON contient uniquement les données autorisées ; les colonnes d’origine
+inconnue et les données techniques des attaques entrantes sont nulles.
+Le calcul des points conserve LeaderboardService::fleetPoints.
+Le repli non découvert du lot G conserve sa protection.
+
+GameRepository::incomingAttackFleets limite la requête aux attaques/conquêtes
+en trajet visant une planète du lecteur dans son univers. GameShell produit
+l’affichage initial. GET /flottes/surveillance utilise exclusivement la session
+courante ; une galaxie optionnelle est revérifiée dans cet univers avant de
+renvoyer les vols autorisés et leur journal HTML. Réponse JSON private, no-store :
+aucun accès anonyme ni choix de lecteur par paramètre. Aucun crédit, consommation,
+résolution, journal consulté ou activité d’empire modifiés par cette lecture.
+
+incoming-attacks interroge ce point toutes les 5 s, suspend la surveillance dans
+un onglet masqué, borne les requêtes à 10 s et conserve le contenu en cas d’erreur.
+Les délais utilisent serverNow, sans dépendre de l’heure du poste.
+La carte reçoit seulement les DTO filtrés ; elle actualise vols et journal sans
+recréer la caméra, la sélection ou le zoom. Les annonces accessibles portent
+sur les changements de menaces, pas sur chaque seconde du compte à rebours.
+
+
+### Orbites : demandes au départ
+Le lot I utilise le sous-objet privé versionné `Fleet.navigation.orbit_request`
+(clé de demande, destinataire et planète initiaux, dates et décision). Aucune
+migration ni reprise des trajets anciens n’est nécessaire. `OrbitPolicy`
+sépare les permissions des nouveaux départs du processus historique conservé.
+`OrbitRequestState` contrôle les réponses périmées et conserve l’état final.
+`FleetRecallPlanner` partage le calcul du retour partiel avec le rappel G,
+sans utiliser le fret d’hydrogène ni prélever de stock à distance.
+Le refus se traite dans la transaction verrouillant la participation de l’hôte,
+l’univers, la destination, l’origine et la flotte ; un nouveau jeton rend l’ancien message
+d’arrivée obsolète. L’accord ne modifie pas la date ni le jeton du trajet.
+À l’arrivée, une demande nouvelle ne passe jamais en attente indéfinie :
+accord revérifié et orbite/défense, ou retour.
+`OrbitRequestView` et la requête `orbitRequestsFor` limitent les données aux
+parties concernées dans l’univers actif ; une origine non découverte est omise.
+La surveillance privée existante actualise ces cartes toutes les cinq secondes
+en premier plan, avec horloge serveur et report du remplacement lorsqu’un
+contrôle possède le focus. Les clés privées ne sont pas ajoutées à la carte.
+
+
+### Abandon : transition transactionnelle sans migration
+ColonyAbandonmentService verrouille participation, univers et planète, puis
+synchronise les files avant le bilan. planetHasActiveFleet contrôle toutes les
+références d’origine, destination et repli sans filtrage de visibilité ; seul un
+motif générique est transmis. Les combats et occupations actifs bloquent aussi.
+L’analyse récursive des dépendances interdit l’abandon si une commande d’une
+autre colonie est concernée. Les files locales sont annulées sans remboursement
+via le traitement existant cancelForCaptureLocked ; les autres files démarrent
+normalement. Tous les états de reconstruction de la planète, y compris ceux des anciens
+propriétaires, conservent leur référence historique mais perdent commande,
+échéance et jeton actifs avant la suppression des files.
+Une empreinte des actifs discrets et commandes empêche une confirmation périmée ;
+les stocks variables sont exclus de cette empreinte mais enregistrés à leur valeur
+matérialisée avant la perte. La confirmation est liée au nom, à la participation,
+au CSRF et à un reçu de requête.
+Les lignes d’actifs sont retirées, les flottes inactives du propriétaire vidées
+et terminées ; Planet et les historiques restent en place. Un AdminAuditLog
+player_colony_abandoned conserve propriétaire, univers, planète, pertes et
+commandes annulées, sans attribuer de droits administrateur au joueur. Ce journal
+sert déjà à tracer la suppression d’un compte par son propriétaire.
+Les messages visant les commandes retirées sont obsolètes ; aucune ressource ne
+peut être déposée à distance et une nouvelle colonisation réutilise les règles
+existantes. La colonie active en session est conservée si elle est encore détenue,
+sinon remplacée par une colonie restante.
+
+ColonizationKitPolicy utilise la trace durable player_colony_abandoned pour le
+couple compte joueur / planète. L’identifiant de planète est global et son univers
+est vérifié. Une ancienne participation ou un changement de pseudonyme ne permet
+pas de réclamer de nouveau le kit du même compte. Les traces d’abandon doivent
+donc être conservées : aucune suppression automatique de ce journal n’est présente
+dans les services ou scripts examinés. Le kit configuré et le multiplicateur de
+rang sont conservés pour un nouveau propriétaire ; seuls les stocks initiaux
+de la recolonisation par l’auteur de l’abandon sont à zéro. Une version de règle
+dans l’empreinte du bilan invalide une confirmation antérieure à cette décision.
+Le reçu de requête reste dans ActionReceipt et n’est pas recopié dans le journal
+d’audit. La page indique le besoin de ravitaillement avant confirmation.
+
+### Présentation des pages joueur — lot K
+
+Les pages Diplomatie, Profil et Inventaire utilisent les styles limités
+à .page-refinement dans player-pages.css et les couleurs du thème existant.
+Les onglets de diplomatie restent des liens GET : trois sans guilde, cinq avec guilde.
+Le contrôleur normalise les anciens onglets indisponibles vers la création et les anciennes adresses de recherche vers Rejoindre une guilde,
+conserve les recherches et redirige les enregistrements vers le panneau concerné.
+Les attributions sont dans Membres, l’édition dans Grades et permissions, le tag et
+le commandement dans Ma guilde. Les services métier, CSRF et versions restent identiques ;
+l’aperçu du canal reste en lecture. Les styles complémentaires sont dans diplomacy-tabs.css.
+
+GuildPresence lit uniquement les PlayerActivity de la guilde actuelle dans l’univers
+consulté. Une sous-requête EXISTS revérifie l’appartenance du lecteur lors de la lecture.
+Le booléen de présence réutilise le seuil existant de PlayerActivityService (< cinq minutes) ;
+aucune agrégation par compte entre univers, ni heure ou durée, n’est transmise à la vue.
+La page est private, no-store. Pas de nouvelle requête périodique, table ou migration.
+
+Le profil utilise des détails natifs, y compris sans JavaScript. Les erreurs
+de modification rouvrent le changement de mot de passe ; une erreur de suppression
+redirige avec delete=1 pour garder sa section ouverte. Ce paramètre ne donne
+aucun droit et ne change ni les validations ni la confirmation serveur.
+
+inventory_review_controller sélectionne la carte de l’opération et intercepte
+uniquement la présentation de sa soumission pour ouvrir un dialogue natif.
+L’annulation ne lance aucune requête métier. La confirmation resoumet le formulaire
+existant avec son jeton CSRF et sa clé de requête ; les services revérifient
+propriété, univers, vacances, opération active et stockage. Le contenu du dialogue
+est écrit avec textContent. Sans JavaScript ou sans showModal, les formulaires
+restent visibles et fonctionnent selon leur comportement serveur habituel.
+Aucune migration, dépendance ou modification des valeurs d’équilibrage.
+
+### Bulles de détails de l’empire
+
+hover_details_controller pilote maintenant des popovers natifs, ouverts depuis
+les noms des colonies ou l’encadré de flotte. La couche supérieure du navigateur
+évite la découpe par les cartes ; le placement tient compte de la fenêtre et du
+défilement. Un déplacement du pointeur vers la bulle conserve sa lecture ; clic,
+focus, toucher et Échap sont gérés. Sans croix : sortie du pointeur de l’ancre et
+de la bulle (délai de passage 180 ms), sortie du focus ou toucher extérieur ferment
+la bulle. Un clic souris ne bloque pas la fermeture automatique.
+Les données viennent des mêmes vues propriétaires qu’avant : aucun chargement
+supplémentaire, aucune extension des permissions ni exposition de flottes tierces.
+
+Les classements utilisent des liens GET dans les cinq en-têtes, avec aria-sort,
+sans changer les calculs, rangs ou pagination côté serveur. Les libellés des
+cases d’archivage restent dans le nom accessible, hors de l’affichage visuel.
+
+L’aperçu de guilde appelle guildConversation(guild, 3), qui limite les résultats
+en base aux trois plus récents (date puis identifiant), affichés dans leur ordre
+chronologique. Il ne marque pas le canal lu. Les boutons de départ/dissolution
+sont visibles dans Ma guilde avec leurs services et jetons CSRF existants.

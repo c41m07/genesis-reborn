@@ -1,5 +1,57 @@
 {% set g=row.guild %}
-<article class="panel guild-card"><span class="badge">{{ own ? relation_labels[row.status]|default(row.status) : 'Recrutement ouvert' }}</span><h3>{{ g.name }}</h3><p>Commandement : {{ g.leader.displayName }}<br>{{ row.members|length }} membre{{ row.members|length > 1 ? 's' : '' }}</p><details><summary>Voir les membres</summary><ul>{% for member in row.members %}<li>{{ member.playerUniverse.displayName }}</li>{% endfor %}</ul></details>
-<div class="guild-hub-actions"><a href="{{ path('app_messages',{with:g.leader.id}) }}">Contacter le commandant</a></div>
-{% if not own %}<form method="post"><input type="hidden" name="_token" value="{{ csrf_token('diplomacy') }}"><input type="hidden" name="target" value="{{ g.id }}"><button class="secondary" name="action" value="join">Rejoindre · recrutement ouvert</button></form>
-{% elseif own.leader.id==membership.id %}<form method="post"><input type="hidden" name="_token" value="{{ csrf_token('diplomacy') }}"><input type="hidden" name="target" value="{{ g.id }}"><input type="hidden" name="action" value="relation"><label for="relation-{{ g.id }}-{{ cardContext }}">Relation réciproque</label><select name="status" id="relation-{{ g.id }}-{{ cardContext }}"><option value="allies">Proposer / accepter l'alliance</option><option value="enemies">Déclarer ennemis</option><option value="neutral">Revenir à la neutralité</option></select><button class="secondary">Mettre à jour</button></form>{% endif %}</article>
+{% set proposal=row.relation.proposal|default(row.status=='pending' ? 'allies' : null) %}
+{% set treatyPermissions={allies:'diplomacy.alliance',non_aggression:'diplomacy.non_aggression',defense:'diplomacy.defense',neutral:'diplomacy.neutral'} %}
+<article class="panel guild-card">
+    <span class="badge">{{ own ? relation_labels[row.status]|default(row.status) : 'Recrutement ouvert' }}</span>
+    <h3>{{ g.name }}</h3>
+    <p>Commandement : {{ g.leader.displayName }}<br>{{ row.members|length }} membre{{ row.members|length > 1 ? 's' : '' }}</p>
+    <details><summary>Voir les membres</summary><ul>{% for member in row.members %}<li>{{ member.playerUniverse.displayName }}</li>{% endfor %}</ul></details>
+    <div class="guild-hub-actions"><a href="{{ path('app_messages',{with:g.leader.id}) }}">Contacter le commandant</a></div>
+    {% if not own %}
+        <form method="post"><input type="hidden" name="_token" value="{{ csrf_token('diplomacy') }}"><input type="hidden" name="target" value="{{ g.id }}"><button class="secondary" name="action" value="join">Rejoindre · recrutement ouvert</button></form>
+    {% else %}
+        {% if row.status=='non_aggression' %}<p>Attaques et conquêtes directes bloquées. Aucun droit supplémentaire de stationnement défensif ou de transport. Espionnage autorisé ; aucune protection contre les tirs dans un combat à plusieurs camps.</p>{% endif %}
+        {% if row.status=='defense' %}<p>Non-agression et stationnement défensif avec accord du propriétaire. Aucun droit supplémentaire de transport ni regroupement offensif. Espionnage autorisé ; aucune protection entre camps dans une bataille.</p>{% endif %}
+        {% if proposal %}
+            <p>{{ proposal=='neutral' ? 'Paix' : relation_labels[proposal] }} : proposition {{ row.relation.proposer.id==own.id ? 'envoyée' : 'reçue' }}. La relation actuelle reste applicable jusqu’à acceptation.</p>
+            {% if guildPermissions[treatyPermissions[proposal]] %}
+                {% if row.relation.proposer.id!=own.id %}
+                    {% include 'player/_guild_treaty_form.html.twig' with {treatyStatus:proposal,treatyAction:'accept',treatyLabel:proposal=='neutral' ? 'Accepter la paix' : 'Accepter le traité'} %}
+                {% endif %}
+                {% include 'player/_guild_treaty_form.html.twig' with {treatyStatus:proposal,treatyAction:'decline',treatyLabel:row.relation.proposer.id==own.id ? 'Retirer la proposition' : 'Refuser la proposition'} %}
+            {% endif %}
+        {% elseif row.status=='enemies' %}
+            {% if guildPermissions['diplomacy.neutral'] %}
+                {% include 'player/_guild_treaty_form.html.twig' with {treatyStatus:'neutral',treatyAction:'propose',treatyLabel:'Proposer la paix'} %}
+            {% endif %}
+        {% else %}
+            {% set choices=[] %}
+            {% for type,permission in treatyPermissions %}{% if type!='neutral' and type!=row.status and guildPermissions[permission] %}{% set choices=choices|merge([type]) %}{% endif %}{% endfor %}
+            {% if choices %}
+                <form method="post">
+                    <input type="hidden" name="_token" value="{{ csrf_token('diplomacy') }}"><input type="hidden" name="action" value="relation"><input type="hidden" name="target" value="{{ g.id }}">
+                    <input type="hidden" name="relation_id" value="{{ row.relation.id|default(0) }}"><input type="hidden" name="relation_version" value="{{ row.relation.version|default(0) }}">
+                    <label for="relation-{{ g.id }}-{{ cardContext }}">Traité à proposer</label>
+                    <select name="status" id="relation-{{ g.id }}-{{ cardContext }}">{% for type in choices %}<option value="{{ type }}">{{ relation_labels[type] }}</option>{% endfor %}</select>
+                    <button class="secondary" name="treaty_action" value="propose">Proposer le traité</button>
+                </form>
+            {% endif %}
+        {% endif %}
+        {% if row.status in ['allies','non_aggression','defense'] and guildPermissions['diplomacy.neutral'] %}
+            <details><summary>Rompre le traité</summary><p>La rupture est immédiate et annule aussi toute proposition en attente.</p>
+                {% include 'player/_guild_treaty_form.html.twig' with {treatyStatus:'neutral',treatyAction:'break',treatyLabel:'Confirmer la rupture'} %}
+            </details>
+        {% endif %}
+        {% if row.status!='enemies' and guildPermissions['diplomacy.hostility'] %}
+            <details><summary>Déclarer ennemis</summary><p>Cette décision est réciproque et rompt immédiatement le traité éventuel. La paix exigera l’accord des deux guildes.</p>
+                {% include 'player/_guild_treaty_form.html.twig' with {treatyStatus:'enemies',treatyAction:'hostile',treatyLabel:'Confirmer l’hostilité'} %}
+            </details>
+        {% endif %}
+        {% if row.history|default([]) %}
+            <details><summary>Historique des traités · 10 dernières actions maximum</summary>
+                {% set actionLabels={propose:'Proposition',accept:'Signature',decline:'Refus ou retrait',break:'Rupture',hostile:'Déclaration d’hostilité'} %}
+                <ol>{% for event in row.history %}<li><time datetime="{{ event.occurredAt|date('c') }}">{{ event.occurredAt|date('d/m/Y H:i', 'UTC') }} UTC</time> · {{ event.actorGuildId==own.id ? 'Votre guilde' : g.name }} · {{ actionLabels[event.action] }} · {{ event.proposal ? (event.proposal=='neutral' ? 'Paix proposée' : relation_labels[event.proposal]) : relation_labels[event.status]|default(event.status) }} · commandant #{{ event.actorId }}</li>{% endfor %}</ol>
+            </details>
+        {% endif %}
+    {% endif %}
+</article>

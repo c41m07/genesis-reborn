@@ -97,3 +97,13 @@ html{scroll-padding-top:180px}@media(max-width:740px){html{scroll-padding-top:22
 .account-delete-form .danger:hover,.event-removal-form .danger:hover{background:#8f2834}
 .account-delete-form .account-delete-confirmation{display:flex;align-items:flex-start;gap:10px}
 .account-delete-form .account-delete-confirmation input{width:18px;height:18px;flex:0 0 18px;margin-top:3px}
+
+.ranking-change{display:inline-block;white-space:nowrap;font-size:.9em}
+.ranking-change--gain{color:#87d8b4}
+.ranking-change--loss{color:#ff9999}
+body[data-theme=light] .ranking-change--gain{color:#256347}
+body[data-theme=light] .ranking-change--loss{color:#a32626}
+.ranking-category{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-block:16px}
+.ranking-category label,.ranking-category select{margin:0}
+
+.ranking-table td[data-category],.ranking-table td:first-child{white-space:nowrap}

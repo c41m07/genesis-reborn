@@ -7,7 +7,7 @@
 {% include 'ui/galaxy_tabs.html.twig' %}
 <h1 class="visually-hidden">Carte interactive de la galaxie</h1>
 
-<div class="galaxy-v2" data-controller="galaxy-v2" data-action="keydown->galaxy-v2#navigateBack"
+<div class="galaxy-v2" data-controller="galaxy-v2" data-surveillance-galaxy="{{ selected_galaxy.id|default(0) }}" data-action="keydown->galaxy-v2#navigateBack"
      data-galaxy-v2-map-value="{{ galaxy_v2_json|e('html_attr') }}"
      data-galaxy-v2-reduced-motion-value="{{ preferences.reducedMotion|default(false)?'true':'false' }}">
     <div class="gv2-scene" data-galaxy-v2-target="scene">
@@ -45,6 +45,7 @@
                 <summary>Légende · <span data-galaxy-v2-target="mapModeLabel">Exploration</span></summary>
                 <ul data-galaxy-v2-target="legend"></ul>
                 <p>Quarts : PNJ ↖ · allié ↗ · neutre/vierge ↘ · ennemi ↙. Gris : absent ou masqué.</p>
+                <p>Cercle extérieur vert : au moins une de vos planètes.</p>
             </details>
             </div>
         </section>
@@ -64,17 +65,9 @@
             <span>CARTE LOCALE</span><canvas data-galaxy-v2-target="minimapCanvas" aria-label="Mini-carte interactive ; cliquez pour déplacer la caméra"></canvas>
         </div>
         <details class="gv2-flight-log {{ galaxy_v2_flights is empty?'is-empty':'' }}" {{ galaxy_v2_flights is not empty?'open':'' }}>
-            <summary><span class="gv2-live-dot" aria-hidden="true"></span>Journal de flotte{% if galaxy_v2_flights is empty %}<span class="visually-hidden"> · aucune mission</span>{% endif %}</summary>
+            <summary><span class="gv2-live-dot" aria-hidden="true"></span>Journal de flotte<span class="visually-hidden" data-galaxy-v2-empty-label {% if galaxy_v2_flights is not empty %}hidden{% endif %}> · aucune mission</span></summary>
             <div data-galaxy-v2-target="fleetLog">
-                {% if galaxy_v2_flights is empty %}<p class="gv2-empty-log">Aucune flotte en mission actuellement.</p>{% else %}
-                    {% for flight in galaxy_v2_flights %}<article class="gv2-flight-entry" data-flight-id="{{ flight.id }}">
-                        <strong>{{ flight.missionLabel }}</strong><span>{{ flight.statusLabel }}</span>
-                        <small>{{ flight.relationLabel }} · {{ flight.ownerName }}</small>
-                        <small>{{ flight.originName }} → {{ flight.destinationName }}</small>
-                        {% if flight.ships %}<small>{{ flight.ships }}</small>{% endif %}
-                        {% if flight.arrivalAt %}<time datetime="{{ flight.arrivalAt }}" data-galaxy-v2-countdown="{{ flight.arrivalAt }}">Calcul du temps…</time>{% endif %}
-                    </article>{% endfor %}
-                {% endif %}
+                {% include 'universe/_fleet_log.html.twig' %}
             </div>
         </details>
         <div class="gv2-map-controls">
@@ -114,6 +107,7 @@
         <template data-gv2-planet="{{ p.id }}">
             {% set relation = map_planet_relations[p.id] %}
             <header class="gv2-panel-heading"><div><span class="muted">PLANÈTE · {{ p.coordinates() }}</span><h2>{{ p.name }}</h2><p><span class="gv2-marker gv2-marker--{{ relation }}" aria-hidden="true">{{ relation_symbols[relation] }}</span> {{ relation_labels[relation] }}{% if relation == 'npc' %} · niveau {{ p.conquestLevel }}{% elseif p.owner and relation != 'own' %} · {{ p.owner.displayName }}{% endif %}</p></div><button type="button" aria-label="Fermer les informations de la planète" data-action="click->galaxy-v2#closePlanet">×</button></header>
+            <button type="button" class="gv2-action-link gv2-system-return" data-action="click->galaxy-v2#returnToPlanetSystem">‹ Revenir au système {{ p.solarSystem.galaxy.coordinateCode() }}:{{ p.solarSystem.number() }}</button>
             <div class="gv2-visual-note">REPRÉSENTATION VISUELLE · DONNÉES DE JEU CI-DESSOUS</div>
             <dl class="gv2-facts"><div><dt>Coordonnées</dt><dd>{{ p.coordinates() }}</dd></div><div><dt>Statut</dt><dd>{{ relation_labels[relation] }}</dd></div>{% if relation == 'npc' %}<div><dt>Niveau PNJ</dt><dd>{{ p.conquestLevel }}</dd></div>{% endif %}</dl>
             <button type="button" class="gv2-primary-action" data-action="click->galaxy-v2#enterPlanetView">◉ Vue rapprochée</button>

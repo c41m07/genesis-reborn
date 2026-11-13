@@ -170,3 +170,6 @@ body.reduced-motion .galaxy-v2 *,body.reduced-motion .galaxy-v2 *::before,body.r
 
 .gv2-planet-choice:focus-visible{outline:2px solid #58c5e8;outline-offset:-2px}
 @media(max-width:740px){.gv2-planet-choice{grid-template-columns:26px minmax(0,1fr)}.gv2-planet-owner{grid-column:2}}
+
+.gv2-system-return{min-height:44px}
+.gv2-system-return:focus-visible{outline:2px solid var(--gv2-cyan);outline-offset:2px}

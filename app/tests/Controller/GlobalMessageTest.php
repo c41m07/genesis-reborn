@@ -104,7 +104,7 @@ final class GlobalMessageTest extends WebTestCase
     public function testGlobalPrecedesGuildAndPreservesOtherUnreadCounts(): void
     {
         $diplomacy = static::getContainer()->get(DiplomacyService::class);
-        $diplomacy->create($this->sender->currentPlayerUniverse, 'Global test');
+        $diplomacy->create($this->sender->currentPlayerUniverse, 'Global test', 'GLB');
         $guild = static::getContainer()->get(RelationResolver::class)->guild($this->sender->currentPlayerUniverse);
         $diplomacy->join($this->reader->currentPlayerUniverse, $guild->id);
         $service = static::getContainer()->get(SocialMessageService::class);

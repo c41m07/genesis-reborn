@@ -15,7 +15,7 @@ final class EmpireConversionService
 {
     public function __construct(private GameManager $manager,private GameRepository $repo,private ActionGuard $guard,
         private EmpireActivityService $activity,private FleetService $fleets,private QueueService $queues,private ClockInterface $clock,private \App\Service\Combat\OccupationService $occupations,
-        #[Autowire('%env(bool:FORGOTTEN_EMPIRES_ENABLED)%')] private bool $enabled) {}
+        #[Autowire('%env(bool:FORGOTTEN_EMPIRES_ENABLED)%')] private bool $enabled, private GuildProjectService $projects,private EmpireReconstructionScheduler $reconstruction) {}
 
     public function convert(PlayerUniverse $membership): array
     {
@@ -61,6 +61,7 @@ final class EmpireConversionService
                 $this->manager->flush();
             }
             if ($membership->universe->isAccessible($now)) $this->queues->synchronize($membership);
+            $this->reconstruction->captureReferenceLocked($membership);
             $membership->detachPlayer($now);
             $this->manager->save($log);
             return ['status'=>'converted'];
@@ -74,7 +75,7 @@ final class EmpireConversionService
         foreach($this->repo->all(AllianceContract::class,['playerB'=>$membership]) as $contract) $ended[$contract->id]=$contract;
         $allianceIds=[];
         foreach($ended as $contract) {
-            if(!in_array($contract->status,['pending','accepted'],true)) continue;
+            if(!in_array($contract->status,AllianceContract::ACTIVE_STATUSES,true)) continue;
             $contract->status='ended';$allianceIds[]=$contract->id;
         }
         $result=['ended_alliance_ids'=>$allianceIds,'guilds'=>[]];
@@ -93,11 +94,12 @@ final class EmpireConversionService
                 $result['guilds'][]=['id'=>$guild->id,'successor_id'=>$successor->id,'archived'=>false];
             } else {
                 $guild->archivedAt=$now;
+                $this->projects->abandonForGuild($guild);
                 $roster=array_map(static fn(GuildMember $row): array=>['member_id'=>$row->id,'membership_id'=>$row->playerUniverse->id],$members);
                 $result['guilds'][]=['id'=>$guild->id,'successor_id'=>null,'archived'=>true,'roster'=>$roster];
                 foreach($members as $member) $this->manager->remove($member);
-                foreach($this->repo->all(GuildRelation::class,['guildA'=>$guild]) as $relation) $relation->status='neutral';
-                foreach($this->repo->all(GuildRelation::class,['guildB'=>$guild]) as $relation) $relation->status='neutral';
+                foreach($this->repo->all(GuildRelation::class,['guildA'=>$guild]) as $relation) { $relation->status='neutral';$relation->proposal=null; }
+                foreach($this->repo->all(GuildRelation::class,['guildB'=>$guild]) as $relation) { $relation->status='neutral';$relation->proposal=null; }
             }
         }
         $member=$this->repo->one(GuildMember::class,['playerUniverse'=>$membership]);

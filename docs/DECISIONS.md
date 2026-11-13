@@ -1202,3 +1202,321 @@ Aucune migration ni réécriture globale des stocks n’est requise. Les nouvell
 ### Disposition du suivi sur les catalogues — ajustement du 10 novembre 2026
 
 Sur Bâtiments, Recherche, Chantier spatial et Défenses : jusqu’à 740 px, l’activité reste en haut et les flottes en vol sont masquées. De 741 à 1 250 px, l’activité reste en haut et les flottes restent accessibles. À partir de 1 251 px, l’activité est à droite du catalogue, au-dessus des flottes en vol. La vue générale et la page Flottes gardent leur suivi. Le masquage mobile retire aussi les liens correspondants du parcours clavier ; aucune duplication de file n’est introduite.
+
+### Rivalités personnelles — décisions du 11 novembre 2026
+
+Décisions explicites de l'utilisateur : une hostilité personnelle est réciproque et peut être déclenchée par un seul joueur, comme entre guildes. Elle est accessible sans appartenance à une guilde.
+
+Les liens collectifs priment : entre membres de la même guilde ou de guildes alliées, une rivalité personnelle reste sans effet sur les autorisations de combat. Elle ne permet pas de contourner l'interdiction d'attaquer ces alliés.
+
+La fin d'une rivalité exige l'accord des deux joueurs : l'un propose la paix et l'autre l'accepte. Une proposition, son retrait ou son refus ne suffit pas à terminer l'hostilité.
+
+Ces décisions ne valident aucun bonus de combat, accès à des renseignements privés, récompense de rivalité ou modification des protections existantes.
+
+### Traités entre guildes — décisions du 11 novembre 2026
+
+Décisions explicites de l’utilisateur : trois traités réciproques, signés par deux guildes du même univers. Une proposition conserve les effets du traité actif jusqu’à acceptation par l’autre guilde.
+
+| Traité | Effets |
+| --- | --- |
+| Alliance complète | Conserve les effets existants : liens alliés pour les camps, stationnement défensif et préférences de transport. Aucune ressource ni flotte envoyée automatiquement. |
+| Non-agression | Bloque les attaques et conquêtes directes entre les deux guildes au départ et à l’arrivée. Aucun droit supplémentaire de défense ou de transport. L’espionnage reste permis et les tirs entre camps d’un combat impliquant des tiers restent possibles. |
+| Défense | Non-agression et possibilité de stationner des flottes défensives chez l’autre guilde avec accord du propriétaire. Aucun droit supplémentaire de transport ni regroupement offensif automatique. La défense ponctuelle déjà ouverte reste inchangée. |
+
+Le dirigeant possède les droits ; chaque grade peut déléguer séparément alliance, non-agression, défense, hostilité et neutralité/paix. Les nouvelles permissions ne sont pas attribuées automatiquement aux grades existants. Les grades n’accordent aucun droit sur les relations personnelles des autres joueurs.
+
+Une rupture est immédiate et unilatérale avec le droit de neutralité ; une déclaration d’hostilité rompt immédiatement le traité et ses propositions. La paix nécessite une proposition puis la signature de l’autre guilde : proposer, retirer ou refuser une offre maintient l’hostilité. Une alliance ou un pacte ne peut pas être proposé pour contourner une hostilité : signer la paix d’abord. Aucun préavis, coût, durée imposée, bonus économique ou engagement automatique n’est ajouté.
+
+Les pactes ne fusionnent pas les camps offensifs. Le pacte de défense concerne le stationnement chez les propriétaires de colonies ; il ne donne pas à lui seul le droit de renforcer une occupation offensive. Une flotte déjà engagée est contrôlée à l’arrivée selon les règles en vigueur ; un combat déjà ouvert conserve ses règles de composition des camps. Les alliances et rivalités personnelles restent indépendantes et ne sont pas effacées par un pacte ou sa rupture.
+
+### Projets collectifs de guilde — décisions du 11 novembre 2026
+
+- Les membres donnent des ressources de leurs propres colonies pour financer des paliers successifs. Les dons sont définitifs et ne sont pas remboursés lors d’un départ, d’une dissolution ou d’un abandon.
+- Chaque projet peut être lancé une seule fois par guilde. Le dirigeant ou un membre ayant la permission explicite `projects.start` choisit le modèle. Tous les membres peuvent contribuer sans grade particulier. Les vacances interdisent lancement et dons, mais permettent la consultation.
+- L’administration définit, pour chaque univers, les coûts des paliers et les minimums de contribution par ressource. Aucun modèle n’est créé ou activé automatiquement. Les coûts et minimums sont figés dans chaque projet au lancement ; les modifications administratives et la désactivation du modèle ne changent pas les projets déjà financés.
+- Un participant doit atteindre tous les minimums positifs, cumulés sur l’ensemble des paliers, et encore appartenir à la guilde à la clôture. Aucun taux de conversion entre ressources n’est inventé. Les personnes éligibles sont figées à cette clôture ; un départ ultérieur ne retire pas une récompense acquise.
+- Chaque participant reçoit au maximum un boost standard pour le même modèle, même après changement de guilde, utilisation du boost ou création d’un nouvel empire dans le même univers. L’effet, la capacité et la file d’attente de l’inventaire existant sont conservés. Il n’y a ni bonus permanent, ni coefficient de puissance, ni récompense proportionnelle au volume donné.
+- Le don est enregistré avec son prélèvement dans une transaction. Une quantité négative, fractionnaire, inconnue, excessive ou supérieure au besoin restant est refusée, sans débit partiel. Un ancien formulaire ne peut pas payer deux fois. Un palier se termine uniquement lorsque toutes ses ressources sont financées.
+- Les récompenses sont distribuées après clôture par le relais existant. Une interruption peut être reprise sans doubler les boosts ; une récompense attend si l’inventaire est plein. La dissolution ou l’archivage d’une guilde abandonne les projets encore actifs et conserve leur historique ; les projets terminés gardent leurs récompenses acquises.
+
+Bornes techniques des formulaires, sans montant d’équilibrage par défaut : 1 à 10 paliers, quantités entières, au plus un milliard d’unités par ressource et palier, et minimums ne dépassant jamais le coût total. Les coûts et seuils réels restent à choisir par l’administration avant activation. Les projets et grades appartiennent aux guildes ; aucune guilde n’est requise pour les alliances et rivalités personnelles, dont les règles restent indépendantes.
+
+## Reconstruction autonome des empires oubliés — décision du 11 novembre 2026
+
+L'utilisateur valide la reconstruction de tous les modèles de vaisseaux et de
+défenses des empires oubliés, sans inclure les PNJ classiques. Chaque planète
+possède une référence immuable des effectifs, modèles et rangs à la conversion,
+flottes rappelées/en retour comprises. Les commandes déjà payées restent acquises
+et peuvent dépasser cette référence sans la relever. Les empires antérieurement
+convertis sans référence sont exclus ; aucune estimation rétroactive n'est créée.
+
+Les coûts et durées normaux s'appliquent, avec prélèvement sur les stocks locaux
+et réutilisation du chantier partagé. La reconstruction complète seulement le
+manque après réparation partielle des défenses, survivants, retours et commandes
+existantes. Le choix privilégie le coût effectif unitaire croissant selon les poids
+économiques existants M=2, N=4, A=8, H=1, puis la durée croissante et un ordre stable
+par modèle, rang et groupe. Les modèles non finançables sont ignorés lors de ce
+choix. Cette règle favorise la quantité sans promettre un optimum combinatoire.
+
+Chaque nouvelle commande autonome porte sur une unité. Le début ou la reprise
+attend cinq minutes après la résolution du dernier combat local. Un nouveau combat
+suspend le travail, conserve l'avancement et le paiement, et invalide ses messages
+précédents. Aucun progrès ni livraison autonome pendant le combat.
+
+La reconstruction continue pendant l'occupation ; les forces hostiles doivent
+être vaincues avant transfert, et l'occupant victorieux garde son temps acquis.
+La capture définitive arrête le mécanisme de l'ancien empire et annule ses commandes
+restantes sans remboursement. Aucun mouvement offensif, nouvelle colonisation ou
+nouvelle recherche n'est ajouté. Cette décision autorise les nouvelles commandes
+de reconstruction et complète l'interdiction générale de nouvelles commandes PNJ
+consignée le 8 novembre ; les autres commandes autonomes restent exclues.
+
+Une table dédiée conserve référence et reprise, avec une commande en cours et
+un jeton invalidant les messages périmés. Le relais et le worker existants assurent
+l'exécution. En cas de stocks insuffisants, le contrôle est reprogrammé après
+60 secondes ; ce délai technique ne remplace pas le délai de cinq minutes après
+combat. La migration de compatibilité `Version20261111173000` (ancien numéro partagé `Version20261111010000`, voir [le suivi](GESTION_GUILDES_ALLIANCES.md)) ne convertit aucun empire
+et demande une autorisation distincte avant application sur une base de jeu.
+
+
+## Évolutions des interfaces et flottes — décisions du 11 novembre 2026
+
+Cette demande remplace la présentation du classement joueur décidée le 5 novembre
+(points totaux seuls et absence de colonne planètes). Les cinq catégories ont leur
+rang, les variations sont sur la même ligne et le nombre de planètes précède les
+points totaux. Formules de points et échéance quotidienne inchangées.
+Dans ce tableau : « (= 0) » si inchangé, « (—) » sans comparaison.
+
+Décisions confirmées pour les lots suivants, avec état d’implémentation dans le suivi :
+- Ancienneté : acquisition par le propriétaire actuel, conquête incluse.
+- Journal : absence depuis la dernière ouverture de la vue générale ;
+  constructions/recherches terminées, arrivées et événements de combat,
+  transport, espionnage et conquête ; marquage explicite comme consultés.
+- Détails : vaisseaux et stocks des planètes ; composition et fret des flottes,
+  accessibles au clavier et au toucher.
+- Destinations : PNJ dans « Ennemis », neutres dans « Destination personnalisée » ;
+  suggestions initialement limitées à la destination par pseudonyme.
+- Points de flotte visible : somme des coûts des vaisseaux présents selon
+  l’univers et le rang, divisée par 100 ; sans défense fixe.
+- Rapports : archive personnelle consultable et restaurable, retrait individuel
+  ou par sélection ; preuves administratives conservées.
+- Guilde : tag de 2 à 5 lettres/chiffres majuscules, unique dans l’univers, choisi
+  par le commandant et obligatoire à la création. « [TAG] Commandant » au classement
+  uniquement ; pas de crochets vides sans guilde. Transition des anciennes guildes
+  précisée ci-dessous.
+
+Les précisions validées pour les rappels, la détection, les orbites, l’abandon et
+les signalements figurent ci-dessous. Voir le [suivi](EVOLUTIONS_INTERFACES_FLOTTES.md).
+
+
+### Précisions confirmées dans la même session
+
+- Préavis d’attaque : niveau effectif = somme simple des trois rangs pour ce seul
+  préavis. Formule validée : min(5 + 5 × niveau effectif, 120 minutes,
+  50 % de la durée totale du trajet). Les effets pondérés sur l’espionnage et la
+  détection à l’arrivée sont conservés. À la détection : planète ciblée et
+  compte à rebours ; aucun détail supplémentaire validé à ce stade.
+- Anciennes guildes : tag choisi par leur commandant, sans génération automatique.
+  Tant qu’il manque, aucun crochet n’est affiché. Les nouvelles créations exigent
+  immédiatement le tag validé.
+- Anciennes colonies : ordre actuel conservé comme approximation si aucune date
+  fiable ne peut être retrouvée. Enregistrer toutes les nouvelles acquisitions ;
+  ne créer aucune date historique fictive.
+
+L’état d’implémentation est décrit dans le suivi de chaque lot ; ces décisions
+ne constituent pas une preuve de déploiement.
+
+
+### Rappels, visibilité, orbite, abandon et signalements — validation utilisateur
+
+- Rappel : toutes les missions en trajet aller, espionnage et colonisation inclus,
+  ainsi que l’orbite et les demandes d’orbite. Retours, combats, résolutions
+  d’arrivée et occupations exclus. Retour sur le chemin déjà parcouru selon la
+  progression réelle, boosts compris. Carburant consommé au prorata ; fret et
+  carburant inutilisé conservés. Si l’origine est perdue, choisir une autre colonie
+  du joueur et recalculer temps/carburant. Sans repli possible, refuser sans
+  changer l’état de la flotte.
+- Déplacements non offensifs : propriétaire, destinataire et alliés uniquement,
+  dans les limites de découverte. Sondes en trajet visibles par leur seul
+  propriétaire ; détection à l’arrivée conservée.
+- Attaque détectée : cible, compte à rebours, commandant, total de vaisseaux et
+  points de flotte. Origine uniquement si déjà découverte ; jamais de composition
+  détaillée pour un tiers.
+- Orbite : demande au départ et valide jusqu’à l’arrivée. Alliance = accord
+  automatique ; neutralité = décision manuelle. Refus ou retrait = retour
+  immédiat ; silence à l’arrivée = retour, sans attente indéfinie. PNJ et mondes
+  sans propriétaire interdits. Propriété et relation revérifiées à l’arrivée ;
+  un accord invalidé entraîne le retour.
+- Abandon : planète redevenue vierge ; perte des bâtiments, ressources, défenses
+  et vaisseaux présents ; files annulées sans remboursement, historiques conservés.
+  Interdit pour la dernière planète, en présence de flottes en trajet liées à la
+  planète (aller/retour), d’orbites, d’attaques, d’occupation ou de combat.
+  La planète initiale est autorisée si une autre colonie reste. Confirmation en
+  retapant son nom, après présentation du bilan des pertes.
+- Signalement joueur : Pseudonyme inapproprié, Harcèlement, Suspicion de triche,
+  Autre ; commentaire. Contexte automatique : univers, joueur visé et pseudonyme
+  au signalement, auteur, date, catégorie/rang consultés. Modération seule habilitée.
+
+Décisions validées pour les futurs lots, non implémentées dans le lot A.
+Les refontes attendent encore la validation des maquettes.
+
+
+### Validation des maquettes et précision du retour système
+
+Les trois maquettes locales Diplomatie, Profil et Inventaire sont validées par
+l’utilisateur pour leur future intégration. Le blocage de quota Figma reste
+distinct : aucune maquette n’y a été composée.
+La croix de la fiche planète renvoie à la galaxie. La demande porte sur l’ajout
+d’un bouton distinct dans cette fiche pour revenir au système de la planète
+consultée ; le retour galaxie existant est conservé.
+
+### Lot C — précisions validées et intégration locale du 12 novembre 2026
+
+Accord explicite pour sauvegarder, vérifier puis appliquer la seule migration
+locale Version20261112010000. Accord sur le démarrage du journal à la première
+ouverture après mise à jour : aucune visite historique inventée, notifications
+antérieures conservées ; seuls les événements suivants des catégories validées
+alimentent le suivi d’absence.
+
+Acquisitions enregistrées à la date réelle pour l’univers initial, colonisation,
+conquête et capture après occupation. Les anciens propriétaires déjà enregistrés
+ne reçoivent pas de date fictive ; les colonies inconnues gardent leur ordre par
+identifiant, signalé comme approximatif, avant les acquisitions datées. Les dates
+connues sont triées par ordre croissant, puis par identifiant en cas d’égalité.
+Le même ordre s’applique aux cartes de la vue générale, à la page Planètes et
+au sélecteur latéral.
+
+Journal : ouverture explicite de la vue générale, requêtes automatiques exclues.
+Les événements proposés restent non consultés entre visites jusqu’au bouton de
+consultation. Une action ne marque que les identifiants effectivement affichés ;
+un événement arrivé après l’affichage reste à consulter. Conservation des données,
+50 événements affichés au maximum puis accès aux suivants après consultation.
+Les détails privés des planètes (unités au repos et ressources) et flottes
+(composition et fret) conservent survol, clavier et toucher.
+Ces éléments sont locaux sur la branche du lot C, pas une annonce de déploiement.
+
+### Lot D — choix PNJ confirmé le 12 novembre 2026
+
+Le besoin dépasse l’interface : canAttack refusait les PNJ sans propriétaire,
+tandis que Conquête JcE existait déjà. Décision explicite : proposer deux missions
+sur les PNJ découverts, Attaque pour combattre et Conquête JcE pour capturer.
+Une attaque classique ne capture pas la planète et n’ajoute aucun butin PNJ.
+La capture conserve vaisseau colonie survivant, emplacement disponible et occupation
+de 24 heures selon le fonctionnement validé de l’univers. Aucun coût, préavis,
+niveau de garnison, calcul de butin ou valeur d’équilibrage n’est modifié.
+
+### Mise en œuvre du lot E — choix déjà validés
+
+Archive personnelle consultable/restaurable, actions individuelles ou par sélection,
+sans suppression des preuves ni changement des droits d’accès. Le tri devient
+commun aux trois types de rapports avant pagination. Les états d’archive sont
+isolés par participation, type et rapport ; restauration sans effacement du rapport.
+
+L’attribution de vaisseaux demandée reprend les protections de la correction de
+ressources : administrateur actif, planète explicitement choisie sur la fiche du
+joueur, type/rang du catalogue, quantité entière, motif et confirmation, trace
+avant/après et reçu de requête. Elle crédite uniquement le stock au sol.
+Les limites d’entier sont des gardes techniques, pas un nouvel équilibrage.
+
+### Mise en œuvre des choix du lot F
+
+Le commandant actuel choisit le tag obligatoire à la création et celui des guildes
+anciennes, sans reprise fictive. Normalisation en majuscules, unicité par univers ;
+préfixe des commandants uniquement au classement. Les autres pseudonymes restent
+inchangés. Les fixtures de création ajoutent explicitement la nouvelle donnée
+obligatoire ; aucun tag automatique n’est ajouté au jeu.
+
+Les quatre motifs et le contexte du signalement sont ceux validés dans cette
+session. Le contexte de classement est mémorisé côté serveur au formulaire ;
+l’envoi conserve le pseudonyme courant et, s’il diffère, celui consulté.
+Le commentaire est facultatif, borné techniquement à 1000 caractères. La modération
+classe ou marque le signalement traité avec audit, sans nouvelle sanction automatique.
+L’idempotence concerne le même formulaire ; aucun quota de signalements ni règle
+d’équilibrage supplémentaire n’est introduit.
+
+### Précisions du rappel et du repli — 12 novembre 2026
+
+Pour les anciennes flottes, le rappel est autorisé quand son calcul est fiable.
+Si les données sont insuffisantes, le rappel est indisponible avec explication
+et la mission continue normalement ; aucune progression historique n’est inventée.
+Les nouveaux départs enregistrent les informations nécessaires.
+
+Après perte de l’origine, le repli vers la colonie choisie utilise les calculs
+normaux de l’univers au moment du rappel. Seul le carburant encore disponible
+est utilisable : le fret d’hydrogène et les stocks des planètes sont préservés.
+Si le carburant manque, le rappel est refusé sans changement d’état.
+
+
+### Orbites — transition validée le 12 novembre 2026
+- Les missions déjà parties sans demande versionnée conservent leur processus
+  d’acceptation à l’arrivée pour ce voyage ; aucune échéance n’est inventée.
+- Les nouveaux départs créent une demande valable jusqu’à l’arrivée :
+  accord automatique entre alliés, décision manuelle pour un joueur neutre,
+  refus pour une planète ennemie, PNJ ou sans propriétaire.
+- Une orbite neutre acceptée participe à la défense de la planète d’accueil,
+  comme une orbite alliée. Les permissions de la mission Défense restent inchangées.
+- Refus ou retrait : retour immédiat depuis la position atteinte, avec le calcul
+  validé du rappel. Sans accord valide à l’arrivée : retour, sans attente indéfinie.
+  Propriétaire et diplomatie sont revérifiés à l’arrivée.
+
+
+### Abandon — dépendances entre colonies, validation du 12 novembre 2026
+L’abandon est bloqué si une commande d’une autre colonie dépend d’une commande
+de la planète abandonnée. Le bilan indique les commandes à gérer ; aucune
+commande d’une autre colonie n’est annulée implicitement. Cette décision
+complète les conséquences d’abandon déjà validées.
+
+
+### Abandon — kit de recolonisation, validation du 12 novembre 2026
+Un joueur qui abandonne une planète ne reçoit plus de kit de colonisation s’il
+recolonise cette même planète dans cet univers. Un nouveau propriétaire conserve
+le kit normal. Les autres coûts, conditions, quotas et consommations restent
+inchangés. Cette règle empêche la récupération répétée du kit après vidage,
+abandon et recolonisation. Le bilan d’abandon annonce l’absence de nouveau kit
+et le besoin de ravitaillement pour le joueur qui abandonne.
+
+### Lot K — présentation approuvée
+
+Les trois maquettes locales Diplomatie, Profil et Inventaire ont été approuvées
+avant intégration. La séparation des périmètres, le rangement des actions
+sensibles et l’examen annulable d’un bonus sont des changements de présentation.
+Ils ne retirent aucune fonction et ne modifient aucune règle de jeu ou permission.
+La revue finale sur dev s’appuie sur la recette A à K ; les retouches sont à
+décider avec l’utilisateur.
+
+### Retouches de recette — présentation
+
+À la demande de l’utilisateur : les détails propriétaires des colonies et flottes
+passent dans des bulles au survol, au clavier et au toucher ; les cases de rapports
+restent nommées pour les lecteurs d’écran mais sans texte visible et sur la ligne
+du rapport ; les cinq catégories du classement joueur se choisissent par les
+en-têtes cliquables, sans modifier les rangs, le tri décroissant ou les calculs
+quotidiens. Deux phrases explicatives sont retirées de Recherche et Rapports,
+sans modifier les mécanismes décrits dans les règles.
+
+La nouvelle organisation de Diplomatie est validée avant intégration : deux onglets
+sans guilde (Créer ou rejoindre une guilde, Relations commandants), cinq avec guilde
+(Ma guilde, Membres, Grades et permissions, Relations guildes, Relations commandants).
+Recherche et adhésion restent dans le premier onglet sans guilde. Aucun changement
+des permissions ou règles de relations.
+
+À la demande de l’utilisateur, la liste des membres affiche En ligne en vert et
+Hors ligne en rouge avec texte. Le seuil d’activité existant (< cinq minutes) est
+réutilisé dans le même univers, uniquement pour les membres de la même guilde.
+L’état est calculé à l’ouverture/actualisation ; les heures et durées restent privées.
+
+### Précision de recette — adhésion distincte
+
+L’utilisateur demande un onglet Rejoindre une guilde à côté de Créer une guilde.
+Cette décision remplace l’organisation précédente à deux onglets sans guilde :
+il y en a désormais trois (Créer une guilde, Rejoindre une guilde, Relations commandants).
+Les cinq onglets avec guilde et les règles d’adhésion restent identiques.
+
+### Dernières retouches de recette validées
+
+À la demande de l’utilisateur : bulles sans croix et fermeture automatique à la
+sortie du pointeur, avec Échap/sortie du focus/toucher extérieur ; trois actions
+Projets, Galaxie et Classement regroupées et raccourci Relations guildes redondant
+retiré du bloc. L’onglet Relations guildes reste présent. Aperçu limité aux trois
+derniers messages, sans lecture implicite. Départ/dissolution rendus directement
+visibles selon le rôle, sans modifier les permissions ni leurs conséquences.

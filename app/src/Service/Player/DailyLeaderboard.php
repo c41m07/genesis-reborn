@@ -47,6 +47,19 @@ final class DailyLeaderboard
             $current = $live[$row['membership_id']] ?? null;
             if ($current !== null) $players[] = $row + ['membership' => $current['membership'], 'protection' => $current['protection']];
         }
+        foreach (['buildings'=>'building_points', 'research'=>'research_points'] as $category=>$field) {
+            if (!array_filter($players, static fn (array $row): bool => !isset($row['ranks'][$category]))) continue;
+            $sorted = $players;
+            usort($sorted, static fn (array $a, array $b): int => ($b[$field] <=> $a[$field])
+                ?: strcasecmp($a['membership']->player->username, $b['membership']->player->username));
+            $ranks = array_flip(array_column($sorted, 'membership_id'));
+            foreach ($players as &$player) {
+                $player['ranks'][$category] ??= $ranks[$player['membership_id']] + 1;
+                $player['score_changes'][$category] ??= null;
+                $player['rank_changes'][$category] ??= null;
+            }
+            unset($player);
+        }
         $guilds = [];
         $currentGuilds = [];
         foreach ($this->repo->all(Guild::class, ['universe'=>$viewer->universe, 'archivedAt'=>null]) as $guild) $currentGuilds[$guild->id] = $guild;
@@ -86,9 +99,9 @@ final class DailyLeaderboard
                 $id = $row['membership']->id;
                 unset($row['membership'], $row['protection']);
                 $old = $previousPlayers[$id] ?? null;
-                foreach (['points'=>'total_points', 'fleet'=>'fleet_points', 'planets'=>'planets'] as $sort=>$field) {
+                foreach (['points'=>'total_points', 'buildings'=>'building_points', 'research'=>'research_points', 'fleet'=>'fleet_points', 'planets'=>'planets'] as $sort=>$field) {
                     $row['score_changes'][$sort] = $old === null ? null : $row[$field] - $old[$field];
-                    $row['rank_changes'][$sort] = $old === null ? null : $old['ranks'][$sort] - $row['ranks'][$sort];
+                    $row['rank_changes'][$sort] = !isset($old['ranks'][$sort]) ? null : $old['ranks'][$sort] - $row['ranks'][$sort];
                 }
                 $players[] = $row + ['membership_id'=>$id];
             }

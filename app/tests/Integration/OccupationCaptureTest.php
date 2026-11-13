@@ -59,7 +59,7 @@ final class OccupationCaptureTest extends KernelTestCase
         foreach([$building,$technology,$report] as $row) $this->em->persist($row);$this->em->flush();
         $this->clock->sleep(86400);$stocks=self::getContainer()->get(ResourceService::class)->snapshot($planet);$token=$this->occupation->dispatchToken;
         self::assertSame('captured',$this->capture()->capture($this->occupation->id,$token)['status']);
-        self::assertSame($member,$planet->owner);self::assertSame(1,$building->level);self::assertSame(0,$this->colony->quantity);
+        self::assertSame($member,$planet->owner);self::assertEquals($this->clock->now(),$planet->acquiredAt);$acquired=$planet->acquiredAt;self::assertSame(1,$building->level);self::assertSame(0,$this->colony->quantity);
         self::assertSame(7,$technology->level);self::assertSame(0,$this->em->getRepository(PlayerTechnology::class)->count(['playerUniverse'=>$member,'slug'=>'weapon_calibration']));
         foreach(self::getContainer()->get(ResourceService::class)->snapshot($planet) as $slug=>$row) self::assertEqualsWithDelta($stocks[$slug]['stock'],$row['stock'],0.000001);
         self::getContainer()->get(\App\Service\Requirement\CatalogAccess::class)->captureLocked($member);
@@ -67,7 +67,7 @@ final class OccupationCaptureTest extends KernelTestCase
         self::assertSame('captured',$report->snapshot['capture']['status']);self::assertSame([],$report->snapshot['losses']);
         self::assertSame('returning',$this->occupation->fleet->status);self::assertEquals(20,$this->occupation->fleet->reservedFuel);
         self::assertSame(1,$this->em->getRepository(PlayerBoost::class)->count(['playerUniverse'=>$member,'sourceType'=>'risk_mission']));
-        self::assertSame('already_finished',$this->capture()->capture($this->occupation->id,$token)['status']);
+        $this->clock->sleep(10);self::assertSame('already_finished',$this->capture()->capture($this->occupation->id,$token)['status']);self::assertEquals($acquired,$planet->acquiredAt);
         self::assertSame(0,$this->colony->quantity);self::assertSame(2,$this->em->getRepository(OccupationEvent::class)->count([]));
     }
 

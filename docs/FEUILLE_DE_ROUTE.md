@@ -1,5 +1,9 @@
 # Roadmap Genesis Reborn
 
+## Guildes et alliances — intégration du 11 novembre 2026
+
+PR #36 fusionnée dans `dev` (`50e7f33`) après revue finale sans anomalie bloquante et CI verte : grades, relations personnelles, trois traités et projets collectifs. Le [guide](GUIDE_GUILDES_ALLIANCES.md) décrit l’utilisation et l’administration ; le [suivi](GESTION_GUILDES_ALLIANCES.md) conserve les preuves et les bilans historiques. Les nouvelles migrations sur base existante, le déploiement et les réglages/activations des modèles restent à réaliser séparément avec les autorisations prévues.
+
 Mise à jour documentaire : 8 novembre 2026. [REGLES](REGLES.md) et
 [DECISIONS](DECISIONS.md) restent les sources des arbitrages de jeu.
 
@@ -68,7 +72,7 @@ en cours et des opérations concurrentes. Les lots prévus sont :
 | 3 — Empire PNJ | Transformation transactionnelle, retrait de l'accès de l'ancien joueur, conservation des forces et recherches, gestion des opérations en cours et nouveau départ. | Aucun transfert partiel ou doublon ; compte et historique conservés ; aucune reprise de l'ancien empire ; pas de garnison standard injectée. |
 | 4 — Vie des PNJ | Production plafonnée et reconstruction limitée ; conservation des comportements particuliers des PNJ existants. | Stockage et consommations respectés, coût/délai/plafond de reconstruction, pas de reconstruction en combat. |
 | 5 — Occupation JcE | Extension de `FleetService` et `CombatEventService`, occupation persistée, place réservée, défense et capture après 24 h. | Rival et remise à zéro, perte/retrait de flotte, colonisateur consommé une seule fois, limites de colonies, production/pillage sans gestion anticipée et courses à l'échéance. |
-| 6 — Interface et livraison | Libellé « Conquête JcE », statuts, échéances, avertissements, rapports, wiki et règles actuelles. | HTML rendu, clavier/focus/libellés/contrastes concernés ; contrôles complets avant commit ou push. |
+| 6 — Interface et livraison | Libellé « Conquête JcE », statuts, échéances, avertissements, rapports, wiki et règles actuelles. | HTML rendu, clavier/focus/libellés/contrastes concernés ; contrôles locaux ciblés pendant le développement et CI complète réussie avant fusion. |
 
 Le socle du lot 1 ajoute `PlayerUniverse.lastActivityAt`, un calcul des échéances
 à 14/30 jours et l'enregistrement transactionnel des visites HTML réussies dans
@@ -1186,3 +1190,298 @@ Les six contrôles requis réussissent : `make validate`, `make lint`, `make tes
 rejouée après l'alignement sur minuit et l'isolation des drapeaux de test.
 Ces contrôles locaux ne constituent pas une validation de la CI GitHub.
 La publication du code ne déploie pas le jeu et n'active pas le cycle à distance.
+
+
+## Gestion des guildes et alliances — 11 novembre 2026
+
+Sur `feature/gestion-guildes-alliances`, les grades et les rivalités personnelles sont complétés par les trois traités officiels : alliance complète, non-agression et défense mutuelle. Permissions séparées, propositions/signatures versionnées, paix bilatérale, historique et contrôles de flotte sont implémentés. La validation locale compte 634 tests PHP, 13 tests Python et 154 scénarios navigateur consolidés ; voir [le suivi détaillé](GESTION_GUILDES_ALLIANCES.md) pour les reprises et limites.
+
+Prochaine étape : projets collectifs à paliers avec dons définitifs et boosts, selon les décisions utilisateur du suivi. Chaque fonctionnalité terminée est committée ; la PR #36 reste en brouillon jusqu’à la fin du périmètre. Ni migration sur une base existante ni déploiement de ces extensions. Le conflit de numéro de migration avec le chantier de reconstruction doit être résolu avant intégration.
+
+
+### Complément terminé localement : projets collectifs — 11 novembre 2026
+
+Les projets de guilde sont implémentés avec paliers successifs, dons atomiques définitifs, coûts/minimums figés au lancement, permission de lancement déléguable et un boost maximum par compte et modèle. L’administration configure chaque univers, sans modèle actif par défaut. La distribution asynchrone est reprenable et respecte l’inventaire existant ; départ, dissolution et archivage ont un traitement explicite.
+
+Validation finale locale : `make validate`, `make lint`, compilation, 670 tests PHP (209722 assertions), 13 tests Python et 156 scénarios navigateur consolidés ; les reprises sont expliquées dans [le suivi](GESTION_GUILDES_ALLIANCES.md). Aucun déploiement ni nouvelle migration de la base habituelle. La PR #36 reste en brouillon, notamment pour coordonner le numéro de migration déjà utilisé par le chantier de reconstruction. Les fonctionnalités demandées sont implémentées ; l’intégration des deux branches et l’activation des modèles restent distinctes.
+
+### Reconstruction ciblée des empires oubliés — 11 novembre 2026
+
+Implémentation sur `feature/reconstruction-empires-oublies`, depuis `dev`
+synchronisée. Le périmètre validé comprend les références par planète à la conversion,
+les vaisseaux et défenses de tous rangs, la réparation partielle déduite, le paiement
+et les durées normaux au chantier partagé, la priorité aux unités finançables les
+moins coûteuses et la suspension/reprise cinq minutes après combat. La reconstruction
+continue sous occupation et cesse à la capture, sans modifier les PNJ classiques.
+Les anciennes commandes payées restent acquises sans relever le plafond ; les
+anciens empires oubliés sans référence sont exclus.
+
+La migration additive `Version20261111010000` est préparée pour une seule nouvelle
+table. Elle ne doit pas être remplacée par une synchronisation globale du schéma,
+notamment lorsque la base locale contient des éléments d'autres branches.
+Les tests couvrent conversion, rangs et modèles, coûts/durées, priorité et ressources
+manquantes, retours, commandes préexistantes, réparation partielle, interruptions,
+occupation, capture, messages rejoués et migration sur base isolée.
+Validation locale finale : `make validate`, `npm run build`, `make test`
+(607 tests PHP, 209 704 assertions et 13 tests Python), `make lint` avec la
+connexion de test isolée (schéma compris), et `git diff --check` réussissent.
+Les 153 tests navigateur passent en deux lots complets indépendants (89 et 64),
+avec application de la migration finale dans leurs bases jetables. Les reprises
+antérieures interrompues ne sont pas comptées comme des exécutions complètes.
+
+Le lint lancé sur la base de jeu signale un écart expliqué : la nouvelle table
+n'y est pas appliquée, et cette base conserve le schéma de guildes d'un autre
+chantier. Aucun élément de ce schéma n'a été supprimé ni modifié. La migration
+de jeu reste non appliquée, sans conversion rétroactive ni déploiement distant.
+Ces contrôles locaux ne constituent pas une validation de la CI GitHub.
+Un commit pour cette fonctionnalité terminée, puis une seule PR vers `dev`
+pour le périmètre complet.
+
+
+Réconciliation du 11 novembre 2026 : `dev` intégré à la branche guildes ; le numéro historique partagé est pris en charge par `Version20261111173000`, sans modifier la migration originale des grades ni appliquer les migrations à la base habituelle. Voir [le suivi](GESTION_GUILDES_ALLIANCES.md). PR #36 toujours en brouillon.
+
+Validation locale de la réconciliation : installation vierge isolée, 23 tests ciblés (205 assertions), 701 tests PHP (209981 assertions), 13 tests Python, 158 scénarios navigateur consolidés après reprise clavier inchangée, lint/schéma, compilation et contrôles Git réussis. Aucune migration de la base habituelle ; détails et limites dans [le suivi](GESTION_GUILDES_ALLIANCES.md).
+
+
+## Interfaces et flottes — lot démarré le 11 novembre 2026
+
+Branche feature/interfaces-classements, depuis dev actualisée (68ca8d9).
+Premier lot : catégories et présentation du classement, prérequis navigables,
+signalement privé, colonnes de surveillance et retrait du journal des missions.
+Aucune migration ni modification des règles de déplacement dans ce lot.
+Le [suivi](EVOLUTIONS_INTERFACES_FLOTTES.md) donne les complexités, décisions,
+dépendances et vérifications réelles. Le premier lot est désormais intégré ; les trois maquettes Diplomatie, Profil
+et Inventaire sont validées ; leur intégration est terminée dans le lot K.
+
+
+### Validation locale du premier lot
+
+Les six contrôles locaux sont réussis : validation Compose, lint/schéma,
+compilation, make test (703 tests PHP, 209995 assertions et 13 tests Python),
+159 scénarios navigateur distincts consolidés après reprises et contrôle du diff.
+Le focus des prérequis préserve les mises à jour automatiques ; les tests de
+missions suivent l’historique conservé après retrait du journal. Le wiki est
+synchronisé et vérifié. La limite de PHPUnit est fixée à 512 Mo dans la seule
+commande de test du Makefile après un épuisement initial à 128 Mo.
+
+Ces résultats ne constituent ni une validation de CI GitHub ni un déploiement.
+Le [suivi](EVOLUTIONS_INTERFACES_FLOTTES.md) détaille les reprises, les fichiers et
+les décisions métier désormais confirmées pour les lots suivants. Les trois
+maquettes sont validées avant leur intégration.
+
+### Intégration du lot A et démarrage du lot B
+
+Le lot A est fusionné dans dev par la [PR #41](https://github.com/c41m07/genesis-reborn/pull/41),
+au commit b58b3b41ca121649093248ba0539921ae30da3ab. La CI complète
+[43107155705](https://github.com/c41m07/genesis-reborn/actions/runs/43107155705)
+est réussie : cinq jobs quality, y compris les contrôles de sauvegarde/restauration
+isolés. La protection de dev impose la PR et ces cinq jobs. Aucun déploiement Alpha.
+
+Le lot B part de cette dev sur feature/carte-confidentialite-flottes :
+cercle extérieur vert des systèmes possédés, bouton distinct de retour au système
+dans la fiche planète (la croix conserve le retour galaxie), sondes étrangères
+masquées côté serveur et résumé des autres flottes visibles par nombre et points.
+Aucun élargissement de visibilité ni migration de la base de jeu.
+Validation locale terminée le 12 novembre : six contrôles exécutés, 706 tests PHP
+(210052 assertions), 13 tests Python et 161 scénarios navigateur distincts réussis.
+Le parcours clavier général a nécessité une reprise seule après dépassement de
+durée en parallèle ; aucun test assoupli. Le [suivi](EVOLUTIONS_INTERFACES_FLOTTES.md)
+détaille les preuves. Lot B désormais fusionné dans dev par la PR #42 au commit fe39a001340548e32ad0b52ef00f686f5a004bd6,
+après CI complète verte 43120982563 (cinq jobs quality et sauvegarde/restauration
+isolées vérifiés). Aucun déploiement Alpha.
+
+### Lot C — branche démarrée depuis dev actualisée
+
+Branche feature/colonies-journal-absence, issue de fe39a00.
+Les détails privés des colonies et flottes sont intégrés ; tests ciblés réussis :
+1 test serveur (15 assertions), 1 parcours survol/clavier/toucher, et 25 tests de
+transition pendant la vérification de la migration sur base jetable.
+Lint/schéma et compilation réussissent. Le lot complet n’est pas encore validé.
+La migration additive des acquisitions et du journal est préparée, non appliquée
+à la base de jeu locale. Accord de sauvegarde/migration et choix du point de départ
+du journal demandés, en attente. Ordre par acquisition et journal restent à réaliser.
+Voir le [suivi](EVOLUTIONS_INTERFACES_FLOTTES.md) ; aucun commit/push/PR du lot C.
+
+### Suite du lot C après décisions
+
+Le démarrage du journal à la première ouverture est confirmé. La migration locale
+Version20261112010000 est appliquée après sauvegarde vérifiée (intégrité gzip et
+manifeste). Les nombres de planètes, ressources, flottes et notifications restent
+identiques avant/après. Aucun serveur Alpha concerné.
+L’acquisition est désormais enregistrée sur les quatre voies, et les trois listes
+de colonies partagent l’ordre avec reprise approximative explicite. Le journal
+filtre les catégories validées et conserve les non-consultés ; POST contrôlé par
+participation, propriété, CSRF et identifiants affichés. Les mises à jour automatiques
+ne visitent ni ne consultent le journal. Les 16 tests ciblés passent (127 assertions).
+Les vérifications complètes du lot C restent à exécuter avant tout commit.
+
+### Validation locale finale du lot C
+
+Les six contrôles sont exécutés et examinés : make validate, make lint (mapping/
+schéma compris), make assets, make test (713 tests PHP, 210134 assertions et
+13 tests Python), make test-browser et contrôle du diff.
+163 scénarios navigateur distincts réussis, couverture exacte consolidée après
+adaptation de trois parcours à la consultation explicite et au nouvel état vide.
+Le clavier est exécuté sans concurrence, ainsi qu’une reprise du journal et de
+la notification de construction réelle sur la version finale. Aucun test assoupli.
+La capture mobile des colonies et les contrôles ciblés d’accessibilité sont relus ;
+cela ne constitue pas un audit complet RGAA.
+Consommateurs locaux rechargés, tous healthy. Lot validé localement ;
+publication, PR et CI GitHub du lot C non effectuées, aucune intégration de C
+dans dev ni déploiement Alpha. Voir le suivi pour les résultats détaillés.
+
+## Lot C intégré et lot D validé localement — 12 novembre 2026
+
+Le lot C est intégré via PR #43, commit 607971469628ca4155c821b18a370c4be53b43ff,
+après CI complète 43134524413 verte. Aucun déploiement Alpha.
+Le lot D part de cette dev actualisée sur feature/destinations-flottes-pnj.
+Trois modes, suggestions privées de pseudonyme et contexte prérempli sont
+implémentés. Décision PNJ confirmée : Attaque pour combattre, Conquête JcE
+pour capturer ; aucun nouveau butin PNJ ni modification d’équilibrage.
+Les 32 tests combat/occupation passent (314 assertions) et 14 tests d’accès
+(154 assertions) après maintien du préremplissage de transport en lecture.
+Les parcours ciblés des trois modes, suggestions clavier/toucher, envoi PNJ,
+wizard et verrouillage de prévisualisation réussissent. Les six contrôles locaux
+réussissent : 718 tests PHP (210198 assertions), 13 Python et 165 scénarios
+navigateur distincts ; validation, lint/schéma, assets et diff vérifiés.
+Relecture mobile et reprise clavier sur le template final réussies ; détails
+et rapports dans le suivi. Publication à autoriser avant le lot E.
+Aucune migration ou dépendance supplémentaire ; aucun push/PR/CI du lot D.
+
+## Lot D intégré, lot E en validation — 12 novembre 2026
+
+PR #44 fusionnée dans dev (63e380f), après CI complète 43169578878 verte.
+Lot E sur feature/administration-vaisseaux-archives : attribution auditée au sol,
+archives personnelles restaurables, tri mixte avant pagination. Tests en cours,
+aucun commit/push/PR du lot E. Migration locale autorisée après sauvegarde vérifiée,
+comptages inchangés ; aucun déploiement Alpha.
+
+Validation locale finale du lot E : six contrôles réussis, 738 tests PHP
+(210294 assertions), 13 tests Python et 167 scénarios navigateur distincts.
+Clavier général et deux nouveaux parcours revérifiés après l’ajustement CSS final.
+Sauvegarde locale et migration vérifiées ; documentation et wiki intégré synchronisés.
+Lot prêt localement, publication à autoriser ; aucune CI GitHub du lot E ni Alpha.
+
+## Lot E intégré, lot F en préparation — 12 novembre 2026
+
+PR #45 fusionnée dans dev (bbbd72e), après CI complète 43177729961 verte.
+Lot F sur feature/tags-guildes-signalements-joueurs : tags obligatoires à la
+création, reprise sans tag fictif, préfixe au classement et signalements privés
+de joueurs avec contexte serveur. 64 tests ciblés réussissent (207 assertions).
+Migration Version20261112030000 préparée ; application locale en attente d’accord.
+Suites complètes isolées en cours ; aucun commit/push/PR du lot F ni Alpha.
+
+Validation du lot F sur bases isolées : 761 tests PHP (210374 assertions),
+13 Python, complément de 23 tests ciblés (84 assertions) et 170 scénarios
+navigateur distincts réussis. Les six contrôles passent ; make lint utilise
+explicitement la configuration et la base des tests PHP, schéma compris.
+Code prêt à publier sous réserve d’accord. La base locale de jeu n’est pas
+migrée : sauvegarde vérifiée et autorisation de Version20261112030000 encore
+requises, puis vérification du schéma local. Aucun push/PR/CI du lot F ni Alpha.
+
+Migration locale F explicitement autorisée, sauvegarde vérifiée deux fois et
+Version20261112030000 appliquée : onze comptages inchangés, ancienne guilde sans
+tag inventé. make lint complet réussit aussi sur la base locale migrée.
+Publication F autorisée ; fusion conditionnée à la CI complète, puis lot G.
+Aucun serveur Alpha concerné.
+
+## Lot F intégré et rappel du lot G — 12 novembre 2026
+
+PR #46 fusionnée dans dev (1818e8e) après CI complète 43189015280 verte.
+Lot G sur feature/rappel-flottes-et-repli, complexité 5 : navigation figée,
+progression réelle après boosts, rappel transactionnel des missions éligibles,
+repli explicite après perte de l’origine, fret protégé et anciens messages sans effet.
+Anciennes flottes conservées : refus expliqué si les données ne permettent pas
+de retour fiable. Les règles validées de combat et stockage restent applicables.
+
+Migration locale Version20261112040000 autorisée puis appliquée après sauvegarde
+vérifiée deux fois ; onze comptages et valeurs historiques des flottes inchangés.
+71 tests ciblés passent (543 assertions). Contrôles complets en cours.
+Publication du lot G non autorisée à ce stade ; aucun push, PR ou déploiement Alpha.
+
+Validation locale finale de G : six contrôles réussis, 793 tests PHP
+(210610 assertions), 13 Python et couverture exacte de 173 scénarios navigateur
+distincts après reprise ciblée du test d’estimation. Le rappel est disponible
+localement, avec contrôles clavier/tactile et confidentialité du repli.
+Documentation et wiki intégré synchronisés. Publication en attente d’accord ;
+aucune PR/CI GitHub G ni fusion ou déploiement Alpha. H à K restent à réaliser.
+
+## Lot G intégré et lot H en validation locale — 12 novembre 2026
+
+PR #47 fusionnée dans dev (30f548b), CI complète 43205470072 verte sur f627c9c,
+cinq quality et GitGuardian vérifiés. Aucun déploiement Alpha.
+
+Lot H sur feature/detection-attaques-visibilite : politique serveur centralisée,
+préavis validé par somme simple, alertes actualisées sur les pages de jeu et carte
+synchronisée, origine inconnue et sondes masquées. Espionnage et règles de mission
+conservés. Univers local abc-1 : aucun remplacement des plafonds tactiques,
+5/5/5 et préavis théorique maximal de 80 minutes avant limite du demi-trajet.
+20 tests ciblés passent (177 assertions) ; suites complètes en cours.
+Aucune migration requise, publication H non autorisée à ce stade. I à K restent à réaliser.
+
+Validation finale de H : six contrôles locaux réussis, 809 tests PHP
+(210723 assertions), 13 Python et couverture exacte de 175 scénarios navigateur.
+Conflit du watch local identifié et références rétablies ; 30 reprises vertes
+sur compilation stable, puis clavier général et variantes H. Le mode de
+développement est rétabli après les contrôles, sans modifier les sources.
+Aucune migration ni publication H ; accord utilisateur requis pour push/PR,
+puis CI complète verte avant fusion et passage à I. Aucun déploiement Alpha.
+
+Publication de H autorisée, PR #48 ouverte. La CI 43235864806 réussit côté
+serveur et sur trois groupes navigateur ; un test de calendrier lit trop tôt
+la base après soumission. Attente de la même valeur persistée ajoutée, reprise
+locale réussie. Nouvelle CI complète requise ; H non fusionné, I non commencé.
+
+
+### Lot I — demandes d’orbite (fusionné, PR #49)
+Demandes au départ, accord allié automatique, réponse neutre avant arrivée,
+refus/retrait par retour partiel, accord revérifié et retour sans réponse.
+Transition des anciennes missions et défense des hôtes neutres validées.
+Suivi privé dans le JSON des trajets existant ; aucune migration.
+Vérifications locales réussies : 835 tests PHP, 13 Python et 176 scénarios
+navigateur distincts, avec compléments ciblés après revue. PR #49 fusionnée
+vers dev après CI complète 43260133554 verte sur 03aad13 ; sauvegarde/restauration
+et cinq jobs quality examinés. Aucun déploiement Alpha lancé.
+
+
+### Lot J — abandon (intégré dans dev, PR #50)
+Bilan, confirmation par nom et contenu courant, dernière planète par univers,
+blocages des opérations et dépendances entre colonies ; perte des actifs présents,
+annulation sans remboursement, trace et conservation des historiques.
+Kit non renouvelé pour le compte qui a abandonné cette même planète ; kit normal
+conservé pour un autre propriétaire (décision explicite).
+Compatibilité des orbites rétablie pour les anciennes planètes PNJ actuellement
+contrôlées par un joueur, selon la définition déjà validée au lot D.
+Vérifications locales : 868 tests PHP, 13 Python et 181 scénarios navigateur
+distincts réussis après corrections/reprises. Publication autorisée par
+l’utilisateur ; PR et CI complète requises avant fusion vers dev. Aucune migration.
+
+### Lot K — interfaces validées (implémenté)
+
+Intégration des maquettes approuvées de Diplomatie, Profil et Inventaire :
+périmètres explicites, gestion de guilde conservée, changement de mot de passe
+facultatif repliable et actions destructives distinctes ; inventaire par usage,
+choix d’opération et examen annulable avant consommation. Les permissions,
+formulaires sécurisés, clés idempotentes et règles de jeu restent identiques.
+
+La recette manuelle A à K est dans [RECETTE_EVOLUTIONS_INTERFACES](RECETTE_EVOLUTIONS_INTERFACES.md).
+La fusion vers dev nécessite la CI complète de la dernière version.
+Aucun déploiement Alpha prévu ; les retouches seront décidées avec l’utilisateur.
+
+Vérifications K : validation et lint réussis, 868 tests PHP, 13 Python, compilation et 31 parcours navigateur concernés réussis après reprises. Le manifeste complet comporte 183 scénarios ; la CI complète reste obligatoire avant fusion. Voir le suivi Interfaces et flottes pour les preuves et les limites.
+
+### Retouches de recette — en cours de vérification locale
+
+Bulles flottantes des colonies et flottes, rapports en lignes compactes,
+en-têtes du classement cliquables et retrait de deux textes explicatifs.
+La nouvelle organisation Diplomatie est validée et intégrée localement : cinq onglets
+avec guilde (Ma guilde, Membres, Grades et permissions, Relations guildes, Relations commandants),
+trois sans guilde (Créer une guilde, Rejoindre une guilde, Relations commandants). Les membres
+affichent En ligne en vert ou Hors ligne en rouge selon l’activité récente dans cet univers.
+Les fonctions et droits existants sont conservés ; publication et CI de cette retouche
+restent distinctes de la livraison A à K déjà fusionnée.
+
+Dernières retouches locales : bulles sans croix avec fermeture automatique ;
+adhésion dans un onglet distinct ; trois actions de guilde regroupées ; aperçu
+de trois messages vérifié ; départ/dissolution directement visibles selon le rôle.
+Tests ciblés réussis ; CI complète sur cette dernière version avant fusion.

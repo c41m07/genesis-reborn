@@ -49,7 +49,7 @@ final class EspionageService
         $report->result = $detected ? 'detected' : 'success';
         if ($detected) {
             if ($target->owner) $this->notifyTarget($fleet, $target);
-            $this->notifications->enqueue($fleet->playerUniverse, 'Vos sondes ont été détectées sur ' . $target->name . '. Aucun renseignement n’a été obtenu.');
+            $this->notifications->enqueue($fleet->playerUniverse, 'Vos sondes ont été détectées sur ' . $target->name . '. Aucun renseignement n’a été obtenu.',journalKind:'spy');
         } else {
             $categories = $settings['intel_categories'] ?? ['resources', 'buildings', 'research', 'fleets', 'defenses'];
             $score = max(0, (int) ($settings['report_score_base'] ?? 1) + $senderTech - $targetTech + $probeCount - 1);
@@ -58,7 +58,7 @@ final class EspionageService
             foreach (array_slice($categories, 0, $report->intelCategories) as $category) {
                 if (array_key_exists($category, $snapshot)) $report->snapshot[$category] = $snapshot[$category];
             }
-            $this->notifications->enqueue($fleet->playerUniverse, 'Rapport d’espionnage disponible : ' . $target->name . '.');
+            $this->notifications->enqueue($fleet->playerUniverse, 'Rapport d’espionnage disponible : ' . $target->name . '.',journalKind:'spy');
         }
         $this->manager->save($report);
         $this->manager->flush();
@@ -125,6 +125,6 @@ final class EspionageService
         if (!$owner) return;
         $known = (bool) $this->repo->one(PlayerDiscovery::class, ['playerUniverse' => $owner, 'solarSystem' => $fleet->homePlanet->solarSystem]);
         $identity = $known ? ' par ' . $fleet->playerUniverse->getDisplayName() : '';
-        $this->notifications->enqueue($owner, 'Sondes d’espionnage détectées sur ' . $target->name . ' depuis ' . $fleet->homePlanet->coordinates() . $identity . '.');
+        $this->notifications->enqueue($owner, 'Sondes d’espionnage détectées sur ' . $target->name . ' depuis ' . $fleet->homePlanet->coordinates() . $identity . '.',journalKind:'spy');
     }
 }

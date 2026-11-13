@@ -1,7 +1,7 @@
 <?php
 namespace App\Service\Admin;
 
-use App\Entity\{AdminAuditLog, CombatParticipant, Fleet, Planet, PlanetBuilding, Player};
+use App\Entity\{AdminAuditLog, CombatParticipant, Fleet, FleetShip, Planet, PlanetBuilding, Player};
 use App\Manager\GameManager;
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
@@ -44,6 +44,34 @@ final class AdminInterventionService
             }
             foreach ($after as $slug=>$stock) $rows[$slug]->currentStock = $stock;
             $this->audit($actor, 'admin_resources_adjust', 'planet', $planet->id, $reason, ['player_id'=>$playerId, 'universe_id'=>$membership->universe->id, 'operation'=>$operation, 'amounts'=>$values, 'before'=>$before, 'after'=>$after]);
+            return true;
+        });
+    }
+
+    public function ships(Player $actor, int $playerId, Planet $planet, string $slug, string $tier, string $quantity, string $reason, string $requestKey): bool
+    {
+        $reason = $this->reason($reason);
+        if (!preg_match('/^[1-9][0-9]{0,9}$/D', $quantity) || (int) $quantity > 2147483647) throw new \DomainException('Quantité invalide : indiquez un entier de 1 à 2147483647.');
+        return $this->manager->transaction(function () use ($actor, $playerId, $planet, $slug, $tier, $quantity, $reason, $requestKey): bool {
+            $this->authorize($actor);
+            $membership = $planet->owner;
+            if (!$membership) throw new \DomainException('Cette colonie ne possède plus de joueur.');
+            $this->guard->lock($membership, $planet);
+            if ($planet->owner?->player?->id !== $playerId) throw new \DomainException('Cette colonie n’appartient plus au joueur sélectionné.');
+            $this->catalog->getTierForUniverse($membership->universe, 'ships', $slug, $tier);
+            if (!$this->guard->receipt($membership, $requestKey)) return false;
+            $fleet = $this->repo->one(Fleet::class, ['homePlanet'=>$planet, 'playerUniverse'=>$membership, 'status'=>'idle']);
+            if (!$fleet) {
+                $fleet = new Fleet();$fleet->homePlanet = $planet;$fleet->playerUniverse = $membership;
+                $this->manager->save($fleet);$this->manager->flush();
+            }
+            $ship = $this->repo->one(FleetShip::class, ['fleet'=>$fleet, 'slug'=>$slug, 'tier'=>$tier]);
+            $before = $ship?->quantity ?? 0;
+            $after = $before + (int) $quantity;
+            if ($after > 2147483647) throw new \DomainException('Attribution refusée : la capacité de stockage du nombre de vaisseaux serait dépassée.');
+            if (!$ship) { $ship = new FleetShip();$ship->fleet = $fleet;$ship->slug = $slug;$ship->tier = $tier;$this->manager->save($ship); }
+            $ship->quantity = $after;
+            $this->audit($actor, 'admin_ships_grant', 'planet', $planet->id, $reason, ['player_id'=>$playerId, 'universe_id'=>$membership->universe->id, 'fleet_id'=>$fleet->id, 'slug'=>$slug, 'tier'=>$tier, 'quantity'=>(int) $quantity, 'before'=>$before, 'after'=>$after]);
             return true;
         });
     }

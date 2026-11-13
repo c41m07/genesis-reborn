@@ -218,7 +218,7 @@ final class GamePersistenceTest extends KernelTestCase
         $service=self::getContainer()->get(\App\Service\Fleet\FleetService::class);
         $service->send($m,$origin,'colonize',$target->id,['colony_ship'=>$ranks],1,[],str_repeat('a',32));
         $fleet=$this->em->getRepository(\App\Entity\Fleet::class)->findOneBy(['status'=>'traveling']);$this->land($fleet,$service);
-        self::assertSame($m->id,$target->owner->id);
+        self::assertSame($m->id,$target->owner->id);self::assertNotNull($target->acquiredAt);
         $kit=self::getContainer()->get(\App\Service\Catalog\GameCatalog::class)->rules()['colony_initial_stock'];
         foreach($this->em->getRepository(PlanetResource::class)->findBy(['planet'=>$target]) as $resource) self::assertEquals($kit[$resource->resourceType]*$factor,$resource->currentStock);
         if(isset($ranks['superior']) && $consumedTier!=='superior') self::assertSame(1,$this->em->getRepository(FleetShip::class)->findOneBy(['fleet'=>$fleet,'slug'=>'colony_ship','tier'=>'superior'])->quantity);
@@ -440,7 +440,7 @@ final class GamePersistenceTest extends KernelTestCase
         $this->join($outsider, 'omega-1');
         $diplomacy = self::getContainer()->get(\App\Service\Player\DiplomacyService::class);
         $relations = self::getContainer()->get(\App\Service\Player\RelationResolver::class);
-        $diplomacy->create($leader->currentPlayerUniverse, 'Canal privé');
+        $diplomacy->create($leader->currentPlayerUniverse, 'Canal privé', 'PRIV');
         $guild = $relations->guild($leader->currentPlayerUniverse);
         $diplomacy->join($member->currentPlayerUniverse, $guild->id);
 
@@ -532,7 +532,7 @@ final class GamePersistenceTest extends KernelTestCase
         $a=$this->player('Alpha');$this->join($a,'omega-1');$b=$this->player('Beta');$this->join($b,'omega-1');$c=$this->player('Gamma');$this->join($c,'omega-1');$d=$this->player('Delta');$this->join($d,'omega-1');
         $service=self::getContainer()->get(\App\Service\Player\DiplomacyService::class);$relations=self::getContainer()->get(\App\Service\Player\RelationResolver::class);
         $ma=$a->currentPlayerUniverse;$mb=$b->currentPlayerUniverse;$mc=$c->currentPlayerUniverse;$md=$d->currentPlayerUniverse;
-        $service->create($ma,'Guilde Alpha');$service->create($mb,'Guilde Beta');$ga=$relations->guild($ma);$gb=$relations->guild($mb);$service->join($mc,$ga->id);$service->join($md,$gb->id);
+        $service->create($ma,'Guilde Alpha', 'ALPHA');$service->create($mb,'Guilde Beta', 'BETA');$ga=$relations->guild($ma);$gb=$relations->guild($mb);$service->join($mc,$ga->id);$service->join($md,$gb->id);
         $service->relation($ma,$gb->id,'allies');self::assertFalse($relations->allied($mc,$md));
         $service->relation($mb,$ga->id,'allies');self::assertTrue($relations->allied($mc,$md));
         $service->alliance($ma,$mb->id,'propose');$service->alliance($mb,$ma->id,'accept');
@@ -542,7 +542,7 @@ final class GamePersistenceTest extends KernelTestCase
     {
         $a=$this->player('Alpha');$this->join($a,'omega-1');$b=$this->player('Beta');$this->join($b,'omega-1');
         $service=self::getContainer()->get(\App\Service\Player\DiplomacyService::class);$relations=self::getContainer()->get(\App\Service\Player\RelationResolver::class);
-        $ma=$a->currentPlayerUniverse;$mb=$b->currentPlayerUniverse;$service->create($ma,'Guilde Alpha');$g=$relations->guild($ma);$service->join($mb,$g->id);
+        $ma=$a->currentPlayerUniverse;$mb=$b->currentPlayerUniverse;$service->create($ma,'Guilde Alpha', 'ALPHA');$g=$relations->guild($ma);$service->join($mb,$g->id);
         $service->transfer($ma,$mb->id);self::assertSame($mb->id,$g->leader->id);$service->leave($ma);self::assertNull($relations->guild($ma));
         $service->disband($mb);self::assertSame(0,$this->em->getRepository(\App\Entity\Guild::class)->count());self::assertSame(0,$this->em->getRepository(\App\Entity\GuildMember::class)->count());
     }
@@ -558,13 +558,13 @@ final class GamePersistenceTest extends KernelTestCase
     }
     public function testGuildFeatureDisabledAndLeaderPermissionAreEnforced(): void
     {
-        $a=$this->player('Alpha');$this->join($a);$this->expectException(\DomainException::class);self::getContainer()->get(\App\Service\Player\DiplomacyService::class)->create($a->currentPlayerUniverse,'Pas de guilde');
+        $a=$this->player('Alpha');$this->join($a);$this->expectException(\DomainException::class);self::getContainer()->get(\App\Service\Player\DiplomacyService::class)->create($a->currentPlayerUniverse,'Pas de guilde', 'NON');
     }
     public function testNonLeaderCannotDeclareGuildEnemy(): void
     {
         $a=$this->player('Alpha');$this->join($a,'omega-1');$b=$this->player('Beta');$this->join($b,'omega-1');$c=$this->player('Gamma');$this->join($c,'omega-1');
         $service=self::getContainer()->get(\App\Service\Player\DiplomacyService::class);$relations=self::getContainer()->get(\App\Service\Player\RelationResolver::class);
-        $service->create($a->currentPlayerUniverse,'Guilde Alpha');$service->create($b->currentPlayerUniverse,'Guilde Beta');$service->join($c->currentPlayerUniverse,$relations->guild($a->currentPlayerUniverse)->id);
+        $service->create($a->currentPlayerUniverse,'Guilde Alpha', 'ALPHA');$service->create($b->currentPlayerUniverse,'Guilde Beta', 'BETA');$service->join($c->currentPlayerUniverse,$relations->guild($a->currentPlayerUniverse)->id);
         $this->expectException(\DomainException::class);$service->relation($c->currentPlayerUniverse,$relations->guild($b->currentPlayerUniverse)->id,'enemies');
     }
     public function testLeaderboardCountsOwnedAssetsAndRemovesPointsAfterFleetLoss(): void

@@ -15,6 +15,10 @@ class Fleet
     public ?Planet $destination = null;
     #[ORM\ManyToOne, ORM\JoinColumn(nullable: true)]
     public ?SolarSystem $destinationSystem = null;
+    #[ORM\ManyToOne, ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    public ?Planet $returnPlanet = null;
+    #[ORM\Column(type: 'json', nullable: true)]
+    public ?array $navigation = null;
     #[ORM\Column(length: 20)]
     public string $status = 'idle';
     #[ORM\Column(length: 20)]

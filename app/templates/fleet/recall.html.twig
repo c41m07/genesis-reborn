@@ -1,0 +1,29 @@
+{% extends 'base.html.twig' %}
+{% block title %}Rappeler une flotte · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="page-heading"><div><h1>Rappeler la flotte #{{ fleet.id }}</h1><p>Vérifiez le retour avant de confirmer le rappel.</p></div></div>
+<section class="panel fleet-recall-panel" aria-labelledby="recall-title">
+<h2 id="recall-title">Retour de la flotte</h2>
+<p>Origine historique : {{ fleet.homePlanet.name }} · {{ fleet.homePlanet.coordinates() }}.</p>
+{% if origin_lost %}
+<p>L’origine ne vous appartient plus. Choisissez une colonie de repli de cet univers. Le calcul utilisera uniquement le carburant disponible à bord.</p>
+<form method="get"><label for="recall-return">Colonie de repli</label><select id="recall-return" name="return_planet" required><option value="">Choisir une colonie</option>{% for planet in return_planets %}<option value="{{ planet.id }}" {{ return_id==planet.id ? 'selected' : '' }}>{{ planet.name }} · {{ planet.coordinates() }}</option>{% endfor %}</select><button class="secondary">Calculer le retour</button></form>
+{% if return_planets is empty %}<p role="status">Aucune colonie de repli disponible : le rappel est indisponible, la mission continue.</p>{% endif %}
+{% endif %}
+{% if error %}<p class="flash error" role="alert">{{ error }}</p>{% endif %}
+{% if quote %}
+<dl class="report-facts">
+<div><dt>Colonie de retour</dt><dd>{{ quote.return_planet.name }} · {{ quote.return_planet.coordinates() }}</dd></div>
+<div><dt>Durée estimée du retour</dt><dd>{{ duration_label(quote.seconds) }}</dd></div>
+<div><dt>Arrivée estimée</dt><dd>{{ quote.arrival_at|date('d/m/Y H:i:s',preferences.timezone) }}</dd></div>
+<div><dt>Carburant consommé avant le retour</dt><dd>{{ quote.spent_now|quantity(2) }} hydrogène</dd></div>
+<div><dt>Carburant réservé pour le retour</dt><dd>{{ quote.return_fuel|quantity(2) }} hydrogène</dd></div>
+<div><dt>Carburant inutilisé conservé</dt><dd>{{ quote.unused_fuel|quantity(2) }} hydrogène</dd></div>
+</dl>
+<h3>Fret conservé</h3><ul>{% for slug,amount in quote.freight|filter(amount => amount > 0) %}<li>{{ resources[slug] }} : {{ amount|quantity(2) }}</li>{% else %}<li>Aucun fret.</li>{% endfor %}</ul>
+<p>Les vaisseaux reviennent sans accomplir la mission prévue. Le calcul est actualisé lors de la confirmation. Le dépôt reste soumis aux capacités de stockage habituelles.</p>
+<form method="post"><input type="hidden" name="_token" value="{{ csrf_token('fleet_recall_'~fleet.id) }}"><input type="hidden" name="request_key" value="{{ request_key }}"><input type="hidden" name="version" value="{{ quote.version }}"><input type="hidden" name="return_planet" value="{{ quote.return_planet.id }}"><button class="primary" type="submit">Confirmer le rappel</button></form>
+{% endif %}
+<p><a href="{{ path('app_fleets') }}">Revenir aux flottes</a></p>
+</section>
+{% endblock %}

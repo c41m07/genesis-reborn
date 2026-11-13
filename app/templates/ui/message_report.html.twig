@@ -1,5 +1,5 @@
 <details class="message-report">
-    <summary>Signaler ce message</summary>
+    <summary aria-label="Signaler ce message"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3 2 21h20Z" fill="#f5c542" stroke="#765500" stroke-width="1.5"/><path d="M12 9v5" stroke="#302400" stroke-width="2"/><circle cx="12" cy="17" r="1" fill="#302400"/></svg></summary>
     <form method="post">
         <input type="hidden" name="_token" value="{{ csrf_token('private_message_report') }}">
         <input type="hidden" name="action" value="report">

@@ -42,7 +42,7 @@ Les opérations en retard sont rejouées à leurs dates théoriques avant dépen
 
 Guildes : recrutement ouvert provisoire, adhésion exclusive dans chaque univers, transfert du commandement à un autre membre, départ après transfert, dissolution par le dirigeant. Alliances personnelles et alliances de guildes exigent le consentement réciproque. Une hostilité de guilde invalide les contrats personnels incompatibles.
 
-Conquête JcE : seules les planètes neutres marquées PNJ sont attaquables; une victoire avec un vaisseau colonie survivant capture la planète. Bâtiments, stocks et développement sont conservés; flotte et défenses PNJ disparaissent. Les planètes vierges restent colonisables et aucune planète détenue par un joueur n’est conquérable.
+PNJ : les planètes PNJ découvertes du même univers peuvent être combattues par la mission Attaque, sans capture ni butin de ressources PNJ. Leur capture reste réservée à Conquête JcE, avec vaisseau colonie survivant, place disponible et règles d’occupation existantes (24 heures lorsque ce mécanisme est activé). Les bâtiments et stocks suivent les règles de conservation de la capture. Les planètes vierges restent colonisables ; les joueurs actifs ou simplement inactifs ne sont pas conquérables. Les empires déjà oubliés suivent les règles spécifiques détaillées ci-dessous.
 
 Espionnage : une mission cible une planète connue du même univers autre que celles de l’émetteur. Elle transporte uniquement des sondes, détruites à l’arrivée. La détection avertit le propriétaire et bloque le rapport; les renseignements et rapports suivent les niveaux et règles résumés dans docs/archives/DECISIONS_INITIALES.md.
 
@@ -229,7 +229,7 @@ objet déjà gagné et interrompt aussi l’annonce qui l’accompagne.
 
 ### Classement des guildes — 5 novembre 2026
 
-Le classement des guildes additionne les points actuels de bâtiments, recherches et flotte de leurs membres. Le total détermine le rang. La médiane des scores individuels complète le total : pour un effectif pair, elle est la moyenne des deux scores centraux. Une guilde sans membre compte zéro point et une médiane de zéro. Le classement joueur reste fondé sur les points totaux ; sa présentation détaille bâtiments, recherches, flotte et total.
+Le classement des guildes additionne les points actuels de bâtiments, recherches et flotte de leurs membres. Le total détermine le rang. La médiane des scores individuels complète le total : pour un effectif pair, elle est la moyenne des deux scores centraux. Une guilde sans membre compte zéro point et une médiane de zéro. Le classement joueur propose les cinq catégories décrites dans « Classements quotidiens » ; les points totaux restent sélectionnés par défaut.
 
 
 ## Répartition des coûts des vaisseaux — 5 novembre 2026
@@ -287,9 +287,11 @@ Les recherches historiquement actives en parallèle terminent leur travail sans 
 
 ## Classements quotidiens — 10 novembre 2026
 
-Tous les classements (points des joueurs, flotte, nombre de colonies et guildes) sont figés entre deux calculs quotidiens, à 00 h en Europe/Paris, en tenant compte des changements d’heure. Les points affichés dans l’aperçu de colonie et l’API utilisent le même instantané. Le calcul des points reste inchangé ; les scores utilisés pour les protections et combats restent en temps réel.
+Tous les classements (points totaux des joueurs, bâtiments, recherche, flotte, nombre de colonies et guildes) sont figés entre deux calculs quotidiens, à 00 h en Europe/Paris, en tenant compte des changements d’heure. Les points affichés dans l’aperçu de colonie et l’API utilisent le même instantané. Le calcul des points reste inchangé ; les scores utilisés pour les protections et combats restent en temps réel.
 
-Les évolutions comparent les deux derniers calculs persistés : points actuels moins points précédents ; rang précédent moins rang actuel (une place gagnée est positive). Gains et pertes sont signés ; une valeur inchangée s’affiche « = ». Sans référence précédente (initialisation, nouveau joueur ou nouvelle guilde), l’évolution s’affiche « = ». Les nouveaux inscrits et guildes entrent au prochain calcul. Les noms, relations diplomatiques et protections restent actuels ; les joueurs supprimés ou devenus empires oubliés et les guildes archivées ne sont plus affichés, sans renuméroter les rangs avant l’échéance suivante.
+Les évolutions comparent les deux derniers calculs persistés : points actuels moins points précédents ; rang précédent moins rang actuel (une place gagnée est positive). Dans le tableau joueur, gains et pertes sont signés et entre parenthèses sur la même ligne que la valeur ; une valeur inchangée s’affiche « (= 0) ». Sans référence précédente, l’évolution s’affiche « (—) ». La présentation des guildes et de l’aperçu conserve ses marqueurs existants. Les nouveaux inscrits et guildes entrent au prochain calcul. Les noms, relations diplomatiques et protections restent actuels ; les joueurs supprimés ou devenus empires oubliés et les guildes archivées ne sont plus affichés, sans renuméroter les rangs avant l’échéance suivante.
+
+Le classement joueur propose points totaux (défaut), bâtiments, recherche, flotte et nombre de planètes. Chaque catégorie possède son rang et sa variation ; le tri décroissant global précède la pagination de 50 lignes. Les égalités reprennent le départage existant par pseudonyme, sans casse. Aucune variation de rang bâtiments/recherche n’est inventée pour les anciens instantanés : elle devient disponible après deux calculs contenant ce rang.
 
 Le relais existant déclenche les calculs même sans visite. Les lectures rattrapent une échéance manquée ; après interruption, le calcul utilise l’état disponible à la reprise et indique son heure réelle, sans inventer les états des jours manqués. Les constructions et recherches déjà terminées sont réconciliées avant le calcul. Les instantanés et leurs dernières évolutions sont conservés en base, avec uniquement des identifiants et valeurs de classement, sans copie des identités.
 
@@ -315,3 +317,325 @@ Transition validée : tout surplus déjà présent au-dessus de la capacité est
 Clarification validée le 10 novembre 2026 : les règles courantes s’appliquent directement à toute la période de production non encore matérialisée, depuis le dernier calcul enregistré, y compris lorsque cette période précède le déploiement. Ce recalcul rétroactif des gains en attente est accepté ; il peut augmenter ou réduire ces gains selon les nouveaux taux. Il ne réinitialise pas les stocks déjà enregistrés. Les frontières d’événements et de vacances restent prises en compte. Cette décision remplace le mécanisme initial de bascule par date : `RESOURCE_BALANCE_EFFECTIVE_AT` n’est plus utilisée et aucun ancien régime n’est maintenu.
 
 Aucune migration ni réécriture globale des stocks n’est requise. Les nouvelles valeurs sont actives dès que le nouveau code est exécuté, pour les univers existants comme pour les nouveaux. Lors du déploiement, arrêter les anciens processus applicatifs puis démarrer tous les services avec la même version ; aucun paramètre d’activation supplémentaire n’est nécessaire.
+
+### Rivalités personnelles et paix — 11 novembre 2026
+
+Une déclaration personnelle suffit à rendre deux joueurs rivaux, sans obligation de guilde. La déclaration remplace leur alliance personnelle éventuelle. La paix exige une proposition puis l'acceptation de l'autre joueur : proposer, retirer ou refuser une offre ne met pas fin à l'hostilité.
+
+L'appartenance à une même guilde ou à des guildes alliées prime : la rivalité personnelle reste enregistrée mais n'autorise pas les combats entre ces alliés. Elle reprend ses effets si ces liens collectifs cessent, tant qu'une paix personnelle n'a pas été acceptée. Inversement, une paix personnelle ne neutralise pas une hostilité entre guildes.
+
+Après la paix, les joueurs sont neutres au niveau personnel et peuvent proposer une nouvelle alliance, avec consentement réciproque. Aucun bonus, butin supplémentaire ou renseignement privé n'est accordé par une rivalité. Les restrictions de combat et les préférences de réception des transports restent applicables. La conversion d'un empire termine aussi les rivalités et offres de paix.
+
+### Traités entre guildes — décisions du 11 novembre 2026
+
+Décisions explicites de l’utilisateur : trois traités réciproques, signés par deux guildes du même univers. Une proposition conserve les effets du traité actif jusqu’à acceptation par l’autre guilde.
+
+| Traité | Effets |
+| --- | --- |
+| Alliance complète | Conserve les effets existants : liens alliés pour les camps, stationnement défensif et préférences de transport. Aucune ressource ni flotte envoyée automatiquement. |
+| Non-agression | Bloque les attaques et conquêtes directes entre les deux guildes au départ et à l’arrivée. Aucun droit supplémentaire de défense ou de transport. L’espionnage reste permis et les tirs entre camps d’un combat impliquant des tiers restent possibles. |
+| Défense | Non-agression et possibilité de stationner des flottes défensives chez l’autre guilde avec accord du propriétaire. Aucun droit supplémentaire de transport ni regroupement offensif automatique. La défense ponctuelle déjà ouverte reste inchangée. |
+
+Le dirigeant possède les droits ; chaque grade peut déléguer séparément alliance, non-agression, défense, hostilité et neutralité/paix. Les nouvelles permissions ne sont pas attribuées automatiquement aux grades existants. Les grades n’accordent aucun droit sur les relations personnelles des autres joueurs.
+
+Une rupture est immédiate et unilatérale avec le droit de neutralité ; une déclaration d’hostilité rompt immédiatement le traité et ses propositions. La paix nécessite une proposition puis la signature de l’autre guilde : proposer, retirer ou refuser une offre maintient l’hostilité. Une alliance ou un pacte ne peut pas être proposé pour contourner une hostilité : signer la paix d’abord. Aucun préavis, coût, durée imposée, bonus économique ou engagement automatique n’est ajouté.
+
+Les pactes ne fusionnent pas les camps offensifs. Le pacte de défense concerne le stationnement chez les propriétaires de colonies ; il ne donne pas à lui seul le droit de renforcer une occupation offensive. Une flotte déjà engagée est contrôlée à l’arrivée selon les règles en vigueur ; un combat déjà ouvert conserve ses règles de composition des camps. Les alliances et rivalités personnelles restent indépendantes et ne sont pas effacées par un pacte ou sa rupture.
+
+### Projets collectifs de guilde — décisions du 11 novembre 2026
+
+- Les membres donnent des ressources de leurs propres colonies pour financer des paliers successifs. Les dons sont définitifs et ne sont pas remboursés lors d’un départ, d’une dissolution ou d’un abandon.
+- Chaque projet peut être lancé une seule fois par guilde. Le dirigeant ou un membre ayant la permission explicite `projects.start` choisit le modèle. Tous les membres peuvent contribuer sans grade particulier. Les vacances interdisent lancement et dons, mais permettent la consultation.
+- L’administration définit, pour chaque univers, les coûts des paliers et les minimums de contribution par ressource. Aucun modèle n’est créé ou activé automatiquement. Les coûts et minimums sont figés dans chaque projet au lancement ; les modifications administratives et la désactivation du modèle ne changent pas les projets déjà financés.
+- Un participant doit atteindre tous les minimums positifs, cumulés sur l’ensemble des paliers, et encore appartenir à la guilde à la clôture. Aucun taux de conversion entre ressources n’est inventé. Les personnes éligibles sont figées à cette clôture ; un départ ultérieur ne retire pas une récompense acquise.
+- Chaque participant reçoit au maximum un boost standard pour le même modèle, même après changement de guilde, utilisation du boost ou création d’un nouvel empire dans le même univers. L’effet, la capacité et la file d’attente de l’inventaire existant sont conservés. Il n’y a ni bonus permanent, ni coefficient de puissance, ni récompense proportionnelle au volume donné.
+- Le don est enregistré avec son prélèvement dans une transaction. Une quantité négative, fractionnaire, inconnue, excessive ou supérieure au besoin restant est refusée, sans débit partiel. Un ancien formulaire ne peut pas payer deux fois. Un palier se termine uniquement lorsque toutes ses ressources sont financées.
+- Les récompenses sont distribuées après clôture par le relais existant. Une interruption peut être reprise sans doubler les boosts ; une récompense attend si l’inventaire est plein. La dissolution ou l’archivage d’une guilde abandonne les projets encore actifs et conserve leur historique ; les projets terminés gardent leurs récompenses acquises.
+
+Bornes techniques des formulaires, sans montant d’équilibrage par défaut : 1 à 10 paliers, quantités entières, au plus un milliard d’unités par ressource et palier, et minimums ne dépassant jamais le coût total. Les coûts et seuils réels restent à choisir par l’administration avant activation. Les projets et grades appartiennent aux guildes ; aucune guilde n’est requise pour les alliances et rivalités personnelles, dont les règles restent indépendantes.
+
+## Reconstruction des empires oubliés — 11 novembre 2026
+
+Seuls les nouveaux empires convertis avec une référence enregistrée sont concernés.
+Les PNJ classiques et les empires déjà oubliés sans cette référence sont exclus.
+
+- Chaque planète conserve ses effectifs à la conversion par modèle et rang,
+  y compris ses propres flottes rappelées ou déjà en retour. Les commandes payées
+  antérieures terminent normalement ; elles ne relèvent pas la référence, même
+  si leurs résultats la dépassent.
+- Le manque est calculé après réparation partielle des défenses, en déduisant les
+  survivants, les retours et les unités déjà commandées. Le chantier existant est
+  conservé : les anciennes commandes passent avant les nouvelles reconstructions.
+- Tous les modèles de défenses et de vaisseaux sont reconstructibles à leur rang
+  d'origine, sans croissance autonome au-delà de la référence.
+- La reconstruction commence au plus tôt cinq minutes après la résolution du
+  dernier combat sur cette planète. Un nouveau combat suspend le travail payé,
+  conserve son avancement et invalide les anciennes échéances ; aucun progrès
+  ni livraison autonome pendant le combat. La reprise attend à nouveau cinq minutes
+  après sa résolution, sans second prélèvement.
+- Une unité est commandée à la fois au chantier partagé, avec les coûts et durées
+  normaux, les réductions acquises et les paramètres de l'univers. Les stocks de
+  la planète paient la commande. S'ils sont insuffisants, la production locale
+  peut permettre une nouvelle commande ultérieure.
+- Les modèles finançables sont classés par coût effectif unitaire croissant :
+  métal × 2 + nano × 4 + antimatière × 8 + hydrogène. À égalité, priorité à la durée
+  la plus courte, puis à l'identifiant du modèle, du rang et du groupe. Un modèle
+  non finançable n'empêche pas d'en reconstruire un autre. Cette priorité favorise
+  la quantité sans garantir une optimisation combinatoire de toutes les ressources.
+- La reconstruction continue pendant l'occupation, hors combat. Les forces hostiles
+  reconstruites doivent être vaincues avant capture, sans remise à zéro du temps
+  acquis par l'occupant victorieux. Aucun départ offensif n'est créé.
+- La capture définitive arrête la reconstruction de l'ancien empire et annule
+  ses commandes restantes sans remboursement. Les références historiques restent
+  conservées et ne s'appliquent jamais au nouveau propriétaire.
+
+Aucune attaque automatique, nouvelle colonisation ou nouvelle recherche n'est
+ajoutée. Les recherches déjà payées à la conversion peuvent finir, puis restent figées.
+
+
+## Carte V2 : confidentialité des flottes
+
+Les trajets d’espionnage, aller comme retour, sont visibles uniquement par le
+propriétaire des sondes. Cette restriction ne modifie pas la détection éventuelle
+à l’arrivée. Les flottes tierces déjà visibles sur la carte montrent leur nombre
+total de vaisseaux et leurs points, sans composition détaillée. Le propriétaire
+conserve les types, quantités et rangs de ses propres flottes.
+
+Les points d’une flotte sont la somme des coûts de ses vaisseaux présents,
+selon le catalogue de son univers et de chaque rang, divisée par 100 après
+totalisation. Les défenses fixes et le fret ne contribuent pas à ces points.
+Ce résumé courant d’une flotte est distinct du classement quotidien des joueurs.
+
+Le cercle extérieur d’un système possédé est vert, avec les informations
+intérieures conservées. Un bouton de la fiche planète revient à son système ;
+la croix permet toujours de revenir à la galaxie.
+
+### Détails privés des colonies et flottes — lot C
+
+Les panneaux de la page Planètes affichent les vaisseaux au repos par rang et
+les stocks calculés de ses colonies dans l’univers actif. Le suivi de ses vols
+affiche leur composition et leur fret. Les données d’un autre empire ne sont
+pas jointes à ces panneaux. Survol, ouverture au clavier et au toucher, fermeture
+par Échap ; la lecture des stocks ne les matérialise pas et ne les consomme pas.
+Les règles de capacité, production, déplacement et confidentialité restent inchangées.
+
+### Ordre des colonies et journal d’absence — lot C
+
+Une acquisition est datée lors de l’attribution initiale, d’une colonisation,
+d’une conquête ou d’une capture après occupation par le propriétaire actuel.
+Les anciennes dates inconnues ne sont pas inventées : les colonies concernées
+conservent un ordre par identifiant indiqué comme approximatif, avant les
+acquisitions datées. Les dates connues vont de la plus ancienne à la plus récente,
+avec départage par identifiant. Vue générale, page Planètes et sélecteur latéral
+partagent cet ordre ; à l’écran, la lecture va de gauche à droite ou de haut en bas.
+
+Le suivi du journal commence à la première ouverture de la vue générale après
+la mise à jour. Les anciennes notifications sont conservées sans être présentées
+comme une absence connue. Pour les ouvertures suivantes, le journal propose les
+constructions/recherches terminées, arrivées, combats, transports, espionnages
+et conquêtes survenus depuis la précédente ouverture, avec maintien des événements
+non consultés des absences antérieures. Une actualisation automatique ne constitue
+ni une nouvelle ouverture ni une consultation. Les notifications instantanées
+restent distinctes du journal d’absence.
+
+Le bouton « Marquer ces événements comme consultés » porte uniquement sur les
+événements affichés, au plus 50 par affichage. Les suivants deviennent accessibles
+après consultation, sans suppression d’historique ; les arrivées ultérieures ne
+sont jamais marquées par une ancienne sélection. L’état est conservé côté serveur
+par participation à l’univers et protégé contre les accès tiers et formulaires expirés.
+
+### Destinations et suggestions des flottes — lot D
+
+Mes planètes et alliés est sélectionné par défaut sur un nouveau formulaire.
+Ce menu regroupe ses colonies et les mondes alliés découverts, compatibles avec
+la mission. Ennemis regroupe les planètes ennemies, PNJ et empires oubliés connus.
+Une ancienne planète PNJ détenue par un joueur neutre relève de la destination
+personnalisée, car son propriétaire actuel prime sur son ancien drapeau PNJ.
+
+Destination personnalisée conserve les coordonnées et propose une recherche de
+pseudonyme : deux caractères minimum, au plus 20 résultats, sans planète inconnue
+ni donnée d’un autre univers. Les joueurs neutres sont accessibles dans ce mode.
+L’exploration d’un système inconnu garde sa saisie personnalisée habituelle.
+Les liens préremplis de la carte conservent le contexte de leur cible ; une cible
+connue peut rester consultable en formulaire même si la prévisualisation refuse
+actuellement l’envoi, notamment un destinataire qui refuse les transports.
+
+Les listes et suggestions respectent les droits de mission existants. Une liste
+ne remplace jamais les contrôles de la prévisualisation et de l’envoi : découverte,
+origine, univers, diplomatie, vacances, composition, carburant et capacités restent
+appliqués. La garnison PNJ est initialisée une seule fois, sous verrou à l’arrivée.
+Une attaque classique n’engage aucune capture, même avec un vaisseau colonie.
+Les récompenses générales de combat et les valeurs de jeu restent inchangées.
+
+## Rapports personnels et corrections administratives — lot E
+
+Les rapports visibles (combat, espionnage et transport) sont présentés ensemble,
+du plus récent au plus ancien, avec 50 résultats par page après tri et filtrage.
+L’archive est personnelle à la participation dans l’univers : retirer un rapport
+de sa liste n’affecte pas celle d’un autre participant. Archive/restauration
+individuelle ou par sélection, sans supprimer ni altérer les rapports d’origine.
+L’archivage n’accorde aucun droit de consultation supplémentaire.
+
+Un administrateur actif peut attribuer un type/rang de vaisseaux existant au
+stock au sol d’une colonie du joueur désigné. Motif et confirmation obligatoires,
+audit avant/après et protection contre une double soumission. Le joueur, la
+propriété et l’univers sont revérifiés sous verrou ; l’opération entière est
+refusée si le stock entier dépasse sa capacité technique (2147483647 par ligne).
+Aucun vaisseau d’une mission active, ressource, coût ou prérequis n’est modifié.
+
+## Tags et signalements depuis le classement — lot F
+
+Le tag de guilde comprend 2 à 5 lettres/chiffres, normalisés en majuscules. Il
+est obligatoire à la création et unique dans chaque univers. Seul le commandant
+actuel peut le choisir ou le mettre à jour. Aucun tag ancien n’est inventé.
+Le préfixe [TAG] Commandant s’affiche uniquement au classement ; une ancienne
+guilde sans tag et un joueur sans guilde ne produisent pas de crochets vides.
+
+Le classement permet de signaler un autre joueur du même univers. Motifs :
+Pseudonyme inapproprié, Harcèlement, Suspicion de triche ou Autre. Commentaire
+facultatif limité à 1000 caractères. Les informations jointes sont le joueur et
+son pseudonyme au moment de l’envoi, l’univers, l’auteur/date et le contexte
+catégorie/rang consulté. Le serveur ne reprend pas un rang soumis par le navigateur.
+Seule la modération consulte ces signalements et peut les classer ou les marquer
+traités ; aucune sanction n’est automatique. Les preuves restent conservées,
+y compris après une identité devenue indisponible. Le rejeu du même formulaire
+ne crée pas de nouveau signalement. Les signalements de messages sont préservés.
+
+## Rappel volontaire des flottes — lot G
+
+Le propriétaire peut rappeler les huit missions à l’aller, y compris espionnage
+et colonisation, ainsi qu’une flotte en orbite ou en attente de décision d’orbite.
+Les retours, occupations, combats et arrivées dont l’échéance est atteinte sont
+exclus. Un combat en cours interdit le rappel même si le statut de flotte est ancien.
+
+Lorsque l’origine appartient toujours au joueur, le retour suit le chemin déjà
+parcouru. La progression réelle tient compte des changements d’échéance et boosts ;
+les coûts et temps du trajet de référence sont conservés pour la portion de retour.
+Le carburant de l’aller est consommé au prorata des portions parcourues.
+En orbite, le carburant de stationnement est consommé au prorata du séjour effectué.
+
+Lorsque l’origine est perdue, le joueur choisit une autre colonie du même univers.
+Le retour est recalculé depuis la position atteinte avec les vaisseaux, technologies
+et paramètres courants de l’univers. Seul le carburant réservé restant est utilisable :
+aucun prélèvement dans le fret d’hydrogène ni à distance dans les stocks de colonies.
+Le refus est sans effet si le carburant ou une destination autorisée manque.
+
+Le rappel n’exécute pas la mission initiale et préserve les vaisseaux, le fret
+et le carburant inutilisé. Une nouvelle programmation invalide les anciens messages ;
+une double confirmation ne crée aucun double retour. L’origine historique reste
+conservée ; propriété et univers de la colonie de retour sont revérifiés à l’arrivée.
+Le dépôt applique les capacités de stockage habituelles, avec débordement tracé.
+
+Aucune donnée ancienne n’est inventée : sans progression et paramètres fiables,
+le rappel est indisponible avec explication et la mission continue normalement.
+Les rappels administratifs et de conversion conservent leurs règles distinctes.
+La carte n’élargit pas les droits de visibilité et masque aux tiers la route
+d’un repli vers une colonie dont le système n’a pas été découvert.
+
+## Préavis d’attaque et visibilité — lot H
+
+Pour le défenseur, une attaque en trajet aller n’est visible qu’à partir de sa
+détection. Niveau effectif = somme simple des niveaux d’Analyse tactique,
+Cartographie des opérations et Réseau de connaissance du champ de bataille.
+Préavis = min(300 + 300 × niveau effectif, 7200, moitié de la durée du trajet),
+en secondes entières, arrondi vers le bas pour ne pas dépasser 50 % du trajet.
+Le trajet pris en compte va du départ enregistré à l’arrivée actuelle ;
+un boost ou un ajustement d’échéance recalcule donc immédiatement ce seuil.
+Aucun coût, temps de voyage ou effet de boost n’est modifié par cette lecture.
+
+La cible, l’échéance/compte à rebours, le commandant, le nombre de vaisseaux
+et leurs points sont visibles dès détection. L’origine n’est affichée que si son
+système est découvert ; aucun identifiant, nom ou coordonnée d’origine inconnue
+n’est transmis. La composition, le fret, le suivi technique et l’heure de départ
+d’une attaque entrante restent privés. Une arrivée en retard de traitement reste
+signalée comme imminente tant que la flotte est encore à l’aller.
+Une flotte rappelée ou passée en combat n’est plus une attaque entrante en trajet ;
+les affichages existants du combat et des retours sont conservés.
+
+Le propriétaire suit ses missions complètes. Les sondes sont privées à leur
+propriétaire à l’aller comme au retour ; leur détection à l’arrivée est inchangée.
+Les mouvements non offensifs sont visibles au propriétaire, au destinataire
+et aux alliés du propriétaire dans les limites de découverte. Le destinataire
+voit sa propre cible, mais une origine inconnue reste masquée. Pour les alliés
+observateurs, les systèmes d’origine et de destination doivent être découverts.
+Leur périmètre préexistant de suivi des attaques alliées reste soumis à ces
+découvertes ; le seuil protège le destinataire d’une attaque.
+Aucun changement aux relations ou conditions d’attaque, défense et stationnement.
+
+Les trois plafonds de référence sont 5/5/5, soit 15 niveaux et 80 minutes de préavis
+théorique ; le plafond de 2 heures n’est pas atteint dans cette configuration.
+Les surcharges propres à l’univers sont résolues comme dans la file de recherche.
+La somme pour le préavis n’altère pas la pondération actuelle de l’espionnage.
+
+
+### Demandes d’orbite au départ — lot I
+Pour les nouveaux départs, l’orbite cible uniquement une planète d’un autre
+joueur actif du même univers, allié ou neutre, dans un système déjà découvert.
+Les planètes ennemies, PNJ ou sans propriétaire sont interdites. L’accord allié
+est automatique ; le propriétaire neutre doit accepter avant l’arrivée.
+La demande expire à l’arrivée réelle, y compris après un boost ou un changement
+autorisé d’échéance. Accepter ne déplace pas la flotte : elle poursuit son trajet.
+Refuser ou retirer la demande déclenche le retour depuis la position atteinte,
+selon les règles de rappel (carburant réservé uniquement, fret protégé).
+Sans réponse à l’arrivée, la flotte rentre ; aucune attente indéfinie n’est créée.
+Le propriétaire initial et les relations sont revérifiés à l’arrivée. Un accord
+automatique exige toujours une alliance ; un accord manuel reste valable entre
+joueurs neutres ou alliés, jamais ennemis. Un changement de propriétaire invalide
+l’accord. Les protections existantes, dont les vacances, restent appliquées.
+Une orbite neutre acceptée défend son hôte comme une orbite alliée ; cela
+n’élargit pas les permissions de la mission Défense envoyée directement.
+Les missions antérieures, sans demande versionnée enregistrée au départ,
+conservent pour ce voyage leur acceptation à l’arrivée, sans échéance inventée.
+
+Pour les vacances de l’hôte, les stations déjà acceptées continuent leur durée
+normale. Les anciennes demandes en attente après l’arrivée sont renvoyées
+à l’activation des vacances ; les nouvelles demandes en trajet sont
+revérifiées à l’arrivée et ne peuvent pas commencer une orbite pendant les vacances.
+
+
+### Abandon d’une colonie — lot J
+L’abandon exige une confirmation par le nom exact de la planète, après bilan des
+pertes. La planète initiale peut être abandonnée si une autre colonie reste dans
+le même univers ; une planète située dans un autre univers ne compte pas.
+La planète redevient vierge : bâtiments, ressources, défenses et vaisseaux présents
+sont perdus. Les files locales et leurs dépendances locales sont annulées sans
+remboursement. Une commande d’une autre colonie dépendante bloque l’abandon,
+sans annulation implicite sur cette autre colonie. Les autres files continuent.
+Aucun actif ni stock n’est transféré vers une autre planète. Les recherches
+acquises et les accès déjà acquis de la participation conservent leur portée
+existante ; ils ne sont pas transmis à un autre propriétaire.
+Toute flotte active liée par son origine, sa destination ou son repli bloque
+l’abandon, ainsi que les orbites, demandes d’orbite, attaques, occupations et
+combats encore ouverts. Un refus ne révèle aucun détail d’une mission invisible.
+Une modification des bâtiments, défenses, vaisseaux ou commandes impose de relire
+le bilan. Les stocks évoluent jusqu’à la confirmation et sont perdus à cet instant.
+La planète et les rapports historiques sont conservés. Les anciennes échéances
+ne peuvent pas recréer les commandes ou actifs supprimés. Une recolonisation
+reste soumise aux règles normales, dont le vaisseau colonisateur et le quota.
+
+Précision de compatibilité des orbites : une planète autrefois PNJ, actuellement
+contrôlée par un joueur actif, est une colonie de ce joueur. Son propriétaire
+actuel prime sur le drapeau historique PNJ, comme pour les destinations (lot D).
+
+Après abandon, aucun nouveau kit de ressources n’est attribué si le même joueur
+recolonise cette planète dans cet univers, y compris depuis une autre participation
+du même compte. Un autre propriétaire conserve le kit normal. Vaisseau colonisateur,
+carburant, durée, quota et multiplicateurs des autres fondations restent inchangés.
+
+### Présentation des pages Diplomatie, Profil et Inventaire
+
+Le lot K réorganise les pages sans changer les règles ci-dessus.
+La diplomatie garde les périmètres guilde, traités et commandants ; les grades,
+permissions et actions existants sont conservés. Les identifiants du profil
+restent communs au compte, avec fermeture de session après enregistrement.
+L’inventaire permet d’examiner et d’annuler l’utilisation avant confirmation ;
+seule la soumission effective peut consommer un objet, sous les contrôles
+habituels de propriété, univers, vacances, opération active et stockage.
+
+### Présence des membres de guilde
+
+La liste Membres affiche En ligne en vert si le membre a été actif depuis moins
+de cinq minutes dans l’univers courant, sinon Hors ligne en rouge. Les libellés
+restent affichés. Cette information est réservée à sa propre guilde et actualisée
+lors de l’ouverture ou du rechargement de la liste. Une activité dans un autre
+univers ne rend pas ce membre en ligne ici ; heures et durées ne sont pas révélées.

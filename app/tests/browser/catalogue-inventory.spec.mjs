@@ -1,5 +1,6 @@
 import { test, expect } from './support/isolated-test.mjs';
 import { execFileSync } from 'node:child_process';
+import AxeBuilder from '@axe-core/playwright';
 import { runIsolatedSql, queryIsolatedSql } from './support/game-fixtures.mjs';
 
 async function enter(page, admin = false) {
@@ -116,20 +117,41 @@ test('Inventaire : appliquer un boost à une file puis à une flotte', async ({ 
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
   await page.screenshot({ path: testInfo.outputPath('boost-use-390.png'), fullPage: true });
+  await page.getByLabel('Opération à accélérer').selectOption('queue-' + queueId);
   const queueForm = page.locator(`form[action$="/queue/${queueId}"]`);
   await expect(queueForm.getByRole('button')).toBeVisible();
   await queueForm.locator('input[name="_token"]').evaluate(input => { input.value = 'invalid'; });
   const deniedResponse = page.waitForResponse(response => response.url().endsWith(`/boosts/utiliser/queue/${queueId}`) && response.request().method() === 'POST');
   await queueForm.getByRole('button').click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Utiliser un boost', exact: true }).click();
   expect((await deniedResponse).status()).toBe(403);
   await expect(page.getByRole('heading', { name: 'Accès refusé' })).toBeVisible();
   expect(queryIsolatedSql(project, `SELECT status FROM player_boost WHERE source_key='use-queue'`)).toBe('available');
   await page.goto('/boosts');
+  await page.getByLabel('Opération à accélérer').selectOption('queue-' + queueId);
   await queueForm.getByRole('button').click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toContainText('25,00 %');
+  await page.screenshot({ path: testInfo.outputPath('boost-review-390.png'), fullPage: false });
+  await expect(dialog.getByRole('button', { name: 'Revenir à l’inventaire' })).toBeFocused();
+  expect((await new AxeBuilder({ page }).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
+  await page.keyboard.press('Tab');
+  await expect(dialog.getByRole('button', { name: 'Utiliser un boost', exact: true })).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(dialog.getByRole('button', { name: 'Revenir à l’inventaire' })).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(dialog.getByRole('button', { name: 'Utiliser un boost', exact: true })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(queueForm.getByRole('button')).toBeFocused();
+  expect(queryIsolatedSql(project, `SELECT status FROM player_boost WHERE source_key='use-queue'`)).toBe('available');
+  await queueForm.getByRole('button').click();
+  await dialog.getByRole('button', { name: 'Utiliser un boost', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('Boost appliqué');
   expect(Number(queryIsolatedSql(project, `SELECT duration_seconds FROM queue_item WHERE id=${queueId}`))).toBeLessThan(3000);
   expect(queryIsolatedSql(project, `SELECT status FROM player_boost WHERE source_key='use-fleet'`)).toBe('available');
+  await page.getByLabel('Opération à accélérer').selectOption('fleet-' + fleetId);
   await page.locator(`form[action$="/fleet/${fleetId}"]`).getByRole('button').click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Utiliser un boost', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('Boost appliqué');
   expect(Number(queryIsolatedSql(project, `SELECT TIMESTAMPDIFF(SECOND,UTC_TIMESTAMP(),arrival_at) FROM fleet WHERE id=${fleetId}`))).toBeLessThan(2800);
   expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM player_boost WHERE player_universe_id=${membershipId} AND status='used'`)).toBe('2');

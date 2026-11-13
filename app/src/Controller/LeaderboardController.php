@@ -16,12 +16,21 @@ final class LeaderboardController extends AbstractController
         $tab = $request->query->getString('tab') === 'guilds' ? 'guilds' : 'players';
         $ownGuild = $relations->guild($membership);
         $daily = $leaderboard->forUniverse($membership);
+        $categories = ['points'=>'Points totaux', 'buildings'=>'Points de bâtiments', 'research'=>'Points de recherche', 'fleet'=>'Points de flotte', 'planets'=>'Nombre de planètes'];
+        $category = $request->query->getString('category', 'points');
+        if (!isset($categories[$category])) $category = 'points';
         $rows = $daily['players'];
+        usort($rows, static fn (array $a, array $b): int => $a['ranks'][$category] <=> $b['ranks'][$category]);
+        $pageSize = 50;
+        $pages = max(1, (int) ceil(count($rows) / $pageSize));
+        $page = max(1, min($pages, $request->query->getInt('page', 1)));
+        $rows = array_slice($rows, ($page - 1) * $pageSize, $pageSize);
         foreach ($rows as &$row) {
             $peer = $row['membership'];
             $guild = $relations->guild($peer);
+            $row['guild_tag'] = $guild?->tag;
             $guildStatus = $relations->guildStatus($ownGuild, $guild);
-            $row['relation'] = $peer->id === $membership->id ? 'self' : ($guildStatus === 'enemies' ? 'enemy' : ($guildStatus === 'allies' ? 'guild' : ($relations->contract($membership, $peer)?->status === 'accepted' ? 'commander' : 'neutral')));
+            $row['relation'] = $peer->id === $membership->id ? 'self' : ($relations->enemy($membership, $peer) ? 'enemy' : ($guildStatus === 'allies' ? 'guild' : ($relations->contract($membership, $peer)?->status === 'accepted' ? 'commander' : 'neutral')));
         }
         unset($row);
 
@@ -34,6 +43,10 @@ final class LeaderboardController extends AbstractController
 
         return $this->render('player/leaderboard.html.twig', [
             'daily' => $daily,
+            'categories' => $categories,
+            'category' => $category,
+            'page' => $page,
+            'pages' => $pages,
             'membership' => $membership,
             'rows' => $rows,
             'tab' => $tab,

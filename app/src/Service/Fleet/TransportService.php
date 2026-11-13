@@ -67,9 +67,9 @@ final class TransportService
             $report->snapshot['returned'] = $result['overflow'];
         }
         $message = $allowed ? 'Transport livré sur '.$target->name.'. Le surplus éventuel revient avec la flotte.' : 'Transport non livré : propriétaire ou autorisation modifiés. La cargaison revient.';
-        $this->notifications->enqueue($fleet->playerUniverse, $message);
+        $this->notifications->enqueue($fleet->playerUniverse, $message,journalKind:'transport');
         if ($report && $recipient->id !== $fleet->playerUniverse->id) {
-            $this->notifications->enqueue($recipient, 'Transport de '.$report->snapshot['sender'].' : '.($allowed ? 'livraison effectuée.' : 'livraison refusée.').' Consultez vos rapports économiques.');
+            $this->notifications->enqueue($recipient, 'Transport de '.$report->snapshot['sender'].' : '.($allowed ? 'livraison effectuée.' : 'livraison refusée.').' Consultez vos rapports économiques.',journalKind:'transport');
         }
     }
 

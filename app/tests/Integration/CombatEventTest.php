@@ -604,7 +604,7 @@ final class CombatEventTest extends KernelTestCase
         self::assertEqualsWithDelta(45.0, $fleet->reservedFuel, 0.001);
     }
 
-    public function testOrbitNeedsGuildHostApprovalThenConsumesStationingFuel(): void
+    public function testLegacyOrbitNeedsGuildHostApprovalThenConsumesStationingFuel(): void
     {
         $clock = $this->clock();
         $host = $this->player('OrbitHost');
@@ -614,6 +614,8 @@ final class CombatEventTest extends KernelTestCase
         $target = $this->em->getRepository(Planet::class)->findOneBy(['solarSystem' => $origin->solarSystem, 'owner' => null]);
         self::assertNotNull($target);
         $target->owner = $host->currentPlayerUniverse;
+        // Cette préparation représente une colonie de joueur, jamais une planète PNJ.
+        $target->npcPlanet = false;
 
         $guild = new \App\Entity\Guild();
         $guild->universe = $host->currentPlayerUniverse->universe;

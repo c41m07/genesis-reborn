@@ -15,7 +15,7 @@ Le code comprend :
   - Les échecs de transport des mails de compte sont retentés trois fois au total pendant la requête. Après échec de confirmation à l’inscription, le compte est conservé et le formulaire de renvoi est proposé. Les états et alertes sont journalisés sans adresse ni jeton ; voir [le diagnostic des emails](docs/DIAGNOSTIC_EMAILS.md).
   - Session expirée après 24 h sans requête au serveur ; case « Se souvenir de moi » facultative pendant 30 jours, annulée à la déconnexion. Un cookie de mémorisation valide permet de retrouver sa connexion après expiration de la session.
   - Mots de passe masqués par défaut, avec un bouton œil pour afficher ou masquer chaque champ.
-- Classements : points, flottes, colonies et guildes figés jusqu’au prochain minuit, heure de Paris (été/hiver inclus). Les écarts de points et de places comparent les deux derniers calculs : + gain, − perte, = inchangé ou sans comparaison. Les protections de combat restent en temps réel. Le relais existant initialise et actualise les instantanés persistés ; une lecture rattrape aussi une échéance manquée. Nouveaux joueurs et guildes apparaissent au prochain calcul.
+- Classements joueurs : en-têtes cliquables pour les points totaux (par défaut), bâtiments, recherche, flotte et nombre de planètes ; rang et variation propres à chaque catégorie, tri global avant pagination de 50 lignes, catégorie conservée entre pages. Scores et guildes figés jusqu’au prochain minuit, heure de Paris (été/hiver inclus). Les écarts comparent les deux derniers calculs : dans le tableau joueur, (+N) en vert, (−N) en rouge, (= 0) si inchangé, (—) sans comparaison. Les signes et libellés accessibles complètent les couleurs. Les protections de combat restent en temps réel. Le relais existant initialise et actualise les instantanés persistés ; une lecture rattrape aussi une échéance manquée. Nouveaux joueurs et guildes apparaissent au prochain calcul.
 - Équilibrage des ressources : première planète à 10 000 de chaque ressource, colonies à 5 000 hors électricité selon le rang, stockage de base à 10 000 ; productions passives M40/E0/A10/H80/N20 par heure à position 5, univers ×1. Les règles s’appliquent directement au déploiement, sans date à configurer, y compris à toute la production en attente depuis le dernier calcul enregistré. Les stocks existants et leurs surplus sont conservés. Voir [les règles et la transition](docs/REGLES.md#ressources-initiales-et-production-passive--décision-du-10-novembre-2026).
 - Interface partagée : les événements occupent leur propre zone sous la barre de ressources et défilent avec la page. Carte V2 : numéro, nom et statut des planètes alignés selon l’espace disponible ; les coordonnées des systèmes restent dans les panneaux et ne sont dessinées sur la carte qu’au survol ou au focus clavier d’un résultat de recherche de système.
 - Suivi des pages Bâtiments, Recherche, Chantier spatial et Défenses : activité en haut sur mobile et tablette ; flottes en vol masquées sur mobile (jusqu’à 740 px), conservées sur tablette. À partir de 1 251 px, activité et flottes sont regroupées à droite, activité au-dessus. L’ordre de lecture et l’actualisation en direct sont conservés.
@@ -30,8 +30,25 @@ Le code comprend :
   - Bâtiments, recherches, vaisseaux et défenses regroupés par famille avec trois onglets de rang, niveau ou quantité possédée dans l’onglet, indicateurs de verrouillage et d’action disponible, interrupteur local des éléments verrouillés et coûts abrégés en k/M (valeur exacte accessible). Quatre cartes par ligne sur grand écran, avec adaptation aux écrans plus étroits ; illustrations d’origine en couleur, cadrées en 16/9 et affichées bord à bord sans bandes ; boutons d’amélioration, de recherche et de construction alignés en bas des cartes d’une même ligne. Les quantités à construire restent propres à chaque rang (1 à 100).
 - Flottes, exploration, transport, colonisation, attaque, défense, orbite et espionnage ; combats persistés, conquête de planètes PNJ et rapports privés. Les rapports présentent un résumé puis les détails : tableaux de combat en vis-à-vis par round et type d’unité (effectifs, pertes et tirs), reconstruction des défenses après le verdict, renseignements d’espionnage en cadres par catégorie et bilan des transports. Les anciens combats sans historique de rounds conservent leur bilan disponible.
 - Galaxie V2 : modes Exploration, PNJ (niveaux) et Joueurs, positions visuelles alignées par dizaines consécutives sur le tracé des huit bras allongés et courbés (1–10, 11–20, etc.), sans modifier les coordonnées de jeu et cadrage de lecture sur les systèmes disponibles, légende à cases à cocher et disques remplis jusqu’au cercle extérieur, partagés en quatre quarts fixes : PNJ en haut à gauche (orange en exploration ; bleu niveaux 1–3, violet niveaux 4–6 et fuchsia dès le niveau 7 en mode PNJ), allié en haut à droite (vert), neutre/planète vierge en bas à droite (gris), ennemi en bas à gauche (rouge). Les catégories absentes, masquées ou exclues par le mode restent grises. Une maison au survol indique vos colonies dans le système. Les systèmes inexplorés portent un « ? » jaune centré, désactivable dans la légende ; les planètes découvertes distinguent vos colonies, PNJ, mondes inhabités et joueurs alliés, neutres ou ennemis selon la diplomatie existante. Textes agrandis sur ordinateur et mobile. L’infobulle d’un système sépare coordonnées, état d’exploration, décompte des planètes par relation et niveaux PNJ découverts. La vue du système solaire répartit les planètes sur des orbites espacées et animées à leurs vitesses propres (immobiles si les animations sont réduites), avec numéros permanents et nom de la planète sélectionnée uniquement. Les légendes sont compactes et repliées par défaut ; sur la galaxie mobile, les filtres se déplient en bas et le journal sans mission se réduit à un bouton ; sur mobile, les informations du système se déplient depuis une barre en bas. Elle dispose d’une légende des planètes ; un clic sur leur dessin ouvre directement la vue rapprochée, tandis que la liste conserve les fiches et actions.
+- Grades personnalisés de guilde : création et modification par le dirigeant, priorités et permissions déléguées pour l’attribution des grades inférieurs et la diplomatie de guilde. Le transfert du commandement et la dissolution restent réservés au dirigeant ; les alliances personnelles restent indépendantes. Les migrations `Version20261111010000` et `Version20261111173000` réconcilient les historiques existants avant utilisation. Voir le [suivi guildes et alliances](docs/GESTION_GUILDES_ALLIANCES.md).
+- Relations personnelles : alliance réciproque, déclaration de rivalité sans guilde et paix acceptée par les deux joueurs. Les liens de guilde restent prioritaires ; la carte et le classement utilisent la relation effective. Un contrat terminé se distingue d’une proposition en attente.
 - Diplomatie, guildes, messages, notifications, inventaire de boosts et événements. Le canal « Global », placé avant la guilde, permet aux joueurs de l’univers courant de discuter sans notifications, badges ni compteurs de messages non lus. Les conversations privées et de guilde s’ouvrent sur le dernier message ; les messages envoyés et reçus se distinguent par leur alignement, leur couleur et un libellé. Les deux boutons du menu mobile signalent les nouveautés d’administration, les messages et patchnotes non lus, ainsi que les nouvelles activités du journal jusqu’à la consultation de la vue générale sur cet appareil.
 - Le contrôle des traitements signale aussi les voyages sans planification ou en retard au-delà du seuil de leur univers, même si les processus fonctionnent et la file est vide. Sur la fiche d’une flotte échue, un retour forcé avec motif et confirmation programme son retour sans exécuter la mission à destination ; les combats en cours restent protégés. Aucun rattrapage automatique n’est effectué.
+- Interfaces Diplomatie, Profil et Inventaire réorganisées pour ordinateur et mobile :
+  sans guilde, trois onglets « Créer une guilde », « Rejoindre une guilde » et « Relations commandants » ;
+  avec guilde, cinq onglets « Ma guilde », « Membres », « Grades et permissions »,
+  « Relations guildes » et « Relations commandants ». Les attributions de grades sont
+  dans Membres ; le tag et le commandement restent dans Ma guilde. Dissoudre (commandant)
+  ou quitter (membre) sont directement visibles dans Gestion de la guilde. Les projets,
+  la galaxie et le classement sont regroupés ; Derniers échanges présente seulement
+  les trois messages les plus récents sans les marquer lus. Les membres voient
+  leur présence dans cet univers : En ligne en vert (activité depuis moins de cinq minutes),
+  Hors ligne en rouge, à l’ouverture ou à l’actualisation de la liste. Le profil distingue
+  les identifiants, le mot de passe facultatif et la suppression définitive.
+  L’inventaire sépare capacité, boosts, boîtes et récompenses en attente ; un sélecteur
+  choisit l’opération et un dialogue permet d’examiner, annuler ou confirmer l’utilisation.
+  Sans JavaScript, les formulaires natifs restent disponibles avec les mêmes contrôles serveur.
+  La [recette des évolutions A à K](docs/RECETTE_EVOLUTIONS_INTERFACES.md) accompagne la revue sur dev.
 - Depuis l’inventaire, un boost peut accélérer une construction, recherche, production ou mission chronométrée active de l’empire ; les opérations en attente, les occupations et les vacances restent exclues.
 - Console d’administration avec une navigation principale à cinq entrées, un accueil synthétique et quatre pages de rubrique en cartes (`/admin/rubriques/{group}`) : joueurs et modération, univers et activité, animation, exploitation. Les fiches disposent d’un fil d’Ariane ; une sous-navigation relie les rubriques du groupe et les outils d’un même univers. Les nouveautés des signalements, de la sécurité et des feedbacks sont comptées par administrateur ; ouvrir l’accueil ne les marque pas comme consultées. Les feedbacks archivés sont masqués par défaut.
 - Surveillance `/admin/flottes` : missions actives et historique, recherche par joueur ou cible, filtres, actualisation et fiches détaillées. Les transports y sont réunis ; les rapports et consultations sont journalisés. Les nouveaux départs conservent un instantané sans reconstruire les anciennes missions.
@@ -84,8 +101,9 @@ et indisponible tant que `FORGOTTEN_EMPIRES_ENABLED=0`.
 Le service exige le retour de toutes les flottes avant les vacances et bloque
 les nouveaux départs. Les empires en vacances sont protégés contre attaques,
 espionnage et nouveaux stationnements ; un transport refusé revient avec sa
-cargaison. Les stations alliées déjà acceptées terminent leur durée normale,
-et les demandes d'orbite en attente sont renvoyées à l'activation.
+cargaison. Les stations déjà acceptées terminent leur durée normale. Les anciennes
+demandes d’orbite en attente après l’arrivée sont renvoyées à l’activation ;
+les nouvelles demandes encore en trajet sont revérifiées à l’arrivée.
 L'inactivité et les avertissements déduisent les vacances réelles : consulter le
 jeu pendant une pause ne remet pas le compteur à zéro, et les courriels reprennent
 aux seuils ajustés sans répéter J14. `make empires-preview` liste sans écriture
@@ -142,6 +160,21 @@ Un combat ouvert ou des forces hostiles empêchent toujours la capture.
 Après activation explicitement autorisée, `RESUME_ARGS=--apply` permet de
 reprogrammer leurs contrôles après interruption ; les messages périmés et rejoués
 ne peuvent pas capturer deux fois. Aucun nouveau processus n'est lancé par ce lot.
+La reconstruction autonome concerne uniquement les empires convertis après
+l'installation de la migration de compatibilité `Version20261111173000`. Une référence
+par planète conserve les modèles, rangs et effectifs à la conversion, retours
+compris, hors commandes déjà payées. Après chaque combat, le chantier reprend au
+bout de cinq minutes, avec les coûts et durées normaux prélevés sur les stocks
+locaux. La réparation partielle des défenses est déduite du manque ; aucune
+croissance autonome au-delà de la référence. Les unités finançables les moins
+coûteuses en valeur économique sont prioritaires, puis les plus rapides.
+Le travail payé est suspendu en combat, sans progression, puis repris sans second
+paiement. La reconstruction continue sous occupation ; les forces hostiles doivent
+être vaincues avant capture. La capture arrête le mécanisme et annule le travail
+restant sans remboursement. Les messages utilisent le relais et le worker existants,
+sans nouveau processus. Les PNJ classiques et les empires déjà oubliés sans référence
+sont exclus. Cette migration doit être appliquée avant de charger cette version des
+services ; aucune synchronisation globale du schéma n'est nécessaire.
 Le passage quotidien est fixé à 00 h, heure de Paris, avec adaptation été/hiver.
 Après 30 jours effectifs, la conversion devient éligible au premier minuit suivant
 (ou au même instant si le seuil tombe déjà à minuit). Le joueur conserve l'accès
@@ -264,20 +297,25 @@ Compiler avant les tests navigateur : la compilation remplace les fichiers de `a
 
 ## Tests et qualité
 
-Depuis `app/`, préparer Chromium pour les tests avec `npx playwright install --with-deps chromium` : cette commande installe le navigateur et ses dépendances système. Les six contrôles avant commit ou publication sont :
+Pendant le développement, lancer les contrôles locaux adaptés au changement et `git diff --check` avant commit ou push. Une branche de travail peut être poussée sans exécuter toute la suite ; signaler les échecs et vérifications restant à faire.
+
+La CI complète se lance sur les PR vers `dev` et `alpha`, y compris à chaque correction. Attendre sa réussite sur la dernière version avant fusion. Les push seuls sur une branche de travail ou sur `dev` ne relancent pas la CI. Les push sur `alpha` (aussi branche par défaut actuellement) conservent la validation avant publication de l’image ; le lancement manuel reste disponible. Les [règles GitHub à vérifier pour protéger `dev`](docs/DEPLOIEMENT.md#protection-de-dev) sont distinctes du workflow.
+
+Pour reproduire les six contrôles localement, préparer Chromium depuis `app/` avec `npx playwright install --with-deps chromium`, puis lancer depuis la racine :
 
 ```bash
 make validate
 make lint
 make test
-(cd app && npm run build)
+make assets
 BROWSER_PERSISTENCE=1 make test-browser
 git diff --check
 ```
 
+- `make assets` compile les assets de production en lançant `npm run build` depuis `app/`.
 - `make validate` valide Compose sans afficher les secrets.
 - `make lint` contrôle PHP, Twig, YAML, le conteneur Symfony et le schéma Doctrine de la base configurée.
-- `make test` utilise `database-test` et `genesis_v2_test` en mémoire, un transport Messenger en mémoire et un transport mail nul ; il lance aussi les tests Python des sauvegardes. Lancer une seule suite PHP à la fois sur cette base.
+- `make test` utilise `database-test` et `genesis_v2_test` en mémoire, un transport Messenger en mémoire et un transport mail nul ; il lance aussi les tests Python des sauvegardes. Lancer une seule suite PHP à la fois sur cette base. PHPUnit est limité à 512 Mo pour ce seul processus, sans changer PHP pour le jeu.
 - `make test-browser` prépare un projet Docker et une base jetables propres à l’exécution. `BROWSER_PERSISTENCE=1` ajoute la persistance temporaire nécessaire aux essais de redémarrage complet ; les volumes sont retirés en fin de test. Les mails et alertes externes y sont neutralisés. Le script npm `test:browser` seul ne prépare pas cet environnement.
 - `make verify-install` prépare une installation temporaire, réinstalle les dépendances et vérifie le redémarrage. Son existence ne vaut pas preuve d’une exécution récente ; consulter le suivi pour les commandes réellement exécutées.
 
@@ -333,6 +371,10 @@ règles et décisions, roadmap, architecture, exploitation, déploiement/sauvega
 SEO, interface et données d’équilibrage. Les anciens bilans et leur contexte
 restent accessibles depuis [l’index des archives](docs/archives/README.md).
 
+Le [guide technique du worker et du notifier](docs/WORKER_NOTIFIER.md) détaille
+la chaîne outbox → RabbitMQ → traitements métier → Mercure, les transactions,
+les contrats de messages, les abonnements privés et les scénarios de panne.
+
 Le wiki utilise les sources uniques `docs/wiki.json`, `docs/REGLES.md` et
 `docs/DECISIONS.md`. Il présente un manuel du joueur en un document avec sommaire,
 premiers pas, règles et calculs expliqués par des formules et exemples dépliables,
@@ -364,3 +406,164 @@ Le nom public de l’éditeur et du responsable des données se renseigne avec `
 
 Conteneurs : `genesis-web`, `genesis-worker`, `genesis-relay`, `genesis-notifications`, `genesis-database`, `genesis-database-test`, `genesis-rabbitmq`, `genesis-mercure`. Image applicative : `local/genesis-web:dev`. Les identifiants des projets Compose et les volumes existants sont conservés.
 Le fichier local `compose.override.yaml`, ignoré par Git, applique ces noms avec les commandes habituelles (`make start`, `make status`). Il reste propre au poste de développement ; un clone neuf utilise les noms générés par Compose. Les tests et installations isolés utilisent leurs fichiers `-f` explicites et conservent leurs propres noms.
+
+### Gestion des guildes et projets collectifs
+
+Fonctionnalité intégrée dans `dev` par la [PR #36](https://github.com/c41m07/genesis-reborn/pull/36), sans déploiement ni nouvelle migration de la base habituelle. Consulter le [guide d’utilisation et d’administration](docs/GUIDE_GUILDES_ALLIANCES.md) pour les grades, les trois traités, les alliances personnelles et les projets.
+
+Les traités officiels distinguent alliance complète, non-agression et défense mutuelle, avec permissions séparées, signatures des deux guildes, paix bilatérale et historique. Les effets et l’état de validation sont détaillés dans [le suivi guildes/alliances](docs/GESTION_GUILDES_ALLIANCES.md). Cette extension nécessite la migration `Version20261111020000`, préparée sans application autorisée à une base existante. Les projets collectifs ajoutent des paliers financés par les membres, des conditions de contribution administrables et une récompense de boost unique. Leur migration `Version20261111150933` est préparée ; aucun modèle n’est actif par défaut. Le suivi détaille les validations locales et les migrations restant à appliquer aux bases existantes avec autorisation.
+
+La migration de compatibilité `Version20261111173000` réconcilie les bases ayant enregistré `Version20261111010000` pour les grades ou pour la reconstruction. Elle conserve les données et l’historique ; son application sur une base existante exige une sauvegarde et une autorisation distinctes. Voir [le suivi des guildes](docs/GESTION_GUILDES_ALLIANCES.md).
+
+Évolutions en cours : [lots, décisions et points ouverts](docs/EVOLUTIONS_INTERFACES_FLOTTES.md). Le journal des missions est retiré de Flotte ; suivi des vols, rapports et traces administratives restent disponibles. Les prérequis des cartes ouvrent la bonne page et le bon rang dans la colonie active. Les sections « Accès associés à ce rang » sont retirées des cartes et fiches, sans changer les déblocages. Le signalement des messages privés et de guilde utilise un triangle jaune accessible au clavier et au toucher.
+
+
+Carte V2 : le cercle extérieur est vert dans les systèmes possédés. La fiche
+planète propose un retour à son système, au clavier et au toucher ; sa croix
+garde le retour galaxie. Les sondes en trajet sont réservées à leur propriétaire.
+Pour une flotte tierce déjà visible, seuls le nombre total de vaisseaux et les
+points remplacent sa composition ; les types et rangs restent accessibles au
+propriétaire. Le calcul reprend les coûts de vaisseaux de l’univers, sans défense
+fixe, avec division par 100 après totalisation. Ces restrictions sont appliquées
+avant l’envoi des données au navigateur.
+
+Détails privés des colonies et flottes : la page Planètes présente les vaisseaux
+disponibles par rang et les stocks calculés de chaque colonie ; le suivi des vols
+présente la composition et le fret de ses propres flottes. Ces panneaux s’ouvrent
+au survol et restent utilisables au clavier et au toucher. Leur lecture ne
+matérialise pas les stocks. La vue générale et le sélecteur latéral partagent
+l’ordre d’acquisition par le propriétaire actuel. Les anciennes dates inconnues
+restent nulles, avec un ordre historique signalé comme approximatif.
+Le journal commence à la première ouverture après mise à jour. Les événements
+validés des absences suivantes restent visibles jusqu’au bouton de consultation ;
+les actualisations automatiques ne changent pas cet état. Au-delà de 50 événements,
+les suivants sont proposés après consultation, sans effacer l’historique.
+La migration additive Version20261112010000 est appliquée sur la seule base locale
+après accord et sauvegarde vérifiée. Les autres installations nécessitent leur
+propre sauvegarde vérifiée et autorisation avant migration, puis le redémarrage
+des consommateurs. Aucun déploiement Alpha de ce lot n’est annoncé.
+
+Destinations des flottes : trois modes sont proposés, Mes planètes et alliés
+par défaut, Ennemis (dont PNJ connus), et Destination personnalisée. Les joueurs
+neutres restent dans le mode personnalisé. La recherche de pseudonyme propose
+au plus 20 planètes déjà découvertes de l’univers actif, compatibles avec la
+mission. Les suggestions se sélectionnent au clavier et au toucher ; les
+coordonnées restent disponibles pour les destinations personnalisées, notamment
+l’exploration d’un système inconnu. Les liens de la carte conservent leur cible.
+Les attaques classiques des PNJ sont possibles sans capture ni nouveau butin PNJ.
+Conquête JcE conserve ses règles de capture et d’occupation existantes.
+Aucune migration, dépendance ou activation globale supplémentaire pour ce lot D,
+qui n’est pas encore publié ni déployé sur Alpha.
+
+### Rapports personnels et attribution administrative
+
+Le centre de rapports mélange combats, renseignements et transports du plus récent
+au plus ancien, avant pagination (50 par page). Les filtres et le choix
+Rapports actifs / Archives personnelles restent conservés en navigation.
+L’archivage individuel ou par sélection est personnel et restaurable ; les preuves
+et l’accès autorisé aux rapports restent conservés.
+
+La fiche administrative d’un joueur permet d’attribuer des vaisseaux au stock
+au sol d’une colonie choisie : type, rang, quantité entière, motif et confirmation.
+L’attribution est contrôlée côté serveur, journalisée et protégée contre le rejeu.
+La migration additive Version20261112020000 mémorise seulement les choix d’archive ;
+sur base existante, son application exige accord explicite et sauvegarde vérifiée.
+
+### Tags de guilde et signalements de joueurs
+
+La création d’une guilde exige un tag de 2 à 5 lettres/chiffres, normalisé en
+majuscules et unique dans l’univers. Le commandant choisit ou met à jour ce tag ;
+les anciennes guildes restent sans tag jusqu’à son choix. Le classement affiche
+[TAG] Commandant ; aucun autre écran ne préfixe le pseudonyme.
+
+Dans Actions du classement, le triangle de signalement ouvre les quatre motifs
+validés avec un commentaire facultatif (1000 caractères maximum). Le contexte
+serveur joint univers, cible/pseudonyme, auteur/date et catégorie/rang consultés.
+Le signalement reste privé à la modération ; une double soumission du formulaire
+ne crée pas de doublon. La rubrique Modération distingue messages et joueurs,
+conserve les preuves et journalise consultation/traitement, sans sanction automatique.
+
+Migration additive Version20261112030000 : tag nullable pour l’historique,
+unicité univers/tag et table player_report. L’application à une base existante
+nécessite accord explicite et sauvegarde vérifiée.
+
+### Rappel des flottes
+
+Depuis ses flottes en vol, le joueur peut préparer puis confirmer le rappel
+d’une mission à l’aller, en orbite ou en attente d’accord d’orbite. L’aperçu
+présente la colonie de retour, la durée et le carburant. Les retours, combats,
+résolutions d’arrivée et occupations sont exclus. Le fret et les vaisseaux
+restent à bord ; le dépôt conserve les règles habituelles de stockage.
+
+Le retour tient compte du chemin parcouru et des boosts. Si l’origine est
+perdue, une autre colonie du même univers doit être choisie explicitement :
+seul le carburant réservé encore disponible sert au repli, sans prendre dans
+le fret d’hydrogène ni dans les stocks des planètes. Si le calcul est impossible
+ou le carburant insuffisant, le refus laisse la mission inchangée. Les anciennes
+flottes ne sont rappelables que lorsque leurs données suffisent à un calcul fiable.
+
+Migration additive Version20261112040000 : suivi nullable du trajet et colonie
+de retour distincte de l’origine historique. Toute application sur base existante
+nécessite accord explicite et sauvegarde vérifiée ; aucun déploiement Alpha.
+
+### Détection des attaques et confidentialité des déplacements
+
+Analyse tactique additionne les niveaux de ses trois rangs pour le seul préavis
+d’attaque : min(5 + 5 × niveaux, 120 minutes, 50 % du trajet). L’espionnage et
+la détection des sondes à l’arrivée conservent leurs effets pondérés actuels.
+Les plafonds du catalogue de l’univers sont pris en compte pour les informations
+de progression ; à 5/5/5, le préavis théorique atteint 80 minutes.
+
+Les attaques détectées sont affichées sur les pages de jeu avec cible, commandant,
+vaisseaux, points et compte à rebours. Une origine non découverte reste masquée.
+La surveillance se met à jour sans rechargement, avec horloge serveur, et conserve
+le focus et la sélection de carte. Sans JavaScript, actualiser la page.
+Les sondes en trajet restent visibles seulement par leur propriétaire.
+Les autres mouvements restent réservés au propriétaire, au destinataire et aux
+alliés, dans les limites des découvertes, avec contrôles avant sérialisation.
+
+
+### Demandes d’orbite
+Une nouvelle mission Orbite envoie sa demande dès le départ. Les alliés sont
+acceptés automatiquement ; un joueur neutre répond depuis Flottes avant
+l’arrivée. La page affiche les demandes envoyées/reçues et leur échéance
+(heure de Paris et compte à rebours). Le refus ou le retrait rappelle la flotte
+depuis la position atteinte ; sans accord valide à l’arrivée, elle rentre.
+Les planètes ennemies, PNJ et sans propriétaire ne peuvent pas être ciblées.
+Une orbite acceptée participe à la défense de l’hôte. Les missions déjà parties
+avant cette évolution gardent leur ancien processus pour ce voyage.
+
+
+### Abandon d’une colonie
+Depuis Planètes, « Préparer l’abandon » ouvre un bilan avant toute action.
+La confirmation exige de retaper son nom. La planète redevient vierge ; bâtiments,
+ressources, défenses et vaisseaux présents sont perdus, et les files sont annulées
+sans remboursement. Les recherches acquises et historiques restent conservés.
+La dernière planète de l’univers ne peut pas être abandonnée, même s’il existe
+des colonies dans un autre univers. Les flottes actives liées, orbites, attaques,
+combats et occupations bloquent l’abandon. Une commande dépendante d’une autre
+colonie le bloque aussi ; les commandes à gérer sont indiquées dans le bilan.
+Si les actifs ou commandes changent après le bilan, il faut le relire.
+Les stocks peuvent évoluer jusqu’à la confirmation. Aucune migration nécessaire.
+
+Après abandon, une recolonisation par le même joueur sur cette planète dans le
+même univers ne donne aucun nouveau kit de ressources. Il doit prévoir le
+ravitaillement ; un nouveau propriétaire conserve le kit normal.
+Le bandeau tronque visuellement les noms très longs ; le nom complet reste
+accessible dans le sélecteur de colonie, le texte accessible et l’infobulle.
+
+
+### Retouches de présentation après recette
+
+Les noms des colonies de la vue générale et de Planètes ouvrent une bulle
+flottante avec vaisseaux et ressources. Les encadrés des flottes ouvrent leur
+composition et leur fret. Survol, focus clavier et toucher sont pris en charge ;
+La bulle, sans croix, se ferme quand le pointeur quitte le nom ou l’encadré et la bulle,
+quand le focus sort, avec Échap ou par toucher extérieur, sans déplacer les cartes.
+La navigation vers la colonie reste disponible depuis la bulle de l’aperçu
+et les commandes existantes de Planètes.
+
+Les listes de rapports alignent sélection, résumé et action ; les noms des
+cases sont conservés pour les lecteurs d’écran. Le paragraphe explicatif des
+archives et la phrase technique sur le calcul du préavis en Recherche sont
+retirés des pages concernées. Les règles d’archive et de détection ne changent pas.

@@ -2,17 +2,14 @@ import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
     static targets = ['badge'];
-    static values = { messages: Number, patchNote: Boolean, admin: Number, membership: Number, latestNotice: Number, journal: Boolean };
+    static values = { messages: Number, patchNote: Boolean, admin: Number, membership: Number, latestNotice: Number, journal: Boolean, unreadJournal: Boolean };
 
     connect() {
-        this.lastSeenNotice = 0;
-        try { this.lastSeenNotice = Number(window.localStorage.getItem(this.storageKey)) || 0; } catch { /* Le témoin reste utilisable sans stockage local. */ }
-        if (this.journalValue) this.readJournal();
         this.onMessages = event => { this.messagesValue = Number(event.detail.count) || 0; this.render(); };
         this.onAdmin = event => { this.adminValue = Number(event.detail.count) || 0; this.render(); };
         this.onActivity = event => {
             this.latestNoticeValue = Math.max(this.latestNoticeValue, Number(event.detail?.notificationId) || 0);
-            if (this.journalValue) this.readJournal();
+            if (event.detail?.journal === true) this.unreadJournalValue = true;
             this.render();
         };
         window.addEventListener('genesis:message-count', this.onMessages);
@@ -27,17 +24,8 @@ export default class extends Controller {
         window.removeEventListener('genesis:refresh', this.onActivity);
     }
 
-    get storageKey() { return `genesis-journal-seen-${this.membershipValue}`; }
-
-    readJournal() {
-        this.lastSeenNotice = this.latestNoticeValue;
-        if (this.membershipValue > 0) {
-            try { window.localStorage.setItem(this.storageKey, String(this.lastSeenNotice)); } catch { /* La lecture courante suffit si le stockage est indisponible. */ }
-        }
-    }
-
     render() {
-        const unread = this.messagesValue > 0 || this.patchNoteValue || this.adminValue > 0 || this.latestNoticeValue > this.lastSeenNotice;
+        const unread = this.messagesValue > 0 || this.patchNoteValue || this.adminValue > 0 || this.unreadJournalValue;
         for (const badge of this.badgeTargets) badge.hidden = !unread;
     }
 }

@@ -138,7 +138,7 @@ test('Le disque garde quatre secteurs égaux et un anneau extérieur détaché',
     arc(...args) { arcs.push(args); }, fill() { fills.push(this.fillStyle); },
   };
   const colors = ['#ff8a00', '#00e676', '#a4acb8', '#ff3344'];
-  GalaxyController.prototype.drawSystemDisk.call({ systemQuarters: () => colors }, ctx, { known: true }, { x: 25, y: 40 }, 11, false);
+  GalaxyController.prototype.drawSystemDisk.call({ systemQuarters: () => colors }, ctx, { known: true, planets: [] }, { x: 25, y: 40 }, 11, false);
   expect(fills).toEqual(colors);
   expect(arcs).toHaveLength(6);
   expect(arcs[5].slice(0, 3)).toEqual([25, 40, 14]);
@@ -293,5 +293,44 @@ test('Les dizaines consécutives sont projetées sur leur propre bras', () => {
     expect(system.wy).toBeCloseTo(expected.wy);
     expect(system.x).toBe((number - 1) * 10);
     expect(system.y).toBe(-(number - 1));
+  }
+});
+
+
+test('Le cercle extérieur des systèmes possédés reste vert sans modifier leurs quarts', () => {
+  for (const owned of [false, true]) for (const hovered of [false, true]) {
+    const fills = [], strokes = [];
+    const ctx = {
+      save() {}, restore() {}, beginPath() {}, moveTo() {}, lineTo() {}, arc() {}, closePath() {},
+      fill() { fills.push(this.fillStyle); }, stroke() { strokes.push(this.strokeStyle); },
+    };
+    const colors = ['#ff8a00', '#00e676', '#b4c2d2', '#ff3344'];
+    const state = { systemQuarters: () => colors };
+    GalaxyController.prototype.drawSystemDisk.call(state, ctx, { known: true, planets: [{ ownedByCurrentPlayer: owned }] }, { x: 20, y: 30 }, 10, hovered);
+    expect(fills).toEqual(colors);
+    expect(strokes.at(-1)).toBe(owned ? '#00e676' : (hovered ? 'rgba(202,232,255,.9)' : 'rgba(157,202,239,.5)'));
+  }
+});
+
+test('Le nouveau retour choisit le système réel de la planète et conserve le cadrage galaxie', () => {
+  const planet = { id: 7 };
+  const target = { id: 3, planets: [planet] };
+  const previous = { id: 2, planets: [] };
+  for (const selected of [target, previous]) {
+    let returned = false;
+    const saved = { camera: { x: 12, y: 24 }, zoom: .8 };
+    const state = {
+      systems: [previous, target], selectedPlanet: planet, selectedSystem: selected, savedCamera: saved,
+      focusSystem(system) { this.selectedSystem = system; this.selectedPlanet = null; this.savedCamera = {}; },
+      toSystem(restoreChoice) {
+        returned = true;
+        expect(restoreChoice).toBe(true);
+        expect(this.selectedSystem).toBe(target);
+        expect(this.selectedPlanet).toBe(planet);
+      },
+    };
+    GalaxyController.prototype.returnToPlanetSystem.call(state);
+    expect(returned).toBe(true);
+    expect(state.savedCamera).toBe(saved);
   }
 });

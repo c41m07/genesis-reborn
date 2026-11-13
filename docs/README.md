@@ -1,5 +1,8 @@
 # Documentation Genesis Reborn
 
+
+[Recette manuelle des évolutions A à K](RECETTE_EVOLUTIONS_INTERFACES.md) — parcours à essayer sur dev avant les retouches finales.
+
 Lire le README du dépôt pour installer et démarrer le jeu. Cet index donne
 une seule référence par sujet ; les anciens bilans ne décrivent pas l’état courant.
 
@@ -7,12 +10,16 @@ une seule référence par sujet ; les anciens bilans ne décrivent pas l’état
 | --- | --- |
 | Comprendre les règles actuelles | [REGLES](REGLES.md) |
 | Retrouver un arbitrage produit | [DECISIONS](DECISIONS.md) |
+| Utiliser les guildes, les relations personnelles, les traités et les projets collectifs | [Guide guildes et alliances](GUIDE_GUILDES_ALLIANCES.md) |
+| Retrouver la revue, la fusion et les validations du chantier guildes | [Suivi guildes et alliances](GESTION_GUILDES_ALLIANCES.md) |
 | Préparer la refonte de la console et ses récompenses | [Cadrage de l’administration, brouillon](REFONTE_ADMINISTRATION.md) |
+| Suivre les évolutions des interfaces et flottes | [Lots et décisions ouvertes](EVOLUTIONS_INTERFACES_FLOTTES.md) |
 | Voir les objectifs et vérifications restantes | [ROADMAP](FEUILLE_DE_ROUTE.md) |
 | Comprendre les dossiers, .env, comptes, wiki et interfaces | [ARCHITECTURE](ARCHITECTURE.md) |
 | Installer et livrer sur le serveur | [DEPLOIEMENT](DEPLOIEMENT.md) |
 | Sauvegarder, contrôler et restaurer | [BACKUPS](SAUVEGARDES.md) |
 | Diagnostiquer processus, outbox, alertes et mesures | [EXPLOITATION](EXPLOITATION.md) |
+| Comprendre le worker, le notifier et les garanties de livraison | [Worker et notifier](WORKER_NOTIFIER.md) |
 | Régler le référencement et Search Console | [SEO](REFERENCEMENT.md) |
 | Consulter les profils de combat, production et vitesse | [EQUILIBRAGE](EQUILIBRAGE.md) |
 | Consulter les 150 profils de coûts | [Grille commune](COUTS.md) |
@@ -25,9 +32,9 @@ une seule référence par sujet ; les anciens bilans ne décrivent pas l’état
 150 libellés, descriptions et utilités de jeu ; la copie Markdown a été retirée.
 Les spécifications textuelles et PDF d’origine restent dans specifications/ et technic/.
 
-La documentation comporte 14 références actives et 8 documents historiques,
-au lieu de 72 Markdown. Les regroupements et retraits sont expliqués dans
-l’index des archives.
+Les regroupements et retraits de l’ancienne documentation sont expliqués dans
+l’index des archives. Le guide du worker et du notifier complète les procédures
+d’exploitation par une description technique de la chaîne asynchrone.
 
 
 ## Noms des documents

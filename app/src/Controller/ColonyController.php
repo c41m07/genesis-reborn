@@ -15,7 +15,7 @@ use Psr\Clock\ClockInterface;
 final class ColonyController extends AbstractController
 {
     public function __construct(private UniverseContext $context,private GameRepository $repo,private QueueService $queueService,
-        private \App\Service\Combat\CombatEventService $combats,private \App\Service\Combat\OccupationService $occupations) {}
+        private \App\Service\Combat\CombatEventService $combats,private \App\Service\Combat\OccupationService $occupations,private LeaderboardService $leaderboard,private \App\Service\Fleet\FleetVisibility $visibility) {}
     private function owned(int $id): Planet
     {
         $m=$this->context->membership();$p=$this->repo->find(Planet::class,$id);
@@ -33,21 +33,23 @@ final class ColonyController extends AbstractController
         return $planet ? $this->redirectToRoute('app_colony',array_filter(['id'=>$planet->id,'section'=>$section==='overview'?null:$section])) : $this->redirectToRoute('app_universes');
     }
     #[Route('/planetes',name:'app_planets',methods:['GET'])]
-    public function planets(ResourceService $resources): Response
+    public function planets(ResourceService $resources,\App\Service\Colony\EmpireDetails $details): Response
     {
         $membership=$this->context->membership();
         $planets=$this->repo->planets($membership->universe,$membership);
         $available=array_values(array_filter($this->repo->planets($membership->universe,null,true),static fn(Planet $planet): bool => !$planet->npcPlanet));
         $positionModifiers=[];
         foreach($planets as $planet) $positionModifiers[$planet->id]=$resources->positionProductionModifiers($planet);
-        return $this->render('colony/planets.html.twig',['membership'=>$membership,'planets'=>$planets,'available_planets'=>$available,'position_modifiers'=>$positionModifiers]);
+        return $this->render('colony/planets.html.twig',['membership'=>$membership,'planets'=>$planets,'available_planets'=>$available,'position_modifiers'=>$positionModifiers,'planet_details'=>$details->planets($membership)]);
     }
     #[Route('/planetes/{id}',name:'app_colony',methods:['GET'],requirements:['id'=>'\d+'])]
-    public function show(int $id,Request $request,ColonyView $view,\App\Service\Player\DailyLeaderboard $leaderboard,RelationResolver $relations,GameCatalog $catalog): Response
+    public function show(int $id,Request $request,ColonyView $view,\App\Service\Player\DailyLeaderboard $leaderboard,RelationResolver $relations,GameCatalog $catalog,\App\Service\Notification\JournalService $journal,\App\Service\Colony\EmpireDetails $details): Response
     {
         $p=$this->owned($id);$m=$this->context->membership();$section=$this->section((string)$request->query->get('section','overview'));$data=$view->data($m,$p,$request->query->getBoolean('showLockedItems'));
         if($section!=='overview' && $request->query->has('showLockedItems')) $data['show_locked_items']=$request->query->getBoolean('showLockedItems');
         if($section==='overview') {
+            if($request->headers->get('X-Genesis-Live')!=='1') $journal->open($m);
+            $data['planet_details']=$details->planets($m);
             $points=['building_points'=>0,'research_points'=>0,'fleet_points'=>0,'total_points'=>0];
             $daily=$leaderboard->forUniverse($m);
             $rank=null;foreach($daily['players'] as $row) if($row['membership']->id===$m->id) {$rank=$row['ranks']['points'];$points=array_intersect_key($row,$points);$data['ranking_changes']=$row;break;}
@@ -56,6 +58,19 @@ final class ColonyController extends AbstractController
         }
         return $this->render('colony/show.html.twig',$data+['section'=>$section]);
     }
+    #[Route('/planetes/{id}/journal/consulter',name:'app_journal_consult',methods:['POST'],requirements:['id'=>'\\d+'])]
+    public function consultJournal(int $id,Request $request,\App\Service\Notification\JournalService $journal): Response
+    {
+        $this->owned($id);$membership=$this->context->membership();
+        if((string)$request->request->get('membership')!==(string)$membership->id || !$this->isCsrfTokenValid('journal-'.$membership->id,$request->request->get('_token'))) throw $this->createAccessDeniedException('Formulaire expiré. Rouvrez le journal.');
+        $ids=$request->request->all('notice_ids');
+        foreach($ids as $value) if(!is_scalar($value) || !ctype_digit((string)$value) || (int)$value<1) throw new \Symfony\Component\HttpKernel\Exception\BadRequestHttpException('Sélection de journal invalide.');
+        try { $journal->consult($membership,array_map('intval',$ids)); }
+        catch(\DomainException $error) { throw $this->createNotFoundException($error->getMessage()); }
+        $this->addFlash('success','Les événements affichés ont été marqués comme consultés.');
+        return $this->redirectToRoute('app_colony',['id'=>$id,'_fragment'=>'dashboard-journal-title']);
+    }
+
     #[Route('/technologies',name:'app_technology_tree',methods:['GET'])]
     public function technologyTree(Request $request, ColonyView $view): Response
     {
@@ -229,7 +244,7 @@ final class ColonyController extends AbstractController
                     } else {
                         if (!isset($ownerRelations[$owner->id])) {
                             $ownerRelations[$owner->id] = $relations->allied($m, $owner) ? 'allied'
-                                : ($relations->guildStatus($relations->guild($m), $relations->guild($owner)) === 'enemies' ? 'enemy' : 'neutral');
+                                : ($relations->enemy($m, $owner) ? 'enemy' : 'neutral');
                         }
                         $mapPlanetRelations[$planet->id] = $ownerRelations[$owner->id];
                     }
@@ -261,53 +276,7 @@ final class ColonyController extends AbstractController
                 ];
             }
 
-            $missionLabels = ['explore' => 'Exploration', 'spy' => 'Espionnage', 'colonize' => 'Colonisation', 'transport' => 'Transport', 'attack' => 'Attaque', 'conquer' => 'Conquête JcE', 'defend' => 'Défense', 'orbit' => 'Orbite'];
-            $statusLabels = ['traveling' => 'En vol', 'returning' => 'Retour', 'attacking' => 'Combat', 'defending' => 'Défense', 'orbiting' => 'En orbite', 'occupying' => 'Occupation JcE', 'orbit_pending' => 'Demande d’orbite'];
-            $relatedOwnerCache = [];
-            foreach ($this->repo->activeFleetsInUniverse($m->universe) as $fleet) {
-                if (!isset($statusLabels[$fleet->status])) continue;
-                $originSystem = $fleet->homePlanet->solarSystem;
-                $destinationSystem = $fleet->destination?->solarSystem ?? $fleet->destinationSystem;
-                if (!$destinationSystem) continue;
-                $isOwnFleet = $fleet->playerUniverse->id === $m->id;
-                $targetsOwnColony = $fleet->destination?->owner?->id === $m->id;
-                $ownerId = (int) $fleet->playerUniverse->id;
-                if (!array_key_exists($ownerId, $relatedOwnerCache)) {
-                    $relatedOwnerCache[$ownerId] = $isOwnFleet || ($relations?->allied($m, $fleet->playerUniverse) ?? false);
-                }
-                $isAlliedFleet = !$isOwnFleet && $relatedOwnerCache[$ownerId];
-                if (!$isOwnFleet && !$targetsOwnColony && !$isAlliedFleet) continue;
-                $originInGalaxy = $selectedGalaxy && $originSystem->galaxy->id === $selectedGalaxy->id;
-                $destinationInGalaxy = $selectedGalaxy && $destinationSystem->galaxy->id === $selectedGalaxy->id;
-                if (!$originInGalaxy && !$destinationInGalaxy) continue;
-
-                $ships = array_values(array_filter($this->repo->all(FleetShip::class, ['fleet' => $fleet]), static fn (FleetShip $ship): bool => $ship->quantity > 0));
-                $shipsSummary = implode(' · ', array_map(static fn (FleetShip $ship): string => $ship->quantity.' × '.str_replace('_', ' ', $ship->slug), $ships));
-                $relationLabel = $isOwnFleet ? 'Votre empire' : ($targetsOwnColony ? 'Flotte entrante' : 'Allié');
-                $flights[] = [
-                    'id' => $fleet->id,
-                    'mission' => $fleet->mission,
-                    'missionLabel' => $missionLabels[$fleet->mission] ?? 'Mission',
-                    'status' => $fleet->status,
-                    'statusLabel' => $statusLabels[$fleet->status],
-                    'relationLabel' => $relationLabel,
-                    'ownerName' => $fleet->playerUniverse->getDisplayName(),
-                    'originSystemId' => $originSystem->id,
-                    'originGalaxy' => $originSystem->galaxy->coordinateCode(),
-                    'originX' => $originSystem->coordX,
-                    'originY' => $originSystem->coordY,
-                    'originName' => $fleet->homePlanet->name,
-                    'destinationSystemId' => $destinationSystem->id,
-                    'destinationGalaxy' => $destinationSystem->galaxy->coordinateCode(),
-                    'destinationX' => $destinationSystem->coordX,
-                    'destinationY' => $destinationSystem->coordY,
-                    'destinationName' => $fleet->destination?->name ?? $destinationSystem->name,
-                    'destinationCoordinates' => $fleet->destination?->coordinates() ?? ($destinationSystem->galaxy->coordinateCode().':'.$destinationSystem->number()),
-                    'departureAt' => $fleet->departureAt?->format(\DateTimeInterface::ATOM),
-                    'arrivalAt' => $fleet->arrivalAt?->format(\DateTimeInterface::ATOM),
-                    'ships' => $shipsSummary,
-                ];
-            }
+            $flights=$this->visibility->forMap($m,$selectedGalaxy);
 
             $galaxyV2Json = json_encode([
                 'systems' => $mapSystems,

@@ -24,3 +24,23 @@ import './styles/building-catalog.css';
 import './styles/mission-reports.css';
 import './styles/game-typography.css';
 import './styles/messaging.css';
+
+import './styles/empire-details.css';
+
+import './styles/fleet-destinations.css';
+
+import './styles/report-archives.css';
+
+import './styles/player-reports.css';
+
+import './styles/fleet-recall.css';
+
+import './styles/incoming-attacks.css';
+
+import './styles/colony-abandon.css';
+
+import './styles/player-pages.css';
+
+import './styles/ranking-sort.css';
+
+import './styles/diplomacy-tabs.css';
