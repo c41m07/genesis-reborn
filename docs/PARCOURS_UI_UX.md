@@ -90,3 +90,13 @@ Les sept scénarios navigateur concernés passent après les reprises du scénar
 Coûts des quatre catalogues : grille limitée à cinq ressources sur une ligne, adaptée à une, deux, trois ou quatre ressources. Dans les cartes étroites à cinq coûts, les libellés longs sont abrégés ; les noms et montants exacts restent disponibles dans les alternatives et titres. Vérification renforcée du cas réel d’un vaisseau à cinq coûts aux largeurs 1 920, 1 440, 390 et 320 px, sans débordement.
 
 Validation de la ligne à cinq ressources : compilation réussie, deux scénarios navigateur réussis sur les quatre catalogues et aux largeurs 1 920/1 440/390/320 px, puis contrôle visuel de la carte à cinq coûts à 320 px. Le rendu Twig strict reste validé avec 1 test et 25 assertions.
+
+## Bilan par ressource et synthèse allégée
+
+Sur demande, le grand bilan groupé de la vue générale est remplacé par une fiche dans le bandeau pour chaque ressource. Ouverture au survol et au focus, bouton natif utilisable au toucher et sans JavaScript, fermeture par Échap ou bouton. Les sources, consommations, soldes et estimations proviennent toujours du même instantané économique ; les valeurs et détails sont rafraîchis par le canal existant. Les dépenses électriques ponctuelles restent distinguées des consommations continues.
+
+Complexité 4 : composant partagé sur les pages privées, actualisation et accès aux données. Le détail est activé uniquement pour la colonie du propriétaire dans le bandeau et sur l’endpoint déjà protégé ; les instantanés par défaut utilisés ailleurs ne sont pas enrichis. Vérifications serveur des refus inter-joueurs et inter-univers.
+
+La liste détaillée « Vos colonies » de la vue générale est retirée au profit du compteur et de son lien vers Planètes déjà présents. Les dates d’acquisition et leur ordre restent dans Planètes et le sélecteur de colonie ; le test d’ordre vérifie maintenant ces points d’accès, sans supprimer ses contrôles de dates inconnues.
+
+Validation des fiches économiques : suite complète locale réussie, 882 tests PHP (211 274 assertions) et 13 tests Python. Les deux scénarios finaux du bandeau et du parcours passent : ouverture/fermeture au focus, Échap, ouverture directe dans le résumé mobile replié, thèmes clair/sombre, géométrie de la fiche, contrôle Axe ciblé et accès sans JavaScript. Quatre scénarios complémentaires de comptes/flottes passent également. Les captures des fiches dans les deux thèmes ont été examinées. Lint et compilation réussis ; CI complète requise sur la version publiée.

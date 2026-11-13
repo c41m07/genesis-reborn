@@ -65,6 +65,23 @@ final class GameplayAccessTest extends WebTestCase
         $this->client->request('POST','/planetes/'.$foreign->id.'/construire',['group'=>'buildings','slug'=>'mine_metal','_token'=>'forged']);self::assertResponseStatusCodeSame(404);
         $this->client->request('POST','/planetes/'.$own->id.'/construire',['group'=>'buildings','slug'=>'mine_metal','_token'=>'forged']);self::assertResponseStatusCodeSame(403);
     }
+    public function testResourceEconomyRemainsPrivateAndScopedToTheActiveUniverse(): void
+    {
+        $this->client->disableReboot();
+        [$player,$planet]=$this->player('EconomyOwner');$this->client->loginUser($player);
+        $this->client->request('GET','/planetes/'.$planet->id.'/ressources');self::assertResponseIsSuccessful();
+        $data=json_decode($this->client->getResponse()->getContent(),true,512,JSON_THROW_ON_ERROR);
+        self::assertStringContainsString('private',$this->client->getResponse()->headers->get('Cache-Control'));
+        foreach(['metal','nano','hydrogen','antimatter','electricity'] as $slug) {
+            foreach(['gross','consumption','sources','consumptionSources','estimateSeconds'] as $field) self::assertArrayHasKey($field,$data[$slug]);
+        }
+        self::assertGreaterThan(0,$data['metal']['sources']['base']);
+        foreach(['electricity','antimatter','hydrogen'] as $slug) self::assertEqualsWithDelta(0,$data[$slug]['sources']['base'],1e-9);
+        $otherUniverse=$this->em->getRepository(Universe::class)->findOneBy(['slug'=>'omega-1']);
+        static::getContainer()->get(UniverseService::class)->select($player,$otherUniverse->id);
+        $this->client->request('GET','/planetes/'.$planet->id.'/ressources');self::assertResponseStatusCodeSame(404);
+    }
+
     public function testFleetPreviewIsServerAuthoritativeAndCannotUseForeignOrigin():void
     {
         [$a,$own]=$this->player('Alpha');[$b,$foreign]=$this->player('Beta');$this->client->loginUser($a);

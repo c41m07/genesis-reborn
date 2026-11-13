@@ -1,8 +1,5 @@
 .colony-comparison td{min-width:170px;font-variant-numeric:tabular-nums}
 .colony-comparison th[scope="row"]{min-width:160px}
-.economy-balance{margin-block:20px;min-width:0}
-.economy-balance td{min-width:140px;font-size:14px;font-variant-numeric:tabular-nums}
-.economy-balance .table-scroll{max-width:100%}
 .sensitive-actions{border-inline-start:4px solid var(--danger,#c64b5b)}
 .requires-attention{border-inline-start:4px solid var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--panel))}
 .wiki-search{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
@@ -16,7 +13,6 @@
 .public-previews img{width:100%;height:auto;border-radius:12px;border:1px solid var(--line)}
 @media(max-width:740px){.fleet-mission-summary dl,.flight-estimate dl,.public-previews{grid-template-columns:1fr}}
 
-body[data-theme="light"] .dashboard-colonies>p{color:#4b5563}
 .intel-section>summary h3{display:inline;margin:0;font-size:16px}
 .resource-stock-capacity{display:flex;flex-wrap:wrap;gap:4px;align-items:baseline}.resource-stock-capacity>small{font-size:13px;color:var(--text);white-space:nowrap}
 section[aria-labelledby="attention-title"] p a{text-decoration:underline;text-underline-offset:3px}
@@ -24,7 +20,6 @@ body[data-theme="light"] .ui-tabs a{color:#4b5563}
 #vacances-info p a{text-decoration:underline;text-underline-offset:3px}
 .building-card .building-costs small{white-space:normal;overflow-wrap:anywhere}
 
-.economy-balance h2{overflow-wrap:anywhere}
 
 .wiki-manual{max-width:1200px}
 .wiki-layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:32px;align-items:start}

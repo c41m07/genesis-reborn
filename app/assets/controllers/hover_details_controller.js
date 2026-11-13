@@ -8,12 +8,18 @@ export default class extends Controller {
         this.reposition = () => { if (this.isOpen()) this.position(); };
         window.addEventListener('resize', this.reposition);
         document.addEventListener('scroll', this.reposition, true);
+        this.outsideFocus = event => {
+            if (this.isOpen() && !this.element.contains(event.target) && !this.panelTarget.contains(event.target)) this.hide();
+        };
+        document.addEventListener('focusin', this.outsideFocus);
+        if (document.activeElement === this.triggerTarget) this.show();
     }
 
     disconnect() {
         clearTimeout(this.timer);
         window.removeEventListener('resize', this.reposition);
         document.removeEventListener('scroll', this.reposition, true);
+        document.removeEventListener('focusin', this.outsideFocus);
     }
 
     isOpen() { return typeof this.panelTarget.showPopover === 'function' && this.panelTarget.matches(':popover-open'); }
@@ -26,8 +32,18 @@ export default class extends Controller {
         this.position();
     }
 
+    refresh() { if (this.isOpen()) this.position(); }
+
+    anchor() {
+        if (this.element.matches('.flight-operation')) return this.element;
+        if (this.triggerTarget.getClientRects().length) return this.triggerTarget;
+        return [...document.querySelectorAll('[popovertarget]')].find(trigger =>
+            trigger.getAttribute('popovertarget') === this.panelTarget.id && trigger.getClientRects().length
+        ) ?? this.triggerTarget;
+    }
+
     position() {
-        const anchor = this.element.matches('.flight-operation') ? this.element : this.triggerTarget;
+        const anchor = this.anchor();
         const rect = anchor.getBoundingClientRect(), panel = this.panelTarget;
         const width = panel.getBoundingClientRect().width, height = panel.getBoundingClientRect().height;
         const left = Math.max(12, Math.min(rect.left, innerWidth - width - 12));
@@ -48,7 +64,7 @@ export default class extends Controller {
         if (event.pointerType !== 'mouse') return;
         clearTimeout(this.timer);
         this.timer = setTimeout(() => {
-            const anchor = this.element.matches('.flight-operation') ? this.element : this.triggerTarget;
+            const anchor = this.anchor();
             if (this.panelTarget.matches(':hover') || anchor.matches(':hover')) return;
             this.hide();
         }, 180);
@@ -93,7 +109,7 @@ export default class extends Controller {
         event.stopPropagation();
         this.hide();
         this.restoringFocus = true;
-        this.triggerTarget.focus();
+        this.anchor().focus();
         this.restoringFocus = false;
     }
 }

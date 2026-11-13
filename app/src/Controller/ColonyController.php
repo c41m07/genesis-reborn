@@ -50,8 +50,6 @@ final class ColonyController extends AbstractController
         if($section!=='overview' && $request->query->has('showLockedItems')) $data['show_locked_items']=$request->query->getBoolean('showLockedItems');
         if($section==='overview') {
             if($request->headers->get('X-Genesis-Live')!=='1') $journal->open($m);
-            $data['planet_details']=$details->planets($m);
-            $data['economy_buildings']=$catalog->forUniverse($m->universe)['catalog']['buildings'];
             $points=['building_points'=>0,'research_points'=>0,'fleet_points'=>0,'total_points'=>0];
             $daily=$leaderboard->forUniverse($m);
             $rank=null;foreach($daily['players'] as $row) if($row['membership']->id===$m->id) {$rank=$row['ranks']['points'];$points=array_intersect_key($row,$points);$data['ranking_changes']=$row;break;}
@@ -108,10 +106,11 @@ final class ColonyController extends AbstractController
         return $this->redirectToRoute('app_planets',['_fragment'=>'planet-'.$id]);
     }
     #[Route('/planetes/{id}/ressources',name:'app_resources',methods:['GET'],requirements:['id'=>'\d+'])]
-    public function resources(int $id,ResourceService $resources,LeaderboardService $leaderboard): JsonResponse
+    public function resources(int $id,ResourceService $resources,LeaderboardService $leaderboard,\App\Service\Player\VacationCalendar $vacations): JsonResponse
     {
         $planet=$this->owned($id);$this->queueService->synchronize($this->context->membership());
-        $snapshot=$resources->snapshot($planet);
+        $snapshot=$resources->snapshot($planet,true);
+        $snapshot['_vacation']=$vacations->isActive($this->context->membership());
         foreach($leaderboard->forUniverse($this->context->membership()) as $row) if($row['membership']->id===$planet->owner->id) {$snapshot['_protection']=$row['protection'];break;}
         return $this->json($snapshot,200,['Cache-Control'=>'private, no-store']);
     }

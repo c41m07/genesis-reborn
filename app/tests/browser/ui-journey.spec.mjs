@@ -4,6 +4,7 @@ import { runIsolatedSql } from './support/game-fixtures.mjs';
 
 test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({page,browser},testInfo) => {
   test.setTimeout(180000);
+  const pageErrors=[];page.on('pageerror',error=>pageErrors.push(error.message));
   const id=crypto.randomUUID().slice(0,8),email=`parcours-${id}@example.test`,password='Browser-test-2026!';
   await page.goto('/inscription');
   await page.getByLabel('Adresse email').fill(email);
@@ -21,7 +22,14 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
   await page.getByRole('link',{name:'Rejoindre une guilde',exact:true}).click();
   await expect(page).toHaveURL(/diplomatie\?tab=join/);
   await page.goto(home);
-  await expect(page.getByRole('heading',{name:/Bilan économique/})).toBeVisible();
+  await expect(page.locator('.economy-balance,.dashboard-colonies')).toHaveCount(0);
+  await expect(page.locator('.dashboard-metrics a[href="/planetes"]')).toBeVisible();
+  const metalEconomy=page.getByRole('region',{name:'Bilan économique : Métal',exact:true});
+  await page.getByRole('button',{name:'Détails économiques : Métal',exact:true}).focus();
+  await expect(metalEconomy,pageErrors.join(' ; ')).toBeVisible();
+  await expect(metalEconomy).toContainText('Revenu de base');
+  await page.keyboard.press('Escape');
+  await expect(metalEconomy).toBeHidden();
   await expect(page.getByRole('link',{name:/Explorer la galaxie/})).toHaveAttribute('href','/carte-v2');
   await page.setViewportSize({width:1440,height:1000});
   if(process.env.GENERATE_PUBLIC_PREVIEWS==='1') {
@@ -63,6 +71,20 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
           await expect(page.locator('.fleet-empty-state').getByRole('link',{name:/chantier/i})).toHaveAttribute('href', /#item-probe-basic/);
           await page.goto(path);
         }
+        if(path===new URL(home).pathname) {
+          const trigger=page.getByRole('button',{name:'Détails économiques : Électricité',exact:true});
+          if(width===1440) await trigger.hover(); else await trigger.click();
+          const panel=page.getByRole('region',{name:'Bilan économique : Électricité',exact:true});
+          await expect(panel).toBeVisible();
+          await expect(panel).toContainText('Consommation / h');
+          await expect(panel).toContainText('à l’ajout dans la file');
+          const bounds=await panel.boundingBox();
+          expect(bounds.x).toBeGreaterThanOrEqual(0);expect(bounds.x+bounds.width).toBeLessThanOrEqual(width);
+          expect((await new AxeBuilder({page}).include('.resource-strip').analyze()).violations).toEqual([]);
+          await panel.screenshot({path:testInfo.outputPath(`bilan-ressource-${theme}-${width}.png`)});
+          await panel.getByRole('button',{name:'Fermer les détails de Électricité',exact:true}).click();
+          await expect(panel).toBeHidden();
+        }
         if(path==='/profil/preferences') {
           await expect(page.locator('#vacances-info')).toBeVisible();
           await expect(page.getByRole('navigation',{name:'Compte et préférences'}).getByRole('link',{name:'Vacances',exact:true})).toHaveAttribute('href','/profil/preferences#vacances-info');
@@ -75,6 +97,7 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
     }
   }
   expect(accessResults).toEqual([]);
+  expect(pageErrors).toEqual([]);
   const anonymous=await browser.newContext({viewport:{width:390,height:900}});
   try {
     const publicPage=await anonymous.newPage(); await publicPage.goto(new URL('/',home).href);
@@ -91,6 +114,12 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
     const noScript=await context.newPage();
     await noScript.goto(new URL('/planetes?view=table',home).href);
     await expect(noScript.locator('.colony-comparison')).toBeVisible();
+    await noScript.getByRole('button',{name:'Détails économiques : Métal',exact:true}).click();
+    await expect(noScript.getByRole('region',{name:'Bilan économique : Métal',exact:true})).toBeVisible();
+    const noScriptBounds=await noScript.getByRole('region',{name:'Bilan économique : Métal',exact:true}).boundingBox();
+    expect(noScriptBounds.x).toBeGreaterThanOrEqual(0);expect(noScriptBounds.x+noScriptBounds.width).toBeLessThanOrEqual(390);
+    expect(noScriptBounds.y).toBeGreaterThanOrEqual(0);expect(noScriptBounds.y+noScriptBounds.height).toBeLessThanOrEqual(900);
+    await noScript.keyboard.press('Escape');
     await noScript.goto(new URL('/wiki?q=colonisation',home).href);
     await expect(noScript.locator('.wiki-chapter').first()).toContainText(/colonisation/i);
   } finally {await context.close();}

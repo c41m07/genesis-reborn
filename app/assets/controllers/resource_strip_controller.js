@@ -16,6 +16,12 @@ export default class extends Controller {
         displayQuantity(target, Math.floor(stock));
         target.closest('.resource-summary-item').classList.toggle('resource-summary-item--deficit', deficit);
     }
+    syncEconomy({ target: panel }) {
+        const expanded = panel.matches(':popover-open');
+        for (const trigger of this.element.querySelectorAll('[aria-expanded][popovertarget]')) {
+            if (trigger.getAttribute('popovertarget') === panel.id) trigger.setAttribute('aria-expanded', String(expanded));
+        }
+    }
     tickProtection() {
         if (!this.hasProtectionTarget) return;
         const end = Date.parse(this.protectionTarget.dataset.until);
@@ -38,7 +44,7 @@ export default class extends Controller {
             }
             for (const element of this.element.querySelectorAll('[data-resource-slug]')) {
                 const resource = resources[element.dataset.resourceSlug];
-                if (resource) element.dispatchEvent(new CustomEvent('resource:update', { detail: resource }));
+                if (resource) element.dispatchEvent(new CustomEvent('resource:update', { detail: { ...resource, vacation: resources._vacation } }));
             }
         } catch (error) {
             // Une interruption réseau conserve les dernières valeurs connues.
