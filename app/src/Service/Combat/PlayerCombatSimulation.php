@@ -43,7 +43,11 @@ final class PlayerCombatSimulation
             }
         }
         if(array_key_exists('buildings',$report->snapshot)) $forces['fortress']=[];
-        if(isset($report->snapshot['buildings']['fortress'])) foreach($report->snapshot['buildings']['fortress'] as $tier=>$entry) $forces['fortress'][$tier]=(int)($entry['level']??0);
+        if(isset($report->snapshot['buildings']['fortress'])) {
+            $fortress=$report->snapshot['buildings']['fortress'];
+            if(isset($fortress['level'])) $forces['fortress']['basic']=(int)$fortress['level'];
+            else foreach($fortress as $tier=>$entry) $forces['fortress'][$tier]=(int)($entry['level']??0);
+        }
         return ['forces'=>$forces,'date'=>$report->createdAt,'id'=>$report->id,'known'=>array_keys($forces)];
     }
 

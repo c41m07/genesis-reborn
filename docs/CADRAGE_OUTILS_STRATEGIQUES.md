@@ -152,5 +152,13 @@ Après les dernières protections et les scénarios d’historique volumineux,
 pages filtrées de fin d’historique (5 000 messages et 5 000 rapports) ont demandé
 0,077 s ; le plan représentatif de sous-chaîne pouvait parcourir les lignes,
 ce qui confirme la limite annoncée plutôt qu’une garantie de temps constant.
-Les contrôles navigateur et la CI sur la dernière version restent à terminer.
-La PR reste soumise à revue et accord explicite avant fusion.
+Les quatre nouveaux scénarios navigateur passent : ordinateur 1 440 px,
+mobile 390/320 px, thèmes clair/sombre réellement enregistrés dans les
+préférences, contrôles axe ciblés, clavier et fonctionnement sans JavaScript.
+Les cinq scénarios existants ciblés de flotte, fret et archives passent aussi.
+Les captures ont été examinées ; ces vérifications ne constituent pas un audit
+RGAA complet. La reprise des anciens instantanés sans rang de forteresse a son
+test dédié, réussi avec le contrôle de provenance (2 tests, 9 assertions).
+
+Le résultat de la CI complète sur la dernière version est consigné dans la PR #55.
+La fusion reste soumise à sa réussite et à l’accord explicite du propriétaire.

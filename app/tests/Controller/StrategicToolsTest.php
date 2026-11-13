@@ -101,9 +101,9 @@ final class StrategicToolsTest extends WebTestCase
     }
     public function testIntelUsesOnlyOwnedSnapshotsIncludingLegacyRanks(): void
     {
-        $report=new EspionageReport();$report->sender=$this->owner->currentPlayerUniverse;$report->target=$this->home($this->other);$report->createdAt=new \DateTimeImmutable('-4 days');$report->snapshot=['fleets'=>['fighter:superior'=>['quantity'=>4]],'research'=>['weapons_engineering'=>['level'=>2]]];$this->em->persist($report);$this->em->flush();
+        $report=new EspionageReport();$report->sender=$this->owner->currentPlayerUniverse;$report->target=$this->home($this->other);$report->createdAt=new \DateTimeImmutable('-4 days');$report->snapshot=['fleets'=>['fighter:superior'=>['quantity'=>4]],'research'=>['weapons_engineering'=>['level'=>2]],'buildings'=>['fortress'=>['level'=>3]]];$this->em->persist($report);$this->em->flush();
         $service=static::getContainer()->get(PlayerCombatSimulation::class);$intel=$service->intel($this->owner->currentPlayerUniverse,$report->id);
-        self::assertSame(4,$intel['forces']['ships']['fighter']['superior']);self::assertSame(2,$intel['forces']['research']['weapons_engineering']['basic']);self::assertArrayNotHasKey('defenses',$intel['forces']);
+        self::assertSame(4,$intel['forces']['ships']['fighter']['superior']);self::assertSame(2,$intel['forces']['research']['weapons_engineering']['basic']);self::assertSame(3,$intel['forces']['fortress']['basic']);self::assertArrayNotHasKey('defenses',$intel['forces']);
         $this->expectException(\DomainException::class);$service->intel($this->other->currentPlayerUniverse,$report->id);
     }
     public function testMessageSearchIsPaginatedScopedAndDoesNotMarkRead(): void
