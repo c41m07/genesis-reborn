@@ -22,6 +22,8 @@ final class GuildTagPlayerReportTest extends WebTestCase
     protected function setUp(): void
     {
         $this->client=self::createClient([],['HTTP_HOST'=>'genesis-reborn.localhost']);
+        // Conserver l’horloge simulée lors des requêtes HTTP successives.
+        $this->client->disableReboot();
         $this->em=self::getContainer()->get(EntityManagerInterface::class);$params=$this->em->getConnection()->getParams();
         if(($params['host']??'')!=='database-test' || ($params['dbname']??'')!=='genesis_v2_test') throw new \RuntimeException('Base non isolée.');
         $tool=new SchemaTool($this->em);$metadata=$this->em->getMetadataFactory()->getAllMetadata();$tool->dropSchema($metadata);$tool->createSchema($metadata);
