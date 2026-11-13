@@ -52,8 +52,11 @@ test('Une recherche ajoutée depuis une autre colonie rejoint la même file et l
     }
     await page.setViewportSize({ width: 390, height: 900 });
     await queue.screenshot({ path: info.outputPath('common-research-390.png'), animations: 'disabled' });
-    const cancel = queue.locator('.queue-detail-item').first().getByRole('button', { name: /Annuler/ });
+    const cancel = queue.locator('.queue-detail-item').first().getByRole('link', { name: /Préparer l’annulation/ });
     await cancel.focus(); await page.keyboard.press('Enter');
+    await expect(page.getByRole('heading',{name:'Commandes concernées'})).toBeVisible();
+    await expect(page.locator('main')).toContainText('Dépendance annulée');
+    await page.getByRole('button',{name:/Confirmer l’annulation/}).click();
     await expect(queue.locator('.operation-idle')).toContainText('Aucune commande en cours');
     expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM queue_item WHERE player_universe_id=${membership} AND queue_type='research'`)).toBe('0');
     await page.goto(`/planetes/${one}?section=technologies`);

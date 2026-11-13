@@ -15,21 +15,29 @@
     <button class="secondary">Rechercher</button>
     {% if query %}<a href="{{ path('app_wiki') }}">Afficher tout le manuel</a><p role="status">{{ sections|length }} chapitre{{ sections|length > 1 ? 's' : '' }} pour « {{ query }} ».</p>{% endif %}
   </form>
-  <a class="quiet-button wiki-summary-shortcut" href="#wiki-summary">Choisir un chapitre</a>
   {% if sections is empty %}<p>Aucun chapitre ne correspond. Essayez un autre terme ou affichez tout le manuel.</p>{% endif %}
-  <nav id="wiki-summary" class="wiki-summary" aria-label="Sommaire du wiki">
+  <div class="wiki-layout">
+  <aside id="wiki-summary" class="wiki-navigation" aria-label="Navigation des chapitres">
+    <form class="wiki-chapter-picker" method="get" action="{{ path('app_wiki') }}">
+      <label for="wiki-chapter-choice">Choisir un chapitre</label>
+      <select id="wiki-chapter-choice" name="chapter" required><option value="">Sélectionner un chapitre</option>{% for chapter in chapters %}<option value="{{ chapter.id }}">{{ chapter.title }}</option>{% endfor %}</select>
+      <button class="secondary">Ouvrir le chapitre</button>
+    </form>
+  <nav class="wiki-summary wiki-desktop-summary" aria-label="Sommaire du wiki">
     <h2>Sommaire</h2>
     {% set currentPart = '' %}
-    {% for section in sections %}
+    {% for section in chapters %}
       {% if section.part != currentPart %}
         {% if not loop.first %}</ol>{% endif %}
         <h3>{{ section.part }}</h3><ol>
         {% set currentPart = section.part %}
       {% endif %}
-      <li><a href="#wiki-{{ section.id }}">{{ section.title }}</a></li>
+      <li><a href="{{ query ? path('app_wiki',{_fragment:'wiki-'~section.id}) : '#wiki-'~section.id }}">{{ section.title }}</a></li>
       {% if loop.last %}</ol>{% endif %}
     {% endfor %}
   </nav>
+  </aside>
+  <div class="wiki-chapters">
   {% set currentPart = '' %}
   {% for section in sections %}
     <section class="wiki-chapter" id="wiki-{{ section.id }}" aria-labelledby="wiki-title-{{ section.id }}">
@@ -59,5 +67,7 @@
       <ul><li><a href="{{ path('app_wiki_reference',{source:'regles'}) }}">Règles de référence</a></li><li><a href="{{ path('app_wiki_reference',{source:'decisions'}) }}">Décisions du projet</a></li></ul>
     </div></details>
   </footer>
+  </div>
+  </div>
 </article>
 {% endblock %}

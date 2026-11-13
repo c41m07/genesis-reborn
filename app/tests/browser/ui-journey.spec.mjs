@@ -17,6 +17,10 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
   await page.locator('article.universe-card').first().getByRole('button',{name:/Créer mon empire/}).click();
   await expect(page).toHaveURL(/planetes\/\d+$/);
   const home=page.url(), accessResults=[];
+  await page.goto('/guildes/projets');
+  await page.getByRole('link',{name:'Rejoindre une guilde',exact:true}).click();
+  await expect(page).toHaveURL(/diplomatie\?tab=join/);
+  await page.goto(home);
   await expect(page.getByRole('heading',{name:/Bilan économique/})).toBeVisible();
   await expect(page.getByRole('link',{name:/Explorer la galaxie/})).toHaveAttribute('href','/carte-v2');
   await page.setViewportSize({width:1440,height:1000});
@@ -53,6 +57,16 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
           await page.goBack();
           await expect(page).toHaveURL(/view=table/);
         }
+        if(path==='/flottes') {
+          await expect(page.locator('.fleet-page-layout--no-idle')).toBeVisible();
+          await page.goto('/flottes?mission=spy');
+          await expect(page.locator('.fleet-empty-state').getByRole('link',{name:/chantier/i})).toHaveAttribute('href', /#item-probe-basic/);
+          await page.goto(path);
+        }
+        if(path==='/profil/preferences') {
+          await expect(page.locator('#vacances-info')).toBeVisible();
+          await expect(page.getByRole('navigation',{name:'Compte et préférences'}).getByRole('link',{name:'Vacances',exact:true})).toHaveAttribute('href','/profil/preferences#vacances-info');
+        }
         const audit=await new AxeBuilder({page}).include('main').analyze();
         if(audit.violations.length) accessResults.push({path,theme,width,violations:audit.violations});
       }
@@ -67,6 +81,8 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
     await expect(publicPage.locator('meta[name="description"]')).toHaveAttribute('content','Genesis Reborn, jeu de stratégie spatiale par navigateur : bâtis ta colonie, explore des systèmes inconnus et forge ton empire.');
     await expect(publicPage.locator('meta[property="og:image"]')).toHaveAttribute('content',/^https?:\/\//);
     await expect(publicPage.locator('.public-previews img')).toHaveCount(2);
+    await expect(publicPage.getByRole('heading',{name:'Développez votre empire',exact:true})).toBeVisible();
+    await expect(publicPage.getByRole('heading',{name:'Choisissez votre univers',exact:true})).toHaveCount(0);
     expect(await publicPage.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
     expect((await new AxeBuilder({page:publicPage}).include('main').analyze()).violations).toEqual([]);
   } finally {await anonymous.close();}

@@ -62,6 +62,8 @@ test('Admin : nouveautés personnelles, total, actualisation et archives masqué
   await page.evaluate(() => window.dispatchEvent(new CustomEvent('genesis:refresh')));
   await expect(page.locator('.admin-sidebar [data-category="players"]')).toHaveText('3');
   await page.goto('/admin');
+  await expect(page.getByRole('link',{name:'Examiner les incidents',exact:true})).toHaveAttribute('href','/admin/securite');
+  await expect(page.locator('.admin-home-actions').getByRole('link',{name:'Préparer un événement',exact:true})).toHaveAttribute('href','/admin/events/assistant');
   await page.goto('/');
   await expect(totalBadge(page)).toHaveText('4');
   await page.goto('/admin/moderation');

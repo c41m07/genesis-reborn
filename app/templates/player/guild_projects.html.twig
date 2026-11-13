@@ -4,7 +4,7 @@
 <div class="page-heading"><h1>Projets collectifs</h1><p>Financez les paliers avec votre guilde et gagnez un boost si vous remplissez les conditions.</p></div>
 <a class="inline-link" href="{{ path('app_diplomacy') }}">← Votre guilde</a>
 {% if not enabled %}<p class="panel">Les guildes sont désactivées dans cet univers.</p>
-{% elseif not guild %}<p class="panel">Rejoignez une guilde pour participer à ses projets collectifs.</p>
+{% elseif not guild %}<p class="panel">Rejoignez une guilde pour participer à ses projets collectifs. <a href="{{ path('app_diplomacy',{tab:'join'}) }}">Rejoindre une guilde</a></p>
 {% else %}
 <p>Guilde : <strong>{{ guild.name }}</strong>. Les dons sont définitifs, y compris après un départ. Un projet ne peut être lancé qu’une fois par guilde.</p>
 {% if readOnly %}<p class="panel">Pendant les vacances, vous pouvez consulter les projets mais pas les lancer ni donner de ressources.</p>{% endif %}

@@ -64,7 +64,7 @@
                 </form>
             </article>
         {% endfor %}
-        {% if active_queues is empty and active_fleets is empty %}<p>Aucune opération active à accélérer. Les commandes en attente et les occupations ne peuvent pas être accélérées.</p>{% endif %}
+        {% if active_queues is empty and active_fleets is empty %}<p>Aucune opération active à accélérer. Les commandes en attente et les occupations ne peuvent pas être accélérées.</p><div class="empty-next-actions">{% if chrome.planet %}<a class="secondary" href="{{ path('app_colony',{id:chrome.planet.id,section:'buildings'}) }}">Choisir une construction</a>{% endif %}<a class="secondary" href="{{ path('app_fleets') }}">Préparer une mission</a></div>{% endif %}
     {% endif %}
 </section>
 </section>

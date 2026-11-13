@@ -56,6 +56,10 @@ test('Wiki : accès, guide, sources, clavier et mobile dans les deux thèmes', a
   await page.getByRole('navigation', { name: 'Sommaire du wiki' }).getByRole('link', { name: 'Flottes et exploration' }).focus();
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/#wiki-missions$/);
+  await expect(page.locator('.wiki-navigation')).toBeInViewport();
+  expect(await page.locator('.wiki-navigation').evaluate(el => getComputedStyle(el).position)).toBe('sticky');
+  const invalidChapter = await page.goto('/wiki?chapter=inconnu');
+  expect(invalidChapter.status()).toBe(404);
   for (const source of ['regles', 'decisions']) {
     await page.goto(`/wiki/references/${source}`);
     await expect(page.locator('.wiki-reference')).toHaveText(readFileSync(`docs/${source === 'regles' ? 'REGLES' : 'DECISIONS'}.md`, 'utf8'));
@@ -75,6 +79,12 @@ test('Wiki : accès, guide, sources, clavier et mobile dans les deux thèmes', a
     for (const summary of await page.locator('.wiki-calculation summary').all()) await summary.click();
     for (const width of [1440, 768, 390]) {
       await page.setViewportSize({ width, height: 900 });
+      if (width < 1100) {
+        await expect(page.getByLabel('Choisir un chapitre')).toBeVisible();
+        await expect(page.getByRole('navigation', { name: 'Sommaire du wiki' })).toBeHidden();
+      } else {
+        await expect(page.getByRole('navigation', { name: 'Sommaire du wiki' })).toBeVisible();
+      }
       await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
       await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
       await page.screenshot({ path: testInfo.outputPath(`wiki-${theme}-${width}.png`) });
@@ -104,8 +114,11 @@ test('Wiki : accès, guide, sources, clavier et mobile dans les deux thèmes', a
     await calculation.locator('summary').focus();
     await noScriptPage.keyboard.press('Enter');
     await expect(calculation.locator('.wiki-formula')).toBeVisible();
-    await noScriptPage.getByRole('navigation', { name: 'Sommaire du wiki' }).getByRole('link', { name: 'Flottes et exploration' }).click();
+    await noScriptPage.getByLabel('Choisir un chapitre').selectOption('missions');
+    await noScriptPage.getByRole('button', { name: 'Ouvrir le chapitre' }).click();
     await expect(noScriptPage).toHaveURL(/#wiki-missions$/);
+    await expect(noScriptPage.locator('#wiki-title-missions')).toBeInViewport();
+    await expect.poll(() => noScriptPage.evaluate(() => document.querySelector('#wiki-title-missions').getBoundingClientRect().top - document.querySelector('.wiki-navigation').getBoundingClientRect().bottom)).toBeGreaterThanOrEqual(0);
     await expect.poll(() => noScriptPage.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   } finally {
     await noScriptContext.close();

@@ -63,6 +63,12 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(page.locator('.building-card[data-category="storage"]').first()).toBeHidden();
     await tab('intermediate').click();
     await page.locator('h1').click();
+    await expect(page).toHaveURL(/#item-power_plant-intermediate$/);
+    await page.goBack();
+    await expect(panel('superior')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Production', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await page.goForward();
+    await expect(panel('intermediate')).toBeVisible();
     const previousFamily = await family.elementHandle();
     const refreshed = page.waitForResponse(response => response.url().includes('?section=buildings') && response.request().method() === 'GET');
     await page.evaluate(() => window.dispatchEvent(new CustomEvent('genesis:refresh')));

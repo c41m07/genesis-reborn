@@ -15,13 +15,19 @@ final class WikiController extends AbstractController
     public function index(Request $request): Response
     {
         $sections = json_decode(file_get_contents(dirname($this->projectDirectory).'/docs/wiki.json'), true, 512, JSON_THROW_ON_ERROR);
+        $chapters = $sections;
+        $chapter = $request->query->getString('chapter');
+        if ($chapter !== '') {
+            if (!in_array($chapter, array_column($chapters, 'id'), true)) throw $this->createNotFoundException('Chapitre inconnu.');
+            return $this->redirectToRoute('app_wiki', ['_fragment' => 'wiki-'.$chapter]);
+        }
         $query = mb_substr(trim($request->query->getString('q')), 0, 150);
         if ($query !== '') {
             $sections = array_values(array_filter($sections, static fn(array $section): bool =>
                 mb_stripos(json_encode($section, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR), $query) !== false
             ));
         }
-        return $this->render('wiki/index.html.twig', ['sections' => $sections, 'query' => $query]);
+        return $this->render('wiki/index.html.twig', ['sections' => $sections, 'chapters' => $chapters, 'query' => $query]);
     }
 
     #[Route('/wiki/references/{source}', name: 'app_wiki_reference', methods: ['GET'])]

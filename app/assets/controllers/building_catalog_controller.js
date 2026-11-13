@@ -50,7 +50,10 @@ export default class extends Controller {
     }
 
     activate(tab, remember = false) {
-        if (remember && location.hash !== tab.hash) history.pushState(null, '', tab.hash);
+        if (remember) {
+            if (location.hash !== tab.hash) history.pushState(null, '', tab.hash);
+            this.state.followedHash = location.hash;
+        }
         const family = tab.closest('[data-slug]');
         this.state.tiers[family.dataset.slug] = tab.dataset.tier;
         this.update();
@@ -82,9 +85,9 @@ export default class extends Controller {
         const tab = this.tabTargets.find(candidate => candidate.hash === location.hash);
         if (!tab) return;
         this.showLockedValue = this.showLockedValue || tab.dataset.locked === 'true';
-        this.state.category = 'all';
+        if (this.state.category !== 'all' && tab.closest('[data-slug]').dataset.category !== this.state.category) this.state.category = 'all';
         this.element.querySelectorAll('[data-category][aria-pressed]').forEach(button => {
-            button.setAttribute('aria-pressed', String(button.dataset.category === 'all'));
+            button.setAttribute('aria-pressed', String(button.dataset.category === this.state.category));
         });
         this.activate(tab);
         this.state.followedHash = location.hash;
