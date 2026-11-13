@@ -104,3 +104,26 @@ Validation des fiches économiques : suite complète locale réussie, 882 tests 
 La CI de `8562253` a relevé une attente obsolète du test `empire-details` : il cherchait encore les cartes détaillées sur la vue générale après leur retrait demandé. Le scénario vérifie maintenant leur absence, l’accès à Planètes puis tous les comportements de survol, clavier, tactile, dimensions et accessibilité sur cette page. Le suivi des flottes reste testé sur la vue générale. Reprise locale réussie du scénario complet ; aucune assertion d’interaction n’est retirée de la fonctionnalité conservée.
 
 Les cartes à cinq coûts adaptent aussi la taille des montants en vue condensée : les libellés restent abrégés sur les cartes étroites et les montants longs ne se chevauchent pas. Le contrôle navigateur couvre ce cas aux mêmes largeurs de 320, 390, 1440 et 1920 pixels.
+
+
+## Intégration des maquettes approuvées le 13 novembre 2026
+
+Complexité : présentation ciblée 3/5, fiches et navigation 4/5, vérifications 3/5.
+
+Les styles complémentaires sont limités aux pages approuvées. Univers, actualités, connexion, inscription, récupération et vérification de compte conservent leur présentation. Les quatre catalogues conservent leurs cartes, filtres et commandes ; leur seul changement de disposition est le regroupement fixe des activités et flottes sur ordinateur (à partir de 1 251 px). Les points restent dans le bandeau de la vue générale. Les métriques et le journal retrouvent des sections distinctes.
+
+Accueil : aperçu réel intégré à la présentation, sans dupliquer la capture de colonie. Compte, inventaire, diplomatie, rapports, confirmations, références et administration : espacements, lecture et commandes harmonisés. Les formulaires administratifs longs disposent de replis progressifs ; les formulaires, jetons et contrôles serveur existants sont conservés. Aucun JavaScript n’est nécessaire pour accéder aux formulaires.
+
+Planètes : comparaison mobile par ressource, avec formulaire GET de secours ; choix conservé dans l’adresse et lors du retour arrière. Un avertissement de surplus repose exclusivement sur le stock et la capacité réels. Classement joueur : points totaux visibles et autres catégories repliables sur mobile, tris et actions conservés.
+
+Projets : liste synthétique, puis fiche dédiée à la progression, contribution personnelle, conditions et dons. La fiche vérifie guilde et univers côté serveur ; les services de contribution et leurs verrous/versions restent inchangés. Le lancement réussi et les dons reviennent sur la fiche. Les formulaires de don restent utilisables sans JavaScript.
+
+Wiki : recherche serveur conservée ; navigation progressive par chapitre avec liens directs, historique et sélecteur mobile. Sans JavaScript, le manuel reste intégralement visible et les formulaires de recherche/sélection fonctionnent. Les documents de référence sont présentés par sections repliables, sans réécriture des sources historiques. Les demandes d’orbite vides se replient ; une demande présente ou reçue en direct ouvre automatiquement le détail.
+
+Validation locale de cette intégration : `make validate`, `make lint`, `make assets` et vérification finale des 151 templates Twig réussis. `make test` : 883 tests PHP, 211 284 assertions et 13 tests Python réussis. Douze scénarios navigateur concernés réussis sur reprises ciblées : catalogues, fiches économiques, comparaison, projets, wiki, routes dans les deux thèmes, navigation et édition administratives. Le parcours général a aussi régénéré les deux aperçus publics depuis un empire fictif isolé.
+
+Contrôle des pages complètes : 90 états rendus, 202 captures ordinateur/mobile (dont les contrôles complémentaires du thème clair), sans image manquante ni débordement horizontal. Des captures représentatives ont été examinées visuellement. Cela complète les contrôles ciblés de clavier, focus, permissions et fonctionnement sans JavaScript ; ce n’est pas un audit RGAA complet.
+
+Les reprises ont corrigé la conservation du focus lors du repli progressif des formulaires administratifs et la restitution du saut de ligne initial des sections de référence. Les tests du wiki continuent de comparer l’intégralité du contenu aux sources. Une compilation automatique locale avait croisé la compilation de production ; le mode local cohérent a été rétabli sans changer la configuration ni affaiblir les tests.
+
+La CI complète reste à vérifier sur le dernier commit de cette intégration. Aucun changement économique supplémentaire, aucune migration sur la base du jeu, fusion ou déploiement dans ce complément.

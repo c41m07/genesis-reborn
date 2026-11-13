@@ -8,11 +8,15 @@
 <a href="{{ path('app_planets',{view:'table'}) }}" {% if table_view %}class="active" aria-current="page"{% endif %}>Comparer les colonies</a>
 </nav>
 {% if table_view %}
+<form class="colony-resource-picker" method="get" action="{{ path('app_planets') }}" data-controller="colony-comparison">
+<input type="hidden" name="view" value="table"><label for="comparison-resource">Ressource à comparer</label>
+<select id="comparison-resource" name="resource" data-action="change->colony-comparison#select">{% for slug,label in {metal:'Métal',nano:'Nano',hydrogen:'Hydrogène',antimatter:'Antimatière',electricity:'Électricité'} %}<option value="{{ slug }}" {{ comparison_resource==slug ? 'selected' : '' }}>{{ label }}</option>{% endfor %}</select><button class="secondary">Comparer cette ressource</button>
+</form>
 <div class="panel table-scroll" role="region" tabindex="0" aria-label="Comparaison des colonies, défilement horizontal">
 <table class="data-table colony-comparison"><caption>Stocks / capacités et soldes nets par heure, au rythme actuel</caption>
-<thead><tr><th scope="col">Colonie</th>{% for resource in (planet_details|first).resources|default([]) %}<th scope="col">{{ resource.label }}</th>{% endfor %}<th scope="col">Activités</th></tr></thead>
+<thead><tr><th scope="col">Colonie</th>{% for slug in ['metal','nano','hydrogen','antimatter','electricity'] %}{% set resource=(planet_details|first).resources[slug]|default(null) %}{% if resource %}<th scope="col" data-resource="{{ slug }}" class="{{ comparison_resource==slug ? 'is-selected-resource' : '' }}">{{ resource.label }}</th>{% endif %}{% endfor %}<th scope="col">Activités</th></tr></thead>
 <tbody>{% for world in planets %}<tr><th scope="row"><a href="{{ path('app_colony',{id:world.id}) }}">{{ world.name }}</a><br>{{ world.coordinates() }}</th>
-{% for resource in planet_details[world.id].resources %}<td><strong>{{ resource.stock|quantity(0) }} / {{ resource.capacity|quantity(0) }}</strong><br>{{ (resource.rate*3600)|quantity(2) }} / h</td>{% endfor %}
+{% for slug in ['metal','nano','hydrogen','antimatter','electricity'] %}{% set resource=planet_details[world.id].resources[slug] %}<td data-resource="{{ slug }}" class="{{ comparison_resource==slug ? 'is-selected-resource' : '' }}"><strong>{{ resource.stock|quantity(0) }} / {{ resource.capacity|quantity(0) }}</strong><br>{{ (resource.rate*3600)|quantity(2) }} / h{% if resource.stock>resource.capacity %}<span class="storage-warning">Stock supérieur à la capacité</span>{% endif %}</td>{% endfor %}
 <td><a href="{{ path('app_colony',{id:world.id}) }}">{{ activities[world.id] }} commande{{ activities[world.id] > 1 ? 's' : '' }} en file</a></td></tr>
 {% else %}<tr><td>Aucune colonie à comparer. <a href="{{ path('app_map_v2') }}">Explorer la galaxie</a></td></tr>{% endfor %}</tbody>
 </table></div>

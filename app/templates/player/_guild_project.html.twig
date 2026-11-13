@@ -1,18 +1,13 @@
-    <article class="panel guild-project" aria-labelledby="project-title-{{ project.id }}">
-        <h3 id="project-title-{{ project.id }}">{{ project.snapshot.name }}</h3><p>{{ project.snapshot.description }}</p>
+    <article class="panel project-overview" aria-labelledby="project-title-{{ project.id }}">
+        <h2 id="project-title-{{ project.id }}">Progression et contribution</h2><p>{{ project.snapshot.description }}</p>
         <p class="badge">{{ project.status=='completed' ? 'Terminé' : (project.status=='abandoned' ? 'Abandonné' : 'En cours') }}</p>
-        <h4>Votre contribution et les minimums</h4>
+        <h3>Votre contribution et les minimums</h3>
         <ul>{% for resource,minimum in project.snapshot.minimums %}<li>{{ resources[resource] }} : {{ row.own[resource]|default(0) }} / {{ minimum }}</li>{% endfor %}</ul>
         {% if row.rewarded %}<p>Vous avez déjà gagné le boost de ce modèle de projet. Il ne peut pas être gagné une seconde fois, même après changement de guilde ou création d’un nouvel empire.</p>{% elseif project.status=='active' %}<p>{{ row.qualified ? 'Minimums atteints. Restez membre jusqu’à la fin pour recevoir le boost.' : 'Atteignez tous les minimums et restez membre jusqu’à la fin pour recevoir le boost.' }}</p>{% endif %}
         {% if project.status=='active' %}
-            <h4>Palier {{ project.stageIndex+1 }} sur {{ project.snapshot.stages|length }} · {{ project.snapshot.stages[project.stageIndex].name }}</h4>
+            <h3>Palier {{ project.stageIndex+1 }} sur {{ project.snapshot.stages|length }} · {{ project.snapshot.stages[project.stageIndex].name }}</h3>
             <ul>{% for resource,remaining in row.remaining %}<li>{{ resources[resource] }} : {{ project.progress[resource]|default(0) }} / {{ project.snapshot.stages[project.stageIndex].costs[resource] }} · reste {{ remaining }}</li>{% endfor %}</ul>
-            {% if not readOnly %}<form method="post" action="{{ path('app_guild_project_contribute',{id:project.id}) }}">
-                <input type="hidden" name="_token" value="{{ csrf_token('guild_project_donation_'~project.id) }}"><input type="hidden" name="version" value="{{ project.version }}">
-                <label for="project-{{ project.id }}-planet">Colonie qui fournit les ressources<select id="project-{{ project.id }}-planet" name="planet_id" required>{% for planet in planets %}<option value="{{ planet.id }}">{{ planet.name }}</option>{% endfor %}</select></label>
-                <div class="form-grid">{% for resource,remaining in row.remaining %}{% if remaining>0 %}<label for="project-{{ project.id }}-{{ resource }}">Don {{ resources[resource] }}<input id="project-{{ project.id }}-{{ resource }}" name="resources[{{ resource }}]" type="number" min="0" max="{{ remaining }}" step="1" value="0"></label>{% endif %}{% endfor %}</div>
-                <p>Ces ressources seront prélevées définitivement sur la colonie choisie.</p><button class="primary">Donner ces ressources</button>
-            </form>{% endif %}
+
         {% elseif project.status=='completed' %}
             <p>{{ project.rewardsDeliveredAt ? 'Distribution des récompenses terminée.' : 'Récompenses en cours de distribution.' }}</p>
             <p>{{ membership.id in project.eligibleIds ? 'Vous avez rempli les conditions à la clôture.' : 'Vous ne remplissiez pas les conditions à la clôture.' }}</p><a href="{{ path('app_boosts') }}">Consulter l’inventaire et sa file d’attente</a>

@@ -1,13 +1,15 @@
 {% extends 'base.html.twig' %}
 {% block title %}Wiki du jeu · Genesis Reborn{% endblock %}
 {% block body %}
-<article class="wiki-guide wiki-manual" id="wiki-top" aria-labelledby="wiki-title">
+<article class="wiki-guide wiki-manual" data-controller="wiki-chapters" data-wiki-chapters-search-value="{{ query ? 'true' : 'false' }}" id="wiki-top" aria-labelledby="wiki-title">
   <header class="wiki-intro">
     <p class="wiki-eyebrow">Le manuel du joueur</p>
     <h1 id="wiki-title">Wiki du jeu</h1>
     <p class="wiki-lead">De votre première colonie aux calculs d’une bataille : comprendre vos choix, préparer votre empire.</p>
+    <details><summary>Comment utiliser ce manuel</summary>
     <p>Commencez par les premiers chapitres ou choisissez un sujet dans le sommaire. Les règles se lisent directement ; les formules et leurs exemples se déplient à votre rythme.</p>
     <p>Les chiffres indiqués sont des références ou des exemples dont les hypothèses sont précisées. Les fiches et aperçus de votre univers donnent les coûts, bonus et durées applicables à vos actions.</p>
+    </details>
   </header>
   <form class="panel wiki-search" method="get" action="{{ path('app_wiki') }}" role="search">
     <label for="wiki-query">Rechercher dans le manuel</label>

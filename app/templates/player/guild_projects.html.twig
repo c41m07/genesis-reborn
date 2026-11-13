@@ -10,7 +10,7 @@
 {% if readOnly %}<p class="panel">Pendant les vacances, vous pouvez consulter les projets mais pas les lancer ni donner de ressources.</p>{% endif %}
 <nav class="ui-tabs" aria-label="Rubriques des projets"><a href="#ongoing-projects-title">En cours ({{ rows|filter(row => row.project.status=='active')|length }})</a><a href="#available-projects-title">Disponibles ({{ available|length }})</a><a href="#completed-projects-title">Terminés ({{ rows|filter(row => row.project.status!='active')|length }})</a></nav>
 <section aria-labelledby="ongoing-projects-title"><h2 id="ongoing-projects-title">En cours</h2>
-{% for row in rows|filter(row => row.project.status=='active') %}{% set project=row.project %}{% include 'player/_guild_project.html.twig' %}{% else %}<p class="panel">Aucun projet en cours. Consultez les projets disponibles ci-dessous.</p>{% endfor %}
+<div class="guild-project-grid">{% for row in rows|filter(row => row.project.status=='active') %}{% set project=row.project %}{% include 'player/_guild_project_summary.html.twig' %}{% else %}<p class="panel">Aucun projet en cours. Consultez les projets disponibles ci-dessous.</p>{% endfor %}</div>
 </section>
 <section aria-labelledby="available-projects-title"><h2 id="available-projects-title">Projets disponibles</h2>
 {% for row in available %}{% set definition=row.definition %}<article class="panel"><h3>{{ definition.name }}</h3><p>{{ definition.description }}</p>
@@ -21,7 +21,7 @@
 </article>{% else %}<p class="panel">Aucun nouveau projet disponible dans cet univers.</p>{% endfor %}
 </section>
 <section aria-labelledby="completed-projects-title"><h2 id="completed-projects-title">Terminés</h2>
-{% for row in rows|filter(row => row.project.status!='active') %}{% set project=row.project %}{% include 'player/_guild_project.html.twig' %}{% else %}<p class="panel">Aucun projet terminé ou abandonné.</p>{% endfor %}
+<div class="guild-project-grid">{% for row in rows|filter(row => row.project.status!='active') %}{% set project=row.project %}{% include 'player/_guild_project_summary.html.twig' %}{% else %}<p class="panel">Aucun projet terminé ou abandonné.</p>{% endfor %}</div>
 </section>
 {% endif %}
 {% endblock %}

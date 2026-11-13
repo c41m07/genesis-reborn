@@ -41,7 +41,7 @@ final class ColonyController extends AbstractController
         $positionModifiers=[];$activities=[];
         foreach($planets as $planet) $activities[$planet->id]=count($this->repo->queue($planet));
         foreach($planets as $planet) $positionModifiers[$planet->id]=$resources->positionProductionModifiers($planet);
-        return $this->render('colony/planets.html.twig',['membership'=>$membership,'planets'=>$planets,'available_planets'=>$available,'position_modifiers'=>$positionModifiers,'activities'=>$activities,'table_view'=>$request->query->get('view')==='table','planet_details'=>$details->planets($membership)]);
+        return $this->render('colony/planets.html.twig',['membership'=>$membership,'planets'=>$planets,'available_planets'=>$available,'position_modifiers'=>$positionModifiers,'activities'=>$activities,'table_view'=>$request->query->get('view')==='table','comparison_resource'=>in_array($request->query->getString('resource'),['metal','nano','hydrogen','antimatter','electricity'],true)?$request->query->getString('resource'):'metal','planet_details'=>$details->planets($membership)]);
     }
     #[Route('/planetes/{id}',name:'app_colony',methods:['GET'],requirements:['id'=>'\d+'])]
     public function show(int $id,Request $request,ColonyView $view,\App\Service\Player\DailyLeaderboard $leaderboard,RelationResolver $relations,GameCatalog $catalog,\App\Service\Notification\JournalService $journal,\App\Service\Colony\EmpireDetails $details): Response

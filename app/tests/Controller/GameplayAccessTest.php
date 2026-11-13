@@ -58,6 +58,36 @@ final class GameplayAccessTest extends WebTestCase
         self::assertSelectorTextSame('h1', 'Joueurs et modération');
     }
 
+    public function testProjectDetailIsRestrictedToOwnGuildAndActiveUniverse(): void
+    {
+        $this->client->disableReboot();
+        [$owner]=$this->player('ProjectDetailOwner');[$other]=$this->player('ProjectDetailOther');
+        $universes=static::getContainer()->get(UniverseService::class);
+        $omega=$this->em->getRepository(Universe::class)->findOneBy(['slug'=>'omega-1']);
+        $universes->select($owner,$omega->id);$universes->select($other,$omega->id);
+        $owner->roles=['ROLE_ADMIN'];$this->em->flush();
+        $diplomacy=static::getContainer()->get(\App\Service\Player\DiplomacyService::class);
+        $diplomacy->create($owner->currentPlayerUniverse,'Projet privé','PRIV');
+        $definition=static::getContainer()->get(\App\Service\Player\GuildProjectDefinitionService::class)->save($owner,0,[
+            'universe_id'=>$omega->id,'name'=>'Station privée','description'=>'Projet réservé à la guilde.','enabled'=>true,
+            'stages'=>[['name'=>'Structure','costs'=>['metal'=>10]]],'minimums'=>['metal'=>2],
+        ],0);
+        $project=static::getContainer()->get(\App\Service\Player\GuildProjectService::class)->start($owner->currentPlayerUniverse,$definition->id,$definition->version);
+        $path='/guildes/projets/'.$project->id;
+        $this->client->loginUser($owner);$this->client->request('GET',$path);
+        self::assertResponseIsSuccessful();self::assertSelectorTextSame('h1','Station privée');
+        self::assertSelectorExists('form input[name="version"]');self::assertSelectorTextContains('.guild-project','Votre contribution');
+        $this->client->loginUser($other);$this->client->request('GET',$path);self::assertResponseStatusCodeSame(404);
+        $other=$this->em->find(Player::class,$other->id);
+        $diplomacy->create($other->currentPlayerUniverse,'Autre projet','AUTR');
+        $this->client->request('GET',$path);self::assertResponseStatusCodeSame(404);
+        $this->client->loginUser($owner);
+        $owner=$this->em->find(Player::class,$owner->id);
+        $turbo=$this->em->getRepository(Universe::class)->findOneBy(['slug'=>'turbo-1']);$universes->select($owner,$turbo->id);
+        $this->client->request('GET',$path);self::assertResponseStatusCodeSame(404);
+        $owner=$this->em->find(Player::class,$owner->id);$universes->select($owner,$omega->id);$this->client->request('GET','/guildes/projets/999999999');self::assertResponseStatusCodeSame(404);
+    }
+
     public function testOtherPlayerPlanetResourcesAndActionsAreInaccessible():void
     {
         [$a,$own]=$this->player('Alpha');[$b,$foreign]=$this->player('Beta');$this->client->loginUser($a);

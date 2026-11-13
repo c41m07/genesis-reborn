@@ -38,6 +38,9 @@ test('Wiki : accès, guide, sources, clavier et mobile dans les deux thèmes', a
   await page.getByRole('link',{name:'Afficher tout le manuel'}).click();
   const guide = JSON.parse(readFileSync('docs/wiki.json', 'utf8'));
   for (const section of guide) {
+    await page.locator('.wiki-summary a[href="#wiki-'+section.id+'"]').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#wiki-'+section.id)).toBeVisible();
     await expect(page.locator(`#wiki-${section.id}`)).toContainText(section.title);
     for (const text of section.paragraphs) await expect(page.locator(`#wiki-${section.id}`)).toContainText(text);
     for (const step of section.steps ?? []) await expect(page.locator(`#wiki-${section.id}`)).toContainText(step);
@@ -62,7 +65,11 @@ test('Wiki : accès, guide, sources, clavier et mobile dans les deux thèmes', a
   expect(invalidChapter.status()).toBe(404);
   for (const source of ['regles', 'decisions']) {
     await page.goto(`/wiki/references/${source}`);
-    await expect(page.locator('.wiki-reference')).toHaveText(readFileSync(`docs/${source === 'regles' ? 'REGLES' : 'DECISIONS'}.md`, 'utf8'));
+    const restored=await page.locator('.wiki-guide').evaluate(guide=>guide.querySelector(':scope > .wiki-reference').textContent+[...guide.querySelectorAll(':scope > details')].map(detail=>'## '+detail.querySelector('summary').textContent+detail.querySelector('pre').textContent).join(''));
+    expect(restored.replace(/\s+/g,' ').trim()).toBe(readFileSync(`docs/${source === 'regles' ? 'REGLES' : 'DECISIONS'}.md`, 'utf8').replace(/\s+/g,' ').trim());
+    await page.locator('.wiki-guide>details').first().locator('summary').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('.wiki-guide>details').first().locator('pre')).toBeVisible();
     await expect(page.locator('.wiki-reference script')).toHaveCount(0);
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1280);
   }
@@ -74,9 +81,11 @@ test('Wiki : accès, guide, sources, clavier et mobile dans les deux thèmes', a
     runIsolatedSql(process.env.BROWSER_ROUTER, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END, '$.theme', '${theme}') WHERE email='${email}'`);
     await page.goto('/wiki');
     await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
-    await page.locator('.wiki-calculation summary').first().focus();
-    await expect(page.locator('.wiki-calculation summary').first()).toBeFocused();
-    for (const summary of await page.locator('.wiki-calculation summary').all()) await summary.click();
+    await page.goto('/wiki#wiki-calcul-production');
+    await expect(page.locator('#wiki-calcul-production')).toBeVisible();
+    await page.locator('.wiki-chapter:visible .wiki-calculation summary').first().focus();
+    await expect(page.locator('.wiki-chapter:visible .wiki-calculation summary').first()).toBeFocused();
+    for (const summary of await page.locator('.wiki-chapter:visible .wiki-calculation summary').all()) await summary.click();
     for (const width of [1440, 768, 390]) {
       await page.setViewportSize({ width, height: 900 });
       if (width < 1100) {

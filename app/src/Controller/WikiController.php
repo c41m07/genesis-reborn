@@ -38,9 +38,13 @@ final class WikiController extends AbstractController
             'decisions' => 'DECISIONS.md',
             default => throw $this->createNotFoundException('Référence inconnue.'),
         };
+        $text=file_get_contents(dirname($this->projectDirectory).'/docs/'.$file);
+        $parts=preg_split('/^(## .+)$/m',$text,-1,PREG_SPLIT_DELIM_CAPTURE);
+        $intro=array_shift($parts);$blocks=[];
+        for($index=0;$index<count($parts);$index+=2) $blocks[]=['title'=>substr($parts[$index],3),'text'=>$parts[$index+1]??''];
         return $this->render('wiki/reference.html.twig', [
             'referenceTitle' => $source === 'regles' ? 'Règles de référence' : 'Décisions du projet',
-            'referenceText' => file_get_contents(dirname($this->projectDirectory).'/docs/'.$file),
+            'referenceIntro'=>$intro,'referenceBlocks'=>$blocks,
         ]);
     }
 }
