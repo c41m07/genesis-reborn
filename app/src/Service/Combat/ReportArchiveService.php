@@ -20,7 +20,7 @@ final class ReportArchiveService
         private GameRepository $repo, private CombatReportReader $combats,
         private EspionageReportReader $espionage, private ClockInterface $clock) {}
 
-    public function page(PlayerUniverse $member, string $filter, bool $archived, int $page): array
+    public function page(PlayerUniverse $member, string $filter, bool $archived, int $page, ?\App\Service\Search\SearchCriteria $criteria = null): array
     {
         $page = max(1, min(1000000, $page));
         $queries = [
@@ -28,13 +28,34 @@ final class ReportArchiveService
             'espionage'=>"SELECT 'espionage' AS kind, r.id, r.created_at AS happened_at FROM espionage_report r JOIN player_universe sender ON sender.id=r.sender_id WHERE r.sender_id=:member AND sender.universe_id=:universe",
             'economy'=>"SELECT 'economy' AS kind, r.id, r.created_at AS happened_at FROM transport_report r JOIN player_universe sender ON sender.id=r.sender_id JOIN player_universe recipient ON recipient.id=r.recipient_id WHERE (r.sender_id=:member OR r.recipient_id=:member) AND sender.universe_id=:universe AND recipient.universe_id=:universe",
         ];
+        $params = ['member'=>$member->id, 'universe'=>$member->universe->id];
         foreach ($queries as $kind=>&$sql) {
+            if($criteria) {
+                $date=$kind==='combat'?'r.resolved_at':'r.created_at';
+                if($criteria->since) {$sql.=' AND '.$date.'>=:since';$params['since']=$criteria->since;}
+                if($criteria->before) {$sql.=' AND '.$date.'<:before';$params['before']=$criteria->before;}
+                if($criteria->values['planet']!=='') {
+                    $params['planet']=\App\Service\Search\SearchCriteria::pattern($criteria->values['planet']);
+                    $sql.=match($kind) {
+                        'combat'=>" AND LOWER(p.name) LIKE :planet ESCAPE '!'",
+                        'espionage'=>" AND EXISTS (SELECT 1 FROM planet ep WHERE ep.id=r.target_id AND LOWER(ep.name) LIKE :planet ESCAPE '!')",
+                        'economy'=>" AND EXISTS (SELECT 1 FROM fleet ef JOIN planet ep ON ep.id=ef.home_planet_id OR ep.id=ef.destination_id WHERE ef.id=r.fleet_id AND LOWER(ep.name) LIKE :planet ESCAPE '!')",
+                    };
+                }
+                if($criteria->values['participant']!=='') {
+                    $params['person']=\App\Service\Search\SearchCriteria::pattern($criteria->values['participant']);
+                    $sql.=match($kind) {
+                        'combat'=>" AND EXISTS (SELECT 1 FROM combat_participant pc JOIN player_universe pm ON pm.id=pc.player_universe_id LEFT JOIN player pp ON pp.id=pm.player_id WHERE pc.combat_event_id=e.id AND pm.universe_id=:universe AND LOWER(COALESCE(pp.username,'Empire oublié')) LIKE :person ESCAPE '!')",
+                        'espionage'=>" AND EXISTS (SELECT 1 FROM player pp WHERE pp.id=sender.player_id AND LOWER(pp.username) LIKE :person ESCAPE '!')",
+                        'economy'=>" AND EXISTS (SELECT 1 FROM player pp WHERE (pp.id=sender.player_id OR pp.id=recipient.player_id) AND LOWER(pp.username) LIKE :person ESCAPE '!')",
+                    };
+                }
+            }
             $sql .= ($archived ? ' AND EXISTS' : ' AND NOT EXISTS')." (SELECT 1 FROM report_archive a WHERE a.player_universe_id=:member AND a.kind='".$kind."' AND a.report_id=r.id AND a.archived_at IS NOT NULL)";
         }
         unset($sql);
         $all = implode(' UNION ALL ', $queries);
         $selected = $filter === 'all' ? $all : $queries[$filter];
-        $params = ['member'=>$member->id, 'universe'=>$member->universe->id];
         $connection = $this->em->getConnection();
         $total = (int) $connection->fetchOne('SELECT COUNT(*) FROM ('.$all.') all_reports', $params);
         $count = $filter === 'all' ? $total : (int) $connection->fetchOne('SELECT COUNT(*) FROM ('.$selected.') selected_reports', $params);
