@@ -39,6 +39,8 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(family.locator('.card-stock-badge, .tier-label')).toHaveCount(0);
     await expect(panel('basic').locator('.costs')).toContainText('1,12 M');
     await expect(panel('basic').locator('.costs > span').first()).toHaveAttribute('aria-label', /Métal : [\d ]+/);
+    await expect(panel('basic').getByRole('button',{name:/^Manque [\d ]+ Métal/})).toBeDisabled();
+    await expect(panel('basic').locator('.catalog-card-art img')).toHaveCSS('filter','none');
     await expect(panel('basic').locator('form [name="tier"]')).toHaveValue('basic');
     await tab('intermediate').click();
     await expect(tab('intermediate').locator('.building-rank-up')).toBeVisible();
@@ -53,7 +55,8 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(tab('superior').locator('.building-rank-cross')).toBeVisible();
     await expect(panel('superior').locator('img')).toHaveAttribute('src', /power_plant__superior.webp$/);
     await expect(panel('superior').locator('.requirement')).toContainText('Nécessite');
-    await expect(panel('superior').locator('form[action*="file"]')).toHaveCount(0);
+    await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('filter','grayscale(1)');
+    await expect(panel('superior').locator('.card-body>form')).toHaveCount(0);
     await toggle.click();
     await expect(toggle).toHaveAttribute('aria-checked', 'false');
     await expect(tab('superior')).toBeHidden();
@@ -144,7 +147,29 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(fallback.locator('#item-power_plant-superior')).toBeHidden();
     await fallback.getByRole('switch', { name: 'Afficher les éléments verrouillés' }).click();
     await expect(fallback.locator('#item-power_plant-superior')).toBeVisible();
+    await expect(fallback.locator('#item-power_plant-superior .catalog-card-art img')).toHaveCSS('filter','grayscale(1)');
+    await expect(fallback.locator('#item-power_plant-basic').getByRole('button',{name:/^Manque/})).toBeDisabled();
     await noScript.close();
+    for (const theme of ['dark','light']) {
+        sql(`UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
+        for (const width of [1440,390]) {
+            await page.setViewportSize({width,height:1000});
+            await page.goto(`${path}?section=buildings#item-power_plant-basic`);
+            await page.reload();
+            await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
+            await expect(panel('basic').getByRole('button',{name:/^Manque/})).toBeDisabled();
+            expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+            await family.screenshot({path:`output/playwright/catalogue-bloque-${theme}-${width}.png`});
+            await tab('superior').click();
+            await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('filter','grayscale(1)');
+        }
+    }
+    sql(`INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'lab','intermediate',10)`);
+    sql(`INSERT INTO player_technology (player_universe_id,slug,tier,level) SELECT owner_id,'engineering_foundations','intermediate',10 FROM planet WHERE id=${planet}`);
+    await page.goto(`${path}?section=buildings#item-power_plant-superior`);
+    await page.reload();
+    await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('filter','none');
+    await expect(panel('superior').locator('.card-body>form')).toHaveCount(1);
     expect(errors).toEqual([]);
 });
 

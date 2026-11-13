@@ -45,7 +45,7 @@ test('Construction : Max dépasse 100, ajuste la saisie et refuse un achat lorsq
     runIsolatedSql(project, `UPDATE planet_resource SET current_stock=0,last_updated_at=UTC_TIMESTAMP() WHERE planet_id=${planet}`);
     await maximum.click();
     await expect(panel.getByRole('status')).toContainText('Ressources manquantes : 300 Métal, 100 Nano, 200 Électricité.');
-    await expect(panel.getByRole('button', { name: /Construire/ })).toBeDisabled();
+    await expect(panel.getByRole('button', { name: 'Manque 300 Métal · 100 Nano · 200 Électricité', exact:true })).toBeDisabled();
     expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM queue_item WHERE planet_id=${planet}`)).toBe('0');
     prepareOwnedColony(project, email, { stock: 150000 });
     await maximum.click();

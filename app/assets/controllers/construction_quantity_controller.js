@@ -2,7 +2,7 @@ import { Controller } from '@hotwired/stimulus';
 import { exactNumber } from '../quantity.js';
 
 export default class extends Controller {
-    static targets = ['input', 'max', 'submit', 'status'];
+    static targets = ['input', 'max', 'submit', 'status', 'label', 'arrow'];
     static values = { url: String };
 
     connect() { this.maxTarget.hidden = false; }
@@ -36,6 +36,8 @@ export default class extends Controller {
             this.statusTarget.textContent = maximum === 0 ? data.reason :
                 (requested > maximum && !maximize ? 'Quantité ajustée. ' : '') + 'Maximum constructible : ' + exactNumber(maximum) + '. Coût électrique du lot : ' + exactNumber(data.costs.electricity || 0) + ' E, payé une seule fois.';
             this.submitTarget.disabled = maximum === 0;
+            this.labelTarget.textContent = maximum === 0 ? data.unavailableLabel : this.submitTarget.dataset.actionLabel;
+            this.arrowTarget.hidden = maximum === 0;
             this.element.dataset.dirty = 'true';
             return true;
         } catch (error) {

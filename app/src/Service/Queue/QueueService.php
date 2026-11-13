@@ -95,18 +95,18 @@ final class QueueService
         $buildings=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);
         $technologies=$this->repo->levelsByTier(PlayerTechnology::class,['playerUniverse'=>$membership]);
         $plan=$this->calculator->calculate($definition,$group,1,max(1,$quantity),$buildings,$config,$technologies);
-        $reason='';
+        $reason='';$missing=[];
         if($maximum===0) {
             $failures=$this->access->failures($membership,$planet,$group,$definition,$tier,$buildings,$technologies);
             if(count($this->repo->queue($planet,'shipyard'))>=30) $reason='File pleine (30 commandes maximum).';
             elseif($failures) $reason='Prérequis manquants : '.implode(', ',$failures).'.';
             else {
-                $stocks=$this->resources->snapshot($planet);$missing=[];
-                foreach($plan['costs'] as $resource=>$amount) if($amount>($stocks[$resource]['stock']??0)) $missing[]=(int)ceil($amount-($stocks[$resource]['stock']??0)).' '.$this->catalog->rules()['resources'][$resource];
+                $stocks=$this->resources->snapshot($planet);
+                foreach($plan['costs'] as $resource=>$amount) if($amount>($stocks[$resource]['stock']??0)) $missing[]=number_format((int)ceil($amount-($stocks[$resource]['stock']??0)),0,',',' ').' '.$this->catalog->rules()['resources'][$resource];
                 $reason=$missing?'Ressources manquantes : '.implode(', ',$missing).'.':'Limite de quantité atteinte.';
             }
         }
-        return ['maximum'=>$maximum,'quantity'=>$quantity,'costs'=>$quantity>0?$plan['costs']:[],'duration'=>$quantity>0?$plan['duration']:0,'reason'=>$reason];
+        return ['maximum'=>$maximum,'quantity'=>$quantity,'costs'=>$quantity>0?$plan['costs']:[],'duration'=>$quantity>0?$plan['duration']:0,'reason'=>$reason,'unavailableLabel'=>$maximum===0?($missing?'Manque '.implode(' · ',$missing):$reason):''];
     }
 
     private function unitMaximum(PlayerUniverse $membership, Planet $planet, string $group, string $slug, string $tier, array $definition, array $buildings, array $config, array $technologies): int

@@ -76,3 +76,13 @@ Les quatre lots navigateur de la CI `c7d7886` sont tous réussis : 46 + 59 + 33 
 La CI `e230527` a ensuite relevé le même basculement d’horloge dans `GuildTagPlayerReportTest` (6 scénarios) et `ColonyAbandonmentTest` (3 scénarios), une fois leur date simulée dépassée de 24 h. Le test de rappel corrigé passe. Complexité réévaluée à 3 pour vérifier le cycle des requêtes HTTP et des sessions dans les tests concernés. Même correction ciblée de conservation du noyau dans ces deux classes, sans modifier leurs assertions ni la sécurité de production.
 
 Après ces corrections, **`make test` complet réussit en un passage : 880 tests PHP, 211 209 assertions et 13 tests Python**. La CI complète sur la version corrigée demeure obligatoire avant fusion. Aucun nouveau changement fonctionnel depuis les 184 scénarios navigateur réussis.
+
+## Précision du revenu de base
+
+Décision explicite : seules les bases métal et nano restent à 10/h avant modificateurs ; antimatière et hydrogène passent de 10/h et 80/h à 0, comme l’électricité déjà nulle. Les productions industrielles et les stocks existants ne sont pas modifiés. Complexité 3 : contrôle des périodes hors ligne, modificateurs et pénuries, sans migration.
+
+Le libellé « Manque » du catalogue indique le coût moins le stock disponible, arrondi à l’unité supérieure. Sur demande précisée ensuite, le manque est intégré directement au bouton désactivé et gris : « Manque 300 Métal · 100 Nano · 200 Électricité » par exemple. Le message séparé dans les coûts est retiré. Le bouton retrouve son action lorsque le lot est constructible ; les aperçus conservent leurs contrôles serveur. Les images des rangs verrouillés sont en noir et blanc jusqu’au déblocage. Complexité 3 : rendu serveur sans JavaScript et mise à jour du bouton pour les lots.
+
+Revalidation locale du passif : `make test` réussit avec 880 tests PHP, 211 214 assertions et 13 tests Python. Après intégration du bouton de manque, ajout d’un test HTTP en mode Twig strict : 1 test, 25 assertions réussies sur les quatre catalogues et le retour de l’action après réapprovisionnement. Ce test reproduit le risque de portée de `queueFull`, désormais défini avant les boucles du template. `make lint` et `make assets` réussissent.
+
+Les sept scénarios navigateur concernés passent après les reprises du scénario de catalogue : boutons de manque, montants multiples, réactivation après réapprovisionnement, illustrations verrouillées puis déverrouillées, thèmes clair/sombre, mobile et parcours sans JavaScript. Les assertions de formulaire ciblent maintenant la commande, distincte des formulaires d’aide inclus dans les cartes.
