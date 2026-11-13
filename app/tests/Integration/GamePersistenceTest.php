@@ -1251,6 +1251,8 @@ final class GamePersistenceTest extends KernelTestCase
         $this->em->flush();
         $service=self::getContainer()->get(QueueService::class);
         self::assertSame(150,$service->maximum($membership,$planet,'ships','probe','basic'));
+        $preview=$service->constructionPreview($membership,$planet,'ships','probe','basic',150);
+        self::assertSame(150,$preview['quantity']);self::assertSame($plan['costs'],$preview['costs']);self::assertSame($plan['duration'],$preview['duration']);
         self::assertSame(150,$service->add($membership,$planet,'ships','probe',1000,str_repeat('e',32)));
         $item=$this->em->getRepository(QueueItem::class)->findOneBy(['planet'=>$planet,'itemSlug'=>'probe']);
         self::assertSame(150,$item->quantity);

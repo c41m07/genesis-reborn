@@ -19,10 +19,11 @@ export default class extends Controller {
         const abort = this.abort = new AbortController();
         this.maxTarget.disabled = true;
         if (maximize) this.submitTarget.disabled = true;
-        this.statusTarget.textContent = 'Calcul du maximum…';
+        this.statusTarget.textContent = 'Calcul du coût et du maximum…';
         try {
             const url = new URL(this.urlValue, window.location.origin);
             for (const name of ['group', 'slug', 'tier']) url.searchParams.set(name, this.element.elements[name].value);
+            url.searchParams.set('quantity', maximize ? '2147483647' : String(Math.max(1,Number(this.inputTarget.value) || 1)));
             const response = await fetch(url, { signal: abort.signal, headers: { Accept: 'application/json' } });
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'Maximum indisponible. Réessayez.');
@@ -32,8 +33,8 @@ export default class extends Controller {
             this.inputTarget.max = String(maximum);
             this.inputTarget.min = maximum > 0 ? '1' : '0';
             if (maximize || requested > maximum || maximum === 0) this.inputTarget.value = String(maximum);
-            this.statusTarget.textContent = maximum === 0 ? 'Aucune unité constructible actuellement.' :
-                (requested > maximum && !maximize ? 'Quantité ajustée. ' : '') + 'Maximum constructible : ' + exactNumber(maximum) + '.';
+            this.statusTarget.textContent = maximum === 0 ? data.reason :
+                (requested > maximum && !maximize ? 'Quantité ajustée. ' : '') + 'Maximum constructible : ' + exactNumber(maximum) + '. Coût électrique du lot : ' + exactNumber(data.costs.electricity || 0) + ' E, payé une seule fois.';
             this.submitTarget.disabled = maximum === 0;
             this.element.dataset.dirty = 'true';
             return true;

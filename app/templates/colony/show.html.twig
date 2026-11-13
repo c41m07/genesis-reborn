@@ -21,8 +21,16 @@
 
 <div class="dashboard-layout">
 <div class="dashboard-primary">
+{% set fullResources=resources|filter(resource => resource.stock >= resource.capacity) %}
+{% set reducedResources=resources|filter(resource => resource.productivity is not null and resource.productivity < 100) %}
+{% if not chrome.vacation and (fullResources or reducedResources) %}
+<section class="panel" aria-labelledby="attention-title"><h2 id="attention-title">À surveiller</h2>
+{% if fullResources %}<p>Stockages pleins : {% for slug,resource in fullResources %}<a href="{{ path('app_colony',{id:planet.id,section:'buildings',_fragment:'item-storage_'~slug~'-basic'}) }}">{{ resource.label }}</a>{{ not loop.last ? ', ' : '.' }}{% endfor %} Les apports supplémentaires ne sont plus stockés.</p>{% endif %}
+{% if reducedResources %}<p>Production industrielle réduite : {% for resource in reducedResources %}{{ resource.label }} ({{ resource.productivity|quantity(0) }} %){{ not loop.last ? ', ' : '.' }}{% endfor %} <a href="#economy-title">Consulter le bilan économique</a></p>{% endif %}
+</section>{% endif %}
 <section class="dashboard-activity" aria-label="Activité et files de la colonie active">{% include 'ui/colony_queues.html.twig' %}</section>
 {% include 'ui/colony_summaries.html.twig' %}
+{% include 'ui/economy_balance.html.twig' %}
 
 </div>
 <aside class="dashboard-secondary">
@@ -57,6 +65,7 @@
             <input type="hidden" name="showLockedItems" value="{{ show_locked_items ? '0' : '1' }}" data-building-catalog-target="visibilityInput">
             <button type="submit" role="switch" aria-checked="{{ show_locked_items ? 'true' : 'false' }}" data-building-catalog-target="visibilitySwitch" data-action="building-catalog#toggleLocked"><span>Afficher les éléments verrouillés</span><span class="building-switch-track" aria-hidden="true"></span><span data-building-catalog-target="visibilityLabel" aria-hidden="true">{{ show_locked_items ? 'ON' : 'OFF' }}</span></button>
         </form>
+        <div class="building-visibility"><button type="button" role="switch" aria-checked="false" data-building-catalog-target="compactSwitch" data-action="building-catalog#toggleCompact" hidden><span>Vue condensée</span><span class="building-switch-track" aria-hidden="true"></span></button></div>
     </div>
     <nav class="catalog-filters ui-tabs" aria-label="Filtrer le catalogue">
         {% set filter_options = catalog_filter_options[group] %}

@@ -1,6 +1,6 @@
 <?php
 namespace App\Controller;
-use App\Entity\{Player,Universe};
+use App\Entity\{Player,Universe,PlayerUniverse};
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Universe\UniverseService;
@@ -19,7 +19,9 @@ final class UniverseController extends AbstractController
             $configs[$universe->slug] = $catalog->forUniverse($universe);
         }
 
-        return $this->render('universe/index.html.twig', ['universes' => $universes, 'configs' => $configs, 'now' => $clock->now()]);
+        $joined=[];
+        foreach($repo->all(PlayerUniverse::class,['player'=>$this->getUser()]) as $member) if(!$member->isForgotten()) $joined[$member->universe->id]=true;
+        return $this->render('universe/index.html.twig', ['joined'=>$joined,'universes' => $universes, 'configs' => $configs, 'now' => $clock->now()]);
     }
     #[Route('/univers/{id}/fermeture', name: 'app_universe_closing', methods: ['GET'], requirements: ['id' => '\\d+'])]
     public function closing(int $id, GameRepository $repo, \App\Service\Universe\UniverseClosingClock $clock): Response

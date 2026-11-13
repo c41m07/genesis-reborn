@@ -3,7 +3,7 @@
 {% block body %}
 <div class="mission-report">
 {% if monitoring_context|default(null) %}<p class="admin-monitor-note">{{ monitoring_context }}</p>{% endif %}
-<a class="inline-link report-back" href="{{ report_back_url|default(path('app_combat_reports')) }}">← {{ monitoring_context|default(null) ? 'Retour à la surveillance' : 'Retour aux rapports' }}</a>
+{% include 'ui/report_back_link.html.twig' %}
 <header class="report-heading"><p class="report-eyebrow">RENSEIGNEMENTS · N° {{ report.id }}</p><h1>Rapport d’espionnage</h1><p>{{ report.target.name }} · {{ report.target.coordinates() }} · {{ report.createdAt|date('d/m/Y H:i') }}</p></header>
 <section class="panel report-summary {{ report.result == 'detected' ? 'report-summary--detected' : '' }}" role="status"><h2>{{ report.result == 'detected' ? 'Sondes détectées' : 'Renseignements obtenus' }}</h2>
 {% if report.result == 'detected' %}<p>Le propriétaire a été averti et aucun renseignement n’a été obtenu.</p>{% else %}<p>{{ report.intelCategories }} catégorie(s) de renseignements obtenue(s).</p>{% endif %}<p class="muted">{{ report.probesSent|quantity }} sonde(s) envoyée(s) · Risque de détection estimé : {{ report.detectionChance }} %</p></section>
@@ -11,7 +11,7 @@
 <section class="panel"><h2>Renseignements détaillés</h2>
 {% for category, title in {resources:'Ressources et production', buildings:'Bâtiments', research:'Recherches', fleets:'Flottes', defenses:'Défenses fixes'} %}
 {% if report.snapshot[category] is defined %}
-<section class="intel-section"><h3>{{ title }}</h3>{% set items = report.snapshot[category] %}
+<details class="intel-section"><summary><h3>{{ title }}</h3></summary>{% set items = report.snapshot[category] %}
 {% if items %}<div class="report-intel-grid">
 {% for slug, item in items %}
     {% set variants = category in ['buildings', 'research'] and item.level is not defined ? item : {single: item} %}
@@ -24,7 +24,7 @@
     {% else %}<p>Quantité : {{ variant.quantity|quantity(0) }}</p>{% endif %}
     </article>
     {% endfor %}
-{% endfor %}</div>{% else %}<p>Aucun élément détecté dans cette catégorie.</p>{% endif %}</section>
+{% endfor %}</div>{% else %}<p>Aucun élément détecté dans cette catégorie.</p>{% endif %}</details>
 {% endif %}{% endfor %}</section>{% endif %}
 </div>
 {% endblock %}

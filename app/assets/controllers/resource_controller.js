@@ -2,7 +2,7 @@ import { Controller } from '@hotwired/stimulus';
 import { exactNumber, displayQuantity } from '../quantity.js';
 
 export default class extends Controller {
-    static targets = ['stock', 'rate', 'productivity', 'meter', 'fill', 'protectedFill', 'protectedLimit'];
+    static targets = ['stock', 'capacity', 'rate', 'productivity', 'meter', 'fill', 'protectedFill', 'protectedLimit'];
     static values = { stock: Number, rate: Number, cap: Number, protectedCap: Number };
     connect() { this.started = Date.now(); this.tick(); this.timer = setInterval(() => this.tick(), 1000); }
     disconnect() { clearInterval(this.timer); }
@@ -12,6 +12,7 @@ export default class extends Controller {
         this.capValue = resource.capacity;
         this.protectedCapValue = resource.protectedCapacity;
         this.started = Date.now();
+        if(this.hasCapacityTarget) displayQuantity(this.capacityTarget,this.capValue);
         displayQuantity(this.rateTarget, Math.round(resource.rate * 3600));
         this.rateTarget.textContent = `${resource.rate >= 0 ? '+' : ''}${this.rateTarget.textContent} / h`;
         this.rateTarget.title += ' / h';

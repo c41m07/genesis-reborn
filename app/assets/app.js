@@ -44,3 +44,5 @@ import './styles/player-pages.css';
 import './styles/ranking-sort.css';
 
 import './styles/diplomacy-tabs.css';
+
+import './styles/journey.css';

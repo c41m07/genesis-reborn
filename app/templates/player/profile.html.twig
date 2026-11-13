@@ -1,6 +1,7 @@
 {% extends 'base.html.twig' %}
 {% block title %}Profil · Genesis Reborn{% endblock %}
 {% block body %}
+{% include 'ui/account_navigation.html.twig' %}
 <div class="page-refinement profile-page">
 <div class="page-heading"><div><h1>Mon profil</h1><p>Les identifiants de votre compte sont communs à tous vos univers.</p></div></div>
 <p class="profile-notice">Toute modification enregistrée ferme cette session : reconnectez-vous ensuite avec vos identifiants.</p>
@@ -12,7 +13,7 @@
     <fieldset class="account-section"><legend>Confirmer la modification</legend>{{ form_row(form.currentPassword, {help: 'Votre mot de passe actuel est nécessaire pour enregistrer le profil.'}) }}</fieldset>
     <button class="primary full">Enregistrer mon profil</button>{{ form_end(form) }}
 </section>
-<section class="panel account-panel" aria-labelledby="account-delete-title">
+<section class="panel account-panel sensitive-actions" aria-labelledby="account-delete-title">
     <h2 id="account-delete-title">Suppression du compte</h2>
     <details class="profile-delete" {% if app.request.query.get('delete') == '1' %}open{% endif %}><summary>Supprimer mon compte</summary>
     <p>Cette action est définitive et concerne tous vos univers. Vos identifiants et préférences seront effacés, votre accès fermé et vos empires convertis en empires oubliés. Vos colonies restent dans le jeu et vous ne pourrez plus les contrôler.</p>

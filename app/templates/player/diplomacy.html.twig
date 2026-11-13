@@ -6,6 +6,11 @@
 <div class="page-refinement diplomacy-page">
 <div class="page-heading"><div><h1>Diplomatie</h1><p>Votre guilde, ses membres et vos relations dans cet univers.</p></div></div>
 <nav class="alliance-tabs ui-tabs diplomacy-tabs" aria-label="Sections de diplomatie">{% for key,label in tabs %}<a href="{{ path('app_diplomacy',{tab:key}) }}"{% if tab==key %} aria-current="page" class="active"{% endif %}>{{ label }}</a>{% endfor %}</nav>
+{% if own %}<p><a class="secondary" href="{{ path('app_guild_projects') }}">Projets collectifs de ma guilde</a></p>{% endif %}
+{% set incomingPersonal = players|filter(row => row.contract and row.contract.status in ['pending','peace_pending'] and row.contract.proposer.id!=membership.id) %}
+{% if incomingPersonal %}<p class="panel"><a href="{{ path('app_diplomacy',{tab:'relations',_fragment:'alliance-members'}) }}">{{ incomingPersonal|length }} proposition{{ incomingPersonal|length > 1 ? 's' : '' }} personnelle{{ incomingPersonal|length > 1 ? 's' : '' }} à traiter</a></p>{% endif %}
+{% if own %}{% set pendingGuild=0 %}{% for row in guildRelations %}{% if row.relation and row.relation.proposer and row.relation.proposer.id!=own.id and (row.relation.proposal or row.status=='pending') %}{% set pendingGuild=pendingGuild+1 %}{% endif %}{% endfor %}
+{% if pendingGuild %}<p class="panel"><a href="{{ path('app_diplomacy',{tab:'diplomacy'}) }}">{{ pendingGuild }} proposition{{ pendingGuild > 1 ? 's' : '' }} de guilde reçue{{ pendingGuild > 1 ? 's' : '' }}</a></p>{% endif %}{% endif %}
 {% if tab=='relations' %}
 <section aria-label="Relations entre commandants">
     <div class="relation-heading"><div><h2>Relations entre commandants</h2><p>Vos alliances et propositions en cours. Une alliance personnelle nécessite l’accord des deux commandants.</p></div>

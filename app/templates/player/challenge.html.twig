@@ -2,7 +2,11 @@
 {% block title %}{{ challenge.name }} · Événement{% endblock %}
 {% block body %}
 <a class="inline-link" href="{{ path('app_game_events') }}">← Événements</a><div class="page-heading"><div><h1>{{ challenge.name }}</h1><p>{{ challenge.weekly ? 'Rotation hebdomadaire' : 'Défi collectif' }}.</p></div></div>
-<section class="panel collective-challenge"><h2>Objectif et récompense</h2>{% include 'events/_challenge_summary.html.twig' %}</section>
+<section class="panel collective-challenge"><h2>Objectif et récompense</h2>{% include 'events/_challenge_summary.html.twig' %}{% if challenge.event.status=='active' %}
+{% if challenge.event.templateKey=='exploration' %}<a class="primary" href="{{ path('app_map_v2') }}">Explorer des systèmes inconnus</a>
+{% elseif challenge.event.templateKey=='combat' %}<a class="primary" href="{{ path('app_map_v2') }}">Choisir une cible de combat</a>
+{% elseif challenge.event.templateKey=='transport' %}<a class="primary" href="{{ path('app_fleets',{mission:'transport'}) }}">Préparer un transport entre mes colonies</a><p>Choisissez une de vos propres colonies : les dons entre joueurs ne comptent pas.</p>{% endif %}{% endif %}
+</section>
 <section class="panel"><h2>Votre participation</h2>{% if challenge.event.rewardMode=='top3' %}<p>Votre classement : {{ challenge.rank ? '#'~challenge.rank : 'Non classé' }}.</p>{% endif %}<p>Contribution personnelle : <strong>{{ challenge.score|quantity(2) }}</strong></p>
 {% if challenge.earned %}<p>Récompense : {{ {available:'disponible dans votre inventaire',pending:'en attente d’une place dans votre inventaire',used:'déjà utilisée'}[challenge.earned.status]|default(challenge.earned.status) }}.</p><a class="secondary" href="{{ path('app_boosts') }}">Ouvrir mon inventaire</a>
 {% elseif challenge.event.status=='cancelled' %}<p>Ce défi a été annulé. Aucune nouvelle récompense n’est attribuée.</p>

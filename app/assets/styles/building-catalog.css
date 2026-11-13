@@ -54,3 +54,11 @@ body[data-theme="light"] .building-rank-up{color:#21633e}
 @container(max-width:340px){:is(.card--ships,.card--defenses) .building-rank-full{display:none}:is(.card--ships,.card--defenses) .building-rank-short{display:inline}}
 
 .building-rank-up .icon{width:11px;height:18px;transform:rotate(-90deg)}
+
+.catalog-condensed .building-card .catalog-card-art{display:none}
+.catalog-condensed .building-card .card-body{padding:14px}
+.catalog-condensed .building-rank-tabs{border-bottom:1px solid var(--line)}
+.catalog-condensed .building-card .catalog-card-heading h3{font-size:17px}
+.catalog-condensed .building-card .build-duration,.catalog-condensed .building-card .building-costs>span{font-size:14px}
+.catalog-condensed .building-card .building-costs small{font-size:12px}
+.building-visibility button[hidden]{display:none}

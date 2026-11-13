@@ -28,6 +28,14 @@ test('Wiki : accès, guide, sources, clavier et mobile dans les deux thèmes', a
   await expect(page.getByRole('link', { name: 'Comprendre le jeu : consulter le wiki', exact: true })).toHaveCount(0);
   await page.getByRole('link', { name: 'Consulter le wiki', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Wiki du jeu', exact: true })).toBeVisible();
+  await page.getByLabel('Rechercher dans le manuel').fill('colonisation');
+  await page.getByRole('button',{name:'Rechercher',exact:true}).click();
+  await expect(page).toHaveURL(/q=colonisation/);
+  await expect(page.locator('.wiki-chapter').first()).toContainText(/colonisation/i);
+  await page.getByLabel('Rechercher dans le manuel').fill('aucunchapitrexyz');
+  await page.getByRole('button',{name:'Rechercher',exact:true}).click();
+  await expect(page.getByText('Aucun chapitre ne correspond.',{exact:false})).toBeVisible();
+  await page.getByRole('link',{name:'Afficher tout le manuel'}).click();
   const guide = JSON.parse(readFileSync('docs/wiki.json', 'utf8'));
   for (const section of guide) {
     await expect(page.locator(`#wiki-${section.id}`)).toContainText(section.title);

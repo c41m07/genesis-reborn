@@ -1,0 +1,11 @@
+<section data-live-region="economy-balance" class="panel economy-balance" aria-labelledby="economy-title">
+<h2 id="economy-title">Bilan économique · {{ planet.name }}</h2>
+<p>Débits au rythme actuel, après les bonus, consommations et limitations de production. Les estimations changent avec les opérations, les événements et les stocks.</p>
+<div class="table-scroll" role="region" tabindex="0" aria-label="Bilan économique, défilement horizontal"><table class="data-table">
+<caption>Ressources de cette colonie</caption><thead><tr><th scope="col">Ressource</th><th scope="col">Stock / capacité</th><th scope="col">Production brute / h</th><th scope="col">Consommation / h</th><th scope="col">Solde net / h</th><th scope="col">Estimation au rythme actuel</th></tr></thead>
+<tbody>{% for slug,resource in resources %}<tr><th scope="row">{{ resource.label }}</th><td>{{ resource.stock|quantity(0) }} / {{ resource.capacity|quantity(0) }}</td><td>{{ (resource.gross*3600)|quantity(2) }}</td><td>{{ (resource.consumption*3600)|quantity(2) }}</td><td><strong>{{ (resource.rate*3600)|quantity(2) }}</strong>{% if resource.uncredited > 0 %}<br>{{ (resource.uncredited*3600)|quantity(2) }} / h non stockés{% endif %}</td><td>{% if chrome.vacation %}Suspendu pendant les vacances{% elseif resource.stock >= resource.capacity and resource.rate >= 0 %}Stockage plein{% elseif resource.estimateSeconds is not null %}{{ resource.rate > 0 ? 'Saturation' : 'Épuisement' }} : {{ duration_label(resource.estimateSeconds) }}{% else %}Stock stable{% endif %}</td></tr>{% endfor %}</tbody>
+</table></div>
+<details><summary>Sources de production et consommations</summary>
+{% for slug,resource in resources %}<h3>{{ resource.label }}</h3><ul>{% for source,rate in resource.sources %}<li>{{ source=='base' ? 'Revenu de base' : economy_buildings[source].label|default(source) }} : {{ (rate*3600)|quantity(2) }} / h</li>{% endfor %}{% for source,rate in resource.consumptionSources %}{% if rate > 0 %}<li>Consommation · {{ economy_buildings[source].label|default(source) }} : {{ (rate*3600)|quantity(2) }} / h</li>{% endif %}{% endfor %}</ul>{% endfor %}
+</details>
+</section>

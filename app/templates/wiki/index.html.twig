@@ -9,7 +9,15 @@
     <p>Commencez par les premiers chapitres ou choisissez un sujet dans le sommaire. Les règles se lisent directement ; les formules et leurs exemples se déplient à votre rythme.</p>
     <p>Les chiffres indiqués sont des références ou des exemples dont les hypothèses sont précisées. Les fiches et aperçus de votre univers donnent les coûts, bonus et durées applicables à vos actions.</p>
   </header>
-  <nav class="wiki-summary" aria-label="Sommaire du wiki">
+  <form class="panel wiki-search" method="get" action="{{ path('app_wiki') }}" role="search">
+    <label for="wiki-query">Rechercher dans le manuel</label>
+    <input id="wiki-query" name="q" type="search" maxlength="150" value="{{ query }}" placeholder="Ressources, colonisation, recherche…">
+    <button class="secondary">Rechercher</button>
+    {% if query %}<a href="{{ path('app_wiki') }}">Afficher tout le manuel</a><p role="status">{{ sections|length }} chapitre{{ sections|length > 1 ? 's' : '' }} pour « {{ query }} ».</p>{% endif %}
+  </form>
+  <a class="quiet-button wiki-summary-shortcut" href="#wiki-summary">Choisir un chapitre</a>
+  {% if sections is empty %}<p>Aucun chapitre ne correspond. Essayez un autre terme ou affichez tout le manuel.</p>{% endif %}
+  <nav id="wiki-summary" class="wiki-summary" aria-label="Sommaire du wiki">
     <h2>Sommaire</h2>
     {% set currentPart = '' %}
     {% for section in sections %}
@@ -40,7 +48,7 @@
           </div>
         </details>
       {% endfor %}
-      <a class="wiki-back" href="#wiki-top">Retour au sommaire</a>
+      <a class="wiki-back" href="#wiki-summary">Retour au sommaire</a>
     </section>
   {% endfor %}
   <footer class="wiki-sources">

@@ -4,6 +4,8 @@ import { compactNumber, exactNumber } from '../quantity.js';
 export default class extends Controller {
     static targets = ['step', 'indicator', 'counter', 'quantity', 'error', 'summary'];
 
+    static values = { origin: String };
+
     connect() {
         this.currentStep = 1;
         this.element.classList.add('fleet-wizard-ready');
@@ -61,7 +63,15 @@ export default class extends Controller {
                 const label = input.closest('label')?.querySelector('.fleet-ship-info strong')?.textContent.trim() || 'Vaisseau';
                 return compactNumber(Number(input.value)) + ' × ' + label;
             });
-        this.summaryTarget.textContent = mission + ' · ' + destination + ' · ' + ships.join(', ');
+        const cargo = [...this.element.querySelectorAll('[name^="cargo["]')]
+            .filter(input => Number(input.value) > 0)
+            .map(input => (this.element.querySelector(`label[for="${input.id}"]`)?.textContent.trim() || 'Ressource') + ' : ' + exactNumber(Number(input.value)));
+        const list = document.createElement('dl');
+        for (const [label, value] of [['Origine', this.originValue], ['Destination', destination], ['Mission', mission], ['Composition', ships.join(', ')], ['Fret chargé', cargo.join(', ') || 'Aucun']]) {
+            const entry = document.createElement('div'), term = document.createElement('dt'), description = document.createElement('dd');
+            term.textContent = label; description.textContent = value; entry.append(term, description); list.append(entry);
+        }
+        this.summaryTarget.replaceChildren(list);
         this.summaryTarget.title = this.quantityTargets.filter(input => Number(input.value) > 0).map(input => exactNumber(Number(input.value)) + ' × ' + (input.closest('label')?.querySelector('strong')?.textContent.trim() || 'Vaisseau')).join(', ');
     }
 

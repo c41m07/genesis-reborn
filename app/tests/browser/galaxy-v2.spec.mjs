@@ -58,11 +58,11 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   await expect(mainNavigation.getByRole('link', {name:'Paramètres', exact:true})).toHaveCount(0);
   await expect(mainNavigation.getByRole('link', {name:'Inventaire', exact:true})).toBeVisible();
   const menuLabels=await mainNavigation.locator('a').allTextContents();
-  await expect(mainNavigation.getByRole('link', {name:'Technologie', exact:true})).toBeVisible();
+  await expect(mainNavigation.getByRole('link', {name:'Guide technologique', exact:true})).toBeVisible();
   await expect(page.getByRole('heading', {name:'Mes planètes', exact:true})).toHaveCount(0);
   await mainNavigation.getByRole('link', {name:'Profil', exact:true}).click();
   await expect(page.getByRole('link', {name:'Paramètres', exact:true})).toBeVisible();
-  await mainNavigation.getByRole('link', {name:'Technologie', exact:true}).click();
+  await mainNavigation.getByRole('link', {name:'Guide technologique', exact:true}).click();
   await expect(page.locator('.technology-tree')).toBeVisible();
   await page.goto('/carte-v2');
   expect(menuLabels.indexOf('Rapports')).toBeLessThan(menuLabels.indexOf('Messages'));
@@ -71,10 +71,10 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   await expect(map).toBeVisible();
   await expect(page.locator('canvas.gv2-canvas--galaxy')).toBeVisible();
 
-  await expect(page.getByRole('link', {name:'Carte interactive (V2)', exact:true})).toHaveAttribute('aria-current', 'page');
-  await page.getByRole('link', {name:'Carte classique', exact:true}).click();
+  await expect(page.getByRole('link', {name:'Carte interactive', exact:true})).toHaveAttribute('aria-current', 'page');
+  await page.getByRole('link', {name:'Liste des systèmes', exact:true}).click();
   await expect(page).toHaveURL(/\/carte(?:\?.*)?$/);
-  await page.getByRole('link', {name:'Carte interactive (V2)', exact:true}).click();
+  await page.getByRole('link', {name:'Carte interactive', exact:true}).click();
   await expect(page).toHaveURL(/\/carte-v2(?:\?.*)?$/);
   await page.waitForLoadState('load');
 
@@ -203,7 +203,7 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   await expect(page.locator('.gv2-planet-panel')).toContainText(homePlanet.name);
   await expect(page.locator('.gv2-planet-panel .gv2-facts')).toContainText(homePlanet.coordinates);
 
-  await page.locator('.gv2-primary-action').click();
+  await page.getByRole('button', {name:/Vue rapprochée/}).click();
   await expect(page.locator('canvas.gv2-canvas--planet')).toHaveClass(/is-active/);
   await expect(page.locator('.gv2-planet-panel')).toBeVisible();
   const systemReturn = page.locator('.gv2-planet-panel').getByRole('button', { name: /Revenir au système/ });
@@ -219,7 +219,7 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   await page.getByRole('navigation', {name:'Navigation principale'}).getByRole('link', { name: 'Galaxie', exact: true }).click();
   await expect(page).toHaveURL(/\/carte-v2(?:\?.*)?$/);
   await expect(page.locator('.galaxy-v2')).toBeVisible();
-  await page.getByRole('link', {name:'Carte classique', exact:true}).click();
+  await page.getByRole('link', {name:'Liste des systèmes', exact:true}).click();
   await expect(page).toHaveURL(/\/carte(?:\?.*)?$/);
   await expect(page.locator('.galaxy-v2')).toHaveCount(0);
 

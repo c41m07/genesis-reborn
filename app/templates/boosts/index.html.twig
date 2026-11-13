@@ -17,8 +17,9 @@
     <progress class="boost-capacity" value="{{ boosts|length }}" max="{{ inventory_capacity }}" aria-label="Emplacements utilisés dans l’inventaire">{{ boosts|length }} / {{ inventory_capacity }}</progress>
     {% if boosts|length >= inventory_capacity %}<p class="muted">Inventaire plein. Les nouvelles récompenses sont conservées en attente.</p>{% endif %}
 </section>
+<nav class="ui-tabs" aria-label="Rubriques de l’inventaire"><a href="#inventory-boosts">Boosts ({{ boost_count }})</a><a href="#inventory-boxes">Boîtes de ressources ({{ resource_boxes|length }})</a><a href="#inventory-pending">En attente ({{ pending_boost_count }})</a></nav>
 <div class="inventory-grid">
-<section class="panel inventory-bonuses" aria-labelledby="available-bonuses-title">
+<section id="inventory-boosts" class="panel inventory-bonuses" aria-labelledby="available-bonuses-title">
     <h2 id="available-bonuses-title">Bonus disponibles</h2>
     {% if boosts is empty %}<div class="empty-state"><h3>Aucun bonus disponible</h3><p>Les récompenses de vos missions, événements et projets de guilde apparaîtront ici.</p></div>{% endif %}
     {% if boost_count > 0 %}
@@ -67,13 +68,13 @@
     {% endif %}
 </section>
 </section>
-<section class="panel inventory-boxes" aria-labelledby="inventory-boxes-title">
+<section id="inventory-boxes" class="panel inventory-boxes" aria-labelledby="inventory-boxes-title">
     <h2 id="inventory-boxes-title">Boîtes de ressources</h2>
     {% include 'boosts/_resource_boxes.html.twig' %}
     {% if resource_boxes is empty %}<p>Aucune boîte de ressources disponible.</p>{% endif %}
 </section>
 </div>
-<section class="panel inventory-pending" aria-labelledby="inventory-pending-title">
+<section id="inventory-pending" class="panel inventory-pending" aria-labelledby="inventory-pending-title">
     <div class="section-heading"><h2 id="inventory-pending-title">Récompenses en attente</h2><span class="badge">{{ pending_boost_count }}</span></div>
     {% if pending_boost_count > 0 %}<p class="boost-pending" role="status">{{ pending_boost_count }} bonus en attente. Dès qu’une place se libère, la récompense la plus ancienne rejoint votre inventaire.</p>
     {% else %}<p>Aucune récompense en attente. Les récompenses gagnées restent conservées même si l’inventaire est plein.</p>{% endif %}
