@@ -4,7 +4,7 @@
 
 Cadrage commencé le 13 novembre 2026 sur `feature/outils-strategiques-et-recherche`, depuis `dev` au commit `f3b9623`, après fusion autorisée de la [PR #54](https://github.com/c41m07/genesis-reborn/pull/54). Sa CI complète a réussi sur `e473255` : 883 tests PHP, 13 tests Python et 184 scénarios navigateur. Cela valide le lot 1, pas les fonctionnalités du lot 2.
 
-Ce premier complément contient uniquement le cadrage et les décisions produit. Le simulateur joueur, les compositions enregistrées et les filtres avancés ne sont pas encore livrés. Une PR distincte vers `dev` porte le lot 2. Aucune modification du jeu, application de migration ou fusion du lot 2 n’est effectuée dans ce cadrage.
+La PR [#55](https://github.com/c41m07/genesis-reborn/pull/55), distincte vers `dev`, contient maintenant les trois fonctionnalités. Les vérifications sont en cours ; aucune fusion ni aucun déploiement du lot 2. La migration des compositions a été appliquée uniquement à la base locale, avec accord explicite après sauvegarde et vérification d’intégrité. Aucune application sur Alpha.
 
 ## Décisions confirmées par le propriétaire
 
@@ -67,6 +67,90 @@ Privilégier une recherche SQL simple et bornée avec les outils existants. Exam
 - Interface : ordinateur/mobile, clair/sombre, clavier/focus, libellés, contenus longs, états vide/chargé/refusé ; fonctionnement sans JavaScript lorsque déjà disponible. Contrôles ciblés, sans prétendre à un audit RGAA complet.
 - Utiliser les contrôles pertinents du Makefile et `git diff --check`. Avant fusion du lot, attendre la CI complète sur le dernier commit ; la fusion de cette PR distincte reste soumise à autorisation.
 
-## Prochaine étape
+## Implémentation et utilisation
 
-Préparer la construction commune des instantanés et les scénarios de mesure du moteur, puis préciser les bornes techniques et les paramètres exposés. Concevoir ensuite les migrations et parcours de composition, puis étendre la sélection paginée des messages et rapports. Actualiser règles, wiki et guides lorsque ces fonctions sont effectivement implémentées et vérifiées.
+Le découpage ci-dessus conserve les risques et critères du cadrage. Les parcours
+implémentés sont les suivants :
+
+- `/simulateur`, accessible depuis Opérations et Flottes : deux camps, rangs,
+  recherches, défenses, forteresse, arrivée des vaisseaux au round et graine.
+  « Charger mes forces » reprend les vaisseaux disponibles d’une colonie propre.
+  Depuis un rapport d’espionnage personnel, « Simuler avec ces renseignements »
+  reprend uniquement son instantané daté. Une catégorie non révélée reste
+  inconnue ; les modifications deviennent des hypothèses identifiées.
+- `/flottes/compositions` : créer, modifier, renommer et supprimer avec CSRF,
+  propriétaire/univers, verrou sur l’empire, version optimiste et jeton de création.
+  L’écran de chargement compare demandé/disponible/manquant pour la colonie.
+  Accepter explicitement les disponibilités ouvre seulement la préparation.
+  L’empreinte refuse un chargement périmé ; aperçu et envoi refusent ensuite
+  toute réduction automatique de cette composition. Les contrôles réels de
+  mission, ressources, verrous et jetons d’envoi sont conservés.
+- `/messages/recherche` : contenu littéral, canal, interlocuteur/conversation,
+  période et pages de 50. Le résultat et son texte complet ne marquent rien lu.
+  Ouvrir la conversation normale peut la marquer lue, comme auparavant.
+- `/rapports` : type, archives, planète, participant et période avant comptage et
+  pagination. Planète = lieu du combat, cible espionnée, origine/destination
+  actuellement liées au transport. Participant = membres enregistrés du combat,
+  expéditeur du rapport d’espionnage, expéditeur/destinataire du transport.
+  Aucun nom de cible non révélé n’est déduit. Les noms conservés sont utilisés,
+  sans prétendre reconstituer leur historique. Le retour et l’archivage gardent
+  les filtres. Les bornes de dates suivent le fuseau des préférences.
+
+Le simulateur réutilise `CombatSimulator` et la fabrique de statistiques commune
+`CombatUnitFactory` avec le résolveur réel. Le calcul ne passe pas par la
+résolution qui paie les pertes et récompenses. Les informations ennemies sont
+soit celles du rapport autorisé, soit des hypothèses manuelles.
+
+### Bornes techniques et mesures locales
+
+Limites de l’interface joueur : **500 unités au total**, budget
+`unités × tirs pondérés × rounds ≤ 5 000 000`, **6 calculs/minute par compte**.
+Les tirs pondérés additionnent maximums des armes principales et secondaires,
+avec une majoration conservative pour les chances de tirs supplémentaires.
+Une requête excessive est refusée, jamais tronquée. Les limites des flottes
+réelles restent inchangées. Ces limites techniques ne sont pas un équilibrage.
+
+Mesures locales du moteur, PHP, plafond mémoire 256 Mio, unités très résistantes
+sans destruction, même graine ; elles ne constituent pas une garantie serveur :
+
+| Unités | Rounds | Configuration | Durée | Pic mémoire |
+| --- | --- | --- | --- | --- |
+| 20 | 10 | 1 tir par unité | 0,002 s | 4 Mio |
+| 200 | 10 | 1 tir par unité | 0,115 s | 4 Mio |
+| 500 | 10 | 1 tir par unité | 0,780 s | 8 Mio |
+| 1 000 | 10 | 1 tir par unité, hors limite joueur | 3,060 s | 12 Mio |
+| 500 | 10 | 2 tirs par unité, budget maximum | 1,540 s | 10 Mio |
+| 500 | 1 | 4 tirs + chances supplémentaires | 0,279 s | 6 Mio |
+
+Un essai à 5 000 unités et nombreux tirs a atteint la borne de sécurité externe
+à 55 secondes, dès un round. Ce scénario n’est pas accepté par l’interface.
+Les résultats montrent pourquoi la limite brute de 5 000 du moteur ne suffit
+pas pour exposer librement le calcul. Occupations, camps multiples,
+interventions non saisies, voyage, butin et reconstruction restent hors
+simulation ; le formulaire l’annonce avant confirmation.
+
+La recherche utilise SQL paramétré et `LIKE` avec échappement explicite de `%`,
+`_` et `!`. Les résultats/hydratations restent bornés à 50 ; le comptage et la
+recherche de sous-chaîne peuvent parcourir l’historique autorisé. Aucun index
+plein texte ni dépendance supplémentaire. Le scénario synthétique de régression
+porte sur 5 000 messages et 5 000 rapports, jusqu’à la dernière page filtrée.
+Un volume bien supérieur en production devra être mesuré avant de promettre
+une latence constante.
+
+### Migration et vérifications
+
+`Version20261113220000` crée `fleet_composition`, son index propriétaire et le
+jeton unique par propriétaire ; aucun historique de jeu n’est réécrit. Elle a
+été appliquée localement après accord, sauvegarde gzip et intégrité vérifiée
+sous `var/backups/lot2-pre-migration`. Toute application sur une autre base
+existante exige un nouvel accord et une sauvegarde vérifiée.
+
+Validation locale : `make validate`, `make lint`, `make assets` réussis ;
+`make test` : 895 tests PHP / 211 348 assertions et 13 tests Python réussis.
+Après les dernières protections et les scénarios d’historique volumineux,
+40 régressions ciblées / 288 assertions réussies. Sur la machine locale, les deux
+pages filtrées de fin d’historique (5 000 messages et 5 000 rapports) ont demandé
+0,077 s ; le plan représentatif de sous-chaîne pouvait parcourir les lignes,
+ce qui confirme la limite annoncée plutôt qu’une garantie de temps constant.
+Les contrôles navigateur et la CI sur la dernière version restent à terminer.
+La PR reste soumise à revue et accord explicite avant fusion.

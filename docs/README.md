@@ -15,7 +15,7 @@ une seule référence par sujet ; les anciens bilans ne décrivent pas l’état
 | Préparer la refonte de la console et ses récompenses | [Cadrage de l’administration, brouillon](REFONTE_ADMINISTRATION.md) |
 | Suivre les évolutions des interfaces et flottes | [Lots et décisions ouvertes](EVOLUTIONS_INTERFACES_FLOTTES.md) |
 | Consulter le lot parcours UI/UX et ses validations locales | [Suivi des parcours](PARCOURS_UI_UX.md) |
-| Préparer simulateur, compositions et recherche avancée (lot 2, non livré) | [Cadrage des outils stratégiques](CADRAGE_OUTILS_STRATEGIQUES.md) |
+| Utiliser simulateur, compositions et recherche avancée (lot 2, PR #55) | [Cadrage des outils stratégiques](CADRAGE_OUTILS_STRATEGIQUES.md) |
 | Voir les objectifs et vérifications restantes | [ROADMAP](FEUILLE_DE_ROUTE.md) |
 | Comprendre les dossiers, .env, comptes, wiki et interfaces | [ARCHITECTURE](ARCHITECTURE.md) |
 | Installer et livrer sur le serveur | [DEPLOIEMENT](DEPLOIEMENT.md) |

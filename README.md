@@ -6,7 +6,7 @@ L’orientation confirmée est une stratégie au rythme modéré ; les durées d
 
 ## État du projet
 
-- Lot 2 : [cadrage des outils stratégiques et de la recherche avancée](docs/CADRAGE_OUTILS_STRATEGIQUES.md) commencé après fusion du lot UI/UX. Les trois fonctionnalités restent à implémenter ; décisions initiales validées, PR distincte vers `dev`.
+- Lot 2 : simulateur illustratif reproductible, 20 compositions personnelles par empire/univers et recherche avancée paginée dans les messages et rapports. Implémentation dans la PR #55 vers `dev`, sans fusion ni déploiement. [Fonctionnement et limites](docs/CADRAGE_OUTILS_STRATEGIQUES.md).
 
 - Parcours : rubriques liées par des ancres dans Flottes, Inventaire, Projets et Rapports ; confirmations d’annulation avec dépendances et remboursements estimés ; retours aux rapports conservant catégorie, archives et page. Profil, Préférences et Vacances sont reliés ; l’accueil public présente des captures d’un compte de démonstration. [Suivi du lot](docs/PARCOURS_UI_UX.md).
 - Opérations : recherches, vaisseaux et défenses paient une fois `100 × ceil(durée effective / 60)` en électricité. Soit 100 E par minute entamée sur la commande entière ; un lot est arrondi une seule fois. Les accélérations ne recalculent pas le coût ; les annulations remboursent 25 % du paiement conservé, dans la place disponible. Les reconstructions automatiques suivent aussi cette règle.

@@ -1541,4 +1541,4 @@ Précision validée le 13 novembre 2026 : le coût électrique initialement appr
 
 Le propriétaire valide un résultat de simulation illustratif reproductible, sans pourcentage de victoire ni garantie. Il valide 20 compositions personnelles au maximum par empire et univers, réutilisables entre ses colonies. Le joueur pourra choisir explicitement un rapport d’espionnage encore accessible, même ancien, avec date et avertissement d’ancienneté ; les informations non révélées restent inconnues.
 
-Ces choix cadrent des fonctionnalités à réaliser ; ils ne les déclarent pas disponibles. Voir le [cadrage du lot 2](CADRAGE_OUTILS_STRATEGIQUES.md) pour les services réutilisés, risques, mesures et vérifications prévues.
+Ces choix sont implémentés dans la PR #55, sans fusion ni déploiement à ce stade. Voir le [suivi du lot 2](CADRAGE_OUTILS_STRATEGIQUES.md) pour les services réutilisés, limites techniques et vérifications. La limite technique du simulateur ne modifie pas les limites des flottes réelles.

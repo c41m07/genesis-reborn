@@ -1491,14 +1491,18 @@ de trois messages vérifié ; départ/dissolution directement visibles selon le 
 Tests ciblés réussis ; CI complète sur cette dernière version avant fusion.
 
 
-## Lot 2 — Cadrage des outils stratégiques
+## Lot 2 — Outils stratégiques et recherche avancée
 
-Le lot UI/UX est fusionné dans `dev` par la PR #54, après CI complète réussie sur `e473255`. Le lot 2 part de `f3b9623` sur `feature/outils-strategiques-et-recherche`, dans une PR distincte. À ce stade, seul le cadrage est rédigé ; aucune de ses trois fonctionnalités n’est livrée.
+Le lot UI/UX est fusionné dans `dev` par la PR #54. Le lot 2 part de `f3b9623`
+sur `feature/outils-strategiques-et-recherche`, dans la PR #55 distincte.
+Implémentation en cours de vérification, sans fusion ni déploiement.
 
 | Sous-tâche | Complexité | État |
 | --- | --- | --- |
-| Simulateur réutilisant le moteur réel | 5/5 | Instantanés, paramètres exposés et mesures de charge à préparer ; résultat illustratif reproductible validé. |
-| Compositions personnelles | 4/5 | Plafond de 20 par empire/univers validé ; modèle, migration et parcours à réaliser. |
-| Recherche avancée messages/rapports | 4/5 | Services et effets de lecture repérés ; requêtes paginées sans effet sur les non-lus à réaliser. |
+| Simulateur réutilisant le moteur réel | 5/5 | Résultat illustratif reproductible, forces propres et rapport daté, hypothèses et calcul borné implémentés. |
+| Compositions personnelles | 4/5 | CRUD, plafond verrouillé de 20, versions et chargement explicite avec manques implémentés. Migration locale autorisée après sauvegarde vérifiée. |
+| Recherche avancée messages/rapports | 4/5 | Sélection SQL par droits/univers, filtres, pagination et conservation du contexte implémentés. |
 
-Voir le [cadrage détaillé](CADRAGE_OUTILS_STRATEGIQUES.md) et les décisions validées. Aucune migration ni aucun déploiement dans ce premier complément documentaire.
+Voir le [suivi détaillé](CADRAGE_OUTILS_STRATEGIQUES.md) et les décisions validées.
+La CI complète sur la dernière version et l’accord du propriétaire restent
+nécessaires avant fusion. Aucune migration Alpha effectuée.
