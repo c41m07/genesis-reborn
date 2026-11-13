@@ -46,3 +46,5 @@ import './styles/ranking-sort.css';
 import './styles/diplomacy-tabs.css';
 
 import './styles/journey.css';
+
+import './styles/approved-pages.css';

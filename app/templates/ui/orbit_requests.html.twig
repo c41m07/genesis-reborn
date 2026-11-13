@@ -1,5 +1,7 @@
 <section class="panel" data-live-region="orbit-requests" data-controller="orbit-requests" data-orbit-requests-now-value="{{ 'now'|date('c') }}" aria-labelledby="orbit-requests-title">
     <div class="section-heading"><h2 id="orbit-requests-title">Demandes d’orbite</h2></div>
+    <details data-orbit-requests-target="details" {% if orbit_requests is not empty %}open{% endif %}><summary>Demandes en cours : <span data-orbit-requests-target="count">{{ orbit_requests|length }}</span></summary>
     <p>Alliés : accord automatique. Joueurs neutres : réponse avant l’arrivée. Sans accord valide, la flotte rentre. Une flotte acceptée défend la planète pendant son orbite.</p>
     <div data-orbit-requests-target="content">{% include 'ui/orbit_requests_list.html.twig' %}</div>
+    </details>
 </section>
