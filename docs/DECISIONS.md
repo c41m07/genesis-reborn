@@ -1549,8 +1549,13 @@ Le propriétaire demande les informations de fonctionnement de l’usine qui pro
 la ressource : production brute potentielle, production actuelle sous contraintes,
 besoins bruts et actuels en électricité et hydrogène séparés, délai de saturation
 et solde net effectivement stocké. Les besoins bruts et le potentiel restent
-visibles même lorsque le stockage plein suspend l’usine. L’utilisation de ce
-stock comme intrant d’autres usines est une information distincte, repliable.
+visibles même lorsque le stockage plein suspend l’usine. Les fiches suivent l’ordre stock, production brute, production actuelle,
+consommation brute, consommation actuelle, solde net puis délai estimé. Les
+lignes de consommation indiquent les besoins pour produire la ressource, de
+façon uniforme pour toutes les usines. Les fiches électricité et hydrogène
+ajoutent le récapitulatif des usines qui prélèvent dans ce stock et son total
+brut/actuel, distinct des besoins de leur propre production. La liste des sources de production et
+les explications répétées sont retirées de l’infobulle.
 
 Ce complément est un affichage en lecture seule, sans nouvelle formule métier ni
 modification des prélèvements : les besoins théoriques réutilisent les entrées du
@@ -1558,3 +1563,14 @@ moteur ; les valeurs actuelles et le solde proviennent de sa simulation. Le sold
 affiché devient nul dès que le compteur atteint la capacité ou épuise un stock
 consommé, puis le bandeau
 demande un instantané serveur pour actualiser le fonctionnement des usines.
+
+
+### Retouches des parcours et de la messagerie
+
+Un lien direct vers un bâtiment, une recherche, un vaisseau ou une défense doit
+révéler le bon rang et le repérer par un cadre jaune pendant cinq secondes.
+L’animation est désactivée avec la préférence de mouvements réduits ; le repère
+reste fixe. Les événements restent visibles au défilement sur ordinateur, sous
+les ressources, sans superposer les activités et flottes des catalogues.
+Le signalement des messages reçus conserve son formulaire et ses permissions ;
+son triangle est placé à droite, hors du cadre de la bulle.

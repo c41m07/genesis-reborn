@@ -105,6 +105,10 @@ final class ResourceBalanceTest extends KernelTestCase
         self::assertEqualsWithDelta(360,$active['antimatter']['productionInputs']['hydrogen']['gross']*3600,1e-7);
         foreach($active['antimatter']['productionInputs'] as $input) self::assertSame($input['gross'],$input['actual']);
         self::assertNotNull($active['metal']['estimateSeconds']);
+        self::assertEqualsWithDelta(360,$active['electricity']['consumptionPotential']*3600,1e-7);
+        self::assertEqualsWithDelta(360,$active['hydrogen']['consumptionPotential']*3600,1e-7);
+        self::assertArrayHasKey('mine_antimatter',$active['hydrogen']['consumerSources']);
+        self::assertArrayHasKey('mine_metal',$active['electricity']['consumerSources']);
         foreach(['metal','antimatter'] as $slug) $rows[$slug]->currentStock=10000;
         $this->em->flush();$full=$resources->snapshot($planet,true);
         foreach(['metal','antimatter'] as $slug) {
@@ -112,6 +116,8 @@ final class ResourceBalanceTest extends KernelTestCase
             self::assertSame(0.0,$full[$slug]['rate']);self::assertNull($full[$slug]['estimateSeconds']);
             foreach($full[$slug]['productionInputs'] as $fuel=>$input) {self::assertSame($active[$slug]['productionInputs'][$fuel]['gross'],$input['gross']);self::assertSame(0.0,$input['actual']);}
         }
+        self::assertSame($active['electricity']['consumptionPotential'],$full['electricity']['consumptionPotential']);
+        self::assertSame(0.0,$full['electricity']['consumerSources']['mine_metal']['actual']);
         foreach($rows as $row) $row->currentStock=0;
         $this->em->flush();$shortage=$resources->snapshot($planet,true);
         self::assertEqualsWithDelta(46,$shortage['metal']['rate']*3600,1e-7);

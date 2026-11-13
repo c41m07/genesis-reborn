@@ -103,7 +103,7 @@ final class GameplayAccessTest extends WebTestCase
         $data=json_decode($this->client->getResponse()->getContent(),true,512,JSON_THROW_ON_ERROR);
         self::assertStringContainsString('private',$this->client->getResponse()->headers->get('Cache-Control'));
         foreach(['metal','nano','hydrogen','antimatter','electricity'] as $slug) {
-            foreach(['gross','consumption','sources','consumptionSources','estimateSeconds','potentialGross','potentialSources','productionInputs'] as $field) self::assertArrayHasKey($field,$data[$slug]);
+            foreach(['gross','consumption','sources','consumptionSources','estimateSeconds','potentialGross','potentialSources','productionInputs','consumptionPotential','consumerSources'] as $field) self::assertArrayHasKey($field,$data[$slug]);
         }
         self::assertGreaterThan(0,$data['metal']['sources']['base']);
         foreach(['electricity','antimatter','hydrogen'] as $slug) self::assertEqualsWithDelta(0,$data[$slug]['sources']['base'],1e-9);
