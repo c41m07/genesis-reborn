@@ -92,6 +92,36 @@ final class ResourceBalanceTest extends KernelTestCase
         self::assertEqualsWithDelta(10,$snapshot['metal']['sources']['base']*3600,1e-7);
     }
 
+    public function testGrossProductionAndInputsRemainVisibleAcrossSaturationAndShortages(): void
+    {
+        $planet=$this->planet();$resources=self::getContainer()->get(ResourceService::class);$rows=$this->rows($planet);
+        foreach(['mine_metal','mine_antimatter'] as $slug) {$building=new PlanetBuilding();$building->planet=$planet;$building->slug=$slug;$building->level=1;$this->em->persist($building);}
+        foreach($rows as $row) $row->currentStock=in_array($row->resourceType,['electricity','hydrogen'],true)?5000:0;
+        $this->em->flush();$active=$resources->snapshot($planet,true);
+        self::assertEqualsWithDelta(370,$active['metal']['potentialGross']*3600,1e-7);
+        self::assertEqualsWithDelta(370,$active['metal']['gross']*3600,1e-7);
+        self::assertEqualsWithDelta(90,$active['antimatter']['potentialGross']*3600,1e-7);
+        self::assertEqualsWithDelta(180,$active['antimatter']['productionInputs']['electricity']['gross']*3600,1e-7);
+        self::assertEqualsWithDelta(360,$active['antimatter']['productionInputs']['hydrogen']['gross']*3600,1e-7);
+        foreach($active['antimatter']['productionInputs'] as $input) self::assertSame($input['gross'],$input['actual']);
+        self::assertNotNull($active['metal']['estimateSeconds']);
+        foreach(['metal','antimatter'] as $slug) $rows[$slug]->currentStock=10000;
+        $this->em->flush();$full=$resources->snapshot($planet,true);
+        foreach(['metal','antimatter'] as $slug) {
+            self::assertSame($active[$slug]['potentialGross'],$full[$slug]['potentialGross']);
+            self::assertSame(0.0,$full[$slug]['rate']);self::assertNull($full[$slug]['estimateSeconds']);
+            foreach($full[$slug]['productionInputs'] as $fuel=>$input) {self::assertSame($active[$slug]['productionInputs'][$fuel]['gross'],$input['gross']);self::assertSame(0.0,$input['actual']);}
+        }
+        foreach($rows as $row) $row->currentStock=0;
+        $this->em->flush();$shortage=$resources->snapshot($planet,true);
+        self::assertEqualsWithDelta(46,$shortage['metal']['rate']*3600,1e-7);
+        self::assertSame(0.0,$shortage['antimatter']['gross']);
+        self::assertSame($active['metal']['potentialGross'],$shortage['metal']['potentialGross']);
+        self::assertSame($active['antimatter']['productionInputs']['hydrogen']['gross'],$shortage['antimatter']['productionInputs']['hydrogen']['gross']);
+        self::assertSame(0.0,$shortage['antimatter']['productionInputs']['hydrogen']['actual']);
+        self::assertArrayNotHasKey('productionInputs',$resources->snapshot($planet)['antimatter']);
+    }
+
     public function testOfflinePeriodUsesCurrentRatesWithoutAnActivationDate(): void
     {
         $planet=$this->planet();$resources=self::getContainer()->get(ResourceService::class);

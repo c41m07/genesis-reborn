@@ -1542,3 +1542,19 @@ Précision validée le 13 novembre 2026 : le coût électrique initialement appr
 Le propriétaire valide un résultat de simulation illustratif reproductible, sans pourcentage de victoire ni garantie. Il valide 20 compositions personnelles au maximum par empire et univers, réutilisables entre ses colonies. Le joueur pourra choisir explicitement un rapport d’espionnage encore accessible, même ancien, avec date et avertissement d’ancienneté ; les informations non révélées restent inconnues.
 
 Ces choix sont implémentés dans la PR #55, sans fusion ni déploiement à ce stade. Voir le [suivi du lot 2](CADRAGE_OUTILS_STRATEGIQUES.md) pour les services réutilisés, limites techniques et vérifications. La limite technique du simulateur ne modifie pas les limites des flottes réelles.
+
+### Précision du bilan par ressource — production et besoins bruts
+
+Le propriétaire demande les informations de fonctionnement de l’usine qui produit
+la ressource : production brute potentielle, production actuelle sous contraintes,
+besoins bruts et actuels en électricité et hydrogène séparés, délai de saturation
+et solde net effectivement stocké. Les besoins bruts et le potentiel restent
+visibles même lorsque le stockage plein suspend l’usine. L’utilisation de ce
+stock comme intrant d’autres usines est une information distincte, repliable.
+
+Ce complément est un affichage en lecture seule, sans nouvelle formule métier ni
+modification des prélèvements : les besoins théoriques réutilisent les entrées du
+moteur ; les valeurs actuelles et le solde proviennent de sa simulation. Le solde
+affiché devient nul dès que le compteur atteint la capacité ou épuise un stock
+consommé, puis le bandeau
+demande un instantané serveur pour actualiser le fonctionnement des usines.

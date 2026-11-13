@@ -18,7 +18,7 @@
             {% endif %}
         {% endfor %}
     </div>
-    <div id="resource-details" class="resource-details" data-action="resource:stock->resource-strip#updateSummary">
+    <div id="resource-details" class="resource-details" data-action="resource:stock->resource-strip#updateSummary resource:boundary->resource-strip#refresh">
     {% for slug in ['metal','nano','hydrogen','antimatter','electricity'] %}
         {% set r=chrome.resources[slug]|default(null) %}
         {% if r %}
