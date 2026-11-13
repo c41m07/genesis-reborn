@@ -30,6 +30,7 @@ export default class extends Controller {
         });
         this.update();
         if (!previous || previous.followedHash !== location.hash) this.followHash();
+        this.restoreHighlight();
     }
 
     toggleLocked(event) {
@@ -92,13 +93,36 @@ export default class extends Controller {
         this.activate(tab);
         this.state.followedHash = location.hash;
         const panel = document.getElementById(tab.hash.slice(1));
-        panel?.scrollIntoView({ block: 'nearest' });
+        if (panel) {
+            this.state.highlight = { slug: tab.closest('[data-slug]').dataset.slug, until: Date.now() + 5000 };
+            this.restoreHighlight();
+            requestAnimationFrame(() => {
+                if (!panel.isConnected) return;
+                const bars = [...document.querySelectorAll('.topbar, .resource-event-stack, .event-drawer-wrap')].filter(bar => ['fixed','sticky'].includes(getComputedStyle(bar).position));
+                const top = Math.max(0, ...bars.map(bar => bar.getBoundingClientRect().bottom));
+                const family = panel.closest('[data-slug]');
+                window.scrollTo({ top: window.scrollY + family.getBoundingClientRect().top - top - 16, behavior: 'instant' });
+            });
+        }
         if (new URLSearchParams(location.search).get('focusItem') === '1') {
             requestAnimationFrame(() => {
                 if (tab.isConnected) tab.focus({ preventScroll: true });
             });
         }
     }
+
+    restoreHighlight() {
+        clearTimeout(this.highlightTimer);
+        const highlight = this.state.highlight;
+        const remaining = (highlight?.until ?? 0) - Date.now();
+        this.familyTargets.forEach(family => family.classList.toggle('catalog-card--targeted', remaining > 0 && family.dataset.slug === highlight.slug));
+        if (remaining > 0) this.highlightTimer = setTimeout(() => {
+            this.familyTargets.forEach(family => family.classList.remove('catalog-card--targeted'));
+            this.state.highlight = null;
+        }, remaining);
+    }
+
+    disconnect() { clearTimeout(this.highlightTimer); }
 
     update() {
         this.element.classList.toggle('catalog-condensed', !!this.state.compact);

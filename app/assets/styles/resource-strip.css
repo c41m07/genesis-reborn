@@ -106,3 +106,10 @@ body[data-theme="light"] .event-drawer-link,body[data-theme="light"] .event-draw
 .resource-economy li{margin:6px 0;overflow-wrap:anywhere}
 .resource-economy .resource-economy-estimate{margin:14px 0 4px;color:var(--text);font-weight:700}
 .resource-economy-close{width:44px;min-height:44px;flex-shrink:0;border:0;background:transparent;color:var(--text);font-size:24px}
+
+.app-frame:has(>.event-drawer-wrap){--event-drawer-height:54px}
+@media(min-width:1251px){.authenticated .event-drawer-wrap{position:sticky;top:calc(var(--topbar-height,68px) + var(--resource-stack-height,88px));z-index:21}}
+
+.resource-economy .resource-economy-cost-row,.resource-economy .resource-economy-net{margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.resource-economy .economy-input-values{list-style:none;padding:0;margin:0;text-align:right}.resource-economy .economy-input-values li{margin:0}
+.resource-economy-consumers{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:12px;margin-top:14px}.resource-economy-consumers caption{text-align:left;font-weight:700;padding:0 0 8px;color:var(--text)}.resource-economy-consumers th,.resource-economy-consumers td{padding:7px 4px;border-bottom:1px solid var(--line);text-align:right}.resource-economy-consumers th:first-child{text-align:left;overflow-wrap:anywhere}.resource-economy-consumers td{white-space:nowrap}.resource-economy-consumers thead th{font-size:11px}.resource-economy details{margin-top:12px}.resource-economy summary{cursor:pointer}
