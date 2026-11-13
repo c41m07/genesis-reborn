@@ -1552,7 +1552,10 @@ et solde net effectivement stocké. Les besoins bruts et le potentiel restent
 visibles même lorsque le stockage plein suspend l’usine. Les fiches suivent l’ordre stock, production brute, production actuelle,
 consommation brute, consommation actuelle, solde net puis délai estimé. Les
 lignes de consommation indiquent les besoins pour produire la ressource, de
-façon uniforme pour toutes les usines. Les fiches électricité et hydrogène
+façon uniforme pour les usines. Pour l’électricité, les consommations brute et
+actuelle affichent chacune un total, sans ventilation par ressource produite ;
+le détail par usine est repliable. La ligne « Non stocké / h » est retirée de
+l’affichage, sans changer le calcul de saturation. Les fiches électricité et hydrogène
 ajoutent le récapitulatif des usines qui prélèvent dans ce stock et son total
 brut/actuel, distinct des besoins de leur propre production. La liste des sources de production et
 les explications répétées sont retirées de l’infobulle.

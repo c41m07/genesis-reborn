@@ -2,7 +2,7 @@ import { Controller } from '@hotwired/stimulus';
 import { exactNumber, displayQuantity } from '../quantity.js';
 
 export default class extends Controller {
-    static targets = ['stock', 'capacity', 'rate', 'productivity', 'meter', 'fill', 'protectedFill', 'protectedLimit', 'economyStock', 'economyCapacity', 'gross', 'net', 'uncredited', 'uncreditedRow', 'estimate', 'potential', 'inputsGross', 'inputsActual', 'consumers', 'consumerGrossTotal', 'consumerActualTotal'];
+    static targets = ['stock', 'capacity', 'rate', 'productivity', 'meter', 'fill', 'protectedFill', 'protectedLimit', 'economyStock', 'economyCapacity', 'gross', 'net', 'estimate', 'potential', 'inputsGross', 'inputsActual', 'consumers', 'consumerGrossTotal', 'consumerActualTotal'];
     static values = { stock: Number, rate: Number, cap: Number, protectedCap: Number, estimateSeconds: { type: Number, default: -1 }, vacation: Boolean, sourceLabels: Object };
     connect() { this.started = Date.now(); this.tick(); this.timer = setInterval(() => this.tick(), 1000); }
     disconnect() { clearInterval(this.timer); }
@@ -17,11 +17,14 @@ export default class extends Controller {
         if (resource.gross !== undefined && this.hasGrossTarget) {
             if (this.hasPotentialTarget && resource.potentialGross !== undefined) this.potentialTarget.textContent = exactNumber(resource.potentialGross * 3600, 2);
             this.grossTarget.textContent = exactNumber(resource.gross * 3600, 2);
-            this.uncreditedTarget.textContent = exactNumber(resource.uncredited * 3600, 2);
-            this.uncreditedRowTarget.hidden = resource.uncredited <= 0;
-            const inputs = Object.values(resource.productionInputs ?? {});
-            if (this.hasInputsGrossTarget) this.renderInputValues(this.inputsGrossTarget, inputs, 'gross');
-            if (this.hasInputsActualTarget) this.renderInputValues(this.inputsActualTarget, inputs, 'actual');
+            if (this.element.dataset.resourceSlug === 'electricity') {
+                if (this.hasInputsGrossTarget) this.inputsGrossTarget.textContent = exactNumber((resource.consumptionPotential ?? 0) * 3600, 2);
+                if (this.hasInputsActualTarget) this.inputsActualTarget.textContent = exactNumber(resource.consumption * 3600, 2);
+            } else {
+                const inputs = Object.values(resource.productionInputs ?? {});
+                if (this.hasInputsGrossTarget) this.renderInputValues(this.inputsGrossTarget, inputs, 'gross');
+                if (this.hasInputsActualTarget) this.renderInputValues(this.inputsActualTarget, inputs, 'actual');
+            }
             if (this.hasConsumersTarget) {
                 this.renderConsumers(resource.consumerSources ?? {});
                 this.consumerGrossTotalTarget.textContent = exactNumber((resource.consumptionPotential ?? 0) * 3600, 2);
