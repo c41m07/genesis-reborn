@@ -1536,3 +1536,9 @@ Les coûts payés sont figés avec la commande. Une accélération ultérieure n
 Les aperçus et maxima constructibles utilisent le même calculateur que les prélèvements serveur. Les commandes déjà enregistrées gardent leurs coûts payés : aucune taxe rétroactive ni migration. L’[étude chiffrée](ETUDE_COUT_ELECTRIQUE.md) conserve les hypothèses et les risques de blocage des gros lots.
 
 Précision validée le 13 novembre 2026 : le coût électrique initialement approuvé à 1 E par minute entamée est multiplié par 100. L’arrondi porte toujours une seule fois sur la durée entière de la commande, avant multiplication. Une commande de 60 s paie 100 E ; 61 s paient 200 E. Les coûts déjà payés ne sont pas recalculés rétroactivement.
+
+### Outils stratégiques — cadrage du lot 2, décisions du 13 novembre 2026
+
+Le propriétaire valide un résultat de simulation illustratif reproductible, sans pourcentage de victoire ni garantie. Il valide 20 compositions personnelles au maximum par empire et univers, réutilisables entre ses colonies. Le joueur pourra choisir explicitement un rapport d’espionnage encore accessible, même ancien, avec date et avertissement d’ancienneté ; les informations non révélées restent inconnues.
+
+Ces choix cadrent des fonctionnalités à réaliser ; ils ne les déclarent pas disponibles. Voir le [cadrage du lot 2](CADRAGE_OUTILS_STRATEGIQUES.md) pour les services réutilisés, risques, mesures et vérifications prévues.

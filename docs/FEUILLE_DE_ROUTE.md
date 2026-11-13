@@ -1489,3 +1489,16 @@ Dernières retouches locales : bulles sans croix avec fermeture automatique ;
 adhésion dans un onglet distinct ; trois actions de guilde regroupées ; aperçu
 de trois messages vérifié ; départ/dissolution directement visibles selon le rôle.
 Tests ciblés réussis ; CI complète sur cette dernière version avant fusion.
+
+
+## Lot 2 — Cadrage des outils stratégiques
+
+Le lot UI/UX est fusionné dans `dev` par la PR #54, après CI complète réussie sur `e473255`. Le lot 2 part de `f3b9623` sur `feature/outils-strategiques-et-recherche`, dans une PR distincte. À ce stade, seul le cadrage est rédigé ; aucune de ses trois fonctionnalités n’est livrée.
+
+| Sous-tâche | Complexité | État |
+| --- | --- | --- |
+| Simulateur réutilisant le moteur réel | 5/5 | Instantanés, paramètres exposés et mesures de charge à préparer ; résultat illustratif reproductible validé. |
+| Compositions personnelles | 4/5 | Plafond de 20 par empire/univers validé ; modèle, migration et parcours à réaliser. |
+| Recherche avancée messages/rapports | 4/5 | Services et effets de lecture repérés ; requêtes paginées sans effet sur les non-lus à réaliser. |
+
+Voir le [cadrage détaillé](CADRAGE_OUTILS_STRATEGIQUES.md) et les décisions validées. Aucune migration ni aucun déploiement dans ce premier complément documentaire.
