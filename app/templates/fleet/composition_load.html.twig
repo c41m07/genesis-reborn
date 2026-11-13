@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+{% block title %}Charger {{ composition.name }} · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="strategic-page"><div class="page-heading"><h1>Charger {{ composition.name }}</h1><a class="secondary" href="{{ path('app_fleet_compositions') }}">Mes compositions</a></div>
+<form class="panel" method="get"><label for="composition-origin">Colonie de départ</label><select id="composition-origin" name="origin">{% for world in planets %}<option value="{{ world.id }}" {{ planet and planet.id==world.id ? 'selected' : '' }}>{{ world.name }}</option>{% endfor %}</select><button class="secondary">Vérifier cette colonie</button></form>
+{% if plan %}<section class="panel"><h2>Disponibilités de {{ planet.name }}</h2><div class="table-scroll" tabindex="0" role="region" aria-label="Tableau défilant horizontalement"><table class="data-table"><thead><tr><th>Vaisseau</th><th>Demandé</th><th>Chargeable</th><th>Manquant</th></tr></thead><tbody>{% for row in plan.rows %}<tr><th scope="row">{{ catalog[row.slug].label|default(row.slug) }} · {{ {basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'}[row.tier] }}</th><td>{{ row.requested|quantity(0) }}</td><td>{{ row.available|quantity(0) }}</td><td>{{ row.missing|quantity(0) }}</td></tr>{% endfor %}</tbody></table></div>
+<p>Le chargement prépare le formulaire de mission. L’envoi demandera toujours une vérification et une confirmation distinctes.</p>
+{% if plan.missing %}<p role="status">Des vaisseaux manquent. Vous pouvez modifier la composition ou accepter explicitement les quantités disponibles.</p>{% endif %}
+{% if plan.available %}<a class="primary" href="{{ path('app_fleets',{composition:composition.id,origin:planet.id,confirmation:plan.fingerprint,adjust:plan.missing?'1':'0'}) }}">{{ plan.missing ? 'Accepter les quantités disponibles et préparer' : 'Charger exactement cette composition' }}</a>{% else %}<p>Aucun vaisseau de cette composition n’est disponible ici. <a href="{{ path('app_colony',{id:planet.id,section:'ships'}) }}">Construire au chantier spatial</a></p>{% endif %}
+</section>{% endif %}</div>
+{% endblock %}

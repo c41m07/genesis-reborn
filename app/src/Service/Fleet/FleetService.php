@@ -59,6 +59,7 @@ final class FleetService
         $techLevels=$this->repo->levelsByTier(PlayerTechnology::class,['playerUniverse'=>$m]);
         $ships=$this->technologyEffects->applyToShips($ships,$techLevels,$m->universe);
         $quote=$this->calculator->quote($this->coords($origin->solarSystem,$origin->position),$this->coords($system,$target instanceof Planet?$target->position:null),$ships,$ratio,$config['multipliers']['travel_time'],$this->catalog->rules()['fuel_ratio_policy'],$windowHours);
+        $shipsAdjusted=$adjusted;
         $requestedCargo=[];
         foreach($cargo as $resource=>$amount) {
             if(!array_key_exists($resource,$this->catalog->rules()['resources'])) throw new \DomainException('Ressource inconnue.');
@@ -80,7 +81,7 @@ final class FleetService
         }
         $maximum=[];$loaded=array_sum($freight);
         foreach($available as $resource=>$amount) $maximum[$resource]=(int)min($amount,max(0,floor($quote['freight_capacity']-$loaded+($freight[$resource]??0))));
-        return $quote+['movement_ships'=>$ships,'target'=>$target,'system'=>$system,'composition'=>$valid,'freight'=>$freight,'idle'=>$idle,'cargo_available'=>$available,'cargo_maximum'=>$maximum,'ship_available'=>$stock,'adjusted'=>$adjusted];
+        return $quote+['movement_ships'=>$ships,'target'=>$target,'system'=>$system,'composition'=>$valid,'freight'=>$freight,'idle'=>$idle,'cargo_available'=>$available,'cargo_maximum'=>$maximum,'ship_available'=>$stock,'ship_adjusted'=>$shipsAdjusted,'adjusted'=>$adjusted];
     }
 
     private function planetLimit(PlayerUniverse $membership,array $config): int
@@ -96,14 +97,15 @@ final class FleetService
         return $this->manager->transaction(function()use($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$orbitHours){
             $this->guard->lock($m,$origin);$this->queues->synchronize($m);
             $q=$this->quote($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$orbitHours);
-            return ['arrival_at'=>$this->clock->now()->modify('+'.$q['seconds'].' seconds')->format(DATE_ATOM)]+array_intersect_key($q,array_flip(['distance','normal_distance','hyper_distance','seconds','one_way_fuel','orbit_fuel','total_fuel','fuel_capacity','cargo_capacity','freight_capacity','composition','freight','cargo_available','cargo_maximum','ship_available','adjusted']));
+            return ['arrival_at'=>$this->clock->now()->modify('+'.$q['seconds'].' seconds')->format(DATE_ATOM)]+array_intersect_key($q,array_flip(['distance','normal_distance','hyper_distance','seconds','one_way_fuel','orbit_fuel','total_fuel','fuel_capacity','cargo_capacity','freight_capacity','composition','freight','cargo_available','cargo_maximum','ship_available','ship_adjusted','adjusted']));
         });
     }
-    public function send(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo,string $key,float $orbitHours=0): bool
+    public function send(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo,string $key,float $orbitHours=0,bool $requireExactComposition=false): bool
     {
-        return $this->manager->transaction(function()use($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$key,$orbitHours){
+        return $this->manager->transaction(function()use($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$key,$orbitHours,$requireExactComposition){
             $this->guard->lock($m,$origin);$this->queues->synchronize($m);if(!$this->guard->receipt($m,$key)) return false;
             $q=$this->quote($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$orbitHours);
+            if($requireExactComposition && $q['ship_adjusted']) throw new \DomainException('La composition n’est plus disponible exactement. Vérifiez à nouveau les quantités avant envoi.');
             if($q['target'] instanceof Planet) $this->manager->lock($q['target']);
             if($mission==='transport') { if(!$q['target']->owner) throw new \DomainException('Cette planète n’accepte plus vos transports.');$this->manager->lock($q['target']->owner->player);if(!$this->transports->canReceive($m,$q['target'])) throw new \DomainException('Cette planète n’accepte plus vos transports.'); }
             $costs=$q['freight'];$costs['hydrogen']=($costs['hydrogen']??0)+$q['total_fuel'];$this->resources->consume($origin,$costs);
