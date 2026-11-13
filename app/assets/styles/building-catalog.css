@@ -74,3 +74,6 @@ body[data-theme="light"] .building-rank-up{color:#21633e}
  .building-card .building-costs:has(>span:nth-child(5)) .cost-label-full{display:none}
  .building-card .building-costs:has(>span:nth-child(5)) .cost-label-short{display:inline;white-space:nowrap}
 }
+
+.catalog-condensed .building-card .building-costs:has(>span:nth-child(5))>span{font-size:clamp(11px,3.4cqi,14px)}
+.catalog-condensed .building-card .building-costs:has(>span:nth-child(5)) small{font-size:clamp(10px,3cqi,12px)}

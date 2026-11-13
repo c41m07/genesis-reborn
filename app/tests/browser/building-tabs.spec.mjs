@@ -241,6 +241,26 @@ test('Recherche, chantier et défenses partagent les onglets et préservent leur
             expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
             if (group === 'ships') await family.screenshot({path:`output/playwright/couts-cinq-ressources-${width}.png`});
         }
+        if (group === 'ships') {
+            const condensedToggle = page.getByRole('switch', { name: 'Vue condensée' });
+            await condensedToggle.click();
+            await expect(condensedToggle).toHaveAttribute('aria-checked', 'true');
+            const costValues = panel('superior').locator('.building-costs > span > span');
+            const originalAmounts = await costValues.evaluateAll(values => values.map(value => value.firstChild.textContent));
+            await costValues.evaluateAll(values => values.forEach(value => { value.firstChild.textContent = '999,99 M'; }));
+            for (const width of [320, 390, 1440, 1920]) {
+                await page.setViewportSize({ width, height: 1000 });
+                const sizes = await costValues.evaluateAll(values => values.map(value => ({
+                    amount: value.getBoundingClientRect().width,
+                    column: value.parentElement.getBoundingClientRect().width,
+                    top: Math.round(value.parentElement.getBoundingClientRect().top),
+                })));
+                expect(new Set(sizes.map(size => size.top)).size).toBe(1);
+                expect(sizes.every(size => size.amount <= size.column + 1), `Coûts longs sans chevauchement en vue condensée à ${width} px`).toBe(true);
+            }
+            await costValues.evaluateAll((values, amounts) => values.forEach((value, index) => { value.firstChild.textContent = amounts[index]; }), originalAmounts);
+            await condensedToggle.click();
+        }
         await tab('basic').click();
         await page.setViewportSize({ width: 1920, height: 1000 });
         await page.screenshot({ path: `output/playwright/catalogue-${group}-tabs.png`, fullPage: true });
