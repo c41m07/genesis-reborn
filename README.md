@@ -6,6 +6,8 @@ L’orientation confirmée est une stratégie au rythme modéré ; les durées d
 
 ## État du projet
 
+- Navigation : les raccourcis « Explorer la galaxie » ouvrent la carte interactive ; la liste des systèmes reste accessible. Le guide technologique se trouve dans Développement et les événements restent accessibles depuis Opérations, même sans événement actif.
+
 **L’Alpha est hébergée, selon le propriétaire.** Son URL publique, sa version exécutée et sa configuration serveur restent à confirmer. Les changements intégrés à `dev` ne sont pas déclarés déployés : consulter [l’état du déploiement](docs/DEPLOIEMENT.md).
 
 Le code comprend :
