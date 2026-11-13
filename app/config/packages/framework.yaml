@@ -4,6 +4,10 @@ framework:
     disallow_search_engine_index: false
     csrf_protection: true
     rate_limiter:
+        combat_simulation:
+            policy: sliding_window
+            limit: 6
+            interval: '1 minute'
         social_message:
             policy: sliding_window
             limit: 10
