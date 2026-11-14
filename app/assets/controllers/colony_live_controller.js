@@ -59,6 +59,7 @@ export default class extends Controller {
             }
             this.pendingRefresh = deferred;
         } catch (e) {
+            if (generation !== this.generation || location.href !== contextUrl || !this.element.isConnected) return;
             if (e.name !== 'AbortError')
                 this.element.dispatchEvent(new CustomEvent('genesis:offline', { bubbles: true }));
         }
