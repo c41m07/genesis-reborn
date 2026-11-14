@@ -16,7 +16,6 @@ final class FleetController extends AbstractController
     public function index(Request $request,UniverseContext $context,GameRepository $repo,GameCatalog $catalog,\App\Service\Queue\QueueService $queues,CombatEventService $combats,\App\Service\Colony\EmpireDetails $details,DestinationCatalogue $destinations,\App\Service\Fleet\OrbitRequestView $orbitView,\App\Service\Fleet\FleetCompositionService $compositions): Response
     {
         $m=$context->membership();$queues->synchronize($m);$idle=[];
-        foreach($repo->all(Fleet::class,['playerUniverse'=>$m,'status'=>'idle']) as $f) { $ships=array_filter($repo->all(FleetShip::class,['fleet'=>$f]),fn($s)=>$s->quantity>0);if($ships) $idle[]=['fleet'=>$f,'ships'=>$ships]; }
         $systems=$repo->systems($m->universe);$mission=(string)$request->query->get('mission','explore');$universeConfig=$catalog->forUniverse($m->universe);$conquestEnabled=(bool)($universeConfig['features']['planet_conquest']??false);
         if(!in_array($mission,DestinationCatalogue::MISSIONS,true)) throw $this->createNotFoundException('Mission indisponible.');
         $destinationChoices=$destinations->choices($m,$mission);
@@ -31,9 +30,9 @@ final class FleetController extends AbstractController
         } elseif($planet) {
             $prefillCoordinates=$mission==='explore'?$planet->solarSystem->galaxy->coordinateCode().':'.$planet->solarSystem->number():$planet->coordinates();$mode=$destinations->allows($m,$planet,$mission)?$destinations->category($m,$planet):'custom';
         }
-        $origin=$request->getSession()->get('selected_planet_'.$m->id,0);
-        usort($idle,fn($a,$b)=>(($a['fleet']->homePlanet->id===$planetId?2:($a['fleet']->homePlanet->id===$origin?0:1)))<=>(($b['fleet']->homePlanet->id===$planetId?2:($b['fleet']->homePlanet->id===$origin?0:1))));
-        $activeFleets=$repo->all(Fleet::class,['playerUniverse'=>$m,'status'=>['traveling','returning','attacking','defending','orbiting','orbit_pending','occupying']],['arrivalAt'=>'ASC']);$combatEvents=[];foreach($activeFleets as $activeFleet){$participant=$repo->one(CombatParticipant::class,['fleet'=>$activeFleet]);if($participant && $participant->combatEvent->status==='pending')$combatEvents[$activeFleet->id]=$participant->combatEvent;}
+        $planets=$repo->planets($m->universe,$m);$selectedPlanet=$planets[0]??null;
+        $selectedId=(int)$request->getSession()->get('selected_planet_'.$m->id,0);
+        foreach($planets as $candidate) if($candidate->id===$selectedId) $selectedPlanet=$candidate;
         $loaded=[];$loadedOrigin=0;
         if($request->query->getInt('composition')) {
             try {
@@ -45,11 +44,14 @@ final class FleetController extends AbstractController
                     $this->addFlash('error','Les disponibilités ou la composition ont changé. Vérifiez les quantités avant de charger.');
                     return $this->redirectToRoute('app_fleet_composition_load',['id'=>$saved->id,'origin'=>$source->id]);
                 }
-                $loaded=$plan['missing']?$plan['available']:$saved->ships;$loadedOrigin=$source->id;
+                $loaded=$plan['missing']?$plan['available']:$saved->ships;$loadedOrigin=$source->id;$selectedPlanet=$source;
             } catch(\DomainException) {throw $this->createNotFoundException('Composition ou colonie inaccessible.');}
         }
-        $orbitRequests=$orbitView->forMember($m);
-        return $this->render('fleet/index.html.twig',['loaded_composition'=>$loaded,'loaded_origin'=>$loadedOrigin,'fleet_details'=>$details->fleets($m,$activeFleets),'prefill'=>['mission'=>$mission,'system'=>$systemId,'planet'=>$planetId,'coordinates'=>$prefillCoordinates,'mode'=>$mode],'active_fleets'=>$activeFleets,'combat_events'=>$combatEvents,'membership'=>$m,'fleets'=>$repo->all(Fleet::class,['playerUniverse'=>$m],['id'=>'DESC']),'idle'=>$idle,'systems'=>$systems,'destination_choices'=>$destinationChoices,'catalog'=>$catalog->all('ships'),'resources'=>$catalog->rules()['resources'],'fuel_pending'=>$catalog->rules()['fuel_ratio_policy']==='pending','orbit_requests'=>$orbitRequests,'fleet_limit'=>(int)$universeConfig['limits']['max_fleet_size'],'conquest_enabled'=>$conquestEnabled]);
+        if($selectedPlanet) $request->getSession()->set('selected_planet_'.$m->id,$selectedPlanet->id);
+        foreach($repo->all(Fleet::class,['playerUniverse'=>$m,'homePlanet'=>$selectedPlanet,'status'=>'idle']) as $f) { $ships=array_filter($repo->all(FleetShip::class,['fleet'=>$f]),fn($s)=>$s->quantity>0);if($ships) $idle[]=['fleet'=>$f,'ships'=>$ships]; }
+        $activeFleets=$repo->all(Fleet::class,['playerUniverse'=>$m,'homePlanet'=>$selectedPlanet,'status'=>['traveling','returning','attacking','defending','orbiting','orbit_pending','occupying']],['arrivalAt'=>'ASC']);$combatEvents=[];foreach($activeFleets as $activeFleet){$participant=$repo->one(CombatParticipant::class,['fleet'=>$activeFleet]);if($participant && $participant->combatEvent->status==='pending')$combatEvents[$activeFleet->id]=$participant->combatEvent;}
+        $orbitRequests=$selectedPlanet?$orbitView->forMember($m,$selectedPlanet):[];
+        return $this->render('fleet/index.html.twig',['fleet_planet'=>$selectedPlanet,'loaded_composition'=>$loaded,'loaded_origin'=>$loadedOrigin,'fleet_details'=>$details->fleets($m,$activeFleets),'prefill'=>['mission'=>$mission,'system'=>$systemId,'planet'=>$planetId,'coordinates'=>$prefillCoordinates,'mode'=>$mode],'active_fleets'=>$activeFleets,'combat_events'=>$combatEvents,'membership'=>$m,'fleet_colony_scope'=>true,'idle'=>$idle,'systems'=>$systems,'destination_choices'=>$destinationChoices,'catalog'=>$catalog->all('ships'),'resources'=>$catalog->rules()['resources'],'fuel_pending'=>$catalog->rules()['fuel_ratio_policy']==='pending','orbit_requests'=>$orbitRequests,'fleet_limit'=>(int)$universeConfig['limits']['max_fleet_size'],'conquest_enabled'=>$conquestEnabled]);
     }
     #[Route('/flottes/destinations',name:'app_fleet_destinations',methods:['GET'])]
     public function destinations(Request $request,UniverseContext $context,DestinationCatalogue $destinations): Response

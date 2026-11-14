@@ -47,3 +47,6 @@ body[data-theme="light"] .ui-tabs a{color:#4b5563}
  .wiki-chapter-picker button{min-height:44px}
 }
 @media(max-width:740px){.wiki-navigation{top:calc(var(--topbar-height,56px) + 60px)}.wiki-manual .wiki-chapter{scroll-margin-top:300px}}
+
+.flight-operations:not(:has(.flight-operation)){flex-direction:column;align-items:stretch}
+.flight-operations:not(:has(.flight-operation))>.flight-idle{max-width:none;width:100%}
