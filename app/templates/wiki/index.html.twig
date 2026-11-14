@@ -1,27 +1,45 @@
 {% extends 'base.html.twig' %}
 {% block title %}Wiki du jeu · Genesis Reborn{% endblock %}
 {% block body %}
-<article class="wiki-guide wiki-manual" id="wiki-top" aria-labelledby="wiki-title">
+<article class="wiki-guide wiki-manual" data-controller="wiki-chapters" data-wiki-chapters-search-value="{{ query ? 'true' : 'false' }}" id="wiki-top" aria-labelledby="wiki-title">
   <header class="wiki-intro">
     <p class="wiki-eyebrow">Le manuel du joueur</p>
     <h1 id="wiki-title">Wiki du jeu</h1>
     <p class="wiki-lead">De votre première colonie aux calculs d’une bataille : comprendre vos choix, préparer votre empire.</p>
+    <details><summary>Comment utiliser ce manuel</summary>
     <p>Commencez par les premiers chapitres ou choisissez un sujet dans le sommaire. Les règles se lisent directement ; les formules et leurs exemples se déplient à votre rythme.</p>
     <p>Les chiffres indiqués sont des références ou des exemples dont les hypothèses sont précisées. Les fiches et aperçus de votre univers donnent les coûts, bonus et durées applicables à vos actions.</p>
+    </details>
   </header>
-  <nav class="wiki-summary" aria-label="Sommaire du wiki">
+  <form class="panel wiki-search" method="get" action="{{ path('app_wiki') }}" role="search">
+    <label for="wiki-query">Rechercher dans le manuel</label>
+    <input id="wiki-query" name="q" type="search" maxlength="150" value="{{ query }}" placeholder="Ressources, colonisation, recherche…">
+    <button class="secondary">Rechercher</button>
+    {% if query %}<a href="{{ path('app_wiki') }}">Afficher tout le manuel</a><p role="status">{{ sections|length }} chapitre{{ sections|length > 1 ? 's' : '' }} pour « {{ query }} ».</p>{% endif %}
+  </form>
+  {% if sections is empty %}<p>Aucun chapitre ne correspond. Essayez un autre terme ou affichez tout le manuel.</p>{% endif %}
+  <div class="wiki-layout">
+  <aside id="wiki-summary" class="wiki-navigation" aria-label="Navigation des chapitres">
+    <form class="wiki-chapter-picker" method="get" action="{{ path('app_wiki') }}">
+      <label for="wiki-chapter-choice">Choisir un chapitre</label>
+      <select id="wiki-chapter-choice" name="chapter" required><option value="">Sélectionner un chapitre</option>{% for chapter in chapters %}<option value="{{ chapter.id }}">{{ chapter.title }}</option>{% endfor %}</select>
+      <button class="secondary">Ouvrir le chapitre</button>
+    </form>
+  <nav class="wiki-summary wiki-desktop-summary" aria-label="Sommaire du wiki">
     <h2>Sommaire</h2>
     {% set currentPart = '' %}
-    {% for section in sections %}
+    {% for section in chapters %}
       {% if section.part != currentPart %}
         {% if not loop.first %}</ol>{% endif %}
         <h3>{{ section.part }}</h3><ol>
         {% set currentPart = section.part %}
       {% endif %}
-      <li><a href="#wiki-{{ section.id }}">{{ section.title }}</a></li>
+      <li><a href="{{ query ? path('app_wiki',{_fragment:'wiki-'~section.id}) : '#wiki-'~section.id }}">{{ section.title }}</a></li>
       {% if loop.last %}</ol>{% endif %}
     {% endfor %}
   </nav>
+  </aside>
+  <div class="wiki-chapters">
   {% set currentPart = '' %}
   {% for section in sections %}
     <section class="wiki-chapter" id="wiki-{{ section.id }}" aria-labelledby="wiki-title-{{ section.id }}">
@@ -40,7 +58,7 @@
           </div>
         </details>
       {% endfor %}
-      <a class="wiki-back" href="#wiki-top">Retour au sommaire</a>
+      <a class="wiki-back" href="#wiki-summary">Retour au sommaire</a>
     </section>
   {% endfor %}
   <footer class="wiki-sources">
@@ -51,5 +69,7 @@
       <ul><li><a href="{{ path('app_wiki_reference',{source:'regles'}) }}">Règles de référence</a></li><li><a href="{{ path('app_wiki_reference',{source:'decisions'}) }}">Décisions du projet</a></li></ul>
     </div></details>
   </footer>
+  </div>
+  </div>
 </article>
 {% endblock %}

@@ -48,9 +48,13 @@ test('Classement : tris, contact direct et échange de messages privés', async 
   runIsolatedSql(process.env.BROWSER_ROUTER, "UPDATE leaderboard_snapshot SET updated_at=DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 DAY)");
   await page.goto('/classement');
   await expect(page.getByRole('table', { name: /Classement de l’univers Turbo/ })).toBeVisible();
+  await expect(page.locator('.ranking-context')).toContainText('Univers : Turbo');
+  await expect(page.locator('.ranking-context')).toContainText('Dernière actualisation');
+  await expect(page.locator('.ranking-context time')).toHaveCount(1);
+  await expect(page.getByText('Comprendre le classement',{exact:true})).toBeVisible();
   const recipientRow = page.getByRole('row').filter({ hasText: recipientName });
   await expect(recipientRow.getByRole('link', { name: 'Contacter ' + recipientName })).toBeVisible();
-  await expect(page.getByRole('columnheader')).toHaveText(['Rang', 'Commandant', 'Points de bâtiments ↕', 'Points de recherche ↕', 'Points de flotte ↕', 'Nombre de planètes ↕', 'Points totaux ↓', 'Actions']);
+  await expect(page.getByRole('columnheader')).toHaveText(['Rang', 'Commandant', 'Points totaux ↓', 'Points de bâtiments ↕', 'Points de recherche ↕', 'Points de flotte ↕', 'Nombre de planètes ↕', 'Actions']);
   await expect(page.getByRole('columnheader', { name: 'Classer par Points totaux' })).toHaveAttribute('aria-sort', 'descending');
 
   for (const [category, label] of [['buildings', 'Points de bâtiments'], ['research', 'Points de recherche'], ['fleet', 'Points de flotte'], ['planets', 'Nombre de planètes'], ['points', 'Points totaux']]) {
@@ -60,8 +64,15 @@ test('Classement : tris, contact direct et échange de messages privés', async 
     await expect(sort).toHaveAttribute('aria-current', 'page');
     await expect(page.getByRole('columnheader', { name: 'Classer par ' + label, exact: true })).toHaveAttribute('aria-sort', 'descending');
     await expect(page.getByLabel('Catégorie du classement')).toHaveCount(0);
-    const ranks = await page.locator('tbody tr td:first-child').allTextContents();
+    const ranks = await page.locator('.ranking-table tbody tr td:first-child').allTextContents();
     expect(ranks.map(text => Number(text.match(/#(\d+)/)[1]))).toEqual(ranks.map(text => Number(text.match(/#(\d+)/)[1])).sort((a, b) => a - b));
+    await sort.click();
+    await expect(page.getByRole('columnheader', { name: 'Classer par ' + label, exact: true })).toHaveAttribute('aria-sort', 'ascending');
+    await expect(page.locator('.ranking-context')).toContainText('Ordre croissant');
+    const scores = await page.locator('.ranking-table tbody [data-category="'+category+'"]').evaluateAll(cells => cells.map(cell => Number(cell.firstChild.textContent.replace(/[^0-9]/g,''))));
+    expect(scores).toEqual([...scores].sort((a,b)=>a-b));
+    await sort.click();
+    await expect(page.getByRole('columnheader', { name: 'Classer par ' + label, exact: true })).toHaveAttribute('aria-sort', 'descending');
   }
 
   const body = 'Message depuis le classement ' + crypto.randomUUID();
@@ -80,7 +91,7 @@ test('Classement : tris, contact direct et échange de messages privés', async 
       await page.setViewportSize({ width, height: 900 });
       await page.goto(conversationUrl);
       await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
-      await expect(page.locator('.message-bubble>p').first()).toHaveCSS('font-size', '13px');
+      await expect(page.locator('.message-content p').first()).toHaveCSS('font-size', '13px');
       await expect(page.locator('.message-meta').first()).toHaveCSS('font-size', '11px');
       await expect(page.getByLabel('Votre message')).toHaveCSS('font-size', width <= 1050 ? '16px' : '14px');
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
@@ -213,10 +224,13 @@ test('Hub de guilde : création, équipage et discussion commune', async ({ page
   await expect(page.getByRole('row').filter({ hasText: member })).toHaveClass(/ranking-row--guild/);
   await page.getByRole('navigation', { name: 'Classements' }).getByRole('link', { name: 'Guildes', exact: true }).click();
   await expect(page.getByRole('row').filter({ hasText: guildName })).toContainText('2');
-  await expect(page.getByRole('columnheader')).toHaveText(['Rang', 'Guilde', 'Joueurs', 'Points bâtiments', 'Points recherches', 'Points flotte', 'Points totaux ↓', 'Médiane des points joueurs']);
+  await expect(page.getByRole('columnheader')).toHaveText(['Rang', 'Guilde', 'Joueurs', 'Points bâtiments', 'Points recherches', 'Points flotte', 'Points totaux', 'Médiane des points joueurs']);
   await expect(page.getByRole('row').filter({ hasText: guildName })).toHaveClass(/ranking-row--guild/);
   await memberPage.goto('/diplomatie');
-  await memberPage.getByText('Gestion de la guilde', { exact: true }).click();
+  await memberPage.getByRole('link', { name: 'Gestion de la guilde', exact: true }).focus();
+  await memberPage.keyboard.press('Enter');
+  await expect(memberPage).toHaveURL(/#guild-management-title$/);
+  await expect(memberPage.getByRole('heading', { name: 'Gestion de la guilde', exact: true })).toBeVisible();
   await memberPage.getByRole('button', { name: 'Quitter la guilde' }).click();
   const enemyGuild = 'Enemy-' + crypto.randomUUID().slice(0, 8);
   await memberPage.getByLabel('Nom de votre nouvelle guilde').fill(enemyGuild);await memberPage.getByLabel('Tag de la guilde', { exact:true }).fill(crypto.randomUUID().replaceAll('-', '').slice(0,5).toUpperCase());
@@ -264,6 +278,8 @@ test('Classement quotidien : points figés, gains, pertes et signe égal accessi
   await page.reload();
   await expect(row.locator('[data-category="points"] .ranking-change')).toHaveText(/\(\+\d/);
   await expect(row.locator('td').first().locator('.ranking-change')).toHaveText('(= 0)');
+  await page.locator('.page-heading details > summary').focus();
+  await page.keyboard.press('Enter');
   await expect(page.getByText('Actualisation chaque jour à 00 h', { exact: false })).toBeVisible();
   const gained = await page.evaluate(() => fetch('/api/classement').then(response => response.json()));
   expect(gained.players.find(player => player.username === name).score_changes.points).toBeGreaterThan(0);
@@ -303,18 +319,36 @@ test('Classement : tri global avant pagination et catégorie conservée', async 
       SELECT m.id,'weapons_engineering','basic',1 FROM player_universe m JOIN player p ON p.id=m.player_id WHERE p.username LIKE '${prefix}%';
     UPDATE leaderboard_snapshot SET updated_at=DATE_SUB(UTC_TIMESTAMP(),INTERVAL 2 DAY) WHERE universe_id=${universe}`);
   await page.goto('/classement?category=research');
-  await expect(page.locator('tbody tr')).toHaveCount(50);
-  await expect(page.locator('tbody tr').first().locator('td').first()).toContainText('#1 ');
-  await expect(page.locator('tbody tr').last().locator('td').first()).toContainText('#50 ');
+  await expect(page.locator('.ranking-table tbody tr')).toHaveCount(50);
+  const snapshot = await page.evaluate(() => fetch('/api/classement').then(response => response.json()));
+  await page.getByRole('link', { name: 'Classer par Points de recherche', exact: true }).click();
+  await expect(page.getByRole('columnheader', { name: 'Classer par Points de recherche', exact: true })).toHaveAttribute('aria-sort', 'ascending');
+  await expect(page.locator('.ranking-table tbody tr').first().locator('td').first()).toContainText('#52 ');
+  await expect(page.locator('.ranking-table tbody tr').last().locator('td').first()).toContainText('#49 ');
+  const ascendingNext = page.getByRole('link', { name: 'Page suivante', exact: true });
+  await expect(ascendingNext).toHaveAttribute('href', /direction=asc/);
+  await ascendingNext.click();
+  await expect(page.locator('.ranking-table tbody tr')).toHaveCount(2);
+  await expect(page.locator('.ranking-table tbody tr').first().locator('td').first()).toContainText('#50 ');
+  await expect(page.locator('.ranking-table tbody tr').last().locator('td').first()).toContainText('#51 ');
+  const report = page.getByRole('link', { name: /^Signaler / }).first();
+  await report.click();
+  await page.getByRole('link', { name: 'Revenir au classement', exact: true }).click();
+  await expect(page).toHaveURL(/direction=asc.*page=2/);
+  expect(await page.evaluate(() => fetch('/api/classement').then(response => response.json()))).toEqual(snapshot);
+  await page.goto('/classement?category=research&direction=invalid');
+  await expect(page.getByRole('columnheader', { name: 'Classer par Points de recherche', exact: true })).toHaveAttribute('aria-sort', 'descending');
+  await expect(page.locator('.ranking-table tbody tr').first().locator('td').first()).toContainText('#1 ');
+  await expect(page.locator('.ranking-table tbody tr').last().locator('td').first()).toContainText('#50 ');
   const next = page.getByRole('link', { name: 'Page suivante', exact: true });
   await expect(next).toHaveAttribute('href', /category=research.*page=2/);
   await next.click();
   await expect(page.getByRole('link', { name: 'Classer par Points de recherche', exact: true })).toHaveAttribute('aria-current', 'page');
-  await expect(page.locator('tbody tr')).toHaveCount(2);
-  await expect(page.locator('tbody tr').first().locator('td').first()).toContainText('#51 ');
+  await expect(page.locator('.ranking-table tbody tr')).toHaveCount(2);
+  await expect(page.locator('.ranking-table tbody tr').first().locator('td').first()).toContainText('#51 ');
   const ownRow = page.getByRole('row').filter({ hasText: ownName });
   await expect(ownRow.locator('td').first()).toContainText('#52 ');
   await page.getByRole('link', { name: 'Page précédente', exact: true }).click();
   await expect(page.getByRole('link', { name: 'Classer par Points de recherche', exact: true })).toHaveAttribute('aria-current', 'page');
-  await expect(page.locator('tbody tr')).toHaveCount(50);
+  await expect(page.locator('.ranking-table tbody tr')).toHaveCount(50);
 });

@@ -44,3 +44,10 @@ import './styles/player-pages.css';
 import './styles/ranking-sort.css';
 
 import './styles/diplomacy-tabs.css';
+
+import './styles/journey.css';
+
+import './styles/approved-pages.css';
+
+import './styles/strategic-tools.css';
+import './styles/social-profiles.css';

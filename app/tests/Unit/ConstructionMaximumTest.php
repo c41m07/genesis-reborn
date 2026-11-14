@@ -17,9 +17,9 @@ final class ConstructionMaximumTest extends TestCase
     public function testMaximumExceedsOneHundredAndUsesEveryResource(): void
     {
         [$calculator, $definition, $config] = $this->fixture();
-        self::assertSame(150, $calculator->maximum($definition, 'defenses', ['metal' => ['stock' => 450], 'nano' => ['stock' => 300]], [], $config));
-        self::assertSame(0, $calculator->maximum($definition, 'defenses', ['metal' => ['stock' => 2], 'nano' => ['stock' => 300]], [], $config));
-        self::assertSame(10, $calculator->maximum($definition, 'defenses', ['metal' => ['stock' => 450], 'nano' => ['stock' => 300]], [], $config, [], 10));
+        self::assertSame(150, $calculator->maximum($definition, 'defenses', ['electricity' => ['stock' => 1e15], 'metal' => ['stock' => 450], 'nano' => ['stock' => 300]], [], $config));
+        self::assertSame(0, $calculator->maximum($definition, 'defenses', ['electricity' => ['stock' => 1e15], 'metal' => ['stock' => 2], 'nano' => ['stock' => 300]], [], $config));
+        self::assertSame(10, $calculator->maximum($definition, 'defenses', ['electricity' => ['stock' => 1e15], 'metal' => ['stock' => 450], 'nano' => ['stock' => 300]], [], $config, [], 10));
     }
 
     public function testBatchRoundingDoesNotMultiplyTheRoundedUnitCost(): void
@@ -27,13 +27,13 @@ final class ConstructionMaximumTest extends TestCase
         [$calculator, $definition, $config] = $this->fixture();
         $technologies = ['naval_engineering' => ['basic' => 25, 'intermediate' => 25, 'superior' => 25]];
         self::assertSame(2, $calculator->calculate($definition, 'ships', 1, 1, [], $config, $technologies)['costs']['metal']);
-        self::assertSame(150, $calculator->maximum($definition, 'ships', ['metal' => ['stock' => 270], 'nano' => ['stock' => 180]], [], $config, $technologies));
+        self::assertSame(150, $calculator->maximum($definition, 'ships', ['electricity' => ['stock' => 1e15], 'metal' => ['stock' => 270], 'nano' => ['stock' => 180]], [], $config, $technologies));
     }
 
     public function testMaximumFitsTheStoredDurationWithoutChangingTheUnitTime(): void
     {
         [$calculator, $definition, $config] = $this->fixture();
-        $stocks = ['metal' => ['stock' => 1e15], 'nano' => ['stock' => 1e15]];
+        $stocks = ['electricity' => ['stock' => 1e15], 'metal' => ['stock' => 1e15], 'nano' => ['stock' => 1e15]];
         self::assertSame(1717986917, $calculator->maximum($definition, 'defenses', $stocks, [], $config));
     }
 }

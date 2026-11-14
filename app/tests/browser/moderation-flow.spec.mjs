@@ -29,9 +29,11 @@ async function login(page, credentials) {
   await page.getByRole('button', { name: /Connexion/ }).click();
 }
 
-test('Modération : signaler un message, refuser un CSRF invalide et classer le dossier', async ({ page, browser }, testInfo) => {
+for(const fallbackFonts of [false,true]) {
+test('Modération : signaler un message, refuser un CSRF invalide et classer le dossier'+(fallbackFonts?' sans polices distantes':''), async ({ page, browser }, testInfo) => {
   test.setTimeout(120000);
   const reporterPage = await browser.newPage();
+  if(fallbackFonts) await reporterPage.route(/https:\/\/fonts\.(googleapis|gstatic)\.com\//,route=>route.abort());
   const sender = await registerAndJoin(page, 'Moderateur');
   const reporter = await registerAndJoin(reporterPage, 'Signalant');
 
@@ -48,9 +50,24 @@ test('Modération : signaler un message, refuser un CSRF invalide et classer le 
   await reporterPage.getByRole('link', { name: new RegExp(sender.username) }).click();
   const message = reporterPage.locator('.message-thread article').filter({ hasText: body });
   await expect(message).toBeVisible();
+  await expect(reporterPage.locator('body')).toHaveCSS('margin','0px');
   await reporterPage.setViewportSize({ width: 390, height: 900 });
   expect(await reporterPage.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await expect(message.locator('.message-report')).not.toHaveAttribute('open', '');
+  expect(await message.locator('.message-bubble .message-report').count()).toBe(0);
+  await expect(message).toHaveCSS('display','grid');
+  await reporterPage.evaluate(()=>document.fonts.ready);
+  const {bubbleBox,reportBox}=await message.evaluate(element=>{
+    const box=node=>{const rect=node.getBoundingClientRect();return {x:rect.x,width:rect.width};};
+    return {bubbleBox:box(element.querySelector('.message-bubble')),reportBox:box(element.querySelector('.message-report summary'))};
+  });
+  if(reportBox.x<bubbleBox.x+bubbleBox.width) console.log('message-layout',JSON.stringify(await message.evaluate(element=>{
+    const css=node=>{const s=getComputedStyle(node),r=node.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,display:s.display,gridTemplateColumns:s.gridTemplateColumns,gridColumn:s.gridColumn,minWidth:s.minWidth,maxWidth:s.maxWidth,fontFamily:s.fontFamily};};
+    return {entry:css(element),bubble:css(element.querySelector('.message-bubble')),report:css(element.querySelector('.message-report')),button:css(element.querySelector('.message-report summary'))};
+  })));
+  expect(reportBox.x).toBeGreaterThanOrEqual(bubbleBox.x+bubbleBox.width);
+  expect(reportBox.x+reportBox.width).toBeLessThanOrEqual(390);
+
   await reporterPage.screenshot({ path: testInfo.outputPath('messages-390.png'), fullPage: true, animations: 'disabled' });
   await message.locator('.message-report summary').focus();
   await reporterPage.keyboard.press('Enter');
@@ -106,3 +123,5 @@ test('Modération : signaler un message, refuser un CSRF invalide et classer le 
   await expect(reporterPage.getByLabel('Motif du signalement')).toHaveCount(0);
   await reporterPage.close();
 });
+
+}

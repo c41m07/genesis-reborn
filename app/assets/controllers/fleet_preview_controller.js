@@ -65,8 +65,19 @@ export default class extends Controller {
             }
 
             const format = value => compactNumber(Math.ceil(value));
-            this.resultTarget.textContent = `${exactNumber(Math.ceil(preview.distance))} UA · ${Math.floor(preview.seconds / 3600)} h ${Math.floor(preview.seconds % 3600 / 60)} min ${preview.seconds % 60} s · Carburant aller-retour : ${format(preview.total_fuel)} H · Fret disponible : ${format(preview.freight_capacity)}`;
-            this.resultTarget.title = `Carburant aller-retour : ${exactNumber(Math.ceil(preview.total_fuel))} H · Fret disponible : ${exactNumber(Math.ceil(preview.freight_capacity))}`;
+            const timezone = document.body.dataset.timezone || 'Europe/Paris';
+            const arrival = preview.arrival_at ? new Intl.DateTimeFormat('fr-FR', { dateStyle: 'short', timeStyle: 'medium', timeZone: timezone }).format(new Date(preview.arrival_at)) + ' · ' + timezone : 'À confirmer';
+            const list = document.createElement('dl');
+            for (const [label, value] of [['Distance', exactNumber(Math.ceil(preview.distance)) + ' UA'], ['Durée', `${Math.floor(preview.seconds / 3600)} h ${Math.floor(preview.seconds % 3600 / 60)} min ${preview.seconds % 60} s`], ['Arrivée estimée', arrival], ['Carburant aller-retour', format(preview.total_fuel) + ' H'], ['Capacité de fret disponible', format(preview.freight_capacity)]]) {
+                const entry = document.createElement('div'), term = document.createElement('dt'), description = document.createElement('dd');
+                term.textContent = label; description.textContent = value; entry.append(term, description); list.append(entry);
+            }
+            if (preview.stored_fuel_used > 0) {
+                const entry = document.createElement('div'), term = document.createElement('dt'), description = document.createElement('dd');
+                term.textContent = 'Origine du carburant'; description.textContent = format(preview.stored_fuel_used) + ' H embarqué + ' + format(preview.planet_fuel) + ' H planétaire';
+                entry.append(term, description); list.append(entry);
+            }
+            this.resultTarget.replaceChildren(list);
             this.resultTarget.classList.remove('error');
             this.dispatch('quoted', { detail: preview });
             if (this.submitButton) {

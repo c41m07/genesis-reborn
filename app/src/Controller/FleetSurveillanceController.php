@@ -1,7 +1,7 @@
 <?php
 namespace App\Controller;
 
-use App\Entity\Galaxy;
+use App\Entity\{Galaxy,Planet};
 use App\Repository\GameRepository;
 use App\Service\Fleet\FleetVisibility;
 use App\Service\Universe\UniverseContext;
@@ -19,7 +19,12 @@ final class FleetSurveillanceController extends AbstractController
         $payload=['membership'=>$member->id,'serverNow'=>$clock->now()->format(DATE_ATOM),
             'html'=>$this->renderView('ui/incoming_attacks_list.html.twig',['attacks'=>$visibility->incoming($member)])];
         if($request->query->getBoolean('orbits')) {
-            $rows=$orbits->forMember($member);
+            $colony=null;
+            if($request->query->has('colony')) {
+                $colony=$repo->find(Planet::class,$request->query->getInt('colony'));
+                if(!$colony || $colony->owner?->id!==$member->id || $colony->solarSystem->galaxy->universe->id!==$member->universe->id) throw $this->createNotFoundException('Colonie inaccessible.');
+            }
+            $rows=$orbits->forMember($member,$colony);
             $payload+=['orbitVersion'=>hash('sha256',json_encode($rows,JSON_THROW_ON_ERROR)),
                 'orbitHtml'=>$this->renderView('ui/orbit_requests_list.html.twig',['orbit_requests'=>$rows])];
         }

@@ -1520,3 +1520,144 @@ Projets, Galaxie et Classement regroupées et raccourci Relations guildes redond
 retiré du bloc. L’onglet Relations guildes reste présent. Aperçu limité aux trois
 derniers messages, sans lecture implicite. Départ/dissolution rendus directement
 visibles selon le rôle, sans modifier les permissions ni leurs conséquences.
+
+### Revenu de base métal et nano — décision du 13 novembre 2026
+
+Le revenu de base total est désormais de **10 métal/h et 10 nano/h**, à vitesse ×1 en position 5, au lieu de 40 métal/h et 20 nano/h. Ce sont des taux de remplacement, pas un revenu additionnel. Les modificateurs de position, d’univers et d’événement existants s’appliquent ; les vacances suspendent toujours la production. Le revenu de base est nul pour l’électricité, l’antimatière et l’hydrogène, conformément à la précision validée le 13 novembre 2026. Les productions des bâtiments, stocks et capacités restent inchangés. Le calcul des gains non matérialisés suit la règle courante déjà validée, sans migration.
+
+À stocks nuls, sans usine, à vitesse ×1 en position 5, 48 h fournissent 480 métal et 480 nano : assez pour les 480 métal et 160 nano d’un premier producteur direct. Cela ne produit aucune électricité et ne garantit pas la résolution de tous les blocages. Le coût électrique ponctuel suit la décision validée ci-dessous.
+
+### Électricité ponctuelle des opérations — décision du 13 novembre 2026
+
+Les recherches, vaisseaux et défenses paient une fois à l’ajout de chaque commande : **100 × arrondi supérieur de la durée effective en secondes / 60**. La durée retenue inclut les réductions et multiplicateurs applicables au moment de l’ajout ; les quantités sont calculées comme une commande entière, avec un seul arrondi final. Ce coût s’ajoute aux autres ressources et à un éventuel coût électrique défini par le catalogue. Les bâtiments ne paient pas ce nouveau coût. Ce n’est pas une consommation horaire continue.
+
+Les coûts payés sont figés avec la commande. Une accélération ultérieure ne recalcule pas le prix et ne rembourse aucune électricité. Une annulation rembourse 25 % des coûts effectivement payés, électricité comprise, pour la commande et chaque dépendance annulée, dans la capacité disponible de chaque colonie payeuse. La capture conserve sa règle d’annulation sans remboursement. Les reconstructions automatiques des empires oubliés paient aussi ce coût ; leurs conditions de ressources restent applicables.
+
+Les aperçus et maxima constructibles utilisent le même calculateur que les prélèvements serveur. Les commandes déjà enregistrées gardent leurs coûts payés : aucune taxe rétroactive ni migration. L’[étude chiffrée](ETUDE_COUT_ELECTRIQUE.md) conserve les hypothèses et les risques de blocage des gros lots.
+
+Précision validée le 13 novembre 2026 : le coût électrique initialement approuvé à 1 E par minute entamée est multiplié par 100. L’arrondi porte toujours une seule fois sur la durée entière de la commande, avant multiplication. Une commande de 60 s paie 100 E ; 61 s paient 200 E. Les coûts déjà payés ne sont pas recalculés rétroactivement.
+
+### Outils stratégiques — cadrage du lot 2, décisions du 13 novembre 2026
+
+Le propriétaire valide un résultat de simulation illustratif reproductible, sans pourcentage de victoire ni garantie. Il valide 20 compositions personnelles au maximum par empire et univers, réutilisables entre ses colonies. Le joueur pourra choisir explicitement un rapport d’espionnage encore accessible, même ancien, avec date et avertissement d’ancienneté ; les informations non révélées restent inconnues.
+
+Ces choix sont implémentés dans la PR #55, sans fusion ni déploiement à ce stade. Voir le [suivi du lot 2](CADRAGE_OUTILS_STRATEGIQUES.md) pour les services réutilisés, limites techniques et vérifications. La limite technique du simulateur ne modifie pas les limites des flottes réelles.
+
+### Précision du bilan par ressource — production et besoins bruts
+
+Le propriétaire demande les informations de fonctionnement de l’usine qui produit
+la ressource : production brute potentielle, production actuelle sous contraintes,
+besoins bruts et actuels en électricité et hydrogène séparés, délai de saturation
+et solde net effectivement stocké. Les besoins bruts et le potentiel restent
+visibles même lorsque le stockage plein suspend l’usine. Les fiches suivent l’ordre stock, production brute, production actuelle,
+consommation brute, consommation actuelle, solde net puis délai estimé. Les
+lignes de consommation indiquent les besoins pour produire la ressource, de
+façon uniforme pour les usines. Pour l’électricité, les consommations brute et
+actuelle affichent chacune un total, sans ventilation par ressource produite ;
+le détail par activité de production est repliable et indique « tous rangs cumulés ». La ligne « Non stocké / h » est retirée de
+l’affichage, sans changer le calcul de saturation. Les fiches électricité et hydrogène
+ajoutent le récapitulatif des usines qui prélèvent dans ce stock et son total
+brut/actuel, distinct des besoins de leur propre production. La liste des sources de production et
+les explications répétées sont retirées de l’infobulle.
+
+Ce complément est un affichage en lecture seule, sans nouvelle formule métier ni
+modification des prélèvements : les besoins théoriques réutilisent les entrées du
+moteur ; les valeurs actuelles et le solde proviennent de sa simulation. Le solde
+affiché devient nul dès que le compteur atteint la capacité ou épuise un stock
+consommé, puis le bandeau
+demande un instantané serveur pour actualiser le fonctionnement des usines.
+
+
+### Retouches des parcours et de la messagerie
+
+Un lien direct vers un bâtiment, une recherche, un vaisseau ou une défense doit
+révéler le bon rang et le repérer par un cadre jaune pendant cinq secondes.
+L’animation est désactivée avec la préférence de mouvements réduits ; le repère
+reste fixe. Les événements restent visibles au défilement sur ordinateur, sous
+les ressources, sans superposer les activités et flottes des catalogues.
+Le signalement des messages reçus conserve son formulaire et ses permissions ;
+son triangle est placé à droite, hors du cadre de la bulle.
+
+### Espionnage — décision du 14 novembre 2026
+
+Le propriétaire valide une base de détection de 50 / 40 / 30 % pour les sondes Basique / Intermédiaire / Supérieure, moyenne pondérée par leurs quantités pour une mission mixte. Les sondes défensives apportent un point par tranche complète de cinq, plafonné à vingt points pour cent sondes, tous rangs comptant chacun une unité. Le périmètre actuel des flottes inactives, de défense et d’orbite ainsi que le traitement des garnisons PNJ est conservé.
+
+Les poids technologiques restent +10 points par niveau effectif de Discipline du secret adverse et −10 par niveau effectif d’Écran de brouillage ; chaque sonde supplémentaire envoyée ajoute un point. La pondération technologique par rang reste 1 / 1,25 / 1,5625. Le résultat est limité à 5–95 %, puis arrondi une seule fois ; réussite = 100 − détection. Aucun bonus de renseignement lié au rang n’est ajouté ; score, catégories, alerte, consommation des sondes et protections restent inchangés.
+
+Les valeurs sont centralisées dans `app/config/game/espionage.yaml` et servent aux essais Alpha : aucune confirmation d’équilibrage par les joueurs n’est revendiquée. Le rapport conserve son risque au moment de la résolution. Voir les [règles actuelles](REGLES.md#espionnage) et le [suivi de reprise](FEUILLE_DE_ROUTE.md).
+
+
+### Interfaces, vie sociale et missions — décisions du 14 novembre 2026
+
+Choix approuvés pour les lots à développer ; cette section ne vaut pas disponibilité ni déploiement.
+
+- Bunker : retirer uniquement Blindage multicouche basique 2. Garder chantier basique 3, laboratoire basique 2, coûts, durées, plafonds et bonus ; aucune nouvelle courbe linéaire.
+- Simulateur : dix graines distinctes, taux de victoires de l’attaquant sur dix, décompte des défaites/autres issues, dix détails repliables sans pertes moyennes. Estimation sur dix combats sans garantie de probabilité réelle. Ce choix remplace le tirage unique sans pourcentage du 13 novembre.
+- Interfaces : nom de mission ouvrant composition et fret, rappel à droite de la barre et distinctions non exclusivement colorées ; échange des seules positions de Vue condensée et Éléments verrouillés. Classement joueur dans les deux sens, aucune flèche pour une colonne non interactive.
+- Profils : joueurs connectés du même univers, accès depuis classement, messagerie et membres de guilde ; pseudo, guilde/tag et scores/rangs déjà publics du classement quotidien. Titres/trophées reportés. Ni email, activité précise, coordonnées, composition militaire ni autre donnée privée.
+- Guildes : pages pour joueurs connectés du même univers, accès depuis classement et membres ; personnalisation par le commandant seul. Description texte de 2 000 caractères ; logo PNG/JPEG/WebP jusqu’à 512×512 et 1 Mo ; bannière jusqu’à 1 920×640 et 2 Mo. Format réel et dimensions contrôlés, noms générés et stockage persistant dédié ; aucun SVG téléversé, identité existante préservée.
+- Privé, guilde et Global : Ctrl+Entrée envoie, Entrée conserve les sauts de ligne. Markdown uniquement pour les nouveaux messages : gras, italique, listes, citations, code et liens HTTP/HTTPS. HTML brut/images désactivés et protocoles dangereux refusés ; historique en texte.
+- Destinations : matrice demandée avec PNJ et ennemis joueurs séparés ; ennemis limités aux hostilités déclarées. Alliés selon les droits actuels de chaque mission, défense mutuelle seulement lorsqu’elle autorise déjà la mission. Systèmes inconnus : coordonnées seules. Ni nouveaux droits ni contournement par la destination personnalisée.
+- Stationnement : base effective à l’arrivée réussie, sans retour automatique après installation ; rappel avant arrivée par le mécanisme existant et son devis. Coût de trajet selon les formules actuelles, aucun coût de séjour. Fret déchargé selon les capacités existantes, carburant restant conservé. Destination perdue : repli vers une colonie possédée, revérifiée à l’arrivée. Sans colonie ou carburant suffisant, étudier une attente sans perte automatique : déclenchement, reprise, notification et stockage du carburant restent à préciser après examen du code. Ce cas ne constitue pas encore une règle finalisée.
+
+Lots et PR vers dev successifs ; CI complète avant fusion. Application de migration sur base existante uniquement avec autorisation explicite et sauvegarde vérifiée. Voir le [suivi](EVOLUTIONS_INTERFACES_FLOTTES.md).
+
+### Application du lot simulateur — 14 novembre 2026
+
+Les choix validés de dix simulations sont développés sur `feature/simulateur-dix-combats`.
+La graine de départ produit dix graines successives et distinctes, avec retour à zéro après le maximum sur 32 bits ; la série reste reproductible.
+Le dénominateur du taux de victoire de l’attaquant est toujours dix, y compris en présence d’autres issues.
+Les dix détails gardent pertes, survivants et résumés des rounds, sans moyenne ni écriture de jeu.
+Les limites techniques par combat et le moteur sont conservés ; temps et mémoire de la série sont mesurés dans le [suivi](CADRAGE_OUTILS_STRATEGIQUES.md).
+Cette implémentation locale ne vaut ni publication, ni fusion, ni déploiement.
+
+### Lot profils et guildes — préparation du 14 novembre 2026
+
+Le périmètre validé précédemment est implémenté sur `feature/profils-joueurs-guildes`, après fusion autorisée de la PR #60. Aucun élargissement aux autres univers ni création de titres/trophées.
+Le propriétaire autorise explicitement GD et la reconstruction locale des images Docker, afin de décoder puis réencoder JPEG, PNG et WebP et retirer les métadonnées, notamment GPS.
+Les présentations sont séparées dans `guild_profile`, sans ajouter de colonnes à la table des guildes existantes. Version de formulaire et verrou de guilde empêchent une écriture périmée ou un double envoi d’images.
+Les fichiers restent privés sous `var/guild-media`, servis après contrôle de l’univers, avec noms générés et volume de production dédié. La sauvegarde SQL ne contient pas ces fichiers.
+La migration est seulement préparée ; aucune application à une base existante, restauration ou import de données n’est autorisé par ce lot. [Suivi et limites](PROFILS_JOUEURS_GUILDES.md).
+
+### Lot messagerie — 14 novembre 2026
+
+Après fusion autorisée de la PR #61 dans dev (2170607), le lot 4 applique les
+choix validés aux messages privés, de guilde et du Global. Ajout de
+league/commonmark autorisé explicitement par le propriétaire, sans nouveau
+parseur maison. Sous-ensemble explicite et liens HTTP/HTTPS seulement.
+Les formats sont persistés : messages existants plain, nouveaux envois markdown.
+Identifiant de formulaire et unicité par expéditeur protègent les répétitions
+sous les verrous existants, sans interdire deux envois intentionnels du même
+texte depuis deux formulaires. Aucune règle de jeu ou valeur modifiée.
+Migration créée, non appliquée à une base existante ; autorisation et sauvegarde
+vérifiée restent nécessaires. [Suivi](MESSAGERIE_MARKDOWN.md).
+
+Le CSRF des trois formulaires d’envoi est lié à l’empire d’ouverture : après un
+changement d’univers dans un autre onglet, le formulaire doit être rechargé.
+Ce contrôle refuse un contexte périmé sans élargir les droits d’envoi.
+
+### Destinations et Stationnement — précisions du 14 novembre 2026
+
+Après examen du moteur, le propriétaire valide l’orbite sur ses propres planètes,
+acceptée automatiquement, avec les durées et coûts existants. Stationnement garde
+une réserve aller-retour ; seul l’aller est consommé à l’installation. La réserve
+restante est mutualisée à quai et utilisée avant les stocks planétaires au prochain
+départ. Refuser un départ qui laisserait une réserve ou un fret dépassant la
+capacité des vaisseaux restants. Déchargement explicite plafonné aux stockages ;
+surplus du fret conservé à bord après installation.
+Repli : origine encore possédée et atteignable, sinon colonie possédée atteignable
+au trajet le plus court ; vérifier à chaque arrivée et utiliser la réserve seule.
+Sans repli possible, attente de trajet sans nouveaux combat/coût de séjour,
+vaisseaux indisponibles, visibilité des vols et notification unique. Reprise
+manuelle après devis avec la réserve existante ; attente persistante sinon.
+Ces validations complètent le cas précédemment à étudier ; voir le
+[plan du lot 5](DESTINATIONS_STATIONNEMENT.md). Aucune migration appliquée.
+
+### Application du lot bunker — 14 novembre 2026
+
+Le propriétaire demande l’implémentation du retrait déjà validé de Blindage
+multicouche basique niveau 2 pour le bunker. Le lot ne retire que cette entrée
+du catalogue par défaut ; chantier spatial basique 3, laboratoire basique 2,
+prérequis des autres rangs, coûts, durées, plafonds et bonus restent conservés.
+Les surcharges explicites d’univers ne sont pas modifiées. Pas de migration,
+de modification des données de jeu ou de déploiement Alpha.

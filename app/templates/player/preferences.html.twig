@@ -1,6 +1,7 @@
 {% extends 'base.html.twig' %}
 {% block title %}Paramètres · Genesis Reborn{% endblock %}
 {% block body %}
+{% include 'ui/account_navigation.html.twig' %}
 <section class="panel account-panel">
     <h1>Paramètres</h1><p>Ces réglages s’appliquent à votre compte et à cette interface.</p>
     {{ form_start(form) }}
@@ -14,6 +15,7 @@
         <div class="preference-toggle">{{ form_widget(form.showLockedItems) }}{{ form_label(form.showLockedItems) }}{{ form_errors(form.showLockedItems) }}</div>
     </fieldset>
     <button class="primary full">Enregistrer les paramètres</button>{{ form_end(form) }}
+    <div id="vacances-info" tabindex="-1">
     {% if vacation_state and (vacation_state.enabled or vacation_state.active) %}
     <section id="vacances" class="account-section" aria-labelledby="vacation-heading" tabindex="-1">
         <h2 id="vacation-heading">Mode vacances</h2>
@@ -49,6 +51,8 @@
             </form>
         {% endif %}
     </section>
+    {% else %}<section class="account-section" aria-labelledby="vacation-heading" tabindex="-1"><h2 id="vacation-heading">Mode vacances</h2><p>Le mode vacances n’est pas disponible pour l’empire actuellement sélectionné. <a href="{{ path('app_universes') }}">Consulter mes univers</a></p></section>
     {% endif %}
+    </div>
 </section>
 {% endblock %}

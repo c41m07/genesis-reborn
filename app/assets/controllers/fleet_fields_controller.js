@@ -11,7 +11,7 @@ export default class extends Controller {
         this.coordinateTarget.querySelector('label').textContent=exploring?'Système cible (GALAXIE:SYSTÈME)':'Planète cible (GALAXIE:SYSTÈME:PLANÈTE)';
         input.placeholder=exploring?'A:12':'A:12:3';
         this.coordinateHelpTarget.textContent=exploring?'Exemple : A:12':'Exemple : A:12:3';
-        for(const [target,visible] of [[this.cargoTarget,mission==='transport'],[this.orbitTarget,mission==='orbit']]) {
+        for(const [target,visible] of [[this.cargoTarget,['transport','station'].includes(mission)],[this.orbitTarget,mission==='orbit']]) {
             target.hidden=!visible;
             target.querySelectorAll('input,select').forEach(field=>{field.disabled=!visible});
         }

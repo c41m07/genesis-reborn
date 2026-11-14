@@ -1,7 +1,7 @@
 <?php
 namespace App\Service\Fleet;
 
-use App\Entity\{Fleet,PlayerDiscovery,PlayerUniverse};
+use App\Entity\{Fleet,Planet,PlayerDiscovery,PlayerUniverse};
 use App\Repository\GameRepository;
 use Psr\Clock\ClockInterface;
 
@@ -9,9 +9,10 @@ final class OrbitRequestView
 {
     public function __construct(private GameRepository $repo,private OrbitRequestState $requests,private ClockInterface $clock) {}
 
-    public function forMember(PlayerUniverse $viewer): array
+    public function forMember(PlayerUniverse $viewer,?Planet $planet=null): array
     {
         if(!$viewer->isPlayerControlled() || $viewer->player->lockedAt!==null) return [];
+        if($planet && ($planet->owner?->id!==$viewer->id || $planet->solarSystem->galaxy->universe->id!==$viewer->universe->id)) return [];
         $known=[];
         foreach($this->repo->all(PlayerDiscovery::class,['playerUniverse'=>$viewer]) as $d) $known[$d->solarSystem->id]=true;
         $rows=[];
@@ -24,6 +25,7 @@ final class OrbitRequestView
             $incoming=$fleet->destination->owner?->id===$viewer->id
                 && ($state===null || ($state['recipient_id']??null)===$viewer->id);
             if(!$outgoing && !$incoming) continue;
+            if($planet && ($outgoing?$fleet->homePlanet->id:$fleet->destination->id)!==$planet->id) continue;
             if($state===null && $fleet->status!=='orbit_pending') continue;
             if($state!==null && !in_array($state['status'],['pending','accepted_auto','accepted_manual'],true)) continue;
             $expired=$state!==null && (!$fleet->arrivalAt || $fleet->arrivalAt<=$this->clock->now());

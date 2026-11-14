@@ -100,6 +100,7 @@ test('Les membres financent deux paliers et le traitement attribue les boosts un
     await expect(page.locator('.flash.success')).toContainText('Don enregistré');
     const stale = await card.locator('form').evaluate(form => ({ url: form.action, data: Object.fromEntries(new FormData(form)) }));
     await other.goto('/guildes/projets');
+    await other.getByRole('link', { name: 'Consulter et contribuer', exact: true }).click();
     const peerCard = other.locator('.guild-project');
     await peerCard.getByLabel('Don Métal', { exact: true }).fill('2');
     await peerCard.getByRole('button', { name: 'Donner ces ressources' }).click();
@@ -120,6 +121,7 @@ test('Les membres financent deux paliers et le traitement attribue les boosts un
     await page.goto('/guildes/projets');
     await expect(page.getByRole('button', { name: 'Lancer ' + projectName, exact: true })).toHaveCount(0);
     await expect(page.locator('.guild-project')).toContainText('Vous avez déjà gagné le boost');
+    await page.getByRole('link', { name: 'Consulter le bilan', exact: true }).click();
     for (const width of [1440, 768, 390]) {
       await page.setViewportSize({ width, height: 900 });
       await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);

@@ -9,8 +9,8 @@ use Psr\Clock\ClockInterface;
 
 final class FleetVisibility
 {
-    private const MISSIONS=['explore'=>'Exploration','spy'=>'Espionnage','colonize'=>'Colonisation','transport'=>'Transport','attack'=>'Attaque','conquer'=>'Conquête JcE','defend'=>'Défense','orbit'=>'Orbite'];
-    private const STATUSES=['traveling'=>'En vol','returning'=>'Retour','attacking'=>'Combat','defending'=>'Défense','orbiting'=>'En orbite','occupying'=>'Occupation JcE','orbit_pending'=>'Demande d’orbite'];
+    private const MISSIONS=['explore'=>'Exploration','spy'=>'Espionnage','colonize'=>'Colonisation','transport'=>'Transport','attack'=>'Attaque','conquer'=>'Conquête JcE','defend'=>'Défense','orbit'=>'Stationnement en orbite','station'=>'Stationnement'];
+    private const STATUSES=['traveling'=>'En vol','returning'=>'Retour','attacking'=>'Combat','defending'=>'Défense','orbiting'=>'En orbite','occupying'=>'Occupation JcE','orbit_pending'=>'Demande d’orbite','station_waiting'=>'Stationnement en attente'];
 
     public function __construct(private GameRepository $repo,private RelationResolver $relations,private AttackDetection $detection,
         private GameCatalog $catalog,private LeaderboardService $leaderboard,private ClockInterface $clock) {}
@@ -21,7 +21,7 @@ final class FleetVisibility
         $known=$this->knownSystems($viewer);$level=$this->detection->level($viewer);$now=$this->clock->now();$rows=[];$allies=[];
         foreach($this->repo->activeFleetsInUniverse($viewer->universe) as $fleet) {
             $destination=$fleet->destination?->solarSystem??$fleet->destinationSystem;
-            if(!$destination || ($fleet->homePlanet->solarSystem->galaxy->id!==$galaxy->id && $destination->galaxy->id!==$galaxy->id)) continue;
+            if(!$destination || ($this->origin($fleet)->solarSystem->galaxy->id!==$galaxy->id && $destination->galaxy->id!==$galaxy->id)) continue;
             $owner=$fleet->playerUniverse->id;
             $allies[$owner]??=$this->relations->allied($viewer,$fleet->playerUniverse);
             if(!$this->visible($viewer,$fleet,$known,$level,$now,$allies[$owner])) continue;
@@ -56,7 +56,7 @@ final class FleetVisibility
 
     private function visible(PlayerUniverse $viewer,Fleet $fleet,array $known,int $level,\DateTimeImmutable $now,bool $allied): bool
     {
-        $origin=$fleet->homePlanet->solarSystem;$target=$fleet->destination?->solarSystem??$fleet->destinationSystem;
+        $origin=$this->origin($fleet)->solarSystem;$target=$fleet->destination?->solarSystem??$fleet->destinationSystem;
         if(!isset(self::STATUSES[$fleet->status]) || !$target || $fleet->playerUniverse->universe->id!==$viewer->universe->id
             || $origin->galaxy->universe->id!==$viewer->universe->id || $target->galaxy->universe->id!==$viewer->universe->id) return false;
         if($fleet->playerUniverse->id===$viewer->id) return true;
@@ -66,9 +66,16 @@ final class FleetVisibility
         return $recipient || ($allied && isset($known[$origin->id],$known[$target->id]));
     }
 
+    private function origin(Fleet $fleet): Planet
+    {
+        $id=$fleet->status==='station_waiting'?($fleet->navigation['station']['position_planet_id']??0):($fleet->navigation['station']['route_origin_id']??0);
+        $planet=$fleet->mission==='station' && $id?$this->repo->find(Planet::class,$id):null;
+        return $planet && $planet->solarSystem->galaxy->universe->id===$fleet->playerUniverse->universe->id?$planet:$fleet->homePlanet;
+    }
+
     private function row(PlayerUniverse $m,Fleet $fleet,array $known): array
     {
-        $originSystem=$fleet->homePlanet->solarSystem;$destinationSystem=$fleet->destination?->solarSystem??$fleet->destinationSystem;
+        $originPlanet=$this->origin($fleet);$originSystem=$originPlanet->solarSystem;$destinationSystem=$fleet->destination?->solarSystem??$fleet->destinationSystem;
         $isOwnFleet=$fleet->playerUniverse->id===$m->id;$targetsOwnColony=$fleet->destination?->owner?->id===$m->id;
         $ships = array_values(array_filter($this->repo->all(FleetShip::class, ['fleet' => $fleet]), static fn (FleetShip $ship): bool => $ship->quantity > 0));
         $shipsSummary = $isOwnFleet ? implode(' · ', array_map(fn (FleetShip $ship): string => $ship->quantity.' × '.str_replace('_', ' ', $ship->slug).' ('.$this->catalog->tiers()[$ship->tier]['label'].')', $ships)) : null;
@@ -97,8 +104,8 @@ final class FleetVisibility
             'originGalaxy' => $seeOrigin?$originSystem->galaxy->coordinateCode():null,
             'originX' => $seeOrigin?$originSystem->coordX:null,
             'originY' => $seeOrigin?$originSystem->coordY:null,
-            'originName' => $seeOrigin?$fleet->homePlanet->name:'Origine non découverte',
-            'originCoordinates' => $seeOrigin?$fleet->homePlanet->coordinates():null,
+            'originName' => $seeOrigin?$originPlanet->name:'Origine non découverte',
+            'originCoordinates' => $seeOrigin?$originPlanet->coordinates():null,
             'destinationPlanetId' => $fleet->destination?->id,
             'destinationGalaxyId' => $destinationSystem->galaxy->id,
             'destinationSystemId' => $destinationSystem->id,
@@ -108,6 +115,7 @@ final class FleetVisibility
             'destinationName' => $fleet->destination?->name ?? $destinationSystem->name,
             'destinationCoordinates' => $fleet->destination?->coordinates() ?? ($destinationSystem->galaxy->coordinateCode().':'.$destinationSystem->number()),
             'recallRoute'=>$recallRoute,
+            'forwardRoute'=>$fleet->mission==='station' && isset($fleet->navigation['station']['route_origin_id']),
             'progressBase'=>$incomingAttack?null:($progressState['progress']??null),
             'progressAt'=>$incomingAttack?null:($progressState['at']??null),
             'departureAt' => $incomingAttack?null:$fleet->departureAt?->format(\DateTimeInterface::ATOM),

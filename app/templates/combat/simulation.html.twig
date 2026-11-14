@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+{% block title %}Simulateur de combat · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="strategic-page">
+<div class="page-heading"><div><h1>Simulateur de combat</h1><p>Dix combats avec la même configuration et des graines distinctes, pour une estimation sans garantie.</p></div><a class="secondary" href="{{ path('app_fleets') }}">Préparer une mission</a></div>
+<p class="panel">Deux camps paramétrés, sans occupation ni intervention future non saisie. Limite : {{ max_units }} unités au total et budget de calcul borné. Aucun vaisseau envoyé, aucune ressource dépensée. Les pertes calculées restent fictives.</p>
+<form method="get" class="panel"><label for="simulation-own">Reprendre mes vaisseaux disponibles</label><select id="simulation-own" name="own_planet">{% for planet in planets %}<option value="{{ planet.id }}">{{ planet.name }}</option>{% endfor %}</select>{% if intel %}<input type="hidden" name="report" value="{{ intel.id }}">{% endif %}<button class="secondary">Charger mes forces</button></form>
+{% if intel %}<section class="panel" aria-label="Source des renseignements"><h2>Rapport d’espionnage du {{ intel.date|date('d/m/Y à H:i',preferences.timezone) }}</h2><p>Ces renseignements datés peuvent être obsolètes. Catégories révélées : {{ intel.known ? intel.known|map(category=>{ships:'vaisseaux',research:'recherches',defenses:'défenses',fortress:'forteresse'}[category])|join(', ') : 'aucune' }}. Toute catégorie absente reste inconnue ; ses valeurs ci-dessous sont des hypothèses à confirmer. Toute modification manuelle est également une hypothèse.</p><a href="{{ path('app_espionage_report',{id:intel.id}) }}">Relire le rapport source</a></section>{% endif %}
+{% if error %}<p class="flash error" role="alert">{{ error }}</p>{% endif %}
+<form method="post" class="panel simulation-form">
+<input type="hidden" name="_token" value="{{ csrf_token('combat_simulation') }}"><input type="hidden" name="report" value="{{ intel.id|default(0) }}">
+<div class="strategic-grid">{% for camp,title in {attacker:'Attaquant',defender:'Défenseur'} %}<section><h2>{{ title }}</h2>
+<label for="arrival-{{ camp }}">Arrivée des vaisseaux au round</label><input id="arrival-{{ camp }}" name="forces[{{ camp }}][arrival]" type="number" min="1" max="10" value="{{ forces[camp].arrival|default(1) }}" required>
+{% for group,heading in {ships:'Vaisseaux',research:'Recherches',defenses:'Défenses'} %}{% if camp=='defender' or group!='defenses' %}<details {{ group=='ships' ? 'open' : '' }}><summary>{{ heading }}{% if camp=='defender' and intel %} · {{ sources[group] }}{% endif %}</summary><div class="table-scroll" tabindex="0" role="region" aria-label="{{ heading }} · {{ title }} · tableau défilant horizontalement"><table class="data-table"><caption>{{ heading }} · {{ title }} · niveaux ou quantités</caption><thead><tr><th>Élément</th>{% for tier,label in {basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'} %}<th>{{ label }}</th>{% endfor %}</tr></thead><tbody>
+{% for slug,definition in choices[group] %}<tr><th scope="row">{{ definition.label }}</th>{% for tier,label in {basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'} %}<td><label class="visually-hidden" for="sim-{{ camp }}-{{ group }}-{{ slug }}-{{ tier }}">{{ title }} · {{ definition.label }} · {{ label }}</label><input id="sim-{{ camp }}-{{ group }}-{{ slug }}-{{ tier }}" name="forces[{{ camp }}][{{ group }}][{{ slug }}][{{ tier }}]" type="number" min="0" max="{{ group=='research' ? definition.max_level|default(25) : max_units }}" value="{{ forces[camp][group][slug][tier]|default(0) }}" required></td>{% endfor %}</tr>{% endfor %}
+</tbody></table></div></details>{% endif %}{% endfor %}
+{% if camp=='defender' %}<details><summary>Forteresse · niveaux supposés{% if intel and 'fortress' not in intel.known %} · inconnus dans le rapport{% endif %}</summary>{% for tier,label in {basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'} %}<label for="fortress-{{ tier }}">Forteresse · {{ label }}</label><input id="fortress-{{ tier }}" name="forces[defender][fortress][{{ tier }}]" type="number" min="0" max="25" value="{{ forces.defender.fortress[tier]|default(0) }}" required>{% endfor %}</details>{% endif %}
+</section>{% endfor %}</div>
+<label for="simulation-seed">Graine de départ reproductible</label><input id="simulation-seed" name="seed" type="number" min="0" max="4294967295" value="{{ seed }}" required aria-describedby="simulation-seed-help">
+<p id="simulation-seed-help">La même graine de départ reproduit la série de dix combats. Chaque combat utilise une graine distincte.</p>
+<label><input type="checkbox" name="assumptions" value="1" required> Je confirme les hypothèses saisies, notamment les valeurs zéro pour les renseignements inconnus. Ce scénario ne prédit pas un combat réel.</label>
+<button class="primary">Simuler 10 combats</button>
+</form>
+{% set unit_labels=choices.ships|merge(choices.defenses) %}{% set tier_labels={basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'} %}
+ {% set outcome_labels={attacker_wins:'Victoire de l’attaquant',defender_wins:'Défaite de l’attaquant',draw:'Égalité',ongoing:'Combat non terminé'} %}
+{% if result %}
+<section class="panel" id="simulation-result" aria-labelledby="simulation-result-title">
+<h2 id="simulation-result-title">Estimation sur {{ result.count }} combats</h2>
+<p><strong>Victoires de l’attaquant : {{ result.win_percent }} %</strong> ({{ result.outcomes.attacker_wins }} sur {{ result.count }}).</p>
+<dl class="simulation-outcomes">
+{% for outcome,count in result.outcomes %}<div><dt>{{ {attacker_wins:'Victoires de l’attaquant',defender_wins:'Défaites de l’attaquant',draw:'Égalités',ongoing:'Combats non terminés'}[outcome]|default(outcome) }}</dt><dd>{{ count }}</dd></div>{% endfor %}
+</dl>
+<p>Cette estimation porte sur dix combats : 7 victoires donnent 70 %, sans garantir cette probabilité réelle. Le butin, la reconstruction, les voyages et l’évolution ultérieure des forces ne sont pas simulés.</p>
+<p>Dépliez chaque combat pour consulter ses pertes fictives, ses survivants et ses rounds. Les pertes moyennes ne sont pas calculées.</p>
+{% for trial in result.trials %}
+<details class="simulation-trial" data-simulation-seed="{{ trial.seed }}">
+<summary>Combat {{ loop.index }} · {{ outcome_labels[trial.outcome]|default(trial.outcome) }} · graine {{ trial.seed }}</summary>
+{% include 'combat/_simulation_trial.html.twig' with {trial:trial,unit_labels:unit_labels,tier_labels:tier_labels} only %}
+</details>
+{% endfor %}
+</section>
+{% endif %}
+</div>
+{% endblock %}

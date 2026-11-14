@@ -26,7 +26,9 @@ final class FleetRecallTest extends WebTestCase
 
     protected function setUp(): void
     {
-        $this->client=self::createClient([],['HTTP_HOST'=>'genesis-reborn.localhost']);$this->em=self::getContainer()->get(EntityManagerInterface::class);
+        $this->client=self::createClient([],['HTTP_HOST'=>'genesis-reborn.localhost']);
+        // Conserver l’horloge simulée entre les requêtes HTTP de ce scénario.
+        $this->client->disableReboot();$this->em=self::getContainer()->get(EntityManagerInterface::class);
         $params=$this->em->getConnection()->getParams();
         if(($params['host']??'')!=='database-test' || ($params['dbname']??'')!=='genesis_v2_test') throw new \RuntimeException('Base non isolée.');
         $tool=new SchemaTool($this->em);$metadata=$this->em->getMetadataFactory()->getAllMetadata();$tool->dropSchema($metadata);$tool->createSchema($metadata);
@@ -227,6 +229,7 @@ final class FleetRecallTest extends WebTestCase
     {
         $f=$this->send();$this->clock->sleep(1);$url='/flottes/'.$f->id.'/rappel';$crawler=$this->client->request('GET',$url);self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1','Rappeler la flotte');$form=$crawler->selectButton('Confirmer le rappel')->form();$this->client->submit($form);self::assertResponseRedirects();
+        self::assertSame('returning',$this->state($f->id)['status']);
         $this->client->request('POST',$url,['_token'=>'forged']);self::assertResponseStatusCodeSame(403);
         $this->client->loginUser($this->peer);$this->client->request('GET',$url);self::assertResponseStatusCodeSame(404);
     }

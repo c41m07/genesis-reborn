@@ -9,11 +9,16 @@ une seule référence par sujet ; les anciens bilans ne décrivent pas l’état
 | Besoin | Référence |
 | --- | --- |
 | Comprendre les règles actuelles | [REGLES](REGLES.md) |
+| Comprendre la détection des sondes et les essais Alpha | [Espionnage](REGLES.md#espionnage) |
 | Retrouver un arbitrage produit | [DECISIONS](DECISIONS.md) |
 | Utiliser les guildes, les relations personnelles, les traités et les projets collectifs | [Guide guildes et alliances](GUIDE_GUILDES_ALLIANCES.md) |
 | Retrouver la revue, la fusion et les validations du chantier guildes | [Suivi guildes et alliances](GESTION_GUILDES_ALLIANCES.md) |
 | Préparer la refonte de la console et ses récompenses | [Cadrage de l’administration, brouillon](REFONTE_ADMINISTRATION.md) |
 | Suivre les évolutions des interfaces et flottes | [Lots et décisions ouvertes](EVOLUTIONS_INTERFACES_FLOTTES.md) |
+| Consulter le lot parcours UI/UX et ses validations locales | [Suivi des parcours](PARCOURS_UI_UX.md) |
+| Choisir une destination, déplacer une base et reprendre un stationnement | [Destinations et Stationnement](DESTINATIONS_STATIONNEMENT.md) |\n| Utiliser Ctrl + Entrée et Markdown dans les nouveaux messages | [Messagerie et historique](MESSAGERIE_MARKDOWN.md) |
+| Consulter les profils et personnaliser une guilde | [Profils et présentations](PROFILS_JOUEURS_GUILDES.md) |
+| Utiliser le simulateur par dix combats, les compositions et la recherche avancée | [Cadrage des outils stratégiques](CADRAGE_OUTILS_STRATEGIQUES.md) |
 | Voir les objectifs et vérifications restantes | [ROADMAP](FEUILLE_DE_ROUTE.md) |
 | Comprendre les dossiers, .env, comptes, wiki et interfaces | [ARCHITECTURE](ARCHITECTURE.md) |
 | Installer et livrer sur le serveur | [DEPLOIEMENT](DEPLOIEMENT.md) |
@@ -45,3 +50,5 @@ conservent les dates déjà présentes dans leurs noms. README.md et AGENTS.md g
 standard. REGLES.md et DECISIONS.md conservent les noms chargés par le wiki.
 Le suivi des chantiers Alpha porte le nom SUIVI_ALPHA.md ; ses notes locales
 sont conservées.
+
+- [Étude du coût électrique des opérations](ETUDE_COUT_ELECTRIQUE.md) : coût de 100 E par minute entamée validé, hypothèses et effets des lots, rangs et vitesses.

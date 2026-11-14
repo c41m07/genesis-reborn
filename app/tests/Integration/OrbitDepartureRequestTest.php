@@ -154,7 +154,8 @@ final class OrbitDepartureRequestTest extends WebTestCase
     public function testNpcWorldsAreRefusedButCapturedPlayerColoniesRemainEligible(): void
     {
         $policy=self::getContainer()->get(\App\Service\Fleet\OrbitPolicy::class);$m=$this->player->currentPlayerUniverse;
-        self::assertFalse($policy->canRequest($m,$this->npc));self::assertFalse($policy->canRequest($m,$this->virgin));self::assertFalse($policy->canRequest($m,$this->home));
+        self::assertFalse($policy->canRequest($m,$this->npc));self::assertFalse($policy->canRequest($m,$this->virgin));
+        self::assertTrue($policy->canRequest($m,$this->home));self::assertTrue($policy->automatic($m,$this->home));
         $this->target->npcPlanet=true;self::assertTrue($policy->canRequest($m,$this->target));
     }
 

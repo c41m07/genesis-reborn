@@ -171,3 +171,11 @@ Ce guide ne réalise aucune de ces opérations. La base habituelle, les migratio
 | Parcours réels, formulaires, droits, mobile et fonctionnement sans JavaScript | [Parcours navigateur](../app/tests/browser). |
 
 Avant le commit final de la fonctionnalité : `make validate`, `make lint` avec schéma, `make test`, `npm run build` et `git diff --check` réussis ; 701 tests PHP / 209981 assertions et 13 tests Python. Les 158 scénarios navigateur locaux ont été validés par consolidation après reprise isolée du clavier, sans modifier son délai ni ses assertions. La CI du contenu fusionné a ensuite réussi intégralement, sans relance. La revue finale a réutilisé ces preuves sur le même code, sans annoncer un nouveau déploiement ni une nouvelle validation globale du projet.
+
+## Page de guilde et profils des commandants
+
+Le nom d’une guilde dans le classement et son centre de guilde ouvre sa page. Le lien « Consulter la page de la guilde » existe aussi dans l’équipage. Les noms des commandants du classement, de la messagerie et des membres ouvrent leurs profils dans le même univers, sans informations privées ni effectifs militaires.
+
+Le commandant peut choisir « Personnaliser la guilde » : description en texte simple (2 000 caractères), logo JPEG/PNG/WebP (1 Mo, 512×512 maximum) et bannière (2 Mo, 1920×640 maximum). Sans nouveau fichier, l’image actuelle reste conservée. Après une erreur, le texte est conservé ; les fichiers doivent être sélectionnés de nouveau. Un formulaire périmé est refusé plutôt que d’écraser une autre modification. Aucun grade délégué ne donne ce droit.
+
+Ce nouveau lot nécessite sa migration et son stockage persistant avant activation sur une base existante ; voir le [suivi](PROFILS_JOUEURS_GUILDES.md). Aucun déploiement Alpha n’est annoncé.

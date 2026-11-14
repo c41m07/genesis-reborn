@@ -21,7 +21,7 @@
         <thead><tr><th scope="col">Flotte</th><th scope="col">Mission</th><th scope="col">État</th><th scope="col">Échéance UTC</th><th scope="col">Anomalie</th></tr></thead>
         <tbody>{% for fleet in health.pending %}<tr>
           <th scope="row"><a href="{{ path('app_admin_mission', {id:fleet.id}) }}">Flotte n° {{ fleet.id }}</a></th>
-          <td>{{ {explore:'Exploration',spy:'Espionnage',transport:'Transport',attack:'Attaque',conquer:'Conquête',defend:'Défense',orbit:'Stationnement',colonize:'Colonisation'}[fleet.mission]|default(fleet.mission) }}</td>
+          <td>{{ {explore:'Exploration',spy:'Espionnage',transport:'Transport',attack:'Attaque',conquer:'Conquête',defend:'Défense',orbit:'Stationnement en orbite',station:'Stationnement',colonize:'Colonisation'}[fleet.mission]|default(fleet.mission) }}</td>
           <td>{{ fleet.status == 'returning' ? 'Retour' : 'Aller' }}</td>
           <td>{{ fleet.due_at|date('d/m/Y H:i:s', 'UTC') }}</td>
           <td>{% if fleet.unscheduled %}Planification absente{% endif %}{% if fleet.unscheduled and fleet.overdue %} · {% endif %}{% if fleet.overdue %}Retard supérieur à {{ fleet.late_minutes }} min{% endif %}</td>

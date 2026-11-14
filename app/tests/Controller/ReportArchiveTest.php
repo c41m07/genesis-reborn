@@ -56,6 +56,20 @@ final class ReportArchiveTest extends WebTestCase
         $report->createdAt=new \DateTimeImmutable($date);$report->snapshot=['sender'=>$sender->username,'recipient'=>$recipient->username,'destination'=>'Alpha:1:1'];$this->em->persist($report);return $report;
     }
 
+    public function testAdvancedFiltersRunBeforePaginationAndKeepTheReturnContext(): void
+    {
+        $service=self::getContainer()->get(ReportArchiveService::class);$member=$this->player->currentPlayerUniverse;
+        $criteria=new \App\Service\Search\SearchCriteria(['participant'=>'ArchiveOwner','from'=>'2026-11-12','until'=>'2026-11-12']);
+        self::assertCount(3,$service->page($member,'all',false,1,$criteria)['entries']);
+        self::assertSame([],$service->page($member,'all',false,1,new \App\Service\Search\SearchCriteria(['participant'=>'ArchiveForeign']))['entries']);
+        $planet=$this->home($this->recipient);
+        $target=new \App\Service\Search\SearchCriteria(['planet'=>$planet->name]);
+        self::assertCount(2,$service->page($member,'all',false,1,$target)['entries']);
+        $crawler=$this->client->request('GET','/rapports',['type'=>'combat','participant'=>'ArchiveOwner','from'=>'2026-11-12','until'=>'2026-11-12']);self::assertResponseIsSuccessful();
+        $url=$crawler->filter('a.report-row')->first()->attr('href');self::assertStringContainsString('participant=ArchiveOwner',$url);
+        $this->client->request('GET',$url);self::assertResponseIsSuccessful();self::assertSelectorExists('a.report-back[href*="participant=ArchiveOwner"]');
+    }
+
     public function testGlobalOrderPersonalArchiveRestoreAndProofPreservation(): void
     {
         $service=self::getContainer()->get(ReportArchiveService::class);$member=$this->player->currentPlayerUniverse;

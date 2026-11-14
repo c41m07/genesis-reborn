@@ -7,3 +7,7 @@
 .fleet-destination-suggestions li[aria-selected="true"],.fleet-destination-suggestions li:hover{background:color-mix(in srgb,var(--accent) 18%,var(--panel));color:var(--text)}
 .fleet-pnj-help{grid-column:1/-1;font-size:12px}
 @media(max-width:740px){.fleet-destination-modes{grid-template-columns:1fr}}
+
+.fleet-page-layout>.fleet-hold{grid-column:1/-1;min-width:0}
+.fleet-hold-actions{display:flex;flex-wrap:wrap;gap:8px}
+.fleet-hold-actions form{margin:0}

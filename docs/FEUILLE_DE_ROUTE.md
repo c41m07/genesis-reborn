@@ -1,5 +1,88 @@
 # Roadmap Genesis Reborn
 
+## Bunker : retrait du prérequis Blindage — 14 novembre 2026
+
+Lot 6 sur fix/prerequis-bunker depuis dev d0b4850, après fusion de la PR #63.
+Complexité 2/5 : retirer uniquement Blindage multicouche basique 2, conformément
+au choix validé. Chantier basique 3, laboratoire basique 2, conditions des autres
+rangs, coûts, durées et bonus conservés. Aucun service de permission, schéma,
+surcharge d’univers ou accès acquis modifié.
+Le test de régression reproduit avant correction le refus pour Blindage niveau 2.
+Après correction : 37 tests PHP ciblés / 17 030 assertions réussis (accès et refus
+de construction, atteignabilité des rangs, règles, coûts, détails et cartes HTTP).
+Validation Compose, syntaxe du catalogue et du wiki, contrôle du diff réussis.
+Comparaison intégrale de fortress.yaml à dev : seule l’entrée Blindage retirée.
+Aucun HTML/CSS/JavaScript modifié ; aucune nouvelle interaction d’interface.
+Suite complète et CI non relancées à ce stade ; CI complète exigée avant fusion.
+Publication et PR en brouillon vers dev autorisées, avec suivi/correction de CI.
+Le statut courant est dans la [PR associée](https://github.com/c41m07/genesis-reborn/pulls?q=is%3Apr+head%3Afix%2Fprerequis-bunker).
+Aucune fusion, migration ou livraison Alpha autorisée pour ce lot.
+
+## Destinations et Stationnement — 14 novembre 2026
+
+Lot 5 fusionné avec autorisation dans dev par la [PR #63](https://github.com/c41m07/genesis-reborn/pull/63),
+commit d0b4850. CI complète réussie sur 8c54627 : cinq jobs quality, GitGuardian,
+1 010 tests PHP / 212 487 assertions, 13 Python et 200 parcours navigateur ;
+compilation, lints, schéma et sauvegarde/restauration isolées réussis.
+Aucune migration de la base habituelle ni livraison Alpha. Le
+[suivi du lot](DESTINATIONS_STATIONNEMENT.md) conserve l’analyse et les reprises.
+
+## Messagerie : raccourci et Markdown — 14 novembre 2026
+
+Lot 4 sur feature/messagerie-markdown, depuis dev 2170607 après fusion autorisée de la PR #61. Raccourci et doublons 3/5 ; Markdown 4/5 ; historique/migration 3/5. Privé, guilde et Global, nouveaux messages seulement. CommonMark ajouté avec autorisation ; format historique et soumission identifiée persistés par une migration préparée, non appliquée à la base habituelle. Vérifications ciblées : 140 tests PHP distincts après compléments et 16 parcours navigateur réussis après reprises ; validation Compose, compilation et lints ciblés réussis. Migration non appliquée à la base habituelle ; suite locale complète non relancée. PR #62 fusionnée avec autorisation vers dev, commit bc4930a, après cinq jobs quality et GitGuardian réussis sur b3686bb (988 PHP / 212 335 assertions, 13 Python, 198 navigateur). Aucune livraison Alpha. Voir [le suivi](MESSAGERIE_MARKDOWN.md).
+
+## Profils des joueurs et présentations de guildes — 14 novembre 2026
+
+Lot 3 sur `feature/profils-joueurs-guildes`, depuis `dev` `4c13f20` après fusion autorisée de la PR #60.
+Complexités : profils 3/5 ; personnalisation et stockage des guildes 4/5.
+Périmètre validé : mêmes univers et informations déjà publiques ; aucun titre/trophée nouveau.
+Description de 2 000 caractères, logo JPEG/PNG/WebP 1 Mo / 512×512 et bannière 2 Mo / 1920×640 ; commandant seul.
+GD ajouté aux deux images du projet après autorisation explicite pour décodage/réencodage et suppression des métadonnées.
+Migration `Version20261114133852` préparée : création de `guild_profile` seulement, non appliquée à la base habituelle.
+Vérifications ciblées sur bases et stockages isolés : 79 tests PHP / 386 assertions, 11 parcours navigateur distincts réussis après reprises, dont persistance des images après redémarrage ; validation Compose, compilation, lints ciblés et construction des images réussis. Synchronisation de la base habituelle non exécutée ; ces contrôles locaux ciblés sont distincts de la CI complète ci-dessous. Voir [le suivi](PROFILS_JOUEURS_GUILDES.md).
+La [PR #61](https://github.com/c41m07/genesis-reborn/pull/61) est fusionnée avec autorisation dans dev au commit 2170607, après cinq jobs quality réussis sur 6389774 : 952 PHP, 13 Python et 194 parcours navigateur. GitGuardian classé comme identifiant de test par le propriétaire (skipped). Migration non appliquée à la base habituelle ; aucun déploiement Alpha.
+
+## Simulateur : dix combats — 14 novembre 2026
+
+Lot 2 sur `feature/simulateur-dix-combats`, depuis `dev` `a1abf08`, après fusion autorisée de la PR #59.
+Complexité 4/5 : dix graines distinctes, estimation des victoires de l’attaquant sur dix, issues séparées et détails repliables, sans pertes moyennes.
+Moteur, limites par combat, propriété des renseignements et absence d’écriture de jeu conservés.
+42 tests PHP ciblés / 4 879 assertions, validation Compose, lint et compilation réussis ; parcours navigateur du simulateur réussi en clair/sombre, au clavier, sans JavaScript et à 320/390/1440 px. Contraste corrigé sans affaiblir le contrôle axe. Ce sont des vérifications ciblées, pas la suite complète ni la CI du nouveau lot.
+Le [suivi et les mesures](CADRAGE_OUTILS_STRATEGIQUES.md) détaillent les limites et la reprise.
+La [PR #60](https://github.com/c41m07/genesis-reborn/pull/60) a été fusionnée avec autorisation dans dev au commit `4c13f20`, après CI complète verte sur `c3eef94` : 925 PHP, 13 Python et 192 scénarios navigateur. Aucune migration ni livraison Alpha de ce lot.
+
+## Interfaces des vols et classement — 14 novembre 2026
+
+Lot 1 fusionné dans dev, issu de `feature/interfaces-vols-classement` et de `origin/dev`
+`d5ec2a5` (PR #58 fusionnée, vérifiée sur GitHub). Complexité 3/5.
+Le nom de mission ouvre composition et fret ; rappel à droite de la barre,
+missions distinguées visuellement et propriété indiquée en texte. Les deux
+commandes des catalogues échangent leur position sans changement de comportement.
+Classement joueur croissant/décroissant, avec catégorie et sens conservés dans
+la pagination et au retour du signalement ; instantanés et rangs conservés.
+Les colonnes de guilde non triables perdent leur flèche.
+
+Validation locale partielle : validation Compose, lint et compilation réussis.
+Premier passage navigateur : 9/11 ; deux attentes de tri ont été ajustées pour
+conserver le départage des égalités. Reprise : détails des vols et contrôle axe
+réussis, puis redémarrage de l’environnement. Les deux parcours de tri et la
+suite PHP/Python restent sans bilan final ; Docker était indisponible après ce
+redémarrage. La [PR #59](https://github.com/c41m07/genesis-reborn/pull/59) a ensuite été fusionnée avec autorisation au commit `a1abf08`, après CI complète verte sur `ee49a42` : 913 PHP, 13 Python et 192 scénarios navigateur. Les limites locales ci-dessus restent historiques. Protection de dev vérifiée : PR et cinq jobs quality requis, règles imposées aux administrateurs. Aucun déploiement Alpha ni migration de ce lot.
+Le [suivi](EVOLUTIONS_INTERFACES_FLOTTES.md) distingue les lots
+suivants et les décisions validées du comportement encore à développer.
+
+## Evolution de l’espionnage — 14 novembre 2026
+
+Branche `feature/evolution-espionnage`, issue de `dev` actualisée à `cd58d52` après fusion autorisée de la PR #57 et sa CI complète verte (902 PHP, 13 Python, 191 navigateur). Les règles validées sont une base d’essais Alpha : [détection par rang et défense plafonnée](REGLES.md#espionnage). Aucun déploiement effectué.
+
+Complexité 4/5 : configuration et calcul centralisé ; moyenne des rangs envoyés, tranches défensives et plafond ; conservation des niveaux technologiques, renseignements et traitements d’arrivée. Régression ciblée locale : 26 tests PHP / 1 986 assertions, validation Compose et lint complet réussis. Suite locale complète : 910 tests PHP / 211 572 assertions et 13 tests Python réussis ; trois scénarios navigateur réussis (150 fiches, mission PNJ et rapport privé, exploration réelle). Après la précision finale de texte, 14 tests du catalogue / 1 896 assertions repassent. Publication autorisée par le propriétaire ; les résultats de la CI complète sont à consulter dans la PR vers `dev`. La validation locale ne remplace pas cette CI. Aucune fusion ni aucun déploiement de ce lot autorisés.
+
+Reprise : attendre et examiner la CI complète sur la dernière version de la PR, puis obtenir un accord explicite avant fusion. Aucun changement de schéma ni migration pour ce lot. Le suivi Alpha du 6 novembre conserve son verdict historique et ne décrit pas cette nouvelle livraison.
+
+## Parcours UI/UX et économie — 13 novembre 2026
+
+Lot local sur `feature/amelioration-parcours-ui-ux`, depuis `dev` 7189f45. Navigation, comparatif des colonies, catalogues condensés, recherche du manuel, rubriques des pages et bilan économique : voir le [suivi courant](PARCOURS_UI_UX.md). Le revenu métal/nano total de 10/h et le coût ponctuel de 100 E par minute entamée sont validés explicitement ; [règles](REGLES.md) et [étude](ETUDE_COUT_ELECTRIQUE.md). La branche est publiée avec la [PR #54 vers dev](https://github.com/c41m07/genesis-reborn/pull/54), sans fusion ni déploiement. Les résultats locaux et limites sont consignés dans le suivi ; la CI complète sur PR reste obligatoire avant fusion.
+
 ## Guildes et alliances — intégration du 11 novembre 2026
 
 PR #36 fusionnée dans `dev` (`50e7f33`) après revue finale sans anomalie bloquante et CI verte : grades, relations personnelles, trois traités et projets collectifs. Le [guide](GUIDE_GUILDES_ALLIANCES.md) décrit l’utilisation et l’administration ; le [suivi](GESTION_GUILDES_ALLIANCES.md) conserve les preuves et les bilans historiques. Les nouvelles migrations sur base existante, le déploiement et les réglages/activations des modèles restent à réaliser séparément avec les autorisations prévues.
@@ -1485,3 +1568,20 @@ Dernières retouches locales : bulles sans croix avec fermeture automatique ;
 adhésion dans un onglet distinct ; trois actions de guilde regroupées ; aperçu
 de trois messages vérifié ; départ/dissolution directement visibles selon le rôle.
 Tests ciblés réussis ; CI complète sur cette dernière version avant fusion.
+
+
+## Lot 2 — Outils stratégiques et recherche avancée
+
+Le lot UI/UX est fusionné dans `dev` par la PR #54. Le lot 2 part de `f3b9623`
+sur `feature/outils-strategiques-et-recherche`, dans la PR #55 distincte.
+Intégré dans `dev` par la PR #55 après CI complète réussie. La PR #56 prépare l’Alpha ; aucun déploiement effectué.
+
+| Sous-tâche | Complexité | État |
+| --- | --- | --- |
+| Simulateur réutilisant le moteur réel | 5/5 | Résultat illustratif reproductible, forces propres et rapport daté, hypothèses et calcul borné implémentés. |
+| Compositions personnelles | 4/5 | CRUD, plafond verrouillé de 20, versions et chargement explicite avec manques implémentés. Migration locale autorisée après sauvegarde vérifiée. |
+| Recherche avancée messages/rapports | 4/5 | Sélection SQL par droits/univers, filtres, pagination et conservation du contexte implémentés. |
+
+Voir le [suivi détaillé](CADRAGE_OUTILS_STRATEGIQUES.md) et les décisions validées.
+La CI complète sur la dernière version et l’accord du propriétaire restent
+nécessaires avant fusion. Aucune migration Alpha effectuée.

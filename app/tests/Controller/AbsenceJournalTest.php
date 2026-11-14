@@ -137,9 +137,12 @@ final class AbsenceJournalTest extends WebTestCase
         $expected=[$legacy->id,$older->id,$this->home->id,$recent->id];
         self::assertSame($expected,array_column($repo->planets($membership->universe,$membership),'id'));
         $this->overview();
-        self::assertSame(array_map('strval',$expected),$this->client->getCrawler()->filter('[data-colony-summary]')->each(fn($node)=>$node->attr('data-colony-summary')));
+        self::assertSelectorNotExists('[data-colony-summary]');
+        self::assertSelectorExists('.dashboard-metrics a[href="/planetes"]');
         self::assertSame(array_map('strval',$expected),$this->client->getCrawler()->filter('#sidebar-colony option')->each(fn($node)=>$node->attr('value')));
-        self::assertSelectorTextContains('[data-colony-summary="'.$legacy->id.'"]','Ancienneté approximative');
+        $this->client->request('GET','/planetes');self::assertResponseIsSuccessful();
+        self::assertSame(array_map(static fn($id)=>'planet-'.$id,$expected),$this->client->getCrawler()->filter('.planet-index-card')->each(fn($node)=>$node->attr('id')));
+        self::assertSelectorTextContains('#planet-'.$legacy->id,'Ancienneté approximative');
         self::assertNull($legacy->acquiredAt);
     }
 }

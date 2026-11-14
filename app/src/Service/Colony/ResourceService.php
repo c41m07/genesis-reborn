@@ -106,12 +106,15 @@ final class ResourceService
         $result=$this->simulate($planet,$levels,$stocks,0,$to);
         if($this->vacations->activeAt($periods,$to)) {
             $result['rates']=array_fill_keys(array_keys($result['rates']),0.0);
+            foreach(['production','consumption','uncredited'] as $key) $result[$key]=array_fill_keys(array_keys($result['rates']),0.0);
+            foreach(['sources','consumption_sources'] as $key) foreach($result[$key] as &$sources) $sources=array_fill_keys(array_keys($sources),0.0);
+            unset($sources);
             foreach(['efficiency','antimatter_efficiency','electricity_consumption','hydrogen_consumption'] as $key) $result[$key]=0.0;
         }
         return $result;
     }
 
-    public function snapshot(Planet $planet): array
+    public function snapshot(Planet $planet,bool $includeEconomy=false): array
     {
         $levels=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);$rows=[];foreach($this->repo->all(PlanetResource::class,['planet'=>$planet]) as $resource)$rows[$resource->resourceType]=$resource;
         $protectedRatio=max(0.0,min(1.0,(float)($this->catalog->rules()['combat_loot_protected_storage_ratio']??0.1)));
@@ -121,12 +124,38 @@ final class ResourceService
         foreach($this->catalog->rules()['resources'] as $slug=>$label){
             $capacity=$this->capacity($planet,$slug,$levels);
             $result[$slug]=['label'=>$label,'stock'=>0.0,'rate'=>0.0,'capacity'=>$capacity,'protectedCapacity'=>$capacity*$protectedRatio,'productivity'=>null];
+            if($includeEconomy) $result[$slug]+= ['gross'=>0.0,'consumption'=>0.0,'uncredited'=>0.0,'sources'=>[],'consumptionSources'=>[],'estimateSeconds'=>null,'potentialGross'=>0.0,'potentialSources'=>[],'productionInputs'=>[],'consumptionPotential'=>0.0,'consumerSources'=>[]];
         }
         if($rows===[])return $result;
         $anchor=$rows['electricity']->lastUpdatedAt??array_values($rows)[0]->lastUpdatedAt;$now=$this->clock->now();$stocks=[];foreach($rows as $slug=>$resource)$stocks[$slug]=$resource->currentStock;$simulation=$this->simulateRange($planet,$levels,$stocks,$anchor<$now?$anchor:$now,$now);
         foreach($this->catalog->rules()['resources'] as $slug=>$label){
             $result[$slug]['stock']=max(0.0,(float)($simulation['stocks'][$slug]??0));
             $result[$slug]['rate']=(float)($simulation['rates'][$slug]??0.0);
+            if($includeEconomy) {
+                foreach(['gross'=>'production','consumption'=>'consumption','uncredited'=>'uncredited'] as $field=>$key) $result[$slug][$field]=(float)($simulation[$key][$slug]??0.0);
+                $result[$slug]['sources']=$simulation['sources'][$slug]??[];
+                $result[$slug]['consumptionSources']=$simulation['consumption_sources'][$slug]??[];
+                $potentialSources=['base'=>(float)($input['base'][$slug]??0.0)];$productionInputs=[];
+                foreach($input['factories'] as $factory) if($factory['resource']===$slug) {
+                    $potentialSources[$factory['slug']]=($potentialSources[$factory['slug']]??0.0)+(float)$factory['rate'];
+                    foreach(['electricity','hydrogen'] as $fuel) if($factory[$fuel]>0) {
+                        $productionInputs[$fuel]??=['label'=>$this->catalog->rules()['resources'][$fuel],'gross'=>0.0,'actual'=>0.0];
+                        $productionInputs[$fuel]['gross']+=(float)$factory[$fuel];
+                        $productionInputs[$fuel]['actual']+=(float)($simulation['consumption_sources'][$fuel][$factory['slug']]??0.0);
+                    }
+                }
+                $result[$slug]['potentialGross']=array_sum($potentialSources);
+                $result[$slug]['potentialSources']=$potentialSources;
+                $result[$slug]['productionInputs']=$productionInputs;
+                $consumerSources=[];
+                if(in_array($slug,['electricity','hydrogen'],true)) foreach($input['factories'] as $factory) if($factory[$slug]>0) {
+                    $consumerSources[$factory['slug']]=['gross'=>(float)$factory[$slug],'actual'=>(float)($simulation['consumption_sources'][$slug][$factory['slug']]??0.0)];
+                }
+                $result[$slug]['consumerSources']=$consumerSources;
+                $result[$slug]['consumptionPotential']=array_sum(array_column($consumerSources,'gross'));
+                $rate=$result[$slug]['rate'];$stock=$result[$slug]['stock'];
+                if(abs($rate)>1e-9) $result[$slug]['estimateSeconds']=(int)ceil(($rate>0?max(0.0,$result[$slug]['capacity']-$stock):$stock)/abs($rate));
+            }
             if($slug!=='electricity'&&in_array($slug,$producedResources,true)){
                 $efficiency=(float)$simulation[$slug==='antimatter'?'antimatter_efficiency':'efficiency'];
                 $result[$slug]['productivity']=max(0.0,min(100.0,$efficiency*100));

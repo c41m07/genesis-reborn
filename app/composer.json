@@ -6,10 +6,12 @@
     "require": {
         "php": ">=8.2",
         "ext-ctype": "*",
+        "ext-gd": "*",
         "ext-iconv": "*",
         "doctrine/doctrine-bundle": "^3.3",
         "doctrine/doctrine-migrations-bundle": "^4.0",
         "doctrine/orm": "^3.7",
+        "league/commonmark": "^2.10.7",
         "symfony/amqp-messenger": "7.4.*",
         "symfony/clock": "7.4.*",
         "symfony/console": "7.4.*",

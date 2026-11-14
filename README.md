@@ -6,6 +6,20 @@ L’orientation confirmée est une stratégie au rythme modéré ; les durées d
 
 ## État du projet
 
+- Bunker de défense : déblocage initial basique avec chantier spatial niveau 3 et laboratoire niveau 2, sans recherche Blindage requise. Coûts, durées, plafonds et bonus défensifs conservés ; les surcharges propres aux univers restent applicables.
+
+- Messagerie : Ctrl + Entrée pour envoyer dans les canaux privé, guilde et Global ; Entrée conserve les sauts de ligne. Markdown sécurisé pour les nouveaux messages seulement, historique conservé en texte ; soumissions répétées protégées côté serveur. CommonMark est une dépendance Composer. [Guide et migration préparée](docs/MESSAGERIE_MARKDOWN.md).
+
+- Profils et guildes : profils de joueurs consultables uniquement par les membres du même univers, avec pseudo, guilde/tag et scores/rangs quotidiens déjà publics ; liens depuis classement, messagerie et membres de guilde. Pages de guildes avec description, logo et bannière, modifiables uniquement par le commandant. Voir [le guide et la préparation de migration](docs/PROFILS_JOUEURS_GUILDES.md). GD (JPEG/PNG/WebP) est intégré aux images Docker ; les médias privés utilisent le volume de production `guild_media`, distinct de la sauvegarde SQL.
+- Outils stratégiques : simulateur de dix combats reproductibles pour une même configuration, avec estimation des victoires de l’attaquant, décompte de toutes les issues et détails repliables par combat, sans pertes moyennes ni garantie de probabilité réelle ; 20 compositions personnelles par empire/univers et recherche avancée paginée dans les messages et rapports. Voir [le suivi et les limites](docs/CADRAGE_OUTILS_STRATEGIQUES.md).
+
+- Parcours : la page Flottes et missions affiche les vaisseaux disponibles et les missions de la colonie active, ainsi que ses demandes d’orbite envoyées/reçues ; les compteurs suivent ce périmètre. Charger une composition sur une autre colonie sélectionne cette colonie sans envoyer de flotte. Rubriques liées par des ancres dans Flottes, Inventaire, Projets et Rapports ; confirmations d’annulation avec dépendances et remboursements estimés ; retours aux rapports conservant catégorie, archives et page. Profil, Préférences et Vacances sont reliés ; l’accueil public présente des captures d’un compte de démonstration. [Suivi du lot](docs/PARCOURS_UI_UX.md).
+- Espionnage : risque de détection de base 50 / 40 / 30 % selon le rang des sondes, pondéré par les quantités en mission mixte. La défense gagne un point par tranche complète de cinq sondes présentes, plafonné à vingt ; technologies, score de renseignement et protections conservés. Valeurs validées comme base d’essais Alpha, sans équilibrage confirmé : [règles et exemples](docs/REGLES.md#espionnage).
+- Opérations : recherches, vaisseaux et défenses paient une fois `100 × ceil(durée effective / 60)` en électricité. Soit 100 E par minute entamée sur la commande entière ; un lot est arrondi une seule fois. Les accélérations ne recalculent pas le coût ; les annulations remboursent 25 % du paiement conservé, dans la place disponible. Les reconstructions automatiques suivent aussi cette règle.
+- Catalogues : interrupteur « Vue condensée » placé avant « Éléments verrouillés » et mémorisé sur cet appareil, sans modifier les actions ni les prérequis. Les cartes affichent jusqu’à cinq ressources sur une ligne, avec libellés abrégés si nécessaire. Le bouton gris désactivé indique les ressources manquantes ; les illustrations des rangs verrouillés sont en noir et blanc au repos et retrouvent leurs couleurs au survol ou au focus clavier. Le wiki propose une recherche utilisable sans JavaScript, un sommaire persistant sur ordinateur, un sélecteur mobile et des liens directs ; avec JavaScript, un chapitre est affiché à la fois hors recherche, avec retour arrière conservé. Les points totaux suivent immédiatement le commandant dans le classement ; sur mobile, les autres catégories sont consultables dans chaque ligne. Les catalogues gardent leur présentation, avec les files, flottes en vol et événements fixes au défilement sur grand écran. Un lien direct vers un élément l’encadre en jaune pendant cinq secondes, sans animation si les mouvements sont réduits.
+- Colonies : comparaison par tableau (stocks / capacités, solde net horaire, commandes en file), avec accès direct à chaque colonie et sélection de la ressource sur mobile. Les projets collectifs ont une fiche dédiée à la progression et aux dons, accessible uniquement à leur guilde dans l’univers actif. Le bandeau propose une fiche économique par ressource au survol, au clavier ou au toucher : stock, production brute, production actuelle, consommation brute, consommation actuelle, solde net et délai estimé issus du moteur de production. Les besoins de production distinguent électricité et hydrogène ; les consommations électriques affichent leurs totaux brut et actuel, avec le détail par activité de production repliable, tous rangs cumulés. La ligne « Non stocké / h » est omise. Les fiches électricité et hydrogène récapitulent les usines qui les consomment. Les besoins bruts restent visibles lorsque le stockage est plein ; le gain stocké devient nul. Les pénuries et pauses modifient uniquement les valeurs actuelles. La vue générale garde le compteur et l’accès aux colonies ; leur liste détaillée reste sur Planètes. Bases métal et nano : 10/h chacun avant multiplicateurs ; base nulle pour électricité, antimatière et hydrogène ; production suspendue en vacances.
+- Navigation : les raccourcis « Explorer la galaxie » ouvrent la carte interactive ; la liste des systèmes reste accessible. Le guide technologique se trouve dans Développement et les événements restent accessibles depuis Opérations, même sans événement actif.
+
 **L’Alpha est hébergée, selon le propriétaire.** Son URL publique, sa version exécutée et sa configuration serveur restent à confirmer. Les changements intégrés à `dev` ne sont pas déclarés déployés : consulter [l’état du déploiement](docs/DEPLOIEMENT.md).
 
 Le code comprend :
@@ -15,8 +29,8 @@ Le code comprend :
   - Les échecs de transport des mails de compte sont retentés trois fois au total pendant la requête. Après échec de confirmation à l’inscription, le compte est conservé et le formulaire de renvoi est proposé. Les états et alertes sont journalisés sans adresse ni jeton ; voir [le diagnostic des emails](docs/DIAGNOSTIC_EMAILS.md).
   - Session expirée après 24 h sans requête au serveur ; case « Se souvenir de moi » facultative pendant 30 jours, annulée à la déconnexion. Un cookie de mémorisation valide permet de retrouver sa connexion après expiration de la session.
   - Mots de passe masqués par défaut, avec un bouton œil pour afficher ou masquer chaque champ.
-- Classements joueurs : en-têtes cliquables pour les points totaux (par défaut), bâtiments, recherche, flotte et nombre de planètes ; rang et variation propres à chaque catégorie, tri global avant pagination de 50 lignes, catégorie conservée entre pages. Scores et guildes figés jusqu’au prochain minuit, heure de Paris (été/hiver inclus). Les écarts comparent les deux derniers calculs : dans le tableau joueur, (+N) en vert, (−N) en rouge, (= 0) si inchangé, (—) sans comparaison. Les signes et libellés accessibles complètent les couleurs. Les protections de combat restent en temps réel. Le relais existant initialise et actualise les instantanés persistés ; une lecture rattrape aussi une échéance manquée. Nouveaux joueurs et guildes apparaissent au prochain calcul.
-- Équilibrage des ressources : première planète à 10 000 de chaque ressource, colonies à 5 000 hors électricité selon le rang, stockage de base à 10 000 ; productions passives M40/E0/A10/H80/N20 par heure à position 5, univers ×1. Les règles s’appliquent directement au déploiement, sans date à configurer, y compris à toute la production en attente depuis le dernier calcul enregistré. Les stocks existants et leurs surplus sont conservés. Voir [les règles et la transition](docs/REGLES.md#ressources-initiales-et-production-passive--décision-du-10-novembre-2026).
+- Classements joueurs : en-têtes cliquables pour les points totaux (par défaut), bâtiments, recherche, flotte et nombre de planètes ; rang et variation propres à chaque catégorie, tri global croissant ou décroissant avant pagination de 50 lignes, catégorie et sens conservés entre pages et au retour d’un signalement. Les colonnes non interactives des guildes ne portent pas de flèche de tri. Scores et guildes figés jusqu’au prochain minuit, heure de Paris (été/hiver inclus). Les écarts comparent les deux derniers calculs : dans le tableau joueur, (+N) en vert, (−N) en rouge, (= 0) si inchangé, (—) sans comparaison. Les signes et libellés accessibles complètent les couleurs. Les protections de combat restent en temps réel. Le relais existant initialise et actualise les instantanés persistés ; une lecture rattrape aussi une échéance manquée. Nouveaux joueurs et guildes apparaissent au prochain calcul.
+- Équilibrage des ressources : première planète à 10 000 de chaque ressource, colonies à 5 000 hors électricité selon le rang, stockage de base à 10 000 ; productions passives M10/E0/A0/H0/N10 par heure à position 5, univers ×1. Les règles s’appliquent directement au déploiement, sans date à configurer, y compris à toute la production en attente depuis le dernier calcul enregistré. Les stocks existants et leurs surplus sont conservés. Voir [les règles et la transition](docs/REGLES.md#ressources-initiales-et-production-passive--décision-du-10-novembre-2026).
 - Interface partagée : les événements occupent leur propre zone sous la barre de ressources et défilent avec la page. Carte V2 : numéro, nom et statut des planètes alignés selon l’espace disponible ; les coordonnées des systèmes restent dans les panneaux et ne sont dessinées sur la carte qu’au survol ou au focus clavier d’un résultat de recherche de système.
 - Suivi des pages Bâtiments, Recherche, Chantier spatial et Défenses : activité en haut sur mobile et tablette ; flottes en vol masquées sur mobile (jusqu’à 740 px), conservées sur tablette. À partir de 1 251 px, activité et flottes sont regroupées à droite, activité au-dessus. L’ordre de lecture et l’actualisation en direct sont conservés.
 - Recherche : une file commune par joueur et par univers, accessible depuis toutes ses colonies, avec 30 commandes maximum. Chaque ajout utilise les ressources et le laboratoire de la colonie choisie ; coûts et durée restent fixés à cet instant. Les recherches déjà actives en parallèle sont conservées ; les suivantes attendent leur fin avant de se succéder.
@@ -28,7 +42,7 @@ Le code comprend :
   - Sur mobile, les cinq stocks restent visibles sur une seule ligne à droite de « Colonie active » sous forme compacte. Un clic sur la colonie déplie les stocks exacts, débits, rendements et jauges de stockage ; un second clic les replie.
   - Typographie du jeu harmonisée entre les thèmes : petits textes des catalogues et des files agrandis, champs de saisie à 16 px sur mobile et tablette, messages à 13 px. Les grands titres et les stocks mobiles compacts conservent leurs tailles.
   - Bâtiments, recherches, vaisseaux et défenses regroupés par famille avec trois onglets de rang, niveau ou quantité possédée dans l’onglet, indicateurs de verrouillage et d’action disponible, interrupteur local des éléments verrouillés et coûts abrégés en k/M (valeur exacte accessible). Quatre cartes par ligne sur grand écran, avec adaptation aux écrans plus étroits ; illustrations d’origine en couleur, cadrées en 16/9 et affichées bord à bord sans bandes ; boutons d’amélioration, de recherche et de construction alignés en bas des cartes d’une même ligne. Les quantités à construire restent propres à chaque rang (1 à 100).
-- Flottes, exploration, transport, colonisation, attaque, défense, orbite et espionnage ; combats persistés, conquête de planètes PNJ et rapports privés. Les rapports présentent un résumé puis les détails : tableaux de combat en vis-à-vis par round et type d’unité (effectifs, pertes et tirs), reconstruction des défenses après le verdict, renseignements d’espionnage en cadres par catégorie et bilan des transports. Les anciens combats sans historique de rounds conservent leur bilan disponible.
+- Flottes, exploration, transport, colonisation, attaque, défense, stationnement en orbite, stationnement sur une autre colonie et espionnage ; combats persistés, conquête de planètes PNJ et rapports privés. Les rapports présentent un résumé puis les détails : tableaux de combat en vis-à-vis par round et type d’unité (effectifs, pertes et tirs), reconstruction des défenses après le verdict, renseignements d’espionnage en cadres par catégorie et bilan des transports. Les anciens combats sans historique de rounds conservent leur bilan disponible.
 - Galaxie V2 : modes Exploration, PNJ (niveaux) et Joueurs, positions visuelles alignées par dizaines consécutives sur le tracé des huit bras allongés et courbés (1–10, 11–20, etc.), sans modifier les coordonnées de jeu et cadrage de lecture sur les systèmes disponibles, légende à cases à cocher et disques remplis jusqu’au cercle extérieur, partagés en quatre quarts fixes : PNJ en haut à gauche (orange en exploration ; bleu niveaux 1–3, violet niveaux 4–6 et fuchsia dès le niveau 7 en mode PNJ), allié en haut à droite (vert), neutre/planète vierge en bas à droite (gris), ennemi en bas à gauche (rouge). Les catégories absentes, masquées ou exclues par le mode restent grises. Une maison au survol indique vos colonies dans le système. Les systèmes inexplorés portent un « ? » jaune centré, désactivable dans la légende ; les planètes découvertes distinguent vos colonies, PNJ, mondes inhabités et joueurs alliés, neutres ou ennemis selon la diplomatie existante. Textes agrandis sur ordinateur et mobile. L’infobulle d’un système sépare coordonnées, état d’exploration, décompte des planètes par relation et niveaux PNJ découverts. La vue du système solaire répartit les planètes sur des orbites espacées et animées à leurs vitesses propres (immobiles si les animations sont réduites), avec numéros permanents et nom de la planète sélectionnée uniquement. Les légendes sont compactes et repliées par défaut ; sur la galaxie mobile, les filtres se déplient en bas et le journal sans mission se réduit à un bouton ; sur mobile, les informations du système se déplient depuis une barre en bas. Elle dispose d’une légende des planètes ; un clic sur leur dessin ouvre directement la vue rapprochée, tandis que la liste conserve les fiches et actions.
 - Grades personnalisés de guilde : création et modification par le dirigeant, priorités et permissions déléguées pour l’attribution des grades inférieurs et la diplomatie de guilde. Le transfert du commandement et la dissolution restent réservés au dirigeant ; les alliances personnelles restent indépendantes. Les migrations `Version20261111010000` et `Version20261111173000` réconcilient les historiques existants avant utilisation. Voir le [suivi guildes et alliances](docs/GESTION_GUILDES_ALLIANCES.md).
 - Relations personnelles : alliance réciproque, déclaration de rivalité sans guilde et paix acceptée par les deux joueurs. Les liens de guilde restent prioritaires ; la carte et le classement utilisent la relation effective. Un contrat terminé se distingue d’une proposition en attente.
@@ -443,17 +457,17 @@ après accord et sauvegarde vérifiée. Les autres installations nécessitent le
 propre sauvegarde vérifiée et autorisation avant migration, puis le redémarrage
 des consommateurs. Aucun déploiement Alpha de ce lot n’est annoncé.
 
-Destinations des flottes : trois modes sont proposés, Mes planètes et alliés
-par défaut, Ennemis (dont PNJ connus), et Destination personnalisée. Les joueurs
-neutres restent dans le mode personnalisé. La recherche de pseudonyme propose
-au plus 20 planètes déjà découvertes de l’univers actif, compatibles avec la
-mission. Les suggestions se sélectionnent au clavier et au toucher ; les
-coordonnées restent disponibles pour les destinations personnalisées, notamment
-l’exploration d’un système inconnu. Les liens de la carte conservent leur cible.
-Les attaques classiques des PNJ sont possibles sans capture ni nouveau butin PNJ.
-Conquête JcE conserve ses règles de capture et d’occupation existantes.
-Aucune migration, dépendance ou activation globale supplémentaire pour ce lot D,
-qui n’est pas encore publié ni déployé sur Alpha.
+Destinations des flottes : les catégories suivent la mission. Exploration propose
+les coordonnées des systèmes non explorés ; colonisation les planètes neutres
+découvertes et colonisables ; transport, défense et orbite séparent mes planètes
+des planètes alliées. Attaque et espionnage séparent PNJ et ennemis déclarés ;
+Conquête JcE propose les PNJ et Stationnement mes planètes. Une destination
+personnalisée reste disponible pour chaque mission, sans contourner les droits
+serveur, la découverte ou les protections. Les recherches sont limitées à
+20 suggestions compatibles de cet univers. [Stationnement et reprise](docs/DESTINATIONS_STATIONNEMENT.md)
+déplacent la base à l’arrivée, sans retour automatique ; réserve et surplus de
+fret sont conservés à quai, avec déchargement explicite. Une migration est
+préparée pour ce stock, sans application à la base habituelle.
 
 ### Rapports personnels et attribution administrative
 
@@ -488,6 +502,8 @@ unicité univers/tag et table player_report. L’application à une base existan
 nécessite accord explicite et sauvegarde vérifiée.
 
 ### Rappel des flottes
+
+Dans le suivi des vols, le nom de mission ouvre composition et fret ; le rappel est à droite de la barre. Les libellés de propriété et de mission complètent les distinctions visuelles.
 
 Depuis ses flottes en vol, le joueur peut préparer puis confirmer le rappel
 d’une mission à l’aller, en orbite ou en attente d’accord d’orbite. L’aperçu
@@ -524,8 +540,8 @@ alliés, dans les limites des découvertes, avec contrôles avant sérialisation
 
 
 ### Demandes d’orbite
-Une nouvelle mission Orbite envoie sa demande dès le départ. Les alliés sont
-acceptés automatiquement ; un joueur neutre répond depuis Flottes avant
+Une mission Stationnement en orbite envoie sa demande dès le départ. Vos autres
+colonies et les alliés sont acceptés automatiquement ; un joueur neutre répond depuis Flottes avant
 l’arrivée. La page affiche les demandes envoyées/reçues et leur échéance
 (heure de Paris et compte à rebours). Le refus ou le retrait rappelle la flotte
 depuis la position atteinte ; sans accord valide à l’arrivée, elle rentre.
@@ -567,3 +583,5 @@ Les listes de rapports alignent sélection, résumé et action ; les noms des
 cases sont conservés pour les lecteurs d’écran. Le paragraphe explicatif des
 archives et la phrase technique sur le calcul du préavis en Recherche sont
 retirés des pages concernées. Les règles d’archive et de détection ne changent pas.
+
+- [Étude du coût électrique des opérations](docs/ETUDE_COUT_ELECTRIQUE.md) : coût de 100 E par minute entamée validé, hypothèses et effets des lots, rangs et vitesses.

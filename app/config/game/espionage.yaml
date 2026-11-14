@@ -1,10 +1,12 @@
 provisional: true
 intel_categories: [resources, buildings, research, fleets, defenses]
 report_score_base: 1
-base_detection_chance: 50
+base_detection_by_tier: {basic: 50, intermediate: 40, superior: 30}
 intelligence_countermeasures_weight: 10
 stealth_weight: 10
 extra_probe_weight: 1
 local_probe_weight: 1
+local_probe_batch_size: 5
+local_probe_bonus_cap: 20
 min_detection_chance: 5
 max_detection_chance: 95

@@ -201,7 +201,7 @@ test('Guide technologique : domaines, prérequis réels, filtres, objectif et ac
   expect(errors).toEqual([]);
 });
 
-test('Carte classique : systèmes connu/inconnu, tableau défilant et sans JS', async ({ page, browser }, testInfo) => {
+test('Liste des systèmes : systèmes connu/inconnu, tableau défilant et sans JS', async ({ page, browser }, testInfo) => {
   const email = await enter(page);
   await page.goto('/carte-v2');
   const data = JSON.parse(await page.locator('.galaxy-v2').getAttribute('data-galaxy-v2-map-value'));
@@ -310,7 +310,7 @@ test('V2 : parcours complet au clavier, focus et retour sans canvas', async ({ p
   const context = await browser.newContext({ javaScriptEnabled: false, storageState: await page.context().storageState() });
   const fallback = await context.newPage();
   await fallback.goto('/carte-v2');
-  await fallback.getByRole('link', { name: 'Carte classique', exact: true }).click();
+  await fallback.getByRole('link', { name: 'Liste des systèmes', exact: true }).click();
   await expect(fallback).toHaveURL(/carte(?:\?.*)?$/);
   await expect(fallback.getByRole('button', { name: 'Afficher le système' })).toBeVisible();
   await context.close();

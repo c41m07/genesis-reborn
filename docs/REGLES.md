@@ -44,7 +44,7 @@ Guildes : recrutement ouvert provisoire, adhésion exclusive dans chaque univers
 
 PNJ : les planètes PNJ découvertes du même univers peuvent être combattues par la mission Attaque, sans capture ni butin de ressources PNJ. Leur capture reste réservée à Conquête JcE, avec vaisseau colonie survivant, place disponible et règles d’occupation existantes (24 heures lorsque ce mécanisme est activé). Les bâtiments et stocks suivent les règles de conservation de la capture. Les planètes vierges restent colonisables ; les joueurs actifs ou simplement inactifs ne sont pas conquérables. Les empires déjà oubliés suivent les règles spécifiques détaillées ci-dessous.
 
-Espionnage : une mission cible une planète connue du même univers autre que celles de l’émetteur. Elle transporte uniquement des sondes, détruites à l’arrivée. La détection avertit le propriétaire et bloque le rapport; les renseignements et rapports suivent les niveaux et règles résumés dans docs/archives/DECISIONS_INITIALES.md.
+Espionnage : une mission cible une planète connue du même univers autre que celles de l’émetteur. Elle transporte uniquement des sondes, détruites à l’arrivée. La détection avertit le propriétaire et bloque le rapport; les règles de détection actuelles sont décrites dans la section [Espionnage](#espionnage), les archives conservant les décisions initiales.
 
 Les classements, l’administration, les combats, les missions avancées et l’espionnage sont livrés. Les choix chiffrés de base figurent dans docs/archives/CHOIX_EQUILIBRAGE_2026-11-02.md; leur effet sur le rythme et la difficulté sera mesuré avec les joueurs Alpha.
 
@@ -164,6 +164,18 @@ Les coûts des seuls producteurs croissent par niveau de ×1,12 jusqu’à 20, �
 Une usine dont la production ne peut plus être stockée suspend ses consommations inutiles. Les raffineries et centrales continuent de fournir les besoins immédiats des autres usines lorsque leurs propres stocks sont pleins. Les pénuries et remplissages sont calculés pendant toute la période écoulée ; les petites erreurs numériques ne doivent pas interrompre ce calcul. Les débits nets affichés excluent les excédents impossibles à stocker.
 
 Les valeurs et résultats de référence, la distinction entre délai d’accès et remboursement, les données existantes et les vérifications sont détaillés dans [BUILDING_BALANCE_2026-11-05.md](EQUILIBRAGE.md#production-des-batiments). Les surcharges d’univers peuvent toujours remplacer les valeurs de base. Les coûts et durées déjà payés en file restent conservés.
+
+### Bunker de défense — 14 novembre 2026
+
+Dans le catalogue par défaut, le déblocage initial du bunker basique exige le
+chantier spatial basique niveau 3 et le laboratoire basique niveau 2. Blindage
+multicouche basique niveau 2 n’est plus requis. Les prérequis supplémentaires
+des rangs Intermédiaire et Supérieur restent inchangés.
+
+Seul ce prérequis de recherche est retiré : coûts, durées, plafonds et bonus de
+points de structure des défenses au sol sont conservés. Aucune nouvelle courbe
+linéaire ni capacité de stockage n’est ajoutée. Les surcharges d’univers et les
+accès déjà acquis restent traités par les mécanismes existants.
 
 ### Limites par défaut des univers — 5 novembre 2026
 
@@ -291,7 +303,7 @@ Tous les classements (points totaux des joueurs, bâtiments, recherche, flotte, 
 
 Les évolutions comparent les deux derniers calculs persistés : points actuels moins points précédents ; rang précédent moins rang actuel (une place gagnée est positive). Dans le tableau joueur, gains et pertes sont signés et entre parenthèses sur la même ligne que la valeur ; une valeur inchangée s’affiche « (= 0) ». Sans référence précédente, l’évolution s’affiche « (—) ». La présentation des guildes et de l’aperçu conserve ses marqueurs existants. Les nouveaux inscrits et guildes entrent au prochain calcul. Les noms, relations diplomatiques et protections restent actuels ; les joueurs supprimés ou devenus empires oubliés et les guildes archivées ne sont plus affichés, sans renuméroter les rangs avant l’échéance suivante.
 
-Le classement joueur propose points totaux (défaut), bâtiments, recherche, flotte et nombre de planètes. Chaque catégorie possède son rang et sa variation ; le tri décroissant global précède la pagination de 50 lignes. Les égalités reprennent le départage existant par pseudonyme, sans casse. Aucune variation de rang bâtiments/recherche n’est inventée pour les anciens instantanés : elle devient disponible après deux calculs contenant ce rang.
+Le classement joueur propose points totaux (défaut), bâtiments, recherche, flotte et nombre de planètes. Chaque catégorie possède son rang et sa variation ; le tri global, décroissant par défaut ou croissant après un second clic sur l’en-tête actif, précède la pagination de 50 lignes. Catégorie et sens sont conservés entre les pages et au retour d’un signalement. Le rang officiel de l’instantané ne change pas avec le sens d’affichage. Les égalités conservent l’ordre des rangs de l’instantané, issu du départage existant par pseudonyme, sans casse. Aucune variation de rang bâtiments/recherche n’est inventée pour les anciens instantanés : elle devient disponible après deux calculs contenant ce rang.
 
 Le relais existant déclenche les calculs même sans visite. Les lectures rattrapent une échéance manquée ; après interruption, le calcul utilise l’état disponible à la reprise et indique son heure réelle, sans inventer les états des jours manqués. Les constructions et recherches déjà terminées sont réconciliées avant le calcul. Les instantanés et leurs dernières évolutions sont conservés en base, avec uniquement des identifiants et valeurs de classement, sans copie des identités.
 
@@ -302,11 +314,13 @@ Les valeurs suivantes s’appliquent après activation du nouvel équilibrage. L
 
 | Ressource | Première planète | Colonie basique | Intermédiaire | Supérieure | Stockage de base | Production / h |
 |---|---:|---:|---:|---:|---:|---:|
-| Métal | 10 000 | 5 000 | 6 250 | 7 812,5 | 10 000 | 40 |
+| Métal | 10 000 | 5 000 | 6 250 | 7 812,5 | 10 000 | 10 |
 | Électricité | 10 000 | 0 | 0 | 0 | 10 000 | 0 |
 | Antimatière | 10 000 | 5 000 | 6 250 | 7 812,5 | 10 000 | 10 |
 | Hydrogène | 10 000 | 5 000 | 6 250 | 7 812,5 | 10 000 | 80 |
-| Nano | 10 000 | 5 000 | 6 250 | 7 812,5 | 10 000 | 20 |
+| Nano | 10 000 | 5 000 | 6 250 | 7 812,5 | 10 000 | 10 |
+
+Les taux métal et nano du tableau intègrent la décision du 13 novembre 2026 : 10/h chacun. Les anciennes valeurs 40/20 restent conservées dans l’historique des décisions.
 
 Le rang du vaisseau réellement consommé détermine le kit : ×1, ×1,25 ou ×1,5625 ; les fractions sont conservées et l’électricité reste nulle. Les stocks initiaux ne sont attribués qu’à la création des ressources. Aucun stock existant n’est redistribué ou remis à zéro.
 
@@ -446,16 +460,22 @@ par participation à l’univers et protégé contre les accès tiers et formula
 
 ### Destinations et suggestions des flottes — lot D
 
-Mes planètes et alliés est sélectionné par défaut sur un nouveau formulaire.
-Ce menu regroupe ses colonies et les mondes alliés découverts, compatibles avec
-la mission. Ennemis regroupe les planètes ennemies, PNJ et empires oubliés connus.
-Une ancienne planète PNJ détenue par un joueur neutre relève de la destination
-personnalisée, car son propriétaire actuel prime sur son ancien drapeau PNJ.
+Les catégories dépendent de la mission : exploration = systèmes non explorés
+(coordonnées seules) ; colonisation = planètes neutres découvertes et colonisables ;
+transport, défense et orbite = mes planètes / planètes alliées ; attaque et espionnage =
+PNJ / ennemis déclarés ; conquête JcE = PNJ ; stationnement = mes planètes.
+Le premier type compatible est sélectionné par défaut. Les alliances sont
+filtrées selon les droits propres à chaque mission ; un pacte défensif ne donne
+pas les droits du transport. Les empires oubliés sont des PNJ. Une planète
+anciennement PNJ appartenant à un joueur actif suit sa relation actuelle.
 
-Destination personnalisée conserve les coordonnées et propose une recherche de
-pseudonyme : deux caractères minimum, au plus 20 résultats, sans planète inconnue
-ni donnée d’un autre univers. Les joueurs neutres sont accessibles dans ce mode.
-L’exploration d’un système inconnu garde sa saisie personnalisée habituelle.
+Destination personnalisée conserve la saisie de coordonnées adaptée au système
+ou à la planète. La recherche propose au plus 20 coordonnées de systèmes non
+explorés, sans révéler leurs planètes, propriétaires ou ressources ; pour les
+missions planétaires elle propose les planètes découvertes et compatibles d’un
+pseudonyme. Deux caractères minimum, jamais de résultat d’un autre univers.
+Les joueurs neutres autorisés restent accessibles dans ce mode, sans extension
+des permissions de la mission.
 Les liens préremplis de la carte conservent le contexte de leur cible ; une cible
 connue peut rester consultable en formulaire même si la prévisualisation refuse
 actuellement l’envoi, notamment un destinataire qui refuse les transports.
@@ -569,9 +589,10 @@ La somme pour le préavis n’altère pas la pondération actuelle de l’espion
 
 
 ### Demandes d’orbite au départ — lot I
-Pour les nouveaux départs, l’orbite cible uniquement une planète d’un autre
-joueur actif du même univers, allié ou neutre, dans un système déjà découvert.
-Les planètes ennemies, PNJ ou sans propriétaire sont interdites. L’accord allié
+Pour les nouveaux départs, le Stationnement en orbite cible une autre colonie
+de votre empire ou une planète d’un joueur actif du même univers, allié ou neutre,
+dans un système déjà découvert.
+Les planètes ennemies, PNJ ou sans propriétaire sont interdites. L’accord sur vos propres colonies ou chez un allié
 est automatique ; le propriétaire neutre doit accepter avant l’arrivée.
 La demande expire à l’arrivée réelle, y compris après un boost ou un changement
 autorisé d’échéance. Accepter ne déplace pas la flotte : elle poursuit son trajet.
@@ -639,3 +660,118 @@ de cinq minutes dans l’univers courant, sinon Hors ligne en rouge. Les libell�
 restent affichés. Cette information est réservée à sa propre guilde et actualisée
 lors de l’ouverture ou du rechargement de la liste. Une activité dans un autre
 univers ne rend pas ce membre en ligne ici ; heures et durées ne sont pas révélées.
+
+### Revenu de base métal et nano — décision du 13 novembre 2026
+
+Le revenu de base total est désormais de **10 métal/h et 10 nano/h**, à vitesse ×1 en position 5, au lieu de 40 métal/h et 20 nano/h. Ce sont des taux de remplacement, pas un revenu additionnel. Les modificateurs de position, d’univers et d’événement existants s’appliquent ; les vacances suspendent toujours la production. Le revenu de base est nul pour l’électricité, l’antimatière et l’hydrogène, conformément à la précision validée le 13 novembre 2026. Les productions des bâtiments, stocks et capacités restent inchangés. Le calcul des gains non matérialisés suit la règle courante déjà validée, sans migration.
+
+À stocks nuls, sans usine, à vitesse ×1 en position 5, 48 h fournissent 480 métal et 480 nano : assez pour les 480 métal et 160 nano d’un premier producteur direct. Cela ne produit aucune électricité et ne garantit pas la résolution de tous les blocages. Le coût électrique ponctuel suit la décision validée ci-dessous.
+
+### Électricité ponctuelle des opérations — décision du 13 novembre 2026
+
+Les recherches, vaisseaux et défenses paient une fois à l’ajout de chaque commande : **100 × arrondi supérieur de la durée effective en secondes / 60**. La durée retenue inclut les réductions et multiplicateurs applicables au moment de l’ajout ; les quantités sont calculées comme une commande entière, avec un seul arrondi final. Ce coût s’ajoute aux autres ressources et à un éventuel coût électrique défini par le catalogue. Les bâtiments ne paient pas ce nouveau coût. Ce n’est pas une consommation horaire continue.
+
+Les coûts payés sont figés avec la commande. Une accélération ultérieure ne recalcule pas le prix et ne rembourse aucune électricité. Une annulation rembourse 25 % des coûts effectivement payés, électricité comprise, pour la commande et chaque dépendance annulée, dans la capacité disponible de chaque colonie payeuse. La capture conserve sa règle d’annulation sans remboursement. Les reconstructions automatiques des empires oubliés paient aussi ce coût ; leurs conditions de ressources restent applicables.
+
+Les aperçus et maxima constructibles utilisent le même calculateur que les prélèvements serveur. Les commandes déjà enregistrées gardent leurs coûts payés : aucune taxe rétroactive ni migration. L’[étude chiffrée](ETUDE_COUT_ELECTRIQUE.md) conserve les hypothèses et les risques de blocage des gros lots.
+
+Précision validée le 13 novembre 2026 : le coût électrique initialement approuvé à 1 E par minute entamée est multiplié par 100. L’arrondi porte toujours une seule fois sur la durée entière de la commande, avant multiplication. Une commande de 60 s paie 100 E ; 61 s paient 200 E. Les coûts déjà payés ne sont pas recalculés rétroactivement.
+
+
+## Outils stratégiques personnels (lot 2)
+
+Le simulateur utilise les statistiques du catalogue de l’univers actif, les rangs,
+recherches, bonus de forteresse et le moteur des combats réels. Le résultat est
+une série de dix combats avec les mêmes paramètres et dix graines distinctes.
+La graine de départ reproduit toute la série. Le pourcentage est celui des
+victoires de l’attaquant sur dix : 7 victoires donnent 70 %, sans garantir
+cette probabilité réelle. Victoires, défaites, égalités et autres issues restent
+distinctes ; les détails des dix combats sont repliables, sans pertes moyennes. Les deux camps, leurs arrivées
+et les défenses sont saisis ; occupations, interventions non saisies, voyages,
+butin et reconstruction ne sont pas estimés. Aucun ordre, perte ou paiement
+réel n’est appliqué. Les limites de calcul sont décrites dans le
+[suivi technique](CADRAGE_OUTILS_STRATEGIQUES.md).
+
+Seuls ses vaisseaux disponibles et un rapport d’espionnage encore accessible
+peuvent être repris automatiquement. Le rapport est daté ; ses catégories absentes
+restent inconnues, même si le formulaire propose des hypothèses à zéro. Une
+modification de ses valeurs est présentée comme une hypothèse.
+
+Un empire peut enregistrer 20 compositions au maximum dans son univers, avec
+nom, types, rangs et quantités, puis les charger depuis une de ses colonies.
+Les manques sont présentés avant toute acceptation explicite des quantités
+disponibles. Charger ne construit ni n’envoie de flotte. Le contrôle final
+d’envoi conserve les disponibilités, permissions et protections habituelles ;
+une composition chargée devenue indisponible n’est pas réduite silencieusement.
+
+La recherche dans les messages reste limitée aux conversations privées du
+joueur, à sa guilde actuelle et au Global de son univers. Lire un résultat de
+recherche ne marque pas la conversation comme lue ; l’ouverture de la
+conversation normale conserve son comportement de lecture. La recherche dans
+les rapports conserve leurs droits et archives personnelles. Les filtres par
+nom portent sur les noms actuellement conservés, sans reconstituer un historique
+absent. Les résultats sont paginés par 50 et les dates utilisent le fuseau choisi.
+
+## Espionnage
+
+Décision du 14 novembre 2026 : ces valeurs sont une base d’essais Alpha, pas un équilibrage confirmé par les joueurs. Configuration : `app/config/game/espionage.yaml`.
+
+Le risque de détection de base vaut 50 % pour une sonde Basique, 40 % pour une Intermédiaire et 30 % pour une Supérieure. Pour plusieurs rangs, prendre la moyenne pondérée par leurs quantités, sans arrondi intermédiaire. Le rang n’ajoute aucun renseignement.
+
+Le bonus défensif vaut `min(20, floor(sondes présentes / 5))` points : 0 à 4 sondes donnent 0 point ; 5 donnent 1 ; 99 donnent 19 ; 100 ou davantage donnent 20. Chaque sonde compte pour une unité, quel que soit son rang. Le périmètre reste celui du moteur : sondes dans les flottes inactives de la planète, en défense ou en orbite sur elle ; les trajets ne sont pas ajoutés. Une planète PNJ sans propriétaire conserve le décompte de sa garnison de sondes et ses recherches PNJ.
+
+`Détection brute = base pondérée + 10 × Discipline du secret adverse − 10 × Écran de brouillage de l’espion + (sondes envoyées − 1) + bonus défensif`.
+
+Les niveaux effectifs conservent la somme pondérée des rangs par 1 / 1,25 / 1,5625, arrondie comme auparavant. Limiter ensuite la détection brute entre 5 et 95 %, puis arrondir une seule fois à l’entier le plus proche. La chance de réussite vaut `100 − détection finale` : aucun investissement ne garantit automatiquement le verdict.
+
+Exemples à technologies égales : une sonde Supérieure face à 100 sondes défensives donne 30 + 20 = 50 % de détection et 50 % de réussite. Quatre Basiques et une Supérieure donnent une base de 46 %, puis 50 % de détection après les quatre sondes supplémentaires, sans défense locale.
+
+Le score reste `1 + Analyse tactique de l’espion − Analyse tactique adverse + sondes supplémentaires`, avec plancher nul et cinq catégories au maximum : ressources, bâtiments, recherches, flottes, défenses. Une détection ne révèle rien et avertit le propriétaire. Toutes les sondes envoyées sont consommées à l’arrivée, succès ou détection. Les coûts, prérequis, transports, permissions, vacances et protections restent inchangés. Les anciens rapports conservent le risque enregistré lors de leur résolution ; ils ne sont pas recalculés rétroactivement.
+
+## Profils des joueurs et pages de guildes — 14 novembre 2026
+
+Les profils sont consultables par les joueurs connectés du même univers, depuis le classement, les messages et les membres de guilde. Ils affichent uniquement pseudo, guilde/tag et les cinq scores/rangs déjà publics du classement quotidien. Un nouveau joueur sans instantané reste « Pas encore classé ». Aucun email, activité précise, coordonnées ou effectif militaire n’est exposé ; aucun système de titres ou trophées n’est ajouté.
+
+Les pages des guildes sont consultables dans le même univers lorsque les guildes y sont activées. Elles montrent nom/tag, description, logo, bannière, commandant et nombre de membres. Seul le commandant actuel peut modifier la présentation, même si des grades disposent d’autres permissions déléguées. Les descriptions restent du texte simple, échappé à l’affichage ; les images sont contrôlées et réencodées. Voir les [contraintes et limites](PROFILS_JOUEURS_GUILDES.md).
+
+## Mise en forme de la messagerie — 14 novembre 2026
+
+Dans les messages privés, de guilde et du Global, Ctrl + Entrée envoie ; Entrée
+conserve les sauts de ligne. Les nouveaux messages acceptent gras, italique,
+listes, citations, code et liens HTTP/HTTPS. HTML brut et images ne sont pas
+exécutés ou chargés. Les anciens messages restent du texte simple.
+Le bouton Envoyer reste disponible sans JavaScript ; un envoi répété depuis le
+même formulaire ne crée pas de second message ni de seconde notification.
+La limite de 1 à 2 000 caractères et les droits par univers restent identiques.
+Voir le [guide](MESSAGERIE_MARKDOWN.md).
+
+
+## Stationnement sur une autre colonie — 14 novembre 2026
+
+La mission Stationnement déplace les vaisseaux vers une autre colonie possédée
+et découverte du même univers. La nouvelle base devient effective uniquement
+après l’arrivée réussie ; aucune mission de retour ni récompense n’est créée.
+Les prochains départs utilisent la nouvelle base et les formules habituelles.
+
+Le départ réserve deux fois le carburant aller. À chaque arrivée, seul le coût
+du trajet effectivement programmé est consommé. Un rappel avant arrivée utilise
+le devis habituel et conserve aussi le carburant inutilisé. Le carburant restant
+à l’installation devient un stock embarqué de la flotte inactive de la colonie,
+séparé du fret d’hydrogène. Les départs suivants utilisent d’abord ce carburant,
+puis l’hydrogène de la planète. Le fret est chargé depuis les stocks planétaires ;
+le surplus déjà embarqué n’est pas rechargé automatiquement.
+
+Le fret est déposé dans les capacités disponibles. Le surplus reste embarqué,
+sans perte automatique ; des commandes distinctes déchargent le carburant ou
+le fret, toujours selon la place disponible. Un départ est refusé si les
+vaisseaux laissés à quai ne peuvent plus porter les stocks conservés.
+
+Si la destination est perdue, repli vers l’origine si elle reste possédée et
+atteignable avec la réserve, sinon vers la colonie possédée atteignable au trajet
+le plus court selon les formules actuelles. Les égalités sont départagées par
+identifiant de colonie. Propriété et réserve sont revérifiées à chaque arrivée.
+Le fret d’hydrogène ne sert jamais de carburant. Sans repli possible, les
+vaisseaux restent indisponibles en attente, sans combat supplémentaire, coût
+de séjour, transfert ou perte automatique. Notification unique ; une reprise
+manuelle après devis utilise seulement la réserve existante et une colonie
+possédée et découverte. Sans solution, l’attente persiste.

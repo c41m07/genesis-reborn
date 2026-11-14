@@ -102,6 +102,14 @@ final class EmpireReconstructionTest extends KernelTestCase
         self::assertSame('complete',$this->rebuild());
     }
 
+    public function testReconstructionWaitsForElectricityEvenWhenOtherResourcesAreAvailable(): void
+    {
+        $ship=$this->ship('fighter',1);$this->convert();$ship->quantity=0;$this->em->flush();$this->afterCombat();$this->clock->sleep(300);
+        $this->stocks(10000000);
+        $electricity=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$this->planet,'resourceType'=>'electricity']);$electricity->currentStock=0;$this->em->flush();
+        self::assertSame('resources_missing',$this->rebuild());self::assertNull($this->state()->queueItem);
+    }
+
     public function testUnaffordableCheapestModelDoesNotBlockAnotherModel(): void
     {
         // La sonde coûte moins en valeur mais exige ici du nano indisponible.
@@ -111,7 +119,9 @@ final class EmpireReconstructionTest extends KernelTestCase
         ]]];$this->em->flush();
         $probe=$this->ship('probe',1);$fighter=$this->ship('fighter',1);$this->convert();$probe->quantity=$fighter->quantity=0;
         $this->em->flush();$this->afterCombat();$this->clock->sleep(300);$this->stocks(0);
-        $metal=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$this->planet,'resourceType'=>'metal']);$metal->currentStock=1000;$this->em->flush();
+        $metal=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$this->planet,'resourceType'=>'metal']);$metal->currentStock=1000;
+        $electricity=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$this->planet,'resourceType'=>'electricity']);$electricity->currentStock=300;
+        $this->em->flush();
         self::assertSame('started',$this->rebuild());self::assertSame('fighter',$this->state()->queueItem->itemSlug);
     }
 

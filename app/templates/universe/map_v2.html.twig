@@ -110,15 +110,15 @@
             <button type="button" class="gv2-action-link gv2-system-return" data-action="click->galaxy-v2#returnToPlanetSystem">‹ Revenir au système {{ p.solarSystem.galaxy.coordinateCode() }}:{{ p.solarSystem.number() }}</button>
             <div class="gv2-visual-note">REPRÉSENTATION VISUELLE · DONNÉES DE JEU CI-DESSOUS</div>
             <dl class="gv2-facts"><div><dt>Coordonnées</dt><dd>{{ p.coordinates() }}</dd></div><div><dt>Statut</dt><dd>{{ relation_labels[relation] }}</dd></div>{% if relation == 'npc' %}<div><dt>Niveau PNJ</dt><dd>{{ p.conquestLevel }}</dd></div>{% endif %}</dl>
-            <button type="button" class="gv2-primary-action" data-action="click->galaxy-v2#enterPlanetView">◉ Vue rapprochée</button>
             <div class="gv2-action-list">
                 {% if p.owner and p.owner.id==membership.id %}<a class="gv2-action-link" href="{{ path('app_colony',{id:p.id}) }}">Gérer cette planète →</a>
                 {% elseif p.owner or p.npcPlanet %}
-                    {% if map_can_spy %}{% include 'ui/map_quick_mission.html.twig' with {quick_mission:'spy',quick_target:p.id,quick_return_to:'app_map_v2'} %}{% else %}<p class="gv2-panel-note">Aucune sonde d’espionnage disponible.</p>{% endif %}
+                    {% if map_can_spy %}{% include 'ui/map_quick_mission.html.twig' with {quick_mission:'spy',quick_target:p.id,quick_return_to:'app_map_v2'} %}{% else %}<p class="gv2-panel-note">Aucune sonde d’espionnage disponible. {% if map_origin %}<a href="{{ path('app_colony',{id:map_origin.id,section:'ships',_fragment:'item-probe-basic'}) }}">Construire des sondes</a>{% endif %}</p>{% endif %}
                     {% include 'ui/map_conquest_actions.html.twig' with {map_action_class:'gv2-action-link gv2-action-link--amber',map_note_class:'gv2-panel-note'} %}
                 {% elseif map_can_colonize %}{% include 'ui/map_quick_mission.html.twig' with {quick_mission:'colonize',quick_target:p.id,quick_return_to:'app_map_v2'} %}
-                {% else %}<p class="gv2-panel-note">Colonisation indisponible : vaisseau colonie absent ou limite atteinte.</p>{% endif %}
+                {% else %}<p class="gv2-panel-note">{% if map_stock.colony_ship|default(0) < 1 %}Vaisseau colonie absent. {% if map_origin %}<a href="{{ path('app_colony',{id:map_origin.id,section:'ships'}) }}">Construire un colonisateur</a>{% endif %}{% else %}Limite de colonies atteinte. <a href="{{ path('app_technology_tree') }}#tech-colonial_expansion-basic">Consulter l’expansion coloniale</a>{% endif %}</p>{% endif %}
             </div>
+            <button type="button" class="gv2-action-link" data-action="click->galaxy-v2#enterPlanetView">◉ Vue rapprochée</button>
         </template>
         {% endfor %}{% endif %}
     {% endfor %}

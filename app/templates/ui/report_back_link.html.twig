@@ -1,0 +1,5 @@
+{% set advancedReportFilters = {} %}
+{% for key in ['planet','participant','from','until'] %}{% set value=app.request.query.getString(key) %}{% if value %}{% set advancedReportFilters=advancedReportFilters|merge({(key):value}) %}{% endif %}{% endfor %}
+{% set reportType=app.request.query.get('type','all') %}
+{% if reportType not in ['all','combat','economy','espionage'] %}{% set reportType='all' %}{% endif %}
+<a class="inline-link report-back" href="{{ report_back_url|default(path('app_combat_reports',advancedReportFilters|merge({type:reportType,view:app.request.query.get('view')=='archives'?'archives':'',page:max(1,app.request.query.getInt('page',1))}))) }}">← {{ monitoring_context|default(null) ? 'Retour à la surveillance' : 'Retour aux rapports' }}</a>

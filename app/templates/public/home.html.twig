@@ -5,9 +5,13 @@
     <img src="{{ asset('art/genesis-reborn-emblem.webp') }}" alt="Genesis Reborn" width="150" height="150">
     <h1 id="home-title">Une colonie.<br>Un empire. <em>Votre histoire.</em></h1>
     <p class="lead">Bâtissez votre colonie, explorez des systèmes inconnus et développez votre flotte dans un jeu de stratégie spatiale par navigateur.</p>
-    <h2>Choisissez votre univers</h2>
     <p>Développez vos ressources, lancez vos recherches et préparez vos expéditions. Chaque univers possède sa propre progression.</p>
     <p><a class="primary" href="{{ path('app_register') }}">Créer mon compte</a></p>
     <p>Déjà commandant ? <a href="{{ path('app_login') }}">Se connecter</a></p>
+    <figure class="public-hero-preview"><a href="{{ asset('art/ui-preview-colony.png') }}"><img src="{{ asset('art/ui-preview-colony.png') }}" alt="Vue générale d’une colonie de démonstration : ressources, développement et suivi des activités" width="1440" height="1000"></a><figcaption>Retrouvez vos ressources, vos colonies et vos opérations dans une synthèse commune.</figcaption></figure>
+</section>
+<section class="public-previews" aria-label="Aperçus réels du jeu">
+
+<article><h2>Explorez la galaxie</h2><a href="{{ asset('art/ui-preview-galaxy.png') }}"><img src="{{ asset('art/ui-preview-galaxy.png') }}" alt="Carte interactive de la galaxie sur un compte de démonstration, avec ses systèmes et ses commandes d’exploration" width="1440" height="1000" loading="lazy"></a><p>Découvrez des systèmes inconnus, préparez vos missions et étendez votre empire.</p><a class="secondary" href="{{ path('app_login') }}">Reprendre ma partie</a></article>
 </section>
 {% endblock %}

@@ -1,0 +1,55 @@
+.colony-comparison td{min-width:170px;font-variant-numeric:tabular-nums}
+.colony-comparison th[scope="row"]{min-width:160px}
+.sensitive-actions{border-inline-start:4px solid var(--danger,#c64b5b)}
+.requires-attention{border-inline-start:4px solid var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--panel))}
+.wiki-search{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.wiki-search input{flex:1;min-width:150px}
+.wiki-summary li a{min-height:44px}
+#inventory-boosts,#inventory-boxes,#inventory-pending,#prepare-mission,#active-missions,#orbit-requests-title,#combat-losses,#combat-rounds,#combat-reconstruction,#wiki-summary{scroll-margin-top:160px}
+.fleet-mission-summary dl,.flight-estimate dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.fleet-mission-summary dt,.flight-estimate dt{color:var(--muted);font-size:13px}
+.fleet-mission-summary dd,.flight-estimate dd{margin:4px 0;overflow-wrap:anywhere}
+.public-previews{max-width:1100px;margin:36px auto;padding:20px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.public-previews img{width:100%;height:auto;border-radius:12px;border:1px solid var(--line)}
+@media(max-width:740px){.fleet-mission-summary dl,.flight-estimate dl,.public-previews{grid-template-columns:1fr}}
+
+.intel-section>summary h3{display:inline;margin:0;font-size:16px}
+.resource-stock-capacity{display:flex;flex-wrap:wrap;gap:4px;align-items:baseline}.resource-stock-capacity>small{font-size:13px;color:var(--text);white-space:nowrap}
+section[aria-labelledby="attention-title"] p a{text-decoration:underline;text-underline-offset:3px}
+body[data-theme="light"] .ui-tabs a{color:#4b5563}
+#vacances-info p a{text-decoration:underline;text-underline-offset:3px}
+.building-card .building-costs small{white-space:normal;overflow-wrap:anywhere}
+
+
+.wiki-manual{max-width:1200px}
+.wiki-layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:32px;align-items:start}
+.wiki-chapters{min-width:0}
+.wiki-manual .wiki-chapter{scroll-margin-top:220px}
+.wiki-navigation{position:sticky;top:calc(var(--topbar-height,68px) + 120px);min-width:0}
+.wiki-navigation .wiki-summary{padding:16px;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-height:calc(100dvh - 220px);overflow-y:auto;overscroll-behavior:contain}
+.wiki-chapter-picker{display:none}
+.wiki-navigation a{overflow-wrap:anywhere}
+.empty-next-actions{display:flex;flex-wrap:wrap;gap:10px}
+.fleet-empty-state,.inventory-page .empty-state{padding:18px;min-height:0;text-align:left}
+.fleet-empty-state>.icon{width:24px;height:24px;margin-bottom:8px}
+.fleet-page-layout--no-idle .fleet-workspace,.fleet-page-layout--no-idle .fleet-operations-rail{grid-template-columns:minmax(0,1fr)}
+.flight-operations:not(:has(.flight-operation)){min-height:0;padding-block:16px}
+.flight-operations:not(:has(.flight-operation)) .flight-idle{margin-bottom:0}
+@media(max-width:1099px){
+ .wiki-layout{display:block}
+ .wiki-chapters{margin-top:20px}
+ .wiki-manual .wiki-chapter{scroll-margin-top:340px}
+ .wiki-desktop-summary{display:none}
+ .wiki-navigation{z-index:3;padding:12px;background:var(--panel);border:1px solid var(--line);border-radius:8px}
+ .wiki-chapter-picker{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+ .wiki-chapter-picker label{flex-basis:100%;font-size:14px}
+ .wiki-chapter-picker select{flex:1;min-width:0;margin:0;min-height:44px}
+ .wiki-chapter-picker button{min-height:44px}
+}
+@media(max-width:740px){.wiki-navigation{top:calc(var(--topbar-height,56px) + 60px)}.wiki-manual .wiki-chapter{scroll-margin-top:300px}}
+
+.flight-operations:not(:has(.flight-operation)){flex-direction:column;align-items:stretch}
+.flight-operations:not(:has(.flight-operation))>.flight-idle{max-width:none;width:100%}
+
+.fleet-page-layout>.page-heading>div{min-width:0;max-width:100%}
+.fleet-colony-scope{overflow-wrap:anywhere}

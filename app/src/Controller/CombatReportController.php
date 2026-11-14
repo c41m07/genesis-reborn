@@ -20,8 +20,14 @@ final class CombatReportController extends AbstractController
         $filter = $request->query->getString('type', 'all');
         if (!in_array($filter, ['all', 'combat', 'economy', 'espionage'], true)) $filter = 'all';
         $archived = $request->query->getString('view') === 'archives';
-        $data = $archives->page($membership, $filter, $archived, $request->query->getInt('page', 1));
-        return $this->render('combat/reports.html.twig', $data + ['membership'=>$membership, 'filter'=>$filter, 'archived'=>$archived]);
+        $error=null;$status=200;
+        try {
+            $criteria=new \App\Service\Search\SearchCriteria($request->query->all(),$membership->player->preferences['timezone']??'Europe/Paris');
+            $data=$archives->page($membership,$filter,$archived,$request->query->getInt('page',1),$criteria);
+        } catch(\DomainException $e) {
+            $error=$e->getMessage();$status=422;$criteria=new \App\Service\Search\SearchCriteria([]);$data=['entries'=>[],'report_count'=>0,'page'=>1,'pages'=>1];
+        }
+        return $this->render('combat/reports.html.twig', $data + ['membership'=>$membership, 'filter'=>$filter, 'archived'=>$archived,'criteria'=>$criteria->values,'search_filters'=>$criteria->url(),'search_error'=>$error],new Response(status:$status));
     }
 
     #[Route('/rapports/archives', name: 'app_report_archive_change', methods: ['POST'])]
@@ -39,7 +45,8 @@ final class CombatReportController extends AbstractController
             $archives->change($member, $keys, $operation === 'archive');
             $this->addFlash('success', $operation === 'archive' ? 'Rapports archivés. Vous pouvez les restaurer depuis les archives.' : 'Rapports restaurés dans votre liste.');
         } catch (\DomainException $error) { $this->addFlash('error', $error->getMessage()); }
-        return $this->redirectToRoute('app_combat_reports', ['type'=>$filter, 'view'=>$view, 'page'=>max(1, $request->request->getInt('page', 1))]);
+        try {$criteria=new \App\Service\Search\SearchCriteria($request->request->all(),$member->player->preferences['timezone']??'Europe/Paris');$extra=$criteria->url();} catch(\DomainException) {$extra=[];}
+        return $this->redirectToRoute('app_combat_reports', $extra+['type'=>$filter, 'view'=>$view, 'page'=>max(1, $request->request->getInt('page', 1))]);
     }
 
     #[Route('/rapports/combat/{id}', name: 'app_combat_report', requirements: ['id' => '\d+'], methods: ['GET'])]

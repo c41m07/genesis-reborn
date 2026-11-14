@@ -1,7 +1,7 @@
 {% import 'ui/macros.html.twig' as ui %}
 {% set available = map_stock[quick_mission=='colonize'?'colony_ship':'probe']|default(0) %}
 {% if quick_mission=='colonize' and not map_can_colonize %}
-<small>Colonisation indisponible : vaisseau colonie absent ou aucune place disponible.</small>
+<small>{% if available < 1 %}Vaisseau colonie absent. {% if map_origin %}<a href="{{ path('app_colony',{id:map_origin.id,section:'ships'}) }}">Construire un colonisateur</a>{% endif %}{% else %}Limite de colonies atteinte. <a href="{{ path('app_technology_tree') }}#tech-colonial_expansion-basic">Consulter l’expansion coloniale</a>{% endif %}</small>
 {% elseif map_origin %}
 <form class="map-quick-mission" method="post" action="{{ path('app_fleet_quick_send') }}">
     <input type="hidden" name="_token" value="{{ csrf_token('map-mission-'~quick_mission~'-'~quick_target) }}">
@@ -11,8 +11,8 @@
     <input type="hidden" name="mission" value="{{ quick_mission }}">
     <input type="hidden" name="target" value="{{ quick_target }}">
     {% if quick_mission=='spy' %}<label class="map-probe-count">Sondes <input name="probe_quantity" type="number" min="1" max="{{ available>100?100:(available>map_fleet_limit?map_fleet_limit:available) }}" value="1" required {{ available<1?'disabled':'' }}></label>{% endif %}
-    <button class="{{ quick_mission=='colonize'?'primary':'secondary' }}" {{ available<1?'disabled':'' }}>{{ quick_mission=='explore'?'Envoyer 1 sonde':(quick_mission=='spy'?'Espionner':'Envoyer le vaisseau colonie') }} {{ ui.icon('arrow') }}</button>
+    <button class="{{ quick_mission=='colonize'?'primary':'secondary' }}" {{ available<1?'disabled':'' }}>{{ quick_mission=='explore'?'Envoyer 1 sonde':(quick_mission=='spy'?'Envoyer les sondes d’espionnage':'Envoyer le vaisseau colonie') }} {{ ui.icon('arrow') }}</button>
     {% if quick_mission=='spy' %}<small>Vitesse appliquée : {{ ((preferences.galaxySpySpeed|default(1))*100)|round }} %</small>{% elseif quick_mission=='colonize' %}<small>Vitesse appliquée : {{ ((preferences.galaxyColonizeSpeed|default(1))*100)|round }} %</small>{% endif %}
-    {% if available<1 %}<small>{{ quick_mission=='colonize'?'Aucun vaisseau colonie':'Aucune sonde' }} disponible sur {{ map_origin.name }}.</small>{% endif %}
+    {% if available<1 %}<small>{{ quick_mission=='colonize'?'Aucun vaisseau colonie':'Aucune sonde' }} disponible sur {{ map_origin.name }}. <a href="{{ path('app_colony',{id:map_origin.id,section:'ships',_fragment:quick_mission=='colonize'?'item-colony_ship-basic':'item-probe-basic'}) }}">{{ quick_mission=='colonize'?'Choisir un colonisateur au chantier':'Choisir une sonde au chantier' }}</a></small>{% endif %}
 </form>
 {% else %}<small><a href="{{ path('app_planets') }}">Choisir une colonie de départ</a></small>{% endif %}

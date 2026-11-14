@@ -98,12 +98,6 @@
         "level": 2
       }
     ],
-    "technologies": [
-      {
-        "slug": "structural_armor",
-        "tier": "basic",
-        "level": 2
-      }
-    ]
+    "technologies": []
   }
 }

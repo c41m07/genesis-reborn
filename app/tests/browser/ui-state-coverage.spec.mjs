@@ -64,8 +64,13 @@ test('Les écrans métier se chargent, restent stables et exposent un arbre acce
     if (route === '/') await expect(page.locator('.dashboard-journal .dashboard-empty')).toContainText('Aucun événement d’absence à consulter');
     if (route === '/flottes') {
       await expect(page.getByRole('heading', { name: 'Aucun vaisseau disponible' })).toBeVisible();
+      const orbit = page.locator('[data-live-region="orbit-requests"]');
+      await expect(orbit.locator('summary')).toContainText('Demandes en cours : 0');
+      await expect(orbit.getByText('Aucune demande d’orbite envoyée ou reçue en cours.', { exact: true })).toBeHidden();
+      await orbit.locator('summary').focus();
+      await page.keyboard.press('Enter');
       await expect(page.getByText('Aucune demande d’orbite envoyée ou reçue en cours.', { exact: true })).toBeVisible();
-      await expect(page.getByText('Aucune flotte en vol. Les départs et les retours de toutes vos colonies apparaissent ici.')).toBeVisible();
+      await expect(page.getByText('Aucune mission en cours au départ de cette colonie.')).toBeVisible();
       await expect(page.getByRole('heading', { name: 'Journal des missions' })).toHaveCount(0);
     }
     if (route === '/rapports') await expect(page.getByRole('heading', { name: 'Aucun rapport dans cette catégorie' })).toBeVisible();

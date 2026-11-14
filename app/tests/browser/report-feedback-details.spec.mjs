@@ -43,6 +43,9 @@ test('Renseignements : rangs actuels, ancien format, ressources et détection', 
     WHERE p.email=${quote(email)} LIMIT 1`);
   const id = queryIsolatedSql(project, 'SELECT MAX(id) FROM espionage_report');
   await page.goto(`/rapports/espionnage/${id}`);
+  await expect(page.locator('.intel-section[open]')).toHaveCount(0);
+  for(const summary of await page.locator('.intel-section > summary').all()) { await summary.focus(); await page.keyboard.press('Enter'); }
+  await expect(page.locator('.intel-section[open]')).toHaveCount(5);
   for (const [label, level] of [['Mine basique', 4], ['Mine orbitale', 2], ['Recherche historique', 3], ['Recherche supérieure', 5]]) {
     await expect(page.locator('.intel-card').filter({ hasText: label })).toContainText(`Niveau ${level}`);
   }

@@ -57,7 +57,7 @@
       {% if accessible %}
         <form method="post" action="{{ path('app_universe_join', {id: u.id}) }}">
           <input type="hidden" name="_token" value="{{ csrf_token('join' ~ u.id) }}">
-          <button class="primary full">{{ current ? 'Continuer dans cet univers' : 'Rejoindre cet univers' }} ↗</button>
+          <button class="primary full">{{ joined[u.id]|default(false) ? 'Reprendre mon empire' : 'Créer mon empire dans cet univers' }} ↗</button>
         </form>
       {% elseif opensLater %}
         <p class="universe-availability">Ouverture le <time datetime="{{ u.startsAt|date('c', 'UTC') }}">{{ u.startsAt|date('d/m/Y à H:i', 'UTC') }} UTC</time>.</p>

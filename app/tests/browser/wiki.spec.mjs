@@ -28,8 +28,19 @@ test('Wiki : accès, guide, sources, clavier et mobile dans les deux thèmes', a
   await expect(page.getByRole('link', { name: 'Comprendre le jeu : consulter le wiki', exact: true })).toHaveCount(0);
   await page.getByRole('link', { name: 'Consulter le wiki', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Wiki du jeu', exact: true })).toBeVisible();
+  await page.getByLabel('Rechercher dans le manuel').fill('colonisation');
+  await page.getByRole('button',{name:'Rechercher',exact:true}).click();
+  await expect(page).toHaveURL(/q=colonisation/);
+  await expect(page.locator('.wiki-chapter').first()).toContainText(/colonisation/i);
+  await page.getByLabel('Rechercher dans le manuel').fill('aucunchapitrexyz');
+  await page.getByRole('button',{name:'Rechercher',exact:true}).click();
+  await expect(page.getByText('Aucun chapitre ne correspond.',{exact:false})).toBeVisible();
+  await page.getByRole('link',{name:'Afficher tout le manuel'}).click();
   const guide = JSON.parse(readFileSync('docs/wiki.json', 'utf8'));
   for (const section of guide) {
+    await page.locator('.wiki-summary a[href="#wiki-'+section.id+'"]').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#wiki-'+section.id)).toBeVisible();
     await expect(page.locator(`#wiki-${section.id}`)).toContainText(section.title);
     for (const text of section.paragraphs) await expect(page.locator(`#wiki-${section.id}`)).toContainText(text);
     for (const step of section.steps ?? []) await expect(page.locator(`#wiki-${section.id}`)).toContainText(step);
@@ -48,9 +59,17 @@ test('Wiki : accès, guide, sources, clavier et mobile dans les deux thèmes', a
   await page.getByRole('navigation', { name: 'Sommaire du wiki' }).getByRole('link', { name: 'Flottes et exploration' }).focus();
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/#wiki-missions$/);
+  await expect(page.locator('.wiki-navigation')).toBeInViewport();
+  expect(await page.locator('.wiki-navigation').evaluate(el => getComputedStyle(el).position)).toBe('sticky');
+  const invalidChapter = await page.goto('/wiki?chapter=inconnu');
+  expect(invalidChapter.status()).toBe(404);
   for (const source of ['regles', 'decisions']) {
     await page.goto(`/wiki/references/${source}`);
-    await expect(page.locator('.wiki-reference')).toHaveText(readFileSync(`docs/${source === 'regles' ? 'REGLES' : 'DECISIONS'}.md`, 'utf8'));
+    const restored=await page.locator('.wiki-guide').evaluate(guide=>guide.querySelector(':scope > .wiki-reference').textContent+[...guide.querySelectorAll(':scope > details')].map(detail=>'## '+detail.querySelector('summary').textContent+detail.querySelector('pre').textContent).join(''));
+    expect(restored.replace(/\s+/g,' ').trim()).toBe(readFileSync(`docs/${source === 'regles' ? 'REGLES' : 'DECISIONS'}.md`, 'utf8').replace(/\s+/g,' ').trim());
+    await page.locator('.wiki-guide>details').first().locator('summary').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('.wiki-guide>details').first().locator('pre')).toBeVisible();
     await expect(page.locator('.wiki-reference script')).toHaveCount(0);
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1280);
   }
@@ -62,11 +81,19 @@ test('Wiki : accès, guide, sources, clavier et mobile dans les deux thèmes', a
     runIsolatedSql(process.env.BROWSER_ROUTER, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END, '$.theme', '${theme}') WHERE email='${email}'`);
     await page.goto('/wiki');
     await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
-    await page.locator('.wiki-calculation summary').first().focus();
-    await expect(page.locator('.wiki-calculation summary').first()).toBeFocused();
-    for (const summary of await page.locator('.wiki-calculation summary').all()) await summary.click();
+    await page.goto('/wiki#wiki-calcul-production');
+    await expect(page.locator('#wiki-calcul-production')).toBeVisible();
+    await page.locator('.wiki-chapter:visible .wiki-calculation summary').first().focus();
+    await expect(page.locator('.wiki-chapter:visible .wiki-calculation summary').first()).toBeFocused();
+    for (const summary of await page.locator('.wiki-chapter:visible .wiki-calculation summary').all()) await summary.click();
     for (const width of [1440, 768, 390]) {
       await page.setViewportSize({ width, height: 900 });
+      if (width < 1100) {
+        await expect(page.getByLabel('Choisir un chapitre')).toBeVisible();
+        await expect(page.getByRole('navigation', { name: 'Sommaire du wiki' })).toBeHidden();
+      } else {
+        await expect(page.getByRole('navigation', { name: 'Sommaire du wiki' })).toBeVisible();
+      }
       await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
       await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
       await page.screenshot({ path: testInfo.outputPath(`wiki-${theme}-${width}.png`) });
@@ -96,8 +123,11 @@ test('Wiki : accès, guide, sources, clavier et mobile dans les deux thèmes', a
     await calculation.locator('summary').focus();
     await noScriptPage.keyboard.press('Enter');
     await expect(calculation.locator('.wiki-formula')).toBeVisible();
-    await noScriptPage.getByRole('navigation', { name: 'Sommaire du wiki' }).getByRole('link', { name: 'Flottes et exploration' }).click();
+    await noScriptPage.getByLabel('Choisir un chapitre').selectOption('missions');
+    await noScriptPage.getByRole('button', { name: 'Ouvrir le chapitre' }).click();
     await expect(noScriptPage).toHaveURL(/#wiki-missions$/);
+    await expect(noScriptPage.locator('#wiki-title-missions')).toBeInViewport();
+    await expect.poll(() => noScriptPage.evaluate(() => document.querySelector('#wiki-title-missions').getBoundingClientRect().top - document.querySelector('.wiki-navigation').getBoundingClientRect().bottom)).toBeGreaterThanOrEqual(0);
     await expect.poll(() => noScriptPage.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   } finally {
     await noScriptContext.close();

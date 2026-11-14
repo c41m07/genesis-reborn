@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-    static targets = ['panel', 'friendly', 'enemies', 'search', 'results', 'searchStatus', 'choicesStatus', 'coordinates'];
+    static targets = ['panel', 'mode', 'choice', 'search', 'searchLabel', 'searchHelp', 'results', 'searchStatus', 'choicesStatus', 'coordinates'];
     static values = { url: String };
 
     connect() {
@@ -18,13 +18,19 @@ export default class extends Controller {
         this.searchAbort?.abort();
     }
 
-    get mode() { return this.element.querySelector('[name="destination_mode"]:checked')?.value || 'friendly'; }
-    get selectedField() { return this.mode === 'custom' ? this.coordinatesTarget : this[this.mode + 'Target']; }
+    get mode() { return this.element.querySelector('[name="destination_mode"]:checked')?.value || 'custom'; }
+    get selectedField() { return this.mode === 'custom' ? this.coordinatesTarget : this.choiceTargets.find(field => field.name === this.mode + '_destination'); }
 
     changed(event) {
         if (event.target.name === 'destination_mode') this.selectMode();
         if (event.target.name === 'mission' && event.target.value !== this.mission) {
+            const previousType = this.mission === 'explore';
             this.mission = event.target.value;
+            if (previousType !== (this.mission === 'explore') || this.coordinatesTarget.value === this.suggestedCoordinates) {
+                this.coordinatesTarget.value = '';
+            }
+            if (previousType !== (this.mission === 'explore')) this.searchTarget.value = '';
+            this.suggestedCoordinates = null;
             this.items = [];
             this.searchStatusTarget.textContent = '';
             this.close();
@@ -34,18 +40,26 @@ export default class extends Controller {
         if (event.target.name === 'coordinates' && event.target.value !== this.suggestedCoordinates) this.suggestedCoordinates = null;
     }
 
-    selectMode() {
-        this.items = [];
-        this.close();
-        this.searchAbort?.abort();
+    selectMode(resetSuggestions = true) {
+        if (resetSuggestions) {
+            this.items = [];
+            this.close();
+            this.searchAbort?.abort();
+        }
         for (const panel of this.panelTargets) {
             const visible = panel.dataset.mode === this.mode;
             panel.hidden = !visible;
             panel.querySelectorAll('input,select').forEach(field => { field.disabled = !visible; field.required = visible && field.name !== ''; });
         }
+        const exploring = this.mission === 'explore';
+        this.searchLabelTarget.textContent = exploring ? 'Rechercher un système par coordonnées' : 'Pseudonyme du commandant';
+        this.searchHelpTarget.textContent = exploring
+            ? 'Deux caractères minimum. Seules les coordonnées des systèmes non explorés sont proposées.'
+            : 'Deux caractères minimum. Seules les planètes découvertes et compatibles avec la mission sont proposées.';
+        this.resultsTarget.setAttribute('aria-label', exploring ? 'Systèmes non explorés proposés' : 'Planètes découvertes proposées');
         const field = this.selectedField;
-        this.choicesStatusTarget.textContent = this.mode !== 'custom' && field.options.length <= 1
-            ? 'Aucune planète découverte compatible dans ce mode. Choisissez un autre mode de destination.'
+        this.choicesStatusTarget.textContent = this.mode !== 'custom' && field && field.options.length <= 1
+            ? 'Aucune destination compatible dans ce mode. Choisissez un autre type de destination.'
             : '';
     }
 
@@ -53,9 +67,8 @@ export default class extends Controller {
         this.choicesAbort?.abort();
         this.choicesAbort = new AbortController();
         const mission = this.mission;
-        const previous = { friendly: this.friendlyTarget.value, enemies: this.enemiesTarget.value };
-        this.fill(this.friendlyTarget, []);
-        this.fill(this.enemiesTarget, []);
+        const previous = Object.fromEntries(this.choiceTargets.map(field => [field.name, field.value]));
+        for (const field of this.choiceTargets) this.fill(field, []);
         this.choicesStatusTarget.textContent = 'Chargement des destinations…';
         try {
             const url = new URL(this.urlValue, location.origin);
@@ -64,12 +77,22 @@ export default class extends Controller {
             if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) throw new Error();
             const data = await response.json();
             if (this.mission !== mission) return;
-            for (const group of ['friendly', 'enemies']) {
-                this.fill(this[group + 'Target'], data.groups[group]);
-                if ([...this[group + 'Target'].options].some(option => option.value === previous[group])) this[group + 'Target'].value = previous[group];
+            for (const field of this.choiceTargets) {
+                const group = field.name.replace('_destination', '');
+                this.fill(field, data.groups[group] ?? []);
+                if ([...field.options].some(option => option.value === previous[field.name])) field.value = previous[field.name];
             }
-            if (this.mode !== 'custom') this.selectMode();
-            else this.choicesStatusTarget.textContent = '';
+            for (const label of this.modeTargets) {
+                const input = label.querySelector('input');
+                const available = input.value === 'custom' || data.modes.includes(input.value);
+                label.hidden = !available;
+                input.disabled = !available;
+                if (!available) input.checked = false;
+            }
+            if (!this.element.querySelector('[name="destination_mode"]:checked')) {
+                this.element.querySelector('[name="destination_mode"][value="' + data.modes[0] + '"]').checked = true;
+            }
+            this.selectMode(false);
             this.selectedField.dispatchEvent(new Event('change', { bubbles: true }));
         } catch (error) {
             if (error.name !== 'AbortError') this.choicesStatusTarget.textContent = 'Les listes sont indisponibles. Vous pouvez utiliser Destination personnalisée.';
@@ -77,9 +100,9 @@ export default class extends Controller {
     }
 
     fill(select, rows) {
-        select.replaceChildren(new Option('Choisir une planète découverte compatible', ''));
+        select.replaceChildren(new Option(this.mission === 'explore' ? 'Choisir un système non exploré' : 'Choisir une planète découverte compatible', ''));
         for (const row of rows) {
-            if (Number(row.id) === Number(this.element.elements.origin.value)) continue;
+            if (row.type !== 'system' && Number(row.id) === Number(this.element.elements.origin.value)) continue;
             const option = new Option(row.label, String(row.id));
             option.dataset.systemCoordinates = row.systemCoordinates;
             select.append(option);
@@ -97,7 +120,7 @@ export default class extends Controller {
             this.coordinatesTarget.dispatchEvent(new Event('change', { bubbles: true }));
         }
         const query = this.searchTarget.value.trim();
-        this.searchStatusTarget.textContent = query.length < 2 ? '' : 'Recherche des planètes découvertes…';
+        this.searchStatusTarget.textContent = query.length < 2 ? '' : (this.mission === 'explore' ? 'Recherche des systèmes non explorés…' : 'Recherche des planètes découvertes…');
         if (query.length >= 2) this.timer = setTimeout(() => this.loadSuggestions(), 250);
     }
 
@@ -114,7 +137,7 @@ export default class extends Controller {
             if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) throw new Error();
             const data = await response.json();
             if (this.mode !== 'custom' || this.mission !== mission || this.searchTarget.value.trim() !== query) return;
-            this.items = data.suggestions.filter(row => Number(row.id) !== Number(this.element.elements.origin.value));
+            this.items = data.suggestions.filter(row => row.type === 'system' || Number(row.id) !== Number(this.element.elements.origin.value));
             this.resultsTarget.replaceChildren();
             this.active = -1;
             for (const [index, row] of this.items.entries()) {
@@ -131,7 +154,7 @@ export default class extends Controller {
             this.searchTarget.setAttribute('aria-expanded', String(this.items.length > 0));
             this.searchStatusTarget.textContent = this.items.length
                 ? this.items.length + ' destination(s) proposée(s). Flèches puis Entrée pour choisir.'
-                : 'Aucune planète découverte compatible pour ce pseudonyme.';
+                : (this.mission === 'explore' ? 'Aucun système non exploré correspondant.' : 'Aucune planète découverte compatible pour ce pseudonyme.');
         } catch (error) {
             if (error.name !== 'AbortError') this.searchStatusTarget.textContent = 'Suggestions indisponibles. Vous pouvez saisir les coordonnées.';
         }
@@ -163,7 +186,7 @@ export default class extends Controller {
     choose(row) {
         this.coordinatesTarget.value = this.mission === 'explore' ? row.systemCoordinates : row.coordinates;
         this.suggestedCoordinates = this.coordinatesTarget.value;
-        this.searchTarget.value = row.owner;
+        this.searchTarget.value = row.owner ?? row.coordinates;
         this.searchStatusTarget.textContent = 'Destination sélectionnée : ' + row.label;
         this.close();
         this.items = [];

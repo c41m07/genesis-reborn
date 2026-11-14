@@ -30,12 +30,14 @@ test('Stock protégé et productivité réelle, pénuries et reprise sans rechar
     const events = page.getByRole('region', { name: 'Événements de l’univers' });
     await expect(events).toBeVisible();
     await expect(page.locator('.resource-event-stack .event-drawer-wrap')).toHaveCount(0);
+    await page.evaluate(async () => { await document.fonts.ready; window.scrollTo({top:0,behavior:'instant'}); });
+    await expect.poll(()=>page.evaluate(()=>window.scrollY)).toBe(0);
     const stackBox = await page.locator('.resource-event-stack').boundingBox();
     const stripBox = await strip.boundingBox();
     expect(stackBox.height).toBeCloseTo(stripBox.height, 0);
     const eventBox = await events.boundingBox();
     expect(eventBox.y).toBeGreaterThanOrEqual(stripBox.y + stripBox.height - 1);
-    await expect(events).toHaveCSS('position', 'relative');
+    await expect(events).toHaveCSS('position', 'sticky');
     await events.locator('summary').focus();
     await page.keyboard.press('Enter');
     await expect(events.locator('details')).toHaveAttribute('open', '');

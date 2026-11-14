@@ -21,6 +21,7 @@ final class PlayerReportController extends AbstractController
         $session=$request->getSession();$contexts=$session->get('player_report_contexts',[]);
         $category=$request->query->getString('category','points');
         if(!isset(PlayerReportService::CATEGORIES[$category])) $category='points';
+        $direction=$request->query->getString('direction')==='asc'?'asc':'desc';
         $page=max(1,$request->query->getInt('page',1));$error=null;$draft=['reason'=>'','comment'=>''];$saved=null;$key='';
         if($request->isMethod('POST')) {
             if(!$this->isCsrfTokenValid('player_report_'.$id,$request->request->get('_token'))) throw $this->createAccessDeniedException('Formulaire expiré.');
@@ -30,7 +31,7 @@ final class PlayerReportController extends AbstractController
                 if(!$saved || $saved['reporter_id']!==$member->id || $saved['target_id']!==$id || $saved['universe_id']!==$member->universe->id) throw new \DomainException('Formulaire expiré. Rouvrez le signalement depuis le classement.');
                 $changed=$reports->submit($member,$target,$draft['reason'],$draft['comment'],$saved,$key);
                 $this->addFlash('success',$changed?'Signalement transmis à la modération.':'Ce signalement a déjà été transmis.');
-                return $this->redirectToRoute('app_leaderboard',['category'=>$saved['category'],'page'=>$saved['page']]);
+                return $this->redirectToRoute('app_leaderboard',['category'=>$saved['category'],'direction'=>$saved['direction']??'desc','page'=>$saved['page']]);
             } catch(\DomainException $exception) { $error=$exception->getMessage(); }
         }
         if(!$saved || $saved['reporter_id']!==$member->id || $saved['target_id']!==$id || $saved['universe_id']!==$member->universe->id) {
@@ -39,7 +40,7 @@ final class PlayerReportController extends AbstractController
             if(!$row) throw $this->createNotFoundException('Ce commandant ne figure pas dans ce classement.');
             $saved=['reporter_id'=>$member->id,'target_id'=>$id,'universe_id'=>$member->universe->id,'category'=>$category,
                 'rank'=>(int)$row['ranks'][$category],'leaderboard_at'=>$snapshot['updated_at']->format(DATE_ATOM),
-                'target_username_seen'=>$target->player->username,'page'=>$page];
+                'target_username_seen'=>$target->player->username,'page'=>$page,'direction'=>$direction];
             $key=bin2hex(random_bytes(16));$contexts[$key]=$saved;
             $session->set('player_report_contexts',array_slice($contexts,-20,null,true));
         }
