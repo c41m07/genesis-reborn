@@ -23,14 +23,30 @@ final class ColonyView
         private EmpireDetails $empireDetails,
     ) {}
 
-    public function data(PlayerUniverse $m,Planet $planet,bool $revealLockedItems=false): array
+    public function data(PlayerUniverse $m,Planet $planet,bool $revealLockedItems=false,string $section='overview'): array
     {
+        // La synchronisation peut terminer des commandes : lire les niveaux seulement après.
         $this->queueService->synchronize($m);
         $buildings=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);$tech=$this->repo->levelsByTier(PlayerTechnology::class,['playerUniverse'=>$m]);
         $universeConfig=$this->catalog->forUniverse($m->universe);$definitions=$universeConfig['catalog'];$cards=[];$filterOptions=[];$queues=[];$showLockedItems=$revealLockedItems||(bool)($m->player->preferences['showLockedItems']??false);
+        if($section==='tree') {
+            return ['membership'=>$m,'planet'=>$planet,'technology_tree'=>$this->insights->tree($buildings,$tech,$m,$planet)];
+        }
+        $planetQueue=$this->repo->queue($planet);
+        $idleFleets=$section==='ships' ? $this->repo->all(Fleet::class,['homePlanet'=>$planet,'playerUniverse'=>$m,'status'=>'idle']) : [];
+        $shipRows=$idleFleets===[] ? [] : $this->repo->all(FleetShip::class,['fleet'=>$idleFleets]);
+        $ships=[];$cardShipQuantities=[];
+        foreach($shipRows as $ship) {
+            $ships[$ship->slug][$ship->tier]=($ships[$ship->slug][$ship->tier]??0)+$ship->quantity;
+            if($ship->fleet->id===$idleFleets[0]->id) $cardShipQuantities[$ship->slug][$ship->tier]=$ship->quantity;
+        }
+        $defenses=$section==='defenses' ? $this->repo->all(PlanetDefense::class,['planet'=>$planet]) : [];
+        $defenseQuantities=[];
+        foreach($defenses as $defense) $defenseQuantities[$defense->slug][$defense->tier]=$defense->quantity;
         foreach(['building','shipyard'] as $type) {
             $sum=0;
-            foreach($this->repo->queue($planet,$type) as $q) {
+            foreach($planetQueue as $q) {
+                if($q->queueType!==$type) continue;
                 $sum+=$q->durationSeconds;$field=$type.'QueueStartedAt';$start=$planet->$field;
                 $group=match($type){'building'=>'buildings','research'=>'technologies',default=>isset($definitions['defenses'][$q->itemSlug])?'defenses':'ships'};
                 $base=$definitions[$group][$q->itemSlug]??$this->catalog->get($group,$q->itemSlug);
@@ -52,7 +68,7 @@ final class ColonyView
             $definition=$this->catalog->getTierForUniverse($m->universe,'technologies',$item->itemSlug,$item->tier);
             $queues['research'][]=['item'=>$item,'label'=>$definition['label'],'finish'=>$finish];
         }
-        foreach(['buildings','technologies','ships','defenses'] as $group) {
+        foreach(in_array($section,['buildings','technologies','ships','defenses'],true) ? [$section] : [] as $group) {
             $groupDefinitions=$definitions[$group];$filterOptions[$group]=$this->filters->options($group,$groupDefinitions);
             $categoryOrder=array_flip(array_keys($filterOptions[$group]));
             if(in_array($group,['buildings','technologies'],true)) {
@@ -78,22 +94,17 @@ final class ColonyView
                     $d=$this->catalog->getTierForUniverse($m->universe,$group,$slug,$tier);
                     $level=match($group){'buildings'=>(int)($buildings[$slug][$tier]??0),'technologies'=>(int)($tech[$slug][$tier]??0),default=>0};$target=$level+1;
                     $queued=null;
-                    foreach(($group==='technologies'?$research:$this->repo->queue($planet)) as $q)if($q->itemSlug===$slug&&$q->tier===$tier&&$q->itemLevel){$queued=$q;$target=max($target,$q->itemLevel+1);}
+                    foreach(($group==='technologies'?$research:$planetQueue) as $q)if($q->itemSlug===$slug&&$q->tier===$tier&&$q->itemLevel){$queued=$q;$target=max($target,$q->itemLevel+1);}
                     $failures=$this->access->failures($m,$planet,$group,$d,$tier,$buildings,$tech);
                     if($group==='defenses')$level=0;
                     $operation=$this->calculator->calculate($d,$group,$target,1,$buildings,$universeConfig,$tech);
-                    $cards[$group][]=['filter_category'=>$this->filters->category($group,$base),'details'=>$this->details->describe($d,$group,$target,$planet,$buildings,$tech),'benefits'=>$this->insights->benefits($d,$group,$target,$planet,$buildings,$tech),'unlocks'=>$this->insights->unlocks($group,$slug,$target,$tier,$m->universe),'definition'=>$d,'tier'=>$tier,'level'=>$level,'target'=>$target,'quantity'=>$group==='ships'?($this->repo->one(FleetShip::class,['fleet'=>$this->repo->one(Fleet::class,['homePlanet'=>$planet,'playerUniverse'=>$m,'status'=>'idle']),'slug'=>$slug,'tier'=>$tier])?->quantity??0):($group==='defenses'?($this->repo->one(PlanetDefense::class,['planet'=>$planet,'slug'=>$slug,'tier'=>$tier])?->quantity??0):0),'duration'=>$operation['duration'],'costs'=>$operation['costs'],'failures'=>array_values(array_unique($failures)),'maximum'=>isset($d['max_level'])&&$target>$d['max_level'],'queued'=>$queued!==null];
+                    $cards[$group][]=['filter_category'=>$this->filters->category($group,$base),'details'=>$this->details->describe($d,$group,$target,$planet,$buildings,$tech),'benefits'=>$this->insights->benefits($d,$group,$target,$planet,$buildings,$tech),'unlocks'=>$this->insights->unlocks($group,$slug,$target,$tier,$m->universe),'definition'=>$d,'tier'=>$tier,'level'=>$level,'target'=>$target,'quantity'=>$group==='ships'?($cardShipQuantities[$slug][$tier]??0):($group==='defenses'?($defenseQuantities[$slug][$tier]??0):0),'duration'=>$operation['duration'],'costs'=>$operation['costs'],'failures'=>array_values(array_unique($failures)),'maximum'=>isset($d['max_level'])&&$target>$d['max_level'],'queued'=>$queued!==null];
                 }
             }
         }
-        // Les rangs restent disponibles pour le filtre local des catalogues regroupés.
-        $technologyTree=$this->insights->tree($buildings,$tech,$m,$planet);
         $activeFleets=$this->repo->all(Fleet::class,['playerUniverse'=>$m,'status'=>['traveling','returning','attacking','defending','occupying','station_waiting']],['arrivalAt'=>'ASC']);
         $combatEvents=[];
         foreach($activeFleets as $activeFleet) { $participant=$this->repo->one(CombatParticipant::class,['fleet'=>$activeFleet]); if($participant && $participant->combatEvent->status==='pending') $combatEvents[$activeFleet->id]=$participant->combatEvent; }
-        $ships=[];
-        foreach($this->repo->all(Fleet::class,['homePlanet'=>$planet,'playerUniverse'=>$m,'status'=>'idle']) as $f) foreach($this->repo->all(FleetShip::class,['fleet'=>$f]) as $s) $ships[$s->slug][$s->tier]=($ships[$s->slug][$s->tier]??0)+$s->quantity;
-        $defenses=$this->repo->all(PlanetDefense::class,['planet'=>$planet]);$defenseQuantities=[];foreach($defenses as $defense) $defenseQuantities[$defense->slug][$defense->tier]=$defense->quantity;
-        return ['fleet_details'=>$this->empireDetails->fleets($m,$activeFleets),'catalog_filter_options'=>$filterOptions,'technology_tree'=>$technologyTree,'show_locked_items'=>$showLockedItems,'combat_events'=>$combatEvents,'defense_quantities'=>$defenseQuantities,'active_fleets'=>$activeFleets,'membership'=>$m,'planet'=>$planet,'planets'=>$this->repo->planets($m->universe,$m),'resources'=>$this->resources->snapshot($planet,true),'cards'=>$cards,'queues'=>$queues,'research_parallel_count'=>count($researchActive),'ships'=>$ships,'defenses'=>$defenses,'defense_catalog'=>$definitions['defenses'],'ship_catalog'=>$definitions['ships']];
+        return ['fleet_details'=>$this->empireDetails->fleets($m,$activeFleets),'catalog_filter_options'=>$filterOptions,'show_locked_items'=>$showLockedItems,'combat_events'=>$combatEvents,'defense_quantities'=>$defenseQuantities,'active_fleets'=>$activeFleets,'membership'=>$m,'planet'=>$planet,'planets'=>$this->repo->planets($m->universe,$m),'resources'=>$this->resources->snapshot($planet,true),'cards'=>$cards,'queues'=>$queues,'research_parallel_count'=>count($researchActive),'ships'=>$ships,'defenses'=>$defenses,'defense_catalog'=>$definitions['defenses'],'ship_catalog'=>$definitions['ships']];
     }
 }

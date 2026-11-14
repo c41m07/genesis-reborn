@@ -46,7 +46,7 @@ final class ColonyController extends AbstractController
     #[Route('/planetes/{id}',name:'app_colony',methods:['GET'],requirements:['id'=>'\d+'])]
     public function show(int $id,Request $request,ColonyView $view,\App\Service\Player\DailyLeaderboard $leaderboard,RelationResolver $relations,GameCatalog $catalog,\App\Service\Notification\JournalService $journal,\App\Service\Colony\EmpireDetails $details): Response
     {
-        $p=$this->owned($id);$m=$this->context->membership();$section=$this->section((string)$request->query->get('section','overview'));$data=$view->data($m,$p,$request->query->getBoolean('showLockedItems'));
+        $p=$this->owned($id);$m=$this->context->membership();$section=$this->section((string)$request->query->get('section','overview'));$data=$view->data($m,$p,$request->query->getBoolean('showLockedItems'),$section);
         if($section!=='overview' && $request->query->has('showLockedItems')) $data['show_locked_items']=$request->query->getBoolean('showLockedItems');
         if($section==='overview') {
             if($request->headers->get('X-Genesis-Live')!=='1') $journal->open($m);
@@ -88,7 +88,7 @@ final class ColonyController extends AbstractController
             }
         }
         $planet ??= $planets[0];
-        return $this->render('player/technology_tree.html.twig', $view->data($membership, $planet) + ['tree_standalone' => true]);
+        return $this->render('player/technology_tree.html.twig', $view->data($membership, $planet, section: 'tree') + ['tree_standalone' => true]);
     }
 
     #[Route('/planetes/{id}/renommer',name:'app_planet_rename',methods:['POST'],requirements:['id'=>'\\d+'])]

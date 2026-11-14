@@ -6,6 +6,7 @@ use App\Entity\{Fleet, FleetShip, Galaxy, Planet, PlanetBuilding, PlanetDefense,
 use App\Service\Colony\{ColonyView, ResourceService};
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Clock\MockClock;
 
@@ -84,12 +85,41 @@ final class ColonyPreparationTest extends KernelTestCase
 
     public function testCatalogValuesAndEconomicSnapshotStayConsistent(): void
     {
-        $data = self::getContainer()->get(ColonyView::class)->data($this->membership, $this->planet, true);
+        $view = self::getContainer()->get(ColonyView::class);
+        $data = $view->data($this->membership, $this->planet, true, 'ships');
         $fighter = array_values(array_filter($data['cards']['ships'], static fn (array $card): bool => $card['definition']['slug'] === 'fighter' && $card['tier'] === 'basic'))[0];
         self::assertSame(7, $fighter['quantity']);
+        $data = $view->data($this->membership, $this->planet, true, 'defenses');
         self::assertSame(3, $data['defense_quantities']['ground_turret_anti_light']['basic']);
         self::assertSame(self::getContainer()->get(ResourceService::class)->snapshot($this->planet, true), $data['resources']);
         self::assertSame(0, $data['research_parallel_count']);
+    }
+
+    public static function sections(): iterable
+    {
+        foreach (['overview', 'buildings', 'technologies', 'ships', 'defenses', 'tree'] as $section) {
+            yield $section => [$section];
+        }
+    }
+
+    #[DataProvider('sections')]
+    public function testOnlyTheRequestedCatalogIsPrepared(string $section): void
+    {
+        $holder = self::getContainer()->get('doctrine.debug_data_holder');
+        $holder->reset();
+        $data = self::getContainer()->get(ColonyView::class)->data($this->membership, $this->planet, section: $section);
+        $budget = $section === 'buildings' ? 400 : 100;
+        self::assertLessThan($budget, count($holder->getData()['default'] ?? []), 'La préparation ne doit pas relire tous les catalogues.');
+        if ($section === 'tree') {
+            self::assertNotEmpty($data['technology_tree']);
+            self::assertArrayNotHasKey('active_fleets', $data);
+            self::assertArrayNotHasKey('cards', $data);
+            return;
+        }
+        self::assertSame($section === 'overview' ? [] : [$section], array_keys($data['cards']));
+        self::assertArrayNotHasKey('technology_tree', $data);
+        self::assertSame($this->planet, $data['planet']);
+        self::assertArrayHasKey('queues', $data);
     }
 
     public function testMeasurePreparationWhenExplicitlyRequested(): void
@@ -99,11 +129,12 @@ final class ColonyPreparationTest extends KernelTestCase
         }
         $holder = self::getContainer()->get('doctrine.debug_data_holder');
         $view = self::getContainer()->get(ColonyView::class);
-        $samples = [];
-        for ($iteration = 0; $iteration < 11; ++$iteration) {
+        foreach (self::sections() as [$section]) {
+            $samples = [];
+            for ($iteration = 0; $iteration < 11; ++$iteration) {
             $holder->reset();
             $start = hrtime(true);
-            $data = $view->data($this->membership, $this->planet, true);
+            $data = $view->data($this->membership, $this->planet, true, $section);
             $elapsed = (hrtime(true) - $start) / 1e6;
             $queries = $holder->getData()['default'] ?? [];
             $samples[] = [
@@ -113,10 +144,11 @@ final class ColonyPreparationTest extends KernelTestCase
                 'server_ms' => $elapsed,
                 'memory_bytes' => memory_get_usage(true),
                 'peak_bytes' => memory_get_peak_usage(true),
-                'cards' => array_map('count', $data['cards']),
+                'cards' => array_map('count', $data['cards'] ?? []),
             ];
+            }
+            fwrite(STDOUT, "\nREWORK_METRICS ".$section.' '.json_encode($samples, JSON_THROW_ON_ERROR)."\n");
         }
-        fwrite(STDOUT, "\nREWORK_METRICS ".json_encode($samples, JSON_THROW_ON_ERROR)."\n");
-        self::assertNotEmpty($data['resources']);
+        self::assertNotEmpty($data['technology_tree']);
     }
 }

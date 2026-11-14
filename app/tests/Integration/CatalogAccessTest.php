@@ -86,7 +86,7 @@ final class CatalogAccessTest extends KernelTestCase
         $queue->add($this->membership,$this->planet,'buildings','shipyard',1,str_repeat('a',32));
         $queue->add($this->membership,$this->other,'technologies','naval_engineering',1,str_repeat('b',32));
         self::assertSame(2,$this->em->getRepository(QueueItem::class)->count());
-        $cards=self::getContainer()->get(ColonyView::class)->data($this->membership,$this->planet,true)['cards'];
+        $cards=self::getContainer()->get(ColonyView::class)->data($this->membership,$this->planet,true,'buildings')['cards'];
         $card=array_values(array_filter($cards['buildings'],static fn($c)=>$c['definition']['slug']==='shipyard'&&$c['tier']==='basic'))[0];
         self::assertSame([],$card['failures']);self::assertTrue($card['details']['acquired']);
         self::assertNotEmpty(array_filter($card['details']['requirements'],static fn($r)=>!$r['met']));

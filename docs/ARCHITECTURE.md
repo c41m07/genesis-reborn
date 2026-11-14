@@ -103,6 +103,16 @@ Le compteur n’est pas une région vocale actualisée chaque seconde (`role=tim
 
 ## Navigation, files et cartes
 
+`ColonyView::data` reçoit la section déjà validée par `ColonyController`.
+Après la synchronisation existante des files, il lit les niveaux servant aux
+prérequis, puis prépare seulement le catalogue demandé. La vue générale ne
+construit aucune carte. La section interne `tree` prépare uniquement le guide
+technologique, sans cartes ni flottes. Les files de la colonie et la recherche
+commune restent disponibles dans les pages de colonie ; les quantités du
+catalogue sont chargées par groupe, sans lecture SQL par carte. Ces données
+restent locales à l’appel et ne servent jamais d’autorisation d’écriture.
+Le calcul et l’endpoint de la barre de ressources restent inchangés.
+
 Le sélecteur conserve la colonie choisie par participation et la catégorie ouverte.
 La vue générale présente les vols de toutes les colonies de l’univers sélectionné.
 Bâtiments, recherches et vaisseaux/défenses occupent trois files indépendantes :

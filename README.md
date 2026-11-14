@@ -311,6 +311,10 @@ Compiler avant les tests navigateur : la compilation remplace les fichiers de `a
 
 ## Tests et qualité
 
+Le [suivi Rework V1](docs/REWORK_V1.md) décrit le chantier local de nettoyage,
+ses mesures et ses vérifications. Les pages de colonie préparent uniquement le
+catalogue affiché ; le guide technologique prépare son arbre séparément.
+
 Pendant le développement, lancer les contrôles locaux adaptés au changement et `git diff --check` avant commit ou push. Une branche de travail peut être poussée sans exécuter toute la suite ; signaler les échecs et vérifications restant à faire.
 
 La CI complète se lance sur les PR vers `dev` et `alpha`, y compris à chaque correction. Attendre sa réussite sur la dernière version avant fusion. Les push seuls sur une branche de travail ou sur `dev` ne relancent pas la CI. Les push sur `alpha` (aussi branche par défaut actuellement) conservent la validation avant publication de l’image ; le lancement manuel reste disponible. Les [règles GitHub à vérifier pour protéger `dev`](docs/DEPLOIEMENT.md#protection-de-dev) sont distinctes du workflow.

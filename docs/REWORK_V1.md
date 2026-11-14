@@ -31,7 +31,7 @@ worktrees et archives historiques exclus des transformations mécaniques.
 | --- | --- | --- | --- |
 | 1 | Inventaire, mesures, isolation | Référence et garde de base nécessaires | Socle ciblé validé, inventaire détaillé à compléter |
 | 2 | Conventions et lisibilité | ColonyView très condensé ; aucun formateur PHP installé | Dépendances clarifiées sur le périmètre prioritaire |
-| 3 | ColonyController, ColonyView, CatalogueInsights | Quatre catalogues et arbre préparés pour chaque page ; lectures par carte | À traiter |
+| 3 | ColonyController, ColonyView, CatalogueInsights | Préparation ciblée et quantités regroupées | Implémentation et tests ciblés validés ; recette finale à faire |
 | 4 | DiplomacyController, GuildProjectService | Onglet choisi après préparation de toutes les relations | À examiner en détail |
 | 5 | Rapports, classements, profils, messages | Recherche déjà paginée ; enrichissements à vérifier | À examiner en détail |
 | 6 | Carte, planètes, destinations, flottes | Lecture des planètes par système avant sélection de galaxie | À traiter |
@@ -77,10 +77,24 @@ isolé, pas une page HTTP complète. Aucun pourcentage global n’est déduit.
   pendant la suite, puis arrêt du seul processus PHPUnit de ce chantier après
   vérification de son identité. Aucun service partagé arrêté ; base habituelle intacte.
 - Nouvelle suite de référence lancée seule ; résultat à consigner.
+- Lot 3 : 8 cas de caractérisation et mesure / 28 assertions réussis, puis
+  16 tests d’accès, coûts, files communes et barre de ressources / 101 assertions.
+  Après ajout des budgets larges de requêtes : 7 cas / 33 assertions réussis ;
+  seule la mesure facultative est ignorée sans `REWORK_MEASURE=1`.
+- Un projet Compose PHP jetable distinct, `genesis-rework-php-20261114`, isole
+  base et cache des nouveaux tests. Sa configuration temporaire est dans `var/`
+  ignoré par Git. Aucun service habituel arrêté ou reconfiguré.
+- Le premier passage complet n’est pas une référence immuable : des fichiers
+  ont évolué pendant son exécution. Ses résultats ne seront pas annoncés comme
+  validation finale ; la suite finale devra partir d’un contenu stabilisé.
+- Bâtiments garde des lectures dans les calculs économiques partagés (275 SQL
+  sur la première mesure ciblée). Leur suppression nécessite une préparation
+  économique dédiée et vérifiée ; aucun cache ajouté dans les services de la
+  barre pour masquer ces lectures. Combats et détails des flottes restent à regrouper.
 
 ## Reprise
 
-- Lot actuel : 2/12.
+- Lot actuel : 3/12.
 - Dernière étape validée : fixture isolée et mesure avant changement.
 - Contrôle en cours : suite PHP/Python de référence.
 - Référence du lot 1 : `9e62541`.
@@ -89,5 +103,5 @@ isolé, pas une page HTTP complète. Aucun pourcentage global n’est déduit.
   existant conservé. Pas de formateur ajouté ni de formatage global : les autres
   écarts sont traités seulement avec les domaines réellement modifiés.
 - Questions en attente : aucune ; actualisation réseau de dev autorisée et effectuée.
-- Prochaine action : préparation ciblée de ColonyView (lot 3), puis attendre
-  la fin de la suite PHP avant toute autre suite utilisant sa base.
+- Prochaine action : lot 4, préparations de la diplomatie et des projets ;
+  mesures comparables et validation cumulée à reprendre au lot 12.
