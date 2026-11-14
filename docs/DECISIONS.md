@@ -1554,7 +1554,7 @@ consommation brute, consommation actuelle, solde net puis délai estimé. Les
 lignes de consommation indiquent les besoins pour produire la ressource, de
 façon uniforme pour les usines. Pour l’électricité, les consommations brute et
 actuelle affichent chacune un total, sans ventilation par ressource produite ;
-le détail par usine est repliable. La ligne « Non stocké / h » est retirée de
+le détail par activité de production est repliable et indique « tous rangs cumulés ». La ligne « Non stocké / h » est retirée de
 l’affichage, sans changer le calcul de saturation. Les fiches électricité et hydrogène
 ajoutent le récapitulatif des usines qui prélèvent dans ce stock et son total
 brut/actuel, distinct des besoins de leur propre production. La liste des sources de production et

@@ -25,6 +25,11 @@ final class GameShell
             $levels=$this->repo->levelsByTier(\App\Entity\PlayerTechnology::class,['playerUniverse'=>$m])['colonial_expansion']??[];
             $colonyLimit=\App\Service\Catalog\GameCatalog::colonyLimit($levels,$effect,$colonyLimit);
         }
-        return ['incomingAttacks'=>$this->visibility->incoming($m),'serverNow'=>$this->clock->now()->format(DATE_ATOM),'journal'=>$this->journal->data($m),'vacation'=>$this->vacations->currentPeriod($m),'colonyLimit'=>$colonyLimit,'unreadMessages'=>$this->messages->unreadPrivateCount($m)+$this->messages->unreadGuildCount($m),'protection'=>$protection,'membership'=>$m,'planet'=>$selected,'planets'=>$planets,'resourceSourceLabels'=>array_map(static fn(array $building):string=>$building['label'],$config['catalog']['buildings']),'resources'=>$selected?$this->resources->snapshot($selected,true):[],'notifications'=>$notifications,'events'=>$this->eventPanel->forPlayer($m)];
+        $consumerLabels=array_map(static fn(array $building):string=>match($building['production_resource']??null) {
+            'metal'=>'Production de métal', 'nano'=>'Production de nano',
+            'hydrogen'=>'Production d’hydrogène', 'antimatter'=>'Production d’antimatière',
+            default=>$building['label'],
+        },$config['catalog']['buildings']);
+        return ['incomingAttacks'=>$this->visibility->incoming($m),'serverNow'=>$this->clock->now()->format(DATE_ATOM),'journal'=>$this->journal->data($m),'vacation'=>$this->vacations->currentPeriod($m),'colonyLimit'=>$colonyLimit,'unreadMessages'=>$this->messages->unreadPrivateCount($m)+$this->messages->unreadGuildCount($m),'protection'=>$protection,'membership'=>$m,'planet'=>$selected,'planets'=>$planets,'resourceConsumerLabels'=>$consumerLabels,'resourceSourceLabels'=>array_map(static fn(array $building):string=>$building['label'],$config['catalog']['buildings']),'resources'=>$selected?$this->resources->snapshot($selected,true):[],'notifications'=>$notifications,'events'=>$this->eventPanel->forPlayer($m)];
     }
 }
