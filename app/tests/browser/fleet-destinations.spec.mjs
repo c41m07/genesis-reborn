@@ -30,21 +30,24 @@ async function prepare(page) {
   return { id, own, npc, project, origin };
 }
 
-test('Les trois modes de destination et les suggestions fonctionnent au clavier et au toucher', async ({ page }, testInfo) => {
+test('Les catégories de destination et les suggestions fonctionnent au clavier et au toucher', async ({ page }, testInfo) => {
   const { id, own, npc } = await prepare(page);
   await page.goto('/flottes');
   const form = page.locator('.fleet-form form').first();
   await expect(form.locator('[name="coordinates"]')).toBeDisabled();
   for (const slug of ['probe', 'transport', 'fighter']) await form.locator('[name="ships[' + slug + ']"]').fill('1');
   await form.getByRole('button', { name: /Choisir la destination/ }).click();
-  await expect(form.getByLabel('Mes planètes et alliés', { exact: true })).toBeChecked();
-  await form.getByLabel('Planète de mon empire ou alliée', { exact: true }).selectOption(String(own.id));
+  await expect(form.locator('input[name="destination_mode"][value="unexplored"]')).toBeChecked();
+  await expect(form.locator('select[name="unexplored_destination"] option')).not.toHaveCount(1);
+  await form.locator('[name="mission"]').selectOption('transport');
+  await expect(form.locator('input[name="destination_mode"][value="owned"]')).toBeChecked();
+  await form.locator('select[name="owned_destination"]').selectOption(String(own.id));
   await form.getByRole('button', { name: /Vérifier la mission/ }).click();
   await expect(form.locator('[data-fleet-wizard-target="summary"]')).toContainText(own.coordinates.split(':').slice(0, 2).join(':'));
   await form.getByRole('button', { name: /Modifier la destination/ }).click();
   await form.locator('[name="mission"]').selectOption('attack');
-  await form.getByLabel('Ennemis', { exact: true }).check();
-  await form.getByLabel('Planète ennemie ou PNJ', { exact: true }).selectOption(String(npc.id));
+  await form.locator('input[name="destination_mode"][value="npc"]').check();
+  await form.locator('select[name="npc_destination"]').selectOption(String(npc.id));
   await expect(form.locator('[name="coordinates"]')).toBeDisabled();
   await form.getByLabel('Destination personnalisée', { exact: true }).check();
   await form.locator('[name="mission"]').selectOption('transport');
@@ -75,7 +78,7 @@ test('Les trois modes de destination et les suggestions fonctionnent au clavier 
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
-test('Une attaque PNJ peut être envoyée depuis Ennemis sans capturer la planète ni dupliquer les vaisseaux', async ({ page }) => {
+test('Une attaque PNJ peut être envoyée depuis PNJ sans capturer la planète ni dupliquer les vaisseaux', async ({ page }) => {
   const { npc, project, origin } = await prepare(page);
   const total = () => Number(queryIsolatedSql(project, 'SELECT COALESCE(SUM(s.quantity),0) FROM fleet_ship s JOIN fleet f ON f.id=s.fleet_id WHERE f.player_universe_id=(SELECT owner_id FROM planet WHERE id=' + origin + ')'));
   const before = total();
@@ -86,8 +89,8 @@ test('Une attaque PNJ peut être envoyée depuis Ennemis sans capturer la planè
   await form.getByRole('button', { name: /Choisir la destination/ }).click();
   await form.locator('[name="mission"]').selectOption('attack');
   await form.locator('[name="ratio"]').selectOption('0.1');
-  await form.getByLabel('Ennemis', { exact: true }).check();
-  await form.getByLabel('Planète ennemie ou PNJ', { exact: true }).selectOption(String(npc.id));
+  await form.locator('input[name="destination_mode"][value="npc"]').check();
+  await form.locator('select[name="npc_destination"]').selectOption(String(npc.id));
   await form.getByRole('button', { name: /Vérifier la mission/ }).click();
   await expect(form.locator('.flight-estimate')).toContainText('Carburant aller-retour');
   await expect(form.getByRole('button', { name: /Envoyer la flotte/ })).toBeEnabled();

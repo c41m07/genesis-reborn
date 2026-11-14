@@ -8,9 +8,9 @@ use Psr\Clock\ClockInterface;
 
 final class AdminMissionMonitoring
 {
-    public const MISSIONS = ['explore'=>'Exploration', 'transport'=>'Transport', 'colonize'=>'Colonisation', 'attack'=>'Attaque', 'spy'=>'Espionnage', 'defend'=>'Défense alliée', 'orbit'=>'Orbite alliée', 'conquer'=>'Conquête JcE'];
-    public const STATUSES = ['traveling'=>'Aller', 'returning'=>'Retour', 'attacking'=>'Combat', 'defending'=>'Défense', 'orbiting'=>'Orbite', 'orbit_pending'=>'En attente d’accord', 'occupying'=>'Occupation JcE', 'completed'=>'Terminée'];
-    private const ACTIVE = ['traveling', 'returning', 'attacking', 'defending', 'orbiting', 'orbit_pending', 'occupying'];
+    public const MISSIONS = ['explore'=>'Exploration', 'transport'=>'Transport', 'colonize'=>'Colonisation', 'attack'=>'Attaque', 'spy'=>'Espionnage', 'defend'=>'Défense alliée', 'orbit'=>'Stationnement en orbite', 'station'=>'Stationnement', 'conquer'=>'Conquête JcE'];
+    public const STATUSES = ['traveling'=>'Aller', 'returning'=>'Retour', 'attacking'=>'Combat', 'defending'=>'Défense', 'orbiting'=>'Orbite', 'orbit_pending'=>'En attente d’accord', 'occupying'=>'Occupation JcE', 'station_waiting'=>'Stationnement en attente', 'completed'=>'Terminée'];
+    private const ACTIVE = ['traveling', 'returning', 'attacking', 'defending', 'orbiting', 'orbit_pending', 'occupying', 'station_waiting'];
 
     public function __construct(private EntityManagerInterface $em, private GameCatalog $catalog, private ClockInterface $clock) {}
 

@@ -1,0 +1,17 @@
+{% extends 'base.html.twig' %}
+{% block title %}Reprendre le stationnement · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="page-heading"><div><h1>Reprendre le stationnement</h1><p>Les vaisseaux restent indisponibles jusqu’à leur installation sur une colonie possédée.</p></div></div>
+<section class="panel" aria-labelledby="station-resume-title">
+<h2 id="station-resume-title">Choisir une nouvelle base</h2>
+<p>Réserve disponible : {{ fleet.reservedFuel|quantity(2) }} hydrogène. Le fret d’hydrogène ne sert pas de carburant.</p>
+<form method="get"><label for="station-planet">Colonie de destination</label><select id="station-planet" name="planet" required><option value="">Choisir une colonie</option>{% for planet in planets %}<option value="{{ planet.id }}" {{ target_id==planet.id?'selected':'' }}>{{ planet.name }} · {{ planet.coordinates() }}</option>{% endfor %}</select><button class="secondary">Calculer le trajet</button></form>
+{% if planets is empty %}<p role="status">Aucune colonie disponible. La flotte reste en attente, sans perte automatique.</p>{% endif %}
+{% if error %}<p class="flash error" role="alert">{{ error }}</p>{% endif %}
+{% if quote %}
+<dl class="report-facts"><div><dt>Nouvelle base</dt><dd>{{ quote.target.name }} · {{ quote.target.coordinates() }}</dd></div><div><dt>Durée</dt><dd>{{ duration_label(quote.seconds) }}</dd></div><div><dt>Carburant consommé à l’arrivée</dt><dd>{{ quote.one_way_fuel|quantity(2) }} hydrogène</dd></div></dl>
+<form method="post"><input type="hidden" name="_token" value="{{ csrf_token('fleet_resume_'~fleet.id) }}"><input type="hidden" name="request_key" value="{{ request_key() }}"><input type="hidden" name="version" value="{{ quote.version }}"><input type="hidden" name="planet" value="{{ quote.target.id }}"><button class="primary">Confirmer la reprise</button></form>
+{% endif %}
+<p><a href="{{ path('app_fleets') }}">Revenir aux flottes</a></p>
+</section>
+{% endblock %}

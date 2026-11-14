@@ -937,7 +937,8 @@ final class CombatEventService
             $fleet->destinationSystem = null;
             $fleet->departureAt = null;
             $fleet->arrivalAt = null;
-            $fleet->cargo = [];
+            $survivors=array_sum(array_map(static fn($ship)=>$ship->quantity,$this->repo->all(FleetShip::class,['fleet'=>$fleet])));
+            if($capturedByAnotherCommander || $survivors===0) {$fleet->cargo=[];$fleet->storedFuel=0;}
             $fleet->reservedFuel = 0;
             $fleet->dispatchToken = \Symfony\Component\Uid\Uuid::v4()->toRfc4122();
 

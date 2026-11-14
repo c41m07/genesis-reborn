@@ -151,6 +151,8 @@ final class CombatEventTest extends KernelTestCase
         $garrison->homePlanet = $target;
         $garrison->status = 'idle';
         $garrison->mission = 'idle';
+        $garrison->storedFuel = 100;
+        $garrison->cargo = ['metal' => 50];
         $this->em->persist($garrison);
         $garrisonShip = new FleetShip();
         $garrisonShip->fleet = $garrison;
@@ -242,6 +244,9 @@ final class CombatEventTest extends KernelTestCase
         self::assertContains($externalOrbit->status, ['returning', 'completed']);
         self::assertSame(0.0, $externalOrbit->orbitFuel);
         self::assertSame('idle', $garrison->status);
+        self::assertGreaterThan(0, $garrisonShip->quantity);
+        self::assertSame(100.0, $garrison->storedFuel);
+        self::assertSame(['metal' => 50], $garrison->cargo);
     }
     public function testCombatRunsAndPersistsOneDeterministicRoundPerMinute(): void
     {

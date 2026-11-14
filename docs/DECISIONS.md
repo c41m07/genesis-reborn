@@ -1635,3 +1635,20 @@ vérifiée restent nécessaires. [Suivi](MESSAGERIE_MARKDOWN.md).
 Le CSRF des trois formulaires d’envoi est lié à l’empire d’ouverture : après un
 changement d’univers dans un autre onglet, le formulaire doit être rechargé.
 Ce contrôle refuse un contexte périmé sans élargir les droits d’envoi.
+
+### Destinations et Stationnement — précisions du 14 novembre 2026
+
+Après examen du moteur, le propriétaire valide l’orbite sur ses propres planètes,
+acceptée automatiquement, avec les durées et coûts existants. Stationnement garde
+une réserve aller-retour ; seul l’aller est consommé à l’installation. La réserve
+restante est mutualisée à quai et utilisée avant les stocks planétaires au prochain
+départ. Refuser un départ qui laisserait une réserve ou un fret dépassant la
+capacité des vaisseaux restants. Déchargement explicite plafonné aux stockages ;
+surplus du fret conservé à bord après installation.
+Repli : origine encore possédée et atteignable, sinon colonie possédée atteignable
+au trajet le plus court ; vérifier à chaque arrivée et utiliser la réserve seule.
+Sans repli possible, attente de trajet sans nouveaux combat/coût de séjour,
+vaisseaux indisponibles, visibilité des vols et notification unique. Reprise
+manuelle après devis avec la réserve existante ; attente persistante sinon.
+Ces validations complètent le cas précédemment à étudier ; voir le
+[plan du lot 5](DESTINATIONS_STATIONNEMENT.md). Aucune migration appliquée.

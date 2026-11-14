@@ -42,7 +42,7 @@ async function prepare(page) {
   await form.getByRole('button',{name:/Choisir la destination/}).click();
   await form.locator('[name="mission"]').selectOption('transport');
   await form.locator('[name="ratio"]').selectOption('0.1');
-  await form.getByLabel('Planète de mon empire ou alliée',{exact:true}).selectOption(String(target.id));
+  await form.locator('select[name="owned_destination"]').selectOption(String(target.id));
   await form.getByRole('button',{name:/Vérifier la mission/}).click();
   const submit=form.getByRole('button',{name:/Envoyer la flotte/});
   await expect(submit).toBeEnabled();await submit.click();

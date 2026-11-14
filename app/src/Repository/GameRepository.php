@@ -91,7 +91,7 @@ SQL;
         $sql = <<<'SQL'
 SELECT
     (SELECT COUNT(*) FROM planet WHERE owner_id = :membership) AS colonies,
-    (SELECT COUNT(*) FROM fleet WHERE player_universe_id = :membership AND status IN ('traveling','returning','attacking','defending','orbiting','orbit_pending','occupying')) AS deployed_fleets,
+    (SELECT COUNT(*) FROM fleet WHERE player_universe_id = :membership AND status IN ('traveling','returning','attacking','defending','orbiting','orbit_pending','occupying','station_waiting')) AS deployed_fleets,
     (SELECT COUNT(*) FROM fleet f JOIN planet p ON p.id = f.destination_id
         WHERE p.owner_id = :membership AND f.player_universe_id <> :membership AND f.status IN ('traveling','attacking','defending','orbiting','orbit_pending','occupying')) AS incoming_or_stationed_fleets,
     (SELECT COUNT(*) FROM queue_item WHERE player_universe_id = :membership) AS queued_orders,
@@ -111,7 +111,7 @@ SQL;
             ->leftJoin('f.destination', 'p')
             ->where('(f.playerUniverse = :membership AND f.status IN (:active)) OR (p.owner = :membership AND f.mission IN (:hostile) AND f.status IN (:incoming))')
             ->setParameter('membership', $membership)
-            ->setParameter('active', ['traveling', 'returning', 'attacking', 'defending', 'orbiting', 'orbit_pending', 'occupying'])
+            ->setParameter('active', ['traveling', 'returning', 'attacking', 'defending', 'orbiting', 'orbit_pending', 'occupying', 'station_waiting'])
             ->setParameter('hostile', ['attack', 'conquer'])->setParameter('incoming', ['traveling', 'attacking'])
             ->setMaxResults(1)->getQuery()->getOneOrNullResult();
         if ($fleet !== null) return true;
@@ -281,7 +281,7 @@ SQL;
             ->where('pu.universe = :universe')
             ->andWhere('f.status IN (:statuses)')
             ->setParameter('universe', $universe)
-            ->setParameter('statuses', ['traveling', 'returning', 'attacking', 'defending', 'orbiting', 'orbit_pending', 'occupying'])
+            ->setParameter('statuses', ['traveling', 'returning', 'attacking', 'defending', 'orbiting', 'orbit_pending', 'occupying', 'station_waiting'])
             ->orderBy('f.arrivalAt', 'ASC')
             ->getQuery()
             ->getResult();

@@ -23,12 +23,12 @@ final class FleetController extends AbstractController
         if($systemId&&!array_filter($systems,fn($system)=>$system->id===$systemId)) throw $this->createNotFoundException('Système inaccessible.');
         $planet=$planetId?$repo->find(Planet::class,$planetId):null;
         if($planetId && (!$planet instanceof Planet || !$destinations->canPrefill($m,$planet,$mission))) throw $this->createNotFoundException('Destination inaccessible.');
-        $prefillCoordinates='';$mode='friendly';
+        $prefillCoordinates='';$mode=$destinationChoices['modes'][0];
         if($mission==='explore' && $systemId) {
             foreach($systems as $system) if($system->id===$systemId) {$prefillCoordinates=$system->galaxy->coordinateCode().':'.$system->number();break;}
             $mode='custom';
         } elseif($planet) {
-            $prefillCoordinates=$mission==='explore'?$planet->solarSystem->galaxy->coordinateCode().':'.$planet->solarSystem->number():$planet->coordinates();$mode=$destinations->allows($m,$planet,$mission)?$destinations->category($m,$planet):'custom';
+            $prefillCoordinates=$mission==='explore'?$planet->solarSystem->galaxy->coordinateCode().':'.$planet->solarSystem->number():$planet->coordinates();$category=$destinations->category($m,$planet,$mission);$mode=$destinations->allows($m,$planet,$mission) && in_array($category,$destinationChoices['modes'],true)?$category:'custom';
         }
         $planets=$repo->planets($m->universe,$m);$selectedPlanet=$planets[0]??null;
         $selectedId=(int)$request->getSession()->get('selected_planet_'.$m->id,0);
@@ -49,9 +49,11 @@ final class FleetController extends AbstractController
         }
         if($selectedPlanet) $request->getSession()->set('selected_planet_'.$m->id,$selectedPlanet->id);
         foreach($repo->all(Fleet::class,['playerUniverse'=>$m,'homePlanet'=>$selectedPlanet,'status'=>'idle']) as $f) { $ships=array_filter($repo->all(FleetShip::class,['fleet'=>$f]),fn($s)=>$s->quantity>0);if($ships) $idle[]=['fleet'=>$f,'ships'=>$ships]; }
+        $heldFleets=$repo->all(Fleet::class,['playerUniverse'=>$m,'mission'=>'station','status'=>'station_waiting'],['id'=>'ASC']);
+        $holds=$repo->all(Fleet::class,['playerUniverse'=>$m,'homePlanet'=>$selectedPlanet,'status'=>'idle']);
         $activeFleets=$repo->all(Fleet::class,['playerUniverse'=>$m,'homePlanet'=>$selectedPlanet,'status'=>['traveling','returning','attacking','defending','orbiting','orbit_pending','occupying']],['arrivalAt'=>'ASC']);$combatEvents=[];foreach($activeFleets as $activeFleet){$participant=$repo->one(CombatParticipant::class,['fleet'=>$activeFleet]);if($participant && $participant->combatEvent->status==='pending')$combatEvents[$activeFleet->id]=$participant->combatEvent;}
         $orbitRequests=$selectedPlanet?$orbitView->forMember($m,$selectedPlanet):[];
-        return $this->render('fleet/index.html.twig',['fleet_planet'=>$selectedPlanet,'loaded_composition'=>$loaded,'loaded_origin'=>$loadedOrigin,'fleet_details'=>$details->fleets($m,$activeFleets),'prefill'=>['mission'=>$mission,'system'=>$systemId,'planet'=>$planetId,'coordinates'=>$prefillCoordinates,'mode'=>$mode],'active_fleets'=>$activeFleets,'combat_events'=>$combatEvents,'membership'=>$m,'fleet_colony_scope'=>true,'idle'=>$idle,'systems'=>$systems,'destination_choices'=>$destinationChoices,'catalog'=>$catalog->all('ships'),'resources'=>$catalog->rules()['resources'],'fuel_pending'=>$catalog->rules()['fuel_ratio_policy']==='pending','orbit_requests'=>$orbitRequests,'fleet_limit'=>(int)$universeConfig['limits']['max_fleet_size'],'conquest_enabled'=>$conquestEnabled]);
+        return $this->render('fleet/index.html.twig',['fleet_planet'=>$selectedPlanet,'loaded_composition'=>$loaded,'loaded_origin'=>$loadedOrigin,'fleet_details'=>$details->fleets($m,$activeFleets),'prefill'=>['mission'=>$mission,'system'=>$systemId,'planet'=>$planetId,'coordinates'=>$prefillCoordinates,'mode'=>$mode],'active_fleets'=>$activeFleets,'held_fleets'=>$heldFleets,'held_details'=>$details->fleets($m,$heldFleets),'holds'=>$holds,'combat_events'=>$combatEvents,'membership'=>$m,'fleet_colony_scope'=>true,'idle'=>$idle,'systems'=>$systems,'destination_choices'=>$destinationChoices,'catalog'=>$catalog->all('ships'),'resources'=>$catalog->rules()['resources'],'fuel_pending'=>$catalog->rules()['fuel_ratio_policy']==='pending','orbit_requests'=>$orbitRequests,'fleet_limit'=>(int)$universeConfig['limits']['max_fleet_size'],'conquest_enabled'=>$conquestEnabled]);
     }
     #[Route('/flottes/destinations',name:'app_fleet_destinations',methods:['GET'])]
     public function destinations(Request $request,UniverseContext $context,DestinationCatalogue $destinations): Response
