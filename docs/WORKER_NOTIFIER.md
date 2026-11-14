@@ -20,7 +20,8 @@ Requête HTTP ou traitement métier
                   +---------------+----------------+
                   |                                |
        kind = queue/fleet/combat/         kind = notification
-       universe/occupation/reconstruction          |
+       universe/occupation/reconstruction/         |
+       guild_project                              |
                   |                            notifier
                 relay                              |
                   |                         publication privée

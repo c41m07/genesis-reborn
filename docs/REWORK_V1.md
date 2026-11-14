@@ -1,5 +1,9 @@
 # Rework V1 — suivi et reprise
 
+Première passe validée localement le 15 novembre 2026, sur le code applicatif
+`6dd33b7`. Le chantier global reste ouvert : voir les exceptions et la recette
+manuelle ci-dessous. Aucun push, PR, fusion ou déploiement effectué.
+
 ## Cadre
 
 - Branche unique : `chore/rework-v1`, créée depuis `origin/dev` actualisée à `48c9a71`.
@@ -16,8 +20,18 @@ Consignes racine présentes et lues ; aucune consigne imbriquée trouvée dans l
 répertoires applicatifs, scripts et documentation. README, index, architecture,
 feuille de route, règles et décisions consultés pour cadrer les domaines ; leurs
 longs historiques ne constituent pas une preuve de l’état courant.
-Les trois documents Work nommés dans AGENTS.md sont absents du dépôt et des pièces
-jointes accessibles à ce chantier ; ils ne sont pas présentés comme lus.
+Les consignes supplémentaires de `docs/conventions-code-architecture:AGENTS.md`
+ont aussi été examinées : elles sont présentes sur cette branche locale, pas
+dans `dev`. Leurs principes figurent dans le prompt du chantier ; aucun commit
+ou fichier de cet autre chantier n’a été intégré silencieusement. Leur application
+au code ancien reste ciblée, sans revendication de conformité exhaustive.
+Les documents Work suivants n’ont pas été trouvés dans le dépôt ni dans les
+pièces jointes accessibles ; ils n’ont pas été lus :
+
+- `GENESIS_REBORN_PROMPT_MAITRE_WORK_V4_COMPLET.md` ;
+- `GENESIS_REBORN_BRIEF_FIGMA_WORK_V2_COMPLET.md` ;
+- `GENESIS_REBORN_PROTOCOLE_DEVELOPPEMENT_ADAPTATIF_WORK_V1.md`.
+
 Le wiki embarqué est `docs/wiki.json` ; aucune source distante n’a été synchronisée.
 
 ## Inventaire initial
@@ -37,10 +51,10 @@ worktrees et archives historiques exclus des transformations mécaniques.
 | 6 | Carte, planètes, destinations, flottes | Mondes découverts et compositions privées regroupés | Tests ciblés validés |
 | 7 | AdminController et historiques | Compteurs SQL, aperçus bornés, préparations par écran | Tests ciblés validés ; pagination encore ouverte |
 | 8 | colony-live, fragments | Fragments partagés, réponses obsolètes ignorées | Tests ciblés validés |
-| 9 | Assets, HTML, accessibilité | Fragments strictement identiques ; entrée compilée 494 Kio | Revue ciblée, contrôles navigateur complets au lot 12 |
+| 9 | Assets, HTML, accessibilité | Fragments strictement identiques ; entrée compilée 494 Kio | Contrôles automatiques locaux validés ; recette manuelle ouverte |
 | 10 | Comptes, boosts, événements, handlers, exploitation | Sept contrats revus ; lectures du simulateur regroupées | Revue ciblée et tests validés ; concurrence réelle non démontrée |
 | 11 | Documentation et écarts transversaux | Index réparé, documentation et relecture des changements | Effectué sur le périmètre modifié |
-| 12 | Contrôles et recette cumulée | Six contrôles, mesures comparables et parcours manuels requis | Suites complètes en cours |
+| 12 | Contrôles et recette cumulée | Six contrôles, mesures comparables et parcours manuels requis | Contrôles locaux du périmètre livré validés ; recette et exceptions ouvertes |
 
 Cet inventaire recense les domaines, sans prétendre à une revue intégrale de
 chaque fichier. Un domaine non vérifié reste explicitement ouvert.
@@ -75,8 +89,10 @@ Deux projets PHP jetables utilisant la même image et la même fixture ont été
 mesurés successivement : avant, le fichier ColonyView de `48c9a71` est monté
 en lecture seule dans le seul conteneur de référence ; après, le fichier courant.
 Aucun fichier applicatif du checkout n’a été remplacé pour mesurer l’ancien code.
-Pour chaque scénario : un premier appel, puis dix passages chauds. Tableau des
-médianes et étendues serveur en millisecondes ; allocations mémoire du processus
+Mesure finale du 15 novembre, après les suites : caches Symfony préchauffés
+avant chaque série. Pour chaque scénario : un premier appel du service, puis
+dix passages chauds. Tableau des médianes et étendues serveur en millisecondes ;
+allocations mémoire du processus
 (cumulatives entre scénarios), pas mémoire HTTP par visite. Instrumentation de
 débogage identique. Les autres services sont ceux du checkout courant ; avec
 la fixture sans flotte active, les changements de compositions ne modifient pas
@@ -84,16 +100,23 @@ le travail comparé. Valeurs de transfert, rendu et temps HTTP : non mesurés.
 
 | Page | Scénario | SQL avant | SQL après | Temps avant | Temps après | Mémoire avant → après | Résultat fonctionnel |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Vue générale | 10 passages chauds | 468 | 35 | 207,91 [199,52–265,22] | 12,29 [11,55–15,81] | 86,5 → 42,5 Mio | Aucune carte ; files et économie conservées |
-| Bâtiments | 10 passages chauds | 468 | 275 | 213,51 [196,75–236,50] | 98,57 [94,73–109,82] | 87,5 → 46,5 Mio | 39 cartes, coûts et prérequis conservés |
-| Recherche | 10 passages chauds | 468 | 35 | 214,13 [196,77–301,02] | 44,12 [41,66–104,25] | 88,5 → 46,5 Mio | 57 cartes et recherche commune conservées |
-| Chantier | 10 passages chauds | 468 | 37 | 211,08 [195,76–232,34] | 15,73 [15,15–17,07] | 88,5 → 46,5 Mio | 42 cartes et stocks par rang conservés |
-| Défenses | 10 passages chauds | 468 | 36 | 235,91 [202,37–247,70] | 14,39 [12,80–15,98] | 88,5 → 46,5 Mio | 12 cartes et stocks par rang conservés |
-| Guide | 10 passages chauds | 468 | 25 | 210,01 [196,75–229,29] | 12,70 [10,99–14,19] | 90,5 → 48,5 Mio | Arbre préparé sans cartes ni flottes |
+| Vue générale | 10 passages chauds | 468 | 35 | 227,08 [212,59–261,40] | 13,77 [12,29–18,50] | 54,5 → 42,5 Mio | Aucune carte ; files et économie conservées |
+| Bâtiments | 10 passages chauds | 468 | 275 | 226,75 [208,52–330,11] | 108,58 [104,41–137,61] | 54,5 → 46,5 Mio | 39 cartes, coûts et prérequis conservés |
+| Recherche | 10 passages chauds | 468 | 35 | 248,17 [212,30–281,67] | 49,12 [43,89–83,89] | 56,5 → 46,5 Mio | 57 cartes et recherche commune conservées |
+| Chantier | 10 passages chauds | 468 | 37 | 228,00 [213,86–240,42] | 17,33 [15,80–21,53] | 56,5 → 46,5 Mio | 42 cartes et stocks par rang conservés |
+| Défenses | 10 passages chauds | 468 | 36 | 226,90 [218,61–279,89] | 14,05 [13,00–17,84] | 56,5 → 46,5 Mio | 12 cartes et stocks par rang conservés |
+| Guide | 10 passages chauds | 468 | 25 | 226,52 [201,69–248,52] | 12,25 [11,40–17,19] | 57,5 → 48,5 Mio | Arbre préparé sans cartes ni flottes |
 
-Temps SQL médians avant/après : vue générale 98,01/7,21 ms ; Bâtiments
-99,98/54,12 ms ; Recherche 99,17/7,77 ms ; Chantier 100,05/7,78 ms ; Défenses
-106,87/8,08 ms ; Guide 100,00/5,93 ms. Les temps ne constituent pas des seuils CI.
+Temps SQL médians [minimum–maximum] avant/après :
+
+- Vue générale : 104,92 [102,21–113,95] / 7,94 [7,22–10,20] ms.
+- Bâtiments : 105,27 [99,91–163,03] / 57,72 [56,13–70,68] ms.
+- Recherche : 110,87 [99,85–119,00] / 8,77 [7,92–12,18] ms.
+- Chantier : 103,59 [97,05–111,90] / 8,37 [7,92–10,49] ms.
+- Défenses : 108,16 [99,02–112,97] / 7,74 [7,26–9,37] ms.
+- Guide : 105,15 [99,75–113,86] / 5,64 [5,17–6,71] ms.
+
+Les temps ne constituent pas des seuils CI.
 Les échantillons bruts et le lanceur temporaire restent dans `var/rework-measures.json`
 et `var/measure-rework.py`, ignorés par Git. Les budgets testés restent larges.
 
@@ -104,7 +127,24 @@ et `var/measure-rework.py`, ignorés par Git. Les budgets testés restent larges
 - Première suite PHP de référence invalidée : lancement accidentel de la mesure
   pendant la suite, puis arrêt du seul processus PHPUnit de ce chantier après
   vérification de son identité. Aucun service partagé arrêté ; base habituelle intacte.
-- Nouvelle suite de référence lancée seule ; résultat à consigner.
+- Une nouvelle suite de référence a été lancée seule ; son erreur de fixture est détaillée ci-dessous.
+- Contrôle en lecture seule de la base locale habituelle : schéma cohérent,
+  sans migration ni modification des données.
+- Première suite finale : 1 026 cas / 212 589 assertions, une erreur de montage
+  du conteneur jetable (fichier `/docker/compose.prod.yaml` absent), benchmark
+  optionnel ignoré. Montage Docker en lecture seule ajouté au seul environnement
+  temporaire et cache préparé après recréation. Suite complète relancée sans
+  modifier les sources ou les tests pour contourner ce défaut d’environnement.
+- Navigateurs : deux dépassements de délai global observés sous charge (clavier
+  sur toutes les routes et actualisation des flottes), sans échec d’assertion
+  identifié lors de ces délais. Les deux reprises isolées réussissent ensuite
+  (flottes 40,6 s ; clavier 38,0 s), sans changement de test ni de délai.
+- La régression de réponse tardive et d’erreur réseau obsolète passe dans la
+  suite complète ; correction ciblée enregistrée dans `6dd33b7`.
+- Reprise PHP/Python complète du 15 novembre réussie : 1 026 cas PHP,
+  212 591 assertions, un benchmark facultatif ignoré dans la suite (mesuré
+  séparément), 13 tests Python réussis. Aucun échec PHP restant. Durée de cette
+  passe sous charge : 17 min 30 s ; il ne s’agit pas d’un budget de performance.
 - Lot 3 : 8 cas de caractérisation et mesure / 28 assertions réussis, puis
   16 tests d’accès, coûts, files communes et barre de ressources / 101 assertions.
   Après ajout des budgets larges de requêtes : 7 cas / 33 assertions réussis ;
@@ -113,29 +153,66 @@ et `var/measure-rework.py`, ignorés par Git. Les budgets testés restent larges
   base et cache des nouveaux tests. Sa configuration temporaire est dans `var/`
   ignoré par Git. Aucun service habituel arrêté ou reconfiguré.
 - Le premier passage complet n’est pas une référence immuable : des fichiers
-  ont évolué pendant son exécution. Ses résultats ne seront pas annoncés comme
-  validation finale ; la suite finale devra partir d’un contenu stabilisé.
+  ont évolué pendant son exécution. Ces résultats n’ont pas servi de validation
+  finale ; la passe finale a porté sur un contenu stabilisé.
 - Ce passage complet se termine avec 1 erreur sur 1 015 tests : la fixture de
   `FleetStationingTest::testNoHomeUsesShortestReachableOwnedColony` déplace une
-  planète sur une position occupée (`planet_unique`). À reproduire et corriger
-  sans modifier les règles de stationnement. La suite Python n’a pas été atteinte.
+  planète sur une position occupée (`planet_unique`). Fixture corrigée dans
+  `5d0417a`, sans changer les règles de stationnement. La suite Python n’avait
+  pas été atteinte lors de cette passe.
 - Bâtiments garde des lectures dans les calculs économiques partagés (275 SQL
   sur la première mesure ciblée). Leur suppression nécessite une préparation
   économique dédiée et vérifiée ; aucun cache ajouté dans les services de la
-  barre pour masquer ces lectures. Combats et détails des flottes restent à regrouper.
+  barre pour masquer ces lectures. Les combats restent à regrouper ; les
+  compositions des flottes ont été regroupées au lot 6.
+
+## Validation finale — 15 novembre 2026
+
+| Contrôle | Résultat |
+| --- | --- |
+| `make validate` | Réussi, sans affichage des secrets |
+| `make lint` | PHP, 78 YAML, 164 Twig, conteneur et schéma synthétique réussis |
+| Schéma local habituel | Cohérent, contrôle en lecture seule, aucune migration |
+| `make test` | Réussi sur le projet PHP isolé : 1 026 cas, 212 591 assertions, benchmark facultatif ignoré ; 13 Python réussis |
+| Mesure facultative | Exécutée séparément avant/après sur six scénarios, avec caches préchauffés et dix passages chauds chacun |
+| `make assets` | Réussi ; compilation finale également réussie sous Node 24.17.0 |
+| `BROWSER_PERSISTENCE=1 make test-browser` | Couverture complète : 201 scénarios distincts réussis après deux reprises isolées, sans changer les tests ni leurs délais |
+| `git diff --check` | Réussi sur le lot cumulé |
+
+Les groupes comptent 55, 54, 43 et 49 cas. Première passe : 199 réussites et
+deux délais dépassés ; reprise ciblée : 2/2. Comparaison des résultats au
+manifeste : 201/201, aucun scénario manquant ni supplémentaire.
+Les tests couvrent aussi les deux abandons simultanés ; cela ne remplace pas
+une étude de concurrence de tous les traitements sensibles.
+
+Les fichiers du bandeau, de ResourceService, de FactoryEconomy et de GameShell
+sont identiques à `48c9a71`. Le corps de l’endpoint ressources est également
+identique. Aucun coût, durée, équilibrage, verrou ou contrat persistant modifié.
+Les environnements PHP et navigateur temporaires ont été fermés ; les services
+habituels sont préservés. Les preuves et configurations temporaires restent
+dans `var/` et `/tmp/genesis-rework-browser-*`, sans données réelles ni secrets.
+La CI GitHub n’a pas été exécutée ; elle restera obligatoire sur une future PR.
 
 ## Reprise
 
-- Lot actuel : 12/12.
-- Dernière étape validée : fixture isolée et mesure avant changement.
-- Contrôles en cours : suite PHP/Python finale (1 026 cas PHP), quatre groupes
-  navigateur indépendants couvrant les 201 scénarios (55 + 54 + 43 + 49).
+- Branche : `chore/rework-v1`, base `48c9a71`, code applicatif validé `6dd33b7`.
+- Lot actuel : 12/12, validation locale de la passe ciblée terminée.
+- Dernière étape validée : suites complètes, reprises, couverture 201/201 et mesures finales.
+- Contrôles en cours : aucun.
+- Modifications non commitées après enregistrement du bilan : aucune.
+- Questions en attente : aucune ; recette manuelle et exceptions restent ouvertes.
+- Prochaine action précise : caractériser les lectures économiques de Bâtiments
+  sur plusieurs volumes et événements, puis préparer une optimisation dédiée
+  aux cartes qui conserve intégralement les traitements du bandeau.
+- Conserver cette branche unique ; aucune PR, fusion ou publication automatique.
+
+## Travaux par lot et contrôles ciblés
+
 - Référence du lot 1 : `9e62541`.
 - Lot 2 : imports explicites et constructeur de ColonyView mis en lignes,
   sans changement de comportement ; syntaxe PHP et diff vérifiés. `.editorconfig`
   existant conservé. Pas de formateur ajouté ni de formatage global : les autres
   écarts sont traités seulement avec les domaines réellement modifiés.
-- Questions en attente : aucune ; actualisation réseau de dev autorisée et effectuée.
 - Lot 4 : onglet validé avant les chargements ; recherche de joueurs uniquement
   dans Relations commandants ; membres et historiques des guildes chargés pour
   les fiches affichées ; grades/attributions seulement sur leurs onglets. Les
@@ -194,7 +271,7 @@ et `var/measure-rework.py`, ignorés par Git. Les budgets testés restent larges
   Compilation réussie : runtime 1,41 Kio, chunk partagé 93,6 Kio, CSS 251 Kio,
   JS applicatif 148 Kio (tailles brutes, pas le transfert compressé).
   Pas d’optimisation supplémentaire sans coût démontré. Clavier, responsive,
-  contrastes automatiques et métadonnées à vérifier dans la suite finale ; cela
+  contrastes automatiques et métadonnées validés dans la suite finale ; cela
   ne constitue pas un audit RGAA/WCAG complet ni une revue de tous les styles.
 - Lot 10 : sept handlers et contrats de messages, routage/retries, outbox,
   garde des boosts, suppression de compte et accès du simulateur examinés de
@@ -214,8 +291,6 @@ et `var/measure-rework.py`, ignorés par Git. Les budgets testés restent larges
   la base synthétique ; `make assets` réussi sous Node WSL 20.19.2, complété par
   une compilation de production réussie sous Node Windows 24.17.0, conforme à la
   version majeure documentée. Aucun téléchargement ni installation nécessaire.
-- Prochaine action : attendre la compilation finale et les suites cumulées ;
-  mesures comparables et validation cumulée à reprendre au lot 12.
 
 ## Exceptions et travaux encore ouverts
 
@@ -256,6 +331,9 @@ mesure. Les règles et valeurs restent strictement hors arbitrage de ce chantier
 | Documentation | `README.md`, `docs/ARCHITECTURE.md`, `docs/FEUILLE_DE_ROUTE.md`, `docs/README.md`, `docs/REWORK_V1.md`, `docs/WORKER_NOTIFIER.md` |
 
 ## Recette manuelle à effectuer
+
+Utiliser un environnement de recette et des comptes synthétiques pour les actions
+modifiant l’état ; les essais automatisés ne portent pas sur la base habituelle.
 
 - Comptes : inscription, confirmation et connexion ; préférences, changement
   d’univers et sélection de colonie. Les emails externes demandent un environnement autorisé.

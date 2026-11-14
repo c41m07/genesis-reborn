@@ -7,8 +7,10 @@ Les préparations de catalogues et d’onglets sont ciblées, plusieurs lectures
 sont regroupées et les colonies disposent de fragments d’actualisation partagés.
 Le bandeau et les règles restent conservés. Le [suivi unique](REWORK_V1.md)
 détaille les contrôles, mesures, exceptions et prochaines actions ; il distingue
-les travaux validés des approfondissements encore ouverts. La recette cumulée
-et la validation complète sont en cours, sans déclaration de chantier achevé.
+les travaux validés des approfondissements encore ouverts. Validation locale de
+la passe réussie le 15 novembre : PHP/Python, lint, compilation et 201 scénarios
+navigateur distincts après reprises. La recette manuelle et les exceptions
+restent ouvertes ; le chantier global n’est pas déclaré achevé. Aucune CI GitHub.
 
 ## Bunker : retrait du prérequis Blindage — 14 novembre 2026
 
