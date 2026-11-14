@@ -85,6 +85,21 @@ test('Les détails des colonies sont accessibles au survol, au clavier et au tou
   await page.goto('/planetes/'+planetId);
   const fleet=page.locator('[data-active-fleet="'+fleetId+'"]');
   const panel=fleet.locator('.empire-details');
+  await expect(fleet).toContainText('Votre flotte');
+  await expect(fleet.getByText(/Détails de la flotte/)).toHaveCount(0);
+  for (const width of [320,390,768,1440]) {
+    await page.setViewportSize({width,height:900});
+    await fleet.scrollIntoViewIfNeeded();
+    const recall=fleet.getByRole('link',{name:/Préparer le rappel/});
+    const timing=await fleet.locator('.flight-progress-timing').boundingBox();
+    const recallBounds=await recall.boundingBox();
+    expect(recallBounds.x).toBeGreaterThanOrEqual(timing.x+timing.width);
+    expect(recallBounds.y).toBeLessThan(timing.y+timing.height);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    await page.screenshot({path:testInfo.outputPath('flight-bar-'+width+'.png'),animations:'disabled'});
+  }
+  await page.setViewportSize({width:390,height:844});
+  expect((await new AxeBuilder({page}).include('[data-live-region="active-flights"]').withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
   await fleet.locator('.operation-heading').hover();
   await expect(panel).toBeVisible();
   await expect(panel).toContainText('Fret transporté');
@@ -97,7 +112,7 @@ test('Les détails des colonies sont accessibles au survol, au clavier et au tou
   await expect(panel).toBeVisible();
   await page.mouse.move(0,0);
   await expect(panel).toBeHidden();
-  await fleet.getByRole('button',{name:/Détails de la flotte/}).focus();
+  await fleet.getByRole('button',{name:/Composition et fret/}).focus();
   await page.keyboard.press('Space');
   await expect(panel).toBeVisible();
   await page.screenshot({path:testInfo.outputPath('fleet-popover-mobile.png'),fullPage:false,animations:'disabled'});

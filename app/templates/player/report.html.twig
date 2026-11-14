@@ -13,6 +13,6 @@
 <label for="player-report-comment">Commentaire (facultatif)</label><textarea id="player-report-comment" name="comment" maxlength="1000" rows="5" aria-describedby="player-report-comment-help">{{ draft.comment }}</textarea><small id="player-report-comment-help">1000 caractères maximum.</small>
 <button class="secondary" type="submit">Transmettre le signalement</button>
 </form>
-<p><a href="{{ path('app_leaderboard',{category:context.category,page:context.page}) }}">Revenir au classement</a></p>
+<p><a href="{{ path('app_leaderboard',{category:context.category,direction:context.direction|default('desc'),page:context.page}) }}">Revenir au classement</a></p>
 </section>
 {% endblock %}
