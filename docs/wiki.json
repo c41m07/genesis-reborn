@@ -256,5 +256,14 @@
         "example": "Si 30 000 métal et 10 000 nano sont pillables pour 8 000 de place disponible, le chargement contient 6 000 métal et 2 000 nano. Si le stockage d’origine ne peut accueillir que 1 500 nano au retour, 500 nano sont perdus."
       }
     ]
+  },
+  {
+    "id": "profils-guildes",
+    "part": "3. Utiliser les outils",
+    "title": "Profils et pages de guildes",
+    "paragraphs": [
+      "Les noms des joueurs dans le classement, les conversations et les membres de guilde ouvrent leur profil, réservé au même univers. Seuls pseudo, guilde/tag et scores/rangs quotidiens déjà publics sont affichés. Titres et trophées restent reportés ; aucune donnée privée, coordonnée ou composition militaire n’est montrée.",
+      "Les pages de guildes sont accessibles depuis le classement et les écrans de guilde. Le commandant seul peut modifier description, logo et bannière. Description en texte simple : 2 000 caractères maximum. Images JPEG/PNG/WebP : logo jusqu’à 1 Mo et 512×512, bannière jusqu’à 2 Mo et 1920×640. Sans nouveau fichier, l’image actuelle est conservée. Les fichiers sont contrôlés, réencodés et réservés aux joueurs du même univers."
+    ]
   }
 ]

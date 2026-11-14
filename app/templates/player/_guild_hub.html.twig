@@ -3,7 +3,7 @@
 {% for row in guilds %}{% if row.guild.id!=own.id %}{% if row.status=='allies' %}{% set alliedGuilds=alliedGuilds+1 %}{% elseif row.status=='enemies' %}{% set enemyGuilds=enemyGuilds+1 %}{% endif %}{% endif %}{% endfor %}
 <section class="panel guild-hub-hero" aria-label="Centre de guilde">
 <span class="guild-hub-emblem" aria-hidden="true">{{ ui.icon('diplomacy') }}</span>
-<div><h2>{{ own.name }}</h2><p class="guild-hub-stats">{{ ownRow.members|length }} {{ ownRow.members|length > 1 ? 'membres' : 'membre' }} · {{ own.leader.id==membership.id ? 'Commandant' : ownMember.rank.name|default('Membre') }} · {{ alliedGuilds }} guildes alliées · {{ enemyGuilds }} ennemies</p></div>
+<div><h2><a class="public-profile-link" href="{{ path('app_guild_public_profile',{id:own.id}) }}">{{ own.name }}</a></h2><p class="guild-hub-stats">{{ ownRow.members|length }} {{ ownRow.members|length > 1 ? 'membres' : 'membre' }} · {{ own.leader.id==membership.id ? 'Commandant' : ownMember.rank.name|default('Membre') }} · {{ alliedGuilds }} guildes alliées · {{ enemyGuilds }} ennemies</p></div>
 <a class="primary" href="{{ path('app_messages',{channel:'guild'}) }}">Ouvrir le canal de guilde {{ ui.icon('arrow') }}</a>
 </section>
 <div class="diplomacy-home-columns">

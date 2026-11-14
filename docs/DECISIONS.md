@@ -1610,3 +1610,11 @@ Le dénominateur du taux de victoire de l’attaquant est toujours dix, y compri
 Les dix détails gardent pertes, survivants et résumés des rounds, sans moyenne ni écriture de jeu.
 Les limites techniques par combat et le moteur sont conservés ; temps et mémoire de la série sont mesurés dans le [suivi](CADRAGE_OUTILS_STRATEGIQUES.md).
 Cette implémentation locale ne vaut ni publication, ni fusion, ni déploiement.
+
+### Lot profils et guildes — préparation du 14 novembre 2026
+
+Le périmètre validé précédemment est implémenté sur `feature/profils-joueurs-guildes`, après fusion autorisée de la PR #60. Aucun élargissement aux autres univers ni création de titres/trophées.
+Le propriétaire autorise explicitement GD et la reconstruction locale des images Docker, afin de décoder puis réencoder JPEG, PNG et WebP et retirer les métadonnées, notamment GPS.
+Les présentations sont séparées dans `guild_profile`, sans ajouter de colonnes à la table des guildes existantes. Version de formulaire et verrou de guilde empêchent une écriture périmée ou un double envoi d’images.
+Les fichiers restent privés sous `var/guild-media`, servis après contrôle de l’univers, avec noms générés et volume de production dédié. La sauvegarde SQL ne contient pas ces fichiers.
+La migration est seulement préparée ; aucune application à une base existante, restauration ou import de données n’est autorisé par ce lot. [Suivi et limites](PROFILS_JOUEURS_GUILDES.md).

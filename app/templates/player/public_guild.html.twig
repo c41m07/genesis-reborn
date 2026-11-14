@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ profile.name }} · Guilde · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="social-profile-page">
+<section class="panel guild-public-hero">
+{% if profile.has_banner %}<img class="guild-public-banner" src="{{ path('app_guild_media',{id:profile.id,kind:'banner'}) }}" alt="Bannière de la guilde {{ profile.name }}">{% endif %}
+<div class="guild-public-heading">{% if profile.has_logo %}<img class="guild-public-logo" src="{{ path('app_guild_media',{id:profile.id,kind:'logo'}) }}" alt="">{% endif %}
+<div><h1>{% if profile.tag %}[{{ profile.tag }}] {% endif %}{{ profile.name }}</h1><p>Guilde de l’univers {{ membership.universe.name }} · {{ profile.member_count }} membre{{ profile.member_count>1?'s':'' }}</p></div></div>
+{% if can_edit %}<a class="secondary" href="{{ path('app_guild_profile_edit',{id:profile.id}) }}">Personnaliser la guilde</a>{% endif %}
+</section>
+<section class="panel" aria-labelledby="guild-public-description"><h2 id="guild-public-description">Présentation</h2><div class="guild-public-description">{% if profile.description %}<p>{{ profile.description|nl2br }}</p>{% else %}<p>Cette guilde n’a pas encore ajouté de description.</p>{% endif %}</div></section>
+<section class="panel" aria-labelledby="guild-public-leader"><h2 id="guild-public-leader">Commandant</h2>{% if profile.leader %}<a href="{{ path('app_player_public_profile',{id:profile.leader.id}) }}">{{ profile.leader.username }}</a>{% else %}<p>Commandement indisponible.</p>{% endif %}</section>
+<p><a href="{{ path('app_leaderboard',{tab:'guilds'}) }}">Classement des guildes</a> · <a href="{{ path('app_diplomacy') }}">Ma guilde</a></p>
+</div>
+{% endblock %}

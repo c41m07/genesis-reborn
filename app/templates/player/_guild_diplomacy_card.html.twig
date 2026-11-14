@@ -3,7 +3,7 @@
 {% set treatyPermissions={allies:'diplomacy.alliance',non_aggression:'diplomacy.non_aggression',defense:'diplomacy.defense',neutral:'diplomacy.neutral'} %}
 <article class="panel guild-card">
     <span class="badge">{{ own ? relation_labels[row.status]|default(row.status) : 'Recrutement ouvert' }}</span>
-    <h3>{{ g.name }}</h3>
+    <h3><a class="public-profile-link" href="{{ path('app_guild_public_profile',{id:g.id}) }}">{{ g.name }}</a></h3>
     <p>Commandement : {{ g.leader.displayName }}<br>{{ row.members|length }} membre{{ row.members|length > 1 ? 's' : '' }}</p>
     <details><summary>Voir les membres</summary><ul>{% for member in row.members %}<li>{{ member.playerUniverse.displayName }}</li>{% endfor %}</ul></details>
     <div class="guild-hub-actions"><a href="{{ path('app_messages',{with:g.leader.id}) }}">Contacter le commandant</a></div>

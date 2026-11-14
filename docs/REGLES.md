@@ -708,3 +708,9 @@ Les niveaux effectifs conservent la somme pondérée des rangs par 1 / 1,25 / 1,
 Exemples à technologies égales : une sonde Supérieure face à 100 sondes défensives donne 30 + 20 = 50 % de détection et 50 % de réussite. Quatre Basiques et une Supérieure donnent une base de 46 %, puis 50 % de détection après les quatre sondes supplémentaires, sans défense locale.
 
 Le score reste `1 + Analyse tactique de l’espion − Analyse tactique adverse + sondes supplémentaires`, avec plancher nul et cinq catégories au maximum : ressources, bâtiments, recherches, flottes, défenses. Une détection ne révèle rien et avertit le propriétaire. Toutes les sondes envoyées sont consommées à l’arrivée, succès ou détection. Les coûts, prérequis, transports, permissions, vacances et protections restent inchangés. Les anciens rapports conservent le risque enregistré lors de leur résolution ; ils ne sont pas recalculés rétroactivement.
+
+## Profils des joueurs et pages de guildes — 14 novembre 2026
+
+Les profils sont consultables par les joueurs connectés du même univers, depuis le classement, les messages et les membres de guilde. Ils affichent uniquement pseudo, guilde/tag et les cinq scores/rangs déjà publics du classement quotidien. Un nouveau joueur sans instantané reste « Pas encore classé ». Aucun email, activité précise, coordonnées ou effectif militaire n’est exposé ; aucun système de titres ou trophées n’est ajouté.
+
+Les pages des guildes sont consultables dans le même univers lorsque les guildes y sont activées. Elles montrent nom/tag, description, logo, bannière, commandant et nombre de membres. Seul le commandant actuel peut modifier la présentation, même si des grades disposent d’autres permissions déléguées. Les descriptions restent du texte simple, échappé à l’affichage ; les images sont contrôlées et réencodées. Voir les [contraintes et limites](PROFILS_JOUEURS_GUILDES.md).

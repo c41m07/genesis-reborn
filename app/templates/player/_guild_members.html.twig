@@ -1,9 +1,10 @@
 <section class="panel" aria-labelledby="guild-members-title">
+<p><a href="{{ path('app_guild_public_profile',{id:own.id}) }}">Consulter la page de la guilde</a></p>
 <div class="section-heading"><h2 id="guild-members-title">Membres de la guilde</h2><span class="badge">{{ ownRow.members|length }} {{ ownRow.members|length > 1 ? 'membres' : 'membre' }}</span></div>
 <table class="guild-members-table"><caption class="visually-hidden">Équipage de {{ own.name }}</caption>
 <thead><tr><th scope="col">Commandant</th><th scope="col">Grade</th><th scope="col">État</th><th scope="col">Actions</th></tr></thead>
 <tbody>{% for member in ownRow.members %}<tr>
-<th scope="row">{{ member.playerUniverse.displayName }}{% if member.playerUniverse.id==membership.id %} <small>· Vous</small>{% endif %}</th>
+<th scope="row">{% if member.playerUniverse.playerControlled %}<a class="public-profile-link" href="{{ path('app_player_public_profile',{id:member.playerUniverse.id}) }}">{{ member.playerUniverse.displayName }}</a>{% else %}{{ member.playerUniverse.displayName }}{% endif %}{% if member.playerUniverse.id==membership.id %} <small>· Vous</small>{% endif %}</th>
 <td>{{ member.playerUniverse.id==own.leader.id ? 'Commandant' : (member.rank.name|default('Membre')) }}</td>
 <td>{% set online=memberPresence[member.playerUniverse.id]|default(false) %}<span class="guild-presence guild-presence--{{ online ? 'online' : 'offline' }}">{{ online ? 'En ligne' : 'Hors ligne' }}</span></td>
 <td>{% if member.playerUniverse.id!=membership.id %}<a class="secondary" href="{{ path('app_messages',{with:member.playerUniverse.id}) }}" aria-label="Écrire à {{ member.playerUniverse.displayName }}">Écrire</a>{% else %}<span class="muted">Vous</span>{% endif %}</td>
