@@ -945,6 +945,54 @@ final class GamePersistenceTest extends KernelTestCase
         self::assertSame('idle', $fleetStock->status);
     }
 
+    public function testMixedSpyArrivalUsesWeightedBaseConsumesEveryRankAndIsIdempotent(): void
+    {
+        $clock=$this->clock();$sender=$this->player('RankedSpy');$origin=$this->join($sender);
+        $defender=$this->player('RankedTarget');$target=$this->join($defender);
+        $stock=$this->ships($origin,['probe'=>4]);$superior=new FleetShip();$superior->fleet=$stock;$superior->slug='probe';$superior->tier='superior';$superior->quantity=1;$this->em->persist($superior);
+        $discovery=new \App\Entity\PlayerDiscovery();$discovery->playerUniverse=$sender->currentPlayerUniverse;$discovery->solarSystem=$target->solarSystem;
+        if(!$this->em->getRepository(\App\Entity\PlayerDiscovery::class)->findOneBy(['playerUniverse'=>$sender->currentPlayerUniverse,'solarSystem'=>$target->solarSystem])) $this->em->persist($discovery);
+        $hydrogen=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$origin,'resourceType'=>'hydrogen']);$hydrogen->currentStock=1000000;$this->em->flush();
+        self::getContainer()->set(\Random\Randomizer::class,new \Random\Randomizer(new \Random\Engine\Mt19937(30)));
+        $service=self::getContainer()->get(\App\Service\Fleet\FleetService::class);
+        $service->send($sender->currentPlayerUniverse,$origin,'spy',$target->id,['probe'=>['basic'=>4,'superior'=>1]],1,[],str_repeat('c',32));
+        $fleet=$this->em->getRepository(Fleet::class)->findOneBy(['playerUniverse'=>$sender->currentPlayerUniverse,'mission'=>'spy','status'=>'traveling']);
+        $token=$fleet->dispatchToken;$clock->sleep($fleet->travelSeconds+1);$service->arrive($fleet->id,$token);
+        $report=$this->em->getRepository(\App\Entity\EspionageReport::class)->findOneBy(['sender'=>$sender->currentPlayerUniverse]);
+        self::assertSame(50,$report->detectionChance);self::assertSame('success',$report->result);self::assertSame(5,$report->probesSent);
+        self::assertSame(5,$report->intelCategories);self::assertSame(['resources','buildings','research','fleets','defenses'],array_keys($report->snapshot));
+        foreach($this->em->getRepository(FleetShip::class)->findBy(['fleet'=>$fleet]) as $probe) self::assertSame(0,$probe->quantity);
+        self::assertSame('completed',$fleet->status);
+        $service->arrive($fleet->id,$token);
+        self::assertSame(1,$this->em->getRepository(\App\Entity\EspionageReport::class)->count(['sender'=>$sender->currentPlayerUniverse]));
+        self::assertSame(1,$this->em->getRepository(\App\Entity\PlayerBoost::class)->count(['playerUniverse'=>$sender->currentPlayerUniverse,'sourceType'=>'risk_mission']));
+    }
+
+    public function testSpyDefensiveProbesCountEveryRankInDefenseAndOrbitWithExistingTechnologyWeights(): void
+    {
+        $sender=$this->player('ProtectedSpy');$origin=$this->join($sender);
+        $defender=$this->player('ProtectedTarget');$target=$this->join($defender);
+        $ally=$this->player('ProtectedAlly');$allyHome=$this->join($ally);
+        $this->ships($target,['probe'=>4]);
+        foreach([['orbiting','superior',93],['defending','intermediate',3],['returning','basic',10000],['traveling','basic',10000]] as [$status,$tier,$quantity]) {
+            $support=new Fleet();$support->playerUniverse=$ally->currentPlayerUniverse;$support->homePlanet=$allyHome;$support->destination=$target;$support->status=$status;$this->em->persist($support);
+            $probe=new FleetShip();$probe->fleet=$support;$probe->slug='probe';$probe->tier=$tier;$probe->quantity=$quantity;$this->em->persist($probe);
+        }
+        $fleet=new Fleet();$fleet->playerUniverse=$sender->currentPlayerUniverse;$fleet->homePlanet=$origin;$fleet->destination=$target;$fleet->mission='spy';$this->em->persist($fleet);
+        $sent=new FleetShip();$sent->fleet=$fleet;$sent->slug='probe';$sent->tier='superior';$sent->quantity=1;$this->em->persist($sent);$this->em->flush();
+        self::getContainer()->set(\Random\Randomizer::class,new \Random\Randomizer(new \Random\Engine\Mt19937(30)));
+        $service=self::getContainer()->get(\App\Service\Fleet\EspionageService::class);
+        self::assertSame(100,new \ReflectionMethod($service,'localProbeCount')->invoke($service,$target));
+        $report=$service->resolve($fleet,1);self::assertSame(50,$report->detectionChance);self::assertSame(50,100-$report->detectionChance);
+        self::assertSame('success',$report->result);self::assertSame(1,$report->intelCategories);self::assertSame(['resources'],array_keys($report->snapshot));
+        foreach([[$defender,'intelligence_countermeasures','basic'],[$defender,'intelligence_countermeasures','intermediate'],[$defender,'intelligence_countermeasures','superior'],[$sender,'signature_masking','intermediate'],[$sender,'signature_masking','superior']] as [$player,$slug,$tier]) {
+            $technology=new PlayerTechnology();$technology->playerUniverse=$player->currentPlayerUniverse;$technology->slug=$slug;$technology->tier=$tier;$technology->level=1;$this->em->persist($technology);
+        }
+        $this->em->flush();$weighted=$service->resolve($fleet,1);
+        self::assertSame(4,$weighted->targetCounterEspionageLevel);self::assertSame(60,$weighted->detectionChance);
+        self::assertSame(0,$weighted->senderEspionageLevel);self::assertSame(0,$weighted->targetEspionageLevel);
+    }
+
     public function testSpySnapshotUsesTheTargetUniverseCatalogueForEveryCategory(): void
     {
         $player = $this->player('SpySnapshot');
@@ -1006,6 +1054,7 @@ final class GamePersistenceTest extends KernelTestCase
         $counter->level = 5;
         $this->em->persist($counter);
         $this->em->flush();
+        self::getContainer()->set(\Random\Randomizer::class,new \Random\Randomizer(new \Random\Engine\Mt19937(50)));
         $service = self::getContainer()->get(\App\Service\Fleet\FleetService::class);
         $service->send($sender->currentPlayerUniverse, $origin, 'spy', $target->id, ['probe' => 2], 1, [], str_repeat('a', 32));
         $spyFleet = $this->em->getRepository(\App\Entity\Fleet::class)->findOneBy(['playerUniverse' => $sender->currentPlayerUniverse, 'status' => 'traveling', 'mission' => 'spy']);
@@ -1015,7 +1064,7 @@ final class GamePersistenceTest extends KernelTestCase
 
         $report = $this->em->getRepository(\App\Entity\EspionageReport::class)->findOneBy(['sender' => $sender->currentPlayerUniverse]);
         self::assertNotNull($report);
-        self::assertContains($report->result, ['detected', 'success']);
+        self::assertSame('detected',$report->result);
         self::assertSame(95, $report->detectionChance);
         self::assertSame(2, $report->probesSent);
         if ($report->result === 'detected') {
@@ -1059,7 +1108,7 @@ final class GamePersistenceTest extends KernelTestCase
         self::assertNotNull($report);
         self::assertContains($report->result, ['detected', 'success']);
         self::assertSame(4, $report->targetCounterEspionageLevel);
-        self::assertSame(94, $report->detectionChance);
+        self::assertSame(91, $report->detectionChance); // 50 + 40 + 1 ; les 3 sondes PNJ ne forment aucune tranche de 5.
         if ($report->result === 'detected') {
             self::assertSame([], $report->snapshot);
             self::assertSame(0, $report->intelCategories);

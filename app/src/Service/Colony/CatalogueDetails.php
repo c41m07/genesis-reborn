@@ -151,16 +151,19 @@ final class CatalogueDetails
     private function espionageSections():array
     {
         $s=$this->catalog->all('espionage');
+        $bases=[];foreach(['basic'=>'Basique','intermediate'=>'Intermédiaire','superior'=>'Supérieur'] as $tier=>$label) $bases[]=$label.' : '.$this->number((float)$s['base_detection_by_tier'][$tier]).' %';
         return [
             $this->section('Détection des sondes',[
-                'Le risque part de '.$this->number((float)($s['base_detection_chance']??50)).' %. Chaque niveau effectif de Discipline du secret de la cible ajoute '.$this->number((float)($s['intelligence_countermeasures_weight']??10)).' points ; chaque niveau effectif d’Écran de brouillage de l’émetteur retire '.$this->number((float)($s['stealth_weight']??10)).' points.',
-                'Chaque sonde envoyée au-delà de la première ajoute '.$this->number((float)($s['extra_probe_weight']??1)).' point(s) de risque. Chaque sonde présente chez la cible ajoute '.$this->number((float)($s['local_probe_weight']??1)).' point(s), y compris les sondes en défense ou en orbite.',
+                'Risque de détection de base selon le rang des sondes : '.implode(' ; ',$bases).'. Pour un mélange, la moyenne est pondérée par le nombre de sondes de chaque rang, sans arrondi intermédiaire.',
+                'Chaque niveau effectif de Discipline du secret de la cible ajoute '.$this->number((float)$s['intelligence_countermeasures_weight']).' points ; chaque niveau effectif d’Écran de brouillage de l’émetteur retire '.$this->number((float)$s['stealth_weight']).' points.',
+                'Chaque sonde envoyée au-delà de la première ajoute '.$this->number((float)$s['extra_probe_weight']).' point(s) de risque. Les sondes présentes chez la cible ajoutent '.$this->number((float)$s['local_probe_weight']).' point(s) par tranche complète de '.$s['local_probe_batch_size'].' sondes, dans la limite de '.$s['local_probe_bonus_cap'].' points. Chaque sonde compte pour une unité, quel que soit son rang, y compris en défense ou en orbite.',
+                'Le calcul est limité aux bornes puis arrondi une seule fois à l’entier le plus proche. La chance de réussite vaut 100 % moins le risque de détection. Ces valeurs servent de base aux essais Alpha, sans équilibrage confirmé par les joueurs.',
                 'Le risque final reste compris entre '.$this->number((float)($s['min_detection_chance']??5)).' % et '.$this->number((float)($s['max_detection_chance']??95)).' %. Si les sondes sont détectées, aucun renseignement n’est obtenu et le propriétaire de la cible est averti.'
             ]),
             $this->section('Contenu du rapport',[
                 'Si les sondes passent inaperçues, le score vaut '.$this->number((float)($s['report_score_base']??1)).' + votre niveau effectif d’Analyse tactique − celui de la cible + le nombre de sondes supplémentaires.',
                 'Chaque point révèle une catégorie supplémentaire, dans l’ordre : ressources, bâtiments, recherches, flottes, défenses. Au-delà de cinq catégories, le rapport est déjà complet ; un score nul ne révèle aucune catégorie.',
-                'Envoyer davantage de sondes peut donc améliorer le rapport, mais augmente aussi le risque de détection.'
+                'Envoyer davantage de sondes peut donc améliorer le rapport, mais augmente aussi le risque de détection. Le rang des sondes n’ajoute aucun bonus de renseignement.'
             ]),
             $this->section('Préparer la mission',[
                 'L’espionnage exige une ou plusieurs sondes, sans escorte, vers une planète connue qui ne vous appartient pas.',

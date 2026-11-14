@@ -40,6 +40,15 @@ final class CatalogueDetailsTest extends KernelTestCase
         self::assertSame(150,$count);
     }
 
+    public function testEspionageCatalogueExplainsTheConfiguredRisksAndDefensiveCap():void
+    {
+        foreach([['ships','probe'],['technologies','signature_masking'],['technologies','intelligence_countermeasures'],['technologies','tactical_intelligence']] as [$group,$slug]) {
+            $details=$this->describe($group,$slug);
+            $text=implode(' ',array_merge(...array_column($details['sections'],'paragraphs')));
+            foreach(['Basique : 50 %','Intermédiaire : 40 %','Supérieur : 30 %','moyenne est pondérée','tranche complète de 5 sondes','limite de 20 points','quel que soit son rang','aucun bonus de renseignement','essais Alpha'] as $expected) self::assertStringContainsString($expected,$text);
+        }
+    }
+
     public function testMilitarySheetIncludesResearchAndLocalFortressWithoutChangingBaseStats():void
     {
         $max=['basic'=>25,'intermediate'=>25,'superior'=>25];
