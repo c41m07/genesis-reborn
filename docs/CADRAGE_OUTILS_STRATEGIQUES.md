@@ -37,9 +37,11 @@ dix essais et graines distinctes, détails au clavier, trois largeurs
 inchangés. Captures de résultat sombre 320 et clair 1440 examinées.
 Ces vérifications ciblées ne constituent pas un audit RGAA complet.
 
-Aucune publication, PR ou fusion du lot simulateur. Aucune dépendance ni
-migration ajoutée. La CI complète reste à lancer sur PR et à attendre avant
-toute fusion ; ces résultats ne constituent pas une suite locale complète.
+Publication autorisée dans la [PR #60 en brouillon vers dev](https://github.com/c41m07/genesis-reborn/pull/60).
+Suivi de CI et correction de ses échecs autorisés ; aucune fusion ni aucun
+déploiement autorisés. Aucune dépendance ni migration ajoutée. Consulter dans
+la PR la CI complète sur la dernière version ; les résultats ciblés ci-dessus
+ne constituent pas une suite locale complète ni le verdict de cette CI.
 
 Fichiers concernés : `PlayerCombatSimulation.php`, `CombatSimulationController.php`,
 `templates/combat/simulation.html.twig`, nouveau partiel

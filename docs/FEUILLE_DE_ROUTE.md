@@ -7,7 +7,9 @@ Complexité 4/5 : dix graines distinctes, estimation des victoires de l’attaqu
 Moteur, limites par combat, propriété des renseignements et absence d’écriture de jeu conservés.
 42 tests PHP ciblés / 4 879 assertions, validation Compose, lint et compilation réussis ; parcours navigateur du simulateur réussi en clair/sombre, au clavier, sans JavaScript et à 320/390/1440 px. Contraste corrigé sans affaiblir le contrôle axe. Ce sont des vérifications ciblées, pas la suite complète ni la CI du nouveau lot.
 Le [suivi et les mesures](CADRAGE_OUTILS_STRATEGIQUES.md) détaillent les limites et la reprise.
-Aucune migration, publication, PR, fusion ou livraison Alpha de ce nouveau lot.
+Branche publiée avec autorisation dans la [PR #60 en brouillon vers dev](https://github.com/c41m07/genesis-reborn/pull/60).
+Les résultats complets sur la dernière version sont à consulter dans la PR.
+Aucune migration, fusion ni livraison Alpha de ce nouveau lot n’est autorisée.
 
 ## Interfaces des vols et classement — 14 novembre 2026
 
