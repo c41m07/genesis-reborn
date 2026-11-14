@@ -124,6 +124,20 @@ consommateurs. La fusion ne constitue ni cette autorisation ni un déploiement.
   explicite. Les trois documents maîtres Work ne sont pas disponibles localement ;
   aucune validation de leurs 15 phases n’est prétendue.
 
+## Publication et correction de CI
+
+PR #63 en brouillon vers dev, publication autorisée. Première CI sur c0089a3 :
+1 010 tests PHP / 212 490 assertions et 13 Python réussis, lints et schéma
+synchronisés, sauvegarde/restauration isolées réussies, GitGuardian réussi.
+Trois scénarios navigateur de messagerie échouent lors de la lecture synchrone
+du bouton, juste après une navigation. Le test attend désormais la fin de
+chargement avant les événements synthétiques ; les vérifications du blocage
+et de l’absence de double envoi sont conservées. Complexité 2/5, correction
+ciblée de synchronisation du test, sans changement du comportement produit.
+Les quatre parcours de message-markdown.spec.mjs réussissent localement après
+cette correction, dans le projet navigateur jetable.
+La PR associée fait référence pour les résultats de la nouvelle CI complète.
+
 ## Fichiers du lot
 
 ### Métier, données et contrôleurs
@@ -168,7 +182,7 @@ consommateurs. La fusion ne constitue ni cette autorisation ni un déploiement.
 - app/tests/Integration/OrbitDepartureRequestTest.php
 - app/tests/browser/fleet-destinations.spec.mjs
 - app/tests/browser/fleet-recall.spec.mjs
-- app/tests/browser/fleet-stationing.spec.mjs
+- app/tests/browser/fleet-stationing.spec.mjs\n- app/tests/browser/message-markdown.spec.mjs
 
 ### Documentation
 
