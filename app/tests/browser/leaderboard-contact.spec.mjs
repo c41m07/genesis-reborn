@@ -91,7 +91,7 @@ test('Classement : tris, contact direct et échange de messages privés', async 
       await page.setViewportSize({ width, height: 900 });
       await page.goto(conversationUrl);
       await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
-      await expect(page.locator('.message-bubble>p').first()).toHaveCSS('font-size', '13px');
+      await expect(page.locator('.message-content p').first()).toHaveCSS('font-size', '13px');
       await expect(page.locator('.message-meta').first()).toHaveCSS('font-size', '11px');
       await expect(page.getByLabel('Votre message')).toHaveCSS('font-size', width <= 1050 ? '16px' : '14px');
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);

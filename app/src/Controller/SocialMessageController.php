@@ -27,6 +27,7 @@ final class SocialMessageController extends AbstractController
         if ($request->isMethod('POST')) {
             $action = (string) $request->request->get('action');
             $tokenId = match ($action) { 'global' => 'global_message', 'guild' => 'guild_message', 'report' => 'private_message_report', default => 'private_message' };
+            if (in_array($action, ['private', 'guild', 'global'], true)) $tokenId .= '_'.$membership->id;
             if (!$this->isCsrfTokenValid($tokenId, $request->request->get('_token'))) {
                 throw $this->createAccessDeniedException('Formulaire expiré.');
             }

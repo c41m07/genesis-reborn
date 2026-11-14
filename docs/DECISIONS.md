@@ -1631,3 +1631,7 @@ sous les verrous existants, sans interdire deux envois intentionnels du même
 texte depuis deux formulaires. Aucune règle de jeu ou valeur modifiée.
 Migration créée, non appliquée à une base existante ; autorisation et sauvegarde
 vérifiée restent nécessaires. [Suivi](MESSAGERIE_MARKDOWN.md).
+
+Le CSRF des trois formulaires d’envoi est lié à l’empire d’ouverture : après un
+changement d’univers dans un autre onglet, le formulaire doit être rechargé.
+Ce contrôle refuse un contexte périmé sans élargir les droits d’envoi.

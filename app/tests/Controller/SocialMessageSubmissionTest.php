@@ -139,6 +139,18 @@ final class SocialMessageSubmissionTest extends WebTestCase
         self::assertSame(0, $this->em()->getRepository(SocialMessage::class)->count());
     }
 
+    #[DataProvider('channels')]
+    public function testFormOpenedInAnotherUniverseIsRejected(string $channel): void
+    {
+        [$url, $data] = $this->form($channel);
+        $player = $this->em()->find(Player::class, $this->sender->id);
+        $universe = $this->em()->getRepository(Universe::class)->findOneBy(['slug' => 'turbo-1']);
+        self::getContainer()->get(UniverseService::class)->select($player, $universe->id);
+        $this->client->request('POST', $url, $data);
+        self::assertResponseStatusCodeSame(403);
+        self::assertSame(0, $this->em()->getRepository(SocialMessage::class)->count());
+    }
+
     public function testLegacyMessagesKeepMarkupAndSpacingLiteral(): void
     {
         $message = new SocialMessage();$message->sender = $this->sender->currentPlayerUniverse;

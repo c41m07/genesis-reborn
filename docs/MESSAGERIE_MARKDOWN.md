@@ -55,7 +55,9 @@ identique du même expéditeur : aucun nouveau message, notification ou
 consommation de limite d’envoi. Réutiliser le formulaire pour une autre
 destination, un autre canal ou contenu est refusé. Deux formulaires distincts
 peuvent envoyer volontairement le même texte. CSRF, isolation des univers,
-droits des guildes, compteurs et notifications existants sont conservés.
+droits des guildes, compteurs et notifications existants sont conservés. Le jeton
+CSRF de chaque envoi est lié à l’empire d’ouverture : changer d’univers dans un
+autre onglet rend ce formulaire périmé, au lieu d’envoyer vers le nouveau contexte.
 
 Version20261114151245 ajoute à social_message le format (plain par défaut),
 l’identifiant nullable et un index unique par expéditeur/soumission, sans
@@ -69,8 +71,8 @@ habituelle.
 
 Vérifications locales ciblées réussies :
 
-- 134 tests PHP élargis / 1 586 assertions, puis 14 tests du contrôleur / 58 assertions après compléments : 137 tests distincts. Rendu et protocoles, UTF-8 invalide, CSRF, univers, soumissions répétées et changées, notifications, limites, recherche, identités oubliées et persistance.
-- 10 parcours navigateur réussis après reprises : privé/guilde/Global, bouton sans JavaScript, modération, recherche/non-lus, simulateur et compositions.
+- 134 tests PHP élargis / 1 586 assertions, puis compléments du contrôleur : 140 tests distincts. Dernière reprise contrôleur/Global après liaison CSRF à l’empire : 24 tests / 127 assertions. Rendu et protocoles, UTF-8 invalide, CSRF, univers, soumissions répétées et changées, notifications, limites, recherche, identités oubliées et persistance.
+- 16 parcours navigateur distincts réussis après reprises : privé/guilde/Global, bouton sans JavaScript, modération, recherche/non-lus, simulateur, compositions, classement et conversations. Le sélecteur du contrôle de typographie suit le conteneur Markdown et conserve l’exigence de 13 px.
 - Clavier, composition IME, répétition de touche, nouvelle ligne, blocage pendant envoi et nombre exact de messages vérifiés. Contrôles axe ciblés en clair/sombre et à 320/390/1440 px. Deux contrastes de messagerie corrigés en clair (dates et conversation active) ; les assertions sont conservées.
 - Compilation des assets, validation Compose, lint Twig (159 templates), lint du conteneur, syntaxe PHP/JavaScript, JSON du wiki et Composer validate réussis.
 - Mapping Doctrine validé avec --skip-sync : la base habituelle n’est pas synchronisée. Le test de migration vérifie sur base isolée qu’un contenu antérieur reste intact et plain, puis que le schéma obtenu correspond aux entités. Ce bilan ne constitue pas un make lint complet sur la base habituelle.
