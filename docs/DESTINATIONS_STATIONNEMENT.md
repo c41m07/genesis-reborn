@@ -5,8 +5,11 @@
 Branche feature/destinations-stationnement depuis dev bc4930a après fusion
 autorisée de la PR #62. CI préalable sur b3686bb : 988 PHP / 212 335 assertions,
 13 Python et 198 parcours navigateur, cinq jobs quality et GitGuardian réussis.
-Implémentation locale terminée ; aucune publication ou fusion de ce lot, aucune
-application de migration à la base habituelle, aucun déploiement Alpha.
+Implémentation locale terminée. Publication de la branche et PR en brouillon vers
+dev autorisées, avec suivi et correction de la CI. Le statut courant figure dans
+la [PR associée](https://github.com/c41m07/genesis-reborn/pulls?q=is%3Apr+head%3Afeature%2Fdestinations-stationnement).
+Aucune fusion du lot, application de migration à la base habituelle ou livraison
+Alpha autorisée.
 Les modifications locales préexistantes de PARCOURS_UI_UX.md et controllers.json
 restent préservées hors du lot. Destinations initialement 4/5, réévaluées à 5/5 pour la synchronisation des listes et suggestions ; Stationnement 5/5.
 
@@ -115,7 +118,8 @@ consommateurs. La fusion ne constitue ni cette autorisation ni un déploiement.
 - make verify-install réussi : installation vierge, schéma synchronisé après
   les migrations et conservation après redémarrage, dans un projet jetable.
 - Contrôle du diff avant commit ; aucune application de migration à la base
-  habituelle, aucune livraison Alpha, aucun push/PR de ce lot.
+  habituelle, aucune livraison Alpha. Publication et PR en brouillon autorisées ;
+  la PR associée fera référence pour les résultats de CI.
 - Avant fusion : CI complète, sauvegarde/restauration isolées et autorisation
   explicite. Les trois documents maîtres Work ne sont pas disponibles localement ;
   aucune validation de leurs 15 phases n’est prétendue.
