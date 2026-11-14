@@ -14,7 +14,9 @@ Validation Compose, syntaxe du catalogue et du wiki, contrôle du diff réussis.
 Comparaison intégrale de fortress.yaml à dev : seule l’entrée Blindage retirée.
 Aucun HTML/CSS/JavaScript modifié ; aucune nouvelle interaction d’interface.
 Suite complète et CI non relancées à ce stade ; CI complète exigée avant fusion.
-Aucune publication, fusion, migration ou livraison Alpha de ce lot.
+Publication et PR en brouillon vers dev autorisées, avec suivi/correction de CI.
+Le statut courant est dans la [PR associée](https://github.com/c41m07/genesis-reborn/pulls?q=is%3Apr+head%3Afix%2Fprerequis-bunker).
+Aucune fusion, migration ou livraison Alpha autorisée pour ce lot.
 
 ## Destinations et Stationnement — 14 novembre 2026
 
