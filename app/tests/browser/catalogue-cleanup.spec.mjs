@@ -23,6 +23,7 @@ test('Le catalogue affiche les gains par niveau, consommations et tourelles spé
   await page.setViewportSize({width:1440,height:1000});
   await page.goto(planetPath+'?section=buildings');
   const compact=page.getByRole('switch',{name:'Vue condensée'});
+  await expect(page.locator('.catalog-section-title [role="switch"]')).toHaveText(['Vue condensée',/Afficher les éléments verrouillés/]);
   await compact.focus();
   await page.keyboard.press('Space');
   await expect(compact).toHaveAttribute('aria-checked','true');

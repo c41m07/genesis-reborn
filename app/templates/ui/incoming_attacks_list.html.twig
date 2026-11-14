@@ -4,6 +4,7 @@
 <p>Organisez votre défense et vos renforts avant l’impact.</p>
 <div class="incoming-attack-grid">
 {% for attack in attacks %}<article data-incoming-attack="{{ attack.id }}">
+<p>Flotte adverse · Attaque entrante</p>
 <h3>{{ attack.destinationName }} · {{ attack.destinationCoordinates }}</h3>
 <p><strong>{{ attack.ownerName }}</strong> · {{ attack.shipCount|quantity(0) }} vaisseau{{ attack.shipCount == 1 ? '' : 'x' }} · {{ attack.fleetPoints|quantity(0) }} point{{ attack.fleetPoints == 1 ? '' : 's' }}</p>
 <p>Impact dans <time datetime="{{ attack.arrivalAt }}" data-incoming-impact="{{ attack.arrivalAt }}" aria-live="off">{{ attack.arrivalAt|date('d/m/Y H:i:s',preferences.timezone|default(app.user.preferences.timezone|default('Europe/Paris'))) }}</time></p>

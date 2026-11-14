@@ -8,3 +8,14 @@
 [data-live-region="orbit-requests"] .mission-state form{display:flex;flex-wrap:wrap;gap:10px}
 [data-live-region="orbit-requests"] :is(button,a){font-size:14px;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
 [data-live-region="orbit-requests"] :is(button,a):focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+.flight-operation .flight-progress-row{display:flex;align-items:center;gap:12px;min-width:0}
+.flight-progress-timing{flex:1;min-width:0}
+.flight-operation .flight-progress-row .fleet-recall-link{margin:0 0 0 auto;flex-shrink:0}
+.flight-operation .flight-ownership{font-size:12px;color:var(--muted);margin:4px 0 8px}
+.flight-operations .flight-operation[data-active-fleet]{border-inline-start:3px solid var(--accent);padding-inline-start:10px}
+.flight-operation .operation-type{min-width:0}
+.flight-operation .operation-type .empire-name{font-size:inherit;min-width:0;color:inherit}
+.flight-operations .flight-operation[data-mission=attack],.flight-operations .flight-operation[data-mission=conquer]{border-inline-start-color:var(--gold)}
+.flight-operations .flight-operation[data-mission=explore],.flight-operations .flight-operation[data-mission=spy]{border-inline-start-style:dashed}
+.flight-operations .flight-operation[data-mission=transport],.flight-operations .flight-operation[data-mission=colonize]{border-inline-start-style:double;border-inline-start-width:5px}

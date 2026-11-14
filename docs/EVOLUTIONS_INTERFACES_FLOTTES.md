@@ -1729,3 +1729,49 @@ le parcours doit passer par Rejoindre une guilde au lieu du raccourci de recherc
 de l’ancien panneau commun. Correction du test uniquement (complexité 1),
 sans retrait d’assertion ni changement de délai ; scénario repris localement,
 1/1 réussi. Les contrôles complets sont relancés sur le commit corrigé.
+
+
+## Nouvelle série — 14 novembre 2026
+
+Lot 1 local sur `feature/interfaces-vols-classement`, depuis `origin/dev` `d5ec2a5`.
+La modification préexistante de `docs/PARCOURS_UI_UX.md` est préservée et exclue du lot.
+Complexités : vols 3/5, échange des commandes 1/5, tri 3/5.
+
+- Le nom de mission ouvre composition et fret au clavier, au survol et au toucher, à la place du libellé de détails avec identifiant.
+- Rappel à droite de la barre, conditions serveur conservées. Texte « Votre flotte », bordures par mission et mention d’attaque entrante pour les flottes adverses déjà détectées ; aucune nouvelle donnée révélée.
+- Vue condensée précède Éléments verrouillés dans les quatre catalogues ; comportements et préférences conservés.
+- Cinq catégories joueurs croissantes/décroissantes ; tri avant pagination, rangs officiels et départage des égalités conservés. Catégorie/sens dans les pages et le contexte serveur du signalement. Aucune flèche sur les colonnes de guilde non interactives.
+
+Vérifications locales :
+- `make validate`, `make lint`, `make assets` réussis avant le redémarrage de l’environnement.
+- Premier passage navigateur : 9/11, dont catalogue, détails au clavier/toucher, rappels et rejeu, repli, conversations, guildes et classement quotidien. Les deux attentes de tri avaient été chargées avant leur adaptation au maintien du départage des égalités ; elles restent à reprendre sur la version finale.
+- Reprise ciblée : détails des flottes réussis avec vérification axe de la zone des vols, captures et géométrie du rappel à 320/390/768/1440 px. Captures 320 et 1440 examinées. Les deux parcours de tri restent sans résultat final après interruption de l’environnement.
+- `make test` interrompu avant bilan final : aucune réussite de la suite complète PHP/Python revendiquée.
+- Après redémarrage, Docker est indisponible. Contrôles locaux de syntaxe des deux contrôleurs PHP, des cinq templates Twig, des trois fichiers de tests JavaScript et du JSON du wiki réussis ; `git diff --check` réussi.
+
+Publication autorisée par le propriétaire dans la
+[PR #59 en brouillon vers dev](https://github.com/c41m07/genesis-reborn/pull/59).
+Le suivi de CI et la correction de ses échecs sont autorisés ; aucune fusion ni
+aucun déploiement ne le sont. Les deux parcours de tri et la suite PHP/Python
+sans bilan local doivent être couverts par la CI complète de la dernière version.
+Consulter les résultats dans la PR : les limites locales restent historiques
+et ne constituent pas le verdict de la CI.
+
+Premier passage CI sur `e4073bd` : suite PHP de 910 tests, un seul échec sur
+l’ancienne URL de retour du signalement, qui ne prévoyait pas `direction=desc`.
+Le test HTTP conserve sa vérification exacte et couvre maintenant les quatre
+cas absent/croissant/décroissant/invalide, ainsi que des paramètres POST et URL
+forgés et le rejeu sans doublon. Syntaxe et découverte des quatre cas vérifiées
+localement ; leur exécution et la validation complète relèvent de la CI suivante.
+Aucune dépendance ni migration ajoutée. Le chapitre local du wiki sur les classements est synchronisé ; aucune publication du wiki Alpha n’est revendiquée.
+
+Lots suivants, après intégration de chaque lot précédent : simulateur 4/5 ; profils 3/5 et guildes 4/5 ; raccourci 2/5 et Markdown 4/5 ; destinations 4/5 et Stationnement 5/5 ; bunker 3/5.
+Les [décisions du 14 novembre](DECISIONS.md) distinguent les choix approuvés du cas d’attente encore à étudier. Ces fonctionnalités futures ne sont pas encore implémentées.
+
+Fichiers du lot courant :
+- Classement : `app/src/Controller/LeaderboardController.php`, `app/templates/player/leaderboard.html.twig`.
+- Contexte de signalement : `app/src/Controller/PlayerReportController.php`, `app/templates/player/report.html.twig`.
+- Catalogues : `app/templates/colony/show.html.twig`.
+- Vols : `app/templates/ui/flights.html.twig`, `app/templates/ui/incoming_attacks_list.html.twig`, `app/assets/styles/fleet-recall.css`.
+- Tests : `app/tests/browser/leaderboard-contact.spec.mjs`, `app/tests/browser/empire-details.spec.mjs`, `app/tests/browser/catalogue-cleanup.spec.mjs`, `app/tests/Controller/GuildTagPlayerReportTest.php`.
+- Documentation : `README.md`, `docs/REGLES.md`, `docs/DECISIONS.md`, `docs/FEUILLE_DE_ROUTE.md`, `docs/wiki.json` et le présent suivi.

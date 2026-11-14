@@ -19,8 +19,12 @@ final class LeaderboardController extends AbstractController
         $categories = ['points'=>'Points totaux', 'buildings'=>'Points de bâtiments', 'research'=>'Points de recherche', 'fleet'=>'Points de flotte', 'planets'=>'Nombre de planètes'];
         $category = $request->query->getString('category', 'points');
         if (!isset($categories[$category])) $category = 'points';
+        $direction = $request->query->getString('direction') === 'asc' ? 'asc' : 'desc';
+        $sortField = ['points'=>'total_points','buildings'=>'building_points','research'=>'research_points','fleet'=>'fleet_points','planets'=>'planets'][$category];
         $rows = $daily['players'];
-        usort($rows, static fn (array $a, array $b): int => $a['ranks'][$category] <=> $b['ranks'][$category]);
+        usort($rows, static fn (array $a, array $b): int => $direction === 'asc'
+            ? ($a[$sortField] <=> $b[$sortField]) ?: ($a['ranks'][$category] <=> $b['ranks'][$category])
+            : $a['ranks'][$category] <=> $b['ranks'][$category]);
         $pageSize = 50;
         $pages = max(1, (int) ceil(count($rows) / $pageSize));
         $page = max(1, min($pages, $request->query->getInt('page', 1)));
@@ -45,6 +49,7 @@ final class LeaderboardController extends AbstractController
             'daily' => $daily,
             'categories' => $categories,
             'category' => $category,
+            'direction' => $direction,
             'page' => $page,
             'pages' => $pages,
             'membership' => $membership,

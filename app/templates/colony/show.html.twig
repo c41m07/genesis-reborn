@@ -60,12 +60,12 @@
 <section id="panel-{{ group }}" data-controller="building-catalog" data-building-catalog-show-locked-value="{{ show_locked_items ? 'true' : 'false' }}" data-action="hashchange@window->building-catalog#followHash click->building-catalog#rememberFilter" aria-label="{{ {buildings:'Bâtiments',technologies:'Recherche',ships:'Chantier spatial',defenses:'Défenses'}[group] }}">
     <div class="catalog-section-title">
         <h2>{{ {buildings:'Développer la colonie',technologies:'Repousser les frontières',ships:'Préparer vos prochaines missions',defenses:'Protéger la planète'}[group] }}</h2>
+        <div class="building-visibility"><button type="button" role="switch" aria-checked="false" data-building-catalog-target="compactSwitch" data-action="building-catalog#toggleCompact" hidden><span>Vue condensée</span><span class="building-switch-track" aria-hidden="true"></span></button></div>
         <form method="get" class="building-visibility">
             <input type="hidden" name="section" value="{{ group }}">
             <input type="hidden" name="showLockedItems" value="{{ show_locked_items ? '0' : '1' }}" data-building-catalog-target="visibilityInput">
             <button type="submit" role="switch" aria-checked="{{ show_locked_items ? 'true' : 'false' }}" data-building-catalog-target="visibilitySwitch" data-action="building-catalog#toggleLocked"><span>Afficher les éléments verrouillés</span><span class="building-switch-track" aria-hidden="true"></span><span data-building-catalog-target="visibilityLabel" aria-hidden="true">{{ show_locked_items ? 'ON' : 'OFF' }}</span></button>
         </form>
-        <div class="building-visibility"><button type="button" role="switch" aria-checked="false" data-building-catalog-target="compactSwitch" data-action="building-catalog#toggleCompact" hidden><span>Vue condensée</span><span class="building-switch-track" aria-hidden="true"></span></button></div>
     </div>
     <nav class="catalog-filters ui-tabs" aria-label="Filtrer le catalogue">
         {% set filter_options = catalog_filter_options[group] %}

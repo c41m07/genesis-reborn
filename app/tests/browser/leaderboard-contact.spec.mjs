@@ -66,6 +66,13 @@ test('Classement : tris, contact direct et échange de messages privés', async 
     await expect(page.getByLabel('Catégorie du classement')).toHaveCount(0);
     const ranks = await page.locator('.ranking-table tbody tr td:first-child').allTextContents();
     expect(ranks.map(text => Number(text.match(/#(\d+)/)[1]))).toEqual(ranks.map(text => Number(text.match(/#(\d+)/)[1])).sort((a, b) => a - b));
+    await sort.click();
+    await expect(page.getByRole('columnheader', { name: 'Classer par ' + label, exact: true })).toHaveAttribute('aria-sort', 'ascending');
+    await expect(page.locator('.ranking-context')).toContainText('Ordre croissant');
+    const scores = await page.locator('.ranking-table tbody [data-category="'+category+'"]').evaluateAll(cells => cells.map(cell => Number(cell.firstChild.textContent.replace(/[^0-9]/g,''))));
+    expect(scores).toEqual([...scores].sort((a,b)=>a-b));
+    await sort.click();
+    await expect(page.getByRole('columnheader', { name: 'Classer par ' + label, exact: true })).toHaveAttribute('aria-sort', 'descending');
   }
 
   const body = 'Message depuis le classement ' + crypto.randomUUID();
@@ -217,7 +224,7 @@ test('Hub de guilde : création, équipage et discussion commune', async ({ page
   await expect(page.getByRole('row').filter({ hasText: member })).toHaveClass(/ranking-row--guild/);
   await page.getByRole('navigation', { name: 'Classements' }).getByRole('link', { name: 'Guildes', exact: true }).click();
   await expect(page.getByRole('row').filter({ hasText: guildName })).toContainText('2');
-  await expect(page.getByRole('columnheader')).toHaveText(['Rang', 'Guilde', 'Joueurs', 'Points bâtiments', 'Points recherches', 'Points flotte', 'Points totaux ↓', 'Médiane des points joueurs']);
+  await expect(page.getByRole('columnheader')).toHaveText(['Rang', 'Guilde', 'Joueurs', 'Points bâtiments', 'Points recherches', 'Points flotte', 'Points totaux', 'Médiane des points joueurs']);
   await expect(page.getByRole('row').filter({ hasText: guildName })).toHaveClass(/ranking-row--guild/);
   await memberPage.goto('/diplomatie');
   await memberPage.getByRole('link', { name: 'Gestion de la guilde', exact: true }).focus();
@@ -313,6 +320,24 @@ test('Classement : tri global avant pagination et catégorie conservée', async 
     UPDATE leaderboard_snapshot SET updated_at=DATE_SUB(UTC_TIMESTAMP(),INTERVAL 2 DAY) WHERE universe_id=${universe}`);
   await page.goto('/classement?category=research');
   await expect(page.locator('.ranking-table tbody tr')).toHaveCount(50);
+  const snapshot = await page.evaluate(() => fetch('/api/classement').then(response => response.json()));
+  await page.getByRole('link', { name: 'Classer par Points de recherche', exact: true }).click();
+  await expect(page.getByRole('columnheader', { name: 'Classer par Points de recherche', exact: true })).toHaveAttribute('aria-sort', 'ascending');
+  await expect(page.locator('.ranking-table tbody tr').first().locator('td').first()).toContainText('#52 ');
+  await expect(page.locator('.ranking-table tbody tr').last().locator('td').first()).toContainText('#49 ');
+  const ascendingNext = page.getByRole('link', { name: 'Page suivante', exact: true });
+  await expect(ascendingNext).toHaveAttribute('href', /direction=asc/);
+  await ascendingNext.click();
+  await expect(page.locator('.ranking-table tbody tr')).toHaveCount(2);
+  await expect(page.locator('.ranking-table tbody tr').first().locator('td').first()).toContainText('#50 ');
+  await expect(page.locator('.ranking-table tbody tr').last().locator('td').first()).toContainText('#51 ');
+  const report = page.getByRole('link', { name: /^Signaler / }).first();
+  await report.click();
+  await page.getByRole('link', { name: 'Revenir au classement', exact: true }).click();
+  await expect(page).toHaveURL(/direction=asc.*page=2/);
+  expect(await page.evaluate(() => fetch('/api/classement').then(response => response.json()))).toEqual(snapshot);
+  await page.goto('/classement?category=research&direction=invalid');
+  await expect(page.getByRole('columnheader', { name: 'Classer par Points de recherche', exact: true })).toHaveAttribute('aria-sort', 'descending');
   await expect(page.locator('.ranking-table tbody tr').first().locator('td').first()).toContainText('#1 ');
   await expect(page.locator('.ranking-table tbody tr').last().locator('td').first()).toContainText('#50 ');
   const next = page.getByRole('link', { name: 'Page suivante', exact: true });

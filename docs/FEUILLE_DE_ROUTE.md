@@ -1,5 +1,29 @@
 # Roadmap Genesis Reborn
 
+## Interfaces des vols et classement — 14 novembre 2026
+
+Lot 1 en cours sur `feature/interfaces-vols-classement`, depuis `origin/dev`
+`d5ec2a5` (PR #58 fusionnée, vérifiée sur GitHub). Complexité 3/5.
+Le nom de mission ouvre composition et fret ; rappel à droite de la barre,
+missions distinguées visuellement et propriété indiquée en texte. Les deux
+commandes des catalogues échangent leur position sans changement de comportement.
+Classement joueur croissant/décroissant, avec catégorie et sens conservés dans
+la pagination et au retour du signalement ; instantanés et rangs conservés.
+Les colonnes de guilde non triables perdent leur flèche.
+
+Validation locale partielle : validation Compose, lint et compilation réussis.
+Premier passage navigateur : 9/11 ; deux attentes de tri ont été ajustées pour
+conserver le départage des égalités. Reprise : détails des vols et contrôle axe
+réussis, puis redémarrage de l’environnement. Les deux parcours de tri et la
+suite PHP/Python restent sans bilan final ; Docker est indisponible après le
+redémarrage. Branche publiée après autorisation dans la
+[PR #59 en brouillon vers dev](https://github.com/c41m07/genesis-reborn/pull/59).
+Les résultats de la CI complète sur la dernière version sont à consulter dans
+la PR ; les limites locales ci-dessus ne constituent pas son verdict.
+Aucune fusion, migration ni livraison Alpha de ce lot n’est autorisée.
+Le [suivi](EVOLUTIONS_INTERFACES_FLOTTES.md) distingue les lots
+suivants et les décisions validées du comportement encore à développer.
+
 ## Evolution de l’espionnage — 14 novembre 2026
 
 Branche `feature/evolution-espionnage`, issue de `dev` actualisée à `cd58d52` après fusion autorisée de la PR #57 et sa CI complète verte (902 PHP, 13 Python, 191 navigateur). Les règles validées sont une base d’essais Alpha : [détection par rang et défense plafonnée](REGLES.md#espionnage). Aucun déploiement effectué.
