@@ -38,7 +38,7 @@ final class SocialProfileView
         $guild=$this->accessibleGuild($viewer,$id);$profile=$this->repo->one(GuildProfile::class,['guild'=>$guild]);
         return ['id'=>$guild->id,'name'=>$guild->name,'tag'=>$guild->tag,'description'=>$profile?->description??'',
             'has_logo'=>$profile?->logoFilename!==null,'has_banner'=>$profile?->bannerFilename!==null,
-            'version'=>$profile?->version??0,'member_count'=>count($this->repo->all(GuildMember::class,['guild'=>$guild])),
+            'version'=>$profile?->version??0,'member_count'=>$this->repo->count(GuildMember::class,['guild'=>$guild]),
             'leader'=>$guild->leader->isPlayerControlled()?['id'=>$guild->leader->id,'username'=>$guild->leader->player->username]:null];
     }
 

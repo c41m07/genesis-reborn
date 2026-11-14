@@ -33,7 +33,7 @@ worktrees et archives historiques exclus des transformations mécaniques.
 | 2 | Conventions et lisibilité | ColonyView très condensé ; aucun formateur PHP installé | Dépendances clarifiées sur le périmètre prioritaire |
 | 3 | ColonyController, ColonyView, CatalogueInsights | Préparation ciblée et quantités regroupées | Implémentation et tests ciblés validés ; recette finale à faire |
 | 4 | DiplomacyController, GuildProjectController | Onglet validé avant listes ; dons personnels séparés du détail | Tests ciblés validés |
-| 5 | Rapports, classements, profils, messages | Recherche déjà paginée ; enrichissements à vérifier | À examiner en détail |
+| 5 | Rapports, classements, profils, messages | Rapports de page et contacts regroupés ; comptage SQL de guilde | Tests ciblés validés, exceptions documentées |
 | 6 | Carte, planètes, destinations, flottes | Lecture des planètes par système avant sélection de galaxie | À traiter |
 | 7 | AdminController et historiques | Toutes les rubriques préparées à chaque ouverture | À examiner en détail |
 | 8 | colony-live, fragments | HTML complet et réponses tardives à vérifier | À examiner en détail |
@@ -87,6 +87,10 @@ isolé, pas une page HTTP complète. Aucun pourcentage global n’est déduit.
 - Le premier passage complet n’est pas une référence immuable : des fichiers
   ont évolué pendant son exécution. Ses résultats ne seront pas annoncés comme
   validation finale ; la suite finale devra partir d’un contenu stabilisé.
+- Ce passage complet se termine avec 1 erreur sur 1 015 tests : la fixture de
+  `FleetStationingTest::testNoHomeUsesShortestReachableOwnedColony` déplace une
+  planète sur une position occupée (`planet_unique`). À reproduire et corriger
+  sans modifier les règles de stationnement. La suite Python n’a pas été atteinte.
 - Bâtiments garde des lectures dans les calculs économiques partagés (275 SQL
   sur la première mesure ciblée). Leur suppression nécessite une préparation
   économique dédiée et vérifiée ; aucun cache ajouté dans les services de la
@@ -94,7 +98,7 @@ isolé, pas une page HTTP complète. Aucun pourcentage global n’est déduit.
 
 ## Reprise
 
-- Lot actuel : 4/12.
+- Lot actuel : 5/12.
 - Dernière étape validée : fixture isolée et mesure avant changement.
 - Contrôle en cours : suite PHP/Python de référence.
 - Référence du lot 1 : `9e62541`.
@@ -113,5 +117,15 @@ isolé, pas une page HTTP complète. Aucun pourcentage global n’est déduit.
   ciblage des commandants ; régression du compteur sur cinq onglets : 1 / 15.
   Aucun style ni interaction modifié ; les listes diplomatiques affichées et les
   détails des projets gardent encore des lectures par élément, à regrouper ensuite.
-- Prochaine action : lot 5, rapports, classements, profils et messages ;
+- Lot 5 : hydratation des rapports regroupée par type après les droits et la
+  pagination (50 maximum), aucun enrichissement des lignes joueurs sur l’onglet
+  Guildes, compteur SQL des membres pour le profil public, identités des contacts
+  chargées ensemble avec filtre d’univers. Classements quotidiens, protections
+  en temps réel et écritures de messagerie conservés.
+- Rapports/profils/classement : 31 tests / 192 assertions réussis. Les rounds
+  des rapports sont encore hydratés dans la liste et les profils passent encore
+  par le classement complet : exceptions restantes, pas d’amélioration revendiquée.
+- Messagerie et classements : 31 tests / 176 assertions réussis après regroupement
+  des contacts ; aucune recherche paginée ni aucun état de lecture modifié.
+- Prochaine action : lot 6, carte et destinations ;
   mesures comparables et validation cumulée à reprendre au lot 12.

@@ -62,10 +62,21 @@ final class ReportArchiveService
         $pages = max(1, (int) ceil($count / 50));
         $page = min($page, $pages);
         $rows = $connection->fetchAllAssociative('SELECT * FROM ('.$selected.') reports ORDER BY happened_at DESC, id DESC, kind ASC LIMIT 50 OFFSET '.(($page - 1) * 50), $params);
+        // Les droits, filtres et LIMIT sont déjà appliqués : charger seulement cette page.
+        $idsByKind = [];
+        foreach ($rows as $row) {
+            $idsByKind[$row['kind']][] = (int) $row['id'];
+        }
+        $reportsByKind = [];
+        foreach ($idsByKind as $kind => $ids) {
+            foreach ($this->repo->all(self::TYPES[$kind][0], ['id' => $ids]) as $report) {
+                $reportsByKind[$kind][$report->id] = $report;
+            }
+        }
         $entries = [];
         foreach ($rows as $row) {
-            [$class, $route] = self::TYPES[$row['kind']];
-            $entries[] = ['kind'=>$row['kind'], 'report'=>$this->repo->find($class, (int) $row['id']), 'route'=>$route,
+            [, $route] = self::TYPES[$row['kind']];
+            $entries[] = ['kind'=>$row['kind'], 'report'=>$reportsByKind[$row['kind']][(int) $row['id']] ?? null, 'route'=>$route,
                 'key'=>$row['kind'].':'.$row['id']];
         }
         return ['entries'=>$entries, 'report_count'=>$total, 'page'=>$page, 'pages'=>$pages];

@@ -21,7 +21,7 @@ final class LeaderboardController extends AbstractController
         if (!isset($categories[$category])) $category = 'points';
         $direction = $request->query->getString('direction') === 'asc' ? 'asc' : 'desc';
         $sortField = ['points'=>'total_points','buildings'=>'building_points','research'=>'research_points','fleet'=>'fleet_points','planets'=>'planets'][$category];
-        $rows = $daily['players'];
+        $rows = $tab === 'players' ? $daily['players'] : [];
         usort($rows, static fn (array $a, array $b): int => $direction === 'asc'
             ? ($a[$sortField] <=> $b[$sortField]) ?: ($a['ranks'][$category] <=> $b['ranks'][$category])
             : $a['ranks'][$category] <=> $b['ranks'][$category]);

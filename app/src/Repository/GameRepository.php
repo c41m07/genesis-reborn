@@ -51,6 +51,10 @@ final class GameRepository
         );
     }
     public function all(string $class, array $criteria = [], array $order = ['id' => 'ASC']): array { return $this->em->getRepository($class)->findBy($criteria, $order); }
+    public function count(string $class, array $criteria = []): int
+    {
+        return $this->em->getRepository($class)->count($criteria);
+    }
     /** @return list<PlayerUniverse> */
     public function forgottenEmpirePreviewCandidates(\DateTimeImmutable $now, int $conversionSeconds, int $limit, int $afterId, \DateTimeImmutable $cutoff): array
     {
@@ -317,9 +321,24 @@ SQL;
             ->andWhere('(m.sender = :viewer OR m.recipient = :viewer)')->setParameter('viewer', $viewer)
             ->groupBy('m.sender, m.recipient')->getQuery()->getArrayResult();
         $contacts = [];
+        $peerIds = [];
+        foreach ($rows as $row) {
+            $peerIds[] = (int) $row['senderId'] === $viewer->id ? (int) $row['recipientId'] : (int) $row['senderId'];
+        }
+        $memberships = [];
+        if ($peerIds !== []) {
+            $peers = $this->em->createQueryBuilder()->select('m', 'p', 'former')->from(PlayerUniverse::class, 'm')
+                ->leftJoin('m.player', 'p')->leftJoin('m.formerPlayer', 'former')
+                ->where('m.universe = :universe')->andWhere('m.id IN (:ids)')
+                ->setParameter('universe', $viewer->universe)->setParameter('ids', array_unique($peerIds))->getQuery()->getResult();
+            foreach ($peers as $peer) {
+                $memberships[$peer->id] = $peer;
+            }
+        }
         foreach ($rows as $row) {
             $id = (int) $row['senderId'] === $viewer->id ? (int) $row['recipientId'] : (int) $row['senderId'];
-            $contacts[$id] ??= ['member' => $this->find(PlayerUniverse::class, $id), 'unread' => 0, 'latest' => 0];
+            if (!isset($memberships[$id])) continue;
+            $contacts[$id] ??= ['member' => $memberships[$id], 'unread' => 0, 'latest' => 0];
             $contacts[$id]['unread'] += (int) $row['unread'];
             $contacts[$id]['latest'] = max($contacts[$id]['latest'], (int) $row['latest']);
         }
