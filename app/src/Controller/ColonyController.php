@@ -3,9 +3,9 @@ namespace App\Controller;
 use App\Entity\{Planet,PlayerDiscovery,Fleet,FleetShip};
 use App\Repository\GameRepository;
 use App\Service\Universe\UniverseContext;
-use App\Service\Colony\{ColonyView,ResourceService};
+use App\Service\Colony\{ColonyView,GameShell,ResourceService};
 use App\Service\Queue\QueueService;
-use App\Service\Player\{LeaderboardService,RelationResolver};
+use App\Service\Player\{LeaderboardService,PreferencesService,RelationResolver};
 use App\Service\Catalog\GameCatalog;
 use App\Manager\GameManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -15,7 +15,7 @@ use Psr\Clock\ClockInterface;
 final class ColonyController extends AbstractController
 {
     public function __construct(private UniverseContext $context,private GameRepository $repo,private QueueService $queueService,
-        private \App\Service\Combat\CombatEventService $combats,private \App\Service\Combat\OccupationService $occupations,private LeaderboardService $leaderboard,private \App\Service\Fleet\FleetVisibility $visibility) {}
+        private \App\Service\Combat\CombatEventService $combats,private \App\Service\Combat\OccupationService $occupations,private LeaderboardService $leaderboard,private \App\Service\Fleet\FleetVisibility $visibility,private GameShell $shell) {}
     private function owned(int $id): Planet
     {
         $m=$this->context->membership();$p=$this->repo->find(Planet::class,$id);
@@ -55,7 +55,30 @@ final class ColonyController extends AbstractController
             $features=$catalog->forUniverse($m->universe)['features']??[];
             $data['empire_points']=$points;$data['empire_rank']=$rank;$data['empire_guild']=$relations->guild($m);$data['guilds_enabled']=(bool)($features['guilds_enabled']??false);
         }
+        if($request->headers->get('X-Genesis-Live')==='1' && $request->getPreferredFormat()==='json') {
+            return $this->liveRegions($data+['section'=>$section]);
+        }
         return $this->render('colony/show.html.twig',$data+['section'=>$section]);
+    }
+
+    private function liveRegions(array $data): JsonResponse
+    {
+        $data['chrome'] = $this->shell->get($this->getUser(), $data['planet']);
+        $data['preferences'] = array_replace(PreferencesService::DEFAULTS, $this->getUser()->preferences);
+        $templates = [
+            'colony-selector' => 'ui/colony_selector.html.twig',
+            // Garder le rendu et le cycle existants du bandeau, sans modifier ses calculs.
+            'resources' => 'ui/resource_strip.html.twig',
+            'queues' => 'ui/colony_queues.html.twig',
+            'active-flights' => 'ui/flights.html.twig',
+        ];
+        $templates[$data['section']==='overview' ? 'journal' : 'catalog'] = $data['section']==='overview'
+            ? 'colony/_journal.html.twig' : 'colony/_catalog.html.twig';
+        $regions = [];
+        foreach ($templates as $name => $template) {
+            $regions[$name] = $this->renderView($template, $data);
+        }
+        return $this->json(['regions' => $regions], 200, ['Cache-Control' => 'private, no-store']);
     }
     #[Route('/planetes/{id}/journal/consulter',name:'app_journal_consult',methods:['POST'],requirements:['id'=>'\\d+'])]
     public function consultJournal(int $id,Request $request,\App\Service\Notification\JournalService $journal): Response

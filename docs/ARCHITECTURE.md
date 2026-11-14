@@ -113,6 +113,14 @@ catalogue sont chargées par groupe, sans lecture SQL par carte. Ces données
 restent locales à l’appel et ne servent jamais d’autorisation d’écriture.
 Le calcul et l’endpoint de la barre de ressources restent inchangés.
 
+Les actualisations des colonies demandent JSON avec `X-Genesis-Live: 1` et
+`Accept: application/json`. La route conserve ses contrôles, synchronisations
+et préparation GameShell, puis renvoie les fragments privés sans cache.
+Le sélecteur, le catalogue et le journal sont partagés entre rendu initial et
+actualisation ; ressources, files et vols réutilisent leurs templates existants.
+Le client ignore les réponses d’une génération ou d’une URL devenue obsolète.
+Le focus, les saisies modifiées et le journal non consulté gardent leurs protections.
+
 Le sélecteur conserve la colonie choisie par participation et la catégorie ouverte.
 La vue générale présente les vols de toutes les colonies de l’univers sélectionné.
 Bâtiments, recherches et vaisseaux/défenses occupent trois files indépendantes :
