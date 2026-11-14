@@ -50,7 +50,7 @@ final class PublicProfilesTest extends WebTestCase
 
     private function player(string $name,string $slug='omega-1'): Player
     {
-        $data=new RegistrationData();$data->username=$name;$data->email=strtolower($name).'@example.test';$data->plainPassword='Public-test-2026!';
+        $data=new RegistrationData();$data->username=$name;$data->email=strtolower($name).'@example.test';$data->plainPassword=bin2hex(random_bytes(16)).'aA1!';
         $player=self::getContainer()->get(RegistrationService::class)->register($data);
         $universe=self::getContainer()->get(EntityManagerInterface::class)->getRepository(Universe::class)->findOneBy(['slug'=>$slug]);
         self::getContainer()->get(UniverseService::class)->select($player,$universe->id);return $player;

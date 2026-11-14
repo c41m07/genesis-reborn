@@ -78,7 +78,13 @@ La suite locale complète n’a pas été relancée pour ce lot. Les dépendance
 Composer existantes n’ont pas été mises à niveau ; les avis de sécurité signalés
 par Composer restent à traiter séparément.
 
-La CI complète sur la dernière version d’une PR reste requise avant fusion.
+Les cinq jobs quality de la CI sur `03dcfbb` ont réussi : 952 tests PHP /
+212 191 assertions, 13 tests Python, 194 parcours navigateur, lint et
+sauvegarde/restauration isolées. GitGuardian a signalé le mot de passe fixe
+d’une fixture ; remplacé par une valeur générée à chaque test, sans désactiver
+le contrôle. Reprise locale : 14 tests du contrôleur / 84 assertions réussis.
+La CI et le contrôle externe sur la dernière version de la PR restent requis
+avant fusion.
 Consulter la PR pour le statut courant de la CI sur sa dernière version.
 Aucune migration de la base habituelle ou publication Alpha n’est effectuée.
 
