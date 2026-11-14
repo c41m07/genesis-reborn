@@ -1,8 +1,19 @@
 # Roadmap Genesis Reborn
 
+## Simulateur : dix combats — 14 novembre 2026
+
+Lot 2 sur `feature/simulateur-dix-combats`, depuis `dev` `a1abf08`, après fusion autorisée de la PR #59.
+Complexité 4/5 : dix graines distinctes, estimation des victoires de l’attaquant sur dix, issues séparées et détails repliables, sans pertes moyennes.
+Moteur, limites par combat, propriété des renseignements et absence d’écriture de jeu conservés.
+42 tests PHP ciblés / 4 879 assertions, validation Compose, lint et compilation réussis ; parcours navigateur du simulateur réussi en clair/sombre, au clavier, sans JavaScript et à 320/390/1440 px. Contraste corrigé sans affaiblir le contrôle axe. Ce sont des vérifications ciblées, pas la suite complète ni la CI du nouveau lot.
+Le [suivi et les mesures](CADRAGE_OUTILS_STRATEGIQUES.md) détaillent les limites et la reprise.
+Branche publiée avec autorisation dans la [PR #60 en brouillon vers dev](https://github.com/c41m07/genesis-reborn/pull/60).
+Les résultats complets sur la dernière version sont à consulter dans la PR.
+Aucune migration, fusion ni livraison Alpha de ce nouveau lot n’est autorisée.
+
 ## Interfaces des vols et classement — 14 novembre 2026
 
-Lot 1 en cours sur `feature/interfaces-vols-classement`, depuis `origin/dev`
+Lot 1 fusionné dans dev, issu de `feature/interfaces-vols-classement` et de `origin/dev`
 `d5ec2a5` (PR #58 fusionnée, vérifiée sur GitHub). Complexité 3/5.
 Le nom de mission ouvre composition et fret ; rappel à droite de la barre,
 missions distinguées visuellement et propriété indiquée en texte. Les deux
@@ -15,12 +26,8 @@ Validation locale partielle : validation Compose, lint et compilation réussis.
 Premier passage navigateur : 9/11 ; deux attentes de tri ont été ajustées pour
 conserver le départage des égalités. Reprise : détails des vols et contrôle axe
 réussis, puis redémarrage de l’environnement. Les deux parcours de tri et la
-suite PHP/Python restent sans bilan final ; Docker est indisponible après le
-redémarrage. Branche publiée après autorisation dans la
-[PR #59 en brouillon vers dev](https://github.com/c41m07/genesis-reborn/pull/59).
-Les résultats de la CI complète sur la dernière version sont à consulter dans
-la PR ; les limites locales ci-dessus ne constituent pas son verdict.
-Aucune fusion, migration ni livraison Alpha de ce lot n’est autorisée.
+suite PHP/Python restent sans bilan final ; Docker était indisponible après ce
+redémarrage. La [PR #59](https://github.com/c41m07/genesis-reborn/pull/59) a ensuite été fusionnée avec autorisation au commit `a1abf08`, après CI complète verte sur `ee49a42` : 913 PHP, 13 Python et 192 scénarios navigateur. Les limites locales ci-dessus restent historiques. Protection de dev vérifiée : PR et cinq jobs quality requis, règles imposées aux administrateurs. Aucun déploiement Alpha ni migration de ce lot.
 Le [suivi](EVOLUTIONS_INTERFACES_FLOTTES.md) distingue les lots
 suivants et les décisions validées du comportement encore à développer.
 

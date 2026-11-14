@@ -663,8 +663,11 @@ Précision validée le 13 novembre 2026 : le coût électrique initialement appr
 
 Le simulateur utilise les statistiques du catalogue de l’univers actif, les rangs,
 recherches, bonus de forteresse et le moteur des combats réels. Le résultat est
-un tirage illustratif reproductible avec la même graine et les mêmes paramètres,
-pas une probabilité ni une garantie de victoire. Les deux camps, leurs arrivées
+une série de dix combats avec les mêmes paramètres et dix graines distinctes.
+La graine de départ reproduit toute la série. Le pourcentage est celui des
+victoires de l’attaquant sur dix : 7 victoires donnent 70 %, sans garantir
+cette probabilité réelle. Victoires, défaites, égalités et autres issues restent
+distinctes ; les détails des dix combats sont repliables, sans pertes moyennes. Les deux camps, leurs arrivées
 et les défenses sont saisis ; occupations, interventions non saisies, voyages,
 butin et reconstruction ne sont pas estimés. Aucun ordre, perte ou paiement
 réel n’est appliqué. Les limites de calcul sont décrites dans le
