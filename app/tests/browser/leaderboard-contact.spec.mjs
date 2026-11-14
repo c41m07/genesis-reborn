@@ -64,7 +64,7 @@ test('Classement : tris, contact direct et échange de messages privés', async 
     await expect(sort).toHaveAttribute('aria-current', 'page');
     await expect(page.getByRole('columnheader', { name: 'Classer par ' + label, exact: true })).toHaveAttribute('aria-sort', 'descending');
     await expect(page.getByLabel('Catégorie du classement')).toHaveCount(0);
-    const ranks = await page.locator('tbody tr td:first-child').allTextContents();
+    const ranks = await page.locator('.ranking-table tbody tr td:first-child').allTextContents();
     expect(ranks.map(text => Number(text.match(/#(\d+)/)[1]))).toEqual(ranks.map(text => Number(text.match(/#(\d+)/)[1])).sort((a, b) => a - b));
   }
 
@@ -312,18 +312,18 @@ test('Classement : tri global avant pagination et catégorie conservée', async 
       SELECT m.id,'weapons_engineering','basic',1 FROM player_universe m JOIN player p ON p.id=m.player_id WHERE p.username LIKE '${prefix}%';
     UPDATE leaderboard_snapshot SET updated_at=DATE_SUB(UTC_TIMESTAMP(),INTERVAL 2 DAY) WHERE universe_id=${universe}`);
   await page.goto('/classement?category=research');
-  await expect(page.locator('tbody tr')).toHaveCount(50);
-  await expect(page.locator('tbody tr').first().locator('td').first()).toContainText('#1 ');
-  await expect(page.locator('tbody tr').last().locator('td').first()).toContainText('#50 ');
+  await expect(page.locator('.ranking-table tbody tr')).toHaveCount(50);
+  await expect(page.locator('.ranking-table tbody tr').first().locator('td').first()).toContainText('#1 ');
+  await expect(page.locator('.ranking-table tbody tr').last().locator('td').first()).toContainText('#50 ');
   const next = page.getByRole('link', { name: 'Page suivante', exact: true });
   await expect(next).toHaveAttribute('href', /category=research.*page=2/);
   await next.click();
   await expect(page.getByRole('link', { name: 'Classer par Points de recherche', exact: true })).toHaveAttribute('aria-current', 'page');
-  await expect(page.locator('tbody tr')).toHaveCount(2);
-  await expect(page.locator('tbody tr').first().locator('td').first()).toContainText('#51 ');
+  await expect(page.locator('.ranking-table tbody tr')).toHaveCount(2);
+  await expect(page.locator('.ranking-table tbody tr').first().locator('td').first()).toContainText('#51 ');
   const ownRow = page.getByRole('row').filter({ hasText: ownName });
   await expect(ownRow.locator('td').first()).toContainText('#52 ');
   await page.getByRole('link', { name: 'Page précédente', exact: true }).click();
   await expect(page.getByRole('link', { name: 'Classer par Points de recherche', exact: true })).toHaveAttribute('aria-current', 'page');
-  await expect(page.locator('tbody tr')).toHaveCount(50);
+  await expect(page.locator('.ranking-table tbody tr')).toHaveCount(50);
 });

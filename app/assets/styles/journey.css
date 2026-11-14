@@ -50,3 +50,6 @@ body[data-theme="light"] .ui-tabs a{color:#4b5563}
 
 .flight-operations:not(:has(.flight-operation)){flex-direction:column;align-items:stretch}
 .flight-operations:not(:has(.flight-operation))>.flight-idle{max-width:none;width:100%}
+
+.fleet-page-layout>.page-heading>div{min-width:0;max-width:100%}
+.fleet-colony-scope{overflow-wrap:anywhere}

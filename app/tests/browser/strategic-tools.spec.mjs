@@ -23,7 +23,7 @@ function ships(owner) {
 test('Compositions : refus, manques, chargement explicite et absence d’envoi automatique',async({page,browser,baseURL},testInfo)=>{
  test.setTimeout(180000);const owner=await register(page);ships(owner);
  await page.goto('/flottes/compositions');await page.getByLabel('Nom de la composition',{exact:true}).fill('Escorte personnelle');await page.locator('#composition-fighter-basic').fill('5');await page.getByRole('button',{name:'Enregistrer la composition'}).click();await expect(page.locator('.flash.success')).toBeVisible();
- await page.getByRole('link',{name:'Vérifier et charger',exact:true}).click();await expect(page.locator('main')).toContainText('Des vaisseaux manquent');await expect(page.locator('tbody tr').first()).toContainText('3');
+ await page.getByRole('link',{name:'Vérifier et charger',exact:true}).click();await expect(page.locator('main')).toContainText('Des vaisseaux manquent');await expect(page.locator('.strategic-page tbody tr').first()).toContainText('3');
  const url=page.url();const noJsContext=await browser.newContext({baseURL,storageState:await page.context().storageState(),javaScriptEnabled:false,viewport:{width:390,height:900}});
  try {const noJs=await noJsContext.newPage();await noJs.goto(url);await noJs.getByRole('link',{name:'Accepter les quantités disponibles et préparer'}).click();await expect(noJs.locator('[name="ships[fighter]"]')).toHaveValue('2');await expect(noJs.locator('[name="require_exact_composition"]')).toHaveValue('1');}finally{await noJsContext.close();}
  await page.getByRole('link',{name:'Accepter les quantités disponibles et préparer'}).click();await expect(page.locator('[name="ships[fighter]"]')).toHaveValue('2');

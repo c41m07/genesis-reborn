@@ -57,7 +57,9 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
   const metalEconomy=page.getByRole('region',{name:'Bilan économique : Métal',exact:true});
   await page.getByRole('button',{name:'Détails économiques : Métal',exact:true}).focus();
   await expect(metalEconomy,pageErrors.join(' ; ')).toBeVisible();
-  await expect(metalEconomy).toContainText('Revenu de base');
+  await expect(metalEconomy.locator('dt')).toHaveText(['Stock / capacité','Production brute / h','Production actuelle / h','Consommation brute / h','Consommation actuelle / h','Solde net / h']);
+  await expect(metalEconomy.locator('[data-resource-target="potential"]')).not.toHaveText('0,00');
+  await expect(metalEconomy.locator('[data-resource-target="net"]')).toHaveText('0,00');
   await page.keyboard.press('Escape');
   await expect(metalEconomy).toBeHidden();
   await expect(page.getByRole('link',{name:/Explorer la galaxie/})).toHaveAttribute('href','/carte-v2');
@@ -106,7 +108,8 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
           if(width===1440) await trigger.hover(); else await trigger.click();
           const panel=page.getByRole('region',{name:'Bilan économique : Électricité',exact:true});
           await expect(panel).toBeVisible();
-          await expect(panel).toContainText('Consommation / h');
+          await expect(panel).toContainText('Consommation brute / h');
+          await expect(panel).toContainText('Consommation actuelle / h');
           await expect(panel).toContainText('à l’ajout dans la file');
           const bounds=await panel.boundingBox();
           expect(bounds.x).toBeGreaterThanOrEqual(0);expect(bounds.x+bounds.width).toBeLessThanOrEqual(width);
