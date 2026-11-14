@@ -121,6 +121,12 @@ actualisation ; ressources, files et vols réutilisent leurs templates existants
 Le client ignore les réponses d’une génération ou d’une URL devenue obsolète.
 Le focus, les saisies modifiées et le journal non consulté gardent leurs protections.
 
+La console utilise `AdminReadRepository` pour ses compteurs et aperçus bornés ;
+les écrans détaillés conservent leurs droits, leur audit et leurs formulaires.
+`GameRepository::discoveredPlanets` filtre découverte et univers en base avant
+préparation cartographique. Les compositions d’EmpireDetails sont chargées après
+filtrage du propriétaire. Aucun cache partagé ni évolution de schéma n’est ajouté.
+
 Le sélecteur conserve la colonie choisie par participation et la catégorie ouverte.
 La vue générale présente les vols de toutes les colonies de l’univers sélectionné.
 Bâtiments, recherches et vaisseaux/défenses occupent trois files indépendantes :

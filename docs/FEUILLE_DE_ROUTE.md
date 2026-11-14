@@ -1,5 +1,15 @@
 # Roadmap Genesis Reborn
 
+## Rework V1 — chantier local du 14 novembre 2026
+
+Le chantier utilise uniquement `chore/rework-v1`, sans PR, fusion ni déploiement.
+Les préparations de catalogues et d’onglets sont ciblées, plusieurs lectures
+sont regroupées et les colonies disposent de fragments d’actualisation partagés.
+Le bandeau et les règles restent conservés. Le [suivi unique](REWORK_V1.md)
+détaille les contrôles, mesures, exceptions et prochaines actions ; il distingue
+les travaux validés des approfondissements encore ouverts. La recette cumulée
+et la validation complète sont en cours, sans déclaration de chantier achevé.
+
 ## Bunker : retrait du prérequis Blindage — 14 novembre 2026
 
 Lot 6 sur fix/prerequis-bunker depuis dev d0b4850, après fusion de la PR #63.

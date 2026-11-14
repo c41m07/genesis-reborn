@@ -39,8 +39,8 @@ worktrees et archives historiques exclus des transformations mécaniques.
 | 8 | colony-live, fragments | Fragments partagés, réponses obsolètes ignorées | Tests ciblés validés |
 | 9 | Assets, HTML, accessibilité | Fragments strictement identiques ; entrée compilée 494 Kio | Revue ciblée, contrôles navigateur complets au lot 12 |
 | 10 | Comptes, boosts, événements, handlers, exploitation | Sept contrats revus ; lectures du simulateur regroupées | Revue ciblée et tests validés ; concurrence réelle non démontrée |
-| 11 | Documentation et écarts transversaux | Index contient un séparateur littéral incorrect | À traiter |
-| 12 | Contrôles et recette cumulée | Six contrôles, mesures comparables et parcours manuels requis | À faire |
+| 11 | Documentation et écarts transversaux | Index réparé, documentation et relecture des changements | Effectué sur le périmètre modifié |
+| 12 | Contrôles et recette cumulée | Six contrôles, mesures comparables et parcours manuels requis | Suites complètes en cours |
 
 Cet inventaire recense les domaines, sans prétendre à une revue intégrale de
 chaque fichier. Un domaine non vérifié reste explicitement ouvert.
@@ -69,7 +69,35 @@ La référence historique d’environ 520 requêtes n’est pas reproduite à l�
 la fixture et le périmètre sont différents. Les 468 requêtes concernent le service
 isolé, pas une page HTTP complète. Aucun pourcentage global n’est déduit.
 
-## Vérifications et incidents
+## Comparaison stabilisée des préparations
+
+Deux projets PHP jetables utilisant la même image et la même fixture ont été
+mesurés successivement : avant, le fichier ColonyView de `48c9a71` est monté
+en lecture seule dans le seul conteneur de référence ; après, le fichier courant.
+Aucun fichier applicatif du checkout n’a été remplacé pour mesurer l’ancien code.
+Pour chaque scénario : un premier appel, puis dix passages chauds. Tableau des
+médianes et étendues serveur en millisecondes ; allocations mémoire du processus
+(cumulatives entre scénarios), pas mémoire HTTP par visite. Instrumentation de
+débogage identique. Les autres services sont ceux du checkout courant ; avec
+la fixture sans flotte active, les changements de compositions ne modifient pas
+le travail comparé. Valeurs de transfert, rendu et temps HTTP : non mesurés.
+
+| Page | Scénario | SQL avant | SQL après | Temps avant | Temps après | Mémoire avant → après | Résultat fonctionnel |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Vue générale | 10 passages chauds | 468 | 35 | 207,91 [199,52–265,22] | 12,29 [11,55–15,81] | 86,5 → 42,5 Mio | Aucune carte ; files et économie conservées |
+| Bâtiments | 10 passages chauds | 468 | 275 | 213,51 [196,75–236,50] | 98,57 [94,73–109,82] | 87,5 → 46,5 Mio | 39 cartes, coûts et prérequis conservés |
+| Recherche | 10 passages chauds | 468 | 35 | 214,13 [196,77–301,02] | 44,12 [41,66–104,25] | 88,5 → 46,5 Mio | 57 cartes et recherche commune conservées |
+| Chantier | 10 passages chauds | 468 | 37 | 211,08 [195,76–232,34] | 15,73 [15,15–17,07] | 88,5 → 46,5 Mio | 42 cartes et stocks par rang conservés |
+| Défenses | 10 passages chauds | 468 | 36 | 235,91 [202,37–247,70] | 14,39 [12,80–15,98] | 88,5 → 46,5 Mio | 12 cartes et stocks par rang conservés |
+| Guide | 10 passages chauds | 468 | 25 | 210,01 [196,75–229,29] | 12,70 [10,99–14,19] | 90,5 → 48,5 Mio | Arbre préparé sans cartes ni flottes |
+
+Temps SQL médians avant/après : vue générale 98,01/7,21 ms ; Bâtiments
+99,98/54,12 ms ; Recherche 99,17/7,77 ms ; Chantier 100,05/7,78 ms ; Défenses
+106,87/8,08 ms ; Guide 100,00/5,93 ms. Les temps ne constituent pas des seuils CI.
+Les échantillons bruts et le lanceur temporaire restent dans `var/rework-measures.json`
+et `var/measure-rework.py`, ignorés par Git. Les budgets testés restent larges.
+
+## Vérifications et incidents (journal)
 
 - `make validate` réussi sur l’état initial.
 - Caractérisation et mesure initiales : 2 tests / 5 assertions réussis.
@@ -98,9 +126,10 @@ isolé, pas une page HTTP complète. Aucun pourcentage global n’est déduit.
 
 ## Reprise
 
-- Lot actuel : 10/12.
+- Lot actuel : 12/12.
 - Dernière étape validée : fixture isolée et mesure avant changement.
-- Contrôle en cours : suite PHP/Python de référence.
+- Contrôles en cours : suite PHP/Python finale (1 026 cas PHP), quatre groupes
+  navigateur indépendants couvrant les 201 scénarios (55 + 54 + 43 + 49).
 - Référence du lot 1 : `9e62541`.
 - Lot 2 : imports explicites et constructeur de ColonyView mis en lignes,
   sans changement de comportement ; syntaxe PHP et diff vérifiés. `.editorconfig`
@@ -177,5 +206,72 @@ isolé, pas une page HTTP complète. Aucun pourcentage global n’est déduit.
   de compte, reconstruction et capture). Les rejoués séquentiels ne démontrent
   pas la concurrence réelle. Pas d’audit exhaustif de comptes/inventaire,
   d’infrastructure ou de dépendances ; pas d’installation ni de service externe.
-- Prochaine action : lot 11, relecture et documentation cumulée ;
+- Lot 11 : index réparé, architecture/README/feuille de route reliés au suivi.
+  Contrôleur JS remis en forme dans un commit distinct, AST vérifié identique
+  avant l’ajout séparé du refus d’erreurs réseau devenues obsolètes. Pas de
+  suppression de fichiers, formatage global, migration ou dépendance ajoutée.
+- Validation déjà terminée : Compose, lint PHP/Twig/YAML/conteneur et schéma sur
+  la base synthétique ; `make assets` réussi sous Node WSL 20.19.2, complété par
+  une compilation de production réussie sous Node Windows 24.17.0, conforme à la
+  version majeure documentée. Aucun téléchargement ni installation nécessaire.
+- Prochaine action : attendre la compilation finale et les suites cumulées ;
   mesures comparables et validation cumulée à reprendre au lot 12.
+
+## Exceptions et travaux encore ouverts
+
+Cette passe n’est pas présentée comme l’achèvement intégral du prompt de
+nettoyage. Tous les domaines du plan sont inventoriés, mais la profondeur de
+revue reste ciblée ; tous les composants existants n’ont pas été relus ligne
+par ligne. Les écarts suivants restent explicitement ouverts :
+
+1. Préparation économique propre aux cartes de bâtiments : 275 requêtes sur la
+   fixture, sans modifier le moteur ni les traitements du bandeau exclu.
+2. Résumés de rapports évitant l’hydratation des rounds ; accès au classement
+   quotidien pour un seul profil sans enrichir tout l’univers.
+3. Regroupement complémentaire des identités/relations diplomatiques, des
+   contributeurs dans les fiches de projet et des combats des flottes actives.
+4. Pagination serveur des joueurs, du journal et des listes administratives
+   spécialisées, avec recherche, export et accès à tout l’historique.
+5. Fragments propres à Flottes et mesures HTTP/navigateur sur plusieurs volumes.
+6. Revue plus large des conventions existantes, accessibilité manuelle complète
+   et tests réellement concurrents des traitements sensibles.
+
+Pas de cache partagé improvisé ni de projection partielle d’entité pour masquer
+ces coûts ; ces évolutions demandent leurs scénarios de caractérisation et de
+mesure. Les règles et valeurs restent strictement hors arbitrage de ce chantier.
+
+## Fichiers du lot cumulé
+
+| Périmètre | Fichiers modifiés ou ajoutés |
+| --- | --- |
+| Contrôleurs | `AdminController`, `ColonyController`, `DiplomacyController`, `GuildProjectController`, `LeaderboardController` dans `app/src/Controller/` |
+| Lectures | `app/src/Repository/AdminReadRepository.php`, `app/src/Repository/GameRepository.php` |
+| Préparation des pages | `Colony/ColonyView.php`, `Colony/EmpireDetails.php`, `Combat/PlayerCombatSimulation.php`, `Combat/ReportArchiveService.php`, `Fleet/DestinationCatalogue.php`, `Player/SocialProfileView.php` sous `app/src/Service/` |
+| Asynchrone | `app/src/Service/Notification/OutboxRelay.php` (commentaire seulement) |
+| Navigateur | `app/assets/controllers/colony_live_controller.js` |
+| Templates | `app/templates/base.html.twig`, `colony/show.html.twig`, `colony/_catalog.html.twig`, `colony/_journal.html.twig`, `player/diplomacy.html.twig`, `ui/colony_selector.html.twig` sous `app/templates/` |
+| Tests HTTP | `app/tests/Controller/AbsenceJournalTest.php`, `GuildTagPlayerReportTest.php` dans le même dossier |
+| Tests intégrés | `AdminReadRepositoryTest.php`, `CatalogAccessTest.php`, `ColonyPreparationTest.php`, `FleetStationingTest.php`, `GamePersistenceTest.php` dans `app/tests/Integration/` |
+| Test navigateur | `app/tests/browser/live-refresh-focus.spec.mjs` |
+| Documentation | `README.md`, `docs/ARCHITECTURE.md`, `docs/FEUILLE_DE_ROUTE.md`, `docs/README.md`, `docs/REWORK_V1.md`, `docs/WORKER_NOTIFIER.md` |
+
+## Recette manuelle à effectuer
+
+- Comptes : inscription, confirmation et connexion ; préférences, changement
+  d’univers et sélection de colonie. Les emails externes demandent un environnement autorisé.
+- Quatre catalogues : rangs, coûts/durées, prérequis, détails, filtres mémorisés,
+  liens directs et Max ; constructions et recherche commune depuis deux colonies.
+- Actualisations : garder une saisie modifiée et le focus, terminer une commande,
+  changer rapidement de colonie, couper/rétablir le réseau ; vérifier le journal
+  non marqué lu et la barre de ressources avec ses détails, pénuries et vacances.
+- Flottes : compositions, aperçu/envoi, orbites, rappel, stationnement et repli ;
+  carte classique/V2, galaxies, destinations connues et masquage des inconnues.
+- Rapports/messages : filtres, dates, pagination, archives/restauration, anciens
+  rapports, canaux privé/guilde/Global, Ctrl + Entrée et Markdown sécurisé.
+- Guildes/projets : cinq onglets, propositions reçues, grades et refus de droits,
+  contribution personnelle, fiche des dons et récompense unique ; inventaire/boosts.
+- Administration : accueil, comptes, univers, modération, sécurité/examen,
+  exploitation et historique complet ; confirmations et refus des non-administrateurs.
+- Mobile, clavier et deux thèmes : focus visible, libellés, erreurs, détails,
+  mouvements réduits et parcours sans JavaScript disponibles. Les tests automatisés
+  ne remplacent pas cette recette et ne prouvent pas une conformité RGAA complète.
