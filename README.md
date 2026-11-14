@@ -40,7 +40,7 @@ Le code comprend :
   - Sur mobile, les cinq stocks restent visibles sur une seule ligne à droite de « Colonie active » sous forme compacte. Un clic sur la colonie déplie les stocks exacts, débits, rendements et jauges de stockage ; un second clic les replie.
   - Typographie du jeu harmonisée entre les thèmes : petits textes des catalogues et des files agrandis, champs de saisie à 16 px sur mobile et tablette, messages à 13 px. Les grands titres et les stocks mobiles compacts conservent leurs tailles.
   - Bâtiments, recherches, vaisseaux et défenses regroupés par famille avec trois onglets de rang, niveau ou quantité possédée dans l’onglet, indicateurs de verrouillage et d’action disponible, interrupteur local des éléments verrouillés et coûts abrégés en k/M (valeur exacte accessible). Quatre cartes par ligne sur grand écran, avec adaptation aux écrans plus étroits ; illustrations d’origine en couleur, cadrées en 16/9 et affichées bord à bord sans bandes ; boutons d’amélioration, de recherche et de construction alignés en bas des cartes d’une même ligne. Les quantités à construire restent propres à chaque rang (1 à 100).
-- Flottes, exploration, transport, colonisation, attaque, défense, orbite et espionnage ; combats persistés, conquête de planètes PNJ et rapports privés. Les rapports présentent un résumé puis les détails : tableaux de combat en vis-à-vis par round et type d’unité (effectifs, pertes et tirs), reconstruction des défenses après le verdict, renseignements d’espionnage en cadres par catégorie et bilan des transports. Les anciens combats sans historique de rounds conservent leur bilan disponible.
+- Flottes, exploration, transport, colonisation, attaque, défense, stationnement en orbite, stationnement sur une autre colonie et espionnage ; combats persistés, conquête de planètes PNJ et rapports privés. Les rapports présentent un résumé puis les détails : tableaux de combat en vis-à-vis par round et type d’unité (effectifs, pertes et tirs), reconstruction des défenses après le verdict, renseignements d’espionnage en cadres par catégorie et bilan des transports. Les anciens combats sans historique de rounds conservent leur bilan disponible.
 - Galaxie V2 : modes Exploration, PNJ (niveaux) et Joueurs, positions visuelles alignées par dizaines consécutives sur le tracé des huit bras allongés et courbés (1–10, 11–20, etc.), sans modifier les coordonnées de jeu et cadrage de lecture sur les systèmes disponibles, légende à cases à cocher et disques remplis jusqu’au cercle extérieur, partagés en quatre quarts fixes : PNJ en haut à gauche (orange en exploration ; bleu niveaux 1–3, violet niveaux 4–6 et fuchsia dès le niveau 7 en mode PNJ), allié en haut à droite (vert), neutre/planète vierge en bas à droite (gris), ennemi en bas à gauche (rouge). Les catégories absentes, masquées ou exclues par le mode restent grises. Une maison au survol indique vos colonies dans le système. Les systèmes inexplorés portent un « ? » jaune centré, désactivable dans la légende ; les planètes découvertes distinguent vos colonies, PNJ, mondes inhabités et joueurs alliés, neutres ou ennemis selon la diplomatie existante. Textes agrandis sur ordinateur et mobile. L’infobulle d’un système sépare coordonnées, état d’exploration, décompte des planètes par relation et niveaux PNJ découverts. La vue du système solaire répartit les planètes sur des orbites espacées et animées à leurs vitesses propres (immobiles si les animations sont réduites), avec numéros permanents et nom de la planète sélectionnée uniquement. Les légendes sont compactes et repliées par défaut ; sur la galaxie mobile, les filtres se déplient en bas et le journal sans mission se réduit à un bouton ; sur mobile, les informations du système se déplient depuis une barre en bas. Elle dispose d’une légende des planètes ; un clic sur leur dessin ouvre directement la vue rapprochée, tandis que la liste conserve les fiches et actions.
 - Grades personnalisés de guilde : création et modification par le dirigeant, priorités et permissions déléguées pour l’attribution des grades inférieurs et la diplomatie de guilde. Le transfert du commandement et la dissolution restent réservés au dirigeant ; les alliances personnelles restent indépendantes. Les migrations `Version20261111010000` et `Version20261111173000` réconcilient les historiques existants avant utilisation. Voir le [suivi guildes et alliances](docs/GESTION_GUILDES_ALLIANCES.md).
 - Relations personnelles : alliance réciproque, déclaration de rivalité sans guilde et paix acceptée par les deux joueurs. Les liens de guilde restent prioritaires ; la carte et le classement utilisent la relation effective. Un contrat terminé se distingue d’une proposition en attente.
@@ -455,17 +455,17 @@ après accord et sauvegarde vérifiée. Les autres installations nécessitent le
 propre sauvegarde vérifiée et autorisation avant migration, puis le redémarrage
 des consommateurs. Aucun déploiement Alpha de ce lot n’est annoncé.
 
-Destinations des flottes : trois modes sont proposés, Mes planètes et alliés
-par défaut, Ennemis (dont PNJ connus), et Destination personnalisée. Les joueurs
-neutres restent dans le mode personnalisé. La recherche de pseudonyme propose
-au plus 20 planètes déjà découvertes de l’univers actif, compatibles avec la
-mission. Les suggestions se sélectionnent au clavier et au toucher ; les
-coordonnées restent disponibles pour les destinations personnalisées, notamment
-l’exploration d’un système inconnu. Les liens de la carte conservent leur cible.
-Les attaques classiques des PNJ sont possibles sans capture ni nouveau butin PNJ.
-Conquête JcE conserve ses règles de capture et d’occupation existantes.
-Aucune migration, dépendance ou activation globale supplémentaire pour ce lot D,
-qui n’est pas encore publié ni déployé sur Alpha.
+Destinations des flottes : les catégories suivent la mission. Exploration propose
+les coordonnées des systèmes non explorés ; colonisation les planètes neutres
+découvertes et colonisables ; transport, défense et orbite séparent mes planètes
+des planètes alliées. Attaque et espionnage séparent PNJ et ennemis déclarés ;
+Conquête JcE propose les PNJ et Stationnement mes planètes. Une destination
+personnalisée reste disponible pour chaque mission, sans contourner les droits
+serveur, la découverte ou les protections. Les recherches sont limitées à
+20 suggestions compatibles de cet univers. [Stationnement et reprise](docs/DESTINATIONS_STATIONNEMENT.md)
+déplacent la base à l’arrivée, sans retour automatique ; réserve et surplus de
+fret sont conservés à quai, avec déchargement explicite. Une migration est
+préparée pour ce stock, sans application à la base habituelle.
 
 ### Rapports personnels et attribution administrative
 
@@ -538,8 +538,8 @@ alliés, dans les limites des découvertes, avec contrôles avant sérialisation
 
 
 ### Demandes d’orbite
-Une nouvelle mission Orbite envoie sa demande dès le départ. Les alliés sont
-acceptés automatiquement ; un joueur neutre répond depuis Flottes avant
+Une mission Stationnement en orbite envoie sa demande dès le départ. Vos autres
+colonies et les alliés sont acceptés automatiquement ; un joueur neutre répond depuis Flottes avant
 l’arrivée. La page affiche les demandes envoyées/reçues et leur échéance
 (heure de Paris et compte à rebours). Le refus ou le retrait rappelle la flotte
 depuis la position atteinte ; sans accord valide à l’arrivée, elle rentre.

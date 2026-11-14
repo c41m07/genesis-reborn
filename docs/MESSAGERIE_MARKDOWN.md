@@ -10,10 +10,11 @@ identifiant de test (skipped), sans réécriture d’historique. La protection d
 dev impose PR et cinq jobs quality, y compris aux administrateurs.
 
 Complexités : raccourci et doublons 3/5, Markdown sécurisé 4/5, historique et
-migration 3/5. Publication de la branche et PR en brouillon vers dev autorisées.
-L’état courant de la [PR associée](https://github.com/c41m07/genesis-reborn/pulls?q=is%3Apr+head%3Afeature%2Fmessagerie-markdown)
-fait référence pour la CI. Aucune fusion de ce lot, application des migrations
-à la base habituelle ou livraison Alpha n’est autorisée par cet accord.
+migration 3/5. PR #62 fusionnée avec autorisation vers dev le 14 novembre 2026,
+commit bc4930ac94eec19101f37b0a3691f375ce1fd9ce. Les cinq jobs quality et
+GitGuardian réussissaient sur son dernier commit b3686bb : 988 tests PHP /
+212 335 assertions, 13 Python et 198 parcours navigateur (exécution 43612536974).
+Aucune application des migrations à la base habituelle ni livraison Alpha.
 Les modifications préexistantes de docs/PARCOURS_UI_UX.md et l’état de
 app/assets/controllers.json restent hors du lot.
 

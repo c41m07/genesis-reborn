@@ -58,6 +58,8 @@ for (const channel of ['private', 'guild', 'global']) {
             expect(posts).toBe(0);
             await textarea.press('Control+Enter');
             await expect(page.locator('.message-content strong')).toHaveText('Bonjour');
+            // Le HTML peut être visible avant le branchement du contrôleur sur la nouvelle page.
+            await page.waitForLoadState('load');
             expect(posts).toBe(1);
             await page.locator('.message-compose textarea').fill('Envoi unique');
             const duringSubmission = await page.locator('.message-compose').evaluate(element => {

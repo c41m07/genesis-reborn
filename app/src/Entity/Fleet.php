@@ -29,6 +29,8 @@ class Fleet
     public array $cargo = [];
     #[ORM\Column]
     public float $reservedFuel = 0;
+    #[ORM\Column(options: ['default' => 0])]
+    public float $storedFuel = 0;
     #[ORM\Column]
     public float $orbitFuel = 0;
     #[ORM\Column]

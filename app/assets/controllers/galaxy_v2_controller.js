@@ -3,7 +3,7 @@ import { Controller } from '@hotwired/stimulus';
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const missionColors = {
     explore: '#00d4ff', spy: '#a78bfa', colonize: '#2dd4a0', transport: '#34d399',
-    attack: '#f43f5e', conquer: '#ffb040', defend: '#60a5fa', orbit: '#f472b6',
+    attack: '#f43f5e', conquer: '#ffb040', defend: '#60a5fa', orbit: '#f472b6', station: '#2dd4a0',
 };
 const mapMarkers = {
     unknown: { symbol: '?', color: '#ffda66', label: 'Inexploré' },
@@ -887,7 +887,7 @@ export default class extends Controller {
             if (!origin && !originInGalaxy && destination) origin = this.galaxyEdgePoint(destination, flight.id, true);
             if (!destination && !destinationInGalaxy && origin) destination = this.galaxyEdgePoint(origin, flight.id, false);
             if (!origin || !destination || (!originInGalaxy && !destinationInGalaxy)) continue;
-            if (['attacking', 'defending', 'orbiting', 'orbit_pending'].includes(flight.status)) {
+            if (['attacking', 'defending', 'orbiting', 'orbit_pending', 'station_waiting'].includes(flight.status)) {
                 const point = this.galaxyPoint(destination);
                 const color = missionColors[flight.mission] || '#00d4ff';
                 ctx.save();
@@ -906,7 +906,7 @@ export default class extends Controller {
             if (!Number.isFinite(departure) || !Number.isFinite(arrival) || arrival <= departure) continue;
             let progress = this.flightProgress(flight, now);
             let from = origin, to = destination;
-            if (flight.status === 'returning' && !flight.recallRoute) {
+            if (flight.status === 'returning' && !flight.recallRoute && !flight.forwardRoute) {
                 progress = 1 - progress;
                 from = destination;
                 to = origin;
@@ -1680,7 +1680,7 @@ export default class extends Controller {
             const start = startPlanet?.visual ? { x: startPlanet.visual.sx, y: startPlanet.visual.sy } : { x: this.width * .04, y: centerY };
             const end = endPlanet?.visual ? { x: endPlanet.visual.sx, y: endPlanet.visual.sy } : { x: this.width * .9, y: centerY };
             const departure = Date.parse(flight.departureAt || ''), arrival = Date.parse(flight.arrivalAt || '');
-            if (flight.status === 'attacking' || flight.status === 'defending' || flight.status === 'orbiting' || flight.status === 'orbit_pending') {
+            if (flight.status === 'attacking' || flight.status === 'defending' || flight.status === 'orbiting' || flight.status === 'orbit_pending' || flight.status === 'station_waiting') {
                 const point = endPlanet?.visual ? end : { x: this.width * .9, y: centerY };
                 const color = missionColors[flight.mission] || '#00d4ff';
                 ctx.strokeStyle = color;
@@ -1702,7 +1702,7 @@ export default class extends Controller {
                 const returnPlanet = returnSystem ? this.findPlanetByName(flight.recallRoute.returnName, returnSystem) : null;
                 routeEnd = Number(flight.recallRoute.returnSystemId) === system.id && returnPlanet?.visual
                     ? { x: returnPlanet.visual.sx, y: returnPlanet.visual.sy } : { x: this.width * .04, y: centerY };
-            } else if (flight.status === 'returning') progress = 1 - progress;
+            } else if (flight.status === 'returning' && !flight.forwardRoute) progress = 1 - progress;
             const x = routeStart.x + (routeEnd.x - routeStart.x) * progress;
             const y = routeStart.y + (routeEnd.y - routeStart.y) * progress - Math.sin(progress * Math.PI) * 36;
             ctx.beginPath();

@@ -72,6 +72,11 @@ export default class extends Controller {
                 const entry = document.createElement('div'), term = document.createElement('dt'), description = document.createElement('dd');
                 term.textContent = label; description.textContent = value; entry.append(term, description); list.append(entry);
             }
+            if (preview.stored_fuel_used > 0) {
+                const entry = document.createElement('div'), term = document.createElement('dt'), description = document.createElement('dd');
+                term.textContent = 'Origine du carburant'; description.textContent = format(preview.stored_fuel_used) + ' H embarqué + ' + format(preview.planet_fuel) + ' H planétaire';
+                entry.append(term, description); list.append(entry);
+            }
             this.resultTarget.replaceChildren(list);
             this.resultTarget.classList.remove('error');
             this.dispatch('quoted', { detail: preview });

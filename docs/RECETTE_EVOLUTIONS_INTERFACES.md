@@ -27,7 +27,7 @@ Cette liste sert à notre revue ensemble sur dev. Cocher après essai et noter l
 
 ## Préparer et suivre une flotte
 
-- [ ] Le sélecteur démarre sur « Mes planètes et alliés » ; les trois modes, PNJ figurent dans « Ennemis » ; les joueurs neutres passent par « Destination personnalisée ».
+- [ ] Le sélecteur propose la matrice du [lot 5](DESTINATIONS_STATIONNEMENT.md), sépare PNJ et ennemis déclarés et conserve les destinations personnalisées autorisées.
 - [ ] La saisie personnalisée et les suggestions ne renvoient que des destinations autorisées et découvertes dans l’univers actif.
 - [ ] Sur un PNJ découvert, « Attaque » combat sans capture ; « Conquête JcE » respecte le vaisseau colonie survivant, la place disponible et l’occupation existante.
 - [ ] Le journal de mission a disparu de la page Flottes ; rapports et historiques restent accessibles.

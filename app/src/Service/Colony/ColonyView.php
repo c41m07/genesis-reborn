@@ -72,7 +72,7 @@ final class ColonyView
         }
         // Les rangs restent disponibles pour le filtre local des catalogues regroupés.
         $technologyTree=$this->insights->tree($buildings,$tech,$m,$planet);
-        $activeFleets=$this->repo->all(Fleet::class,['playerUniverse'=>$m,'status'=>['traveling','returning','attacking','defending','occupying']],['arrivalAt'=>'ASC']);
+        $activeFleets=$this->repo->all(Fleet::class,['playerUniverse'=>$m,'status'=>['traveling','returning','attacking','defending','occupying','station_waiting']],['arrivalAt'=>'ASC']);
         $combatEvents=[];
         foreach($activeFleets as $activeFleet) { $participant=$this->repo->one(CombatParticipant::class,['fleet'=>$activeFleet]); if($participant && $participant->combatEvent->status==='pending') $combatEvents[$activeFleet->id]=$participant->combatEvent; }
         $ships=[];

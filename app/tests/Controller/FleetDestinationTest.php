@@ -37,6 +37,7 @@ final class FleetDestinationTest extends WebTestCase
         [$this->player,$this->home]=$this->player('DestOwner');
         [$ally,$this->ally]=$this->player('DestAlly');[$enemy,$this->enemy]=$this->player('DestEnemy');
         [, $this->neutral]=$this->player('DestNeutral');
+        $this->neutral->owner->player->preferences['transportReception']='all';
         // Une ancienne planète PNJ peut conserver son drapeau après capture par un joueur neutre.
         $this->neutral->npcPlanet=true;[$hidden,$oldHidden]=$this->player('SecretUnseen');
         [, $this->foreign]=$this->player('ForeignGalaxy','turbo-1');
@@ -66,7 +67,7 @@ final class FleetDestinationTest extends WebTestCase
 
     private function player(string $name,string $slug='omega-1'): array
     {
-        $data=new RegistrationData();$data->email=strtolower($name).'@example.test';$data->username=$name;$data->plainPassword='A-test-password-2026';
+        $data=new RegistrationData();$data->email=strtolower($name).'@example.test';$data->username=$name;$data->plainPassword=bin2hex(random_bytes(16)).'aA1!';
         $player=static::getContainer()->get(RegistrationService::class)->register($data);
         $universe=$this->em->getRepository(Universe::class)->findOneBy(['slug'=>$slug]);
         static::getContainer()->get(UniverseService::class)->select($player,$universe->id);
@@ -145,18 +146,18 @@ final class FleetDestinationTest extends WebTestCase
             // L’anomalie est limitée à ce test de l’API, qui doit la filtrer avant toute donnée.
             $planet->owner=$this->foreign->owner;$planet->name='Relation étrangère';$this->em->flush();break;
         }
-        $this->client->request('GET','/flottes/destinations?mission=explore');
+        $this->client->request('GET','/flottes/destinations?mission=spy');
         self::assertResponseIsSuccessful();$data=json_decode($this->client->getResponse()->getContent(),true,512,JSON_THROW_ON_ERROR);
-        $friendly=array_column($data['groups']['friendly'],'id');$enemies=array_column($data['groups']['enemies'],'id');
-        self::assertContains($this->own->id,$friendly);self::assertContains($this->ally->id,$friendly);
-        self::assertContains($this->enemy->id,$enemies);self::assertContains($this->npc->id,$enemies);
-        self::assertNotContains($this->neutral->id,[...$friendly,...$enemies]);self::assertNotContains($this->hidden->id,[...$friendly,...$enemies]);
+        $npcs=array_column($data['groups']['npc'],'id');$enemies=array_column($data['groups']['enemies'],'id');
+        self::assertContains($this->enemy->id,$enemies);self::assertContains($this->npc->id,$npcs);
+        self::assertNotContains($this->npc->id,$enemies);self::assertNotContains($this->enemy->id,$npcs);
+        self::assertNotContains($this->neutral->id,[...$npcs,...$enemies]);self::assertNotContains($this->hidden->id,[...$npcs,...$enemies]);
         self::assertStringContainsString('no-store',$this->client->getResponse()->headers->get('Cache-Control'));
         foreach(['SecretUnseen','ForeignGalaxy','%%'] as $query) {
             $this->client->request('GET','/flottes/destinations',['mission'=>'explore','q'=>$query,'universe'=>$this->foreign->solarSystem->galaxy->universe->id]);
             self::assertResponseIsSuccessful();$rows=json_decode($this->client->getResponse()->getContent(),true)['suggestions'];self::assertSame([],$rows);
         }
-        $this->client->request('GET','/flottes/destinations',['mission'=>'explore','q'=>'destneutral']);
+        $this->client->request('GET','/flottes/destinations',['mission'=>'transport','q'=>'destneutral']);
         $rows=json_decode($this->client->getResponse()->getContent(),true)['suggestions'];
         self::assertSame([$this->neutral->id],array_column($rows,'id'));
         $this->client->request('GET','/flottes/destinations',['mission'=>'explore','q'=>'D']);self::assertSame([],json_decode($this->client->getResponse()->getContent(),true)['suggestions']);
@@ -165,15 +166,15 @@ final class FleetDestinationTest extends WebTestCase
     public function testModesAreRevalidatedServerSideAndCustomExplorationRemainsPossible(): void
     {
         $member=$this->player->currentPlayerUniverse;$catalogue=static::getContainer()->get(DestinationCatalogue::class);
-        self::assertSame($this->own->solarSystem->id,$catalogue->resolve($member,'explore','friendly','',$this->own->id)->id);
-        self::assertSame($this->npc->id,$catalogue->resolve($member,'attack','enemies','',$this->npc->id)->id);
+        self::assertSame($this->own->solarSystem->id,$catalogue->resolve($member,'transport','owned','',$this->own->id)->solarSystem->id);
+        self::assertSame($this->npc->id,$catalogue->resolve($member,'attack','npc','',$this->npc->id)->id);
         self::assertSame($this->hidden->solarSystem->id,$catalogue->resolve($member,'explore','custom',$this->hidden->solarSystem->galaxy->coordinateCode().':'.$this->hidden->solarSystem->number())->id);
         $this->client->request('GET','/planetes/'.$this->home->id);
         $this->client->request('GET','/flottes');
         $token=$this->client->getCrawler()->filter('form[action="/flottes/envoyer"] input[name="_token"]')->first()->attr('value');
-        $base=['_token'=>$token,'origin'=>$this->home->id,'mission'=>'explore','ships'=>['probe'=>['basic'=>1]],'ratio'=>1];
+        $base=['_token'=>$token,'origin'=>$this->home->id,'mission'=>'spy','ships'=>['probe'=>['basic'=>1]],'ratio'=>1];
         $url=static::getContainer()->get('router')->generate('app_fleet_preview');
-        foreach([['friendly',$this->neutral],['friendly',$this->enemy],['enemies',$this->ally],['enemies',$this->hidden],['enemies',$this->foreign]] as [$mode,$planet]) {
+        foreach([['npc',$this->ally],['enemies',$this->npc],['enemies',$this->neutral],['enemies',$this->hidden],['enemies',$this->foreign]] as [$mode,$planet]) {
             $this->client->request('POST',$url,$base+['destination_mode'=>$mode,$mode.'_destination'=>$planet->id]);
             self::assertResponseStatusCodeSame(422);self::assertStringNotContainsString('SecretUnseen',$this->client->getResponse()->getContent());
         }
@@ -187,13 +188,45 @@ final class FleetDestinationTest extends WebTestCase
     {
         $this->client->request('GET','/planetes/'.$this->home->id);
         $this->client->request('GET','/flottes');self::assertResponseIsSuccessful();
-        self::assertSelectorExists('input[name="destination_mode"][value="friendly"][checked]');
+        self::assertSelectorExists('input[name="destination_mode"][value="unexplored"][checked]');
         $this->client->request('GET','/flottes',['mission'=>'attack','planet'=>$this->npc->id]);self::assertResponseIsSuccessful();
-        self::assertSelectorExists('input[name="destination_mode"][value="enemies"][checked]');
-        self::assertSelectorExists('select[name="enemies_destination"] option[value="'.$this->npc->id.'"][selected]');
+        self::assertSelectorExists('input[name="destination_mode"][value="npc"][checked]');
+        self::assertSelectorExists('select[name="npc_destination"] option[value="'.$this->npc->id.'"][selected]');
         $this->client->request('GET','/flottes',['mission'=>'attack','planet'=>$this->hidden->id]);self::assertResponseStatusCodeSame(404);
         $this->client->request('GET','/flottes/destinations',['mission'=>'invalid']);self::assertResponseStatusCodeSame(422);
         $this->client->getCookieJar()->clear();static::getContainer()->get('security.token_storage')->setToken(null);
         $this->client->request('GET','/flottes/destinations');self::assertResponseRedirects('/connexion');
     }
+    public function testExplorationOnlyRevealsUnknownSystemCoordinates(): void
+    {
+        $this->client->request('GET','/flottes/destinations?mission=explore');
+        self::assertResponseIsSuccessful();$data=json_decode($this->client->getResponse()->getContent(),true);
+        self::assertSame(['unexplored'],$data['modes']);
+        self::assertContains($this->hidden->solarSystem->id,array_column($data['groups']['unexplored'],'id'));
+        self::assertNotContains($this->home->solarSystem->id,array_column($data['groups']['unexplored'],'id'));
+        foreach($data['groups']['unexplored'] as $row) {
+            self::assertSame(['id','type','coordinates','systemCoordinates','label'],array_keys($row));
+            self::assertSame($row['coordinates'],$row['label']);self::assertSame('system',$row['type']);
+        }
+        foreach($data['groups'] as $group=>$rows) if($group!=='unexplored') self::assertSame([],$rows);
+        self::assertStringNotContainsString('SecretUnseen',$this->client->getResponse()->getContent());
+    }
+
+    public function testMissionMatrixAndCustomPermissionsStayDistinct(): void
+    {
+        $expected=['explore'=>['unexplored'],'colonize'=>['neutral'],'transport'=>['owned','allied'],
+            'attack'=>['npc','enemies'],'spy'=>['npc','enemies'],'conquer'=>['npc'],
+            'defend'=>['owned','allied'],'orbit'=>['owned','allied'],'station'=>['owned']];
+        $catalogue=static::getContainer()->get(DestinationCatalogue::class);$member=$this->player->currentPlayerUniverse;
+        foreach($expected as $mission=>$modes) self::assertSame($modes,$catalogue->choices($member,$mission)['modes']);
+        $transport=$catalogue->choices($member,'transport')['groups'];
+        self::assertContains($this->own->id,array_column($transport['owned'],'id'));
+        self::assertContains($this->ally->id,array_column($transport['allied'],'id'));
+        self::assertNotContains($this->neutral->id,array_column($transport['allied'],'id'));
+        self::assertSame($this->neutral->id,$catalogue->resolve($member,'transport','custom',$this->neutral->coordinates())->id);
+        self::assertSame($this->own->id,$catalogue->resolve($member,'orbit','owned','',$this->own->id)->id);
+        self::assertTrue(static::getContainer()->get(\App\Service\Fleet\OrbitPolicy::class)->automatic($member,$this->own));
+        self::assertSame($this->own->id,$catalogue->resolve($member,'station','owned','',$this->own->id)->id);
+    }
+
 }

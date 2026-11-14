@@ -448,16 +448,22 @@ par participation à l’univers et protégé contre les accès tiers et formula
 
 ### Destinations et suggestions des flottes — lot D
 
-Mes planètes et alliés est sélectionné par défaut sur un nouveau formulaire.
-Ce menu regroupe ses colonies et les mondes alliés découverts, compatibles avec
-la mission. Ennemis regroupe les planètes ennemies, PNJ et empires oubliés connus.
-Une ancienne planète PNJ détenue par un joueur neutre relève de la destination
-personnalisée, car son propriétaire actuel prime sur son ancien drapeau PNJ.
+Les catégories dépendent de la mission : exploration = systèmes non explorés
+(coordonnées seules) ; colonisation = planètes neutres découvertes et colonisables ;
+transport, défense et orbite = mes planètes / planètes alliées ; attaque et espionnage =
+PNJ / ennemis déclarés ; conquête JcE = PNJ ; stationnement = mes planètes.
+Le premier type compatible est sélectionné par défaut. Les alliances sont
+filtrées selon les droits propres à chaque mission ; un pacte défensif ne donne
+pas les droits du transport. Les empires oubliés sont des PNJ. Une planète
+anciennement PNJ appartenant à un joueur actif suit sa relation actuelle.
 
-Destination personnalisée conserve les coordonnées et propose une recherche de
-pseudonyme : deux caractères minimum, au plus 20 résultats, sans planète inconnue
-ni donnée d’un autre univers. Les joueurs neutres sont accessibles dans ce mode.
-L’exploration d’un système inconnu garde sa saisie personnalisée habituelle.
+Destination personnalisée conserve la saisie de coordonnées adaptée au système
+ou à la planète. La recherche propose au plus 20 coordonnées de systèmes non
+explorés, sans révéler leurs planètes, propriétaires ou ressources ; pour les
+missions planétaires elle propose les planètes découvertes et compatibles d’un
+pseudonyme. Deux caractères minimum, jamais de résultat d’un autre univers.
+Les joueurs neutres autorisés restent accessibles dans ce mode, sans extension
+des permissions de la mission.
 Les liens préremplis de la carte conservent le contexte de leur cible ; une cible
 connue peut rester consultable en formulaire même si la prévisualisation refuse
 actuellement l’envoi, notamment un destinataire qui refuse les transports.
@@ -571,9 +577,10 @@ La somme pour le préavis n’altère pas la pondération actuelle de l’espion
 
 
 ### Demandes d’orbite au départ — lot I
-Pour les nouveaux départs, l’orbite cible uniquement une planète d’un autre
-joueur actif du même univers, allié ou neutre, dans un système déjà découvert.
-Les planètes ennemies, PNJ ou sans propriétaire sont interdites. L’accord allié
+Pour les nouveaux départs, le Stationnement en orbite cible une autre colonie
+de votre empire ou une planète d’un joueur actif du même univers, allié ou neutre,
+dans un système déjà découvert.
+Les planètes ennemies, PNJ ou sans propriétaire sont interdites. L’accord sur vos propres colonies ou chez un allié
 est automatique ; le propriétaire neutre doit accepter avant l’arrivée.
 La demande expire à l’arrivée réelle, y compris après un boost ou un changement
 autorisé d’échéance. Accepter ne déplace pas la flotte : elle poursuit son trajet.
@@ -725,3 +732,34 @@ Le bouton Envoyer reste disponible sans JavaScript ; un envoi répété depuis l
 même formulaire ne crée pas de second message ni de seconde notification.
 La limite de 1 à 2 000 caractères et les droits par univers restent identiques.
 Voir le [guide](MESSAGERIE_MARKDOWN.md).
+
+
+## Stationnement sur une autre colonie — 14 novembre 2026
+
+La mission Stationnement déplace les vaisseaux vers une autre colonie possédée
+et découverte du même univers. La nouvelle base devient effective uniquement
+après l’arrivée réussie ; aucune mission de retour ni récompense n’est créée.
+Les prochains départs utilisent la nouvelle base et les formules habituelles.
+
+Le départ réserve deux fois le carburant aller. À chaque arrivée, seul le coût
+du trajet effectivement programmé est consommé. Un rappel avant arrivée utilise
+le devis habituel et conserve aussi le carburant inutilisé. Le carburant restant
+à l’installation devient un stock embarqué de la flotte inactive de la colonie,
+séparé du fret d’hydrogène. Les départs suivants utilisent d’abord ce carburant,
+puis l’hydrogène de la planète. Le fret est chargé depuis les stocks planétaires ;
+le surplus déjà embarqué n’est pas rechargé automatiquement.
+
+Le fret est déposé dans les capacités disponibles. Le surplus reste embarqué,
+sans perte automatique ; des commandes distinctes déchargent le carburant ou
+le fret, toujours selon la place disponible. Un départ est refusé si les
+vaisseaux laissés à quai ne peuvent plus porter les stocks conservés.
+
+Si la destination est perdue, repli vers l’origine si elle reste possédée et
+atteignable avec la réserve, sinon vers la colonie possédée atteignable au trajet
+le plus court selon les formules actuelles. Les égalités sont départagées par
+identifiant de colonie. Propriété et réserve sont revérifiées à chaque arrivée.
+Le fret d’hydrogène ne sert jamais de carburant. Sans repli possible, les
+vaisseaux restent indisponibles en attente, sans combat supplémentaire, coût
+de séjour, transfert ou perte automatique. Notification unique ; une reprise
+manuelle après devis utilise seulement la réserve existante et une colonie
+possédée et découverte. Sans solution, l’attente persiste.

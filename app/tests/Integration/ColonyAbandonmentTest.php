@@ -81,6 +81,8 @@ final class ColonyAbandonmentTest extends WebTestCase
 
     public function testCapturedColonyBecomesVirginWithAuditedLossesAndUnchangedOtherColony(): void
     {
+        $idle=$this->em->getRepository(Fleet::class)->findOneBy(['homePlanet'=>$this->home,'status'=>'idle']);
+        $idle->storedFuel=50;$idle->cargo=['hydrogen'=>20];$this->em->flush();
         $this->home->npcPlanet=true;$this->home->npcGarrisonInitialized=true;
         foreach(['building','research','shipyard'] as $type) $this->queue($this->home,$type);
         $history=new CombatEvent();$history->planet=$this->home;$history->status='resolved';$history->startedAt=$this->clock->now();$history->resolveAt=$this->clock->now();$history->seed=1;$this->em->persist($history);$this->em->flush();
@@ -94,6 +96,8 @@ final class ColonyAbandonmentTest extends WebTestCase
         self::assertSame(1,$this->auditCount());$audit=$this->em->getRepository(AdminAuditLog::class)->findOneBy(['action'=>'player_colony_abandoned']);
         self::assertTrue($audit->details['planet']['was_npc']);self::assertSame($this->home->id,$audit->details['planet']['id']);self::assertCount(3,$audit->details['cancelled_orders']);self::assertSame(2,$audit->details['losses']['ships'][0]['quantity']);
         self::assertSame($preview['version'],$audit->details['confirmed_version']);self::assertArrayNotHasKey('request_key',$audit->details);
+        self::assertSame(70.0,$audit->details['losses']['fleet_cargo'][0]['cargo']['hydrogen']);
+        self::assertSame(0.0,$idle->storedFuel);self::assertSame([],$idle->cargo);
     }
 
     public function testLastPlanetIsRefusedWithoutAnyLoss(): void

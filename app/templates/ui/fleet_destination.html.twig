@@ -1,28 +1,28 @@
 <fieldset class="fleet-destination-modes">
 <legend>Type de destination</legend>
-{% for value,label in {friendly:'Mes planètes et alliés',enemies:'Ennemis',custom:'Destination personnalisée'} %}
-<label for="destination-mode-{{ f.id }}-{{ value }}"><input type="radio" id="destination-mode-{{ f.id }}-{{ value }}" name="destination_mode" value="{{ value }}" {{ prefill.mode==value?'checked':'' }}><span>{{ label }}</span></label>
+{% for value,label in destination_choices.labels|merge({custom:'Destination personnalisée'}) %}
+<label data-fleet-destination-target="mode" {{ value!='custom' and value not in destination_choices.modes ? 'hidden' : '' }} for="destination-mode-{{ f.id }}-{{ value }}"><input type="radio" id="destination-mode-{{ f.id }}-{{ value }}" name="destination_mode" value="{{ value }}" {{ prefill.mode==value?'checked':'' }} {{ value!='custom' and value not in destination_choices.modes ? 'disabled' : '' }}><span>{{ label }}</span></label>
 {% endfor %}
 </fieldset>
 <p class="muted" data-fleet-destination-target="choicesStatus" role="status"></p>
-{% for value,label in {friendly:'Planète de mon empire ou alliée',enemies:'Planète ennemie ou PNJ'} %}
-<div data-fleet-destination-target="panel" data-mode="{{ value }}">
+{% for value,label in destination_choices.labels %}
+<div data-fleet-destination-target="panel" data-mode="{{ value }}" {{ value not in destination_choices.modes ? 'hidden' : '' }}>
 <label for="destination-{{ f.id }}-{{ value }}">{{ label }}</label>
-<select id="destination-{{ f.id }}-{{ value }}" name="{{ value }}_destination" data-fleet-destination-target="{{ value }}">
-<option value="">Choisir une planète découverte compatible</option>
-{% for target in destination_choices.groups[value] %}{% if target.id!=f.homePlanet.id %}
-<option value="{{ target.id }}" data-system-coordinates="{{ target.systemCoordinates }}" {{ prefill.planet==target.id?'selected':'' }}>{{ target.label }}</option>
+<select id="destination-{{ f.id }}-{{ value }}" name="{{ value }}_destination" data-fleet-destination-target="choice">
+<option value="">{{ prefill.mission=='explore' ? 'Choisir un système non exploré' : 'Choisir une planète découverte compatible' }}</option>
+{% for target in destination_choices.groups[value] %}{% if target.type=='system' or target.id!=f.homePlanet.id %}
+<option value="{{ target.id }}" data-system-coordinates="{{ target.systemCoordinates }}" {{ (target.type=='system' ? prefill.system==target.id : prefill.planet==target.id)?'selected':'' }}>{{ target.label }}</option>
 {% endif %}{% endfor %}
 </select>
 </div>
 {% endfor %}
 <div data-fleet-destination-target="panel" data-mode="custom">
-<label for="destination-search-{{ f.id }}">Pseudonyme du commandant</label>
+<label data-fleet-destination-target="searchLabel" for="destination-search-{{ f.id }}">{{ prefill.mission=='explore' ? 'Rechercher un système par coordonnées' : 'Pseudonyme du commandant' }}</label>
 <div class="fleet-destination-search">
 <input id="destination-search-{{ f.id }}" type="search" maxlength="40" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="destination-results-{{ f.id }}" aria-describedby="destination-search-help-{{ f.id }}" data-fleet-destination-target="search" data-action="input->fleet-destination#search keydown->fleet-destination#navigate blur->fleet-destination#blur">
 <ul id="destination-results-{{ f.id }}" class="fleet-destination-suggestions" role="listbox" aria-label="Planètes découvertes proposées" data-fleet-destination-target="results" hidden></ul>
 </div>
-<small id="destination-search-help-{{ f.id }}">Deux caractères minimum. Seules les planètes découvertes dans cet univers et compatibles avec la mission sont proposées.</small>
+<small data-fleet-destination-target="searchHelp" id="destination-search-help-{{ f.id }}">{{ prefill.mission=='explore' ? 'Deux caractères minimum. Coordonnées des systèmes non explorés uniquement.' : 'Deux caractères minimum. Planètes découvertes dans cet univers et compatibles avec la mission uniquement.' }}</small>
 <p class="muted" role="status" data-fleet-destination-target="searchStatus"></p>
 <div data-fleet-fields-target="coordinate">
 <label for="coordinates-{{ f.id }}">Coordonnées de destination</label>
@@ -31,4 +31,4 @@
 </div>
 <noscript><p>Utilisez les coordonnées pour une destination personnalisée.</p></noscript>
 </div>
-<p class="muted fleet-pnj-help">PNJ : Attaque pour combattre sans capture ni butin ; Conquête JcE pour capturer selon les conditions de l’univers. Pour explorer un système inconnu, utilisez Destination personnalisée.</p>
+<p class="muted fleet-pnj-help">PNJ : Attaque pour combattre sans capture ni butin ; Conquête JcE pour capturer selon les conditions de l’univers. Exploration propose uniquement les coordonnées des systèmes non explorés.</p>
