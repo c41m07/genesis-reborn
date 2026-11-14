@@ -2,8 +2,9 @@
 
 namespace App\Tests\Integration;
 
-use App\Entity\{Fleet, FleetShip, Galaxy, Planet, PlanetBuilding, PlanetDefense, Player, PlayerTechnology, PlayerUniverse, Universe, SolarSystem};
-use App\Service\Colony\{ColonyView, ResourceService};
+use App\Entity\{Fleet, FleetShip, Galaxy, Planet, PlanetBuilding, PlanetDefense, Player, PlayerDiscovery, PlayerTechnology, PlayerUniverse, Universe, SolarSystem};
+use App\Repository\GameRepository;
+use App\Service\Colony\{ColonyView, EmpireDetails, ResourceService};
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -150,5 +151,63 @@ final class ColonyPreparationTest extends KernelTestCase
             fwrite(STDOUT, "\nREWORK_METRICS ".$section.' '.json_encode($samples, JSON_THROW_ON_ERROR)."\n");
         }
         self::assertNotEmpty($data['technology_tree']);
+    }
+
+    public function testDiscoveredPlanetsAreGroupedAndExcludeUnknownSystemsAndOtherUniverses(): void
+    {
+        $knownIds = [];
+        for ($index = 0; $index < 12; ++$index) {
+            $system = new SolarSystem();
+            $system->galaxy = $this->planet->solarSystem->galaxy;
+            $system->name = 'Système synthétique '.$index;
+            $system->coordX = ($index + 1) * 3;
+            $system->coordY = 0;
+            if ($index === 11) {
+                $universe = new Universe();
+                $universe->slug = 'foreign-rework';
+                $universe->name = 'Autre univers';
+                $galaxy = new Galaxy();
+                $galaxy->universe = $universe;
+                $galaxy->name = 'Autre galaxie';
+                $this->em->persist($universe);
+                $this->em->persist($galaxy);
+                $system->galaxy = $galaxy;
+            }
+            $planet = new Planet();
+            $planet->solarSystem = $system;
+            $planet->position = 1;
+            $planet->name = 'Monde synthétique '.$index;
+            $this->em->persist($system);
+            $this->em->persist($planet);
+            // Inclure une découverte incohérente : l’univers doit quand même être refusé.
+            if ($index !== 10) {
+                $discovery = new PlayerDiscovery();
+                $discovery->playerUniverse = $this->membership;
+                $discovery->solarSystem = $system;
+                $this->em->persist($discovery);
+            }
+            $this->em->flush();
+            if ($index < 10) $knownIds[] = $system->id;
+        }
+        $repository = self::getContainer()->get(GameRepository::class);
+        $holder = self::getContainer()->get('doctrine.debug_data_holder');
+        $holder->reset();
+        self::assertCount(10, $repository->discoveredPlanets($this->membership));
+        self::assertLessThan(4, count($holder->getData()['default'] ?? []));
+        self::assertCount(2, $repository->discoveredPlanets($this->membership, array_slice($knownIds, 0, 2)));
+        self::assertSame([], $repository->discoveredPlanets($this->membership, []));
+    }
+
+    public function testFleetDetailsKeepOwnedCompositionsAndExcludeAnotherMembership(): void
+    {
+        $fleet = $this->em->getRepository(Fleet::class)->findOneBy(['playerUniverse' => $this->membership]);
+        $foreign = clone $fleet;
+        $foreign->id = $fleet->id + 100;
+        $foreign->playerUniverse = clone $this->membership;
+        $foreign->playerUniverse->id = $this->membership->id + 100;
+        $details = self::getContainer()->get(EmpireDetails::class)->fleets($this->membership, [$fleet, $foreign]);
+        self::assertSame([$fleet->id], array_keys($details));
+        self::assertSame(7, $details[$fleet->id]['ships'][0]['quantity']);
+        self::assertSame([], self::getContainer()->get(EmpireDetails::class)->fleets($this->membership, [$foreign]));
     }
 }

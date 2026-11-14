@@ -37,11 +37,10 @@ final class ColonyController extends AbstractController
     {
         $membership=$this->context->membership();
         $planets=$this->repo->planets($membership->universe,$membership);
-        $available=array_values(array_filter($this->repo->planets($membership->universe,null,true),static fn(Planet $planet): bool => !$planet->npcPlanet));
         $positionModifiers=[];$activities=[];
         foreach($planets as $planet) $activities[$planet->id]=count($this->repo->queue($planet));
         foreach($planets as $planet) $positionModifiers[$planet->id]=$resources->positionProductionModifiers($planet);
-        return $this->render('colony/planets.html.twig',['membership'=>$membership,'planets'=>$planets,'available_planets'=>$available,'position_modifiers'=>$positionModifiers,'activities'=>$activities,'table_view'=>$request->query->get('view')==='table','comparison_resource'=>in_array($request->query->getString('resource'),['metal','nano','hydrogen','antimatter','electricity'],true)?$request->query->getString('resource'):'metal','planet_details'=>$details->planets($membership)]);
+        return $this->render('colony/planets.html.twig',['membership'=>$membership,'planets'=>$planets,'position_modifiers'=>$positionModifiers,'activities'=>$activities,'table_view'=>$request->query->get('view')==='table','comparison_resource'=>in_array($request->query->getString('resource'),['metal','nano','hydrogen','antimatter','electricity'],true)?$request->query->getString('resource'):'metal','planet_details'=>$details->planets($membership)]);
     }
     #[Route('/planetes/{id}',name:'app_colony',methods:['GET'],requirements:['id'=>'\d+'])]
     public function show(int $id,Request $request,ColonyView $view,\App\Service\Player\DailyLeaderboard $leaderboard,RelationResolver $relations,GameCatalog $catalog,\App\Service\Notification\JournalService $journal,\App\Service\Colony\EmpireDetails $details): Response
@@ -178,7 +177,7 @@ final class ColonyController extends AbstractController
         $m=$this->context->membership();$known=[];
         foreach($this->repo->all(PlayerDiscovery::class,['playerUniverse'=>$m]) as $d) $known[$d->solarSystem->id]=true;
         $systems=[];
-        foreach($this->repo->systems($m->universe) as $s) $systems[]=['system'=>$s,'known'=>isset($known[$s->id]),'planets'=>isset($known[$s->id])?$this->repo->all(Planet::class,['solarSystem'=>$s]):[]];
+        foreach($this->repo->systems($m->universe) as $s) $systems[]=['system'=>$s,'known'=>isset($known[$s->id]),'planets'=>[]];
         $galaxiesById = [];
         foreach ($systems as $row) {
             $galaxiesById[$row['system']->galaxy->id] = $row['system']->galaxy;
@@ -213,6 +212,15 @@ final class ColonyController extends AbstractController
             throw $this->createNotFoundException('Galaxie inaccessible dans cet univers.');
         }
         $systems = array_values(array_filter($systems, fn (array $row): bool => $selectedGalaxy !== null && $row['system']->galaxy->id === $selectedGalaxy->id));
+        $planetsBySystem = [];
+        $systemIds = array_map(static fn (array $row): int => $row['system']->id, $systems);
+        foreach ($this->repo->discoveredPlanets($m, $systemIds) as $planet) {
+            $planetsBySystem[$planet->solarSystem->id][] = $planet;
+        }
+        foreach ($systems as &$row) {
+            $row['planets'] = $planetsBySystem[$row['system']->id] ?? [];
+        }
+        unset($row);
 
         $selectedId = $request->query->getInt('system');
         $selectedSystem = null;

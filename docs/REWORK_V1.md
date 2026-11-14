@@ -34,7 +34,7 @@ worktrees et archives historiques exclus des transformations mécaniques.
 | 3 | ColonyController, ColonyView, CatalogueInsights | Préparation ciblée et quantités regroupées | Implémentation et tests ciblés validés ; recette finale à faire |
 | 4 | DiplomacyController, GuildProjectController | Onglet validé avant listes ; dons personnels séparés du détail | Tests ciblés validés |
 | 5 | Rapports, classements, profils, messages | Rapports de page et contacts regroupés ; comptage SQL de guilde | Tests ciblés validés, exceptions documentées |
-| 6 | Carte, planètes, destinations, flottes | Lecture des planètes par système avant sélection de galaxie | À traiter |
+| 6 | Carte, planètes, destinations, flottes | Mondes découverts et compositions privées regroupés | Tests ciblés validés |
 | 7 | AdminController et historiques | Toutes les rubriques préparées à chaque ouverture | À examiner en détail |
 | 8 | colony-live, fragments | HTML complet et réponses tardives à vérifier | À examiner en détail |
 | 9 | Assets, HTML, accessibilité | Coûts non mesurés ; préserver présentation et identité | À examiner en détail |
@@ -98,7 +98,7 @@ isolé, pas une page HTTP complète. Aucun pourcentage global n’est déduit.
 
 ## Reprise
 
-- Lot actuel : 5/12.
+- Lot actuel : 6/12.
 - Dernière étape validée : fixture isolée et mesure avant changement.
 - Contrôle en cours : suite PHP/Python de référence.
 - Référence du lot 1 : `9e62541`.
@@ -127,5 +127,15 @@ isolé, pas une page HTTP complète. Aucun pourcentage global n’est déduit.
   par le classement complet : exceptions restantes, pas d’amélioration revendiquée.
 - Messagerie et classements : 31 tests / 176 assertions réussis après regroupement
   des contacts ; aucune recherche paginée ni aucun état de lecture modifié.
-- Prochaine action : lot 6, carte et destinations ;
+- Lot 6 : lecture groupée des planètes découvertes dans la galaxie sélectionnée,
+  avec filtre d’univers serveur ; suggestions limitées aux mondes découverts
+  avant préparation ; stationnement limité aux colonies propres. La liste libre
+  inutilisée de Planètes est retirée après recherche de tous ses usages.
+  EmpireDetails regroupe les compositions après filtrage des flottes autorisées.
+  Les snapshots économiques, trajets et décisions de mission sont inchangés.
+- Validation : carte/destinations 16 tests / 309 assertions ; caractérisation
+  et accès 9 cas / 40 assertions (mesure optionnelle ignorée) ; stationnement
+  20 / 98, puis repli renforcé 1 / 5. Correction de fixture distincte `5d0417a`.
+  Le regroupement des combats et les snapshots par colonie restent à approfondir.
+- Prochaine action : lot 7, préparations administratives ;
   mesures comparables et validation cumulée à reprendre au lot 12.

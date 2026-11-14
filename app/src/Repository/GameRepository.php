@@ -236,6 +236,24 @@ SQL;
         return $this->em->createQueryBuilder()->select('s','g')->from(SolarSystem::class,'s')->join('s.galaxy','g')->where('g.universe = :u')->setParameter('u',$u)->orderBy('s.id','ASC')->getQuery()->getResult();
     }
 
+    /** @param list<int>|null $systemIds
+     *  @return list<Planet>
+     */
+    public function discoveredPlanets(PlayerUniverse $membership, ?array $systemIds = null): array
+    {
+        if ($systemIds === []) return [];
+        // La découverte et l’univers sont filtrés en base, avant toute sérialisation.
+        $query = $this->em->createQueryBuilder()->select('p', 's', 'g', 'owner', 'player', 'former')
+            ->from(Planet::class, 'p')->join('p.solarSystem', 's')->join('s.galaxy', 'g')
+            ->leftJoin('p.owner', 'owner')->leftJoin('owner.player', 'player')->leftJoin('owner.formerPlayer', 'former')
+            ->join(PlayerDiscovery::class, 'd', 'WITH', 'd.solarSystem = s AND d.playerUniverse = :membership')
+            ->where('g.universe = :universe')->setParameter('membership', $membership)->setParameter('universe', $membership->universe);
+        if ($systemIds !== null) {
+            $query->andWhere('s.id IN (:systems)')->setParameter('systems', $systemIds);
+        }
+        return $query->orderBy('p.id', 'ASC')->getQuery()->getResult();
+    }
+
     /** @return list<Fleet> */
     public function incomingAttackFleets(PlayerUniverse $viewer): array
     {

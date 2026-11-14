@@ -44,7 +44,7 @@ final class DestinationCatalogue
             return $result;
         }
         $owned=$this->repo->planets($viewer->universe,$viewer);
-        $others=array_filter($this->repo->planets($viewer->universe),static fn(Planet $p):bool=>$p->owner?->id!==$viewer->id);
+        $others=$mission==='station' ? [] : array_filter($this->repo->discoveredPlanets($viewer),static fn(Planet $p):bool=>$p->owner?->id!==$viewer->id);
         foreach([...$owned,...array_values($others)] as $planet) {
             if(!isset($known[$planet->solarSystem->id])) continue;
             if($query!==null && ($planet->owner?->player===null || mb_stripos($planet->owner->player->username,$query)===false)) continue;
