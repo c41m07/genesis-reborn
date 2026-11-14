@@ -30,3 +30,23 @@ body.authenticated .message-entry .message-report[open]{grid-column:1/-1;max-wid
 body.authenticated .message-entry .message-report summary{width:44px;margin-left:auto}
 body.authenticated .message-entry .message-report form{min-width:0;margin-top:10px}
 @media(max-width:740px){body.authenticated .message-entry{max-width:100%}}
+
+body.authenticated .message-compose-help{margin:0;padding:0 14px 12px;color:var(--text);font-size:12px;line-height:1.5}
+
+body.authenticated .message-content{min-width:0;font-size:13px;line-height:1.65;overflow-wrap:anywhere;color:inherit}
+body.authenticated .message-content :is(p,ul,ol,blockquote,pre){margin:8px 0}
+body.authenticated .message-content :is(p,li,blockquote,code){color:inherit}
+body.authenticated .message-content :is(ul,ol){padding-left:24px}
+body.authenticated .message-content blockquote{border-left:3px solid currentColor;padding-left:12px}
+body.authenticated .message-content pre{max-width:100%;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}
+body.authenticated .message-content code{font-size:.95em}
+body.authenticated .message-content a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+body.authenticated .message-content a:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+body.authenticated .message-markdown-help{padding:0 14px 12px;font-size:12px}
+body.authenticated .message-markdown-help summary{cursor:pointer;min-height:24px}
+body.authenticated .message-markdown-help summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+body.authenticated .message-markdown-help p{margin:8px 0;overflow-wrap:anywhere}
+
+body.authenticated .message-content .message-plain{white-space:pre-wrap}
+body.authenticated .message-meta time{color:inherit}
+body.authenticated[data-theme=light] .inbox-item.active small{color:#44545f}

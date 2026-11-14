@@ -714,3 +714,14 @@ Le score reste `1 + Analyse tactique de l’espion − Analyse tactique adverse 
 Les profils sont consultables par les joueurs connectés du même univers, depuis le classement, les messages et les membres de guilde. Ils affichent uniquement pseudo, guilde/tag et les cinq scores/rangs déjà publics du classement quotidien. Un nouveau joueur sans instantané reste « Pas encore classé ». Aucun email, activité précise, coordonnées ou effectif militaire n’est exposé ; aucun système de titres ou trophées n’est ajouté.
 
 Les pages des guildes sont consultables dans le même univers lorsque les guildes y sont activées. Elles montrent nom/tag, description, logo, bannière, commandant et nombre de membres. Seul le commandant actuel peut modifier la présentation, même si des grades disposent d’autres permissions déléguées. Les descriptions restent du texte simple, échappé à l’affichage ; les images sont contrôlées et réencodées. Voir les [contraintes et limites](PROFILS_JOUEURS_GUILDES.md).
+
+## Mise en forme de la messagerie — 14 novembre 2026
+
+Dans les messages privés, de guilde et du Global, Ctrl + Entrée envoie ; Entrée
+conserve les sauts de ligne. Les nouveaux messages acceptent gras, italique,
+listes, citations, code et liens HTTP/HTTPS. HTML brut et images ne sont pas
+exécutés ou chargés. Les anciens messages restent du texte simple.
+Le bouton Envoyer reste disponible sans JavaScript ; un envoi répété depuis le
+même formulaire ne crée pas de second message ni de seconde notification.
+La limite de 1 à 2 000 caractères et les droits par univers restent identiques.
+Voir le [guide](MESSAGERIE_MARKDOWN.md).

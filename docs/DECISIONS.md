@@ -1618,3 +1618,20 @@ Le propriétaire autorise explicitement GD et la reconstruction locale des image
 Les présentations sont séparées dans `guild_profile`, sans ajouter de colonnes à la table des guildes existantes. Version de formulaire et verrou de guilde empêchent une écriture périmée ou un double envoi d’images.
 Les fichiers restent privés sous `var/guild-media`, servis après contrôle de l’univers, avec noms générés et volume de production dédié. La sauvegarde SQL ne contient pas ces fichiers.
 La migration est seulement préparée ; aucune application à une base existante, restauration ou import de données n’est autorisé par ce lot. [Suivi et limites](PROFILS_JOUEURS_GUILDES.md).
+
+### Lot messagerie — 14 novembre 2026
+
+Après fusion autorisée de la PR #61 dans dev (2170607), le lot 4 applique les
+choix validés aux messages privés, de guilde et du Global. Ajout de
+league/commonmark autorisé explicitement par le propriétaire, sans nouveau
+parseur maison. Sous-ensemble explicite et liens HTTP/HTTPS seulement.
+Les formats sont persistés : messages existants plain, nouveaux envois markdown.
+Identifiant de formulaire et unicité par expéditeur protègent les répétitions
+sous les verrous existants, sans interdire deux envois intentionnels du même
+texte depuis deux formulaires. Aucune règle de jeu ou valeur modifiée.
+Migration créée, non appliquée à une base existante ; autorisation et sauvegarde
+vérifiée restent nécessaires. [Suivi](MESSAGERIE_MARKDOWN.md).
+
+Le CSRF des trois formulaires d’envoi est lié à l’empire d’ouverture : après un
+changement d’univers dans un autre onglet, le formulaire doit être rechargé.
+Ce contrôle refuse un contexte périmé sans élargir les droits d’envoi.

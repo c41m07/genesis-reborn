@@ -5,7 +5,7 @@
 Branche `feature/profils-joueurs-guildes`, issue de dev `4c13f20` après fusion
 autorisée de la PR #60 et sa CI complète (925 PHP, 13 Python, 192 navigateur).
 Complexités : profils 3/5 ; personnalisation et stockage des guildes 4/5.
-Branche publiée avec autorisation dans la [PR #61 en brouillon](https://github.com/c41m07/genesis-reborn/pull/61) vers dev. Aucun accord de fusion de ce lot ni déploiement Alpha.
+La [PR #61](https://github.com/c41m07/genesis-reborn/pull/61) est fusionnée avec autorisation dans dev au commit 2170607. Cinq jobs quality réussis sur 6389774 : 952 PHP / 212 191 assertions, 13 Python et 194 parcours navigateur. Le propriétaire a classé GitGuardian comme identifiant de test (skipped), sans réécriture d’historique. Aucun déploiement Alpha.
 La modification préexistante de `docs/PARCOURS_UI_UX.md` est conservée hors du lot.
 
 ## Informations et accès validés
@@ -83,8 +83,7 @@ Les cinq jobs quality de la CI sur `03dcfbb` ont réussi : 952 tests PHP /
 sauvegarde/restauration isolées. GitGuardian a signalé le mot de passe fixe
 d’une fixture ; remplacé par une valeur générée à chaque test, sans désactiver
 le contrôle. Reprise locale : 14 tests du contrôleur / 84 assertions réussis.
-La CI et le contrôle externe sur la dernière version de la PR restent requis
-avant fusion.
+Cette reprise a ensuite été validée dans la CI complète de 6389774 ; GitGuardian a été classé comme identifiant de test par le propriétaire avant la fusion autorisée.
 Consulter la PR pour le statut courant de la CI sur sa dernière version.
 Aucune migration de la base habituelle ou publication Alpha n’est effectuée.
 
