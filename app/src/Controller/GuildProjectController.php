@@ -39,15 +39,18 @@ final class GuildProjectController extends AbstractController
         $project=$repo->find(GuildProject::class,$id);
         if(!$guild || !$catalog->forUniverse($actor->universe)['features']['guilds_enabled'] || !$project || $project->guildId!==$guild->id || $project->universe->id!==$actor->universe->id) throw $this->createNotFoundException('Projet inaccessible.');
         return $this->render('player/guild_project.html.twig',[
-            'membership'=>$actor,'guild'=>$guild,'project'=>$project,'row'=>$this->projectRow($project,$actor,$repo,$rules,$boosts),
+            'membership'=>$actor,'guild'=>$guild,'project'=>$project,'row'=>$this->projectRow($project,$actor,$repo,$rules,$boosts,true),
             'readOnly'=>$vacations->isActive($actor),'planets'=>$repo->planets($actor->universe,$actor),'resources'=>$catalog->rules()['resources'],
         ]);
     }
 
-    private function projectRow(GuildProject $project,PlayerUniverse $actor,GameRepository $repo,GuildProjectRules $rules,BoostGrantService $boosts): array
+    private function projectRow(GuildProject $project,PlayerUniverse $actor,GameRepository $repo,GuildProjectRules $rules,BoostGrantService $boosts,bool $withContributions=false): array
     {
         $contributions=[];$own=[];
-        foreach($repo->all(GuildProjectContribution::class,['project'=>$project]) as $row) {
+        // La liste affiche seulement le don personnel ; les identités restent dans la fiche.
+        $rows=$withContributions ? $repo->all(GuildProjectContribution::class,['project'=>$project]) : [];
+        if(!$withContributions) $own=$repo->one(GuildProjectContribution::class,['project'=>$project,'playerUniverseId'=>$actor->id])?->resources??[];
+        foreach($rows as $row) {
             $player=$repo->find(PlayerUniverse::class,$row->playerUniverseId);
             $contributions[]=['name'=>$player?->getDisplayName()??'Ancien membre #'.$row->playerUniverseId,'resources'=>$row->resources];
             if($row->playerUniverseId===$actor->id) $own=$row->resources;

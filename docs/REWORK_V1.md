@@ -32,7 +32,7 @@ worktrees et archives historiques exclus des transformations mécaniques.
 | 1 | Inventaire, mesures, isolation | Référence et garde de base nécessaires | Socle ciblé validé, inventaire détaillé à compléter |
 | 2 | Conventions et lisibilité | ColonyView très condensé ; aucun formateur PHP installé | Dépendances clarifiées sur le périmètre prioritaire |
 | 3 | ColonyController, ColonyView, CatalogueInsights | Préparation ciblée et quantités regroupées | Implémentation et tests ciblés validés ; recette finale à faire |
-| 4 | DiplomacyController, GuildProjectService | Onglet choisi après préparation de toutes les relations | À examiner en détail |
+| 4 | DiplomacyController, GuildProjectController | Onglet validé avant listes ; dons personnels séparés du détail | Tests ciblés validés |
 | 5 | Rapports, classements, profils, messages | Recherche déjà paginée ; enrichissements à vérifier | À examiner en détail |
 | 6 | Carte, planètes, destinations, flottes | Lecture des planètes par système avant sélection de galaxie | À traiter |
 | 7 | AdminController et historiques | Toutes les rubriques préparées à chaque ouverture | À examiner en détail |
@@ -94,7 +94,7 @@ isolé, pas une page HTTP complète. Aucun pourcentage global n’est déduit.
 
 ## Reprise
 
-- Lot actuel : 3/12.
+- Lot actuel : 4/12.
 - Dernière étape validée : fixture isolée et mesure avant changement.
 - Contrôle en cours : suite PHP/Python de référence.
 - Référence du lot 1 : `9e62541`.
@@ -103,5 +103,15 @@ isolé, pas une page HTTP complète. Aucun pourcentage global n’est déduit.
   existant conservé. Pas de formateur ajouté ni de formatage global : les autres
   écarts sont traités seulement avec les domaines réellement modifiés.
 - Questions en attente : aucune ; actualisation réseau de dev autorisée et effectuée.
-- Prochaine action : lot 4, préparations de la diplomatie et des projets ;
+- Lot 4 : onglet validé avant les chargements ; recherche de joueurs uniquement
+  dans Relations commandants ; membres et historiques des guildes chargés pour
+  les fiches affichées ; grades/attributions seulement sur leurs onglets. Les
+  compteurs de propositions restent communs, sans enrichir tous les joueurs.
+  La liste des projets ne résout plus les identités des autres contributeurs ;
+  la fiche garde le bilan complet. Permissions et écritures inchangées.
+- Vérifications du lot 4 : 80 tests / 328 assertions, puis 44 / 211 après le
+  ciblage des commandants ; régression du compteur sur cinq onglets : 1 / 15.
+  Aucun style ni interaction modifié ; les listes diplomatiques affichées et les
+  détails des projets gardent encore des lectures par élément, à regrouper ensuite.
+- Prochaine action : lot 5, rapports, classements, profils et messages ;
   mesures comparables et validation cumulée à reprendre au lot 12.

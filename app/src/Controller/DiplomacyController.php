@@ -1,6 +1,6 @@
 <?php
 namespace App\Controller;
-use App\Entity\{PlayerUniverse,Guild,GuildMember,GuildRank,GuildRelation};
+use App\Entity\{AllianceContract,PlayerUniverse,Guild,GuildMember,GuildRank,GuildRelation};
 use App\Service\Universe\UniverseContext;
 use App\Service\Player\{RelationResolver,DiplomacyService,DiplomacyAccessPolicy,GuildRankService,GuildPresence};
 use App\Service\Catalog\GameCatalog;
@@ -36,16 +36,41 @@ final class DiplomacyController extends AbstractController
             return $this->redirectToRoute('app_diplomacy',$redirect);
         }
         $own=$relations->guild($m);
+        // Valider l’onglet avant de préparer ses listes et formulaires.
+        $tabs=$own ? ['guilds'=>'Ma guilde','members'=>'Membres','ranks'=>'Grades et permissions','diplomacy'=>'Relations guildes','relations'=>'Relations commandants'] : ['guilds'=>'Créer une guilde','join'=>'Rejoindre une guilde','relations'=>'Relations commandants'];
+        $tab=$request->query->getString('tab','guilds');
+        if(!$own && ($tab==='diplomacy' || ($tab==='guilds' && $search!==''))) $tab='join';
+        if(!isset($tabs[$tab])) $tab='guilds';
+        $incomingPersonalCount=0;
+        foreach([
+            ...$repo->all(AllianceContract::class,['playerA'=>$m,'status'=>['pending','peace_pending']]),
+            ...$repo->all(AllianceContract::class,['playerB'=>$m,'status'=>['pending','peace_pending']]),
+        ] as $contract) {
+            $peer=$contract->playerA->id===$m->id ? $contract->playerB : $contract->playerA;
+            if($contract->proposer->id!==$m->id && $peer->isPlayerControlled() && $peer->universe->id===$m->universe->id) ++$incomingPersonalCount;
+        }
         $players=[];$searchPlayers=[];
-        foreach($repo->all(PlayerUniverse::class,['universe'=>$m->universe]) as $pu) {
+        foreach($tab==='relations' ? $repo->all(PlayerUniverse::class,['universe'=>$m->universe]) : [] as $pu) {
             if($pu->id===$m->id || !$pu->isPlayerControlled()) continue;
             $contract=$relations->contract($m,$pu);
             $allied=$relations->allied($m,$pu);
             $enemy=$relations->enemy($m,$pu);
             if($contract || $allied || $enemy) $players[]=['player'=>$pu,'contract'=>$contract,'allied'=>$allied,'enemy'=>$enemy,'guildStatus'=>$relations->guildStatus($own,$relations->guild($pu))];
         }
-        foreach($repo->searchMessageRecipients($m,$search) as $pu) $searchPlayers[]=['player'=>$pu,'contract'=>$relations->contract($m,$pu),'allied'=>$relations->allied($m,$pu),'enemy'=>$relations->enemy($m,$pu),'guildStatus'=>$relations->guildStatus($own,$relations->guild($pu))];
-        $own=$relations->guild($m);$guilds=[];foreach($repo->all(Guild::class,['universe'=>$m->universe,'archivedAt'=>null]) as $g) $guilds[]=['guild'=>$g,'status'=>$relations->guildStatus($own,$g),'relation'=>$own && $own->id!==$g->id ? $repo->one(GuildRelation::class,$own->id<$g->id ? ['guildA'=>$own,'guildB'=>$g] : ['guildA'=>$g,'guildB'=>$own]) : null,'members'=>$repo->all(GuildMember::class,['guild'=>$g]),'history'=>$own && $own->id!==$g->id ? $repo->guildTreatyHistory($own,$g) : []];
+        if($tab==='relations') foreach($repo->searchMessageRecipients($m,$search) as $pu) $searchPlayers[]=['player'=>$pu,'contract'=>$relations->contract($m,$pu),'allied'=>$relations->allied($m,$pu),'enemy'=>$relations->enemy($m,$pu),'guildStatus'=>$relations->guildStatus($own,$relations->guild($pu))];
+        $guilds=[];
+        foreach($repo->all(Guild::class,['universe'=>$m->universe,'archivedAt'=>null]) as $guild) {
+            $isOwn=$own?->id===$guild->id;
+            $status=$relations->guildStatus($own,$guild);
+            $relation=$own && !$isOwn ? $repo->one(GuildRelation::class,$own->id<$guild->id ? ['guildA'=>$own,'guildB'=>$guild] : ['guildA'=>$guild,'guildB'=>$own]) : null;
+            $matchesSearch=mb_strlen($search)>=2 && mb_stripos($guild->name,$search)!==false;
+            $showDetails=($isOwn && in_array($tab,['guilds','members'],true))
+                || (!$isOwn && ($tab==='diplomacy' && ($status!=='neutral' || $relation?->proposal!==null || $matchesSearch)))
+                || ($tab==='join' && $matchesSearch);
+            $guilds[]=['guild'=>$guild,'status'=>$status,'relation'=>$relation,
+                'members'=>$showDetails ? $repo->all(GuildMember::class,['guild'=>$guild]) : [],
+                'history'=>$showDetails && $own && !$isOwn ? $repo->guildTreatyHistory($own,$guild) : []];
+        }
         $guildRelations=[];$guildSearchResults=[];
         foreach($guilds as $row) {
             if($own && $row['guild']->id===$own->id) continue;
@@ -53,18 +78,14 @@ final class DiplomacyController extends AbstractController
             if(mb_strlen($search)>=2 && mb_stripos($row['guild']->name,$search)!==false && count($guildSearchResults)<20) $guildSearchResults[]=$row;
         }
         $ownMember=$own ? $repo->one(GuildMember::class,['playerUniverse'=>$m]) : null;
-        $ranks=$own ? $repo->all(GuildRank::class,['guild'=>$own],['position'=>'ASC','id'=>'ASC']) : [];
+        $ranks=$own && in_array($tab,['members','ranks'],true) ? $repo->all(GuildRank::class,['guild'=>$own],['position'=>'ASC','id'=>'ASC']) : [];
         $rankAssignments=[];
-        if($ownMember) foreach($repo->all(GuildMember::class,['guild'=>$own]) as $member) {
+        if($ownMember && $tab==='members') foreach($repo->all(GuildMember::class,['guild'=>$own]) as $member) {
             if(!$access->canAssignRank($ownMember,$member,null)) continue;
             $rankAssignments[]=['member'=>$member,'choices'=>array_values(array_filter($ranks,fn(GuildRank $rank): bool=>$access->canAssignRank($ownMember,$member,$rank)))];
         }
         $ownRow=null;
         foreach($guilds as $row) if($own && $row['guild']->id===$own->id) $ownRow=$row;
-        $tabs=$own ? ['guilds'=>'Ma guilde','members'=>'Membres','ranks'=>'Grades et permissions','diplomacy'=>'Relations guildes','relations'=>'Relations commandants'] : ['guilds'=>'Créer une guilde','join'=>'Rejoindre une guilde','relations'=>'Relations commandants'];
-        $tab=$request->query->getString('tab','guilds');
-        if(!$own && ($tab==='diplomacy' || ($tab==='guilds' && $search!==''))) $tab='join';
-        if(!isset($tabs[$tab])) $tab='guilds';
         $selectedRank=$ranks[0]??null;
         if($request->query->has('rank')) {
             $selectedId=$request->query->getInt('rank');
@@ -74,7 +95,7 @@ final class DiplomacyController extends AbstractController
         $guildPermissions=[];
         foreach(DiplomacyAccessPolicy::PERMISSIONS as $permission=>$label) $guildPermissions[$permission]=$access->allows($ownMember,$permission);
         $memberPresence=$tab==='members' && $own && $ownRow && $catalog->forUniverse($m->universe)['features']['guilds_enabled'] ? $presence->forMember($m) : [];
-        $response=$this->render('player/diplomacy.html.twig',['memberPresence'=>$memberPresence,'tabs'=>$tabs,'tab'=>$tab,'ownRow'=>$ownRow,'selectedRank'=>$selectedRank,'ownMember'=>$ownMember,'ranks'=>$ranks,'rankAssignments'=>$rankAssignments,'guildPermissions'=>$guildPermissions,'rankPermissionLabels'=>DiplomacyAccessPolicy::PERMISSIONS,'membership'=>$m,'search'=>$search,'searchPlayers'=>$searchPlayers,'players'=>$players,'guilds'=>$guilds,'guildRelations'=>$guildRelations,'guildSearchResults'=>$guildSearchResults,'guildPreview'=>$own ? $repo->guildConversation($own,3) : [],'own'=>$own,'enabled'=>$catalog->forUniverse($m->universe)['features']['guilds_enabled']]);
+        $response=$this->render('player/diplomacy.html.twig',['incomingPersonalCount'=>$incomingPersonalCount,'memberPresence'=>$memberPresence,'tabs'=>$tabs,'tab'=>$tab,'ownRow'=>$ownRow,'selectedRank'=>$selectedRank,'ownMember'=>$ownMember,'ranks'=>$ranks,'rankAssignments'=>$rankAssignments,'guildPermissions'=>$guildPermissions,'rankPermissionLabels'=>DiplomacyAccessPolicy::PERMISSIONS,'membership'=>$m,'search'=>$search,'searchPlayers'=>$searchPlayers,'players'=>$players,'guilds'=>$guilds,'guildRelations'=>$guildRelations,'guildSearchResults'=>$guildSearchResults,'guildPreview'=>$own && $tab==='guilds' ? $repo->guildConversation($own,3) : [],'own'=>$own,'enabled'=>$catalog->forUniverse($m->universe)['features']['guilds_enabled']]);
         $response->headers->set('Cache-Control','private, no-store');
         return $response;
     }
