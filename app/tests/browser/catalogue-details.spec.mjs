@@ -85,6 +85,7 @@ test('Les 150 fiches expliquent leurs effets, bonus, accès et limites sur ordin
     await page.keyboard.press('Escape');
     dialog = await open('ships', 'probe');
     await expect(dialog).toContainText('Toutes les sondes envoyées en espionnage sont consommées');
+    for(const rule of ['Basique : 50 %','Intermédiaire : 40 %','Supérieur : 30 %','moyenne est pondérée','tranche complète de 5 sondes','limite de 20 points','aucun bonus de renseignement','essais Alpha']) await expect(dialog).toContainText(rule);
     await expect(dialog).toContainText('Aucun');
     await page.keyboard.press('Escape');
 
@@ -105,6 +106,7 @@ test('Les 150 fiches expliquent leurs effets, bonus, accès et limites sur ordin
         await page.setViewportSize({ width, height: 900 });
         for (const [group, slug] of [['buildings', 'mine_antimatter'], ['technologies', 'signature_masking'], ['ships', 'battleship'], ['defenses', 'ground_turret_anti_light']]) {
             dialog = await open(group, slug);
+            if(slug==='signature_masking') {await expect(dialog).toContainText('tranche complète de 5 sondes');await expect(dialog).toContainText('limite de 20 points');}
             const bounds = await dialog.boundingBox();
             expect(bounds.x).toBeGreaterThanOrEqual(0);
             expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);

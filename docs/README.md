@@ -9,6 +9,7 @@ une seule référence par sujet ; les anciens bilans ne décrivent pas l’état
 | Besoin | Référence |
 | --- | --- |
 | Comprendre les règles actuelles | [REGLES](REGLES.md) |
+| Comprendre la détection des sondes et les essais Alpha | [Espionnage](REGLES.md#espionnage) |
 | Retrouver un arbitrage produit | [DECISIONS](DECISIONS.md) |
 | Utiliser les guildes, les relations personnelles, les traités et les projets collectifs | [Guide guildes et alliances](GUIDE_GUILDES_ALLIANCES.md) |
 | Retrouver la revue, la fusion et les validations du chantier guildes | [Suivi guildes et alliances](GESTION_GUILDES_ALLIANCES.md) |

@@ -65,6 +65,9 @@ test('Espionnage PNJ : envoyer une sonde et consulter le rapport privé', async 
   await reportLink.click();
   await expect(page.getByRole('heading', { name: 'Rapport d’espionnage', exact: true })).toBeVisible();
   await expect(page.locator('.report-heading')).toContainText(reportName);
+  const risk=Number(queryIsolatedSql(process.env.BROWSER_ROUTER,`SELECT detection_chance FROM espionage_report WHERE id=${Number(new URL(page.url()).pathname.split('/').pop())}`));
+  expect(risk).toBeGreaterThanOrEqual(5);expect(risk).toBeLessThanOrEqual(95);
+  await expect(page.locator('.report-summary')).toContainText(`Risque de détection estimé : ${risk} %`);
   await expect(page.getByRole('status')).toContainText(/Sondes détectées|catégorie.*renseignements obtenue/);
   await expect(page.getByRole('link', { name: 'Retour aux rapports' })).toBeVisible();
 

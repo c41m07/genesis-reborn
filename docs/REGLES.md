@@ -44,7 +44,7 @@ Guildes : recrutement ouvert provisoire, adhésion exclusive dans chaque univers
 
 PNJ : les planètes PNJ découvertes du même univers peuvent être combattues par la mission Attaque, sans capture ni butin de ressources PNJ. Leur capture reste réservée à Conquête JcE, avec vaisseau colonie survivant, place disponible et règles d’occupation existantes (24 heures lorsque ce mécanisme est activé). Les bâtiments et stocks suivent les règles de conservation de la capture. Les planètes vierges restent colonisables ; les joueurs actifs ou simplement inactifs ne sont pas conquérables. Les empires déjà oubliés suivent les règles spécifiques détaillées ci-dessous.
 
-Espionnage : une mission cible une planète connue du même univers autre que celles de l’émetteur. Elle transporte uniquement des sondes, détruites à l’arrivée. La détection avertit le propriétaire et bloque le rapport; les renseignements et rapports suivent les niveaux et règles résumés dans docs/archives/DECISIONS_INITIALES.md.
+Espionnage : une mission cible une planète connue du même univers autre que celles de l’émetteur. Elle transporte uniquement des sondes, détruites à l’arrivée. La détection avertit le propriétaire et bloque le rapport; les règles de détection actuelles sont décrites dans la section [Espionnage](#espionnage), les archives conservant les décisions initiales.
 
 Les classements, l’administration, les combats, les missions avancées et l’espionnage sont livrés. Les choix chiffrés de base figurent dans docs/archives/CHOIX_EQUILIBRAGE_2026-11-02.md; leur effet sur le rythme et la difficulté sera mesuré avec les joueurs Alpha.
 
@@ -689,3 +689,19 @@ conversation normale conserve son comportement de lecture. La recherche dans
 les rapports conserve leurs droits et archives personnelles. Les filtres par
 nom portent sur les noms actuellement conservés, sans reconstituer un historique
 absent. Les résultats sont paginés par 50 et les dates utilisent le fuseau choisi.
+
+## Espionnage
+
+Décision du 14 novembre 2026 : ces valeurs sont une base d’essais Alpha, pas un équilibrage confirmé par les joueurs. Configuration : `app/config/game/espionage.yaml`.
+
+Le risque de détection de base vaut 50 % pour une sonde Basique, 40 % pour une Intermédiaire et 30 % pour une Supérieure. Pour plusieurs rangs, prendre la moyenne pondérée par leurs quantités, sans arrondi intermédiaire. Le rang n’ajoute aucun renseignement.
+
+Le bonus défensif vaut `min(20, floor(sondes présentes / 5))` points : 0 à 4 sondes donnent 0 point ; 5 donnent 1 ; 99 donnent 19 ; 100 ou davantage donnent 20. Chaque sonde compte pour une unité, quel que soit son rang. Le périmètre reste celui du moteur : sondes dans les flottes inactives de la planète, en défense ou en orbite sur elle ; les trajets ne sont pas ajoutés. Une planète PNJ sans propriétaire conserve le décompte de sa garnison de sondes et ses recherches PNJ.
+
+`Détection brute = base pondérée + 10 × Discipline du secret adverse − 10 × Écran de brouillage de l’espion + (sondes envoyées − 1) + bonus défensif`.
+
+Les niveaux effectifs conservent la somme pondérée des rangs par 1 / 1,25 / 1,5625, arrondie comme auparavant. Limiter ensuite la détection brute entre 5 et 95 %, puis arrondir une seule fois à l’entier le plus proche. La chance de réussite vaut `100 − détection finale` : aucun investissement ne garantit automatiquement le verdict.
+
+Exemples à technologies égales : une sonde Supérieure face à 100 sondes défensives donne 30 + 20 = 50 % de détection et 50 % de réussite. Quatre Basiques et une Supérieure donnent une base de 46 %, puis 50 % de détection après les quatre sondes supplémentaires, sans défense locale.
+
+Le score reste `1 + Analyse tactique de l’espion − Analyse tactique adverse + sondes supplémentaires`, avec plancher nul et cinq catégories au maximum : ressources, bâtiments, recherches, flottes, défenses. Une détection ne révèle rien et avertit le propriétaire. Toutes les sondes envoyées sont consommées à l’arrivée, succès ou détection. Les coûts, prérequis, transports, permissions, vacances et protections restent inchangés. Les anciens rapports conservent le risque enregistré lors de leur résolution ; ils ne sont pas recalculés rétroactivement.

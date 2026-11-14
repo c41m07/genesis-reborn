@@ -29,13 +29,9 @@ final class EspionageService
         $targetTech = $target->owner ? $this->techLevel($target->owner, 'tactical_intelligence') : $this->npcResearch($target, 'tactical_intelligence');
         $targetCounter = $target->owner ? $this->techLevel($target->owner, 'intelligence_countermeasures') : $this->npcResearch($target, 'intelligence_countermeasures');
         $settings = $this->catalog->all('espionage');
-        $detectionChance = (int) round(max((int) ($settings['min_detection_chance'] ?? 5), min((int) ($settings['max_detection_chance'] ?? 95),
-            (int) ($settings['base_detection_chance'] ?? 50)
-            + (int) ($settings['intelligence_countermeasures_weight'] ?? 10) * $targetCounter
-            - (int) ($settings['stealth_weight'] ?? 10) * $senderStealth
-            + (int) ($settings['extra_probe_weight'] ?? 1) * max(0, $probeCount - 1)
-            + (int) ($settings['local_probe_weight'] ?? 1) * $this->localProbeCount($target)
-        )));
+        $probesByTier=[];
+        foreach($this->repo->all(FleetShip::class,['fleet'=>$fleet,'slug'=>'probe']) as $probe) $probesByTier[$probe->tier]=($probesByTier[$probe->tier]??0)+$probe->quantity;
+        $detectionChance=EspionageDetection::chance($probesByTier,$targetCounter,$senderStealth,$this->localProbeCount($target),$settings);
         $detected = $this->randomizer->getInt(1, 100) <= $detectionChance;
         $report = new EspionageReport();
         $report->sender = $fleet->playerUniverse;
