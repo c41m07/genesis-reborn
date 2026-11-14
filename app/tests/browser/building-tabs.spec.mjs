@@ -1,6 +1,16 @@
 import { test, expect } from './support/isolated-test.mjs';
 import { prepareOwnedColony, runIsolatedSql, queryIsolatedSql } from './support/game-fixtures.mjs';
 
+async function checkLockedArtwork(page, panel, tab) {
+    const image=panel.locator('.catalog-card-art img');
+    await page.mouse.move(0,0);await tab.focus();
+    await expect(image).toHaveCSS('filter','grayscale(1)');
+    await image.hover();await expect(image).toHaveCSS('filter','none');
+    await page.mouse.move(0,0);await expect(image).toHaveCSS('filter','grayscale(1)');
+    await panel.locator('.requirement a').first().focus();await expect(image).toHaveCSS('filter','none');
+    await tab.focus();await expect(image).toHaveCSS('filter','grayscale(1)');
+}
+
 test('Les rangs bâtiments partagent une carte accessible et conservent les filtres au rafraîchissement', async ({ page, browser }) => {
     test.setTimeout(180000);
     const errors = [];
@@ -56,6 +66,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(panel('superior').locator('img')).toHaveAttribute('src', /power_plant__superior.webp$/);
     await expect(panel('superior').locator('.requirement')).toContainText('Nécessite');
     await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('filter','grayscale(1)');
+    await checkLockedArtwork(page,panel('superior'),tab('superior'));
     await expect(panel('superior').locator('.card-body>form')).toHaveCount(0);
     await toggle.click();
     await expect(toggle).toHaveAttribute('aria-checked', 'false');
@@ -227,6 +238,7 @@ test('Recherche, chantier et défenses partagent les onglets et préservent leur
         await expect(panel('superior')).toBeVisible();
         await expect(tab('superior').locator('.building-rank-cross')).toBeVisible();
         await expect(panel('superior').locator('img')).toHaveAttribute('alt', /\S/);
+        await checkLockedArtwork(page,panel('superior'),tab('superior'));
         await toggle.click();
         await expect(tab('superior')).toBeHidden();
         await expect(panel('basic')).toBeVisible();
