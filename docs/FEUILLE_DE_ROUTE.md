@@ -1,4 +1,31 @@
-# Roadmap Genesis Reborn\n\n## Destinations et Stationnement — 14 novembre 2026\n\nLot 5 sur feature/destinations-stationnement depuis dev bc4930a, après fusion de la PR #62. Destinations initialement 4/5, réévaluées à 5/5 pour les interactions asynchrones ; Stationnement 5/5. Matrice des catégories et choix complémentaires de carburant, surplus, repli et attente validés. Implémentation locale terminée : 152 tests PHP ciblés et 11 parcours navigateur distincts réussis après reprises, 13 Python, compilation et installation vierge isolée validées. Suite initiale de 1 000 PHP : une attente obsolète corrigée puis reprise ciblée réussie ; CI complète encore requise. Migration préparée uniquement pour la base habituelle. Publication et PR en brouillon autorisées avec suivi/correction de CI, sans fusion ni application de migration. La [PR associée](https://github.com/c41m07/genesis-reborn/pulls?q=is%3Apr+head%3Afeature%2Fdestinations-stationnement) indique la CI courante. Voir [le suivi](DESTINATIONS_STATIONNEMENT.md).
+# Roadmap Genesis Reborn
+
+## Bunker : retrait du prérequis Blindage — 14 novembre 2026
+
+Lot 6 sur fix/prerequis-bunker depuis dev d0b4850, après fusion de la PR #63.
+Complexité 2/5 : retirer uniquement Blindage multicouche basique 2, conformément
+au choix validé. Chantier basique 3, laboratoire basique 2, conditions des autres
+rangs, coûts, durées et bonus conservés. Aucun service de permission, schéma,
+surcharge d’univers ou accès acquis modifié.
+Le test de régression reproduit avant correction le refus pour Blindage niveau 2.
+Après correction : 37 tests PHP ciblés / 17 030 assertions réussis (accès et refus
+de construction, atteignabilité des rangs, règles, coûts, détails et cartes HTTP).
+Validation Compose, syntaxe du catalogue et du wiki, contrôle du diff réussis.
+Comparaison intégrale de fortress.yaml à dev : seule l’entrée Blindage retirée.
+Aucun HTML/CSS/JavaScript modifié ; aucune nouvelle interaction d’interface.
+Suite complète et CI non relancées à ce stade ; CI complète exigée avant fusion.
+Publication et PR en brouillon vers dev autorisées, avec suivi/correction de CI.
+Le statut courant est dans la [PR associée](https://github.com/c41m07/genesis-reborn/pulls?q=is%3Apr+head%3Afix%2Fprerequis-bunker).
+Aucune fusion, migration ou livraison Alpha autorisée pour ce lot.
+
+## Destinations et Stationnement — 14 novembre 2026
+
+Lot 5 fusionné avec autorisation dans dev par la [PR #63](https://github.com/c41m07/genesis-reborn/pull/63),
+commit d0b4850. CI complète réussie sur 8c54627 : cinq jobs quality, GitGuardian,
+1 010 tests PHP / 212 487 assertions, 13 Python et 200 parcours navigateur ;
+compilation, lints, schéma et sauvegarde/restauration isolées réussis.
+Aucune migration de la base habituelle ni livraison Alpha. Le
+[suivi du lot](DESTINATIONS_STATIONNEMENT.md) conserve l’analyse et les reprises.
 
 ## Messagerie : raccourci et Markdown — 14 novembre 2026
 

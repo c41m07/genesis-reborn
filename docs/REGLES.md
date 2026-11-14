@@ -165,6 +165,18 @@ Une usine dont la production ne peut plus être stockée suspend ses consommatio
 
 Les valeurs et résultats de référence, la distinction entre délai d’accès et remboursement, les données existantes et les vérifications sont détaillés dans [BUILDING_BALANCE_2026-11-05.md](EQUILIBRAGE.md#production-des-batiments). Les surcharges d’univers peuvent toujours remplacer les valeurs de base. Les coûts et durées déjà payés en file restent conservés.
 
+### Bunker de défense — 14 novembre 2026
+
+Dans le catalogue par défaut, le déblocage initial du bunker basique exige le
+chantier spatial basique niveau 3 et le laboratoire basique niveau 2. Blindage
+multicouche basique niveau 2 n’est plus requis. Les prérequis supplémentaires
+des rangs Intermédiaire et Supérieur restent inchangés.
+
+Seul ce prérequis de recherche est retiré : coûts, durées, plafonds et bonus de
+points de structure des défenses au sol sont conservés. Aucune nouvelle courbe
+linéaire ni capacité de stockage n’est ajoutée. Les surcharges d’univers et les
+accès déjà acquis restent traités par les mécanismes existants.
+
 ### Limites par défaut des univers — 5 novembre 2026
 
 Le nombre maximum de vaisseaux par flotte est fixé par défaut à **1 000 000** et le plafond de planètes à **31**. Ces valeurs s’appliquent aux profils de référence et aux nouveaux univers. Les réglages personnalisés d’un univers restent prioritaires. Le plafond de planètes ne modifie pas les prérequis de recherche de colonisation.
