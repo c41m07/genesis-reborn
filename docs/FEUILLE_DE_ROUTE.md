@@ -16,7 +16,11 @@ Premier passage navigateur : 9/11 ; deux attentes de tri ont été ajustées pou
 conserver le départage des égalités. Reprise : détails des vols et contrôle axe
 réussis, puis redémarrage de l’environnement. Les deux parcours de tri et la
 suite PHP/Python restent sans bilan final ; Docker est indisponible après le
-redémarrage. Aucun push, fusion, migration ou livraison Alpha de ce lot.
+redémarrage. Branche publiée après autorisation dans la
+[PR #59 en brouillon vers dev](https://github.com/c41m07/genesis-reborn/pull/59).
+Les résultats de la CI complète sur la dernière version sont à consulter dans
+la PR ; les limites locales ci-dessus ne constituent pas son verdict.
+Aucune fusion, migration ni livraison Alpha de ce lot n’est autorisée.
 Le [suivi](EVOLUTIONS_INTERFACES_FLOTTES.md) distingue les lots
 suivants et les décisions validées du comportement encore à développer.
 

@@ -1749,9 +1749,13 @@ Vérifications locales :
 - `make test` interrompu avant bilan final : aucune réussite de la suite complète PHP/Python revendiquée.
 - Après redémarrage, Docker est indisponible. Contrôles locaux de syntaxe des deux contrôleurs PHP, des cinq templates Twig, des trois fichiers de tests JavaScript et du JSON du wiki réussis ; `git diff --check` réussi.
 
-Aucun push, PR, fusion ou déploiement de ce lot. Reprise requise : les deux tests
-de tri et la suite PHP/Python, puis CI complète sur PR avant toute fusion. Une
-publication de diagnostic en brouillon reste soumise à autorisation du propriétaire.
+Publication autorisée par le propriétaire dans la
+[PR #59 en brouillon vers dev](https://github.com/c41m07/genesis-reborn/pull/59).
+Le suivi de CI et la correction de ses échecs sont autorisés ; aucune fusion ni
+aucun déploiement ne le sont. Les deux parcours de tri et la suite PHP/Python
+sans bilan local doivent être couverts par la CI complète de la dernière version.
+Consulter les résultats dans la PR : les limites locales restent historiques
+et ne constituent pas le verdict de la CI.
 Aucune dépendance ni migration ajoutée. Le chapitre local du wiki sur les classements est synchronisé ; aucune publication du wiki Alpha n’est revendiquée.
 
 Lots suivants, après intégration de chaque lot précédent : simulateur 4/5 ; profils 3/5 et guildes 4/5 ; raccourci 2/5 et Markdown 4/5 ; destinations 4/5 et Stationnement 5/5 ; bunker 3/5.
