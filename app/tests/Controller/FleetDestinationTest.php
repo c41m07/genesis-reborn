@@ -80,6 +80,63 @@ final class FleetDestinationTest extends WebTestCase
         $discovery=new PlayerDiscovery();$discovery->playerUniverse=$criteria['playerUniverse'];$discovery->solarSystem=$planet->solarSystem;$this->em->persist($discovery);$this->em->flush();
     }
 
+    public function testFleetPageShowsOnlyTheActiveColonyAndScopedOrbitRequests(): void
+    {
+        $member=$this->player->currentPlayerUniverse;
+        $otherIdle=new Fleet();$otherIdle->playerUniverse=$member;$otherIdle->homePlanet=$this->own;$this->em->persist($otherIdle);
+        $ship=new FleetShip();$ship->fleet=$otherIdle;$ship->slug='probe';$ship->quantity=5;$this->em->persist($ship);
+        $create=function(Planet $origin,Planet $destination,string $mission,string $status) {
+            $fleet=new Fleet();$fleet->playerUniverse=$origin->owner;$fleet->homePlanet=$origin;$fleet->destination=$destination;
+            $fleet->mission=$mission;$fleet->status=$status;$fleet->departureAt=new \DateTimeImmutable();$fleet->arrivalAt=new \DateTimeImmutable('+1 day');
+            $this->em->persist($fleet);return $fleet;
+        };
+        $homeFlight=$create($this->home,$this->enemy,'attack','traveling');
+        $otherFlight=$create($this->own,$this->enemy,'attack','returning');
+        $homeOrbit=$create($this->home,$this->ally,'orbit','orbit_pending');
+        $otherOrbit=$create($this->own,$this->ally,'orbit','orbit_pending');
+        $homeIncoming=$create($this->ally,$this->home,'orbit','orbit_pending');
+        $otherIncoming=$create($this->ally,$this->own,'orbit','orbit_pending');
+        $foreignFlight=$create($this->foreign,$this->foreign,'explore','traveling');$this->em->flush();
+        foreach([[$this->home,$homeFlight,$homeOrbit,$homeIncoming,$otherFlight,$otherOrbit,$otherIncoming],[$this->own,$otherFlight,$otherOrbit,$otherIncoming,$homeFlight,$homeOrbit,$homeIncoming]] as [$planet,$flight,$orbit,$incoming,$hiddenFlight,$hiddenOrbit,$hiddenIncoming]) {
+            $this->client->request('GET','/planetes/'.$planet->id);self::assertResponseIsSuccessful();
+            $this->client->request('GET','/flottes');self::assertResponseIsSuccessful();
+            self::assertSelectorCount(1,'form[action="/flottes/envoyer"]');
+            self::assertSelectorExists('form[action="/flottes/envoyer"] input[name="origin"][value="'.$planet->id.'"]');
+            self::assertSelectorTextContains('.fleet-colony-scope',$planet->name);
+            self::assertSelectorTextContains('.ui-tabs','Missions actives (2)');
+            self::assertSelectorTextContains('.ui-tabs','Demandes d’orbite (2)');
+            foreach([$flight,$orbit] as $visible) self::assertSelectorExists('[data-active-fleet="'.$visible->id.'"]');
+            foreach([$hiddenFlight,$hiddenOrbit,$foreignFlight] as $hidden) self::assertSelectorNotExists('[data-active-fleet="'.$hidden->id.'"]');
+            foreach([$orbit,$incoming] as $visible) self::assertSelectorExists('[data-orbit-request="'.$visible->id.'"]');
+            foreach([$hiddenOrbit,$hiddenIncoming] as $hidden) self::assertSelectorNotExists('[data-orbit-request="'.$hidden->id.'"]');
+            self::assertSelectorNotExists('main a[href="'.static::getContainer()->get('router')->generate('app_combat_simulation').'"]');
+            self::assertSelectorExists('main a.inline-link[href="/flottes/compositions"]');
+            $this->client->request('GET','/flottes/surveillance',['orbits'=>1,'colony'=>$planet->id]);self::assertResponseIsSuccessful();
+            $payload=json_decode($this->client->getResponse()->getContent(),true,512,JSON_THROW_ON_ERROR);
+            self::assertStringContainsString('data-orbit-request="'.$incoming->id.'"',$payload['orbitHtml']);
+            self::assertStringNotContainsString('data-orbit-request="'.$hiddenIncoming->id.'"',$payload['orbitHtml']);
+        }
+        $view=static::getContainer()->get(\App\Service\Fleet\OrbitRequestView::class);
+        self::assertSame([],$view->forMember($member,$this->foreign));
+        self::assertSame([],$view->forMember($member,$this->ally));
+        foreach([$this->ally,$this->foreign] as $forbidden) {
+            $this->client->request('GET','/flottes/surveillance',['orbits'=>1,'colony'=>$forbidden->id]);self::assertResponseStatusCodeSame(404);
+        }
+        $this->client->request('GET','/planetes/'.$this->home->id);
+        $member=$this->em->find(PlayerUniverse::class,$member->id);
+        $this->own=$this->em->find(Planet::class,$this->own->id);
+        $service=static::getContainer()->get(\App\Service\Fleet\FleetCompositionService::class);
+        $saved=$service->save($member,0,'Sondes',['probe'=>['basic'=>1]],0,str_repeat('a',32));$plan=$service->plan($member,$saved,$this->own);
+        $this->client->request('GET','/flottes',['composition'=>$saved->id,'origin'=>$this->own->id,'confirmation'=>$plan['fingerprint']]);
+        self::assertResponseIsSuccessful();self::assertSelectorExists('input[name="origin"][value="'.$this->own->id.'"]');
+        self::assertSelectorTextContains('.fleet-colony-scope',$this->own->name);
+        self::assertSame('idle',$otherIdle->status);
+        $session=$this->client->getRequest()->getSession();$session->set('selected_planet_'.$member->id,$this->foreign->id);$session->save();
+        $fallback=static::getContainer()->get(GameRepository::class)->planets($member->universe,$member)[0];
+        $this->client->request('GET','/flottes');self::assertResponseIsSuccessful();
+        self::assertSelectorExists('input[name="origin"][value="'.$fallback->id.'"]');
+    }
+
     public function testGroupsAndSuggestionsExposeOnlyKnownPlanetsOfActiveUniverse(): void
     {
         $member=$this->player->currentPlayerUniverse;$repo=static::getContainer()->get(GameRepository::class);
@@ -111,6 +168,7 @@ final class FleetDestinationTest extends WebTestCase
         self::assertSame($this->own->solarSystem->id,$catalogue->resolve($member,'explore','friendly','',$this->own->id)->id);
         self::assertSame($this->npc->id,$catalogue->resolve($member,'attack','enemies','',$this->npc->id)->id);
         self::assertSame($this->hidden->solarSystem->id,$catalogue->resolve($member,'explore','custom',$this->hidden->solarSystem->galaxy->coordinateCode().':'.$this->hidden->solarSystem->number())->id);
+        $this->client->request('GET','/planetes/'.$this->home->id);
         $this->client->request('GET','/flottes');
         $token=$this->client->getCrawler()->filter('form[action="/flottes/envoyer"] input[name="_token"]')->first()->attr('value');
         $base=['_token'=>$token,'origin'=>$this->home->id,'mission'=>'explore','ships'=>['probe'=>['basic'=>1]],'ratio'=>1];
@@ -127,6 +185,7 @@ final class FleetDestinationTest extends WebTestCase
 
     public function testDefaultModePrefillAndPnjAttackChoicesKeepMissionRules(): void
     {
+        $this->client->request('GET','/planetes/'.$this->home->id);
         $this->client->request('GET','/flottes');self::assertResponseIsSuccessful();
         self::assertSelectorExists('input[name="destination_mode"][value="friendly"][checked]');
         $this->client->request('GET','/flottes',['mission'=>'attack','planet'=>$this->npc->id]);self::assertResponseIsSuccessful();

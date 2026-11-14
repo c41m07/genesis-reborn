@@ -51,6 +51,11 @@ test('Modération : signaler un message, refuser un CSRF invalide et classer le 
   await reporterPage.setViewportSize({ width: 390, height: 900 });
   expect(await reporterPage.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await expect(message.locator('.message-report')).not.toHaveAttribute('open', '');
+  expect(await message.locator('.message-bubble .message-report').count()).toBe(0);
+  const bubbleBox=await message.locator('.message-bubble').boundingBox(),reportBox=await message.locator('.message-report summary').boundingBox();
+  expect(reportBox.x).toBeGreaterThanOrEqual(bubbleBox.x+bubbleBox.width);
+  expect(reportBox.x+reportBox.width).toBeLessThanOrEqual(390);
+
   await reporterPage.screenshot({ path: testInfo.outputPath('messages-390.png'), fullPage: true, animations: 'disabled' });
   await message.locator('.message-report summary').focus();
   await reporterPage.keyboard.press('Enter');

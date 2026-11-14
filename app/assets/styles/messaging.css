@@ -19,3 +19,14 @@ body.authenticated .message-report summary{display:grid;place-items:center;min-w
 body.authenticated .message-report summary::-webkit-details-marker{display:none}
 body.authenticated .message-report summary:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 body.authenticated .message-report form{width:100%}
+
+body.authenticated .message-entry{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px;max-width:85%;min-width:0;align-self:flex-start}
+body.authenticated .message-entry--own{align-self:flex-end;justify-content:flex-end}
+body.authenticated .message-thread .message-entry .message-bubble{flex:0 1 auto;max-width:100%;margin:0;min-width:0}
+body.authenticated .message-entry:has(.message-report){display:grid;grid-template-columns:minmax(0,1fr) 44px}
+body.authenticated .message-entry:has(.message-report) .message-bubble{max-width:100%}
+body.authenticated .message-entry .message-report{flex:0 0 44px;max-width:44px;margin:0;padding:0;align-self:flex-end}
+body.authenticated .message-entry .message-report[open]{grid-column:1/-1;max-width:100%}
+body.authenticated .message-entry .message-report summary{width:44px;margin-left:auto}
+body.authenticated .message-entry .message-report form{min-width:0;margin-top:10px}
+@media(max-width:740px){body.authenticated .message-entry{max-width:100%}}

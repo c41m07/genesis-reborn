@@ -22,6 +22,13 @@ test('L’état Espionnage sans flotte conduit au chantier réel', async ({ page
   await expect(page.getByRole('heading', { name: 'Espionnage', level: 1 })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Aucune sonde exploratrice disponible' })).toBeVisible();
 
+  for(const width of [1440,390]) {
+    await page.setViewportSize({width,height:844});
+    const heading=await page.locator('.flight-operations > .section-heading').boundingBox();
+    const empty=await page.locator('.flight-operations > .flight-idle').boundingBox();
+    expect(empty.y).toBeGreaterThanOrEqual(heading.y+heading.height);
+    await expect(page.locator('.flight-operations > .flight-idle')).toContainText('cette colonie');
+  }
   await page.setViewportSize({ width: 390, height: 844 });
   await expect.poll(() => page.locator('.sidebar').evaluate(element => element.getBoundingClientRect().right)).toBeLessThanOrEqual(0);
   await expect(page.locator('.sidebar')).toHaveAttribute('aria-hidden', 'true');

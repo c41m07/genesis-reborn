@@ -58,7 +58,10 @@ final class EmpireDetailsTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('.empire-details[popover="auto"][role="region"]');
         self::assertSelectorExists('button.empire-name[popovertarget]');
-        self::assertSelectorNotExists('.empire-details summary');
+        self::assertSelectorNotExists('.empire-details:not(.resource-economy) summary');
+        self::assertSelectorCount(1,'.resource-economy summary');
+        self::assertSelectorTextSame('#resource-economy-electricity summary','Détail des consommations');
+        self::assertSelectorTextSame('#resource-economy-electricity caption','Consommation par production — tous rangs cumulés');
         $trigger=$crawler->filter('button.empire-name[popovertarget]')->first();
         $panel=$crawler->filter('#'.$trigger->attr('popovertarget'));
         self::assertCount(1,$panel);

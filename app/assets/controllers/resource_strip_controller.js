@@ -4,8 +4,15 @@ import { displayQuantity } from '../quantity.js';
 export default class extends Controller {
     static values = { url: String };
     static targets = ['protection', 'protectionLabel', 'protectionTime', 'toggle', 'compactStock'];
-    connect() { this.element.classList.add('resource-strip--collapsible'); this.tickProtection(); this.protectionTimer = setInterval(() => this.tickProtection(), 1000); this.timer = setInterval(() => this.refresh(), 10000); }
-    disconnect() { this.element.classList.remove('resource-strip--collapsible'); clearInterval(this.protectionTimer); clearInterval(this.timer); this.abort?.abort(); }
+    connect() {
+        this.stack = this.element.closest('.resource-event-stack');
+        this.frame = this.element.closest('.app-frame');
+        this.heightObserver = new ResizeObserver(() => {
+            this.frame?.style.setProperty('--resource-stack-height', `${(this.stack ?? this.element).getBoundingClientRect().height}px`);
+        });
+        this.heightObserver.observe(this.stack ?? this.element);
+        this.element.classList.add('resource-strip--collapsible'); this.tickProtection(); this.protectionTimer = setInterval(() => this.tickProtection(), 1000); this.timer = setInterval(() => this.refresh(), 10000); }
+    disconnect() { this.heightObserver?.disconnect(); this.frame?.style.removeProperty('--resource-stack-height'); this.element.classList.remove('resource-strip--collapsible'); clearInterval(this.protectionTimer); clearInterval(this.timer); this.abort?.abort(); }
     toggleDetails() {
         const expanded = this.element.classList.toggle('resource-strip--expanded');
         this.toggleTarget.setAttribute('aria-expanded', String(expanded));

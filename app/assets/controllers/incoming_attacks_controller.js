@@ -33,6 +33,8 @@ export default class extends Controller {
         try {
             const url = new URL(this.urlValue, location.origin);
             if (document.querySelector('[data-controller~="orbit-requests"]')) url.searchParams.set('orbits', '1');
+            const colony = document.querySelector('.fleet-page-layout[data-fleet-colony]')?.dataset.fleetColony;
+            if (colony && colony !== '0') url.searchParams.set('colony', colony);
             const galaxy = document.querySelector('[data-surveillance-galaxy]')?.dataset.surveillanceGalaxy;
             if (Number(galaxy) > 0) url.searchParams.set('galaxy', galaxy);
             const response = await fetch(url, { signal: this.abort.signal, headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, cache: 'no-store' });

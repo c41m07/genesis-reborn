@@ -1495,7 +1495,7 @@ Tests ciblés réussis ; CI complète sur cette dernière version avant fusion.
 
 Le lot UI/UX est fusionné dans `dev` par la PR #54. Le lot 2 part de `f3b9623`
 sur `feature/outils-strategiques-et-recherche`, dans la PR #55 distincte.
-Implémentation en cours de vérification, sans fusion ni déploiement.
+Intégré dans `dev` par la PR #55 après CI complète réussie. La PR #56 prépare l’Alpha ; aucun déploiement effectué.
 
 | Sous-tâche | Complexité | État |
 | --- | --- | --- |
