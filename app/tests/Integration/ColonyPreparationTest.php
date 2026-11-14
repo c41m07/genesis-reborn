@@ -133,20 +133,20 @@ final class ColonyPreparationTest extends KernelTestCase
         foreach (self::sections() as [$section]) {
             $samples = [];
             for ($iteration = 0; $iteration < 11; ++$iteration) {
-            $holder->reset();
-            $start = hrtime(true);
-            $data = $view->data($this->membership, $this->planet, true, $section);
-            $elapsed = (hrtime(true) - $start) / 1e6;
-            $queries = $holder->getData()['default'] ?? [];
-            $samples[] = [
-                'pass' => $iteration === 0 ? 'first' : 'warm',
-                'queries' => count($queries),
-                'sql_ms' => array_sum(array_column($queries, 'executionMS')) * 1000,
-                'server_ms' => $elapsed,
-                'memory_bytes' => memory_get_usage(true),
-                'peak_bytes' => memory_get_peak_usage(true),
-                'cards' => array_map('count', $data['cards'] ?? []),
-            ];
+                $holder->reset();
+                $start = hrtime(true);
+                $data = $view->data($this->membership, $this->planet, true, $section);
+                $elapsed = (hrtime(true) - $start) / 1e6;
+                $queries = $holder->getData()['default'] ?? [];
+                $samples[] = [
+                    'pass' => $iteration === 0 ? 'first' : 'warm',
+                    'queries' => count($queries),
+                    'sql_ms' => array_sum(array_column($queries, 'executionMS')) * 1000,
+                    'server_ms' => $elapsed,
+                    'memory_bytes' => memory_get_usage(true),
+                    'peak_bytes' => memory_get_peak_usage(true),
+                    'cards' => array_map('count', $data['cards'] ?? []),
+                ];
             }
             fwrite(STDOUT, "\nREWORK_METRICS ".$section.' '.json_encode($samples, JSON_THROW_ON_ERROR)."\n");
         }

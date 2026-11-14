@@ -236,8 +236,9 @@ SQL;
         return $this->em->createQueryBuilder()->select('s','g')->from(SolarSystem::class,'s')->join('s.galaxy','g')->where('g.universe = :u')->setParameter('u',$u)->orderBy('s.id','ASC')->getQuery()->getResult();
     }
 
-    /** @param list<int>|null $systemIds
-     *  @return list<Planet>
+    /**
+     * @param list<int>|null $systemIds
+     * @return list<Planet>
      */
     public function discoveredPlanets(PlayerUniverse $membership, ?array $systemIds = null): array
     {
