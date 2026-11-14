@@ -182,7 +182,8 @@ La PR associée fait référence pour les résultats de la nouvelle CI complète
 - app/tests/Integration/OrbitDepartureRequestTest.php
 - app/tests/browser/fleet-destinations.spec.mjs
 - app/tests/browser/fleet-recall.spec.mjs
-- app/tests/browser/fleet-stationing.spec.mjs\n- app/tests/browser/message-markdown.spec.mjs
+- app/tests/browser/fleet-stationing.spec.mjs
+- app/tests/browser/message-markdown.spec.mjs
 
 ### Documentation
 
