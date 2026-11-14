@@ -6,6 +6,8 @@ L’orientation confirmée est une stratégie au rythme modéré ; les durées d
 
 ## État du projet
 
+- Messagerie : Ctrl + Entrée pour envoyer dans les canaux privé, guilde et Global ; Entrée conserve les sauts de ligne. Markdown sécurisé pour les nouveaux messages seulement, historique conservé en texte ; soumissions répétées protégées côté serveur. CommonMark est une dépendance Composer. [Guide et migration préparée](docs/MESSAGERIE_MARKDOWN.md).
+
 - Profils et guildes : profils de joueurs consultables uniquement par les membres du même univers, avec pseudo, guilde/tag et scores/rangs quotidiens déjà publics ; liens depuis classement, messagerie et membres de guilde. Pages de guildes avec description, logo et bannière, modifiables uniquement par le commandant. Voir [le guide et la préparation de migration](docs/PROFILS_JOUEURS_GUILDES.md). GD (JPEG/PNG/WebP) est intégré aux images Docker ; les médias privés utilisent le volume de production `guild_media`, distinct de la sauvegarde SQL.
 - Outils stratégiques : simulateur de dix combats reproductibles pour une même configuration, avec estimation des victoires de l’attaquant, décompte de toutes les issues et détails repliables par combat, sans pertes moyennes ni garantie de probabilité réelle ; 20 compositions personnelles par empire/univers et recherche avancée paginée dans les messages et rapports. Voir [le suivi et les limites](docs/CADRAGE_OUTILS_STRATEGIQUES.md).
 

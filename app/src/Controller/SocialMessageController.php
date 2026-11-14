@@ -9,6 +9,7 @@ use App\Service\Universe\UniverseContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{Request,Response};
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Uid\Uuid;
 
 final class SocialMessageController extends AbstractController
 {
@@ -37,16 +38,16 @@ final class SocialMessageController extends AbstractController
                 }
                 if ($action === 'private') {
                     $peerId = (int) $request->request->get('recipient');
-                    $messages->sendPrivate($membership, $peerId, (string) $request->request->get('content'));
+                    $messages->sendPrivate($membership, $peerId, (string) $request->request->get('content'), $request->request->getString('submission_id'));
                     $this->addFlash('success', 'Message privé envoyé.');
                     return $this->redirectToRoute('app_messages', ['with' => $peerId]);
                 }
                 if ($action === 'global') {
-                    $messages->sendGlobal($membership, (string) $request->request->get('content'));
+                    $messages->sendGlobal($membership, (string) $request->request->get('content'), $request->request->getString('submission_id'));
                     return $this->redirectToRoute('app_messages', ['channel' => 'global']);
                 }
                 if ($action === 'guild') {
-                    $messages->sendGuild($membership, (string) $request->request->get('content'));
+                    $messages->sendGuild($membership, (string) $request->request->get('content'), $request->request->getString('submission_id'));
                     $this->addFlash('success', 'Message envoyé à la guilde.');
                     return $this->redirectToRoute('app_messages', ['channel' => 'guild']);
                 } else {
@@ -89,6 +90,7 @@ final class SocialMessageController extends AbstractController
             'globalConversation' => $activeChannel === 'global' ? $messages->globalConversation($membership) : [],
             'unreadPrivate' => $messages->unreadPrivateCount($membership),
             'activeChannel' => $activeChannel,
+            'submissionId' => Uuid::v4()->toRfc4122(),
         ]);
     }
 }

@@ -265,5 +265,14 @@
       "Les noms des joueurs dans le classement, les conversations et les membres de guilde ouvrent leur profil, réservé au même univers. Seuls pseudo, guilde/tag et scores/rangs quotidiens déjà publics sont affichés. Titres et trophées restent reportés ; aucune donnée privée, coordonnée ou composition militaire n’est montrée.",
       "Les pages de guildes sont accessibles depuis le classement et les écrans de guilde. Le commandant seul peut modifier description, logo et bannière. Description en texte simple : 2 000 caractères maximum. Images JPEG/PNG/WebP : logo jusqu’à 1 Mo et 512×512, bannière jusqu’à 2 Mo et 1920×640. Sans nouveau fichier, l’image actuelle est conservée. Les fichiers sont contrôlés, réencodés et réservés aux joueurs du même univers."
     ]
+  },
+  {
+    "id": "messagerie-markdown",
+    "part": "3. Utiliser les outils",
+    "title": "Messages et mise en forme",
+    "paragraphs": [
+      "Dans les messages privés, de guilde et du Global, Ctrl + Entrée envoie et Entrée ajoute une nouvelle ligne. Le bouton Envoyer fonctionne aussi sans JavaScript. Une soumission répétée du même formulaire ne crée pas de doublon.",
+      "Les nouveaux messages acceptent gras, italique, listes, citations, code et liens HTTP/HTTPS. Le HTML reste du texte et les images ne sont pas chargées. Les anciens messages conservent leur texte et leurs caractères Markdown. La limite reste de 2 000 caractères ; seuls les joueurs et canaux autorisés de votre univers sont accessibles."
+    ]
   }
 ]

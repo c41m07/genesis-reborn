@@ -1,5 +1,9 @@
 # Roadmap Genesis Reborn
 
+## Messagerie : raccourci et Markdown — 14 novembre 2026
+
+Lot 4 sur feature/messagerie-markdown, depuis dev 2170607 après fusion autorisée de la PR #61. Raccourci et doublons 3/5 ; Markdown 4/5 ; historique/migration 3/5. Privé, guilde et Global, nouveaux messages seulement. CommonMark ajouté avec autorisation ; format historique et soumission identifiée persistés par une migration préparée, non appliquée à la base habituelle. Vérifications ciblées : 137 tests PHP distincts après compléments et 10 parcours navigateur réussis après reprises ; validation Compose, compilation et lints ciblés réussis. Migration non appliquée, suite locale complète et CI du lot non revendiquées ; aucune publication/PR du lot ni livraison Alpha. Voir [le suivi](MESSAGERIE_MARKDOWN.md).
+
 ## Profils des joueurs et présentations de guildes — 14 novembre 2026
 
 Lot 3 sur `feature/profils-joueurs-guildes`, depuis `dev` `4c13f20` après fusion autorisée de la PR #60.
@@ -8,8 +12,8 @@ Périmètre validé : mêmes univers et informations déjà publiques ; aucun ti
 Description de 2 000 caractères, logo JPEG/PNG/WebP 1 Mo / 512×512 et bannière 2 Mo / 1920×640 ; commandant seul.
 GD ajouté aux deux images du projet après autorisation explicite pour décodage/réencodage et suppression des métadonnées.
 Migration `Version20261114133852` préparée : création de `guild_profile` seulement, non appliquée à la base habituelle.
-Vérifications ciblées sur bases et stockages isolés : 79 tests PHP / 386 assertions, 11 parcours navigateur distincts réussis après reprises, dont persistance des images après redémarrage ; validation Compose, compilation, lints ciblés et construction des images réussis. Synchronisation de la base habituelle non exécutée ; suite locale complète et CI du nouveau lot non revendiquées. Voir [le suivi](PROFILS_JOUEURS_GUILDES.md).
-Branche publiée avec autorisation dans la [PR #61 en brouillon](https://github.com/c41m07/genesis-reborn/pull/61) vers dev ; statut de CI courant à consulter dans la PR. Aucune fusion du lot 3 ni déploiement Alpha.
+Vérifications ciblées sur bases et stockages isolés : 79 tests PHP / 386 assertions, 11 parcours navigateur distincts réussis après reprises, dont persistance des images après redémarrage ; validation Compose, compilation, lints ciblés et construction des images réussis. Synchronisation de la base habituelle non exécutée ; ces contrôles locaux ciblés sont distincts de la CI complète ci-dessous. Voir [le suivi](PROFILS_JOUEURS_GUILDES.md).
+La [PR #61](https://github.com/c41m07/genesis-reborn/pull/61) est fusionnée avec autorisation dans dev au commit 2170607, après cinq jobs quality réussis sur 6389774 : 952 PHP, 13 Python et 194 parcours navigateur. GitGuardian classé comme identifiant de test par le propriétaire (skipped). Migration non appliquée à la base habituelle ; aucun déploiement Alpha.
 
 ## Simulateur : dix combats — 14 novembre 2026
 

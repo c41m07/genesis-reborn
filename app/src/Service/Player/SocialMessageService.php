@@ -23,37 +23,43 @@ final class SocialMessageService
         #[Autowire(service: 'limiter.social_message')] private RateLimiterFactory $messageLimiter,
     ) {}
 
-    public function sendPrivate(PlayerUniverse $sender, int $recipientId, string $content): void
+    public function sendPrivate(PlayerUniverse $sender, int $recipientId, string $content, ?string $submissionId = null): void
     {
-        $this->manager->transaction(function () use ($sender, $recipientId, $content): void {
+        $this->manager->transaction(function () use ($sender, $recipientId, $content, $submissionId): void {
             $this->lockUniverse($sender);
             $recipient = $this->repo->find(PlayerUniverse::class, $recipientId);
             if (!$recipient || !$recipient->isPlayerControlled() || $recipient->universe->id !== $sender->universe->id || $recipient->id === $sender->id) {
                 throw new \DomainException('Destinataire inaccessible dans cet univers.');
             }
             $content = $this->validateContent($content);
+            if ($this->alreadySubmitted($sender, $submissionId, $content, $recipient, null)) return;
             $this->consumeRateLimit($sender);
 
             $message = new SocialMessage();
             $message->sender = $sender;
             $message->recipient = $recipient;
             $message->content = $content;
+            $message->contentFormat = 'markdown';
+            $message->submissionId = $submissionId;
             $message->createdAt = $this->clock->now();
             $this->manager->save($message);
             $this->notifications->enqueue($recipient, 'Nouveau message privé de ' . $sender->player->username . '.');
         });
     }
 
-    public function sendGlobal(PlayerUniverse $sender, string $content): void
+    public function sendGlobal(PlayerUniverse $sender, string $content, ?string $submissionId = null): void
     {
-        $this->manager->transaction(function () use ($sender, $content): void {
+        $this->manager->transaction(function () use ($sender, $content, $submissionId): void {
             $this->lockUniverse($sender);
             $content = $this->validateContent($content);
+            if ($this->alreadySubmitted($sender, $submissionId, $content, null, null)) return;
             $this->consumeRateLimit($sender);
 
             $message = new SocialMessage();
             $message->sender = $sender;
             $message->content = $content;
+            $message->contentFormat = 'markdown';
+            $message->submissionId = $submissionId;
             $message->createdAt = $this->clock->now();
             $this->manager->save($message);
         });
@@ -67,9 +73,9 @@ final class SocialMessageService
         });
     }
 
-    public function sendGuild(PlayerUniverse $sender, string $content): void
+    public function sendGuild(PlayerUniverse $sender, string $content, ?string $submissionId = null): void
     {
-        $this->manager->transaction(function () use ($sender, $content): void {
+        $this->manager->transaction(function () use ($sender, $content, $submissionId): void {
             $this->lockUniverse($sender);
             if (!$this->catalog->forUniverse($sender->universe)['features']['guilds_enabled']) {
                 throw new \DomainException('Les guildes sont désactivées dans cet univers.');
@@ -79,12 +85,15 @@ final class SocialMessageService
                 throw new \DomainException('Rejoignez une guilde pour écrire dans son canal.');
             }
             $content = $this->validateContent($content);
+            if ($this->alreadySubmitted($sender, $submissionId, $content, null, $guild)) return;
             $this->consumeRateLimit($sender);
 
             $message = new SocialMessage();
             $message->sender = $sender;
             $message->guild = $guild;
             $message->content = $content;
+            $message->contentFormat = 'markdown';
+            $message->submissionId = $submissionId;
             $message->createdAt = $this->clock->now();
             $this->manager->save($message);
             foreach ($this->repo->all(\App\Entity\GuildMember::class, ['guild' => $guild]) as $member) {
@@ -162,6 +171,7 @@ final class SocialMessageService
 
     private function validateContent(string $content): string
     {
+        if (!mb_check_encoding($content, 'UTF-8')) throw new \DomainException('Le message contient des caractères invalides.');
         $content = trim($content);
         $length = mb_strlen($content);
         if ($length < 1 || $length > 2000) {
@@ -169,6 +179,20 @@ final class SocialMessageService
         }
 
         return $content;
+    }
+
+    private function alreadySubmitted(PlayerUniverse $sender, ?string $id, string $content, ?PlayerUniverse $recipient, ?Guild $guild): bool
+    {
+        if ($id === null) return false;
+        if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/D', $id)) {
+            throw new \DomainException('Formulaire expiré. Ouvrez de nouveau la conversation.');
+        }
+        $previous = $this->repo->one(SocialMessage::class, ['sender' => $sender, 'submissionId' => $id]);
+        if (!$previous) return false;
+        if ($previous->content !== $content || $previous->recipient?->id !== $recipient?->id || $previous->guild?->id !== $guild?->id) {
+            throw new \DomainException('Ce formulaire a déjà servi à un autre envoi. Ouvrez de nouveau la conversation.');
+        }
+        return true;
     }
 
     private function consumeRateLimit(PlayerUniverse $membership): void
