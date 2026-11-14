@@ -589,7 +589,7 @@ La somme pour le préavis n’altère pas la pondération actuelle de l’espion
 
 
 ### Demandes d’orbite au départ — lot I
-Pour les nouveaux départs, le Stationnement en orbite cible une autre colonie
+Pour les nouveaux départs, la mission Mise en orbite cible une autre colonie
 de votre empire ou une planète d’un joueur actif du même univers, allié ou neutre,
 dans un système déjà découvert.
 Les planètes ennemies, PNJ ou sans propriétaire sont interdites. L’accord sur vos propres colonies ou chez un allié

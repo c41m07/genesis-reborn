@@ -9,7 +9,7 @@ use Psr\Clock\ClockInterface;
 
 final class FleetVisibility
 {
-    private const MISSIONS=['explore'=>'Exploration','spy'=>'Espionnage','colonize'=>'Colonisation','transport'=>'Transport','attack'=>'Attaque','conquer'=>'Conquête JcE','defend'=>'Défense','orbit'=>'Stationnement en orbite','station'=>'Stationnement'];
+    private const MISSIONS=['explore'=>'Exploration','spy'=>'Espionnage','colonize'=>'Colonisation','transport'=>'Transport','attack'=>'Attaque','conquer'=>'Conquête JcE','defend'=>'Défense','orbit'=>'Mise en orbite','station'=>'Stationnement'];
     private const STATUSES=['traveling'=>'En vol','returning'=>'Retour','attacking'=>'Combat','defending'=>'Défense','orbiting'=>'En orbite','occupying'=>'Occupation JcE','orbit_pending'=>'Demande d’orbite','station_waiting'=>'Stationnement en attente'];
 
     public function __construct(private GameRepository $repo,private RelationResolver $relations,private AttackDetection $detection,

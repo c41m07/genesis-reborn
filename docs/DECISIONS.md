@@ -1638,6 +1638,8 @@ Ce contrôle refuse un contexte périmé sans élargir les droits d’envoi.
 
 ### Destinations et Stationnement — précisions du 14 novembre 2026
 
+Libellés validés : « Mise en orbite » pour la mission d’orbite temporaire et « Stationnement » pour le transfert de flotte vers une autre colonie possédée. Seuls les libellés changent ; les règles et identifiants des missions restent identiques.
+
 Après examen du moteur, le propriétaire valide l’orbite sur ses propres planètes,
 acceptée automatiquement, avec les durées et coûts existants. Stationnement garde
 une réserve aller-retour ; seul l’aller est consommé à l’installation. La réserve
