@@ -1,7 +1,7 @@
 <?php
 namespace App\Service\Combat;
 
-use App\Entity\{Planet,PlanetBuilding,PlayerTechnology,PlayerUniverse,Fleet,FleetShip};
+use App\Entity\{Planet,PlayerTechnology,PlayerUniverse,Fleet,FleetShip};
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Fleet\EspionageReportReader;
@@ -24,7 +24,11 @@ final class PlayerCombatSimulation
         $planet=$this->repo->find(Planet::class,$planetId);
         if(!$planet || $planet->owner?->id!==$owner->id || $planet->solarSystem->galaxy->universe->id!==$owner->universe->id) throw new \DomainException('Colonie inaccessible.');
         $ships=[];
-        foreach($this->repo->all(Fleet::class,['playerUniverse'=>$owner,'homePlanet'=>$planet,'status'=>'idle']) as $fleet) foreach($this->repo->all(FleetShip::class,['fleet'=>$fleet]) as $ship) if($ship->quantity>0) $ships[$ship->slug][$ship->tier]=($ships[$ship->slug][$ship->tier]??0)+$ship->quantity;
+        $fleets=$this->repo->all(Fleet::class,['playerUniverse'=>$owner,'homePlanet'=>$planet,'status'=>'idle']);
+        foreach($fleets===[] ? [] : $this->repo->all(FleetShip::class,['fleet'=>$fleets]) as $ship) {
+            if($ship->quantity<=0) continue;
+            $ships[$ship->slug][$ship->tier]=($ships[$ship->slug][$ship->tier]??0)+$ship->quantity;
+        }
         return ['ships'=>$ships,'research'=>$this->repo->levelsByTier(PlayerTechnology::class,['playerUniverse'=>$owner])];
     }
 

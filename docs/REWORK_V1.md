@@ -38,7 +38,7 @@ worktrees et archives historiques exclus des transformations mécaniques.
 | 7 | AdminController et historiques | Compteurs SQL, aperçus bornés, préparations par écran | Tests ciblés validés ; pagination encore ouverte |
 | 8 | colony-live, fragments | Fragments partagés, réponses obsolètes ignorées | Tests ciblés validés |
 | 9 | Assets, HTML, accessibilité | Fragments strictement identiques ; entrée compilée 494 Kio | Revue ciblée, contrôles navigateur complets au lot 12 |
-| 10 | Comptes, boosts, événements, handlers, exploitation | Contrats et idempotence à vérifier sans toucher aux verrous | À examiner en détail |
+| 10 | Comptes, boosts, événements, handlers, exploitation | Sept contrats revus ; lectures du simulateur regroupées | Revue ciblée et tests validés ; concurrence réelle non démontrée |
 | 11 | Documentation et écarts transversaux | Index contient un séparateur littéral incorrect | À traiter |
 | 12 | Contrôles et recette cumulée | Six contrôles, mesures comparables et parcours manuels requis | À faire |
 
@@ -98,7 +98,7 @@ isolé, pas une page HTTP complète. Aucun pourcentage global n’est déduit.
 
 ## Reprise
 
-- Lot actuel : 9/12.
+- Lot actuel : 10/12.
 - Dernière étape validée : fixture isolée et mesure avant changement.
 - Contrôle en cours : suite PHP/Python de référence.
 - Référence du lot 1 : `9e62541`.
@@ -167,5 +167,15 @@ isolé, pas une page HTTP complète. Aucun pourcentage global n’est déduit.
   Pas d’optimisation supplémentaire sans coût démontré. Clavier, responsive,
   contrastes automatiques et métadonnées à vérifier dans la suite finale ; cela
   ne constitue pas un audit RGAA/WCAG complet ni une revue de tous les styles.
-- Prochaine action : lot 10, fiabilité et traitements différés ;
+- Lot 10 : sept handlers et contrats de messages, routage/retries, outbox,
+  garde des boosts, suppression de compte et accès du simulateur examinés de
+  manière ciblée. Compositions du simulateur regroupées après contrôle de la
+  colonie. Commentaire du relais traduit et précisé sans promesse d’exactement
+  une livraison. Guide asynchrone corrigé pour les sept natures et guild_project.
+  Aucun verrou, ordre de verrouillage, contrat persistant ou retry modifié.
+- Validation : 57 tests / 539 assertions (outils stratégiques, boosts, suppression
+  de compte, reconstruction et capture). Les rejoués séquentiels ne démontrent
+  pas la concurrence réelle. Pas d’audit exhaustif de comptes/inventaire,
+  d’infrastructure ou de dépendances ; pas d’installation ni de service externe.
+- Prochaine action : lot 11, relecture et documentation cumulée ;
   mesures comparables et validation cumulée à reprendre au lot 12.

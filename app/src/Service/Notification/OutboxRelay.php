@@ -24,7 +24,7 @@ final class OutboxRelay
                     $delay=max(0,($o->dueAt->getTimestamp()-$this->clock->now()->getTimestamp())*1000);
                     $this->bus->dispatch($message,[new DelayStamp($delay)]);
                 }
-                // A crash after sending can duplicate an event; handlers and notification IDs are idempotent.
+                // Un arrêt après l’envoi peut republier le même événement : conserver son jeton et l’identifiant de notification.
                 $this->manager->remove($o);
             });++$count;
         }

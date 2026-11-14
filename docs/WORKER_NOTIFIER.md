@@ -2,7 +2,13 @@
 
 Genesis Reborn utilise une chaîne asynchrone pour exécuter les échéances du jeu sans navigateur ouvert, puis informer les joueurs connectés. Elle repose sur trois processus PHP distincts : `relay`, `worker` et `notifier`, avec MariaDB comme stockage métier, RabbitMQ comme transport de tâches et Mercure comme serveur de diffusion SSE.
 
-Ce guide s’adresse à un développeur confirmé. Il décrit l’implémentation de la branche `dev`, au commit `186008a` consulté le 11 novembre 2026, incluant la reconstruction des empires oubliés. Les exemples de commandes visent le développement local, sauf mention explicite de la production. Les règles de jeu restent définies dans [REGLES.md](REGLES.md) et [DECISIONS.md](DECISIONS.md).
+Ce guide s’adresse à un développeur confirmé. La description initiale a été
+établie sur `dev` au commit `186008a`, le 11 novembre 2026. Les sept contrats
+de messages et le routage ont été revérifiés pendant le Rework V1 du
+14 novembre 2026, notamment les récompenses des projets de guilde.
+Les exemples de commandes visent le développement local, sauf mention explicite
+de la production. Les règles de jeu restent définies dans [REGLES.md](REGLES.md)
+et [DECISIONS.md](DECISIONS.md).
 
 ## Vue d’ensemble et responsabilités
 
@@ -100,13 +106,14 @@ L’outbox évite de coupler directement le commit métier à un appel réseau v
 
 ## Publication des événements par relay
 
-`GameRepository::outbox(false)` sélectionne au maximum 100 lignes, par `id` croissant, parmi les six natures métier prises en charge. La sélection ne filtre pas les échéances futures.
+`GameRepository::outbox(false)` sélectionne au maximum 100 lignes, par `id` croissant, parmi les sept natures métier prises en charge. La sélection ne filtre pas les échéances futures.
 
 | Nature | Message Messenger | Gestionnaire et service appelé |
 | --- | --- | --- |
 | `queue` | `QueueItemFinished(queueItemId, dispatchToken)` | `QueueItemFinishedHandler` → `QueueService::complete()` |
 | `fleet` | `FleetArrived(fleetId, dispatchToken)` | `FleetArrivedHandler` → `FleetService::arrive()` |
 | `combat` | `CombatEventDue(combatEventId, dispatchToken)` | `CombatEventDueHandler` → `CombatEventService::resolve()` |
+| `guild_project` | `GuildProjectRewardsDue(projectId, dispatchToken)` | `GuildProjectRewardsDueHandler` → `GuildProjectRewardService::distribute()` |
 | `occupation` | `OccupationDue(occupationId, dispatchToken)` | `OccupationDueHandler` → `OccupationCaptureService::capture()` ; reprogrammation via `OccupationScheduler` si nécessaire et circuit activé |
 | `reconstruction` | `EmpireReconstructionDue(reconstructionId, dispatchToken)` | `EmpireReconstructionDueHandler` → `EmpireReconstructionService::rebuild()` |
 | `universe` | `UniverseClosureDue(universeId, scheduleToken)` | `UniverseClosureDueHandler` → `UniverseLifecycleService::closeIfDue()` |
