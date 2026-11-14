@@ -1,12 +1,28 @@
 <?php
 namespace App\Service\Colony;
+
 use App\Entity\{Planet,PlayerUniverse,PlanetBuilding,PlayerTechnology,Fleet,FleetShip,PlanetDefense,CombatParticipant};
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
-use App\Service\Requirement\RequirementChecker;
+use App\Service\Queue\{OperationCalculator, QueueService};
+use App\Service\Requirement\{CatalogAccess, RequirementChecker};
+
 final class ColonyView
 {
-    public function __construct(private GameRepository $repo,private GameCatalog $catalog,private RequirementChecker $requirements,private ResourceService $resources,private \App\Service\Queue\QueueService $queueService,private \App\Service\Queue\OperationCalculator $calculator,private CatalogueInsights $insights,private CatalogueDetails $details,private \App\Service\Requirement\CatalogAccess $access,private CatalogFilters $filters,private EmpireDetails $empireDetails) {}
+    public function __construct(
+        private GameRepository $repo,
+        private GameCatalog $catalog,
+        private RequirementChecker $requirements,
+        private ResourceService $resources,
+        private QueueService $queueService,
+        private OperationCalculator $calculator,
+        private CatalogueInsights $insights,
+        private CatalogueDetails $details,
+        private CatalogAccess $access,
+        private CatalogFilters $filters,
+        private EmpireDetails $empireDetails,
+    ) {}
+
     public function data(PlayerUniverse $m,Planet $planet,bool $revealLockedItems=false): array
     {
         $this->queueService->synchronize($m);

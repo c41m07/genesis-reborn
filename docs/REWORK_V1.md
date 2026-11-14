@@ -29,8 +29,8 @@ worktrees et archives historiques exclus des transformations mécaniques.
 
 | Lot | Domaine et points d’entrée | Constat initial | État |
 | --- | --- | --- | --- |
-| 1 | Inventaire, mesures, isolation | Référence et garde de base nécessaires | En cours |
-| 2 | Conventions et lisibilité | ColonyView très condensé ; aucun formateur PHP installé | À traiter |
+| 1 | Inventaire, mesures, isolation | Référence et garde de base nécessaires | Socle ciblé validé, inventaire détaillé à compléter |
+| 2 | Conventions et lisibilité | ColonyView très condensé ; aucun formateur PHP installé | Dépendances clarifiées sur le périmètre prioritaire |
 | 3 | ColonyController, ColonyView, CatalogueInsights | Quatre catalogues et arbre préparés pour chaque page ; lectures par carte | À traiter |
 | 4 | DiplomacyController, GuildProjectService | Onglet choisi après préparation de toutes les relations | À examiner en détail |
 | 5 | Rapports, classements, profils, messages | Recherche déjà paginée ; enrichissements à vérifier | À examiner en détail |
@@ -80,10 +80,14 @@ isolé, pas une page HTTP complète. Aucun pourcentage global n’est déduit.
 
 ## Reprise
 
-- Lot actuel : 1/12.
+- Lot actuel : 2/12.
 - Dernière étape validée : fixture isolée et mesure avant changement.
 - Contrôle en cours : suite PHP/Python de référence.
-- Modifications non commitées : ce suivi et le test de caractérisation.
+- Référence du lot 1 : `9e62541`.
+- Lot 2 : imports explicites et constructeur de ColonyView mis en lignes,
+  sans changement de comportement ; syntaxe PHP et diff vérifiés. `.editorconfig`
+  existant conservé. Pas de formateur ajouté ni de formatage global : les autres
+  écarts sont traités seulement avec les domaines réellement modifiés.
 - Questions en attente : aucune ; actualisation réseau de dev autorisée et effectuée.
-- Prochaine action : examiner la référence complète, valider le lot 1, puis
-  séparer la lisibilité de ColonyView de son optimisation fonctionnelle.
+- Prochaine action : préparation ciblée de ColonyView (lot 3), puis attendre
+  la fin de la suite PHP avant toute autre suite utilisant sa base.
