@@ -1652,3 +1652,12 @@ vaisseaux indisponibles, visibilité des vols et notification unique. Reprise
 manuelle après devis avec la réserve existante ; attente persistante sinon.
 Ces validations complètent le cas précédemment à étudier ; voir le
 [plan du lot 5](DESTINATIONS_STATIONNEMENT.md). Aucune migration appliquée.
+
+### Application du lot bunker — 14 novembre 2026
+
+Le propriétaire demande l’implémentation du retrait déjà validé de Blindage
+multicouche basique niveau 2 pour le bunker. Le lot ne retire que cette entrée
+du catalogue par défaut ; chantier spatial basique 3, laboratoire basique 2,
+prérequis des autres rangs, coûts, durées, plafonds et bonus restent conservés.
+Les surcharges explicites d’univers ne sont pas modifiées. Pas de migration,
+de modification des données de jeu ou de déploiement Alpha.

@@ -47,6 +47,32 @@ final class CatalogAccessTest extends KernelTestCase
         $row->slug=$slug;$row->tier=$tier;$row->level=$level;$this->em->persist($row);$this->em->flush();return $row;
     }
 
+    public function testBunkerCanBeQueuedWithoutArmorWithShipyardThreeAndLabTwo():void
+    {
+        $this->level('buildings','shipyard',3);$this->level('buildings','lab',2);
+        self::assertSame(0,$this->em->getRepository(PlayerTechnology::class)->count(['playerUniverse'=>$this->membership,'slug'=>'structural_armor']));
+        self::getContainer()->get(QueueService::class)->add($this->membership,$this->planet,'buildings','fortress',1,str_repeat('2',32));
+        $item=$this->em->getRepository(QueueItem::class)->findOneBy(['planet'=>$this->planet,'itemSlug'=>'fortress']);
+        self::assertNotNull($item);self::assertSame('basic',$item->tier);self::assertSame(1,$item->itemLevel);
+        self::assertTrue(self::getContainer()->get(CatalogAccess::class)->acquired($this->membership,$this->planet,'buildings','fortress','basic'));
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('missingBunkerBuildings')]
+    public function testBunkerStillRequiresItsShipyardAndLaboratory(int $shipyard,int $lab,string $missing):void
+    {
+        $this->level('buildings','shipyard',$shipyard);$this->level('buildings','lab',$lab);
+        $connection=$this->em->getConnection();
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage(self::getContainer()->get(\App\Service\Catalog\GameCatalog::class)->get('buildings',$missing)['label']);
+        try {self::getContainer()->get(QueueService::class)->add($this->membership,$this->planet,'buildings','fortress',1,str_repeat('2',32));}
+        finally {self::assertSame(0,(int)$connection->fetchOne('SELECT COUNT(*) FROM queue_item WHERE item_slug=?',['fortress']));}
+    }
+
+    public static function missingBunkerBuildings():array
+    {
+        return [[2,2,'shipyard'],[3,1,'lab']];
+    }
+
     public function testAccessSurvivesMissingConditionsAndRespectsColonyAndUniverseScopes():void
     {
         $lab=$this->level('buildings','lab',2);$mine=$this->level('buildings','mine_metal',2);
