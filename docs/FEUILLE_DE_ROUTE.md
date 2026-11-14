@@ -9,7 +9,7 @@ Description de 2 000 caractères, logo JPEG/PNG/WebP 1 Mo / 512×512 et bannièr
 GD ajouté aux deux images du projet après autorisation explicite pour décodage/réencodage et suppression des métadonnées.
 Migration `Version20261114133852` préparée : création de `guild_profile` seulement, non appliquée à la base habituelle.
 Vérifications ciblées sur bases et stockages isolés : 79 tests PHP / 386 assertions, 11 parcours navigateur distincts réussis après reprises, dont persistance des images après redémarrage ; validation Compose, compilation, lints ciblés et construction des images réussis. Synchronisation de la base habituelle non exécutée ; suite locale complète et CI du nouveau lot non revendiquées. Voir [le suivi](PROFILS_JOUEURS_GUILDES.md).
-Aucune publication, PR ou fusion du lot 3 et aucun déploiement Alpha.
+Branche publiée avec autorisation dans la [PR #61 en brouillon](https://github.com/c41m07/genesis-reborn/pull/61) vers dev ; statut de CI courant à consulter dans la PR. Aucune fusion du lot 3 ni déploiement Alpha.
 
 ## Simulateur : dix combats — 14 novembre 2026
 

@@ -5,7 +5,7 @@
 Branche `feature/profils-joueurs-guildes`, issue de dev `4c13f20` après fusion
 autorisée de la PR #60 et sa CI complète (925 PHP, 13 Python, 192 navigateur).
 Complexités : profils 3/5 ; personnalisation et stockage des guildes 4/5.
-Développement local, sans publication, PR ou fusion de ce lot, ni déploiement Alpha.
+Branche publiée avec autorisation dans la [PR #61 en brouillon](https://github.com/c41m07/genesis-reborn/pull/61) vers dev. Aucun accord de fusion de ce lot ni déploiement Alpha.
 La modification préexistante de `docs/PARCOURS_UI_UX.md` est conservée hors du lot.
 
 ## Informations et accès validés
@@ -79,8 +79,8 @@ Composer existantes n’ont pas été mises à niveau ; les avis de sécurité s
 par Composer restent à traiter séparément.
 
 La CI complète sur la dernière version d’une PR reste requise avant fusion.
-Aucune validation de CI, migration de la base habituelle ou publication Alpha
-n’est revendiquée par ce suivi.
+Consulter la PR pour le statut courant de la CI sur sa dernière version.
+Aucune migration de la base habituelle ou publication Alpha n’est effectuée.
 
 Fichiers principaux : contrôleur `PublicProfileController`, services
 `SocialProfileView`, `GuildProfileService`, `GuildImageStorage`, entité
