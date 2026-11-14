@@ -1,11 +1,12 @@
 <?php
 namespace App\Controller;
 
-use App\Entity\{AdminAuditLog, GameEvent, MessageReport, PlayerReport, Player, PlayerUniverse, Universe};
+use App\Entity\{AdminAuditLog, GameEvent, MessageReport, PlayerReport, Player, Universe};
 use App\Service\Admin\AdminMissionMonitoring;
 use App\Service\Admin\AdminCaseService;
 use App\Service\Player\PlayerActivityService;
 use App\Repository\GameRepository;
+use App\Repository\AdminReadRepository;
 use App\Service\Admin\AdminService;
 use App\Service\Admin\AdminOperationsService;
 use App\Service\Admin\AdminNotificationService;
@@ -30,41 +31,31 @@ final class AdminController extends AbstractController
     #[Route('/securite', name: '_security', methods: ['GET'], defaults: ['screen'=>'security'])]
     #[Route('/exploitation', name: '_operations', methods: ['GET'], defaults: ['screen'=>'operations'])]
     #[Route('/journal', name: '_audit', methods: ['GET'], defaults: ['screen'=>'audit'])]
-    public function index(Request $request, GameRepository $repo, GameCatalog $catalog, AdminService $admin, AdminOperationsService $operations, AdminNotificationService $notifications, AdminMissionMonitoring $monitor, PlayerActivityService $presence, AdminCaseService $caseFiles, \App\Service\Player\PlayerReportService $playerReportService, string $screen = 'overview'): Response
+    public function index(Request $request, GameRepository $repo, GameCatalog $catalog, AdminService $admin, AdminOperationsService $operations, AdminNotificationService $notifications, AdminMissionMonitoring $monitor, PlayerActivityService $presence, AdminCaseService $caseFiles, \App\Service\Player\PlayerReportService $playerReportService, AdminReadRepository $reads, string $screen = 'overview'): Response
     {
         $titles = ['overview'=>'Accueil', 'players'=>'Joueurs', 'universes'=>'Univers', 'reports'=>'Modération', 'security'=>'Sécurité', 'operations'=>'Exploitation', 'audit'=>'Journal des actions'];
         if (!isset($titles[$screen])) throw $this->createNotFoundException();
-        $reports = $repo->all(MessageReport::class, ['status' => 'open'], ['createdAt' => 'DESC']);
-        $playerReports = $repo->all(PlayerReport::class, ['status'=>'open'], ['createdAt'=>'DESC','id'=>'DESC']);
+        $counters = $reads->counters();
+        $reports = $screen === 'reports' ? $repo->all(MessageReport::class, ['status' => 'open'], ['createdAt' => 'DESC']) : [];
+        $playerReports = $screen === 'reports' ? $repo->all(PlayerReport::class, ['status'=>'open'], ['createdAt'=>'DESC','id'=>'DESC']) : [];
         if ($screen === 'reports') $admin->recordReportViews($this->getUser(), $reports);
         if ($screen === 'reports') $playerReportService->recordViews($this->getUser(), $playerReports);
-        $universes = $repo->all(Universe::class, [], ['id' => 'ASC']);
-        $memberships = $repo->all(PlayerUniverse::class);
-        $universePlayerCounts = [];
-        foreach ($memberships as $membership) {
-            $universePlayerCounts[$membership->universe->id] = ($universePlayerCounts[$membership->universe->id] ?? 0) + 1;
-        }
+        $universes = in_array($screen, ['overview', 'universes'], true) ? $repo->all(Universe::class, [], ['id' => 'ASC']) : [];
+        $universePlayerCounts = $screen === 'universes' ? $reads->universePlayerCounts() : [];
         $universeConfigs = [];
-        foreach ($universes as $universe) { $universeConfigs[$universe->id] = $catalog->forUniverse($universe); }
-        $players = $repo->all(Player::class, [], ['id' => 'DESC']);
+        if ($screen === 'universes') foreach ($universes as $universe) { $universeConfigs[$universe->id] = $catalog->forUniverse($universe); }
+        $players = $screen === 'players' ? $repo->all(Player::class, [], ['id' => 'DESC']) : [];
         $activeUniverseCount = count(array_filter($universes, static fn (Universe $universe): bool => $universe->status === 'active'));
         $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
         $scheduledUniverseCount = count(array_filter($universes, static fn (Universe $universe): bool => $universe->status === 'active' && $universe->startsAt !== null && $universe->startsAt > $now));
         $closedUniverseCount = count(array_filter($universes, static fn (Universe $universe): bool => $universe->status === 'closed'));
-        $suspendedPlayerCount = count(array_filter($players, static fn (Player $player): bool => $player->lockedAt !== null));
-        $auditLogs = $repo->all(AdminAuditLog::class, [], ['createdAt' => 'DESC']);
-        $reviewedIncidentIds = [];
-        foreach ($auditLogs as $entry) {
-            if ($entry->action === 'admin_access_reviewed' && $entry->targetType === 'admin_access_incident') {
-                $reviewedIncidentIds[$entry->targetId] = true;
-            }
-        }
-        $securityIncidents = array_values(array_filter($auditLogs, static fn (AdminAuditLog $entry): bool => $entry->action === 'admin_access_denied' && !isset($reviewedIncidentIds[$entry->id])));
+        $auditLogs = $screen === 'audit' ? $repo->all(AdminAuditLog::class, [], ['createdAt' => 'DESC']) : ($screen === 'overview' ? $reads->recentActions() : []);
+        $securityIncidents = $screen === 'security' ? $reads->securityIncidents() : [];
         if ($screen === 'reports') $notifications->markVisited($this->getUser(), ['reports'=>max([0, ...array_map(static fn (MessageReport $report): int => $report->id, $reports)]), 'player_reports'=>max([0, ...array_map(static fn (PlayerReport $report): int => $report->id, $playerReports)])]);
-        if ($screen === 'security') $notifications->markVisited($this->getUser(), ['security'=>max([0, ...array_map(static fn (AdminAuditLog $entry): int => $entry->id, $securityIncidents)])]);
+        if ($screen === 'security') $notifications->markVisited($this->getUser(), ['security'=>$reads->latestSecurityIncidentId()]);
         $auditActions = array_values(array_unique(array_map(static fn (AdminAuditLog $entry): string => $entry->action, $auditLogs)));
         sort($auditActions);
-        $operationsSnapshot = $operations->snapshot();
+        $operationsSnapshot = in_array($screen, ['overview', 'operations'], true) ? $operations->snapshot() : [];
         return $this->render($screen === 'overview' ? 'admin/index.html.twig' : 'admin/section.html.twig', [
             'screen'=>$screen, 'screenTitle'=>$titles[$screen],
             'activeCaseCount'=>$screen === 'overview' ? $caseFiles->activeCount() : 0,
@@ -72,15 +63,15 @@ final class AdminController extends AbstractController
             'upcomingEvents'=>$screen === 'overview' ? array_slice(array_filter($repo->all(GameEvent::class, ['status'=>['planned', 'active']], ['startsAt'=>'ASC']), static fn (GameEvent $event): bool => $event->endsAt > $now), 0, 5) : [],
             'players' => $players,
             'playerPresence' => $screen === 'players' ? $presence->forPlayers($players) : [],
-            'playerCount' => count($players),
-            'suspendedPlayerCount' => $suspendedPlayerCount,
+            'playerCount' => $counters['playerCount'],
+            'suspendedPlayerCount' => $counters['suspendedPlayerCount'],
             'activeUniverseCount' => $activeUniverseCount,
             'scheduledUniverseCount' => $scheduledUniverseCount,
             'closedUniverseCount' => $closedUniverseCount,
             'universePlayerCounts' => $universePlayerCounts,
-            'openReportCount' => count($reports)+count($playerReports),
+            'openReportCount' => $counters['openReportCount'],
             'securityIncidents' => $securityIncidents,
-            'securityIncidentCount' => count($securityIncidents),
+            'securityIncidentCount' => in_array($screen, ['overview', 'security'], true) ? $reads->securityIncidentCount() : 0,
             'operations' => $operationsSnapshot,
             'auditActions' => $auditActions,
             'universes' => $universes,

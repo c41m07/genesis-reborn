@@ -35,7 +35,7 @@ worktrees et archives historiques exclus des transformations mécaniques.
 | 4 | DiplomacyController, GuildProjectController | Onglet validé avant listes ; dons personnels séparés du détail | Tests ciblés validés |
 | 5 | Rapports, classements, profils, messages | Rapports de page et contacts regroupés ; comptage SQL de guilde | Tests ciblés validés, exceptions documentées |
 | 6 | Carte, planètes, destinations, flottes | Mondes découverts et compositions privées regroupés | Tests ciblés validés |
-| 7 | AdminController et historiques | Toutes les rubriques préparées à chaque ouverture | À examiner en détail |
+| 7 | AdminController et historiques | Compteurs SQL, aperçus bornés, préparations par écran | Tests ciblés validés ; pagination encore ouverte |
 | 8 | colony-live, fragments | HTML complet et réponses tardives à vérifier | À examiner en détail |
 | 9 | Assets, HTML, accessibilité | Coûts non mesurés ; préserver présentation et identité | À examiner en détail |
 | 10 | Comptes, boosts, événements, handlers, exploitation | Contrats et idempotence à vérifier sans toucher aux verrous | À examiner en détail |
@@ -98,7 +98,7 @@ isolé, pas une page HTTP complète. Aucun pourcentage global n’est déduit.
 
 ## Reprise
 
-- Lot actuel : 6/12.
+- Lot actuel : 7/12.
 - Dernière étape validée : fixture isolée et mesure avant changement.
 - Contrôle en cours : suite PHP/Python de référence.
 - Référence du lot 1 : `9e62541`.
@@ -137,5 +137,14 @@ isolé, pas une page HTTP complète. Aucun pourcentage global n’est déduit.
   et accès 9 cas / 40 assertions (mesure optionnelle ignorée) ; stationnement
   20 / 98, puis repli renforcé 1 / 5. Correction de fixture distincte `5d0417a`.
   Le regroupement des combats et les snapshots par colonie restent à approfondir.
-- Prochaine action : lot 7, préparations administratives ;
+- Lot 7 : AdminReadRepository sépare compteurs, incidents et aperçu des dernières
+  actions. Les détails de modération, joueurs, univers et exploitation ne sont
+  chargés que sur leurs écrans. L’accueil lit cinq actions ; Sécurité lit les
+  cinquante incidents affichés et conserve un compteur/curseur sur l’ensemble
+  des incidents. Aucune preuve ou action d’administration modifiée.
+- Validation : 7 tests HTTP/métier / 53 assertions ; régression sur 75 incidents
+  et un examen : 1 test / 7 assertions, avec conservation des 76 traces.
+  Les pages Joueurs et Journal et certaines listes spécialisées restent non
+  paginées : chantier ouvert, filtres et export complet à préserver.
+- Prochaine action : lot 8, actualisations partielles ;
   mesures comparables et validation cumulée à reprendre au lot 12.
