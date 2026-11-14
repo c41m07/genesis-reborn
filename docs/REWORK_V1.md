@@ -37,7 +37,7 @@ worktrees et archives historiques exclus des transformations mécaniques.
 | 6 | Carte, planètes, destinations, flottes | Mondes découverts et compositions privées regroupés | Tests ciblés validés |
 | 7 | AdminController et historiques | Compteurs SQL, aperçus bornés, préparations par écran | Tests ciblés validés ; pagination encore ouverte |
 | 8 | colony-live, fragments | Fragments partagés, réponses obsolètes ignorées | Tests ciblés validés |
-| 9 | Assets, HTML, accessibilité | Coûts non mesurés ; préserver présentation et identité | À examiner en détail |
+| 9 | Assets, HTML, accessibilité | Fragments strictement identiques ; entrée compilée 494 Kio | Revue ciblée, contrôles navigateur complets au lot 12 |
 | 10 | Comptes, boosts, événements, handlers, exploitation | Contrats et idempotence à vérifier sans toucher aux verrous | À examiner en détail |
 | 11 | Documentation et écarts transversaux | Index contient un séparateur littéral incorrect | À traiter |
 | 12 | Contrôles et recette cumulée | Six contrôles, mesures comparables et parcours manuels requis | À faire |
@@ -98,7 +98,7 @@ isolé, pas une page HTTP complète. Aucun pourcentage global n’est déduit.
 
 ## Reprise
 
-- Lot actuel : 8/12.
+- Lot actuel : 9/12.
 - Dernière étape validée : fixture isolée et mesure avant changement.
 - Contrôle en cours : suite PHP/Python de référence.
 - Référence du lot 1 : `9e62541`.
@@ -158,5 +158,14 @@ isolé, pas une page HTTP complète. Aucun pourcentage global n’est déduit.
   1 / 42 ; deux scénarios navigateur réussis (focus puis réponse inversée).
   Le premier essai du nouveau scénario envoyait son événement avant connexion
   de Stimulus ; attente d’un état DOM observable ajoutée, sans délai fixe.
-- Prochaine action : lot 9, assets et accessibilité ;
+- Lot 9 : extraction comparée à la source avant changement, contenu des trois
+  fragments strictement conservé. Aucun CSS, image, police, logo, métadonnée ou
+  réglage de compilation changé. Nettoyage des listeners/minuteries vérifié pour
+  colony-live, building-catalog et catalog-sticky. Focus vérifié au lot 8.
+  Compilation réussie : runtime 1,41 Kio, chunk partagé 93,6 Kio, CSS 251 Kio,
+  JS applicatif 148 Kio (tailles brutes, pas le transfert compressé).
+  Pas d’optimisation supplémentaire sans coût démontré. Clavier, responsive,
+  contrastes automatiques et métadonnées à vérifier dans la suite finale ; cela
+  ne constitue pas un audit RGAA/WCAG complet ni une revue de tous les styles.
+- Prochaine action : lot 10, fiabilité et traitements différés ;
   mesures comparables et validation cumulée à reprendre au lot 12.
