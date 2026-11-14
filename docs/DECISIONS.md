@@ -1601,3 +1601,12 @@ Choix approuvés pour les lots à développer ; cette section ne vaut pas dispon
 - Stationnement : base effective à l’arrivée réussie, sans retour automatique après installation ; rappel avant arrivée par le mécanisme existant et son devis. Coût de trajet selon les formules actuelles, aucun coût de séjour. Fret déchargé selon les capacités existantes, carburant restant conservé. Destination perdue : repli vers une colonie possédée, revérifiée à l’arrivée. Sans colonie ou carburant suffisant, étudier une attente sans perte automatique : déclenchement, reprise, notification et stockage du carburant restent à préciser après examen du code. Ce cas ne constitue pas encore une règle finalisée.
 
 Lots et PR vers dev successifs ; CI complète avant fusion. Application de migration sur base existante uniquement avec autorisation explicite et sauvegarde vérifiée. Voir le [suivi](EVOLUTIONS_INTERFACES_FLOTTES.md).
+
+### Application du lot simulateur — 14 novembre 2026
+
+Les choix validés de dix simulations sont développés sur `feature/simulateur-dix-combats`.
+La graine de départ produit dix graines successives et distinctes, avec retour à zéro après le maximum sur 32 bits ; la série reste reproductible.
+Le dénominateur du taux de victoire de l’attaquant est toujours dix, y compris en présence d’autres issues.
+Les dix détails gardent pertes, survivants et résumés des rounds, sans moyenne ni écriture de jeu.
+Les limites techniques par combat et le moteur sont conservés ; temps et mémoire de la série sont mesurés dans le [suivi](CADRAGE_OUTILS_STRATEGIQUES.md).
+Cette implémentation locale ne vaut ni publication, ni fusion, ni déploiement.

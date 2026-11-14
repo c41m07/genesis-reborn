@@ -26,7 +26,7 @@ final class CombatSimulationController extends AbstractController
                 if($request->request->get('assumptions')!=='1') throw new \DomainException('Confirmez les hypothèses avant de simuler.');
                 $number=filter_var($seed,FILTER_VALIDATE_INT);
                 if($number===false) throw new \DomainException('Graine invalide.');
-                $result=$simulation->run($owner,$forces,$number);
+                $result=$simulation->runBatch($owner,$forces,$number);
             } elseif($request->query->getInt('own_planet')) $forces['attacker']=$simulation->own($owner,$request->query->getInt('own_planet'));
         } catch(\DomainException $e) {$error=$e->getMessage();$status=422;}
         $response=$this->render('combat/simulation.html.twig',[

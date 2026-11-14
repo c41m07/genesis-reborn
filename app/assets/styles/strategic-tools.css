@@ -3,3 +3,8 @@
 .strategic-page{min-width:0;max-width:100%}.strategic-page .panel,.strategic-page form{min-width:0;max-width:100%}.strategic-page .page-heading{flex-wrap:wrap}.strategic-page .page-heading>div{min-width:0}.strategic-page h1,.strategic-page h2,.strategic-page h3,.strategic-page summary{overflow-wrap:anywhere}.strategic-page input,.strategic-page select{min-height:44px;box-sizing:border-box}.strategic-page .table-scroll{position:relative;display:block;width:100%;max-width:100%;overflow:auto}.strategic-page .table-scroll:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 
 .strategic-page a{max-width:100%;overflow-wrap:anywhere;white-space:normal}
+.simulation-outcomes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:12px;margin:16px 0}
+.simulation-outcomes>div{padding:12px;border:1px solid var(--line);border-radius:6px;min-width:0}
+.simulation-outcomes dt{font-size:14px;color:var(--text)}.simulation-outcomes dd{font-size:24px;margin:6px 0 0}
+.simulation-trial{border-top:1px solid var(--line);padding:12px 0}.simulation-trial summary{cursor:pointer;min-height:44px;padding:10px 0;font-size:14px}
+.simulation-trial summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}

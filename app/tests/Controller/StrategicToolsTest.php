@@ -89,7 +89,9 @@ final class StrategicToolsTest extends WebTestCase
             ['id'=>'attacker','role'=>'attacker','camp'=>'attacker','arrival_round'=>1,'units'=>$factory->ships($owner->universe,$forces['attacker']['ships'],$forces['attacker']['research'])],
             ['id'=>'defender','role'=>'defender','camp'=>'defender','arrival_round'=>1,'units'=>$factory->ships($owner->universe,$forces['defender']['ships'],[])],
         ],[$defense],$catalog->all('combat_modifiers')['modifiers'],$rules['max_combat_rounds'],12345,null,$rules['shield_recharge_percent_per_round'],$rules['restore_survivor_shields_after_combat']);
-        self::assertSame($expected,$actual);self::assertSame($before,$this->em->getConnection()->fetchAllAssociative('SELECT * FROM planet_resource ORDER BY id'));
+        self::assertSame($expected,$actual);
+        $batch=$service->runBatch($owner,$forces,12345);self::assertCount(10,$batch['trials']);
+        self::assertSame($before,$this->em->getConnection()->fetchAllAssociative('SELECT * FROM planet_resource ORDER BY id'));
         foreach(['fleet','combat_event','combat_log','queue_item'] as $table) self::assertSame(0,(int)$this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM '.$table));
     }
     public function testSimulationRejectsOversizedAndMalformedForces(): void
@@ -130,13 +132,15 @@ final class StrategicToolsTest extends WebTestCase
         $diplomacy->leave($other);self::assertSame(0,$search->page($other,new SearchCriteria(['q'=>'Journal']),'all',0,1)['count']);
     }
 
-    public function testSimulationHttpRejectsCsrfAndDisplaysAnIllustrativeResult(): void
+    public function testSimulationHttpRejectsCsrfAndDisplaysTenTrials(): void
     {
         $before=$this->em->getConnection()->fetchAllAssociative('SELECT * FROM planet_resource ORDER BY id');
         $this->client->loginUser($this->owner);$crawler=$this->client->request('GET','/simulateur');self::assertResponseIsSuccessful();
         $token=$crawler->filter('.simulation-form input[name="_token"]')->attr('value');
         $payload=['_token'=>$token,'seed'=>'42','assumptions'=>'1','forces'=>['attacker'=>['ships'=>['fighter'=>['basic'=>2]]],'defender'=>['ships'=>['fighter'=>['basic'=>1]]]]];
         $this->client->request('POST','/simulateur',$payload);self::assertResponseIsSuccessful();self::assertSelectorExists('#simulation-result');
+        self::assertSelectorCount(10,'.simulation-trial');self::assertSelectorTextContains('#simulation-result-title','Estimation sur 10 combats');
+        self::assertSelectorTextContains('#simulation-result','7 victoires donnent 70 %, sans garantir cette probabilité réelle');
         self::assertSame($before,$this->em->getConnection()->fetchAllAssociative('SELECT * FROM planet_resource ORDER BY id'));
         $payload['_token']='forged';$this->client->request('POST','/simulateur',$payload);self::assertResponseStatusCodeSame(403);
     }

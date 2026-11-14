@@ -1,12 +1,61 @@
 # Lot 2 — Outils stratégiques et recherche avancée
 
-## État et périmètre
+
+## Série de dix combats — évolution du 14 novembre 2026
+
+Développement sur `feature/simulateur-dix-combats`, depuis `dev` `a1abf08`
+après fusion autorisée de la PR #59 et ses cinq jobs quality réussis
+(913 PHP, 13 Python, 192 scénarios navigateur). Complexité 4/5.
+Cette section remplace le choix initial de tirage unique pour le simulateur ;
+le bilan du 13 novembre et les mesures du moteur ci-dessous restent historiques.
+
+- Dix appels au moteur existant pour les mêmes forces, technologies, défenses et arrivées. Aucune règle de combat modifiée et aucune écriture de jeu.
+- Graines successives à partir de celle saisie, avec retour à zéro après 4 294 967 295. Elles sont distinctes dans la série et la même saisie reproduit les dix résultats.
+- Victoires de l’attaquant divisées par dix : 7 donnent 70 %. Défaites, égalités, combats non terminés et toute autre issue du moteur restent décomptés séparément ; le dénominateur reste dix. Ce petit échantillon ne garantit aucune probabilité réelle.
+- Dix détails repliables, avec pertes, survivants et résumés des rounds. Aucune moyenne des pertes. Les tirs sont résumés après chaque essai pour conserver les informations affichées sans cumuler dix journaux complets.
+- Bornes conservées pour chaque combat : 500 unités et budget de travail de 5 000 000. La limitation existante devient six séries par minute par compte. Un scénario invalide est refusé, sans réduction ni résultat partiel présenté comme dix combats.
+
+Mesures locales PHP 8.4, processus de test plafonné à 256 Mio, deux camps
+symétriques de chasseurs : PV 1 000 000 000, bouclier 0, dégâts 1, deux tirs
+fixes par unité, aucune recherche, graine de départ 42 et dix rounds.
+Pic mémoire du processus incluant le conteneur de services Symfony, données
+en mémoire sans lecture/écriture de la base ; aucune garantie de latence serveur :
+
+| Unités au total | Combats | Durée de la série | Pic mémoire | Résultat JSON |
+| --- | --- | --- | --- | --- |
+| 20 | 10 | 0,022 s | 58,5 Mio | 35 215 octets |
+| 200 | 10 | 1,924 s | 60,5 Mio | 300 040 octets |
+| 500 | 10 | 12,002 s | 64,5 Mio | 744 136 octets |
+
+Validation locale : `make validate`, `make lint`, `make assets` réussis.
+42 tests PHP ciblés / 4 879 assertions : moteur existant, série, pourcentage,
+reproductibilité, graines aux limites, budget, rapports autorisés et absence
+d’écriture. Le parcours navigateur du simulateur réussit après correction
+ciblée du contraste des nouveaux libellés en thème clair, sans affaiblir axe :
+dix essais et graines distinctes, détails au clavier, trois largeurs
+(320/390/1440), thèmes clair/sombre, fonctionnement sans JavaScript et stocks
+inchangés. Captures de résultat sombre 320 et clair 1440 examinées.
+Ces vérifications ciblées ne constituent pas un audit RGAA complet.
+
+Aucune publication, PR ou fusion du lot simulateur. Aucune dépendance ni
+migration ajoutée. La CI complète reste à lancer sur PR et à attendre avant
+toute fusion ; ces résultats ne constituent pas une suite locale complète.
+
+Fichiers concernés : `PlayerCombatSimulation.php`, `CombatSimulationController.php`,
+`templates/combat/simulation.html.twig`, nouveau partiel
+`templates/combat/_simulation_trial.html.twig`, `assets/styles/strategic-tools.css`
+et les tests `Service/PlayerCombatSimulationBatchTest.php`,
+`Controller/StrategicToolsTest.php`, `browser/strategic-tools.spec.mjs` sous `app/`.
+Documentation : README, index docs, règles, décisions, wiki local, feuille de
+route, suivi Interfaces et flottes et présent cadrage.
+
+## État et périmètre initial — 13 novembre 2026
 
 Cadrage commencé le 13 novembre 2026 sur `feature/outils-strategiques-et-recherche`, depuis `dev` au commit `f3b9623`, après fusion autorisée de la [PR #54](https://github.com/c41m07/genesis-reborn/pull/54). Sa CI complète a réussi sur `e473255` : 883 tests PHP, 13 tests Python et 184 scénarios navigateur. Cela valide le lot 1, pas les fonctionnalités du lot 2.
 
 La PR [#55](https://github.com/c41m07/genesis-reborn/pull/55) a intégré les trois fonctionnalités dans `dev` après CI complète réussie sur `8559445` : 900 tests PHP, 13 tests Python et 188 scénarios navigateur. La préparation de l’Alpha est suivie dans la PR #56 ; aucun déploiement n’est effectué. La migration des compositions a été appliquée uniquement à la base locale, avec accord explicite après sauvegarde et vérification d’intégrité. Aucune application sur Alpha.
 
-## Décisions confirmées par le propriétaire
+## Décisions confirmées le 13 novembre — périmètre initial
 
 - Simulateur : un résultat illustratif reproductible ; aucun pourcentage de victoire et aucune victoire garantie. Les paramètres et la graine doivent permettre de reproduire ce résultat.
 - Compositions : 20 compositions personnelles au maximum par empire et univers, réutilisables entre les colonies de cet empire.

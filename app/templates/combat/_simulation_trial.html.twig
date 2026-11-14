@@ -1,0 +1,13 @@
+<p>{{ trial.rounds_played }} rounds joués.</p>
+<details><summary>Pertes et survivants fictifs</summary>
+<ul>{% for unit,count in trial.losses %}
+{% set parts=unit|split(':') %}{% set tier=parts|last in ['intermediate','superior'] ? parts|last : 'basic' %}{% set slug=tier=='basic' ? parts|last : parts[parts|length-2] %}
+<li>{{ parts[0]=='attacker' ? 'Attaquant' : 'Défenseur' }} · {{ unit_labels[slug].label|default(slug) }} · {{ tier_labels[tier] }} : {{ count }} perdu(s)</li>
+{% else %}<li>Aucune perte dans ce combat.</li>{% endfor %}</ul>
+<ul>{% for unit in trial.survivors %}
+<li>{{ unit.role=='attacker' ? 'Attaquant' : 'Défenseur' }} · {{ unit_labels[unit.slug].label|default(unit.slug) }} · {{ tier_labels[unit.tier] }} · structure {{ unit.hp|quantity(0) }}</li>
+{% else %}<li>Aucun survivant dans ce combat.</li>{% endfor %}</ul>
+</details>
+<details><summary>Rounds et tirs</summary>
+{% for round in trial.rounds %}<h3>Round {{ round.number }}</h3><p>{{ round.shots }} tirs · {{ round.hits }} impacts · {{ round.destroyed }} destructions</p>{% endfor %}
+</details>

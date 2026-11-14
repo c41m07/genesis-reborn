@@ -1733,7 +1733,12 @@ sans retrait d’assertion ni changement de délai ; scénario repris localement
 
 ## Nouvelle série — 14 novembre 2026
 
-Lot 1 local sur `feature/interfaces-vols-classement`, depuis `origin/dev` `d5ec2a5`.
+Lot 1 sur `feature/interfaces-vols-classement`, depuis `origin/dev` `d5ec2a5`.
+PR #59 fusionnée avec autorisation dans dev le 14 novembre, commit `a1abf08`,
+après cinq jobs quality verts sur `ee49a42` : 913 PHP, 13 Python, 192 navigateur.
+Protection de dev vérifiée : PR et cinq jobs quality requis, administrateurs inclus.
+Aucun déploiement Alpha. La série de dix simulations est suivie dans
+[le cadrage des outils stratégiques](CADRAGE_OUTILS_STRATEGIQUES.md).
 La modification préexistante de `docs/PARCOURS_UI_UX.md` est préservée et exclue du lot.
 Complexités : vols 3/5, échange des commandes 1/5, tri 3/5.
 
@@ -1750,10 +1755,10 @@ Vérifications locales :
 - Après redémarrage, Docker est indisponible. Contrôles locaux de syntaxe des deux contrôleurs PHP, des cinq templates Twig, des trois fichiers de tests JavaScript et du JSON du wiki réussis ; `git diff --check` réussi.
 
 Publication autorisée par le propriétaire dans la
-[PR #59 en brouillon vers dev](https://github.com/c41m07/genesis-reborn/pull/59).
-Le suivi de CI et la correction de ses échecs sont autorisés ; aucune fusion ni
-aucun déploiement ne le sont. Les deux parcours de tri et la suite PHP/Python
-sans bilan local doivent être couverts par la CI complète de la dernière version.
+[PR #59 vers dev](https://github.com/c41m07/genesis-reborn/pull/59).
+Le suivi de CI et ses correctifs ont été autorisés ; la fusion a ensuite été
+autorisée et réalisée. Aucun déploiement n’est autorisé. Les deux parcours de tri et la suite PHP/Python
+sans bilan local ont été couverts par la CI complète sur `ee49a42`.
 Consulter les résultats dans la PR : les limites locales restent historiques
 et ne constituent pas le verdict de la CI.
 
@@ -1762,11 +1767,11 @@ l’ancienne URL de retour du signalement, qui ne prévoyait pas `direction=desc
 Le test HTTP conserve sa vérification exacte et couvre maintenant les quatre
 cas absent/croissant/décroissant/invalide, ainsi que des paramètres POST et URL
 forgés et le rejeu sans doublon. Syntaxe et découverte des quatre cas vérifiées
-localement ; leur exécution et la validation complète relèvent de la CI suivante.
+localement ; la CI suivante a validé ces quatre cas et l’ensemble de la suite (913 PHP, 13 Python, 192 navigateur).
 Aucune dépendance ni migration ajoutée. Le chapitre local du wiki sur les classements est synchronisé ; aucune publication du wiki Alpha n’est revendiquée.
 
 Lots suivants, après intégration de chaque lot précédent : simulateur 4/5 ; profils 3/5 et guildes 4/5 ; raccourci 2/5 et Markdown 4/5 ; destinations 4/5 et Stationnement 5/5 ; bunker 3/5.
-Les [décisions du 14 novembre](DECISIONS.md) distinguent les choix approuvés du cas d’attente encore à étudier. Ces fonctionnalités futures ne sont pas encore implémentées.
+Les [décisions du 14 novembre](DECISIONS.md) distinguent les choix approuvés du cas d’attente encore à étudier. Le simulateur est développé dans le lot suivant ; les autres évolutions ne sont pas encore implémentées.
 
 Fichiers du lot courant :
 - Classement : `app/src/Controller/LeaderboardController.php`, `app/templates/player/leaderboard.html.twig`.

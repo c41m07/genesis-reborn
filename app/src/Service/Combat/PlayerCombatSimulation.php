@@ -10,6 +10,7 @@ final class PlayerCombatSimulation
 {
     public const MAX_UNITS=500;
     public const MAX_WORK=5000000;
+    public const TRIALS=10;
     public function __construct(private CombatSimulator $simulator,private CombatUnitFactory $units,private GameCatalog $catalog,private GameRepository $repo,private EspionageReportReader $reports) {}
 
     public function choices(PlayerUniverse $owner): array
@@ -87,6 +88,23 @@ final class PlayerCombatSimulation
             }
         }
         return $result;
+    }
+
+    public function runBatch(PlayerUniverse $owner,array $forces,int $seed): array
+    {
+        $trials=[];$trialSeed=$seed;$outcomes=['attacker_wins'=>0,'defender_wins'=>0,'draw'=>0,'ongoing'=>0];
+        for($index=0;$index<self::TRIALS;$index++) {
+            $trial=$this->run($owner,$forces,$trialSeed);
+            $trialSeed=($trialSeed+1)%0x100000000;
+            $outcomes[$trial['outcome']]=($outcomes[$trial['outcome']]??0)+1;
+            $trial['rounds']=array_map(static fn(array $round):array=>[
+                'number'=>$round['number'],'shots'=>count($round['shots']),
+                'hits'=>count(array_filter($round['shots'],static fn(array $shot):bool=>$shot['hit'])),
+                'destroyed'=>count(array_filter($round['shots'],static fn(array $shot):bool=>$shot['destroyed'])),
+            ],$trial['rounds']);
+            $trials[]=$trial;
+        }
+        return ['count'=>self::TRIALS,'outcomes'=>$outcomes,'win_percent'=>intdiv($outcomes['attacker_wins']*100,self::TRIALS),'trials'=>$trials];
     }
 
     public function run(PlayerUniverse $owner,array $forces,int $seed): array
