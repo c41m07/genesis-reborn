@@ -143,20 +143,29 @@ final class GuildTagPlayerReportTest extends WebTestCase
     }
     public static function invalidReports(): array { return array_map(fn($s)=>[$s],['foreign','self','category','rank','reason','comment','key','locked']); }
 
-    public function testHttpContextCannotBeForgedAndRenamingKeepsBothNames(): void
+    #[\PHPUnit\Framework\Attributes\DataProvider('reportDirections')]
+    public function testHttpContextCannotBeForgedAndRenamingKeepsBothNames(string $direction,string $expectedDirection): void
     {
-        $id=$this->target->currentPlayerUniverse->id;$url='/classement/signaler/'.$id.'?category=fleet&page=1';
+        $id=$this->target->currentPlayerUniverse->id;$url='/classement/signaler/'.$id.'?category=fleet&page=1'.($direction!==''?'&direction='.$direction:'');
         $crawler=$this->client->request('GET',$url);self::assertResponseIsSuccessful();
+        $returnUrl='/classement?category=fleet&direction='.$expectedDirection.'&page=1';
+        self::assertSame($returnUrl,$crawler->selectLink('Revenir au classement')->attr('href'));
         $token=$crawler->filter('input[name="_token"]')->attr('value');$key=$crawler->filter('input[name="request_key"]')->attr('value');
         $em=self::getContainer()->get(EntityManagerInterface::class);$target=$em->find(Player::class,$this->target->id);$target->username='RenamedTarget';$em->flush();
-        $post=['_token'=>$token,'request_key'=>$key,'reason'=>'cheating','comment'=>'Détails utiles','rank'=>9999,'category'=>'planets','universe_id'=>$this->foreign->currentPlayerUniverse->universe->id];
-        $this->client->request('POST',$url,$post);self::assertResponseRedirects('/classement?category=fleet&page=1');
+        $forgedDirection=$expectedDirection==='asc'?'desc':'asc';
+        $post=['_token'=>$token,'request_key'=>$key,'reason'=>'cheating','comment'=>'Détails utiles','rank'=>9999,'category'=>'planets','direction'=>$forgedDirection,'universe_id'=>$this->foreign->currentPlayerUniverse->universe->id];
+        $postUrl='/classement/signaler/'.$id.'?category=planets&direction='.$forgedDirection.'&page=99';
+        $this->client->request('POST',$postUrl,$post);self::assertResponseRedirects($returnUrl);
         $em=self::getContainer()->get(EntityManagerInterface::class);$report=$em->getRepository(PlayerReport::class)->findOneBy(['requestKey'=>$key]);
         self::assertSame('fleet',$report->context['category']);self::assertNotSame(9999,$report->context['rank']);
         self::assertSame('RenamedTarget',$report->context['target_username']);self::assertSame('ReportTarget',$report->context['target_username_seen']);
-        $this->client->request('POST',$url,$post);self::assertResponseRedirects();
+        $this->client->request('POST',$postUrl,$post);self::assertResponseRedirects($returnUrl);
         self::assertSame(1,self::getContainer()->get(EntityManagerInterface::class)->getRepository(PlayerReport::class)->count([]));
         $this->client->request('POST',$url,['_token'=>'forged']);self::assertResponseStatusCodeSame(403);
+    }
+    public static function reportDirections(): array
+    {
+        return ['default'=>['','desc'],'ascending'=>['asc','asc'],'descending'=>['desc','desc'],'invalid'=>['invalid','desc']];
     }
 
     public function testReportFormErrorsKeepInputAndAdminAccessIsRestricted(): void

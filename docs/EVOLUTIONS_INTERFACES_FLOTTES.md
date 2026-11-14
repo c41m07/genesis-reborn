@@ -1756,6 +1756,13 @@ aucun déploiement ne le sont. Les deux parcours de tri et la suite PHP/Python
 sans bilan local doivent être couverts par la CI complète de la dernière version.
 Consulter les résultats dans la PR : les limites locales restent historiques
 et ne constituent pas le verdict de la CI.
+
+Premier passage CI sur `e4073bd` : suite PHP de 910 tests, un seul échec sur
+l’ancienne URL de retour du signalement, qui ne prévoyait pas `direction=desc`.
+Le test HTTP conserve sa vérification exacte et couvre maintenant les quatre
+cas absent/croissant/décroissant/invalide, ainsi que des paramètres POST et URL
+forgés et le rejeu sans doublon. Syntaxe et découverte des quatre cas vérifiées
+localement ; leur exécution et la validation complète relèvent de la CI suivante.
 Aucune dépendance ni migration ajoutée. Le chapitre local du wiki sur les classements est synchronisé ; aucune publication du wiki Alpha n’est revendiquée.
 
 Lots suivants, après intégration de chaque lot précédent : simulateur 4/5 ; profils 3/5 et guildes 4/5 ; raccourci 2/5 et Markdown 4/5 ; destinations 4/5 et Stationnement 5/5 ; bunker 3/5.
@@ -1766,5 +1773,5 @@ Fichiers du lot courant :
 - Contexte de signalement : `app/src/Controller/PlayerReportController.php`, `app/templates/player/report.html.twig`.
 - Catalogues : `app/templates/colony/show.html.twig`.
 - Vols : `app/templates/ui/flights.html.twig`, `app/templates/ui/incoming_attacks_list.html.twig`, `app/assets/styles/fleet-recall.css`.
-- Tests : `app/tests/browser/leaderboard-contact.spec.mjs`, `app/tests/browser/empire-details.spec.mjs`, `app/tests/browser/catalogue-cleanup.spec.mjs`.
+- Tests : `app/tests/browser/leaderboard-contact.spec.mjs`, `app/tests/browser/empire-details.spec.mjs`, `app/tests/browser/catalogue-cleanup.spec.mjs`, `app/tests/Controller/GuildTagPlayerReportTest.php`.
 - Documentation : `README.md`, `docs/REGLES.md`, `docs/DECISIONS.md`, `docs/FEUILLE_DE_ROUTE.md`, `docs/wiki.json` et le présent suivi.
