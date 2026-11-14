@@ -1,5 +1,13 @@
 # Roadmap Genesis Reborn
 
+## Evolution de l’espionnage — 14 novembre 2026
+
+Branche `feature/evolution-espionnage`, issue de `dev` actualisée à `cd58d52` après fusion autorisée de la PR #57 et sa CI complète verte (902 PHP, 13 Python, 191 navigateur). Les règles validées sont une base d’essais Alpha : [détection par rang et défense plafonnée](REGLES.md#espionnage). Aucun déploiement effectué.
+
+Complexité 4/5 : configuration et calcul centralisé ; moyenne des rangs envoyés, tranches défensives et plafond ; conservation des niveaux technologiques, renseignements et traitements d’arrivée. Régression ciblée locale : 26 tests PHP / 1 986 assertions, validation Compose et lint complet réussis. Suite locale complète : 910 tests PHP / 211 572 assertions et 13 tests Python réussis ; trois scénarios navigateur réussis (150 fiches, mission PNJ et rapport privé, exploration réelle). Après la précision finale de texte, 14 tests du catalogue / 1 896 assertions repassent. CI de cette nouvelle branche non lancée ; aucune nouvelle PR ni fusion revendiquée.
+
+Reprise : examiner les résultats des contrôles restants, publier uniquement avec autorisation, puis attendre la CI complète sur la dernière version de la PR avant toute fusion. Aucun changement de schéma ni migration pour ce lot. Le suivi Alpha du 6 novembre conserve son verdict historique et ne décrit pas cette nouvelle livraison.
+
 ## Parcours UI/UX et économie — 13 novembre 2026
 
 Lot local sur `feature/amelioration-parcours-ui-ux`, depuis `dev` 7189f45. Navigation, comparatif des colonies, catalogues condensés, recherche du manuel, rubriques des pages et bilan économique : voir le [suivi courant](PARCOURS_UI_UX.md). Le revenu métal/nano total de 10/h et le coût ponctuel de 100 E par minute entamée sont validés explicitement ; [règles](REGLES.md) et [étude](ETUDE_COUT_ELECTRIQUE.md). La branche est publiée avec la [PR #54 vers dev](https://github.com/c41m07/genesis-reborn/pull/54), sans fusion ni déploiement. Les résultats locaux et limites sont consignés dans le suivi ; la CI complète sur PR reste obligatoire avant fusion.

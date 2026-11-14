@@ -1577,3 +1577,11 @@ reste fixe. Les événements restent visibles au défilement sur ordinateur, sou
 les ressources, sans superposer les activités et flottes des catalogues.
 Le signalement des messages reçus conserve son formulaire et ses permissions ;
 son triangle est placé à droite, hors du cadre de la bulle.
+
+### Espionnage — décision du 14 novembre 2026
+
+Le propriétaire valide une base de détection de 50 / 40 / 30 % pour les sondes Basique / Intermédiaire / Supérieure, moyenne pondérée par leurs quantités pour une mission mixte. Les sondes défensives apportent un point par tranche complète de cinq, plafonné à vingt points pour cent sondes, tous rangs comptant chacun une unité. Le périmètre actuel des flottes inactives, de défense et d’orbite ainsi que le traitement des garnisons PNJ est conservé.
+
+Les poids technologiques restent +10 points par niveau effectif de Discipline du secret adverse et −10 par niveau effectif d’Écran de brouillage ; chaque sonde supplémentaire envoyée ajoute un point. La pondération technologique par rang reste 1 / 1,25 / 1,5625. Le résultat est limité à 5–95 %, puis arrondi une seule fois ; réussite = 100 − détection. Aucun bonus de renseignement lié au rang n’est ajouté ; score, catégories, alerte, consommation des sondes et protections restent inchangés.
+
+Les valeurs sont centralisées dans `app/config/game/espionage.yaml` et servent aux essais Alpha : aucune confirmation d’équilibrage par les joueurs n’est revendiquée. Le rapport conserve son risque au moment de la résolution. Voir les [règles actuelles](REGLES.md#espionnage) et le [suivi de reprise](FEUILLE_DE_ROUTE.md).
