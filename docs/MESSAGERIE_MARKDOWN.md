@@ -10,8 +10,10 @@ identifiant de test (skipped), sans réécriture d’historique. La protection d
 dev impose PR et cinq jobs quality, y compris aux administrateurs.
 
 Complexités : raccourci et doublons 3/5, Markdown sécurisé 4/5, historique et
-migration 3/5. Développement local uniquement : aucune publication/PR du lot,
-aucune application des migrations à la base habituelle, aucun déploiement Alpha.
+migration 3/5. Publication de la branche et PR en brouillon vers dev autorisées.
+L’état courant de la [PR associée](https://github.com/c41m07/genesis-reborn/pulls?q=is%3Apr+head%3Afeature%2Fmessagerie-markdown)
+fait référence pour la CI. Aucune fusion de ce lot, application des migrations
+à la base habituelle ou livraison Alpha n’est autorisée par cet accord.
 Les modifications préexistantes de docs/PARCOURS_UI_UX.md et l’état de
 app/assets/controllers.json restent hors du lot.
 
@@ -76,8 +78,9 @@ Vérifications locales ciblées réussies :
 Le premier scénario de double envoi retenait une réponse réseau tout en attendant
 sa navigation. Cette simulation a été remplacée par un vrai Ctrl + Entrée puis
 des tentatives simultanées dans le navigateur ; tous les contrôles de contenu,
-d’état du bouton et de quantité restent présents. La suite locale complète et
-la CI GitHub du nouveau lot ne sont pas revendiquées.
+d’état du bouton et de quantité restent présents. Ce bilan décrit les contrôles
+locaux ciblés ; la suite locale complète n’a pas été relancée. Consulter la PR
+associée pour le résultat courant de la CI GitHub sur sa dernière version.
 
 PHP utilise uniquement database-test/genesis_v2_test ; le navigateur utilise son
 projet jetable. Le test de migration part d’une table antérieure avec un message
@@ -88,7 +91,7 @@ Le parcours privé complémentaire repasse, avec l’aide Markdown ouverte/ferm�
 clavier et contrôlée par axe, sans débordement. Ces vérifications ciblées ne
 constituent pas un audit de conformité RGAA.
 
-Publication et PR demandent encore un accord du propriétaire. Avant fusion :
+Publication et PR en brouillon autorisées par le propriétaire. Avant fusion :
 CI complète réussie sur la dernière version, puis accord explicite.
 
 ## Fichiers principaux
