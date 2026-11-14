@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+{% block title %}Personnaliser {{ profile.name }} · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="social-profile-page">
+<div class="page-heading"><div><h1>Personnaliser la guilde</h1><p>{{ profile.name }} · Commandant uniquement</p></div></div>
+<form class="panel guild-profile-form" method="post" enctype="multipart/form-data">
+<input type="hidden" name="_token" value="{{ csrf_token('guild_profile_'~profile.id) }}"><input type="hidden" name="version" value="{{ profile.version }}">
+<label for="guild-description">Description</label><textarea id="guild-description" name="description" rows="7" maxlength="2000" aria-describedby="guild-description-help">{{ description }}</textarea>
+<p id="guild-description-help">Texte simple, 2 000 caractères maximum. Les retours à la ligne sont conservés.</p>
+<label for="guild-logo">Logo</label><input id="guild-logo" type="file" name="logo" accept="image/jpeg,image/png,image/webp" aria-describedby="guild-logo-help">
+<p id="guild-logo-help">JPEG, PNG ou WebP, 1 Mo et 512 × 512 pixels maximum. Sans nouveau fichier, le logo actuel est conservé.</p>
+<label for="guild-banner">Bannière</label><input id="guild-banner" type="file" name="banner" accept="image/jpeg,image/png,image/webp" aria-describedby="guild-banner-help">
+<p id="guild-banner-help">JPEG, PNG ou WebP, 2 Mo et 1 920 × 640 pixels maximum. Sans nouveau fichier, la bannière actuelle est conservée.</p>
+<button class="primary" type="submit">Enregistrer la présentation</button>
+</form>
+<p><a href="{{ path('app_guild_public_profile',{id:profile.id}) }}">Revenir à la page de la guilde</a></p>
+</div>
+{% endblock %}

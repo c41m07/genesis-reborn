@@ -202,3 +202,9 @@ Le contexte de construction reste la racine. Le Dockerfile copie le code depuis
 sont sous `docker/`, avec des liens de compatibilité à la racine. Le transfert
 SSH lit directement `docker/compose.prod.yaml` : le serveur reçoit `compose.prod.yaml`, fichier ordinaire,
 sans dépendance au clone. Suivre [les contrôles SEO](REFERENCEMENT.md) avant ouverture publique.
+
+## Préparer les présentations de guildes
+
+Le lot profils/guildes ajoute GD (JPEG/PNG/WebP) dans les images de développement et de production, ainsi que le volume logique `guild_media` monté uniquement dans le service web sous `/app/var/guild-media`. L’image prépare ce dossier pour l’utilisateur Apache ; les images téléversées restent hors de la racine web. Conserver ce volume lors des remplacements de conteneur et l’inclure dans les sauvegardes de fichiers.
+
+La migration `Version20261114133852` crée seulement `guild_profile`. Sa présence dans le dépôt ne signifie pas son application : sur une base existante, obtenir l’autorisation explicite et vérifier une sauvegarde avant de l’exécuter. Les nouveaux écrans de guildes attendent cette table. Les profils de joueurs ne requièrent aucun nouveau champ sur les comptes. Aucun déploiement Alpha ni aucune migration de la base habituelle n’est effectué dans ce lot.

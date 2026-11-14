@@ -60,3 +60,9 @@ Les 13 tests Python des scripts sont inclus dans `make test` ; le test de restau
 ## Limites de reprise
 
 Une base restaurée peut contenir des opérations dont le message a déjà quitté l’outbox pour RabbitMQ. Le dump SQL ne restaure pas les messages du broker. La comparaison de données ne prouve donc pas la poursuite automatique de ces opérations. Le runbook historique affirmait une reconstruction possible sans en fournir une commande générale vérifiée ; ne pas déduire que cette reconstruction est livrée. Prévoir une analyse et une réconciliation contrôlées, avec tests de doublons, avant une reprise complète après perte du transport. Le chantier G doit examiner cette reprise ; aucune opération de ce type n’a été exécutée sur l’Alpha.
+
+## Images des guildes
+
+Les archives SQL ne contiennent pas les logos et bannières. Sauvegarder séparément le volume logique Compose `guild_media`, en conservant les noms des fichiers, en même temps que la base contenant leurs références dans `guild_profile`. Une sauvegarde de la base seule ne permet pas de restaurer les images.
+
+Toute restauration doit coordonner ces deux sauvegardes et rétablir les droits du dossier privé pour l’utilisateur web de l’image déployée. Ne pas supprimer le volume lors d’une mise à jour. Aucune sauvegarde ou restauration de production n’est revendiquée par l’ajout de cette documentation. Les tests de persistance utilisent uniquement leurs propres volumes jetables.

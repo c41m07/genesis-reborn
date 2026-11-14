@@ -36,3 +36,9 @@ services:
     App\Integration\Mercure\PublisherInterface: '@App\Integration\Mercure\MercurePublisher'
 
     Random\Randomizer: ~
+
+when@test:
+    services:
+        App\Service\Player\GuildImageStorage:
+            arguments:
+                $directory: '%kernel.cache_dir%/guild-media'

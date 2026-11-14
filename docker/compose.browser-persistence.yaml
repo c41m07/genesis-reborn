@@ -1,5 +1,8 @@
 # Réservé aux projets jetables du lanceur navigateur.
 services:
+  app:
+    volumes:
+      - guild_media:/app/var/guild-media
   database:
     tmpfs: !reset []
     volumes: !override ["database_data:/var/lib/mysql"]

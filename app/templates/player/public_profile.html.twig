@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ profile.username }} · Profil du commandant · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="social-profile-page">
+<div class="page-heading"><div><h1>{{ profile.username }}</h1><p>Profil du commandant · Univers {{ membership.universe.name }}</p></div>
+{% if profile.id!=membership.id %}<a class="secondary" href="{{ path('app_messages',{with:profile.id}) }}">Écrire à {{ profile.username }}</a>{% endif %}</div>
+<section class="panel" aria-labelledby="player-public-guild"><h2 id="player-public-guild">Guilde</h2>
+{% if profile.guild %}<p>{% if profile.guild.can_view %}<a href="{{ path('app_guild_public_profile',{id:profile.guild.id}) }}">{% endif %}{% if profile.guild.tag %}[{{ profile.guild.tag }}] {% endif %}{{ profile.guild.name }}{% if profile.guild.can_view %}</a>{% endif %}</p>{% else %}<p>Aucune guilde.</p>{% endif %}
+</section>
+<section class="panel" aria-labelledby="player-public-scores"><h2 id="player-public-scores">Classement quotidien</h2>
+<p>Valeurs du <time datetime="{{ profile.updated_at|date('c') }}">{{ profile.updated_at|date('d/m/Y à H:i',preferences.timezone) }}</time>. Les points de flotte incluent les défenses fixes.</p>
+<dl class="social-profile-scores">{% for score in profile.scores %}<div><dt>{{ score.label }}</dt><dd>{% if score.value is not null %}{{ score.value|quantity(0) }} · rang #{{ score.rank }}{% else %}Pas encore classé{% endif %}</dd></div>{% endfor %}</dl>
+</section>
+<p><a href="{{ path('app_leaderboard') }}">Consulter le classement</a></p>
+</div>
+{% endblock %}

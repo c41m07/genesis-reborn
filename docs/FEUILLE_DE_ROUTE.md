@@ -1,5 +1,16 @@
 # Roadmap Genesis Reborn
 
+## Profils des joueurs et présentations de guildes — 14 novembre 2026
+
+Lot 3 sur `feature/profils-joueurs-guildes`, depuis `dev` `4c13f20` après fusion autorisée de la PR #60.
+Complexités : profils 3/5 ; personnalisation et stockage des guildes 4/5.
+Périmètre validé : mêmes univers et informations déjà publiques ; aucun titre/trophée nouveau.
+Description de 2 000 caractères, logo JPEG/PNG/WebP 1 Mo / 512×512 et bannière 2 Mo / 1920×640 ; commandant seul.
+GD ajouté aux deux images du projet après autorisation explicite pour décodage/réencodage et suppression des métadonnées.
+Migration `Version20261114133852` préparée : création de `guild_profile` seulement, non appliquée à la base habituelle.
+Vérifications ciblées sur bases et stockages isolés : 79 tests PHP / 386 assertions, 11 parcours navigateur distincts réussis après reprises, dont persistance des images après redémarrage ; validation Compose, compilation, lints ciblés et construction des images réussis. Synchronisation de la base habituelle non exécutée ; suite locale complète et CI du nouveau lot non revendiquées. Voir [le suivi](PROFILS_JOUEURS_GUILDES.md).
+Branche publiée avec autorisation dans la [PR #61 en brouillon](https://github.com/c41m07/genesis-reborn/pull/61) vers dev ; statut de CI courant à consulter dans la PR. Aucune fusion du lot 3 ni déploiement Alpha.
+
 ## Simulateur : dix combats — 14 novembre 2026
 
 Lot 2 sur `feature/simulateur-dix-combats`, depuis `dev` `a1abf08`, après fusion autorisée de la PR #59.
@@ -7,9 +18,7 @@ Complexité 4/5 : dix graines distinctes, estimation des victoires de l’attaqu
 Moteur, limites par combat, propriété des renseignements et absence d’écriture de jeu conservés.
 42 tests PHP ciblés / 4 879 assertions, validation Compose, lint et compilation réussis ; parcours navigateur du simulateur réussi en clair/sombre, au clavier, sans JavaScript et à 320/390/1440 px. Contraste corrigé sans affaiblir le contrôle axe. Ce sont des vérifications ciblées, pas la suite complète ni la CI du nouveau lot.
 Le [suivi et les mesures](CADRAGE_OUTILS_STRATEGIQUES.md) détaillent les limites et la reprise.
-Branche publiée avec autorisation dans la [PR #60 en brouillon vers dev](https://github.com/c41m07/genesis-reborn/pull/60).
-Les résultats complets sur la dernière version sont à consulter dans la PR.
-Aucune migration, fusion ni livraison Alpha de ce nouveau lot n’est autorisée.
+La [PR #60](https://github.com/c41m07/genesis-reborn/pull/60) a été fusionnée avec autorisation dans dev au commit `4c13f20`, après CI complète verte sur `c3eef94` : 925 PHP, 13 Python et 192 scénarios navigateur. Aucune migration ni livraison Alpha de ce lot.
 
 ## Interfaces des vols et classement — 14 novembre 2026
 
