@@ -7,6 +7,10 @@ use App\Manager\GameManager;
 use App\Repository\GameRepository;
 use Psr\Clock\ClockInterface;
 
+/**
+ * Verrouille le contexte d’une action avant de revérifier ses droits.
+ * L’appelant doit déjà avoir ouvert la transaction qui portera l’action.
+ */
 final class ActionGuard
 {
     public function __construct(
@@ -17,7 +21,7 @@ final class ActionGuard
     )
     {
     }
-    // L’appelant ouvre la transaction ; le verrou de participation sérialise la recherche entre ses colonies.
+
     public function lock(PlayerUniverse $membership, Planet $planet): void
     {
         $this->lockMembership($membership);
@@ -32,9 +36,11 @@ final class ActionGuard
         $this->lockMembershipForProcessing($membership);
         $this->activity->assertCanControl($membership);
     }
-    // Les traitements automatiques peuvent terminer les commandes déjà payées d'un empire oublié.
+
+    // Un empire oublié ne reçoit plus d’ordres du joueur, mais ses commandes déjà payées peuvent finir.
     public function lockMembershipForProcessing(PlayerUniverse $membership): void
     {
+        // Garder cet ordre commun à toutes les colonies : participation, univers, puis planète chez l’appelant.
         $this->manager->lock($membership);
         $this->manager->lock($membership->universe);
         if (!$membership->universe->isAccessible($this->clock->now())) {
@@ -59,6 +65,7 @@ final class ActionGuard
         if ($this->repo->one(ActionReceipt::class, ['playerUniverse' => $membership, 'requestKey' => $key])) {
             return false;
         }
+        // Le reçu partage la transaction de l’action : un rollback libère aussi cette clé de requête.
         $receipt = new ActionReceipt();
         $receipt->playerUniverse = $membership;
         $receipt->requestKey = $key;

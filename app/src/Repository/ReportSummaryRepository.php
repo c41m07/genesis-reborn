@@ -5,7 +5,10 @@ namespace App\Repository;
 use App\Entity\{Planet, PlayerUniverse};
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityManagerInterface;
-/** La liste ne charge que ses métadonnées ; les rapports détaillés conservent leurs preuves complètes. */
+/**
+ * Ne charge que les données visibles dans les listes de rapports.
+ * Les tours de combat, le fret et les renseignements restent dans les rapports complets.
+ */
 final class ReportSummaryRepository
 {
     public function __construct(private EntityManagerInterface $em)

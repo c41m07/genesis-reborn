@@ -42,11 +42,13 @@ final class LeaderboardController extends AbstractController
             'planets' => 'planets',
         ][$category];
         $rows = $tab === 'players' ? $daily['players'] : [];
+        // Trier avant de paginer conserve les rangs globaux et le départage des égalités.
         usort($rows, static fn(array $a, array $b): int => $direction === 'asc' ? $a[$sortField] <=> $b[$sortField] ?: $a['ranks'][$category] <=> $b['ranks'][$category] : $a['ranks'][$category] <=> $b['ranks'][$category]);
         $pageSize = 50;
         $pages = max(1, (int) ceil(count($rows) / $pageSize));
         $page = max(1, min($pages, $request->query->getInt('page', 1)));
         $rows = array_slice($rows, ($page - 1) * $pageSize, $pageSize);
+        // Les relations restent actuelles ; seuls les joueurs de cette page ont besoin de cet enrichissement.
         foreach ($rows as &$row) {
             $peer = $row['membership'];
             $guild = $relations->guild($peer);

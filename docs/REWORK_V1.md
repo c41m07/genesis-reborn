@@ -1,6 +1,6 @@
 # Rework V1 — suivi et reprise
 
-## Dernière relecture du prompt et des conventions — en cours
+## Dernière relecture du prompt et des conventions — validée localement
 
 Demande complémentaire après `a9f5ddc` : rapprocher chaque exigence du prompt
 des preuves disponibles et écrire les commentaires comme des notes de maintenance
@@ -16,8 +16,8 @@ Preuve : `var/rework-last-format-proof.log`. Le lint complet et les 18 protectio
 du bandeau réussissent après ce changement. Ce complément est séparé des noms et
 commentaires dans l’historique Git.
 
-La relecture des noms, commentaires et critères détaillés suit ; les résultats
-précédents restent historiques et ne sont pas présentés comme une nouvelle suite.
+La relecture des noms, commentaires et critères détaillés est terminée ; les
+résultats précédents restent historiques et sont distingués des nouvelles vérifications.
 
 Noms : participation, définition, technologie, bâtiment, défense, reçu et message
 de relais remplacent les abréviations ambiguës de trois fichiers déjà concernés.
@@ -25,8 +25,54 @@ Chaque méthode est vérifiée sans collision de variable ; la structure PHP res
 identique après application de cette seule correspondance de noms. Aucun appel
 avec les anciens noms de paramètres n’a été trouvé dans les sources, tests et
 configuration. Clés persistées, propriétés, routes et messages inchangés.
-Preuve : `var/rework-last-renames-proof.json`. Une suite PHP/Python complète est
-lancée dans un nouveau projet isolé ; aucun schéma de la base habituelle n’est modifié.
+Preuve : `var/rework-last-renames-proof.json`. La nouvelle suite PHP/Python complète
+réussit dans un projet isolé ; aucun schéma de la base habituelle n’est modifié.
+
+Commentaires : relecture et complément de 12 fichiers applicatifs. Les explications
+portent sur le rôle des traitements, les préconditions de verrouillage, l’état
+périmé, les dépendances de niveaux, l’échéance réelle, les jetons, les remboursements,
+les cycles du guide et les effets de consultation. Le ton reste simple ; chaque
+explication porte sur une contrainte vérifiée du traitement. Les instructions PHP restent
+strictement identiques après retrait des seuls commentaires et espaces :
+`var/rework-last-comments-proof.json`. Ces ajouts sont séparés des renommages.
+
+### Correspondance entre le prompt et les preuves
+
+| Exigence | État et preuve / exception |
+| --- | --- |
+| Branche unique et travail préservé | `chore/rework-v1`, base `48c9a71`, état initial propre, aucun commit de fusion ; commits mécaniques, noms et commentaires séparés |
+| Douze lots et inventaire de tous les domaines | Douze lots conservés ; inventaire initial/final et classement des 44 contrôleurs, dépendances et contrats dans ce suivi et `var/rework-final-domain-inventory.json` |
+| Sources et consignes | AGENTS racine, conventions locales et sources du chantier consultés ; les trois documents Work restent absents du dépôt et des pièces jointes accessibles, sans prétendre les avoir lus |
+| Conventions et commentaires | Relecture des 31 fichiers PHP applicatifs concernés ; trois fichiers transactionnels développés, noms clarifiés et commentaires de maintenance vérifiés. Les alias SQL et variables de comparaison courtes restent légitimes ; aucune normalisation des dépendances ou archives |
+| Responsabilités proportionnées | Préparations ColonyView/Catalogue*, lectures dédiées AdminReadRepository/ReportSummaryRepository, transport LiveRegionResponse ; contrôles d’action conservés dans les services, sans nouvel accès global au conteneur |
+| Catalogues, diplomatie, rapports, planètes, flottes, administration | Préparations ciblées, lectures groupées, filtrage d’univers et pagination décrits et mesurés par domaine ; listes de configuration réellement complètes conservées avec justification |
+| Barre de ressources exclue | 18 comparaisons de fichiers/corps protégés à la base ; aucun changement du rendu, endpoint, calculs, fraîcheur, polling ou interactions du bandeau |
+| Règles, coûts, données, confidentialité et permissions | Pas de changement des catalogues, entités, schéma ou dépendances ; caractérisations, refus d’accès et suites métier conservés. Les lectures d’affichage ne valent pas autorisation |
+| Concurrence et traitements différés | Cinq courses à deux processus avec attente constatée, clés de requête et jetons obsolètes ; fin de commande relue sous verrou. Aucun ordre de verrou changé ; toutes les courses possibles ne sont pas revendiquées |
+| Cache et synchronisation | Préparation économique limitée à la requête et à une planète ; synchronisation avant lecture des niveaux ; aucun cache partagé ajouté. Les snapshots complets du moteur économique restent une exception justifiée |
+| Mesures comparables | Premiers passages séparés, dix mesures chaudes, médianes/étendues, SQL/temps/mémoire distingués ; mesures multi-volumes et 132 actualisations DOM. Pas de gain global inventé ni d’assimilation service/HTTP/rendu |
+| Actualisations, formulaires et erreurs | Fragments partagés, générations de requêtes et réponses obsolètes, focus/saisie/journal préservés ; tests de refus et de réponse tardive ; aucune suppression de journalisation ni réussite factice |
+| Interface, accessibilité, SEO et identité | Parcours réel ordinateur/mobile/deux thèmes et suite navigateur ; logos/SVG et métadonnées publiques conservés. Aucune certification RGAA ou validation avec un lecteur d’écran réel revendiquée |
+| Vérifications locales | Nouvelle suite : 1 047 cas PHP / 213 253 assertions, un benchmark facultatif ignoré ; 13 Python réussis. Dernière suite navigateur : 202/202 sans reprise et 24 répétitions réussies. Validation/compilation inchangées depuis cette passe, lint complet relancé et réussi. Aucune assertion supprimée ou délai d’action relevé |
+| Documentation, suivi et commits | README, architecture, index, feuille de route, worker et suivi synchronisés dans le lot ; six documents contrôlés pour leurs liens. Les anciens résultats restent historiques, les preuves générées restent ignorées |
+| Opérations sensibles et publication | Aucune installation, suppression de source, migration de base habituelle, réécriture Git, PR, fusion ou publication ; seuls des projets de tests synthétiques propres au chantier sont créés puis fermés |
+| Limites externes et prochaine étape | Wiki distant, emails externes, technologies d’assistance, CI et protection distante des branches non vérifiés ici. La CI complète et le contrôle des protections restent nécessaires avant une future fusion autorisée |
+
+Cette correspondance valide le périmètre réalisable et ses exceptions explicites.
+Elle ne transforme pas l’inventaire en audit de chaque ligne du dépôt, ni les tests
+automatiques en preuve d’absence de bugs ou de conformité générale.
+
+### Résultats et reprise de cette relecture
+
+- Mise en forme : commit `0553e47`, trois fichiers et structure PHP inchangée.
+- Noms : commit `8f88dc6`, trois fichiers, aucune modification hors correspondance de variables contrôlée ; recherches d’appels nommés effectuées.
+- Commentaires : 12 fichiers, comparaison de leurs instructions et analyse syntaxique réussies ; `var/rework-last-comments-proof.json`.
+- Nouvelle suite complète : 1 047 cas PHP, 213 253 assertions, 13 tests Python ; seul le benchmark facultatif reste ignoré dans la suite standard, avec ses mesures séparées déjà conservées. Durée PHP 9 min 03 s, pic 123 Mio ; ce n’est pas une mesure comparative du jeu. Journal `var/rework-last-test.log`.
+- Lint final : PHP, YAML, Twig, conteneur et schéma synthétique réussis ; `var/rework-last-lint.log`. Liens des six documents, diff et 18 protections du bandeau réussis.
+- Navigateurs et mesures : résultats complets précédents conservés ; aucun template, asset, réglage, formule ou traitement applicatif n’a changé dans cette relecture. Les différences exécutables se limitent aux noms explicitement vérifiés, sans nouvelle mesure ou nouvelle exécution navigateur revendiquée.
+- Nettoyage : nouveau projet PHP fermé, anciens projets conservés, huit services habituels sains ; `var/rework-last-cleanup.json`.
+- État : lot 12/12 terminé sur le périmètre accessible, aucun contrôle en cours ni question en attente ; changements en commits locaux sur la même branche.
+- Prochaine étape : validation complémentaire de l’utilisateur si souhaitée ; aucune PR ou publication automatique. Les limites externes restent celles de la matrice ci-dessus.
 
 ## Recette autonome supplémentaire — validée localement
 
@@ -144,7 +190,7 @@ refus de droits et fonctionnement sans JavaScript sont apportés par les scénar
 automatisés dédiés, sans les présenter comme tous rejoués manuellement.
 Les emails externes et technologies d’assistance réelles restent des limites.
 
-### Reprise actuelle
+### Reprise de la recette autonome — historique
 
 - Branche : `chore/rework-v1`, base `48c9a71` ; correction des tests `0f3fad0`, commentaires `831bf61`.
 - Lot : 12/12 terminé sur le périmètre accessible, sans correction applicative ouverte.
@@ -270,7 +316,7 @@ qu’aucun changement justifié n’a été retenu après cet examen.
 | Colonies : ColonyController, ColonyView, CatalogueInsights/Details, CatalogFilters, RequirementChecker/CatalogAccess | Amélioration réalisée. Un seul catalogue par page, aucun sur l’aperçu ; arbre seul au guide ; noms et étapes clarifiés | Synchronisation avant niveaux, coûts et durées réels, recherche commune, quantités par rang ; ColonyPreparationTest, CatalogAccessTest, GamePersistenceTest et catalogue navigateur |
 | Économie des cartes : CatalogueProductionContext, ResourceService | Amélioration dédiée aux cartes. Événements/vacances lus une fois par préparation, contexte limité à la planète | Formules réutilisées ; comparaison en événements, vacances et fin de commande. Méthodes économiques protégées et bandeau conservés |
 | Barre de ressources : endpoint resources, GameShell, FactoryEconomy et fichiers du bandeau | Hors périmètre explicite. Aucun changement de rendu, polling, endpoint, détails ou calculs | 18 comparaisons de corps/fichiers à la base, caractérisations économiques et tests navigateur ; aucune optimisation revendiquée du bandeau |
-| Files : QueueService, ActionGuard, OperationCalculator, GameManager | Défaut de concurrence traité dans complete uniquement ; reste conservé | Verrous participation/univers/planète, propriété, jeton, échéance et reçu idempotent ; cinq courses prouvées et tests métier existants. Les anciennes parties condensées hors correction ne sont pas réécrites |
+| Files : QueueService, ActionGuard, OperationCalculator, GameManager | Défaut de concurrence traité dans complete ; présentation et noms clarifiés lors de la dernière relecture, règles conservées | Verrous participation/univers/planète, propriété, jeton, échéance et reçu idempotent ; cinq courses prouvées, tests métier existants et comparaisons de structure PHP avant/après |
 | Diplomatie/guildes : DiplomacyController, RelationResolver, DiplomacyService, GuildRankService, GuildPresence, PublicProfileController | Amélioration réalisée. Onglet validé avant préparation, relations et identités regroupées, présences limitées au bon écran | Priorité des traités de guilde conservée ; aucune décision d’action fondée sur le modèle d’affichage ; PersonalDiplomacyTest, GuildTagPlayerReportTest, public-profiles |
 | Projets de guilde : GuildProjectController, GuildProjectService/RewardService/Rules et administration associée | Amélioration réalisée. Don personnel dans la liste, identités des contributeurs dans la fiche ; règles conservées | Droits, univers, paiements et récompense unique ; suites de projets et permissions ; aucune visibilité supplémentaire des contributions |
 | Rapports/simulation : CombatReportController, EspionageReportController, TransportReportController, CombatSimulationController ; ReportArchiveService, ReportSummaryRepository, lecteurs et PlayerCombatSimulation | Amélioration réalisée. Métadonnées seules en liste, preuves détaillées conservées, compositions regroupées | Filtrage d’accès avant pagination, dates/archives/restauration et anciens rapports ; ReportArchiveTest, tests des lecteurs et simulations |
@@ -859,9 +905,9 @@ volumes. Les exceptions restantes sont délimitées :
 - Conventions : appliquer les changements utiles au périmètre modifié ; ne pas
   réécrire tous les anciens tris et contrôleurs pour obtenir un diff cosmétique.
   L’inventaire n’est pas une relecture ligne par ligne de tous les fichiers.
-- Accessibilité : contrôles ciblés, captures et suites automatiques ; aucune
-  revendication de conformité RGAA exhaustive. La recette détaillée ci-dessous
-  reste à effectuer avec l’utilisateur, notamment les technologies d’assistance.
+- Accessibilité : contrôles ciblés, recette interactive, captures et suites
+  automatiques ; aucune revendication de conformité RGAA exhaustive. Les essais
+  avec les technologies d’assistance réelles de l’utilisateur restent à effectuer.
 - Concurrence : cinq courses serveur avec deux connexions réellement bloquées
   sont maintenant vérifiées, en plus des abandons et compositions simultanés au
   navigateur. La fin de commande relit son état après les verrous. Cela ne prouve

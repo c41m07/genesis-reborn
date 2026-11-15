@@ -10,6 +10,10 @@ use App\Message\{QueueItemFinished, FleetArrived, CombatEventDue, UniverseClosur
 use Symfony\Component\Messenger\{MessageBusInterface, Stamp\DelayStamp};
 use Psr\Clock\ClockInterface;
 
+/**
+ * Relaye les événements enregistrés vers Messenger ou Mercure.
+ * Un arrêt entre l’envoi et le retrait de l’outbox peut provoquer une nouvelle réception.
+ */
 final class OutboxRelay
 {
     public function __construct(
@@ -44,6 +48,7 @@ final class OutboxRelay
                         'universe' => new UniverseClosureDue($outboxMessage->targetId, $outboxMessage->token),
                         default => throw new \LogicException('Événement inconnu.'),
                     };
+                    // Messenger porte l’attente ; une échéance déjà dépassée est envoyée sans délai.
                     $delay = max(0, ($outboxMessage->dueAt->getTimestamp() - $this->clock->now()->getTimestamp()) * 1000);
                     $this->bus->dispatch($message, [new DelayStamp($delay)]);
                 }
@@ -52,6 +57,7 @@ final class OutboxRelay
             });
             ++$count;
         }
+        // Ne pas garder les entités de cette passe pour le prochain appel du relais.
         $this->manager->clear();
         return $count;
     }

@@ -12,6 +12,10 @@ use Psr\Clock\ClockInterface;
 use Symfony\Component\Uid\Uuid;
 use App\Service\Player\VacationCalendar;
 
+/**
+ * Gère les commandes payées, de leur ajout jusqu’à leur résolution.
+ * Le rattrapage lors d’une lecture et les messages du worker passent par les mêmes traitements.
+ */
 final class QueueService
 {
     public function __construct(
@@ -44,6 +48,7 @@ final class QueueService
         return $this->manager->transaction(function () use ($membership, $planet, $group, $slug, $quantity, $requestKey, $tier) {
             $this->guard->lock($membership, $planet);
             $this->vacations->assertCanManageQueues($membership);
+            // Les niveaux et les stocks doivent tenir compte des commandes déjà échues avant tout nouvel achat.
             $this->settleMembershipLocked($membership);
             if (!$this->guard->receipt($membership, $requestKey)) {
                 return 0;
@@ -82,6 +87,7 @@ final class QueueService
             $level = 1;
             $previousLevel = null;
             if (in_array($group, ['buildings', 'technologies'], true)) {
+                // Les niveaux en attente comptent pour le niveau demandé, sans satisfaire les prérequis à l’avance.
                 $quantity = 1;
                 $level = (int) ($group === 'buildings' ? $buildings[$slug][$tier] ?? 0 : $technologies[$slug][$tier] ?? 0) + 1;
                 foreach ($queue as $item) {
@@ -131,7 +137,10 @@ final class QueueService
         });
     }
 
-    /** Réservé au traitement autonome, avec propriétaire et planète verrouillés. */
+    /**
+     * Ajoute une commande de reconstruction pour un empire oublié.
+     * La participation et la planète doivent déjà être verrouillées par l’appelant.
+     */
     public function addReconstructionLocked(
         PlayerUniverse $membership,
         Planet $planet,
@@ -278,6 +287,7 @@ final class QueueService
         $item->startedAt = $at;
         $startedAtField = $item->queueType . 'QueueStartedAt';
         $item->planet->{$startedAtField} = $at;
+        // Un nouveau jeton rend les anciens messages sans effet après un boost ou une reprise.
         $item->dispatchToken = Uuid::v4()->toRfc4122();
         $message = new OutboxMessage();
         $message->kind = 'queue';
@@ -313,7 +323,8 @@ final class QueueService
                     $items[$item->id] = $item;
                 }
             }
-            // Les fins sont traitées dans l’ordre réel, même si la prochaine recherche vient d’une autre colonie.
+            // Chaque fin peut lancer la suivante, y compris une recherche sur une autre colonie.
+            // Recalculer les échéances à chaque tour conserve leur ordre et la production correspondante.
             while (true) {
                 $dueItems = [];
                 $queueHeads = [];
@@ -366,6 +377,7 @@ final class QueueService
     {
         $planet = $item->planet;
         $membership = $item->playerUniverse;
+        // Le worker peut être en retard : appliquer la fin prévue, pas l’heure à laquelle le message est reçu.
         $finish = $item->finishAt();
         if ($item->queueType === 'building') {
             // Calculer les stocks à la date de fin avec les anciens niveaux, avant d’appliquer le nouveau gain.
@@ -473,7 +485,7 @@ final class QueueService
         $this->start($item, $item->startedAt);
     }
 
-    /** Accélération accordée par l’administration ; aucun achat ou point d’entrée joueur gratuit. */
+    /** Accélération administrative ; les boosts consommés par un joueur passent par applyPlayerBoost(). */
     public function boost(
         PlayerUniverse $membership,
         int $id,
@@ -513,6 +525,7 @@ final class QueueService
                 throw new \DomainException('Cette commande est déjà terminée.');
             }
             $rows = [];
+            // Plusieurs remboursements utilisent le même stockage : réserver sa place au fil de l’aperçu.
             $rooms = [];
             $collect = function (QueueItem $command) use (&$collect, &$rows, &$rooms, $membership): void {
                 if ($command->playerUniverse->id !== $membership->id || $command->planet->owner?->id !== $membership->id) {
@@ -527,6 +540,7 @@ final class QueueService
                     default => isset($this->catalog->all('defenses')[$command->itemSlug]) ? 'defenses' : 'ships',
                 };
                 $definition = $this->catalog->getTierForUniverse($membership->universe, $group, $command->itemSlug, $command->tier);
+                // Ne recalculer les coûts que pour les anciennes commandes qui ne les ont pas enregistrés.
                 $paid = $command->paidCosts ?? $this->catalog->costs($definition, $command->itemLevel ?? 1, $command->quantity, $group);
                 if (!isset($rooms[$command->planet->id])) {
                     foreach ($this->resources->snapshot($command->planet) as $slug => $resource) {
@@ -555,6 +569,7 @@ final class QueueService
             $this->guard->lock($membership, $item->planet);
             $this->vacations->assertCanManageQueues($membership);
             $this->settleMembershipLocked($membership);
+            // Le rattrapage a pu terminer cette commande : la relire avant de l’annuler.
             $item = $this->repo->find(QueueItem::class, $id);
             if (!$item) {
                 return;
@@ -594,7 +609,7 @@ final class QueueService
         $this->shiftVacationHeadsLocked($membership, $until->getTimestamp() - $at->getTimestamp());
     }
 
-    /** Annule seulement la partie inutilisée des 90 jours déjà reportés. */
+    /** Au retour anticipé, retire seulement le report de durée qui n’a pas été consommé. */
     public function resumeAfterVacationLocked(PlayerUniverse $membership, int $unusedSeconds): void
     {
         if ($unusedSeconds > 0) {
@@ -614,6 +629,7 @@ final class QueueService
 
     private function removeTree(QueueItem $item): void
     {
+        // Retirer d’abord les niveaux dépendants pour ne laisser aucune commande orpheline.
         foreach ($this->repo->all(QueueItem::class, ['dependsOn' => $item]) as $dependent) {
             $this->removeTree($dependent);
         }

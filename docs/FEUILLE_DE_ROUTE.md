@@ -11,12 +11,17 @@ détaille les mesures, fichiers, vérifications et exceptions justifiées.
 Clôture du 15 novembre : conventions et inventaire final par domaine, correction
 des fins de commande simultanées, mesures serveur sur trois volumes et 132
 actualisations navigateur mesurées. Validation courante : 1 047 tests PHP,
-213 250 assertions, 13 tests Python, lint et compilation réussis. Le complément
-de recette stabilise la préparation des bases navigateur et limite les schedulers
-RabbitMQ du seul profil jetable. La nouvelle suite passe 202/202 au premier essai,
+213 253 assertions lors de la dernière suite, 13 tests Python, lint et compilation
+réussis. La préparation des bases navigateur est stabilisée et les schedulers
+RabbitMQ sont limités dans le seul profil jetable. Dernière suite navigateur :
+202/202 au premier essai,
 sans reprise ; les 12 anciens scénarios instables passent aussi deux fois chacun
 (24/24), avec assertions et délais des actions conservés. Des commentaires français
-expliquent les traitements sensibles dans 18 fichiers, sans changement exécutable.
+expliquent les traitements sensibles. La dernière relecture développe la présentation
+de GameManager, ActionGuard et QueueService, clarifie les noms des files et du relais,
+puis complète les commentaires de 12 fichiers. Structure PHP et correspondance des
+variables vérifiées ; nouvelle suite PHP/Python complète et lint réussis. Les
+commentaires eux-mêmes ne changent aucune instruction.
 Recette interactive sur comptes synthétiques : deux univers/colonies, files communes,
 transport et rapport, archives, guilde/projet/récompense/boost, messages, administration,
 CSV filtré, progression sans onglet, mobile et thèmes. Les parcours complémentaires

@@ -20,6 +20,7 @@ final class PatchNoteController extends AbstractController
         $patchNotes = $notes->published();
         $player = $this->getUser();
         if ($player instanceof \App\Entity\Player && $patchNotes !== []) {
+            // L’ouverture de cette page enregistre la note affichée en tête comme lue.
             $player->preferences['last_patch_note_read_id'] = $patchNotes[0]->id;
             $em->flush();
         }

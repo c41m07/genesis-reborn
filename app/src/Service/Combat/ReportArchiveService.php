@@ -66,6 +66,7 @@ final class ReportArchiveService
             $sql .= ($archived ? ' AND EXISTS' : ' AND NOT EXISTS') . " (SELECT 1 FROM report_archive a WHERE a.player_universe_id=:member AND a.kind='" . $kind . "' AND a.report_id=r.id AND a.archived_at IS NOT NULL)";
         }
         unset($sql);
+        // Compter et paginer après les droits et les filtres, y compris dans l’onglet Tous.
         $all = implode(' UNION ALL ', $queries);
         $selected = $filter === 'all' ? $all : $queries[$filter];
         $connection = $this->em->getConnection();

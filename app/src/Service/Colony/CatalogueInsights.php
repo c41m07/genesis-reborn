@@ -355,6 +355,7 @@ final class CatalogueInsights
         $depths = [];
         $visiting = [];
         $catalog = $membership ? $this->catalog->forUniverse($membership->universe)['catalog'] : [];
+        // Construire tous les liens avant les profondeurs : un prérequis peut être déclaré plus loin dans le catalogue.
         foreach ([
             'buildings',
             'technologies',
@@ -419,6 +420,7 @@ final class CatalogueInsights
                 }
             }
         }
+        // Réutiliser les profondeurs connues et refuser les cycles plutôt que masquer un catalogue invalide.
         $depth = function (string $key) use (&$depth, &$depths, &$visiting, $nodes): int {
             if (isset($depths[$key])) {
                 return $depths[$key];

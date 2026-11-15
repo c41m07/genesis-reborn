@@ -44,6 +44,7 @@ final class AdminGameEventController extends AbstractController
                 $this->addFlash('error', $error->getMessage());
             }
         }
+        // Garder le brouillon si la validation échoue, indépendamment de la page d’historique affichée.
         $archived = $request->query->getBoolean('archived');
         return $this->render('admin/events.html.twig', $reads->gameEvents($archived, $request->query->getInt('page', 1)) + [
             'archived' => $archived,

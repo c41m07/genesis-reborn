@@ -5,6 +5,7 @@ namespace App\Manager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\DBAL\LockMode;
 
+/** Point de passage commun aux services de jeu pour les transactions et les écritures Doctrine. */
 final class GameManager
 {
     public function __construct(private EntityManagerInterface $em)
@@ -15,10 +16,11 @@ final class GameManager
     {
         return $this->em->wrapInTransaction(fn() => $operation());
     }
-    // Une entité chargée avant l’attente peut être périmée : relire son état une fois le verrou obtenu.
+
     public function lock(object $entity): void
     {
         $this->em->lock($entity, LockMode::PESSIMISTIC_WRITE);
+        // L’attente du verrou a pu rendre l’entité périmée : repartir de l’état réellement en base.
         $this->em->refresh($entity);
     }
 

@@ -59,6 +59,7 @@ final class AdminController extends AbstractController
         if (!isset($titles[$screen])) {
             throw $this->createNotFoundException();
         }
+        // Préparer les listes de la seule rubrique demandée ; les compteurs restent communs à la console.
         $listFilters = [
             'q' => mb_substr(trim($request->query->getString('q')), 0, 150),
             'status' => in_array($request->query->getString('status'), ['active', 'suspended'], true) ? $request->query->getString('status') : '',
@@ -76,6 +77,7 @@ final class AdminController extends AbstractController
         $counters = $reads->counters();
         $reports = $screen === 'reports' ? $repo->all(MessageReport::class, ['status' => 'open'], ['createdAt' => 'DESC']) : [];
         $playerReports = $screen === 'reports' ? $repo->all(PlayerReport::class, ['status' => 'open'], ['createdAt' => 'DESC', 'id' => 'DESC']) : [];
+        // Ouvrir la modération est une consultation journalisée ; les autres rubriques ne doivent pas la déclencher.
         if ($screen === 'reports') {
             $admin->recordReportViews($this->getUser(), $reports);
         }
