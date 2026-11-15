@@ -1,6 +1,6 @@
 # Déblocages initiaux permanents — grille du 15 novembre 2026
 
-Lot 1 préparé sur `feature/progression-acces-par-rang`. Voir le [suivi de mission](PROGRESSION_CARBURANT_UNITES.md) pour les vérifications et l’état réel de l’intégration. Aucune activation sur la base de jeu ni publication Alpha annoncée.
+Lot 1 fusionné dans `dev` par la [PR #69](https://github.com/c41m07/genesis-reborn/pull/69), après CI complète réussie. Voir le [suivi de mission](PROGRESSION_CARBURANT_UNITES.md) pour les vérifications et l’état réel de l’intégration. Aucune activation sur la base de jeu ni publication Alpha annoncée.
 
 ## Lecture
 

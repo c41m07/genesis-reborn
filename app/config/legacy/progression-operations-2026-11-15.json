@@ -1,0 +1,135 @@
+{
+  "source_revision": "01bc65ae5ba20077d5506dc303b9c5ae277897ce",
+  "durations": {
+    "buildings": {
+      "fortress": 360,
+      "lab": 240,
+      "mine_antimatter": 120,
+      "mine_hydrogen": 60,
+      "mine_metal": 60,
+      "mine_nano": 60,
+      "power_plant": 120,
+      "shipyard": 1800,
+      "storage_antimatter": 180,
+      "storage_electricity": 180,
+      "storage_hydrogen": 180,
+      "storage_metal": 180,
+      "storage_nano": 180
+    },
+    "technologies": {
+      "automated_defense_repair": 600,
+      "colonial_expansion": 288000,
+      "cryogenic_reserves": 7200,
+      "engineering_foundations": 600,
+      "evasive_navigation": 7200,
+      "intelligence_countermeasures": 600,
+      "modular_cargo_bays": 7200,
+      "nanomaterial_synthesis": 600,
+      "naval_engineering": 600,
+      "rapid_fire_cycle": 21600,
+      "shield_harmonics": 14400,
+      "signature_masking": 600,
+      "signature_reduction": 7200,
+      "structural_armor": 14400,
+      "tactical_intelligence": 600,
+      "target_acquisition": 600,
+      "vector_propulsion": 3600,
+      "weapon_calibration": 7200,
+      "weapons_engineering": 21600
+    },
+    "ships": {
+      "battleship": 172800,
+      "bomber": 1200,
+      "capital": 259200,
+      "colony_ship": 7200,
+      "corvette": 2700,
+      "cruiser": 57600,
+      "destroyer": 21600,
+      "fighter": 180,
+      "frigate": 7200,
+      "heavy_fighter": 600,
+      "interceptor": 240,
+      "probe": 120,
+      "stealth_fighter": 900,
+      "transport": 3600
+    },
+    "defenses": {
+      "ground_turret_anti_capital": 1260,
+      "ground_turret_anti_escort": 540,
+      "ground_turret_anti_heavy": 900,
+      "ground_turret_anti_light": 300
+    }
+  },
+  "fuel_profiles": {
+    "battleship": {
+      "fuel_travel_system": 0.5,
+      "fuel_travel_galaxy": 2,
+      "fuel_orbit": 0.3
+    },
+    "bomber": {
+      "fuel_travel_system": 0.5,
+      "fuel_travel_galaxy": 2,
+      "fuel_orbit": 0.3
+    },
+    "capital": {
+      "fuel_travel_system": 0.5,
+      "fuel_travel_galaxy": 2,
+      "fuel_orbit": 0.3
+    },
+    "colony_ship": {
+      "fuel_travel_system": 0.5,
+      "fuel_travel_galaxy": 2,
+      "fuel_orbit": 0.3
+    },
+    "corvette": {
+      "fuel_travel_system": 0.5,
+      "fuel_travel_galaxy": 2,
+      "fuel_orbit": 0.3
+    },
+    "cruiser": {
+      "fuel_travel_system": 0.5,
+      "fuel_travel_galaxy": 2,
+      "fuel_orbit": 0.3
+    },
+    "destroyer": {
+      "fuel_travel_system": 0.5,
+      "fuel_travel_galaxy": 2,
+      "fuel_orbit": 0.3
+    },
+    "fighter": {
+      "fuel_travel_system": 0.5,
+      "fuel_travel_galaxy": 2,
+      "fuel_orbit": 0.3
+    },
+    "frigate": {
+      "fuel_travel_system": 0.5,
+      "fuel_travel_galaxy": 2,
+      "fuel_orbit": 0.3
+    },
+    "heavy_fighter": {
+      "fuel_travel_system": 0.5,
+      "fuel_travel_galaxy": 2,
+      "fuel_orbit": 0.3
+    },
+    "interceptor": {
+      "fuel_travel_system": 0.5,
+      "fuel_travel_galaxy": 2,
+      "fuel_orbit": 0.3
+    },
+    "probe": {
+      "fuel_travel_system": 0.5,
+      "fuel_travel_galaxy": 2,
+      "fuel_orbit": 0.3
+    },
+    "stealth_fighter": {
+      "fuel_travel_system": 0.5,
+      "fuel_travel_galaxy": 2,
+      "fuel_orbit": 0.3
+    },
+    "transport": {
+      "fuel_travel_system": 0.5,
+      "fuel_travel_galaxy": 2,
+      "fuel_orbit": 0.3
+    }
+  }
+}

@@ -41,12 +41,29 @@ pas à débloquer l’élément. L’accès nouvellement acquis reste ensuite pe
 par joueur/univers pour les recherches, par joueur/colonie pour les autres catégories.
 La [procédure de bascule](DEBLOCAGES.md#activation-après-validation) ne s’exécute
 qu’après sauvegarde vérifiée et autorisation. Le [suivi de mission](PROGRESSION_CARBURANT_UNITES.md)
-distingue les lots implémentés des évolutions de durée, carburant et unités restant à réaliser.
+distingue les lots intégrés, les implémentations locales et les unités restant à réaliser.
 
 ## Queues (PDF 7 p.1–7)
-Trois queues indépendantes par planète. QueueItem : type, slug, niveau cible ou quantité, durée, started_at, queued_at, dispatch_token, depends_on. Ordre id ASC. Échéance non persistée : T0 + somme des durées. Un item actif par type. Prérequis achevés à l'ajout ; exception niveaux successifs via dépendance. Suppression récursive des dépendants. Boost : chaque application retire 25 % du temps restant de l’opération active. Les applications successives se cumulent sur le nouveau temps restant; aucune file en attente n’est accélérée. Ancien message ignoré si token différent ; doublon ignoré après traitement. Persistance et déduction des ressources dans une transaction avec verrou.
+
+Les [durées du 15 novembre](DUREES_CARBURANT.md) s’appliquent aux nouvelles commandes,
+avec les courbes de niveau conservées et les facteurs de rang ×1 / ×1,25 / ×1,5625.
+La taxe des recherches, vaisseaux et défenses reste de 100 E par minute entamée
+de durée effective pour le lot entier ; les bâtiments en sont exclus. Les défenses
+ne reçoivent pas de réduction de durée du chantier ou du bunker. Les opérations
+déjà payées gardent leur durée et leur coût, y compris après la révision du catalogue.
+
+Trois types de file : bâtiments et chantier par planète, recherche commune au joueur dans l’univers. QueueItem : type, slug, niveau cible ou quantité, durée, started_at, queued_at, dispatch_token, depends_on. Ordre id ASC. Échéance non persistée : T0 + somme des durées. Un item actif par type. Prérequis achevés à l'ajout ; exception niveaux successifs via dépendance. Suppression récursive des dépendants. Boost : chaque application retire 25 % du temps restant de l’opération active. Les applications successives se cumulent sur le nouveau temps restant; aucune file en attente n’est accélérée. Ancien message ignoré si token différent ; doublon ignoré après traitement. Persistance et déduction des ressources dans une transaction avec verrou.
 
 ## Trajets (PDF 3 p.2–9)
+
+La consommation est différenciée par classe selon le [barème du 15 novembre](DUREES_CARBURANT.md#carburant-par-classe),
+identique dans les trois rangs. À 50 % de vitesse, le carburant du trajet est divisé
+par deux ; le maintien des missions qui le facturent reste indépendant de ce choix.
+Aucun coût horaire supplémentaire pour le stationnement sur une colonie possédée.
+Les réservations historiques restent conservées ; les coefficients des nouveaux
+départs sont figés pour leurs rappels et replis. Vitesses, distances, réservoirs,
+soutes et usages des unités déjà possédées restent conservés.
+
 UA universelle. Intra-système : abs(positionB-positionA) × 10. Inter-systèmes : sortie 100−positionA×10, hyperespace hypot(dx,dy)×100, entrée 100−positionB×10. Temps par segment = distance / (vitesse minimale de flotte × ratio). Ratio entre 0.1 et 1. Aller-retour symétrique. Carburant aller + stationnement + retour réservé avant départ. Consommation proportionnelle au ratio de vitesse. Chaque vaisseau possède un petit réservoir exclusivement pour le carburant ; les soutes cargo peuvent embarquer le fret et le carburant supplémentaire. Consommation d'orbite horaire indépendante du ratio. Navigation inter-galaxies non définie et refusée jusqu'à spécification.
 
 ## Combat (PDF 1 p.6–8, PDF 2 p.2–6)

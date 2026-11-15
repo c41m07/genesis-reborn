@@ -47,7 +47,7 @@
                     <h3>{{ detail.title }}</h3>
                     {% for paragraph in detail.paragraphs %}<p>{{ paragraph }}</p>{% endfor %}
                     {% if detail.rows %}<dl class="catalog-info-stats">
-                        {% for row in detail.rows %}<div><dt>{{ row.label }}</dt><dd>{% if row.text is defined %}{{ row.text }}{% else %}{{ (row.unit in ['%', 's', 'UA/s'] ? row.value|number_format(2,',',' ')|trim('0','right')|trim(',','right') : row.value|quantity(2, true)) }} {{ row.unit }}{% endif %}</dd></div>{% endfor %}
+                        {% for row in detail.rows %}<div><dt>{{ row.label }}</dt><dd>{% if row.text is defined %}{{ row.text }}{% else %}{{ (row.unit in ['%', 's', 'UA/s'] ? row.value|number_format(2,',',' ')|trim('0','right')|trim(',','right') : row.value|quantity(row.precision|default(2), true)) }} {{ row.unit }}{% endif %}</dd></div>{% endfor %}
                     </dl>{% endif %}
                 </section>
             {% endfor %}

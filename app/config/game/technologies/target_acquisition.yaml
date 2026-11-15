@@ -2,7 +2,7 @@
   "slug": "target_acquisition",
   "label": "Télémétrie de poursuite",
   "max_level": 25,
-  "research_time_base": 600,
+  "research_time_base": 3600,
   "research_time_scaling": 1.8,
   "costs_base": {
     "metal": 1700,

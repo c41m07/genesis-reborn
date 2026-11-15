@@ -31,13 +31,13 @@ final class ShipCostCompositionTest extends TestCase
 
     public function testEveryShipKeepsItsBudgetAndOnlyItsResourceProfilesChange():void
     {
-        $catalog=new GameCatalog(dirname(__DIR__,2).'/config/game');$fixture=$this->fixture();
+        $catalog=\App\Tests\Support\ProgressionOperationsReference::historicalCatalog();$fixture=$this->fixture();
         self::assertCount(14,$catalog->all('ships'));self::assertCount(14,$fixture['ships']);
         foreach($fixture['ships'] as $slug=>$expected){
             $definition=$catalog->get('ships',$slug);$nonCost=$definition;unset($nonCost['cost_profiles']);
             // JSON peut sérialiser une valeur flottante entière sans sa partie décimale.
             $historical=$expected['non_cost_fields'];
-                foreach(['levels','unlock_requirements','tier_unlock_requirements','description','tier_descriptions'] as $field){unset($historical[$field],$nonCost[$field]);}
+                foreach(['levels','unlock_requirements','tier_unlock_requirements','description','tier_descriptions','fuel_capacity_note'] as $field){unset($historical[$field],$nonCost[$field]);}
                 self::assertEquals($historical,$nonCost,$slug.' : caractéristiques hors coûts');
             foreach(self::SHARES as $tier=>$shares){
                 $costs=$catalog->costs($catalog->withTier($definition,$tier));$budget=$this->value($expected['old_profiles'][$tier]);
@@ -56,7 +56,7 @@ final class ShipCostCompositionTest extends TestCase
 
     public function testResearchAndBatchOrdersMatchFrozenRoundedQuotes():void
     {
-        $catalog=new GameCatalog(dirname(__DIR__,2).'/config/game');$calculator=new OperationCalculator($catalog);$fixture=$this->fixture();
+        $catalog=\App\Tests\Support\ProgressionOperationsReference::historicalCatalog();$calculator=new OperationCalculator($catalog);$fixture=$this->fixture();
         $universe=new Universe();$universe->slug='cost-study';$universe->name='Étude des coûts';$maximumDifference=0;
         foreach($fixture['ships'] as $slug=>$ship)foreach($ship['costs'] as $tier=>$profiles)foreach($profiles as $profile=>$quantities){
             $ranks=match($profile){'none'=>[],'mid'=>['basic'=>10,'intermediate'=>5,'superior'=>0],'max'=>['basic'=>25,'intermediate'=>25,'superior'=>25]};

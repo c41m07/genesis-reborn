@@ -141,9 +141,9 @@ final class BalanceMechanicsTest extends TestCase
         }
 
         $research = $universe['catalog']['technologies']['vector_propulsion'];
-        self::assertSame(3600, $calculator->calculate($catalog->withTier($research, 'basic'), 'technologies', 1, 1, [], $universe)['duration']);
-        self::assertSame(4500, $calculator->calculate($catalog->withTier($research, 'intermediate'), 'technologies', 1, 1, [], $universe)['duration']);
-        self::assertSame(5625, $calculator->calculate($catalog->withTier($research, 'superior'), 'technologies', 1, 1, [], $universe)['duration']);
+        self::assertSame(2700, $calculator->calculate($catalog->withTier($research, 'basic'), 'technologies', 1, 1, [], $universe)['duration']);
+        self::assertSame(3375, $calculator->calculate($catalog->withTier($research, 'intermediate'), 'technologies', 1, 1, [], $universe)['duration']);
+        self::assertSame(4219, $calculator->calculate($catalog->withTier($research, 'superior'), 'technologies', 1, 1, [], $universe)['duration']);
     }
 
     public function testTechnologyRankUnlocksRequireOnlyTheRequestedRank(): void

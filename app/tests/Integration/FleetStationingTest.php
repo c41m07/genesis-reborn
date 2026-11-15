@@ -127,6 +127,30 @@ final class FleetStationingTest extends WebTestCase
         $cargo=$fleet->cargo;self::getContainer()->get(FleetService::class)->arrive($fleet->id,$old);self::assertSame($cargo,$fleet->cargo);
     }
 
+    #[\PHPUnit\Framework\Attributes\DataProvider('fuelSnapshots')]
+    public function testStationingFallbackKeepsItsOriginalFuelRates(bool $legacy): void
+    {
+        $universe=$this->player->currentPlayerUniverse->universe;$original=$universe->gameSettings;
+        $settings=$original;$settings['catalog_overrides']['ships']['transport']=[
+            'fuel_travel_system'=>.5,'fuel_travel_galaxy'=>2,'fuel_orbit'=>.3,
+        ];
+        $universe->gameSettings=$settings;$this->em->flush();$fleet=$this->send();
+        $oneWay=$fleet->navigation['station']['leg_fuel'];
+        if ($legacy) unset($fleet->navigation['fuel_profiles']);
+        $universe->gameSettings=$original;$this->target->owner=$this->peer->currentPlayerUniverse;$this->em->flush();
+        $this->arrive($fleet);
+        self::assertSame('returning',$fleet->status);self::assertSame($this->home->id,$fleet->returnPlanet->id);
+        self::assertEqualsWithDelta($oneWay,$fleet->navigation['station']['leg_fuel'],1e-8);
+        self::assertEqualsWithDelta($oneWay,$fleet->reservedFuel,1e-8);
+        $this->arrive($fleet);self::assertSame('completed',$fleet->status);
+        self::assertEqualsWithDelta(0,$this->stock($this->home)->storedFuel,1e-8);
+    }
+
+    public static function fuelSnapshots(): array
+    {
+        return ['historical'=>[true],'frozen'=>[false]];
+    }
+
     #[\PHPUnit\Framework\Attributes\DataProvider('stationingDirections')]
     public function testNoHomeUsesShortestReachableOwnedColony(bool $reverse): void
     {

@@ -21,7 +21,7 @@
   "evasion": 0,
   "signature": 75,
   "base_attack": 220,
-  "build_time_base": 540,
+  "build_time_base": 900,
   "economy_value_budget": 18000,
   "cost_profiles": {
     "basic": {

@@ -2,7 +2,7 @@
   "slug": "nanomaterial_synthesis",
   "label": "Métallurgie des nanomatériaux",
   "max_level": 25,
-  "research_time_base": 600,
+  "research_time_base": 1200,
   "research_time_scaling": 1.8,
   "costs_base": {
     "metal": 1700,

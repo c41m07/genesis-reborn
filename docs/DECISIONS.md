@@ -236,6 +236,31 @@ L’utilisateur valide la progression T1 métal/nano, T2 ajout d’antimatière,
 L’hydrogène de construction/recherche est une dépense industrielle, distincte du carburant réservé au départ des missions et des consommations des usines. Les coûts enregistrés des commandes déjà payées restent conservés. Les surcharges d’univers sont préservées champ par champ. L’étude et les vérifications de démarrage, progression et conservation sont consignées dans [COUTS.md](COUTS.md). Aucun prix d’asset premium ni réglage d’univers n’est modifié par cette décision.
 
 
+## Durées et carburant par classe — décision du 15 novembre 2026
+
+Les [tableaux complets](DUREES_CARBURANT.md) reprennent le prompt validé : nouvelles
+durées initiales de recherche, construction de vaisseaux et défenses, avec courbes,
+facteurs de rang, multiplicateurs d’univers et réductions existants conservés.
+Protocoles de colonisation reste à 80 h de référence au premier niveau Basique.
+Les défenses ne reçoivent aucune réduction du chantier ou du bunker. La taxe
+électrique garde son coefficient de 100 E par minute entamée de durée effective ;
+les hausses comme les baisses sont chiffrées, sans remboursement des paiements anciens.
+
+Le carburant uniforme est remplacé par le barème de classe, commun aux trois rangs.
+Le trajet reste proportionnel à la vitesse choisie ; le maintien reste indépendant
+de celle-ci et limité aux missions qui le facturent déjà. Les vitesses, réservoirs,
+soutes, statistiques et réserves des missions en cours sont conservés. Les nouveaux
+coefficients sont figés au départ pour les rappels et replis ultérieurs ; la reprise
+des missions anciennes et ses limites sont explicites dans la documentation.
+
+Une correction numérique évite la seconde artificielle au plafond de réduction
+de 70 %, sans changer la règle d’arrondi supérieur. Les courbes et paiements
+enregistrés ne sont pas recalculés. Aucun changement SQL pour ce lot.
+
+Implémentation locale du lot 2 ; intégration et activation distinctes. Les unités
+économiques et les simulations conjointes restent les lots suivants. La redistribution
+des prix reste candidate, sans modification des profils M/N/A/H dans le lot 2.
+
 ## Grille commune par rang — décision du 15 novembre 2026
 
 Le prompt validé remplace les prérequis des 150 profils par la [grille complète](DEBLOCAGES.md).

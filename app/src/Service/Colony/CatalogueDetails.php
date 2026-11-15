@@ -342,7 +342,7 @@ final class CatalogueDetails
             }
             $mobility[] = ['label' => 'Consommation en trajet normal', 'value' => (float) ($itemDefinition['fuel_travel_system'] ?? 0), 'unit' => 'H / unité de distance'];
             $mobility[] = ['label' => 'Consommation en trajet entre systèmes', 'value' => (float) ($itemDefinition['fuel_travel_galaxy'] ?? 0), 'unit' => 'H / unité de distance'];
-            $mobility[] = ['label' => 'Consommation en stationnement', 'value' => (float) ($itemDefinition['fuel_orbit'] ?? 0), 'unit' => 'H / h'];
+            $mobility[] = ['label' => 'Consommation en stationnement', 'value' => (float) ($itemDefinition['fuel_orbit'] ?? 0), 'unit' => 'H / h', 'precision' => 3];
             $sections[] = $this->section('Déplacement et chargement', ['Les vitesses et capacités ci-dessous incluent vos recherches. La flotte utilise la vitesse de son vaisseau le plus lent pour chaque segment du trajet.', 'Les réservoirs sont réservés au carburant. Le carburant aller-retour et le stationnement prévu sont réservés dès le départ ; le surplus utilise la soute et réduit la place disponible pour le fret.', 'Le coût réel dépend de la route, de la vitesse choisie et de la composition de la flotte. Consultez l’estimation de mission avant le départ.'], $mobility);
             if ($itemDefinition['slug'] === 'probe') {
                 $sections = [...$sections, ...$this->espionageSections()];

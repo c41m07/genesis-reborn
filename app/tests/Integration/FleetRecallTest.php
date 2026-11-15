@@ -163,6 +163,40 @@ final class FleetRecallTest extends WebTestCase
         self::assertSame(1,$this->em->getRepository(FleetShip::class)->findOneBy(['fleet'=>$idle,'slug'=>'transport'])->quantity);
     }
 
+    #[\PHPUnit\Framework\Attributes\DataProvider('fuelSnapshots')]
+    public function testLostOriginRecallKeepsDepartureFuelAfterCatalogRebalance(bool $legacy): void
+    {
+        $membership=$this->player->currentPlayerUniverse;$original=$membership->universe->gameSettings;
+        $settings=$original;
+        foreach (['transport','fighter'] as $slug) {
+            $settings['catalog_overrides']['ships'][$slug]=['fuel_travel_system'=>.5,'fuel_travel_galaxy'=>2,'fuel_orbit'=>.3];
+        }
+        $membership->universe->gameSettings=$settings;$this->em->flush();
+        $fleet=$this->send();
+        // Simuler un départ ancien ou un départ figé, puis la bascule du catalogue.
+        if ($legacy) unset($fleet->navigation['fuel_profiles']);
+        $membership->universe->gameSettings=$original;
+        $this->home->owner=$this->peer->currentPlayerUniverse;$this->target->owner=$membership;$this->em->flush();
+        $this->clock->sleep(max(1,(int)floor($fleet->travelSeconds/2)));
+        $navigation=self::getContainer()->get(FleetNavigation::class);
+        $point=$navigation->traveled($fleet->navigation,$navigation->progress($fleet,$this->clock->now()))['point'];
+        $system=$this->target->solarSystem;
+        $distances=$navigation->distances($point,[$system->id,$system->galaxy->id,$system->coordX,$system->coordY,$this->target->position]);
+        $expected=$distances['normal']+4*$distances['hyper']; // Deux vaisseaux à 0,5 / 2 H par distance.
+        $before=$this->state($fleet->id);$service=self::getContainer()->get(FleetRecallService::class);
+        $quote=$service->preview($membership,$fleet,$this->target->id);
+        self::assertEqualsWithDelta($expected,$quote['return_fuel'],1e-8);
+        self::assertSame($before,$this->state($fleet->id),'Le devis ne réécrit pas la mission ni son paiement.');
+        self::assertTrue($service->recall($membership,$fleet->id,$this->target->id,$quote['version'],str_repeat('b',32)));
+        self::assertEqualsWithDelta($expected,$fleet->reservedFuel,1e-8);
+        self::assertEqualsWithDelta(50,$quote['freight']['hydrogen'],1e-8);
+    }
+
+    public static function fuelSnapshots(): array
+    {
+        return ['historical'=>[true],'frozen'=>[false]];
+    }
+
     #[\PHPUnit\Framework\Attributes\DataProvider('refusals')]
     public function testRefusalNeverChangesFleetOrRecordsReceipt(string $scenario): void
     {
