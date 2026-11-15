@@ -11,9 +11,11 @@ détaille les mesures, fichiers, vérifications et exceptions justifiées.
 Clôture du 15 novembre : conventions et inventaire final par domaine, correction
 des fins de commande simultanées, mesures serveur sur trois volumes et 132
 actualisations navigateur mesurées. Validation courante : 1 047 tests PHP,
-213 250 assertions, 13 tests Python, lint et compilation réussis. Nouvelle passe
-des 202 scénarios navigateur en cours ; la précédente est conservée comme
-historique. Aucune CI GitHub, intégration ou publication.
+213 250 assertions, 13 tests Python, lint et compilation réussis. Les 202 scénarios
+navigateur sont réussis cumulativement après douze reprises isolées pour délais
+sous charge, sans changer code, assertions ou délais. Environnements de test du
+chantier fermés. Version prête pour la recette complète utilisateur, avec les
+limites et preuves documentées. Aucune CI GitHub, intégration ou publication.
 
 ## Bunker : retrait du prérequis Blindage — 14 novembre 2026
 

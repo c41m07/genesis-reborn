@@ -1,19 +1,19 @@
 # Rework V1 — suivi et reprise
 
-Clôture renforcée reprise depuis `929b4b0` : conventions sur les fichiers
-modifiés, inventaire final par domaine, preuves de concurrence, mesures
-complémentaires et recette ciblée. Les validations ci-dessous restent celles
-des passages précédents jusqu’à l’enregistrement de cette clôture.
+Clôture technique locale validée le 15 novembre 2026 sur le code applicatif
+`e5ca6cb`, branche `chore/rework-v1`. Douze lots terminés sur le périmètre
+réalisable : conventions, inventaire final, préparations ciblées, fiabilité,
+mesures et documentation. Version prête pour la recette complète utilisateur.
 
-Compléments réalisés le 15 novembre 2026 sur le code applicatif `9c8abb7` :
-économie des bâtiments, relations, résumés, pagination et fragments Flottes.
-Validation PHP/Python, lint, compilation, mesures et 202 scénarios navigateur
-réussis après une reprise isolée. La première passe sur `6dd33b7` reste consignée
-comme référence historique. Aucun push, PR, fusion ou déploiement effectué.
+Validation : 1 047 cas PHP / 213 250 assertions, 13 tests Python, lint,
+compilation et couverture navigateur 202/202 après douze reprises isolées.
+Le benchmark facultatif est ignoré dans la suite standard et a été mesuré
+séparément. Barre de ressources protégée ; aucun push, PR, fusion ou déploiement.
+Les passages précédents restent consignés plus bas comme historique.
 
 ## Cadre
 
-### Compléments de clôture en cours
+### Compléments de clôture validés
 
 - Conventions : 24 fichiers PHP déjà concernés remis en forme avec comparaison
   de leur structure PHP avant/après ; noms locaux et paramètres clarifiés dans
@@ -535,15 +535,67 @@ Sa préparation contrôle maintenant l’hôte et le nom de base, puis reconstru
 son propre schéma synthétique. Aucun test affaibli : 60 cas / 2 248 assertions
 réussis après correction. Le lint complet réussit sur l’état remis en forme.
 
+## Validation finale de la clôture
+
+| Contrôle sur le lot cumulé | Résultat |
+| --- | --- |
+| `make validate` | Réussi |
+| `make lint` | PHP, 78 YAML, 169 Twig, injection et schéma synthétique réussis |
+| `make test` | 1 047 cas PHP, 213 250 assertions, un benchmark facultatif ignoré ; 13 tests Python réussis ; 9 min 13,824 s, pic 127 Mio |
+| `make assets` | Réussi, entrée 495 Kio ; CSS et JavaScript identiques au précédent passage validé |
+| `BROWSER_PERSISTENCE=1 make test-browser` | 202 scénarios distincts réussis cumulativement ; première passe 190 réussites, puis 12/12 en reprise isolée |
+| `git diff --check` et liens documentaires | Réussis ; aucun lien local manquant dans les six documents du lot |
+| Protections du bandeau | 18/18 comparaisons de sources identiques à la base |
+| Environnement habituel | Services injectés correctement ; aucune action de jeu ni migration sur sa base |
+
+Les groupes navigateur ont couvert respectivement 51, 59, 43 et 49 cas.
+Résultats initiaux : 51/51, 53/59, 39/43 et 47/49. Les 12 incidents signalent
+un dépassement du délai global de 60 secondes ; dix portent le statut
+`timedOut`, deux le statut `failed` pendant un `expect.poll` après ce délai.
+Aucune erreur globale de rapport. Reprise des seuls douze sélecteurs dans un
+projet neuf, sans autre suite concurrente : 12/12 en 6,5 minutes, sans changer
+code, assertions ou délais. Cette reprise conserve le réglage RabbitMQ standard
+du projet neuf ; le réglage temporaire de la première passe est détaillé ci-dessous.
+
+La réconciliation au manifeste donne 202 attendus / 202 réussis, aucun manquant,
+supplémentaire ou échec non résolu. Rapports et couverture :
+`var/rework-closure-browser-{1,2,3,4,retry}.json` et
+`var/rework-closure-browser-coverage.json`. Les douze incidents initiaux sont
+conservés dans ces preuves ; ils ne sont pas présentés comme une passe initiale
+entièrement verte. Il s’agit de contrôles locaux, pas de CI GitHub.
+
+Les projets PHP, les quatre projets navigateur et celui de reprise créés pour
+cette clôture ont été fermés par leurs lanceurs. Les deux anciens projets de
+tests arrêtés et les autres projets préexistants ont été conservés. Aucun
+environnement temporaire de cette clôture ne subsiste dans l’inventaire Compose.
+Les scripts, mesures et captures synthétiques restent dans `var/`, ignoré par Git.
+
 ## Reprise
 
+Contrôles de clôture déjà terminés sur le code applicatif `e5ca6cb` :
+`make validate`, lint complet, compilation, 1 047 cas PHP / 213 250 assertions
+(un benchmark facultatif ignoré dans la suite standard), 13 tests Python,
+mesures serveur et 132 actualisations DOM. Le benchmark facultatif a aussi été
+exécuté séparément dans les passages consignés plus haut. Le contrôle des
+services de l’instance locale habituelle réussit, sans action de jeu sur sa base.
+
+La passe navigateur a utilisé quatre projets jetables. Une charge moyenne proche
+de 19 a été observée pour 12 processeurs logiques, sans swap utilisé. Pour les
+seuls quatre courtiers RabbitMQ de cette passe, le nombre de schedulers Erlang
+actifs a été réduit dynamiquement de 12 à 2 ; contrôle préalable des étiquettes
+projet/service, sans redémarrage ni modification d’un fichier de configuration.
+Ce réglage était local aux conteneurs jetables et a disparu avec eux. Les
+réglages de l’instance habituelle et les délais/assertions de tests ne changent
+pas. Preuve : `var/rework-closure-browser-resources.json`. Les mesures de
+performance précédentes ont été faites avant cette passe, sans sa concurrence.
+
 - Branche : `chore/rework-v1`, base `48c9a71`, première passe complète validée `6dd33b7` ; compléments depuis `9332789`.
-- Lot actuel : 12/12, validation cumulative de la clôture ; code applicatif `e5ca6cb`.
-- Dernière étape validée : validate/lint/assets, 1 047 tests PHP / 213 250 assertions, 13 Python, mesures serveur et 132 actualisations DOM ; captures examinées.
-- Contrôles en cours : navigateur, quatre projets isolés ; rapports `var/rework-closure-browser-{1,2,3,4}.json` et logs associés. Manifeste 202 scénarios. Premier délai global observé sur galaxy-v2, reprise isolée à effectuer après la passe.
-- Modifications en cours : documentation de la clôture uniquement ; aucune source applicative après les validations PHP.
+- Lot actuel : 12/12 terminé ; code applicatif validé `e5ca6cb`.
+- Dernière étape validée : six contrôles locaux, 202/202 scénarios navigateur réconciliés, mesures et captures, nettoyage des seuls environnements du chantier.
+- Contrôles en cours : aucun ; aucune source applicative après les validations.
+- Modifications en cours : aucune à la clôture ; changements regroupés en commits locaux, aucune correction applicative ouverte.
 - Questions en attente : aucune ; recette complète utilisateur et accès externes distincts.
-- Prochaine action précise : attendre les quatre rapports, reprendre uniquement les échecs expliqués, réconcilier le manifeste et fermer les projets de test créés par ce chantier.
+- Prochaine action précise : recette complète utilisateur sur cette branche, selon la liste en fin de document. Publication vers dev seulement après validation explicite, avec CI complète sur une future PR.
 - Conserver cette branche unique ; aucune PR, fusion ou publication automatique.
 
 ## Travaux et contrôles ciblés de la première passe
@@ -655,10 +707,11 @@ volumes. Les exceptions restantes sont délimitées :
 - Accessibilité : contrôles ciblés, captures et suites automatiques ; aucune
   revendication de conformité RGAA exhaustive. La recette détaillée ci-dessous
   reste à effectuer avec l’utilisateur, notamment les technologies d’assistance.
-- Concurrence : les scénarios navigateur existants d’abandon et de créations
-  simultanées de compositions sont réellement concurrents. Les suites de rejeu
-  et de messages obsolètes ne prouvent pas, à elles seules, toutes les courses
-  possibles entre dépenses et workers. Aucun verrou ou ordre de verrou modifié.
+- Concurrence : cinq courses serveur avec deux connexions réellement bloquées
+  sont maintenant vérifiées, en plus des abandons et compositions simultanés au
+  navigateur. La fin de commande relit son état après les verrous. Cela ne prouve
+  pas toutes les courses possibles de tous les handlers ni l’exploitation avec
+  plusieurs relais/notifiers. Aucun verrou ni ordre de verrou supprimé ou changé.
 - Sources externes/Work inaccessibles et CI GitHub : non vérifiées dans cette
   session ; aucune publication distante. CI complète obligatoire avant une future fusion.
 
