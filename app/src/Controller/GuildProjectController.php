@@ -50,8 +50,10 @@ final class GuildProjectController extends AbstractController
         // La liste affiche seulement le don personnel ; les identités restent dans la fiche.
         $rows=$withContributions ? $repo->all(GuildProjectContribution::class,['project'=>$project]) : [];
         if(!$withContributions) $own=$repo->one(GuildProjectContribution::class,['project'=>$project,'playerUniverseId'=>$actor->id])?->resources??[];
+        $identities=[];
+        foreach($repo->membershipIdentities($actor->universe,array_column($rows,'playerUniverseId')) as $player) $identities[$player->id]=$player;
         foreach($rows as $row) {
-            $player=$repo->find(PlayerUniverse::class,$row->playerUniverseId);
+            $player=$identities[$row->playerUniverseId]??null;
             $contributions[]=['name'=>$player?->getDisplayName()??'Ancien membre #'.$row->playerUniverseId,'resources'=>$row->resources];
             if($row->playerUniverseId===$actor->id) $own=$row->resources;
         }

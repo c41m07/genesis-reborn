@@ -230,6 +230,19 @@ silencieuse d’un autre combat. Test sur douze flottes : une lecture groupée,
 cas vide et historique résolu conservés ; 12 cas / 370 assertions, dont le
 benchmark optionnel ignoré. Les projections des compositions restent inchangées.
 
+## Complément du lot 4 — relations et contributeurs
+
+Les contrats personnels, relations des guildes et identités des commandants
+sont lus par groupes pour l’affichage de Diplomatie. Les autres onglets ne
+préparent pas la liste des commandants. Les priorités guildes/contrats, les
+propositions entrantes communes et l’ordre des résultats de recherche sont
+conservés. Aucun cache partagé ni modification des validations d’actions.
+Les contributeurs de la fiche de projet sont hydratés ensemble, avec les
+anciens membres et le filtre d’univers ; la liste des projets garde le seul
+don personnel. Vérification : 69 tests / 418 assertions réussis, dont
+25 combinaisons comparées à RelationResolver. Deux erreurs de préparation
+(fixture sans proposant et alias DQL réservé) corrigées avant la reprise.
+
 ## Reprise
 
 - Branche : `chore/rework-v1`, base `48c9a71`, code applicatif validé `6dd33b7`.

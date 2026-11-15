@@ -55,6 +55,53 @@ final class GameRepository
     {
         return $this->em->getRepository($class)->count($criteria);
     }
+
+    /** Identités complètes, y compris les anciens membres, limitées à l’univers demandé. */
+    public function membershipIdentities(Universe $universe, ?array $ids = null): array
+    {
+        if ($ids === []) return [];
+        $query = $this->em->createQueryBuilder()->select('membership', 'player', 'former')
+            ->from(PlayerUniverse::class, 'membership')->leftJoin('membership.player', 'player')
+            ->leftJoin('membership.formerPlayer', 'former')->where('membership.universe = :universe')
+            ->setParameter('universe', $universe)->orderBy('membership.id', 'ASC');
+        if ($ids !== null) $query->andWhere('membership.id IN (:ids)')->setParameter('ids', $ids);
+        return $query->getQuery()->getResult();
+    }
+
+    public function personalContracts(PlayerUniverse $viewer): array
+    {
+        return $this->em->createQueryBuilder()->select('contract', 'a', 'b', 'playerA', 'playerB')
+            ->from(\App\Entity\AllianceContract::class, 'contract')
+            ->join('contract.playerA', 'a')->join('contract.playerB', 'b')
+            ->leftJoin('a.player', 'playerA')->leftJoin('b.player', 'playerB')
+            ->where('a = :viewer OR b = :viewer')->andWhere('a.universe = :universe AND b.universe = :universe')
+            ->setParameter('viewer', $viewer)->setParameter('universe', $viewer->universe)
+            ->orderBy('contract.id', 'ASC')->getQuery()->getResult();
+    }
+
+    /** @return array<int,\App\Entity\GuildRelation> */
+    public function guildRelations(\App\Entity\Guild $guild): array
+    {
+        $relations = $this->em->createQueryBuilder()->select('relation', 'a', 'b')
+            ->from(\App\Entity\GuildRelation::class, 'relation')
+            ->join('relation.guildA', 'a')->join('relation.guildB', 'b')
+            ->where('a = :guild OR b = :guild')->andWhere('a.universe = :universe AND b.universe = :universe')
+            ->setParameter('guild', $guild)->setParameter('universe', $guild->universe)->getQuery()->getResult();
+        $byPeer = [];
+        foreach ($relations as $relation) $byPeer[$relation->guildA->id === $guild->id ? $relation->guildB->id : $relation->guildA->id] = $relation;
+        return $byPeer;
+    }
+
+    public function guildMemberships(array $memberships, Universe $universe): array
+    {
+        if ($memberships === []) return [];
+        return $this->em->createQueryBuilder()->select('gm', 'guild')
+            ->from(\App\Entity\GuildMember::class, 'gm')->join('gm.guild', 'guild')
+            ->join('gm.playerUniverse', 'membership')->where('membership IN (:memberships)')
+            ->andWhere('membership.universe = :universe AND guild.universe = :universe')
+            ->andWhere('guild.archivedAt IS NULL')->setParameter('memberships', $memberships)
+            ->setParameter('universe', $universe)->getQuery()->getResult();
+    }
     /** @return list<PlayerUniverse> */
     public function forgottenEmpirePreviewCandidates(\DateTimeImmutable $now, int $conversionSeconds, int $limit, int $afterId, \DateTimeImmutable $cutoff): array
     {

@@ -1,6 +1,6 @@
 <?php
 namespace App\Controller;
-use App\Entity\{AllianceContract,PlayerUniverse,Guild,GuildMember,GuildRank,GuildRelation};
+use App\Entity\{Guild,GuildMember,GuildRank};
 use App\Service\Universe\UniverseContext;
 use App\Service\Player\{RelationResolver,DiplomacyService,DiplomacyAccessPolicy,GuildRankService,GuildPresence};
 use App\Service\Catalog\GameCatalog;
@@ -42,27 +42,23 @@ final class DiplomacyController extends AbstractController
         if(!$own && ($tab==='diplomacy' || ($tab==='guilds' && $search!==''))) $tab='join';
         if(!isset($tabs[$tab])) $tab='guilds';
         $incomingPersonalCount=0;
-        foreach([
-            ...$repo->all(AllianceContract::class,['playerA'=>$m,'status'=>['pending','peace_pending']]),
-            ...$repo->all(AllianceContract::class,['playerB'=>$m,'status'=>['pending','peace_pending']]),
-        ] as $contract) {
+        $personalContracts=$repo->personalContracts($m);
+        $guildRelationsByPeer=$own ? $repo->guildRelations($own) : [];
+        foreach($personalContracts as $contract) {
             $peer=$contract->playerA->id===$m->id ? $contract->playerB : $contract->playerA;
-            if($contract->proposer->id!==$m->id && $peer->isPlayerControlled() && $peer->universe->id===$m->universe->id) ++$incomingPersonalCount;
+            if(in_array($contract->status,['pending','peace_pending'],true) && $contract->proposer->id!==$m->id && $peer->isPlayerControlled() && $peer->universe->id===$m->universe->id) ++$incomingPersonalCount;
         }
         $players=[];$searchPlayers=[];
-        foreach($tab==='relations' ? $repo->all(PlayerUniverse::class,['universe'=>$m->universe]) : [] as $pu) {
-            if($pu->id===$m->id || !$pu->isPlayerControlled()) continue;
-            $contract=$relations->contract($m,$pu);
-            $allied=$relations->allied($m,$pu);
-            $enemy=$relations->enemy($m,$pu);
-            if($contract || $allied || $enemy) $players[]=['player'=>$pu,'contract'=>$contract,'allied'=>$allied,'enemy'=>$enemy,'guildStatus'=>$relations->guildStatus($own,$relations->guild($pu))];
+        if($tab==='relations') {
+            $rows=$relations->displayRows($m,$repo->membershipIdentities($m->universe),$own,$personalContracts,$guildRelationsByPeer);
+            $players=array_values(array_filter($rows,static fn(array $row):bool=>$row['contract'] || $row['allied'] || $row['enemy']));
+            foreach($repo->searchMessageRecipients($m,$search) as $player) if(isset($rows[$player->id])) $searchPlayers[]=$rows[$player->id];
         }
-        if($tab==='relations') foreach($repo->searchMessageRecipients($m,$search) as $pu) $searchPlayers[]=['player'=>$pu,'contract'=>$relations->contract($m,$pu),'allied'=>$relations->allied($m,$pu),'enemy'=>$relations->enemy($m,$pu),'guildStatus'=>$relations->guildStatus($own,$relations->guild($pu))];
         $guilds=[];
         foreach($repo->all(Guild::class,['universe'=>$m->universe,'archivedAt'=>null]) as $guild) {
             $isOwn=$own?->id===$guild->id;
-            $status=$relations->guildStatus($own,$guild);
-            $relation=$own && !$isOwn ? $repo->one(GuildRelation::class,$own->id<$guild->id ? ['guildA'=>$own,'guildB'=>$guild] : ['guildA'=>$guild,'guildB'=>$own]) : null;
+            $relation=$own && !$isOwn ? ($guildRelationsByPeer[$guild->id]??null) : null;
+            $status=$isOwn ? 'allies' : ($relation?->status??'neutral');
             $matchesSearch=mb_strlen($search)>=2 && mb_stripos($guild->name,$search)!==false;
             $showDetails=($isOwn && in_array($tab,['guilds','members'],true))
                 || (!$isOwn && ($tab==='diplomacy' && ($status!=='neutral' || $relation?->proposal!==null || $matchesSearch)))

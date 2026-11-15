@@ -5,6 +5,30 @@ use App\Repository\GameRepository;
 final class RelationResolver
 {
     public function __construct(private GameRepository $repo) {}
+    /** Préparation d’affichage uniquement ; les validations d’actions relisent leur état. */
+    public function displayRows(PlayerUniverse $viewer, array $players, ?Guild $own, array $contracts, array $guildRelations): array
+    {
+        $guilds = [];
+        foreach ($this->repo->guildMemberships($players, $viewer->universe) as $member) {
+            $guilds[$member->playerUniverse->id] = $member->guild;
+        }
+        $byPeer = [];
+        foreach ($contracts as $contract) {
+            $byPeer[$contract->playerA->id === $viewer->id ? $contract->playerB->id : $contract->playerA->id] = $contract;
+        }
+        $rows = [];
+        foreach ($players as $player) {
+            if ($player->id === $viewer->id || !$player->isPlayerControlled() || $player->universe->id !== $viewer->universe->id) continue;
+            $guild = $guilds[$player->id] ?? null;
+            $status = $own && $guild ? ($own->id === $guild->id ? 'allies' : ($guildRelations[$guild->id]->status ?? 'neutral')) : 'neutral';
+            $contract = $byPeer[$player->id] ?? null;
+            // Les alliances et rivalités de guilde gardent la priorité sur les contrats personnels.
+            $rows[$player->id] = ['player'=>$player, 'contract'=>$contract, 'guildStatus'=>$status,
+                'allied'=>$status !== 'enemies' && ($status === 'allies' || $contract?->status === 'accepted'),
+                'enemy'=>$status === 'enemies' || ($status !== 'allies' && in_array($contract?->status, AllianceContract::HOSTILE_STATUSES, true))];
+        }
+        return $rows;
+    }
     public function guild(PlayerUniverse $p): ?Guild
     {
         $guild=$p->isPlayerControlled()?$this->repo->one(GuildMember::class,['playerUniverse'=>$p])?->guild:null;
