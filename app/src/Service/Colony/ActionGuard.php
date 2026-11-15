@@ -18,51 +18,51 @@ final class ActionGuard
     {
     }
     // L’appelant ouvre la transaction ; le verrou de participation sérialise la recherche entre ses colonies.
-    public function lock(PlayerUniverse $m, Planet $planet): void
+    public function lock(PlayerUniverse $membership, Planet $planet): void
     {
-        $this->lockMembership($m);
+        $this->lockMembership($membership);
         $this->manager->lock($planet);
-        if ($planet->owner?->id !== $m->id || $planet->solarSystem->galaxy->universe->id !== $m->universe->id) {
+        if ($planet->owner?->id !== $membership->id || $planet->solarSystem->galaxy->universe->id !== $membership->universe->id) {
             throw new \DomainException('Cette planète ne vous appartient pas dans cet univers.');
         }
     }
 
-    public function lockMembership(PlayerUniverse $m): void
+    public function lockMembership(PlayerUniverse $membership): void
     {
-        $this->lockMembershipForProcessing($m);
-        $this->activity->assertCanControl($m);
+        $this->lockMembershipForProcessing($membership);
+        $this->activity->assertCanControl($membership);
     }
     // Les traitements automatiques peuvent terminer les commandes déjà payées d'un empire oublié.
-    public function lockMembershipForProcessing(PlayerUniverse $m): void
+    public function lockMembershipForProcessing(PlayerUniverse $membership): void
     {
-        $this->manager->lock($m);
-        $this->manager->lock($m->universe);
-        if (!$m->universe->isAccessible($this->clock->now())) {
+        $this->manager->lock($membership);
+        $this->manager->lock($membership->universe);
+        if (!$membership->universe->isAccessible($this->clock->now())) {
             throw new \DomainException('Univers inaccessible.');
         }
     }
 
-    public function lockForCompletion(PlayerUniverse $m, Planet $planet): void
+    public function lockForCompletion(PlayerUniverse $membership, Planet $planet): void
     {
-        $this->lockMembershipForProcessing($m);
+        $this->lockMembershipForProcessing($membership);
         $this->manager->lock($planet);
-        if ($planet->owner?->id !== $m->id || $planet->solarSystem->galaxy->universe->id !== $m->universe->id) {
+        if ($planet->owner?->id !== $membership->id || $planet->solarSystem->galaxy->universe->id !== $membership->universe->id) {
             throw new \DomainException('Cette planète ne correspond plus à la commande.');
         }
     }
 
-    public function receipt(PlayerUniverse $m, string $key): bool
+    public function receipt(PlayerUniverse $membership, string $key): bool
     {
         if (!preg_match('/^[a-f0-9]{32}$/D', $key)) {
             throw new \DomainException('Identifiant de requête invalide.');
         }
-        if ($this->repo->one(ActionReceipt::class, ['playerUniverse' => $m, 'requestKey' => $key])) {
+        if ($this->repo->one(ActionReceipt::class, ['playerUniverse' => $membership, 'requestKey' => $key])) {
             return false;
         }
-        $r = new ActionReceipt();
-        $r->playerUniverse = $m;
-        $r->requestKey = $key;
-        $this->manager->save($r);
+        $receipt = new ActionReceipt();
+        $receipt->playerUniverse = $membership;
+        $receipt->requestKey = $key;
+        $this->manager->save($receipt);
         return true;
     }
 }

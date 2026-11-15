@@ -19,6 +19,15 @@ commentaires dans l’historique Git.
 La relecture des noms, commentaires et critères détaillés suit ; les résultats
 précédents restent historiques et ne sont pas présentés comme une nouvelle suite.
 
+Noms : participation, définition, technologie, bâtiment, défense, reçu et message
+de relais remplacent les abréviations ambiguës de trois fichiers déjà concernés.
+Chaque méthode est vérifiée sans collision de variable ; la structure PHP reste
+identique après application de cette seule correspondance de noms. Aucun appel
+avec les anciens noms de paramètres n’a été trouvé dans les sources, tests et
+configuration. Clés persistées, propriétés, routes et messages inchangés.
+Preuve : `var/rework-last-renames-proof.json`. Une suite PHP/Python complète est
+lancée dans un nouveau projet isolé ; aucun schéma de la base habituelle n’est modifié.
+
 ## Recette autonome supplémentaire — validée localement
 
 Demande du 15 novembre après `3cdfefa` : effectuer la recette complète en
