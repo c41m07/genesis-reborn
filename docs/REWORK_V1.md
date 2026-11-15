@@ -1,5 +1,24 @@
 # Rework V1 — suivi et reprise
 
+## Dernière relecture du prompt et des conventions — en cours
+
+Demande complémentaire après `a9f5ddc` : rapprocher chaque exigence du prompt
+des preuves disponibles et écrire les commentaires comme des notes de maintenance
+du développeur. Lot 12/12 conservé, complexité 3/5 ; branche et exclusions inchangées.
+État initial propre. Les 31 fichiers PHP applicatifs du lot cumulé sont recensés
+dans `var/rework-last-conventions-inventory.json`, sans parcourir les dépendances.
+
+Écart confirmé : GameManager, ActionGuard et les anciennes parties de QueueService
+restaient condensés. Mise en forme limitée à ces trois fichiers, avec le formateur
+déjà utilisé et installé ; AST avant/après strictement identique. Chaque instruction
+et condition est développée, sans déplacement des verrous, requêtes ou écritures.
+Preuve : `var/rework-last-format-proof.log`. Le lint complet et les 18 protections
+du bandeau réussissent après ce changement. Ce complément est séparé des noms et
+commentaires dans l’historique Git.
+
+La relecture des noms, commentaires et critères détaillés suit ; les résultats
+précédents restent historiques et ne sont pas présentés comme une nouvelle suite.
+
 ## Recette autonome supplémentaire — validée localement
 
 Demande du 15 novembre après `3cdfefa` : effectuer la recette complète en
