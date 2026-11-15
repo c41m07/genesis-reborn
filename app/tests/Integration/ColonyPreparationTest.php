@@ -103,13 +103,84 @@ final class ColonyPreparationTest extends KernelTestCase
         }
     }
 
+    public function testBuildingCardsKeepEconomicValuesAfterEventsVacationsAndQueueCompletion(): void
+    {
+        $catalog = self::getContainer()->get(\App\Service\Catalog\GameCatalog::class);
+        $repository = self::getContainer()->get(GameRepository::class);
+        $resources = self::getContainer()->get(ResourceService::class);
+        $view = self::getContainer()->get(ColonyView::class);
+        $clock = self::getContainer()->get('clock');
+        $this->planet->position = 9;
+        $this->membership->universe->gameSettings = ['multipliers' => ['resource_production' => 3]];
+        foreach (['mine_metal', 'mine_antimatter', 'power_plant', 'storage_metal'] as $slug) {
+            foreach (['basic' => 2, 'intermediate' => 3, 'superior' => 1] as $tier => $level) {
+                $building = new PlanetBuilding();
+                $building->planet = $this->planet;
+                $building->slug = $slug;
+                $building->tier = $tier;
+                $building->level = $level;
+                $this->em->persist($building);
+            }
+        }
+        $queue = new \App\Entity\QueueItem();
+        $queue->planet = $this->planet;
+        $queue->playerUniverse = $this->membership;
+        $queue->queueType = 'building';
+        $queue->itemSlug = 'mine_metal';
+        $queue->itemLevel = 3;
+        $queue->durationSeconds = 10;
+        $queue->startedAt = $queue->queuedAt = $clock->now();
+        $queue->dispatchToken = 'rework-economic-queue';
+        $this->planet->buildingQueueStartedAt = $clock->now();
+        $this->em->persist($queue);
+        $event = new \App\Entity\GameEvent();
+        $event->name = 'Bonus synthétique';
+        $event->type = 'production_bonus';
+        $event->startsAt = $clock->now();
+        $event->endsAt = $clock->now()->modify('+1 hour');
+        $event->parameters = ['percentage' => 50];
+        $event->universe = $this->membership->universe;
+        $this->em->persist($event);
+        $period = new \App\Entity\VacationPeriod();
+        $period->membership = $this->membership;
+        $period->startedAt = $clock->now();
+        $period->scheduledEndAt = $clock->now()->modify('+1 hour');
+        $period->endedAt = $clock->now();
+        $this->em->persist($period);
+        $this->em->flush();
+
+        foreach (['normal', 'event', 'vacation', 'resumed'] as $state) {
+            $event->status = $state === 'normal' ? 'draft' : 'active';
+            $period->endedAt = $state === 'vacation' ? null : $clock->now();
+            $this->em->flush();
+            $data = $view->data($this->membership, $this->planet, true, 'buildings');
+            $levels = $repository->levelsByTier(PlanetBuilding::class, ['planet' => $this->planet]);
+            $tech = $repository->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $this->membership]);
+            foreach ($data['cards']['buildings'] as $card) {
+                $definition = $card['definition'];
+                self::assertSame(self::getContainer()->get(\App\Service\Colony\CatalogueDetails::class)->describe($definition, 'buildings', $card['target'], $this->planet, $levels, $tech), $card['details'], $state);
+                self::assertSame(self::getContainer()->get(\App\Service\Colony\CatalogueInsights::class)->benefits($definition, 'buildings', $card['target'], $this->planet, $levels, $tech), $card['benefits'], $state);
+                if ($definition['slug'] === 'mine_metal' && $card['tier'] === 'basic') {
+                    self::assertSame(4, $card['target']);
+                    self::assertSame(2, $card['level']);
+                }
+            }
+            self::assertSame($resources->snapshot($this->planet, true), $data['resources'], 'La barre garde son calcul indépendant.');
+        }
+        $clock->sleep(11);
+        $data = $view->data($this->membership, $this->planet, true, 'buildings');
+        $metal = array_values(array_filter($data['cards']['buildings'], static fn (array $card): bool => $card['definition']['slug'] === 'mine_metal' && $card['tier'] === 'basic'))[0];
+        self::assertSame(3, $metal['level'], 'La synchronisation précède la préparation économique.');
+        self::assertSame(4, $metal['target']);
+    }
+
     #[DataProvider('sections')]
     public function testOnlyTheRequestedCatalogIsPrepared(string $section): void
     {
         $holder = self::getContainer()->get('doctrine.debug_data_holder');
         $holder->reset();
         $data = self::getContainer()->get(ColonyView::class)->data($this->membership, $this->planet, section: $section);
-        $budget = $section === 'buildings' ? 400 : 100;
+        $budget = 100;
         self::assertLessThan($budget, count($holder->getData()['default'] ?? []), 'La préparation ne doit pas relire tous les catalogues.');
         if ($section === 'tree') {
             self::assertNotEmpty($data['technology_tree']);

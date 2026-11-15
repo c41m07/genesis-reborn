@@ -9,7 +9,7 @@ manuelle ci-dessous. Aucun push, PR, fusion ou déploiement effectué.
 - Branche unique : `chore/rework-v1`, créée depuis `origin/dev` actualisée à `48c9a71`.
 - Arbre initial propre ; huit worktrees existants recensés et conservés.
 - Douze lots conservés. Aucun push, PR, fusion, déploiement ou changement d’équilibrage.
-- Barre de ressources exclue : endpoint, services de calcul, templates et fréquence inchangés.
+- Barre de ressources exclue : endpoint, calculs, templates et fréquence inchangés. L’extension de ResourceService pour les cartes est optionnelle et n’est pas utilisée par le bandeau.
 - Aucune dépendance nouvelle, migration ou suppression prévue.
 - Tests PHP sur `database-test/genesis_v2_test` exclusivement ; tests navigateur dans un projet jetable distinct.
 - Ne pas exécuter deux suites PHP en parallèle : elles reconstruisent le même schéma synthétique.
@@ -193,6 +193,36 @@ habituels sont préservés. Les preuves et configurations temporaires restent
 dans `var/` et `/tmp/genesis-rework-browser-*`, sans données réelles ni secrets.
 La CI GitHub n’a pas été exécutée ; elle restera obligatoire sur une future PR.
 
+## Complément du lot 3 — économie des bâtiments, 15 novembre 2026
+
+Les cartes partagent désormais un contexte immuable de vacances et de bonus
+d’événements, créé après la synchronisation des commandes et relu à chaque
+préparation. Aucun cache de service ni copie des formules économiques.
+ResourceService accepte ce contexte uniquement comme argument optionnel de
+`rate` et `factoryConsumption`. Ses appels existants, son snapshot, les
+capacités, la simulation et les écritures conservent leurs traitements.
+Le contexte refuse une utilisation avec une autre colonie.
+
+Comparaison isolée avec `9332789`, même fixture et cache Symfony préchauffé,
+premier passage séparé puis dix passages chauds :
+
+| Mesure Bâtiments | Avant | Après |
+|---|---|---|
+| Requêtes SQL | 275 | 37 |
+| Temps serveur médian [min–max] | 97,59 ms [95,23–120,49] | 39,26 ms [33,97–53,58] |
+| Temps SQL médian [min–max] | 53,04 ms [52,35–67,24] | 8,64 ms [7,66–10,07] |
+| Mémoire allouée médiane du processus | 46,5 Mio | 42,5 Mio |
+
+Les 39 cartes et leurs détails sont conservés. Il s’agit de mesures du service,
+pas d’un temps HTTP ou navigateur. Données brutes :
+`var/rework-economy-measures.json` (ignoré). Les autres sections gardent leurs
+nombres de requêtes. Le test de caractérisation compare toutes les cartes aux
+appels sans contexte, après changement d’événement, vacances et reprise ; il
+vérifie aussi la fin d’une commande et l’égalité du snapshot économique.
+Contrôles : 62 tests, 2 475 assertions, un benchmark optionnel ignoré puis
+exécuté séparément ; `make lint` réussi. La validation cumulative finale reste
+à relancer après les autres compléments.
+
 ## Reprise
 
 - Branche : `chore/rework-v1`, base `48c9a71`, code applicatif validé `6dd33b7`.
@@ -299,8 +329,8 @@ nettoyage. Tous les domaines du plan sont inventoriés, mais la profondeur de
 revue reste ciblée ; tous les composants existants n’ont pas été relus ligne
 par ligne. Les écarts suivants restent explicitement ouverts :
 
-1. Préparation économique propre aux cartes de bâtiments : 275 requêtes sur la
-   fixture, sans modifier le moteur ni les traitements du bandeau exclu.
+1. Préparation économique des bâtiments traitée dans le complément du lot 3 :
+   37 requêtes sur la fixture ; mesures à plusieurs volumes encore à compléter.
 2. Résumés de rapports évitant l’hydratation des rounds ; accès au classement
    quotidien pour un seul profil sans enrichir tout l’univers.
 3. Regroupement complémentaire des identités/relations diplomatiques, des

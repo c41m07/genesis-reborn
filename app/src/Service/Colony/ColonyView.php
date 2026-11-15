@@ -68,6 +68,8 @@ final class ColonyView
             $definition=$this->catalog->getTierForUniverse($m->universe,'technologies',$item->itemSlug,$item->tier);
             $queues['research'][]=['item'=>$item,'label'=>$definition['label'],'finish'=>$finish];
         }
+        // Aucun état partagé : chaque préparation relit les événements et les vacances.
+        $productionContext=$section==='buildings' ? $this->resources->catalogueContext($planet) : null;
         foreach(in_array($section,['buildings','technologies','ships','defenses'],true) ? [$section] : [] as $group) {
             $groupDefinitions=$definitions[$group];$filterOptions[$group]=$this->filters->options($group,$groupDefinitions);
             $categoryOrder=array_flip(array_keys($filterOptions[$group]));
@@ -98,7 +100,7 @@ final class ColonyView
                     $failures=$this->access->failures($m,$planet,$group,$d,$tier,$buildings,$tech);
                     if($group==='defenses')$level=0;
                     $operation=$this->calculator->calculate($d,$group,$target,1,$buildings,$universeConfig,$tech);
-                    $cards[$group][]=['filter_category'=>$this->filters->category($group,$base),'details'=>$this->details->describe($d,$group,$target,$planet,$buildings,$tech),'benefits'=>$this->insights->benefits($d,$group,$target,$planet,$buildings,$tech),'unlocks'=>$this->insights->unlocks($group,$slug,$target,$tier,$m->universe),'definition'=>$d,'tier'=>$tier,'level'=>$level,'target'=>$target,'quantity'=>$group==='ships'?($cardShipQuantities[$slug][$tier]??0):($group==='defenses'?($defenseQuantities[$slug][$tier]??0):0),'duration'=>$operation['duration'],'costs'=>$operation['costs'],'failures'=>array_values(array_unique($failures)),'maximum'=>isset($d['max_level'])&&$target>$d['max_level'],'queued'=>$queued!==null];
+                    $cards[$group][]=['filter_category'=>$this->filters->category($group,$base),'details'=>$this->details->describe($d,$group,$target,$planet,$buildings,$tech,$productionContext),'benefits'=>$this->insights->benefits($d,$group,$target,$planet,$buildings,$tech,$productionContext),'unlocks'=>$this->insights->unlocks($group,$slug,$target,$tier,$m->universe),'definition'=>$d,'tier'=>$tier,'level'=>$level,'target'=>$target,'quantity'=>$group==='ships'?($cardShipQuantities[$slug][$tier]??0):($group==='defenses'?($defenseQuantities[$slug][$tier]??0):0),'duration'=>$operation['duration'],'costs'=>$operation['costs'],'failures'=>array_values(array_unique($failures)),'maximum'=>isset($d['max_level'])&&$target>$d['max_level'],'queued'=>$queued!==null];
                 }
             }
         }

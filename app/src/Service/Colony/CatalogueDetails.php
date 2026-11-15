@@ -16,13 +16,13 @@ final class CatalogueDetails
         private RequirementChecker $requirements,
     ) {}
 
-    public function describe(array $d,string $group,int $target,Planet $planet,array $buildings,array $tech):array
+    public function describe(array $d,string $group,int $target,Planet $planet,array $buildings,array $tech,?CatalogueProductionContext $context=null):array
     {
         $details=['intro'=>'','scope'=>'','sections'=>[],'performance'=>[],
             'acquired'=>$planet->owner!==null && isset($planet->owner->catalogUnlocks[\App\Service\Requirement\CatalogAccess::key($planet,$group,$d['slug'],$d['_tier'])]),
             'requirements'=>$this->accessRequirements($d,$group,$target,$planet,$buildings,$tech),
             'unlocks'=>$this->relatedUnlocks($d,$group,$planet)];
-        if($group==='buildings')return array_replace($details,$this->building($d,$target,$planet,$buildings));
+        if($group==='buildings')return array_replace($details,$this->building($d,$target,$planet,$buildings,$context));
         if($group==='technologies')return array_replace($details,$this->technology($d,$target,$planet,$tech));
         return array_replace($details,$this->unit($d,$group,$planet,$buildings,$tech));
     }
@@ -32,16 +32,16 @@ final class CatalogueDetails
         return ['title'=>$title,'paragraphs'=>$paragraphs,'rows'=>$rows];
     }
 
-    private function building(array $d,int $target,Planet $planet,array $levels):array
+    private function building(array $d,int $target,Planet $planet,array $levels,?CatalogueProductionContext $context):array
     {
         $slug=$d['slug'];$tier=$d['_tier'];$next=$levels;$next[$slug][$tier]=$target;
         $sections=[];$rules=$this->catalog->rules();
         if(isset($d['production_resource'])){
             $resource=$d['production_resource'];$label=mb_strtolower($rules['resources'][$resource]);
             $intro=match($resource){'electricity'=>'Produit de l’électricité sur cette colonie.','antimatter'=>'Produit de l’antimatière sur cette colonie.','hydrogen'=>'Produit de l’hydrogène sur cette colonie.','nano'=>'Produit des nanomatériaux sur cette colonie.',default=>'Produit du '.$label.' sur cette colonie.'};
-            $rows=[['label'=>'Production nominale actuelle','value'=>$this->resources->rate($planet,$resource,0,$levels)*3600,'unit'=>'/ h'],
-                ['label'=>'Production nominale après amélioration','value'=>$this->resources->rate($planet,$resource,0,$next)*3600,'unit'=>'/ h']];
-            $before=$this->resources->factoryConsumption($planet,$slug,$levels);$after=$this->resources->factoryConsumption($planet,$slug,$next);
+            $rows=[['label'=>'Production nominale actuelle','value'=>$this->resources->rate($planet,$resource,0,$levels,$context)*3600,'unit'=>'/ h'],
+                ['label'=>'Production nominale après amélioration','value'=>$this->resources->rate($planet,$resource,0,$next,$context)*3600,'unit'=>'/ h']];
+            $before=$this->resources->factoryConsumption($planet,$slug,$levels,$context);$after=$this->resources->factoryConsumption($planet,$slug,$next,$context);
             foreach(['electricity'=>'Électricité','hydrogen'=>'Hydrogène'] as $r=>$name)if(max($before[$r],$after[$r])>0){
                 $rows[]=['label'=>$name.($r==='electricity'?' consommée':' consommé').' avant amélioration','value'=>$before[$r]*3600,'unit'=>'/ h'];
                 $rows[]=['label'=>$name.($r==='electricity'?' consommée':' consommé').' après amélioration','value'=>$after[$r]*3600,'unit'=>'/ h'];

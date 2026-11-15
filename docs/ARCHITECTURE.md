@@ -112,6 +112,10 @@ commune restent disponibles dans les pages de colonie ; les quantités du
 catalogue sont chargées par groupe, sans lecture SQL par carte. Ces données
 restent locales à l’appel et ne servent jamais d’autorisation d’écriture.
 Le calcul et l’endpoint de la barre de ressources restent inchangés.
+Les cartes Bâtiments transmettent un contexte économique immuable, préparé après
+la synchronisation des files, aux calculs nominaux de ResourceService. Ce contexte
+regroupe les lectures d’événements et de vacances pour cette préparation seulement ;
+les appels existants et les snapshots de la barre ne l’utilisent pas.
 
 Les actualisations des colonies demandent JSON avec `X-Genesis-Live: 1` et
 `Accept: application/json`. La route conserve ses contrôles, synchronisations

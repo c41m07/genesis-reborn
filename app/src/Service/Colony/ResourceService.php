@@ -33,10 +33,21 @@ final class ResourceService
         foreach(GameCatalog::TIERS as $tier)$added+=$this->tierLevel($storedLevels,$tier)*$this->catalog->tierFactor($tier)*$this->catalog->rules()['storage_capacity_per_level'];
         return $this->catalog->rules()['base_storage_capacity']+$added;
     }
-    public function rate(Planet $planet,string $slug,int $mineLevel,?array $levels=null):float
+    public function catalogueContext(Planet $planet): CatalogueProductionContext
     {
-        if ($planet->owner !== null && $this->vacations->isActive($planet->owner)) return 0.0;
-        $levels??=['mine_'.$slug=>['basic'=>$mineLevel]];$input=$this->operatingInput($planet,$levels);$rate=(float)($input['base'][$slug]??0.0);
+        $now = $this->clock->now();
+        return new CatalogueProductionContext(
+            $planet,
+            $planet->owner !== null && $this->vacations->isActive($planet->owner, $now),
+            $this->events->productionMultiplier($planet->solarSystem->galaxy->universe, $now),
+        );
+    }
+
+    public function rate(Planet $planet,string $slug,int $mineLevel,?array $levels=null,?CatalogueProductionContext $context=null):float
+    {
+        $context?->assertPlanet($planet);
+        if ($context?->onVacation ?? ($planet->owner !== null && $this->vacations->isActive($planet->owner))) return 0.0;
+        $levels??=['mine_'.$slug=>['basic'=>$mineLevel]];$input=$this->operatingInput($planet,$levels,productionMultiplier:$context?->eventMultiplier);$rate=(float)($input['base'][$slug]??0.0);
         foreach($input['factories'] as $factory)if($factory['resource']===$slug)$rate+=$factory['rate'];
         return $rate;
     }
@@ -68,21 +79,22 @@ final class ResourceService
         return $first+($last-$first)*$ratio;
     }
 
-    private function operatingInput(Planet $planet,array $levels,?\DateTimeImmutable $at=null):array
+    private function operatingInput(Planet $planet,array $levels,?\DateTimeImmutable $at=null,?float $productionMultiplier=null):array
     {
         $rules=$this->catalog->rules();$universe=$this->catalog->forUniverse($planet->solarSystem->galaxy->universe);$mult=(float)$universe['multipliers']['resource_production'];$base=[];
         foreach($rules['resources'] as $slug=>$label)$base[$slug]=(float)($rules['base_production'][$slug]??0)*$this->positionFactor($planet,$slug)*$mult;
         $factories=[];
-        $eventMultiplier=$this->events->productionMultiplier($planet->solarSystem->galaxy->universe,$at);
+        $eventMultiplier=$productionMultiplier??$this->events->productionMultiplier($planet->solarSystem->galaxy->universe,$at);
         foreach($base as $slug=>$rate)$base[$slug]*=$eventMultiplier;
         foreach($universe['catalog']['buildings'] as $building){$resource=$building['production_resource']??null;if(!is_string($resource))continue;$ranked=$levels[$building['slug']]??0;$weighted=0.0;foreach(GameCatalog::TIERS as $tier)$weighted+=$this->tierLevel($ranked,$tier)*$this->catalog->productionTierFactor($tier);if($weighted<=0)continue;$per=(float)($building['production_per_level']??$rules['mine_production_per_level']??0);$rate=$weighted*$per*$this->positionFactor($planet,$resource)*$mult*$eventMultiplier;$electricity=$resource==='electricity'?0.0:$weighted*(float)($building['electricity_use_per_level']??$rules['factory_electricity_use_per_level']??0)*$this->positionFactor($planet,$resource)*$mult;$hydrogen=$resource==='antimatter'?$rate*(float)($building['hydrogen_per_output']??$rules['antimatter_hydrogen_per_unit']??8):0.0;$factories[]=['slug'=>$building['slug'],'resource'=>$resource,'rate'=>$rate,'electricity'=>$electricity,'hydrogen'=>$hydrogen];}
         return ['base'=>$base,'factories'=>$factories];
     }
 
-    public function factoryConsumption(Planet $planet,string $buildingSlug,array $levels):array
+    public function factoryConsumption(Planet $planet,string $buildingSlug,array $levels,?CatalogueProductionContext $context=null):array
     {
-        if ($planet->owner !== null && $this->vacations->isActive($planet->owner)) return ['electricity'=>0.0,'hydrogen'=>0.0];
-        $input=$this->operatingInput($planet,$levels);$result=['electricity'=>0.0,'hydrogen'=>0.0];
+        $context?->assertPlanet($planet);
+        if ($context?->onVacation ?? ($planet->owner !== null && $this->vacations->isActive($planet->owner))) return ['electricity'=>0.0,'hydrogen'=>0.0];
+        $input=$this->operatingInput($planet,$levels,productionMultiplier:$context?->eventMultiplier);$result=['electricity'=>0.0,'hydrogen'=>0.0];
         foreach($input['factories'] as $factory)if($factory['slug']===$buildingSlug){$result['electricity']+=(float)$factory['electricity'];$result['hydrogen']+=(float)$factory['hydrogen'];}
         return $result;
     }
