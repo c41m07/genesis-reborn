@@ -26,6 +26,7 @@ final class SocialProfileView
         if (!$target || !$target->isPlayerControlled() || $target->universe->id !== $viewer->universe->id) {
             throw new \DomainException('Commandant inaccessible dans cet univers.');
         }
+        // Le score vient du snapshot quotidien ; l’identité et l’accès restent contrôlés sur l’état courant.
         $daily = $this->leaderboard->forPlayer($viewer, $target);
         $score = $daily['player'];
         $categories = [

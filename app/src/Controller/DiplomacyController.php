@@ -104,6 +104,7 @@ final class DiplomacyController extends AbstractController
         if (!isset($tabs[$tab])) {
             $tab = 'guilds';
         }
+        // Le compteur des propositions reste commun aux onglets ; les listes détaillées sont préparées ensuite.
         $incomingPersonalCount = 0;
         $personalContracts = $repository->personalContracts($membership);
         $guildRelationsByPeer = $ownGuild ? $repository->guildRelations($ownGuild) : [];
@@ -130,6 +131,7 @@ final class DiplomacyController extends AbstractController
             $relation = $ownGuild && !$isOwn ? $guildRelationsByPeer[$guild->id] ?? null : null;
             $status = $isOwn ? 'allies' : $relation?->status ?? 'neutral';
             $matchesSearch = mb_strlen($search) >= 2 && mb_stripos($guild->name, $search) !== false;
+            // Charger membres et historique seulement si l’onglet affiche réellement les détails de cette guilde.
             $showDetails = $isOwn && in_array($tab, ['guilds', 'members'], true) || !$isOwn && ($tab === 'diplomacy' && ($status !== 'neutral' || $relation?->proposal !== null || $matchesSearch)) || $tab === 'join' && $matchesSearch;
             $guilds[] = [
                 'guild' => $guild,

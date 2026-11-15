@@ -27,6 +27,7 @@ final class AdminAuditExport
 
     private static function cell(string $value): string
     {
+        // Préfixer les caractères de formule pour que le tableur conserve ces cellules en texte.
         $value = trim(preg_replace('/\R/u', ' ', $value));
         return preg_match('/^[=+\-@]/u', $value) ? "'".$value : $value;
     }

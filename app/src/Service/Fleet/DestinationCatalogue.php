@@ -101,6 +101,7 @@ final class DestinationCatalogue
             }
             return $result;
         }
+        // Filtrer les mondes connus côté serveur avant toute suggestion ; le filtre du navigateur ne suffit pas.
         $owned = $this->repo->planets($viewer->universe, $viewer);
         $others = $mission === 'station' ? [] : array_filter($this->repo->discoveredPlanets($viewer), static fn(Planet $p): bool => $p->owner?->id !== $viewer->id);
         foreach ([...$owned, ...array_values($others)] as $planet) {
@@ -210,6 +211,7 @@ final class DestinationCatalogue
         mixed $selection = null,
     ): Planet|SolarSystem
     {
+        // Une suggestion peut être périmée : vérifier de nouveau la sélection reçue du formulaire.
         $this->assertMission($mission);
         if (!$viewer->isPlayerControlled()) {
             throw new \DomainException('Destination inaccessible.');

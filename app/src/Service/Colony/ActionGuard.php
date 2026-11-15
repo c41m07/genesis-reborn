@@ -7,7 +7,7 @@ use Psr\Clock\ClockInterface;
 final class ActionGuard
 {
     public function __construct(private GameManager $manager,private GameRepository $repo,private ClockInterface $clock,private \App\Service\Player\EmpireActivityService $activity) {}
-    // Every caller is inside a database transaction. Membership serializes research across planets.
+    // L’appelant ouvre la transaction ; le verrou de participation sérialise la recherche entre ses colonies.
     public function lock(PlayerUniverse $m,Planet $planet): void
     {
         $this->lockMembership($m);$this->manager->lock($planet);

@@ -98,6 +98,7 @@ final class FleetController extends AbstractController
         if ($selectedPlanet) {
             $request->getSession()->set('selected_planet_' . $m->id, $selectedPlanet->id);
         }
+        // Les compositions disponibles viennent seulement des flottes au sol de la colonie active.
         $holds = $repo->all(Fleet::class, ['playerUniverse' => $m, 'homePlanet' => $selectedPlanet, 'status' => 'idle']);
         $shipsByFleet = [];
         foreach ($holds ? $repo->all(FleetShip::class, ['fleet' => $holds]) : [] as $ship) {

@@ -384,6 +384,7 @@ final class CatalogueDetails
                 $current = $owned[$requirement['slug']] ?? [];
                 $current = is_numeric($current) ? $tier === 'basic' ? (int) $current : 0 : (int) ($current[$tier] ?? 0);
                 $key = $kind . ':' . $requirement['slug'] . ':' . $tier;
+                // Un même prérequis peut revenir plusieurs fois : conserver son seuil le plus exigeant.
                 if (isset($result[$key]) && $result[$key]['required'] >= (int) $requirement['level']) {
                     continue;
                 }
@@ -434,6 +435,7 @@ final class CatalogueDetails
         }
         $result = [];
         $universe = $this->catalog->forUniverse($planet->solarSystem->galaxy->universe);
+        // Déduire les déblocages des prérequis réels évite une seconde liste manuelle qui pourrait diverger.
         foreach ($universe['catalog'] as $kind => $definitions) {
             foreach ($definitions as $base) {
                 foreach (GameCatalog::TIERS as $tier) {

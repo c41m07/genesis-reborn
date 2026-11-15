@@ -24,6 +24,7 @@ final class GameRepository
     /** @return array{membershipId: int, planetId: int}|null */
     public function queueContext(int $id): ?array
     {
+        // Prélecture des identités pour les verrous ; elle ne remplace pas le contrôle de la commande sous verrou.
         $row = $this->em->getConnection()->fetchAssociative(
             'SELECT player_universe_id, planet_id FROM queue_item WHERE id = ?',
             [$id],
@@ -435,6 +436,7 @@ final class GameRepository
     /** @return array<int,int> */
     public function queueCounts(PlayerUniverse $membership, array $planets): array
     {
+        // Des identifiants fournis ne suffisent pas : borner aussi aux colonies possédées dans cet univers.
         if ($planets === []) {
             return [];
         }
@@ -449,6 +451,7 @@ final class GameRepository
     /** @return list<QueueItem> */
     public function researchQueue(PlayerUniverse $membership): array
     {
+        // L’ordre est commun aux colonies de la participation, indépendamment de la planète affichée.
         return $this->all(QueueItem::class, ['playerUniverse' => $membership, 'queueType' => 'research'], ['id' => 'ASC']);
     }
 
@@ -473,6 +476,7 @@ final class GameRepository
 
     public function messageContacts(PlayerUniverse $viewer): array
     {
+        // Réunir les deux sens des échanges privés ; les canaux guilde et Global ne sont pas des contacts privés.
         $rows = $this->em->createQueryBuilder()->select('IDENTITY(m.sender) AS senderId, IDENTITY(m.recipient) AS recipientId, MAX(m.id) AS latest, SUM(CASE WHEN m.recipient = :viewer AND m.readAt IS NULL THEN 1 ELSE 0 END) AS unread')->from(\App\Entity\SocialMessage::class, 'm')->where('m.guild IS NULL')->andWhere('m.recipient IS NOT NULL')->andWhere('(m.sender = :viewer OR m.recipient = :viewer)')->setParameter('viewer', $viewer)->groupBy('m.sender, m.recipient')->getQuery()->getArrayResult();
         $contacts = [];
         $peerIds = [];

@@ -35,6 +35,27 @@ Constats et correction de l’infrastructure de test :
 - Vérifications ciblées : syntaxe Node, validation du profil Compose, diff et
   18 protections du bandeau réussis. La suite complète et la recette UI suivent.
 
+Contrôle des commentaires demandé pendant la recette : quatre commentaires
+anglais hérités dans QueueService et ActionGuard ont été traduits. Des explications
+ciblées ont été ajoutées dans 18 fichiers, dont GameManager, les préparations de
+diplomatie/flottes/profils, les lectures de rapports, la pagination, l’export CSV,
+les compatibilités d’espionnage, les fragments Twig et colony-live. Elles décrivent
+les raisons des verrous, les droits, les lectures périmées et les risques de perte
+de saisie ; elles ne répètent pas chaque affectation ou boucle.
+
+Les commentaires déjà présents dans ColonyView (synchronisation avant lecture),
+OutboxRelay (republication après un arrêt), DailyLeaderboard (snapshot quotidien
+et anciens rangs) et admin-list (réponses obsolètes et focus) sont conservés.
+La précédente déclaration de clôture ne devait pas être interprétée comme une
+vérification exhaustive de tous les commentaires du code ancien.
+
+Preuves du complément : instructions de 14 fichiers PHP identiques après retrait
+des commentaires et espaces, AST JavaScript identique, trois templates strictement
+identiques après retrait des commentaires Twig. Syntaxes PHP/JS/Twig et diff
+vérifiés ; aucun code exécutable modifié. Résultats :
+`var/rework-comments-{php,frontend}-proof.json`. La compilation des assets sera
+refaite après la suite navigateur pour éviter de remplacer ses fichiers en cours.
+
 Clôture technique locale validée le 15 novembre 2026 sur le code applicatif
 `e5ca6cb`, branche `chore/rework-v1`. Douze lots terminés sur le périmètre
 réalisable : conventions, inventaire final, préparations ciblées, fiabilité,

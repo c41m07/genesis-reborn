@@ -51,6 +51,7 @@ final class PlayerCombatSimulation
         if (!$report || $report->sender->universe->id !== $owner->universe->id) {
             throw new \DomainException('Rapport inaccessible dans cet univers.');
         }
+        // Une catégorie absente reste inconnue ; une catégorie présente et vide confirme l’absence de forces.
         $forces = [];
         foreach (['fleets' => 'ships', 'defenses' => 'defenses', 'research' => 'research'] as $category => $target) {
             if (!array_key_exists($category, $report->snapshot)) {
@@ -58,6 +59,7 @@ final class PlayerCombatSimulation
             }
             $forces[$target] = [];
             foreach ($report->snapshot[$category] as $slug => $entry) {
+                // Les anciens rapports sans rang restent lisibles à côté du format actuel par rang.
                 if (isset($entry['quantity']) || isset($entry['level'])) {
                     [$type, $tier] = array_pad(explode(':', $slug, 2), 2, 'basic');
                     $forces[$target][$type][$tier] = (int) ($entry[$target === 'research' ? 'level' : 'quantity'] ?? 0);
@@ -115,6 +117,7 @@ final class PlayerCombatSimulation
 
     private function canonical(array $values): array
     {
+        // Normaliser les zéros et l’ordre des clés évite une fausse modification due au seul format de saisie.
         $result = [];
         foreach ($values as $key => $value) {
             $normalized = is_array($value) ? $this->canonical($value) : (is_numeric($value) ? (int) $value : $value);
@@ -160,6 +163,7 @@ final class PlayerCombatSimulation
             'draw' => 0,
             'ongoing' => 0,
         ];
+        // Dériver les dix graines de celle saisie permet de rejouer la même série de simulations.
         for ($index = 0; $index < self::TRIALS; $index++) {
             $trial = $this->run($owner, $forces, $trialSeed);
             $trialSeed = ($trialSeed + 1) % 0x100000000;

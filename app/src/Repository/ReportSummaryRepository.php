@@ -5,7 +5,7 @@ namespace App\Repository;
 use App\Entity\{Planet, PlayerUniverse};
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityManagerInterface;
-/** Résumés d’affichage ; les rapports détaillés restent des entités complètes. */
+/** La liste ne charge que ses métadonnées ; les rapports détaillés conservent leurs preuves complètes. */
 final class ReportSummaryRepository
 {
     public function __construct(private EntityManagerInterface $em)
@@ -14,6 +14,7 @@ final class ReportSummaryRepository
 
     public function combats(PlayerUniverse $viewer, array $ids): array
     {
+        // Même une liste d’identifiants déjà paginée doit être filtrée par les droits et l’univers du lecteur.
         if ($ids === []) {
             return [];
         }

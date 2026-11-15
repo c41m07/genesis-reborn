@@ -1,4 +1,4 @@
-{% import 'ui/macros.html.twig' as ui %}
+{# Le même catalogue HTML sert à la page complète et aux fragments ; ses clés data-live-region restent communes à colony-live. #}{% import 'ui/macros.html.twig' as ui %}
 <div class="workspace colony-catalog" data-live-region="catalog" aria-label="Catalogue et opérations de la colonie" data-controller="catalog-filter">
 {% for group,items in cards %}{% if group==section %}
 <section id="panel-{{ group }}" data-controller="building-catalog" data-building-catalog-show-locked-value="{{ show_locked_items ? 'true' : 'false' }}" data-action="hashchange@window->building-catalog#followHash click->building-catalog#rememberFilter" aria-label="{{ {buildings:'Bâtiments',technologies:'Recherche',ships:'Chantier spatial',defenses:'Défenses'}[group] }}">

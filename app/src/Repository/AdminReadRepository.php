@@ -102,6 +102,7 @@ final class AdminReadRepository
         if ($filters['q'] !== '') {
             $query->andWhere('f.title LIKE :query OR p.username LIKE :query')->setParameter('query', '%' . $filters['q'] . '%');
         }
+        // Le curseur de consultation et les compteurs portent sur tous les résultats filtrés, avant la pagination.
         $stats = (clone $query)->select("COUNT(f.id) AS total, COALESCE(MAX(f.id), 0) AS latest, SUM(CASE WHEN f.status = 'open' THEN 1 ELSE 0 END) AS openCount")->getQuery()->getSingleResult();
         return $this->page($query, 'f', $page, ['f.createdAt' => 'DESC', 'f.id' => 'DESC'], (int) $stats['total']) + ['latest' => (int) $stats['latest'], 'openCount' => (int) $stats['openCount']];
     }
@@ -171,6 +172,7 @@ final class AdminReadRepository
         ?int $total = null,
     ): array
     {
+        // Le comptage reprend tous les filtres ; le limiter à cette page ferait perdre le total réel.
         $total ??= (int) (clone $query)->select('COUNT(' . $alias . '.id)')->getQuery()->getSingleScalarResult();
         $pages = max(1, (int) ceil($total / 50));
         $page = max(1, min($page, $pages));

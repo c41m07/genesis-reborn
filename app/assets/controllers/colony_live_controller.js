@@ -44,6 +44,7 @@ export default class extends Controller {
             if (generation !== this.generation || location.href !== contextUrl || !this.element.isConnected) return;
             const doc = new DOMParser().parseFromString(html, 'text/html');
             let deferred = false;
+            // Préserver les formulaires modifiés et différer les zones portant le focus pour ne pas interrompre la saisie.
             for (const region of document.querySelectorAll('[data-live-region]')) {
                 if (region.querySelector('form[data-dirty="true"]')) continue;
                 if (region.contains(document.activeElement)) {

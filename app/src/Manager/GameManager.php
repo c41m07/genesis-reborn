@@ -9,6 +9,7 @@ final class GameManager
     {
         return $this->em->wrapInTransaction(fn() => $operation());
     }
+    // Une entité chargée avant l’attente peut être périmée : relire son état une fois le verrou obtenu.
     public function lock(object $entity): void { $this->em->lock($entity, LockMode::PESSIMISTIC_WRITE); $this->em->refresh($entity); }
     public function save(object $entity): void { $this->em->persist($entity); }
     public function remove(object $entity): void { $this->em->remove($entity); }

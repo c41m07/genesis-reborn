@@ -127,7 +127,7 @@ final class QueueService
         $item->dispatchToken=Uuid::v4()->toRfc4122();
         $o=new OutboxMessage();$o->kind='queue';$o->targetId=$item->id;$o->token=$item->dispatchToken;$o->dueAt=$item->finishAt();$this->manager->save($o);
     }
-    /** Reconcile all elapsed work before any spending, preview or gameplay read. */
+    /** Rattrape les commandes échues selon l’horloge et les vacances, avant une lecture ou une dépense. */
     public function synchronize(PlayerUniverse $m,?\DateTimeImmutable $until=null): void
     {
         $this->manager->transaction(function()use($m,$until){
@@ -183,7 +183,7 @@ final class QueueService
     {
         $planet=$item->planet;$m=$item->playerUniverse;$finish=$item->finishAt();
         if($item->queueType==='building') {
-            // Settle using the OLD production and storage capacity exactly at the event date.
+            // Calculer les stocks à la date de fin avec les anciens niveaux, avant d’appliquer le nouveau gain.
             $this->resources->materialize($planet,$finish);
             $b=$this->repo->one(PlanetBuilding::class,['planet'=>$planet,'slug'=>$item->itemSlug,'tier'=>$item->tier])??new PlanetBuilding();
             $b->planet=$planet;$b->slug=$item->itemSlug;$b->tier=$item->tier;$b->level=$item->itemLevel;
@@ -215,6 +215,7 @@ final class QueueService
     }
     public function complete(int $id, string $token): void
     {
+        // Ce contexte choisit seulement les verrous ; la commande et ses droits seront revérifiés sous verrou.
         $context = $this->repo->queueContext($id);
         if ($context === null) {
             return;
@@ -249,7 +250,7 @@ final class QueueService
         $this->start($item, $item->startedAt);
     }
 
-    /** Operator-granted boosts only: no unspecified player currency or free public endpoint. */
+    /** Accélération accordée par l’administration ; aucun achat ou point d’entrée joueur gratuit. */
     public function boost(PlayerUniverse $m,int $id,float $divisor,string $key): void
     {
         $this->manager->transaction(function()use($m,$id,$divisor,$key){
