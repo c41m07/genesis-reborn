@@ -19,12 +19,12 @@ final class CatalogueDetails
     }
 
     public function describe(
-        array $d,
+        array $itemDefinition,
         string $group,
         int $target,
         Planet $planet,
         array $buildings,
-        array $tech,
+        array $technologies,
         ?CatalogueProductionContext $context = null,
     ): array
     {
@@ -33,17 +33,17 @@ final class CatalogueDetails
             'scope' => '',
             'sections' => [],
             'performance' => [],
-            'acquired' => $planet->owner !== null && isset($planet->owner->catalogUnlocks[\App\Service\Requirement\CatalogAccess::key($planet, $group, $d['slug'], $d['_tier'])]),
-            'requirements' => $this->accessRequirements($d, $group, $target, $planet, $buildings, $tech),
-            'unlocks' => $this->relatedUnlocks($d, $group, $planet),
+            'acquired' => $planet->owner !== null && isset($planet->owner->catalogUnlocks[\App\Service\Requirement\CatalogAccess::key($planet, $group, $itemDefinition['slug'], $itemDefinition['_tier'])]),
+            'requirements' => $this->accessRequirements($itemDefinition, $group, $target, $planet, $buildings, $technologies),
+            'unlocks' => $this->relatedUnlocks($itemDefinition, $group, $planet),
         ];
         if ($group === 'buildings') {
-            return array_replace($details, $this->building($d, $target, $planet, $buildings, $context));
+            return array_replace($details, $this->building($itemDefinition, $target, $planet, $buildings, $context));
         }
         if ($group === 'technologies') {
-            return array_replace($details, $this->technology($d, $target, $planet, $tech));
+            return array_replace($details, $this->technology($itemDefinition, $target, $planet, $technologies));
         }
-        return array_replace($details, $this->unit($d, $group, $planet, $buildings, $tech));
+        return array_replace($details, $this->unit($itemDefinition, $group, $planet, $buildings, $technologies));
     }
 
     private function section(string $title, array $paragraphs = [], array $rows = []): array
@@ -52,21 +52,21 @@ final class CatalogueDetails
     }
 
     private function building(
-        array $d,
+        array $itemDefinition,
         int $target,
         Planet $planet,
         array $levels,
         ?CatalogueProductionContext $context,
     ): array
     {
-        $slug = $d['slug'];
-        $tier = $d['_tier'];
+        $slug = $itemDefinition['slug'];
+        $tier = $itemDefinition['_tier'];
         $next = $levels;
         $next[$slug][$tier] = $target;
         $sections = [];
         $rules = $this->catalog->rules();
-        if (isset($d['production_resource'])) {
-            $resource = $d['production_resource'];
+        if (isset($itemDefinition['production_resource'])) {
+            $resource = $itemDefinition['production_resource'];
             $label = mb_strtolower($rules['resources'][$resource]);
             $intro = match ($resource) {
                 'electricity' => 'Produit de l’électricité sur cette colonie.',
@@ -78,10 +78,10 @@ final class CatalogueDetails
             $rows = [['label' => 'Production nominale actuelle', 'value' => $this->resources->rate($planet, $resource, 0, $levels, $context) * 3600, 'unit' => '/ h'], ['label' => 'Production nominale après amélioration', 'value' => $this->resources->rate($planet, $resource, 0, $next, $context) * 3600, 'unit' => '/ h']];
             $before = $this->resources->factoryConsumption($planet, $slug, $levels, $context);
             $after = $this->resources->factoryConsumption($planet, $slug, $next, $context);
-            foreach (['electricity' => 'Électricité', 'hydrogen' => 'Hydrogène'] as $r => $name) {
-                if (max($before[$r], $after[$r]) > 0) {
-                    $rows[] = ['label' => $name . ($r === 'electricity' ? ' consommée' : ' consommé') . ' avant amélioration', 'value' => $before[$r] * 3600, 'unit' => '/ h'];
-                    $rows[] = ['label' => $name . ($r === 'electricity' ? ' consommée' : ' consommé') . ' après amélioration', 'value' => $after[$r] * 3600, 'unit' => '/ h'];
+            foreach (['electricity' => 'Électricité', 'hydrogen' => 'Hydrogène'] as $consumedResource => $name) {
+                if (max($before[$consumedResource], $after[$consumedResource]) > 0) {
+                    $rows[] = ['label' => $name . ($consumedResource === 'electricity' ? ' consommée' : ' consommé') . ' avant amélioration', 'value' => $before[$consumedResource] * 3600, 'unit' => '/ h'];
+                    $rows[] = ['label' => $name . ($consumedResource === 'electricity' ? ' consommée' : ' consommé') . ' après amélioration', 'value' => $after[$consumedResource] * 3600, 'unit' => '/ h'];
                 }
             }
             $sections[] = $this->section('Production et entretien', [
@@ -91,10 +91,10 @@ final class CatalogueDetails
                 'La barre de ressources affiche le débit net réel, après consommation, et la productivité des usines actives. Une usine dont le stockage de sortie est plein suspend ses consommations inutiles ; les productions d’hydrogène et d’électricité continuent à alimenter les autres usines si nécessaire.',
             ], $rows);
             if ($resource === 'antimatter') {
-                $sections[] = $this->section('Approvisionnement en hydrogène', ['Chaque unité d’antimatière produite consomme ' . $this->number((float) ($d['hydrogen_per_output'] ?? $rules['antimatter_hydrogen_per_unit'] ?? 8)) . ' unités d’hydrogène.', 'Sans stock d’hydrogène, la production d’antimatière est limitée par l’hydrogène disponible par heure. Sans aucun apport, elle s’arrête ; le rendement de secours électrique ne compense pas ce manque.']);
+                $sections[] = $this->section('Approvisionnement en hydrogène', ['Chaque unité d’antimatière produite consomme ' . $this->number((float) ($itemDefinition['hydrogen_per_output'] ?? $rules['antimatter_hydrogen_per_unit'] ?? 8)) . ' unités d’hydrogène.', 'Sans stock d’hydrogène, la production d’antimatière est limitée par l’hydrogène disponible par heure. Sans aucun apport, elle s’arrête ; le rendement de secours électrique ne compense pas ce manque.']);
             }
-        } elseif (isset($d['storage_resource'])) {
-            $resource = $d['storage_resource'];
+        } elseif (isset($itemDefinition['storage_resource'])) {
+            $resource = $itemDefinition['storage_resource'];
             $ratio = max(0.0, min(1.0, (float) ($rules['combat_loot_protected_storage_ratio'] ?? 0.1)));
             $before = $this->resources->capacity($planet, $resource, $levels);
             $after = $this->resources->capacity($planet, $resource, $next);
@@ -111,7 +111,7 @@ final class CatalogueDetails
                 'lab' => 'Accélère les nouvelles recherches lancées depuis cette colonie.',
                 'shipyard' => 'Accélère la construction de nouveaux vaisseaux sur cette colonie.',
                 'fortress' => 'Augmente la structure des défenses au sol de cette colonie.',
-                default => $d['description'] ?? '',
+                default => $itemDefinition['description'] ?? '',
             };
             $sections[] = $this->section('Fonctionnement', match ($slug) {
                 'lab' => ['Les trois rangs contribuent ensemble à la réduction du temps de recherche, avec des rendements décroissants.', 'La recherche est partagée entre vos colonies de cet univers, mais le laboratoire utilisé est celui de la colonie où elle est lancée.', 'Les durées des opérations déjà en file restent celles enregistrées à leur lancement.'],
@@ -124,15 +124,15 @@ final class CatalogueDetails
     }
 
     private function technology(
-        array $d,
+        array $itemDefinition,
         int $target,
         Planet $planet,
         array $levels,
     ): array
     {
-        $effect = $d['effect'] ?? [];
+        $effect = $itemDefinition['effect'] ?? [];
         $type = $effect['type'] ?? '';
-        $slug = $d['slug'];
+        $slug = $itemDefinition['slug'];
         $rules = $this->catalog->rules();
         $sections = [];
         $scope = match ($effect['targets'] ?? '') {
@@ -163,7 +163,7 @@ final class CatalogueDetails
             'signature_masking' => 'Réduit le risque de détection de vos sondes pendant une mission d’espionnage.',
             'intelligence_countermeasures' => 'Augmente le risque de détection des sondes qui espionnent vos colonies.',
             'tactical_intelligence' => 'Améliore vos rapports d’espionnage et réduit les renseignements obtenus par les sondes adverses.',
-            default => $d['description'] ?? '',
+            default => $itemDefinition['description'] ?? '',
         };
         if (in_array($slug, ['signature_masking', 'intelligence_countermeasures', 'tactical_intelligence'], true)) {
             $sections = $this->espionageSections();
@@ -184,7 +184,7 @@ final class CatalogueDetails
         } elseif ($type === 'defense_rebuild') {
             $sections[] = $this->section('Après le combat', ['Le taux s’applique aux défenses détruites, séparément pour chaque type et rang. Le nombre reconstruit est arrondi à l’entier inférieur.', 'Exemple : un taux de 10 % appliqué à 9 défenses détruites ne reconstruit aucune unité ; sur 10 défenses détruites, il en reconstruit une.', 'Cette recherche ne répare pas les vaisseaux et ne soigne pas les unités entre deux rounds.']);
         } elseif ($type === 'planet_limit') {
-            $sections[] = $this->colonizationSection($d, $target, $planet, $levels);
+            $sections[] = $this->colonizationSection($itemDefinition, $target, $planet, $levels);
         } elseif (in_array($type, ['time_discount', 'cost_discount'], true)) {
             $sections[] = $this->section('Application', [$type === 'time_discount' ? 'La réduction est calculée au lancement de chaque nouvelle construction de bâtiment.' : 'La réduction est calculée au lancement de chaque nouvelle construction concernée, sur les ressources facturées. Les montants sont arrondis vers le haut.', 'Les opérations déjà en file conservent leur coût payé et leur durée enregistrée.', ($effect['targets'] ?? '') === 'ships' ? 'Les défenses et les bâtiments ne bénéficient pas de cette réduction.' : 'Les recherches, vaisseaux et défenses ne bénéficient pas de cette réduction.']);
         }
@@ -194,40 +194,40 @@ final class CatalogueDetails
 
     private function espionageSections(): array
     {
-        $s = $this->catalog->all('espionage');
+        $settings = $this->catalog->all('espionage');
         $bases = [];
         foreach (['basic' => 'Basique', 'intermediate' => 'Intermédiaire', 'superior' => 'Supérieur'] as $tier => $label) {
-            $bases[] = $label . ' : ' . $this->number((float) $s['base_detection_by_tier'][$tier]) . ' %';
+            $bases[] = $label . ' : ' . $this->number((float) $settings['base_detection_by_tier'][$tier]) . ' %';
         }
         return [$this->section('Détection des sondes', [
             'Risque de détection de base selon le rang des sondes : ' . implode(' ; ', $bases) . '. Pour un mélange, la moyenne est pondérée par le nombre de sondes de chaque rang, sans arrondi intermédiaire.',
-            'Chaque niveau effectif de Discipline du secret de la cible ajoute ' . $this->number((float) $s['intelligence_countermeasures_weight']) . ' points ; chaque niveau effectif d’Écran de brouillage de l’émetteur retire ' . $this->number((float) $s['stealth_weight']) . ' points.',
-            'Chaque sonde envoyée au-delà de la première ajoute ' . $this->number((float) $s['extra_probe_weight']) . ' point(s) de risque. Les sondes présentes chez la cible ajoutent ' . $this->number((float) $s['local_probe_weight']) . ' point(s) par tranche complète de ' . $s['local_probe_batch_size'] . ' sondes, dans la limite de ' . $s['local_probe_bonus_cap'] . ' points. Chaque sonde compte pour une unité, quel que soit son rang, y compris en défense ou en orbite.',
+            'Chaque niveau effectif de Discipline du secret de la cible ajoute ' . $this->number((float) $settings['intelligence_countermeasures_weight']) . ' points ; chaque niveau effectif d’Écran de brouillage de l’émetteur retire ' . $this->number((float) $settings['stealth_weight']) . ' points.',
+            'Chaque sonde envoyée au-delà de la première ajoute ' . $this->number((float) $settings['extra_probe_weight']) . ' point(s) de risque. Les sondes présentes chez la cible ajoutent ' . $this->number((float) $settings['local_probe_weight']) . ' point(s) par tranche complète de ' . $settings['local_probe_batch_size'] . ' sondes, dans la limite de ' . $settings['local_probe_bonus_cap'] . ' points. Chaque sonde compte pour une unité, quel que soit son rang, y compris en défense ou en orbite.',
             'Le calcul est limité aux bornes puis arrondi une seule fois à l’entier le plus proche. La chance de réussite vaut 100 % moins le risque de détection. Ces valeurs servent de base aux essais Alpha, sans équilibrage confirmé par les joueurs.',
-            'Le risque final reste compris entre ' . $this->number((float) ($s['min_detection_chance'] ?? 5)) . ' % et ' . $this->number((float) ($s['max_detection_chance'] ?? 95)) . ' %. Si les sondes sont détectées, aucun renseignement n’est obtenu et le propriétaire de la cible est averti.',
-        ]), $this->section('Contenu du rapport', ['Si les sondes passent inaperçues, le score vaut ' . $this->number((float) ($s['report_score_base'] ?? 1)) . ' + votre niveau effectif d’Analyse tactique − celui de la cible + le nombre de sondes supplémentaires.', 'Chaque point révèle une catégorie supplémentaire, dans l’ordre : ressources, bâtiments, recherches, flottes, défenses. Au-delà de cinq catégories, le rapport est déjà complet ; un score nul ne révèle aucune catégorie.', 'Envoyer davantage de sondes peut donc améliorer le rapport, mais augmente aussi le risque de détection. Le rang des sondes n’ajoute aucun bonus de renseignement.']), $this->section('Préparer la mission', ['L’espionnage exige une ou plusieurs sondes, sans escorte, vers une planète connue qui ne vous appartient pas.', 'Toutes les sondes envoyées en espionnage sont consommées à l’arrivée, que la mission soit détectée ou réussie. Une mission d’exploration consomme une seule sonde pour découvrir un système.'])];
+            'Le risque final reste compris entre ' . $this->number((float) ($settings['min_detection_chance'] ?? 5)) . ' % et ' . $this->number((float) ($settings['max_detection_chance'] ?? 95)) . ' %. Si les sondes sont détectées, aucun renseignement n’est obtenu et le propriétaire de la cible est averti.',
+        ]), $this->section('Contenu du rapport', ['Si les sondes passent inaperçues, le score vaut ' . $this->number((float) ($settings['report_score_base'] ?? 1)) . ' + votre niveau effectif d’Analyse tactique − celui de la cible + le nombre de sondes supplémentaires.', 'Chaque point révèle une catégorie supplémentaire, dans l’ordre : ressources, bâtiments, recherches, flottes, défenses. Au-delà de cinq catégories, le rapport est déjà complet ; un score nul ne révèle aucune catégorie.', 'Envoyer davantage de sondes peut donc améliorer le rapport, mais augmente aussi le risque de détection. Le rang des sondes n’ajoute aucun bonus de renseignement.']), $this->section('Préparer la mission', ['L’espionnage exige une ou plusieurs sondes, sans escorte, vers une planète connue qui ne vous appartient pas.', 'Toutes les sondes envoyées en espionnage sont consommées à l’arrivée, que la mission soit détectée ou réussie. Une mission d’exploration consomme une seule sonde pour découvrir un système.'])];
     }
 
     private function colonizationSection(
-        array $d,
+        array $itemDefinition,
         int $target,
         Planet $planet,
         array $levels,
     ): array
     {
-        $ranks = $levels[$d['slug']] ?? [];
+        $ranks = $levels[$itemDefinition['slug']] ?? [];
         if (is_numeric($ranks)) {
             $ranks = ['basic' => (int) $ranks];
         }
-        $effect = $d['effect'] ?? [];
+        $effect = $itemDefinition['effect'] ?? [];
         $tierCaps = $effect['tier_max_levels'] ?? [];
-        $tierCap = (int) ($tierCaps[$d['_tier']] ?? $d['max_level'] ?? 25);
+        $tierCap = (int) ($tierCaps[$itemDefinition['_tier']] ?? $itemDefinition['max_level'] ?? 25);
         $caps = 'Basique 5, Intermédiaire 10, Supérieur 15';
         $universe = $this->catalog->forUniverse($planet->solarSystem->galaxy->universe);
         $cap = (int) $universe['limits']['max_planets'];
         $limit = fn(array $ranks): int => GameCatalog::colonyLimit($ranks, $effect, $cap);
         $after = $ranks;
-        $after[$d['_tier']] = min($target, $tierCap);
+        $after[$itemDefinition['_tier']] = min($target, $tierCap);
         $current = $limit($ranks);
         $next = $limit($after);
         return $this->section('Emplacements de colonies', [
@@ -240,17 +240,17 @@ final class CatalogueDetails
     }
 
     private function unit(
-        array $d,
+        array $itemDefinition,
         string $group,
         Planet $planet,
         array $buildings,
-        array $tech,
+        array $technologies,
     ): array
     {
         $universe = $planet->solarSystem->galaxy->universe;
         $defense = $group === 'defenses';
         $rules = $this->catalog->rules();
-        $effective = $defense ? $this->technologyEffects->applyToDefenses([$d], $tech, $universe)[0] : $this->technologyEffects->applyToShips([$d], $tech, $universe)[0];
+        $effective = $defense ? $this->technologyEffects->applyToDefenses([$itemDefinition], $technologies, $universe)[0] : $this->technologyEffects->applyToShips([$itemDefinition], $technologies, $universe)[0];
         if ($defense) {
             $fortress = $this->catalog->getForUniverse($universe, 'buildings', 'fortress');
             $effect = $fortress['effect'] ?? [];
@@ -270,32 +270,32 @@ final class CatalogueDetails
         ] as $key => $label) {
             $performance[] = [
                 'label' => $label,
-                'base' => (float) ($d[$key] ?? 0),
+                'base' => (float) ($itemDefinition[$key] ?? 0),
                 'effective' => (float) ($effective[$key] ?? 0),
                 'unit' => in_array($key, ['precision', 'tracking', 'evasion'], true) ? '%' : '',
             ];
         }
-        if (isset($d['secondary_attack'])) {
+        if (isset($itemDefinition['secondary_attack'])) {
             $performance[] = [
                 'label' => 'Attaque secondaire par tir',
-                'base' => (float) $d['secondary_attack'],
+                'base' => (float) $itemDefinition['secondary_attack'],
                 'effective' => (float) $effective['secondary_attack'],
                 'unit' => '',
             ];
         }
-        $armed = (float) ($d['base_attack'] ?? 0) > 0;
+        $armed = (float) ($itemDefinition['base_attack'] ?? 0) > 0;
         $sections = [];
-        $combatRows = [['label' => 'Tirs principaux de base par round', 'text' => $armed ? $d['shots_min'] . ' à ' . $d['shots_max'] : 'Aucun']];
+        $combatRows = [['label' => 'Tirs principaux de base par round', 'text' => $armed ? $itemDefinition['shots_min'] . ' à ' . $itemDefinition['shots_max'] : 'Aucun']];
         $chance = (float) ($effective['extra_shot_chances'][0] ?? 0);
         if ($armed) {
             $combatRows[] = ['label' => 'Chance de tir principal supplémentaire', 'value' => $chance * 100, 'unit' => '% par tir de base'];
         }
-        if (isset($d['secondary_attack'])) {
-            $combatRows[] = ['label' => 'Tirs secondaires par round', 'text' => ($d['secondary_shots_min'] ?? 0) . ' à ' . ($d['secondary_shots_max'] ?? 0)];
-            $combatRows[] = ['label' => 'Correction de précision des tirs secondaires', 'value' => (float) ($d['secondary_precision_modifier'] ?? 0), 'unit' => 'points'];
+        if (isset($itemDefinition['secondary_attack'])) {
+            $combatRows[] = ['label' => 'Tirs secondaires par round', 'text' => ($itemDefinition['secondary_shots_min'] ?? 0) . ' à ' . ($itemDefinition['secondary_shots_max'] ?? 0)];
+            $combatRows[] = ['label' => 'Correction de précision des tirs secondaires', 'value' => (float) ($itemDefinition['secondary_precision_modifier'] ?? 0), 'unit' => 'points'];
         }
         $paragraphs = ['Les valeurs « Avec vos bonus » incluent vos recherches' . ($defense ? ' et le bunker de cette planète' : '') . '. Elles décrivent les capacités maximales, avant les pertes du combat.', 'Une faible signature réduit la probabilité d’être choisi comme cible. Précision et suivi sont opposés à l’esquive adverse. Le coefficient de contre multiplie ensuite la chance de toucher, qui reste comprise entre 15 % et 95 %.'];
-        if (isset($d['secondary_attack'])) {
+        if (isset($itemDefinition['secondary_attack'])) {
             $paragraphs[] = 'L’arme secondaire vise uniquement les vaisseaux légers. Son bonus d’attaque suit la recherche d’armement, mais elle ne bénéficie pas des tirs supplémentaires du Séquenceur de salves.';
         }
         if (!$armed) {
@@ -305,7 +305,7 @@ final class CatalogueDetails
         $matchups = [];
         $groupDescriptions = [];
         $counters = $this->catalog->all('combat_modifiers');
-        foreach ($counters['relations'][$d['slug']] ?? [] as $slug => $factor) {
+        foreach ($counters['relations'][$itemDefinition['slug']] ?? [] as $slug => $factor) {
             if ((float) $factor === 1.0 || !isset($this->catalog->all('ships')[$slug]) && !isset($counters['target_groups'][$slug]) && $slug !== 'ground_defense') {
                 continue;
             }
@@ -327,7 +327,7 @@ final class CatalogueDetails
         $sections[] = $this->section('Boucliers', [$shieldText]);
         if ($defense) {
             $repair = $this->catalog->get('technologies', 'automated_defense_repair');
-            $rebuild = GameCatalog::diminishingBonus($tech['automated_defense_repair'] ?? [], (float) ($rules['defense_rebuild_max_percent'] ?? 40), (int) ($repair['max_level'] ?? 25));
+            $rebuild = GameCatalog::diminishingBonus($technologies['automated_defense_repair'] ?? [], (float) ($rules['defense_rebuild_max_percent'] ?? 40), (int) ($repair['max_level'] ?? 25));
             $sections[] = $this->section('Déploiement et reconstruction', ['Installation fixe sur cette planète : elle ne peut ni voyager ni rejoindre une flotte. Chaque rang possède sa propre réserve d’unités.', 'Après le combat, la recherche Drones réparateurs reconstruit une partie des défenses détruites. Le nombre est arrondi à l’entier inférieur pour chaque type et rang.'], [['label' => 'Taux actuel de reconstruction', 'value' => $rebuild, 'unit' => '% des pertes']]);
         } else {
             $mobility = [];
@@ -339,24 +339,24 @@ final class CatalogueDetails
             ] as $key => $label) {
                 $mobility[] = ['label' => $label, 'value' => (float) ($effective[$key] ?? 0), 'unit' => in_array($key, ['cargo_capacity', 'fuel_capacity'], true) ? 'unités' : 'indice'];
             }
-            $mobility[] = ['label' => 'Consommation en trajet normal', 'value' => (float) ($d['fuel_travel_system'] ?? 0), 'unit' => 'H / unité de distance'];
-            $mobility[] = ['label' => 'Consommation en trajet entre systèmes', 'value' => (float) ($d['fuel_travel_galaxy'] ?? 0), 'unit' => 'H / unité de distance'];
-            $mobility[] = ['label' => 'Consommation en stationnement', 'value' => (float) ($d['fuel_orbit'] ?? 0), 'unit' => 'H / h'];
+            $mobility[] = ['label' => 'Consommation en trajet normal', 'value' => (float) ($itemDefinition['fuel_travel_system'] ?? 0), 'unit' => 'H / unité de distance'];
+            $mobility[] = ['label' => 'Consommation en trajet entre systèmes', 'value' => (float) ($itemDefinition['fuel_travel_galaxy'] ?? 0), 'unit' => 'H / unité de distance'];
+            $mobility[] = ['label' => 'Consommation en stationnement', 'value' => (float) ($itemDefinition['fuel_orbit'] ?? 0), 'unit' => 'H / h'];
             $sections[] = $this->section('Déplacement et chargement', ['Les vitesses et capacités ci-dessous incluent vos recherches. La flotte utilise la vitesse de son vaisseau le plus lent pour chaque segment du trajet.', 'Les réservoirs sont réservés au carburant. Le carburant aller-retour et le stationnement prévu sont réservés dès le départ ; le surplus utilise la soute et réduit la place disponible pour le fret.', 'Le coût réel dépend de la route, de la vitesse choisie et de la composition de la flotte. Consultez l’estimation de mission avant le départ.'], $mobility);
-            if ($d['slug'] === 'probe') {
+            if ($itemDefinition['slug'] === 'probe') {
                 $sections = [...$sections, ...$this->espionageSections()];
-            } elseif ($d['slug'] === 'colony_ship') {
+            } elseif ($itemDefinition['slug'] === 'colony_ship') {
                 $sections[] = $this->section('Fondation et conquête', ['Fonde une colonie sur une planète vierge connue, si votre limite de colonies le permet. Un vaisseau colonie est consommé à la fondation.', 'Les ressources de départ de la nouvelle colonie sont multipliées par le rang du vaisseau consommé : ×1 en Basique, ×1,25 en Intermédiaire et ×1,5625 en Supérieur. Si plusieurs rangs sont présents, le rang le plus bas disponible est consommé.', 'Pour conquérir une planète PNJ, au moins un vaisseau colonie doit survivre au combat. Les planètes détenues par d’autres joueurs ne peuvent pas être conquises.']);
-            } elseif ((float) ($d['cargo_capacity'] ?? 0) > 0) {
+            } elseif ((float) ($itemDefinition['cargo_capacity'] ?? 0) > 0) {
                 $sections[] = $this->section('Transport', ['Transporte des ressources vers vos colonies ou celles des joueurs qui acceptent vos livraisons, dans la même galaxie et un système connu. Le surplus de stockage revient avec la flotte. Les dons ne donnent aucun boost et ne font progresser aucun objectif.', 'Une soute plus grande augmente aussi la capacité disponible pour le butin si le vaisseau survit au combat. La capacité de fret réelle est calculée après réservation du carburant.']);
             }
         }
-        $intro = $defense ? 'Défense fixe spécialisée contre ' . implode(', ', $d['countered_ship_labels'] ?? []) . '.' : match ($d['slug']) {
+        $intro = $defense ? 'Défense fixe spécialisée contre ' . implode(', ', $itemDefinition['countered_ship_labels'] ?? []) . '.' : match ($itemDefinition['slug']) {
             'probe' => 'Sonde non armée pour découvrir des systèmes et espionner des planètes connues.',
             'colony_ship' => 'Vaisseau de soutien permettant de fonder une colonie ou d’accompagner une conquête.',
             'transport' => 'Vaisseau de logistique doté d’une soute pour le fret, le carburant supplémentaire et le butin.',
             'stealth_fighter' => 'Vaisseau de combat à faible signature, moins susceptible d’être choisi comme cible.',
-            default => explode(' Une ', $d['description'] ?? 'Vaisseau de combat.')[0],
+            default => explode(' Une ', $itemDefinition['description'] ?? 'Vaisseau de combat.')[0],
         };
         return [
             'intro' => $intro,
@@ -367,43 +367,43 @@ final class CatalogueDetails
     }
 
     private function accessRequirements(
-        array $d,
+        array $itemDefinition,
         string $group,
         int $target,
         Planet $planet,
         array $buildings,
-        array $tech,
+        array $technologies,
     ): array
     {
-        $requirements = $this->requirements->forTier($d, $d['_tier'], $target);
+        $requirements = $this->requirements->forTier($itemDefinition, $itemDefinition['_tier'], $target);
         $result = [];
-        foreach (['buildings' => $buildings, 'technologies' => $tech] as $kind => $owned) {
-            foreach ($requirements[$kind] ?? [] as $r) {
-                $tier = $r['tier'] ?? 'basic';
-                $definition = $this->catalog->getTierForUniverse($planet->solarSystem->galaxy->universe, $kind, $r['slug'], $tier);
-                $current = $owned[$r['slug']] ?? [];
+        foreach (['buildings' => $buildings, 'technologies' => $technologies] as $kind => $owned) {
+            foreach ($requirements[$kind] ?? [] as $requirement) {
+                $tier = $requirement['tier'] ?? 'basic';
+                $definition = $this->catalog->getTierForUniverse($planet->solarSystem->galaxy->universe, $kind, $requirement['slug'], $tier);
+                $current = $owned[$requirement['slug']] ?? [];
                 $current = is_numeric($current) ? $tier === 'basic' ? (int) $current : 0 : (int) ($current[$tier] ?? 0);
-                $key = $kind . ':' . $r['slug'] . ':' . $tier;
-                if (isset($result[$key]) && $result[$key]['required'] >= (int) $r['level']) {
+                $key = $kind . ':' . $requirement['slug'] . ':' . $tier;
+                if (isset($result[$key]) && $result[$key]['required'] >= (int) $requirement['level']) {
                     continue;
                 }
                 $result[$key] = [
                     'group' => $kind,
-                    'slug' => $r['slug'],
+                    'slug' => $requirement['slug'],
                     'rank' => $tier,
                     'label' => $definition['label'],
                     'tier' => $definition['_tier_label'],
-                    'required' => (int) $r['level'],
+                    'required' => (int) $requirement['level'],
                     'current' => $current,
-                    'met' => $current >= (int) $r['level'],
+                    'met' => $current >= (int) $requirement['level'],
                     'maximum' => $definition['max_level'] ?? null,
-                    'unreachable' => isset($definition['max_level']) && (int) $r['level'] > (int) $definition['max_level'],
+                    'unreachable' => isset($definition['max_level']) && (int) $requirement['level'] > (int) $definition['max_level'],
                 ];
             }
         }
-        foreach ($requirements['ships'] ?? [] as $r) {
-            $slug = is_array($r) ? $r['slug'] : $r;
-            $tier = is_array($r) ? $r['tier'] ?? 'basic' : 'basic';
+        foreach ($requirements['ships'] ?? [] as $requirement) {
+            $slug = is_array($requirement) ? $requirement['slug'] : $requirement;
+            $tier = is_array($requirement) ? $requirement['tier'] ?? 'basic' : 'basic';
             $definition = $this->catalog->getTierForUniverse($planet->solarSystem->galaxy->universe, 'ships', $slug, $tier);
             $result[] = [
                 'group' => 'ships',
@@ -414,9 +414,9 @@ final class CatalogueDetails
                 'required' => null,
                 'current' => null,
                 'met' => $this->requirements->check(
-                    ['ships' => [$r]],
+                    ['ships' => [$requirement]],
                     $buildings,
-                    $tech,
+                    $technologies,
                     [],
                     $this->catalog->forUniverse($planet->solarSystem->galaxy->universe)['catalog']
                 ) === [],
@@ -427,7 +427,7 @@ final class CatalogueDetails
         return array_values($result);
     }
 
-    private function relatedUnlocks(array $d, string $group, Planet $planet): array
+    private function relatedUnlocks(array $itemDefinition, string $group, Planet $planet): array
     {
         if (!in_array($group, ['buildings', 'technologies'], true)) {
             return [];
@@ -438,19 +438,19 @@ final class CatalogueDetails
             foreach ($definitions as $base) {
                 foreach (GameCatalog::TIERS as $tier) {
                     $definition = $this->catalog->withTier($base, $tier);
-                    foreach ($this->requirements->forTier($definition, $tier)[$group] ?? [] as $r) {
-                        if ($r['slug'] !== $d['slug'] || ($r['tier'] ?? 'basic') !== $d['_tier']) {
+                    foreach ($this->requirements->forTier($definition, $tier)[$group] ?? [] as $requirement) {
+                        if ($requirement['slug'] !== $itemDefinition['slug'] || ($requirement['tier'] ?? 'basic') !== $itemDefinition['_tier']) {
                             continue;
                         }
-                        $key = $kind . ':' . $base['slug'] . ':' . $tier . ':' . $r['level'];
+                        $key = $kind . ':' . $base['slug'] . ':' . $tier . ':' . $requirement['level'];
                         $result[$key] = [
                             'label' => $definition['label'],
                             'group' => $kind,
                             'slug' => $base['slug'],
                             'tier' => $tier,
                             'tierLabel' => $definition['_tier_label'],
-                            'requiredLevel' => (int) $r['level'],
-                            'unreachable' => isset($d['max_level']) && (int) $r['level'] > (int) $d['max_level'],
+                            'requiredLevel' => (int) $requirement['level'],
+                            'unreachable' => isset($itemDefinition['max_level']) && (int) $requirement['level'] > (int) $itemDefinition['max_level'],
                         ];
                     }
                 }

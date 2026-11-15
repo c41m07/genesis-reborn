@@ -19,31 +19,31 @@ final class CatalogueInsights
     }
 
     public function benefits(
-        array $d,
+        array $definition,
         string $group,
         int $target,
         Planet $planet,
         array $levels,
-        array $tech,
+        array $technologies,
         ?CatalogueProductionContext $context = null,
     ): array
     {
-        $tier = (string) ($d['_tier'] ?? 'basic');
+        $tier = (string) ($definition['_tier'] ?? 'basic');
         $factor = GameCatalog::tierFactor($tier);
-        $slug = $d['slug'];
+        $slug = $definition['slug'];
         if ($group === 'buildings') {
             // Exclut du gain les niveaux de production déjà programmés dans la file.
-            if (isset($d['production_resource'])) {
+            if (isset($definition['production_resource'])) {
                 $levels[$slug][$tier] = max(0, $target - 1);
             }
             $next = $levels;
             $next[$slug][$tier] = $target;
-            if (isset($d['production_resource'])) {
-                $r = $d['production_resource'];
+            if (isset($definition['production_resource'])) {
+                $benefitResource = $definition['production_resource'];
                 $result = [[
-                    'label' => 'Production de ' . mb_strtolower($this->catalog->rules()['resources'][$r]),
-                    'before' => $this->resources->rate($planet, $r, 0, $levels, $context) * 3600,
-                    'after' => $this->resources->rate($planet, $r, 0, $next, $context) * 3600,
+                    'label' => 'Production de ' . mb_strtolower($this->catalog->rules()['resources'][$benefitResource]),
+                    'before' => $this->resources->rate($planet, $benefitResource, 0, $levels, $context) * 3600,
+                    'after' => $this->resources->rate($planet, $benefitResource, 0, $next, $context) * 3600,
                     'unit' => '/ h',
                 ]];
                 $beforeUse = $this->resources->factoryConsumption($planet, $slug, $levels, $context);
@@ -61,17 +61,17 @@ final class CatalogueInsights
                 }
                 return $result;
             }
-            if (isset($d['storage_resource'])) {
-                $r = $d['storage_resource'];
+            if (isset($definition['storage_resource'])) {
+                $benefitResource = $definition['storage_resource'];
                 return [[
-                    'label' => 'Stockage de ' . mb_strtolower($this->catalog->rules()['resources'][$r]),
-                    'before' => $this->resources->capacity($planet, $r, $levels),
-                    'after' => $this->resources->capacity($planet, $r, $next),
+                    'label' => 'Stockage de ' . mb_strtolower($this->catalog->rules()['resources'][$benefitResource]),
+                    'before' => $this->resources->capacity($planet, $benefitResource, $levels),
+                    'after' => $this->resources->capacity($planet, $benefitResource, $next),
                     'unit' => '',
                 ]];
             }
             if (in_array($slug, ['lab', 'shipyard'], true)) {
-                $maxLevel = max(1, (int) ($d['max_level'] ?? 25));
+                $maxLevel = max(1, (int) ($definition['max_level'] ?? 25));
                 $afterRanks = $levels[$slug] ?? [];
                 $afterRanks[$tier] = $target;
                 $cap = (float) ($this->catalog->rules()['time_reduction_max_percent'] ?? 70);
@@ -85,8 +85,8 @@ final class CatalogueInsights
                 ]];
             }
             if ($slug === 'fortress') {
-                $effect = $d['effect'] ?? [];
-                $maxLevel = max(1, (int) ($d['max_level'] ?? 25));
+                $effect = $definition['effect'] ?? [];
+                $maxLevel = max(1, (int) ($definition['max_level'] ?? 25));
                 $afterRanks = $levels[$slug] ?? [];
                 $afterRanks[$tier] = $target;
                 $cap = (float) ($effect['max_bonus'] ?? 25);
@@ -99,40 +99,40 @@ final class CatalogueInsights
             }
         }
         if ($group === 'technologies') {
-            return $this->technologyBenefits($d, $target, $tech, $planet);
+            return $this->technologyBenefits($definition, $target, $technologies, $planet);
         }
         if ($group === 'ships') {
-            $d = $this->technologyEffects->applyToShips([$d], $tech, $planet->solarSystem->galaxy->universe)[0];
+            $definition = $this->technologyEffects->applyToShips([$definition], $technologies, $planet->solarSystem->galaxy->universe)[0];
         }
         if ($group === 'ships') {
             $shipBenefits = [
-                ['label' => 'Vitesse dans le système', 'value' => $d['speed_system'] ?? 0, 'unit' => ''],
-                ['label' => 'Vitesse entre systèmes', 'value' => $d['speed_galaxy'] ?? 0, 'unit' => ''],
-                ['label' => 'Tirs principaux par round', 'text' => (float) ($d['base_attack'] ?? 0) > 0 ? ($d['shots_min'] ?? 0) . '–' . ($d['shots_max'] ?? 0) : 'Aucun'],
-                ['label' => 'Attaque', 'value' => $d['base_attack'] ?? 0, 'unit' => ''],
-                ['label' => 'Structure', 'value' => $d['hp'], 'unit' => ''],
-                ['label' => 'Bouclier maximal', 'value' => $d['shield'] ?? 0, 'unit' => ''],
-                ['label' => 'Précision de tir', 'value' => $d['precision'] ?? 0, 'unit' => '%'],
-                ['label' => 'Suivi de cible', 'value' => $d['tracking'] ?? 0, 'unit' => '%'],
-                ['label' => 'Capacité d’esquive', 'value' => $d['evasion'] ?? 0, 'unit' => '%'],
-                ['label' => 'Signature · faible = moins ciblé', 'value' => $d['signature'] ?? 0, 'unit' => ''],
-                ['label' => 'Capacité de soute', 'value' => $d['cargo_capacity'] ?? 0, 'unit' => 'unités'],
-                ['label' => 'Réservoir d’hydrogène', 'value' => $d['fuel_capacity'] ?? 0, 'unit' => 'unités'],
+                ['label' => 'Vitesse dans le système', 'value' => $definition['speed_system'] ?? 0, 'unit' => ''],
+                ['label' => 'Vitesse entre systèmes', 'value' => $definition['speed_galaxy'] ?? 0, 'unit' => ''],
+                ['label' => 'Tirs principaux par round', 'text' => (float) ($definition['base_attack'] ?? 0) > 0 ? ($definition['shots_min'] ?? 0) . '–' . ($definition['shots_max'] ?? 0) : 'Aucun'],
+                ['label' => 'Attaque', 'value' => $definition['base_attack'] ?? 0, 'unit' => ''],
+                ['label' => 'Structure', 'value' => $definition['hp'], 'unit' => ''],
+                ['label' => 'Bouclier maximal', 'value' => $definition['shield'] ?? 0, 'unit' => ''],
+                ['label' => 'Précision de tir', 'value' => $definition['precision'] ?? 0, 'unit' => '%'],
+                ['label' => 'Suivi de cible', 'value' => $definition['tracking'] ?? 0, 'unit' => '%'],
+                ['label' => 'Capacité d’esquive', 'value' => $definition['evasion'] ?? 0, 'unit' => '%'],
+                ['label' => 'Signature · faible = moins ciblé', 'value' => $definition['signature'] ?? 0, 'unit' => ''],
+                ['label' => 'Capacité de soute', 'value' => $definition['cargo_capacity'] ?? 0, 'unit' => 'unités'],
+                ['label' => 'Réservoir d’hydrogène', 'value' => $definition['fuel_capacity'] ?? 0, 'unit' => 'unités'],
             ];
-            if (isset($d['secondary_attack'])) {
-                $shipBenefits[] = ['label' => 'Tir secondaire anti-léger', 'value' => $d['secondary_attack'], 'unit' => ''];
+            if (isset($definition['secondary_attack'])) {
+                $shipBenefits[] = ['label' => 'Tir secondaire anti-léger', 'value' => $definition['secondary_attack'], 'unit' => ''];
             }
             array_unshift($shipBenefits, ['text' => 'Vos recherches sont incluses · valeurs maximales avant combat.']);
-            if ((float) ($d['base_attack'] ?? 0) > 0) {
+            if ((float) ($definition['base_attack'] ?? 0) > 0) {
                 $chance = 1.0;
-                foreach ($d['extra_shot_chances'] ?? [] as $extraChance) {
+                foreach ($definition['extra_shot_chances'] ?? [] as $extraChance) {
                     $chance *= 1.0 - (float) $extraChance;
                 }
                 $shipBenefits[] = ['label' => 'Chance de tir supplémentaire par tir de base', 'value' => (1.0 - $chance) * 100, 'unit' => '%'];
             }
-            if (isset($d['secondary_attack'])) {
-                $shipBenefits[] = ['label' => 'Tirs secondaires par round', 'text' => ($d['secondary_shots_min'] ?? 0) . '–' . ($d['secondary_shots_max'] ?? 0)];
-                $shipBenefits[] = ['label' => 'Correction de précision secondaire', 'value' => $d['secondary_precision_modifier'] ?? 0, 'unit' => 'points'];
+            if (isset($definition['secondary_attack'])) {
+                $shipBenefits[] = ['label' => 'Tirs secondaires par round', 'text' => ($definition['secondary_shots_min'] ?? 0) . '–' . ($definition['secondary_shots_max'] ?? 0)];
+                $shipBenefits[] = ['label' => 'Correction de précision secondaire', 'value' => $definition['secondary_precision_modifier'] ?? 0, 'unit' => 'points'];
             }
             foreach ($shipBenefits as &$benefit) {
                 if (isset($benefit['value'])) {
@@ -144,35 +144,35 @@ final class CatalogueInsights
         }
         if ($group === 'defenses') {
             return [
-                ...isset($d['countered_class_label']) ? [['text' => 'Bonus contre : ' . $d['countered_class_label'] . ' (' . implode(', ', $d['countered_ship_labels'] ?? []) . ') · dégâts et chance de toucher ×1,30']] : [],
-                ['label' => 'Attaque', 'value' => $d['base_attack'] ?? 0, 'unit' => ''],
-                ['label' => 'Structure', 'value' => $d['hp'], 'unit' => ''],
-                ['label' => 'Bouclier maximal', 'value' => $d['shield'] ?? 0, 'unit' => ''],
+                ...isset($definition['countered_class_label']) ? [['text' => 'Bonus contre : ' . $definition['countered_class_label'] . ' (' . implode(', ', $definition['countered_ship_labels'] ?? []) . ') · dégâts et chance de toucher ×1,30']] : [],
+                ['label' => 'Attaque', 'value' => $definition['base_attack'] ?? 0, 'unit' => ''],
+                ['label' => 'Structure', 'value' => $definition['hp'], 'unit' => ''],
+                ['label' => 'Bouclier maximal', 'value' => $definition['shield'] ?? 0, 'unit' => ''],
             ];
         }
         return [];
     }
 
     private function technologyBenefits(
-        array $d,
+        array $definition,
         int $target,
         array $levels,
         Planet $planet,
     ): array
     {
-        $effect = $d['effect'] ?? [];
-        $slug = $d['slug'];
-        $tier = (string) ($d['_tier'] ?? 'basic');
+        $effect = $definition['effect'] ?? [];
+        $slug = $definition['slug'];
+        $tier = (string) ($definition['_tier'] ?? 'basic');
         $ranks = $levels[$slug] ?? [];
         if (is_numeric($ranks)) {
             $ranks = ['basic' => (int) $ranks];
         }
-        $target = min($target, (int) ($effect['tier_max_levels'][$tier] ?? $d['max_level'] ?? $target));
+        $target = min($target, (int) ($effect['tier_max_levels'][$tier] ?? $definition['max_level'] ?? $target));
         // Compare uniquement le niveau proposé au dernier niveau déjà programmé.
         $ranks[$tier] = max(0, $target - 1);
         $afterRanks = $ranks;
         $afterRanks[$tier] = $target;
-        $maxLevel = max(1, (int) ($d['max_level'] ?? 25));
+        $maxLevel = max(1, (int) ($definition['max_level'] ?? 25));
         $type = $effect['type'] ?? null;
         if (in_array($slug, ['signature_masking', 'intelligence_countermeasures', 'tactical_intelligence'], true)) {
             // L’espionnage arrondit la somme des niveaux pondérés des trois rangs.
@@ -324,8 +324,8 @@ final class CatalogueInsights
         ] as $kind) {
             foreach ($catalog[$kind] ?? $this->catalog->all($kind) as $candidate) {
                 foreach (GameCatalog::TIERS as $tier) {
-                    foreach ($this->requirements->forTier($candidate, $tier)[$group] ?? [] as $r) {
-                        if ($r['slug'] !== $slug || ($r['tier'] ?? 'basic') !== $sourceTier || (int) $r['level'] > $target) {
+                    foreach ($this->requirements->forTier($candidate, $tier)[$group] ?? [] as $requirement) {
+                        if ($requirement['slug'] !== $slug || ($requirement['tier'] ?? 'basic') !== $sourceTier || (int) $requirement['level'] > $target) {
                             continue;
                         }
                         $definition = $this->catalog->withTier($candidate, $tier);
@@ -335,7 +335,7 @@ final class CatalogueInsights
                             'tier' => $tier,
                             'tierLabel' => $definition['_tier_label'],
                             'label' => $definition['label'],
-                            'requiredLevel' => $r['level'],
+                            'requiredLevel' => $requirement['level'],
                         ];
                     }
                 }
@@ -346,7 +346,7 @@ final class CatalogueInsights
 
     public function tree(
         array $levels,
-        array $tech,
+        array $technologies,
         ?\App\Entity\PlayerUniverse $membership = null,
         ?Planet $planet = null,
     ): array
@@ -368,7 +368,7 @@ final class CatalogueInsights
                     $requirements = $this->requirements->forTier($definition, $tier, 1);
                     $prerequisites = [];
                     $parents = [];
-                    foreach (['buildings' => $levels, 'technologies' => $tech] as $group => $owned) {
+                    foreach (['buildings' => $levels, 'technologies' => $technologies] as $group => $owned) {
                         foreach ($requirements[$group] ?? [] as $requirement) {
                             $requiredTier = $requirement['tier'] ?? 'basic';
                             $have = (int) ($owned[$requirement['slug']][$requiredTier] ?? ($requiredTier === 'basic' && is_numeric($owned[$requirement['slug']] ?? null) ? $owned[$requirement['slug']] : 0));
@@ -390,7 +390,7 @@ final class CatalogueInsights
                         $shipTier = is_array($entry) ? $entry['tier'] ?? 'basic' : 'basic';
                         $parents[] = 'ships:' . $shipSlug . '-' . $shipTier;
                         $ship = $this->catalog->withTier($catalog['ships'][$shipSlug] ?? $this->catalog->get('ships', $shipSlug), $shipTier);
-                        $met = !$this->requirements->check($this->requirements->forTier($ship, $shipTier), $levels, $tech, [], $catalog ?: null);
+                        $met = !$this->requirements->check($this->requirements->forTier($ship, $shipTier), $levels, $technologies, [], $catalog ?: null);
                         $prerequisites[] = [
                             'group' => 'ships',
                             'slug' => $shipSlug,
@@ -401,7 +401,7 @@ final class CatalogueInsights
                             'met' => $met,
                         ];
                     }
-                    $owned = $kind === 'buildings' ? $levels : ($kind === 'technologies' ? $tech : []);
+                    $owned = $kind === 'buildings' ? $levels : ($kind === 'technologies' ? $technologies : []);
                     $value = $owned[$slug] ?? 0;
                     $acquired = $membership && $planet && isset($membership->catalogUnlocks[\App\Service\Requirement\CatalogAccess::key($planet, $kind, $slug, $tier)]);
                     $nodes[$key] = [
@@ -414,7 +414,7 @@ final class CatalogueInsights
                         'prerequisites' => $prerequisites,
                         'parents' => array_values(array_unique($parents)),
                         'acquired' => (bool) $acquired,
-                        'available' => $acquired || !$this->requirements->check($requirements, $levels, $tech, [], $catalog ?: null),
+                        'available' => $acquired || !$this->requirements->check($requirements, $levels, $technologies, [], $catalog ?: null),
                     ];
                 }
             }
