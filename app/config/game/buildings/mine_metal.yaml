@@ -12,35 +12,22 @@
   "production_resource": "metal",
   "provisional": true,
   "tier_unlock_requirements": {
+    "basic": {},
     "intermediate": {
-      "technologies": [
-        {
-          "slug": "engineering_foundations",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
       "buildings": [
         {
-          "slug": "lab",
+          "slug": "mine_metal",
           "tier": "basic",
-          "level": 5
+          "level": 10
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "engineering_foundations",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
       "buildings": [
         {
-          "slug": "lab",
+          "slug": "mine_metal",
           "tier": "intermediate",
-          "level": 10
+          "level": 20
         }
       ]
     }

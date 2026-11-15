@@ -10,14 +10,7 @@
     "antimatter": 0
   },
   "costs_scaling": 2,
-  "unlock_requirements": {
-    "buildings": [
-      {
-        "slug": "lab",
-        "level": 1
-      }
-    ]
-  },
+  "unlock_requirements": {},
   "effect": {
     "type": "planet_limit",
     "base_planets": 1,
@@ -31,35 +24,51 @@
   },
   "provisional": true,
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "vector_propulsion",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
           "slug": "lab",
           "tier": "basic",
-          "level": 5
+          "level": 2
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "naval_engineering",
+          "tier": "basic",
+          "level": 1
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 2
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "naval_engineering",
+          "tier": "intermediate",
+          "level": 1
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "vector_propulsion",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
       "buildings": [
         {
           "slug": "lab",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 2
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "naval_engineering",
+          "tier": "superior",
+          "level": 1
         }
       ]
     }

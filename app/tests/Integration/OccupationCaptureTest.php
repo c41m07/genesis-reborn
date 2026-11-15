@@ -175,7 +175,7 @@ final class OccupationCaptureTest extends KernelTestCase
     private function member(string $name,Universe $universe): PlayerUniverse
     {
         $player=new Player();$player->email=$name.'@example.test';$player->username=$name;$player->password='unused';
-        $member=new PlayerUniverse();$member->player=$player;$member->universe=$universe;$member->joinedAt=$this->clock->now();$member->lastActivityAt=$this->clock->now();$member->catalogUnlocks=[];
+        $member=new PlayerUniverse();$member->player=$player;$member->universe=$universe;$member->joinedAt=$this->clock->now();$member->lastActivityAt=$this->clock->now();$member->catalogUnlocks=PlayerUniverse::INITIAL_CATALOG_UNLOCKS;
         $this->em->persist($player);$this->em->persist($member);$this->em->flush();return $member;
     }
     private function queue(string $type,string $slug,int $duration): QueueItem

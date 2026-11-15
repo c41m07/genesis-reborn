@@ -10,14 +10,7 @@
     "antimatter": 0
   },
   "costs_scaling": 2,
-  "unlock_requirements": {
-    "buildings": [
-      {
-        "slug": "lab",
-        "level": 1
-      }
-    ]
-  },
+  "unlock_requirements": {},
   "effect": {
     "type": "time_discount",
     "targets": "buildings",
@@ -26,35 +19,30 @@
   },
   "provisional": true,
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "naval_engineering",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
           "slug": "lab",
           "tier": "basic",
-          "level": 5
+          "level": 1
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 1
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "naval_engineering",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
       "buildings": [
         {
           "slug": "lab",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 1
         }
       ]
     }

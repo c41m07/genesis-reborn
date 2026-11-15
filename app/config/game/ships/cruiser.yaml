@@ -18,32 +18,7 @@
   "fuel_travel_galaxy": 2,
   "fuel_orbit": 0.3,
   "cargo_capacity": 4000,
-  "unlock_requirements": {
-    "buildings": [
-      {
-        "slug": "shipyard",
-        "tier": "basic",
-        "level": 10
-      }
-    ],
-    "technologies": [
-      {
-        "slug": "weapons_engineering",
-        "tier": "basic",
-        "level": 8
-      },
-      {
-        "slug": "vector_propulsion",
-        "tier": "basic",
-        "level": 5
-      },
-      {
-        "slug": "structural_armor",
-        "tier": "basic",
-        "level": 5
-      }
-    ]
-  },
+  "unlock_requirements": {},
   "provisional": true,
   "note": "Équilibrage R14 adopté pour la branche Alpha le 05/11/2026 ; validation en jeu à poursuivre.",
   "fuel_capacity": 16000,
@@ -51,35 +26,81 @@
   "fuel_capacity_note": "Réservoir dédié de 16 000 H au rang basique, permettant le plus long aller-retour des cartes de référence sans utiliser la soute. Consommation maximale mesurée : environ 15 453,51 H hors stationnement.",
   "shield": 1404,
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "vector_propulsion",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
           "slug": "shipyard",
           "tier": "basic",
+          "level": 12
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "structural_armor",
+          "tier": "basic",
           "level": 5
+        },
+        {
+          "slug": "shield_harmonics",
+          "tier": "basic",
+          "level": 4
+        },
+        {
+          "slug": "vector_propulsion",
+          "tier": "basic",
+          "level": 4
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "shipyard",
+          "tier": "intermediate",
+          "level": 12
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "structural_armor",
+          "tier": "intermediate",
+          "level": 5
+        },
+        {
+          "slug": "shield_harmonics",
+          "tier": "intermediate",
+          "level": 4
+        },
+        {
+          "slug": "vector_propulsion",
+          "tier": "intermediate",
+          "level": 4
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "vector_propulsion",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
       "buildings": [
         {
           "slug": "shipyard",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 12
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "structural_armor",
+          "tier": "superior",
+          "level": 5
+        },
+        {
+          "slug": "shield_harmonics",
+          "tier": "superior",
+          "level": 4
+        },
+        {
+          "slug": "vector_propulsion",
+          "tier": "superior",
+          "level": 4
         }
       ]
     }

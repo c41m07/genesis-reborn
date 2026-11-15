@@ -61,7 +61,7 @@ final class ForgottenEmpireIdentityTest extends WebTestCase
         $new=$this->player->currentPlayerUniverse;
         self::assertNotSame($oldId,$new->id);
         self::assertSame($this->player,$new->player);
-        self::assertSame([],$new->catalogUnlocks);
+        self::assertSame(PlayerUniverse::INITIAL_CATALOG_UNLOCKS,$new->catalogUnlocks);
         self::assertSame(0,$this->em->getRepository(PlayerTechnology::class)->count(['playerUniverse'=>$new]));
         $this->em->refresh($this->planet);$this->em->refresh($ship);$this->em->refresh($technology);
         self::assertSame($oldId,$this->planet->owner->id);

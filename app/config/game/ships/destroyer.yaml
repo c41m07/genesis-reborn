@@ -18,27 +18,7 @@
   "fuel_travel_galaxy": 2,
   "fuel_orbit": 0.3,
   "cargo_capacity": 2500,
-  "unlock_requirements": {
-    "buildings": [
-      {
-        "slug": "shipyard",
-        "tier": "basic",
-        "level": 9
-      }
-    ],
-    "technologies": [
-      {
-        "slug": "weapons_engineering",
-        "tier": "basic",
-        "level": 9
-      },
-      {
-        "slug": "shield_harmonics",
-        "tier": "basic",
-        "level": 5
-      }
-    ]
-  },
+  "unlock_requirements": {},
   "provisional": true,
   "note": "Équilibrage R14 adopté pour la branche Alpha le 05/11/2026 ; validation en jeu à poursuivre.",
   "fuel_capacity": 16000,
@@ -46,35 +26,81 @@
   "fuel_capacity_note": "Réservoir dédié de 16 000 H au rang basique, permettant le plus long aller-retour des cartes de référence sans utiliser la soute. Consommation maximale mesurée : environ 15 453,51 H hors stationnement.",
   "shield": 600,
   "tier_unlock_requirements": {
-    "intermediate": {
+    "basic": {
+      "buildings": [
+        {
+          "slug": "shipyard",
+          "tier": "basic",
+          "level": 10
+        }
+      ],
       "technologies": [
         {
           "slug": "weapons_engineering",
           "tier": "basic",
           "level": 5
+        },
+        {
+          "slug": "target_acquisition",
+          "tier": "basic",
+          "level": 3
+        },
+        {
+          "slug": "shield_harmonics",
+          "tier": "basic",
+          "level": 2
         }
-      ],
+      ]
+    },
+    "intermediate": {
       "buildings": [
         {
           "slug": "shipyard",
-          "tier": "basic",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "weapons_engineering",
+          "tier": "intermediate",
           "level": 5
+        },
+        {
+          "slug": "target_acquisition",
+          "tier": "intermediate",
+          "level": 3
+        },
+        {
+          "slug": "shield_harmonics",
+          "tier": "intermediate",
+          "level": 2
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "weapons_engineering",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
       "buildings": [
         {
           "slug": "shipyard",
-          "tier": "intermediate",
+          "tier": "superior",
           "level": 10
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "weapons_engineering",
+          "tier": "superior",
+          "level": 5
+        },
+        {
+          "slug": "target_acquisition",
+          "tier": "superior",
+          "level": 3
+        },
+        {
+          "slug": "shield_harmonics",
+          "tier": "superior",
+          "level": 2
         }
       ]
     }

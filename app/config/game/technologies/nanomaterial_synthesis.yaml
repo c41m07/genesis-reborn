@@ -10,22 +10,7 @@
     "antimatter": 0
   },
   "costs_scaling": 2,
-  "unlock_requirements": {
-    "buildings": [
-      {
-        "slug": "lab",
-        "tier": "basic",
-        "level": 3
-      }
-    ],
-    "technologies": [
-      {
-        "slug": "engineering_foundations",
-        "tier": "basic",
-        "level": 3
-      }
-    ]
-  },
+  "unlock_requirements": {},
   "effect": {
     "type": "cost_discount",
     "targets": "buildings",
@@ -34,35 +19,51 @@
   },
   "provisional": true,
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "engineering_foundations",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
           "slug": "lab",
           "tier": "basic",
-          "level": 5
+          "level": 3
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "engineering_foundations",
+          "tier": "basic",
+          "level": 3
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 3
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "engineering_foundations",
+          "tier": "intermediate",
+          "level": 3
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "engineering_foundations",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
       "buildings": [
         {
           "slug": "lab",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 3
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "engineering_foundations",
+          "tier": "superior",
+          "level": 3
         }
       ]
     }

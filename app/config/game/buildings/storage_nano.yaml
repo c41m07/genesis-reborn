@@ -12,35 +12,30 @@
   "storage_resource": "nano",
   "provisional": true,
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "engineering_foundations",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
-          "slug": "lab",
+          "slug": "mine_nano",
           "tier": "basic",
           "level": 5
         }
       ]
     },
-    "superior": {
-      "technologies": [
-        {
-          "slug": "engineering_foundations",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
+    "intermediate": {
       "buildings": [
         {
-          "slug": "lab",
+          "slug": "mine_nano",
           "tier": "intermediate",
-          "level": 10
+          "level": 5
+        }
+      ]
+    },
+    "superior": {
+      "buildings": [
+        {
+          "slug": "mine_nano",
+          "tier": "superior",
+          "level": 5
         }
       ]
     }

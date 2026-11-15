@@ -12,35 +12,30 @@
   "storage_resource": "metal",
   "provisional": true,
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "nanomaterial_synthesis",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
-          "slug": "lab",
+          "slug": "mine_metal",
           "tier": "basic",
           "level": 5
         }
       ]
     },
-    "superior": {
-      "technologies": [
-        {
-          "slug": "nanomaterial_synthesis",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
+    "intermediate": {
       "buildings": [
         {
-          "slug": "lab",
+          "slug": "mine_metal",
           "tier": "intermediate",
-          "level": 10
+          "level": 5
+        }
+      ]
+    },
+    "superior": {
+      "buildings": [
+        {
+          "slug": "mine_metal",
+          "tier": "superior",
+          "level": 5
         }
       ]
     }

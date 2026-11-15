@@ -12,35 +12,22 @@
   "production_resource": "nano",
   "provisional": true,
   "tier_unlock_requirements": {
+    "basic": {},
     "intermediate": {
-      "technologies": [
-        {
-          "slug": "nanomaterial_synthesis",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
       "buildings": [
         {
-          "slug": "lab",
+          "slug": "mine_nano",
           "tier": "basic",
-          "level": 5
+          "level": 10
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "nanomaterial_synthesis",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
       "buildings": [
         {
-          "slug": "lab",
+          "slug": "mine_nano",
           "tier": "intermediate",
-          "level": 10
+          "level": 20
         }
       ]
     }

@@ -65,7 +65,8 @@ test('Les 150 fiches expliquent leurs effets, bonus, accès et limites sur ordin
     await expect(dialog).toContainText('armes principales et secondaires');
     await page.keyboard.press('Escape');
     dialog = await open('technologies', 'colonial_expansion');
-    await expect(dialog).toContainText('Laboratoire colonial · Basique · niveau 1 requis');
+    await expect(dialog).toContainText('Laboratoire colonial · Basique · niveau 2 requis');
+    await expect(dialog).toContainText('Architecture navale · Basique · niveau 1 requis');
     await expect(dialog).toContainText('Limite après ce niveau');
     await page.keyboard.press('Escape');
     dialog = await open('ships', 'battleship');
@@ -91,16 +92,16 @@ test('Les 150 fiches expliquent leurs effets, bonus, accès et limites sur ordin
 
     dialog = await open('ships', 'probe', 'superior');
     const access = dialog.getByRole('region', { name: 'Conditions d’accès', exact: true });
-    await expect(access).toContainText('Cartographie des opérations · Intermédiaire · niveau 5 requis');
-    await expect(access).toContainText('Docks orbitaux modulaires · Intermédiaire · niveau 10 requis');
+    await expect(access).toContainText('Anneau industriel planétaire · Supérieur · niveau 1 requis');
+    await expect(access.getByRole('link')).toHaveCount(1);
     await expect(access.locator('.catalog-info-unreachable')).toHaveCount(0);
-    const prerequisite = access.getByRole('link', { name: 'Docks orbitaux modulaires', exact: true });
+    const prerequisite = access.getByRole('link', { name: 'Anneau industriel planétaire', exact: true });
     await prerequisite.focus();
     await page.keyboard.press('Enter');
-    await expect(page).toHaveURL(/section=buildings.*#item-shipyard-intermediate/);
-    await expect(page.locator('#item-shipyard-intermediate')).toBeVisible();
-    await expect(page.locator('#building-tab-shipyard-intermediate')).toHaveAttribute('aria-selected', 'true');
-    await expect(page.locator('#building-tab-shipyard-intermediate')).toBeFocused();
+    await expect(page).toHaveURL(/section=buildings.*#item-shipyard-superior/);
+    await expect(page.locator('#item-shipyard-superior')).toBeVisible();
+    await expect(page.locator('#building-tab-shipyard-superior')).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('#building-tab-shipyard-superior')).toBeFocused();
 
     for (const width of [768, 390]) {
         await page.setViewportSize({ width, height: 900 });

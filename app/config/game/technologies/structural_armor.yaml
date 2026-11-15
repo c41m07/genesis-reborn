@@ -10,26 +10,7 @@
     "antimatter": 0
   },
   "costs_scaling": 2,
-  "unlock_requirements": {
-    "technologies": [
-      {
-        "slug": "nanomaterial_synthesis",
-        "tier": "basic",
-        "level": 3
-      },
-      {
-        "slug": "weapons_engineering",
-        "tier": "basic",
-        "level": 3
-      }
-    ],
-    "buildings": [
-      {
-        "slug": "lab",
-        "level": 1
-      }
-    ]
-  },
+  "unlock_requirements": {},
   "effect": {
     "type": "stat_bonus",
     "targets": "all_combat_units",
@@ -40,35 +21,66 @@
     "max_bonus": 0.25
   },
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "weapons_engineering",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
           "slug": "lab",
           "tier": "basic",
-          "level": 5
+          "level": 4
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "nanomaterial_synthesis",
+          "tier": "basic",
+          "level": 2
+        },
+        {
+          "slug": "weapons_engineering",
+          "tier": "basic",
+          "level": 2
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 4
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "nanomaterial_synthesis",
+          "tier": "intermediate",
+          "level": 2
+        },
+        {
+          "slug": "weapons_engineering",
+          "tier": "intermediate",
+          "level": 2
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "weapons_engineering",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
       "buildings": [
         {
           "slug": "lab",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 4
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "nanomaterial_synthesis",
+          "tier": "superior",
+          "level": 2
+        },
+        {
+          "slug": "weapons_engineering",
+          "tier": "superior",
+          "level": 2
         }
       ]
     }

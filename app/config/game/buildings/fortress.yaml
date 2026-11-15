@@ -20,35 +20,45 @@
     "max_bonus": 25
   },
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "weapons_engineering",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
+        {
+          "slug": "shipyard",
+          "tier": "basic",
+          "level": 3
+        },
         {
           "slug": "lab",
           "tier": "basic",
-          "level": 5
+          "level": 2
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "shipyard",
+          "tier": "intermediate",
+          "level": 3
+        },
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 2
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "weapons_engineering",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
       "buildings": [
         {
+          "slug": "shipyard",
+          "tier": "superior",
+          "level": 3
+        },
+        {
           "slug": "lab",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 2
         }
       ]
     }
@@ -85,19 +95,5 @@
     "superior": "Renforce la structure des défenses au sol. Un maillage étendu porte cette fonction à l’échelle planétaire."
   },
   "description": "Renforce la structure des défenses au sol. Une installation locale assure cette fonction sur la colonie.",
-  "unlock_requirements": {
-    "buildings": [
-      {
-        "slug": "shipyard",
-        "tier": "basic",
-        "level": 3
-      },
-      {
-        "slug": "lab",
-        "tier": "basic",
-        "level": 2
-      }
-    ],
-    "technologies": []
-  }
+  "unlock_requirements": {}
 }

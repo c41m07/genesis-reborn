@@ -185,10 +185,11 @@ final class CatalogueDetailsTest extends KernelTestCase
     public function testInitialUnlocksMatchTheExactResearchRank():void
     {
         $basic=$this->describe('technologies','signature_masking')['unlocks'];
-        self::assertNotEmpty(array_filter($basic,static fn(array $u):bool=>$u['slug']==='signature_reduction'&&$u['tier']==='intermediate'&&$u['requiredLevel']===5));
+        self::assertNotEmpty(array_filter($basic,static fn(array $u):bool=>$u['slug']==='signature_reduction'&&$u['tier']==='basic'&&$u['requiredLevel']===2));
+        self::assertEmpty(array_filter($basic,static fn(array $u):bool=>$u['slug']==='signature_reduction'&&$u['tier']!=='basic'));
         $intermediate=$this->describe('technologies','signature_masking','intermediate')['unlocks'];
-        self::assertEmpty(array_filter($intermediate,static fn(array $u):bool=>$u['slug']==='signature_reduction'&&$u['tier']==='intermediate'));
-        self::assertNotEmpty(array_filter($intermediate,static fn(array $u):bool=>$u['slug']==='signature_reduction'&&$u['tier']==='superior'&&$u['requiredLevel']===5));
+        self::assertNotEmpty(array_filter($intermediate,static fn(array $u):bool=>$u['slug']==='signature_reduction'&&$u['tier']==='intermediate'&&$u['requiredLevel']===2));
+        self::assertEmpty(array_filter($intermediate,static fn(array $u):bool=>$u['slug']==='signature_reduction'&&$u['tier']!=='intermediate'));
     }
 
     public function testCounterTargetNamesAreGenericAndIndependentOfShipRank():void
@@ -214,7 +215,8 @@ final class CatalogueDetailsTest extends KernelTestCase
             self::assertSame($details['requirements'],$this->describe($group,$base['slug'],$tier,25)['requirements']);
         }
         $blocked=$this->describe('ships','probe','superior')['requirements'];
-        self::assertContains(5,array_column($blocked,'required'));
+        self::assertSame([1],array_column($blocked,'required'));
+        self::assertSame(['Supérieur'],array_column($blocked,'tier'));
     }
 
     public function testStorageShowsActualProtectionAndProbeDocumentsMissionConsumption():void

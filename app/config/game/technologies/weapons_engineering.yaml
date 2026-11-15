@@ -10,27 +10,7 @@
     "antimatter": 0
   },
   "costs_scaling": 2,
-  "unlock_requirements": {
-    "buildings": [
-      {
-        "slug": "lab",
-        "tier": "basic",
-        "level": 5
-      }
-    ],
-    "technologies": [
-      {
-        "slug": "vector_propulsion",
-        "tier": "basic",
-        "level": 3
-      },
-      {
-        "slug": "naval_engineering",
-        "tier": "basic",
-        "level": 8
-      }
-    ]
-  },
+  "unlock_requirements": {},
   "effect": {
     "type": "stat_bonus",
     "targets": "all_ships",
@@ -40,35 +20,51 @@
     "max_bonus": 0.25
   },
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "target_acquisition",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
           "slug": "lab",
           "tier": "basic",
-          "level": 5
+          "level": 3
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "naval_engineering",
+          "tier": "basic",
+          "level": 2
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 3
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "naval_engineering",
+          "tier": "intermediate",
+          "level": 2
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "target_acquisition",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
       "buildings": [
         {
           "slug": "lab",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 3
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "naval_engineering",
+          "tier": "superior",
+          "level": 2
         }
       ]
     }

@@ -18,27 +18,7 @@
   "fuel_travel_galaxy": 2,
   "fuel_orbit": 0.3,
   "cargo_capacity": 300,
-  "unlock_requirements": {
-    "technologies": [
-      {
-        "slug": "signature_masking",
-        "level": 2
-      },
-      {
-        "slug": "vector_propulsion",
-        "level": 1
-      }
-    ],
-    "buildings": [
-      {
-        "slug": "shipyard",
-        "level": 4
-      }
-    ],
-    "ships": [
-      "fighter"
-    ]
-  },
+  "unlock_requirements": {},
   "provisional": true,
   "note": "Profil de mobilité et de combat différencié, équilibrage validé le 02/11/2026 et à mesurer en Alpha.",
   "fuel_capacity": 16000,
@@ -46,35 +26,66 @@
   "fuel_capacity_note": "Réservoir dédié de 16 000 H au rang basique, permettant le plus long aller-retour des cartes de référence sans utiliser la soute. Consommation maximale mesurée : environ 15 453,51 H hors stationnement.",
   "shield": 75,
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "signature_masking",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
           "slug": "shipyard",
           "tier": "basic",
-          "level": 5
+          "level": 6
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "signature_masking",
+          "tier": "basic",
+          "level": 2
+        },
+        {
+          "slug": "vector_propulsion",
+          "tier": "basic",
+          "level": 2
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "shipyard",
+          "tier": "intermediate",
+          "level": 6
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "signature_masking",
+          "tier": "intermediate",
+          "level": 2
+        },
+        {
+          "slug": "vector_propulsion",
+          "tier": "intermediate",
+          "level": 2
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "signature_masking",
-          "tier": "intermediate",
-          "level": 5
-        }
-      ],
       "buildings": [
         {
           "slug": "shipyard",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 6
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "signature_masking",
+          "tier": "superior",
+          "level": 2
+        },
+        {
+          "slug": "vector_propulsion",
+          "tier": "superior",
+          "level": 2
         }
       ]
     }
