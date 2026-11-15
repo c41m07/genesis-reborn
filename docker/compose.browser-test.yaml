@@ -32,6 +32,9 @@ services:
     volumes: !reset []
     tmpfs: [/var/lib/mysql]
   rabbitmq:
+    environment:
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: "+S 2:2"
+      RABBITMQ_CTL_ERL_ARGS: "+S 1:1"
     volumes: !reset []
     tmpfs: [/var/lib/rabbitmq]
   mercure:

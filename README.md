@@ -319,6 +319,13 @@ Les actualisations des colonies et de Flottes rendent des fragments partagés,
 transmis en JSON compact et compressé lorsque le navigateur l’accepte.
 Les contrôles de fiabilité comprennent des dépenses et des fins de commande
 réellement concurrentes, avec deux connexions attendant le même verrou.
+Pour les parcours navigateur, la préparation de la base jetable possède un
+budget distinct de 60 secondes ; le délai du parcours reste de 60 secondes
+(hors scénarios disposant déjà d’un délai spécifique). Les consommateurs sont
+arrêtés avant la reconstruction du schéma, puis leur disponibilité est vérifiée.
+Le rapport joint les durées de ces étapes. Le profil navigateur limite aussi
+les schedulers RabbitMQ du serveur et de ses outils CLI, sans modifier le profil
+habituel ou de production.
 
 Pendant le développement, lancer les contrôles locaux adaptés au changement et `git diff --check` avant commit ou push. Une branche de travail peut être poussée sans exécuter toute la suite ; signaler les échecs et vérifications restant à faire.
 

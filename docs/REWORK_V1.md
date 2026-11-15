@@ -1,5 +1,40 @@
 # Rework V1 — suivi et reprise
 
+## Recette autonome supplémentaire — en cours
+
+Demande du 15 novembre après `3cdfefa` : effectuer la recette complète en
+autonomie et corriger les défauts, dont la stabilité des tests navigateur.
+Branche, absence de PR et exclusion du bandeau conservées. Cette phase complète
+la clôture technique historique ci-dessous ; elle n’est pas encore déclarée validée.
+
+Complexité 4/5. Ordre retenu : stabiliser la préparation des tests, effectuer les
+parcours réels avec des comptes synthétiques, puis valider le résultat cumulé.
+La base habituelle, les dépendances et les règles de jeu restent hors mutation.
+
+Constats et correction de l’infrastructure de test :
+
+- La préparation synchrone faisait reconstruire le schéma pendant que les trois
+  consommateurs fonctionnaient, puis leur redémarrage entrait dans le budget du
+  parcours. Les appels Docker de cette préparation sont désormais asynchrones
+  et bornés ; arrêt des consommateurs avant reconstruction, vérification de leur
+  disponibilité après import. Les gardes du projet jetable restent actives.
+- Budget distinct de 60 s pour la préparation, avec les mêmes 60 s pour les
+  actions du parcours et les mêmes assertions. Le budget total d’un cas peut
+  donc inclure ces deux phases ; ce n’est pas une accélération du jeu ni une
+  hausse silencieuse du délai d’une interaction. Mécanisme documenté par
+  [Playwright](https://playwright.dev/docs/test-fixtures#fixture-timeout).
+- Profil navigateur uniquement : RabbitMQ démarre avec deux schedulers serveur
+  et un pour ses outils CLI, au lieu de prendre les processeurs de l’hôte pour
+  chaque instance et chaque sonde. Configuration selon la
+  [documentation RabbitMQ](https://www.rabbitmq.com/docs/runtime), sans modifier
+  les réglages de production. Les états sains attendus ne sont pas affaiblis.
+- Profilage de référence sur Flottes et clavier, sans autre suite : 39,90 s dont
+  20,85 s de préparation ; 38,22 s dont 21,43 s. Après correction : 18,41 s
+  d’actions + 21,02 s de préparation ; 16,55 s + 20,60 s. Deux succès avant et
+  après, aucun gain global revendiqué. Logs `var/rework-recipe-{before,after}.log`.
+- Vérifications ciblées : syntaxe Node, validation du profil Compose, diff et
+  18 protections du bandeau réussis. La suite complète et la recette UI suivent.
+
 Clôture technique locale validée le 15 novembre 2026 sur le code applicatif
 `e5ca6cb`, branche `chore/rework-v1`. Douze lots terminés sur le périmètre
 réalisable : conventions, inventaire final, préparations ciblées, fiabilité,
