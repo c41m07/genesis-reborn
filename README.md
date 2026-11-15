@@ -317,6 +317,8 @@ ses mesures et ses vérifications. Les pages de colonie préparent uniquement le
 catalogue affiché ; le guide technologique prépare son arbre séparément.
 Les actualisations des colonies et de Flottes rendent des fragments partagés,
 transmis en JSON compact et compressé lorsque le navigateur l’accepte.
+Les contrôles de fiabilité comprennent des dépenses et des fins de commande
+réellement concurrentes, avec deux connexions attendant le même verrou.
 
 Pendant le développement, lancer les contrôles locaux adaptés au changement et `git diff --check` avant commit ou push. Une branche de travail peut être poussée sans exécuter toute la suite ; signaler les échecs et vérifications restant à faire.
 

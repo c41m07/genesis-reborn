@@ -8,11 +8,12 @@ les relations, les résumés de rapports et profils, la pagination administrativ
 et les fragments Flottes avec transport compact mesuré sur trois volumes.
 Le bandeau et les règles restent conservés. Le [suivi unique](REWORK_V1.md)
 détaille les mesures, fichiers, vérifications et exceptions justifiées.
-Validation locale : 1 042 tests PHP, 13 tests Python, lint et compilation
-réussis ; 202 scénarios navigateur cumulatifs réussis après une reprise isolée,
-sans changement du test ni de son délai. La version locale est prête pour la
-recette utilisateur, avec les exceptions documentées. Aucune CI GitHub,
-intégration ou publication.
+Clôture du 15 novembre : conventions et inventaire final par domaine, correction
+des fins de commande simultanées, mesures serveur sur trois volumes et 132
+actualisations navigateur mesurées. Validation courante : 1 047 tests PHP,
+213 250 assertions, 13 tests Python, lint et compilation réussis. Nouvelle passe
+des 202 scénarios navigateur en cours ; la précédente est conservée comme
+historique. Aucune CI GitHub, intégration ou publication.
 
 ## Bunker : retrait du prérequis Blindage — 14 novembre 2026
 

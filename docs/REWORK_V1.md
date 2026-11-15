@@ -538,12 +538,12 @@ réussis après correction. Le lint complet réussit sur l’état remis en form
 ## Reprise
 
 - Branche : `chore/rework-v1`, base `48c9a71`, première passe complète validée `6dd33b7` ; compléments depuis `9332789`.
-- Lot actuel : 2/12, clôture renforcée des conventions ; inventaire final ensuite.
-- Dernière étape validée : six contrôles, mesures comparables, captures et couverture navigateur réconciliée 202/202 après une reprise isolée.
-- Contrôles en cours : aucun ; 60 tests ciblés et lint réussis.
-- Modifications en cours : mise en forme et isolation de CatalogueDetailsTest, à séparer des renommages et compléments de preuve.
-- Questions en attente : aucune ; recette manuelle et exceptions restent ouvertes.
-- Prochaine action précise : enregistrer séparément l’isolation des tests et la mise en forme, puis clarifier les variables métier et finaliser l’inventaire.
+- Lot actuel : 12/12, validation cumulative de la clôture ; code applicatif `e5ca6cb`.
+- Dernière étape validée : validate/lint/assets, 1 047 tests PHP / 213 250 assertions, 13 Python, mesures serveur et 132 actualisations DOM ; captures examinées.
+- Contrôles en cours : navigateur, quatre projets isolés ; rapports `var/rework-closure-browser-{1,2,3,4}.json` et logs associés. Manifeste 202 scénarios. Premier délai global observé sur galaxy-v2, reprise isolée à effectuer après la passe.
+- Modifications en cours : documentation de la clôture uniquement ; aucune source applicative après les validations PHP.
+- Questions en attente : aucune ; recette complète utilisateur et accès externes distincts.
+- Prochaine action précise : attendre les quatre rapports, reprendre uniquement les échecs expliqués, réconcilier le manifeste et fermer les projets de test créés par ce chantier.
 - Conserver cette branche unique ; aucune PR, fusion ou publication automatique.
 
 ## Travaux et contrôles ciblés de la première passe
@@ -740,6 +740,52 @@ premiers passages sont dans var/rework-transverse-measures.json ; un allocateur
 peut réserver plus de pages malgré moins de données retenues (admin à petit
 volume). Lanceur : var/measure-rework-transverse.py. Ces chiffres ne sont pas
 des seuils CI et ne permettent aucun pourcentage global d’économie.
+
+## Mesures du remplacement navigateur — clôture
+
+Chromium réel, application isolée APP_DEBUG=0, même fixture et backend courant
+pour les deux modes. Avant chaque série : navigation complète puis événement
+genesis:refresh. En mode HTML, le seul en-tête de fragments est retiré de la
+requête de mesure pour conserver le retour HTML complet déjà supporté ; en mode
+JSON, le contrôleur courant demande ses fragments normalement. Aucune modification
+du contrôleur, du bandeau ou des délais applicatifs. Comparaison du transport et
+du décodage, pas de deux versions complètes du serveur.
+
+Bâtiments et Flottes, 0/5/25 flottes actives : premier passage séparé puis dix
+passages par mode, 132 actualisations au total. Le temps événement → DOM comprend
+le délai de regroupement de 200 ms, le réseau et la préparation serveur. Un
+observateur constate le remplacement du catalogue/comptage ; DOMParser et
+replaceWith sont chronométrés séparément. Deux requestAnimationFrame donnent
+aussi une mesure après opportunité de rendu, conservée dans les données brutes ;
+ce n’est pas une mesure LCP ni une preuve de stabilisation de toutes les images.
+
+| Page | Flottes | Événement → DOM HTML [min–max], ms | Événement → DOM JSON [min–max], ms | Décodage HTML → JSON, ms | Remplacements HTML → JSON, ms |
+| --- | --- | --- | --- | --- | --- |
+| Bâtiments | 0 | 421,05 [398,40–455,00] | 412,15 [367,90–443,90] | 16,00 [10,70–21,00] → 11,90 [7,10–18,30] | 6,90 [5,30–10,20] → 7,45 [5,20–10,80] |
+| Bâtiments | 5 | 414,60 [389,60–445,50] | 425,15 [395,30–473,50] | 11,95 [8,90–18,30] → 11,40 [8,70–15,30] | 6,15 [5,10–8,90] → 6,65 [5,20–9,40] |
+| Bâtiments | 25 | 468,00 [412,20–559,90] | 427,30 [399,10–471,00] | 14,35 [11,00–22,10] → 11,30 [9,20–14,00] | 6,95 [5,80–13,70] → 7,25 [5,80–15,80] |
+| Flottes | 0 | 322,25 [313,20–337,50] | 330,00 [317,70–341,50] | 1,50 [1,20–2,20] → 1,20 [0,70–5,70] | 0,70 [0,40–0,90] → 0,75 [0,40–1,50] |
+| Flottes | 5 | 333,90 [318,70–348,90] | 330,35 [319,50–407,10] | 1,75 [1,30–2,50] → 1,50 [1,10–2,20] | 1,05 [0,50–1,60] → 0,95 [0,60–3,00] |
+| Flottes | 25 | 358,05 [331,70–443,40] | 340,90 [329,20–354,20] | 2,25 [2,10–4,80] → 1,90 [1,60–3,40] | 2,10 [1,60–5,80] → 1,80 [1,70–2,70] |
+
+Les écarts courts varient avec les requêtes et le rendu ; aucun gain global
+de réactivité n’est déduit. Les gains de poids transféré sont ceux des mesures
+HTTP séparées, consignées plus haut. Les temps SQL et la mémoire HTTP de cette
+mesure navigateur ne sont pas instrumentés. Données brutes :
+var/rework-dom-measures.json ; scénario : var/rework-dom-measure.spec.mjs.
+
+Le premier essai de l’instrumentation avait laissé plusieurs callbacks de rendu
+terminer après le début de la mesure suivante. L’observateur est désormais
+déconnecté dès le remplacement constaté. Cet incident concernait le lanceur
+temporaire ; aucun correctif produit ni délai de test existant modifié.
+
+Contrôle visuel ciblé : captures réelles Bâtiments et Flottes à 1440 et 390 pixels,
+avec 25 flottes actives. Images visibles chargées, textes et commandes lisibles,
+aucun débordement horizontal. Les quatre captures var/rework-{buildings,fleets}-
+{1440,390}.png ont été examinées. Le contrôle visuel du bandeau ne vaut aucune
+modification de son périmètre. Clavier, thèmes, formulaires et réponses tardives
+restent couverts par les parcours navigateur ; la recette complète ci-dessous
+reste celle de l’utilisateur, notamment avec ses technologies d’assistance.
 
 ## Fichiers du lot cumulé
 
