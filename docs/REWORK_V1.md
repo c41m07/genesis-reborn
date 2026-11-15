@@ -92,6 +92,55 @@ Cet inventaire recense les domaines, sans prétendre à une revue intégrale de
 chaque fichier. Les états du tableau sont ceux de la première passe ; les
 compléments et la validation courante sont consignés plus bas.
 
+## Inventaire final par domaine — clôture
+
+Relevé actuel : 44 contrôleurs classés sans omission, 142 attributs Route
+(y compris préfixes et alias), 133 services, quatre repositories, un manager,
+sept handlers, 11 commandes, cinq composants de sécurité, quatre listeners,
+169 templates et 52 contrôleurs Stimulus. Le manifeste structurel avec routes,
+imports et marqueurs de permissions est conservé dans
+`var/rework-final-domain-inventory.json`.
+Les nombres initiaux ci-dessus restent historiques.
+
+L’examen est ciblé par parcours : points d’entrée, dépendances, préparation,
+contrats, droits, écritures et tests associés. Il ne vaut ni relecture de chaque
+ligne des dépendances ni audit de sécurité exhaustif. « Conservé » signifie
+qu’aucun changement justifié n’a été retenu après cet examen.
+
+| Domaine / points d’entrée et dépendances | Classement final et décision | Contrats, données et vérification |
+| --- | --- | --- |
+| Comptes : SecurityController, ProfileController ; RegistrationService, EmailVerificationService, PasswordResetService, ProfileService, AccountDeletionService | Conservé. Formulaires et services distincts ; aucun changement de stockage ou de réponse sensible | CSRF, validation, hachage, jetons et réponses neutres ; AuthenticationTest, PasswordResetTest, SecurityHeadersTest, parcours de validation et confirmation |
+| Participation/univers : UniverseController, UniverseContext, UniverseService, UniverseLifecycleService et import | Conservé. Contexte validé côté serveur ; sélection et fermeture restent identifiables comme écritures | Propriété, univers accessible, fermeture différée avec jeton ; GamePersistenceTest, universe-colonies-ui et refus interunivers |
+| Préférences/vacances : PreferencesController, PreferencesService, VacationEconomyService/Calendar | Conservé. Paramètres sauvegardés et modes économiques inchangés ; aucun cache partagé ajouté | CSRF lié à la participation, formulaire obsolète refusé, suspension/reprise ; PreferencesTest, VacationPreferencesTest, VacationEconomyTest et VacationMissionsTest |
+| Colonies : ColonyController, ColonyView, CatalogueInsights/Details, CatalogFilters, RequirementChecker/CatalogAccess | Amélioration réalisée. Un seul catalogue par page, aucun sur l’aperçu ; arbre seul au guide ; noms et étapes clarifiés | Synchronisation avant niveaux, coûts et durées réels, recherche commune, quantités par rang ; ColonyPreparationTest, CatalogAccessTest, GamePersistenceTest et catalogue navigateur |
+| Économie des cartes : CatalogueProductionContext, ResourceService | Amélioration dédiée aux cartes. Événements/vacances lus une fois par préparation, contexte limité à la planète | Formules réutilisées ; comparaison en événements, vacances et fin de commande. Méthodes économiques protégées et bandeau conservés |
+| Barre de ressources : endpoint resources, GameShell, FactoryEconomy et fichiers du bandeau | Hors périmètre explicite. Aucun changement de rendu, polling, endpoint, détails ou calculs | 18 comparaisons de corps/fichiers à la base, caractérisations économiques et tests navigateur ; aucune optimisation revendiquée du bandeau |
+| Files : QueueService, ActionGuard, OperationCalculator, GameManager | Défaut de concurrence traité dans complete uniquement ; reste conservé | Verrous participation/univers/planète, propriété, jeton, échéance et reçu idempotent ; cinq courses prouvées et tests métier existants. Les anciennes parties condensées hors correction ne sont pas réécrites |
+| Diplomatie/guildes : DiplomacyController, RelationResolver, DiplomacyService, GuildRankService, GuildPresence, PublicProfileController | Amélioration réalisée. Onglet validé avant préparation, relations et identités regroupées, présences limitées au bon écran | Priorité des traités de guilde conservée ; aucune décision d’action fondée sur le modèle d’affichage ; PersonalDiplomacyTest, GuildTagPlayerReportTest, public-profiles |
+| Projets de guilde : GuildProjectController, GuildProjectService/RewardService/Rules et administration associée | Amélioration réalisée. Don personnel dans la liste, identités des contributeurs dans la fiche ; règles conservées | Droits, univers, paiements et récompense unique ; suites de projets et permissions ; aucune visibilité supplémentaire des contributions |
+| Rapports/simulation : CombatReportController, EspionageReportController, TransportReportController, CombatSimulationController ; ReportArchiveService, ReportSummaryRepository, lecteurs et PlayerCombatSimulation | Amélioration réalisée. Métadonnées seules en liste, preuves détaillées conservées, compositions regroupées | Filtrage d’accès avant pagination, dates/archives/restauration et anciens rapports ; ReportArchiveTest, tests des lecteurs et simulations |
+| Classements/profils/signalements : LeaderboardController, PublicProfileController, PlayerActivityController, PlayerReportController ; DailyLeaderboard, SocialProfileView | Amélioration réalisée. Lecture d’un score de profil dans le snapshot quotidien ; agrégats courants et recalcul à minuit conservés | Refus interunivers, ancien snapshot avec rangs manquants, identité actuelle, permissions de guilde ; DailyLeaderboardTest, PublicProfilesTest et parcours associés |
+| Messages/notifications : SocialMessageController, MessageSearchController, NotificationController ; SocialMessageService, MessageSearch, JournalService | Conservé après regroupements de contacts déjà livrés. Pas de refonte de messagerie ou du transport Mercure | Canaux privé/guilde/Global, CSRF, échappement/Markdown assaini, dates et pagination ; suites messages, recherche, message-markdown et clavier |
+| Planètes/carte/abandon : ColonyAbandonmentController, ColonyController ; DestinationCatalogue, EmpireDetails, CoordinateResolver, ColonyAbandonmentService | Amélioration réalisée. Destinations connues filtrées en base et compositions privées groupées | Découverte et univers avant sérialisation, propriété et concurrence d’abandon ; FleetDestinationTest, FleetStationingTest et cartes classiques/V2 |
+| Flottes : FleetController, FleetCompositionController, FleetRecallController, FleetStationingController, FleetSurveillanceController ; services de flotte/orbite/transport | Amélioration réalisée. Lectures groupées et fragments disponibles/comptages partagés ; actions conservées | Propriétaire, participation/univers, versions et jetons, carburant, rappels/repli/orbite ; suites flottes, composition concurrente et destinations |
+| Inventaire/boosts/défis/événements : BoostController, ChallengeController, GameEventsController ; services Boost/Event, WeeklyRotationService | Conservé. Calculs, fenêtres temporelles et réclamations existants ; aucune modification d’équilibrage | Consommation unique, boîtes sur colonie autorisée, événements ciblés ; BoostSystemTest, ResourceBoxTest, WeeklyRotationTest et resource-boxes |
+| Console admin : AdminController et contrôleurs AdminCase/Player/Mission/Notification/EventWizard/GameEvent/GuildProject/Challenge/ResourceBox/WeeklyRotation/LegalPreview | Amélioration réalisée. Compteurs et aperçus SQL, préparation par écran ; listes paginées à 50 et export complet par lots de 100 | ROLE_ADMIN, CSRF, confirmations, actions auditées, filtre avant LIMIT et curseurs de consultation ; AdminPaginationTest, AdminReadRepositoryTest, refus et tests admin navigateur |
+| Feedback/annonces : FeedbackController, PatchNoteController et leurs repositories | Amélioration réalisée pour les listes administratives. Filtres et pagination conservés ; écrans joueurs et contenu identiques | Pièces jointes et permissions conservées, historique non purgé ; tests feedback, patchnotes et pagination |
+| Asynchrone/exploitation : sept handlers, OutboxRelay, scheduler d’occupation/reconstruction, services de combat/flotte/projets/univers ; commandes relay/tick/occupation/empire | Conservé sauf fin de commande corrigée. Commentaire de reprise clarifié ; aucun verrou supprimé ni format de message changé | Jetons périmés, échéances, rejeux, transactions et reprises ; suites GamePersistence, occupation, reconstruction, projets ; publication et files en production non provoquées |
+| Fragments/Stimulus : colony_live, admin_list, LiveRegionResponse et Twig partagés | Amélioration réalisée. JSON compact et compression négociée ; erreurs et réponses obsolètes protégées | Déconnexion/nettoyage, focus/saisies, navigation native GET ; LiveRegionResponseTest, live-refresh-focus, filtres admin et mesures HTTP/DOM séparées |
+| Présentation/assets/accessibilité : base, fragments catalogues/flottes/admin, contrôleurs existants | Amélioration ciblée. HTML commun aux réponses complètes/partielles ; médias, logos, SVG et CSS conservés | Compilation, captures à 1440/390, clavier, thèmes, focus et contrastes ciblés ; pas de déclaration de conformité RGAA complète |
+| Public/SEO/aide : CrawlerController, LegalController, WikiController, PublicPageMetadata, templates publics | Conservé. Métadonnées, noindex connexion, sitemap et robots examinés ; aucune publication juridique | PublicSeoTest, public-seo, liens wiki ; domaine réel et Search Console demandent l’environnement et le compte propriétaire |
+| Infrastructure/configuration/scripts/dépendances : Compose, Makefile, packages Symfony, CI, scripts installation/sauvegarde/restauration/générateur | Conservé. Pas d’installation, changement de schéma, dépendance, configuration globale ou procédure de déploiement | validate/lint/test/assets/browser, tests Python incluant scripts ; secrets exclus, sauvegarde/restauration isolées dans CI existante. CI distante et protection GitHub non revérifiées |
+| Documentation et sources externes : README, index, architecture, règles/décisions, feuille de route, guides et suivi | Synchronisation réalisée pour le comportement modifié. Règles et audits historiques conservés | Liens locaux vérifiés ; wiki distant et trois documents Work indisponibles, explicitement signalés ; aucune suppression documentaire ni purge d’assets |
+
+Les dépendances installées, fichiers compilés, archives historiques, autres
+worktrees et médias d’identité restent exclus des transformations mécaniques.
+Aucune suppression n’a été nécessaire. Les listes d’administration complètes
+restent disponibles par pagination/export ; les historiques utiles ne sont pas
+tronqués pour obtenir une meilleure mesure. Les autres contrôleurs conservent
+leurs réponses et leurs écritures ; les conditions d’accès sont également
+exercées par les suites cumulées.
+
 ## Référence de performance
 
 `ColonyPreparationTest` construit un univers, un joueur, une colonie position 5,
@@ -619,20 +668,95 @@ comparaison de sources vérifie 18 méthodes/fichiers protégés identiques à
 `48c9a71` (`var/rework-boundaries.json`), dont le corps de l’endpoint, snapshot,
 simulation, écritures, FactoryEconomy, GameShell et les deux fichiers du bandeau.
 
+## Mesures transversales de clôture
+
+Mesures isolées du 15 novembre, après validation PHP : PHP 8.4.26, MariaDB
+11.8, Symfony test/debug identique avant/après. Trois fixtures synthétiques
+de 10, 100 et 500 joueurs/participations, autant de rapports et actions admin.
+Une colonie, aucun ordre en cours, un snapshot quotidien déjà à jour, aucun
+traité de guilde ; un contrat personnel pour chaque cinquième autre joueur
+(accepté, ennemi ou proposition). Chaque rapport contient 80 lignes de preuve
+avec 512 caractères par ligne. Ce volume de preuve sert uniquement à la mesure.
+
+Pour chaque couple volume/domaine/version : processus PHP distinct, un premier
+appel séparé puis dix passages avec caches Symfony/DQL chauds. EntityManager
+vidé entre passages, collecteur SQL réinitialisé et pic mémoire réinitialisé.
+Les services sont initialisés avant la mesure. Les médianes et étendues ci-dessous
+incluent la préparation et la normalisation des champs visibles, pas Twig, HTTP
+ni navigateur. Le collecteur de débogage est inclus dans la mémoire mesurée.
+
+Référence : classes ReportArchiveService et SocialProfileView de 48c9a71
+chargées sous un autre nom dans le seul processus de mesure ; autres dépendances
+courantes identiques. Pour la diplomatie et l’administration, les séquences
+de lectures du contrôleur initial sont reconstituées, avec tri du journal
+départagé par identifiant pour comparer les mêmes lignes en cas d’égalité.
+Comparaison des préparations concernées, sans prétendre mesurer l’ancienne
+page complète. Le checkout applicatif n’est jamais remplacé.
+
+Avant/après : métadonnées des rapports, scores/rangs du profil, relations
+affichées, identifiants des 50 premières lignes et totaux admin identiques
+sur les 264 appels. La suite de diplomatie couvre en plus les statuts de
+guilde, absents de cette fixture. L’export admin complet est testé séparément.
+
+| Préparation | Volume | SQL avant → après | Serveur avant [min–max], ms | Serveur après [min–max], ms | Surcroît de pic avant → après, Mio |
+| --- | --- | --- | --- | --- | --- |
+| Relations commandants | 10 | 67 → 5 | 24,55 [22,11–33,12] | 2,93 [2,63–4,04] | 0,33 [0,33–0,34] → 0,14 [0,14–0,14] |
+| Profil public | 10 | 32 → 5 | 13,13 [12,83–14,64] | 1,86 [1,68–2,02] | 0,26 [0,26–0,27] → 0,08 [0,08–0,08] |
+| Liste des rapports | 10 | 24 → 5 | 12,20 [11,02–13,36] | 3,31 [2,91–4,72] | 1,12 [1,12–1,12] → 0,10 [0,10–0,10] |
+| Joueurs + journal admin | 10 | 3 → 5 | 1,78 [1,57–2,01] | 2,73 [2,37–4,12] | 0,11 [0,11–0,11] → 0,15 [0,15–0,15] |
+| Relations commandants | 100 | 715 → 5 | 249,17 [242,72–315,99] | 8,28 [7,06–10,73] | 3,49 [3,49–3,55] → 0,47 [0,47–0,47] |
+| Profil public | 100 | 212 → 5 | 88,92 [84,07–101,43] | 2,33 [2,21–2,82] | 1,99 [1,99–2,02] → 0,27 [0,27–0,27] |
+| Liste des rapports | 100 | 104 → 5 | 47,45 [44,54–50,63] | 4,38 [3,88–5,11] | 4,98 [4,98–4,99] → 0,14 [0,14–0,14] |
+| Joueurs + journal admin | 100 | 3 → 5 | 4,36 [3,78–4,97] | 4,37 [3,81–4,94] | 0,85 [0,85–0,85] → 0,49 [0,49–0,49] |
+| Relations commandants | 500 | 3595 → 5 | 1357,79 [1299,63–1782,74] | 25,87 [24,53–36,89] | 17,58 [17,49–17,99] → 2,06 [2,06–2,06] |
+| Profil public | 500 | 1012 → 5 | 463,98 [452,48–571,28] | 3,42 [2,61–4,47] | 9,59 [9,57–9,69] → 1,15 [1,15–1,15] |
+| Liste des rapports | 500 | 104 → 5 | 50,70 [48,32–53,85] | 7,12 [6,01–8,09] | 4,98 [4,98–4,99] → 0,14 [0,14–0,14] |
+| Joueurs + journal admin | 500 | 3 → 5 | 14,49 [13,44–15,74] | 5,23 [4,11–6,73] | 4,03 [4,03–4,03] → 0,49 [0,49–0,49] |
+
+Temps SQL médians [min–max], ms :
+
+- Relations commandants, 10 : 17,83 [16,37–24,39] → 1,62 [1,48–2,44].
+- Profil public, 10 : 9,10 [8,91–10,26] → 1,32 [1,20–1,46].
+- Liste des rapports, 10 : 8,60 [7,67–8,99] → 2,60 [2,28–3,75].
+- Joueurs + journal admin, 10 : 1,02 [0,92–1,20] → 1,60 [1,46–2,59].
+- Relations commandants, 100 : 180,89 [177,35–220,70] → 2,71 [2,45–3,22].
+- Profil public, 100 : 60,73 [57,65–66,74] → 1,48 [1,42–1,70].
+- Liste des rapports, 100 : 31,37 [29,86–33,59] → 3,59 [3,13–3,88].
+- Joueurs + journal admin, 100 : 1,90 [1,23–2,32] → 2,07 [1,91–2,37].
+- Relations commandants, 500 : 973,90 [934,42–1291,04] → 4,87 [4,22–5,55].
+- Profil public, 500 : 291,48 [283,84–349,75] → 1,71 [1,37–2,53].
+- Liste des rapports, 500 : 34,57 [32,94–35,83] → 6,05 [5,21–6,96].
+- Joueurs + journal admin, 500 : 4,84 [4,03–6,44] → 2,42 [2,03–3,32].
+
+Les nouvelles lectures admin font davantage de requêtes pour compter et paginer.
+Le bénéfice porte sur les grandes listes et la mémoire ; aucun gain de temps
+n’est garanti sur les petites fixtures. Les rapports restent bornés à 50 par
+page. La lecture du snapshot de profil reste proportionnelle à sa taille JSON :
+aucune projection persistée ou modification du recalcul quotidien ajoutée.
+
+La mémoire du tableau est le surcroît de pic du chemin mesuré, pas la mémoire
+totale du processus ni celle d’une requête HTTP. Les allocations totales et
+premiers passages sont dans var/rework-transverse-measures.json ; un allocateur
+peut réserver plus de pages malgré moins de données retenues (admin à petit
+volume). Lanceur : var/measure-rework-transverse.py. Ces chiffres ne sont pas
+des seuils CI et ne permettent aucun pourcentage global d’économie.
+
 ## Fichiers du lot cumulé
 
-69 fichiers suivis modifiés ou ajoutés par rapport à `48c9a71`.
+73 fichiers suivis modifiés ou ajoutés par rapport à `48c9a71`.
 
 | Périmètre | Fichiers modifiés ou ajoutés |
 | --- | --- |
 | Contrôleurs | `app/src/Controller/AdminController.php`, `app/src/Controller/AdminGameEventController.php`, `app/src/Controller/ColonyController.php`, `app/src/Controller/DiplomacyController.php`, `app/src/Controller/FeedbackController.php`, `app/src/Controller/FleetController.php`, `app/src/Controller/GuildProjectController.php`, `app/src/Controller/LeaderboardController.php`, `app/src/Controller/PatchNoteController.php` |
 | Lectures | `app/src/Repository/AdminReadRepository.php`, `app/src/Repository/GameRepository.php`, `app/src/Repository/PatchNoteRepository.php`, `app/src/Repository/ReportSummaryRepository.php` |
-| Services et préparation | `app/src/Service/Admin/AdminAuditExport.php`, `app/src/Service/Colony/CatalogueDetails.php`, `app/src/Service/Colony/CatalogueInsights.php`, `app/src/Service/Colony/CatalogueProductionContext.php`, `app/src/Service/Colony/ColonyView.php`, `app/src/Service/Colony/EmpireDetails.php`, `app/src/Service/Colony/LiveRegionResponse.php`, `app/src/Service/Colony/ResourceService.php`, `app/src/Service/Combat/PlayerCombatSimulation.php`, `app/src/Service/Combat/ReportArchiveService.php`, `app/src/Service/Fleet/DestinationCatalogue.php`, `app/src/Service/Notification/OutboxRelay.php`, `app/src/Service/Player/DailyLeaderboard.php`, `app/src/Service/Player/RelationResolver.php`, `app/src/Service/Player/SocialProfileView.php` |
+| Services et préparation | `app/src/Service/Admin/AdminAuditExport.php`, `app/src/Service/Colony/CatalogueDetails.php`, `app/src/Service/Colony/CatalogueInsights.php`, `app/src/Service/Colony/CatalogueProductionContext.php`, `app/src/Service/Colony/ColonyView.php`, `app/src/Service/Colony/EmpireDetails.php`, `app/src/Service/Colony/LiveRegionResponse.php`, `app/src/Service/Colony/ResourceService.php`, `app/src/Service/Combat/PlayerCombatSimulation.php`, `app/src/Service/Combat/ReportArchiveService.php`, `app/src/Service/Fleet/DestinationCatalogue.php`, `app/src/Service/Notification/OutboxRelay.php`, `app/src/Service/Player/DailyLeaderboard.php`, `app/src/Service/Player/RelationResolver.php`, `app/src/Service/Player/SocialProfileView.php`, `app/src/Service/Queue/QueueService.php` |
 | Contrôleurs navigateur | `app/assets/controllers/admin_list_controller.js`, `app/assets/controllers/colony_live_controller.js` |
 | Templates | `app/templates/admin/events.html.twig`, `app/templates/admin/feedbacks.html.twig`, `app/templates/admin/patchnotes.html.twig`, `app/templates/admin/sections/_audit_results.html.twig`, `app/templates/admin/sections/_list_pagination.html.twig`, `app/templates/admin/sections/_players_results.html.twig`, `app/templates/admin/sections/audit.html.twig`, `app/templates/admin/sections/players.html.twig`, `app/templates/base.html.twig`, `app/templates/colony/_catalog.html.twig`, `app/templates/colony/_journal.html.twig`, `app/templates/colony/show.html.twig`, `app/templates/combat/reports.html.twig`, `app/templates/fleet/_available.html.twig`, `app/templates/fleet/_counts.html.twig`, `app/templates/fleet/index.html.twig`, `app/templates/player/diplomacy.html.twig`, `app/templates/ui/colony_selector.html.twig` |
 | Tests HTTP | `app/tests/Controller/AbsenceJournalTest.php`, `app/tests/Controller/AdminPaginationTest.php`, `app/tests/Controller/FleetDestinationTest.php`, `app/tests/Controller/GuildTagPlayerReportTest.php`, `app/tests/Controller/ReportArchiveTest.php` |
-| Tests intégrés | `app/tests/Integration/AdminReadRepositoryTest.php`, `app/tests/Integration/CatalogAccessTest.php`, `app/tests/Integration/ColonyPreparationTest.php`, `app/tests/Integration/DailyLeaderboardTest.php`, `app/tests/Integration/FleetStationingTest.php`, `app/tests/Integration/GamePersistenceTest.php`, `app/tests/Integration/PersonalDiplomacyTest.php` |
+| Tests intégrés | `app/tests/Integration/AdminReadRepositoryTest.php`, `app/tests/Integration/CatalogAccessTest.php`, `app/tests/Integration/ColonyPreparationTest.php`, `app/tests/Integration/ConcurrentQueueTest.php`, `app/tests/Integration/DailyLeaderboardTest.php`, `app/tests/Integration/FleetStationingTest.php`, `app/tests/Integration/GamePersistenceTest.php`, `app/tests/Integration/PersonalDiplomacyTest.php` |
 | Tests unitaires | `app/tests/Unit/LiveRegionResponseTest.php` |
+| Tests de services | `app/tests/Service/CatalogueDetailsTest.php` |
+| Supports de tests | `app/tests/Support/concurrent_queue.php` |
 | Tests navigateur | `app/tests/browser/admin-accounts-flights.spec.mjs`, `app/tests/browser/live-refresh-focus.spec.mjs` |
 | Documentation | `README.md`, `docs/ARCHITECTURE.md`, `docs/FEUILLE_DE_ROUTE.md`, `docs/README.md`, `docs/REWORK_V1.md`, `docs/WORKER_NOTIFIER.md` |
 
