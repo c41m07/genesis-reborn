@@ -127,25 +127,46 @@ final class FleetStationingTest extends WebTestCase
         $cargo=$fleet->cargo;self::getContainer()->get(FleetService::class)->arrive($fleet->id,$old);self::assertSame($cargo,$fleet->cargo);
     }
 
-    public function testNoHomeUsesShortestReachableOwnedColony(): void
+    #[\PHPUnit\Framework\Attributes\DataProvider('stationingDirections')]
+    public function testNoHomeUsesShortestReachableOwnedColony(bool $reverse): void
     {
-        $fleet=$this->send();$this->home->owner=$this->peer->currentPlayerUniverse;$this->target->owner=$this->peer->currentPlayerUniverse;
-        // Les positions de la carte sont déjà occupées : conserver les coordonnées réelles.
-        // Ajouter un second repli plus éloigné pour vérifier le choix du trajet le plus court.
-        $farther = null;
-        foreach($this->em->getRepository(Planet::class)->findBy(['solarSystem'=>$this->target->solarSystem]) as $candidate) {
-            if(abs($candidate->position-$this->target->position)<=abs($this->fallback->position-$this->target->position)) continue;
-            if(in_array($candidate->id,[$this->home->id,$this->target->id,$this->fallback->id],true)) continue;
-            $candidate->owner=$this->player->currentPlayerUniverse;
-            $candidate->npcPlanet=false;
-            self::getContainer()->get(ResourceService::class)->initialize($candidate);
-            $farther = $candidate;
-            break;
+        $planets = $this->em->getRepository(Planet::class)->findBy(['solarSystem'=>$this->home->solarSystem], ['position'=>'ASC']);
+        $first = $planets[0];
+        $last = $planets[count($planets)-1];
+
+        // Un départ et une arrivée aux extrémités rendent les deux replis atteignables,
+        // même si le système tiré au sort contient des positions sans planète.
+        $this->home = $reverse ? $last : $first;
+        $this->idle->homePlanet = $this->home;
+        $this->target = $reverse ? $first : $last;
+        $refuges = array_values(array_filter($planets, fn(Planet $planet): bool => !in_array($planet->id, [$this->home->id, $this->target->id], true)));
+        usort($refuges, fn(Planet $a, Planet $b): int => abs($a->position-$this->target->position) <=> abs($b->position-$this->target->position));
+        $this->fallback = $refuges[0];
+        $farther = $refuges[1];
+        self::assertLessThan(abs($farther->position-$this->target->position), abs($this->fallback->position-$this->target->position));
+        self::assertLessThanOrEqual(abs($this->home->position-$this->target->position), abs($farther->position-$this->target->position));
+
+        // Garder uniquement les deux replis à comparer après la perte du départ et de la destination.
+        foreach($planets as $planet) {
+            $owned = in_array($planet->id, [$this->home->id, $this->target->id, $this->fallback->id, $farther->id], true);
+            $planet->owner = $owned ? $this->player->currentPlayerUniverse : $this->peer->currentPlayerUniverse;
+            if($owned) {
+                $planet->npcPlanet = false;
+                self::getContainer()->get(ResourceService::class)->initialize($planet);
+            }
         }
-        self::assertNotNull($farther);
+        $this->em->flush();
+        $fleet = $this->send();
+        $this->home->owner = $this->peer->currentPlayerUniverse;
+        $this->target->owner = $this->peer->currentPlayerUniverse;
         $this->em->flush();$this->arrive($fleet);
         self::assertSame('returning',$fleet->status);self::assertSame($this->fallback->id,$fleet->returnPlanet->id);$this->arrive($fleet);
         self::assertSame('completed',$fleet->status);self::assertNotNull($this->stock($this->fallback));
+    }
+
+    public static function stationingDirections(): array
+    {
+        return ['ascending'=>[false], 'descending'=>[true]];
     }
 
     private function wait(): Fleet
