@@ -243,6 +243,22 @@ don personnel. Vérification : 69 tests / 418 assertions réussis, dont
 25 combinaisons comparées à RelationResolver. Deux erreurs de préparation
 (fixture sans proposant et alias DQL réservé) corrigées avant la reprise.
 
+## Complément du lot 5 — résumés de combats et profil quotidien
+
+La liste des rapports de combat lit des résumés scalaires : résultat, date,
+planète et nombre de participants. Ni les rounds ni le snapshot complet ne
+sont hydratés. Les entités détaillées restent complètes pour la lecture et
+l’archivage. Les droits sont vérifiés avant pagination et à nouveau dans la
+lecture des résumés ; les refus interunivers et tiers sont testés.
+
+Le profil lit sa ligne dans le snapshot quotidien existant. Le rattrapage des
+files, le verrou et le recalcul de minuit sont conservés ; les nouveaux joueurs
+attendent toujours le prochain calcul. Les vieux snapshots sans les rangs
+bâtiments/recherche utilisent le chemin de compatibilité existant. À chaud,
+le test exige moins de quatre requêtes pour la lecture du score individuel.
+Contrôles : 19 tests / 133 assertions réussis, preuve détaillée conservée,
+dates et contexte de retour, nouveaux joueurs et minuit couverts.
+
 ## Reprise
 
 - Branche : `chore/rework-v1`, base `48c9a71`, code applicatif validé `6dd33b7`.

@@ -70,6 +70,29 @@ final class ReportArchiveTest extends WebTestCase
         $this->client->request('GET',$url);self::assertResponseIsSuccessful();self::assertSelectorExists('a.report-back[href*="participant=ArchiveOwner"]');
     }
 
+    public function testCombatListReadsSummariesWithoutHydratingRoundsAndKeepsDetailedProof(): void
+    {
+        $id = (int) substr($this->keys[0], strlen('combat:'));
+        $log = $this->em->find(CombatLog::class, $id);
+        $log->rounds = [['proof'=>str_repeat('synthetic-round-', 1000)]];
+        $log->snapshot = ['participants'=>[['name'=>'Alpha'], ['name'=>'Beta']]];
+        $this->em->flush();
+        $memberId = $this->player->currentPlayerUniverse->id;
+        $this->em->clear();
+        $member = $this->em->find(\App\Entity\PlayerUniverse::class, $memberId);
+        $holder = self::getContainer()->get('doctrine.debug_data_holder');
+        $holder->reset();
+        $entries = self::getContainer()->get(ReportArchiveService::class)->page($member, 'combat', false, 1)['entries'];
+        self::assertSame(2, $entries[0]['report']['participantCount']);
+        self::assertSame('attacker_wins', $entries[0]['report']['outcome']);
+        self::assertSame([], $this->em->getUnitOfWork()->getIdentityMap()[CombatLog::class] ?? []);
+        foreach ($holder->getData()['default'] ?? [] as $query) self::assertStringNotContainsString('.rounds', $query['sql']);
+        $proof = self::getContainer()->get(\App\Service\Combat\CombatReportReader::class)->findVisible($member, $id);
+        self::assertSame(str_repeat('synthetic-round-', 1000), $proof->rounds[0]['proof']);
+        self::assertSame([], self::getContainer()->get(\App\Repository\ReportSummaryRepository::class)->combats($this->outsider->currentPlayerUniverse, [$id]));
+        self::assertSame([], self::getContainer()->get(\App\Repository\ReportSummaryRepository::class)->combats($this->foreign->currentPlayerUniverse, [$id]));
+    }
+
     public function testGlobalOrderPersonalArchiveRestoreAndProofPreservation(): void
     {
         $service=self::getContainer()->get(ReportArchiveService::class);$member=$this->player->currentPlayerUniverse;

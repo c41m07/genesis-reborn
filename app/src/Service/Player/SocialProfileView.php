@@ -14,8 +14,7 @@ final class SocialProfileView
         if(!$viewer->isPlayerControlled()) throw new \DomainException('Profil inaccessible.');
         $target=$this->repo->find(PlayerUniverse::class,$id);
         if(!$target || !$target->isPlayerControlled() || $target->universe->id!==$viewer->universe->id) throw new \DomainException('Commandant inaccessible dans cet univers.');
-        $daily=$this->leaderboard->forUniverse($viewer);$score=null;
-        foreach($daily['players'] as $row) if($row['membership_id']===$id) {$score=$row;break;}
+        $daily=$this->leaderboard->forPlayer($viewer,$target);$score=$daily['player'];
         $categories=['points'=>['Points totaux','total_points'],'buildings'=>['Points de bâtiments','building_points'],
             'research'=>['Points de recherche','research_points'],'fleet'=>['Points de flotte','fleet_points'],'planets'=>['Nombre de planètes','planets']];
         $scores=[];

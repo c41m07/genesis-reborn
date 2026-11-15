@@ -70,6 +70,26 @@ final class DailyLeaderboard
             'comparison_at'=>$snapshot->comparisonAt, 'next_update'=>self::midnight($this->clock->now())->modify('+1 day')];
     }
 
+    /** Scores du profil : le recalcul quotidien reste commun, sans enrichissement de tout l’univers à chaud. */
+    public function forPlayer(PlayerUniverse $viewer, PlayerUniverse $target): array
+    {
+        if (!$viewer->isPlayerControlled() || !$target->isPlayerControlled() || $target->universe->id !== $viewer->universe->id) {
+            throw new \DomainException('Commandant inaccessible dans cet univers.');
+        }
+        $snapshot = $this->refresh($viewer->universe);
+        foreach ($snapshot->players as $row) {
+            if ($row['membership_id'] !== $target->id) continue;
+            if (!isset($row['ranks']['buildings'], $row['ranks']['research'])) {
+                // Les anciens snapshots complètent ces rangs avec le départage actuel par pseudo.
+                foreach ($this->forUniverse($viewer)['players'] as $legacyRow) {
+                    if ($legacyRow['membership_id'] === $target->id) return ['player'=>$legacyRow, 'updated_at'=>$snapshot->updatedAt];
+                }
+            }
+            return ['player'=>$row, 'updated_at'=>$snapshot->updatedAt];
+        }
+        return ['player'=>null, 'updated_at'=>$snapshot->updatedAt];
+    }
+
     private function refresh(Universe $universe): LeaderboardSnapshot
     {
         $midnight = self::midnight($this->clock->now());

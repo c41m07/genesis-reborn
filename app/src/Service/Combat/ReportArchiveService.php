@@ -18,7 +18,8 @@ final class ReportArchiveService
 
     public function __construct(private EntityManagerInterface $em, private GameManager $manager,
         private GameRepository $repo, private CombatReportReader $combats,
-        private EspionageReportReader $espionage, private ClockInterface $clock) {}
+        private EspionageReportReader $espionage, private ClockInterface $clock,
+        private \App\Repository\ReportSummaryRepository $summaries) {}
 
     public function page(PlayerUniverse $member, string $filter, bool $archived, int $page, ?\App\Service\Search\SearchCriteria $criteria = null): array
     {
@@ -69,6 +70,10 @@ final class ReportArchiveService
         }
         $reportsByKind = [];
         foreach ($idsByKind as $kind => $ids) {
+            if ($kind === 'combat') {
+                $reportsByKind[$kind] = $this->summaries->combats($member, $ids);
+                continue;
+            }
             foreach ($this->repo->all(self::TYPES[$kind][0], ['id' => $ids]) as $report) {
                 $reportsByKind[$kind][$report->id] = $report;
             }

@@ -116,6 +116,10 @@ Les cartes Bâtiments transmettent un contexte économique immuable, préparé a
 la synchronisation des files, aux calculs nominaux de ResourceService. Ce contexte
 regroupe les lectures d’événements et de vacances pour cette préparation seulement ;
 les appels existants et les snapshots de la barre ne l’utilisent pas.
+La liste des combats utilise ReportSummaryRepository pour éviter les rounds et
+snapshots complets. Le lecteur détaillé et les archives conservent les entités
+entières. Les profils consultent la ligne du snapshot quotidien sans enrichir
+tous les scores à chaque affichage ; le recalcul quotidien reste partagé.
 
 Les actualisations des colonies demandent JSON avec `X-Genesis-Live: 1` et
 `Accept: application/json`. La route conserve ses contrôles, synchronisations
