@@ -1,8 +1,10 @@
 # Rework V1 — suivi et reprise
 
-Première passe validée localement le 15 novembre 2026, sur le code applicatif
-`6dd33b7`. Le chantier global reste ouvert : voir les exceptions et la recette
-manuelle ci-dessous. Aucun push, PR, fusion ou déploiement effectué.
+Compléments réalisés le 15 novembre 2026 sur le code applicatif `9c8abb7` :
+économie des bâtiments, relations, résumés, pagination et fragments Flottes.
+Validation PHP/Python, lint, compilation, mesures et 202 scénarios navigateur
+réussis après une reprise isolée. La première passe sur `6dd33b7` reste consignée
+comme référence historique. Aucun push, PR, fusion ou déploiement effectué.
 
 ## Cadre
 
@@ -57,7 +59,8 @@ worktrees et archives historiques exclus des transformations mécaniques.
 | 12 | Contrôles et recette cumulée | Six contrôles, mesures comparables et parcours manuels requis | Contrôles locaux du périmètre livré validés ; recette et exceptions ouvertes |
 
 Cet inventaire recense les domaines, sans prétendre à une revue intégrale de
-chaque fichier. Un domaine non vérifié reste explicitement ouvert.
+chaque fichier. Les états du tableau sont ceux de la première passe ; les
+compléments et la validation courante sont consignés plus bas.
 
 ## Référence de performance
 
@@ -83,7 +86,7 @@ La référence historique d’environ 520 requêtes n’est pas reproduite à l�
 la fixture et le périmètre sont différents. Les 468 requêtes concernent le service
 isolé, pas une page HTTP complète. Aucun pourcentage global n’est déduit.
 
-## Comparaison stabilisée des préparations
+## Comparaison stabilisée des préparations — première passe
 
 Deux projets PHP jetables utilisant la même image et la même fixture ont été
 mesurés successivement : avant, le fichier ColonyView de `48c9a71` est monté
@@ -166,7 +169,7 @@ et `var/measure-rework.py`, ignorés par Git. Les budgets testés restent larges
   barre pour masquer ces lectures. Les combats restent à regrouper ; les
   compositions des flottes ont été regroupées au lot 6.
 
-## Validation finale — 15 novembre 2026
+## Validation de la première passe — 15 novembre 2026
 
 | Contrôle | Résultat |
 | --- | --- |
@@ -399,18 +402,56 @@ suppression de fichier, de document ou d’asset ; aucun formateur installé.
 Le conteneur et le schéma passent `make lint`, puis les six scénarios du
 benchmark sont réexécutés sur cette version.
 
+## Validation cumulative des compléments — 15 novembre 2026
+
+Code applicatif figé à `9c8abb7`. Les changements retenus dans les douze lots
+sont livrés localement, avec les exceptions justifiées ci-dessous ; cette
+validation prépare la recette utilisateur, sans revendiquer l’absence de bugs.
+
+| Contrôle | Résultat |
+|---|---|
+| `make validate` | Réussi, configuration Compose validée sans affichage des secrets |
+| `make lint` | Réussi : PHP, 78 YAML, 169 Twig, conteneur et schéma cohérent dans l’environnement synthétique |
+| `make test` | 1 042 tests PHP, 213 209 assertions, un benchmark optionnel ignoré ; 13 tests Python réussis |
+| Benchmark explicitement activé | Réussi séparément, six scénarios avant/après ; premier passage et dix passages chauds conservés |
+| `make assets` | Réussi, entrée de production 495 Kio ; aucune modification des CSS, images ou polices source |
+| `BROWSER_PERSISTENCE=1 make test-browser` | 202 scénarios distincts réussis après une reprise isolée, aucun scénario manquant ou supplémentaire |
+| `git diff --check` | Réussi avant l’enregistrement du bilan |
+
+Les quatre groupes navigateur utilisent chacun leur projet, base, cache et
+répertoire de résultats : 51/51, 59/59, 42/43, 49/49. Le seul échec initial
+est `keyboard-navigation.spec.mjs:21`, limité à 60 s pendant une navigation,
+sans échec d’assertion de focus. Sa reprise sur un environnement seul réussit
+en 39,5 s, avec le même test et le même délai. Aucune source applicative,
+assertion ni limite modifiée entre la suite et cette reprise.
+
+La couverture des cinq rapports JSON est comparée au manifeste de 202 scénarios :
+`missing=[]`, `extra=[]`, `unresolved_failures=[]`. Les fichiers sont dans
+`var/rework-final-browser-{1,2,3,4,retry}.json` et
+`var/rework-final-browser-coverage.json`, ignorés par Git. Les contrôles incluent
+les audits axe, le contraste échantillonné, le clavier, les formulaires natifs,
+les refus d’accès et les parcours métiers, dont le bandeau de ressources.
+
+Sur l’instance locale habituelle : services sains, `lint:container` réussi et
+empreintes des fichiers ResourceService/LiveRegionResponse identiques au dépôt.
+Aucune migration, restauration ou fixture exécutée sur sa base. Nos projets
+jetables ont été retirés ; les deux anciens projets de tests déjà présents
+sont conservés. Les preuves et configurations temporaires restent dans `var/`.
+Aucun push, PR, CI GitHub, fusion ou déploiement Alpha. La future intégration
+exigera sa CI complète après la recette et l’autorisation de publication.
+
 ## Reprise
 
 - Branche : `chore/rework-v1`, base `48c9a71`, première passe complète validée `6dd33b7` ; compléments depuis `9332789`.
-- Lot actuel : 12/12, validation cumulative des compléments.
-- Dernière étape validée : mesures HTTP 0/5/25 flottes, captures et nouvelle comparaison des six préparations ; validate/lint réussis.
-- Contrôles en cours : suite PHP/Python complète ; suite navigateur complète à lancer ensuite.
-- Modifications non commitées : aucune après le commit de nettoyage.
+- Lot actuel : 12/12, validation cumulative locale terminée pour le périmètre livré et ses exceptions.
+- Dernière étape validée : six contrôles, mesures comparables, captures et couverture navigateur réconciliée 202/202 après une reprise isolée.
+- Contrôles en cours : aucun.
+- Modifications non commitées : aucune après enregistrement du bilan ; code applicatif validé `9c8abb7`.
 - Questions en attente : aucune ; recette manuelle et exceptions restent ouvertes.
-- Prochaine action précise : attendre PHP/Python, puis lancer les navigateurs isolés sur quatre groupes et réconcilier la couverture.
+- Prochaine action précise : recette utilisateur locale, notamment détails économiques, constructions/recherche, formulaires Flottes et filtres/exports administratifs.
 - Conserver cette branche unique ; aucune PR, fusion ou publication automatique.
 
-## Travaux par lot et contrôles ciblés
+## Travaux et contrôles ciblés de la première passe
 
 - Référence du lot 1 : `9e62541`.
 - Lot 2 : imports explicites et constructeur de ColonyView mis en lignes,
@@ -496,42 +537,57 @@ benchmark sont réexécutés sur cette version.
   une compilation de production réussie sous Node Windows 24.17.0, conforme à la
   version majeure documentée. Aucun téléchargement ni installation nécessaire.
 
-## Exceptions et travaux encore ouverts
+## Exceptions et limites conservées
 
-Cette passe n’est pas présentée comme l’achèvement intégral du prompt de
-nettoyage. Tous les domaines du plan sont inventoriés, mais la profondeur de
-revue reste ciblée ; tous les composants existants n’ont pas été relus ligne
-par ligne. Les écarts suivants restent explicitement ouverts :
+Les cinq compléments de performance précédemment ouverts sont traités :
+contexte des bâtiments, résumés/profil individuel, identités/relations/combats,
+pagination des historiques et fragments Flottes avec mesures HTTP à trois
+volumes. Les exceptions restantes sont délimitées :
 
-1. Préparation économique des bâtiments traitée dans le complément du lot 3 :
-   37 requêtes sur la fixture ; mesures à plusieurs volumes encore à compléter.
-2. Résumés de rapports évitant l’hydratation des rounds ; accès au classement
-   quotidien pour un seul profil sans enrichir tout l’univers.
-3. Regroupement complémentaire des identités/relations diplomatiques, des
-   contributeurs dans les fiches de projet et des combats des flottes actives.
-4. Pagination serveur des joueurs, du journal et des listes administratives
-   spécialisées, avec recherche, export et accès à tout l’historique.
-5. Fragments propres à Flottes et mesures HTTP/navigateur sur plusieurs volumes.
-6. Revue plus large des conventions existantes, accessibilité manuelle complète
-   et tests réellement concurrents des traitements sensibles.
+- Snapshots économiques par planète : conserver le moteur complet partagé avec
+  le bandeau exclu. Une extraction plus large nécessiterait une étude séparée,
+  sans supprimer l’historique d’événements ou de vacances pour accélérer la lecture.
+- Ancien snapshot quotidien sans rangs bâtiments/recherche : conserver le
+  recalcul de présentation historique jusqu’au prochain snapshot. Le chemin
+  normal du profil ne prépare plus le classement entier.
+- Listes de configuration éditées dans leur ensemble (modèles et catalogues) :
+  conserver leurs vues complètes et liens directs. La modération conserve la
+  portée actuelle de ses consultations journalisées. Les membres/historiques
+  de guilde ne sont chargés que si leurs détails sont effectivement affichés.
+- Conventions : appliquer les changements utiles au périmètre modifié ; ne pas
+  réécrire tous les anciens tris et contrôleurs pour obtenir un diff cosmétique.
+  L’inventaire n’est pas une relecture ligne par ligne de tous les fichiers.
+- Accessibilité : contrôles ciblés, captures et suites automatiques ; aucune
+  revendication de conformité RGAA exhaustive. La recette détaillée ci-dessous
+  reste à effectuer avec l’utilisateur, notamment les technologies d’assistance.
+- Concurrence : les scénarios navigateur existants d’abandon et de créations
+  simultanées de compositions sont réellement concurrents. Les suites de rejeu
+  et de messages obsolètes ne prouvent pas, à elles seules, toutes les courses
+  possibles entre dépenses et workers. Aucun verrou ou ordre de verrou modifié.
+- Sources externes/Work inaccessibles et CI GitHub : non vérifiées dans cette
+  session ; aucune publication distante. CI complète obligatoire avant une future fusion.
 
-Pas de cache partagé improvisé ni de projection partielle d’entité pour masquer
-ces coûts ; ces évolutions demandent leurs scénarios de caractérisation et de
-mesure. Les règles et valeurs restent strictement hors arbitrage de ce chantier.
+Pas de cache partagé improvisé ni de projection partielle d’entité. La barre
+garde son endpoint, ses calculs, ses états de vacances et sa fréquence. Une
+comparaison de sources vérifie 18 méthodes/fichiers protégés identiques à
+`48c9a71` (`var/rework-boundaries.json`), dont le corps de l’endpoint, snapshot,
+simulation, écritures, FactoryEconomy, GameShell et les deux fichiers du bandeau.
 
 ## Fichiers du lot cumulé
 
+69 fichiers suivis modifiés ou ajoutés par rapport à `48c9a71`.
+
 | Périmètre | Fichiers modifiés ou ajoutés |
 | --- | --- |
-| Contrôleurs | `AdminController`, `ColonyController`, `DiplomacyController`, `GuildProjectController`, `LeaderboardController` dans `app/src/Controller/` |
-| Lectures | `app/src/Repository/AdminReadRepository.php`, `app/src/Repository/GameRepository.php` |
-| Préparation des pages | `Colony/ColonyView.php`, `Colony/EmpireDetails.php`, `Combat/PlayerCombatSimulation.php`, `Combat/ReportArchiveService.php`, `Fleet/DestinationCatalogue.php`, `Player/SocialProfileView.php` sous `app/src/Service/` |
-| Asynchrone | `app/src/Service/Notification/OutboxRelay.php` (commentaire seulement) |
-| Navigateur | `app/assets/controllers/colony_live_controller.js` |
-| Templates | `app/templates/base.html.twig`, `colony/show.html.twig`, `colony/_catalog.html.twig`, `colony/_journal.html.twig`, `player/diplomacy.html.twig`, `ui/colony_selector.html.twig` sous `app/templates/` |
-| Tests HTTP | `app/tests/Controller/AbsenceJournalTest.php`, `GuildTagPlayerReportTest.php` dans le même dossier |
-| Tests intégrés | `AdminReadRepositoryTest.php`, `CatalogAccessTest.php`, `ColonyPreparationTest.php`, `FleetStationingTest.php`, `GamePersistenceTest.php` dans `app/tests/Integration/` |
-| Test navigateur | `app/tests/browser/live-refresh-focus.spec.mjs` |
+| Contrôleurs | `app/src/Controller/AdminController.php`, `app/src/Controller/AdminGameEventController.php`, `app/src/Controller/ColonyController.php`, `app/src/Controller/DiplomacyController.php`, `app/src/Controller/FeedbackController.php`, `app/src/Controller/FleetController.php`, `app/src/Controller/GuildProjectController.php`, `app/src/Controller/LeaderboardController.php`, `app/src/Controller/PatchNoteController.php` |
+| Lectures | `app/src/Repository/AdminReadRepository.php`, `app/src/Repository/GameRepository.php`, `app/src/Repository/PatchNoteRepository.php`, `app/src/Repository/ReportSummaryRepository.php` |
+| Services et préparation | `app/src/Service/Admin/AdminAuditExport.php`, `app/src/Service/Colony/CatalogueDetails.php`, `app/src/Service/Colony/CatalogueInsights.php`, `app/src/Service/Colony/CatalogueProductionContext.php`, `app/src/Service/Colony/ColonyView.php`, `app/src/Service/Colony/EmpireDetails.php`, `app/src/Service/Colony/LiveRegionResponse.php`, `app/src/Service/Colony/ResourceService.php`, `app/src/Service/Combat/PlayerCombatSimulation.php`, `app/src/Service/Combat/ReportArchiveService.php`, `app/src/Service/Fleet/DestinationCatalogue.php`, `app/src/Service/Notification/OutboxRelay.php`, `app/src/Service/Player/DailyLeaderboard.php`, `app/src/Service/Player/RelationResolver.php`, `app/src/Service/Player/SocialProfileView.php` |
+| Contrôleurs navigateur | `app/assets/controllers/admin_list_controller.js`, `app/assets/controllers/colony_live_controller.js` |
+| Templates | `app/templates/admin/events.html.twig`, `app/templates/admin/feedbacks.html.twig`, `app/templates/admin/patchnotes.html.twig`, `app/templates/admin/sections/_audit_results.html.twig`, `app/templates/admin/sections/_list_pagination.html.twig`, `app/templates/admin/sections/_players_results.html.twig`, `app/templates/admin/sections/audit.html.twig`, `app/templates/admin/sections/players.html.twig`, `app/templates/base.html.twig`, `app/templates/colony/_catalog.html.twig`, `app/templates/colony/_journal.html.twig`, `app/templates/colony/show.html.twig`, `app/templates/combat/reports.html.twig`, `app/templates/fleet/_available.html.twig`, `app/templates/fleet/_counts.html.twig`, `app/templates/fleet/index.html.twig`, `app/templates/player/diplomacy.html.twig`, `app/templates/ui/colony_selector.html.twig` |
+| Tests HTTP | `app/tests/Controller/AbsenceJournalTest.php`, `app/tests/Controller/AdminPaginationTest.php`, `app/tests/Controller/FleetDestinationTest.php`, `app/tests/Controller/GuildTagPlayerReportTest.php`, `app/tests/Controller/ReportArchiveTest.php` |
+| Tests intégrés | `app/tests/Integration/AdminReadRepositoryTest.php`, `app/tests/Integration/CatalogAccessTest.php`, `app/tests/Integration/ColonyPreparationTest.php`, `app/tests/Integration/DailyLeaderboardTest.php`, `app/tests/Integration/FleetStationingTest.php`, `app/tests/Integration/GamePersistenceTest.php`, `app/tests/Integration/PersonalDiplomacyTest.php` |
+| Tests unitaires | `app/tests/Unit/LiveRegionResponseTest.php` |
+| Tests navigateur | `app/tests/browser/admin-accounts-flights.spec.mjs`, `app/tests/browser/live-refresh-focus.spec.mjs` |
 | Documentation | `README.md`, `docs/ARCHITECTURE.md`, `docs/FEUILLE_DE_ROUTE.md`, `docs/README.md`, `docs/REWORK_V1.md`, `docs/WORKER_NOTIFIER.md` |
 
 ## Recette manuelle à effectuer
