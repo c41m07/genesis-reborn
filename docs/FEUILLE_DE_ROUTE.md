@@ -2,11 +2,15 @@
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026
 
-Lot 1 préparé : grille commune des 150 profils et requalification explicite des
-accès existants. Lots suivants : durées/carburant, unités économiques, simulations
-et comparaison de la répartition des coûts. État et vérifications dans le
-[suivi de mission](PROGRESSION_CARBURANT_UNITES.md). L’activation des accès en base
-reste soumise à sauvegarde vérifiée et autorisation ; aucun déploiement Alpha prévu.
+Lot 1 fusionné dans `dev` par la [PR #69](https://github.com/c41m07/genesis-reborn/pull/69)
+après CI complète réussie : grille commune des 150 profils et requalification explicite.
+Lot 2 développé localement sur `feature/durees-carburant-par-classe` : durées,
+électricité associée, carburant par classe et conservation des missions historiques.
+Les [mesures du lot 2](DUREES_CARBURANT.md) distinguent temps, financement et limites.
+Les unités économiques puis les simulations conjointes restent à réaliser.
+État, contrôles et autorisations dans le [suivi de mission](PROGRESSION_CARBURANT_UNITES.md).
+L’activation des accès en base reste soumise à sauvegarde vérifiée et autorisation ;
+aucun déploiement Alpha prévu.
 
 ## Rework V1 — chantier local du 14 novembre 2026
 

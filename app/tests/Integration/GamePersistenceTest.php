@@ -1359,6 +1359,35 @@ final class GamePersistenceTest extends KernelTestCase
         return [$clock,$player,$one,$two,self::getContainer()->get(QueueService::class)];
     }
 
+    public function testColonizationOccupiesTheCommonQueueForItsRecordedEffectiveDuration(): void
+    {
+        [$clock,$player,$one,$two,$queues]=$this->researchColonies();$membership=$player->currentPlayerUniverse;
+        $membership->universe->gameSettings['multipliers']['research_time']=1;
+        $this->em->getRepository(PlanetBuilding::class)->findOneBy(['planet'=>$one,'slug'=>'lab'])->level=2;
+        foreach (['engineering_foundations'=>2,'naval_engineering'=>1] as $slug=>$level) {
+            $technology=new PlayerTechnology();$technology->playerUniverse=$membership;$technology->slug=$slug;$technology->level=$level;
+            $this->em->persist($technology);
+        }
+        // Le financement est fourni pour isoler l'occupation réelle de la file commune.
+        foreach ([$one,$two] as $planet) {
+            foreach ($this->em->getRepository(PlanetResource::class)->findBy(['planet'=>$planet]) as $resource) {
+                $resource->currentStock=1000000;
+            }
+        }
+        $this->em->flush();
+        $queues->add($membership,$one,'technologies','colonial_expansion',1,str_repeat('a',32));
+        $queues->add($membership,$two,'technologies','engineering_foundations',1,str_repeat('b',32));
+        [$colony,$following]=$this->em->getRepository(QueueItem::class)->findBy(['playerUniverse'=>$membership],['id'=>'ASC']);
+        self::assertSame(280457,$colony->durationSeconds);self::assertSame(467500,$colony->paidCosts['electricity']);
+        self::assertNull($following->startedAt);$finish=$colony->finishAt();$paid=$colony->paidCosts;
+        $clock->sleep($colony->durationSeconds-1);$queues->synchronize($membership);
+        self::assertNull($following->startedAt);
+        $clock->sleep(2);$queues->synchronize($membership);
+        self::assertEquals($finish,$following->startedAt);
+        self::assertSame($paid,$colony->paidCosts);self::assertSame(280457,$colony->durationSeconds);
+        self::assertSame(1,$this->em->getRepository(PlayerTechnology::class)->findOneBy(['playerUniverse'=>$membership,'slug'=>'colonial_expansion'])->level);
+    }
+
     private function recordedResearch(Planet $planet,string $slug,int $level,int $duration,\DateTimeImmutable $at,bool $active,array $paid=['metal'=>123]): QueueItem
     {
         $item=new QueueItem();$item->planet=$planet;$item->playerUniverse=$planet->owner;$item->queueType='research';$item->itemSlug=$slug;$item->itemLevel=$level;

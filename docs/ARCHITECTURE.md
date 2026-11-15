@@ -34,6 +34,27 @@ La reconstruction des empires oubliés conserve son chemin particulier et ne
 crée pas un accès joueur par la seule livraison d’une unité.
 Voir la [grille et la bascule](DEBLOCAGES.md) et le [suivi](PROGRESSION_CARBURANT_UNITES.md).
 
+## Durées et carburant des opérations
+
+`OperationCalculator` reste le calculateur commun des devis, maxima et paiements.
+La réduction est soustraite en pourcentage avant division, pour conserver
+l’arrondi supérieur sans créer une seconde artificielle au plafond de 70 %.
+Les durées et coûts des QueueItem acceptés restent la référence de leur résolution.
+
+`FleetNavigation.freeze` ajoute les coefficients de carburant réellement utilisés
+au départ dans `fuel_profiles`, par slug et rang, sans changer la version de route.
+`FleetFuel` restaure ces coefficients pour FleetRecallPlanner et FleetStationing,
+sans modifier quantités, vitesses ni réserve payée. Si le profil est présent mais
+incomplet, le nouveau trajet est refusé ; aucune tarification courante de repli.
+Pour les missions antérieures, la référence de `config/legacy/` est combinée aux
+surcharges persistées. Une ancienne personnalisation modifiée depuis son départ
+n’est pas reconstruite avec certitude : voir la [procédure et ses limites](DUREES_CARBURANT.md#commandes-payées-et-missions-historiques).
+
+`app:balance:compare-operations` produit une comparaison JSON sans lecture de compte
+ni écriture en base, avec les calculateurs réels et un univers transitoire ×1.
+Aucune migration SQL pour ces compléments. Déploiement cohérent du web et des
+workers requis avant toute activation ; aucun déploiement Alpha dans cette mission.
+
 ## Comptes et courriels
 
 Les nouveaux comptes reçoivent deux messages : bienvenue et confirmation. Seul le lien de confirmation permet d’activer l’accès ; il ouvre une page demandant une confirmation explicite par formulaire POST protégé contre les CSRF. L’ouverture automatique par un scanner de mails ne valide donc pas le compte.

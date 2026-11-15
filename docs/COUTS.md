@@ -1,5 +1,10 @@
 # Grille de coûts commune — métal, nano, antimatière et hydrogène
 
+Le lot du 15 novembre conserve ces profils et leurs budgets : la redistribution
+Basique 50/50 et Intermédiaire 40/40/20 reste candidate et non activée. Seule la
+taxe électrique évolue avec les [nouvelles durées effectives](DUREES_CARBURANT.md),
+sans réécrire les paiements déjà enregistrés.
+
 Décision utilisateur du 5 novembre 2026 : appliquer la progression des ressources à l’ensemble des bâtiments, du chantier spatial (vaisseaux), des défenses et des recherches. Le chantier d’assemblage lui-même fait partie des bâtiments concernés. Les boosts et les réglages d’univers ne font pas partie de cette modification.
 
 ## Règle appliquée par défaut

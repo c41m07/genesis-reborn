@@ -16,7 +16,8 @@ final class FleetStationing
     public function __construct(private GameRepository $repo,private GameManager $manager,
         private ActionGuard $guard,private FleetHold $hold,private MovementCalculator $calculator,
         private FleetNavigation $navigation,private FleetDispatch $dispatch,private GameCatalog $catalog,
-        private NotificationService $notifications,private VacationCalendar $vacations,private ClockInterface $clock) {}
+        private NotificationService $notifications,private VacationCalendar $vacations,private ClockInterface $clock,
+        private FleetFuel $fuel) {}
 
     /** Le contrôle du jeton, de l'échéance et les verrous de participation et flotte précèdent cet appel. */
     public function arriveLocked(Fleet $fleet): void
@@ -112,7 +113,7 @@ final class FleetStationing
 
     private function route(Fleet $fleet,Planet $source,Planet $target): array
     {
-        $ships=$this->hold->ships($fleet);
+        $ships=$this->fuel->forFleet($fleet,$this->hold->ships($fleet));
         if(!$ships) throw new \DomainException('Vaisseaux indisponibles.');
         $config=$this->catalog->forUniverse($fleet->playerUniverse->universe);
         $quote=$this->calculator->quote($this->coords($source),$this->coords($target),$ships,$fleet->speedRatio,

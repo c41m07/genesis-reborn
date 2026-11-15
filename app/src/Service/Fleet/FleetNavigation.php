@@ -24,7 +24,8 @@ final class FleetNavigation
         if($raw<=0) throw new \DomainException('Trajet nul ou incohérent.');
         foreach($legs as &$leg) { $leg['seconds']=$quote['seconds']*$leg['weight']/$raw;unset($leg['weight']); }unset($leg);
         return ['version'=>1,'origin'=>$origin,'target'=>$target,'seconds'=>(int)$quote['seconds'],'one_way_fuel'=>(float)$quote['one_way_fuel'],
-            'legs'=>$legs,'active'=>['status'=>'traveling','progress'=>0.0,'at'=>$now->getTimestamp()]];
+            'legs'=>$legs,'fuel_profiles'=>FleetFuel::snapshot($ships),
+            'active'=>['status'=>'traveling','progress'=>0.0,'at'=>$now->getTimestamp()]];
     }
 
     private function leg(array $from,array $to,float $distance,float $speed,float $fuel,bool $hyper=false): array

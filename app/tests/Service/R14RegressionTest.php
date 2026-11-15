@@ -20,7 +20,7 @@ final class R14RegressionTest extends TestCase
         $fixture = $this->fixture();
         $prices = json_decode(file_get_contents(dirname(__DIR__).'/Fixtures/ship-costs-2026-11-05.json'), true, 512, JSON_THROW_ON_ERROR);
         $commonPrices = json_decode(file_get_contents(dirname(__DIR__).'/Fixtures/catalog-costs-2026-11-05.json'), true, 512, JSON_THROW_ON_ERROR);
-        $catalog = new GameCatalog(dirname(__DIR__, 2).'/config/game');
+        $catalog = \App\Tests\Support\ProgressionOperationsReference::historicalCatalog();
         $universe = new Universe();
         $universe->slug = 'simulation';
         $universe->name = 'Simulation';

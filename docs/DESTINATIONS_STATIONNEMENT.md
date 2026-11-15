@@ -1,5 +1,15 @@
 # Destinations et Stationnement — lot 5
 
+## Complément carburant — 15 novembre 2026
+
+Les règles de destination, réserve, propriété, rappel et stationnement restent
+conservées. Le [nouveau barème par classe](DUREES_CARBURANT.md#carburant-par-classe)
+s’applique aux nouveaux départs. Les coefficients des missions sont figés pour
+leurs rappels et replis ; les réserves déjà payées ne sont pas recalculées.
+Les anciennes missions sans profil utilisent la référence précédente et leurs
+surcharges persistées ; une surcharge modifiée depuis le départ doit être examinée.
+Le stationnement sur une colonie possédée ne reçoit aucun coût horaire supplémentaire.
+
 ## État et plan
 
 Branche feature/destinations-stationnement depuis dev bc4930a après fusion

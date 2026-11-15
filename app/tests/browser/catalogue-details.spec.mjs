@@ -85,6 +85,7 @@ test('Les 150 fiches expliquent leurs effets, bonus, accès et limites sur ordin
     await expect(counters).toContainText('dégâts et chance de toucher');
     await page.keyboard.press('Escape');
     dialog = await open('ships', 'probe');
+    await expect(dialog).toContainText(/0,006\s+H\s*\/\s*h/);
     await expect(dialog).toContainText('Toutes les sondes envoyées en espionnage sont consommées');
     for(const rule of ['Basique : 50 %','Intermédiaire : 40 %','Supérieur : 30 %','moyenne est pondérée','tranche complète de 5 sondes','limite de 20 points','aucun bonus de renseignement','essais Alpha']) await expect(dialog).toContainText(rule);
     await expect(dialog).toContainText('Aucun');

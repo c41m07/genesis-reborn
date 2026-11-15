@@ -2,7 +2,7 @@
   "slug": "automated_defense_repair",
   "label": "Drones réparateurs",
   "max_level": 5,
-  "research_time_base": 600,
+  "research_time_base": 2700,
   "research_time_scaling": 1.8,
   "costs_base": {
     "metal": 1700,

@@ -1,5 +1,13 @@
 # Réglages et études d’équilibrage
 
+## Durées et carburant — 15 novembre 2026
+
+Les [grilles et mesures courantes](DUREES_CARBURANT.md) remplacent les anciennes
+durées de départ des recherches, vaisseaux et défenses ainsi que le carburant
+uniforme. Les statistiques, vitesses, soutes, réservoirs, productions, plafonds et
+prix hors taxe électrique restent conservés. Les études datées ci-dessous gardent
+leurs hypothèses historiques ; leurs délais ne valident pas cette nouvelle version.
+
 Références datées des choix validés. Les décisions les plus récentes de
 [DECISIONS.md](DECISIONS.md) et [REGLES.md](REGLES.md) priment sur les exemples
 historiques. Les valeurs réellement appliquées sont dans `app/config/game/`,
