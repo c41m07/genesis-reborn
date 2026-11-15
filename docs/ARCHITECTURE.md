@@ -128,7 +128,7 @@ lit 100 lignes à la fois, avec un identifiant plafond et neutralisation des
 formules CSV. Les recherches immédiates Joueurs/Journal rendent leurs fragments
 partagés et préservent le formulaire ; les réponses obsolètes sont ignorées.
 
-Les actualisations des colonies demandent JSON avec `X-Genesis-Live: 1` et
+Les actualisations des colonies et de Flottes demandent JSON avec `X-Genesis-Live: 1` et
 `Accept: application/json`. La route conserve ses contrôles, synchronisations
 et préparation GameShell, puis renvoie les fragments privés sans cache.
 Le sélecteur, le catalogue et le journal sont partagés entre rendu initial et

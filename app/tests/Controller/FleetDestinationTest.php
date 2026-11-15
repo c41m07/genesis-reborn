@@ -33,6 +33,7 @@ final class FleetDestinationTest extends WebTestCase
         $this->em=static::getContainer()->get(EntityManagerInterface::class);$params=$this->em->getConnection()->getParams();
         if(($params['host']??'')!=='database-test' || ($params['dbname']??'')!=='genesis_v2_test') throw new \RuntimeException('Base de test non isolée.');
         $schema=new SchemaTool($this->em);$metadata=$this->em->getMetadataFactory()->getAllMetadata();$schema->dropSchema($metadata);$schema->createSchema($metadata);
+        static::getContainer()->set('clock',new \Symfony\Component\Clock\MockClock());
         static::getContainer()->get(UniverseImporter::class)->import();
         [$this->player,$this->home]=$this->player('DestOwner');
         [$ally,$this->ally]=$this->player('DestAlly');[$enemy,$this->enemy]=$this->player('DestEnemy');
@@ -79,6 +80,38 @@ final class FleetDestinationTest extends WebTestCase
         $criteria=['playerUniverse'=>$this->player->currentPlayerUniverse,'solarSystem'=>$planet->solarSystem];
         if($this->em->getRepository(PlayerDiscovery::class)->findOneBy($criteria)) return;
         $discovery=new PlayerDiscovery();$discovery->playerUniverse=$criteria['playerUniverse'];$discovery->solarSystem=$planet->solarSystem;$this->em->persist($discovery);$this->em->flush();
+    }
+
+    public function testFleetRefreshReusesTheFullPageRegionsWithoutChangingTheResourceStrip(): void
+    {
+        $normalize = static function(string $html): string {
+            $crawler = new \Symfony\Component\DomCrawler\Crawler($html);
+            $crawler->filter('input[name="request_key"], input[name="_token"]')->each(static function($input): void {
+                self::assertNotEmpty($input->attr('value'));
+                $input->getNode(0)->removeAttribute('value');
+            });
+            return trim($crawler->filter('[data-live-region]')->html());
+        };
+        foreach (['explore', 'spy'] as $mission) {
+            $full = $this->client->request('GET', '/flottes', ['mission'=>$mission]);
+            self::assertResponseIsSuccessful();
+            $regions = [];
+            foreach (['colony-selector', 'resources', 'fleet-counts', 'available-fleets', 'active-flights', 'orbit-requests'] as $name) {
+                $node = $full->filter('[data-live-region="'.$name.'"]');
+                self::assertCount(1, $node, $name);
+                $regions[$name] = $node->outerHtml();
+            }
+            $this->client->request('GET', '/flottes', ['mission'=>$mission], [], ['HTTP_X_GENESIS_LIVE'=>'1', 'HTTP_ACCEPT'=>'application/json']);
+            self::assertResponseIsSuccessful();
+            self::assertResponseHeaderSame('Content-Type', 'application/json');
+            $payload = json_decode($this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+            self::assertSame(array_keys($regions), array_keys($payload['regions']));
+            foreach ($regions as $name=>$html) {
+                self::assertSame($normalize($html), $normalize($payload['regions'][$name]), $name.' / '.$mission);
+            }
+            self::assertStringNotContainsString('<!DOCTYPE', implode('', $payload['regions']));
+            self::assertStringNotContainsString($this->hidden->name, $payload['regions']['available-fleets']);
+        }
     }
 
     public function testFleetPageShowsOnlyTheActiveColonyAndScopedOrbitRequests(): void

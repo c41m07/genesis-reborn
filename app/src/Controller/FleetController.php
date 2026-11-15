@@ -13,7 +13,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final class FleetController extends AbstractController
 {
     #[Route('/flottes',name:'app_fleets',methods:['GET'])]
-    public function index(Request $request,UniverseContext $context,GameRepository $repo,GameCatalog $catalog,\App\Service\Queue\QueueService $queues,CombatEventService $combats,\App\Service\Colony\EmpireDetails $details,DestinationCatalogue $destinations,\App\Service\Fleet\OrbitRequestView $orbitView,\App\Service\Fleet\FleetCompositionService $compositions): Response
+    public function index(Request $request,UniverseContext $context,GameRepository $repo,GameCatalog $catalog,\App\Service\Queue\QueueService $queues,CombatEventService $combats,\App\Service\Colony\EmpireDetails $details,DestinationCatalogue $destinations,\App\Service\Fleet\OrbitRequestView $orbitView,\App\Service\Fleet\FleetCompositionService $compositions,\App\Service\Colony\GameShell $shell): Response
     {
         $m=$context->membership();$queues->synchronize($m);$idle=[];
         $systems=$repo->systems($m->universe);$mission=(string)$request->query->get('mission','explore');$universeConfig=$catalog->forUniverse($m->universe);$conquestEnabled=(bool)($universeConfig['features']['planet_conquest']??false);
@@ -60,7 +60,26 @@ final class FleetController extends AbstractController
         $activeFleets=$repo->all(Fleet::class,['playerUniverse'=>$m,'homePlanet'=>$selectedPlanet,'status'=>['traveling','returning','attacking','defending','orbiting','orbit_pending','occupying']],['arrivalAt'=>'ASC']);
         $combatEvents=$repo->fleetCombatEvents($m,$activeFleets);
         $orbitRequests=$selectedPlanet?$orbitView->forMember($m,$selectedPlanet):[];
-        return $this->render('fleet/index.html.twig',['fleet_planet'=>$selectedPlanet,'loaded_composition'=>$loaded,'loaded_origin'=>$loadedOrigin,'fleet_details'=>$details->fleets($m,$activeFleets),'prefill'=>['mission'=>$mission,'system'=>$systemId,'planet'=>$planetId,'coordinates'=>$prefillCoordinates,'mode'=>$mode],'active_fleets'=>$activeFleets,'held_fleets'=>$heldFleets,'held_details'=>$details->fleets($m,$heldFleets),'holds'=>$holds,'combat_events'=>$combatEvents,'membership'=>$m,'fleet_colony_scope'=>true,'idle'=>$idle,'systems'=>$systems,'destination_choices'=>$destinationChoices,'catalog'=>$catalog->all('ships'),'resources'=>$catalog->rules()['resources'],'fuel_pending'=>$catalog->rules()['fuel_ratio_policy']==='pending','orbit_requests'=>$orbitRequests,'fleet_limit'=>(int)$universeConfig['limits']['max_fleet_size'],'conquest_enabled'=>$conquestEnabled]);
+        $data=['fleet_planet'=>$selectedPlanet,'loaded_composition'=>$loaded,'loaded_origin'=>$loadedOrigin,'fleet_details'=>$details->fleets($m,$activeFleets),'prefill'=>['mission'=>$mission,'system'=>$systemId,'planet'=>$planetId,'coordinates'=>$prefillCoordinates,'mode'=>$mode],'active_fleets'=>$activeFleets,'held_fleets'=>$heldFleets,'held_details'=>$details->fleets($m,$heldFleets),'holds'=>$holds,'combat_events'=>$combatEvents,'membership'=>$m,'fleet_colony_scope'=>true,'idle'=>$idle,'systems'=>$systems,'destination_choices'=>$destinationChoices,'catalog'=>$catalog->all('ships'),'resources'=>$catalog->rules()['resources'],'fuel_pending'=>$catalog->rules()['fuel_ratio_policy']==='pending','orbit_requests'=>$orbitRequests,'fleet_limit'=>(int)$universeConfig['limits']['max_fleet_size'],'conquest_enabled'=>$conquestEnabled];
+        if($request->headers->get('X-Genesis-Live')==='1' && $request->getPreferredFormat()==='json') {
+            // Préserver la préparation du bandeau faite par base.html.twig lors d’un rendu complet.
+            $data['chrome']=$shell->get($this->getUser());
+            $data['section']='overview';
+            $data['preferences']=array_replace(PreferencesService::DEFAULTS,$this->getUser()->preferences);
+            $regions=[];
+            foreach([
+                'colony-selector'=>'ui/colony_selector.html.twig',
+                'resources'=>'ui/resource_strip.html.twig',
+                'fleet-counts'=>'fleet/_counts.html.twig',
+                'available-fleets'=>'fleet/_available.html.twig',
+                'active-flights'=>'ui/flights.html.twig',
+                'orbit-requests'=>'ui/orbit_requests.html.twig',
+            ] as $name=>$template) {
+                $regions[$name]=$this->renderView($template,$data);
+            }
+            return $this->json(['regions'=>$regions],200,['Cache-Control'=>'private, no-store']);
+        }
+        return $this->render('fleet/index.html.twig',$data);
     }
     #[Route('/flottes/destinations',name:'app_fleet_destinations',methods:['GET'])]
     public function destinations(Request $request,UniverseContext $context,DestinationCatalogue $destinations): Response

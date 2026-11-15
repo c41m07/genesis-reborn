@@ -302,6 +302,22 @@ Les snapshots par planète restent des appels complets au moteur existant :
 leur regroupement nécessiterait une extraction plus large du moteur partagé
 avec la barre exclue, sans bénéfice mesuré ici qui justifierait ce risque.
 
+## Complément du lot 8 — fragments des flottes
+
+Flottes répond aussi en JSON à X-Genesis-Live + Accept JSON : sélecteur de
+colonie, ressources, compteurs, flottes disponibles, vols et demandes d’orbite.
+Le HTML complet reste le repli. Les formulaires et compteurs proviennent de
+fragments extraits sans changement de leur contenu. GameShell et le template
+de ressources conservent leur préparation et leur cycle.
+
+Contrôles : 7 tests du contrôleur Destinations réussis, puis comparaison des
+six régions pour Exploration/Espionnage, incluant le bandeau économique
+identique avec horloge figée. Les jetons de formulaire et de rejeu restent
+présents ; leur valeur renouvelée est exclue de la comparaison textuelle.
+Les cinq scénarios navigateur Destinations/Focus réussissent ensemble :
+colonie active, compteurs, destination, requêtes rapprochées et réponse tardive.
+Le JS de remplacement des régions n’a pas nécessité de modification.
+
 ## Reprise
 
 - Branche : `chore/rework-v1`, base `48c9a71`, code applicatif validé `6dd33b7`.
