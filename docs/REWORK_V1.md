@@ -324,6 +324,17 @@ Les cinq scénarios navigateur Destinations/Focus réussissent ensemble :
 colonie active, compteurs, destination, requêtes rapprochées et réponse tardive.
 Le JS de remplacement des régions n’a pas nécessité de modification.
 
+## Complément du lot 2 — lisibilité de ColonyView
+
+Renommages locaux `membership`, `technologies`, `definition`, `queueItem`,
+initialisation et cartes mises en lignes. Les clés d’affichage, signatures
+persistées, routes, calculs et ordre de synchronisation sont conservés.
+Absence d’appel avec l’ancien argument nommé vérifiée dans sources/tests/config.
+Pas d’installation de formateur ni de formatage global. Contrôle : 21 cas /
+409 assertions, dont un benchmark optionnel ignoré, avec les tests du transport.
+Les blocs historiques de tri hors modification restent une exception à la
+normalisation exhaustive ; les réécrire sans gain mesuré ajouterait du risque.
+
 ## Reprise
 
 - Branche : `chore/rework-v1`, base `48c9a71`, première passe complète validée `6dd33b7` ; compléments depuis `9332789`.
