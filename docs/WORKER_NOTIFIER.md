@@ -147,6 +147,15 @@ La reconstruction autonome suit la même chaîne `reconstruction` → `async` �
 
 Cette distinction compte lorsqu’un boost reprogramme une action : l’ancien message peut rester dans RabbitMQ, mais son ancien jeton ne doit plus déclencher l’opération. Les verrous et validations métier sont la protection contre les doubles effets ; une livraison unique du broker n’est pas supposée.
 
+Pour une fin de commande, `QueueService::complete()` identifie la participation
+et la planète avant d’ouvrir sa transaction. La première lecture transactionnelle
+verrouille ensuite la participation, puis l’univers et la planète dans l’ordre
+habituel. La commande est relue et son propriétaire, son jeton et sa position
+en tête sont vérifiés sous ces verrous. Cela évite qu’un second worker attende
+avec un snapshot déjà périmé sur MariaDB 11.8. Une commande disparue pendant
+l’attente ne produit aucun effet. Ce chemin ne change pas la synchronisation
+utilisée par les lectures du jeu ni le format des messages.
+
 Messenger configure cinq nouvelles tentatives après la première exécution, avec délai initial de 1 000 ms et multiplicateur 2. Pour une exception ordinaire, les délais de base sont 1, 2, 4, 8 et 16 secondes, avec le jitter par défaut de 10 % du framework installé. La charge du système peut ajouter de l’attente ; ce ne sont pas des garanties de temps réel. Après épuisement, Messenger utilise le transport `failed`, configuré avec l’exchange et la queue `genesis_v2_failed`.
 
 Ces reprises concernent les erreurs d’exécution des messages consommés par le worker. Elles ne concernent pas les publications directes du notifier vers Mercure.

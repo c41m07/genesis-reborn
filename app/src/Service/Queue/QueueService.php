@@ -213,14 +213,29 @@ final class QueueService
             if($next) $this->start($next,$finish);else { $field=$type.'QueueStartedAt';$planet->$field=null; }
         }
     }
-    public function complete(int $id,string $token): void
+    public function complete(int $id, string $token): void
     {
-        $this->manager->transaction(function()use($id,$token){
-            $item=$this->repo->find(QueueItem::class,$id);if(!$item) return;
-            $planet=$item->planet;$this->guard->lockForCompletion($item->playerUniverse,$planet);
-            $head=$item->queueType==='research'?$item:($this->repo->queue($planet,$item->queueType)[0]??null);
-            if(!$head || $head->id!==$id || !hash_equals($head->dispatchToken,$token) || !$head->startedAt) return;
-            $this->settleMembershipLocked($item->playerUniverse);
+        $context = $this->repo->queueContext($id);
+        if ($context === null) {
+            return;
+        }
+        $membership = $this->repo->find(PlayerUniverse::class, $context['membershipId']);
+        $planet = $this->repo->find(Planet::class, $context['planetId']);
+        if (!$membership || !$planet) {
+            return;
+        }
+        // Identifier les verrous avant la transaction évite un snapshot périmé pendant leur attente.
+        $this->manager->transaction(function () use ($id, $token, $membership, $planet) {
+            $this->guard->lockForCompletion($membership, $planet);
+            $item = $this->repo->find(QueueItem::class, $id);
+            if (!$item || $item->playerUniverse->id !== $membership->id || $item->planet->id !== $planet->id) {
+                return;
+            }
+            $head = $item->queueType === 'research' ? $item : ($this->repo->queue($planet, $item->queueType)[0] ?? null);
+            if (!$head || $head->id !== $id || !hash_equals($head->dispatchToken, $token) || !$head->startedAt) {
+                return;
+            }
+            $this->settleMembershipLocked($membership);
         });
     }
     public function applyPlayerBoost(QueueItem $item, float $divisor): void

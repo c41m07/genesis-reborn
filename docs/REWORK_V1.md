@@ -13,6 +13,31 @@ comme référence historique. Aucun push, PR, fusion ou déploiement effectué.
 
 ## Cadre
 
+### Compléments de clôture en cours
+
+- Conventions : 24 fichiers PHP déjà concernés remis en forme avec comparaison
+  de leur structure PHP avant/après ; noms locaux et paramètres clarifiés dans
+  DiplomacyController, CatalogueInsights et CatalogueDetails. Routes, clés Twig,
+  contrats persistés et noms de propriétés conservés. Configuration du formateur
+  temporaire : PHP 8.2, quatre espaces, LF, tableaux courts, séparation des méthodes.
+  PhpParser était déjà installé ; aucune dépendance ajoutée. Les formules et
+  méthodes protégées de ResourceService ne sont pas reformatées.
+- Validation des noms : 60 tests / 2 248 assertions réussis. Commits séparés :
+  `91b2ff8` (présentation) et `c439d95` (noms). Isolation de CatalogueDetailsTest
+  corrigée dans `94e4481`, sans changer ses assertions.
+- Concurrence : cinq scénarios nouveaux, deux processus et connexions distincts,
+  barrière et attente simultanée constatée sur le verrou de participation. Dépense
+  insuffisante, double soumission, doublon de message, fin pendant une dépense et
+  message obsolète. Premier passage : 5/5, 44 assertions ; répétition : 25/25,
+  220 assertions. Les anciens tests concurrents GamePersistenceTest sont conservés.
+- Défaut reproduit : deux fins simultanées pouvaient provoquer l’erreur MariaDB
+  1020, car la lecture de commande précédait le premier verrou transactionnel.
+  Correction limitée au contexte préalable et à la relecture sous verrou, sans
+  modifier ordre des verrous, calculs, jetons ou synchronisation des lectures.
+  Le comportement de snapshot est décrit dans le
+  [guide MariaDB 11.8](https://mariadb.com/docs/server/server-management/install-and-upgrade-mariadb/upgrading/mariadb-community-server-upgrade-paths/upgrading-from-mariadb-11-4-to-mariadb-11-8.md).
+  Tests uniquement sur la base synthétique ; aucune configuration SQL modifiée.
+
 - Branche unique : `chore/rework-v1`, créée depuis `origin/dev` actualisée à `48c9a71`.
 - Arbre initial propre ; huit worktrees existants recensés et conservés.
 - Douze lots conservés. Aucun push, PR, fusion, déploiement ou changement d’équilibrage.

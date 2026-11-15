@@ -21,6 +21,19 @@ final class GameRepository
         return $this->em->getRepository($class)->findOneBy($criteria);
     }
 
+    /** @return array{membershipId: int, planetId: int}|null */
+    public function queueContext(int $id): ?array
+    {
+        $row = $this->em->getConnection()->fetchAssociative(
+            'SELECT player_universe_id, planet_id FROM queue_item WHERE id = ?',
+            [$id],
+        );
+        return $row === false ? null : [
+            'membershipId' => (int) $row['player_universe_id'],
+            'planetId' => (int) $row['planet_id'],
+        ];
+    }
+
     public function occupationReservations(PlayerUniverse $membership): int
     {
         return $this->em->getRepository(\App\Entity\PlanetOccupation::class)->count(['occupant' => $membership, 'status' => 'active']);
