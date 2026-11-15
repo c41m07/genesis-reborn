@@ -8,6 +8,43 @@
 - Le périmètre livré et les objectifs sont dans [README.md](README.md), [docs/README.md](docs/README.md) et [docs/FEUILLE_DE_ROUTE.md](docs/FEUILLE_DE_ROUTE.md). Les documents de `docs/archives/` sont historiques, sauf mention contraire ; leur index distingue les références conservées des bilans remplacés.
 - Conserver les logos et les SVG d’identité.
 
+## Qualité du code et continuité de la refactorisation
+
+- Poursuivre les conventions et la séparation des responsabilités établies dans le projet. Examiner les composants existants et la documentation d’architecture avant d’introduire une nouvelle organisation.
+- Avant de modifier un domaine déjà refactorisé, consulter sa documentation actuelle et le suivi pertinent du chantier ; ne pas recommencer les travaux validés sans constater un problème précis.
+- Appliquer ces conventions au code nouveau et aux portions de code existant concernées par la tâche. Ne pas étendre une modification ciblée à une réécriture générale sans justification.
+- Préserver les améliorations déjà réalisées : chargements ciblés, lectures regroupées, séparation entre préparation d’affichage et traitements métier, gestion des actualisations et protections contre les régressions.
+- Toute simplification ou optimisation doit apporter un bénéfice concret de compréhension, de fiabilité, de maintenance ou de performance, sans retirer d’information utile ni modifier implicitement le comportement.
+- Employer un vocabulaire cohérent avec le modèle et les règles du jeu. Respecter la convention du dépôt pour les identifiants de code et conserver les textes destinés aux utilisateurs en français.
+- Choisir des noms explicites, des types adaptés et une présentation lisible. Éviter les instructions métier condensées, les abréviations ambiguës et les abstractions sans besoin réel.
+- Donner une responsabilité claire aux composants. Découper les traitements difficiles à comprendre ou à vérifier sans multiplier les couches et les méthodes artificielles.
+- Ne pas modifier les routes publiques, colonnes SQL, clés persistées, formats de messages ou autres contrats pour une simple harmonisation de style.
+- Ne pas masquer un échec par une exception ignorée, une valeur de repli trompeuse ou un message de réussite injustifié.
+- Séparer les changements mécaniques importants des modifications de comportement afin de garder des différences faciles à relire.
+
+## Commentaires et documentation du code
+
+- Les commentaires utiles font partie du code attendu. Lors de chaque ajout ou modification, examiner les traitements concernés et ajouter ou actualiser les explications nécessaires à leur compréhension.
+- Écrire les commentaires explicatifs en français simple, direct et naturel, comme des notes permettant de retrouver l’intention du code.
+- Commenter obligatoirement les choix non évidents et les traitements complexes ou sensibles lorsque le code seul ne permet pas de comprendre leur raison.
+- Expliquer notamment les étapes importantes d’un algorithme, les raisons et le périmètre d’un verrou, l’ordre nécessaire des opérations, les contrôles de confidentialité, les risques de données périmées, l’idempotence, les cas particuliers et les compatibilités historiques.
+- Pour un traitement métier comportant plusieurs étapes non évidentes, ajouter une courte explication d’ensemble et des commentaires aux étapes qui le nécessitent.
+- Expliquer l’intention, les contraintes et les raisons des choix ; ne pas paraphraser mécaniquement les affectations, conditions ou boucles.
+- Vérifier le comportement avant de le décrire. Ne pas présenter une hypothèse ou une garantie non démontrée comme un fait.
+- Lorsqu’un traitement change, actualiser ses commentaires dans le même lot. Retirer les commentaires faux ou inutiles et conserver les explications historiques encore nécessaires.
+- Utiliser les PHPDoc pour les informations que les types natifs n’expriment pas suffisamment, notamment les structures de tableaux, les contrats et les contraintes d’utilisation.
+- Préserver les annotations techniques et directives imposées par les outils.
+- Ne jamais inclure de secrets ou de données personnelles dans les commentaires.
+
+## Vérification des refactorisations et optimisations
+
+- Distinguer les lectures, la préparation d’affichage, la synchronisation, la validation et les écritures. Rendre identifiables les effets de bord nécessaires.
+- Ne pas réintroduire de chargements globaux lorsqu’une préparation ciblée existe. Vérifier les usages et les données réellement nécessaires aux pages concernées.
+- Ne pas remplacer des requêtes répétées par un chargement illimité en mémoire.
+- Lorsqu’une amélioration de performance est annoncée, comparer des scénarios équivalents et préciser les conditions de mesure. Indiquer « non mesuré » lorsque les données manquent.
+- Adapter les tests aux risques : résultats métier, accès refusés, cas limites et concurrence lorsque pertinente. Deux appels séquentiels ne prouvent pas la sécurité d’actions simultanées.
+- Avant de terminer, relire les différences pour vérifier la cohérence du code et des commentaires, l’absence de régression, de code provisoire et de modifications étrangères à la tâche.
+
 ## Protection des données, sécurité et fiabilité
 
 - Protection des données : distinguer la création d’une migration de son application. Sur une base existante, exiger une autorisation explicite et une sauvegarde vérifiée avant migration, restauration ou import modifiant les données.
