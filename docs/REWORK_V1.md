@@ -324,6 +324,61 @@ Les cinq scénarios navigateur Destinations/Focus réussissent ensemble :
 colonie active, compteurs, destination, requêtes rapprochées et réponse tardive.
 Le JS de remplacement des régions n’a pas nécessité de modification.
 
+## Mesures HTTP des fragments — 0, 5 et 25 flottes
+
+Environnement navigateur éphémère, APP_DEBUG=0, un compte synthétique, univers
+standard, colonie neuve ; volumes ajoutés sans action de jeu sur la base usuelle.
+HTML complet et JSON des fragments comparés sur la même version, en alternance.
+Premier passage conservé séparément, puis dix passages chauds par combinaison.
+Les durées couvrent fetch et lecture du corps ; les octets transférés proviennent
+de Resource Timing (entêtes inclus). SQL et mémoire par requête HTTP : non mesurés.
+
+| Page | Flottes | HTTP HTML, médiane [min–max] ms | HTTP fragments, médiane [min–max] ms | Transfert HTML → fragments |
+|---|---:|---|---|---|
+| Bâtiments | 0 | 154,20 [140,70–187,00] | 144,20 [137,70–166,00] | 24,19 → 20,78 Kio |
+| Bâtiments | 5 | 149,90 [139,00–308,00] | 154,65 [141,50–172,70] | 24,86 → 21,51 Kio |
+| Bâtiments | 25 | 157,30 [141,00–195,00] | 158,25 [135,40–203,80] | 26,12 → 22,75 Kio |
+| Flottes | 0 | 100,15 [95,10–159,10] | 104,35 [94,80–139,20] | 7,72 → 4,10 Kio |
+| Flottes | 5 | 103,50 [96,50–212,70] | 104,55 [92,60–196,40] | 8,42 → 4,83 Kio |
+| Flottes | 25 | 124,05 [102,10–183,00] | 114,50 [100,60–144,40] | 9,60 → 5,96 Kio |
+
+Le temps HTTP ne démontre pas de gain général : plages variables et médianes
+proches. Le transfert diminue dans les six scénarios. La première mesure a
+révélé que le JSON non compressé transférait davantage que le HTML compressé.
+Gzip seul restait insuffisant pour Bâtiments, à cause de l’encodage HTML dans
+JSON ; le transport compact conserve le contenu après décodage. Les formats
+acceptés et les refus `gzip;q=0` sont testés. Aucun changement global Apache,
+aucune modification de l’endpoint ou de la fréquence de la barre.
+
+Les 132 réponses de la mesure finale sont dans `var/rework-http-measures.json`.
+Les essais précédents sont conservés dans les fichiers `*-uncompressed.json`
+et `*-gzip-only.json`. La phase de captures de ce lanceur a attendu des images
+masquées après la mesure ; son attente est corrigée séparément, sans répéter
+les mesures. Le lanceur et les artefacts restent ignorés par Git.
+La reprise limitée aux captures réussit ensuite (44,3 s), sans refaire les
+132 mesures. Vérification visuelle réelle à 1440/390 px : illustrations
+chargées, interface conservée et aucun débordement horizontal. Captures dans
+`var/rework-{buildings,fleets}-{1440,390}.png` ; les images masquées restent
+chargées à la demande, conformément au comportement existant.
+
+## Nouvelle mesure cumulative du service
+
+Même fixture synthétique, base `48c9a71` et version finale, cache Symfony chaud,
+dix passages chauds, premier passage séparé. Le lanceur existant est réutilisé.
+
+| Page | SQL avant → après | Serveur avant, ms médiane [min–max] | Serveur après, ms médiane [min–max] | Mémoire allouée médiane avant → après |
+|---|---|---|---|---|
+| Vue générale | 468 → 35 | 259,80 [209,85–371,76] | 13,06 [12,45–16,28] | 54,5 → 42,5 Mio |
+| Bâtiments | 468 → 37 | 223,22 [202,50–289,58] | 37,38 [35,26–44,31] | 54,5 → 42,5 Mio |
+| Recherche | 468 → 35 | 214,12 [197,14–299,92] | 43,75 [41,48–48,62] | 56,5 → 42,5 Mio |
+| Chantier | 468 → 37 | 213,66 [194,70–237,73] | 18,04 [15,25–22,23] | 56,5 → 44,5 Mio |
+| Défenses | 468 → 36 | 212,20 [194,16–237,40] | 14,65 [13,05–18,29] | 56,5 → 44,5 Mio |
+| Guide | 468 → 25 | 214,03 [202,34–249,01] | 10,77 [9,96–11,52] | 57,5 → 45,5 Mio |
+
+Mémoire du processus cumulée entre scénarios, pas allocation d’une requête HTTP.
+SQL et temps SQL détaillés dans `var/rework-measures.json` ; journal
+`var/rework-final-service-measures.log`. Les budgets de tests restent larges.
+
 ## Complément du lot 2 — lisibilité de ColonyView
 
 Renommages locaux `membership`, `technologies`, `definition`, `queueItem`,
@@ -338,13 +393,12 @@ normalisation exhaustive ; les réécrire sans gain mesuré ajouterait du risque
 ## Reprise
 
 - Branche : `chore/rework-v1`, base `48c9a71`, première passe complète validée `6dd33b7` ; compléments depuis `9332789`.
-- Lot actuel : 8/12, mesure du transport compressé des fragments.
-- Dernière étape validée : fragments Flottes et cinq scénarios navigateur, pagination et résumés de rapports.
-- Contrôles en cours : mesures HTTP comparées sur 0/5/25 flottes.
-- Modifications non commitées : transport LiveRegionResponse, branchements Colony/Fleet et tests associés.
+- Lot actuel : 12/12, validation cumulative des compléments.
+- Dernière étape validée : mesures HTTP 0/5/25 flottes, captures et nouvelle comparaison des six préparations ; validate/lint réussis.
+- Contrôles en cours : suite PHP/Python complète ; suite navigateur complète à lancer ensuite.
+- Modifications non commitées : retrait d’une dépendance et d’une méthode privée sans usage dans les catalogues.
 - Questions en attente : aucune ; recette manuelle et exceptions restent ouvertes.
-- Prochaine action précise : enregistrer les mesures HTTP, terminer la revue de lisibilité,
-  puis relancer les six contrôles cumulés sur la dernière version.
+- Prochaine action précise : attendre PHP/Python, puis lancer les navigateurs isolés sur quatre groupes et réconcilier la couverture.
 - Conserver cette branche unique ; aucune PR, fusion ou publication automatique.
 
 ## Travaux par lot et contrôles ciblés

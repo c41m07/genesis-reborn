@@ -315,6 +315,8 @@ Compiler avant les tests navigateur : la compilation remplace les fichiers de `a
 Le [suivi Rework V1](docs/REWORK_V1.md) décrit le chantier local de nettoyage,
 ses mesures et ses vérifications. Les pages de colonie préparent uniquement le
 catalogue affiché ; le guide technologique prépare son arbre séparément.
+Les actualisations des colonies et de Flottes rendent des fragments partagés,
+transmis en JSON compact et compressé lorsque le navigateur l’accepte.
 
 Pendant le développement, lancer les contrôles locaux adaptés au changement et `git diff --check` avant commit ou push. Une branche de travail peut être poussée sans exécuter toute la suite ; signaler les échecs et vérifications restant à faire.
 

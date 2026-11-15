@@ -131,6 +131,9 @@ partagés et préservent le formulaire ; les réponses obsolètes sont ignorées
 Les actualisations des colonies et de Flottes demandent JSON avec `X-Genesis-Live: 1` et
 `Accept: application/json`. La route conserve ses contrôles, synchronisations
 et préparation GameShell, puis renvoie les fragments privés sans cache.
+LiveRegionResponse produit du JSON compact et le compresse en gzip si accepté,
+avec Vary adapté. Cette compression est propre aux réponses de fragments ;
+aucune configuration serveur ni traitement de l’endpoint ressources n’est modifié.
 Le sélecteur, le catalogue et le journal sont partagés entre rendu initial et
 actualisation ; ressources, files et vols réutilisent leurs templates existants.
 Le client ignore les réponses d’une génération ou d’une URL devenue obsolète.

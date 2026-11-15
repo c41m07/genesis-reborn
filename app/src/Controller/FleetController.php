@@ -13,7 +13,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final class FleetController extends AbstractController
 {
     #[Route('/flottes',name:'app_fleets',methods:['GET'])]
-    public function index(Request $request,UniverseContext $context,GameRepository $repo,GameCatalog $catalog,\App\Service\Queue\QueueService $queues,CombatEventService $combats,\App\Service\Colony\EmpireDetails $details,DestinationCatalogue $destinations,\App\Service\Fleet\OrbitRequestView $orbitView,\App\Service\Fleet\FleetCompositionService $compositions,\App\Service\Colony\GameShell $shell): Response
+    public function index(Request $request,UniverseContext $context,GameRepository $repo,GameCatalog $catalog,\App\Service\Queue\QueueService $queues,CombatEventService $combats,\App\Service\Colony\EmpireDetails $details,DestinationCatalogue $destinations,\App\Service\Fleet\OrbitRequestView $orbitView,\App\Service\Fleet\FleetCompositionService $compositions,\App\Service\Colony\GameShell $shell,\App\Service\Colony\LiveRegionResponse $liveResponses): Response
     {
         $m=$context->membership();$queues->synchronize($m);$idle=[];
         $systems=$repo->systems($m->universe);$mission=(string)$request->query->get('mission','explore');$universeConfig=$catalog->forUniverse($m->universe);$conquestEnabled=(bool)($universeConfig['features']['planet_conquest']??false);
@@ -77,7 +77,7 @@ final class FleetController extends AbstractController
             ] as $name=>$template) {
                 $regions[$name]=$this->renderView($template,$data);
             }
-            return $this->json(['regions'=>$regions],200,['Cache-Control'=>'private, no-store']);
+            return $liveResponses->create($request,$regions);
         }
         return $this->render('fleet/index.html.twig',$data);
     }

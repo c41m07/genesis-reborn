@@ -3,7 +3,7 @@ namespace App\Controller;
 use App\Entity\{Planet,PlayerDiscovery,Fleet,FleetShip};
 use App\Repository\GameRepository;
 use App\Service\Universe\UniverseContext;
-use App\Service\Colony\{ColonyView,GameShell,ResourceService};
+use App\Service\Colony\{ColonyView,GameShell,ResourceService,LiveRegionResponse};
 use App\Service\Queue\QueueService;
 use App\Service\Player\{LeaderboardService,PreferencesService,RelationResolver};
 use App\Service\Catalog\GameCatalog;
@@ -15,7 +15,7 @@ use Psr\Clock\ClockInterface;
 final class ColonyController extends AbstractController
 {
     public function __construct(private UniverseContext $context,private GameRepository $repo,private QueueService $queueService,
-        private \App\Service\Combat\CombatEventService $combats,private \App\Service\Combat\OccupationService $occupations,private LeaderboardService $leaderboard,private \App\Service\Fleet\FleetVisibility $visibility,private GameShell $shell) {}
+        private \App\Service\Combat\CombatEventService $combats,private \App\Service\Combat\OccupationService $occupations,private LeaderboardService $leaderboard,private \App\Service\Fleet\FleetVisibility $visibility,private GameShell $shell,private LiveRegionResponse $liveResponses) {}
     private function owned(int $id): Planet
     {
         $m=$this->context->membership();$p=$this->repo->find(Planet::class,$id);
@@ -56,12 +56,12 @@ final class ColonyController extends AbstractController
             $data['empire_points']=$points;$data['empire_rank']=$rank;$data['empire_guild']=$relations->guild($m);$data['guilds_enabled']=(bool)($features['guilds_enabled']??false);
         }
         if($request->headers->get('X-Genesis-Live')==='1' && $request->getPreferredFormat()==='json') {
-            return $this->liveRegions($data+['section'=>$section]);
+            return $this->liveRegions($request,$data+['section'=>$section]);
         }
         return $this->render('colony/show.html.twig',$data+['section'=>$section]);
     }
 
-    private function liveRegions(array $data): JsonResponse
+    private function liveRegions(Request $request,array $data): JsonResponse
     {
         $data['chrome'] = $this->shell->get($this->getUser(), $data['planet']);
         $data['preferences'] = array_replace(PreferencesService::DEFAULTS, $this->getUser()->preferences);
@@ -78,7 +78,7 @@ final class ColonyController extends AbstractController
         foreach ($templates as $name => $template) {
             $regions[$name] = $this->renderView($template, $data);
         }
-        return $this->json(['regions' => $regions], 200, ['Cache-Control' => 'private, no-store']);
+        return $this->liveResponses->create($request,$regions);
     }
     #[Route('/planetes/{id}/journal/consulter',name:'app_journal_consult',methods:['POST'],requirements:['id'=>'\\d+'])]
     public function consultJournal(int $id,Request $request,\App\Service\Notification\JournalService $journal): Response
