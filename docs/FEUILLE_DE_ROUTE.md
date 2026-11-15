@@ -1,5 +1,13 @@
 # Roadmap Genesis Reborn
 
+## Progression, carburant et unités économiques — mission du 15 novembre 2026
+
+Lot 1 préparé : grille commune des 150 profils et requalification explicite des
+accès existants. Lots suivants : durées/carburant, unités économiques, simulations
+et comparaison de la répartition des coûts. État et vérifications dans le
+[suivi de mission](PROGRESSION_CARBURANT_UNITES.md). L’activation des accès en base
+reste soumise à sauvegarde vérifiée et autorisation ; aucun déploiement Alpha prévu.
+
 ## Rework V1 — chantier local du 14 novembre 2026
 
 Le chantier utilise uniquement `chore/rework-v1`, sans PR, fusion ni déploiement.

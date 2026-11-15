@@ -1,5 +1,10 @@
 # Genesis Reborn
 
+Évolution de progression en préparation : les [150 profils de prérequis](docs/DEBLOCAGES.md)
+utilisent une grille commune par rang, avec requalification explicite des accès
+existants. Le [suivi de mission](docs/PROGRESSION_CARBURANT_UNITES.md) distingue
+les lots préparés, leur activation et les décisions encore ouvertes.
+
 Genesis Reborn est un jeu de stratégie spatiale multijoueur par navigateur. Chaque joueur développe ses colonies, organise sa production et ses recherches, explore la galaxie et conduit des opérations de flotte dans des univers indépendants. L’Alpha sert aussi à observer la progression et les retours des joueurs avant de futures décisions d’équilibrage.
 
 L’orientation confirmée est une stratégie au rythme modéré ; les durées de progression restent des objectifs à mesurer pendant l’Alpha.

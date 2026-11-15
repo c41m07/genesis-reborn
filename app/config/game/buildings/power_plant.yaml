@@ -14,35 +14,22 @@
   "production_per_level": 0.3,
   "effect_note": "Production d’électricité : +0,3/s par niveau basique avant facteur de position et multiplicateur d’univers.",
   "tier_unlock_requirements": {
+    "basic": {},
     "intermediate": {
-      "technologies": [
-        {
-          "slug": "engineering_foundations",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
       "buildings": [
         {
-          "slug": "lab",
+          "slug": "power_plant",
           "tier": "basic",
-          "level": 5
+          "level": 10
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "engineering_foundations",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
       "buildings": [
         {
-          "slug": "lab",
+          "slug": "power_plant",
           "tier": "intermediate",
-          "level": 10
+          "level": 20
         }
       ]
     }

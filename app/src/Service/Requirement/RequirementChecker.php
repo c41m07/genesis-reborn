@@ -22,19 +22,19 @@ final class RequirementChecker
             $key=$slug.':'.$tier;
             if (in_array($key,$visited,true)) throw new \LogicException('Cycle de prérequis : '.implode(' → ',[...$visited,$key]));
             $d=$definitions['ships'][$slug]??$this->catalog->get('ships',$slug);
-            $nested=$d['unlock_requirements']??[];
-            if($tier!=='basic')$nested=$this->merge($nested,$d['tier_unlock_requirements'][$tier]??[]);
+            // Une référence à un vaisseau reprend sa grille complète, y compris en Basique.
+            $nested=$this->forTier($d,$tier);
             $failures=[...$failures,...$this->check($nested,$buildings,$technologies,[...$visited,$key],$definitions)];
         }
         return array_values(array_unique($failures));
     }
     public function forLevel(array $definition,int $level): array
     {
-        return $definition['unlock_requirements']??[];
+        return $this->forTier($definition,(string)($definition['_tier']??'basic'),$level);
     }
     public function forTier(array $definition,string $tier,int $level=1):array
     {
-        return $this->merge($this->forLevel($definition,$level),$definition['tier_unlock_requirements'][$tier]??[]);
+        return $this->merge($definition['unlock_requirements']??[],$definition['tier_unlock_requirements'][$tier]??[]);
     }
     private function level(array $levels,string $slug,string $tier):int
     {

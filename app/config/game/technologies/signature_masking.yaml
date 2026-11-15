@@ -10,48 +10,57 @@
     "antimatter": 0
   },
   "costs_scaling": 2,
-  "unlock_requirements": {
-    "buildings": [
-      {
-        "slug": "lab",
-        "level": 1
-      }
-    ]
-  },
+  "unlock_requirements": {},
   "effect": {
     "type": "unlock"
   },
   "provisional": true,
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "tactical_intelligence",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
           "slug": "lab",
           "tier": "basic",
-          "level": 5
+          "level": 6
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "tactical_intelligence",
+          "tier": "basic",
+          "level": 3
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 6
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "tactical_intelligence",
+          "tier": "intermediate",
+          "level": 3
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "tactical_intelligence",
-          "tier": "intermediate",
-          "level": 5
-        }
-      ],
       "buildings": [
         {
           "slug": "lab",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 6
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "tactical_intelligence",
+          "tier": "superior",
+          "level": 3
         }
       ]
     }

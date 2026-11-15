@@ -278,7 +278,7 @@ final class EmpireReconstructionTest extends KernelTestCase
     private function member(string $name,Universe $universe): PlayerUniverse
     {
         $player=new Player();$player->email=$name.'@example.test';$player->username=$name;$player->password='unused';$player->emailVerifiedAt=$this->clock->now();
-        $member=new PlayerUniverse();$member->player=$player;$member->universe=$universe;$member->joinedAt=$this->clock->now();$member->lastActivityAt=$this->clock->now();$member->catalogUnlocks=[];
+        $member=new PlayerUniverse();$member->player=$player;$member->universe=$universe;$member->joinedAt=$this->clock->now();$member->lastActivityAt=$this->clock->now();$member->catalogUnlocks=PlayerUniverse::INITIAL_CATALOG_UNLOCKS;
         $this->em->persist($player);$this->em->persist($member);$this->em->flush();return $member;
     }
     private function ship(string $slug,int $quantity,string $tier='basic'): FleetShip

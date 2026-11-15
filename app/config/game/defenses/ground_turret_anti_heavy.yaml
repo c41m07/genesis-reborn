@@ -45,22 +45,7 @@
   "shots_max": 2,
   "costs": {},
   "costs_scaling": 1,
-  "unlock_requirements": {
-    "buildings": [
-      {
-        "slug": "fortress",
-        "tier": "basic",
-        "level": 3
-      }
-    ],
-    "technologies": [
-      {
-        "slug": "structural_armor",
-        "tier": "basic",
-        "level": 3
-      }
-    ]
-  },
+  "unlock_requirements": {},
   "provisional": true,
   "display_order": 3,
   "tier_labels": {
@@ -75,19 +60,45 @@
   },
   "description": "Tourelle stationnaire ciblant les vaisseaux lourds. Une tourelle individuelle protège la planète contre la classe visée.",
   "tier_unlock_requirements": {
-    "intermediate": {
+    "basic": {
       "buildings": [
         {
           "slug": "fortress",
           "tier": "basic",
-          "level": 7
+          "level": 5
         }
       ],
       "technologies": [
         {
           "slug": "weapons_engineering",
           "tier": "basic",
-          "level": 7
+          "level": 5
+        },
+        {
+          "slug": "structural_armor",
+          "tier": "basic",
+          "level": 3
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "fortress",
+          "tier": "intermediate",
+          "level": 5
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "weapons_engineering",
+          "tier": "intermediate",
+          "level": 5
+        },
+        {
+          "slug": "structural_armor",
+          "tier": "intermediate",
+          "level": 3
         }
       ]
     },
@@ -95,15 +106,20 @@
       "buildings": [
         {
           "slug": "fortress",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 5
         }
       ],
       "technologies": [
         {
           "slug": "weapons_engineering",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 5
+        },
+        {
+          "slug": "structural_armor",
+          "tier": "superior",
+          "level": 3
         }
       ]
     }

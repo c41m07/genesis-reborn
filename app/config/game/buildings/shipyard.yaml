@@ -14,21 +14,45 @@
   "source": "PDF 1 p.14–15",
   "build_time_reduction_max_percent": 70,
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
+    "basic": {
+      "buildings": [
         {
-          "slug": "naval_engineering",
+          "slug": "mine_metal",
           "tier": "basic",
-          "level": 5
+          "level": 2
+        },
+        {
+          "slug": "mine_nano",
+          "tier": "basic",
+          "level": 2
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "mine_metal",
+          "tier": "intermediate",
+          "level": 2
+        },
+        {
+          "slug": "mine_nano",
+          "tier": "intermediate",
+          "level": 2
         }
       ]
     },
     "superior": {
-      "technologies": [
+      "buildings": [
         {
-          "slug": "naval_engineering",
-          "tier": "intermediate",
-          "level": 10
+          "slug": "mine_metal",
+          "tier": "superior",
+          "level": 2
+        },
+        {
+          "slug": "mine_nano",
+          "tier": "superior",
+          "level": 2
         }
       ]
     }
@@ -65,18 +89,5 @@
     "superior": "Réduit la durée de construction des vaisseaux. Un maillage étendu porte cette fonction à l’échelle planétaire."
   },
   "description": "Réduit la durée de construction des vaisseaux. Une installation locale assure cette fonction sur la colonie.",
-  "unlock_requirements": {
-    "buildings": [
-      {
-        "slug": "mine_metal",
-        "level": 2
-      }
-    ],
-    "technologies": [
-      {
-        "slug": "naval_engineering",
-        "level": 1
-      }
-    ]
-  }
+  "unlock_requirements": {}
 }

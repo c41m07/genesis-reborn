@@ -14,21 +14,22 @@
   "research_time_reduction_percent_per_level": 2,
   "research_time_reduction_max_percent": 70,
   "tier_unlock_requirements": {
+    "basic": {},
     "intermediate": {
-      "technologies": [
+      "buildings": [
         {
-          "slug": "engineering_foundations",
+          "slug": "lab",
           "tier": "basic",
-          "level": 5
+          "level": 10
         }
       ]
     },
     "superior": {
-      "technologies": [
+      "buildings": [
         {
-          "slug": "engineering_foundations",
+          "slug": "lab",
           "tier": "intermediate",
-          "level": 10
+          "level": 20
         }
       ]
     }

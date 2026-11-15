@@ -43,27 +43,7 @@
   "shots_max": 2,
   "costs": {},
   "costs_scaling": 1,
-  "unlock_requirements": {
-    "buildings": [
-      {
-        "slug": "fortress",
-        "tier": "basic",
-        "level": 5
-      }
-    ],
-    "technologies": [
-      {
-        "slug": "rapid_fire_cycle",
-        "tier": "basic",
-        "level": 5
-      },
-      {
-        "slug": "weapons_engineering",
-        "tier": "basic",
-        "level": 8
-      }
-    ]
-  },
+  "unlock_requirements": {},
   "provisional": true,
   "display_order": 4,
   "tier_labels": {
@@ -78,19 +58,55 @@
   },
   "description": "Tourelle stationnaire ciblant les vaisseaux capitaux. Une tourelle individuelle protège la planète contre la classe visée.",
   "tier_unlock_requirements": {
-    "intermediate": {
+    "basic": {
       "buildings": [
         {
           "slug": "fortress",
           "tier": "basic",
-          "level": 10
+          "level": 8
         }
       ],
       "technologies": [
         {
+          "slug": "weapons_engineering",
+          "tier": "basic",
+          "level": 8
+        },
+        {
+          "slug": "target_acquisition",
+          "tier": "basic",
+          "level": 4
+        },
+        {
           "slug": "rapid_fire_cycle",
           "tier": "basic",
-          "level": 10
+          "level": 3
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "fortress",
+          "tier": "intermediate",
+          "level": 8
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "weapons_engineering",
+          "tier": "intermediate",
+          "level": 8
+        },
+        {
+          "slug": "target_acquisition",
+          "tier": "intermediate",
+          "level": 4
+        },
+        {
+          "slug": "rapid_fire_cycle",
+          "tier": "intermediate",
+          "level": 3
         }
       ]
     },
@@ -98,15 +114,25 @@
       "buildings": [
         {
           "slug": "fortress",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 8
         }
       ],
       "technologies": [
         {
+          "slug": "weapons_engineering",
+          "tier": "superior",
+          "level": 8
+        },
+        {
+          "slug": "target_acquisition",
+          "tier": "superior",
+          "level": 4
+        },
+        {
           "slug": "rapid_fire_cycle",
-          "tier": "intermediate",
-          "level": 15
+          "tier": "superior",
+          "level": 3
         }
       ]
     }

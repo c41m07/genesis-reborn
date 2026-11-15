@@ -31,6 +31,7 @@ une seule référence par sujet ; les anciens bilans ne décrivent pas l’état
 | Consulter les profils de combat, production et vitesse | [EQUILIBRAGE](EQUILIBRAGE.md) |
 | Consulter les 150 profils de coûts | [Grille commune](COUTS.md) |
 | Comprendre les déblocages par rang | [Déblocages initiaux](DEBLOCAGES.md) |
+| Suivre l’évolution de progression, carburant et unités économiques | [Lots, vérifications et activation](PROGRESSION_CARBURANT_UNITES.md) |
 | Modifier l’interface | [Guide UI](ui-ux/GUIDE_INTERFACE.md) |
 | Recréer une illustration | [Prompts](ILLUSTRATIONS.md) |
 | Consulter une preuve ou décision historique | [Archives et liste de consolidation](archives/README.md) |

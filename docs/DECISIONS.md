@@ -236,7 +236,31 @@ L’utilisateur valide la progression T1 métal/nano, T2 ajout d’antimatière,
 L’hydrogène de construction/recherche est une dépense industrielle, distincte du carburant réservé au départ des missions et des consommations des usines. Les coûts enregistrés des commandes déjà payées restent conservés. Les surcharges d’univers sont préservées champ par champ. L’étude et les vérifications de démarrage, progression et conservation sont consignées dans [COUTS.md](COUTS.md). Aucun prix d’asset premium ni réglage d’univers n’est modifié par cette décision.
 
 
-## Déblocages initiaux permanents — décision du 6 novembre 2026
+## Grille commune par rang — décision du 15 novembre 2026
+
+Le prompt validé remplace les prérequis des 150 profils par la [grille complète](DEBLOCAGES.md).
+Les conditions et niveaux sont identiques dans le rang demandé, sans cumul des
+anciennes exigences. Métal, nano, hydrogène, centrale et laboratoire sont libres
+en Basique, puis exigent leur propre Basique 10 et Intermédiaire 20. Les autres
+bâtiments, recherches, vaisseaux et défenses utilisent uniquement le rang demandé.
+Les effets et plafonds existants sont conservés.
+
+Les possessions et commandes payées restent conservées mais ne confèrent pas
+l’accès à de nouvelles commandes. Le registre est requalifié explicitement,
+sans réattribuer un accès à partir d’une ancienne possession, clé ou commande.
+Après acquisition selon cette grille, les accès restent permanents dans leur
+portée actuelle : recherches par joueur/univers, autres catégories par joueur/colonie.
+Le laboratoire est une condition initiale ; il n’est pas requis localement après déblocage.
+
+Le [suivi](PROGRESSION_CARBURANT_UNITES.md) distingue cette implémentation des
+lots durées/carburant, unités économiques et simulations. La redistribution
+Basique 50/50 et Intermédiaire 40/40/20 reste un candidat à comparer avant décision,
+sans activation dans le présent lot. Aucune activation de base ni publication Alpha annoncée.
+
+## Déblocages initiaux permanents — décision historique du 6 novembre 2026
+
+Les prérequis et règles de conservation d’accès décrits ci-dessous sont remplacés
+par la décision du 15 novembre ; les preuves d’application locale restent historiques.
 
 Les prérequis pendant les niveaux sont supprimés dans les quatre catégories. Chaque rang conserve des conditions initiales puis un accès acquis : colonie pour constructions et unités, univers pour recherches. Le laboratoire devient une condition initiale explicite de toutes les recherches, commune au serveur et à l’interface. Coûts, durées, ressources, plafonds et conditions des missions restent appliqués.
 

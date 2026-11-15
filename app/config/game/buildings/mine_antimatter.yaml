@@ -12,35 +12,45 @@
   "production_resource": "antimatter",
   "provisional": true,
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "naval_engineering",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
+        {
+          "slug": "mine_hydrogen",
+          "tier": "basic",
+          "level": 3
+        },
         {
           "slug": "lab",
           "tier": "basic",
-          "level": 5
+          "level": 2
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "mine_hydrogen",
+          "tier": "intermediate",
+          "level": 3
+        },
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 2
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "naval_engineering",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
       "buildings": [
         {
+          "slug": "mine_hydrogen",
+          "tier": "superior",
+          "level": 3
+        },
+        {
           "slug": "lab",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 2
         }
       ]
     }
@@ -79,23 +89,6 @@
     "superior": "Produit antimatière en consommant de l’hydrogène. Un maillage étendu porte cette fonction à l’échelle planétaire."
   },
   "description": "Produit antimatière en consommant de l’hydrogène. Une installation locale assure cette fonction sur la colonie.",
-  "unlock_requirements": {
-    "buildings": [
-      {
-        "slug": "mine_hydrogen",
-        "level": 3
-      },
-      {
-        "slug": "lab",
-        "level": 2
-      }
-    ],
-    "technologies": [
-      {
-        "slug": "naval_engineering",
-        "level": 2
-      }
-    ]
-  },
+  "unlock_requirements": {},
   "production_per_level": 0.025
 }

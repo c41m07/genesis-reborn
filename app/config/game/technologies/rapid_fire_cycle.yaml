@@ -10,26 +10,7 @@
     "antimatter": 0
   },
   "costs_scaling": 2,
-  "unlock_requirements": {
-    "technologies": [
-      {
-        "slug": "weapons_engineering",
-        "tier": "basic",
-        "level": 7
-      },
-      {
-        "slug": "target_acquisition",
-        "tier": "basic",
-        "level": 4
-      }
-    ],
-    "buildings": [
-      {
-        "slug": "lab",
-        "level": 1
-      }
-    ]
-  },
+  "unlock_requirements": {},
   "effect": {
     "type": "extra_shot_chance",
     "targets": "combat_ships",
@@ -37,35 +18,66 @@
     "max_bonus": 0.5
   },
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "target_acquisition",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
           "slug": "lab",
           "tier": "basic",
+          "level": 10
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "weapons_engineering",
+          "tier": "basic",
           "level": 5
+        },
+        {
+          "slug": "target_acquisition",
+          "tier": "basic",
+          "level": 4
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 10
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "weapons_engineering",
+          "tier": "intermediate",
+          "level": 5
+        },
+        {
+          "slug": "target_acquisition",
+          "tier": "intermediate",
+          "level": 4
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "target_acquisition",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
       "buildings": [
         {
           "slug": "lab",
-          "tier": "intermediate",
+          "tier": "superior",
           "level": 10
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "weapons_engineering",
+          "tier": "superior",
+          "level": 5
+        },
+        {
+          "slug": "target_acquisition",
+          "tier": "superior",
+          "level": 4
         }
       ]
     }

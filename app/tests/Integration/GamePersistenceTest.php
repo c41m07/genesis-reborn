@@ -328,6 +328,8 @@ final class GamePersistenceTest extends KernelTestCase
     public function testCatchupRespectsStorageCapBeforeStorageUpgrade(): void
     {
         $clock=$this->clock();$p=$this->player();$planet=$this->join($p);$q=self::getContainer()->get(QueueService::class);$r=self::getContainer()->get(ResourceService::class);
+        $mine=new PlanetBuilding();$mine->planet=$planet;$mine->slug='mine_metal';$mine->level=5;$this->em->persist($mine);$this->em->flush();
+        $r->refreshProduction($planet);
         $q->add($p->currentPlayerUniverse,$planet,'buildings','storage_metal',1,str_repeat('a',32));
         $item=$this->em->getRepository(QueueItem::class)->findOneBy(['planet'=>$planet]);$duration=$item->durationSeconds;
         $metal=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$planet,'resourceType'=>'metal']);$metal->currentStock=10000;$rate=$metal->productionRate;$this->em->flush();
@@ -382,7 +384,7 @@ final class GamePersistenceTest extends KernelTestCase
     {
         $clock=$this->clock();$p=$this->player();$planet=$this->join($p);
         $fortress=new PlanetBuilding();$fortress->planet=$planet;$fortress->slug='fortress';$fortress->level=1;$this->em->persist($fortress);
-        $advancedFortress=new PlanetBuilding();$advancedFortress->planet=$planet;$advancedFortress->slug='fortress';$advancedFortress->tier='intermediate';$advancedFortress->level=10;$this->em->persist($advancedFortress);
+        $advancedFortress=new PlanetBuilding();$advancedFortress->planet=$planet;$advancedFortress->slug='fortress';$advancedFortress->tier='superior';$advancedFortress->level=1;$this->em->persist($advancedFortress);
         $technology=new PlayerTechnology();$technology->playerUniverse=$p->currentPlayerUniverse;$technology->slug='weapon_calibration';$technology->tier='intermediate';$technology->level=10;$this->em->persist($technology);$this->em->flush();
         $queue=self::getContainer()->get(QueueService::class);$queue->add($p->currentPlayerUniverse,$planet,'defenses','ground_turret_anti_light',2,str_repeat('a',32),'basic');$queue->add($p->currentPlayerUniverse,$planet,'defenses','ground_turret_anti_light',3,str_repeat('b',32),'superior');
         $clock->sleep(3600);$queue->synchronize($p->currentPlayerUniverse);
@@ -868,7 +870,7 @@ final class GamePersistenceTest extends KernelTestCase
         self::assertArrayNotHasKey('mine_energy',$catalog->all('buildings'));
         $benefit=$insights->benefits($catalog->get('buildings','power_plant'),'buildings',1,$planet,[],[])[0];
         $resources=self::getContainer()->get(ResourceService::class);self::assertEqualsWithDelta($resources->rate($planet,'electricity',0,['power_plant'=>1])*3600,$benefit['after'],.000001);self::assertGreaterThan($benefit['before'],$benefit['after']);
-        $unlocks=$insights->unlocks('technologies','engineering_foundations',5);self::assertContains('vector_propulsion',array_column($unlocks,'slug'));
+        $unlocks=$insights->unlocks('technologies','naval_engineering',3);self::assertContains('vector_propulsion',array_column($unlocks,'slug'));
         $tree=$insights->tree(['lab'=>4],['engineering_foundations'=>5,'naval_engineering'=>5]);$nodes=array_merge(...array_values($tree));$propulsion=array_values(array_filter($nodes,fn($n)=>$n['definition']['slug']==='vector_propulsion'))[0];self::assertTrue($propulsion['available']);
         $tree=$insights->tree([],['engineering_foundations'=>5,'naval_engineering'=>5]);$nodes=array_merge(...array_values($tree));$propulsion=array_values(array_filter($nodes,fn($n)=>$n['definition']['slug']==='vector_propulsion'))[0];self::assertFalse($propulsion['available']);
     }
@@ -1350,6 +1352,9 @@ final class GamePersistenceTest extends KernelTestCase
     {
         $clock=$this->clock();$player=$this->player('CommonResearch');$one=$this->join($player);$two=$this->secondPlanet($player);
         foreach([$one,$two] as $planet) {$lab=new PlanetBuilding();$lab->planet=$planet;$lab->slug='lab';$lab->level=1;$this->em->persist($lab);}
+        // Accès acquis selon la nouvelle grille avant une perte d'infrastructure ;
+        // ce scénario isole l'ordonnancement sans changer les bonus scientifiques.
+        $player->currentPlayerUniverse->catalogUnlocks[\App\Service\Requirement\CatalogAccess::key($one,'technologies','tactical_intelligence','basic')]=true;
         $this->em->flush();
         return [$clock,$player,$one,$two,self::getContainer()->get(QueueService::class)];
     }

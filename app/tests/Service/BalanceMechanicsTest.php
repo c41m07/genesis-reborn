@@ -146,12 +146,13 @@ final class BalanceMechanicsTest extends TestCase
         self::assertSame(5625, $calculator->calculate($catalog->withTier($research, 'superior'), 'technologies', 1, 1, [], $universe)['duration']);
     }
 
-    public function testTechnologyRankUnlocksRequireThePreviousRankThreshold(): void
+    public function testTechnologyRankUnlocksRequireOnlyTheRequestedRank(): void
     {
         $catalog=$this->catalog();$checker=new \App\Service\Requirement\RequirementChecker($catalog);$definition=$catalog->get('technologies','vector_propulsion');$rankedTech=['engineering_foundations'=>['basic'=>4,'intermediate'=>10],'naval_engineering'=>['basic'=>5]];$rankedBuildings=['lab'=>['basic'=>4,'intermediate'=>10]];
         self::assertNotEmpty($checker->check($checker->forTier($definition,'intermediate'),$rankedBuildings,$rankedTech));
-        $rankedTech['engineering_foundations']['basic']=5;$rankedBuildings['lab']['basic']=5;self::assertSame([],$checker->check($checker->forTier($definition,'intermediate'),$rankedBuildings,$rankedTech));
-        $rankedTech['engineering_foundations']['intermediate']=10;$rankedBuildings['lab']['intermediate']=10;self::assertSame([],$checker->check($checker->forTier($definition,'superior'),$rankedBuildings,$rankedTech));
+        $rankedTech['naval_engineering']['intermediate']=3;self::assertSame([],$checker->check($checker->forTier($definition,'intermediate'),$rankedBuildings,$rankedTech));
+        self::assertNotEmpty($checker->check($checker->forTier($definition,'superior'),$rankedBuildings,$rankedTech));
+        self::assertSame([],$checker->check($checker->forTier($definition,'superior'),['lab'=>['superior'=>4]],['naval_engineering'=>['superior'=>3]]));
     }
 
     public function testResourceAndStorageBuildingsHaveNoConfiguredLevelCap(): void

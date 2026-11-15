@@ -40,10 +40,14 @@ final class ProducerBalanceTest extends TestCase
     {
         $fixture=ProducerBalanceReference::fixture();
         foreach($fixture['definitions'] as $slug=>$expected){
-            $actual=$this->catalog->get('buildings',$slug);self::assertSame($expected,$actual,$slug);
+            $actual=$this->catalog->get('buildings',$slug);
+            // Les prérequis du 15 novembre sont vérifiés sur les 150 profils par
+            // RankProgressionRequirementsTest ; la référence économique reste historique.
+            foreach(['unlock_requirements','tier_unlock_requirements'] as $field)unset($expected[$field],$actual[$field]);
+            self::assertSame($expected,$actual,$slug);
             $old=$fixture['historical_definitions'][$slug];
-            foreach(['base_build_time','production_per_level','electricity_use_per_level','hydrogen_per_output','cost_profiles','economy_value_budget','effect_note'] as $field)unset($old[$field],$actual[$field]);
-            self::assertSame($old,$actual,$slug.' : identité et prérequis conservés');
+            foreach(['base_build_time','production_per_level','electricity_use_per_level','hydrogen_per_output','cost_profiles','economy_value_budget','effect_note','unlock_requirements','tier_unlock_requirements'] as $field)unset($old[$field],$actual[$field]);
+            self::assertSame($old,$actual,$slug.' : autres champs conservés');
         }
         $rules=$this->catalog->rules();
         self::assertSame(4,$rules['antimatter_hydrogen_per_unit']);

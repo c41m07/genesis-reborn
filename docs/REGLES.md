@@ -22,7 +22,26 @@ cours bloque l’opération entière jusqu’à sa résolution. Le dernier admin
 actif doit désigner un successeur avant de supprimer son compte.
 
 ## Colonie
-Métal, électricité, antimatière, hydrogène et nano par planète. La simulation intègre les stocks par segments entre épuisement et capacité. Les usines adaptent leur rendement à l’électricité disponible avec un plancher de 10 % ; l’antimatière exige aussi de l’hydrogène. Coûts et durées sont autoritaires côté serveur. Les coûts des trois rangs suivent des profils par catégorie avec budgets de valeur constants. Technologies par PlayerUniverse avec laboratoire local. Même technologie interdite simultanément sur des planètes différentes.
+Métal, électricité, antimatière, hydrogène et nano par planète. La simulation intègre les stocks par segments entre épuisement et capacité. Les usines adaptent leur rendement à l’électricité disponible avec un plancher de 10 % ; l’antimatière exige aussi de l’hydrogène. Coûts et durées sont autoritaires côté serveur. Les coûts des trois rangs suivent des profils par catégorie avec budgets de valeur constants. Technologies par PlayerUniverse : le laboratoire est un prérequis initial, sans obligation locale permanente après déblocage. La file de recherche est commune au joueur dans l’univers.
+
+### Prérequis par rang — grille du 15 novembre 2026
+
+Chaque famille utilise la [grille complète des prérequis](DEBLOCAGES.md) dans son
+propre rang. Seuls métal, nano, hydrogène, centrale et laboratoire font une
+passerelle : Basique sans condition, Intermédiaire après le même bâtiment Basique 10,
+Supérieur après son Intermédiaire 20. Les stockages demandent leur producteur
+du même rang au niveau 5, le chantier métal 2 + nano 2, le piège hydrogène 3 + laboratoire 2,
+le bunker chantier 3 + laboratoire 2 ; aucune recherche supplémentaire pour ces bâtiments.
+
+Après requalification explicite des accès existants, seules les conditions de
+cette grille ouvrent les nouvelles commandes. Les niveaux, effets, unités,
+flottes, stocks et historiques restent conservés. Les opérations déjà payées se
+terminent avec leur paiement et durée enregistrés ; leur achèvement ne suffit
+pas à débloquer l’élément. L’accès nouvellement acquis reste ensuite permanent,
+par joueur/univers pour les recherches, par joueur/colonie pour les autres catégories.
+La [procédure de bascule](DEBLOCAGES.md#activation-après-validation) ne s’exécute
+qu’après sauvegarde vérifiée et autorisation. Le [suivi de mission](PROGRESSION_CARBURANT_UNITES.md)
+distingue les lots implémentés des évolutions de durée, carburant et unités restant à réaliser.
 
 ## Queues (PDF 7 p.1–7)
 Trois queues indépendantes par planète. QueueItem : type, slug, niveau cible ou quantité, durée, started_at, queued_at, dispatch_token, depends_on. Ordre id ASC. Échéance non persistée : T0 + somme des durées. Un item actif par type. Prérequis achevés à l'ajout ; exception niveaux successifs via dépendance. Suppression récursive des dépendants. Boost : chaque application retire 25 % du temps restant de l’opération active. Les applications successives se cumulent sur le nouveau temps restant; aucune file en attente n’est accélérée. Ancien message ignoré si token différent ; doublon ignoré après traitement. Persistance et déduction des ressources dans une transaction avec verrou.
@@ -165,17 +184,18 @@ Une usine dont la production ne peut plus être stockée suspend ses consommatio
 
 Les valeurs et résultats de référence, la distinction entre délai d’accès et remboursement, les données existantes et les vérifications sont détaillés dans [BUILDING_BALANCE_2026-11-05.md](EQUILIBRAGE.md#production-des-batiments). Les surcharges d’univers peuvent toujours remplacer les valeurs de base. Les coûts et durées déjà payés en file restent conservés.
 
-### Bunker de défense — 14 novembre 2026
+### Bunker de défense — correction du 14 novembre, grille du 15 novembre 2026
 
 Dans le catalogue par défaut, le déblocage initial du bunker basique exige le
 chantier spatial basique niveau 3 et le laboratoire basique niveau 2. Blindage
-multicouche basique niveau 2 n’est plus requis. Les prérequis supplémentaires
-des rangs Intermédiaire et Supérieur restent inchangés.
+multicouche basique niveau 2 n’est plus requis. Depuis la décision du 15 novembre,
+les trois rangs demandent uniquement chantier 3 et laboratoire 2 du même rang ;
+les anciennes exigences supplémentaires des rangs avancés sont remplacées.
 
 Seul ce prérequis de recherche est retiré : coûts, durées, plafonds et bonus de
 points de structure des défenses au sol sont conservés. Aucune nouvelle courbe
 linéaire ni capacité de stockage n’est ajoutée. Les surcharges d’univers et les
-accès déjà acquis restent traités par les mécanismes existants.
+accès sont traités selon la [procédure de requalification](DEBLOCAGES.md#compatibilité).
 
 ### Limites par défaut des univers — 5 novembre 2026
 

@@ -14,6 +14,7 @@ final class CatalogueInsights
         private ResourceService $resources,
         private RequirementChecker $requirements,
         private TechnologyEffectCalculator $technologyEffects,
+        private \App\Service\Requirement\CatalogAccess $access,
     )
     {
     }
@@ -404,7 +405,7 @@ final class CatalogueInsights
                     }
                     $owned = $kind === 'buildings' ? $levels : ($kind === 'technologies' ? $technologies : []);
                     $value = $owned[$slug] ?? 0;
-                    $acquired = $membership && $planet && isset($membership->catalogUnlocks[\App\Service\Requirement\CatalogAccess::key($planet, $kind, $slug, $tier)]);
+                    $acquired = $membership && $planet && $this->access->acquired($membership, $planet, $kind, $slug, $tier);
                     $nodes[$key] = [
                         'group' => $kind,
                         'key' => $key,
@@ -415,7 +416,7 @@ final class CatalogueInsights
                         'prerequisites' => $prerequisites,
                         'parents' => array_values(array_unique($parents)),
                         'acquired' => (bool) $acquired,
-                        'available' => $acquired || !$this->requirements->check($requirements, $levels, $technologies, [], $catalog ?: null),
+                        'available' => (!$membership || $this->access->isCurrent($membership)) && ($acquired || !$this->requirements->check($requirements, $levels, $technologies, [], $catalog ?: null)),
                     ];
                 }
             }

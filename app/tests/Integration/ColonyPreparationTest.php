@@ -42,7 +42,7 @@ final class ColonyPreparationTest extends KernelTestCase
         $this->membership->player = $player;
         $this->membership->universe = $universe;
         $this->membership->joinedAt = new \DateTimeImmutable('2026-11-14T12:00:00Z');
-        $this->membership->catalogUnlocks = [];
+        $this->membership->catalogUnlocks = PlayerUniverse::INITIAL_CATALOG_UNLOCKS;
         $galaxy = new Galaxy();
         $galaxy->universe = $universe;
         $galaxy->name = 'Référence';

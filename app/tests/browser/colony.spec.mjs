@@ -51,8 +51,8 @@ test('Construction réelle, notification privée et actualisation sans rechargem
 });
 test('Chantier, estimation, colonisation, transport et exploration réels', async ({page}) => {
   test.setTimeout(320000);page.setDefaultTimeout(15000);const {email}=await enter(page,'Fleet');prepareOwnedColony(process.env.BROWSER_ROUTER,email,{showLockedItems:true});grantSecondColony(process.env.BROWSER_ROUTER,email);const origin=Number(page.url().split('/').pop());await page.getByRole('link',{name:'Bâtiments',exact:true}).click();
-  runIsolatedSql(process.env.BROWSER_ROUTER, `INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${origin},'lab','basic',4),(${origin},'mine_metal','basic',2)`);
-  runIsolatedSql(process.env.BROWSER_ROUTER, `INSERT INTO player_technology (player_universe_id,slug,tier,level) SELECT owner_id,'engineering_foundations','basic',5 FROM planet WHERE id=${origin} UNION ALL SELECT owner_id,'naval_engineering','basic',5 FROM planet WHERE id=${origin}`);
+  runIsolatedSql(process.env.BROWSER_ROUTER, `INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${origin},'lab','basic',4),(${origin},'mine_metal','basic',2),(${origin},'mine_nano','basic',2)`);
+  runIsolatedSql(process.env.BROWSER_ROUTER, `INSERT INTO player_technology (player_universe_id,slug,tier,level) SELECT owner_id,'engineering_foundations','basic',5 FROM planet WHERE id=${origin} UNION ALL SELECT owner_id,'naval_engineering','basic',5 FROM planet WHERE id=${origin} UNION ALL SELECT owner_id,'modular_cargo_bays','basic',1 FROM planet WHERE id=${origin}`);
   await page.reload();
   const card=slug=>page.locator('#item-'+slug+'-basic');
   await card('shipyard').getByRole('button',{name:/Améliorer .* niveau 1/}).click();accelerateQueuedItem(process.env.BROWSER_ROUTER,email,'building','shipyard');await page.reload();await expect(page.locator('#building-tab-shipyard-basic .building-rank-level')).toHaveText('1',{timeout:30000});

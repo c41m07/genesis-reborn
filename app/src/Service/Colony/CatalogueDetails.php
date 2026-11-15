@@ -14,6 +14,7 @@ final class CatalogueDetails
         private ResourceService $resources,
         private TechnologyEffectCalculator $technologyEffects,
         private RequirementChecker $requirements,
+        private \App\Service\Requirement\CatalogAccess $access,
     )
     {
     }
@@ -33,7 +34,7 @@ final class CatalogueDetails
             'scope' => '',
             'sections' => [],
             'performance' => [],
-            'acquired' => $planet->owner !== null && isset($planet->owner->catalogUnlocks[\App\Service\Requirement\CatalogAccess::key($planet, $group, $itemDefinition['slug'], $itemDefinition['_tier'])]),
+            'acquired' => $planet->owner !== null && $this->access->acquired($planet->owner, $planet, $group, $itemDefinition['slug'], $itemDefinition['_tier']),
             'requirements' => $this->accessRequirements($itemDefinition, $group, $target, $planet, $buildings, $technologies),
             'unlocks' => $this->relatedUnlocks($itemDefinition, $group, $planet),
         ];

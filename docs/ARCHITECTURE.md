@@ -19,6 +19,21 @@ Les possessions et recherches sont isolées par participation à un univers.
 Les événements persistés dans l’outbox permettent la progression sans navigateur.
 Voir [l’exploitation](EXPLOITATION.md) et [les règles](REGLES.md).
 
+## Registre des prérequis — version 2
+
+`CatalogAccess` lit uniquement les clés `v2:` du registre JSON et contrôle son
+marqueur de version. Les nouveaux empires partent du registre courant ; une
+participation existante reste à requalifier explicitement. La synchronisation
+ne bascule pas ce registre et laisse se résoudre les commandes déjà payées.
+La commande `app:catalog:preserve-unlocks` est en lecture seule par défaut ;
+`--apply` reprend les accès sous verrous participation puis univers, après
+contrôle des surcharges. Aucun changement SQL pour ce lot. L’interface et
+les commandes utilisent le même service d’accès ; les conditions complètes
+sont rangées par rang, y compris Basique, sans héritage d’un autre rang.
+La reconstruction des empires oubliés conserve son chemin particulier et ne
+crée pas un accès joueur par la seule livraison d’une unité.
+Voir la [grille et la bascule](DEBLOCAGES.md) et le [suivi](PROGRESSION_CARBURANT_UNITES.md).
+
 ## Comptes et courriels
 
 Les nouveaux comptes reçoivent deux messages : bienvenue et confirmation. Seul le lien de confirmation permet d’activer l’accès ; il ouvre une page demandant une confirmation explicite par formulaire POST protégé contre les CSRF. L’ouverture automatique par un scanner de mails ne valide donc pas le compte.

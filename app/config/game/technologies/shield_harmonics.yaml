@@ -10,26 +10,7 @@
     "antimatter": 0
   },
   "costs_scaling": 2,
-  "unlock_requirements": {
-    "technologies": [
-      {
-        "slug": "structural_armor",
-        "tier": "basic",
-        "level": 3
-      },
-      {
-        "slug": "weapons_engineering",
-        "tier": "basic",
-        "level": 5
-      }
-    ],
-    "buildings": [
-      {
-        "slug": "lab",
-        "level": 1
-      }
-    ]
-  },
+  "unlock_requirements": {},
   "effect": {
     "type": "stat_bonus",
     "targets": "all_combat_units",
@@ -39,35 +20,66 @@
     "max_bonus": 0.25
   },
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "naval_engineering",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
           "slug": "lab",
           "tier": "basic",
-          "level": 5
+          "level": 7
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "structural_armor",
+          "tier": "basic",
+          "level": 3
+        },
+        {
+          "slug": "weapons_engineering",
+          "tier": "basic",
+          "level": 3
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 7
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "structural_armor",
+          "tier": "intermediate",
+          "level": 3
+        },
+        {
+          "slug": "weapons_engineering",
+          "tier": "intermediate",
+          "level": 3
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "naval_engineering",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
       "buildings": [
         {
           "slug": "lab",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 7
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "structural_armor",
+          "tier": "superior",
+          "level": 3
+        },
+        {
+          "slug": "weapons_engineering",
+          "tier": "superior",
+          "level": 3
         }
       ]
     }

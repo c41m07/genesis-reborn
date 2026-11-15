@@ -12,35 +12,30 @@
   "storage_resource": "electricity",
   "provisional": true,
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "naval_engineering",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
-          "slug": "lab",
+          "slug": "power_plant",
           "tier": "basic",
           "level": 5
         }
       ]
     },
-    "superior": {
-      "technologies": [
-        {
-          "slug": "naval_engineering",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
+    "intermediate": {
       "buildings": [
         {
-          "slug": "lab",
+          "slug": "power_plant",
           "tier": "intermediate",
-          "level": 10
+          "level": 5
+        }
+      ]
+    },
+    "superior": {
+      "buildings": [
+        {
+          "slug": "power_plant",
+          "tier": "superior",
+          "level": 5
         }
       ]
     }

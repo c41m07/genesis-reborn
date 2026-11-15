@@ -10,26 +10,7 @@
     "antimatter": 0
   },
   "costs_scaling": 2,
-  "unlock_requirements": {
-    "technologies": [
-      {
-        "slug": "vector_propulsion",
-        "tier": "basic",
-        "level": 3
-      },
-      {
-        "slug": "target_acquisition",
-        "tier": "basic",
-        "level": 2
-      }
-    ],
-    "buildings": [
-      {
-        "slug": "lab",
-        "level": 1
-      }
-    ]
-  },
+  "unlock_requirements": {},
   "effect": {
     "type": "stat_bonus",
     "targets": "all_combat_units",
@@ -40,35 +21,66 @@
     "max_bonus": 0.2
   },
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "vector_propulsion",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
           "slug": "lab",
           "tier": "basic",
-          "level": 5
+          "level": 8
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "vector_propulsion",
+          "tier": "basic",
+          "level": 4
+        },
+        {
+          "slug": "target_acquisition",
+          "tier": "basic",
+          "level": 3
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 8
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "vector_propulsion",
+          "tier": "intermediate",
+          "level": 4
+        },
+        {
+          "slug": "target_acquisition",
+          "tier": "intermediate",
+          "level": 3
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "vector_propulsion",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
       "buildings": [
         {
           "slug": "lab",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 8
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "vector_propulsion",
+          "tier": "superior",
+          "level": 4
+        },
+        {
+          "slug": "target_acquisition",
+          "tier": "superior",
+          "level": 3
         }
       ]
     }

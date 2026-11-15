@@ -49,15 +49,7 @@
   "shots_max": 3,
   "costs": {},
   "costs_scaling": 1,
-  "unlock_requirements": {
-    "buildings": [
-      {
-        "slug": "fortress",
-        "tier": "basic",
-        "level": 1
-      }
-    ]
-  },
+  "unlock_requirements": {},
   "provisional": true,
   "display_order": 1,
   "tier_labels": {
@@ -72,19 +64,21 @@
   },
   "description": "Tourelle stationnaire ciblant les vaisseaux légers. Une tourelle individuelle protège la planète contre la classe visée.",
   "tier_unlock_requirements": {
-    "intermediate": {
+    "basic": {
       "buildings": [
         {
           "slug": "fortress",
           "tier": "basic",
-          "level": 5
+          "level": 1
         }
-      ],
-      "technologies": [
+      ]
+    },
+    "intermediate": {
+      "buildings": [
         {
-          "slug": "weapon_calibration",
-          "tier": "basic",
-          "level": 5
+          "slug": "fortress",
+          "tier": "intermediate",
+          "level": 1
         }
       ]
     },
@@ -92,15 +86,8 @@
       "buildings": [
         {
           "slug": "fortress",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
-      "technologies": [
-        {
-          "slug": "weapon_calibration",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 1
         }
       ]
     }

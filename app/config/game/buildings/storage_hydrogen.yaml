@@ -12,35 +12,30 @@
   "storage_resource": "hydrogen",
   "provisional": true,
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "vector_propulsion",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
-          "slug": "lab",
+          "slug": "mine_hydrogen",
           "tier": "basic",
           "level": 5
         }
       ]
     },
-    "superior": {
-      "technologies": [
-        {
-          "slug": "vector_propulsion",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
+    "intermediate": {
       "buildings": [
         {
-          "slug": "lab",
+          "slug": "mine_hydrogen",
           "tier": "intermediate",
-          "level": 10
+          "level": 5
+        }
+      ]
+    },
+    "superior": {
+      "buildings": [
+        {
+          "slug": "mine_hydrogen",
+          "tier": "superior",
+          "level": 5
         }
       ]
     }
