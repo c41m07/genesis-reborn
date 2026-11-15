@@ -70,13 +70,11 @@ final class ReportArchiveService
         }
         $reportsByKind = [];
         foreach ($idsByKind as $kind => $ids) {
-            if ($kind === 'combat') {
-                $reportsByKind[$kind] = $this->summaries->combats($member, $ids);
-                continue;
-            }
-            foreach ($this->repo->all(self::TYPES[$kind][0], ['id' => $ids]) as $report) {
-                $reportsByKind[$kind][$report->id] = $report;
-            }
+            $reportsByKind[$kind] = match ($kind) {
+                'combat'=>$this->summaries->combats($member, $ids),
+                'espionage'=>$this->summaries->espionage($member, $ids),
+                'economy'=>$this->summaries->transports($member, $ids),
+            };
         }
         $entries = [];
         foreach ($rows as $row) {

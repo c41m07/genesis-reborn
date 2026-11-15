@@ -258,6 +258,12 @@ bâtiments/recherche utilisent le chemin de compatibilité existant. À chaud,
 le test exige moins de quatre requêtes pour la lecture du score individuel.
 Contrôles : 19 tests / 133 assertions réussis, preuve détaillée conservée,
 dates et contexte de retour, nouveaux joueurs et minuit couverts.
+Les listes d’espionnage et de transport utilisent également des résumés ciblés :
+date, cible/résultat ou identités enregistrées à la mission. Les snapshots
+d’intelligence, fret et preuves restent dans les rapports détaillés.
+Vérification complémentaire : 25 tests Rapports/Outils stratégiques,
+146 assertions, dont recherche sur 5 000 rapports synthétiques ; aucune entité
+de rapport n’est hydratée pour les lignes de liste.
 
 ## Complément du lot 7 — pagination et historique administratif
 
@@ -320,15 +326,14 @@ Le JS de remplacement des régions n’a pas nécessité de modification.
 
 ## Reprise
 
-- Branche : `chore/rework-v1`, base `48c9a71`, code applicatif validé `6dd33b7`.
-- Lot actuel : 12/12, validation locale de la passe ciblée terminée.
-- Dernière étape validée : suites complètes, reprises, couverture 201/201 et mesures finales.
-- Contrôles en cours : aucun.
-- Modifications non commitées après enregistrement du bilan : aucune.
+- Branche : `chore/rework-v1`, base `48c9a71`, première passe complète validée `6dd33b7` ; compléments depuis `9332789`.
+- Lot actuel : 8/12, mesure du transport compressé des fragments.
+- Dernière étape validée : fragments Flottes et cinq scénarios navigateur, pagination et résumés de rapports.
+- Contrôles en cours : mesures HTTP comparées sur 0/5/25 flottes.
+- Modifications non commitées : transport LiveRegionResponse, branchements Colony/Fleet et tests associés.
 - Questions en attente : aucune ; recette manuelle et exceptions restent ouvertes.
-- Prochaine action précise : caractériser les lectures économiques de Bâtiments
-  sur plusieurs volumes et événements, puis préparer une optimisation dédiée
-  aux cartes qui conserve intégralement les traitements du bandeau.
+- Prochaine action précise : enregistrer les mesures HTTP, terminer la revue de lisibilité,
+  puis relancer les six contrôles cumulés sur la dernière version.
 - Conserver cette branche unique ; aucune PR, fusion ou publication automatique.
 
 ## Travaux par lot et contrôles ciblés
