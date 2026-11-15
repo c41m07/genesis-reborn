@@ -1,5 +1,10 @@
 # Rework V1 — suivi et reprise
 
+Clôture renforcée reprise depuis `929b4b0` : conventions sur les fichiers
+modifiés, inventaire final par domaine, preuves de concurrence, mesures
+complémentaires et recette ciblée. Les validations ci-dessous restent celles
+des passages précédents jusqu’à l’enregistrement de cette clôture.
+
 Compléments réalisés le 15 novembre 2026 sur le code applicatif `9c8abb7` :
 économie des bâtiments, relations, résumés, pagination et fragments Flottes.
 Validation PHP/Python, lint, compilation, mesures et 202 scénarios navigateur
@@ -440,15 +445,31 @@ sont conservés. Les preuves et configurations temporaires restent dans `var/`.
 Aucun push, PR, CI GitHub, fusion ou déploiement Alpha. La future intégration
 exigera sa CI complète après la recette et l’autorisation de publication.
 
+## Clôture renforcée — conventions et isolation des fiches
+
+Complexité 3/5. Inspection des fichiers PHP déjà modifiés, sans extension au
+moteur ou aux traitements exclus de la barre. Utilisation locale du parseur PHP
+déjà installé et verrouillé, configuré LF/quatre espaces/tableaux courts,
+essayé d’abord sur CatalogueInsights, CatalogueDetails et DiplomacyController.
+La mise en forme de 24 fichiers conserve leur AST ; le corps de l’endpoint
+ressources est replacé à l’identique et les 18 frontières protégées restent
+identiques. Aucune installation, aucun changement de verrou ou de contrat.
+
+Le lancement isolé de CatalogueDetailsTest sur une base jetable vierge a
+révélé une dépendance à la création préalable des tables par d’autres tests.
+Sa préparation contrôle maintenant l’hôte et le nom de base, puis reconstruit
+son propre schéma synthétique. Aucun test affaibli : 60 cas / 2 248 assertions
+réussis après correction. Le lint complet réussit sur l’état remis en forme.
+
 ## Reprise
 
 - Branche : `chore/rework-v1`, base `48c9a71`, première passe complète validée `6dd33b7` ; compléments depuis `9332789`.
-- Lot actuel : 12/12, validation cumulative locale terminée pour le périmètre livré et ses exceptions.
+- Lot actuel : 2/12, clôture renforcée des conventions ; inventaire final ensuite.
 - Dernière étape validée : six contrôles, mesures comparables, captures et couverture navigateur réconciliée 202/202 après une reprise isolée.
-- Contrôles en cours : aucun.
-- Modifications non commitées : aucune après enregistrement du bilan ; code applicatif validé `9c8abb7`.
+- Contrôles en cours : aucun ; 60 tests ciblés et lint réussis.
+- Modifications en cours : mise en forme et isolation de CatalogueDetailsTest, à séparer des renommages et compléments de preuve.
 - Questions en attente : aucune ; recette manuelle et exceptions restent ouvertes.
-- Prochaine action précise : recette utilisateur locale, notamment détails économiques, constructions/recherche, formulaires Flottes et filtres/exports administratifs.
+- Prochaine action précise : enregistrer séparément l’isolation des tests et la mise en forme, puis clarifier les variables métier et finaliser l’inventaire.
 - Conserver cette branche unique ; aucune PR, fusion ou publication automatique.
 
 ## Travaux et contrôles ciblés de la première passe

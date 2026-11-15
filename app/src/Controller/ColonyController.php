@@ -1,67 +1,148 @@
 <?php
+
 namespace App\Controller;
-use App\Entity\{Planet,PlayerDiscovery,Fleet,FleetShip};
+
+use App\Entity\{Planet, PlayerDiscovery, Fleet, FleetShip};
 use App\Repository\GameRepository;
 use App\Service\Universe\UniverseContext;
-use App\Service\Colony\{ColonyView,GameShell,ResourceService,LiveRegionResponse};
+use App\Service\Colony\{ColonyView, GameShell, ResourceService, LiveRegionResponse};
 use App\Service\Queue\QueueService;
-use App\Service\Player\{LeaderboardService,PreferencesService,RelationResolver};
+use App\Service\Player\{LeaderboardService, PreferencesService, RelationResolver};
 use App\Service\Catalog\GameCatalog;
 use App\Manager\GameManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\{Request,Response,JsonResponse};
+use Symfony\Component\HttpFoundation\{Request, Response, JsonResponse};
 use Symfony\Component\Routing\Attribute\Route;
 use Psr\Clock\ClockInterface;
+
 final class ColonyController extends AbstractController
 {
-    public function __construct(private UniverseContext $context,private GameRepository $repo,private QueueService $queueService,
-        private \App\Service\Combat\CombatEventService $combats,private \App\Service\Combat\OccupationService $occupations,private LeaderboardService $leaderboard,private \App\Service\Fleet\FleetVisibility $visibility,private GameShell $shell,private LiveRegionResponse $liveResponses) {}
-    private function owned(int $id): Planet
+    public function __construct(
+        private UniverseContext $context,
+        private GameRepository $repo,
+        private QueueService $queueService,
+        private \App\Service\Combat\CombatEventService $combats,
+        private \App\Service\Combat\OccupationService $occupations,
+        private LeaderboardService $leaderboard,
+        private \App\Service\Fleet\FleetVisibility $visibility,
+        private GameShell $shell,
+        private LiveRegionResponse $liveResponses,
+    )
     {
-        $m=$this->context->membership();$p=$this->repo->find(Planet::class,$id);
-        if(!$p || $p->owner?->id!==$m->id || $p->solarSystem->galaxy->universe->id!==$m->universe->id) throw $this->createNotFoundException('Planète inaccessible.');return $p;
-    }
-    #[Route('/',name:'app_home',methods:['GET'])]
-    public function home(Request $request): Response
-    {
-        if (!$this->getUser()) return $this->render('public/home.html.twig');
-        $m=$this->context->membership();$planets=$this->repo->planets($m->universe,$m);
-        $chosen=$request->query->getInt('colony',$request->getSession()->get('selected_planet_'.$m->id,0));$planet=null;
-        foreach($planets as $candidate) if($candidate->id===$chosen) $planet=$candidate;
-        if($request->query->has('colony') && !$planet) throw $this->createNotFoundException('Planète inaccessible.');
-        $planet??=$planets[0]??null;$section=$this->section((string)$request->query->get('section','overview'));
-        return $planet ? $this->redirectToRoute('app_colony',array_filter(['id'=>$planet->id,'section'=>$section==='overview'?null:$section])) : $this->redirectToRoute('app_universes');
-    }
-    #[Route('/planetes',name:'app_planets',methods:['GET'])]
-    public function planets(Request $request,ResourceService $resources,\App\Service\Colony\EmpireDetails $details): Response
-    {
-        $membership=$this->context->membership();
-        $planets=$this->repo->planets($membership->universe,$membership);
-        $positionModifiers=[];$activities=$this->repo->queueCounts($membership,$planets);
-        foreach($planets as $planet) $activities[$planet->id]??=0;
-        foreach($planets as $planet) $positionModifiers[$planet->id]=$resources->positionProductionModifiers($planet);
-        return $this->render('colony/planets.html.twig',['membership'=>$membership,'planets'=>$planets,'position_modifiers'=>$positionModifiers,'activities'=>$activities,'table_view'=>$request->query->get('view')==='table','comparison_resource'=>in_array($request->query->getString('resource'),['metal','nano','hydrogen','antimatter','electricity'],true)?$request->query->getString('resource'):'metal','planet_details'=>$details->planets($membership)]);
-    }
-    #[Route('/planetes/{id}',name:'app_colony',methods:['GET'],requirements:['id'=>'\d+'])]
-    public function show(int $id,Request $request,ColonyView $view,\App\Service\Player\DailyLeaderboard $leaderboard,RelationResolver $relations,GameCatalog $catalog,\App\Service\Notification\JournalService $journal,\App\Service\Colony\EmpireDetails $details): Response
-    {
-        $p=$this->owned($id);$m=$this->context->membership();$section=$this->section((string)$request->query->get('section','overview'));$data=$view->data($m,$p,$request->query->getBoolean('showLockedItems'),$section);
-        if($section!=='overview' && $request->query->has('showLockedItems')) $data['show_locked_items']=$request->query->getBoolean('showLockedItems');
-        if($section==='overview') {
-            if($request->headers->get('X-Genesis-Live')!=='1') $journal->open($m);
-            $points=['building_points'=>0,'research_points'=>0,'fleet_points'=>0,'total_points'=>0];
-            $daily=$leaderboard->forUniverse($m);
-            $rank=null;foreach($daily['players'] as $row) if($row['membership']->id===$m->id) {$rank=$row['ranks']['points'];$points=array_intersect_key($row,$points);$data['ranking_changes']=$row;break;}
-            $features=$catalog->forUniverse($m->universe)['features']??[];
-            $data['empire_points']=$points;$data['empire_rank']=$rank;$data['empire_guild']=$relations->guild($m);$data['guilds_enabled']=(bool)($features['guilds_enabled']??false);
-        }
-        if($request->headers->get('X-Genesis-Live')==='1' && $request->getPreferredFormat()==='json') {
-            return $this->liveRegions($request,$data+['section'=>$section]);
-        }
-        return $this->render('colony/show.html.twig',$data+['section'=>$section]);
     }
 
-    private function liveRegions(Request $request,array $data): JsonResponse
+    private function owned(int $id): Planet
+    {
+        $m = $this->context->membership();
+        $p = $this->repo->find(Planet::class, $id);
+        if (!$p || $p->owner?->id !== $m->id || $p->solarSystem->galaxy->universe->id !== $m->universe->id) {
+            throw $this->createNotFoundException('Planète inaccessible.');
+        }
+        return $p;
+    }
+    #[Route('/', name: 'app_home', methods: ['GET'])]
+    public function home(Request $request): Response
+    {
+        if (!$this->getUser()) {
+            return $this->render('public/home.html.twig');
+        }
+        $m = $this->context->membership();
+        $planets = $this->repo->planets($m->universe, $m);
+        $chosen = $request->query->getInt('colony', $request->getSession()->get('selected_planet_' . $m->id, 0));
+        $planet = null;
+        foreach ($planets as $candidate) {
+            if ($candidate->id === $chosen) {
+                $planet = $candidate;
+            }
+        }
+        if ($request->query->has('colony') && !$planet) {
+            throw $this->createNotFoundException('Planète inaccessible.');
+        }
+        $planet ??= $planets[0] ?? null;
+        $section = $this->section((string) $request->query->get('section', 'overview'));
+        return $planet ? $this->redirectToRoute('app_colony', array_filter(['id' => $planet->id, 'section' => $section === 'overview' ? null : $section])) : $this->redirectToRoute('app_universes');
+    }
+    #[Route('/planetes', name: 'app_planets', methods: ['GET'])]
+    public function planets(Request $request, ResourceService $resources, \App\Service\Colony\EmpireDetails $details): Response
+    {
+        $membership = $this->context->membership();
+        $planets = $this->repo->planets($membership->universe, $membership);
+        $positionModifiers = [];
+        $activities = $this->repo->queueCounts($membership, $planets);
+        foreach ($planets as $planet) {
+            $activities[$planet->id] ??= 0;
+        }
+        foreach ($planets as $planet) {
+            $positionModifiers[$planet->id] = $resources->positionProductionModifiers($planet);
+        }
+        return $this->render('colony/planets.html.twig', [
+            'membership' => $membership,
+            'planets' => $planets,
+            'position_modifiers' => $positionModifiers,
+            'activities' => $activities,
+            'table_view' => $request->query->get('view') === 'table',
+            'comparison_resource' => in_array($request->query->getString('resource'), [
+                'metal',
+                'nano',
+                'hydrogen',
+                'antimatter',
+                'electricity',
+            ], true) ? $request->query->getString('resource') : 'metal',
+            'planet_details' => $details->planets($membership),
+        ]);
+    }
+    #[Route('/planetes/{id}', name: 'app_colony', methods: ['GET'], requirements: ['id' => '\d+'])]
+    public function show(
+        int $id,
+        Request $request,
+        ColonyView $view,
+        \App\Service\Player\DailyLeaderboard $leaderboard,
+        RelationResolver $relations,
+        GameCatalog $catalog,
+        \App\Service\Notification\JournalService $journal,
+        \App\Service\Colony\EmpireDetails $details,
+    ): Response
+    {
+        $p = $this->owned($id);
+        $m = $this->context->membership();
+        $section = $this->section((string) $request->query->get('section', 'overview'));
+        $data = $view->data($m, $p, $request->query->getBoolean('showLockedItems'), $section);
+        if ($section !== 'overview' && $request->query->has('showLockedItems')) {
+            $data['show_locked_items'] = $request->query->getBoolean('showLockedItems');
+        }
+        if ($section === 'overview') {
+            if ($request->headers->get('X-Genesis-Live') !== '1') {
+                $journal->open($m);
+            }
+            $points = [
+                'building_points' => 0,
+                'research_points' => 0,
+                'fleet_points' => 0,
+                'total_points' => 0,
+            ];
+            $daily = $leaderboard->forUniverse($m);
+            $rank = null;
+            foreach ($daily['players'] as $row) {
+                if ($row['membership']->id === $m->id) {
+                    $rank = $row['ranks']['points'];
+                    $points = array_intersect_key($row, $points);
+                    $data['ranking_changes'] = $row;
+                    break;
+                }
+            }
+            $features = $catalog->forUniverse($m->universe)['features'] ?? [];
+            $data['empire_points'] = $points;
+            $data['empire_rank'] = $rank;
+            $data['empire_guild'] = $relations->guild($m);
+            $data['guilds_enabled'] = (bool) ($features['guilds_enabled'] ?? false);
+        }
+        if ($request->headers->get('X-Genesis-Live') === '1' && $request->getPreferredFormat() === 'json') {
+            return $this->liveRegions($request, $data + ['section' => $section]);
+        }
+        return $this->render('colony/show.html.twig', $data + ['section' => $section]);
+    }
+
+    private function liveRegions(Request $request, array $data): JsonResponse
     {
         $data['chrome'] = $this->shell->get($this->getUser(), $data['planet']);
         $data['preferences'] = array_replace(PreferencesService::DEFAULTS, $this->getUser()->preferences);
@@ -72,28 +153,36 @@ final class ColonyController extends AbstractController
             'queues' => 'ui/colony_queues.html.twig',
             'active-flights' => 'ui/flights.html.twig',
         ];
-        $templates[$data['section']==='overview' ? 'journal' : 'catalog'] = $data['section']==='overview'
-            ? 'colony/_journal.html.twig' : 'colony/_catalog.html.twig';
+        $templates[$data['section'] === 'overview' ? 'journal' : 'catalog'] = $data['section'] === 'overview' ? 'colony/_journal.html.twig' : 'colony/_catalog.html.twig';
         $regions = [];
         foreach ($templates as $name => $template) {
             $regions[$name] = $this->renderView($template, $data);
         }
-        return $this->liveResponses->create($request,$regions);
+        return $this->liveResponses->create($request, $regions);
     }
-    #[Route('/planetes/{id}/journal/consulter',name:'app_journal_consult',methods:['POST'],requirements:['id'=>'\\d+'])]
-    public function consultJournal(int $id,Request $request,\App\Service\Notification\JournalService $journal): Response
+    #[Route('/planetes/{id}/journal/consulter', name: 'app_journal_consult', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function consultJournal(int $id, Request $request, \App\Service\Notification\JournalService $journal): Response
     {
-        $this->owned($id);$membership=$this->context->membership();
-        if((string)$request->request->get('membership')!==(string)$membership->id || !$this->isCsrfTokenValid('journal-'.$membership->id,$request->request->get('_token'))) throw $this->createAccessDeniedException('Formulaire expiré. Rouvrez le journal.');
-        $ids=$request->request->all('notice_ids');
-        foreach($ids as $value) if(!is_scalar($value) || !ctype_digit((string)$value) || (int)$value<1) throw new \Symfony\Component\HttpKernel\Exception\BadRequestHttpException('Sélection de journal invalide.');
-        try { $journal->consult($membership,array_map('intval',$ids)); }
-        catch(\DomainException $error) { throw $this->createNotFoundException($error->getMessage()); }
-        $this->addFlash('success','Les événements affichés ont été marqués comme consultés.');
-        return $this->redirectToRoute('app_colony',['id'=>$id,'_fragment'=>'dashboard-journal-title']);
+        $this->owned($id);
+        $membership = $this->context->membership();
+        if ((string) $request->request->get('membership') !== (string) $membership->id || !$this->isCsrfTokenValid('journal-' . $membership->id, $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Formulaire expiré. Rouvrez le journal.');
+        }
+        $ids = $request->request->all('notice_ids');
+        foreach ($ids as $value) {
+            if (!is_scalar($value) || !ctype_digit((string) $value) || (int) $value < 1) {
+                throw new \Symfony\Component\HttpKernel\Exception\BadRequestHttpException('Sélection de journal invalide.');
+            }
+        }
+        try {
+            $journal->consult($membership, array_map('intval', $ids));
+        } catch (\DomainException $error) {
+            throw $this->createNotFoundException($error->getMessage());
+        }
+        $this->addFlash('success', 'Les événements affichés ont été marqués comme consultés.');
+        return $this->redirectToRoute('app_colony', ['id' => $id, '_fragment' => 'dashboard-journal-title']);
     }
-
-    #[Route('/technologies',name:'app_technology_tree',methods:['GET'])]
+    #[Route('/technologies', name: 'app_technology_tree', methods: ['GET'])]
     public function technologyTree(Request $request, ColonyView $view): Response
     {
         $membership = $this->context->membership();
@@ -101,7 +190,7 @@ final class ColonyController extends AbstractController
         if ($planets === []) {
             return $this->redirectToRoute('app_universes');
         }
-        $selectedId = (int) $request->getSession()->get('selected_planet_'.$membership->id, 0);
+        $selectedId = (int) $request->getSession()->get('selected_planet_' . $membership->id, 0);
         $planet = null;
         foreach ($planets as $candidate) {
             if ($candidate->id === $selectedId) {
@@ -112,23 +201,31 @@ final class ColonyController extends AbstractController
         $planet ??= $planets[0];
         return $this->render('player/technology_tree.html.twig', $view->data($membership, $planet, section: 'tree') + ['tree_standalone' => true]);
     }
-
-    #[Route('/planetes/{id}/renommer',name:'app_planet_rename',methods:['POST'],requirements:['id'=>'\\d+'])]
-    public function rename(int $id,Request $request,GameManager $manager): Response
+    #[Route('/planetes/{id}/renommer', name: 'app_planet_rename', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function rename(int $id, Request $request, GameManager $manager): Response
     {
-        $planet=$this->owned($id);
-        if(!$this->isCsrfTokenValid('rename-planet-'.$id,$request->request->get('_token'))) throw $this->createAccessDeniedException('Formulaire expiré.');
-        $name=trim((string)$request->request->get('name',''));
-        if($name==='' || mb_strlen($name)>80) {
-            $this->addFlash('error','Le nom de la planète doit contenir entre 1 et 80 caractères.');
-        } else {
-            $planet->name=$name;$manager->save($planet);$manager->flush();
-            $this->addFlash('success','Planète renommée.');
+        $planet = $this->owned($id);
+        if (!$this->isCsrfTokenValid('rename-planet-' . $id, $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Formulaire expiré.');
         }
-        return $this->redirectToRoute('app_planets',['_fragment'=>'planet-'.$id]);
+        $name = trim((string) $request->request->get('name', ''));
+        if ($name === '' || mb_strlen($name) > 80) {
+            $this->addFlash('error', 'Le nom de la planète doit contenir entre 1 et 80 caractères.');
+        } else {
+            $planet->name = $name;
+            $manager->save($planet);
+            $manager->flush();
+            $this->addFlash('success', 'Planète renommée.');
+        }
+        return $this->redirectToRoute('app_planets', ['_fragment' => 'planet-' . $id]);
     }
-    #[Route('/planetes/{id}/ressources',name:'app_resources',methods:['GET'],requirements:['id'=>'\d+'])]
-    public function resources(int $id,ResourceService $resources,LeaderboardService $leaderboard,\App\Service\Player\VacationCalendar $vacations): JsonResponse
+    #[Route('/planetes/{id}/ressources', name: 'app_resources', methods: ['GET'], requirements: ['id' => '\d+'])]
+    public function resources(
+        int $id,
+        ResourceService $resources,
+        LeaderboardService $leaderboard,
+        \App\Service\Player\VacationCalendar $vacations,
+    ): JsonResponse
     {
         $planet=$this->owned($id);$this->queueService->synchronize($this->context->membership());
         $snapshot=$resources->snapshot($planet,true);
@@ -136,78 +233,137 @@ final class ColonyController extends AbstractController
         foreach($leaderboard->forUniverse($this->context->membership()) as $row) if($row['membership']->id===$planet->owner->id) {$snapshot['_protection']=$row['protection'];break;}
         return $this->json($snapshot,200,['Cache-Control'=>'private, no-store']);
     }
-    #[Route('/planetes/{id}/construction-maximum', name: 'app_construction_maximum', methods: ['GET'], requirements: ['id' => '\\d+'])]
+    #[Route('/planetes/{id}/construction-maximum', name: 'app_construction_maximum', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function constructionMaximum(int $id, Request $request, QueueService $service): JsonResponse
     {
         $planet = $this->owned($id);
         try {
-            $preview = $service->constructionPreview($this->context->membership(), $planet, (string) $request->query->get('group'), (string) $request->query->get('slug'), (string) $request->query->get('tier', 'basic'),max(1,$request->query->getInt('quantity',1)));
+            $preview = $service->constructionPreview(
+                $this->context->membership(),
+                $planet,
+                (string) $request->query->get('group'),
+                (string) $request->query->get('slug'),
+                (string) $request->query->get('tier', 'basic'),
+                max(1, $request->query->getInt('quantity', 1))
+            );
             return $this->json($preview, 200, ['Cache-Control' => 'private, no-store']);
         } catch (\DomainException $error) {
             return $this->json(['error' => $error->getMessage()], 422, ['Cache-Control' => 'private, no-store']);
         }
     }
-
-    #[Route('/planetes/{id}/construire',name:'app_queue_add',methods:['POST'],requirements:['id'=>'\d+'])]
-    public function add(int $id,Request $request,QueueService $service): Response
+    #[Route('/planetes/{id}/construire', name: 'app_queue_add', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function add(int $id, Request $request, QueueService $service): Response
     {
-        $p=$this->owned($id);
-        if(!$this->isCsrfTokenValid('build'.$id,$request->request->get('_token'))) throw $this->createAccessDeniedException('Formulaire expiré.');
-        $quantity=filter_var($request->request->get('quantity',1),FILTER_VALIDATE_INT);
+        $p = $this->owned($id);
+        if (!$this->isCsrfTokenValid('build' . $id, $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Formulaire expiré.');
+        }
+        $quantity = filter_var($request->request->get('quantity', 1), FILTER_VALIDATE_INT);
         try {
-            if($quantity===false) throw new \DomainException('Quantité invalide.');
-            $actualQuantity=$service->add($this->context->membership(),$p,(string)$request->request->get('group'),(string)$request->request->get('slug'),$quantity,(string)$request->request->get('request_key'),(string)$request->request->get('tier','basic'));
-            $this->addFlash('success','Commande enregistrée dans la file.'.($actualQuantity>0 && $actualQuantity<$quantity?' Quantité ajustée au maximum constructible : '.$actualQuantity.'.':''));
-        } catch(\DomainException $e) { $this->addFlash('error',$e->getMessage()); }
-        return $this->redirectToRoute('app_colony',['id'=>$id,'section'=>$this->section((string)$request->request->get('section','overview')),'_fragment'=>'item-'.(string)$request->request->get('slug','').'-'.(string)$request->request->get('tier','basic')]);
+            if ($quantity === false) {
+                throw new \DomainException('Quantité invalide.');
+            }
+            $actualQuantity = $service->add(
+                $this->context->membership(),
+                $p,
+                (string) $request->request->get('group'),
+                (string) $request->request->get('slug'),
+                $quantity,
+                (string) $request->request->get('request_key'),
+                (string) $request->request->get('tier', 'basic')
+            );
+            $this->addFlash('success', 'Commande enregistrée dans la file.' . ($actualQuantity > 0 && $actualQuantity < $quantity ? ' Quantité ajustée au maximum constructible : ' . $actualQuantity . '.' : ''));
+        } catch (\DomainException $e) {
+            $this->addFlash('error', $e->getMessage());
+        }
+        return $this->redirectToRoute('app_colony', ['id' => $id, 'section' => $this->section((string) $request->request->get('section', 'overview')), '_fragment' => 'item-' . (string) $request->request->get('slug', '') . '-' . (string) $request->request->get('tier', 'basic')]);
     }
-    #[Route('/planetes/{id}/file/{itemId}/annulation',name:'app_queue_cancel_preview',methods:['GET'],requirements:['id'=>'\\d+','itemId'=>'\\d+'])]
-    public function cancellationPreview(int $id,int $itemId,QueueService $service,Request $request): Response
+    #[Route('/planetes/{id}/file/{itemId}/annulation', name: 'app_queue_cancel_preview', methods: ['GET'], requirements: ['id' => '\d+', 'itemId' => '\d+'])]
+    public function cancellationPreview(
+        int $id,
+        int $itemId,
+        QueueService $service,
+        Request $request,
+    ): Response
     {
-        $planet=$this->owned($id);
-        try { $preview=$service->cancellationPreview($this->context->membership(),$itemId); }
-        catch(\DomainException $error) { throw $this->createNotFoundException($error->getMessage()); }
-        return $this->render('colony/cancel.html.twig',$preview+['planet'=>$planet,'section'=>$this->section($request->query->getString('section','overview'))]);
+        $planet = $this->owned($id);
+        try {
+            $preview = $service->cancellationPreview($this->context->membership(), $itemId);
+        } catch (\DomainException $error) {
+            throw $this->createNotFoundException($error->getMessage());
+        }
+        return $this->render('colony/cancel.html.twig', $preview + ['planet' => $planet, 'section' => $this->section($request->query->getString('section', 'overview'))]);
     }
-
-    #[Route('/planetes/{id}/file/{itemId}/annuler',name:'app_queue_cancel',methods:['POST'],requirements:['id'=>'\d+','itemId'=>'\d+'])]
-    public function cancel(int $id,int $itemId,Request $request,QueueService $service): Response
+    #[Route('/planetes/{id}/file/{itemId}/annuler', name: 'app_queue_cancel', methods: ['POST'], requirements: ['id' => '\d+', 'itemId' => '\d+'])]
+    public function cancel(
+        int $id,
+        int $itemId,
+        Request $request,
+        QueueService $service,
+    ): Response
     {
         $this->owned($id);
-        if(!$this->isCsrfTokenValid('cancel'.$itemId,$request->request->get('_token'))) throw $this->createAccessDeniedException('Formulaire expiré.');
-        try { $service->cancel($this->context->membership(),$itemId,(string)$request->request->get('request_key'));$this->addFlash('success','Commande et dépendances annulées. 25 % du coût payé remboursé, dans la limite du stockage.'); }
-        catch(\DomainException $e) { $this->addFlash('error',$e->getMessage()); }
-        return $this->redirectToRoute('app_colony',['id'=>$id,'section'=>$this->section((string)$request->request->get('section','overview')),'_fragment'=>'panel-'. $this->section((string)$request->request->get('section','overview'))]);
+        if (!$this->isCsrfTokenValid('cancel' . $itemId, $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Formulaire expiré.');
+        }
+        try {
+            $service->cancel($this->context->membership(), $itemId, (string) $request->request->get('request_key'));
+            $this->addFlash('success', 'Commande et dépendances annulées. 25 % du coût payé remboursé, dans la limite du stockage.');
+        } catch (\DomainException $e) {
+            $this->addFlash('error', $e->getMessage());
+        }
+        return $this->redirectToRoute('app_colony', ['id' => $id, 'section' => $this->section((string) $request->request->get('section', 'overview')), '_fragment' => 'panel-' . $this->section((string) $request->request->get('section', 'overview'))]);
     }
+
     private function section(string $section): string
     {
-        return in_array($section,['buildings','technologies','ships','defenses'],true)?$section:'overview';
+        return in_array($section, [
+            'buildings',
+            'technologies',
+            'ships',
+            'defenses',
+        ], true) ? $section : 'overview';
     }
-    #[Route('/carte',name:'app_map',methods:['GET'])]
+    #[Route('/carte', name: 'app_map', methods: ['GET'])]
     public function map(Request $request, GameCatalog $catalog, ClockInterface $clock): Response
     {
         return $this->render('universe/map.html.twig', $this->mapData($request, $catalog, $clock));
     }
-
-    #[Route('/carte-v2',name:'app_map_v2',methods:['GET'])]
-    public function mapV2(Request $request, GameCatalog $catalog, ClockInterface $clock, RelationResolver $relations): Response
+    #[Route('/carte-v2', name: 'app_map_v2', methods: ['GET'])]
+    public function mapV2(
+        Request $request,
+        GameCatalog $catalog,
+        ClockInterface $clock,
+        RelationResolver $relations,
+    ): Response
     {
         return $this->render('universe/map_v2.html.twig', $this->mapData($request, $catalog, $clock, true, $relations));
     }
 
-    private function mapData(Request $request, GameCatalog $catalog, ClockInterface $clock, bool $interactive = false, ?RelationResolver $relations = null): array
+    private function mapData(
+        Request $request,
+        GameCatalog $catalog,
+        ClockInterface $clock,
+        bool $interactive = false,
+        ?RelationResolver $relations = null,
+    ): array
     {
-        $m=$this->context->membership();$known=[];
-        foreach($this->repo->all(PlayerDiscovery::class,['playerUniverse'=>$m]) as $d) $known[$d->solarSystem->id]=true;
-        $systems=[];
-        foreach($this->repo->systems($m->universe) as $s) $systems[]=['system'=>$s,'known'=>isset($known[$s->id]),'planets'=>[]];
+        $m = $this->context->membership();
+        $known = [];
+        foreach ($this->repo->all(PlayerDiscovery::class, ['playerUniverse' => $m]) as $d) {
+            $known[$d->solarSystem->id] = true;
+        }
+        $systems = [];
+        foreach ($this->repo->systems($m->universe) as $s) {
+            $systems[] = ['system' => $s, 'known' => isset($known[$s->id]), 'planets' => []];
+        }
         $galaxiesById = [];
         foreach ($systems as $row) {
             $galaxiesById[$row['system']->galaxy->id] = $row['system']->galaxy;
         }
         $galaxies = array_values($galaxiesById);
         $ownedPlanets = $this->repo->planets($m->universe, $m);
-        $originId = (int) $request->getSession()->get('selected_planet_'.$m->id, 0);
+        $originId = (int) $request->getSession()->get('selected_planet_' . $m->id, 0);
         $mapOrigin = null;
         foreach ($ownedPlanets as $ownedPlanet) {
             if ($ownedPlanet->id === $originId) {
@@ -234,9 +390,9 @@ final class ColonyController extends AbstractController
         if ($galaxyId > 0 && $selectedGalaxy === null) {
             throw $this->createNotFoundException('Galaxie inaccessible dans cet univers.');
         }
-        $systems = array_values(array_filter($systems, fn (array $row): bool => $selectedGalaxy !== null && $row['system']->galaxy->id === $selectedGalaxy->id));
+        $systems = array_values(array_filter($systems, fn(array $row): bool => $selectedGalaxy !== null && $row['system']->galaxy->id === $selectedGalaxy->id));
         $planetsBySystem = [];
-        $systemIds = array_map(static fn (array $row): int => $row['system']->id, $systems);
+        $systemIds = array_map(static fn(array $row): int => $row['system']->id, $systems);
         foreach ($this->repo->discoveredPlanets($m, $systemIds) as $planet) {
             $planetsBySystem[$planet->solarSystem->id][] = $planet;
         }
@@ -244,31 +400,45 @@ final class ColonyController extends AbstractController
             $row['planets'] = $planetsBySystem[$row['system']->id] ?? [];
         }
         unset($row);
-
         $selectedId = $request->query->getInt('system');
         $selectedSystem = null;
         foreach ($systems as $row) {
-            if (($selectedId > 0 && $row['system']->id === $selectedId) || ($selectedId === 0 && $selectedSystem === null)) {
+            if ($selectedId > 0 && $row['system']->id === $selectedId || $selectedId === 0 && $selectedSystem === null) {
                 $selectedSystem = $row;
             }
         }
         if ($selectedId > 0 && $selectedSystem === null) {
             throw $this->createNotFoundException('Système inaccessible dans cet univers.');
         }
-
-        $mapStock=[];$mapFleetLimit=max(1,(int)($catalog->forUniverse($m->universe)['limits']['max_fleet_size']??1000000));
-        if($mapOrigin) { $idleFleet=$this->repo->one(Fleet::class,['homePlanet'=>$mapOrigin,'playerUniverse'=>$m,'status'=>'idle']);if($idleFleet) foreach($this->repo->all(FleetShip::class,['fleet'=>$idleFleet]) as $ship) $mapStock[$ship->slug]=$ship->quantity; }
-
+        $mapStock = [];
+        $mapFleetLimit = max(1, (int) ($catalog->forUniverse($m->universe)['limits']['max_fleet_size'] ?? 1000000));
+        if ($mapOrigin) {
+            $idleFleet = $this->repo->one(Fleet::class, ['homePlanet' => $mapOrigin, 'playerUniverse' => $m, 'status' => 'idle']);
+            if ($idleFleet) {
+                foreach ($this->repo->all(FleetShip::class, ['fleet' => $idleFleet]) as $ship) {
+                    $mapStock[$ship->slug] = $ship->quantity;
+                }
+            }
+        }
         $galaxyV2Json = '';
         $flights = [];
-        $mapOccupations=[];$mapConquerable=[];$mapReinforceable=[];$mapContestable=[];
-        foreach($systems as $row) foreach($row['planets'] as $planet) {
-            if($planet->npcPlanet || $planet->owner?->isForgotten()) $mapConquerable[$planet->id]=$this->combats->canConquer($m,$planet);
-            $occupation=$this->occupations->activeFor($planet);
-            if($occupation===null) continue;
-            $mapOccupations[$planet->id]=$occupation;
-            $mapReinforceable[$planet->id]=$this->combats->canDefend($m,$planet);
-            $mapContestable[$planet->id]=$this->combats->canAttack($m,$planet);
+        $mapOccupations = [];
+        $mapConquerable = [];
+        $mapReinforceable = [];
+        $mapContestable = [];
+        foreach ($systems as $row) {
+            foreach ($row['planets'] as $planet) {
+                if ($planet->npcPlanet || $planet->owner?->isForgotten()) {
+                    $mapConquerable[$planet->id] = $this->combats->canConquer($m, $planet);
+                }
+                $occupation = $this->occupations->activeFor($planet);
+                if ($occupation === null) {
+                    continue;
+                }
+                $mapOccupations[$planet->id] = $occupation;
+                $mapReinforceable[$planet->id] = $this->combats->canDefend($m, $planet);
+                $mapContestable[$planet->id] = $this->combats->canAttack($m, $planet);
+            }
         }
         $mapPlanetRelations = [];
         if ($interactive) {
@@ -284,8 +454,7 @@ final class ColonyController extends AbstractController
                         $mapPlanetRelations[$planet->id] = 'uninhabited';
                     } else {
                         if (!isset($ownerRelations[$owner->id])) {
-                            $ownerRelations[$owner->id] = $relations->allied($m, $owner) ? 'allied'
-                                : ($relations->enemy($m, $owner) ? 'enemy' : 'neutral');
+                            $ownerRelations[$owner->id] = $relations->allied($m, $owner) ? 'allied' : ($relations->enemy($m, $owner) ? 'enemy' : 'neutral');
                         }
                         $mapPlanetRelations[$planet->id] = $ownerRelations[$owner->id];
                     }
@@ -303,7 +472,7 @@ final class ColonyController extends AbstractController
                     'x' => $system->coordX,
                     'y' => $system->coordY,
                     'known' => $row['known'],
-                    'planets' => array_map(fn (Planet $planet): array => [
+                    'planets' => array_map(fn(Planet $planet): array => [
                         'id' => $planet->id,
                         'name' => $planet->name,
                         'position' => $planet->position,
@@ -316,9 +485,7 @@ final class ColonyController extends AbstractController
                     ], $row['planets']),
                 ];
             }
-
-            $flights=$this->visibility->forMap($m,$selectedGalaxy);
-
+            $flights = $this->visibility->forMap($m, $selectedGalaxy);
             $galaxyV2Json = json_encode([
                 'systems' => $mapSystems,
                 'origin' => $mapOrigin ? [
@@ -337,8 +504,7 @@ final class ColonyController extends AbstractController
                 'universe' => $m->universe->name,
             ], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_THROW_ON_ERROR);
         }
-
-        $hasColonySlot=count($ownedPlanets)+$this->occupations->reservedSlots($m)<$this->occupations->colonyLimit($m);
+        $hasColonySlot = count($ownedPlanets) + $this->occupations->reservedSlots($m) < $this->occupations->colonyLimit($m);
         return [
             'membership' => $m,
             'map_origin' => $mapOrigin,

@@ -1,6 +1,6 @@
 <?php
-declare(strict_types=1);
 
+declare (strict_types=1);
 namespace App\Controller;
 
 use App\Entity\{AdminAuditLog, PatchNote};
@@ -25,7 +25,6 @@ final class PatchNoteController extends AbstractController
         }
         return $this->render('patchnotes/index.html.twig', ['patchNotes' => $patchNotes]);
     }
-
     #[Route('/admin/patchnotes', name: 'app_admin_patchnotes', methods: ['GET', 'POST'])]
     #[IsGranted('ROLE_ADMIN')]
     public function admin(Request $request, PatchNoteRepository $notes, EntityManagerInterface $em): Response
@@ -34,7 +33,9 @@ final class PatchNoteController extends AbstractController
         $status = $request->query->getString('status');
         $search = trim($request->query->getString('q'));
         if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('patchnote_create', $request->request->get('_token'))) throw $this->createAccessDeniedException();
+            if (!$this->isCsrfTokenValid('patchnote_create', $request->request->get('_token'))) {
+                throw $this->createAccessDeniedException();
+            }
             $this->fill($note, $request);
             if ($note->title === '' || $note->version === '' || $note->summary === '' || $note->content === '') {
                 $this->addFlash('error', 'Tous les champs sont obligatoires.');
@@ -47,30 +48,31 @@ final class PatchNoteController extends AbstractController
                 return $this->redirectToRoute('app_admin_patchnotes');
             }
         }
-        return $this->render('admin/patchnotes.html.twig', $notes->page($status, $search, $request->query->getInt('page', 1))
-            + ['draft'=>$note, 'statusFilter'=>$status, 'search'=>$search]);
+        return $this->render('admin/patchnotes.html.twig', $notes->page($status, $search, $request->query->getInt('page', 1)) + ['draft' => $note, 'statusFilter' => $status, 'search' => $search]);
     }
-
     #[Route('/admin/patchnotes/{id}', name: 'app_admin_patchnote_edit', methods: ['POST'])]
     #[IsGranted('ROLE_ADMIN')]
     public function edit(PatchNote $note, Request $request, EntityManagerInterface $em): Response
     {
-        if (!$this->isCsrfTokenValid('patchnote_edit_'.$note->id, $request->request->get('_token'))) throw $this->createAccessDeniedException();
+        if (!$this->isCsrfTokenValid('patchnote_edit_' . $note->id, $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
         $old = $note->status;
         $this->fill($note, $request);
         $note->updatedAt = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
-        $action = $old !== $note->status ? ($note->status === 'published' ? 'patchnote_published' : 'patchnote_unpublished') : 'patchnote_updated';
+        $action = $old !== $note->status ? $note->status === 'published' ? 'patchnote_published' : 'patchnote_unpublished' : 'patchnote_updated';
         $this->audit($em, $action, $note);
         $em->flush();
         $this->addFlash('success', 'Patchnote mise à jour.');
         return $this->redirectToRoute('app_admin_patchnotes');
     }
-
     #[Route('/admin/patchnotes/{id}/delete', name: 'app_admin_patchnote_delete', methods: ['POST'])]
     #[IsGranted('ROLE_ADMIN')]
     public function delete(PatchNote $note, Request $request, EntityManagerInterface $em): Response
     {
-        if (!$this->isCsrfTokenValid('patchnote_delete_'.$note->id, $request->request->get('_token'))) throw $this->createAccessDeniedException();
+        if (!$this->isCsrfTokenValid('patchnote_delete_' . $note->id, $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
         $this->audit($em, 'patchnote_deleted', $note);
         $em->remove($note);
         $em->flush();
@@ -88,14 +90,20 @@ final class PatchNoteController extends AbstractController
         $note->status = $data->getString('status') === 'published' ? 'published' : 'draft';
         $date = trim($data->getString('publishedAt'));
         $note->publishedAt = $date !== '' ? new \DateTimeImmutable($date, new \DateTimeZone('UTC')) : ($note->status === 'published' ? new \DateTimeImmutable('now', new \DateTimeZone('UTC')) : null);
-        if ($note->status === 'draft') $note->publishedAt = null;
+        if ($note->status === 'draft') {
+            $note->publishedAt = null;
+        }
     }
 
     private function audit(EntityManagerInterface $em, string $action, PatchNote $note): void
     {
         $entry = new AdminAuditLog();
-        $entry->actor = $this->getUser(); $entry->action = $action; $entry->targetType = 'patch_note'; $entry->targetId = $note->id ?? 0;
-        $entry->details = ['title' => $note->title, 'version' => $note->version]; $entry->createdAt = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+        $entry->actor = $this->getUser();
+        $entry->action = $action;
+        $entry->targetType = 'patch_note';
+        $entry->targetId = $note->id ?? 0;
+        $entry->details = ['title' => $note->title, 'version' => $note->version];
+        $entry->createdAt = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
         $em->persist($entry);
     }
 }
