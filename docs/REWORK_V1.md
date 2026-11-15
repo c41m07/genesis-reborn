@@ -259,6 +259,36 @@ le test exige moins de quatre requêtes pour la lecture du score individuel.
 Contrôles : 19 tests / 133 assertions réussis, preuve détaillée conservée,
 dates et contexte de retour, nouveaux joueurs et minuit couverts.
 
+## Complément du lot 7 — pagination et historique administratif
+
+Joueurs, journal, feedbacks, événements et patchnotes administratifs sont
+paginés par 50. Les recherches et filtres s’appliquent avant pagination.
+Les compteurs des feedbacks et leur curseur de consultation conservent la
+sélection complète ; le filtre d’archives des événements conserve la sémantique
+des anciens JSON. Aucun historique ni preuve supprimé.
+
+Joueurs/Journal conservent la recherche immédiate avec fragments partagés,
+focus et sélection ; les réponses obsolètes sont écartées. Le formulaire GET
+fonctionne aussi sans JavaScript. L’export des lignes visibles reste disponible ;
+un export de tous les résultats filtrés lit 100 lignes à la fois, avec plafond
+d’identifiant et protection contre les formules CSV.
+
+Contrôles : 4 tests PHP / 65 assertions, fixtures de 175 comptes, feedbacks,
+événements, notes et actions ; recherches hors page, filtres combinés, archives,
+comptages, curseur de consultation, export complet et refus d’accès couverts.
+Les cinq scénarios navigateur du fichier comptes/flottes réussissent par
+consolidation : quatre scénarios, dont le nouveau parcours de pagination, puis reprise
+du scénario rubriques/journal après correction d’une sélection avant connexion
+Stimulus et du texte « aucun résultat ». Aucun test ni délai affaibli.
+`make assets` réussi (495 Kio bruts, contre 494 Kio avant ce complément).
+
+Les modèles de projets/rotations et les catalogues de paramètres restent des
+listes de configuration complètes : leurs écrans affichent et éditent réellement
+l’ensemble, contrairement aux historiques de joueurs. Pas de pagination
+automatique qui ferait perdre les liens d’édition et la vue d’ensemble. La
+modération garde ses consultations journalisées existantes ; son éventuelle
+pagination doit aussi définir la portée des consultations avant changement.
+
 ## Reprise
 
 - Branche : `chore/rework-v1`, base `48c9a71`, code applicatif validé `6dd33b7`.

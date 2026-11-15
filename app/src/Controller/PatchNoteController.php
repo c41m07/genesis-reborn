@@ -47,7 +47,8 @@ final class PatchNoteController extends AbstractController
                 return $this->redirectToRoute('app_admin_patchnotes');
             }
         }
-        return $this->render('admin/patchnotes.html.twig', ['patchNotes' => $notes->filtered($status, $search), 'draft' => $note, 'statusFilter' => $status, 'search' => $search]);
+        return $this->render('admin/patchnotes.html.twig', $notes->page($status, $search, $request->query->getInt('page', 1))
+            + ['draft'=>$note, 'statusFilter'=>$status, 'search'=>$search]);
     }
 
     #[Route('/admin/patchnotes/{id}', name: 'app_admin_patchnote_edit', methods: ['POST'])]

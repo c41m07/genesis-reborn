@@ -88,18 +88,15 @@ final class FeedbackController extends AbstractController
 
     #[IsGranted('ROLE_ADMIN')]
     #[Route('/admin/feedbacks', name: 'app_admin_feedbacks', methods: ['GET'])]
-    public function index(Request $request, EntityManagerInterface $em, \App\Service\Admin\AdminNotificationService $notifications): Response
+    public function index(Request $request, EntityManagerInterface $em, \App\Service\Admin\AdminNotificationService $notifications, \App\Repository\AdminReadRepository $reads): Response
     {
-        $qb=$em->createQueryBuilder()->select('f','p','u')->from(UserFeedback::class,'f')->join('f.player','p')->leftJoin('f.universe','u')->orderBy('f.createdAt','DESC');
-        foreach (['type','priority'] as $field) if ($value=$request->query->get($field)) $qb->andWhere('f.'.$field.' = :'.$field)->setParameter($field,$value);
-        $status=(string)$request->query->get('status','');
-        if ($status==='') $qb->andWhere('f.status <> :archived')->setParameter('archived','archived');
-        elseif ($status!=='all') $qb->andWhere('f.status = :status')->setParameter('status',$status);
-        if ($universe=$request->query->get('universe')) $qb->andWhere('u.id = :universe')->setParameter('universe',(int)$universe);
-        if ($search=trim((string)$request->query->get('q'))) $qb->andWhere('f.title LIKE :q OR p.username LIKE :q')->setParameter('q','%'.$search.'%');
-        $feedbacks=$qb->getQuery()->getResult();
-        $notifications->markVisited($this->getUser(), ['feedbacks'=>max([0, ...array_map(static fn (UserFeedback $feedback): int => $feedback->id, $feedbacks)])]);
-        return $this->render('admin/feedbacks.html.twig',['feedbacks'=>$feedbacks,'universes'=>$em->getRepository(\App\Entity\Universe::class)->findBy([],['name'=>'ASC']),'total'=>count($feedbacks),'openCount'=>count(array_filter($feedbacks,static fn(UserFeedback $f)=>$f->status==='open'))]);
+        $filters = [];
+        foreach (['type', 'priority', 'status', 'universe', 'q'] as $field) $filters[$field] = trim($request->query->getString($field));
+        $page = $reads->feedbacks($filters, $request->query->getInt('page', 1));
+        // Le curseur de consultation garde la portée de tous les résultats filtrés.
+        $notifications->markVisited($this->getUser(), ['feedbacks'=>$page['latest']]);
+        return $this->render('admin/feedbacks.html.twig', $page + ['feedbacks'=>$page['entries'], 'filters'=>$filters,
+            'universes'=>$em->getRepository(\App\Entity\Universe::class)->findBy([], ['name'=>'ASC'])]);
     }
 
     #[IsGranted('ROLE_ADMIN')]

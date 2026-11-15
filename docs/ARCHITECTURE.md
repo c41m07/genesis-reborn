@@ -120,6 +120,13 @@ La liste des combats utilise ReportSummaryRepository pour éviter les rounds et
 snapshots complets. Le lecteur détaillé et les archives conservent les entités
 entières. Les profils consultent la ligne du snapshot quotidien sans enrichir
 tous les scores à chaque affichage ; le recalcul quotidien reste partagé.
+AdminReadRepository borne les listes de joueurs, d’audit, de feedbacks et
+d’événements à 50 lignes. Les filtres sont appliqués avant LIMIT ; les compteurs
+et curseurs de consultation portent sur la sélection complète. Les patchnotes
+administratives sont paginées par leur repository. L’export complet du journal
+lit 100 lignes à la fois, avec un identifiant plafond et neutralisation des
+formules CSV. Les recherches immédiates Joueurs/Journal rendent leurs fragments
+partagés et préservent le formulaire ; les réponses obsolètes sont ignorées.
 
 Les actualisations des colonies demandent JSON avec `X-Genesis-Live: 1` et
 `Accept: application/json`. La route conserve ses contrôles, synchronisations

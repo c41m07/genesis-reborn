@@ -27,12 +27,16 @@ final class PatchNoteRepository
             ->getQuery()->getSingleScalarResult() ?? 0);
     }
 
-    /** @return PatchNote[] */
-    public function filtered(string $status, string $search): array
+    public function page(string $status, string $search, int $page): array
     {
         $query = $this->em->createQueryBuilder()->select('p')->from(PatchNote::class, 'p');
         if (in_array($status, ['draft', 'published'], true)) $query->andWhere('p.status = :status')->setParameter('status', $status);
         if ($search !== '') $query->andWhere('LOWER(p.title) LIKE :search OR LOWER(p.version) LIKE :search')->setParameter('search', '%'.mb_strtolower($search).'%');
-        return $query->orderBy('p.updatedAt', 'DESC')->getQuery()->getResult();
+        $total = (int) (clone $query)->select('COUNT(p.id)')->getQuery()->getSingleScalarResult();
+        $pages = max(1, (int) ceil($total / 50));
+        $page = max(1, min($page, $pages));
+        return ['patchNotes'=>$query->orderBy('p.updatedAt', 'DESC')->addOrderBy('p.id', 'DESC')
+            ->setFirstResult(($page - 1) * 50)->setMaxResults(50)->getQuery()->getResult(),
+            'total'=>$total, 'page'=>$page, 'pages'=>$pages];
     }
 }

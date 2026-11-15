@@ -31,10 +31,20 @@ final class AdminController extends AbstractController
     #[Route('/securite', name: '_security', methods: ['GET'], defaults: ['screen'=>'security'])]
     #[Route('/exploitation', name: '_operations', methods: ['GET'], defaults: ['screen'=>'operations'])]
     #[Route('/journal', name: '_audit', methods: ['GET'], defaults: ['screen'=>'audit'])]
-    public function index(Request $request, GameRepository $repo, GameCatalog $catalog, AdminService $admin, AdminOperationsService $operations, AdminNotificationService $notifications, AdminMissionMonitoring $monitor, PlayerActivityService $presence, AdminCaseService $caseFiles, \App\Service\Player\PlayerReportService $playerReportService, AdminReadRepository $reads, string $screen = 'overview'): Response
+    public function index(Request $request, GameRepository $repo, GameCatalog $catalog, AdminService $admin, AdminOperationsService $operations, AdminNotificationService $notifications, AdminMissionMonitoring $monitor, PlayerActivityService $presence, AdminCaseService $caseFiles, \App\Service\Player\PlayerReportService $playerReportService, AdminReadRepository $reads, \App\Service\Admin\AdminAuditExport $auditExport, string $screen = 'overview'): Response
     {
         $titles = ['overview'=>'Accueil', 'players'=>'Joueurs', 'universes'=>'Univers', 'reports'=>'Modération', 'security'=>'Sécurité', 'operations'=>'Exploitation', 'audit'=>'Journal des actions'];
         if (!isset($titles[$screen])) throw $this->createNotFoundException();
+        $listFilters = ['q'=>mb_substr(trim($request->query->getString('q')), 0, 150),
+            'status'=>in_array($request->query->getString('status'), ['active', 'suspended'], true) ? $request->query->getString('status') : '',
+            'role'=>in_array($request->query->getString('role'), ['admin', 'player'], true) ? $request->query->getString('role') : '',
+            'action'=>mb_substr($request->query->getString('action'), 0, 80)];
+        if ($screen === 'audit' && $request->query->getString('export') === 'all') return $auditExport->response($listFilters);
+        $listPage = match ($screen) {
+            'players'=>$reads->players($listFilters, $request->query->getInt('page', 1)),
+            'audit'=>$reads->audit($listFilters, $request->query->getInt('page', 1)),
+            default=>[],
+        };
         $counters = $reads->counters();
         $reports = $screen === 'reports' ? $repo->all(MessageReport::class, ['status' => 'open'], ['createdAt' => 'DESC']) : [];
         $playerReports = $screen === 'reports' ? $repo->all(PlayerReport::class, ['status'=>'open'], ['createdAt'=>'DESC','id'=>'DESC']) : [];
@@ -44,19 +54,20 @@ final class AdminController extends AbstractController
         $universePlayerCounts = $screen === 'universes' ? $reads->universePlayerCounts() : [];
         $universeConfigs = [];
         if ($screen === 'universes') foreach ($universes as $universe) { $universeConfigs[$universe->id] = $catalog->forUniverse($universe); }
-        $players = $screen === 'players' ? $repo->all(Player::class, [], ['id' => 'DESC']) : [];
+        $players = $screen === 'players' ? $listPage['entries'] : [];
         $activeUniverseCount = count(array_filter($universes, static fn (Universe $universe): bool => $universe->status === 'active'));
         $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
         $scheduledUniverseCount = count(array_filter($universes, static fn (Universe $universe): bool => $universe->status === 'active' && $universe->startsAt !== null && $universe->startsAt > $now));
         $closedUniverseCount = count(array_filter($universes, static fn (Universe $universe): bool => $universe->status === 'closed'));
-        $auditLogs = $screen === 'audit' ? $repo->all(AdminAuditLog::class, [], ['createdAt' => 'DESC']) : ($screen === 'overview' ? $reads->recentActions() : []);
+        $auditLogs = $screen === 'audit' ? $listPage['entries'] : ($screen === 'overview' ? $reads->recentActions() : []);
         $securityIncidents = $screen === 'security' ? $reads->securityIncidents() : [];
         if ($screen === 'reports') $notifications->markVisited($this->getUser(), ['reports'=>max([0, ...array_map(static fn (MessageReport $report): int => $report->id, $reports)]), 'player_reports'=>max([0, ...array_map(static fn (PlayerReport $report): int => $report->id, $playerReports)])]);
         if ($screen === 'security') $notifications->markVisited($this->getUser(), ['security'=>$reads->latestSecurityIncidentId()]);
-        $auditActions = array_values(array_unique(array_map(static fn (AdminAuditLog $entry): string => $entry->action, $auditLogs)));
-        sort($auditActions);
+        $auditActions = $screen === 'audit' ? $reads->auditActions() : [];
         $operationsSnapshot = in_array($screen, ['overview', 'operations'], true) ? $operations->snapshot() : [];
-        return $this->render($screen === 'overview' ? 'admin/index.html.twig' : 'admin/section.html.twig', [
+        $data = [
+            'listPage'=>$listPage, 'listFilters'=>$listFilters,
+            'preferences'=>array_replace(['timezone'=>'Europe/Paris'], $this->getUser()->preferences),
             'screen'=>$screen, 'screenTitle'=>$titles[$screen],
             'activeCaseCount'=>$screen === 'overview' ? $caseFiles->activeCount() : 0,
             'fleetOverview'=>$screen === 'overview' ? $monitor->search(['universe'=>0, 'mission'=>'', 'status'=>'active', 'q'=>''], 1) : [],
@@ -85,7 +96,15 @@ final class AdminController extends AbstractController
             'playerReportReasons'=>\App\Service\Player\PlayerReportService::REASONS,
             'playerReportCategories'=>\App\Service\Player\PlayerReportService::CATEGORIES,
             'auditLogs' => $auditLogs,
-        ]);
+        ];
+        if (in_array($screen, ['players', 'audit'], true) && $request->headers->get('X-Genesis-Admin-List') === '1') {
+            $response = $this->render('admin/sections/_'.$screen.'_results.html.twig', $data);
+        } else {
+            $response = $this->render($screen === 'overview' ? 'admin/index.html.twig' : 'admin/section.html.twig', $data);
+        }
+        $response->headers->set('Cache-Control', 'private, no-store');
+        $response->setVary('X-Genesis-Admin-List');
+        return $response;
     }
 
     #[Route('/rubriques/{group}', name: '_group', requirements: ['group'=>'players|universe|events|ops'], methods: ['GET'])]

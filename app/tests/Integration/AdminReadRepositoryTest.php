@@ -50,5 +50,19 @@ final class AdminReadRepositoryTest extends KernelTestCase
         self::assertCount(5, $reads->recentActions());
         self::assertSame(76, $em->getRepository(AdminAuditLog::class)->count([]));
         self::assertSame(['playerCount' => 0, 'suspendedPlayerCount' => 0, 'openReportCount' => 0], $reads->counters());
+        $archiveValues = [null, false, true, 0, 1, 0.0, 0.001, '', '0', 'null', 'false', [], [1], ['marker'=>1]];
+        $expectedArchived = 0;
+        foreach ($archiveValues as $index=>$value) {
+            $event = new \App\Entity\GameEvent();
+            $event->name = 'Archive synthétique '.$index;
+            $event->type = 'announcement';
+            $event->startsAt = $event->endsAt = $now;
+            $event->parameters = ['archived_at'=>$value];
+            $expectedArchived += !empty($value) ? 1 : 0;
+            $em->persist($event);
+        }
+        $em->flush();
+        self::assertSame($expectedArchived, $reads->gameEvents(true, 1)['total']);
+        self::assertSame(count($archiveValues) - $expectedArchived, $reads->gameEvents(false, 1)['total']);
     }
 }

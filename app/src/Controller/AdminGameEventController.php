@@ -14,7 +14,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class AdminGameEventController extends AbstractController
 {
     #[Route('/admin/events', name: 'app_admin_game_events', methods: ['GET', 'POST'])]
-    public function index(Request $request, GameRepository $repo, GameEventService $events): Response
+    public function index(Request $request, GameRepository $repo, GameEventService $events, \App\Repository\AdminReadRepository $reads): Response
     {
         $draft = ['name' => '', 'description' => '', 'type' => 'announcement', 'status' => 'draft', 'starts_at' => '', 'ends_at' => '', 'universe_id' => 0, 'percentage' => '', 'visible' => false];
         if ($request->isMethod('POST')) {
@@ -26,7 +26,9 @@ final class AdminGameEventController extends AbstractController
                 return $this->redirectToRoute('app_admin_game_events');
             } catch (\DomainException $error) { $this->addFlash('error', $error->getMessage()); }
         }
-        return $this->render('admin/events.html.twig', ['archived' => $request->query->getBoolean('archived'), 'events' => array_values(array_filter($repo->all(GameEvent::class, [], ['startsAt' => 'DESC']), static fn(GameEvent $event): bool => !empty($event->parameters['archived_at']) === $request->query->getBoolean('archived'))), 'universes' => $repo->all(Universe::class), 'draft' => $draft, 'types' => GameEventService::TYPES, 'statuses' => GameEventService::STATUSES]);
+        $archived = $request->query->getBoolean('archived');
+        return $this->render('admin/events.html.twig', $reads->gameEvents($archived, $request->query->getInt('page', 1))
+            + ['archived'=>$archived, 'universes'=>$repo->all(Universe::class), 'draft'=>$draft, 'types'=>GameEventService::TYPES, 'statuses'=>GameEventService::STATUSES]);
     }
 
     #[Route('/admin/events/{id}/edit', name: 'app_admin_game_event_edit', methods: ['POST'], requirements: ['id' => '\\d+'])]
