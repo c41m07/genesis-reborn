@@ -122,6 +122,5 @@ final class CatalogueInsights
         $columns=[];foreach($nodes as $key=>$node){$node['depth']=$depth($key);$columns[$node['depth']][]=$node;}
         ksort($columns);return $columns;
     }
-    private function merge(array $left,array $right):array{foreach($right as $group=>$items)$left[$group]=[...($left[$group]??[]),...$items];return $left;}
 }
 

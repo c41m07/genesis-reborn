@@ -5,14 +5,13 @@ use App\Entity\{Planet,PlayerUniverse,PlanetBuilding,PlayerTechnology,Fleet,Flee
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Queue\{OperationCalculator, QueueService};
-use App\Service\Requirement\{CatalogAccess, RequirementChecker};
+use App\Service\Requirement\CatalogAccess;
 
 final class ColonyView
 {
     public function __construct(
         private GameRepository $repo,
         private GameCatalog $catalog,
-        private RequirementChecker $requirements,
         private ResourceService $resources,
         private QueueService $queueService,
         private OperationCalculator $calculator,

@@ -390,13 +390,22 @@ Pas d’installation de formateur ni de formatage global. Contrôle : 21 cas /
 Les blocs historiques de tri hors modification restent une exception à la
 normalisation exhaustive ; les réécrire sans gain mesuré ajouterait du risque.
 
+## Complément du lot 11 — nettoyage ciblé
+
+Retrait de l’injection RequirementChecker sans usage dans ColonyView et d’une
+méthode privée de fusion sans appel dans CatalogueInsights. Les usages directs,
+configurations et appels nommés ont été recherchés avant retrait. Aucune
+suppression de fichier, de document ou d’asset ; aucun formateur installé.
+Le conteneur et le schéma passent `make lint`, puis les six scénarios du
+benchmark sont réexécutés sur cette version.
+
 ## Reprise
 
 - Branche : `chore/rework-v1`, base `48c9a71`, première passe complète validée `6dd33b7` ; compléments depuis `9332789`.
 - Lot actuel : 12/12, validation cumulative des compléments.
 - Dernière étape validée : mesures HTTP 0/5/25 flottes, captures et nouvelle comparaison des six préparations ; validate/lint réussis.
 - Contrôles en cours : suite PHP/Python complète ; suite navigateur complète à lancer ensuite.
-- Modifications non commitées : retrait d’une dépendance et d’une méthode privée sans usage dans les catalogues.
+- Modifications non commitées : aucune après le commit de nettoyage.
 - Questions en attente : aucune ; recette manuelle et exceptions restent ouvertes.
 - Prochaine action précise : attendre PHP/Python, puis lancer les navigateurs isolés sur quatre groupes et réconcilier la couverture.
 - Conserver cette branche unique ; aucune PR, fusion ou publication automatique.
