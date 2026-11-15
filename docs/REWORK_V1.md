@@ -1,5 +1,53 @@
 # Rework V1 — suivi et reprise
 
+## Nouvelle suite navigateur sur la dernière version — validée localement
+
+Demande du 15 novembre après `d7bee6f` : rejouer la suite complète sur la dernière
+version de `chore/rework-v1` et corriger les éventuels problèmes. Lot 12/12 conservé,
+complexité 3/5, état Git initial propre. Aucune modification du bandeau ni PR.
+
+Version applicative testée : `d7bee6f3655a94da8ffdd487cd6b0e29f9711273`.
+Manifeste neuf : 202 scénarios, répartis en quatre groupes indépendants via
+`BROWSER_PERSISTENCE=1 make test-browser`. Délais et assertions inchangés.
+Chaque lanceur crée puis ferme son propre projet et sa base synthétique.
+Les huit services habituels sont sains et aucun watcher d’assets n’est actif.
+
+Nouvelle exécution complète réussie, au premier essai :
+
+| Groupe | Scénarios réussis | Ignorés / échecs / instables | Durée du rapport |
+| --- | --- | --- | --- |
+| 1 | 51/51 | 0 / 0 / 0 | 36,4 min |
+| 2 | 59/59 | 0 / 0 / 0 | 26,8 min |
+| 3 | 43/43 | 0 / 0 / 0 | 34,1 min |
+| 4 | 49/49 | 0 / 0 / 0 | 37,4 min |
+
+Rapprochement avec le manifeste neuf : **202/202 scénarios distincts**, aucun
+manquant, supplémentaire ou dupliqué. Chaque résultat contient un seul essai
+réussi ; aucune reprise ni erreur globale. Les durées excluent le démarrage
+initial des projets et ne mesurent pas la performance du jeu.
+
+Les quatre applications de test contiennent les versions attendues de GameManager,
+ActionGuard, QueueService et OutboxRelay. Les empreintes des sources, tests,
+configurations, scripts et fichiers compilés restent identiques du début à la fin.
+Aucune correction applicative ou modification de test n’a été nécessaire.
+Les 18 protections du bandeau étaient réussies au lancement ; leurs sources
+restent identiques après la suite.
+
+Les quatre lanceurs se terminent avec un code nul et leurs projets ont tous
+disparu. Aucun projet préexistant ne manque et les huit services habituels
+restent sains. Aucune action de jeu ni migration sur la base habituelle.
+
+Préfixe des rapports et journaux : `var/rework-browser-d7bee6f-1794765279-*`.
+Le fichier `*-summary.json` conserve la couverture, les contrôles d’empreintes
+et de nettoyage ; `*-container-sources.json` conserve la comparaison des applications.
+Manifeste, empreintes initiales, projets préexistants et codes de sortie sont
+dans `var/rework-browser-latest.json`. Ces preuves restent ignorées par Git.
+Les résultats de la passe précédente restent distincts ci-dessous.
+
+Reprise : lot 12/12 terminé, aucun contrôle en cours ni problème ouvert après
+cette passe. Seule la documentation du résultat est modifiée depuis la version
+applicative testée. Aucune CI GitHub, PR, fusion ou publication effectuée.
+
 ## Dernière relecture du prompt et des conventions — validée localement
 
 Demande complémentaire après `a9f5ddc` : rapprocher chaque exigence du prompt

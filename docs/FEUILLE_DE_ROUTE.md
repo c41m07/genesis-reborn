@@ -13,10 +13,12 @@ des fins de commande simultanées, mesures serveur sur trois volumes et 132
 actualisations navigateur mesurées. Validation courante : 1 047 tests PHP,
 213 253 assertions lors de la dernière suite, 13 tests Python, lint et compilation
 réussis. La préparation des bases navigateur est stabilisée et les schedulers
-RabbitMQ sont limités dans le seul profil jetable. Dernière suite navigateur :
-202/202 au premier essai,
-sans reprise ; les 12 anciens scénarios instables passent aussi deux fois chacun
-(24/24), avec assertions et délais des actions conservés. Des commentaires français
+RabbitMQ sont limités dans le seul profil jetable. Nouvelle suite navigateur complète
+sur `d7bee6f` : 202/202 au premier essai, sans reprise, scénario ignoré ni erreur
+globale. Sources et fichiers compilés identiques pendant toute la passe, aucun
+correctif nécessaire ; les quatre projets jetables sont fermés. Les 12 anciens
+scénarios instables avaient également réussi deux fois chacun (24/24), avec
+assertions et délais des actions conservés. Des commentaires français
 expliquent les traitements sensibles. La dernière relecture développe la présentation
 de GameManager, ActionGuard et QueueService, clarifie les noms des files et du relais,
 puis complète les commentaires de 12 fichiers. Structure PHP et correspondance des
