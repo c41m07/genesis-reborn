@@ -66,6 +66,7 @@ Le code comprend :
 - Depuis l’inventaire, un boost peut accélérer une construction, recherche, production ou mission chronométrée active de l’empire ; les opérations en attente, les occupations et les vacances restent exclues.
 - Console d’administration avec une navigation principale à cinq entrées, un accueil synthétique et quatre pages de rubrique en cartes (`/admin/rubriques/{group}`) : joueurs et modération, univers et activité, animation, exploitation. Les fiches disposent d’un fil d’Ariane ; une sous-navigation relie les rubriques du groupe et les outils d’un même univers. Les nouveautés des signalements, de la sécurité et des feedbacks sont comptées par administrateur ; ouvrir l’accueil ne les marque pas comme consultées. Les feedbacks archivés sont masqués par défaut.
 - Surveillance `/admin/flottes` : missions actives et historique, recherche par joueur ou cible, filtres, actualisation et fiches détaillées. Les transports y sont réunis ; les rapports et consultations sont journalisés. Les nouveaux départs conservent un instantané sans reconstruire les anciennes missions.
+- Joueurs, journal, feedbacks, patchnotes et événements administratifs : listes de 50 éléments par page avec accès à l’historique complet. Les filtres Joueurs et Journal recherchent dans tous les résultats et gardent la saisie au focus ; sans JavaScript, le bouton Rechercher reste disponible. Le journal propose l’export des lignes visibles et de tous les résultats filtrés.
 - Alertes `/admin/surveillance` et dossiers `/admin/dossiers` : seuils par univers, notes conservées, états ouvert/en examen/clos, recherche et pagination. Les alertes restent des indices à examiner, sans sanction automatique.
 - Fiches `/admin/joueurs` : présence estimée depuis moins de cinq minutes, dernière activité et temps de jeu par univers (aujourd’hui, sept jours UTC, total depuis le début du suivi). Aucun historique antérieur n’est inventé ; les onglets concurrents ne multiplient pas le temps.
 - Interventions administratives : ajout/retrait de ressources par colonie dans les capacités de stockage, ajustement des échéances et rappel des flottes éligibles. Motif, confirmation, contrôle des doubles envois et journal avant/après ; les combats et occupations restent protégés.
@@ -310,6 +311,21 @@ Compiler avant les tests navigateur : la compilation remplace les fichiers de `a
 [Le guide des sauvegardes](docs/SAUVEGARDES.md) décrit `make backup`, `make restore`, la conservation de 14 jours par défaut, les contrôles d’échec et la restauration isolée. `make backup-status` consulte l’état sans créer de sauvegarde. `make test-backup` vérifie les comptes et la progression sur deux instances jetables distinctes.
 
 ## Tests et qualité
+
+Le [suivi Rework V1](docs/REWORK_V1.md) décrit le chantier local de nettoyage,
+ses mesures et ses vérifications. Les pages de colonie préparent uniquement le
+catalogue affiché ; le guide technologique prépare son arbre séparément.
+Les actualisations des colonies et de Flottes rendent des fragments partagés,
+transmis en JSON compact et compressé lorsque le navigateur l’accepte.
+Les contrôles de fiabilité comprennent des dépenses et des fins de commande
+réellement concurrentes, avec deux connexions attendant le même verrou.
+Pour les parcours navigateur, la préparation de la base jetable possède un
+budget distinct de 60 secondes ; le délai du parcours reste de 60 secondes
+(hors scénarios disposant déjà d’un délai spécifique). Les consommateurs sont
+arrêtés avant la reconstruction du schéma, puis leur disponibilité est vérifiée.
+Le rapport joint les durées de ces étapes. Le profil navigateur limite aussi
+les schedulers RabbitMQ du serveur et de ses outils CLI, sans modifier le profil
+habituel ou de production.
 
 Pendant le développement, lancer les contrôles locaux adaptés au changement et `git diff --check` avant commit ou push. Une branche de travail peut être poussée sans exécuter toute la suite ; signaler les échecs et vérifications restant à faire.
 

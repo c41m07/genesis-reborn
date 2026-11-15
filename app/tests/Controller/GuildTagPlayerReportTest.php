@@ -259,6 +259,20 @@ final class GuildTagPlayerReportTest extends WebTestCase
         self::assertSame(0,(int)$connection->fetchOne("SELECT COUNT(*) FROM guild_rank WHERE name='Interdit'"));
     }
 
+    public function testPersonalProposalCountRemainsVisibleOnEveryGuildTab(): void
+    {
+        $service = self::getContainer()->get(DiplomacyService::class);
+        $viewer = $this->reporter->currentPlayerUniverse;
+        $service->create($viewer, 'Guilde compteur', 'CMP');
+        $service->alliance($this->target->currentPlayerUniverse, $viewer->id, 'propose');
+        $service->alliance($viewer, $this->admin->currentPlayerUniverse->id, 'propose');
+        foreach (['guilds', 'members', 'ranks', 'diplomacy', 'relations'] as $tab) {
+            $this->client->request('GET', '/diplomatie?tab='.$tab);
+            self::assertResponseIsSuccessful();
+            self::assertSelectorTextContains('a[href="/diplomatie?tab=relations#alliance-members"]', '1 proposition personnelle à traiter');
+        }
+    }
+
     public function testGuildPresenceIsScopedAndDoesNotRevealActivityInAnotherUniverse(): void
     {
         $guilds=self::getContainer()->get(DiplomacyService::class);

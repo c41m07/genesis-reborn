@@ -130,10 +130,19 @@ final class FleetStationingTest extends WebTestCase
     public function testNoHomeUsesShortestReachableOwnedColony(): void
     {
         $fleet=$this->send();$this->home->owner=$this->peer->currentPlayerUniverse;$this->target->owner=$this->peer->currentPlayerUniverse;
-        // Le repli voisin est atteignable avec la réserve du trajet aller.
-        $this->fallback->position=$this->target->position;$this->fallback->solarSystem=$this->target->solarSystem;
-        // Garder des positions distinctes (contrainte de carte).
-        $this->fallback->position=$this->target->position===1?2:1;
+        // Les positions de la carte sont déjà occupées : conserver les coordonnées réelles.
+        // Ajouter un second repli plus éloigné pour vérifier le choix du trajet le plus court.
+        $farther = null;
+        foreach($this->em->getRepository(Planet::class)->findBy(['solarSystem'=>$this->target->solarSystem]) as $candidate) {
+            if(abs($candidate->position-$this->target->position)<=abs($this->fallback->position-$this->target->position)) continue;
+            if(in_array($candidate->id,[$this->home->id,$this->target->id,$this->fallback->id],true)) continue;
+            $candidate->owner=$this->player->currentPlayerUniverse;
+            $candidate->npcPlanet=false;
+            self::getContainer()->get(ResourceService::class)->initialize($candidate);
+            $farther = $candidate;
+            break;
+        }
+        self::assertNotNull($farther);
         $this->em->flush();$this->arrive($fleet);
         self::assertSame('returning',$fleet->status);self::assertSame($this->fallback->id,$fleet->returnPlanet->id);$this->arrive($fleet);
         self::assertSame('completed',$fleet->status);self::assertNotNull($this->stock($this->fallback));

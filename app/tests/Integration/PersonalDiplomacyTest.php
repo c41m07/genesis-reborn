@@ -77,6 +77,42 @@ final class PersonalDiplomacyTest extends KernelTestCase
         self::assertSame(1, $this->em->getRepository(AllianceContract::class)->count());
     }
 
+    public function testGroupedDisplayKeepsPersonalAndGuildPrioritiesWithoutSharedCache(): void
+    {
+        [$actor, $target] = $this->pair('omega-1');
+        $this->diplomacy->create($actor, 'Guilde Alpha', 'ALFA');
+        $this->diplomacy->create($target, 'Guilde Beta', 'BETA');
+        $own = $this->relations->guild($actor);
+        $peerGuild = $this->relations->guild($target);
+        $relation = new \App\Entity\GuildRelation();
+        [$relation->guildA, $relation->guildB] = $own->id < $peerGuild->id ? [$own, $peerGuild] : [$peerGuild, $own];
+        $relation->proposer = $own;
+        $contract = new AllianceContract();
+        [$contract->playerA, $contract->playerB] = $actor->id < $target->id ? [$actor, $target] : [$target, $actor];
+        $contract->proposer = $actor;
+        $this->em->persist($relation);
+        $this->em->persist($contract);
+        $repository = self::getContainer()->get(GameRepository::class);
+        foreach (['neutral', 'allies', 'enemies', 'non_aggression', 'defense'] as $guildStatus) {
+            foreach (['pending', 'accepted', 'enemies', 'peace_pending', 'ended'] as $personalStatus) {
+                $relation->status = $guildStatus;
+                $contract->status = $personalStatus;
+                $this->em->flush();
+                $rows = $this->relations->displayRows($actor, [$actor, $target], $own, $repository->personalContracts($actor), $repository->guildRelations($own));
+                self::assertSame([$target->id], array_keys($rows));
+                self::assertSame($this->relations->allied($actor, $target), $rows[$target->id]['allied']);
+                self::assertSame($this->relations->enemy($actor, $target), $rows[$target->id]['enemy']);
+                self::assertSame($guildStatus, $rows[$target->id]['guildStatus']);
+                self::assertSame($contract, $rows[$target->id]['contract']);
+            }
+        }
+        $foreign = clone $target;
+        $foreign->id += 100;
+        $foreign->universe = clone $target->universe;
+        $foreign->universe->id += 100;
+        self::assertSame([], $this->relations->displayRows($actor, [$foreign], $own, [], []));
+    }
+
     public static function forbiddenTransitions(): array
     {
         return [

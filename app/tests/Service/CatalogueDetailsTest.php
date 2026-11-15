@@ -14,7 +14,17 @@ final class CatalogueDetailsTest extends KernelTestCase
 
     protected function setUp():void
     {
-        self::bootKernel();$this->catalog=self::getContainer()->get(GameCatalog::class);
+        self::bootKernel();
+        $entityManager = self::getContainer()->get(\Doctrine\ORM\EntityManagerInterface::class);
+        $params = $entityManager->getConnection()->getParams();
+        if (($params['host'] ?? '') !== 'database-test' || ($params['dbname'] ?? '') !== 'genesis_v2_test') {
+            throw new \RuntimeException('Base de test non isolée.');
+        }
+        $schema = new \Doctrine\ORM\Tools\SchemaTool($entityManager);
+        $metadata = $entityManager->getMetadataFactory()->getAllMetadata();
+        $schema->dropSchema($metadata);
+        $schema->createSchema($metadata);
+        $this->catalog=self::getContainer()->get(GameCatalog::class);
         $this->details=self::getContainer()->get(CatalogueDetails::class);
         $universe=new Universe();$universe->slug='omega-1';
         $galaxy=new Galaxy();$galaxy->universe=$universe;

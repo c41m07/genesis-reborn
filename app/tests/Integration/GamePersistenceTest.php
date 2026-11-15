@@ -824,14 +824,14 @@ final class GamePersistenceTest extends KernelTestCase
         foreach(['basic'=>3,'intermediate'=>7] as $tier=>$quantity){
             $defense=new PlanetDefense();$defense->planet=$planet;$defense->slug='ground_turret_anti_light';$defense->tier=$tier;$defense->quantity=$quantity;$this->em->persist($defense);
         }
-        $this->em->flush();$data=self::getContainer()->get(\App\Service\Colony\ColonyView::class)->data($player->currentPlayerUniverse,$planet);
+        $this->em->flush();$data=self::getContainer()->get(\App\Service\Colony\ColonyView::class)->data($player->currentPlayerUniverse,$planet,section:'buildings');
         $catalog=self::getContainer()->get(GameCatalog::class);
         foreach($data['cards']['buildings'] as $card)if($card['definition']['slug']==='mine_metal'&&$card['tier']==='basic'){
             $base=$catalog->costs($card['definition'],1,1,'buildings');
             self::assertSame((int)ceil($base['metal']*.6),$card['costs']['metal']);
         }
         // These ranks can be locked: enable the catalogue preference before reading them.
-        $player->preferences['showLockedItems']=true;$this->em->flush();$data=self::getContainer()->get(\App\Service\Colony\ColonyView::class)->data($player->currentPlayerUniverse,$planet);
+        $player->preferences['showLockedItems']=true;$this->em->flush();$data=self::getContainer()->get(\App\Service\Colony\ColonyView::class)->data($player->currentPlayerUniverse,$planet,section:'defenses');
         $quantities=[];foreach($data['cards']['defenses'] as $card)if($card['definition']['slug']==='ground_turret_anti_light')$quantities[$card['tier']]=$card['quantity'];
         self::assertSame(['basic'=>3,'intermediate'=>7,'superior'=>0],$quantities);
     }

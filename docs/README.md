@@ -8,6 +8,7 @@ une seule référence par sujet ; les anciens bilans ne décrivent pas l’état
 
 | Besoin | Référence |
 | --- | --- |
+| Suivre le nettoyage progressif et reprendre le chantier | [Rework V1](REWORK_V1.md) |
 | Comprendre les règles actuelles | [REGLES](REGLES.md) |
 | Comprendre la détection des sondes et les essais Alpha | [Espionnage](REGLES.md#espionnage) |
 | Retrouver un arbitrage produit | [DECISIONS](DECISIONS.md) |
@@ -16,7 +17,8 @@ une seule référence par sujet ; les anciens bilans ne décrivent pas l’état
 | Préparer la refonte de la console et ses récompenses | [Cadrage de l’administration, brouillon](REFONTE_ADMINISTRATION.md) |
 | Suivre les évolutions des interfaces et flottes | [Lots et décisions ouvertes](EVOLUTIONS_INTERFACES_FLOTTES.md) |
 | Consulter le lot parcours UI/UX et ses validations locales | [Suivi des parcours](PARCOURS_UI_UX.md) |
-| Choisir une destination, déplacer une base et reprendre un stationnement | [Destinations et Stationnement](DESTINATIONS_STATIONNEMENT.md) |\n| Utiliser Ctrl + Entrée et Markdown dans les nouveaux messages | [Messagerie et historique](MESSAGERIE_MARKDOWN.md) |
+| Choisir une destination, déplacer une base et reprendre un stationnement | [Destinations et Stationnement](DESTINATIONS_STATIONNEMENT.md) |
+| Utiliser Ctrl + Entrée et Markdown dans les nouveaux messages | [Messagerie et historique](MESSAGERIE_MARKDOWN.md) |
 | Consulter les profils et personnaliser une guilde | [Profils et présentations](PROFILS_JOUEURS_GUILDES.md) |
 | Utiliser le simulateur par dix combats, les compositions et la recherche avancée | [Cadrage des outils stratégiques](CADRAGE_OUTILS_STRATEGIQUES.md) |
 | Voir les objectifs et vérifications restantes | [ROADMAP](FEUILLE_DE_ROUTE.md) |

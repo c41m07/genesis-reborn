@@ -142,6 +142,38 @@ final class DailyLeaderboardTest extends KernelTestCase
         self::assertCount(1, $service->forUniverse($other)['players']);
     }
 
+    public function testSingleProfileKeepsDailyScoresNewcomersLegacyRanksAndMidnightRefresh(): void
+    {
+        $viewer = $this->join('ProfileViewer');
+        $target = $this->join('ProfileTarget');
+        $service = self::getContainer()->get(DailyLeaderboard::class);
+        $first = $service->forUniverse($viewer);
+        $profile = $service->forPlayer($viewer, $target);
+        $frozen = $this->row($first, $target);
+        foreach (['total_points', 'building_points', 'research_points', 'fleet_points', 'planets', 'ranks'] as $field) {
+            self::assertSame($frozen[$field], $profile['player'][$field]);
+        }
+        self::assertSame($first['updated_at'], $profile['updated_at']);
+        $newcomer = $this->join('ProfileNewcomer');
+        self::assertNull($service->forPlayer($viewer, $newcomer)['player']);
+        $this->ship($target, 20);
+        $holder = self::getContainer()->get('doctrine.debug_data_holder');
+        $holder->reset();
+        self::assertSame($frozen['total_points'], $service->forPlayer($viewer, $target)['player']['total_points']);
+        self::assertLessThan(4, count($holder->getData()['default'] ?? []), 'Un profil à jour ne recalcule pas les scores de tous les joueurs.');
+        $snapshot = $this->em->getRepository(LeaderboardSnapshot::class)->findOneBy(['universe'=>$viewer->universe]);
+        foreach ($snapshot->players as &$row) unset($row['ranks']['buildings'], $row['ranks']['research']);
+        unset($row);
+        $this->em->flush();
+        self::assertSame($this->row($service->forUniverse($viewer), $target)['ranks'], $service->forPlayer($viewer, $target)['player']['ranks']);
+        $this->clock->sleep(2);
+        self::assertGreaterThan($frozen['total_points'], $service->forPlayer($viewer, $target)['player']['total_points']);
+        self::assertNotNull($service->forPlayer($viewer, $newcomer)['player']);
+        $foreign = $this->join('ForeignProfile', 'turbo-1');
+        $this->expectException(\DomainException::class);
+        $service->forPlayer($viewer, $foreign);
+    }
+
     public function testDailyRefreshIncludesFinishedOfflineQueues(): void
     {
         $a = $this->join('Offline');

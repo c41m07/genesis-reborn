@@ -44,3 +44,45 @@ test('Le rafraîchissement live conserve le focus puis reprend quand il quitte l
   await secondRefresh;
   await expect.poll(() => linkHandle.evaluate(node => node.isConnected)).toBe(false);
 });
+
+test('Une réponse live tardive ne remplace jamais la plus récente', async ({ page }) => {
+  await signIn(page);
+  await expect(page.locator('.resource-strip')).toHaveClass(/resource-strip--collapsible/);
+  await page.evaluate(() => {
+    const originalFetch = window.fetch;
+    window.reworkPending = [];
+    window.reworkOffline = 0;
+    document.addEventListener('genesis:offline', () => ++window.reworkOffline);
+    window.fetch = (url, options) => {
+      if (options?.headers?.['X-Genesis-Live'] !== '1') return originalFetch(url, options);
+      return new Promise((resolve, reject) => window.reworkPending.push(version => {
+        if (version === 'network-error') return reject(new Error('Erreur réseau synthétique'));
+        const region = document.querySelector('[data-live-region="active-flights"]').cloneNode(true);
+        region.dataset.reworkVersion = version;
+        resolve(new Response(region.outerHTML, { headers: { 'Content-Type': 'text/html' } }));
+      }));
+    };
+    window.dispatchEvent(new CustomEvent('genesis:refresh'));
+  });
+  await expect.poll(() => page.evaluate(() => window.reworkPending.length)).toBe(1);
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent('genesis:refresh')));
+  await expect.poll(() => page.evaluate(() => window.reworkPending.length)).toBe(2);
+  await page.evaluate(() => window.reworkPending[1]('recent'));
+  await expect(page.locator('[data-live-region="active-flights"]')).toHaveAttribute('data-rework-version', 'recent');
+  await page.evaluate(async () => {
+    window.reworkPending[0]('obsolete');
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  });
+  await expect(page.locator('[data-live-region="active-flights"]')).toHaveAttribute('data-rework-version', 'recent');
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent('genesis:refresh')));
+  await expect.poll(() => page.evaluate(() => window.reworkPending.length)).toBe(3);
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent('genesis:refresh')));
+  await expect.poll(() => page.evaluate(() => window.reworkPending.length)).toBe(4);
+  await page.evaluate(() => window.reworkPending[3]('latest'));
+  await expect(page.locator('[data-live-region="active-flights"]')).toHaveAttribute('data-rework-version', 'latest');
+  await page.evaluate(async () => {
+    window.reworkPending[2]('network-error');
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  });
+  expect(await page.evaluate(() => window.reworkOffline)).toBe(0);
+});

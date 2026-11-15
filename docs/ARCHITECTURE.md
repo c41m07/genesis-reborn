@@ -103,6 +103,48 @@ Le compteur n’est pas une région vocale actualisée chaque seconde (`role=tim
 
 ## Navigation, files et cartes
 
+`ColonyView::data` reçoit la section déjà validée par `ColonyController`.
+Après la synchronisation existante des files, il lit les niveaux servant aux
+prérequis, puis prépare seulement le catalogue demandé. La vue générale ne
+construit aucune carte. La section interne `tree` prépare uniquement le guide
+technologique, sans cartes ni flottes. Les files de la colonie et la recherche
+commune restent disponibles dans les pages de colonie ; les quantités du
+catalogue sont chargées par groupe, sans lecture SQL par carte. Ces données
+restent locales à l’appel et ne servent jamais d’autorisation d’écriture.
+Le calcul et l’endpoint de la barre de ressources restent inchangés.
+Les cartes Bâtiments transmettent un contexte économique immuable, préparé après
+la synchronisation des files, aux calculs nominaux de ResourceService. Ce contexte
+regroupe les lectures d’événements et de vacances pour cette préparation seulement ;
+les appels existants et les snapshots de la barre ne l’utilisent pas.
+La liste des combats utilise ReportSummaryRepository pour éviter les rounds et
+snapshots complets. Le lecteur détaillé et les archives conservent les entités
+entières. Les profils consultent la ligne du snapshot quotidien sans enrichir
+tous les scores à chaque affichage ; le recalcul quotidien reste partagé.
+AdminReadRepository borne les listes de joueurs, d’audit, de feedbacks et
+d’événements à 50 lignes. Les filtres sont appliqués avant LIMIT ; les compteurs
+et curseurs de consultation portent sur la sélection complète. Les patchnotes
+administratives sont paginées par leur repository. L’export complet du journal
+lit 100 lignes à la fois, avec un identifiant plafond et neutralisation des
+formules CSV. Les recherches immédiates Joueurs/Journal rendent leurs fragments
+partagés et préservent le formulaire ; les réponses obsolètes sont ignorées.
+
+Les actualisations des colonies et de Flottes demandent JSON avec `X-Genesis-Live: 1` et
+`Accept: application/json`. La route conserve ses contrôles, synchronisations
+et préparation GameShell, puis renvoie les fragments privés sans cache.
+LiveRegionResponse produit du JSON compact et le compresse en gzip si accepté,
+avec Vary adapté. Cette compression est propre aux réponses de fragments ;
+aucune configuration serveur ni traitement de l’endpoint ressources n’est modifié.
+Le sélecteur, le catalogue et le journal sont partagés entre rendu initial et
+actualisation ; ressources, files et vols réutilisent leurs templates existants.
+Le client ignore les réponses d’une génération ou d’une URL devenue obsolète.
+Le focus, les saisies modifiées et le journal non consulté gardent leurs protections.
+
+La console utilise `AdminReadRepository` pour ses compteurs et aperçus bornés ;
+les écrans détaillés conservent leurs droits, leur audit et leurs formulaires.
+`GameRepository::discoveredPlanets` filtre découverte et univers en base avant
+préparation cartographique. Les compositions d’EmpireDetails sont chargées après
+filtrage du propriétaire. Aucun cache partagé ni évolution de schéma n’est ajouté.
+
 Le sélecteur conserve la colonie choisie par participation et la catégorie ouverte.
 La vue générale présente les vols de toutes les colonies de l’univers sélectionné.
 Bâtiments, recherches et vaisseaux/défenses occupent trois files indépendantes :
