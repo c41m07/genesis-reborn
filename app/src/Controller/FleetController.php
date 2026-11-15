@@ -1,6 +1,6 @@
 <?php
 namespace App\Controller;
-use App\Entity\{Fleet,FleetShip,Planet,PlayerDiscovery,SolarSystem,CombatParticipant};
+use App\Entity\{Fleet,FleetShip,Planet,PlayerDiscovery,SolarSystem};
 use App\Repository\GameRepository;
 use App\Service\Universe\UniverseContext;
 use App\Service\Fleet\{FleetService,DestinationCatalogue};
@@ -48,10 +48,17 @@ final class FleetController extends AbstractController
             } catch(\DomainException) {throw $this->createNotFoundException('Composition ou colonie inaccessible.');}
         }
         if($selectedPlanet) $request->getSession()->set('selected_planet_'.$m->id,$selectedPlanet->id);
-        foreach($repo->all(Fleet::class,['playerUniverse'=>$m,'homePlanet'=>$selectedPlanet,'status'=>'idle']) as $f) { $ships=array_filter($repo->all(FleetShip::class,['fleet'=>$f]),fn($s)=>$s->quantity>0);if($ships) $idle[]=['fleet'=>$f,'ships'=>$ships]; }
-        $heldFleets=$repo->all(Fleet::class,['playerUniverse'=>$m,'mission'=>'station','status'=>'station_waiting'],['id'=>'ASC']);
         $holds=$repo->all(Fleet::class,['playerUniverse'=>$m,'homePlanet'=>$selectedPlanet,'status'=>'idle']);
-        $activeFleets=$repo->all(Fleet::class,['playerUniverse'=>$m,'homePlanet'=>$selectedPlanet,'status'=>['traveling','returning','attacking','defending','orbiting','orbit_pending','occupying']],['arrivalAt'=>'ASC']);$combatEvents=[];foreach($activeFleets as $activeFleet){$participant=$repo->one(CombatParticipant::class,['fleet'=>$activeFleet]);if($participant && $participant->combatEvent->status==='pending')$combatEvents[$activeFleet->id]=$participant->combatEvent;}
+        $shipsByFleet=[];
+        foreach($holds ? $repo->all(FleetShip::class,['fleet'=>$holds]) : [] as $ship) {
+            if($ship->quantity>0) $shipsByFleet[$ship->fleet->id][]=$ship;
+        }
+        foreach($holds as $fleet) {
+            if(isset($shipsByFleet[$fleet->id])) $idle[]=['fleet'=>$fleet,'ships'=>$shipsByFleet[$fleet->id]];
+        }
+        $heldFleets=$repo->all(Fleet::class,['playerUniverse'=>$m,'mission'=>'station','status'=>'station_waiting'],['id'=>'ASC']);
+        $activeFleets=$repo->all(Fleet::class,['playerUniverse'=>$m,'homePlanet'=>$selectedPlanet,'status'=>['traveling','returning','attacking','defending','orbiting','orbit_pending','occupying']],['arrivalAt'=>'ASC']);
+        $combatEvents=$repo->fleetCombatEvents($m,$activeFleets);
         $orbitRequests=$selectedPlanet?$orbitView->forMember($m,$selectedPlanet):[];
         return $this->render('fleet/index.html.twig',['fleet_planet'=>$selectedPlanet,'loaded_composition'=>$loaded,'loaded_origin'=>$loadedOrigin,'fleet_details'=>$details->fleets($m,$activeFleets),'prefill'=>['mission'=>$mission,'system'=>$systemId,'planet'=>$planetId,'coordinates'=>$prefillCoordinates,'mode'=>$mode],'active_fleets'=>$activeFleets,'held_fleets'=>$heldFleets,'held_details'=>$details->fleets($m,$heldFleets),'holds'=>$holds,'combat_events'=>$combatEvents,'membership'=>$m,'fleet_colony_scope'=>true,'idle'=>$idle,'systems'=>$systems,'destination_choices'=>$destinationChoices,'catalog'=>$catalog->all('ships'),'resources'=>$catalog->rules()['resources'],'fuel_pending'=>$catalog->rules()['fuel_ratio_policy']==='pending','orbit_requests'=>$orbitRequests,'fleet_limit'=>(int)$universeConfig['limits']['max_fleet_size'],'conquest_enabled'=>$conquestEnabled]);
     }

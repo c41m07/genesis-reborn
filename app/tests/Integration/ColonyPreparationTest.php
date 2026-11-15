@@ -327,4 +327,34 @@ final class ColonyPreparationTest extends KernelTestCase
         $this->em->flush();
         self::assertSame([], $repository->fleetCombatEvents($this->membership, $fleets));
     }
+
+    public function testColonyQueueCountsAreGroupedAndExcludeUnownedPlanets(): void
+    {
+        $foreign = new Planet();
+        $foreign->name = 'Monde non possédé';
+        $foreign->solarSystem = $this->planet->solarSystem;
+        $foreign->position = 1;
+        $this->em->persist($foreign);
+        foreach ([$this->planet, $foreign] as $planet) {
+            for ($index = 0; $index < 12; ++$index) {
+                $item = new \App\Entity\QueueItem();
+                $item->planet = $planet;
+                $item->playerUniverse = $this->membership;
+                $item->itemSlug = 'mine_metal';
+                $item->queueType = 'building';
+                $item->queuedAt = new \DateTimeImmutable('2026-11-14T12:00:00Z');
+                $item->durationSeconds = 100;
+                $item->dispatchToken = 'synthetic-count-'.$index;
+                $this->em->persist($item);
+            }
+        }
+        $this->em->flush();
+        $holder = self::getContainer()->get('doctrine.debug_data_holder');
+        $holder->reset();
+        $repository = self::getContainer()->get(GameRepository::class);
+        self::assertSame([$this->planet->id=>12], $repository->queueCounts($this->membership, [$this->planet, $foreign]));
+        self::assertLessThan(3, count($holder->getData()['default'] ?? []));
+        self::assertSame([], $repository->queueCounts($this->membership, []));
+        self::assertCount(12, $repository->queue($this->planet));
+    }
 }

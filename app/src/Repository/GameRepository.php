@@ -380,6 +380,20 @@ SQL;
     {
         return $this->all(QueueItem::class, $type ? ['planet'=>$p,'queueType'=>$type] : ['planet'=>$p]);
     }
+
+    /** @return array<int,int> */
+    public function queueCounts(PlayerUniverse $membership, array $planets): array
+    {
+        if ($planets === []) return [];
+        $rows = $this->em->createQueryBuilder()->select('IDENTITY(q.planet) AS planetId', 'COUNT(q.id) AS total')
+            ->from(QueueItem::class, 'q')->join('q.planet', 'p')->join('p.solarSystem', 's')->join('s.galaxy', 'g')
+            ->where('p IN (:planets)')->andWhere('p.owner = :membership')->andWhere('g.universe = :universe')
+            ->setParameter('planets', $planets)->setParameter('membership', $membership)->setParameter('universe', $membership->universe)
+            ->groupBy('q.planet')->getQuery()->getArrayResult();
+        $counts = [];
+        foreach ($rows as $row) $counts[(int) $row['planetId']] = (int) $row['total'];
+        return $counts;
+    }
     /** @return list<QueueItem> */
     public function researchQueue(PlayerUniverse $membership): array
     {

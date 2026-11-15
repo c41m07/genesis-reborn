@@ -289,6 +289,19 @@ automatique qui ferait perdre les liens d’édition et la vue d’ensemble. La
 modération garde ses consultations journalisées existantes ; son éventuelle
 pagination doit aussi définir la portée des consultations avant changement.
 
+## Complément du lot 6 — compositions, combats et activités
+
+Flottes réutilise la liste à quai pour les réserves et lit ses compositions
+ensemble ; les quantités nulles restent exclues du formulaire. Les combats
+utilisent la même lecture groupée que la colonie. Le périmètre de la colonie
+active, les préremplissages et les demandes d’orbite sont conservés.
+La liste des colonies compte les commandes par groupe SQL au lieu d’hydrater
+chaque file. Filtrage propriétaire/univers conservé même avec des identifiants
+forgés. Contrôles : 19 tests / 525 assertions, un benchmark optionnel ignoré.
+Les snapshots par planète restent des appels complets au moteur existant :
+leur regroupement nécessiterait une extraction plus large du moteur partagé
+avec la barre exclue, sans bénéfice mesuré ici qui justifierait ce risque.
+
 ## Reprise
 
 - Branche : `chore/rework-v1`, base `48c9a71`, code applicatif validé `6dd33b7`.

@@ -37,8 +37,8 @@ final class ColonyController extends AbstractController
     {
         $membership=$this->context->membership();
         $planets=$this->repo->planets($membership->universe,$membership);
-        $positionModifiers=[];$activities=[];
-        foreach($planets as $planet) $activities[$planet->id]=count($this->repo->queue($planet));
+        $positionModifiers=[];$activities=$this->repo->queueCounts($membership,$planets);
+        foreach($planets as $planet) $activities[$planet->id]??=0;
         foreach($planets as $planet) $positionModifiers[$planet->id]=$resources->positionProductionModifiers($planet);
         return $this->render('colony/planets.html.twig',['membership'=>$membership,'planets'=>$planets,'position_modifiers'=>$positionModifiers,'activities'=>$activities,'table_view'=>$request->query->get('view')==='table','comparison_resource'=>in_array($request->query->getString('resource'),['metal','nano','hydrogen','antimatter','electricity'],true)?$request->query->getString('resource'):'metal','planet_details'=>$details->planets($membership)]);
     }
