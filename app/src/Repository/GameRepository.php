@@ -309,6 +309,26 @@ SQL;
             ->getQuery()
             ->getResult();
     }
+    /** @return array<int,\App\Entity\CombatEvent> */
+    public function fleetCombatEvents(PlayerUniverse $membership, array $fleets): array
+    {
+        if ($fleets === []) return [];
+        // Conserver le premier participant historique utilisé par la vue existante.
+        $participants = $this->em->createQueryBuilder()->select('participant', 'event')
+            ->from(\App\Entity\CombatParticipant::class, 'participant')
+            ->join('participant.combatEvent', 'event')->join('participant.fleet', 'fleet')
+            ->join('event.planet', 'planet')->join('planet.solarSystem', 'system')->join('system.galaxy', 'galaxy')
+            ->where('fleet IN (:fleets)')->andWhere('fleet.playerUniverse = :membership')
+            ->andWhere('galaxy.universe = :universe')->andWhere('event.status = :pending')
+            ->andWhere('participant.id = (SELECT MIN(firstParticipant.id) FROM App\Entity\CombatParticipant firstParticipant WHERE firstParticipant.fleet = fleet)')
+            ->setParameter('fleets', $fleets)->setParameter('membership', $membership)
+            ->setParameter('universe', $membership->universe)->setParameter('pending', 'pending')
+            ->getQuery()->getResult();
+        $events = [];
+        foreach ($participants as $participant) $events[$participant->fleet->id] = $participant->combatEvent;
+        return $events;
+    }
+
     public function queue(Planet $p, ?string $type = null): array
     {
         return $this->all(QueueItem::class, $type ? ['planet'=>$p,'queueType'=>$type] : ['planet'=>$p]);

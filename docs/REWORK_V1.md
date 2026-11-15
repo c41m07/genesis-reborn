@@ -223,6 +223,13 @@ Contrôles : 62 tests, 2 475 assertions, un benchmark optionnel ignoré puis
 exécuté séparément ; `make lint` réussi. La validation cumulative finale reste
 à relancer après les autres compléments.
 
+Les combats des flottes actives sont aussi lus en une requête, filtrée par
+propriétaire et univers. Le premier participant historique reste la référence,
+y compris si une flotte possède plusieurs participations : aucune sélection
+silencieuse d’un autre combat. Test sur douze flottes : une lecture groupée,
+cas vide et historique résolu conservés ; 12 cas / 370 assertions, dont le
+benchmark optionnel ignoré. Les projections des compositions restent inchangées.
+
 ## Reprise
 
 - Branche : `chore/rework-v1`, base `48c9a71`, code applicatif validé `6dd33b7`.

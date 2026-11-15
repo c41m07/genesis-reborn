@@ -1,7 +1,7 @@
 <?php
 namespace App\Service\Colony;
 
-use App\Entity\{Planet,PlayerUniverse,PlanetBuilding,PlayerTechnology,Fleet,FleetShip,PlanetDefense,CombatParticipant};
+use App\Entity\{Planet,PlayerUniverse,PlanetBuilding,PlayerTechnology,Fleet,FleetShip,PlanetDefense};
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Queue\{OperationCalculator, QueueService};
@@ -105,8 +105,7 @@ final class ColonyView
             }
         }
         $activeFleets=$this->repo->all(Fleet::class,['playerUniverse'=>$m,'status'=>['traveling','returning','attacking','defending','occupying','station_waiting']],['arrivalAt'=>'ASC']);
-        $combatEvents=[];
-        foreach($activeFleets as $activeFleet) { $participant=$this->repo->one(CombatParticipant::class,['fleet'=>$activeFleet]); if($participant && $participant->combatEvent->status==='pending') $combatEvents[$activeFleet->id]=$participant->combatEvent; }
+        $combatEvents=$this->repo->fleetCombatEvents($m,$activeFleets);
         return ['fleet_details'=>$this->empireDetails->fleets($m,$activeFleets),'catalog_filter_options'=>$filterOptions,'show_locked_items'=>$showLockedItems,'combat_events'=>$combatEvents,'defense_quantities'=>$defenseQuantities,'active_fleets'=>$activeFleets,'membership'=>$m,'planet'=>$planet,'planets'=>$this->repo->planets($m->universe,$m),'resources'=>$this->resources->snapshot($planet,true),'cards'=>$cards,'queues'=>$queues,'research_parallel_count'=>count($researchActive),'ships'=>$ships,'defenses'=>$defenses,'defense_catalog'=>$definitions['defenses'],'ship_catalog'=>$definitions['ships']];
     }
 }

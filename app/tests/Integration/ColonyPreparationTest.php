@@ -281,4 +281,50 @@ final class ColonyPreparationTest extends KernelTestCase
         self::assertSame(7, $details[$fleet->id]['ships'][0]['quantity']);
         self::assertSame([], self::getContainer()->get(EmpireDetails::class)->fleets($this->membership, [$foreign]));
     }
+
+    public function testFleetCombatsAreGroupedAndKeepTheFirstHistoricalParticipant(): void
+    {
+        $event = new \App\Entity\CombatEvent();
+        $event->planet = $this->planet;
+        $event->startedAt = $event->resolveAt = new \DateTimeImmutable('2026-11-14T12:00:00Z');
+        $event->seed = 1;
+        $this->em->persist($event);
+        $fleets = [];
+        for ($index = 0; $index < 12; ++$index) {
+            $fleet = new Fleet();
+            $fleet->playerUniverse = $this->membership;
+            $fleet->homePlanet = $this->planet;
+            $fleet->status = 'attacking';
+            $participant = new \App\Entity\CombatParticipant();
+            $participant->fleet = $fleet;
+            $participant->playerUniverse = $this->membership;
+            $participant->combatEvent = $event;
+            $participant->role = 'attacker';
+            $participant->arrivalAt = $event->startedAt;
+            $this->em->persist($fleet);
+            $this->em->persist($participant);
+            $fleets[] = $fleet;
+        }
+        $this->em->flush();
+        $repository = self::getContainer()->get(GameRepository::class);
+        $holder = self::getContainer()->get('doctrine.debug_data_holder');
+        $holder->reset();
+        self::assertCount(12, $repository->fleetCombatEvents($this->membership, $fleets));
+        self::assertLessThan(3, count($holder->getData()['default'] ?? []));
+        self::assertSame([], $repository->fleetCombatEvents($this->membership, []));
+        $event->status = 'resolved';
+        $next = clone $event;
+        $next->id = null;
+        $next->status = 'pending';
+        $participant = new \App\Entity\CombatParticipant();
+        $participant->fleet = $fleets[0];
+        $participant->playerUniverse = $this->membership;
+        $participant->combatEvent = $next;
+        $participant->role = 'attacker';
+        $participant->arrivalAt = $event->startedAt;
+        $this->em->persist($next);
+        $this->em->persist($participant);
+        $this->em->flush();
+        self::assertSame([], $repository->fleetCombatEvents($this->membership, $fleets));
+    }
 }
