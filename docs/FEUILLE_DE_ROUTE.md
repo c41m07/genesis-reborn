@@ -11,11 +11,18 @@ détaille les mesures, fichiers, vérifications et exceptions justifiées.
 Clôture du 15 novembre : conventions et inventaire final par domaine, correction
 des fins de commande simultanées, mesures serveur sur trois volumes et 132
 actualisations navigateur mesurées. Validation courante : 1 047 tests PHP,
-213 250 assertions, 13 tests Python, lint et compilation réussis. Les 202 scénarios
-navigateur sont réussis cumulativement après douze reprises isolées pour délais
-sous charge, sans changer code, assertions ou délais. Environnements de test du
-chantier fermés. Version prête pour la recette complète utilisateur, avec les
-limites et preuves documentées. Aucune CI GitHub, intégration ou publication.
+213 250 assertions, 13 tests Python, lint et compilation réussis. Le complément
+de recette stabilise la préparation des bases navigateur et limite les schedulers
+RabbitMQ du seul profil jetable. La nouvelle suite passe 202/202 au premier essai,
+sans reprise ; les 12 anciens scénarios instables passent aussi deux fois chacun
+(24/24), avec assertions et délais des actions conservés. Des commentaires français
+expliquent les traitements sensibles dans 18 fichiers, sans changement exécutable.
+Recette interactive sur comptes synthétiques : deux univers/colonies, files communes,
+transport et rapport, archives, guilde/projet/récompense/boost, messages, administration,
+CSV filtré, progression sans onglet, mobile et thèmes. Les parcours complémentaires
+et limites sont distingués dans le suivi. Environnements propres au chantier fermés ;
+huit services habituels sains et anciens projets de tests conservés. Version prête
+pour la recette complémentaire utilisateur. Aucune CI GitHub, intégration ou publication.
 
 ## Bunker : retrait du prérequis Blindage — 14 novembre 2026
 

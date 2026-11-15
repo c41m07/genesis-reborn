@@ -1,11 +1,12 @@
 # Rework V1 — suivi et reprise
 
-## Recette autonome supplémentaire — en cours
+## Recette autonome supplémentaire — validée localement
 
 Demande du 15 novembre après `3cdfefa` : effectuer la recette complète en
 autonomie et corriger les défauts, dont la stabilité des tests navigateur.
 Branche, absence de PR et exclusion du bandeau conservées. Cette phase complète
-la clôture technique historique ci-dessous ; elle n’est pas encore déclarée validée.
+la clôture technique historique ci-dessous. Les parcours représentatifs et les
+contrôles locaux sont terminés ; aucune garantie d’absence de bugs n’en est déduite.
 
 Complexité 4/5. Ordre retenu : stabiliser la préparation des tests, effectuer les
 parcours réels avec des comptes synthétiques, puis valider le résultat cumulé.
@@ -33,7 +34,8 @@ Constats et correction de l’infrastructure de test :
   d’actions + 21,02 s de préparation ; 16,55 s + 20,60 s. Deux succès avant et
   après, aucun gain global revendiqué. Logs `var/rework-recipe-{before,after}.log`.
 - Vérifications ciblées : syntaxe Node, validation du profil Compose, diff et
-  18 protections du bandeau réussis. La suite complète et la recette UI suivent.
+  18 protections du bandeau réussis. La suite complète et la recette UI sont
+  détaillées ci-dessous.
 
 Contrôle des commentaires demandé pendant la recette : quatre commentaires
 anglais hérités dans QueueService et ActionGuard ont été traduits. Des explications
@@ -53,8 +55,77 @@ Preuves du complément : instructions de 14 fichiers PHP identiques après retra
 des commentaires et espaces, AST JavaScript identique, trois templates strictement
 identiques après retrait des commentaires Twig. Syntaxes PHP/JS/Twig et diff
 vérifiés ; aucun code exécutable modifié. Résultats :
-`var/rework-comments-{php,frontend}-proof.json`. La compilation des assets sera
+`var/rework-comments-{php,frontend}-proof.json`. La compilation des assets a été
 refaite après la suite navigateur pour éviter de remplacer ses fichiers en cours.
+Les empreintes des fichiers d’entrée compilés sont identiques à celles testées
+par la suite complète ; le commentaire JavaScript ne change pas le bundle final.
+
+### Validation finale de cette recette
+
+| Contrôle | Résultat courant |
+| --- | --- |
+| Stabilité des anciens échecs | Les 12 scénarios concernés répétés deux fois sur quatre projets simultanés : 24/24 au premier essai, aucune reprise ni erreur globale |
+| Suite navigateur complète avec persistance | Quatre groupes de 51, 59, 43 et 49 cas : 202/202 au premier essai ; aucun cas ignoré, échec, reprise ou résultat instable |
+| Couverture | Rapprochement avec un manifeste neuf : aucun scénario absent, supplémentaire ou dupliqué ; chaque résultat contient un seul essai réussi |
+| `make validate` et `make lint` | Relancés et réussis après les ajouts de commentaires ; PHP, YAML, Twig, conteneur et schéma synthétique |
+| `make assets` | Relancé et réussi après les navigateurs ; entrée 495 Kio et mêmes empreintes compilées |
+| Suite PHP/Python | Résultat complet conservé sur les mêmes instructions applicatives : 1 047 cas PHP / 213 250 assertions, un benchmark optionnel ignoré dans la suite et mesuré séparément ; 13 Python réussis. Aucun code PHP exécutable changé depuis cette passe |
+| Bandeau et diff | 18 comparaisons protégées réussies contre `48c9a71` ; `git diff --check` réussi |
+| Nettoyage isolé | Les 11 projets créés pour ce complément ont disparu ; les deux anciens projets de tests sont conservés et les huit services habituels restent sains |
+
+Durées des groupes navigateur : 36,4 / 26,9 / 34,7 / 38,4 minutes. Ce sont des
+durées de suites sous concurrence, pas des mesures de performance du jeu.
+Assertions et délais des actions restent inchangés ; le budget distinct de
+préparation est expliqué plus haut. Les anciens dépassements et reprises ne
+sont pas effacés des bilans historiques.
+
+Preuves locales ignorées par Git : `var/rework-recipe-coverage.json`, les quatre
+`var/rework-recipe-full-*.json`, `var/rework-stability-*.json`, les journaux
+`var/rework-recipe-{validate,lint,assets}.log` et `var/rework-recipe-cleanup.json`.
+La CI GitHub n’a pas été lancée et aucune PR, fusion ou publication n’a eu lieu.
+
+### Recette interactive isolée du 15 novembre
+
+Environnement propre à cette recette, comptes et noms synthétiques, aucun email
+externe. Les préconditions (confirmation, rôle de test, colonies, technologies et
+vaisseaux) sont préparées exclusivement dans ce projet jetable. Les commandes,
+contributions, transports et utilisations sont ensuite effectués dans le vrai
+navigateur. Les échéances accélérées restent des fixtures ; les consommateurs
+réels effectuent les résolutions. Les parcours automatisés complémentaires sont
+distingués des manipulations interactives ci-dessous.
+
+| Domaine | Parcours interactif constaté |
+| --- | --- |
+| Comptes | Inscription invalide puis corrigée, conservation des saisies, connexion refusée avant confirmation puis réussie après préparation du compte synthétique |
+| Univers et colonies | Omega et Turbo, création du second empire, refus d’accès à une colonie d’un autre univers actif, retour à Omega, sélection entre deux colonies et comparaison des stocks/activités |
+| Catalogues et files | Mine construite, recherche commune niveau 2 puis niveau 3 depuis deux colonies, annulation de la seule dépendance avec aperçu du remboursement, fin de recherche et chasseur construit ; Max, prérequis et lien guide → chantier bloqué par manque de métal |
+| Actualisation | Composition de flotte et saisie conservées pendant une fin de construction ; progression de nanofabrication sans onglet ouvert constatée en SQL avant tout retour HTTP, puis niveau 1 et journal d’absence visibles |
+| Flottes et carte | Transport entre colonies avec aperçu, changement de vitesse conservant le fret, départ, livraison de 10 métaux et retour via les consommateurs ; carte interactive et liste des systèmes, destinations connues, rendu mobile |
+| Rapports et messages | Détail du transport livré, archivage puis restauration ; canal de guilde, envoi Ctrl + Entrée et rendu Markdown |
+| Guildes et projets | Création de guilde, modèle de projet synthétique créé dans l’administration, lancement, don de 10 métaux, clôture et récompense reçue |
+| Inventaire | Boost reçu du projet, aperçu puis confirmation sur une commande active, réduction annoncée de 25 % et inventaire passé de un à zéro |
+| Administration | Refus initial du compte non administrateur, reconnexion après changement du seul rôle synthétique ; accueil, filtres joueurs sans résultat puis administrateur, fiche joueur, journal filtré, export CSV contenant une seule action correspondante |
+| Présentation et clavier | Carte à 390 px, thème clair à 1440 px, animations réduites et préférences conservées entre univers ; retour au thème sombre ; saisies, erreurs, raccourci d’envoi et fermeture du détail économique avec Échap |
+| Bandeau préservé | Détail Métal ouvert, capacité, production/consommation et solde présents, fermeture clavier ; aucune modification de son code ou de ses calculs |
+
+Captures réelles conservées hors Git : `rework-recette-mobile.jpg`,
+`rework-recette-clair.jpg` et `rework-recette-desktop.jpg`, dans le dossier de
+visualisations de cette session. Les essais de rangs, défenses, orbites, rappel,
+stationnement, pénuries/vacances, messagerie privée/Global, pagination volumineuse,
+refus de droits et fonctionnement sans JavaScript sont apportés par les scénarios
+automatisés dédiés, sans les présenter comme tous rejoués manuellement.
+Les emails externes et technologies d’assistance réelles restent des limites.
+
+### Reprise actuelle
+
+- Branche : `chore/rework-v1`, base `48c9a71` ; correction des tests `0f3fad0`, commentaires `831bf61`.
+- Lot : 12/12 terminé sur le périmètre accessible, sans correction applicative ouverte.
+- Dernière étape validée : recette interactive, 202/202 au premier essai, 24 répétitions réussies, compilation et fermeture des environnements propres à la recette.
+- Contrôles en cours : aucun ; modifications regroupées en commits locaux.
+- Questions en attente : aucune. Sources Work absentes, wiki distant, emails externes, technologies d’assistance et CI restent les limites identifiées.
+- Prochaine action : recette complémentaire de l’utilisateur sur cette branche si souhaitée ; toute publication ultérieure exige une décision explicite et la CI complète de la future PR.
+
+## Clôture technique précédente — historique
 
 Clôture technique locale validée le 15 novembre 2026 sur le code applicatif
 `e5ca6cb`, branche `chore/rework-v1`. Douze lots terminés sur le périmètre
@@ -626,7 +697,7 @@ tests arrêtés et les autres projets préexistants ont été conservés. Aucun
 environnement temporaire de cette clôture ne subsiste dans l’inventaire Compose.
 Les scripts, mesures et captures synthétiques restent dans `var/`, ignoré par Git.
 
-## Reprise
+## Reprise de la clôture précédente — historique
 
 Contrôles de clôture déjà terminés sur le code applicatif `e5ca6cb` :
 `make validate`, lint complet, compilation, 1 047 cas PHP / 213 250 assertions
@@ -898,13 +969,14 @@ reste celle de l’utilisateur, notamment avec ses technologies d’assistance.
 
 ## Fichiers du lot cumulé
 
-73 fichiers suivis modifiés ou ajoutés par rapport à `48c9a71`.
+77 fichiers suivis modifiés ou ajoutés par rapport à `48c9a71`.
 
 | Périmètre | Fichiers modifiés ou ajoutés |
 | --- | --- |
 | Contrôleurs | `app/src/Controller/AdminController.php`, `app/src/Controller/AdminGameEventController.php`, `app/src/Controller/ColonyController.php`, `app/src/Controller/DiplomacyController.php`, `app/src/Controller/FeedbackController.php`, `app/src/Controller/FleetController.php`, `app/src/Controller/GuildProjectController.php`, `app/src/Controller/LeaderboardController.php`, `app/src/Controller/PatchNoteController.php` |
 | Lectures | `app/src/Repository/AdminReadRepository.php`, `app/src/Repository/GameRepository.php`, `app/src/Repository/PatchNoteRepository.php`, `app/src/Repository/ReportSummaryRepository.php` |
-| Services et préparation | `app/src/Service/Admin/AdminAuditExport.php`, `app/src/Service/Colony/CatalogueDetails.php`, `app/src/Service/Colony/CatalogueInsights.php`, `app/src/Service/Colony/CatalogueProductionContext.php`, `app/src/Service/Colony/ColonyView.php`, `app/src/Service/Colony/EmpireDetails.php`, `app/src/Service/Colony/LiveRegionResponse.php`, `app/src/Service/Colony/ResourceService.php`, `app/src/Service/Combat/PlayerCombatSimulation.php`, `app/src/Service/Combat/ReportArchiveService.php`, `app/src/Service/Fleet/DestinationCatalogue.php`, `app/src/Service/Notification/OutboxRelay.php`, `app/src/Service/Player/DailyLeaderboard.php`, `app/src/Service/Player/RelationResolver.php`, `app/src/Service/Player/SocialProfileView.php`, `app/src/Service/Queue/QueueService.php` |
+| Orchestration | `app/src/Manager/GameManager.php` |
+| Services et préparation | `app/src/Service/Admin/AdminAuditExport.php`, `app/src/Service/Colony/ActionGuard.php`, `app/src/Service/Colony/CatalogueDetails.php`, `app/src/Service/Colony/CatalogueInsights.php`, `app/src/Service/Colony/CatalogueProductionContext.php`, `app/src/Service/Colony/ColonyView.php`, `app/src/Service/Colony/EmpireDetails.php`, `app/src/Service/Colony/LiveRegionResponse.php`, `app/src/Service/Colony/ResourceService.php`, `app/src/Service/Combat/PlayerCombatSimulation.php`, `app/src/Service/Combat/ReportArchiveService.php`, `app/src/Service/Fleet/DestinationCatalogue.php`, `app/src/Service/Notification/OutboxRelay.php`, `app/src/Service/Player/DailyLeaderboard.php`, `app/src/Service/Player/RelationResolver.php`, `app/src/Service/Player/SocialProfileView.php`, `app/src/Service/Queue/QueueService.php` |
 | Contrôleurs navigateur | `app/assets/controllers/admin_list_controller.js`, `app/assets/controllers/colony_live_controller.js` |
 | Templates | `app/templates/admin/events.html.twig`, `app/templates/admin/feedbacks.html.twig`, `app/templates/admin/patchnotes.html.twig`, `app/templates/admin/sections/_audit_results.html.twig`, `app/templates/admin/sections/_list_pagination.html.twig`, `app/templates/admin/sections/_players_results.html.twig`, `app/templates/admin/sections/audit.html.twig`, `app/templates/admin/sections/players.html.twig`, `app/templates/base.html.twig`, `app/templates/colony/_catalog.html.twig`, `app/templates/colony/_journal.html.twig`, `app/templates/colony/show.html.twig`, `app/templates/combat/reports.html.twig`, `app/templates/fleet/_available.html.twig`, `app/templates/fleet/_counts.html.twig`, `app/templates/fleet/index.html.twig`, `app/templates/player/diplomacy.html.twig`, `app/templates/ui/colony_selector.html.twig` |
 | Tests HTTP | `app/tests/Controller/AbsenceJournalTest.php`, `app/tests/Controller/AdminPaginationTest.php`, `app/tests/Controller/FleetDestinationTest.php`, `app/tests/Controller/GuildTagPlayerReportTest.php`, `app/tests/Controller/ReportArchiveTest.php` |
@@ -912,13 +984,18 @@ reste celle de l’utilisateur, notamment avec ses technologies d’assistance.
 | Tests unitaires | `app/tests/Unit/LiveRegionResponseTest.php` |
 | Tests de services | `app/tests/Service/CatalogueDetailsTest.php` |
 | Supports de tests | `app/tests/Support/concurrent_queue.php` |
-| Tests navigateur | `app/tests/browser/admin-accounts-flights.spec.mjs`, `app/tests/browser/live-refresh-focus.spec.mjs` |
+| Tests navigateur | `app/tests/browser/admin-accounts-flights.spec.mjs`, `app/tests/browser/live-refresh-focus.spec.mjs`, `app/tests/browser/support/isolated-test.mjs` |
+| Environnement de test | `docker/compose.browser-test.yaml` |
 | Documentation | `README.md`, `docs/ARCHITECTURE.md`, `docs/FEUILLE_DE_ROUTE.md`, `docs/README.md`, `docs/REWORK_V1.md`, `docs/WORKER_NOTIFIER.md` |
 
-## Recette manuelle à effectuer
+## Recette utilisateur complémentaire
 
+Les parcours représentatifs réalisés pendant la recette autonome figurent en tête
+de ce document. La liste ci-dessous reste un support de validation par l’utilisateur,
+sur ses navigateurs et technologies d’assistance ; elle ne signifie pas que tous
+ces parcours restent non vérifiés. Les limites externes sont signalées séparément.
 Utiliser un environnement de recette et des comptes synthétiques pour les actions
-modifiant l’état ; les essais automatisés ne portent pas sur la base habituelle.
+modifiant l’état ; aucun essai du chantier ne porte sur la base habituelle.
 
 - Comptes : inscription, confirmation et connexion ; préférences, changement
   d’univers et sélection de colonie. Les emails externes demandent un environnement autorisé.
