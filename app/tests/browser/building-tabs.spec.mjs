@@ -175,8 +175,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
             await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('filter','grayscale(1)');
         }
     }
-    sql(`INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'lab','intermediate',10)`);
-    sql(`INSERT INTO player_technology (player_universe_id,slug,tier,level) SELECT owner_id,'engineering_foundations','intermediate',10 FROM planet WHERE id=${planet}`);
+    sql(`INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'power_plant','intermediate',20)`);
     await page.goto(`${path}?section=buildings#item-power_plant-superior`);
     await page.reload();
     await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('filter','none');
@@ -210,6 +209,12 @@ test('Recherche, chantier et défenses partagent les onglets et préservent leur
     sql(`INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) SELECT id,'fighter','basic',125000 FROM fleet WHERE home_planet_id=${planet} AND status='idle' LIMIT 1`);
     sql(`INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) SELECT id,'fighter','intermediate',1250000 FROM fleet WHERE home_planet_id=${planet} AND status='idle' LIMIT 1`);
     sql(`INSERT INTO planet_defense (planet_id,slug,tier,quantity) VALUES (${planet},'ground_turret_anti_light','basic',1250000)`);
+    // Les unités conservées restent lisibles quand leur nouvelle construction n'est pas débloquée.
+    await page.goto(`${path}?section=ships#item-fighter-intermediate`);
+    await expect(page.locator('#building-tab-fighter-intermediate .building-rank-level')).toHaveText('1,25 M');
+    await expect(page.locator('#building-tab-fighter-intermediate')).toHaveAccessibleDescription(/1 250 000 unités possédées.*Rang verrouillé/);
+    await expect(page.locator('#item-fighter-intermediate .card-body>form')).toHaveCount(0);
+    sql(`INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'shipyard','intermediate',1)`);
     for (const [group, slug, families] of [['technologies', 'engineering_foundations', 19], ['ships', 'fighter', 14], ['defenses', 'ground_turret_anti_light', 4]]) {
         await page.setViewportSize({ width: 1920, height: 1000 });
         await page.goto(`${path}?section=${group}`);

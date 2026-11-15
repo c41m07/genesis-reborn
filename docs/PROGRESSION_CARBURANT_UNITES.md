@@ -17,7 +17,7 @@ pas présentées comme lues.
 
 | Lot | Contenu | État |
 |---|---|---|
-| 1 | 150 profils de prérequis, registre versionné, diagnostic et requalification explicite, interface et documentation associées | Prêt localement ; publication et CI à autoriser |
+| 1 | 150 profils de prérequis, registre versionné, diagnostic et requalification explicite, interface et documentation associées | PR #69 ouverte ; corrections de recette en validation |
 | 2 | Durées, taxe électrique calculée sur la durée effective, carburant différencié, navigation historique préservée | À réaliser après fusion du lot 1 |
 | 3 | Six profils civils, production segmentée, mobilité/immobilité, affectations et réservations concurrentes, combat, rapports et simulateur | À réaliser après fusion du lot 2 |
 | 4 | Simulations avec les calculateurs réels, comparaison des répartitions, mesures et limites | À réaliser après intégration des unités |
@@ -48,7 +48,7 @@ est idempotente et sérialisée par les verrous existants de participation/unive
 
 - `make validate` : réussi avant les modifications.
 - `make lint` : réussi (PHP, YAML, Twig, conteneur, mapping et schéma).
-- `make test` : réussi, 1 205 tests PHP, 214 139 assertions et 13 tests Python.
+- `make test` sur `510610f` : réussi, 1 205 tests PHP, 214 139 assertions et 13 tests Python.
   Une mesure de préparation facultative préexistante est ignorée par défaut
   (`REWORK_MEASURE=1` pour l’activer) ; aucun test métier n’est désactivé.
 - Parcours navigateur ciblés : 9 scénarios réussis sur la première passe, puis
@@ -68,12 +68,29 @@ est idempotente et sérialisée par les verrous existants de participation/unive
 - Wiki : source locale `docs/wiki.json` et références REGLES/DECISIONS synchronisées ; aucun wiki hébergé ni déploiement n’est déclaré mis à jour.
 - Diagnostic en lecture seule de la base locale : 6 participations à requalifier,
   aucune surcharge de prérequis signalée. Aucune écriture par cette commande.
-- Aucune requalification appliquée à la base de jeu, aucune PR ni fusion à ce stade.
+- Aucune requalification appliquée à la base de jeu. [PR #69](https://github.com/c41m07/genesis-reborn/pull/69) ouverte ; aucune fusion à ce stade.
 
 ## Reprise
 
-Contrôles locaux terminés et différences relues. Autorisation de publication du lot 1 à obtenir.
-Présenter le lot prêt à relire avant de demander l’autorisation de push et de PR.
-Attendre la CI complète et l’autorisation de fusion, puis commencer le lot suivant.
+Publication et fusion du lot 1 autorisées, sous réserve de CI complète réussie.
+Attendre la réussite des cinq jobs quality sur la dernière version de la PR #69,
+puis fusionner vers dev et commencer le lot 2 depuis dev actualisée.
 Pour une base existante : maintenance coordonnée, sauvegarde restaurable vérifiée,
 diagnostic des surcharges puis autorisation explicite avant `--apply`.
+
+## Recette CI du lot 1
+
+Le premier passage CI a validé les lots navigateur 3 et 4. Les lots 1 et 2
+ont révélé quatre préparations de test fondées sur l’ancienne grille : métal
+sans nano pour le chantier, ancienne passerelle de centrale et chantier
+Intermédiaire absent. Les préparations sont actualisées sans retrait d’assertion.
+Le cas d’unités possédées mais non débloquées vérifie désormais explicitement
+que leur quantité reste lisible et qu’aucun formulaire de construction ne s’ouvre.
+
+Le contrôle PHP s’est arrêté avant PHPUnit, la base isolée database-test étant
+unhealthy. Ses journaux sont ajoutés aux diagnostics CI en cas d’échec ; aucun
+contrôle n’est affaibli. Une nouvelle CI complète doit valider le lot corrigé.
+
+Corrections de recette vérifiées localement : 4/4 scénarios navigateur concernés,
+16 tests PHP ciblés / 133 assertions, make lint et git diff --check réussis.
+La nouvelle CI complète doit confirmer ces corrections sur leur dernier commit.

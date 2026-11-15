@@ -26,7 +26,7 @@ test('Espionnage PNJ : envoyer une sonde et consulter le rapport privé', async 
   prepareOwnedColony(process.env.BROWSER_ROUTER,email);
   // Conditions initiales du chantier ; la construction et la mission restent jouées dans l’interface.
   const planet = Number(new URL(page.url()).pathname.split('/').pop());
-  runIsolatedSql(process.env.BROWSER_ROUTER, `INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'mine_metal','basic',2)`);
+  runIsolatedSql(process.env.BROWSER_ROUTER, `INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'mine_metal','basic',2),(${planet},'mine_nano','basic',2)`);
   runIsolatedSql(process.env.BROWSER_ROUTER, `INSERT INTO player_technology (player_universe_id,slug,tier,level) SELECT owner_id,'naval_engineering','basic',1 FROM planet WHERE id=${planet}`);
   const target = revealNpcPlanet(process.env.BROWSER_ROUTER,email);
   const card = slug => page.locator('#item-'+slug+'-basic');

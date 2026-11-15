@@ -103,7 +103,7 @@ jobs:
         if: failure()
         run: |
           docker compose --env-file .env.local ps -a
-          docker compose --env-file .env.local logs --no-color --tail=100 app worker relay notifier database rabbitmq mercure
+          docker compose --env-file .env.local --profile test logs --no-color --tail=100 app worker relay notifier database database-test rabbitmq mercure
           docker logs --tail=100 genesis-ci-traefik
       - name: Teardown CI stack
         if: always()

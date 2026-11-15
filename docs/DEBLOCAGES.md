@@ -107,7 +107,7 @@ Le registre JSON existant reçoit des clés `v2:universe:...` ou `v2:planet:<id>
 
 Les nouveaux empires commencent avec le marqueur courant. Les participations existantes nécessitent une requalification explicite, sous verrou de participation et d’univers. Avant cette opération, les nouvelles commandes sont indisponibles ; les anciennes continuent leur résolution. Aucune lecture, aucun redémarrage ni worker ne déclenche automatiquement cette bascule.
 
-La requalification utilise seulement les conditions réellement remplies : jamais la possession de l’élément, ses unités, une ancienne clé, une commande ou son achèvement. Niveaux, effets, stocks, unités et historiques restent inchangés. Les opérations payées gardent leur coût, leur durée et leur résultat.
+La requalification utilise seulement les conditions réellement remplies : jamais la possession de l’élément, ses unités, une ancienne clé, une commande ou son achèvement. Niveaux, effets, stocks, unités et historiques restent inchangés. Les opérations payées gardent leur coût, leur durée et leur résultat. Lorsqu’un rang verrouillé est consulté, ses niveaux et quantités déjà possédés restent lisibles ; le verrou concerne les nouvelles commandes.
 
 Après requalification, la synchronisation mémorise les nouveaux accès dont les conditions sont remplies. Une perte ultérieure de bâtiment, une annulation ou un redémarrage ne retire pas ces accès. La portée joueur/univers ou joueur/colonie est conservée, sans transmission des accès de l’ancien propriétaire lors d’une capture.
 
