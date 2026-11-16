@@ -189,10 +189,14 @@ commune restent disponibles dans les pages de colonie ; les quantités du
 catalogue sont chargées par groupe, sans lecture SQL par carte. Ces données
 restent locales à l’appel et ne servent jamais d’autorisation d’écriture.
 Le calcul et l’endpoint de la barre de ressources restent inchangés.
-Les cartes Bâtiments transmettent un contexte économique immuable, préparé après
+Les cartes Bâtiments et Vaisseaux transmettent un contexte économique immuable, préparé après
 la synchronisation des files, aux calculs nominaux de ResourceService. Ce contexte
 regroupe les lectures d’événements et de vacances pour cette préparation seulement ;
 les appels existants et les snapshots de la barre ne l’utilisent pas.
+`ResourceService::economicUnitRate` fournit le rendement nominal local d’une unité
+civile active aux cadres et fiches, avec ce même contexte, sans relire les effectifs
+ou les événements par carte. Les capacités et le crédit effectif des stocks restent
+gérés par la simulation existante.
 La liste des combats utilise ReportSummaryRepository pour éviter les rounds et
 snapshots complets. Le lecteur détaillé et les archives conservent les entités
 entières. Les profils consultent la ligne du snapshot quotidien sans enrichir

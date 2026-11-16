@@ -8,6 +8,8 @@ Les [unités économiques](docs/UNITES_ECONOMIQUES.md) ajoutent des récolteurs 
 et des satellites fixes, avec places par rang, réservations et production locale.
 Chaque famille possède trois noms et trois illustrations propres aux rangs, selon la
 [direction artistique du catalogue](docs/ILLUSTRATIONS.md).
+Les cartes affichent leur production par unité active sur la colonie consultée,
+avec les modificateurs locaux et la pause des vacances.
 Leur livraison pendant un combat rejoint les renforts locaux avec toute la flotte.
 Le [suivi de mission](docs/PROGRESSION_CARBURANT_UNITES.md) distingue les lots
 préparés, leur intégration, leur activation et les décisions encore ouvertes.

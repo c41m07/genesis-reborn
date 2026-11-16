@@ -35,6 +35,10 @@ async function prepare(page) {
 test('Unités civiles : places actives et réservées, conservation, images et accès clavier', async ({ page }, testInfo) => {
     test.setTimeout(180000);
     const data = await prepare(page), path = `/planetes/${data.planet}?section=ships`;
+    const position = Number(queryIsolatedSql(data.project, `SELECT position FROM planet WHERE id=${data.planet}`));
+    runIsolatedSql(data.project, `UPDATE universe SET game_settings=JSON_SET(CASE WHEN JSON_TYPE(game_settings)='OBJECT' THEN game_settings ELSE JSON_OBJECT() END,'$.multipliers',JSON_OBJECT('resource_production',2)) WHERE id=(SELECT universe_id FROM player_universe WHERE id=${data.member})`);
+    const localFactors = { electricity: 1.2 - 0.4 * (position - 1) / 8, hydrogen: 0.8 + 0.4 * (position - 1) / 8 };
+    const numericValue = text => Number.parseFloat(text.replace(/\s/g, '').replace(',', '.'));
     // Acquérir l'accès initial avant de réduire la capacité locale, comme après une perte d'infrastructure.
     await page.goto(path);
     runIsolatedSql(data.project, `UPDATE planet_building SET level=1 WHERE planet_id=${data.planet} AND slug='power_plant' AND tier='basic'`);
@@ -68,6 +72,18 @@ test('Unités civiles : places actives et réservées, conservation, images et a
             await expect(artwork).toHaveAttribute('src', `/images/catalog/ships/${slug}__${tier}.webp`);
             await expect(artwork).toHaveAttribute('alt', names[index]);
             await expect.poll(() => artwork.evaluate(image => image.complete && image.naturalWidth > 0 && image.naturalWidth * 3 === image.naturalHeight * 4)).toBeTruthy();
+            const resource = slug === 'solar_satellite' ? 'electricity' : 'hydrogen';
+            const reference = (resource === 'electricity' ? [450, 675, 1012.5] : [900, 1350, 2025])[index];
+            const expectedProduction = reference * localFactors[resource] * 2;
+            const benefits = panel.locator('.card-benefits');
+            if (!await benefits.evaluate(element => element.open)) await benefits.locator('summary').click();
+            const production = benefits.getByText('Production par unité active · cette colonie', { exact: true }).locator('..').locator('strong');
+            expect(numericValue(await production.innerText())).toBeCloseTo(expectedProduction, 2);
+            await expect(benefits).not.toContainText('position 5, univers ×1');
+            await panel.locator('.catalog-info-trigger').click();
+            const detailProduction = panel.locator('dialog').getByText('Production par unité active sur cette colonie', { exact: true }).locator('..').locator('dd');
+            expect(numericValue(await detailProduction.innerText())).toBeCloseTo(expectedProduction, 2);
+            await page.keyboard.press('Escape');
         }
         await page.locator(`#building-tab-${slug}-basic`).click();
     }

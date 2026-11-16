@@ -54,6 +54,25 @@ final class ResourceService
         return $rate;
     }
 
+    /** Taux nominal d’une unité civile active sur cette colonie, en ressources par seconde. */
+    public function economicUnitRate(Planet $planet, array $definition, ?CatalogueProductionContext $context = null): float
+    {
+        $context?->assertPlanet($planet);
+        if ($context?->onVacation ?? ($planet->owner !== null && $this->vacations->isActive($planet->owner))) {
+            return 0.0;
+        }
+        $economic = $definition['economic_unit'];
+        $tier = $definition['_tier'];
+        $universe = $this->catalog->forUniverse($planet->solarSystem->galaxy->universe);
+        $eventMultiplier = $context?->eventMultiplier
+            ?? $this->events->productionMultiplier($planet->solarSystem->galaxy->universe);
+        // Même rendement local que la source civile d’operatingInput, sans multiplier
+        // par les effectifs ni déduire les pertes de stockage d’un aperçu par unité active.
+        return (float) $economic['production_per_hour'][$tier] / 3600
+            * $this->positionFactor($planet, $economic['resource'])
+            * (float) $universe['multipliers']['resource_production'] * $eventMultiplier;
+    }
+
     private function tierLevel(int|array $levels,string $tier):int
     {
         if(is_int($levels))return $tier==='basic'?$levels:0;

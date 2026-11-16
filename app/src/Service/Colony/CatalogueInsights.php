@@ -122,8 +122,8 @@ final class CatalogueInsights
             ];
             if (isset($definition['economic_unit'])) {
                 $economic = $definition['economic_unit'];
-                array_unshift($shipBenefits, ['label'=>'Production par unité · position 5, univers ×1',
-                    'value'=>$economic['production_per_hour'][$tier],
+                array_unshift($shipBenefits, ['label'=>'Production par unité active · cette colonie',
+                    'value'=>$this->resources->economicUnitRate($planet, $definition, $context) * 3600,
                     'unit'=>$economic['resource']==='hydrogen'?'H / h':'E / h']);
             }
             if (isset($definition['secondary_attack'])) {

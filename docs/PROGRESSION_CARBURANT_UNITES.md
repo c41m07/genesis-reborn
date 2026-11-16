@@ -531,3 +531,18 @@ simulateur), cohérence JSON/CSV/prompts et `git diff --check` réussis. Prix, d
 production, capacités et identifiants comparés au parent : inchangés. Les 150
 illustrations précédentes et les six fichiers modifiés par l’autre tâche sont préservés.
 Aucune nouvelle CI GitHub : ces vérifications décrivent uniquement la recette locale.
+
+## Production civile affichée sur la colonie — 16 novembre 2026, complexité 3/5
+
+Les cadres verts et la fiche détaillée affichaient la référence position 5 / univers ×1.
+Ils utilisent maintenant le rendement nominal d’une unité active sur la colonie :
+position, univers, événement courant et pause des vacances inclus. Le contexte préparé
+par ColonyView reste partagé, sans lecture répétée par carte ; la production réelle,
+les effectifs, places et plafonds ne changent pas. Les deux présentations sont comparées
+au moteur réel dans 144 contextes, avec surcharge de profil et isolation des colonies.
+
+Recette locale : 3 tests unitaires / 578 assertions, `make validate`, `make lint`
+et les deux scénarios navigateur civils réussis. Le premier passage navigateur
+avait une préparation d’univers ×2 incomplète (chemin JSON absent) ; la préparation
+est corrigée et le scénario des six cadres/fiches repasse, sans retrait d’assertion.
+Aucune modification du moteur de stocks, migration ou publication GitHub/Alpha.
