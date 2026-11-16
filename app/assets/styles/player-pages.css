@@ -84,3 +84,8 @@ body.authenticated .page-refinement p>a {text-decoration:underline;text-underlin
 .inventory-space .space-navigation a{min-height:44px}
 
 .inventory-space .inventory-pending .section-heading>.badge{flex-shrink:0;white-space:nowrap}
+
+.account-space>.space-navigation{margin-bottom:20px}
+.account-space .account-panel{max-width:900px}
+.account-space .space-navigation a{min-height:44px}
+.account-space #vacances-info .account-section{margin-top:0}

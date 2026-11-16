@@ -59,7 +59,7 @@ Univers → galaxie → système (x,y) → planète position 1..9. Comptes globa
 
 ### Suppression volontaire du compte
 
-Depuis le profil, le joueur peut supprimer son compte dans tous les univers
+Depuis la page Suppression du compte de Mon compte, le joueur peut supprimer son compte dans tous les univers
 après saisie du mot de passe et confirmation explicite. Les identifiants et
 préférences sont effacés et les accès fermés. Les empires deviennent oubliés
 immédiatement, sans attendre le délai d’inactivité ; leurs colonies et les

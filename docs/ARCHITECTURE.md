@@ -629,3 +629,28 @@ page Boîtes ; les utilisations de boost à Boosts. Les anciens fragments sont
 orientés par le contrôleur de navigation, à l’ouverture et au changement de
 fragment. Les liens serveur fonctionnent sans JavaScript.
 Voir [le suivi](NAVIGATION_PAGES_DEDIEES.md) pour les contrôles et limites.
+
+
+### Compte commun et mode vacances
+
+Le menu Mon compte ouvre `/profil` (Mes identifiants). La navigation commune
+relie `/profil/preferences`, `/profil/vacances` et `/profil/supprimer`.
+`PreferencesController` prépare uniquement le formulaire des préférences communes.
+`VacationController` prépare l’état de l’empire sélectionné et reprend les POST
+historiques `/profil/preferences/vacances/activer` et `/terminer`, avec les mêmes
+noms de routes, jetons, identifiants et services métier. Le contrôle de sélection,
+propriété, participation et univers reste préalable à chaque action de vacances.
+Les comptes sans empire conservent les identifiants, préférences et suppression ;
+la page Vacances présente l’information d’indisponibilité, sans nouvelles permissions.
+
+La lecture d’affichage de `VacationEconomyService.settings` ne sélectionne que la
+dernière période (début puis identifiant décroissants), y compris terminée pour
+le délai de réactivation. Les calculs d’historique et les écritures sous verrou
+restent inchangés. `ProfileService` et `AccountDeletionService` sont réutilisés,
+avec fermeture de session après modification et protections de suppression.
+
+Le GET de suppression ne prépare aucun formulaire des identifiants et ne supprime
+rien. Les anciens `?delete=1` redirigent côté serveur ; les fragments des vacances
+et de suppression sont orientés côté navigateur. Les nouvelles pages désactivent
+le sommaire automatique et conservent leurs liens et formulaires serveur sans JS.
+Voir [le suivi de navigation](NAVIGATION_PAGES_DEDIEES.md) pour la recette.

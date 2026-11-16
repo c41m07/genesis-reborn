@@ -14,6 +14,11 @@ final class ProfileController extends AbstractController
     #[Route('/profil',name:'app_profile',methods:['GET','POST'])]
     public function index(Request $request,ProfileService $service,Security $security):Response
     {
+        // L’ancien raccourci de suppression devient une vraie page, avant de préparer le formulaire des identifiants.
+        if ($request->isMethod('GET') && $request->query->getString('delete') === '1') {
+            $parameters = $request->query->all();unset($parameters['delete']);
+            return $this->redirectToRoute('app_account_delete_page', $parameters);
+        }
         $data=new ProfileData();$data->email=$this->getUser()->email;$data->username=$this->getUser()->username;
         $form=$this->createForm(ProfileType::class,$data);$form->handleRequest($request);
         if($form->isSubmitted() && $form->isValid()) {
@@ -25,6 +30,12 @@ final class ProfileController extends AbstractController
         }
         return $this->render('player/profile.html.twig',['form'=>$form],new Response(status:$form->isSubmitted()?422:200));
     }
+    #[Route('/profil/supprimer', name: 'app_account_delete_page', methods: ['GET'])]
+    public function deletePage(): Response
+    {
+        return $this->render('player/account_delete.html.twig', [], new Response(headers: ['Cache-Control' => 'private, no-store']));
+    }
+
     #[Route('/profil/supprimer',name:'app_account_delete',methods:['POST'])]
     public function delete(Request $request,\App\Service\Player\AccountDeletionService $deletion,Security $security): Response
     {
@@ -33,7 +44,7 @@ final class ProfileController extends AbstractController
             $deletion->delete($this->getUser(),(string)$request->request->get('password'),$request->request->getBoolean('confirmed'));
         } catch (\DomainException $error) {
             $this->addFlash('error',$error->getMessage());
-            return $this->redirectToRoute('app_profile', ['delete' => '1']);
+            return $this->redirectToRoute('app_account_delete_page');
         }
         $response=$security->logout(false);
         $request->getSession()->getFlashBag()->add('success','Votre compte a été supprimé. Vos empires sont devenus des empires oubliés.');

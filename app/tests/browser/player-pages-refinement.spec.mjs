@@ -20,7 +20,7 @@ test('Pages validées : diplomatie, profil et inventaire, thèmes, clavier et é
   await expect(page).toHaveURL(/planetes\/\d+$/);
   for (const theme of ['dark', 'light']) {
     runIsolatedSql(process.env.BROWSER_ROUTER, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
-    for (const [route, heading, name] of [['/guildes/creer','Créer une guilde','creation-guilde'],['/diplomatie','Relations entre commandants','diplomatie'],['/profil','Mon profil','profil'],['/boosts','Boosts','inventaire']]) {
+    for (const [route, heading, name] of [['/guildes/creer','Créer une guilde','creation-guilde'],['/diplomatie','Relations entre commandants','diplomatie'],['/profil','Mes identifiants','profil'],['/boosts','Boosts','inventaire']]) {
       await page.goto(route);
       await expect(page.getByRole('heading',{level:1,name:heading,exact:true})).toBeVisible();
       await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
@@ -38,8 +38,9 @@ test('Pages validées : diplomatie, profil et inventaire, thèmes, clavier et é
   await page.keyboard.press('Enter');
   await expect(page.getByRole('group',{name:'Changer de mot de passe',exact:true})).toBeVisible();
   expect(await passwordSummary.evaluate(el=>getComputedStyle(el).outlineStyle)).not.toBe('none');
-  await page.getByText('Supprimer mon compte',{exact:true}).focus();
-  await page.keyboard.press('Space');
+  await page.getByRole('navigation',{name:'Compte et préférences'}).getByRole('link',{name:'Suppression du compte',exact:true}).focus();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/profil\/supprimer$/);
   await expect(page.getByRole('button',{name:'Supprimer définitivement mon compte'})).toBeVisible();
   await page.goto('/guildes/creer');
   await page.getByLabel('Nom de votre nouvelle guilde').fill('Refonte-'+suffix);

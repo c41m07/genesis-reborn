@@ -1846,3 +1846,11 @@ ressources et Récompenses en attente sur des pages autonomes. La capacité comm
 reste visible dans cet espace. L’attente est présentée dans son ordre d’arrivée,
 par pages de 25 ; elle reste conservée sans limite métier. Les règles d’attribution,
 utilisation, stockage, vacances et promotion ne changent pas.
+
+
+Le lot Mon compte sépare Mes identifiants, Préférences, Mode vacances et
+Suppression du compte sur quatre pages reliées. Les identifiants et préférences
+sont communs au compte ; la suppression concerne tous ses univers. Le mode
+vacances concerne uniquement l’empire sélectionné et nomme explicitement son
+univers. Les durées, restrictions, confirmations, protections et effets de ces
+actions ne sont pas modifiés par cette organisation.

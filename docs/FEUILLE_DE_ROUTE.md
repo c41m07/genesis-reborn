@@ -1668,8 +1668,11 @@ choix, vérifications et limites. CI, fusion et déploiement restent distincts.
 Lot 2 intégré sur dev par la [PR #77](https://github.com/c41m07/genesis-reborn/pull/77),
 merge `52030d2`, après CI complète réussie sur `b6d1aaf`. Dev local actualisé.
 
-Lot 3 Inventaire réalisé sur `feature/navigation-inventaire` depuis dev
-`52030d2` : pages Boosts, Boîtes et Récompenses en attente, lectures adaptées,
-services métier et capacité conservés. Contrôles locaux ciblés réussis ;
-[PR #78](https://github.com/c41m07/genesis-reborn/pull/78) vers dev, avec CI complète
-obligatoire avant fusion. [Recette et état d’intégration](NAVIGATION_PAGES_DEDIEES.md).
+Lot 3 intégré sur dev par la [PR #78](https://github.com/c41m07/genesis-reborn/pull/78),
+merge `3eb4df0`, après CI complète réussie sur `7643609`. Application locale
+actualisée avec préservation des modifications présentes.
+
+Lot 4 Mon compte / Mode vacances en cours sur `feature/navigation-compte-vacances`
+depuis dev `3eb4df0` : Mes identifiants, Préférences, Mode vacances et Suppression
+du compte. Les services métier et périmètres compte/empire sont conservés.
+[Recette et état d’intégration](NAVIGATION_PAGES_DEDIEES.md).

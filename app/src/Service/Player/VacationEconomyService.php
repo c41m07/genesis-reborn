@@ -27,7 +27,8 @@ final class VacationEconomyService
     public function settings(PlayerUniverse $membership): array
     {
         $now=$this->clock->now();
-        $latest=$this->repo->all(VacationPeriod::class,['membership'=>$membership],['startedAt'=>'DESC','id'=>'DESC'])[0]??null;
+        // L’affichage ne nécessite que la dernière période, y compris si elle est terminée pour le délai de réactivation.
+        $latest=$this->repo->latestVacationPeriod($membership);
         $active=$latest?->isActiveAt($now)?$latest:null;
         $nextActivation=$latest!==null?$this->policy->nextActivationAt($latest):null;
         $earliestEnd=$active?->startedAt->modify('+'.VacationPolicy::MINIMUM_SECONDS.' seconds');
