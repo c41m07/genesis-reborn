@@ -338,6 +338,41 @@ final class EconomicUnitTest extends KernelTestCase
         self::assertSame($history,array_slice($event->combatSnapshot['round_history'],0,4));
     }
 
+    public function testAdministrativeGrantStartsCivilProductionNowAndKeepsExcessInactive(): void
+    {
+        $this->player->roles = ['ROLE_ADMIN'];$this->units($this->home,'hydrogen_collector',1);
+        $hydrogen = $this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$this->home,'resourceType'=>'hydrogen']);
+        $hydrogen->currentStock = 0;$this->em->flush();
+        $resources = self::getContainer()->get(ResourceService::class);$this->clock->sleep(60);
+        $expected = $resources->snapshot($this->home)['hydrogen']['stock'];
+        self::assertLessThan(9000,$expected,'Le stockage doit laisser visible un éventuel crédit rétroactif.');
+        $service = self::getContainer()->get(\App\Service\Admin\AdminInterventionService::class);
+        self::assertTrue($service->ships($this->player,$this->player->id,$this->home,'hydrogen_collector','basic','7','Correction civile',str_repeat('a',32)));
+        self::assertEqualsWithDelta($expected,$resources->snapshot($this->home)['hydrogen']['stock'],1e-6);
+        $state = $this->state($this->home)['hydrogen_collector']['basic'];
+        self::assertSame(8,$state['present']);self::assertSame(5,$state['active']);self::assertSame(3,$state['inactive']);
+        $rate = $resources->snapshot($this->home)['hydrogen']['rate'];$this->clock->sleep(10);
+        self::assertEqualsWithDelta($expected+10*$rate,$resources->snapshot($this->home)['hydrogen']['stock'],1e-6);
+        self::assertFalse($service->ships($this->player,$this->player->id,$this->home,'hydrogen_collector','basic','7','Correction civile',str_repeat('a',32)));
+        self::assertSame(8,$this->state($this->home)['hydrogen_collector']['basic']['present']);
+        self::assertSame(1,$this->em->getRepository(\App\Entity\AdminAuditLog::class)->count(['action'=>'admin_ships_grant']));
+    }
+
+    public function testAdministrativeDeliveryJoinsTheNextUnresolvedRoundWithTheWholeLocalFleet(): void
+    {
+        $this->player->roles = ['ROLE_ADMIN'];$this->units($this->home,'transport',5);[$event,$combat] = $this->battle();
+        $this->clock->sleep(60);$combat->resolve($event->id,$event->dispatchToken);self::assertSame('pending',$event->status);
+        $local = $this->units($this->home,'fighter',1)->fleet;$local->storedFuel = 75;$this->em->flush();
+        $service = self::getContainer()->get(\App\Service\Admin\AdminInterventionService::class);
+        self::assertTrue($service->ships($this->player,$this->player->id,$this->home,'solar_satellite','basic','2','Livraison civile',str_repeat('b',32)));
+        $participant = $this->em->getRepository(\App\Entity\CombatParticipant::class)->findOneBy(['combatEvent'=>$event,'fleet'=>$local]);
+        self::assertNotNull($participant);self::assertSame(2,$participant->arrivalRound);
+        self::assertSame('defending',$local->status);self::assertNull($local->departureAt);self::assertSame(75.0,$local->storedFuel);
+        self::assertSame(2,$this->state($this->home)['solar_satellite']['basic']['active']);
+        self::assertFalse($service->ships($this->player,$this->player->id,$this->home,'solar_satellite','basic','2','Livraison civile',str_repeat('b',32)));
+        self::assertSame(1,$this->em->getRepository(\App\Entity\CombatParticipant::class)->count(['combatEvent'=>$event,'fleet'=>$local]));
+    }
+
     /** @return array{\App\Entity\CombatEvent, \App\Service\Combat\CombatEventService} */
     private function battle(int $arrivalDelay = 0): array
     {

@@ -254,6 +254,23 @@ modifier les délais d’attente ni retirer leurs assertions métier.
 Une nouvelle CI complète sur ces corrections reste obligatoire avant fusion. Aucune opération sur une base de jeu
 ni aucun déploiement Alpha.
 
+### Complément de relecture : attributions administratives
+
+La vérification des chemins créant des FleetShip identifie l’attribution
+administrative : elle doit solder l’ancien effectif avant d’ajouter des unités
+économiques. `AdminInterventionService` applique maintenant cette transition et
+le raccordement commun des livraisons locales aux renforts. Les permissions,
+propriété, verrouillage, reçu et audit sont conservés, sans attribution réelle
+ni changement des règles de correction administrative. Les rappels et retours
+administratifs passent déjà par `startReturn`, qui libère et replace les réservations.
+Deux régressions vérifient l’absence de production rétroactive, les excédents
+inactifs, l’idempotence, le prochain round éligible et le carburant conservé. Les
+26 cas administratifs existants et 18 cas économiques précédents réussissent.
+Après correction d’une référence de flotte dans le nouveau test, les deux cas
+ajoutés passent (21 assertions) et l’injection du conteneur est valide.
+La CI n° 297 portait sur la correction des deux attentes navigateur ; l’ajout
+métier impose une nouvelle CI complète sur sa propre révision avant fusion.
+
 ## Reprise
 
 Attendre la CI complète de la PR #71 sur la dernière révision avant fusion dans dev. Les simulations conjointes restent au

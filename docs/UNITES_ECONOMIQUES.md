@@ -128,6 +128,7 @@ pas. La remontée de capacité permet leur réactivation, sans production rétro
 | Transition | Places et production |
 |---|---|
 | Fin de construction | Ancien effectif matérialisé jusqu’à la fin enregistrée ; ajout des unités, libération de la réservation de satellite, activation dans les places restantes |
+| Attribution administrative | Droits, propriétaire, reçu et audit existants ; ancien effectif soldé avant ajout, production à partir de la correction, excédents conservés inactifs et renfort local commun |
 | Annulation | Remboursement habituel sur paiement enregistré ; retrait de la commande et libération de sa réservation, sans second effet au rejeu |
 | Départ de récolteurs | Vérification de toutes les places demandées à destination ; production d’origine soldée avant retrait ; place d’origine libérée et destination réservée dans la même transaction |
 | Vol ou attente | Aucune production des unités en mouvement ou en attente de nouvelle base |
