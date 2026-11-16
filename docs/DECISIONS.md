@@ -1854,3 +1854,13 @@ sont communs au compte ; la suppression concerne tous ses univers. Le mode
 vacances concerne uniquement l’empire sélectionné et nomme explicitement son
 univers. Les durées, restrictions, confirmations, protections et effets de ces
 actions ne sont pas modifiés par cette organisation.
+
+
+### Navigation des projets collectifs — 17 novembre 2026
+
+Projets collectifs ouvre Projets en cours sur l’adresse existante. Projets disponibles
+et Historique disposent de leurs pages et partagent une navigation commune avec
+les fiches. La consultation est paginée par 25 sans limite métier sur les historiques.
+Les formulaires, permissions, versions, transactions, minimums, dons définitifs
+et récompenses compte/modèle conservent leurs règles. Les anciens fragments sont
+orientés côté navigateur ; sans JavaScript, la navigation serveur reste utilisable.

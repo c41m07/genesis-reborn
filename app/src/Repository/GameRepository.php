@@ -2,13 +2,66 @@
 
 namespace App\Repository;
 
-use App\Entity\{Player, PlayerUniverse, Universe, Galaxy, SolarSystem, Planet, PlanetResource, PlanetBuilding, PlayerTechnology, Fleet, FleetShip, PlayerDiscovery, QueueItem, OutboxMessage, CombatLog, CombatParticipant, PlayerBoost, BoostEvent, BoostEventContribution, GameEvent};
+use App\Entity\{Player, PlayerUniverse, Universe, Galaxy, SolarSystem, Planet, PlanetResource, PlanetBuilding, PlayerTechnology, Fleet, FleetShip, PlayerDiscovery, QueueItem, OutboxMessage, CombatLog, CombatParticipant, PlayerBoost, BoostEvent, BoostEventContribution, GameEvent, Guild, GuildProject, GuildProjectDefinition, GuildProjectContribution};
 use Doctrine\ORM\EntityManagerInterface;
 
 final class GameRepository
 {
     public function __construct(private EntityManagerInterface $em)
     {
+    }
+
+    /** @return list<GuildProject> Une ligne supplémentaire permet de proposer la page suivante. */
+    public function guildProjectsPage(Guild $guild, bool $history, int $beforeId): array
+    {
+        $query = $this->em->createQueryBuilder()->select('project')->from(GuildProject::class, 'project')
+            ->where('project.guildId = :guild')->andWhere('project.universe = :universe')
+            ->andWhere($history ? 'project.status != :active' : 'project.status = :active')
+            ->setParameter('guild', $guild->id)->setParameter('universe', $guild->universe)->setParameter('active', 'active');
+        if ($beforeId > 0) $query->andWhere('project.id < :before')->setParameter('before', $beforeId);
+        return $query->orderBy('project.id', 'DESC')->setMaxResults(26)->getQuery()->getResult();
+    }
+
+    /** @return list<GuildProjectDefinition> Les modèles déjà lancés restent exclus, quel que soit leur état. */
+    public function availableGuildProjectDefinitions(Guild $guild, int $beforeId): array
+    {
+        $query = $this->em->createQueryBuilder()->select('definition')->from(GuildProjectDefinition::class, 'definition')
+            ->where('definition.universe = :universe')->andWhere('definition.enabled = true')
+            ->andWhere('NOT EXISTS (SELECT launched.id FROM '.GuildProject::class.' launched WHERE launched.definition = definition AND launched.guildId = :guild AND launched.universe = :universe)')
+            ->setParameter('universe', $guild->universe)->setParameter('guild', $guild->id);
+        if ($beforeId > 0) $query->andWhere('definition.id < :before')->setParameter('before', $beforeId);
+        return $query->orderBy('definition.id', 'DESC')->setMaxResults(26)->getQuery()->getResult();
+    }
+
+    /** @param list<int> $projectIds @return array<int, array<string, int>> Dons personnels des seuls projets affichés. */
+    public function ownGuildProjectContributions(PlayerUniverse $actor, array $projectIds): array
+    {
+        if ($projectIds === []) return [];
+        $rows = $this->em->createQueryBuilder()->select('contribution')->from(GuildProjectContribution::class, 'contribution')
+            ->join('contribution.project', 'project')->where('project.id IN (:projects)')
+            ->andWhere('project.universe = :universe')->andWhere('contribution.playerUniverseId = :actor')
+            ->setParameter('projects', $projectIds)->setParameter('universe', $actor->universe)->setParameter('actor', $actor->id)
+            ->getQuery()->getResult();
+        $result = [];
+        foreach ($rows as $row) $result[$row->project->id] = $row->resources;
+        return $result;
+    }
+
+    /** @return list<GuildProjectContribution> Le projet est autorisé par le contrôleur avant cette lecture. */
+    public function guildProjectContributionsPage(GuildProject $project, int $beforeId): array
+    {
+        $query = $this->em->createQueryBuilder()->select('contribution')->from(GuildProjectContribution::class, 'contribution')
+            ->where('contribution.project = :project')->setParameter('project', $project);
+        if ($beforeId > 0) $query->andWhere('contribution.id < :before')->setParameter('before', $beforeId);
+        return $query->orderBy('contribution.id', 'DESC')->setMaxResults(26)->getQuery()->getResult();
+    }
+
+    /** @param list<string> $keys @return list<string> Inclut les récompenses utilisées ou liées à un ancien empire. */
+    public function existingBoostSourceKeys(array $keys): array
+    {
+        if ($keys === []) return [];
+        return array_column($this->em->createQueryBuilder()->select('boost.sourceKey AS sourceKey')->from(PlayerBoost::class, 'boost')
+            ->where('boost.sourceKey IN (:keys)')->setParameter('keys', $keys)->getQuery()->getScalarResult(), 'sourceKey');
     }
 
     public function find(string $class, int $id): ?object

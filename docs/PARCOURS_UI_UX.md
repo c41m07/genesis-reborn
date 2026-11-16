@@ -159,3 +159,12 @@ Mode vacances et Suppression du compte. Les réglages du compte sont distingués
 du mode vacances de l’empire sélectionné. Les anciens raccourcis et fragments
 restent utilisables ; l’organisation historique Profil/Préférences de ce suivi
 est remplacée sur ce périmètre. [Recette](NAVIGATION_PAGES_DEDIEES.md).
+
+
+## Projets collectifs : pages dédiées — 17 novembre 2026
+
+Le lot 5 remplace les rubriques de la liste par En cours, Disponibles et Historique,
+avec liens GET communs. Les fiches restent le lieu de la contribution et du bilan.
+La pagination ne retire ni historique ni total personnel. Cette évolution remplace
+seulement l’organisation des projets décrite précédemment ; les services et
+confirmations sensibles restent inchangés. Voir le [suivi](NAVIGATION_PAGES_DEDIEES.md).

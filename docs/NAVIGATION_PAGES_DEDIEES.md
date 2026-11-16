@@ -1,6 +1,6 @@
 # Navigation par espaces et pages dédiées
 
-## État du chantier — 16 novembre 2026
+## État du chantier — 17 novembre 2026
 
 Lot 1 intégré sur dev par la [PR #75](https://github.com/c41m07/genesis-reborn/pull/75),
 merge `a279cd1`, après les cinq jobs quality réussis sur `d8849aa`
@@ -22,9 +22,14 @@ merge `3eb4df0`, après les cinq jobs quality réussis sur `7643609`
 Dev local actualisé, assets et routes vérifiés, fichier local préservé.
 Le bilan du lot 3 ci-dessous conserve la recette précédant l’intégration.
 
-Lot 4 réalisé sur `feature/navigation-compte-vacances`, depuis dev `3eb4df0` ;
-[PR #79](https://github.com/c41m07/genesis-reborn/pull/79). Le bilan ci-dessous
-décrit la recette locale avant intégration ; la PR donne l’état de la CI et de la fusion.
+Lot 4 intégré sur dev par la [PR #79](https://github.com/c41m07/genesis-reborn/pull/79),
+merge `5b072cb`, après les cinq jobs quality réussis sur `afe19b8`
+([CI 43975029731](https://github.com/c41m07/genesis-reborn/actions/runs/43975029731)).
+Application locale actualisée avec assets, cache et routes vérifiés ; modification
+préexistante conservée. Le bilan ci-dessous garde la recette avant intégration.
+
+Lot 5 en cours sur `feature/navigation-projets-collectifs`, depuis dev `5b072cb`.
+La recette ci-dessous précède l’intégration ; la PR donnera la CI et la fusion.
 
 Les trois documents Work V4 (prompt maître), V2 (brief Figma) et V1 (protocole
 adaptatif) n’ont pas été trouvés dans le dépôt ni les sources connectées
@@ -40,7 +45,8 @@ accessibles. Aucune lecture intégrale ni validation de leurs phases n’est rev
    paginée et retours après consommation, sans modifier les services métier.
 4. Mon compte / vacances : 5/5 après examen ; authentification, suppression
    définitive, état de l’empire sélectionné et compatibilité des formulaires.
-5. Projets collectifs : estimation 4/5 ; contribution, historique et permissions.
+5. Projets collectifs : 4/5 après examen ; contributions, historiques paginés,
+   permissions, versions et isolation des univers.
 6. Événements : estimation 3/5 ; bonus actifs, défis et rotations.
 7. Administration : estimation 4/5 ; droits, formulaires et parcours guidés existants.
 8. Wiki : estimation 4/5 ; recherche globale, chapitres et fragments historiques.
@@ -583,4 +589,89 @@ externe n’a pas été modifié. Le manuel embarqué est synchronisé.
 - `docs/NAVIGATION_PAGES_DEDIEES.md`
 - `docs/PARCOURS_UI_UX.md`
 - `docs/REGLES.md`
+- `docs/wiki.json`
+
+
+## Lot 5 — Projets collectifs
+
+Complexité 4/5 confirmée : droits délégués, formulaires périmés, confidentialité
+et isolation d’univers ; les dons restent des écritures sensibles confiées aux
+services existants. Analyse des routes, contrôleur, préparations, fragments,
+liens entrants, styles et tests du domaine avant modification. Aucun rafraîchissement
+périodique des projets n’était présent ; aucun n’est introduit.
+
+| Page | Adresse | Objectif |
+| --- | --- | --- |
+| Projets en cours | `/guildes/projets` | Entrée, progression et accès aux fiches de contribution. |
+| Projets disponibles | `/guildes/projets/disponibles` | Conditions et lancement selon les droits existants. |
+| Historique des projets | `/guildes/projets/historique` | Projets terminés ou abandonnés et accès aux bilans. |
+| Fiche d’un projet | `/guildes/projets/{id}` | Détail, dons, conditions figées et contributions paginées. |
+
+### Compatibilité et préparation
+
+Les routes et champs POST, jetons CSRF et versions restent identiques. Un lancement
+réussi ouvre la fiche ; une erreur revient aux projets disponibles. Les retours
+des fiches suivent leur état actif ou historique. Les anciennes ancres
+`ongoing-projects-title`, `available-projects-title` et `completed-projects-title`
+sont orientées à l’ouverture ou au changement du fragment, avec paramètres
+conservés. Le serveur ne reçoit pas le fragment ; sans JavaScript, les liens
+communs restent disponibles. Le menu principal garde Ma guilde actif, sa navigation
+Projets collectifs, puis la navigation du projet sa page active.
+
+`GuildProjectPageView` prépare la seule destination demandée. Les listes sont
+bornées à 25 et un témoin de suite, avec curseur d’identifiant décroissant.
+Les modèles déjà lancés sont exclus en base, sans hydrater l’historique. Dons
+personnels et antécédents de récompenses sont lus ensemble pour les lignes visibles.
+La fiche sépare contribution personnelle complète et page de contributeurs,
+puis charge les identités de cet univers. Seule la fiche active prépare les
+colonies de don. Le contexte commun de colonie reste celui de GameShell.
+Les états actifs, terminés et abandonnés ne changent pas ; les permissions,
+vacances, coûts figés, transactions, verrous, versions, idempotence et protections
+de don/récompense restent dans les services actuels. Aucun modèle n’est activé.
+Aucune mesure comparative de performance n’est revendiquée.
+
+### Vérifications et livraison
+
+Validation Compose, lint et compilation réussis ; 43 tests PHP ciblés / 226
+assertions, puis 8 tests HTTP / 155 assertions (séries partiellement communes).
+Une fixture détachée après requête a été rechargée pour tester le refus entre
+guildes sans modifier les contrôles serveur. Quatre parcours navigateur réussis :
+modèles administratifs existants, deux paliers et boosts, parcours joueur sans
+JavaScript, parcours transversal. La recette du thème clair est reprise avec
+la préférence réellement persistée, après examen des premières captures.
+Les essais utilisent des bases jetables distinctes de la base habituelle.
+La CI complète restera obligatoire sur la dernière version avant fusion.
+
+Les documents Work V4/V2/V1 ne sont pas retrouvés par les recherches locales et
+connectées ; aucune lecture ou validation de leurs phases n’est revendiquée.
+Manuel embarqué mis à jour ; wiki externe non synchronisé. Les contrôles RGAA
+restent ciblés. Aucune dépendance, migration, règle de jeu ou valeur modifiée.
+Aucune migration de base existante ni livraison Alpha.
+
+
+### Fichiers du lot 5
+
+- `README.md`
+- `app/assets/controllers/page_sections_controller.js`
+- `app/assets/styles/player-pages.css`
+- `app/src/Controller/GuildProjectController.php`
+- `app/src/Repository/GameRepository.php`
+- `app/src/Service/Boost/BoostGrantService.php`
+- `app/src/Service/Player/GuildProjectPageView.php`
+- `app/templates/base.html.twig`
+- `app/templates/player/_guild_project.html.twig`
+- `app/templates/player/_guild_project_summary.html.twig`
+- `app/templates/player/guild_project.html.twig`
+- `app/templates/player/guild_projects.html.twig`
+- `app/templates/ui/guild_navigation.html.twig`
+- `app/templates/ui/guild_project_navigation.html.twig`
+- `app/tests/Controller/GuildProjectPagesTest.php`
+- `app/tests/browser/guild-projects.spec.mjs`
+- `docs/ARCHITECTURE.md`
+- `docs/DECISIONS.md`
+- `docs/FEUILLE_DE_ROUTE.md`
+- `docs/GESTION_GUILDES_ALLIANCES.md`
+- `docs/GUIDE_GUILDES_ALLIANCES.md`
+- `docs/NAVIGATION_PAGES_DEDIEES.md`
+- `docs/PARCOURS_UI_UX.md`
 - `docs/wiki.json`

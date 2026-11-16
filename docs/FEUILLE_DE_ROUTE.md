@@ -1672,8 +1672,12 @@ Lot 3 intégré sur dev par la [PR #78](https://github.com/c41m07/genesis-reborn
 merge `3eb4df0`, après CI complète réussie sur `7643609`. Application locale
 actualisée avec préservation des modifications présentes.
 
-Lot 4 Mon compte / Mode vacances réalisé sur `feature/navigation-compte-vacances`
-depuis dev `3eb4df0` : Mes identifiants, Préférences, Mode vacances et Suppression
-du compte. Les services métier et périmètres compte/empire sont conservés.
-Contrôles locaux ciblés réussis ; [PR #79](https://github.com/c41m07/genesis-reborn/pull/79)
-vers dev avec CI complète obligatoire avant fusion. [Recette et état d’intégration](NAVIGATION_PAGES_DEDIEES.md).
+Lot 4 intégré sur dev par la [PR #79](https://github.com/c41m07/genesis-reborn/pull/79),
+merge `5b072cb`, après CI complète réussie sur `afe19b8`. Application locale
+actualisée et modification préexistante conservée. Mes identifiants, Préférences,
+Mode vacances et Suppression du compte disposent de leurs pages.
+
+Lot 5 Projets collectifs en cours sur `feature/navigation-projets-collectifs`,
+depuis dev `5b072cb` : En cours, Disponibles, Historique et fiche de contribution.
+Complexité 4/5, lectures ciblées et paginées ; services métier et droits conservés.
+[Recette et état d’intégration](NAVIGATION_PAGES_DEDIEES.md).
