@@ -22,7 +22,9 @@ merge `3eb4df0`, après les cinq jobs quality réussis sur `7643609`
 Dev local actualisé, assets et routes vérifiés, fichier local préservé.
 Le bilan du lot 3 ci-dessous conserve la recette précédant l’intégration.
 
-Lot 4 en cours sur `feature/navigation-compte-vacances`, depuis dev `3eb4df0`.
+Lot 4 réalisé sur `feature/navigation-compte-vacances`, depuis dev `3eb4df0` ;
+[PR #79](https://github.com/c41m07/genesis-reborn/pull/79). Le bilan ci-dessous
+décrit la recette locale avant intégration ; la PR donne l’état de la CI et de la fusion.
 
 Les trois documents Work V4 (prompt maître), V2 (brief Figma) et V1 (protocole
 adaptatif) n’ont pas été trouvés dans le dépôt ni les sources connectées
@@ -519,11 +521,66 @@ sous verrou. Aucun gain chiffré de performance n’est annoncé.
 
 ### Vérifications et livraison
 
-Validation en cours, exclusivement sur bases jetables distinctes de la base
-habituelle. La configuration navigateur garde le drapeau existant de vacances
+- `make validate`, `make lint`, `make assets`, syntaxe JavaScript, JSON du manuel
+  et `git diff --check` réussis.
+- 75 tests PHP / 447 assertions réussis : préférences, vacances, accès de jeu,
+  suppression de compte, économie et missions pendant les vacances. Puis
+  13 tests du contrôleur / 125 assertions réussis, dont quatre nouveaux cas :
+  pages et formulaires séparés, état actif, accès sans empire et anonyme,
+  ancien raccourci, formulaire obsolète après changement d’univers et lecture
+  d’une seule période parmi 40 sans retirer l’historique. Les deux séries se recouvrent.
+- Neuf parcours navigateur distincts réussis par consolidation : préférences,
+  erreur et conservation des champs, reconnexion après modification, suppression
+  et fermeture des autres sessions, quatre pages directes, thèmes et navigation,
+  accès clavier, rechargement, retour arrière, anciens fragments, aperçu général,
+  carte et thème clair. Les nouvelles pages passent Axe sur `main` à
+  320/390/1 440 px, dans les deux thèmes ; des captures ont été examinées.
+- Le parcours natif sans JavaScript se connecte dans une session neuve : cloner
+  une session déjà connectée avec JavaScript déclenche la protection CSRF existante
+  contre le déclassement de double-submit vers l’origine seule. Aucun mécanisme
+  CSRF n’a été modifié. Préférences sauvegardées, sortie d’une période active et
+  suppression confirmée réussissent dans cette session native.
+- Les cinq jobs quality de la dernière version prête à relire restent requis
+  avant fusion. Les contrôles locaux ne sont pas une validation CI complète.
+
+Les essais utilisent exclusivement des bases jetables distinctes de la base habituelle. La configuration navigateur garde le drapeau existant de vacances
 désactivé ; les tests HTTP contrôlent aussi son activation autorisée. Le cas
 navigateur d’une période déjà active conserve la sortie autorisée même quand
 le drapeau est désactivé. Aucune modification de configuration globale, règle,
 dépendance ou schéma. Aucun déploiement ni migration d’une base existante.
 Les contrôles RGAA sont ciblés ; les sources Work restent introuvables et le wiki
 externe n’a pas été modifié. Le manuel embarqué est synchronisé.
+
+
+### Fichiers du lot 4
+
+- `README.md`
+- `app/assets/controllers/page_sections_controller.js`
+- `app/assets/styles/player-pages.css`
+- `app/src/Controller/PreferencesController.php`
+- `app/src/Controller/ProfileController.php`
+- `app/src/Controller/VacationController.php`
+- `app/src/Repository/GameRepository.php`
+- `app/src/Service/Player/VacationEconomyService.php`
+- `app/templates/base.html.twig`
+- `app/templates/player/account_delete.html.twig`
+- `app/templates/player/preferences.html.twig`
+- `app/templates/player/profile.html.twig`
+- `app/templates/player/vacation.html.twig`
+- `app/templates/ui/account_navigation.html.twig`
+- `app/templates/ui/colony_queues.html.twig`
+- `app/tests/Controller/GameplayAccessTest.php`
+- `app/tests/Controller/VacationPreferencesTest.php`
+- `app/tests/browser/galaxy-v2.spec.mjs`
+- `app/tests/browser/player-pages-refinement.spec.mjs`
+- `app/tests/browser/preferences-accessibility.spec.mjs`
+- `app/tests/browser/profile-forms.spec.mjs`
+- `app/tests/browser/ui-journey.spec.mjs`
+- `app/tests/browser/wireframe-theme-screens.spec.mjs`
+- `docs/ARCHITECTURE.md`
+- `docs/DECISIONS.md`
+- `docs/FEUILLE_DE_ROUTE.md`
+- `docs/NAVIGATION_PAGES_DEDIEES.md`
+- `docs/PARCOURS_UI_UX.md`
+- `docs/REGLES.md`
+- `docs/wiki.json`
