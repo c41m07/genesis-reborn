@@ -16,7 +16,9 @@ Dev local avancé avec assets recompilés, cache vidé, routes et assets servis
 vérifiés, modification locale préservée. Le bilan ci-dessous conserve la recette
 et les reprises précédant cette intégration.
 
-Lot 3 en cours sur `feature/navigation-inventaire`, depuis dev `52030d2`.
+Lot 3 réalisé sur `feature/navigation-inventaire`, depuis dev `52030d2` ;
+[PR #78](https://github.com/c41m07/genesis-reborn/pull/78). Le bilan local ci-dessous
+précède l’intégration ; la PR donne l’état courant de la CI et de la fusion.
 
 Les trois documents Work V4 (prompt maître), V2 (brief Figma) et V1 (protocole
 adaptatif) n’ont pas été trouvés dans le dépôt ni les sources connectées
@@ -416,8 +418,53 @@ globale de performance n’est annoncée.
 
 ### Vérifications et livraison
 
-Validation en cours. Les tests utilisent uniquement des bases jetables distinctes
-de la base locale habituelle. Aucun déploiement ni migration d’une base existante.
+- `make validate`, `make lint`, `make assets`, contrôles de syntaxe JavaScript,
+  JSON du manuel et `git diff --check` réussis.
+- 17 tests des services de boosts/boîtes et cinq tests HTTP dédiés réussis par
+  reprises. Ces derniers couvrent 128 assertions : accès directs, titres,
+  navigation active, capacité commune, absence de données tierces ou d’historique
+  utilisé, lectures bornées, pagination, CSRF, propriété et rejeu sans double effet.
+  Le scénario d’ouverture valide prépare explicitement des entrepôts disponibles ;
+  les tests métier distincts conservent le refus lorsque le stockage est plein.
+- 16 parcours navigateur distincts réussis : 13 métier (événements, boosts,
+  boîtes, vacances, stockage, protections, confirmations et consommation native
+  sans JavaScript), puis trois de navigation/états/accessibilité. Les nouvelles
+  pages sont contrôlées à 320/390/1 440 px, dans les deux thèmes, avec Axe sur
+  `main`, liens directs, rechargement, retour arrière, focus clavier, anciens
+  fragments et pagination. La navigation et la lecture paginée fonctionnent
+  aussi sans JavaScript. Les captures représentatives ont été examinées ; le
+  compteur d’attente reste sur une ligne sur mobile.
+- La première CI légère a réussi sur `2f52096`. Elle ne remplace pas les cinq
+  jobs quality obligatoires sur la dernière version prête à relire avant fusion.
+
+Les tests utilisent uniquement des bases jetables distinctes de la base locale habituelle. Aucun déploiement ni migration d’une base existante.
 Les contrôles d’accessibilité sont ciblés, sans audit de conformité complet.
 Les trois sources Work citées plus haut restent introuvables ; le wiki externe
 n’a pas été actualisé. Le manuel embarqué et la documentation du dépôt sont synchronisés.
+
+
+### Fichiers du lot 3
+
+- `README.md`
+- `app/assets/controllers/page_sections_controller.js`
+- `app/assets/styles/player-pages.css`
+- `app/src/Controller/BoostController.php`
+- `app/src/Repository/GameRepository.php`
+- `app/src/Service/Boost/InventoryPageView.php`
+- `app/templates/base.html.twig`
+- `app/templates/boosts/_boosts.html.twig`
+- `app/templates/boosts/_pending.html.twig`
+- `app/templates/boosts/_review_dialog.html.twig`
+- `app/templates/boosts/index.html.twig`
+- `app/templates/ui/inventory_navigation.html.twig`
+- `app/tests/Controller/InventoryPagesTest.php`
+- `app/tests/browser/admin-event-wizard.spec.mjs`
+- `app/tests/browser/catalogue-inventory.spec.mjs`
+- `app/tests/browser/player-pages-refinement.spec.mjs`
+- `app/tests/browser/resource-boxes.spec.mjs`
+- `docs/ARCHITECTURE.md`
+- `docs/DECISIONS.md`
+- `docs/FEUILLE_DE_ROUTE.md`
+- `docs/NAVIGATION_PAGES_DEDIEES.md`
+- `docs/PARCOURS_UI_UX.md`
+- `docs/wiki.json`

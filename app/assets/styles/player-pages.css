@@ -82,3 +82,5 @@ body.authenticated .page-refinement p>a {text-decoration:underline;text-underlin
 .inventory-space .inventory-pending-list li{padding:12px 4px;border-top:1px solid var(--line);overflow-wrap:anywhere}
 .inventory-space .inventory-pending-list time{color:var(--muted)}
 .inventory-space .space-navigation a{min-height:44px}
+
+.inventory-space .inventory-pending .section-heading>.badge{flex-shrink:0;white-space:nowrap}

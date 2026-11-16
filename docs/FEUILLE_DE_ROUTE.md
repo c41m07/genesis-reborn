@@ -1668,6 +1668,8 @@ choix, vérifications et limites. CI, fusion et déploiement restent distincts.
 Lot 2 intégré sur dev par la [PR #77](https://github.com/c41m07/genesis-reborn/pull/77),
 merge `52030d2`, après CI complète réussie sur `b6d1aaf`. Dev local actualisé.
 
-Lot 3 Inventaire en cours sur `feature/navigation-inventaire` depuis dev
+Lot 3 Inventaire réalisé sur `feature/navigation-inventaire` depuis dev
 `52030d2` : pages Boosts, Boîtes et Récompenses en attente, lectures adaptées,
-services métier et capacité conservés. [Recette et état d’intégration](NAVIGATION_PAGES_DEDIEES.md).
+services métier et capacité conservés. Contrôles locaux ciblés réussis ;
+[PR #78](https://github.com/c41m07/genesis-reborn/pull/78) vers dev, avec CI complète
+obligatoire avant fusion. [Recette et état d’intégration](NAVIGATION_PAGES_DEDIEES.md).
