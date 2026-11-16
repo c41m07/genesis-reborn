@@ -37,8 +37,8 @@ test('Le thème clair couvre les principaux écrans stratégiques sans débordem
     ['/rapports', 'Rapports', 'rapports-theme.png'],
     ['/classement', 'Classement', 'classement-theme.png'],
     ['/univers', 'Les univers', 'univers-theme.png'],
-    ['/profil', 'Mon profil', 'profil-theme.png'],
-    ['/profil/preferences', 'Paramètres', 'preferences-theme.png'],
+    ['/profil', 'Mes identifiants', 'profil-theme.png'],
+    ['/profil/preferences', 'Préférences', 'preferences-theme.png'],
   ];
   const colonyScreens = [
     ['?section=buildings', 'Bâtiments.', 'batiments-theme.png'],

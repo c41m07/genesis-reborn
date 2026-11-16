@@ -20,7 +20,7 @@ test('Préférences accessibles : mouvement réduit, alertes désactivées et fu
   await expect(page.locator('body')).toHaveAttribute('data-theme', 'dark');
   await expect(page.locator('link[href*=wireframe-theme]')).toHaveCount(0);
   await page.goto('/profil/preferences');
-  await expect(page.getByRole('heading', { name: 'Paramètres', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Préférences', exact: true })).toBeVisible();
   await expect(page.getByLabel('Accepter les ressources envoyées par')).toHaveValue('allies');
   await page.getByLabel('Accepter les ressources envoyées par').selectOption('none');
   await page.getByLabel('Thème de l’interface').selectOption('light');

@@ -312,6 +312,13 @@ final class GameRepository
         return array_map('intval', $this->em->getConnection()->fetchAssociative($sql, ['membership' => $membership->id], ['membership' => \Doctrine\DBAL\ParameterType::INTEGER]));
     }
 
+    public function latestVacationPeriod(PlayerUniverse $membership): ?\App\Entity\VacationPeriod
+    {
+        return $this->em->getRepository(\App\Entity\VacationPeriod::class)->findOneBy(
+            ['membership' => $membership], ['startedAt' => 'DESC', 'id' => 'DESC'],
+        );
+    }
+
     public function hasVacationFleetBlocker(PlayerUniverse $membership): bool
     {
         $fleet = $this->em->createQueryBuilder()->select('f.id')->from(Fleet::class, 'f')->leftJoin('f.destination', 'p')->where('(f.playerUniverse = :membership AND f.status IN (:active)) OR (p.owner = :membership AND f.mission IN (:hostile) AND f.status IN (:incoming))')->setParameter('membership', $membership)->setParameter('active', [

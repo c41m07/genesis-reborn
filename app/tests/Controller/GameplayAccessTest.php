@@ -149,8 +149,8 @@ final class GameplayAccessTest extends WebTestCase
     public function testProfileRequiresCurrentPasswordThenLogsOutAfterSave():void
     {
         [$a]=$this->player('Alpha');$this->client->loginUser($a);$crawler=$this->client->request('GET','/profil');self::assertResponseIsSuccessful();
-        $form=$crawler->selectButton('Enregistrer mon profil')->form();$this->client->submit($form,['profile[email]'=>'updated@example.test','profile[username]'=>'Updated','profile[currentPassword]'=>'wrong']);self::assertResponseStatusCodeSame(422);
-        $crawler=$this->client->request('GET','/profil');$form=$crawler->selectButton('Enregistrer mon profil')->form();$this->client->submit($form,['profile[email]'=>'updated@example.test','profile[username]'=>'Updated','profile[currentPassword]'=>'A-test-password-2026']);self::assertResponseRedirects('/connexion');
+        $form=$crawler->selectButton('Enregistrer mes identifiants')->form();$this->client->submit($form,['profile[email]'=>'updated@example.test','profile[username]'=>'Updated','profile[currentPassword]'=>'wrong']);self::assertResponseStatusCodeSame(422);
+        $crawler=$this->client->request('GET','/profil');$form=$crawler->selectButton('Enregistrer mes identifiants')->form();$this->client->submit($form,['profile[email]'=>'updated@example.test','profile[username]'=>'Updated','profile[currentPassword]'=>'A-test-password-2026']);self::assertResponseRedirects('/connexion');
         $this->client->request('GET','/profil');self::assertResponseRedirects('http://genesis-reborn.localhost/connexion');
     }
     public function testColonySelectorPreservesOwnSelectionAndRejectsForeignPlanet():void

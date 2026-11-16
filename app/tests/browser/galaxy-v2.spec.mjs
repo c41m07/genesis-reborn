@@ -60,7 +60,7 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   const menuLabels=await mainNavigation.locator('a').allTextContents();
   await expect(mainNavigation.getByRole('link', {name:'Guide technologique', exact:true})).toBeVisible();
   await expect(page.getByRole('heading', {name:'Mes planètes', exact:true})).toHaveCount(0);
-  await mainNavigation.getByRole('link', {name:'Profil', exact:true}).click();
+  await mainNavigation.getByRole('link', {name:'Mon compte', exact:true}).click();
   await expect(page.getByRole('link', {name:'Paramètres', exact:true})).toBeVisible();
   await mainNavigation.getByRole('link', {name:'Guide technologique', exact:true}).click();
   await expect(page.locator('.technology-tree')).toBeVisible();

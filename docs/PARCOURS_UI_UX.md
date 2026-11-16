@@ -150,3 +150,12 @@ Le lot 3 remplace les ancres entre Boosts, Boîtes de ressources et Récompenses
 attente par trois pages reliées par une navigation commune. Il conserve les
 confirmations et les services de consommation. Cette organisation remplace celle
 de l’inventaire décrite plus haut ; voir [le suivi](NAVIGATION_PAGES_DEDIEES.md).
+
+
+## Compte — navigation dédiée du 16 novembre 2026
+
+Le lot 4 remplace les formulaires regroupés par Mes identifiants, Préférences,
+Mode vacances et Suppression du compte. Les réglages du compte sont distingués
+du mode vacances de l’empire sélectionné. Les anciens raccourcis et fragments
+restent utilisables ; l’organisation historique Profil/Préférences de ce suivi
+est remplacée sur ce périmètre. [Recette](NAVIGATION_PAGES_DEDIEES.md).

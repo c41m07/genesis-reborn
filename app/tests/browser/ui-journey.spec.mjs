@@ -83,7 +83,7 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
     runIsolatedSql(process.env.BROWSER_ROUTER,`UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
     for(const width of [1440,390]) {
       await page.setViewportSize({width,height:900});
-      for(const path of [new URL(home).pathname,'/planetes?view=table','/flottes','/boosts','/evenements','/profil','/profil/preferences','/diplomatie']) {
+      for(const path of [new URL(home).pathname,'/planetes?view=table','/flottes','/boosts','/evenements','/profil','/profil/preferences','/profil/vacances','/diplomatie']) {
         await page.goto(path);
         await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
         await expect(page.locator('main h1')).toBeVisible();
@@ -119,9 +119,10 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
           await expect(panel).toBeHidden();
         }
         if(path==='/profil/preferences') {
-          await expect(page.locator('#vacances-info')).toBeVisible();
-          await expect(page.getByRole('navigation',{name:'Compte et préférences'}).getByRole('link',{name:'Vacances',exact:true})).toHaveAttribute('href','/profil/preferences#vacances-info');
+          await expect(page.locator('#vacances-info')).toHaveCount(0);
+          await expect(page.getByRole('navigation',{name:'Compte et préférences'}).getByRole('link',{name:'Mode vacances',exact:true})).toHaveAttribute('href','/profil/vacances');
         }
+        if(path==='/profil/vacances') await expect(page.locator('#vacances-info')).toBeVisible();
         const audit=await new AxeBuilder({page}).include('main').analyze();
         if(audit.violations.length) accessResults.push({path,theme,width,violations:audit.violations});
       }

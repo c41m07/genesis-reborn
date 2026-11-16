@@ -2,7 +2,7 @@ import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
     connect() {
-        if (['guilde', 'diplomatie', 'flottes', 'inventaire'].includes(this.element.dataset.uiPage)) {
+        if (['guilde', 'diplomatie', 'flottes', 'inventaire', 'profil', 'preferences'].includes(this.element.dataset.uiPage)) {
             // Un changement de fragment peut conserver le document et ne reconnecte pas Stimulus.
             this.onHashChange = () => this.redirectLegacyFragment();
             window.addEventListener('hashchange', this.onHashChange);
@@ -43,6 +43,17 @@ export default class extends Controller {
             const destination = destinations[window.location.hash];
             if (destination && window.location.pathname !== destination) {
                 window.location.replace(destination + window.location.hash);
+                return true;
+            }
+        }
+        if (['profil', 'preferences'].includes(this.element.dataset.uiPage)) {
+            const destinations = {
+                '#vacances': '/profil/vacances', '#vacances-info': '/profil/vacances', '#vacation-heading': '/profil/vacances',
+                '#account-delete-title': '/profil/supprimer',
+            };
+            const destination = destinations[window.location.hash];
+            if (destination && window.location.pathname !== destination) {
+                window.location.replace(destination + window.location.search + window.location.hash);
                 return true;
             }
         }

@@ -93,8 +93,13 @@ Le code comprend :
   la galaxie et le classement sont regroupés ; Derniers échanges présente seulement
   les trois messages les plus récents sans les marquer lus. Les membres voient
   leur présence dans cet univers : En ligne en vert (activité depuis moins de cinq minutes),
-  Hors ligne en rouge, à l’ouverture ou à l’actualisation de la liste. Le profil distingue
-  les identifiants, le mot de passe facultatif et la suppression définitive.
+  Hors ligne en rouge, à l’ouverture ou à l’actualisation de la liste. Mon compte ouvre Mes identifiants
+  (`/profil`) et relie Préférences (`/profil/preferences`), Mode vacances
+  (`/profil/vacances`) et Suppression du compte (`/profil/supprimer`). Les
+  identifiants, préférences et suppression concernent tous les univers ; les
+  vacances concernent seulement l’empire de l’univers sélectionné. Le changement
+  de mot de passe reste facultatif dans Mes identifiants ; l’enregistrement ferme
+  toujours la session. Les anciennes adresses et actions restent utilisables.
   L’inventaire ouvre Boosts (`/boosts`), puis relie Boîtes de ressources
   (`/inventaire/boites`) et Récompenses en attente (`/inventaire/recompenses`).
   La capacité commune reste visible ; la file d’attente est paginée par 25. Un sélecteur
