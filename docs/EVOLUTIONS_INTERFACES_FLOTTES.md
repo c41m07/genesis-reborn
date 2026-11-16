@@ -1847,3 +1847,20 @@ Les mentions de réalisation locale ci-dessus décrivent la recette avant public
 La protection de dev a été revérifiée : PR et cinq jobs quality obligatoires,
 base à jour, administrateurs inclus ; publish n’est pas un contrôle requis.
 Aucune fusion dans Alpha ni exécution du déploiement n’est autorisée pour ce lot.
+
+### Reprise des attentes PHP de la PR 74
+
+La première CI (63817a5) exécute 1 351 tests PHP et révèle une erreur et quatre
+échecs liés à des attentes historiques. Les tests du Bunker attendent encore
+Chantier 3/Laboratoire 2 ; ils vérifient maintenant les deux mines niveau 1 du
+même rang, sans chantier, laboratoire ni blindage, ainsi que les deux refus de
+mine manquante sur chaque rang. Les mines des autres rangs ne doivent pas suffire.
+Le parcours financé vérifie exactement Chantier 1 et Laboratoire 1 tout en
+conservant les unités, stocks et files parallèles. Le titre de Diplomatie est
+cherché dans sa section pour ne pas confondre le panneau d’arrivées.
+Aucun changement du code produit, des valeurs validées ou des délais de test.
+
+Reprise locale réussie : 60 tests PHP / 377 assertions pour CatalogAccess,
+FundedProgressionSimulation et GuildTagPlayerReport, dans une base isolée.
+Les trois fichiers passent leur analyse syntaxique ; le diff reste vérifié.
+Toute la CI doit être rejouée sur la nouvelle version avant fusion.

@@ -52,12 +52,15 @@ final class FundedProgressionSimulationTest extends TestCase
         foreach ([
             'mine_metal' => 2,
             'mine_nano' => 2,
-            'lab' => 2,
-            'shipyard' => 3,
+            'lab' => 1,
+            'shipyard' => 1,
             'fortress' => 1,
         ] as $slug => $level) {
             self::assertGreaterThanOrEqual($level, $result['checkpoint']['buildings'][$slug]['basic']);
         }
+        // Le Bunker dépend des mines : ce parcours n’a plus besoin d’anciens niveaux de chantier ou de laboratoire.
+        self::assertSame(1, $result['checkpoint']['buildings']['lab']['basic']);
+        self::assertSame(1, $result['checkpoint']['buildings']['shipyard']['basic']);
         self::assertSame(1, $result['checkpoint']['units']['probe']['basic']);
         self::assertSame(1, $result['checkpoint']['defenses']['ground_turret_anti_light']['basic']);
         foreach ($result['end_stocks'] as $resource => $stock) {

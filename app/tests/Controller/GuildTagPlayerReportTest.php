@@ -217,7 +217,7 @@ final class GuildTagPlayerReportTest extends WebTestCase
         self::assertSelectorExists('#guild-name');
         self::assertSelectorNotExists('#guild-search-query');
         $this->client->request('GET','/diplomatie?tab=relations');
-        self::assertSelectorTextContains('h2','Relations entre commandants');
+        self::assertSelectorTextContains('section[aria-label="Relations entre commandants"] h2','Relations entre commandants');
     }
 
     public function testGuildNavigationSeparatesMembersAndRanksWithoutGrantingPermissions(): void
