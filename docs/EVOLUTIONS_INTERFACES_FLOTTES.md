@@ -1864,3 +1864,20 @@ Reprise locale réussie : 60 tests PHP / 377 assertions pour CatalogAccess,
 FundedProgressionSimulation et GuildTagPlayerReport, dans une base isolée.
 Les trois fichiers passent leur analyse syntaxique ; le diff reste vérifié.
 Toute la CI doit être rejouée sur la nouvelle version avant fusion.
+
+### Reprise du dernier résultat navigateur de la première CI
+
+Le lot navigateur 1 termine avec 53 parcours réussis et trois échecs : le retour
+clavier des deux pages d’accès refusé est précédé par le nouveau panneau vide ;
+le test du catalogue attend encore les vols masqués sous 740 px.
+Complexité 2/5 : le panneau est exclu de la page de refus pour conserver le retour
+comme première action après le lien d’évitement. Les contrôles clavier restent
+inchangés et vérifient aussi l’absence du panneau sur cette page.
+Le test des rangs attend maintenant les deux cadres visibles après le catalogue
+sur mobile, dans l’ordre validé, en conservant filtres, actualisation, navigation,
+illustrations, dimensions et vérifications d’accessibilité.
+
+Reprise locale réussie : cinq parcours navigateur (quatre refus d’accès et les
+rangs du catalogue) sur base éphémère, sans augmenter les délais ni retirer de
+contrôle. Syntaxes Twig/JavaScript et git diff --check réussis. La nouvelle version
+de la PR doit repasser toute la CI avant fusion ; aucun déploiement Alpha.

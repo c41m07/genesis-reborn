@@ -107,8 +107,12 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
         } else {
             expect(activityBox.y + activityBox.height).toBeLessThanOrEqual(catalogBox.y);
         }
-        if (width <= 740) await expect(flights).toBeHidden();
-        else await expect(flights).toBeVisible();
+        await expect(flights).toBeVisible();
+        await expect(flights.locator('[data-live-region="active-flights"] + .incoming-attacks .incoming-attack-panel')).toHaveCount(1);
+        if (width <= 740) {
+            const flightsBox = await flights.boundingBox();
+            expect(flightsBox.y).toBeGreaterThanOrEqual(catalogBox.y + catalogBox.height - 1);
+        }
 
         await tab('superior').click();
         const firstRow = await page.locator('.building-card:visible').evaluateAll(cards => {
