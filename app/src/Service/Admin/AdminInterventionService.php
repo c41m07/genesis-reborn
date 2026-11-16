@@ -14,7 +14,7 @@ final class AdminInterventionService
 {
     public function __construct(private EntityManagerInterface $em, private GameManager $manager, private GameRepository $repo, private GameCatalog $catalog,
         private ActionGuard $guard, private ResourceService $resources, private FleetService $fleets, private ClockInterface $clock,
-        private \App\Service\Combat\LocalGarrison $garrison) {}
+        private \App\Service\Combat\LocalGarrison $garrison, private \App\Service\Queue\QueueService $queues) {}
 
     public function resources(Player $actor, int $playerId, Planet $planet, string $operation, array $amounts, string $reason, string $requestKey): bool
     {
@@ -61,6 +61,8 @@ final class AdminInterventionService
             if ($planet->owner?->player?->id !== $playerId) throw new \DomainException('Cette colonie n’appartient plus au joueur sélectionné.');
             $definition = $this->catalog->getTierForUniverse($membership->universe, 'ships', $slug, $tier);
             if (!$this->guard->receipt($membership, $requestKey)) return false;
+            // Livrer les commandes échues avant d'avancer l'horloge de production à la date de correction.
+            if (isset($definition['economic_unit'])) $this->queues->synchronize($membership);
             $fleet = $this->repo->one(Fleet::class, ['homePlanet'=>$planet, 'playerUniverse'=>$membership, 'status'=>'idle']);
             if (!$fleet) {
                 $fleet = new Fleet();$fleet->homePlanet = $planet;$fleet->playerUniverse = $membership;

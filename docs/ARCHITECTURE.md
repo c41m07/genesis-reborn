@@ -333,8 +333,9 @@ créé si nécessaire ; chaque quantité reste dans l’entier SQL signé. L’a
 admin_ships_grant est enregistré dans la même transaction (motif, acteur,
 joueur/univers/planète/flotte, type/rang, quantité, avant/après).
 La route d’attribution n’accepte qu’un POST CSRF avec confirmation explicite.
-Pour les unités économiques, l’ancien effectif est matérialisé avant l’ajout,
-puis la production actualisée. Un dépassement des places reste conservé inactif,
+Pour les unités économiques, les commandes échues sont d’abord synchronisées,
+puis l’ancien effectif matérialisé avant l’ajout et la production actualisée.
+Ce séquencement conserve la production due entre une livraison payée et la correction. Un dépassement des places reste conservé inactif,
 comme pour les autres corrections de stock autorisées. Les livraisons administratives
 utilisent aussi `LocalGarrison` pour rejoindre le prochain round non résolu,
 sans duplication ni retrait du carburant local. Droits, reçu et audit restent

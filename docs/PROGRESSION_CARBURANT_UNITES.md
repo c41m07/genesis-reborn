@@ -263,11 +263,13 @@ le raccordement commun des livraisons locales aux renforts. Les permissions,
 propriété, verrouillage, reçu et audit sont conservés, sans attribution réelle
 ni changement des règles de correction administrative. Les rappels et retours
 administratifs passent déjà par `startReturn`, qui libère et replace les réservations.
-Deux régressions vérifient l’absence de production rétroactive, les excédents
-inactifs, l’idempotence, le prochain round éligible et le carburant conservé. Les
-26 cas administratifs existants et 18 cas économiques précédents réussissent.
-Après correction d’une référence de flotte dans le nouveau test, les deux cas
-ajoutés passent (21 assertions) et l’injection du conteneur est valide.
+Trois régressions vérifient l’absence de production rétroactive, les excédents
+inactifs, l’idempotence, le prochain round éligible et le carburant conservé.
+La synchronisation des commandes échues précède la correction afin de conserver
+la production due depuis leur livraison payée. Les 26 cas administratifs existants
+et 18 cas économiques précédents réussissent. Les deux premiers cas ajoutés passent
+(21 assertions), puis le cas de livraison échue passe (6 assertions) ; l’injection
+du conteneur est valide. Ces résultats ciblés ne remplacent pas la nouvelle CI.
 La CI n° 297 portait sur la correction des deux attentes navigateur ; l’ajout
 métier impose une nouvelle CI complète sur sa propre révision avant fusion.
 

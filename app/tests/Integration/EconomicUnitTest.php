@@ -358,6 +358,28 @@ final class EconomicUnitTest extends KernelTestCase
         self::assertSame(1,$this->em->getRepository(\App\Entity\AdminAuditLog::class)->count(['action'=>'admin_ships_grant']));
     }
 
+    public function testAdministrativeCivilGrantSettlesPaidDeliveriesBeforeMaterializingProduction(): void
+    {
+        $this->player->roles = ['ROLE_ADMIN'];
+        $electricity = $this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$this->home,'resourceType'=>'electricity']);
+        $electricity->currentStock = 5000;$this->em->flush();
+        $queues = self::getContainer()->get(QueueService::class);$member = $this->player->currentPlayerUniverse;
+        $queues->add($member,$this->home,'ships','solar_satellite',1,str_repeat('c',32));
+        $item = $this->em->getRepository(QueueItem::class)->findOneBy(['planet'=>$this->home,'itemSlug'=>'solar_satellite']);
+        $this->clock->sleep($item->durationSeconds+60);
+        $resources = self::getContainer()->get(ResourceService::class);$baseline = $resources->snapshot($this->home)['electricity']['stock'];
+        self::assertLessThan(9000,$baseline,'Le plafond ne doit pas masquer le crédit après livraison.');
+        self::getContainer()->get(\App\Service\Admin\AdminInterventionService::class)->ships($this->player,$this->player->id,$this->home,'hydrogen_collector','basic','1','Correction après livraison',str_repeat('d',32));
+        $after = $resources->snapshot($this->home,true)['electricity'];
+        $expected = $baseline+60*$after['sources']['solar_satellite'];
+        self::assertEqualsWithDelta($expected,$after['stock'],1e-6);
+        self::assertSame(0,$this->em->getRepository(QueueItem::class)->count(['planet'=>$this->home]));
+        self::assertSame(1,$this->state($this->home)['solar_satellite']['basic']['active']);
+        $queues->synchronize($member);
+        self::assertEqualsWithDelta($expected,$resources->snapshot($this->home)['electricity']['stock'],1e-6);
+        self::assertEquals($this->clock->now(),$electricity->lastUpdatedAt);
+    }
+
     public function testAdministrativeDeliveryJoinsTheNextUnresolvedRoundWithTheWholeLocalFleet(): void
     {
         $this->player->roles = ['ROLE_ADMIN'];$this->units($this->home,'transport',5);[$event,$combat] = $this->battle();
