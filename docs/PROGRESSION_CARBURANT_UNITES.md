@@ -492,3 +492,18 @@ La [PR #73](https://github.com/c41m07/genesis-reborn/pull/73) inclut les complé
 la grille retenue, ses tests et sa documentation. Les résultats de CI sur la dernière
 révision et l’état de fusion sont consultables directement dans cette PR.
 Cette autorisation ne comprend aucun déploiement Alpha ni aucune reprise de base de jeu.
+
+### Correction après la première CI de la PR #73
+
+La CI 303 sur `9d72d02` valide les 1 339 tests PHP / 250 828 assertions
+(une mesure facultative préexistante ignorée), les 13 Python, lint, assets,
+Compose, diff et sauvegarde/restauration isolée. Trois lots navigateur passent ;
+le quatrième relève une attente de prix de centrale antérieure à la nouvelle grille.
+Au total, 203 parcours passent et un échoue ; aucune fusion sur cette révision.
+
+Le scénario `building-tabs` prépare désormais une centrale B250 pour conserver
+le contrôle d’un prix affiché en millions, attend 1,23 M pour son prochain niveau
+et 900 métal au rang intermédiaire. Les assertions clavier, mobile, formulaires,
+rafraîchissement et filtres restent présentes. Les deux scénarios du fichier
+repassent via `BROWSER_PERSISTENCE=1 make test-browser` sur une base jetable.
+Une nouvelle CI complète sur la correction est exigée avant fusion.
