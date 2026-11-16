@@ -237,14 +237,23 @@ sans réutiliser l’illustration d’un autre vaisseau.
 
 Un autre travail a changé la branche du dossier partagé pendant la vérification.
 Le lot a été copié dans un checkout séparé de sa branche, en préservant les
-modifications étrangères. La copie du dossier partagé reste conservée à ce stade.
-Publication et fusion du lot 3 non autorisées à ce stade ; aucune CI de PR du lot 3
-ni opération sur une base de jeu ou déploiement Alpha annoncés.
+modifications étrangères. Après autorisation explicite, sa copie initiale a été
+retirée du dossier partagé avec vérification d’identité de chaque fichier ; les
+six fichiers modifiés par l’autre tâche sont conservés.
+
+Publication et fusion conditionnelle autorisées : [PR #71](https://github.com/c41m07/genesis-reborn/pull/71).
+La première [CI complète n° 296](https://github.com/c41m07/genesis-reborn/actions/runs/43780432127)
+confirme 1 306 PHP / 228 969 assertions, 13 Python, lint, schéma, compilation,
+diff et sauvegarde/restauration isolées (60 tables). Un ancien test navigateur
+d’onglets attendait encore 14 familles de vaisseaux au lieu de 16 : son attente
+est mise à jour sans retirer de contrôle. Le parcours concerné repasse dans une
+base navigateur isolée (un scénario, 41 s pour l’exécution complète). Une nouvelle
+CI complète sur cette correction reste obligatoire avant fusion. Aucune opération sur une base de jeu
+ni aucun déploiement Alpha.
 
 ## Reprise
 
-Présenter le lot 3 vérifié et son commit pour autorisation de publication, puis
-attendre la CI complète sur la dernière révision avant fusion dans dev. Les simulations conjointes restent au
+Attendre la CI complète de la PR #71 sur la dernière révision avant fusion dans dev. Les simulations conjointes restent au
 lot 4, sans activer la redistribution des prix candidate.
 
 Pour une base existante : maintenance coordonnée, sauvegarde restaurable vérifiée,

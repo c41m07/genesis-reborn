@@ -215,7 +215,7 @@ test('Recherche, chantier et défenses partagent les onglets et préservent leur
     await expect(page.locator('#building-tab-fighter-intermediate')).toHaveAccessibleDescription(/1 250 000 unités possédées.*Rang verrouillé/);
     await expect(page.locator('#item-fighter-intermediate .card-body>form')).toHaveCount(0);
     sql(`INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'shipyard','intermediate',1)`);
-    for (const [group, slug, families] of [['technologies', 'engineering_foundations', 19], ['ships', 'fighter', 14], ['defenses', 'ground_turret_anti_light', 4]]) {
+    for (const [group, slug, families] of [['technologies', 'engineering_foundations', 19], ['ships', 'fighter', 16], ['defenses', 'ground_turret_anti_light', 4]]) {
         await page.setViewportSize({ width: 1920, height: 1000 });
         await page.goto(`${path}?section=${group}`);
         const family = page.locator(`.building-card[data-slug="${slug}"]`);

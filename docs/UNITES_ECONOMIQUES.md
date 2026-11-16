@@ -1,6 +1,7 @@
 # Unités économiques — lot 3
 
-Implémentation en cours de vérification sur `feature/unites-economiques-orbitales`,
+Implémentation publiée dans la [PR #71](https://github.com/c41m07/genesis-reborn/pull/71),
+en cours de vérification sur `feature/unites-economiques-orbitales`,
 depuis dev `6fa8823` après fusion de la [PR #70](https://github.com/c41m07/genesis-reborn/pull/70).
 Les [lots et contrôles](PROGRESSION_CARBURANT_UNITES.md) distinguent développement,
 intégration et activation. Aucun déploiement Alpha.
