@@ -236,6 +236,19 @@ L’utilisateur valide la progression T1 métal/nano, T2 ajout d’antimatière,
 L’hydrogène de construction/recherche est une dépense industrielle, distincte du carburant réservé au départ des missions et des consommations des usines. Les coûts enregistrés des commandes déjà payées restent conservés. Les surcharges d’univers sont préservées champ par champ. L’étude et les vérifications de démarrage, progression et conservation sont consignées dans [COUTS.md](COUTS.md). Aucun prix d’asset premium ni réglage d’univers n’est modifié par cette décision.
 
 
+## Unités économiques — compléments validés des 15 et 16 novembre 2026
+
+Les tirs visant les récolteurs et satellites utilisent le coefficient neutre ×1,
+comme les autres unités de soutien, sans nouvelle spécialisation de contre.
+La production cesse à l’application effective des pertes à la clôture du combat,
+conformément au moteur existant ; l’engagement seul ne l’interrompt pas.
+Les vaisseaux achevés au chantier ou installés par Stationnement pendant un combat
+rejoignent les renforts locaux au prochain round éligible. La règle commune concerne
+les unités civiles et les autres vaisseaux présents ; la flotte et son carburant
+embarqué restent conservés, sans trajet fictif ni nouvelle copie des unités.
+Ces choix explicites complètent le prompt ; l’implémentation est suivie dans
+[PROGRESSION_CARBURANT_UNITES.md](PROGRESSION_CARBURANT_UNITES.md).
+
 ## Durées et carburant par classe — décision du 15 novembre 2026
 
 Les [tableaux complets](DUREES_CARBURANT.md) reprennent le prompt validé : nouvelles

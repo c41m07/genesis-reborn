@@ -29,16 +29,17 @@ une seule référence par sujet ; les anciens bilans ne décrivent pas l’état
 | Comprendre le worker, le notifier et les garanties de livraison | [Worker et notifier](WORKER_NOTIFIER.md) |
 | Régler le référencement et Search Console | [SEO](REFERENCEMENT.md) |
 | Consulter les profils de combat, production et vitesse | [EQUILIBRAGE](EQUILIBRAGE.md) |
-| Consulter les 150 profils de coûts | [Grille commune](COUTS.md) |
+| Consulter les 156 profils de coûts | [Grille commune](COUTS.md) |
 | Comprendre les déblocages par rang | [Déblocages initiaux](DEBLOCAGES.md) |
 | Comparer les durées, taxes électriques et carburants par classe | [Grilles et mesures du 15 novembre](DUREES_CARBURANT.md) |
 | Suivre l’évolution de progression, carburant et unités économiques | [Lots, vérifications et activation](PROGRESSION_CARBURANT_UNITES.md) |
+| Déployer récolteurs et satellites, comprendre leurs places et pertes | [Unités économiques](UNITES_ECONOMIQUES.md) |
 | Modifier l’interface | [Guide UI](ui-ux/GUIDE_INTERFACE.md) |
 | Recréer une illustration | [Prompts](ILLUSTRATIONS.md) |
 | Consulter une preuve ou décision historique | [Archives et liste de consolidation](archives/README.md) |
 
 `wiki.json` reste le contenu unique du wiki. `CATALOGUE_LABELS.csv` conserve les
-150 libellés, descriptions et utilités de jeu ; la copie Markdown a été retirée.
+156 libellés, descriptions et utilités de jeu ; la copie Markdown a été retirée.
 Les spécifications textuelles et PDF d’origine restent dans specifications/ et technic/.
 
 Les regroupements et retraits de l’ancienne documentation sont expliqués dans

@@ -120,6 +120,12 @@ final class CatalogueInsights
                 ['label' => 'Capacité de soute', 'value' => $definition['cargo_capacity'] ?? 0, 'unit' => 'unités'],
                 ['label' => 'Réservoir d’hydrogène', 'value' => $definition['fuel_capacity'] ?? 0, 'unit' => 'unités'],
             ];
+            if (isset($definition['economic_unit'])) {
+                $economic = $definition['economic_unit'];
+                array_unshift($shipBenefits, ['label'=>'Production par unité · position 5, univers ×1',
+                    'value'=>$economic['production_per_hour'][$tier],
+                    'unit'=>$economic['resource']==='hydrogen'?'H / h':'E / h']);
+            }
             if (isset($definition['secondary_attack'])) {
                 $shipBenefits[] = ['label' => 'Tir secondaire anti-léger', 'value' => $definition['secondary_attack'], 'unit' => ''];
             }

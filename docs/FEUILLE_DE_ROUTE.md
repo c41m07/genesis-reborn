@@ -4,10 +4,15 @@
 
 Lot 1 fusionné dans `dev` par la [PR #69](https://github.com/c41m07/genesis-reborn/pull/69)
 après CI complète réussie : grille commune des 150 profils et requalification explicite.
-Lot 2 développé localement sur `feature/durees-carburant-par-classe` : durées,
-électricité associée, carburant par classe et conservation des missions historiques.
+Lot 2 fusionné par la [PR #70](https://github.com/c41m07/genesis-reborn/pull/70),
+commit `6fa8823`, après CI complète n° 295 réussie : durées, taxe électrique,
+carburant par classe et conservation des missions historiques.
 Les [mesures du lot 2](DUREES_CARBURANT.md) distinguent temps, financement et limites.
-Les unités économiques puis les simulations conjointes restent à réaliser.
+Lot 3 développé localement sur `feature/unites-economiques-orbitales` : six profils,
+capacités et réservations, production, combat et renforts locaux, interface et tests.
+Les [règles détaillées](UNITES_ECONOMIQUES.md) sont vérifiées localement ; publication
+et CI de PR restent à autoriser puis à constater. Le lot 4 de simulations conjointes
+reste à réaliser ; le candidat de redistribution des prix n’est pas activé.
 État, contrôles et autorisations dans le [suivi de mission](PROGRESSION_CARBURANT_UNITES.md).
 L’activation des accès en base reste soumise à sauvegarde vérifiée et autorisation ;
 aucun déploiement Alpha prévu.

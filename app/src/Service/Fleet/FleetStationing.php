@@ -17,7 +17,7 @@ final class FleetStationing
         private ActionGuard $guard,private FleetHold $hold,private MovementCalculator $calculator,
         private FleetNavigation $navigation,private FleetDispatch $dispatch,private GameCatalog $catalog,
         private NotificationService $notifications,private VacationCalendar $vacations,private ClockInterface $clock,
-        private FleetFuel $fuel) {}
+        private FleetFuel $fuel,private \App\Service\Colony\EconomicUnitDeployment $economicDeployment) {}
 
     /** Le contrôle du jeton, de l'échéance et les verrous de participation et flotte précèdent cet appel. */
     public function arriveLocked(Fleet $fleet): void
@@ -88,7 +88,7 @@ final class FleetStationing
             if(!hash_equals($quote['version'],$version)) throw new \DomainException('Le devis a changé. Recalculez le trajet.');
             $source=$this->position($fleet);
             if($source->id===$quote['target']->id) $this->install($fleet,$source);
-            else $this->start($fleet,$source,$quote);
+            else $this->start($fleet,$source,$quote,true);
         });
     }
 
@@ -127,11 +127,12 @@ final class FleetStationing
             'version'=>hash('sha256',json_encode([$fleet->dispatchToken,$target->id,$quote['one_way_fuel'],$quote['seconds'],$fleet->reservedFuel],JSON_THROW_ON_ERROR))];
     }
 
-    private function start(Fleet $fleet,Planet $source,array $quote): void
+    private function start(Fleet $fleet,Planet $source,array $quote,bool $requireSlots=false): void
     {
         $target=$quote['target'];$this->manager->lock($target);
         if($target->owner?->id!==$fleet->playerUniverse->id) throw new \DomainException('La colonie de repli ne vous appartient plus.');
         if($source->id===$target->id) {$this->install($fleet,$target);return;}
+        $this->economicDeployment->clear($fleet);
         $state=$fleet->navigation['station'];$state['leg_fuel']=$quote['one_way_fuel'];
         $fleet->navigation=$this->navigation->freeze($this->coords($source),$this->coords($target),$quote['ships'],
             $fleet->speedRatio,$this->catalog->rules()['fuel_ratio_policy'],$quote,$this->clock->now());
@@ -139,7 +140,9 @@ final class FleetStationing
         $fleet->navigation['station']['route_origin_id']=$source->id;
         $fleet->destination=$target;$fleet->destinationSystem=$target->solarSystem;$fleet->returnPlanet=$target;
         $fleet->status='returning';$fleet->departureAt=$this->clock->now();$fleet->travelSeconds=$quote['seconds'];$fleet->arrivalAt=$quote['arrival_at'];
-        $this->navigation->beginLeg($fleet,$fleet->departureAt);$this->dispatch->schedule($fleet);
+        $this->navigation->beginLeg($fleet,$fleet->departureAt);
+        $this->economicDeployment->reserve($fleet,$target,$requireSlots);
+        $this->dispatch->schedule($fleet);
         $this->notifications->enqueue($fleet->playerUniverse,'Votre flotte de stationnement se replie vers '.$target->name.'.',journalKind:'arrival');
     }
 

@@ -1,7 +1,7 @@
 import { test, expect } from './support/isolated-test.mjs';
 import { prepareOwnedColony, runIsolatedSql } from './support/game-fixtures.mjs';
 
-test('Les 150 fiches expliquent leurs effets, bonus, accès et limites sur ordinateur et mobile', async ({ page }) => {
+test('Les 156 fiches expliquent leurs effets, bonus, accès et limites sur ordinateur et mobile', async ({ page }) => {
     test.setTimeout(240000);
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
@@ -27,7 +27,7 @@ test('Les 150 fiches expliquent leurs effets, bonus, accès et limites sur ordin
     sql(`INSERT INTO planet_defense (planet_id,slug,tier,quantity) VALUES (${planet},'ground_turret_anti_light','basic',3),(${planet},'ground_turret_anti_light','intermediate',7)`);
     await page.setViewportSize({ width: 1440, height: 1000 });
     let inspected = 0;
-    for (const [group, count] of [['buildings', 39], ['technologies', 57], ['ships', 42], ['defenses', 12]]) {
+    for (const [group, count] of [['buildings', 39], ['technologies', 57], ['ships', 48], ['defenses', 12]]) {
         await page.goto(`${path}?section=${group}`);
         await expect(page.getByText('Accès associés à ce rang', { exact: false })).toHaveCount(0);
         const cards = page.locator('.building-rank');
@@ -52,7 +52,7 @@ test('Les 150 fiches expliquent leurs effets, bonus, accès et limites sur ordin
             inspected++;
         }
     }
-    expect(inspected).toBe(150);
+    expect(inspected).toBe(156);
 
     async function open(group, slug, tier = 'basic') {
         await page.goto(`${path}?section=${group}`);

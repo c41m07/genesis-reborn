@@ -1,0 +1,135 @@
+{
+  "slug": "solar_satellite",
+  "label": "Satellite solaire",
+  "category": "support",
+  "hp": 40,
+  "shield": 0,
+  "combat_tier_growth": 1.5,
+  "precision": 0,
+  "tracking": 0,
+  "evasion": 0,
+  "signature": 40,
+  "base_attack": 0,
+  "shots_min": 0,
+  "shots_max": 0,
+  "build_time_base": 180,
+  "costs": {},
+  "speed_system": 0,
+  "speed_galaxy": 0,
+  "mobile": false,
+  "allowed_missions": [],
+  "fuel_travel_system": 0,
+  "fuel_travel_galaxy": 0,
+  "fuel_orbit": 0,
+  "cargo_capacity": 0,
+  "fuel_capacity": 0,
+  "economic_unit": {
+    "resource": "electricity",
+    "production_per_hour": {
+      "basic": 450,
+      "intermediate": 675,
+      "superior": 1012.5
+    },
+    "capacity_building": "power_plant",
+    "slots_per_level": 2
+  },
+  "unlock_requirements": {},
+  "tier_unlock_requirements": {
+    "basic": {
+      "buildings": [
+        {
+          "slug": "shipyard",
+          "tier": "basic",
+          "level": 2
+        },
+        {
+          "slug": "power_plant",
+          "tier": "basic",
+          "level": 5
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "engineering_foundations",
+          "tier": "basic",
+          "level": 2
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "shipyard",
+          "tier": "intermediate",
+          "level": 2
+        },
+        {
+          "slug": "power_plant",
+          "tier": "intermediate",
+          "level": 5
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "engineering_foundations",
+          "tier": "intermediate",
+          "level": 2
+        }
+      ]
+    },
+    "superior": {
+      "buildings": [
+        {
+          "slug": "shipyard",
+          "tier": "superior",
+          "level": 2
+        },
+        {
+          "slug": "power_plant",
+          "tier": "superior",
+          "level": 5
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "engineering_foundations",
+          "tier": "superior",
+          "level": 2
+        }
+      ]
+    }
+  },
+  "economy_value_budget": 1600,
+  "cost_profiles": {
+    "basic": {
+      "metal": 480,
+      "nano": 160,
+      "antimatter": 0,
+      "hydrogen": 0
+    },
+    "intermediate": {
+      "metal": 450,
+      "nano": 225,
+      "antimatter": 25,
+      "hydrogen": 0
+    },
+    "superior": {
+      "metal": 374,
+      "nano": 281,
+      "antimatter": 63,
+      "hydrogen": 124
+    }
+  },
+  "description": "Unité civile fixe produisant de l’électricité, dans les places de la centrale du même rang. Le satellite ne peut pas être envoyé en mission. Sans armement et destructible en combat.",
+  "tier_labels": {
+    "basic": "Satellite solaire",
+    "intermediate": "Satellite solaire Intermédiaire",
+    "superior": "Satellite solaire Supérieur"
+  },
+  "tier_descriptions": {
+    "basic": "Unité civile fixe produisant de l’électricité, dans les places de la centrale du même rang. Le satellite ne peut pas être envoyé en mission. Sans armement et destructible en combat.",
+    "intermediate": "Unité civile fixe produisant de l’électricité, dans les places de la centrale du même rang. Le satellite ne peut pas être envoyé en mission. Sans armement et destructible en combat.",
+    "superior": "Unité civile fixe produisant de l’électricité, dans les places de la centrale du même rang. Le satellite ne peut pas être envoyé en mission. Sans armement et destructible en combat."
+  },
+  "artwork": "images/catalog/ships/solar_satellite.svg"
+}

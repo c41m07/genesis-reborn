@@ -1,0 +1,8 @@
+<dl class="catalog-info-stats" aria-label="Déploiement {{ definition._tier_label }}">
+    <div><dt>Unités actives</dt><dd>{{ state.active|number_format(0, ',', ' ') }} / {{ state.capacity|number_format(0, ',', ' ') }} places</dd></div>
+    <div><dt>Places réservées</dt><dd>{{ state.reserved|number_format(0, ',', ' ') }}{% if state.incoming %} · {{ state.incoming|number_format(0, ',', ' ') }} en route{% endif %}{% if state.construction %} · {{ state.construction|number_format(0, ',', ' ') }} en construction{% endif %}</dd></div>
+    {% if state.inactive %}<div><dt>Unités conservées, sans production</dt><dd>{{ state.inactive|number_format(0, ',', ' ') }}</dd></div>{% endif %}
+    {% if state.waiting_reservations %}<div><dt>Réservations en attente de capacité</dt><dd>{{ state.waiting_reservations|number_format(0, ',', ' ') }}</dd></div>{% endif %}
+</dl>
+<p class="catalog-info-note">{{ definition.mobile ? 'Les récolteurs produisent à quai dans les places du même rang. Le Stationnement vers vos colonies réserve leurs places ; aucune production en vol.' : 'Chaque niveau de centrale réserve deux places du même rang. Les satellites restent sur cette colonie.' }} Sans entretien supplémentaire. Unités destructibles en combat.</p>
+{% if vacation|default(null) %}<p class="catalog-info-note">Production en pause pendant les vacances.</p>{% endif %}

@@ -190,7 +190,8 @@ final class GamePersistenceTest extends KernelTestCase
     }
     private function land(\App\Entity\Fleet $fleet,\App\Service\Fleet\FleetService $service): void
     {
-        $fleet->arrivalAt=new \DateTimeImmutable('-1 second');$this->em->flush();$service->arrive($fleet->id,$fleet->dispatchToken);
+        // Même horloge que la mission : l'arrivée reste échue quelle que soit la date réelle.
+        $fleet->arrivalAt=self::getContainer()->get('clock')->now()->modify('-1 second');$this->em->flush();$service->arrive($fleet->id,$fleet->dispatchToken);
     }
     public function testSoloProbeReservesFuelAndDiscoversWholeSystemExactlyOnce(): void
     {

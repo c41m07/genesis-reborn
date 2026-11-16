@@ -13,6 +13,8 @@ final class ProgressionOperationsReference
         $property = new \ReflectionProperty(GameCatalog::class, 'data');
         $data = $property->getValue($catalog);
         foreach ($reference['durations'] as $group => $entries) {
+            // Les études datées ne contiennent pas les unités civiles ajoutées ensuite.
+            $data[$group] = array_intersect_key($data[$group], $entries);
             $field = match ($group) {
                 'buildings' => 'base_build_time',
                 'technologies' => 'research_time_base',

@@ -18,8 +18,8 @@ pas présentées comme lues.
 | Lot | Contenu | État |
 |---|---|---|
 | 1 | 150 profils de prérequis, registre versionné, diagnostic et requalification explicite, interface et documentation associées | Fusionné dans dev par PR #69 après CI complète réussie |
-| 2 | Durées, taxe électrique calculée sur la durée effective, carburant différencié, navigation historique préservée | Implémenté et vérifié localement ; publication à autoriser |
-| 3 | Six profils civils, production segmentée, mobilité/immobilité, affectations et réservations concurrentes, combat, rapports et simulateur | À réaliser après fusion du lot 2 |
+| 2 | Durées, taxe électrique calculée sur la durée effective, carburant différencié, navigation historique préservée | Fusionné dans dev par PR #70 après CI complète réussie |
+| 3 | Six profils civils, production segmentée, mobilité/immobilité, affectations et réservations concurrentes, combat, rapports et simulateur | Analyse en cours sur feature/unites-economiques-orbitales |
 | 4 | Simulations avec les calculateurs réels, comparaison des répartitions, mesures et limites | À réaliser après intégration des unités |
 
 ## Lot 1 — complexité 5/5
@@ -157,14 +157,126 @@ La fiche de sonde conserve l’affichage de 0,006 H/h.
 - `git diff --check` réussi ; wiki JSON et liens des deux suivis valides.
 - Diagnostic local en lecture seule : aucune surcharge de durée/carburant et aucune
   flotte active ; cela ne décrit pas Alpha. Aucune migration SQL nécessaire.
-- Publication, PR et CI du lot 2 non exécutées à ce stade. Aucune requalification
-  d’accès en base de jeu et aucun déploiement Alpha.
+- [PR #70](https://github.com/c41m07/genesis-reborn/pull/70) fusionnée avec autorisation dans
+  dev au commit `6fa8823`, après [CI complète n° 295](https://github.com/c41m07/genesis-reborn/actions/runs/43767637219)
+  réussie sur `ce4bc69` : cinq jobs quality, 1 282 PHP / 215 798 assertions,
+  13 Python et 202 parcours navigateur ; compilation, lint, schéma, diff et
+  sauvegarde/restauration isolées réussis. GitGuardian réussi ; publish ignoré sur PR.
+  Aucune requalification d’accès en base de jeu ni livraison Alpha.
+
+## Lot 3 — implémentation locale, complexité 5/5
+
+Base : dev actualisée `6fa8823`, après fusion du lot 2 ; arbre initialement propre.
+Branche : `feature/unites-economiques-orbitales`.
+Sous-tâches : catalogue et statistiques 3/5 ; capacités et réservations concurrentes
+5/5 ; production et transitions 5/5 ; combat et chronologie 5/5 ; interface 3/5.
+
+Décisions complémentaires explicites des 15 et 16 novembre :
+- Coefficient neutre ×1 pour les tirs ciblant les deux unités civiles, sans nouveau contre.
+- Livraisons du chantier et du Stationnement : la flotte locale complète rejoint
+  les renforts au prochain round éligible, en conservant son carburant embarqué.
+- Les pertes effectives et l’arrêt de production suivent la clôture du combat,
+  conformément au moteur actuel. Aucun arrêt général au début du combat.
+
+### Résultat
+
+Les [six profils et leurs règles](UNITES_ECONOMIQUES.md) sont implémentés : prix,
+prérequis, production, places du même rang, inactivité sans perte des excédents,
+réservations de chantier/Stationnement, retours et replis. Les transactions et
+verrous existants portent les contrôles, sans nouvelle table ni migration SQL.
+Les sources civiles sont distinguées des usines dans les ressources et les cartes.
+Les satellites sont exclus des départs, les récolteurs limités au Stationnement
+entre colonies possédées. Aucune modification de coûts/statistiques des unités
+existantes et aucune activation du candidat de redistribution.
+
+Le moteur de combat conserve l’unicité des FleetShip, le carburant et le fret des
+renforts locaux. Une livraison retardée ne réécrit pas les rounds déjà résolus.
+Deux SVG originaux de famille sont fournis et partagés entre leurs trois rangs,
+sans réutiliser l’illustration d’un autre vaisseau.
+
+### Fichiers principaux
+
+- Deux catalogues de vaisseaux, deux SVG et colonnes neutres de la matrice de combat.
+- `EconomicUnitCapacity`, `EconomicUnitDeployment`, `GameRepository` : stocks ciblés,
+  places et transitions sous les verrous existants.
+- `ResourceService`, `CatalogueProductionContext` : production civile et frontières temporelles.
+- `QueueService`, services de flotte, `LocalGarrison`, `CombatEventService` : livraisons,
+  réservations, pertes et renforts sans duplication.
+- Cartes, détails, composition et simulateur : disponibilité, capacité, immobilité et accès clavier.
+- Tests unitaires, intégration, concurrence réelle et deux nouveaux parcours navigateur.
+- README, règles, décisions, coûts, déblocages, architecture, économie, déplacements,
+  illustrations, 156 libellés CSV, wiki embarqué et index synchronisés. Aucune mise
+  à jour d’un wiki hébergé externe ni livraison Alpha annoncée.
+
+### Vérifications locales du 16 novembre 2026
+
+- `make validate`, `make lint` (PHP, 80 YAML, 170 Twig, injection et schéma) et
+  `make assets` réussis ; aucun changement de schéma requis.
+- Suite `make test` : 1 306 tests PHP exécutés, 228 957 assertions, un seul échec
+  dans un ancien test de retour qui mélangeait horloge simulée et date réelle.
+  La correction aligne l’échéance de test sur l’horloge applicative ; ce test
+  repasse (8 assertions). Aucune assertion retirée. La suite complète n’a pas été
+  relancée après cette correction limitée au support de test ; la CI de PR devra
+  donc confirmer l’ensemble. L’unique omission reste la mesure facultative
+  préexistante `REWORK_MEASURE=1`.
+- Les 13 tests Python passent. Les 18 cas d’intégration économiques passent dans
+  la suite, dont deux commandes réellement simultanées pour la dernière place.
+- Huit parcours navigateur distincts ont été exécutés : fiches des 156 profils,
+  deux nouveaux parcours économiques, Stationnement et rappels. Sept passent
+  immédiatement ; le nouveau contrôle Axe détecte le libellé du bouton Max,
+  corrigé pour inclure son texte visible. Le parcours concerné repasse avec
+  vérifications clavier, contrastes et absence de débordement à 1440 et 390 px.
+  Les pictogrammes et l’affichage des places ont été examinés sur captures.
+- La commande de comparaison existante produit 156 profils et 180 trajets ; les
+  six nouveaux profils n’inventent pas de durée historique. L’archive est conservée.
+- Diagnostic local en lecture seule : zéro univers surchargeant les deux nouvelles
+  unités, zéro ligne de stock civil et zéro commande civile. Ce constat ne décrit
+  pas Alpha et ne constitue pas une activation.
+- Relecture de la matrice : toutes les relations existantes sont conservées, deux
+  colonnes neutres seulement ajoutées. Aucun prix existant modifié.
+
+Un autre travail a changé la branche du dossier partagé pendant la vérification.
+Le lot a été copié dans un checkout séparé de sa branche, en préservant les
+modifications étrangères. Après autorisation explicite, sa copie initiale a été
+retirée du dossier partagé avec vérification d’identité de chaque fichier ; les
+six fichiers modifiés par l’autre tâche sont conservés.
+
+Publication et fusion conditionnelle autorisées : [PR #71](https://github.com/c41m07/genesis-reborn/pull/71).
+La première [CI complète n° 296](https://github.com/c41m07/genesis-reborn/actions/runs/43780432127)
+confirme 1 306 PHP / 228 969 assertions, 13 Python, lint, schéma, compilation,
+diff et sauvegarde/restauration isolées (60 tables). Les 204 parcours navigateur
+sont allés au bout : 202 réussis, deux attentes devenues obsolètes. Le test
+d’onglets attendait 14 familles au lieu de 16 ; le test de maximum cherchait
+l’ancien nom accessible du bouton Max. Leurs attentes sont actualisées sans
+retrait de contrôle, avec conservation de la correction d’accessibilité.
+Les deux parcours corrigés repassent dans des bases navigateur isolées, sans
+modifier les délais d’attente ni retirer leurs assertions métier.
+Une nouvelle CI complète sur ces corrections reste obligatoire avant fusion. Aucune opération sur une base de jeu
+ni aucun déploiement Alpha.
+
+### Complément de relecture : attributions administratives
+
+La vérification des chemins créant des FleetShip identifie l’attribution
+administrative : elle doit solder l’ancien effectif avant d’ajouter des unités
+économiques. `AdminInterventionService` applique maintenant cette transition et
+le raccordement commun des livraisons locales aux renforts. Les permissions,
+propriété, verrouillage, reçu et audit sont conservés, sans attribution réelle
+ni changement des règles de correction administrative. Les rappels et retours
+administratifs passent déjà par `startReturn`, qui libère et replace les réservations.
+Trois régressions vérifient l’absence de production rétroactive, les excédents
+inactifs, l’idempotence, le prochain round éligible et le carburant conservé.
+La synchronisation des commandes échues précède la correction afin de conserver
+la production due depuis leur livraison payée. Les 26 cas administratifs existants
+et 18 cas économiques précédents réussissent. Les deux premiers cas ajoutés passent
+(21 assertions), puis le cas de livraison échue passe (6 assertions) ; l’injection
+du conteneur est valide. Ces résultats ciblés ne remplacent pas la nouvelle CI.
+La CI n° 297 portait sur la correction des deux attentes navigateur ; l’ajout
+métier impose une nouvelle CI complète sur sa propre révision avant fusion.
 
 ## Reprise
 
-Présenter le commit local relu et les contrôles du lot 2 pour autorisation du push, de la PR vers dev et de la fusion après CI complète.
-Ne démarrer le lot 3 qu’après cette intégration. Les simulations conjointes restent
-au lot 4, sans activer la redistribution des prix candidate.
+Attendre la CI complète de la PR #71 sur la dernière révision avant fusion dans dev. Les simulations conjointes restent au
+lot 4, sans activer la redistribution des prix candidate.
 
 Pour une base existante : maintenance coordonnée, sauvegarde restaurable vérifiée,
 diagnostic des surcharges puis autorisation explicite avant la requalification `--apply`.

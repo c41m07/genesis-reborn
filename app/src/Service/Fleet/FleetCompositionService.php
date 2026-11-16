@@ -30,6 +30,7 @@ final class FleetCompositionService
             foreach($tiers as $tier=>$value) {
                 $quantity=filter_var($value,FILTER_VALIDATE_INT);
                 if(!in_array($tier,GameCatalog::TIERS,true) || $quantity===false || $quantity<0 || $quantity>(int)$config['limits']['max_fleet_size']) throw new \DomainException('Rang ou quantité de vaisseaux invalide.');
+                if($quantity && ($config['catalog']['ships'][$slug]['mobile']??true)===false) throw new \DomainException('Une unité fixe ne peut pas rejoindre une composition de flotte.');
                 if($quantity) {$result[$slug][$tier]=$quantity;$total+=$quantity;}
             }
         }

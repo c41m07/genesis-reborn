@@ -12,7 +12,7 @@ final class ClassFuelTest extends TestCase
     public static function coefficients(): iterable
     {
         foreach ([
-            'probe'=>[0.01,0.04,0.006], 'interceptor'=>[0.04,0.16,0.024],
+            'hydrogen_collector'=>[0.05,0.20,0], 'probe'=>[0.01,0.04,0.006], 'interceptor'=>[0.04,0.16,0.024],
             'fighter'=>[0.05,0.20,0.030], 'stealth_fighter'=>[0.06,0.24,0.036],
             'heavy_fighter'=>[0.07,0.28,0.042], 'bomber'=>[0.10,0.40,0.060],
             'corvette'=>[0.12,0.48,0.072], 'frigate'=>[0.18,0.72,0.108],

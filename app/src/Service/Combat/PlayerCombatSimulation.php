@@ -35,9 +35,10 @@ final class PlayerCombatSimulation
             throw new \DomainException('Colonie inaccessible.');
         }
         $ships = [];
+        $definitions = $this->choices($owner)['ships'];
         $fleets = $this->repo->all(Fleet::class, ['playerUniverse' => $owner, 'homePlanet' => $planet, 'status' => 'idle']);
         foreach ($fleets === [] ? [] : $this->repo->all(FleetShip::class, ['fleet' => $fleets]) as $ship) {
-            if ($ship->quantity <= 0) {
+            if ($ship->quantity <= 0 || isset($definitions[$ship->slug]['economic_unit'])) {
                 continue;
             }
             $ships[$ship->slug][$ship->tier] = ($ships[$ship->slug][$ship->tier] ?? 0) + $ship->quantity;
@@ -201,6 +202,11 @@ final class PlayerCombatSimulation
             }
             $research = $this->values($input['research'] ?? [], $choices['research'], true);
             $composition = $this->values($input['ships'] ?? [], $choices['ships']);
+            if ($camp === 'attacker') {
+                foreach ($composition as $slug=>$tiers) if (isset($choices['ships'][$slug]['economic_unit'])) {
+                    throw new \DomainException('Les unités économiques participent uniquement à la défense de leur colonie.');
+                }
+            }
             $ships = $this->units->ships($owner->universe, $composition, $research);
             $arrival = filter_var($input['arrival'] ?? 1, FILTER_VALIDATE_INT);
             $rounds = (int) $this->catalog->rules()['max_combat_rounds'];

@@ -13,7 +13,7 @@ use Psr\Clock\ClockInterface;
 use App\Service\Player\VacationCalendar;
 final class FleetService
 {
-    public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues,private \App\Service\Combat\CombatEventService $combats,private EspionageService $espionage,private BoostGrantService $boostGrants,private BoostEventService $boostEvents,private \App\Service\Universe\PlanetNameGenerator $planetNames,private \App\Service\Combat\TechnologyEffectCalculator $technologyEffects,private TransportService $transports,private VacationCalendar $vacations,private \App\Service\Combat\OccupationService $occupations, private \App\Service\Admin\FleetMissionTraceService $traces,private FleetNavigation $navigation,private OrbitPolicy $orbitPolicy,private OrbitRequestState $orbitRequests,private FleetRecallPlanner $recallPlanner,private \App\Service\Colony\ColonizationKitPolicy $colonizationKits,private FleetHold $hold,private FleetDispatch $dispatch,private FleetStationing $stationing) {}
+    public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues,private \App\Service\Combat\CombatEventService $combats,private EspionageService $espionage,private BoostGrantService $boostGrants,private BoostEventService $boostEvents,private \App\Service\Universe\PlanetNameGenerator $planetNames,private \App\Service\Combat\TechnologyEffectCalculator $technologyEffects,private TransportService $transports,private VacationCalendar $vacations,private \App\Service\Combat\OccupationService $occupations, private \App\Service\Admin\FleetMissionTraceService $traces,private FleetNavigation $navigation,private OrbitPolicy $orbitPolicy,private OrbitRequestState $orbitRequests,private FleetRecallPlanner $recallPlanner,private \App\Service\Colony\ColonizationKitPolicy $colonizationKits,private FleetHold $hold,private FleetDispatch $dispatch,private FleetStationing $stationing,private \App\Service\Colony\EconomicUnitCapacity $economicUnits,private \App\Service\Colony\EconomicUnitDeployment $economicDeployment) {}
     private function coords(SolarSystem $s,?int $position): array { return [$s->id,$s->galaxy->id,$s->coordX,$s->coordY,$position]; }
     public function quote(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo=[],float $orbitHours=0): array
     {
@@ -47,8 +47,11 @@ final class FleetService
             if(!in_array($tier,GameCatalog::TIERS,true))throw new \DomainException('Rang de vaisseau invalide.');
             $requested=filter_var($amount,FILTER_VALIDATE_INT);if($requested===false||$requested<0)throw new \DomainException('Quantité de vaisseaux invalide.');
             $n=min($requested,$stock[$slug][$tier]??0,$remaining);$remaining-=$n;$adjusted=$adjusted||$n!==$requested;if(!$n)continue;
-            $ship=$this->catalog->getTierForUniverse($m->universe,'ships',(string)$slug,(string)$tier);$ship['quantity']=$n;$ship['tier']=$tier;$ships[]=$ship;$valid[$slug][$tier]=$n;
+            $ship=$this->catalog->getTierForUniverse($m->universe,'ships',(string)$slug,(string)$tier);$ship['quantity']=$n;$ship['tier']=$tier;
+            if (($ship['mobile']??true)===false || (isset($ship['allowed_missions']) && !in_array($mission,$ship['allowed_missions'],true))) throw new \DomainException($ship['label'].' ne peut pas participer à cette mission.');
+            $ships[]=$ship;$valid[$slug][$tier]=$n;
         }}
+        if($mission==='station') $this->economicUnits->allocate($target,$valid);
         $fleetSize=0;foreach($valid as $ranks)foreach($ranks as $amount)$fleetSize+=$amount;if($fleetSize>$config['limits']['max_fleet_size'])throw new \DomainException('Flotte trop grande.');
         $hasSlug=static fn(string $slug):bool=>array_sum($valid[$slug]??[])>0;
         if($mission==='attack' && $target instanceof Planet && $target->owner?->id===$m->id) throw new \DomainException('Vous ne pouvez pas attaquer votre propre colonie.');
@@ -121,6 +124,11 @@ final class FleetService
                 $stock=$this->repo->one(FleetShip::class,['fleet'=>$q['idle'],'slug'=>$slug,'tier'=>$tier]);$stock->quantity-=$quantity;
                 $ship=new FleetShip();$ship->fleet=$f;$ship->slug=$slug;$ship->tier=$tier;$ship->quantity=$quantity;$this->manager->save($ship);
             }
+            if($mission==='station') {
+                $this->manager->flush();
+                $this->economicDeployment->reserve($f,$q['target'],true);
+                $this->resources->refreshProduction($origin);
+            }
             if($mission==='orbit') {
                 if(!$this->orbitPolicy->canRequest($m,$f->destination)) throw new \DomainException('Cette planète n’accepte plus les demandes d’orbite.');
                 $automatic=$this->orbitPolicy->automatic($m,$f->destination);
@@ -165,6 +173,10 @@ final class FleetService
     /** La participation, l’univers, les planètes et la flotte sont déjà verrouillés. */
     public function startPlayerRecallLocked(Fleet $fleet,Planet $returnPlanet,array $quote): void
     {
+        if($fleet->mission==='station') {
+            $this->economicDeployment->clear($fleet);
+            unset($quote['navigation']['economic_slots']);
+        }
         $fleet->cargo['hydrogen']=max(0.0,($fleet->cargo['hydrogen']??0)-$quote['spent_now']);
         $fleet->reservedFuel=$quote['return_fuel'];$fleet->orbitFuel=0;
         $fleet->returnPlanet=$returnPlanet;$fleet->navigation=$quote['navigation'];
@@ -179,6 +191,7 @@ final class FleetService
         $fleet->travelSeconds=$quote['seconds'];$fleet->status='returning';
         $fleet->departureAt=$quote['at'];$fleet->arrivalAt=$fleet->departureAt->modify('+'.$fleet->travelSeconds.' seconds');
         $this->navigation->beginLeg($fleet,$fleet->departureAt);
+        if($fleet->mission==='station') $this->economicDeployment->reserve($fleet,$returnPlanet);
         $this->transports->recordConversionRecall($fleet,'player_recall');
         $this->schedule($fleet);
     }
@@ -412,11 +425,13 @@ final class FleetService
 
     private function startReturn(Fleet $fleet, ?\DateTimeImmutable $at = null): void
     {
+        if($fleet->mission==='station') $this->economicDeployment->clear($fleet);
         $this->orbitRequests->close($fleet,'invalid',$this->clock->now());
         $fleet->status = 'returning';
         $fleet->departureAt = $at ?? $this->clock->now();
         $fleet->arrivalAt = $fleet->departureAt->modify('+' . $fleet->travelSeconds . ' seconds');
         $this->navigation->beginLeg($fleet,$fleet->departureAt);
+        if($fleet->mission==='station') $this->economicDeployment->reserve($fleet,$fleet->returnPlanet??$fleet->homePlanet);
         $this->schedule($fleet);
     }
 

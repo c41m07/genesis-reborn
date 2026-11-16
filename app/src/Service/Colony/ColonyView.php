@@ -21,6 +21,7 @@ final class ColonyView
         private CatalogAccess $access,
         private CatalogFilters $filters,
         private EmpireDetails $empireDetails,
+        private EconomicUnitCapacity $economicUnits,
     )
     {
     }
@@ -96,7 +97,8 @@ final class ColonyView
             $queues['research'][] = ['item' => $item, 'label' => $definition['label'], 'finish' => $finish];
         }
         // Aucun état partagé : chaque préparation relit les événements et les vacances.
-        $productionContext = $section === 'buildings' ? $this->resources->catalogueContext($planet) : null;
+        $productionContext = in_array($section, ['buildings','ships'], true) ? $this->resources->catalogueContext($planet) : null;
+        $economicStates = $section === 'ships' ? $this->economicUnits->state($planet, $buildings, $productionContext?->economicInventory) : [];
         foreach (in_array($section, [
             'buildings',
             'technologies',
@@ -226,6 +228,9 @@ final class ColonyView
                         'failures' => array_values(array_unique($failures)),
                         'maximum' => isset($definition['max_level']) && $target > $definition['max_level'],
                         'queued' => $queued !== null,
+                        'economic' => $economicStates[$slug][$tier] ?? null,
+                        'capacity_full' => isset($definition['economic_unit']) && !($definition['mobile'] ?? true)
+                            && ($economicStates[$slug][$tier]['available'] ?? 0) === 0,
                     ];
                 }
             }

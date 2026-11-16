@@ -102,7 +102,7 @@ final class FleetController extends AbstractController
         $holds = $repo->all(Fleet::class, ['playerUniverse' => $m, 'homePlanet' => $selectedPlanet, 'status' => 'idle']);
         $shipsByFleet = [];
         foreach ($holds ? $repo->all(FleetShip::class, ['fleet' => $holds]) : [] as $ship) {
-            if ($ship->quantity > 0) {
+            if ($ship->quantity > 0 && ($universeConfig['catalog']['ships'][$ship->slug]['mobile'] ?? true)) {
                 $shipsByFleet[$ship->fleet->id][] = $ship;
             }
         }

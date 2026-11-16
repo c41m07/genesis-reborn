@@ -24,7 +24,7 @@ final class ProducerBalanceTest extends TestCase
         $repository=$this->createStub(EntityRepository::class);$repository->method('findBy')->willReturn([]);
         $em=$this->createStub(EntityManagerInterface::class);$em->method('getRepository')->willReturn($repository);
         $repo=new GameRepository($em);$manager=new GameManager($em);$clock=new MockClock('2026-11-09T12:00:00Z');
-        $this->resources=new ResourceService($repo,$manager,$this->catalog,$clock,new GameEventService($repo,$manager,$clock),new VacationCalendar($repo,$clock));
+        $this->resources=new ResourceService($repo,$manager,$this->catalog,$clock,new GameEventService($repo,$manager,$clock),new VacationCalendar($repo,$clock),new \App\Service\Colony\EconomicUnitCapacity($repo,$this->catalog));
     }
     private function planet(int $position=5,int $speed=1):Planet
     {

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="title">
+  <title id="title">Satellite solaire, pictogramme de famille</title>
+  <defs><linearGradient id="space" x2="1" y2="1"><stop stop-color="#10253a"/><stop offset="1" stop-color="#050b14"/></linearGradient></defs>
+  <rect width="640" height="360" fill="url(#space)"/>
+  <g stroke-width="4" stroke-linejoin="round">
+    <path d="M110 118h150v124H110zm270 0h150v124H380z" fill="#1a4d76" stroke="#8bd4ff"/>
+    <path d="M160 118v124m50-124v124m220-124v124m50-124v124M110 160h150m-150 40h150m120-40h150m-150 40h150" fill="none" stroke="#6db7e3" stroke-width="2"/>
+    <path d="M260 180h30m60 0h30m-60-65V80m0 165v35" fill="none" stroke="#e6c67a"/>
+    <path d="m320 110 35 24v92l-35 24-35-24v-92z" fill="#64503b" stroke="#f7d990"/>
+    <circle cx="320" cy="180" r="18" fill="#ffe7a7" stroke="#fff4cf"/>
+  </g>
+  <g fill="#baf5ff"><circle cx="85" cy="70" r="2"/><circle cx="535" cy="80" r="3"/><circle cx="90" cy="285" r="2"/></g>
+</svg>

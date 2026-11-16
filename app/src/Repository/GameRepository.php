@@ -21,6 +21,23 @@ final class GameRepository
         return $this->em->getRepository($class)->findOneBy($criteria);
     }
 
+    /** @return list<FleetShip> Stocks civils locaux et flottes de stationnement entrantes uniquement. */
+    public function economicUnitStocks(Planet $planet, array $slugs): array
+    {
+        if ($planet->owner === null || $slugs === []) return [];
+        return $this->em->createQueryBuilder()->select('ship', 'fleet')->from(FleetShip::class, 'ship')
+            ->join('ship.fleet', 'fleet')->where('ship.slug IN (:slugs)')->andWhere('ship.quantity > 0')
+            ->andWhere('fleet.playerUniverse = :owner')
+            ->andWhere('((fleet.homePlanet = :planet AND fleet.status IN (:local)) OR '
+                .'(fleet.mission = :station AND ((fleet.status = :outbound AND fleet.destination = :planet) OR '
+                .'(fleet.status = :returning AND (fleet.returnPlanet = :planet OR '
+                .'(fleet.returnPlanet IS NULL AND fleet.homePlanet = :planet))))))')
+            ->setParameter('slugs', $slugs)->setParameter('owner', $planet->owner)->setParameter('planet', $planet)
+            ->setParameter('local', ['idle', 'defending'])->setParameter('station', 'station')
+            ->setParameter('outbound', 'traveling')->setParameter('returning', 'returning')
+            ->orderBy('fleet.id', 'ASC')->getQuery()->getResult();
+    }
+
     /** @return array{membershipId: int, planetId: int}|null */
     public function queueContext(int $id): ?array
     {

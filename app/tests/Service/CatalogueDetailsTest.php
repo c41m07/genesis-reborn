@@ -47,7 +47,7 @@ final class CatalogueDetailsTest extends KernelTestCase
             if(in_array($group,['ships','defenses'],true))self::assertCount(isset($base['secondary_attack'])?8:7,$details['performance']);
             ++$count;
         }
-        self::assertSame(150,$count);
+        self::assertSame(156,$count);
     }
 
     public function testEspionageCatalogueExplainsTheConfiguredRisksAndDefensiveCap():void

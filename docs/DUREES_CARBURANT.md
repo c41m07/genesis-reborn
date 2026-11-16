@@ -1,6 +1,6 @@
 # Durées et carburant — décision du 15 novembre 2026
 
-Lot 2 implémenté localement sur `feature/durees-carburant-par-classe`, depuis dev `01bc65a` après fusion de la [PR #69](https://github.com/c41m07/genesis-reborn/pull/69). Sa publication et sa CI restent distinctes ; aucun déploiement Alpha. Voir le [suivi](PROGRESSION_CARBURANT_UNITES.md).
+Lot 2 fusionné dans dev par la [PR #70](https://github.com/c41m07/genesis-reborn/pull/70), commit `6fa8823`, après CI complète n° 295 réussie. Il part de `01bc65a` après la [PR #69](https://github.com/c41m07/genesis-reborn/pull/69). Aucun déploiement Alpha. Voir le [suivi](PROGRESSION_CARBURANT_UNITES.md).
 
 ## Référence de lecture
 
@@ -74,6 +74,16 @@ La durée croît à chaque niveau : ×1,35 de 2 à 5 ; ×1,25 de 6 à 10 ; ×1,1
 | Cargo de ligne | 1 h | 30 min | 6 000 | 3 000 |
 
 Exemple Capital : Basique 24 h, Intermédiaire 30 h, Supérieur 37 h 30 ; avec une réduction effective de 70 %, le Basique dure exactement 7 h 12. La soustraction des pourcentages avant division corrige une imprécision numérique qui ajoutait une seconde à ce dernier cas.
+
+## Nouvelles unités économiques — lot 3
+
+Récolteur et satellite : 180 s Basique / 225 s Intermédiaire / 282 s Supérieur,
+soit 300 / 400 / 500 E avant réductions, une unité à vitesse ×1. Le calculateur
+des vaisseaux applique les bonus, lots et taxe usuels ; le satellite reste immobile.
+Carburant du récolteur : 0,05 normal / 0,20 hyperespace / aucun maintien propre.
+Les [profils, conditions et limites](UNITES_ECONOMIQUES.md) complètent les 150
+profils existants. La comparaison courante couvre 156 profils ; pour les six
+nouveaux, aucune durée historique n’existait. L’archive datée reste inchangée.
 
 ## Défenses
 

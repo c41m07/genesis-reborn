@@ -1,15 +1,18 @@
 # Genesis Reborn
 
-Les [150 profils de prérequis](docs/DEBLOCAGES.md) utilisent une grille commune
+Les [156 profils de prérequis](docs/DEBLOCAGES.md) utilisent une grille commune
 par rang, avec requalification explicite des accès existants. Les [durées et
 consommations de carburant](docs/DUREES_CARBURANT.md) sont révisées par famille,
 avec conservation des commandes payées et des coefficients des missions lancées.
+Les [unités économiques](docs/UNITES_ECONOMIQUES.md) ajoutent des récolteurs mobiles
+et des satellites fixes, avec places par rang, réservations et production locale.
+Leur livraison pendant un combat rejoint les renforts locaux avec toute la flotte.
 Le [suivi de mission](docs/PROGRESSION_CARBURANT_UNITES.md) distingue les lots
 préparés, leur intégration, leur activation et les décisions encore ouvertes.
 
 Comparer les durées, la taxe électrique et les trajets sans écrire en base :
 `make -s console CMD="app:balance:compare-operations"`. La sortie JSON couvre les
-150 profils et des scénarios de trajet ; les hypothèses et limites sont dans
+156 profils et des scénarios de trajet ; les hypothèses et limites sont dans
 la [méthode de mesure](docs/DUREES_CARBURANT.md#mesure-reproductible-et-limites).
 
 Genesis Reborn est un jeu de stratégie spatiale multijoueur par navigateur. Chaque joueur développe ses colonies, organise sa production et ses recherches, explore la galaxie et conduit des opérations de flotte dans des univers indépendants. L’Alpha sert aussi à observer la progression et les retours des joueurs avant de futures décisions d’équilibrage.

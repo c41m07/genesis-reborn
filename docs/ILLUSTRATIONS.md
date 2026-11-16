@@ -1,5 +1,15 @@
 # Prompts des illustrations du catalogue
 
+## Pictogrammes des unités économiques — lot 3
+
+Deux nouveaux SVG originaux sont livrés :
+`app/public/images/catalog/ships/hydrogen_collector.svg` et `solar_satellite.svg`.
+Chacun représente sa propre famille et est partagé entre ses trois rangs.
+Ce sont des pictogrammes vectoriels, pas six illustrations cinématiques de rang
+ni des images réutilisées d’un autre vaisseau. Le champ `artwork` de ces deux
+fiches indique leur chemin ; les 150 illustrations et SVG d’identité restent
+conservés. Les cartes conservent leurs alternatives textuelles et chargement natif.
+
 ## Format retenu
 
 Les 150 illustrations du catalogue sont servies depuis `app/public/images/catalog/`. Les ressources de conception restent sous `docs/artwork/`. Ces prompts servent à leur recréation ; préserver les illustrations actuellement utilisées.

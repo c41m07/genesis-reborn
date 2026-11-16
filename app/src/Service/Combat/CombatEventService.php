@@ -217,7 +217,7 @@ final class CombatEventService
         $this->notifications->enqueue($host, $message,journalKind:'combat');
     }
 
-    public function joinOpenDefense(Fleet $fleet): bool
+    public function joinOpenDefense(Fleet $fleet, ?\DateTimeImmutable $arrivalAt = null): bool
     {
         $planet = $fleet->destination;
         if (!$planet) {
@@ -228,7 +228,8 @@ final class CombatEventService
             return false;
         }
         foreach ($this->repo->all(CombatEvent::class, ['planet' => $planet, 'status' => 'pending'], ['id' => 'DESC']) as $event) {
-            if ($event->resolveAt <= $this->clock->now()) {
+            if ($event->resolveAt <= $this->clock->now() || ($arrivalAt !== null
+                && $event->currentRound >= max(1, (int)($this->catalog->rules()['max_combat_rounds'] ?? 10)))) {
                 continue;
             }
             $existing = $this->repo->one(CombatParticipant::class, ['combatEvent' => $event, 'fleet' => $fleet]);
@@ -238,8 +239,12 @@ final class CombatEventService
                 $participant->fleet = $fleet;
                 $participant->playerUniverse = $fleet->playerUniverse;
                 $participant->role = 'defender';
-                $participant->arrivalAt = $this->clock->now();
+                $participant->arrivalAt = $arrivalAt ?? $this->clock->now();
                 $participant->arrivalRound = $this->arrivalRound($event, $participant->arrivalAt);
+                if ($arrivalAt !== null) {
+                    // Une livraison locale retardée ne rejoue aucun round déjà résolu.
+                    $participant->arrivalRound = max($event->currentRound+1, $participant->arrivalRound);
+                }
                 $this->manager->save($participant);
                 $this->notifyReinforcement($planet, $fleet);
             }
@@ -533,6 +538,8 @@ final class CombatEventService
             }
             $event->currentRound = $result['rounds_played'];
 
+            // Les unités civiles de la garnison produisent jusqu'à la perte effective, à la clôture.
+            $this->resources->materialize($event->planet, $this->clock->now());
             $defenseRebuilt = $this->persistLosses($participants, $defenseSnapshots, $result['losses'], $event->planet);
             $recoveryProtection = $this->applyRecoveryProtection($snapshot, $result['losses'], $participants);
             $loot = $this->collectLoot($participants, $result['outcome'], $event);
@@ -606,6 +613,8 @@ final class CombatEventService
             $log->resolvedAt = $this->clock->now();
             $this->manager->save($log);
             $event->status = 'resolved';
+            $this->manager->flush();
+            $this->resources->refreshProduction($event->planet);
             $this->reconstruction->afterCombatLocked($event->planet);
         });
     }

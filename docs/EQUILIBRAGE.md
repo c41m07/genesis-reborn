@@ -1,5 +1,15 @@
 # Réglages et études d’équilibrage
 
+## Unités civiles — lot 3 du 16 novembre 2026
+
+Les six [profils économiques](UNITES_ECONOMIQUES.md) sont ajoutés sans changer les
+statistiques, coûts ou contres des 150 profils existants. Les tirs visant ces
+unités sans arme utilisent le coefficient neutre ×1 validé. La production locale
+et ses limites sont testées ; les études historiques ci-dessous ne mesurent pas
+cette nouvelle composition ni son effet de masse. Les simulations conjointes,
+la reconstruction et le risque de surproduction d’hydrogène restent au lot 4.
+Le candidat B50/50 et I40/40/20 reste non activé.
+
 ## Durées et carburant — 15 novembre 2026
 
 Les [grilles et mesures courantes](DUREES_CARBURANT.md) remplacent les anciennes
