@@ -3,10 +3,18 @@
 ## Périmètre validé
 
 Deux cadres distincts : « Flottes en vol » conserve le suivi de vos propres missions ;
-« Flottes entrantes » reprend le cadre d’attaques détectées et annonce les arrivées
+« Flottes entrantes » annonce les arrivées
 d’autres commandants sur vos colonies. Il reste présent même sans arrivée
 visible : compteur zéro et message « Aucune flotte entrante visible vers vos colonies ». Aucun mouvement allié vers une autre destination n’est ajouté.
-Le panneau reste un complément de la page Flottes, sans nouvelle page ni formulaire.
+Le panneau reprend les mêmes composants visuels que « Flottes en vol » : cadre,
+titre avec compteur, cartes de mission, trajet et échéance. Il se place juste sous
+les vols personnels dans la Vue générale, dans Flottes et dans la colonne de droite
+des quatre catalogues (Bâtiments, Recherche, Chantier spatial et Défenses).
+Sur mobile, ces deux cadres restent visibles après le catalogue, dans la même
+colonne. Un seul panneau apparaît par page ; les autres pages conservent la surveillance
+existante. Aucune nouvelle page, onglet ou navigation n’est ajouté.
+La barre de progression utilise l’heure serveur lorsque le départ est public.
+Les attaques masquent leur date de départ et affichent uniquement leur échéance.
 
 | Mission | Visibilité dans le panneau |
 |---|---|
@@ -50,7 +58,7 @@ contrat d’accueil, droit de combat, coût, trajet ou état de flotte n’est m
 Les attributs et le format d’actualisation existants restent compatibles avec
 les pages déjà ouvertes. Aucune dépendance, migration ou livraison Alpha.
 
-## Vérifications locales
+## Vérifications de l’extension initiale
 
 - 32 tests PHP ciblés / 1 113 assertions réussis : arrivées neutres et alliées,
   attaques, préavis, origine inconnue, sondes, univers, retours exclus, empires
@@ -64,3 +72,16 @@ les pages déjà ouvertes. Aucune dépendance, migration ou livraison Alpha.
   Les contrôles ont été relancés sans retirer d’assertion ni modifier les règles.
 - Les captures réelles et journaux sont conservés sous output/incoming-fleets/ et
   app/test-results/ (hors Git). Aucune nouvelle CI GitHub ni publication distante.
+
+## Validation de la présentation commune
+
+- 16 tests PHP de visibilité / 209 assertions réussis.
+- Sept parcours navigateur distincts réussis : trois de surveillance (détection,
+  focus, horloge serveur décalée, origines privées, carte, six pages, mobile, thèmes
+  et orbite) et quatre parcours existants de vols, Vue générale et état Espionnage vide.
+- Comparaison des styles calculés des deux cadres et cartes sur les six pages,
+  absence de doublon et vérifications ciblées Axe dans les deux thèmes.
+- make validate, make lint, make assets, syntaxes JavaScript et git diff --check réussis.
+- Captures réelles et journaux sous output/playwright/incoming-style/ (hors Git).
+  Version locale actualisée ; routes / et /health répondent 200, assets servis vérifiés.
+- Aucune publication GitHub, CI distante ou livraison Alpha pour cette retouche.

@@ -24,10 +24,10 @@ test('L’état Espionnage sans flotte conduit au chantier réel', async ({ page
 
   for(const width of [1440,390]) {
     await page.setViewportSize({width,height:844});
-    const heading=await page.locator('.flight-operations > .section-heading').boundingBox();
-    const empty=await page.locator('.flight-operations > .flight-idle').boundingBox();
+    const heading=await page.locator('[data-live-region="active-flights"] > .section-heading').boundingBox();
+    const empty=await page.locator('[data-live-region="active-flights"] > .flight-idle').boundingBox();
     expect(empty.y).toBeGreaterThanOrEqual(heading.y+heading.height);
-    await expect(page.locator('.flight-operations > .flight-idle')).toContainText('cette colonie');
+    await expect(page.locator('[data-live-region="active-flights"] > .flight-idle')).toContainText('cette colonie');
   }
   await page.setViewportSize({ width: 390, height: 844 });
   await expect.poll(() => page.locator('.sidebar').evaluate(element => element.getBoundingClientRect().right)).toBeLessThanOrEqual(0);

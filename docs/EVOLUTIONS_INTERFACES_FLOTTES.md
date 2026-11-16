@@ -1807,3 +1807,31 @@ Vérifications : 16 tests PHP de visibilité / 207 assertions, trois scénarios
 navigateur (zéro, apparition, disparition, focus, mobile et thèmes), lint,
 compilation et contrôle du diff réussis. Aucune écriture dans la base de jeu,
 aucune publication GitHub ni livraison Alpha pour cette correction locale.
+
+### Placement et style des arrivées — 16 novembre 2026, complexité 3/5
+
+Retour utilisateur : reprendre le cadre et les cartes de « Flottes en vol », puis
+placer les arrivées immédiatement dessous dans la Vue générale, Flottes et la
+colonne droite des quatre catalogues. Le bloc Twig de base laisse les pages avec
+vols choisir cet emplacement, sans doublon ; les autres pages, dont la carte,
+conservent leur surveillance et leur actualisation existantes.
+
+Réutilisation des classes panel/flight-operations/flight-operation, du titre à
+compteur, des badges, du trajet et des styles adaptatifs. L’état vide reste visible.
+La progression des missions non offensives emploie l’horloge serveur existante ;
+une attaque ne révèle pas de date de départ et n’affiche pas de progression inventée.
+Aucun changement des requêtes, droits de visibilité ou règles métier.
+
+La première recette a révélé que la colonne des vols était masquée sous 740 px.
+Elle est rendue visible après le catalogue sur mobile, avec les deux cadres ensemble.
+Les retraits et bordures des cartes sont partagés avec les vols personnels.
+Le contrôle des thèmes charge désormais réellement la feuille du thème clair depuis
+la préférence du compte de test, au lieu de modifier seulement un attribut HTML.
+Les assertions et délais sont conservés ; la navigation d’orbite reste vérifiée.
+
+Bilan local : 16 PHP / 209 assertions et sept parcours navigateur distincts réussis,
+sans compter deux fois les reprises. Les six emplacements ont un cadre unique,
+les mêmes styles calculés que les vols personnels et une navigation accessible.
+Les contrôles validate, lint, assets, syntaxes JavaScript et diff réussissent.
+Le site local a été actualisé et ses fichiers compilés servis ont été comparés.
+Captures : output/playwright/incoming-style/ ; aucune publication ni livraison Alpha.

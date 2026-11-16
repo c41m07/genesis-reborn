@@ -68,8 +68,17 @@ export default class extends Controller {
     }
 
     tick() {
+        const now = Date.now() + this.offset;
+        // La progression partage l’horloge serveur des échéances, même si le poste est décalé.
+        for (const progress of this.contentTarget.querySelectorAll('[data-incoming-progress]')) {
+            const start = Date.parse(progress.dataset.incomingProgress);
+            const end = Date.parse(progress.dataset.incomingArrival);
+            const percent = Math.max(0, Math.min(100, (now - start) / Math.max(1, end - start) * 100));
+            progress.querySelector('.progress-track').setAttribute('aria-valuenow', String(Math.round(percent)));
+            progress.querySelector('.progress-track > span').style.width = percent + '%';
+        }
         for (const time of this.contentTarget.querySelectorAll('[data-incoming-impact]')) {
-            const seconds = Math.max(0, Math.ceil((Date.parse(time.dataset.incomingImpact) - Date.now() - this.offset) / 1000));
+            const seconds = Math.max(0, Math.ceil((Date.parse(time.dataset.incomingImpact) - now) / 1000));
             time.textContent = seconds ? Math.floor(seconds / 3600) + ' h ' + Math.floor(seconds % 3600 / 60) + ' min ' + seconds % 60 + ' s' : (time.dataset.incomingKind === 'arrival' ? 'Arrivée en cours' : 'Impact imminent · arrivée en cours');
         }
     }
