@@ -546,3 +546,22 @@ et les deux scénarios navigateur civils réussis. Le premier passage navigateur
 avait une préparation d’univers ×2 incomplète (chemin JSON absent) ; la préparation
 est corrigée et le scénario des six cadres/fiches repasse, sans retrait d’assertion.
 Aucune modification du moteur de stocks, migration ou publication GitHub/Alpha.
+
+## Cadres verts bâtiments et recherches — 16 novembre 2026, complexité 2/5
+
+Examen ciblé des 13 bâtiments et 19 recherches, dans leurs trois rangs. Les cinq
+producteurs et les recherches avaient déjà une comparaison par niveau. Les cinq
+stockages, le laboratoire, le chantier et le bunker incluaient encore plusieurs
+niveaux de file dans leur gain : le même calcul  précédent → proposé est maintenant
+appliqué à tous les bâtiments, sans mutation des niveaux réels ni des commandes.
+Les autres rangs restent inclus dans les rendements décroissants.
+
+Régressions : 96 profils comparés avec ou sans niveaux en attente, valeurs explicites
+des bonus et capacités, et parcours navigateur avec trois niveaux en file pour les
+mines, le laboratoire, le chantier, le bunker, un stockage et une recherche.
+
+Recette : 3 tests unitaires / 310 assertions couvrent les 96 profils et des valeurs
+explicites ; les 3 tests civils précédents repassent également (6 / 888 au total).
+`make lint` et le parcours navigateur passent. La préparation du stockage nano a
+été corrigée pour respecter son producteur niveau 5 ; les assertions de gain et
+de niveau proposé restent intactes. Aucun niveau, prix, effet ou paiement modifié.

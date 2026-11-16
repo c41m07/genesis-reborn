@@ -10,6 +10,8 @@ Chaque famille possède trois noms et trois illustrations propres aux rangs, sel
 [direction artistique du catalogue](docs/ILLUSTRATIONS.md).
 Les cartes affichent leur production par unité active sur la colonie consultée,
 avec les modificateurs locaux et la pause des vacances.
+Les cadres de gain des bâtiments et recherches comparent uniquement le niveau
+proposé au précédent, sans cumuler les niveaux déjà en file.
 Leur livraison pendant un combat rejoint les renforts locaux avec toute la flotte.
 Le [suivi de mission](docs/PROGRESSION_CARBURANT_UNITES.md) distingue les lots
 préparés, leur intégration, leur activation et les décisions encore ouvertes.
