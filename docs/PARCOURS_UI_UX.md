@@ -142,3 +142,11 @@ La page Flottes et missions est limitée à la colonie active : vaisseaux dispon
 ## Navigation dédiée — 16 novembre 2026
 
 Le lot Flottes remplace les ancres entre tâches autonomes par des pages dédiées : missions, préparation, orbites, réserves et compositions. Les ancres des détails de vol restent utiles. Cette évolution remplace uniquement l’organisation de Flottes décrite dans ce suivi ; les autres écrans restent dans leur périmètre actuel. Voir le [suivi de navigation](NAVIGATION_PAGES_DEDIEES.md).
+
+
+## Inventaire — navigation dédiée du 16 novembre 2026
+
+Le lot 3 remplace les ancres entre Boosts, Boîtes de ressources et Récompenses en
+attente par trois pages reliées par une navigation commune. Il conserve les
+confirmations et les services de consommation. Cette organisation remplace celle
+de l’inventaire décrite plus haut ; voir [le suivi](NAVIGATION_PAGES_DEDIEES.md).

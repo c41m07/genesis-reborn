@@ -76,3 +76,11 @@ body.authenticated .page-refinement :is(small,.guild-member-list small,.guild-hu
 body.authenticated .page-refinement p>a {text-decoration:underline;text-underline-offset:3px}
 
 @media(max-width:400px) {.diplomacy-page .guild-hub-stats .panel {padding:12px}.diplomacy-page .guild-hub-stats strong {font-size:16px;line-height:1.4}}
+
+.inventory-space>.space-navigation{margin-bottom:20px}
+.inventory-space .inventory-pending-list{padding-left:24px;margin-top:20px}
+.inventory-space .inventory-pending-list li{padding:12px 4px;border-top:1px solid var(--line);overflow-wrap:anywhere}
+.inventory-space .inventory-pending-list time{color:var(--muted)}
+.inventory-space .space-navigation a{min-height:44px}
+
+.inventory-space .inventory-pending .section-heading>.badge{flex-shrink:0;white-space:nowrap}

@@ -9,10 +9,16 @@ La copie dev utilisée par localhost a été avancée sans écraser son fichier
 `app/config/reference.php` préexistant ; assets recompilés et cache applicatif
 vidé. Aucune migration de sa base ni livraison Alpha.
 
-Lot 2 Flottes réalisé sur `feature/navigation-flottes`, depuis cette dev puis
-actualisé avec dev `cc5926d`. [PR #77](https://github.com/c41m07/genesis-reborn/pull/77).
-Le bilan du lot 2 ci-dessous décrit la recette avant intégration ; la PR donne
-l’état courant de la CI et de la fusion.
+Lot 2 intégré sur dev par la [PR #77](https://github.com/c41m07/genesis-reborn/pull/77),
+merge `52030d2`, après les cinq jobs quality réussis sur `b6d1aaf`
+([CI 43958951002](https://github.com/c41m07/genesis-reborn/actions/runs/43958951002)).
+Dev local avancé avec assets recompilés, cache vidé, routes et assets servis
+vérifiés, modification locale préservée. Le bilan ci-dessous conserve la recette
+et les reprises précédant cette intégration.
+
+Lot 3 réalisé sur `feature/navigation-inventaire`, depuis dev `52030d2` ;
+[PR #78](https://github.com/c41m07/genesis-reborn/pull/78). Le bilan local ci-dessous
+précède l’intégration ; la PR donne l’état courant de la CI et de la fusion.
 
 Les trois documents Work V4 (prompt maître), V2 (brief Figma) et V1 (protocole
 adaptatif) n’ont pas été trouvés dans le dépôt ni les sources connectées
@@ -24,7 +30,8 @@ accessibles. Aucune lecture intégrale ni validation de leurs phases n’est rev
    données privées, compatibilité des adresses et liens entrants.
 2. Flottes : 5/5. Périmètres colonie/empire, actualisations, demandes d’orbite,
    composition continue et compatibilité des liens.
-3. Inventaire : estimation 3/5, à confirmer au lot ; consommation et récompenses.
+3. Inventaire : 4/5 après examen ; capacité commune, lectures ciblées, attente
+   paginée et retours après consommation, sans modifier les services métier.
 4. Mon compte / vacances : estimation 4/5 ; compte commun, empire et actions sensibles.
 5. Projets collectifs : estimation 4/5 ; contribution, historique et permissions.
 6. Événements : estimation 3/5 ; bonus actifs, défis et rotations.
@@ -362,6 +369,102 @@ les tests HTTP/intégration/navigateur et les documents de navigation/flottes.
 - `docs/DESTINATIONS_STATIONNEMENT.md`
 - `docs/FEUILLE_DE_ROUTE.md`
 - `docs/FLOTTES_ENTRANTES.md`
+- `docs/NAVIGATION_PAGES_DEDIEES.md`
+- `docs/PARCOURS_UI_UX.md`
+- `docs/wiki.json`
+
+
+## Lot 3 — Inventaire (complexité 4/5)
+
+### Pages et compatibilité
+
+- `/boosts` : entrée de l’espace, stock de boosts et utilisation sur les opérations
+  actives de tout l’empire. Le choix de l’opération est un filtre d’une même tâche.
+- `/inventaire/boites` : contenu disponible, regroupement par contenu identique,
+  choix explicite d’une colonie, confirmation et ouverture.
+- `/inventaire/recompenses` : récompenses conservées, type, origine et date,
+  présentées dans l’ordre d’attribution et paginées par 25.
+
+Chaque tâche a son titre, son URL et la navigation secondaire commune, avec
+espace et page actifs. Le menu principal garde une seule entrée Inventaire.
+La capacité partagée (boosts et boîtes) reste visible sur les trois pages. L’aide
+complémentaire reste dépliable et aucun sommaire automatique ne recrée les sections.
+Les fragments historiques `inventory-boosts`, `inventory-boxes`,
+`inventory-boxes-title`, `inventory-pending`, `inventory-pending-title`,
+`available-bonuses-title` et `boost-use-title` rejoignent leur destination côté
+navigateur, y compris sans rechargement du document. Sans JavaScript, la
+navigation serveur donne accès aux mêmes pages ; le serveur ne reçoit pas les fragments.
+
+Les POST existants et leurs jetons restent inchangés. L’ouverture revient aux
+Boîtes, avec message de succès ou de refus ; le boost revient à Boosts. Les
+confirmations existantes et le retour du focus sont conservés. Aucun changement
+de règle, de capacité, de permissions, de configuration ou de données persistées.
+
+### Préparation et risques
+
+`InventoryPageView` utilise une agrégation par statut et type pour les compteurs.
+Boosts ne charge pas les objets utilisés, ni les boîtes, ni les récompenses en
+attente. Les opérations restent celles de tout l’empire, préparées seulement si
+un boost est disponible et hors vacances. Boîtes ne prépare pas les opérations ;
+les objets disponibles sont bornés par la capacité maximale existante de 100.
+Attente hydrate au plus 25 objets privés à la fois ; son stockage reste illimité.
+Les regroupements ouvrent toujours le plus ancien objet disponible de même contenu.
+
+La synchronisation initiale est conservée. Les transactions, verrous, contrôles
+d’univers, de propriété, de vacances, de capacité de stockage et les reçus
+idempotents restent dans les services métier existants. La promotion du plus
+ancien objet en attente reste automatique lors d’une consommation. Aucune mesure
+globale de performance n’est annoncée.
+
+### Vérifications et livraison
+
+- `make validate`, `make lint`, `make assets`, contrôles de syntaxe JavaScript,
+  JSON du manuel et `git diff --check` réussis.
+- 17 tests des services de boosts/boîtes et cinq tests HTTP dédiés réussis par
+  reprises. Ces derniers couvrent 128 assertions : accès directs, titres,
+  navigation active, capacité commune, absence de données tierces ou d’historique
+  utilisé, lectures bornées, pagination, CSRF, propriété et rejeu sans double effet.
+  Le scénario d’ouverture valide prépare explicitement des entrepôts disponibles ;
+  les tests métier distincts conservent le refus lorsque le stockage est plein.
+- 16 parcours navigateur distincts réussis : 13 métier (événements, boosts,
+  boîtes, vacances, stockage, protections, confirmations et consommation native
+  sans JavaScript), puis trois de navigation/états/accessibilité. Les nouvelles
+  pages sont contrôlées à 320/390/1 440 px, dans les deux thèmes, avec Axe sur
+  `main`, liens directs, rechargement, retour arrière, focus clavier, anciens
+  fragments et pagination. La navigation et la lecture paginée fonctionnent
+  aussi sans JavaScript. Les captures représentatives ont été examinées ; le
+  compteur d’attente reste sur une ligne sur mobile.
+- La première CI légère a réussi sur `2f52096`. Elle ne remplace pas les cinq
+  jobs quality obligatoires sur la dernière version prête à relire avant fusion.
+
+Les tests utilisent uniquement des bases jetables distinctes de la base locale habituelle. Aucun déploiement ni migration d’une base existante.
+Les contrôles d’accessibilité sont ciblés, sans audit de conformité complet.
+Les trois sources Work citées plus haut restent introuvables ; le wiki externe
+n’a pas été actualisé. Le manuel embarqué et la documentation du dépôt sont synchronisés.
+
+
+### Fichiers du lot 3
+
+- `README.md`
+- `app/assets/controllers/page_sections_controller.js`
+- `app/assets/styles/player-pages.css`
+- `app/src/Controller/BoostController.php`
+- `app/src/Repository/GameRepository.php`
+- `app/src/Service/Boost/InventoryPageView.php`
+- `app/templates/base.html.twig`
+- `app/templates/boosts/_boosts.html.twig`
+- `app/templates/boosts/_pending.html.twig`
+- `app/templates/boosts/_review_dialog.html.twig`
+- `app/templates/boosts/index.html.twig`
+- `app/templates/ui/inventory_navigation.html.twig`
+- `app/tests/Controller/InventoryPagesTest.php`
+- `app/tests/browser/admin-event-wizard.spec.mjs`
+- `app/tests/browser/catalogue-inventory.spec.mjs`
+- `app/tests/browser/player-pages-refinement.spec.mjs`
+- `app/tests/browser/resource-boxes.spec.mjs`
+- `docs/ARCHITECTURE.md`
+- `docs/DECISIONS.md`
+- `docs/FEUILLE_DE_ROUTE.md`
 - `docs/NAVIGATION_PAGES_DEDIEES.md`
 - `docs/PARCOURS_UI_UX.md`
 - `docs/wiki.json`

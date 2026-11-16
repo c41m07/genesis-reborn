@@ -1,0 +1,9 @@
+<dialog class="inventory-review-dialog" data-inventory-review-target="dialog" data-action="cancel->inventory-review#cancel close->inventory-review#closed keydown->inventory-review#navigate" aria-labelledby="inventory-review-title" aria-describedby="inventory-review-copy">
+    <h2 id="inventory-review-title" data-inventory-review-target="title">Vérifier l’utilisation</h2>
+    <p id="inventory-review-copy" data-inventory-review-target="copy"></p>
+    <p>L’état de l’opération et les conditions d’utilisation seront revérifiés lors de la confirmation.</p>
+    <div class="inventory-review-actions">
+        <button type="button" class="secondary" data-action="inventory-review#cancel" autofocus>Revenir à l’inventaire</button>
+        <button type="button" class="primary" data-inventory-review-target="confirm" data-action="inventory-review#confirm">Confirmer</button>
+    </div>
+</dialog>
