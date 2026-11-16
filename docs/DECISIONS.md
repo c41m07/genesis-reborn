@@ -236,6 +236,23 @@ L’utilisateur valide la progression T1 métal/nano, T2 ajout d’antimatière,
 L’hydrogène de construction/recherche est une dépense industrielle, distincte du carburant réservé au départ des missions et des consommations des usines. Les coûts enregistrés des commandes déjà payées restent conservés. Les surcharges d’univers sont préservées champ par champ. L’étude et les vérifications de démarrage, progression et conservation sont consignées dans [COUTS.md](COUTS.md). Aucun prix d’asset premium ni réglage d’univers n’est modifié par cette décision.
 
 
+## Étude de redistribution — résultats du 16 novembre 2026, décision en attente
+
+Le [rapport du lot 4](SIMULATIONS_PROGRESSION_ECONOMIE.md) compare les prix courants
+à B50/50 et I40/40/20, S inchangé, sans sauvegarder la variante. Les 156 budgets
+propres de base sont conservés, y compris les défenses ; les 912 devis effectifs
+montrent encore jusqu’à 12 unités de valeur d’écart après arrondis par ressource.
+Les colonies B10 testées gagnent environ 14 % de temps, mais les premiers accès I/S
+des parcours économiques sont retardés. Le bénéfice n’est pas général.
+
+Aucune activation de la redistribution, nouvelle valeur de production, modification
+du carburant ou du ciblage n’est décidée par ces résultats. L’éventuelle activation
+exige une décision explicite sur le compromis et le traitement des arrondis.
+Le surplus H des petites missions ne s’étend pas à toute cadence militaire :
+les sorties répétées de 500 chasseurs réintroduisent une attente de carburant.
+La masse civile influence le combat, sans avantage démontré au contrôle à budget
+proche ; le refus au-delà de 5 000 unités est une limite technique existante à suivre.
+
 ## Unités économiques — compléments validés des 15 et 16 novembre 2026
 
 Les tirs visant les récolteurs et satellites utilisent le coefficient neutre ×1,

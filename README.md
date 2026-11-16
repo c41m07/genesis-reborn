@@ -15,6 +15,12 @@ Comparer les durées, la taxe électrique et les trajets sans écrire en base :
 156 profils et des scénarios de trajet ; les hypothèses et limites sont dans
 la [méthode de mesure](docs/DUREES_CARBURANT.md#mesure-reproductible-et-limites).
 
+Comparer les parcours financés et le candidat de prix sans données de jeu :
+`make -s console CMD="app:balance:compare-economy --section=all"`.
+Le [rapport économique et militaire](docs/SIMULATIONS_PROGRESSION_ECONOMIE.md)
+présente les 54 parcours, les combats et leurs limites. B50/50 et I40/40/20
+restent une variante d’étude en mémoire, sans activation.
+
 Genesis Reborn est un jeu de stratégie spatiale multijoueur par navigateur. Chaque joueur développe ses colonies, organise sa production et ses recherches, explore la galaxie et conduit des opérations de flotte dans des univers indépendants. L’Alpha sert aussi à observer la progression et les retours des joueurs avant de futures décisions d’équilibrage.
 
 L’orientation confirmée est une stratégie au rythme modéré ; les durées de progression restent des objectifs à mesurer pendant l’Alpha.

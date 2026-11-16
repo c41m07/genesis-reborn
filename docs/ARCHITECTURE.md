@@ -79,6 +79,23 @@ ni écriture en base, avec les calculateurs réels et un univers transitoire ×1
 Aucune migration SQL pour ces compléments. Déploiement cohérent du web et des
 workers requis avant toute activation ; aucun déploiement Alpha dans cette mission.
 
+## Études économiques hors base
+
+`app:balance:compare-economy` orchestre `Balance/ProgressionEconomyStudy` et
+`MilitaryEconomyStudy`. Le candidat de prix crée uniquement des surcharges sur
+un `Universe` transitoire. `FundedProgressionSimulation` construit un graphe
+d’objectifs et prérequis, paie avec les stocks disponibles au départ, conserve
+le devis et avance aux fins d’opérations et frontières de flux.
+
+`ResourceService.project` exige un contexte du même objet planète, un inventaire
+explicite et un multiplicateur d’événement fini. Cette entrée sans lecture de compte
+réutilise la simulation normale ; `FactoryEconomy` peut retourner les intégrales
+par segment avec une option désactivée par défaut. Les appels de jeu conservent
+leur résultat et leurs effets existants. Les tests vérifient cette équivalence,
+les frontières, le bilan des ressources et l’absence d’accès aux dépôts de données.
+Les [scénarios et limites](SIMULATIONS_PROGRESSION_ECONOMIE.md) sont distincts des
+règles de jeu ; aucune simulation n’écrit un accès, un paiement ou un résultat de combat.
+
 ## Comptes et courriels
 
 Les nouveaux comptes reçoivent deux messages : bienvenue et confirmation. Seul le lien de confirmation permet d’activer l’accès ; il ouvre une page demandant une confirmation explicite par formulaire POST protégé contre les CSRF. L’ouverture automatique par un scanner de mails ne valide donc pas le compte.

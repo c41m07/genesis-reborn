@@ -162,4 +162,8 @@ make -s console CMD="app:balance:compare-operations" > var/mesures-progression-o
 
 Elle compare 150 profils de durée, la colonisation suivie d’une recherche et les trajets des classes/rangs dans quatre scénarios. Les valeurs historiques sont bornées à la référence `01bc65a` conservée dans `app/config/legacy/progression-operations-2026-11-15.json`. Les opérations utilisent `OperationCalculator` et les trajets `MovementCalculator`.
 
-Ce lot ne simule pas encore les stocks, productions, déficits, événements, vacances, reconstruction complète ou nouvelles unités économiques. Ces mesures ne remplacent pas les simulations conjointes du lot 4. La baisse du carburant combinée aux futurs récolteurs et l’écart entre remplacement offensif et défensif restent à mesurer, sans ajustement arbitraire des valeurs.
+La commande du lot 2 compare des devis, sans parcours de financement. Les
+[simulations conjointes du lot 4](SIMULATIONS_PROGRESSION_ECONOMIE.md) complètent
+ces mesures par les stocks, productions, déficits, unités civiles, missions et
+reconstructions. Elles distinguent les références sans événements/vacances des
+tests ciblés de projection ; aucune valeur n’est ajustée pour obtenir un délai.

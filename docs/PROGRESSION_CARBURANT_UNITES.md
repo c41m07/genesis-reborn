@@ -1,6 +1,6 @@
 # Progression, carburant et unités économiques
 
-## Périmètre et état — 15 novembre 2026
+## Périmètre et état — 16 novembre 2026
 
 Mission issue du prompt utilisateur : nouvelles grilles, nouvelles durées et
 consommations de carburant, récolteur d’hydrogène mobile, satellite solaire fixe,
@@ -19,8 +19,8 @@ pas présentées comme lues.
 |---|---|---|
 | 1 | 150 profils de prérequis, registre versionné, diagnostic et requalification explicite, interface et documentation associées | Fusionné dans dev par PR #69 après CI complète réussie |
 | 2 | Durées, taxe électrique calculée sur la durée effective, carburant différencié, navigation historique préservée | Fusionné dans dev par PR #70 après CI complète réussie |
-| 3 | Six profils civils, production segmentée, mobilité/immobilité, affectations et réservations concurrentes, combat, rapports et simulateur | Analyse en cours sur feature/unites-economiques-orbitales |
-| 4 | Simulations avec les calculateurs réels, comparaison des répartitions, mesures et limites | À réaliser après intégration des unités |
+| 3 | Six profils civils, production segmentée, mobilité/immobilité, affectations et réservations concurrentes, combat, rapports et simulateur | Fusionné dans dev par PR #71 après CI complète n° 299 réussie |
+| 4 | Simulations avec les calculateurs réels, comparaison des répartitions, mesures et limites | Publié par [PR #72](https://github.com/c41m07/genesis-reborn/pull/72) ; résultats CI et fusion consultables dans la PR |
 
 ## Lot 1 — complexité 5/5
 
@@ -251,8 +251,8 @@ l’ancien nom accessible du bouton Max. Leurs attentes sont actualisées sans
 retrait de contrôle, avec conservation de la correction d’accessibilité.
 Les deux parcours corrigés repassent dans des bases navigateur isolées, sans
 modifier les délais d’attente ni retirer leurs assertions métier.
-Une nouvelle CI complète sur ces corrections reste obligatoire avant fusion. Aucune opération sur une base de jeu
-ni aucun déploiement Alpha.
+La CI complète finale décrite ci-dessous a ensuite validé ces corrections avant fusion.
+Aucune opération sur une base de jeu ni aucun déploiement Alpha.
 
 ### Complément de relecture : attributions administratives
 
@@ -273,10 +273,80 @@ du conteneur est valide. Ces résultats ciblés ne remplacent pas la nouvelle CI
 La CI n° 297 portait sur la correction des deux attentes navigateur ; l’ajout
 métier impose une nouvelle CI complète sur sa propre révision avant fusion.
 
+## Lot 3 — intégration confirmée
+
+[PR #71](https://github.com/c41m07/genesis-reborn/pull/71) fusionnée avec autorisation
+au commit `4192821`, après [CI complète n° 299](https://github.com/c41m07/genesis-reborn/actions/runs/43785384598)
+réussie sur `e5bb9d6` : cinq jobs quality, GitGuardian, 1 309 PHP / 228 985 assertions,
+13 Python et 204 parcours navigateur (51 + 61 + 41 + 51). Compilation, lint, schéma,
+diff et sauvegarde/restauration isolée de 60 tables réussis. La seule omission PHP
+reste la mesure facultative préexistante. Les CI 297 et 298 ont été remplacées
+par les révisions suivantes ; elles ne sont pas présentées comme des validations.
+Aucune requalification de base de jeu ni livraison Alpha.
+
+## Lot 4 — analyse et plan, complexité 5/5
+
+Base : dev actualisée `4192821`, arbre propre ; branche
+`feature/simulations-progression-economie`, dans le checkout séparé réutilisé.
+
+1. Comparer en mémoire les 156 budgets actuels avec B50/50 et I40/40/20 ; conserver
+   le Supérieur, les budgets propres aux défenses et toutes les règles existantes.
+2. Exposer une projection de ressources à état explicite, sans lecture de compte,
+   utilisant la même simulation segmentée et les mêmes capacités/places civiles.
+   Mesurer ses flux cumulés avec conservation des stocks ; aucun effet de bord.
+3. Ajouter des parcours déterministes financés : prérequis réels, accès acquis,
+   bâtiments/recherche/chantier indépendants, file de recherche unique, paiement
+   et bonus au lancement, production pendant les opérations, plafonds et manques.
+4. Mesurer missions, carburant, transferts de récolteurs, petites/grandes flottes,
+   combats avec unités civiles, pertes et reconstruction. Séparer les infrastructures
+   données pour une expérience militaire des parcours démarrant avec les vrais kits.
+5. Publier les hypothèses, résultats reproductibles et limites ; tester les invariants
+   économiques, la chronologie et l’absence d’accès aux données de jeu. La grille
+   candidate reste inactive ; aucune valeur n’est ajustée pour obtenir un résultat.
+
+Risques suivis : copie divergente des formules, arrondis après croissance/remises,
+financement non monotone en déficit, capacité insuffisante, doubles facteurs de rang,
+production pendant les vols ou après pertes, effet de masse et limites du simulateur.
+Les anciennes mesures restent des références datées, pas une validation de ce lot.
+
+## Lot 4 — résultats et vérifications locales
+
+Le [rapport détaillé](SIMULATIONS_PROGRESSION_ECONOMIE.md) décrit les stratégies,
+les 54 bilans de ressources et leurs limites. Le [CSV des prix](COMPARAISON_COUTS_CANDIDATS.csv)
+compare les 156 profils. Le résultat JSON complet reste dans le dossier ignoré
+`output/balance/` ; la commande et l’empreinte de configuration permettent sa reproduction.
+
+- Suite PHP complète sur MariaDB jetable : 1 328 tests / 230 759 assertions,
+  une mesure facultative préexistante ignorée ; 13 tests Python réussis.
+- Après ajout du refus d’un calendrier de vacances interrompant une mission et
+  présentation lisible des nouveaux fichiers : 20 nouveaux tests / 1 776 assertions réussis.
+  Les arbres syntaxiques sont comparés avant/après mise en forme.
+- Après la dernière relecture des deux services de production : 24 tests ciblés /
+  176 assertions réussis (usines, projection et parcours financés).
+- `make validate` réussi. Syntaxe PHP (487 fichiers), YAML (80), Twig (170) et
+  conteneur Symfony réussis. La relance de `make lint` a d’abord échoué sur une
+  adresse non protégée dans la commande de contrôle, puis Docker a été constaté arrêté.
+  Les contrôles statiques ont été terminés nativement ; la nouvelle vérification
+  du schéma sur base jetable relève donc de la CI complète requise avant fusion.
+- Pas de changement de template ou d’asset dans ce lot ; pas de nouvelle suite
+  navigateur/compilation locale. La CI de PR complète est obligatoire sur la dernière révision avant fusion.
+- `git diff --check` et liens locaux de la documentation vérifiés.
+- Les catalogues applicatifs, l’archive historique, les valeurs de jeu et les
+  dépendances restent inchangés. Le candidat vit seulement dans un univers en mémoire.
+- Dev distante reconsultée : aucun nouveau commit depuis `4192821`. Les six
+  modifications étrangères du dossier partagé sont toujours conservées.
+- Aucune nouvelle migration SQL, aucune reprise de base de jeu et aucun déploiement Alpha.
+
 ## Reprise
 
-Attendre la CI complète de la PR #71 sur la dernière révision avant fusion dans dev. Les simulations conjointes restent au
-lot 4, sans activer la redistribution des prix candidate.
+Les simulations et le [comparatif chiffré](SIMULATIONS_PROGRESSION_ECONOMIE.md) du
+lot 4 sont réalisés : 54 parcours financés, 156 profils / 912 devis de prix,
+36 devis de navigation, transferts, reconstructions et combats à graines fixes.
+Les 54 bilans de ressources sont conservés. Le commit initial `843f0aa` est publié
+par la [PR #72](https://github.com/c41m07/genesis-reborn/pull/72) après autorisation explicite du 16 novembre.
+La fusion est autorisée uniquement après CI complète sur la dernière révision ;
+les résultats et l’état d’intégration sont consultables directement dans cette PR.
+Le candidat reste inactif ; sa décision d’activation est distincte de la publication du code d’étude.
 
 Pour une base existante : maintenance coordonnée, sauvegarde restaurable vérifiée,
 diagnostic des surcharges puis autorisation explicite avant la requalification `--apply`.
