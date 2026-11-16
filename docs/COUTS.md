@@ -5,6 +5,13 @@ Basique 50/50 et Intermédiaire 40/40/20 reste candidate et non activée. Seule 
 taxe électrique évolue avec les [nouvelles durées effectives](DUREES_CARBURANT.md),
 sans réécrire les paiements déjà enregistrés.
 
+Le [comparatif chiffré](SIMULATIONS_PROGRESSION_ECONOMIE.md) et son
+[CSV des 156 profils](COMPARAISON_COUTS_CANDIDATS.csv) conservent exactement les
+budgets de base de la variante. Après croissance et remises, les arrondis par
+ressource créent jusqu’à 12 unités de valeur d’écart sur les 912 devis testés.
+Ce point et les effets contrastés sur la progression restent à décider avant
+une éventuelle activation ; aucun profil courant n’est remplacé par l’étude.
+
 Décision utilisateur du 5 novembre 2026 : appliquer la progression des ressources à l’ensemble des bâtiments, du chantier spatial (vaisseaux), des défenses et des recherches. Le chantier d’assemblage lui-même fait partie des bâtiments concernés. Les boosts et les réglages d’univers ne font pas partie de cette modification.
 
 ## Règle appliquée par défaut

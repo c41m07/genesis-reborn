@@ -27,7 +27,9 @@ résolu n’est réécrit par cette livraison.
 
 Les usines gardent le secours électrique de 10 %, sans garantie absolue de reprise :
 le piège reste dépendant de son hydrogène. La reconstruction n’ajoute aucun secours
-gratuit. Les mesures économiques et de masse conjointes sont réservées au lot 4.
+gratuit. Les [mesures conjointes](SIMULATIONS_PROGRESSION_ECONOMIE.md) du lot 4
+comparent des politiques déterministes, sans garantir de délai pour tous les joueurs
+ni activer le candidat de prix. Les règles ci-dessus restent inchangées.
 
 ## Progression (PDF 0 p.3–9)
 1. Socle, authentification session.

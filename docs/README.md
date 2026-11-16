@@ -32,6 +32,7 @@ une seule référence par sujet ; les anciens bilans ne décrivent pas l’état
 | Consulter les 156 profils de coûts | [Grille commune](COUTS.md) |
 | Comprendre les déblocages par rang | [Déblocages initiaux](DEBLOCAGES.md) |
 | Comparer les durées, taxes électriques et carburants par classe | [Grilles et mesures du 15 novembre](DUREES_CARBURANT.md) |
+| Comparer les parcours financés, flottes, reconstructions et prix candidats | [Simulations économiques et militaires](SIMULATIONS_PROGRESSION_ECONOMIE.md) |
 | Suivre l’évolution de progression, carburant et unités économiques | [Lots, vérifications et activation](PROGRESSION_CARBURANT_UNITES.md) |
 | Déployer récolteurs et satellites, comprendre leurs places et pertes | [Unités économiques](UNITES_ECONOMIQUES.md) |
 | Modifier l’interface | [Guide UI](ui-ux/GUIDE_INTERFACE.md) |

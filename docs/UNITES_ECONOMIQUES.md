@@ -104,7 +104,8 @@ Les sources restent identifiées dans les détails des ressources.
 Les vacances suspendent leur production selon les périodes enregistrées.
 Le plancher industriel reste à 10 %. L’antimatière conserve son besoin d’hydrogène
 et peut s’arrêter faute d’apport. L’ensemble ne constitue pas une garantie de
-financement ou de reconstruction : ces délais doivent être mesurés au lot 4.
+financement ou de reconstruction : les [mesures du lot 4](SIMULATIONS_PROGRESSION_ECONOMIE.md)
+donnent des délais pour des états et politiques précis, sans garantie générale.
 
 ## Capacités et réservations
 
@@ -164,9 +165,9 @@ une livraison traitée après plusieurs rounds rejoint au plus tôt le suivant.
 Inventaires et rapports utilisent les mêmes unités et libellés. Le simulateur
 permet de les saisir côté Défenseur ; l’importation des forces offensives et
 les champs Attaquant les excluent. Leurs signatures et leur nombre peuvent
-absorber des tirs destinés aux autres défenseurs : l’effet de masse reste à
-chiffrer au lot 4, sans nouveau coefficient de contre ni résultat d’équilibrage
-présumé.
+absorber des tirs destinés aux autres défenseurs : les [essais de masse](SIMULATIONS_PROGRESSION_ECONOMIE.md#masse-civile-et-combat)
+le mesurent, sans bénéfice économique démontré à budget comparable ni nouveau
+coefficient de contre. Le moteur refuse actuellement plus de 5 000 unités par combat.
 
 ## Architecture et activation
 
@@ -201,6 +202,6 @@ vérifient les dernières places, en construction et en transfert.
 
 Les résultats complets locaux et la CI du lot sont consignés dans le
 [suivi de reprise](PROGRESSION_CARBURANT_UNITES.md). Les vérifications ciblées
-d’accessibilité ne constituent pas un audit RGAA complet. Les simulations
-économiques et militaires conjointes restent au lot 4 ; aucun délai de parcours
-ou avantage économique global n’est validé par ces seuls tests fonctionnels.
+d’accessibilité ne constituent pas un audit RGAA complet. Les [simulations du lot 4](SIMULATIONS_PROGRESSION_ECONOMIE.md)
+complètent ces tests fonctionnels par des mesures financées. Leurs politiques,
+états initiaux et limites ne valident aucun avantage économique global garanti.

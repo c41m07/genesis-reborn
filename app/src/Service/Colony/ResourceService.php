@@ -114,14 +114,50 @@ final class ResourceService
         return $result;
     }
 
-    private function simulate(Planet $planet,array $levels,array $stocks,int $elapsed,?\DateTimeImmutable $at=null,?array $economicInventory=null):array
+    private function simulate(Planet $planet,array $levels,array $stocks,int $elapsed,?\DateTimeImmutable $at=null,?array $economicInventory=null,?float $productionMultiplier=null,bool $includeTotals=false):array
     {
-        $input=$this->operatingInput($planet,$levels,$at,economicInventory:$economicInventory);$capacities=[];foreach($this->catalog->rules()['resources'] as $slug=>$label)$capacities[$slug]=$this->capacity($planet,$slug,$levels,$at);
-        $result=FactoryEconomy::simulate($input['base'],$input['factories'],$stocks,$capacities,$elapsed,(float)($this->catalog->rules()['minimum_factory_efficiency']??.1));
+        $input=$this->operatingInput($planet,$levels,$at,productionMultiplier:$productionMultiplier,economicInventory:$economicInventory);$capacities=[];foreach($this->catalog->rules()['resources'] as $slug=>$label)$capacities[$slug]=$this->capacity($planet,$slug,$levels,$at);
+        $result=FactoryEconomy::simulate($input['base'],$input['factories'],$stocks,$capacities,$elapsed,(float)($this->catalog->rules()['minimum_factory_efficiency']??.1),$includeTotals);
         // Distinguer les sources civiles du socle passif sans ajouter de consommation fictive.
         foreach($input['civil_sources'] as $resource=>$sources) {
             $result['sources'][$resource]['base']-=array_sum($sources);
             foreach($sources as $slug=>$rate)$result['sources'][$resource][$slug]=$rate;
+        }
+        return $result;
+    }
+
+    /**
+     * Projection à état fourni pour les études hors base. Le contexte complet évite toute lecture
+     * d'effectifs, d'événements ou de vacances persistés ; aucune écriture ni progression de compte.
+     * @param array<string,array<string,int>> $levels
+     * @param array<string,float|int> $stocks
+     */
+    public function project(Planet $planet, array $levels, array $stocks, int $elapsed, CatalogueProductionContext $context): array
+    {
+        $context->assertPlanet($planet);
+        if ($elapsed < 0) throw new \InvalidArgumentException('Durée de projection invalide.');
+        if ($context->economicInventory === null || !is_finite($context->eventMultiplier) || $context->eventMultiplier < 0) {
+            throw new \InvalidArgumentException('La projection exige un inventaire et un multiplicateur explicites.');
+        }
+        $result = $this->simulate($planet,$levels,$stocks,$context->onVacation?0:$elapsed,
+            economicInventory:$context->economicInventory,productionMultiplier:$context->eventMultiplier,includeTotals:true);
+        return $context->onVacation ? $this->pause($result) : $result;
+    }
+
+    private function pause(array $result): array
+    {
+        $result['rates'] = array_fill_keys(array_keys($result['rates']),0.0);
+        foreach (['production','consumption','uncredited'] as $key) {
+            $result[$key] = array_fill_keys(array_keys($result['rates']),0.0);
+        }
+        foreach (['sources','consumption_sources'] as $key) {
+            foreach ($result[$key] as &$sources) {
+                $sources = array_fill_keys(array_keys($sources),0.0);
+            }
+        }
+        unset($sources);
+        foreach (['efficiency','antimatter_efficiency','electricity_consumption','hydrogen_consumption'] as $key) {
+            $result[$key] = 0.0;
         }
         return $result;
     }
@@ -138,13 +174,7 @@ final class ResourceService
         usort($points,static fn(\DateTimeImmutable $a,\DateTimeImmutable $b):int=>$a<=>$b);
         foreach($points as $point){$seconds=max(0,$point->getTimestamp()-$cursor->getTimestamp());if($seconds>0 && !$this->vacations->activeAt($periods,$cursor))$stocks=$this->simulate($planet,$levels,$stocks,$seconds,$cursor,$economicInventory)['stocks'];$cursor=$point;}
         $result=$this->simulate($planet,$levels,$stocks,0,$to,$economicInventory);
-        if($this->vacations->activeAt($periods,$to)) {
-            $result['rates']=array_fill_keys(array_keys($result['rates']),0.0);
-            foreach(['production','consumption','uncredited'] as $key) $result[$key]=array_fill_keys(array_keys($result['rates']),0.0);
-            foreach(['sources','consumption_sources'] as $key) foreach($result[$key] as &$sources) $sources=array_fill_keys(array_keys($sources),0.0);
-            unset($sources);
-            foreach(['efficiency','antimatter_efficiency','electricity_consumption','hydrogen_consumption'] as $key) $result[$key]=0.0;
-        }
+        if($this->vacations->activeAt($periods,$to)) $result=$this->pause($result);
         return $result;
     }
 

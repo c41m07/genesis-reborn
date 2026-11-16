@@ -78,6 +78,10 @@ Toutes les conditions appartiennent au rang demandé.
 | Vaisseau capital (`capital`) | 20 | Canons à énergie focalisée 10 + Blindage multicouche 10 + Générateurs de bouclier accordés 10 + Séquenceur de salves 5 + Propulseurs vectoriels 7 |
 | Sonde de reconnaissance (`probe`) | 1 | Aucune |
 
+Les [simulations financées](SIMULATIONS_PROGRESSION_ECONOMIE.md) mesurent séparément
+la date d’accès, le financement et l’achèvement. L’accessibilité du graphe ne constitue
+pas une garantie de délai ni une activation des accès historiques.
+
 ## Unités économiques — 2 familles, 6 profils
 
 Toutes les conditions appartiennent au rang demandé. Elles utilisent les mêmes

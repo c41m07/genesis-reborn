@@ -1,5 +1,17 @@
 # Réglages et études d’équilibrage
 
+## Étude conjointe — lot 4 du 16 novembre 2026
+
+Le [rapport reproductible](SIMULATIONS_PROGRESSION_ECONOMIE.md) mesure 54 parcours
+financés avec les nouveaux prérequis, durées, carburants et six profils civils,
+ainsi que 36 devis de navigation et des combats à graines fixes. Le candidat
+B50/50 et I40/40/20 accélère les colonies testées mais retarde certains accès I/S.
+Les petites missions choisies laissent un surplus H ; des sorties répétées de
+500 chasseurs peuvent encore attendre du carburant. La masse civile modifie le
+ciblage, sans avantage démontré à budget comparable ; le plafond technique du
+moteur reste 5 000 unités. Les hypothèses et limites sont détaillées dans le rapport.
+Aucun prix, rendement, contre ou plafond n’est modifié à partir de ces résultats.
+
 ## Unités civiles — lot 3 du 16 novembre 2026
 
 Les six [profils économiques](UNITES_ECONOMIQUES.md) sont ajoutés sans changer les
@@ -7,7 +19,7 @@ statistiques, coûts ou contres des 150 profils existants. Les tirs visant ces
 unités sans arme utilisent le coefficient neutre ×1 validé. La production locale
 et ses limites sont testées ; les études historiques ci-dessous ne mesurent pas
 cette nouvelle composition ni son effet de masse. Les simulations conjointes,
-la reconstruction et le risque de surproduction d’hydrogène restent au lot 4.
+la reconstruction et le risque de surproduction d’hydrogène sont mesurés dans le rapport du lot 4 ci-dessus.
 Le candidat B50/50 et I40/40/20 reste non activé.
 
 ## Durées et carburant — 15 novembre 2026
