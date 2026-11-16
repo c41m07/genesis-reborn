@@ -3,7 +3,8 @@
 ## État du chantier — 16 novembre 2026
 
 Lot 1 réalisé localement sur `feature/navigation-guildes-diplomatie`, depuis
-`origin/dev` `c6b72d1`. CI, publication, fusion et déploiement non effectués.
+`origin/dev` `c6b72d1`. Branche publiée ; [PR #75](https://github.com/c41m07/genesis-reborn/pull/75) ouverte vers dev.
+CI complète en attente ; fusion et déploiement non effectués.
 Les modifications juridiques de la copie principale sont préservées.
 
 Les trois documents Work V4 (prompt maître), V2 (brief Figma) et V1 (protocole
@@ -124,10 +125,13 @@ ni changement de la base habituelle.
 Les contrôles visuels, clavier, focus et Axe sont ciblés : ils ne constituent
 pas un audit de conformité RGAA complet. Les contrôles CI complets restent
 obligatoires sur la dernière version de la PR avant fusion. La lecture des
-protections de dev retourne HTTP 403 avec la connexion GitHub disponible ; leur
-activation doit être confirmée avec un accès autorisé à l’administration du dépôt.
+protections détaillées de dev retourne HTTP 403 avec la connexion GitHub disponible.
+La lecture de la branche confirme néanmoins la protection active et les cinq
+contrôles obligatoires : `quality (php, lot 0)` et `quality (browser, lot 1)` à
+`quality (browser, lot 4)`, appliqués à tous. Le job publish n’est pas requis.
 
-Publication et PR à autoriser après ce bilan ; aucune fusion ni aucun déploiement.
+Publication et PR autorisées ; attendre la CI complète de la PR #75 avant la fusion
+autorisée vers dev. Aucun déploiement n’est autorisé par cette étape.
 Le lot 2 Flottes reste en attente de l’intégration validée du lot 1.
 
 
