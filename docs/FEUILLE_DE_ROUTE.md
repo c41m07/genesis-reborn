@@ -14,7 +14,8 @@ navigateur et sauvegarde/restauration isolée réussis. Six profils civils, capa
 réservations, production, combat et renforts locaux : [règles détaillées](UNITES_ECONOMIQUES.md).
 Lot 4 mesuré localement sur `feature/simulations-progression-economie` :
 [54 parcours financés, navigation, combats et reconstructions](SIMULATIONS_PROGRESSION_ECONOMIE.md).
-Publication et CI de PR du lot 4 restent à autoriser puis à constater.
+Publication et fusion conditionnelle autorisées le 16 novembre par la [PR #72](https://github.com/c41m07/genesis-reborn/pull/72).
+Les résultats de CI complète et l’état d’intégration sont consultables dans la PR.
 Le candidat de redistribution des prix n’est pas activé.
 État, contrôles et autorisations dans le [suivi de mission](PROGRESSION_CARBURANT_UNITES.md).
 L’activation des accès en base reste soumise à sauvegarde vérifiée et autorisation ;

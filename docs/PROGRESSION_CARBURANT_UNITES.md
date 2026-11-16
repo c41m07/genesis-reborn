@@ -20,7 +20,7 @@ pas présentées comme lues.
 | 1 | 150 profils de prérequis, registre versionné, diagnostic et requalification explicite, interface et documentation associées | Fusionné dans dev par PR #69 après CI complète réussie |
 | 2 | Durées, taxe électrique calculée sur la durée effective, carburant différencié, navigation historique préservée | Fusionné dans dev par PR #70 après CI complète réussie |
 | 3 | Six profils civils, production segmentée, mobilité/immobilité, affectations et réservations concurrentes, combat, rapports et simulateur | Fusionné dans dev par PR #71 après CI complète n° 299 réussie |
-| 4 | Simulations avec les calculateurs réels, comparaison des répartitions, mesures et limites | Mesuré localement ; publication et CI de PR à autoriser puis constater |
+| 4 | Simulations avec les calculateurs réels, comparaison des répartitions, mesures et limites | Publié par [PR #72](https://github.com/c41m07/genesis-reborn/pull/72) ; résultats CI et fusion consultables dans la PR |
 
 ## Lot 1 — complexité 5/5
 
@@ -327,9 +327,9 @@ compare les 156 profils. Le résultat JSON complet reste dans le dossier ignoré
   conteneur Symfony réussis. La relance de `make lint` a d’abord échoué sur une
   adresse non protégée dans la commande de contrôle, puis Docker a été constaté arrêté.
   Les contrôles statiques ont été terminés nativement ; la nouvelle vérification
-  du schéma sur base jetable reste à confirmer par la CI complète avant fusion.
+  du schéma sur base jetable relève donc de la CI complète requise avant fusion.
 - Pas de changement de template ou d’asset dans ce lot ; pas de nouvelle suite
-  navigateur/compilation locale. La CI de PR complète reste requise sur la dernière révision.
+  navigateur/compilation locale. La CI de PR complète est obligatoire sur la dernière révision avant fusion.
 - `git diff --check` et liens locaux de la documentation vérifiés.
 - Les catalogues applicatifs, l’archive historique, les valeurs de jeu et les
   dépendances restent inchangés. Le candidat vit seulement dans un univers en mémoire.
@@ -342,8 +342,10 @@ compare les 156 profils. Le résultat JSON complet reste dans le dossier ignoré
 Les simulations et le [comparatif chiffré](SIMULATIONS_PROGRESSION_ECONOMIE.md) du
 lot 4 sont réalisés : 54 parcours financés, 156 profils / 912 devis de prix,
 36 devis de navigation, transferts, reconstructions et combats à graines fixes.
-Les 54 bilans de ressources sont conservés. La publication du lot 4 demandera
-une autorisation distincte une fois les contrôles et le commit local prêts.
+Les 54 bilans de ressources sont conservés. Le commit initial `843f0aa` est publié
+par la [PR #72](https://github.com/c41m07/genesis-reborn/pull/72) après autorisation explicite du 16 novembre.
+La fusion est autorisée uniquement après CI complète sur la dernière révision ;
+les résultats et l’état d’intégration sont consultables directement dans cette PR.
 Le candidat reste inactif ; sa décision d’activation est distincte de la publication du code d’étude.
 
 Pour une base existante : maintenance coordonnée, sauvegarde restaurable vérifiée,
