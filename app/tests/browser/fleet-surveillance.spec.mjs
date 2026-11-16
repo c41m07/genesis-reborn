@@ -100,3 +100,48 @@ test('Carte tactile : détection synchronisée, vue conservée, horloge serveur 
   await expect(page.locator('.gv2-canvas--planet.is-active')).toBeVisible();
   expect(errors).toEqual([]);await context.close();
 });
+
+
+test('Flottes entrantes : transport neutre, propre retour séparé et demande d’orbite', async ({ page, browser }, testInfo) => {
+  test.setTimeout(150000);
+  const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  const data=await prepareThreat(page,browser);
+  await page.goto('/flottes');
+  await expect(page.locator('[data-incoming-attack]')).toHaveCount(0);
+  const focus=page.getByRole('link',{name:'Accéder au chantier spatial',exact:true});await focus.focus();
+  runIsolatedSql(data.project,"UPDATE fleet SET mission='transport',cargo='{\"metal\":987654321}' WHERE id="+data.fleet);
+  const incoming=page.locator('[data-incoming-attack="'+data.fleet+'"]');
+  await expect(incoming).toBeVisible({timeout:15000});await expect(focus).toBeFocused();
+  await expect(page.getByRole('heading',{name:'Flottes entrantes · 1',exact:true})).toBeVisible();
+  await expect(incoming).toContainText('Transport');await expect(incoming).toContainText('Arrivée dans');
+  await expect(incoming).not.toContainText('Impact');await expect(incoming).toContainText('Origine non découverte');
+  await expect(page.locator('.incoming-attack-panel')).not.toHaveClass(/has-hostile/);
+  await expect(page.locator('[data-incoming-attacks-target="status"]')).toContainText('1 flotte');
+  const payload=await page.evaluate(()=>fetch('/flottes/surveillance').then(r=>r.json()));
+  expect(JSON.stringify(payload)).not.toContain('987654321');expect(JSON.stringify(payload)).not.toContain('Source confidentielle');
+  const token=crypto.randomUUID();
+  runIsolatedSql(data.project,"INSERT INTO fleet(player_universe_id,home_planet_id,destination_id,destination_system_id,status,mission,speed_ratio,cargo,reserved_fuel,orbit_fuel,orbit_duration_seconds,travel_seconds,departure_at,arrival_at,dispatch_token) SELECT "+data.defender.memberId+","+data.defender.planetId+",id,solar_system_id,'returning','transport',1,'{}',0,0,0,10800,DATE_SUB(UTC_TIMESTAMP(),INTERVAL 1 HOUR),DATE_ADD(UTC_TIMESTAMP(),INTERVAL 2 HOUR),'"+token+"' FROM planet WHERE id="+data.attacker.planetId);
+  const own=Number(queryIsolatedSql(data.project,"SELECT id FROM fleet WHERE dispatch_token='"+token+"'"));
+  runIsolatedSql(data.project,"INSERT INTO fleet_ship(fleet_id,slug,tier,quantity) VALUES("+own+",'transport','basic',1)");
+  await page.setViewportSize({width:1440,height:1000});
+  await page.goto('/planetes/'+data.defender.planetId+'?section=buildings');
+  await expect(page.getByRole('heading',{name:/^Flottes en vol/})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'Flottes entrantes · 1',exact:true})).toBeVisible();
+  await expect(page.locator('[data-incoming-attack="'+own+'"]')).toHaveCount(0);
+  for(const theme of ['dark','light']) {
+    await page.evaluate(value=>document.body.dataset.theme=value,theme);
+    for(const width of [1440,390]) {
+      await page.setViewportSize({width,height:1000});
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBeTruthy();
+      const violations=(await new AxeBuilder({page}).include('.incoming-attack-panel').analyze()).violations.filter(v=>['serious','critical'].includes(v.impact));
+      expect(violations).toEqual([]);
+      await page.screenshot({path:testInfo.outputPath(`flottes-entrantes-${theme}-${width}.png`),animations:'disabled'});
+    }
+  }
+  runIsolatedSql(data.project,"UPDATE fleet SET mission='orbit',status='orbit_pending',arrival_at=NULL WHERE id="+data.fleet);
+  await expect(incoming).toContainText('Demande d’orbite à traiter',{timeout:15000});
+  await expect(incoming.locator('time')).toHaveCount(0);
+  await incoming.getByRole('link',{name:'Consulter la demande d’orbite',exact:true}).click();
+  await expect(page).toHaveURL(new RegExp('/flottes[?]colony='+data.defender.planetId+'$'));
+  expect(errors).toEqual([]);
+});

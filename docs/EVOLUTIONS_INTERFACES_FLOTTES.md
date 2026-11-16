@@ -1780,3 +1780,18 @@ Fichiers du lot courant :
 - Vols : `app/templates/ui/flights.html.twig`, `app/templates/ui/incoming_attacks_list.html.twig`, `app/assets/styles/fleet-recall.css`.
 - Tests : `app/tests/browser/leaderboard-contact.spec.mjs`, `app/tests/browser/empire-details.spec.mjs`, `app/tests/browser/catalogue-cleanup.spec.mjs`, `app/tests/Controller/GuildTagPlayerReportTest.php`.
 - Documentation : `README.md`, `docs/REGLES.md`, `docs/DECISIONS.md`, `docs/FEUILLE_DE_ROUTE.md`, `docs/wiki.json` et le présent suivi.
+
+## Extension locale du panneau des arrivées — 16 novembre 2026
+
+Choix utilisateur confirmés : deux cadres distincts ; flottes d’autres commandants
+vers ses seules colonies ; transports/renforts/orbites visibles dès le départ,
+attaques après détection, espionnage privé même entre alliés, composition/fret masqués.
+Le cadre d’attaques existant est élargi ; aucune page ni droit d’envoi supplémentaire.
+Complexité 4/5 : [matrice, risques et réalisation](FLOTTES_ENTRANTES.md).
+Lecture bornée aux arrivées de l’univers de session, stocks groupés après filtrage,
+origines découvertes et anciens états d’orbite conservés ; aucune écriture du lecteur.
+
+Recette complète ciblée locale : 32 PHP / 1 113 assertions, trois parcours navigateur
+distincts, `make validate`, lint, assets et diff réussis. Origines, compositions,
+fret et sondes restent privés aux conditions prévues ; captures réelles dans les
+deux thèmes et sur mobile. Aucun déploiement Alpha ni reprise de données.

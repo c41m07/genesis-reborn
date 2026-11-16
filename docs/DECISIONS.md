@@ -1810,3 +1810,13 @@ prix et règles de mission ne changent pas. Six illustrations originales par ran
 remplacent les pictogrammes dans les cartes ; les SVG originaux sont conservés.
 Le prompt maître et les références proviennent de docs/ILLUSTRATIONS.md et des
 cargos existants. Aucun envoi GitHub ni déploiement Alpha dans cette recette locale.
+
+## 16 novembre 2026 — deux cadres de suivi des flottes
+
+L’utilisateur valide deux cadres : propres vols conservés, arrivées des autres
+commandants vers ses colonies dans le panneau existant élargi. Transports,
+renforts et orbites sont visibles dès le départ selon leurs règles existantes ;
+attaques après détection ; espionnage caché même entre alliés ; composition et
+fret masqués. Les déplacements alliés ailleurs et les retours personnels ne sont
+pas ajoutés aux arrivées étrangères. [Matrice et réalisation](FLOTTES_ENTRANTES.md).
+Application demandée sur dev local, sans publication GitHub ni livraison Alpha.

@@ -575,3 +575,14 @@ sont visibles dans Ma guilde avec leurs services et jetons CSRF existants.
 `GuildProfile` conserve description, références d’images et version dans une table dédiée, rattachée à la guilde avec suppression en cascade de la ligne. Les lectures des guildes existantes n’ajoutent pas de jointure à cette table. Les profils de joueurs ne transmettent aux templates qu’une liste explicite des informations publiques, avec les scores du classement quotidien.
 
 `GuildImageStorage` vérifie taille, type réel, dimensions et décodage GD ; il réencode les pixels sous un nom aléatoire, sans conserver les métadonnées. Les fichiers sont hors de `public/`, en `var/guild-media`, servis par une route authentifiée et limitée à l’univers, avec `nosniff`, CSP restrictive et absence de cache partagé. `GuildProfileService` vérifie commandant actuel et version sous verrou ; un échec retire les nouveaux fichiers et les anciennes images ne sont nettoyées qu’après validation de la transaction. [Limites et vérifications](PROFILS_JOUEURS_GUILDES.md).
+
+
+## Panneau des arrivées étrangères — 16 novembre 2026
+
+FleetVisibility::incoming reçoit les seuls candidats de GameRepository::incomingFleets,
+filtrés par destinataire propriétaire, univers, mission et état. Il applique le même
+masque que la carte avant de lire les FleetShip des flottes visibles en groupe.
+La sérialisation tierce conserve les effectifs/points et masque composition, fret
+et origines non découvertes. Les déplacements personnels restent exclus de ce panneau.
+Le lecteur de surveillance reste sans écriture ; URL, clé de réponse HTML, contrôleur
+Stimulus et attributs d’actualisation sont conservés pour les pages déjà ouvertes.

@@ -582,8 +582,10 @@ la détection des sondes à l’arrivée conservent leurs effets pondérés actu
 Les plafonds du catalogue de l’univers sont pris en compte pour les informations
 de progression ; à 5/5/5, le préavis théorique atteint 80 minutes.
 
-Les attaques détectées sont affichées sur les pages de jeu avec cible, commandant,
-vaisseaux, points et compte à rebours. Une origine non découverte reste masquée.
+Le cadre [Flottes entrantes](docs/FLOTTES_ENTRANTES.md) regroupe les arrivées d’autres
+commandants sur vos colonies : transports, renforts, orbites et attaques détectées.
+Vos propres missions restent dans Flottes en vol. Les attaques gardent leur préavis
+et leur priorité ; une origine non découverte reste masquée.
 La surveillance se met à jour sans rechargement, avec horloge serveur, et conserve
 le focus et la sélection de carte. Sans JavaScript, actualiser la page.
 Les sondes en trajet restent visibles seulement par leur propriétaire.

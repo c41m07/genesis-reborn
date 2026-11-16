@@ -1,16 +1,25 @@
-{% if attacks is not empty %}
-<section class="incoming-attack-panel" aria-labelledby="incoming-attacks-heading">
-<h2 id="incoming-attacks-heading">Attaques détectées · {{ attacks|length }}</h2>
-<p>Organisez votre défense et vos renforts avant l’impact.</p>
+{# Les attributs d’actualisation existants gardent les pages déjà ouvertes compatibles. #}
+{% set fleets = attacks|default([]) %}
+{% if fleets is not empty %}
+{% set threats = fleets|filter(fleet => fleet.mission in ['attack', 'conquer'])|length %}
+<section class="incoming-attack-panel{{ threats ? ' has-hostile' : '' }}" aria-labelledby="incoming-attacks-heading">
+<h2 id="incoming-attacks-heading">Flottes entrantes · {{ fleets|length }}</h2>
+{% if threats %}<p>{{ threats }} attaque{{ threats == 1 ? '' : 's' }} détectée{{ threats == 1 ? '' : 's' }} · Organisez votre défense et vos renforts avant l’impact.</p>{% endif %}
 <div class="incoming-attack-grid">
-{% for attack in attacks %}<article data-incoming-attack="{{ attack.id }}">
-<p>Flotte adverse · Attaque entrante</p>
-<h3>{{ attack.destinationName }} · {{ attack.destinationCoordinates }}</h3>
-<p><strong>{{ attack.ownerName }}</strong> · {{ attack.shipCount|quantity(0) }} vaisseau{{ attack.shipCount == 1 ? '' : 'x' }} · {{ attack.fleetPoints|quantity(0) }} point{{ attack.fleetPoints == 1 ? '' : 's' }}</p>
-<p>Impact dans <time datetime="{{ attack.arrivalAt }}" data-incoming-impact="{{ attack.arrivalAt }}" aria-live="off">{{ attack.arrivalAt|date('d/m/Y H:i:s',preferences.timezone|default(app.user.preferences.timezone|default('Europe/Paris'))) }}</time></p>
-<p>{{ attack.originName }}{% if attack.originCoordinates %} · {{ attack.originCoordinates }}{% endif %}</p>
-<a class="secondary" href="{{ path('app_colony',{id:attack.destinationPlanetId}) }}">Ouvrir la colonie {{ attack.destinationName }}</a>
-</article>{% endfor %}
+{% for fleet in fleets %}
+{% set hostile = fleet.mission in ['attack', 'conquer'] %}
+{% set pendingOrbit = fleet.mission == 'orbit' and fleet.status == 'orbit_pending' %}
+<article data-incoming-attack="{{ fleet.id }}" data-incoming-kind="{{ hostile ? 'attack' : 'arrival' }}" class="{{ hostile ? 'is-hostile' : '' }}">
+<p>{{ fleet.missionLabel }} · {{ pendingOrbit ? 'Demande en attente' : 'Flotte entrante' }}</p>
+<h3>{{ fleet.destinationName }} · {{ fleet.destinationCoordinates }}</h3>
+<p><strong>{{ fleet.ownerName }}</strong> · {{ fleet.shipCount|quantity(0) }} vaisseau{{ fleet.shipCount == 1 ? '' : 'x' }} · {{ fleet.fleetPoints|quantity(0) }} point{{ fleet.fleetPoints == 1 ? '' : 's' }}</p>
+{% if pendingOrbit %}<p>Demande d’orbite à traiter.</p>
+{% elseif fleet.arrivalAt %}<p>{{ hostile ? 'Impact dans' : 'Arrivée dans' }} <time datetime="{{ fleet.arrivalAt }}" data-incoming-impact="{{ fleet.arrivalAt }}" data-incoming-kind="{{ hostile ? 'attack' : 'arrival' }}" aria-live="off">{{ fleet.arrivalAt|date('d/m/Y H:i:s',preferences.timezone|default(app.user.preferences.timezone|default('Europe/Paris'))) }}</time></p>{% endif %}
+<p>{{ fleet.originName }}{% if fleet.originCoordinates %} · {{ fleet.originCoordinates }}{% endif %}</p>
+<a class="secondary" href="{{ path('app_colony',{id:fleet.destinationPlanetId}) }}">Ouvrir la colonie {{ fleet.destinationName }}</a>
+{% if fleet.mission == 'orbit' %}<a class="secondary" href="{{ path('app_fleets',{colony:fleet.destinationPlanetId}) }}">Consulter la demande d’orbite</a>{% endif %}
+</article>
+{% endfor %}
 </div>
 </section>
 {% endif %}

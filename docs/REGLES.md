@@ -513,6 +513,16 @@ Le cercle extérieur d’un système possédé est vert, avec les informations
 intérieures conservées. Un bouton de la fiche planète revient à son système ;
 la croix permet toujours de revenir à la galaxie.
 
+### Panneau Flottes entrantes — décision du 16 novembre 2026
+
+Les arrivées d’autres commandants vers vos colonies sont regroupées dans un cadre
+séparé de vos propres vols : transports, renforts, demandes d’orbite et attaques
+détectées. Les règles d’envoi, d’accueil et de détection restent inchangées.
+Les sondes restent cachées pendant le trajet, même entre alliés ; composition et
+fret tiers restent privés. Aucune flotte alliée visant une autre colonie n’est ajoutée.
+Le [détail par mission](FLOTTES_ENTRANTES.md) décrit les origines découvertes, les
+anciens états d’orbite et le suivi des missions personnelles.
+
 ### Détails privés des colonies et flottes — lot C
 
 Les panneaux de la page Planètes affichent les vaisseaux au repos par rang et
