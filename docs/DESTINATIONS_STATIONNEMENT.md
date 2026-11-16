@@ -1,5 +1,21 @@
 # Destinations et Stationnement — lot 5
 
+## Complément unités économiques — 16 novembre 2026
+
+Les récolteurs se déplacent uniquement entre colonies possédées, par Stationnement.
+Le devis vérifie les places du même rang à destination ; l’envoi et la reprise
+volontaire les réservent sous verrou. Départ : arrêt de production à l’origine ;
+installation : production selon la capacité locale. Le rappel libère l’ancienne
+réservation et en prépare une vers son retour. Un retour ou repli automatique
+conserve les unités même sans assez de places : l’excédent arrivé reste inactif.
+Une destination perdue ne conserve pas de place réservée chez son nouveau maître.
+Les satellites sont exclus de tout départ, côté interface et côté serveur.
+
+Pendant un combat ouvert, l’installation et les livraisons du chantier font
+rejoindre la défense à toute la flotte locale disponible au prochain round
+éligible, sans copie de vaisseaux ni perte de carburant embarqué. Aucun maintien
+horaire supplémentaire n’est ajouté. Voir [capacités et transitions](UNITES_ECONOMIQUES.md).
+
 ## Complément carburant — 15 novembre 2026
 
 Les règles de destination, réserve, propriété, rappel et stationnement restent

@@ -38,7 +38,11 @@ try {
     } else {
         $membership = $entityManager->find(PlayerUniverse::class, $input['membershipId']);
         $planet = $entityManager->find(Planet::class, $input['planetId']);
-        $container->get(QueueService::class)->add($membership, $planet, 'buildings', 'mine_metal', 1, $input['key']);
+        if ($input['action'] === 'station') {
+            $container->get(\App\Service\Fleet\FleetService::class)->send($membership, $planet, 'station', $input['targetId'], ['hydrogen_collector'=>1], 1, [], $input['key']);
+        } else {
+            $container->get(QueueService::class)->add($membership, $planet, $input['group'] ?? 'buildings', $input['slug'] ?? 'mine_metal', $input['quantity'] ?? 1, $input['key'], $input['tier'] ?? 'basic');
+        }
     }
     exit(0);
 } catch (DomainException) {

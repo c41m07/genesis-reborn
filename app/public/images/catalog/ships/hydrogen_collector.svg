@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="title">
+  <title id="title">Récolteur d’hydrogène, pictogramme de famille</title>
+  <defs><linearGradient id="space" x2="1" y2="1"><stop stop-color="#10253a"/><stop offset="1" stop-color="#050b14"/></linearGradient></defs>
+  <rect width="640" height="360" fill="url(#space)"/>
+  <g fill="none" stroke="#80d9ff" stroke-width="5" stroke-linejoin="round">
+    <path d="m320 65 65 85v95l-65 35-65-35v-95z" fill="#203e56"/>
+    <path d="m255 150-120 35-35 65 155-25m130-75 120 35 35 65-155-25" fill="#122d41"/>
+    <ellipse cx="320" cy="180" rx="35" ry="56" fill="#175364"/>
+    <path d="M306 160v40m28-40v40m-28-20h28" stroke="#baf5ff"/>
+    <path d="m270 258-20 38m120-38 20 38" stroke="#56e6c2"/>
+  </g>
+  <g fill="#baf5ff"><circle cx="90" cy="80" r="2"/><circle cx="500" cy="65" r="3"/><circle cx="555" cy="305" r="2"/></g>
+</svg>

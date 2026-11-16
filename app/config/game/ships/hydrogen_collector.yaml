@@ -1,0 +1,137 @@
+{
+  "slug": "hydrogen_collector",
+  "label": "Récolteur d’hydrogène",
+  "category": "support",
+  "hp": 100,
+  "shield": 20,
+  "combat_tier_growth": 1.5,
+  "precision": 0,
+  "tracking": 0,
+  "evasion": 20,
+  "signature": 30,
+  "base_attack": 0,
+  "shots_min": 0,
+  "shots_max": 0,
+  "build_time_base": 180,
+  "costs": {},
+  "speed_system": 104,
+  "speed_galaxy": 515,
+  "mobile": true,
+  "allowed_missions": [
+    "station"
+  ],
+  "fuel_travel_system": 0.05,
+  "fuel_travel_galaxy": 0.2,
+  "fuel_orbit": 0,
+  "cargo_capacity": 0,
+  "fuel_capacity": 1600,
+  "economic_unit": {
+    "resource": "hydrogen",
+    "production_per_hour": {
+      "basic": 900,
+      "intermediate": 1350,
+      "superior": 2025
+    },
+    "capacity_building": "mine_hydrogen",
+    "slots_per_level": 1
+  },
+  "unlock_requirements": {},
+  "tier_unlock_requirements": {
+    "basic": {
+      "buildings": [
+        {
+          "slug": "shipyard",
+          "tier": "basic",
+          "level": 2
+        },
+        {
+          "slug": "mine_hydrogen",
+          "tier": "basic",
+          "level": 5
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "vector_propulsion",
+          "tier": "basic",
+          "level": 1
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "shipyard",
+          "tier": "intermediate",
+          "level": 2
+        },
+        {
+          "slug": "mine_hydrogen",
+          "tier": "intermediate",
+          "level": 5
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "vector_propulsion",
+          "tier": "intermediate",
+          "level": 1
+        }
+      ]
+    },
+    "superior": {
+      "buildings": [
+        {
+          "slug": "shipyard",
+          "tier": "superior",
+          "level": 2
+        },
+        {
+          "slug": "mine_hydrogen",
+          "tier": "superior",
+          "level": 5
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "vector_propulsion",
+          "tier": "superior",
+          "level": 1
+        }
+      ]
+    }
+  },
+  "economy_value_budget": 1600,
+  "cost_profiles": {
+    "basic": {
+      "metal": 480,
+      "nano": 160,
+      "antimatter": 0,
+      "hydrogen": 0
+    },
+    "intermediate": {
+      "metal": 450,
+      "nano": 225,
+      "antimatter": 25,
+      "hydrogen": 0
+    },
+    "superior": {
+      "metal": 374,
+      "nano": 281,
+      "antimatter": 63,
+      "hydrogen": 124
+    }
+  },
+  "description": "Unité civile mobile produisant de l’hydrogène sur votre colonie, dans les places de sa raffinerie du même rang. Déplacement par Stationnement entre vos colonies, sans fret ni production en vol. Sans armement et destructible en combat.",
+  "tier_labels": {
+    "basic": "Récolteur d’hydrogène",
+    "intermediate": "Récolteur d’hydrogène Intermédiaire",
+    "superior": "Récolteur d’hydrogène Supérieur"
+  },
+  "tier_descriptions": {
+    "basic": "Unité civile mobile produisant de l’hydrogène sur votre colonie, dans les places de sa raffinerie du même rang. Déplacement par Stationnement entre vos colonies, sans fret ni production en vol. Sans armement et destructible en combat.",
+    "intermediate": "Unité civile mobile produisant de l’hydrogène sur votre colonie, dans les places de sa raffinerie du même rang. Déplacement par Stationnement entre vos colonies, sans fret ni production en vol. Sans armement et destructible en combat.",
+    "superior": "Unité civile mobile produisant de l’hydrogène sur votre colonie, dans les places de sa raffinerie du même rang. Déplacement par Stationnement entre vos colonies, sans fret ni production en vol. Sans armement et destructible en combat."
+  },
+  "artwork": "images/catalog/ships/hydrogen_collector.svg"
+}

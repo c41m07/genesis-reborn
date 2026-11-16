@@ -17,7 +17,7 @@ Décision utilisateur du 5 novembre 2026 : appliquer la progression des ressourc
 
 Il s’agit de parts de **valeur économique** : métal ×2, nano ×4, antimatière ×8, hydrogène ×1. Ce ne sont pas des pourcentages des quantités brutes. Chaque quantité est entière ; les arrondis sont choisis conjointement pour approcher la répartition et conserver **exactement la valeur réelle du profil de base de chaque rang**, avant croissance des niveaux et recherches.
 
-La grille couvre **50 fiches et 150 profils** : 13 bâtiments, 19 recherches, 14 vaisseaux et 4 défenses. Les profils réels sont lus et conservés en JSON malgré leur extension `.yaml`. Les budgets déclaratifs ne remplacent pas leurs coûts arrondis effectifs.
+La grille couvre **52 fiches et 156 profils** : 13 bâtiments, 19 recherches, 16 vaisseaux (dont les deux unités économiques) et 4 défenses. Les profils réels sont lus et conservés en JSON malgré leur extension `.yaml`. Les budgets déclaratifs ne remplacent pas leurs coûts arrondis effectifs.
 
 La décision du 9 novembre 2026 révise volontairement les budgets du réacteur et de la centrale : 1 200 / 1 500 / 1 875 et 4 800 / 6 000 / 7 500. La conservation des budgets de la redistribution du 5 novembre reste une référence historique ; les nouveaux budgets et leurs parts de ressources font désormais foi pour ces deux familles. Voir [EQUILIBRAGE](EQUILIBRAGE.md#production-des-batiments).
 
@@ -59,6 +59,8 @@ Chaque cellule indique **métal / nano / antimatière / hydrogène** pour le niv
 | technologies | Propulseurs vectoriels | 3 000 / 1 000 / 0 / 0 | 2 816 / 1 407 / 156 / 0 | 2 344 / 1 758 / 391 / 782 |
 | technologies | Viseurs balistiques | 7 200 / 2 400 / 0 / 0 | 6 750 / 3 375 / 375 / 0 | 5 625 / 4 219 / 938 / 1 874 |
 | technologies | Canons à énergie focalisée | 7 200 / 2 400 / 0 / 0 | 6 750 / 3 375 / 375 / 0 | 5 625 / 4 219 / 938 / 1 874 |
+| ships | Récolteur d’hydrogène | 480 / 160 / 0 / 0 | 450 / 225 / 25 / 0 | 374 / 281 / 63 / 124 |
+| ships | Satellite solaire | 480 / 160 / 0 / 0 | 450 / 225 / 25 / 0 | 374 / 281 / 63 / 124 |
 | ships | Cuirassé de ligne | 66 151 / 22 050 / 0 / 0 | 62 017 / 31 009 / 3 445 / 0 | 51 681 / 38 761 / 8 614 / 17 226 |
 | ships | Bombardier tactique | 6 451 / 2 150 / 0 / 0 | 6 049 / 3 025 / 336 / 0 | 5 042 / 3 781 / 840 / 1 680 |
 | ships | Vaisseau capital | 113 266 / 37 755 / 0 / 0 | 106 188 / 53 094 / 5 899 / 0 | 88 490 / 66 368 / 14 748 / 29 498 |

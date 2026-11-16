@@ -78,6 +78,20 @@ Toutes les conditions appartiennent au rang demandé.
 | Vaisseau capital (`capital`) | 20 | Canons à énergie focalisée 10 + Blindage multicouche 10 + Générateurs de bouclier accordés 10 + Séquenceur de salves 5 + Propulseurs vectoriels 7 |
 | Sonde de reconnaissance (`probe`) | 1 | Aucune |
 
+## Unités économiques — 2 familles, 6 profils
+
+Toutes les conditions appartiennent au rang demandé. Elles utilisent les mêmes
+accès locaux initiaux et permanents que les autres vaisseaux.
+
+| Famille | Conditions complètes du même rang |
+|---|---|
+| Récolteur d’hydrogène (`hydrogen_collector`) | Chantier 2 + raffinerie d’hydrogène 5 + Propulseurs vectoriels 1 |
+| Satellite solaire (`solar_satellite`) | Chantier 2 + centrale 5 + Génie civil colonial 2 |
+
+La construction du satellite exige aussi une place libre ou non réservée ; les
+récolteurs excédentaires restent conservés sans production. Ce contrôle de
+capacité est distinct de l’accès acquis. Voir [les règles de déploiement](UNITES_ECONOMIQUES.md).
+
 ## Défenses — 4
 
 Toutes les conditions appartiennent au rang demandé.
@@ -99,7 +113,7 @@ Toutes les conditions appartiennent au rang demandé.
 
 • Chaque stockage exige son producteur du même rang au niveau 5 ; aucun stockage précédent.
 
-Le test de parcours explore les 150 profils depuis les entrées libres avec leurs plafonds réels. Il vérifie l’accessibilité et les cycles, sans prétendre mesurer le financement ou un délai de progression.
+Le test de parcours explore les 156 profils (150 existants et 6 nouveaux) depuis les entrées libres avec leurs plafonds réels. Il vérifie l’accessibilité et les cycles, sans prétendre mesurer le financement ou un délai de progression.
 
 ## Compatibilité
 

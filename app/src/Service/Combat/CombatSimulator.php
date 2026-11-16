@@ -269,7 +269,9 @@ final class CombatSimulator
             }
             $shotsMin = $definition['shots_min'] ?? null;
             $shotsMax = $definition['shots_max'] ?? null;
-            if (!is_int($shotsMin) || !is_int($shotsMax) || $shotsMin < 1 || $shotsMax < $shotsMin || $shotsMax > 100) {
+            // Une unité sans armement peut déclarer explicitement zéro tir.
+            $minimumShots = $stats['base_attack'] > 0 ? 1 : 0;
+            if (!is_int($shotsMin) || !is_int($shotsMax) || $shotsMin < $minimumShots || $shotsMax < $shotsMin || $shotsMax > 100) {
                 throw new \DomainException('Nombre de tirs invalide.');
             }
             $secondary=[];

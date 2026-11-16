@@ -23,7 +23,7 @@ final class InitialUnlockRequirementsTest extends TestCase
                 $pending[$group.':'.$slug.':'.$tier]=[$group,$slug,$tier,$base,$requirements];
             }
         }
-        self::assertCount(150,$pending);
+        self::assertCount(156,$pending);
         do{
             $previous=count($pending);
             foreach($pending as $key=>[$group,$slug,$tier,$base,$requirements]){

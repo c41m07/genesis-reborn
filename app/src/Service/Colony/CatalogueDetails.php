@@ -15,6 +15,7 @@ final class CatalogueDetails
         private TechnologyEffectCalculator $technologyEffects,
         private RequirementChecker $requirements,
         private \App\Service\Requirement\CatalogAccess $access,
+        private EconomicUnitCapacity $economicUnits,
     )
     {
     }
@@ -44,7 +45,7 @@ final class CatalogueDetails
         if ($group === 'technologies') {
             return array_replace($details, $this->technology($itemDefinition, $target, $planet, $technologies));
         }
-        return array_replace($details, $this->unit($itemDefinition, $group, $planet, $buildings, $technologies));
+        return array_replace($details, $this->unit($itemDefinition, $group, $planet, $buildings, $technologies, $context));
     }
 
     private function section(string $title, array $paragraphs = [], array $rows = []): array
@@ -246,6 +247,7 @@ final class CatalogueDetails
         Planet $planet,
         array $buildings,
         array $technologies,
+        ?CatalogueProductionContext $context,
     ): array
     {
         $universe = $planet->solarSystem->galaxy->universe;
@@ -331,26 +333,47 @@ final class CatalogueDetails
             $rebuild = GameCatalog::diminishingBonus($technologies['automated_defense_repair'] ?? [], (float) ($rules['defense_rebuild_max_percent'] ?? 40), (int) ($repair['max_level'] ?? 25));
             $sections[] = $this->section('Déploiement et reconstruction', ['Installation fixe sur cette planète : elle ne peut ni voyager ni rejoindre une flotte. Chaque rang possède sa propre réserve d’unités.', 'Après le combat, la recherche Drones réparateurs reconstruit une partie des défenses détruites. Le nombre est arrondi à l’entier inférieur pour chaque type et rang.'], [['label' => 'Taux actuel de reconstruction', 'value' => $rebuild, 'unit' => '% des pertes']]);
         } else {
-            $mobility = [];
-            foreach ([
-                'speed_system' => 'Vitesse dans le système',
-                'speed_galaxy' => 'Vitesse entre systèmes',
-                'cargo_capacity' => 'Soute disponible avant chargement',
-                'fuel_capacity' => 'Réservoir dédié à l’hydrogène',
-            ] as $key => $label) {
-                $mobility[] = ['label' => $label, 'value' => (float) ($effective[$key] ?? 0), 'unit' => in_array($key, ['cargo_capacity', 'fuel_capacity'], true) ? 'unités' : 'indice'];
+            if (($itemDefinition['mobile'] ?? true) === false) {
+                $sections[] = $this->section('Installation fixe', ['Le satellite reste sur sa colonie de construction. Il ne peut être ni envoyé en mission ni transféré ; il ne dispose ni de fret ni de réservoir.']);
+            } else {
+                $mobility = [];
+                foreach ([
+                    'speed_system' => 'Vitesse dans le système',
+                    'speed_galaxy' => 'Vitesse entre systèmes',
+                    'cargo_capacity' => 'Soute disponible avant chargement',
+                    'fuel_capacity' => 'Réservoir dédié à l’hydrogène',
+                ] as $key => $label) {
+                    $mobility[] = ['label' => $label, 'value' => (float) ($effective[$key] ?? 0), 'unit' => in_array($key, ['cargo_capacity', 'fuel_capacity'], true) ? 'unités' : 'indice'];
+                }
+                $mobility[] = ['label' => 'Consommation en trajet normal', 'value' => (float) ($itemDefinition['fuel_travel_system'] ?? 0), 'unit' => 'H / unité de distance'];
+                $mobility[] = ['label' => 'Consommation en trajet entre systèmes', 'value' => (float) ($itemDefinition['fuel_travel_galaxy'] ?? 0), 'unit' => 'H / unité de distance'];
+                $mobility[] = ['label' => 'Consommation en stationnement', 'value' => (float) ($itemDefinition['fuel_orbit'] ?? 0), 'unit' => 'H / h', 'precision' => 3];
+                $sections[] = $this->section('Déplacement et chargement', ['Les vitesses et capacités ci-dessous incluent vos recherches. La flotte utilise la vitesse de son vaisseau le plus lent pour chaque segment du trajet.', 'Les réservoirs sont réservés au carburant. Le carburant aller-retour et le stationnement prévu sont réservés dès le départ ; le surplus utilise la soute et réduit la place disponible pour le fret.', 'Le coût réel dépend de la route, de la vitesse choisie et de la composition de la flotte. Consultez l’estimation de mission avant le départ.'], $mobility);
+                if ($itemDefinition['slug'] === 'probe') {
+                    $sections = [...$sections, ...$this->espionageSections()];
+                } elseif ($itemDefinition['slug'] === 'colony_ship') {
+                    $sections[] = $this->section('Fondation et conquête', ['Fonde une colonie sur une planète vierge connue, si votre limite de colonies le permet. Un vaisseau colonie est consommé à la fondation.', 'Les ressources de départ de la nouvelle colonie sont multipliées par le rang du vaisseau consommé : ×1 en Basique, ×1,25 en Intermédiaire et ×1,5625 en Supérieur. Si plusieurs rangs sont présents, le rang le plus bas disponible est consommé.', 'Pour conquérir une planète PNJ, au moins un vaisseau colonie doit survivre au combat. Les planètes détenues par d’autres joueurs ne peuvent pas être conquises.']);
+                } elseif ((float) ($itemDefinition['cargo_capacity'] ?? 0) > 0) {
+                    $sections[] = $this->section('Transport', ['Transporte des ressources vers vos colonies ou celles des joueurs qui acceptent vos livraisons, dans la même galaxie et un système connu. Le surplus de stockage revient avec la flotte. Les dons ne donnent aucun boost et ne font progresser aucun objectif.', 'Une soute plus grande augmente aussi la capacité disponible pour le butin si le vaisseau survit au combat. La capacité de fret réelle est calculée après réservation du carburant.']);
+                }
             }
-            $mobility[] = ['label' => 'Consommation en trajet normal', 'value' => (float) ($itemDefinition['fuel_travel_system'] ?? 0), 'unit' => 'H / unité de distance'];
-            $mobility[] = ['label' => 'Consommation en trajet entre systèmes', 'value' => (float) ($itemDefinition['fuel_travel_galaxy'] ?? 0), 'unit' => 'H / unité de distance'];
-            $mobility[] = ['label' => 'Consommation en stationnement', 'value' => (float) ($itemDefinition['fuel_orbit'] ?? 0), 'unit' => 'H / h', 'precision' => 3];
-            $sections[] = $this->section('Déplacement et chargement', ['Les vitesses et capacités ci-dessous incluent vos recherches. La flotte utilise la vitesse de son vaisseau le plus lent pour chaque segment du trajet.', 'Les réservoirs sont réservés au carburant. Le carburant aller-retour et le stationnement prévu sont réservés dès le départ ; le surplus utilise la soute et réduit la place disponible pour le fret.', 'Le coût réel dépend de la route, de la vitesse choisie et de la composition de la flotte. Consultez l’estimation de mission avant le départ.'], $mobility);
-            if ($itemDefinition['slug'] === 'probe') {
-                $sections = [...$sections, ...$this->espionageSections()];
-            } elseif ($itemDefinition['slug'] === 'colony_ship') {
-                $sections[] = $this->section('Fondation et conquête', ['Fonde une colonie sur une planète vierge connue, si votre limite de colonies le permet. Un vaisseau colonie est consommé à la fondation.', 'Les ressources de départ de la nouvelle colonie sont multipliées par le rang du vaisseau consommé : ×1 en Basique, ×1,25 en Intermédiaire et ×1,5625 en Supérieur. Si plusieurs rangs sont présents, le rang le plus bas disponible est consommé.', 'Pour conquérir une planète PNJ, au moins un vaisseau colonie doit survivre au combat. Les planètes détenues par d’autres joueurs ne peuvent pas être conquises.']);
-            } elseif ((float) ($itemDefinition['cargo_capacity'] ?? 0) > 0) {
-                $sections[] = $this->section('Transport', ['Transporte des ressources vers vos colonies ou celles des joueurs qui acceptent vos livraisons, dans la même galaxie et un système connu. Le surplus de stockage revient avec la flotte. Les dons ne donnent aucun boost et ne font progresser aucun objectif.', 'Une soute plus grande augmente aussi la capacité disponible pour le butin si le vaisseau survit au combat. La capacité de fret réelle est calculée après réservation du carburant.']);
-            }
+        }
+        if (isset($itemDefinition['economic_unit'])) {
+            $economic = $itemDefinition['economic_unit'];$tier = $itemDefinition['_tier'];
+            $state = $this->economicUnits->state($planet, $buildings, $context?->economicInventory)[$itemDefinition['slug']][$tier];
+            $building = $this->catalog->getForUniverse($universe, 'buildings', $economic['capacity_building']);
+            $sections[] = $this->section('Production et places locales', [
+                'Les références de production concernent la position 5 et un univers ×1. Position, univers, événements, vacances et stockage s’appliquent ensuite, sans entretien supplémentaire.',
+                $economic['slots_per_level'].' place(s) par niveau de '.$building['label'].' du même rang. Les unités sans place sont conservées sans produire ; les places réservées ne peuvent pas être prises par une nouvelle construction.',
+                ($itemDefinition['mobile'] ?? true) ? 'Le Stationnement réserve les places sur une autre de vos colonies. Les récolteurs ne produisent pas en vol et n’ont pas de soute de fret.' : 'La construction réserve une place jusqu’au déploiement local du satellite.',
+                'Ces unités ne tirent pas et défendent leur colonie sans évacuation automatique. La production cesse à l’application des pertes à la clôture du combat.',
+            ], [
+                ['label'=>'Production de référence par unité','value'=>$economic['production_per_hour'][$tier], 'unit'=>$economic['resource']==='hydrogen'?'H / h':'E / h'],
+                ['label'=>'Places de ce rang','value'=>$state['capacity'],'unit'=>'places'],
+                ['label'=>'Unités actives','value'=>$state['active'],'unit'=>'unités'],
+                ['label'=>'Places réservées','value'=>$state['reserved'],'unit'=>'places'],
+                ['label'=>'Unités conservées inactives','value'=>$state['inactive'],'unit'=>'unités'],
+            ]);
         }
         $intro = $defense ? 'Défense fixe spécialisée contre ' . implode(', ', $itemDefinition['countered_ship_labels'] ?? []) . '.' : match ($itemDefinition['slug']) {
             'probe' => 'Sonde non armée pour découvrir des systèmes et espionner des planètes connues.',

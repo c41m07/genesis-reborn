@@ -1,5 +1,29 @@
 # Architecture et parcours applicatifs
 
+## Unités économiques et livraisons en défense
+
+`EconomicUnitCapacity` dérive les stocks et réservations à partir des FleetShip,
+des files locales et de `Fleet.navigation.economic_slots`. La requête ciblée
+`GameRepository.economicUnitStocks` charge seulement les unités civiles présentes
+ou attendues de la participation sur la planète. Aucun stock d’affectation dupliqué
+ni changement SQL. `CatalogueProductionContext` conserve cette lecture brute pour
+les cartes et les segments de ressources ; les modificateurs sont recalculés à
+chaque frontière d’événement ou de vacances.
+
+`EconomicUnitDeployment` réserve ou libère sous les verrous de jeu existants,
+après matérialisation de l’ancien état. `ResourceService` ajoute les deux sources
+civiles sans les soumettre à l’entretien ni au rendement électrique des usines.
+Les sources restent identifiables dans le bandeau ; les surplus existants sont
+conservés. Les pertes sont matérialisées puis appliquées à la clôture du combat.
+
+`LocalGarrison` raccorde les livraisons du chantier et du Stationnement à
+`CombatEventService.joinOpenDefense`. Toute la flotte locale disponible participe,
+carburant et fret conservés, sans copie d’unités ni trajet fictif. La date payée du
+chantier est prise en compte ; un renfort ajouté après des rounds déjà résolus
+ne peut pas réécrire ces rounds. Une fermeture différée du service de combat
+évite le cycle entre résolution de combat et livraison des files.
+Voir les [transitions, contrôles et limites](UNITES_ECONOMIQUES.md).
+
 ## Organisation et environnement
 
 Le code Symfony, les templates, assets, migrations, tests et dépendances sont
@@ -217,7 +241,7 @@ Les tests utilisent uniquement les comptes et bases de leurs projets Docker
 jetables. SMTP, livraison Internet des liens et configuration Alpha demandent
 une vérification séparée sur un serveur autorisé.
 
-Le tableau documentaire `docs/CATALOGUE_LABELS.csv` conserve les 150 libellés,
+Le tableau documentaire `docs/CATALOGUE_LABELS.csv` conserve les 156 libellés,
 descriptions et utilités de jeu. Les valeurs d’exécution restent celles du catalogue
 applicatif ; ce fichier documentaire n’est pas importé dans la base.
 

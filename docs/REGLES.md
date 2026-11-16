@@ -1,5 +1,34 @@
 # Synthèse de conception
 
+## Unités économiques — décision des 15 et 16 novembre 2026
+
+Les deux familles de vaisseaux civils sont détaillées dans
+[UNITES_ECONOMIQUES](UNITES_ECONOMIQUES.md) : prix, prérequis, statistiques et
+transitions. Chaque rang dispose de ses propres places sur chaque colonie :
+un récolteur actif par niveau de raffinerie d’hydrogène, deux satellites par
+niveau de centrale du même rang. Les satellites en chantier et les récolteurs
+en affectation réservent ces places. Aucun manque de place ne détruit une unité ;
+l’excédent présent reste conservé sans production.
+
+Production par unité active, position 5, univers ×1 : récolteur 900 / 1 350 /
+2 025 H/h, satellite 450 / 675 / 1 012,5 E/h. Position, univers, événements,
+vacances, stockage et surplus existants restent pris en compte. Aucun entretien
+horaire ajouté, ni réduction de ces sources par le rendement électrique industriel.
+Le récolteur n’a pas de fret et se déplace uniquement par Stationnement entre
+colonies possédées ; aucune production en déplacement. Le satellite est immobile.
+
+Ces unités défendent leur colonie, sont ciblables et destructibles, sans aucun tir
+même après recherche. Les tirs qui les ciblent utilisent ×1. La production continue
+pendant l’engagement et cesse avec les pertes appliquées à la clôture. Les unités
+livrées au chantier ou installées par Stationnement pendant une bataille ouverte
+rejoignent la défense au prochain round éligible avec tous les vaisseaux locaux
+disponibles ; leur flotte et leur carburant restent conservés. Aucun round déjà
+résolu n’est réécrit par cette livraison.
+
+Les usines gardent le secours électrique de 10 %, sans garantie absolue de reprise :
+le piège reste dépendant de son hydrogène. La reconstruction n’ajoute aucun secours
+gratuit. Les mesures économiques et de masse conjointes sont réservées au lot 4.
+
 ## Progression (PDF 0 p.3–9)
 1. Socle, authentification session.
 2. Univers et cartes JSON, inscription PlayerUniverse, sélection.

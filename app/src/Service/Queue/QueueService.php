@@ -31,6 +31,8 @@ final class QueueService
         private \App\Service\Requirement\CatalogAccess $access,
         private VacationCalendar $vacations,
         private \App\Service\Player\EmpireReconstructionScheduler $reconstruction,
+        private \App\Service\Colony\EconomicUnitCapacity $economicUnits,
+        private \App\Service\Combat\LocalGarrison $garrison,
     )
     {
     }
@@ -108,6 +110,9 @@ final class QueueService
             if (in_array($group, ['ships', 'defenses'], true)) {
                 $maximum = $this->unitMaximum($membership, $planet, $group, $slug, $tier, $definition, $buildings, $config, $technologies);
                 if ($maximum < 1) {
+                    if ($this->economicUnits->constructionLimit($planet, $definition, $buildings) === 0) {
+                        throw new \DomainException('Aucune place de satellite disponible dans la centrale de ce rang.');
+                    }
                     throw new \DomainException('Ressources insuffisantes pour construire une unité.');
                 }
                 $quantity = min($quantity, $maximum);
@@ -240,6 +245,8 @@ final class QueueService
                 $reason = 'File pleine (30 commandes maximum).';
             } elseif ($failures) {
                 $reason = 'Prérequis manquants : ' . implode(', ', $failures) . '.';
+            } elseif ($this->economicUnits->constructionLimit($planet, $definition, $buildings) === 0) {
+                $reason = 'Aucune place de satellite disponible dans la centrale de ce rang.';
             } else {
                 $stocks = $this->resources->snapshot($planet);
                 foreach ($plan['costs'] as $resource => $amount) {
@@ -279,6 +286,7 @@ final class QueueService
                 $limit -= $item->quantity;
             }
         }
+        $limit = min($limit, $this->economicUnits->constructionLimit($planet, $definition, $buildings));
         return $this->calculator->maximum($definition, $group, $this->resources->snapshot($planet), $buildings, $config, $technologies, max(0, $limit));
     }
 
@@ -379,6 +387,12 @@ final class QueueService
         $membership = $item->playerUniverse;
         // Le worker peut être en retard : appliquer la fin prévue, pas l’heure à laquelle le message est reçu.
         $finish = $item->finishAt();
+        $shipConstruction = $item->queueType === 'shipyard' && isset($this->catalog->all('ships')[$item->itemSlug]);
+        $economic = $shipConstruction && isset($this->catalog->all('ships')[$item->itemSlug]['economic_unit']);
+        if ($economic) {
+            // Créditer uniquement l'ancien effectif jusqu'à la fin payée, même après une longue absence.
+            $this->resources->materialize($planet, $finish);
+        }
         if ($item->queueType === 'building') {
             // Calculer les stocks à la date de fin avec les anciens niveaux, avant d’appliquer le nouveau gain.
             $this->resources->materialize($planet, $finish);
@@ -433,6 +447,8 @@ final class QueueService
         $queueType = $item->queueType;
         $this->manager->remove($item);
         $this->manager->flush();
+        if ($shipConstruction) $this->garrison->enlist($planet,$finish);
+        if ($economic) $this->resources->refreshProduction($planet);
         if ($queueType === 'research') {
             $planet->researchQueueStartedAt = null;
             $this->startNextResearch($membership, $finish);

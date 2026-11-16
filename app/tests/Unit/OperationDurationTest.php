@@ -23,7 +23,7 @@ final class OperationDurationTest extends TestCase
                 'automated_defense_repair'=>2700,'intelligence_countermeasures'=>2700,'signature_masking'=>3600,
                 'signature_reduction'=>5400,'shield_harmonics'=>7200,'evasive_navigation'=>7200,'rapid_fire_cycle'=>14400],
             'ships' => ['probe'=>120,'fighter'=>180,'interceptor'=>240,'heavy_fighter'=>600,'stealth_fighter'=>900,
-                'bomber'=>1200,'corvette'=>1800,'transport'=>1800,'colony_ship'=>7200,'frigate'=>5400,
+                'hydrogen_collector'=>180,'solar_satellite'=>180,'bomber'=>1200,'corvette'=>1800,'transport'=>1800,'colony_ship'=>7200,'frigate'=>5400,
                 'destroyer'=>10800,'cruiser'=>21600,'battleship'=>43200,'capital'=>86400],
             'defenses' => ['ground_turret_anti_light'=>300,'ground_turret_anti_escort'=>900,
                 'ground_turret_anti_heavy'=>1800,'ground_turret_anti_capital'=>3600],

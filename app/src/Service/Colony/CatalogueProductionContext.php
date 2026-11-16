@@ -5,7 +5,7 @@ namespace App\Service\Colony;
 use App\Entity\Planet;
 
 /**
- * Évite de relire les événements et les vacances pour chaque carte de bâtiment.
+ * Évite de relire les événements, les vacances et les effectifs civils pour chaque carte.
  * Recréer ce contexte après une synchronisation ou une écriture économique.
  */
 final readonly class CatalogueProductionContext
@@ -14,6 +14,7 @@ final readonly class CatalogueProductionContext
         private Planet $planet,
         public bool $onVacation,
         public float $eventMultiplier,
+        public ?array $economicInventory = null,
     ) {}
 
     public function assertPlanet(Planet $planet): void

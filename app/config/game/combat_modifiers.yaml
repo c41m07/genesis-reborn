@@ -15,7 +15,9 @@
       "ground_defense": 0.85,
       "fighter": 1,
       "stealth_fighter": 1.15,
-      "interceptor": 2.04
+      "interceptor": 2.04,
+      "hydrogen_collector": 1,
+      "solar_satellite": 1
     },
     "interceptor": {
       "heavy_fighter": 2.35,
@@ -32,7 +34,9 @@
       "ground_defense": 1,
       "fighter": 1,
       "stealth_fighter": 1.15,
-      "interceptor": 1
+      "interceptor": 1,
+      "hydrogen_collector": 1,
+      "solar_satellite": 1
     },
     "stealth_fighter": {
       "fighters": 1,
@@ -47,7 +51,9 @@
       "transport": 1,
       "colony_ship": 1,
       "probe": 1,
-      "ground_defense": 1
+      "ground_defense": 1,
+      "hydrogen_collector": 1,
+      "solar_satellite": 1
     },
     "heavy_fighter": {
       "heavy_fighter": 1,
@@ -64,7 +70,9 @@
       "ground_defense": 1,
       "fighter": 4.15,
       "stealth_fighter": 1.15,
-      "interceptor": 1
+      "interceptor": 1,
+      "hydrogen_collector": 1,
+      "solar_satellite": 1
     },
     "bomber": {
       "heavy_fighter": 1,
@@ -81,7 +89,9 @@
       "ground_defense": 1,
       "fighter": 1,
       "stealth_fighter": 1,
-      "interceptor": 1
+      "interceptor": 1,
+      "hydrogen_collector": 1,
+      "solar_satellite": 1
     },
     "corvette": {
       "fighters": 1.3,
@@ -96,7 +106,9 @@
       "transport": 1,
       "colony_ship": 1,
       "probe": 1,
-      "ground_defense": 1
+      "ground_defense": 1,
+      "hydrogen_collector": 1,
+      "solar_satellite": 1
     },
     "frigate": {
       "heavy_fighter": 1,
@@ -113,7 +125,9 @@
       "ground_defense": 1,
       "fighter": 8,
       "stealth_fighter": 1.3,
-      "interceptor": 4.5
+      "interceptor": 4.5,
+      "hydrogen_collector": 1,
+      "solar_satellite": 1
     },
     "destroyer": {
       "heavy_fighter": 1,
@@ -130,7 +144,9 @@
       "ground_defense": 1,
       "fighter": 1,
       "stealth_fighter": 1,
-      "interceptor": 1
+      "interceptor": 1,
+      "hydrogen_collector": 1,
+      "solar_satellite": 1
     },
     "cruiser": {
       "heavy_fighter": 6,
@@ -147,7 +163,9 @@
       "ground_defense": 1,
       "fighter": 1,
       "stealth_fighter": 1,
-      "interceptor": 1
+      "interceptor": 1,
+      "hydrogen_collector": 1,
+      "solar_satellite": 1
     },
     "battleship": {
       "heavy_fighter": 1,
@@ -164,7 +182,9 @@
       "ground_defense": 1.15,
       "fighter": 1,
       "stealth_fighter": 1,
-      "interceptor": 1
+      "interceptor": 1,
+      "hydrogen_collector": 1,
+      "solar_satellite": 1
     },
     "capital": {
       "heavy_fighter": 1,
@@ -181,7 +201,9 @@
       "ground_defense": 1.3,
       "fighter": 1,
       "stealth_fighter": 1,
-      "interceptor": 1
+      "interceptor": 1,
+      "hydrogen_collector": 1,
+      "solar_satellite": 1
     },
     "transport": {
       "fighters": 1,
@@ -196,7 +218,9 @@
       "transport": 1,
       "colony_ship": 1,
       "probe": 1,
-      "ground_defense": 1
+      "ground_defense": 1,
+      "hydrogen_collector": 1,
+      "solar_satellite": 1
     },
     "colony_ship": {
       "fighters": 1,
@@ -211,7 +235,9 @@
       "transport": 1,
       "colony_ship": 1,
       "probe": 1,
-      "ground_defense": 1
+      "ground_defense": 1,
+      "hydrogen_collector": 1,
+      "solar_satellite": 1
     },
     "probe": {
       "fighters": 1,
@@ -226,7 +252,9 @@
       "transport": 1,
       "colony_ship": 1,
       "probe": 1,
-      "ground_defense": 1
+      "ground_defense": 1,
+      "hydrogen_collector": 1,
+      "solar_satellite": 1
     },
     "ground_turret_anti_light": {
       "fighters": 1.3,
@@ -240,7 +268,9 @@
       "capital": 0.85,
       "transport": 1,
       "colony_ship": 1,
-      "probe": 1
+      "probe": 1,
+      "hydrogen_collector": 1,
+      "solar_satellite": 1
     },
     "ground_turret_anti_escort": {
       "fighters": 0.85,
@@ -254,7 +284,9 @@
       "capital": 0.85,
       "transport": 1,
       "colony_ship": 1,
-      "probe": 1
+      "probe": 1,
+      "hydrogen_collector": 1,
+      "solar_satellite": 1
     },
     "ground_turret_anti_heavy": {
       "fighters": 0.85,
@@ -268,7 +300,9 @@
       "capital": 0.85,
       "transport": 1,
       "colony_ship": 1,
-      "probe": 1
+      "probe": 1,
+      "hydrogen_collector": 1,
+      "solar_satellite": 1
     },
     "ground_turret_anti_capital": {
       "fighters": 0.85,
@@ -282,7 +316,9 @@
       "capital": 1.3,
       "transport": 1,
       "colony_ship": 1,
-      "probe": 1
+      "probe": 1,
+      "hydrogen_collector": 1,
+      "solar_satellite": 1
     }
   },
   "labels": {
@@ -300,7 +336,9 @@
     "transport": "Transporteur",
     "colony_ship": "Vaisseau colonie",
     "probe": "Sonde",
-    "ground_defense": "Défenses au sol"
+    "ground_defense": "Défenses au sol",
+    "hydrogen_collector": "Récolteur d’hydrogène",
+    "solar_satellite": "Satellite solaire"
   },
   "source": "R14 Alpha — décision utilisateur du 05/11/2026. Matrice explicite des neuf classes ; autres relations conservées.",
   "target_groups": {
