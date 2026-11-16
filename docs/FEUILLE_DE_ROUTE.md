@@ -1668,6 +1668,7 @@ choix, vérifications et limites. CI, fusion et déploiement restent distincts.
 Lot 2 Flottes réalisé sur `feature/navigation-flottes` depuis dev `a279cd1` :
 missions, préparation, orbites, réserves et compositions séparées, services
 métier conservés. Contrôles locaux ciblés réussis ; [PR #77](https://github.com/c41m07/genesis-reborn/pull/77)
-en attente de la CI complète avant fusion. État d’intégration suivi dans
+vers dev, avec CI complète obligatoire avant fusion. La PR donne l’état courant
+de la CI et de l’intégration ; la recette et les limites sont suivies dans
 [NAVIGATION_PAGES_DEDIEES](NAVIGATION_PAGES_DEDIEES.md). Ne pas démarrer Inventaire
 avant la CI complète et la fusion de ce lot.
