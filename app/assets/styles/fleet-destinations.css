@@ -21,3 +21,7 @@
 .fleet-space .fleet-hold-actions form{min-width:0}
 
 .fleet-space .fleet-wizard-header h2{margin:0;font-size:18px}
+
+body.ui-refined[data-ui-page="flottes"] .fleet-space .fleet-operations-rail{order:0}
+
+body[data-theme=light] .fleet-space .fleet-wizard-steps>span:not(.active):not(.complete),body[data-theme=light] .fleet-space .fleet-wizard-note{color:var(--text)}

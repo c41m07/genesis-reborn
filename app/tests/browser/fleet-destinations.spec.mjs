@@ -140,7 +140,7 @@ test('Les pages Flottes gardent navigation, historique et saisies pendant les ac
     ['/flottes/compositions','Mes compositions'], ['/flottes/compositions/creer','Créer une composition'],
   ];
   for (const theme of ['dark','light']) {
-    runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(preferences,'$.theme','${theme}') WHERE email='details-${id}@example.test'`);
+    runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='details-${id}@example.test'`);
     for (const width of [1440,320]) {
       await page.setViewportSize({width,height:900});
       for (const [url,title] of routes) {
@@ -155,6 +155,7 @@ test('Les pages Flottes gardent navigation, historique et saisies pendant les ac
         expect((await new AxeBuilder({page}).include('main').analyze()).violations).toEqual([]);
       }
       await page.goto('/flottes/preparer');
+      if (width===320) expect((await page.locator('.fleet-composer').boundingBox()).y).toBeLessThan((await page.locator('.fleet-operations-rail').boundingBox()).y);
       await page.screenshot({path:testInfo.outputPath(`fleet-prepare-${theme}-${width}.png`),fullPage:true});
     }
   }
@@ -166,13 +167,15 @@ test('Les pages Flottes gardent navigation, historique et saisies pendant les ac
   await nav.getByRole('link',{name:'Demandes d’orbite',exact:true}).focus();await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/flottes\/orbites$/);await page.reload();await expect(page.locator('h1')).toHaveText('Demandes d’orbite');
   await page.goBack();await expect(page).toHaveURL(/flottes\/preparer$/);
+  await page.goto('/flottes?mission=spy#active-missions');
+  await expect(page).toHaveURL(/\/flottes#active-missions$/);
   for (const [fragment,path] of [['prepare-mission','/flottes/preparer'],['orbit-requests-title','/flottes/orbites'],['held-fleets-title','/flottes/quai']]) {
     await page.goto('/flottes#'+fragment);await expect(page).toHaveURL(new RegExp(path+'#'+fragment+'$'));
   }
 });
 
 test('Les pages et les compositions restent utilisables sans JavaScript', async ({ page, browser, baseURL }) => {
-  await prepare(page);
+  const { origin }=await prepare(page);
   const context=await browser.newContext({baseURL,storageState:await page.context().storageState(),javaScriptEnabled:false});
   try {
     const plain=await context.newPage();
@@ -192,6 +195,8 @@ test('Les pages et les compositions restent utilisables sans JavaScript', async 
     await plain.reload();await expect(plain.locator('#composition-probe-basic')).toHaveValue('1');
     await plain.getByRole('navigation',{name:'Navigation des flottes'}).getByRole('link',{name:'Mes compositions'}).click();
     await plain.getByRole('link',{name:'Vérifier et charger',exact:true}).click();
+    await plain.getByLabel('Colonie de départ',{exact:true}).selectOption(String(origin));
+    await plain.getByRole('button',{name:'Vérifier cette colonie',exact:true}).click();
     await plain.getByRole('link',{name:'Charger exactement cette composition'}).click();
     await expect(plain).toHaveURL(/flottes\/preparer\?composition=/);
     await expect(plain.locator('input[name="ships[probe]"]')).toHaveValue('1');

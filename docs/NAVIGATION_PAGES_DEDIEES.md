@@ -9,7 +9,10 @@ La copie dev utilisée par localhost a été avancée sans écraser son fichier
 `app/config/reference.php` préexistant ; assets recompilés et cache applicatif
 vidé. Aucune migration de sa base ni livraison Alpha.
 
-Lot 2 Flottes en cours sur `feature/navigation-flottes`, depuis cette dev.
+Lot 2 Flottes réalisé sur `feature/navigation-flottes`, depuis cette dev puis
+actualisé avec dev `cc5926d`. [PR #77](https://github.com/c41m07/genesis-reborn/pull/77).
+Le bilan du lot 2 ci-dessous décrit la recette avant intégration ; la PR donne
+l’état courant de la CI et de la fusion.
 
 Les trois documents Work V4 (prompt maître), V2 (brief Figma) et V1 (protocole
 adaptatif) n’ont pas été trouvés dans le dépôt ni les sources connectées
@@ -210,6 +213,7 @@ La tâche autonome devient une page ; les étapes d’un seul envoi restent dans
 le même formulaire. Le menu principal garde une seule entrée Flottes. Une
 navigation secondaire commune se replie en plusieurs lignes sur mobile et
 identifie la page active, y compris dans les formulaires de composition.
+Sur mobile, le formulaire précède son résumé et les arrivées étrangères.
 Les nouveaux écrans n’ajoutent aucun sommaire automatique. Les ancres de vol
 restent utiles dans la liste détaillée et les rapports de combat ne changent pas.
 
@@ -249,8 +253,32 @@ Les vérifications du vol ciblé restent bornées au joueur et à sa colonie.
 
 ### Vérifications et livraison
 
-Validation en cours ; compléter les résultats avant publication. Aucune
-migration, installation de dépendance ni modification d’équilibrage.
+- `make validate`, `make lint`, `make assets`, syntaxes JavaScript, validité du
+  JSON du manuel et `git diff --check` réussis.
+- Tests PHP ciblés : première série de 87 tests / 1 001 assertions, avec une
+  mesure facultative ignorée ; reprises réussies des destinations/transports
+  (24 tests / 319 assertions), compositions/destinations/orbites
+  (42 / 419), destinations/occupation JcE (42 / 582). Ces séries se recouvrent.
+  Les scénarios de reconstruction des empires oubliés ont aussi réussi ; les
+  erreurs de chemins et de préparation des fixtures repérées ont été corrigées.
+- 27 parcours navigateur distincts réussis par consolidation des reprises :
+  envoi, estimation, ajustement, colonie, compositions, concurrence, stationnement,
+  orbites, rappels, surveillance, états vides, quantités et navigation responsive.
+  Le dernier parcours contrôlant toutes les nouvelles pages passe en clair et
+  sombre, à 320 et 1 440 px, avec Axe sur `main`, focus, mise à jour sans perte
+  de saisie, rechargement, retour arrière et anciens fragments. La recette
+  responsive générale couvre aussi 390, 834 et 1 024 px. Les compositions et
+  leurs disponibilités restent utilisables sans JavaScript.
+- Les captures représentatives ont été examinées. La hiérarchie des titres,
+  les contrastes du formulaire clair et la priorité du formulaire sur mobile
+  ont été corrigés. Les anciens fragments réagissent aussi à un changement
+  d’ancre conservant le document, sans boucle avec les paramètres de préparation.
+- La première CI de brouillon a réussi sur `e5f0c90`. Elle ne constitue pas
+  la CI complète ; les cinq jobs quality sont obligatoires sur la dernière
+  version prête à relire de la PR #77 avant toute fusion.
+
+Aucune migration sur une base existante, installation locale de dépendance ni
+modification d’équilibrage.
 Les tests écrivent uniquement dans des bases jetables distinctes de localhost.
 Les vérifications RGAA sont ciblées ; lecteur d’écran réel et audit complet
 restent hors de cette recette. Les trois sources Work citées en début de suivi
@@ -261,3 +289,71 @@ Les fichiers principaux du lot sont `FleetController`, `FleetPageView`,
 les templates `fleet/`, `ui/fleet_navigation`, le menu principal et les liens
 entrants, `colony_live_controller`, `page_sections_controller`, les styles,
 les tests HTTP/intégration/navigateur et les documents de navigation/flottes.
+
+
+### Fichiers du lot 2
+
+- `README.md`
+- `app/assets/controllers/colony_live_controller.js`
+- `app/assets/controllers/page_sections_controller.js`
+- `app/assets/styles/fleet-destinations.css`
+- `app/src/Controller/FleetCompositionController.php`
+- `app/src/Controller/FleetController.php`
+- `app/src/Controller/FleetRecallController.php`
+- `app/src/Controller/FleetStationingController.php`
+- `app/src/Repository/GameRepository.php`
+- `app/src/Service/Fleet/FleetPageView.php`
+- `app/src/Service/Fleet/OrbitRequestView.php`
+- `app/templates/base.html.twig`
+- `app/templates/boosts/index.html.twig`
+- `app/templates/combat/simulation.html.twig`
+- `app/templates/fleet/_available.html.twig`
+- `app/templates/fleet/_composition_editor.html.twig`
+- `app/templates/fleet/_counts.html.twig`
+- `app/templates/fleet/_dock.html.twig`
+- `app/templates/fleet/_mission_summary.html.twig`
+- `app/templates/fleet/_pagination.html.twig`
+- `app/templates/fleet/composition_load.html.twig`
+- `app/templates/fleet/compositions.html.twig`
+- `app/templates/fleet/index.html.twig`
+- `app/templates/fleet/recall.html.twig`
+- `app/templates/fleet/resume.html.twig`
+- `app/templates/player/challenge.html.twig`
+- `app/templates/ui/fleet_navigation.html.twig`
+- `app/templates/ui/flights.html.twig`
+- `app/templates/ui/incoming_attacks_list.html.twig`
+- `app/templates/ui/map_conquest_actions.html.twig`
+- `app/templates/ui/orbit_requests.html.twig`
+- `app/templates/universe/map.html.twig`
+- `app/tests/Controller/FleetDestinationTest.php`
+- `app/tests/Controller/GameplayAccessTest.php`
+- `app/tests/Controller/StrategicToolsTest.php`
+- `app/tests/Integration/FleetStationingTest.php`
+- `app/tests/Integration/ForgottenEmpireJourneyTest.php`
+- `app/tests/browser/colony.spec.mjs`
+- `app/tests/browser/conquest-report.spec.mjs`
+- `app/tests/browser/economic-units.spec.mjs`
+- `app/tests/browser/espionage-report.spec.mjs`
+- `app/tests/browser/fleet-destinations.spec.mjs`
+- `app/tests/browser/fleet-empty-state.spec.mjs`
+- `app/tests/browser/fleet-preview-submit-state.spec.mjs`
+- `app/tests/browser/fleet-recall.spec.mjs`
+- `app/tests/browser/fleet-stationing.spec.mjs`
+- `app/tests/browser/fleet-surveillance.spec.mjs`
+- `app/tests/browser/fleet-wizard.spec.mjs`
+- `app/tests/browser/orbit-request.spec.mjs`
+- `app/tests/browser/quantity-max.spec.mjs`
+- `app/tests/browser/strategic-tools.spec.mjs`
+- `app/tests/browser/ui-journey.spec.mjs`
+- `app/tests/browser/ui-routes-responsive.spec.mjs`
+- `app/tests/browser/ui-state-coverage.spec.mjs`
+- `app/tests/browser/wireframe-theme-screens.spec.mjs`
+- `docs/ARCHITECTURE.md`
+- `docs/CADRAGE_OUTILS_STRATEGIQUES.md`
+- `docs/DECISIONS.md`
+- `docs/DESTINATIONS_STATIONNEMENT.md`
+- `docs/FEUILLE_DE_ROUTE.md`
+- `docs/FLOTTES_ENTRANTES.md`
+- `docs/NAVIGATION_PAGES_DEDIEES.md`
+- `docs/PARCOURS_UI_UX.md`
+- `docs/wiki.json`
