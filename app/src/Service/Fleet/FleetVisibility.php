@@ -32,11 +32,33 @@ final class FleetVisibility
 
     public function incoming(PlayerUniverse $viewer): array
     {
-        if(!$this->canRead($viewer)) return [];
-        $known=$this->knownSystems($viewer);$level=$this->detection->level($viewer);$now=$this->clock->now();$rows=[];
-        foreach($this->repo->incomingAttackFleets($viewer) as $fleet) {
-            if($this->visible($viewer,$fleet,$known,$level,$now,false)) $rows[]=$this->row($viewer,$fleet,$known);
+        if (!$this->canRead($viewer)) return [];
+        $known = $this->knownSystems($viewer);
+        $level = $this->detection->level($viewer);
+        $now = $this->clock->now();
+        $missions = array_values(array_diff(array_keys(self::MISSIONS), ['spy']));
+        $visible = [];
+        foreach ($this->repo->incomingFleets($viewer, $missions) as $fleet) {
+            // Réutiliser les mêmes protections que la carte : origine découverte,
+            // univers, espionnage privé et préavis des attaques restent autoritaires.
+            if ($this->visible($viewer, $fleet, $known, $level, $now, false)) $visible[] = $fleet;
         }
+        if ($visible === []) return [];
+        // Les attaques détectées restent prioritaires quand les transports s’ajoutent au panneau.
+        usort($visible, static function (Fleet $left, Fleet $right): int {
+            $leftHostile = in_array($left->mission, ['attack', 'conquer'], true);
+            $rightHostile = in_array($right->mission, ['attack', 'conquer'], true);
+            return ($rightHostile <=> $leftHostile)
+                ?: (($left->arrivalAt?->getTimestamp() ?? PHP_INT_MAX) <=> ($right->arrivalAt?->getTimestamp() ?? PHP_INT_MAX))
+                ?: ($left->id <=> $right->id);
+        });
+        // Charger les effectifs seulement pour les flottes visibles, en une lecture ciblée.
+        $shipsByFleet = [];
+        foreach ($this->repo->all(FleetShip::class, ['fleet'=>$visible]) as $ship) {
+            $shipsByFleet[$ship->fleet->id][] = $ship;
+        }
+        $rows = [];
+        foreach ($visible as $fleet) $rows[] = $this->row($viewer, $fleet, $known, $shipsByFleet[$fleet->id] ?? []);
         return $rows;
     }
 
@@ -73,11 +95,12 @@ final class FleetVisibility
         return $planet && $planet->solarSystem->galaxy->universe->id===$fleet->playerUniverse->universe->id?$planet:$fleet->homePlanet;
     }
 
-    private function row(PlayerUniverse $m,Fleet $fleet,array $known): array
+    /** @param list<FleetShip>|null $preparedShips */
+    private function row(PlayerUniverse $m,Fleet $fleet,array $known,?array $preparedShips=null): array
     {
         $originPlanet=$this->origin($fleet);$originSystem=$originPlanet->solarSystem;$destinationSystem=$fleet->destination?->solarSystem??$fleet->destinationSystem;
         $isOwnFleet=$fleet->playerUniverse->id===$m->id;$targetsOwnColony=$fleet->destination?->owner?->id===$m->id;
-        $ships = array_values(array_filter($this->repo->all(FleetShip::class, ['fleet' => $fleet]), static fn (FleetShip $ship): bool => $ship->quantity > 0));
+        $ships = array_values(array_filter($preparedShips ?? $this->repo->all(FleetShip::class, ['fleet' => $fleet]), static fn (FleetShip $ship): bool => $ship->quantity > 0));
         $shipsSummary = $isOwnFleet ? implode(' · ', array_map(fn (FleetShip $ship): string => $ship->quantity.' × '.str_replace('_', ' ', $ship->slug).' ('.$this->catalog->tiers()[$ship->tier]['label'].')', $ships)) : null;
         $relationLabel = $isOwnFleet ? 'Votre empire' : ($targetsOwnColony ? 'Flotte entrante' : 'Allié');
         $recallRoute=null;

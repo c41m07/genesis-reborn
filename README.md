@@ -6,6 +6,12 @@ consommations de carburant](docs/DUREES_CARBURANT.md) sont révisées par famill
 avec conservation des commandes payées et des coefficients des missions lancées.
 Les [unités économiques](docs/UNITES_ECONOMIQUES.md) ajoutent des récolteurs mobiles
 et des satellites fixes, avec places par rang, réservations et production locale.
+Chaque famille possède trois noms et trois illustrations propres aux rangs, selon la
+[direction artistique du catalogue](docs/ILLUSTRATIONS.md).
+Les cartes affichent leur production par unité active sur la colonie consultée,
+avec les modificateurs locaux et la pause des vacances.
+Les cadres de gain des bâtiments et recherches comparent uniquement le niveau
+proposé au précédent, sans cumuler les niveaux déjà en file.
 Leur livraison pendant un combat rejoint les renforts locaux avec toute la flotte.
 Le [suivi de mission](docs/PROGRESSION_CARBURANT_UNITES.md) distingue les lots
 préparés, leur intégration, leur activation et les décisions encore ouvertes.
@@ -36,7 +42,7 @@ L’orientation confirmée est une stratégie au rythme modéré ; les durées d
 
 ## État du projet
 
-- Bunker de défense : déblocage initial basique avec chantier spatial niveau 3 et laboratoire niveau 2, sans recherche Blindage requise. Coûts, durées, plafonds et bonus défensifs conservés ; les surcharges propres aux univers restent applicables.
+- Bunker de défense : mine de métal 1 + atelier de nanofabrication 1 dans le rang demandé, sans chantier, laboratoire ni recherche supplémentaire. Le chantier spatial conserve métal 2 + nano 2 de son rang. Coûts, durées, plafonds et bonus défensifs conservés ; les surcharges propres aux univers restent applicables.
 
 - Messagerie : Ctrl + Entrée pour envoyer dans les canaux privé, guilde et Global ; Entrée conserve les sauts de ligne. Markdown sécurisé pour les nouveaux messages seulement, historique conservé en texte ; soumissions répétées protégées côté serveur. CommonMark est une dépendance Composer. [Guide et migration préparée](docs/MESSAGERIE_MARKDOWN.md).
 
@@ -576,8 +582,13 @@ la détection des sondes à l’arrivée conservent leurs effets pondérés actu
 Les plafonds du catalogue de l’univers sont pris en compte pour les informations
 de progression ; à 5/5/5, le préavis théorique atteint 80 minutes.
 
-Les attaques détectées sont affichées sur les pages de jeu avec cible, commandant,
-vaisseaux, points et compte à rebours. Une origine non découverte reste masquée.
+Le cadre [Flottes entrantes](docs/FLOTTES_ENTRANTES.md) regroupe les arrivées d’autres
+commandants sur vos colonies : transports, renforts, orbites et attaques détectées.
+Vos propres missions restent dans Flottes en vol. Flottes entrantes reprend le même
+style de cadre et de cartes, juste en dessous dans la Vue générale, la page Flottes
+et la colonne de droite des catalogues. Le cadre reste visible à zéro
+quand aucune arrivée étrangère n’est visible. Les attaques gardent leur préavis
+et leur priorité ; une origine non découverte reste masquée.
 La surveillance se met à jour sans rechargement, avec horloge serveur, et conserve
 le focus et la sélection de carte. Sans JavaScript, actualiser la page.
 Les sondes en trajet restent visibles seulement par leur propriétaire.

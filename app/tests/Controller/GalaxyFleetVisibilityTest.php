@@ -294,4 +294,89 @@ final class GalaxyFleetVisibilityTest extends WebTestCase
         self::assertResponseRedirects('/connexion');
     }
 
+
+    public function testIncomingPanelIncludesNeutralTransportsAndAlliedReinforcementsAndOrbit(): void
+    {
+        [$viewer,$target]=$this->player('IncomingViewer');[$neutral,$home]=$this->player('IncomingNeutral');[$ally,$alliedHome]=$this->player('IncomingAlly');
+        $viewer->preferences['transportReception']='all';
+        $contract=new AllianceContract();$contract->playerA=$viewer->currentPlayerUniverse;$contract->playerB=$ally->currentPlayerUniverse;
+        $contract->proposer=$viewer->currentPlayerUniverse;$contract->status='accepted';$this->em->persist($contract);$this->em->flush();
+        $fleets=[$this->fleet($neutral,$home,$target,'transport'),$this->fleet($ally,$alliedHome,$target,'defend'),$this->fleet($neutral,$home,$target,'orbit')];
+        foreach($fleets as $fleet)$this->ship($fleet,'transport','basic',2);
+        $data=$this->surveillance($viewer);
+        self::assertStringContainsString('Flottes entrantes <span class="badge">3</span>',$data['html']);
+        foreach($fleets as $fleet)self::assertStringContainsString('data-incoming-attack="'.$fleet->id.'"',$data['html']);
+        self::assertStringContainsString('Transport',$data['html']);self::assertStringContainsString('Défense',$data['html']);self::assertStringContainsString('Mise en orbite',$data['html']);
+        self::assertStringContainsString('Arrivée dans',$data['html']);self::assertStringNotContainsString('Impact dans',$data['html']);
+        self::assertStringNotContainsString('has-hostile',$data['html']);
+        $this->client->request('GET','/planetes/'.$target->id);self::assertSelectorTextContains('#incoming-attacks-heading','Flottes entrantes 3');
+        self::assertSelectorCount(1,'.incoming-attack-panel');
+        self::assertSelectorExists('.dashboard-secondary [data-live-region="active-flights"] + .incoming-attacks .panel.flight-operations');
+    }
+
+    public function testIncomingPanelExcludesOwnFlightsReturnsSpiesAndAlliedThirdPartyRoutes(): void
+    {
+        [$viewer,$target]=$this->player('ScopeViewer');[$sender,$home]=$this->player('ScopeSender');[$third,$elsewhere]=$this->player('ScopeThird');
+        $contract=new AllianceContract();$contract->playerA=$viewer->currentPlayerUniverse;$contract->playerB=$sender->currentPlayerUniverse;
+        $contract->proposer=$viewer->currentPlayerUniverse;$contract->status='accepted';$this->em->persist($contract);$this->em->flush();
+        $this->reveal($viewer,$home);$this->reveal($viewer,$elsewhere);
+        $own=$this->fleet($viewer,$target,$target,'transport');
+        $return=$this->fleet($sender,$home,$target,'transport','returning');
+        $spy=$this->fleet($sender,$home,$target,'spy');$this->ship($spy,'probe','basic',1);
+        $thirdParty=$this->fleet($sender,$home,$elsewhere,'transport');
+        $data=$this->surveillance($viewer);
+        foreach([$own,$return,$spy,$thirdParty] as $fleet)self::assertStringNotContainsString('data-incoming-attack="'.$fleet->id.'"',$data['html']);
+        self::assertStringContainsString('Flottes entrantes <span class="badge">0</span>',$data['html']);
+        self::assertStringContainsString('Aucune flotte entrante visible vers vos colonies.',$data['html']);
+    }
+
+    public function testIncomingNonHostileFlightKeepsCompositionFreightAndUnknownOriginPrivate(): void
+    {
+        [$viewer,$target]=$this->player('PrivacyViewer');[$sender]=$this->player('PrivacySender');
+        $home=$this->hiddenOrigin($viewer,$sender,$target);
+        $fleet=$this->fleet($sender,$home,$target,'transport');$this->ship($fleet,'transport','superior',2);
+        $fleet->cargo=['metal'=>987654321];$fleet->navigation=['private'=>'CONFIDENTIAL_INCOMING'];$this->em->flush();
+        $data=$this->surveillance($viewer);self::assertStringContainsString('data-incoming-attack="'.$fleet->id.'"',$data['html']);
+        self::assertStringContainsString('Origine non découverte',$data['html']);
+        foreach(['ORIGINE_CONFIDENTIELLE','CONFIDENTIAL_INCOMING','987654321','Cargo interstellaire'] as $secret)self::assertStringNotContainsString($secret,json_encode($data));
+        $rows=static::getContainer()->get(\App\Service\Fleet\FleetVisibility::class)->incoming($viewer->currentPlayerUniverse);
+        self::assertSame(2,$rows[0]['shipCount']);self::assertNull($rows[0]['ships']);
+        self::assertArrayNotHasKey('cargo',$rows[0]);self::assertArrayNotHasKey('composition',$rows[0]);
+    }
+
+    public function testDetectedThreatStaysFirstAndLegacyOrbitHasNoFalseCountdown(): void
+    {
+        [$viewer,$target]=$this->player('OrderViewer');[$sender,$home]=$this->player('OrderSender');
+        $transport=$this->fleet($sender,$home,$target,'transport');$transport->arrivalAt=$this->clock->now()->modify('+1 minute');
+        $attack=$this->fleet($sender,$home,$target,'attack');$attack->arrivalAt=$this->clock->now()->modify('+4 minutes');$attack->departureAt=$this->clock->now()->modify('-2 hours');
+        $pending=$this->fleet($sender,$home,$target,'orbit','orbit_pending');$pending->arrivalAt=null;
+        foreach([$transport,$attack,$pending] as $fleet)$this->ship($fleet,'fighter','basic',1);$this->em->flush();
+        $data=$this->surveillance($viewer);
+        $rows=static::getContainer()->get(\App\Service\Fleet\FleetVisibility::class)->incoming($viewer->currentPlayerUniverse);
+        self::assertSame([$attack->id,$transport->id,$pending->id],array_column($rows,'id'));
+        self::assertStringContainsString('has-hostile',$data['html']);self::assertStringContainsString('1 attaque détectée',$data['html']);
+        self::assertStringContainsString('Demande d’orbite à traiter',$data['html']);
+        $crawler=new \Symfony\Component\DomCrawler\Crawler($data['html']);
+        self::assertCount(0,$crawler->filter('[data-incoming-attack="'.$pending->id.'"] time'));
+    }
+
+    public function testIncomingPanelRejectsForeignUniverseOriginsAndTargets(): void
+    {
+        [$viewer,$target]=$this->player('BorderViewer');[$sender,$home]=$this->player('BorderSender');[$foreign,$foreignHome]=$this->player('BorderForeign','turbo-1');
+        $a=$this->fleet($foreign,$foreignHome,$target,'transport');
+        $b=$this->fleet($sender,$foreignHome,$target,'transport');
+        $foreignHome->owner=$viewer->currentPlayerUniverse;
+        $c=$this->fleet($sender,$home,$foreignHome,'transport');$this->em->flush();
+        $data=$this->surveillance($viewer);
+        foreach([$a,$b,$c] as $fleet)self::assertStringNotContainsString('data-incoming-attack="'.$fleet->id.'"',$data['html']);
+    }
+
+    public function testExistingAttackFromAnEmpireWithoutPlayerRemainsDetectable(): void
+    {
+        [$viewer,$target]=$this->player('ForgottenViewer');[$sender,$home]=$this->player('ForgottenSender');
+        $fleet=$this->fleet($sender,$home,$target,'attack');$fleet->arrivalAt=$this->clock->now()->modify('+4 minutes');$fleet->departureAt=$this->clock->now()->modify('-2 hours');$this->ship($fleet,'fighter','basic',1);
+        $sender->currentPlayerUniverse->detachPlayer($this->clock->now());$this->em->flush();
+        self::assertStringContainsString('data-incoming-attack="'.$fleet->id.'"',$this->surveillance($viewer)['html']);
+    }
+
 }

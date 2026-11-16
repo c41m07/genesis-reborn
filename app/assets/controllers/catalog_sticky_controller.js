@@ -14,7 +14,7 @@ export default class extends Controller {
         if (this.viewport.matches) {
             this.railTarget.tabIndex = 0;
             this.railTarget.setAttribute('role', 'region');
-            this.railTarget.setAttribute('aria-label', 'Activité de la colonie et flottes en vol');
+            this.railTarget.setAttribute('aria-label', 'Activité de la colonie et suivi des flottes');
         } else {
             this.railTarget.removeAttribute('tabindex');
             this.railTarget.removeAttribute('role');

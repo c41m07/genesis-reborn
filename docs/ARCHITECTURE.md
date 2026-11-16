@@ -189,10 +189,14 @@ commune restent disponibles dans les pages de colonie ; les quantités du
 catalogue sont chargées par groupe, sans lecture SQL par carte. Ces données
 restent locales à l’appel et ne servent jamais d’autorisation d’écriture.
 Le calcul et l’endpoint de la barre de ressources restent inchangés.
-Les cartes Bâtiments transmettent un contexte économique immuable, préparé après
+Les cartes Bâtiments et Vaisseaux transmettent un contexte économique immuable, préparé après
 la synchronisation des files, aux calculs nominaux de ResourceService. Ce contexte
 regroupe les lectures d’événements et de vacances pour cette préparation seulement ;
 les appels existants et les snapshots de la barre ne l’utilisent pas.
+`ResourceService::economicUnitRate` fournit le rendement nominal local d’une unité
+civile active aux cadres et fiches, avec ce même contexte, sans relire les effectifs
+ou les événements par carte. Les capacités et le crédit effectif des stocks restent
+gérés par la simulation existante.
 La liste des combats utilise ReportSummaryRepository pour éviter les rounds et
 snapshots complets. Le lecteur détaillé et les archives conservent les entités
 entières. Les profils consultent la ligne du snapshot quotidien sans enrichir
@@ -571,3 +575,21 @@ sont visibles dans Ma guilde avec leurs services et jetons CSRF existants.
 `GuildProfile` conserve description, références d’images et version dans une table dédiée, rattachée à la guilde avec suppression en cascade de la ligne. Les lectures des guildes existantes n’ajoutent pas de jointure à cette table. Les profils de joueurs ne transmettent aux templates qu’une liste explicite des informations publiques, avec les scores du classement quotidien.
 
 `GuildImageStorage` vérifie taille, type réel, dimensions et décodage GD ; il réencode les pixels sous un nom aléatoire, sans conserver les métadonnées. Les fichiers sont hors de `public/`, en `var/guild-media`, servis par une route authentifiée et limitée à l’univers, avec `nosniff`, CSP restrictive et absence de cache partagé. `GuildProfileService` vérifie commandant actuel et version sous verrou ; un échec retire les nouveaux fichiers et les anciennes images ne sont nettoyées qu’après validation de la transaction. [Limites et vérifications](PROFILS_JOUEURS_GUILDES.md).
+
+
+## Panneau des arrivées étrangères — 16 novembre 2026
+
+FleetVisibility::incoming reçoit les seuls candidats de GameRepository::incomingFleets,
+filtrés par destinataire propriétaire, univers, mission et état. Il applique le même
+masque que la carte avant de lire les FleetShip des flottes visibles en groupe.
+La sérialisation tierce conserve les effectifs/points et masque composition, fret
+et origines non découvertes. Les déplacements personnels restent exclus de ce panneau.
+Le lecteur de surveillance reste sans écriture ; URL, clé de réponse HTML, contrôleur
+Stimulus et attributs d’actualisation sont conservés pour les pages déjà ouvertes.
+
+Le paramètre interne incoming_panel distingue la surveillance commune de son
+rendu. Les six vues de colonie/flottes affichent le panneau sous les vols ; la
+carte et les autres vues gardent le contrôleur sans cadre ajouté. Dans ce dernier
+cas, le HTML autorisé est lu hors du DOM affiché pour calculer les annonces, puis
+les événements cartographiques existants sont transmis. Les droits, lectures,
+URL et clés de réponse restent communs aux deux présentations.

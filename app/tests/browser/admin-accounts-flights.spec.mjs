@@ -107,7 +107,7 @@ test('Captures comptes, sécurité, journal et flottes actives', async ({ page, 
   await expect(player.locator('.flight-operation')).toHaveCount(2);
   for (const width of [1440, 390]) {
     await player.setViewportSize({ width, height: 900 });
-    await player.locator('.flight-operations').scrollIntoViewIfNeeded();
+    await player.locator('[data-live-region="active-flights"]').scrollIntoViewIfNeeded();
     await player.screenshot({ path: testInfo.outputPath(`active-flights-${width}.png`), animations: 'disabled' });
   }
   await player.close();
@@ -225,7 +225,7 @@ test('Flottes actives : aller, retour, noms longs et thème clair', async ({ pag
   prepareFlights(email);
   for (const route of ['/flottes', '/']) {
     await page.goto(route);
-    const operations = page.locator('.flight-operations');
+    const operations = page.locator('[data-live-region="active-flights"]');
     await expect(operations.locator('.flight-operation')).toHaveCount(2);
     await expect(operations).toContainText('ALLER');
     await expect(operations).toContainText('RETOUR');
@@ -253,7 +253,7 @@ test('Flottes actives : aller, retour, noms longs et thème clair', async ({ pag
   }
   runIsolatedSql(process.env.BROWSER_ROUTER, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','light') WHERE email='${email}'`);
   await page.goto('/flottes');
-  await page.locator('.flight-operations').scrollIntoViewIfNeeded();
+  await page.locator('[data-live-region="active-flights"]').scrollIntoViewIfNeeded();
   await page.screenshot({ path: testInfo.outputPath('fleets-active-light-390.png'), animations: 'disabled' });
 });
 

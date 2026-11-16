@@ -1789,3 +1789,34 @@ du catalogue par défaut ; chantier spatial basique 3, laboratoire basique 2,
 prérequis des autres rangs, coûts, durées, plafonds et bonus restent conservés.
 Les surcharges explicites d’univers ne sont pas modifiées. Pas de migration,
 de modification des données de jeu ou de déploiement Alpha.
+
+## 16 novembre 2026 — bunker accessible et unités civiles par rang
+
+Décision explicite utilisateur, appliquée directement sur dev local : le chantier
+spatial conserve métal 2 + nano 2 ; le bunker demande métal 1 + nano 1, toujours
+dans le rang demandé. L’ancienne condition chantier 3 + laboratoire 2 est remplacée.
+Il s’agit d’un assouplissement : les accès permanents existants restent acquis,
+sans changement de version du registre ni reprise automatique.
+
+| Rang | Famille solaire | Famille hydrogène |
+|---|---|---|
+| Basique | Satellite héliocapteur | Récolteur atmosphérique |
+| Intermédiaire | Plateforme solaire | Collecteur orbital |
+| Supérieur | Couronne héliosolaire | Raffineur d’hydrogène |
+
+Les noms des unités civiles suivent le vocabulaire des vaisseaux et restent au
+singulier. Identifiants persistés, caractéristiques, production, capacités,
+prix et règles de mission ne changent pas. Six illustrations originales par rang
+remplacent les pictogrammes dans les cartes ; les SVG originaux sont conservés.
+Le prompt maître et les références proviennent de docs/ILLUSTRATIONS.md et des
+cargos existants. Aucun envoi GitHub ni déploiement Alpha dans cette recette locale.
+
+## 16 novembre 2026 — deux cadres de suivi des flottes
+
+L’utilisateur valide deux cadres : propres vols conservés, arrivées des autres
+commandants vers ses colonies dans le panneau existant élargi. Transports,
+renforts et orbites sont visibles dès le départ selon leurs règles existantes ;
+attaques après détection ; espionnage caché même entre alliés ; composition et
+fret masqués. Les déplacements alliés ailleurs et les retours personnels ne sont
+pas ajoutés aux arrivées étrangères. [Matrice et réalisation](FLOTTES_ENTRANTES.md).
+Application demandée sur dev local, sans publication GitHub ni livraison Alpha.

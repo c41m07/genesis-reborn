@@ -47,30 +47,47 @@ final class CatalogAccessTest extends KernelTestCase
         $row->slug=$slug;$row->tier=$tier;$row->level=$level;$this->em->persist($row);$this->em->flush();return $row;
     }
 
-    public function testBunkerCanBeQueuedWithoutArmorWithShipyardThreeAndLabTwo():void
+    #[\PHPUnit\Framework\Attributes\DataProvider('bunkerTiers')]
+    public function testBunkerCanBeQueuedWithOnlyItsSameRankMines(string $tier):void
     {
-        $this->level('buildings','shipyard',3);$this->level('buildings','lab',2);
+        $this->level('buildings','mine_metal',1,$tier);$this->level('buildings','mine_nano',1,$tier);
         self::assertSame(0,$this->em->getRepository(PlayerTechnology::class)->count(['playerUniverse'=>$this->membership,'slug'=>'structural_armor']));
-        self::getContainer()->get(QueueService::class)->add($this->membership,$this->planet,'buildings','fortress',1,str_repeat('2',32));
+        foreach(['shipyard','lab'] as $slug)self::assertSame(0,$this->em->getRepository(PlanetBuilding::class)->count(['planet'=>$this->planet,'slug'=>$slug]));
+        self::getContainer()->get(QueueService::class)->add($this->membership,$this->planet,'buildings','fortress',1,str_repeat('2',32),$tier);
         $item=$this->em->getRepository(QueueItem::class)->findOneBy(['planet'=>$this->planet,'itemSlug'=>'fortress']);
-        self::assertNotNull($item);self::assertSame('basic',$item->tier);self::assertSame(1,$item->itemLevel);
-        self::assertTrue(self::getContainer()->get(CatalogAccess::class)->acquired($this->membership,$this->planet,'buildings','fortress','basic'));
+        self::assertNotNull($item);self::assertSame($tier,$item->tier);self::assertSame(1,$item->itemLevel);
+        self::assertTrue(self::getContainer()->get(CatalogAccess::class)->acquired($this->membership,$this->planet,'buildings','fortress',$tier));
+    }
+
+    public static function bunkerTiers():array
+    {
+        return [['basic'],['intermediate'],['superior']];
     }
 
     #[\PHPUnit\Framework\Attributes\DataProvider('missingBunkerBuildings')]
-    public function testBunkerStillRequiresItsShipyardAndLaboratory(int $shipyard,int $lab,string $missing):void
+    public function testBunkerRequiresBothMinesOfTheSameRank(string $tier,int $metal,int $nano,string $missing):void
     {
-        $this->level('buildings','shipyard',$shipyard);$this->level('buildings','lab',$lab);
+        $this->level('buildings','mine_metal',$metal,$tier);$this->level('buildings','mine_nano',$nano,$tier);
+        // Des mines d’un autre rang ne doivent pas ouvrir l’accès demandé.
+        foreach(array_diff(['basic','intermediate','superior'],[$tier]) as $otherTier){
+            $this->level('buildings','mine_metal',5,$otherTier);$this->level('buildings','mine_nano',5,$otherTier);
+        }
+        $catalog=self::getContainer()->get(\App\Service\Catalog\GameCatalog::class);
         $connection=$this->em->getConnection();
         $this->expectException(\DomainException::class);
-        $this->expectExceptionMessage(self::getContainer()->get(\App\Service\Catalog\GameCatalog::class)->get('buildings',$missing)['label']);
-        try {self::getContainer()->get(QueueService::class)->add($this->membership,$this->planet,'buildings','fortress',1,str_repeat('2',32));}
+        $this->expectExceptionMessage($catalog->withTier($catalog->get('buildings',$missing),$tier)['label']);
+        try {self::getContainer()->get(QueueService::class)->add($this->membership,$this->planet,'buildings','fortress',1,str_repeat('2',32),$tier);}
         finally {self::assertSame(0,(int)$connection->fetchOne('SELECT COUNT(*) FROM queue_item WHERE item_slug=?',['fortress']));}
     }
 
     public static function missingBunkerBuildings():array
     {
-        return [[2,2,'shipyard'],[3,1,'lab']];
+        $cases=[];
+        foreach(['basic','intermediate','superior'] as $tier){
+            $cases[]=[$tier,0,1,'mine_metal'];
+            $cases[]=[$tier,1,0,'mine_nano'];
+        }
+        return $cases;
     }
 
     public function testAccessSurvivesMissingConditionsAndRespectsColonyAndUniverseScopes():void

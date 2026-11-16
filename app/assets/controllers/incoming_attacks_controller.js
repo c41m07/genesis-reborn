@@ -2,7 +2,7 @@ import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
     static targets = ['content', 'status'];
-    static values = { url: String, membership: Number, now: String };
+    static values = { url: String, membership: Number, now: String, panel: { type: Boolean, default: true } };
 
     connect() {
         this.active = true;
@@ -44,12 +44,16 @@ export default class extends Controller {
             if (this.failed) { this.statusTarget.textContent = ''; this.statusTarget.classList.add('visually-hidden'); this.failed = false; }
             this.offset = Date.parse(data.serverNow) - Date.now();
             if (data.html !== this.lastHtml && !this.contentTarget.contains(document.activeElement)) {
-                this.contentTarget.innerHTML = data.html;
+                // Hors des vues de vol, lire les alertes sans insérer un cadre qui décalerait la page.
+                const content = this.panelValue ? this.contentTarget : document.createElement('div');
+                content.innerHTML = data.html;
                 this.lastHtml = data.html;
-                const count = this.contentTarget.querySelectorAll('[data-incoming-attack]').length;
-                const signature = [...this.contentTarget.querySelectorAll('[data-incoming-attack]')].map(row => row.dataset.incomingAttack).join(',');
-                if (this.signature !== undefined && signature !== this.signature)
-                    this.statusTarget.textContent = count ? count + ' attaque(s) détectée(s). Consultez les colonies ciblées.' : 'Aucune attaque détectée en trajet.';
+                const count = content.querySelectorAll('[data-incoming-attack]').length;
+                const signature = [...content.querySelectorAll('[data-incoming-attack]')].map(row => row.dataset.incomingAttack).join(',');
+                if (this.signature !== undefined && signature !== this.signature) {
+                    const threats = content.querySelectorAll('[data-incoming-attack][data-incoming-kind="attack"]').length;
+                    this.statusTarget.textContent = count ? count + ' flotte(s) entrante(s).' + (threats ? ' Dont ' + threats + ' attaque(s) détectée(s).' : '') : 'Aucune flotte entrante visible en trajet.';
+                }
                 this.signature = signature;
             }
             this.tick();
@@ -62,13 +66,23 @@ export default class extends Controller {
     unavailable() {
         this.failed = true;
         this.statusTarget.classList.remove('visually-hidden');
-        this.statusTarget.textContent = 'Surveillance temporairement indisponible. Actualisez la page pour vérifier les attaques.';
+        this.statusTarget.textContent = 'Surveillance temporairement indisponible. Actualisez la page pour vérifier les flottes entrantes.';
     }
 
     tick() {
+        if (!this.panelValue) return;
+        const now = Date.now() + this.offset;
+        // La progression partage l’horloge serveur des échéances, même si le poste est décalé.
+        for (const progress of this.contentTarget.querySelectorAll('[data-incoming-progress]')) {
+            const start = Date.parse(progress.dataset.incomingProgress);
+            const end = Date.parse(progress.dataset.incomingArrival);
+            const percent = Math.max(0, Math.min(100, (now - start) / Math.max(1, end - start) * 100));
+            progress.querySelector('.progress-track').setAttribute('aria-valuenow', String(Math.round(percent)));
+            progress.querySelector('.progress-track > span').style.width = percent + '%';
+        }
         for (const time of this.contentTarget.querySelectorAll('[data-incoming-impact]')) {
-            const seconds = Math.max(0, Math.ceil((Date.parse(time.dataset.incomingImpact) - Date.now() - this.offset) / 1000));
-            time.textContent = seconds ? Math.floor(seconds / 3600) + ' h ' + Math.floor(seconds % 3600 / 60) + ' min ' + seconds % 60 + ' s' : 'Impact imminent · arrivée en cours';
+            const seconds = Math.max(0, Math.ceil((Date.parse(time.dataset.incomingImpact) - now) / 1000));
+            time.textContent = seconds ? Math.floor(seconds / 3600) + ' h ' + Math.floor(seconds % 3600 / 60) + ' min ' + seconds % 60 + ' s' : (time.dataset.incomingKind === 'arrival' ? 'Arrivée en cours' : 'Impact imminent · arrivée en cours');
         }
     }
 }

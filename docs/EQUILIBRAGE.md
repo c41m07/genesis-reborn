@@ -393,3 +393,24 @@ Tests : `tests/Service/MovementCalculatorTest.php`, `tests/Service/MovementMapCo
 ## Production passive et stocks — 10 novembre 2026
 
 Les nouveaux stocks, capacités de base et productions passives sont définis dans [les règles](REGLES.md#ressources-initiales-et-production-passive--décision-du-10-novembre-2026). Ils remplacent les valeurs de départ précédentes uniquement après une bascule explicite. Cette décision ne change pas les productions ni consommations des usines documentées ici. Aucun stock existant n’est réinitialisé ; les surplus sont conservés.
+
+## Cadres de gain par niveau — vérification du 16 novembre 2026
+
+Les cadres verts des 13 bâtiments et 19 recherches affichent le gain du seul
+niveau proposé, comparé à son niveau précédent. Le niveau proposé tient déjà
+compte de la file. Un laboratoire niveau 1 avec les niveaux 2, 3 et 4 en attente
+compare donc 4 → 5, sans cumuler les gains 1 → 5. Les autres rangs détenus restent
+inclus dans les rendements décroissants ; les niveaux réels ne sont pas modifiés.
+
+| Famille de cadres | Résultat de la vérification |
+|---|---|
+| Cinq producteurs et leurs consommations | Comparaison par niveau déjà correcte, conservée |
+| Cinq stockages | Correction : capacité du seul niveau proposé |
+| Laboratoire et chantier | Correction : réduction supplémentaire du seul niveau proposé |
+| Bunker | Correction : structure supplémentaire du seul niveau proposé |
+| Dix-neuf recherches, tous types d’effets | Comparaison par niveau déjà correcte, conservée et testée |
+
+Les 96 profils bâtiment/recherche sont caractérisés. Les prix, durées, effets
+réellement acquis et opérations en file restent inchangés. Les débits de mines
+restent des gains nominaux locaux ; la simulation des stocks applique toujours
+les contraintes de production réelles.

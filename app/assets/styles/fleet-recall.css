@@ -13,7 +13,7 @@
 .flight-progress-timing{flex:1;min-width:0}
 .flight-operation .flight-progress-row .fleet-recall-link{margin:0 0 0 auto;flex-shrink:0}
 .flight-operation .flight-ownership{font-size:12px;color:var(--muted);margin:4px 0 8px}
-.flight-operations .flight-operation[data-active-fleet]{border-inline-start:3px solid var(--accent);padding-inline-start:10px}
+.flight-operations .flight-operation:is([data-active-fleet],[data-incoming-attack]){border-inline-start:3px solid var(--accent);padding-inline-start:10px}
 .flight-operation .operation-type{min-width:0}
 .flight-operation .operation-type .empire-name{font-size:inherit;min-width:0;color:inherit}
 .flight-operations .flight-operation[data-mission=attack],.flight-operations .flight-operation[data-mission=conquer]{border-inline-start-color:var(--gold)}

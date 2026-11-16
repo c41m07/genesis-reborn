@@ -387,10 +387,27 @@ final class GameRepository
         return $query->orderBy('p.id', 'ASC')->getQuery()->getResult();
     }
 
-    /** @return list<Fleet> */
-    public function incomingAttackFleets(PlayerUniverse $viewer): array
+    /**
+     * @param list<string> $missions
+     * @return list<Fleet>
+     */
+    public function incomingFleets(PlayerUniverse $viewer, array $missions): array
     {
-        return $this->em->createQueryBuilder()->select('f', 'target')->from(Fleet::class, 'f')->join('f.destination', 'target')->join('f.playerUniverse', 'sender')->where('target.owner = :viewer')->andWhere('sender.universe = :universe')->andWhere('f.playerUniverse <> :viewer')->andWhere('f.status = :status')->andWhere('f.mission IN (:missions)')->setParameter('viewer', $viewer)->setParameter('universe', $viewer->universe)->setParameter('status', 'traveling')->setParameter('missions', ['attack', 'conquer'])->orderBy('f.arrivalAt', 'ASC')->addOrderBy('f.id', 'ASC')->getQuery()->getResult();
+        // Limiter la lecture aux arrivées étrangères vers les colonies actuellement
+        // possédées, dans l’univers de la session. Les retours restent dans les vols du propriétaire.
+        return $this->em->createQueryBuilder()
+            ->select('f', 'sender', 'senderPlayer', 'target', 'targetSystem', 'targetGalaxy', 'home', 'homeSystem', 'homeGalaxy')
+            ->from(Fleet::class, 'f')->join('f.destination', 'target')
+            ->join('f.playerUniverse', 'sender')->leftJoin('sender.player', 'senderPlayer')
+            ->join('target.solarSystem', 'targetSystem')->join('targetSystem.galaxy', 'targetGalaxy')
+            ->join('f.homePlanet', 'home')->join('home.solarSystem', 'homeSystem')->join('homeSystem.galaxy', 'homeGalaxy')
+            ->where('target.owner = :viewer')->andWhere('sender.universe = :universe')
+            ->andWhere('f.playerUniverse <> :viewer')->andWhere('f.mission IN (:missions)')
+            ->andWhere('(f.status = :traveling OR (f.mission = :orbit AND f.status = :pending))')
+            ->setParameter('viewer', $viewer)->setParameter('universe', $viewer->universe)
+            ->setParameter('missions', $missions)->setParameter('traveling', 'traveling')
+            ->setParameter('orbit', 'orbit')->setParameter('pending', 'orbit_pending')
+            ->orderBy('f.arrivalAt', 'ASC')->addOrderBy('f.id', 'ASC')->getQuery()->getResult();
     }
 
     /** @return list<Fleet> */

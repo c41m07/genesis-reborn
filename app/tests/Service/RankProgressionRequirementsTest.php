@@ -14,7 +14,7 @@ final class RankProgressionRequirementsTest extends TestCase
         $buildings=[
             'mine_antimatter'=>['mine_hydrogen'=>3,'lab'=>2],
             'shipyard'=>['mine_metal'=>2,'mine_nano'=>2],
-            'fortress'=>['shipyard'=>3,'lab'=>2],
+            'fortress'=>['mine_metal'=>1,'mine_nano'=>1],
             'storage_metal'=>['mine_metal'=>5], 'storage_nano'=>['mine_nano'=>5],
             'storage_hydrogen'=>['mine_hydrogen'=>5], 'storage_electricity'=>['power_plant'=>5],
             'storage_antimatter'=>['mine_antimatter'=>5],

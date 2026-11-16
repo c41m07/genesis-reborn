@@ -231,6 +231,7 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   await expect(filters).toHaveAttribute('aria-expanded', 'false');
   await expect(page.locator('#gv2-filter-content')).toBeHidden();
   await expect(emptyJournal).toBeVisible();
+  await expect(page.locator('.incoming-attack-panel')).toHaveCount(0);
   const mobileMarkers = await page.evaluate(() => {
     const canvas = document.querySelector('.gv2-canvas--galaxy');
     const rect = canvas.getBoundingClientRect();

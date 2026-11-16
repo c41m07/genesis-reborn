@@ -1,6 +1,6 @@
 {
   "slug": "solar_satellite",
-  "label": "Satellite solaire",
+  "label": "Satellite héliocapteur",
   "category": "support",
   "hp": 40,
   "shield": 0,
@@ -122,14 +122,13 @@
   },
   "description": "Unité civile fixe produisant de l’électricité, dans les places de la centrale du même rang. Le satellite ne peut pas être envoyé en mission. Sans armement et destructible en combat.",
   "tier_labels": {
-    "basic": "Satellite solaire",
-    "intermediate": "Satellite solaire Intermédiaire",
-    "superior": "Satellite solaire Supérieur"
+    "basic": "Satellite héliocapteur",
+    "intermediate": "Plateforme solaire",
+    "superior": "Couronne héliosolaire"
   },
   "tier_descriptions": {
     "basic": "Unité civile fixe produisant de l’électricité, dans les places de la centrale du même rang. Le satellite ne peut pas être envoyé en mission. Sans armement et destructible en combat.",
     "intermediate": "Unité civile fixe produisant de l’électricité, dans les places de la centrale du même rang. Le satellite ne peut pas être envoyé en mission. Sans armement et destructible en combat.",
     "superior": "Unité civile fixe produisant de l’électricité, dans les places de la centrale du même rang. Le satellite ne peut pas être envoyé en mission. Sans armement et destructible en combat."
-  },
-  "artwork": "images/catalog/ships/solar_satellite.svg"
+  }
 }

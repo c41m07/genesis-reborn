@@ -1,5 +1,5 @@
 {% extends 'base.html.twig' %}{% import 'ui/macros.html.twig' as ui %}{% import 'ui/ranking_change.html.twig' as evolution %}{% block title %}{{ planet.name }} · Genesis Reborn{% endblock %}
-{% block body %}<div data-controller="colony-live" data-colony-live-url-value="{{ path('app_colony',{id:planet.id}) }}">
+{# Les arrivées sont placées après les vols dans le contenu, sans second panneau en tête. #}{% block incoming_fleets %}{% endblock %}{% block body %}<div data-controller="colony-live" data-colony-live-url-value="{{ path('app_colony',{id:planet.id}) }}">
 <div class="page-heading"><div><h1>{{ {overview:'Vue générale',buildings:'Bâtiments',technologies:'Recherche',ships:'Chantier spatial',defenses:'Défenses'}[section] }}<span>.</span></h1></div><a class="quiet-button" href="{{ path('app_map_v2') }}">{{ ui.icon('galaxy') }} Explorer la galaxie {{ ui.icon('arrow') }}</a></div>
 <div class="colony-layout colony-layout--integrated"><div class="colony-content">
 {% if section=='overview' %}
@@ -33,14 +33,14 @@
 
 </div>
 <aside class="dashboard-secondary">
-{% include 'ui/flights.html.twig' %}
+{% include 'ui/flights.html.twig' %}{% include 'ui/incoming_attacks.html.twig' %}
 
 </aside>
 </div>
 {% include 'colony/_journal.html.twig' %}
 {% endif %}
 {% else %}
-<div class="colony-catalog-workspace" data-controller="catalog-sticky"><div class="catalog-operations-rail" data-catalog-sticky-target="rail"><section class="colony-catalog-activity dashboard-activity" aria-label="Activité et files de la colonie active">{% include 'ui/colony_queues.html.twig' %}</section><aside class="colony-catalog-aside">{% include 'ui/flights.html.twig' %}</aside></div>{% include 'colony/_catalog.html.twig' %}</div>
+<div class="colony-catalog-workspace" data-controller="catalog-sticky"><div class="catalog-operations-rail" data-catalog-sticky-target="rail"><section class="colony-catalog-activity dashboard-activity" aria-label="Activité et files de la colonie active">{% include 'ui/colony_queues.html.twig' %}</section><aside class="colony-catalog-aside">{% include 'ui/flights.html.twig' %}{% include 'ui/incoming_attacks.html.twig' %}</aside></div>{% include 'colony/_catalog.html.twig' %}</div>
 {% endif %}
 
 </div></div></div>{% endblock %}

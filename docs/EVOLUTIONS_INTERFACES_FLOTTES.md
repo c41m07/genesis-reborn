@@ -1780,3 +1780,131 @@ Fichiers du lot courant :
 - Vols : `app/templates/ui/flights.html.twig`, `app/templates/ui/incoming_attacks_list.html.twig`, `app/assets/styles/fleet-recall.css`.
 - Tests : `app/tests/browser/leaderboard-contact.spec.mjs`, `app/tests/browser/empire-details.spec.mjs`, `app/tests/browser/catalogue-cleanup.spec.mjs`, `app/tests/Controller/GuildTagPlayerReportTest.php`.
 - Documentation : `README.md`, `docs/REGLES.md`, `docs/DECISIONS.md`, `docs/FEUILLE_DE_ROUTE.md`, `docs/wiki.json` et le présent suivi.
+
+## Extension locale du panneau des arrivées — 16 novembre 2026
+
+Choix utilisateur confirmés : deux cadres distincts ; flottes d’autres commandants
+vers ses seules colonies ; transports/renforts/orbites visibles dès le départ,
+attaques après détection, espionnage privé même entre alliés, composition/fret masqués.
+Le cadre d’attaques existant est élargi ; aucune page ni droit d’envoi supplémentaire.
+Complexité 4/5 : [matrice, risques et réalisation](FLOTTES_ENTRANTES.md).
+Lecture bornée aux arrivées de l’univers de session, stocks groupés après filtrage,
+origines découvertes et anciens états d’orbite conservés ; aucune écriture du lecteur.
+
+Recette complète ciblée locale : 32 PHP / 1 113 assertions, trois parcours navigateur
+distincts, `make validate`, lint, assets et diff réussis. Origines, compositions,
+fret et sondes restent privés aux conditions prévues ; captures réelles dans les
+deux thèmes et sur mobile. Aucun déploiement Alpha ni reprise de données.
+
+### Cadre vide conservé — 16 novembre 2026, complexité 1/5
+
+Le panneau était masqué sans arrivée visible. Après le retour utilisateur, il reste
+présent avec le compteur zéro et un état vide compact. Le mot « visible » préserve
+la distinction avec les attaques non détectées ; aucun droit ou masque ne change.
+Le message sans JavaScript est également étendu à toutes les arrivées.
+
+Vérifications : 16 tests PHP de visibilité / 207 assertions, trois scénarios
+navigateur (zéro, apparition, disparition, focus, mobile et thèmes), lint,
+compilation et contrôle du diff réussis. Aucune écriture dans la base de jeu,
+aucune publication GitHub ni livraison Alpha pour cette correction locale.
+
+### Placement et style des arrivées — 16 novembre 2026, complexité 3/5
+
+Retour utilisateur : reprendre le cadre et les cartes de « Flottes en vol », puis
+placer les arrivées immédiatement dessous dans la Vue générale, Flottes et la
+colonne droite des quatre catalogues. Le bloc Twig de base laisse les pages avec
+vols choisir cet emplacement, sans doublon ; les autres pages, dont la carte,
+conservent leur surveillance et leur actualisation existantes.
+
+Réutilisation des classes panel/flight-operations/flight-operation, du titre à
+compteur, des badges, du trajet et des styles adaptatifs. L’état vide reste visible.
+La progression des missions non offensives emploie l’horloge serveur existante ;
+une attaque ne révèle pas de date de départ et n’affiche pas de progression inventée.
+Aucun changement des requêtes, droits de visibilité ou règles métier.
+
+La première recette a révélé que la colonne des vols était masquée sous 740 px.
+Elle est rendue visible après le catalogue sur mobile, avec les deux cadres ensemble.
+Les retraits et bordures des cartes sont partagés avec les vols personnels.
+Le contrôle des thèmes charge désormais réellement la feuille du thème clair depuis
+la préférence du compte de test, au lieu de modifier seulement un attribut HTML.
+Les assertions et délais sont conservés ; la navigation d’orbite reste vérifiée.
+
+Bilan local : 16 PHP / 209 assertions et sept parcours navigateur distincts réussis,
+sans compter deux fois les reprises. Les six emplacements ont un cadre unique,
+les mêmes styles calculés que les vols personnels et une navigation accessible.
+Les contrôles validate, lint, assets, syntaxes JavaScript et diff réussissent.
+Le site local a été actualisé et ses fichiers compilés servis ont été comparés.
+Captures : output/playwright/incoming-style/ ; aucune publication ni livraison Alpha.
+
+### Publication des retouches autorisée — 16 novembre 2026
+
+L’utilisateur autorise l’envoi des retouches locales validées dans une PR vers dev,
+puis sa fusion uniquement après réussite de toute la CI sur la dernière version.
+La branche feature/unites-civiles-affichages-flottes regroupe les prérequis du Bunker,
+les noms et six illustrations civiles, la production propre à la colonie, les gains
+par niveau des cadres verts et le panneau des arrivées avec sa présentation validée.
+Les mentions de réalisation locale ci-dessus décrivent la recette avant publication.
+La protection de dev a été revérifiée : PR et cinq jobs quality obligatoires,
+base à jour, administrateurs inclus ; publish n’est pas un contrôle requis.
+Aucune fusion dans Alpha ni exécution du déploiement n’est autorisée pour ce lot.
+
+### Reprise des attentes PHP de la PR 74
+
+La première CI (63817a5) exécute 1 351 tests PHP et révèle une erreur et quatre
+échecs liés à des attentes historiques. Les tests du Bunker attendent encore
+Chantier 3/Laboratoire 2 ; ils vérifient maintenant les deux mines niveau 1 du
+même rang, sans chantier, laboratoire ni blindage, ainsi que les deux refus de
+mine manquante sur chaque rang. Les mines des autres rangs ne doivent pas suffire.
+Le parcours financé vérifie exactement Chantier 1 et Laboratoire 1 tout en
+conservant les unités, stocks et files parallèles. Le titre de Diplomatie est
+cherché dans sa section pour ne pas confondre le panneau d’arrivées.
+Aucun changement du code produit, des valeurs validées ou des délais de test.
+
+Reprise locale réussie : 60 tests PHP / 377 assertions pour CatalogAccess,
+FundedProgressionSimulation et GuildTagPlayerReport, dans une base isolée.
+Les trois fichiers passent leur analyse syntaxique ; le diff reste vérifié.
+Toute la CI doit être rejouée sur la nouvelle version avant fusion.
+
+### Reprise du dernier résultat navigateur de la première CI
+
+Le lot navigateur 1 termine avec 53 parcours réussis et trois échecs : le retour
+clavier des deux pages d’accès refusé est précédé par le nouveau panneau vide ;
+le test du catalogue attend encore les vols masqués sous 740 px.
+Complexité 2/5 : le panneau est exclu de la page de refus pour conserver le retour
+comme première action après le lien d’évitement. Les contrôles clavier restent
+inchangés et vérifient aussi l’absence du panneau sur cette page.
+Le test des rangs attend maintenant les deux cadres visibles après le catalogue
+sur mobile, dans l’ordre validé, en conservant filtres, actualisation, navigation,
+illustrations, dimensions et vérifications d’accessibilité.
+
+Reprise locale réussie : cinq parcours navigateur (quatre refus d’accès et les
+rangs du catalogue) sur base éphémère, sans augmenter les délais ni retirer de
+contrôle. Syntaxes Twig/JavaScript et git diff --check réussis. La nouvelle version
+de la PR doit repasser toute la CI avant fusion ; aucun déploiement Alpha.
+
+### Surveillance globale sans panneau hors des vues de vol
+
+La CI complète de 76b0476 valide PHP/Python, lint, restauration et deux lots
+navigateur, puis révèle les décalages de la carte et de la messagerie, un en-tête
+supplémentaire dans le classement et un débordement dans Planètes. La cause commune
+est le panneau vide encore inséré par le template de base hors des six vues demandées.
+Complexité réévaluée à 4/5 après cette dépendance d’affichage transversale.
+
+Plan ciblé : séparer le choix de rendre le panneau de la surveillance existante,
+préserver les événements de carte, le focus, les annonces et l’horloge serveur,
+puis reprendre les sept parcours concernés sans retirer leurs contrôles de géométrie,
+de clavier ou de confidentialité. Le paramètre de présentation reste interne :
+aucune route, réponse API, règle, requête ou permission ne change.
+
+Le template de base conserve un contrôleur sans cadre ; les vues de colonie et de
+flottes affichent leur cadre au même emplacement. Hors de ces vues, le HTML autorisé
+est analysé dans un élément détaché pour les annonces et les événements de carte.
+Les tests conservent les points cliquables de la carte, le champ de message entièrement
+visible, les en-têtes attendus, les noms longs et le suivi des arrivées sans rechargement.
+
+Reprise locale complète réussie : sept parcours navigateur ciblés couvrent les
+quatre régressions de géométrie ainsi que les trois scénarios de surveillance ;
+16 tests PHP de visibilité / 209 assertions, lint, compilation et diff réussissent.
+Aucun contrôle des marqueurs cliquables, du champ de saisie, du débordement, des
+en-têtes, des origines privées ou des sondes n’a été relâché. La CI complète doit
+maintenant valider cette version avant fusion.

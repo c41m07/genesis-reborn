@@ -507,3 +507,61 @@ et 900 métal au rang intermédiaire. Les assertions clavier, mobile, formulaire
 rafraîchissement et filtres restent présentes. Les deux scénarios du fichier
 repassent via `BROWSER_PERSISTENCE=1 make test-browser` sur une base jetable.
 Une nouvelle CI complète sur la correction est exigée avant fusion.
+
+## Ajustements directs sur dev local — 16 novembre 2026, complexité 2/5
+
+Demande utilisateur : chantier métal 2 + nano 2 (déjà courant), bunker métal 1 +
+nano 1 au même rang. Catalogue et référence exhaustive des seuils actualisés ;
+accès permanents conservés, aucune reprise de registre nécessaire pour cet assouplissement.
+Les études économiques précédentes restent des mesures antérieures à ce changement
+et ne sont pas présentées comme une simulation de ce nouveau prérequis.
+
+Les deux familles civiles reçoivent trois noms propres et trois illustrations
+cinématiques WebP 4:3 chacune. Les six générations reprennent le prompt maître
+et la direction artistique des cargos ; les prompts sont conservés dans la
+[documentation des illustrations](ILLUSTRATIONS.md). Les SVG originaux restent présents.
+Le champ artwork commun est retiré des deux fiches pour utiliser le chemin habituel
+par slug et rang. Aucun template, identifiant persisté, prix ou autre statistique changé.
+Application locale demandée directement sur dev ; aucune publication GitHub ni Alpha.
+
+Vérifications locales de ce lot : `make validate`, `make lint`, 160 tests PHP
+ciblés / 21 017 assertions, les deux scénarios navigateur civils (six illustrations,
+noms/alternatives, trois rangs, mobile, clavier, accessibilité ciblée, transfert et
+simulateur), cohérence JSON/CSV/prompts et `git diff --check` réussis. Prix, durées,
+production, capacités et identifiants comparés au parent : inchangés. Les 150
+illustrations précédentes et les six fichiers modifiés par l’autre tâche sont préservés.
+Aucune nouvelle CI GitHub : ces vérifications décrivent uniquement la recette locale.
+
+## Production civile affichée sur la colonie — 16 novembre 2026, complexité 3/5
+
+Les cadres verts et la fiche détaillée affichaient la référence position 5 / univers ×1.
+Ils utilisent maintenant le rendement nominal d’une unité active sur la colonie :
+position, univers, événement courant et pause des vacances inclus. Le contexte préparé
+par ColonyView reste partagé, sans lecture répétée par carte ; la production réelle,
+les effectifs, places et plafonds ne changent pas. Les deux présentations sont comparées
+au moteur réel dans 144 contextes, avec surcharge de profil et isolation des colonies.
+
+Recette locale : 3 tests unitaires / 578 assertions, `make validate`, `make lint`
+et les deux scénarios navigateur civils réussis. Le premier passage navigateur
+avait une préparation d’univers ×2 incomplète (chemin JSON absent) ; la préparation
+est corrigée et le scénario des six cadres/fiches repasse, sans retrait d’assertion.
+Aucune modification du moteur de stocks, migration ou publication GitHub/Alpha.
+
+## Cadres verts bâtiments et recherches — 16 novembre 2026, complexité 2/5
+
+Examen ciblé des 13 bâtiments et 19 recherches, dans leurs trois rangs. Les cinq
+producteurs et les recherches avaient déjà une comparaison par niveau. Les cinq
+stockages, le laboratoire, le chantier et le bunker incluaient encore plusieurs
+niveaux de file dans leur gain : le même calcul  précédent → proposé est maintenant
+appliqué à tous les bâtiments, sans mutation des niveaux réels ni des commandes.
+Les autres rangs restent inclus dans les rendements décroissants.
+
+Régressions : 96 profils comparés avec ou sans niveaux en attente, valeurs explicites
+des bonus et capacités, et parcours navigateur avec trois niveaux en file pour les
+mines, le laboratoire, le chantier, le bunker, un stockage et une recherche.
+
+Recette : 3 tests unitaires / 310 assertions couvrent les 96 profils et des valeurs
+explicites ; les 3 tests civils précédents repassent également (6 / 888 au total).
+`make lint` et le parcours navigateur passent. La préparation du stockage nano a
+été corrigée pour respecter son producteur niveau 5 ; les assertions de gain et
+de niveau proposé restent intactes. Aucun niveau, prix, effet ou paiement modifié.

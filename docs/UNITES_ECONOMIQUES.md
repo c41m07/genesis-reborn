@@ -6,6 +6,25 @@ Les prix ci-dessous suivent la décision de répartition du 16 novembre.
 Les [lots et contrôles](PROGRESSION_CARBURANT_UNITES.md) distinguent développement,
 intégration et activation. Aucun déploiement Alpha.
 
+## Noms et illustrations par rang — 16 novembre 2026
+
+| Rang | Famille solaire | Famille hydrogène |
+|---|---|---|
+| Basique | Satellite héliocapteur | Récolteur atmosphérique |
+| Intermédiaire | Plateforme solaire | Collecteur orbital |
+| Supérieur | Couronne héliosolaire | Raffineur d’hydrogène |
+
+Ces noms distinguent les niveaux de conception sans changer les identifiants,
+les prix ni les règles des deux familles. Les six illustrations 4:3 suivent la
+[direction artistique du catalogue](ILLUSTRATIONS.md). Les termes génériques
+« récolteur » et « satellite » ci-dessous désignent leur fonction.
+
+Les cadres verts et les fiches détaillées affichent la production nominale d’une
+unité active sur la colonie consultée : position, multiplicateur d’univers et
+événement en cours inclus ; zéro pendant les vacances. Cette valeur ne multiplie
+pas les effectifs possédés. Les places déterminent les unités actives et le stockage
+limite les ressources effectivement créditées.
+
 ## Les six profils
 
 Deux familles du catalogue des vaisseaux, chacune avec trois rangs. Elles sont

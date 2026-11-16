@@ -1,6 +1,6 @@
 {
   "slug": "hydrogen_collector",
-  "label": "Récolteur d’hydrogène",
+  "label": "Récolteur atmosphérique",
   "category": "support",
   "hp": 100,
   "shield": 20,
@@ -124,14 +124,13 @@
   },
   "description": "Unité civile mobile produisant de l’hydrogène sur votre colonie, dans les places de sa raffinerie du même rang. Déplacement par Stationnement entre vos colonies, sans fret ni production en vol. Sans armement et destructible en combat.",
   "tier_labels": {
-    "basic": "Récolteur d’hydrogène",
-    "intermediate": "Récolteur d’hydrogène Intermédiaire",
-    "superior": "Récolteur d’hydrogène Supérieur"
+    "basic": "Récolteur atmosphérique",
+    "intermediate": "Collecteur orbital",
+    "superior": "Raffineur d’hydrogène"
   },
   "tier_descriptions": {
     "basic": "Unité civile mobile produisant de l’hydrogène sur votre colonie, dans les places de sa raffinerie du même rang. Déplacement par Stationnement entre vos colonies, sans fret ni production en vol. Sans armement et destructible en combat.",
     "intermediate": "Unité civile mobile produisant de l’hydrogène sur votre colonie, dans les places de sa raffinerie du même rang. Déplacement par Stationnement entre vos colonies, sans fret ni production en vol. Sans armement et destructible en combat.",
     "superior": "Unité civile mobile produisant de l’hydrogène sur votre colonie, dans les places de sa raffinerie du même rang. Déplacement par Stationnement entre vos colonies, sans fret ni production en vol. Sans armement et destructible en combat."
-  },
-  "artwork": "images/catalog/ships/hydrogen_collector.svg"
+  }
 }

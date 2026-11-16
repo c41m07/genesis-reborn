@@ -363,12 +363,12 @@ final class CatalogueDetails
             $state = $this->economicUnits->state($planet, $buildings, $context?->economicInventory)[$itemDefinition['slug']][$tier];
             $building = $this->catalog->getForUniverse($universe, 'buildings', $economic['capacity_building']);
             $sections[] = $this->section('Production et places locales', [
-                'Les références de production concernent la position 5 et un univers ×1. Position, univers, événements, vacances et stockage s’appliquent ensuite, sans entretien supplémentaire.',
+                'La production par unité active inclut la position de cette colonie, l’univers et les événements en cours. Elle est en pause pendant les vacances ; le stockage limite les gains crédités. Aucun entretien supplémentaire.',
                 $economic['slots_per_level'].' place(s) par niveau de '.$building['label'].' du même rang. Les unités sans place sont conservées sans produire ; les places réservées ne peuvent pas être prises par une nouvelle construction.',
                 ($itemDefinition['mobile'] ?? true) ? 'Le Stationnement réserve les places sur une autre de vos colonies. Les récolteurs ne produisent pas en vol et n’ont pas de soute de fret.' : 'La construction réserve une place jusqu’au déploiement local du satellite.',
                 'Ces unités ne tirent pas et défendent leur colonie sans évacuation automatique. La production cesse à l’application des pertes à la clôture du combat.',
             ], [
-                ['label'=>'Production de référence par unité','value'=>$economic['production_per_hour'][$tier], 'unit'=>$economic['resource']==='hydrogen'?'H / h':'E / h'],
+                ['label'=>'Production par unité active sur cette colonie','value'=>$this->resources->economicUnitRate($planet, $itemDefinition, $context) * 3600, 'unit'=>$economic['resource']==='hydrogen'?'H / h':'E / h'],
                 ['label'=>'Places de ce rang','value'=>$state['capacity'],'unit'=>'places'],
                 ['label'=>'Unités actives','value'=>$state['active'],'unit'=>'unités'],
                 ['label'=>'Places réservées','value'=>$state['reserved'],'unit'=>'places'],

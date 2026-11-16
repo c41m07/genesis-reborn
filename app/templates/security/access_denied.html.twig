@@ -1,5 +1,7 @@
 {% extends 'base.html.twig' %}
 {% block title %}Accès refusé · Genesis Reborn{% endblock %}
+{# Le retour au jeu ou à la console doit rester la première action après le lien d’évitement. #}
+{% block incoming_fleets %}{% endblock %}
 {% block body %}
 <section class="panel narrow auth-card access-denied-panel" aria-labelledby="access-denied-title">
   

@@ -33,10 +33,14 @@ final class CatalogueInsights
         $factor = GameCatalog::tierFactor($tier);
         $slug = $definition['slug'];
         if ($group === 'buildings') {
-            // Exclut du gain les niveaux de production déjà programmés dans la file.
-            if (isset($definition['production_resource'])) {
-                $levels[$slug][$tier] = max(0, $target - 1);
+            // Le niveau proposé inclut déjà la file : comparer seulement le dernier
+            // passage de niveau, pour les productions comme pour les bonus et stockages.
+            $rankedLevels = $levels[$slug] ?? [];
+            if (is_numeric($rankedLevels)) {
+                $rankedLevels = ['basic' => (int) $rankedLevels];
             }
+            $rankedLevels[$tier] = max(0, $target - 1);
+            $levels[$slug] = $rankedLevels;
             $next = $levels;
             $next[$slug][$tier] = $target;
             if (isset($definition['production_resource'])) {
@@ -122,8 +126,8 @@ final class CatalogueInsights
             ];
             if (isset($definition['economic_unit'])) {
                 $economic = $definition['economic_unit'];
-                array_unshift($shipBenefits, ['label'=>'Production par unité · position 5, univers ×1',
-                    'value'=>$economic['production_per_hour'][$tier],
+                array_unshift($shipBenefits, ['label'=>'Production par unité active · cette colonie',
+                    'value'=>$this->resources->economicUnitRate($planet, $definition, $context) * 3600,
                     'unit'=>$economic['resource']==='hydrogen'?'H / h':'E / h']);
             }
             if (isset($definition['secondary_attack'])) {
