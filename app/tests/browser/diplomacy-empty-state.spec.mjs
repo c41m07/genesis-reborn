@@ -17,11 +17,11 @@ test('La liste vide de guildes explique l’action possible', async ({ page }) =
   await page.getByRole('button', { name: /Connexion/ }).click();
   await page.locator('article.universe-card').filter({ has: page.getByRole('heading', { name: /Omega/ }) }).getByRole('button').click();
 
-  await page.goto('/diplomatie?tab=guilds');
+  await page.goto('/guildes/creer');
   await expect(page.locator('.guild-card')).toHaveCount(0);
   await expect(page.getByLabel('Nom de votre nouvelle guilde')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Fonder une guilde' })).toBeEnabled();
-  await page.getByRole('navigation', { name: 'Sections de diplomatie' }).getByRole('link', { name: 'Rejoindre une guilde', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Navigation de guilde' }).getByRole('link', { name: 'Trouver une guilde', exact: true }).click();
   await page.getByRole('searchbox', { name: 'Rechercher une guilde', exact: true }).fill('Guilde inexistante');
   await page.getByRole('button', { name: 'Rechercher', exact: true }).click();
   await expect(page.getByRole('status')).toHaveText('Aucune guilde trouvée dans cet univers.');

@@ -1820,3 +1820,15 @@ attaques après détection ; espionnage caché même entre alliés ; composition
 fret masqués. Les déplacements alliés ailleurs et les retours personnels ne sont
 pas ajoutés aux arrivées étrangères. [Matrice et réalisation](FLOTTES_ENTRANTES.md).
 Application demandée sur dev local, sans publication GitHub ni livraison Alpha.
+
+
+## 16 novembre 2026 — navigation par espaces
+
+Décision utilisateur : une entrée principale ouvre l’accueil de son espace,
+puis une navigation secondaire commune donne accès à de vraies pages avec
+adresse propre. Les tâches autonomes quittent les grandes pages composites.
+L’ordre des huit lots est consigné dans [le suivi](NAVIGATION_PAGES_DEDIEES.md).
+Pour le premier lot, Ma guilde/Guildes est distinct de Diplomatie ; les relations
+personnelles restent accessibles avec ou sans guilde. Ce choix remplace la
+présentation précédente à trois ou cinq onglets de diplomatie, sans modifier
+permissions, consentements, règles d’adhésion ou priorité des relations.

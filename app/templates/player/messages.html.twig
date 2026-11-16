@@ -16,7 +16,7 @@
             {% endif %}
         </section>{% endif %}
         <div data-message-notifications-target="conversations">{% include 'player/_message_contacts.html.twig' %}</div>
-        {% if not guild %}<a class="inbox-guild-hint" href="{{ path('app_diplomacy') }}">Le canal de guilde est accessible après avoir rejoint une guilde.</a>{% endif %}
+        {% if not guild %}<a class="inbox-guild-hint" href="{{ path('app_guilds') }}">Le canal de guilde est accessible après avoir rejoint une guilde.</a>{% endif %}
     </aside>
     <section class="panel message-pane" aria-label="Conversation sélectionnée">
         {% if peer and activeChannel=='private' %}

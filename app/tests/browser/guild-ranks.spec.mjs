@@ -26,10 +26,10 @@ test('Le dirigeant crée un grade, le délègue et les droits restent contrôlé
   try {
     await page.setViewportSize({ width: 1440, height: 900 });
     await register(page, 'Leader-' + id, 'leader-' + id + '@example.test');
-    await page.goto('/diplomatie');
+    await page.goto('/guildes/creer');
     await page.getByLabel('Nom de votre nouvelle guilde').fill(guildName);await page.getByLabel('Tag de la guilde', { exact:true }).fill(crypto.randomUUID().replaceAll('-', '').slice(0,5).toUpperCase());
     await page.getByRole('button', { name: 'Fonder une guilde' }).click();
-    await page.getByRole('navigation',{name:'Sections de diplomatie'}).getByRole('link',{name:'Grades et permissions',exact:true}).click();
+    await page.getByRole('navigation',{name:'Navigation de guilde'}).getByRole('link',{name:'Grades et permissions',exact:true}).click();
     await page.getByText('Créer un grade', { exact: true }).click();
     const create = page.locator('form').filter({ has: page.getByLabel('Nom du grade', { exact: true }) }).last();
     await create.getByLabel('Nom du grade', { exact: true }).fill('Diplomate');
@@ -58,9 +58,10 @@ test('Le dirigeant crée un grade, le délègue et les droits restent contrôlé
     await page.getByText('Attribuer un grade',{exact:true}).click();
     await page.getByLabel('Grade de ' + memberName, { exact: true }).selectOption({ label: 'Diplomate' });
     await page.getByRole('button', { name: 'Attribuer le grade à ' + memberName, exact: true }).click();
-    await memberPage.goto('/diplomatie');
+    await memberPage.goto('/guildes/creer');
     await expect(memberPage.locator('.guild-hub-stats')).toContainText('Diplomate');
     await expect(memberPage.getByText('Créer un grade', { exact: true })).toHaveCount(0);
+    await memberPage.goto('/guildes/gestion');
     const token = await memberPage.locator('input[name="_token"]').first().inputValue();
     const response = await memberPage.evaluate(async token => {
       const result = await fetch('/diplomatie', {
@@ -81,7 +82,8 @@ test('Le dirigeant crée un grade, le délègue et les droits restent contrôlé
         .analyze();
       expect(result.violations).toEqual([]);
     }
-    await expect(memberPage.getByRole('navigation', { name: 'Sections de diplomatie' }).getByRole('link', { name: 'Relations commandants', exact: true })).toBeVisible();
+    await memberPage.goto('/diplomatie/commandants');
+    await expect(memberPage.getByRole('navigation', { name: 'Navigation de diplomatie' }).getByRole('link', { name: 'Relations entre commandants', exact: true })).toBeVisible();
     await memberContext.route('**/activite/presence',route=>route.fulfill({status:204}));
     const project=process.env.BROWSER_ROUTER;
     runIsolatedSql(project,`UPDATE player_activity a JOIN player_universe m ON m.id=a.membership_id JOIN player p ON p.id=m.player_id SET a.last_seen_at=UTC_TIMESTAMP()-INTERVAL 6 MINUTE WHERE p.username='${memberName}'`);

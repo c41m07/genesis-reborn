@@ -642,3 +642,11 @@ archives et la phrase technique sur le calcul du préavis en Recherche sont
 retirés des pages concernées. Les règles d’archive et de détection ne changent pas.
 
 - [Étude du coût électrique des opérations](docs/ETUDE_COUT_ELECTRIQUE.md) : coût de 100 E par minute entamée validé, hypothèses et effets des lots, rangs et vitesses.
+
+
+## Navigation joueur
+
+Lot 1 publié dans la [PR #75](https://github.com/c41m07/genesis-reborn/pull/75) : espaces Guildes et Diplomatie séparés, pages dédiées de membres,
+grades, gestion et création ; liens directs, anciennes adresses conservées et
+lectures adaptées à chaque page. Voir le [suivi des lots](docs/NAVIGATION_PAGES_DEDIEES.md) pour les
+choix, vérifications et limites. CI, fusion et déploiement restent distincts.

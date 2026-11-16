@@ -36,8 +36,8 @@ test('Ancienne orbite alliée : demande à l’arrivée conservée et stationnem
     const host = await enter(hostPage, 'Orbit-Host');
     const commander = (page, name) => page.locator('.commander-card').filter({ has: page.getByRole('heading', { name, exact: true }) });
 
-    await senderPage.goto('/diplomatie');
-    await hostPage.goto('/diplomatie');
+    await senderPage.goto('/guildes/creer');
+    await hostPage.goto('/guildes/creer');
     const senderGuild = 'Orbite-Sender-' + crypto.randomUUID().slice(0, 6);
     const hostGuild = 'Orbite-Host-' + crypto.randomUUID().slice(0, 6);
     await senderPage.getByLabel('Nom de votre nouvelle guilde').fill(senderGuild);await senderPage.getByLabel('Tag de la guilde', { exact:true }).fill(crypto.randomUUID().replaceAll('-', '').slice(0,5).toUpperCase());

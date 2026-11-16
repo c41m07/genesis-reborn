@@ -234,3 +234,11 @@ Validation de la réconciliation sur le contenu intégré :
 - `make test-browser` réparti en quatre projets jetables : lots 1, 2 et 4 entièrement réussis (40, 49 et 39 scénarios), lot 3 avec 29 réussites et un dépassement du délai de 60 secondes du parcours clavier général lors de `keyboard.press('Tab')`. Le parcours est rejoué seul après les lots et réussit, sans changer ses assertions ni son délai. Bilan : 158 scénarios validés par consolidation, pas une campagne unique sans échec.
 - `make assets` / `npm run build` et `git diff --check` réussis. La compilation a attendu la fin des quatre lots pour préserver les actifs utilisés pendant leurs vérifications. Contrôle du contenu préparé et des exclusions avant commit : les configurations locales, dépendances et résultats restent ignorés ; `app/config/reference.php` reste préservé hors commit.
 - La pile PHP jetable est arrêtée et les projets navigateur se nettoient par le script existant. La PR #36 a été vérifiée ouverte et en brouillon ; aucun changement de sa disponibilité pour revue. Aucune nouvelle validation CI n’est revendiquée pour cette correction locale. Aucune écriture, migration ou lecture de données sur la base habituelle.
+
+
+## Réorganisation des pages — 16 novembre 2026
+
+Lot 1 publié dans la [PR #75](https://github.com/c41m07/genesis-reborn/pull/75) : espaces Guildes et Diplomatie séparés, pages dédiées de membres,
+grades, gestion et création ; liens directs, anciennes adresses conservées et
+lectures adaptées à chaque page. Voir le [suivi des lots](NAVIGATION_PAGES_DEDIEES.md) pour les
+choix, vérifications et limites. CI, fusion et déploiement restent distincts.

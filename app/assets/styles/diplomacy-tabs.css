@@ -62,3 +62,11 @@ body[data-theme=light] .guild-presence--online{color:#256347}
 body[data-theme=light] .guild-presence--offline{color:#9a2929}
 
 .diplomacy-page .guild-hub-actions>a.secondary{display:inline-flex;width:auto}
+
+/* Les destinations restent visibles et passent à la ligne sans menu JavaScript. */
+.space-navigation{display:flex;flex-wrap:wrap;gap:8px;margin-block:18px;min-width:0}
+.space-navigation>a{min-height:44px;white-space:normal;overflow-wrap:anywhere;text-align:center}
+.diplomacy-page .guild-hub-hero:has(.guild-public-banner){flex-wrap:wrap}
+.diplomacy-page .guild-hub-hero>.guild-public-banner{flex-basis:100%;width:100%;min-width:0}
+.received-proposals{border-left:3px solid var(--gold)}
+@media(max-width:600px){.space-navigation>a{flex:1 1 calc(50% - 8px);min-width:0}}

@@ -50,7 +50,7 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
   await page.setViewportSize({width:1440,height:900});
   await page.goto('/guildes/projets');
   await page.getByRole('link',{name:'Rejoindre une guilde',exact:true}).click();
-  await expect(page).toHaveURL(/diplomatie\?tab=join/);
+  await expect(page).toHaveURL(/\/guildes$/);
   await page.goto(home);
   await expect(page.locator('.economy-balance,.dashboard-colonies')).toHaveCount(0);
   await expect(page.locator('.dashboard-metrics a[href="/planetes"]')).toBeVisible();

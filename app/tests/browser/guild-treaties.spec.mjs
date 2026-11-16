@@ -30,7 +30,7 @@ test('Les trois traités ont deux signatures, des droits distincts et une paix b
   try {
     for (const [current, name] of [[page, guildA], [other, guildB]]) {
       await register(current, name, name.toLowerCase() + '@example.test');
-      await current.goto('/diplomatie');
+      await current.goto('/guildes/creer');
       await current.getByLabel('Nom de votre nouvelle guilde').fill(name);await current.getByLabel('Tag de la guilde', { exact:true }).fill(crypto.randomUUID().replaceAll('-', '').slice(0,5).toUpperCase());
       await current.getByRole('button', { name: 'Fonder une guilde' }).click();
       await expect(current.locator('.guild-hub-hero')).toContainText(name);

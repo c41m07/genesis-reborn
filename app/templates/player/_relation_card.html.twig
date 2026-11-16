@@ -1,7 +1,7 @@
 {% set status = row.contract ? row.contract.status : 'none' %}
 {% set rival = status in ['enemies','peace_pending'] %}
 {% set guildStatus = row.guildStatus|default('neutral') %}
-<article class="panel commander-card">
+<article class="panel commander-card{{ status in ['pending','peace_pending'] and row.contract.proposer.id!=membership.id ? ' received-proposals' : '' }}">
     <span class="avatar" aria-hidden="true">{{ row.player.player.username|first|upper }}</span>
     <h3>{{ row.player.player.username }}</h3>
     <p>{{ row.enemy ? (guildStatus=='enemies' ? 'Ennemi · diplomatie de guilde' : 'Rival personnel') : (row.allied ? 'Allié' : (status=='pending' ? (row.contract.proposer.id==membership.id ? 'Proposition envoyée' : 'Proposition reçue') : (status=='ended' ? 'Relation personnelle terminée' : 'Neutre'))) }}</p>

@@ -1,6 +1,6 @@
 import { test, expect } from './support/isolated-test.mjs';
 
-test('Trois onglets sans guilde, recherche conservée et anciennes adresses compatibles', async ({ page }) => {
+test('Espaces distincts, pages directes, historique et anciennes adresses compatibles', async ({ page, browser }) => {
   const id = crypto.randomUUID().slice(0, 8);
   const email = 'diplomacy-' + id + '@example.test';
   const password = 'Browser-test-2026!';
@@ -15,27 +15,46 @@ test('Trois onglets sans guilde, recherche conservée et anciennes adresses comp
   await page.getByLabel('Mot de passe', { exact: true }).fill(password);
   await page.getByRole('button', { name: /Connexion/ }).click();
   await page.locator('article.universe-card').filter({ has: page.getByRole('heading', { name: /Omega/ }) }).getByRole('button').click();
-  await page.goto('/diplomatie');
-  await expect(page.locator('.guild-hub-hero')).toContainText('Un empire se construit ensemble');
-  const sections = page.getByRole('navigation', { name: 'Sections de diplomatie' });
-  await expect(sections.getByRole('link')).toHaveText(['Créer une guilde','Rejoindre une guilde','Relations commandants']);
-  for (const [label, tab, heading] of [['Créer une guilde', 'guilds', 'Un empire se construit ensemble'], ['Rejoindre une guilde', 'join', 'Rejoignez une guilde'], ['Relations commandants', 'relations', 'Relations entre commandants']]) {
-    await sections.getByRole('link', { name: label, exact: true }).click();
-    await expect(page).toHaveURL(url => url.searchParams.get('tab') === tab);
-    await expect(sections.getByRole('link', { name: label, exact: true })).toHaveAttribute('aria-current', 'page');
-    await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible();
-  }
-  await sections.getByRole('link', { name: 'Créer une guilde', exact: true }).click();
-  await expect(page.getByLabel('Rechercher une guilde', {exact:true})).toHaveCount(0);
-  await sections.getByRole('link', { name: 'Rejoindre une guilde', exact: true }).click();
+  await page.goto('/guildes');
+  const sections = page.getByRole('navigation', { name: 'Navigation de guilde' });
+  await expect(sections.getByRole('link')).toHaveText(['Trouver une guilde','Créer une guilde']);
   await expect(page.getByLabel('Nom de votre nouvelle guilde')).toHaveCount(0);
+  await sections.getByRole('link', { name: 'Créer une guilde', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/\/guildes\/creer$/);
+  await page.reload();
+  await expect(page.getByLabel('Nom de votre nouvelle guilde')).toBeVisible();
+  await expect(sections.getByRole('link', { name: 'Créer une guilde', exact: true })).toHaveAttribute('aria-current','page');
+  await page.goBack();
+  await expect(page).toHaveURL(/\/guildes$/);
   await page.goto('/diplomatie?tab=diplomacy&q=introuvable');
-  await expect(sections.getByRole('link', {name:'Rejoindre une guilde',exact:true})).toHaveAttribute('aria-current','page');
-  await expect(sections.getByRole('link')).toHaveCount(3);
+  await expect(page).toHaveURL(/\/guildes\?q=introuvable$/);
   await expect(page.getByLabel('Rechercher une guilde', {exact:true})).toHaveValue('introuvable');
   await expect(page.getByRole('status')).toContainText('Aucune guilde');
   await page.goto('/diplomatie?tab=ranks');
+  await expect(page).toHaveURL(/\/guildes\/creer$/);
   await expect(page.getByLabel('Nom du grade', {exact:true})).toHaveCount(0);
+  await page.goto('/diplomatie');
+  await expect(page.getByRole('heading', {level:1,name:'Relations entre commandants',exact:true})).toBeVisible();
+  await expect(page.getByRole('navigation',{name:'Navigation principale'}).getByRole('link',{name:'Diplomatie',exact:true})).toHaveAttribute('aria-current','page');
+  const noScript = await browser.newContext({ storageState: await page.context().storageState(), javaScriptEnabled: false });
+  try {
+    const plain = await noScript.newPage();
+    await plain.goto(new URL('/guildes', page.url()).href);
+    await plain.getByRole('navigation',{name:'Navigation de guilde'}).getByRole('link',{name:'Créer une guilde',exact:true}).click();
+    await plain.getByLabel('Nom de votre nouvelle guilde').fill('Navigation-'+id);
+    await plain.getByLabel('Tag de la guilde',{exact:true}).fill(id.replaceAll('-','').slice(0,5));
+    await plain.getByRole('button',{name:'Fonder une guilde',exact:true}).click();
+    await expect(plain).toHaveURL(/\/guildes$/);
+    await plain.getByRole('navigation',{name:'Navigation de guilde'}).getByRole('link',{name:'Gestion',exact:true}).click();
+    await expect(plain.getByRole('button',{name:'Dissoudre la guilde',exact:true})).toBeVisible();
+    await expect(plain.getByRole('navigation',{name:'Navigation principale'}).getByRole('link',{name:'Ma guilde',exact:true})).toHaveAttribute('aria-current','page');
+  } finally { await noScript.close(); }
+  await page.goto('/diplomatie?tab=guilds#guild-management-title');
+  await expect(page).toHaveURL(/\/guildes\/gestion#guild-management-title$/);
+  await expect(page.locator('.page-contents')).toHaveCount(0);
+  await page.goto('/diplomatie/commandants');
+  await expect(page.getByRole('navigation',{name:'Navigation de diplomatie'}).getByRole('link',{name:'Relations entre commandants',exact:true})).toHaveAttribute('aria-current','page');
   await page.setViewportSize({ width: 390, height: 844 });
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 });
