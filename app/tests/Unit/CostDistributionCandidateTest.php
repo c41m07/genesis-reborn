@@ -49,4 +49,38 @@ final class CostDistributionCandidateTest extends TestCase
             self::assertSame(2500, CostDistributionCandidate::value($profiles['superior']));
         }
     }
+
+    public function testSelectingOneRankPreservesAllOtherEffectiveProfilesAndTheSource(): void
+    {
+        $catalog = new GameCatalog(dirname(__DIR__, 2) . '/config/game');
+        $universe = new Universe();
+        $universe->slug = 'candidate-one-rank-x1';
+        $universe->name = 'Candidat isolé';
+        $before = $catalog->forUniverse($universe);
+        $candidate = new CostDistributionCandidate($catalog);
+        foreach (CostDistributionCandidate::DEFAULT_TIERS as $selected) {
+            $comparison = $candidate->compare($universe, [$selected]);
+            $changed = 0;
+            foreach ($comparison['profiles'] as $row) {
+                self::assertSame($row['value'], CostDistributionCandidate::value($row['candidate']));
+                if ($row['tier'] !== $selected) {
+                    self::assertSame($row['current'], $row['candidate'], $selected . ' ne doit pas modifier ' . $row['slug'] . '/' . $row['tier']);
+                } elseif ($row['current'] !== $row['candidate']) {
+                    $changed++;
+                }
+            }
+            self::assertSame(52, $changed);
+            self::assertSame($before, $catalog->forUniverse($universe));
+            self::assertSame([], $universe->gameSettings);
+        }
+    }
+
+    public function testSuperiorCannotBeSelectedForRedistribution(): void
+    {
+        $catalog = new GameCatalog(dirname(__DIR__, 2) . '/config/game');
+        $universe = new Universe();
+        $this->expectException(\InvalidArgumentException::class);
+        (new CostDistributionCandidate($catalog))->compare($universe, ['superior']);
+    }
+
 }

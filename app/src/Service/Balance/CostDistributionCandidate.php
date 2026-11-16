@@ -7,6 +7,7 @@ use App\Service\Catalog\GameCatalog;
 /** Prépare une variante d'étude en mémoire ; ne modifie ni catalogue ni univers persisté. */
 final class CostDistributionCandidate
 {
+    public const DEFAULT_TIERS = ['basic', 'intermediate'];
     public const WEIGHTS = ['metal' => 2, 'nano' => 4, 'antimatter' => 8, 'hydrogen' => 1];
     public function __construct(private GameCatalog $catalog)
     {
@@ -20,9 +21,15 @@ final class CostDistributionCandidate
         }
         return $value;
     }
-    /** @return array{overrides:array,profiles:list<array>,maximum_share_error_points:float} */
-    public function compare(Universe $universe): array
+    /**
+     * @param list<'basic'|'intermediate'> $tiers Rangs modifiés uniquement dans l'univers temporaire.
+     * @return array{overrides:array,profiles:list<array>,maximum_share_error_points:float}
+     */
+    public function compare(Universe $universe, array $tiers = self::DEFAULT_TIERS): array
     {
+        if ($tiers === [] || array_diff($tiers, self::DEFAULT_TIERS) !== []) {
+            throw new \InvalidArgumentException('Les rangs candidats autorisés sont basic et intermediate.');
+        }
         $overrides = [];
         $rows = [];
         $maxError = 0.0;
@@ -31,14 +38,16 @@ final class CostDistributionCandidate
                 foreach (GameCatalog::TIERS as $tier) {
                     $current = $this->catalog->costs($this->catalog->withTier($definition, $tier), 1, 1, $group);
                     $budget = self::value($current);
-                    $candidate = $tier === 'superior' ? $current : $this->distribute($budget, $tier);
+                    // L'autre rang conserve son profil effectif, sans nouvelle répartition ni arrondi.
+                    $selected = in_array($tier, $tiers, true);
+                    $candidate = $selected ? $this->distribute($budget, $tier) : $current;
                     if (self::value($candidate) !== $budget) {
                         throw new \LogicException('Le budget du profil a changé.');
                     }
                     $overrides[$group][$slug]['cost_profiles'][$tier] = $candidate;
                     $target = $tier === 'basic' ? ['metal' => 0.5, 'nano' => 0.5] : ['metal' => 0.4, 'nano' => 0.4, 'antimatter' => 0.2];
                     $error = 0.0;
-                    if ($tier !== 'superior' && $budget > 0) {
+                    if ($selected && $budget > 0) {
                         foreach ($target as $resource => $share) {
                             $error = max($error, 100 * abs($candidate[$resource] * self::WEIGHTS[$resource] / $budget - $share));
                         }

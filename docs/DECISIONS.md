@@ -236,6 +236,17 @@ L’utilisateur valide la progression T1 métal/nano, T2 ajout d’antimatière,
 L’hydrogène de construction/recherche est une dépense industrielle, distincte du carburant réservé au départ des missions et des consommations des usines. Les coûts enregistrés des commandes déjà payées restent conservés. Les surcharges d’univers sont préservées champ par champ. L’étude et les vérifications de démarrage, progression et conservation sont consignées dans [COUTS.md](COUTS.md). Aucun prix d’asset premium ni réglage d’univers n’est modifié par cette décision.
 
 
+## Redistribution par rang — complément du 16 novembre 2026, décision en attente
+
+À la demande de l’utilisateur, les [mesures séparées](SIMULATIONS_COUTS_PAR_RANG.md)
+conservent l’autre rang aux prix actuels. B50/50 accélère les colonies B10 mais retarde
+les premiers accès I/S des politiques testées. I40/40/20 seul conserve le premier accès I,
+réduit les parcours économiques d’environ 4,5 à 5,1 % et la grande formation I de 6,9 %.
+La recommandation issue de l’étude devient : B60/40 conservé, I40/40/20 candidat
+prioritaire à valider, S inchangé. Ce n’est pas une décision d’activation ni une nouvelle
+règle de jeu. Les surcharges sont temporaires et jamais enregistrées ; le traitement
+des arrondis et d’autres stratégies reste à examiner avant une activation explicite.
+
 ## Étude de redistribution — résultats du 16 novembre 2026, décision en attente
 
 Le [rapport du lot 4](SIMULATIONS_PROGRESSION_ECONOMIE.md) compare les prix courants

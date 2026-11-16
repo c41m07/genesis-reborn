@@ -350,3 +350,38 @@ Le candidat reste inactif ; sa décision d’activation est distincte de la publ
 
 Pour une base existante : maintenance coordonnée, sauvegarde restaurable vérifiée,
 diagnostic des surcharges puis autorisation explicite avant la requalification `--apply`.
+
+## Complément — comparaison des coûts par rang, complexité 3/5
+
+Demande explicite : isoler B50/50 puis I40/40/20, sans activation. Base dev `4bbb0cf`,
+actualisée et propre ; branche `feature/comparaison-couts-par-rang` dans le checkout
+économique réutilisé. Les sources Work nommées restent absentes du dépôt accessible.
+
+Périmètre : sélection du rang dans les seules surcharges d'univers transitoires,
+option de commande reproductible, mêmes parcours économiques et militaires,
+tests de conservation stricte des profils non sélectionnés, rapport comparatif.
+Risques : application involontaire aux deux rangs, variation des stratégies ou du
+point de départ, comparaison de dates d'accès avec des dates de livraison.
+Aucune formule, valeur applicative, donnée persistée, dépendance ou migration modifiée.
+
+### Résultats du complément par rang
+
+[Rapport](SIMULATIONS_COUTS_PAR_RANG.md) et [108 bilans synthétiques](RESULTATS_COUTS_PAR_RANG.csv).
+Les trois commandes exécutent 162 parcours avec répétition des contrôles actuels ;
+ces contrôles et les bilans combinés reproduisent exactement les résultats initiaux.
+Les 162 bilans de ressources sont conservés (écart maximal inférieur à 0,00000009 unité).
+B seul modifie 52 profils B, I seul 52 profils I, sans autre modification de profil.
+La recommandation est actualisée : conserver B60/40, privilégier I40/40/20 comme
+candidat à valider, S inchangé ; aucune activation ni décision produit implicite.
+
+Contrôles locaux : 22 tests PHP / 2 303 assertions, syntaxe des cinq fichiers PHP,
+conteneur Symfony, `make validate`, option répétée identique au défaut combiné,
+refus du Supérieur avant simulation. Aucune nouvelle compilation ou suite navigateur
+locale pour cet outil sans interface. Les contrôles CI du lot 4 portent sur la version
+précédente ; ce complément local n’est pas déclaré validé par cette CI.
+Les liens documentaires et le diff sont vérifiés avant commit.
+
+Les vérifications de bout en bout confirment aussi : colonies B identiques au courant
+avec I seul, premier accès I inchangé avec I seul, reconstruction des défenses B et
+formation B identiques avec I seul, résultats physiques des combats et devis de
+navigation strictement identiques entre variantes (mesures de temps machine exclues).

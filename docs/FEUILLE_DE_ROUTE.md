@@ -17,6 +17,10 @@ Lot 4 mesuré localement sur `feature/simulations-progression-economie` :
 Publication et fusion conditionnelle autorisées le 16 novembre par la [PR #72](https://github.com/c41m07/genesis-reborn/pull/72).
 Les résultats de CI complète et l’état d’intégration sont consultables dans la PR.
 Le candidat de redistribution des prix n’est pas activé.
+Complément local sur `feature/comparaison-couts-par-rang` : [B seul / I seul / les deux](SIMULATIONS_COUTS_PAR_RANG.md),
+108 parcours distincts, contrôles courants identiques, sélection CLI et tests ciblés.
+La recommandation privilégie I seul pour validation ; aucun prix activé.
+Publication et CI de ce complément non réalisées à ce stade.
 État, contrôles et autorisations dans le [suivi de mission](PROGRESSION_CARBURANT_UNITES.md).
 L’activation des accès en base reste soumise à sauvegarde vérifiée et autorisation ;
 aucun déploiement Alpha prévu.

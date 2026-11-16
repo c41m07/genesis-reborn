@@ -3,6 +3,8 @@
 Mesures du 16 novembre 2026, après intégration des lots 1 à 3 dans dev (`4192821`).
 Ce rapport compare le système courant et une variante de prix **inactive**.
 Il ne décide ni une activation du candidat ni un déploiement Alpha.
+Le [complément par rang](SIMULATIONS_COUTS_PAR_RANG.md) isole ensuite B50/50 et
+I40/40/20 : il distingue leurs effets et actualise la recommandation, sans activation.
 
 ## Reproduire les résultats
 

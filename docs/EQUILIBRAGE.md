@@ -1,5 +1,15 @@
 # Réglages et études d’équilibrage
 
+## Comparaison séparée des prix — 16 novembre 2026
+
+Le [complément par rang](SIMULATIONS_COUTS_PAR_RANG.md) compare les prix courants,
+B seul, I seul et B + I sur 108 parcours distincts. Le changement B provoque le retard
+des premiers accès I dans les politiques testées. I seul conserve ces accès et améliore
+les parcours économiques et la grande formation I ; c’est le candidat recommandé pour
+une validation supplémentaire, B et S conservés. Les gains B sur colonies/reconstruction
+restent documentés. Cette recommandation n’active aucun prix ; les arrondis et la
+sensibilité à une production d’antimatière faible restent à traiter avant activation.
+
 ## Étude conjointe — lot 4 du 16 novembre 2026
 
 Le [rapport reproductible](SIMULATIONS_PROGRESSION_ECONOMIE.md) mesure 54 parcours

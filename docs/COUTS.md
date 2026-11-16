@@ -11,6 +11,9 @@ budgets de base de la variante. Après croissance et remises, les arrondis par
 ressource créent jusqu’à 12 unités de valeur d’écart sur les 912 devis testés.
 Ce point et les effets contrastés sur la progression restent à décider avant
 une éventuelle activation ; aucun profil courant n’est remplacé par l’étude.
+Le [complément séparant les rangs](SIMULATIONS_COUTS_PAR_RANG.md) recommande de
+conserver le Basique courant et de privilégier le candidat Intermédiaire pour
+validation. Cette recommandation ne change pas la grille appliquée ci-dessous.
 
 Décision utilisateur du 5 novembre 2026 : appliquer la progression des ressources à l’ensemble des bâtiments, du chantier spatial (vaisseaux), des défenses et des recherches. Le chantier d’assemblage lui-même fait partie des bâtiments concernés. Les boosts et les réglages d’univers ne font pas partie de cette modification.
 
