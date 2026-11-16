@@ -140,6 +140,7 @@ test('Conversations : dernier message, bulles distinctes et témoin mobile', asy
     for (const width of [1440, 768, 390]) {
       await page.setViewportSize({ width, height: 900 });
       await page.goto(`/messages?with=${peerId}`);
+      await expect(page.locator('.incoming-attack-panel')).toHaveCount(0);
       const thread = page.getByLabel('Historique de la conversation', { exact: true });
       await expect.poll(() => thread.evaluate(node => node.scrollHeight - node.scrollTop - node.clientHeight)).toBeLessThan(2);
       await expect(thread.getByText('Dernier message du fil', { exact: true })).toBeVisible();
@@ -245,6 +246,7 @@ test('Hub de guilde : création, équipage et discussion commune', async ({ page
   await page.goto('/classement?tab=guilds');
   await expect(page.getByRole('row').filter({ hasText: enemyGuild })).toHaveClass(/ranking-row--enemy/);
   await expect(page.getByRole('row').filter({ hasText: enemyGuild })).toContainText('Guilde ennemie');
+  await expect(page.locator('.incoming-attack-panel')).toHaveCount(0);
   await expect(page.locator('.section-heading')).toHaveCount(0);
   await page.goto('/profil');
   await expect(page.getByRole('navigation', { name: 'Sections du profil' })).toHaveCount(0);

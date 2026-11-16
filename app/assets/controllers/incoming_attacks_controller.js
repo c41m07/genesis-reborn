@@ -2,7 +2,7 @@ import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
     static targets = ['content', 'status'];
-    static values = { url: String, membership: Number, now: String };
+    static values = { url: String, membership: Number, now: String, panel: { type: Boolean, default: true } };
 
     connect() {
         this.active = true;
@@ -44,12 +44,14 @@ export default class extends Controller {
             if (this.failed) { this.statusTarget.textContent = ''; this.statusTarget.classList.add('visually-hidden'); this.failed = false; }
             this.offset = Date.parse(data.serverNow) - Date.now();
             if (data.html !== this.lastHtml && !this.contentTarget.contains(document.activeElement)) {
-                this.contentTarget.innerHTML = data.html;
+                // Hors des vues de vol, lire les alertes sans insérer un cadre qui décalerait la page.
+                const content = this.panelValue ? this.contentTarget : document.createElement('div');
+                content.innerHTML = data.html;
                 this.lastHtml = data.html;
-                const count = this.contentTarget.querySelectorAll('[data-incoming-attack]').length;
-                const signature = [...this.contentTarget.querySelectorAll('[data-incoming-attack]')].map(row => row.dataset.incomingAttack).join(',');
+                const count = content.querySelectorAll('[data-incoming-attack]').length;
+                const signature = [...content.querySelectorAll('[data-incoming-attack]')].map(row => row.dataset.incomingAttack).join(',');
                 if (this.signature !== undefined && signature !== this.signature) {
-                    const threats = this.contentTarget.querySelectorAll('[data-incoming-attack][data-incoming-kind="attack"]').length;
+                    const threats = content.querySelectorAll('[data-incoming-attack][data-incoming-kind="attack"]').length;
                     this.statusTarget.textContent = count ? count + ' flotte(s) entrante(s).' + (threats ? ' Dont ' + threats + ' attaque(s) détectée(s).' : '') : 'Aucune flotte entrante visible en trajet.';
                 }
                 this.signature = signature;
@@ -68,6 +70,7 @@ export default class extends Controller {
     }
 
     tick() {
+        if (!this.panelValue) return;
         const now = Date.now() + this.offset;
         // La progression partage l’horloge serveur des échéances, même si le poste est décalé.
         for (const progress of this.contentTarget.querySelectorAll('[data-incoming-progress]')) {

@@ -1881,3 +1881,30 @@ Reprise locale réussie : cinq parcours navigateur (quatre refus d’accès et l
 rangs du catalogue) sur base éphémère, sans augmenter les délais ni retirer de
 contrôle. Syntaxes Twig/JavaScript et git diff --check réussis. La nouvelle version
 de la PR doit repasser toute la CI avant fusion ; aucun déploiement Alpha.
+
+### Surveillance globale sans panneau hors des vues de vol
+
+La CI complète de 76b0476 valide PHP/Python, lint, restauration et deux lots
+navigateur, puis révèle les décalages de la carte et de la messagerie, un en-tête
+supplémentaire dans le classement et un débordement dans Planètes. La cause commune
+est le panneau vide encore inséré par le template de base hors des six vues demandées.
+Complexité réévaluée à 4/5 après cette dépendance d’affichage transversale.
+
+Plan ciblé : séparer le choix de rendre le panneau de la surveillance existante,
+préserver les événements de carte, le focus, les annonces et l’horloge serveur,
+puis reprendre les sept parcours concernés sans retirer leurs contrôles de géométrie,
+de clavier ou de confidentialité. Le paramètre de présentation reste interne :
+aucune route, réponse API, règle, requête ou permission ne change.
+
+Le template de base conserve un contrôleur sans cadre ; les vues de colonie et de
+flottes affichent leur cadre au même emplacement. Hors de ces vues, le HTML autorisé
+est analysé dans un élément détaché pour les annonces et les événements de carte.
+Les tests conservent les points cliquables de la carte, le champ de message entièrement
+visible, les en-têtes attendus, les noms longs et le suivi des arrivées sans rechargement.
+
+Reprise locale complète réussie : sept parcours navigateur ciblés couvrent les
+quatre régressions de géométrie ainsi que les trois scénarios de surveillance ;
+16 tests PHP de visibilité / 209 assertions, lint, compilation et diff réussissent.
+Aucun contrôle des marqueurs cliquables, du champ de saisie, du débordement, des
+en-têtes, des origines privées ou des sondes n’a été relâché. La CI complète doit
+maintenant valider cette version avant fusion.

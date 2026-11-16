@@ -11,9 +11,10 @@ titre avec compteur, cartes de mission, trajet et échéance. Il se place juste 
 les vols personnels dans la Vue générale, dans Flottes et dans la colonne de droite
 des quatre catalogues (Bâtiments, Recherche, Chantier spatial et Défenses).
 Sur mobile, ces deux cadres restent visibles après le catalogue, dans la même
-colonne. Un seul panneau apparaît par page ; les autres pages conservent la surveillance
-existante, sauf la page d’accès refusé qui garde le retour au jeu ou à la console
-comme première action après le lien d’évitement. Aucune nouvelle page, onglet ou navigation n’est ajouté.
+colonne. Un seul panneau apparaît par page. La carte, la messagerie, les classements
+et les autres vues conservent la surveillance sans cadre ajouté au-dessus du contenu.
+La page d’accès refusé garde le retour au jeu ou à la console comme première action
+après le lien d’évitement. Aucune nouvelle page, onglet ou navigation n’est ajouté.
 La barre de progression utilise l’heure serveur lorsque le départ est public.
 Les attaques masquent leur date de départ et affichent uniquement leur échéance.
 

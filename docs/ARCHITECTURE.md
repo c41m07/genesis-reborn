@@ -586,3 +586,10 @@ La sérialisation tierce conserve les effectifs/points et masque composition, fr
 et origines non découvertes. Les déplacements personnels restent exclus de ce panneau.
 Le lecteur de surveillance reste sans écriture ; URL, clé de réponse HTML, contrôleur
 Stimulus et attributs d’actualisation sont conservés pour les pages déjà ouvertes.
+
+Le paramètre interne incoming_panel distingue la surveillance commune de son
+rendu. Les six vues de colonie/flottes affichent le panneau sous les vols ; la
+carte et les autres vues gardent le contrôleur sans cadre ajouté. Dans ce dernier
+cas, le HTML autorisé est lu hors du DOM affiché pour calculer les annonces, puis
+les événements cartographiques existants sont transmis. Les droits, lectures,
+URL et clés de réponse restent communs aux deux présentations.

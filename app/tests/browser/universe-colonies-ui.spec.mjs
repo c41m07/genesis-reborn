@@ -158,6 +158,7 @@ test('Colonies : noms longs, renommage, sélection, raccourcis et état vide', a
   const { home, extra } = addColony(email);
   await page.goto('/planetes');
   const card = page.locator('#planet-' + extra);
+  await expect(page.locator('.incoming-attack-panel')).toHaveCount(0);
   for (const width of [1920, 1440, 1280, 768, 390]) {
     await page.setViewportSize({ width, height: 900 });
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
