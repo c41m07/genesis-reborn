@@ -88,7 +88,9 @@ test('Inventaire : état vide, capacité pleine, attente et effet configuré', a
   await expect(page.locator('.mission-card')).toContainText(`Quantité : ${capacity}`);
   await expect(page.locator('.mission-card')).toContainText('25,00 %');
   await expect(page.getByText('Inventaire plein.', { exact: false })).toBeVisible();
+  await page.getByRole('navigation',{name:'Navigation de l’inventaire'}).getByRole('link',{name:/Récompenses en attente/}).click();
   await expect(page.locator('.boost-pending')).toContainText('2 bonus en attente');
+  await page.getByRole('navigation',{name:'Navigation de l’inventaire'}).getByRole('link',{name:/^Boosts/}).click();
   await expect(page.getByRole('progressbar')).toHaveAttribute('value', String(capacity));
   for (const width of [1920, 1440, 1280, 768, 390]) {
     await page.setViewportSize({ width, height: 900 });
@@ -156,4 +158,45 @@ test('Inventaire : appliquer un boost à une file puis à une flotte', async ({ 
   expect(Number(queryIsolatedSql(project, `SELECT TIMESTAMPDIFF(SECOND,UTC_TIMESTAMP(),arrival_at) FROM fleet WHERE id=${fleetId}`))).toBeLessThan(2800);
   expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM player_boost WHERE player_universe_id=${membershipId} AND status='used'`)).toBe('2');
   await expect(page.getByRole('heading', { name: 'Aucun bonus disponible' })).toBeVisible();
+});
+
+
+test('Inventaire : pages directes, navigation, attente paginée et anciens fragments', async ({ page, browser }, testInfo) => {
+  test.setTimeout(180000);
+  const email=await enter(page), project=process.env.BROWSER_ROUTER;
+  const member=Number(queryIsolatedSql(project,`SELECT current_player_universe_id FROM player WHERE email='${email}'`));
+  runIsolatedSql(project, `INSERT INTO player_boost (player_universe_id,source_type,source_key,status,earned_at) VALUES ${Array.from({length:28},(_,i)=>`(${member},'event','pending-${member}-${i}','pending',DATE_ADD(UTC_TIMESTAMP(),INTERVAL ${i} SECOND))`).join(',')}`);
+  const routes=[['/boosts','Boosts'],['/inventaire/boites','Boîtes de ressources'],['/inventaire/recompenses','Récompenses en attente']];
+  for (const theme of ['dark','light']) {
+    runIsolatedSql(project,`UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
+    for (const width of [1440,390,320]) {
+      await page.setViewportSize({width,height:900});
+      for (const [url,title] of routes) {
+        expect((await page.goto(url)).status()).toBe(200);
+        await expect(page.locator('h1')).toHaveText(title);
+        await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
+        await expect(page.locator(`nav[aria-label="Navigation de l’inventaire"] a[href="${url}"]`)).toHaveAttribute('aria-current','page');
+        await expect(page.locator('.sidebar a[href="/boosts"]')).toHaveClass(/active/);
+        expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+        expect((await new AxeBuilder({page}).include('main').analyze()).violations).toEqual([]);
+      }
+      await page.screenshot({path:testInfo.outputPath(`pending-${theme}-${width}.png`),fullPage:true});
+    }
+  }
+  await expect(page.locator('[data-pending-item]')).toHaveCount(25);
+  await page.getByRole('link',{name:'Récompenses suivantes',exact:true}).focus();await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/recompenses\?page=2$/);await page.reload();await expect(page.locator('[data-pending-item]')).toHaveCount(3);
+  await page.goBack();await expect(page.locator('[data-pending-item]')).toHaveCount(25);
+  for (const [fragment,path] of [['inventory-boxes','/inventaire/boites'],['inventory-pending','/inventaire/recompenses'],['inventory-boosts','/boosts']]) {
+    await page.goto('/boosts#'+fragment);await expect(page).toHaveURL(new RegExp(path+'#'+fragment+'$'));
+  }
+  const context=await browser.newContext({baseURL:new URL(page.url()).origin,storageState:await page.context().storageState(),javaScriptEnabled:false,viewport:{width:390,height:900}});
+  try {
+    const plain=await context.newPage();await plain.goto('/inventaire/recompenses?page=2');
+    await expect(plain.locator('[data-pending-item]')).toHaveCount(3);
+    const nav=plain.getByRole('navigation',{name:'Navigation de l’inventaire'});
+    await nav.getByRole('link',{name:/^Boosts/}).click();await expect(plain.locator('h1')).toHaveText('Boosts');
+    await nav.getByRole('link',{name:/Boîtes de ressources/}).click();await expect(plain.locator('h1')).toHaveText('Boîtes de ressources');
+    await nav.getByRole('link',{name:/Récompenses en attente/}).click();await expect(plain.locator('[data-pending-item]')).toHaveCount(25);
+  } finally {await context.close();}
 });

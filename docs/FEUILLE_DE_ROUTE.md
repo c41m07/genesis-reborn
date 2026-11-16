@@ -1665,10 +1665,9 @@ lectures adaptées à chaque page. Voir le [suivi des lots](NAVIGATION_PAGES_DED
 choix, vérifications et limites. CI, fusion et déploiement restent distincts.
 
 
-Lot 2 Flottes réalisé sur `feature/navigation-flottes` depuis dev `a279cd1` :
-missions, préparation, orbites, réserves et compositions séparées, services
-métier conservés. Contrôles locaux ciblés réussis ; [PR #77](https://github.com/c41m07/genesis-reborn/pull/77)
-vers dev, avec CI complète obligatoire avant fusion. La PR donne l’état courant
-de la CI et de l’intégration ; la recette et les limites sont suivies dans
-[NAVIGATION_PAGES_DEDIEES](NAVIGATION_PAGES_DEDIEES.md). Ne pas démarrer Inventaire
-avant la CI complète et la fusion de ce lot.
+Lot 2 intégré sur dev par la [PR #77](https://github.com/c41m07/genesis-reborn/pull/77),
+merge `52030d2`, après CI complète réussie sur `b6d1aaf`. Dev local actualisé.
+
+Lot 3 Inventaire en cours sur `feature/navigation-inventaire` depuis dev
+`52030d2` : pages Boosts, Boîtes et Récompenses en attente, lectures adaptées,
+services métier et capacité conservés. [Recette et état d’intégration](NAVIGATION_PAGES_DEDIEES.md).

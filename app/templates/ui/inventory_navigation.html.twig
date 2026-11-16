@@ -1,0 +1,9 @@
+<nav class="ui-tabs space-navigation" aria-label="Navigation de l’inventaire">
+{% for destination in [
+    {page:'boosts',route:'app_boosts',label:'Boosts',count:inventory_counts.boosts},
+    {page:'boxes',route:'app_inventory_boxes',label:'Boîtes de ressources',count:inventory_counts.boxes},
+    {page:'pending',route:'app_inventory_pending',label:'Récompenses en attente',count:inventory_counts.pending}
+] %}
+<a href="{{ path(destination.route) }}"{% if inventory_page==destination.page %} class="active" aria-current="page"{% endif %}>{{ destination.label }} <span class="badge">{{ destination.count }}</span></a>
+{% endfor %}
+</nav>

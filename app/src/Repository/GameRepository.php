@@ -761,6 +761,35 @@ final class GameRepository
         return $this->all(PlayerBoost::class, ['playerUniverse' => $membership], ['earnedAt' => 'ASC', 'id' => 'ASC']);
     }
 
+    /** @return list<array{status:string,kind:string,quantity:int|string}> Comptages privés sans charger l’historique utilisé. */
+    public function inventoryCounts(PlayerUniverse $membership): array
+    {
+        return $this->em->createQueryBuilder()->select('b.status', 'b.kind', 'COUNT(b.id) AS quantity')
+            ->from(PlayerBoost::class, 'b')->where('b.playerUniverse = :membership')
+            ->andWhere('b.status IN (:statuses)')->setParameter('membership', $membership)
+            ->setParameter('statuses', ['available', 'pending'])->groupBy('b.status', 'b.kind')
+            ->getQuery()->getArrayResult();
+    }
+
+    /** @return list<PlayerBoost> Les objets disponibles partagent une capacité maximale de 100. */
+    public function availableResourceBoxes(PlayerUniverse $membership): array
+    {
+        return $this->em->getRepository(PlayerBoost::class)->findBy(
+            ['playerUniverse' => $membership, 'status' => 'available', 'kind' => 'resource_box'],
+            ['earnedAt' => 'ASC', 'id' => 'ASC'], 100,
+        );
+    }
+
+    /** @return list<PlayerBoost> La file d’attente reste illimitée en stockage, sa lecture est paginée. */
+    public function pendingInventoryItems(PlayerUniverse $membership, int $page, int $limit = 25): array
+    {
+        $limit = max(1, min(25, $limit));
+        return $this->em->getRepository(PlayerBoost::class)->findBy(
+            ['playerUniverse' => $membership, 'status' => 'pending'],
+            ['earnedAt' => 'ASC', 'id' => 'ASC'], $limit, (max(1, $page) - 1) * $limit,
+        );
+    }
+
     public function countBoosts(PlayerUniverse $membership, string $status): int
     {
         return (int) $this->em->createQueryBuilder()->select('COUNT(b.id)')->from(PlayerBoost::class, 'b')->where('b.playerUniverse = :membership')->andWhere('b.status = :status')->setParameter('membership', $membership)->setParameter('status', $status)->getQuery()->getSingleScalarResult();

@@ -9,10 +9,14 @@ La copie dev utilisée par localhost a été avancée sans écraser son fichier
 `app/config/reference.php` préexistant ; assets recompilés et cache applicatif
 vidé. Aucune migration de sa base ni livraison Alpha.
 
-Lot 2 Flottes réalisé sur `feature/navigation-flottes`, depuis cette dev puis
-actualisé avec dev `cc5926d`. [PR #77](https://github.com/c41m07/genesis-reborn/pull/77).
-Le bilan du lot 2 ci-dessous décrit la recette avant intégration ; la PR donne
-l’état courant de la CI et de la fusion.
+Lot 2 intégré sur dev par la [PR #77](https://github.com/c41m07/genesis-reborn/pull/77),
+merge `52030d2`, après les cinq jobs quality réussis sur `b6d1aaf`
+([CI 43958951002](https://github.com/c41m07/genesis-reborn/actions/runs/43958951002)).
+Dev local avancé avec assets recompilés, cache vidé, routes et assets servis
+vérifiés, modification locale préservée. Le bilan ci-dessous conserve la recette
+et les reprises précédant cette intégration.
+
+Lot 3 en cours sur `feature/navigation-inventaire`, depuis dev `52030d2`.
 
 Les trois documents Work V4 (prompt maître), V2 (brief Figma) et V1 (protocole
 adaptatif) n’ont pas été trouvés dans le dépôt ni les sources connectées
@@ -24,7 +28,8 @@ accessibles. Aucune lecture intégrale ni validation de leurs phases n’est rev
    données privées, compatibilité des adresses et liens entrants.
 2. Flottes : 5/5. Périmètres colonie/empire, actualisations, demandes d’orbite,
    composition continue et compatibilité des liens.
-3. Inventaire : estimation 3/5, à confirmer au lot ; consommation et récompenses.
+3. Inventaire : 4/5 après examen ; capacité commune, lectures ciblées, attente
+   paginée et retours après consommation, sans modifier les services métier.
 4. Mon compte / vacances : estimation 4/5 ; compte commun, empire et actions sensibles.
 5. Projets collectifs : estimation 4/5 ; contribution, historique et permissions.
 6. Événements : estimation 3/5 ; bonus actifs, défis et rotations.
@@ -365,3 +370,54 @@ les tests HTTP/intégration/navigateur et les documents de navigation/flottes.
 - `docs/NAVIGATION_PAGES_DEDIEES.md`
 - `docs/PARCOURS_UI_UX.md`
 - `docs/wiki.json`
+
+
+## Lot 3 — Inventaire (complexité 4/5)
+
+### Pages et compatibilité
+
+- `/boosts` : entrée de l’espace, stock de boosts et utilisation sur les opérations
+  actives de tout l’empire. Le choix de l’opération est un filtre d’une même tâche.
+- `/inventaire/boites` : contenu disponible, regroupement par contenu identique,
+  choix explicite d’une colonie, confirmation et ouverture.
+- `/inventaire/recompenses` : récompenses conservées, type, origine et date,
+  présentées dans l’ordre d’attribution et paginées par 25.
+
+Chaque tâche a son titre, son URL et la navigation secondaire commune, avec
+espace et page actifs. Le menu principal garde une seule entrée Inventaire.
+La capacité partagée (boosts et boîtes) reste visible sur les trois pages. L’aide
+complémentaire reste dépliable et aucun sommaire automatique ne recrée les sections.
+Les fragments historiques `inventory-boosts`, `inventory-boxes`,
+`inventory-boxes-title`, `inventory-pending`, `inventory-pending-title`,
+`available-bonuses-title` et `boost-use-title` rejoignent leur destination côté
+navigateur, y compris sans rechargement du document. Sans JavaScript, la
+navigation serveur donne accès aux mêmes pages ; le serveur ne reçoit pas les fragments.
+
+Les POST existants et leurs jetons restent inchangés. L’ouverture revient aux
+Boîtes, avec message de succès ou de refus ; le boost revient à Boosts. Les
+confirmations existantes et le retour du focus sont conservés. Aucun changement
+de règle, de capacité, de permissions, de configuration ou de données persistées.
+
+### Préparation et risques
+
+`InventoryPageView` utilise une agrégation par statut et type pour les compteurs.
+Boosts ne charge pas les objets utilisés, ni les boîtes, ni les récompenses en
+attente. Les opérations restent celles de tout l’empire, préparées seulement si
+un boost est disponible et hors vacances. Boîtes ne prépare pas les opérations ;
+les objets disponibles sont bornés par la capacité maximale existante de 100.
+Attente hydrate au plus 25 objets privés à la fois ; son stockage reste illimité.
+Les regroupements ouvrent toujours le plus ancien objet disponible de même contenu.
+
+La synchronisation initiale est conservée. Les transactions, verrous, contrôles
+d’univers, de propriété, de vacances, de capacité de stockage et les reçus
+idempotents restent dans les services métier existants. La promotion du plus
+ancien objet en attente reste automatique lors d’une consommation. Aucune mesure
+globale de performance n’est annoncée.
+
+### Vérifications et livraison
+
+Validation en cours. Les tests utilisent uniquement des bases jetables distinctes
+de la base locale habituelle. Aucun déploiement ni migration d’une base existante.
+Les contrôles d’accessibilité sont ciblés, sans audit de conformité complet.
+Les trois sources Work citées plus haut restent introuvables ; le wiki externe
+n’a pas été actualisé. Le manuel embarqué et la documentation du dépôt sont synchronisés.

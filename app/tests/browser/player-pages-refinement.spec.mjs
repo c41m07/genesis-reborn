@@ -20,7 +20,7 @@ test('Pages validées : diplomatie, profil et inventaire, thèmes, clavier et é
   await expect(page).toHaveURL(/planetes\/\d+$/);
   for (const theme of ['dark', 'light']) {
     runIsolatedSql(process.env.BROWSER_ROUTER, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
-    for (const [route, heading, name] of [['/guildes/creer','Créer une guilde','creation-guilde'],['/diplomatie','Relations entre commandants','diplomatie'],['/profil','Mon profil','profil'],['/boosts','Inventaire','inventaire']]) {
+    for (const [route, heading, name] of [['/guildes/creer','Créer une guilde','creation-guilde'],['/diplomatie','Relations entre commandants','diplomatie'],['/profil','Mon profil','profil'],['/boosts','Boosts','inventaire']]) {
       await page.goto(route);
       await expect(page.getByRole('heading',{level:1,name:heading,exact:true})).toBeVisible();
       await expect(page.locator('body')).toHaveAttribute('data-theme',theme);

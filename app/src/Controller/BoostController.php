@@ -1,18 +1,11 @@
 <?php
 namespace App\Controller;
 
-use App\Entity\Fleet;
-use App\Entity\QueueItem;
-use App\Entity\Planet;
 use App\Service\Boost\ResourceBoxUseService;
 use App\Service\Boost\BoostGrantService;
 use App\Service\Boost\BoostUseService;
 use App\Service\Universe\UniverseContext;
-use App\Repository\GameRepository;
-use App\Service\Catalog\GameCatalog;
 use App\Service\Queue\QueueService;
-use App\Service\Player\VacationCalendar;
-use Psr\Clock\ClockInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,47 +13,16 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class BoostController extends AbstractController
 {
-    #[Route('/boosts', name: 'app_boosts', methods: ['GET'])]
-    public function index(
-        UniverseContext $context,
-        BoostGrantService $grants,
-        GameRepository $repo,
-        GameCatalog $catalog,
-        QueueService $queues,
-        VacationCalendar $vacations,
-        ClockInterface $clock,
-    ): Response {
+    #[Route('/boosts', name: 'app_boosts', defaults: ['inventory_page' => 'boosts'], methods: ['GET'])]
+    #[Route('/inventaire/boites', name: 'app_inventory_boxes', defaults: ['inventory_page' => 'boxes'], methods: ['GET'])]
+    #[Route('/inventaire/recompenses', name: 'app_inventory_pending', defaults: ['inventory_page' => 'pending'], methods: ['GET'])]
+    public function index(Request $request, UniverseContext $context, QueueService $queues, \App\Service\Boost\InventoryPageView $view): Response
+    {
         $membership = $context->membership();
+        // Conserver le règlement des commandes échues avant de lire les opérations disponibles.
         $queues->synchronize($membership);
-        $vacation = $vacations->currentPeriod($membership);
-        $definitions = array_merge($catalog->all('buildings'), $catalog->all('technologies'), $catalog->all('ships'), $catalog->all('defenses'));
-        $activeQueues = [];
-        foreach ($repo->activeQueueItemsFor($membership) as $item) {
-            if ($item->finishAt() > $clock->now()) {
-                $definition = $definitions[$item->itemSlug] ?? null;
-                $activeQueues[] = ['item' => $item, 'label' => $definition ? $catalog->withTier($definition, $item->tier)['label'] : $item->itemSlug];
-            }
-        }
-        $activeFleets = array_values(array_filter($repo->activeFleetsForBoost($membership), static fn (Fleet $fleet): bool => $fleet->arrivalAt > $clock->now()));
-        $inventory=$grants->inventory($membership);$boostCount=0;$boxes=[];
-        foreach ($inventory as $item) {
-            if ($item->kind==='boost') { ++$boostCount;continue; }
-            if ($item->kind!=='resource_box') continue;
-            $key=hash('sha256',json_encode($item->payload));
-            $boxes[$key] ??= ['item'=>$item,'quantity'=>0];++$boxes[$key]['quantity'];
-        }
-
-        return $this->render('boosts/index.html.twig', [
-            'membership' => $membership,
-            'boosts' => $inventory,
-            'box_resources'=>$catalog->rules()['resources'], 'boost_count'=>$boostCount, 'resource_boxes'=>array_values($boxes), 'available_colonies'=>$repo->all(Planet::class,['owner'=>$membership],['id'=>'ASC']),
-            'pending_boost_count' => $grants->pendingCount($membership),
-            'inventory_capacity' => $grants->inventoryCapacity(),
-            'duration_reduction_percent' => $grants->durationReductionRatio() * 100,
-            'active_queues' => $activeQueues,
-            'active_fleets' => $activeFleets,
-            'vacation' => $vacation,
-        ]);
+        $data = $view->prepare($membership, $request->attributes->getString('inventory_page'), $request->query->getInt('page', 1));
+        return $this->render('boosts/index.html.twig', $data, new Response(headers: ['Cache-Control' => 'private, no-store']));
     }
 
     #[Route('/inventaire/boites/{id}/ouvrir', name:'app_resource_box_open', requirements:['id'=>'\d+'], methods:['POST'])]
@@ -71,7 +33,7 @@ final class BoostController extends AbstractController
             $changed=$boxes->open($context->membership(),$id,$request->request->getInt('planet_id'),(string)$request->request->get('request_key'));
             $this->addFlash('success',$changed ? 'Boîte ouverte : toutes les ressources ont été déposées sur la colonie choisie.' : 'Cette ouverture a déjà été traitée.');
         } catch (\DomainException $error) { $this->addFlash('error',$error->getMessage()); }
-        return $this->redirectToRoute('app_boosts');
+        return $this->redirectToRoute('app_inventory_boxes');
     }
 
     #[Route('/boosts/utiliser/{type}/{id}', name: 'app_boost_use', methods: ['POST'], requirements: ['type' => 'queue|fleet', 'id' => '\\d+'])]

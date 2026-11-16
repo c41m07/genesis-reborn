@@ -610,3 +610,22 @@ Lot 1 publié dans la [PR #75](https://github.com/c41m07/genesis-reborn/pull/75)
 grades, gestion et création ; liens directs, anciennes adresses conservées et
 lectures adaptées à chaque page. Voir le [suivi des lots](NAVIGATION_PAGES_DEDIEES.md) pour les
 choix, vérifications et limites. CI, fusion et déploiement restent distincts.
+
+
+### Inventaire par destination
+
+`InventoryPageView` prépare `/boosts`, `/inventaire/boites` ou
+`/inventaire/recompenses`. Une agrégation privée compte les objets disponibles
+et en attente sans hydrater l’historique utilisé. Les boîtes disponibles sont
+lues séparément, dans la capacité maximale existante de 100, puis regroupées
+par contenu identique. La file d’attente est lue par pages de 25 dans l’ordre
+`earnedAt, id`. Les opérations de tout l’empire sont préparées sur Boosts,
+uniquement si un boost est disponible et utilisable hors vacances.
+
+`BoostController` conserve la synchronisation préalable et les POST publics.
+`BoostUseService`, `ResourceBoxUseService`, les reçus, verrous, transactions et
+la promotion automatique restent inchangés. Les ouvertures reviennent à la
+page Boîtes ; les utilisations de boost à Boosts. Les anciens fragments sont
+orientés par le contrôleur de navigation, à l’ouverture et au changement de
+fragment. Les liens serveur fonctionnent sans JavaScript.
+Voir [le suivi](NAVIGATION_PAGES_DEDIEES.md) pour les contrôles et limites.

@@ -1,0 +1,49 @@
+<section id="inventory-boosts" class="panel inventory-bonuses" aria-labelledby="available-bonuses-title">
+    <h2 id="available-bonuses-title">Bonus disponibles</h2>
+    {% if boost_count == 0 %}<div class="empty-state"><h3>Aucun bonus disponible</h3><p>Les récompenses de vos missions, événements et projets de guilde apparaîtront ici.</p></div>{% endif %}
+    {% if boost_count > 0 %}
+        <article class="mission-card"><div><h3>Boost de réduction de durée</h3><p>Réduit de {{ duration_reduction_percent|number_format(2, ',', ' ') }} % le temps restant d’une opération active.</p></div><span class="badge">Quantité : {{ boost_count }}</span></article>
+    {% endif %}
+<section class="boost-information" aria-labelledby="boost-use-title">
+    <h2 id="boost-use-title">Utiliser un boost</h2>
+    {% if vacation %}<p role="status">Les accélérations sont indisponibles pendant les vacances.</p>
+    {% elseif boost_count == 0 %}<p>Aucun boost de réduction de durée disponible pour accélérer une opération.</p>
+    {% else %}
+        <p>Choisissez l’opération à accélérer. Chaque utilisation consomme un bonus.</p>
+        {% if active_queues is not empty or active_fleets is not empty %}
+        <div data-inventory-review-target="picker" hidden>
+            <label for="inventory-operation">Opération à accélérer</label>
+            <select id="inventory-operation" data-inventory-review-target="selection" data-action="change->inventory-review#choose">
+                <option value="">Choisir une opération active</option>
+                <optgroup label="Commandes">{% for row in active_queues %}<option value="queue-{{ row.item.id }}">{{ row.label }} · {{ row.item.planet.name }}</option>{% endfor %}</optgroup>
+                <optgroup label="Flottes">{% for fleet in active_fleets %}<option value="fleet-{{ fleet.id }}">Flotte n° {{ fleet.id }} · {{ fleet.status == 'returning' ? 'Retour' : 'Aller' }}</option>{% endfor %}</optgroup>
+            </select>
+        </div>
+        {% endif %}
+        {% for row in active_queues %}
+            {% set item = row.item %}
+            <article class="boost-operation" data-inventory-review-target="operation" data-operation="queue-{{ item.id }}">
+                <h3>{{ row.label }} · {{ item.planet.name }}</h3>
+                <p>{% if item.itemLevel %}Niveau {{ item.itemLevel }}{% else %}Quantité : {{ item.quantity|quantity }}{% endif %} · Fin prévue : <time datetime="{{ item.finishAt|date('c') }}">{{ item.finishAt|date('d/m/Y H:i:s', preferences.timezone) }}</time></p>
+                <form method="post" action="{{ path('app_boost_use', {type:'queue', id:item.id}) }}" data-action="submit->inventory-review#review" data-review-title="Vérifier l’accélération" data-review-copy="{{ row.label }} · {{ item.planet.name }} : utiliser un boost pour retirer {{ duration_reduction_percent|number_format(2, ',', ' ') }} % du temps restant." data-review-confirm="Utiliser un boost">
+                    <input type="hidden" name="_token" value="{{ csrf_token('boost-queue-' ~ item.id) }}">
+                    <input type="hidden" name="request_key" value="{{ request_key() }}">
+                    <button class="secondary">Utiliser un boost pour {{ row.label }}</button>
+                </form>
+            </article>
+        {% endfor %}
+        {% for fleet in active_fleets %}
+            <article class="boost-operation" data-inventory-review-target="operation" data-operation="fleet-{{ fleet.id }}">
+                <h3>Flotte n° {{ fleet.id }} · {{ {attack:'Attaque',transport:'Transport',explore:'Exploration',colonize:'Colonisation',conquer:'Conquête',spy:'Espionnage',defend:'Défense',orbit:'Mise en orbite',station:'Stationnement'}[fleet.mission]|default(fleet.mission) }}</h3>
+                <p>{{ fleet.status == 'returning' ? (fleet.destination ? fleet.destination.name : fleet.destinationSystem.name|default('Destination inconnue')) : fleet.homePlanet.name }} → {{ fleet.status == 'returning' ? (fleet.returnPlanet ? fleet.returnPlanet.name : fleet.homePlanet.name) : (fleet.destination ? fleet.destination.name : fleet.destinationSystem.name|default('Destination inconnue')) }} · {{ {traveling:'Aller',returning:'Retour',defending:'Défense',orbiting:'Orbite'}[fleet.status] }} · Échéance : <time datetime="{{ fleet.arrivalAt|date('c') }}">{{ fleet.arrivalAt|date('d/m/Y H:i:s', preferences.timezone) }}</time></p>
+                <form method="post" action="{{ path('app_boost_use', {type:'fleet', id:fleet.id}) }}" data-action="submit->inventory-review#review" data-review-title="Vérifier l’accélération" data-review-copy="Flotte n° {{ fleet.id }} : utiliser un boost pour retirer {{ duration_reduction_percent|number_format(2, ',', ' ') }} % du temps restant." data-review-confirm="Utiliser un boost">
+                    <input type="hidden" name="_token" value="{{ csrf_token('boost-fleet-' ~ fleet.id) }}">
+                    <input type="hidden" name="request_key" value="{{ request_key() }}">
+                    <button class="secondary">Utiliser un boost pour la flotte n° {{ fleet.id }}</button>
+                </form>
+            </article>
+        {% endfor %}
+        {% if active_queues is empty and active_fleets is empty %}<p>Aucune opération active à accélérer. Les commandes en attente et les occupations ne peuvent pas être accélérées.</p><div class="empty-next-actions">{% if chrome.planet %}<a class="secondary" href="{{ path('app_colony',{id:chrome.planet.id,section:'buildings'}) }}">Choisir une construction</a>{% endif %}<a class="secondary" href="{{ path('app_fleet_prepare') }}">Préparer une mission</a></div>{% endif %}
+    {% endif %}
+</section>
+</section>

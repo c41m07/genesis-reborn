@@ -1839,3 +1839,10 @@ une préparation continue et des pages autonomes pour orbites, réserves et
 compositions. Les missions sont paginées par 30 ; trois restent visibles pendant
 la préparation. Le périmètre colonie/empire, la confidentialité et les règles de
 mission ne changent pas. [Compatibilité et vérifications](NAVIGATION_PAGES_DEDIEES.md#lot-2--flottes-complexité-55).
+
+
+Le lot Inventaire conserve Boosts comme entrée sur `/boosts` et place Boîtes de
+ressources et Récompenses en attente sur des pages autonomes. La capacité commune
+reste visible dans cet espace. L’attente est présentée dans son ordre d’arrivée,
+par pages de 25 ; elle reste conservée sans limite métier. Les règles d’attribution,
+utilisation, stockage, vacances et promotion ne changent pas.
