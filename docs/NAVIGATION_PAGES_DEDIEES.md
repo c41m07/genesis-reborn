@@ -276,6 +276,14 @@ Les vérifications du vol ciblé restent bornées au joueur et à sa colonie.
 - La première CI de brouillon a réussi sur `e5f0c90`. Elle ne constitue pas
   la CI complète ; les cinq jobs quality sont obligatoires sur la dernière
   version prête à relire de la PR #77 avant toute fusion.
+- La première CI complète a validé PHP et le groupe navigateur 3, puis a signalé
+  trois tests utilisant encore l’ancien accès direct au formulaire. Les tests
+  suivent désormais Flottes → Préparer une mission et distinguent les menus
+  principal et mobile, en conservant leurs assertions métier. Reprise locale
+  réussie des neuf parcours de `colony.spec.mjs` et `espionage-report.spec.mjs`,
+  y compris l’arrivée réelle sans accélération. Les groupes restants ont été
+  interrompus par le retour en brouillon ; une nouvelle CI complète est requise.
+
 
 Aucune migration sur une base existante, installation locale de dépendance ni
 modification d’équilibrage.
