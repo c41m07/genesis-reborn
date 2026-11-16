@@ -593,3 +593,11 @@ carte et les autres vues gardent le contrôleur sans cadre ajouté. Dans ce dern
 cas, le HTML autorisé est lu hors du DOM affiché pour calculer les annonces, puis
 les événements cartographiques existants sont transmis. Les droits, lectures,
 URL et clés de réponse restent communs aux deux présentations.
+
+
+## Espaces Guildes et Diplomatie
+
+Lot 1 publié dans la [PR #75](https://github.com/c41m07/genesis-reborn/pull/75) : espaces Guildes et Diplomatie séparés, pages dédiées de membres,
+grades, gestion et création ; liens directs, anciennes adresses conservées et
+lectures adaptées à chaque page. Voir le [suivi des lots](NAVIGATION_PAGES_DEDIEES.md) pour les
+choix, vérifications et limites. CI, fusion et déploiement restent distincts.

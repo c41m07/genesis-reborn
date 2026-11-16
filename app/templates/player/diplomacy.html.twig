@@ -1,37 +1,47 @@
 {% extends 'base.html.twig' %}
-{% block title %}Diplomatie · Genesis Reborn{% endblock %}
+{% block title %}{{ pageTitle }} · Genesis Reborn{% endblock %}
 {% block body %}
 {% import 'ui/macros.html.twig' as ui %}
 {% set relation_labels={allies:'Alliés',enemies:'Ennemis',neutral:'Neutre',pending:'Proposition en attente',non_aggression:'Pacte de non-agression',defense:'Pacte de défense'} %}
-<div class="page-refinement diplomacy-page">
-<div class="page-heading"><div><h1>Diplomatie</h1><p>Votre guilde, ses membres et vos relations dans cet univers.</p></div></div>
-<nav class="alliance-tabs ui-tabs diplomacy-tabs" aria-label="Sections de diplomatie">{% for key,label in tabs %}<a href="{{ path('app_diplomacy',{tab:key}) }}"{% if tab==key %} aria-current="page" class="active"{% endif %}>{{ label }}</a>{% endfor %}</nav>
-{% if own %}<p><a class="secondary" href="{{ path('app_guild_projects') }}">Projets collectifs de ma guilde</a></p>{% endif %}
-{% if incomingPersonalCount %}<p class="panel"><a href="{{ path('app_diplomacy',{tab:'relations',_fragment:'alliance-members'}) }}">{{ incomingPersonalCount }} proposition{{ incomingPersonalCount > 1 ? 's' : '' }} personnelle{{ incomingPersonalCount > 1 ? 's' : '' }} à traiter</a></p>{% endif %}
-{% if own %}{% set pendingGuild=0 %}{% for row in guildRelations %}{% if row.relation and row.relation.proposer and row.relation.proposer.id!=own.id and (row.relation.proposal or row.status=='pending') %}{% set pendingGuild=pendingGuild+1 %}{% endif %}{% endfor %}
-{% if pendingGuild %}<p class="panel"><a href="{{ path('app_diplomacy',{tab:'diplomacy'}) }}">{{ pendingGuild }} proposition{{ pendingGuild > 1 ? 's' : '' }} de guilde reçue{{ pendingGuild > 1 ? 's' : '' }}</a></p>{% endif %}{% endif %}
+<div class="page-refinement diplomacy-page" data-page-sections="disabled">
+<div class="page-heading"><div><h1>{{ pageTitle }}</h1><p>{{ tab in ['relations','diplomacy'] ? 'Vos relations dans l’univers ' ~ membership.universe.name ~ '.' : 'Votre espace de guilde dans l’univers ' ~ membership.universe.name ~ '.' }}</p></div></div>
+{% if tab in ['relations','diplomacy'] %}
+<nav class="ui-tabs space-navigation" aria-label="Navigation de diplomatie">
+{% if own %}<a href="{{ path('app_diplomacy') }}"{% if tab=='diplomacy' %} class="active" aria-current="page"{% endif %}>Relations entre guildes</a>{% endif %}
+<a href="{{ path('app_personal_relations') }}"{% if tab=='relations' %} class="active" aria-current="page"{% endif %}>Relations entre commandants</a>
+</nav>
+{% else %}{% include 'ui/guild_navigation.html.twig' %}{% endif %}
+{% if incomingPersonalCount %}<p class="panel received-proposals"><a href="#alliance-members">{{ incomingPersonalCount }} proposition{{ incomingPersonalCount > 1 ? 's' : '' }} personnelle{{ incomingPersonalCount > 1 ? 's' : '' }} à traiter</a></p>{% endif %}
+{% if incomingGuildCount %}<p class="panel received-proposals">{{ incomingGuildCount }} proposition{{ incomingGuildCount > 1 ? 's' : '' }} de guilde reçue{{ incomingGuildCount > 1 ? 's' : '' }} à traiter</p>{% endif %}
 {% if tab=='relations' %}
 <section aria-label="Relations entre commandants">
-    <div class="relation-heading"><div><h2>Relations entre commandants</h2><p>Vos alliances et propositions en cours. Une alliance personnelle nécessite l’accord des deux commandants.</p></div>
-        <form method="get" action="{{ path('app_diplomacy') }}" class="relation-search" role="search">
-            <input type="hidden" name="tab" value="relations">
+    <div class="relation-heading"><div><h2>Alliances et rivalités</h2><p>Vos alliances et propositions en cours. Une alliance personnelle nécessite l’accord des deux commandants.</p></div>
+        <form method="get" action="{{ path('app_personal_relations') }}" class="relation-search" role="search">
             <label for="relation-player-search">Rechercher un joueur</label>
             <input id="relation-player-search" type="search" name="q" value="{{ search }}" minlength="2" maxlength="40" placeholder="Rechercher un joueur…" required>
             <button class="secondary">Rechercher</button>
         </form>
     </div>
-    {% if search %}<section class="relation-results" aria-label="Résultats de recherche"><div class="section-heading"><h3>Résultats pour « {{ search }} »</h3><a href="{{ path('app_diplomacy', {tab:'relations'}) }}">Fermer la recherche</a></div><div class="catalog-grid">
+    {% if search %}<section class="relation-results" aria-label="Résultats de recherche"><div class="section-heading"><h3>Résultats pour « {{ search }} »</h3><a href="{{ path('app_personal_relations') }}">Fermer la recherche</a></div><div class="catalog-grid">
         {% for row in searchPlayers %}{% include 'player/_relation_card.html.twig' %}{% else %}<p role="status">{{ search|length < 2 ? 'Saisissez au moins deux caractères.' : 'Aucun joueur trouvé dans cet univers.' }}</p>{% endfor %}
     </div></section>{% endif %}
     <div class="section-heading"><h3>Vos relations</h3><span class="badge">{{ players|length }}</span></div>
     <div class="catalog-grid" id="alliance-members">{% for row in players %}{% include 'player/_relation_card.html.twig' %}{% else %}<div class="panel"><h3>Aucune relation établie</h3><p>Recherchez un commandant pour lui proposer une alliance. Vos propositions et alliances apparaîtront ici.</p></div>{% endfor %}</div>
+{% if nextPersonalCursor or afterPersonalCursor %}<nav class="ui-tabs" aria-label="Pages des relations">
+{% if afterPersonalCursor %}<a href="{{ path('app_personal_relations',{q:search}) }}">Première page</a>{% endif %}
+{% if nextPersonalCursor %}<a href="{{ path('app_personal_relations',{q:search,after:nextPersonalCursor}) }}">Relations suivantes</a>{% endif %}
+</nav>{% endif %}
 </section>
 
 {% elseif not enabled %}
 <section class="panel guild-hub-hero" aria-label="Centre de guilde"><span class="guild-hub-emblem" aria-hidden="true">{{ ui.icon('diplomacy') }}</span><div><h2>{{ own ? own.name : 'Un empire se construit ensemble' }}</h2><p>Vos relations personnelles restent disponibles dans cet univers.</p></div>{% if own %}<a class="primary" href="{{ path('app_messages',{channel:'guild'}) }}">Ouvrir le canal de guilde</a>{% endif %}</section>
-<p class="panel">Les guildes sont désactivées dans cet univers. Les relations entre commandants restent accessibles dans l’onglet Relations commandants.</p>
+<p class="panel">Les guildes sont désactivées dans cet univers. Les relations entre commandants restent accessibles sur la page <a href="{{ path('app_personal_relations') }}">Relations entre commandants</a>.</p>
 {% elseif tab=='guilds' %}
-    {% if own and ownRow %}{% include 'player/_guild_hub.html.twig' %}{% else %}{% include 'player/_guild_create.html.twig' %}{% endif %}
+    {% include 'player/_guild_hub.html.twig' %}
+{% elseif tab=='create' %}
+    {% include 'player/_guild_create.html.twig' %}
+{% elseif tab=='management' and own %}
+    {% include 'player/_guild_settings.html.twig' %}
 {% elseif tab=='join' and not own %}
     {% include 'player/_guild_join.html.twig' %}
 {% elseif tab=='members' and own and ownRow %}
@@ -40,7 +50,7 @@
     {% include 'player/_guild_ranks.html.twig' %}
 {% elseif tab=='diplomacy' and own %}
 <section aria-label="Diplomatie des guildes">
-<section class="panel"><h2>Relations entre guildes</h2><p>Vos alliances, propositions et hostilités de guilde.</p>{% include 'player/_guild_search.html.twig' %}</section>
+<section class="panel"><h2>Traités et propositions</h2><p>Vos alliances, propositions et hostilités de guilde.</p>{% include 'player/_guild_search.html.twig' %}</section>
 <div class="section-heading"><h3>Relations de votre guilde</h3><span class="badge">{{ guildRelations|length }}</span></div>
 <div class="guild-relations-list">{% for row in guildRelations %}{% include 'player/_guild_diplomacy_card.html.twig' with {cardContext:'existing'} %}{% else %}<section class="panel"><h3>Aucune relation de guilde établie</h3><p>Recherchez une guilde pour consulter son équipage et établir une relation diplomatique.</p></section>{% endfor %}</div>
 </section>

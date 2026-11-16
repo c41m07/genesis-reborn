@@ -1,7 +1,7 @@
 {% set g=row.guild %}
 {% set proposal=row.relation.proposal|default(row.status=='pending' ? 'allies' : null) %}
 {% set treatyPermissions={allies:'diplomacy.alliance',non_aggression:'diplomacy.non_aggression',defense:'diplomacy.defense',neutral:'diplomacy.neutral'} %}
-<article class="panel guild-card">
+<article class="panel guild-card{{ proposal and own and row.relation.proposer.id!=own.id ? ' received-proposals' : '' }}">
     <span class="badge">{{ own ? relation_labels[row.status]|default(row.status) : 'Recrutement ouvert' }}</span>
     <h3><a class="public-profile-link" href="{{ path('app_guild_public_profile',{id:g.id}) }}">{{ g.name }}</a></h3>
     <p>Commandement : {{ g.leader.displayName }}<br>{{ row.members|length }} membre{{ row.members|length > 1 ? 's' : '' }}</p>

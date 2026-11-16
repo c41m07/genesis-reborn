@@ -1655,3 +1655,11 @@ Intégré dans `dev` par la PR #55 après CI complète réussie. La PR #56 prép
 Voir le [suivi détaillé](CADRAGE_OUTILS_STRATEGIQUES.md) et les décisions validées.
 La CI complète sur la dernière version et l’accord du propriétaire restent
 nécessaires avant fusion. Aucune migration Alpha effectuée.
+
+
+## Navigation par pages dédiées
+
+Lot 1 publié dans la [PR #75](https://github.com/c41m07/genesis-reborn/pull/75) : espaces Guildes et Diplomatie séparés, pages dédiées de membres,
+grades, gestion et création ; liens directs, anciennes adresses conservées et
+lectures adaptées à chaque page. Voir le [suivi des lots](NAVIGATION_PAGES_DEDIEES.md) pour les
+choix, vérifications et limites. CI, fusion et déploiement restent distincts.

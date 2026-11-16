@@ -8,6 +8,7 @@ une seule référence par sujet ; les anciens bilans ne décrivent pas l’état
 
 | Besoin | Référence |
 | --- | --- |
+| Suivre la navigation par pages dédiées | [Navigation et lots](NAVIGATION_PAGES_DEDIEES.md) |
 | Suivre le nettoyage progressif et reprendre le chantier | [Rework V1](REWORK_V1.md) |
 | Comprendre les règles actuelles | [REGLES](REGLES.md) |
 | Comprendre la détection des sondes et les essais Alpha | [Espionnage](REGLES.md#espionnage) |

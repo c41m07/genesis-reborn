@@ -1,6 +1,7 @@
 {% extends 'base.html.twig' %}
 {% block title %}{{ project.snapshot.name }} · Projets collectifs · Genesis Reborn{% endblock %}
 {% block body %}
+{% include 'ui/guild_navigation.html.twig' %}
 <div class="page-heading"><div><h1>{{ project.snapshot.name }}</h1><p>Projet collectif de {{ guild.name }}</p></div><a class="secondary" href="{{ path('app_guild_projects') }}">Retour aux projets</a></div>
 {% if readOnly %}<p class="panel">Pendant les vacances, vous pouvez consulter ce projet mais pas donner de ressources.</p>{% endif %}
 <div class="guild-project-detail guild-project">
