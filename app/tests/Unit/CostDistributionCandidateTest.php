@@ -75,12 +75,65 @@ final class CostDistributionCandidateTest extends TestCase
         }
     }
 
-    public function testSuperiorCannotBeSelectedForRedistribution(): void
+    public function testSuperiorNeedsAnExplicitRedistributionProfile(): void
     {
         $catalog = new GameCatalog(dirname(__DIR__, 2) . '/config/game');
         $universe = new Universe();
         $this->expectException(\InvalidArgumentException::class);
         (new CostDistributionCandidate($catalog))->compare($universe, ['superior']);
+    }
+
+
+    public function testExplicitThreeRankProfileConservesEveryBudgetIncludingOddSuperiorValues(): void
+    {
+        $catalog = new GameCatalog(dirname(__DIR__, 2) . '/config/game');
+        $universe = new Universe();
+        $universe->slug = 'proposed-costs-x1';
+        $universe->name = 'Grille proposée';
+        $before = $catalog->forUniverse($universe);
+        $profiles = [
+            'basic' => ['metal'=>40, 'nano'=>60],
+            'intermediate' => ['metal'=>30, 'nano'=>50, 'antimatter'=>20],
+            'superior' => ['metal'=>25, 'nano'=>35, 'antimatter'=>30, 'hydrogen'=>10],
+        ];
+        $report = (new CostDistributionCandidate($catalog))->compare($universe, GameCatalog::TIERS, $profiles);
+        self::assertCount(156, $report['profiles']);
+        foreach ($report['profiles'] as $row) {
+            self::assertSame($row['value'], CostDistributionCandidate::value($row['candidate']));
+            foreach ($row['candidate'] as $amount) {
+                self::assertIsInt($amount);
+                self::assertGreaterThanOrEqual(0, $amount);
+            }
+            if ($row['tier'] !== 'superior') {
+                self::assertSame(0, $row['candidate']['hydrogen']);
+            }
+        }
+        $civil = $report['overrides']['ships']['hydrogen_collector']['cost_profiles'];
+        self::assertSame(['metal'=>320,'nano'=>240,'antimatter'=>0,'hydrogen'=>0], $civil['basic']);
+        self::assertSame(['metal'=>300,'nano'=>250,'antimatter'=>50,'hydrogen'=>0], $civil['intermediate']);
+        $trap = $report['overrides']['buildings']['mine_antimatter']['cost_profiles']['superior'];
+        self::assertSame(1875, CostDistributionCandidate::value($trap));
+        self::assertGreaterThan(0, $trap['hydrogen']);
+        self::assertSame($before, $catalog->forUniverse($universe));
+        self::assertSame([], $universe->gameSettings);
+    }
+
+    public function testIncompletePercentagesAreRejectedInsteadOfBeingNormalized(): void
+    {
+        $catalog = new GameCatalog(dirname(__DIR__, 2) . '/config/game');
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Chaque profil candidat doit totaliser 100 %.');
+        (new CostDistributionCandidate($catalog))->compare(new Universe(), ['basic'], ['basic'=>['metal'=>40,'nano'=>50]]);
+    }
+
+    public function testOddSuperiorBudgetWithoutHydrogenIsRejectedInsteadOfChangingItsValue(): void
+    {
+        $catalog = new GameCatalog(dirname(__DIR__, 2) . '/config/game');
+        $universe = new Universe();
+        $universe->slug = 'odd-superior';
+        $universe->name = 'Budget impair';
+        $this->expectException(\DomainException::class);
+        (new CostDistributionCandidate($catalog))->compare($universe, ['superior'], ['superior'=>['metal'=>30,'nano'=>40,'antimatter'=>30]]);
     }
 
 }

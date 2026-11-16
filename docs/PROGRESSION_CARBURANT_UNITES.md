@@ -385,3 +385,40 @@ Les vérifications de bout en bout confirment aussi : colonies B identiques au c
 avec I seul, premier accès I inchangé avec I seul, reconstruction des défenses B et
 formation B identiques avec I seul, résultats physiques des combats et devis de
 navigation strictement identiques entre variantes (mesures de temps machine exclues).
+
+### Nouvelle grille proposée — complexité réévaluée 4/5
+
+Publication du complément précédent refusée par l’utilisateur ; conserver tout en local.
+La dernière grille demandée est B40/60, I30/50/20, S25/35/30/10 (M/N/A/H).
+Comparer aussi B50/50 avec les mêmes nouveaux I/S, et isoler chaque rang proposé.
+Extension limitée au lecteur de profils d’étude et à l’arrondi conjoint en mémoire.
+Le budget impair du piège Supérieur exige une ressource de poids 1 pour être conservé ;
+la part H10 demandée permet cette conservation exacte. Refuser les pourcentages ne
+sommant pas à 100 et les combinaisons mathématiquement incompatibles, sans normalisation.
+Risques : changement implicite des budgets, sélection involontaire d’autres rangs,
+pression nano/antimatière/hydrogène et financement non monotone.
+Aucun profil applicatif, prix payé, donnée persistée ou déploiement modifié.
+
+### Résultats de la nouvelle proposition
+
+[Rapport](SIMULATIONS_GRILLE_PROPOSEE.md), [243 parcours distincts](RESULTATS_GRILLE_PROPOSEE.csv)
+et profils JSON explicites pour la [proposition B40](PROFIL_COUTS_PROPOSE.json) et
+sa [comparaison B50](PROFIL_COUTS_PROPOSE_B50.json). Cinq nouvelles simulations
+complètes exécutent 270 parcours, contrôles courants répétés inclus ; tous terminent.
+Les contrôles courants sont identiques aux anciens. Les bilans de ressources sont
+conservés avec un écart maximal inférieur à 0,000000105 unité. Les résultats physiques
+et les devis de navigation du témoin sont inchangés. Les profils de base conservent
+exactement V, y compris le piège Supérieur de valeur impaire 1 875 avec H explicite.
+
+Contrôles : 25 tests PHP / 4 445 assertions réussis ; après présentation finale,
+7 tests d’allocation / 4 290 assertions réussis. Syntaxe des cinq fichiers PHP,
+conteneur Symfony, profils JSON, liens et diff vérifiés. Le profil par défaut de
+l’ancien outil reproduit exactement les 156 profils et les 912 devis échantillonnés.
+Le chargement d’une grille ne normalise pas les pourcentages : total 100 obligatoire.
+Aucune compilation, suite navigateur ou CI complète nouvelle pour cette extension locale.
+Les protections nécessaires avant une éventuelle publication/fusion restent celles
+du dépôt ; le refus de publication s’applique et aucune nouvelle demande n’est envoyée.
+
+Les résultats montrent un compromis : la nouvelle grille complète ralentit plusieurs
+objectifs ; I30/50/20 seul accélère nettement l’économie mais ralentit sa grande flotte.
+Les recommandations restent des propositions de décision, sans activation de prix.

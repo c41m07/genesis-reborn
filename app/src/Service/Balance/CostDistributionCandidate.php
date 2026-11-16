@@ -8,6 +8,10 @@ use App\Service\Catalog\GameCatalog;
 final class CostDistributionCandidate
 {
     public const DEFAULT_TIERS = ['basic', 'intermediate'];
+    public const DEFAULT_PROFILES = [
+        'basic' => ['metal' => 50, 'nano' => 50, 'antimatter' => 0, 'hydrogen' => 0],
+        'intermediate' => ['metal' => 40, 'nano' => 40, 'antimatter' => 20, 'hydrogen' => 0],
+    ];
     public const WEIGHTS = ['metal' => 2, 'nano' => 4, 'antimatter' => 8, 'hydrogen' => 1];
     public function __construct(private GameCatalog $catalog)
     {
@@ -22,13 +26,20 @@ final class CostDistributionCandidate
         return $value;
     }
     /**
-     * @param list<'basic'|'intermediate'> $tiers Rangs modifiés uniquement dans l'univers temporaire.
+     * @param list<'basic'|'intermediate'|'superior'> $tiers Rangs modifiés uniquement dans l'univers temporaire.
+     * @param array<string,array<string,int|float>> $profiles Parts de valeur en pourcentages, total 100 par rang.
      * @return array{overrides:array,profiles:list<array>,maximum_share_error_points:float}
      */
-    public function compare(Universe $universe, array $tiers = self::DEFAULT_TIERS): array
+    public function compare(Universe $universe, array $tiers = self::DEFAULT_TIERS, array $profiles = []): array
     {
-        if ($tiers === [] || array_diff($tiers, self::DEFAULT_TIERS) !== []) {
-            throw new \InvalidArgumentException('Les rangs candidats autorisés sont basic et intermediate.');
+        if ($tiers === [] || array_diff($tiers, GameCatalog::TIERS) !== []) {
+            throw new \InvalidArgumentException('Rang candidat inconnu.');
+        }
+        $shares = $this->shares($profiles);
+        foreach ($tiers as $tier) {
+            if (!isset($shares[$tier])) {
+                throw new \InvalidArgumentException('Le rang ' . $tier . ' nécessite un profil explicite.');
+            }
         }
         $overrides = [];
         $rows = [];
@@ -40,12 +51,12 @@ final class CostDistributionCandidate
                     $budget = self::value($current);
                     // L'autre rang conserve son profil effectif, sans nouvelle répartition ni arrondi.
                     $selected = in_array($tier, $tiers, true);
-                    $candidate = $selected ? $this->distribute($budget, $tier) : $current;
+                    $candidate = $selected ? $this->distribute($budget, $shares[$tier]) : $current;
                     if (self::value($candidate) !== $budget) {
                         throw new \LogicException('Le budget du profil a changé.');
                     }
                     $overrides[$group][$slug]['cost_profiles'][$tier] = $candidate;
-                    $target = $tier === 'basic' ? ['metal' => 0.5, 'nano' => 0.5] : ['metal' => 0.4, 'nano' => 0.4, 'antimatter' => 0.2];
+                    $target = $shares[$tier] ?? [];
                     $error = 0.0;
                     if ($selected && $budget > 0) {
                         foreach ($target as $resource => $share) {
@@ -68,35 +79,77 @@ final class CostDistributionCandidate
         return ['overrides' => $overrides, 'profiles' => $rows, 'maximum_share_error_points' => $maxError];
     }
 
-    private function distribute(int $budget, string $tier): array
+    /** @return array<string,array<string,float>> */
+    private function shares(array $profiles): array
     {
-        if ($budget < 0 || $budget % 2 !== 0) {
-            throw new \DomainException('Budget incompatible avec les ressources du candidat.');
+        $result = [];
+        foreach (array_replace(self::DEFAULT_PROFILES, $profiles) as $tier => $percentages) {
+            if (!in_array($tier, GameCatalog::TIERS, true) || !is_array($percentages)
+                || array_diff(array_keys($percentages), array_keys(self::WEIGHTS)) !== []) {
+                throw new \InvalidArgumentException('Profil de ressources candidat invalide.');
+            }
+            foreach ($percentages as $percent) {
+                if ((!is_int($percent) && !is_float($percent)) || !is_finite((float) $percent) || $percent < 0 || $percent > 100) {
+                    throw new \InvalidArgumentException('Pourcentage candidat invalide.');
+                }
+            }
+            // Ne pas normaliser silencieusement une grille incomplète ou dont la somme dépasse 100.
+            if (abs(array_sum($percentages) - 100) > 1e-7) {
+                throw new \InvalidArgumentException('Chaque profil candidat doit totaliser 100 %.');
+            }
+            foreach (self::WEIGHTS as $resource => $weight) {
+                $result[$tier][$resource] = (float) ($percentages[$resource] ?? 0) / 100;
+            }
         }
-        $shares = $tier === 'basic' ? ['metal' => 0.5, 'nano' => 0.5, 'antimatter' => 0] : ['metal' => 0.4, 'nano' => 0.4, 'antimatter' => 0.2];
-        $nanoTarget = $budget * $shares['nano'] / 4;
-        $antiTarget = $budget * $shares['antimatter'] / 8;
+        return $result;
+    }
+
+    /** @param array<string,float> $shares */
+    private function distribute(int $budget, array $shares): array
+    {
+        if ($budget < 0 || ($shares['hydrogen'] === 0.0 && $budget % 2 !== 0)) {
+            throw new \DomainException('Budget incompatible sans hydrogène : une valeur impaire exige une ressource de poids 1.');
+        }
+        $targets = [];
+        foreach (self::WEIGHTS as $resource => $weight) {
+            $targets[$resource] = $budget * $shares[$resource] / $weight;
+        }
+        $antiValues = $shares['antimatter'] > 0
+            ? range(max(0, (int) floor($targets['antimatter']) - 1), (int) ceil($targets['antimatter']) + 1) : [0];
+        $nanoValues = $shares['nano'] > 0
+            ? range(max(0, (int) floor($targets['nano']) - 2), (int) ceil($targets['nano']) + 2) : [0];
         $best = null;
         $bestError = INF;
-        // Arrondis conjoints au voisinage des parts : le métal absorbe le reliquat pair.
-        // En cas d'égalité, l'ordre fixe des candidats rend la mesure reproductible.
-        for ($antimatter = max(0, (int) floor($antiTarget) - 1); $antimatter <= (int) ceil($antiTarget) + 1; $antimatter++) {
-            if ($tier === 'basic' && $antimatter !== 0) {
-                continue;
-            }
-            for ($nano = max(0, (int) floor($nanoTarget) - 2); $nano <= (int) ceil($nanoTarget) + 2; $nano++) {
+        // Sans hydrogène, conserver l'arrondi conjoint historique : le métal absorbe le reliquat pair.
+        // Avec hydrogène, explorer aussi les arrondis du métal et garder le reliquat entier en H.
+        // Cette ressource de poids 1 permet de conserver les budgets impairs du Supérieur.
+        foreach ($antiValues as $antimatter) {
+            foreach ($nanoValues as $nano) {
                 $remaining = $budget - 8 * $antimatter - 4 * $nano;
                 if ($remaining < 0) {
                     continue;
                 }
-                $profile = ['metal' => intdiv($remaining, 2), 'nano' => $nano, 'antimatter' => $antimatter, 'hydrogen' => 0];
-                $error = 0.0;
-                foreach ($shares as $resource => $share) {
-                    $error += ($profile[$resource] * self::WEIGHTS[$resource] - $budget * $share) ** 2;
+                if ($shares['hydrogen'] > 0) {
+                    $metalValues = $shares['metal'] > 0
+                        ? range(max(0, (int) floor($targets['metal']) - 2), (int) ceil($targets['metal']) + 2) : [0];
+                } else {
+                    $metalValues = [intdiv($remaining, 2)];
                 }
-                if ($error < $bestError) {
-                    $best = $profile;
-                    $bestError = $error;
+                foreach ($metalValues as $metal) {
+                    $hydrogen = $remaining - 2 * $metal;
+                    if ($hydrogen < 0) {
+                        continue;
+                    }
+                    $profile = ['metal' => $metal, 'nano' => $nano, 'antimatter' => $antimatter, 'hydrogen' => $hydrogen];
+                    $error = 0.0;
+                    foreach ($shares as $resource => $share) {
+                        $error += ($profile[$resource] * self::WEIGHTS[$resource] - $budget * $share) ** 2;
+                    }
+                    // L'ordre des valeurs départage les égalités de façon reproductible.
+                    if ($error < $bestError) {
+                        $best = $profile;
+                        $bestError = $error;
+                    }
                 }
             }
         }

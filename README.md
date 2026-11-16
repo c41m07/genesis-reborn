@@ -22,6 +22,9 @@ présente les 54 parcours, les combats et leurs limites. B50/50 et I40/40/20
 restent une variante d’étude en mémoire, sans activation.
 L’option `--candidate-tier=basic` ou `--candidate-tier=intermediate` isole un rang ;
 le [comparatif par rang](docs/SIMULATIONS_COUTS_PAR_RANG.md) présente les quatre variantes.
+`--candidate-profile=../docs/PROFIL_COUTS_PROPOSE.json` charge les pourcentages
+explicites d’une étude ; la [nouvelle grille proposée](docs/SIMULATIONS_GRILLE_PROPOSEE.md)
+compare aussi le Basique 40/60 au 50/50 avec les mêmes Intermédiaire et Supérieur.
 
 Genesis Reborn est un jeu de stratégie spatiale multijoueur par navigateur. Chaque joueur développe ses colonies, organise sa production et ses recherches, explore la galaxie et conduit des opérations de flotte dans des univers indépendants. L’Alpha sert aussi à observer la progression et les retours des joueurs avant de futures décisions d’équilibrage.
 

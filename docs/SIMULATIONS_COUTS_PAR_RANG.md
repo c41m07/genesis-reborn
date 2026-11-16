@@ -1,6 +1,8 @@
 # Comparaison séparée des coûts Basiques et Intermédiaires
 
 Mesures du 16 novembre 2026, outil issu de dev `4bbb0cf`, sans activation.
+Le [complément sur la nouvelle grille](SIMULATIONS_GRILLE_PROPOSEE.md) compare ensuite
+B40/60, I30/50/20 et S25/35/30/10, ainsi que B50 avec les mêmes nouveaux I/S.
 Cette étude complète le [rapport conjoint](SIMULATIONS_PROGRESSION_ECONOMIE.md)
 en isolant les deux changements de prix. Ses stratégies, kits initiaux, files,
 stockages adaptatifs, production et limites restent les mêmes.

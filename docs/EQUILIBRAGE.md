@@ -1,5 +1,16 @@
 # Réglages et études d’équilibrage
 
+## Nouvelle proposition B/I/S — 16 novembre 2026
+
+L’[étude complémentaire](SIMULATIONS_GRILLE_PROPOSEE.md) mesure B40/60, I30/50/20 et
+S25/35/30/10, puis B50 avec les mêmes nouveaux I/S. La proposition complète augmente
+les attentes nano puis antimatière et ralentit plusieurs objectifs, avec un gain sur
+la reconstruction des défenses B. I30/50/20 seul présente un compromis distinct :
+économie plus rapide et grande formation I plus lente. Les profils de base conservent
+exactement leur valeur, y compris le budget impair du piège S grâce à H10.
+La recommandation de compromis B actuel / I40/40/20 / S actuel reste distincte d’une
+option privilégiant l’économie avec I30/50/20. Aucun réglage n’est activé ni publié.
+
 ## Comparaison séparée des prix — 16 novembre 2026
 
 Le [complément par rang](SIMULATIONS_COUTS_PAR_RANG.md) compare les prix courants,

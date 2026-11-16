@@ -14,6 +14,9 @@ une éventuelle activation ; aucun profil courant n’est remplacé par l’étu
 Le [complément séparant les rangs](SIMULATIONS_COUTS_PAR_RANG.md) recommande de
 conserver le Basique courant et de privilégier le candidat Intermédiaire pour
 validation. Cette recommandation ne change pas la grille appliquée ci-dessous.
+La [nouvelle proposition trois rangs](SIMULATIONS_GRILLE_PROPOSEE.md) reste également
+inactive : I30/50/20 favorise le développement mais ralentit les grandes formations I ;
+S25/35/30/10 augmente surtout la pression d’antimatière dans la formation S testée.
 
 Décision utilisateur du 5 novembre 2026 : appliquer la progression des ressources à l’ensemble des bâtiments, du chantier spatial (vaisseaux), des défenses et des recherches. Le chantier d’assemblage lui-même fait partie des bâtiments concernés. Les boosts et les réglages d’univers ne font pas partie de cette modification.
 

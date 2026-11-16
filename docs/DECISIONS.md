@@ -236,6 +236,18 @@ L’utilisateur valide la progression T1 métal/nano, T2 ajout d’antimatière,
 L’hydrogène de construction/recherche est une dépense industrielle, distincte du carburant réservé au départ des missions et des consommations des usines. Les coûts enregistrés des commandes déjà payées restent conservés. Les surcharges d’univers sont préservées champ par champ. L’étude et les vérifications de démarrage, progression et conservation sont consignées dans [COUTS.md](COUTS.md). Aucun prix d’asset premium ni réglage d’univers n’est modifié par cette décision.
 
 
+## Nouvelle grille proposée — mesures du 16 novembre 2026, sans activation
+
+La dernière proposition utilisateur à calculer est B40/60, I30/50/20 et
+S25/35/30/10 en parts de valeur M/N/A/H. Les [mesures locales](SIMULATIONS_GRILLE_PROPOSEE.md)
+comparent chaque rang isolé, l’ensemble, et B50 avec les mêmes nouveaux I/S.
+La grille complète ralentit le parcours économique avec civils de 9,66 % et les grandes
+formations I/S de 4,62 % / 11,05 %. I30/50/20 seul accélère l’économie de 15 à 16 %,
+mais sa formation I est plus lente que l’actuelle et que I40/40/20. Le compromis
+économie/armée reste une décision produit ; aucun changement de grille n’est validé
+pour activation. L’étude et son outil restent locaux après refus de publication.
+Les profils JSON de docs sont des entrées explicites de commande, jamais des prix applicatifs.
+
 ## Redistribution par rang — complément du 16 novembre 2026, décision en attente
 
 À la demande de l’utilisateur, les [mesures séparées](SIMULATIONS_COUTS_PAR_RANG.md)
