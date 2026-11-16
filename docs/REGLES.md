@@ -1,5 +1,20 @@
 # Synthèse de conception
 
+## Répartition des prix retenue — 16 novembre 2026
+
+Les 156 profils par défaut utilisent les parts de valeur M/N/A/H suivantes :
+Basique 40/60/0/0, Intermédiaire 30/50/20/0 et Supérieur 25/35/30/10.
+La valeur est M×2 + N×4 + A×8 + H ; il ne s’agit pas de quantités brutes ni d’un marché.
+Les quantités sont entières et conservent le budget de base propre à chaque profil,
+y compris ceux des défenses. Les courbes et arrondis après croissance/remises restent
+inchangés, comme les durées et la taxe électrique. Les nouveaux prix concernent les
+nouvelles commandes ; les coûts déjà payés restent la référence des annulations et
+résolutions. Les réglages personnalisés d’univers gardent leur priorité.
+La formule de points reste fondée sur les quantités brutes des prix courants,
+sans pondération M/N/A/H : leur redistribution peut donc changer les points au
+recalcul, ainsi que les protections qui en dépendent. Les seuils et règles de
+protection ne sont pas modifiés. [Profils détaillés et limites des arrondis](COUTS.md).
+
 ## Unités économiques — décision des 15 et 16 novembre 2026
 
 Les deux familles de vaisseaux civils sont détaillées dans
@@ -312,14 +327,20 @@ objet déjà gagné et interrompt aussi l’annonce qui l’accompagne.
 Le classement des guildes additionne les points actuels de bâtiments, recherches et flotte de leurs membres. Le total détermine le rang. La médiane des scores individuels complète le total : pour un effectif pair, elle est la moyenne des deux scores centraux. Une guilde sans membre compte zéro point et une médiane de zéro. Le classement joueur propose les cinq catégories décrites dans « Classements quotidiens » ; les points totaux restent sélectionnés par défaut.
 
 
-## Répartition des coûts des vaisseaux — 5 novembre 2026
+## Historique : répartition des vaisseaux du 5 novembre 2026
+
+Cette étape est remplacée par la grille commune retenue le 16 novembre, présentée
+en tête de ce document. Les paragraphes suivants décrivent uniquement cette étape historique.
 
 Les 14 classes utilisent les parts de valeur économique suivantes : T1 60 % métal / 40 % nano ; T2 45 % métal / 45 % nano / 10 % antimatière ; T3 30 % métal / 50 % nano / 20 % antimatière. Le calcul pondère M×2, N×4, A×8 et H×1. Ces pourcentages ne représentent pas les quantités brutes. Les arrondis des trois ressources sont répartis pour conserver exactement la valeur de chaque profil de rang avant recherche ; les profils réels font foi.
 
 Le carburant des missions est séparé des coûts de construction, qui n’ajoutent pas d’hydrogène. Les recherches de réduction des coûts s’appliquent ensuite avec leurs arrondis par ressource. Les nouvelles commandes utilisent les nouveaux prix ; les coûts déjà payés restent enregistrés. Les profils, budgets conservés et limites sont détaillés dans [SHIP_COSTS_2026-11-05.md](COUTS.md).
 
 
-## Grille commune des prix — 5 novembre 2026
+## Historique : grille commune des prix du 5 novembre 2026
+
+Les parts ci-dessous sont remplacées par la décision du 16 novembre ; les garanties
+de conservation des paiements et de priorité des surcharges restent applicables.
 
 Cette grille remplace les anciennes répartitions des ressources pour tous les bâtiments, vaisseaux, défenses et recherches : **T1 M60/N40 ; T2 M45/N45/A10 ; T3 M30/N45/A20/H5**, en parts de valeur économique, avec M×2, N×4, A×8 et H×1. Les quantités sont entières, et la valeur réelle de chaque profil de rang de base est conservée. Les prix réels aux niveaux suivants ou après recherche suivent les mêmes courbes et arrondis par ressource qu’auparavant ; de petits écarts de valeur dus à ces arrondis sont possibles.
 

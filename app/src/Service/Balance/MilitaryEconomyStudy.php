@@ -15,7 +15,16 @@ final class MilitaryEconomyStudy
     {
     }
 
-    public function run(?array $checkpoint = null, ?callable $progress = null): array
+    /**
+     * @param list<'basic'|'intermediate'|'superior'> $candidateTiers Rangs de la seule variante en mémoire.
+     * @param array<string,array<string,int|float>> $profiles Pourcentages explicites facultatifs par rang.
+     */
+    public function run(
+        ?array $checkpoint = null,
+        ?callable $progress = null,
+        array $candidateTiers = CostDistributionCandidate::DEFAULT_TIERS,
+        array $profiles = [],
+    ): array
     {
         $reference = $this->progression->universe();
         $checkpoint ??= $this->funding->run($reference, $this->progression->mixedGoals())['checkpoint'];
@@ -50,7 +59,7 @@ final class MilitaryEconomyStudy
         $result['engine_volume_check'] = $this->volumeLimit($reference, $checkpoint);
         $result['equal_budget'] = $this->equalBudget($reference, $checkpoint);
         foreach ([false, true] as $candidate) {
-            $universe = $this->progression->universe($candidate);
+            $universe = $this->progression->universe($candidate, $candidateTiers, $profiles);
             $variant = $candidate ? 'candidate' : 'current';
             $initial = $checkpoint;
             $initial['units'] = array_intersect_key($checkpoint['units'], ['hydrogen_collector' => true, 'solar_satellite' => true]);

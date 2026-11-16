@@ -13,22 +13,37 @@ final class ProgressionEconomyStudy
     {
     }
 
-    public function universe(bool $candidate = false): Universe
+    /**
+     * @param list<'basic'|'intermediate'|'superior'> $candidateTiers Rangs de la seule variante en mémoire.
+     * @param array<string,array<string,int|float>> $profiles Pourcentages explicites facultatifs par rang.
+     */
+    public function universe(
+        bool $candidate = false,
+        array $candidateTiers = CostDistributionCandidate::DEFAULT_TIERS,
+        array $profiles = [],
+    ): Universe
     {
         $universe = new Universe();
         $universe->slug = 'progression-economy-x1';
         $universe->name = 'Étude de progression ×1';
         if ($candidate) {
-            $universe->gameSettings['catalog_overrides'] = $this->candidate->compare($universe)['overrides'];
+            $universe->gameSettings['catalog_overrides'] = $this->candidate->compare($universe, $candidateTiers, $profiles)['overrides'];
         }
         return $universe;
     }
-    /** @return array<string,mixed> */
-    public function costs(): array
+    /**
+     * @param list<'basic'|'intermediate'|'superior'> $candidateTiers
+     * @param array<string,array<string,int|float>> $profiles
+     * @return array<string,mixed>
+     */
+    public function costs(
+        array $candidateTiers = CostDistributionCandidate::DEFAULT_TIERS,
+        array $profiles = [],
+    ): array
     {
         $reference = $this->universe();
-        $comparison = $this->candidate->compare($reference);
-        $variant = $this->universe(true);
+        $comparison = $this->candidate->compare($reference, $candidateTiers, $profiles);
+        $variant = $this->universe(true, $candidateTiers, $profiles);
         $currentConfig = $this->catalog->forUniverse($reference);
         $variantConfig = $this->catalog->forUniverse($variant);
         $maxDifference = 0;
@@ -72,11 +87,20 @@ final class ProgressionEconomyStudy
         return $comparison + ['effective_quotes_compared' => $quotes, 'maximum_rounded_value_difference' => $maxDifference, 'worst_rounded_quote' => $worst];
     }
 
-    public function economy(?callable $progress = null, bool $trace = false): array
+    /**
+     * @param list<'basic'|'intermediate'|'superior'> $candidateTiers Rangs de la seule variante en mémoire.
+     * @param array<string,array<string,int|float>> $profiles Pourcentages explicites facultatifs par rang.
+     */
+    public function economy(
+        ?callable $progress = null,
+        bool $trace = false,
+        array $candidateTiers = CostDistributionCandidate::DEFAULT_TIERS,
+        array $profiles = [],
+    ): array
     {
         $cases = [];
         foreach ([false, true] as $variant) {
-            $universe = $this->universe($variant);
+            $universe = $this->universe($variant, $candidateTiers, $profiles);
             $name = $variant ? 'candidate' : 'current';
             foreach ([
                 'economy_without_civil',

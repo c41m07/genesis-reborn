@@ -36,7 +36,7 @@ final class GameRulesTest extends TestCase
         self::assertNotEmpty($checker->check(['ships'=>['fighter']],[],[]));
         self::assertNotEmpty($checker->check(['ships'=>['fighter']],['shipyard'=>['intermediate'=>1]],[]));
         self::assertSame([], $checker->check(['ships'=>['fighter']],['shipyard'=>['basic'=>1]],[]));
-        self::assertSame(['metal'=>5400,'nano'=>1800,'antimatter'=>0,'hydrogen'=>0],$c->costs($c->get('ships','fighter'),1,3));
+        self::assertSame(['metal'=>3600,'nano'=>2700,'antimatter'=>0,'hydrogen'=>0],$c->costs($c->get('ships','fighter'),1,3));
     }
     public function testCatalogueUnlockRequirementsForBuildingsAndTechnologies(): void
     {

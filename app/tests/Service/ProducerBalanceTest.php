@@ -14,13 +14,14 @@ use Doctrine\ORM\{EntityManagerInterface,EntityRepository};
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Clock\MockClock;
 
+/** Rejoue les productions du 9 novembre avec leurs prix ; la nouvelle grille a ses tests dédiés. */
 final class ProducerBalanceTest extends TestCase
 {
     private GameCatalog $catalog;
     private ResourceService $resources;
     protected function setUp():void
     {
-        $this->catalog=new GameCatalog(dirname(__DIR__,2).'/config/game');
+        $this->catalog=\App\Tests\Support\ResourceCostReference::historicalCatalog();
         $repository=$this->createStub(EntityRepository::class);$repository->method('findBy')->willReturn([]);
         $em=$this->createStub(EntityManagerInterface::class);$em->method('getRepository')->willReturn($repository);
         $repo=new GameRepository($em);$manager=new GameManager($em);$clock=new MockClock('2026-11-09T12:00:00Z');

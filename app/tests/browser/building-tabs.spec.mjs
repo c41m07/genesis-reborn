@@ -31,8 +31,8 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     const path = new URL(page.url()).pathname, planet = Number(path.split('/').pop());
     prepareOwnedColony(process.env.BROWSER_ROUTER, email, { stock: 200000, showLockedItems: true });
     const sql = query => runIsolatedSql(process.env.BROWSER_ROUTER, query);
-    // Le niveau 200 conserve un prix en millions malgré la baisse du coût de la centrale.
-    sql(`INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'power_plant','basic',200),(${planet},'lab','basic',5)`);
+    // Le niveau 250 garde un prix en millions avec la répartition validée des coûts.
+    sql(`INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'power_plant','basic',250),(${planet},'lab','basic',5)`);
     sql(`INSERT INTO player_technology (player_universe_id,slug,tier,level) SELECT owner_id,'engineering_foundations','basic',5 FROM planet WHERE id=${planet}`);
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto(`${path}?section=buildings`);
@@ -43,11 +43,11 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(page.locator('.building-card')).toHaveCount(13);
     await expect(family.getByRole('tab')).toHaveCount(3);
     await expect(tab('basic')).toHaveAttribute('aria-selected', 'true');
-    await expect(tab('basic').locator('.building-rank-level')).toHaveText('200');
+    await expect(tab('basic').locator('.building-rank-level')).toHaveText('250');
     await expect(tab('basic').locator('.building-rank-up')).toHaveCount(0);
     await expect(tab('basic')).toHaveAccessibleDescription(/Ressources insuffisantes/);
     await expect(family.locator('.card-stock-badge, .tier-label')).toHaveCount(0);
-    await expect(panel('basic').locator('.costs')).toContainText('1,12 M');
+    await expect(panel('basic').locator('.costs')).toContainText('1,23 M');
     await expect(panel('basic').locator('.costs > span').first()).toHaveAttribute('aria-label', /Métal : [\d ]+/);
     await expect(panel('basic').getByRole('button',{name:/^Manque [\d ]+ Métal/})).toBeDisabled();
     await expect(panel('basic').locator('.catalog-card-art img')).toHaveCSS('filter','none');
@@ -58,7 +58,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(panel('intermediate').locator('img')).toHaveAttribute('src', /power_plant__intermediate.webp$/);
     await expect(panel('intermediate').locator('.catalog-card-heading > h3')).toHaveText('Complexe énergétique à antimatière');
     await expect(panel('intermediate').locator('form [name="tier"]')).toHaveValue('intermediate');
-    await expect(panel('intermediate').locator('.costs')).toContainText('1 350');
+    await expect(panel('intermediate').locator('.costs > span').first()).toContainText('900');
     await page.keyboard.press('ArrowRight');
     await expect(tab('superior')).toBeFocused();
     await expect(panel('superior')).toBeVisible();

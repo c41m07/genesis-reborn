@@ -1,5 +1,29 @@
 # Décisions et ambiguïtés — 21 octobre 2026
 
+## Grille de coûts retenue — décision explicite du 16 novembre 2026
+
+L’utilisateur retient B40/60, I30/50/20 et S25/35/30/10 en parts de valeur
+métal/nano/antimatière/hydrogène après lecture des simulations. Cette décision
+remplace les recommandations et statuts « candidat non activé » des études précédentes.
+Les [tableaux courants](COUTS.md) couvrent les 52 familles et 156 profils, civils inclus.
+Les budgets réels de base sont exactement conservés, sans nouveau facteur de rang.
+
+Les courbes, réductions, deux étapes d’arrondi par ressource, durées, taxe E, bonus,
+productions et statistiques restent conservés. Les petits écarts de devis après
+croissance/remises restent possibles ; aucune compensation ou règle d’arrondi
+supplémentaire n’est ajoutée. Les commandes déjà payées gardent leurs valeurs.
+Les surcharges d’univers ne sont pas effacées ni requalifiées automatiquement.
+La formule de points n’est pas modifiée : elle additionne les ressources brutes des
+prix courants. La redistribution peut donc faire évoluer les points des possessions
+existantes et les protections liées aux points lors des nouveaux calculs. Les snapshots
+quotidiens déjà établis restent figés jusqu’à l’actualisation normale ; aucune reprise
+des classements ou des seuils n’est ajoutée.
+
+Les effets observés sont acceptés comme un choix d’essai : plus de nano, puis davantage
+d’antimatière et d’hydrogène au Supérieur. Les délais simulés ne sont pas une garantie
+pour tous les joueurs. L’intégration, la publication et la mise en ligne restent
+suivies séparément dans le [suivi de mission](PROGRESSION_CARBURANT_UNITES.md).
+
 ## Comptes — décision du 6 novembre 2026
 
 Le propriétaire demande un mail de bienvenue et une vérification d’adresse avant l’accès pour les nouveaux comptes. Les comptes déjà présents conservent leur accès lors de la migration. Le parcours, la configuration et les limites sont décrits dans [ACCOUNT_EMAIL.md](ARCHITECTURE.md).
@@ -235,6 +259,29 @@ L’utilisateur valide la progression T1 métal/nano, T2 ajout d’antimatière,
 
 L’hydrogène de construction/recherche est une dépense industrielle, distincte du carburant réservé au départ des missions et des consommations des usines. Les coûts enregistrés des commandes déjà payées restent conservés. Les surcharges d’univers sont préservées champ par champ. L’étude et les vérifications de démarrage, progression et conservation sont consignées dans [COUTS.md](COUTS.md). Aucun prix d’asset premium ni réglage d’univers n’est modifié par cette décision.
 
+
+## Nouvelle grille proposée — mesures du 16 novembre 2026, sans activation
+
+La dernière proposition utilisateur à calculer est B40/60, I30/50/20 et
+S25/35/30/10 en parts de valeur M/N/A/H. Les [mesures locales](SIMULATIONS_GRILLE_PROPOSEE.md)
+comparent chaque rang isolé, l’ensemble, et B50 avec les mêmes nouveaux I/S.
+La grille complète ralentit le parcours économique avec civils de 9,66 % et les grandes
+formations I/S de 4,62 % / 11,05 %. I30/50/20 seul accélère l’économie de 15 à 16 %,
+mais sa formation I est plus lente que l’actuelle et que I40/40/20. Le compromis
+économie/armée reste une décision produit ; aucun changement de grille n’est validé
+pour activation. L’étude et son outil restent locaux après refus de publication.
+Les profils JSON de docs sont des entrées explicites de commande, jamais des prix applicatifs.
+
+## Redistribution par rang — complément du 16 novembre 2026, décision en attente
+
+À la demande de l’utilisateur, les [mesures séparées](SIMULATIONS_COUTS_PAR_RANG.md)
+conservent l’autre rang aux prix actuels. B50/50 accélère les colonies B10 mais retarde
+les premiers accès I/S des politiques testées. I40/40/20 seul conserve le premier accès I,
+réduit les parcours économiques d’environ 4,5 à 5,1 % et la grande formation I de 6,9 %.
+La recommandation issue de l’étude devient : B60/40 conservé, I40/40/20 candidat
+prioritaire à valider, S inchangé. Ce n’est pas une décision d’activation ni une nouvelle
+règle de jeu. Les surcharges sont temporaires et jamais enregistrées ; le traitement
+des arrondis et d’autres stratégies reste à examiner avant une activation explicite.
 
 ## Étude de redistribution — résultats du 16 novembre 2026, décision en attente
 

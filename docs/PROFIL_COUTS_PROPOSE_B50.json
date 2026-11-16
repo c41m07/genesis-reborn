@@ -1,0 +1,20 @@
+{
+  "basic": {
+    "metal": 50,
+    "nano": 50,
+    "antimatter": 0,
+    "hydrogen": 0
+  },
+  "intermediate": {
+    "metal": 30,
+    "nano": 50,
+    "antimatter": 20,
+    "hydrogen": 0
+  },
+  "superior": {
+    "metal": 25,
+    "nano": 35,
+    "antimatter": 30,
+    "hydrogen": 10
+  }
+}

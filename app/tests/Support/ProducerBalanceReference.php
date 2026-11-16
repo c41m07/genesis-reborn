@@ -13,7 +13,8 @@ final class ProducerBalanceReference
 
     public static function historicalCatalog(?GameCatalog $catalog=null):GameCatalog
     {
-        $catalog??=new GameCatalog(dirname(__DIR__,2).'/config/game');$fixture=self::fixture();
+        // Restaurer les prix avant les producteurs propres à cette étude, qui ont leurs anciens budgets.
+        $catalog=ResourceCostReference::historicalCatalog($catalog);$fixture=self::fixture();
         $property=new \ReflectionProperty(GameCatalog::class,'data');$data=$property->getValue($catalog);
         foreach($fixture['historical_definitions'] as $slug=>$definition)$data['buildings'][$slug]=$definition;
         $data['rules']=$fixture['historical_rules'];$property->setValue($catalog,$data);

@@ -5,8 +5,10 @@
 Mission issue du prompt utilisateur : nouvelles grilles, nouvelles durées et
 consommations de carburant, récolteur d’hydrogène mobile, satellite solaire fixe,
 simulation des effets économiques et militaires. Aucun déploiement Alpha.
-La redistribution des coûts B 50/50 et I 40/40/20 reste un candidat à comparer,
-sans activation avant une décision séparée et chiffrée. Aucun budget, effet,
+Les premières études ont comparé B50/50 et I40/40/20. Après les comparaisons
+séparées, l’utilisateur retient B40/60, I30/50/20 et S25/35/30/10 le 16 novembre ;
+la grille est publiée dans la [PR #73](https://github.com/c41m07/genesis-reborn/pull/73),
+avec validation CI complète requise avant fusion. Aucun budget, effet,
 plafond ni règle non explicitement visé ne doit changer.
 
 Chaque lot part de dev actualisée et doit être validé en CI complète puis fusionné
@@ -21,6 +23,7 @@ pas présentées comme lues.
 | 2 | Durées, taxe électrique calculée sur la durée effective, carburant différencié, navigation historique préservée | Fusionné dans dev par PR #70 après CI complète réussie |
 | 3 | Six profils civils, production segmentée, mobilité/immobilité, affectations et réservations concurrentes, combat, rapports et simulateur | Fusionné dans dev par PR #71 après CI complète n° 299 réussie |
 | 4 | Simulations avec les calculateurs réels, comparaison des répartitions, mesures et limites | Publié par [PR #72](https://github.com/c41m07/genesis-reborn/pull/72) ; résultats CI et fusion consultables dans la PR |
+| 5 | Grille retenue B40/60, I30/50/20 et S25/35/30/10 ; budgets, paiements et surcharges conservés | Publié par [PR #73](https://github.com/c41m07/genesis-reborn/pull/73) ; résultats CI et intégration consultables dans la PR |
 
 ## Lot 1 — complexité 5/5
 
@@ -350,3 +353,157 @@ Le candidat reste inactif ; sa décision d’activation est distincte de la publ
 
 Pour une base existante : maintenance coordonnée, sauvegarde restaurable vérifiée,
 diagnostic des surcharges puis autorisation explicite avant la requalification `--apply`.
+
+## Complément — comparaison des coûts par rang, complexité 3/5
+
+Demande explicite : isoler B50/50 puis I40/40/20, sans activation. Base dev `4bbb0cf`,
+actualisée et propre ; branche `feature/comparaison-couts-par-rang` dans le checkout
+économique réutilisé. Les sources Work nommées restent absentes du dépôt accessible.
+
+Périmètre : sélection du rang dans les seules surcharges d'univers transitoires,
+option de commande reproductible, mêmes parcours économiques et militaires,
+tests de conservation stricte des profils non sélectionnés, rapport comparatif.
+Risques : application involontaire aux deux rangs, variation des stratégies ou du
+point de départ, comparaison de dates d'accès avec des dates de livraison.
+Aucune formule, valeur applicative, donnée persistée, dépendance ou migration modifiée.
+
+### Résultats du complément par rang
+
+[Rapport](SIMULATIONS_COUTS_PAR_RANG.md) et [108 bilans synthétiques](RESULTATS_COUTS_PAR_RANG.csv).
+Les trois commandes exécutent 162 parcours avec répétition des contrôles actuels ;
+ces contrôles et les bilans combinés reproduisent exactement les résultats initiaux.
+Les 162 bilans de ressources sont conservés (écart maximal inférieur à 0,00000009 unité).
+B seul modifie 52 profils B, I seul 52 profils I, sans autre modification de profil.
+La recommandation est actualisée : conserver B60/40, privilégier I40/40/20 comme
+candidat à valider, S inchangé ; aucune activation ni décision produit implicite.
+
+Contrôles locaux : 22 tests PHP / 2 303 assertions, syntaxe des cinq fichiers PHP,
+conteneur Symfony, `make validate`, option répétée identique au défaut combiné,
+refus du Supérieur avant simulation. Aucune nouvelle compilation ou suite navigateur
+locale pour cet outil sans interface. Les contrôles CI du lot 4 portent sur la version
+précédente ; ce complément local n’est pas déclaré validé par cette CI.
+Les liens documentaires et le diff sont vérifiés avant commit.
+
+Les vérifications de bout en bout confirment aussi : colonies B identiques au courant
+avec I seul, premier accès I inchangé avec I seul, reconstruction des défenses B et
+formation B identiques avec I seul, résultats physiques des combats et devis de
+navigation strictement identiques entre variantes (mesures de temps machine exclues).
+
+### Nouvelle grille proposée — complexité réévaluée 4/5
+
+Publication du complément précédent refusée par l’utilisateur ; conserver tout en local.
+La dernière grille demandée est B40/60, I30/50/20, S25/35/30/10 (M/N/A/H).
+Comparer aussi B50/50 avec les mêmes nouveaux I/S, et isoler chaque rang proposé.
+Extension limitée au lecteur de profils d’étude et à l’arrondi conjoint en mémoire.
+Le budget impair du piège Supérieur exige une ressource de poids 1 pour être conservé ;
+la part H10 demandée permet cette conservation exacte. Refuser les pourcentages ne
+sommant pas à 100 et les combinaisons mathématiquement incompatibles, sans normalisation.
+Risques : changement implicite des budgets, sélection involontaire d’autres rangs,
+pression nano/antimatière/hydrogène et financement non monotone.
+Aucun profil applicatif, prix payé, donnée persistée ou déploiement modifié.
+
+### Résultats de la nouvelle proposition
+
+[Rapport](SIMULATIONS_GRILLE_PROPOSEE.md), [243 parcours distincts](RESULTATS_GRILLE_PROPOSEE.csv)
+et profils JSON explicites pour la [proposition B40](PROFIL_COUTS_PROPOSE.json) et
+sa [comparaison B50](PROFIL_COUTS_PROPOSE_B50.json). Cinq nouvelles simulations
+complètes exécutent 270 parcours, contrôles courants répétés inclus ; tous terminent.
+Les contrôles courants sont identiques aux anciens. Les bilans de ressources sont
+conservés avec un écart maximal inférieur à 0,000000105 unité. Les résultats physiques
+et les devis de navigation du témoin sont inchangés. Les profils de base conservent
+exactement V, y compris le piège Supérieur de valeur impaire 1 875 avec H explicite.
+
+Contrôles : 25 tests PHP / 4 445 assertions réussis ; après présentation finale,
+7 tests d’allocation / 4 290 assertions réussis. Syntaxe des cinq fichiers PHP,
+conteneur Symfony, profils JSON, liens et diff vérifiés. Le profil par défaut de
+l’ancien outil reproduit exactement les 156 profils et les 912 devis échantillonnés.
+Le chargement d’une grille ne normalise pas les pourcentages : total 100 obligatoire.
+Aucune compilation, suite navigateur ou CI complète nouvelle pour cette extension locale.
+Les protections nécessaires avant une éventuelle publication/fusion restent celles
+du dépôt ; le refus de publication s’applique et aucune nouvelle demande n’est envoyée.
+
+Les résultats montrent un compromis : la nouvelle grille complète ralentit plusieurs
+objectifs ; I30/50/20 seul accélère nettement l’économie mais ralentit sa grande flotte.
+Les recommandations restent des propositions de décision, sans activation de prix.
+
+## Grille retenue — implémentation, complexité 4/5
+
+Décision explicite utilisateur : retenir B40/60, I30/50/20, S25/35/30/10 (M/N/A/H).
+Branche `feature/repartition-couts-ressources`, depuis dev actualisée `4bbb0cf`,
+avec les compléments locaux de mesure `0645c6e` et `4b4cd51` conservés.
+Les trois documents Work nommés restent absents des fichiers du dépôt accessibles.
+
+Plan : modifier uniquement les 156 cost_profiles des 52 fiches, conserver les budgets
+réels de base et tous les champs indépendants des prix ; figer l'avant/après pour les
+tests, restaurer les prix dans les seules références historiques, vérifier devis,
+paiements, annulations et surcharges d’univers. Synchroniser les tableaux et le wiki.
+Les courbes et arrondis courants restent appliqués après croissance/remises ; les écarts
+mesurés des devis ne sont pas supprimés par une nouvelle règle d'arrondi implicite.
+Aucune migration SQL ni reprise de prix payés, d’accès ou de surcharge persistée.
+La publication et la fusion de ce lot nécessiteront un accord sur le résultat prêt,
+puis la CI complète sur la dernière version ; aucune livraison Alpha.
+
+### Vérification des impacts et première recette
+
+La formule de classement lit les ressources brutes des profils courants, pas leur
+valeur économique pondérée. Elle reste inchangée ; un chasseur B seul vaut désormais
+21 points au lieu de 24. Les prochains calculs de scores et protections liées aux
+points suivent donc ces prix, tandis que les snapshots quotidiens restent figés
+jusqu’à leur actualisation normale. Effet annoncé dans la conversation et documenté ;
+aucun nouveau mécanisme de points, seuil de protection ou recalcul forcé ajouté.
+
+Le premier passage complet exécute 1 338 PHP / 250 826 assertions, avec une erreur
+dans le nouveau test de rejeu (identifiant lu après suppression), une attente de prix
+obsolète dans GameRulesTest et la mesure facultative préexistante ignorée. Les 6 parcours
+navigateur ciblés terminent : 5 réussis, un message de manque de ressources attendait
+encore 300 M / 100 N au lieu de 200 M / 150 N pour la sonde B. Le test de remboursement
+mémorise maintenant son identifiant, les valeurs attendues sont actualisées sans
+retirer d’assertion et un cas vérifie la règle de points. Relances ciblées en cours.
+
+### Recette locale corrigée de la grille retenue
+
+- Les deux cas ayant échoué au premier passage PHP sont corrigés et repassent,
+  avec le nouveau cas de score : 9 tests / 41 assertions dans une base jetable.
+- Les 13 tests Python passent. `make lint` complet passe dans un projet jetable
+  avec APP_ENV=test et URL explicitement protégée : PHP, 80 YAML, 170 Twig,
+  injection, mapping et schéma. `make validate` passe également.
+- Le parcours de maximum corrigé repasse : les 6 scénarios navigateur distincts
+  sont donc réussis (156 fiches, quantités, civil, déploiement et wiki ; clavier,
+  mobile et thèmes couverts selon les scénarios). Aucun retrait d’assertion.
+- Le test de prix renforcé passe : 3 tests / 17 364 assertions. Les 3 636 devis
+  gardent leurs durées/taxes, avec écarts de valeur maxima 12/10/9/0 par groupe
+  bâtiments/recherches/vaisseaux/défenses ; budgets de base exactement conservés.
+- Les 8 parcours économiques du catalogue désormais courant reproduisent exactement
+  les résultats de la proposition étudiée et de son profil explicite. L’empreinte
+  de configuration est `29c3a29cb524bfaceb9d1ba161c6ebeadcf89a94a3377ff6482bef32528f8220`.
+- La suite PHP locale complète n’a pas été répétée après les seules corrections
+  d’attentes/tests et les ajouts de vérification. Une nouvelle CI complète sur la
+  dernière révision est requise avant fusion ; les anciennes CI ne valident pas ce lot.
+- Aucun asset, dépendance, paramètre de production, colonne ou règle hors prix
+  n’a changé. Les helpers historiques et leurs prix sont limités aux tests.
+- Le wiki local et les documents courants sont synchronisés ; aucun wiki hébergé,
+  reprise de base de jeu ou déploiement Alpha n’est déclaré réalisé.
+
+### Publication autorisée de la grille retenue
+
+Après présentation du lot `b250cfe`, de la recette et de l’effet sur les points,
+l’utilisateur autorise le push, la PR vers dev et la fusion uniquement après CI complète.
+La [PR #73](https://github.com/c41m07/genesis-reborn/pull/73) inclut les compléments de comparaison auparavant locaux,
+la grille retenue, ses tests et sa documentation. Les résultats de CI sur la dernière
+révision et l’état de fusion sont consultables directement dans cette PR.
+Cette autorisation ne comprend aucun déploiement Alpha ni aucune reprise de base de jeu.
+
+### Correction après la première CI de la PR #73
+
+La CI 303 sur `9d72d02` valide les 1 339 tests PHP / 250 828 assertions
+(une mesure facultative préexistante ignorée), les 13 Python, lint, assets,
+Compose, diff et sauvegarde/restauration isolée. Trois lots navigateur passent ;
+le quatrième relève une attente de prix de centrale antérieure à la nouvelle grille.
+Au total, 203 parcours passent et un échoue ; aucune fusion sur cette révision.
+
+Le scénario `building-tabs` prépare désormais une centrale B250 pour conserver
+le contrôle d’un prix affiché en millions, attend 1,23 M pour son prochain niveau
+et 900 métal au rang intermédiaire. Les assertions clavier, mobile, formulaires,
+rafraîchissement et filtres restent présentes. Les deux scénarios du fichier
+repassent via `BROWSER_PERSISTENCE=1 make test-browser` sur une base jetable.
+Une nouvelle CI complète sur la correction est exigée avant fusion.
