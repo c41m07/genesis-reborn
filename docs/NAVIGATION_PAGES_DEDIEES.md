@@ -28,8 +28,9 @@ merge `5b072cb`, après les cinq jobs quality réussis sur `afe19b8`
 Application locale actualisée avec assets, cache et routes vérifiés ; modification
 préexistante conservée. Le bilan ci-dessous garde la recette avant intégration.
 
-Lot 5 en cours sur `feature/navigation-projets-collectifs`, depuis dev `5b072cb`.
-La recette ci-dessous précède l’intégration ; la PR donnera la CI et la fusion.
+Lot 5 réalisé sur `feature/navigation-projets-collectifs`, depuis dev `5b072cb` ;
+[PR #80](https://github.com/c41m07/genesis-reborn/pull/80). La recette ci-dessous
+précède l’intégration ; la PR donne l’état de la CI, de la fusion et de localhost.
 
 Les trois documents Work V4 (prompt maître), V2 (brief Figma) et V1 (protocole
 adaptatif) n’ont pas été trouvés dans le dépôt ni les sources connectées
@@ -635,12 +636,19 @@ Aucune mesure comparative de performance n’est revendiquée.
 Validation Compose, lint et compilation réussis ; 43 tests PHP ciblés / 226
 assertions, puis 8 tests HTTP / 155 assertions (séries partiellement communes).
 Une fixture détachée après requête a été rechargée pour tester le refus entre
-guildes sans modifier les contrôles serveur. Quatre parcours navigateur réussis :
-modèles administratifs existants, deux paliers et boosts, parcours joueur sans
-JavaScript, parcours transversal. La recette du thème clair est reprise avec
-la préférence réellement persistée, après examen des premières captures.
+guildes sans modifier les contrôles serveur. Quatre parcours navigateur distincts
+réussis : modèles administratifs existants, deux paliers et boosts, parcours joueur
+sans JavaScript, parcours transversal. La reprise du deuxième parcours utilise
+la préférence de thème réellement persistée, après examen des premières captures ;
+elle réussit. Les trois listes et la fiche passent Axe sur `main` dans les deux
+thèmes à 320/390/1 440 px, sans débordement. Navigation active à ses trois niveaux,
+clavier, liens directs, rechargement, retour arrière et anciens fragments vérifiés.
+Captures réelles sombre sur ordinateur et claire sur mobile examinées.
+
 Les essais utilisent des bases jetables distinctes de la base habituelle.
-La CI complète restera obligatoire sur la dernière version avant fusion.
+La [PR #80](https://github.com/c41m07/genesis-reborn/pull/80) est prête pour la CI
+complète ; les cinq jobs quality de sa dernière version restent obligatoires
+avant fusion. Les résultats locaux ne constituent pas une validation CI complète.
 
 Les documents Work V4/V2/V1 ne sont pas retrouvés par les recherches locales et
 connectées ; aucune lecture ou validation de leurs phases n’est revendiquée.
