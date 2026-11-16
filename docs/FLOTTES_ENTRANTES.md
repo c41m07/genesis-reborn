@@ -4,8 +4,8 @@
 
 Deux cadres distincts : « Flottes en vol » conserve le suivi de vos propres missions ;
 « Flottes entrantes » reprend le cadre d’attaques détectées et annonce les arrivées
-d’autres commandants sur vos colonies. Il apparaît seulement lorsqu’une arrivée
-visible existe. Aucun mouvement allié vers une autre destination n’est ajouté.
+d’autres commandants sur vos colonies. Il reste présent même sans arrivée
+visible : compteur zéro et message « Aucune flotte entrante visible vers vos colonies ». Aucun mouvement allié vers une autre destination n’est ajouté.
 Le panneau reste un complément de la page Flottes, sans nouvelle page ni formulaire.
 
 | Mission | Visibilité dans le panneau |

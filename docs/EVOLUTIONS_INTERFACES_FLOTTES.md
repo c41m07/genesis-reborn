@@ -1795,3 +1795,15 @@ Recette complète ciblée locale : 32 PHP / 1 113 assertions, trois parcours nav
 distincts, `make validate`, lint, assets et diff réussis. Origines, compositions,
 fret et sondes restent privés aux conditions prévues ; captures réelles dans les
 deux thèmes et sur mobile. Aucun déploiement Alpha ni reprise de données.
+
+### Cadre vide conservé — 16 novembre 2026, complexité 1/5
+
+Le panneau était masqué sans arrivée visible. Après le retour utilisateur, il reste
+présent avec le compteur zéro et un état vide compact. Le mot « visible » préserve
+la distinction avec les attaques non détectées ; aucun droit ou masque ne change.
+Le message sans JavaScript est également étendu à toutes les arrivées.
+
+Vérifications : 16 tests PHP de visibilité / 207 assertions, trois scénarios
+navigateur (zéro, apparition, disparition, focus, mobile et thèmes), lint,
+compilation et contrôle du diff réussis. Aucune écriture dans la base de jeu,
+aucune publication GitHub ni livraison Alpha pour cette correction locale.

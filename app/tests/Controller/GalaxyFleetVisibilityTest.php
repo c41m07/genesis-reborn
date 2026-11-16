@@ -324,7 +324,8 @@ final class GalaxyFleetVisibilityTest extends WebTestCase
         $thirdParty=$this->fleet($sender,$home,$elsewhere,'transport');
         $data=$this->surveillance($viewer);
         foreach([$own,$return,$spy,$thirdParty] as $fleet)self::assertStringNotContainsString('data-incoming-attack="'.$fleet->id.'"',$data['html']);
-        self::assertStringNotContainsString('incoming-attack-panel',$data['html']);
+        self::assertStringContainsString('Flottes entrantes · 0',$data['html']);
+        self::assertStringContainsString('Aucune flotte entrante visible vers vos colonies.',$data['html']);
     }
 
     public function testIncomingNonHostileFlightKeepsCompositionFreightAndUnknownOriginPrivate(): void

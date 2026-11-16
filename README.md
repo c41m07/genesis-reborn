@@ -584,7 +584,8 @@ de progression ; à 5/5/5, le préavis théorique atteint 80 minutes.
 
 Le cadre [Flottes entrantes](docs/FLOTTES_ENTRANTES.md) regroupe les arrivées d’autres
 commandants sur vos colonies : transports, renforts, orbites et attaques détectées.
-Vos propres missions restent dans Flottes en vol. Les attaques gardent leur préavis
+Vos propres missions restent dans Flottes en vol. Le cadre reste visible à zéro
+quand aucune arrivée étrangère n’est visible. Les attaques gardent leur préavis
 et leur priorité ; une origine non découverte reste masquée.
 La surveillance se met à jour sans rechargement, avec horloge serveur, et conserve
 le focus et la sélection de carte. Sans JavaScript, actualiser la page.

@@ -1,9 +1,11 @@
 {# Les attributs d’actualisation existants gardent les pages déjà ouvertes compatibles. #}
 {% set fleets = attacks|default([]) %}
-{% if fleets is not empty %}
 {% set threats = fleets|filter(fleet => fleet.mission in ['attack', 'conquer'])|length %}
-<section class="incoming-attack-panel{{ threats ? ' has-hostile' : '' }}" aria-labelledby="incoming-attacks-heading">
+<section class="incoming-attack-panel{{ threats ? ' has-hostile' : '' }}{{ fleets is empty ? ' is-empty' : '' }}" aria-labelledby="incoming-attacks-heading">
 <h2 id="incoming-attacks-heading">Flottes entrantes · {{ fleets|length }}</h2>
+{% if fleets is empty %}
+<p class="incoming-empty-message">Aucune flotte entrante visible vers vos colonies.</p>
+{% else %}
 {% if threats %}<p>{{ threats }} attaque{{ threats == 1 ? '' : 's' }} détectée{{ threats == 1 ? '' : 's' }} · Organisez votre défense et vos renforts avant l’impact.</p>{% endif %}
 <div class="incoming-attack-grid">
 {% for fleet in fleets %}
@@ -21,5 +23,5 @@
 </article>
 {% endfor %}
 </div>
-</section>
 {% endif %}
+</section>

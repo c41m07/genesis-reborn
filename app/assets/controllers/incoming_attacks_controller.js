@@ -50,7 +50,7 @@ export default class extends Controller {
                 const signature = [...this.contentTarget.querySelectorAll('[data-incoming-attack]')].map(row => row.dataset.incomingAttack).join(',');
                 if (this.signature !== undefined && signature !== this.signature) {
                     const threats = this.contentTarget.querySelectorAll('[data-incoming-attack][data-incoming-kind="attack"]').length;
-                    this.statusTarget.textContent = count ? count + ' flotte(s) entrante(s).' + (threats ? ' Dont ' + threats + ' attaque(s) détectée(s).' : '') : 'Aucune flotte entrante en trajet.';
+                    this.statusTarget.textContent = count ? count + ' flotte(s) entrante(s).' + (threats ? ' Dont ' + threats + ' attaque(s) détectée(s).' : '') : 'Aucune flotte entrante visible en trajet.';
                 }
                 this.signature = signature;
             }

@@ -49,6 +49,8 @@ test('Une attaque apparaît au seuil sans recharger, avec focus préservé et do
   const data=await prepareThreat(page,browser);
   await page.goto('/flottes');
   await expect(page.locator('[data-incoming-attack]')).toHaveCount(0);
+  await expect(page.getByRole('heading',{name:'Flottes entrantes · 0',exact:true})).toBeVisible();
+  await expect(page.locator('.incoming-empty-message')).toHaveText('Aucune flotte entrante visible vers vos colonies.');
   const before=await page.evaluate(galaxy=>fetch('/flottes/surveillance?galaxy='+galaxy).then(r=>r.json()),data.galaxy);
   expect(before.flights).toEqual([]);expect(before.html).not.toContain('Source confidentielle');
   const focus=page.getByRole('link',{name:'Accéder au chantier spatial',exact:true});await focus.focus();
@@ -97,6 +99,9 @@ test('Carte tactile : détection synchronisée, vue conservée, horloge serveur 
   await page.screenshot({path:testInfo.outputPath('carte-menace-tactile.png'),animations:'disabled'});
   runIsolatedSql(data.project,"UPDATE fleet SET mission='spy' WHERE id="+data.fleet);
   await expect(warning).toHaveCount(0,{timeout:15000});await expect(entry).toHaveCount(0,{timeout:15000});
+  await expect(page.locator('[data-incoming-attacks-target="status"]')).toContainText('Aucune flotte entrante visible');
+  await expect(page.getByRole('heading',{name:'Flottes entrantes · 0',exact:true})).toBeVisible();
+  await expect(page.locator('.incoming-empty-message')).toHaveText('Aucune flotte entrante visible vers vos colonies.');
   await expect(page.locator('.gv2-canvas--planet.is-active')).toBeVisible();
   expect(errors).toEqual([]);await context.close();
 });
@@ -108,6 +113,8 @@ test('Flottes entrantes : transport neutre, propre retour séparé et demande d�
   const data=await prepareThreat(page,browser);
   await page.goto('/flottes');
   await expect(page.locator('[data-incoming-attack]')).toHaveCount(0);
+  await expect(page.getByRole('heading',{name:'Flottes entrantes · 0',exact:true})).toBeVisible();
+  await expect(page.locator('.incoming-empty-message')).toHaveText('Aucune flotte entrante visible vers vos colonies.');
   const focus=page.getByRole('link',{name:'Accéder au chantier spatial',exact:true});await focus.focus();
   runIsolatedSql(data.project,"UPDATE fleet SET mission='transport',cargo='{\"metal\":987654321}' WHERE id="+data.fleet);
   const incoming=page.locator('[data-incoming-attack="'+data.fleet+'"]');
