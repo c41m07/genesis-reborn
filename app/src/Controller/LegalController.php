@@ -14,12 +14,10 @@ final class LegalController extends AbstractController
     #[Route('/cookies', name: 'app_legal_cookies', defaults: ['page' => 'cookies'], methods: ['GET'])]
     public function show(string $page, #[Autowire('%env(LEGAL_PUBLISHER_NAME)%')] string $publisherName): Response
     {
-        $response = $this->render('legal/page.html.twig', [
+        return $this->render('legal/page.html.twig', [
             'page' => $page,
             'publisherName' => trim($publisherName),
             'pageTitle' => AdminLegalPreviewController::PAGES[$page],
         ]);
-        $response->headers->set('X-Robots-Tag', 'noindex, follow');
-        return $response;
     }
 }
