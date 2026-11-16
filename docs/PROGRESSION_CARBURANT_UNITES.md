@@ -7,7 +7,8 @@ consommations de carburant, récolteur d’hydrogène mobile, satellite solaire 
 simulation des effets économiques et militaires. Aucun déploiement Alpha.
 Les premières études ont comparé B50/50 et I40/40/20. Après les comparaisons
 séparées, l’utilisateur retient B40/60, I30/50/20 et S25/35/30/10 le 16 novembre ;
-la grille est implémentée localement, avec publication et CI de PR encore à autoriser. Aucun budget, effet,
+la grille est publiée dans la [PR #73](https://github.com/c41m07/genesis-reborn/pull/73),
+avec validation CI complète requise avant fusion. Aucun budget, effet,
 plafond ni règle non explicitement visé ne doit changer.
 
 Chaque lot part de dev actualisée et doit être validé en CI complète puis fusionné
@@ -22,7 +23,7 @@ pas présentées comme lues.
 | 2 | Durées, taxe électrique calculée sur la durée effective, carburant différencié, navigation historique préservée | Fusionné dans dev par PR #70 après CI complète réussie |
 | 3 | Six profils civils, production segmentée, mobilité/immobilité, affectations et réservations concurrentes, combat, rapports et simulateur | Fusionné dans dev par PR #71 après CI complète n° 299 réussie |
 | 4 | Simulations avec les calculateurs réels, comparaison des répartitions, mesures et limites | Publié par [PR #72](https://github.com/c41m07/genesis-reborn/pull/72) ; résultats CI et fusion consultables dans la PR |
-| 5 | Grille retenue B40/60, I30/50/20 et S25/35/30/10 ; budgets, paiements et surcharges conservés | Lot local prêt ; relances ciblées, lints et six parcours navigateur réussis ; publication/CI à autoriser |
+| 5 | Grille retenue B40/60, I30/50/20 et S25/35/30/10 ; budgets, paiements et surcharges conservés | Publié par [PR #73](https://github.com/c41m07/genesis-reborn/pull/73) ; résultats CI et intégration consultables dans la PR |
 
 ## Lot 1 — complexité 5/5
 
@@ -482,3 +483,12 @@ retirer d’assertion et un cas vérifie la règle de points. Relances ciblées 
   n’a changé. Les helpers historiques et leurs prix sont limités aux tests.
 - Le wiki local et les documents courants sont synchronisés ; aucun wiki hébergé,
   reprise de base de jeu ou déploiement Alpha n’est déclaré réalisé.
+
+### Publication autorisée de la grille retenue
+
+Après présentation du lot `b250cfe`, de la recette et de l’effet sur les points,
+l’utilisateur autorise le push, la PR vers dev et la fusion uniquement après CI complète.
+La [PR #73](https://github.com/c41m07/genesis-reborn/pull/73) inclut les compléments de comparaison auparavant locaux,
+la grille retenue, ses tests et sa documentation. Les résultats de CI sur la dernière
+révision et l’état de fusion sont consultables directement dans cette PR.
+Cette autorisation ne comprend aucun déploiement Alpha ni aucune reprise de base de jeu.

@@ -20,7 +20,7 @@ Le candidat de redistribution des prix n’est pas activé.
 Complément local sur `feature/comparaison-couts-par-rang` : [B seul / I seul / les deux](SIMULATIONS_COUTS_PAR_RANG.md),
 108 parcours distincts, contrôles courants identiques, sélection CLI et tests ciblés.
 La recommandation privilégie I seul pour validation ; aucun prix activé.
-Publication du complément refusée : conserver en local. Nouvelle [grille B/I/S calculée](SIMULATIONS_GRILLE_PROPOSEE.md),
+Complément initialement conservé en local ; nouvelle [grille B/I/S calculée](SIMULATIONS_GRILLE_PROPOSEE.md),
 avec comparaison B50/B40 et variantes isolées ; les profils actifs restent inchangés.
 Aucune CI GitHub de cette extension locale ni activation.
 État, contrôles et autorisations dans le [suivi de mission](PROGRESSION_CARBURANT_UNITES.md).
@@ -35,8 +35,8 @@ profils modifiés, budgets conservés et anciens paiements inchangés. Les surch
 d’univers restent prioritaires. Les [prix courants](COUTS.md), règles et wiki local
 sont synchronisés ; les études antérieures sont clairement datées.
 Les contrôles locaux, les relances des cas corrigés, les lints et six parcours
-navigateur ciblés réussissent. Publication/PR/fusion de cet ensemble à autoriser,
-puis CI complète sur la dernière révision avant fusion ; aucune migration de données
+navigateur ciblés réussissent. Publication et fusion conditionnelle autorisées dans la [PR #73](https://github.com/c41m07/genesis-reborn/pull/73).
+La CI complète sur la dernière révision est requise avant fusion ; aucune migration de données
 ni livraison Alpha. Les recommandations précédentes ne remplacent pas cette décision.
 
 ## Rework V1 — chantier local du 14 novembre 2026

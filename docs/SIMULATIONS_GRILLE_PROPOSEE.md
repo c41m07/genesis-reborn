@@ -18,7 +18,9 @@ Le [profil JSON](PROFIL_COUTS_PROPOSE.json) fixe ces paramètres d’étude. Le
 [profil B50 alternatif](PROFIL_COUTS_PROPOSE_B50.json) conserve exactement les mêmes
 I/S et remplace seulement le Basique par 50/50. Les valeurs applicatives restent
 celles du catalogue courant : ces fichiers ne sont lus que par la commande d’étude.
-**Étude conservée en local, sans publication ni activation.**
+**Au moment des mesures, étude conservée en local sans activation.**
+Les comparaisons sont ensuite incluses dans la [PR #73](https://github.com/c41m07/genesis-reborn/pull/73) avec
+l’implémentation de la grille retenue ; aucun déploiement Alpha n’en découle.
 
 ## Méthode et contrôles
 
