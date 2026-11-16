@@ -247,18 +247,18 @@ Une usine dont la production ne peut plus être stockée suspend ses consommatio
 
 Les valeurs et résultats de référence, la distinction entre délai d’accès et remboursement, les données existantes et les vérifications sont détaillés dans [BUILDING_BALANCE_2026-11-05.md](EQUILIBRAGE.md#production-des-batiments). Les surcharges d’univers peuvent toujours remplacer les valeurs de base. Les coûts et durées déjà payés en file restent conservés.
 
-### Bunker de défense — correction du 14 novembre, grille du 15 novembre 2026
+### Bunker de défense — décision du 16 novembre 2026
 
-Dans le catalogue par défaut, le déblocage initial du bunker basique exige le
-chantier spatial basique niveau 3 et le laboratoire basique niveau 2. Blindage
-multicouche basique niveau 2 n’est plus requis. Depuis la décision du 15 novembre,
-les trois rangs demandent uniquement chantier 3 et laboratoire 2 du même rang ;
-les anciennes exigences supplémentaires des rangs avancés sont remplacées.
+Dans chacun des trois rangs, le bunker demande uniquement une mine de métal
+niveau 1 et un atelier de nanofabrication niveau 1 de ce même rang. Aucun chantier,
+laboratoire ou recherche supplémentaire n’est requis. Le chantier spatial conserve
+ses conditions distinctes : métal 2 + nano 2 du rang demandé.
 
-Seul ce prérequis de recherche est retiré : coûts, durées, plafonds et bonus de
-points de structure des défenses au sol sont conservés. Aucune nouvelle courbe
-linéaire ni capacité de stockage n’est ajoutée. Les surcharges d’univers et les
-accès sont traités selon la [procédure de requalification](DEBLOCAGES.md#compatibilité).
+Cette décision remplace la grille du 15 novembre (chantier 3 + laboratoire 2).
+Coûts, durées, plafonds et bonus de structure des défenses restent conservés.
+Les accès déjà acquis restent permanents ; les nouveaux accès suivent les conditions
+assouplies, sans réinitialisation ni nouvelle reprise de données. Les surcharges
+d’univers restent prioritaires.
 
 ### Limites par défaut des univers — 5 novembre 2026
 

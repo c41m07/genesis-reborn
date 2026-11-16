@@ -1,23 +1,37 @@
 # Prompts des illustrations du catalogue
 
-## Pictogrammes des unités économiques — lot 3
+## Illustrations des unités économiques — 16 novembre 2026
 
-Deux nouveaux SVG originaux sont livrés :
-`app/public/images/catalog/ships/hydrogen_collector.svg` et `solar_satellite.svg`.
-Chacun représente sa propre famille et est partagé entre ses trois rangs.
-Ce sont des pictogrammes vectoriels, pas six illustrations cinématiques de rang
-ni des images réutilisées d’un autre vaisseau. Le champ `artwork` de ces deux
-fiches indique leur chemin ; les 150 illustrations et SVG d’identité restent
-conservés. Les cartes conservent leurs alternatives textuelles et chargement natif.
+Six illustrations originales 4:3, une par rang de chaque famille, sont générées
+avec l’outil image intégré à partir du prompt maître ci-dessous et de la direction
+artistique des trois cargos existants. Métal graphite, joints industriels, cuivre
+et voyants ambre, lumière cyan, vue trois-quarts et colonie à l’arrière-plan :
+les rangs évoluent par leur construction, sans simple changement de couleur.
+
+| Rang | Famille solaire | Famille hydrogène |
+|---|---|---|
+| Basique | Satellite héliocapteur : deux ailes photovoltaïques | Récolteur atmosphérique : filtre frontal et modules cryogéniques |
+| Intermédiaire | Plateforme solaire : quatre ailes et conversion renforcée | Collecteur orbital : double filtration et traitement renforcé |
+| Supérieur | Couronne héliosolaire : couronne photovoltaïque fermée | Raffineur d’hydrogène : séparation intégrée et modules multiples |
+
+Les [prompts complets et références](artwork/civil-2026-11-16/prompts.json) permettent
+la reproduction : concaténer master_prompt, style_prompt et subject_prompt avec
+un saut de ligne, puis utiliser la référence de rang précédent lorsqu’elle est indiquée.
+Les PNG sources sont conservés dans output/imagegen/civil-2026-11-16/ (hors Git) ;
+les six WebP livrés gardent leur résolution 1448 × 1086, qualité 90.
+Les 150 illustrations précédentes et les SVG d’identité restent conservés.
+Les deux pictogrammes civils SVG initiaux restent présents comme sources historiques ;
+les cartes utilisent maintenant le chemin WebP habituel par slug et rang.
+Les noms changent dans les fiches, pas les identifiants ni les capacités des unités.
 
 ## Format retenu
 
-Les 150 illustrations du catalogue sont servies depuis `app/public/images/catalog/`. Les ressources de conception restent sous `docs/artwork/`. Ces prompts servent à leur recréation ; préserver les illustrations actuellement utilisées.
+Les 156 illustrations du catalogue sont servies depuis `app/public/images/catalog/`. Les ressources de conception restent sous `docs/artwork/`. Ces prompts servent à leur recréation ; préserver les illustrations actuellement utilisées.
 
 - Concept art 3D de science-fiction réaliste et cinématique pour Genesis Reborn.
 - Univers bleu nuit et noir, éclairage cyan/bleu, touches ambre discrètes.
 - Une seule scène et un seul sujet principal par image, sans collage ni planche.
-- Cadrage paysage panoramique, sujet centré, entièrement visible et lisible dans une carte.
+- Cadrage paysage 4:3, sujet centré, entièrement visible et lisible dans une carte.
 - L’illustration remplit le cadre sans déformer le sujet.
 - Aucun texte, label, chiffre, logo, interface, cadre ou filigrane.
 - Les variantes Intermédiaire et Supérieur gardent la silhouette de base et gagnent en sophistication.

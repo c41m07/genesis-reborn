@@ -6,6 +6,8 @@ consommations de carburant](docs/DUREES_CARBURANT.md) sont révisées par famill
 avec conservation des commandes payées et des coefficients des missions lancées.
 Les [unités économiques](docs/UNITES_ECONOMIQUES.md) ajoutent des récolteurs mobiles
 et des satellites fixes, avec places par rang, réservations et production locale.
+Chaque famille possède trois noms et trois illustrations propres aux rangs, selon la
+[direction artistique du catalogue](docs/ILLUSTRATIONS.md).
 Leur livraison pendant un combat rejoint les renforts locaux avec toute la flotte.
 Le [suivi de mission](docs/PROGRESSION_CARBURANT_UNITES.md) distingue les lots
 préparés, leur intégration, leur activation et les décisions encore ouvertes.
@@ -36,7 +38,7 @@ L’orientation confirmée est une stratégie au rythme modéré ; les durées d
 
 ## État du projet
 
-- Bunker de défense : déblocage initial basique avec chantier spatial niveau 3 et laboratoire niveau 2, sans recherche Blindage requise. Coûts, durées, plafonds et bonus défensifs conservés ; les surcharges propres aux univers restent applicables.
+- Bunker de défense : mine de métal 1 + atelier de nanofabrication 1 dans le rang demandé, sans chantier, laboratoire ni recherche supplémentaire. Le chantier spatial conserve métal 2 + nano 2 de son rang. Coûts, durées, plafonds et bonus défensifs conservés ; les surcharges propres aux univers restent applicables.
 
 - Messagerie : Ctrl + Entrée pour envoyer dans les canaux privé, guilde et Global ; Entrée conserve les sauts de ligne. Markdown sécurisé pour les nouveaux messages seulement, historique conservé en texte ; soumissions répétées protégées côté serveur. CommonMark est une dépendance Composer. [Guide et migration préparée](docs/MESSAGERIE_MARKDOWN.md).
 

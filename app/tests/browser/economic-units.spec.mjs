@@ -54,9 +54,22 @@ test('Unités civiles : places actives et réservées, conservation, images et a
     await page.locator('#building-tab-hydrogen_collector-basic').click();
     await expect(collector.locator('dl[aria-label="Déploiement Basique"]')).toContainText('5 / 5 places');
     await expect(collector).toContainText('Unités conservées, sans production');
-    for (const card of [collector, satellite]) {
-        await expect(card.locator('.catalog-card-art img')).toHaveAttribute('src', /\.svg$/);
-        await expect.poll(() => card.locator('.catalog-card-art img').evaluate(image => image.complete && image.naturalWidth > 0)).toBeTruthy();
+    const families = [
+        ['hydrogen_collector', ['Récolteur atmosphérique', 'Collecteur orbital', 'Raffineur d’hydrogène']],
+        ['solar_satellite', ['Satellite héliocapteur', 'Plateforme solaire', 'Couronne héliosolaire']],
+    ];
+    for (const [slug, names] of families) {
+        for (const [index, tier] of ['basic', 'intermediate', 'superior'].entries()) {
+            await page.locator(`#building-tab-${slug}-${tier}`).click();
+            const panel = page.locator(`#item-${slug}-${tier}`);
+            await expect(panel.locator('.catalog-card-heading > h3')).toHaveText(names[index]);
+            const artwork = panel.locator('.catalog-card-art img');
+            await artwork.scrollIntoViewIfNeeded();
+            await expect(artwork).toHaveAttribute('src', `/images/catalog/ships/${slug}__${tier}.webp`);
+            await expect(artwork).toHaveAttribute('alt', names[index]);
+            await expect.poll(() => artwork.evaluate(image => image.complete && image.naturalWidth > 0 && image.naturalWidth * 3 === image.naturalHeight * 4)).toBeTruthy();
+        }
+        await page.locator(`#building-tab-${slug}-basic`).click();
     }
     for (const width of [1440, 390]) {
         await page.setViewportSize({ width, height: 1000 });

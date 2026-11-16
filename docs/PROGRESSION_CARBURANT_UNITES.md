@@ -507,3 +507,27 @@ et 900 métal au rang intermédiaire. Les assertions clavier, mobile, formulaire
 rafraîchissement et filtres restent présentes. Les deux scénarios du fichier
 repassent via `BROWSER_PERSISTENCE=1 make test-browser` sur une base jetable.
 Une nouvelle CI complète sur la correction est exigée avant fusion.
+
+## Ajustements directs sur dev local — 16 novembre 2026, complexité 2/5
+
+Demande utilisateur : chantier métal 2 + nano 2 (déjà courant), bunker métal 1 +
+nano 1 au même rang. Catalogue et référence exhaustive des seuils actualisés ;
+accès permanents conservés, aucune reprise de registre nécessaire pour cet assouplissement.
+Les études économiques précédentes restent des mesures antérieures à ce changement
+et ne sont pas présentées comme une simulation de ce nouveau prérequis.
+
+Les deux familles civiles reçoivent trois noms propres et trois illustrations
+cinématiques WebP 4:3 chacune. Les six générations reprennent le prompt maître
+et la direction artistique des cargos ; les prompts sont conservés dans la
+[documentation des illustrations](ILLUSTRATIONS.md). Les SVG originaux restent présents.
+Le champ artwork commun est retiré des deux fiches pour utiliser le chemin habituel
+par slug et rang. Aucun template, identifiant persisté, prix ou autre statistique changé.
+Application locale demandée directement sur dev ; aucune publication GitHub ni Alpha.
+
+Vérifications locales de ce lot : `make validate`, `make lint`, 160 tests PHP
+ciblés / 21 017 assertions, les deux scénarios navigateur civils (six illustrations,
+noms/alternatives, trois rangs, mobile, clavier, accessibilité ciblée, transfert et
+simulateur), cohérence JSON/CSV/prompts et `git diff --check` réussis. Prix, durées,
+production, capacités et identifiants comparés au parent : inchangés. Les 150
+illustrations précédentes et les six fichiers modifiés par l’autre tâche sont préservés.
+Aucune nouvelle CI GitHub : ces vérifications décrivent uniquement la recette locale.
