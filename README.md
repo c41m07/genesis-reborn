@@ -365,7 +365,9 @@ habituel ou de production.
 
 Pendant le développement, lancer les contrôles locaux adaptés au changement et `git diff --check` avant commit ou push. Une branche de travail peut être poussée sans exécuter toute la suite ; signaler les échecs et vérifications restant à faire.
 
-La CI complète se lance sur les PR vers `dev` et `alpha`, y compris à chaque correction. Attendre sa réussite sur la dernière version avant fusion. Les push seuls sur une branche de travail ou sur `dev` ne relancent pas la CI. Les push sur `alpha` (aussi branche par défaut actuellement) conservent la validation avant publication de l’image ; le lancement manuel reste disponible. Les [règles GitHub à vérifier pour protéger `dev`](docs/DEPLOIEMENT.md#protection-de-dev) sont distinctes du workflow.
+Ouvrir les PR vers `dev` et `alpha` en brouillon pendant le développement : une CI légère contrôle le diff, Compose, PHP/Twig/YAML et le conteneur Symfony, compile les assets et lance les tests Python, sans base ni migration. Le passage en « prête à relire » lance la CI complète, obligatoire sur la dernière version avant fusion. Toute correction d’une PR prête relance la suite complète ; repasser en brouillon si le développement reprend. Les cinq contrôles complets requis ne sont pas créés par la CI légère.
+
+Pendant la CI, le travail peut continuer sur un lot indépendant, avec une autre branche issue de `dev` actualisée. Préserver la branche testée ; les lots dépendants attendent son intégration. Les push seuls sur une branche de travail ou sur `dev` ne lancent pas de CI. Les push sur `alpha` (aussi branche par défaut actuellement) et le lancement manuel conservent la CI complète avant publication éventuelle de l’image. Les [règles GitHub à vérifier pour protéger `dev`](docs/DEPLOIEMENT.md#protection-de-dev) sont distinctes du workflow.
 
 Pour reproduire les six contrôles localement, préparer Chromium depuis `app/` avec `npx playwright install --with-deps chromium`, puis lancer depuis la racine :
 
@@ -381,6 +383,7 @@ git diff --check
 - `make assets` compile les assets de production en lançant `npm run build` depuis `app/`.
 - `make validate` valide Compose sans afficher les secrets.
 - `make lint` contrôle PHP, Twig, YAML, le conteneur Symfony et le schéma Doctrine de la base configurée.
+- `make lint-static` reprend les contrôles de `make lint` sans la validation du schéma SQL ; il peut s’exécuter sans base via un conteneur ponctuel, comme dans la CI légère.
 - `make test` utilise `database-test` et `genesis_v2_test` en mémoire, un transport Messenger en mémoire et un transport mail nul ; il lance aussi les tests Python des sauvegardes. Lancer une seule suite PHP à la fois sur cette base. PHPUnit est limité à 512 Mo pour ce seul processus, sans changer PHP pour le jeu.
 - `make test-browser` prépare un projet Docker et une base jetables propres à l’exécution. `BROWSER_PERSISTENCE=1` ajoute la persistance temporaire nécessaire aux essais de redémarrage complet ; les volumes sont retirés en fin de test. Les mails et alertes externes y sont neutralisés. Le script npm `test:browser` seul ne prépare pas cet environnement.
 - `make verify-install` prépare une installation temporaire, réinstalle les dépendances et vérifie le redémarrage. Son existence ne vaut pas preuve d’une exécution récente ; consulter le suivi pour les commandes réellement exécutées.
