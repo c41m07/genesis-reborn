@@ -50,7 +50,7 @@ test('Rivalité personnelle sans guilde, paix bilatérale et nouvelle alliance',
     await expect(page.getByRole('row').filter({ hasText: targetName })).toHaveClass(/ranking-row--enemy/);
     actorCard = await relations(page);
     await actorCard.getByRole('button', { name: 'Proposer la paix', exact: true }).click();
-    await expect(page).toHaveURL(url => url.searchParams.get('tab') === 'relations');
+    await expect(page).toHaveURL(url => url.pathname === '/diplomatie/commandants');
     actorCard = await relations(page);
     await expect(actorCard).toContainText('Proposition de paix envoyée');
     await expect(actorCard.getByRole('button', { name: 'Accepter la paix' })).toHaveCount(0);
@@ -64,14 +64,14 @@ test('Rivalité personnelle sans guilde, paix bilatérale et nouvelle alliance',
     targetCard = await relations(targetPage);
     await expect(targetCard).toContainText('Proposition de paix reçue');
     await targetCard.getByRole('button', { name: 'Refuser la paix', exact: true }).click();
-    await expect(targetPage).toHaveURL(url => url.searchParams.get('tab') === 'relations');
+    await expect(targetPage).toHaveURL(url => url.pathname === '/diplomatie/commandants');
     targetCard = await relations(targetPage);
     await expect(targetCard).toContainText('Rival personnel');
     await targetCard.getByRole('button', { name: 'Proposer la paix', exact: true }).click();
-    await expect(targetPage).toHaveURL(url => url.searchParams.get('tab') === 'relations');
+    await expect(targetPage).toHaveURL(url => url.pathname === '/diplomatie/commandants');
     actorCard = await relations(page);
     await actorCard.getByRole('button', { name: 'Accepter la paix', exact: true }).click();
-    await expect(page).toHaveURL(url => url.searchParams.get('tab') === 'relations');
+    await expect(page).toHaveURL(url => url.pathname === '/diplomatie/commandants');
     actorCard = await relations(page);
     await expect(actorCard).toContainText('Relation personnelle terminée');
     await expect(actorCard.getByRole('button', { name: "Accepter l'alliance", exact: true })).toHaveCount(0);

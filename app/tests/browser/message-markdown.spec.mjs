@@ -26,7 +26,7 @@ for (const channel of ['private', 'guild', 'global']) {
         try {
             const peer = await register(await context.newPage()), project = process.env.BROWSER_ROUTER;
             if (channel === 'guild') {
-                await page.goto('/diplomatie');
+                await page.goto('/guildes/creer');
                 await page.getByLabel('Nom de votre nouvelle guilde').fill('Markdown Guild ' + crypto.randomUUID().slice(0, 8));
                 await page.getByLabel('Tag de la guilde', { exact: true }).fill('MDK');
                 await page.getByRole('button', { name: 'Fonder une guilde' }).click();

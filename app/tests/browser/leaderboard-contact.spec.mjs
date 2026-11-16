@@ -176,15 +176,15 @@ test('Conversations : dernier message, bulles distinctes et témoin mobile', asy
   await peerPage.close();
 });
 
-test('Alliances : Guildes par défaut et panneaux séparés', async ({ page }) => {
+test('Guildes et diplomatie : espaces séparés', async ({ page }) => {
   await registerAndJoin(page, 'Tabs');
-  await page.goto('/diplomatie');
-  const tabs = page.getByRole('navigation', { name: 'Sections de diplomatie' });
-  await expect(tabs.getByRole('link')).toHaveText(['Créer une guilde', 'Rejoindre une guilde', 'Relations commandants']);
-  await expect(tabs.getByRole('link').first()).toHaveAttribute('aria-current', 'page');
+  await page.goto('/guildes/creer');
+  const tabs = page.getByRole('navigation', { name: 'Navigation de guilde' });
+  await expect(tabs.getByRole('link')).toHaveText(['Trouver une guilde', 'Créer une guilde']);
+  await expect(tabs.getByRole('link',{name:'Créer une guilde',exact:true})).toHaveAttribute('aria-current', 'page');
   await expect(page.getByRole('region', { name: 'Centre de guilde' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Relations entre commandants' })).toHaveCount(0);
-  await tabs.getByRole('link', { name: 'Relations commandants', exact: true }).click();
+  await page.getByRole('navigation',{name:'Navigation principale'}).getByRole('link',{name:'Diplomatie',exact:true}).click();
   await expect(page.getByRole('heading', { name: 'Relations entre commandants' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Relations entre guildes' })).toHaveCount(0);
 });
@@ -194,11 +194,11 @@ test('Hub de guilde : création, équipage et discussion commune', async ({ page
   const memberPage = await browser.newPage();
   const leader = await registerAndJoin(page, 'Hub-Leader', 'Omega');
   const member = await registerAndJoin(memberPage, 'Hub-Member', 'Omega');
-  await page.goto('/diplomatie');
+  await page.goto('/guildes/creer');
   const guildName = 'Hub-' + crypto.randomUUID().slice(0, 8);
   await page.getByLabel('Nom de votre nouvelle guilde').fill(guildName);await page.getByLabel('Tag de la guilde', { exact:true }).fill(crypto.randomUUID().replaceAll('-', '').slice(0,5).toUpperCase());
   await page.getByRole('button', { name: 'Fonder une guilde' }).click();
-  await page.getByRole('navigation',{name:'Sections de diplomatie'}).getByRole('link',{name:'Membres',exact:true}).click();
+  await page.getByRole('navigation',{name:'Navigation de guilde'}).getByRole('link',{name:'Membres',exact:true}).click();
   await expect(page.getByRole('heading', { name: 'Membres de la guilde', exact: true })).toBeVisible();
   await expect(page.locator('.guild-members-table')).toContainText(leader);
   await memberPage.goto('/diplomatie?tab=diplomacy');
@@ -206,15 +206,15 @@ test('Hub de guilde : création, équipage et discussion commune', async ({ page
   await memberPage.getByLabel('Rechercher une guilde').fill(guildName);
   await memberPage.getByRole('button', { name: 'Rechercher', exact: true }).click();
   await memberPage.locator('.guild-card').filter({ has: memberPage.getByRole('heading', { name: guildName, exact: true }) }).getByRole('button', { name: 'Rejoindre · recrutement ouvert' }).click();
-  await memberPage.getByRole('navigation',{name:'Sections de diplomatie'}).getByRole('link',{name:'Membres',exact:true}).click();
+  await memberPage.getByRole('navigation',{name:'Navigation de guilde'}).getByRole('link',{name:'Membres',exact:true}).click();
   await expect(memberPage.locator('.guild-members-table')).toContainText(leader);
   await expect(memberPage.locator('.guild-members-table')).toContainText(member);
   await expect(memberPage.getByText('Gérer le commandement', { exact: true })).toHaveCount(0);
-  await memberPage.goto('/diplomatie');
+  await memberPage.goto('/guildes/creer');
   await memberPage.getByRole('link', { name: 'Ouvrir le canal de guilde' }).click();
   await memberPage.getByLabel('Message pour la guilde').fill('Préparons notre prochaine expédition.');
   await memberPage.getByRole('button', { name: 'Envoyer', exact: true }).click();
-  await page.goto('/diplomatie');
+  await page.goto('/guildes/creer');
   await expect(page.locator('.guild-message-preview')).toContainText('Préparons notre prochaine expédition.');
   await expect(page.getByRole('link', { name: 'Messages', exact: false }).filter({ has: page.locator('.message-unread-dot') })).toHaveCount(1);
   await page.getByRole('link', { name: 'Ouvrir le canal de guilde' }).click();
@@ -227,13 +227,14 @@ test('Hub de guilde : création, équipage et discussion commune', async ({ page
   await expect(page.getByRole('row').filter({ hasText: guildName })).toContainText('2');
   await expect(page.getByRole('columnheader')).toHaveText(['Rang', 'Guilde', 'Joueurs', 'Points bâtiments', 'Points recherches', 'Points flotte', 'Points totaux', 'Médiane des points joueurs']);
   await expect(page.getByRole('row').filter({ hasText: guildName })).toHaveClass(/ranking-row--guild/);
-  await memberPage.goto('/diplomatie');
-  await memberPage.getByRole('link', { name: 'Gestion de la guilde', exact: true }).focus();
+  await memberPage.goto('/guildes/creer');
+  await memberPage.getByRole('link', { name: 'Gestion', exact: true }).focus();
   await memberPage.keyboard.press('Enter');
-  await expect(memberPage).toHaveURL(/#guild-management-title$/);
+  await expect(memberPage).toHaveURL(/\/guildes\/gestion$/);
   await expect(memberPage.getByRole('heading', { name: 'Gestion de la guilde', exact: true })).toBeVisible();
   await memberPage.getByRole('button', { name: 'Quitter la guilde' }).click();
   const enemyGuild = 'Enemy-' + crypto.randomUUID().slice(0, 8);
+  await memberPage.goto('/guildes/creer');
   await memberPage.getByLabel('Nom de votre nouvelle guilde').fill(enemyGuild);await memberPage.getByLabel('Tag de la guilde', { exact:true }).fill(crypto.randomUUID().replaceAll('-', '').slice(0,5).toUpperCase());
   await memberPage.getByRole('button', { name: 'Fonder une guilde' }).click();
   await page.goto('/diplomatie?tab=diplomacy');

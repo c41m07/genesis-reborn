@@ -76,7 +76,7 @@ test('Les membres financent deux paliers et le traitement attribue les boosts un
   const other = await otherContext.newPage();
   try {
     await register(page, 'ProjLeader-' + id, 'proj-leader-' + id + '@example.test');
-    await page.goto('/diplomatie');
+    await page.goto('/guildes/creer');
     await page.getByLabel('Nom de votre nouvelle guilde').fill(guildName);await page.getByLabel('Tag de la guilde', { exact:true }).fill(crypto.randomUUID().replaceAll('-', '').slice(0,5).toUpperCase());
     await page.getByRole('button', { name: 'Fonder une guilde' }).click();
     await register(other, 'ProjMember-' + id, 'proj-member-' + id + '@example.test');
@@ -89,7 +89,7 @@ test('Les membres financent deux paliers et le traitement attribue les boosts un
     expect(denied.status()).toBe(403);
     await other.goto('/guildes/projets');
     await expect(other.getByRole('button', { name: 'Lancer ' + projectName })).toHaveCount(0);
-    await page.goto('/diplomatie');
+    await page.goto('/guildes/creer');
     await page.getByRole('link', { name: 'Consulter les projets', exact: true }).click();
     await page.getByRole('button', { name: 'Lancer ' + projectName, exact: true }).click();
     const card = page.locator('.guild-project');

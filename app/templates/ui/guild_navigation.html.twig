@@ -1,0 +1,24 @@
+{% set navigationGuild = chrome.guild|default(null) %}
+<nav class="ui-tabs space-navigation" aria-label="Navigation de guilde">
+{% if navigationGuild %}
+    {% set destinations = [
+        {route:'app_guilds', label:'Vue générale'},
+        {route:'app_guild_members', label:'Membres'},
+        {route:'app_guild_ranks', label:'Grades et permissions'},
+        {route:'app_guild_projects', label:'Projets collectifs'}
+    ] %}
+    {% if navigationGuild.leader.id == chrome.membership.id %}
+        {% set destinations = destinations|merge([{route:'app_guild_profile_edit', label:'Personnalisation', parameters:{id:navigationGuild.id}}]) %}
+    {% endif %}
+    {% set destinations = destinations|merge([{route:'app_guild_management', label:'Gestion'}]) %}
+{% else %}
+    {% set destinations = [{route:'app_guilds', label:'Trouver une guilde'}, {route:'app_guild_create', label:'Créer une guilde'}] %}
+{% endif %}
+{% if route == 'app_guild_public_profile' %}
+    {% set destinations = destinations|merge([{route:'app_guild_public_profile',label:'Présentation',parameters:{id:app.request.attributes.getInt('id')}}]) %}
+{% endif %}
+{% for destination in destinations %}
+    {% set active = route == destination.route or destination.route == 'app_guild_projects' and route == 'app_guild_project' %}
+    <a href="{{ path(destination.route, destination.parameters|default({})) }}"{% if active %} class="active" aria-current="page"{% endif %}>{{ destination.label }}</a>
+{% endfor %}
+</nav>

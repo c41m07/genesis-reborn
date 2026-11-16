@@ -148,6 +148,60 @@ final class GameRepository
         return $byPeer;
     }
 
+    /** @return array<string, int> Compteurs de la vue générale sans équipages ni historiques. */
+    public function guildRelationCounts(\App\Entity\Guild $guild): array
+    {
+        $rows = $this->em->createQueryBuilder()->select('relation.status AS status', 'COUNT(relation.id) AS total')
+            ->from(\App\Entity\GuildRelation::class, 'relation')->join('relation.guildA', 'a')->join('relation.guildB', 'b')
+            ->where('a = :guild OR b = :guild')->andWhere('a.universe = :universe AND b.universe = :universe')
+            ->andWhere('a.archivedAt IS NULL AND b.archivedAt IS NULL')->setParameter('guild', $guild)
+            ->setParameter('universe', $guild->universe)->groupBy('relation.status')->getQuery()->getArrayResult();
+        return array_map('intval', array_column($rows, 'total', 'status'));
+    }
+
+    /** @return list<\App\Entity\Guild> Recherche bornée avant chargement des équipages. */
+    public function searchGuilds(PlayerUniverse $viewer, string $search, ?\App\Entity\Guild $own): array
+    {
+        if (mb_strlen($search) < 2) {
+            return [];
+        }
+        // LOCATE conserve la recherche littérale historique, y compris pour % et _.
+        $query = $this->em->createQueryBuilder()->select('guild', 'leader', 'player')->from(\App\Entity\Guild::class, 'guild')
+            ->join('guild.leader', 'leader')->leftJoin('leader.player', 'player')
+            ->where('guild.universe = :universe')->andWhere('guild.archivedAt IS NULL')
+            ->andWhere('LOCATE(:search, LOWER(guild.name)) > 0')->setParameter('search', mb_strtolower($search))
+            ->setParameter('universe', $viewer->universe)->orderBy('guild.id', 'ASC')->setMaxResults(20);
+        if ($own) {
+            $query->andWhere('guild != :own')->setParameter('own', $own);
+        }
+        return $query->getQuery()->getResult();
+    }
+
+    /**
+     * @param list<\App\Entity\AllianceContract> $contracts
+     * @param list<int> $guildIds Guildes déjà validées dans l’univers du lecteur.
+     * @return list<PlayerUniverse> Au plus 51 identités, dont une pour détecter la page suivante.
+     */
+    public function personalDiplomacyPlayers(PlayerUniverse $viewer, array $contracts, array $guildIds, int $afterId): array
+    {
+        $peerIds = [];
+        foreach ($contracts as $contract) {
+            $peerIds[] = $contract->playerA->id === $viewer->id ? $contract->playerB->id : $contract->playerA->id;
+        }
+        if ($peerIds === [] && $guildIds === []) {
+            return [];
+        }
+        $query = $this->em->createQueryBuilder()->select('DISTINCT membership', 'player')->from(PlayerUniverse::class, 'membership')
+            ->leftJoin('membership.player', 'player')->leftJoin(\App\Entity\GuildMember::class, 'peerMember', 'WITH', 'peerMember.playerUniverse = membership')
+            ->where('membership.universe = :universe')->andWhere('membership.id != :viewer')->andWhere('membership.id > :after')
+            ->andWhere('membership.forgottenAt IS NULL')->andWhere('player.id IS NOT NULL')
+            ->andWhere('membership.id IN (:peers) OR peerMember.guild IN (:guilds)')
+            ->setParameter('universe', $viewer->universe)->setParameter('viewer', $viewer->id)->setParameter('after', max(0, $afterId))
+            ->setParameter('peers', $peerIds ?: [0])->setParameter('guilds', $guildIds ?: [0])
+            ->orderBy('membership.id', 'ASC')->setMaxResults(51);
+        return $query->getQuery()->getResult();
+    }
+
     public function guildMemberships(array $memberships, Universe $universe): array
     {
         if ($memberships === []) {

@@ -1,0 +1,9 @@
+<section class="panel" id="guild-management" aria-labelledby="guild-management-title">
+<h2 id="guild-management-title">Gestion de la guilde</h2>
+{% if own.leader.id==membership.id %}<details><summary>Tag et commandement</summary>{% include 'player/_guild_management.html.twig' %}</details>
+<p>Dissoudre la guilde abandonne ses projets en cours, sans rembourser les dons. Les contrats personnels sont conservés.</p>
+<form method="post"><input type="hidden" name="_token" value="{{ csrf_token('diplomacy') }}"><button class="text-button" name="action" value="disband">Dissoudre la guilde</button></form>
+{% else %}<p>Les dons de projet restent définitifs après votre départ. Pour recevoir une récompense, vous devez appartenir à la guilde à la clôture du projet.</p>
+<form method="post"><input type="hidden" name="_token" value="{{ csrf_token('diplomacy') }}"><button class="text-button" name="action" value="leave">Quitter la guilde</button></form>
+{% endif %}
+</section>

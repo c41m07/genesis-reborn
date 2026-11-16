@@ -7,6 +7,7 @@
 {% set presentationPages = {
 'app_combat_simulation':'simulateur','app_fleet_compositions':'compositions','app_fleet_composition_load':'compositions','app_message_search':'recherche-messages','app_home':'accueil-public','app_profile':'profil','app_preferences':'preferences','app_feedback':'feedback',
 'app_planets':'planetes','app_technology_tree':'guide-technologique','app_fleets':'flottes','app_map':'galaxie','app_map_v2':'galaxie',
+'app_guilds':'guilde','app_guild_create':'guilde','app_guild_members':'guilde','app_guild_ranks':'guilde','app_guild_management':'guilde','app_personal_relations':'diplomatie','app_guild_profile_edit':'guilde','app_guild_public_profile':'guilde',
 'app_boosts':'inventaire','app_game_events':'evenements','app_challenge':'defi','app_diplomacy':'diplomatie','app_messages':'messages',
 'app_guild_projects':'projets','app_guild_project':'projet-detail','app_leaderboard':'classements','app_combat_reports':'rapports',
 'app_combat_report':'rapport-combat','app_espionage_report':'rapport-espionnage','app_transport_report':'rapport-transport','app_player_report':'signaler-commandant',
@@ -48,9 +49,19 @@
 {% if chrome.planet %}{% for item in [{group:'buildings',label:'Bâtiments',icon:'buildings'},{group:'technologies',label:'Recherche',icon:'research'},{group:'ships',label:'Chantier spatial',icon:'fleet'},{group:'defenses',label:'Défenses',icon:'diplomacy'}] %}<a href="{{ path('app_colony',{id:chrome.planet.id,section:item.group}) }}" data-colony-section="{{ item.group }}" class="{{ route=='app_colony' and section==item.group?'active':'' }}" {{ route=='app_colony' and section==item.group?'aria-current="page"':'' }}>{{ ui.icon(item.icon) }}<span>{{ item.label }}</span></a>{% endfor %}{% endif %}
 <a href="{{ path('app_technology_tree') }}" class="{{ route=='app_technology_tree'?'active':'' }}" {{ route=='app_technology_tree'?'aria-current="page"':'' }}>{{ ui.icon('research') }}<span>Guide technologique</span></a>
 <div class="nav-section-label">Opérations</div>
-{% for item in [{route:'app_fleets',label:'Flottes et missions',icon:'fleet'},{route:'app_combat_simulation',label:'Simulateur de combat',icon:'fleet'},{route:'app_map_v2',label:'Galaxie',icon:'galaxy'},{route:'app_boosts',label:'Inventaire',icon:'clock'},{route:'app_game_events',label:'Événements',icon:'clock'}] %}<a href="{{ path(item.route) }}" class="{{ (route==item.route or (item.route=='app_map_v2' and route=='app_map'))?'active':'' }}" {{ (route==item.route or (item.route=='app_map_v2' and route=='app_map'))?'aria-current="page"':'' }}>{{ ui.icon(item.icon) }}<span>{{ item.label }}</span>{% if item.route=='app_messages' %}<span class="message-unread-dot" data-message-notifications-target="badge" role="img" aria-label="Messages non lus" {% if not chrome.unreadMessages|default(0) %}hidden{% endif %}></span>{% endif %}</a>{% endfor %}
+{% for item in [{route:'app_fleets',label:'Flottes et missions',icon:'fleet'},{route:'app_map_v2',label:'Galaxie',icon:'galaxy'},{route:'app_combat_simulation',label:'Simulateur de combat',icon:'fleet'},{route:'app_combat_reports',label:'Rapports',icon:'clock'},{route:'app_boosts',label:'Inventaire',icon:'clock'}] %}<a href="{{ path(item.route) }}" class="{{ (route==item.route or (item.route=='app_map_v2' and route=='app_map'))?'active':'' }}" {{ (route==item.route or (item.route=='app_map_v2' and route=='app_map'))?'aria-current="page"':'' }}>{{ ui.icon(item.icon) }}<span>{{ item.label }}</span>{% if item.route=='app_messages' %}<span class="message-unread-dot" data-message-notifications-target="badge" role="img" aria-label="Messages non lus" {% if not chrome.unreadMessages|default(0) %}hidden{% endif %}></span>{% endif %}</a>{% endfor %}
 <div class="nav-section-label">Communauté</div>
-{% for item in [{route:'app_combat_reports',label:'Rapports',icon:'clock'},{route:'app_messages',label:'Messages',icon:'notifications'},{route:'app_diplomacy',label:'Diplomatie',icon:'diplomacy'},{route:'app_leaderboard',label:'Classements',icon:'research'}] %}<a href="{{ path(item.route) }}" class="{{ (route==item.route or (item.route=='app_map_v2' and route=='app_map'))?'active':'' }}" {{ (route==item.route or (item.route=='app_map_v2' and route=='app_map'))?'aria-current="page"':'' }}>{{ ui.icon(item.icon) }}<span>{{ item.label }}</span>{% if item.route=='app_messages' %}<span class="message-unread-dot" data-message-notifications-target="badge" role="img" aria-label="Messages non lus" {% if not chrome.unreadMessages|default(0) %}hidden{% endif %}></span>{% endif %}</a>{% endfor %}
+{% set guildRoutes = ['app_guilds','app_guild_create','app_guild_members','app_guild_ranks','app_guild_management','app_guild_profile_edit','app_guild_public_profile','app_guild_projects','app_guild_project'] %}
+{% for item in [
+    {route:'app_guilds',label:chrome.guild|default(null) ? 'Ma guilde' : 'Guildes',icon:'diplomacy'},
+    {route:'app_diplomacy',label:'Diplomatie',icon:'diplomacy'},
+    {route:'app_messages',label:'Messages',icon:'notifications'},
+    {route:'app_leaderboard',label:'Classements',icon:'research'},
+    {route:'app_game_events',label:'Événements',icon:'clock'}
+] %}
+{% set active = route==item.route or (item.route=='app_guilds' and route in guildRoutes) or (item.route=='app_diplomacy' and route=='app_personal_relations') %}
+<a href="{{ path(item.route) }}"{% if active %} class="active" aria-current="page"{% endif %}>{{ ui.icon(item.icon) }}<span>{{ item.label }}</span>{% if item.route=='app_messages' %}<span class="message-unread-dot" data-message-notifications-target="badge" role="img" aria-label="Messages non lus" {% if not chrome.unreadMessages|default(0) %}hidden{% endif %}></span>{% endif %}</a>
+{% endfor %}
 <div class="nav-section-label">Compte</div>
 <a href="{{ path('app_profile') }}" class="{{ route=='app_profile'?'active':'' }}" {{ route=='app_profile'?'aria-current="page"':'' }}>{{ ui.icon('user') }}<span>Profil</span></a>
 

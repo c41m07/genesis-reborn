@@ -2,10 +2,9 @@
 
 namespace App\Controller;
 
-use App\Entity\{Guild, GuildMember, GuildRank};
+use App\Entity\GuildRank;
 use App\Service\Universe\UniverseContext;
-use App\Service\Player\{RelationResolver, DiplomacyService, DiplomacyAccessPolicy, GuildRankService, GuildPresence};
-use App\Service\Catalog\GameCatalog;
+use App\Service\Player\{RelationResolver, DiplomacyService, GuildRankService, DiplomacyPageView};
 use App\Repository\GameRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{Request, Response};
@@ -13,21 +12,51 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class DiplomacyController extends AbstractController
 {
-    #[Route('/diplomatie', name: 'app_diplomacy', methods: ['GET', 'POST'])]
+    #[Route('/guildes', name: 'app_guilds', defaults: ['page' => 'guilds'], methods: ['GET', 'POST'])]
+    #[Route('/guildes/creer', name: 'app_guild_create', defaults: ['page' => 'create'], methods: ['GET', 'POST'])]
+    #[Route('/guildes/membres', name: 'app_guild_members', defaults: ['page' => 'members'], methods: ['GET', 'POST'])]
+    #[Route('/guildes/grades', name: 'app_guild_ranks', defaults: ['page' => 'ranks'], methods: ['GET', 'POST'])]
+    #[Route('/guildes/gestion', name: 'app_guild_management', defaults: ['page' => 'management'], methods: ['GET', 'POST'])]
+    #[Route('/diplomatie/commandants', name: 'app_personal_relations', defaults: ['page' => 'relations'], methods: ['GET', 'POST'])]
+    #[Route('/diplomatie', name: 'app_diplomacy', defaults: ['page' => 'diplomacy'], methods: ['GET', 'POST'])]
     public function index(
         Request $request,
         UniverseContext $context,
         RelationResolver $relations,
         DiplomacyService $service,
         GameRepository $repository,
-        GameCatalog $catalog,
-        DiplomacyAccessPolicy $access,
         GuildRankService $rankService,
-        GuildPresence $presence,
+        DiplomacyPageView $view,
     ): Response
     {
         $membership = $context->membership();
-        $search = mb_substr(trim($request->query->getString('q')), 0, $request->query->getString('tab') === 'relations' ? 40 : 60);
+        $ownGuild = $relations->guild($membership);
+        $page = $request->attributes->getString('page');
+        $personalPage = $page === 'relations' || ($page === 'diplomacy' && !$ownGuild)
+            || $request->query->getString('tab') === 'relations';
+        $search = mb_substr(trim($request->query->getString('q')), 0, $personalPage ? 40 : 60);
+        // Les anciennes adresses restent des points d’entrée, sans conserver l’ancien écran composite.
+        if ($request->isMethod('GET') && $request->query->has('tab')) {
+            $legacyPage = $request->query->getString('tab');
+            $route = match ($legacyPage) {
+                'members' => $ownGuild ? 'app_guild_members' : 'app_guild_create',
+                'ranks' => $ownGuild ? 'app_guild_ranks' : 'app_guild_create',
+                'relations' => 'app_personal_relations',
+                'join' => 'app_guilds',
+                'diplomacy' => $ownGuild ? 'app_diplomacy' : 'app_guilds',
+                default => $ownGuild ? 'app_guilds' : ($search !== '' ? 'app_guilds' : 'app_guild_create'),
+            };
+            $parameters = array_intersect_key($request->query->all(), array_flip(['q', 'rank']));
+            return $this->redirectToRoute($route, $parameters);
+        }
+        if (!$request->isMethod('POST')) {
+            if ($ownGuild && $page === 'create') {
+                return $this->redirectToRoute('app_guilds');
+            }
+            if (!$ownGuild && in_array($page, ['members', 'ranks', 'management'], true)) {
+                return $this->redirectToRoute('app_guilds');
+            }
+        }
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('diplomacy', $request->request->get('_token'))) {
                 throw $this->createAccessDeniedException('Formulaire expiré.');
@@ -68,14 +97,21 @@ final class DiplomacyController extends AbstractController
             } catch (\DomainException $e) {
                 $this->addFlash('error', $e->getMessage());
             }
-            $redirect = ['q' => $search, 'tab' => match ($action) {
-                'rank_save' => 'ranks',
-                'rank_assign' => 'members',
-                'join' => $updated ? 'guilds' : 'join',
-                'relation' => 'diplomacy',
-                'propose', 'accept', 'break', 'rival', 'peace_propose', 'peace_accept', 'peace_reject' => 'relations',
-                default => 'guilds',
-            }];
+            $redirectRoute = match ($action) {
+                'rank_save' => 'app_guild_ranks',
+                'rank_assign' => 'app_guild_members',
+                'create' => $updated ? 'app_guilds' : 'app_guild_create',
+                'join' => 'app_guilds',
+                'leave', 'disband' => $updated ? 'app_guilds' : 'app_guild_management',
+                'tag', 'transfer' => 'app_guild_management',
+                'relation' => 'app_diplomacy',
+                'propose', 'accept', 'break', 'rival', 'peace_propose', 'peace_accept', 'peace_reject' => 'app_personal_relations',
+                default => 'app_guilds',
+            };
+            $redirect = $search !== '' ? ['q' => $search] : [];
+            if ($redirectRoute === 'app_personal_relations' && $request->query->getInt('after') > 0) {
+                $redirect['after'] = $request->query->getInt('after');
+            }
             if ($action === 'rank_save') {
                 $redirect['rank'] = $target;
                 if ($updated) {
@@ -86,133 +122,16 @@ final class DiplomacyController extends AbstractController
                     }
                 }
             }
-            return $this->redirectToRoute('app_diplomacy', $redirect);
+            return $this->redirectToRoute($redirectRoute, $redirect);
         }
-        $ownGuild = $relations->guild($membership);
-        // Valider l’onglet avant de préparer ses listes et formulaires.
-        $tabs = $ownGuild ? [
-            'guilds' => 'Ma guilde',
-            'members' => 'Membres',
-            'ranks' => 'Grades et permissions',
-            'diplomacy' => 'Relations guildes',
-            'relations' => 'Relations commandants',
-        ] : ['guilds' => 'Créer une guilde', 'join' => 'Rejoindre une guilde', 'relations' => 'Relations commandants'];
-        $tab = $request->query->getString('tab', 'guilds');
-        if (!$ownGuild && ($tab === 'diplomacy' || $tab === 'guilds' && $search !== '')) {
-            $tab = 'join';
-        }
-        if (!isset($tabs[$tab])) {
-            $tab = 'guilds';
-        }
-        // Le compteur des propositions reste commun aux onglets ; les listes détaillées sont préparées ensuite.
-        $incomingPersonalCount = 0;
-        $personalContracts = $repository->personalContracts($membership);
-        $guildRelationsByPeer = $ownGuild ? $repository->guildRelations($ownGuild) : [];
-        foreach ($personalContracts as $contract) {
-            $peer = $contract->playerA->id === $membership->id ? $contract->playerB : $contract->playerA;
-            if (in_array($contract->status, ['pending', 'peace_pending'], true) && $contract->proposer->id !== $membership->id && $peer->isPlayerControlled() && $peer->universe->id === $membership->universe->id) {
-                ++$incomingPersonalCount;
-            }
-        }
-        $players = [];
-        $searchPlayers = [];
-        if ($tab === 'relations') {
-            $rows = $relations->displayRows($membership, $repository->membershipIdentities($membership->universe), $ownGuild, $personalContracts, $guildRelationsByPeer);
-            $players = array_values(array_filter($rows, static fn(array $row): bool => $row['contract'] || $row['allied'] || $row['enemy']));
-            foreach ($repository->searchMessageRecipients($membership, $search) as $player) {
-                if (isset($rows[$player->id])) {
-                    $searchPlayers[] = $rows[$player->id];
-                }
-            }
-        }
-        $guilds = [];
-        foreach ($repository->all(Guild::class, ['universe' => $membership->universe, 'archivedAt' => null]) as $guild) {
-            $isOwn = $ownGuild?->id === $guild->id;
-            $relation = $ownGuild && !$isOwn ? $guildRelationsByPeer[$guild->id] ?? null : null;
-            $status = $isOwn ? 'allies' : $relation?->status ?? 'neutral';
-            $matchesSearch = mb_strlen($search) >= 2 && mb_stripos($guild->name, $search) !== false;
-            // Charger membres et historique seulement si l’onglet affiche réellement les détails de cette guilde.
-            $showDetails = $isOwn && in_array($tab, ['guilds', 'members'], true) || !$isOwn && ($tab === 'diplomacy' && ($status !== 'neutral' || $relation?->proposal !== null || $matchesSearch)) || $tab === 'join' && $matchesSearch;
-            $guilds[] = [
-                'guild' => $guild,
-                'status' => $status,
-                'relation' => $relation,
-                'members' => $showDetails ? $repository->all(GuildMember::class, ['guild' => $guild]) : [],
-                'history' => $showDetails && $ownGuild && !$isOwn ? $repository->guildTreatyHistory($ownGuild, $guild) : [],
-            ];
-        }
-        $guildRelations = [];
-        $guildSearchResults = [];
-        foreach ($guilds as $row) {
-            if ($ownGuild && $row['guild']->id === $ownGuild->id) {
-                continue;
-            }
-            if ($ownGuild && ($row['status'] !== 'neutral' || $row['relation']?->proposal !== null)) {
-                $guildRelations[] = $row;
-            }
-            if (mb_strlen($search) >= 2 && mb_stripos($row['guild']->name, $search) !== false && count($guildSearchResults) < 20) {
-                $guildSearchResults[] = $row;
-            }
-        }
-        $ownGuildMember = $ownGuild ? $repository->one(GuildMember::class, ['playerUniverse' => $membership]) : null;
-        $ranks = $ownGuild && in_array($tab, ['members', 'ranks'], true) ? $repository->all(GuildRank::class, ['guild' => $ownGuild], ['position' => 'ASC', 'id' => 'ASC']) : [];
-        $rankAssignments = [];
-        if ($ownGuildMember && $tab === 'members') {
-            foreach ($repository->all(GuildMember::class, ['guild' => $ownGuild]) as $member) {
-                if (!$access->canAssignRank($ownGuildMember, $member, null)) {
-                    continue;
-                }
-                $rankAssignments[] = ['member' => $member, 'choices' => array_values(array_filter($ranks, fn(GuildRank $rank): bool => $access->canAssignRank($ownGuildMember, $member, $rank)))];
-            }
-        }
-        $ownGuildRow = null;
-        foreach ($guilds as $row) {
-            if ($ownGuild && $row['guild']->id === $ownGuild->id) {
-                $ownGuildRow = $row;
-            }
-        }
-        $selectedRank = $ranks[0] ?? null;
-        if ($request->query->has('rank')) {
-            $selectedId = $request->query->getInt('rank');
-            if ($selectedId === 0) {
-                $selectedRank = null;
-            } else {
-                foreach ($ranks as $rank) {
-                    if ($rank->id === $selectedId) {
-                        $selectedRank = $rank;
-                    }
-                }
-            }
-        }
-        $guildPermissions = [];
-        foreach (DiplomacyAccessPolicy::PERMISSIONS as $permission => $label) {
-            $guildPermissions[$permission] = $access->allows($ownGuildMember, $permission);
-        }
-        $memberPresence = $tab === 'members' && $ownGuild && $ownGuildRow && $catalog->forUniverse($membership->universe)['features']['guilds_enabled'] ? $presence->forMember($membership) : [];
-        $response = $this->render('player/diplomacy.html.twig', [
-            'incomingPersonalCount' => $incomingPersonalCount,
-            'memberPresence' => $memberPresence,
-            'tabs' => $tabs,
-            'tab' => $tab,
-            'ownRow' => $ownGuildRow,
-            'selectedRank' => $selectedRank,
-            'ownMember' => $ownGuildMember,
-            'ranks' => $ranks,
-            'rankAssignments' => $rankAssignments,
-            'guildPermissions' => $guildPermissions,
-            'rankPermissionLabels' => DiplomacyAccessPolicy::PERMISSIONS,
-            'membership' => $membership,
-            'search' => $search,
-            'searchPlayers' => $searchPlayers,
-            'players' => $players,
-            'guilds' => $guilds,
-            'guildRelations' => $guildRelations,
-            'guildSearchResults' => $guildSearchResults,
-            'guildPreview' => $ownGuild && $tab === 'guilds' ? $repository->guildConversation($ownGuild, 3) : [],
-            'own' => $ownGuild,
-            'enabled' => $catalog->forUniverse($membership->universe)['features']['guilds_enabled'],
-        ]);
-        $response->headers->set('Cache-Control', 'private, no-store');
-        return $response;
+        $data = $view->prepare(
+            $membership,
+            $ownGuild,
+            $page,
+            $search,
+            $request->query->getInt('rank', -1),
+            max(0, $request->query->getInt('after')),
+        );
+        return $this->render('player/diplomacy.html.twig', $data, new Response(headers: ['Cache-Control' => 'private, no-store']));
     }
 }

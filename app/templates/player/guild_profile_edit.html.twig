@@ -1,6 +1,7 @@
 {% extends 'base.html.twig' %}
 {% block title %}Personnaliser {{ profile.name }} · Genesis Reborn{% endblock %}
 {% block body %}
+{% include 'ui/guild_navigation.html.twig' %}
 <div class="social-profile-page">
 <div class="page-heading"><div><h1>Personnaliser la guilde</h1><p>{{ profile.name }} · Commandant uniquement</p></div></div>
 <form class="panel guild-profile-form" method="post" enctype="multipart/form-data">

@@ -2,9 +2,22 @@ import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
     connect() {
+        // Les anciens liens d’un écran composite gardent une destination après la séparation.
+        if (['guilde', 'diplomatie'].includes(this.element.dataset.uiPage)) {
+            const destinations = {
+                '#guild-management': '/guildes/gestion', '#guild-management-title': '/guildes/gestion',
+                '#guild-members-title': '/guildes/membres', '#guild-ranks-title': '/guildes/grades',
+                '#guild-search': '/guildes', '#alliance-members': '/diplomatie/commandants',
+            };
+            const destination = destinations[window.location.hash];
+            if (destination && window.location.pathname !== destination) {
+                window.location.replace(destination + window.location.hash);
+                return;
+            }
+        }
         const main = this.element.querySelector('main');
         if (!main || ['vue-generale', 'flottes', 'wiki', 'projet-detail', 'accueil-public', 'recherche-messages'].includes(this.element.dataset.uiPage)) return;
-        if (main.querySelector('.page-contents, nav a[href^="#"]')) return;
+        if (main.querySelector('[data-page-sections="disabled"], .page-contents, nav a[href^="#"]')) return;
         const seen = new Set();
         const headings = [...main.querySelectorAll('h2')].filter(heading => {
             const label = heading.textContent.trim();
