@@ -1,0 +1,6 @@
+<section class="panel fleet-mission-summary-card" data-live-region="mission-summary" aria-labelledby="mission-summary-title">
+<div class="section-heading"><h2 id="mission-summary-title">Missions de la colonie <span class="badge">{{ active_fleet_count }}</span></h2><a href="{{ path('app_fleets') }}">Tout voir</a></div>
+{% set missionLabels={explore:'Exploration',colonize:'Colonisation',transport:'Transport',attack:'Attaque',spy:'Espionnage',defend:'Défense',orbit:'Mise en orbite',station:'Stationnement',conquer:'Conquête JcE'} %}
+<ul>{% for fleet in active_fleets %}<li><a href="{{ path('app_fleets',{fleet:fleet.id,_fragment:'fleet-'~fleet.id}) }}">{{ missionLabels[fleet.mission]|default(fleet.mission) }} · flotte {{ fleet.id }}</a>{% if fleet.arrivalAt %}<br><time datetime="{{ fleet.arrivalAt|date('c') }}">{{ fleet.arrivalAt|date('d/m H:i',preferences.timezone) }}</time>{% else %}<br>Flotte engagée{% endif %}</li>{% else %}<li>Aucune mission en cours au départ de cette colonie.</li>{% endfor %}</ul>
+{% if active_fleet_count>3 %}<p>Trois missions affichées sur {{ active_fleet_count }}.</p>{% endif %}
+</section>

@@ -26,7 +26,7 @@
 </div>
 {% endif %}
 <div class="incoming-fleet-actions"><a class="inline-link" href="{{ path('app_colony',{id:fleet.destinationPlanetId}) }}">Ouvrir la colonie {{ fleet.destinationName }} {{ ui.icon('arrow') }}</a>
-{% if fleet.mission == 'orbit' %}<a class="inline-link" href="{{ path('app_fleets',{colony:fleet.destinationPlanetId}) }}">Consulter la demande d’orbite {{ ui.icon('arrow') }}</a>{% endif %}</div>
+{% if fleet.mission == 'orbit' %}<a class="inline-link" href="{{ path('app_fleet_orbits',{colony:fleet.destinationPlanetId}) }}">Consulter la demande d’orbite {{ ui.icon('arrow') }}</a>{% endif %}</div>
 </article>
 {% else %}<p class="flight-idle incoming-empty-message">Aucune flotte entrante visible vers vos colonies.</p>{% endfor %}
 </section>

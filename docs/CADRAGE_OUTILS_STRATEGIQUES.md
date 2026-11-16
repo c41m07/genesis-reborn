@@ -212,3 +212,8 @@ test dédié, réussi avec le contrôle de provenance (2 tests, 9 assertions).
 
 Le résultat de la CI complète sur la dernière version est consigné dans la PR #55.
 La fusion reste soumise à sa réussite et à l’accord explicite du propriétaire.
+
+
+## Navigation dédiée — 16 novembre 2026
+
+Les compositions disposent désormais d’une liste `/flottes/compositions`, d’une création `/creer`, d’une modification `/{id}/modifier` et du chargement existant `/{id}/charger`. Le chargement confirmé ouvre `/flottes/preparer`, sans envoyer de flotte. La limite de 20 et les protections de propriété, univers, version et idempotence sont conservées. Voir le [suivi de navigation](NAVIGATION_PAGES_DEDIEES.md).

@@ -1,2 +1,20 @@
-{% extends 'base.html.twig' %}{% block title %}{{ prefill.mission == 'spy' ? 'Espionnage' : 'Flottes et missions' }} · Genesis Reborn{% endblock %}{# Les arrivées sont placées après les vols dans le contenu, sans second panneau en tête. #}{% block incoming_fleets %}{% endblock %}{% block body %}{% import 'ui/macros.html.twig' as ui %}{% set espionage_screen = prefill.mission == 'spy' %}{% set mission_labels={explore:'Exploration',colonize:'Colonisation',transport:'Transport',attack:'Attaque',spy:'Espionnage',defend:'Défense',orbit:'Mise en orbite',station:'Stationnement',conquer:'Conquête JcE'} %}{% set status_labels={traveling:'En route',returning:'Retour en cours',attacking:'Combat en cours',defending:'En défense',completed:'Terminée',failed:'Échouée',orbiting:'En orbite',orbit_pending:'En attente d’acceptation'} %}<div class="fleet-page-layout {{ idle is empty ? 'fleet-page-layout--no-idle' : '' }} {{ espionage_screen ? 'fleet-page-layout--spy' : '' }}" data-fleet-colony="{{ fleet_planet ? fleet_planet.id : 0 }}" data-controller="colony-live" data-colony-live-url-value="{{ path('app_fleets') }}"><div class="page-heading"><div><h1>{{ espionage_screen ? 'Espionnage' : 'Flottes et missions' }}</h1><p>{{ espionage_screen ? 'Envoyez des sondes vers une planète connue pour recueillir des renseignements. Le résultat détaillé apparaîtra dans vos rapports.' : 'Préparez vos expéditions, choisissez leur destination et suivez les mouvements de vos flottes.' }}</p>{% if fleet_planet %}<p class="muted fleet-colony-scope">Colonie active : {{ fleet_planet.name }} · {{ fleet_planet.coordinates() }}</p>{% endif %}</div></div>{% if fuel_pending %}<p class="flash" role="status">Les départs attendent la validation de la règle de consommation de carburant.</p>{% endif %}
-{% include 'fleet/holds.html.twig' %}<p><a class="inline-link" href="{{ path('app_fleet_compositions') }}">Mes compositions</a></p>{% include 'fleet/_counts.html.twig' %}<div class="fleet-workspace" id="prepare-mission"><div class="fleet-composer">{% include 'fleet/_available.html.twig' %}</div><aside class="fleet-operations-rail" id="active-missions">{% include 'ui/flights.html.twig' %}{% include 'ui/incoming_attacks.html.twig' %}{% include 'ui/orbit_requests.html.twig' %}</aside></div></div>{% endblock %}
+{% extends 'base.html.twig' %}
+{% set pageTitle = fleet_page=='prepare' ? (prefill.mission=='spy' ? 'Espionnage' : 'Préparer une mission') : {missions:'Missions actives',orbits:'Demandes d’orbite',holds:'À quai et stationnements'}[fleet_page] %}
+{% block title %}{{ pageTitle }} · Genesis Reborn{% endblock %}
+{% block incoming_fleets %}{% endblock %}
+{% block body %}
+<div class="fleet-page-layout fleet-space" data-page-sections="disabled" data-fleet-colony="{{ fleet_planet ? fleet_planet.id : 0 }}" data-controller="colony-live" data-colony-live-url-value="{{ path(app.request.attributes.get('_route')) }}">
+<div class="page-heading"><div><h1>{{ pageTitle }}</h1>{% if fleet_planet %}<p class="muted fleet-colony-scope">Colonie active : {{ fleet_planet.name }} · {{ fleet_planet.coordinates() }}</p>{% endif %}</div>{% if fleet_page=='missions' %}<a class="primary" href="{{ path('app_fleet_prepare') }}">Nouvelle mission</a>{% endif %}</div>
+{% include 'fleet/_counts.html.twig' %}
+{% if fleet_page=='prepare' %}
+{% if fuel_pending %}<p class="flash" role="status">Les départs attendent la validation de la règle de consommation de carburant.</p>{% endif %}
+<div class="fleet-workspace" id="prepare-mission"><div class="fleet-composer">{% include 'fleet/_available.html.twig' %}</div><aside class="fleet-operations-rail">{% include 'fleet/_mission_summary.html.twig' %}{% include 'ui/incoming_attacks.html.twig' %}</aside></div>
+{% elseif fleet_page=='missions' %}
+<div id="active-missions">{% include 'fleet/_pagination.html.twig' %}{% include 'ui/flights.html.twig' %}{% include 'ui/incoming_attacks.html.twig' %}</div>
+{% elseif fleet_page=='orbits' %}
+{% include 'ui/orbit_requests.html.twig' %}{% include 'ui/incoming_attacks.html.twig' with {incoming_panel:false} %}
+{% elseif fleet_page=='holds' %}
+{% include 'fleet/_dock.html.twig' %}{% include 'ui/incoming_attacks.html.twig' with {incoming_panel:false} %}
+{% endif %}
+</div>
+{% endblock %}

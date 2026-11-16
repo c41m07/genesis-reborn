@@ -1659,7 +1659,14 @@ nécessaires avant fusion. Aucune migration Alpha effectuée.
 
 ## Navigation par pages dédiées
 
-Lot 1 publié dans la [PR #75](https://github.com/c41m07/genesis-reborn/pull/75) : espaces Guildes et Diplomatie séparés, pages dédiées de membres,
+Lot 1 intégré sur dev par la [PR #75](https://github.com/c41m07/genesis-reborn/pull/75) : espaces Guildes et Diplomatie séparés, pages dédiées de membres,
 grades, gestion et création ; liens directs, anciennes adresses conservées et
 lectures adaptées à chaque page. Voir le [suivi des lots](NAVIGATION_PAGES_DEDIEES.md) pour les
 choix, vérifications et limites. CI, fusion et déploiement restent distincts.
+
+
+Lot 2 Flottes réalisé sur `feature/navigation-flottes` depuis dev `a279cd1` :
+missions, préparation, orbites, réserves et compositions séparées, services
+métier conservés. Validation locale et intégration suivies dans
+[NAVIGATION_PAGES_DEDIEES](NAVIGATION_PAGES_DEDIEES.md). Ne pas démarrer Inventaire
+avant la CI complète et la fusion de ce lot.

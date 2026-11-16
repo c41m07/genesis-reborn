@@ -137,3 +137,8 @@ La CI complète `83f91dd` a terminé les 184 scénarios navigateur : 181 réussi
 ### Précisions de suivi des flottes
 
 La page Flottes et missions est limitée à la colonie active : vaisseaux disponibles, missions parties de cette colonie, compteurs et demandes d’orbite envoyées ou reçues. Ce filtre est conservé lors des actualisations automatiques. Le chargement confirmé d’une composition sélectionne sa colonie d’origine ; les permissions et validations d’envoi restent inchangées. Le raccourci « Simuler un combat » est retiré de cette page, avec accès conservé dans le menu ; « Mes compositions » devient un lien compact. Le message sans flotte apparaît sous le titre, dans la page et les autres panneaux de suivi.
+
+
+## Navigation dédiée — 16 novembre 2026
+
+Le lot Flottes remplace les ancres entre tâches autonomes par des pages dédiées : missions, préparation, orbites, réserves et compositions. Les ancres des détails de vol restent utiles. Cette évolution remplace uniquement l’organisation de Flottes décrite dans ce suivi ; les autres écrans restent dans leur périmètre actuel. Voir le [suivi de navigation](NAVIGATION_PAGES_DEDIEES.md).

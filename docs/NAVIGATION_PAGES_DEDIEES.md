@@ -2,10 +2,14 @@
 
 ## État du chantier — 16 novembre 2026
 
-Lot 1 réalisé localement sur `feature/navigation-guildes-diplomatie`, depuis
-`origin/dev` `c6b72d1`. Branche publiée ; [PR #75](https://github.com/c41m07/genesis-reborn/pull/75) ouverte vers dev.
-CI complète en attente ; fusion et déploiement non effectués.
-Les modifications juridiques de la copie principale sont préservées.
+Lot 1 intégré sur dev par la [PR #75](https://github.com/c41m07/genesis-reborn/pull/75),
+merge `a279cd1`, après les cinq jobs quality réussis sur `d8849aa`
+([CI 43942224638](https://github.com/c41m07/genesis-reborn/actions/runs/43942224638)).
+La copie dev utilisée par localhost a été avancée sans écraser son fichier
+`app/config/reference.php` préexistant ; assets recompilés et cache applicatif
+vidé. Aucune migration de sa base ni livraison Alpha.
+
+Lot 2 Flottes en cours sur `feature/navigation-flottes`, depuis cette dev.
 
 Les trois documents Work V4 (prompt maître), V2 (brief Figma) et V1 (protocole
 adaptatif) n’ont pas été trouvés dans le dépôt ni les sources connectées
@@ -15,14 +19,17 @@ accessibles. Aucune lecture intégrale ni validation de leurs phases n’est rev
 
 1. Guildes / Diplomatie : 4/5. Routes, retours après formulaire, appartenance,
    données privées, compatibilité des adresses et liens entrants.
-2. Flottes : à examiner après intégration du lot 1 ; préserver les périmètres,
-   actualisations, demandes d’orbite et préparation continue des missions.
-3. Inventaire : à examiner après le lot 2.
-4. Mon compte / vacances : à examiner après le lot 3 ; séparer compte et empire.
-5. Projets collectifs : à examiner après le lot 4 ; conserver contributions et fiches.
-6. Événements : à examiner après le lot 5.
-7. Administration : à examiner après le lot 6, en poursuivant l’organisation existante.
-8. Wiki : à examiner après le lot 7, avec transition explicite des fragments historiques.
+2. Flottes : 5/5. Périmètres colonie/empire, actualisations, demandes d’orbite,
+   composition continue et compatibilité des liens.
+3. Inventaire : estimation 3/5, à confirmer au lot ; consommation et récompenses.
+4. Mon compte / vacances : estimation 4/5 ; compte commun, empire et actions sensibles.
+5. Projets collectifs : estimation 4/5 ; contribution, historique et permissions.
+6. Événements : estimation 3/5 ; bonus actifs, défis et rotations.
+7. Administration : estimation 4/5 ; droits, formulaires et parcours guidés existants.
+8. Wiki : estimation 4/5 ; recherche globale, chapitres et fragments historiques.
+
+Les estimations des lots 3 à 8 seront confirmées sur leurs dépendances au début
+du lot, après intégration du précédent.
 
 La complexité et les risques des lots suivants seront attribués après lecture
 ciblée de leurs dépendances. Aucun lot suivant ne démarre avant l’intégration
@@ -123,16 +130,12 @@ ni changement de la base habituelle.
 ## Limites et intégration
 
 Les contrôles visuels, clavier, focus et Axe sont ciblés : ils ne constituent
-pas un audit de conformité RGAA complet. Les contrôles CI complets restent
-obligatoires sur la dernière version de la PR avant fusion. La lecture des
-protections détaillées de dev retourne HTTP 403 avec la connexion GitHub disponible.
-La lecture de la branche confirme néanmoins la protection active et les cinq
-contrôles obligatoires : `quality (php, lot 0)` et `quality (browser, lot 1)` à
-`quality (browser, lot 4)`, appliqués à tous. Le job publish n’est pas requis.
-
-Publication et PR autorisées ; attendre la CI complète de la PR #75 avant la fusion
-autorisée vers dev. Aucun déploiement n’est autorisé par cette étape.
-Le lot 2 Flottes reste en attente de l’intégration validée du lot 1.
+pas un audit de conformité RGAA complet. Les cinq jobs quality de la PR #75 ont
+réussi avant sa fusion. La protection de dev impose une PR, les cinq jobs,
+la mise à jour avec dev et s’applique aussi aux administrateurs ; ni force push
+ni suppression autorisés. Le job publish n’est pas requis.
+Le détail a été vérifié via l’accès Git existant, après le refus HTTP 403 du
+connecteur sur cet endpoint. Aucun déploiement n’a été effectué.
 
 
 ## Fichiers du lot
@@ -186,3 +189,75 @@ Le lot 2 Flottes reste en attente de l’intégration validée du lot 1.
 - `docs/NAVIGATION_PAGES_DEDIEES.md`
 - `docs/README.md`
 - `docs/wiki.json`
+
+
+## Lot 2 — Flottes (complexité 5/5)
+
+### Pages et choix
+
+| Adresse | Objectif |
+| --- | --- |
+| `/flottes` | Missions actives de la colonie, par pages de 30 |
+| `/flottes/preparer` | Composition → Destination → Confirmation, avec résumé de trois missions |
+| `/flottes/orbites` | Demandes envoyées et reçues de la colonie active |
+| `/flottes/quai` | Vaisseaux et réserves de la colonie, stationnements en attente de tout l’empire |
+| `/flottes/compositions` | Liste personnelle, chargement et suppression confirmée |
+| `/flottes/compositions/creer` | Création d’une composition |
+| `/flottes/compositions/{id}/modifier` | Modification avec version et propriété contrôlées |
+| `/flottes/compositions/{id}/charger` | Disponibilités, manques et accord explicite avant préparation |
+
+La tâche autonome devient une page ; les étapes d’un seul envoi restent dans
+le même formulaire. Le menu principal garde une seule entrée Flottes. Une
+navigation secondaire commune se replie en plusieurs lignes sur mobile et
+identifie la page active, y compris dans les formulaires de composition.
+Les nouveaux écrans n’ajoutent aucun sommaire automatique. Les ancres de vol
+restent utiles dans la liste détaillée et les rapports de combat ne changent pas.
+
+### Lectures, risques et compatibilité
+
+`FleetPageView` prépare uniquement les lectures de la page choisie. La préparation
+charge les vaisseaux de la colonie, les choix de destination et trois missions
+sans composition, fret ni combats détaillés. La liste enrichit au plus 30
+missions. La requête des orbites filtre la colonie avant la préparation des lignes. Les orbites et stationnements sont préparés sur leur destination.
+La limite de 20 compositions par empire/univers reste inchangée. Aucun gain
+chiffré de performance n’est revendiqué.
+
+Les services métier, contrôles serveur, synchronisation, transactions, versions,
+CSRF et clés d’idempotence sont réutilisés. Les détails des stations en attente
+restent accessibles après perte de l’origine. Les arrivées étrangères conservent
+leur périmètre et leur confidentialité ; le polling d’orbites porte toujours la
+colonie active. Les fragments de mise à jour sont propres à chaque page et le
+client conserve les saisies modifiées, le focus et les protections contre les
+réponses périmées.
+
+Les anciens GET `/flottes?mission=…`, `system`, `planet` ou `composition`
+redirigent vers la préparation en conservant les paramètres. L’ancien `colony`
+redirige vers les orbites après contrôle d’appartenance à l’arrivée. Le paramètre
+`origin` des raccourcis de colonies sélectionne uniquement une colonie autorisée. Le GET
+`/flottes/compositions?edit=…` mène à la modification dédiée ; les POST
+historiques de composition restent acceptés. Les liens de carte, rapports,
+inventaire et défis ciblent désormais la préparation. Les actions de réserve
+reviennent à quai, les décisions d’orbite aux demandes et l’envoi aux missions.
+
+Les anciens fragments `prepare-mission`, `active-missions`,
+`orbit-requests-title` et `held-fleets-title` sont orientés côté navigateur.
+Le serveur ne reçoit pas ces fragments : sans JavaScript, la navigation serveur
+permet de rejoindre la page. Les liens de résumé comportent `fleet={id}` et une
+ancre pour sélectionner la bonne page de missions même sans JavaScript ; les
+anciens liens `#fleet-{id}` bénéficient de la transition côté navigateur.
+Les vérifications du vol ciblé restent bornées au joueur et à sa colonie.
+
+### Vérifications et livraison
+
+Validation en cours ; compléter les résultats avant publication. Aucune
+migration, installation de dépendance ni modification d’équilibrage.
+Les tests écrivent uniquement dans des bases jetables distinctes de localhost.
+Les vérifications RGAA sont ciblées ; lecteur d’écran réel et audit complet
+restent hors de cette recette. Les trois sources Work citées en début de suivi
+restent introuvables ; le wiki externe n’a pas été modifié.
+
+Les fichiers principaux du lot sont `FleetController`, `FleetPageView`,
+`FleetCompositionController`, `FleetStationingController`, `GameRepository`,
+les templates `fleet/`, `ui/fleet_navigation`, le menu principal et les liens
+entrants, `colony_live_controller`, `page_sections_controller`, les styles,
+les tests HTTP/intégration/navigateur et les documents de navigation/flottes.

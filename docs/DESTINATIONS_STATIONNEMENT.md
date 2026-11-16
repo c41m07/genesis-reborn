@@ -222,3 +222,8 @@ La PR associée fait référence pour les résultats de la nouvelle CI complète
 - docs/RECETTE_EVOLUTIONS_INTERFACES.md
 - docs/REGLES.md
 - docs/wiki.json
+
+
+## Navigation dédiée — 16 novembre 2026
+
+La navigation dédiée place désormais les réserves et les stationnements en attente dans `/flottes/quai`, avec reprise et déchargement revenant à cette page. Le formulaire d’envoi reste sur `/flottes/preparer` ; les disponibilités sont celles de la colonie active et les attentes celles de tout l’empire. Les règles de carburant, fret, reprise et autorisation restent celles de ce document. Voir le [suivi de navigation](NAVIGATION_PAGES_DEDIEES.md).

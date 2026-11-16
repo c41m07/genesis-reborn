@@ -1,0 +1,13 @@
+{% set fleetRoute = app.request.attributes.get('_route') %}
+<nav class="ui-tabs space-navigation" aria-label="Navigation des flottes">
+{% for destination in [
+    {route:'app_fleets',label:'Missions actives'},
+    {route:'app_fleet_prepare',label:'Préparer une mission'},
+    {route:'app_fleet_orbits',label:'Demandes d’orbite'},
+    {route:'app_fleet_holds',label:'À quai et stationnements'},
+    {route:'app_fleet_compositions',label:'Mes compositions'}
+] %}
+{% set active = fleetRoute==destination.route or (destination.route=='app_fleet_compositions' and fleetRoute in ['app_fleet_composition_new','app_fleet_composition_edit','app_fleet_composition_load']) or (destination.route=='app_fleet_holds' and fleetRoute=='app_fleet_station_resume') or (destination.route=='app_fleets' and fleetRoute=='app_fleet_recall') %}
+<a href="{{ path(destination.route) }}"{% if active %} class="active" aria-current="page"{% endif %}>{{ destination.label }}</a>
+{% endfor %}
+</nav>

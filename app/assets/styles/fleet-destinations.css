@@ -11,3 +11,13 @@
 .fleet-page-layout>.fleet-hold{grid-column:1/-1;min-width:0}
 .fleet-hold-actions{display:flex;flex-wrap:wrap;gap:8px}
 .fleet-hold-actions form{margin:0}
+
+.fleet-page-layout.fleet-space{display:block}
+.fleet-space .space-navigation{margin-block:18px 24px}
+.fleet-space #active-missions{max-width:1100px;margin-inline:auto}
+.fleet-mission-summary-card ul{padding-left:20px;margin-bottom:0}
+.fleet-mission-summary-card li+li{margin-top:12px}
+.fleet-space .fleet-hold-actions{display:flex;flex-wrap:wrap;gap:12px}
+.fleet-space .fleet-hold-actions form{min-width:0}
+
+.fleet-space .fleet-wizard-header h2{margin:0;font-size:18px}

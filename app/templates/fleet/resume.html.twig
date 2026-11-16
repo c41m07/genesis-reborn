@@ -1,6 +1,7 @@
 {% extends 'base.html.twig' %}
 {% block title %}Reprendre le stationnement · Genesis Reborn{% endblock %}
 {% block body %}
+{% include 'ui/fleet_navigation.html.twig' %}
 <div class="page-heading"><div><h1>Reprendre le stationnement</h1><p>Les vaisseaux restent indisponibles jusqu’à leur installation sur une colonie possédée.</p></div></div>
 <section class="panel" aria-labelledby="station-resume-title">
 <h2 id="station-resume-title">Choisir une nouvelle base</h2>
@@ -12,6 +13,6 @@
 <dl class="report-facts"><div><dt>Nouvelle base</dt><dd>{{ quote.target.name }} · {{ quote.target.coordinates() }}</dd></div><div><dt>Durée</dt><dd>{{ duration_label(quote.seconds) }}</dd></div><div><dt>Carburant consommé à l’arrivée</dt><dd>{{ quote.one_way_fuel|quantity(2) }} hydrogène</dd></div></dl>
 <form method="post"><input type="hidden" name="_token" value="{{ csrf_token('fleet_resume_'~fleet.id) }}"><input type="hidden" name="request_key" value="{{ request_key() }}"><input type="hidden" name="version" value="{{ quote.version }}"><input type="hidden" name="planet" value="{{ quote.target.id }}"><button class="primary">Confirmer la reprise</button></form>
 {% endif %}
-<p><a href="{{ path('app_fleets') }}">Revenir aux flottes</a></p>
+<p><a href="{{ path('app_fleet_holds') }}">Revenir aux flottes</a></p>
 </section>
 {% endblock %}

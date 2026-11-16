@@ -52,6 +52,27 @@ final class StrategicToolsTest extends WebTestCase
         $this->expectException(\DomainException::class);$this->expectExceptionMessage('a changé');
         $this->compositions()->save($this->owner->currentPlayerUniverse,$id,'Périmée',['fighter'=>['basic'=>9]],$version,$first->requestKey);
     }
+    public function testDedicatedCompositionEditorUsesItsUrlAndKeepsDraftOnError(): void
+    {
+        $first=$this->create();$second=$this->create(str_repeat('b',32));
+        $this->client->loginUser($this->owner);
+        $crawler=$this->client->request('GET','/flottes/compositions/'.$first->id.'/modifier');
+        self::assertResponseIsSuccessful();self::assertSelectorTextSame('h1','Modifier la composition');
+        $form=$crawler->filter('#main form[method="post"]')->form();
+        $values=$form->getPhpValues();$values['id']=$second->id;$values['name']='Cible de l’adresse';
+        $this->client->request('POST','/flottes/compositions/'.$first->id.'/modifier',$values);
+        self::assertResponseRedirects('/flottes/compositions');
+        self::assertSame('Cible de l’adresse',$this->compositions()->owned($this->owner->currentPlayerUniverse,$first->id)->name);
+        self::assertSame('Escorte',$this->compositions()->owned($this->owner->currentPlayerUniverse,$second->id)->name);
+        $crawler=$this->client->request('GET','/flottes/compositions/creer');
+        $form=$crawler->filter('#main form[method="post"]')->form();
+        $values=$form->getPhpValues();$values['name']='Brouillon conservé';$values['ships']=['unknown'=>['basic'=>1]];
+        $this->client->request('POST','/flottes/compositions/creer',$values);
+        self::assertResponseStatusCodeSame(422);self::assertSelectorExists('[role="alert"]');
+        self::assertSelectorExists('input[name="name"][value="Brouillon conservé"]');
+        self::assertCount(2,$this->compositions()->all($this->owner->currentPlayerUniverse));
+    }
+
     public function testCompositionLimitIsTwentyPerEmpire(): void
     {
         for($i=0;$i<20;$i++) $this->create(str_pad(dechex($i),32,'0',STR_PAD_LEFT));
@@ -63,7 +84,7 @@ final class StrategicToolsTest extends WebTestCase
     {
         $composition=$this->create();$id=$composition->id;
         foreach([$this->other,$this->foreign] as $player) {
-            $this->client->loginUser($player);$this->client->request('GET','/flottes/compositions?edit='.$id);self::assertResponseStatusCodeSame(404);
+            $this->client->loginUser($player);$this->client->request('GET','/flottes/compositions/'.$id.'/modifier');self::assertResponseStatusCodeSame(404);
             $this->client->request('GET','/flottes/compositions/'.$id.'/charger');self::assertResponseStatusCodeSame(404);
         }
         $this->client->loginUser($this->owner);$this->client->request('POST','/flottes/compositions',['_token'=>'invalid','id'=>$id,'action'=>'delete']);self::assertResponseStatusCodeSame(403);
@@ -75,7 +96,7 @@ final class StrategicToolsTest extends WebTestCase
         $plan=$this->compositions()->plan($this->owner->currentPlayerUniverse,$composition,$home);
         self::assertTrue($plan['missing']);self::assertSame(1,$plan['rows'][0]['missing']);self::assertSame(['fighter'=>['basic'=>2]],$plan['available']);
         $this->client->loginUser($this->owner);$this->client->request('GET','/flottes/compositions/'.$composition->id.'/charger?origin='.$home->id);self::assertResponseIsSuccessful();self::assertSelectorTextContains('main','Accepter les quantités disponibles');
-        $this->client->request('GET','/flottes?composition='.$composition->id.'&origin='.$home->id.'&confirmation=stale&adjust=1');self::assertResponseRedirects('/flottes/compositions/'.$composition->id.'/charger?origin='.$home->id);
+        $this->client->request('GET','/flottes/preparer?composition='.$composition->id.'&origin='.$home->id.'&confirmation=stale&adjust=1');self::assertResponseRedirects('/flottes/compositions/'.$composition->id.'/charger?origin='.$home->id);
         self::assertSame(0,(int)$this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM fleet WHERE status='traveling'"));
     }
     public function testSimulationMatchesRealEngineAndDoesNotWriteGameState(): void
@@ -159,7 +180,7 @@ final class StrategicToolsTest extends WebTestCase
     public function testCompositionDeletionIsOwnedAndCannotProduceDoubleEffects(): void
     {
         $composition=$this->create();$id=$composition->id;$version=$composition->version;
-        $this->client->loginUser($this->other);$crawler=$this->client->request('GET','/flottes/compositions');
+        $this->client->loginUser($this->other);$crawler=$this->client->request('GET','/flottes/compositions/creer');
         $token=$crawler->filter('main form input[name="_token"]')->first()->attr('value');
         $this->client->request('POST','/flottes/compositions',['_token'=>$token,'action'=>'delete','id'=>$id,'version'=>$version]);self::assertResponseStatusCodeSame(422);
         self::assertSame(1,(int)$this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM fleet_composition'));

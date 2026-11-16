@@ -31,7 +31,7 @@ test('Le parcours de flotte guide de la composition à la confirmation', async (
   sql(project, createFleet);
   const addShip = "INSERT INTO fleet_ship (fleet_id, slug, quantity) SELECT f.id, 'fighter', 2 FROM fleet f INNER JOIN player_universe pu ON pu.id=f.player_universe_id INNER JOIN player p ON p.id=pu.player_id WHERE p.email='" + email + "' AND f.status='idle' LIMIT 1 ON DUPLICATE KEY UPDATE quantity=VALUES(quantity)";
   sql(project, addShip);
-  await page.goto('/flottes');
+  await page.goto('/flottes/preparer');
   const form = page.locator('.fleet-form form').first();
   const steps = form.locator('[data-fleet-wizard-target="step"]');
   await expect(steps.nth(0)).toBeVisible();

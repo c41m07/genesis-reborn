@@ -88,3 +88,8 @@ les pages déjà ouvertes. Aucune dépendance, migration ou livraison Alpha.
   Version locale actualisée ; routes / et /health répondent 200, assets servis vérifiés.
 - Ce bilan décrit la recette locale avant publication. L’envoi dans une PR vers dev
   est ensuite autorisé, avec fusion conditionnée à toute la CI et sans livraison Alpha.
+
+
+## Navigation dédiée — 16 novembre 2026
+
+La séparation de Flottes conserve le panneau d’arrivées sur Missions actives et Préparer une mission. Les pages Orbites et À quai gardent le contrôleur de surveillance nécessaire aux alertes communes ; les orbites sont actualisées uniquement si leur région est présente. La colonie affichée est transmise et contrôlée côté serveur. Les règles de visibilité de ce suivi ne changent pas. Voir le [suivi de navigation](NAVIGATION_PAGES_DEDIEES.md).

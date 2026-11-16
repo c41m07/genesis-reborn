@@ -67,7 +67,7 @@ test('Flotte et fret : Max conserve les autres champs, réserve le carburant et 
     runIsolatedSql(project, `UPDATE planet target JOIN planet origin ON origin.id=${planet} SET target.owner_id=origin.owner_id WHERE target.id=${target}`);
     runIsolatedSql(project, `INSERT INTO fleet (player_universe_id,home_planet_id,status,mission,speed_ratio,cargo,reserved_fuel,orbit_fuel,orbit_duration_seconds,travel_seconds,dispatch_token) SELECT owner_id,id,'idle','idle',1,'{}',0,0,0,0,'' FROM planet WHERE id=${planet}`);
     runIsolatedSql(project, `INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) SELECT id,'fighter','basic',200 FROM fleet WHERE home_planet_id=${planet} AND status='idle'; INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) SELECT id,'transport','basic',1 FROM fleet WHERE home_planet_id=${planet} AND status='idle'`);
-    await page.goto('/flottes');
+    await page.goto('/flottes/preparer');
     const form = page.locator('.fleet-form form').first();
     const fighter = form.locator('[name="ships[fighter]"]'), transport = form.locator('[name="ships[transport]"]');
     await form.locator('[data-action="fleet-quantity#maximumShip"][data-input-id$="-fighter-basic"]').click();

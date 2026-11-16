@@ -15,6 +15,21 @@ export default class extends Controller {
                 return;
             }
         }
+        if (this.element.dataset.uiPage === 'flottes') {
+            const fleet = /^#fleet-(\d+)$/.exec(window.location.hash);
+            if (window.location.pathname === '/flottes' && fleet && new URLSearchParams(window.location.search).get('fleet') !== fleet[1]) {
+                const url = new URL(window.location.href);
+                url.searchParams.set('fleet', fleet[1]);
+                window.location.replace(url);
+                return;
+            }
+            const destinations = { '#prepare-mission':'/flottes/preparer', '#active-missions':'/flottes', '#orbit-requests-title':'/flottes/orbites', '#held-fleets-title':'/flottes/quai' };
+            const destination = destinations[window.location.hash];
+            if (destination && window.location.pathname !== destination) {
+                window.location.replace(destination + window.location.search + window.location.hash);
+                return;
+            }
+        }
         const main = this.element.querySelector('main');
         if (!main || ['vue-generale', 'flottes', 'wiki', 'projet-detail', 'accueil-public', 'recherche-messages'].includes(this.element.dataset.uiPage)) return;
         if (main.querySelector('[data-page-sections="disabled"], .page-contents, nav a[href^="#"]')) return;

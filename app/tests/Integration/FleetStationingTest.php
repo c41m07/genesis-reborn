@@ -234,7 +234,7 @@ final class FleetStationingTest extends WebTestCase
 
     public function testWaitingPageSurvivesLostOriginAndIsPrivateAndCsrfProtected(): void
     {
-        $fleet=$this->wait();$url='/flottes/'.$fleet->id.'/reprendre';$this->client->request('GET','/flottes');self::assertResponseIsSuccessful();
+        $fleet=$this->wait();$url='/flottes/'.$fleet->id.'/reprendre';$this->client->request('GET','/flottes/quai');self::assertResponseIsSuccessful();
         self::assertSelectorExists('a[href="'.$url.'"]');$this->client->request('GET',$url);self::assertResponseIsSuccessful();
         $this->client->request('POST',$url,['_token'=>'invalid']);self::assertResponseStatusCodeSame(403);
         $this->client->loginUser($this->peer);$this->client->request('GET',$url);self::assertResponseStatusCodeSame(404);

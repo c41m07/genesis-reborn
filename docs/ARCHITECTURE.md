@@ -209,6 +209,15 @@ lit 100 lignes à la fois, avec un identifiant plafond et neutralisation des
 formules CSV. Les recherches immédiates Joueurs/Journal rendent leurs fragments
 partagés et préservent le formulaire ; les réponses obsolètes sont ignorées.
 
+L’espace Flottes utilise `FleetPageView` : `/flottes` prépare une page de 30
+missions de la colonie, `/flottes/preparer` les unités et destinations de l’envoi
+avec trois missions résumées, `/flottes/orbites` les demandes de la colonie,
+`/flottes/quai` ses réserves et les stationnements en attente de tout l’empire.
+Les compositions ont liste, création, modification et chargement distincts.
+Les services métier restent communs ; les anciens paramètres et fragments sont
+maintenus par les transitions décrites dans [le suivi](NAVIGATION_PAGES_DEDIEES.md).
+Le paramètre `fleet` situe un vol autorisé avant la lecture bornée des détails.
+
 Les actualisations des colonies et de Flottes demandent JSON avec `X-Genesis-Live: 1` et
 `Accept: application/json`. La route conserve ses contrôles, synchronisations
 et préparation GameShell, puis renvoie les fragments privés sans cache.

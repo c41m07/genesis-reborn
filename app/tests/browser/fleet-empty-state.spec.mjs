@@ -17,17 +17,17 @@ test('L’état Espionnage sans flotte conduit au chantier réel', async ({ page
   await page.getByRole('button', { name: /Connexion/ }).click();
   await page.locator('article.universe-card').filter({ has: page.getByRole('heading', { name: /Turbo/ }) }).getByRole('button').click();
 
-  await page.goto('/flottes?mission=spy');
+  await page.goto('/flottes/preparer?mission=spy');
   await expect(page.getByRole('heading', { name: 'Journal des missions' })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Espionnage', level: 1 })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Aucune sonde exploratrice disponible' })).toBeVisible();
 
   for(const width of [1440,390]) {
     await page.setViewportSize({width,height:844});
-    const heading=await page.locator('[data-live-region="active-flights"] > .section-heading').boundingBox();
-    const empty=await page.locator('[data-live-region="active-flights"] > .flight-idle').boundingBox();
+    const heading=await page.locator('[data-live-region="mission-summary"] > .section-heading').boundingBox();
+    const empty=await page.locator('[data-live-region="mission-summary"] > ul').boundingBox();
     expect(empty.y).toBeGreaterThanOrEqual(heading.y+heading.height);
-    await expect(page.locator('[data-live-region="active-flights"] > .flight-idle')).toContainText('cette colonie');
+    await expect(page.locator('[data-live-region="mission-summary"] > ul')).toContainText('cette colonie');
   }
   await page.setViewportSize({ width: 390, height: 844 });
   await expect.poll(() => page.locator('.sidebar').evaluate(element => element.getBoundingClientRect().right)).toBeLessThanOrEqual(0);

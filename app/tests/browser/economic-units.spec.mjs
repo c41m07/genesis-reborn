@@ -109,7 +109,7 @@ test('Déploiement civil : satellite exclu des départs, récolteur transféré 
     runIsolatedSql(data.project, `INSERT IGNORE INTO planet_resource(planet_id,resource_type,current_stock,production_rate,last_updated_at)
         SELECT ${destination.id},resource_type,0,0,UTC_TIMESTAMP() FROM planet_resource WHERE planet_id=${data.planet}`);
     runIsolatedSql(data.project, `INSERT INTO planet_building(planet_id,slug,tier,level) VALUES(${destination.id},'mine_hydrogen','basic',1)`);
-    await page.goto('/flottes?mission=station');
+    await page.goto('/flottes/preparer?mission=station');
     await expect(page.locator('input[name="ships[solar_satellite]"]')).toHaveCount(0);
     const form = page.locator('.fleet-form form').first();
     await form.locator('input[name="ships[hydrogen_collector]"]').fill('1');

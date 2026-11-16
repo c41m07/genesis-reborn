@@ -36,7 +36,7 @@ async function prepare(page) {
   runIsolatedSql(project,"INSERT INTO player_technology (player_universe_id,slug,tier,level) VALUES ("+user.memberId+",'colonial_expansion','basic',1) ON DUPLICATE KEY UPDATE level=GREATEST(level,1)");
   runIsolatedSql(project,"INSERT INTO fleet (player_universe_id,home_planet_id,status,mission,speed_ratio,cargo,reserved_fuel,orbit_fuel,orbit_duration_seconds,travel_seconds,dispatch_token) SELECT "+user.memberId+","+user.planetId+",'idle','idle',1,'{}',0,0,0,0,'' WHERE NOT EXISTS (SELECT 1 FROM fleet WHERE home_planet_id="+user.planetId+" AND status='idle')");
   runIsolatedSql(project,"INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) SELECT id,'transport','basic',3 FROM fleet WHERE home_planet_id="+user.planetId+" AND status='idle' ON DUPLICATE KEY UPDATE quantity=3");
-  await page.goto('/flottes');
+  await page.goto('/flottes/preparer');
   const form=page.locator('.fleet-form form').first();
   await form.locator('[name="ships[transport]"]').fill('1');
   await form.getByRole('button',{name:/Choisir la destination/}).click();
