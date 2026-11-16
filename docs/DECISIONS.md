@@ -1,5 +1,29 @@
 # Décisions et ambiguïtés — 21 octobre 2026
 
+## Grille de coûts retenue — décision explicite du 16 novembre 2026
+
+L’utilisateur retient B40/60, I30/50/20 et S25/35/30/10 en parts de valeur
+métal/nano/antimatière/hydrogène après lecture des simulations. Cette décision
+remplace les recommandations et statuts « candidat non activé » des études précédentes.
+Les [tableaux courants](COUTS.md) couvrent les 52 familles et 156 profils, civils inclus.
+Les budgets réels de base sont exactement conservés, sans nouveau facteur de rang.
+
+Les courbes, réductions, deux étapes d’arrondi par ressource, durées, taxe E, bonus,
+productions et statistiques restent conservés. Les petits écarts de devis après
+croissance/remises restent possibles ; aucune compensation ou règle d’arrondi
+supplémentaire n’est ajoutée. Les commandes déjà payées gardent leurs valeurs.
+Les surcharges d’univers ne sont pas effacées ni requalifiées automatiquement.
+La formule de points n’est pas modifiée : elle additionne les ressources brutes des
+prix courants. La redistribution peut donc faire évoluer les points des possessions
+existantes et les protections liées aux points lors des nouveaux calculs. Les snapshots
+quotidiens déjà établis restent figés jusqu’à l’actualisation normale ; aucune reprise
+des classements ou des seuils n’est ajoutée.
+
+Les effets observés sont acceptés comme un choix d’essai : plus de nano, puis davantage
+d’antimatière et d’hydrogène au Supérieur. Les délais simulés ne sont pas une garantie
+pour tous les joueurs. L’intégration, la publication et la mise en ligne restent
+suivies séparément dans le [suivi de mission](PROGRESSION_CARBURANT_UNITES.md).
+
 ## Comptes — décision du 6 novembre 2026
 
 Le propriétaire demande un mail de bienvenue et une vérification d’adresse avant l’accès pour les nouveaux comptes. Les comptes déjà présents conservent leur accès lors de la migration. Le parcours, la configuration et les limites sont décrits dans [ACCOUNT_EMAIL.md](ARCHITECTURE.md).

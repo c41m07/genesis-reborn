@@ -4,7 +4,9 @@ Lot 2 fusionné dans dev par la [PR #70](https://github.com/c41m07/genesis-rebor
 
 ## Référence de lecture
 
-Les tableaux concernent le Basique, un univers ×1, avant réduction : niveau 1 pour bâtiments et recherches, une unité pour les vaisseaux et défenses. Les prix en métal, nano, antimatière et hydrogène ne changent pas. La redistribution B 50/50 et I 40/40/20 reste un candidat non activé.
+Les tableaux concernent le Basique, un univers ×1, avant réduction : niveau 1 pour bâtiments et recherches, une unité pour les vaisseaux et défenses. Ce lot de durées/carburant ne modifiait pas les profils M/N/A/H. La décision
+ultérieure du 16 novembre adopte la [nouvelle répartition](COUTS.md), sans changer
+les durées ni les coefficients présentés ici.
 
 Les trois rangs multiplient la durée une seule fois : ×1, ×1,25 et ×1,5625. Les multiplicateurs d’univers et rendements décroissants existants restent appliqués à la commande. Le plafond de réduction est de 70 %, le minimum d’une seconde et l’arrondi au supérieur restent en place.
 

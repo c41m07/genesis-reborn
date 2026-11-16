@@ -1,5 +1,10 @@
 # Simulations de progression et d’économie
 
+> Étude antérieure à la décision de retenir B40/60, I30/50/20 et S25/35/30/10.
+> Les prix désormais retenus sont dans [COUTS.md](COUTS.md). Pour reproduire les
+> comparaisons avec leurs anciens prix de référence, utiliser la révision `4b4cd51`.
+> Les commandes exécutées sur une autre version lisent le catalogue de cette version.
+
 Mesures du 16 novembre 2026, après intégration des lots 1 à 3 dans dev (`4192821`).
 Ce rapport compare le système courant et une variante de prix **inactive**.
 Il ne décide ni une activation du candidat ni un déploiement Alpha.

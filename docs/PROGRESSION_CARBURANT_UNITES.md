@@ -5,8 +5,9 @@
 Mission issue du prompt utilisateur : nouvelles grilles, nouvelles durées et
 consommations de carburant, récolteur d’hydrogène mobile, satellite solaire fixe,
 simulation des effets économiques et militaires. Aucun déploiement Alpha.
-La redistribution des coûts B 50/50 et I 40/40/20 reste un candidat à comparer,
-sans activation avant une décision séparée et chiffrée. Aucun budget, effet,
+Les premières études ont comparé B50/50 et I40/40/20. Après les comparaisons
+séparées, l’utilisateur retient B40/60, I30/50/20 et S25/35/30/10 le 16 novembre ;
+la grille est implémentée localement, avec publication et CI de PR encore à autoriser. Aucun budget, effet,
 plafond ni règle non explicitement visé ne doit changer.
 
 Chaque lot part de dev actualisée et doit être validé en CI complète puis fusionné
@@ -21,6 +22,7 @@ pas présentées comme lues.
 | 2 | Durées, taxe électrique calculée sur la durée effective, carburant différencié, navigation historique préservée | Fusionné dans dev par PR #70 après CI complète réussie |
 | 3 | Six profils civils, production segmentée, mobilité/immobilité, affectations et réservations concurrentes, combat, rapports et simulateur | Fusionné dans dev par PR #71 après CI complète n° 299 réussie |
 | 4 | Simulations avec les calculateurs réels, comparaison des répartitions, mesures et limites | Publié par [PR #72](https://github.com/c41m07/genesis-reborn/pull/72) ; résultats CI et fusion consultables dans la PR |
+| 5 | Grille retenue B40/60, I30/50/20 et S25/35/30/10 ; budgets, paiements et surcharges conservés | Lot local prêt ; relances ciblées, lints et six parcours navigateur réussis ; publication/CI à autoriser |
 
 ## Lot 1 — complexité 5/5
 
@@ -422,3 +424,61 @@ du dépôt ; le refus de publication s’applique et aucune nouvelle demande n�
 Les résultats montrent un compromis : la nouvelle grille complète ralentit plusieurs
 objectifs ; I30/50/20 seul accélère nettement l’économie mais ralentit sa grande flotte.
 Les recommandations restent des propositions de décision, sans activation de prix.
+
+## Grille retenue — implémentation, complexité 4/5
+
+Décision explicite utilisateur : retenir B40/60, I30/50/20, S25/35/30/10 (M/N/A/H).
+Branche `feature/repartition-couts-ressources`, depuis dev actualisée `4bbb0cf`,
+avec les compléments locaux de mesure `0645c6e` et `4b4cd51` conservés.
+Les trois documents Work nommés restent absents des fichiers du dépôt accessibles.
+
+Plan : modifier uniquement les 156 cost_profiles des 52 fiches, conserver les budgets
+réels de base et tous les champs indépendants des prix ; figer l'avant/après pour les
+tests, restaurer les prix dans les seules références historiques, vérifier devis,
+paiements, annulations et surcharges d’univers. Synchroniser les tableaux et le wiki.
+Les courbes et arrondis courants restent appliqués après croissance/remises ; les écarts
+mesurés des devis ne sont pas supprimés par une nouvelle règle d'arrondi implicite.
+Aucune migration SQL ni reprise de prix payés, d’accès ou de surcharge persistée.
+La publication et la fusion de ce lot nécessiteront un accord sur le résultat prêt,
+puis la CI complète sur la dernière version ; aucune livraison Alpha.
+
+### Vérification des impacts et première recette
+
+La formule de classement lit les ressources brutes des profils courants, pas leur
+valeur économique pondérée. Elle reste inchangée ; un chasseur B seul vaut désormais
+21 points au lieu de 24. Les prochains calculs de scores et protections liées aux
+points suivent donc ces prix, tandis que les snapshots quotidiens restent figés
+jusqu’à leur actualisation normale. Effet annoncé dans la conversation et documenté ;
+aucun nouveau mécanisme de points, seuil de protection ou recalcul forcé ajouté.
+
+Le premier passage complet exécute 1 338 PHP / 250 826 assertions, avec une erreur
+dans le nouveau test de rejeu (identifiant lu après suppression), une attente de prix
+obsolète dans GameRulesTest et la mesure facultative préexistante ignorée. Les 6 parcours
+navigateur ciblés terminent : 5 réussis, un message de manque de ressources attendait
+encore 300 M / 100 N au lieu de 200 M / 150 N pour la sonde B. Le test de remboursement
+mémorise maintenant son identifiant, les valeurs attendues sont actualisées sans
+retirer d’assertion et un cas vérifie la règle de points. Relances ciblées en cours.
+
+### Recette locale corrigée de la grille retenue
+
+- Les deux cas ayant échoué au premier passage PHP sont corrigés et repassent,
+  avec le nouveau cas de score : 9 tests / 41 assertions dans une base jetable.
+- Les 13 tests Python passent. `make lint` complet passe dans un projet jetable
+  avec APP_ENV=test et URL explicitement protégée : PHP, 80 YAML, 170 Twig,
+  injection, mapping et schéma. `make validate` passe également.
+- Le parcours de maximum corrigé repasse : les 6 scénarios navigateur distincts
+  sont donc réussis (156 fiches, quantités, civil, déploiement et wiki ; clavier,
+  mobile et thèmes couverts selon les scénarios). Aucun retrait d’assertion.
+- Le test de prix renforcé passe : 3 tests / 17 364 assertions. Les 3 636 devis
+  gardent leurs durées/taxes, avec écarts de valeur maxima 12/10/9/0 par groupe
+  bâtiments/recherches/vaisseaux/défenses ; budgets de base exactement conservés.
+- Les 8 parcours économiques du catalogue désormais courant reproduisent exactement
+  les résultats de la proposition étudiée et de son profil explicite. L’empreinte
+  de configuration est `29c3a29cb524bfaceb9d1ba161c6ebeadcf89a94a3377ff6482bef32528f8220`.
+- La suite PHP locale complète n’a pas été répétée après les seules corrections
+  d’attentes/tests et les ajouts de vérification. Une nouvelle CI complète sur la
+  dernière révision est requise avant fusion ; les anciennes CI ne valident pas ce lot.
+- Aucun asset, dépendance, paramètre de production, colonne ou règle hors prix
+  n’a changé. Les helpers historiques et leurs prix sont limités aux tests.
+- Le wiki local et les documents courants sont synchronisés ; aucun wiki hébergé,
+  reprise de base de jeu ou déploiement Alpha n’est déclaré réalisé.

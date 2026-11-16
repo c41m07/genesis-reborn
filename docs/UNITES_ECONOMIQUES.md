@@ -1,8 +1,8 @@
 # Unités économiques — lot 3
 
 Implémentation publiée dans la [PR #71](https://github.com/c41m07/genesis-reborn/pull/71),
-en cours de vérification sur `feature/unites-economiques-orbitales`,
-depuis dev `6fa8823` après fusion de la [PR #70](https://github.com/c41m07/genesis-reborn/pull/70).
+fusionnée dans dev au commit `4192821` après CI complète n° 299.
+Les prix ci-dessous suivent la décision de répartition du 16 novembre.
 Les [lots et contrôles](PROGRESSION_CARBURANT_UNITES.md) distinguent développement,
 intégration et activation. Aucun déploiement Alpha.
 
@@ -29,13 +29,13 @@ Les deux familles partagent les profils suivants, avant réductions :
 
 | Rang | Métal | Nano | Antimatière | Hydrogène industriel | Valeur économique | Durée ×1 | Taxe E |
 |---|---|---|---|---|---|---|---|
-| Basique | 480 | 160 | 0 | 0 | 1 600 | 180 s | 300 |
-| Intermédiaire | 450 | 225 | 25 | 0 | 2 000 | 225 s | 400 |
-| Supérieur | 374 | 281 | 63 | 124 | 2 500 | 282 s | 500 |
+| Basique | 320 | 240 | 0 | 0 | 1 600 | 180 s | 300 |
+| Intermédiaire | 300 | 250 | 50 | 0 | 2 000 | 225 s | 400 |
+| Supérieur | 312 | 219 | 94 | 248 | 2 500 | 282 s | 500 |
 
 Valeur = M×2 + N×4 + A×8 + H. Les quantités des profils de rang intègrent déjà
-leur budget : aucun second facteur de rang sur ces prix. La redistribution
-Basique 50/50 et Intermédiaire 40/40/20 reste candidate, non activée.
+leur budget : aucun second facteur de rang sur ces prix. La [grille retenue](COUTS.md)
+remplace les anciens prix pour les commandes futures ; les paiements antérieurs restent conservés.
 
 Le calculateur commun applique les réductions du chantier et d’Architecture
 navale, les multiplicateurs d’univers, les plafonds et les arrondis habituels.

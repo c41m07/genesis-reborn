@@ -1,6 +1,15 @@
 # Réglages et études d’équilibrage
 
-## Nouvelle proposition B/I/S — 16 novembre 2026
+## Répartition retenue — 16 novembre 2026
+
+Après les études, l’utilisateur retient B40/60, I30/50/20 et S25/35/30/10.
+La [grille courante](COUTS.md) conserve exactement les 156 budgets de base et tous
+les paramètres hors prix. Cette décision remplace les recommandations préalables
+ci-dessous, conservées comme résultats datés. Les courbes et arrondis habituels restent
+appliqués ; paiements existants et surcharges d’univers restent préservés.
+Les résultats de validation et l’état de livraison sont dans le [suivi](PROGRESSION_CARBURANT_UNITES.md).
+
+## Nouvelle proposition B/I/S — étude avant décision, 16 novembre 2026
 
 L’[étude complémentaire](SIMULATIONS_GRILLE_PROPOSEE.md) mesure B40/60, I30/50/20 et
 S25/35/30/10, puis B50 avec les mêmes nouveaux I/S. La proposition complète augmente

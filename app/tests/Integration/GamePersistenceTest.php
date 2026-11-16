@@ -804,7 +804,7 @@ final class GamePersistenceTest extends KernelTestCase
         $this->clock();$p=$this->player();$planet=$this->join($p,'omega-1');$m=$p->currentPlayerUniverse;$q=self::getContainer()->get(QueueService::class);
         $q->add($m,$planet,'buildings','mine_metal',1,str_repeat('a',32));$q->add($m,$planet,'buildings','mine_metal',1,str_repeat('b',32));
         $items=$this->em->getRepository(QueueItem::class)->findBy([],['id'=>'ASC']);$id=$items[0]->id;
-        self::assertSame(['metal'=>480,'nano'=>160,'antimatter'=>0,'hydrogen'=>0],$items[0]->paidCosts);
+        self::assertSame(['metal'=>320,'nano'=>240,'antimatter'=>0,'hydrogen'=>0],$items[0]->paidCosts);
         $paid=['metal'=>0,'nano'=>0,'antimatter'=>0,'hydrogen'=>0];foreach($items as $item)foreach($item->paidCosts as $resource=>$amount)$paid[$resource]+=$amount;
         $resources=[];$before=[];foreach($this->em->getRepository(PlanetResource::class)->findBy(['planet'=>$planet]) as $resource){$resources[$resource->resourceType]=$resource;$before[$resource->resourceType]=$resource->currentStock;}
         // Modifier les nouveaux prix ne doit pas changer les coûts déjà payés.
@@ -812,6 +812,46 @@ final class GamePersistenceTest extends KernelTestCase
         $q->cancel($m,$id,str_repeat('c',32));foreach($paid as $resource=>$amount)self::assertEqualsWithDelta($before[$resource]+$amount*.25,$resources[$resource]->currentStock,.000001,$resource);
         $q->cancel($m,$id,str_repeat('d',32));foreach($paid as $resource=>$amount)self::assertEqualsWithDelta($before[$resource]+$amount*.25,$resources[$resource]->currentStock,.000001,$resource);self::assertSame(0,$this->em->getRepository(QueueItem::class)->count());
     }
+    public function testPriceRedistributionKeepsHistoricalPaymentsAndRefundsExactlyOnce(): void
+    {
+        $this->clock();$player=$this->player();$planet=$this->join($player,'omega-1');
+        $membership=$player->currentPlayerUniverse;$universe=$membership->universe;
+        $queue=self::getContainer()->get(QueueService::class);$catalog=self::getContainer()->get(GameCatalog::class);
+        $old=['metal'=>480,'nano'=>160,'antimatter'=>0,'hydrogen'=>0];
+        $universe->gameSettings['catalog_overrides']['buildings']['mine_metal']['cost_profiles']['basic']=$old;
+        $this->em->flush();
+        $queue->add($membership,$planet,'buildings','mine_metal',1,str_repeat('a',32));
+        $item=$this->em->getRepository(QueueItem::class)->findOneBy([]);$finish=$item->finishAt();$id=$item->id;
+        self::assertSame($old,$item->paidCosts);
+
+        // Représenter la bascule après paiement : seul le prochain devis hérite de la nouvelle grille.
+        unset($universe->gameSettings['catalog_overrides']['buildings']['mine_metal']['cost_profiles']);
+        $this->em->flush();
+        $definition=$catalog->getTierForUniverse($universe,'buildings','mine_metal','basic');
+        self::assertSame(['metal'=>320,'nano'=>240,'antimatter'=>0,'hydrogen'=>0],$catalog->costs($definition,1,1,'buildings'));
+        self::assertSame($old,$item->paidCosts);self::assertEquals($finish,$item->finishAt());
+        $stocks=[];$before=[];
+        foreach($this->em->getRepository(PlanetResource::class)->findBy(['planet'=>$planet]) as $resource){
+            $stocks[$resource->resourceType]=$resource;$before[$resource->resourceType]=$resource->currentStock;
+        }
+        $queue->cancel($membership,$id,str_repeat('b',32));
+        foreach($old as $resource=>$amount)self::assertEqualsWithDelta($before[$resource]+.25*$amount,$stocks[$resource]->currentStock,1e-6);
+        $queue->cancel($membership,$id,str_repeat('c',32));
+        foreach($old as $resource=>$amount)self::assertEqualsWithDelta($before[$resource]+.25*$amount,$stocks[$resource]->currentStock,1e-6);
+    }
+
+    public function testRedistributedPricesKeepTheRawResourceScoringRule(): void
+    {
+        $player=$this->player();$this->join($player,'omega-1');
+        $fleet=new Fleet();$fleet->playerUniverse=$player->currentPlayerUniverse;
+        $ship=new FleetShip();$ship->fleet=$fleet;$ship->slug='fighter';$ship->tier='basic';$ship->quantity=1;
+        // Les points utilisent les quantités de ressources du profil courant, sans pondération M/N/A/H.
+        $scores=self::getContainer()->get(\App\Service\Player\LeaderboardService::class);
+        self::assertSame(21,$scores->fleetPoints($fleet,[$ship]));
+        $ship->quantity=100;
+        self::assertSame(2100,$scores->fleetPoints($fleet,[$ship]));
+    }
+
     public function testCancellationRefundRespectsStorageCapacity():void
     {
         $this->clock();$p=$this->player();$planet=$this->join($p,'omega-1');$q=self::getContainer()->get(QueueService::class);$q->add($p->currentPlayerUniverse,$planet,'buildings','mine_metal',1,str_repeat('a',32));

@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 final class BalanceMechanicsTest extends TestCase
 {
     // Références : ln(1 + 2 × investissement pondéré) / ln(3), poids 1/1,25/1,5625.
-    // Plafonds communs aux trois rangs ; profils de combat R14 et coûts du 5 novembre.
+    // Plafonds communs aux trois rangs ; profils de combat R14 et coûts retenus le 16 novembre.
     private function catalog(): GameCatalog
     {
         return new GameCatalog(dirname(__DIR__, 2) . '/config/game');
@@ -59,16 +59,15 @@ final class BalanceMechanicsTest extends TestCase
         );
 
         self::assertSame(159, $plan['duration']);
-        self::assertSame(['metal'=>1735,'nano'=>579,'antimatter'=>0,'hydrogen'=>0,'electricity'=>300],$plan['costs']);
+        self::assertSame(['metal'=>1157,'nano'=>868,'antimatter'=>0,'hydrogen'=>0,'electricity'=>300],$plan['costs']);
     }
 
-    public function testTierCostProfilesIncreaseRareValueShareWithoutPricingElectricity(): void
+    public function testTierCostProfilesIncreaseNonMetalValueShareWithoutPricingElectricity(): void
     {
         $catalog=$this->catalog();$factor=['basic'=>1.0,'intermediate'=>1.25,'superior'=>1.5625];
         foreach(['buildings','technologies','ships','defenses'] as $group)foreach($catalog->all($group) as $slug=>$definition){
             foreach($factor as $tier=>$multiplier){$costs=$catalog->costs($catalog->withTier($definition,$tier));self::assertArrayNotHasKey('electricity',$costs);self::assertArrayNotHasKey('energy',$costs);foreach($costs as $amount)self::assertGreaterThanOrEqual(0,$amount);}
-            if(in_array($slug,['mine_metal','mine_nano','mine_antimatter','mine_hydrogen','power_plant'],true))continue;
-            $shares=[];foreach(GameCatalog::TIERS as $tier){$costs=$catalog->costs($catalog->withTier($definition,$tier));$total=2*$costs['metal']+4*$costs['nano']+8*$costs['antimatter']+$costs['hydrogen'];$shares[]=$total>0?(4*$costs['nano']+8*$costs['antimatter'])/$total:0;}
+            $shares=[];foreach(GameCatalog::TIERS as $tier){$costs=$catalog->costs($catalog->withTier($definition,$tier));$total=2*$costs['metal']+4*$costs['nano']+8*$costs['antimatter']+$costs['hydrogen'];$shares[]=$total>0?(4*$costs['nano']+8*$costs['antimatter']+$costs['hydrogen'])/$total:0;}
             self::assertGreaterThanOrEqual($shares[0],$shares[1],$group.'/'.$slug.' rang intermédiaire');self::assertGreaterThanOrEqual($shares[1],$shares[2],$group.'/'.$slug.' rang supérieur');
         }
     }
@@ -76,9 +75,9 @@ final class BalanceMechanicsTest extends TestCase
     public function testTierCostProfilesScaleTheReferenceBudget(): void
     {
         $catalog=$this->catalog();$fighter=$catalog->get('ships','fighter');$expected=[
-            'basic'=>['metal'=>1800,'nano'=>600,'antimatter'=>0,'hydrogen'=>0],
-            'intermediate'=>['metal'=>1688,'nano'=>844,'antimatter'=>94,'hydrogen'=>0],
-            'superior'=>['metal'=>1406,'nano'=>1055,'antimatter'=>235,'hydrogen'=>468],
+            'basic'=>['metal'=>1200,'nano'=>900,'antimatter'=>0,'hydrogen'=>0],
+            'intermediate'=>['metal'=>1124,'nano'=>938,'antimatter'=>188,'hydrogen'=>0],
+            'superior'=>['metal'=>1172,'nano'=>821,'antimatter'=>352,'hydrogen'=>936],
         ];
         foreach($expected as $tier=>$costs)self::assertSame($costs,$catalog->costs($catalog->withTier($fighter,$tier)));
     }

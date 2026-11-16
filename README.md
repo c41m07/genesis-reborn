@@ -9,6 +9,10 @@ et des satellites fixes, avec places par rang, réservations et production local
 Leur livraison pendant un combat rejoint les renforts locaux avec toute la flotte.
 Le [suivi de mission](docs/PROGRESSION_CARBURANT_UNITES.md) distingue les lots
 préparés, leur intégration, leur activation et les décisions encore ouvertes.
+La [grille de coûts retenue](docs/COUTS.md) est B40/60, I30/50/20 et S25/35/30/10,
+en parts de valeur M/N/A/H. Budgets de base conservés et commandes payées inchangées.
+Les points suivent toujours les quantités brutes des prix courants : le classement
+et les protections liées aux points peuvent évoluer lors de leur recalcul.
 
 Comparer les durées, la taxe électrique et les trajets sans écrire en base :
 `make -s console CMD="app:balance:compare-operations"`. La sortie JSON couvre les
@@ -18,8 +22,8 @@ la [méthode de mesure](docs/DUREES_CARBURANT.md#mesure-reproductible-et-limites
 Comparer les parcours financés et le candidat de prix sans données de jeu :
 `make -s console CMD="app:balance:compare-economy --section=all"`.
 Le [rapport économique et militaire](docs/SIMULATIONS_PROGRESSION_ECONOMIE.md)
-présente les 54 parcours, les combats et leurs limites. B50/50 et I40/40/20
-restent une variante d’étude en mémoire, sans activation.
+présente les 54 parcours, les combats et leurs limites avant le choix de la nouvelle
+grille. B50/50 et I40/40/20 restent des alternatives d’étude en mémoire.
 L’option `--candidate-tier=basic` ou `--candidate-tier=intermediate` isole un rang ;
 le [comparatif par rang](docs/SIMULATIONS_COUTS_PAR_RANG.md) présente les quatre variantes.
 `--candidate-profile=../docs/PROFIL_COUTS_PROPOSE.json` charge les pourcentages

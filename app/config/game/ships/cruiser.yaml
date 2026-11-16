@@ -108,22 +108,22 @@
   "economy_value_budget": 121730,
   "cost_profiles": {
     "basic": {
-      "metal": 36519,
-      "nano": 12173,
+      "metal": 24347,
+      "nano": 18259,
       "antimatter": 0,
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 34242,
-      "nano": 17120,
-      "antimatter": 1902,
+      "metal": 22828,
+      "nano": 19023,
+      "antimatter": 3804,
       "hydrogen": 0
     },
     "superior": {
-      "metal": 28532,
-      "nano": 21399,
-      "antimatter": 4755,
-      "hydrogen": 9510
+      "metal": 23776,
+      "nano": 16643,
+      "antimatter": 7133,
+      "hydrogen": 19022
     }
   },
   "secondary_attack": 254,

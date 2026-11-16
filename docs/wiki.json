@@ -156,6 +156,7 @@
     "title": "Coûts, durées et bonus de recherche",
     "paragraphs": [
       "Les coûts viennent du profil propre à l’élément et au rang. Une courbe fait évoluer ce profil avec le niveau ; les réductions éventuelles et les arrondis s’appliquent ensuite. Les pourcentages de composition économique ne représentent pas des pourcentages de quantités brutes.",
+      "Par défaut, les parts de valeur métal/nano/antimatière/hydrogène sont 40/60/0/0 en Basique, 30/50/20/0 en Intermédiaire et 25/35/30/10 en Supérieur. La pondération vaut 2 pour le métal, 4 pour le nano, 8 pour l’antimatière et 1 pour l’hydrogène. Elle sert à répartir les prix et ne permet pas d’échanger les ressources. Les réglages de l’univers restent prioritaires ; une commande déjà payée conserve son coût et sa durée.",
       "Dans les références actuelles, une réduction de durée est plafonnée à 70 % et une réduction de coût à 40 %. Le laboratoire réduit la durée des recherches, le chantier celle des vaisseaux. Les défenses ne reçoivent aucune réduction de durée du chantier ou du bunker."
     ],
     "calculations": [

@@ -27,6 +27,18 @@ Aucune CI GitHub de cette extension locale ni activation.
 L’activation des accès en base reste soumise à sauvegarde vérifiée et autorisation ;
 aucun déploiement Alpha prévu.
 
+### Nouvelle grille retenue — 16 novembre 2026
+
+L’utilisateur valide B40/60, I30/50/20 et S25/35/30/10 après les études.
+Implémentation locale sur `feature/repartition-couts-ressources` : 52 fiches / 156
+profils modifiés, budgets conservés et anciens paiements inchangés. Les surcharges
+d’univers restent prioritaires. Les [prix courants](COUTS.md), règles et wiki local
+sont synchronisés ; les études antérieures sont clairement datées.
+Les contrôles locaux, les relances des cas corrigés, les lints et six parcours
+navigateur ciblés réussissent. Publication/PR/fusion de cet ensemble à autoriser,
+puis CI complète sur la dernière révision avant fusion ; aucune migration de données
+ni livraison Alpha. Les recommandations précédentes ne remplacent pas cette décision.
+
 ## Rework V1 — chantier local du 14 novembre 2026
 
 Le chantier utilise uniquement `chore/rework-v1`, sans PR, fusion ni déploiement.

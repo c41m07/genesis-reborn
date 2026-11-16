@@ -1,5 +1,10 @@
 # Étude de la nouvelle grille de coûts proposée
 
+> Étude antérieure à la décision de retenir B40/60, I30/50/20 et S25/35/30/10.
+> Les prix désormais retenus sont dans [COUTS.md](COUTS.md). Pour reproduire les
+> comparaisons avec leurs anciens prix de référence, utiliser la révision `4b4cd51`.
+> Les commandes exécutées sur une autre version lisent le catalogue de cette version.
+
 Mesures du 16 novembre 2026, complément local au commit `0645c6e`.
 Dernière proposition utilisateur, en parts de valeur M/N/A/H :
 

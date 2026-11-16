@@ -29,7 +29,7 @@ une seule référence par sujet ; les anciens bilans ne décrivent pas l’état
 | Comprendre le worker, le notifier et les garanties de livraison | [Worker et notifier](WORKER_NOTIFIER.md) |
 | Régler le référencement et Search Console | [SEO](REFERENCEMENT.md) |
 | Consulter les profils de combat, production et vitesse | [EQUILIBRAGE](EQUILIBRAGE.md) |
-| Consulter les 156 profils de coûts | [Grille commune](COUTS.md) |
+| Consulter les 156 profils de coûts B40/I30/S25 retenus | [Grille commune](COUTS.md) |
 | Comprendre les déblocages par rang | [Déblocages initiaux](DEBLOCAGES.md) |
 | Comparer les durées, taxes électriques et carburants par classe | [Grilles et mesures du 15 novembre](DUREES_CARBURANT.md) |
 | Comparer les parcours financés, flottes, reconstructions et prix candidats | [Simulations économiques et militaires](SIMULATIONS_PROGRESSION_ECONOMIE.md) |
