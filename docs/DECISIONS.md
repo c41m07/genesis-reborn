@@ -1832,3 +1832,10 @@ Pour le premier lot, Ma guilde/Guildes est distinct de Diplomatie ; les relation
 personnelles restent accessibles avec ou sans guilde. Ce choix remplace la
 présentation précédente à trois ou cinq onglets de diplomatie, sans modifier
 permissions, consentements, règles d’adhésion ou priorité des relations.
+
+
+Le lot Flottes applique cette décision avec Missions actives comme accueil,
+une préparation continue et des pages autonomes pour orbites, réserves et
+compositions. Les missions sont paginées par 30 ; trois restent visibles pendant
+la préparation. Le périmètre colonie/empire, la confidentialité et les règles de
+mission ne changent pas. [Compatibilité et vérifications](NAVIGATION_PAGES_DEDIEES.md#lot-2--flottes-complexité-55).

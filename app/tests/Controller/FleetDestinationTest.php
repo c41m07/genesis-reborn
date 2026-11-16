@@ -82,6 +82,87 @@ final class FleetDestinationTest extends WebTestCase
         $discovery=new PlayerDiscovery();$discovery->playerUniverse=$criteria['playerUniverse'];$discovery->solarSystem=$planet->solarSystem;$this->em->persist($discovery);$this->em->flush();
     }
 
+    public function testDedicatedPagesExposeOnlyTheirOwnRegionsAndActiveNavigation(): void
+    {
+        foreach ([
+            '/flottes'=>['Missions actives','active-flights'],
+            '/flottes/preparer'=>['Préparer une mission','available-fleets'],
+            '/flottes/orbites'=>['Demandes d’orbite','orbit-requests'],
+            '/flottes/quai'=>['À quai et stationnements','fleet-holds'],
+        ] as $url=>[$title,$region]) {
+            $this->client->request('GET',$url);self::assertResponseIsSuccessful();
+            self::assertSelectorTextSame('h1',$title);
+            self::assertSelectorExists('nav[aria-label="Navigation des flottes"] a[href="'.$url.'"][aria-current="page"]');
+            self::assertSelectorExists('.sidebar a[href="/flottes"].active');
+            self::assertSelectorCount(1,'[data-live-region="'.$region.'"]');
+            foreach (['active-flights','available-fleets','orbit-requests','fleet-holds'] as $other) {
+                if ($other!==$region) self::assertSelectorNotExists('[data-live-region="'.$other.'"]');
+            }
+            $this->client->request('GET',$url,[],[],['HTTP_X_GENESIS_LIVE'=>'1','HTTP_ACCEPT'=>'application/json']);
+            self::assertResponseIsSuccessful();
+            $payload=json_decode($this->client->getResponse()->getContent(),true,512,JSON_THROW_ON_ERROR);
+            $expected=['colony-selector','resources','fleet-counts',$region];
+            if ($url==='/flottes') $expected[]='mission-pagination';
+            if ($url==='/flottes/preparer') $expected[]='mission-summary';
+            self::assertSame($expected,array_keys($payload['regions']));
+        }
+    }
+
+    public function testLegacyUrlsPreservePreparationAndRejectForeignColonies(): void
+    {
+        $this->client->request('GET','/planetes/'.$this->home->id);
+        $this->client->request('GET','/flottes',['origin'=>$this->own->id]);self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.fleet-colony-scope',$this->own->name);
+        $this->client->request('GET','/planetes/'.$this->home->id);
+        $query=['mission'=>'transport','planet'=>$this->ally->id];
+        $this->client->request('GET','/flottes',$query);
+        self::assertResponseRedirects('/flottes/preparer?'.http_build_query($query));
+        $this->client->followRedirect();self::assertResponseIsSuccessful();
+        self::assertSelectorExists('select[name="mission"] option[value="transport"][selected]');
+        self::assertSelectorExists('input[name="coordinates"][value="'.$this->ally->coordinates().'"]');
+        $this->client->request('GET','/flottes',['colony'=>$this->own->id]);
+        self::assertResponseRedirects('/flottes/orbites?colony='.$this->own->id);
+        $this->client->followRedirect();self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.fleet-colony-scope',$this->own->name);
+        foreach (['/flottes/preparer','/flottes/orbites','/flottes/quai'] as $url) {
+            foreach ([$this->enemy,$this->foreign] as $planet) {
+                $this->client->request('GET',$url,['colony'=>$planet->id]);self::assertResponseStatusCodeSame(404);
+            }
+        }
+        $this->client->request('GET','/flottes/compositions',['edit'=>999999]);
+        self::assertResponseRedirects('/flottes/compositions/999999/modifier');
+        $this->client->followRedirect();self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testMissionsAreBoundedAndDirectLinksLocateTheCorrectPage(): void
+    {
+        $flights=[];
+        for ($i=0;$i<33;$i++) {
+            $fleet=new Fleet();$fleet->playerUniverse=$this->player->currentPlayerUniverse;
+            $fleet->homePlanet=$this->home;$fleet->destination=$this->enemy;$fleet->mission='transport';
+            $fleet->status='traveling';$fleet->departureAt=new \DateTimeImmutable();$fleet->arrivalAt=new \DateTimeImmutable('+1 day');
+            $this->em->persist($fleet);$flights[]=$fleet;
+        }
+        $foreign=new Fleet();$foreign->playerUniverse=$this->foreign->owner;$foreign->homePlanet=$this->foreign;
+        $foreign->status='traveling';$foreign->arrivalAt=new \DateTimeImmutable('+1 day');$this->em->persist($foreign);
+        $this->em->flush();
+        $this->client->request('GET','/planetes/'.$this->home->id);
+        $this->client->request('GET','/flottes');self::assertResponseIsSuccessful();
+        self::assertSelectorCount(30,'[data-active-fleet]');
+        self::assertSelectorTextContains('[data-live-region="mission-pagination"]','Page 1 / 2');
+        self::assertSelectorNotExists('[data-active-fleet="'.$foreign->id.'"]');
+        $this->client->request('GET','/flottes',['fleet'=>$flights[32]->id]);self::assertResponseIsSuccessful();
+        self::assertSelectorCount(3,'[data-active-fleet]');
+        self::assertSelectorExists('[data-active-fleet="'.$flights[32]->id.'"]');
+        self::assertSelectorTextContains('[data-live-region="mission-pagination"]','Page 2 / 2');
+        $this->client->request('GET','/flottes',['fleet'=>$foreign->id]);self::assertResponseIsSuccessful();
+        self::assertSelectorCount(30,'[data-active-fleet]');
+        self::assertSelectorNotExists('[data-active-fleet="'.$foreign->id.'"]');
+        $this->client->request('GET','/flottes/preparer');self::assertResponseIsSuccessful();
+        self::assertSelectorCount(3,'[data-live-region="mission-summary"] li');
+        self::assertSelectorTextSame('[data-live-region="mission-summary"] .badge','33');
+    }
+
     public function testFleetRefreshReusesTheFullPageRegionsWithoutChangingTheResourceStrip(): void
     {
         $normalize = static function(string $html): string {
@@ -93,15 +174,15 @@ final class FleetDestinationTest extends WebTestCase
             return trim($crawler->filter('[data-live-region]')->html());
         };
         foreach (['explore', 'spy'] as $mission) {
-            $full = $this->client->request('GET', '/flottes', ['mission'=>$mission]);
+            $full = $this->client->request('GET', '/flottes/preparer', ['mission'=>$mission]);
             self::assertResponseIsSuccessful();
             $regions = [];
-            foreach (['colony-selector', 'resources', 'fleet-counts', 'available-fleets', 'active-flights', 'orbit-requests'] as $name) {
+            foreach (['colony-selector', 'resources', 'fleet-counts', 'available-fleets', 'mission-summary'] as $name) {
                 $node = $full->filter('[data-live-region="'.$name.'"]');
                 self::assertCount(1, $node, $name);
                 $regions[$name] = $node->outerHtml();
             }
-            $this->client->request('GET', '/flottes', ['mission'=>$mission], [], ['HTTP_X_GENESIS_LIVE'=>'1', 'HTTP_ACCEPT'=>'application/json']);
+            $this->client->request('GET', '/flottes/preparer', ['mission'=>$mission], [], ['HTTP_X_GENESIS_LIVE'=>'1', 'HTTP_ACCEPT'=>'application/json']);
             self::assertResponseIsSuccessful();
             self::assertResponseHeaderSame('Content-Type', 'application/json');
             $payload = json_decode($this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
@@ -133,18 +214,20 @@ final class FleetDestinationTest extends WebTestCase
         $foreignFlight=$create($this->foreign,$this->foreign,'explore','traveling');$this->em->flush();
         foreach([[$this->home,$homeFlight,$homeOrbit,$homeIncoming,$otherFlight,$otherOrbit,$otherIncoming],[$this->own,$otherFlight,$otherOrbit,$otherIncoming,$homeFlight,$homeOrbit,$homeIncoming]] as [$planet,$flight,$orbit,$incoming,$hiddenFlight,$hiddenOrbit,$hiddenIncoming]) {
             $this->client->request('GET','/planetes/'.$planet->id);self::assertResponseIsSuccessful();
-            $this->client->request('GET','/flottes');self::assertResponseIsSuccessful();
+            $this->client->request('GET','/flottes/preparer');self::assertResponseIsSuccessful();
             self::assertSelectorCount(1,'form[action="/flottes/envoyer"]');
             self::assertSelectorExists('form[action="/flottes/envoyer"] input[name="origin"][value="'.$planet->id.'"]');
             self::assertSelectorTextContains('.fleet-colony-scope',$planet->name);
-            self::assertSelectorTextContains('.ui-tabs','Missions actives (2)');
-            self::assertSelectorTextContains('.ui-tabs','Demandes d’orbite (2)');
+            self::assertSelectorTextContains('[data-live-region="mission-summary"] .badge','2');
+            self::assertSelectorNotExists('[data-orbit-request]');
+            $this->client->request('GET','/flottes');self::assertResponseIsSuccessful();
             foreach([$flight,$orbit] as $visible) self::assertSelectorExists('[data-active-fleet="'.$visible->id.'"]');
             foreach([$hiddenFlight,$hiddenOrbit,$foreignFlight] as $hidden) self::assertSelectorNotExists('[data-active-fleet="'.$hidden->id.'"]');
+            $this->client->request('GET','/flottes/orbites');self::assertResponseIsSuccessful();
             foreach([$orbit,$incoming] as $visible) self::assertSelectorExists('[data-orbit-request="'.$visible->id.'"]');
             foreach([$hiddenOrbit,$hiddenIncoming] as $hidden) self::assertSelectorNotExists('[data-orbit-request="'.$hidden->id.'"]');
             self::assertSelectorNotExists('main a[href="'.static::getContainer()->get('router')->generate('app_combat_simulation').'"]');
-            self::assertSelectorExists('main a.inline-link[href="/flottes/compositions"]');
+            self::assertSelectorExists('nav[aria-label="Navigation des flottes"] a[href="/flottes/compositions"]');
             $this->client->request('GET','/flottes/surveillance',['orbits'=>1,'colony'=>$planet->id]);self::assertResponseIsSuccessful();
             $payload=json_decode($this->client->getResponse()->getContent(),true,512,JSON_THROW_ON_ERROR);
             self::assertStringContainsString('data-orbit-request="'.$incoming->id.'"',$payload['orbitHtml']);
@@ -161,13 +244,13 @@ final class FleetDestinationTest extends WebTestCase
         $this->own=$this->em->find(Planet::class,$this->own->id);
         $service=static::getContainer()->get(\App\Service\Fleet\FleetCompositionService::class);
         $saved=$service->save($member,0,'Sondes',['probe'=>['basic'=>1]],0,str_repeat('a',32));$plan=$service->plan($member,$saved,$this->own);
-        $this->client->request('GET','/flottes',['composition'=>$saved->id,'origin'=>$this->own->id,'confirmation'=>$plan['fingerprint']]);
+        $this->client->request('GET','/flottes/preparer',['composition'=>$saved->id,'origin'=>$this->own->id,'confirmation'=>$plan['fingerprint']]);
         self::assertResponseIsSuccessful();self::assertSelectorExists('input[name="origin"][value="'.$this->own->id.'"]');
         self::assertSelectorTextContains('.fleet-colony-scope',$this->own->name);
         self::assertSame('idle',$otherIdle->status);
         $session=$this->client->getRequest()->getSession();$session->set('selected_planet_'.$member->id,$this->foreign->id);$session->save();
         $fallback=static::getContainer()->get(GameRepository::class)->planets($member->universe,$member)[0];
-        $this->client->request('GET','/flottes');self::assertResponseIsSuccessful();
+        $this->client->request('GET','/flottes/preparer');self::assertResponseIsSuccessful();
         self::assertSelectorExists('input[name="origin"][value="'.$fallback->id.'"]');
     }
 
@@ -203,7 +286,7 @@ final class FleetDestinationTest extends WebTestCase
         self::assertSame($this->npc->id,$catalogue->resolve($member,'attack','npc','',$this->npc->id)->id);
         self::assertSame($this->hidden->solarSystem->id,$catalogue->resolve($member,'explore','custom',$this->hidden->solarSystem->galaxy->coordinateCode().':'.$this->hidden->solarSystem->number())->id);
         $this->client->request('GET','/planetes/'.$this->home->id);
-        $this->client->request('GET','/flottes');
+        $this->client->request('GET','/flottes/preparer');
         $token=$this->client->getCrawler()->filter('form[action="/flottes/envoyer"] input[name="_token"]')->first()->attr('value');
         $base=['_token'=>$token,'origin'=>$this->home->id,'mission'=>'spy','ships'=>['probe'=>['basic'=>1]],'ratio'=>1];
         $url=static::getContainer()->get('router')->generate('app_fleet_preview');
@@ -220,12 +303,12 @@ final class FleetDestinationTest extends WebTestCase
     public function testDefaultModePrefillAndPnjAttackChoicesKeepMissionRules(): void
     {
         $this->client->request('GET','/planetes/'.$this->home->id);
-        $this->client->request('GET','/flottes');self::assertResponseIsSuccessful();
+        $this->client->request('GET','/flottes/preparer');self::assertResponseIsSuccessful();
         self::assertSelectorExists('input[name="destination_mode"][value="unexplored"][checked]');
-        $this->client->request('GET','/flottes',['mission'=>'attack','planet'=>$this->npc->id]);self::assertResponseIsSuccessful();
+        $this->client->request('GET','/flottes/preparer',['mission'=>'attack','planet'=>$this->npc->id]);self::assertResponseIsSuccessful();
         self::assertSelectorExists('input[name="destination_mode"][value="npc"][checked]');
         self::assertSelectorExists('select[name="npc_destination"] option[value="'.$this->npc->id.'"][selected]');
-        $this->client->request('GET','/flottes',['mission'=>'attack','planet'=>$this->hidden->id]);self::assertResponseStatusCodeSame(404);
+        $this->client->request('GET','/flottes/preparer',['mission'=>'attack','planet'=>$this->hidden->id]);self::assertResponseStatusCodeSame(404);
         $this->client->request('GET','/flottes/destinations',['mission'=>'invalid']);self::assertResponseStatusCodeSame(422);
         $this->client->getCookieJar()->clear();static::getContainer()->get('security.token_storage')->setToken(null);
         $this->client->request('GET','/flottes/destinations');self::assertResponseRedirects('/connexion');

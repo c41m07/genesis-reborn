@@ -27,6 +27,7 @@ test('Routes de navigation utilisables sans débordement aux trois tailles', asy
   const email = await signIn(page);
   prepareOwnedColony(process.env.BROWSER_ROUTER, email, { showLockedItems: true });
   const routes = await page.locator('.sidebar nav a').evaluateAll(links => [...new Set(links.map(link => new URL(link.href).pathname + new URL(link.href).search))]);
+  routes.push('/flottes/preparer', '/flottes/orbites', '/flottes/quai', '/flottes/compositions', '/flottes/compositions/creer');
   expect(routes.length).toBeGreaterThanOrEqual(10);
 
   for (const theme of ['dark', 'light']) {

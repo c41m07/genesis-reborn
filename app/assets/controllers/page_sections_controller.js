@@ -2,18 +2,11 @@ import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
     connect() {
-        // Les anciens liens d’un écran composite gardent une destination après la séparation.
-        if (['guilde', 'diplomatie'].includes(this.element.dataset.uiPage)) {
-            const destinations = {
-                '#guild-management': '/guildes/gestion', '#guild-management-title': '/guildes/gestion',
-                '#guild-members-title': '/guildes/membres', '#guild-ranks-title': '/guildes/grades',
-                '#guild-search': '/guildes', '#alliance-members': '/diplomatie/commandants',
-            };
-            const destination = destinations[window.location.hash];
-            if (destination && window.location.pathname !== destination) {
-                window.location.replace(destination + window.location.hash);
-                return;
-            }
+        if (['guilde', 'diplomatie', 'flottes'].includes(this.element.dataset.uiPage)) {
+            // Un changement de fragment peut conserver le document et ne reconnecte pas Stimulus.
+            this.onHashChange = () => this.redirectLegacyFragment();
+            window.addEventListener('hashchange', this.onHashChange);
+            if (this.redirectLegacyFragment()) return;
         }
         const main = this.element.querySelector('main');
         if (!main || ['vue-generale', 'flottes', 'wiki', 'projet-detail', 'accueil-public', 'recherche-messages'].includes(this.element.dataset.uiPage)) return;
@@ -39,5 +32,51 @@ export default class extends Controller {
         (main.querySelector('.page-heading') || main.querySelector('h1'))?.after(this.navigation);
     }
 
-    disconnect() { this.navigation?.remove(); }
+    redirectLegacyFragment() {
+        // Les anciens liens d’un écran composite gardent une destination après la séparation.
+        if (['guilde', 'diplomatie'].includes(this.element.dataset.uiPage)) {
+            const destinations = {
+                '#guild-management': '/guildes/gestion', '#guild-management-title': '/guildes/gestion',
+                '#guild-members-title': '/guildes/membres', '#guild-ranks-title': '/guildes/grades',
+                '#guild-search': '/guildes', '#alliance-members': '/diplomatie/commandants',
+            };
+            const destination = destinations[window.location.hash];
+            if (destination && window.location.pathname !== destination) {
+                window.location.replace(destination + window.location.hash);
+                return true;
+            }
+        }
+        if (this.element.dataset.uiPage === 'flottes') {
+            const fleet = /^#fleet-(\d+)$/.exec(window.location.hash);
+            if (window.location.pathname === '/flottes' && fleet && !document.getElementById(`fleet-${fleet[1]}`) && new URLSearchParams(window.location.search).get('fleet') !== fleet[1]) {
+                const url = new URL(window.location.href);
+                url.searchParams.set('fleet', fleet[1]);
+                window.location.replace(url);
+                return true;
+            }
+            const destinations = { '#prepare-mission':'/flottes/preparer', '#active-missions':'/flottes', '#orbit-requests-title':'/flottes/orbites', '#held-fleets-title':'/flottes/quai' };
+            const destination = destinations[window.location.hash];
+            if (destination && window.location.pathname !== destination) {
+                const url = new URL(destination, window.location.origin);
+                url.search = window.location.search;
+                url.hash = window.location.hash;
+                // Les paramètres d’envoi feraient revenir l’ancienne entrée /flottes vers la préparation.
+                if (destination !== '/flottes/preparer') {
+                    for (const parameter of ['mission', 'system', 'planet', 'composition', 'confirmation', 'adjust']) url.searchParams.delete(parameter);
+                }
+                if (destination === '/flottes' && url.searchParams.has('colony')) {
+                    url.searchParams.set('origin', url.searchParams.get('colony'));
+                    url.searchParams.delete('colony');
+                }
+                window.location.replace(url);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    disconnect() {
+        window.removeEventListener('hashchange', this.onHashChange);
+        this.navigation?.remove();
+    }
 }

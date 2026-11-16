@@ -98,8 +98,8 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
           await expect(page).toHaveURL(/view=table/);
         }
         if(path==='/flottes') {
-          await expect(page.locator('.fleet-page-layout--no-idle')).toBeVisible();
-          await page.goto('/flottes?mission=spy');
+          await expect(page.getByRole('heading',{name:'Missions actives',exact:true})).toBeVisible();
+          await page.goto('/flottes/preparer?mission=spy');
           await expect(page.locator('.fleet-empty-state').getByRole('link',{name:/chantier/i})).toHaveAttribute('href', /#item-probe-basic/);
           await page.goto(path);
         }

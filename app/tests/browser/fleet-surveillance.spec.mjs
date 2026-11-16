@@ -60,7 +60,7 @@ test('Une attaque apparaît au seuil sans recharger, avec focus préservé et do
   await expect(page.locator('.incoming-empty-message')).toHaveText('Aucune flotte entrante visible vers vos colonies.');
   const before=await page.evaluate(galaxy=>fetch('/flottes/surveillance?galaxy='+galaxy).then(r=>r.json()),data.galaxy);
   expect(before.flights).toEqual([]);expect(before.html).not.toContain('Source confidentielle');
-  const focus=page.getByRole('link',{name:'Accéder au chantier spatial',exact:true});await focus.focus();
+  const focus=page.getByRole('navigation',{name:'Navigation des flottes'}).getByRole('link',{name:'Préparer une mission',exact:true});await focus.focus();
   runIsolatedSql(data.project,'UPDATE fleet SET arrival_at=DATE_ADD(UTC_TIMESTAMP(),INTERVAL 4 MINUTE) WHERE id='+data.fleet);
   const warning=page.locator('[data-incoming-attack="'+data.fleet+'"]');
   await expect(warning).toBeVisible({timeout:15000});await expect(focus).toBeFocused();
@@ -129,7 +129,7 @@ test('Flottes entrantes : transport neutre, propre retour séparé et demande d�
   await expect(page.locator('[data-incoming-attack]')).toHaveCount(0);
   await expect(page.getByRole('heading',{name:/^Flottes entrantes\s+0$/})).toBeVisible();
   await expect(page.locator('.incoming-empty-message')).toHaveText('Aucune flotte entrante visible vers vos colonies.');
-  const focus=page.getByRole('link',{name:'Accéder au chantier spatial',exact:true});await focus.focus();
+  const focus=page.getByRole('navigation',{name:'Navigation des flottes'}).getByRole('link',{name:'Préparer une mission',exact:true});await focus.focus();
   runIsolatedSql(data.project,"UPDATE fleet SET mission='transport',cargo='{\"metal\":987654321}' WHERE id="+data.fleet);
   const incoming=page.locator('[data-incoming-attack="'+data.fleet+'"]');
   await expect(incoming).toBeVisible({timeout:15000});await expect(focus).toBeFocused();
@@ -147,7 +147,7 @@ test('Flottes entrantes : transport neutre, propre retour séparé et demande d�
   await page.setViewportSize({width:1440,height:1000});
   for(const [label,url,container] of [
     ['vue-generale','/planetes/'+data.defender.planetId,'.dashboard-secondary'],
-    ['flottes','/flottes','.fleet-operations-rail'],
+    ['flottes','/flottes','#active-missions'],
     ...['buildings','technologies','ships','defenses'].map(section=>[section,'/planetes/'+data.defender.planetId+'?section='+section,'.colony-catalog-aside']),
   ]) {
     await page.goto(url);
@@ -195,6 +195,6 @@ test('Flottes entrantes : transport neutre, propre retour séparé et demande d�
   await expect(incoming).toContainText('Demande d’orbite à traiter',{timeout:15000});
   await expect(incoming.locator('time')).toHaveCount(0);
   await incoming.getByRole('link',{name:'Consulter la demande d’orbite',exact:true}).click();
-  await expect(page).toHaveURL(new RegExp('/flottes[?]colony='+data.defender.planetId+'$'));
+  await expect(page).toHaveURL(new RegExp('/flottes/orbites[?]colony='+data.defender.planetId+'$'));
   expect(errors).toEqual([]);
 });

@@ -38,7 +38,7 @@ test('La prévisualisation valide autorise l’envoi, les erreurs backend et ré
   const addProbe = "INSERT INTO fleet_ship (fleet_id, slug, quantity) SELECT f.id, 'probe', 1 FROM fleet f INNER JOIN player_universe pu ON pu.id=f.player_universe_id INNER JOIN player p ON p.id=pu.player_id WHERE p.email='" + email + "' AND f.status='idle' LIMIT 1 ON DUPLICATE KEY UPDATE quantity=VALUES(quantity)";
   sql(project, addProbe);
 
-  await page.goto('/flottes');
+  await page.goto('/flottes/preparer');
   const form = page.locator('.fleet-form form').first();
   const estimate = form.locator('[data-fleet-preview-target="result"]');
   await expect(estimate).toHaveAttribute('aria-live', 'polite');

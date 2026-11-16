@@ -43,7 +43,7 @@ test('Conquête PNJ : rapport détaillé, résultat, responsive et confidentiali
     sql(project, insert);
   }
 
-  await page.goto('/flottes');
+  await page.goto('/flottes/preparer');
   const form = page.locator('.fleet-form form').first();
   await form.locator('[name="ships[fighter]"]').fill('10');
   await form.locator('[name="ships[colony_ship]"]').fill('1');

@@ -2,12 +2,11 @@
 
 namespace App\Controller;
 
-use App\Entity\{Fleet, FleetShip, Planet, PlayerDiscovery, SolarSystem};
+use App\Entity\{Fleet, Planet, SolarSystem};
 use App\Repository\GameRepository;
 use App\Service\Universe\UniverseContext;
 use App\Service\Fleet\{FleetService, DestinationCatalogue};
 use App\Service\Player\PreferencesService;
-use App\Service\Combat\CombatEventService;
 use App\Service\Catalog\GameCatalog;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{Request, Response};
@@ -15,162 +14,71 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class FleetController extends AbstractController
 {
-    #[Route('/flottes', name: 'app_fleets', methods: ['GET'])]
+    #[Route('/flottes', name: 'app_fleets', defaults: ['fleet_page' => 'missions'], methods: ['GET'])]
+    #[Route('/flottes/preparer', name: 'app_fleet_prepare', defaults: ['fleet_page' => 'prepare'], methods: ['GET'])]
+    #[Route('/flottes/orbites', name: 'app_fleet_orbits', defaults: ['fleet_page' => 'orbits'], methods: ['GET'])]
+    #[Route('/flottes/quai', name: 'app_fleet_holds', defaults: ['fleet_page' => 'holds'], methods: ['GET'])]
     public function index(
         Request $request,
         UniverseContext $context,
-        GameRepository $repo,
-        GameCatalog $catalog,
         \App\Service\Queue\QueueService $queues,
-        CombatEventService $combats,
-        \App\Service\Colony\EmpireDetails $details,
-        DestinationCatalogue $destinations,
-        \App\Service\Fleet\OrbitRequestView $orbitView,
-        \App\Service\Fleet\FleetCompositionService $compositions,
+        \App\Service\Fleet\FleetPageView $view,
         \App\Service\Colony\GameShell $shell,
         \App\Service\Colony\LiveRegionResponse $liveResponses,
     ): Response
     {
-        $m = $context->membership();
-        $queues->synchronize($m);
-        $idle = [];
-        $systems = $repo->systems($m->universe);
-        $mission = (string) $request->query->get('mission', 'explore');
-        $universeConfig = $catalog->forUniverse($m->universe);
-        $conquestEnabled = (bool) ($universeConfig['features']['planet_conquest'] ?? false);
-        if (!in_array($mission, DestinationCatalogue::MISSIONS, true)) {
-            throw $this->createNotFoundException('Mission indisponible.');
+        $member = $context->membership();
+        $page = $request->attributes->getString('fleet_page');
+        // Les liens de carte et de composition déjà diffusés gardent leurs paramètres de préparation.
+        if ($page === 'missions' && array_intersect(['mission', 'system', 'planet', 'composition'], array_keys($request->query->all()))) {
+            return $this->redirectToRoute('app_fleet_prepare', $request->query->all());
         }
-        $destinationChoices = $destinations->choices($m, $mission);
-        $systemId = $request->query->getInt('system');
-        $planetId = $request->query->getInt('planet');
-        if ($systemId && !array_filter($systems, fn($system) => $system->id === $systemId)) {
-            throw $this->createNotFoundException('Système inaccessible.');
+        if ($page === 'missions' && $request->query->has('colony')) {
+            return $this->redirectToRoute('app_fleet_orbits', $request->query->all());
         }
-        $planet = $planetId ? $repo->find(Planet::class, $planetId) : null;
-        if ($planetId && (!$planet instanceof Planet || !$destinations->canPrefill($m, $planet, $mission))) {
-            throw $this->createNotFoundException('Destination inaccessible.');
-        }
-        $prefillCoordinates = '';
-        $mode = $destinationChoices['modes'][0];
-        if ($mission === 'explore' && $systemId) {
-            foreach ($systems as $system) {
-                if ($system->id === $systemId) {
-                    $prefillCoordinates = $system->galaxy->coordinateCode() . ':' . $system->number();
-                    break;
-                }
-            }
-            $mode = 'custom';
-        } elseif ($planet) {
-            $prefillCoordinates = $mission === 'explore' ? $planet->solarSystem->galaxy->coordinateCode() . ':' . $planet->solarSystem->number() : $planet->coordinates();
-            $category = $destinations->category($m, $planet, $mission);
-            $mode = $destinations->allows($m, $planet, $mission) && in_array($category, $destinationChoices['modes'], true) ? $category : 'custom';
-        }
-        $planets = $repo->planets($m->universe, $m);
-        $selectedPlanet = $planets[0] ?? null;
-        $selectedId = (int) $request->getSession()->get('selected_planet_' . $m->id, 0);
-        foreach ($planets as $candidate) {
-            if ($candidate->id === $selectedId) {
-                $selectedPlanet = $candidate;
-            }
-        }
-        $loaded = [];
-        $loadedOrigin = 0;
-        if ($request->query->getInt('composition')) {
-            try {
-                $saved = $compositions->owned($m, $request->query->getInt('composition'));
-                $source = $repo->find(Planet::class, $request->query->getInt('origin'));
-                if (!$source) {
-                    throw new \DomainException('Colonie inaccessible.');
-                }
-                $plan = $compositions->plan($m, $saved, $source);
-                if (!hash_equals($plan['fingerprint'], $request->query->getString('confirmation')) || $plan['missing'] && !$request->query->getBoolean('adjust')) {
-                    $this->addFlash('error', 'Les disponibilités ou la composition ont changé. Vérifiez les quantités avant de charger.');
-                    return $this->redirectToRoute('app_fleet_composition_load', ['id' => $saved->id, 'origin' => $source->id]);
-                }
-                $loaded = $plan['missing'] ? $plan['available'] : $saved->ships;
-                $loadedOrigin = $source->id;
-                $selectedPlanet = $source;
-            } catch (\DomainException) {
-                throw $this->createNotFoundException('Composition ou colonie inaccessible.');
-            }
-        }
-        if ($selectedPlanet) {
-            $request->getSession()->set('selected_planet_' . $m->id, $selectedPlanet->id);
-        }
-        // Les compositions disponibles viennent seulement des flottes au sol de la colonie active.
-        $holds = $repo->all(Fleet::class, ['playerUniverse' => $m, 'homePlanet' => $selectedPlanet, 'status' => 'idle']);
-        $shipsByFleet = [];
-        foreach ($holds ? $repo->all(FleetShip::class, ['fleet' => $holds]) : [] as $ship) {
-            if ($ship->quantity > 0 && ($universeConfig['catalog']['ships'][$ship->slug]['mobile'] ?? true)) {
-                $shipsByFleet[$ship->fleet->id][] = $ship;
-            }
-        }
-        foreach ($holds as $fleet) {
-            if (isset($shipsByFleet[$fleet->id])) {
-                $idle[] = ['fleet' => $fleet, 'ships' => $shipsByFleet[$fleet->id]];
-            }
-        }
-        $heldFleets = $repo->all(Fleet::class, ['playerUniverse' => $m, 'mission' => 'station', 'status' => 'station_waiting'], ['id' => 'ASC']);
-        $activeFleets = $repo->all(Fleet::class, ['playerUniverse' => $m, 'homePlanet' => $selectedPlanet, 'status' => [
-            'traveling',
-            'returning',
-            'attacking',
-            'defending',
-            'orbiting',
-            'orbit_pending',
-            'occupying',
-        ]], ['arrivalAt' => 'ASC']);
-        $combatEvents = $repo->fleetCombatEvents($m, $activeFleets);
-        $orbitRequests = $selectedPlanet ? $orbitView->forMember($m, $selectedPlanet) : [];
-        $data = [
-            'fleet_planet' => $selectedPlanet,
-            'loaded_composition' => $loaded,
-            'loaded_origin' => $loadedOrigin,
-            'fleet_details' => $details->fleets($m, $activeFleets),
-            'prefill' => [
-                'mission' => $mission,
-                'system' => $systemId,
-                'planet' => $planetId,
-                'coordinates' => $prefillCoordinates,
-                'mode' => $mode,
-            ],
-            'active_fleets' => $activeFleets,
-            'held_fleets' => $heldFleets,
-            'held_details' => $details->fleets($m, $heldFleets),
-            'holds' => $holds,
-            'combat_events' => $combatEvents,
-            'membership' => $m,
-            'fleet_colony_scope' => true,
-            'idle' => $idle,
-            'systems' => $systems,
-            'destination_choices' => $destinationChoices,
-            'catalog' => $catalog->all('ships'),
-            'resources' => $catalog->rules()['resources'],
-            'fuel_pending' => $catalog->rules()['fuel_ratio_policy'] === 'pending',
-            'orbit_requests' => $orbitRequests,
-            'fleet_limit' => (int) $universeConfig['limits']['max_fleet_size'],
-            'conquest_enabled' => $conquestEnabled,
+        $queues->synchronize($member);
+        $parameters = [
+            'mission' => $request->query->getString('mission', 'explore'), 'system' => $request->query->getInt('system'),
+            'planet' => $request->query->getInt('planet'), 'composition' => $request->query->getInt('composition'),
+            'origin' => $request->query->getInt('origin'), 'confirmation' => $request->query->getString('confirmation'),
+            'adjust' => $request->query->getBoolean('adjust'), 'page' => $request->query->getInt('page', 1),
+            'colony' => $request->query->getInt('colony'), 'focus' => $request->query->getInt('fleet'),
         ];
+        try {
+            $data = $view->prepare($member, (int) $request->getSession()->get('selected_planet_'.$member->id, 0), $page, $parameters);
+        } catch (\DomainException $error) {
+            throw $this->createNotFoundException($error->getMessage());
+        }
+        if (isset($data['composition_review'])) {
+            $this->addFlash('error', 'Les disponibilités ou la composition ont changé. Vérifiez les quantités avant de charger.');
+            return $this->redirectToRoute('app_fleet_composition_load', $data['composition_review']);
+        }
+        if ($data['fleet_planet']) {
+            $request->getSession()->set('selected_planet_'.$member->id, $data['fleet_planet']->id);
+        }
         if ($request->headers->get('X-Genesis-Live') === '1' && $request->getPreferredFormat() === 'json') {
-            // Préserver la préparation du bandeau faite par base.html.twig lors d’un rendu complet.
             $data['chrome'] = $shell->get($this->getUser());
             $data['section'] = 'overview';
             $data['preferences'] = array_replace(PreferencesService::DEFAULTS, $this->getUser()->preferences);
-            $regions = [];
-            foreach ([
-                'colony-selector' => 'ui/colony_selector.html.twig',
-                'resources' => 'ui/resource_strip.html.twig',
+            $templates = [
+                'colony-selector' => 'ui/colony_selector.html.twig', 'resources' => 'ui/resource_strip.html.twig',
                 'fleet-counts' => 'fleet/_counts.html.twig',
-                'available-fleets' => 'fleet/_available.html.twig',
-                'active-flights' => 'ui/flights.html.twig',
-                'orbit-requests' => 'ui/orbit_requests.html.twig',
-            ] as $name => $template) {
+            ];
+            // Chaque actualisation ne produit que les fragments présents sur cette destination.
+            $templates += match ($page) {
+                'prepare' => ['available-fleets' => 'fleet/_available.html.twig', 'mission-summary' => 'fleet/_mission_summary.html.twig'],
+                'missions' => ['active-flights' => 'ui/flights.html.twig', 'mission-pagination' => 'fleet/_pagination.html.twig'],
+                'orbits' => ['orbit-requests' => 'ui/orbit_requests.html.twig'],
+                'holds' => ['fleet-holds' => 'fleet/_dock.html.twig'],
+                default => [],
+            };
+            $regions = [];
+            foreach ($templates as $name => $template) {
                 $regions[$name] = $this->renderView($template, $data);
             }
             return $liveResponses->create($request, $regions);
         }
-        return $this->render('fleet/index.html.twig', $data);
+        return $this->render('fleet/index.html.twig', $data, new Response(headers: ['Cache-Control' => 'private, no-store']));
     }
     #[Route('/flottes/destinations', name: 'app_fleet_destinations', methods: ['GET'])]
     public function destinations(Request $request, UniverseContext $context, DestinationCatalogue $destinations): Response
@@ -335,7 +243,7 @@ final class FleetController extends AbstractController
         } catch (\DomainException $e) {
             $this->addFlash('error', $e->getMessage());
         }
-        return $this->redirectToRoute('app_fleets');
+        return $this->redirectToRoute('app_fleet_orbits');
     }
     #[Route('/flottes/envoyer', name: 'app_fleet_send', methods: ['POST'])]
     public function send(
@@ -392,6 +300,6 @@ final class FleetController extends AbstractController
         } catch (\DomainException $e) {
             $this->addFlash('error', $e->getMessage());
         }
-        return $this->redirectToRoute('app_fleets');
+        return $this->redirectToRoute(isset($adjusted) ? 'app_fleets' : 'app_fleet_prepare', isset($adjusted) ? [] : ['mission' => $request->request->getString('mission', 'explore')]);
     }
 }

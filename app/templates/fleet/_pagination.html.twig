@@ -1,0 +1,5 @@
+<div data-live-region="mission-pagination">{% if missions_pages>1 %}<nav class="ui-tabs" aria-label="Pages des missions">
+{% if missions_page>1 %}<a href="{{ path('app_fleets',{page:missions_page-1}) }}">Missions précédentes</a>{% endif %}
+<span>Page {{ missions_page }} / {{ missions_pages }}</span>
+{% if missions_page<missions_pages %}<a href="{{ path('app_fleets',{page:missions_page+1}) }}">Missions suivantes</a>{% endif %}
+</nav>{% endif %}</div>

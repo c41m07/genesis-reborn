@@ -33,7 +33,7 @@ export default class extends Controller {
         const generation = ++this.generation;
         const contextUrl = location.href;
         try {
-            const r = await fetch((location.pathname.startsWith('/planetes/') || location.pathname === '/flottes') ? contextUrl : this.urlValue, {
+            const r = await fetch((location.pathname.startsWith('/planetes/') || location.pathname === '/flottes' || location.pathname.startsWith('/flottes/')) ? contextUrl : this.urlValue, {
                 signal: this.abort.signal,
                 headers: { 'X-Genesis-Live': '1', Accept: 'application/json' },
             });

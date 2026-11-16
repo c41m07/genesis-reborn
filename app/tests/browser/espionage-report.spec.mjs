@@ -41,7 +41,8 @@ test('Espionnage PNJ : envoyer une sonde et consulter le rapport privé', async 
   await page.reload();
   await expect(page.locator('#building-tab-probe-basic .building-rank-level')).toHaveText('1', { timeout: 60000 });
 
-  await page.getByRole('link', { name: 'Flottes et missions', exact: true }).click();
+  await page.getByRole('navigation',{name:page.viewportSize().width<=740?'Navigation mobile':'Navigation principale'}).getByRole('link', { name: 'Flottes', exact: true }).click();
+   await page.getByRole('navigation',{name:'Navigation des flottes'}).getByRole('link',{name:'Préparer une mission',exact:true}).click();
   const form = page.locator('.fleet-form form').first();
   await form.locator('[name="ships[probe]"]').fill('1');
   await form.getByRole('button', { name: /Choisir la destination/ }).click();
@@ -91,7 +92,8 @@ test('Espionnage PNJ : envoyer une sonde et consulter le rapport privé', async 
      SELECT id,'probe','basic',1 FROM fleet WHERE home_planet_id=${planet} AND status='idle'
      ON DUPLICATE KEY UPDATE quantity=1`);
    const coordinates = planetCoordinates(project, planet).split(':').slice(0, 2).join(':');
-   await page.getByRole('link', { name: 'Flottes et missions', exact: true }).click();
+   await page.getByRole('navigation',{name:page.viewportSize().width<=740?'Navigation mobile':'Navigation principale'}).getByRole('link', { name: 'Flottes', exact: true }).click();
+   await page.getByRole('navigation',{name:'Navigation des flottes'}).getByRole('link',{name:'Préparer une mission',exact:true}).click();
    const form = page.locator('.fleet-form form').first();
    await form.locator('[name="ships[probe]"]').fill('1');
    await form.getByRole('button', { name: /Choisir la destination/ }).click();

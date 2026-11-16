@@ -98,6 +98,39 @@ final class GameRepository
         return false;
     }
 
+    /** @return array{fleets:list<Fleet>,count:int,page:int,pages:int} Missions de la colonie, bornées avant enrichissement. */
+    public function fleetMissionPage(PlayerUniverse $owner, ?Planet $colony, int $page, int $limit = 30, int $focusId = 0): array
+    {
+        if (!$colony) {
+            return ['fleets' => [], 'count' => 0, 'page' => 1, 'pages' => 1];
+        }
+        $limit = max(1, min(30, $limit));
+        $query = $this->em->createQueryBuilder()->select('fleet')->from(Fleet::class, 'fleet')
+            ->where('fleet.playerUniverse = :owner')->andWhere('fleet.homePlanet = :colony')
+            ->andWhere('fleet.status IN (:states)')->setParameter('owner', $owner)->setParameter('colony', $colony)
+            ->setParameter('states', ['traveling', 'returning', 'attacking', 'defending', 'orbiting', 'orbit_pending', 'occupying']);
+        $count = (int) (clone $query)->select('COUNT(fleet.id)')->getQuery()->getSingleScalarResult();
+        $pages = max(1, (int) ceil($count / $limit));
+        if ($focusId > 0) {
+            $focused = (clone $query)->andWhere('fleet.id = :focus')->setParameter('focus', $focusId)->getQuery()->getOneOrNullResult();
+            if ($focused) {
+                // Reconstituer la page d’un lien direct avant de borner les lectures détaillées.
+                $before = (clone $query)->select('COUNT(fleet.id)')->setParameter('focus', $focusId);
+                if ($focused->arrivalAt === null) {
+                    $before->andWhere('fleet.arrivalAt IS NULL AND fleet.id < :focus');
+                } else {
+                    $before->andWhere('(fleet.arrivalAt IS NULL OR fleet.arrivalAt < :arrival OR (fleet.arrivalAt = :arrival AND fleet.id < :focus))')
+                        ->setParameter('arrival', $focused->arrivalAt);
+                }
+                $page = intdiv((int) $before->getQuery()->getSingleScalarResult(), $limit) + 1;
+            }
+        }
+        $page = max(1, min($pages, $page));
+        $fleets = $query->orderBy('fleet.arrivalAt', 'ASC')->addOrderBy('fleet.id', 'ASC')
+            ->setFirstResult(($page - 1) * $limit)->setMaxResults($limit)->getQuery()->getResult();
+        return ['fleets' => $fleets, 'count' => $count, 'page' => $page, 'pages' => $pages];
+    }
+
     public function guildTreatyHistory(\App\Entity\Guild $a, \App\Entity\Guild $b): array
     {
         if ($a->universe->id !== $b->universe->id) {
@@ -471,9 +504,20 @@ final class GameRepository
     }
 
     /** @return list<Fleet> */
-    public function orbitRequestsFor(PlayerUniverse $viewer): array
+    public function orbitRequestsFor(PlayerUniverse $viewer, ?Planet $colony = null): array
     {
-        return $this->em->createQueryBuilder()->select('f', 'sender', 'target')->from(Fleet::class, 'f')->join('f.playerUniverse', 'sender')->join('f.destination', 'target')->where('sender.universe = :universe')->andWhere('f.mission = :mission')->andWhere('f.status IN (:statuses)')->andWhere('(sender = :viewer OR target.owner = :viewer)')->setParameter('universe', $viewer->universe)->setParameter('viewer', $viewer)->setParameter('mission', 'orbit')->setParameter('statuses', ['traveling', 'orbit_pending'])->orderBy('f.arrivalAt', 'ASC')->addOrderBy('f.id', 'ASC')->getQuery()->getResult();
+        $query = $this->em->createQueryBuilder()->select('f', 'sender', 'target')->from(Fleet::class, 'f')
+            ->join('f.playerUniverse', 'sender')->join('f.destination', 'target')
+            ->where('sender.universe = :universe')->andWhere('f.mission = :mission')
+            ->andWhere('f.status IN (:statuses)')->andWhere('(sender = :viewer OR target.owner = :viewer)')
+            ->setParameter('universe', $viewer->universe)->setParameter('viewer', $viewer)
+            ->setParameter('mission', 'orbit')->setParameter('statuses', ['traveling', 'orbit_pending']);
+        if ($colony) {
+            // Une orbite personnelle est classée côté départ, même si sa destination appartient au même empire.
+            $query->andWhere('((sender = :viewer AND f.homePlanet = :colony) OR (sender <> :viewer AND target = :colony AND target.owner = :viewer))')
+                ->setParameter('colony', $colony);
+        }
+        return $query->orderBy('f.arrivalAt', 'ASC')->addOrderBy('f.id', 'ASC')->getQuery()->getResult();
     }
 
     public function activeFleetsInUniverse(Universe $universe): array
