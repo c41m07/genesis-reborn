@@ -84,4 +84,5 @@ les pages déjà ouvertes. Aucune dépendance, migration ou livraison Alpha.
 - make validate, make lint, make assets, syntaxes JavaScript et git diff --check réussis.
 - Captures réelles et journaux sous output/playwright/incoming-style/ (hors Git).
   Version locale actualisée ; routes / et /health répondent 200, assets servis vérifiés.
-- Aucune publication GitHub, CI distante ou livraison Alpha pour cette retouche.
+- Ce bilan décrit la recette locale avant publication. L’envoi dans une PR vers dev
+  est ensuite autorisé, avec fusion conditionnée à toute la CI et sans livraison Alpha.

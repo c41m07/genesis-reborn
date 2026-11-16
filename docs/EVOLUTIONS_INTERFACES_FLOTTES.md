@@ -1835,3 +1835,15 @@ les mêmes styles calculés que les vols personnels et une navigation accessible
 Les contrôles validate, lint, assets, syntaxes JavaScript et diff réussissent.
 Le site local a été actualisé et ses fichiers compilés servis ont été comparés.
 Captures : output/playwright/incoming-style/ ; aucune publication ni livraison Alpha.
+
+### Publication des retouches autorisée — 16 novembre 2026
+
+L’utilisateur autorise l’envoi des retouches locales validées dans une PR vers dev,
+puis sa fusion uniquement après réussite de toute la CI sur la dernière version.
+La branche feature/unites-civiles-affichages-flottes regroupe les prérequis du Bunker,
+les noms et six illustrations civiles, la production propre à la colonie, les gains
+par niveau des cadres verts et le panneau des arrivées avec sa présentation validée.
+Les mentions de réalisation locale ci-dessus décrivent la recette avant publication.
+La protection de dev a été revérifiée : PR et cinq jobs quality obligatoires,
+base à jour, administrateurs inclus ; publish n’est pas un contrôle requis.
+Aucune fusion dans Alpha ni exécution du déploiement n’est autorisée pour ce lot.
