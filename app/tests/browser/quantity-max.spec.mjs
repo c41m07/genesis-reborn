@@ -29,7 +29,7 @@ test('Construction : Max dépasse 100, ajuste la saisie et refuse un achat lorsq
     expect(await page.evaluate(async url => (await fetch(url)).status, `/planetes/${planet}/construction-maximum?group=buildings&slug=mine_metal&tier=basic`)).toBe(422);
     await page.goto(`/planetes/${planet}?section=ships`);
     const panel = page.locator('#item-probe-basic'), input = panel.locator('[name="quantity"]');
-    const maximum = panel.getByRole('button', { name: /^Quantité maximale/ });
+    const maximum = panel.getByRole('button', { name: /^Max : quantité maximale de/ });
     await maximum.focus(); await page.keyboard.press('Enter');
     await expect.poll(async () => Number(await input.inputValue())).toBeGreaterThan(100);
     const initial = Number(await input.inputValue());

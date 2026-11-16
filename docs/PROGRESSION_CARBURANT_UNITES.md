@@ -244,11 +244,14 @@ six fichiers modifiés par l’autre tâche sont conservés.
 Publication et fusion conditionnelle autorisées : [PR #71](https://github.com/c41m07/genesis-reborn/pull/71).
 La première [CI complète n° 296](https://github.com/c41m07/genesis-reborn/actions/runs/43780432127)
 confirme 1 306 PHP / 228 969 assertions, 13 Python, lint, schéma, compilation,
-diff et sauvegarde/restauration isolées (60 tables). Un ancien test navigateur
-d’onglets attendait encore 14 familles de vaisseaux au lieu de 16 : son attente
-est mise à jour sans retirer de contrôle. Le parcours concerné repasse dans une
-base navigateur isolée (un scénario, 41 s pour l’exécution complète). Une nouvelle
-CI complète sur cette correction reste obligatoire avant fusion. Aucune opération sur une base de jeu
+diff et sauvegarde/restauration isolées (60 tables). Les 204 parcours navigateur
+sont allés au bout : 202 réussis, deux attentes devenues obsolètes. Le test
+d’onglets attendait 14 familles au lieu de 16 ; le test de maximum cherchait
+l’ancien nom accessible du bouton Max. Leurs attentes sont actualisées sans
+retrait de contrôle, avec conservation de la correction d’accessibilité.
+Les deux parcours corrigés repassent dans des bases navigateur isolées, sans
+modifier les délais d’attente ni retirer leurs assertions métier.
+Une nouvelle CI complète sur ces corrections reste obligatoire avant fusion. Aucune opération sur une base de jeu
 ni aucun déploiement Alpha.
 
 ## Reprise
