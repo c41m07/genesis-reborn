@@ -1,5 +1,13 @@
 # Roadmap Genesis Reborn
 
+## Évolution visuelle et couverture des interfaces — 17 novembre 2026
+
+Mission en cours sur `feature/interface-guildes`, après les huit lots de pages
+dédiées déjà intégrés. Premier lot local : Vue générale, Membres et Grades de
+guilde, sans modification métier. [Inventaire et reprise](COUVERTURE_INTERFACES.md)
+pour les autres interfaces, composants, vérifications et limites Figcraft.
+La réalisation locale ne vaut ni CI GitHub réussie, ni fusion, ni déploiement.
+
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026
 
 Lot 1 fusionné dans `dev` par la [PR #69](https://github.com/c41m07/genesis-reborn/pull/69)
