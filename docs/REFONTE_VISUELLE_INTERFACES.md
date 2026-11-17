@@ -69,13 +69,15 @@ Fichier natif local, hors du dépôt :
 
 `C:/Users/xdark/.codex/visualizations/2026/11/17/01a1ea81-5284-7b10-9009-41e7f3c29e5e/genesis-reborn-lot-1-guildes-A-B.figcraft`
 
-Après la préparation de L1B, le document comporte cinq pages :
+Après la préparation de L1C, le document comporte sept pages :
 
 1. **01 · Vue générale — Validée** : conservée sans modification ;
 2. **02 · Guildes · A — Horizon partagé** : première proposition nouvelle ;
 3. **03 · Guildes · B — Échanges et gestion** : B validée et implémentée pour L1A ;
 4. **04 · L1B · A — Recherche directe** : liste compacte et création accompagnée ;
-5. **05 · L1B · B — Identités en cartes** : résultats en cartes et formulaire centré.
+5. **05 · L1B · B — Identités en cartes** : seconde proposition L1B ;
+6. **06 · L1C · A — Gestion directe** : grades latéraux et formulaires visibles ;
+7. **07 · L1C · B — Gestion progressive** : grades horizontaux, réglages secondaires dépliables.
 
 Dans chaque proposition, les formats ordinateur, mobile et tablette sont rangés
 côte à côte par tâche : Ma guilde, Membres, Relations entre commandants. Une
@@ -423,6 +425,87 @@ Fichiers de réalisation : `app/src/Controller/DiplomacyController.php`,
 README, architecture, décisions, guide UI, feuille de route, inventaire et suivi
 sont synchronisés dans le même lot.
 
+## L1C — grades, gestion, personnalisation et traités
+
+Conception **4/5**, réalisation prévue **4/5**. Quatre pages existantes :
+`/guildes/grades`, `/guildes/gestion`, `/guildes/{id}/personnaliser` et
+`/diplomatie`. Sources ciblées lues : fragments ranks/rank_form/settings/management,
+personnalisation, cartes/formulaires de traité, `DiplomacyPageView`,
+`DiplomacyController`, `PublicProfileController`, `GuildRankService`,
+`DiplomacyAccessPolicy`, `DiplomacyService` et suivi de navigation livré.
+
+Les quatre tâches gardent leurs pages dédiées. La sélection d’un grade reste
+une URL avec `rank`, pas un panneau masqué par JavaScript. Les réglages secondaires
+et confirmations peuvent être dépliables ; nom/priorité/permissions d’un même
+grade restent dans un formulaire. Les deux compositions réutilisent le menu
+mobile de l’espace déjà retenu en L1A pour ces destinations nombreuses.
+
+### Deux compositions, mêmes fonctions
+
+| Option | Grades et gestion | Personnalisation et traités | Limite |
+| --- | --- | --- | --- |
+| A · Gestion directe | Grades à gauche, édition à droite ; tag/transfert visibles et dissolution distinguée. | Description puis fichiers ; relations en lignes complètes. | Plus de hauteur pour sept permissions et plusieurs relations ; réglages visibles plus denses. |
+| B · Gestion progressive | Grades au-dessus, permissions sur deux colonnes ; commande secondaire dépliable. | Formulaire avec visuel actuel à côté ; proposition reçue prioritaire, autres relations en cartes. | Les réglages secondaires demandent un clic ; cartes à adapter aux descriptions et noms longs. |
+
+**Recommandation : A**, pour faciliter la lecture linéaire des permissions et
+des conséquences dans ces écrans de gestion. B est une option complète si la
+priorité est de limiter les réglages visibles d’emblée. Aucun choix L1C acquis ;
+la validation A de L1B ne couvre pas ce nouveau lot.
+
+### Rôles et garanties à préserver
+
+- Seul le commandant actuel crée/modifie les grades et personnalise la guilde.
+  Sept permissions déléguées existantes, priorité 1–1 000 et nom 1–60 caractères.
+  Aucun classement par glisser-déposer ni suppression de grade inventés.
+  Attribution dans Membres, avec les limites de rang et de délégation existantes.
+- Tag unique de 2–5 lettres/chiffres. Transfert à un autre membre, désactivé s’il
+  n’y en a aucun. Le membre quitte ; le commandant transfère ou dissout. La
+  dissolution abandonne les projets sans remboursement ; les contrats personnels
+  restent conservés et la récompense exige la présence à la clôture du projet.
+- **Adaptation UX proposée dans les deux options** : confirmation dépliable avant
+  transfert, départ et dissolution. Les boutons actuels de transfert/départ/
+  dissolution envoient directement leurs POST ; les maquettes ajoutent une étape
+  de revue sans modifier les conséquences ni les contrôles serveur.
+- Description simple de 2 000 caractères ; fichiers JPEG/PNG/WebP, logo 1 Mo et
+  512×512, bannière 2 Mo et 1920×640. Images conservées sans nouveau fichier,
+  texte conservé après refus et fichiers à resélectionner. B montre le visuel
+  actuel, sans inventer un aperçu interactif du futur fichier.
+- Traités selon permissions : proposition et deux signatures, état effectif
+  maintenu avant acceptation. Rupture/hostilité immédiates après confirmation,
+  paix bilatérale ; refus de version périmée et historique de dix actions maximum.
+  Les particularités non-agression/défense/espionnage et combats à plusieurs camps
+  sont rappelées dans la planche. Aucun droit de transport ou d’offensive ajouté.
+- Univers, appartenance, CSRF, versions attendues, verrous et transactions
+  restent vérifiés côté serveur. Les lectures par destination et les accès aux
+  relations personnelles sans guilde restent conservés.
+
+### Livrables et contrôles de conception
+
+Deux nouvelles pages dans le fichier de bureau courant ; quatre vues par option
+à 1440/768/390 px et deux planches rôles/erreurs, soit **26 cadres**. Structures
+grises enregistrées avant couleurs ; composants, propriétés et variables propres
+au lot. Les liens simulent les pages, états et confirmations ; aucun POST du jeu.
+La comparaison complète confirme Vue générale, L1A B et L1B A inchangées.
+Contrôles des 26 cadres : aucun texte hors cadre, coupé par son parent ou
+superposé ; 298 liens de prototype avec destinations existantes. L’entrée
+Diplomatie avec une guilde mène aux traités, les relations personnelles restent
+accessibles. Contrastes fondés sur les mêmes couleurs vérifiées : texte 14,80,
+secondaire 8,84, action principale 10,39 et contours 3,21. Ces vérifications de
+conception ne constituent pas une recette du jeu ni un audit RGAA.
+
+Exports : `lot-1C-{A,B}-{ranks,management,customize,treaties}-{1440,768,390}.png`,
+`lot-1C-{A,B}-states-1100.png`, `lot-1C-{A,B}-apercus.png` (grades ordinateur/mobile),
+structures, manifeste et rapports `lot-1C-verification.json` / `lot-1C-containment.json`.
+Les maquettes restent hors dépôt dans le dossier natif indiqué plus haut. Les
+logos et SVG sont conservés ; seul l’asset d’exemple existant illustre B.
+
+Après choix : réalisation ciblée et recette renforcée des rôles, transferts,
+versions et refus, validations de fichiers, confirmations sans JavaScript,
+clavier/focus, thèmes et conservation des saisies. Références : `GuildRankTest`,
+`DiplomacyAccessPolicyTest`, `PublicProfilesTest`, `GuildTreatyTest`,
+`guild-ranks.spec.mjs`, `guild-treaties.spec.mjs` et `public-profiles.spec.mjs`.
+Aucune nouvelle réalisation du jeu pour L1C avant validation.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -430,12 +513,12 @@ sont synchronisés dans le même lot.
 | Vue générale Figcraft | Conception de référence conservée | Choix explicite de l’utilisateur | Page inchangée, comparaison effectuée | Ne valide pas automatiquement l’implémentation web ni les autres écrans |
 | L1A | B implémentée et vérifiée localement | B choisie explicitement | Trois pages, PHP ciblé, recette responsive et captures ; bilan ci-dessus | CI complète, intégration et déploiement distincts |
 | L1B | A implémentée et vérifiée localement | A choisie explicitement | Trois pages et brouillon, PHP ciblé, recette responsive et captures | CI complète et intégration distinctes |
-| L1C à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
+| L1C | Propositions préparées | Choix A/B attendu | Quatre pages et états conçus, contrôles de maquette | Validation avant réalisation |
+| L2 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
-Prochaine action demandée : conserver les commits sur `feature/refonte-visuelle`
-et enregistrer L1B selon A. Prochain périmètre : L1C couvrira grades, gestion,
-personnalisation et relations entre guildes, à subdiviser si nécessaire. Ce lot
-aura ses propres propositions et choix avant réalisation.
+Les commits restent sur `feature/refonte-visuelle` ; L1B A est enregistré dans
+`1e390a9`. Prochaine étape : choix explicite entre les deux propositions L1C,
+puis réalisation. Les validations précédentes restent limitées à leurs lots.
 Aucun push, PR, fusion ou déploiement n’est autorisé par le seul changement de
 branche. La mission globale reste non terminée.

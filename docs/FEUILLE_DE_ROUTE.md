@@ -25,6 +25,12 @@ Les deux propositions restent dans les pages Figcraft 04 et 05 ; Vue générale
 et B du premier lot préservées. Les 16 lots restants attendent leur propre cycle
 de conception et validation. CI GitHub et fusion restent distinctes.
 
+L1B est enregistré dans `1e390a9`. L1C est analysé : Grades, Gestion,
+Personnalisation et Relations entre guildes. Deux propositions Figcraft couvrent
+ces quatre pages et leurs rôles/états à 1440/768/390 px, dans les pages 06 et 07.
+Elles attendent le choix utilisateur avant code ; confirmations supplémentaires
+proposées pour transfert, départ et dissolution, sans changer leurs conséquences.
+
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026
 
 Lot 1 fusionné dans `dev` par la [PR #69](https://github.com/c41m07/genesis-reborn/pull/69)
