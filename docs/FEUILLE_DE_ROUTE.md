@@ -2,7 +2,7 @@
 
 ## Refonte visuelle avec Figcraft — 17 novembre 2026
 
-Préparation depuis `dev` à `e7acc17` sur `feature/refonte-visuelle-guildes`.
+Préparation depuis `dev` à `e7acc17` sur `feature/refonte-visuelle`.
 L’[inventaire initial](INVENTAIRE_INTERFACES.md) recense 170 routes du projet,
 200 gabarits et 53 contrôleurs d’interaction après le premier lot, avec les
 variantes et lots associés. Les navigations par pages déjà livrées sont conservées.
@@ -13,6 +13,15 @@ menu de l’espace mobile utilisable sans JavaScript. Les contrôles ciblés et
 captures réelles figurent dans le [suivi de refonte](REFONTE_VISUELLE_INTERFACES.md).
 CI GitHub et fusion restent à effectuer. Les autres lots attendent leur propre
 conception et validation ; la mission globale n’est pas terminée.
+
+À la demande de l’utilisateur, la branche commune `feature/refonte-visuelle`
+accueille les prochains lots par commits locaux, sans publication implicite.
+Le tableau détaillé compte **18 lots prévus**, dont L1A réalisé localement.
+L1B est analysé : Trouver une guilde, Créer une guilde et Présentation consultée.
+Deux propositions Figcraft sont préparées dans les pages 04 et 05, avec les
+variantes ordinateur/tablette/mobile et états ; leur choix reste attendu.
+La Vue générale et la B validée du premier lot restent préservées. Aucun code
+du jeu supplémentaire n’est réalisé avant validation de L1B.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026
 
