@@ -39,6 +39,16 @@ navigateur ciblés réussissent. Publication et fusion conditionnelle autorisée
 La CI complète sur la dernière révision est requise avant fusion ; aucune migration de données
 ni livraison Alpha. Les recommandations précédentes ne remplacent pas cette décision.
 
+## Prérequis des producteurs et du laboratoire — 17 novembre 2026
+
+Grille validée implémentée : quatre producteurs Intermédiaires après Basique 25
+et recherche industrielle Intermédiaire 5 ; Supérieurs après Basique 50,
+Intermédiaire 25 et recherche Supérieure 5. Laboratoire : Basique 25 pour
+l’Intermédiaire, puis 25/25 pour le Supérieur, avec recherche du rang précédent
+au niveau 5. Accès acquis et plafonds conservés ; aucune migration ni reprise.
+Voir la [grille courante](DEBLOCAGES.md) et le [suivi des vérifications](PROGRESSION_CARBURANT_UNITES.md#prérequis-des-producteurs-et-du-laboratoire--17-novembre-2026).
+Intégration dans dev soumise à la CI complète ; aucun déploiement Alpha.
+
 ## Rework V1 — chantier local du 14 novembre 2026
 
 Le chantier utilise uniquement `chore/rework-v1`, sans PR, fusion ni déploiement.

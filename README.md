@@ -1,7 +1,11 @@
 # Genesis Reborn
 
 Les [156 profils de prérequis](docs/DEBLOCAGES.md) utilisent une grille commune
-par rang, avec requalification explicite des accès existants. Les [durées et
+par rang, avec requalification explicite des accès existants. Les quatre producteurs
+de départ demandent Basique 25 et recherche industrielle Intermédiaire 5 pour
+l’Intermédiaire, puis Basique 50, Intermédiaire 25 et recherche Supérieure 5 pour
+le Supérieur. Le laboratoire utilise la recherche du rang précédent et reste à
+25/25 pour son Supérieur ; les accès déjà acquis sont conservés. Les [durées et
 consommations de carburant](docs/DUREES_CARBURANT.md) sont révisées par famille,
 avec conservation des commandes payées et des coefficients des missions lancées.
 Les [unités économiques](docs/UNITES_ECONOMIQUES.md) ajoutent des récolteurs mobiles

@@ -61,7 +61,21 @@ final class RankProgressionRequirementsTest extends TestCase
         ];
         foreach(GameCatalog::TIERS as $index=>$tier){
             foreach(['mine_metal','mine_nano','mine_hydrogen','power_plant','lab'] as $slug){
-                $rules=$index===0?[]:['buildings'=>[['slug'=>$slug,'tier'=>GameCatalog::TIERS[$index-1],'level'=>$index===1?10:20]]];
+                $rules = [];
+                if ($index > 0) {
+                    $isLaboratory = $slug === 'lab';
+                    $rules['buildings'] = [
+                        ['slug' => $slug, 'tier' => 'basic', 'level' => $index === 2 && !$isLaboratory ? 50 : 25],
+                    ];
+                    if ($index === 2) {
+                        $rules['buildings'][] = ['slug' => $slug, 'tier' => 'intermediate', 'level' => 25];
+                    }
+                    // Le laboratoire utilise la recherche précédente pour rester débloquable.
+                    $researchTier = $isLaboratory ? GameCatalog::TIERS[$index - 1] : $tier;
+                    $rules['technologies'] = [
+                        ['slug' => 'engineering_foundations', 'tier' => $researchTier, 'level' => 5],
+                    ];
+                }
                 yield 'buildings/'.$slug.'/'.$tier=>['buildings',$slug,$tier,$rules];
             }
             foreach(['buildings'=>$buildings,'technologies'=>$technologies,'ships'=>$ships,'defenses'=>$defenses] as $group=>$entries){

@@ -71,7 +71,10 @@ for(const touch of [false,true]) test('Abandon confirmé : pertes, trace et cont
     await input.fill(user.name);
     const confirm=page.getByRole('button',{name:'Abandonner définitivement '+user.name,exact:true});
     if(!touch) {
-      await confirm.focus();await expect(confirm).toBeFocused();
+      // Le focus visible dépend d’une navigation clavier réelle, pas d’un focus programmatique après un clic.
+      await input.press('Tab');
+      await expect(page.getByRole('link',{name:'Conserver cette colonie',exact:true})).toBeFocused();
+      await page.keyboard.press('Tab');await expect(confirm).toBeFocused();
       expect(await confirm.evaluate(e=>e.matches(':focus-visible') && getComputedStyle(e).outlineStyle==='solid' && parseFloat(getComputedStyle(e).outlineWidth)>0)).toBeTruthy();
     }
     const body=await page.locator('.abandon-confirmation').evaluate(form=>Object.fromEntries(new FormData(form)));

@@ -1900,3 +1900,24 @@ extraits et liens de chapitre, sans afficher tous leurs corps. Le sommaire,
 l’historique et les accès natifs restent disponibles. Aucun changement de règle,
 valeur, permission ou condition d’accès. Le [bilan du lot 8](NAVIGATION_PAGES_DEDIEES.md)
 distingue recette locale, CI, fusion et actualisation de l’application.
+
+## Prérequis des producteurs de départ et du laboratoire — 17 novembre 2026
+
+Décision utilisateur validée : pour métal, nano, hydrogène et centrale,
+l’Intermédiaire exige le même bâtiment Basique 25 et Ingénierie de chantier
+automatisée Intermédiaire 5 ; le Supérieur exige le même bâtiment Basique 50,
+son Intermédiaire 25 et Planification industrielle intégrée Supérieure 5.
+
+Le laboratoire utilise la recherche du rang précédent pour éviter de demander
+une recherche qui exige déjà le laboratoire à débloquer : Intermédiaire après
+Laboratoire colonial Basique 25 + Génie civil colonial Basique 5 ; Supérieur
+après Laboratoire colonial Basique 25 + Institut de recherche orbitale
+Intermédiaire 25 + Ingénierie de chantier automatisée Intermédiaire 5.
+La correction explicite 25/25 conserve le plafond actuel de 25 du laboratoire.
+
+Ces conditions initiales remplacent les anciennes passerelles Basique 10 puis
+Intermédiaire 20 de ces cinq familles. Les accès déjà acquis restent permanents,
+sans changement de version du registre ni nouvelle reprise. Les huit autres
+bâtiments, recherches, unités, défenses, prix, durées, effets et plafonds restent
+conservés ; les surcharges d’univers ne sont pas réécrites. Aucun effet sur les
+délais de progression n’est annoncé sans mesure, aucune activation Alpha.
