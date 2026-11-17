@@ -389,3 +389,17 @@ L’inventaire reste ouvert pour toutes les autres interfaces. Les lots ultérie
 ne doivent pas être développés sur cette branche en attente de CI.
 Aucune amélioration de performance mesurée n’est revendiquée. Les contrôles
 accessibilité sont ciblés, sans verdict de conformité RGAA globale.
+
+## Fichiers du premier lot
+
+- Présentation : `app/assets/app.js`, `app/assets/styles/guild-space.css`,
+  `app/templates/player/diplomacy.html.twig`, `app/templates/player/_guild_hub.html.twig`,
+  `app/templates/player/_guild_members.html.twig`, `app/templates/player/_guild_ranks.html.twig`.
+- Vérification : `app/tests/browser/guild-visual-pages.spec.mjs`.
+- Documentation : `README.md`, `docs/README.md`, `docs/ARCHITECTURE.md`,
+  `docs/FEUILLE_DE_ROUTE.md`, `docs/ui-ux/GUIDE_INTERFACE.md` et le présent suivi.
+- Conception : `docs/artwork/interfaces-guilde/guildes-v1.figcraft`.
+
+Le code du lot est conservé dans `b2a5c28` ; les compléments documentaires et
+Figcraft sont des commits locaux suivants sur la même branche. La publication
+et toute fusion attendent l’autorisation demandée dans la conversation.
