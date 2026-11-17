@@ -62,10 +62,11 @@ final class AdminController extends AbstractController
         // Préparer les listes de la seule rubrique demandée ; les compteurs restent communs à la console.
         $listFilters = [
             'q' => mb_substr(trim($request->query->getString('q')), 0, 150),
-            'status' => in_array($request->query->getString('status'), ['active', 'suspended'], true) ? $request->query->getString('status') : '',
+            'status' => in_array($request->query->getString('status'), ['active', 'suspended', 'scheduled', 'closed'], true) ? $request->query->getString('status') : '',
             'role' => in_array($request->query->getString('role'), ['admin', 'player'], true) ? $request->query->getString('role') : '',
             'action' => mb_substr($request->query->getString('action'), 0, 80),
         ];
+        if ($screen !== 'universes' && !in_array($listFilters['status'], ['active', 'suspended'], true)) $listFilters['status'] = '';
         if ($screen === 'audit' && $request->query->getString('export') === 'all') {
             return $auditExport->response($listFilters);
         }
@@ -84,7 +85,8 @@ final class AdminController extends AbstractController
         if ($screen === 'reports') {
             $playerReportService->recordViews($this->getUser(), $playerReports);
         }
-        $universes = in_array($screen, ['overview', 'universes'], true) ? $repo->all(Universe::class, [], ['id' => 'ASC']) : [];
+        $universePage = $screen === 'universes' ? $reads->universes($request->query->getInt('page', 1), $listFilters['q'], $listFilters['status']) : [];
+        $universes = $screen === 'universes' ? $universePage['entries'] : ($screen === 'overview' ? $repo->all(Universe::class, [], ['id' => 'ASC']) : []);
         $universePlayerCounts = $screen === 'universes' ? $reads->universePlayerCounts() : [];
         $universeConfigs = [];
         if ($screen === 'universes') {
@@ -136,10 +138,11 @@ final class AdminController extends AbstractController
             'auditActions' => $auditActions,
             'universes' => $universes,
             'universeConfigs' => $universeConfigs,
+            'universePage' => $universePage,
             'universeProfiles' => UniverseCreationService::profiles(),
-            'universeCreationDraft' => $screen === 'universes' ? $request->getSession()->remove('admin_universe_creation_draft') ?? [] : [],
-            'universeScheduleDraft' => $screen === 'universes' ? $request->getSession()->remove('admin_universe_schedule_draft') ?? [] : [],
-            'universeSettingsDraft' => $screen === 'universes' ? $request->getSession()->remove('admin_universe_settings_draft') ?? [] : [],
+            'universeCreationDraft' => [],
+            'universeScheduleDraft' => [],
+            'universeSettingsDraft' => [],
             'reports' => $reports,
             'playerReports' => $playerReports,
             'playerReportReasons' => \App\Service\Player\PlayerReportService::REASONS,
@@ -174,14 +177,67 @@ final class AdminController extends AbstractController
         }
         return $this->render('admin/universe_metrics.html.twig', ['universe' => $universe, 'metrics' => $metrics->snapshot($universe, $request->query->getInt('page', 1))]);
     }
-    #[Route('/universes/{id}/catalogue', name: '_catalogue', methods: ['GET'])]
-    public function catalogue(int $id, GameRepository $repo, CatalogBalanceService $balance): Response
+    #[Route('/universes/nouveau', name: '_universe_new', methods: ['GET'])]
+    public function newUniverse(Request $request): Response
+    {
+        return $this->render('admin/universe_new.html.twig', [
+            'universeProfiles' => UniverseCreationService::profiles(),
+            'universeCreationDraft' => $request->getSession()->remove('admin_universe_creation_draft') ?? [],
+        ]);
+    }
+
+    #[Route('/universes/{id}/gerer', name: '_universe_manage', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function manageUniverse(int $id, Request $request, GameRepository $repo, GameCatalog $catalog): Response
     {
         $universe = $repo->find(Universe::class, $id);
-        if (!$universe instanceof Universe) {
-            throw $this->createNotFoundException('Univers introuvable.');
+        if (!$universe instanceof Universe) throw $this->createNotFoundException('Univers introuvable.');
+        // Ne consommer que les brouillons de l’univers ouvert ; une autre fiche ne doit pas les perdre.
+        $drafts = [];
+        foreach (['schedule', 'settings'] as $kind) {
+            $key = 'admin_universe_'.$kind.'_draft';
+            $draft = $request->getSession()->get($key, []);
+            $drafts[$kind] = ($draft['universe_id'] ?? null) === $id ? $request->getSession()->remove($key) : [];
         }
-        return $this->render('admin/catalogue.html.twig', ['universe' => $universe, 'catalogues' => $balance->entries($universe), 'adminUniverses' => $repo->all(Universe::class, [], ['id' => 'ASC'])]);
+        return $this->render('admin/universe_manage.html.twig', [
+            'universe' => $universe, 'config' => $catalog->forUniverse($universe),
+            'universePlayerCounts' => [$id => $repo->count(\App\Entity\PlayerUniverse::class, ['universe' => $universe])],
+            'universeProfiles' => UniverseCreationService::profiles(),
+            'universeScheduleDraft' => $drafts['schedule'], 'universeSettingsDraft' => $drafts['settings'],
+        ]);
+    }
+
+    #[Route('/universes/{id}/catalogue', name: '_catalogue', methods: ['GET'])]
+    #[Route('/universes/{id}/catalogue/{group}', name: '_catalogue_group', requirements: ['group' => 'buildings|technologies|ships|defenses'], methods: ['GET'])]
+    #[Route('/universes/{id}/catalogue/{group}/{slug}', name: '_catalogue_edit', requirements: ['group' => 'buildings|technologies|ships|defenses'], methods: ['GET'])]
+    public function catalogue(int $id, Request $request, GameRepository $repo, CatalogBalanceService $balance, string $group = 'buildings', ?string $slug = null): Response
+    {
+        $universe = $repo->find(Universe::class, $id);
+        if (!$universe instanceof Universe) throw $this->createNotFoundException('Univers introuvable.');
+        $query = mb_substr(trim($request->query->getString('q')), 0, 150);
+        // La recherche traverse les familles ; une fiche seule prépare ses champs modifiables.
+        $catalogues = $balance->entries($universe, $slug !== null || $query === '' ? $group : null, $slug, $slug !== null);
+        if ($slug !== null && empty($catalogues[$group])) throw $this->createNotFoundException('Entrée introuvable.');
+        if ($slug !== null) {
+            $draft = $request->getSession()->remove('admin_catalogue_draft_'.$id.'_'.$group.'_'.$slug);
+            // Un échec ne perd pas les saisies et ne modifie jamais les valeurs de référence.
+            if (is_array($draft)) {
+                foreach ($catalogues[$group][0]['fields'] as &$field) {
+                    $value = $draft;
+                    foreach (explode('.', $field['path']) as $part) $value = is_array($value) ? ($value[$part] ?? null) : null;
+                    if (is_scalar($value)) $field['value'] = $value;
+                }
+                unset($field);
+            }
+        }
+        if ($query !== '' && $slug === null) {
+            foreach ($catalogues as $family => $items) {
+                $catalogues[$family] = array_filter($items, static fn(array $item): bool => str_contains(mb_strtolower($item['label'].' '.$item['slug'].' '.implode(' ', $item['tier_labels'])), mb_strtolower($query)));
+            }
+        }
+        return $this->render('admin/catalogue.html.twig', [
+            'universe' => $universe, 'catalogues' => $catalogues, 'group' => $group, 'query' => $query,
+            'editing' => $slug !== null, 'item' => $slug !== null ? $catalogues[$group][0] : null,
+        ]);
     }
     #[Route('/universes/{id}/catalogue/{group}/{slug}', name: '_catalogue_save', methods: ['POST'])]
     public function saveCatalogue(
@@ -202,11 +258,13 @@ final class AdminController extends AbstractController
             } else {
                 $balance->save($this->getUser(), $id, $group, $slug, $request->request->all('values'));
             }
+            $request->getSession()->remove('admin_catalogue_draft_'.$id.'_'.$group.'_'.$slug);
             $this->addFlash('success', 'Équilibrage enregistré pour cet univers.');
         } catch (\DomainException $error) {
+            $request->getSession()->set('admin_catalogue_draft_'.$id.'_'.$group.'_'.$slug, $request->request->all('values'));
             $this->addFlash('error', $error->getMessage());
         }
-        return $this->redirectToRoute('app_admin_catalogue', ['id' => $id, '_fragment' => $group . '-' . $slug]);
+        return $this->redirectToRoute('app_admin_catalogue_edit', ['id' => $id, 'group' => $group, 'slug' => $slug]);
     }
     #[Route('/security-incidents/{id}/review', name: '_security_review', methods: ['POST'])]
     public function reviewSecurityIncident(int $id, Request $request, AdminService $admin): Response
@@ -296,7 +354,7 @@ final class AdminController extends AbstractController
             }
             $request->getSession()->set('admin_universe_settings_draft', $draft);
         }
-        return $this->redirectToRoute('app_admin_universes', ['_fragment' => 'admin-universe-' . $id]);
+        return $this->redirectToRoute('app_admin_universe_manage', ['id' => $id]);
     }
     #[Route('/universes', name: '_universe_create', methods: ['POST'])]
     public function createUniverse(Request $request, AdminService $admin): Response
@@ -304,7 +362,6 @@ final class AdminController extends AbstractController
         if (!$this->isCsrfTokenValid('admin_create_universe', $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Formulaire expiré.');
         }
-        $fragment = 'admin-universe-create';
         try {
             $universe = $admin->createUniverse(
                 $this->getUser(),
@@ -315,7 +372,6 @@ final class AdminController extends AbstractController
                 (int) $request->request->get('systems_per_galaxy')
             );
             $request->getSession()->remove('admin_universe_creation_draft');
-            $fragment = 'admin-universe-' . $universe->id;
             $this->addFlash('success', 'Univers créé et prêt à accueillir des joueurs.');
         } catch (\DomainException $error) {
             $this->addFlash('error', $error->getMessage());
@@ -329,7 +385,7 @@ final class AdminController extends AbstractController
             $draft['error'] = $error->getMessage();
             $request->getSession()->set('admin_universe_creation_draft', $draft);
         }
-        return $this->redirectToRoute('app_admin_universes', ['_fragment' => $fragment]);
+        return isset($universe) ? $this->redirectToRoute('app_admin_universe_manage', ['id' => $universe->id]) : $this->redirectToRoute('app_admin_universe_new');
     }
     #[Route('/universes/{id}/delete', name: '_universe_delete', methods: ['POST'])]
     public function deleteUniverse(int $id, Request $request, AdminService $admin): Response
@@ -367,6 +423,6 @@ final class AdminController extends AbstractController
             $draft['error'] = $error->getMessage();
             $request->getSession()->set('admin_universe_schedule_draft', $draft);
         }
-        return $this->redirectToRoute('app_admin_universes', ['_fragment' => 'admin-universe-' . $id]);
+        return $this->redirectToRoute('app_admin_universe_manage', ['id' => $id]);
     }
 }

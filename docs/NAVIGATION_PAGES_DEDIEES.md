@@ -835,3 +835,38 @@ doivent réussir sur sa dernière version avant intégration.
 - `docs/PARCOURS_UI_UX.md`
 - `docs/REGLES.md`
 - `docs/wiki.json`
+
+## Lot 7 — Administration — 17 novembre 2026
+
+Complexités : univers 3/5, catalogue 4/5, événements 3/5, projets 3/5,
+rotations 4/5. Risques : contexte d’univers, données préparées, formulaires
+périmés, CSRF, redirections et compatibilité des fragments. La console générale
+refactorisée n’est pas recommencée.
+
+| Espace | Destinations |
+| --- | --- |
+| Univers | `/admin/univers`, `/admin/universes/nouveau`, `/admin/universes/{id}/gerer` |
+| Catalogue | `/admin/universes/{id}/catalogue`, `…/{group}`, `…/{group}/{slug}` ; recherche GET `q` dans toutes les familles |
+| Événements | `/admin/events`, assistant existant, `/admin/events/nouveau`, `/admin/events/{id}/edit` |
+| Projets | `/admin/projets-guilde`, `…/nouveau`, `…/{id}/modifier` |
+| Rotations | `/admin/rotations?universe={id}`, `…/nouveau?universe={id}`, `…/{id}/{key}/modifier` |
+
+Les anciennes routes POST et leurs jetons restent valables. `?edit=` des modèles
+de projets redirige vers la fiche. Les fragments univers et catalogue sont
+interprétés dans le navigateur, également après changement de fragment ; sans
+JavaScript, les listes offrent des liens vers les fiches. Les GET de liste ne
+préparent plus leurs formulaires ; les univers et modèles de projets sont paginés
+par 50. Les références du catalogue, règles, conditions d’accès, droits et
+confirmations sensibles sont conservés. L’édition de rotation garde clé/ordre,
+valide une empreinte sous verrou et préserve les occurrences existantes.
+
+Validation locale en cours. Les résultats définitifs seront consignés avant
+publication ; la PR donnera l’état de CI, de fusion et d’activation locale après
+ce relevé. Aucune fusion, migration existante ou livraison Alpha n’est annoncée
+par cette photographie du développement.
+
+Les documents Work V4, brief Figma V2 et protocole adaptatif V1 ne sont pas
+retrouvés dans les sources locales et connectées accessibles ; aucune lecture
+intégrale ni validation de leurs phases n’est revendiquée. Wiki externe non
+synchronisé. Les vérifications d’accessibilité ciblées ne constituent pas un
+audit RGAA complet. Aucun gain de performance mesuré n’est revendiqué.

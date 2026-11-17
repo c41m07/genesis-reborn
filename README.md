@@ -675,3 +675,11 @@ leurs adresses et leurs objectifs. Les événements en cours et à venir dispose
 chacun de leur pagination ; les défis sont également présentés par pages de 25.
 Le panneau commun conserve ses informations et son compteur. Aucune règle de
 production, de contribution ou de récompense ne change. [Bilan de navigation](docs/NAVIGATION_PAGES_DEDIEES.md).
+
+Le lot Administration sépare la liste des univers, leur création et leur fiche de
+configuration/calendrier. Les quatre familles du catalogue disposent de pages
+propres, d’une recherche transversale et d’une fiche par entrée. Les événements
+conservent l’assistant guidé ; création avancée et édition ont leurs pages.
+Les modèles de projets de guilde et de rotations séparent liste, création et
+modification. Les occurrences déjà programmées gardent leur configuration.
+[Bilan et compatibilité](docs/NAVIGATION_PAGES_DEDIEES.md).

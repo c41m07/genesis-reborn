@@ -107,6 +107,22 @@ final class AdminReadRepository
         return $this->page($query, 'f', $page, ['f.createdAt' => 'DESC', 'f.id' => 'DESC'], (int) $stats['total']) + ['latest' => (int) $stats['latest'], 'openCount' => (int) $stats['openCount']];
     }
 
+    public function universes(int $page, string $search = '', string $status = ''): array
+    {
+        $query = $this->em->createQueryBuilder()->select('u')->from(\App\Entity\Universe::class, 'u');
+        if ($search !== '') $query->andWhere("LOWER(CONCAT(u.name, ' ', u.slug)) LIKE :search ESCAPE '!'")->setParameter('search', SearchCriteria::pattern($search));
+        if ($status === 'scheduled') $query->andWhere('u.status = :active AND u.startsAt > :now')->setParameter('active', 'active')->setParameter('now', new \DateTimeImmutable());
+        elseif ($status === 'active') $query->andWhere('u.status = :active AND (u.startsAt IS NULL OR u.startsAt <= :now)')->setParameter('active', 'active')->setParameter('now', new \DateTimeImmutable());
+        elseif ($status === 'closed') $query->andWhere('u.status = :closed')->setParameter('closed', 'closed');
+        return $this->page($query, 'u', $page, ['u.id' => 'ASC']);
+    }
+
+    public function guildProjectDefinitions(int $page): array
+    {
+        $query = $this->em->createQueryBuilder()->select('d', 'u')->from(\App\Entity\GuildProjectDefinition::class, 'd')->join('d.universe', 'u');
+        return $this->page($query, 'd', $page, ['d.id' => 'DESC']);
+    }
+
     public function gameEvents(bool $archived, int $page): array
     {
         // Reproduire !empty(parameters['archived_at']) avant LIMIT, y compris les anciens JSON.

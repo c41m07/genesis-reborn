@@ -10,7 +10,7 @@
 {% set showRangeNotice = outsideSpeeds|length > 0 and universe.status != 'closed' %}
 <form class="admin-settings-form" method="post" action="{{ path('app_admin_universe_settings', {id: universe.id}) }}" {% if draftSettings %}aria-describedby="settings-error-{{ universe.id }}"{% endif %}>
     <input type="hidden" name="_token" value="{{ csrf_token('admin_settings_' ~ universe.id) }}">
-    <h4>Règles de jeu</h4>
+    <h3>Règles de jeu</h3>
     {% if draftSettings %}<p class="admin-draft-notice" id="settings-error-{{ universe.id }}">{{ universeSettingsDraft.error }} Vos saisies sont conservées; elles ne sont pas encore enregistrées.</p>{% endif %}
     {% if universe.status == 'closed' %}<p>Cet univers est fermé; ses paramètres ne peuvent plus être modifiés.</p>{% endif %}
     {% if showRangeNotice %}

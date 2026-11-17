@@ -13,6 +13,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class AdminGameEventController extends AbstractController
 {
     #[Route('/admin/events', name: 'app_admin_game_events', methods: ['GET', 'POST'])]
+    #[Route('/admin/events/nouveau', name: 'app_admin_game_event_new', methods: ['GET', 'POST'])]
     public function index(
         Request $request,
         GameRepository $repo,
@@ -20,6 +21,10 @@ final class AdminGameEventController extends AbstractController
         \App\Repository\AdminReadRepository $reads,
     ): Response
     {
+        if ($request->attributes->get('_route') === 'app_admin_game_events' && !$request->isMethod('POST')) {
+            $archived = $request->query->getBoolean('archived');
+            return $this->render('admin/events.html.twig', $reads->gameEvents($archived, $request->query->getInt('page', 1)) + ['archived' => $archived]);
+        }
         $draft = [
             'name' => '',
             'description' => '',
@@ -44,29 +49,46 @@ final class AdminGameEventController extends AbstractController
                 $this->addFlash('error', $error->getMessage());
             }
         }
-        // Garder le brouillon si la validation échoue, indépendamment de la page d’historique affichée.
-        $archived = $request->query->getBoolean('archived');
-        return $this->render('admin/events.html.twig', $reads->gameEvents($archived, $request->query->getInt('page', 1)) + [
-            'archived' => $archived,
+        return $this->render('admin/event_form.html.twig', [
+            'editing' => null,
             'universes' => $repo->all(Universe::class),
             'draft' => $draft,
             'types' => GameEventService::TYPES,
             'statuses' => GameEventService::STATUSES,
         ]);
     }
-    #[Route('/admin/events/{id}/edit', name: 'app_admin_game_event_edit', methods: ['POST'], requirements: ['id' => '\d+'])]
-    public function edit(int $id, Request $request, GameEventService $events): Response
+    #[Route('/admin/events/{id}/edit', name: 'app_admin_game_event_edit', methods: ['GET', 'POST'], requirements: ['id' => '\d+'])]
+    public function edit(int $id, Request $request, GameEventService $events, GameRepository $repo): Response
     {
-        if (!$this->isCsrfTokenValid('game_event_edit_' . $id, $request->request->get('_token'))) {
-            throw $this->createAccessDeniedException('Formulaire expiré.');
+        $event = $repo->find(GameEvent::class, $id);
+        if (!$event) throw $this->createNotFoundException('Événement introuvable.');
+        // Les définitions guidées publiées conservent leur parcours et leur protection contre la réécriture.
+        if (!$request->isMethod('POST') && !empty($event->parameters['guided_key'])) {
+            throw $this->createAccessDeniedException('Cet événement ne peut pas être modifié par le formulaire avancé.');
         }
-        try {
-            $events->save($this->admin(), $id, $request->request->all() + ['parameters' => ['percentage' => $request->request->get('percentage')]]);
-            $this->addFlash('success', 'Événement modifié.');
-        } catch (\DomainException $error) {
-            $this->addFlash('error', $error->getMessage());
+        $draft = [
+            'name' => $event->name, 'description' => $event->description, 'type' => $event->type,
+            'status' => $event->status, 'starts_at' => $event->startsAt->format('Y-m-d\TH:i'),
+            'ends_at' => $event->endsAt->format('Y-m-d\TH:i'), 'universe_id' => $event->universe?->id ?? 0,
+            'percentage' => $event->parameters['percentage'] ?? '', 'visible' => $event->visibleToPlayers,
+        ];
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('game_event_edit_' . $id, $request->request->get('_token'))) {
+                throw $this->createAccessDeniedException('Formulaire expiré.');
+            }
+            $draft = array_replace($draft, $request->request->all(), ['visible' => $request->request->getBoolean('visible')]);
+            try {
+                $events->save($this->admin(), $id, $request->request->all() + ['parameters' => ['percentage' => $request->request->get('percentage')]]);
+                $this->addFlash('success', 'Événement modifié.');
+                return $this->redirectToRoute('app_admin_game_events');
+            } catch (\DomainException $error) {
+                $this->addFlash('error', $error->getMessage());
+            }
         }
-        return $this->redirectToRoute('app_admin_game_events');
+        return $this->render('admin/event_form.html.twig', [
+            'draft' => $draft, 'editing' => $event, 'universes' => $repo->all(Universe::class),
+            'types' => GameEventService::TYPES, 'statuses' => GameEventService::STATUSES,
+        ]);
     }
     #[Route('/admin/events/{id}/cancel', name: 'app_admin_game_event_cancel', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function cancel(int $id, Request $request, GameEventService $events): Response

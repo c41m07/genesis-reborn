@@ -1,23 +1,12 @@
 {% extends 'admin/layout.html.twig' %}
-{% block title %}Équilibrage · {{ universe.name }}{% endblock %}
-{% block body %}
-<div class="page-heading"><div><h1>Équilibrage des catalogues</h1><p>Ces valeurs ne s’appliquent qu’à cet univers. Les opérations déjà en file conservent leurs coûts et durées enregistrés; la production est matérialisée puis recalculée au moment de l’enregistrement.</p></div><a class="secondary" href="{{ path('app_admin_index') }}">Retour à l’administration</a></div>
-{% for message in app.flashes('success') %}<p class="flash success" role="status">{{ message }}</p>{% endfor %}{% for message in app.flashes('error') %}<p class="flash error" role="alert">{{ message }}</p>{% endfor %}
-
 {% set groupLabels = {'buildings':'Bâtiments','technologies':'Technologies','ships':'Vaisseaux','defenses':'Défenses'} %}
-<div class="catalogue-balance" data-controller="admin-filter">
-<div class="catalogue-search" role="search" aria-label="Rechercher dans les catalogues" data-admin-filter-target="tools" hidden>
-    <div><label for="catalogue-query">Rechercher une entrée</label><input id="catalogue-query" type="search" placeholder="Nom, identifiant ou rang" data-admin-filter-target="query" data-action="input->admin-filter#filter"></div>
-    <div><label for="catalogue-family">Famille</label><select id="catalogue-family" data-admin-filter-target="filter" data-filter-key="group" data-action="change->admin-filter#filter"><option value="">Toutes les familles</option>{% for key,label in groupLabels %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select></div>
-    <button class="secondary" type="button" data-action="admin-filter#clear">Effacer les filtres</button><output data-admin-filter-target="count" aria-live="polite"></output>
-</div>
-<nav class="catalogue-family-nav ui-tabs" aria-label="Familles de catalogues">{% for group,items in catalogues %}<a class="secondary" href="#group-{{ group }}" data-admin-filter-target="groupLink">{{ groupLabels[group] }} · {{ items|length }}</a> {% endfor %}</nav>
-{% for group,items in catalogues %}<section class="panel" id="group-{{ group }}" data-admin-filter-target="group"><h2>{{ groupLabels[group] }}</h2><p>Les valeurs de référence restent intactes et peuvent être restaurées pour chaque entrée.</p>
-{% for item in items %}<details class="panel" id="{{ group }}-{{ item.slug }}" data-admin-filter-target="row" data-filter-group="{{ group }}" data-search-text="{{ item.label }} {{ item.slug }} {{ item.tier_labels|join(' ') }}"><summary><strong>{{ item.label }}</strong> <small>{{ item.slug }}</small></summary><p>{% for tier,label in item.tier_labels %}<span class="badge">{{ label }}</span> {% endfor %}</p>
-<form method="post" action="{{ path('app_admin_catalogue_save',{id:universe.id,group:group,slug:item.slug}) }}"><input type="hidden" name="_token" value="{{ csrf_token('admin_catalogue_'~universe.id~'_'~group~'_'~item.slug) }}"><div class="catalog-balance-grid">
-{% for field in item.fields %}<div><label for="{{ group }}-{{ item.slug }}-{{ field.path|replace({'.':'-'}) }}">{{ field.label }}</label><input id="{{ group }}-{{ item.slug }}-{{ field.path|replace({'.':'-'}) }}" type="number" name="values[{{ field.path|split('.')|join('][') }}]" value="{{ field.value }}" min="{{ field.min }}" max="{{ field.max }}" step="{{ field.integer?'1':'0.01' }}" required></div>{% endfor %}
-</div><div class="button-row"><button class="primary">Enregistrer cet équilibrage</button></div></form>
-<form method="post" action="{{ path('app_admin_catalogue_save',{id:universe.id,group:group,slug:item.slug}) }}"><input type="hidden" name="_token" value="{{ csrf_token('admin_catalogue_'~universe.id~'_'~group~'_'~item.slug) }}"><input type="hidden" name="reset" value="1"><button class="secondary">Restaurer les valeurs de référence</button></form></details>{% endfor %}</section>{% endfor %}
-<p class="panel empty-state" data-admin-filter-target="empty" hidden>Aucune entrée ne correspond à ces filtres. Modifiez votre recherche ou effacez les filtres.</p>
-</div>
+{% block title %}{{ editing ? item.label : (query ? 'Recherche dans les catalogues' : groupLabels[group]) }} · {{ universe.name }}{% endblock %}
+{% block body %}
+<div class="page-heading"><div><p class="eyebrow">Équilibrage · {{ universe.name }}</p><h1>{{ editing ? 'Modifier '~item.label : (query ? 'Recherche dans les catalogues' : groupLabels[group]) }}</h1><p>Les valeurs s’appliquent uniquement à cet univers. Les opérations déjà en file conservent leurs coûts et durées enregistrés.</p></div>{% if editing %}<a class="secondary" href="{{ path('app_admin_catalogue_group',{id:universe.id,group:group}) }}">Retour aux {{ groupLabels[group]|lower }}</a>{% endif %}</div>
+<nav class="admin-page-navigation" aria-label="Familles de catalogues">{% for key,label in groupLabels %}<a href="{{ path('app_admin_catalogue_group',{id:universe.id,group:key}) }}"{% if key==group and not query %} aria-current="{{ editing ? 'location' : 'page' }}"{% endif %}>{{ label }}</a>{% endfor %}</nav>
+{% if editing %}<section class="panel"><h2>Valeurs de {{ item.label }}</h2><p>La production est matérialisée puis recalculée à l’enregistrement. Les références peuvent être restaurées pour cette entrée.</p>{% include 'admin/_catalogue_form.html.twig' %}</section>
+{% else %}
+<form method="get" action="{{ path('app_admin_catalogue',{id:universe.id}) }}" class="admin-page-search" role="search"><label for="catalogue-query">Rechercher dans toutes les familles</label><input id="catalogue-query" name="q" type="search" maxlength="150" value="{{ query }}" placeholder="Nom, identifiant ou rang"><button class="primary">Rechercher</button>{% if query %}<a href="{{ path('app_admin_catalogue_group',{id:universe.id,group:group}) }}">Effacer la recherche</a>{% endif %}</form>
+{% set resultCount = 0 %}<div class="admin-module-grid">{% for family,items in catalogues %}{% for entry in items %}{% set resultCount=resultCount+1 %}<article class="panel"><p class="eyebrow">{{ groupLabels[family] }}</p><h2>{{ entry.label }}</h2><p><code>{{ entry.slug }}</code></p><p>{{ entry.tier_labels|join(' · ') }}</p><a class="secondary" href="{{ path('app_admin_catalogue_edit',{id:universe.id,group:family,slug:entry.slug}) }}">Modifier {{ entry.label }}</a></article>{% endfor %}{% endfor %}</div>{% if resultCount==0 %}<p class="panel" role="status">Aucune entrée ne correspond à cette recherche.</p>{% endif %}
+{% endif %}
 {% endblock %}

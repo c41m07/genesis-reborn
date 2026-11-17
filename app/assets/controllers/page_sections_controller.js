@@ -2,7 +2,7 @@ import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
     connect() {
-        if (['guilde', 'diplomatie', 'flottes', 'inventaire', 'profil', 'preferences', 'projets', 'evenements'].includes(this.element.dataset.uiPage)) {
+        if (this.element.dataset.uiPage?.startsWith('admin-') || ['guilde', 'diplomatie', 'flottes', 'inventaire', 'profil', 'preferences', 'projets', 'evenements'].includes(this.element.dataset.uiPage)) {
             // Un changement de fragment peut conserver le document et ne reconnecte pas Stimulus.
             this.onHashChange = () => this.redirectLegacyFragment();
             window.addEventListener('hashchange', this.onHashChange);
@@ -33,6 +33,27 @@ export default class extends Controller {
     }
 
     redirectLegacyFragment() {
+        if (this.element.dataset.uiPage?.startsWith('admin-')) {
+            const hash = window.location.hash;
+            const universe = hash.match(/^#admin-universe-(\d+)$/);
+            const entry = hash.match(/^#(buildings|technologies|ships|defenses)-([a-z0-9_-]+)$/);
+            const catalogue = window.location.pathname.match(/^\/admin\/universes\/(\d+)\/catalogue$/);
+            let destination = null;
+            if (['/admin', '/admin/univers'].includes(window.location.pathname)) {
+                if (hash === '#admin-universes' && window.location.pathname === '/admin') destination = '/admin/univers';
+                else if (hash === '#admin-universe-create') destination = '/admin/universes/nouveau';
+                else if (universe) destination = `/admin/universes/${universe[1]}/gerer`;
+            } else if (catalogue && entry) {
+                destination = `/admin/universes/${catalogue[1]}/catalogue/${entry[1]}/${entry[2]}`;
+            } else if (catalogue && /^#group-(buildings|technologies|ships|defenses)$/.test(hash)) {
+                destination = `/admin/universes/${catalogue[1]}/catalogue/${hash.slice(7)}`;
+            }
+            if (destination) {
+                // Le fragment reste côté navigateur ; remplacer l’entrée évite une boucle au retour arrière.
+                window.location.replace(destination + window.location.search + hash);
+                return true;
+            }
+        }
         // Les anciens liens d’un écran composite gardent une destination après la séparation.
         if (this.element.dataset.uiPage === 'evenements' && window.location.pathname === '/evenements' && window.location.hash === '#page-section-0') {
             // Le premier titre sans identifiant de l’ancien écran était celui des défis.

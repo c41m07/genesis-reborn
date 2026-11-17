@@ -6,7 +6,7 @@ import AxeBuilder from '@axe-core/playwright';
 async function universe(page) {
   const suffix = crypto.randomUUID().slice(0, 8);
   const email = `settings-${suffix}@example.test`;
-  const password = 'Browser-test-2026!';
+  const password = crypto.randomUUID() + 'aA1!';
   await page.goto('/inscription');
   await page.getByLabel('Adresse email').fill(email);
   await page.getByLabel('Nom de commandant').fill(`Settings-${suffix}`);
@@ -29,7 +29,7 @@ async function universe(page) {
   await creation.getByRole('button', { name: 'Créer l’univers' }).click();
   const id = Number(queryIsolatedSql(process.env.BROWSER_ROUTER, `SELECT id FROM universe WHERE slug='${slug}'`));
   const card = page.locator('#admin-universe-' + id);
-  await card.locator('.admin-universe-settings>summary').click();
+  await expect(card.locator('.admin-universe-settings')).toBeVisible();
   return { id, card, form: card.locator('form[action$="/settings"]') };
 }
 
@@ -49,12 +49,12 @@ test('Paramètres : profils cohérents, erreur conservée et sauvegarde temporai
   const project = process.env.BROWSER_ROUTER;
   runIsolatedSql(project, `UPDATE universe SET game_settings=JSON_SET(game_settings,'$.catalog_overrides',JSON_OBJECT('buildings',JSON_OBJECT('power_plant',JSON_OBJECT('max_level',7)))) WHERE id=${id}`);
   await page.reload();
-  await card.locator('.admin-universe-settings>summary').click();
+  await expect(card.locator('.admin-universe-settings')).toBeVisible();
   await form.getByLabel('Profil de vitesse').selectOption('x2');
   for (const input of await form.locator('[data-admin-speed-target="multiplier"]').all()) await expect(input).toHaveValue('2');
   await form.getByRole('button', { name: 'Enregistrer les règles' }).click();
   await expect(page.locator('.flash.success')).toContainText('Paramètres de l’univers enregistrés');
-  await expect(page).toHaveURL(new RegExp('#admin-universe-' + id + '$'));
+  await expect(page).toHaveURL(new RegExp('/admin/universes/' + id + '/gerer$'));
   await expect(card.locator('.admin-universe-facts')).toContainText('x2');
   const load = () => JSON.parse(queryIsolatedSql(project, `SELECT game_settings FROM universe WHERE id=${id}`));
   const preset = load();
@@ -63,7 +63,7 @@ test('Paramètres : profils cohérents, erreur conservée et sauvegarde temporai
   expect(preset.multipliers.ship_build_time).toBe(.5);
   expect(preset.multipliers.travel_time).toBe(.5);
   expect(preset.multipliers.resource_production).toBe(2);
-  await card.locator('.admin-universe-settings>summary').click();
+  await expect(card.locator('.admin-universe-settings')).toBeVisible();
   await expect(form.getByLabel('Profil de vitesse')).toHaveValue('x2');
   await form.getByLabel('Vitesse bâtiments (×)', { exact: true }).fill('0');
   await form.getByLabel('Colonies maximum', { exact: true }).fill('6');
@@ -71,7 +71,7 @@ test('Paramètres : profils cohérents, erreur conservée et sauvegarde temporai
   await form.getByLabel('Guildes autorisées', { exact: true }).uncheck();
   await form.evaluate(element => { element.noValidate = true; });
   await form.getByRole('button', { name: 'Enregistrer les règles' }).click();
-  await expect(card.locator('.admin-universe-settings')).toHaveAttribute('open', '');
+  await expect(card.locator('.admin-universe-settings')).toBeVisible();
   await expect(form.locator('.admin-draft-notice')).toContainText('Chaque vitesse doit être comprise');
   await expect(form.getByLabel('Vitesse bâtiments (×)', { exact: true })).toHaveValue('0');
   await expect(form.getByLabel('Colonies maximum', { exact: true })).toHaveValue('6');
@@ -92,7 +92,7 @@ test('Paramètres : profils cohérents, erreur conservée et sauvegarde temporai
   expect(custom.features.planet_conquest).toBe(true);
   expect(custom.catalog_overrides).toEqual(preset.catalog_overrides);
   await expect(card.locator('.admin-universe-facts')).toContainText('Personnalisé');
-  await card.locator('.admin-universe-settings>summary').click();
+  await expect(card.locator('.admin-universe-settings')).toBeVisible();
   await expect(form.getByLabel('Vitesse bâtiments (×)', { exact: true })).toHaveValue('3');
   for (const width of [1920, 1440, 1280, 768, 390]) {
     await page.setViewportSize({ width, height: 900 });
@@ -114,7 +114,7 @@ test('Paramètres hérités : valeurs hors plage conservées, refus expliqué et
   const load = () => queryIsolatedSql(project, `SELECT game_settings FROM universe WHERE id=${id}`);
   const original = load();
   await page.reload();
-  await card.locator('.admin-universe-settings>summary').click();
+  await expect(card.locator('.admin-universe-settings')).toBeVisible();
   await expect(form.getByLabel('Vitesse bâtiments (×)', { exact: true })).toHaveValue('100');
   await expect(form.locator('.admin-range-notice')).toContainText('Vitesses enregistrées hors plage');
   await expect(form.locator('.admin-range-notice')).toContainText('sans ajustement automatique');
@@ -147,13 +147,13 @@ test('Paramètres hérités : valeurs hors plage conservées, refus expliqué et
   expect(saved.multipliers.building_time).toBe(.025);
   expect(saved.multipliers.resource_production).toBe(40);
   await expect(card.locator('.admin-universe-facts')).toContainText('Alpha');
-  await card.locator('.admin-universe-settings>summary').click();
+  await expect(card.locator('.admin-universe-settings')).toBeVisible();
   await expect(form.locator('.admin-range-notice')).toHaveCount(0);
   const context = await browser.newContext({ storageState: await page.context().storageState(), javaScriptEnabled: false, viewport: { width: 390, height: 900 } });
   const fallback = await context.newPage();
-  await fallback.goto('/admin/univers#admin-universe-' + id);
+  await fallback.goto('/admin/universes/' + id + '/gerer');
   const fallbackCard = fallback.locator('#admin-universe-' + id);
-  await fallbackCard.locator('.admin-universe-settings>summary').click();
+  await expect(fallbackCard.locator('.admin-universe-settings')).toBeVisible();
   const fallbackForm = fallbackCard.locator('form[action$="/settings"]');
   const fallbackHelp = fallbackForm.locator('noscript p');
   await expect(fallbackHelp).toBeVisible();
@@ -176,9 +176,8 @@ test('Paramètres fermés : lecture clavier et sans JS, contrôles désactivés 
   runIsolatedSql(project, `UPDATE universe SET status='closed' WHERE id=${id}`);
   const original = queryIsolatedSql(project, `SELECT game_settings FROM universe WHERE id=${id}`);
   await page.reload();
-  const summary = card.locator('.admin-universe-settings>summary');
-  await summary.focus();
-  await page.keyboard.press('Enter');
+  await page.getByRole('link', { name: 'Tous les univers', exact: true }).last().focus();
+  await expect(page.getByRole('link', { name: 'Tous les univers', exact: true }).last()).toBeFocused();
   await expect(form).toBeVisible();
   await expect(form).toContainText('Cet univers est fermé');
   for (const control of await form.locator('input:not([type=hidden]), select, button').all()) await expect(control).toBeDisabled();
@@ -204,9 +203,9 @@ test('Paramètres fermés : lecture clavier et sans JS, contrôles désactivés 
   expect(queryIsolatedSql(project, `SELECT status FROM universe WHERE id=${id}`)).toBe('closed');
   const context = await browser.newContext({ storageState: await page.context().storageState(), javaScriptEnabled: false, viewport: { width: 390, height: 900 } });
   const fallback = await context.newPage();
-  await fallback.goto('/admin/univers#admin-universe-' + id);
+  await fallback.goto('/admin/universes/' + id + '/gerer');
   const fallbackCard = fallback.locator('#admin-universe-' + id);
-  await fallbackCard.locator('.admin-universe-settings>summary').click();
+  await expect(fallbackCard.locator('.admin-universe-settings')).toBeVisible();
   await expect(fallbackCard.getByText('Cet univers est fermé; ses paramètres ne peuvent plus être modifiés.')).toBeVisible();
   await expect(fallbackCard.getByRole('button', { name: 'Enregistrer les règles' })).toBeDisabled();
   await context.close();

@@ -23,8 +23,8 @@ test('Les modèles de projets conservent la saisie et les paliers fonctionnent s
   const id = crypto.randomUUID().slice(0, 8);
   const name = 'Modele-' + id;
   await register(page, 'AdminProj-' + id, 'admin-project-' + id + '@example.test', true);
-  await page.goto('/admin/projets-guilde');
-  await expect(page.getByRole('heading', { name: 'Projets de guilde', exact: true })).toBeVisible();
+  await page.goto('/admin/projets-guilde/nouveau');
+  await expect(page.getByRole('heading', { name: 'Créer un modèle de projet', exact: true })).toBeVisible();
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
   await page.getByLabel('Nom du projet', { exact: true }).fill(name);
   const universeId = await page.getByRole('combobox', { name: 'Univers', exact: true }).locator('option').filter({ hasText: 'Omega' }).getAttribute('value');
