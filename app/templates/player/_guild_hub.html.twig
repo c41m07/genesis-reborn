@@ -1,41 +1,13 @@
 {% import 'ui/macros.html.twig' as ui %}
-<section class="panel guild-hub-hero guild-overview" aria-label="Centre de guilde">
-    <div class="guild-cover">
-        {% if profile.has_banner %}
-            <img class="guild-public-banner" src="{{ path('app_guild_media',{id:own.id,kind:'banner'}) }}" alt="">
-        {% endif %}
-    </div>
-    <div class="guild-identity">
-        {% if profile.has_logo %}
-            <img class="guild-public-logo" src="{{ path('app_guild_media',{id:own.id,kind:'logo'}) }}" alt="" width="80" height="80">
-        {% else %}
-            <span class="guild-hub-emblem" aria-hidden="true">{{ ui.icon('diplomacy') }}</span>
-        {% endif %}
-        <div class="guild-identity-name">
-            <h2><a class="public-profile-link" href="{{ path('app_guild_public_profile',{id:own.id}) }}">{{ own.name }}</a></h2>
-            <p>{{ own.tag ? '[' ~ own.tag ~ '] · ' : '' }}{{ membership.universe.name }}</p>
-        </div>
-        <a class="primary" href="{{ path('app_messages',{channel:'guild'}) }}">Ouvrir le canal de guilde {{ ui.icon('arrow') }}</a>
-    </div>
-    <dl class="guild-hub-stats">
-        <div><dt>Équipage</dt><dd>{{ profile.member_count }} {{ profile.member_count > 1 ? 'membres' : 'membre' }}</dd></div>
-        <div><dt>Votre grade</dt><dd>{{ own.leader.id == membership.id ? 'Commandant' : ownMember.rank.name|default('Membre') }}</dd></div>
-        <div><dt>Guildes alliées</dt><dd>{{ guildRelationCounts.allies|default(0) }}</dd></div>
-        <div><dt>Guildes ennemies</dt><dd>{{ guildRelationCounts.enemies|default(0) }}</dd></div>
-    </dl>
+<section class="panel guild-hub-hero" aria-label="Centre de guilde">
+{% if profile.has_banner %}<img class="guild-public-banner" src="{{ path('app_guild_media',{id:own.id,kind:'banner'}) }}" alt="Bannière de la guilde {{ own.name }}">{% endif %}
+{% if profile.has_logo %}<img class="guild-public-logo" src="{{ path('app_guild_media',{id:own.id,kind:'logo'}) }}" alt="">{% else %}<span class="guild-hub-emblem" aria-hidden="true">{{ ui.icon('diplomacy') }}</span>{% endif %}
+<div><h2><a class="public-profile-link" href="{{ path('app_guild_public_profile',{id:own.id}) }}">{{ own.name }}</a></h2><p class="guild-hub-stats">{{ profile.member_count }} {{ profile.member_count > 1 ? 'membres' : 'membre' }} · {{ own.leader.id==membership.id ? 'Commandant' : ownMember.rank.name|default('Membre') }} · {{ guildRelationCounts.allies|default(0) }} guildes alliées · {{ guildRelationCounts.enemies|default(0) }} ennemies</p></div>
+<a class="primary" href="{{ path('app_messages',{channel:'guild'}) }}">Ouvrir le canal de guilde {{ ui.icon('arrow') }}</a>
 </section>
+<section class="panel"><h2>Présentation</h2>{% if profile.description %}<p class="guild-public-description">{{ profile.description|nl2br }}</p>{% else %}<p>Votre guilde n’a pas encore ajouté de présentation.</p>{% endif %}</section>
 <div class="diplomacy-home-columns">
-<div class="guild-home-content">
-    <section class="panel">
-        <h2>Présentation</h2>
-        {% if profile.description %}
-            <p class="guild-public-description">{{ profile.description|nl2br }}</p>
-        {% else %}
-            <p>Votre guilde n’a pas encore ajouté de présentation.</p>
-        {% endif %}
-    </section>
-    <section class="panel"><h2>Projets collectifs</h2><p>Retrouvez les paliers, contributions et récompenses de votre guilde.</p><div class="guild-hub-actions"><a class="secondary" href="{{ path('app_guild_projects') }}">Consulter les projets</a><a class="secondary" href="{{ path('app_map_v2') }}">Ouvrir la galaxie</a><a class="secondary" href="{{ path('app_leaderboard',{tab:'guilds'}) }}">Classement</a></div></section>
-</div>
+<section class="panel"><h2>Projets collectifs</h2><p>Retrouvez les paliers, contributions et récompenses de votre guilde.</p><div class="guild-hub-actions"><a class="secondary" href="{{ path('app_guild_projects') }}">Consulter les projets</a><a class="secondary" href="{{ path('app_map_v2') }}">Ouvrir la galaxie</a><a class="secondary" href="{{ path('app_leaderboard',{tab:'guilds'}) }}">Classement</a></div></section>
 <section class="panel"><div class="section-heading"><h2>Derniers échanges</h2><a href="{{ path('app_messages',{channel:'guild'}) }}">Tout lire</a></div>
 {% for message in guildPreview %}<article class="guild-message-preview"><div><strong>{{ message.sender.displayName }}</strong><time datetime="{{ message.createdAt|date('c') }}">{{ message.createdAt|date('d/m H:i',preferences.timezone) }}</time></div><p>{{ message.content|length > 160 ? message.content|slice(0,160) ~ '…' : message.content }}</p></article>{% else %}<p>Le canal est prêt. Lancez la première discussion avec votre guilde.</p>{% endfor %}
 <small>Consulter cet aperçu ne marque pas le canal comme lu.</small></section>

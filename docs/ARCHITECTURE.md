@@ -622,14 +622,6 @@ URL et clés de réponse restent communs aux deux présentations.
 
 ## Espaces Guildes et Diplomatie
 
-L’évolution visuelle locale de Vue générale, Membres et Grades utilise
-`guild-space.css`, chargé après les styles historiques. La classe `guild-space`
-limite ces règles aux trois destinations déjà préparées par `DiplomacyPageView`.
-La bannière est séparée du nom et des actions, les données existantes de l’accueil
-restent des lectures inchangées. Ni le contrôleur métier ni les formulaires,
-actualisations et protections serveur ne sont modifiés. Le [suivi de couverture](COUVERTURE_INTERFACES.md)
-conserve l’état de recette et les limites de conception externe.
-
 Lot 1 publié dans la [PR #75](https://github.com/c41m07/genesis-reborn/pull/75) : espaces Guildes et Diplomatie séparés, pages dédiées de membres,
 grades, gestion et création ; liens directs, anciennes adresses conservées et
 lectures adaptées à chaque page. Voir le [suivi des lots](NAVIGATION_PAGES_DEDIEES.md) pour les

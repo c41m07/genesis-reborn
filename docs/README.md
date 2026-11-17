@@ -40,7 +40,6 @@ une seule référence par sujet ; les anciens bilans ne décrivent pas l’état
 | Suivre l’évolution de progression, carburant et unités économiques | [Lots, vérifications et activation](PROGRESSION_CARBURANT_UNITES.md) |
 | Déployer récolteurs et satellites, comprendre leurs places et pertes | [Unités économiques](UNITES_ECONOMIQUES.md) |
 | Modifier l’interface | [Guide UI](ui-ux/GUIDE_INTERFACE.md) |
-| Reprendre l’évolution visuelle et vérifier les écrans restants | [Couverture des interfaces](COUVERTURE_INTERFACES.md) |
 | Recréer une illustration | [Prompts](ILLUSTRATIONS.md) |
 | Consulter une preuve ou décision historique | [Archives et liste de consolidation](archives/README.md) |
 

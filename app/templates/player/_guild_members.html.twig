@@ -1,8 +1,6 @@
-<section class="panel guild-member-panel" aria-labelledby="guild-members-title">
-<div class="section-heading">
-    <div><h2 id="guild-members-title">Membres de la guilde</h2><p>{{ own.name }} · {{ ownRow.members|length }} {{ ownRow.members|length > 1 ? 'membres' : 'membre' }}</p></div>
-    <a class="secondary" href="{{ path('app_guild_public_profile',{id:own.id}) }}">Consulter la page de la guilde</a>
-</div>
+<section class="panel" aria-labelledby="guild-members-title">
+<p><a href="{{ path('app_guild_public_profile',{id:own.id}) }}">Consulter la page de la guilde</a></p>
+<div class="section-heading"><h2 id="guild-members-title">Membres de la guilde</h2><span class="badge">{{ ownRow.members|length }} {{ ownRow.members|length > 1 ? 'membres' : 'membre' }}</span></div>
 <table class="guild-members-table"><caption class="visually-hidden">Équipage de {{ own.name }}</caption>
 <thead><tr><th scope="col">Commandant</th><th scope="col">Grade</th><th scope="col">État</th><th scope="col">Actions</th></tr></thead>
 <tbody>{% for member in ownRow.members %}<tr>

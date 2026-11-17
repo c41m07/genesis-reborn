@@ -1,19 +1,5 @@
 # Design system — Genesis Reborn
 
-## Accueil et gestion de guilde — évolution locale
-
-La couverture porte la bannière existante ou un fond CSS léger. Le nom, le tag
-et l’action du canal restent hors de l’image ; les indicateurs utilisent `dl`.
-L’accueil associe présentation, raccourcis et trois échanges récents. L’aperçu
-reste en lecture sans marquer le canal comme lu. Membres conserve un tableau
-adapté au mobile, Grades son éditeur séparé de la liste. La navigation serveur
-est regroupée dans une surface commune et reste visible sans JavaScript.
-
-Les styles `guild-space.css` sont limités à Vue générale, Membres et Grades.
-Les couleurs suivent les variables existantes dans les deux thèmes. Les transitions
-courtes sont activées uniquement sans préférence de réduction des animations.
-La nouvelle direction des autres pages reste à traiter : [couverture](../COUVERTURE_INTERFACES.md).
-
 ## Refus et actions de reprise
 
 - Une explication de refus doit distinguer l’absence de session, un rôle insuffisant et une action refusée alors que le rôle est présent. Ne pas diagnostiquer une perte de droits à partir d’un refus de formulaire.

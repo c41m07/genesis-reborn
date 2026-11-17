@@ -3,7 +3,7 @@
 {% block body %}
 {% import 'ui/macros.html.twig' as ui %}
 {% set relation_labels={allies:'Alliés',enemies:'Ennemis',neutral:'Neutre',pending:'Proposition en attente',non_aggression:'Pacte de non-agression',defense:'Pacte de défense'} %}
-<div class="page-refinement diplomacy-page{{ own and tab in ['guilds','members','ranks'] ? ' guild-space' : '' }}" data-page-sections="disabled">
+<div class="page-refinement diplomacy-page" data-page-sections="disabled">
 <div class="page-heading"><div><h1>{{ pageTitle }}</h1><p>{{ tab in ['relations','diplomacy'] ? 'Vos relations dans l’univers ' ~ membership.universe.name ~ '.' : 'Votre espace de guilde dans l’univers ' ~ membership.universe.name ~ '.' }}</p></div></div>
 {% if tab in ['relations','diplomacy'] %}
 <nav class="ui-tabs space-navigation" aria-label="Navigation de diplomatie">
