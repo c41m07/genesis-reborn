@@ -28,9 +28,16 @@ merge `5b072cb`, après les cinq jobs quality réussis sur `afe19b8`
 Application locale actualisée avec assets, cache et routes vérifiés ; modification
 préexistante conservée. Le bilan ci-dessous garde la recette avant intégration.
 
-Lot 5 réalisé sur `feature/navigation-projets-collectifs`, depuis dev `5b072cb` ;
-[PR #80](https://github.com/c41m07/genesis-reborn/pull/80). La recette ci-dessous
-précède l’intégration ; la PR donne l’état de la CI, de la fusion et de localhost.
+Lot 5 intégré sur dev par la [PR #80](https://github.com/c41m07/genesis-reborn/pull/80),
+merge `4fa63a7`, après les cinq jobs quality réussis sur `6f969da`
+([CI 43982486963](https://github.com/c41m07/genesis-reborn/actions/runs/43982486963)).
+Localhost actualisé avec assets, cache et routes vérifiés ; modification préexistante
+conservée. Le bilan du lot 5 ci-dessous garde sa recette avant intégration.
+
+Lot 6 réalisé sur `feature/navigation-evenements-pages`, depuis dev `4fa63a7`.
+La [PR #81](https://github.com/c41m07/genesis-reborn/pull/81) conserve les premières
+validations ; une PR de remplacement livre le contenu final sans identifiant de
+test fixe dans ses commits. La recette ci-dessous précède l’intégration.
 
 Les trois documents Work V4 (prompt maître), V2 (brief Figma) et V1 (protocole
 adaptatif) n’ont pas été trouvés dans le dépôt ni les sources connectées
@@ -48,7 +55,8 @@ accessibles. Aucune lecture intégrale ni validation de leurs phases n’est rev
    définitive, état de l’empire sélectionné et compatibilité des formulaires.
 5. Projets collectifs : 4/5 après examen ; contributions, historiques paginés,
    permissions, versions et isolation des univers.
-6. Événements : estimation 3/5 ; bonus actifs, défis et rotations.
+6. Événements : 4/5 après examen ; visibilité, filtres JSON avant pagination,
+   périmètres d’univers et panneau commun conservé.
 7. Administration : estimation 4/5 ; droits, formulaires et parcours guidés existants.
 8. Wiki : estimation 4/5 ; recherche globale, chapitres et fragments historiques.
 
@@ -472,6 +480,7 @@ n’a pas été actualisé. Le manuel embarqué et la documentation du dépôt s
 - `app/templates/boosts/index.html.twig`
 - `app/templates/ui/inventory_navigation.html.twig`
 - `app/tests/Controller/InventoryPagesTest.php`
+- `app/tests/Integration/AdminInterventionTest.php`
 - `app/tests/browser/admin-event-wizard.spec.mjs`
 - `app/tests/browser/catalogue-inventory.spec.mjs`
 - `app/tests/browser/player-pages-refinement.spec.mjs`
@@ -682,4 +691,144 @@ Aucune migration de base existante ni livraison Alpha.
 - `docs/GUIDE_GUILDES_ALLIANCES.md`
 - `docs/NAVIGATION_PAGES_DEDIEES.md`
 - `docs/PARCOURS_UI_UX.md`
+- `docs/wiki.json`
+
+
+## Lot 6 — Événements
+
+Complexité 4/5 après examen du contrôleur, des préparations de listes/fiches,
+du panneau commun et des comptes à rebours, des liens entrants, tests et suivis.
+Le risque principal est de changer les critères de visibilité en séparant les
+listes, ou de perdre progression, place et récompense dans le panneau commun.
+Les décisions de retrait/archivage, d’annulation, de dates et d’attribution ont
+été relues ; aucun traitement métier correspondant n’est modifié.
+
+| Destination | Adresse | Objectif |
+| --- | --- | --- |
+| Événements et bonus | `/evenements` | Entrée, annonces et bonus en cours ou à venir. |
+| Défis et rotations | `/evenements/defis` | Défis annoncés, rotations et derniers bilans. |
+| Fiche d’un défi | `/evenements/defis/{id}` | Objectif, dates, récompense et participation personnelle. |
+
+### Compatibilité et préparation
+
+Les deux listes partagent des liens serveur avec état actif ; les fiches gardent
+Événements actif dans le menu principal et Défis et rotations dans la navigation.
+Les annonces courantes et futures conservent leurs ancres utiles. Le fragment
+`#page-section-0` du titre des défis de l’ancien sommaire est orienté vers
+`/evenements/defis#challenges-list`, avec les paramètres, à l’ouverture et au
+changement de fragment. Sans JavaScript, les liens serveur restent disponibles.
+Le sommaire automatique est désactivé sur ces pages ; les rapports restent inchangés.
+
+Les critères de `GameRepository` sont partagés entre pages et panneau. Les
+valeurs JSON fausses ou vides gardent la sémantique PHP antérieure, et le préfixe
+`weekly-` garde sa sensibilité à la casse. Ces filtres sont appliqués avant les
+comptages et limites ; des occurrences hors parcours ne masquent plus une page
+de défis. Le mapping Doctrine conserve les types sur une seule lecture filtrée.
+Les annonces sont paginées par 25 dans chacun des deux groupes ; leurs paramètres
+se conservent mutuellement. Les défis sont paginés par 25, sans nouveau plafond
+de conservation. La limite historique de `forPlayer` reste 50 pour ses consommateurs.
+
+Le panneau garde son périmètre commun en cours/à venir, ses informations personnelles,
+son compteur visible fermé et ses durées. Aucun historique de défis n’y est chargé.
+Il s’agit de données communes déjà présentes, distinctes des nouvelles listes paginées.
+Les anciennes fiches restent consultables selon leurs gardes existants, y compris
+les fiches archivées exclues des listes courantes. Aucune nouvelle actualisation
+périodique ; aucune modification de production, contribution ou récompense.
+Aucun gain de performance n’est annoncé sans mesure comparative.
+
+### Vérifications et livraison
+
+Validation Compose et compilation réussies. Lint complet réussi sur pile isolée
+avec `APP_DEBUG=1` : le conteneur non-debug gardait un cache antérieur à la nouvelle
+injection du repository. Le cache debug a été régénéré ; aucune configuration
+globale ni protection n’a été modifiée pour cette vérification.
+28 tests métier / 104 assertions, puis 6 tests HTTP / 74 assertions réussis :
+visibilité, types JSON, casse du préfixe, groupes paginés et paramètres conservés,
+filtrage avant limites, univers, anonymes, participation, métadonnées privées et
+ancienne fiche archivée. Douze parcours navigateur réussis : assistants, défis,
+récompenses, retraits protégés, rotations, panneau fermé, pages dédiées et écrans
+joueur. Les trois écrans concernés passent Axe sur `main` en thèmes réellement
+enregistrés clair/sombre à 320/390/1 440 px. Clavier, liens directs, rechargement,
+retour arrière, changement de fragment et paramètres de l’ancien lien vérifiés.
+Connexion native sans JavaScript, navigation des deux listes et fiche réussies.
+Captures sombre ordinateur et claire mobile examinées. Les essais utilisent des
+bases jetables distinctes de la base habituelle. La [PR #81](https://github.com/c41m07/genesis-reborn/pull/81)
+est prête pour la CI complète ; les cinq jobs quality restent obligatoires sur sa
+dernière version avant fusion. Les vérifications locales ne sont pas une validation
+CI complète.
+
+README, architecture, décisions, règles de navigation, parcours, feuille de route
+et manuel embarqué synchronisés. Les trois documents Work V4/V2/V1 ne sont pas
+retrouvés dans les recherches locales et connectées ; aucune lecture intégrale
+ni validation de leurs phases n’est revendiquée. Wiki externe non synchronisé.
+Contrôles RGAA ciblés, sans audit complet. Aucune dépendance, migration, valeur
+ou règle de jeu modifiée. Aucune migration de base existante ni livraison Alpha.
+
+
+### Reprise de la première CI complète
+
+La [CI 43990158030](https://github.com/c41m07/genesis-reborn/actions/runs/43990158030)
+sur `f987b36` exécute 1 386 tests PHP, avec deux échecs dans les parcours existants
+Transport et Intervention administrative. Reproduction isolée : mêmes deux échecs.
+Leurs requêtes suivantes redémarraient le noyau, remplaçant l’horloge simulée du
+16 novembre par l’heure réelle du 17 novembre ; la protection normale de session
+à 24 h invalidait alors l’authentification. Les deux seuls scénarios concernés
+conservent désormais leur horloge entre requêtes. Aucune assertion n’est retirée,
+aucun code d’expiration, droit ou traitement métier n’est changé. Reprise locale :
+40 tests / 179 assertions réussis. Une nouvelle CI complète reste obligatoire sur
+le commit corrigé ; les résultats de la première exécution ne permettent pas de fusionner.
+
+### Reprise du test clavier du wiki
+
+La [deuxième CI](https://github.com/c41m07/genesis-reborn/actions/runs/43993199017)
+sur `be9ea53` réussit le PHP et trois lots navigateur ; le quatrième compte
+51 réussites et un échec intermittent dans le parcours clavier du wiki.
+La reprise isolée de ce scénario réussit. Le test pouvait valider le premier
+chapitre encore visible avant l’initialisation du contrôleur, puis enchaîner
+ses actions trop tôt. Il attend désormais le signal `wiki-chapters-ready` et
+vérifie l’URL de chaque chapitre après activation. Les assertions de contenu,
+clavier, thèmes, formules, sources et accès natif restent présentes.
+Le wiki de l’application n’est pas modifié. Trois reprises consécutives du
+scénario renforcé réussissent. Une nouvelle CI complète reste requise sur ce commit.
+
+### Identifiants synthétiques des tests
+
+Le contrôle GitGuardian signale le mot de passe fictif de la nouvelle fixture HTTP,
+présent depuis le premier commit de la PR #81. Ces comptes n’existent que sur les
+bases jetables, mais leurs mots de passe sont désormais générés à l’exécution,
+également dans le parcours navigateur. Aucune exception de détection n’est ajoutée.
+Une branche de remplacement repart de dev avec le contenu final corrigé, sans
+reprendre le littéral dans ses commits. La branche et la PR #81 restent conservées
+pour la traçabilité, sans reset, rebase ni push forcé. La nouvelle PR et sa CI complète
+donnent l’état de livraison ; les contrôles précédents ne valent pas validation
+sur le nouvel historique.
+
+### Fichiers du lot 6
+
+- `README.md`
+- `app/assets/controllers/page_sections_controller.js`
+- `app/assets/styles/player-pages.css`
+- `app/src/Controller/GameEventsController.php`
+- `app/src/Repository/GameRepository.php`
+- `app/src/Service/Event/ChallengeQueryService.php`
+- `app/src/Service/Event/EventPanelService.php`
+- `app/templates/base.html.twig`
+- `app/templates/player/challenge.html.twig`
+- `app/templates/player/challenges.html.twig`
+- `app/templates/player/events.html.twig`
+- `app/templates/ui/event_drawer.html.twig`
+- `app/templates/ui/event_navigation.html.twig`
+- `app/templates/ui/event_pagination.html.twig`
+- `app/tests/Controller/EventPagesTest.php`
+- `app/tests/Controller/TransportTest.php`
+- `app/tests/browser/admin-event-wizard.spec.mjs`
+- `app/tests/browser/event-pages.spec.mjs`
+- `app/tests/browser/player-support-worlds.spec.mjs`
+- `app/tests/browser/wiki.spec.mjs`
+- `docs/ARCHITECTURE.md`
+- `docs/DECISIONS.md`
+- `docs/FEUILLE_DE_ROUTE.md`
+- `docs/NAVIGATION_PAGES_DEDIEES.md`
+- `docs/PARCOURS_UI_UX.md`
+- `docs/REGLES.md`
 - `docs/wiki.json`

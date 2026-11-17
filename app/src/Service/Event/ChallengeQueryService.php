@@ -36,9 +36,15 @@ final class ChallengeQueryService
 
     public function forPlayer(PlayerUniverse $membership): array
     {
-        $events=$this->em->createQueryBuilder()->select('e')->from(BoostEvent::class,'e')->where('e.universe=:universe')->andWhere('(e.configuration IS NULL OR e.configuration NOT LIKE :archived)')->setParameter('archived','%"archived_at"%')
-            ->andWhere('e.status IN (:states)')->setParameter('universe',$membership->universe)->setParameter('states',['scheduled','active','closed','cancelled'])->orderBy('e.scheduledAt','DESC')->setMaxResults(50)->getQuery()->getResult();
-        return array_map(fn(BoostEvent $event):array=>$this->view($event),array_values(array_filter($events,static fn(BoostEvent $event):bool=>(bool)($event->configuration['guided'] ?? false) || str_starts_with($event->eventKey,'weekly-'))));
+        $events = $this->repo->playerChallengeEvents($membership, ['scheduled', 'active', 'closed', 'cancelled']);
+        return array_map(fn(BoostEvent $event): array => $this->view($event), $events);
+    }
+
+    public function playerPage(PlayerUniverse $membership, int $page): array
+    {
+        $data = $this->repo->playerChallengesPage($membership, $page);
+        $data['rows'] = array_map(fn(BoostEvent $event): array => $this->view($event), $data['rows']);
+        return $data;
     }
 
     public function search(int $universe,string $status,int $page,bool $archived=false): array

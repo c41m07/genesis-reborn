@@ -370,7 +370,7 @@ empêche ses nouvelles programmations mais n’annule pas les occurrences déjà
 créées. Leurs règles sont figées ; contributions et récompenses acquises restent
 conservées lors d’une annulation, sans nouvelle attribution après annulation.
 Le plafond simultané, le lundi à 00 h UTC et les règles de récompense historiques
-s’appliquent toujours. Les joueurs retrouvent les rotations dans Événements.
+s’appliquent toujours. Les joueurs retrouvent les rotations dans Événements → Défis et rotations.
 
 ## Saisie des quantités et boutons Max
 

@@ -168,3 +168,12 @@ avec liens GET communs. Les fiches restent le lieu de la contribution et du bila
 La pagination ne retire ni historique ni total personnel. Cette évolution remplace
 seulement l’organisation des projets décrite précédemment ; les services et
 confirmations sensibles restent inchangés. Voir le [suivi](NAVIGATION_PAGES_DEDIEES.md).
+
+
+## Événements : annonces et défis séparés — 17 novembre 2026
+
+Le lot 6 remplace la liste composite par Événements et bonus et Défis et rotations,
+avec navigation commune et états actifs jusque dans les fiches. Le panneau sous
+les ressources garde son fonctionnement actuel. Les listes sont paginées et les
+ancres utiles aux périodes restent locales au document. Les liens vers les activités
+d’un défi et l’inventaire sont conservés. [Recette](NAVIGATION_PAGES_DEDIEES.md).

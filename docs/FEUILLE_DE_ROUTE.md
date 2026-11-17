@@ -1677,8 +1677,13 @@ merge `5b072cb`, après CI complète réussie sur `afe19b8`. Application locale
 actualisée et modification préexistante conservée. Mes identifiants, Préférences,
 Mode vacances et Suppression du compte disposent de leurs pages.
 
-Lot 5 Projets collectifs réalisé sur `feature/navigation-projets-collectifs`,
-depuis dev `5b072cb` : En cours, Disponibles, Historique et fiche de contribution.
-Complexité 4/5, lectures ciblées et paginées ; services métier et droits conservés.
-Contrôles locaux ciblés réussis ; [PR #80](https://github.com/c41m07/genesis-reborn/pull/80)
-avec CI complète requise avant fusion. [Recette et état d’intégration](NAVIGATION_PAGES_DEDIEES.md).
+Lot 5 intégré sur dev par la [PR #80](https://github.com/c41m07/genesis-reborn/pull/80),
+merge `4fa63a7`, après CI complète réussie sur `6f969da`. Application locale
+actualisée avec préservation de la modification préexistante.
+
+Lot 6 Événements réalisé sur `feature/navigation-evenements-pages`, depuis dev `4fa63a7` :
+Événements et bonus, Défis et rotations, avec fiches et panneau commun conservés.
+Complexité 4/5, critères de visibilité partagés et pagination avant affichage.
+Contrôles locaux ciblés réussis ; la PR initiale #81 est remplacée pour retirer
+l’identifiant fictif des commits à intégrer, sans réécriture forcée. Une CI complète
+reste requise sur la nouvelle PR. [Recette et état d’intégration](NAVIGATION_PAGES_DEDIEES.md).
