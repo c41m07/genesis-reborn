@@ -28,15 +28,19 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
   await page.setViewportSize({width:1440,height:900});
   await expect(page.locator('.catalog-operations-rail')).toBeVisible();
   await page.goto('/wiki');
-  await expect(page.locator('.wiki-chapter:visible')).toHaveCount(1);
+  await expect(page.locator('.wiki-chapter')).toHaveCount(0);
   const chapters=await page.locator('#wiki-chapter-choice option[value]:not([value=""])').evaluateAll(options=>options.map(option=>option.value));
-  await page.locator('.wiki-summary a[href="#wiki-'+chapters[1]+'"]').focus();
+  await page.locator('.wiki-summary a[href="/wiki/chapitres/'+chapters[1]+'"]').focus();
   await page.keyboard.press('Enter');
-  await expect(page).toHaveURL(new RegExp('#wiki-'+chapters[1]+'$'));
+  await expect(page).toHaveURL(new RegExp('/wiki/chapitres/'+chapters[1]+'$'));
   await expect(page.locator('#wiki-'+chapters[1])).toBeVisible();
-  await page.locator('.wiki-summary a[href="#wiki-'+chapters[2]+'"]').focus();
+  await page.locator('.wiki-summary a[href="/wiki/chapitres/'+chapters[2]+'"]').focus();
   await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(new RegExp('/wiki/chapitres/'+chapters[2]+'$'));
+  await expect(page.locator('#wiki-'+chapters[2])).toBeVisible();
+  await page.waitForLoadState('load');
   await page.goBack();
+  await expect(page).toHaveURL(new RegExp('/wiki/chapitres/'+chapters[1]+'$'));
   await expect(page.locator('#wiki-'+chapters[1])).toBeVisible();
   await expect(page.locator('.wiki-chapter:visible')).toHaveCount(1);
   await page.goto('/planetes?view=table');
@@ -160,8 +164,9 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
     await expect(noScript).toHaveURL(/resource=electricity/);
     await expect(noScript.locator('.colony-comparison td[data-resource="electricity"]')).toBeVisible();
     await noScript.goto(new URL('/wiki',home).href);
-    expect(await noScript.locator('.wiki-chapter:visible').count()).toBeGreaterThan(1);
+    await expect(noScript.locator('.wiki-chapter')).toHaveCount(0);
+    expect(await noScript.locator('.wiki-chapter-card').count()).toBeGreaterThan(1);
     await noScript.goto(new URL('/wiki?q=colonisation',home).href);
-    await expect(noScript.locator('.wiki-chapter').first()).toContainText(/colonisation/i);
+    await expect(noScript.locator('.wiki-search-result').first()).toContainText(/colonisation/i);
   } finally {await context.close();}
 });

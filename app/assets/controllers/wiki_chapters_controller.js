@@ -1,56 +1,31 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-    static values = { search: Boolean };
+    static values = { destinations: Object };
+
     connect() {
-        this.chapters = [...this.element.querySelectorAll('.wiki-chapter')];
         this.picker = this.element.querySelector('[name="chapter"]');
-        if (!this.chapters.length || !this.picker) return;
-        this.element.classList.add('wiki-chapters-ready');
-        this.follow = () => this.show(location.hash.slice(1));
-        this.choose = event => {
-            if (!event.target.value) return;
-            const id = 'wiki-' + event.target.value;
-            if (this.searchValue) { this.picker.form.requestSubmit(); return; }
-            this.navigate(id);
-        };
-        this.click = event => {
-            const link = event.target.closest('a[href^="#wiki-"]');
-            if (!link || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-            const id = link.hash.slice(1);
-            if (!this.chapters.some(chapter => chapter.id === id)) return;
-            event.preventDefault();
-            this.navigate(id);
-        };
-        this.element.addEventListener('click', this.click);
-        this.picker.addEventListener('change', this.choose);
+        this.follow = () => this.redirectLegacyFragment();
+        this.choose = () => { if (this.picker.value) this.picker.form.requestSubmit(); };
         window.addEventListener('hashchange', this.follow);
-        window.addEventListener('popstate', this.follow);
-        this.follow();
+        this.picker?.addEventListener('change', this.choose);
+        if (this.redirectLegacyFragment()) return;
+        this.element.classList.add('wiki-chapters-ready');
     }
-    navigate(id) {
-        history.pushState(null, '', '#' + id);
-        this.show(id);
-        const heading = document.getElementById(id)?.querySelector('h2');
-        if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); heading.scrollIntoView({ block: 'start' }); }
+
+    redirectLegacyFragment() {
+        // Le serveur ne reçoit pas le fragment des anciennes URL ; seuls les identifiants du manuel sont acceptés.
+        const match = window.location.hash.match(/^#wiki-(?:title-)?([a-z0-9-]+)$/);
+        const destination = match && Object.prototype.hasOwnProperty.call(this.destinationsValue, match[1]) ? this.destinationsValue[match[1]] : null;
+        if (!destination || window.location.pathname === destination) return false;
+        // Remplacer l’ancienne entrée évite une boucle au retour arrière. Les liens serveur restent le parcours natif.
+        window.location.replace(destination + window.location.search + window.location.hash);
+        return true;
     }
-    show(id) {
-        if (this.searchValue) return;
-        if (id && !this.chapters.some(chapter => chapter.id === id)) return;
-        const current = this.chapters.find(chapter => chapter.id === id) || this.chapters[0];
-        for (const chapter of this.chapters) chapter.hidden = chapter !== current;
-        this.picker.value = current.id.slice(5);
-        for (const link of this.element.querySelectorAll('.wiki-summary a')) {
-            if (link.hash === '#' + current.id) link.setAttribute('aria-current', 'true');
-            else link.removeAttribute('aria-current');
-        }
-    }
+
     disconnect() {
-        this.element.removeEventListener('click', this.click);
-        this.picker?.removeEventListener('change', this.choose);
         window.removeEventListener('hashchange', this.follow);
-        window.removeEventListener('popstate', this.follow);
-        for (const chapter of this.chapters || []) chapter.hidden = false;
+        this.picker?.removeEventListener('change', this.choose);
         this.element.classList.remove('wiki-chapters-ready');
     }
 }

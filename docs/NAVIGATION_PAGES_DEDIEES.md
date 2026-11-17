@@ -34,10 +34,19 @@ merge `4fa63a7`, après les cinq jobs quality réussis sur `6f969da`
 Localhost actualisé avec assets, cache et routes vérifiés ; modification préexistante
 conservée. Le bilan du lot 5 ci-dessous garde sa recette avant intégration.
 
-Lot 6 réalisé sur `feature/navigation-evenements-pages`, depuis dev `4fa63a7` ;
-[PR #82](https://github.com/c41m07/genesis-reborn/pull/82). La PR #81 et sa branche
-conservent les premières validations ; la nouvelle PR livre le contenu final sans
-identifiant de test fixe dans ses commits. La recette ci-dessous précède l’intégration.
+Lot 6 intégré sur dev par la [PR #82](https://github.com/c41m07/genesis-reborn/pull/82),
+merge `8f1bc6e`, après les cinq jobs quality réussis sur `25bb0ae`
+([CI 44001350739](https://github.com/c41m07/genesis-reborn/actions/runs/44001350739)).
+La PR #81 conserve les premières validations et est fermée sans fusion.
+Application locale actualisée, modification préexistante conservée. La recette
+ci-dessous garde les étapes précédant l’intégration.
+
+Lot 7 intégré sur dev par la [PR #83](https://github.com/c41m07/genesis-reborn/pull/83),
+merge `7b7d92d`, après les cinq jobs quality réussis sur `e7616ed`
+([CI 44048538481](https://github.com/c41m07/genesis-reborn/actions/runs/44048538481)).
+Localhost actualisé avec compilation, cache, routage et assets servis vérifiés ;
+modification locale préservée. Le bilan du lot 7 garde sa recette et ses reprises
+avant intégration.
 
 Les trois documents Work V4 (prompt maître), V2 (brief Figma) et V1 (protocole
 adaptatif) n’ont pas été trouvés dans le dépôt ni les sources connectées
@@ -59,7 +68,8 @@ accessibles. Aucune lecture intégrale ni validation de leurs phases n’est rev
    périmètres d’univers et panneau commun conservé.
 7. Administration : 4/5 après examen ; droits, formulaires, édition des modèles
    de rotations sous verrou et parcours guidés existants.
-8. Wiki : estimation 4/5 ; recherche globale, chapitres et fragments historiques.
+8. Wiki : 4/5 confirmé ; pages serveur, recherche globale, références inchangées
+   et compatibilité des paramètres/fragments avec ou sans JavaScript.
 
 Les estimations des lots 3 à 8 seront confirmées sur leurs dépendances au début
 du lot, après intégration du précédent.
@@ -973,3 +983,86 @@ CI complète avant fusion.
 - `docs/PARCOURS_UI_UX.md`
 - `docs/REFONTE_ADMINISTRATION.md`
 - `docs/REGLES.md`
+
+## Lot 8 — Wiki — 17 novembre 2026
+
+Complexité 4/5. Risques : anciennes ancres non reçues par le serveur, retours
+arrière, lecture au clavier et sans JavaScript, recherche globale, références
+échappées et contexte de l’univers sélectionné. Le contenu du manuel et ses
+règles ne sont pas réécrits.
+
+| Destination | Adresse | Préparation |
+| --- | --- | --- |
+| Accueil | `/wiki` | Titres, parties et liens des chapitres ; aucun corps complet. |
+| Chapitre | `/wiki/chapitres/{chapter}` | Sommaire et corps du seul chapitre demandé. |
+| Recherche | `/wiki/recherche?q=…` | Résultats avec extraits bornés et liens, sans anciens chapitres complets. |
+| Références | `/wiki/references/regles`, `/wiki/references/decisions` | Document source inchangé et échappé, sections natives. |
+
+Le manuel reste privé et accessible sans participation à un univers ; aucune
+nouvelle condition d’accès. `docs/wiki.json`, `REGLES.md` et `DECISIONS.md` restent
+les sources uniques. `WikiManual` prépare les seules données de la vue à partir
+du fichier de référence fini, sans données de jeu ou nouvelle persistance.
+
+Les anciens GET `?chapter=` et `?q=` redirigent. Pour `#wiki-{id}` et
+`#wiki-title-{id}`, une transition côté navigateur choisit la fiche dans une liste
+fermée de destinations et remplace l’entrée d’historique. Sans JavaScript, les
+ancres repèrent les cartes de l’accueil et leurs liens de lecture ; les résultats
+portent aussi leurs repères. Les fragments inconnus restent sur leur page, sans
+redirection arbitraire. Aucun chapitre n’est masqué pour simuler une URL.
+
+Le sommaire et la navigation commune conservent les états actifs. Les formules
+et exemples se déplient au clavier sans dépendre de JavaScript ; le sélecteur
+mobile soumet un GET. La recherche se trouve dans la navigation et son formulaire
+est réservé à l’accueil et aux résultats pour alléger les pages de lecture.
+Les logos et SVG d’identité sont conservés. Les pages gardent `noindex`, leur
+protection étant inchangée ; robots et sitemap publics ne sont pas modifiés.
+
+Validation locale : `make validate`, `make lint-static` (PHP, Twig, YAML et
+conteneur), `make assets`, contrôle Twig ciblé et `git diff --check` réussis.
+Huit tests PHP distincts réussissent par consolidation (Wiki et SEO privé/public),
+dont trois tests Wiki / 208 assertions sur les dernières vérifications ciblées.
+Ils couvrent les liens directs, les 16 chapitres, les données réellement rendues,
+les anciennes requêtes, la recherche vide/sans résultat, l’échappement, la limite
+de saisie, les références inconnues et l’accès sans connexion/sans participation.
+
+Quatre scénarios navigateur réussissent par consolidation des reprises : lecture complète de chaque
+chapitre, formules au clavier, intégralité des références comparée aux fichiers,
+recherche et navigation serveur, fragments historiques (dont les inconnus), retour
+arrière, rechargement, mode natif, thèmes clair/sombre et largeurs 390/768/1 440 px.
+Le parcours transversal conserve les contrôles des autres espaces et attend la
+navigation réelle avant le retour arrière. Les références restent du texte
+échappé. Les audits Axe et les contrôles de débordement passent ; les captures
+réelles bureau et mobile ont été examinées. Une reprise ciblée vérifie aussi
+que la participation à l’univers sélectionné reste identique sur chaque page.
+Aucune suite complète PHP/navigateur locale n’est revendiquée.
+
+La dernière version doit réussir la CI complète avant fusion. La PR donnera
+ensuite l’état de CI, d’intégration et d’activation locale. Aucune migration de base existante ni livraison Alpha dans ce lot.
+Les trois sources Work V4/V2/V1 et le wiki documentaire externe restent
+inaccessibles ; aucune lecture ou synchronisation n’est revendiquée. Les
+contrôles d’accessibilité ciblés ne valent pas audit RGAA complet. Performance
+non mesurée.
+
+### Fichiers du lot 8
+
+- `README.md`
+- `app/assets/controllers/wiki_chapters_controller.js`
+- `app/assets/styles/approved-pages.css`
+- `app/src/Controller/WikiController.php`
+- `app/src/Service/Wiki/WikiManual.php`
+- `app/templates/base.html.twig`
+- `app/templates/wiki/_summary.html.twig`
+- `app/templates/wiki/chapter.html.twig`
+- `app/templates/wiki/index.html.twig`
+- `app/templates/wiki/layout.html.twig`
+- `app/templates/wiki/reference.html.twig`
+- `app/templates/wiki/search.html.twig`
+- `app/tests/Controller/WikiPagesTest.php`
+- `app/tests/browser/ui-journey.spec.mjs`
+- `app/tests/browser/wiki.spec.mjs`
+- `docs/ARCHITECTURE.md`
+- `docs/DECISIONS.md`
+- `docs/FEUILLE_DE_ROUTE.md`
+- `docs/NAVIGATION_PAGES_DEDIEES.md`
+- `docs/PARCOURS_UI_UX.md`
+- `docs/README.md`
