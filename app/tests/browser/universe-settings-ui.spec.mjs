@@ -27,6 +27,7 @@ async function universe(page) {
   await creation.getByLabel('Nombre de galaxies').fill('1');
   await creation.getByLabel('Systèmes par galaxie').fill('1');
   await creation.getByRole('button', { name: 'Créer l’univers' }).click();
+  await page.waitForLoadState('load');
   const id = Number(queryIsolatedSql(process.env.BROWSER_ROUTER, `SELECT id FROM universe WHERE slug='${slug}'`));
   const card = page.locator('#admin-universe-' + id);
   await expect(card.locator('.admin-universe-settings')).toBeVisible();
@@ -36,7 +37,7 @@ async function universe(page) {
 test('Paramètres : capture des vitesses affichées après sélection du profil', async ({ page }, testInfo) => {
   const { form } = await universe(page);
   await form.getByLabel('Profil de vitesse').selectOption('x2');
-  console.log('Vitesses affichées après ×2 : ' + JSON.stringify(await form.locator('[data-admin-speed-target="multiplier"]').evaluateAll(inputs => inputs.map(input => ({ name: input.name, value: input.value })))));
+  for (const input of await form.locator('[data-admin-speed-target="multiplier"]').all()) await expect(input).toHaveValue('2');
   for (const width of [1440, 390]) {
     await page.setViewportSize({ width, height: 900 });
     await form.scrollIntoViewIfNeeded();
@@ -45,6 +46,11 @@ test('Paramètres : capture des vitesses affichées après sélection du profil'
 });
 
 test('Paramètres : profils cohérents, erreur conservée et sauvegarde temporaire', async ({ page }, testInfo) => {
+  // Reproduire une feuille de style lente, comme lors de la mesure prématurée observée dans la CI.
+  await page.route('**/build/*.css', async route => {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    await route.continue();
+  });
   const { id, card, form } = await universe(page);
   const project = process.env.BROWSER_ROUTER;
   runIsolatedSql(project, `UPDATE universe SET game_settings=JSON_SET(game_settings,'$.catalog_overrides',JSON_OBJECT('buildings',JSON_OBJECT('power_plant',JSON_OBJECT('max_level',7)))) WHERE id=${id}`);
@@ -53,6 +59,7 @@ test('Paramètres : profils cohérents, erreur conservée et sauvegarde temporai
   await form.getByLabel('Profil de vitesse').selectOption('x2');
   for (const input of await form.locator('[data-admin-speed-target="multiplier"]').all()) await expect(input).toHaveValue('2');
   await form.getByRole('button', { name: 'Enregistrer les règles' }).click();
+  await page.waitForLoadState('load');
   await expect(page.locator('.flash.success')).toContainText('Paramètres de l’univers enregistrés');
   await expect(page).toHaveURL(new RegExp('/admin/universes/' + id + '/gerer$'));
   await expect(card.locator('.admin-universe-facts')).toContainText('x2');
@@ -71,6 +78,7 @@ test('Paramètres : profils cohérents, erreur conservée et sauvegarde temporai
   await form.getByLabel('Guildes autorisées', { exact: true }).uncheck();
   await form.evaluate(element => { element.noValidate = true; });
   await form.getByRole('button', { name: 'Enregistrer les règles' }).click();
+  await page.waitForLoadState('load');
   await expect(card.locator('.admin-universe-settings')).toBeVisible();
   await expect(form.locator('.admin-draft-notice')).toContainText('Chaque vitesse doit être comprise');
   await expect(form.getByLabel('Vitesse bâtiments (×)', { exact: true })).toHaveValue('0');
@@ -84,6 +92,7 @@ test('Paramètres : profils cohérents, erreur conservée et sauvegarde temporai
   await form.getByLabel('Vitesse bâtiments (×)', { exact: true }).fill('3');
   await expect(form.getByLabel('Profil de vitesse')).toHaveValue('custom');
   await form.getByRole('button', { name: 'Enregistrer les règles' }).click();
+  await page.waitForLoadState('load');
   const custom = load();
   expect(custom.multipliers.building_time).toBeCloseTo(1 / 3, 8);
   expect(custom.multipliers.resource_production).toBe(2);
@@ -97,8 +106,10 @@ test('Paramètres : profils cohérents, erreur conservée et sauvegarde temporai
   for (const width of [1920, 1440, 1280, 768, 390]) {
     await page.setViewportSize({ width, height: 900 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-    const toggles = await form.locator('input[type="checkbox"]').evaluateAll(inputs => inputs.map(input => ({ width: input.getBoundingClientRect().width, height: input.getBoundingClientRect().height })));
-    for (const toggle of toggles) expect(toggle).toEqual({ width: 18, height: 18 });
+    // Après une redirection, le DOM peut précéder les styles ; attendre les dimensions finales, sans tolérance.
+    for (const toggle of await form.locator('input[type="checkbox"]').all()) {
+      await expect.poll(() => toggle.evaluate(input => ({ width: input.getBoundingClientRect().width, height: input.getBoundingClientRect().height }))).toEqual({ width: 18, height: 18 });
+    }
   }
   const accessibility = await new AxeBuilder({ page }).include('#admin-universe-' + id).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
   await testInfo.attach('settings-accessibility.json', { body: JSON.stringify(accessibility.violations, null, 2), contentType: 'application/json' });
@@ -130,10 +141,12 @@ test('Paramètres hérités : valeurs hors plage conservées, refus expliqué et
   }
   expect(load()).toBe(original);
   await form.getByRole('button', { name: 'Enregistrer les règles' }).click();
+  await page.waitForLoadState('load');
   await expect(form.getByLabel('Vitesse bâtiments (×)', { exact: true })).toBeFocused();
   expect(load()).toBe(original);
   await form.evaluate(element => { element.noValidate = true; });
   await form.getByRole('button', { name: 'Enregistrer les règles' }).click();
+  await page.waitForLoadState('load');
   await expect(form.locator('.admin-draft-notice')).toContainText('Chaque vitesse doit être comprise');
   await expect(form.getByLabel('Vitesse bâtiments (×)', { exact: true })).toHaveValue('100');
   expect(load()).toBe(original);
@@ -142,6 +155,7 @@ test('Paramètres hérités : valeurs hors plage conservées, refus expliqué et
   for (const input of await form.locator('[data-admin-speed-target="multiplier"]').all()) await expect(input).toHaveValue('40');
   expect(load()).toBe(original);
   await form.getByRole('button', { name: 'Enregistrer les règles' }).click();
+  await page.waitForLoadState('load');
   await expect(page.locator('.flash.success')).toContainText('Paramètres de l’univers enregistrés');
   const saved = JSON.parse(load());
   expect(saved.multipliers.building_time).toBe(.025);

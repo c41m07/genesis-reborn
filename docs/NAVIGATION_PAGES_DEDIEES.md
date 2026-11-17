@@ -909,6 +909,22 @@ lisibles en thème clair. Les deux parcours concernés réussissent après corre
 Une nouvelle CI complète sur le dernier commit reste requise ; le résultat PHP
 de cette première exécution n’autorise pas la fusion de la version suivante.
 
+### Reprise du contrôle navigateur des paramètres
+
+La [CI suivante](https://github.com/c41m07/genesis-reborn/actions/runs/44044536180)
+sur `48fa0a5` valide le PHP et trois lots navigateur. Le quatrième réussit
+51 scénarios et échoue sur les dimensions d’une case à cocher : mesure native de
+13 px avant les 18 px attendus. Une autre capture du même fichier constate aussi
+le profil sélectionné avant son application par Stimulus. Le test attend désormais
+le chargement complet après redirection, puis les dimensions exactes, sans marge
+supplémentaire. La première capture vérifie aussi les cinq vitesses à ×2 au lieu
+de les journaliser seulement. Aucune assertion de sauvegarde, erreur, stock,
+permission, accessibilité ou mode natif n’est retirée. Les quatre scénarios du
+fichier réussissent localement ; le parcours de sauvegarde est également vérifié
+avec une feuille de style volontairement retardée. Aucun service métier ou CSS
+n’est modifié par cette dernière reprise. La dernière version exige sa propre
+CI complète avant fusion.
+
 ### Fichiers du lot 7
 
 - `README.md`
