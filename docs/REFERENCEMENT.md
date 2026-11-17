@@ -8,13 +8,14 @@ n’est inventé par le code. Le modèle .env.prod.example reste à remplacer.
 Les URL canoniques et Open Graph ignorent le Host reçu.
 
 `app/src/Service/PublicPageMetadata.php` est la liste unique des pages indexables :
-accueil et inscription. Le sitemap réutilise cette liste ; robots.txt l’annonce,
+accueil, inscription, mentions légales, CGU, confidentialité et cookies. Le sitemap
+réutilise cette liste ; robots.txt l’annonce,
 sans bloquer la connexion. Les autres vues utilisent noindex. Les pages privées
 restent protégées par Symfony Security : l’indexation ne remplace pas la sécurité.
 
 En développement, Symfony ajoute volontairement `X-Robots-Tag: noindex`.
 La configuration générale, utilisée en production et pour les tests HTTP, le
-désactive pour laisser indexer l’accueil et l’inscription. Une préproduction
+désactive pour laisser indexer les six pages publiques. Une préproduction
 publique doit définir explicitement `disallow_search_engine_index: true`.
 
 L’image de partage est l’emblème existant à
@@ -26,7 +27,8 @@ restent à vérifier sur le domaine réel après déploiement.
 
 Vérifier anonymement les réponses 200 de l’accueil, de l’inscription, de robots.txt,
 du sitemap et de l’image, avec leurs types text/plain, application/xml et image/webp.
-Le sitemap doit contenir exactement les deux URL canoniques indexables. Vérifier
+Le sitemap doit contenir exactement les six URL canoniques indexables : `/`,
+`/inscription`, `/mentions-legales`, `/cgu`, `/confidentialite` et `/cookies`. Vérifier
 le HTML initial, HTTPS, l’absence d’un en-tête noindex ajouté par le proxy sur les
 pages publiques et la présence de noindex sur la connexion. Les pages privées
 doivent toujours demander l’authentification.
@@ -42,7 +44,7 @@ dans cette mission. Aucune validation, soumission ou indexation n’est annoncé
    DNS. Préserver les validations existantes et attendre la confirmation Google.
 3. Dans Sitemaps, envoyer l’adresse publique absolue de `/sitemap.xml`.
    Vérifier le résultat de lecture dans Search Console.
-4. Inspecter l’accueil et l’inscription avec l’outil d’inspection d’URL ;
+4. Inspecter l’accueil, l’inscription et les quatre pages juridiques avec l’outil d’inspection d’URL ;
    contrôler les URL canoniques et les erreurs. L’envoi ne garantit pas l’indexation.
 
 Sources officielles consultées le 7 novembre 2026 :

@@ -151,8 +151,14 @@ Le job léger `development checks` ne remplace aucun de ces cinq contrôles.
 Vérification du 16 novembre 2026 : `dev` exige toujours la PR, les cinq contrôles,
 la branche à jour et l’application aux administrateurs. `alpha` n’a ni protection
 de branche ni règle de dépôt applicable à cette date. Le workflow y lance bien la
-CI complète pour les PR prêtes, mais ne peut pas imposer seul son attente avant
-fusion ; activer une protection équivalente avant une prochaine livraison Alpha.
+CI complète pour les PR prêtes, mais ne pouvait pas imposer seul son attente
+avant fusion à cette date.
+
+Le 17 novembre 2026, avec l’accord explicite du propriétaire, `alpha` a reçu une
+protection équivalente à `dev`, appliquée puis relue via l’API : PR obligatoire,
+cinq jobs `quality` associés à GitHub Actions, branche à jour, exigences appliquées
+aux administrateurs, force-push et suppression interdits. Aucune approbation humaine
+n’est imposée ; `publish` n’est pas un contrôle requis pour les PR.
 
 Protection activée et relue via l’API GitHub le 11 novembre 2026 avec les
 identifiants Git autorisés : PR obligatoire, cinq jobs requis, branche à jour et

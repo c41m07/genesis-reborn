@@ -59,9 +59,12 @@ chaque lot. Leur état d’intégration est donné ici ; les échecs intermédia
 sont des traces historiques, pas des contrôles encore manquants sur ces versions.
 La recette transversale finale et ses limites figurent en fin de document.
 
-Les trois documents Work V4 (prompt maître), V2 (brief Figma) et V1 (protocole
-adaptatif) n’ont pas été trouvés dans le dépôt ni les sources connectées
-accessibles. Aucune lecture intégrale ni validation de leurs phases n’est revendiquée.
+Lors des huit lots, les trois documents Work V4 (prompt maître), V2 (brief Figma)
+et V1 (protocole adaptatif) n’avaient pas été localisés. L’inventaire des branches
+du 17 novembre a retrouvé leurs copies locales non versionnées dans l’ancien
+worktree `var/corrections-interface/docs/` ; elles ont alors été lues intégralement.
+Les bilans historiques ci-dessous conservent les limites connues lors des essais.
+Aucune validation globale des 15 phases n’est revendiquée.
 
 ## Découpage et complexité
 
@@ -1161,8 +1164,11 @@ ni accès à la session habituelle par un autre moyen. Sa recette de confort
 reste donc à effectuer manuellement ; les essais isolés ne la remplacent pas.
 La liste manuelle des évolutions A à K n’est pas cochée par cette recette.
 
-Les trois sources Work V4/V2/V1 sont encore introuvables dans le dépôt et les
-sources connectées accessibles ; le wiki documentaire externe n’est pas synchronisé.
+Les copies locales des trois sources Work V4/V2/V1 ont été retrouvées et lues
+intégralement lors de l’inventaire des branches du 17 novembre, après cette recette.
+Elles restent non versionnées dans l’ancien worktree ; le wiki documentaire externe
+n’est pas synchronisé. Leur lecture ne constitue pas une validation rétroactive
+des 15 phases.
 Les contrôles d’accessibilité sont ciblés, sans audit complet RGAA ni lecteur
 d’écran réel. Performance non mesurée. Aucune migration de base existante,
 installation de dépendance ou livraison Alpha autorisée ou réalisée par ce lot.
