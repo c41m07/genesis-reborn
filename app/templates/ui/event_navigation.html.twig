@@ -1,0 +1,6 @@
+<nav class="ui-tabs space-navigation" aria-label="Navigation des événements">
+{% for destination in [{route:'app_game_events',label:'Événements et bonus'},{route:'app_game_challenges',label:'Défis et rotations'}] %}
+{% set active=route==destination.route or destination.route=='app_game_challenges' and route=='app_challenge' %}
+<a href="{{ path(destination.route) }}"{% if active %} class="active" aria-current="{{ route=='app_challenge' ? 'location' : 'page' }}"{% endif %}>{{ destination.label }}</a>
+{% endfor %}
+</nav>
