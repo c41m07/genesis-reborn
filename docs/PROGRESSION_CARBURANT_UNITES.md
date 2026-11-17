@@ -577,9 +577,20 @@ pas de version : les accès acquis sont conservés, les nouvelles conditions ne
 concernent que les accès restant à acquérir. Aucune migration, requalification
 ou réécriture des surcharges d’univers.
 
-Vérifications : validation Compose réussie ; suite PHP/Python et contrôles
-complémentaires en cours. Les tests de grille couvrent chaque seuil et le rang
-requis ; le parcours des 156 profils contrôle l’absence de cycle et les plafonds.
+Vérifications locales sur les fichiers définitifs : validation Compose, lint
+complet (PHP, YAML, Twig, conteneur et schéma) et diff réussis ; 195 tests ciblés,
+3 575 assertions, couvrant la grille, les seuils, l’atteignabilité et les accès.
+Le conteneur habituel monte un autre répertoire de travail : ses premiers
+résultats ne valident pas ce lot. La suite complète locale lancée dans ce
+conteneur a été interrompue ; les contrôles retenus utilisent un conteneur
+éphémère monté explicitement sur ce dépôt, sans déplacer les services habituels.
+La suite complète PHP/Python, les assets, les parcours navigateur et la
+sauvegarde/restauration isolée relèvent de la CI complète de la
+[PR #85](https://github.com/c41m07/genesis-reborn/pull/85), requise avant fusion.
+Les protections de dev ont été vérifiées : PR et cinq jobs quality obligatoires,
+administrateurs inclus, sans publish requis.
+Les tests de grille couvrent chaque seuil et le rang requis ; le parcours des
+156 profils contrôle l’absence de cycle et les plafonds.
 Les tests d’intégration couvrent les dix rangs modifiés, la recherche à 4 puis 5,
 le refus d’une commande directe, la portée locale et la conservation des accès.
 Les anciennes mesures financées restent historiques et ne mesurent pas cette
