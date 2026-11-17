@@ -564,6 +564,112 @@ sur la partie habituelle ; aucun déploiement. Performance non mesurée, lecteur
 d’écran réel non essayé. Les vérifications ciblées ne remplacent pas la CI
 complète requise avant fusion.
 
+## L2A — missions, préparation complète et rappel
+
+Les deux propositions sont prêtes dans le même document Figcraft de bureau :
+**08 · L2A · A — Missions en lignes** et **09 · L2A · B — Poste d’opérations**.
+Aucun choix n’est encore reçu pour ce sous-lot ; aucun code Flottes n’est modifié.
+L1C A est enregistré dans `1a33d14` sur la branche commune.
+
+### Analyse ciblée et découpage
+
+Conception : **4/5** ; réalisation à venir : **5/5**. Sources examinées :
+`FleetController`, `FleetPageView`, `FleetRecallController`, templates de Flottes,
+navigation, destinations, vols personnels et arrivées, contrôleurs `fleet-wizard`
+et `fleet-preview`, scénarios existants de destinations, devis, états vides et
+rappel, architecture et suivis de navigation/arrivées.
+
+| Vue | Adresse / organisation conservée | Contraintes |
+| --- | --- | --- |
+| Missions actives | `/flottes`, entrée de l’espace | Missions de la colonie active, pages de 30, liens de vol ciblé, états de combat et rappel autorisé |
+| Composition | Première étape de `/flottes/preparer` | Unités disponibles de la colonie, quantités/Max, composition chargée exacte et avertissement civil |
+| Destination | Deuxième étape du même formulaire | Mission, vitesse, catégories compatibles ou coordonnées, recherche, orbite conditionnelle et fret |
+| Confirmation | Troisième étape du même formulaire | Composition/fret, devis serveur, réserve de carburant, erreurs et blocage pendant une estimation |
+| Rappel | `/flottes/{id}/rappel`, page dédiée existante | Revue avant confirmation, version/idempotence, origine perdue et colonie de repli |
+
+La préparation garde ses étapes dans un seul formulaire : elles servent un même
+envoi et les retours ne doivent pas perdre la saisie. Missions et rappel restent
+des pages autonomes. La navigation secondaire conserve les cinq destinations
+existantes ; orbites, quai et compositions seront traités dans la suite de L2.
+Le menu principal garde une entrée Flottes ; aucun nouveau sommaire ni filtre
+de missions n’est proposé. Les ancres de flotte restent utiles.
+
+### A — Missions en lignes
+
+Les vols personnels occupent des lignes larges et compactes sur ordinateur et
+tablette, puis une colonne sur mobile. Type/statut, trajet/échéance et rappel
+restent séparés. Les arrivées étrangères suivent les vols personnels. La
+préparation affiche les étapes horizontalement ; les trois missions résumées
+et les arrivées restent à droite sur grand écran, après le formulaire aux
+formats plus étroits. La confirmation présente résumé et estimation côte à
+côte lorsqu’ils disposent d’assez de largeur. Le rappel utilise deux colonnes de
+faits sur ordinateur. Un menu compact rassemble les cinq pages sur mobile.
+
+Bénéfice : comparaison des trajets et largeur utile pour les libellés longs ;
+continuité avec la préparation déjà présente. Limite : la liste doit être parcourue
+avant d’atteindre les arrivées sur mobile ; le menu compact demande une ouverture.
+L’adaptation devra rester limitée à l’espace Flottes pour préserver la Vue générale
+et les autres consommateurs des composants de vols. **Recommandation : A** pour
+la lecture de plusieurs missions et la proximité avec l’organisation existante.
+
+### B — Poste d’opérations
+
+Les missions deviennent des cartes sur deux colonnes et les arrivées occupent
+une colonne distincte sur grand écran. La préparation met les étapes dans une
+colonne latérale ; résumé des missions et arrivées suivent le formulaire. La
+confirmation et le rappel privilégient une lecture verticale. Sur mobile,
+Missions et Préparer restent visibles ; les autres pages sont dans un menu.
+
+Bénéfice : séparation visuelle du suivi personnel et des arrivées sur ordinateur,
+parcours de préparation concentré. Limite : davantage de défilement dans la
+confirmation ; deux liens visibles et un menu prennent plus de place sur mobile.
+L’implémentation devra préserver un seul panneau d’arrivées et son actualisation
+autorisée lorsqu’il passe dans une colonne latérale.
+
+Les deux options couvrent les mêmes données, actions, conditions et destinations.
+Les chiffres du devis sont des exemples fictifs de présentation, pas des mesures
+ni des valeurs d’équilibrage proposées. Les champs Figcraft sont illustratifs ;
+les interactions naviguent dans les maquettes et n’exécutent aucune mission.
+
+### États et vérification de conception
+
+**32 cadres** : les quatre vues missions/composition/destination/confirmation
+en 1440/768/390 px pour chaque option ; rappel en 1440/390 px ; deux planches
+par option consacrées aux contraintes et aux états visibles. Les exemples incluent
+un nom de colonie long, un retour, un combat, une attaque détectée à origine
+inconnue, aucun vaisseau/aucune sonde, listes vides, erreur de composition,
+estimation en cours/refusée, origine perdue et menu ouvert.
+
+Les structures grises sont enregistrées avant couleur. Composants et variables
+propres à L2A réutilisent les conventions approuvées sans modifier les sept pages
+précédentes : leurs empreintes sont identiques, dont Vue générale, L1A B, L1B A
+et L1C A. Logos/SVG conservés ; aucune illustration ajoutée. Les couleurs sont
+celles déjà vérifiées : texte 14,80, secondaire 8,84, action principale 10,39,
+contours de champs 3,21. Les actions portent du texte ; états et erreurs ne reposent
+pas seulement sur la couleur.
+
+Le contrôle des 32 cadres ne relève aucun texte hors cadre, superposé ou coupé
+par son parent ; **400 liens** ont une destination existante. La revue visuelle
+a conduit à compacter les lignes de A, identifier Flottes dans le menu principal,
+reprendre les libellés du catalogue et ajuster les cadres à leur contenu.
+Ces contrôles portent sur la conception ; ils ne valident pas encore le jeu,
+le clavier réel ni la conformité RGAA.
+
+Exports dans le dossier local du document natif :
+`lot-2A-{A,B}-{missions,composition,destination,confirmation}-{1440,768,390}.png`,
+`lot-2A-{A,B}-recall-{1440,390}.png`, planches `states` / `visible-states`, aperçus
+ordinateur/mobile `lot-2A-{A,B}-apercus.png` et `-preparation-apercus.png`.
+Manifeste : `lot-2A-manifest.json` ; contrôle : `lot-2A-verification.json`.
+
+Après choix explicite : styles et templates ciblés, puis contrôles Make adaptés,
+parcours de préparation/rappel dans une base synthétique isolée, devis en erreur
+ou modifié, préremplissage carte/composition, actualisation sans perte de saisie,
+clavier, accès directs/rechargement/retour, mobile 320/390/768 et ordinateur,
+thèmes sombre et clair, vérification des consommateurs partagés. La préparation
+charge toujours trois missions résumées, la liste au plus 30 détails. Les services,
+permissions, univers, colonie, CSRF, versions et clés d’envoi restent conservés.
+Aucun gain de performance n’est annoncé ; aucune nouvelle règle n’est proposée.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -572,12 +678,14 @@ complète requise avant fusion.
 | L1A | B implémentée et vérifiée localement | B choisie explicitement | Trois pages, PHP ciblé, recette responsive et captures ; bilan ci-dessus | CI complète, intégration et déploiement distincts |
 | L1B | A implémentée et vérifiée localement | A choisie explicitement | Trois pages et brouillon, PHP ciblé, recette responsive et captures | CI complète et intégration distinctes |
 | L1C | A implémentée et vérifiée localement | A choisie explicitement | Quatre pages, confirmations natives, 83 PHP et recette responsive ; captures | CI complète et intégration distinctes |
-| L2 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
+| L2A | Deux propositions Figcraft prêtes | Choix A/B attendu | 32 cadres, 400 liens, sept pages antérieures préservées | Aucun code Flottes réalisé pour ce lot |
+| Suite L2, L3 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
 Les commits restent sur `feature/refonte-visuelle` ; L1B A est enregistré dans
-`1e390a9`. L1C A est réalisé et vérifié localement. Prochain périmètre :
-L2, à découper autour du parcours de flotte avant deux propositions Figcraft.
+`1e390a9`, L1C A dans `1a33d14`. Le prochain périmètre L2A attend le choix entre
+les deux propositions Figcraft avant son implémentation. Le plan reste à
+18 ensembles, dont trois réalisés ; L2 est maintenant découpé en sous-lots.
 Les validations précédentes restent limitées à leurs lots.
 Aucun push, PR, fusion ou déploiement n’est autorisé par le seul changement de
 branche. La mission globale reste non terminée.

@@ -25,14 +25,21 @@ Les deux propositions restent dans les pages Figcraft 04 et 05 ; Vue générale
 et B du premier lot préservées. Les 15 lots restants attendent leur propre cycle
 de conception et validation. CI GitHub et fusion restent distinctes.
 
-L1B est enregistré dans `1e390a9`. L1C retient A après validation : Grades,
+L1B est enregistré dans `1e390a9`, L1C A dans `1a33d14`. L1C retient A après validation : Grades,
 Gestion, Personnalisation et Relations entre guildes, confirmations natives avant
 transfert/départ/dissolution et menu mobile partagé. 83 tests PHP ciblés réussis ;
 une reprise navigateur corrige le focus au changement de format et passe sur les
-six parcours concernés, après 14 autres succès du premier passage. Captures réelles
+six parcours concernés, après 14 succès au premier passage. Captures réelles
 et limites dans le suivi ; aucune CI GitHub ou intégration revendiquée. Les deux
 propositions restent dans Figcraft, pages 06/07. **Trois lots réalisés localement,
-15 restants** dans le plan principal. L2 sera découpé autour du parcours de flotte.
+15 restants** dans le plan principal. L2 est découpé autour du parcours de flotte.
+
+L2A : Missions actives, les trois étapes complètes de préparation et le rappel.
+Deux propositions Figcraft prêtes dans les pages 08/09 : A en lignes compactes,
+B en cartes avec arrivées latérales sur ordinateur. 32 cadres et 400 liens
+contrôlés ; les sept pages précédentes sont inchangées. Le choix de l’utilisateur
+reste attendu avant tout changement du code Flottes. Orbites, quai et compositions
+suivront dans la suite de L2 ; détails et limites dans le suivi de refonte.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026
 
