@@ -1,14 +1,14 @@
 {% set status = row.contract ? row.contract.status : 'none' %}
 {% set rival = status in ['enemies','peace_pending'] %}
 {% set guildStatus = row.guildStatus|default('neutral') %}
-<article class="panel commander-card{{ status in ['pending','peace_pending'] and row.contract.proposer.id!=membership.id ? ' received-proposals' : '' }}">
-    <span class="avatar" aria-hidden="true">{{ row.player.player.username|first|upper }}</span>
+{% set relationTone = row.enemy ? 'enemy' : (row.allied ? 'allied' : 'neutral') %}
+<article class="panel commander-card commander-card--{{ relationTone }}{{ status in ['pending','peace_pending'] and row.contract.proposer.id!=membership.id ? ' received-proposals' : '' }}">
     <h3>{{ row.player.player.username }}</h3>
-    <p>{{ row.enemy ? (guildStatus=='enemies' ? 'Ennemi · diplomatie de guilde' : 'Rival personnel') : (row.allied ? 'Allié' : (status=='pending' ? (row.contract.proposer.id==membership.id ? 'Proposition envoyée' : 'Proposition reçue') : (status=='ended' ? 'Relation personnelle terminée' : 'Neutre'))) }}</p>
+    <p class="personal-relation-state">Relation actuelle : {{ row.enemy ? (guildStatus=='enemies' ? 'Ennemi · diplomatie de guilde' : 'Rival personnel') : (row.allied ? (guildStatus=='allies' ? 'Allié · guilde' : 'Allié') : (status=='ended' ? 'Relation personnelle terminée' : 'Neutre')) }}</p>
+    {% if status=='pending' %}<p class="personal-relation-proposal">{{ row.contract.proposer.id==membership.id ? 'Proposition envoyée' : 'Proposition reçue' }}</p>{% endif %}
     {% if rival and guildStatus=='allies' %}<p>Rivalité personnelle sans effet sur les combats : les liens de guilde sont prioritaires.</p>{% endif %}
     {% if status=='peace_pending' %}<p>{{ row.contract.proposer.id==membership.id ? 'Proposition de paix envoyée' : 'Proposition de paix reçue' }} · la rivalité continue jusqu’à acceptation.</p>{% endif %}
     {% if status=='ended' and (row.allied or row.enemy) %}<p>Ancien contrat personnel terminé.</p>{% endif %}
-    <a href="{{ path('app_messages',{with:row.player.id}) }}">Envoyer un message</a>
     <form method="post">
         <input type="hidden" name="_token" value="{{ csrf_token('diplomacy') }}">
         <input type="hidden" name="target" value="{{ row.player.id }}">
@@ -28,4 +28,5 @@
             </details>
         {% endif %}
     </form>
+    <a class="personal-relation-message" href="{{ path('app_messages',{with:row.player.id}) }}">Envoyer un message</a>
 </article>

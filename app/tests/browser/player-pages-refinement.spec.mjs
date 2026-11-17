@@ -50,7 +50,8 @@ test('Pages validées : diplomatie, profil et inventaire, thèmes, clavier et é
   const guildActions=page.locator('.guild-hub-actions');
   await expect(guildActions.getByRole('link')).toHaveText(['Consulter les projets','Ouvrir la galaxie','Classement']);
   const actionTops=await guildActions.getByRole('link').evaluateAll(links=>links.map(link=>link.getBoundingClientRect().top));
-  expect(Math.max(...actionTops)-Math.min(...actionTops)).toBeLessThan(2);
+  expect(actionTops[0]).toBeLessThan(actionTops[1]);
+  expect(Math.abs(actionTops[1]-actionTops[2])).toBeLessThan(2);
   await expect(page.getByRole('button',{name:'Dissoudre la guilde',exact:true})).toHaveCount(0);
 
   const navigation=page.getByRole('navigation',{name:'Navigation de guilde'});
@@ -65,6 +66,10 @@ test('Pages validées : diplomatie, profil et inventaire, thèmes, clavier et é
     runIsolatedSql(process.env.BROWSER_ROUTER, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
     for(const [tab,url] of [['guilds','/guildes'],['members','/guildes/membres'],['ranks','/guildes/grades'],['management','/guildes/gestion'],['diplomacy','/diplomatie'],['relations','/diplomatie/commandants']]) {
       await page.goto(url);
+      const spaceMenu = page.locator('.space-navigation-menu:not([open])');
+      if (await spaceMenu.count()) {
+        await spaceMenu.locator('summary').click();
+      }
       await expect(page.getByRole('navigation',{name:['diplomacy','relations'].includes(tab)?'Navigation de diplomatie':'Navigation de guilde'}).getByRole('link')).toHaveCount(['diplomacy','relations'].includes(tab)?2:6);
       for(const width of [1440,834,390,320]) {
         await page.setViewportSize({width,height:900});

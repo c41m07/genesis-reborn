@@ -1921,3 +1921,20 @@ sans changement de version du registre ni nouvelle reprise. Les huit autres
 bâtiments, recherches, unités, défenses, prix, durées, effets et plafonds restent
 conservés ; les surcharges d’univers ne sont pas réécrites. Aucun effet sur les
 délais de progression n’est annoncé sans mesure, aucune activation Alpha.
+
+## Refonte visuelle L1A : proposition B — 17 novembre 2026
+
+Après présentation des deux compositions Figcraft, l’utilisateur choisit B
+(« j’aime bien la B ») pour Ma guilde, Membres et Relations entre commandants.
+La Vue générale de référence reste conservée dans le document de bureau.
+
+L’accueil privilégie le canal et ses trois derniers échanges, puis la présentation
+et les projets. Les membres gardent leur tableau et leurs attributions ; les
+relations personnelles utilisent deux colonnes de cartes sur ordinateur et une
+sur mobile. Sur les trois pages concernées, les liens secondaires sont regroupés
+dans « Pages de l’espace » sur mobile, avec indication de la page courante et
+navigation native sans JavaScript. Les vraies pages existantes restent les
+destinations ; cette décision n’ajoute ni donnée métier, ni permission, ni règle.
+
+Cette validation permet la réalisation locale de L1A ; les autres lots attendent
+leurs propres propositions et choix. [Périmètre, vérifications et limites](REFONTE_VISUELLE_INTERFACES.md).

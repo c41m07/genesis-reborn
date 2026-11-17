@@ -143,3 +143,20 @@ La référence visuelle commune est le filtre de catalogue : pastilles arrondies
 ### Ajustements des en-têtes et rapports
 
 Les surtitres `eyebrow` sont retirés des pages. Les métadonnées utiles (dates, versions, identifiants et coordonnées) restent présentes sous une présentation ordinaire. La galaxie interactive n’affiche plus les paragraphes `gv2-access-help`. Les filtres du centre de rapports conservent leur présentation antérieure en onglets soulignés ; ils constituent une exception au style commun en pastilles.
+
+### Guildes et relations — composition B validée pour L1A
+
+Ma guilde, Membres et Relations entre commandants utilisent les compositions
+de `guild-workspace.css` : bannière compacte, canal en action principale,
+échanges prioritaires, membres en tableau adaptatif et relations en cartes.
+Les surfaces, polices et couleurs reprennent les variables du jeu ; les repères
+de relation comportent toujours du texte, et les initiales sont décoratives.
+Les images personnalisées restent celles de la guilde ; l’emblème existant
+sert de repli. Aucun visuel ou logo d’identité n’est remplacé.
+
+Sur ces pages, le menu « Pages de l’espace » indique la page active sous 600 px
+et déplie les liens réels. Il reste ouvert sans JavaScript ; Échap ferme le menu
+et rend le focus au résumé. Le changement de format replace le focus sur un
+élément visible. Une seule destination diplomatique reste directement affichée
+pour les joueurs sans guilde. Le thème clair reprend ses variables existantes.
+Ces choix restent limités au [lot L1A](../REFONTE_VISUELLE_INTERFACES.md).

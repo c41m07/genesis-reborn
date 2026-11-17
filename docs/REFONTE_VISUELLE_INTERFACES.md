@@ -4,17 +4,18 @@
 
 Départ depuis `dev` à `e7acc17`, après récupération GitHub autorisée ; arbre
 initial propre, `dev` identique à `origin/dev`. Branche de mission :
-`feature/refonte-visuelle-guildes`. Les modifications du dépôt sont documentaires.
+`feature/refonte-visuelle-guildes`.
 
 **Reprise de conception demandée par l’utilisateur : seule la page Figcraft
 « Vue générale » est conservée et approuvée comme référence. Les anciennes
 propositions ont été retirées par l’utilisateur.** Les deux nouvelles propositions
-L1A sont préparées et attendent un choix explicite. Aucun changement d’interface
-du jeu n’est implémenté par cette mission. Aucune migration, dépendance, PR,
-fusion ou livraison n’est réalisée pour ce lot.
+L1A ont été présentées ; l’utilisateur a choisi **B** (« j’aime bien la B »).
+Les trois pages sont implémentées localement dans cette direction. Cette
+validation ne concerne pas les lots suivants. Aucune migration sur une base
+existante, dépendance, PR, fusion ou livraison n’est réalisée pour ce lot.
 
 L’[inventaire de couverture](INVENTAIRE_INTERFACES.md) recense 170 routes du projet,
-199 gabarits Twig et 52 contrôleurs Stimulus, avec les paramètres et états qui ne
+200 gabarits Twig et 53 contrôleurs Stimulus après L1A, avec les paramètres et états qui ne
 se comptent pas comme des routes distinctes. Le relevé global reste utile à la
 reprise ; il ne constitue pas une validation visuelle ou fonctionnelle de tous
 les écrans. L’analyse détaillée porte sur le socle et le premier lot.
@@ -148,9 +149,10 @@ accès plus immédiat à la vie de la guilde et aux actions diplomatiques. Limit
 présentation/projets sont plus bas et les cartes demandent davantage de retours
 à la ligne. Les mêmes fonctions et données sont couvertes que dans A.
 
-**Recommandation : A**, pour sa continuité avec la Vue générale approuvée et la
-lisibilité des listes. Aucun choix des nouvelles propositions n’est encore validé.
-Une combinaison substantielle devra être consolidée puis présentée avant code.
+La recommandation initiale était A pour la continuité et la lisibilité des listes.
+**Choix utilisateur : B**, validé après présentation, sans combinaison nouvelle.
+La version « Lot 1A - B validee par utilisateur » est enregistrée dans le fichier
+Figcraft de bureau, ouvert sur B ; la page Vue générale reste inchangée.
 
 ## Livrables de la reprise
 
@@ -178,7 +180,7 @@ moins 44 px. Les états actifs et statuts ont des repères textuels. Les composa
 emploient variables et mises en page automatiques. Les hauteurs des cadres ne
 doivent pas devenir des hauteurs fixes imposées aux pages du jeu.
 
-## Vérifications et prochaine réalisation
+## Vérifications de conception
 
 Contrôles de cette préparation :
 
@@ -201,38 +203,96 @@ Contrôles de cette préparation :
   puis `git diff --check`. Aucun test PHP/navigateur du jeu n’est présenté comme
   réexécuté pour ces seuls changements documentaires.
 
-Après validation : réutiliser routes, formulaires et `DiplomacyPageView`, limiter
-les styles aux trois pages approuvées et vérifier les autres consommateurs de
-tout fragment commun touché. Conserver les permissions, CSRF, versions,
-transactions, isolation des univers, confirmations, saisies et actualisations.
-Performance : non mesurée. Le thème clair n’est pas redessiné ; son fonctionnement
-et ses usages communs seront contrôlés après intégration.
+## Réalisation locale B
 
-Contrôles à adapter au diff réel : `make validate`, `make lint-static`, `make assets`,
-PHP ciblé et scénarios navigateur de guilde/grades/rivalités/navigation/profils,
-`git diff --check`, puis CI complète avant fusion. Références existantes :
-`GuildTagPlayerReportTest.php`, `DiplomacyAccessPolicyTest.php`, `GuildRankTest.php`,
-`PersonalDiplomacyTest.php`, `guild-ranks.spec.mjs`, `personal-rivalries.spec.mjs`,
-`diplomacy-empty-state.spec.mjs` et `navigation-final.spec.mjs`.
+Complexité réévaluée avant code : **4/5**. Le risque porte sur les fragments
+partagés, les nombreuses conditions d’action et la navigation mobile, plutôt que
+sur un nouveau traitement serveur. Routes, services, lectures, droits, CSRF,
+versions attendues, transactions et isolation des univers restent inchangés.
 
-La recette devra couvrir accès direct/rechargement/retour arrière, navigation
-active, recherche/curseurs, retours après action, refus et univers distincts,
-présence privée, aperçu non lu, actualisations sans perte de saisie, rôles,
-clavier/focus, titres/libellés, images et contrastes. Captures réelles attendues à
-1440/768/390 px, avec contrôle à 320 px et du thème clair. Les essais avec écriture
-utiliseront des données et une pile jetables. La base de test partagée signalée
-non saine par `make status` n’a pas été réparée ou utilisée par cette préparation.
+- `_guild_hub` : bannière et logo existants, canal en action principale, trois
+  échanges avant présentation/projets. Les trois raccourcis sont conservés.
+- `_guild_members` : même tableau, présence et formulaires d’attribution ; ajout
+  d’une initiale décorative et adaptation des lignes sur petit écran.
+- `_relation_card` : relation actuelle et proposition séparées, deux colonnes
+  sur ordinateur, une sous 700 px. Confirmation de rivalité, paix, priorité de
+  guilde et formulaire d’origine conservés ; lien de message en bas de carte.
+- Navigation : destinations serveur et `aria-current` dans un fragment commun ;
+  `details` ouvert sans JavaScript, adapté sous 600 px par un contrôleur Stimulus.
+  Échap ferme le menu ; les changements de format gardent le focus visible.
+  Sans guilde, l’unique destination diplomatique n’est pas repliée.
+- Styles limités à `.guild-workspace`, importés après les styles existants.
+  Barre de ressources, menu principal, logos, SVG et polices conservés.
+
+Adaptations mineures à la maquette : données et visuels réels du profil de
+guilde, Manrope existante et hauteurs fluides ; aucune image de démonstration
+imposée aux guildes. Les menus des pages hors L1A gardent leur présentation.
+Le thème clair utilise ses variables actuelles, sans seconde direction visuelle.
+Performance : non mesurée ; aucun gain chiffré annoncé.
+
+### Vérifications locales
+
+- `make validate`, `make lint-static` (200 Twig, 80 YAML, PHP et conteneur) et
+  `make assets` : réussis.
+- PHP ciblé, via le PHPUnit existant dans une pile jetable propre au lot :
+  **68 tests, 456 assertions réussis** (`GuildTagPlayerReportTest`, `GuildRankTest`,
+  `PersonalDiplomacyTest`, `DiplomacyAccessPolicyTest`).
+- Première exécution navigateur : cinq scénarios réussis (ancres de diplomatie,
+  grades, affinage des pages et deux profils) ; débordement des cartes et bannière
+  de fixture hors dimensions détectés. Contournement de style historique corrigé,
+  fixture remplacée par une bannière synthétique autorisée ; aucune règle d’image
+  ni assertion de débordement affaiblie.
+- Nouveau scénario `guild-workspace.spec.mjs` : comptes et guilde synthétiques,
+  vraie personnalisation avec bannière, membre au nom long, quatre messages et
+  proposition reçue. Les trois pages passent en sombre/clair à 1440/768/390/320 px,
+  sans débordement ; aperçu limité à trois sans lecture implicite, disposition des
+  cartes et présence vérifiés. Axe ne relève aucune violation dans le périmètre
+  `.guild-workspace` à 390 px. Clavier, Échap, focus, accès direct, rechargement,
+  retour arrière, recherche vide et navigation sans JavaScript sont couverts.
+- Reprise navigateur : **4 scénarios réussis** (nouveau parcours B, deux recettes
+  finales sans/avec guilde et rivalités personnelles). Après le dernier ajustement
+  du focus dans les deux sens de redimensionnement, le seul parcours B est relancé :
+  **1 scénario réussi**, captures finales produites. Les autres cas inchangés ne
+  sont pas relancés une troisième fois.
+- `git diff --check` : réussi ; relecture du périmètre et des commentaires effectuée.
+
+Les migrations/imports des essais ne concernent que leurs bases synthétiques en
+mémoire. La base de test partagée non saine n’a pas été utilisée. Une première
+tentative PHP et une reprise navigateur ont rencontré l’épuisement des réseaux
+Docker ; le réseau du seul projet PHP jetable créé ici a été libéré avec son
+profil de test. Aucun réseau d’un autre projet ni configuration globale changé.
+
+Les captures réelles `jeu-B-{guilde,membres,relations}-{dark,light}-{1440,768,390}.png`
+sont produites par le scénario dans `app/test-results/` et conservées hors Git
+dans `output/playwright/guild-workspace/` et le dossier Figcraft local. Elles
+représentent le jeu avec des données synthétiques, distinctement des maquettes.
+Les variantes `-390-ecran.png` montrent la fenêtre mobile sans capture déroulée.
+18 captures de page et six captures de fenêtre sont conservées. Aucun lecteur
+d’écran réel n’a été essayé.
+Ces contrôles ciblés ne constituent ni un audit RGAA ni la CI complète.
+
+Fichiers de réalisation : `app/assets/app.js`,
+`app/assets/styles/guild-workspace.css`,
+`app/assets/controllers/space_navigation_controller.js`,
+`app/templates/ui/{space_navigation,guild_navigation}.html.twig`,
+`app/templates/player/{diplomacy,_guild_hub,_guild_members,_relation_card}.html.twig`.
+Scénario ajouté : `guild-workspace.spec.mjs` ; adaptations de navigation et de
+disposition dans `guild-ranks.spec.mjs`, `navigation-final.spec.mjs` et
+`player-pages-refinement.spec.mjs`. README, architecture, décisions, guide UI,
+feuille de route, inventaire et présent suivi sont synchronisés dans le même lot.
 
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
 | --- | --- | --- | --- | --- |
 | Vue générale Figcraft | Conception de référence conservée | Choix explicite de l’utilisateur | Page inchangée, comparaison effectuée | Ne valide pas automatiquement l’implémentation web ni les autres écrans |
-| L1A | Propositions préparées, en attente de validation | Aucune pour A/B | Conception et contrôles du document ; aucun code du jeu | Choix explicite avant implémentation |
+| L1A | B implémentée et vérifiée localement | B choisie explicitement | Trois pages, PHP ciblé, recette responsive et captures ; bilan ci-dessus | CI complète, intégration et déploiement distincts |
 | L1B à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
-Prochaine action : choix A ou B et ajustements du lot L1A. Après validation,
-implémenter localement ce lot et présenter des captures réelles. CI, fusion et
-déploiement restent distincts. Aucun push ni déploiement n’est autorisé par la
-seule récupération GitHub précédente. La mission globale reste non terminée.
+Prochaine action : présenter les captures réelles et demander l’autorisation de
+publication de la branche et de sa PR brouillon, après enregistrement local.
+La CI complète doit réussir sur la dernière version avant fusion. Les lots
+dépendants attendent l’intégration de L1A dans `dev` ; ils auront leurs propres
+propositions A/B. Aucun push ni déploiement n’est autorisé par la seule
+récupération GitHub précédente. La mission globale reste non terminée.

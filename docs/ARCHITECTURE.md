@@ -627,6 +627,21 @@ grades, gestion et création ; liens directs, anciennes adresses conservées et
 lectures adaptées à chaque page. Voir le [suivi des lots](NAVIGATION_PAGES_DEDIEES.md) pour les
 choix, vérifications et limites. CI, fusion et déploiement restent distincts.
 
+Le lot visuel L1A validé en B réutilise `DiplomacyPageView` et les mêmes POST,
+sans changement de préparation des données. `ui/space_navigation.html.twig`
+reçoit les destinations autorisées et leur état actif ; les consommateurs de
+guilde passent toujours par `ui/guild_navigation.html.twig`. Le mode compact
+est activé seulement sur Ma guilde, Membres et Relations entre commandants
+(dans ce dernier cas, si deux destinations sont disponibles).
+
+Le HTML contient un `details` ouvert : les liens serveur restent accessibles
+sans JavaScript. `space_navigation_controller.js` adapte son ouverture au seuil
+de 600 px, ferme sur Échap et replace le focus lorsque le format masque son
+élément. Son écouteur de changement de format est retiré à la déconnexion.
+`guild-workspace.css`, chargé après les styles existants, limite les compositions
+et couleurs aux trois pages. Le socle commun et la barre de ressources sont
+conservés. [Suivi de réalisation locale](REFONTE_VISUELLE_INTERFACES.md).
+
 
 ### Inventaire par destination
 

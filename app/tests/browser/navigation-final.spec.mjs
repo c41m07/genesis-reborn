@@ -69,6 +69,10 @@ async function inspectPage(page, user, row, width, theme) {
     await expect(active).toHaveAttribute('href', row.entry);
   } else await expect(page.locator('.header-tools a[href="/wiki"]')).toHaveAttribute('aria-current', row.url === '/wiki' ? 'page' : 'location');
   if (row.space) {
+    const menu = page.locator('.space-navigation-menu:not([open])');
+    if (await menu.count()) {
+      await menu.locator('summary').click();
+    }
     const active = page.getByRole('navigation', {
       name: row.space,
       exact: true

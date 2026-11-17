@@ -4,14 +4,15 @@
 
 Préparation depuis `dev` à `e7acc17` sur `feature/refonte-visuelle-guildes`.
 L’[inventaire initial](INVENTAIRE_INTERFACES.md) recense 170 routes du projet,
-199 gabarits et 52 contrôleurs d’interaction, avec les variantes et lots associés.
-Les navigations par pages déjà livrées sont conservées. Deux propositions du
-premier lot Ma guilde / Membres / Relations entre commandants sont préparées
-avec le MCP Figcraft à 1440/768/390 px et attendent le choix explicite de
-l’utilisateur. Aucun changement d’interface n’est encore implémenté pour cette
-mission. Les autres lots restent à examiner et à concevoir ; la mission globale
-n’est pas terminée. Le [suivi de refonte](REFONTE_VISUELLE_INTERFACES.md) distingue
-conception, contrôles locaux, CI, fusion et déploiement.
+200 gabarits et 53 contrôleurs d’interaction après le premier lot, avec les
+variantes et lots associés. Les navigations par pages déjà livrées sont conservées.
+Après présentation de deux propositions Figcraft à 1440/768/390 px, l’utilisateur
+a choisi B pour Ma guilde / Membres / Relations entre commandants. Ce lot est
+implémenté localement : échanges prioritaires, membres et cartes de relations,
+menu de l’espace mobile utilisable sans JavaScript. Les contrôles ciblés et
+captures réelles figurent dans le [suivi de refonte](REFONTE_VISUELLE_INTERFACES.md).
+CI GitHub et fusion restent à effectuer. Les autres lots attendent leur propre
+conception et validation ; la mission globale n’est pas terminée.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026
 

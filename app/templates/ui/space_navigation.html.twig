@@ -1,0 +1,16 @@
+{% if compact|default(false) %}
+<details class="space-navigation-menu" open data-controller="space-navigation" data-action="keydown.esc->space-navigation#close">
+    <summary data-space-navigation-target="summary">
+        <span>{{ currentLabel }}</span>
+        <span class="space-navigation-menu-label">Pages de l’espace</span>
+        <span aria-hidden="true">⌄</span>
+    </summary>
+{% endif %}
+<nav class="ui-tabs space-navigation" aria-label="{{ navigationLabel }}">
+    {% for destination in destinations %}
+        <a href="{{ path(destination.route, destination.parameters|default({})) }}"{% if destination.active %} class="active" aria-current="page"{% endif %}>{{ destination.label }}</a>
+    {% endfor %}
+</nav>
+{% if compact|default(false) %}
+</details>
+{% endif %}

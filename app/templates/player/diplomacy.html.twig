@@ -3,14 +3,22 @@
 {% block body %}
 {% import 'ui/macros.html.twig' as ui %}
 {% set relation_labels={allies:'Alliés',enemies:'Ennemis',neutral:'Neutre',pending:'Proposition en attente',non_aggression:'Pacte de non-agression',defense:'Pacte de défense'} %}
-<div class="page-refinement diplomacy-page" data-page-sections="disabled">
+{% set guildWorkspace = tab == 'relations' or (enabled and own and tab in ['guilds', 'members']) %}
+<div class="page-refinement diplomacy-page{% if guildWorkspace %} guild-workspace guild-workspace--{{ tab }}{% endif %}" data-page-sections="disabled">
 <div class="page-heading"><div><h1>{{ pageTitle }}</h1><p>{{ tab in ['relations','diplomacy'] ? 'Vos relations dans l’univers ' ~ membership.universe.name ~ '.' : 'Votre espace de guilde dans l’univers ' ~ membership.universe.name ~ '.' }}</p></div></div>
 {% if tab in ['relations','diplomacy'] %}
-<nav class="ui-tabs space-navigation" aria-label="Navigation de diplomatie">
-{% if own %}<a href="{{ path('app_diplomacy') }}"{% if tab=='diplomacy' %} class="active" aria-current="page"{% endif %}>Relations entre guildes</a>{% endif %}
-<a href="{{ path('app_personal_relations') }}"{% if tab=='relations' %} class="active" aria-current="page"{% endif %}>Relations entre commandants</a>
-</nav>
-{% else %}{% include 'ui/guild_navigation.html.twig' %}{% endif %}
+{% set destinations = [] %}
+{% if own %}
+    {% set destinations = [{route: 'app_diplomacy', label: 'Relations entre guildes', active: tab == 'diplomacy'}] %}
+{% endif %}
+{% set destinations = destinations|merge([{route: 'app_personal_relations', label: 'Relations entre commandants', active: tab == 'relations'}]) %}
+{% include 'ui/space_navigation.html.twig' with {
+    destinations: destinations,
+    navigationLabel: 'Navigation de diplomatie',
+    currentLabel: tab == 'relations' ? 'Commandants' : 'Relations entre guildes',
+    compact: guildWorkspace and destinations|length > 1
+} only %}
+{% else %}{% include 'ui/guild_navigation.html.twig' with {compactNavigation: guildWorkspace} %}{% endif %}
 {% if incomingPersonalCount %}<p class="panel received-proposals"><a href="#alliance-members">{{ incomingPersonalCount }} proposition{{ incomingPersonalCount > 1 ? 's' : '' }} personnelle{{ incomingPersonalCount > 1 ? 's' : '' }} à traiter</a></p>{% endif %}
 {% if incomingGuildCount %}<p class="panel received-proposals">{{ incomingGuildCount }} proposition{{ incomingGuildCount > 1 ? 's' : '' }} de guilde reçue{{ incomingGuildCount > 1 ? 's' : '' }} à traiter</p>{% endif %}
 {% if tab=='relations' %}
@@ -22,11 +30,11 @@
             <button class="secondary">Rechercher</button>
         </form>
     </div>
-    {% if search %}<section class="relation-results" aria-label="Résultats de recherche"><div class="section-heading"><h3>Résultats pour « {{ search }} »</h3><a href="{{ path('app_personal_relations') }}">Fermer la recherche</a></div><div class="catalog-grid">
+    {% if search %}<section class="relation-results" aria-label="Résultats de recherche"><div class="section-heading"><h3>Résultats pour « {{ search }} »</h3><a href="{{ path('app_personal_relations') }}">Fermer la recherche</a></div><div class="catalog-grid personal-relations-grid">
         {% for row in searchPlayers %}{% include 'player/_relation_card.html.twig' %}{% else %}<p role="status">{{ search|length < 2 ? 'Saisissez au moins deux caractères.' : 'Aucun joueur trouvé dans cet univers.' }}</p>{% endfor %}
     </div></section>{% endif %}
     <div class="section-heading"><h3>Vos relations</h3><span class="badge">{{ players|length }}</span></div>
-    <div class="catalog-grid" id="alliance-members">{% for row in players %}{% include 'player/_relation_card.html.twig' %}{% else %}<div class="panel"><h3>Aucune relation établie</h3><p>Recherchez un commandant pour lui proposer une alliance. Vos propositions et alliances apparaîtront ici.</p></div>{% endfor %}</div>
+    <div class="catalog-grid personal-relations-grid" id="alliance-members">{% for row in players %}{% include 'player/_relation_card.html.twig' %}{% else %}<div class="panel"><h3>Aucune relation établie</h3><p>Recherchez un commandant pour lui proposer une alliance. Vos propositions et alliances apparaîtront ici.</p></div>{% endfor %}</div>
 {% if nextPersonalCursor or afterPersonalCursor %}<nav class="ui-tabs" aria-label="Pages des relations">
 {% if afterPersonalCursor %}<a href="{{ path('app_personal_relations',{q:search}) }}">Première page</a>{% endif %}
 {% if nextPersonalCursor %}<a href="{{ path('app_personal_relations',{q:search,after:nextPersonalCursor}) }}">Relations suivantes</a>{% endif %}

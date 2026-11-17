@@ -4,7 +4,19 @@
 <table class="guild-members-table"><caption class="visually-hidden">Équipage de {{ own.name }}</caption>
 <thead><tr><th scope="col">Commandant</th><th scope="col">Grade</th><th scope="col">État</th><th scope="col">Actions</th></tr></thead>
 <tbody>{% for member in ownRow.members %}<tr>
-<th scope="row">{% if member.playerUniverse.playerControlled %}<a class="public-profile-link" href="{{ path('app_player_public_profile',{id:member.playerUniverse.id}) }}">{{ member.playerUniverse.displayName }}</a>{% else %}{{ member.playerUniverse.displayName }}{% endif %}{% if member.playerUniverse.id==membership.id %} <small>· Vous</small>{% endif %}</th>
+<th scope="row">
+    <span class="guild-member-identity">
+        <span class="guild-member-avatar" aria-hidden="true">{{ member.playerUniverse.displayName|first|upper }}</span>
+        <span>
+            {% if member.playerUniverse.playerControlled %}
+                <a class="public-profile-link" href="{{ path('app_player_public_profile',{id:member.playerUniverse.id}) }}">{{ member.playerUniverse.displayName }}</a>
+            {% else %}
+                {{ member.playerUniverse.displayName }}
+            {% endif %}
+            {% if member.playerUniverse.id==membership.id %} <small>· Vous</small>{% endif %}
+        </span>
+    </span>
+</th>
 <td>{{ member.playerUniverse.id==own.leader.id ? 'Commandant' : (member.rank.name|default('Membre')) }}</td>
 <td>{% set online=memberPresence[member.playerUniverse.id]|default(false) %}<span class="guild-presence guild-presence--{{ online ? 'online' : 'offline' }}">{{ online ? 'En ligne' : 'Hors ligne' }}</span></td>
 <td>{% if member.playerUniverse.id!=membership.id %}<a class="secondary" href="{{ path('app_messages',{with:member.playerUniverse.id}) }}" aria-label="Écrire à {{ member.playerUniverse.displayName }}">Écrire</a>{% else %}<span class="muted">Vous</span>{% endif %}</td>

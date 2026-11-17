@@ -673,9 +673,12 @@ détaille les pages, vérifications et limites. CI, fusion et déploiement sont 
 
 Une [mission de refonte visuelle](docs/REFONTE_VISUELLE_INTERFACES.md) reprend ces
 destinations sans recommencer leur séparation. Son [inventaire](docs/INVENTAIRE_INTERFACES.md)
-couvre les routes, gabarits et interactions ; les deux propositions Figcraft du
-premier lot (Ma guilde, Membres, Relations entre commandants) attendent un choix
-explicite avant toute modification de l’interface du jeu.
+couvre les routes, gabarits et interactions. La proposition B, validée pour
+Ma guilde, Membres et Relations entre commandants, est implémentée localement :
+échanges prioritaires, liste de membres adaptée au mobile et cartes diplomatiques.
+Sur ces pages, le menu mobile « Pages de l’espace » conserve les liens serveur
+et fonctionne sans JavaScript. Les lots suivants attendent leur propre conception
+et validation ; ce travail n’est pas encore fusionné dans `dev`.
 
 Le lot Projets collectifs conserve `/guildes/projets` comme entrée des projets en
 cours et ajoute `/guildes/projets/disponibles` et `/guildes/projets/historique`.

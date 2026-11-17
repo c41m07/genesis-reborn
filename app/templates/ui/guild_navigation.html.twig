@@ -1,5 +1,4 @@
 {% set navigationGuild = chrome.guild|default(null) %}
-<nav class="ui-tabs space-navigation" aria-label="Navigation de guilde">
 {% if navigationGuild %}
     {% set destinations = [
         {route:'app_guilds', label:'Vue générale'},
@@ -17,8 +16,16 @@
 {% if route == 'app_guild_public_profile' %}
     {% set destinations = destinations|merge([{route:'app_guild_public_profile',label:'Présentation',parameters:{id:app.request.attributes.getInt('id')}}]) %}
 {% endif %}
+{% set navigationItems = [] %}
+{% set currentLabel = 'Ma guilde' %}
 {% for destination in destinations %}
     {% set active = route == destination.route or destination.route == 'app_guild_projects' and route in ['app_guild_project','app_guild_projects_available','app_guild_projects_history'] %}
-    <a href="{{ path(destination.route, destination.parameters|default({})) }}"{% if active %} class="active" aria-current="page"{% endif %}>{{ destination.label }}</a>
+    {% set navigationItems = navigationItems|merge([destination|merge({active: active})]) %}
+    {% if active %}{% set currentLabel = destination.label %}{% endif %}
 {% endfor %}
-</nav>
+{% include 'ui/space_navigation.html.twig' with {
+    destinations: navigationItems,
+    navigationLabel: 'Navigation de guilde',
+    currentLabel: currentLabel,
+    compact: compactNavigation|default(false)
+} only %}
