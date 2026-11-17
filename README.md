@@ -1,7 +1,11 @@
 # Genesis Reborn
 
 Les [156 profils de prérequis](docs/DEBLOCAGES.md) utilisent une grille commune
-par rang, avec requalification explicite des accès existants. Les [durées et
+par rang, avec requalification explicite des accès existants. Les quatre producteurs
+de départ demandent Basique 25 et recherche industrielle Intermédiaire 5 pour
+l’Intermédiaire, puis Basique 50, Intermédiaire 25 et recherche Supérieure 5 pour
+le Supérieur. Le laboratoire utilise la recherche du rang précédent et reste à
+25/25 pour son Supérieur ; les accès déjà acquis sont conservés. Les [durées et
 consommations de carburant](docs/DUREES_CARBURANT.md) sont révisées par famille,
 avec conservation des commandes payées et des coefficients des missions lancées.
 Les [unités économiques](docs/UNITES_ECONOMIQUES.md) ajoutent des récolteurs mobiles
@@ -118,7 +122,7 @@ Le code comprend :
 - Filtres des catalogues : bâtiments par fonction, recherches par effet, vaisseaux par classe/rôle (une soute ne les classe plus tous en transport), défenses par classe ciblée. Le résumé redondant en tête de la liste des planètes est retiré.
 - Inventaire commun de 100 objets, boosts et boîtes confondus, avec attente dans l’ordre d’attribution. Un défi donne au maximum un objet par participant éligible : boost OU boîte. Le contenu annoncé est figé ; le joueur choisit une colonie du même univers. Vacances ou stockage insuffisant refusent l’ouverture sans perte. Les modèles et plafonds de boîtes sont réglables par univers.
 - Le [cadrage de l’administration](docs/REFONTE_ADMINISTRATION.md) précise les règles, accès et contrôles. Quatre migrations additives, Version20261109010000 à Version20261109040000, préparent ces fonctions. Leur publication sur Dev ne vaut pas application sur une base existante ni déploiement.
-- Quatre pages juridiques publiques provisoires (`/mentions-legales`, `/cgu`, `/confidentialite`, `/cookies`), accessibles depuis le pied de page, avec métadonnées et `noindex` tant qu’elles sont incomplètes ; exclues du sitemap. Leur présence ne vaut pas conformité juridique.
+- Quatre pages juridiques publiques (`/mentions-legales`, `/cgu`, `/confidentialite`, `/cookies`), accessibles depuis le pied de page, avec métadonnées et indexation autorisée ; incluses dans le sitemap. Leur présence ne vaut pas conformité juridique.
 - Aperçu privé des quatre brouillons juridiques dans l’administration (`/admin/juridique`), réservé aux administrateurs ; ces textes ne sont pas encore publiés.
 - Wiki connecté et compte à rebours dans les dernières 24 heures avant la fermeture d’un univers.
 
@@ -437,8 +441,9 @@ montées en lecture seule en développement et copiées dans `/docs` en producti
 
 Les visiteurs disposent d’un accueil public sur `/` ; les joueurs connectés
 conservent l’accès à leur colonie. Titres, descriptions, URL canoniques, Open Graph,
-robots.txt et sitemap.xml sont générés côté serveur. `DEFAULT_URI` doit correspondre
-à l’origine HTTPS réelle ; voir [SEO et Search Console](docs/REFERENCEMENT.md).
+robots.txt et sitemap.xml sont générés côté serveur. Le sitemap référence l’accueil,
+l’inscription et les quatre pages juridiques publiques ; la connexion reste en `noindex`.
+`DEFAULT_URI` doit correspondre à l’origine HTTPS réelle ; voir [SEO et Search Console](docs/REFERENCEMENT.md).
 
 ## Documentation de référence
 
@@ -477,7 +482,7 @@ Les dons entre joueurs ne donnent aucun boost et ne font progresser aucun object
 
 Installation ou mise à jour : la migration `Version20261107150000` crée l’historique des transports ; son application sur chaque base active nécessite une validation explicite. Elle a été appliquée à la base locale le 7 novembre 2026 après sauvegarde vérifiée. Les anciens transports déjà en vol restent limités au propriétaire initial (l’expéditeur).
 
-## Pages juridiques provisoires
+## Pages juridiques
 
 Le nom public de l’éditeur et du responsable des données se renseigne avec `LEGAL_PUBLISHER_NAME` dans `.env.local` (local) ou `.env.prod` (serveur), hors Git. En son absence, les pages restent disponibles et signalent l’identité manquante. Adresse et téléphone de publication restent à compléter ; ne pas annoncer une conformité juridique sur la seule présence de ces pages.
 

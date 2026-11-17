@@ -39,6 +39,16 @@ navigateur ciblés réussissent. Publication et fusion conditionnelle autorisée
 La CI complète sur la dernière révision est requise avant fusion ; aucune migration de données
 ni livraison Alpha. Les recommandations précédentes ne remplacent pas cette décision.
 
+## Prérequis des producteurs et du laboratoire — 17 novembre 2026
+
+Grille validée implémentée : quatre producteurs Intermédiaires après Basique 25
+et recherche industrielle Intermédiaire 5 ; Supérieurs après Basique 50,
+Intermédiaire 25 et recherche Supérieure 5. Laboratoire : Basique 25 pour
+l’Intermédiaire, puis 25/25 pour le Supérieur, avec recherche du rang précédent
+au niveau 5. Accès acquis et plafonds conservés ; aucune migration ni reprise.
+Voir la [grille courante](DEBLOCAGES.md) et le [suivi des vérifications](PROGRESSION_CARBURANT_UNITES.md#prérequis-des-producteurs-et-du-laboratoire--17-novembre-2026).
+Intégration dans dev soumise à la CI complète ; aucun déploiement Alpha.
+
 ## Rework V1 — chantier local du 14 novembre 2026
 
 Le chantier utilise uniquement `chore/rework-v1`, sans PR, fusion ni déploiement.
@@ -1720,3 +1730,17 @@ de cette clôture sont suivies dans la [PR #86](https://github.com/c41m07/genesi
 et le [bilan final](NAVIGATION_PAGES_DEDIEES.md#recette-transversale-finale).
 La recette de confort sur le compte habituel reste manuelle : le contrôle Edge
 a été arrêté faute de vérification fiable de l’URL. Aucun déploiement Alpha.
+
+## Reprise des branches de consignes et de référencement — 17 novembre 2026
+
+Les branches `docs/consignes-textes-aide`, `docs/conventions-code-architecture`
+et `docs/choix-navigation` sont réunies sur `chore/integration-branches-restantes`,
+depuis dev `13a15a9`. Leurs historiques sont conservés ; les consignes récentes
+restent présentes avec les compléments de navigation, architecture et performance.
+Les quatre pages juridiques publiques sont indexables et présentes dans le sitemap ;
+les textes et brouillons privés ne sont pas modifiés. Connexion et pages privées
+gardent leurs protections. Contrôles locaux : validation Compose, lint statique,
+huit tests HTTP / 173 assertions et vérification du diff réussis.
+La [PR #89](https://github.com/c41m07/genesis-reborn/pull/89) consigne la CI complète
+et l’intégration, puis une nouvelle promotion Alpha reprend le dev consolidé. Aucune migration de base existante,
+installation de dépendance ni intervention sur le serveur dans cette reprise.

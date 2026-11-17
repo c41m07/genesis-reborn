@@ -1,6 +1,18 @@
 # Brouillons des pages juridiques de Genesis Reborn
 
-## État de l’intégration au 7 novembre 2026
+## Indexation des pages publiques — 15 novembre 2026
+
+À la demande explicite du propriétaire, l’indexation des quatre pages juridiques
+publiques est autorisée et elles sont ajoutées au sitemap. Ce changement retire
+les directives `noindex` du HTML et des en-têtes HTTP, sans modifier les textes
+juridiques ni les brouillons privés. Le dépôt contient encore des mentions de
+contenu provisoire ; leur révision est distincte de cette correction SEO.
+Vérifications locales réussies : `make validate`, `make lint`, tests HTTP
+`PublicSeoTest` et `AdminLegalPreviewControllerTest` (8 tests, 173 assertions),
+et `git diff --check`. La CI complète, le déploiement et la prise en compte par
+Google restent à vérifier.
+
+## État de l’intégration au 7 novembre 2026 (historique)
 
 Décisions complémentaires du propriétaire : publier uniquement son nom pour le moment, sans adresse ni téléphone ; conserver sa valeur dans `LEGAL_PUBLISHER_NAME`, hors Git. Le propriétaire confirme être aussi le directeur de publication et traiter manuellement les demandes de droits, de fermeture et les contestations reçues à contact@genesis-reborn.fr. Le propriétaire confirme le stockage du serveur et des sauvegardes en France et l’utilisation d’une boîte OVHcloud/Zimbra indépendante pour le contact principal. Ces informations déclaratives remplacent les inconnues correspondantes dans les textes publics ; les paragraphes de préparation ci-dessous conservent l’historique et ne décrivent pas tous l’état actuel.
 

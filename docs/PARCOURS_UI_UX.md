@@ -1,6 +1,6 @@
 # Parcours UI/UX — suivi du 13 novembre 2026
 
-Branche unique : `feature/amelioration-parcours-ui-ux`, créée depuis `origin/dev` vérifiée à `7189f45`. Branche publiée et [PR #54 ouverte vers dev](https://github.com/c41m07/genesis-reborn/pull/54). Aucune fusion ni aucun déploiement. Les captures `docs/PGimg` restent locales, intactes et exclues des commits. Les trois documents Work nommés dans AGENTS.md ne sont pas présents dans les fichiers du dépôt examinés ; aucune validation des phases Work n’est revendiquée.
+Branche unique : `feature/amelioration-parcours-ui-ux`, créée depuis `origin/dev` vérifiée à `7189f45`. Branche publiée et [PR #54 ouverte vers dev](https://github.com/c41m07/genesis-reborn/pull/54). Aucune fusion ni aucun déploiement. Les captures `../output/PGimg` restent locales, intactes et exclues des commits. Les trois documents Work nommés dans AGENTS.md ne sont pas présents dans les fichiers du dépôt examinés ; aucune validation des phases Work n’est revendiquée.
 
 ## Périmètre réalisé
 

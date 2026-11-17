@@ -565,3 +565,49 @@ explicites ; les 3 tests civils précédents repassent également (6 / 888 au to
 `make lint` et le parcours navigateur passent. La préparation du stockage nano a
 été corrigée pour respecter son producteur niveau 5 ; les assertions de gain et
 de niveau proposé restent intactes. Aucun niveau, prix, effet ou paiement modifié.
+
+## Prérequis des producteurs et du laboratoire — 17 novembre 2026
+
+Complexité 3/5, branche `feature/prerequis-rangs-producteurs` depuis dev actualisée.
+Cinq catalogues concernés : métal, nano, hydrogène, centrale et laboratoire.
+La [grille courante](DEBLOCAGES.md) et les décisions décrivent les conditions
+validées. Le laboratoire utilise la recherche précédente pour éviter un cycle,
+avec seuils 25/25 au Supérieur et plafond 25 conservé. Le registre ne change
+pas de version : les accès acquis sont conservés, les nouvelles conditions ne
+concernent que les accès restant à acquérir. Aucune migration, requalification
+ou réécriture des surcharges d’univers.
+
+Vérifications locales sur les fichiers définitifs : validation Compose, lint
+complet (PHP, YAML, Twig, conteneur et schéma) et diff réussis ; 195 tests ciblés,
+3 575 assertions, couvrant la grille, les seuils, l’atteignabilité et les accès.
+Le conteneur habituel monte un autre répertoire de travail : ses premiers
+résultats ne valident pas ce lot. La suite complète locale lancée dans ce
+conteneur a été interrompue ; les contrôles retenus utilisent un conteneur
+éphémère monté explicitement sur ce dépôt, sans déplacer les services habituels.
+La suite complète PHP/Python, les assets, les parcours navigateur et la
+sauvegarde/restauration isolée relèvent de la CI complète de la
+[PR #85](https://github.com/c41m07/genesis-reborn/pull/85), requise avant fusion.
+Les protections de dev ont été vérifiées : PR et cinq jobs quality obligatoires,
+administrateurs inclus, sans publish requis.
+Les tests de grille couvrent chaque seuil et le rang requis ; le parcours des
+156 profils contrôle l’absence de cycle et les plafonds.
+Les tests d’intégration couvrent les dix rangs modifiés, la recherche à 4 puis 5,
+le refus d’une commande directe, la portée locale et la conservation des accès.
+Les anciennes mesures financées restent historiques et ne mesurent pas cette
+nouvelle progression. Wiki local synchronisé ; aucun wiki hébergé ni Alpha
+annoncé mis à jour. CI complète requise avant fusion dans dev.
+
+La première CI complète (n° 357) valide 1 413 tests PHP / 252 897 assertions
+(un test optionnel ignoré), 13 tests Python, lint, assets et sauvegarde/restauration.
+Le lot navigateur 1 révèle une préparation encore fondée sur l’ancien seuil
+Intermédiaire 20 et sans recherche industrielle ; le scénario des onglets prépare
+désormais les recherches des rangs Intermédiaire et Supérieur au niveau 5 et
+la centrale Intermédiaire 25. Ses assertions restent conservées.
+Un second échec concerne le focus visible après un focus programmatique suivant
+un clic dans le parcours d’abandon. Le test utilise maintenant les deux vrais
+Tab depuis le champ de confirmation, contrôle le lien intermédiaire puis le
+bouton, et conserve l’assertion de focus visible. Aucun comportement produit changé.
+Après ces corrections, les sept scénarios d’onglets et d’abandon réussissent
+avec `BROWSER_PERSISTENCE=1 make test-browser BROWSER_ARGS="building-tabs.spec.mjs colony-abandonment.spec.mjs"`
+dans un projet jetable monté sur ce dépôt (7/7, sans reprise). La CI complète
+doit réussir sur cette dernière révision avant fusion ; la PR donne le résultat final.

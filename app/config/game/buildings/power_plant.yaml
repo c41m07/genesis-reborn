@@ -20,7 +20,14 @@
         {
           "slug": "power_plant",
           "tier": "basic",
-          "level": 10
+          "level": 25
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "engineering_foundations",
+          "tier": "intermediate",
+          "level": 5
         }
       ]
     },
@@ -28,8 +35,20 @@
       "buildings": [
         {
           "slug": "power_plant",
+          "tier": "basic",
+          "level": 50
+        },
+        {
+          "slug": "power_plant",
           "tier": "intermediate",
-          "level": 20
+          "level": 25
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "engineering_foundations",
+          "tier": "superior",
+          "level": 5
         }
       ]
     }

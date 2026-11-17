@@ -117,6 +117,72 @@ final class CatalogAccessTest extends KernelTestCase
         self::assertTrue($node['available']);self::assertTrue($node['acquired']);
     }
 
+    public static function industrialBuildingRanks(): iterable
+    {
+        foreach (['mine_metal', 'mine_nano', 'mine_hydrogen', 'power_plant', 'lab'] as $slug) {
+            foreach (['intermediate', 'superior'] as $tier) {
+                yield $slug.'/'.$tier => [$slug, $tier];
+            }
+        }
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('industrialBuildingRanks')]
+    public function testIndustrialRankRequiresResearchAndKeepsItsLocalAccess(string $slug, string $tier): void
+    {
+        $isLaboratory = $slug === 'lab';
+        $basicLevel = $tier === 'superior' && !$isLaboratory ? 50 : 25;
+        $parents = [$this->level('buildings', $slug, $basicLevel)];
+        if ($tier === 'superior') {
+            $parents[] = $this->level('buildings', $slug, 25, 'intermediate');
+        }
+        $researchTier = $isLaboratory ? ($tier === 'intermediate' ? 'basic' : 'intermediate') : $tier;
+        $research = $this->level('technologies', 'engineering_foundations', 4, $researchTier);
+        $queue = self::getContainer()->get(QueueService::class);
+        $access = self::getContainer()->get(CatalogAccess::class);
+        $queue->synchronize($this->membership);
+        self::assertFalse($access->acquired($this->membership, $this->planet, 'buildings', $slug, $tier));
+
+        $research->level = 5;
+        $this->em->flush();
+        $queue->synchronize($this->membership);
+        self::assertTrue($access->acquired($this->membership, $this->planet, 'buildings', $slug, $tier));
+        self::assertFalse($access->acquired($this->membership, $this->other, 'buildings', $slug, $tier));
+
+        // La nouvelle grille ne retire pas un accès acquis si ses conditions disparaissent.
+        foreach ([...$parents, $research] as $row) {
+            $this->em->remove($row);
+        }
+        $this->em->flush();
+        $queue->add($this->membership, $this->planet, 'buildings', $slug, 1, str_repeat('4', 32), $tier);
+        $item = $this->em->getRepository(QueueItem::class)->findOneBy(['planet' => $this->planet, 'itemSlug' => $slug]);
+        self::assertNotNull($item);
+        self::assertSame($tier, $item->tier);
+        self::assertSame(1, $item->itemLevel);
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('industrialBuildingRanks')]
+    public function testDirectIndustrialConstructionRejectsInsufficientResearch(string $slug, string $tier): void
+    {
+        $isLaboratory = $slug === 'lab';
+        $this->level('buildings', $slug, $tier === 'superior' && !$isLaboratory ? 50 : 25);
+        if ($tier === 'superior') {
+            $this->level('buildings', $slug, 25, 'intermediate');
+        }
+        $researchTier = $isLaboratory ? ($tier === 'intermediate' ? 'basic' : 'intermediate') : $tier;
+        $this->level('technologies', 'engineering_foundations', 4, $researchTier);
+        $connection = $this->em->getConnection();
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('Déblocage initial');
+        try {
+            self::getContainer()->get(QueueService::class)->add(
+                $this->membership, $this->planet, 'buildings', $slug, 1, str_repeat('3', 32), $tier,
+            );
+        } finally {
+            // Le refus doit annuler toute écriture de commande dans la transaction.
+            self::assertSame(0, (int) $connection->fetchOne('SELECT COUNT(*) FROM queue_item'));
+        }
+    }
+
     public function testRequalificationKeepsPossessionsAndQueuesWithoutGrantingHistoricalAccess():void
     {
         $this->membership->catalogUnlocks=null;
