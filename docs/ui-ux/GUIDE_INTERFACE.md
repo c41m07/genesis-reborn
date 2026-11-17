@@ -219,3 +219,24 @@ leurs détails restent dépliables. En l’absence de réserve, les unités repr
 la largeur disponible. La reprise garde choix et devis sur deux colonnes, puis
 les empile sur petit écran. Le calcul ne soumet pas la confirmation ; erreurs,
 versions, liens serveur et formulaires sans JavaScript sont conservés.
+
+
+### Vue générale — référence validée, finalisation du 18 novembre 2026
+
+La page existante conserve son URL. Une alerte de stockage ou de production
+précède la bannière ; elle disparaît en vacances. La bannière regroupe la colonie
+active, les points quotidiens de l’empire et quatre accès : Planètes, Classement,
+Flottes et Guilde. Les chiffres proviennent des données existantes ; la maquette
+ne fournit aucune valeur de jeu. Les points sont répartis en quatre colonnes,
+puis deux sur petit écran.
+
+L’activité de la colonie reste à gauche sur grand écran ; chaque file offre un
+lien vers sa page dédiée, même à vide. Les détails et annulations conservent leur
+comportement. Les arrivées précèdent les vols personnels dans la colonne de
+suivi. Sur petit écran : activité, arrivées, vols, journal. Le journal reste en
+pleine largeur. Aucune rubrique n’est remplacée par un faux onglet JavaScript.
+
+Les composants partagés conservent leurs liens dans les en-têtes, y compris
+après actualisation. Le bouton global des événements et la barre de ressources
+restent dans leur emplacement commun. Ces adaptations à la maquette évitent de
+modifier le fonctionnement des autres vues. Le style est limité à `.overview-page`.

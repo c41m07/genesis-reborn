@@ -7,11 +7,12 @@ Deux cadres distincts : « Flottes en vol » conserve le suivi de vos propres mi
 d’autres commandants sur vos colonies. Il reste présent même sans arrivée
 visible : compteur zéro et message « Aucune flotte entrante visible vers vos colonies ». Aucun mouvement allié vers une autre destination n’est ajouté.
 Le panneau reprend les mêmes composants visuels que « Flottes en vol » : cadre,
-titre avec compteur, cartes de mission, trajet et échéance. Il se place juste sous
-les vols personnels dans la Vue générale, dans Flottes et dans la colonne de droite
-des quatre catalogues (Bâtiments, Recherche, Chantier spatial et Défenses).
-Sur mobile, ces deux cadres restent visibles après le catalogue, dans la même
-colonne. Un seul panneau apparaît par page. La carte, la messagerie, les classements
+titre avec compteur, cartes de mission, trajet et échéance. La Vue générale finalisée
+selon sa maquette validée place les arrivées avant les vols personnels, à droite de
+l’activité sur grand écran et après celle-ci sur mobile. Flottes et la colonne de droite
+des quatre catalogues (Bâtiments, Recherche, Chantier spatial et Défenses) conservent
+les arrivées après les vols personnels. Sur mobile, les deux cadres restent visibles
+après le catalogue. Un seul panneau apparaît par page. La carte, la messagerie, les classements
 et les autres vues conservent la surveillance sans cadre ajouté au-dessus du contenu.
 La page d’accès refusé garde le retour au jeu ou à la console comme première action
 après le lien d’évitement. Aucune nouvelle page, onglet ou navigation n’est ajouté.

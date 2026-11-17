@@ -157,9 +157,14 @@ test('Flottes entrantes : transport neutre, propre retour séparé et demande d�
     await expect(ownPanel).toBeVisible();await expect(incomingPanel).toBeVisible();
     await expect(ownPanel.locator('[data-active-fleet="'+own+'"]')).toHaveCount(1);
     await expect(incomingPanel.locator('[data-incoming-attack="'+data.fleet+'"]')).toHaveCount(1);
-    expect(await ownPanel.evaluate(element=>element.nextElementSibling.matches('.incoming-attacks'))).toBeTruthy();
     const ownBox=await ownPanel.boundingBox(),incomingBox=await incomingPanel.boundingBox();
-    expect(incomingBox.y).toBeGreaterThanOrEqual(ownBox.y+ownBox.height-1);
+    if (label === 'vue-generale') {
+      expect(await ownPanel.evaluate(element=>element.previousElementSibling.matches('.incoming-attacks'))).toBeTruthy();
+      expect(ownBox.y).toBeGreaterThanOrEqual(incomingBox.y+incomingBox.height-1);
+    } else {
+      expect(await ownPanel.evaluate(element=>element.nextElementSibling.matches('.incoming-attacks'))).toBeTruthy();
+      expect(incomingBox.y).toBeGreaterThanOrEqual(ownBox.y+ownBox.height-1);
+    }
     expect(Math.abs(incomingBox.x-ownBox.x)).toBeLessThan(2);
     expect(Math.abs(incomingBox.width-ownBox.width)).toBeLessThan(2);
     for(const property of ['backgroundImage','backgroundColor','borderRadius','padding','borderTopWidth']) {

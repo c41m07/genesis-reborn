@@ -52,6 +52,13 @@ contrôles statiques et compilation réussis. Les références Figcraft restent
 conservées. À la demande de l’utilisateur, la finalisation de la Vue générale
 déjà maquettée devient prioritaire avant les compositions L2C.
 
+Complément du 18 novembre : Vue générale finalisée depuis la référence conservée.
+Alertes avant la bannière, points et accès regroupés, liens des files, arrivées
+avant les vols et journal préservé. 28 tests PHP / 562 assertions (une mesure
+optionnelle ignorée), huit parcours navigateur consolidés et dix captures ;
+contrôles statiques et compilation réussis. Les autres vues de L7 restent dans
+leur propre périmètre. L2C reste soumis au choix A/B ; CI et intégration distinctes.
+
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026
 
 Lot 1 fusionné dans `dev` par la [PR #69](https://github.com/c41m07/genesis-reborn/pull/69)

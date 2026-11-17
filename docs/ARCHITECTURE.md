@@ -312,6 +312,16 @@ applicatif ; ce fichier documentaire n’est pas importé dans la base.
 
 ## Colonies et journal d’absence — lot C
 
+La Vue générale finalisée reprend la maquette conservée : alertes avant la bannière,
+points et quatre raccourcis dans celle-ci, activité locale puis arrivées et vols de
+l’empire, journal en pleine largeur. `empire-overview.css` est limité à
+`.overview-page` sur cette destination ; les catalogues gardent leur disposition.
+Les liens des files mènent aux pages existantes et sont rendus aussi dans le fragment
+`queues`. `_overview_attention.html.twig` réutilise les ressources déjà préparées :
+sa région, présente même vide, est incluse seulement dans la réponse d’actualisation
+de la Vue générale. Le contrôleur existant diffère son remplacement pendant le focus.
+La barre de ressources conserve son rendu, ses calculs et son actualisation.
+
 Planet.acquiredAt est nullable : les quatre transferts de propriété existants
 appellent acquireBy dans leurs transactions et gardes de rejeu. Une attribution
 inchangée ne redéfinit pas la date. GameRepository::planets trie les seuls résultats

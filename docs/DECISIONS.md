@@ -1993,3 +1993,18 @@ carburant/fret, déchargement dans les capacités disponibles, origine perdue,
 versions et confirmation de reprise gardent leurs règles. L’ancien mode
 dépliable reste pris en charge par le contrôleur d’actualisation. Cette validation
 porte sur L2B ; les compositions attendent leur choix. [Suivi](REFONTE_VISUELLE_INTERFACES.md).
+
+
+## Vue générale : finaliser la référence conservée — 18 novembre 2026
+
+L’utilisateur demande sa finalisation avant les compositions de flotte. La page
+Figcraft validée reste la référence : alertes avant la bannière, points et quatre
+accès de l’empire intégrés, activité locale à gauche, arrivées puis vols personnels
+à droite, journal en pleine largeur. Sur petit écran, ces blocs se suivent dans
+cet ordre. Les catalogues conservent leur disposition.
+
+La page garde son URL et ses liens vers les tâches dédiées. Les files, le journal,
+les confirmations et les règles de confidentialité restent ceux du jeu. La barre
+de ressources et le bouton global des événements restent dans leur composant
+commun. Aucune valeur d’équilibrage n’est décidée par cette finalisation.
+[Recette et limites](REFONTE_VISUELLE_INTERFACES.md).

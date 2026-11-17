@@ -113,6 +113,14 @@ final class AbsenceJournalTest extends WebTestCase
             self::assertArrayHasKey('resources', $regions);
             self::assertArrayHasKey('queues', $regions);
             self::assertArrayHasKey($section === 'overview' ? 'journal' : 'catalog', $regions);
+            if ($section === 'overview') {
+                self::assertArrayHasKey('overview-attention', $regions);
+                self::assertStringContainsString('data-live-region="overview-attention"', $regions['overview-attention']);
+                self::assertStringContainsString('Ouvrir les bâtiments', $regions['queues']);
+            } else {
+                self::assertArrayNotHasKey('overview-attention', $regions);
+                self::assertStringNotContainsString('overview-queue-links', $regions['queues']);
+            }
             self::assertStringNotContainsString('<!DOCTYPE', implode('', $regions));
         }
         self::assertEquals($visited, $this->player->currentPlayerUniverse->overviewVisitedAt);

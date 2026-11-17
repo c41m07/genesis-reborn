@@ -15,6 +15,8 @@ La page Figcraft Vue générale est conservée comme référence après le choix
 explicite de l’utilisateur ; cette validation de conception ne valide pas toutes
 les sections de la route de colonie ni leur implémentation web.
 Une même route peut servir plusieurs états et une même vue peut être partagée.
+La finalisation de Vue générale ajoute le fragment T-201 (201 Twig au total),
+sans nouvelle route ni nouveau contrôleur Stimulus.
 
 Pour chaque ligne, `Lot` renvoie au suivi commun : liens A/B, choix validé,
 vérifications, dépendances et limites y sont consignés sans dupliquer ces champs.
@@ -105,7 +107,7 @@ la recette du lot. Les méthodes HTTP restent celles du routeur.
 | UI-065 | Inventaire / L3 | `app_resource_box_open`<br>`/inventaire/boites/{id}/ouvrir` | POST / Formulaire / action | [BoostController::openBox](../app/src/Controller/BoostController.php#L29) | Examiner le rendu ; conserver les contrats et la séparation déjà présente | 4/5 | Capacité, confirmation, vacances et consommation unique | Inventorié |
 | UI-066 | Inventaire / L3 | `app_boost_use`<br>`/boosts/utiliser/{type}/{id}` | POST / Formulaire / action | [BoostController::use](../app/src/Controller/BoostController.php#L40) | Examiner le rendu ; conserver les contrats et la séparation déjà présente | 4/5 | Capacité, confirmation, vacances et consommation unique | Inventorié |
 | UI-067 | Événements / L6 | `app_challenge`<br>`/evenements/defis/{id}` | GET / Page | [ChallengeController::show](../app/src/Controller/ChallengeController.php#L16) | Examiner le rendu ; conserver les contrats et la séparation déjà présente | 4/5 | Visibilité, univers, dates et récompenses | Inventorié |
-| UI-068 | Commandement / L7A | `app_planet_abandon`<br>`/planetes/{id}/abandonner` | GET / POST / Page | [ColonyAbandonmentController::abandon](../app/src/Controller/ColonyAbandonmentController.php#L16) | Examiner le rendu ; conserver les contrats et la séparation déjà présente | 4/5 | Colonie active, journal et conséquences d’abandon | Inventorié |
+| UI-068 | Commandement / L7A | `app_planet_abandon`<br>`/planetes/{id}/abandonner` | GET / POST / Page | [ColonyAbandonmentController::abandon](../app/src/Controller/ColonyAbandonmentController.php#L16) | Vue générale finalisée depuis la référence ; catalogues et abandon hors de ce complément | 4/5 | Colonie active, journal et conséquences d’abandon | Vue générale implémentée ; recette dans le suivi |
 | UI-069 | Public / Entrée / Univers / L8 | `app_home`<br>`/` | GET / Page | [ColonyController::home](../app/src/Controller/ColonyController.php#L44) | Examiner le rendu ; conserver les contrats et la séparation déjà présente | 4/5 | Authentification, états de jeton, SEO et redirections | Inventorié |
 | UI-070 | Commandement / L7A | `app_planets`<br>`/planetes` | GET / Page | [ColonyController::planets](../app/src/Controller/ColonyController.php#L66) | Examiner le rendu ; conserver les contrats et la séparation déjà présente | 4/5 | Colonie active, journal et conséquences d’abandon | Inventorié |
 | UI-071 | Commandement / L7A | `app_colony`<br>`/planetes/{id}` | GET / Page | [ColonyController::show](../app/src/Controller/ColonyController.php#L95) | Examiner le rendu ; conserver les contrats et la séparation déjà présente | 4/5 | Colonie active, journal et conséquences d’abandon | Inventorié |
@@ -330,7 +332,7 @@ Les gabarits analysés ne sont pas présentés comme vérifiés dans le navigate
 | T-070 | [colony/abandon.html.twig](../app/templates/colony/abandon.html.twig) | Page / gabarit | Inventorié ; examen visuel et action à préciser au lot | `base.html.twig` ; rendu non revérifié |
 | T-071 | [colony/cancel.html.twig](../app/templates/colony/cancel.html.twig) | Page / gabarit | Inventorié ; examen visuel et action à préciser au lot | `base.html.twig` ; rendu non revérifié |
 | T-072 | [colony/planets.html.twig](../app/templates/colony/planets.html.twig) | Page / gabarit | Inventorié ; examen visuel et action à préciser au lot | `base.html.twig`, `ui/empire_details.html.twig`, `ui/empire_details_trigger.html.twig` et 1 autres ; rendu non revérifié |
-| T-073 | [colony/show.html.twig](../app/templates/colony/show.html.twig) | Page / gabarit | Inventorié ; examen visuel et action à préciser au lot | `base.html.twig`, `colony/_catalog.html.twig`, `colony/_journal.html.twig` et 6 autres ; rendu non revérifié |
+| T-073 | [colony/show.html.twig](../app/templates/colony/show.html.twig) | Page / gabarit | Vue générale finalisée depuis la référence ; catalogues conservés | Alertes, bannière, activité, arrivées, vols et journal ; recette dans le suivi |
 | T-074 | [combat/_simulation_trial.html.twig](../app/templates/combat/_simulation_trial.html.twig) | Fragment / composant | Inventorié ; examen visuel et action à préciser au lot | Données et contexte fournis par la page ; rendu non revérifié |
 | T-075 | [combat/report.html.twig](../app/templates/combat/report.html.twig) | Page / gabarit | Inventorié ; examen visuel et action à préciser au lot | `ui/report_back_link.html.twig` ; rendu non revérifié |
 | T-076 | [combat/reports.html.twig](../app/templates/combat/reports.html.twig) | Page / gabarit | Inventorié ; examen visuel et action à préciser au lot | `base.html.twig`, `ui/macros.html.twig` ; rendu non revérifié |
@@ -416,7 +418,7 @@ Les gabarits analysés ne sont pas présentés comme vérifiés dans le navigate
 | T-156 | [ui/catalogue_benefit_value.html.twig](../app/templates/ui/catalogue_benefit_value.html.twig) | Fragment / composant | Inventorié ; examen visuel et action à préciser au lot | Données et contexte fournis par la page ; rendu non revérifié |
 | T-157 | [ui/catalogue_benefits.html.twig](../app/templates/ui/catalogue_benefits.html.twig) | Fragment / composant | Inventorié ; examen visuel et action à préciser au lot | `ui/catalogue_benefit_value.html.twig` ; rendu non revérifié |
 | T-158 | [ui/catalogue_info.html.twig](../app/templates/ui/catalogue_info.html.twig) | Fragment / composant | Inventorié ; examen visuel et action à préciser au lot | `ui/catalogue_benefit_value.html.twig` ; rendu non revérifié |
-| T-159 | [ui/colony_queues.html.twig](../app/templates/ui/colony_queues.html.twig) | Fragment / composant | Inventorié ; examen visuel et action à préciser au lot | `ui/macros.html.twig` ; rendu non revérifié |
+| T-159 | [ui/colony_queues.html.twig](../app/templates/ui/colony_queues.html.twig) | Fragment / composant | Liens natifs vers les catalogues sur Vue générale, y compris après actualisation | Files, vacances et annulations conservées ; autres consommateurs inchangés |
 | T-160 | [ui/colony_selector.html.twig](../app/templates/ui/colony_selector.html.twig) | Fragment / composant | Inventorié ; examen visuel et action à préciser au lot | Données et contexte fournis par la page ; rendu non revérifié |
 | T-161 | [ui/colony_summaries.html.twig](../app/templates/ui/colony_summaries.html.twig) | Fragment / composant | Inventorié ; examen visuel et action à préciser au lot | `ui/macros.html.twig` ; rendu non revérifié |
 | T-162 | [ui/economic_units.html.twig](../app/templates/ui/economic_units.html.twig) | Fragment / composant | Inventorié ; examen visuel et action à préciser au lot | Données et contexte fournis par la page ; rendu non revérifié |
@@ -458,6 +460,7 @@ Les gabarits analysés ne sont pas présentés comme vérifiés dans le navigate
 | T-198 | [wiki/reference.html.twig](../app/templates/wiki/reference.html.twig) | Page / gabarit | Inventorié ; examen visuel et action à préciser au lot | `wiki/layout.html.twig` ; rendu non revérifié |
 | T-199 | [wiki/search.html.twig](../app/templates/wiki/search.html.twig) | Page / gabarit | Inventorié ; examen visuel et action à préciser au lot | `wiki/layout.html.twig` ; rendu non revérifié |
 | T-200 | [ui/space_navigation.html.twig](../app/templates/ui/space_navigation.html.twig) | Fragment partagé / L1A-L1C | Menu natif partagé et focus au changement de format vérifiés | `ui/guild_navigation.html.twig`, `player/diplomacy.html.twig` ; contrôles ciblés dans le suivi |
+| T-201 | [colony/_overview_attention.html.twig](../app/templates/colony/_overview_attention.html.twig) | Fragment / Vue générale | Alerte de la colonie avant la bannière, région conservée à vide | Ressources préparées existantes, actualisation différée pendant le focus |
 
 ## Contrôleurs d’interaction à examiner avec leurs consommateurs
 

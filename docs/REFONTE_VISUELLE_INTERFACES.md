@@ -883,11 +883,64 @@ adaptations ciblées des scénarios historiques. Documentation synchronisée.
 partir de sa maquette déjà validée, avant de poursuivre les compositions. Les
 propositions L2C préparées restent en attente ; leur code n’est pas commencé.
 
+## Vue générale — finalisation de la référence, 18 novembre 2026
+
+Priorité explicite avant L2C, sur la même branche. Complexité **4/5** : composants
+partagés, actualisation, journal privé et états occupés. La page Figcraft 01 et
+ses deux cadres 1440/390 restent strictement conservés ; aucun nouveau choix
+A/B n’est nécessaire pour cette référence déjà validée.
+
+Réalisation : alertes avant la bannière, colonie et exploration de la galaxie,
+quatre catégories de points et évolution quotidienne, quatre liens d’empire
+intégrés. Activité locale à gauche et arrivées avant les vols personnels à droite ;
+sur petit écran, activité puis suivi, puis journal en pleine largeur. Les liens
+vers les bâtiments, la recherche, les vaisseaux et les défenses restent disponibles
+quand les files sont vides et après actualisation.
+
+La destination garde son URL et ses pages dédiées existantes ; aucun nouvel onglet
+ou filtre n’est introduit. Les détails de file restent dépliables et le journal
+conserve son formulaire de consultation. Les en-têtes des composants de vols
+et le bouton global des événements gardent leur place commune, adaptation limitée
+à la maquette pour préserver les actualisations et les autres pages. La barre de
+ressources, les lectures métier et la visibilité des flottes ne changent pas.
+
+L’alerte utilise les ressources déjà préparées. Une région vide permet son ajout
+ou retrait sans rechargement ; le focus existant en diffère le remplacement.
+Les catalogues ne rendent pas cette nouvelle région. `empire-overview.css` est
+limité à `.overview-page`. Le lien de confirmation de file affiche maintenant
+« Préparer l’annulation », cohérent avec son nom accessible et son comportement.
+
+Vérifications : 28 tests PHP / 562 assertions, dont une mesure optionnelle ignorée
+sans `REWORK_MEASURE=1` ; validation Compose, lint PHP/Twig/YAML/conteneur et
+compilation réussis. **Huit scénarios navigateur distincts réussis**, consolidés
+après corrections ciblées : contraste de l’alerte claire, alignement des points,
+encodage d’une édition intermédiaire et nom accessible de la confirmation.
+L’ancienne assertion d’ordre des cadres distingue maintenant Vue générale des
+cinq autres destinations ; contrôles de confidentialité et de styles conservés.
+
+Recette à 1440/768/390/320 px dans les deux thèmes : aucun débordement,
+Axe sans violation à 390 px, files vides et occupées, alertes ajoutées/retirées
+avec focus préservé, liens natifs et retour/rechargement sans JavaScript. Journal,
+protection, détails de flottes et surveillance restent couverts par les scénarios
+existants. **Dix captures finales réelles**, dont deux avec file active, conservées
+dans `output/playwright/overview/captures-jeu-vue-generale/` et près du document
+Figcraft dans `captures-jeu-vue-generale/`, avec index JSON. Journaux de contrôles
+dans `output/playwright/overview/` ; données exclusivement synthétiques.
+
+Fichiers principaux : `colony/show.html.twig`, nouveau fragment
+`colony/_overview_attention.html.twig`, composants `ui/colony_queues` et `ui/flights`,
+`ColonyController::liveRegions` et `empire-overview.css`. Les scénarios existants
+`empire-overview`, `fleet-surveillance` et `AbsenceJournalTest` suivent ce périmètre.
+README, architecture, guide, inventaire et documentation des arrivées synchronisés.
+Aucune migration existante, nouvelle dépendance, modification d’équilibrage,
+publication distante ou CI GitHub. Performance non mesurée ; pas d’audit RGAA global.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
 | --- | --- | --- | --- | --- |
-| Vue générale Figcraft | Conception de référence conservée | Choix explicite de l’utilisateur | Page inchangée, comparaison effectuée | Ne valide pas automatiquement l’implémentation web ni les autres écrans |
+| Vue générale Figcraft | Conception de référence conservée | Choix explicite de l’utilisateur | Page inchangée, comparaison effectuée | Les autres écrans restent soumis à leur propre validation |
+| Vue générale web | Finalisée et vérifiée localement | Demande explicite avant L2C | 28 PHP, huit parcours navigateur consolidés et dix captures ; bilan ci-dessus | CI, intégration et déploiement distincts |
 | L1A | B implémentée et vérifiée localement | B choisie explicitement | Trois pages, PHP ciblé, recette responsive et captures ; bilan ci-dessus | CI complète, intégration et déploiement distincts |
 | L1B | A implémentée et vérifiée localement | A choisie explicitement | Trois pages et brouillon, PHP ciblé, recette responsive et captures | CI complète et intégration distinctes |
 | L1C | A implémentée et vérifiée localement | A choisie explicitement | Quatre pages, confirmations natives, 83 PHP et recette responsive ; captures | CI complète et intégration distinctes |

@@ -69,6 +69,7 @@ Le code comprend :
   - Les échecs de transport des mails de compte sont retentés trois fois au total pendant la requête. Après échec de confirmation à l’inscription, le compte est conservé et le formulaire de renvoi est proposé. Les états et alertes sont journalisés sans adresse ni jeton ; voir [le diagnostic des emails](docs/DIAGNOSTIC_EMAILS.md).
   - Session expirée après 24 h sans requête au serveur ; case « Se souvenir de moi » facultative pendant 30 jours, annulée à la déconnexion. Un cookie de mémorisation valide permet de retrouver sa connexion après expiration de la session.
   - Mots de passe masqués par défaut, avec un bouton œil pour afficher ou masquer chaque champ.
+- Vue générale : alertes de la colonie avant la bannière, points et quatre raccourcis de l’empire regroupés ; accès aux bâtiments, à la recherche et aux chantiers depuis les files, puis suivi des arrivées et des vols personnels. Le journal conserve sa consultation explicite.
 - Classements joueurs : en-têtes cliquables pour les points totaux (par défaut), bâtiments, recherche, flotte et nombre de planètes ; rang et variation propres à chaque catégorie, tri global croissant ou décroissant avant pagination de 50 lignes, catégorie et sens conservés entre pages et au retour d’un signalement. Les colonnes non interactives des guildes ne portent pas de flèche de tri. Scores et guildes figés jusqu’au prochain minuit, heure de Paris (été/hiver inclus). Les écarts comparent les deux derniers calculs : dans le tableau joueur, (+N) en vert, (−N) en rouge, (= 0) si inchangé, (—) sans comparaison. Les signes et libellés accessibles complètent les couleurs. Les protections de combat restent en temps réel. Le relais existant initialise et actualise les instantanés persistés ; une lecture rattrape aussi une échéance manquée. Nouveaux joueurs et guildes apparaissent au prochain calcul.
 - Équilibrage des ressources : première planète à 10 000 de chaque ressource, colonies à 5 000 hors électricité selon le rang, stockage de base à 10 000 ; productions passives M10/E0/A0/H0/N10 par heure à position 5, univers ×1. Les règles s’appliquent directement au déploiement, sans date à configurer, y compris à toute la production en attente depuis le dernier calcul enregistré. Les stocks existants et leurs surplus sont conservés. Voir [les règles et la transition](docs/REGLES.md#ressources-initiales-et-production-passive--décision-du-10-novembre-2026).
 - Interface partagée : les événements occupent leur propre zone sous la barre de ressources et défilent avec la page. Carte V2 : numéro, nom et statut des planètes alignés selon l’espace disponible ; les coordonnées des systèmes restent dans les panneaux et ne sont dessinées sur la carte qu’au survol ou au focus clavier d’un résultat de recherche de système.
@@ -603,8 +604,9 @@ de progression ; à 5/5/5, le préavis théorique atteint 80 minutes.
 Le cadre [Flottes entrantes](docs/FLOTTES_ENTRANTES.md) regroupe les arrivées d’autres
 commandants sur vos colonies : transports, renforts, orbites et attaques détectées.
 Vos propres missions restent dans Flottes en vol. Flottes entrantes reprend le même
-style de cadre et de cartes, juste en dessous dans la Vue générale, la page Flottes
-et la colonne de droite des catalogues. Le cadre reste visible à zéro
+style de cadre et de cartes. La Vue générale affiche les arrivées avant les vols
+personnels ; Flottes et les catalogues conservent les arrivées après les vols.
+Le cadre reste visible à zéro
 quand aucune arrivée étrangère n’est visible. Les attaques gardent leur préavis
 et leur priorité ; une origine non découverte reste masquée.
 La surveillance se met à jour sans rechargement, avec horloge serveur, et conserve

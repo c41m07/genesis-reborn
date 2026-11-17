@@ -154,6 +154,10 @@ final class ColonyController extends AbstractController
             'active-flights' => 'ui/flights.html.twig',
         ];
         $templates[$data['section'] === 'overview' ? 'journal' : 'catalog'] = $data['section'] === 'overview' ? 'colony/_journal.html.twig' : 'colony/_catalog.html.twig';
+        if ($data['section'] === 'overview') {
+            // Réutiliser les ressources déjà préparées ; le bandeau conserve son propre rendu.
+            $templates['overview-attention'] = 'colony/_overview_attention.html.twig';
+        }
         $regions = [];
         foreach ($templates as $name => $template) {
             $regions[$name] = $this->renderView($template, $data);
