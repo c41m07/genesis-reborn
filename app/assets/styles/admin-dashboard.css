@@ -51,3 +51,9 @@
 .admin-page-search input { flex: 1 1 14rem; min-width: 0; }
 .admin-console .admin-module-grid > .panel { min-width: 0; overflow-wrap: anywhere; }
 @media (max-width: 560px) { .admin-page-navigation { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); } }
+
+/* Les états gardent leurs libellés et une couleur lisible sur les panneaux clairs. */
+.admin-console[data-theme="light"] .admin-status-badge--active { color: var(--green); }
+.admin-console[data-theme="light"] .admin-status-badge--scheduled { color: var(--text); }
+.admin-console[data-theme="light"] .admin-status-badge--closed { color: var(--danger); }
+.admin-console .admin-danger-zone summary { color: var(--danger); }

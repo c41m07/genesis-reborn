@@ -1692,7 +1692,8 @@ forcée. Scan de secrets et CI complète requis avant fusion. [Recette et état 
 
 Pages dédiées des univers, familles du catalogue, formulaires d’événements,
 modèles de projets et rotations. Console, assistant, services et protections
-existants conservés. Développement et vérifications ciblées en cours ; la PR,
-la CI complète, l’intégration dans dev et l’actualisation locale sont des étapes
+existants conservés. Réalisation locale et contrôles ciblés réussis (22 tests PHP et 27 parcours
+navigateur distincts, par consolidation). La PR #83, la CI complète,
+l’intégration dans dev et l’actualisation locale sont des étapes
 distinctes, suivies dans le [bilan](NAVIGATION_PAGES_DEDIEES.md). Pas de migration
 sur une base existante ni de déploiement Alpha. Le lot Wiki reste séparé.

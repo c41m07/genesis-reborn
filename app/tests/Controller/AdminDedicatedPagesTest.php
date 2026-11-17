@@ -80,6 +80,34 @@ final class AdminDedicatedPagesTest extends WebTestCase
         $client->request('GET', '/admin/univers?q=omega-1');
         self::assertSelectorTextContains('.admin-universe-card', $universe->name);
         self::assertSelectorNotExists('#admin-universe-'.$other->id);
+        // Dépasser une page vérifie que LIMIT s’applique avant le rendu et que la recherche reste globale.
+        $universe = $em->find(Universe::class, $universe->id);
+        for ($index = 0; $index < 55; ++$index) {
+            $extra = new Universe();
+            $extra->slug = 'admin-pagination-'.$index;
+            $extra->name = 'Univers de pagination '.$index;
+            $extra->status = 'closed';
+            $em->persist($extra);
+            $model = new GuildProjectDefinition();
+            $model->universe = $universe;
+            $model->name = 'Modèle de pagination '.$index;
+            $model->stages = $definition->stages;
+            $model->createdAt = $model->updatedAt = new \DateTimeImmutable();
+            $em->persist($model);
+        }
+        $em->flush();
+        $reads = self::getContainer()->get(\App\Repository\AdminReadRepository::class);
+        self::assertCount(50, $reads->universes(1)['entries']);
+        self::assertSame(55, $reads->universes(1, '', 'closed')['total']);
+        self::assertSame(1, $reads->universes(100, 'admin-pagination-54')['total']);
+        self::assertSame(1, $reads->universes(100, 'admin-pagination-54')['page']);
+        self::assertCount(50, $reads->guildProjectDefinitions(1)['entries']);
+        self::assertCount(6, $reads->guildProjectDefinitions(2)['entries']);
+        self::assertSame(2, $reads->guildProjectDefinitions(PHP_INT_MAX)['page']);
+        $crawler = $client->request('GET', '/admin/univers?page=2&status=closed');
+        parse_str(parse_url($crawler->filter('.admin-mission-pages a')->attr('href'), PHP_URL_QUERY), $paginationQuery);
+        self::assertSame('1', $paginationQuery['page']);
+        self::assertSame('closed', $paginationQuery['status']);
         $player = new Player();
         $player->username = 'OrdinaryPages';
         $player->email = 'ordinary-pages@example.test';

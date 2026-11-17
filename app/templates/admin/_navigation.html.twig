@@ -103,13 +103,14 @@
     </nav>
     {% include 'admin/_page_navigation.html.twig' %}
     {% if activeItem %}
-    <nav class="admin-section-navigation" aria-label="{{ activeGroup.label }}">
+    {% set dedicatedPage = currentRoute starts with 'app_admin_universe' or currentRoute starts with 'app_admin_catalogue' or currentRoute starts with 'app_admin_game_event' or currentRoute starts with 'app_admin_guild_project' or currentRoute starts with 'app_admin_weekly_rotation' %}
+    {% if not dedicatedPage %}<nav class="admin-section-navigation" aria-label="{{ activeGroup.label }}">
         {% for item in activeGroup.items %}<a href="{{ path(item.route) }}" {% if activeItem.route == item.route %}aria-current="{{ currentRoute == item.route ? 'page' : 'location' }}"{% endif %}>{{ item.label }}</a>{% endfor %}
-    </nav>
+    </nav>{% endif %}
     {% if currentRoute in ['app_admin_universe_manage','app_admin_catalogue','app_admin_catalogue_group','app_admin_catalogue_edit','app_admin_resource_boxes','app_admin_universe_metrics'] %}
         <nav class="admin-universe-navigation" aria-label="Gestion de {{ universe.name }}">
             <span>{{ universe.name }}</span>
-            {% for route,label in {app_admin_universe_manage:'Configuration et calendrier',app_admin_universe_metrics:'Mesures',app_admin_catalogue:'Catalogue',app_admin_resource_boxes:'Boîtes de ressources'} %}<a href="{{ path(route,{id:universe.id}) }}" {% if currentRoute == route or (route=='app_admin_catalogue' and currentRoute starts with 'app_admin_catalogue') %}aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}
+            {% for route,label in {app_admin_universe_manage:'Configuration et calendrier',app_admin_universe_metrics:'Mesures',app_admin_catalogue:'Catalogue',app_admin_resource_boxes:'Boîtes de ressources'} %}<a href="{{ path(route,{id:universe.id}) }}" {% if currentRoute == route or (route=='app_admin_catalogue' and currentRoute starts with 'app_admin_catalogue') %}aria-current="{{ currentRoute == route ? 'page' : 'location' }}"{% endif %}>{{ label }}</a>{% endfor %}
         </nav>
     {% endif %}
     {% endif %}

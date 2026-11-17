@@ -10,7 +10,7 @@ export default class extends Controller {
         }
         const main = this.element.querySelector('main');
         if (!main || ['vue-generale', 'flottes', 'wiki', 'projet-detail', 'accueil-public', 'recherche-messages'].includes(this.element.dataset.uiPage)) return;
-        if (main.querySelector('[data-page-sections="disabled"], .page-contents, nav a[href^="#"]')) return;
+        if (main.matches('[data-page-sections="disabled"]') || main.querySelector('[data-page-sections="disabled"], .page-contents, nav a[href^="#"]')) return;
         const seen = new Set();
         const headings = [...main.querySelectorAll('h2')].filter(heading => {
             const label = heading.textContent.trim();

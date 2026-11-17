@@ -363,6 +363,9 @@ Les dons entre joueurs ne donnent aucun boost et ne font progresser aucun object
 ### Administration des rotations hebdomadaires
 
 Les administrateurs gèrent les modèles par univers dans `/admin/rotations`.
+La liste mène à des pages de création et de modification ; une modification du
+modèle concerne uniquement les futures programmations, avec refus d’une fiche
+devenue périmée. Les valeurs de référence restent inchangées.
 Les modèles actifs alternent selon l’indice hebdomadaire du moteur. Une seule
 occurrence est réservée par univers et semaine ; une occurrence annulée conserve
 cette réservation et ne peut pas être recréée cette semaine. Désactiver un modèle
