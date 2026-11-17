@@ -57,3 +57,6 @@
 .admin-console[data-theme="light"] .admin-status-badge--scheduled { color: var(--text); }
 .admin-console[data-theme="light"] .admin-status-badge--closed { color: var(--danger); }
 .admin-console .admin-danger-zone summary { color: var(--danger); }
+
+.admin-console[data-theme="light"] .admin-universe-alerts span { color: var(--danger); }
+.admin-console[data-theme="light"] .admin-universe-alerts .is-warning { color: var(--text); }

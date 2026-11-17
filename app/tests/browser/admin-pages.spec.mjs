@@ -37,6 +37,16 @@ test('Pages administratives : liens directs, thèmes, clavier, ancres et rendu r
       }
     }
   }
+  // Les états conditionnels utilisent aussi des couleurs lisibles en thème clair.
+  for(const status of ['active','closed']) {
+    runIsolatedSql(process.env.BROWSER_ROUTER,`UPDATE universe SET status='${status}',ends_at=DATE_ADD(UTC_TIMESTAMP(),INTERVAL 1 DAY) WHERE id=${universe}`);
+    for(const theme of ['dark','light']) {
+      runIsolatedSql(process.env.BROWSER_ROUTER,`UPDATE player SET preferences=JSON_SET(preferences,'$.theme','${theme}') WHERE email='${email}'`);
+      await page.goto(`${base}/gerer`);await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
+      await expect(page.locator('.admin-universe-alerts .is-warning')).toBeVisible();
+      expect((await new AxeBuilder({page}).include('#admin-main').withTags(['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']).analyze()).violations).toEqual([]);
+    }
+  }
   await page.goto(`${base}/catalogue#ships-fighter`);await expect(page).toHaveURL(new RegExp(`${base}/catalogue/ships/fighter#ships-fighter$`));
   await page.goto('/admin/univers#admin-universe-'+universe);await expect(page).toHaveURL(new RegExp(`${base}/gerer#admin-universe-${universe}$`));
   const all=page.getByRole('navigation',{name:'Pages de cette rubrique'}).getByRole('link',{name:'Liste des univers',exact:true});

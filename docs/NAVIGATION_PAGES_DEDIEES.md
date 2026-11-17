@@ -864,7 +864,7 @@ valide une empreinte sous verrou et préserve les occurrences existantes.
 Validation locale : `make validate`, `make lint-static` (PHP, YAML, Twig et
 conteneur), `make assets` et `git diff --check` réussis. Les bases de test sont
 jetables et distinctes de l’application locale normale. Pas de suite complète
-PHP/navigateur locale revendiquée : 22 tests PHP distincts et 27 parcours navigateur
+PHP/navigateur locale revendiquée : 22 tests PHP distincts et 28 parcours navigateur
 distincts réussissent par consolidation des exécutions et reprises ciblées.
 Le test HTTP de navigation compte 132 assertions ; il dépasse une page de listes,
 vérifie les filtres avant pagination, les liens directs, 404 et refus d’accès.
@@ -881,7 +881,8 @@ couvrent aussi tablette et 1 920 px. Axe est utilisé sur les nouvelles fiches.
 Le contrôle visuel corrige le sommaire automatique quand la désactivation est
 portée par `main`, ainsi que le contraste des états d’univers et de la zone
 sensible en thème clair. La navigation de groupe reste accessible dans le menu ;
-sa rangée redondante est retirée des nouvelles pages. Les formulaires ne sont
+sa rangée redondante est retirée des nouvelles pages. Les alertes de fermeture
+proche et d’univers fermé sont également vérifiées par Axe dans les deux thèmes. Les formulaires ne sont
 pas remplacés périodiquement ; une saisie catalogue en cours reste intacte.
 
 La [PR #83](https://github.com/c41m07/genesis-reborn/pull/83) donne l’état de CI,
@@ -895,6 +896,18 @@ retrouvés dans les sources locales et connectées accessibles ; aucune lecture
 intégrale ni validation de leurs phases n’est revendiquée. Wiki externe non
 synchronisé. Les vérifications d’accessibilité ciblées ne constituent pas un
 audit RGAA complet. Aucun gain de performance mesuré n’est revendiqué.
+
+### Dernière reprise avant CI complète
+
+La [première CI complète](https://github.com/c41m07/genesis-reborn/actions/runs/44042306526)
+sur `40cd20f` réussit le job PHP, incluant les contrôles de schéma et de sauvegarde.
+Elle est interrompue au retour en brouillon pour une dernière correction ciblée :
+un scénario de refus CSRF ouvrait encore l’ancien tiroir d’univers. Il rejoint
+maintenant la fiche dédiée, en conservant tous ses contrôles de refus et de
+non-écriture. Les alertes conditionnelles de fermeture reçoivent des couleurs
+lisibles en thème clair. Les deux parcours concernés réussissent après correction.
+Une nouvelle CI complète sur le dernier commit reste requise ; le résultat PHP
+de cette première exécution n’autorise pas la fusion de la version suivante.
 
 ### Fichiers du lot 7
 
@@ -928,6 +941,7 @@ audit RGAA complet. Aucun gain de performance mesuré n’est revendiqué.
 - `app/tests/Controller/AdminDedicatedPagesTest.php`
 - `app/tests/Controller/CatalogBalanceControllerTest.php`
 - `app/tests/Integration/WeeklyRotationTest.php`
+- `app/tests/browser/access-denied-validation-gates.spec.mjs`
 - `app/tests/browser/admin-catalogue.spec.mjs`
 - `app/tests/browser/admin-event-wizard.spec.mjs`
 - `app/tests/browser/admin-events-responsive.spec.mjs`
