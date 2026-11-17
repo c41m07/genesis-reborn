@@ -58,6 +58,10 @@ avant les vols et journal préservé. 28 tests PHP / 562 assertions (une mesure
 optionnelle ignorée), huit parcours navigateur consolidés et dix captures ;
 contrôles statiques et compilation réussis. Les autres vues de L7 restent dans
 leur propre périmètre. L2C reste soumis au choix A/B ; CI et intégration distinctes.
+Vue générale est enregistrée dans `6b3bb70`, L2B dans `88d68e3`.
+Les propositions L2C sont prêtes dans Figcraft, pages 12/13 : modèles en lignes
+(A) ou en cartes (B), liste/création/modification/chargement, 26 cadres contrôlés.
+Aucun code de composition n’est modifié avant ce choix.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026
 

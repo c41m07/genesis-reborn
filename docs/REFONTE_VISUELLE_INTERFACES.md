@@ -935,6 +935,45 @@ README, architecture, guide, inventaire et documentation des arrivées synchroni
 Aucune migration existante, nouvelle dépendance, modification d’équilibrage,
 publication distante ou CI GitHub. Performance non mesurée ; pas d’audit RGAA global.
 
+## L2C — compositions de flotte, propositions à choisir
+
+Après finalisation de Vue générale (`6b3bb70`), le prochain sous-lot porte sur
+Mes compositions, Créer, Modifier et Vérifier/charger. Analyse ciblée de
+`FleetCompositionController`, `FleetCompositionService`, des trois templates et
+du catalogue des unités mobiles. Complexité : conception 4/5, réalisation 5/5
+(propriétaire/univers, versions, disponibilité et continuité de préparation).
+
+Les pages dédiées et leur menu commun restent le support du parcours. Le formulaire
+garde ensemble le nom et les quantités des trois rangs ; pas de filtre qui masque
+une partie de la saisie. Le chargement reste une vérification de disponibilité
+avant le retour à Préparer une mission, sans envoi direct.
+
+- **A — Modèles en lignes** : liste compacte, informations à gauche et actions à
+  droite ; éditeur en tableau sur grand écran, une unité et ses trois rangs sur
+  mobile ; choix de colonie et disponibilité côte à côte lorsque la largeur suffit.
+- **B — Modèles en cartes** : modèles en grille, éditeur par cartes d’unités et
+  chargement en étapes verticales. Une seule colonne sur petit écran.
+
+Même contenu et mêmes actions existantes : maximum de 20 modèles par empire/univers,
+nom jusqu’à 80 caractères, types mobiles disponibles et trois rangs. Les versions,
+jetons, contrôles d’accès et la nouvelle vérification serveur au retour vers l’envoi
+restent nécessaires. Une disponibilité réduite exige l’accord explicite existant.
+Les données des maquettes sont fictives et leurs actions sont simulées.
+
+Dans le document Figcraft courant, **pages 12 et 13**, après les lots conservés :
+quatre vues à 1440/768/390 px par option et une planche d’états par option, soit
+**26 cadres**. Structures grises enregistrées avant mise en couleur ; fondations
+et composants du document réutilisés. Le contrôle du document vérifie 230 liens,
+aucun texte hors cadre, chevauchement ni découpage par son parent ; les onze pages
+précédentes, dont Vue générale, sont inchangées. Les exports liste/éditeur et les
+écrans de chargement ont fait l’objet de contrôles visuels ciblés.
+
+Manifestes et preuves près du fichier `.figcraft` : `lot-2C-manifest.json`,
+`lot-2C-verification.json`, exports `lot-2C-{A,B}-{list,new,edit,load}-{largeur}.png`
+et aperçus `lot-2C-{A,B}-list-apercus.png`. Il s’agit de conception uniquement :
+**aucun choix L2C validé, aucun code des compositions modifié, aucune nouvelle
+recette fonctionnelle du jeu pour L2C**. Attendre le choix A/B avant réalisation.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -946,13 +985,14 @@ publication distante ou CI GitHub. Performance non mesurée ; pas d’audit RGAA
 | L1C | A implémentée et vérifiée localement | A choisie explicitement | Quatre pages, confirmations natives, 83 PHP et recette responsive ; captures | CI complète et intégration distinctes |
 | L2A | A implémentée et vérifiée localement | A choisie explicitement | 59 tests PHP, 15 parcours navigateur consolidés et 40 captures ; bilan ci-dessus | CI complète et intégration distinctes |
 | L2B | A implémentée et vérifiée localement | A choisie explicitement | 60 tests PHP, 14 parcours navigateur consolidés et 24 captures | CI complète et intégration distinctes |
-| L2C, L3 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
+| L2C | Deux propositions préparées | Choix A/B attendu | Pages 12/13, 26 cadres et contrôle du document ; code non engagé | Vérifier les parcours du jeu après implémentation |
+| L3 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
 Les commits restent sur `feature/refonte-visuelle` ; L1B A est enregistré dans
-`1e390a9`, L1C A dans `1a33d14`, L2A A dans `ff6c324`. Le prochain périmètre
-L2B (orbites, quai et reprise) est réalisé. La Vue générale est prioritaire avant
-L2C (compositions), à la demande de l’utilisateur. Le plan
+`1e390a9`, L1C A dans `1a33d14`, L2A A dans `ff6c324`, L2B A dans `88d68e3`.
+La Vue générale est finalisée dans `6b3bb70`, avant L2C (compositions),
+à la demande de l’utilisateur. L2C attend maintenant son choix A/B. Le plan
 reste à 18 ensembles : les trois premiers sont réalisés, L2 est partiellement
 réalisé. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
 Les validations précédentes restent limitées à leurs lots.
