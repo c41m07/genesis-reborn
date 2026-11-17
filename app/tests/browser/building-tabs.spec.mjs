@@ -34,6 +34,8 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     // Le niveau 250 garde un prix en millions avec la répartition validée des coûts.
     sql(`INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'power_plant','basic',250),(${planet},'lab','basic',5)`);
     sql(`INSERT INTO player_technology (player_universe_id,slug,tier,level) SELECT owner_id,'engineering_foundations','basic',5 FROM planet WHERE id=${planet}`);
+    // La recherche est partagée dans l’univers ; elle ouvre ici le rang Intermédiaire local.
+    sql(`INSERT INTO player_technology (player_universe_id,slug,tier,level) SELECT owner_id,'engineering_foundations','intermediate',5 FROM planet WHERE id=${planet}`);
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto(`${path}?section=buildings`);
     const family = page.locator('.building-card[data-slug="power_plant"]');
@@ -179,7 +181,8 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
             await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('filter','grayscale(1)');
         }
     }
-    sql(`INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'power_plant','intermediate',20)`);
+    sql(`INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'power_plant','intermediate',25)`);
+    sql(`INSERT INTO player_technology (player_universe_id,slug,tier,level) SELECT owner_id,'engineering_foundations','superior',5 FROM planet WHERE id=${planet}`);
     await page.goto(`${path}?section=buildings#item-power_plant-superior`);
     await page.reload();
     await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('filter','none');

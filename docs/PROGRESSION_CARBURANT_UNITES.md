@@ -596,3 +596,18 @@ le refus d’une commande directe, la portée locale et la conservation des acc�
 Les anciennes mesures financées restent historiques et ne mesurent pas cette
 nouvelle progression. Wiki local synchronisé ; aucun wiki hébergé ni Alpha
 annoncé mis à jour. CI complète requise avant fusion dans dev.
+
+La première CI complète (n° 357) valide 1 413 tests PHP / 252 897 assertions
+(un test optionnel ignoré), 13 tests Python, lint, assets et sauvegarde/restauration.
+Le lot navigateur 1 révèle une préparation encore fondée sur l’ancien seuil
+Intermédiaire 20 et sans recherche industrielle ; le scénario des onglets prépare
+désormais les recherches des rangs Intermédiaire et Supérieur au niveau 5 et
+la centrale Intermédiaire 25. Ses assertions restent conservées.
+Un second échec concerne le focus visible après un focus programmatique suivant
+un clic dans le parcours d’abandon. Le test utilise maintenant les deux vrais
+Tab depuis le champ de confirmation, contrôle le lien intermédiaire puis le
+bouton, et conserve l’assertion de focus visible. Aucun comportement produit changé.
+Après ces corrections, les sept scénarios d’onglets et d’abandon réussissent
+avec `BROWSER_PERSISTENCE=1 make test-browser BROWSER_ARGS="building-tabs.spec.mjs colony-abandonment.spec.mjs"`
+dans un projet jetable monté sur ce dépôt (7/7, sans reprise). La CI complète
+doit réussir sur cette dernière révision avant fusion ; la PR donne le résultat final.
