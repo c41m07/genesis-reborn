@@ -1730,3 +1730,17 @@ de cette clôture sont suivies dans la [PR #86](https://github.com/c41m07/genesi
 et le [bilan final](NAVIGATION_PAGES_DEDIEES.md#recette-transversale-finale).
 La recette de confort sur le compte habituel reste manuelle : le contrôle Edge
 a été arrêté faute de vérification fiable de l’URL. Aucun déploiement Alpha.
+
+## Reprise des branches de consignes et de référencement — 17 novembre 2026
+
+Les branches `docs/consignes-textes-aide`, `docs/conventions-code-architecture`
+et `docs/choix-navigation` sont réunies sur `chore/integration-branches-restantes`,
+depuis dev `13a15a9`. Leurs historiques sont conservés ; les consignes récentes
+restent présentes avec les compléments de navigation, architecture et performance.
+Les quatre pages juridiques publiques sont indexables et présentes dans le sitemap ;
+les textes et brouillons privés ne sont pas modifiés. Connexion et pages privées
+gardent leurs protections. Contrôles locaux : validation Compose, lint statique,
+huit tests HTTP / 173 assertions et vérification du diff réussis.
+La PR de reprise consigne la CI complète et l’intégration, puis une nouvelle
+promotion Alpha reprend le dev consolidé. Aucune migration de base existante,
+installation de dépendance ni intervention sur le serveur dans cette reprise.
