@@ -1885,3 +1885,18 @@ clé et son ordre restent stables. Une édition devenue périmée est refusée e
 les occurrences déjà programmées gardent leurs règles. Aucune valeur de référence,
 règle de récompense, permission ou condition d’accès n’est modifiée.
 Voir le [lot 7](NAVIGATION_PAGES_DEDIEES.md) pour les preuves et limites.
+
+## Navigation du wiki par pages — 17 novembre 2026
+
+Le lot Wiki conserve le contenu unique du manuel et les deux documents de
+référence. L’accueil, les chapitres et la recherche disposent de pages serveur
+avec titres propres ; les formules et exemples restent dépliables nativement.
+Le manuel reste privé et ne nécessite pas de participation à un univers.
+
+Les anciens paramètres GET redirigent vers les nouvelles destinations. Les
+anciens fragments sont orientés vers une fiche côté navigateur ; sans JavaScript,
+ils repèrent la carte et son lien sur l’accueil. La recherche présente des
+extraits et liens de chapitre, sans afficher tous leurs corps. Le sommaire,
+l’historique et les accès natifs restent disponibles. Aucun changement de règle,
+valeur, permission ou condition d’accès. Le [bilan du lot 8](NAVIGATION_PAGES_DEDIEES.md)
+distingue recette locale, CI, fusion et actualisation de l’application.

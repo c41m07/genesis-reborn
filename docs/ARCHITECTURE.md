@@ -135,39 +135,55 @@ La demande et la consommation prennent les verrous dans le même ordre : joueur 
 Si le transport mail échoue, l’erreur est journalisée sans adresse ni jeton ; le mot de passe reste inchangé et la réponse publique reste neutre. Une nouvelle demande permet de réessayer. Les tests vérifient les réponses HTTP et le contenu des messages, sans prétendre mesurer les délais ni la délivrabilité du serveur Alpha. La configuration SMTP, l’expéditeur et l’URL HTTPS réels restent à vérifier sur ce serveur. Aucune migration supplémentaire n’est nécessaire pour ce parcours.
 ## Wiki et sources embarquées
 
-Le guide est accessible aux comptes connectés sur `/wiki`, sans participation à
-un univers obligatoire. Les liens sont présents près de Feedback et sur la vue
-générale de la colonie, destination de l’accueil du jeu.
+Le guide est accessible aux comptes connectés, même sans participation à un
+univers. L’accès Wiki reste dans l’en-tête, près de Feedback. `/wiki` est l’accueil,
+`/wiki/chapitres/{chapter}` affiche un chapitre et `/wiki/recherche?q=…` affiche des
+résultats avec extraits et liens de lecture. Chaque destination est rendue par le
+serveur, avec un titre propre et le même sommaire. Aucune section de manuel n’est
+masquée pour simuler une page. La recherche reste utilisable sans JavaScript.
 
-`docs/wiki.json` est l’unique texte explicatif du guide. Il explique les
-mécanismes sans recopier les tableaux économiques, les prix ou les statistiques.
-Les références détaillées proviennent directement de `docs/REGLES.md` et
-`docs/DECISIONS.md`, consultables sous `/wiki/references/regles` et
-`/wiki/references/decisions`. Elles sont affichées comme texte brut échappé ;
-aucun HTML ou Markdown actif n’est interprété. Les identifiants de référence
-sont limités à ces deux valeurs : aucun chemin fourni par le visiteur n’est lu.
+`WikiManual` lit les sources uniques `docs/wiki.json`, `docs/REGLES.md` et
+`docs/DECISIONS.md`. Le JSON fini du manuel est décodé une fois par préparation ;
+seules les métadonnées du sommaire et le contenu demandé vont au template.
+L’accueil ne prépare aucun corps de chapitre ; une fiche n’en transmet qu’un ;
+la recherche parcourt le document de référence et ne transmet que des extraits
+bornés à 240 caractères. Aucun chargement de données de jeu, schéma ou dépendance
+n’est ajouté. Aucun gain de performance mesuré n’est revendiqué.
 
-Les références conservent des paragraphes historiques remplacés par des décisions
-ultérieures (bonus, courbes et prix communs). Le guide signale ces écarts sans
-additionner les anciennes règles aux nouvelles. Les valeurs propres à un univers
-restent celles affichées par le jeu ; le wiki ne change aucun équilibrage.
+Les formules et exemples utilisent les éléments natifs `details` et `summary`.
+Les références, conservées sous `/wiki/references/regles` et
+`/wiki/references/decisions`, restent du texte brut échappé et sont présentées par
+sections repliables. Les identifiants de référence se limitent à ces deux valeurs :
+aucun chemin fourni par le visiteur n’est lu. Ne pas ajouter `raw` aux paragraphes
+ou références. Les sources gardent leurs paragraphes historiques ; le guide
+n’additionne pas leurs anciens réglages aux règles récentes. Les valeurs propres
+à un univers restent celles affichées par le jeu. Aucune règle ou valeur du
+manuel n’est changée par cette navigation.
 
-Après une décision de gameplay, relire les rubriques explicatives touchées et les
-sources de référence dans le même lot. Ne pas créer une deuxième copie chiffrée
-des règles dans une vue Twig. Les paragraphes du guide sont rendus avec
-l’échappement normal de Twig ; ne pas ajouter `raw`.
+Les GET historiques `?chapter=` et `?q=` redirigent vers les pages dédiées.
+Le serveur ne reçoit pas le fragment d’une URL. `wiki_chapters` traduit donc
+les anciens `#wiki-{id}` et `#wiki-title-{id}` au chargement et au changement de
+fragment, en conservant la recherche et en remplaçant l’entrée d’historique pour
+éviter une boucle au retour arrière. La liste des destinations est produite par
+le routeur depuis les seuls chapitres connus. Sans JavaScript, les cartes de
+l’accueil portent ces mêmes identifiants et donnent un lien de lecture ; les
+résultats de recherche gardent aussi leurs repères. Le sélecteur mobile soumet
+un GET natif ; JavaScript peut seulement déclencher cette soumission à la sélection.
+Le sommaire automatique est désactivé sur ces pages, les ancres utiles au sommaire
+et à la lecture restent disponibles.
 
-Le contrôleur lit `../docs/` depuis `app/` : montage `/docs` en développement
-et copie `/docs` en production. L’image de production copie seulement les trois fichiers de contenu du wiki ;
-les exceptions de `.dockerignore` doivent être conservées. Les autres documents
-restent exclus du contexte. Une compilation d’image et son déploiement restent
-distincts des tests locaux du wiki.
+Le contrôleur lit `../docs/` depuis `app/` : montage `/docs` en développement et
+copie `/docs` en production. L’image de production copie seulement ces trois
+fichiers de contenu du wiki ; conserver les exceptions de `.dockerignore`.
+Après une décision de gameplay, relire les rubriques touchées dans le même lot,
+sans recopier les règles chiffrées dans les templates.
 
-Vérifications : scénario `app/tests/browser/wiki.spec.mjs` (accès anonyme, liens,
-sommaire clavier, contenu des sources, référence inconnue, trois largeurs et deux
-thèmes), puis six contrôles obligatoires avant publication. Ces contrôles ciblés
-ne constituent pas un audit RGAA complet. Aucun déploiement n’est effectué par
-l’ajout de cette page.
+Validation : tests HTTP `WikiPagesTest`, parcours `wiki.spec.mjs` et parcours
+transversal `ui-journey.spec.mjs`. Le bilan de navigation distingue les contrôles
+locaux, la CI, l’intégration et l’activation locale. Les contrôles ciblés ne
+constituent pas un audit RGAA complet. Aucun déploiement n’est effectué par l’ajout
+de ces pages.
+
 ## Compte à rebours de fermeture
 
 La date `Universe.endsAt` enregistrée en base fait autorité. Le composant apparaît lorsque le statut est actif et qu’il reste **au maximum 24 heures**, sur la carte de l’univers et dans les pages du joueur ayant cet univers sélectionné. Sans date, ou avec une date à plus de 24 heures, il est masqué. Il peut apparaître sans rechargement lorsque le seuil est franchi.

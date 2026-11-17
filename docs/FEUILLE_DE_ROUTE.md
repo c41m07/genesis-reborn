@@ -1697,3 +1697,15 @@ navigateur distincts, par consolidation). La PR #83, la CI complète,
 l’intégration dans dev et l’actualisation locale sont des étapes
 distinctes, suivies dans le [bilan](NAVIGATION_PAGES_DEDIEES.md). Pas de migration
 sur une base existante ni de déploiement Alpha. Le lot Wiki reste séparé.
+
+## Navigation — lot 8 Wiki, 17 novembre 2026
+
+Accueil, chapitres et recherche globale séparés, avec titres et navigation active.
+Sommaire, formules natives et documents de référence conservés. Les anciennes
+adresses à paramètres et fragments restent utilisables, avec une transition
+explicite sans JavaScript. Aucune règle, valeur, permission ou condition d’accès
+modifiée. Réalisation locale vérifiée : huit tests PHP distincts et quatre
+scénarios navigateur réussis, validation, lint et compilation. La CI complète,
+la fusion dev et l’actualisation de l’application restent des étapes distinctes,
+suivies dans le [bilan](NAVIGATION_PAGES_DEDIEES.md). Pas de migration sur une base
+existante ni de déploiement Alpha. Les trois sources Work restent inaccessibles.

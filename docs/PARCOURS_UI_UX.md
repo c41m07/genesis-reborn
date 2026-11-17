@@ -188,3 +188,20 @@ des modèles → création ou modification. Le fil d’Ariane et la navigation d
 rubrique gardent le contexte. Sans JavaScript, ces parcours restent des liens
 et formulaires natifs. Les anciennes ancres disposent de liens équivalents ;
 avec JavaScript, elles ouvrent directement la fiche correspondante.
+
+## Wiki : pages dédiées — lot 8, 17 novembre 2026
+
+Ce parcours remplace la sélection de chapitres dans le document unique décrite
+pour l’intégration du 13 novembre. L’accueil présente les sujets par partie, puis
+chaque chapitre ouvre sa propre page. Le sommaire indique le chapitre actif sur
+ordinateur ; le sélecteur mobile conserve le parcours GET natif. Les liens
+Précédent/Suivant permettent une lecture continue.
+
+La recherche possède sa page, avec extraits et liens de chapitre. Elle se trouve
+dans la navigation commune, avec les deux références historiques. Son formulaire
+est visible sur l’accueil et les résultats pour laisser davantage de place au
+texte sur une page de lecture. Les formules et exemples se déplient au clavier,
+y compris sans JavaScript. Les anciennes ancres ouvrent directement une fiche
+avec JavaScript ; sans lui, elles repèrent la carte et son lien dans l’accueil.
+Retour arrière, rechargement, titres, navigation active et refus d’accès sont
+contrôlés. Les contenus et chiffres du manuel sont conservés.

@@ -1,0 +1,14 @@
+<form class="wiki-chapter-picker" method="get" action="{{ path('app_wiki') }}">
+  <label for="wiki-chapter-choice">Choisir un chapitre</label>
+  <select id="wiki-chapter-choice" name="chapter" required><option value="">Sélectionner un chapitre</option>{% for chapter in chapters %}<option value="{{ chapter.id }}"{% if chapter.id==currentChapter %} selected{% endif %}>{{ chapter.title }}</option>{% endfor %}</select>
+  <button class="secondary">Ouvrir le chapitre</button>
+</form>
+<nav class="wiki-summary wiki-desktop-summary" aria-label="Sommaire du wiki">
+  <h2>Sommaire</h2>
+  {% set currentPart = '' %}
+  {% for chapter in chapters %}
+    {% if chapter.part != currentPart %}{% if not loop.first %}</ol>{% endif %}<h3>{{ chapter.part }}</h3><ol>{% set currentPart=chapter.part %}{% endif %}
+    <li><a href="{{ path('app_wiki_chapter',{chapter:chapter.id}) }}"{% if chapter.id==currentChapter %} aria-current="page"{% endif %}>{{ chapter.title }}</a></li>
+    {% if loop.last %}</ol>{% endif %}
+  {% endfor %}
+</nav>

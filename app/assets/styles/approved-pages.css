@@ -41,3 +41,31 @@ body.ui-refined[data-ui-page="flottes"] [data-live-region="orbit-requests"]>deta
 @media(min-width:741px) and (max-width:760px){.catalog-operations-rail>.colony-catalog-aside{grid-column:1;grid-row:3}.colony-catalog-workspace>.colony-catalog{grid-column:1;grid-row:2}}
 
 @media(max-width:1050px){body.ui-refined main :is(input,select,textarea){font-size:16px}}
+
+/* Le wiki utilise des pages serveur ; le sommaire demeure commun à chaque destination. */
+body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-intro h1 { overflow-wrap: anywhere; }
+.wiki-space-navigation { display: flex; flex-wrap: wrap; gap: .5rem; margin-block: 1rem; }
+.wiki-space-navigation a { padding: .65rem .9rem; border: 1px solid var(--line); border-radius: .5rem; min-height: 44px; display: inline-flex; align-items: center; }
+.wiki-space-navigation a[aria-current], .wiki-summary a[aria-current] { font-weight: 700; text-decoration: underline; text-underline-offset: .25em; }
+.wiki-card-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1rem; }
+.wiki-manual .wiki-chapter-card { margin: 0; padding: 1.1rem; min-width: 0; }
+.wiki-chapter-card h3 { margin: 0; }
+.wiki-chapter-card h3 a { display: inline-flex; align-items: center; min-height: 44px; }
+.wiki-chapter-card p { margin-bottom: 0; font-size: .85rem; }
+.wiki-part { margin-bottom: 2rem; }
+.wiki-chapter-pagination { display: flex; gap: 1rem; justify-content: space-between; flex-wrap: wrap; margin-block: 1.5rem; }
+.wiki-chapter-pagination a { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.wiki-search-result h2 a { text-decoration: underline; text-underline-offset: .2em; }
+.wiki-reference-document { min-width: 0; }
+@media(max-width:1099px) {
+    body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-navigation { position: static; }
+}
+@media(max-width:600px) {
+    .wiki-card-grid, .wiki-space-navigation { display: grid; grid-template-columns: minmax(0,1fr); }
+    .wiki-space-navigation { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .wiki-chapter-pagination { display: grid; grid-template-columns: minmax(0,1fr); }
+}
+
+.wiki-chapter-card, .wiki-search-result { scroll-margin-top: 200px; }
+
+.wiki-manual .wiki-intro a.primary { display: inline-flex; width: auto; min-height: 44px; align-items: center; padding: .75rem 1rem; }
