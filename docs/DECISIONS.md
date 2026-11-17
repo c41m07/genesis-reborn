@@ -1952,3 +1952,15 @@ Nom et tag sont conservés après erreur et rechargement dans le contexte de
 l’empire, puis effacés après réussite. La recherche par nom, le recrutement ouvert,
 les droits, médias et règles de création restent inchangés. Les lots ultérieurs
 attendent leur propre conception et validation. [Suivi du lot](REFONTE_VISUELLE_INTERFACES.md).
+
+## Refonte visuelle L1C : proposition A — 17 novembre 2026
+
+L’utilisateur choisit A (« j’aime bien le A ») pour Grades et permissions,
+Gestion, Personnalisation et Relations entre guildes. Grades à gauche et édition
+à droite, tag/transfert visibles, dissolution distinguée, fichiers sous la
+description et traités en lignes. Le menu mobile reprend celui de l’espace.
+
+Une confirmation dépliable précède transfert, départ et dissolution, y compris
+sans JavaScript. Les conséquences affichées, droits délégués, vérifications de
+version, limites de fichiers et règles de signature restent inchangés. Cette
+validation porte uniquement sur L1C ; [suivi et vérifications](REFONTE_VISUELLE_INTERFACES.md).

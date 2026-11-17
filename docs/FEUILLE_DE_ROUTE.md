@@ -16,20 +16,23 @@ conception et validation ; la mission globale n’est pas terminée.
 
 À la demande de l’utilisateur, la branche commune `feature/refonte-visuelle`
 accueille les prochains lots par commits locaux, sans publication implicite.
-Le tableau détaillé compte **18 lots prévus**, dont L1A et L1B réalisés localement.
+Le tableau détaillé compte **18 lots prévus**, dont L1A, L1B et L1C réalisés localement.
 L1B retient A après validation : Trouver une guilde, Créer une guilde et
 Présentation consultée. Résultats en lignes, formulaire accompagné et fiche
 immersive ; nom/tag conservés après erreur et rechargement dans le seul empire
 concerné. Les contrôles ciblés et captures réelles sont consignés dans le suivi.
 Les deux propositions restent dans les pages Figcraft 04 et 05 ; Vue générale
-et B du premier lot préservées. Les 16 lots restants attendent leur propre cycle
+et B du premier lot préservées. Les 15 lots restants attendent leur propre cycle
 de conception et validation. CI GitHub et fusion restent distinctes.
 
-L1B est enregistré dans `1e390a9`. L1C est analysé : Grades, Gestion,
-Personnalisation et Relations entre guildes. Deux propositions Figcraft couvrent
-ces quatre pages et leurs rôles/états à 1440/768/390 px, dans les pages 06 et 07.
-Elles attendent le choix utilisateur avant code ; confirmations supplémentaires
-proposées pour transfert, départ et dissolution, sans changer leurs conséquences.
+L1B est enregistré dans `1e390a9`. L1C retient A après validation : Grades,
+Gestion, Personnalisation et Relations entre guildes, confirmations natives avant
+transfert/départ/dissolution et menu mobile partagé. 83 tests PHP ciblés réussis ;
+une reprise navigateur corrige le focus au changement de format et passe sur les
+six parcours concernés, après 14 autres succès du premier passage. Captures réelles
+et limites dans le suivi ; aucune CI GitHub ou intégration revendiquée. Les deux
+propositions restent dans Figcraft, pages 06/07. **Trois lots réalisés localement,
+15 restants** dans le plan principal. L2 sera découpé autour du parcours de flotte.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026
 

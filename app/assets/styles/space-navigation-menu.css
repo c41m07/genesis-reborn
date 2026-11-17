@@ -1,0 +1,36 @@
+/* Le même menu natif sert aux pages d'espace nombreuses ; il reste ouvert sans JavaScript. */
+.space-navigation-menu {
+    margin-block: 18px 22px;
+    min-width: 0;
+}
+
+.space-navigation-menu > summary {
+    display: none;
+}
+
+@media (max-width: 600px) {
+    .space-navigation-menu > summary {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        padding: 12px;
+        border: 1px solid var(--accent);
+        border-radius: 5px;
+        background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+    }
+
+    .space-navigation-menu > summary::marker {
+        content: "";
+    }
+
+    .space-navigation-menu-label {
+        flex: 1;
+        color: var(--muted);
+        font-size: 12px;
+    }
+
+    .space-navigation-menu .space-navigation {
+        margin-block: 10px 0;
+    }
+}

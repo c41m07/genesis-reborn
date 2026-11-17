@@ -5,6 +5,7 @@ export default class extends Controller {
 
     connect() {
         this.mobile = matchMedia('(max-width: 600px)');
+        this.summaryLostFocus = false;
         this.onViewportChange = () => this.sync();
         this.mobile.addEventListener('change', this.onViewportChange);
         this.sync();
@@ -18,13 +19,22 @@ export default class extends Controller {
         // Le HTML reste déplié sans JavaScript ; sur ordinateur, le résumé est masqué.
         const focusedElement = document.activeElement;
         const focusSummary = this.mobile.matches && this.element.contains(focusedElement);
-        const focusCurrentPage = !this.mobile.matches && focusedElement === this.summaryTarget;
+        const focusCurrentPage = !this.mobile.matches
+            && (focusedElement === this.summaryTarget || this.summaryLostFocus);
         this.element.open = !this.mobile.matches;
         // Un changement de format ne doit pas laisser le focus dans un élément masqué.
         if (focusSummary) {
             this.summaryTarget.focus();
         } else if (focusCurrentPage) {
             this.element.querySelector('[aria-current="page"]')?.focus();
+        }
+        this.summaryLostFocus = false;
+    }
+
+    captureFocus(event) {
+        // Le CSS peut masquer le résumé et lui retirer le focus avant l'événement de changement de format.
+        if (event.target === this.summaryTarget && getComputedStyle(this.summaryTarget).display === 'none') {
+            this.summaryLostFocus = true;
         }
     }
 

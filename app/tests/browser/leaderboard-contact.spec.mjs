@@ -231,7 +231,8 @@ test('Hub de guilde : création, équipage et discussion commune', async ({ page
   await memberPage.getByRole('link', { name: 'Gestion', exact: true }).focus();
   await memberPage.keyboard.press('Enter');
   await expect(memberPage).toHaveURL(/\/guildes\/gestion$/);
-  await expect(memberPage.getByRole('heading', { name: 'Gestion de la guilde', exact: true })).toBeVisible();
+  await expect(memberPage.getByRole('heading', { level: 1, name: 'Gestion de ma guilde', exact: true })).toBeVisible();
+  await memberPage.getByText('Examiner le départ', { exact: true }).click();
   await memberPage.getByRole('button', { name: 'Quitter la guilde' }).click();
   const enemyGuild = 'Enemy-' + crypto.randomUUID().slice(0, 8);
   await memberPage.goto('/guildes/creer');

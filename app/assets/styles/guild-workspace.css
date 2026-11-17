@@ -14,15 +14,6 @@ body.authenticated[data-theme="light"] .guild-workspace {
     --guild-negative: #9a2929;
 }
 
-.guild-workspace .space-navigation-menu {
-    margin-block: 18px 22px;
-    min-width: 0;
-}
-
-.guild-workspace .space-navigation-menu > summary {
-    display: none;
-}
-
 body.authenticated .guild-workspace .space-navigation a {
     border-color: var(--guild-control-border);
     border-radius: 5px;
@@ -323,31 +314,6 @@ body.authenticated .guild-workspace .commander-card > form {
 }
 
 @media (max-width: 600px) {
-    .guild-workspace .space-navigation-menu > summary {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 8px 12px;
-        padding: 12px;
-        border: 1px solid var(--accent);
-        border-radius: 5px;
-        background: color-mix(in srgb, var(--accent) 12%, var(--panel));
-    }
-
-    .guild-workspace .space-navigation-menu > summary::marker {
-        content: "";
-    }
-
-    .guild-workspace .space-navigation-menu-label {
-        flex: 1;
-        color: var(--muted);
-        font-size: 12px;
-    }
-
-    .guild-workspace .space-navigation-menu .space-navigation {
-        margin-block: 10px 0;
-    }
-
     body.authenticated .guild-workspace .guild-overview-hero.guild-hub-hero {
         grid-template-columns: minmax(0, 1fr);
         padding: 20px;

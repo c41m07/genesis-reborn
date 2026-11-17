@@ -5,7 +5,8 @@
 {% set relation_labels={allies:'Alliés',enemies:'Ennemis',neutral:'Neutre',pending:'Proposition en attente',non_aggression:'Pacte de non-agression',defense:'Pacte de défense'} %}
 {% set guildWorkspace = tab == 'relations' or (enabled and own and tab in ['guilds', 'members']) %}
 {% set guildDiscovery = enabled and not own and tab in ['join', 'create'] %}
-<div class="page-refinement diplomacy-page{% if guildWorkspace %} guild-workspace guild-workspace--{{ tab }}{% endif %}{% if guildDiscovery %} guild-discovery guild-discovery--{{ tab }}{% endif %}" data-page-sections="disabled">
+{% set guildControl = enabled and own and tab in ['ranks', 'management', 'diplomacy'] %}
+<div class="page-refinement diplomacy-page{% if guildWorkspace %} guild-workspace guild-workspace--{{ tab }}{% endif %}{% if guildDiscovery %} guild-discovery guild-discovery--{{ tab }}{% endif %}{% if guildControl %} guild-control guild-control--{{ tab }}{% endif %}" data-page-sections="disabled">
 <div class="page-heading"><div><h1>{{ pageTitle }}</h1><p>{{ tab in ['relations','diplomacy'] ? 'Vos relations dans l’univers ' ~ membership.universe.name ~ '.' : 'Votre espace de guilde dans l’univers ' ~ membership.universe.name ~ '.' }}</p></div></div>
 {% if tab in ['relations','diplomacy'] %}
 {% set destinations = [] %}
@@ -17,9 +18,9 @@
     destinations: destinations,
     navigationLabel: 'Navigation de diplomatie',
     currentLabel: tab == 'relations' ? 'Commandants' : 'Relations entre guildes',
-    compact: guildWorkspace and destinations|length > 1
+    compact: (guildWorkspace or guildControl) and destinations|length > 1
 } only %}
-{% else %}{% include 'ui/guild_navigation.html.twig' with {compactNavigation: guildWorkspace} %}{% endif %}
+{% else %}{% include 'ui/guild_navigation.html.twig' with {compactNavigation: guildWorkspace or guildControl} %}{% endif %}
 {% if incomingPersonalCount %}<p class="panel received-proposals"><a href="#alliance-members">{{ incomingPersonalCount }} proposition{{ incomingPersonalCount > 1 ? 's' : '' }} personnelle{{ incomingPersonalCount > 1 ? 's' : '' }} à traiter</a></p>{% endif %}
 {% if incomingGuildCount %}<p class="panel received-proposals">{{ incomingGuildCount }} proposition{{ incomingGuildCount > 1 ? 's' : '' }} de guilde reçue{{ incomingGuildCount > 1 ? 's' : '' }} à traiter</p>{% endif %}
 {% if tab=='relations' %}

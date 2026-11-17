@@ -171,3 +171,19 @@ La fiche conserve le nom de guilde comme titre principal, ses visuels réels ou
 l’emblème de repli, puis présentation et commandant en sections successives.
 Les thèmes utilisent les variables existantes. Le brouillon de nom/tag est
 échappé et conservé après erreur ; il ne remplace pas la validation serveur.
+
+### Gestion de guilde — composition A validée pour L1C
+
+`guild-control.css` conserve les grades à gauche sur ordinateur puis au-dessus
+du formulaire sur petit écran. Nom, priorité et sept permissions restent dans le
+même formulaire. Les réglages de tag/transfert sont visibles ; les actions
+sensibles utilisent un dépliable décrivant leurs conséquences avant l’envoi.
+Les membres consultent les grades et disposent du départ, selon les droits
+existants. Les traités restent en lignes avec relation actuelle et proposition
+distinctes. Description et fichiers restent groupés dans le formulaire de
+personnalisation ; les fichiers s’empilent sur mobile.
+
+Le menu natif est partagé dans `space-navigation-menu.css`. Sans JavaScript,
+les liens restent dépliés ; son comportement au clavier, au redimensionnement et
+au retour de focus reste celui validé en L1A. Les confirmations utilisent le
+comportement natif de `details`, sans nouvelle dépendance.

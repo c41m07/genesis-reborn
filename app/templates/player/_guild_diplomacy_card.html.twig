@@ -1,16 +1,12 @@
 {% set g=row.guild %}
 {% set proposal=row.relation.proposal|default(row.status=='pending' ? 'allies' : null) %}
 {% set treatyPermissions={allies:'diplomacy.alliance',non_aggression:'diplomacy.non_aggression',defense:'diplomacy.defense',neutral:'diplomacy.neutral'} %}
-<article class="panel guild-card{{ proposal and own and row.relation.proposer.id!=own.id ? ' received-proposals' : '' }}">
+<article class="panel guild-card{% if own %} guild-card--{{ row.status }}{% endif %}{{ proposal and own and row.relation.proposer.id!=own.id ? ' received-proposals' : '' }}">
     <span class="badge">{{ own ? relation_labels[row.status]|default(row.status) : 'Recrutement ouvert' }}</span>
     <h3><a class="public-profile-link" href="{{ path('app_guild_public_profile',{id:g.id}) }}">{{ g.name }}</a></h3>
+    <p class="guild-result-meta"><span>Commandement : {{ g.leader.displayName }}</span><span>{{ row.members|length }} membre{{ row.members|length > 1 ? 's' : '' }}</span></p>
     {% if not own %}
-        <p class="guild-result-meta"><span>Commandement : {{ g.leader.displayName }}</span><span>{{ row.members|length }} membre{{ row.members|length > 1 ? 's' : '' }}</span></p>
-    {% else %}
-        <p>Commandement : {{ g.leader.displayName }}<br>{{ row.members|length }} membre{{ row.members|length > 1 ? 's' : '' }}</p>
-    {% endif %}
-    <details><summary>Voir les membres</summary><ul>{% for member in row.members %}<li>{{ member.playerUniverse.displayName }}</li>{% endfor %}</ul></details>
-    {% if not own %}
+        <details><summary>Voir les membres</summary><ul>{% for member in row.members %}<li>{{ member.playerUniverse.displayName }}</li>{% endfor %}</ul></details>
         <div class="guild-result-actions">
             <a class="secondary" href="{{ path('app_guild_public_profile',{id:g.id}) }}">Consulter la présentation</a>
             <a class="secondary" href="{{ path('app_messages',{with:g.leader.id}) }}">Contacter le commandant</a>
@@ -21,9 +17,9 @@
             </form>
         </div>
     {% else %}
-        <div class="guild-hub-actions"><a href="{{ path('app_messages',{with:g.leader.id}) }}">Contacter le commandant</a></div>
         {% if row.status=='non_aggression' %}<p>Attaques et conquêtes directes bloquées. Aucun droit supplémentaire de stationnement défensif ou de transport. Espionnage autorisé ; aucune protection contre les tirs dans un combat à plusieurs camps.</p>{% endif %}
         {% if row.status=='defense' %}<p>Non-agression et stationnement défensif avec accord du propriétaire. Aucun droit supplémentaire de transport ni regroupement offensif. Espionnage autorisé ; aucune protection entre camps dans une bataille.</p>{% endif %}
+        <div class="guild-treaty-actions">
         {% if proposal %}
             <p>{{ proposal=='neutral' ? 'Paix' : relation_labels[proposal] }} : proposition {{ row.relation.proposer.id==own.id ? 'envoyée' : 'reçue' }}. La relation actuelle reste applicable jusqu’à acceptation.</p>
             {% if guildPermissions[treatyPermissions[proposal]] %}
@@ -45,10 +41,15 @@
                     <input type="hidden" name="relation_id" value="{{ row.relation.id|default(0) }}"><input type="hidden" name="relation_version" value="{{ row.relation.version|default(0) }}">
                     <label for="relation-{{ g.id }}-{{ cardContext }}">Traité à proposer</label>
                     <select name="status" id="relation-{{ g.id }}-{{ cardContext }}">{% for type in choices %}<option value="{{ type }}">{{ relation_labels[type] }}</option>{% endfor %}</select>
-                    <button class="secondary" name="treaty_action" value="propose">Proposer le traité</button>
+                    <button class="primary" name="treaty_action" value="propose">Proposer le traité</button>
                 </form>
             {% endif %}
         {% endif %}
+        </div>
+        <div class="guild-treaty-links">
+            <details><summary>Voir les membres</summary><ul>{% for member in row.members %}<li>{{ member.playerUniverse.displayName }}</li>{% endfor %}</ul></details>
+            <a href="{{ path('app_messages',{with:g.leader.id}) }}">Contacter le commandant</a>
+        </div>
         {% if row.status in ['allies','non_aggression','defense'] and guildPermissions['diplomacy.neutral'] %}
             <details><summary>Rompre le traité</summary><p>La rupture est immédiate et annule aussi toute proposition en attente.</p>
                 {% include 'player/_guild_treaty_form.html.twig' with {treatyStatus:'neutral',treatyAction:'break',treatyLabel:'Confirmer la rupture'} %}

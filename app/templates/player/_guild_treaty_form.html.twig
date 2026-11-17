@@ -5,5 +5,5 @@
     <input type="hidden" name="relation_id" value="{{ row.relation.id|default(0) }}">
     <input type="hidden" name="relation_version" value="{{ row.relation.version|default(0) }}">
     <input type="hidden" name="status" value="{{ treatyStatus }}">
-    <button class="secondary" name="treaty_action" value="{{ treatyAction }}">{{ treatyLabel }}</button>
+    <button class="{{ treatyAction == 'accept' ? 'primary' : 'secondary' }}" name="treaty_action" value="{{ treatyAction }}">{{ treatyLabel }}</button>
 </form>

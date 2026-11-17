@@ -686,6 +686,12 @@ d’erreur de création, le nom et le tag restent disponibles au rechargement da
 le seul empire concerné ; une création réussie efface ce brouillon. Les recherches,
 adhésions et accès conservent leurs règles existantes.
 
+Le lot Gestion retient également A pour Grades, Gestion, Personnalisation et
+Relations entre guildes : sélection de grade latérale, formulaires lisibles et
+traités en lignes. Le transfert du commandement, le départ et la dissolution
+disposent d’une confirmation dépliable utilisable sans JavaScript. Les conditions,
+permissions et conséquences de ces actions restent celles des services existants.
+
 Le lot Projets collectifs conserve `/guildes/projets` comme entrée des projets en
 cours et ajoute `/guildes/projets/disponibles` et `/guildes/projets/historique`.
 La fiche existante reste dédiée au détail et au don. Listes et contributions sont

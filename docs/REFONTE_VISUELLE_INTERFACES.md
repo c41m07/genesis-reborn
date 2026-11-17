@@ -113,8 +113,8 @@ Les liens du prototype simulent la navigation et n’exécutent aucune action du
 | L11 | Wiki : accueil, chapitre, recherche et références | 3/5 · 3/5 | Pages déjà séparées, anciens fragments et formules dépliables. |
 | L12 | Cohérence, erreurs et composants communs restants | 4/5 · 4/5 | Revue transversale ; adaptations communes rattachées au lot consommateur. |
 
-Le tableau comporte **18 lots prévus** : deux lots réalisés localement (L1A/L1B),
-16 restants. Certains ensembles complexes seront subdivisés pendant leur analyse ;
+Le tableau comporte **18 lots prévus** : trois lots réalisés localement (L1A/L1B/L1C),
+15 restants. Certains ensembles complexes seront subdivisés pendant leur analyse ;
 ce total ne fixe donc pas le nombre final de livraisons. Les complexités seront
 réévaluées avant chaque sous-tâche. À la demande de l’utilisateur, les lots de
 cette mission se poursuivent par commits sur la branche commune, sans fusion
@@ -427,7 +427,7 @@ sont synchronisés dans le même lot.
 
 ## L1C — grades, gestion, personnalisation et traités
 
-Conception **4/5**, réalisation prévue **4/5**. Quatre pages existantes :
+Conception **4/5**, réalisation **4/5**. Quatre pages existantes :
 `/guildes/grades`, `/guildes/gestion`, `/guildes/{id}/personnaliser` et
 `/diplomatie`. Sources ciblées lues : fragments ranks/rank_form/settings/management,
 personnalisation, cartes/formulaires de traité, `DiplomacyPageView`,
@@ -447,10 +447,11 @@ mobile de l’espace déjà retenu en L1A pour ces destinations nombreuses.
 | A · Gestion directe | Grades à gauche, édition à droite ; tag/transfert visibles et dissolution distinguée. | Description puis fichiers ; relations en lignes complètes. | Plus de hauteur pour sept permissions et plusieurs relations ; réglages visibles plus denses. |
 | B · Gestion progressive | Grades au-dessus, permissions sur deux colonnes ; commande secondaire dépliable. | Formulaire avec visuel actuel à côté ; proposition reçue prioritaire, autres relations en cartes. | Les réglages secondaires demandent un clic ; cartes à adapter aux descriptions et noms longs. |
 
-**Recommandation : A**, pour faciliter la lecture linéaire des permissions et
-des conséquences dans ces écrans de gestion. B est une option complète si la
-priorité est de limiter les réglages visibles d’emblée. Aucun choix L1C acquis ;
-la validation A de L1B ne couvre pas ce nouveau lot.
+La recommandation était A pour la lecture linéaire des permissions et
+des conséquences. **Choix utilisateur : A** (« j’aime bien le A »), pour les
+quatre pages L1C. La version de validation est enregistrée dans Figcraft.
+Les deux compositions restent consultables ; les lots suivants attendent leur
+propre validation.
 
 ### Rôles et garanties à préserver
 
@@ -462,10 +463,9 @@ la validation A de L1B ne couvre pas ce nouveau lot.
   n’y en a aucun. Le membre quitte ; le commandant transfère ou dissout. La
   dissolution abandonne les projets sans remboursement ; les contrats personnels
   restent conservés et la récompense exige la présence à la clôture du projet.
-- **Adaptation UX proposée dans les deux options** : confirmation dépliable avant
-  transfert, départ et dissolution. Les boutons actuels de transfert/départ/
-  dissolution envoient directement leurs POST ; les maquettes ajoutent une étape
-  de revue sans modifier les conséquences ni les contrôles serveur.
+- **Adaptation UX validée et réalisée** : confirmation dépliable avant
+  transfert, départ et dissolution. Une étape de revue précède désormais les
+  POST existants, sans modifier les conséquences ni les contrôles serveur.
 - Description simple de 2 000 caractères ; fichiers JPEG/PNG/WebP, logo 1 Mo et
   512×512, bannière 2 Mo et 1920×640. Images conservées sans nouveau fichier,
   texte conservé après refus et fichiers à resélectionner. B montre le visuel
@@ -499,12 +499,70 @@ structures, manifeste et rapports `lot-1C-verification.json` / `lot-1C-containme
 Les maquettes restent hors dépôt dans le dossier natif indiqué plus haut. Les
 logos et SVG sont conservés ; seul l’asset d’exemple existant illustre B.
 
-Après choix : réalisation ciblée et recette renforcée des rôles, transferts,
-versions et refus, validations de fichiers, confirmations sans JavaScript,
-clavier/focus, thèmes et conservation des saisies. Références : `GuildRankTest`,
-`DiplomacyAccessPolicyTest`, `PublicProfilesTest`, `GuildTreatyTest`,
-`guild-ranks.spec.mjs`, `guild-treaties.spec.mjs` et `public-profiles.spec.mjs`.
-Aucune nouvelle réalisation du jeu pour L1C avant validation.
+### Réalisation A et vérifications locales
+
+Templates et styles réorganisés dans les quatre pages approuvées. Les services,
+contrôleurs, lectures, validations, transactions et droits restent inchangés.
+Le menu mobile existant est réutilisé ; ses styles sont extraits vers
+`space-navigation-menu.css` pour L1A/L1C, sans ajouter de contrôleur. Les formulaires
+conservent leurs champs, CSRF et versions. La confirmation de transfert garde
+le choix du successeur visible ; départ et dissolution placent le formulaire
+complet dans leur dépliable. Les membres n’ont que leur départ et la lecture des
+grades, selon les permissions actuelles.
+
+Contrôles locaux :
+
+- `make validate`, `make lint-static` (200 Twig, 80 YAML, PHP et conteneur) et
+  `make assets` réussis.
+- PHPUnit existant dans une pile jetable propre au lot : **83 tests / 471 assertions
+  réussis** (`GuildTagPlayerReportTest`, `GuildRankTest`, `PublicProfilesTest`,
+  `DiplomacyAccessPolicyTest`, `GuildTreatyTest`). Les refus d’accès et versions
+  périmées restent couverts par leurs scénarios existants.
+- Nouveau parcours navigateur A réussi : grade long et sept permissions,
+  consultation d’un délégué, fichier invalide avec texte conservé, proposition
+  de défense reçue pendant une alliance, champs et actions autorisés selon rôle.
+  Les quatre pages passent en sombre/clair à 1440/768/390/320 px ; Axe ciblé à
+  390 px ne relève aucune violation dans `.guild-control`.
+- Transfert, départ et dissolution sont réalisés dans la pile de test sans
+  JavaScript, après leur revue. Entrée dans la liste du successeur ne transfère
+  pas avant confirmation ; ancien commandant privé de personnalisation après
+  transfert ; dissolution limitée à sa propre guilde. État sans successeur,
+  accès direct, rechargement, retour arrière et clavier vérifiés.
+- Recette des consommateurs partagés : 14 des 15 scénarios réussis au premier
+  passage. Le parcours B détecte une perte de focus lors du passage mobile →
+  ordinateur. Le CSS peut masquer le résumé avant l’événement de changement de
+  format ; le contrôleur enregistre cette perte de focus pour le rendre à la page
+  active. Les assertions sont conservées ; un cas vérifie aussi que le focus d’un
+  champ extérieur au menu reste inchangé au redimensionnement.
+- La revue des captures conduit à harmoniser description et boutons natifs avec
+  les couleurs de A, à distinguer les actions principales de traité et à éviter
+  les titres visuels répétés. Leurs identifiants et titres de section restent
+  disponibles pour la structure accessible et les anciens liens.
+- Reprise finale des six parcours concernés : **6 scénarios réussis** (L1C,
+  traités, B de L1A, discussion/gestion et deux profils). Aucun test n’est affaibli.
+  Nouveau lint statique et compilation finale réussis ; diff relu et contrôlé.
+
+32 captures réelles finales sont conservées dans
+`output/playwright/guild-control/captures-jeu-L1C-A/` et le dossier Figcraft local
+`captures-jeu-L1C-A/` : quatre pages en sombre/clair à 1440/768/390 px, plus huit
+fenêtres mobiles. Préfixe : `jeu-L1C-A-{grades,gestion,personnalisation,traites}`.
+Les images montrent des données synthétiques du jeu, distinctement des maquettes.
+
+Fichiers principaux : `app/templates/player/{diplomacy,_guild_ranks,_guild_rank_form,
+_guild_settings,_guild_management,guild_profile_edit,_guild_diplomacy_card}.html.twig`,
+`app/assets/app.js`, styles `guild-control.css`, `space-navigation-menu.css` et
+extraction ciblée dans `guild-workspace.css`. Scénario ajouté :
+`guild-control.spec.mjs` ; correction du focus dans
+`space_navigation_controller.js` et action correspondante dans
+`ui/space_navigation.html.twig`. Les scénarios historiques de tag, transfert/départ/
+dissolution, accès direct et classement/contact suivent désormais la confirmation
+validée. Documentation synchronisée dans le même lot.
+
+Les essais écrivent uniquement dans leurs bases et stockages synthétiques jetables,
+sans utiliser la base de test partagée non saine. Aucun email externe ni action
+sur la partie habituelle ; aucun déploiement. Performance non mesurée, lecteur
+d’écran réel non essayé. Les vérifications ciblées ne remplacent pas la CI
+complète requise avant fusion.
 
 ## Reprise et états de couverture
 
@@ -513,12 +571,13 @@ Aucune nouvelle réalisation du jeu pour L1C avant validation.
 | Vue générale Figcraft | Conception de référence conservée | Choix explicite de l’utilisateur | Page inchangée, comparaison effectuée | Ne valide pas automatiquement l’implémentation web ni les autres écrans |
 | L1A | B implémentée et vérifiée localement | B choisie explicitement | Trois pages, PHP ciblé, recette responsive et captures ; bilan ci-dessus | CI complète, intégration et déploiement distincts |
 | L1B | A implémentée et vérifiée localement | A choisie explicitement | Trois pages et brouillon, PHP ciblé, recette responsive et captures | CI complète et intégration distinctes |
-| L1C | Propositions préparées | Choix A/B attendu | Quatre pages et états conçus, contrôles de maquette | Validation avant réalisation |
+| L1C | A implémentée et vérifiée localement | A choisie explicitement | Quatre pages, confirmations natives, 83 PHP et recette responsive ; captures | CI complète et intégration distinctes |
 | L2 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
 Les commits restent sur `feature/refonte-visuelle` ; L1B A est enregistré dans
-`1e390a9`. Prochaine étape : choix explicite entre les deux propositions L1C,
-puis réalisation. Les validations précédentes restent limitées à leurs lots.
+`1e390a9`. L1C A est réalisé et vérifié localement. Prochain périmètre :
+L2, à découper autour du parcours de flotte avant deux propositions Figcraft.
+Les validations précédentes restent limitées à leurs lots.
 Aucun push, PR, fusion ou déploiement n’est autorisé par le seul changement de
 branche. La mission globale reste non terminée.

@@ -639,7 +639,7 @@ sans JavaScript. `space_navigation_controller.js` adapte son ouverture au seuil
 de 600 px, ferme sur Échap et replace le focus lorsque le format masque son
 élément. Son écouteur de changement de format est retiré à la déconnexion.
 `guild-workspace.css`, chargé après les styles existants, limite les compositions
-et couleurs aux trois pages. Le socle commun et la barre de ressources sont
+et couleurs aux trois pages L1A. Le socle commun et la barre de ressources sont
 conservés. [Suivi de réalisation locale](REFONTE_VISUELLE_INTERFACES.md).
 
 L1B, validé en A, ajoute `guild-discovery.css` limité à la recherche/création sans
@@ -655,6 +655,24 @@ valeur trop longue après troncature. Les champs Twig restent échappés ; le br
 survit aux GET et n’est pas un état métier. Une création réussie le retire. Le
 contrôle CSRF précède son écriture ; services, validations et transactions restent
 inchangés. Les tests couvrent rechargement, isolement, CSRF et bornes.
+
+L1C, validé en A, réutilise les données préparées pour grades, gestion,
+personnalisation et traités. `guild-control.css` limite leurs compositions à
+`.guild-control`. Le style du menu natif est extrait de `guild-workspace.css`
+vers `space-navigation-menu.css` pour les consommateurs L1A/L1C ; le contrôleur
+Stimulus et le HTML ouvert sans JavaScript restent communs. Le contrôleur garde
+la trace d’une perte de focus causée par le masquage CSS du résumé : selon l’ordre
+des événements navigateur, elle peut précéder le signal de changement de format.
+Le focus rejoint alors la page active sur ordinateur, sans modifier celui d’un
+champ situé hors du menu.
+
+Tag et transfert sont des formulaires distincts. Les confirmations dépliables de
+transfert, départ et dissolution ne changent ni l’URL, ni les champs d’action,
+ni le CSRF : elles précèdent uniquement l’envoi. Les services vérifient toujours
+le commandant actuel, la cible, l’univers, les versions et leurs verrous. Les
+formulaires de traités conservent `relation_id`, `relation_version`, `status` et
+`treaty_action`, avec les mêmes conditions d’affichage. Aucun nouveau chargement
+de données ni traitement serveur n’est introduit par ce lot.
 
 
 ### Inventaire par destination

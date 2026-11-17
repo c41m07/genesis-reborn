@@ -114,9 +114,17 @@ test('Alliances réciproques, guilde, transfert et dissolution depuis deux compt
     await expect(commander(b,alice.username)).toContainText('Allié');await a.goto('/diplomatie?tab=relations');await expect(commander(a,bob.username)).toContainText('Allié');
     await a.goto('/guildes/creer');const name=`Orbite-${crypto.randomUUID().slice(0,8)}`;await a.getByLabel('Nom de votre nouvelle guilde').fill(name);await a.getByLabel('Tag de la guilde', { exact:true }).fill(crypto.randomUUID().replaceAll('-', '').slice(0,5).toUpperCase());await a.getByRole('button',{name:'Fonder une guilde'}).click();
     await b.goto('/diplomatie?tab=diplomacy&q='+encodeURIComponent(name));await b.locator('.guild-card').filter({has:b.getByRole('heading',{name,exact:true})}).getByRole('button',{name:/Rejoindre/}).click();
-    await a.goto('/guildes/gestion');await a.getByText('Tag et commandement',{exact:true}).click();await a.getByText('Gérer le commandement',{exact:true}).click();await a.getByLabel('Nouveau commandant').selectOption({label:bob.username});await a.getByRole('button',{name:'Transférer le commandement'}).click();
-    await a.goto('/guildes/gestion');await expect(a.getByRole('button',{name:'Quitter la guilde'})).toBeVisible();await a.getByRole('button',{name:'Quitter la guilde'}).click();
-    await b.goto('/guildes/gestion');await b.getByText('Tag et commandement',{exact:true}).click();await b.getByText('Gérer le commandement',{exact:true}).click();await b.getByRole('button',{name:'Dissoudre la guilde'}).click();
+    await a.goto('/guildes/gestion');
+    await a.getByLabel('Nouveau commandant').selectOption({label:bob.username});
+    await a.getByText('Vérifier le transfert',{exact:true}).click();
+    await a.getByRole('button',{name:'Transférer le commandement'}).click();
+    await a.goto('/guildes/gestion');
+    await a.getByText('Examiner le départ',{exact:true}).click();
+    await expect(a.getByRole('button',{name:'Quitter la guilde'})).toBeVisible();
+    await a.getByRole('button',{name:'Quitter la guilde'}).click();
+    await b.goto('/guildes/gestion');
+    await b.getByText('Examiner la dissolution',{exact:true}).click();
+    await b.getByRole('button',{name:'Dissoudre la guilde'}).click();
     await b.goto('/guildes/creer');await expect(b.getByRole('button',{name:'Fonder une guilde'})).toBeVisible();await b.goto('/diplomatie?tab=relations');await expect(commander(b,alice.username)).toContainText('Allié');
   } finally {await a.close();await b.close();}
 });

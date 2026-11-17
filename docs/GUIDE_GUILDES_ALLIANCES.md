@@ -183,4 +183,18 @@ Le nom d’une guilde dans le classement et son centre de guilde ouvre sa page. 
 
 Le commandant peut choisir « Personnaliser la guilde » : description en texte simple (2 000 caractères), logo JPEG/PNG/WebP (1 Mo, 512×512 maximum) et bannière (2 Mo, 1920×640 maximum). Sans nouveau fichier, l’image actuelle reste conservée. Après une erreur, le texte est conservé ; les fichiers doivent être sélectionnés de nouveau. Un formulaire périmé est refusé plutôt que d’écraser une autre modification. Aucun grade délégué ne donne ce droit.
 
+### Gestion et confirmations — réalisation locale L1C
+
+Sur la branche de refonte visuelle, **Ma guilde → Gestion** affiche directement
+le tag et le choix du successeur pour le commandant. Sélectionner un autre membre
+puis ouvrir **Vérifier le transfert** permet de lire les conséquences avant
+**Transférer le commandement**. Sans autre membre, le choix et l’envoi sont désactivés.
+
+Le commandant ouvre **Examiner la dissolution** avant de dissoudre ; un autre
+membre ouvre **Examiner le départ** avant de quitter. Les avertissements restent
+visibles avant l’envoi. Ces confirmations fonctionnent sans JavaScript et ne
+changent ni les droits, ni les conséquences sur les dons, projets et récompenses.
+Le [suivi de refonte](REFONTE_VISUELLE_INTERFACES.md) distingue les vérifications
+locales, la CI requise avant fusion et le déploiement, non réalisé pour ce lot.
+
 Ce nouveau lot nécessite sa migration et son stockage persistant avant activation sur une base existante ; voir le [suivi](PROFILS_JOUEURS_GUILDES.md). Aucun déploiement Alpha n’est annoncé.

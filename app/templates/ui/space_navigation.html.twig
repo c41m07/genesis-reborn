@@ -1,5 +1,5 @@
 {% if compact|default(false) %}
-<details class="space-navigation-menu" open data-controller="space-navigation" data-action="keydown.esc->space-navigation#close">
+<details class="space-navigation-menu" open data-controller="space-navigation" data-action="keydown.esc->space-navigation#close focusout->space-navigation#captureFocus">
     <summary data-space-navigation-target="summary">
         <span>{{ currentLabel }}</span>
         <span class="space-navigation-menu-label">Pages de l’espace</span>
