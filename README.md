@@ -671,6 +671,12 @@ par une navigation secondaire commune. Les anciennes adresses et les protections
 serveur sont conservées. Le [suivi des lots](docs/NAVIGATION_PAGES_DEDIEES.md)
 détaille les pages, vérifications et limites. CI, fusion et déploiement sont distingués.
 
+Une [mission de refonte visuelle](docs/REFONTE_VISUELLE_INTERFACES.md) reprend ces
+destinations sans recommencer leur séparation. Son [inventaire](docs/INVENTAIRE_INTERFACES.md)
+couvre les routes, gabarits et interactions ; les deux propositions Figcraft du
+premier lot (Ma guilde, Membres, Relations entre commandants) attendent un choix
+explicite avant toute modification de l’interface du jeu.
+
 Le lot Projets collectifs conserve `/guildes/projets` comme entrée des projets en
 cours et ajoute `/guildes/projets/disponibles` et `/guildes/projets/historique`.
 La fiche existante reste dédiée au détail et au don. Listes et contributions sont

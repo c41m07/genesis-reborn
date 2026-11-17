@@ -1,5 +1,18 @@
 # Roadmap Genesis Reborn
 
+## Refonte visuelle avec Figcraft — 17 novembre 2026
+
+Préparation depuis `dev` à `e7acc17` sur `feature/refonte-visuelle-guildes`.
+L’[inventaire initial](INVENTAIRE_INTERFACES.md) recense 170 routes du projet,
+199 gabarits et 52 contrôleurs d’interaction, avec les variantes et lots associés.
+Les navigations par pages déjà livrées sont conservées. Deux propositions du
+premier lot Ma guilde / Membres / Relations entre commandants sont préparées
+avec le MCP Figcraft à 1440/768/390 px et attendent le choix explicite de
+l’utilisateur. Aucun changement d’interface n’est encore implémenté pour cette
+mission. Les autres lots restent à examiner et à concevoir ; la mission globale
+n’est pas terminée. Le [suivi de refonte](REFONTE_VISUELLE_INTERFACES.md) distingue
+conception, contrôles locaux, CI, fusion et déploiement.
+
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026
 
 Lot 1 fusionné dans `dev` par la [PR #69](https://github.com/c41m07/genesis-reborn/pull/69)
