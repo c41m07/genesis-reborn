@@ -20,7 +20,8 @@
 @media(max-width:740px){.patchnote-form{grid-template-columns:minmax(0,1fr)}.patchnote-form>label:nth-of-type(n){grid-column:1}}
 .admin-event-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:0 18px}
 .admin-event-form>label:nth-of-type(3){grid-column:1/-1}
-.admin-event-form textarea{display:block;width:100%;min-height:120px;margin:8px 0 0;padding:12px 13px;border:1px solid #31445d;border-radius:4px;background:#0a1525;color:#e5eef8;line-height:1.6;resize:vertical}
+/* Les descriptions suivent le thème comme les autres champs administratifs. */
+.admin-event-form textarea{display:block;width:100%;min-height:120px;margin:8px 0 0;padding:12px 13px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--text);line-height:1.6;resize:vertical}
 .admin-event-form>.admin-event-visibility{display:flex;align-items:center;gap:10px;width:max-content;margin:8px 0}
 .admin-event-form>.admin-event-visibility input[type=checkbox]{width:18px;height:18px;margin:0;accent-color:var(--accent)}
 .admin-event-form>.primary{justify-self:start;width:auto;min-width:180px}
