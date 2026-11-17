@@ -747,6 +747,80 @@ action de jeu sur les données usuelles et aucun email externe. Aucun gain de
 performance mesuré ou annoncé ; aucun audit RGAA complet. La CI GitHub, la fusion
 et le déploiement restent distincts.
 
+## L2B — orbites, quai et reprise de stationnement
+
+Deux propositions prêtes dans le même document Figcraft, sans code L2B modifié :
+**10 · L2B · A — Suivi en lignes** et **11 · L2B · B — Opérations en cartes**.
+L2A A est enregistré dans `ff6c324` ; sa validation ne vaut pas choix de L2B.
+Conception **4/5**, réalisation à venir **5/5**.
+
+Sources examinées : `FleetPageView`, `OrbitRequestView`, `FleetStationingController`,
+`FleetStationing` et `FleetHold` pour leurs actions et erreurs ; templates
+`ui/orbit_requests{,_list}`, `fleet/{_dock,holds,resume}`, contrôleur
+`orbit_requests`, architecture, règles et suivis actuels des flottes.
+
+| Page dédiée conservée | But et périmètre |
+| --- | --- |
+| `/flottes/orbites` | Demandes envoyées/reçues de la colonie active ; origine inconnue masquée ; réponses seulement si autorisées et retrait par le rappel existant |
+| `/flottes/quai` | Unités/réserves de la colonie active, puis stationnements de tout l’empire, y compris après perte de l’origine |
+| `/flottes/{id}/reprendre` | Choix d’une base possédée, calcul GET puis confirmation POST du devis ; erreur visible et absence de colonie sans perte automatique |
+
+Les tâches gardent leurs pages et URL ; carburant et fret conservent leurs deux
+actions de déchargement. La reprise garde un seul formulaire de choix de base,
+suivi du devis et de sa confirmation. Le menu principal conserve Flottes ; les
+trois vues proposent le même menu secondaire mobile que L2A. Aucun filtre, tri
+métier, regroupement reçu/envoyé ni indicateur privé n’est ajouté. Les demandes
+sont directement lisibles ; Composition et fret des stationnements reste dépliable.
+
+Accord automatique/confirmé : aucune réponse supplémentaire. Échéance atteinte :
+arrivée à résoudre. Ancienne demande : aucun faux délai. Le remplacement d’un
+fragment attend que le focus quitte ses actions, comme actuellement ; compteur,
+contexte et contrôles serveur doivent être conservés. Le fret d’hydrogène ne
+devient pas du carburant de reprise ; le déchargement reste limité aux capacités.
+
+### A — Suivi en lignes
+
+Orbites en lignes larges : informations à gauche, échéance/actions à droite sur
+grand écran, puis empilées. Au quai, vaisseaux et réserve sont côte à côte, suivis
+des stationnements de tout l’empire sur la largeur complète. La reprise rapproche
+choix de base et devis, puis les empile aux formats étroits.
+Bénéfice : comparaison des statuts et revue du devis sans aller-retour vertical
+sur ordinateur. Limite : les stationnements suivent la réserve sur mobile ; les
+lignes doivent se développer pour les noms longs. **Recommandation : A**, pour
+la lecture des demandes et la continuité avec A de L2A.
+
+### B — Opérations en cartes
+
+Les demandes occupent deux colonnes sur grand écran, une ailleurs. Au quai, la
+liste des vaisseaux précède réserve et stationnements, placés côte à côte sur
+ordinateur. La reprise conserve une lecture verticale : choix, devis, confirmation.
+Même menu, champs, états et droits que A. Bénéfice : demandes séparées visuellement
+et réserve/stationnements visibles ensemble sur ordinateur. Limite : davantage de
+défilement dans la reprise et lecture des demandes sur deux colonnes.
+Les deux options réutilisent les préparations ciblées, sans agrégation métier imposée.
+
+### États et contrôle de conception
+
+**20 cadres** : trois pages en 1440/768/390 px pour chaque option et une planche
+d’états par option. Demande reçue, envoi avec accord automatique, échéance atteinte,
+mission ancienne, nom long, réserve partiellement déchargeable, stationnements,
+devis, listes vides, réserve insuffisante, version périmée et absence de colonie
+sont représentés ou explicités. Les chiffres sont fictifs et les actions simulées.
+
+Structures grises enregistrées avant couleur, composants/variables propres au lot,
+mêmes couleurs et typographie que les références approuvées. Les neuf pages
+précédentes sont identiques par empreinte, dont Vue générale et L2A A. Aucun texte
+hors cadre, superposé ou coupé par son parent sur les vingt cadres ; **178 liens**
+ont une destination existante. La revue visuelle a compacté A et ajusté hauteurs
+et échéances d’exemple. Ce contrôle ne constitue pas une recette du jeu ou un audit RGAA.
+
+Exports locaux : `lot-2B-{A,B}-{orbits,dock,resume}-{1440,768,390}.png`, planches
+`states-1100`, aperçus `lot-2B-{A,B}-{orbits,dock}-apercus.png`, manifeste et
+`lot-2B-verification.json`. Le fichier natif reste celui indiqué au début du suivi.
+Après choix : réponses orbitales, contextes/délais, déchargement partiel, devis
+périmé, origine perdue, accès refusés, formulaires sans JavaScript, focus et
+actualisation ; recette responsive/thèmes et contrôles Make adaptés.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -756,12 +830,13 @@ et le déploiement restent distincts.
 | L1B | A implémentée et vérifiée localement | A choisie explicitement | Trois pages et brouillon, PHP ciblé, recette responsive et captures | CI complète et intégration distinctes |
 | L1C | A implémentée et vérifiée localement | A choisie explicitement | Quatre pages, confirmations natives, 83 PHP et recette responsive ; captures | CI complète et intégration distinctes |
 | L2A | A implémentée et vérifiée localement | A choisie explicitement | 59 tests PHP, 15 parcours navigateur consolidés et 40 captures ; bilan ci-dessus | CI complète et intégration distinctes |
-| Suite L2, L3 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
+| L2B | Deux propositions Figcraft prêtes | Choix A/B attendu | 20 cadres, 178 liens, neuf pages précédentes préservées | Aucun code L2B réalisé |
+| L2C, L3 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
 Les commits restent sur `feature/refonte-visuelle` ; L1B A est enregistré dans
-`1e390a9`, L1C A dans `1a33d14`. L2A A est réalisé localement ; le prochain
-périmètre est L2B (orbites, quai et reprise), puis L2C (compositions). Le plan
+`1e390a9`, L1C A dans `1a33d14`, L2A A dans `ff6c324`. Le prochain périmètre
+L2B (orbites, quai et reprise) attend le choix A/B, puis vient L2C (compositions). Le plan
 reste à 18 ensembles : les trois premiers sont réalisés, L2 est partiellement
 réalisé. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
 Les validations précédentes restent limitées à leurs lots.

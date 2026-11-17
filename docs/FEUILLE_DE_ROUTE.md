@@ -44,6 +44,12 @@ préservées. L2 reste partiellement réalisé : orbites, quai et reprise compos
 L2B, puis les compositions L2C. Ces sous-lots suivront leur propre choix A/B.
 Détails et limites dans le suivi de refonte ; CI et intégration restent distinctes.
 
+L2A A est enregistré dans `ff6c324`. Les deux propositions suivantes L2B sont
+prêtes dans Figcraft, pages 10/11 : Orbites, À quai et stationnements, Reprendre
+le stationnement. A privilégie lignes compactes et devis côte à côte ; B cartes
+et reprise verticale. 20 cadres et 178 liens contrôlés, neuf pages précédentes
+conservées. Le choix reste attendu avant tout code L2B.
+
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026
 
 Lot 1 fusionné dans `dev` par la [PR #69](https://github.com/c41m07/genesis-reborn/pull/69)
