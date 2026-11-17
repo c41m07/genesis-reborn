@@ -70,14 +70,28 @@ actif doit désigner un successeur avant de supprimer son compte.
 ## Colonie
 Métal, électricité, antimatière, hydrogène et nano par planète. La simulation intègre les stocks par segments entre épuisement et capacité. Les usines adaptent leur rendement à l’électricité disponible avec un plancher de 10 % ; l’antimatière exige aussi de l’hydrogène. Coûts et durées sont autoritaires côté serveur. Les coûts des trois rangs suivent des profils par catégorie avec budgets de valeur constants. Technologies par PlayerUniverse : le laboratoire est un prérequis initial, sans obligation locale permanente après déblocage. La file de recherche est commune au joueur dans l’univers.
 
-### Prérequis par rang — grille du 15 novembre 2026
+### Prérequis par rang — grille actualisée le 17 novembre 2026
 
-Chaque famille utilise la [grille complète des prérequis](DEBLOCAGES.md) dans son
-propre rang. Seuls métal, nano, hydrogène, centrale et laboratoire font une
-passerelle : Basique sans condition, Intermédiaire après le même bâtiment Basique 10,
-Supérieur après son Intermédiaire 20. Les stockages demandent leur producteur
-du même rang au niveau 5, le chantier métal 2 + nano 2, le piège hydrogène 3 + laboratoire 2,
-le bunker chantier 3 + laboratoire 2 ; aucune recherche supplémentaire pour ces bâtiments.
+Chaque famille utilise la [grille complète des prérequis](DEBLOCAGES.md).
+Les quatre producteurs de départ (métal, nano, hydrogène et centrale) sont libres
+au rang Basique. Leur Intermédiaire exige le même bâtiment Basique 25 et
+Ingénierie de chantier automatisée Intermédiaire 5. Leur Supérieur exige le même
+bâtiment Basique 50, son Intermédiaire 25 et Planification industrielle intégrée
+Supérieure 5.
+
+Le laboratoire reste libre en Basique. Son Intermédiaire exige Laboratoire
+colonial Basique 25 + Génie civil colonial Basique 5. Son Supérieur exige
+Laboratoire colonial Basique 25 + Institut de recherche orbitale Intermédiaire 25
+et Ingénierie de chantier automatisée Intermédiaire 5. La recherche du rang
+précédent évite un cycle ; le plafond du laboratoire reste 25.
+
+Les huit autres bâtiments gardent leurs conditions du même rang : les stockages
+exigent leur producteur 5, le chantier métal 2 + nano 2, le piège hydrogène 3 +
+laboratoire 2 et le bunker métal 1 + nano 1, sans recherche supplémentaire.
+Les accès déjà acquis restent conservés ; cette révision ne change pas la version
+du registre et ne nécessite aucune nouvelle requalification. Coûts, durées,
+plafonds et surcharges d’univers restent applicables. L’effet de ces nouveaux
+seuils sur les délais de progression n’est pas mesuré.
 
 Après requalification explicite des accès existants, seules les conditions de
 cette grille ouvrent les nouvelles commandes. Les niveaux, effets, unités,

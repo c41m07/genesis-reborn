@@ -565,3 +565,23 @@ explicites ; les 3 tests civils précédents repassent également (6 / 888 au to
 `make lint` et le parcours navigateur passent. La préparation du stockage nano a
 été corrigée pour respecter son producteur niveau 5 ; les assertions de gain et
 de niveau proposé restent intactes. Aucun niveau, prix, effet ou paiement modifié.
+
+## Prérequis des producteurs et du laboratoire — 17 novembre 2026
+
+Complexité 3/5, branche `feature/prerequis-rangs-producteurs` depuis dev actualisée.
+Cinq catalogues concernés : métal, nano, hydrogène, centrale et laboratoire.
+La [grille courante](DEBLOCAGES.md) et les décisions décrivent les conditions
+validées. Le laboratoire utilise la recherche précédente pour éviter un cycle,
+avec seuils 25/25 au Supérieur et plafond 25 conservé. Le registre ne change
+pas de version : les accès acquis sont conservés, les nouvelles conditions ne
+concernent que les accès restant à acquérir. Aucune migration, requalification
+ou réécriture des surcharges d’univers.
+
+Vérifications : validation Compose réussie ; suite PHP/Python et contrôles
+complémentaires en cours. Les tests de grille couvrent chaque seuil et le rang
+requis ; le parcours des 156 profils contrôle l’absence de cycle et les plafonds.
+Les tests d’intégration couvrent les dix rangs modifiés, la recherche à 4 puis 5,
+le refus d’une commande directe, la portée locale et la conservation des accès.
+Les anciennes mesures financées restent historiques et ne mesurent pas cette
+nouvelle progression. Wiki local synchronisé ; aucun wiki hébergé ni Alpha
+annoncé mis à jour. CI complète requise avant fusion dans dev.

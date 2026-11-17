@@ -20,7 +20,14 @@
         {
           "slug": "lab",
           "tier": "basic",
-          "level": 10
+          "level": 25
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "engineering_foundations",
+          "tier": "basic",
+          "level": 5
         }
       ]
     },
@@ -28,8 +35,20 @@
       "buildings": [
         {
           "slug": "lab",
+          "tier": "basic",
+          "level": 25
+        },
+        {
+          "slug": "lab",
           "tier": "intermediate",
-          "level": 20
+          "level": 25
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "engineering_foundations",
+          "tier": "intermediate",
+          "level": 5
         }
       ]
     }

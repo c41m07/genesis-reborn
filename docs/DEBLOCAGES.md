@@ -1,4 +1,4 @@
-# Déblocages initiaux permanents — grille du 15 novembre 2026
+# Déblocages initiaux permanents — grille actualisée le 17 novembre 2026
 
 Lot 1 fusionné dans `dev` par la [PR #69](https://github.com/c41m07/genesis-reborn/pull/69), après CI complète réussie. Voir le [suivi de mission](PROGRESSION_CARBURANT_UNITES.md) pour les vérifications et l’état réel de l’intégration. Aucune activation sur la base de jeu ni publication Alpha annoncée.
 
@@ -12,11 +12,20 @@ Les conditions sont initiales et permanentes après acquisition selon cette gril
 
 | Famille | Basique | Intermédiaire | Supérieur |
 |---|---|---|---|
-| Mine à ciel ouvert (`mine_metal`) | Aucun | Même bâtiment Basique 10 | Même bâtiment Intermédiaire 20 |
-| Atelier de nanofabrication (`mine_nano`) | Aucun | Même bâtiment Basique 10 | Même bâtiment Intermédiaire 20 |
-| Raffinerie d’hydrogène (`mine_hydrogen`) | Aucun | Même bâtiment Basique 10 | Même bâtiment Intermédiaire 20 |
-| Centrale nucléaire (`power_plant`) | Aucun | Même bâtiment Basique 10 | Même bâtiment Intermédiaire 20 |
-| Laboratoire colonial (`lab`) | Aucun | Même bâtiment Basique 10 | Même bâtiment Intermédiaire 20 |
+| Mine à ciel ouvert (`mine_metal`) | Aucun | Même bâtiment Basique 25 + Ingénierie de chantier automatisée 5 | Même bâtiment Basique 50 + même bâtiment Intermédiaire 25 + Planification industrielle intégrée 5 |
+| Atelier de nanofabrication (`mine_nano`) | Aucun | Même bâtiment Basique 25 + Ingénierie de chantier automatisée 5 | Même bâtiment Basique 50 + même bâtiment Intermédiaire 25 + Planification industrielle intégrée 5 |
+| Raffinerie d’hydrogène (`mine_hydrogen`) | Aucun | Même bâtiment Basique 25 + Ingénierie de chantier automatisée 5 | Même bâtiment Basique 50 + même bâtiment Intermédiaire 25 + Planification industrielle intégrée 5 |
+| Centrale nucléaire (`power_plant`) | Aucun | Même bâtiment Basique 25 + Ingénierie de chantier automatisée 5 | Même bâtiment Basique 50 + même bâtiment Intermédiaire 25 + Planification industrielle intégrée 5 |
+| Laboratoire colonial (`lab`) | Aucun | Laboratoire colonial Basique 25 + Génie civil colonial Basique 5 | Laboratoire colonial Basique 25 + Institut de recherche orbitale Intermédiaire 25 + Ingénierie de chantier automatisée Intermédiaire 5 |
+
+Les quatre producteurs utilisent la recherche industrielle du rang à débloquer.
+Le laboratoire utilise celle du rang précédent : exiger une recherche du rang
+visé créerait un cycle, car cette recherche exige déjà le laboratoire de ce rang.
+Son plafond reste 25 ; aucun laboratoire Basique 50 n’est demandé.
+Ces conditions s’appliquent aux accès restant à acquérir, sans retirer ceux déjà
+mémorisés. Aucun changement de version du registre ni requalification supplémentaire.
+Les coûts, durées et plafonds restent conservés ; l’effet sur les délais de
+progression de cette révision n’est pas mesuré.
 
 Pour les huit autres familles, les conditions suivantes s’appliquent dans chacun des trois rangs :
 
