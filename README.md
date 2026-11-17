@@ -54,7 +54,7 @@ L’orientation confirmée est une stratégie au rythme modéré ; les durées d
 - Opérations : recherches, vaisseaux et défenses paient une fois `100 × ceil(durée effective / 60)` en électricité. Soit 100 E par minute entamée sur la commande entière ; un lot est arrondi une seule fois. Les accélérations ne recalculent pas le coût ; les annulations remboursent 25 % du paiement conservé, dans la place disponible. Les reconstructions automatiques suivent aussi cette règle.
 - Catalogues : interrupteur « Vue condensée » placé avant « Éléments verrouillés » et mémorisé sur cet appareil, sans modifier les actions ni les prérequis. Les cartes affichent jusqu’à cinq ressources sur une ligne, avec libellés abrégés si nécessaire. Le bouton gris désactivé indique les ressources manquantes ; les illustrations des rangs verrouillés sont en noir et blanc au repos et retrouvent leurs couleurs au survol ou au focus clavier. Le wiki propose un accueil, une page par chapitre et une recherche globale avec extraits et liens de lecture, utilisables sans JavaScript. Le sommaire sur ordinateur, le sélecteur mobile, les formules dépliables et le retour arrière sont conservés ; les anciennes ancres ouvrent la nouvelle page avec JavaScript et repèrent le lien du chapitre dans l’accueil sans JavaScript. Les points totaux suivent immédiatement le commandant dans le classement ; sur mobile, les autres catégories sont consultables dans chaque ligne. Les catalogues gardent leur présentation, avec les files, flottes en vol et événements fixes au défilement sur grand écran. Un lien direct vers un élément l’encadre en jaune pendant cinq secondes, sans animation si les mouvements sont réduits.
 - Colonies : comparaison par tableau (stocks / capacités, solde net horaire, commandes en file), avec accès direct à chaque colonie et sélection de la ressource sur mobile. Les projets collectifs ont une fiche dédiée à la progression et aux dons, accessible uniquement à leur guilde dans l’univers actif. Le bandeau propose une fiche économique par ressource au survol, au clavier ou au toucher : stock, production brute, production actuelle, consommation brute, consommation actuelle, solde net et délai estimé issus du moteur de production. Les besoins de production distinguent électricité et hydrogène ; les consommations électriques affichent leurs totaux brut et actuel, avec le détail par activité de production repliable, tous rangs cumulés. La ligne « Non stocké / h » est omise. Les fiches électricité et hydrogène récapitulent les usines qui les consomment. Les besoins bruts restent visibles lorsque le stockage est plein ; le gain stocké devient nul. Les pénuries et pauses modifient uniquement les valeurs actuelles. La vue générale garde le compteur et l’accès aux colonies ; leur liste détaillée reste sur Planètes. Bases métal et nano : 10/h chacun avant multiplicateurs ; base nulle pour électricité, antimatière et hydrogène ; production suspendue en vacances.
-- Navigation : les raccourcis « Explorer la galaxie » ouvrent la carte interactive ; la liste des systèmes reste accessible. Le guide technologique se trouve dans Développement et les événements restent accessibles depuis Opérations, même sans événement actif.
+- Navigation : les raccourcis « Explorer la galaxie » ouvrent la carte interactive ; la liste des systèmes reste accessible. Le guide technologique se trouve dans Développement et les événements restent accessibles depuis Communauté, même sans événement actif.
 
 **L’Alpha est hébergée, selon le propriétaire.** Son URL publique, sa version exécutée et sa configuration serveur restent à confirmer. Les changements intégrés à `dev` ne sont pas déclarés déployés : consulter [l’état du déploiement](docs/DEPLOIEMENT.md).
 
@@ -659,10 +659,12 @@ retirés des pages concernées. Les règles d’archive et de détection ne chan
 
 ## Navigation joueur
 
-Lot 1 intégré sur dev par la [PR #75](https://github.com/c41m07/genesis-reborn/pull/75) : espaces Guildes et Diplomatie séparés, pages dédiées de membres,
-grades, gestion et création ; liens directs, anciennes adresses conservées et
-lectures adaptées à chaque page. Voir le [suivi des lots](docs/NAVIGATION_PAGES_DEDIEES.md) pour les
-choix, vérifications et limites. Le lot Flottes poursuit cette organisation sur des pages propres. CI, fusion et déploiement restent distincts.
+Les huit lots de navigation sont intégrés dans dev : Guildes et Diplomatie,
+Flottes, Inventaire, Mon compte et Mode vacances, Projets collectifs, Événements,
+Administration et Wiki. Chaque espace ouvre sa page d’entrée et relie ses pages
+par une navigation secondaire commune. Les anciennes adresses et les protections
+serveur sont conservées. Le [suivi des lots](docs/NAVIGATION_PAGES_DEDIEES.md)
+détaille les pages, vérifications et limites. CI, fusion et déploiement sont distingués.
 
 Le lot Projets collectifs conserve `/guildes/projets` comme entrée des projets en
 cours et ajoute `/guildes/projets/disponibles` et `/guildes/projets/historique`.
