@@ -1025,6 +1025,68 @@ Aucune base habituelle modifiée, dépendance installée, règle changée ou mig
 existante appliquée. CI GitHub, fusion et déploiement distincts ; pas d’audit RGAA
 global ni de mesure de performance annoncée.
 
+## L3 — Inventaire, propositions à choisir — 18 novembre 2026
+
+L2C A est enregistré dans `da86685`. Le prochain lot conserve les trois pages
+existantes : `/boosts`, `/inventaire/boites`, `/inventaire/recompenses`.
+Conception **4/5**, réalisation **4/5** : capacité commune, consommation unique,
+colonies autorisées, vacances, stocks et reprise des récompenses en attente.
+Sources examinées : `BoostController`, `InventoryPageView`, les cinq templates,
+la navigation, `inventory-review`, services d’utilisation de boosts/boîtes,
+configuration des bonus et suivi des pages dédiées. Aucun audit général rouvert.
+
+Deux pages ajoutées au document Figcraft courant, sans nouvel index :
+
+- **14 · L3 · A — Inventaire guidé** : stock et choix d’opération rapprochés,
+  sélecteur existant pour afficher une opération ; boîtes en lignes avec contenu
+  à gauche et destination/ouverture à droite sur ordinateur ; attente en liste
+  ordonnée. Une seule colonne sur mobile.
+- **15 · L3 · B — Inventaire en cartes** : stock puis opérations actives visibles
+  en cartes, sans sélecteur masquant les autres ; boîtes en grille avec leur
+  destination sous le contenu ; attente en cartes numérotées dans le même ordre.
+  Une seule colonne sur mobile. Ce mode réutilise la présentation de toutes les
+  opérations déjà disponible sans le sélecteur, sans nouvelle lecture métier.
+
+Les tâches restent sur leurs pages dédiées. Le choix d’opération de A est une
+sélection dans la même tâche, pas une nouvelle page. La capacité partagée reste
+visible sur les trois pages ; Comprendre vos bonus reste un dépliable. Les deux
+fenêtres de revue représentent les confirmations JavaScript existantes, sans
+nouvelles URL ; les formulaires serveur restent accessibles sans JavaScript.
+Les liens de retour et les notifications de refus restent ceux du jeu.
+
+Même contenu et mêmes conditions dans les deux options : retrait de 25 % du temps
+restant et capacité de 100 selon la configuration locale, contenu de boîte fixé
+à l’attribution, regroupement par contenu identique, dépôt intégral ou refus,
+colonies du même univers, restrictions de vacances, opérations actives autorisées,
+attente chronologique automatiquement promue et pagination de 25 objets.
+Les nombres illustrés sont fictifs : 12 boosts, 88 boîtes regroupées, trois objets
+en attente et deux colonies. Aucun bouton de récupération manuelle ou nouveau
+tri n’est proposé ; aucune règle ou valeur d’équilibrage n’est modifiée.
+
+**32 cadres** : trois pages et deux revues à 1440/768/390 px pour chaque option,
+plus une planche d’états par option. Stocks nuls, aucune opération, vacances,
+absence de colonie, capacité pleine, stockage insuffisant, opération terminée,
+objet consommé, rejeu, contexte refusé, focus et parcours sans JavaScript sont
+représentés ou explicités. Les actions du prototype sont simulées.
+Structures grises enregistrées avant la couleur ; styles de référence et boutons
+réutilisés avec des variables propres au lot. Les treize pages antérieures,
+dont Vue générale et L2C A, restent strictement conservées.
+
+Contrôle du document : 32 cadres, 226 liens vers une destination existante,
+aucun texte hors cadre, chevauchement ou découpage par son parent. Exports
+Boosts, Boîtes et confirmations relus visuellement, dont les formats mobiles ;
+compteurs d’exemple cohérents avec les deux colonies. Manifestes, exports et
+preuves près du `.figcraft` : `lot-3-manifest.json`, `lot-3-verification.json`,
+`lot-3-{A,B}-{boosts,boxes,pending,review-boost,review-box}-{largeur}.png`.
+Ce contrôle de conception ne constitue pas une recette du jeu ni un audit RGAA.
+
+**Choix A/B attendu avant modification du code de L3.** La réalisation devra
+conserver les champs et jetons, les confirmations et le focus, les lectures
+ciblées, le refus sans consommation en cas de stockage insuffisant et les
+protections contre le double envoi. Recette des trois pages dans les deux thèmes,
+clavier/mobile/sans JavaScript, contexte et erreurs ; contrôles Make adaptés,
+puis CI complète avant toute fusion.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -1037,13 +1099,15 @@ global ni de mesure de performance annoncée.
 | L2A | A implémentée et vérifiée localement | A choisie explicitement | 59 tests PHP, 15 parcours navigateur consolidés et 40 captures ; bilan ci-dessus | CI complète et intégration distinctes |
 | L2B | A implémentée et vérifiée localement | A choisie explicitement | 60 tests PHP, 14 parcours navigateur consolidés et 24 captures | CI complète et intégration distinctes |
 | L2C | A implémentée et vérifiée localement | A choisie explicitement | 27 PHP, cinq parcours navigateur consolidés et 36 captures | CI, intégration et déploiement distincts |
-| L3 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
+| L3 | Deux propositions préparées | Choix A/B attendu | Pages 14/15, 32 cadres et contrôle du document ; code inchangé | Recette du jeu après implémentation |
+| L4 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
 Les commits restent sur `feature/refonte-visuelle` ; L1B A est enregistré dans
 `1e390a9`, L1C A dans `1a33d14`, L2A A dans `ff6c324`, L2B A dans `88d68e3`.
 La Vue générale est finalisée dans `6b3bb70`, avant L2C (compositions),
-à la demande de l’utilisateur. L2C A est réalisé ; L2 est donc complet localement.
+à la demande de l’utilisateur. L2C A est enregistré dans `da86685` ; L2 est donc complet localement.
+L3 est préparé dans Figcraft et attend son choix A/B.
 Le plan reste à 18 ensembles : quatre sont réalisés, quatorze restent à traiter.
 Vue générale constitue aussi une avance ciblée de L7A, sans valider tout ce lot. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
 Les validations précédentes restent limitées à leurs lots.

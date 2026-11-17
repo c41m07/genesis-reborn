@@ -66,6 +66,10 @@ et vérifiées : 27 tests PHP / 372 assertions, cinq parcours navigateur consoli
 36 captures réelles et contrôles statiques/compilation réussis. L2 est désormais
 complet localement : **quatre ensembles réalisés sur 18, quatorze restants**.
 La finalisation anticipée de Vue générale ne valide pas le reste de L7A.
+Le commit L2C est `da86685`. Les propositions L3 sont préparées dans Figcraft,
+pages 14/15 : Inventaire guidé (A) ou Inventaire en cartes (B). Trois pages,
+deux fenêtres de confirmation et leurs états sont déclinés en 32 cadres contrôlés.
+Le code de L3 attend le choix A/B ; les treize pages précédentes sont préservées.
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026
