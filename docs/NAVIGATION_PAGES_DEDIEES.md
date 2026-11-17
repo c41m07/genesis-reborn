@@ -34,8 +34,9 @@ merge `4fa63a7`, après les cinq jobs quality réussis sur `6f969da`
 Localhost actualisé avec assets, cache et routes vérifiés ; modification préexistante
 conservée. Le bilan du lot 5 ci-dessous garde sa recette avant intégration.
 
-Lot 6 en cours sur `feature/navigation-evenements`, depuis dev `4fa63a7`.
-La recette ci-dessous précède la CI complète, l’intégration et l’actualisation locale.
+Lot 6 réalisé sur `feature/navigation-evenements`, depuis dev `4fa63a7` ;
+[PR #81](https://github.com/c41m07/genesis-reborn/pull/81). La recette ci-dessous
+précède l’intégration ; la PR donne l’état de la CI, de la fusion et de localhost.
 
 Les trois documents Work V4 (prompt maître), V2 (brief Figma) et V1 (protocole
 adaptatif) n’ont pas été trouvés dans le dépôt ni les sources connectées
@@ -749,8 +750,10 @@ enregistrés clair/sombre à 320/390/1 440 px. Clavier, liens directs, rechargem
 retour arrière, changement de fragment et paramètres de l’ancien lien vérifiés.
 Connexion native sans JavaScript, navigation des deux listes et fiche réussies.
 Captures sombre ordinateur et claire mobile examinées. Les essais utilisent des
-bases jetables distinctes de la base habituelle. La CI complète restera obligatoire
-sur la dernière version avant fusion.
+bases jetables distinctes de la base habituelle. La [PR #81](https://github.com/c41m07/genesis-reborn/pull/81)
+est prête pour la CI complète ; les cinq jobs quality restent obligatoires sur sa
+dernière version avant fusion. Les vérifications locales ne sont pas une validation
+CI complète.
 
 README, architecture, décisions, règles de navigation, parcours, feuille de route
 et manuel embarqué synchronisés. Les trois documents Work V4/V2/V1 ne sont pas

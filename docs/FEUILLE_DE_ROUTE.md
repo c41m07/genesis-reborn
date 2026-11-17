@@ -1681,7 +1681,8 @@ Lot 5 intégré sur dev par la [PR #80](https://github.com/c41m07/genesis-reborn
 merge `4fa63a7`, après CI complète réussie sur `6f969da`. Application locale
 actualisée avec préservation de la modification préexistante.
 
-Lot 6 Événements en cours sur `feature/navigation-evenements`, depuis dev `4fa63a7` :
+Lot 6 Événements réalisé sur `feature/navigation-evenements`, depuis dev `4fa63a7` :
 Événements et bonus, Défis et rotations, avec fiches et panneau commun conservés.
 Complexité 4/5, critères de visibilité partagés et pagination avant affichage.
-[Recette et état d’intégration](NAVIGATION_PAGES_DEDIEES.md).
+Contrôles locaux ciblés réussis ; [PR #81](https://github.com/c41m07/genesis-reborn/pull/81)
+avec CI complète requise avant fusion. [Recette et état d’intégration](NAVIGATION_PAGES_DEDIEES.md).
