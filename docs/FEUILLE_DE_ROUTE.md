@@ -1684,6 +1684,6 @@ actualisée avec préservation de la modification préexistante.
 Lot 6 Événements réalisé sur `feature/navigation-evenements-pages`, depuis dev `4fa63a7` :
 Événements et bonus, Défis et rotations, avec fiches et panneau commun conservés.
 Complexité 4/5, critères de visibilité partagés et pagination avant affichage.
-Contrôles locaux ciblés réussis ; la PR initiale #81 est remplacée pour retirer
-l’identifiant fictif des commits à intégrer, sans réécriture forcée. Une CI complète
-reste requise sur la nouvelle PR. [Recette et état d’intégration](NAVIGATION_PAGES_DEDIEES.md).
+Contrôles locaux ciblés réussis ; la [PR #82](https://github.com/c41m07/genesis-reborn/pull/82)
+remplace #81 pour retirer l’identifiant fictif des commits à intégrer, sans réécriture
+forcée. Scan de secrets et CI complète requis avant fusion. [Recette et état d’intégration](NAVIGATION_PAGES_DEDIEES.md).

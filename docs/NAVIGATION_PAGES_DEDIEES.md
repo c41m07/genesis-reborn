@@ -34,10 +34,10 @@ merge `4fa63a7`, après les cinq jobs quality réussis sur `6f969da`
 Localhost actualisé avec assets, cache et routes vérifiés ; modification préexistante
 conservée. Le bilan du lot 5 ci-dessous garde sa recette avant intégration.
 
-Lot 6 réalisé sur `feature/navigation-evenements-pages`, depuis dev `4fa63a7`.
-La [PR #81](https://github.com/c41m07/genesis-reborn/pull/81) conserve les premières
-validations ; une PR de remplacement livre le contenu final sans identifiant de
-test fixe dans ses commits. La recette ci-dessous précède l’intégration.
+Lot 6 réalisé sur `feature/navigation-evenements-pages`, depuis dev `4fa63a7` ;
+[PR #82](https://github.com/c41m07/genesis-reborn/pull/82). La PR #81 et sa branche
+conservent les premières validations ; la nouvelle PR livre le contenu final sans
+identifiant de test fixe dans ses commits. La recette ci-dessous précède l’intégration.
 
 Les trois documents Work V4 (prompt maître), V2 (brief Figma) et V1 (protocole
 adaptatif) n’ont pas été trouvés dans le dépôt ni les sources connectées
@@ -801,7 +801,10 @@ Une branche de remplacement repart de dev avec le contenu final corrigé, sans
 reprendre le littéral dans ses commits. La branche et la PR #81 restent conservées
 pour la traçabilité, sans reset, rebase ni push forcé. La nouvelle PR et sa CI complète
 donnent l’état de livraison ; les contrôles précédents ne valent pas validation
-sur le nouvel historique.
+sur le nouvel historique. Reprise locale avec identifiants générés : 6 tests HTTP /
+74 assertions et le parcours navigateur dédié réussissent. La [PR #82](https://github.com/c41m07/genesis-reborn/pull/82)
+remplace la PR #81, fermée sans fusion ; le scan de secrets et les cinq jobs quality
+doivent réussir sur sa dernière version avant intégration.
 
 ### Fichiers du lot 6
 
