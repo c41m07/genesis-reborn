@@ -1716,6 +1716,7 @@ espaces joueur sans/avec guilde et l’administration, dans les deux thèmes.
 Le fond des descriptions administratives suit maintenant le thème clair/sombre ;
 la régression est reproduite puis vérifiée après correction. Les huit bilans de
 livraison sont synchronisés. La CI complète, la fusion et l’actualisation locale
-de cette clôture sont suivies dans la PR associée au [bilan final](NAVIGATION_PAGES_DEDIEES.md#recette-transversale-finale).
+de cette clôture sont suivies dans la [PR #86](https://github.com/c41m07/genesis-reborn/pull/86)
+et le [bilan final](NAVIGATION_PAGES_DEDIEES.md#recette-transversale-finale).
 La recette de confort sur le compte habituel reste manuelle : le contrôle Edge
 a été arrêté faute de vérification fiable de l’URL. Aucun déploiement Alpha.

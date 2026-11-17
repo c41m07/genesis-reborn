@@ -1134,9 +1134,11 @@ Contrôles locaux réussis :
   dans les sessions avec JavaScript, distincts du parcours natif.
 
 La validation locale reste ciblée ; aucune suite complète PHP/navigateur locale
-n’est revendiquée. La CI complète de la PR de clôture doit réussir sur sa dernière
-version avant fusion. L’intégration dev et l’actualisation locale de cette recette
-sont consignées dans cette PR, séparément des résultats locaux ci-dessus.
+n’est revendiquée. Le relevé de livraison est tenu dans la
+[PR #86](https://github.com/c41m07/genesis-reborn/pull/86) : dernière version validée
+par la CI complète, intégration dev et actualisation du checkout réellement servi.
+Ces étapes sont distinguées des résultats locaux ci-dessus et de la recette
+manuelle du compte habituel encore à effectuer.
 
 ### Fichiers du lot de clôture
 
