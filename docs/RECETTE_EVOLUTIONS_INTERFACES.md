@@ -2,6 +2,11 @@
 
 Cette liste sert à notre revue ensemble sur dev. Cocher après essai et noter la page, le résultat attendu, le résultat observé et une capture si utile. Les contrôles automatisés ne remplacent pas cette validation de confort d’utilisation.
 
+La recette transversale des huit lots de navigation est suivie séparément dans
+[Navigation par pages dédiées](NAVIGATION_PAGES_DEDIEES.md#recette-transversale-finale).
+Ses résultats automatisés ne cochent pas cette liste manuelle, notamment les
+opérations sensibles et le confort d’utilisation du compte habituel.
+
 ## Préparer les essais
 
 - [ ] Vérifier que la version réellement affichée correspond à la dernière fusion de dev ; actualiser les pages et les ressources du navigateur.

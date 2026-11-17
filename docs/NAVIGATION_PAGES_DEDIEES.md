@@ -48,6 +48,17 @@ Localhost actualisé avec compilation, cache, routage et assets servis vérifié
 modification locale préservée. Le bilan du lot 7 garde sa recette et ses reprises
 avant intégration.
 
+Lot 8 intégré sur dev par la [PR #84](https://github.com/c41m07/genesis-reborn/pull/84),
+merge `dff8e11`, après les cinq jobs quality réussis sur `fad20ad`
+([CI 44057167152](https://github.com/c41m07/genesis-reborn/actions/runs/44057167152)).
+Localhost actualisé avec compilation, cache, six routes et quatre assets servis
+vérifiés ; modification locale préservée. Les huit lots fonctionnels sont intégrés.
+
+Les bilans ci-dessous conservent les vérifications locales et les reprises de
+chaque lot. Leur état d’intégration est donné ici ; les échecs intermédiaires
+sont des traces historiques, pas des contrôles encore manquants sur ces versions.
+La recette transversale finale et ses limites figurent en fin de document.
+
 Les trois documents Work V4 (prompt maître), V2 (brief Figma) et V1 (protocole
 adaptatif) n’ont pas été trouvés dans le dépôt ni les sources connectées
 accessibles. Aucune lecture intégrale ni validation de leurs phases n’est revendiquée.
@@ -71,12 +82,10 @@ accessibles. Aucune lecture intégrale ni validation de leurs phases n’est rev
 8. Wiki : 4/5 confirmé ; pages serveur, recherche globale, références inchangées
    et compatibilité des paramètres/fragments avec ou sans JavaScript.
 
-Les estimations des lots 3 à 8 seront confirmées sur leurs dépendances au début
-du lot, après intégration du précédent.
-
-La complexité et les risques des lots suivants seront attribués après lecture
-ciblée de leurs dépendances. Aucun lot suivant ne démarre avant l’intégration
-validée du précédent.
+Ces complexités ont été confirmées lors de l’examen ciblé de chaque lot.
+Chaque lot dépendant a démarré après l’intégration du précédent dans dev.
+La recette transversale finale est de complexité 4/5 : huit espaces, contextes
+de colonie/univers, droits et compatibilité des adresses à vérifier ensemble.
 
 ## Lot 1 — choix de navigation
 
@@ -313,16 +322,16 @@ Les vérifications du vol ciblé restent bornées au joueur et à sa colonie.
   les contrastes du formulaire clair et la priorité du formulaire sur mobile
   ont été corrigés. Les anciens fragments réagissent aussi à un changement
   d’ancre conservant le document, sans boucle avec les paramètres de préparation.
-- La première CI de brouillon a réussi sur `e5f0c90`. Elle ne constitue pas
-  la CI complète ; les cinq jobs quality sont obligatoires sur la dernière
-  version prête à relire de la PR #77 avant toute fusion.
+- La première CI de brouillon a réussi sur `e5f0c90`. La CI complète finale
+  a ensuite validé les cinq jobs quality sur `b6d1aaf`, avant la fusion de la PR #77.
 - La première CI complète a validé PHP et le groupe navigateur 3, puis a signalé
   trois tests utilisant encore l’ancien accès direct au formulaire. Les tests
   suivent désormais Flottes → Préparer une mission et distinguent les menus
   principal et mobile, en conservant leurs assertions métier. Reprise locale
   réussie des neuf parcours de `colony.spec.mjs` et `espionage-report.spec.mjs`,
   y compris l’arrivée réelle sans accélération. Les groupes restants ont été
-  interrompus par le retour en brouillon ; une nouvelle CI complète est requise.
+  interrompus par le retour en brouillon ; la CI finale citée en tête de suivi
+  a validé la reprise avant fusion.
 
 
 Aucune migration sur une base existante, installation locale de dépendance ni
@@ -467,8 +476,8 @@ globale de performance n’est annoncée.
   fragments et pagination. La navigation et la lecture paginée fonctionnent
   aussi sans JavaScript. Les captures représentatives ont été examinées ; le
   compteur d’attente reste sur une ligne sur mobile.
-- La première CI légère a réussi sur `2f52096`. Elle ne remplace pas les cinq
-  jobs quality obligatoires sur la dernière version prête à relire avant fusion.
+- La première CI légère a réussi sur `2f52096`. Les cinq jobs quality de la
+  CI complète finale ont réussi sur `7643609` avant la fusion de la PR #78.
 
 Les tests utilisent uniquement des bases jetables distinctes de la base locale habituelle. Aucun déploiement ni migration d’une base existante.
 Les contrôles d’accessibilité sont ciblés, sans audit de conformité complet.
@@ -567,8 +576,8 @@ sous verrou. Aucun gain chiffré de performance n’est annoncé.
   contre le déclassement de double-submit vers l’origine seule. Aucun mécanisme
   CSRF n’a été modifié. Préférences sauvegardées, sortie d’une période active et
   suppression confirmée réussissent dans cette session native.
-- Les cinq jobs quality de la dernière version prête à relire restent requis
-  avant fusion. Les contrôles locaux ne sont pas une validation CI complète.
+- Les cinq jobs quality ont réussi sur `afe19b8` avant la fusion de la PR #79.
+  Les contrôles locaux et la CI GitHub restent distingués dans le relevé initial.
 
 Les essais utilisent exclusivement des bases jetables distinctes de la base habituelle. La configuration navigateur garde le drapeau existant de vacances
 désactivé ; les tests HTTP contrôlent aussi son activation autorisée. Le cas
@@ -666,9 +675,9 @@ clavier, liens directs, rechargement, retour arrière et anciens fragments véri
 Captures réelles sombre sur ordinateur et claire sur mobile examinées.
 
 Les essais utilisent des bases jetables distinctes de la base habituelle.
-La [PR #80](https://github.com/c41m07/genesis-reborn/pull/80) est prête pour la CI
-complète ; les cinq jobs quality de sa dernière version restent obligatoires
-avant fusion. Les résultats locaux ne constituent pas une validation CI complète.
+La [PR #80](https://github.com/c41m07/genesis-reborn/pull/80) a été fusionnée après
+les cinq jobs quality réussis sur `6f969da`. La CI et l’actualisation locale sont
+consignées séparément en tête de suivi.
 
 Les documents Work V4/V2/V1 ne sont pas retrouvés par les recherches locales et
 connectées ; aucune lecture ou validation de leurs phases n’est revendiquée.
@@ -764,9 +773,8 @@ retour arrière, changement de fragment et paramètres de l’ancien lien vérif
 Connexion native sans JavaScript, navigation des deux listes et fiche réussies.
 Captures sombre ordinateur et claire mobile examinées. Les essais utilisent des
 bases jetables distinctes de la base habituelle. La [PR #81](https://github.com/c41m07/genesis-reborn/pull/81)
-est prête pour la CI complète ; les cinq jobs quality restent obligatoires sur sa
-dernière version avant fusion. Les vérifications locales ne sont pas une validation
-CI complète.
+a été fermée sans fusion ; la PR #82 a intégré le lot après les cinq jobs quality
+réussis sur `25bb0ae`. Les reprises ci-dessous expliquent cette succession.
 
 README, architecture, décisions, règles de navigation, parcours, feuille de route
 et manuel embarqué synchronisés. Les trois documents Work V4/V2/V1 ne sont pas
@@ -895,11 +903,12 @@ sa rangée redondante est retirée des nouvelles pages. Les alertes de fermeture
 proche et d’univers fermé sont également vérifiées par Axe dans les deux thèmes. Les formulaires ne sont
 pas remplacés périodiquement ; une saisie catalogue en cours reste intacte.
 
-La [PR #83](https://github.com/c41m07/genesis-reborn/pull/83) donne l’état de CI,
-de fusion et d’activation locale après ce relevé. Le scan de secrets et la CI
-légère réussissent sur le premier commit. La CI complète reste obligatoire sur
-la dernière version avant fusion. Aucune fusion, migration existante ou livraison
-Alpha n’est annoncée par cette photographie du développement.
+La [PR #83](https://github.com/c41m07/genesis-reborn/pull/83) a été fusionnée dans dev
+par `7b7d92d`, après le scan de secrets et les cinq jobs quality réussis sur
+`e7616ed` (CI 44048538481). L’application locale a ensuite été actualisée avec
+préservation de sa modification préexistante. Aucune migration de base existante
+ni livraison Alpha. Les deux reprises suivantes sont historiques et ont été
+validées par cette CI finale.
 
 Les documents Work V4, brief Figma V2 et protocole adaptatif V1 ne sont pas
 retrouvés dans les sources locales et connectées accessibles ; aucune lecture
@@ -1036,10 +1045,11 @@ réelles bureau et mobile ont été examinées. Une reprise ciblée vérifie aus
 que la participation à l’univers sélectionné reste identique sur chaque page.
 Aucune suite complète PHP/navigateur locale n’est revendiquée.
 
-La dernière version doit réussir la CI complète avant fusion. La
-[PR #84](https://github.com/c41m07/genesis-reborn/pull/84) donnera ensuite l’état
-de CI, d’intégration et d’activation locale. Les deux scénarios de contenu et de
-compatibilité ont aussi été repris après la synchronisation des décisions :
+La [PR #84](https://github.com/c41m07/genesis-reborn/pull/84) a été fusionnée dans dev
+par `dff8e11`, après le scan de secrets et les cinq jobs quality réussis sur
+`fad20ad` (CI 44057167152). Localhost a été actualisé et sa modification locale
+préservée. Les deux scénarios de contenu et de compatibilité ont aussi été repris
+après la synchronisation des décisions :
 ils réussissent, avec comparaison intégrale des références aux sources finales. Aucune migration de base existante ni livraison Alpha dans ce lot.
 Les trois sources Work V4/V2/V1 et le wiki documentaire externe restent
 inaccessibles ; aucune lecture ou synchronisation n’est revendiquée. Les
@@ -1069,3 +1079,88 @@ non mesurée.
 - `docs/NAVIGATION_PAGES_DEDIEES.md`
 - `docs/PARCOURS_UI_UX.md`
 - `docs/README.md`
+
+
+## Recette transversale finale
+
+### Périmètre et risques
+
+Recette de complexité 4/5, depuis dev `dff8e11`, sur une branche dédiée.
+Aucune nouvelle page ni règle métier : ce lot consolide les tests des pages
+livrées, corrige le thème des champs de description administratifs et clôt les
+mentions documentaires de CI/fusion encore provisoires.
+Les décisions de navigation et l’architecture des huit lots restent applicables.
+
+| Risque | Vérification transversale |
+| --- | --- |
+| Perte du contexte | Seconde colonie de fixture sélectionnée ; participation et colonie conservées sur chaque page joueur |
+| Destination ou navigation active incorrecte | Réponses HTTP, titre propre, entrée principale et sous-page actives, absence de sommaire automatique inutile |
+| Régression mobile ou de thème | Largeurs 320/390/1 440 px côté joueur et 390/1 440 px côté administration ; préférences clair/sombre réellement enregistrées |
+| Fonctions dépendantes du JavaScript | Lecture des pages serveur sans JavaScript ; parcours clavier, rechargement et retour arrière |
+| Confusion des droits | Diplomatie personnelle avec/sans guilde ; administration refusée au joueur puis accessible au compte de test autorisé |
+| Effets sur les données habituelles | Créations et modifications de fixtures exclusivement dans le projet Docker jetable contrôlé par le support de test |
+
+La matrice `app/tests/browser/navigation-final.spec.mjs` couvre 22 destinations
+sans guilde, 10 avec guilde et 13 administratives (certaines adresses sont communes
+aux états avec/sans guilde). Axe contrôle les contenus principaux représentatifs
+dans les deux thèmes. Les captures réelles accompagnent les résultats Playwright.
+Les tests propres à chaque lot restent la référence pour les actions métier,
+refus d’accès détaillés, isolation des univers, versions et actualisations.
+
+### Correction et résultats locaux
+
+Les champs de description des événements, modèles de projets et rotations
+imposaient un fond sombre dans le thème clair. Les captures ont motivé un
+contrôle ciblé : le contraste calculé passait, mais le contrôle du fond adapté
+au thème reproduisait le défaut. La règle commune `.admin-event-form textarea`
+réutilise maintenant les tokens de fond, texte et bordure existants. La reprise
+réussit dans les deux thèmes ; aucun formulaire ni traitement serveur modifié.
+Les captures corrigées mobile claire et ordinateur sombre ont été examinées,
+ainsi que les vues de guilde et du wiki.
+
+Contrôles locaux réussis :
+
+- `make validate`, `node --check app/tests/browser/navigation-final.spec.mjs`,
+  `make assets` et `git diff --check`.
+- Trois scénarios navigateur distincts réussis par consolidation des reprises :
+  espaces sans guilde (22 destinations), guilde et diplomatie/projets (10),
+  administration et refus d’accès (13). Le dernier inclut le contrôle du fond
+  et du contraste des descriptions, après reproduction avant correction.
+- Liens directs, titres, navigation active, colonie/participation, absence de
+  débordement et thèmes vérifiés dans la matrice. Clavier, focus, rechargement,
+  retour arrière et lecture sans JavaScript vérifiés sur le parcours joueur.
+- Les deux erreurs de préparation de la nouvelle recette ont été corrigées :
+  titre de personnalisation incluant le nom de guilde et audits Axe exécutés
+  dans les sessions avec JavaScript, distincts du parcours natif.
+
+La validation locale reste ciblée ; aucune suite complète PHP/navigateur locale
+n’est revendiquée. La CI complète de la PR de clôture doit réussir sur sa dernière
+version avant fusion. L’intégration dev et l’actualisation locale de cette recette
+sont consignées dans cette PR, séparément des résultats locaux ci-dessus.
+
+### Fichiers du lot de clôture
+
+- `app/assets/styles/admin-dashboard.css`
+- `app/tests/browser/navigation-final.spec.mjs`
+- `README.md`
+- `docs/README.md`
+- `docs/NAVIGATION_PAGES_DEDIEES.md`
+- `docs/FEUILLE_DE_ROUTE.md`
+- `docs/REFONTE_ADMINISTRATION.md`
+- `docs/RECETTE_EVOLUTIONS_INTERFACES.md`
+
+### Limites explicites
+
+La vérification automatique du compte habituel n’a pas pu être menée : l’outil
+Edge a d’abord signalé un panneau d’extension ouvert, puis arrêté le contrôle
+car il ne pouvait pas vérifier l’URL avec assez de certitude, malgré l’onglet
+localhost ouvert et connecté confirmé par l’utilisateur. Aucun contournement
+ni accès à la session habituelle par un autre moyen. Sa recette de confort
+reste donc à effectuer manuellement ; les essais isolés ne la remplacent pas.
+La liste manuelle des évolutions A à K n’est pas cochée par cette recette.
+
+Les trois sources Work V4/V2/V1 sont encore introuvables dans le dépôt et les
+sources connectées accessibles ; le wiki documentaire externe n’est pas synchronisé.
+Les contrôles d’accessibilité sont ciblés, sans audit complet RGAA ni lecteur
+d’écran réel. Performance non mesurée. Aucune migration de base existante,
+installation de dépendance ou livraison Alpha autorisée ou réalisée par ce lot.

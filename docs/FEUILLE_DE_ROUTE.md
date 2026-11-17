@@ -1681,31 +1681,41 @@ Lot 5 intégré sur dev par la [PR #80](https://github.com/c41m07/genesis-reborn
 merge `4fa63a7`, après CI complète réussie sur `6f969da`. Application locale
 actualisée avec préservation de la modification préexistante.
 
-Lot 6 Événements réalisé sur `feature/navigation-evenements-pages`, depuis dev `4fa63a7` :
-Événements et bonus, Défis et rotations, avec fiches et panneau commun conservés.
-Complexité 4/5, critères de visibilité partagés et pagination avant affichage.
-Contrôles locaux ciblés réussis ; la [PR #82](https://github.com/c41m07/genesis-reborn/pull/82)
-remplace #81 pour retirer l’identifiant fictif des commits à intégrer, sans réécriture
-forcée. Scan de secrets et CI complète requis avant fusion. [Recette et état d’intégration](NAVIGATION_PAGES_DEDIEES.md).
+Lot 6 Événements intégré par la [PR #82](https://github.com/c41m07/genesis-reborn/pull/82),
+merge `8f1bc6e`, après les cinq jobs quality réussis sur `25bb0ae`
+(CI 44001350739). La PR #81 est fermée sans fusion. Événements et bonus,
+Défis et rotations conservent les fiches et le panneau commun. Localhost actualisé.
 
 ## Navigation — lot 7 Administration, 17 novembre 2026
 
 Pages dédiées des univers, familles du catalogue, formulaires d’événements,
 modèles de projets et rotations. Console, assistant, services et protections
-existants conservés. Réalisation locale et contrôles ciblés réussis (22 tests PHP et 28 parcours
-navigateur distincts, par consolidation). La PR #83, la CI complète,
-l’intégration dans dev et l’actualisation locale sont des étapes
-distinctes, suivies dans le [bilan](NAVIGATION_PAGES_DEDIEES.md). Pas de migration
-sur une base existante ni de déploiement Alpha. Le lot Wiki reste séparé.
+existants conservés. Contrôles ciblés : 22 tests PHP et 28 parcours navigateur
+distincts, par consolidation. Intégré par la [PR #83](https://github.com/c41m07/genesis-reborn/pull/83),
+merge `7b7d92d`, après les cinq jobs quality réussis sur `e7616ed`
+(CI 44048538481). Application locale actualisée, modification préexistante préservée.
 
 ## Navigation — lot 8 Wiki, 17 novembre 2026
 
 Accueil, chapitres et recherche globale séparés, avec titres et navigation active.
-Sommaire, formules natives et documents de référence conservés. Les anciennes
-adresses à paramètres et fragments restent utilisables, avec une transition
-explicite sans JavaScript. Aucune règle, valeur, permission ou condition d’accès
-modifiée. Réalisation locale vérifiée : huit tests PHP distincts et quatre
-scénarios navigateur réussis, validation, lint et compilation. La CI complète,
-la fusion dev et l’actualisation de l’application restent des étapes distinctes,
-suivies dans le [bilan](NAVIGATION_PAGES_DEDIEES.md). Pas de migration sur une base
-existante ni de déploiement Alpha. Les trois sources Work restent inaccessibles.
+Sommaire, formules natives, documents de référence et anciennes adresses conservés.
+Contrôles ciblés : huit tests PHP distincts et quatre scénarios navigateur réussis.
+Intégré par la [PR #84](https://github.com/c41m07/genesis-reborn/pull/84), merge `dff8e11`,
+après les cinq jobs quality réussis sur `fad20ad` (CI 44057167152).
+Application locale actualisée, routes et assets servis vérifiés.
+
+Les huit lots fonctionnels sont intégrés dans dev. Le [suivi de navigation](NAVIGATION_PAGES_DEDIEES.md)
+distingue leur recette locale, leur CI, leur fusion et leur activation locale.
+Aucune migration de base existante ni livraison Alpha. Les trois sources Work
+et le wiki documentaire externe restent inaccessibles.
+
+## Navigation — recette finale, 17 novembre 2026
+
+Recette transversale locale réussie : trois scénarios distincts couvrent les
+espaces joueur sans/avec guilde et l’administration, dans les deux thèmes.
+Le fond des descriptions administratives suit maintenant le thème clair/sombre ;
+la régression est reproduite puis vérifiée après correction. Les huit bilans de
+livraison sont synchronisés. La CI complète, la fusion et l’actualisation locale
+de cette clôture sont suivies dans la PR associée au [bilan final](NAVIGATION_PAGES_DEDIEES.md#recette-transversale-finale).
+La recette de confort sur le compte habituel reste manuelle : le contrôle Edge
+a été arrêté faute de vérification fiable de l’URL. Aucun déploiement Alpha.
