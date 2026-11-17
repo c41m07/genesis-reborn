@@ -9,7 +9,8 @@ use App\Service\Combat\TechnologyEffectCalculator;
 final class FleetRecallPlanner
 {
     public function __construct(private GameRepository $repo,private FleetNavigation $navigation,
-        private MovementCalculator $calculator,private GameCatalog $catalog,private TechnologyEffectCalculator $technologyEffects) {}
+        private MovementCalculator $calculator,private GameCatalog $catalog,private TechnologyEffectCalculator $technologyEffects,
+        private FleetFuel $fuel) {}
 
     public function destination(PlayerUniverse $member,Fleet $fleet,?int $id): Planet
     {
@@ -78,7 +79,7 @@ final class FleetRecallPlanner
         }
         if(!$ships) throw new \DomainException('Cette flotte ne possède plus de vaisseau.');
         $levels=$this->repo->levelsByTier(PlayerTechnology::class,['playerUniverse'=>$fleet->playerUniverse]);
-        return $this->technologyEffects->applyToShips($ships,$levels,$fleet->playerUniverse->universe);
+        return $this->fuel->forFleet($fleet,$this->technologyEffects->applyToShips($ships,$levels,$fleet->playerUniverse->universe));
     }
 
     private function legacyNavigation(Fleet $fleet): array

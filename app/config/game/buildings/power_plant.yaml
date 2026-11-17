@@ -14,35 +14,22 @@
   "production_per_level": 0.3,
   "effect_note": "Production d’électricité : +0,3/s par niveau basique avant facteur de position et multiplicateur d’univers.",
   "tier_unlock_requirements": {
+    "basic": {},
     "intermediate": {
-      "technologies": [
-        {
-          "slug": "engineering_foundations",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
       "buildings": [
         {
-          "slug": "lab",
+          "slug": "power_plant",
           "tier": "basic",
-          "level": 5
+          "level": 10
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "engineering_foundations",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
       "buildings": [
         {
-          "slug": "lab",
+          "slug": "power_plant",
           "tier": "intermediate",
-          "level": 10
+          "level": 20
         }
       ]
     }
@@ -50,22 +37,22 @@
   "economy_value_budget": 4800,
   "cost_profiles": {
     "basic": {
-      "metal": 1440,
-      "nano": 480,
+      "metal": 960,
+      "nano": 720,
       "antimatter": 0,
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 1350,
-      "nano": 675,
-      "antimatter": 75,
+      "metal": 900,
+      "nano": 750,
+      "antimatter": 150,
       "hydrogen": 0
     },
     "superior": {
-      "metal": 1126,
-      "nano": 844,
-      "antimatter": 187,
-      "hydrogen": 376
+      "metal": 938,
+      "nano": 656,
+      "antimatter": 281,
+      "hydrogen": 752
     }
   },
   "tier_labels": {

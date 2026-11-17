@@ -28,15 +28,19 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
   await page.setViewportSize({width:1440,height:900});
   await expect(page.locator('.catalog-operations-rail')).toBeVisible();
   await page.goto('/wiki');
-  await expect(page.locator('.wiki-chapter:visible')).toHaveCount(1);
+  await expect(page.locator('.wiki-chapter')).toHaveCount(0);
   const chapters=await page.locator('#wiki-chapter-choice option[value]:not([value=""])').evaluateAll(options=>options.map(option=>option.value));
-  await page.locator('.wiki-summary a[href="#wiki-'+chapters[1]+'"]').focus();
+  await page.locator('.wiki-summary a[href="/wiki/chapitres/'+chapters[1]+'"]').focus();
   await page.keyboard.press('Enter');
-  await expect(page).toHaveURL(new RegExp('#wiki-'+chapters[1]+'$'));
+  await expect(page).toHaveURL(new RegExp('/wiki/chapitres/'+chapters[1]+'$'));
   await expect(page.locator('#wiki-'+chapters[1])).toBeVisible();
-  await page.locator('.wiki-summary a[href="#wiki-'+chapters[2]+'"]').focus();
+  await page.locator('.wiki-summary a[href="/wiki/chapitres/'+chapters[2]+'"]').focus();
   await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(new RegExp('/wiki/chapitres/'+chapters[2]+'$'));
+  await expect(page.locator('#wiki-'+chapters[2])).toBeVisible();
+  await page.waitForLoadState('load');
   await page.goBack();
+  await expect(page).toHaveURL(new RegExp('/wiki/chapitres/'+chapters[1]+'$'));
   await expect(page.locator('#wiki-'+chapters[1])).toBeVisible();
   await expect(page.locator('.wiki-chapter:visible')).toHaveCount(1);
   await page.goto('/planetes?view=table');
@@ -50,7 +54,7 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
   await page.setViewportSize({width:1440,height:900});
   await page.goto('/guildes/projets');
   await page.getByRole('link',{name:'Rejoindre une guilde',exact:true}).click();
-  await expect(page).toHaveURL(/diplomatie\?tab=join/);
+  await expect(page).toHaveURL(/\/guildes$/);
   await page.goto(home);
   await expect(page.locator('.economy-balance,.dashboard-colonies')).toHaveCount(0);
   await expect(page.locator('.dashboard-metrics a[href="/planetes"]')).toBeVisible();
@@ -83,7 +87,7 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
     runIsolatedSql(process.env.BROWSER_ROUTER,`UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
     for(const width of [1440,390]) {
       await page.setViewportSize({width,height:900});
-      for(const path of [new URL(home).pathname,'/planetes?view=table','/flottes','/boosts','/evenements','/profil','/profil/preferences','/diplomatie']) {
+      for(const path of [new URL(home).pathname,'/planetes?view=table','/flottes','/boosts','/evenements','/profil','/profil/preferences','/profil/vacances','/diplomatie']) {
         await page.goto(path);
         await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
         await expect(page.locator('main h1')).toBeVisible();
@@ -98,8 +102,8 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
           await expect(page).toHaveURL(/view=table/);
         }
         if(path==='/flottes') {
-          await expect(page.locator('.fleet-page-layout--no-idle')).toBeVisible();
-          await page.goto('/flottes?mission=spy');
+          await expect(page.getByRole('heading',{name:'Missions actives',exact:true})).toBeVisible();
+          await page.goto('/flottes/preparer?mission=spy');
           await expect(page.locator('.fleet-empty-state').getByRole('link',{name:/chantier/i})).toHaveAttribute('href', /#item-probe-basic/);
           await page.goto(path);
         }
@@ -119,9 +123,10 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
           await expect(panel).toBeHidden();
         }
         if(path==='/profil/preferences') {
-          await expect(page.locator('#vacances-info')).toBeVisible();
-          await expect(page.getByRole('navigation',{name:'Compte et préférences'}).getByRole('link',{name:'Vacances',exact:true})).toHaveAttribute('href','/profil/preferences#vacances-info');
+          await expect(page.locator('#vacances-info')).toHaveCount(0);
+          await expect(page.getByRole('navigation',{name:'Compte et préférences'}).getByRole('link',{name:'Mode vacances',exact:true})).toHaveAttribute('href','/profil/vacances');
         }
+        if(path==='/profil/vacances') await expect(page.locator('#vacances-info')).toBeVisible();
         const audit=await new AxeBuilder({page}).include('main').analyze();
         if(audit.violations.length) accessResults.push({path,theme,width,violations:audit.violations});
       }
@@ -159,8 +164,9 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
     await expect(noScript).toHaveURL(/resource=electricity/);
     await expect(noScript.locator('.colony-comparison td[data-resource="electricity"]')).toBeVisible();
     await noScript.goto(new URL('/wiki',home).href);
-    expect(await noScript.locator('.wiki-chapter:visible').count()).toBeGreaterThan(1);
+    await expect(noScript.locator('.wiki-chapter')).toHaveCount(0);
+    expect(await noScript.locator('.wiki-chapter-card').count()).toBeGreaterThan(1);
     await noScript.goto(new URL('/wiki?q=colonisation',home).href);
-    await expect(noScript.locator('.wiki-chapter').first()).toContainText(/colonisation/i);
+    await expect(noScript.locator('.wiki-search-result').first()).toContainText(/colonisation/i);
   } finally {await context.close();}
 });

@@ -24,7 +24,7 @@ test('Thème sombre par défaut : dashboard structuré et navigation responsive'
   await expect(metrics.nth(1)).toContainText('Classement');
   await expect(metrics.nth(1).locator('strong')).toHaveText(/^#\d+$/);
   await expect(metrics.nth(3)).toContainText('Guilde');
-  await expect(metrics.nth(3)).toHaveAttribute('href', '/diplomatie');
+  await expect(metrics.nth(3)).toHaveAttribute('href', '/guildes');
   await page.setViewportSize({ width: 1440, height: 900 });
 
   await page.goto(colonyPath + '?section=buildings');

@@ -27,6 +27,7 @@ test('Routes de navigation utilisables sans débordement aux trois tailles', asy
   const email = await signIn(page);
   prepareOwnedColony(process.env.BROWSER_ROUTER, email, { showLockedItems: true });
   const routes = await page.locator('.sidebar nav a').evaluateAll(links => [...new Set(links.map(link => new URL(link.href).pathname + new URL(link.href).search))]);
+  routes.push('/flottes/preparer', '/flottes/orbites', '/flottes/quai', '/flottes/compositions', '/flottes/compositions/creer');
   expect(routes.length).toBeGreaterThanOrEqual(10);
 
   for (const theme of ['dark', 'light']) {
@@ -40,7 +41,7 @@ test('Routes de navigation utilisables sans débordement aux trois tailles', asy
       expect(overflow.document, `${route} déborde à ${width}px : ${JSON.stringify(overflow.offenders)}`).toBeLessThanOrEqual(width);
       await expect(page.locator('main#main')).toBeVisible();
       await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
-      if (route.startsWith('/diplomatie')) await expect(page.locator('.diplomacy-page .alliance-tabs>a')).toHaveCount(3);
+      if (route.startsWith('/diplomatie')) await expect(page.locator('.diplomacy-page nav[aria-label="Navigation de diplomatie"]>a')).toHaveCount(1);
       const checks = [
         ['.sidebar nav>a', 12],
         ['.catalog-card h3', width <= 740 ? 13 : 14],

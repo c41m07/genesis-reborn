@@ -375,3 +375,21 @@ Le temps de jeu commence au début de ce suivi, sans reconstituer le passé.
   `GameEventService` et les vues d’aperçu et de défis.
 - Vérifications : tests d’intégration des services et parcours navigateur ciblés
   dans `app/tests/Integration` et `app/tests/browser`.
+
+## Navigation dédiée — lot 7, 17 novembre 2026
+
+La console refactorisée est conservée. Les listes Univers, Catalogue, Événements,
+Modèles de projets et Rotations ne regroupent plus tous leurs formulaires.
+Création, modification et gestion d’un univers s’ouvrent sur leurs propres pages.
+La recherche du catalogue traverse les quatre familles, y compris sans JavaScript.
+Le modèle de rotation s’édite avec contrôle de version sous verrou ; les
+occurrences gardent leur configuration figée. Les POST et confirmations sensibles
+existants sont conservés. Les anciens fragments sont orientés côté navigateur,
+avec liens serveur disponibles dans les listes.
+Le [bilan du lot 7](NAVIGATION_PAGES_DEDIEES.md) distingue les validations locales,
+la CI, la fusion et l’actualisation de l’application. Les bilans historiques de
+ce document décrivent leurs lots respectifs, sans valoir validation de ce lot.
+
+La PR #83 a intégré ce lot dans dev par `7b7d92d`, après les cinq jobs quality
+réussis sur `e7616ed` (CI 44048538481). Localhost a été actualisé avec préservation
+de sa modification locale. Aucune migration de base existante ni livraison Alpha.

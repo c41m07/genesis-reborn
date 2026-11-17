@@ -10,15 +10,20 @@ Cette fusion ne constitue pas un déploiement. Aucune nouvelle migration n’a �
 
 ## Trouver les écrans
 
-L’entrée **Alliances** ouvre `/diplomatie` et propose trois onglets :
+L’entrée **Ma guilde** ouvre `/guildes` pour un membre ; sans guilde, elle devient
+**Guildes** et ouvre la recherche. La navigation commune donne accès à Membres,
+Grades et permissions, Projets collectifs, Personnalisation (commandant) et Gestion.
+La création utilise `/guildes/creer`. **Projets collectifs** ouvre les projets en
+cours sur `/guildes/projets`. Sa navigation relie les projets disponibles
+(`/guildes/projets/disponibles`) et l’historique (`/guildes/projets/historique`).
+Les listes et les contributions des fiches se parcourent par pages de 25 ;
+la fiche et les formulaires conservent leurs adresses existantes.
 
-| Onglet ou écran | Utilisation |
-| --- | --- |
-| Guildes, `/diplomatie?tab=guilds` | Créer ou rejoindre une guilde, consulter ses membres, gérer ses grades et son commandement. |
-| Diplomatie, `/diplomatie?tab=diplomacy` | Rechercher une autre guilde, proposer et signer un traité, gérer l’hostilité ou la paix. |
-| Relation, `/diplomatie?tab=relations` | Gérer ses alliances et rivalités personnelles, même sans guilde. |
-| Projets collectifs, `/guildes/projets` | Lancer un modèle autorisé, financer les paliers et consulter les contributions. |
-| Administration, `/admin/projets-guilde` | Créer et modifier les modèles de projets par univers avec un compte administrateur. |
+**Diplomatie** ouvre `/diplomatie` : relations entre guildes avec une guilde,
+relations entre commandants sinon. `/diplomatie/commandants` reste accessible
+à tous les joueurs, y compris guildés. Les propositions reçues sont mises en
+évidence sur leur page. Les anciennes adresses `?tab=...` restent utilisables.
+Voir [les destinations et la transition](NAVIGATION_PAGES_DEDIEES.md).
 
 Les relations restent limitées au même univers. Les projets et les grades nécessitent une guilde et l’activation de la fonctionnalité guildes dans l’univers. Les relations personnelles ne nécessitent pas de guilde.
 
@@ -88,7 +93,7 @@ Les grades de guilde ne donnent aucun pouvoir sur les relations personnelles d�
 
 ## Projets collectifs : participer
 
-Un projet utilise un modèle défini par l’administration pour son univers. Le dirigeant ou un membre ayant `projects.start` peut le lancer depuis **Projets collectifs**. Tous les membres peuvent ensuite contribuer depuis une colonie leur appartenant.
+Un projet utilise un modèle défini par l’administration pour son univers. Le dirigeant ou un membre ayant `projects.start` peut le lancer depuis **Projets collectifs → Projets disponibles**. Tous les membres peuvent ensuite contribuer depuis une colonie leur appartenant.
 
 Le lancement fige le nom, la description, les coûts de chaque palier et les minimums de récompense. Une modification administrative ultérieure ne change pas un projet en cours. Un modèle désactivé cesse d’être proposé aux nouveaux lancements ; les projets déjà lancés continuent.
 

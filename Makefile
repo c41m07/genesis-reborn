@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 DC = docker compose --env-file .env.local
 EXEC = $(DC) exec -T --user $(shell id -u):$(shell id -g) app
-.PHONY: help configure doctor validate build start stop down status logs shell console install migrate import seed-demo test lint assets watch verify-install test-browser backup restore ops-check backup-status test-backup empires-warn empires-preview empires-convert occupations-resume
+.PHONY: help configure doctor validate build start stop down status logs shell console install migrate import seed-demo test lint lint-static assets watch verify-install test-browser backup restore ops-check backup-status test-backup empires-warn empires-preview empires-convert occupations-resume
 help: ## Afficher les commandes
 	@awk 'BEGIN {FS = ":.*## "} /^[a-z-]+:.*## / {printf "%-16s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 configure: ## Générer les secrets locaux sans écraser l'existant
@@ -45,11 +45,12 @@ test: ## Tests unitaires, HTTP et MariaDB isolée en mémoire
 	$(DC) exec -T --user root app chown -R $(shell id -u):$(shell id -g) var/cache
 	$(EXEC) php -d memory_limit=512M bin/phpunit
 	python3 -m unittest discover -s app/tests/scripts -p "test_backup*.py"
-lint: ## Vérifier PHP, Twig, YAML, conteneur et schéma
+lint-static: ## Vérifier PHP, Twig, YAML et conteneur sans contrôler le schéma SQL
 	$(EXEC) sh -c 'find src tests migrations -name "*.php" -print0 | xargs -0 -n1 php -l >/dev/null'
 	$(EXEC) php bin/console lint:yaml config
 	$(EXEC) php bin/console lint:twig templates
 	$(EXEC) php bin/console lint:container
+lint: lint-static ## Vérifier PHP, Twig, YAML, conteneur et schéma
 	$(EXEC) php bin/console doctrine:schema:validate
 
 test-browser: ## Vérifier les parcours navigateur dans une base MariaDB éphémère isolée

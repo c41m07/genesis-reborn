@@ -1,6 +1,7 @@
 {% extends 'base.html.twig' %}
 {% block title %}Rappeler une flotte · Genesis Reborn{% endblock %}
 {% block body %}
+{% include 'ui/fleet_navigation.html.twig' %}
 <div class="page-heading"><div><h1>Rappeler la flotte #{{ fleet.id }}</h1><p>Vérifiez le retour avant de confirmer le rappel.</p></div></div>
 <section class="panel fleet-recall-panel" aria-labelledby="recall-title">
 <h2 id="recall-title">Retour de la flotte</h2>

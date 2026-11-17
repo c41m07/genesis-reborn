@@ -1,24 +1,60 @@
 # Genesis Reborn
 
+Les [156 profils de prérequis](docs/DEBLOCAGES.md) utilisent une grille commune
+par rang, avec requalification explicite des accès existants. Les [durées et
+consommations de carburant](docs/DUREES_CARBURANT.md) sont révisées par famille,
+avec conservation des commandes payées et des coefficients des missions lancées.
+Les [unités économiques](docs/UNITES_ECONOMIQUES.md) ajoutent des récolteurs mobiles
+et des satellites fixes, avec places par rang, réservations et production locale.
+Chaque famille possède trois noms et trois illustrations propres aux rangs, selon la
+[direction artistique du catalogue](docs/ILLUSTRATIONS.md).
+Les cartes affichent leur production par unité active sur la colonie consultée,
+avec les modificateurs locaux et la pause des vacances.
+Les cadres de gain des bâtiments et recherches comparent uniquement le niveau
+proposé au précédent, sans cumuler les niveaux déjà en file.
+Leur livraison pendant un combat rejoint les renforts locaux avec toute la flotte.
+Le [suivi de mission](docs/PROGRESSION_CARBURANT_UNITES.md) distingue les lots
+préparés, leur intégration, leur activation et les décisions encore ouvertes.
+La [grille de coûts retenue](docs/COUTS.md) est B40/60, I30/50/20 et S25/35/30/10,
+en parts de valeur M/N/A/H. Budgets de base conservés et commandes payées inchangées.
+Les points suivent toujours les quantités brutes des prix courants : le classement
+et les protections liées aux points peuvent évoluer lors de leur recalcul.
+
+Comparer les durées, la taxe électrique et les trajets sans écrire en base :
+`make -s console CMD="app:balance:compare-operations"`. La sortie JSON couvre les
+156 profils et des scénarios de trajet ; les hypothèses et limites sont dans
+la [méthode de mesure](docs/DUREES_CARBURANT.md#mesure-reproductible-et-limites).
+
+Comparer les parcours financés et le candidat de prix sans données de jeu :
+`make -s console CMD="app:balance:compare-economy --section=all"`.
+Le [rapport économique et militaire](docs/SIMULATIONS_PROGRESSION_ECONOMIE.md)
+présente les 54 parcours, les combats et leurs limites avant le choix de la nouvelle
+grille. B50/50 et I40/40/20 restent des alternatives d’étude en mémoire.
+L’option `--candidate-tier=basic` ou `--candidate-tier=intermediate` isole un rang ;
+le [comparatif par rang](docs/SIMULATIONS_COUTS_PAR_RANG.md) présente les quatre variantes.
+`--candidate-profile=../docs/PROFIL_COUTS_PROPOSE.json` charge les pourcentages
+explicites d’une étude ; la [nouvelle grille proposée](docs/SIMULATIONS_GRILLE_PROPOSEE.md)
+compare aussi le Basique 40/60 au 50/50 avec les mêmes Intermédiaire et Supérieur.
+
 Genesis Reborn est un jeu de stratégie spatiale multijoueur par navigateur. Chaque joueur développe ses colonies, organise sa production et ses recherches, explore la galaxie et conduit des opérations de flotte dans des univers indépendants. L’Alpha sert aussi à observer la progression et les retours des joueurs avant de futures décisions d’équilibrage.
 
 L’orientation confirmée est une stratégie au rythme modéré ; les durées de progression restent des objectifs à mesurer pendant l’Alpha.
 
 ## État du projet
 
-- Bunker de défense : déblocage initial basique avec chantier spatial niveau 3 et laboratoire niveau 2, sans recherche Blindage requise. Coûts, durées, plafonds et bonus défensifs conservés ; les surcharges propres aux univers restent applicables.
+- Bunker de défense : mine de métal 1 + atelier de nanofabrication 1 dans le rang demandé, sans chantier, laboratoire ni recherche supplémentaire. Le chantier spatial conserve métal 2 + nano 2 de son rang. Coûts, durées, plafonds et bonus défensifs conservés ; les surcharges propres aux univers restent applicables.
 
 - Messagerie : Ctrl + Entrée pour envoyer dans les canaux privé, guilde et Global ; Entrée conserve les sauts de ligne. Markdown sécurisé pour les nouveaux messages seulement, historique conservé en texte ; soumissions répétées protégées côté serveur. CommonMark est une dépendance Composer. [Guide et migration préparée](docs/MESSAGERIE_MARKDOWN.md).
 
 - Profils et guildes : profils de joueurs consultables uniquement par les membres du même univers, avec pseudo, guilde/tag et scores/rangs quotidiens déjà publics ; liens depuis classement, messagerie et membres de guilde. Pages de guildes avec description, logo et bannière, modifiables uniquement par le commandant. Voir [le guide et la préparation de migration](docs/PROFILS_JOUEURS_GUILDES.md). GD (JPEG/PNG/WebP) est intégré aux images Docker ; les médias privés utilisent le volume de production `guild_media`, distinct de la sauvegarde SQL.
 - Outils stratégiques : simulateur de dix combats reproductibles pour une même configuration, avec estimation des victoires de l’attaquant, décompte de toutes les issues et détails repliables par combat, sans pertes moyennes ni garantie de probabilité réelle ; 20 compositions personnelles par empire/univers et recherche avancée paginée dans les messages et rapports. Voir [le suivi et les limites](docs/CADRAGE_OUTILS_STRATEGIQUES.md).
 
-- Parcours : la page Flottes et missions affiche les vaisseaux disponibles et les missions de la colonie active, ainsi que ses demandes d’orbite envoyées/reçues ; les compteurs suivent ce périmètre. Charger une composition sur une autre colonie sélectionne cette colonie sans envoyer de flotte. Rubriques liées par des ancres dans Flottes, Inventaire, Projets et Rapports ; confirmations d’annulation avec dépendances et remboursements estimés ; retours aux rapports conservant catégorie, archives et page. Profil, Préférences et Vacances sont reliés ; l’accueil public présente des captures d’un compte de démonstration. [Suivi du lot](docs/PARCOURS_UI_UX.md).
+- Parcours : Flottes ouvre les missions de la colonie active, avec pages distinctes pour préparer une mission, consulter les demandes d’orbite, gérer les réserves et stationnements, puis enregistrer ou charger des compositions. La préparation garde Composition → Destination → Confirmation et un résumé de trois missions. Les stationnements en attente restent ceux de tout l’empire. Charger une composition sur une autre colonie sélectionne cette colonie sans envoyer de flotte. L’Inventaire sépare Boosts, Boîtes de ressources et Récompenses en attente sur des pages dédiées. Projets collectifs sépare Projets en cours, Projets disponibles et Historique, avec une fiche pour contribuer. Rapports conserve ses rubriques actuelles ; les confirmations d’annulation et les retours aux rapports gardent leur contexte. [Suivi de navigation](docs/NAVIGATION_PAGES_DEDIEES.md).
 - Espionnage : risque de détection de base 50 / 40 / 30 % selon le rang des sondes, pondéré par les quantités en mission mixte. La défense gagne un point par tranche complète de cinq sondes présentes, plafonné à vingt ; technologies, score de renseignement et protections conservés. Valeurs validées comme base d’essais Alpha, sans équilibrage confirmé : [règles et exemples](docs/REGLES.md#espionnage).
 - Opérations : recherches, vaisseaux et défenses paient une fois `100 × ceil(durée effective / 60)` en électricité. Soit 100 E par minute entamée sur la commande entière ; un lot est arrondi une seule fois. Les accélérations ne recalculent pas le coût ; les annulations remboursent 25 % du paiement conservé, dans la place disponible. Les reconstructions automatiques suivent aussi cette règle.
-- Catalogues : interrupteur « Vue condensée » placé avant « Éléments verrouillés » et mémorisé sur cet appareil, sans modifier les actions ni les prérequis. Les cartes affichent jusqu’à cinq ressources sur une ligne, avec libellés abrégés si nécessaire. Le bouton gris désactivé indique les ressources manquantes ; les illustrations des rangs verrouillés sont en noir et blanc au repos et retrouvent leurs couleurs au survol ou au focus clavier. Le wiki propose une recherche utilisable sans JavaScript, un sommaire persistant sur ordinateur, un sélecteur mobile et des liens directs ; avec JavaScript, un chapitre est affiché à la fois hors recherche, avec retour arrière conservé. Les points totaux suivent immédiatement le commandant dans le classement ; sur mobile, les autres catégories sont consultables dans chaque ligne. Les catalogues gardent leur présentation, avec les files, flottes en vol et événements fixes au défilement sur grand écran. Un lien direct vers un élément l’encadre en jaune pendant cinq secondes, sans animation si les mouvements sont réduits.
+- Catalogues : interrupteur « Vue condensée » placé avant « Éléments verrouillés » et mémorisé sur cet appareil, sans modifier les actions ni les prérequis. Les cartes affichent jusqu’à cinq ressources sur une ligne, avec libellés abrégés si nécessaire. Le bouton gris désactivé indique les ressources manquantes ; les illustrations des rangs verrouillés sont en noir et blanc au repos et retrouvent leurs couleurs au survol ou au focus clavier. Le wiki propose un accueil, une page par chapitre et une recherche globale avec extraits et liens de lecture, utilisables sans JavaScript. Le sommaire sur ordinateur, le sélecteur mobile, les formules dépliables et le retour arrière sont conservés ; les anciennes ancres ouvrent la nouvelle page avec JavaScript et repèrent le lien du chapitre dans l’accueil sans JavaScript. Les points totaux suivent immédiatement le commandant dans le classement ; sur mobile, les autres catégories sont consultables dans chaque ligne. Les catalogues gardent leur présentation, avec les files, flottes en vol et événements fixes au défilement sur grand écran. Un lien direct vers un élément l’encadre en jaune pendant cinq secondes, sans animation si les mouvements sont réduits.
 - Colonies : comparaison par tableau (stocks / capacités, solde net horaire, commandes en file), avec accès direct à chaque colonie et sélection de la ressource sur mobile. Les projets collectifs ont une fiche dédiée à la progression et aux dons, accessible uniquement à leur guilde dans l’univers actif. Le bandeau propose une fiche économique par ressource au survol, au clavier ou au toucher : stock, production brute, production actuelle, consommation brute, consommation actuelle, solde net et délai estimé issus du moteur de production. Les besoins de production distinguent électricité et hydrogène ; les consommations électriques affichent leurs totaux brut et actuel, avec le détail par activité de production repliable, tous rangs cumulés. La ligne « Non stocké / h » est omise. Les fiches électricité et hydrogène récapitulent les usines qui les consomment. Les besoins bruts restent visibles lorsque le stockage est plein ; le gain stocké devient nul. Les pénuries et pauses modifient uniquement les valeurs actuelles. La vue générale garde le compteur et l’accès aux colonies ; leur liste détaillée reste sur Planètes. Bases métal et nano : 10/h chacun avant multiplicateurs ; base nulle pour électricité, antimatière et hydrogène ; production suspendue en vacances.
-- Navigation : les raccourcis « Explorer la galaxie » ouvrent la carte interactive ; la liste des systèmes reste accessible. Le guide technologique se trouve dans Développement et les événements restent accessibles depuis Opérations, même sans événement actif.
+- Navigation : les raccourcis « Explorer la galaxie » ouvrent la carte interactive ; la liste des systèmes reste accessible. Le guide technologique se trouve dans Développement et les événements restent accessibles depuis Communauté, même sans événement actif.
 
 **L’Alpha est hébergée, selon le propriétaire.** Son URL publique, sa version exécutée et sa configuration serveur restent à confirmer. Les changements intégrés à `dev` ne sont pas déclarés déployés : consulter [l’état du déploiement](docs/DEPLOIEMENT.md).
 
@@ -57,15 +93,23 @@ Le code comprend :
   la galaxie et le classement sont regroupés ; Derniers échanges présente seulement
   les trois messages les plus récents sans les marquer lus. Les membres voient
   leur présence dans cet univers : En ligne en vert (activité depuis moins de cinq minutes),
-  Hors ligne en rouge, à l’ouverture ou à l’actualisation de la liste. Le profil distingue
-  les identifiants, le mot de passe facultatif et la suppression définitive.
-  L’inventaire sépare capacité, boosts, boîtes et récompenses en attente ; un sélecteur
+  Hors ligne en rouge, à l’ouverture ou à l’actualisation de la liste. Mon compte ouvre Mes identifiants
+  (`/profil`) et relie Préférences (`/profil/preferences`), Mode vacances
+  (`/profil/vacances`) et Suppression du compte (`/profil/supprimer`). Les
+  identifiants, préférences et suppression concernent tous les univers ; les
+  vacances concernent seulement l’empire de l’univers sélectionné. Le changement
+  de mot de passe reste facultatif dans Mes identifiants ; l’enregistrement ferme
+  toujours la session. Les anciennes adresses et actions restent utilisables.
+  L’inventaire ouvre Boosts (`/boosts`), puis relie Boîtes de ressources
+  (`/inventaire/boites`) et Récompenses en attente (`/inventaire/recompenses`).
+  La capacité commune reste visible ; la file d’attente est paginée par 25. Un sélecteur
   choisit l’opération et un dialogue permet d’examiner, annuler ou confirmer l’utilisation.
   Sans JavaScript, les formulaires natifs restent disponibles avec les mêmes contrôles serveur.
   La [recette des évolutions A à K](docs/RECETTE_EVOLUTIONS_INTERFACES.md) accompagne la revue sur dev.
 - Depuis l’inventaire, un boost peut accélérer une construction, recherche, production ou mission chronométrée active de l’empire ; les opérations en attente, les occupations et les vacances restent exclues.
 - Console d’administration avec une navigation principale à cinq entrées, un accueil synthétique et quatre pages de rubrique en cartes (`/admin/rubriques/{group}`) : joueurs et modération, univers et activité, animation, exploitation. Les fiches disposent d’un fil d’Ariane ; une sous-navigation relie les rubriques du groupe et les outils d’un même univers. Les nouveautés des signalements, de la sécurité et des feedbacks sont comptées par administrateur ; ouvrir l’accueil ne les marque pas comme consultées. Les feedbacks archivés sont masqués par défaut.
 - Surveillance `/admin/flottes` : missions actives et historique, recherche par joueur ou cible, filtres, actualisation et fiches détaillées. Les transports y sont réunis ; les rapports et consultations sont journalisés. Les nouveaux départs conservent un instantané sans reconstruire les anciennes missions.
+- Joueurs, journal, feedbacks, patchnotes et événements administratifs : listes de 50 éléments par page avec accès à l’historique complet. Les filtres Joueurs et Journal recherchent dans tous les résultats et gardent la saisie au focus ; sans JavaScript, le bouton Rechercher reste disponible. Le journal propose l’export des lignes visibles et de tous les résultats filtrés.
 - Alertes `/admin/surveillance` et dossiers `/admin/dossiers` : seuils par univers, notes conservées, états ouvert/en examen/clos, recherche et pagination. Les alertes restent des indices à examiner, sans sanction automatique.
 - Fiches `/admin/joueurs` : présence estimée depuis moins de cinq minutes, dernière activité et temps de jeu par univers (aujourd’hui, sept jours UTC, total depuis le début du suivi). Aucun historique antérieur n’est inventé ; les onglets concurrents ne multiplient pas le temps.
 - Interventions administratives : ajout/retrait de ressources par colonie dans les capacités de stockage, ajustement des échéances et rappel des flottes éligibles. Motif, confirmation, contrôle des doubles envois et journal avant/après ; les combats et occupations restent protégés.
@@ -311,9 +355,26 @@ Compiler avant les tests navigateur : la compilation remplace les fichiers de `a
 
 ## Tests et qualité
 
+Le [suivi Rework V1](docs/REWORK_V1.md) décrit le chantier local de nettoyage,
+ses mesures et ses vérifications. Les pages de colonie préparent uniquement le
+catalogue affiché ; le guide technologique prépare son arbre séparément.
+Les actualisations des colonies et de Flottes rendent des fragments partagés,
+transmis en JSON compact et compressé lorsque le navigateur l’accepte.
+Les contrôles de fiabilité comprennent des dépenses et des fins de commande
+réellement concurrentes, avec deux connexions attendant le même verrou.
+Pour les parcours navigateur, la préparation de la base jetable possède un
+budget distinct de 60 secondes ; le délai du parcours reste de 60 secondes
+(hors scénarios disposant déjà d’un délai spécifique). Les consommateurs sont
+arrêtés avant la reconstruction du schéma, puis leur disponibilité est vérifiée.
+Le rapport joint les durées de ces étapes. Le profil navigateur limite aussi
+les schedulers RabbitMQ du serveur et de ses outils CLI, sans modifier le profil
+habituel ou de production.
+
 Pendant le développement, lancer les contrôles locaux adaptés au changement et `git diff --check` avant commit ou push. Une branche de travail peut être poussée sans exécuter toute la suite ; signaler les échecs et vérifications restant à faire.
 
-La CI complète se lance sur les PR vers `dev` et `alpha`, y compris à chaque correction. Attendre sa réussite sur la dernière version avant fusion. Les push seuls sur une branche de travail ou sur `dev` ne relancent pas la CI. Les push sur `alpha` (aussi branche par défaut actuellement) conservent la validation avant publication de l’image ; le lancement manuel reste disponible. Les [règles GitHub à vérifier pour protéger `dev`](docs/DEPLOIEMENT.md#protection-de-dev) sont distinctes du workflow.
+Ouvrir les PR vers `dev` et `alpha` en brouillon pendant le développement : une CI légère contrôle le diff, Compose, PHP/Twig/YAML et le conteneur Symfony, compile les assets et lance les tests Python, sans base ni migration. Le passage en « prête à relire » lance la CI complète, obligatoire sur la dernière version avant fusion. Toute correction d’une PR prête relance la suite complète ; repasser en brouillon si le développement reprend. Les cinq contrôles complets requis ne sont pas créés par la CI légère.
+
+Pendant la CI, le travail peut continuer sur un lot indépendant, avec une autre branche issue de `dev` actualisée. Préserver la branche testée ; les lots dépendants attendent son intégration. Les push seuls sur une branche de travail ou sur `dev` ne lancent pas de CI. Les push sur `alpha` (aussi branche par défaut actuellement) et le lancement manuel conservent la CI complète avant publication éventuelle de l’image. Les [règles GitHub à vérifier pour protéger `dev`](docs/DEPLOIEMENT.md#protection-de-dev) sont distinctes du workflow.
 
 Pour reproduire les six contrôles localement, préparer Chromium depuis `app/` avec `npx playwright install --with-deps chromium`, puis lancer depuis la racine :
 
@@ -329,6 +390,7 @@ git diff --check
 - `make assets` compile les assets de production en lançant `npm run build` depuis `app/`.
 - `make validate` valide Compose sans afficher les secrets.
 - `make lint` contrôle PHP, Twig, YAML, le conteneur Symfony et le schéma Doctrine de la base configurée.
+- `make lint-static` reprend les contrôles de `make lint` sans la validation du schéma SQL ; il peut s’exécuter sans base via un conteneur ponctuel, comme dans la CI légère.
 - `make test` utilise `database-test` et `genesis_v2_test` en mémoire, un transport Messenger en mémoire et un transport mail nul ; il lance aussi les tests Python des sauvegardes. Lancer une seule suite PHP à la fois sur cette base. PHPUnit est limité à 512 Mo pour ce seul processus, sans changer PHP pour le jeu.
 - `make test-browser` prépare un projet Docker et une base jetables propres à l’exécution. `BROWSER_PERSISTENCE=1` ajoute la persistance temporaire nécessaire aux essais de redémarrage complet ; les volumes sont retirés en fin de test. Les mails et alertes externes y sont neutralisés. Le script npm `test:browser` seul ne prépare pas cet environnement.
 - `make verify-install` prépare une installation temporaire, réinstalle les dépendances et vérifie le redémarrage. Son existence ne vaut pas preuve d’une exécution récente ; consulter le suivi pour les commandes réellement exécutées.
@@ -390,9 +452,12 @@ la chaîne outbox → RabbitMQ → traitements métier → Mercure, les transact
 les contrats de messages, les abonnements privés et les scénarios de panne.
 
 Le wiki utilise les sources uniques `docs/wiki.json`, `docs/REGLES.md` et
-`docs/DECISIONS.md`. Il présente un manuel du joueur en un document avec sommaire,
-premiers pas, règles et calculs expliqués par des formules et exemples dépliables,
-accessibles au clavier et sans JavaScript. Les PDF d’origine et leurs extractions textuelles sont
+`docs/DECISIONS.md`. `/wiki` ouvre l’accueil, `/wiki/chapitres/{chapter}` une page
+de lecture et `/wiki/recherche?q=…` la recherche globale. Premiers pas, règles,
+formules et exemples restent accessibles au clavier et sans JavaScript. Les
+paramètres historiques `?chapter=` et `?q=` gardent une redirection utilisable ;
+les anciennes ancres sont orientées côté navigateur ou repèrent les cartes de
+chapitres dans l’accueil natif. Les PDF d’origine et leurs extractions textuelles sont
 conservés ; les libellés du catalogue restent dans `docs/CATALOGUE_LABELS.csv`.
 
 ## Contribution et conventions
@@ -530,8 +595,13 @@ la détection des sondes à l’arrivée conservent leurs effets pondérés actu
 Les plafonds du catalogue de l’univers sont pris en compte pour les informations
 de progression ; à 5/5/5, le préavis théorique atteint 80 minutes.
 
-Les attaques détectées sont affichées sur les pages de jeu avec cible, commandant,
-vaisseaux, points et compte à rebours. Une origine non découverte reste masquée.
+Le cadre [Flottes entrantes](docs/FLOTTES_ENTRANTES.md) regroupe les arrivées d’autres
+commandants sur vos colonies : transports, renforts, orbites et attaques détectées.
+Vos propres missions restent dans Flottes en vol. Flottes entrantes reprend le même
+style de cadre et de cartes, juste en dessous dans la Vue générale, la page Flottes
+et la colonne de droite des catalogues. Le cadre reste visible à zéro
+quand aucune arrivée étrangère n’est visible. Les attaques gardent leur préavis
+et leur priorité ; une origine non découverte reste masquée.
 La surveillance se met à jour sans rechargement, avec horloge serveur, et conserve
 le focus et la sélection de carte. Sans JavaScript, actualiser la page.
 Les sondes en trajet restent visibles seulement par leur propriétaire.
@@ -585,3 +655,36 @@ archives et la phrase technique sur le calcul du préavis en Recherche sont
 retirés des pages concernées. Les règles d’archive et de détection ne changent pas.
 
 - [Étude du coût électrique des opérations](docs/ETUDE_COUT_ELECTRIQUE.md) : coût de 100 E par minute entamée validé, hypothèses et effets des lots, rangs et vitesses.
+
+
+## Navigation joueur
+
+Les huit lots de navigation sont intégrés dans dev : Guildes et Diplomatie,
+Flottes, Inventaire, Mon compte et Mode vacances, Projets collectifs, Événements,
+Administration et Wiki. Chaque espace ouvre sa page d’entrée et relie ses pages
+par une navigation secondaire commune. Les anciennes adresses et les protections
+serveur sont conservées. Le [suivi des lots](docs/NAVIGATION_PAGES_DEDIEES.md)
+détaille les pages, vérifications et limites. CI, fusion et déploiement sont distingués.
+
+Le lot Projets collectifs conserve `/guildes/projets` comme entrée des projets en
+cours et ajoute `/guildes/projets/disponibles` et `/guildes/projets/historique`.
+La fiche existante reste dédiée au détail et au don. Listes et contributions sont
+paginées par 25, avec lectures regroupées des dons personnels et des récompenses.
+Les anciennes ancres sont orientées vers leur page lorsque JavaScript est disponible ;
+les liens serveur fonctionnent aussi sans JavaScript. Les droits et règles de dons
+et de récompenses restent inchangés.
+
+Le lot Événements garde `/evenements` comme entrée **Événements et bonus** et
+place **Défis et rotations** sur `/evenements/defis`. Les fiches de défi gardent
+leurs adresses et leurs objectifs. Les événements en cours et à venir disposent
+chacun de leur pagination ; les défis sont également présentés par pages de 25.
+Le panneau commun conserve ses informations et son compteur. Aucune règle de
+production, de contribution ou de récompense ne change. [Bilan de navigation](docs/NAVIGATION_PAGES_DEDIEES.md).
+
+Le lot Administration sépare la liste des univers, leur création et leur fiche de
+configuration/calendrier. Les quatre familles du catalogue disposent de pages
+propres, d’une recherche transversale et d’une fiche par entrée. Les événements
+conservent l’assistant guidé ; création avancée et édition ont leurs pages.
+Les modèles de projets de guilde et de rotations séparent liste, création et
+modification. Les occurrences déjà programmées gardent leur configuration.
+[Bilan et compatibilité](docs/NAVIGATION_PAGES_DEDIEES.md).

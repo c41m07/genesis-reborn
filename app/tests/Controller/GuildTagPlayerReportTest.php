@@ -65,7 +65,7 @@ final class GuildTagPlayerReportTest extends WebTestCase
         $guild=self::getContainer()->get(RelationResolver::class)->guild($this->reporter->currentPlayerUniverse);self::assertSame('A1Z',$guild->tag);
         $crawler=$this->client->request('GET','/classement');self::assertResponseIsSuccessful();
         self::assertStringContainsString('[A1Z] ReportAuthor',$crawler->filter('tbody th[scope="row"]')->reduce(fn($node)=>str_contains($node->text(),'ReportAuthor'))->text());
-        $this->client->request('GET','/diplomatie');self::assertResponseIsSuccessful();
+        $this->client->request('GET','/guildes');self::assertResponseIsSuccessful();
         self::assertStringNotContainsString('[A1Z] ReportAuthor',$this->client->getResponse()->getContent());
         self::assertSame('ReportAuthor',$this->reporter->username);
     }
@@ -196,28 +196,32 @@ final class GuildTagPlayerReportTest extends WebTestCase
         try { self::getContainer()->get(PlayerReportService::class)->review($this->reporter,$report->id,'dismiss'); }
         finally { self::assertSame('open',$connection->fetchOne('SELECT status FROM player_report WHERE id=?',[$report->id])); }
     }
-    public function testGuildlessNavigationHasThreeTabsAndKeepsScopedLegacySearch(): void
+    public function testGuildlessNavigationKeepsScopedLegacySearch(): void
     {
         $service=self::getContainer()->get(DiplomacyService::class);
         $service->create($this->target->currentPlayerUniverse,'GuildPublicLocal','LOC');
         $this->foreign->currentPlayerUniverse->universe->gameSettings['features']['guilds_enabled']=true;$this->em->flush();
         $service->create($this->foreign->currentPlayerUniverse,'GuildPublicForeign','EXT');
-        $crawler=$this->client->request('GET','/diplomatie?tab=diplomacy&q=GuildPublic');
+        $this->client->request('GET','/diplomatie?tab=diplomacy&q=GuildPublic');
+        self::assertResponseRedirects('/guildes?q=GuildPublic');
+        $crawler=$this->client->followRedirect();
         self::assertResponseIsSuccessful();
-        self::assertSame(['Créer une guilde','Rejoindre une guilde','Relations commandants'],$crawler->filter('nav[aria-label="Sections de diplomatie"] a')->each(fn($node)=>$node->text()));
-        self::assertSame('page',$crawler->filter('nav a[href="/diplomatie?tab=join"]')->attr('aria-current'));
+        self::assertSame(['Trouver une guilde','Créer une guilde'],$crawler->filter('nav[aria-label="Navigation de guilde"] a')->each(fn($node)=>$node->text()));
+        self::assertSame('page',$crawler->filter('nav[aria-label="Navigation de guilde"] a[href="/guildes"]')->attr('aria-current'));
         self::assertSelectorNotExists('#guild-name');
         self::assertCount(1,$crawler->filter('.guild-card'));
         self::assertSelectorNotExists('.guild-presence');
         self::assertSelectorTextContains('.guild-card','GuildPublicLocal');
         self::assertStringNotContainsString('GuildPublicForeign',$this->client->getResponse()->getContent());
         $this->client->request('GET','/diplomatie?tab=ranks');
+        self::assertResponseRedirects('/guildes/creer');
+        $this->client->followRedirect();
         self::assertResponseIsSuccessful();
         self::assertSelectorNotExists('#guild-ranks-title');
         self::assertSelectorExists('#guild-name');
         self::assertSelectorNotExists('#guild-search-query');
-        $this->client->request('GET','/diplomatie?tab=relations');
-        self::assertSelectorTextContains('h2','Relations entre commandants');
+        $this->client->request('GET','/diplomatie/commandants');
+        self::assertSelectorTextContains('section[aria-label="Relations entre commandants"] h2','Alliances et rivalités');
     }
 
     public function testGuildNavigationSeparatesMembersAndRanksWithoutGrantingPermissions(): void
@@ -228,28 +232,28 @@ final class GuildTagPlayerReportTest extends WebTestCase
         $service->join($this->target->currentPlayerUniverse,$guild->id);
         self::getContainer()->get(\App\Service\Player\GuildRankService::class)->save($this->reporter->currentPlayerUniverse,0,'Diplomate',10,[],0);
         $connection=$this->em->getConnection();
-        $crawler=$this->client->request('GET','/diplomatie');
+        $crawler=$this->client->request('GET','/guildes');
         self::assertResponseIsSuccessful();
-        self::assertSame(['Ma guilde','Membres','Grades et permissions','Relations guildes','Relations commandants'],$crawler->filter('nav[aria-label="Sections de diplomatie"] a')->each(fn($node)=>$node->text()));
+        self::assertSame(['Vue générale','Membres','Grades et permissions','Projets collectifs','Personnalisation','Gestion'],$crawler->filter('nav[aria-label="Navigation de guilde"] a')->each(fn($node)=>$node->text()));
         self::assertSelectorNotExists('.guild-members-table');
         self::assertSelectorNotExists('#guild-ranks-title');
-        $this->client->request('GET','/diplomatie?tab=members');
+        $this->client->request('GET','/guildes/membres');
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('.guild-members-table','ReportTarget');
         self::assertStringContainsString('private',$this->client->getResponse()->headers->get('Cache-Control'));
         self::assertStringContainsString('no-store',$this->client->getResponse()->headers->get('Cache-Control'));
         self::assertSelectorExists('input[name="expected_rank"]');
         self::assertSelectorNotExists('input[name="action"][value="rank_save"]');
-        $this->client->request('GET','/diplomatie?tab=ranks');
+        $this->client->request('GET','/guildes/grades');
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('input[name="action"][value="rank_save"]');
         self::assertSelectorExists('input[name="version"]');
         self::assertSelectorNotExists('input[name="action"][value="rank_assign"]');
 
         $this->client->loginUser($this->target);
-        $crawler=$this->client->request('GET','/diplomatie');
+        $crawler=$this->client->request('GET','/guildes/gestion');
         $token=$crawler->filter('input[name="_token"]')->first()->attr('value');
-        $this->client->request('GET','/diplomatie?tab=ranks');
+        $this->client->request('GET','/guildes/grades');
         self::assertSelectorTextContains('#guild-ranks-title','Grades et permissions');
         self::assertSelectorNotExists('input[name="action"][value="rank_save"]');
         $this->client->request('POST','/diplomatie',['_token'=>$token,'action'=>'rank_save','target'=>0,'name'=>'Interdit','position'=>1,'version'=>0,'permissions'=>[]]);
@@ -257,6 +261,85 @@ final class GuildTagPlayerReportTest extends WebTestCase
         $this->client->followRedirect();
         self::assertSelectorTextContains('[role="alert"]','Seul le dirigeant');
         self::assertSame(0,(int)$connection->fetchOne("SELECT COUNT(*) FROM guild_rank WHERE name='Interdit'"));
+    }
+
+    public function testPersonalProposalsStayAccessibleWithAGuildAndAreHighlightedOnTheirPage(): void
+    {
+        $service = self::getContainer()->get(DiplomacyService::class);
+        $viewer = $this->reporter->currentPlayerUniverse;
+        $service->create($viewer, 'Guilde compteur', 'CMP');
+        $service->alliance($this->target->currentPlayerUniverse, $viewer->id, 'propose');
+        $service->alliance($viewer, $this->admin->currentPlayerUniverse->id, 'propose');
+        foreach (['/guildes', '/guildes/membres', '/guildes/grades', '/diplomatie'] as $url) {
+            $this->client->request('GET', $url);
+            self::assertResponseIsSuccessful();
+            self::assertSelectorExists('nav[aria-label="Navigation principale"] a[href="/diplomatie"]');
+        }
+        $this->client->request('GET', '/diplomatie/commandants');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('a[href="#alliance-members"]', '1 proposition personnelle à traiter');
+        self::assertSelectorCount(1, '.commander-card.received-proposals');
+    }
+
+    public function testDirectPagesKeepActiveNavigationAndDoNotPrepareOtherSections(): void
+    {
+        $service = self::getContainer()->get(DiplomacyService::class);
+        $service->create($this->reporter->currentPlayerUniverse, 'Navigation ciblée', 'CIB');
+        foreach (['/guildes'=>'Ma guilde', '/guildes/membres'=>'Membres de ma guilde', '/guildes/grades'=>'Grades et permissions', '/guildes/gestion'=>'Gestion de ma guilde', '/diplomatie'=>'Relations entre guildes', '/diplomatie/commandants'=>'Relations entre commandants'] as $url=>$title) {
+            $this->client->request('GET', $url);
+            self::assertResponseIsSuccessful();
+            self::assertSelectorTextSame('h1', $title);
+            self::assertSelectorCount(1, 'nav[aria-label="Navigation principale"] a[aria-current="page"]');
+            self::assertSelectorNotExists('input[name="action"][value="create"]');
+        }
+        $this->client->request('GET', '/guildes');
+        self::assertSelectorNotExists('.guild-members-table');
+        self::assertSelectorNotExists('button[value="disband"]');
+        $membership = self::getContainer()->get(EntityManagerInterface::class)->find(Player::class, $this->reporter->id)->currentPlayerUniverse;
+        $guild = self::getContainer()->get(RelationResolver::class)->guild($membership);
+        $data = self::getContainer()->get(\App\Service\Player\DiplomacyPageView::class)->prepare($membership, $guild, 'ranks', '', -1);
+        self::assertSame([], $data['ownRow']['members']);
+        self::assertSame([], $data['guildRelations']);
+        self::assertSame([], $data['guildPreview']);
+        self::assertNull($data['profile']);
+        $this->client->request('POST', '/guildes/gestion', ['_token'=>'invalid','action'=>'disband']);
+        self::assertResponseStatusCodeSame(403);
+    }
+
+    public function testPersonalRelationsArePagedWithoutHidingIndependentSearch(): void
+    {
+        $viewer = $this->reporter->currentPlayerUniverse;
+        self::getContainer()->get(DiplomacyService::class)->create($viewer, 'Guilde pagination', 'PAGE');
+        $guild = self::getContainer()->get(RelationResolver::class)->guild($viewer);
+        for ($index = 0; $index < 55; ++$index) {
+            $player = new Player();
+            $player->username = 'Paged'.str_pad((string) $index, 2, '0', STR_PAD_LEFT);
+            $player->email = strtolower($player->username).'@example.test';
+            $player->password = password_hash(bin2hex(random_bytes(16)), PASSWORD_BCRYPT, ['cost'=>4]);
+            $membership = new \App\Entity\PlayerUniverse();
+            $membership->player = $player;
+            $membership->universe = $viewer->universe;
+            $membership->joinedAt = new \DateTimeImmutable();
+            $member = new GuildMember();
+            $member->guild = $guild;
+            $member->playerUniverse = $membership;
+            foreach ([$player, $membership, $member] as $entity) {
+                $this->em->persist($entity);
+            }
+        }
+        $this->em->flush();
+        $crawler = $this->client->request('GET', '/diplomatie/commandants');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorCount(50, '#alliance-members .commander-card');
+        self::assertSelectorTextNotContains('#alliance-members', 'ReportTarget');
+        $next = $crawler->selectLink('Relations suivantes')->attr('href');
+        $this->client->request('GET', $next);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorCount(5, '#alliance-members .commander-card');
+        self::assertSelectorNotExists('nav[aria-label="Pages des relations"] a[href*="after="]');
+        $this->client->request('GET', '/diplomatie/commandants?q=ReportTarget');
+        self::assertSelectorTextContains('.relation-results', 'ReportTarget');
+        self::assertSelectorCount(50, '#alliance-members .commander-card');
     }
 
     public function testGuildPresenceIsScopedAndDoesNotRevealActivityInAnotherUniverse(): void
@@ -306,7 +389,7 @@ final class GuildTagPlayerReportTest extends WebTestCase
         }
         $this->em->flush();
         self::assertSame(5,self::getContainer()->get(\App\Service\Player\SocialMessageService::class)->unreadGuildCount($reader));
-        $crawler=$this->client->request('GET','/diplomatie');
+        $crawler=$this->client->request('GET','/guildes');
         self::assertResponseIsSuccessful();
         self::assertSame(['Échange numéro 3','Échange numéro 4','Échange numéro 5'],$crawler->filter('.guild-message-preview p')->each(fn($node)=>$node->text()));
         $fresh=self::getContainer()->get(EntityManagerInterface::class)->find(Player::class,$this->reporter->id)->currentPlayerUniverse;

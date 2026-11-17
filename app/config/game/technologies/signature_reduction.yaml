@@ -2,7 +2,7 @@
   "slug": "signature_reduction",
   "label": "Revêtement absorbant",
   "max_level": 25,
-  "research_time_base": 7200,
+  "research_time_base": 5400,
   "research_time_scaling": 1.8,
   "costs_base": {
     "metal": 2550,
@@ -10,14 +10,7 @@
     "antimatter": 0
   },
   "costs_scaling": 2,
-  "unlock_requirements": {
-    "buildings": [
-      {
-        "slug": "lab",
-        "level": 1
-      }
-    ]
-  },
+  "unlock_requirements": {},
   "effect": {
     "type": "stat_bonus",
     "targets": "all_combat_units",
@@ -28,35 +21,66 @@
     "max_bonus": 0.25
   },
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "signature_masking",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
           "slug": "lab",
           "tier": "basic",
-          "level": 5
+          "level": 7
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "signature_masking",
+          "tier": "basic",
+          "level": 2
+        },
+        {
+          "slug": "nanomaterial_synthesis",
+          "tier": "basic",
+          "level": 3
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 7
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "signature_masking",
+          "tier": "intermediate",
+          "level": 2
+        },
+        {
+          "slug": "nanomaterial_synthesis",
+          "tier": "intermediate",
+          "level": 3
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "signature_masking",
-          "tier": "intermediate",
-          "level": 5
-        }
-      ],
       "buildings": [
         {
           "slug": "lab",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 7
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "signature_masking",
+          "tier": "superior",
+          "level": 2
+        },
+        {
+          "slug": "nanomaterial_synthesis",
+          "tier": "superior",
+          "level": 3
         }
       ]
     }
@@ -64,22 +88,22 @@
   "economy_value_budget": 6000,
   "cost_profiles": {
     "basic": {
-      "metal": 1800,
-      "nano": 600,
+      "metal": 1200,
+      "nano": 900,
       "antimatter": 0,
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 1688,
-      "nano": 844,
-      "antimatter": 94,
+      "metal": 1124,
+      "nano": 938,
+      "antimatter": 188,
       "hydrogen": 0
     },
     "superior": {
-      "metal": 1407,
-      "nano": 1055,
-      "antimatter": 235,
-      "hydrogen": 468
+      "metal": 1172,
+      "nano": 821,
+      "antimatter": 352,
+      "hydrogen": 938
     }
   },
   "tier_labels": {

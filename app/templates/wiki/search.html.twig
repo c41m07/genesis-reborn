@@ -1,0 +1,11 @@
+{% extends 'wiki/layout.html.twig' %}
+{% block title %}Recherche dans le manuel · Wiki · Genesis Reborn{% endblock %}
+{% block wiki_heading %}Recherche dans le manuel{% endblock %}
+{% block wiki_intro %}<p class="wiki-lead">Retrouvez un sujet dans les explications, les formules et les exemples de tous les chapitres.</p>{% endblock %}
+{% block wiki_content %}
+{% if query %}
+  <p role="status">{{ results|length }} chapitre{{ results|length > 1 ? 's' : '' }} pour « {{ query }} ».</p>
+  <div class="wiki-search-results">{% for result in results %}<article class="panel wiki-search-result" id="wiki-{{ result.id }}"><p class="wiki-eyebrow">{{ result.part }}</p><h2 id="wiki-title-{{ result.id }}"><a href="{{ path('app_wiki_chapter',{chapter:result.id}) }}">{{ result.title }}</a></h2><p>{{ result.excerpt }}</p></article>{% else %}<p class="panel">Aucun chapitre ne correspond. Essayez un autre terme ou consultez le sommaire.</p>{% endfor %}</div>
+  <p><a class="secondary" href="{{ path('app_wiki') }}">Retour à l’accueil du wiki</a></p>
+{% else %}<section class="panel"><h2>Quel sujet recherchez-vous ?</h2><p>Saisissez un terme, par exemple « colonisation », « carburant » ou « pillage ».</p></section>{% endif %}
+{% endblock %}

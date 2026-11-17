@@ -1,0 +1,7 @@
+<div data-live-region="fleet-holds">
+<section class="panel"><h2>Vaisseaux mobiles à quai</h2><p>Disponibles au départ de la colonie active.</p>
+{% for row in idle %}<ul>{% for ship in row.ships %}<li>{{ catalog[ship.slug].tier_labels[ship.tier]|default(catalog[ship.slug].label) }} : {{ ship.quantity|quantity(0) }}</li>{% endfor %}</ul>{% else %}<p>Aucun vaisseau mobile disponible sur cette colonie.</p>{% endfor %}
+<a class="secondary" href="{{ path('app_fleet_prepare') }}">Préparer un départ</a></section>
+{% include 'fleet/holds.html.twig' %}
+{% if held_fleets is empty %}<p class="panel">Aucun stationnement en attente dans votre empire.</p>{% endif %}
+</div>

@@ -24,13 +24,13 @@ final class CatalogCostCompositionTest extends TestCase
     }
     public function testHistoricalResourceRedistributionKeepsThePreviousBaseBudgets():void
     {
-        $catalog=\App\Tests\Support\ProducerBalanceReference::historicalCatalog();$fixture=$this->fixture();$count=0;
+        $catalog=\App\Tests\Support\ProducerBalanceReference::historicalCatalog(\App\Tests\Support\ProgressionOperationsReference::historicalCatalog());$fixture=$this->fixture();$count=0;
         foreach(['buildings'=>13,'technologies'=>19,'ships'=>14,'defenses'=>4] as $group=>$expectedCount){
             self::assertCount($expectedCount,$catalog->all($group));
             foreach($fixture['entries'][$group] as $slug=>$expected){
                 $definition=$catalog->get($group,$slug);$nonCost=$definition;unset($nonCost['cost_profiles']);
                 $historical=$expected['non_cost_fields'];
-                foreach(['levels','unlock_requirements','tier_unlock_requirements','description','tier_descriptions'] as $field){unset($historical[$field],$nonCost[$field]);}
+                foreach(['levels','unlock_requirements','tier_unlock_requirements','description','tier_descriptions','fuel_capacity_note'] as $field){unset($historical[$field],$nonCost[$field]);}
                 self::assertEquals($historical,$nonCost,"$group/$slug : hors coûts");
                 foreach(self::SHARES as $tier=>$shares){
                     ++$count;$costs=$catalog->costs($catalog->withTier($definition,$tier));$budget=$this->value($expected['old_profiles'][$tier]);
@@ -46,13 +46,19 @@ final class CatalogCostCompositionTest extends TestCase
     }
     public function testHistoricalCostsAtCurveBoundariesAndAfterResearchMatchFrozenQuotes():void
     {
-        $catalog=\App\Tests\Support\ProducerBalanceReference::historicalCatalog();$operation=new OperationCalculator($catalog);$fixture=$this->fixture();
+        $catalog=\App\Tests\Support\ProducerBalanceReference::historicalCatalog(\App\Tests\Support\ProgressionOperationsReference::historicalCatalog());$operation=new OperationCalculator($catalog);$fixture=$this->fixture();
         $universe=new Universe();$universe->slug='common-cost-study';$universe->name='Grille économique commune';$count=0;$maxima=[];
         foreach($fixture['entries'] as $group=>$entries)foreach($entries as $slug=>$entry)foreach($entry['costs'] as $tier=>$profiles)foreach($profiles as $profile=>$levels){
             $ranks=match($profile){'none'=>[],'mid'=>['basic'=>10,'intermediate'=>5,'superior'=>0],'max'=>['basic'=>25,'intermediate'=>25,'superior'=>25]};
             $tech=$ranks?($group==='buildings'?['nanomaterial_synthesis'=>$ranks,'engineering_foundations'=>$ranks]:['naval_engineering'=>$ranks]):[];
             foreach($levels as $level=>$quantities)foreach($quantities as $quantity=>$expected){
                 ++$count;$actual=$operation->calculate($catalog->getTierForUniverse($universe,$group,$slug,$tier),$group,(int)$level,(int)$quantity,[],$catalog->forUniverse($universe),$tech);
+                // Le calcul corrigé retire l'ancienne seconde flottante au plafond exact de 70 %.
+                // Les autres échéances de l'étude restent vérifiées sans tolérance.
+                if($group==='buildings'&&$profile==='max'&&(int)$level===1){
+                    $seconds=(int)ceil($entry['non_cost_fields']['base_build_time']*GameCatalog::tierFactor($tier)*0.3*(int)$quantity);
+                    $expected['new']['duration']=$expected['old']['duration']=$seconds;
+                }
                 if($group!=='buildings') $expected['new']['costs']['electricity']=100*(int)ceil($expected['new']['duration']/60);
                 self::assertSame($expected['new'],$actual,"$group/$slug/$tier/$profile/$level/$quantity");
                 self::assertSame($expected['old']['duration'],$actual['duration']);

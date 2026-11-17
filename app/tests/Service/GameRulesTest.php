@@ -30,13 +30,13 @@ final class GameRulesTest extends TestCase
     {
         $c=new GameCatalog(dirname(__DIR__,2).'/config/game');$checker=new RequirementChecker($c);
         $d=$c->get('buildings','shipyard');
-        self::assertNotEmpty($checker->check($checker->forLevel($d,1),[],[]));
-        self::assertNotEmpty($checker->check($checker->forLevel($d,4),[],[]));
-        self::assertSame([], $checker->check($checker->forLevel($d,4),['mine_metal'=>2],['naval_engineering'=>1]));
+        self::assertNotEmpty($checker->check($checker->forTier($d,'basic',1),[],[]));
+        self::assertNotEmpty($checker->check($checker->forTier($d,'basic',4),[],[]));
+        self::assertSame([], $checker->check($checker->forTier($d,'basic',4),['mine_metal'=>2,'mine_nano'=>2],[]));
         self::assertNotEmpty($checker->check(['ships'=>['fighter']],[],[]));
         self::assertNotEmpty($checker->check(['ships'=>['fighter']],['shipyard'=>['intermediate'=>1]],[]));
         self::assertSame([], $checker->check(['ships'=>['fighter']],['shipyard'=>['basic'=>1]],[]));
-        self::assertSame(['metal'=>5400,'nano'=>1800,'antimatter'=>0,'hydrogen'=>0],$c->costs($c->get('ships','fighter'),1,3));
+        self::assertSame(['metal'=>3600,'nano'=>2700,'antimatter'=>0,'hydrogen'=>0],$c->costs($c->get('ships','fighter'),1,3));
     }
     public function testCatalogueUnlockRequirementsForBuildingsAndTechnologies(): void
     {
@@ -63,8 +63,8 @@ final class GameRulesTest extends TestCase
 
         $defense=$catalog->get('defenses','ground_turret_anti_capital');
         self::assertNotEmpty($checker->check($checker->forTier($defense,'basic'),[],[]));
-        self::assertSame([],$checker->check($checker->forTier($defense,'basic'),['fortress'=>['basic'=>5]],[
-            'rapid_fire_cycle'=>['basic'=>5],'weapons_engineering'=>['basic'=>8],
+        self::assertSame([],$checker->check($checker->forTier($defense,'basic'),['fortress'=>['basic'=>8]],[
+            'rapid_fire_cycle'=>['basic'=>3],'weapons_engineering'=>['basic'=>8],'target_acquisition'=>['basic'=>4],
         ]));
         $advanced=$checker->forTier($defense,'intermediate');
         self::assertNotEmpty($checker->check($advanced,['fortress'=>['basic'=>10]],[]));

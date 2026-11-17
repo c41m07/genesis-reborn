@@ -1,5 +1,29 @@
 # Décisions et ambiguïtés — 21 octobre 2026
 
+## Grille de coûts retenue — décision explicite du 16 novembre 2026
+
+L’utilisateur retient B40/60, I30/50/20 et S25/35/30/10 en parts de valeur
+métal/nano/antimatière/hydrogène après lecture des simulations. Cette décision
+remplace les recommandations et statuts « candidat non activé » des études précédentes.
+Les [tableaux courants](COUTS.md) couvrent les 52 familles et 156 profils, civils inclus.
+Les budgets réels de base sont exactement conservés, sans nouveau facteur de rang.
+
+Les courbes, réductions, deux étapes d’arrondi par ressource, durées, taxe E, bonus,
+productions et statistiques restent conservés. Les petits écarts de devis après
+croissance/remises restent possibles ; aucune compensation ou règle d’arrondi
+supplémentaire n’est ajoutée. Les commandes déjà payées gardent leurs valeurs.
+Les surcharges d’univers ne sont pas effacées ni requalifiées automatiquement.
+La formule de points n’est pas modifiée : elle additionne les ressources brutes des
+prix courants. La redistribution peut donc faire évoluer les points des possessions
+existantes et les protections liées aux points lors des nouveaux calculs. Les snapshots
+quotidiens déjà établis restent figés jusqu’à l’actualisation normale ; aucune reprise
+des classements ou des seuils n’est ajoutée.
+
+Les effets observés sont acceptés comme un choix d’essai : plus de nano, puis davantage
+d’antimatière et d’hydrogène au Supérieur. Les délais simulés ne sont pas une garantie
+pour tous les joueurs. L’intégration, la publication et la mise en ligne restent
+suivies séparément dans le [suivi de mission](PROGRESSION_CARBURANT_UNITES.md).
+
 ## Comptes — décision du 6 novembre 2026
 
 Le propriétaire demande un mail de bienvenue et une vérification d’adresse avant l’accès pour les nouveaux comptes. Les comptes déjà présents conservent leur accès lors de la migration. Le parcours, la configuration et les limites sont décrits dans [ACCOUNT_EMAIL.md](ARCHITECTURE.md).
@@ -236,7 +260,109 @@ L’utilisateur valide la progression T1 métal/nano, T2 ajout d’antimatière,
 L’hydrogène de construction/recherche est une dépense industrielle, distincte du carburant réservé au départ des missions et des consommations des usines. Les coûts enregistrés des commandes déjà payées restent conservés. Les surcharges d’univers sont préservées champ par champ. L’étude et les vérifications de démarrage, progression et conservation sont consignées dans [COUTS.md](COUTS.md). Aucun prix d’asset premium ni réglage d’univers n’est modifié par cette décision.
 
 
-## Déblocages initiaux permanents — décision du 6 novembre 2026
+## Nouvelle grille proposée — mesures du 16 novembre 2026, sans activation
+
+La dernière proposition utilisateur à calculer est B40/60, I30/50/20 et
+S25/35/30/10 en parts de valeur M/N/A/H. Les [mesures locales](SIMULATIONS_GRILLE_PROPOSEE.md)
+comparent chaque rang isolé, l’ensemble, et B50 avec les mêmes nouveaux I/S.
+La grille complète ralentit le parcours économique avec civils de 9,66 % et les grandes
+formations I/S de 4,62 % / 11,05 %. I30/50/20 seul accélère l’économie de 15 à 16 %,
+mais sa formation I est plus lente que l’actuelle et que I40/40/20. Le compromis
+économie/armée reste une décision produit ; aucun changement de grille n’est validé
+pour activation. L’étude et son outil restent locaux après refus de publication.
+Les profils JSON de docs sont des entrées explicites de commande, jamais des prix applicatifs.
+
+## Redistribution par rang — complément du 16 novembre 2026, décision en attente
+
+À la demande de l’utilisateur, les [mesures séparées](SIMULATIONS_COUTS_PAR_RANG.md)
+conservent l’autre rang aux prix actuels. B50/50 accélère les colonies B10 mais retarde
+les premiers accès I/S des politiques testées. I40/40/20 seul conserve le premier accès I,
+réduit les parcours économiques d’environ 4,5 à 5,1 % et la grande formation I de 6,9 %.
+La recommandation issue de l’étude devient : B60/40 conservé, I40/40/20 candidat
+prioritaire à valider, S inchangé. Ce n’est pas une décision d’activation ni une nouvelle
+règle de jeu. Les surcharges sont temporaires et jamais enregistrées ; le traitement
+des arrondis et d’autres stratégies reste à examiner avant une activation explicite.
+
+## Étude de redistribution — résultats du 16 novembre 2026, décision en attente
+
+Le [rapport du lot 4](SIMULATIONS_PROGRESSION_ECONOMIE.md) compare les prix courants
+à B50/50 et I40/40/20, S inchangé, sans sauvegarder la variante. Les 156 budgets
+propres de base sont conservés, y compris les défenses ; les 912 devis effectifs
+montrent encore jusqu’à 12 unités de valeur d’écart après arrondis par ressource.
+Les colonies B10 testées gagnent environ 14 % de temps, mais les premiers accès I/S
+des parcours économiques sont retardés. Le bénéfice n’est pas général.
+
+Aucune activation de la redistribution, nouvelle valeur de production, modification
+du carburant ou du ciblage n’est décidée par ces résultats. L’éventuelle activation
+exige une décision explicite sur le compromis et le traitement des arrondis.
+Le surplus H des petites missions ne s’étend pas à toute cadence militaire :
+les sorties répétées de 500 chasseurs réintroduisent une attente de carburant.
+La masse civile influence le combat, sans avantage démontré au contrôle à budget
+proche ; le refus au-delà de 5 000 unités est une limite technique existante à suivre.
+
+## Unités économiques — compléments validés des 15 et 16 novembre 2026
+
+Les tirs visant les récolteurs et satellites utilisent le coefficient neutre ×1,
+comme les autres unités de soutien, sans nouvelle spécialisation de contre.
+La production cesse à l’application effective des pertes à la clôture du combat,
+conformément au moteur existant ; l’engagement seul ne l’interrompt pas.
+Les vaisseaux achevés au chantier ou installés par Stationnement pendant un combat
+rejoignent les renforts locaux au prochain round éligible. La règle commune concerne
+les unités civiles et les autres vaisseaux présents ; la flotte et son carburant
+embarqué restent conservés, sans trajet fictif ni nouvelle copie des unités.
+Ces choix explicites complètent le prompt ; l’implémentation est suivie dans
+[PROGRESSION_CARBURANT_UNITES.md](PROGRESSION_CARBURANT_UNITES.md).
+
+## Durées et carburant par classe — décision du 15 novembre 2026
+
+Les [tableaux complets](DUREES_CARBURANT.md) reprennent le prompt validé : nouvelles
+durées initiales de recherche, construction de vaisseaux et défenses, avec courbes,
+facteurs de rang, multiplicateurs d’univers et réductions existants conservés.
+Protocoles de colonisation reste à 80 h de référence au premier niveau Basique.
+Les défenses ne reçoivent aucune réduction du chantier ou du bunker. La taxe
+électrique garde son coefficient de 100 E par minute entamée de durée effective ;
+les hausses comme les baisses sont chiffrées, sans remboursement des paiements anciens.
+
+Le carburant uniforme est remplacé par le barème de classe, commun aux trois rangs.
+Le trajet reste proportionnel à la vitesse choisie ; le maintien reste indépendant
+de celle-ci et limité aux missions qui le facturent déjà. Les vitesses, réservoirs,
+soutes, statistiques et réserves des missions en cours sont conservés. Les nouveaux
+coefficients sont figés au départ pour les rappels et replis ultérieurs ; la reprise
+des missions anciennes et ses limites sont explicites dans la documentation.
+
+Une correction numérique évite la seconde artificielle au plafond de réduction
+de 70 %, sans changer la règle d’arrondi supérieur. Les courbes et paiements
+enregistrés ne sont pas recalculés. Aucun changement SQL pour ce lot.
+
+Implémentation locale du lot 2 ; intégration et activation distinctes. Les unités
+économiques et les simulations conjointes restent les lots suivants. La redistribution
+des prix reste candidate, sans modification des profils M/N/A/H dans le lot 2.
+
+## Grille commune par rang — décision du 15 novembre 2026
+
+Le prompt validé remplace les prérequis des 150 profils par la [grille complète](DEBLOCAGES.md).
+Les conditions et niveaux sont identiques dans le rang demandé, sans cumul des
+anciennes exigences. Métal, nano, hydrogène, centrale et laboratoire sont libres
+en Basique, puis exigent leur propre Basique 10 et Intermédiaire 20. Les autres
+bâtiments, recherches, vaisseaux et défenses utilisent uniquement le rang demandé.
+Les effets et plafonds existants sont conservés.
+
+Les possessions et commandes payées restent conservées mais ne confèrent pas
+l’accès à de nouvelles commandes. Le registre est requalifié explicitement,
+sans réattribuer un accès à partir d’une ancienne possession, clé ou commande.
+Après acquisition selon cette grille, les accès restent permanents dans leur
+portée actuelle : recherches par joueur/univers, autres catégories par joueur/colonie.
+Le laboratoire est une condition initiale ; il n’est pas requis localement après déblocage.
+
+Le [suivi](PROGRESSION_CARBURANT_UNITES.md) distingue cette implémentation des
+lots durées/carburant, unités économiques et simulations. La redistribution
+Basique 50/50 et Intermédiaire 40/40/20 reste un candidat à comparer avant décision,
+sans activation dans le présent lot. Aucune activation de base ni publication Alpha annoncée.
+
+## Déblocages initiaux permanents — décision historique du 6 novembre 2026
+
+Les prérequis et règles de conservation d’accès décrits ci-dessous sont remplacés
+par la décision du 15 novembre ; les preuves d’application locale restent historiques.
 
 Les prérequis pendant les niveaux sont supprimés dans les quatre catégories. Chaque rang conserve des conditions initiales puis un accès acquis : colonie pour constructions et unités, univers pour recherches. Le laboratoire devient une condition initiale explicite de toutes les recherches, commune au serveur et à l’interface. Coûts, durées, ressources, plafonds et conditions des missions restent appliqués.
 
@@ -1663,3 +1789,114 @@ du catalogue par défaut ; chantier spatial basique 3, laboratoire basique 2,
 prérequis des autres rangs, coûts, durées, plafonds et bonus restent conservés.
 Les surcharges explicites d’univers ne sont pas modifiées. Pas de migration,
 de modification des données de jeu ou de déploiement Alpha.
+
+## 16 novembre 2026 — bunker accessible et unités civiles par rang
+
+Décision explicite utilisateur, appliquée directement sur dev local : le chantier
+spatial conserve métal 2 + nano 2 ; le bunker demande métal 1 + nano 1, toujours
+dans le rang demandé. L’ancienne condition chantier 3 + laboratoire 2 est remplacée.
+Il s’agit d’un assouplissement : les accès permanents existants restent acquis,
+sans changement de version du registre ni reprise automatique.
+
+| Rang | Famille solaire | Famille hydrogène |
+|---|---|---|
+| Basique | Satellite héliocapteur | Récolteur atmosphérique |
+| Intermédiaire | Plateforme solaire | Collecteur orbital |
+| Supérieur | Couronne héliosolaire | Raffineur d’hydrogène |
+
+Les noms des unités civiles suivent le vocabulaire des vaisseaux et restent au
+singulier. Identifiants persistés, caractéristiques, production, capacités,
+prix et règles de mission ne changent pas. Six illustrations originales par rang
+remplacent les pictogrammes dans les cartes ; les SVG originaux sont conservés.
+Le prompt maître et les références proviennent de docs/ILLUSTRATIONS.md et des
+cargos existants. Aucun envoi GitHub ni déploiement Alpha dans cette recette locale.
+
+## 16 novembre 2026 — deux cadres de suivi des flottes
+
+L’utilisateur valide deux cadres : propres vols conservés, arrivées des autres
+commandants vers ses colonies dans le panneau existant élargi. Transports,
+renforts et orbites sont visibles dès le départ selon leurs règles existantes ;
+attaques après détection ; espionnage caché même entre alliés ; composition et
+fret masqués. Les déplacements alliés ailleurs et les retours personnels ne sont
+pas ajoutés aux arrivées étrangères. [Matrice et réalisation](FLOTTES_ENTRANTES.md).
+Application demandée sur dev local, sans publication GitHub ni livraison Alpha.
+
+
+## 16 novembre 2026 — navigation par espaces
+
+Décision utilisateur : une entrée principale ouvre l’accueil de son espace,
+puis une navigation secondaire commune donne accès à de vraies pages avec
+adresse propre. Les tâches autonomes quittent les grandes pages composites.
+L’ordre des huit lots est consigné dans [le suivi](NAVIGATION_PAGES_DEDIEES.md).
+Pour le premier lot, Ma guilde/Guildes est distinct de Diplomatie ; les relations
+personnelles restent accessibles avec ou sans guilde. Ce choix remplace la
+présentation précédente à trois ou cinq onglets de diplomatie, sans modifier
+permissions, consentements, règles d’adhésion ou priorité des relations.
+
+
+Le lot Flottes applique cette décision avec Missions actives comme accueil,
+une préparation continue et des pages autonomes pour orbites, réserves et
+compositions. Les missions sont paginées par 30 ; trois restent visibles pendant
+la préparation. Le périmètre colonie/empire, la confidentialité et les règles de
+mission ne changent pas. [Compatibilité et vérifications](NAVIGATION_PAGES_DEDIEES.md#lot-2--flottes-complexité-55).
+
+
+Le lot Inventaire conserve Boosts comme entrée sur `/boosts` et place Boîtes de
+ressources et Récompenses en attente sur des pages autonomes. La capacité commune
+reste visible dans cet espace. L’attente est présentée dans son ordre d’arrivée,
+par pages de 25 ; elle reste conservée sans limite métier. Les règles d’attribution,
+utilisation, stockage, vacances et promotion ne changent pas.
+
+
+Le lot Mon compte sépare Mes identifiants, Préférences, Mode vacances et
+Suppression du compte sur quatre pages reliées. Les identifiants et préférences
+sont communs au compte ; la suppression concerne tous ses univers. Le mode
+vacances concerne uniquement l’empire sélectionné et nomme explicitement son
+univers. Les durées, restrictions, confirmations, protections et effets de ces
+actions ne sont pas modifiés par cette organisation.
+
+
+### Navigation des projets collectifs — 17 novembre 2026
+
+Projets collectifs ouvre Projets en cours sur l’adresse existante. Projets disponibles
+et Historique disposent de leurs pages et partagent une navigation commune avec
+les fiches. La consultation est paginée par 25 sans limite métier sur les historiques.
+Les formulaires, permissions, versions, transactions, minimums, dons définitifs
+et récompenses compte/modèle conservent leurs règles. Les anciens fragments sont
+orientés côté navigateur ; sans JavaScript, la navigation serveur reste utilisable.
+
+
+### Navigation des événements — 17 novembre 2026
+
+Événements ouvre Événements et bonus. Défis et rotations possède sa page dédiée,
+reliée aux fiches existantes. Les listes sont paginées sans changer la conservation
+des occurrences ni leur accès. Le panneau sous les ressources garde son contenu,
+son compteur visible fermé et ses liens de détail. Les dates, objectifs, critères
+de contribution, effets et attributions de récompenses ne changent pas.
+
+## Navigation administrative dédiée — 17 novembre 2026
+
+La réorganisation conserve les quatre groupes de console validés. Une liste
+ouvre chaque espace ; les formulaires Univers, Catalogue, Événements, Modèles de
+projets et Rotations disposent de vraies URL. L’assistant d’événement reste le
+parcours principal de création, avec accès séparé au formulaire avancé existant.
+Une rotation peut modifier son modèle pour les prochaines programmations ; sa
+clé et son ordre restent stables. Une édition devenue périmée est refusée et
+les occurrences déjà programmées gardent leurs règles. Aucune valeur de référence,
+règle de récompense, permission ou condition d’accès n’est modifiée.
+Voir le [lot 7](NAVIGATION_PAGES_DEDIEES.md) pour les preuves et limites.
+
+## Navigation du wiki par pages — 17 novembre 2026
+
+Le lot Wiki conserve le contenu unique du manuel et les deux documents de
+référence. L’accueil, les chapitres et la recherche disposent de pages serveur
+avec titres propres ; les formules et exemples restent dépliables nativement.
+Le manuel reste privé et ne nécessite pas de participation à un univers.
+
+Les anciens paramètres GET redirigent vers les nouvelles destinations. Les
+anciens fragments sont orientés vers une fiche côté navigateur ; sans JavaScript,
+ils repèrent la carte et son lien sur l’accueil. La recherche présente des
+extraits et liens de chapitre, sans afficher tous leurs corps. Le sommaire,
+l’historique et les accès natifs restent disponibles. Aucun changement de règle,
+valeur, permission ou condition d’accès. Le [bilan du lot 8](NAVIGATION_PAGES_DEDIEES.md)
+distingue recette locale, CI, fusion et actualisation de l’application.

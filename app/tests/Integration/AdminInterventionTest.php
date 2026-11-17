@@ -176,6 +176,8 @@ final class AdminInterventionTest extends WebTestCase
 
     public function testShipFormUsesCsrfAndExplicitConfirmation(): void
     {
+        // Garder l’horloge simulée entre les requêtes évite de basculer vers la date réelle et d’expirer la session.
+        $this->client->disableReboot();
         $this->client->loginUser($this->sender);
         $crawler=$this->client->request('GET','/admin/joueurs/'.$this->recipient->id);
         self::assertResponseIsSuccessful();

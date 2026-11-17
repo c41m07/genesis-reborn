@@ -19,7 +19,7 @@ async function prepare(page) {
 }
 
 async function send(page,data) {
-  await page.goto('/flottes?mission=station');const form=page.locator('.fleet-form form').first();
+  await page.goto('/flottes/preparer?mission=station');const form=page.locator('.fleet-form form').first();
   await form.locator('[name="ships[transport]"]').fill('2');await form.getByRole('button',{name:/Choisir la destination/}).click();
   await expect(form.locator('input[value="owned"][name="destination_mode"]')).toBeChecked();
   await expect(form.locator('input[value="npc"][name="destination_mode"]')).toBeDisabled();
@@ -35,7 +35,7 @@ test('Stationnement : nouvelle base, réserve à quai, déchargement et rendu ac
   const data=await prepare(page),id=await send(page,data);
   accelerateTravelingMission(data.project,data.email,'station');
   await expect.poll(()=>queryIsolatedSql(data.project,`SELECT status FROM fleet WHERE id=${id}`),{timeout:20000}).toBe('completed');
-  await page.goto('/planetes/'+data.own.id);await page.goto('/flottes');
+  await page.goto('/planetes/'+data.own.id);await page.goto('/flottes/quai');
   await expect(page.getByRole('heading',{name:'Réserve embarquée à quai',exact:true})).toBeVisible();
   expect(Number(queryIsolatedSql(data.project,`SELECT SUM(stored_fuel) FROM fleet WHERE home_planet_id=${data.own.id} AND status='idle'`))).toBeGreaterThan(0);
   for(const viewport of [{width:1440,height:1000},{width:390,height:844}]) {
@@ -57,7 +57,7 @@ test('Attente : accessible malgré l’origine perdue, reprise tactile après de
     accelerateTravelingMission(data.project,data.email,'station');
     await expect.poll(()=>queryIsolatedSql(data.project,`SELECT status FROM fleet WHERE id=${id}`),{timeout:20000}).toBe('station_waiting');
     runIsolatedSql(data.project,`UPDATE planet SET owner_id=${data.member},acquired_at=UTC_TIMESTAMP() WHERE id=${data.own.id}`);
-    await page.goto('/flottes');await page.getByRole('link',{name:'Reprendre le stationnement de la flotte '+id,exact:true}).tap();
+    await page.goto('/flottes/quai');await page.getByRole('link',{name:'Reprendre le stationnement de la flotte '+id,exact:true}).tap();
     await page.getByLabel('Colonie de destination',{exact:true}).selectOption(String(data.own.id));await page.getByRole('button',{name:'Calculer le trajet',exact:true}).tap();
     await expect(page.getByRole('button',{name:'Confirmer la reprise',exact:true})).toBeVisible();
     expect((await new AxeBuilder({page}).include('main').analyze()).violations.filter(v=>['serious','critical'].includes(v.impact))).toEqual([]);

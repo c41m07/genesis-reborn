@@ -195,6 +195,13 @@ test('Guide technologique : domaines, prérequis réels, filtres, objectif et ac
   await page.reload();
   await query.fill('vector_propulsion');
   await research.locator('summary').click();
+  await expect(panel).not.toContainText('Objectif atteint : accès acquis définitivement.');
+  await expect(panel.locator('.technology-requirements li[data-state="historical"]')).toHaveCount(0);
+  // Une ancienne clé ne suffit plus ; seule la clé issue de la nouvelle grille est acquise.
+  runIsolatedSql(process.env.BROWSER_ROUTER, `UPDATE player_universe pu JOIN player p ON p.id=pu.player_id SET pu.catalog_unlocks=JSON_SET(pu.catalog_unlocks, '$."v2:universe:technologies:vector_propulsion:basic"', true) WHERE p.email='${email}'`);
+  await page.reload();
+  await query.fill('vector_propulsion');
+  await research.locator('summary').click();
   await expect(panel).toContainText('Objectif atteint : accès acquis définitivement.');
   expect(await panel.locator('.technology-requirements li').count()).toBeGreaterThan(0);
   await expect(panel.locator('.technology-requirements li:not([data-state="historical"])')).toHaveCount(0);

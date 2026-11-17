@@ -12,35 +12,30 @@
   "storage_resource": "nano",
   "provisional": true,
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "engineering_foundations",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
-          "slug": "lab",
+          "slug": "mine_nano",
           "tier": "basic",
           "level": 5
         }
       ]
     },
-    "superior": {
-      "technologies": [
-        {
-          "slug": "engineering_foundations",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
+    "intermediate": {
       "buildings": [
         {
-          "slug": "lab",
+          "slug": "mine_nano",
           "tier": "intermediate",
-          "level": 10
+          "level": 5
+        }
+      ]
+    },
+    "superior": {
+      "buildings": [
+        {
+          "slug": "mine_nano",
+          "tier": "superior",
+          "level": 5
         }
       ]
     }
@@ -48,22 +43,22 @@
   "economy_value_budget": 5000,
   "cost_profiles": {
     "basic": {
-      "metal": 1501,
-      "nano": 500,
+      "metal": 1001,
+      "nano": 750,
       "antimatter": 0,
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 1410,
-      "nano": 704,
-      "antimatter": 78,
+      "metal": 940,
+      "nano": 783,
+      "antimatter": 156,
       "hydrogen": 0
     },
     "superior": {
-      "metal": 1174,
-      "nano": 880,
-      "antimatter": 195,
-      "hydrogen": 392
+      "metal": 978,
+      "nano": 684,
+      "antimatter": 293,
+      "hydrogen": 784
     }
   },
   "tier_labels": {

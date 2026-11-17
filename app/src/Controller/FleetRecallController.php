@@ -25,7 +25,7 @@ final class FleetRecallController extends AbstractController
                     $request->request->getString('version'),$request->request->getString('request_key'));
                 $this->addFlash('success',$changed?'Flotte rappelée. Le retour est programmé.':'Ce rappel a déjà été traité.');
             } catch(\DomainException $error) { $this->addFlash('error',$error->getMessage()); }
-            return $this->redirectToRoute('app_fleets',['_fragment'=>'fleet-'.$id]);
+            return $this->redirectToRoute('app_fleets',['fleet'=>$id,'_fragment'=>'fleet-'.$id]);
         }
         $lost=$fleet->homePlanet->owner?->id!==$member->id;
         $returnId=$request->query->getInt('return_planet');$quote=null;$error=null;

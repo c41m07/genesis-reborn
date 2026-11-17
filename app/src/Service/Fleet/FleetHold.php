@@ -12,7 +12,9 @@ final class FleetHold
 {
     public function __construct(private GameRepository $repo, private GameManager $manager,
         private GameCatalog $catalog, private TechnologyEffectCalculator $effects,
-        private ResourceService $resources, private ActionGuard $guard) {}
+        private ResourceService $resources, private ActionGuard $guard,
+        private \App\Service\Colony\EconomicUnitDeployment $economicDeployment,
+        private \App\Service\Combat\LocalGarrison $garrison) {}
 
     public function ships(Fleet $fleet, array $removed = []): array
     {
@@ -72,6 +74,7 @@ final class FleetHold
         if($planet->owner?->id!==$fleet->playerUniverse->id || $planet->solarSystem->galaxy->universe->id!==$fleet->playerUniverse->universe->id) {
             throw new \DomainException('La nouvelle base ne vous appartient pas dans cet univers.');
         }
+        $this->economicDeployment->clear($fleet);
         $freight = $fleet->cargo;
         $freight['hydrogen'] = max(0.0, ($freight['hydrogen'] ?? 0) - $fleet->reservedFuel);
         $result = $this->resources->deposit($planet, $freight);
@@ -90,5 +93,8 @@ final class FleetHold
         $fleet->cargo = [];$fleet->reservedFuel = 0;$fleet->storedFuel = 0;
         $fleet->status = 'completed';$fleet->arrivalAt = null;
         $fleet->dispatchToken = \Symfony\Component\Uid\Uuid::v4()->toRfc4122();
+        $this->manager->flush();
+        $this->resources->refreshProduction($planet);
+        $this->garrison->enlist($planet);
     }
 }

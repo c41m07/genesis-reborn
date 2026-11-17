@@ -127,16 +127,70 @@ final class FleetStationingTest extends WebTestCase
         $cargo=$fleet->cargo;self::getContainer()->get(FleetService::class)->arrive($fleet->id,$old);self::assertSame($cargo,$fleet->cargo);
     }
 
-    public function testNoHomeUsesShortestReachableOwnedColony(): void
+    #[\PHPUnit\Framework\Attributes\DataProvider('fuelSnapshots')]
+    public function testStationingFallbackKeepsItsOriginalFuelRates(bool $legacy): void
     {
-        $fleet=$this->send();$this->home->owner=$this->peer->currentPlayerUniverse;$this->target->owner=$this->peer->currentPlayerUniverse;
-        // Le repli voisin est atteignable avec la réserve du trajet aller.
-        $this->fallback->position=$this->target->position;$this->fallback->solarSystem=$this->target->solarSystem;
-        // Garder des positions distinctes (contrainte de carte).
-        $this->fallback->position=$this->target->position===1?2:1;
+        $universe=$this->player->currentPlayerUniverse->universe;$original=$universe->gameSettings;
+        $settings=$original;$settings['catalog_overrides']['ships']['transport']=[
+            'fuel_travel_system'=>.5,'fuel_travel_galaxy'=>2,'fuel_orbit'=>.3,
+        ];
+        $universe->gameSettings=$settings;$this->em->flush();$fleet=$this->send();
+        $oneWay=$fleet->navigation['station']['leg_fuel'];
+        if ($legacy) unset($fleet->navigation['fuel_profiles']);
+        $universe->gameSettings=$original;$this->target->owner=$this->peer->currentPlayerUniverse;$this->em->flush();
+        $this->arrive($fleet);
+        self::assertSame('returning',$fleet->status);self::assertSame($this->home->id,$fleet->returnPlanet->id);
+        self::assertEqualsWithDelta($oneWay,$fleet->navigation['station']['leg_fuel'],1e-8);
+        self::assertEqualsWithDelta($oneWay,$fleet->reservedFuel,1e-8);
+        $this->arrive($fleet);self::assertSame('completed',$fleet->status);
+        self::assertEqualsWithDelta(0,$this->stock($this->home)->storedFuel,1e-8);
+    }
+
+    public static function fuelSnapshots(): array
+    {
+        return ['historical'=>[true],'frozen'=>[false]];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('stationingDirections')]
+    public function testNoHomeUsesShortestReachableOwnedColony(bool $reverse): void
+    {
+        $planets = $this->em->getRepository(Planet::class)->findBy(['solarSystem'=>$this->home->solarSystem], ['position'=>'ASC']);
+        $first = $planets[0];
+        $last = $planets[count($planets)-1];
+
+        // Un départ et une arrivée aux extrémités rendent les deux replis atteignables,
+        // même si le système tiré au sort contient des positions sans planète.
+        $this->home = $reverse ? $last : $first;
+        $this->idle->homePlanet = $this->home;
+        $this->target = $reverse ? $first : $last;
+        $refuges = array_values(array_filter($planets, fn(Planet $planet): bool => !in_array($planet->id, [$this->home->id, $this->target->id], true)));
+        usort($refuges, fn(Planet $a, Planet $b): int => abs($a->position-$this->target->position) <=> abs($b->position-$this->target->position));
+        $this->fallback = $refuges[0];
+        $farther = $refuges[1];
+        self::assertLessThan(abs($farther->position-$this->target->position), abs($this->fallback->position-$this->target->position));
+        self::assertLessThanOrEqual(abs($this->home->position-$this->target->position), abs($farther->position-$this->target->position));
+
+        // Garder uniquement les deux replis à comparer après la perte du départ et de la destination.
+        foreach($planets as $planet) {
+            $owned = in_array($planet->id, [$this->home->id, $this->target->id, $this->fallback->id, $farther->id], true);
+            $planet->owner = $owned ? $this->player->currentPlayerUniverse : $this->peer->currentPlayerUniverse;
+            if($owned) {
+                $planet->npcPlanet = false;
+                self::getContainer()->get(ResourceService::class)->initialize($planet);
+            }
+        }
+        $this->em->flush();
+        $fleet = $this->send();
+        $this->home->owner = $this->peer->currentPlayerUniverse;
+        $this->target->owner = $this->peer->currentPlayerUniverse;
         $this->em->flush();$this->arrive($fleet);
         self::assertSame('returning',$fleet->status);self::assertSame($this->fallback->id,$fleet->returnPlanet->id);$this->arrive($fleet);
         self::assertSame('completed',$fleet->status);self::assertNotNull($this->stock($this->fallback));
+    }
+
+    public static function stationingDirections(): array
+    {
+        return ['ascending'=>[false], 'descending'=>[true]];
     }
 
     private function wait(): Fleet
@@ -180,7 +234,7 @@ final class FleetStationingTest extends WebTestCase
 
     public function testWaitingPageSurvivesLostOriginAndIsPrivateAndCsrfProtected(): void
     {
-        $fleet=$this->wait();$url='/flottes/'.$fleet->id.'/reprendre';$this->client->request('GET','/flottes');self::assertResponseIsSuccessful();
+        $fleet=$this->wait();$url='/flottes/'.$fleet->id.'/reprendre';$this->client->request('GET','/flottes/quai');self::assertResponseIsSuccessful();
         self::assertSelectorExists('a[href="'.$url.'"]');$this->client->request('GET',$url);self::assertResponseIsSuccessful();
         $this->client->request('POST',$url,['_token'=>'invalid']);self::assertResponseStatusCodeSame(403);
         $this->client->loginUser($this->peer);$this->client->request('GET',$url);self::assertResponseStatusCodeSame(404);

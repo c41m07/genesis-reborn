@@ -115,7 +115,7 @@ final class GameplayAccessTest extends WebTestCase
     public function testFleetPreviewIsServerAuthoritativeAndCannotUseForeignOrigin():void
     {
         [$a,$own]=$this->player('Alpha');[$b,$foreign]=$this->player('Beta');$this->client->loginUser($a);
-        $crawler=$this->client->request('GET','/flottes');self::assertResponseIsSuccessful();$token=$crawler->filter('input[name="_token"]')->first()->attr('value');
+        $crawler=$this->client->request('GET','/flottes/preparer');self::assertResponseIsSuccessful();$token=$crawler->filter('input[name="_token"]')->first()->attr('value');
         $payload=['_token'=>$token,'origin'=>$own->id,'mission'=>'explore','coordinates'=>$own->solarSystem->galaxy->coordinateCode().':'.$own->solarSystem->number(),'ratio'=>'0.5','ships'=>['probe'=>1],'cargo'=>[],'total_fuel'=>0,'seconds'=>0];
         $this->client->request('POST','/flottes/estimer',$payload);self::assertResponseIsSuccessful();$q=json_decode($this->client->getResponse()->getContent(),true);self::assertGreaterThan(0,$q['total_fuel']);self::assertGreaterThan(0,$q['seconds']);
         $payload['origin']=$foreign->id;$this->client->request('POST','/flottes/estimer',$payload);self::assertResponseStatusCodeSame(422);
@@ -149,8 +149,8 @@ final class GameplayAccessTest extends WebTestCase
     public function testProfileRequiresCurrentPasswordThenLogsOutAfterSave():void
     {
         [$a]=$this->player('Alpha');$this->client->loginUser($a);$crawler=$this->client->request('GET','/profil');self::assertResponseIsSuccessful();
-        $form=$crawler->selectButton('Enregistrer mon profil')->form();$this->client->submit($form,['profile[email]'=>'updated@example.test','profile[username]'=>'Updated','profile[currentPassword]'=>'wrong']);self::assertResponseStatusCodeSame(422);
-        $crawler=$this->client->request('GET','/profil');$form=$crawler->selectButton('Enregistrer mon profil')->form();$this->client->submit($form,['profile[email]'=>'updated@example.test','profile[username]'=>'Updated','profile[currentPassword]'=>'A-test-password-2026']);self::assertResponseRedirects('/connexion');
+        $form=$crawler->selectButton('Enregistrer mes identifiants')->form();$this->client->submit($form,['profile[email]'=>'updated@example.test','profile[username]'=>'Updated','profile[currentPassword]'=>'wrong']);self::assertResponseStatusCodeSame(422);
+        $crawler=$this->client->request('GET','/profil');$form=$crawler->selectButton('Enregistrer mes identifiants')->form();$this->client->submit($form,['profile[email]'=>'updated@example.test','profile[username]'=>'Updated','profile[currentPassword]'=>'A-test-password-2026']);self::assertResponseRedirects('/connexion');
         $this->client->request('GET','/profil');self::assertResponseRedirects('http://genesis-reborn.localhost/connexion');
     }
     public function testColonySelectorPreservesOwnSelectionAndRejectsForeignPlanet():void
@@ -195,11 +195,11 @@ final class GameplayAccessTest extends WebTestCase
         $outsideId=(int)$this->em->getConnection()->fetchOne('SELECT p.id FROM planet p JOIN solar_system s ON s.id=p.solar_system_id JOIN galaxy g ON g.id=s.galaxy_id WHERE g.universe_id <> ? LIMIT 1',[$a->currentPlayerUniverse->universe->id]);
         self::assertGreaterThan(0,$outsideId);
         $freeId=$free->id;$foreignId=$foreign->id;$unknownId=$unknown->id;$this->client->loginUser($a);
-        $crawler=$this->client->request('GET','/flottes?mission=colonize&planet='.$freeId);self::assertResponseIsSuccessful();self::assertSame('colonize',$crawler->filter('select[name="mission"] option[selected]')->first()->attr('value'));self::assertSame($free->coordinates(),$crawler->filter('input[name="coordinates"]')->attr('value'));
-        $this->client->request('GET','/flottes?mission=transport&planet='.$foreignId);self::assertResponseIsSuccessful();
-        $this->client->request('GET','/flottes?mission=colonize&planet='.$foreignId);self::assertResponseStatusCodeSame(404);
-        $this->client->request('GET','/flottes?mission=transport&planet='.$outsideId);self::assertResponseStatusCodeSame(404);
-        $this->client->request('GET','/flottes?mission=colonize&planet='.$unknownId);self::assertResponseStatusCodeSame(404);
+        $crawler=$this->client->request('GET','/flottes/preparer?mission=colonize&planet='.$freeId);self::assertResponseIsSuccessful();self::assertSame('colonize',$crawler->filter('select[name="mission"] option[selected]')->first()->attr('value'));self::assertSame($free->coordinates(),$crawler->filter('input[name="coordinates"]')->attr('value'));
+        $this->client->request('GET','/flottes/preparer?mission=transport&planet='.$foreignId);self::assertResponseIsSuccessful();
+        $this->client->request('GET','/flottes/preparer?mission=colonize&planet='.$foreignId);self::assertResponseStatusCodeSame(404);
+        $this->client->request('GET','/flottes/preparer?mission=transport&planet='.$outsideId);self::assertResponseStatusCodeSame(404);
+        $this->client->request('GET','/flottes/preparer?mission=colonize&planet='.$unknownId);self::assertResponseStatusCodeSame(404);
     }
 
 

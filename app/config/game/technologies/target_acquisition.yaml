@@ -2,7 +2,7 @@
   "slug": "target_acquisition",
   "label": "Télémétrie de poursuite",
   "max_level": 25,
-  "research_time_base": 600,
+  "research_time_base": 3600,
   "research_time_scaling": 1.8,
   "costs_base": {
     "metal": 1700,
@@ -10,26 +10,7 @@
     "antimatter": 0
   },
   "costs_scaling": 2,
-  "unlock_requirements": {
-    "technologies": [
-      {
-        "slug": "weapon_calibration",
-        "tier": "basic",
-        "level": 2
-      },
-      {
-        "slug": "naval_engineering",
-        "tier": "basic",
-        "level": 3
-      }
-    ],
-    "buildings": [
-      {
-        "slug": "lab",
-        "level": 1
-      }
-    ]
-  },
+  "unlock_requirements": {},
   "effect": {
     "type": "stat_bonus",
     "targets": "all_ships",
@@ -40,35 +21,66 @@
   },
   "provisional": true,
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "weapon_calibration",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
           "slug": "lab",
           "tier": "basic",
           "level": 5
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "weapon_calibration",
+          "tier": "basic",
+          "level": 2
+        },
+        {
+          "slug": "naval_engineering",
+          "tier": "basic",
+          "level": 3
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 5
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "weapon_calibration",
+          "tier": "intermediate",
+          "level": 2
+        },
+        {
+          "slug": "naval_engineering",
+          "tier": "intermediate",
+          "level": 3
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "weapon_calibration",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
       "buildings": [
         {
           "slug": "lab",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 5
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "weapon_calibration",
+          "tier": "superior",
+          "level": 2
+        },
+        {
+          "slug": "naval_engineering",
+          "tier": "superior",
+          "level": 3
         }
       ]
     }
@@ -76,22 +88,22 @@
   "economy_value_budget": 4000,
   "cost_profiles": {
     "basic": {
-      "metal": 1200,
-      "nano": 400,
+      "metal": 800,
+      "nano": 600,
       "antimatter": 0,
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 1126,
-      "nano": 562,
-      "antimatter": 63,
+      "metal": 750,
+      "nano": 626,
+      "antimatter": 125,
       "hydrogen": 0
     },
     "superior": {
-      "metal": 939,
-      "nano": 704,
-      "antimatter": 156,
-      "hydrogen": 314
+      "metal": 782,
+      "nano": 547,
+      "antimatter": 235,
+      "hydrogen": 624
     }
   },
   "tier_labels": {

@@ -1,5 +1,10 @@
 # Étude du coût électrique des opérations — 13 novembre 2026
 
+Les durées et chiffrages des exemples ci-dessous conservent leurs hypothèses
+historiques. Les [mesures du 15 novembre](DUREES_CARBURANT.md) donnent les nouvelles
+durées et leurs taxes, y compris les hausses. La formule de 100 E par minute
+entamée, le remboursement à 25 % et le paiement unique restent valables.
+
 Statut : coût initial multiplié par 100 sur demande explicite du 13 novembre 2026 ; coefficient, remboursement à 25 % et application aux reconstructions automatiques validés explicitement le 13 novembre 2026. Intégration locale ; aucun déploiement annoncé.
 
 ## Méthode et hypothèses

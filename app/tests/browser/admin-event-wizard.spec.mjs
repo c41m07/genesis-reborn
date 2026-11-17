@@ -60,7 +60,7 @@ test('Assistant : défi, aperçu sans publication, contributions et boîte attri
   await peer.goto(`/evenements/defis/${id}`);await expect(peer.locator('main')).toContainText('Vous n’avez pas rempli');
   await page.goto(`/evenements/defis/${id}`);await expect(page.locator('main')).toContainText('disponible dans votre inventaire');await page.setViewportSize({width:390,height:900});expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);await page.screenshot({path:testInfo.outputPath('player-challenge-390.png'),fullPage:true});
   runIsolatedSql(project,`UPDATE planet_resource SET current_stock=1000,last_updated_at=UTC_TIMESTAMP() WHERE planet_id=${own.planetId}`);
-  await page.goto('/boosts');const box=page.locator('.resource-box-card');await box.getByLabel('Colonie de destination').selectOption(String(own.planetId));await box.getByRole('button').click();await page.getByRole('dialog').getByRole('button',{name:'Ouvrir cette boîte'}).click();await expect(page.locator('.flash.success')).toContainText('Boîte ouverte');expect(queryIsolatedSql(project,`SELECT status FROM player_boost WHERE source_key='${rewardKey}'`)).toBe('used');
+  await page.goto('/inventaire/boites');const box=page.locator('.resource-box-card');await box.getByLabel('Colonie de destination').selectOption(String(own.planetId));await box.getByRole('button').click();await page.getByRole('dialog').getByRole('button',{name:'Ouvrir cette boîte'}).click();await expect(page.locator('.flash.success')).toContainText('Boîte ouverte');expect(queryIsolatedSql(project,`SELECT status FROM player_boost WHERE source_key='${rewardKey}'`)).toBe('used');
   const foreign=await browser.newPage();await enter(foreign,false,'Turbo');expect((await foreign.goto(`/evenements/defis/${id}`)).status()).toBe(404);await foreign.close();await peer.close();
 });
 
@@ -111,6 +111,7 @@ test('Rotations : créer, activer, suivre depuis son univers et annuler sans rec
   const tick=()=>execFileSync('docker',['compose','-p',project,'--env-file','.env.local','exec','-T','app','php','bin/console','app:boost-events:tick'],{stdio:'pipe'});
   await page.goto(`/admin/rotations?universe=${own.universeId}`);
   for (const key of ['exploration','combat','transport']) {
+    await page.goto(`/admin/rotations/${own.universeId}/${key}/modifier`);
     const form=page.locator('form').filter({has:page.locator(`input[name="key"][value="${key}"]`)});
     await form.getByLabel('Motif du changement').fill('Préparer une rotation dédiée');await form.getByRole('button',{name:'Désactiver ce modèle'}).click();
   }
@@ -119,14 +120,16 @@ test('Rotations : créer, activer, suivre depuis son univers et annuler sans rec
   runIsolatedSql(project,`UPDATE boost_event SET event_key=CONCAT('weekly-',DATE_FORMAT(DATE_SUB(scheduled_at,INTERVAL 7 DAY),'%Y%m%d'),'-u',universe_id,'-',template_key),scheduled_at=DATE_SUB(scheduled_at,INTERVAL 7 DAY),status='closed',ends_at=UTC_TIMESTAMP()-INTERVAL 1 SECOND,closed_at=UTC_TIMESTAMP()-INTERVAL 1 SECOND WHERE universe_id=${own.universeId} AND event_key LIKE 'weekly-%'`);
   const historyCount=Number(queryIsolatedSql(project,`SELECT COUNT(*) FROM boost_event WHERE universe_id=${own.universeId}`));
   const name='Rotation navigateur '+crypto.randomUUID().slice(0,6);
+  await page.goto(`/admin/rotations/nouveau?universe=${own.universeId}`);
   await page.getByLabel('Nom de la rotation').fill(name);await page.getByLabel('Consignes pour les joueurs').fill('Découvrir des systèmes pour entrer au classement.');
   await page.getByLabel('Objectif suivi').selectOption('exploration');await page.getByLabel('Format de la rotation').selectOption('competitive');await page.getByLabel('Attribution du boost').selectOption('top3');
-  await page.getByLabel('Activer ce modèle dès sa création').uncheck();await page.getByLabel('Motif de création').fill('Nouvelle animation');
+  await page.getByLabel('Modèle actif pour les prochaines semaines').uncheck();await page.getByLabel('Motif de l’enregistrement').fill('Nouvelle animation');
   await page.getByRole('button',{name:'Créer la rotation hebdomadaire'}).click();await expect(page.getByRole('alert')).toContainText('objectif global');await expect(page.getByLabel('Nom de la rotation')).toHaveValue(name);
   await page.getByLabel('Objectif global (obligatoire pour le Top 3)').fill('10');await page.getByRole('button',{name:'Créer la rotation hebdomadaire'}).click();
   const article=page.locator('article').filter({has:page.getByRole('heading',{name,exact:true})});await expect(article).toContainText('Désactivé');tick();
   expect(Number(queryIsolatedSql(project,`SELECT COUNT(*) FROM boost_event WHERE universe_id=${own.universeId} AND status IN ('scheduled','active')`))).toBe(0);
-  await article.getByLabel('Motif du changement').fill('Lancement');await article.getByRole('button',{name:'Activer ce modèle'}).click();tick();
+  await article.getByRole('link',{name:`Modifier ${name}`,exact:true}).click();
+  await page.getByLabel('Motif du changement', {exact:true}).fill('Lancement');await page.getByRole('button',{name:'Activer ce modèle',exact:true}).click();tick();
   const id=Number(queryIsolatedSql(project,`SELECT id FROM boost_event WHERE universe_id=${own.universeId} AND status='active'`));
   runIsolatedSql(project,`INSERT INTO boost_event_contribution (event_id,player_universe_id,source_key,value) VALUES (${id},${own.memberId},'own-test',2),(${id},${other.memberId},'peer-test',3);UPDATE boost_event SET total_contribution=5 WHERE id=${id}`);
   await page.goto(`/evenements/defis/${id}`);await expect(page.locator('main')).toContainText('Votre classement : #2');
@@ -146,7 +149,7 @@ test('Rotations : créer, activer, suivre depuis son univers et annuler sans rec
       await page.screenshot({path:testInfo.outputPath(`weekly-panel-${theme}-${width}.png`),fullPage:true});await page.keyboard.press('Escape');await expect(summary).toBeFocused();await expect(drawer).not.toHaveAttribute('open','');
     }
   }
-  await page.goto('/evenements');await expect(page.locator('main').getByRole('link',{name,exact:true})).toBeVisible();
+  await page.goto('/evenements/defis');await expect(page.locator('main').getByRole('link',{name,exact:true})).toBeVisible();
   expect(await post(page,`/admin/rotations/occurrences/${id}/annuler`,{_token:'invalid',confirmed:'1',reason:'Interdit'})).toBe(403);
   await page.goto(`/admin/defis/${id}`);const cancel=page.locator('form[action$="/annuler"]');const data=await cancel.evaluate(f=>Object.fromEntries(new FormData(f)));
   await post(page,`/admin/rotations/occurrences/${id}/annuler`,{...data,reason:'Sans confirmation'});expect(queryIsolatedSql(project,`SELECT status FROM boost_event WHERE id=${id}`)).toBe('active');

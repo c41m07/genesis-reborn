@@ -30,15 +30,15 @@ test('Le thème clair couvre les principaux écrans stratégiques sans débordem
   const screens = [
     ['/planetes', 'Planètes', 'planetes-theme.png'],
     ['/carte', 'Galaxie', 'carte-theme.png'],
-    ['/flottes', 'Flottes et missions', 'flottes-theme.png'],
-    ['/flottes?mission=spy', 'Espionnage', 'espionnage-composer-theme.png'],
-    ['/diplomatie', 'Diplomatie', 'diplomatie-theme.png'],
+    ['/flottes', 'Missions actives', 'flottes-theme.png'],
+    ['/flottes/preparer?mission=spy', 'Espionnage', 'espionnage-composer-theme.png'],
+    ['/diplomatie', 'Relations entre commandants', 'diplomatie-theme.png'],
     ['/messages', 'Messages', 'messages-theme.png'],
     ['/rapports', 'Rapports', 'rapports-theme.png'],
     ['/classement', 'Classement', 'classement-theme.png'],
     ['/univers', 'Les univers', 'univers-theme.png'],
-    ['/profil', 'Mon profil', 'profil-theme.png'],
-    ['/profil/preferences', 'Paramètres', 'preferences-theme.png'],
+    ['/profil', 'Mes identifiants', 'profil-theme.png'],
+    ['/profil/preferences', 'Préférences', 'preferences-theme.png'],
   ];
   const colonyScreens = [
     ['?section=buildings', 'Bâtiments.', 'batiments-theme.png'],
@@ -55,8 +55,8 @@ test('Le thème clair couvre les principaux écrans stratégiques sans débordem
       await expect(page.locator('.colony-catalog-workspace')).toBeVisible();
       await expect(page.getByRole('region', { name: 'Activité et files de la colonie active' }).getByRole('heading', { name: 'Activité de la colonie', exact: true })).toBeVisible();
     }
-    if (route === '/flottes') await expect(page.getByRole('navigation', { name: 'Navigation principale' }).getByRole('link', { name: 'Flottes et missions' })).toHaveAttribute('aria-current', 'page');
-    if (route === '/flottes?mission=spy') await expect(page.getByRole('navigation', { name: 'Navigation principale' }).getByRole('link', { name: 'Flottes et missions' })).toHaveAttribute('aria-current', 'page');
+    if (route === '/flottes') await expect(page.getByRole('navigation', { name: 'Navigation principale' }).getByRole('link', { name: 'Flottes' })).toHaveAttribute('aria-current', 'page');
+    if (route === '/flottes/preparer?mission=spy') await expect(page.getByRole('navigation', { name: 'Navigation principale' }).getByRole('link', { name: 'Flottes' })).toHaveAttribute('aria-current', 'page');
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1440);
     if (route === '/rapports') {
       for (const category of ['Combats', 'Économie', 'Espionnage', 'Tous']) {

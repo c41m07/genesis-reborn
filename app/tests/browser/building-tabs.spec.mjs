@@ -31,8 +31,8 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     const path = new URL(page.url()).pathname, planet = Number(path.split('/').pop());
     prepareOwnedColony(process.env.BROWSER_ROUTER, email, { stock: 200000, showLockedItems: true });
     const sql = query => runIsolatedSql(process.env.BROWSER_ROUTER, query);
-    // Le niveau 200 conserve un prix en millions malgré la baisse du coût de la centrale.
-    sql(`INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'power_plant','basic',200),(${planet},'lab','basic',5)`);
+    // Le niveau 250 garde un prix en millions avec la répartition validée des coûts.
+    sql(`INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'power_plant','basic',250),(${planet},'lab','basic',5)`);
     sql(`INSERT INTO player_technology (player_universe_id,slug,tier,level) SELECT owner_id,'engineering_foundations','basic',5 FROM planet WHERE id=${planet}`);
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto(`${path}?section=buildings`);
@@ -43,11 +43,11 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(page.locator('.building-card')).toHaveCount(13);
     await expect(family.getByRole('tab')).toHaveCount(3);
     await expect(tab('basic')).toHaveAttribute('aria-selected', 'true');
-    await expect(tab('basic').locator('.building-rank-level')).toHaveText('200');
+    await expect(tab('basic').locator('.building-rank-level')).toHaveText('250');
     await expect(tab('basic').locator('.building-rank-up')).toHaveCount(0);
     await expect(tab('basic')).toHaveAccessibleDescription(/Ressources insuffisantes/);
     await expect(family.locator('.card-stock-badge, .tier-label')).toHaveCount(0);
-    await expect(panel('basic').locator('.costs')).toContainText('1,12 M');
+    await expect(panel('basic').locator('.costs')).toContainText('1,23 M');
     await expect(panel('basic').locator('.costs > span').first()).toHaveAttribute('aria-label', /Métal : [\d ]+/);
     await expect(panel('basic').getByRole('button',{name:/^Manque [\d ]+ Métal/})).toBeDisabled();
     await expect(panel('basic').locator('.catalog-card-art img')).toHaveCSS('filter','none');
@@ -58,7 +58,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(panel('intermediate').locator('img')).toHaveAttribute('src', /power_plant__intermediate.webp$/);
     await expect(panel('intermediate').locator('.catalog-card-heading > h3')).toHaveText('Complexe énergétique à antimatière');
     await expect(panel('intermediate').locator('form [name="tier"]')).toHaveValue('intermediate');
-    await expect(panel('intermediate').locator('.costs')).toContainText('1 350');
+    await expect(panel('intermediate').locator('.costs > span').first()).toContainText('900');
     await page.keyboard.press('ArrowRight');
     await expect(tab('superior')).toBeFocused();
     await expect(panel('superior')).toBeVisible();
@@ -107,8 +107,12 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
         } else {
             expect(activityBox.y + activityBox.height).toBeLessThanOrEqual(catalogBox.y);
         }
-        if (width <= 740) await expect(flights).toBeHidden();
-        else await expect(flights).toBeVisible();
+        await expect(flights).toBeVisible();
+        await expect(flights.locator('[data-live-region="active-flights"] + .incoming-attacks .incoming-attack-panel')).toHaveCount(1);
+        if (width <= 740) {
+            const flightsBox = await flights.boundingBox();
+            expect(flightsBox.y).toBeGreaterThanOrEqual(catalogBox.y + catalogBox.height - 1);
+        }
 
         await tab('superior').click();
         const firstRow = await page.locator('.building-card:visible').evaluateAll(cards => {
@@ -175,8 +179,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
             await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('filter','grayscale(1)');
         }
     }
-    sql(`INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'lab','intermediate',10)`);
-    sql(`INSERT INTO player_technology (player_universe_id,slug,tier,level) SELECT owner_id,'engineering_foundations','intermediate',10 FROM planet WHERE id=${planet}`);
+    sql(`INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'power_plant','intermediate',20)`);
     await page.goto(`${path}?section=buildings#item-power_plant-superior`);
     await page.reload();
     await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('filter','none');
@@ -210,7 +213,13 @@ test('Recherche, chantier et défenses partagent les onglets et préservent leur
     sql(`INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) SELECT id,'fighter','basic',125000 FROM fleet WHERE home_planet_id=${planet} AND status='idle' LIMIT 1`);
     sql(`INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) SELECT id,'fighter','intermediate',1250000 FROM fleet WHERE home_planet_id=${planet} AND status='idle' LIMIT 1`);
     sql(`INSERT INTO planet_defense (planet_id,slug,tier,quantity) VALUES (${planet},'ground_turret_anti_light','basic',1250000)`);
-    for (const [group, slug, families] of [['technologies', 'engineering_foundations', 19], ['ships', 'fighter', 14], ['defenses', 'ground_turret_anti_light', 4]]) {
+    // Les unités conservées restent lisibles quand leur nouvelle construction n'est pas débloquée.
+    await page.goto(`${path}?section=ships#item-fighter-intermediate`);
+    await expect(page.locator('#building-tab-fighter-intermediate .building-rank-level')).toHaveText('1,25 M');
+    await expect(page.locator('#building-tab-fighter-intermediate')).toHaveAccessibleDescription(/1 250 000 unités possédées.*Rang verrouillé/);
+    await expect(page.locator('#item-fighter-intermediate .card-body>form')).toHaveCount(0);
+    sql(`INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'shipyard','intermediate',1)`);
+    for (const [group, slug, families] of [['technologies', 'engineering_foundations', 19], ['ships', 'fighter', 16], ['defenses', 'ground_turret_anti_light', 4]]) {
         await page.setViewportSize({ width: 1920, height: 1000 });
         await page.goto(`${path}?section=${group}`);
         const family = page.locator(`.building-card[data-slug="${slug}"]`);

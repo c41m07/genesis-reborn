@@ -27,37 +27,29 @@
   "economy_value_budget": 5000,
   "cost_profiles": {
     "basic": {
-      "metal": 1500,
-      "nano": 500,
+      "metal": 1000,
+      "nano": 750,
       "antimatter": 0,
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 1125,
-      "nano": 563,
-      "antimatter": 62,
+      "metal": 749,
+      "nano": 625,
+      "antimatter": 125,
       "hydrogen": 0
     },
     "superior": {
-      "metal": 750,
-      "nano": 563,
-      "antimatter": 125,
-      "hydrogen": 250
+      "metal": 625,
+      "nano": 437,
+      "antimatter": 188,
+      "hydrogen": 500
     }
   },
   "shots_min": 3,
   "shots_max": 3,
   "costs": {},
   "costs_scaling": 1,
-  "unlock_requirements": {
-    "buildings": [
-      {
-        "slug": "fortress",
-        "tier": "basic",
-        "level": 1
-      }
-    ]
-  },
+  "unlock_requirements": {},
   "provisional": true,
   "display_order": 1,
   "tier_labels": {
@@ -72,19 +64,21 @@
   },
   "description": "Tourelle stationnaire ciblant les vaisseaux légers. Une tourelle individuelle protège la planète contre la classe visée.",
   "tier_unlock_requirements": {
-    "intermediate": {
+    "basic": {
       "buildings": [
         {
           "slug": "fortress",
           "tier": "basic",
-          "level": 5
+          "level": 1
         }
-      ],
-      "technologies": [
+      ]
+    },
+    "intermediate": {
+      "buildings": [
         {
-          "slug": "weapon_calibration",
-          "tier": "basic",
-          "level": 5
+          "slug": "fortress",
+          "tier": "intermediate",
+          "level": 1
         }
       ]
     },
@@ -92,15 +86,8 @@
       "buildings": [
         {
           "slug": "fortress",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
-      "technologies": [
-        {
-          "slug": "weapon_calibration",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 1
         }
       ]
     }

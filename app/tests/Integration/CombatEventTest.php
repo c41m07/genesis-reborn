@@ -596,7 +596,7 @@ final class CombatEventTest extends KernelTestCase
         $this->em->flush();
         $service = self::getContainer()->get(\App\Service\Fleet\FleetService::class);
         $quote = $service->quote($visitor->currentPlayerUniverse, $origin, 'defend', $target->id, ['fighter' => 1, 'transport' => 1], 0.5);
-        self::assertEqualsWithDelta(0.10, $quote['orbit_fuel'], 0.000001);
+        self::assertEqualsWithDelta(0.015, $quote['orbit_fuel'], 0.000001);
         $fleet = $this->defenseFleet($visitor, $origin, $target, 'idle', $clock->now());
         $service->arrive($fleet->id, $fleet->dispatchToken);
         self::assertSame('defending', $fleet->status);
@@ -647,7 +647,7 @@ final class CombatEventTest extends KernelTestCase
 
         $fleetService = self::getContainer()->get(\App\Service\Fleet\FleetService::class);
         $quote = $fleetService->quote($sender->currentPlayerUniverse, $origin, 'orbit', $target->id, ['fighter' => 1], 0.5, [], 24);
-        self::assertEqualsWithDelta(7.2, $quote['orbit_fuel'], 0.000001);
+        self::assertEqualsWithDelta(0.72, $quote['orbit_fuel'], 0.000001);
         $combat = self::getContainer()->get(CombatEventService::class);
         self::assertFalse($combat->orbitAutoAccepted($sender->currentPlayerUniverse, $target));
 

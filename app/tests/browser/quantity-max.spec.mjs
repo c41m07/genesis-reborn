@@ -29,7 +29,7 @@ test('Construction : Max dépasse 100, ajuste la saisie et refuse un achat lorsq
     expect(await page.evaluate(async url => (await fetch(url)).status, `/planetes/${planet}/construction-maximum?group=buildings&slug=mine_metal&tier=basic`)).toBe(422);
     await page.goto(`/planetes/${planet}?section=ships`);
     const panel = page.locator('#item-probe-basic'), input = panel.locator('[name="quantity"]');
-    const maximum = panel.getByRole('button', { name: /^Quantité maximale/ });
+    const maximum = panel.getByRole('button', { name: /^Max : quantité maximale de/ });
     await maximum.focus(); await page.keyboard.press('Enter');
     await expect.poll(async () => Number(await input.inputValue())).toBeGreaterThan(100);
     const initial = Number(await input.inputValue());
@@ -44,8 +44,8 @@ test('Construction : Max dépasse 100, ajuste la saisie et refuse un achat lorsq
     await panel.screenshot({ path: info.outputPath('construction-max-390.png'), animations: 'disabled' });
     runIsolatedSql(project, `UPDATE planet_resource SET current_stock=0,last_updated_at=UTC_TIMESTAMP() WHERE planet_id=${planet}`);
     await maximum.click();
-    await expect(panel.getByRole('status')).toContainText('Ressources manquantes : 300 Métal, 100 Nano, 200 Électricité.');
-    await expect(panel.getByRole('button', { name: 'Manque 300 Métal · 100 Nano · 200 Électricité', exact:true })).toBeDisabled();
+    await expect(panel.getByRole('status')).toContainText('Ressources manquantes : 200 Métal, 150 Nano, 200 Électricité.');
+    await expect(panel.getByRole('button', { name: 'Manque 200 Métal · 150 Nano · 200 Électricité', exact:true })).toBeDisabled();
     expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM queue_item WHERE planet_id=${planet}`)).toBe('0');
     prepareOwnedColony(project, email, { stock: 150000 });
     await maximum.click();
@@ -67,7 +67,7 @@ test('Flotte et fret : Max conserve les autres champs, réserve le carburant et 
     runIsolatedSql(project, `UPDATE planet target JOIN planet origin ON origin.id=${planet} SET target.owner_id=origin.owner_id WHERE target.id=${target}`);
     runIsolatedSql(project, `INSERT INTO fleet (player_universe_id,home_planet_id,status,mission,speed_ratio,cargo,reserved_fuel,orbit_fuel,orbit_duration_seconds,travel_seconds,dispatch_token) SELECT owner_id,id,'idle','idle',1,'{}',0,0,0,0,'' FROM planet WHERE id=${planet}`);
     runIsolatedSql(project, `INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) SELECT id,'fighter','basic',200 FROM fleet WHERE home_planet_id=${planet} AND status='idle'; INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) SELECT id,'transport','basic',1 FROM fleet WHERE home_planet_id=${planet} AND status='idle'`);
-    await page.goto('/flottes');
+    await page.goto('/flottes/preparer');
     const form = page.locator('.fleet-form form').first();
     const fighter = form.locator('[name="ships[fighter]"]'), transport = form.locator('[name="ships[transport]"]');
     await form.locator('[data-action="fleet-quantity#maximumShip"][data-input-id$="-fighter-basic"]').click();

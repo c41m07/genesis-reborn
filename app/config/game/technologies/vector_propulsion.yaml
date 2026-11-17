@@ -2,7 +2,7 @@
   "slug": "vector_propulsion",
   "label": "Propulseurs vectoriels",
   "max_level": 25,
-  "research_time_base": 3600,
+  "research_time_base": 2700,
   "research_time_scaling": 1.8,
   "costs_base": {
     "metal": 4250,
@@ -10,27 +10,7 @@
     "antimatter": 0
   },
   "costs_scaling": 2,
-  "unlock_requirements": {
-    "buildings": [
-      {
-        "slug": "lab",
-        "tier": "basic",
-        "level": 4
-      }
-    ],
-    "technologies": [
-      {
-        "slug": "naval_engineering",
-        "tier": "basic",
-        "level": 5
-      },
-      {
-        "slug": "engineering_foundations",
-        "tier": "basic",
-        "level": 5
-      }
-    ]
-  },
+  "unlock_requirements": {},
   "effect": {
     "type": "stat_bonus",
     "targets": "all_ships",
@@ -44,35 +24,51 @@
   },
   "source": "PDF 1 p.15",
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "engineering_foundations",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
           "slug": "lab",
           "tier": "basic",
-          "level": 5
+          "level": 4
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "naval_engineering",
+          "tier": "basic",
+          "level": 3
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 4
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "naval_engineering",
+          "tier": "intermediate",
+          "level": 3
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "engineering_foundations",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
       "buildings": [
         {
           "slug": "lab",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 4
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "naval_engineering",
+          "tier": "superior",
+          "level": 3
         }
       ]
     }
@@ -80,22 +76,22 @@
   "economy_value_budget": 10000,
   "cost_profiles": {
     "basic": {
-      "metal": 3000,
-      "nano": 1000,
+      "metal": 2000,
+      "nano": 1500,
       "antimatter": 0,
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 2816,
-      "nano": 1407,
-      "antimatter": 156,
+      "metal": 1876,
+      "nano": 1563,
+      "antimatter": 313,
       "hydrogen": 0
     },
     "superior": {
-      "metal": 2344,
-      "nano": 1758,
-      "antimatter": 391,
-      "hydrogen": 782
+      "metal": 1954,
+      "nano": 1368,
+      "antimatter": 586,
+      "hydrogen": 1562
     }
   },
   "tier_labels": {

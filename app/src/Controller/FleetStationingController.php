@@ -18,7 +18,7 @@ final class FleetStationingController extends AbstractController
             $hold->unload($context->membership(),$planet,$request->request->getString('kind'),$request->request->getString('request_key'));
             $this->addFlash('success','Déchargement effectué dans les capacités disponibles. Le surplus reste à bord.');
         } catch(\DomainException $error) {$this->addFlash('error',$error->getMessage());}
-        return $this->redirectToRoute('app_fleets');
+        return $this->redirectToRoute('app_fleet_holds');
     }
 
     #[Route('/flottes/{id}/reprendre',name:'app_fleet_station_resume',requirements:['id'=>'\d+'],methods:['GET','POST'])]
@@ -33,7 +33,7 @@ final class FleetStationingController extends AbstractController
                 $stationing->resume($member,$id,$request->request->getInt('planet'),$request->request->getString('version'),$request->request->getString('request_key'));
                 $this->addFlash('success','Reprise du stationnement enregistrée.');
             } catch(\DomainException $error) {$this->addFlash('error',$error->getMessage());}
-            return $this->redirectToRoute('app_fleets');
+            return $this->redirectToRoute('app_fleet_holds');
         }
         $target=$request->query->getInt('planet');$quote=null;$error=null;
         if($target) try {$quote=$stationing->preview($member,$id,$target);}

@@ -1,0 +1,10 @@
+{% set projectDestination = route == 'app_guild_project' ? (project.status == 'active' ? 'app_guild_projects' : 'app_guild_projects_history') : route %}
+<nav class="ui-tabs space-navigation" aria-label="Navigation des projets collectifs">
+{% for destination in [
+    {route:'app_guild_projects', label:'Projets en cours'},
+    {route:'app_guild_projects_available', label:'Projets disponibles'},
+    {route:'app_guild_projects_history', label:'Historique'}
+] %}
+<a href="{{ path(destination.route) }}"{% if projectDestination == destination.route %} class="active" aria-current="{{ route == 'app_guild_project' ? 'location' : 'page' }}"{% endif %}>{{ destination.label }}</a>
+{% endfor %}
+</nav>

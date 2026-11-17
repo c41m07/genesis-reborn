@@ -96,6 +96,37 @@ final class AbsenceJournalTest extends WebTestCase
         self::assertSame(2,$this->em->getRepository(Notification::class)->count([]));
     }
 
+    public function testJsonRefreshReturnsOnlyRegionsAndNeverOpensTheJournal(): void
+    {
+        $this->overview();
+        $visited = $this->player->currentPlayerUniverse->overviewVisitedAt;
+        $notice = $this->notice('Événement encore non consulté');
+        $this->clock->sleep(60);
+        $server = ['HTTP_X_GENESIS_LIVE' => '1', 'HTTP_ACCEPT' => 'application/json'];
+        foreach (['overview', 'buildings', 'technologies', 'ships', 'defenses'] as $section) {
+            $this->client->request('GET', '/planetes/'.$this->home->id.'?section='.$section, [], [], $server);
+            self::assertResponseIsSuccessful();
+            $response = $this->client->getResponse();
+            self::assertStringContainsString('application/json', $response->headers->get('Content-Type'));
+            self::assertStringContainsString('no-store', $response->headers->get('Cache-Control'));
+            $regions = json_decode($response->getContent(), true, 512, JSON_THROW_ON_ERROR)['regions'];
+            self::assertArrayHasKey('resources', $regions);
+            self::assertArrayHasKey('queues', $regions);
+            self::assertArrayHasKey($section === 'overview' ? 'journal' : 'catalog', $regions);
+            self::assertStringNotContainsString('<!DOCTYPE', implode('', $regions));
+        }
+        self::assertEquals($visited, $this->player->currentPlayerUniverse->overviewVisitedAt);
+        self::assertNull($this->em->getConnection()->fetchOne('SELECT consulted_at FROM notification WHERE id = ?', [$notice->id]));
+        $this->overview();
+        $this->client->request('GET', '/planetes/'.$this->home->id, [], [], $server);
+        self::assertResponseIsSuccessful();
+        $regions = json_decode($this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR)['regions'];
+        self::assertStringContainsString('Événement encore non consulté', $regions['journal']);
+        [, $foreign] = $this->player('JournalForeignJson');
+        $this->client->request('GET', '/planetes/'.$foreign->id, [], [], $server);
+        self::assertResponseStatusCodeSame(404);
+    }
+
     public function testInvalidCsrfMembershipAndForeignNotificationsAreRejected(): void
     {
         $this->overview();$own=$this->notice('Propre');$this->overview();

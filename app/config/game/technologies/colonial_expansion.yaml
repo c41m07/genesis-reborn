@@ -10,14 +10,7 @@
     "antimatter": 0
   },
   "costs_scaling": 2,
-  "unlock_requirements": {
-    "buildings": [
-      {
-        "slug": "lab",
-        "level": 1
-      }
-    ]
-  },
+  "unlock_requirements": {},
   "effect": {
     "type": "planet_limit",
     "base_planets": 1,
@@ -31,35 +24,51 @@
   },
   "provisional": true,
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "vector_propulsion",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
           "slug": "lab",
           "tier": "basic",
-          "level": 5
+          "level": 2
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "naval_engineering",
+          "tier": "basic",
+          "level": 1
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 2
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "naval_engineering",
+          "tier": "intermediate",
+          "level": 1
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "vector_propulsion",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
       "buildings": [
         {
           "slug": "lab",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 2
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "naval_engineering",
+          "tier": "superior",
+          "level": 1
         }
       ]
     }
@@ -67,22 +76,22 @@
   "economy_value_budget": 22000,
   "cost_profiles": {
     "basic": {
-      "metal": 6600,
-      "nano": 2200,
+      "metal": 4400,
+      "nano": 3300,
       "antimatter": 0,
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 6188,
-      "nano": 3094,
-      "antimatter": 344,
+      "metal": 4124,
+      "nano": 3438,
+      "antimatter": 688,
       "hydrogen": 0
     },
     "superior": {
-      "metal": 5156,
-      "nano": 3868,
-      "antimatter": 860,
-      "hydrogen": 1718
+      "metal": 4298,
+      "nano": 3009,
+      "antimatter": 1289,
+      "hydrogen": 3438
     }
   },
   "tier_labels": {

@@ -19,48 +19,33 @@
   "evasion": 0,
   "signature": 80,
   "base_attack": 500,
-  "build_time_base": 900,
+  "build_time_base": 1800,
   "economy_value_budget": 47000,
   "cost_profiles": {
     "basic": {
-      "metal": 14100,
-      "nano": 4700,
+      "metal": 9400,
+      "nano": 7050,
       "antimatter": 0,
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 10575,
-      "nano": 5287,
-      "antimatter": 588,
+      "metal": 7051,
+      "nano": 5875,
+      "antimatter": 1175,
       "hydrogen": 0
     },
     "superior": {
-      "metal": 7050,
-      "nano": 5287,
-      "antimatter": 1175,
-      "hydrogen": 2350
+      "metal": 5875,
+      "nano": 4113,
+      "antimatter": 1762,
+      "hydrogen": 4700
     }
   },
   "shots_min": 2,
   "shots_max": 2,
   "costs": {},
   "costs_scaling": 1,
-  "unlock_requirements": {
-    "buildings": [
-      {
-        "slug": "fortress",
-        "tier": "basic",
-        "level": 3
-      }
-    ],
-    "technologies": [
-      {
-        "slug": "structural_armor",
-        "tier": "basic",
-        "level": 3
-      }
-    ]
-  },
+  "unlock_requirements": {},
   "provisional": true,
   "display_order": 3,
   "tier_labels": {
@@ -75,19 +60,45 @@
   },
   "description": "Tourelle stationnaire ciblant les vaisseaux lourds. Une tourelle individuelle protège la planète contre la classe visée.",
   "tier_unlock_requirements": {
-    "intermediate": {
+    "basic": {
       "buildings": [
         {
           "slug": "fortress",
           "tier": "basic",
-          "level": 7
+          "level": 5
         }
       ],
       "technologies": [
         {
           "slug": "weapons_engineering",
           "tier": "basic",
-          "level": 7
+          "level": 5
+        },
+        {
+          "slug": "structural_armor",
+          "tier": "basic",
+          "level": 3
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "fortress",
+          "tier": "intermediate",
+          "level": 5
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "weapons_engineering",
+          "tier": "intermediate",
+          "level": 5
+        },
+        {
+          "slug": "structural_armor",
+          "tier": "intermediate",
+          "level": 3
         }
       ]
     },
@@ -95,15 +106,20 @@
       "buildings": [
         {
           "slug": "fortress",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 5
         }
       ],
       "technologies": [
         {
           "slug": "weapons_engineering",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 5
+        },
+        {
+          "slug": "structural_armor",
+          "tier": "superior",
+          "level": 3
         }
       ]
     }

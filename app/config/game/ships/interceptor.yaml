@@ -14,62 +14,78 @@
   "costs": {},
   "speed_system": 224,
   "speed_galaxy": 1320,
-  "fuel_travel_system": 0.5,
-  "fuel_travel_galaxy": 2,
-  "fuel_orbit": 0.3,
+  "fuel_travel_system": 0.04,
+  "fuel_travel_galaxy": 0.16,
+  "fuel_orbit": 0.024,
   "cargo_capacity": 100,
-  "unlock_requirements": {
-    "buildings": [
-      {
-        "slug": "shipyard",
-        "tier": "basic",
-        "level": 2
-      }
-    ],
-    "technologies": [
-      {
-        "slug": "naval_engineering",
-        "tier": "basic",
-        "level": 1
-      }
-    ]
-  },
+  "unlock_requirements": {},
   "provisional": true,
   "note": "Équilibrage R14 adopté pour la branche Alpha le 05/11/2026 ; validation en jeu à poursuivre.",
   "fuel_capacity": 16000,
   "fuel_capacity_provisional": true,
-  "fuel_capacity_note": "Réservoir dédié de 16 000 H au rang basique, permettant le plus long aller-retour des cartes de référence sans utiliser la soute. Consommation maximale mesurée : environ 15 453,51 H hors stationnement.",
+  "fuel_capacity_note": "Réservoir dédié conservé. Son autonomie dépend de la classe, du trajet et du pourcentage de vitesse ; cette réserve est distincte de la soute de fret.",
   "shield": 40,
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "target_acquisition",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
           "slug": "shipyard",
           "tier": "basic",
-          "level": 5
+          "level": 3
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "vector_propulsion",
+          "tier": "basic",
+          "level": 1
+        },
+        {
+          "slug": "weapon_calibration",
+          "tier": "basic",
+          "level": 1
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "shipyard",
+          "tier": "intermediate",
+          "level": 3
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "vector_propulsion",
+          "tier": "intermediate",
+          "level": 1
+        },
+        {
+          "slug": "weapon_calibration",
+          "tier": "intermediate",
+          "level": 1
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "target_acquisition",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
       "buildings": [
         {
           "slug": "shipyard",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 3
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "vector_propulsion",
+          "tier": "superior",
+          "level": 1
+        },
+        {
+          "slug": "weapon_calibration",
+          "tier": "superior",
+          "level": 1
         }
       ]
     }
@@ -77,22 +93,22 @@
   "economy_value_budget": 7352,
   "cost_profiles": {
     "basic": {
-      "metal": 2206,
-      "nano": 735,
+      "metal": 1470,
+      "nano": 1103,
       "antimatter": 0,
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 2069,
-      "nano": 1035,
-      "antimatter": 115,
+      "metal": 1379,
+      "nano": 1150,
+      "antimatter": 230,
       "hydrogen": 0
     },
     "superior": {
-      "metal": 1724,
-      "nano": 1294,
-      "antimatter": 288,
-      "hydrogen": 574
+      "metal": 1438,
+      "nano": 1007,
+      "antimatter": 431,
+      "hydrogen": 1150
     }
   },
   "tier_labels": {

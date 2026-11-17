@@ -22,10 +22,31 @@ conserve son sens : il ne doit pas être transformé en preuve de livraison.
 
 ## Chaîne versionnée
 
-La CI exécute les contrôles et les tests à l’ouverture, à la réouverture et à chaque
-mise à jour d’une PR vers `dev` ou `alpha`. Les push seuls sur les branches de
-travail et sur `dev`, y compris après fusion, ne lancent pas de seconde validation.
-Le déclenchement manuel reste disponible.
+La CI se déclenche à l’ouverture, à la réouverture et à chaque mise à jour d’une PR
+vers `dev` ou `alpha`, ainsi qu’aux passages entre brouillon et « prête à relire ».
+
+- En brouillon : un seul job `development checks` vérifie les espaces du diff,
+  Compose, la syntaxe PHP, Twig, YAML et le conteneur Symfony ; il compile les
+  assets et lance les tests Python. Aucun service de base de données, migration,
+  parcours navigateur ou restauration SQL n’est lancé.
+- Prête à relire : les cinq jobs `quality` exécutent la CI complète sur la dernière
+  version de la PR. Une correction relance cette validation ; repasser en brouillon
+  si le développement reprend.
+
+La matrice légère ne crée aucun des cinq contrôles complets requis, même comme
+job ignoré : GitHub peut accepter un contrôle ignoré pour autoriser une fusion.
+La CI légère seule ne suffit donc pas à satisfaire la protection de `dev`.
+Les noms des cinq contrôles requis sont conservés.
+
+Pendant la CI, il est possible de relire et documenter le lot courant ou de
+développer un lot indépendant sur une autre branche issue de `dev` actualisée.
+Préserver la branche testée pour éviter les relances inutiles ; un lot dépendant
+attend l’intégration du précédent. Examiner les résultats avant chaque fusion,
+actualiser la branche si nécessaire et attendre la CI complète de cette version.
+Ne pas partager les bases de test entre vérifications simultanées.
+
+Les push seuls sur les branches de travail et sur `dev`, y compris après fusion,
+ne lancent pas de seconde validation. Le déclenchement manuel reste complet.
 
 Les push sur `alpha`, actuellement aussi branche par défaut, conservent la
 validation complète. Après sa réussite, le job `publish` construit `docker/prod/Dockerfile` et publie
@@ -38,7 +59,7 @@ Le job PHP vérifie aussi les espaces du diff avec `git diff --check HEAD^ HEAD`
 sur une PR, il compare le commit de fusion testé à son premier parent (la base) ;
 sur un push de livraison, il compare le commit livré à son parent.
 
-La validation utilise cinq jobs en parallèle : un pour PHP et le lint, quatre
+La validation complète utilise cinq jobs en parallèle : un pour PHP et le lint, quatre
 pour les tests navigateur répartis avec `--shard=N/4`. Chaque lot navigateur
 conserve un seul worker, son runner et sa base jetable ; tous les lots doivent
 réussir avant la publication. Le nombre de scénarios évolue avec le dépôt ; le lot H a validé 93 scénarios localement, puis ses contrôles GitHub. Les nombres datés des anciens audits ne décrivent pas la suite courante. Les couches de
@@ -125,6 +146,13 @@ Ne pas exiger le job `publish`, qui ne s’exécute pas sur les PR. Demander une
 branche à jour avant fusion pour revalider les changements avec le dernier `dev`
 et appliquer les exigences aux administrateurs pour éviter les push directs.
 Conserver toute protection existante plus stricte.
+
+Le job léger `development checks` ne remplace aucun de ces cinq contrôles.
+Vérification du 16 novembre 2026 : `dev` exige toujours la PR, les cinq contrôles,
+la branche à jour et l’application aux administrateurs. `alpha` n’a ni protection
+de branche ni règle de dépôt applicable à cette date. Le workflow y lance bien la
+CI complète pour les PR prêtes, mais ne peut pas imposer seul son attente avant
+fusion ; activer une protection équivalente avant une prochaine livraison Alpha.
 
 Protection activée et relue via l’API GitHub le 11 novembre 2026 avec les
 identifiants Git autorisés : PR obligatoire, cinq jobs requis, branche à jour et

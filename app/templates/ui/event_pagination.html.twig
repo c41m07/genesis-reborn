@@ -1,0 +1,7 @@
+{% if pagination.pages > 1 %}
+<nav class="ui-tabs" aria-label="{{ paginationLabel }}">
+{% if pagination.page > 1 %}<a rel="prev" href="{{ path(route,app.request.query.all|merge({(pageParameter):pagination.page-1,_fragment:fragment})) }}">Page précédente</a>{% endif %}
+<span>Page {{ pagination.page }} / {{ pagination.pages }}</span>
+{% if pagination.page < pagination.pages %}<a rel="next" href="{{ path(route,app.request.query.all|merge({(pageParameter):pagination.page+1,_fragment:fragment})) }}">Page suivante</a>{% endif %}
+</nav>
+{% endif %}

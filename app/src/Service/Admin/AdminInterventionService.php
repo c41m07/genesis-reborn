@@ -13,7 +13,8 @@ use Psr\Clock\ClockInterface;
 final class AdminInterventionService
 {
     public function __construct(private EntityManagerInterface $em, private GameManager $manager, private GameRepository $repo, private GameCatalog $catalog,
-        private ActionGuard $guard, private ResourceService $resources, private FleetService $fleets, private ClockInterface $clock) {}
+        private ActionGuard $guard, private ResourceService $resources, private FleetService $fleets, private ClockInterface $clock,
+        private \App\Service\Combat\LocalGarrison $garrison, private \App\Service\Queue\QueueService $queues) {}
 
     public function resources(Player $actor, int $playerId, Planet $planet, string $operation, array $amounts, string $reason, string $requestKey): bool
     {
@@ -58,8 +59,10 @@ final class AdminInterventionService
             if (!$membership) throw new \DomainException('Cette colonie ne possède plus de joueur.');
             $this->guard->lock($membership, $planet);
             if ($planet->owner?->player?->id !== $playerId) throw new \DomainException('Cette colonie n’appartient plus au joueur sélectionné.');
-            $this->catalog->getTierForUniverse($membership->universe, 'ships', $slug, $tier);
+            $definition = $this->catalog->getTierForUniverse($membership->universe, 'ships', $slug, $tier);
             if (!$this->guard->receipt($membership, $requestKey)) return false;
+            // Livrer les commandes échues avant d'avancer l'horloge de production à la date de correction.
+            if (isset($definition['economic_unit'])) $this->queues->synchronize($membership);
             $fleet = $this->repo->one(Fleet::class, ['homePlanet'=>$planet, 'playerUniverse'=>$membership, 'status'=>'idle']);
             if (!$fleet) {
                 $fleet = new Fleet();$fleet->homePlanet = $planet;$fleet->playerUniverse = $membership;
@@ -70,7 +73,12 @@ final class AdminInterventionService
             $after = $before + (int) $quantity;
             if ($after > 2147483647) throw new \DomainException('Attribution refusée : la capacité de stockage du nombre de vaisseaux serait dépassée.');
             if (!$ship) { $ship = new FleetShip();$ship->fleet = $fleet;$ship->slug = $slug;$ship->tier = $tier;$this->manager->save($ship); }
+            // Une correction administrative ne doit pas créditer rétroactivement les nouvelles unités civiles.
+            if (isset($definition['economic_unit'])) $this->resources->materialize($planet);
             $ship->quantity = $after;
+            $this->manager->flush();
+            if (isset($definition['economic_unit'])) $this->resources->refreshProduction($planet);
+            $this->garrison->enlist($planet);
             $this->audit($actor, 'admin_ships_grant', 'planet', $planet->id, $reason, ['player_id'=>$playerId, 'universe_id'=>$membership->universe->id, 'fleet_id'=>$fleet->id, 'slug'=>$slug, 'tier'=>$tier, 'quantity'=>(int) $quantity, 'before'=>$before, 'after'=>$after]);
             return true;
         });

@@ -7,6 +7,8 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Index(name: 'membership_former_player_idx', columns: ['former_player_id'])]
 class PlayerUniverse
 {
+    public const CATALOG_REQUIREMENTS_VERSION = 2;
+    public const INITIAL_CATALOG_UNLOCKS = ['_requirements_version' => self::CATALOG_REQUIREMENTS_VERSION];
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]
     public ?int $id = null;
     #[ORM\ManyToOne, ORM\JoinColumn(nullable: true)]
@@ -26,7 +28,8 @@ class PlayerUniverse
     #[ORM\Column(nullable: true)]
     public ?\DateTimeImmutable $lastRecoveryProtectionAt = null;
     #[ORM\Column(type: 'json', nullable: true)]
-    public ?array $catalogUnlocks = null;
+    /** Les anciennes valeurs hydratées restent inchangées jusqu'à la requalification explicite. */
+    public ?array $catalogUnlocks = self::INITIAL_CATALOG_UNLOCKS;
 
     #[ORM\Column(nullable: true)]
     public ?\DateTimeImmutable $journalStartedAt = null;

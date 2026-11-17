@@ -4,7 +4,7 @@ import { execFileSync } from 'node:child_process';
 async function registerAndLogin(page) {
   const id = crypto.randomUUID().slice(0, 8);
   const email = `admin-events-${id}@example.test`;
-  const password = 'Browser-test-2026!';
+  const password = crypto.randomUUID() + 'aA1!';
 
   await page.goto('/inscription');
   await page.getByLabel('Adresse email').fill(email);
@@ -36,6 +36,7 @@ async function registerAndLogin(page) {
 
 test('Formulaire d’événements admin lisible aux tailles desktop, tablette et mobile', async ({ page }) => {
   await registerAndLogin(page);
+  await page.getByRole('link', {name:'Création avancée',exact:true}).click();
   const form = page.locator('form.admin-event-form').first();
   const description = form.locator('textarea[name="description"]');
   const visibility = form.getByLabel('Visible aux joueurs');

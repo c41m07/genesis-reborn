@@ -62,6 +62,7 @@ test('Refus joueur : console protégée, cinq tailles et retour clavier à sa co
   await expect(page.locator('.access-denied-panel')).toContainText('réservée aux comptes administrateurs');
   await expect(page.locator('.flash.error')).toContainText('La tentative a été consignée');
   await inspect(page, testInfo, 'player-denied', 'Retourner au jeu');
+  await expect(page.locator('.incoming-attacks')).toHaveCount(0);
   await keyboardReturn(page, 'Retourner au jeu');
   await expect(page).toHaveURL(account.gameUrl);
   expect(JSON.parse(queryIsolatedSql(process.env.BROWSER_ROUTER, `SELECT roles FROM player WHERE email='${account.email}'`))).not.toContain('ROLE_ADMIN');
@@ -122,7 +123,8 @@ test('Refus administrateur : jeton invalide expliqué et retour à la console', 
   const card = page.locator('.admin-universe-card').first();
   const id = Number((await card.getAttribute('id')).replace('admin-universe-', ''));
   const original = queryIsolatedSql(process.env.BROWSER_ROUTER, `SELECT game_settings FROM universe WHERE id=${id}`);
-  await card.locator('.admin-universe-settings>summary').click();
+  await page.goto(`/admin/universes/${id}/gerer`);
+  await expect(card.locator('.admin-universe-settings')).toBeVisible();
   const form = card.locator('form[action$="/settings"]');
   await form.evaluate(element => { element.noValidate = true; element.querySelector('input[name=_token]').value = 'invalid'; });
   await form.getByRole('button', { name: 'Enregistrer les règles' }).click();
@@ -132,6 +134,7 @@ test('Refus administrateur : jeton invalide expliqué et retour à la console', 
   expect(queryIsolatedSql(process.env.BROWSER_ROUTER, `SELECT game_settings FROM universe WHERE id=${id}`)).toBe(original);
   await expect(page.locator('.access-denied-panel')).toContainText('formulaire');
   await inspect(page, testInfo, 'admin-denied', 'Retour à la console');
+  await expect(page.locator('.incoming-attacks')).toHaveCount(0);
   await keyboardReturn(page, 'Retour à la console');
   await expect(page).toHaveURL(/admin$/);
   await expect(page.locator('.admin-console')).toBeVisible();

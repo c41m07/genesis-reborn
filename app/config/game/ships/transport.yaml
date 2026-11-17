@@ -10,66 +10,67 @@
   "base_attack": 0,
   "shots_min": 1,
   "shots_max": 3,
-  "build_time_base": 3600,
+  "build_time_base": 1800,
   "costs": {},
   "speed_system": 104,
   "speed_galaxy": 515,
-  "fuel_travel_system": 0.5,
-  "fuel_travel_galaxy": 2,
-  "fuel_orbit": 0.3,
+  "fuel_travel_system": 0.1,
+  "fuel_travel_galaxy": 0.4,
+  "fuel_orbit": 0.06,
   "cargo_capacity": 50000,
-  "unlock_requirements": {
-    "buildings": [
-      {
-        "slug": "shipyard",
-        "tier": "basic",
-        "level": 2
-      }
-    ],
-    "technologies": [
-      {
-        "slug": "naval_engineering",
-        "tier": "basic",
-        "level": 2
-      }
-    ]
-  },
+  "unlock_requirements": {},
   "provisional": true,
   "note": "Profil de mobilité et de combat différencié, équilibrage validé le 02/11/2026 et à mesurer en Alpha.",
   "fuel_capacity": 16000,
   "fuel_capacity_provisional": true,
-  "fuel_capacity_note": "Réservoir dédié de 16 000 H au rang basique, permettant le plus long aller-retour des cartes de référence sans utiliser la soute. Consommation maximale mesurée : environ 15 453,51 H hors stationnement.",
+  "fuel_capacity_note": "Réservoir dédié conservé. Son autonomie dépend de la classe, du trajet et du pourcentage de vitesse ; cette réserve est distincte de la soute de fret.",
   "shield": 100,
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "modular_cargo_bays",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
           "slug": "shipyard",
           "tier": "basic",
-          "level": 5
+          "level": 2
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "modular_cargo_bays",
+          "tier": "basic",
+          "level": 1
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "shipyard",
+          "tier": "intermediate",
+          "level": 2
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "modular_cargo_bays",
+          "tier": "intermediate",
+          "level": 1
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "modular_cargo_bays",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
       "buildings": [
         {
           "slug": "shipyard",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 2
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "modular_cargo_bays",
+          "tier": "superior",
+          "level": 1
         }
       ]
     }
@@ -77,22 +78,22 @@
   "economy_value_budget": 24000,
   "cost_profiles": {
     "basic": {
-      "metal": 7200,
-      "nano": 2400,
+      "metal": 4800,
+      "nano": 3600,
       "antimatter": 0,
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 6752,
-      "nano": 3375,
-      "antimatter": 375,
+      "metal": 4500,
+      "nano": 3751,
+      "antimatter": 750,
       "hydrogen": 0
     },
     "superior": {
-      "metal": 5626,
-      "nano": 4219,
-      "antimatter": 938,
-      "hydrogen": 1876
+      "metal": 4688,
+      "nano": 3282,
+      "antimatter": 1407,
+      "hydrogen": 3748
     }
   },
   "tier_labels": {

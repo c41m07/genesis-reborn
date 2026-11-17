@@ -8,6 +8,8 @@ une seule référence par sujet ; les anciens bilans ne décrivent pas l’état
 
 | Besoin | Référence |
 | --- | --- |
+| Consulter les huit lots de navigation intégrés et leur recette finale | [Navigation et lots](NAVIGATION_PAGES_DEDIEES.md) |
+| Suivre le nettoyage progressif et reprendre le chantier | [Rework V1](REWORK_V1.md) |
 | Comprendre les règles actuelles | [REGLES](REGLES.md) |
 | Comprendre la détection des sondes et les essais Alpha | [Espionnage](REGLES.md#espionnage) |
 | Retrouver un arbitrage produit | [DECISIONS](DECISIONS.md) |
@@ -15,8 +17,10 @@ une seule référence par sujet ; les anciens bilans ne décrivent pas l’état
 | Retrouver la revue, la fusion et les validations du chantier guildes | [Suivi guildes et alliances](GESTION_GUILDES_ALLIANCES.md) |
 | Préparer la refonte de la console et ses récompenses | [Cadrage de l’administration, brouillon](REFONTE_ADMINISTRATION.md) |
 | Suivre les évolutions des interfaces et flottes | [Lots et décisions ouvertes](EVOLUTIONS_INTERFACES_FLOTTES.md) |
+| Comprendre les arrivées étrangères et leur visibilité | [Flottes entrantes](FLOTTES_ENTRANTES.md) |
 | Consulter le lot parcours UI/UX et ses validations locales | [Suivi des parcours](PARCOURS_UI_UX.md) |
-| Choisir une destination, déplacer une base et reprendre un stationnement | [Destinations et Stationnement](DESTINATIONS_STATIONNEMENT.md) |\n| Utiliser Ctrl + Entrée et Markdown dans les nouveaux messages | [Messagerie et historique](MESSAGERIE_MARKDOWN.md) |
+| Choisir une destination, déplacer une base et reprendre un stationnement | [Destinations et Stationnement](DESTINATIONS_STATIONNEMENT.md) |
+| Utiliser Ctrl + Entrée et Markdown dans les nouveaux messages | [Messagerie et historique](MESSAGERIE_MARKDOWN.md) |
 | Consulter les profils et personnaliser une guilde | [Profils et présentations](PROFILS_JOUEURS_GUILDES.md) |
 | Utiliser le simulateur par dix combats, les compositions et la recherche avancée | [Cadrage des outils stratégiques](CADRAGE_OUTILS_STRATEGIQUES.md) |
 | Voir les objectifs et vérifications restantes | [ROADMAP](FEUILLE_DE_ROUTE.md) |
@@ -27,14 +31,21 @@ une seule référence par sujet ; les anciens bilans ne décrivent pas l’état
 | Comprendre le worker, le notifier et les garanties de livraison | [Worker et notifier](WORKER_NOTIFIER.md) |
 | Régler le référencement et Search Console | [SEO](REFERENCEMENT.md) |
 | Consulter les profils de combat, production et vitesse | [EQUILIBRAGE](EQUILIBRAGE.md) |
-| Consulter les 150 profils de coûts | [Grille commune](COUTS.md) |
+| Consulter les 156 profils de coûts B40/I30/S25 retenus | [Grille commune](COUTS.md) |
 | Comprendre les déblocages par rang | [Déblocages initiaux](DEBLOCAGES.md) |
+| Comparer les durées, taxes électriques et carburants par classe | [Grilles et mesures du 15 novembre](DUREES_CARBURANT.md) |
+| Comparer les parcours financés, flottes, reconstructions et prix candidats | [Simulations économiques et militaires](SIMULATIONS_PROGRESSION_ECONOMIE.md) |
+| Étudier B40/60, I30/50/20 et S25/35/30/10 sans activation | [Grille proposée et comparaisons](SIMULATIONS_GRILLE_PROPOSEE.md) |
+| Isoler les changements de prix Basiques et Intermédiaires | [Comparaison par rang](SIMULATIONS_COUTS_PAR_RANG.md) |
+| Suivre l’évolution de progression, carburant et unités économiques | [Lots, vérifications et activation](PROGRESSION_CARBURANT_UNITES.md) |
+| Déployer récolteurs et satellites, comprendre leurs places et pertes | [Unités économiques](UNITES_ECONOMIQUES.md) |
 | Modifier l’interface | [Guide UI](ui-ux/GUIDE_INTERFACE.md) |
 | Recréer une illustration | [Prompts](ILLUSTRATIONS.md) |
 | Consulter une preuve ou décision historique | [Archives et liste de consolidation](archives/README.md) |
 
-`wiki.json` reste le contenu unique du wiki. `CATALOGUE_LABELS.csv` conserve les
-150 libellés, descriptions et utilités de jeu ; la copie Markdown a été retirée.
+`wiki.json` reste le contenu unique du manuel : accueil, chapitres et recherche
+servent des pages distinctes ; [navigation et compatibilité](NAVIGATION_PAGES_DEDIEES.md). `CATALOGUE_LABELS.csv` conserve les
+156 libellés, descriptions et utilités de jeu ; la copie Markdown a été retirée.
 Les spécifications textuelles et PDF d’origine restent dans specifications/ et technic/.
 
 Les regroupements et retraits de l’ancienne documentation sont expliqués dans

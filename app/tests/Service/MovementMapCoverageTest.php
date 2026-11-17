@@ -38,12 +38,13 @@ final class MovementMapCoverageTest extends TestCase
         return ['planet_pairs_by_map'=>$counts,'distinct_distances'=>$cases];
     }
 
-    public function testEveryPlanetPairRespectsTheReferenceMaximumsForAllShipClasses():void
+    public function testEveryPlanetPairRespectsTheReferenceMaximumsForAllMobileShipClasses():void
     {
         $coverage=self::distanceCases();
         self::assertSame(404550,$coverage['planet_pairs_by_map']['generated-100']);
         $catalog=new GameCatalog(dirname(__DIR__,2).'/config/game');$calculator=new MovementCalculator();$maximums=[];
         foreach($catalog->all('ships') as $slug=>$definition){
+            if(($definition['mobile']??true)===false)continue;
             $ship=$catalog->withTier($definition,'basic')+['quantity'=>1];
             foreach($coverage['distinct_distances'] as $case){
                 $origin=$case['origin'];$target=$case['target'];$local=$origin[0]===$target[0];$probe=$slug==='probe';
@@ -70,13 +71,14 @@ final class MovementMapCoverageTest extends TestCase
         self::assertGreaterThan(43200,$quote['seconds']);
     }
 
-    public function testEveryShipCanFundEveryReturnTripWithItsDedicatedTankAtEveryRank():void
+    public function testEveryMobileShipCanFundEveryReturnTripWithItsDedicatedTankAtEveryRank():void
     {
         $coverage=self::distanceCases();$catalog=new GameCatalog(dirname(__DIR__,2).'/config/game');$calculator=new MovementCalculator();
         $policy=$catalog->rules()['fuel_ratio_policy'];
         self::assertSame('proportional',$policy,'Avec cette règle, un départ à 100 % est le plus coûteux.');
         $combatHours=$catalog->rules()['combat_window_seconds']/3600;$maximumFuel=0.0;
         foreach(GameCatalog::TIERS as $tier)foreach($catalog->all('ships') as $slug=>$definition){
+            if(($definition['mobile']??true)===false)continue;
             $ship=$catalog->withTier($definition,$tier)+['quantity'=>1];
             foreach($coverage['distinct_distances'] as $case){
                 $quote=$calculator->quote($case['origin'],$case['target'],[$ship],1,1,$policy,$combatHours);
@@ -103,6 +105,7 @@ final class MovementMapCoverageTest extends TestCase
         self::assertSame(20000.0,$boosted['fuel_capacity']);
         $fleet=[];$expectedCargo=0;
         foreach($catalog->all('ships') as $ship){
+            if(($ship['mobile']??true)===false)continue;
             $ship=$catalog->withTier($ship,'basic')+['quantity'=>3];$fleet[]=$ship;$expectedCargo+=$ship['cargo_capacity']*3;
         }
         $quote=$calculator->quote([1,1,0,0,1],[100,1,27,27,1],$fleet,1,1,$catalog->rules()['fuel_ratio_policy'],1/6);

@@ -1,0 +1,8 @@
+{% if listPage.pages > 1 %}
+{% set route = screen == 'players' ? 'app_admin_players' : 'app_admin_audit' %}
+<nav class="admin-mission-pages" aria-label="Pagination {{ screen == 'players' ? 'des joueurs' : 'du journal' }}">
+{% if listPage.page > 1 %}<a class="secondary" href="{{ path(route, listFilters|merge({page:listPage.page-1,_fragment:'admin-'~screen})) }}">Page précédente</a>{% endif %}
+<span>Page {{ listPage.page }} / {{ listPage.pages }}</span>
+{% if listPage.page < listPage.pages %}<a class="secondary" href="{{ path(route, listFilters|merge({page:listPage.page+1,_fragment:'admin-'~screen})) }}">Page suivante</a>{% endif %}
+</nav>
+{% endif %}

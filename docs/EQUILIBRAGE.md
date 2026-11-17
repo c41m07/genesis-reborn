@@ -1,5 +1,65 @@
 # Réglages et études d’équilibrage
 
+## Répartition retenue — 16 novembre 2026
+
+Après les études, l’utilisateur retient B40/60, I30/50/20 et S25/35/30/10.
+La [grille courante](COUTS.md) conserve exactement les 156 budgets de base et tous
+les paramètres hors prix. Cette décision remplace les recommandations préalables
+ci-dessous, conservées comme résultats datés. Les courbes et arrondis habituels restent
+appliqués ; paiements existants et surcharges d’univers restent préservés.
+Les résultats de validation et l’état de livraison sont dans le [suivi](PROGRESSION_CARBURANT_UNITES.md).
+
+## Nouvelle proposition B/I/S — étude avant décision, 16 novembre 2026
+
+L’[étude complémentaire](SIMULATIONS_GRILLE_PROPOSEE.md) mesure B40/60, I30/50/20 et
+S25/35/30/10, puis B50 avec les mêmes nouveaux I/S. La proposition complète augmente
+les attentes nano puis antimatière et ralentit plusieurs objectifs, avec un gain sur
+la reconstruction des défenses B. I30/50/20 seul présente un compromis distinct :
+économie plus rapide et grande formation I plus lente. Les profils de base conservent
+exactement leur valeur, y compris le budget impair du piège S grâce à H10.
+La recommandation de compromis B actuel / I40/40/20 / S actuel reste distincte d’une
+option privilégiant l’économie avec I30/50/20. Aucun réglage n’est activé ni publié.
+
+## Comparaison séparée des prix — 16 novembre 2026
+
+Le [complément par rang](SIMULATIONS_COUTS_PAR_RANG.md) compare les prix courants,
+B seul, I seul et B + I sur 108 parcours distincts. Le changement B provoque le retard
+des premiers accès I dans les politiques testées. I seul conserve ces accès et améliore
+les parcours économiques et la grande formation I ; c’est le candidat recommandé pour
+une validation supplémentaire, B et S conservés. Les gains B sur colonies/reconstruction
+restent documentés. Cette recommandation n’active aucun prix ; les arrondis et la
+sensibilité à une production d’antimatière faible restent à traiter avant activation.
+
+## Étude conjointe — lot 4 du 16 novembre 2026
+
+Le [rapport reproductible](SIMULATIONS_PROGRESSION_ECONOMIE.md) mesure 54 parcours
+financés avec les nouveaux prérequis, durées, carburants et six profils civils,
+ainsi que 36 devis de navigation et des combats à graines fixes. Le candidat
+B50/50 et I40/40/20 accélère les colonies testées mais retarde certains accès I/S.
+Les petites missions choisies laissent un surplus H ; des sorties répétées de
+500 chasseurs peuvent encore attendre du carburant. La masse civile modifie le
+ciblage, sans avantage démontré à budget comparable ; le plafond technique du
+moteur reste 5 000 unités. Les hypothèses et limites sont détaillées dans le rapport.
+Aucun prix, rendement, contre ou plafond n’est modifié à partir de ces résultats.
+
+## Unités civiles — lot 3 du 16 novembre 2026
+
+Les six [profils économiques](UNITES_ECONOMIQUES.md) sont ajoutés sans changer les
+statistiques, coûts ou contres des 150 profils existants. Les tirs visant ces
+unités sans arme utilisent le coefficient neutre ×1 validé. La production locale
+et ses limites sont testées ; les études historiques ci-dessous ne mesurent pas
+cette nouvelle composition ni son effet de masse. Les simulations conjointes,
+la reconstruction et le risque de surproduction d’hydrogène sont mesurés dans le rapport du lot 4 ci-dessus.
+Le candidat B50/50 et I40/40/20 reste non activé.
+
+## Durées et carburant — 15 novembre 2026
+
+Les [grilles et mesures courantes](DUREES_CARBURANT.md) remplacent les anciennes
+durées de départ des recherches, vaisseaux et défenses ainsi que le carburant
+uniforme. Les statistiques, vitesses, soutes, réservoirs, productions, plafonds et
+prix hors taxe électrique restent conservés. Les études datées ci-dessous gardent
+leurs hypothèses historiques ; leurs délais ne valident pas cette nouvelle version.
+
 Références datées des choix validés. Les décisions les plus récentes de
 [DECISIONS.md](DECISIONS.md) et [REGLES.md](REGLES.md) priment sur les exemples
 historiques. Les valeurs réellement appliquées sont dans `app/config/game/`,
@@ -333,3 +393,24 @@ Tests : `tests/Service/MovementCalculatorTest.php`, `tests/Service/MovementMapCo
 ## Production passive et stocks — 10 novembre 2026
 
 Les nouveaux stocks, capacités de base et productions passives sont définis dans [les règles](REGLES.md#ressources-initiales-et-production-passive--décision-du-10-novembre-2026). Ils remplacent les valeurs de départ précédentes uniquement après une bascule explicite. Cette décision ne change pas les productions ni consommations des usines documentées ici. Aucun stock existant n’est réinitialisé ; les surplus sont conservés.
+
+## Cadres de gain par niveau — vérification du 16 novembre 2026
+
+Les cadres verts des 13 bâtiments et 19 recherches affichent le gain du seul
+niveau proposé, comparé à son niveau précédent. Le niveau proposé tient déjà
+compte de la file. Un laboratoire niveau 1 avec les niveaux 2, 3 et 4 en attente
+compare donc 4 → 5, sans cumuler les gains 1 → 5. Les autres rangs détenus restent
+inclus dans les rendements décroissants ; les niveaux réels ne sont pas modifiés.
+
+| Famille de cadres | Résultat de la vérification |
+|---|---|
+| Cinq producteurs et leurs consommations | Comparaison par niveau déjà correcte, conservée |
+| Cinq stockages | Correction : capacité du seul niveau proposé |
+| Laboratoire et chantier | Correction : réduction supplémentaire du seul niveau proposé |
+| Bunker | Correction : structure supplémentaire du seul niveau proposé |
+| Dix-neuf recherches, tous types d’effets | Comparaison par niveau déjà correcte, conservée et testée |
+
+Les 96 profils bâtiment/recherche sont caractérisés. Les prix, durées, effets
+réellement acquis et opérations en file restent inchangés. Les débits de mines
+restent des gains nominaux locaux ; la simulation des stocks applique toujours
+les contraintes de production réelles.

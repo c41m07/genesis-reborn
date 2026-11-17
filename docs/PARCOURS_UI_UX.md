@@ -137,3 +137,71 @@ La CI complète `83f91dd` a terminé les 184 scénarios navigateur : 181 réussi
 ### Précisions de suivi des flottes
 
 La page Flottes et missions est limitée à la colonie active : vaisseaux disponibles, missions parties de cette colonie, compteurs et demandes d’orbite envoyées ou reçues. Ce filtre est conservé lors des actualisations automatiques. Le chargement confirmé d’une composition sélectionne sa colonie d’origine ; les permissions et validations d’envoi restent inchangées. Le raccourci « Simuler un combat » est retiré de cette page, avec accès conservé dans le menu ; « Mes compositions » devient un lien compact. Le message sans flotte apparaît sous le titre, dans la page et les autres panneaux de suivi.
+
+
+## Navigation dédiée — 16 novembre 2026
+
+Le lot Flottes remplace les ancres entre tâches autonomes par des pages dédiées : missions, préparation, orbites, réserves et compositions. Les ancres des détails de vol restent utiles. Cette évolution remplace uniquement l’organisation de Flottes décrite dans ce suivi ; les autres écrans restent dans leur périmètre actuel. Voir le [suivi de navigation](NAVIGATION_PAGES_DEDIEES.md).
+
+
+## Inventaire — navigation dédiée du 16 novembre 2026
+
+Le lot 3 remplace les ancres entre Boosts, Boîtes de ressources et Récompenses en
+attente par trois pages reliées par une navigation commune. Il conserve les
+confirmations et les services de consommation. Cette organisation remplace celle
+de l’inventaire décrite plus haut ; voir [le suivi](NAVIGATION_PAGES_DEDIEES.md).
+
+
+## Compte — navigation dédiée du 16 novembre 2026
+
+Le lot 4 remplace les formulaires regroupés par Mes identifiants, Préférences,
+Mode vacances et Suppression du compte. Les réglages du compte sont distingués
+du mode vacances de l’empire sélectionné. Les anciens raccourcis et fragments
+restent utilisables ; l’organisation historique Profil/Préférences de ce suivi
+est remplacée sur ce périmètre. [Recette](NAVIGATION_PAGES_DEDIEES.md).
+
+
+## Projets collectifs : pages dédiées — 17 novembre 2026
+
+Le lot 5 remplace les rubriques de la liste par En cours, Disponibles et Historique,
+avec liens GET communs. Les fiches restent le lieu de la contribution et du bilan.
+La pagination ne retire ni historique ni total personnel. Cette évolution remplace
+seulement l’organisation des projets décrite précédemment ; les services et
+confirmations sensibles restent inchangés. Voir le [suivi](NAVIGATION_PAGES_DEDIEES.md).
+
+
+## Événements : annonces et défis séparés — 17 novembre 2026
+
+Le lot 6 remplace la liste composite par Événements et bonus et Défis et rotations,
+avec navigation commune et états actifs jusque dans les fiches. Le panneau sous
+les ressources garde son fonctionnement actuel. Les listes sont paginées et les
+ancres utiles aux périodes restent locales au document. Les liens vers les activités
+d’un défi et l’inventaire sont conservés. [Recette](NAVIGATION_PAGES_DEDIEES.md).
+
+## Administration : listes et formulaires dédiés
+
+Univers → liste → création ou gestion d’un univers (calendrier et configuration).
+Catalogue d’un univers → famille ou recherche transversale → modification d’une
+entrée. Événements → liste → assistant guidé ou formulaire avancé ; les événements
+ordinaires possèdent une page d’édition. Projets de guilde et rotations → liste
+des modèles → création ou modification. Le fil d’Ariane et la navigation de
+rubrique gardent le contexte. Sans JavaScript, ces parcours restent des liens
+et formulaires natifs. Les anciennes ancres disposent de liens équivalents ;
+avec JavaScript, elles ouvrent directement la fiche correspondante.
+
+## Wiki : pages dédiées — lot 8, 17 novembre 2026
+
+Ce parcours remplace la sélection de chapitres dans le document unique décrite
+pour l’intégration du 13 novembre. L’accueil présente les sujets par partie, puis
+chaque chapitre ouvre sa propre page. Le sommaire indique le chapitre actif sur
+ordinateur ; le sélecteur mobile conserve le parcours GET natif. Les liens
+Précédent/Suivant permettent une lecture continue.
+
+La recherche possède sa page, avec extraits et liens de chapitre. Elle se trouve
+dans la navigation commune, avec les deux références historiques. Son formulaire
+est visible sur l’accueil et les résultats pour laisser davantage de place au
+texte sur une page de lecture. Les formules et exemples se déplient au clavier,
+y compris sans JavaScript. Les anciennes ancres ouvrent directement une fiche
+avec JavaScript ; sans lui, elles repèrent la carte et son lien dans l’accueil.
+Retour arrière, rechargement, titres, navigation active et refus d’accès sont
+contrôlés. Les contenus et chiffres du manuel sont conservés.

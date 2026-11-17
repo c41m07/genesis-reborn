@@ -14,12 +14,13 @@ final class CatalogBalanceService
 
     public function __construct(private GameCatalog $catalog,private GameRepository $repo,private GameManager $manager,private ResourceService $resources,private ClockInterface $clock){}
 
-    public function entries(Universe $universe):array
+    public function entries(Universe $universe, ?string $family = null, ?string $slugFilter = null, bool $withFields = true):array
     {
         $config=$this->catalog->forUniverse($universe);$result=[];
-        foreach(self::GROUPS as $group) foreach($config['catalog'][$group] as $slug=>$definition){
+        foreach($family === null ? self::GROUPS : [$family] as $group) foreach($config['catalog'][$group] as $slug=>$definition){
+            if ($slugFilter !== null && $slug !== $slugFilter) continue;
             $fields=[];
-            foreach($this->fieldSchema($group,$definition) as $path=>$schema){$value=$this->read($definition,$path);$fields[$path]=$schema+['path'=>$path,'value'=>$value];}
+            foreach($withFields ? $this->fieldSchema($group,$definition) : [] as $path=>$schema){$value=$this->read($definition,$path);$fields[$path]=$schema+['path'=>$path,'value'=>$value];}
             $result[$group][]=['slug'=>$slug,'label'=>$definition['tier_labels']['basic']??$definition['label'],'tier_labels'=>$definition['tier_labels']??[],'fields'=>$fields];
         }
         return $result;

@@ -44,7 +44,7 @@ test('Boîte : contenu annoncé, choix de colonie, protection et ouverture uniqu
   const second=Number(queryIsolatedSql(project,`SELECT p.id FROM planet p INNER JOIN solar_system s ON s.id=p.solar_system_id INNER JOIN galaxy g ON g.id=s.galaxy_id WHERE g.universe_id=${own.universeId} AND p.owner_id IS NULL AND p.npc_planet=0 ORDER BY p.id LIMIT 1`));
   runIsolatedSql(project,`UPDATE planet SET owner_id=${own.memberId},name='Colonie des boites' WHERE id=${second}`);
   runIsolatedSql(project,`INSERT INTO planet_resource (planet_id,resource_type,current_stock,production_rate,last_updated_at) SELECT ${second},resource_type,1000,0,UTC_TIMESTAMP() FROM planet_resource WHERE planet_id=${own.planetId} ON DUPLICATE KEY UPDATE current_stock=1000,production_rate=0,last_updated_at=UTC_TIMESTAMP()`);
-  const id=addBox(project,own);await page.goto('/boosts');const card=page.locator(`.resource-box-card[data-box-id='${id}']`);await expect(card).toContainText('4 000,00');
+  const id=addBox(project,own);await page.goto('/inventaire/boites');const card=page.locator(`.resource-box-card[data-box-id='${id}']`);await expect(card).toContainText('4 000,00');
   for(const theme of ['dark','light']) {
     runIsolatedSql(project,`UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE id=${own.playerId}`);
     for(const width of [1440,390]) {await page.setViewportSize({width,height:900});await page.reload();await expect(page.locator('body')).toHaveAttribute('data-theme',theme);expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);await page.screenshot({path:testInfo.outputPath(`box-${theme}-${width}.png`),fullPage:true});}
@@ -68,7 +68,7 @@ test('Boîte : contenu annoncé, choix de colonie, protection et ouverture uniqu
 test('Boîte : stockage insuffisant et vacances conservent objet et ressources',async({page})=>{
   test.setTimeout(90000);const own=await enter(page);const project=process.env.BROWSER_ROUTER;const id=addBox(project,own);
   runIsolatedSql(project,`UPDATE planet_resource SET current_stock=200000,last_updated_at=UTC_TIMESTAMP() WHERE planet_id=${own.planetId} AND resource_type='metal'`);
-  await page.goto('/boosts');const card=page.locator('.resource-box-card');await card.getByLabel('Colonie de destination').selectOption(String(own.planetId));
+  await page.goto('/inventaire/boites');const card=page.locator('.resource-box-card');await card.getByLabel('Colonie de destination').selectOption(String(own.planetId));
   const data=await card.locator('form').evaluate(f=>Object.fromEntries(new FormData(f)));const action=await card.locator('form').getAttribute('action');
   const before=queryIsolatedSql(project,`SELECT current_stock FROM planet_resource WHERE planet_id=${own.planetId} ORDER BY resource_type`);
   await card.getByRole('button').click();await page.getByRole('dialog').getByRole('button',{name:'Ouvrir cette boîte'}).click();await expect(page.locator('.flash.error')).toContainText('La boîte reste intacte');expect(queryIsolatedSql(project,`SELECT status FROM player_boost WHERE id=${id}`)).toBe('available');expect(queryIsolatedSql(project,`SELECT current_stock FROM planet_resource WHERE planet_id=${own.planetId} ORDER BY resource_type`)).toBe(before);
@@ -97,12 +97,13 @@ test('Inventaire sans JavaScript : ouverture native et contrôles serveur conser
   const context = await browser.newContext({ javaScriptEnabled: false, storageState: await page.context().storageState() });
   try {
     const fallback = await context.newPage();
-    await fallback.goto('/boosts');
+    await fallback.goto('/inventaire/boites');
     const card = fallback.locator(`.resource-box-card[data-box-id="${id}"]`);
     await card.getByLabel('Colonie de destination').selectOption(String(own.planetId));
     await card.getByRole('button', { name: 'Ouvrir cette boîte' }).click();
     await expect(fallback.locator('.flash.success')).toContainText('Boîte ouverte');
     expect(queryIsolatedSql(project, `SELECT status FROM player_boost WHERE id=${id}`)).toBe('used');
+    await fallback.getByRole('navigation',{name:'Navigation de l’inventaire'}).getByRole('link',{name:/^Boosts/}).click();
     await expect(fallback.locator('#inventory-operation')).toBeHidden();
     await fallback.locator(`form[action$="/queue/${queueId}"]`).getByRole('button').click();
     await expect(fallback.locator('.flash.success')).toContainText('Boost appliqué');

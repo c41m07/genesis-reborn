@@ -23,7 +23,7 @@ async function enter(page,prefix='E2E') {
 }
 test('Inscription, connexion, menus, ressources fixes et rendu responsive', async ({page}) => {
   const errors=[];page.on('pageerror',e=>errors.push(e.message));await enter(page);
-  await expect(page.locator('.dashboard-metrics .metric-card')).toHaveCount(4);await expect(page.getByRole('heading',{name:'Mes planètes',exact:true})).toHaveCount(0);await expect(page.locator('.dashboard-activity')).toBeVisible();await expect(page.locator('.dashboard-secondary .flight-operations')).toBeVisible();await expect(page.locator('.dashboard-journal')).toBeVisible();
+  await expect(page.locator('.dashboard-metrics .metric-card')).toHaveCount(4);await expect(page.getByRole('heading',{name:'Mes planètes',exact:true})).toHaveCount(0);await expect(page.locator('.dashboard-activity')).toBeVisible();await expect(page.locator('.dashboard-secondary [data-live-region="active-flights"]')).toBeVisible();await expect(page.locator('.dashboard-journal')).toBeVisible();
   await expect(page.locator('[data-resource-target="stock"]')).toHaveCount(5);
   await page.getByRole('link',{name:'Recherche',exact:true}).click();await expect(page.locator('#panel-technologies')).toBeVisible();await expect(page.locator('#panel-buildings')).toHaveCount(0);
   await page.getByRole('link',{name:'Chantier spatial',exact:true}).focus();await page.keyboard.press('Enter');await expect(page.locator('#panel-ships')).toBeVisible();
@@ -51,8 +51,8 @@ test('Construction réelle, notification privée et actualisation sans rechargem
 });
 test('Chantier, estimation, colonisation, transport et exploration réels', async ({page}) => {
   test.setTimeout(320000);page.setDefaultTimeout(15000);const {email}=await enter(page,'Fleet');prepareOwnedColony(process.env.BROWSER_ROUTER,email,{showLockedItems:true});grantSecondColony(process.env.BROWSER_ROUTER,email);const origin=Number(page.url().split('/').pop());await page.getByRole('link',{name:'Bâtiments',exact:true}).click();
-  runIsolatedSql(process.env.BROWSER_ROUTER, `INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${origin},'lab','basic',4),(${origin},'mine_metal','basic',2)`);
-  runIsolatedSql(process.env.BROWSER_ROUTER, `INSERT INTO player_technology (player_universe_id,slug,tier,level) SELECT owner_id,'engineering_foundations','basic',5 FROM planet WHERE id=${origin} UNION ALL SELECT owner_id,'naval_engineering','basic',5 FROM planet WHERE id=${origin}`);
+  runIsolatedSql(process.env.BROWSER_ROUTER, `INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${origin},'lab','basic',4),(${origin},'mine_metal','basic',2),(${origin},'mine_nano','basic',2)`);
+  runIsolatedSql(process.env.BROWSER_ROUTER, `INSERT INTO player_technology (player_universe_id,slug,tier,level) SELECT owner_id,'engineering_foundations','basic',5 FROM planet WHERE id=${origin} UNION ALL SELECT owner_id,'naval_engineering','basic',5 FROM planet WHERE id=${origin} UNION ALL SELECT owner_id,'modular_cargo_bays','basic',1 FROM planet WHERE id=${origin}`);
   await page.reload();
   const card=slug=>page.locator('#item-'+slug+'-basic');
   await card('shipyard').getByRole('button',{name:/Améliorer .* niveau 1/}).click();accelerateQueuedItem(process.env.BROWSER_ROUTER,email,'building','shipyard');await page.reload();await expect(page.locator('#building-tab-shipyard-basic .building-rank-level')).toHaveText('1',{timeout:30000});
@@ -64,7 +64,8 @@ test('Chantier, estimation, colonisation, transport et exploration réels', asyn
   accelerateShipyard(process.env.BROWSER_ROUTER,email);
   await page.reload();
   for(const name of ['probe','colony_ship','transport']) await expect(page.locator('#building-tab-'+name+'-basic .building-rank-level')).toHaveText('1',{timeout:90000});
-  await page.getByRole('link',{name:'Flottes et missions',exact:true}).click();
+  await page.getByRole('navigation',{name:page.viewportSize().width<=740?'Navigation mobile':'Navigation principale'}).getByRole('link',{name:'Flottes',exact:true}).click();
+  await page.getByRole('navigation',{name:'Navigation des flottes'}).getByRole('link',{name:'Préparer une mission',exact:true}).click();
   let form=page.locator('.fleet-form form').first();
   await form.locator('[name="ships[probe]"]').fill('1');
   await form.getByRole('button',{name:/Choisir la destination/}).click();
@@ -73,7 +74,7 @@ test('Chantier, estimation, colonisation, transport et exploration réels', asyn
   await page.goto('/carte');await page.getByText(/Parcourir les autres systèmes/).click();
   const unknownSystem=page.locator('.system-card.unknown-system').first();
   const destinationCoordinates=(await unknownSystem.locator(':scope > p.muted').first().innerText()).trim();
-  await page.goto('/flottes');form=page.locator('.fleet-form form').first();
+  await page.goto('/flottes/preparer');form=page.locator('.fleet-form form').first();
   await form.locator('[name="ships[probe]"]').fill('1');await form.getByRole('button',{name:/Choisir la destination/}).click();
   await form.locator('[name="mission"]').selectOption('explore');await form.getByLabel('Destination personnalisée', { exact: true }).check();await form.locator('[name="coordinates"]').fill(destinationCoordinates);await form.locator('[name="ratio"]').selectOption('0.7');
   await form.getByRole('button',{name:/Vérifier la mission/}).click();await form.getByRole('button',{name:'Estimer le trajet'}).click();await expect(form.locator('.flight-estimate')).toContainText('Carburant aller-retour');
@@ -82,7 +83,7 @@ test('Chantier, estimation, colonisation, transport et exploration réels', asyn
   await expect(page.locator('[data-active-fleet]')).toHaveCount(0, { timeout: 15000 });
 
   const target=revealVirginPlanet(process.env.BROWSER_ROUTER,email);
-  await page.getByRole('link',{name:'Flottes et missions',exact:true}).click();form=page.locator('.fleet-form form').first();
+  await page.getByRole('navigation',{name:page.viewportSize().width<=740?'Navigation mobile':'Navigation principale'}).getByRole('link',{name:'Flottes',exact:true}).click();await page.getByRole('navigation',{name:'Navigation des flottes'}).getByRole('link',{name:'Préparer une mission',exact:true}).click();form=page.locator('.fleet-form form').first();
   await form.locator('[name="ships[colony_ship]"]').fill('1');await form.getByRole('button',{name:/Choisir la destination/}).click();
   await form.locator('[name="mission"]').selectOption('colonize');await form.getByLabel('Destination personnalisée', { exact: true }).check();await form.locator('[name="coordinates"]').fill(target.coordinates);await form.locator('[name="ratio"]').selectOption('0.1');
   await form.getByRole('button',{name:/Vérifier la mission/}).click();await form.getByRole('button',{name:'Estimer le trajet'}).click();await expect(form.locator('.flight-estimate')).toContainText('Carburant aller-retour');
@@ -92,14 +93,14 @@ test('Chantier, estimation, colonisation, transport et exploration réels', asyn
   await page.getByRole('link',{name:'Recherche',exact:true}).click();await expect(page.locator('#panel-technologies')).toBeVisible();
   await page.waitForLoadState('load');await page.getByLabel('Choisir une colonie').selectOption(String(origin));await expect(page).toHaveURL(url=>url.pathname==='/planetes/'+origin&&url.search==='?section=technologies');await expect(page.locator('#panel-technologies')).toBeVisible();
   await page.getByRole('link',{name:'Vue générale',exact:true}).click();await expect(page).toHaveURL(new RegExp('/planetes/'+origin+'$'));
-  await page.getByRole('link',{name:'Flottes et missions',exact:true}).click();form=page.locator('.fleet-form form').first();
+  await page.getByRole('navigation',{name:page.viewportSize().width<=740?'Navigation mobile':'Navigation principale'}).getByRole('link',{name:'Flottes',exact:true}).click();await page.getByRole('navigation',{name:'Navigation des flottes'}).getByRole('link',{name:'Préparer une mission',exact:true}).click();form=page.locator('.fleet-form form').first();
   await form.locator('[name="ships[transport]"]').fill('1');await form.getByRole('button',{name:/Choisir la destination/}).click();await form.locator('[name="mission"]').selectOption('transport');await form.getByLabel('Destination personnalisée', { exact: true }).check();await form.locator('[name="coordinates"]').fill(target.coordinates);await form.locator('[name="ratio"]').selectOption('0.1');await form.locator('summary').click();await form.locator('[name="cargo[metal]"]').fill('123');await form.getByRole('button',{name:/Vérifier la mission/}).click();
   await form.getByRole('button',{name:/Envoyer la flotte/}).click();await expect(page.locator('[data-status="traveling"]')).toHaveCount(1);
   await page.getByRole('link',{name:'Vue générale',exact:true}).click();await expect(page.locator('[data-active-fleet]')).toHaveCount(1);
   const bar=page.locator('[data-active-fleet] [role="progressbar"]');const progress=Number(await bar.getAttribute('aria-valuenow'));expect(Number.isFinite(progress)).toBe(true);expect(progress).toBeGreaterThanOrEqual(0);expect(progress).toBeLessThanOrEqual(100);accelerateTravelingMission(process.env.BROWSER_ROUTER,email,'transport');
   await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
   await expect.poll(()=>queryIsolatedSql(process.env.BROWSER_ROUTER,"SELECT status FROM fleet INNER JOIN player_universe membership ON membership.id = fleet.player_universe_id INNER JOIN player ON player.id = membership.player_id WHERE player.email = '"+email+"' AND mission = 'transport' ORDER BY fleet.id DESC LIMIT 1"),{timeout:45000,intervals:[1000]}).toBe('returning');await page.goto('/flottes');await expect(page.locator('[data-status="returning"]')).toHaveCount(1);accelerateTravelingMission(process.env.BROWSER_ROUTER,email,'transport');
-  await page.getByRole('link',{name:'Flottes et missions',exact:true}).click();await expect.poll(async()=>{await page.reload();return completedFleetCount(process.env.BROWSER_ROUTER,email);},{timeout:45000,intervals:[1000]}).toBe(3);await expect(page.locator('[data-active-fleet]')).toHaveCount(0);
+  await page.getByRole('navigation',{name:page.viewportSize().width<=740?'Navigation mobile':'Navigation principale'}).getByRole('link',{name:'Flottes',exact:true}).click();await expect.poll(async()=>{await page.reload();return completedFleetCount(process.env.BROWSER_ROUTER,email);},{timeout:45000,intervals:[1000]}).toBe(3);await expect(page.locator('[data-active-fleet]')).toHaveCount(0);
   const discovered=queryIsolatedSql(process.env.BROWSER_ROUTER,"SELECT COUNT(*) FROM player_discovery discovery INNER JOIN player_universe membership ON membership.id = discovery.player_universe_id INNER JOIN player ON player.id = membership.player_id INNER JOIN solar_system system ON system.id = discovery.solar_system_id INNER JOIN galaxy ON galaxy.id = system.galaxy_id WHERE player.email = '"+email+"' AND CONCAT(REPLACE(galaxy.name, 'Galaxie ', ''), ':', FLOOR(system.coord_y / 3) * 10 + FLOOR(system.coord_x / 3) + 1) = '"+destinationCoordinates+"'");expect(discovered).toBe('1');await page.getByRole('link',{name:'Galaxie',exact:true}).click();await page.getByRole('link',{name:'Liste des systèmes',exact:true}).click();await expect(page.getByText(/Parcourir les autres systèmes/)).toBeVisible();
 });
 test('Alliances réciproques, guilde, transfert et dissolution depuis deux comptes',async({browser})=>{
@@ -111,12 +112,12 @@ test('Alliances réciproques, guilde, transfert et dissolution depuis deux compt
     await commander(a,bob.username).getByRole('button',{name:'Proposer une alliance'}).click();
     await b.reload();await commander(b,alice.username).getByRole('button',{name:"Accepter l'alliance"}).click();
     await expect(commander(b,alice.username)).toContainText('Allié');await a.goto('/diplomatie?tab=relations');await expect(commander(a,bob.username)).toContainText('Allié');
-    await a.goto('/diplomatie');const name=`Orbite-${crypto.randomUUID().slice(0,8)}`;await a.getByLabel('Nom de votre nouvelle guilde').fill(name);await a.getByLabel('Tag de la guilde', { exact:true }).fill(crypto.randomUUID().replaceAll('-', '').slice(0,5).toUpperCase());await a.getByRole('button',{name:'Fonder une guilde'}).click();
+    await a.goto('/guildes/creer');const name=`Orbite-${crypto.randomUUID().slice(0,8)}`;await a.getByLabel('Nom de votre nouvelle guilde').fill(name);await a.getByLabel('Tag de la guilde', { exact:true }).fill(crypto.randomUUID().replaceAll('-', '').slice(0,5).toUpperCase());await a.getByRole('button',{name:'Fonder une guilde'}).click();
     await b.goto('/diplomatie?tab=diplomacy&q='+encodeURIComponent(name));await b.locator('.guild-card').filter({has:b.getByRole('heading',{name,exact:true})}).getByRole('button',{name:/Rejoindre/}).click();
-    await a.goto('/diplomatie');await a.getByText('Tag et commandement',{exact:true}).click();await a.getByText('Gérer le commandement',{exact:true}).click();await a.getByLabel('Nouveau commandant').selectOption({label:bob.username});await a.getByRole('button',{name:'Transférer le commandement'}).click();
-    await a.getByText('Gestion de la guilde',{exact:true}).click();await expect(a.getByRole('button',{name:'Quitter la guilde'})).toBeVisible();await a.getByRole('button',{name:'Quitter la guilde'}).click();
-    await b.goto('/diplomatie');await b.getByText('Tag et commandement',{exact:true}).click();await b.getByText('Gérer le commandement',{exact:true}).click();await b.getByRole('button',{name:'Dissoudre la guilde'}).click();
-    await expect(b.getByRole('button',{name:'Fonder une guilde'})).toBeVisible();await b.goto('/diplomatie?tab=relations');await expect(commander(b,alice.username)).toContainText('Allié');
+    await a.goto('/guildes/gestion');await a.getByText('Tag et commandement',{exact:true}).click();await a.getByText('Gérer le commandement',{exact:true}).click();await a.getByLabel('Nouveau commandant').selectOption({label:bob.username});await a.getByRole('button',{name:'Transférer le commandement'}).click();
+    await a.goto('/guildes/gestion');await expect(a.getByRole('button',{name:'Quitter la guilde'})).toBeVisible();await a.getByRole('button',{name:'Quitter la guilde'}).click();
+    await b.goto('/guildes/gestion');await b.getByText('Tag et commandement',{exact:true}).click();await b.getByText('Gérer le commandement',{exact:true}).click();await b.getByRole('button',{name:'Dissoudre la guilde'}).click();
+    await b.goto('/guildes/creer');await expect(b.getByRole('button',{name:'Fonder une guilde'})).toBeVisible();await b.goto('/diplomatie?tab=relations');await expect(commander(b,alice.username)).toContainText('Allié');
   } finally {await a.close();await b.close();}
 });
 test('Files intégrées : commande active, supplément, durée totale et annulation',async({page})=>{

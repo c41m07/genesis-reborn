@@ -24,6 +24,7 @@ final class MovementCalculator
         if(!in_array($fuelPolicy,['proportional','inverse'],true)) throw new \DomainException('Départs en attente du choix de la règle de carburant.');
         $systemSpeed=INF;$galaxySpeed=INF;$fuelNormal=0;$fuelHyper=0;$orbit=0;$cargoCapacity=0;$fuelCapacity=0;$probeOnly=true;
         foreach($ships as $ship) {
+            if(($ship['mobile']??true)===false) throw new \DomainException('Une unité fixe ne peut pas se déplacer.');
             $n=$ship['quantity'];if(!is_int($n)||$n<1||$ship['speed_system']<=0||$ship['speed_galaxy']<=0) throw new \DomainException('Composition de flotte invalide.');
             $systemSpeed=min($systemSpeed,$ship['speed_system']);$galaxySpeed=min($galaxySpeed,$ship['speed_galaxy']);
             $probeOnly=$probeOnly&&($ship['slug']??null)==='probe';

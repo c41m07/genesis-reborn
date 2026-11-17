@@ -10,76 +10,97 @@
   "base_attack": 160,
   "shots_min": 17,
   "shots_max": 18,
-  "build_time_base": 172800,
+  "build_time_base": 43200,
   "costs": {},
   "speed_system": 88,
   "speed_galaxy": 436,
-  "fuel_travel_system": 0.5,
-  "fuel_travel_galaxy": 2,
-  "fuel_orbit": 0.3,
+  "fuel_travel_system": 0.4,
+  "fuel_travel_galaxy": 1.6,
+  "fuel_orbit": 0.24,
   "cargo_capacity": 8000,
-  "unlock_requirements": {
-    "buildings": [
-      {
-        "slug": "shipyard",
-        "tier": "basic",
-        "level": 14
-      }
-    ],
-    "technologies": [
-      {
-        "slug": "weapons_engineering",
-        "tier": "basic",
-        "level": 10
-      },
-      {
-        "slug": "shield_harmonics",
-        "tier": "basic",
-        "level": 8
-      },
-      {
-        "slug": "rapid_fire_cycle",
-        "tier": "basic",
-        "level": 5
-      }
-    ]
-  },
+  "unlock_requirements": {},
   "provisional": true,
   "note": "Équilibrage R14 adopté pour la branche Alpha le 05/11/2026 ; validation en jeu à poursuivre.",
   "fuel_capacity": 16000,
   "fuel_capacity_provisional": true,
-  "fuel_capacity_note": "Réservoir dédié de 16 000 H au rang basique, permettant le plus long aller-retour des cartes de référence sans utiliser la soute. Consommation maximale mesurée : environ 15 453,51 H hors stationnement.",
+  "fuel_capacity_note": "Réservoir dédié conservé. Son autonomie dépend de la classe, du trajet et du pourcentage de vitesse ; cette réserve est distincte de la soute de fret.",
   "shield": 2540,
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "shield_harmonics",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
           "slug": "shipyard",
           "tier": "basic",
-          "level": 5
+          "level": 15
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "structural_armor",
+          "tier": "basic",
+          "level": 7
+        },
+        {
+          "slug": "shield_harmonics",
+          "tier": "basic",
+          "level": 6
+        },
+        {
+          "slug": "rapid_fire_cycle",
+          "tier": "basic",
+          "level": 2
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "shipyard",
+          "tier": "intermediate",
+          "level": 15
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "structural_armor",
+          "tier": "intermediate",
+          "level": 7
+        },
+        {
+          "slug": "shield_harmonics",
+          "tier": "intermediate",
+          "level": 6
+        },
+        {
+          "slug": "rapid_fire_cycle",
+          "tier": "intermediate",
+          "level": 2
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "shield_harmonics",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
       "buildings": [
         {
           "slug": "shipyard",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 15
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "structural_armor",
+          "tier": "superior",
+          "level": 7
+        },
+        {
+          "slug": "shield_harmonics",
+          "tier": "superior",
+          "level": 6
+        },
+        {
+          "slug": "rapid_fire_cycle",
+          "tier": "superior",
+          "level": 2
         }
       ]
     }
@@ -87,22 +108,22 @@
   "economy_value_budget": 220502,
   "cost_profiles": {
     "basic": {
-      "metal": 66151,
-      "nano": 22050,
+      "metal": 44101,
+      "nano": 33075,
       "antimatter": 0,
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 62017,
-      "nano": 31009,
-      "antimatter": 3445,
+      "metal": 41345,
+      "nano": 34453,
+      "antimatter": 6891,
       "hydrogen": 0
     },
     "superior": {
-      "metal": 51681,
-      "nano": 38761,
-      "antimatter": 8614,
-      "hydrogen": 17226
+      "metal": 43068,
+      "nano": 30148,
+      "antimatter": 12920,
+      "hydrogen": 34456
     }
   },
   "secondary_attack": 224,

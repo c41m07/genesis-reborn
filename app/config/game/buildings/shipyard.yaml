@@ -14,21 +14,45 @@
   "source": "PDF 1 p.14–15",
   "build_time_reduction_max_percent": 70,
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
+    "basic": {
+      "buildings": [
         {
-          "slug": "naval_engineering",
+          "slug": "mine_metal",
           "tier": "basic",
-          "level": 5
+          "level": 2
+        },
+        {
+          "slug": "mine_nano",
+          "tier": "basic",
+          "level": 2
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "mine_metal",
+          "tier": "intermediate",
+          "level": 2
+        },
+        {
+          "slug": "mine_nano",
+          "tier": "intermediate",
+          "level": 2
         }
       ]
     },
     "superior": {
-      "technologies": [
+      "buildings": [
         {
-          "slug": "naval_engineering",
-          "tier": "intermediate",
-          "level": 10
+          "slug": "mine_metal",
+          "tier": "superior",
+          "level": 2
+        },
+        {
+          "slug": "mine_nano",
+          "tier": "superior",
+          "level": 2
         }
       ]
     }
@@ -36,22 +60,22 @@
   "economy_value_budget": 20000,
   "cost_profiles": {
     "basic": {
-      "metal": 6000,
-      "nano": 2000,
+      "metal": 4000,
+      "nano": 3000,
       "antimatter": 0,
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 5625,
-      "nano": 2813,
-      "antimatter": 313,
+      "metal": 3751,
+      "nano": 3126,
+      "antimatter": 625,
       "hydrogen": 0
     },
     "superior": {
-      "metal": 4688,
-      "nano": 3516,
-      "antimatter": 781,
-      "hydrogen": 1564
+      "metal": 3906,
+      "nano": 2735,
+      "antimatter": 1172,
+      "hydrogen": 3124
     }
   },
   "tier_labels": {
@@ -65,18 +89,5 @@
     "superior": "Réduit la durée de construction des vaisseaux. Un maillage étendu porte cette fonction à l’échelle planétaire."
   },
   "description": "Réduit la durée de construction des vaisseaux. Une installation locale assure cette fonction sur la colonie.",
-  "unlock_requirements": {
-    "buildings": [
-      {
-        "slug": "mine_metal",
-        "level": 2
-      }
-    ],
-    "technologies": [
-      {
-        "slug": "naval_engineering",
-        "level": 1
-      }
-    ]
-  }
+  "unlock_requirements": {}
 }

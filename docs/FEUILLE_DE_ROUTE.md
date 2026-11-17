@@ -1,5 +1,75 @@
 # Roadmap Genesis Reborn
 
+## Progression, carburant et unités économiques — mission du 15 novembre 2026
+
+Lot 1 fusionné dans `dev` par la [PR #69](https://github.com/c41m07/genesis-reborn/pull/69)
+après CI complète réussie : grille commune des 150 profils et requalification explicite.
+Lot 2 fusionné par la [PR #70](https://github.com/c41m07/genesis-reborn/pull/70),
+commit `6fa8823`, après CI complète n° 295 réussie : durées, taxe électrique,
+carburant par classe et conservation des missions historiques.
+Les [mesures du lot 2](DUREES_CARBURANT.md) distinguent temps, financement et limites.
+Lot 3 fusionné par la [PR #71](https://github.com/c41m07/genesis-reborn/pull/71),
+commit `4192821`, après CI complète n° 299 : 1 309 PHP, 13 Python, 204 parcours
+navigateur et sauvegarde/restauration isolée réussis. Six profils civils, capacités,
+réservations, production, combat et renforts locaux : [règles détaillées](UNITES_ECONOMIQUES.md).
+Lot 4 mesuré localement sur `feature/simulations-progression-economie` :
+[54 parcours financés, navigation, combats et reconstructions](SIMULATIONS_PROGRESSION_ECONOMIE.md).
+Publication et fusion conditionnelle autorisées le 16 novembre par la [PR #72](https://github.com/c41m07/genesis-reborn/pull/72).
+Les résultats de CI complète et l’état d’intégration sont consultables dans la PR.
+Le candidat de redistribution des prix n’est pas activé.
+Complément local sur `feature/comparaison-couts-par-rang` : [B seul / I seul / les deux](SIMULATIONS_COUTS_PAR_RANG.md),
+108 parcours distincts, contrôles courants identiques, sélection CLI et tests ciblés.
+La recommandation privilégie I seul pour validation ; aucun prix activé.
+Complément initialement conservé en local ; nouvelle [grille B/I/S calculée](SIMULATIONS_GRILLE_PROPOSEE.md),
+avec comparaison B50/B40 et variantes isolées ; les profils actifs restent inchangés.
+Aucune CI GitHub de cette extension locale ni activation.
+État, contrôles et autorisations dans le [suivi de mission](PROGRESSION_CARBURANT_UNITES.md).
+L’activation des accès en base reste soumise à sauvegarde vérifiée et autorisation ;
+aucun déploiement Alpha prévu.
+
+### Nouvelle grille retenue — 16 novembre 2026
+
+L’utilisateur valide B40/60, I30/50/20 et S25/35/30/10 après les études.
+Implémentation locale sur `feature/repartition-couts-ressources` : 52 fiches / 156
+profils modifiés, budgets conservés et anciens paiements inchangés. Les surcharges
+d’univers restent prioritaires. Les [prix courants](COUTS.md), règles et wiki local
+sont synchronisés ; les études antérieures sont clairement datées.
+Les contrôles locaux, les relances des cas corrigés, les lints et six parcours
+navigateur ciblés réussissent. Publication et fusion conditionnelle autorisées dans la [PR #73](https://github.com/c41m07/genesis-reborn/pull/73).
+La CI complète sur la dernière révision est requise avant fusion ; aucune migration de données
+ni livraison Alpha. Les recommandations précédentes ne remplacent pas cette décision.
+
+## Rework V1 — chantier local du 14 novembre 2026
+
+Le chantier utilise uniquement `chore/rework-v1`, sans PR, fusion ni déploiement.
+Les compléments du 15 novembre traitent l’économie des cartes Bâtiments,
+les relations, les résumés de rapports et profils, la pagination administrative
+et les fragments Flottes avec transport compact mesuré sur trois volumes.
+Le bandeau et les règles restent conservés. Le [suivi unique](REWORK_V1.md)
+détaille les mesures, fichiers, vérifications et exceptions justifiées.
+Clôture du 15 novembre : conventions et inventaire final par domaine, correction
+des fins de commande simultanées, mesures serveur sur trois volumes et 132
+actualisations navigateur mesurées. Validation courante : 1 047 tests PHP,
+213 253 assertions lors de la dernière suite, 13 tests Python, lint et compilation
+réussis. La préparation des bases navigateur est stabilisée et les schedulers
+RabbitMQ sont limités dans le seul profil jetable. Nouvelle suite navigateur complète
+sur `d7bee6f` : 202/202 au premier essai, sans reprise, scénario ignoré ni erreur
+globale. Sources et fichiers compilés identiques pendant toute la passe, aucun
+correctif nécessaire ; les quatre projets jetables sont fermés. Les 12 anciens
+scénarios instables avaient également réussi deux fois chacun (24/24), avec
+assertions et délais des actions conservés. Des commentaires français
+expliquent les traitements sensibles. La dernière relecture développe la présentation
+de GameManager, ActionGuard et QueueService, clarifie les noms des files et du relais,
+puis complète les commentaires de 12 fichiers. Structure PHP et correspondance des
+variables vérifiées ; nouvelle suite PHP/Python complète et lint réussis. Les
+commentaires eux-mêmes ne changent aucune instruction.
+Recette interactive sur comptes synthétiques : deux univers/colonies, files communes,
+transport et rapport, archives, guilde/projet/récompense/boost, messages, administration,
+CSV filtré, progression sans onglet, mobile et thèmes. Les parcours complémentaires
+et limites sont distingués dans le suivi. Environnements propres au chantier fermés ;
+huit services habituels sains et anciens projets de tests conservés. Version prête
+pour la recette complémentaire utilisateur. Aucune CI GitHub, intégration ou publication.
+
 ## Bunker : retrait du prérequis Blindage — 14 novembre 2026
 
 Lot 6 sur fix/prerequis-bunker depuis dev d0b4850, après fusion de la PR #63.
@@ -1585,3 +1655,68 @@ Intégré dans `dev` par la PR #55 après CI complète réussie. La PR #56 prép
 Voir le [suivi détaillé](CADRAGE_OUTILS_STRATEGIQUES.md) et les décisions validées.
 La CI complète sur la dernière version et l’accord du propriétaire restent
 nécessaires avant fusion. Aucune migration Alpha effectuée.
+
+
+## Navigation par pages dédiées
+
+Lot 1 intégré sur dev par la [PR #75](https://github.com/c41m07/genesis-reborn/pull/75) : espaces Guildes et Diplomatie séparés, pages dédiées de membres,
+grades, gestion et création ; liens directs, anciennes adresses conservées et
+lectures adaptées à chaque page. Voir le [suivi des lots](NAVIGATION_PAGES_DEDIEES.md) pour les
+choix, vérifications et limites. CI, fusion et déploiement restent distincts.
+
+
+Lot 2 intégré sur dev par la [PR #77](https://github.com/c41m07/genesis-reborn/pull/77),
+merge `52030d2`, après CI complète réussie sur `b6d1aaf`. Dev local actualisé.
+
+Lot 3 intégré sur dev par la [PR #78](https://github.com/c41m07/genesis-reborn/pull/78),
+merge `3eb4df0`, après CI complète réussie sur `7643609`. Application locale
+actualisée avec préservation des modifications présentes.
+
+Lot 4 intégré sur dev par la [PR #79](https://github.com/c41m07/genesis-reborn/pull/79),
+merge `5b072cb`, après CI complète réussie sur `afe19b8`. Application locale
+actualisée et modification préexistante conservée. Mes identifiants, Préférences,
+Mode vacances et Suppression du compte disposent de leurs pages.
+
+Lot 5 intégré sur dev par la [PR #80](https://github.com/c41m07/genesis-reborn/pull/80),
+merge `4fa63a7`, après CI complète réussie sur `6f969da`. Application locale
+actualisée avec préservation de la modification préexistante.
+
+Lot 6 Événements intégré par la [PR #82](https://github.com/c41m07/genesis-reborn/pull/82),
+merge `8f1bc6e`, après les cinq jobs quality réussis sur `25bb0ae`
+(CI 44001350739). La PR #81 est fermée sans fusion. Événements et bonus,
+Défis et rotations conservent les fiches et le panneau commun. Localhost actualisé.
+
+## Navigation — lot 7 Administration, 17 novembre 2026
+
+Pages dédiées des univers, familles du catalogue, formulaires d’événements,
+modèles de projets et rotations. Console, assistant, services et protections
+existants conservés. Contrôles ciblés : 22 tests PHP et 28 parcours navigateur
+distincts, par consolidation. Intégré par la [PR #83](https://github.com/c41m07/genesis-reborn/pull/83),
+merge `7b7d92d`, après les cinq jobs quality réussis sur `e7616ed`
+(CI 44048538481). Application locale actualisée, modification préexistante préservée.
+
+## Navigation — lot 8 Wiki, 17 novembre 2026
+
+Accueil, chapitres et recherche globale séparés, avec titres et navigation active.
+Sommaire, formules natives, documents de référence et anciennes adresses conservés.
+Contrôles ciblés : huit tests PHP distincts et quatre scénarios navigateur réussis.
+Intégré par la [PR #84](https://github.com/c41m07/genesis-reborn/pull/84), merge `dff8e11`,
+après les cinq jobs quality réussis sur `fad20ad` (CI 44057167152).
+Application locale actualisée, routes et assets servis vérifiés.
+
+Les huit lots fonctionnels sont intégrés dans dev. Le [suivi de navigation](NAVIGATION_PAGES_DEDIEES.md)
+distingue leur recette locale, leur CI, leur fusion et leur activation locale.
+Aucune migration de base existante ni livraison Alpha. Les trois sources Work
+et le wiki documentaire externe restent inaccessibles.
+
+## Navigation — recette finale, 17 novembre 2026
+
+Recette transversale locale réussie : trois scénarios distincts couvrent les
+espaces joueur sans/avec guilde et l’administration, dans les deux thèmes.
+Le fond des descriptions administratives suit maintenant le thème clair/sombre ;
+la régression est reproduite puis vérifiée après correction. Les huit bilans de
+livraison sont synchronisés. La CI complète, la fusion et l’actualisation locale
+de cette clôture sont suivies dans la [PR #86](https://github.com/c41m07/genesis-reborn/pull/86)
+et le [bilan final](NAVIGATION_PAGES_DEDIEES.md#recette-transversale-finale).
+La recette de confort sur le compte habituel reste manuelle : le contrôle Edge
+a été arrêté faute de vérification fiable de l’URL. Aucun déploiement Alpha.

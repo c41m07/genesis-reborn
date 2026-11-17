@@ -2,9 +2,15 @@ import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
     connect() {
+        if (this.element.dataset.uiPage?.startsWith('admin-') || ['guilde', 'diplomatie', 'flottes', 'inventaire', 'profil', 'preferences', 'projets', 'evenements'].includes(this.element.dataset.uiPage)) {
+            // Un changement de fragment peut conserver le document et ne reconnecte pas Stimulus.
+            this.onHashChange = () => this.redirectLegacyFragment();
+            window.addEventListener('hashchange', this.onHashChange);
+            if (this.redirectLegacyFragment()) return;
+        }
         const main = this.element.querySelector('main');
         if (!main || ['vue-generale', 'flottes', 'wiki', 'projet-detail', 'accueil-public', 'recherche-messages'].includes(this.element.dataset.uiPage)) return;
-        if (main.querySelector('.page-contents, nav a[href^="#"]')) return;
+        if (main.matches('[data-page-sections="disabled"]') || main.querySelector('[data-page-sections="disabled"], .page-contents, nav a[href^="#"]')) return;
         const seen = new Set();
         const headings = [...main.querySelectorAll('h2')].filter(heading => {
             const label = heading.textContent.trim();
@@ -26,5 +32,112 @@ export default class extends Controller {
         (main.querySelector('.page-heading') || main.querySelector('h1'))?.after(this.navigation);
     }
 
-    disconnect() { this.navigation?.remove(); }
+    redirectLegacyFragment() {
+        if (this.element.dataset.uiPage?.startsWith('admin-')) {
+            const hash = window.location.hash;
+            const universe = hash.match(/^#admin-universe-(\d+)$/);
+            const entry = hash.match(/^#(buildings|technologies|ships|defenses)-([a-z0-9_-]+)$/);
+            const catalogue = window.location.pathname.match(/^\/admin\/universes\/(\d+)\/catalogue$/);
+            let destination = null;
+            if (['/admin', '/admin/univers'].includes(window.location.pathname)) {
+                if (hash === '#admin-universes' && window.location.pathname === '/admin') destination = '/admin/univers';
+                else if (hash === '#admin-universe-create') destination = '/admin/universes/nouveau';
+                else if (universe) destination = `/admin/universes/${universe[1]}/gerer`;
+            } else if (catalogue && entry) {
+                destination = `/admin/universes/${catalogue[1]}/catalogue/${entry[1]}/${entry[2]}`;
+            } else if (catalogue && /^#group-(buildings|technologies|ships|defenses)$/.test(hash)) {
+                destination = `/admin/universes/${catalogue[1]}/catalogue/${hash.slice(7)}`;
+            }
+            if (destination) {
+                // Le fragment reste côté navigateur ; remplacer l’entrée évite une boucle au retour arrière.
+                window.location.replace(destination + window.location.search + hash);
+                return true;
+            }
+        }
+        // Les anciens liens d’un écran composite gardent une destination après la séparation.
+        if (this.element.dataset.uiPage === 'evenements' && window.location.pathname === '/evenements' && window.location.hash === '#page-section-0') {
+            // Le premier titre sans identifiant de l’ancien écran était celui des défis.
+            window.location.replace('/evenements/defis' + window.location.search + '#challenges-list');
+            return true;
+        }
+        if (['guilde', 'diplomatie'].includes(this.element.dataset.uiPage)) {
+            const destinations = {
+                '#guild-management': '/guildes/gestion', '#guild-management-title': '/guildes/gestion',
+                '#guild-members-title': '/guildes/membres', '#guild-ranks-title': '/guildes/grades',
+                '#guild-search': '/guildes', '#alliance-members': '/diplomatie/commandants',
+            };
+            const destination = destinations[window.location.hash];
+            if (destination && window.location.pathname !== destination) {
+                window.location.replace(destination + window.location.hash);
+                return true;
+            }
+        }
+        if (this.element.dataset.uiPage === 'projets') {
+            const destinations = {
+                '#ongoing-projects-title': '/guildes/projets',
+                '#available-projects-title': '/guildes/projets/disponibles',
+                '#completed-projects-title': '/guildes/projets/historique',
+            };
+            const destination = destinations[window.location.hash];
+            if (destination && window.location.pathname !== destination) {
+                window.location.replace(destination + window.location.search + window.location.hash);
+                return true;
+            }
+        }
+        if (['profil', 'preferences'].includes(this.element.dataset.uiPage)) {
+            const destinations = {
+                '#vacances': '/profil/vacances', '#vacances-info': '/profil/vacances', '#vacation-heading': '/profil/vacances',
+                '#account-delete-title': '/profil/supprimer',
+            };
+            const destination = destinations[window.location.hash];
+            if (destination && window.location.pathname !== destination) {
+                window.location.replace(destination + window.location.search + window.location.hash);
+                return true;
+            }
+        }
+        if (this.element.dataset.uiPage === 'inventaire') {
+            const destinations = {
+                '#inventory-boosts': '/boosts', '#available-bonuses-title': '/boosts', '#boost-use-title': '/boosts',
+                '#inventory-boxes': '/inventaire/boites', '#inventory-boxes-title': '/inventaire/boites',
+                '#inventory-pending': '/inventaire/recompenses', '#inventory-pending-title': '/inventaire/recompenses',
+            };
+            const destination = destinations[window.location.hash];
+            if (destination && window.location.pathname !== destination) {
+                window.location.replace(destination + window.location.search + window.location.hash);
+                return true;
+            }
+        }
+        if (this.element.dataset.uiPage === 'flottes') {
+            const fleet = /^#fleet-(\d+)$/.exec(window.location.hash);
+            if (window.location.pathname === '/flottes' && fleet && !document.getElementById(`fleet-${fleet[1]}`) && new URLSearchParams(window.location.search).get('fleet') !== fleet[1]) {
+                const url = new URL(window.location.href);
+                url.searchParams.set('fleet', fleet[1]);
+                window.location.replace(url);
+                return true;
+            }
+            const destinations = { '#prepare-mission':'/flottes/preparer', '#active-missions':'/flottes', '#orbit-requests-title':'/flottes/orbites', '#held-fleets-title':'/flottes/quai' };
+            const destination = destinations[window.location.hash];
+            if (destination && window.location.pathname !== destination) {
+                const url = new URL(destination, window.location.origin);
+                url.search = window.location.search;
+                url.hash = window.location.hash;
+                // Les paramètres d’envoi feraient revenir l’ancienne entrée /flottes vers la préparation.
+                if (destination !== '/flottes/preparer') {
+                    for (const parameter of ['mission', 'system', 'planet', 'composition', 'confirmation', 'adjust']) url.searchParams.delete(parameter);
+                }
+                if (destination === '/flottes' && url.searchParams.has('colony')) {
+                    url.searchParams.set('origin', url.searchParams.get('colony'));
+                    url.searchParams.delete('colony');
+                }
+                window.location.replace(url);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    disconnect() {
+        window.removeEventListener('hashchange', this.onHashChange);
+        this.navigation?.remove();
+    }
 }

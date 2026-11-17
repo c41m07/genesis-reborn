@@ -57,29 +57,98 @@ final class VacationPreferencesTest extends WebTestCase
         putenv($this->previousEnvironment[2]===false?$name:$name.'='.$this->previousEnvironment[2]);
     }
 
+    public function testAccountPagesSeparateFormsAndKeepTheirNavigationActive(): void
+    {
+        foreach ([
+            '/profil'=>['Mes identifiants','form[name="profile"]'],
+            '/profil/preferences'=>['Préférences','form[name="preferences"]'],
+            '/profil/vacances'=>['Mode vacances','form[action$="/vacances/activer"]'],
+            '/profil/supprimer'=>['Suppression du compte','.account-delete-form'],
+        ] as $url=>[$title,$form]) {
+            $this->client->request('GET',$url);self::assertResponseIsSuccessful();
+            self::assertSelectorTextSame('h1',$title);self::assertSelectorExists($form);
+            self::assertSelectorCount(1,'nav[aria-label="Compte et préférences"] [aria-current="page"]');
+            self::assertSelectorExists('nav[aria-label="Compte et préférences"] a[href="'.$url.'"][aria-current="page"]');
+            self::assertSelectorExists('.sidebar a[href="/profil"].active');
+            foreach (['form[name="profile"]','form[name="preferences"]','form[action$="/vacances/activer"]','.account-delete-form'] as $other) {
+                if ($other!==$form) self::assertSelectorNotExists($other);
+            }
+        }
+    }
+
+    public function testOldDeletionShortcutRedirectsAndAccountPagesRemainAvailableWithoutEmpire(): void
+    {
+        $this->client->request('GET','/profil?delete=1');self::assertResponseRedirects('/profil/supprimer');
+        $this->client->followRedirect();self::assertSelectorExists('.account-delete-form');
+        $player=$this->em->find(Player::class,$this->player->id);$player->currentPlayerUniverse=null;$this->em->flush();
+        foreach (['/profil','/profil/preferences','/profil/supprimer'] as $url) {
+            $this->client->request('GET',$url);self::assertResponseIsSuccessful();
+        }
+        $this->client->request('GET','/profil/vacances');self::assertResponseIsSuccessful();
+        self::assertSelectorExists('#vacances-info');self::assertSelectorNotExists('form[action*="/vacances/"]');
+        $this->client->getCookieJar()->clear();static::getContainer()->get('security.token_storage')->setToken(null);
+        foreach (['/profil','/profil/preferences','/profil/vacances','/profil/supprimer'] as $url) {
+            $this->client->request('GET',$url);self::assertResponseRedirects('/connexion');
+        }
+    }
+
+    public function testVacationFormFromAnotherSelectedUniverseIsRejected(): void
+    {
+        $crawler=$this->client->request('GET','/profil/vacances');
+        $form=$crawler->selectButton('Activer le mode vacances dans cet univers')->form();
+        $values=$form->getPhpValues();$values['confirm']='1';
+        $oldMembership=$this->player->currentPlayerUniverse->id;
+        $universe=$this->em->getRepository(Universe::class)->findOneBy(['slug'=>'turbo-1']);
+        static::getContainer()->get(UniverseService::class)->select($this->player,$universe->id);
+        $this->client->request('POST',$form->getUri(),$values);self::assertResponseStatusCodeSame(403);
+        self::assertSame(0,$this->em->getRepository(VacationPeriod::class)->count([]));
+        $this->client->request('GET','/profil/vacances');self::assertResponseIsSuccessful();
+        self::assertSelectorExists('input[name="membership_id"][value="'.$this->player->currentPlayerUniverse->id.'"]');
+        self::assertSelectorNotExists('input[name="membership_id"][value="'.$oldMembership.'"]');
+        self::assertSelectorTextContains('#vacances',$universe->name);
+    }
+
+    public function testVacationSettingsLoadsOnlyTheLatestPeriodForDisplay(): void
+    {
+        $member=$this->player->currentPlayerUniverse;$id=$member->id;$latest=null;
+        for ($i=0;$i<40;$i++) {
+            $period=new VacationPeriod();$period->membership=$member;
+            $period->startedAt=$this->clock->now()->modify('-'.(100-$i*2).' days');
+            $period->scheduledEndAt=$period->startedAt->modify('+1 day');$period->endedAt=$period->scheduledEndAt;
+            $this->em->persist($period);$latest=$period;
+        }
+        $this->em->flush();$latestId=$latest->id;$this->em->clear();
+        $member=$this->em->find(\App\Entity\PlayerUniverse::class,$id);
+        $settings=static::getContainer()->get(\App\Service\Player\VacationEconomyService::class)->settings($member);
+        $loaded=$this->em->getUnitOfWork()->getIdentityMap()[VacationPeriod::class]??[];
+        self::assertCount(1,$loaded);self::assertSame($latestId,array_values($loaded)[0]->id);
+        self::assertNull($settings['active']);self::assertTrue($settings['can_start']);
+        self::assertSame(40,$this->em->getRepository(VacationPeriod::class)->count(['membership'=>$member]));
+    }
+
     public function testActivationAndExitRespectMinimumDurationAndCooldown(): void
     {
-        $crawler=$this->client->request('GET','/profil/preferences');
+        $crawler=$this->client->request('GET','/profil/vacances');
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('label[for="vacation-confirm"]');
         $form=$crawler->selectButton('Activer le mode vacances dans cet univers')->form();
         $form['confirm']->tick();
         $this->client->submit($form);
-        self::assertResponseRedirects('/profil/preferences#vacances');
+        self::assertResponseRedirects('/profil/vacances#vacances');
         $this->client->followRedirect();
         self::assertSelectorTextContains('#vacances','Vacances actives');
         self::assertEquals($this->clock->now(),$this->em->getRepository(VacationPeriod::class)->findOneBy([])->startedAt);
         self::assertSelectorExists('form[action$="/vacances/terminer"] button[disabled]');
         $this->clock->sleep(48*3600);
-        $this->client->request('GET','/profil/preferences');
+        $this->client->request('GET','/profil/vacances');
         self::assertResponseRedirects('http://genesis-reborn.localhost/connexion');
         $this->client->loginUser($this->player);
-        $crawler=$this->client->request('GET','/profil/preferences');
+        $crawler=$this->client->request('GET','/profil/vacances');
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('#vacances');
         self::assertSelectorExists('form[action$="/vacances/terminer"] button:not([disabled])');
         $this->client->submit($crawler->selectButton('Terminer mes vacances dans cet univers')->form());
-        self::assertResponseRedirects('/profil/preferences#vacances');
+        self::assertResponseRedirects('/profil/vacances#vacances');
         $this->client->followRedirect();
         self::assertSelectorTextContains('#vacances','Nouvelle activation possible');
         self::assertSelectorExists('form[action$="/vacances/activer"] button[disabled]');
@@ -88,9 +157,9 @@ final class VacationPreferencesTest extends WebTestCase
 
     public function testConfirmationIsRequiredOnServer(): void
     {
-        $crawler=$this->client->request('GET','/profil/preferences');
+        $crawler=$this->client->request('GET','/profil/vacances');
         $this->client->submit($crawler->selectButton('Activer le mode vacances dans cet univers')->form());
-        self::assertResponseRedirects('/profil/preferences#vacances');
+        self::assertResponseRedirects('/profil/vacances#vacances');
         self::assertSame(0,$this->em->getRepository(VacationPeriod::class)->count([]));
         $this->client->followRedirect();
         self::assertSelectorTextContains('body','Confirmez avoir lu');
@@ -98,7 +167,7 @@ final class VacationPreferencesTest extends WebTestCase
 
     public function testTamperedMembershipIsRejected(): void
     {
-        $crawler=$this->client->request('GET','/profil/preferences');
+        $crawler=$this->client->request('GET','/profil/vacances');
         $form=$crawler->selectButton('Activer le mode vacances dans cet univers')->form();
         $values=$form->getPhpValues();
         $values['membership_id']=(string)($this->player->currentPlayerUniverse->id+1000);
@@ -119,14 +188,14 @@ final class VacationPreferencesTest extends WebTestCase
 
     public function testForgedEarlyExitIsRejectedOnServer(): void
     {
-        $crawler=$this->client->request('GET','/profil/preferences');
+        $crawler=$this->client->request('GET','/profil/vacances');
         $form=$crawler->selectButton('Activer le mode vacances dans cet univers')->form();
         $form['confirm']->tick();
         $this->client->submit($form);
         $crawler=$this->client->followRedirect();
         $form=$crawler->filter('form[action$="/vacances/terminer"]')->form();
         $this->client->request('POST',$form->getUri(),$form->getPhpValues());
-        self::assertResponseRedirects('/profil/preferences#vacances');
+        self::assertResponseRedirects('/profil/vacances#vacances');
         self::assertSame(0,(int)$this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM vacation_period WHERE ended_at IS NOT NULL'));
     }
 
@@ -134,7 +203,7 @@ final class VacationPreferencesTest extends WebTestCase
     {
         $this->player->currentPlayerUniverse=null;
         $this->em->flush();
-        $this->client->request('GET','/profil/preferences');
+        $this->client->request('GET','/profil/vacances');
         self::assertResponseIsSuccessful();
         self::assertSelectorNotExists('#vacances');
         self::assertSelectorExists('#vacances-info');
@@ -152,7 +221,7 @@ final class VacationPreferencesTest extends WebTestCase
         $fleet->status='returning';
         $this->em->persist($fleet);
         $this->em->flush();
-        $this->client->request('GET','/profil/preferences');
+        $this->client->request('GET','/profil/vacances');
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('#vacation-start-blocker','Toutes vos flottes doivent être rentrées');
         self::assertSelectorExists('form[action$="/vacances/activer"] button[disabled]');
@@ -167,7 +236,7 @@ final class VacationPreferencesTest extends WebTestCase
         $this->client=static::createClient(['environment'=>'test'],['HTTP_HOST'=>'genesis-reborn.localhost']);
         $this->client->disableReboot();
         $this->client->loginUser($this->player);
-        $this->client->request('GET','/profil/preferences');
+        $this->client->request('GET','/profil/vacances');
         self::assertResponseIsSuccessful();
         self::assertSelectorNotExists('#vacances');
         self::assertSelectorExists('#vacances-info');
@@ -181,7 +250,7 @@ final class VacationPreferencesTest extends WebTestCase
             $request->getSession()->save();
         } finally { $stack->pop(); }
         $this->client->request('POST','/profil/preferences/vacances/activer',['membership_id'=>$id,'confirm'=>'1','_token'=>$token]);
-        self::assertResponseRedirects('/profil/preferences#vacances');
+        self::assertResponseRedirects('/profil/vacances#vacances');
         $em=static::getContainer()->get(EntityManagerInterface::class);
         self::assertSame(0,$em->getRepository(VacationPeriod::class)->count([]));
     }
@@ -202,11 +271,11 @@ final class VacationPreferencesTest extends WebTestCase
         $planet->buildingQueueStartedAt=$queue->startedAt;
         $this->em->persist($queue);
         $this->em->flush();
-        $crawler=$this->client->request('GET','/profil/preferences');
+        $crawler=$this->client->request('GET','/profil/vacances');
         $form=$crawler->selectButton('Activer le mode vacances dans cet univers')->form();
         $form['confirm']->tick();
         $this->client->submit($form);
-        self::assertResponseRedirects('/profil/preferences#vacances');
+        self::assertResponseRedirects('/profil/vacances#vacances');
         $crawler=$this->client->request('GET','/planetes/'.$planet->id.'?section=buildings');
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('[data-vacation-paused] [role="progressbar"][aria-valuenow="20"]');

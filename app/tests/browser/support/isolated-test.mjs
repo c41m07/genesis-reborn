@@ -1,19 +1,33 @@
 import { test as base, expect } from '@playwright/test';
-import { execFileSync } from 'node:child_process';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 
-function resetGameDatabase() {
+const executeFile = promisify(execFile);
+const docker = args => executeFile('docker', args, {
+  encoding: 'utf8', timeout: 45_000, maxBuffer: 4 * 1024 * 1024,
+});
+
+async function resetGameDatabase() {
   const project = process.env.BROWSER_ROUTER;
   if (!/^genesis-browser-test-[0-9]+-[0-9]+$/.test(project ?? '')) {
     throw new Error('La remise à zéro Playwright est autorisée uniquement dans le projet Docker de test isolé.');
   }
   const compose = ['compose', '--project-name', project, '--env-file', '.env.local', '-f', 'compose.yaml', '-f', 'compose.browser-test.yaml'];
   if (process.env.BROWSER_PERSISTENCE === '1') compose.push('-f', 'compose.browser-persistence.yaml');
-  const run = (service, args) => execFileSync('docker', [...compose, 'exec', '-T', service, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
-  run('database', ['sh', '-lc', 'mariadb -uroot -p"$MARIADB_ROOT_PASSWORD" -e "DROP DATABASE IF EXISTS genesis_v2; CREATE DATABASE genesis_v2 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; GRANT ALL PRIVILEGES ON genesis_v2.* TO \'genesis\'@\'%\';"']);
-  run('app', ['php', 'bin/console', 'doctrine:migrations:migrate', '--no-interaction']);
-  run('app', ['php', 'bin/console', 'app:universe:import']);
-  execFileSync('docker', [...compose, 'restart', '--timeout', '3', 'worker', 'relay', 'notifier'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
-  execFileSync('docker', [...compose, 'up', '-d', '--wait', '--wait-timeout', '45', 'worker', 'relay', 'notifier'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  const run = (service, args) => docker([...compose, 'exec', '-T', service, ...args]);
+  const timings = [];
+  const stage = async (name, action) => {
+    const started = performance.now();
+    await action();
+    timings.push({ name, duration_ms: Math.round(performance.now() - started) });
+  };
+  // Aucun consommateur ne doit lire ou écrire pendant la reconstruction du schéma.
+  await stage('stop_consumers', () => docker([...compose, 'stop', '--timeout', '3', 'worker', 'relay', 'notifier']));
+  await stage('reset_database', () => run('database', ['sh', '-lc', 'mariadb -uroot -p"$MARIADB_ROOT_PASSWORD" -e "DROP DATABASE IF EXISTS genesis_v2; CREATE DATABASE genesis_v2 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; GRANT ALL PRIVILEGES ON genesis_v2.* TO \'genesis\'@\'%\';"']));
+  await stage('migrate', () => run('app', ['php', 'bin/console', 'doctrine:migrations:migrate', '--no-interaction']));
+  await stage('import', () => run('app', ['php', 'bin/console', 'app:universe:import']));
+  await stage('start_consumers', () => docker([...compose, 'up', '-d', '--wait', '--wait-timeout', '45', 'worker', 'relay', 'notifier']));
+  return timings;
 }
 
 export const test = base.extend({
@@ -31,7 +45,7 @@ export const test = base.extend({
           const email = new URLSearchParams(route.request().postData()).get('registration[email]');
           if (email) {
             const query = "UPDATE player SET email_verified_at=UTC_TIMESTAMP() WHERE email='" + email.replaceAll("'", "''") + "'";
-            execFileSync('docker', ['compose', '-p', process.env.BROWSER_ROUTER, '--env-file', '.env.local', 'exec', '-T', 'app', 'php', 'bin/console', 'dbal:run-sql', query], { stdio: 'pipe' });
+            await docker(['compose', '-p', process.env.BROWSER_ROUTER, '--env-file', '.env.local', 'exec', '-T', 'app', 'php', 'bin/console', 'dbal:run-sql', query]);
           }
         }
         await route.fulfill({ response });
@@ -44,14 +58,20 @@ export const test = base.extend({
     }
     try { await use(); } finally { browser.newContext = originalNewContext; }
   }, { auto: true }],
-  isolatedDatabase: [async ({ baseURL }, use) => {
+  isolatedDatabase: [async ({ baseURL }, use, testInfo) => {
     const project = process.env.BROWSER_ROUTER;
     if (!/^genesis-browser-test-[0-9]+-[0-9]+$/.test(project ?? '') || new URL(baseURL).hostname !== `${project}.localhost`) {
       throw new Error('Utilisez make test-browser ou scripts/test-browser-isolated.sh : ces scénarios écrivent uniquement dans une base de test temporaire.');
     }
-    if (process.env.PLAYWRIGHT_RESET_DB === '1') resetGameDatabase();
+    if (process.env.PLAYWRIGHT_RESET_DB === '1') {
+      const stages = await resetGameDatabase();
+      await testInfo.attach('isolated-database-setup', {
+        body: Buffer.from(JSON.stringify({ stages })), contentType: 'application/json',
+      });
+    }
     await use();
-  }, { auto: true }],
+  // Budget de préparation distinct : les 60 secondes du parcours restent réservées à ses actions.
+  }, { auto: true, timeout: 60_000 }],
 });
 
 export { expect };

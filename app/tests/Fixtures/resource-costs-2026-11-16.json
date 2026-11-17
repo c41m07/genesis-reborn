@@ -1,0 +1,2322 @@
+{
+  "provenance": {
+    "previous_revision": "4b4cd5190dd52cb7909e574f584f4a4ad4074169",
+    "previous_catalog_sha256": "fd425f965b3af6d457d4968fac02de6a42414cc52343c6ffcca3d92f44b3df69",
+    "decision": "Choix utilisateur du 16 novembre 2026 : B40/60, I30/50/20, S25/35/30/10. Profils calculés avant modification du catalogue."
+  },
+  "weights": {
+    "metal": 2,
+    "nano": 4,
+    "antimatter": 8,
+    "hydrogen": 1
+  },
+  "shares_percent": {
+    "basic": {
+      "metal": 40,
+      "nano": 60,
+      "antimatter": 0,
+      "hydrogen": 0
+    },
+    "intermediate": {
+      "metal": 30,
+      "nano": 50,
+      "antimatter": 20,
+      "hydrogen": 0
+    },
+    "superior": {
+      "metal": 25,
+      "nano": 35,
+      "antimatter": 30,
+      "hydrogen": 10
+    }
+  },
+  "entries": {
+    "buildings": {
+      "fortress": {
+        "old_profiles": {
+          "basic": {
+            "metal": 3600,
+            "nano": 1200,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 3375,
+            "nano": 1687,
+            "antimatter": 188,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 2813,
+            "nano": 2110,
+            "antimatter": 469,
+            "hydrogen": 936
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 2400,
+            "nano": 1800,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 2251,
+            "nano": 1875,
+            "antimatter": 375,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 2345,
+            "nano": 1641,
+            "antimatter": 703,
+            "hydrogen": 1876
+          }
+        },
+        "non_cost_sha256": "b644b44a51a6fb71d100616b38229736bb0cea53b1f24adb1144282f767b41ee"
+      },
+      "lab": {
+        "old_profiles": {
+          "basic": {
+            "metal": 3000,
+            "nano": 1000,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 2815,
+            "nano": 1408,
+            "antimatter": 156,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 2344,
+            "nano": 1758,
+            "antimatter": 391,
+            "hydrogen": 780
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 2000,
+            "nano": 1500,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 1877,
+            "nano": 1563,
+            "antimatter": 313,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 1954,
+            "nano": 1367,
+            "antimatter": 586,
+            "hydrogen": 1564
+          }
+        },
+        "non_cost_sha256": "c9d3f2d7248f6a9a11543830c403956093f589a6f00371d066d0b30bf432a3ff"
+      },
+      "mine_antimatter": {
+        "old_profiles": {
+          "basic": {
+            "metal": 360,
+            "nano": 120,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 338,
+            "nano": 168,
+            "antimatter": 19,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 281,
+            "nano": 211,
+            "antimatter": 47,
+            "hydrogen": 93
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 240,
+            "nano": 180,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 226,
+            "nano": 188,
+            "antimatter": 37,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 235,
+            "nano": 164,
+            "antimatter": 70,
+            "hydrogen": 189
+          }
+        },
+        "non_cost_sha256": "068e846ae8f3282987461c2f4ac8c128aa4b9171a5486de8fe63ee197093968d"
+      },
+      "mine_hydrogen": {
+        "old_profiles": {
+          "basic": {
+            "metal": 480,
+            "nano": 160,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 450,
+            "nano": 225,
+            "antimatter": 25,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 375,
+            "nano": 281,
+            "antimatter": 63,
+            "hydrogen": 124
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 320,
+            "nano": 240,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 300,
+            "nano": 250,
+            "antimatter": 50,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 312,
+            "nano": 219,
+            "antimatter": 94,
+            "hydrogen": 250
+          }
+        },
+        "non_cost_sha256": "c0d52610e9d25c0fdec27ee34ca52e9bcb968a97cae2736643d1c2440cfae27e"
+      },
+      "mine_metal": {
+        "old_profiles": {
+          "basic": {
+            "metal": 480,
+            "nano": 160,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 450,
+            "nano": 225,
+            "antimatter": 25,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 374,
+            "nano": 281,
+            "antimatter": 63,
+            "hydrogen": 124
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 320,
+            "nano": 240,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 300,
+            "nano": 250,
+            "antimatter": 50,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 312,
+            "nano": 219,
+            "antimatter": 94,
+            "hydrogen": 248
+          }
+        },
+        "non_cost_sha256": "503ec9a1b8ac2472fea0b165832e90cbee1fc27cec6289cf3532dc66b126764f"
+      },
+      "mine_nano": {
+        "old_profiles": {
+          "basic": {
+            "metal": 480,
+            "nano": 160,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 450,
+            "nano": 225,
+            "antimatter": 25,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 375,
+            "nano": 281,
+            "antimatter": 63,
+            "hydrogen": 124
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 320,
+            "nano": 240,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 300,
+            "nano": 250,
+            "antimatter": 50,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 312,
+            "nano": 219,
+            "antimatter": 94,
+            "hydrogen": 250
+          }
+        },
+        "non_cost_sha256": "5dd92ec5f9247567af0640ace7a20d949f53cf9a2623d8f1f5442b06c15f95c3"
+      },
+      "power_plant": {
+        "old_profiles": {
+          "basic": {
+            "metal": 1440,
+            "nano": 480,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 1350,
+            "nano": 675,
+            "antimatter": 75,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 1126,
+            "nano": 844,
+            "antimatter": 187,
+            "hydrogen": 376
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 960,
+            "nano": 720,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 900,
+            "nano": 750,
+            "antimatter": 150,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 938,
+            "nano": 656,
+            "antimatter": 281,
+            "hydrogen": 752
+          }
+        },
+        "non_cost_sha256": "66ab92d897bd7582613c00fcdafd31d0acd3c1728102cd0bd608db67c23f7b82"
+      },
+      "shipyard": {
+        "old_profiles": {
+          "basic": {
+            "metal": 6000,
+            "nano": 2000,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 5625,
+            "nano": 2813,
+            "antimatter": 313,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 4688,
+            "nano": 3516,
+            "antimatter": 781,
+            "hydrogen": 1564
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 4000,
+            "nano": 3000,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 3751,
+            "nano": 3126,
+            "antimatter": 625,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 3906,
+            "nano": 2735,
+            "antimatter": 1172,
+            "hydrogen": 3124
+          }
+        },
+        "non_cost_sha256": "91b3154582c0be80a56ddabe3220ef0d032b973a2c848ffa0b95960eb7e024b7"
+      },
+      "storage_antimatter": {
+        "old_profiles": {
+          "basic": {
+            "metal": 1501,
+            "nano": 500,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 1410,
+            "nano": 704,
+            "antimatter": 78,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 1174,
+            "nano": 880,
+            "antimatter": 195,
+            "hydrogen": 392
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 1001,
+            "nano": 750,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 940,
+            "nano": 783,
+            "antimatter": 156,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 978,
+            "nano": 684,
+            "antimatter": 293,
+            "hydrogen": 784
+          }
+        },
+        "non_cost_sha256": "4648dde964831c05184f62ef1a6e9d8c31ee9bcdfed2fdaea447d492d34e3c40"
+      },
+      "storage_electricity": {
+        "old_profiles": {
+          "basic": {
+            "metal": 1501,
+            "nano": 500,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 1410,
+            "nano": 704,
+            "antimatter": 78,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 1174,
+            "nano": 880,
+            "antimatter": 195,
+            "hydrogen": 392
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 1001,
+            "nano": 750,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 940,
+            "nano": 783,
+            "antimatter": 156,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 978,
+            "nano": 684,
+            "antimatter": 293,
+            "hydrogen": 784
+          }
+        },
+        "non_cost_sha256": "ca9fe3ea564bcfd746741f6ab487134690538b19512a31a33a6263f308614131"
+      },
+      "storage_hydrogen": {
+        "old_profiles": {
+          "basic": {
+            "metal": 1501,
+            "nano": 500,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 1410,
+            "nano": 704,
+            "antimatter": 78,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 1174,
+            "nano": 880,
+            "antimatter": 195,
+            "hydrogen": 392
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 1001,
+            "nano": 750,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 940,
+            "nano": 783,
+            "antimatter": 156,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 978,
+            "nano": 684,
+            "antimatter": 293,
+            "hydrogen": 784
+          }
+        },
+        "non_cost_sha256": "07d487aff926706d3fc03fb5fe3e9e63be9efb67995789e041dcb0e7e749c087"
+      },
+      "storage_metal": {
+        "old_profiles": {
+          "basic": {
+            "metal": 1501,
+            "nano": 500,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 1410,
+            "nano": 704,
+            "antimatter": 78,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 1174,
+            "nano": 880,
+            "antimatter": 195,
+            "hydrogen": 392
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 1001,
+            "nano": 750,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 940,
+            "nano": 783,
+            "antimatter": 156,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 978,
+            "nano": 684,
+            "antimatter": 293,
+            "hydrogen": 784
+          }
+        },
+        "non_cost_sha256": "b2a07093fdddc88c14e2686a4adb78baaa5cdcb7da453a3a654316fbd7cf2328"
+      },
+      "storage_nano": {
+        "old_profiles": {
+          "basic": {
+            "metal": 1501,
+            "nano": 500,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 1410,
+            "nano": 704,
+            "antimatter": 78,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 1174,
+            "nano": 880,
+            "antimatter": 195,
+            "hydrogen": 392
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 1001,
+            "nano": 750,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 940,
+            "nano": 783,
+            "antimatter": 156,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 978,
+            "nano": 684,
+            "antimatter": 293,
+            "hydrogen": 784
+          }
+        },
+        "non_cost_sha256": "57d8d6c487964313b7a52c4009e3a663789114403080555c1c08c48fe9bfebaa"
+      }
+    },
+    "technologies": {
+      "automated_defense_repair": {
+        "old_profiles": {
+          "basic": {
+            "metal": 1200,
+            "nano": 400,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 1126,
+            "nano": 562,
+            "antimatter": 63,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 939,
+            "nano": 704,
+            "antimatter": 156,
+            "hydrogen": 314
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 800,
+            "nano": 600,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 750,
+            "nano": 626,
+            "antimatter": 125,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 782,
+            "nano": 547,
+            "antimatter": 235,
+            "hydrogen": 624
+          }
+        },
+        "non_cost_sha256": "fa126c67f52592cca725aee2bdf15ddb6b8f3fa199e1d25aa00bbd636e9759ae"
+      },
+      "colonial_expansion": {
+        "old_profiles": {
+          "basic": {
+            "metal": 6600,
+            "nano": 2200,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 6188,
+            "nano": 3094,
+            "antimatter": 344,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 5156,
+            "nano": 3868,
+            "antimatter": 860,
+            "hydrogen": 1718
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 4400,
+            "nano": 3300,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 4124,
+            "nano": 3438,
+            "antimatter": 688,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 4298,
+            "nano": 3009,
+            "antimatter": 1289,
+            "hydrogen": 3438
+          }
+        },
+        "non_cost_sha256": "e8c96642c5804b44926c5284646cd66ad950944ef1da27a2e7f6610c4c955426"
+      },
+      "cryogenic_reserves": {
+        "old_profiles": {
+          "basic": {
+            "metal": 3000,
+            "nano": 1000,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 2816,
+            "nano": 1407,
+            "antimatter": 156,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 2344,
+            "nano": 1758,
+            "antimatter": 391,
+            "hydrogen": 782
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 2000,
+            "nano": 1500,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 1876,
+            "nano": 1563,
+            "antimatter": 313,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 1954,
+            "nano": 1368,
+            "antimatter": 586,
+            "hydrogen": 1562
+          }
+        },
+        "non_cost_sha256": "9d5840d422afc8211ca27bf850727f472a21c218f061692582ac16ca0307359b"
+      },
+      "engineering_foundations": {
+        "old_profiles": {
+          "basic": {
+            "metal": 1200,
+            "nano": 400,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 1126,
+            "nano": 562,
+            "antimatter": 63,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 939,
+            "nano": 704,
+            "antimatter": 156,
+            "hydrogen": 314
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 800,
+            "nano": 600,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 750,
+            "nano": 626,
+            "antimatter": 125,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 782,
+            "nano": 547,
+            "antimatter": 235,
+            "hydrogen": 624
+          }
+        },
+        "non_cost_sha256": "9498e9105dacc570f59aceb06cc8fc11c3564079c95b5df104dc93ba2d750c8b"
+      },
+      "evasive_navigation": {
+        "old_profiles": {
+          "basic": {
+            "metal": 1800,
+            "nano": 600,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 1688,
+            "nano": 844,
+            "antimatter": 94,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 1407,
+            "nano": 1055,
+            "antimatter": 235,
+            "hydrogen": 468
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 1200,
+            "nano": 900,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 1124,
+            "nano": 938,
+            "antimatter": 188,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 1172,
+            "nano": 821,
+            "antimatter": 352,
+            "hydrogen": 938
+          }
+        },
+        "non_cost_sha256": "744d857c5205da75181eab3fcf03f15a15b0ef59fce9f9f17f9b63aece78ecf3"
+      },
+      "intelligence_countermeasures": {
+        "old_profiles": {
+          "basic": {
+            "metal": 1800,
+            "nano": 600,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 1688,
+            "nano": 844,
+            "antimatter": 94,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 1407,
+            "nano": 1055,
+            "antimatter": 235,
+            "hydrogen": 468
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 1200,
+            "nano": 900,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 1124,
+            "nano": 938,
+            "antimatter": 188,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 1172,
+            "nano": 821,
+            "antimatter": 352,
+            "hydrogen": 938
+          }
+        },
+        "non_cost_sha256": "d916fdba2435dee749ebc78df86b666844556a159fb882c350b0e79e857a681b"
+      },
+      "modular_cargo_bays": {
+        "old_profiles": {
+          "basic": {
+            "metal": 3000,
+            "nano": 1000,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 2816,
+            "nano": 1407,
+            "antimatter": 156,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 2344,
+            "nano": 1758,
+            "antimatter": 391,
+            "hydrogen": 782
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 2000,
+            "nano": 1500,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 1876,
+            "nano": 1563,
+            "antimatter": 313,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 1954,
+            "nano": 1368,
+            "antimatter": 586,
+            "hydrogen": 1562
+          }
+        },
+        "non_cost_sha256": "ccc15078d624e515dd5f4b44931a55845490427c94675fc2f126a50e42faa365"
+      },
+      "nanomaterial_synthesis": {
+        "old_profiles": {
+          "basic": {
+            "metal": 1200,
+            "nano": 400,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 1126,
+            "nano": 562,
+            "antimatter": 63,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 939,
+            "nano": 704,
+            "antimatter": 156,
+            "hydrogen": 314
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 800,
+            "nano": 600,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 750,
+            "nano": 626,
+            "antimatter": 125,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 782,
+            "nano": 547,
+            "antimatter": 235,
+            "hydrogen": 624
+          }
+        },
+        "non_cost_sha256": "e35949108280d3f068b49b40060b0eb045bce84d71fc05928e54b1eceb278a31"
+      },
+      "naval_engineering": {
+        "old_profiles": {
+          "basic": {
+            "metal": 1200,
+            "nano": 400,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 1126,
+            "nano": 562,
+            "antimatter": 63,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 939,
+            "nano": 704,
+            "antimatter": 156,
+            "hydrogen": 314
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 800,
+            "nano": 600,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 750,
+            "nano": 626,
+            "antimatter": 125,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 782,
+            "nano": 547,
+            "antimatter": 235,
+            "hydrogen": 624
+          }
+        },
+        "non_cost_sha256": "5193bba47c9453bed13c444f36b2047bd7a0479367b85126ebe683afc9e4ca74"
+      },
+      "rapid_fire_cycle": {
+        "old_profiles": {
+          "basic": {
+            "metal": 7200,
+            "nano": 2400,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 6750,
+            "nano": 3375,
+            "antimatter": 375,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 5625,
+            "nano": 4219,
+            "antimatter": 938,
+            "hydrogen": 1874
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 4800,
+            "nano": 3600,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 4500,
+            "nano": 3750,
+            "antimatter": 750,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 4688,
+            "nano": 3282,
+            "antimatter": 1406,
+            "hydrogen": 3752
+          }
+        },
+        "non_cost_sha256": "ee047508e83eceda00fab17b447bc30233000b7b36dc46178fd86b0845590411"
+      },
+      "shield_harmonics": {
+        "old_profiles": {
+          "basic": {
+            "metal": 4800,
+            "nano": 1600,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 4500,
+            "nano": 2250,
+            "antimatter": 250,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 3751,
+            "nano": 2812,
+            "antimatter": 625,
+            "hydrogen": 1250
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 3200,
+            "nano": 2400,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 3000,
+            "nano": 2500,
+            "antimatter": 500,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 3125,
+            "nano": 2188,
+            "antimatter": 937,
+            "hydrogen": 2502
+          }
+        },
+        "non_cost_sha256": "64cd6157d4058b7c1f6130400f47ffcb0ac1b80b2392df66da1fb3dcaba6b407"
+      },
+      "signature_masking": {
+        "old_profiles": {
+          "basic": {
+            "metal": 1200,
+            "nano": 400,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 1126,
+            "nano": 562,
+            "antimatter": 63,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 939,
+            "nano": 704,
+            "antimatter": 156,
+            "hydrogen": 314
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 800,
+            "nano": 600,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 750,
+            "nano": 626,
+            "antimatter": 125,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 782,
+            "nano": 547,
+            "antimatter": 235,
+            "hydrogen": 624
+          }
+        },
+        "non_cost_sha256": "a8ca45f18869d7e2c87103f6b431b9a4be8e43622a9dcb8b44557ac7b87c443e"
+      },
+      "signature_reduction": {
+        "old_profiles": {
+          "basic": {
+            "metal": 1800,
+            "nano": 600,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 1688,
+            "nano": 844,
+            "antimatter": 94,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 1407,
+            "nano": 1055,
+            "antimatter": 235,
+            "hydrogen": 468
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 1200,
+            "nano": 900,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 1124,
+            "nano": 938,
+            "antimatter": 188,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 1172,
+            "nano": 821,
+            "antimatter": 352,
+            "hydrogen": 938
+          }
+        },
+        "non_cost_sha256": "333d1fb4c12d3585abba5c1d4666410e6b099c703862b5a50e4a673e7ebedceb"
+      },
+      "structural_armor": {
+        "old_profiles": {
+          "basic": {
+            "metal": 4800,
+            "nano": 1600,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 4500,
+            "nano": 2250,
+            "antimatter": 250,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 3751,
+            "nano": 2812,
+            "antimatter": 625,
+            "hydrogen": 1250
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 3200,
+            "nano": 2400,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 3000,
+            "nano": 2500,
+            "antimatter": 500,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 3125,
+            "nano": 2188,
+            "antimatter": 937,
+            "hydrogen": 2502
+          }
+        },
+        "non_cost_sha256": "bab48339723ee8609c994ad8fa1632409656a31663807024d41d0769de4daef7"
+      },
+      "tactical_intelligence": {
+        "old_profiles": {
+          "basic": {
+            "metal": 1501,
+            "nano": 500,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 1409,
+            "nano": 704,
+            "antimatter": 78,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 1172,
+            "nano": 880,
+            "antimatter": 196,
+            "hydrogen": 390
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 1001,
+            "nano": 750,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 939,
+            "nano": 783,
+            "antimatter": 156,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 978,
+            "nano": 685,
+            "antimatter": 293,
+            "hydrogen": 782
+          }
+        },
+        "non_cost_sha256": "323feaa2e90cef8342d242a9343f78d6ce109293ce008ac8de7f97e22781d2ac"
+      },
+      "target_acquisition": {
+        "old_profiles": {
+          "basic": {
+            "metal": 1200,
+            "nano": 400,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 1126,
+            "nano": 562,
+            "antimatter": 63,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 939,
+            "nano": 704,
+            "antimatter": 156,
+            "hydrogen": 314
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 800,
+            "nano": 600,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 750,
+            "nano": 626,
+            "antimatter": 125,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 782,
+            "nano": 547,
+            "antimatter": 235,
+            "hydrogen": 624
+          }
+        },
+        "non_cost_sha256": "6a653867cdec7558ea402f36f865d370969e187636b4cf795458175e77ed17f4"
+      },
+      "vector_propulsion": {
+        "old_profiles": {
+          "basic": {
+            "metal": 3000,
+            "nano": 1000,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 2816,
+            "nano": 1407,
+            "antimatter": 156,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 2344,
+            "nano": 1758,
+            "antimatter": 391,
+            "hydrogen": 782
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 2000,
+            "nano": 1500,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 1876,
+            "nano": 1563,
+            "antimatter": 313,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 1954,
+            "nano": 1368,
+            "antimatter": 586,
+            "hydrogen": 1562
+          }
+        },
+        "non_cost_sha256": "1334e3d8af5272f60e430f1865f8a271906371317e15e6bb9cfe5d03ad686aaf"
+      },
+      "weapon_calibration": {
+        "old_profiles": {
+          "basic": {
+            "metal": 7200,
+            "nano": 2400,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 6750,
+            "nano": 3375,
+            "antimatter": 375,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 5625,
+            "nano": 4219,
+            "antimatter": 938,
+            "hydrogen": 1874
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 4800,
+            "nano": 3600,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 4500,
+            "nano": 3750,
+            "antimatter": 750,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 4688,
+            "nano": 3282,
+            "antimatter": 1406,
+            "hydrogen": 3752
+          }
+        },
+        "non_cost_sha256": "a8fe7ff04382a36ef3655f05c06056ecf6d5d2840ede3924819773b6636f5af6"
+      },
+      "weapons_engineering": {
+        "old_profiles": {
+          "basic": {
+            "metal": 7200,
+            "nano": 2400,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 6750,
+            "nano": 3375,
+            "antimatter": 375,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 5625,
+            "nano": 4219,
+            "antimatter": 938,
+            "hydrogen": 1874
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 4800,
+            "nano": 3600,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 4500,
+            "nano": 3750,
+            "antimatter": 750,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 4688,
+            "nano": 3282,
+            "antimatter": 1406,
+            "hydrogen": 3752
+          }
+        },
+        "non_cost_sha256": "5baa479184c8b25cf4630374d8c8268ec80719104f706a51e042efcff170d6b3"
+      }
+    },
+    "ships": {
+      "battleship": {
+        "old_profiles": {
+          "basic": {
+            "metal": 66151,
+            "nano": 22050,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 62017,
+            "nano": 31009,
+            "antimatter": 3445,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 51681,
+            "nano": 38761,
+            "antimatter": 8614,
+            "hydrogen": 17226
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 44101,
+            "nano": 33075,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 41345,
+            "nano": 34453,
+            "antimatter": 6891,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 43068,
+            "nano": 30148,
+            "antimatter": 12920,
+            "hydrogen": 34456
+          }
+        },
+        "non_cost_sha256": "e45d0b845cec8af4ffa1fd38d9472679c427dbc6285200cd8cc23289bf0c6a74"
+      },
+      "bomber": {
+        "old_profiles": {
+          "basic": {
+            "metal": 6451,
+            "nano": 2150,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 6049,
+            "nano": 3025,
+            "antimatter": 336,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 5042,
+            "nano": 3781,
+            "antimatter": 840,
+            "hydrogen": 1680
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 4301,
+            "nano": 3225,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 4033,
+            "nano": 3361,
+            "antimatter": 672,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 4201,
+            "nano": 2941,
+            "antimatter": 1260,
+            "hydrogen": 3362
+          }
+        },
+        "non_cost_sha256": "1f656664a91efb04dd7119de1329ddcc1f64e1fe7a2c258114ff3f19c88916aa"
+      },
+      "capital": {
+        "old_profiles": {
+          "basic": {
+            "metal": 113266,
+            "nano": 37755,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 106188,
+            "nano": 53094,
+            "antimatter": 5899,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 88490,
+            "nano": 66368,
+            "antimatter": 14748,
+            "hydrogen": 29498
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 75510,
+            "nano": 56633,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 70790,
+            "nano": 58993,
+            "antimatter": 11799,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 73741,
+            "nano": 51619,
+            "antimatter": 22123,
+            "hydrogen": 58992
+          }
+        },
+        "non_cost_sha256": "2705a1905604988fc1dcbbc6264557c93df32cea1e73386830cd77c74b7b923b"
+      },
+      "colony_ship": {
+        "old_profiles": {
+          "basic": {
+            "metal": 12000,
+            "nano": 4000,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 11252,
+            "nano": 5625,
+            "antimatter": 625,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 9375,
+            "nano": 7031,
+            "antimatter": 1563,
+            "hydrogen": 3124
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 8000,
+            "nano": 6000,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 7500,
+            "nano": 6251,
+            "antimatter": 1250,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 7812,
+            "nano": 5469,
+            "antimatter": 2344,
+            "hydrogen": 6250
+          }
+        },
+        "non_cost_sha256": "5961a9be21893c4c96f8eddd6baeb955734ab2d35f42f6947ca7d78f6863a40f"
+      },
+      "corvette": {
+        "old_profiles": {
+          "basic": {
+            "metal": 8400,
+            "nano": 2800,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 7875,
+            "nano": 3937,
+            "antimatter": 438,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 6564,
+            "nano": 4922,
+            "antimatter": 1094,
+            "hydrogen": 2188
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 5600,
+            "nano": 4200,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 5251,
+            "nano": 4375,
+            "antimatter": 875,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 5469,
+            "nano": 3829,
+            "antimatter": 1641,
+            "hydrogen": 4374
+          }
+        },
+        "non_cost_sha256": "0201e1793d9069c1a4f168a960f7f3024eb8857e9f003304c50ba4e496dc8500"
+      },
+      "cruiser": {
+        "old_profiles": {
+          "basic": {
+            "metal": 36519,
+            "nano": 12173,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 34242,
+            "nano": 17120,
+            "antimatter": 1902,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 28532,
+            "nano": 21399,
+            "antimatter": 4755,
+            "hydrogen": 9510
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 24347,
+            "nano": 18259,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 22828,
+            "nano": 19023,
+            "antimatter": 3804,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 23776,
+            "nano": 16643,
+            "antimatter": 7133,
+            "hydrogen": 19022
+          }
+        },
+        "non_cost_sha256": "5c5c9d5dd0626bc4962cfd84fd36663c41ee8fd801dda20374ee8bd16dd5a6a8"
+      },
+      "destroyer": {
+        "old_profiles": {
+          "basic": {
+            "metal": 25267,
+            "nano": 8422,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 23690,
+            "nano": 11844,
+            "antimatter": 1316,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 19741,
+            "nano": 14805,
+            "antimatter": 3290,
+            "hydrogen": 6580
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 16845,
+            "nano": 12633,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 15792,
+            "nano": 13161,
+            "antimatter": 2632,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 16451,
+            "nano": 11515,
+            "antimatter": 4935,
+            "hydrogen": 13160
+          }
+        },
+        "non_cost_sha256": "9f9cb988754977c169aecb3bb849a43f7dcbae36060986b8ac87a2180d703c68"
+      },
+      "fighter": {
+        "old_profiles": {
+          "basic": {
+            "metal": 1800,
+            "nano": 600,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 1688,
+            "nano": 844,
+            "antimatter": 94,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 1406,
+            "nano": 1055,
+            "antimatter": 235,
+            "hydrogen": 468
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 1200,
+            "nano": 900,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 1124,
+            "nano": 938,
+            "antimatter": 188,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 1172,
+            "nano": 821,
+            "antimatter": 352,
+            "hydrogen": 936
+          }
+        },
+        "non_cost_sha256": "31cf33719349f88479ed61c534a4e6ae384b3d39e817521cad7bf65c23db8643"
+      },
+      "frigate": {
+        "old_profiles": {
+          "basic": {
+            "metal": 13668,
+            "nano": 4556,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 12816,
+            "nano": 6408,
+            "antimatter": 712,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 10679,
+            "nano": 8010,
+            "antimatter": 1780,
+            "hydrogen": 3560
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 9112,
+            "nano": 6834,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 8544,
+            "nano": 7120,
+            "antimatter": 1424,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 8899,
+            "nano": 6230,
+            "antimatter": 2670,
+            "hydrogen": 7120
+          }
+        },
+        "non_cost_sha256": "5c2b53468fa7cfc5a16b7513207994326eaf1ad24ad2628bce2c6501fba4aedb"
+      },
+      "heavy_fighter": {
+        "old_profiles": {
+          "basic": {
+            "metal": 4440,
+            "nano": 1480,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 4165,
+            "nano": 2082,
+            "antimatter": 231,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 3470,
+            "nano": 2603,
+            "antimatter": 579,
+            "hydrogen": 1156
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 2960,
+            "nano": 2220,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 2775,
+            "nano": 2313,
+            "antimatter": 463,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 2892,
+            "nano": 2025,
+            "antimatter": 868,
+            "hydrogen": 2312
+          }
+        },
+        "non_cost_sha256": "9703296976accfd69ca06a124770e677f9030ed61a0c6f68e2cf71547fd11738"
+      },
+      "hydrogen_collector": {
+        "old_profiles": {
+          "basic": {
+            "metal": 480,
+            "nano": 160,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 450,
+            "nano": 225,
+            "antimatter": 25,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 374,
+            "nano": 281,
+            "antimatter": 63,
+            "hydrogen": 124
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 320,
+            "nano": 240,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 300,
+            "nano": 250,
+            "antimatter": 50,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 312,
+            "nano": 219,
+            "antimatter": 94,
+            "hydrogen": 248
+          }
+        },
+        "non_cost_sha256": "087ec02e54c43f032b9f020a3d16d1afb66d7b4b925a836992c0e76f291b88dc"
+      },
+      "interceptor": {
+        "old_profiles": {
+          "basic": {
+            "metal": 2206,
+            "nano": 735,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 2069,
+            "nano": 1035,
+            "antimatter": 115,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 1724,
+            "nano": 1294,
+            "antimatter": 288,
+            "hydrogen": 574
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 1470,
+            "nano": 1103,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 1379,
+            "nano": 1150,
+            "antimatter": 230,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 1438,
+            "nano": 1007,
+            "antimatter": 431,
+            "hydrogen": 1150
+          }
+        },
+        "non_cost_sha256": "27163c2af607c3855ec3d83aae7009cae568e9b9542597b51aee4db4d6559b7d"
+      },
+      "probe": {
+        "old_profiles": {
+          "basic": {
+            "metal": 300,
+            "nano": 100,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 281,
+            "nano": 141,
+            "antimatter": 16,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 236,
+            "nano": 177,
+            "antimatter": 39,
+            "hydrogen": 80
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 200,
+            "nano": 150,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 189,
+            "nano": 157,
+            "antimatter": 31,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 196,
+            "nano": 138,
+            "antimatter": 59,
+            "hydrogen": 156
+          }
+        },
+        "non_cost_sha256": "ce0f62c41c12b99300e22b70ffd4113d68382db260c3d60b902aaa368056b6fd"
+      },
+      "solar_satellite": {
+        "old_profiles": {
+          "basic": {
+            "metal": 480,
+            "nano": 160,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 450,
+            "nano": 225,
+            "antimatter": 25,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 374,
+            "nano": 281,
+            "antimatter": 63,
+            "hydrogen": 124
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 320,
+            "nano": 240,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 300,
+            "nano": 250,
+            "antimatter": 50,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 312,
+            "nano": 219,
+            "antimatter": 94,
+            "hydrogen": 248
+          }
+        },
+        "non_cost_sha256": "866971b5a889cc785e7bdf80ed2c9c748a4f04e220aaab9d9de1c42f6f563e31"
+      },
+      "stealth_fighter": {
+        "old_profiles": {
+          "basic": {
+            "metal": 7320,
+            "nano": 2440,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 6865,
+            "nano": 3432,
+            "antimatter": 381,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 5720,
+            "nano": 4290,
+            "antimatter": 953,
+            "hydrogen": 1906
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 4880,
+            "nano": 3660,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 4575,
+            "nano": 3813,
+            "antimatter": 763,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 4766,
+            "nano": 3336,
+            "antimatter": 1430,
+            "hydrogen": 3814
+          }
+        },
+        "non_cost_sha256": "ac4889635f9330233ead01b97f3f06a2882917c7710d03c1b94f73928e39d7c8"
+      },
+      "transport": {
+        "old_profiles": {
+          "basic": {
+            "metal": 7200,
+            "nano": 2400,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 6752,
+            "nano": 3375,
+            "antimatter": 375,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 5626,
+            "nano": 4219,
+            "antimatter": 938,
+            "hydrogen": 1876
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 4800,
+            "nano": 3600,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 4500,
+            "nano": 3751,
+            "antimatter": 750,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 4688,
+            "nano": 3282,
+            "antimatter": 1407,
+            "hydrogen": 3748
+          }
+        },
+        "non_cost_sha256": "36536c5cdd3abbffe697680894b25c51f5ec9dee1eb9e7efb47c0587dccf0291"
+      }
+    },
+    "defenses": {
+      "ground_turret_anti_capital": {
+        "old_profiles": {
+          "basic": {
+            "metal": 38400,
+            "nano": 12800,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 28800,
+            "nano": 14400,
+            "antimatter": 1600,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 19200,
+            "nano": 14400,
+            "antimatter": 3200,
+            "hydrogen": 6400
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 25600,
+            "nano": 19200,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 19200,
+            "nano": 16000,
+            "antimatter": 3200,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 16000,
+            "nano": 11200,
+            "antimatter": 4800,
+            "hydrogen": 12800
+          }
+        },
+        "non_cost_sha256": "bfb50d534542404756344fb485baa3675ef4af77a67076174fa67bff0012d23b"
+      },
+      "ground_turret_anti_escort": {
+        "old_profiles": {
+          "basic": {
+            "metal": 5400,
+            "nano": 1800,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 4052,
+            "nano": 2025,
+            "antimatter": 225,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 2700,
+            "nano": 2026,
+            "antimatter": 450,
+            "hydrogen": 900
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 3600,
+            "nano": 2700,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 2700,
+            "nano": 2251,
+            "antimatter": 450,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 2251,
+            "nano": 1575,
+            "antimatter": 675,
+            "hydrogen": 1802
+          }
+        },
+        "non_cost_sha256": "c8b27d6308af89969a751d6fc640220c09d0198831778bb100df4b2bed88e5eb"
+      },
+      "ground_turret_anti_heavy": {
+        "old_profiles": {
+          "basic": {
+            "metal": 14100,
+            "nano": 4700,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 10575,
+            "nano": 5287,
+            "antimatter": 588,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 7050,
+            "nano": 5287,
+            "antimatter": 1175,
+            "hydrogen": 2350
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 9400,
+            "nano": 7050,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 7051,
+            "nano": 5875,
+            "antimatter": 1175,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 5875,
+            "nano": 4113,
+            "antimatter": 1762,
+            "hydrogen": 4700
+          }
+        },
+        "non_cost_sha256": "b03f33f4ddb2bf468ed5553d1452951d6a9dcc6b8f90d2f944e957ccc8ae4304"
+      },
+      "ground_turret_anti_light": {
+        "old_profiles": {
+          "basic": {
+            "metal": 1500,
+            "nano": 500,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 1125,
+            "nano": 563,
+            "antimatter": 62,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 750,
+            "nano": 563,
+            "antimatter": 125,
+            "hydrogen": 250
+          }
+        },
+        "profiles": {
+          "basic": {
+            "metal": 1000,
+            "nano": 750,
+            "antimatter": 0,
+            "hydrogen": 0
+          },
+          "intermediate": {
+            "metal": 749,
+            "nano": 625,
+            "antimatter": 125,
+            "hydrogen": 0
+          },
+          "superior": {
+            "metal": 625,
+            "nano": 437,
+            "antimatter": 188,
+            "hydrogen": 500
+          }
+        },
+        "non_cost_sha256": "77e2789c954d61233ccd0a0c9a28b1c25adf6797f1c272d600f987077c540265"
+      }
+    }
+  },
+  "quote_validation": {
+    "quotes": 3636,
+    "maximum_absolute_difference_by_group": {
+      "buildings": 12,
+      "technologies": 10,
+      "ships": 9,
+      "defenses": 0
+    },
+    "worst": {
+      "buildings": {
+        "slug": "fortress",
+        "tier": "intermediate",
+        "level": 10,
+        "quantity": 1,
+        "bonus": "mid",
+        "delta": -12
+      },
+      "technologies": {
+        "slug": "colonial_expansion",
+        "tier": "superior",
+        "level": 2,
+        "quantity": 1,
+        "bonus": "none",
+        "delta": 10
+      },
+      "ships": {
+        "slug": "fighter",
+        "tier": "superior",
+        "level": 1,
+        "quantity": 1,
+        "bonus": "max",
+        "delta": 9
+      },
+      "defenses": {
+        "slug": "ground_turret_anti_light",
+        "tier": "basic",
+        "level": 1,
+        "quantity": 1,
+        "bonus": "none",
+        "delta": 0
+      }
+    }
+  }
+}

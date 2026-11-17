@@ -1,1 +1,10 @@
-<nav class="ui-tabs" aria-label="Compte et préférences"><a href="{{ path('app_profile') }}" {% if route=='app_profile' %}aria-current="page"{% endif %}>Profil</a><a href="{{ path('app_preferences') }}" {% if route=='app_preferences' %}aria-current="page"{% endif %}>Préférences</a><a href="{{ path('app_preferences',{_fragment:'vacances-info'}) }}">Vacances</a></nav>
+<nav class="ui-tabs space-navigation" aria-label="Compte et préférences">
+{% for destination in [
+    {route:'app_profile',label:'Mes identifiants'},
+    {route:'app_preferences',label:'Préférences'},
+    {route:'app_vacation',label:'Mode vacances'},
+    {route:'app_account_delete_page',label:'Suppression du compte'}
+] %}
+<a href="{{ path(destination.route) }}"{% if app.request.attributes.get('_route')==destination.route %} class="active" aria-current="page"{% endif %}>{{ destination.label }}</a>
+{% endfor %}
+</nav>

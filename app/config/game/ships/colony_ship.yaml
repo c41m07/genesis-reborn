@@ -14,54 +14,63 @@
   "costs": {},
   "speed_system": 96,
   "speed_galaxy": 476,
-  "fuel_travel_system": 0.5,
-  "fuel_travel_galaxy": 2,
-  "fuel_orbit": 0.3,
+  "fuel_travel_system": 0.15,
+  "fuel_travel_galaxy": 0.6,
+  "fuel_orbit": 0.09,
   "cargo_capacity": 1000,
-  "unlock_requirements": {
-    "buildings": [
-      {
-        "slug": "shipyard",
-        "level": 1
-      }
-    ]
-  },
+  "unlock_requirements": {},
   "provisional": true,
   "note": "Profil de mobilité et de combat différencié, équilibrage validé le 02/11/2026 et à mesurer en Alpha.",
   "fuel_capacity": 16000,
   "fuel_capacity_provisional": true,
-  "fuel_capacity_note": "Réservoir dédié de 16 000 H au rang basique, permettant le plus long aller-retour des cartes de référence sans utiliser la soute. Consommation maximale mesurée : environ 15 453,51 H hors stationnement.",
+  "fuel_capacity_note": "Réservoir dédié conservé. Son autonomie dépend de la classe, du trajet et du pourcentage de vitesse ; cette réserve est distincte de la soute de fret.",
   "shield": 150,
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "colonial_expansion",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
           "slug": "shipyard",
           "tier": "basic",
-          "level": 5
+          "level": 2
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "colonial_expansion",
+          "tier": "basic",
+          "level": 1
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "shipyard",
+          "tier": "intermediate",
+          "level": 2
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "colonial_expansion",
+          "tier": "intermediate",
+          "level": 1
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "colonial_expansion",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
       "buildings": [
         {
           "slug": "shipyard",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 2
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "colonial_expansion",
+          "tier": "superior",
+          "level": 1
         }
       ]
     }
@@ -69,22 +78,22 @@
   "economy_value_budget": 40000,
   "cost_profiles": {
     "basic": {
-      "metal": 12000,
-      "nano": 4000,
+      "metal": 8000,
+      "nano": 6000,
       "antimatter": 0,
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 11252,
-      "nano": 5625,
-      "antimatter": 625,
+      "metal": 7500,
+      "nano": 6251,
+      "antimatter": 1250,
       "hydrogen": 0
     },
     "superior": {
-      "metal": 9375,
-      "nano": 7031,
-      "antimatter": 1563,
-      "hydrogen": 3124
+      "metal": 7812,
+      "nano": 5469,
+      "antimatter": 2344,
+      "hydrogen": 6250
     }
   },
   "tier_labels": {

@@ -6,7 +6,7 @@ import { runIsolatedSql, queryIsolatedSql } from './support/game-fixtures.mjs';
 async function enter(page, admin = false) {
   const id = crypto.randomUUID().slice(0, 8);
   const email = `inventory-${id}@example.test`;
-  const password = 'Browser-test-2026!';
+  const password = crypto.randomUUID() + 'aA1!';
   await page.goto('/inscription');
   await page.getByLabel('Adresse email').fill(email);
   await page.getByLabel('Nom de commandant').fill(`Inventory-${id}`);
@@ -25,49 +25,38 @@ async function enter(page, admin = false) {
   return email;
 }
 
-test('Catalogue admin : recherche, famille, état vide et saisie non perdue', async ({ page, browser }, testInfo) => {
+test('Catalogue admin : familles dédiées, recherche transversale et lecture sans JS', async ({ page, browser }, testInfo) => {
   await enter(page, true);
   const universeId = queryIsolatedSql(process.env.BROWSER_ROUTER, 'SELECT id FROM universe ORDER BY id LIMIT 1');
   const route = `/admin/universes/${Number(universeId)}/catalogue`;
   await page.goto(route);
-  const tools = page.getByRole('search', { name: 'Rechercher dans les catalogues' });
-  await expect(tools).toBeVisible();
-  const entries = page.locator('details[data-admin-filter-target="row"]');
-  const total = await entries.count();
-  expect(total).toBeGreaterThan(4);
-  const first = entries.first();
-  const family = await first.getAttribute('data-filter-group');
-  const slug = (await first.getAttribute('id')).slice(family.length + 1);
-  await first.locator('summary').click();
-  const input = first.locator('input[type="number"]').first();
-  const draft = String(Number(await input.inputValue()) + 1);
-  await input.fill(draft);
-  await tools.getByLabel('Rechercher une entrée').fill('zz-sans-résultat');
-  await expect(page.locator('details[data-admin-filter-target="row"]:visible')).toHaveCount(0);
-  await expect(page.getByText('Aucune entrée ne correspond à ces filtres.', { exact: false })).toBeVisible();
-  await expect(page.locator('.catalogue-family-nav a:visible')).toHaveCount(0);
-  await tools.getByRole('button', { name: 'Effacer les filtres' }).click();
-  await expect(tools.getByLabel('Rechercher une entrée')).toBeFocused();
-  await expect(page.locator('details[data-admin-filter-target="row"]:visible')).toHaveCount(total);
-  await expect(input).toHaveValue(draft);
-  await tools.getByLabel('Famille', { exact: true }).selectOption('ships');
-  const ships = await entries.filter({ has: page.locator('summary') }).evaluateAll(nodes => nodes.filter(node => node.dataset.filterGroup === 'ships').length);
-  await expect(page.locator('details[data-admin-filter-target="row"]:visible')).toHaveCount(ships);
-  await tools.getByLabel('Famille', { exact: true }).selectOption(family);
-  await tools.getByLabel('Rechercher une entrée').fill(slug);
-  await expect(page.locator('details[data-admin-filter-target="row"]:visible')).toHaveCount(1);
-  for (const width of [1920, 1440, 1280, 768, 390]) {
-    await page.setViewportSize({ width, height: 900 });
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-    if (width === 1440) await page.screenshot({ path: testInfo.outputPath('catalogue-open-1440.png'), fullPage: true, animations: 'disabled' });
+  await expect(page.getByRole('heading', {name:'Bâtiments',exact:true})).toBeVisible();
+  await expect(page.locator('input[name^="values["]')).toHaveCount(0);
+  const families = page.getByRole('navigation', {name:'Familles de catalogues'});
+  await families.getByRole('link', {name:'Vaisseaux',exact:true}).click();
+  await expect(page).toHaveURL(new RegExp(route + '/ships$'));
+  await expect(families.getByRole('link', {name:'Vaisseaux',exact:true})).toHaveAttribute('aria-current','page');
+  const query=page.getByLabel('Rechercher dans toutes les familles');
+  await query.fill('zz-sans-résultat');await page.getByRole('button',{name:'Rechercher',exact:true}).click();
+  await expect(page.getByText('Aucune entrée ne correspond à cette recherche.')).toBeVisible();
+  await query.fill('fighter');await page.getByRole('button',{name:'Rechercher',exact:true}).click();
+  await expect(page.getByRole('link',{name:/^Modifier /})).toHaveCount(3);
+  const edit=page.locator(`a[href="${route}/ships/fighter"]`);await expect(edit).toHaveCount(1);
+  await edit.focus();await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(new RegExp(route + '/ships/fighter$'));
+  const input=page.locator('input[name="values[precision]"]');
+  await input.fill('83');await page.waitForTimeout(1100);await expect(input).toHaveValue('83');
+  for (const width of [1920,1440,1280,768,390]) {
+    await page.setViewportSize({width,height:900});
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    if ([1440,390].includes(width)) await page.screenshot({path:testInfo.outputPath(`catalogue-edit-${width}.png`),fullPage:true,animations:'disabled'});
   }
-  await first.locator('summary').click();
-  await page.screenshot({ path: testInfo.outputPath('catalogue-filter-390.png'), fullPage: true, animations: 'disabled' });
-  const context = await browser.newContext({ javaScriptEnabled: false, storageState: await page.context().storageState() });
-  const fallback = await context.newPage();
-  await fallback.goto(route);
-  await expect(fallback.locator('.catalogue-search')).toBeHidden();
-  await expect(fallback.locator('details[data-admin-filter-target="row"]:visible')).toHaveCount(total);
+  const context=await browser.newContext({javaScriptEnabled:false,storageState:await page.context().storageState()});
+  const fallback=await context.newPage();await fallback.goto(route);
+  await fallback.getByLabel('Rechercher dans toutes les familles').fill('fighter');await fallback.getByRole('button',{name:'Rechercher',exact:true}).click();
+  await expect(fallback.getByRole('link',{name:/^Modifier /})).toHaveCount(3);
+  await fallback.locator(`a[href="${route}/ships/fighter"]`).click();
+  await expect(fallback.locator('input[name="values[precision]"]')).toBeVisible();
   await context.close();
 });
 
@@ -88,7 +77,9 @@ test('Inventaire : état vide, capacité pleine, attente et effet configuré', a
   await expect(page.locator('.mission-card')).toContainText(`Quantité : ${capacity}`);
   await expect(page.locator('.mission-card')).toContainText('25,00 %');
   await expect(page.getByText('Inventaire plein.', { exact: false })).toBeVisible();
+  await page.getByRole('navigation',{name:'Navigation de l’inventaire'}).getByRole('link',{name:/Récompenses en attente/}).click();
   await expect(page.locator('.boost-pending')).toContainText('2 bonus en attente');
+  await page.getByRole('navigation',{name:'Navigation de l’inventaire'}).getByRole('link',{name:/^Boosts/}).click();
   await expect(page.getByRole('progressbar')).toHaveAttribute('value', String(capacity));
   for (const width of [1920, 1440, 1280, 768, 390]) {
     await page.setViewportSize({ width, height: 900 });
@@ -156,4 +147,45 @@ test('Inventaire : appliquer un boost à une file puis à une flotte', async ({ 
   expect(Number(queryIsolatedSql(project, `SELECT TIMESTAMPDIFF(SECOND,UTC_TIMESTAMP(),arrival_at) FROM fleet WHERE id=${fleetId}`))).toBeLessThan(2800);
   expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM player_boost WHERE player_universe_id=${membershipId} AND status='used'`)).toBe('2');
   await expect(page.getByRole('heading', { name: 'Aucun bonus disponible' })).toBeVisible();
+});
+
+
+test('Inventaire : pages directes, navigation, attente paginée et anciens fragments', async ({ page, browser }, testInfo) => {
+  test.setTimeout(180000);
+  const email=await enter(page), project=process.env.BROWSER_ROUTER;
+  const member=Number(queryIsolatedSql(project,`SELECT current_player_universe_id FROM player WHERE email='${email}'`));
+  runIsolatedSql(project, `INSERT INTO player_boost (player_universe_id,source_type,source_key,status,earned_at) VALUES ${Array.from({length:28},(_,i)=>`(${member},'event','pending-${member}-${i}','pending',DATE_ADD(UTC_TIMESTAMP(),INTERVAL ${i} SECOND))`).join(',')}`);
+  const routes=[['/boosts','Boosts'],['/inventaire/boites','Boîtes de ressources'],['/inventaire/recompenses','Récompenses en attente']];
+  for (const theme of ['dark','light']) {
+    runIsolatedSql(project,`UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
+    for (const width of [1440,390,320]) {
+      await page.setViewportSize({width,height:900});
+      for (const [url,title] of routes) {
+        expect((await page.goto(url)).status()).toBe(200);
+        await expect(page.locator('h1')).toHaveText(title);
+        await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
+        await expect(page.locator(`nav[aria-label="Navigation de l’inventaire"] a[href="${url}"]`)).toHaveAttribute('aria-current','page');
+        await expect(page.locator('.sidebar a[href="/boosts"]')).toHaveClass(/active/);
+        expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+        expect((await new AxeBuilder({page}).include('main').analyze()).violations).toEqual([]);
+      }
+      await page.screenshot({path:testInfo.outputPath(`pending-${theme}-${width}.png`),fullPage:true});
+    }
+  }
+  await expect(page.locator('[data-pending-item]')).toHaveCount(25);
+  await page.getByRole('link',{name:'Récompenses suivantes',exact:true}).focus();await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/recompenses\?page=2$/);await page.reload();await expect(page.locator('[data-pending-item]')).toHaveCount(3);
+  await page.goBack();await expect(page.locator('[data-pending-item]')).toHaveCount(25);
+  for (const [fragment,path] of [['inventory-boxes','/inventaire/boites'],['inventory-pending','/inventaire/recompenses'],['inventory-boosts','/boosts']]) {
+    await page.goto('/boosts#'+fragment);await expect(page).toHaveURL(new RegExp(path+'#'+fragment+'$'));
+  }
+  const context=await browser.newContext({baseURL:new URL(page.url()).origin,storageState:await page.context().storageState(),javaScriptEnabled:false,viewport:{width:390,height:900}});
+  try {
+    const plain=await context.newPage();await plain.goto('/inventaire/recompenses?page=2');
+    await expect(plain.locator('[data-pending-item]')).toHaveCount(3);
+    const nav=plain.getByRole('navigation',{name:'Navigation de l’inventaire'});
+    await nav.getByRole('link',{name:/^Boosts/}).click();await expect(plain.locator('h1')).toHaveText('Boosts');
+    await nav.getByRole('link',{name:/Boîtes de ressources/}).click();await expect(plain.locator('h1')).toHaveText('Boîtes de ressources');
+    await nav.getByRole('link',{name:/Récompenses en attente/}).click();await expect(plain.locator('[data-pending-item]')).toHaveCount(25);
+  } finally {await context.close();}
 });

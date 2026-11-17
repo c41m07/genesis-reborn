@@ -6,23 +6,41 @@ final class FactoryEconomy
 {
     private const STOCK_EPSILON=1e-7;
 
-    public static function simulate(array $baseRates,array $factories,array $stocks,array $capacities,int $elapsed,float $minimumEfficiency=0.1):array
+    /** L'option de mesure ajoute les intégrales par ressource sans modifier les débits ni les stocks. */
+    public static function simulate(array $baseRates,array $factories,array $stocks,array $capacities,int $elapsed,float $minimumEfficiency=0.1,bool $includeTotals=false):array
     {
         if($elapsed<0||!is_finite($minimumEfficiency)||$minimumEfficiency<0||$minimumEfficiency>1)throw new \InvalidArgumentException('Paramètres de production invalides.');
         foreach($baseRates as $rate)if(!is_finite((float)$rate)||$rate<0)throw new \InvalidArgumentException('Débit de production invalide.');
         $stocks=array_map(static fn($v):float=>max(0.0,(float)$v),$stocks);$remaining=(float)$elapsed;$guard=0;
+        $totals=[];
+        if ($includeTotals) {
+            foreach (['production','consumption','uncredited'] as $field) {
+                $totals[$field] = array_fill_keys(array_keys($stocks),0.0);
+            }
+        }
         while($remaining>1e-9&&++$guard<=64){
             $stocks=self::normalizeStocks($stocks,$capacities);
             $point=self::operatingPoint($baseRates,$factories,$stocks,$capacities,$minimumEfficiency);$flows=$point['flows'];$step=$remaining;
             foreach($flows as $resource=>$flow){$stock=$stocks[$resource]??0.0;$cap=(float)($capacities[$resource]??INF);if($flow>1e-12&&$stock<$cap-1e-9)$step=min($step,($cap-$stock)/$flow);elseif($flow< -1e-12&&$stock>1e-9){$step=min($step,$stock/-$flow);if($stock>$cap+self::STOCK_EPSILON)$step=min($step,($stock-$cap)/-$flow);}}
             if($step<=0)throw new \LogicException('La simulation de production ne progresse plus.');
+            // Mesurer chaque segment réel, y compris les frontières fractionnaires de stockage.
+            if ($includeTotals) {
+                foreach ($totals as $field=>&$amounts) {
+                    foreach ($point[$field] as $resource=>$rate) {
+                        $amounts[$resource] = ($amounts[$resource]??0.0)+$rate*$step;
+                    }
+                }
+                unset($amounts);
+            }
             foreach($flows as $resource=>$flow){$cap=(float)($capacities[$resource]??INF);$stocks[$resource]=min(max($cap,$stocks[$resource]??0.0),max(0.0,($stocks[$resource]??0.0)+$flow*$step));}
             $remaining-=$step;
         }
         if($remaining>1e-9)throw new \LogicException('La simulation de production n’a pas intégré toute la durée.');
         $stocks=self::normalizeStocks($stocks,$capacities);
         $point=self::operatingPoint($baseRates,$factories,$stocks,$capacities,$minimumEfficiency);
-        return ['production'=>$point['production'],'consumption'=>$point['consumption'],'sources'=>$point['sources'],'consumption_sources'=>$point['consumption_sources'],'uncredited'=>$point['uncredited'],'stocks'=>$stocks,'rates'=>$point['flows'],'efficiency'=>$point['efficiency'],'antimatter_efficiency'=>$point['antimatter_efficiency'],'electricity_consumption'=>$point['electricity_consumption'],'hydrogen_consumption'=>$point['hydrogen_consumption']];
+        $result=['production'=>$point['production'],'consumption'=>$point['consumption'],'sources'=>$point['sources'],'consumption_sources'=>$point['consumption_sources'],'uncredited'=>$point['uncredited'],'stocks'=>$stocks,'rates'=>$point['flows'],'efficiency'=>$point['efficiency'],'antimatter_efficiency'=>$point['antimatter_efficiency'],'electricity_consumption'=>$point['electricity_consumption'],'hydrogen_consumption'=>$point['hydrogen_consumption']];
+        if($includeTotals) $result['totals']=$totals;
+        return $result;
     }
 
     private static function normalizeStocks(array $stocks,array $capacities):array

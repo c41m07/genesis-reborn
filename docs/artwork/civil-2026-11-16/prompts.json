@@ -1,0 +1,74 @@
+{
+  "date": "2026-11-16",
+  "generator": "image_gen intégré",
+  "master_source": "docs/ILLUSTRATIONS.md",
+  "master_prompt": "Crée une illustration individuelle pour une carte du jeu de stratégie spatiale Genesis Reborn. Montre uniquement le sujet indiqué, dans une scène de concept art 3D réaliste et cinématique. Palette bleu nuit et noir, éclairages cyan/bleu, accents ambre discrets. Vue paysage, ratio 4:3 (1200 × 900 ou supérieur de même ratio), sujet centré, complet et immédiatement reconnaissable à petite taille. Utilise toute la surface du cadre sans étirer le sujet. Pas de planche, grille, collage, texte, libellé, chiffre, logo, interface, bordure ou filigrane. Le décor doit prolonger l’image jusqu’aux bords.",
+  "style_prompt": "DA de référence observée dans les trois cargos existants de Genesis Reborn : rendu 3D détaillé mais silhouettes nettes, construction industrielle crédible, panneaux métalliques gris graphite patinés, joints et poutres mécaniques précis, bandes orange cuivre discrètes, points lumineux ambre, lumières froides cyan. Fond d'espace noir peuplé de petites étoiles, mince courbure d'une colonie bleutée dans le coin inférieur gauche. Vue trois-quarts légèrement plongeante : arrière vers le haut gauche, avant vers le bas droit. Un seul appareil, aucune flotte.",
+  "style_references": [
+    "app/public/images/catalog/ships/transport__basic.webp",
+    "app/public/images/catalog/ships/transport__intermediate.webp",
+    "app/public/images/catalog/ships/transport__superior.webp"
+  ],
+  "format": {
+    "width": 1448,
+    "height": 1086,
+    "ratio": "4:3",
+    "webp_quality": 90
+  },
+  "assets": [
+    {
+      "slug": "solar_satellite",
+      "tier": "basic",
+      "label": "Satellite héliocapteur",
+      "file": "app/public/images/catalog/ships/solar_satellite__basic.webp",
+      "source_png": "output/imagegen/civil-2026-11-16/solar_satellite__basic.png",
+      "subject_prompt": "Sujet : Satellite héliocapteur, rang BASIQUE. Petit satellite civil fixe de production électrique, sans armement. Bloc central compact hexagonal en métal graphite et deux ailes symétriques de panneaux photovoltaïques bleu nuit, formées chacune de deux segments rectangulaires jointifs. Panneaux en perspective cohérente, cellules régulières, charnières industrielles bien reliées. Un petit collecteur d'énergie cyan au centre, quelques voyants ambre. Il est installé au-dessus de sa colonie, aucune propulsion ni traînée. Silhouette simple et complète, 80 % de la largeur du cadre, marges confortables ; ne pas couper les ailes. La fonction solaire doit se comprendre immédiatement. Ni antenne en forme de canon, ni arme, ni station gigantesque. Ce modèle est la base d'une famille qui gagnera ensuite des panneaux et une couronne structurale.",
+      "previous_tier_reference": null
+    },
+    {
+      "slug": "solar_satellite",
+      "tier": "intermediate",
+      "label": "Plateforme solaire",
+      "file": "app/public/images/catalog/ships/solar_satellite__intermediate.webp",
+      "source_png": "output/imagegen/civil-2026-11-16/solar_satellite__intermediate.png",
+      "subject_prompt": "Image de départ : le Satellite héliocapteur fourni. Créer son évolution INTERMÉDIAIRE, nom de conception Plateforme solaire (aucun texte dans l'image). Garder la même famille de bloc central hexagonal, les mêmes cellules photovoltaïques bleu nuit, métal graphite, raccords cuivrés, éclairage cyan, angle trois-quarts et colonie en bas à gauche. Faire évoluer réellement la construction : bloc central plus large avec étage de conversion ajouté dessous, QUATRE ailes photovoltaïques identiques disposées symétriquement en X, chacune composée de deux panneaux rectangulaires articulés. Tous les quatre bras sont connectés proprement au moyeu, aucune aile superposée ou détachée. Des longerons renforcés et petits radiateurs latéraux matérialisent l'intégration industrielle. Un seul appareil complet, sans propulsion, sans arme, en orbite stable. Construction plus sophistiquée que le rang basique mais aucune grande couronne extérieure encore. Dézoomer suffisamment pour montrer toutes les extrémités avec des marges, silhouette lisible occupant environ 80 % de l'image, ratio paysage 4:3. Conserver le rendu crédible du catalogue.",
+      "previous_tier_reference": "app/public/images/catalog/ships/solar_satellite__basic.webp"
+    },
+    {
+      "slug": "solar_satellite",
+      "tier": "superior",
+      "label": "Couronne héliosolaire",
+      "file": "app/public/images/catalog/ships/solar_satellite__superior.webp",
+      "source_png": "output/imagegen/civil-2026-11-16/solar_satellite__superior.png",
+      "subject_prompt": "Image de départ : la Plateforme solaire fournie. Créer l'évolution SUPÉRIEURE de cette même famille, nom de conception Couronne héliosolaire (aucun texte). Garder le même moyeu graphite hexagonal à cœur cyan, les quatre bras symétriques et la structure industrielle à touches cuivrées. Ajouter une vraie grande couronne circulaire segmentée photovoltaïque autour du moyeu, rigidifiée par les quatre bras : anneau extérieur entièrement fermé et relié mécaniquement, huit grands secteurs de cellules solaires bleu nuit intégrés dans la couronne, vide spatial visible entre moyeu et couronne. Le moyeu reçoit un troisième étage compact de conversion et des radiateurs industriels. Architecture nettement plus aboutie que le modèle intermédiaire, sans devenir une mégastructure entourant une planète : c'est toujours UNE unité solaire locale, sans équipage apparent, sans armes, sans moteurs, sans traînée. Une seule couronne extérieure, symétrie physique cohérente et perspective elliptique correcte. Vue trois-quarts plongeante, même colonie lointaine en bas à gauche et éclairage du catalogue. Montrer le cercle entier avec marges confortables dans un cadre paysage 4:3, l'appareil occupe environ 80 % du cadre. Rien de coupé, aucun texte.",
+      "previous_tier_reference": "app/public/images/catalog/ships/solar_satellite__intermediate.webp"
+    },
+    {
+      "slug": "hydrogen_collector",
+      "tier": "basic",
+      "label": "Récolteur atmosphérique",
+      "file": "app/public/images/catalog/ships/hydrogen_collector__basic.webp",
+      "source_png": "output/imagegen/civil-2026-11-16/hydrogen_collector__basic.png",
+      "subject_prompt": "Sujet : Récolteur atmosphérique, rang BASIQUE de la famille civile productrice d'hydrogène. Un appareil industriel spatial compact, sans armement, vu intégralement de trois-quarts légèrement au-dessus, nez dirigé vers le coin inférieur droit. Silhouette courte et robuste, symétrique. À l'avant, un UNIQUE large entonnoir de collecte rectangulaire en V, ouverture sombre bordée d'une grille de filtration visible, relié à la coque par deux bras mécaniques latéraux. Il doit clairement s'agir d'une bouche de collecte de gaz et non d'un canon. Au-dessus et au milieu : deux petits cylindres de traitement cryogénique, conduites, vannes et compresseurs apparents. Arrière court avec deux petits blocs de propulsion de transfert éteints, juste quelques voyants cyan. Panneaux graphite à joints fins, quelques bandes orange cuivre et éclairages de service ambre. Appareil actuellement stationné au-dessus de sa colonie : aucune traînée de déplacement ; une très légère brume bleue seulement à l'intérieur du filtre évoque l'hydrogène. Aucun conteneur de fret ni soute ouverte, aucun projectile, aucun outil de forage, aucune arme, pas de personnage. Taille modeste ; la collecte et le traitement, plutôt que le transport, doivent se lire immédiatement. Une seule unité, espace étoilé bleu-noir et mince horizon de colonie en bas à gauche, perspective et matériaux crédibles. Garder une marge autour de tout le véhicule ; ratio 4:3.",
+      "previous_tier_reference": null
+    },
+    {
+      "slug": "hydrogen_collector",
+      "tier": "intermediate",
+      "label": "Collecteur orbital",
+      "file": "app/public/images/catalog/ships/hydrogen_collector__intermediate.webp",
+      "source_png": "output/imagegen/civil-2026-11-16/hydrogen_collector__intermediate.png",
+      "subject_prompt": "Image de départ : le Récolteur atmosphérique fourni. Créer son évolution INTERMÉDIAIRE, nom de conception Collecteur orbital (aucun texte dans l'image). Même famille, même point de vue, nez vers le bas droit, proportions et symétrie mécaniques crédibles. Garder la grande bouche de filtration rectangulaire en V à l'avant, ses deux bras latéraux et la coque industrielle graphite à bandes cuivre. Faire évoluer la fonction : bouche plus large à double grille de filtration superposée, quatre modules cryogéniques cylindriques distincts arrangés en deux paires symétriques sur le dos, réseau de tuyauteries correctement connecté à un compresseur central, radiateurs supplémentaires latéraux et châssis un peu plus long, mieux intégré que la base. Deux blocs moteurs de transfert à l'arrière restent éteints. La brume cyan reste uniquement à l'intérieur du collecteur frontal, pas derrière le véhicule. Pas de soute de fret, pas de conteneurs amovibles, aucune arme ni canon, aucune dérive d'apparence militaire. Un seul vaisseau civil stationné au-dessus de sa colonie, silhouettes nettes et complètes avec marges, cadre paysage 4:3. Progression architecturale visible, mais le rang supérieur sera encore plus intégré.",
+      "previous_tier_reference": "app/public/images/catalog/ships/hydrogen_collector__basic.webp"
+    },
+    {
+      "slug": "hydrogen_collector",
+      "tier": "superior",
+      "label": "Raffineur d’hydrogène",
+      "file": "app/public/images/catalog/ships/hydrogen_collector__superior.webp",
+      "source_png": "output/imagegen/civil-2026-11-16/hydrogen_collector__superior.png",
+      "subject_prompt": "Image de départ : le Collecteur orbital fourni. Créer son évolution SUPÉRIEURE, nom de conception Raffineur d’hydrogène (aucun texte). Conserver la famille industrielle, la grande admission filtrante rectangulaire en V à l'avant, les deux bras symétriques de support, les modules cryogéniques et le nez vers le bas droit, avec même angle de vue et colonie à gauche. Évolution structurelle nette : coque plus longue, large et intégrée, épais châssis périphérique graphite, SIX colonnes cryogéniques reliées en trois paires sur le dos ; au milieu un module compact de séparation cylindrique horizontal avec anneaux de service cyan, relié aux six colonnes par un réseau de tuyaux ordonné et plausible. La bouche de collecte reste UNIQUE et large, avec plusieurs filtres internes lisibles, pas plusieurs petites bouches ni canons. Les bords de la coque reçoivent des carénages techniques et de larges radiateurs à ailettes intégrés, à touches cuivre/ambre. L'appareil est un raffinage mobile local abouti, pas un cargo à conteneurs, pas une usine géante, pas un vaisseau armé. Deux blocs moteurs de transfert discrets à l'arrière sans traînée, production illustrée seulement par une fine brume bleue DANS les filtres. Un seul appareil civil stationné au-dessus de sa colonie, aucune arme ni projectile, pas de texte ni logo. Dézoomer assez pour montrer tout le véhicule et ses bras avec des marges ; ratio paysage 4:3 et rendu cinématique réaliste cohérent avec les cinq autres illustrations.",
+      "previous_tier_reference": "app/public/images/catalog/ships/hydrogen_collector__intermediate.webp"
+    }
+  ]
+}

@@ -14,67 +14,78 @@
   "costs": {},
   "speed_system": 192,
   "speed_galaxy": 1056,
-  "fuel_travel_system": 0.5,
-  "fuel_travel_galaxy": 2,
-  "fuel_orbit": 0.3,
+  "fuel_travel_system": 0.06,
+  "fuel_travel_galaxy": 0.24,
+  "fuel_orbit": 0.036,
   "cargo_capacity": 300,
-  "unlock_requirements": {
-    "technologies": [
-      {
-        "slug": "signature_masking",
-        "level": 2
-      },
-      {
-        "slug": "vector_propulsion",
-        "level": 1
-      }
-    ],
-    "buildings": [
-      {
-        "slug": "shipyard",
-        "level": 4
-      }
-    ],
-    "ships": [
-      "fighter"
-    ]
-  },
+  "unlock_requirements": {},
   "provisional": true,
   "note": "Profil de mobilité et de combat différencié, équilibrage validé le 02/11/2026 et à mesurer en Alpha.",
   "fuel_capacity": 16000,
   "fuel_capacity_provisional": true,
-  "fuel_capacity_note": "Réservoir dédié de 16 000 H au rang basique, permettant le plus long aller-retour des cartes de référence sans utiliser la soute. Consommation maximale mesurée : environ 15 453,51 H hors stationnement.",
+  "fuel_capacity_note": "Réservoir dédié conservé. Son autonomie dépend de la classe, du trajet et du pourcentage de vitesse ; cette réserve est distincte de la soute de fret.",
   "shield": 75,
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "signature_masking",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
           "slug": "shipyard",
           "tier": "basic",
-          "level": 5
+          "level": 6
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "signature_masking",
+          "tier": "basic",
+          "level": 2
+        },
+        {
+          "slug": "vector_propulsion",
+          "tier": "basic",
+          "level": 2
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "shipyard",
+          "tier": "intermediate",
+          "level": 6
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "signature_masking",
+          "tier": "intermediate",
+          "level": 2
+        },
+        {
+          "slug": "vector_propulsion",
+          "tier": "intermediate",
+          "level": 2
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "signature_masking",
-          "tier": "intermediate",
-          "level": 5
-        }
-      ],
       "buildings": [
         {
           "slug": "shipyard",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 6
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "signature_masking",
+          "tier": "superior",
+          "level": 2
+        },
+        {
+          "slug": "vector_propulsion",
+          "tier": "superior",
+          "level": 2
         }
       ]
     }
@@ -82,22 +93,22 @@
   "economy_value_budget": 24400,
   "cost_profiles": {
     "basic": {
-      "metal": 7320,
-      "nano": 2440,
+      "metal": 4880,
+      "nano": 3660,
       "antimatter": 0,
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 6865,
-      "nano": 3432,
-      "antimatter": 381,
+      "metal": 4575,
+      "nano": 3813,
+      "antimatter": 763,
       "hydrogen": 0
     },
     "superior": {
-      "metal": 5720,
-      "nano": 4290,
-      "antimatter": 953,
-      "hydrogen": 1906
+      "metal": 4766,
+      "nano": 3336,
+      "antimatter": 1430,
+      "hydrogen": 3814
     }
   },
   "tier_labels": {

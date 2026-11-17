@@ -1,11 +1,12 @@
 {% extends 'admin/layout.html.twig' %}
-{% block title %}Projets de guilde · Console d’administration{% endblock %}
+{% block title %}{{ editing ? 'Modifier '~editing.name : 'Créer un modèle de projet' }} · Administration{% endblock %}
 {% block body %}
-<div class="page-heading"><h1>Projets de guilde</h1><p>Des paliers financés par les membres, avec une récompense unique par joueur et modèle de projet.</p></div>
+<div class="page-heading"><h1>{{ editing ? 'Modifier '~editing.name : 'Créer un modèle de projet' }}</h1><p>Des paliers financés par les membres, avec une récompense unique par joueur et modèle de projet.</p></div>
+<p><a class="secondary" href="{{ path('app_admin_guild_projects') }}">Tous les modèles de projets</a></p>
 <section class="panel" aria-labelledby="project-definition-title">
     <h2 id="project-definition-title">{{ editing ? 'Modifier le modèle' : 'Créer un modèle' }}</h2>
     <p>Aucun modèle n’est actif par défaut. Les projets déjà lancés conservent leurs conditions, même si vous modifiez ou désactivez leur modèle.</p>
-    <form method="post" class="admin-event-form">
+    <form method="post" action="{{ editing ? path('app_admin_guild_project_edit',{id:editing.id}) : path('app_admin_guild_project_new') }}" class="admin-event-form">
         <input type="hidden" name="_token" value="{{ csrf_token('guild_project_definition_'~(editing.id|default(0))) }}"><input type="hidden" name="version" value="{{ draft.version }}">
         <div class="form-grid">
             <label for="project-name">Nom du projet<input id="project-name" name="name" maxlength="120" required value="{{ draft.name }}"></label>
@@ -30,8 +31,5 @@
         <p>Un seul boost standard par joueur et modèle, même après changement de guilde. Les dons ne sont pas remboursés. Aucun bonus permanent n’est accordé.</p>
         <button class="primary" name="intent" value="save">Enregistrer le modèle</button>{% if editing %} <a href="{{ path('app_admin_guild_projects') }}">Annuler la modification</a>{% endif %}
     </form>
-</section>
-<section aria-labelledby="project-models-title"><h2 id="project-models-title">Modèles enregistrés</h2>
-{% for definition in definitions %}<article class="panel"><h3>{{ definition.name }}</h3><p>{{ definition.universe.name }} · {{ definition.enabled ? 'Disponible' : 'Désactivé pour les nouveaux lancements' }} · {{ definition.stages|length }} palier(s)</p><p>Les coûts et minimums permettent au maximum {{ projectRules.maximumRecipients(definition.stages,definition.minimums) }} récompense(s) dans une guilde, selon la répartition des dons.</p><a href="{{ path('app_admin_guild_projects',{edit:definition.id}) }}">Modifier {{ definition.name }}</a></article>{% else %}<p class="panel">Aucun modèle de projet. Aucun coût ni récompense de projet n’est actif.</p>{% endfor %}
 </section>
 {% endblock %}

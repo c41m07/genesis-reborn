@@ -2,7 +2,7 @@
   "slug": "structural_armor",
   "label": "Blindage multicouche",
   "max_level": 25,
-  "research_time_base": 14400,
+  "research_time_base": 3600,
   "research_time_scaling": 1.8,
   "costs_base": {
     "metal": 6800,
@@ -10,26 +10,7 @@
     "antimatter": 0
   },
   "costs_scaling": 2,
-  "unlock_requirements": {
-    "technologies": [
-      {
-        "slug": "nanomaterial_synthesis",
-        "tier": "basic",
-        "level": 3
-      },
-      {
-        "slug": "weapons_engineering",
-        "tier": "basic",
-        "level": 3
-      }
-    ],
-    "buildings": [
-      {
-        "slug": "lab",
-        "level": 1
-      }
-    ]
-  },
+  "unlock_requirements": {},
   "effect": {
     "type": "stat_bonus",
     "targets": "all_combat_units",
@@ -40,35 +21,66 @@
     "max_bonus": 0.25
   },
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "weapons_engineering",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
           "slug": "lab",
           "tier": "basic",
-          "level": 5
+          "level": 4
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "nanomaterial_synthesis",
+          "tier": "basic",
+          "level": 2
+        },
+        {
+          "slug": "weapons_engineering",
+          "tier": "basic",
+          "level": 2
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 4
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "nanomaterial_synthesis",
+          "tier": "intermediate",
+          "level": 2
+        },
+        {
+          "slug": "weapons_engineering",
+          "tier": "intermediate",
+          "level": 2
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "weapons_engineering",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
       "buildings": [
         {
           "slug": "lab",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 4
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "nanomaterial_synthesis",
+          "tier": "superior",
+          "level": 2
+        },
+        {
+          "slug": "weapons_engineering",
+          "tier": "superior",
+          "level": 2
         }
       ]
     }
@@ -76,22 +88,22 @@
   "economy_value_budget": 16000,
   "cost_profiles": {
     "basic": {
-      "metal": 4800,
-      "nano": 1600,
+      "metal": 3200,
+      "nano": 2400,
       "antimatter": 0,
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 4500,
-      "nano": 2250,
-      "antimatter": 250,
+      "metal": 3000,
+      "nano": 2500,
+      "antimatter": 500,
       "hydrogen": 0
     },
     "superior": {
-      "metal": 3751,
-      "nano": 2812,
-      "antimatter": 625,
-      "hydrogen": 1250
+      "metal": 3125,
+      "nano": 2188,
+      "antimatter": 937,
+      "hydrogen": 2502
     }
   },
   "tier_labels": {

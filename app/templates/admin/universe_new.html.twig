@@ -1,0 +1,6 @@
+{% extends 'admin/layout.html.twig' %}
+{% block title %}Créer un univers · Administration{% endblock %}
+{% block body %}
+<div class="page-heading"><h1>Créer un univers</h1><a class="secondary" href="{{ path('app_admin_universes') }}">Tous les univers</a></div>
+{% include 'admin/_universe_creation.html.twig' %}
+{% endblock %}

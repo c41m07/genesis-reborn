@@ -25,6 +25,58 @@ async function enter(page, admin = false) {
   return { email, username };
 }
 
+test('Administration : recherche globale paginée, focus conservé et export complet', async ({ page, browser }) => {
+  const { email } = await enter(page, true);
+  const prefix = 'Paged-' + crypto.randomUUID().slice(0, 8);
+  const values = Array.from({ length: 175 }, (_, index) => `('${prefix}-${String(index).padStart(3, '0')}','${prefix}-${index}@example.test','unused','[]','{}')`).join(',');
+  runIsolatedSql(process.env.BROWSER_ROUTER, `INSERT INTO player (username,email,password,roles,preferences) VALUES ${values}`);
+  const auditValues = Array.from({ length: 175 }, (_, index) => `('rework_page','synthetic',${index},'{"marker":"${prefix}-${index}"}','2026-11-15 12:00:00')`).join(',');
+  runIsolatedSql(process.env.BROWSER_ROUTER, `INSERT INTO admin_audit_log (action,target_type,target_id,details,created_at) VALUES ${auditValues}`);
+  await page.goto('/admin/joueurs');
+  const players = page.locator('#admin-players');
+  await expect(players.locator('tr[data-admin-filter-target="row"]')).toHaveCount(50);
+  await expect(players.getByRole('link', { name: 'Page suivante' })).toBeVisible();
+  const search = players.getByRole('searchbox', { name: 'Rechercher', exact: true });
+  await search.fill(prefix + '-000');
+  await expect(players.locator('tr[data-admin-filter-target="row"]')).toHaveCount(1);
+  await expect(players.locator('tbody')).toContainText(prefix + '-000');
+  await expect(search).toBeFocused();
+  await expect(page).toHaveURL(new RegExp('q=' + prefix + '-000'));
+
+  await page.route('**/admin/joueurs?*', async route => {
+    if (new URL(route.request().url()).searchParams.get('q') === prefix + '-001') await new Promise(resolve => setTimeout(resolve, 800));
+    await route.continue();
+  });
+  await search.fill(prefix + '-001');
+  await page.waitForRequest(request => request.url().includes('q=' + prefix + '-001'));
+  await search.fill(prefix + '-002');
+  await expect(players.locator('tbody')).toContainText(prefix + '-002');
+  await page.waitForTimeout(900);
+  await expect(players.locator('tbody')).not.toContainText(prefix + '-001');
+  await expect(search).toBeFocused();
+  await page.unroute('**/admin/joueurs?*');
+
+  await page.goto('/admin/journal?action=rework_page');
+  const audit = page.locator('#admin-audit');
+  await expect(audit.locator('tr[data-admin-filter-target="row"]')).toHaveCount(50);
+  const downloadPromise = page.waitForEvent('download');
+  await audit.getByRole('link', { name: 'Exporter tous les résultats en CSV' }).click();
+  const download = await downloadPromise;
+  const csv = await readFile(await download.path(), 'utf8');
+  expect(csv.split('\r\n').filter(Boolean)).toHaveLength(176);
+  expect(csv).toContain(prefix + '-0');
+  expect(csv).toContain(prefix + '-174');
+
+  const noJs = await browser.newContext({ javaScriptEnabled: false, storageState: await page.context().storageState() });
+  const fallback = await noJs.newPage();
+  await fallback.goto('/admin/joueurs?q=' + prefix + '-000');
+  await expect(fallback.locator('#admin-players tbody')).toContainText(prefix + '-000');
+  await fallback.getByRole('searchbox', { name: 'Rechercher', exact: true }).fill(prefix + '-174');
+  await fallback.getByRole('button', { name: 'Rechercher', exact: true }).click();
+  await expect(fallback.locator('#admin-players tbody')).toContainText(prefix + '-174');
+  await noJs.close();
+});
+
 function prepareFlights(email) {
   const project = process.env.BROWSER_ROUTER;
   const home = Number(queryIsolatedSql(project, `SELECT planet.id FROM planet JOIN player_universe pu ON pu.id=planet.owner_id JOIN player p ON p.id=pu.player_id WHERE p.email='${email}' LIMIT 1`));
@@ -55,7 +107,7 @@ test('Captures comptes, sécurité, journal et flottes actives', async ({ page, 
   await expect(player.locator('.flight-operation')).toHaveCount(2);
   for (const width of [1440, 390]) {
     await player.setViewportSize({ width, height: 900 });
-    await player.locator('.flight-operations').scrollIntoViewIfNeeded();
+    await player.locator('[data-live-region="active-flights"]').scrollIntoViewIfNeeded();
     await player.screenshot({ path: testInfo.outputPath(`active-flights-${width}.png`), animations: 'disabled' });
   }
   await player.close();
@@ -173,7 +225,7 @@ test('Flottes actives : aller, retour, noms longs et thème clair', async ({ pag
   prepareFlights(email);
   for (const route of ['/flottes', '/']) {
     await page.goto(route);
-    const operations = page.locator('.flight-operations');
+    const operations = page.locator('[data-live-region="active-flights"]');
     await expect(operations.locator('.flight-operation')).toHaveCount(2);
     await expect(operations).toContainText('ALLER');
     await expect(operations).toContainText('RETOUR');
@@ -201,7 +253,7 @@ test('Flottes actives : aller, retour, noms longs et thème clair', async ({ pag
   }
   runIsolatedSql(process.env.BROWSER_ROUTER, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','light') WHERE email='${email}'`);
   await page.goto('/flottes');
-  await page.locator('.flight-operations').scrollIntoViewIfNeeded();
+  await page.locator('[data-live-region="active-flights"]').scrollIntoViewIfNeeded();
   await page.screenshot({ path: testInfo.outputPath('fleets-active-light-390.png'), animations: 'disabled' });
 });
 

@@ -1,0 +1,23 @@
+{% extends 'wiki/layout.html.twig' %}
+{% block title %}{{ section.title }} · Wiki · Genesis Reborn{% endblock %}
+{% block wiki_eyebrow %}{{ section.part }}{% endblock %}
+{% block wiki_heading %}{{ section.title }}{% endblock %}
+{% block wiki_content %}
+<section class="wiki-chapter" id="wiki-{{ section.id }}" aria-labelledby="wiki-title-{{ section.id }}">
+  {% for paragraph in section.paragraphs %}<p>{{ paragraph }}</p>{% endfor %}
+  {% if section.steps is defined %}<h2>Les étapes à suivre</h2><ol>{% for step in section.steps %}<li>{{ step }}</li>{% endfor %}</ol>{% endif %}
+  {% if section.calculations|default([]) %}<h2>Formules et exemples</h2>{% endif %}
+  {% for calculation in section.calculations|default([]) %}
+    <details class="wiki-calculation"><summary>{{ calculation.title }}</summary><div class="wiki-calculation-body">
+      <p>{{ calculation.explanation }}</p><pre class="wiki-formula">{{ calculation.formula }}</pre>
+      <ul>{% for variable in calculation.variables %}<li>{{ variable }}</li>{% endfor %}</ul>
+      <h3>Exemple chiffré</h3><p>{{ calculation.example }}</p>
+    </div></details>
+  {% endfor %}
+  <a class="wiki-back" href="#wiki-summary">Retour au sommaire</a>
+</section>
+<nav class="wiki-chapter-pagination" aria-label="Parcours du manuel">
+  {% if previousChapter %}<a class="secondary" rel="prev" href="{{ path('app_wiki_chapter',{chapter:previousChapter.id}) }}">Précédent : {{ previousChapter.title }}</a>{% endif %}
+  {% if nextChapter %}<a class="primary" rel="next" href="{{ path('app_wiki_chapter',{chapter:nextChapter.id}) }}">Suivant : {{ nextChapter.title }}</a>{% endif %}
+</nav>
+{% endblock %}

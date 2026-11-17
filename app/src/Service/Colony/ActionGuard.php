@@ -1,38 +1,75 @@
 <?php
+
 namespace App\Service\Colony;
-use App\Entity\{PlayerUniverse,Planet,ActionReceipt};
+
+use App\Entity\{PlayerUniverse, Planet, ActionReceipt};
 use App\Manager\GameManager;
 use App\Repository\GameRepository;
 use Psr\Clock\ClockInterface;
+
+/**
+ * Verrouille le contexte d’une action avant de revérifier ses droits.
+ * L’appelant doit déjà avoir ouvert la transaction qui portera l’action.
+ */
 final class ActionGuard
 {
-    public function __construct(private GameManager $manager,private GameRepository $repo,private ClockInterface $clock,private \App\Service\Player\EmpireActivityService $activity) {}
-    // Every caller is inside a database transaction. Membership serializes research across planets.
-    public function lock(PlayerUniverse $m,Planet $planet): void
+    public function __construct(
+        private GameManager $manager,
+        private GameRepository $repo,
+        private ClockInterface $clock,
+        private \App\Service\Player\EmpireActivityService $activity,
+    )
     {
-        $this->lockMembership($m);$this->manager->lock($planet);
-        if($planet->owner?->id!==$m->id || $planet->solarSystem->galaxy->universe->id!==$m->universe->id) throw new \DomainException('Cette planète ne vous appartient pas dans cet univers.');
     }
-    public function lockMembership(PlayerUniverse $m): void
+
+    public function lock(PlayerUniverse $membership, Planet $planet): void
     {
-        $this->lockMembershipForProcessing($m);
-        $this->activity->assertCanControl($m);
+        $this->lockMembership($membership);
+        $this->manager->lock($planet);
+        if ($planet->owner?->id !== $membership->id || $planet->solarSystem->galaxy->universe->id !== $membership->universe->id) {
+            throw new \DomainException('Cette planète ne vous appartient pas dans cet univers.');
+        }
     }
-    // Les traitements automatiques peuvent terminer les commandes déjà payées d'un empire oublié.
-    public function lockMembershipForProcessing(PlayerUniverse $m): void
+
+    public function lockMembership(PlayerUniverse $membership): void
     {
-        $this->manager->lock($m);$this->manager->lock($m->universe);
-        if(!$m->universe->isAccessible($this->clock->now())) throw new \DomainException('Univers inaccessible.');
+        $this->lockMembershipForProcessing($membership);
+        $this->activity->assertCanControl($membership);
     }
-    public function lockForCompletion(PlayerUniverse $m,Planet $planet): void
+
+    // Un empire oublié ne reçoit plus d’ordres du joueur, mais ses commandes déjà payées peuvent finir.
+    public function lockMembershipForProcessing(PlayerUniverse $membership): void
     {
-        $this->lockMembershipForProcessing($m);$this->manager->lock($planet);
-        if($planet->owner?->id!==$m->id || $planet->solarSystem->galaxy->universe->id!==$m->universe->id) throw new \DomainException('Cette planète ne correspond plus à la commande.');
+        // Garder cet ordre commun à toutes les colonies : participation, univers, puis planète chez l’appelant.
+        $this->manager->lock($membership);
+        $this->manager->lock($membership->universe);
+        if (!$membership->universe->isAccessible($this->clock->now())) {
+            throw new \DomainException('Univers inaccessible.');
+        }
     }
-    public function receipt(PlayerUniverse $m,string $key): bool
+
+    public function lockForCompletion(PlayerUniverse $membership, Planet $planet): void
     {
-        if(!preg_match('/^[a-f0-9]{32}$/D',$key)) throw new \DomainException('Identifiant de requête invalide.');
-        if($this->repo->one(ActionReceipt::class,['playerUniverse'=>$m,'requestKey'=>$key])) return false;
-        $r=new ActionReceipt();$r->playerUniverse=$m;$r->requestKey=$key;$this->manager->save($r);return true;
+        $this->lockMembershipForProcessing($membership);
+        $this->manager->lock($planet);
+        if ($planet->owner?->id !== $membership->id || $planet->solarSystem->galaxy->universe->id !== $membership->universe->id) {
+            throw new \DomainException('Cette planète ne correspond plus à la commande.');
+        }
+    }
+
+    public function receipt(PlayerUniverse $membership, string $key): bool
+    {
+        if (!preg_match('/^[a-f0-9]{32}$/D', $key)) {
+            throw new \DomainException('Identifiant de requête invalide.');
+        }
+        if ($this->repo->one(ActionReceipt::class, ['playerUniverse' => $membership, 'requestKey' => $key])) {
+            return false;
+        }
+        // Le reçu partage la transaction de l’action : un rollback libère aussi cette clé de requête.
+        $receipt = new ActionReceipt();
+        $receipt->playerUniverse = $membership;
+        $receipt->requestKey = $key;
+        $this->manager->save($receipt);
+        return true;
     }
 }

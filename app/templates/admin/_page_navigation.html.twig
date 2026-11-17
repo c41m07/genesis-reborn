@@ -1,0 +1,11 @@
+{% set pageLinks = [] %}
+{% if currentRoute starts with 'app_admin_universe' or currentRoute starts with 'app_admin_catalogue' or currentRoute == 'app_admin_resource_boxes' %}
+    {% set pageLinks = [{route:'app_admin_universes',label:'Liste des univers'},{route:'app_admin_universe_new',label:'Nouvel univers'}] %}
+{% elseif currentRoute starts with 'app_admin_game_event' or currentRoute in ['app_admin_event_wizard','app_admin_event_preview'] %}
+    {% set pageLinks = [{route:'app_admin_game_events',label:'Liste des événements'},{route:'app_admin_event_wizard',label:'Création guidée'},{route:'app_admin_game_event_new',label:'Formulaire avancé'}] %}
+{% elseif currentRoute starts with 'app_admin_guild_project' %}
+    {% set pageLinks = [{route:'app_admin_guild_projects',label:'Liste des modèles de projets'},{route:'app_admin_guild_project_new',label:'Nouveau modèle'}] %}
+{% elseif currentRoute starts with 'app_admin_weekly_rotation' %}
+    {% set pageLinks = [{route:'app_admin_weekly_rotations',label:'Liste des modèles de rotations',params:{universe:universe.id}},{route:'app_admin_weekly_rotation_new',label:'Nouveau modèle',params:{universe:universe.id}}] %}
+{% endif %}
+{% if pageLinks %}<nav class="admin-page-navigation" aria-label="Pages de cette rubrique">{% for link in pageLinks %}<a href="{{ path(link.route,link.params|default({})) }}"{% if currentRoute==link.route %} aria-current="page"{% endif %}>{{ link.label }}</a>{% endfor %}</nav>{% endif %}

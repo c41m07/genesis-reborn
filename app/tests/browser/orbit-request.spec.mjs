@@ -36,8 +36,8 @@ test('Ancienne orbite alliée : demande à l’arrivée conservée et stationnem
     const host = await enter(hostPage, 'Orbit-Host');
     const commander = (page, name) => page.locator('.commander-card').filter({ has: page.getByRole('heading', { name, exact: true }) });
 
-    await senderPage.goto('/diplomatie');
-    await hostPage.goto('/diplomatie');
+    await senderPage.goto('/guildes/creer');
+    await hostPage.goto('/guildes/creer');
     const senderGuild = 'Orbite-Sender-' + crypto.randomUUID().slice(0, 6);
     const hostGuild = 'Orbite-Host-' + crypto.randomUUID().slice(0, 6);
     await senderPage.getByLabel('Nom de votre nouvelle guilde').fill(senderGuild);await senderPage.getByLabel('Tag de la guilde', { exact:true }).fill(crypto.randomUUID().replaceAll('-', '').slice(0,5).toUpperCase());
@@ -69,7 +69,7 @@ test('Ancienne orbite alliée : demande à l’arrivée conservée et stationnem
     const discovery = "INSERT IGNORE INTO player_discovery (player_universe_id, solar_system_id) SELECT pu.id, target.solar_system_id FROM player_universe pu INNER JOIN player p ON p.id=pu.player_id INNER JOIN planet target ON target.id=" + host.planetId + " WHERE p.email='" + sender.email + "'";
     sql(project, discovery);
 
-    await senderPage.goto('/flottes?mission=orbit');
+    await senderPage.goto('/flottes/preparer?mission=orbit');
     const form = senderPage.locator('.fleet-form form').first();
     await form.locator('[name="ships[probe]"]').fill('1');
     await form.getByRole('button', { name: /Choisir la destination/ }).click();
@@ -100,7 +100,7 @@ test('Ancienne orbite alliée : demande à l’arrivée conservée et stationnem
       return senderPage.locator('[data-status="orbit_pending"]').count();
     }, { timeout: 45000, intervals: [1000] }).toBe(1);
 
-    await hostPage.goto('/flottes');
+    await hostPage.goto('/flottes/orbites');
     await expect(hostPage.getByRole('heading', { name: 'Demandes d’orbite', exact: true })).toBeVisible();
     await expect(hostPage.locator('[data-live-region="orbit-requests"]')).toContainText('Ancienne mission');
     await hostPage.getByRole('button', { name: /Accepter l’orbite de la flotte/ }).click();
@@ -133,8 +133,8 @@ test('Orbite neutre : demande au départ, accord clavier, suivi et retrait tacti
     runIsolatedSql(project,"INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) SELECT id,'probe','basic',1 FROM fleet WHERE player_universe_id="+senderId+" AND status='idle'");
     runIsolatedSql(project,"INSERT IGNORE INTO player_discovery (player_universe_id,solar_system_id) SELECT "+senderId+",solar_system_id FROM planet WHERE id="+host.planetId);
     runIsolatedSql(project,"DELETE d FROM player_discovery d JOIN planet p ON d.solar_system_id=p.solar_system_id WHERE d.player_universe_id="+hostId+" AND p.id="+sender.planetId);
-    await hostPage.goto('/flottes');
-    await senderPage.goto('/flottes?mission=orbit');
+    await hostPage.goto('/flottes/orbites');
+    await senderPage.goto('/flottes/preparer?mission=orbit');
     const form=senderPage.locator('.fleet-form form').first();
     await form.locator('[name="ships[probe]"]').fill('1');
     await form.getByRole('button',{name:/Choisir la destination/}).tap();
@@ -146,6 +146,7 @@ test('Orbite neutre : demande au départ, accord clavier, suivi et retrait tacti
     await form.getByRole('button',{name:/Envoyer la flotte/}).tap();
     await expect(senderPage.getByRole('status')).toContainText('Flotte envoyée');
     const fleetId=Number(queryIsolatedSql(project,"SELECT id FROM fleet WHERE player_universe_id="+senderId+" AND status='traveling' AND mission='orbit'"));
+    await senderPage.goto('/flottes/orbites');
     const card=hostPage.locator('[data-orbit-request="'+fleetId+'"]');
     await expect(card).toContainText('Demande reçue',{timeout:15000});
     await expect(card).toContainText('système non découvert');

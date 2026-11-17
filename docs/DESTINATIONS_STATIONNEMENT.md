@@ -1,5 +1,31 @@
 # Destinations et Stationnement — lot 5
 
+## Complément unités économiques — 16 novembre 2026
+
+Les récolteurs se déplacent uniquement entre colonies possédées, par Stationnement.
+Le devis vérifie les places du même rang à destination ; l’envoi et la reprise
+volontaire les réservent sous verrou. Départ : arrêt de production à l’origine ;
+installation : production selon la capacité locale. Le rappel libère l’ancienne
+réservation et en prépare une vers son retour. Un retour ou repli automatique
+conserve les unités même sans assez de places : l’excédent arrivé reste inactif.
+Une destination perdue ne conserve pas de place réservée chez son nouveau maître.
+Les satellites sont exclus de tout départ, côté interface et côté serveur.
+
+Pendant un combat ouvert, l’installation et les livraisons du chantier font
+rejoindre la défense à toute la flotte locale disponible au prochain round
+éligible, sans copie de vaisseaux ni perte de carburant embarqué. Aucun maintien
+horaire supplémentaire n’est ajouté. Voir [capacités et transitions](UNITES_ECONOMIQUES.md).
+
+## Complément carburant — 15 novembre 2026
+
+Les règles de destination, réserve, propriété, rappel et stationnement restent
+conservées. Le [nouveau barème par classe](DUREES_CARBURANT.md#carburant-par-classe)
+s’applique aux nouveaux départs. Les coefficients des missions sont figés pour
+leurs rappels et replis ; les réserves déjà payées ne sont pas recalculées.
+Les anciennes missions sans profil utilisent la référence précédente et leurs
+surcharges persistées ; une surcharge modifiée depuis le départ doit être examinée.
+Le stationnement sur une colonie possédée ne reçoit aucun coût horaire supplémentaire.
+
 ## État et plan
 
 Branche feature/destinations-stationnement depuis dev bc4930a après fusion
@@ -196,3 +222,8 @@ La PR associée fait référence pour les résultats de la nouvelle CI complète
 - docs/RECETTE_EVOLUTIONS_INTERFACES.md
 - docs/REGLES.md
 - docs/wiki.json
+
+
+## Navigation dédiée — 16 novembre 2026
+
+La navigation dédiée place désormais les réserves et les stationnements en attente dans `/flottes/quai`, avec reprise et déchargement revenant à cette page. Le formulaire d’envoi reste sur `/flottes/preparer` ; les disponibilités sont celles de la colonie active et les attentes celles de tout l’empire. Les règles de carburant, fret, reprise et autorisation restent celles de ce document. Voir le [suivi de navigation](NAVIGATION_PAGES_DEDIEES.md).

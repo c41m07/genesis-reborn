@@ -1,122 +1,149 @@
-# Déblocages initiaux permanents — 6 novembre 2026
+# Déblocages initiaux permanents — grille du 15 novembre 2026
 
-Implémenté sur **dev** ; aucune fusion vers Alpha ni déploiement. Migration et reprise appliquées à la base locale le 6 novembre 2026 après validation explicite de l’utilisateur.
+Lot 1 fusionné dans `dev` par la [PR #69](https://github.com/c41m07/genesis-reborn/pull/69), après CI complète réussie. Voir le [suivi de mission](PROGRESSION_CARBURANT_UNITES.md) pour les vérifications et l’état réel de l’intégration. Aucune activation sur la base de jeu ni publication Alpha annoncée.
 
 ## Lecture
 
-Les conditions débloquent chaque rang dès son niveau 1, puis l’accès est conservé. Aucun nouveau prérequis pendant ses niveaux. Chaque colonne donne toutes les conditions ensemble, sans doublons.
+Les tableaux donnent les conditions complètes : toutes appartiennent au rang demandé, sauf les cinq passerelles explicites ci-dessous. Aucun autre rang du même élément, aucune ancienne spécialisation ni recherche implicite ne s’ajoute. Les libellés de famille ci-dessous gardent leurs variantes dans le jeu.
 
-**B** = Basique, **I** = Intermédiaire, **S** = Supérieur. Le chiffre est le niveau du prérequis, pas un futur palier de l’élément. Les noms indiquent les familles ; leurs variantes gardent leurs libellés dans le jeu.
-
-Recherches : accès du joueur dans cet univers, utilisable depuis les autres colonies même sans laboratoire local. Bâtiments, vaisseaux, défenses : accès du joueur sur cette colonie seulement. Aucun rang précédent du même élément n’est exigé implicitement. Coûts, durées, ressources, plafonds et limites de file restent applicables.
-
-## Choix de progression
-
-Démarrage accessible : métal, nano, hydrogène, centrale, réserves courantes et laboratoire sans prérequis. Le chantier reprend seulement son premier ancien jalon léger. Le réacteur demande un premier développement hydrogène/naval, allégé par rapport à son ancien palier 2. Son stockage s’ouvre au premier réacteur. Les autres anciens paliers disparaissent sans être déplacés intégralement au niveau 1.
-
-Les conditions militaires initiales restent graduelles. Les rangs avancés gardent leurs spécialités : généralement B5 puis I10, ou I5 si le plafond réel est 5. Le bunker Intermédiaire demandé pour l’anti-capital Supérieur passe de 15 à 10. Huit accès hors plafond sont corrigés sans relever les plafonds ni modifier les bonus.
+Les conditions sont initiales et permanentes après acquisition selon cette grille. Elles ne changent pas pendant les améliorations. Recherches : accès du joueur dans l’univers, depuis toute colonie après déblocage, sans laboratoire local permanent. Bâtiments, vaisseaux et défenses : accès du joueur sur la colonie concernée. Prix, plafonds, durées et conditions de mission restent applicables.
 
 ## Bâtiments — 13
 
-| Élément | Basique | Intermédiaire | Supérieur | Pourquoi |
-|---|---|---|---|---|
-| Bunker de défense (`fortress`) | Chantier d’assemblage B 3 ; Laboratoire colonial B 2 ; Blindage multicouche B 2 | Chantier d’assemblage B 3 ; Laboratoire colonial B 5 ; Blindage multicouche B 2 ; Canons à énergie focalisée B 5 | Chantier d’assemblage B 3 ; Laboratoire colonial B 2 ; Blindage multicouche B 2 ; Canons à énergie focalisée I 10 ; Laboratoire colonial I 10 | Accès militaire initial conservé ; retrait du futur verrou blindage 5 et réparation 3 au niveau 2. |
-| Laboratoire colonial (`lab`) | Aucun | Génie civil colonial B 5 | Génie civil colonial I 10 | Entrée libre dans la recherche ; suppression du verrou sur ses propres améliorations. |
-| Piège à antimatière (`mine_antimatter`) | Raffinerie d’hydrogène B 3 ; Laboratoire colonial B 2 ; Architecture navale B 2 | Raffinerie d’hydrogène B 3 ; Laboratoire colonial B 5 ; Architecture navale B 5 | Raffinerie d’hydrogène B 3 ; Laboratoire colonial B 2 ; Architecture navale B 2 ; Architecture navale I 10 ; Laboratoire colonial I 10 | Premier jalon industriel après hydrogène 3 et recherche navale 2, allégé par rapport à l’ancien palier. |
-| Raffinerie d’hydrogène (`mine_hydrogen`) | Aucun | Propulseurs vectoriels B 5 ; Laboratoire colonial B 5 | Propulseurs vectoriels I 10 ; Laboratoire colonial I 10 | Carburant et alimentation du réacteur sans recherche navale préalable. |
-| Mine à ciel ouvert (`mine_metal`) | Aucun | Génie civil colonial B 5 ; Laboratoire colonial B 5 | Génie civil colonial I 10 ; Laboratoire colonial I 10 | Ressource de départ sans verrou scientifique. |
-| Atelier de nanofabrication (`mine_nano`) | Aucun | Métallurgie des nanomatériaux B 5 ; Laboratoire colonial B 5 | Métallurgie des nanomatériaux I 10 ; Laboratoire colonial I 10 | Ressource de départ ; suppression du blocage au niveau 2. Rangs avancés liés à la synthèse. |
-| Centrale nucléaire (`power_plant`) | Aucun | Génie civil colonial B 5 ; Laboratoire colonial B 5 | Génie civil colonial I 10 ; Laboratoire colonial I 10 | Énergie disponible dès le départ, puis approfondissement du génie civil. |
-| Chantier d’assemblage (`shipyard`) | Mine à ciel ouvert B 2 ; Architecture navale B 1 | Mine à ciel ouvert B 2 ; Architecture navale B 5 | Mine à ciel ouvert B 2 ; Architecture navale B 1 ; Architecture navale I 10 | Seulement le premier ancien jalon léger : métal 2 et architecture navale 1, sans cumuler les paliers 6 et 10. |
-| Cage magnétique (`storage_antimatter`) | Piège à antimatière B 1 | Piège à antimatière B 1 ; Métallurgie des nanomatériaux B 5 ; Laboratoire colonial B 5 | Piège à antimatière B 1 ; Métallurgie des nanomatériaux I 10 ; Laboratoire colonial I 10 | Stockage ouvert au premier réacteur, sans réacteur 2 ni synthèse 2. |
-| Batterie de colonie (`storage_electricity`) | Aucun | Architecture navale B 5 ; Laboratoire colonial B 5 | Architecture navale I 10 ; Laboratoire colonial I 10 | Stockage accessible dès le départ pour éviter un blocage de capacité ; rangs avancés liés à la spécialité existante. |
-| Réservoir cryogénique (`storage_hydrogen`) | Aucun | Propulseurs vectoriels B 5 ; Laboratoire colonial B 5 | Propulseurs vectoriels I 10 ; Laboratoire colonial I 10 | Stockage accessible dès le départ pour éviter un blocage de capacité ; rangs avancés liés à la spécialité existante. |
-| Dépôt de minerais (`storage_metal`) | Aucun | Métallurgie des nanomatériaux B 5 ; Laboratoire colonial B 5 | Métallurgie des nanomatériaux I 10 ; Laboratoire colonial I 10 | Stockage accessible dès le départ pour éviter un blocage de capacité ; rangs avancés liés à la spécialité existante. |
-| Coffre de nanomatériaux (`storage_nano`) | Aucun | Génie civil colonial B 5 ; Laboratoire colonial B 5 | Génie civil colonial I 10 ; Laboratoire colonial I 10 | Stockage accessible dès le départ pour éviter un blocage de capacité ; rangs avancés liés à la spécialité existante. |
+| Famille | Basique | Intermédiaire | Supérieur |
+|---|---|---|---|
+| Mine à ciel ouvert (`mine_metal`) | Aucun | Même bâtiment Basique 10 | Même bâtiment Intermédiaire 20 |
+| Atelier de nanofabrication (`mine_nano`) | Aucun | Même bâtiment Basique 10 | Même bâtiment Intermédiaire 20 |
+| Raffinerie d’hydrogène (`mine_hydrogen`) | Aucun | Même bâtiment Basique 10 | Même bâtiment Intermédiaire 20 |
+| Centrale nucléaire (`power_plant`) | Aucun | Même bâtiment Basique 10 | Même bâtiment Intermédiaire 20 |
+| Laboratoire colonial (`lab`) | Aucun | Même bâtiment Basique 10 | Même bâtiment Intermédiaire 20 |
+
+Pour les huit autres familles, les conditions suivantes s’appliquent dans chacun des trois rangs :
+
+| Famille | Conditions du même rang |
+|---|---|
+| Piège à antimatière (`mine_antimatter`) | Raffinerie d’hydrogène 3 + Laboratoire colonial 2 |
+| Chantier d’assemblage (`shipyard`) | Mine à ciel ouvert 2 + Atelier de nanofabrication 2 |
+| Bunker de défense (`fortress`) | Mine à ciel ouvert 1 + Atelier de nanofabrication 1 |
+| Dépôt de minerais (`storage_metal`) | Mine à ciel ouvert 5 |
+| Coffre de nanomatériaux (`storage_nano`) | Atelier de nanofabrication 5 |
+| Réservoir cryogénique (`storage_hydrogen`) | Raffinerie d’hydrogène 5 |
+| Batterie de colonie (`storage_electricity`) | Centrale nucléaire 5 |
+| Cage magnétique (`storage_antimatter`) | Piège à antimatière 5 |
 
 ## Recherches — 19
 
-| Élément | Basique | Intermédiaire | Supérieur | Pourquoi |
-|---|---|---|---|---|
-| Drones réparateurs (`automated_defense_repair`) | Laboratoire colonial B 1 | Laboratoire colonial B 5 ; Architecture navale B 5 | Laboratoire colonial B 1 ; Architecture navale I 10 ; Laboratoire colonial I 10 | Reconstruction des défenses accessible avec le laboratoire ; rangs avancés liés à l’architecture navale, sans verrou sur les niveaux du bunker. |
-| Protocoles de colonisation (`colonial_expansion`) | Laboratoire colonial B 1 | Laboratoire colonial B 5 ; Propulseurs vectoriels B 5 | Laboratoire colonial B 1 ; Propulseurs vectoriels I 10 ; Laboratoire colonial I 10 | Premiers emplacements accessibles tôt ; rangs suivants liés à la propulsion. Quotas et missions conservés. |
-| Réservoirs cryogéniques (`cryogenic_reserves`) | Laboratoire colonial B 1 | Laboratoire colonial B 5 ; Propulseurs vectoriels B 5 | Laboratoire colonial B 1 ; Propulseurs vectoriels I 10 ; Laboratoire colonial I 10 | Réservoir accessible tôt après le laboratoire ; approfondissement par la propulsion. |
-| Génie civil colonial (`engineering_foundations`) | Laboratoire colonial B 1 | Laboratoire colonial B 5 ; Architecture navale B 5 | Laboratoire colonial B 1 ; Architecture navale I 10 ; Laboratoire colonial I 10 | Première recherche civile après le laboratoire ; ouvre les branches spécialisées. |
-| Manœuvres d’évitement (`evasive_navigation`) | Propulseurs vectoriels B 3 ; Télémétrie de poursuite B 2 ; Laboratoire colonial B 1 | Propulseurs vectoriels B 5 ; Télémétrie de poursuite B 2 ; Laboratoire colonial B 5 | Propulseurs vectoriels B 3 ; Télémétrie de poursuite B 2 ; Laboratoire colonial B 1 ; Propulseurs vectoriels I 10 ; Laboratoire colonial I 10 | Mobilité défensive liée à la propulsion et au suivi. |
-| Discipline du secret (`intelligence_countermeasures`) | Laboratoire colonial B 1 | Laboratoire colonial B 5 ; Analyse tactique B 5 | Laboratoire colonial B 1 ; Analyse tactique I 5 ; Laboratoire colonial I 10 | Contre-espionnage accessible tôt ; rang supérieur fondé sur un renseignement atteignable. |
-| Soute compartimentée (`modular_cargo_bays`) | Laboratoire colonial B 1 | Laboratoire colonial B 5 ; Protocoles de colonisation B 5 | Laboratoire colonial B 1 ; Protocoles de colonisation I 10 ; Laboratoire colonial I 10 | Logistique accessible tôt ; rangs avancés liés à l’expansion et à ses plafonds réels. |
-| Métallurgie des nanomatériaux (`nanomaterial_synthesis`) | Laboratoire colonial B 3 ; Génie civil colonial B 3 | Laboratoire colonial B 5 ; Génie civil colonial B 5 | Laboratoire colonial B 3 ; Génie civil colonial B 3 ; Génie civil colonial I 10 ; Laboratoire colonial I 10 | Branche industrielle après génie civil 3, distincte de la branche navale. |
-| Architecture navale (`naval_engineering`) | Laboratoire colonial B 2 ; Génie civil colonial B 2 | Laboratoire colonial B 5 ; Génie civil colonial B 5 | Laboratoire colonial B 2 ; Génie civil colonial B 2 ; Génie civil colonial I 10 ; Laboratoire colonial I 10 | Spécialisation après les bases civiles, préparant les premiers vaisseaux et leur économie. |
-| Séquenceur de salves (`rapid_fire_cycle`) | Canons à énergie focalisée B 7 ; Télémétrie de poursuite B 4 ; Laboratoire colonial B 1 | Canons à énergie focalisée B 7 ; Télémétrie de poursuite B 5 ; Laboratoire colonial B 5 | Canons à énergie focalisée B 7 ; Télémétrie de poursuite B 4 ; Laboratoire colonial B 1 ; Télémétrie de poursuite I 10 ; Laboratoire colonial I 10 | Spécialisation militaire avancée ; conditions vérifiées seulement à l’ouverture. |
-| Générateurs de bouclier accordés (`shield_harmonics`) | Blindage multicouche B 3 ; Canons à énergie focalisée B 5 ; Laboratoire colonial B 1 | Blindage multicouche B 3 ; Canons à énergie focalisée B 5 ; Laboratoire colonial B 5 ; Architecture navale B 5 | Blindage multicouche B 3 ; Canons à énergie focalisée B 5 ; Laboratoire colonial B 1 ; Architecture navale I 10 ; Laboratoire colonial I 10 | Protection avancée après blindage et armement. |
-| Écran de brouillage (`signature_masking`) | Laboratoire colonial B 1 | Laboratoire colonial B 5 ; Analyse tactique B 5 | Laboratoire colonial B 1 ; Analyse tactique I 5 ; Laboratoire colonial I 10 | Brouillage accessible tôt ; analyse tactique Intermédiaire 5 remplace le seuil 10 impossible. |
-| Revêtement absorbant (`signature_reduction`) | Laboratoire colonial B 1 | Laboratoire colonial B 5 ; Écran de brouillage B 5 | Laboratoire colonial B 1 ; Écran de brouillage I 5 ; Laboratoire colonial I 10 | Signature accessible avec le laboratoire ; seuil avancé de brouillage ramené à son plafond 5. |
-| Blindage multicouche (`structural_armor`) | Métallurgie des nanomatériaux B 3 ; Canons à énergie focalisée B 3 ; Laboratoire colonial B 1 | Métallurgie des nanomatériaux B 3 ; Canons à énergie focalisée B 5 ; Laboratoire colonial B 5 | Métallurgie des nanomatériaux B 3 ; Canons à énergie focalisée B 3 ; Laboratoire colonial B 1 ; Canons à énergie focalisée I 10 ; Laboratoire colonial I 10 | Blindage associant matériaux et armement ; ne bloque plus les améliorations futures du bunker. |
-| Analyse tactique (`tactical_intelligence`) | Laboratoire colonial B 1 | Laboratoire colonial B 5 ; Écran de brouillage B 5 | Laboratoire colonial B 1 ; Écran de brouillage I 5 ; Laboratoire colonial I 10 | Renseignement accessible tôt ; brouillage Intermédiaire 5 remplace le seuil 10 impossible. |
-| Télémétrie de poursuite (`target_acquisition`) | Viseurs balistiques B 2 ; Architecture navale B 3 ; Laboratoire colonial B 1 | Viseurs balistiques B 5 ; Architecture navale B 3 ; Laboratoire colonial B 5 | Viseurs balistiques B 2 ; Architecture navale B 3 ; Laboratoire colonial B 1 ; Viseurs balistiques I 10 ; Laboratoire colonial I 10 | Suivi après précision et architecture navale, utile aux unités spécialisées. |
-| Propulseurs vectoriels (`vector_propulsion`) | Laboratoire colonial B 4 ; Architecture navale B 5 ; Génie civil colonial B 5 | Laboratoire colonial B 5 ; Architecture navale B 5 ; Génie civil colonial B 5 | Laboratoire colonial B 4 ; Architecture navale B 5 ; Génie civil colonial B 5 ; Génie civil colonial I 10 ; Laboratoire colonial I 10 | Développement naval préalable aux bonus de mobilité. |
-| Viseurs balistiques (`weapon_calibration`) | Canons à énergie focalisée B 2 ; Laboratoire colonial B 1 | Canons à énergie focalisée B 2 ; Laboratoire colonial B 5 ; Télémétrie de poursuite B 5 | Canons à énergie focalisée B 2 ; Laboratoire colonial B 1 ; Télémétrie de poursuite I 10 ; Laboratoire colonial I 10 | Précision après les premiers travaux d’armement. |
-| Canons à énergie focalisée (`weapons_engineering`) | Laboratoire colonial B 5 ; Propulseurs vectoriels B 3 ; Architecture navale B 8 | Laboratoire colonial B 5 ; Propulseurs vectoriels B 3 ; Architecture navale B 8 ; Télémétrie de poursuite B 5 | Laboratoire colonial B 5 ; Propulseurs vectoriels B 3 ; Architecture navale B 8 ; Télémétrie de poursuite I 10 ; Laboratoire colonial I 10 | Armement après propulsion et architecture navale, pour une progression militaire graduelle. |
+Toutes les conditions appartiennent au rang demandé.
 
-## Vaisseaux — 14
+| Famille | Laboratoire | Recherches nécessaires |
+|---|---|---|
+| Protocoles de colonisation (`colonial_expansion`) | 2 | Architecture navale 1 |
+| Manœuvres d’évitement (`evasive_navigation`) | 8 | Propulseurs vectoriels 4 + Télémétrie de poursuite 3 |
+| Discipline du secret (`intelligence_countermeasures`) | 5 | Analyse tactique 2 |
+| Soute compartimentée (`modular_cargo_bays`) | 3 | Architecture navale 2 |
+| Réservoirs cryogéniques (`cryogenic_reserves`) | 5 | Propulseurs vectoriels 2 |
+| Analyse tactique (`tactical_intelligence`) | 3 | Architecture navale 2 |
+| Drones réparateurs (`automated_defense_repair`) | 5 | Blindage multicouche 2 |
+| Générateurs de bouclier accordés (`shield_harmonics`) | 7 | Blindage multicouche 3 + Canons à énergie focalisée 3 |
+| Séquenceur de salves (`rapid_fire_cycle`) | 10 | Canons à énergie focalisée 5 + Télémétrie de poursuite 4 |
+| Viseurs balistiques (`weapon_calibration`) | 4 | Canons à énergie focalisée 2 |
+| Métallurgie des nanomatériaux (`nanomaterial_synthesis`) | 3 | Génie civil colonial 3 |
+| Architecture navale (`naval_engineering`) | 2 | Génie civil colonial 2 |
+| Écran de brouillage (`signature_masking`) | 6 | Analyse tactique 3 |
+| Télémétrie de poursuite (`target_acquisition`) | 5 | Viseurs balistiques 2 + Architecture navale 3 |
+| Propulseurs vectoriels (`vector_propulsion`) | 4 | Architecture navale 3 |
+| Génie civil colonial (`engineering_foundations`) | 1 | Aucune |
+| Blindage multicouche (`structural_armor`) | 4 | Métallurgie des nanomatériaux 2 + Canons à énergie focalisée 2 |
+| Revêtement absorbant (`signature_reduction`) | 7 | Écran de brouillage 2 + Métallurgie des nanomatériaux 3 |
+| Canons à énergie focalisée (`weapons_engineering`) | 3 | Architecture navale 2 |
 
-| Élément | Basique | Intermédiaire | Supérieur | Pourquoi |
-|---|---|---|---|---|
-| Cuirassé de ligne (`battleship`) | Chantier d’assemblage B 14 ; Canons à énergie focalisée B 10 ; Générateurs de bouclier accordés B 8 ; Séquenceur de salves B 5 | Chantier d’assemblage B 14 ; Canons à énergie focalisée B 10 ; Générateurs de bouclier accordés B 8 ; Séquenceur de salves B 5 | Chantier d’assemblage B 14 ; Canons à énergie focalisée B 10 ; Générateurs de bouclier accordés B 8 ; Séquenceur de salves B 5 ; Générateurs de bouclier accordés I 10 ; Chantier d’assemblage I 10 | Grande coque tardive après chantier 14 et plusieurs spécialisations militaires. |
-| Bombardier tactique (`bomber`) | Chantier d’assemblage B 4 ; Canons à énergie focalisée B 3 ; Blindage multicouche B 2 | Chantier d’assemblage B 5 ; Canons à énergie focalisée B 5 ; Blindage multicouche B 2 | Chantier d’assemblage B 4 ; Canons à énergie focalisée B 3 ; Blindage multicouche B 2 ; Canons à énergie focalisée I 10 ; Chantier d’assemblage I 10 | Accès gradué à l’anti-grandes coques via chantier 4, armement et blindage. |
-| Vaisseau capital (`capital`) | Chantier d’assemblage B 18 ; Canons à énergie focalisée B 12 ; Générateurs de bouclier accordés B 12 ; Séquenceur de salves B 10 ; Propulseurs vectoriels B 10 | Chantier d’assemblage B 18 ; Canons à énergie focalisée B 12 ; Générateurs de bouclier accordés B 12 ; Séquenceur de salves B 10 ; Propulseurs vectoriels B 10 | Chantier d’assemblage B 18 ; Canons à énergie focalisée B 12 ; Générateurs de bouclier accordés B 12 ; Séquenceur de salves B 10 ; Propulseurs vectoriels B 10 ; Canons à énergie focalisée I 10 ; Chantier d’assemblage I 10 | Aboutissement militaire au chantier 18 avec plusieurs branches avancées. |
-| Vaisseau colonisateur (`colony_ship`) | Chantier d’assemblage B 1 | Chantier d’assemblage B 5 ; Protocoles de colonisation B 5 | Chantier d’assemblage B 1 ; Protocoles de colonisation I 10 ; Chantier d’assemblage I 10 | Accessible au chantier 1 ; la mission reste soumise au quota colonial et à ses conditions propres. |
-| Corvette de patrouille (`corvette`) | Chantier d’assemblage B 4 ; Architecture navale B 4 ; Propulseurs vectoriels B 2 | Chantier d’assemblage B 5 ; Architecture navale B 4 ; Propulseurs vectoriels B 2 ; Télémétrie de poursuite B 5 | Chantier d’assemblage B 4 ; Architecture navale B 4 ; Propulseurs vectoriels B 2 ; Télémétrie de poursuite I 10 ; Chantier d’assemblage I 10 | Branche rapide après chantier 4 et premiers travaux de propulsion. |
-| Croiseur de combat (`cruiser`) | Chantier d’assemblage B 10 ; Canons à énergie focalisée B 8 ; Propulseurs vectoriels B 5 ; Blindage multicouche B 5 | Chantier d’assemblage B 10 ; Canons à énergie focalisée B 8 ; Propulseurs vectoriels B 5 ; Blindage multicouche B 5 | Chantier d’assemblage B 10 ; Canons à énergie focalisée B 8 ; Propulseurs vectoriels B 5 ; Blindage multicouche B 5 ; Propulseurs vectoriels I 10 ; Chantier d’assemblage I 10 | Jalon lourd associant armement, propulsion et blindage. |
-| Destroyer d’escorte (`destroyer`) | Chantier d’assemblage B 9 ; Canons à énergie focalisée B 9 ; Générateurs de bouclier accordés B 5 | Chantier d’assemblage B 9 ; Canons à énergie focalisée B 9 ; Générateurs de bouclier accordés B 5 | Chantier d’assemblage B 9 ; Canons à énergie focalisée B 9 ; Générateurs de bouclier accordés B 5 ; Canons à énergie focalisée I 10 ; Chantier d’assemblage I 10 | Spécialiste anti-lourd après chantier, armes et boucliers. |
-| Chasseur de patrouille (`fighter`) | Aucun | Propulseurs vectoriels B 5 ; Chantier d’assemblage B 5 | Propulseurs vectoriels I 10 ; Chantier d’assemblage I 10 | Vaisseau de départ libre ; variantes avancées liées à la propulsion et au chantier. |
-| Frégate d’escorte (`frigate`) | Chantier d’assemblage B 6 ; Canons à énergie focalisée B 5 ; Architecture navale B 7 | Chantier d’assemblage B 6 ; Canons à énergie focalisée B 5 ; Architecture navale B 7 | Chantier d’assemblage B 6 ; Canons à énergie focalisée B 5 ; Architecture navale B 7 ; Canons à énergie focalisée I 10 ; Chantier d’assemblage I 10 | Développement naval avant cette défense contre les petites unités. |
-| Chasseur lourd (`heavy_fighter`) | Chantier d’assemblage B 3 ; Viseurs balistiques B 1 | Chantier d’assemblage B 5 ; Viseurs balistiques B 1 ; Canons à énergie focalisée B 5 | Chantier d’assemblage B 3 ; Viseurs balistiques B 1 ; Canons à énergie focalisée I 10 ; Chantier d’assemblage I 10 | Contre spécialisé précoce après chantier 3 et première précision. |
-| Intercepteur atmosphérique (`interceptor`) | Chantier d’assemblage B 2 ; Architecture navale B 1 | Chantier d’assemblage B 5 ; Architecture navale B 1 ; Télémétrie de poursuite B 5 | Chantier d’assemblage B 2 ; Architecture navale B 1 ; Télémétrie de poursuite I 10 ; Chantier d’assemblage I 10 | Première spécialisation au chantier 2 ; rangs avancés liés au suivi. |
-| Sonde de reconnaissance (`probe`) | Chantier d’assemblage B 1 | Chantier d’assemblage B 5 ; Analyse tactique B 5 | Chantier d’assemblage B 1 ; Analyse tactique I 5 ; Chantier d’assemblage I 10 | Découverte dès le chantier 1 ; analyse tactique Intermédiaire 5 remplace le seuil 10 impossible. |
-| Chasseur furtif (`stealth_fighter`) | Écran de brouillage B 2 ; Propulseurs vectoriels B 1 ; Chantier d’assemblage B 4 ; Chasseur de patrouille B accessible | Écran de brouillage B 5 ; Propulseurs vectoriels B 1 ; Chantier d’assemblage B 5 ; Chasseur de patrouille B accessible | Écran de brouillage B 2 ; Propulseurs vectoriels B 1 ; Chantier d’assemblage B 4 ; Chasseur de patrouille B accessible ; Écran de brouillage I 5 ; Chantier d’assemblage I 10 | Mobilité et brouillage avant le furtif ; seuil Supérieur de brouillage corrigé à 5. |
-| Cargo de ligne (`transport`) | Chantier d’assemblage B 2 ; Architecture navale B 2 | Chantier d’assemblage B 5 ; Architecture navale B 2 ; Soute compartimentée B 5 | Chantier d’assemblage B 2 ; Architecture navale B 2 ; Soute compartimentée I 10 ; Chantier d’assemblage I 10 | Logistique après chantier 2 et architecture navale 2 ; rangs avancés liés à la soute. |
+## Vaisseaux existants — 14
+
+Toutes les conditions appartiennent au rang demandé.
+
+| Famille | Chantier spatial | Recherches nécessaires |
+|---|---|---|
+| Croiseur de combat (`cruiser`) | 12 | Blindage multicouche 5 + Générateurs de bouclier accordés 4 + Propulseurs vectoriels 4 |
+| Corvette de patrouille (`corvette`) | 5 | Architecture navale 4 + Propulseurs vectoriels 2 + Blindage multicouche 2 |
+| Vaisseau colonisateur (`colony_ship`) | 2 | Protocoles de colonisation 1 |
+| Chasseur lourd (`heavy_fighter`) | 4 | Blindage multicouche 1 + Viseurs balistiques 2 |
+| Frégate d’escorte (`frigate`) | 8 | Blindage multicouche 3 + Générateurs de bouclier accordés 1 |
+| Destroyer d’escorte (`destroyer`) | 10 | Canons à énergie focalisée 5 + Télémétrie de poursuite 3 + Générateurs de bouclier accordés 2 |
+| Chasseur de patrouille (`fighter`) | 1 | Aucune |
+| Cuirassé de ligne (`battleship`) | 15 | Blindage multicouche 7 + Générateurs de bouclier accordés 6 + Séquenceur de salves 2 |
+| Cargo de ligne (`transport`) | 2 | Soute compartimentée 1 |
+| Chasseur furtif (`stealth_fighter`) | 6 | Écran de brouillage 2 + Propulseurs vectoriels 2 |
+| Intercepteur atmosphérique (`interceptor`) | 3 | Propulseurs vectoriels 1 + Viseurs balistiques 1 |
+| Bombardier tactique (`bomber`) | 6 | Canons à énergie focalisée 3 + Télémétrie de poursuite 2 |
+| Vaisseau capital (`capital`) | 20 | Canons à énergie focalisée 10 + Blindage multicouche 10 + Générateurs de bouclier accordés 10 + Séquenceur de salves 5 + Propulseurs vectoriels 7 |
+| Sonde de reconnaissance (`probe`) | 1 | Aucune |
+
+Les [simulations financées](SIMULATIONS_PROGRESSION_ECONOMIE.md) mesurent séparément
+la date d’accès, le financement et l’achèvement. L’accessibilité du graphe ne constitue
+pas une garantie de délai ni une activation des accès historiques.
+
+## Unités économiques — 2 familles, 6 profils
+
+Toutes les conditions appartiennent au rang demandé. Elles utilisent les mêmes
+accès locaux initiaux et permanents que les autres vaisseaux.
+
+| Famille | Conditions complètes du même rang |
+|---|---|
+| Récolteur d’hydrogène (`hydrogen_collector`) | Chantier 2 + raffinerie d’hydrogène 5 + Propulseurs vectoriels 1 |
+| Satellite solaire (`solar_satellite`) | Chantier 2 + centrale 5 + Génie civil colonial 2 |
+
+La construction du satellite exige aussi une place libre ou non réservée ; les
+récolteurs excédentaires restent conservés sans production. Ce contrôle de
+capacité est distinct de l’accès acquis. Voir [les règles de déploiement](UNITES_ECONOMIQUES.md).
 
 ## Défenses — 4
 
-| Élément | Basique | Intermédiaire | Supérieur | Pourquoi |
-|---|---|---|---|---|
-| Canon laser anti-capital (`ground_turret_anti_capital`) | Bunker de défense B 5 ; Séquenceur de salves B 5 ; Canons à énergie focalisée B 8 | Bunker de défense B 10 ; Séquenceur de salves B 10 ; Canons à énergie focalisée B 8 | Bunker de défense B 5 ; Séquenceur de salves B 5 ; Canons à énergie focalisée B 8 ; Bunker de défense I 10 ; Séquenceur de salves I 15 | Dernière spécialisation défensive. Bunker Intermédiaire 10 remplace le seuil 15 impossible. |
-| Canon laser anti-escorteur (`ground_turret_anti_escort`) | Bunker de défense B 2 ; Télémétrie de poursuite B 2 | Bunker de défense B 6 ; Télémétrie de poursuite B 5 | Bunker de défense B 2 ; Télémétrie de poursuite B 2 ; Bunker de défense I 10 ; Télémétrie de poursuite I 10 | Spécialisation après bunker 2 et suivi 2, puis approfondissement du suivi. |
-| Canon laser anti-lourd (`ground_turret_anti_heavy`) | Bunker de défense B 3 ; Blindage multicouche B 3 | Bunker de défense B 7 ; Blindage multicouche B 3 ; Canons à énergie focalisée B 7 | Bunker de défense B 3 ; Blindage multicouche B 3 ; Bunker de défense I 10 ; Canons à énergie focalisée I 10 | Anti-lourd après bunker 3 et blindage 3, puis approfondissement de l’armement. |
-| Canon laser anti-léger (`ground_turret_anti_light`) | Bunker de défense B 1 | Bunker de défense B 5 ; Viseurs balistiques B 5 | Bunker de défense B 1 ; Bunker de défense I 10 ; Viseurs balistiques I 10 | Première défense au bunker 1 ; précision aux rangs avancés. |
+Toutes les conditions appartiennent au rang demandé.
+
+| Famille | Bunker | Recherches nécessaires |
+|---|---|---|
+| Canon laser anti-léger (`ground_turret_anti_light`) | 1 | Aucune |
+| Canon laser anti-capital (`ground_turret_anti_capital`) | 8 | Canons à énergie focalisée 8 + Télémétrie de poursuite 4 + Séquenceur de salves 3 |
+| Canon laser anti-escorteur (`ground_turret_anti_escort`) | 3 | Canons à énergie focalisée 2 + Télémétrie de poursuite 1 |
+| Canon laser anti-lourd (`ground_turret_anti_heavy`) | 5 | Canons à énergie focalisée 5 + Blindage multicouche 3 |
 
 ## Parcours
 
-- Laboratoire B1 libre → laboratoire B2 + génie civil B2 → architecture navale B1 ; avec métal B2, chantier B1. Sondes et vaisseaux colonie B disponibles.
-- Hydrogène B3 + laboratoire B2 + architecture navale B2 → réacteur B1 → stockage d’antimatière B1. Le chemin utilise des recettes B métal/nano, sans antimatière nécessaire avant son ouverture.
-- Chantier B3 + laboratoire B2 + blindage B2 → bunker B1 → tourelle anti-léger B. Les autres défenses approfondissent leurs branches.
-- Le test de parcours part de zéro, ouvre les éléments accessibles puis augmente uniquement leurs niveaux autorisés. Les 150 profils sont atteints, sans cycle bloquant ni seuil hors plafond. Il ne mesure pas un délai économique complet.
+• Métal 2 + nano 2 → chantier 1 → chasseur et sonde, sans recherche supplémentaire.
+
+• Hydrogène 3 + laboratoire 2 → piège à antimatière ; piège 5 → stockage d’antimatière.
+
+• Mine de métal 1 + atelier de nanofabrication 1 → bunker 1 → défense anti-léger, sans chantier, laboratoire ni recherche supplémentaire.
+
+• Chaque stockage exige son producteur du même rang au niveau 5 ; aucun stockage précédent.
+
+Le test de parcours explore les 156 profils (150 existants et 6 nouveaux) depuis les entrées libres avec leurs plafonds réels. Il vérifie l’accessibilité et les cycles, sans prétendre mesurer le financement ou un délai de progression.
 
 ## Compatibilité
 
-La colonne JSON nullable `player_universe.catalog_unlocks` mémorise les accès. `null` identifie une participation historique à reprendre ; les nouvelles participations commencent avec un registre vide. Les clés distinguent l’univers ou l’identifiant de colonie, au sein de la participation du joueur.
+Le registre JSON existant reçoit des clés `v2:universe:...` ou `v2:planet:<id>:...` et le marqueur `_requirements_version: 2`. Aucun changement de schéma n’est nécessaire pour ce lot. Les anciennes clés sont conservées pour diagnostic mais ne donnent aucun accès. L’instantané historique du 6 novembre reste conservé comme référence ; le code de reprise ne le consulte plus.
 
-La reprise utilise les anciennes conditions d’entrée figées dans `config/legacy/catalog-unlocks-2026-11-06.json`, avec les surcharges de l’univers. Elle conserve les rangs possédés, unités fixes et mobiles (y compris en déplacement), commandes acceptées et accès anciens non construits dont les anciennes conditions sont remplies. Les anciens paliers ultérieurs ne deviennent pas des conditions initiales.
+Les nouveaux empires commencent avec le marqueur courant. Les participations existantes nécessitent une requalification explicite, sous verrou de participation et d’univers. Avant cette opération, les nouvelles commandes sont indisponibles ; les anciennes continuent leur résolution. Aucune lecture, aucun redémarrage ni worker ne déclenche automatiquement cette bascule.
 
-Le registre est complété sous verrou avant et après la synchronisation des files. Une condition initiale manquante ou une annulation de commande ne retire pas l’accès acquis. Aucun compte, niveau, rang, unité, coût payé, durée enregistrée ou ordre de file n’est réinitialisé. Le registre d’un joueur ne transmet pas les accès d’une colonie à un autre propriétaire.
+La requalification utilise seulement les conditions réellement remplies : jamais la possession de l’élément, ses unités, une ancienne clé, une commande ou son achèvement. Niveaux, effets, stocks, unités et historiques restent inchangés. Les opérations payées gardent leur coût, leur durée et leur résultat. Lorsqu’un rang verrouillé est consulté, ses niveaux et quantités déjà possédés restent lisibles ; le verrou concerne les nouvelles commandes.
+
+Après requalification, la synchronisation mémorise les nouveaux accès dont les conditions sont remplies. Une perte ultérieure de bâtiment, une annulation ou un redémarrage ne retire pas ces accès. La portée joueur/univers ou joueur/colonie est conservée, sans transmission des accès de l’ancien propriétaire lors d’une capture.
 
 ### Activation après validation
 
-1. Prévoir maintenance et sauvegarde habituelles.
-2. Appliquer `Version20261106120000` : ajout de la colonne JSON seulement.
-3. Exécuter `app:catalog:preserve-unlocks --dry-run`, puis `app:catalog:preserve-unlocks`. Reprise idempotente, univers fermés inclus.
-4. Vérifier zéro participation restant à reprendre avant réouverture du jeu.
-
-La reprise à la première synchronisation est un filet de compatibilité ; utiliser la commande avant de reprendre les actions de jeu, pour figer les accès avant d’éventuelles pertes ou changements d’état. Les états disparus avant cette mise à jour, sans trace sauvegardée, ne peuvent pas être reconstitués. Ne pas supprimer le registre ni l’instantané.
+1. Activer la maintenance, arrêter les entrées de commandes et coordonner code web, workers, relais et notifier sur la même révision. Vérifier une sauvegarde restaurable avant toute reprise de la base existante.
+2. Exécuter `make console CMD="app:catalog:preserve-unlocks --dry-run"`. Sans option, la commande reste également en lecture seule. Elle compte les participations anciennes et détaille les profils modifiés par les surcharges d’univers.
+3. Examiner les surcharges signalées. `--apply` refuse la bascule si elles changent les prérequis. Aucune personnalisation n’est effacée ; toute correction éventuelle exige un choix et une autorisation séparés.
+4. Après autorisation explicite et sauvegarde vérifiée, exécuter `make console CMD="app:catalog:preserve-unlocks --apply"`. Cette opération est idempotente et n’altère que le registre ; aucun import, aucune synchronisation globale de schéma.
+5. Relancer le diagnostic : zéro participation restante et zéro surcharge incompatible. Contrôler sur un cas ancien les niveaux, unités, stocks, files, paiements et durées, ainsi que le refus des nouvelles commandes non débloquées. Redémarrer les consommateurs et rouvrir les accès après contrôle.
 
 ## Autres mécanismes
 
-Les prérequis de catalogue sont limités aux quatre catégories. Les `levels` de conquête/PNJ décrivent garnisons et recherches PNJ : ils restent intacts. Conditions de mission, planète connue, sondes seules, carburant, quota colonial, conquête et permissions restent inchangés.
+Les règles particulières des PNJ, de reconstruction, de capture, de réparation et de mission restent conservées. Les commandes nouvelles du joueur suivent les contrôles d’accès existants avec le nouveau registre ; la résolution d’une commande déjà acceptée ne revérifie pas ses prérequis. La reconstruction des empires oubliés conserve explicitement son chemin particulier `addReconstructionLocked`, qui ne consulte pas les accès du joueur. Cette exception existante n’est pas étendue et l’achèvement ne confère aucun accès au catalogue.
 
-Les surcharges d’univers sur les conditions initiales restent prioritaires. Les anciens `levels.*.unlock_requirements` sont ignorés même dans une surcharge. Les contrôles d’accessibilité portent sur le catalogue livré ; les conditions personnalisées manuellement doivent rester compatibles avec les plafonds de leur univers.
+Les surcharges restent présentes en base. Le diagnostic compare leurs prérequis effectifs à la grille livrée et refuse une requalification incompatible ; les autres personnalisations, par exemple un prix ou une durée, restent applicables. Les anciens `levels.*.unlock_requirements` restent ignorés.
 
-## Vérifications
+## Vérifications historiques — 6 novembre 2026
 
 150 profils atteignables, exigences constantes sur neuf niveaux de contrôle. Tests des accès acquis, portées, anciennes unités/files, reprise idempotente, commandes directes, améliorations et présentation. Les devis, budgets, effets et statistiques restent conservés en dehors des prérequis et descriptions volontairement révisés.
 
@@ -131,7 +158,7 @@ Résultats :
 
 Une exécution précédente de la suite complète a rencontré l’assertion intermittente préexistante `testNpcSpyReportInitializesGarrisonAndUsesItsCounterTechnology` : elle attend des catégories positives si l’espionnage réussit, alors que le score peut en révéler zéro. Le dernier passage complet réussit ; ce test et les règles d’espionnage ne sont pas modifiés dans ce travail.
 
-## Fichiers concernés
+## Fichiers concernés par le lot historique du 6 novembre
 
 Catalogues de bâtiments/recherches et quatre fiches d’unités ; instantané `config/legacy`. `RequirementChecker`, `CatalogAccess`, `QueueService`, `UniverseService`, `PlayerUniverse` pour validation et registre. `ColonyView`, `CatalogueDetails`, `CatalogueInsights`, templates `catalogue_info`/`technology_tree` pour la présentation. Migration et commande de reprise dédiées ; tests de parcours, persistance, présentation et économie ; règles et décisions.
 

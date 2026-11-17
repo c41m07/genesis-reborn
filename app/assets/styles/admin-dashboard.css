@@ -20,7 +20,8 @@
 @media(max-width:740px){.patchnote-form{grid-template-columns:minmax(0,1fr)}.patchnote-form>label:nth-of-type(n){grid-column:1}}
 .admin-event-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:0 18px}
 .admin-event-form>label:nth-of-type(3){grid-column:1/-1}
-.admin-event-form textarea{display:block;width:100%;min-height:120px;margin:8px 0 0;padding:12px 13px;border:1px solid #31445d;border-radius:4px;background:#0a1525;color:#e5eef8;line-height:1.6;resize:vertical}
+/* Les descriptions suivent le thème comme les autres champs administratifs. */
+.admin-event-form textarea{display:block;width:100%;min-height:120px;margin:8px 0 0;padding:12px 13px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--text);line-height:1.6;resize:vertical}
 .admin-event-form>.admin-event-visibility{display:flex;align-items:center;gap:10px;width:max-content;margin:8px 0}
 .admin-event-form>.admin-event-visibility input[type=checkbox]{width:18px;height:18px;margin:0;accent-color:var(--accent)}
 .admin-event-form>.primary{justify-self:start;width:auto;min-width:180px}
@@ -41,3 +42,22 @@
 .admin-console[data-theme=light] .universe-observations caption {
     color: #46515b;
 }
+
+/* Les sous-pages restent lisibles au clavier et se replient sur mobile. */
+.admin-page-navigation { display: flex; flex-wrap: wrap; gap: .5rem; margin-block: 1rem; }
+.admin-page-navigation a { padding: .65rem .9rem; border: 1px solid var(--line); border-radius: .6rem; }
+.admin-page-navigation a[aria-current] { font-weight: 700; text-decoration: underline; text-underline-offset: .25em; }
+.admin-page-search { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; margin-block: 1rem; }
+.admin-page-search label { flex-basis: 100%; }
+.admin-page-search input { flex: 1 1 14rem; min-width: 0; }
+.admin-console .admin-module-grid > .panel { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 560px) { .admin-page-navigation { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); } }
+
+/* Les états gardent leurs libellés et une couleur lisible sur les panneaux clairs. */
+.admin-console[data-theme="light"] .admin-status-badge--active { color: var(--green); }
+.admin-console[data-theme="light"] .admin-status-badge--scheduled { color: var(--text); }
+.admin-console[data-theme="light"] .admin-status-badge--closed { color: var(--danger); }
+.admin-console .admin-danger-zone summary { color: var(--danger); }
+
+.admin-console[data-theme="light"] .admin-universe-alerts span { color: var(--danger); }
+.admin-console[data-theme="light"] .admin-universe-alerts .is-warning { color: var(--text); }

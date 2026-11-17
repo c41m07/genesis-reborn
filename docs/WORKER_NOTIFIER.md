@@ -2,7 +2,13 @@
 
 Genesis Reborn utilise une chaîne asynchrone pour exécuter les échéances du jeu sans navigateur ouvert, puis informer les joueurs connectés. Elle repose sur trois processus PHP distincts : `relay`, `worker` et `notifier`, avec MariaDB comme stockage métier, RabbitMQ comme transport de tâches et Mercure comme serveur de diffusion SSE.
 
-Ce guide s’adresse à un développeur confirmé. Il décrit l’implémentation de la branche `dev`, au commit `186008a` consulté le 11 novembre 2026, incluant la reconstruction des empires oubliés. Les exemples de commandes visent le développement local, sauf mention explicite de la production. Les règles de jeu restent définies dans [REGLES.md](REGLES.md) et [DECISIONS.md](DECISIONS.md).
+Ce guide s’adresse à un développeur confirmé. La description initiale a été
+établie sur `dev` au commit `186008a`, le 11 novembre 2026. Les sept contrats
+de messages et le routage ont été revérifiés pendant le Rework V1 du
+14 novembre 2026, notamment les récompenses des projets de guilde.
+Les exemples de commandes visent le développement local, sauf mention explicite
+de la production. Les règles de jeu restent définies dans [REGLES.md](REGLES.md)
+et [DECISIONS.md](DECISIONS.md).
 
 ## Vue d’ensemble et responsabilités
 
@@ -14,7 +20,8 @@ Requête HTTP ou traitement métier
                   +---------------+----------------+
                   |                                |
        kind = queue/fleet/combat/         kind = notification
-       universe/occupation/reconstruction          |
+       universe/occupation/reconstruction/         |
+       guild_project                              |
                   |                            notifier
                 relay                              |
                   |                         publication privée
@@ -100,13 +107,14 @@ L’outbox évite de coupler directement le commit métier à un appel réseau v
 
 ## Publication des événements par relay
 
-`GameRepository::outbox(false)` sélectionne au maximum 100 lignes, par `id` croissant, parmi les six natures métier prises en charge. La sélection ne filtre pas les échéances futures.
+`GameRepository::outbox(false)` sélectionne au maximum 100 lignes, par `id` croissant, parmi les sept natures métier prises en charge. La sélection ne filtre pas les échéances futures.
 
 | Nature | Message Messenger | Gestionnaire et service appelé |
 | --- | --- | --- |
 | `queue` | `QueueItemFinished(queueItemId, dispatchToken)` | `QueueItemFinishedHandler` → `QueueService::complete()` |
 | `fleet` | `FleetArrived(fleetId, dispatchToken)` | `FleetArrivedHandler` → `FleetService::arrive()` |
 | `combat` | `CombatEventDue(combatEventId, dispatchToken)` | `CombatEventDueHandler` → `CombatEventService::resolve()` |
+| `guild_project` | `GuildProjectRewardsDue(projectId, dispatchToken)` | `GuildProjectRewardsDueHandler` → `GuildProjectRewardService::distribute()` |
 | `occupation` | `OccupationDue(occupationId, dispatchToken)` | `OccupationDueHandler` → `OccupationCaptureService::capture()` ; reprogrammation via `OccupationScheduler` si nécessaire et circuit activé |
 | `reconstruction` | `EmpireReconstructionDue(reconstructionId, dispatchToken)` | `EmpireReconstructionDueHandler` → `EmpireReconstructionService::rebuild()` |
 | `universe` | `UniverseClosureDue(universeId, scheduleToken)` | `UniverseClosureDueHandler` → `UniverseLifecycleService::closeIfDue()` |
@@ -138,6 +146,15 @@ Les flottes et les combats contrôlent également leur état, leur jeton et leur
 La reconstruction autonome suit la même chaîne `reconstruction` → `async` → worker. `EmpireReconstructionScheduler::scheduleLocked()` renouvelle le jeton, conserve l’échéance et crée la ligne d’outbox. `EmpireReconstructionService::rebuild()` vérifie l’activation de `FORGOTTEN_EMPIRES_ENABLED`, verrouille la participation, l’univers, la planète et l’état de reconstruction, puis contrôle jeton, échéance, propriété, statut d’empire oublié et absence de combat en attente. Selon l’état, il reprend ou crée une commande de chantier, reprogramme un contrôle, ou termine sans mutation utile. La fabrication effective utilise ensuite le circuit `queue` existant. Une ancienne génération reste identifiable par son jeton périmé.
 
 Cette distinction compte lorsqu’un boost reprogramme une action : l’ancien message peut rester dans RabbitMQ, mais son ancien jeton ne doit plus déclencher l’opération. Les verrous et validations métier sont la protection contre les doubles effets ; une livraison unique du broker n’est pas supposée.
+
+Pour une fin de commande, `QueueService::complete()` identifie la participation
+et la planète avant d’ouvrir sa transaction. La première lecture transactionnelle
+verrouille ensuite la participation, puis l’univers et la planète dans l’ordre
+habituel. La commande est relue et son propriétaire, son jeton et sa position
+en tête sont vérifiés sous ces verrous. Cela évite qu’un second worker attende
+avec un snapshot déjà périmé sur MariaDB 11.8. Une commande disparue pendant
+l’attente ne produit aucun effet. Ce chemin ne change pas la synchronisation
+utilisée par les lectures du jeu ni le format des messages.
 
 Messenger configure cinq nouvelles tentatives après la première exécution, avec délai initial de 1 000 ms et multiplicateur 2. Pour une exception ordinaire, les délais de base sont 1, 2, 4, 8 et 16 secondes, avec le jitter par défaut de 10 % du framework installé. La charge du système peut ajouter de l’attente ; ce ne sont pas des garanties de temps réel. Après épuisement, Messenger utilise le transport `failed`, configuré avec l’exchange et la queue `genesis_v2_failed`.
 

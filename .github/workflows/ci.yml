@@ -5,6 +5,7 @@ on:
     branches: [alpha]
   pull_request:
     branches: [dev, alpha]
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
   workflow_dispatch:
 permissions:
   contents: read
@@ -18,24 +19,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - suite: php
-            shard: 0
-          - suite: browser
-            shard: 1
-          - suite: browser
-            shard: 2
-          - suite: browser
-            shard: 3
-          - suite: browser
-            shard: 4
-    name: quality (${{ matrix.suite }}, lot ${{ matrix.shard }})
+        # Un brouillon ne crée pas les contrôles quality requis : un job ignoré
+        # pourrait être accepté par GitHub comme un contrôle réussi avant fusion.
+        include: >-
+          ${{ fromJSON(
+            github.event_name == 'pull_request' && github.event.pull_request.draft
+            && '[{"suite":"development","shard":0}]'
+            || '[{"suite":"php","shard":0},{"suite":"browser","shard":1},{"suite":"browser","shard":2},{"suite":"browser","shard":3},{"suite":"browser","shard":4}]'
+          ) }}
+    name: ${{ matrix.suite == 'development' && 'development checks' || format('quality ({0}, lot {1})', matrix.suite, matrix.shard) }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           fetch-depth: 2
       - name: Check patch whitespace
-        if: matrix.suite == 'php'
+        if: matrix.suite != 'browser'
         run: git diff --check HEAD^ HEAD
       - name: Set up Node.js and npm cache
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
@@ -76,6 +74,11 @@ jobs:
         run: make install
       - name: Build production assets
         run: make assets
+      - name: Static checks without database and Python tests
+        if: matrix.suite == 'development'
+        run: |
+          make lint-static EXEC="docker compose --env-file .env.local run --rm --no-deps --user $(id -u):$(id -g) app"
+          python3 -m unittest discover -s app/tests/scripts -p "test_backup*.py"
       - name: Start infrastructure and web application
         if: matrix.suite == 'php'
         run: docker compose --env-file .env.local up -d --wait app database rabbitmq mercure
@@ -103,7 +106,7 @@ jobs:
         if: failure()
         run: |
           docker compose --env-file .env.local ps -a
-          docker compose --env-file .env.local logs --no-color --tail=100 app worker relay notifier database rabbitmq mercure
+          docker compose --env-file .env.local --profile test logs --no-color --tail=100 app worker relay notifier database database-test rabbitmq mercure
           docker logs --tail=100 genesis-ci-traefik
       - name: Teardown CI stack
         if: always()

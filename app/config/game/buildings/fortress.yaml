@@ -20,35 +20,45 @@
     "max_bonus": 25
   },
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "weapons_engineering",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
-          "slug": "lab",
+          "slug": "mine_metal",
           "tier": "basic",
-          "level": 5
+          "level": 1
+        },
+        {
+          "slug": "mine_nano",
+          "tier": "basic",
+          "level": 1
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "mine_metal",
+          "tier": "intermediate",
+          "level": 1
+        },
+        {
+          "slug": "mine_nano",
+          "tier": "intermediate",
+          "level": 1
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "weapons_engineering",
-          "tier": "intermediate",
-          "level": 10
-        }
-      ],
       "buildings": [
         {
-          "slug": "lab",
-          "tier": "intermediate",
-          "level": 10
+          "slug": "mine_metal",
+          "tier": "superior",
+          "level": 1
+        },
+        {
+          "slug": "mine_nano",
+          "tier": "superior",
+          "level": 1
         }
       ]
     }
@@ -56,22 +66,22 @@
   "economy_value_budget": 12000,
   "cost_profiles": {
     "basic": {
-      "metal": 3600,
-      "nano": 1200,
+      "metal": 2400,
+      "nano": 1800,
       "antimatter": 0,
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 3375,
-      "nano": 1687,
-      "antimatter": 188,
+      "metal": 2251,
+      "nano": 1875,
+      "antimatter": 375,
       "hydrogen": 0
     },
     "superior": {
-      "metal": 2813,
-      "nano": 2110,
-      "antimatter": 469,
-      "hydrogen": 936
+      "metal": 2345,
+      "nano": 1641,
+      "antimatter": 703,
+      "hydrogen": 1876
     }
   },
   "tier_labels": {
@@ -85,19 +95,5 @@
     "superior": "Renforce la structure des défenses au sol. Un maillage étendu porte cette fonction à l’échelle planétaire."
   },
   "description": "Renforce la structure des défenses au sol. Une installation locale assure cette fonction sur la colonie.",
-  "unlock_requirements": {
-    "buildings": [
-      {
-        "slug": "shipyard",
-        "tier": "basic",
-        "level": 3
-      },
-      {
-        "slug": "lab",
-        "tier": "basic",
-        "level": 2
-      }
-    ],
-    "technologies": []
-  }
+  "unlock_requirements": {}
 }

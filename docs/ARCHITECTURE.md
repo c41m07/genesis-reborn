@@ -1,5 +1,29 @@
 # Architecture et parcours applicatifs
 
+## Unités économiques et livraisons en défense
+
+`EconomicUnitCapacity` dérive les stocks et réservations à partir des FleetShip,
+des files locales et de `Fleet.navigation.economic_slots`. La requête ciblée
+`GameRepository.economicUnitStocks` charge seulement les unités civiles présentes
+ou attendues de la participation sur la planète. Aucun stock d’affectation dupliqué
+ni changement SQL. `CatalogueProductionContext` conserve cette lecture brute pour
+les cartes et les segments de ressources ; les modificateurs sont recalculés à
+chaque frontière d’événement ou de vacances.
+
+`EconomicUnitDeployment` réserve ou libère sous les verrous de jeu existants,
+après matérialisation de l’ancien état. `ResourceService` ajoute les deux sources
+civiles sans les soumettre à l’entretien ni au rendement électrique des usines.
+Les sources restent identifiables dans le bandeau ; les surplus existants sont
+conservés. Les pertes sont matérialisées puis appliquées à la clôture du combat.
+
+`LocalGarrison` raccorde les livraisons du chantier et du Stationnement à
+`CombatEventService.joinOpenDefense`. Toute la flotte locale disponible participe,
+carburant et fret conservés, sans copie d’unités ni trajet fictif. La date payée du
+chantier est prise en compte ; un renfort ajouté après des rounds déjà résolus
+ne peut pas réécrire ces rounds. Une fermeture différée du service de combat
+évite le cycle entre résolution de combat et livraison des files.
+Voir les [transitions, contrôles et limites](UNITES_ECONOMIQUES.md).
+
 ## Organisation et environnement
 
 Le code Symfony, les templates, assets, migrations, tests et dépendances sont
@@ -18,6 +42,59 @@ Catalogues YAML/JSON et cartes JSON restent hors base ; l’import est explicite
 Les possessions et recherches sont isolées par participation à un univers.
 Les événements persistés dans l’outbox permettent la progression sans navigateur.
 Voir [l’exploitation](EXPLOITATION.md) et [les règles](REGLES.md).
+
+## Registre des prérequis — version 2
+
+`CatalogAccess` lit uniquement les clés `v2:` du registre JSON et contrôle son
+marqueur de version. Les nouveaux empires partent du registre courant ; une
+participation existante reste à requalifier explicitement. La synchronisation
+ne bascule pas ce registre et laisse se résoudre les commandes déjà payées.
+La commande `app:catalog:preserve-unlocks` est en lecture seule par défaut ;
+`--apply` reprend les accès sous verrous participation puis univers, après
+contrôle des surcharges. Aucun changement SQL pour ce lot. L’interface et
+les commandes utilisent le même service d’accès ; les conditions complètes
+sont rangées par rang, y compris Basique, sans héritage d’un autre rang.
+La reconstruction des empires oubliés conserve son chemin particulier et ne
+crée pas un accès joueur par la seule livraison d’une unité.
+Voir la [grille et la bascule](DEBLOCAGES.md) et le [suivi](PROGRESSION_CARBURANT_UNITES.md).
+
+## Durées et carburant des opérations
+
+`OperationCalculator` reste le calculateur commun des devis, maxima et paiements.
+La réduction est soustraite en pourcentage avant division, pour conserver
+l’arrondi supérieur sans créer une seconde artificielle au plafond de 70 %.
+Les durées et coûts des QueueItem acceptés restent la référence de leur résolution.
+
+`FleetNavigation.freeze` ajoute les coefficients de carburant réellement utilisés
+au départ dans `fuel_profiles`, par slug et rang, sans changer la version de route.
+`FleetFuel` restaure ces coefficients pour FleetRecallPlanner et FleetStationing,
+sans modifier quantités, vitesses ni réserve payée. Si le profil est présent mais
+incomplet, le nouveau trajet est refusé ; aucune tarification courante de repli.
+Pour les missions antérieures, la référence de `config/legacy/` est combinée aux
+surcharges persistées. Une ancienne personnalisation modifiée depuis son départ
+n’est pas reconstruite avec certitude : voir la [procédure et ses limites](DUREES_CARBURANT.md#commandes-payées-et-missions-historiques).
+
+`app:balance:compare-operations` produit une comparaison JSON sans lecture de compte
+ni écriture en base, avec les calculateurs réels et un univers transitoire ×1.
+Aucune migration SQL pour ces compléments. Déploiement cohérent du web et des
+workers requis avant toute activation ; aucun déploiement Alpha dans cette mission.
+
+## Études économiques hors base
+
+`app:balance:compare-economy` orchestre `Balance/ProgressionEconomyStudy` et
+`MilitaryEconomyStudy`. Le candidat de prix crée uniquement des surcharges sur
+un `Universe` transitoire. `FundedProgressionSimulation` construit un graphe
+d’objectifs et prérequis, paie avec les stocks disponibles au départ, conserve
+le devis et avance aux fins d’opérations et frontières de flux.
+
+`ResourceService.project` exige un contexte du même objet planète, un inventaire
+explicite et un multiplicateur d’événement fini. Cette entrée sans lecture de compte
+réutilise la simulation normale ; `FactoryEconomy` peut retourner les intégrales
+par segment avec une option désactivée par défaut. Les appels de jeu conservent
+leur résultat et leurs effets existants. Les tests vérifient cette équivalence,
+les frontières, le bilan des ressources et l’absence d’accès aux dépôts de données.
+Les [scénarios et limites](SIMULATIONS_PROGRESSION_ECONOMIE.md) sont distincts des
+règles de jeu ; aucune simulation n’écrit un accès, un paiement ou un résultat de combat.
 
 ## Comptes et courriels
 
@@ -58,39 +135,55 @@ La demande et la consommation prennent les verrous dans le même ordre : joueur 
 Si le transport mail échoue, l’erreur est journalisée sans adresse ni jeton ; le mot de passe reste inchangé et la réponse publique reste neutre. Une nouvelle demande permet de réessayer. Les tests vérifient les réponses HTTP et le contenu des messages, sans prétendre mesurer les délais ni la délivrabilité du serveur Alpha. La configuration SMTP, l’expéditeur et l’URL HTTPS réels restent à vérifier sur ce serveur. Aucune migration supplémentaire n’est nécessaire pour ce parcours.
 ## Wiki et sources embarquées
 
-Le guide est accessible aux comptes connectés sur `/wiki`, sans participation à
-un univers obligatoire. Les liens sont présents près de Feedback et sur la vue
-générale de la colonie, destination de l’accueil du jeu.
+Le guide est accessible aux comptes connectés, même sans participation à un
+univers. L’accès Wiki reste dans l’en-tête, près de Feedback. `/wiki` est l’accueil,
+`/wiki/chapitres/{chapter}` affiche un chapitre et `/wiki/recherche?q=…` affiche des
+résultats avec extraits et liens de lecture. Chaque destination est rendue par le
+serveur, avec un titre propre et le même sommaire. Aucune section de manuel n’est
+masquée pour simuler une page. La recherche reste utilisable sans JavaScript.
 
-`docs/wiki.json` est l’unique texte explicatif du guide. Il explique les
-mécanismes sans recopier les tableaux économiques, les prix ou les statistiques.
-Les références détaillées proviennent directement de `docs/REGLES.md` et
-`docs/DECISIONS.md`, consultables sous `/wiki/references/regles` et
-`/wiki/references/decisions`. Elles sont affichées comme texte brut échappé ;
-aucun HTML ou Markdown actif n’est interprété. Les identifiants de référence
-sont limités à ces deux valeurs : aucun chemin fourni par le visiteur n’est lu.
+`WikiManual` lit les sources uniques `docs/wiki.json`, `docs/REGLES.md` et
+`docs/DECISIONS.md`. Le JSON fini du manuel est décodé une fois par préparation ;
+seules les métadonnées du sommaire et le contenu demandé vont au template.
+L’accueil ne prépare aucun corps de chapitre ; une fiche n’en transmet qu’un ;
+la recherche parcourt le document de référence et ne transmet que des extraits
+bornés à 240 caractères. Aucun chargement de données de jeu, schéma ou dépendance
+n’est ajouté. Aucun gain de performance mesuré n’est revendiqué.
 
-Les références conservent des paragraphes historiques remplacés par des décisions
-ultérieures (bonus, courbes et prix communs). Le guide signale ces écarts sans
-additionner les anciennes règles aux nouvelles. Les valeurs propres à un univers
-restent celles affichées par le jeu ; le wiki ne change aucun équilibrage.
+Les formules et exemples utilisent les éléments natifs `details` et `summary`.
+Les références, conservées sous `/wiki/references/regles` et
+`/wiki/references/decisions`, restent du texte brut échappé et sont présentées par
+sections repliables. Les identifiants de référence se limitent à ces deux valeurs :
+aucun chemin fourni par le visiteur n’est lu. Ne pas ajouter `raw` aux paragraphes
+ou références. Les sources gardent leurs paragraphes historiques ; le guide
+n’additionne pas leurs anciens réglages aux règles récentes. Les valeurs propres
+à un univers restent celles affichées par le jeu. Aucune règle ou valeur du
+manuel n’est changée par cette navigation.
 
-Après une décision de gameplay, relire les rubriques explicatives touchées et les
-sources de référence dans le même lot. Ne pas créer une deuxième copie chiffrée
-des règles dans une vue Twig. Les paragraphes du guide sont rendus avec
-l’échappement normal de Twig ; ne pas ajouter `raw`.
+Les GET historiques `?chapter=` et `?q=` redirigent vers les pages dédiées.
+Le serveur ne reçoit pas le fragment d’une URL. `wiki_chapters` traduit donc
+les anciens `#wiki-{id}` et `#wiki-title-{id}` au chargement et au changement de
+fragment, en conservant la recherche et en remplaçant l’entrée d’historique pour
+éviter une boucle au retour arrière. La liste des destinations est produite par
+le routeur depuis les seuls chapitres connus. Sans JavaScript, les cartes de
+l’accueil portent ces mêmes identifiants et donnent un lien de lecture ; les
+résultats de recherche gardent aussi leurs repères. Le sélecteur mobile soumet
+un GET natif ; JavaScript peut seulement déclencher cette soumission à la sélection.
+Le sommaire automatique est désactivé sur ces pages, les ancres utiles au sommaire
+et à la lecture restent disponibles.
 
-Le contrôleur lit `../docs/` depuis `app/` : montage `/docs` en développement
-et copie `/docs` en production. L’image de production copie seulement les trois fichiers de contenu du wiki ;
-les exceptions de `.dockerignore` doivent être conservées. Les autres documents
-restent exclus du contexte. Une compilation d’image et son déploiement restent
-distincts des tests locaux du wiki.
+Le contrôleur lit `../docs/` depuis `app/` : montage `/docs` en développement et
+copie `/docs` en production. L’image de production copie seulement ces trois
+fichiers de contenu du wiki ; conserver les exceptions de `.dockerignore`.
+Après une décision de gameplay, relire les rubriques touchées dans le même lot,
+sans recopier les règles chiffrées dans les templates.
 
-Vérifications : scénario `app/tests/browser/wiki.spec.mjs` (accès anonyme, liens,
-sommaire clavier, contenu des sources, référence inconnue, trois largeurs et deux
-thèmes), puis six contrôles obligatoires avant publication. Ces contrôles ciblés
-ne constituent pas un audit RGAA complet. Aucun déploiement n’est effectué par
-l’ajout de cette page.
+Validation : tests HTTP `WikiPagesTest`, parcours `wiki.spec.mjs` et parcours
+transversal `ui-journey.spec.mjs`. Le bilan de navigation distingue les contrôles
+locaux, la CI, l’intégration et l’activation locale. Les contrôles ciblés ne
+constituent pas un audit RGAA complet. Aucun déploiement n’est effectué par l’ajout
+de ces pages.
+
 ## Compte à rebours de fermeture
 
 La date `Universe.endsAt` enregistrée en base fait autorité. Le composant apparaît lorsque le statut est actif et qu’il reste **au maximum 24 heures**, sur la carte de l’univers et dans les pages du joueur ayant cet univers sélectionné. Sans date, ou avec une date à plus de 24 heures, il est masqué. Il peut apparaître sans rechargement lorsque le seuil est franchi.
@@ -102,6 +195,61 @@ Le rendu initial utilise `ClockInterface`. Le navigateur progresse avec son horl
 Le compteur n’est pas une région vocale actualisée chaque seconde (`role=timer`, `aria-live=off`). Les textes sont explicites et la mise en page s’adapte au mobile. Ces contrôles ciblés ne constituent pas un audit RGAA complet.
 
 ## Navigation, files et cartes
+
+`ColonyView::data` reçoit la section déjà validée par `ColonyController`.
+Après la synchronisation existante des files, il lit les niveaux servant aux
+prérequis, puis prépare seulement le catalogue demandé. La vue générale ne
+construit aucune carte. La section interne `tree` prépare uniquement le guide
+technologique, sans cartes ni flottes. Les files de la colonie et la recherche
+commune restent disponibles dans les pages de colonie ; les quantités du
+catalogue sont chargées par groupe, sans lecture SQL par carte. Ces données
+restent locales à l’appel et ne servent jamais d’autorisation d’écriture.
+Le calcul et l’endpoint de la barre de ressources restent inchangés.
+Les cartes Bâtiments et Vaisseaux transmettent un contexte économique immuable, préparé après
+la synchronisation des files, aux calculs nominaux de ResourceService. Ce contexte
+regroupe les lectures d’événements et de vacances pour cette préparation seulement ;
+les appels existants et les snapshots de la barre ne l’utilisent pas.
+`ResourceService::economicUnitRate` fournit le rendement nominal local d’une unité
+civile active aux cadres et fiches, avec ce même contexte, sans relire les effectifs
+ou les événements par carte. Les capacités et le crédit effectif des stocks restent
+gérés par la simulation existante.
+La liste des combats utilise ReportSummaryRepository pour éviter les rounds et
+snapshots complets. Le lecteur détaillé et les archives conservent les entités
+entières. Les profils consultent la ligne du snapshot quotidien sans enrichir
+tous les scores à chaque affichage ; le recalcul quotidien reste partagé.
+AdminReadRepository borne les listes de joueurs, d’audit, de feedbacks et
+d’événements à 50 lignes. Les filtres sont appliqués avant LIMIT ; les compteurs
+et curseurs de consultation portent sur la sélection complète. Les patchnotes
+administratives sont paginées par leur repository. L’export complet du journal
+lit 100 lignes à la fois, avec un identifiant plafond et neutralisation des
+formules CSV. Les recherches immédiates Joueurs/Journal rendent leurs fragments
+partagés et préservent le formulaire ; les réponses obsolètes sont ignorées.
+
+L’espace Flottes utilise `FleetPageView` : `/flottes` prépare une page de 30
+missions de la colonie, `/flottes/preparer` les unités et destinations de l’envoi
+avec trois missions résumées, `/flottes/orbites` les demandes de la colonie,
+`/flottes/quai` ses réserves et les stationnements en attente de tout l’empire.
+Les compositions ont liste, création, modification et chargement distincts.
+Les services métier restent communs ; les anciens paramètres et fragments sont
+maintenus par les transitions décrites dans [le suivi](NAVIGATION_PAGES_DEDIEES.md).
+Le paramètre `fleet` situe un vol autorisé avant la lecture bornée des détails.
+
+Les actualisations des colonies et de Flottes demandent JSON avec `X-Genesis-Live: 1` et
+`Accept: application/json`. La route conserve ses contrôles, synchronisations
+et préparation GameShell, puis renvoie les fragments privés sans cache.
+LiveRegionResponse produit du JSON compact et le compresse en gzip si accepté,
+avec Vary adapté. Cette compression est propre aux réponses de fragments ;
+aucune configuration serveur ni traitement de l’endpoint ressources n’est modifié.
+Le sélecteur, le catalogue et le journal sont partagés entre rendu initial et
+actualisation ; ressources, files et vols réutilisent leurs templates existants.
+Le client ignore les réponses d’une génération ou d’une URL devenue obsolète.
+Le focus, les saisies modifiées et le journal non consulté gardent leurs protections.
+
+La console utilise `AdminReadRepository` pour ses compteurs et aperçus bornés ;
+les écrans détaillés conservent leurs droits, leur audit et leurs formulaires.
+`GameRepository::discoveredPlanets` filtre découverte et univers en base avant
+préparation cartographique. Les compositions d’EmpireDetails sont chargées après
+filtrage du propriétaire. Aucun cache partagé ni évolution de schéma n’est ajouté.
 
 Le sélecteur conserve la colonie choisie par participation et la catégorie ouverte.
 La vue générale présente les vols de toutes les colonies de l’univers sélectionné.
@@ -139,7 +287,7 @@ Les tests utilisent uniquement les comptes et bases de leurs projets Docker
 jetables. SMTP, livraison Internet des liens et configuration Alpha demandent
 une vérification séparée sur un serveur autorisé.
 
-Le tableau documentaire `docs/CATALOGUE_LABELS.csv` conserve les 150 libellés,
+Le tableau documentaire `docs/CATALOGUE_LABELS.csv` conserve les 156 libellés,
 descriptions et utilités de jeu. Les valeurs d’exécution restent celles du catalogue
 applicatif ; ce fichier documentaire n’est pas importé dans la base.
 
@@ -231,6 +379,13 @@ créé si nécessaire ; chaque quantité reste dans l’entier SQL signé. L’a
 admin_ships_grant est enregistré dans la même transaction (motif, acteur,
 joueur/univers/planète/flotte, type/rang, quantité, avant/après).
 La route d’attribution n’accepte qu’un POST CSRF avec confirmation explicite.
+Pour les unités économiques, les commandes échues sont d’abord synchronisées,
+puis l’ancien effectif matérialisé avant l’ajout et la production actualisée.
+Ce séquencement conserve la production due entre une livraison payée et la correction. Un dépassement des places reste conservé inactif,
+comme pour les autres corrections de stock autorisées. Les livraisons administratives
+utilisent aussi `LocalGarrison` pour rejoindre le prochain round non résolu,
+sans duplication ni retrait du carburant local. Droits, reçu et audit restent
+les contrôles existants ; aucune attribution réelle n’est exécutée par les tests.
 
 Version20261112020000 est additive. Accord explicite reçu ; sauvegarde locale
 dans var/backups/lot-e-20261112, archive/manifeste vérifiés deux fois avant make
@@ -445,3 +600,165 @@ sont visibles dans Ma guilde avec leurs services et jetons CSRF existants.
 `GuildProfile` conserve description, références d’images et version dans une table dédiée, rattachée à la guilde avec suppression en cascade de la ligne. Les lectures des guildes existantes n’ajoutent pas de jointure à cette table. Les profils de joueurs ne transmettent aux templates qu’une liste explicite des informations publiques, avec les scores du classement quotidien.
 
 `GuildImageStorage` vérifie taille, type réel, dimensions et décodage GD ; il réencode les pixels sous un nom aléatoire, sans conserver les métadonnées. Les fichiers sont hors de `public/`, en `var/guild-media`, servis par une route authentifiée et limitée à l’univers, avec `nosniff`, CSP restrictive et absence de cache partagé. `GuildProfileService` vérifie commandant actuel et version sous verrou ; un échec retire les nouveaux fichiers et les anciennes images ne sont nettoyées qu’après validation de la transaction. [Limites et vérifications](PROFILS_JOUEURS_GUILDES.md).
+
+
+## Panneau des arrivées étrangères — 16 novembre 2026
+
+FleetVisibility::incoming reçoit les seuls candidats de GameRepository::incomingFleets,
+filtrés par destinataire propriétaire, univers, mission et état. Il applique le même
+masque que la carte avant de lire les FleetShip des flottes visibles en groupe.
+La sérialisation tierce conserve les effectifs/points et masque composition, fret
+et origines non découvertes. Les déplacements personnels restent exclus de ce panneau.
+Le lecteur de surveillance reste sans écriture ; URL, clé de réponse HTML, contrôleur
+Stimulus et attributs d’actualisation sont conservés pour les pages déjà ouvertes.
+
+Le paramètre interne incoming_panel distingue la surveillance commune de son
+rendu. Les six vues de colonie/flottes affichent le panneau sous les vols ; la
+carte et les autres vues gardent le contrôleur sans cadre ajouté. Dans ce dernier
+cas, le HTML autorisé est lu hors du DOM affiché pour calculer les annonces, puis
+les événements cartographiques existants sont transmis. Les droits, lectures,
+URL et clés de réponse restent communs aux deux présentations.
+
+
+## Espaces Guildes et Diplomatie
+
+Lot 1 publié dans la [PR #75](https://github.com/c41m07/genesis-reborn/pull/75) : espaces Guildes et Diplomatie séparés, pages dédiées de membres,
+grades, gestion et création ; liens directs, anciennes adresses conservées et
+lectures adaptées à chaque page. Voir le [suivi des lots](NAVIGATION_PAGES_DEDIEES.md) pour les
+choix, vérifications et limites. CI, fusion et déploiement restent distincts.
+
+
+### Inventaire par destination
+
+`InventoryPageView` prépare `/boosts`, `/inventaire/boites` ou
+`/inventaire/recompenses`. Une agrégation privée compte les objets disponibles
+et en attente sans hydrater l’historique utilisé. Les boîtes disponibles sont
+lues séparément, dans la capacité maximale existante de 100, puis regroupées
+par contenu identique. La file d’attente est lue par pages de 25 dans l’ordre
+`earnedAt, id`. Les opérations de tout l’empire sont préparées sur Boosts,
+uniquement si un boost est disponible et utilisable hors vacances.
+
+`BoostController` conserve la synchronisation préalable et les POST publics.
+`BoostUseService`, `ResourceBoxUseService`, les reçus, verrous, transactions et
+la promotion automatique restent inchangés. Les ouvertures reviennent à la
+page Boîtes ; les utilisations de boost à Boosts. Les anciens fragments sont
+orientés par le contrôleur de navigation, à l’ouverture et au changement de
+fragment. Les liens serveur fonctionnent sans JavaScript.
+Voir [le suivi](NAVIGATION_PAGES_DEDIEES.md) pour les contrôles et limites.
+
+
+### Compte commun et mode vacances
+
+Le menu Mon compte ouvre `/profil` (Mes identifiants). La navigation commune
+relie `/profil/preferences`, `/profil/vacances` et `/profil/supprimer`.
+`PreferencesController` prépare uniquement le formulaire des préférences communes.
+`VacationController` prépare l’état de l’empire sélectionné et reprend les POST
+historiques `/profil/preferences/vacances/activer` et `/terminer`, avec les mêmes
+noms de routes, jetons, identifiants et services métier. Le contrôle de sélection,
+propriété, participation et univers reste préalable à chaque action de vacances.
+Les comptes sans empire conservent les identifiants, préférences et suppression ;
+la page Vacances présente l’information d’indisponibilité, sans nouvelles permissions.
+
+La lecture d’affichage de `VacationEconomyService.settings` ne sélectionne que la
+dernière période (début puis identifiant décroissants), y compris terminée pour
+le délai de réactivation. Les calculs d’historique et les écritures sous verrou
+restent inchangés. `ProfileService` et `AccountDeletionService` sont réutilisés,
+avec fermeture de session après modification et protections de suppression.
+
+Le GET de suppression ne prépare aucun formulaire des identifiants et ne supprime
+rien. Les anciens `?delete=1` redirigent côté serveur ; les fragments des vacances
+et de suppression sont orientés côté navigateur. Les nouvelles pages désactivent
+le sommaire automatique et conservent leurs liens et formulaires serveur sans JS.
+Voir [le suivi de navigation](NAVIGATION_PAGES_DEDIEES.md) pour la recette.
+
+
+## Pages des projets collectifs — 17 novembre 2026
+
+`GuildProjectController` expose les listes En cours, Disponibles et Historique
+sur des GET distincts ; les routes de fiche, lancement et contribution restent
+compatibles. Les actions délèguent toujours aux mêmes services métier.
+`GuildProjectPageView` prépare la destination demandée, après validation de
+la participation, de la guilde et de la fonctionnalité dans l’univers.
+
+Les listes lisent 26 lignes au plus pour en afficher 25 et calculer le curseur
+suivant (`before`). Les modèles disponibles sont sélectionnés par `NOT EXISTS`
+sur tous les projets de la guilde, y compris terminés ou abandonnés, sans charger
+ces projets. Les contributions personnelles et les clés de récompenses des seules
+lignes affichées sont regroupées. La clé compte/modèle reste celle de
+`BoostGrantService`, sans filtrer les boosts utilisés ou les anciens empires.
+La fiche pagine aussi les contributeurs (`before_contribution`) ; la contribution
+personnelle est lue séparément et reste complète. Les identités sont limitées aux
+25 contributeurs visibles, dans le même univers. Seule une fiche active prépare
+les colonies nécessaires au don ; les données communes du bandeau restent celles
+de `GameShell`. Aucune actualisation périodique ni nouvelle écriture de lecture.
+
+Les deux navigations gardent l’espace guilde et la destination projet actifs.
+`page_sections` ne crée pas de sommaire sur ces pages. Il oriente les anciens
+fragments de liste à l’ouverture et au changement de fragment, en conservant la
+recherche ; les liens serveur restent disponibles sans JavaScript. Les ancres
+internes d’une fiche restent utilisables. Aucune migration ou mesure comparative
+de performance ; voir le [bilan du lot 5](NAVIGATION_PAGES_DEDIEES.md).
+
+
+## Pages Événements et Défis — 17 novembre 2026
+
+`GameEventsController` sépare `/evenements` et `/evenements/defis`. La première
+page prépare les annonces et bonus en cours ou à venir ; la seconde utilise
+`ChallengeQueryService::playerPage`. Les fiches de `ChallengeController` gardent
+leurs routes, contrôles d’univers, progression, classement et récompenses.
+
+Les critères de lecture communs sont dans `GameRepository`. Les prédicats JSON
+équivalents à `!empty()` et le préfixe hebdomadaire sensible à la casse sont
+appliqués avant comptage et pagination, sans charger des occurrences hors du
+parcours pour les rejeter ensuite. Le mapping natif Doctrine conserve dates,
+JSON et associations sur la même requête filtrée. Les tests comparent les valeurs
+JSON nulles, fausses, nulles numériquement, vides et non vides à leur lecture PHP.
+Aucune expression SQL ne vient d’une saisie utilisateur.
+
+Les deux groupes d’annonces sont paginés séparément par 25, avec `current_page`
+et `upcoming_page` conservés dans les liens. Les défis utilisent `page` et un
+ordre date/identifiant stable. Les lignes closes ou annulées restent consultables
+sur les pages suivantes. Les exclusions d’archivage restent celles des listes
+actuelles ; une ancienne fiche archivée reste accessible selon ses droits existants.
+`ChallengeQueryService::view` garde les calculs métier et lectures personnelles.
+
+`EventPanelService` réutilise les mêmes critères, sans changer son périmètre
+commun : annonces/bonus applicables et occurrences en cours ou programmées.
+Il conserve toutes ses informations, son compteur fermé et ses comptes à rebours ;
+il ne charge aucun historique de défis. Les pages n’ajoutent pas de sondage.
+L’ancien fragment `#page-section-0` du sommaire des défis est orienté côté navigateur
+vers la nouvelle liste. `#events-current` et `#events-upcoming` restent sur le
+document des annonces ; les nouveaux écrans désactivent le sommaire automatique.
+Voir [la recette et les limites](NAVIGATION_PAGES_DEDIEES.md).
+
+## Pages administratives dédiées — 17 novembre 2026
+
+La console et ses groupes existants restent en place. `AdminController` expose
+les GET de création et de gestion d’un univers ; les POST historiques gardent
+leurs services, jetons et contrôles. Les brouillons d’erreur sont consommés sur
+la seule fiche concernée. `AdminReadRepository` pagine les univers et les modèles
+de projets par 50 ; les filtres d’univers s’appliquent avant la pagination.
+Les formulaires ne sont plus préparés dans les listes. Les pages d’édition ne
+chargent ni la liste des modèles ni les autres univers pour leur configuration.
+
+`CatalogBalanceService::entries` conserve son contrat par défaut ; ses paramètres
+facultatifs limitent famille, entrée et préparation des champs. La recherche
+transversale porte sur le catalogue de configuration fini de l’univers ; une
+liste ne construit aucun champ d’édition. Les écritures d’équilibrage réutilisent
+les transactions, matérialisations et validations existantes.
+
+Les contrôleurs Événements, Projets et Rotations séparent les GET de liste et de
+formulaire. Les anciens POST restent acceptés. L’assistant et les interdictions
+de réécriture des événements guidés restent inchangés. L’édition de rotation
+réutilise les validations de création dans `WeeklyRotationService` ; elle vérifie
+une empreinte du modèle sous le verrou existant administrateur puis univers,
+conserve sa clé et sa position et journalise avant/après. Les configurations des
+occurrences et les récompenses acquises ne sont pas réécrites.
+
+`admin/_page_navigation` relie les destinations ; le menu de groupe et le fil
+d’Ariane reconnaissent les pages profondes. Les nouvelles pages désactivent le
+sommaire automatique et ne sont plus repliées par `admin_editors`.
+`page_sections` traduit les anciens fragments univers/catalogue dans le navigateur
+avec remplacement de l’entrée d’historique ; sans JavaScript, listes et liens
+serveur permettent d’atteindre les mêmes fiches. Aucun changement de schéma,
+dépendance ou chargement global de données de jeu n’est ajouté.

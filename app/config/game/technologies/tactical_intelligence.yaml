@@ -2,7 +2,7 @@
   "slug": "tactical_intelligence",
   "label": "Analyse tactique",
   "max_level": 5,
-  "research_time_base": 600,
+  "research_time_base": 1200,
   "research_time_scaling": 1.8,
   "costs_base": {
     "metal": 2125,
@@ -10,48 +10,57 @@
     "antimatter": 0
   },
   "costs_scaling": 2,
-  "unlock_requirements": {
-    "buildings": [
-      {
-        "slug": "lab",
-        "level": 1
-      }
-    ]
-  },
+  "unlock_requirements": {},
   "effect": {
     "type": "unlock"
   },
   "provisional": true,
   "tier_unlock_requirements": {
-    "intermediate": {
-      "technologies": [
-        {
-          "slug": "signature_masking",
-          "tier": "basic",
-          "level": 5
-        }
-      ],
+    "basic": {
       "buildings": [
         {
           "slug": "lab",
           "tier": "basic",
-          "level": 5
+          "level": 3
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "naval_engineering",
+          "tier": "basic",
+          "level": 2
+        }
+      ]
+    },
+    "intermediate": {
+      "buildings": [
+        {
+          "slug": "lab",
+          "tier": "intermediate",
+          "level": 3
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "naval_engineering",
+          "tier": "intermediate",
+          "level": 2
         }
       ]
     },
     "superior": {
-      "technologies": [
-        {
-          "slug": "signature_masking",
-          "tier": "intermediate",
-          "level": 5
-        }
-      ],
       "buildings": [
         {
           "slug": "lab",
-          "tier": "intermediate",
-          "level": 10
+          "tier": "superior",
+          "level": 3
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "naval_engineering",
+          "tier": "superior",
+          "level": 2
         }
       ]
     }
@@ -59,22 +68,22 @@
   "economy_value_budget": 5000,
   "cost_profiles": {
     "basic": {
-      "metal": 1501,
-      "nano": 500,
+      "metal": 1001,
+      "nano": 750,
       "antimatter": 0,
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 1409,
-      "nano": 704,
-      "antimatter": 78,
+      "metal": 939,
+      "nano": 783,
+      "antimatter": 156,
       "hydrogen": 0
     },
     "superior": {
-      "metal": 1172,
-      "nano": 880,
-      "antimatter": 196,
-      "hydrogen": 390
+      "metal": 978,
+      "nano": 685,
+      "antimatter": 293,
+      "hydrogen": 782
     }
   },
   "tier_labels": {

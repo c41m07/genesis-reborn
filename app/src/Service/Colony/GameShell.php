@@ -30,6 +30,8 @@ final class GameShell
             'hydrogen'=>'Production d’hydrogène', 'antimatter'=>'Production d’antimatière',
             default=>$building['label'],
         },$config['catalog']['buildings']);
-        return ['incomingAttacks'=>$this->visibility->incoming($m),'serverNow'=>$this->clock->now()->format(DATE_ATOM),'journal'=>$this->journal->data($m),'vacation'=>$this->vacations->currentPeriod($m),'colonyLimit'=>$colonyLimit,'unreadMessages'=>$this->messages->unreadPrivateCount($m)+$this->messages->unreadGuildCount($m),'protection'=>$protection,'membership'=>$m,'planet'=>$selected,'planets'=>$planets,'resourceConsumerLabels'=>$consumerLabels,'resourceSourceLabels'=>array_map(static fn(array $building):string=>$building['label'],$config['catalog']['buildings']),'resources'=>$selected?$this->resources->snapshot($selected,true):[],'notifications'=>$notifications,'events'=>$this->eventPanel->forPlayer($m)];
+        $guild=$this->repo->one(\App\Entity\GuildMember::class,['playerUniverse'=>$m])?->guild;
+        $guild=$guild?->archivedAt===null?$guild:null;
+        return ['guild'=>$guild,'incomingAttacks'=>$this->visibility->incoming($m),'serverNow'=>$this->clock->now()->format(DATE_ATOM),'journal'=>$this->journal->data($m),'vacation'=>$this->vacations->currentPeriod($m),'colonyLimit'=>$colonyLimit,'unreadMessages'=>$this->messages->unreadPrivateCount($m)+$this->messages->unreadGuildCount($m),'protection'=>$protection,'membership'=>$m,'planet'=>$selected,'planets'=>$planets,'resourceConsumerLabels'=>$consumerLabels,'resourceSourceLabels'=>array_map(static fn(array $definition):string=>$definition['label'],$config['catalog']['buildings']+array_filter($config['catalog']['ships'],static fn(array $ship):bool=>isset($ship['economic_unit']))),'resources'=>$selected?$this->resources->snapshot($selected,true):[],'notifications'=>$notifications,'events'=>$this->eventPanel->forPlayer($m)];
     }
 }

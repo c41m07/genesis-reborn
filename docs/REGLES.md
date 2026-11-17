@@ -1,5 +1,51 @@
 # Synthèse de conception
 
+## Répartition des prix retenue — 16 novembre 2026
+
+Les 156 profils par défaut utilisent les parts de valeur M/N/A/H suivantes :
+Basique 40/60/0/0, Intermédiaire 30/50/20/0 et Supérieur 25/35/30/10.
+La valeur est M×2 + N×4 + A×8 + H ; il ne s’agit pas de quantités brutes ni d’un marché.
+Les quantités sont entières et conservent le budget de base propre à chaque profil,
+y compris ceux des défenses. Les courbes et arrondis après croissance/remises restent
+inchangés, comme les durées et la taxe électrique. Les nouveaux prix concernent les
+nouvelles commandes ; les coûts déjà payés restent la référence des annulations et
+résolutions. Les réglages personnalisés d’univers gardent leur priorité.
+La formule de points reste fondée sur les quantités brutes des prix courants,
+sans pondération M/N/A/H : leur redistribution peut donc changer les points au
+recalcul, ainsi que les protections qui en dépendent. Les seuils et règles de
+protection ne sont pas modifiés. [Profils détaillés et limites des arrondis](COUTS.md).
+
+## Unités économiques — décision des 15 et 16 novembre 2026
+
+Les deux familles de vaisseaux civils sont détaillées dans
+[UNITES_ECONOMIQUES](UNITES_ECONOMIQUES.md) : prix, prérequis, statistiques et
+transitions. Chaque rang dispose de ses propres places sur chaque colonie :
+un récolteur actif par niveau de raffinerie d’hydrogène, deux satellites par
+niveau de centrale du même rang. Les satellites en chantier et les récolteurs
+en affectation réservent ces places. Aucun manque de place ne détruit une unité ;
+l’excédent présent reste conservé sans production.
+
+Production par unité active, position 5, univers ×1 : récolteur 900 / 1 350 /
+2 025 H/h, satellite 450 / 675 / 1 012,5 E/h. Position, univers, événements,
+vacances, stockage et surplus existants restent pris en compte. Aucun entretien
+horaire ajouté, ni réduction de ces sources par le rendement électrique industriel.
+Le récolteur n’a pas de fret et se déplace uniquement par Stationnement entre
+colonies possédées ; aucune production en déplacement. Le satellite est immobile.
+
+Ces unités défendent leur colonie, sont ciblables et destructibles, sans aucun tir
+même après recherche. Les tirs qui les ciblent utilisent ×1. La production continue
+pendant l’engagement et cesse avec les pertes appliquées à la clôture. Les unités
+livrées au chantier ou installées par Stationnement pendant une bataille ouverte
+rejoignent la défense au prochain round éligible avec tous les vaisseaux locaux
+disponibles ; leur flotte et leur carburant restent conservés. Aucun round déjà
+résolu n’est réécrit par cette livraison.
+
+Les usines gardent le secours électrique de 10 %, sans garantie absolue de reprise :
+le piège reste dépendant de son hydrogène. La reconstruction n’ajoute aucun secours
+gratuit. Les [mesures conjointes](SIMULATIONS_PROGRESSION_ECONOMIE.md) du lot 4
+comparent des politiques déterministes, sans garantir de délai pour tous les joueurs
+ni activer le candidat de prix. Les règles ci-dessus restent inchangées.
+
 ## Progression (PDF 0 p.3–9)
 1. Socle, authentification session.
 2. Univers et cartes JSON, inscription PlayerUniverse, sélection.
@@ -13,7 +59,7 @@ Univers → galaxie → système (x,y) → planète position 1..9. Comptes globa
 
 ### Suppression volontaire du compte
 
-Depuis le profil, le joueur peut supprimer son compte dans tous les univers
+Depuis la page Suppression du compte de Mon compte, le joueur peut supprimer son compte dans tous les univers
 après saisie du mot de passe et confirmation explicite. Les identifiants et
 préférences sont effacés et les accès fermés. Les empires deviennent oubliés
 immédiatement, sans attendre le délai d’inactivité ; leurs colonies et les
@@ -22,12 +68,48 @@ cours bloque l’opération entière jusqu’à sa résolution. Le dernier admin
 actif doit désigner un successeur avant de supprimer son compte.
 
 ## Colonie
-Métal, électricité, antimatière, hydrogène et nano par planète. La simulation intègre les stocks par segments entre épuisement et capacité. Les usines adaptent leur rendement à l’électricité disponible avec un plancher de 10 % ; l’antimatière exige aussi de l’hydrogène. Coûts et durées sont autoritaires côté serveur. Les coûts des trois rangs suivent des profils par catégorie avec budgets de valeur constants. Technologies par PlayerUniverse avec laboratoire local. Même technologie interdite simultanément sur des planètes différentes.
+Métal, électricité, antimatière, hydrogène et nano par planète. La simulation intègre les stocks par segments entre épuisement et capacité. Les usines adaptent leur rendement à l’électricité disponible avec un plancher de 10 % ; l’antimatière exige aussi de l’hydrogène. Coûts et durées sont autoritaires côté serveur. Les coûts des trois rangs suivent des profils par catégorie avec budgets de valeur constants. Technologies par PlayerUniverse : le laboratoire est un prérequis initial, sans obligation locale permanente après déblocage. La file de recherche est commune au joueur dans l’univers.
+
+### Prérequis par rang — grille du 15 novembre 2026
+
+Chaque famille utilise la [grille complète des prérequis](DEBLOCAGES.md) dans son
+propre rang. Seuls métal, nano, hydrogène, centrale et laboratoire font une
+passerelle : Basique sans condition, Intermédiaire après le même bâtiment Basique 10,
+Supérieur après son Intermédiaire 20. Les stockages demandent leur producteur
+du même rang au niveau 5, le chantier métal 2 + nano 2, le piège hydrogène 3 + laboratoire 2,
+le bunker chantier 3 + laboratoire 2 ; aucune recherche supplémentaire pour ces bâtiments.
+
+Après requalification explicite des accès existants, seules les conditions de
+cette grille ouvrent les nouvelles commandes. Les niveaux, effets, unités,
+flottes, stocks et historiques restent conservés. Les opérations déjà payées se
+terminent avec leur paiement et durée enregistrés ; leur achèvement ne suffit
+pas à débloquer l’élément. L’accès nouvellement acquis reste ensuite permanent,
+par joueur/univers pour les recherches, par joueur/colonie pour les autres catégories.
+La [procédure de bascule](DEBLOCAGES.md#activation-après-validation) ne s’exécute
+qu’après sauvegarde vérifiée et autorisation. Le [suivi de mission](PROGRESSION_CARBURANT_UNITES.md)
+distingue les lots intégrés, les implémentations locales et les unités restant à réaliser.
 
 ## Queues (PDF 7 p.1–7)
-Trois queues indépendantes par planète. QueueItem : type, slug, niveau cible ou quantité, durée, started_at, queued_at, dispatch_token, depends_on. Ordre id ASC. Échéance non persistée : T0 + somme des durées. Un item actif par type. Prérequis achevés à l'ajout ; exception niveaux successifs via dépendance. Suppression récursive des dépendants. Boost : chaque application retire 25 % du temps restant de l’opération active. Les applications successives se cumulent sur le nouveau temps restant; aucune file en attente n’est accélérée. Ancien message ignoré si token différent ; doublon ignoré après traitement. Persistance et déduction des ressources dans une transaction avec verrou.
+
+Les [durées du 15 novembre](DUREES_CARBURANT.md) s’appliquent aux nouvelles commandes,
+avec les courbes de niveau conservées et les facteurs de rang ×1 / ×1,25 / ×1,5625.
+La taxe des recherches, vaisseaux et défenses reste de 100 E par minute entamée
+de durée effective pour le lot entier ; les bâtiments en sont exclus. Les défenses
+ne reçoivent pas de réduction de durée du chantier ou du bunker. Les opérations
+déjà payées gardent leur durée et leur coût, y compris après la révision du catalogue.
+
+Trois types de file : bâtiments et chantier par planète, recherche commune au joueur dans l’univers. QueueItem : type, slug, niveau cible ou quantité, durée, started_at, queued_at, dispatch_token, depends_on. Ordre id ASC. Échéance non persistée : T0 + somme des durées. Un item actif par type. Prérequis achevés à l'ajout ; exception niveaux successifs via dépendance. Suppression récursive des dépendants. Boost : chaque application retire 25 % du temps restant de l’opération active. Les applications successives se cumulent sur le nouveau temps restant; aucune file en attente n’est accélérée. Ancien message ignoré si token différent ; doublon ignoré après traitement. Persistance et déduction des ressources dans une transaction avec verrou.
 
 ## Trajets (PDF 3 p.2–9)
+
+La consommation est différenciée par classe selon le [barème du 15 novembre](DUREES_CARBURANT.md#carburant-par-classe),
+identique dans les trois rangs. À 50 % de vitesse, le carburant du trajet est divisé
+par deux ; le maintien des missions qui le facturent reste indépendant de ce choix.
+Aucun coût horaire supplémentaire pour le stationnement sur une colonie possédée.
+Les réservations historiques restent conservées ; les coefficients des nouveaux
+départs sont figés pour leurs rappels et replis. Vitesses, distances, réservoirs,
+soutes et usages des unités déjà possédées restent conservés.
+
 UA universelle. Intra-système : abs(positionB-positionA) × 10. Inter-systèmes : sortie 100−positionA×10, hyperespace hypot(dx,dy)×100, entrée 100−positionB×10. Temps par segment = distance / (vitesse minimale de flotte × ratio). Ratio entre 0.1 et 1. Aller-retour symétrique. Carburant aller + stationnement + retour réservé avant départ. Consommation proportionnelle au ratio de vitesse. Chaque vaisseau possède un petit réservoir exclusivement pour le carburant ; les soutes cargo peuvent embarquer le fret et le carburant supplémentaire. Consommation d'orbite horaire indépendante du ratio. Navigation inter-galaxies non définie et refusée jusqu'à spécification.
 
 ## Combat (PDF 1 p.6–8, PDF 2 p.2–6)
@@ -165,17 +247,18 @@ Une usine dont la production ne peut plus être stockée suspend ses consommatio
 
 Les valeurs et résultats de référence, la distinction entre délai d’accès et remboursement, les données existantes et les vérifications sont détaillés dans [BUILDING_BALANCE_2026-11-05.md](EQUILIBRAGE.md#production-des-batiments). Les surcharges d’univers peuvent toujours remplacer les valeurs de base. Les coûts et durées déjà payés en file restent conservés.
 
-### Bunker de défense — 14 novembre 2026
+### Bunker de défense — décision du 16 novembre 2026
 
-Dans le catalogue par défaut, le déblocage initial du bunker basique exige le
-chantier spatial basique niveau 3 et le laboratoire basique niveau 2. Blindage
-multicouche basique niveau 2 n’est plus requis. Les prérequis supplémentaires
-des rangs Intermédiaire et Supérieur restent inchangés.
+Dans chacun des trois rangs, le bunker demande uniquement une mine de métal
+niveau 1 et un atelier de nanofabrication niveau 1 de ce même rang. Aucun chantier,
+laboratoire ou recherche supplémentaire n’est requis. Le chantier spatial conserve
+ses conditions distinctes : métal 2 + nano 2 du rang demandé.
 
-Seul ce prérequis de recherche est retiré : coûts, durées, plafonds et bonus de
-points de structure des défenses au sol sont conservés. Aucune nouvelle courbe
-linéaire ni capacité de stockage n’est ajoutée. Les surcharges d’univers et les
-accès déjà acquis restent traités par les mécanismes existants.
+Cette décision remplace la grille du 15 novembre (chantier 3 + laboratoire 2).
+Coûts, durées, plafonds et bonus de structure des défenses restent conservés.
+Les accès déjà acquis restent permanents ; les nouveaux accès suivent les conditions
+assouplies, sans réinitialisation ni nouvelle reprise de données. Les surcharges
+d’univers restent prioritaires.
 
 ### Limites par défaut des univers — 5 novembre 2026
 
@@ -244,14 +327,20 @@ objet déjà gagné et interrompt aussi l’annonce qui l’accompagne.
 Le classement des guildes additionne les points actuels de bâtiments, recherches et flotte de leurs membres. Le total détermine le rang. La médiane des scores individuels complète le total : pour un effectif pair, elle est la moyenne des deux scores centraux. Une guilde sans membre compte zéro point et une médiane de zéro. Le classement joueur propose les cinq catégories décrites dans « Classements quotidiens » ; les points totaux restent sélectionnés par défaut.
 
 
-## Répartition des coûts des vaisseaux — 5 novembre 2026
+## Historique : répartition des vaisseaux du 5 novembre 2026
+
+Cette étape est remplacée par la grille commune retenue le 16 novembre, présentée
+en tête de ce document. Les paragraphes suivants décrivent uniquement cette étape historique.
 
 Les 14 classes utilisent les parts de valeur économique suivantes : T1 60 % métal / 40 % nano ; T2 45 % métal / 45 % nano / 10 % antimatière ; T3 30 % métal / 50 % nano / 20 % antimatière. Le calcul pondère M×2, N×4, A×8 et H×1. Ces pourcentages ne représentent pas les quantités brutes. Les arrondis des trois ressources sont répartis pour conserver exactement la valeur de chaque profil de rang avant recherche ; les profils réels font foi.
 
 Le carburant des missions est séparé des coûts de construction, qui n’ajoutent pas d’hydrogène. Les recherches de réduction des coûts s’appliquent ensuite avec leurs arrondis par ressource. Les nouvelles commandes utilisent les nouveaux prix ; les coûts déjà payés restent enregistrés. Les profils, budgets conservés et limites sont détaillés dans [SHIP_COSTS_2026-11-05.md](COUTS.md).
 
 
-## Grille commune des prix — 5 novembre 2026
+## Historique : grille commune des prix du 5 novembre 2026
+
+Les parts ci-dessous sont remplacées par la décision du 16 novembre ; les garanties
+de conservation des paiements et de priorité des surcharges restent applicables.
 
 Cette grille remplace les anciennes répartitions des ressources pour tous les bâtiments, vaisseaux, défenses et recherches : **T1 M60/N40 ; T2 M45/N45/A10 ; T3 M30/N45/A20/H5**, en parts de valeur économique, avec M×2, N×4, A×8 et H×1. Les quantités sont entières, et la valeur réelle de chaque profil de rang de base est conservée. Les prix réels aux niveaux suivants ou après recherche suivent les mêmes courbes et arrondis par ressource qu’auparavant ; de petits écarts de valeur dus à ces arrondis sont possibles.
 
@@ -274,6 +363,9 @@ Les dons entre joueurs ne donnent aucun boost et ne font progresser aucun object
 ### Administration des rotations hebdomadaires
 
 Les administrateurs gèrent les modèles par univers dans `/admin/rotations`.
+La liste mène à des pages de création et de modification ; une modification du
+modèle concerne uniquement les futures programmations, avec refus d’une fiche
+devenue périmée. Les valeurs de référence restent inchangées.
 Les modèles actifs alternent selon l’indice hebdomadaire du moteur. Une seule
 occurrence est réservée par univers et semaine ; une occurrence annulée conserve
 cette réservation et ne peut pas être recréée cette semaine. Désactiver un modèle
@@ -281,7 +373,7 @@ empêche ses nouvelles programmations mais n’annule pas les occurrences déjà
 créées. Leurs règles sont figées ; contributions et récompenses acquises restent
 conservées lors d’une annulation, sans nouvelle attribution après annulation.
 Le plafond simultané, le lundi à 00 h UTC et les règles de récompense historiques
-s’appliquent toujours. Les joueurs retrouvent les rotations dans Événements.
+s’appliquent toujours. Les joueurs retrouvent les rotations dans Événements → Défis et rotations.
 
 ## Saisie des quantités et boutons Max
 
@@ -423,6 +515,16 @@ Ce résumé courant d’une flotte est distinct du classement quotidien des joue
 Le cercle extérieur d’un système possédé est vert, avec les informations
 intérieures conservées. Un bouton de la fiche planète revient à son système ;
 la croix permet toujours de revenir à la galaxie.
+
+### Panneau Flottes entrantes — décision du 16 novembre 2026
+
+Les arrivées d’autres commandants vers vos colonies sont regroupées dans un cadre
+séparé de vos propres vols : transports, renforts, demandes d’orbite et attaques
+détectées. Les règles d’envoi, d’accueil et de détection restent inchangées.
+Les sondes restent cachées pendant le trajet, même entre alliés ; composition et
+fret tiers restent privés. Aucune flotte alliée visant une autre colonie n’est ajoutée.
+Le [détail par mission](FLOTTES_ENTRANTES.md) décrit les origines découvertes, les
+anciens états d’orbite et le suivi des missions personnelles.
 
 ### Détails privés des colonies et flottes — lot C
 

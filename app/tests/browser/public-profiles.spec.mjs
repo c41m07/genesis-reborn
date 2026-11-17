@@ -19,7 +19,7 @@ async function register(page) {
 }
 
 async function createGuild(page,owner) {
-  await page.goto('/diplomatie');const name='Guilde publique '+crypto.randomUUID().slice(0,8);
+  await page.goto('/guildes/creer');const name='Guilde publique '+crypto.randomUUID().slice(0,8);
   await page.getByLabel('Nom de votre nouvelle guilde').fill(name);await page.getByLabel('Tag de la guilde',{exact:true}).fill('PUB');
   await page.getByRole('button',{name:'Fonder une guilde'}).click();
   return {name,id:Number(queryIsolatedSql(process.env.BROWSER_ROUTER,`SELECT id FROM guild WHERE leader_id=${owner.member}`))};
@@ -74,7 +74,18 @@ test('Guilde : images contrôlées, présentation accessible et persistance isol
     for(const width of [320,390,1440]) {await page.setViewportSize({width,height:900});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);if(width===320) await page.screenshot({path:testInfo.outputPath('guilde-'+value+'-mobile.png'),fullPage:true,animations:'disabled'});}
     expect((await new AxeBuilder({page}).include('main').analyze()).violations).toEqual([]);
     await page.screenshot({path:testInfo.outputPath('guilde-'+value+'.png'),fullPage:true,animations:'disabled'});
-    await page.getByRole('link',{name:'Personnaliser la guilde'}).click();
+    await expect(page.getByRole('navigation',{name:'Navigation de guilde'}).getByRole('link',{name:'Présentation',exact:true})).toHaveAttribute('aria-current','page');
+    await page.goto('/guildes');
+    await expect(page.locator('.guild-hub-hero .guild-public-logo')).toBeVisible();
+    await expect(page.locator('.guild-hub-hero .guild-public-banner')).toBeVisible();
+    await expect(page.locator('.guild-public-description')).toContainText('Bienvenue');
+    for(const width of [320,1440]) {
+      await page.setViewportSize({width,height:900});
+      await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+      await page.screenshot({path:testInfo.outputPath('accueil-guilde-'+value+'-'+width+'.png'),fullPage:true,animations:'disabled'});
+    }
+    expect((await new AxeBuilder({page}).include('main').analyze()).violations).toEqual([]);
+    await page.getByRole('navigation',{name:'Navigation de guilde'}).getByRole('link',{name:'Personnalisation',exact:true}).click();
     expect((await new AxeBuilder({page}).include('main').analyze()).violations).toEqual([]);
   }
   if(process.env.BROWSER_PERSISTENCE==='1') {

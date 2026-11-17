@@ -25,7 +25,9 @@ final class OperationCalculator
             default=>0.0,
         };
         $mult=(float)($universe['multipliers'][match($group){'buildings'=>'building_time','technologies'=>'research_time',default=>'ship_build_time'}]??1);
-        $rawDuration=$base*$levelFactor*$quantity*$mult*$tierFactor*(1-$timeReduction/100);
+        // Soustraire les pourcentages avant la division évite le faux dépassement
+        // d'une seconde (et d'une minute électrique) à la réduction exacte de 70 %.
+        $rawDuration=$base*$levelFactor*$quantity*$mult*$tierFactor*((100-$timeReduction)/100);
         $duration=max(1,(int)ceil($rawDuration));
         $costs=$this->catalog->costs($d,$level,$quantity,$group);
         $discountSlug=match($group){'buildings'=>'nanomaterial_synthesis','ships'=>'naval_engineering',default=>null};

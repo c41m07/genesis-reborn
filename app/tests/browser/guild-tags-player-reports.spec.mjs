@@ -31,7 +31,7 @@ async function enter(page, admin = false, universe = '') {
 test('Tag obligatoire, choix du commandant et préfixe limité au classement', async ({page,browser},testInfo) => {
   test.setTimeout(120000);
   const author=await enter(page), peerPage=await browser.newPage(), peer=await enter(peerPage);
-  await page.goto('/diplomatie');
+  await page.goto('/guildes/creer');
   await page.getByLabel('Nom de votre nouvelle guilde').fill('Guilde-'+author.playerId);
   await page.getByRole('button',{name:'Fonder une guilde',exact:true}).click();
   await expect(page.getByLabel('Tag de la guilde',{exact:true})).toBeFocused();
@@ -42,10 +42,10 @@ test('Tag obligatoire, choix du commandant et préfixe limité au classement', a
   await page.goto('/classement');
   const ownRow=page.getByRole('row').filter({hasText:author.username});
   await expect(ownRow.locator('th')).toContainText('[ALPHA] '+author.username);
-  await page.goto('/diplomatie');
+  await page.goto('/guildes/creer');
   await page.goto('/diplomatie?tab=members');
   await expect(page.locator('.guild-members-table')).not.toContainText('[ALPHA]');
-  await page.goto('/diplomatie');
+  await page.goto('/guildes/gestion');
   await page.getByText('Tag et commandement',{exact:true}).click();
   await page.getByText('Modifier le tag de la guilde',{exact:true}).click();
   await page.getByLabel('Tag de la guilde',{exact:true}).fill('BETA');
@@ -62,7 +62,7 @@ test('Ancienne guilde : aucun tag inventé et choix accessible au commandant', a
   const user=await enter(page), project=process.env.BROWSER_ROUTER;
   runIsolatedSql(project,"INSERT INTO guild (universe_id,leader_id,name,tag) VALUES ("+user.universeId+","+user.memberId+",'Guilde ancienne',NULL)");
   runIsolatedSql(project,"INSERT INTO guild_member (guild_id,player_universe_id) SELECT id,"+user.memberId+" FROM guild WHERE leader_id="+user.memberId);
-  await page.goto('/diplomatie');
+  await page.goto('/guildes/gestion');
   await page.getByText('Tag et commandement',{exact:true}).click();
   const summary=page.getByText('Choisir le tag de la guilde',{exact:true});
   await summary.focus();await page.keyboard.press('Enter');

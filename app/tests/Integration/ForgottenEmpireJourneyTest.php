@@ -79,9 +79,9 @@ final class ForgottenEmpireJourneyTest extends WebTestCase
         $this->em->flush();$this->client->loginUser($attacker);
         foreach(['/carte','/carte-v2'] as $route) {
             $this->client->request('GET',$route.'?system='.$this->planet->solarSystem->id.'&galaxy='.$this->planet->solarSystem->galaxy->id);self::assertResponseIsSuccessful();
-            self::assertSelectorExists('a[href="/flottes?mission=conquer&planet='.$this->planet->id.'"]');
+            self::assertSelectorExists('a[href="/flottes/preparer?mission=conquer&planet='.$this->planet->id.'"]');
         }
-        $crawler=$this->client->request('GET','/flottes?mission=conquer&planet='.$this->planet->id);self::assertResponseIsSuccessful();
+        $crawler=$this->client->request('GET','/flottes/preparer?mission=conquer&planet='.$this->planet->id);self::assertResponseIsSuccessful();
         $form=$crawler->filter('.fleet-form form')->first()->form();$form['mission']='conquer';$form['coordinates']=$this->planet->coordinates();$form['ratio']='0.1';
         foreach(['fighter'=>12,'battleship'=>4,'transport'=>5,'colony_ship'=>1] as $slug=>$quantity) $form['ships['.$slug.']']=(string)$quantity;
         $this->client->submit($form);self::assertResponseRedirects('/flottes');
@@ -99,8 +99,8 @@ final class ForgottenEmpireJourneyTest extends WebTestCase
         $this->em->getRepository(FleetShip::class)->findOneBy(['fleet'=>$depot,'slug'=>'colony_ship'])->quantity=1;$this->em->flush();
         foreach(['/carte','/carte-v2'] as $route) {
             $this->client->request('GET',$route.'?system='.$this->planet->solarSystem->id.'&galaxy='.$this->planet->solarSystem->galaxy->id);self::assertResponseIsSuccessful();
-            self::assertSelectorExists('a[href="/flottes?mission=defend&planet='.$this->planet->id.'"]');
-            self::assertSelectorNotExists('a[href="/flottes?mission=conquer&planet='.$this->planet->id.'"]');
+            self::assertSelectorExists('a[href="/flottes/preparer?mission=defend&planet='.$this->planet->id.'"]');
+            self::assertSelectorNotExists('a[href="/flottes/preparer?mission=conquer&planet='.$this->planet->id.'"]');
             self::assertSelectorNotExists('form.map-quick-mission input[name="mission"][value="colonize"]');
             self::assertSelectorExists('time[datetime="'.$occupation->captureAt->format(DATE_ATOM).'"]');
         }
@@ -113,17 +113,17 @@ final class ForgottenEmpireJourneyTest extends WebTestCase
         $this->client->loginUser($this->player);
         foreach(['/carte','/carte-v2'] as $route) {
             $this->client->request('GET',$route.'?system='.$this->planet->solarSystem->id.'&galaxy='.$this->planet->solarSystem->galaxy->id);self::assertResponseIsSuccessful();
-            self::assertSelectorExists('a[href="/flottes?mission=attack&planet='.$this->planet->id.'"]');
-            self::assertSelectorExists('a[href="/flottes?mission=conquer&planet='.$this->planet->id.'"]');
-            self::assertSelectorNotExists('a[href="/flottes?mission=defend&planet='.$this->planet->id.'"]');
+            self::assertSelectorExists('a[href="/flottes/preparer?mission=attack&planet='.$this->planet->id.'"]');
+            self::assertSelectorExists('a[href="/flottes/preparer?mission=conquer&planet='.$this->planet->id.'"]');
+            self::assertSelectorNotExists('a[href="/flottes/preparer?mission=defend&planet='.$this->planet->id.'"]');
         }
         $fresh=$this->em->find(\App\Entity\PlayerUniverse::class,$fresh->id);$member=$this->em->find(\App\Entity\PlayerUniverse::class,$member->id);
         $contract=new \App\Entity\AllianceContract();$contract->playerA=$fresh;$contract->playerB=$member;$contract->proposer=$fresh;$contract->status='accepted';$this->em->persist($contract);$this->em->flush();
         foreach(['/carte','/carte-v2'] as $route) {
             $this->client->request('GET',$route.'?system='.$this->planet->solarSystem->id.'&galaxy='.$this->planet->solarSystem->galaxy->id);self::assertResponseIsSuccessful();
-            self::assertSelectorExists('a[href="/flottes?mission=defend&planet='.$this->planet->id.'"]');
-            self::assertSelectorNotExists('a[href="/flottes?mission=attack&planet='.$this->planet->id.'"]');
-            self::assertSelectorNotExists('a[href="/flottes?mission=conquer&planet='.$this->planet->id.'"]');
+            self::assertSelectorExists('a[href="/flottes/preparer?mission=defend&planet='.$this->planet->id.'"]');
+            self::assertSelectorNotExists('a[href="/flottes/preparer?mission=attack&planet='.$this->planet->id.'"]');
+            self::assertSelectorNotExists('a[href="/flottes/preparer?mission=conquer&planet='.$this->planet->id.'"]');
         }
         $this->planet=$this->em->find(Planet::class,$this->planet->id);
         $message=new \App\Message\OccupationDue($occupation->id,$occupation->dispatchToken);$handler=static::getContainer()->get(\App\MessageHandler\OccupationDueHandler::class);

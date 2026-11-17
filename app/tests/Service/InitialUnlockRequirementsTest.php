@@ -23,7 +23,7 @@ final class InitialUnlockRequirementsTest extends TestCase
                 $pending[$group.':'.$slug.':'.$tier]=[$group,$slug,$tier,$base,$requirements];
             }
         }
-        self::assertCount(150,$pending);
+        self::assertCount(156,$pending);
         do{
             $previous=count($pending);
             foreach($pending as $key=>[$group,$slug,$tier,$base,$requirements]){
@@ -49,5 +49,15 @@ final class InitialUnlockRequirementsTest extends TestCase
         $catalog=new GameCatalog(dirname(__DIR__,2).'/config/game');$checker=new RequirementChecker($catalog);
         $base=['unlock_requirements'=>[],'levels'=>[2=>['unlock_requirements'=>['technologies'=>[['slug'=>'naval_engineering','level'=>99]]]]]];
         self::assertSame([],$checker->forTier($base,'basic',100));
+    }
+
+    public function testShipReferencesUseTheCompleteGridInEveryRank():void
+    {
+        $catalog=new GameCatalog(dirname(__DIR__,2).'/config/game');$checker=new RequirementChecker($catalog);
+        foreach(GameCatalog::TIERS as $tier){
+            $requirements=['ships'=>[['slug'=>'fighter','tier'=>$tier]]];
+            self::assertNotEmpty($checker->check($requirements,[],[]));
+            self::assertSame([],$checker->check($requirements,['shipyard'=>[$tier=>1]],[]));
+        }
     }
 }
