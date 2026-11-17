@@ -89,3 +89,8 @@ body.authenticated .page-refinement p>a {text-decoration:underline;text-underlin
 .account-space .account-panel{max-width:900px}
 .account-space .space-navigation a{min-height:44px}
 .account-space #vacances-info .account-section{margin-top:0}
+
+.guild-project-space>.space-navigation{margin-bottom:16px}
+.guild-project-space .space-navigation a{min-height:44px}
+.guild-project-space .guild-project-grid>article{min-width:0;overflow-wrap:anywhere}
+.guild-project-space .project-started{color:var(--muted);font-size:13px}

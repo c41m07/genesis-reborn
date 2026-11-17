@@ -654,3 +654,31 @@ rien. Les anciens `?delete=1` redirigent côté serveur ; les fragments des vaca
 et de suppression sont orientés côté navigateur. Les nouvelles pages désactivent
 le sommaire automatique et conservent leurs liens et formulaires serveur sans JS.
 Voir [le suivi de navigation](NAVIGATION_PAGES_DEDIEES.md) pour la recette.
+
+
+## Pages des projets collectifs — 17 novembre 2026
+
+`GuildProjectController` expose les listes En cours, Disponibles et Historique
+sur des GET distincts ; les routes de fiche, lancement et contribution restent
+compatibles. Les actions délèguent toujours aux mêmes services métier.
+`GuildProjectPageView` prépare la destination demandée, après validation de
+la participation, de la guilde et de la fonctionnalité dans l’univers.
+
+Les listes lisent 26 lignes au plus pour en afficher 25 et calculer le curseur
+suivant (`before`). Les modèles disponibles sont sélectionnés par `NOT EXISTS`
+sur tous les projets de la guilde, y compris terminés ou abandonnés, sans charger
+ces projets. Les contributions personnelles et les clés de récompenses des seules
+lignes affichées sont regroupées. La clé compte/modèle reste celle de
+`BoostGrantService`, sans filtrer les boosts utilisés ou les anciens empires.
+La fiche pagine aussi les contributeurs (`before_contribution`) ; la contribution
+personnelle est lue séparément et reste complète. Les identités sont limitées aux
+25 contributeurs visibles, dans le même univers. Seule une fiche active prépare
+les colonies nécessaires au don ; les données communes du bandeau restent celles
+de `GameShell`. Aucune actualisation périodique ni nouvelle écriture de lecture.
+
+Les deux navigations gardent l’espace guilde et la destination projet actifs.
+`page_sections` ne crée pas de sommaire sur ces pages. Il oriente les anciens
+fragments de liste à l’ouverture et au changement de fragment, en conservant la
+recherche ; les liens serveur restent disponibles sans JavaScript. Les ancres
+internes d’une fiche restent utilisables. Aucune migration ou mesure comparative
+de performance ; voir le [bilan du lot 5](NAVIGATION_PAGES_DEDIEES.md).

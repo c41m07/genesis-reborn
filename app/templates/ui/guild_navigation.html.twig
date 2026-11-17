@@ -18,7 +18,7 @@
     {% set destinations = destinations|merge([{route:'app_guild_public_profile',label:'Présentation',parameters:{id:app.request.attributes.getInt('id')}}]) %}
 {% endif %}
 {% for destination in destinations %}
-    {% set active = route == destination.route or destination.route == 'app_guild_projects' and route == 'app_guild_project' %}
+    {% set active = route == destination.route or destination.route == 'app_guild_projects' and route in ['app_guild_project','app_guild_projects_available','app_guild_projects_history'] %}
     <a href="{{ path(destination.route, destination.parameters|default({})) }}"{% if active %} class="active" aria-current="page"{% endif %}>{{ destination.label }}</a>
 {% endfor %}
 </nav>

@@ -10,6 +10,12 @@ Validation locale du contenu fusionné : 701 tests PHP (209981 assertions), 13 t
 
 Aucune nouvelle migration sur la base habituelle ni aucun déploiement n’est réalisé pendant la revue, la fusion ou cette documentation. Les modèles de projets restent à configurer par l’administration, sans modèle actif par défaut. Les entrées suivantes sont des bilans historiques datés ; leurs mentions « en cours », « brouillon » ou « conflit à résoudre » ne remplacent pas cet état courant.
 
+## Navigation actuelle des projets — 17 novembre 2026
+
+Le lot 5 poursuit les services validés : trois listes dédiées et paginées, avec
+la fiche existante pour contribuer. Les droits, dons et récompenses ne changent
+pas. [Navigation, vérifications et intégration](NAVIGATION_PAGES_DEDIEES.md).
+
 ## Périmètre validé
 
 - Grades personnalisés avec permissions détaillées pour les guildes.

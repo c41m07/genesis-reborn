@@ -64,6 +64,18 @@ final class BoostGrantService
         return $this->repo->one(PlayerBoost::class,['sourceKey'=>$this->guildProjectKey($membership,$definitionId)])!==null;
     }
 
+    /** @param list<int> $definitionIds @return array<int, true> Modèles déjà récompensés pour ce compte. */
+    public function guildProjectRewardedDefinitions(PlayerUniverse $membership, array $definitionIds): array
+    {
+        $keys = [];
+        foreach ($definitionIds as $id) $keys[$id] = $this->guildProjectKey($membership, $id);
+        // La clé historique porte le compte : changer d’empire ou utiliser le boost ne redonne aucun droit.
+        $existing = array_fill_keys($this->repo->existingBoostSourceKeys(array_values($keys)), true);
+        $rewarded = [];
+        foreach ($keys as $id => $key) if (isset($existing[$key])) $rewarded[$id] = true;
+        return $rewarded;
+    }
+
     private function guildProjectKey(PlayerUniverse $membership,int $definitionId): string
     {
         $accountId=($membership->player??$membership->formerPlayer)?->id;

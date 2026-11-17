@@ -13,8 +13,11 @@ Cette fusion ne constitue pas un déploiement. Aucune nouvelle migration n’a �
 L’entrée **Ma guilde** ouvre `/guildes` pour un membre ; sans guilde, elle devient
 **Guildes** et ouvre la recherche. La navigation commune donne accès à Membres,
 Grades et permissions, Projets collectifs, Personnalisation (commandant) et Gestion.
-La création utilise `/guildes/creer`. Les projets et leurs fiches gardent leurs
-adresses existantes.
+La création utilise `/guildes/creer`. **Projets collectifs** ouvre les projets en
+cours sur `/guildes/projets`. Sa navigation relie les projets disponibles
+(`/guildes/projets/disponibles`) et l’historique (`/guildes/projets/historique`).
+Les listes et les contributions des fiches se parcourent par pages de 25 ;
+la fiche et les formulaires conservent leurs adresses existantes.
 
 **Diplomatie** ouvre `/diplomatie` : relations entre guildes avec une guilde,
 relations entre commandants sinon. `/diplomatie/commandants` reste accessible
@@ -90,7 +93,7 @@ Les grades de guilde ne donnent aucun pouvoir sur les relations personnelles d�
 
 ## Projets collectifs : participer
 
-Un projet utilise un modèle défini par l’administration pour son univers. Le dirigeant ou un membre ayant `projects.start` peut le lancer depuis **Projets collectifs**. Tous les membres peuvent ensuite contribuer depuis une colonie leur appartenant.
+Un projet utilise un modèle défini par l’administration pour son univers. Le dirigeant ou un membre ayant `projects.start` peut le lancer depuis **Projets collectifs → Projets disponibles**. Tous les membres peuvent ensuite contribuer depuis une colonie leur appartenant.
 
 Le lancement fige le nom, la description, les coûts de chaque palier et les minimums de récompense. Une modification administrative ultérieure ne change pas un projet en cours. Un modèle désactivé cesse d’être proposé aux nouveaux lancements ; les projets déjà lancés continuent.
 

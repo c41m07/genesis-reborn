@@ -2,7 +2,7 @@ import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
     connect() {
-        if (['guilde', 'diplomatie', 'flottes', 'inventaire', 'profil', 'preferences'].includes(this.element.dataset.uiPage)) {
+        if (['guilde', 'diplomatie', 'flottes', 'inventaire', 'profil', 'preferences', 'projets'].includes(this.element.dataset.uiPage)) {
             // Un changement de fragment peut conserver le document et ne reconnecte pas Stimulus.
             this.onHashChange = () => this.redirectLegacyFragment();
             window.addEventListener('hashchange', this.onHashChange);
@@ -43,6 +43,18 @@ export default class extends Controller {
             const destination = destinations[window.location.hash];
             if (destination && window.location.pathname !== destination) {
                 window.location.replace(destination + window.location.hash);
+                return true;
+            }
+        }
+        if (this.element.dataset.uiPage === 'projets') {
+            const destinations = {
+                '#ongoing-projects-title': '/guildes/projets',
+                '#available-projects-title': '/guildes/projets/disponibles',
+                '#completed-projects-title': '/guildes/projets/historique',
+            };
+            const destination = destinations[window.location.hash];
+            if (destination && window.location.pathname !== destination) {
+                window.location.replace(destination + window.location.search + window.location.hash);
                 return true;
             }
         }
