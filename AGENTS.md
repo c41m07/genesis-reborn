@@ -106,6 +106,18 @@
 - Décrire uniquement les changements vérifiés du lot à livrer, sans reprendre les anciennes annonces comme des nouveautés. Préciser les conditions utiles (univers, position de référence, nouveaux empires ou stocks existants) et éviter les détails internes tels que commits, commandes ou variables de configuration.
 - Distinguer clairement une note proposée d’une version déjà publiée ; ne pas annoncer un déploiement sans en avoir vérifié le résultat.
 
+## Organisation des pages et de la navigation
+
+- Pour tout ajout ou changement d’interface, choisir explicitement entre page dédiée, onglet, filtre, ancre et contenu dépliable selon l’objectif du joueur, le volume de contenu, la fréquence d’utilisation et les besoins sur mobile. Expliquer brièvement les choix structurants dans le suivi du lot.
+- Privilégier une page dédiée pour une tâche autonome, une gestion comportant ses propres formulaires ou un contenu conséquent consulté indépendamment. Lui donner une URL stable, un titre précis et une navigation cohérente ; vérifier l’accès direct, le rechargement et le retour arrière. Ne pas simuler cette séparation en masquant simplement les sections d’une grande page avec JavaScript.
+- Réserver les onglets aux vues proches d’un même sujet, et les filtres à la sélection ou à la présentation d’un même ensemble de données. Un lien présenté comme un onglet peut mener à une vraie page ; son apparence ne détermine pas l’organisation du contenu.
+- Utiliser les ancres pour parcourir les sections d’un même document ou résultat, par exemple un rapport de combat ou une aide. Ne pas les employer comme substitut à des pages correspondant à des tâches indépendantes. Le nombre de titres seul ne justifie pas la création automatique d’un sommaire.
+- Employer un contenu dépliable pour une explication complémentaire ou une option secondaire, sans dissimuler une information indispensable à la décision. Garder ensemble les étapes et informations nécessaires à une même action afin d’éviter les allers-retours et la perte de saisie.
+- Organiser les espaces autour d’une entrée principale ouvrant leur page d’accueil, puis d’une navigation secondaire commune vers leurs sous-pages. Garder le menu principal compact et rendre identifiables l’espace et la page actifs, sur ordinateur comme sur mobile.
+- Préserver les permissions, les contextes de colonie et d’univers, les confirmations, les liens existants et les redirections après action. Une réorganisation visuelle ne doit retirer aucun accès autorisé ; notamment, les relations entre commandants restent accessibles avec ou sans guilde.
+- Adapter les lectures et actualisations aux données réellement nécessaires à chaque page, sans dupliquer les traitements métier ni charger systématiquement toutes les rubriques d’un espace.
+- Appliquer ces principes au périmètre traité, sans imposer une refonte générale des écrans existants. Toute séparation doit apporter un bénéfice concret de compréhension, de navigation ou de maintenance, avec les vérifications d’accessibilité et la documentation correspondantes.
+
 ## Accessibilité (RGAA) et SEO
 
 - Textes d’aide dans l’interface : ajouter uniquement des précisions utiles, courtes et placées au bon endroit. Éviter les explications évidentes ou répétitives et les mentions qui surchargent les libellés, débordent des menus ou gênent la lecture. Conserver les informations nécessaires pour comprendre une action, ses conditions ou ses conséquences.

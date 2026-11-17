@@ -27,7 +27,7 @@ final class PublicSeoTest extends WebTestCase
         self::assertSelectorExists('meta[name="description"][content="Genesis Reborn, jeu de stratégie spatiale par navigateur : bâtis ta colonie, explore des systèmes inconnus et forge ton empire."]');
     }
 
-    public function testProvisionalLegalPagesArePublicLinkedAndNoindex(): void
+    public function testLegalPagesArePublicLinkedAndIndexable(): void
     {
         $client = static::createClient([], ['HTTP_HOST' => 'untrusted.example.test']);
         $origin = rtrim($_ENV['DEFAULT_URI'], '/');
@@ -36,8 +36,8 @@ final class PublicSeoTest extends WebTestCase
             self::assertResponseIsSuccessful();
             self::assertSelectorCount(1, 'h1');
             self::assertSelectorTextContains('main', 'Information provisoire et incomplète');
-            self::assertSelectorCount(1, 'meta[name="robots"][content="noindex"]');
-            self::assertResponseHeaderSame('X-Robots-Tag', 'noindex, follow');
+            self::assertSelectorNotExists('meta[name="robots"][content*="noindex"]');
+            self::assertFalse($client->getResponse()->headers->has('X-Robots-Tag'));
             self::assertSame($origin.$path, $crawler->filter('link[rel="canonical"]')->attr('href'));
             self::assertSelectorExists('meta[name="description"]');
             self::assertSelectorExists('meta[property="og:title"]');
@@ -104,6 +104,9 @@ final class PublicSeoTest extends WebTestCase
         self::assertTrue($xml->loadXML($client->getResponse()->getContent()));
         self::assertSame('http://www.sitemaps.org/schemas/sitemap/0.9', $xml->documentElement->namespaceURI);
         $urls = array_map(static fn ($node) => $node->textContent, iterator_to_array($xml->getElementsByTagName('loc')));
-        self::assertSame([$origin.'/', $origin.'/inscription'], $urls);
+        self::assertSame([
+            $origin.'/', $origin.'/inscription', $origin.'/mentions-legales',
+            $origin.'/cgu', $origin.'/confidentialite', $origin.'/cookies',
+        ], $urls);
     }
 }
