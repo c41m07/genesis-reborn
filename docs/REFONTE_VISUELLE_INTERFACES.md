@@ -568,12 +568,14 @@ complète requise avant fusion.
 
 Les deux propositions sont prêtes dans le même document Figcraft de bureau :
 **08 · L2A · A — Missions en lignes** et **09 · L2A · B — Poste d’opérations**.
-Aucun choix n’est encore reçu pour ce sous-lot ; aucun code Flottes n’est modifié.
+L’utilisateur a choisi **A** (« j’aime bien le A »). La validation est enregistrée
+dans la version Figcraft `L2A - A validee par utilisateur` ; elle porte uniquement
+sur Missions, les trois étapes de préparation et le rappel.
 L1C A est enregistré dans `1a33d14` sur la branche commune.
 
 ### Analyse ciblée et découpage
 
-Conception : **4/5** ; réalisation à venir : **5/5**. Sources examinées :
+Conception : **4/5** ; réalisation : **5/5**. Sources examinées :
 `FleetController`, `FleetPageView`, `FleetRecallController`, templates de Flottes,
 navigation, destinations, vols personnels et arrivées, contrôleurs `fleet-wizard`
 et `fleet-preview`, scénarios existants de destinations, devis, états vides et
@@ -670,6 +672,81 @@ charge toujours trois missions résumées, la liste au plus 30 détails. Les ser
 permissions, univers, colonie, CSRF, versions et clés d’envoi restent conservés.
 Aucun gain de performance n’est annoncé ; aucune nouvelle règle n’est proposée.
 
+### Réalisation de A
+
+`fleet-workspace.css` est limité à `.fleet-redesign`, présent sur Missions,
+Préparer et Rappel. Les vols personnels utilisent des lignes larges, avec numéro
+de flotte et bouton Composition et fret séparé du titre. Le fragment de mise à
+jour reçoit aussi `fleet_page` : il conserve cette présentation après actualisation.
+La Vue générale et les catalogues gardent leurs déclencheurs et leur disposition.
+Les demandes d’orbite, le quai et les compositions conservent leur présentation
+en attendant leurs validations.
+
+Le menu réutilise `ui/space_navigation` et le contrôleur existant ; les cinq
+destinations, leurs URL et leur page active sont conservées. Le rappel place le
+titre avant la navigation, puis présente ses six informations sur deux colonnes
+lorsque la largeur le permet. Aucun champ, action, CSRF ou version n’est changé.
+
+La préparation conserve ses contrôleurs, champs, préremplissages et clé d’envoi.
+Résumé et estimation sont regroupés avant les explications et les actions, sur
+deux colonnes si la largeur suffit. Le fret est déplié pour les missions qui le
+permettent ; le sélecteur natif conserve le libellé complet de destination dans
+ses options. Le titre reçoit le focus après Suivant/Retour, sans prise de focus
+à la connexion du contrôleur. L’envoi reste bloqué par le contrôleur de devis
+pendant le calcul et après erreur ; sans JavaScript, les trois étapes et les
+formulaires restent accessibles.
+
+Les contrôles ont identifié des contrastes insuffisants en thème clair,
+dans le menu compact, les arrivées et le badge Retour. Les corrections restent limitées au nouvel
+espace. Les libellés des unités et les valeurs du devis ont été agrandis après
+revue des captures. Le contrôle Axe du nouveau parcours a aussi relevé le nom
+accessible de Rappeler, qui ne contenait pas ce texte visible : la nouvelle vue
+affiche désormais Préparer le rappel, cohérent avec son libellé accessible et
+sa destination de confirmation. Les autres consommateurs ne sont pas modifiés.
+
+Fichiers principaux : `app/templates/fleet/{index,_available,recall}.html.twig`,
+`app/templates/ui/{fleet_navigation,flights}.html.twig`,
+`app/assets/styles/fleet-workspace.css`, import dans `app/assets/app.js`,
+`app/assets/controllers/fleet_wizard_controller.js`. Nouveau scénario :
+`app/tests/browser/fleet-workspace.spec.mjs` ; scénario de navigation existant
+adapté à l’ouverture du menu mobile, avec ses assertions conservées.
+
+Contrôles serveur : `make validate`, `make lint-static` (200 Twig, 80 YAML, PHP
+et conteneur), compilation des assets, syntaxe JavaScript et `git diff --check`
+réussis. Les champs, méthodes, destinations de formulaire et CSRF de préparation
+et de rappel ont été comparés avant/après : identiques. PHPUnit isolé :
+**59 tests / 713 assertions réussis**, suites `FleetDestinationTest`,
+`FleetNavigationTest`, `FleetRecallTest`, `GalaxyFleetVisibilityTest`.
+
+Premier passage navigateur : 12 succès sur 15 ; deux échecs de contraste et une
+fixture de rappel insuffisamment fiable. Cette fixture utilise désormais un
+véritable envoi pour préparer la navigation. Reprise des sept parcours concernés :
+six succès, dont navigation complète, devis, trois rappels et surveillance ; le
+nouveau parcours relève ensuite le libellé accessible corrigé ci-dessus.
+La recette finale de A passe après correction du libellé et du badge Retour :
+les cinq vues, en sombre et clair, à 320/390/768/1440 px ; Axe sans violation à
+390 px dans `.fleet-redesign`, absence de débordement, focus des étapes, erreur
+sans vaisseau, retours avec composition/fret conservés, devis autorisé, détails
+privés au clavier, menu/Échap, rechargement et retour arrière. Le scénario passe
+d’abord en clair pour contrôler les états concernés avant de parcourir le sombre.
+**15 scénarios distincts réussis par consolidation des reprises**, sans retirer
+ni affaiblir les assertions. Lint statique et compilation finaux réussis.
+
+**40 captures réelles finales** : missions, composition, destination, confirmation
+et rappel, en sombre/clair à 1440/768/390 px, plus dix fenêtres mobiles. Conservées
+dans `output/playwright/fleet-workspace/captures-jeu-L2A-A/` et le dossier Figcraft
+local `captures-jeu-L2A-A/`, avec index JSON ; préfixe `jeu-L2A-A-`. Les noms,
+stocks et flottes sont synthétiques. Le nouveau parcours repousse seulement
+l’échéance de sa flotte de capture pour garder les vues stables ; les scénarios
+existants testent le rappel réel, l’origine perdue et le refus d’un trajet ancien
+non fiable sans changer les règles.
+
+Les essais utilisent uniquement leurs bases et stockages synthétiques jetables.
+Pas de migration sur la partie habituelle, aucune dépendance installée, aucune
+action de jeu sur les données usuelles et aucun email externe. Aucun gain de
+performance mesuré ou annoncé ; aucun audit RGAA complet. La CI GitHub, la fusion
+et le déploiement restent distincts.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -678,14 +755,15 @@ Aucun gain de performance n’est annoncé ; aucune nouvelle règle n’est prop
 | L1A | B implémentée et vérifiée localement | B choisie explicitement | Trois pages, PHP ciblé, recette responsive et captures ; bilan ci-dessus | CI complète, intégration et déploiement distincts |
 | L1B | A implémentée et vérifiée localement | A choisie explicitement | Trois pages et brouillon, PHP ciblé, recette responsive et captures | CI complète et intégration distinctes |
 | L1C | A implémentée et vérifiée localement | A choisie explicitement | Quatre pages, confirmations natives, 83 PHP et recette responsive ; captures | CI complète et intégration distinctes |
-| L2A | Deux propositions Figcraft prêtes | Choix A/B attendu | 32 cadres, 400 liens, sept pages antérieures préservées | Aucun code Flottes réalisé pour ce lot |
+| L2A | A implémentée et vérifiée localement | A choisie explicitement | 59 tests PHP, 15 parcours navigateur consolidés et 40 captures ; bilan ci-dessus | CI complète et intégration distinctes |
 | Suite L2, L3 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
 Les commits restent sur `feature/refonte-visuelle` ; L1B A est enregistré dans
-`1e390a9`, L1C A dans `1a33d14`. Le prochain périmètre L2A attend le choix entre
-les deux propositions Figcraft avant son implémentation. Le plan reste à
-18 ensembles, dont trois réalisés ; L2 est maintenant découpé en sous-lots.
+`1e390a9`, L1C A dans `1a33d14`. L2A A est réalisé localement ; le prochain
+périmètre est L2B (orbites, quai et reprise), puis L2C (compositions). Le plan
+reste à 18 ensembles : les trois premiers sont réalisés, L2 est partiellement
+réalisé. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
 Les validations précédentes restent limitées à leurs lots.
 Aucun push, PR, fusion ou déploiement n’est autorisé par le seul changement de
 branche. La mission globale reste non terminée.

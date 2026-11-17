@@ -692,6 +692,14 @@ traités en lignes. Le transfert du commandement, le départ et la dissolution
 disposent d’une confirmation dépliable utilisable sans JavaScript. Les conditions,
 permissions et conséquences de ces actions restent celles des services existants.
 
+Le lot Flottes L2A retient A : missions personnelles en lignes sur grand écran,
+préparation en trois étapes avec suivi à droite, résumé et estimation rapprochés,
+puis rappel sur sa page dédiée. Le menu mobile reprend les cinq destinations
+existantes ; les liens restent ouverts sans JavaScript. Les détails personnels
+disposent d’un bouton « Composition et fret ». Le focus rejoint le titre après
+un changement d’étape ; les retours conservent les champs. La Vue générale,
+les catalogues, les règles d’envoi et de rappel gardent leurs comportements.
+
 Le lot Projets collectifs conserve `/guildes/projets` comme entrée des projets en
 cours et ajoute `/guildes/projets/disponibles` et `/guildes/projets/historique`.
 La fiche existante reste dédiée au détail et au don. Listes et contributions sont

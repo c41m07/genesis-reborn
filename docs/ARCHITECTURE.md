@@ -234,6 +234,16 @@ Les services métier restent communs ; les anciens paramètres et fragments sont
 maintenus par les transitions décrites dans [le suivi](NAVIGATION_PAGES_DEDIEES.md).
 Le paramètre `fleet` situe un vol autorisé avant la lecture bornée des détails.
 
+L2A A ajoute `fleet-workspace.css`, limité à `.fleet-redesign` sur Missions,
+Préparer et Rappel. Les vols gardent leur composant partagé et leurs données :
+`fleet_page == missions` distingue le bouton de détails du titre, y compris dans
+les fragments actualisés. Le rendu de Vue générale et des catalogues est conservé.
+La navigation réutilise `ui/space_navigation` et son menu natif pour ces trois
+destinations. `fleet-wizard` déplace le focus vers le titre uniquement après un
+changement explicite d’étape ; la connexion du contrôleur ne prend pas le focus.
+Le devis reste sous `fleet-preview`, avec son blocage d’envoi existant. Aucune
+lecture, validation ou transaction de Flottes n’est changée.
+
 Les actualisations des colonies et de Flottes demandent JSON avec `X-Genesis-Live: 1` et
 `Accept: application/json`. La route conserve ses contrôles, synchronisations
 et préparation GameShell, puis renvoie les fragments privés sans cache.

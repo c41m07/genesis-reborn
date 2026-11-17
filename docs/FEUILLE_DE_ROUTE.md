@@ -35,11 +35,14 @@ propositions restent dans Figcraft, pages 06/07. **Trois lots réalisés localem
 15 restants** dans le plan principal. L2 est découpé autour du parcours de flotte.
 
 L2A : Missions actives, les trois étapes complètes de préparation et le rappel.
-Deux propositions Figcraft prêtes dans les pages 08/09 : A en lignes compactes,
-B en cartes avec arrivées latérales sur ordinateur. 32 cadres et 400 liens
-contrôlés ; les sept pages précédentes sont inchangées. Le choix de l’utilisateur
-reste attendu avant tout changement du code Flottes. Orbites, quai et compositions
-suivront dans la suite de L2 ; détails et limites dans le suivi de refonte.
+A est choisie et réalisée : lignes compactes, préparation guidée et menu mobile
+partagé. 59 tests PHP / 713 assertions, 15 parcours navigateur consolidés et
+40 captures réelles ; contrôles statiques et compilation réussis. Les contrastes
+et le libellé accessible du rappel ont été corrigés sans affaiblir les tests.
+Les maquettes restent dans les pages 08/09 ; les références antérieures sont
+préservées. L2 reste partiellement réalisé : orbites, quai et reprise composent
+L2B, puis les compositions L2C. Ces sous-lots suivront leur propre choix A/B.
+Détails et limites dans le suivi de refonte ; CI et intégration restent distinctes.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026
 

@@ -27,14 +27,14 @@ export default class extends Controller {
         this.errorTarget.hidden = true;
         this.currentStep = Math.min(3, this.currentStep + 1);
         if (this.currentStep === 3) this.updateSummary();
-        this.render();
+        this.render(true);
     }
 
     previous(event) {
         event.preventDefault();
         this.errorTarget.hidden = true;
         this.currentStep = Math.max(1, this.currentStep - 1);
-        this.render();
+        this.render(true);
     }
 
     hasComposition() {
@@ -80,7 +80,7 @@ export default class extends Controller {
         this.errorTarget.hidden = false;
     }
 
-    render() {
+    render(moveFocus = false) {
         this.stepTargets.forEach(step => {
             const active = Number(step.dataset.step) === this.currentStep;
             step.hidden = !active;
@@ -95,5 +95,10 @@ export default class extends Controller {
             else indicator.removeAttribute('aria-current');
         });
         this.counterTarget.textContent = 'Étape ' + this.currentStep + ' / 3';
+        if (moveFocus) {
+            // Le bouton précédent est masqué : le titre situe le clavier dans la nouvelle étape.
+            const activeStep = this.stepTargets.find(step => Number(step.dataset.step) === this.currentStep);
+            activeStep?.querySelector('h3').focus();
+        }
     }
 }

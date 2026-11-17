@@ -187,3 +187,20 @@ Le menu natif est partagé dans `space-navigation-menu.css`. Sans JavaScript,
 les liens restent dépliés ; son comportement au clavier, au redimensionnement et
 au retour de focus reste celui validé en L1A. Les confirmations utilisent le
 comportement natif de `details`, sans nouvelle dépendance.
+
+### Missions et préparation — composition A validée pour L2A
+
+`fleet-workspace.css` reste limité à `.fleet-redesign` : missions, préparation et
+rappel. Les vols personnels utilisent des lignes à deux colonnes sur grand écran,
+puis une colonne sur mobile ; le bouton Composition et fret reste distinct du
+rappel. Les composants de Vue générale et des catalogues gardent leur disposition.
+Les arrivées conservent leur panneau séparé, même vide.
+
+La préparation place ses trois missions résumées et ses arrivées à droite sur
+grand écran, après le formulaire sur petit écran. Résumé et estimation sont côte
+à côte lorsque la largeur suffit. Le fret est déplié pour les missions qui le
+permettent. Le changement explicite d’étape place le focus sur son titre ; les
+erreurs ciblent toujours le champ concerné. Une actualisation ne prend pas le
+focus. Le menu mobile reprend `space-navigation-menu` et ses liens serveur ;
+sans JavaScript, le menu et les trois étapes restent lisibles. Les confirmations
+et états de blocage de devis conservent leurs contrôleurs existants.

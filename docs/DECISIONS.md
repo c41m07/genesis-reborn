@@ -1964,3 +1964,18 @@ Une confirmation dépliable précède transfert, départ et dissolution, y compr
 sans JavaScript. Les conséquences affichées, droits délégués, vérifications de
 version, limites de fichiers et règles de signature restent inchangés. Cette
 validation porte uniquement sur L1C ; [suivi et vérifications](REFONTE_VISUELLE_INTERFACES.md).
+
+## Refonte visuelle L2A : proposition A — 17 novembre 2026
+
+L’utilisateur choisit A (« j’aime bien le A ») pour Missions actives, les trois
+étapes de préparation et le rappel. Les missions personnelles utilisent des
+lignes larges sur ordinateur/tablette, puis une colonne sur mobile. Les arrivées
+suivent les vols personnels. Pendant la préparation, suivi des missions et
+arrivées restent à droite sur grand écran, après le formulaire sur petit écran.
+
+Les étapes restent dans le même formulaire ; résumé et estimation sont rapprochés
+avant l’envoi. Le menu mobile conserve les cinq pages existantes et reste ouvert
+sans JavaScript. Les détails personnels utilisent un bouton explicite ; le rappel
+conserve son devis et sa confirmation. Orbites, quai et compositions attendent
+leur propre conception et validation. Aucune règle d’envoi, de carburant, de
+visibilité ou de rappel n’est modifiée. [Suivi du lot](REFONTE_VISUELLE_INTERFACES.md).
