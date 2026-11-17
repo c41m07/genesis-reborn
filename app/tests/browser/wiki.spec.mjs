@@ -36,10 +36,13 @@ test('Wiki : accès, guide, sources, clavier et mobile dans les deux thèmes', a
   await page.getByRole('button',{name:'Rechercher',exact:true}).click();
   await expect(page.getByText('Aucun chapitre ne correspond.',{exact:false})).toBeVisible();
   await page.getByRole('link',{name:'Afficher tout le manuel'}).click();
+  // Attendre la navigation enrichie : avant son initialisation, tous les chapitres sont encore visibles.
+  await expect(page.locator('.wiki-manual')).toHaveClass(/wiki-chapters-ready/);
   const guide = JSON.parse(readFileSync('docs/wiki.json', 'utf8'));
   for (const section of guide) {
     await page.locator('.wiki-summary a[href="#wiki-'+section.id+'"]').focus();
     await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(new RegExp('#wiki-' + section.id + '$'));
     await expect(page.locator('#wiki-'+section.id)).toBeVisible();
     await expect(page.locator(`#wiki-${section.id}`)).toContainText(section.title);
     for (const text of section.paragraphs) await expect(page.locator(`#wiki-${section.id}`)).toContainText(text);
@@ -82,6 +85,7 @@ test('Wiki : accès, guide, sources, clavier et mobile dans les deux thèmes', a
     await page.goto('/wiki');
     await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
     await page.goto('/wiki#wiki-calcul-production');
+    await expect(page.locator('.wiki-manual')).toHaveClass(/wiki-chapters-ready/);
     await expect(page.locator('#wiki-calcul-production')).toBeVisible();
     await page.locator('.wiki-chapter:visible .wiki-calculation summary').first().focus();
     await expect(page.locator('.wiki-chapter:visible .wiki-calculation summary').first()).toBeFocused();

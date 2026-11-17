@@ -777,6 +777,19 @@ aucun code d’expiration, droit ou traitement métier n’est changé. Reprise 
 40 tests / 179 assertions réussis. Une nouvelle CI complète reste obligatoire sur
 le commit corrigé ; les résultats de la première exécution ne permettent pas de fusionner.
 
+### Reprise du test clavier du wiki
+
+La [deuxième CI](https://github.com/c41m07/genesis-reborn/actions/runs/43993199017)
+sur `be9ea53` réussit le PHP et trois lots navigateur ; le quatrième compte
+51 réussites et un échec intermittent dans le parcours clavier du wiki.
+La reprise isolée de ce scénario réussit. Le test pouvait valider le premier
+chapitre encore visible avant l’initialisation du contrôleur, puis enchaîner
+ses actions trop tôt. Il attend désormais le signal `wiki-chapters-ready` et
+vérifie l’URL de chaque chapitre après activation. Les assertions de contenu,
+clavier, thèmes, formules, sources et accès natif restent présentes.
+Le wiki de l’application n’est pas modifié. Trois reprises consécutives du
+scénario renforcé réussissent. Une nouvelle CI complète reste requise sur ce commit.
+
 ### Fichiers du lot 6
 
 - `README.md`
@@ -798,6 +811,7 @@ le commit corrigé ; les résultats de la première exécution ne permettent pas
 - `app/tests/browser/admin-event-wizard.spec.mjs`
 - `app/tests/browser/event-pages.spec.mjs`
 - `app/tests/browser/player-support-worlds.spec.mjs`
+- `app/tests/browser/wiki.spec.mjs`
 - `docs/ARCHITECTURE.md`
 - `docs/DECISIONS.md`
 - `docs/FEUILLE_DE_ROUTE.md`
