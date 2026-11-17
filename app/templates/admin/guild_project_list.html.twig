@@ -1,0 +1,8 @@
+{% extends 'admin/layout.html.twig' %}
+{% block title %}Modèles de projets de guilde · Administration{% endblock %}
+{% block body %}<div class="page-heading"><div><h1>Modèles de projets de guilde</h1><p>Les conditions des projets déjà lancés restent figées.</p></div><a class="primary" href="{{ path('app_admin_guild_project_new') }}">Créer un modèle de projet</a></div>
+<section aria-labelledby="project-models-title"><h2 id="project-models-title">Modèles enregistrés</h2>
+{% for definition in listing.entries %}<article class="panel"><h3>{{ definition.name }}</h3><p>{{ definition.universe.name }} · {{ definition.enabled ? 'Disponible' : 'Désactivé pour les nouveaux lancements' }} · {{ definition.stages|length }} palier(s)</p><p>Les coûts et minimums permettent au maximum {{ projectRules.maximumRecipients(definition.stages,definition.minimums) }} récompense(s) dans une guilde, selon la répartition des dons.</p><a href="{{ path('app_admin_guild_project_edit',{id:definition.id}) }}">Modifier {{ definition.name }}</a></article>{% else %}<p class="panel">Aucun modèle de projet. Aucun coût ni récompense de projet n’est actif.</p>{% endfor %}
+</section>
+{% include 'admin/_list_pagination.html.twig' with {listing:listing,route:'app_admin_guild_projects'} only %}
+{% endblock %}

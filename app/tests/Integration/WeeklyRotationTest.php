@@ -31,7 +31,7 @@ final class WeeklyRotationTest extends KernelTestCase
     }
     private function player(string $name): Player
     {
-        $data=new RegistrationData();$data->email=strtolower($name).'@example.test';$data->username=$name;$data->plainPassword='A-test-password-2026';
+        $data=new RegistrationData();$data->email=strtolower($name).'@example.test';$data->username=$name;$data->plainPassword=bin2hex(random_bytes(16)).'aA1!';
         $player=self::getContainer()->get(RegistrationService::class)->register($data);
         $universe=$this->em->getRepository(Universe::class)->findOneBy(['slug'=>'omega-1']);self::getContainer()->get(UniverseService::class)->select($player,$universe->id);return $player;
     }
@@ -47,6 +47,42 @@ final class WeeklyRotationTest extends KernelTestCase
     private function current(): ?BoostEvent
     {
         return self::getContainer()->get(GameRepository::class)->weeklyBoostEventFor($this->universe,$this->clock->now()->modify('monday this week')->setTime(0,0));
+    }
+
+    public function testEditingKeepsScheduledOccurrenceAndRejectsStaleVersion(): void
+    {
+        $this->disableDefaults();
+        $rotations = self::getContainer()->get(WeeklyRotationService::class);
+        $key = $rotations->create($this->admin, $this->universe, $this->input());
+        self::getContainer()->get(BoostEventService::class)->tick();
+        $event = $this->current();
+        $snapshot = [$event->thresholdValue, $event->configuration, $event->endsAt->format(DATE_ATOM)];
+        $definition = array_values(array_filter($rotations->definitions($this->universe), static fn(array $row): bool => $row['key'] === $key))[0];
+        $version = $rotations->version($definition);
+        $rotations->update($this->admin, $this->universe, $key, $this->input(['name'=>'Modèle modifié', 'threshold_value'=>20]), $version);
+        $this->em->refresh($event);
+        self::assertSame($snapshot, [$event->thresholdValue, $event->configuration, $event->endsAt->format(DATE_ATOM)]);
+        $saved = array_values(array_filter($rotations->definitions($this->universe), static fn(array $row): bool => $row['key'] === $key))[0];
+        self::assertSame('Modèle modifié', $saved['name']);
+        self::assertSame(20.0, $saved['threshold_value']);
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('Ce modèle a changé');
+        $rotations->update($this->admin, $this->universe, $key, $this->input(), $version);
+    }
+
+    public function testEditingCannotUseAnotherUniversesKey(): void
+    {
+        $rotations = self::getContainer()->get(WeeklyRotationService::class);
+        $key = $rotations->create($this->admin, $this->universe, $this->input());
+        $other = $this->em->getRepository(Universe::class)->findOneBy(['slug'=>'turbo-1']);
+        $before = $other->gameSettings;
+        try {
+            $rotations->update($this->admin, $other, $key, $this->input(), 'invalid');
+            self::fail('La clé d’un autre univers doit être refusée.');
+        } catch (\DomainException $error) {
+            self::assertStringContainsString('introuvable dans cet univers', $error->getMessage());
+        }
+        self::assertSame($before, $other->gameSettings);
     }
 
     public function testDefaultSequenceIsUnchangedAndTicksAreIdempotent(): void

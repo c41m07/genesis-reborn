@@ -1873,3 +1873,15 @@ reliée aux fiches existantes. Les listes sont paginées sans changer la conserv
 des occurrences ni leur accès. Le panneau sous les ressources garde son contenu,
 son compteur visible fermé et ses liens de détail. Les dates, objectifs, critères
 de contribution, effets et attributions de récompenses ne changent pas.
+
+## Navigation administrative dédiée — 17 novembre 2026
+
+La réorganisation conserve les quatre groupes de console validés. Une liste
+ouvre chaque espace ; les formulaires Univers, Catalogue, Événements, Modèles de
+projets et Rotations disposent de vraies URL. L’assistant d’événement reste le
+parcours principal de création, avec accès séparé au formulaire avancé existant.
+Une rotation peut modifier son modèle pour les prochaines programmations ; sa
+clé et son ordre restent stables. Une édition devenue périmée est refusée et
+les occurrences déjà programmées gardent leurs règles. Aucune valeur de référence,
+règle de récompense, permission ou condition d’accès n’est modifiée.
+Voir le [lot 7](NAVIGATION_PAGES_DEDIEES.md) pour les preuves et limites.

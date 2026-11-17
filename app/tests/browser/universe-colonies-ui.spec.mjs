@@ -5,7 +5,7 @@ import { runIsolatedSql, queryIsolatedSql } from './support/game-fixtures.mjs';
 async function enter(page, admin = false) {
   const id = crypto.randomUUID().slice(0, 8);
   const email = `world-ui-${id}@example.test`;
-  const password = 'Browser-test-2026!';
+  const password = crypto.randomUUID() + 'aA1!';
   await page.goto('/inscription');
   await page.getByLabel('Adresse email').fill(email);
   await page.getByLabel('Nom de commandant').fill(`WorldUI-${id}`);
@@ -41,8 +41,8 @@ test('Captures calendrier admin et colonies multiples', async ({ page, browser }
   const scheduled = Number(queryIsolatedSql(project, 'SELECT id FROM universe ORDER BY id DESC LIMIT 1'));
   runIsolatedSql(project, `UPDATE universe SET starts_at='2030-05-12 09:30:00',ends_at='2030-05-14 18:00:00' WHERE id=${scheduled}`);
   await page.goto('/admin#admin-universes');
-  const card = page.locator('.admin-universe-card[data-filter-status="scheduled"]').first();
-  await card.locator('.admin-universe-settings>summary').click();
+  await page.goto(`/admin/universes/${scheduled}/gerer`);
+  const card = page.locator('.admin-universe-card');
   const start = card.locator('input[name="starts_at"]');
   console.log('Ouverture rendue : ' + await start.getAttribute('value') + ' ; valeur reconnue : ' + await start.inputValue());
   for (const width of [1440, 390]) {
@@ -66,7 +66,7 @@ test('Univers : création, brouillons conservés, calendrier UTC et univers ferm
   await enter(page, true);
   const project = process.env.BROWSER_ROUTER;
   await page.goto('/admin#admin-universe-create');
-  await expect(page.locator('#admin-universes')).toBeVisible();
+  await expect(page.getByRole('heading', {name:'Créer un univers', exact:true}).first()).toBeVisible();
   const creation = page.locator('#admin-universe-create');
   const existingSlug = queryIsolatedSql(project, 'SELECT slug FROM universe ORDER BY id LIMIT 1');
   const slug = 'ui-world-' + crypto.randomUUID().slice(0, 8);
@@ -76,7 +76,7 @@ test('Univers : création, brouillons conservés, calendrier UTC et univers ferm
   await creation.getByLabel('Nombre de galaxies').fill('2');
   await creation.getByLabel('Systèmes par galaxie').fill('1');
   await creation.getByRole('button', { name: 'Créer l’univers' }).click();
-  await expect(page).toHaveURL(/#admin-universe-create$/);
+  await expect(page).toHaveURL(/\/admin\/universes\/nouveau$/);
   await expect(page.locator('.flash.error')).toContainText('déjà ce code');
   await expect(creation.getByLabel('Nom affiché')).toHaveValue('Univers de vérification UI');
   await expect(creation.getByLabel('Code unique')).toHaveValue(existingSlug);
@@ -95,7 +95,7 @@ test('Univers : création, brouillons conservés, calendrier UTC et univers ferm
   await creation.getByRole('button', { name: 'Créer l’univers' }).click();
   const id = Number(queryIsolatedSql(project, `SELECT id FROM universe WHERE slug='${slug}'`));
   expect(id).toBeGreaterThan(0);
-  await expect(page).toHaveURL(new RegExp('#admin-universe-' + id + '$'));
+  await expect(page).toHaveURL(new RegExp('/admin/universes/' + id + '/gerer$'));
   const card = page.locator('#admin-universe-' + id);
   await expect(card).toBeVisible();
   await expect(card).toContainText('Univers de vérification UI');
@@ -103,14 +103,14 @@ test('Univers : création, brouillons conservés, calendrier UTC et univers ferm
   await expect(card).not.toContainText('Configuration à vérifier');
   const config = queryIsolatedSql(project, `SELECT game_settings FROM universe WHERE id=${id}`);
   expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM planet p JOIN solar_system s ON s.id=p.solar_system_id JOIN galaxy g ON g.id=s.galaxy_id WHERE g.universe_id=${id}`)).toBe('9');
-  await card.locator('.admin-universe-settings>summary').click();
+  await expect(card.locator('.admin-universe-settings')).toBeVisible();
   const calendar = card.locator('.admin-calendar-form');
   await calendar.getByLabel('Ouverture (UTC)', { exact: true }).fill('2030-06-10T12:30');
   await calendar.getByLabel('Fermeture planifiée (UTC)').fill('2030-06-09T11:15');
   await calendar.getByRole('button', { name: 'Enregistrer le calendrier' }).click();
   await expect(page.locator('.flash.error')).toContainText('postérieure');
   await expect(calendar.locator('.admin-draft-notice')).toContainText('postérieure');
-  await expect(card.locator('.admin-universe-settings')).toHaveAttribute('open', '');
+  await expect(card.locator('.admin-universe-settings')).toBeVisible();
   await expect(calendar.getByLabel('Ouverture (UTC)', { exact: true })).toHaveValue('2030-06-10T12:30');
   await expect(calendar.getByLabel('Fermeture planifiée (UTC)')).toHaveValue('2030-06-09T11:15');
   expect(queryIsolatedSql(project, `SELECT starts_at IS NULL AND ends_at IS NULL FROM universe WHERE id=${id}`)).toBe('1');
@@ -122,11 +122,14 @@ test('Univers : création, brouillons conservés, calendrier UTC et univers ferm
   await expect(page.locator('.flash.success')).toContainText('Calendrier de l’univers enregistré');
   await expect(card).toHaveAttribute('data-filter-status', 'scheduled');
   await expect(card).toContainText('10/06/2030 12:30 UTC');
-  await card.locator('.admin-universe-settings>summary').click();
+  await expect(card.locator('.admin-universe-settings')).toBeVisible();
   await expect(calendar.getByLabel('Ouverture (UTC)', { exact: true })).toHaveValue('2030-06-10T12:30');
   await expect(calendar.getByLabel('Fermeture planifiée (UTC)')).toHaveValue('2030-06-12T18:45');
+  await page.goto('/admin/univers');
   await page.getByLabel('État', { exact: true }).filter({ has: page.locator('option[value="scheduled"]') }).selectOption('scheduled');
+  await page.getByRole('button',{name:'Rechercher',exact:true}).click();
   await expect(page.locator('#admin-universes .admin-universe-card:visible')).toHaveCount(1);
+  await page.goto(`/admin/universes/${id}/gerer`);
   for (const width of [1920, 1440, 1280, 768, 390]) {
     await page.setViewportSize({ width, height: 900 });
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
@@ -141,7 +144,7 @@ test('Univers : création, brouillons conservés, calendrier UTC et univers ferm
   runIsolatedSql(project, `UPDATE universe SET status='closed' WHERE id=${id}`);
   await page.reload();
   await expect(card).toHaveAttribute('data-filter-status', 'closed');
-  await card.locator('.admin-universe-settings>summary').click();
+  await expect(card.locator('.admin-universe-settings')).toBeVisible();
   await expect(calendar.getByLabel('Ouverture (UTC)', { exact: true })).toBeDisabled();
   await expect(calendar.getByLabel('Fermeture planifiée (UTC)')).toBeDisabled();
   await expect(calendar.getByRole('button', { name: 'Enregistrer le calendrier' })).toBeDisabled();

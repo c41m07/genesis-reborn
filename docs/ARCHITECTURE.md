@@ -714,3 +714,35 @@ L’ancien fragment `#page-section-0` du sommaire des défis est orienté côté
 vers la nouvelle liste. `#events-current` et `#events-upcoming` restent sur le
 document des annonces ; les nouveaux écrans désactivent le sommaire automatique.
 Voir [la recette et les limites](NAVIGATION_PAGES_DEDIEES.md).
+
+## Pages administratives dédiées — 17 novembre 2026
+
+La console et ses groupes existants restent en place. `AdminController` expose
+les GET de création et de gestion d’un univers ; les POST historiques gardent
+leurs services, jetons et contrôles. Les brouillons d’erreur sont consommés sur
+la seule fiche concernée. `AdminReadRepository` pagine les univers et les modèles
+de projets par 50 ; les filtres d’univers s’appliquent avant la pagination.
+Les formulaires ne sont plus préparés dans les listes. Les pages d’édition ne
+chargent ni la liste des modèles ni les autres univers pour leur configuration.
+
+`CatalogBalanceService::entries` conserve son contrat par défaut ; ses paramètres
+facultatifs limitent famille, entrée et préparation des champs. La recherche
+transversale porte sur le catalogue de configuration fini de l’univers ; une
+liste ne construit aucun champ d’édition. Les écritures d’équilibrage réutilisent
+les transactions, matérialisations et validations existantes.
+
+Les contrôleurs Événements, Projets et Rotations séparent les GET de liste et de
+formulaire. Les anciens POST restent acceptés. L’assistant et les interdictions
+de réécriture des événements guidés restent inchangés. L’édition de rotation
+réutilise les validations de création dans `WeeklyRotationService` ; elle vérifie
+une empreinte du modèle sous le verrou existant administrateur puis univers,
+conserve sa clé et sa position et journalise avant/après. Les configurations des
+occurrences et les récompenses acquises ne sont pas réécrites.
+
+`admin/_page_navigation` relie les destinations ; le menu de groupe et le fil
+d’Ariane reconnaissent les pages profondes. Les nouvelles pages désactivent le
+sommaire automatique et ne sont plus repliées par `admin_editors`.
+`page_sections` traduit les anciens fragments univers/catalogue dans le navigateur
+avec remplacement de l’entrée d’historique ; sans JavaScript, listes et liens
+serveur permettent d’atteindre les mêmes fiches. Aucun changement de schéma,
+dépendance ou chargement global de données de jeu n’est ajouté.

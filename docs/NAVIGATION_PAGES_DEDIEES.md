@@ -57,7 +57,8 @@ accessibles. Aucune lecture intégrale ni validation de leurs phases n’est rev
    permissions, versions et isolation des univers.
 6. Événements : 4/5 après examen ; visibilité, filtres JSON avant pagination,
    périmètres d’univers et panneau commun conservé.
-7. Administration : estimation 4/5 ; droits, formulaires et parcours guidés existants.
+7. Administration : 4/5 après examen ; droits, formulaires, édition des modèles
+   de rotations sous verrou et parcours guidés existants.
 8. Wiki : estimation 4/5 ; recherche globale, chapitres et fragments historiques.
 
 Les estimations des lots 3 à 8 seront confirmées sur leurs dépendances au début
@@ -835,3 +836,140 @@ doivent réussir sur sa dernière version avant intégration.
 - `docs/PARCOURS_UI_UX.md`
 - `docs/REGLES.md`
 - `docs/wiki.json`
+
+## Lot 7 — Administration — 17 novembre 2026
+
+Complexités : univers 3/5, catalogue 4/5, événements 3/5, projets 3/5,
+rotations 4/5. Risques : contexte d’univers, données préparées, formulaires
+périmés, CSRF, redirections et compatibilité des fragments. La console générale
+refactorisée n’est pas recommencée.
+
+| Espace | Destinations |
+| --- | --- |
+| Univers | `/admin/univers`, `/admin/universes/nouveau`, `/admin/universes/{id}/gerer` |
+| Catalogue | `/admin/universes/{id}/catalogue`, `…/{group}`, `…/{group}/{slug}` ; recherche GET `q` dans toutes les familles |
+| Événements | `/admin/events`, assistant existant, `/admin/events/nouveau`, `/admin/events/{id}/edit` |
+| Projets | `/admin/projets-guilde`, `…/nouveau`, `…/{id}/modifier` |
+| Rotations | `/admin/rotations?universe={id}`, `…/nouveau?universe={id}`, `…/{id}/{key}/modifier` |
+
+Les anciennes routes POST et leurs jetons restent valables. `?edit=` des modèles
+de projets redirige vers la fiche. Les fragments univers et catalogue sont
+interprétés dans le navigateur, également après changement de fragment ; sans
+JavaScript, les listes offrent des liens vers les fiches. Les GET de liste ne
+préparent plus leurs formulaires ; les univers et modèles de projets sont paginés
+par 50. Les références du catalogue, règles, conditions d’accès, droits et
+confirmations sensibles sont conservés. L’édition de rotation garde clé/ordre,
+valide une empreinte sous verrou et préserve les occurrences existantes.
+
+Validation locale : `make validate`, `make lint-static` (PHP, YAML, Twig et
+conteneur), `make assets` et `git diff --check` réussis. Les bases de test sont
+jetables et distinctes de l’application locale normale. Pas de suite complète
+PHP/navigateur locale revendiquée : 22 tests PHP distincts et 28 parcours navigateur
+distincts réussissent par consolidation des exécutions et reprises ciblées.
+Le test HTTP de navigation compte 132 assertions ; il dépasse une page de listes,
+vérifie les filtres avant pagination, les liens directs, 404 et refus d’accès.
+Les tests du catalogue couvrent sauvegarde, restauration et erreur avec saisie
+conservée. Ceux des rotations couvrent la configuration figée d’une occurrence,
+le refus d’une version périmée et d’une clé appartenant à un autre univers.
+Deux appels séquentiels ne constituent pas une preuve de concurrence réelle.
+
+Les parcours navigateur couvrent les formulaires natifs sans JavaScript, les
+brouillons, les validations et redirections, les anciennes ancres, le clavier,
+le focus, les titres et libellés, le retour arrière et le rechargement. Les pages
+sont contrôlées en clair/sombre et à 390/1 440 px ; plusieurs parcours existants
+couvrent aussi tablette et 1 920 px. Axe est utilisé sur les nouvelles fiches.
+Le contrôle visuel corrige le sommaire automatique quand la désactivation est
+portée par `main`, ainsi que le contraste des états d’univers et de la zone
+sensible en thème clair. La navigation de groupe reste accessible dans le menu ;
+sa rangée redondante est retirée des nouvelles pages. Les alertes de fermeture
+proche et d’univers fermé sont également vérifiées par Axe dans les deux thèmes. Les formulaires ne sont
+pas remplacés périodiquement ; une saisie catalogue en cours reste intacte.
+
+La [PR #83](https://github.com/c41m07/genesis-reborn/pull/83) donne l’état de CI,
+de fusion et d’activation locale après ce relevé. Le scan de secrets et la CI
+légère réussissent sur le premier commit. La CI complète reste obligatoire sur
+la dernière version avant fusion. Aucune fusion, migration existante ou livraison
+Alpha n’est annoncée par cette photographie du développement.
+
+Les documents Work V4, brief Figma V2 et protocole adaptatif V1 ne sont pas
+retrouvés dans les sources locales et connectées accessibles ; aucune lecture
+intégrale ni validation de leurs phases n’est revendiquée. Wiki externe non
+synchronisé. Les vérifications d’accessibilité ciblées ne constituent pas un
+audit RGAA complet. Aucun gain de performance mesuré n’est revendiqué.
+
+### Dernière reprise avant CI complète
+
+La [première CI complète](https://github.com/c41m07/genesis-reborn/actions/runs/44042306526)
+sur `40cd20f` réussit le job PHP, incluant les contrôles de schéma et de sauvegarde.
+Elle est interrompue au retour en brouillon pour une dernière correction ciblée :
+un scénario de refus CSRF ouvrait encore l’ancien tiroir d’univers. Il rejoint
+maintenant la fiche dédiée, en conservant tous ses contrôles de refus et de
+non-écriture. Les alertes conditionnelles de fermeture reçoivent des couleurs
+lisibles en thème clair. Les deux parcours concernés réussissent après correction.
+Une nouvelle CI complète sur le dernier commit reste requise ; le résultat PHP
+de cette première exécution n’autorise pas la fusion de la version suivante.
+
+### Reprise du contrôle navigateur des paramètres
+
+La [CI suivante](https://github.com/c41m07/genesis-reborn/actions/runs/44044536180)
+sur `48fa0a5` valide le PHP et trois lots navigateur. Le quatrième réussit
+51 scénarios et échoue sur les dimensions d’une case à cocher : mesure native de
+13 px avant les 18 px attendus. Une autre capture du même fichier constate aussi
+le profil sélectionné avant son application par Stimulus. Le test attend désormais
+le chargement complet après redirection, puis les dimensions exactes, sans marge
+supplémentaire. La première capture vérifie aussi les cinq vitesses à ×2 au lieu
+de les journaliser seulement. Aucune assertion de sauvegarde, erreur, stock,
+permission, accessibilité ou mode natif n’est retirée. Les quatre scénarios du
+fichier réussissent localement ; le parcours de sauvegarde est également vérifié
+avec une feuille de style volontairement retardée. Aucun service métier ou CSS
+n’est modifié par cette dernière reprise. La dernière version exige sa propre
+CI complète avant fusion.
+
+### Fichiers du lot 7
+
+- `README.md`
+- `app/assets/controllers/page_sections_controller.js`
+- `app/assets/styles/admin-dashboard.css`
+- `app/src/Controller/AdminController.php`
+- `app/src/Controller/AdminGameEventController.php`
+- `app/src/Controller/AdminGuildProjectController.php`
+- `app/src/Controller/AdminWeeklyRotationController.php`
+- `app/src/Repository/AdminReadRepository.php`
+- `app/src/Service/Admin/CatalogBalanceService.php`
+- `app/src/Service/Boost/WeeklyRotationService.php`
+- `app/templates/admin/_catalogue_form.html.twig`
+- `app/templates/admin/_list_pagination.html.twig`
+- `app/templates/admin/_navigation.html.twig`
+- `app/templates/admin/_page_navigation.html.twig`
+- `app/templates/admin/_universe_creation.html.twig`
+- `app/templates/admin/_universe_settings.html.twig`
+- `app/templates/admin/catalogue.html.twig`
+- `app/templates/admin/event_form.html.twig`
+- `app/templates/admin/events.html.twig`
+- `app/templates/admin/guild_project_list.html.twig`
+- `app/templates/admin/guild_projects.html.twig`
+- `app/templates/admin/layout.html.twig`
+- `app/templates/admin/sections/universes.html.twig`
+- `app/templates/admin/universe_manage.html.twig`
+- `app/templates/admin/universe_new.html.twig`
+- `app/templates/admin/weekly_rotation_form.html.twig`
+- `app/templates/admin/weekly_rotations.html.twig`
+- `app/tests/Controller/AdminDedicatedPagesTest.php`
+- `app/tests/Controller/CatalogBalanceControllerTest.php`
+- `app/tests/Integration/WeeklyRotationTest.php`
+- `app/tests/browser/access-denied-validation-gates.spec.mjs`
+- `app/tests/browser/admin-catalogue.spec.mjs`
+- `app/tests/browser/admin-event-wizard.spec.mjs`
+- `app/tests/browser/admin-events-responsive.spec.mjs`
+- `app/tests/browser/admin-pages.spec.mjs`
+- `app/tests/browser/catalogue-inventory.spec.mjs`
+- `app/tests/browser/guild-projects.spec.mjs`
+- `app/tests/browser/universe-colonies-ui.spec.mjs`
+- `app/tests/browser/universe-settings-ui.spec.mjs`
+- `docs/ARCHITECTURE.md`
+- `docs/DECISIONS.md`
+- `docs/FEUILLE_DE_ROUTE.md`
+- `docs/NAVIGATION_PAGES_DEDIEES.md`
+- `docs/PARCOURS_UI_UX.md`
+- `docs/REFONTE_ADMINISTRATION.md`
+- `docs/REGLES.md`

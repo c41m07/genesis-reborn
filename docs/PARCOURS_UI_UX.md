@@ -177,3 +177,14 @@ avec navigation commune et états actifs jusque dans les fiches. Le panneau sous
 les ressources garde son fonctionnement actuel. Les listes sont paginées et les
 ancres utiles aux périodes restent locales au document. Les liens vers les activités
 d’un défi et l’inventaire sont conservés. [Recette](NAVIGATION_PAGES_DEDIEES.md).
+
+## Administration : listes et formulaires dédiés
+
+Univers → liste → création ou gestion d’un univers (calendrier et configuration).
+Catalogue d’un univers → famille ou recherche transversale → modification d’une
+entrée. Événements → liste → assistant guidé ou formulaire avancé ; les événements
+ordinaires possèdent une page d’édition. Projets de guilde et rotations → liste
+des modèles → création ou modification. Le fil d’Ariane et la navigation de
+rubrique gardent le contexte. Sans JavaScript, ces parcours restent des liens
+et formulaires natifs. Les anciennes ancres disposent de liens équivalents ;
+avec JavaScript, elles ouvrent directement la fiche correspondante.

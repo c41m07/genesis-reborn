@@ -6,7 +6,7 @@ import { runIsolatedSql, queryIsolatedSql } from './support/game-fixtures.mjs';
 async function enter(page, admin = false) {
   const id = crypto.randomUUID().slice(0, 8);
   const email = `inventory-${id}@example.test`;
-  const password = 'Browser-test-2026!';
+  const password = crypto.randomUUID() + 'aA1!';
   await page.goto('/inscription');
   await page.getByLabel('Adresse email').fill(email);
   await page.getByLabel('Nom de commandant').fill(`Inventory-${id}`);
@@ -25,49 +25,38 @@ async function enter(page, admin = false) {
   return email;
 }
 
-test('Catalogue admin : recherche, famille, état vide et saisie non perdue', async ({ page, browser }, testInfo) => {
+test('Catalogue admin : familles dédiées, recherche transversale et lecture sans JS', async ({ page, browser }, testInfo) => {
   await enter(page, true);
   const universeId = queryIsolatedSql(process.env.BROWSER_ROUTER, 'SELECT id FROM universe ORDER BY id LIMIT 1');
   const route = `/admin/universes/${Number(universeId)}/catalogue`;
   await page.goto(route);
-  const tools = page.getByRole('search', { name: 'Rechercher dans les catalogues' });
-  await expect(tools).toBeVisible();
-  const entries = page.locator('details[data-admin-filter-target="row"]');
-  const total = await entries.count();
-  expect(total).toBeGreaterThan(4);
-  const first = entries.first();
-  const family = await first.getAttribute('data-filter-group');
-  const slug = (await first.getAttribute('id')).slice(family.length + 1);
-  await first.locator('summary').click();
-  const input = first.locator('input[type="number"]').first();
-  const draft = String(Number(await input.inputValue()) + 1);
-  await input.fill(draft);
-  await tools.getByLabel('Rechercher une entrée').fill('zz-sans-résultat');
-  await expect(page.locator('details[data-admin-filter-target="row"]:visible')).toHaveCount(0);
-  await expect(page.getByText('Aucune entrée ne correspond à ces filtres.', { exact: false })).toBeVisible();
-  await expect(page.locator('.catalogue-family-nav a:visible')).toHaveCount(0);
-  await tools.getByRole('button', { name: 'Effacer les filtres' }).click();
-  await expect(tools.getByLabel('Rechercher une entrée')).toBeFocused();
-  await expect(page.locator('details[data-admin-filter-target="row"]:visible')).toHaveCount(total);
-  await expect(input).toHaveValue(draft);
-  await tools.getByLabel('Famille', { exact: true }).selectOption('ships');
-  const ships = await entries.filter({ has: page.locator('summary') }).evaluateAll(nodes => nodes.filter(node => node.dataset.filterGroup === 'ships').length);
-  await expect(page.locator('details[data-admin-filter-target="row"]:visible')).toHaveCount(ships);
-  await tools.getByLabel('Famille', { exact: true }).selectOption(family);
-  await tools.getByLabel('Rechercher une entrée').fill(slug);
-  await expect(page.locator('details[data-admin-filter-target="row"]:visible')).toHaveCount(1);
-  for (const width of [1920, 1440, 1280, 768, 390]) {
-    await page.setViewportSize({ width, height: 900 });
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-    if (width === 1440) await page.screenshot({ path: testInfo.outputPath('catalogue-open-1440.png'), fullPage: true, animations: 'disabled' });
+  await expect(page.getByRole('heading', {name:'Bâtiments',exact:true})).toBeVisible();
+  await expect(page.locator('input[name^="values["]')).toHaveCount(0);
+  const families = page.getByRole('navigation', {name:'Familles de catalogues'});
+  await families.getByRole('link', {name:'Vaisseaux',exact:true}).click();
+  await expect(page).toHaveURL(new RegExp(route + '/ships$'));
+  await expect(families.getByRole('link', {name:'Vaisseaux',exact:true})).toHaveAttribute('aria-current','page');
+  const query=page.getByLabel('Rechercher dans toutes les familles');
+  await query.fill('zz-sans-résultat');await page.getByRole('button',{name:'Rechercher',exact:true}).click();
+  await expect(page.getByText('Aucune entrée ne correspond à cette recherche.')).toBeVisible();
+  await query.fill('fighter');await page.getByRole('button',{name:'Rechercher',exact:true}).click();
+  await expect(page.getByRole('link',{name:/^Modifier /})).toHaveCount(3);
+  const edit=page.locator(`a[href="${route}/ships/fighter"]`);await expect(edit).toHaveCount(1);
+  await edit.focus();await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(new RegExp(route + '/ships/fighter$'));
+  const input=page.locator('input[name="values[precision]"]');
+  await input.fill('83');await page.waitForTimeout(1100);await expect(input).toHaveValue('83');
+  for (const width of [1920,1440,1280,768,390]) {
+    await page.setViewportSize({width,height:900});
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    if ([1440,390].includes(width)) await page.screenshot({path:testInfo.outputPath(`catalogue-edit-${width}.png`),fullPage:true,animations:'disabled'});
   }
-  await first.locator('summary').click();
-  await page.screenshot({ path: testInfo.outputPath('catalogue-filter-390.png'), fullPage: true, animations: 'disabled' });
-  const context = await browser.newContext({ javaScriptEnabled: false, storageState: await page.context().storageState() });
-  const fallback = await context.newPage();
-  await fallback.goto(route);
-  await expect(fallback.locator('.catalogue-search')).toBeHidden();
-  await expect(fallback.locator('details[data-admin-filter-target="row"]:visible')).toHaveCount(total);
+  const context=await browser.newContext({javaScriptEnabled:false,storageState:await page.context().storageState()});
+  const fallback=await context.newPage();await fallback.goto(route);
+  await fallback.getByLabel('Rechercher dans toutes les familles').fill('fighter');await fallback.getByRole('button',{name:'Rechercher',exact:true}).click();
+  await expect(fallback.getByRole('link',{name:/^Modifier /})).toHaveCount(3);
+  await fallback.locator(`a[href="${route}/ships/fighter"]`).click();
+  await expect(fallback.locator('input[name="values[precision]"]')).toBeVisible();
   await context.close();
 });
 

@@ -123,7 +123,8 @@ test('Refus administrateur : jeton invalide expliqué et retour à la console', 
   const card = page.locator('.admin-universe-card').first();
   const id = Number((await card.getAttribute('id')).replace('admin-universe-', ''));
   const original = queryIsolatedSql(process.env.BROWSER_ROUTER, `SELECT game_settings FROM universe WHERE id=${id}`);
-  await card.locator('.admin-universe-settings>summary').click();
+  await page.goto(`/admin/universes/${id}/gerer`);
+  await expect(card.locator('.admin-universe-settings')).toBeVisible();
   const form = card.locator('form[action$="/settings"]');
   await form.evaluate(element => { element.noValidate = true; element.querySelector('input[name=_token]').value = 'invalid'; });
   await form.getByRole('button', { name: 'Enregistrer les règles' }).click();

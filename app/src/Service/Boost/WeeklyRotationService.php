@@ -23,6 +23,22 @@ final class WeeklyRotationService
 
     public function create(Player $actor,Universe $universe,array $input): string
     {
+        return $this->saveModel($actor, $universe, $input);
+    }
+
+    public function update(Player $actor, Universe $universe, string $key, array $input, string $version): void
+    {
+        $this->saveModel($actor, $universe, $input, $key, $version);
+    }
+
+    /** Empreinte du modèle affiché, sans colonne ou version persistée supplémentaire. */
+    public function version(array $definition): string
+    {
+        return hash('sha256', json_encode($definition, JSON_THROW_ON_ERROR));
+    }
+
+    private function saveModel(Player $actor, Universe $universe, array $input, ?string $key = null, string $version = ''): string
+    {
         $name=trim((string)($input['name'] ?? ''));$description=trim((string)($input['description'] ?? ''));
         $objective=(string)($input['objective'] ?? '');$format=(string)($input['format'] ?? '');$mode=(string)($input['reward_mode'] ?? '');
         if ($name==='' || mb_strlen($name)>120 || mb_strlen($description)>2000) throw new \DomainException('Nom obligatoire (120 caractères maximum), description limitée à 2 000 caractères.');
@@ -34,17 +50,31 @@ final class WeeklyRotationService
         if ($mode==='threshold' && $threshold===null) throw new \DomainException('Le mode seuil nécessite un seuil individuel.');
         if ($objective==='exploration' && (($goal!==null && floor($goal)!==$goal) || ($threshold!==null && floor($threshold)!==$threshold))) throw new \DomainException('Les découvertes utilisent des objectifs et seuils entiers.');
         $reason=$this->reason((string)($input['reason'] ?? ''));
-        return $this->manager->transaction(function () use ($actor,$universe,$input,$name,$description,$objective,$format,$mode,$hours,$goal,$threshold,$reason): string {
+        return $this->manager->transaction(function () use ($actor,$universe,$input,$name,$description,$objective,$format,$mode,$hours,$goal,$threshold,$reason,$key,$version): string {
             $this->authorize($actor);$this->manager->lock($universe);
             if ($universe->status!=='active') throw new \DomainException('Choisissez un univers ouvert.');
             $definitions=$this->definitions($universe);
-            if (count($definitions)>=30) throw new \DomainException('Trente modèles au maximum par univers.');
-            $key='rotation-'.bin2hex(random_bytes(8));
+            $index = null;
+            $before = null;
+            if ($key !== null) {
+                foreach ($definitions as $position => $existing) {
+                    if ($existing['key'] === $key) { $index = $position; $before = $existing; break; }
+                }
+                if ($before === null) throw new \DomainException('Modèle de rotation introuvable dans cet univers.');
+                // Vérifier sous le verrou : une édition ou activation intervenue depuis l’ouverture invalide la fiche.
+                if (!hash_equals($this->version($before), $version)) throw new \DomainException('Ce modèle a changé. Rechargez sa fiche avant de réessayer.');
+            } else {
+                if (count($definitions)>=30) throw new \DomainException('Trente modèles au maximum par univers.');
+                $key='rotation-'.bin2hex(random_bytes(8));
+            }
             $definition=['key'=>$key,'name'=>$name,'description'=>$description,'objective'=>$objective,'format'=>$format,'reward_mode'=>$mode,
                 'contribution_metric'=>AdminEventPlanner::OBJECTIVES[$objective]['metric'],'duration_seconds'=>(int)round($hours*3600),
                 'global_goal'=>$goal,'threshold_value'=>$threshold,'enabled'=>!empty($input['enabled'])];
-            $definitions[]=$definition;$universe->gameSettings['weekly_rotations']=$definitions;
-            $this->audit($actor,'weekly_rotation_created','universe',$universe->id,['reason'=>$reason,'definition'=>$definition]);
+            if ($index === null) $definitions[] = $definition;
+            else $definitions[$index] = array_replace($before, $definition);
+            // Les occurrences ont leur propre configuration figée ; seul le modèle des futures semaines est écrit.
+            $universe->gameSettings['weekly_rotations']=$definitions;
+            $this->audit($actor,$before === null ? 'weekly_rotation_created' : 'weekly_rotation_updated','universe',$universe->id,['reason'=>$reason,'before'=>$before,'definition'=>$definition]);
             return $key;
         });
     }
