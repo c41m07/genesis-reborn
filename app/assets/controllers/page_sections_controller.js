@@ -2,7 +2,7 @@ import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
     connect() {
-        if (['guilde', 'diplomatie', 'flottes', 'inventaire', 'profil', 'preferences', 'projets'].includes(this.element.dataset.uiPage)) {
+        if (['guilde', 'diplomatie', 'flottes', 'inventaire', 'profil', 'preferences', 'projets', 'evenements'].includes(this.element.dataset.uiPage)) {
             // Un changement de fragment peut conserver le document et ne reconnecte pas Stimulus.
             this.onHashChange = () => this.redirectLegacyFragment();
             window.addEventListener('hashchange', this.onHashChange);
@@ -34,6 +34,11 @@ export default class extends Controller {
 
     redirectLegacyFragment() {
         // Les anciens liens d’un écran composite gardent une destination après la séparation.
+        if (this.element.dataset.uiPage === 'evenements' && window.location.pathname === '/evenements' && window.location.hash === '#page-section-0') {
+            // Le premier titre sans identifiant de l’ancien écran était celui des défis.
+            window.location.replace('/evenements/defis' + window.location.search + '#challenges-list');
+            return true;
+        }
         if (['guilde', 'diplomatie'].includes(this.element.dataset.uiPage)) {
             const destinations = {
                 '#guild-management': '/guildes/gestion', '#guild-management-title': '/guildes/gestion',

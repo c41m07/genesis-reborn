@@ -208,6 +208,8 @@ final class TransportTest extends WebTestCase
 
     public function testReportsArePrivateAndAdminHistoryRequiresAdminRole(): void
     {
+        // Garder l’horloge simulée entre les requêtes évite de basculer vers la date réelle et d’expirer la session.
+        $this->client->disableReboot();
         $fleet = $this->send();$this->arrive($fleet);
         $id = $this->em->getRepository(TransportReport::class)->findOneBy(['fleet' => $fleet])->id;
         $this->client->loginUser($this->sender);

@@ -46,12 +46,10 @@ test('Événements : périodes, portée et contenu visible au joueur', async ({ 
   await join(page);
   await page.goto('/evenements');
   await expect(page.locator('.event-card')).toHaveCount(0);
-  if (await page.locator('.challenge-list li').count()) {
-    await expect(page.getByRole('heading', { name: 'Défis et rotations hebdomadaires' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Aucun événement annoncé' })).toHaveCount(0);
-  } else {
-    await expect(page.getByRole('heading', { name: 'Aucun événement annoncé' })).toBeVisible();
-  }
+  await expect(page.getByRole('heading', { name: 'Événements et bonus', exact: true })).toBeVisible();
+  await expect(page.locator('.event-list')).toContainText('Aucun événement en cours dans cet univers.');
+  await expect(page.locator('.event-list')).toContainText('Aucun événement à venir annoncé.');
+  await expect(page.getByRole('navigation', { name: 'Navigation des événements', exact: true }).getByRole('link', { name: 'Défis et rotations', exact: true })).toHaveAttribute('href', '/evenements/defis');
   const project = process.env.BROWSER_ROUTER;
   const universeId = Number(queryIsolatedSql(project, `SELECT pu.universe_id FROM player_universe pu JOIN player p ON p.id=pu.player_id WHERE p.email=${quote(email)}`));
   const otherId = Number(queryIsolatedSql(project, `SELECT id FROM universe WHERE id<>${universeId} LIMIT 1`));

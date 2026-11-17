@@ -3,7 +3,10 @@
 namespace App\Repository;
 
 use App\Entity\{Player, PlayerUniverse, Universe, Galaxy, SolarSystem, Planet, PlanetResource, PlanetBuilding, PlayerTechnology, Fleet, FleetShip, PlayerDiscovery, QueueItem, OutboxMessage, CombatLog, CombatParticipant, PlayerBoost, BoostEvent, BoostEventContribution, GameEvent, Guild, GuildProject, GuildProjectDefinition, GuildProjectContribution};
+use Doctrine\DBAL\{ArrayParameterType, Query\QueryBuilder};
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Query\ResultSetMappingBuilder;
 
 final class GameRepository
 {
@@ -475,10 +478,92 @@ final class GameRepository
         return $this->em->getRepository(\App\Entity\PasswordResetToken::class)->createQueryBuilder('t')->where('t.tokenHash = :hash')->setParameter('hash', $hash)->getQuery()->setLockMode(\Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE)->setHint(\Doctrine\ORM\Query::HINT_REFRESH, true)->getOneOrNullResult();
     }
 
-    /** @return list<GameEvent> */
+    /** @return list<GameEvent> Le panneau commun conserve tous les événements applicables. */
     public function visibleGameEvents(PlayerUniverse $membership, \DateTimeImmutable $now): array
     {
-        return $this->em->createQueryBuilder()->select('e')->from(GameEvent::class, 'e')->where('e.status IN (:statuses)')->andWhere('e.visibleToPlayers = true')->andWhere('e.endsAt > :now')->andWhere('(e.universe IS NULL OR e.universe = :universe)')->setParameter('statuses', ['active', 'planned'])->setParameter('now', $now)->setParameter('universe', $membership->universe)->orderBy('e.endsAt', 'ASC')->getQuery()->getResult();
+        return $this->eventEntities($this->visibleGameEventsQuery($membership, $now)->orderBy('e.ends_at', 'ASC'), GameEvent::class);
+    }
+
+    public function playerGameEventsPage(PlayerUniverse $membership, \DateTimeImmutable $now, bool $upcoming, int $page): array
+    {
+        $query = $this->visibleGameEventsQuery($membership, $now)
+            ->andWhere('NOT '.$this->nonEmptyJsonValue("JSON_EXTRACT(e.parameters, '$.challenge_id')"))
+            ->andWhere($upcoming ? 'e.starts_at > :now' : 'e.starts_at <= :now')
+            ->orderBy('e.ends_at', 'ASC')->addOrderBy('e.id', 'ASC');
+        return $this->eventPage($query, GameEvent::class, $page);
+    }
+
+    private function visibleGameEventsQuery(PlayerUniverse $membership, \DateTimeImmutable $now): QueryBuilder
+    {
+        return $this->em->getConnection()->createQueryBuilder()->from('game_event', 'e')
+            ->where('e.status IN (:statuses)')->andWhere('e.visible_to_players = 1')->andWhere('e.ends_at > :now')
+            ->andWhere('(e.universe_id IS NULL OR e.universe_id = :universe)')
+            ->setParameter('statuses', ['active', 'planned'], ArrayParameterType::STRING)
+            ->setParameter('now', $now, Types::DATETIME_IMMUTABLE)->setParameter('universe', $membership->universe->id);
+    }
+
+    public function playerChallengesPage(PlayerUniverse $membership, int $page): array
+    {
+        $query = $this->playerChallengesQuery($membership, ['scheduled', 'active', 'closed', 'cancelled'])
+            ->orderBy('e.scheduled_at', 'DESC')->addOrderBy('e.id', 'DESC');
+        return $this->eventPage($query, BoostEvent::class, $page);
+    }
+
+    /** @param list<string> $statuses @return list<BoostEvent> Le panneau garde son périmètre actuel, les listes sont bornées. */
+    public function playerChallengeEvents(PlayerUniverse $membership, array $statuses, ?int $limit = 50, bool $newestFirst = true): array
+    {
+        $direction = $newestFirst ? 'DESC' : 'ASC';
+        $query = $this->playerChallengesQuery($membership, $statuses)->orderBy('e.scheduled_at', $direction)->addOrderBy('e.id', $direction);
+        if ($limit !== null) $query->setMaxResults(max(1, min(50, $limit)));
+        return $this->eventEntities($query, BoostEvent::class);
+    }
+
+    private function playerChallengesQuery(PlayerUniverse $membership, array $statuses): QueryBuilder
+    {
+        return $this->em->getConnection()->createQueryBuilder()->from('boost_event', 'e')
+            ->where('e.universe_id = :universe')->andWhere('e.status IN (:statuses)')
+            ->andWhere('(e.configuration IS NULL OR e.configuration NOT LIKE :archived)')
+            ->andWhere('('.$this->nonEmptyJsonValue("JSON_EXTRACT(e.configuration, '$.guided')").' OR BINARY e.event_key LIKE :weekly)')
+            ->setParameter('universe', $membership->universe->id)->setParameter('statuses', $statuses, ArrayParameterType::STRING)
+            ->setParameter('archived', '%"archived_at"%')->setParameter('weekly', 'weekly-%');
+    }
+
+    /**
+     * Reproduit !empty() sur une valeur JSON avant de compter ou paginer les résultats.
+     * Les expressions proviennent exclusivement de colonnes et chemins constants, jamais de saisies.
+     */
+    private function nonEmptyJsonValue(string $value): string
+    {
+        return "($value IS NOT NULL AND NOT (JSON_TYPE($value) = 'NULL'"
+            ." OR (JSON_TYPE($value) IN ('INTEGER', 'DOUBLE') AND $value + 0 = 0)"
+            ." OR (JSON_TYPE($value) = 'BOOLEAN' AND $value = 'false')"
+            ." OR (JSON_TYPE($value) = 'STRING' AND BINARY JSON_UNQUOTE($value) IN ('', '0'))"
+            ." OR (JSON_TYPE($value) IN ('ARRAY', 'OBJECT') AND JSON_LENGTH($value) = 0)))";
+    }
+
+    /** @param class-string $class */
+    private function eventPage(QueryBuilder $query, string $class, int $page): array
+    {
+        $total = (int) (clone $query)->select('COUNT(*)')->resetOrderBy()->executeQuery()->fetchOne();
+        $pages = max(1, (int) ceil($total / 25));
+        $page = min($pages, max(1, $page));
+        return ['rows' => $this->eventEntities($query->setFirstResult(($page - 1) * 25)->setMaxResults(25), $class),
+            'total' => $total, 'page' => $page, 'pages' => $pages];
+    }
+
+    /**
+     * @template T of object
+     * @param class-string<T> $class
+     * @return list<T>
+     */
+    private function eventEntities(QueryBuilder $query, string $class): array
+    {
+        // Le mapping Doctrine conserve les types JSON, dates et associations sans seconde lecture non filtrée.
+        $mapping = new ResultSetMappingBuilder($this->em);
+        $mapping->addRootEntityFromClassMetadata($class, 'e');
+        $native = $this->em->createNativeQuery($query->select('e.*')->getSQL(), $mapping);
+        foreach ($query->getParameters() as $name => $value) $native->setParameter($name, $value, $query->getParameterTypes()[$name] ?? null);
+        return $native->getResult();
     }
 
     public function transportReportsFor(?PlayerUniverse $membership, int $page = 1): array

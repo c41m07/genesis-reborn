@@ -668,3 +668,10 @@ paginées par 25, avec lectures regroupées des dons personnels et des récompen
 Les anciennes ancres sont orientées vers leur page lorsque JavaScript est disponible ;
 les liens serveur fonctionnent aussi sans JavaScript. Les droits et règles de dons
 et de récompenses restent inchangés.
+
+Le lot Événements garde `/evenements` comme entrée **Événements et bonus** et
+place **Défis et rotations** sur `/evenements/defis`. Les fiches de défi gardent
+leurs adresses et leurs objectifs. Les événements en cours et à venir disposent
+chacun de leur pagination ; les défis sont également présentés par pages de 25.
+Le panneau commun conserve ses informations et son compteur. Aucune règle de
+production, de contribution ou de récompense ne change. [Bilan de navigation](docs/NAVIGATION_PAGES_DEDIEES.md).

@@ -146,7 +146,7 @@ test('Rotations : créer, activer, suivre depuis son univers et annuler sans rec
       await page.screenshot({path:testInfo.outputPath(`weekly-panel-${theme}-${width}.png`),fullPage:true});await page.keyboard.press('Escape');await expect(summary).toBeFocused();await expect(drawer).not.toHaveAttribute('open','');
     }
   }
-  await page.goto('/evenements');await expect(page.locator('main').getByRole('link',{name,exact:true})).toBeVisible();
+  await page.goto('/evenements/defis');await expect(page.locator('main').getByRole('link',{name,exact:true})).toBeVisible();
   expect(await post(page,`/admin/rotations/occurrences/${id}/annuler`,{_token:'invalid',confirmed:'1',reason:'Interdit'})).toBe(403);
   await page.goto(`/admin/defis/${id}`);const cancel=page.locator('form[action$="/annuler"]');const data=await cancel.evaluate(f=>Object.fromEntries(new FormData(f)));
   await post(page,`/admin/rotations/occurrences/${id}/annuler`,{...data,reason:'Sans confirmation'});expect(queryIsolatedSql(project,`SELECT status FROM boost_event WHERE id=${id}`)).toBe('active');

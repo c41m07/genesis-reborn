@@ -1,7 +1,9 @@
 {% extends 'base.html.twig' %}
-{% block title %}{{ challenge.name }} · Événement{% endblock %}
+{% block title %}{{ challenge.name }} · Défis et rotations · Genesis Reborn{% endblock %}
 {% block body %}
-<a class="inline-link" href="{{ path('app_game_events') }}">← Événements</a><div class="page-heading"><div><h1>{{ challenge.name }}</h1><p>{{ challenge.weekly ? 'Rotation hebdomadaire' : 'Défi collectif' }}.</p></div></div>
+<div class="page-refinement events-space" data-page-sections="disabled">
+<a class="inline-link" href="{{ path('app_game_challenges') }}">← Retour aux défis</a><div class="page-heading"><div><h1>{{ challenge.name }}</h1><p>{{ challenge.weekly ? 'Rotation hebdomadaire' : 'Défi collectif' }}.</p></div></div>
+{% include 'ui/event_navigation.html.twig' %}
 <section class="panel collective-challenge"><h2>Objectif et récompense</h2>{% include 'events/_challenge_summary.html.twig' %}{% if challenge.event.status=='active' %}
 {% if challenge.event.templateKey=='exploration' %}<a class="primary" href="{{ path('app_map_v2') }}">Explorer des systèmes inconnus</a>
 {% elseif challenge.event.templateKey=='combat' %}<a class="primary" href="{{ path('app_map_v2') }}">Choisir une cible de combat</a>
@@ -12,4 +14,5 @@
 {% elseif challenge.event.status=='cancelled' %}<p>Ce défi a été annulé. Aucune nouvelle récompense n’est attribuée.</p>
 {% elseif challenge.event.status=='closed' %}<p>{{ (challenge.guided or challenge.event.rewardMode=='top3') and not challenge.goal_reached ? 'L’objectif collectif n’a pas été atteint.' : 'Vous n’avez pas rempli les conditions de contribution de ce défi.' }}</p>
 {% else %}<p>Les contributions sont comptées pendant le défi. La récompense éventuelle sera attribuée à sa clôture.</p>{% endif %}</section>
+</div>
 {% endblock %}

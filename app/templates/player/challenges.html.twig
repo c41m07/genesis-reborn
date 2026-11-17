@@ -1,0 +1,24 @@
+{% extends 'base.html.twig' %}
+{% block title %}Défis et rotations · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="page-refinement events-space" data-page-sections="disabled">
+<div class="page-heading"><div><h1>Défis et rotations</h1><p>Objectifs collectifs, rotations hebdomadaires et derniers bilans dans <strong>{{ membership.universe.name }}</strong>. Horaires : {{ preferences.timezone }}.</p></div><a class="secondary" href="{{ path('app_game_events') }}">Voir les événements et bonus</a></div>
+{% include 'ui/event_navigation.html.twig' %}
+<section id="challenges-list" aria-label="Défis et rotations annoncés" tabindex="-1">
+<div class="event-challenge-grid">
+{% for challenge in listing.rows %}
+<article class="panel event-card" aria-labelledby="challenge-{{ challenge.event.id }}-title">
+<div class="event-meta"><span class="badge">{{ challenge.status_label }}</span><span class="muted">{{ challenge.weekly ? 'Rotation hebdomadaire' : 'Défi collectif' }}</span></div>
+<h2 id="challenge-{{ challenge.event.id }}-title"><a href="{{ path('app_challenge',{id:challenge.event.id}) }}">{{ challenge.name }}</a></h2>
+<p>{{ challenge.objective.label }}</p>
+<dl class="event-period"><div><dt>Début prévu</dt><dd><time datetime="{{ challenge.event.scheduledAt|date('c') }}">{{ challenge.event.scheduledAt|date('d/m/Y à H:i',preferences.timezone) }}</time></dd></div><div><dt>Fin prévue</dt><dd><time datetime="{{ challenge.expected_end|date('c') }}">{{ challenge.expected_end|date('d/m/Y à H:i',preferences.timezone) }}</time></dd></div></dl>
+{% if challenge.goal %}<p>Progression collective : {{ challenge.event.totalContribution|quantity(2) }} / {{ challenge.goal|quantity(2) }}</p><progress class="challenge-progress" max="100" value="{{ challenge.progress }}" aria-label="Progression de {{ challenge.name }}">{{ challenge.progress|number_format(0) }} %</progress>{% else %}<p>Contribution collective : {{ challenge.event.totalContribution|quantity(2) }}.</p>{% endif %}
+<p>Récompense annoncée : {{ challenge.reward_label }}.</p>
+<a class="secondary" href="{{ path('app_challenge',{id:challenge.event.id}) }}">Consulter l’objectif et les récompenses<span class="visually-hidden"> : {{ challenge.name }}</span></a>
+</article>
+{% else %}<div class="panel"><p>Aucun défi ou rotation annoncé dans cet univers.</p><a href="{{ path('app_game_events') }}">Consulter les événements et bonus</a></div>{% endfor %}
+</div>
+{% include 'ui/event_pagination.html.twig' with {pagination:listing,pageParameter:'page',fragment:'challenges-list',paginationLabel:'Pagination des défis et rotations'} %}
+</section>
+</div>
+{% endblock %}

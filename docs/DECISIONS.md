@@ -1864,3 +1864,12 @@ les fiches. La consultation est paginée par 25 sans limite métier sur les hist
 Les formulaires, permissions, versions, transactions, minimums, dons définitifs
 et récompenses compte/modèle conservent leurs règles. Les anciens fragments sont
 orientés côté navigateur ; sans JavaScript, la navigation serveur reste utilisable.
+
+
+### Navigation des événements — 17 novembre 2026
+
+Événements ouvre Événements et bonus. Défis et rotations possède sa page dédiée,
+reliée aux fiches existantes. Les listes sont paginées sans changer la conservation
+des occurrences ni leur accès. Le panneau sous les ressources garde son contenu,
+son compteur visible fermé et ses liens de détail. Les dates, objectifs, critères
+de contribution, effets et attributions de récompenses ne changent pas.

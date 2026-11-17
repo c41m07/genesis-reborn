@@ -682,3 +682,35 @@ fragments de liste à l’ouverture et au changement de fragment, en conservant 
 recherche ; les liens serveur restent disponibles sans JavaScript. Les ancres
 internes d’une fiche restent utilisables. Aucune migration ou mesure comparative
 de performance ; voir le [bilan du lot 5](NAVIGATION_PAGES_DEDIEES.md).
+
+
+## Pages Événements et Défis — 17 novembre 2026
+
+`GameEventsController` sépare `/evenements` et `/evenements/defis`. La première
+page prépare les annonces et bonus en cours ou à venir ; la seconde utilise
+`ChallengeQueryService::playerPage`. Les fiches de `ChallengeController` gardent
+leurs routes, contrôles d’univers, progression, classement et récompenses.
+
+Les critères de lecture communs sont dans `GameRepository`. Les prédicats JSON
+équivalents à `!empty()` et le préfixe hebdomadaire sensible à la casse sont
+appliqués avant comptage et pagination, sans charger des occurrences hors du
+parcours pour les rejeter ensuite. Le mapping natif Doctrine conserve dates,
+JSON et associations sur la même requête filtrée. Les tests comparent les valeurs
+JSON nulles, fausses, nulles numériquement, vides et non vides à leur lecture PHP.
+Aucune expression SQL ne vient d’une saisie utilisateur.
+
+Les deux groupes d’annonces sont paginés séparément par 25, avec `current_page`
+et `upcoming_page` conservés dans les liens. Les défis utilisent `page` et un
+ordre date/identifiant stable. Les lignes closes ou annulées restent consultables
+sur les pages suivantes. Les exclusions d’archivage restent celles des listes
+actuelles ; une ancienne fiche archivée reste accessible selon ses droits existants.
+`ChallengeQueryService::view` garde les calculs métier et lectures personnelles.
+
+`EventPanelService` réutilise les mêmes critères, sans changer son périmètre
+commun : annonces/bonus applicables et occurrences en cours ou programmées.
+Il conserve toutes ses informations, son compteur fermé et ses comptes à rebours ;
+il ne charge aucun historique de défis. Les pages n’ajoutent pas de sondage.
+L’ancien fragment `#page-section-0` du sommaire des défis est orienté côté navigateur
+vers la nouvelle liste. `#events-current` et `#events-upcoming` restent sur le
+document des annonces ; les nouveaux écrans désactivent le sommaire automatique.
+Voir [la recette et les limites](NAVIGATION_PAGES_DEDIEES.md).
