@@ -244,6 +244,15 @@ changement explicite d’étape ; la connexion du contrôleur ne prend pas le fo
 Le devis reste sous `fleet-preview`, avec son blocage d’envoi existant. Aucune
 lecture, validation ou transaction de Flottes n’est changée.
 
+L2B étend `.fleet-redesign` aux orbites, au quai et à la reprise ;
+`fleet-harbour.css` limite leur composition à `.fleet-harbour`. La réserve reste
+distincte des unités à quai et des stationnements de tout l’empire, sans lecture
+supplémentaire ni agrégation métier. Les formulaires GET de devis et POST de
+confirmation gardent leurs contrats. Les demandes ne sont plus dans un dépliable ;
+`orbit-requests` actualise leur compteur indépendamment du target `details`, qui
+reste accepté pour les anciennes vues. Les garde-fous de focus, d’échéance et
+de contexte restent ceux du contrôleur et des services existants.
+
 Les actualisations des colonies et de Flottes demandent JSON avec `X-Genesis-Live: 1` et
 `Accept: application/json`. La route conserve ses contrôles, synchronisations
 et préparation GameShell, puis renvoie les fragments privés sans cache.

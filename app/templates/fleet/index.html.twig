@@ -3,7 +3,7 @@
 {% block title %}{{ pageTitle }} · Genesis Reborn{% endblock %}
 {% block incoming_fleets %}{% endblock %}
 {% block body %}
-<div class="fleet-page-layout fleet-space{{ fleet_page in ['missions','prepare'] ? ' fleet-redesign' : '' }}" data-page-sections="disabled" data-fleet-colony="{{ fleet_planet ? fleet_planet.id : 0 }}" data-controller="colony-live" data-colony-live-url-value="{{ path(app.request.attributes.get('_route')) }}">
+<div class="fleet-page-layout fleet-space fleet-redesign{{ fleet_page in ['orbits','holds'] ? ' fleet-harbour' : '' }}" data-page-sections="disabled" data-fleet-colony="{{ fleet_planet ? fleet_planet.id : 0 }}" data-controller="colony-live" data-colony-live-url-value="{{ path(app.request.attributes.get('_route')) }}">
 <div class="page-heading"><div><h1>{{ pageTitle }}</h1>{% if fleet_planet %}<p class="muted fleet-colony-scope">Colonie active : {{ fleet_planet.name }} · {{ fleet_planet.coordinates() }}</p>{% endif %}</div>{% if fleet_page=='missions' %}<a class="primary" href="{{ path('app_fleet_prepare') }}">Nouvelle mission</a>{% endif %}</div>
 {% include 'fleet/_counts.html.twig' %}
 {% if fleet_page=='prepare' %}

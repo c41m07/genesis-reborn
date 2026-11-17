@@ -204,3 +204,18 @@ erreurs ciblent toujours le champ concerné. Une actualisation ne prend pas le
 focus. Le menu mobile reprend `space-navigation-menu` et ses liens serveur ;
 sans JavaScript, le menu et les trois étapes restent lisibles. Les confirmations
 et états de blocage de devis conservent leurs contrôleurs existants.
+
+### Orbites, quai et reprise — composition A validée pour L2B
+
+`fleet-harbour.css` étend le socle L2A à ces trois destinations. Les demandes
+sont visibles sans ouverture préalable ; origine/statut et échéance/actions
+occupent deux colonnes sur grand écran, puis une sur mobile. Le compteur garde
+son actualisation même sans dépliable. Aucune réponse n’est présentée lorsque
+le serveur ne l’autorise plus.
+
+Le quai place les unités et la réserve côte à côte sur ordinateur. Les
+stationnements en attente gardent une section large portant « tout l’empire » ;
+leurs détails restent dépliables. En l’absence de réserve, les unités reprennent
+la largeur disponible. La reprise garde choix et devis sur deux colonnes, puis
+les empile sur petit écran. Le calcul ne soumet pas la confirmation ; erreurs,
+versions, liens serveur et formulaires sans JavaScript sont conservés.

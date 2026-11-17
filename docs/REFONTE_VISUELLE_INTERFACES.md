@@ -749,10 +749,10 @@ et le déploiement restent distincts.
 
 ## L2B — orbites, quai et reprise de stationnement
 
-Deux propositions prêtes dans le même document Figcraft, sans code L2B modifié :
+Deux propositions conservées dans le même document Figcraft :
 **10 · L2B · A — Suivi en lignes** et **11 · L2B · B — Opérations en cartes**.
-L2A A est enregistré dans `ff6c324` ; sa validation ne vaut pas choix de L2B.
-Conception **4/5**, réalisation à venir **5/5**.
+L’utilisateur a choisi **A** (« j’aime bien le A ») pour les trois pages L2B.
+La validation est enregistrée dans Figcraft. Conception **4/5**, réalisation **5/5**.
 
 Sources examinées : `FleetPageView`, `OrbitRequestView`, `FleetStationingController`,
 `FleetStationing` et `FleetHold` pour leurs actions et erreurs ; templates
@@ -821,6 +821,68 @@ Après choix : réponses orbitales, contextes/délais, déchargement partiel, de
 périmé, origine perdue, accès refusés, formulaires sans JavaScript, focus et
 actualisation ; recette responsive/thèmes et contrôles Make adaptés.
 
+### Réalisation A et contrôles locaux
+
+Les trois pages réutilisent le socle `.fleet-redesign` de L2A et le menu natif,
+avec `fleet-harbour.css` limité à `.fleet-harbour`. Les demandes sont directement
+lisibles ; `orbit-requests` actualise le compteur indépendamment du target
+optionnel `details`, conservé pour les anciennes vues. La protection de focus et
+le nettoyage des écouteurs/minuteries restent inchangés.
+
+Au quai, unités et réserve sont côte à côte sur grand écran ; sans réserve, les
+unités reprennent la largeur disponible. Les stationnements de tout l’empire
+gardent une section distincte et leurs détails dépliables, même après perte de
+l’origine. Le titre et le message vide restent affichés lorsque cette liste est
+vide. La reprise rapproche choix de base et devis conditionnel, avec ses deux
+formulaires existants. Aucun service, lecture, règle, permission ou valeur de jeu
+n’est modifié. Champs, méthodes, actions et CSRF ont été comparés avant/après :
+identiques pour demandes, déchargement et reprise.
+
+Contrôles réussis :
+
+- `make validate`, `make lint-static` (200 Twig, 80 YAML, PHP et conteneur),
+  `make assets`, syntaxe JavaScript et `git diff --check`.
+- PHPUnit dans une pile synthétique propre au lot : **60 tests / 471 assertions**,
+  suites `FleetStationingTest`, `OrbitDepartureRequestTest`, `OrbitRequestStateTest`
+  et `FleetDestinationTest` ; accès, stockages, versions et protections métier.
+- Premier passage navigateur : 12 succès sur 14. Le nouveau scénario utilisait
+  une réserve synthétique insuffisante pour son trajet ; elle est corrigée sans
+  changer le moteur. Le test couvre aussi explicitement le refus d’un devis avec
+  réserve nulle. L’ancien test de thème modifiait seulement `data-theme`, alors
+  que le clair charge une feuille dédiée : il applique désormais la préférence
+  et recharge réellement la page, avec les mêmes assertions Axe.
+- Reprise des deux scénarios concernés : **deux succès**. Consolidation :
+  **14 scénarios distincts réussis**, dont envois réels, ancien/neutre orbital,
+  accord clavier et retrait tactile, stationnement/déchargement, origine perdue,
+  maxima de fret, états vides, navigation et régression de L2A. Les tests qui
+  ouvraient le fret tiennent compte de son ouverture déjà validée en L2A ; leurs
+  vérifications de quantités et d’envoi sont conservées.
+- Nouvelle recette A : trois pages, deux thèmes, largeurs 320/390/768/1440 px,
+  aucun débordement ; Axe sans violation à 390 px dans `.fleet-harbour`. Origine
+  étrangère et fret privés masqués ; ancienne demande sans faux délai ; compteur
+  différé tant qu’une action garde le focus, puis passage de quatre à trois.
+- Sans JavaScript : déchargements partiels de carburant/fret avec surplus
+  conservé, accord orbital, calcul et confirmation de reprise. Autre commandant
+  refusé ; changement de colonie sans disparition des stationnements de l’empire.
+
+**24 captures réelles finales** : orbites, quai et reprise en sombre/clair à
+1440/768/390 px, plus six fenêtres mobiles. Dossiers
+`output/playwright/fleet-harbour/captures-jeu-L2B-A/` et `captures-jeu-L2B-A/`
+près du fichier Figcraft, index JSON et préfixe `jeu-L2B-A-`. Données synthétiques ;
+aucune partie habituelle modifiée, dépendance installée ou migration existante.
+CI GitHub, intégration et déploiement restent distincts. Performance non mesurée,
+lecteur d’écran réel non essayé ; ces contrôles ne constituent pas un audit RGAA.
+
+Fichiers principaux : `app/templates/fleet/{index,_dock,holds,resume}.html.twig`,
+`app/templates/ui/{fleet_navigation,orbit_requests,orbit_requests_list}.html.twig`,
+`app/assets/controllers/orbit_requests_controller.js`, style `fleet-harbour.css`
+et import dans `app/assets/app.js`. Nouveau scénario `fleet-harbour.spec.mjs` et
+adaptations ciblées des scénarios historiques. Documentation synchronisée.
+
+**Priorité suivante demandée par l’utilisateur** : finaliser la Vue générale à
+partir de sa maquette déjà validée, avant de poursuivre les compositions. Les
+propositions L2C préparées restent en attente ; leur code n’est pas commencé.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -830,13 +892,14 @@ actualisation ; recette responsive/thèmes et contrôles Make adaptés.
 | L1B | A implémentée et vérifiée localement | A choisie explicitement | Trois pages et brouillon, PHP ciblé, recette responsive et captures | CI complète et intégration distinctes |
 | L1C | A implémentée et vérifiée localement | A choisie explicitement | Quatre pages, confirmations natives, 83 PHP et recette responsive ; captures | CI complète et intégration distinctes |
 | L2A | A implémentée et vérifiée localement | A choisie explicitement | 59 tests PHP, 15 parcours navigateur consolidés et 40 captures ; bilan ci-dessus | CI complète et intégration distinctes |
-| L2B | Deux propositions Figcraft prêtes | Choix A/B attendu | 20 cadres, 178 liens, neuf pages précédentes préservées | Aucun code L2B réalisé |
+| L2B | A implémentée et vérifiée localement | A choisie explicitement | 60 tests PHP, 14 parcours navigateur consolidés et 24 captures | CI complète et intégration distinctes |
 | L2C, L3 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
 Les commits restent sur `feature/refonte-visuelle` ; L1B A est enregistré dans
 `1e390a9`, L1C A dans `1a33d14`, L2A A dans `ff6c324`. Le prochain périmètre
-L2B (orbites, quai et reprise) attend le choix A/B, puis vient L2C (compositions). Le plan
+L2B (orbites, quai et reprise) est réalisé. La Vue générale est prioritaire avant
+L2C (compositions), à la demande de l’utilisateur. Le plan
 reste à 18 ensembles : les trois premiers sont réalisés, L2 est partiellement
 réalisé. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
 Les validations précédentes restent limitées à leurs lots.

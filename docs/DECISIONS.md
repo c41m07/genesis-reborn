@@ -1979,3 +1979,17 @@ sans JavaScript. Les détails personnels utilisent un bouton explicite ; le rapp
 conserve son devis et sa confirmation. Orbites, quai et compositions attendent
 leur propre conception et validation. Aucune règle d’envoi, de carburant, de
 visibilité ou de rappel n’est modifiée. [Suivi du lot](REFONTE_VISUELLE_INTERFACES.md).
+
+## Refonte visuelle L2B : proposition A — 17 novembre 2026
+
+L’utilisateur choisit A (« j’aime bien le A ») pour Demandes d’orbite, À quai et
+stationnements, et Reprendre le stationnement. Les demandes deviennent des
+lignes directement lisibles, avec échéance et actions à droite sur grand écran.
+Au quai, unités et réserve de la colonie sont côte à côte, puis viennent les
+stationnements de tout l’empire. La reprise rapproche choix de base et devis.
+
+Les pages conservent leurs URL et le menu mobile commun. Réponses orbitales,
+carburant/fret, déchargement dans les capacités disponibles, origine perdue,
+versions et confirmation de reprise gardent leurs règles. L’ancien mode
+dépliable reste pris en charge par le contrôleur d’actualisation. Cette validation
+porte sur L2B ; les compositions attendent leur choix. [Suivi](REFONTE_VISUELLE_INTERFACES.md).

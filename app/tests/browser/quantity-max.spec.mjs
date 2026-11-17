@@ -77,7 +77,8 @@ test('Flotte et fret : Max conserve les autres champs, réserve le carburant et 
     await form.getByRole('button', { name: /Choisir la destination/ }).click();
     await form.locator('[name="mission"]').selectOption('transport');
     await form.getByLabel('Destination personnalisée', { exact: true }).check();await form.locator('[name="coordinates"]').fill(planetCoordinates(project, target));
-    await form.locator('[data-fleet-fields-target="cargo"] > summary').click();
+    const cargo = form.locator('[data-fleet-fields-target="cargo"]');
+    if (!(await cargo.evaluate(element => element.open))) await cargo.locator('summary').click();
     const metal = form.locator('[name="cargo[metal]"]'), hydrogen = form.locator('[name="cargo[hydrogen]"]');
     const hydrogenMax = form.locator('[data-fleet-quantity-target="cargoMax"][data-input-id$="-hydrogen"]');
     await expect(hydrogenMax).toBeEnabled();

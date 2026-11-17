@@ -56,3 +56,4 @@ import './styles/guild-discovery.css';
 import './styles/space-navigation-menu.css';
 import './styles/guild-control.css';
 import './styles/fleet-workspace.css';
+import './styles/fleet-harbour.css';

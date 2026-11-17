@@ -700,6 +700,13 @@ disposent d’un bouton « Composition et fret ». Le focus rejoint le titre apr
 un changement d’étape ; les retours conservent les champs. La Vue générale,
 les catalogues, les règles d’envoi et de rappel gardent leurs comportements.
 
+Le lot Flottes L2B retient également A : demandes d’orbite directement lisibles,
+échéances et réponses à droite sur ordinateur, vaisseaux et réserve côte à côte
+au quai, puis stationnements en attente de tout l’empire. La reprise rapproche
+le choix de base et le devis, avec confirmation distincte. Le menu mobile est
+commun à ces pages ; les formulaires restent utilisables sans JavaScript.
+Déchargement partiel, réserve, permissions et confidentialité restent inchangés.
+
 Le lot Projets collectifs conserve `/guildes/projets` comme entrée des projets en
 cours et ajoute `/guildes/projets/disponibles` et `/guildes/projets/historique`.
 La fiche existante reste dédiée au détail et au don. Listes et contributions sont
