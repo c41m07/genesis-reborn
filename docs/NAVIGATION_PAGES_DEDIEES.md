@@ -1036,8 +1036,11 @@ réelles bureau et mobile ont été examinées. Une reprise ciblée vérifie aus
 que la participation à l’univers sélectionné reste identique sur chaque page.
 Aucune suite complète PHP/navigateur locale n’est revendiquée.
 
-La dernière version doit réussir la CI complète avant fusion. La PR donnera
-ensuite l’état de CI, d’intégration et d’activation locale. Aucune migration de base existante ni livraison Alpha dans ce lot.
+La dernière version doit réussir la CI complète avant fusion. La
+[PR #84](https://github.com/c41m07/genesis-reborn/pull/84) donnera ensuite l’état
+de CI, d’intégration et d’activation locale. Les deux scénarios de contenu et de
+compatibilité ont aussi été repris après la synchronisation des décisions :
+ils réussissent, avec comparaison intégrale des références aux sources finales. Aucune migration de base existante ni livraison Alpha dans ce lot.
 Les trois sources Work V4/V2/V1 et le wiki documentaire externe restent
 inaccessibles ; aucune lecture ou synchronisation n’est revendiquée. Les
 contrôles d’accessibilité ciblés ne valent pas audit RGAA complet. Performance
