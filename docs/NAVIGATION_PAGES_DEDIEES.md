@@ -479,6 +479,7 @@ n’a pas été actualisé. Le manuel embarqué et la documentation du dépôt s
 - `app/templates/boosts/index.html.twig`
 - `app/templates/ui/inventory_navigation.html.twig`
 - `app/tests/Controller/InventoryPagesTest.php`
+- `app/tests/Integration/AdminInterventionTest.php`
 - `app/tests/browser/admin-event-wizard.spec.mjs`
 - `app/tests/browser/catalogue-inventory.spec.mjs`
 - `app/tests/browser/player-pages-refinement.spec.mjs`
@@ -763,6 +764,19 @@ Contrôles RGAA ciblés, sans audit complet. Aucune dépendance, migration, vale
 ou règle de jeu modifiée. Aucune migration de base existante ni livraison Alpha.
 
 
+### Reprise de la première CI complète
+
+La [CI 43990158030](https://github.com/c41m07/genesis-reborn/actions/runs/43990158030)
+sur `f987b36` exécute 1 386 tests PHP, avec deux échecs dans les parcours existants
+Transport et Intervention administrative. Reproduction isolée : mêmes deux échecs.
+Leurs requêtes suivantes redémarraient le noyau, remplaçant l’horloge simulée du
+16 novembre par l’heure réelle du 17 novembre ; la protection normale de session
+à 24 h invalidait alors l’authentification. Les deux seuls scénarios concernés
+conservent désormais leur horloge entre requêtes. Aucune assertion n’est retirée,
+aucun code d’expiration, droit ou traitement métier n’est changé. Reprise locale :
+40 tests / 179 assertions réussis. Une nouvelle CI complète reste obligatoire sur
+le commit corrigé ; les résultats de la première exécution ne permettent pas de fusionner.
+
 ### Fichiers du lot 6
 
 - `README.md`
@@ -780,6 +794,7 @@ ou règle de jeu modifiée. Aucune migration de base existante ni livraison Alph
 - `app/templates/ui/event_navigation.html.twig`
 - `app/templates/ui/event_pagination.html.twig`
 - `app/tests/Controller/EventPagesTest.php`
+- `app/tests/Controller/TransportTest.php`
 - `app/tests/browser/admin-event-wizard.spec.mjs`
 - `app/tests/browser/event-pages.spec.mjs`
 - `app/tests/browser/player-support-worlds.spec.mjs`
