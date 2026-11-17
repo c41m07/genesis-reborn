@@ -1,0 +1,306 @@
+/* Composition A de L1B : ces styles restent limités à la découverte, la création et la présentation. */
+body.authenticated .guild-discovery {
+    --guild-discovery-control: #526d87;
+    --guild-discovery-action-text: #090f1b;
+    --guild-discovery-positive: #87d8b4;
+}
+
+body.authenticated[data-theme="light"] .guild-discovery {
+    --guild-discovery-control: #6a7b88;
+    --guild-discovery-action-text: #fff;
+    --guild-discovery-positive: #256347;
+}
+
+.guild-discovery :is(input, .secondary) {
+    border-color: var(--guild-discovery-control);
+}
+
+body.authenticated .guild-discovery .secondary {
+    background: transparent;
+    border-color: var(--guild-discovery-control);
+    color: var(--text);
+}
+
+body.authenticated .guild-discovery .space-navigation > a {
+    border-color: var(--guild-discovery-control);
+    border-radius: 5px;
+    text-decoration: none;
+}
+
+body.authenticated .guild-discovery .space-navigation.space-navigation > a[aria-current="page"] {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, var(--panel));
+    color: var(--accent);
+}
+
+.guild-discovery .relation-search :is(input, button) {
+    margin: 0;
+    min-height: 48px;
+    align-self: stretch;
+}
+
+body.authenticated .guild-discovery .guild-discovery-search button {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--guild-discovery-action-text);
+}
+
+.guild-discovery .guild-discovery-search h2 {
+    margin-top: 0;
+}
+
+.guild-discovery .relation-results {
+    border: 0;
+    padding-top: 4px;
+}
+
+.guild-discovery .guild-card {
+    display: block;
+    padding: 20px;
+    margin: 0;
+}
+
+.guild-discovery .guild-card h3 {
+    margin-block: 12px;
+    font-size: 18px;
+}
+
+body.authenticated .guild-discovery .guild-card > .badge {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: var(--guild-discovery-positive);
+}
+
+.guild-discovery .guild-card h3 a {
+    color: var(--text);
+    text-decoration: none;
+}
+
+.guild-discovery .guild-card h3 a:hover {
+    text-decoration: underline;
+}
+
+.guild-discovery .guild-result-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 20px;
+    margin-block: 8px;
+    color: var(--muted);
+}
+
+.guild-discovery .guild-result-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.guild-discovery .guild-result-actions form {
+    display: flex;
+    min-width: 0;
+    margin: 0;
+}
+
+.guild-discovery .guild-result-actions :is(a, button) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+    text-decoration: none;
+}
+
+body.authenticated .guild-discovery .guild-discovery-join {
+    border-color: var(--gold);
+    background: var(--gold);
+    color: var(--guild-discovery-action-text);
+}
+
+.guild-discovery .guild-foundation-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.9fr);
+    grid-template-areas: "intro form";
+    gap: 20px;
+    align-items: start;
+    margin-top: 20px;
+}
+
+/* Le formulaire précède les liens d'aide dans le DOM pour garder un parcours clavier continu sur mobile. */
+.guild-discovery .guild-foundation-intro {
+    grid-area: intro;
+}
+
+.guild-discovery .guild-create {
+    grid-area: form;
+}
+
+.guild-discovery .guild-foundation-intro p {
+    margin-block: 24px;
+    color: var(--muted);
+}
+
+/* Les champs sont regroupés avec leur aide ; les anciennes positions de grille ne s'appliquent plus. */
+body.authenticated .guild-discovery .guild-create {
+    display: block;
+}
+
+body.authenticated .guild-discovery .guild-create form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    margin-top: 26px;
+}
+
+.guild-discovery .guild-create form > div {
+    display: grid;
+    gap: 10px;
+    min-width: 0;
+}
+
+.guild-discovery .guild-create form > div > :is(label, input, small) {
+    margin: 0;
+}
+
+.guild-discovery .guild-create input:not([type="hidden"]) {
+    width: 100%;
+}
+
+.guild-discovery .guild-create #guild-tag {
+    max-width: 220px;
+}
+
+.guild-discovery .guild-create small {
+    color: var(--muted);
+}
+
+.guild-discovery .guild-create form > a {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+}
+
+body.authenticated .guild-discovery .guild-create button {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--guild-discovery-action-text);
+}
+
+.guild-discovery--profile.social-profile-page {
+    max-width: none;
+    margin-inline: 0;
+}
+
+.guild-discovery--profile .guild-public-hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    min-height: 230px;
+    padding: 24px;
+}
+
+/* Le voile suit le thème et garde le texte lisible sur une bannière personnalisée. */
+.guild-discovery--profile .guild-public-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: color-mix(in srgb, var(--panel) 85%, transparent);
+}
+
+.guild-discovery--profile .guild-public-hero > .guild-public-banner {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    margin: 0;
+    border-radius: 0;
+    object-fit: cover;
+}
+
+.guild-discovery--profile .guild-public-heading {
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.guild-discovery--profile .guild-public-heading h1 {
+    margin-block: 0 16px;
+}
+
+.guild-discovery--profile .guild-public-heading > :is(.guild-public-logo, .guild-profile-emblem) {
+    width: 72px;
+    height: 72px;
+    flex: 0 0 72px;
+}
+
+.guild-discovery--profile .guild-profile-emblem {
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+    color: var(--gold);
+}
+
+.guild-discovery--profile .guild-profile-emblem .icon {
+    width: 40px;
+    height: 40px;
+}
+
+.guild-discovery--profile .guild-public-description {
+    max-width: 85ch;
+}
+
+.guild-discovery--profile :is(.guild-profile-links, section[aria-labelledby="guild-public-leader"]) .secondary {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    text-decoration: none;
+}
+
+.guild-discovery--profile .guild-profile-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+@media (max-width: 900px) {
+    .guild-discovery .guild-foundation-layout {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas: "form" "intro";
+    }
+}
+
+@media (max-width: 700px) {
+    .guild-discovery .guild-result-actions {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .guild-discovery .guild-result-meta {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 600px) {
+    body.authenticated .guild-discovery .relation-search {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .guild-discovery .guild-create button {
+        justify-self: stretch;
+        width: 100%;
+    }
+
+    .guild-discovery--profile .guild-public-heading {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .guild-discovery--profile .guild-profile-links > a {
+        width: 100%;
+        justify-content: center;
+    }
+}

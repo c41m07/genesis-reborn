@@ -32,6 +32,7 @@ final class DiplomacyController extends AbstractController
         $membership = $context->membership();
         $ownGuild = $relations->guild($membership);
         $page = $request->attributes->getString('page');
+        $creationDraftKey = 'guild_creation_draft_'.$membership->id.'_'.$membership->universe->id;
         $personalPage = $page === 'relations' || ($page === 'diplomacy' && !$ownGuild)
             || $request->query->getString('tab') === 'relations';
         $search = mb_substr(trim($request->query->getString('q')), 0, $personalPage ? 40 : 60);
@@ -93,8 +94,19 @@ final class DiplomacyController extends AbstractController
                     default => throw new \DomainException('Action inconnue.'),
                 };
                 $updated = true;
+                if ($action === 'create') {
+                    $request->getSession()->remove($creationDraftKey);
+                }
                 $this->addFlash('success', 'Diplomatie mise à jour.');
             } catch (\DomainException $e) {
+                if ($action === 'create') {
+                    // Le retour après erreur conserve la saisie dans ce seul empire, sans valider le brouillon.
+                    // Les limites de stockage dépassent les maxima autorisés : une valeur trop longue reste invalide.
+                    $request->getSession()->set($creationDraftKey, [
+                        'name' => mb_substr($request->request->getString('name'), 0, 120),
+                        'tag' => mb_substr($request->request->getString('tag'), 0, 10),
+                    ]);
+                }
                 $this->addFlash('error', $e->getMessage());
             }
             $redirectRoute = match ($action) {
@@ -132,6 +144,10 @@ final class DiplomacyController extends AbstractController
             $request->query->getInt('rank', -1),
             max(0, $request->query->getInt('after')),
         );
+        if ($data['tab'] === 'create' && !$ownGuild && $data['enabled']) {
+            // Le brouillon survit au rechargement ; seule une création réussie l’efface.
+            $data['guildCreationDraft'] = $request->getSession()->get($creationDraftKey, []);
+        }
         return $this->render('player/diplomacy.html.twig', $data, new Response(headers: ['Cache-Control' => 'private, no-store']));
     }
 }

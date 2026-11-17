@@ -52,3 +52,4 @@ import './styles/approved-pages.css';
 import './styles/strategic-tools.css';
 import './styles/social-profiles.css';
 import './styles/guild-workspace.css';
+import './styles/guild-discovery.css';

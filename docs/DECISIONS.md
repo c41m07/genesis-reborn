@@ -1938,3 +1938,17 @@ destinations ; cette décision n’ajoute ni donnée métier, ni permission, ni 
 
 Cette validation permet la réalisation locale de L1A ; les autres lots attendent
 leurs propres propositions et choix. [Périmètre, vérifications et limites](REFONTE_VISUELLE_INTERFACES.md).
+
+## Refonte visuelle L1B : proposition A — 17 novembre 2026
+
+L’utilisateur choisit A (« j’aime bien le A ») pour Trouver une guilde, Créer une
+guilde et Présentation consultée. La liste privilégie les lignes larges et leurs
+actions ; le formulaire dispose d’une aide latérale sur ordinateur, placée après
+les champs sur mobile. La fiche garde une bannière immersive, puis description
+et commandant en sections successives. Les destinations secondaires restent
+visibles sur mobile.
+
+Nom et tag sont conservés après erreur et rechargement dans le contexte de
+l’empire, puis effacés après réussite. La recherche par nom, le recrutement ouvert,
+les droits, médias et règles de création restent inchangés. Les lots ultérieurs
+attendent leur propre conception et validation. [Suivi du lot](REFONTE_VISUELLE_INTERFACES.md).

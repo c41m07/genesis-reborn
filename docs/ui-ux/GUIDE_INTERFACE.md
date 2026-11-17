@@ -160,3 +160,14 @@ et rend le focus au résumé. Le changement de format replace le focus sur un
 élément visible. Une seule destination diplomatique reste directement affichée
 pour les joueurs sans guilde. Le thème clair reprend ses variables existantes.
 Ces choix restent limités au [lot L1A](../REFONTE_VISUELLE_INTERFACES.md).
+
+### Découverte et création de guilde — composition A validée pour L1B
+
+`guild-discovery.css` compose les résultats en lignes et aligne Présentation,
+Contact et Adhésion sur ordinateur ; les actions sont empilées sur mobile. La
+création garde les labels et aides à proximité des champs, avec une aide latérale
+sur ordinateur. Les liens de l’espace restent visibles, sans menu supplémentaire.
+La fiche conserve le nom de guilde comme titre principal, ses visuels réels ou
+l’emblème de repli, puis présentation et commandant en sections successives.
+Les thèmes utilisent les variables existantes. Le brouillon de nom/tag est
+échappé et conservé après erreur ; il ne remplace pas la validation serveur.

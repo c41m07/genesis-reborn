@@ -680,6 +680,12 @@ Sur ces pages, le menu mobile « Pages de l’espace » conserve les liens serve
 et fonctionne sans JavaScript. Les lots suivants attendent leur propre conception
 et validation ; ce travail n’est pas encore fusionné dans `dev`.
 
+Le lot suivant retient A pour Trouver une guilde, Créer une guilde et Présentation :
+résultats en lignes, formulaire accompagné et fiche de guilde immersive. En cas
+d’erreur de création, le nom et le tag restent disponibles au rechargement dans
+le seul empire concerné ; une création réussie efface ce brouillon. Les recherches,
+adhésions et accès conservent leurs règles existantes.
+
 Le lot Projets collectifs conserve `/guildes/projets` comme entrée des projets en
 cours et ajoute `/guildes/projets/disponibles` et `/guildes/projets/historique`.
 La fiche existante reste dédiée au détail et au don. Listes et contributions sont

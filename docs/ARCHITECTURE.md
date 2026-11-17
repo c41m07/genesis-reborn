@@ -642,6 +642,20 @@ de 600 px, ferme sur Échap et replace le focus lorsque le format masque son
 et couleurs aux trois pages. Le socle commun et la barre de ressources sont
 conservés. [Suivi de réalisation locale](REFONTE_VISUELLE_INTERFACES.md).
 
+L1B, validé en A, ajoute `guild-discovery.css` limité à la recherche/création sans
+guilde et à la présentation consultée. Les résultats gardent leur fragment commun
+et leurs POST ; les adaptations d’adhésion sont conditionnées à l’absence de
+guilde. La partie traités du fragment ne change pas. Les liens secondaires restent
+visibles sur mobile, sans contrôleur supplémentaire ni nouvelle route.
+
+`DiplomacyController` conserve en session le nom/tag d’une création refusée,
+dans une clé liée à la participation et à l’univers. Les valeurs sont bornées à
+120/10 caractères, au-delà des maxima valides 60/5, pour ne pas rendre valide une
+valeur trop longue après troncature. Les champs Twig restent échappés ; le brouillon
+survit aux GET et n’est pas un état métier. Une création réussie le retire. Le
+contrôle CSRF précède son écriture ; services, validations et transactions restent
+inchangés. Les tests couvrent rechargement, isolement, CSRF et bornes.
+
 
 ### Inventaire par destination
 

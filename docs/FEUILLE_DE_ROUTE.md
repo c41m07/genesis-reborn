@@ -16,12 +16,14 @@ conception et validation ; la mission globale n’est pas terminée.
 
 À la demande de l’utilisateur, la branche commune `feature/refonte-visuelle`
 accueille les prochains lots par commits locaux, sans publication implicite.
-Le tableau détaillé compte **18 lots prévus**, dont L1A réalisé localement.
-L1B est analysé : Trouver une guilde, Créer une guilde et Présentation consultée.
-Deux propositions Figcraft sont préparées dans les pages 04 et 05, avec les
-variantes ordinateur/tablette/mobile et états ; leur choix reste attendu.
-La Vue générale et la B validée du premier lot restent préservées. Aucun code
-du jeu supplémentaire n’est réalisé avant validation de L1B.
+Le tableau détaillé compte **18 lots prévus**, dont L1A et L1B réalisés localement.
+L1B retient A après validation : Trouver une guilde, Créer une guilde et
+Présentation consultée. Résultats en lignes, formulaire accompagné et fiche
+immersive ; nom/tag conservés après erreur et rechargement dans le seul empire
+concerné. Les contrôles ciblés et captures réelles sont consignés dans le suivi.
+Les deux propositions restent dans les pages Figcraft 04 et 05 ; Vue générale
+et B du premier lot préservées. Les 16 lots restants attendent leur propre cycle
+de conception et validation. CI GitHub et fusion restent distinctes.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026
 

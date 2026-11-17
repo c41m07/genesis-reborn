@@ -111,8 +111,8 @@ Les liens du prototype simulent la navigation et n’exécutent aucune action du
 | L11 | Wiki : accueil, chapitre, recherche et références | 3/5 · 3/5 | Pages déjà séparées, anciens fragments et formules dépliables. |
 | L12 | Cohérence, erreurs et composants communs restants | 4/5 · 4/5 | Revue transversale ; adaptations communes rattachées au lot consommateur. |
 
-Le tableau comporte **18 lots prévus** : un lot réalisé localement (L1A),
-17 restants. Certains ensembles complexes seront subdivisés pendant leur analyse ;
+Le tableau comporte **18 lots prévus** : deux lots réalisés localement (L1A/L1B),
+16 restants. Certains ensembles complexes seront subdivisés pendant leur analyse ;
 ce total ne fixe donc pas le nombre final de livraisons. Les complexités seront
 réévaluées avant chaque sous-tâche. À la demande de l’utilisateur, les lots de
 cette mission se poursuivent par commits sur la branche commune, sans fusion
@@ -294,7 +294,7 @@ feuille de route, inventaire et présent suivi sont synchronisés dans le même 
 
 ## L1B — trouver, créer et consulter une guilde
 
-Conception **3/5**, réalisation prévue **4/5**. Analyse ciblée des routes
+Conception **3/5**, réalisation **4/5**. Analyse ciblée des routes
 `/guildes` sans appartenance, `/guildes/creer`, `/guildes/{id}`, du média de
 guilde, des fragments join/search/create/card, de `DiplomacyPageView`,
 `DiplomacyController`, `SocialProfileView`, `DiplomacyService` et des scénarios
@@ -323,16 +323,18 @@ et l’accès permanent aux relations personnelles restent conservés.
 | A · Recherche directe | Résultats en lignes larges ; aide courte à côté du formulaire sur ordinateur ; présentation immersive puis description et commandant en sections successives. Deux liens d’espace visibles sur mobile, troisième lien pour la présentation. | Comparaison et actions directes, densité plus compacte. | Les actions occupent la largeur de la ligne ; présentation plus longue verticalement. |
 | B · Identités en cartes | Résultats sur deux colonnes ; formulaire centré ; présentation compacte avec description et commandant côte à côte. Deux liens visibles sur mobile ; menu Pages de l’espace sur la présentation. | Continuité des cartes diplomatiques de L1A B, groupes d’actions mieux isolés. | Les cartes demandent plus de hauteur et doivent gérer les noms longs ; la troisième destination mobile est dans le menu. |
 
-**Recommandation : B**, pour prolonger la direction déjà retenue et conserver
-les mêmes repères de gestion. A reste une option complète si la priorité est la
-densité des résultats. Les deux options couvrent les mêmes fonctions ; les
-compositions convergent en une colonne sur mobile. Aucun choix L1B n’est acquis.
+La recommandation initiale était B pour la continuité des cartes.
+**Choix utilisateur : A** (« j’aime bien le A »), pour les trois pages du lot.
+La version de validation est enregistrée dans le document Figcraft de bureau.
+Les deux options restent consultables ; les compositions convergent en une
+colonne sur mobile.
 
-Le formulaire actuel redirige après erreur sans conserver nom/tag. La planche
-prévoit leur conservation, à réaliser après validation avec un brouillon borné
-et propre au joueur/univers, sans changer les règles de validation. Les messages
-de nom/tag déjà utilisés restent explicites. Ce point est une adaptation UX
-prévue, pas un correctif déjà appliqué au jeu.
+La conservation du nom/tag après erreur est réalisée par un brouillon de session
+propre à la participation et à l’univers, échappé au rendu. Les valeurs stockées
+sont bornées à 120/10 caractères, au-delà des maxima valides 60/5 : une saisie
+trop longue ne devient pas valide après troncature. Le brouillon survit aux GET
+et rechargements, puis disparaît après création réussie. CSRF, messages de refus,
+services, permissions, transactions et validation métier restent inchangés.
 
 ### Maquettes et contrôles de conception
 
@@ -358,12 +360,68 @@ Exports hors dépôt dans le dossier du fichier natif :
 structures grises, manifeste et rapports `lot-1B-verification.json`,
 `lot-1B-containment.json` et `lot-1B-contrastes.json`. Visuel d’exemple issu des
 assets existants ; aucun logo/SVG retouché. Les contrôles d’outil portent sur la
-conception ; aucun nouveau test fonctionnel du jeu n’est revendiqué pour L1B.
+conception ; les vérifications du jeu sont distinguées ci-dessous.
 
-Après choix : réalisation ciblée, scénarios de recherche/adhésion/création,
-erreurs et conservation de saisie, profils avec/sans droits et univers distincts,
-clavier/focus, absence de JavaScript et thèmes, puis captures réelles. La CI
-complète reste obligatoire avant fusion de la branche commune.
+### Réalisation A et contrôles locaux
+
+`guild-discovery.css` est limité aux recherches/créations sans guilde et à la
+présentation consultée. Résultats et actions occupent des lignes ; l’aide et le
+formulaire sont côte à côte sur ordinateur, puis les champs précèdent l’aide sur
+petit écran. La présentation garde sa bannière, puis description et commandant.
+Les liens secondaires restent visibles. Aucun nouveau contrôleur JavaScript,
+route, migration, dépendance ou changement des traitements métier.
+
+Adaptations mineures : conservation du nom de guilde dans le titre principal
+du profil, du titre « Rejoignez une guilde » et des libellés d’adhésion existants ;
+les images sont celles de la guilde, avec le repli existant. Les autres pages de
+traités gardent leur composition et leurs actions.
+
+Contrôles locaux :
+
+- `make validate`, `make lint-static` (200 Twig, 80 YAML, PHP/conteneur) et
+  `make assets` réussis.
+- PHP ciblé isolé : 69 des 70 cas réussis au premier passage ; la nouvelle fixture
+  de changement d’univers réutilisait une entité détachée après refus. Les trois
+  nouveaux tests de brouillon sont relancés après relecture des fixtures :
+  **3 tests / 31 assertions réussis**. Le jeu n’est pas modifié pour contourner
+  cet échec de préparation. Couverture : erreur/rechargement, joueur et univers
+  distincts, échappement, succès, CSRF et stockage borné restant invalide.
+- Nouveau parcours navigateur A réussi en sombre/clair à 1440/768/390/320 px :
+  deux guildes synthétiques, bannière stockée réellement, saisie conservée,
+  résultats longs, actions en lignes/empilées, profils avec/sans droits, recherche
+  initiale/courte/vide, accès direct/rechargement/retour arrière, clavier et
+  adhésion sans JavaScript. Axe ciblé sur `.guild-discovery` à 390 px : aucune
+  violation relevée.
+- **9 scénarios navigateur réussis** : nouveau parcours, état vide, trois parcours
+  de tag/signalement, traités, B de L1A et deux parcours de profils. La revue des
+  captures a entraîné des ajustements limités d’alignement, de couleurs des actions
+  et de parcours clavier. Le formulaire précède l’aide dans le DOM ; la grille
+  le place à droite sur ordinateur et en premier sur mobile.
+- Après ces ajustements, reprise des trois parcours concernés (A et deux profils) :
+  **3 scénarios réussis**. Contrôles supplémentaires d’alignement du champ/bouton
+  de recherche et de premier champ au clavier sans JavaScript. Nouveau
+  `make lint-static`, compilation finale et `git diff --check` réussis.
+
+24 captures réelles finales sont conservées dans
+`output/playwright/guild-discovery/captures-jeu-L1B-A/` et le dossier Figcraft local
+`captures-jeu-L1B-A/` : trois pages en sombre/clair à 1440/768/390 px, plus six
+fenêtres mobiles. Préfixe : `jeu-L1B-A-{recherche,creation,presentation}`.
+Elles montrent le jeu et des données synthétiques, distinctement des maquettes.
+Le cache de l’application locale est actualisé après réalisation ; aucune
+écriture sur sa partie habituelle n’est nécessaire à la recette.
+
+Les essais écrivent uniquement dans leurs bases synthétiques et stockages
+jetables ; la base de test partagée non saine reste inutilisée. Aucun email
+externe ni action sur la partie habituelle. Performance non mesurée ; aucun
+lecteur d’écran réel essayé. Ces contrôles ne constituent ni un audit RGAA ni la
+CI GitHub complète, qui reste requise avant fusion de la branche commune.
+
+Fichiers de réalisation : `app/src/Controller/DiplomacyController.php`,
+`app/templates/player/{diplomacy,_guild_join,_guild_search,_guild_create,_guild_diplomacy_card,public_guild}.html.twig`,
+`app/assets/app.js`, `app/assets/styles/guild-discovery.css`. Régressions dans
+`GuildTagPlayerReportTest.php` et nouveau scénario `guild-discovery.spec.mjs`.
+README, architecture, décisions, guide UI, feuille de route, inventaire et suivi
+sont synchronisés dans le même lot.
 
 ## Reprise et états de couverture
 
@@ -371,12 +429,13 @@ complète reste obligatoire avant fusion de la branche commune.
 | --- | --- | --- | --- | --- |
 | Vue générale Figcraft | Conception de référence conservée | Choix explicite de l’utilisateur | Page inchangée, comparaison effectuée | Ne valide pas automatiquement l’implémentation web ni les autres écrans |
 | L1A | B implémentée et vérifiée localement | B choisie explicitement | Trois pages, PHP ciblé, recette responsive et captures ; bilan ci-dessus | CI complète, intégration et déploiement distincts |
-| L1B | Deux propositions préparées | Choix A/B attendu | Analyse et contrôles du document, aucun nouveau code du jeu | Validation avant réalisation |
+| L1B | A implémentée et vérifiée localement | A choisie explicitement | Trois pages et brouillon, PHP ciblé, recette responsive et captures | CI complète et intégration distinctes |
 | L1C à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
 Prochaine action demandée : conserver les commits sur `feature/refonte-visuelle`
-et présenter L1B. Les propositions de ce lot devront être choisies avant son
-implémentation ; la validation B de L1A ne les approuve pas automatiquement.
+et enregistrer L1B selon A. Prochain périmètre : L1C couvrira grades, gestion,
+personnalisation et relations entre guildes, à subdiviser si nécessaire. Ce lot
+aura ses propres propositions et choix avant réalisation.
 Aucun push, PR, fusion ou déploiement n’est autorisé par le seul changement de
 branche. La mission globale reste non terminée.
