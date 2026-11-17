@@ -2008,3 +2008,17 @@ les confirmations et les règles de confidentialité restent ceux du jeu. La bar
 de ressources et le bouton global des événements restent dans leur composant
 commun. Aucune valeur d’équilibrage n’est décidée par cette finalisation.
 [Recette et limites](REFONTE_VISUELLE_INTERFACES.md).
+
+
+## Refonte visuelle L2C : proposition A — 18 novembre 2026
+
+L’utilisateur choisit A (« le A est bien ») pour les compositions de flotte :
+liste en lignes, éditeur en tableau sur ordinateur et trois rangs réunis par
+vaisseau sur mobile, choix de colonie et disponibilités rapprochés. Les quatre
+vues gardent leurs URL et le menu commun à Flottes.
+
+Les modèles restent personnels et limités à vingt par empire/univers. Quantités,
+versions, CSRF, accord sur les manques et nouvelle vérification des disponibilités
+restent existants. Charger prépare la mission sans l’envoyer. Cette validation
+termine L2 localement ; elle ne valide pas les lots suivants.
+[Recette et limites](REFONTE_VISUELLE_INTERFACES.md).

@@ -61,7 +61,12 @@ leur propre périmètre. L2C reste soumis au choix A/B ; CI et intégration dist
 Vue générale est enregistrée dans `6b3bb70`, L2B dans `88d68e3`.
 Les propositions L2C sont prêtes dans Figcraft, pages 12/13 : modèles en lignes
 (A) ou en cartes (B), liste/création/modification/chargement, 26 cadres contrôlés.
-Aucun code de composition n’est modifié avant ce choix.
+Après choix explicite de A (« le A est bien »), les quatre vues sont implémentées
+et vérifiées : 27 tests PHP / 372 assertions, cinq parcours navigateur consolidés,
+36 captures réelles et contrôles statiques/compilation réussis. L2 est désormais
+complet localement : **quatre ensembles réalisés sur 18, quatorze restants**.
+La finalisation anticipée de Vue générale ne valide pas le reste de L7A.
+CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026
 

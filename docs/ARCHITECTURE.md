@@ -253,6 +253,14 @@ confirmation gardent leurs contrats. Les demandes ne sont plus dans un dépliabl
 reste accepté pour les anciennes vues. Les garde-fous de focus, d’échéance et
 de contexte restent ceux du contrôleur et des services existants.
 
+L2C étend le menu et `.fleet-redesign` aux compositions. `fleet-compositions.css`
+reste limité à `.fleet-compositions` : lignes pour les modèles, tableau d’édition
+et choix/disponibilités côte à côte lorsque la largeur suffit. Chaque champ est
+rendu une seule fois ; les lignes du tableau deviennent des groupes de trois
+rangs sur mobile, avec les rôles et en-têtes accessibles conservés. Aucun nouveau
+contrôleur JavaScript, aucune lecture ou écriture supplémentaire : formulaires,
+versions, empreinte de disponibilité et contrôle exact de l’envoi restent existants.
+
 Les actualisations des colonies et de Flottes demandent JSON avec `X-Genesis-Live: 1` et
 `Accept: application/json`. La route conserve ses contrôles, synchronisations
 et préparation GameShell, puis renvoie les fragments privés sans cache.

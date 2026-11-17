@@ -240,3 +240,20 @@ Les composants partagés conservent leurs liens dans les en-têtes, y compris
 après actualisation. Le bouton global des événements et la barre de ressources
 restent dans leur emplacement commun. Ces adaptations à la maquette évitent de
 modifier le fonctionnement des autres vues. Le style est limité à `.overview-page`.
+
+
+### Compositions de flotte — proposition A validée pour L2C
+
+Un modèle par ligne sur ordinateur : contenu à gauche, chargement et gestion à
+droite. Sur petit écran, les actions suivent le contenu. La suppression conserve
+sa confirmation native ; Modifier garde le nom du modèle dans son nom accessible.
+La création, la modification et le chargement restent des pages dédiées, avec
+le menu mobile commun à Flottes. La liste garde sa propre page d’entrée.
+
+L’éditeur conserve un tableau sur grand écran et regroupe les trois rangs sous
+chaque vaisseau sur mobile. Une seule série de champs est rendue ; libellés,
+en-têtes et rôles restent accessibles. Le choix de colonie et ses disponibilités
+sont côte à côte lorsque la largeur suffit, puis empilés. Les colonnes Demandé,
+Chargeable et Manquant deviennent des libellés visibles sur chaque groupe mobile.
+Les manques conservent texte et couleur ; le lien de chantier reste souligné.
+Les styles sont limités à `.fleet-compositions`, sans changer les règles de chargement.
