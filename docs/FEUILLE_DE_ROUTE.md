@@ -1741,6 +1741,6 @@ Les quatre pages juridiques publiques sont indexables et présentes dans le site
 les textes et brouillons privés ne sont pas modifiés. Connexion et pages privées
 gardent leurs protections. Contrôles locaux : validation Compose, lint statique,
 huit tests HTTP / 173 assertions et vérification du diff réussis.
-La PR de reprise consigne la CI complète et l’intégration, puis une nouvelle
-promotion Alpha reprend le dev consolidé. Aucune migration de base existante,
+La [PR #89](https://github.com/c41m07/genesis-reborn/pull/89) consigne la CI complète
+et l’intégration, puis une nouvelle promotion Alpha reprend le dev consolidé. Aucune migration de base existante,
 installation de dépendance ni intervention sur le serveur dans cette reprise.
