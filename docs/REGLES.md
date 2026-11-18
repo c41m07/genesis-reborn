@@ -68,7 +68,7 @@ cours bloque l’opération entière jusqu’à sa résolution. Le dernier admin
 actif doit désigner un successeur avant de supprimer son compte.
 
 ## Colonie
-Métal, électricité, antimatière, hydrogène et nano par planète. La simulation intègre les stocks par segments entre épuisement et capacité. Les usines adaptent leur rendement à l’électricité disponible avec un plancher de 10 % ; l’antimatière exige aussi de l’hydrogène. Coûts et durées sont autoritaires côté serveur. Les coûts des trois rangs suivent des profils par catégorie avec budgets de valeur constants. Les technologies sont débloquées par joueur et par univers. Chaque nouvelle commande de recherche exige aussi un Laboratoire colonial Basique de niveau 1 ou plus sur la colonie de lancement. La file de recherche est commune au joueur dans l’univers.
+Métal, électricité, antimatière, hydrogène et nano par planète. La simulation intègre les stocks par segments entre épuisement et capacité. Les usines adaptent leur rendement à l’électricité disponible avec un plancher de 10 % ; l’antimatière exige aussi de l’hydrogène. Coûts et durées sont autoritaires côté serveur. Les coûts des trois rangs suivent des profils par catégorie avec budgets de valeur constants. Les technologies sont débloquées par joueur et par univers. Chaque nouvelle commande de recherche exige aussi un laboratoire du même rang au niveau 1 ou plus sur la colonie de lancement. La file de recherche est commune au joueur dans l’univers.
 
 ### Prérequis par rang — grille actualisée le 18 novembre 2026
 
@@ -407,7 +407,7 @@ s’appliquent toujours. Les joueurs retrouvent les rotations dans Événements 
 
 ## File de recherche commune
 
-Dans un même univers, toutes les colonies d’un joueur partagent une file de recherche de 30 commandes maximum. Chaque ajout exige un Laboratoire colonial Basique de niveau 1 ou plus sur la colonie choisie. Il paie ses coûts sur cette colonie et utilise ses bonus de laboratoire pour calculer la durée à cet instant. Les niveaux déjà en file sont pris en compte depuis toutes les colonies ; les commandes sont exécutées successivement, sans nouveau calcul de leurs coûts ou durées au démarrage.
+Dans un même univers, toutes les colonies d’un joueur partagent une file de recherche de 30 commandes maximum. Chaque ajout exige un laboratoire du même rang au niveau 1 ou plus sur la colonie choisie. Il paie ses coûts sur cette colonie et utilise ses bonus de laboratoire pour calculer la durée à cet instant. Les niveaux déjà en file sont pris en compte depuis toutes les colonies ; les commandes sont exécutées successivement, sans nouveau calcul de leurs coûts ou durées au démarrage.
 
 Les recherches historiquement actives en parallèle terminent leur travail sans être annulées. La suite de la file attend la fin de toutes ces recherches, puis fonctionne avec une seule recherche active. Les univers restent indépendants. Annulations, remboursements, vacances et captures conservent leurs règles ; la colonie d’origine de chaque commande reste enregistrée.
 

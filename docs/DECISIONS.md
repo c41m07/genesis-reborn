@@ -2000,10 +2000,12 @@ consommation. Les débits ci-dessus sont ceux du catalogue de référence.
 
 ## Laboratoire local pour lancer une recherche — 18 novembre 2026
 
-Toute nouvelle commande de recherche exige un Laboratoire colonial Basique
-de niveau 1 ou plus sur sa colonie de lancement, quel que soit le rang
-commandé. La grille de déblocage par recherche et par rang continue de
-s’appliquer à l’échelle du joueur dans l’univers.
+Toute nouvelle commande exige un laboratoire du même rang que la recherche,
+au niveau 1 ou plus sur sa colonie de lancement. Les déblocages et les niveaux
+de recherche sont partagés dans l’empire au sein du même univers. Les
+laboratoires avancés demandent la recherche du rang précédent et les niveaux
+locaux de la grille. Les constructions utilisent les technologies de l’empire
+selon leurs propres prérequis.
 
 La file reste commune. La colonie de lancement finance la commande et
 fournit les bonus de durée. Les commandes déjà payées poursuivent leur

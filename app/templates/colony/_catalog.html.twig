@@ -11,9 +11,6 @@
             <button type="submit" role="switch" aria-checked="{{ show_locked_items ? 'true' : 'false' }}" data-building-catalog-target="visibilitySwitch" data-action="building-catalog#toggleLocked"><span>Afficher les éléments verrouillés</span><span class="building-switch-track" aria-hidden="true"></span><span data-building-catalog-target="visibilityLabel" aria-hidden="true">{{ show_locked_items ? 'ON' : 'OFF' }}</span></button>
         </form>
     </div>
-    {% if research_requires_laboratory|default(false) %}
-        <p>Pour lancer une recherche ici, construisez un <a href="{{ path('app_colony', {id: planet.id, section: 'buildings', focusItem: 1}) }}#item-lab-basic">Laboratoire colonial de niveau 1</a>.</p>
-    {% endif %}
     <nav class="catalog-filters ui-tabs" aria-label="Filtrer le catalogue">
         {% set filter_options = catalog_filter_options[group] %}
         {% for key,label in filter_options %}<button type="button" data-action="click->catalog-filter#apply" data-category="{{ key }}" aria-pressed="{{ key=='all'?'true':'false' }}">{{ label }}</button>{% endfor %}

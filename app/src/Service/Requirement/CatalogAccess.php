@@ -42,10 +42,10 @@ final class CatalogAccess
     }
 
     /** @param array<string, array<string, int>> $buildings Niveaux de la colonie de lancement. */
-    public function hasLocalResearchLaboratory(array $buildings): bool
+    public function hasLocalResearchLaboratory(array $buildings, string $tier): bool
     {
-        // Le déblocage dans l’univers est permanent. L’installation de départ est vérifiée à chaque ajout.
-        return ($buildings['lab']['basic'] ?? 0) >= 1;
+        // Le déblocage est partagé dans l’univers. Chaque lancement exige une installation du rang demandé sur place.
+        return ($buildings['lab'][$tier] ?? 0) >= 1;
     }
 
     public function captureLocked(PlayerUniverse $membership):void

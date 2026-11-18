@@ -2,9 +2,9 @@
 
 ## Laboratoire local pour lancer une recherche — 18 novembre 2026
 
-Le catalogue Recherche indique l’exigence locale au-dessus des filtres quand
-le laboratoire Basique manque et propose un lien vers sa fiche sur la même
-colonie. La file commune et les fiches restent consultables sur cette page.
+Le catalogue Recherche indique, sur le rang déjà débloqué, quel laboratoire
+local manque pour lancer la commande. Le lien ouvre sa fiche sur la même
+colonie. La file commune et les fiches restent consultables.
 La [règle de lancement](REGLES.md) s’applique aussi côté serveur.
 
 ## Équilibrage des prix et de l’antimatière
