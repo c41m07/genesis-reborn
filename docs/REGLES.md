@@ -70,20 +70,20 @@ actif doit désigner un successeur avant de supprimer son compte.
 ## Colonie
 Métal, électricité, antimatière, hydrogène et nano par planète. La simulation intègre les stocks par segments entre épuisement et capacité. Les usines adaptent leur rendement à l’électricité disponible avec un plancher de 10 % ; l’antimatière exige aussi de l’hydrogène. Coûts et durées sont autoritaires côté serveur. Les coûts des trois rangs suivent des profils par catégorie avec budgets de valeur constants. Technologies par PlayerUniverse : le laboratoire est un prérequis initial, sans obligation locale permanente après déblocage. La file de recherche est commune au joueur dans l’univers.
 
-### Prérequis par rang — grille actualisée le 17 novembre 2026
+### Prérequis par rang — grille actualisée le 18 novembre 2026
 
 Chaque famille utilise la [grille complète des prérequis](DEBLOCAGES.md).
-Les quatre producteurs de départ (métal, nano, hydrogène et centrale) sont libres
-au rang Basique. Leur Intermédiaire exige le même bâtiment Basique 25 et
-Ingénierie de chantier automatisée Intermédiaire 5. Leur Supérieur exige le même
-bâtiment Basique 50, son Intermédiaire 25 et Planification industrielle intégrée
-Supérieure 5.
+Le métal, le nano et la centrale sont libres au rang Basique. Leur
+Intermédiaire exige le même bâtiment Basique 25 et Ingénierie de chantier
+automatisée 5. Leur Supérieur exige le même bâtiment Basique 50, son
+Intermédiaire 25 et Planification industrielle intégrée 5. L’hydrogène
+utilise les mêmes seuils de bâtiments et exige sa recherche industrielle
+du même rang au niveau 3, dès le Basique.
 
-Le laboratoire reste libre en Basique. Son Intermédiaire exige Laboratoire
-colonial Basique 25 + Génie civil colonial Basique 5. Son Supérieur exige
-Laboratoire colonial Basique 25 + Institut de recherche orbitale Intermédiaire 25
-et Ingénierie de chantier automatisée Intermédiaire 5. La recherche du rang
-précédent évite un cycle ; le plafond du laboratoire reste 25.
+Le laboratoire reste libre en Basique. Son Intermédiaire exige le laboratoire
+Basique 10 et Génie civil colonial 5. Son Supérieur exige les laboratoires
+Basique et Intermédiaire 10 et Ingénierie de chantier automatisée 5. La
+recherche du rang précédent évite un cycle. Le laboratoire est plafonné à 25.
 
 Chaque stockage exige son producteur du même rang niveau 5 sur la colonie.
 L’Intermédiaire exige aussi le même stockage Basique niveau 5. Le Supérieur
@@ -92,10 +92,11 @@ commandes sont plafonnées à 5 en Basique et en Intermédiaire. Le Supérieur a
 une progression sans plafond. Les niveaux historiques, leur capacité et les
 commandes déjà payées sont conservés.
 
-Le chantier exige métal 2 et nano 2, et le bunker métal 1 et nano 1, toujours
-dans le rang demandé. Le Piège à antimatière exige le producteur d’hydrogène
-niveau 5 sur la colonie et la recherche Génie civil colonial niveau 2 dans
-l’univers, tous deux du rang demandé.
+Le chantier exige métal 2 et nano 2, et le bunker métal 1 et nano 1,
+dans le rang demandé. Pour les rangs avancés, le même bâtiment doit
+atteindre le niveau 20 (chantier) ou 8 (bunker) dans chaque rang précédent.
+Le Piège à antimatière exige le producteur d’hydrogène 5 sur la colonie et
+la recherche industrielle 5 dans l’univers, tous deux du rang demandé.
 Le laboratoire niveau 1 du même rang sert au déblocage initial de cette recherche.
 Les accès déjà acquis restent conservés ; cette révision ne change pas la version
 du registre et ne nécessite aucune nouvelle requalification. Coûts, durées,
@@ -262,7 +263,7 @@ Les rangs multiplient ces capacités par 1 / 1,25 / 1,5625 avec arrondi supérie
 
 ## Production des bâtiments — cadence A, 5 novembre 2026
 
-Depuis la décision confirmée du 9 novembre 2026, les productions Basiques par niveau à vitesse ×1 et position 5 sont : métal 360/h, nano 180/h, hydrogène 720/h, antimatière 90/h et centrale 1 080 électricité/h. Chaque extracteur consomme 180 électricité/h ; le réacteur consomme aussi 4 H par A produite. Les rangs s’additionnent et gardent les facteurs de production et consommation **1 / 1,5 / 2,25**. Les bonus de position et la production passive restent appliqués séparément. Les prix du niveau 1 sont 480 M + 160 N pour les trois producteurs directs, 360 M + 120 N pour le réacteur et 1 440 M + 480 N pour la centrale. Les durées du niveau 1 Basique sont respectivement 1 min, 2 min et 2 min ; les courbes de niveaux et les réductions sont conservées. Les budgets du réacteur et de la centrale sont déclinés sur les autres rangs avec les facteurs de coût existants, sans changer les parts de ressources. Le [bilan courant](EQUILIBRAGE.md#production-des-batiments) précise les 84,16 jours cumulés jusqu’à 80 confirmés par l’utilisateur, leur périmètre et leurs limites.
+En position 5, dans un univers ×1 et à plein rendement, les productions Basiques par niveau sont de 360 métal/h, 360 nano/h, 720 hydrogène/h, 90 antimatière/h et 1 080 électricité/h pour la centrale. Le métal, l’hydrogène et l’antimatière consomment 180 électricité/h par niveau. Le nano en consomme 360. Le piège consomme aussi 4 H par A produite. Les rangs s’additionnent et gardent les facteurs de production et consommation **1 / 1,5 / 2,25**. Les bonus de position et la production passive restent appliqués séparément. Les prix du niveau 1 sont 480 M + 160 N pour les trois producteurs directs, 360 M + 120 N pour le réacteur et 1 440 M + 480 N pour la centrale. Les durées du niveau 1 Basique sont respectivement 1 min, 2 min et 2 min ; les courbes de niveaux et les réductions sont conservées. Les budgets du réacteur et de la centrale sont déclinés sur les autres rangs avec les facteurs de coût existants, sans changer les parts de ressources. Le [bilan historique du 9 novembre](EQUILIBRAGE.md#référence-historique--production-du-9-novembre-2026) précise les 84,16 jours de construction cumulés jusqu’au niveau 80 et les limites de cette mesure.
 
 Les coûts des seuls producteurs croissent par niveau de ×1,12 jusqu’à 20, ×1,09 jusqu’à 40, ×1,035 jusqu’à 80, ×1,015 jusqu’à 120, puis ×1,01. Les premiers prix, profils de ressources par rang et arrondis par ressource restent utilisés. Les durées et les effets des laboratoires, chantiers, bunkers et stockages ne reçoivent pas le nouveau facteur de production ; leur calcul reste séparé.
 

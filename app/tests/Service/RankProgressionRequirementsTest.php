@@ -59,23 +59,27 @@ final class RankProgressionRequirementsTest extends TestCase
             'ground_turret_anti_capital'=>[8,['weapons_engineering'=>8,'target_acquisition'=>4,'rapid_fire_cycle'=>3]],
         ];
         foreach(GameCatalog::TIERS as $index=>$tier){
-            foreach(['mine_metal','mine_nano','mine_hydrogen','power_plant','lab'] as $slug){
+            foreach (['mine_metal', 'mine_nano', 'mine_hydrogen', 'power_plant', 'lab'] as $slug) {
                 $rules = [];
+                $isLaboratory = $slug === 'lab';
                 if ($index > 0) {
-                    $isLaboratory = $slug === 'lab';
+                    $lowerLevel = $isLaboratory ? 10 : 25;
+                    $basicLevel = $index === 2 && !$isLaboratory ? 50 : $lowerLevel;
                     $rules['buildings'] = [
-                        ['slug' => $slug, 'tier' => 'basic', 'level' => $index === 2 && !$isLaboratory ? 50 : 25],
+                        ['slug' => $slug, 'tier' => 'basic', 'level' => $basicLevel],
                     ];
                     if ($index === 2) {
-                        $rules['buildings'][] = ['slug' => $slug, 'tier' => 'intermediate', 'level' => 25];
+                        $rules['buildings'][] = ['slug' => $slug, 'tier' => 'intermediate', 'level' => $lowerLevel];
                     }
+                }
+                if ($index > 0 || $slug === 'mine_hydrogen') {
                     // Le laboratoire utilise la recherche précédente pour rester débloquable.
                     $researchTier = $isLaboratory ? GameCatalog::TIERS[$index - 1] : $tier;
                     $rules['technologies'] = [
-                        ['slug' => 'engineering_foundations', 'tier' => $researchTier, 'level' => 5],
+                        ['slug' => 'engineering_foundations', 'tier' => $researchTier, 'level' => $slug === 'mine_hydrogen' ? 3 : 5],
                     ];
                 }
-                yield 'buildings/'.$slug.'/'.$tier=>['buildings',$slug,$tier,$rules];
+                yield 'buildings/'.$slug.'/'.$tier => ['buildings', $slug, $tier, $rules];
             }
             yield 'buildings/mine_antimatter/'.$tier => [
                 'buildings',
@@ -83,7 +87,7 @@ final class RankProgressionRequirementsTest extends TestCase
                 $tier,
                 [
                     'buildings' => [['slug' => 'mine_hydrogen', 'tier' => $tier, 'level' => 5]],
-                    'technologies' => [['slug' => 'engineering_foundations', 'tier' => $tier, 'level' => 2]],
+                    'technologies' => [['slug' => 'engineering_foundations', 'tier' => $tier, 'level' => 5]],
                 ],
             ];
 
@@ -96,9 +100,14 @@ final class RankProgressionRequirementsTest extends TestCase
                     $expected=[];
                     foreach($rules as $kind=>$parents)foreach($parents as $parent=>$level)
                         $expected[$kind][]=['slug'=>$parent,'tier'=>$tier,'level'=>$level];
-                    if ($group === 'buildings' && str_starts_with($slug, 'storage_')) {
+                    if ($group === 'buildings') {
+                        $previousRankLevel = match ($slug) {
+                            'shipyard' => 20,
+                            'fortress' => 8,
+                            default => 5, // Les stockages sont les seules autres familles de cette liste.
+                        };
                         foreach (array_slice(GameCatalog::TIERS, 0, $index) as $previousTier) {
-                            $expected['buildings'][] = ['slug' => $slug, 'tier' => $previousTier, 'level' => 5];
+                            $expected['buildings'][] = ['slug' => $slug, 'tier' => $previousTier, 'level' => $previousRankLevel];
                         }
                     }
                     yield $group.'/'.$slug.'/'.$tier=>[$group,$slug,$tier,$expected];

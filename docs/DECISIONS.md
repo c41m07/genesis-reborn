@@ -1952,3 +1952,21 @@ stockages Basique et Intermédiaire au niveau 5. Le niveau maximum des nouvelles
 commandes est 5 en Basique et en Intermédiaire. Le Supérieur reste illimité.
 Les accès acquis, les niveaux existants, leur capacité et les opérations déjà
 payées sont conservés. Le registre garde sa version actuelle.
+
+## Équilibrage de la progression des bâtiments — 18 novembre 2026
+
+L’utilisateur valide la grille présentée avant implémentation. L’hydrogène exige
+la recherche industrielle du même rang au niveau 3 (et ses raffineries des
+rangs précédents aux niveaux 25 puis 50/25). Le piège à antimatière exige cette
+recherche au niveau 5 et la raffinerie du même rang au niveau 5. Le chantier
+demande le niveau 20 de chacun de ses rangs précédents, le bunker le niveau 8,
+en plus des producteurs de métal et de nano du rang visé. Le laboratoire avancé
+demande le niveau 10 de chacun de ses rangs précédents et la recherche
+industrielle du rang précédent au niveau 5.
+
+La production et la consommation électrique du nano doublent à tous les rangs.
+À position 5 dans un univers ×1, les débits nominaux par niveau et par heure
+passent de 180/270/405 à 360/540/810. La production passive est indépendante.
+Le lot reprend les stockages déjà livrés dans dev. Le registre conserve sa
+version, les accès acquis restent valides et les commandes payées se terminent
+selon leurs paramètres enregistrés.

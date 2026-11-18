@@ -39,7 +39,7 @@ test('Les cadres verts isolent un niveau avec trois améliorations en file', asy
         ['shipyard', 'Réduction du temps de construction des vaisseaux', bonusGain(70, 25)],
         ['fortress', 'Structure supplémentaire des défenses', bonusGain(25, 10)],
         ['storage_nano', 'Stockage de nano', 100000],
-        ['mine_nano', 'Production de nano', 180 * (1.2 - 0.4 * (position - 1) / 8)],
+        ['mine_nano', 'Production de nano', 360 * (1.2 - 0.4 * (position - 1) / 8)],
     ];
     for (const [slug, label, expected] of examples) {
         sql(`DELETE FROM queue_item WHERE planet_id=${planet} AND queue_type='building'`);
