@@ -1,5 +1,11 @@
 # Roadmap Genesis Reborn
 
+## Préavis de détection des attaques — 18 novembre 2026
+
+Le [préavis des attaques entrantes](REGLES.md#préavis-dattaque-et-visibilité--lot-h)
+passe à 30 minutes plus 5 minutes par niveau cumulé d’Analyse tactique, dans la
+limite de 75 % du trajet aller. Le seuil est recalculé lorsque l’arrivée change.
+
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026
 
 Lot 1 fusionné dans `dev` par la [PR #69](https://github.com/c41m07/genesis-reborn/pull/69)

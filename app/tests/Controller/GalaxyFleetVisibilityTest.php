@@ -205,7 +205,7 @@ final class GalaxyFleetVisibilityTest extends WebTestCase
         [$defender,$target]=$this->player('ThresholdDefender');[$attacker]=$this->player('ThresholdAttacker');
         $home=$this->hiddenOrigin($defender,$attacker,$target);
         $fleet=$this->fleet($attacker,$home,$target,'attack');$fleet->departureAt=$this->clock->now()->modify('-2 hours');
-        $fleet->arrivalAt=$this->clock->now()->modify('+5 minutes 1 second');$fleet->cargo=['hydrogen'=>987654321];
+        $fleet->arrivalAt=$this->clock->now()->modify('+30 minutes 1 second');$fleet->cargo=['hydrogen'=>987654321];
         $fleet->navigation=['active'=>['status'=>'traveling','progress'=>.5,'at'=>$this->clock->now()->getTimestamp()],'private'=>'SECRET_NAVIGATION'];
         $this->ship($fleet,'fighter','basic',3);$this->em->flush();
         self::assertNotContains($fleet->id,array_column($this->surveillance($defender,$target->solarSystem->galaxy->id)['flights'],'id'));
@@ -236,7 +236,7 @@ final class GalaxyFleetVisibilityTest extends WebTestCase
         self::assertSame(15,$detection->level($defender->currentPlayerUniverse));
         self::assertSame(['basic'=>5,'intermediate'=>5,'superior'=>5],$detection->maxLevels($defender->currentPlayerUniverse->universe));
         $fleet=$this->fleet($attacker,$home,$target,'attack');$fleet->departureAt=$this->clock->now()->modify('-4 hours');
-        $fleet->arrivalAt=$this->clock->now()->modify('+80 minutes 1 second');$this->ship($fleet,'fighter','basic',1);$this->em->flush();
+        $fleet->arrivalAt=$this->clock->now()->modify('+105 minutes 1 second');$this->ship($fleet,'fighter','basic',1);$this->em->flush();
         self::assertStringNotContainsString('data-incoming-attack=',$this->surveillance($defender)['html']);
         $this->clock->sleep(1);self::assertStringContainsString('data-incoming-attack=',$this->surveillance($defender)['html']);
         $universe=$this->em->find(Universe::class,$defender->currentPlayerUniverse->universe->id);
@@ -247,7 +247,8 @@ final class GalaxyFleetVisibilityTest extends WebTestCase
             $catalog->getTierForUniverse($universe,'technologies','tactical_intelligence','superior'),'technologies',4,$target,[],['tactical_intelligence'=>['basic'=>5,'intermediate'=>5,'superior'=>3]]);
         self::assertSame(16,$benefits[0]['before']);self::assertSame(18,$benefits[0]['after']);
         self::assertSame(-16,$benefits[1]['before']);self::assertSame(-18,$benefits[1]['after']);
-        self::assertEquals(70,$benefits[2]['before']);self::assertEquals(75,$benefits[2]['after']);
+        self::assertEquals(95, $benefits[2]['before']);
+        self::assertEquals(100, $benefits[2]['after']);
     }
 
     public function testNonOffensiveRecipientsAlliesAndDiscoveryAreRechecked(): void
