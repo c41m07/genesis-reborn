@@ -2091,19 +2091,22 @@ Conception **3/5**. L’utilisateur souhaite garder sa galaxie et examiner une c
 immersive à 80 systèmes avant de choisir une direction. Cette demande ne valide
 ni la proposition B ni sa réalisation dans le jeu.
 
-La page Figcraft **32 · L7C · 80 systèmes — Galaxie et distances** ajoute huit
-cadres : galaxie conservée et vue à l’échelle en 1440, 768 et 390 px, puis deux
-planches explicatives adaptées à l’ordinateur et au téléphone. Les pages précédentes
-sont conservées. Les deux modes sont des présentations du même ensemble de systèmes,
-avec une sélection commune, plutôt que des pages correspondant à des tâches distinctes.
+La page Figcraft **32 · L7C · 80 systèmes — Galaxie et distances** contient onze
+cadres : galaxie conservée, échelle actuelle et étude de spirale à l’échelle en
+1440, 768 et 390 px, puis deux planches explicatives. Les pages précédentes sont
+conservées. Les modes présentent les mêmes identifiants de systèmes et gardent
+une sélection commune, plutôt que de séparer cette consultation en plusieurs pages.
+La destination est désormais **vide par défaut** : pas de trajet de sélection ni
+de fiche de distance avant un choix explicite. Deux mouvements fictifs, identifiés
+comme tels, illustrent la consultation des flottes sans destination sélectionnée.
 
 L’étude reprend les coordonnées des 80 systèmes de la galaxie locale existante,
 par lecture seule, sans données de commandants. Le placement du contrôleur actuel
 est conservé : huit bras de dix systèmes. Cette spirale est une disposition visuelle ;
 ses écarts en pixels ne représentent pas les distances calculées depuis les coordonnées.
-La proposition conserve donc la spirale et son habillage immersif, affiche la distance
-réelle de la destination et propose une vue à l’échelle facultative, sans déplacer les
-coordonnées persistées ni modifier les règles de trajet.
+Les modes « Galaxie » et « Échelle actuelle » conservent donc les distances du jeu.
+Le second retire le quadrillage visible et reprend un habillage spatial, sans déplacer
+les marqueurs pour les faire artificiellement suivre les bras.
 
 Exemple avec des positions planétaires illustratives : A:43:3 vers A:44:3 ou
 A:53:3 donne **440 UA** dans les deux cas : sortie 70, hyperspace 300, entrée 70.
@@ -2113,16 +2116,33 @@ inventée sans flotte sélectionnée. Sur téléphone, les 80 marqueurs restent 
 et les libellés de la spirale sont allégés. Le zoom du moteur existant reste à préserver
 lors d’une éventuelle intégration ; l’aperçu ne l’implémente pas.
 
-Vérifications de conception : six cartes contenant chacune 80 marqueurs natifs,
-20 liens de prototype, huit exports sans débordement ni chevauchement de textes
-détecté. Les 9 480 paires comparées dans les trois cartes métriques confirment
-une échelle uniforme ; l’arrondi des coordonnées natives produit un écart maximal
-de 0,013 px. L’aperçu interactif est vérifié en 1024, 736, 390 et 320 px : sélection
-des 80 destinations, mêmes distances entre les modes, aucun débordement ni erreur
-de script constaté. Le document Figcraft est enregistré sur la page 32.
+À la demande de l’utilisateur, un troisième mode **« Spirale à l’échelle »** explore
+une géographie différente : les distances hyperspatiales sont proportionnelles aux
+écarts entre les points des bras, avec la même échelle sur les deux axes. L’exemple
+utilise la courbe normalisée de la galaxie multipliée par 1 500 UA ; cette échelle
+sert uniquement à la démonstration et ne constitue pas une décision d’équilibrage.
+A:43:3 → A:44:3 vaut alors environ 292 UA et A:43:3 → A:53:3 environ 662 UA,
+contre 440 UA chacun actuellement. Les 70 UA d’entrée et de sortie de l’exemple
+s’ajoutent aux distances hyperspatiales. Adopter cette géographie modifierait les
+distances, les durées et les consommations : cela nécessite une décision produit
+distincte, sans réécriture ni migration implicite des systèmes existants.
+
+La première proposition A (page 30) était une maquette de composition à cinq repères
+placés manuellement, **pas une vue à l’échelle**. Le rendu de grille de la première
+étude de page 32 utilisait bien les coordonnées actuelles à échelle uniforme.
+
+Vérifications de conception : neuf cartes contenant chacune 80 marqueurs natifs,
+38 liens de prototype et onze cadres contrôlés. Les 9 480 paires des trois cartes
+métriques et 9 480 paires des trois spirales proposées confirment une échelle uniforme
+pour leur géographie respective ; l’arrondi des marqueurs métriques produit un écart
+maximal de 0,013 px. L’aperçu interactif est vérifié en 1024, 736, 390 et 320 px :
+destination initiale vide, ancienne sélection d’exemple écartée, retour à « Aucune »,
+mouvements visibles et distances cohérentes dans les trois modes. Aucune erreur de
+script ni débordement horizontal constaté. Les libellés mobiles sont raccourcis après
+contrôle visuel pour éviter leur coupure. Le document est enregistré sur la page 32.
 
 Preuves locales : `lot-7C-80-manifest.json`, `galaxie-80-verification.json`,
-`galaxie-80-interactive-verification.json` et `genesis-galaxie-80.html`, dans le
+`galaxie-80-v2-interactive-verification.json` et `genesis-galaxie-80.html`, dans le
 dossier de conception courant. Aucun code du jeu, règle ou donnée existante n’est
 modifié. **Direction de conception toujours à valider avant développement.**
 
@@ -2144,7 +2164,7 @@ modifié. **Direction de conception toujours à valider avant développement.**
 | L6 | A implémentée et vérifiée localement | A choisie explicitement | 32 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
 | L7A | A implémentée et vérifiée localement | A choisie explicitement ; Vue générale conservée | 51 PHP, sept parcours navigateur et 43 captures | CI, intégration et déploiement distincts |
 | L7B | Page 29 implémentée et vérifiée localement | Version consolidée validée explicitement | 20 PHP, six parcours navigateur consolidés et 30 captures ; bilan ci-dessus | CI complète, intégration et déploiement distincts |
-| L7C | Deux propositions et une étude à 80 systèmes préparées | Direction attendue, pages 30/31/32 | 50 cadres A/B, puis huit cadres comparant spirale et distances ; aucune réalisation du jeu | Choisir la direction avant développement |
+| L7C | Deux propositions et une étude à 80 systèmes préparées | Direction attendue, pages 30/31/32 | 50 cadres A/B, puis onze cadres comparant géographie actuelle et spirale à l’échelle ; aucune réalisation du jeu | Choisir la direction et décider des distances avant développement |
 | L7D à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 

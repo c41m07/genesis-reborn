@@ -129,9 +129,11 @@ Ses deux propositions sont préparées dans Figcraft : page 30 « Exploration ca
 et page 31 « Carte immersive », 50 cadres en trois formats, états et détails compris.
 Cartes schématiques ; le moteur 3D existant sera conservé. Choix utilisateur attendu.
 Une étude complémentaire en page 32 montre les 80 systèmes de la galaxie locale :
-huit bras conservés, distance réelle affichée et vue à l’échelle facultative.
-Huit cadres et un aperçu interactif sont vérifiés ; aucune direction supplémentaire
-n’est approuvée et aucun code de carte n’est modifié.
+huit bras conservés, échelle actuelle et étude de spirale avec de nouvelles distances.
+Onze cadres et un aperçu interactif sont vérifiés, avec destination vide par défaut
+et mouvements fictifs identifiés. La première proposition A n’était pas à l’échelle.
+Adopter une spirale physiquement cohérente changerait les distances et demande une
+décision produit ; aucun code de carte ni donnée du jeu n’est modifié.
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026
