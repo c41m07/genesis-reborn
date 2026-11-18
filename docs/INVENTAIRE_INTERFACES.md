@@ -41,6 +41,10 @@ en lignes, suivi fixe et files/flottes dépliables, sans stocks répétés dans 
 Les consommations sont rouges et négatives. Les rangs intermédiaire/supérieur sont
 repris dans 16 aperçus des écrans de la page 29, avec leur suivi et jusqu’à cinq ressources ;
 la planche séparée précédente est écartée.
+Les coûts occupent au maximum cinq colonnes par rangée ; sur téléphone, le mode
+en lignes leur réserve toute la largeur. Le bouton indisponible détaille le nom
+complet et le montant de chaque ressource manquante, une par ligne. Vérification
+ciblée de 44 écrans et 172 cartes/lignes, sans modification des montants.
 Les quatre catalogues et leurs états sont représentés ; validation de la page 29 attendue.
 Les autres écrans restent inventoriés, sans validation implicite. Aucune CI GitHub, fusion ou livraison n’est revendiquée.
 Les états visibles supplémentaires sont recensés ensuite.

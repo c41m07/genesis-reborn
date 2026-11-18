@@ -116,6 +116,10 @@ et panneaux de files/flottes avec annulation. 53 cadres vérifiés et deux aper�
 défilables. Les consommations deviennent rouges et négatives. Après précision de
 l’utilisateur, 16 aperçus Intermédiaire/Supérieur reprennent directement les écrans
 de la page 29, avec leurs files et interrupteurs, en cartes/lignes sur ordinateur/mobile.
+Les coûts sont ensuite limités à cinq colonnes par rangée, et chaque ressource
+manquante est détaillée dans le bouton indisponible. Sur téléphone, les coûts du
+mode en lignes prennent toute la largeur. Vérification ciblée : 44 écrans,
+172 cartes/lignes et 464 montants conservés ; 31 captures actualisées.
 Validation de la reprise attendue avant intégration.
 CI GitHub, fusion et déploiement restent distincts.
 

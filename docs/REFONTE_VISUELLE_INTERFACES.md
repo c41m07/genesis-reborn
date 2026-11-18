@@ -1937,6 +1937,33 @@ les mêmes pages qu’avant l’intervention. Preuves : `lot-7B-rangs-page29-man
 courante est exclusivement la page 29 ; la comparaison précédente est écartée.
 Le code du jeu est inchangé ; aucune CI, intégration ou publication revendiquée.
 
+### Coûts sur cinq colonnes et manque dans le bouton — 18 novembre 2026
+
+À la demande de l’utilisateur, les coûts occupent **au maximum cinq colonnes par
+rangée** dans la page 29. Les rangs à quatre ou cinq ressources tiennent désormais
+sur une seule rangée ; leurs cartes sont raccourcies en conséquence. Les quatre
+cartes par ligne sur ordinateur sont conservées. Dans les lignes sur téléphone,
+les caractéristiques passent sur une ou deux colonnes, puis les coûts prennent
+toute la largeur. C’est une adaptation du mode d’affichage, sans nouvelle page.
+Complexité **3/5** : adaptation responsive et préservation des états et liaisons.
+
+Le bouton indisponible affiche **« Il manque : »**, suivi du nom complet et du
+montant manquant de chaque ressource, une par ligne. Exemple supérieur de recherche :
+976 Antimatière et 1 391 Hydrogène. Sa hauteur s’adapte au nombre de manques ;
+l’ancien message extérieur est masqué. Les motifs de prérequis restent prioritaires
+dans les états qui les présentent. Les libellés des coûts sont abrégés à quatre ou
+cinq colonnes ; le détail du manque conserve les noms complets. Les consommations
+horaires restent rouges et négatives, sans répétition des stocks dans les cartes.
+
+Vérification ciblée des **44 écrans et 172 cartes/lignes** : 464 montants de coûts
+inchangés, 16 boutons de manque dont quatre avec deux ressources, 40 consommations
+rouges négatives et 1 540 interactions contrôlées. Aucun chevauchement ou débordement
+de texte visible détecté ; lecture visuelle complémentaire sur ordinateur et
+téléphone. Les pages, cadres, interrupteurs et zones de suivi fixe sont préservés.
+31 captures sont actualisées. Preuves : `lot-7B-couts-page29-manifest.json` et
+`lot-7B-couts-page29-verification.json`. Maquette enregistrée dans Figcraft ;
+validation de l’utilisateur attendue avant réalisation dans le jeu.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -1954,7 +1981,7 @@ Le code du jeu est inchangé ; aucune CI, intégration ou publication revendiqu�
 | L5 | A implémentée et vérifiée localement | A choisie explicitement | 44 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
 | L6 | A implémentée et vérifiée localement | A choisie explicitement | 32 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
 | L7A | A implémentée et vérifiée localement | A choisie explicitement ; Vue générale conservée | 51 PHP, sept parcours navigateur et 43 captures | CI, intégration et déploiement distincts |
-| L7B | Cartes/lignes et suivi dépliable consolidés | Validation attendue, page 29 | 53 cadres modèle et 16 aperçus de rangs dans la page 29 ; deux menus mobiles | Réalisation après validation |
+| L7B | Cartes/lignes et suivi dépliable consolidés | Validation attendue, page 29 | 53 cadres modèle et 16 aperçus de rangs ; coûts sur cinq colonnes, manque dans le bouton ; deux menus mobiles | Réalisation après validation |
 | L7C à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
