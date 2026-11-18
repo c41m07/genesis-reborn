@@ -113,8 +113,8 @@ Les liens du prototype simulent la navigation et n’exécutent aucune action du
 | L11 | Wiki : accueil, chapitre, recherche et références | 3/5 · 3/5 | Pages déjà séparées, anciens fragments et formules dépliables. |
 | L12 | Cohérence, erreurs et composants communs restants | 4/5 · 4/5 | Revue transversale ; adaptations communes rattachées au lot consommateur. |
 
-Le tableau comporte **18 lots prévus** : six ensembles réalisés localement
-(L1A/L1B/L1C, L2, L3 et L4), douze restants. Certains ensembles complexes seront
+Le tableau comporte **18 lots prévus** : sept ensembles réalisés localement
+(L1A/L1B/L1C, L2, L3, L4 et L5), onze restants. Certains ensembles complexes seront
 subdivisés pendant leur analyse ;
 ce total ne fixe donc pas le nombre final de livraisons. Les complexités seront
 réévaluées avant chaque sous-tâche. À la demande de l’utilisateur, les lots de
@@ -1253,7 +1253,7 @@ Aucun changement de configuration globale, dépendance installée, donnée habit
 modifiée ou migration sur une base existante. Ces contrôles ciblés ne constituent
 pas un audit RGAA ; performance non mesurée, CI GitHub/fusion/déploiement distincts.
 
-## L5 — Projets collectifs, deux propositions préparées — 18 novembre 2026
+## L5 — Projets collectifs, proposition A retenue — 18 novembre 2026
 
 L4 A est enregistré dans `e13e588`. Le lot conserve les trois listes dédiées
 `/guildes/projets`, `/guildes/projets/disponibles`, `/guildes/projets/historique`
@@ -1310,7 +1310,53 @@ Preuves près du `.figcraft` : `lot-5-manifest.json`, `lot-5-preservation-avant.
 `lot-5-{A,B}-{ongoing,available,history,detail,completed,abandoned}-{largeur}.png`.
 Versions de structure et de navigation conservées dans le document.
 Ces contrôles de conception ne constituent pas une recette du jeu ni un audit RGAA.
-Les propositions attendent leur propre choix ; aucun code du jeu L5 n’est modifié.
+L’utilisateur choisit **A** (« j’aime bien le A »). Validation sauvegardée dans
+Figcraft `L5 - A validee par utilisateur`, sans toucher aux pages précédentes.
+
+### Réalisation A et vérifications locales
+
+Listes en lignes sur grand écran, identité/financement/contribution côte à côte ;
+modèles avec description/paliers et minimums/lancement rapprochés. Les minimums
+restent visibles, hors du dépliable des paliers. Fiche active : progression à
+gauche et don à droite à partir de 1201 px, puis une colonne. Maximums des dons
+indiqués en texte, sans changer les bornes ni les champs. Fiches terminées,
+abandonnées et consultation pendant les vacances sans formulaire de don.
+
+`guild-project-workspace.css` reste limité à `.project-redesign`. Les deux menus
+utilisent `ui/space_navigation`, ouvert sans JavaScript ; l’option facultative
+`currentAriaValue` conserve `location` sur la fiche et `page` par défaut ailleurs.
+Le titre de fiche ne contient plus une balise HTML parasite. Aucun contrôleur,
+service, règle de jeu, requête ou contrôleur JavaScript n’est modifié.
+Méthodes/actions, noms des champs et CSRF des deux formulaires comparés avant/après :
+identiques. Les versions, accès et dépliables/paginations restent existants.
+
+Contrôles réussis :
+
+- `make validate`, `make lint-static` (201 Twig, 80 YAML, PHP et conteneur),
+  `make assets`, syntaxe JavaScript et `git diff --check`.
+- **44 tests PHP / 239 assertions** dans une pile MariaDB jetable :
+  `GuildProjectPagesTest`, `GuildProjectTest`, `GuildProjectRulesTest`.
+  Accès par guilde/univers, lectures et paginations bornées, minimums, stocks,
+  colonie étrangère, versions périmées, CSRF, départ/dissolution, vacances,
+  attribution unique et récompense conservée en attente couverts.
+- **Trois parcours navigateur réussis** sur le passage final : financement de
+  deux paliers à plusieurs membres et boost unique ; lancement/don/historique
+  sans JavaScript ; recette A. Les assertions métier existantes sont conservées.
+  Les menus mobiles sont ouverts avant d’examiner leurs liens. La nouvelle recette
+  a été reprise après correction de sa mise en situation clavier (Tab avant focus).
+- Six vues/états à 1440/768/390/320 px, thèmes sombre/clair ; aucune barre horizontale,
+  Axe sans violation dans l’espace à 390 px. Minimums visibles, ressource déjà
+  financée sans champ de don, maximums, colonie au nom long, clavier/retour/
+  rechargement, absence de guilde, listes vides, contributions et vacances vérifiés.
+
+**66 captures réelles finales**, indexées dans
+`output/playwright/project-workspace/captures-jeu-L5-A/` et `captures-jeu-L5-A/`
+près du fichier Figcraft. Nouveau `project-workspace.spec.mjs` et adaptation
+ciblée de `guild-projects.spec.mjs`. README, architecture, guide des guildes,
+guide d’interface et suivi synchronisés. Aucune installation, migration sur base
+existante ou modification de données habituelles. Performance non mesurée ;
+ces contrôles ne constituent pas un audit RGAA. CI GitHub, fusion et déploiement
+restent distincts.
 
 ## Reprise et états de couverture
 
@@ -1326,7 +1372,7 @@ Les propositions attendent leur propre choix ; aucun code du jeu L5 n’est modi
 | L2C | A implémentée et vérifiée localement | A choisie explicitement | 27 PHP, cinq parcours navigateur consolidés et 36 captures | CI, intégration et déploiement distincts |
 | L3 | A implémentée et vérifiée localement | A choisie explicitement | 22 PHP, sept parcours navigateur et 50 captures | CI, intégration et déploiement distincts |
 | L4 | A implémentée et vérifiée localement | A choisie explicitement | 34 PHP, six parcours navigateur consolidés et 52 captures | CI, intégration et déploiement distincts |
-| L5 | Propositions A/B préparées | Choix attendu | 38 cadres à 1440/768/390 px ; statuts et confirmations documentés | Conception seulement ; réalisation après choix |
+| L5 | A implémentée et vérifiée localement | A choisie explicitement | 44 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
 | L6 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
@@ -1336,8 +1382,8 @@ La Vue générale est finalisée dans `6b3bb70`, avant L2C (compositions),
 à la demande de l’utilisateur. L2C A est enregistré dans `da86685` ; L2 est donc complet localement.
 L3 A est enregistré dans `16a9173`, réalisé et vérifié localement.
 L4 A est enregistré dans `e13e588`, réalisé et vérifié localement.
-L5 attend le choix A/B dans les pages Figcraft 18/19.
-Le plan reste à 18 ensembles : six sont réalisés, douze restent à traiter.
+L5 A est réalisé localement ; L6 constitue le prochain ensemble.
+Le plan reste à 18 ensembles : sept sont réalisés, onze restent à traiter.
 Vue générale constitue aussi une avance ciblée de L7A, sans valider tout ce lot. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
 Les validations précédentes restent limitées à leurs lots.
 Aucun push, PR, fusion ou déploiement n’est autorisé par le seul changement de

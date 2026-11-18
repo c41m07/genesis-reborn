@@ -2050,3 +2050,17 @@ confirmation de suppression dans tous les univers sont conservés. Aucune règle
 métier n’est modifiée. L’utilisateur confirme vouloir conserver la méthode A/B
 actuelle pour les lots suivants ; ses choix répétés ne les valident pas d’avance.
 [Recette et limites](REFONTE_VISUELLE_INTERFACES.md).
+
+
+## Refonte visuelle L5 : proposition A — 18 novembre 2026
+
+L’utilisateur choisit A pour les projets collectifs : listes en lignes, minimums
+visibles avant lancement, progression et don rapprochés sur la fiche active.
+Les menus communs de guilde et de projets restent disponibles sur mobile.
+Les trois listes et la fiche gardent leurs URL, paginations et dépliables utiles.
+
+Les dons restent définitifs, limités au palier courant et à une colonie autorisée.
+Versions, CSRF, restrictions de vacances, minimums, présence à la clôture et clé
+unique de récompense restent inchangés. Cette validation ne modifie aucune
+valeur de jeu et ne valide pas les lots suivants.
+[Recette et limites](REFONTE_VISUELLE_INTERFACES.md).

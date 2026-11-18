@@ -93,6 +93,13 @@ Les grades de guilde ne donnent aucun pouvoir sur les relations personnelles d�
 
 ## Projets collectifs : participer
 
+La présentation A du lot L5 aligne identité, financement et minimums sur grand
+écran ; elle s’empile sur mobile. Sur une fiche active, la progression et le don
+sont rapprochés. Les deux menus communs se replient sur mobile et restent ouverts
+sans JavaScript. Les minimums d’un modèle sont visibles avant son lancement ;
+seul le détail des paliers est dépliable. Les pages, droits et règles ci-dessous
+restent les mêmes. [Recette et limites](REFONTE_VISUELLE_INTERFACES.md).
+
 Un projet utilise un modèle défini par l’administration pour son univers. Le dirigeant ou un membre ayant `projects.start` peut le lancer depuis **Projets collectifs → Projets disponibles**. Tous les membres peuvent ensuite contribuer depuis une colonie leur appartenant.
 
 Le lancement fige le nom, la description, les coûts de chaque palier et les minimums de récompense. Une modification administrative ultérieure ne change pas un projet en cours. Un modèle désactivé cesse d’être proposé aux nouveaux lancements ; les projets déjà lancés continuent.

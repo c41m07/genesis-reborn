@@ -1,0 +1,246 @@
+/* L5 A : les listes et la fiche partagent leur style sans modifier les autres espaces. */
+body.authenticated .project-redesign {
+    --project-control-border: #526d87;
+    --project-action-text: #090f1b;
+    --project-positive: #87d8b4;
+}
+
+body.authenticated[data-theme="light"] .project-redesign {
+    --muted: #526170;
+    --project-control-border: #6a7b88;
+    --project-action-text: #fff;
+    --project-positive: #256347;
+}
+
+body.authenticated .project-redesign .panel {
+    min-width: 0;
+    margin: 0;
+    padding: 20px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--panel);
+}
+
+body.authenticated .project-redesign :is(.guild-project-grid, .guild-project-detail) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+    margin: 24px 0;
+}
+
+.project-redesign .project-summary,
+.project-redesign .project-model {
+    display: grid;
+    gap: 28px;
+    align-items: start;
+}
+
+.project-redesign :is(.project-summary, .project-model) > div {
+    min-width: 0;
+}
+
+body.authenticated .project-redesign h2 {
+    margin: 0 0 24px;
+    font-size: 22px;
+    line-height: 1.5;
+}
+
+body.authenticated .project-redesign h3 {
+    margin: 0 0 24px;
+    font-size: 18px;
+    line-height: 1.5;
+}
+
+.project-redesign .project-overview h3 {
+    margin-top: 32px;
+}
+
+body.authenticated .project-redesign p {
+    margin: 0 0 20px;
+}
+
+body.authenticated .project-redesign .project-started {
+    margin: 24px 0;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+body.authenticated .project-redesign .badge {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--gold);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+body.authenticated .project-redesign .badge.completed {
+    color: var(--project-positive);
+}
+
+.project-redesign .project-personal ul,
+.project-redesign .project-overview > ul {
+    margin: 0 0 24px;
+    padding-left: 20px;
+}
+
+.project-redesign li + li {
+    margin-top: 8px;
+}
+
+body.authenticated .project-redesign .project-personal > a {
+    display: block;
+    margin-top: 28px;
+}
+
+body.authenticated .project-redesign .project-stage > label {
+    display: block;
+    margin: 0 0 24px;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+body.authenticated .project-redesign progress {
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    margin: 12px 0 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 5px;
+    background: var(--line);
+}
+
+.project-redesign progress::-webkit-progress-bar {
+    background: var(--line);
+}
+
+.project-redesign progress::-webkit-progress-value {
+    border-radius: 5px;
+    background: var(--gold);
+}
+
+.project-redesign progress::-moz-progress-bar {
+    border-radius: 5px;
+    background: var(--gold);
+}
+
+body.authenticated .project-redesign :is(button, .primary, .secondary, .space-navigation > a, summary) {
+    min-height: 44px;
+    font-size: 14px;
+    white-space: normal;
+}
+
+body.authenticated .project-redesign .primary {
+    border-color: var(--gold);
+    background: var(--gold);
+    color: var(--project-action-text);
+}
+
+body.authenticated .project-redesign .secondary {
+    border-color: var(--project-control-border);
+    background: transparent;
+    color: var(--text);
+}
+
+.project-redesign .space-navigation-menu-label {
+    color: var(--text);
+}
+
+body.authenticated .project-redesign .space-navigation > a {
+    border: 1px solid var(--project-control-border);
+    border-radius: 5px;
+}
+
+body.authenticated .project-redesign .space-navigation.space-navigation > a[aria-current] {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, var(--panel));
+    color: var(--accent);
+}
+
+.project-redesign details + details {
+    margin-top: 16px;
+}
+
+body.authenticated .project-redesign details > summary {
+    padding: 10px 12px;
+    border: 1px solid var(--project-control-border);
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.project-redesign details[open] > summary {
+    margin-bottom: 24px;
+}
+
+.project-redesign details > :is(ol, ul) {
+    padding-left: 20px;
+}
+
+.project-redesign .project-model-launch button {
+    width: 100%;
+    margin-top: 8px;
+}
+
+.project-redesign .project-donation-panel form {
+    display: grid;
+    gap: 20px;
+}
+
+.project-redesign .project-donation-panel .form-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+}
+
+body.authenticated .project-redesign .project-donation-panel label {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+body.authenticated .project-redesign .project-donation-panel :is(input, select) {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    margin: 8px 0 0;
+    border-color: var(--project-control-border);
+    font-size: 16px;
+}
+
+body.authenticated .project-redesign .project-donation-panel .project-donation-limit {
+    margin: 8px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.project-redesign .project-donation-panel button {
+    width: 100%;
+}
+
+.project-redesign .project-donation-panel form > p {
+    margin: 4px 0;
+    color: var(--muted);
+}
+
+@media (min-width: 1201px) {
+    .project-redesign .project-summary {
+        grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr) minmax(0, 1.2fr);
+    }
+
+    .project-redesign .project-model,
+    body.authenticated .project-redesign .project-active-layout {
+        grid-template-columns: minmax(0, 1fr) 330px;
+    }
+}
+
+@media (max-width: 600px) {
+    body.authenticated .project-redesign .panel {
+        padding: 18px;
+    }
+
+    .project-redesign .page-heading > :is(.primary, .secondary) {
+        width: 100%;
+    }
+}

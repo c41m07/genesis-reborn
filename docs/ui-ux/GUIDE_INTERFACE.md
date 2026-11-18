@@ -288,3 +288,14 @@ compte, vacances de l’univers sélectionné, suppression dans tous les univers
 Actions irréversibles identifiables, labels/focus/erreurs conservés ; styles
 isolés dans `account-workspace.css`. Résultats de recette et captures dans le
 [suivi de refonte](../REFONTE_VISUELLE_INTERFACES.md).
+
+## Projets collectifs — proposition A du lot L5
+
+Trois listes dédiées et une fiche par projet. Deux menus natifs partagés : guilde,
+puis projets ; repliables sur mobile et ouverts sans JavaScript. Listes en lignes
+sur grand écran : identité, financement et minimums personnels. Modèles avec
+conditions de récompense visibles avant lancement ; paliers dépliables. Fiche
+active avec progression à gauche et don à droite, puis une colonne ; aucun
+formulaire sur une fiche close ou pendant les vacances. Maximums de don en texte,
+libellés et confirmations existants. Styles limités à `.project-redesign` ;
+[recette et captures](../REFONTE_VISUELLE_INTERFACES.md).

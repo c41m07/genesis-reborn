@@ -793,6 +793,16 @@ personnelle est lue séparément et reste complète. Les identités sont limité
 les colonies nécessaires au don ; les données communes du bandeau restent celles
 de `GameShell`. Aucune actualisation périodique ni nouvelle écriture de lecture.
 
+L5 A conserve cette préparation et réorganise seulement les templates.
+`guild-project-workspace.css` est limité à `.project-redesign` : listes en lignes,
+modèles avec minimums visibles et fiche active avec don à droite à partir de
+1201 px, puis une colonne. Les formulaires gardent leurs méthodes, actions,
+champs, CSRF et versions ; les maximums existants sont aussi indiqués en texte.
+Les deux menus réutilisent `ui/space_navigation`, ouvert sans JavaScript. Son
+option `currentAriaValue` conserve `location` sur une fiche de projet et reste
+`page` par défaut pour les autres espaces. Aucun nouveau service, contrôleur
+JavaScript, chargement ou calcul métier n’est ajouté.
+
 Les deux navigations gardent l’espace guilde et la destination projet actifs.
 `page_sections` ne crée pas de sommaire sur ces pages. Il oriente les anciens
 fragments de liste à l’ouverture et au changement de fragment, en conservant la

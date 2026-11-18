@@ -60,3 +60,4 @@ import './styles/fleet-harbour.css';
 import './styles/fleet-compositions.css';
 import './styles/inventory-workspace.css';
 import './styles/account-workspace.css';
+import './styles/guild-project-workspace.css';

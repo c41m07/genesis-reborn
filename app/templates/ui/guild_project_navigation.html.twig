@@ -1,10 +1,19 @@
 {% set projectDestination = route == 'app_guild_project' ? (project.status == 'active' ? 'app_guild_projects' : 'app_guild_projects_history') : route %}
-<nav class="ui-tabs space-navigation" aria-label="Navigation des projets collectifs">
+{% set projectDestinations = [] %}
+{% set currentLabel = '' %}
 {% for destination in [
     {route:'app_guild_projects', label:'Projets en cours'},
     {route:'app_guild_projects_available', label:'Projets disponibles'},
     {route:'app_guild_projects_history', label:'Historique'}
 ] %}
-<a href="{{ path(destination.route) }}"{% if projectDestination == destination.route %} class="active" aria-current="{{ route == 'app_guild_project' ? 'location' : 'page' }}"{% endif %}>{{ destination.label }}</a>
+{% set active = projectDestination == destination.route %}
+{% set projectDestinations = projectDestinations|merge([destination|merge({active:active})]) %}
+{% if active %}{% set currentLabel = destination.label %}{% endif %}
 {% endfor %}
-</nav>
+{% include 'ui/space_navigation.html.twig' with {
+    destinations:projectDestinations,
+    navigationLabel:'Navigation des projets collectifs',
+    currentLabel:currentLabel,
+    currentAriaValue:route == 'app_guild_project' ? 'location' : 'page',
+    compact:true
+} only %}
