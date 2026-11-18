@@ -2671,6 +2671,91 @@ L7E est réalisé et vérifié localement sur `feature/refonte-visuelle`.
 **Treize lots sur dix-huit réalisés ; cinq restants**, à partir de L8.
 CI GitHub, push, fusion et déploiement ne sont pas réalisés par ce lot.
 
+## L8 — Accueil, accès et univers : propositions A/B préparées — 18 novembre 2026
+
+Complexité **4/5** : parcours publics, erreurs de formulaire, confirmation d’adresse,
+récupération, participations et calendriers d’univers. Lecture ciblée de
+`SecurityController`, `UniverseController`, `ColonyController::home`,
+`CrawlerController`, de la configuration d’authentification, des formulaires/DTO,
+des gabarits publics/sécurité/univers, du socle commun et des deux configurations
+d’univers. Les gabarits des emails de bienvenue, confirmation et réinitialisation
+sont examinés et conservés : contenu, lien de repli et durées restent ceux de l’existant.
+
+Le fichier Figcraft de la mission contient deux nouvelles pages natives :
+
+- **38 · L8 · A — Continuité claire** : accueil présentant le jeu à côté d’un aperçu
+  réel, formulaires en panneau avec contexte à gauche sur ordinateur, univers en
+  cartes complètes. Sur téléphone, l’accès au compte reste direct et les cartes
+  d’univers sont empilées. Bénéfice : continuité avec les écrans actuels et règles
+  regroupées par univers ; limite : la comparaison demande davantage de lecture
+  verticale lorsque plusieurs univers sont affichés sur téléphone.
+- **39 · L8 · B — Immersion et comparaison** : illustration spatiale existante à
+  l’accueil, formulaires centrés sur une surface opaque, inscription sur deux colonnes
+  à grande largeur, univers comparés par critères. Sur téléphone, chaque critère
+  rapproche les deux valeurs, sans défilement horizontal ni information retirée.
+  Bénéfice : identité spatiale à l’entrée et comparaison plus immédiate ; limites :
+  illustration plus présente et comparaison à adapter à un nombre supérieur d’univers.
+
+Même couverture dans les deux directions : accueil visiteur, connexion, inscription,
+confirmation d’adresse et renvoi, demande de récupération, nouveau mot de passe,
+liens expirés/invalides, succès neutres, échec d’envoi, erreurs de champs, mot de
+passe visible/masqué et mémorisation 30 jours. Les univers montrent participation
+existante/premier empire, ouvert/programmé/inaccessible, fermeture, absence d’univers
+et actualisation indisponible avec dernière échéance connue. L’accès refusé reprend
+les trois rôles du gabarit actuel : visiteur, joueur et administrateur.
+
+Les neuf paramètres des univers restent lisibles avant les boutons : cinq vitesses,
+limites de planètes et de flotte, guildes et conquête JcE. Exemples basés sur les
+configurations Omega/Turbo : vitesses temporelles ×1/×100, production ×1, 31 planètes,
+1 000 000 vaisseaux ; guildes activées dans Omega et désactivées dans Turbo.
+Les participations, comptes et calendriers sont fictifs, sans état de serveur prétendu.
+Les illustrations et captures réutilisent les assets déjà présents dans le projet.
+
+Navigation : pages dédiées conservées pour chaque tâche d’accès ; les erreurs et
+succès sont des états de ces pages. Une comparaison d’univers reste sur `/univers`,
+sans nouvelle étape obligatoire avant la création d’empire. La connexion reprend
+la destination par défaut `/univers` ; l’accueil d’un compte déjà connecté conserve
+sa redirection vers la colonie sélectionnée ou les univers. Les cadres du prototype
+ne constituent pas de nouvelles routes. Un joueur déjà établi retrouve le socle
+approuvé ; le premier empire ne montre aucun stock ou colonie inventés et conserve
+les accès au compte, au wiki, au feedback et à la déconnexion.
+Un **plan cliquable**, placé à gauche des cadres de chaque proposition, donne accès
+aux parcours, aux erreurs et à l’autre direction. Huit départs de prototype au total
+(plan, accueil, connexion et univers pour chaque option).
+
+Garde-fous de réalisation : mêmes champs, réponses neutres, mots de passe de 12–128 caractères,
+CSRF, quotas d’envoi, liens à usage unique et redirections. Aucun accès social,
+case obligatoire ou compteur de joueurs ajouté. Confirmation et récupération restent
+des actions explicites. Conserver les métadonnées, l’indexation accueil/inscription,
+le `noindex` de connexion et les contrats de `robots.txt`, du sitemap et de `/health`.
+Aucune vérification Search Console ou publication n’est annoncée.
+
+Vérifications de conception : **92 cadres** (46 par direction), **512 commandes
+reliées**, destinations contrôlées et couverture A/B équivalente. Accueil, connexion,
+inscription et univers en 1440/768/390 ; récupération et confirmation en 1440/390 ;
+autres états en 390. Contrôles des limites et des chevauchements de texte : aucun
+signalement restant. Examen visuel des exports ordinateur/mobile de l’accueil,
+connexion, inscription et univers. Les 32 pages antérieures, dont la page 36 A,
+conservent leurs noms et nombres de cadres. Fichier natif enregistré sur la page 38 A.
+Ces vérifications portent sur les maquettes, pas sur le fonctionnement ni une
+conformité RGAA complète de l’application.
+
+Limites du prototype : champs dessinés, exemples de navigation simulés et calendrier
+statique ; aucune saisie réelle, création de compte, entrée dans un univers ou émission
+d’email. Les documents légaux, le wiki, le feedback et le retour à la console sont
+représentés sans nouvelle maquette de leurs destinations, rattachées aux lots suivants.
+L’affichage du mot de passe est illustré à la connexion ; les contrôles des autres
+formulaires restent représentés. Les changements de contexte et protections serveur
+seront vérifiés sur l’application après choix. Le thème clair existant restera à
+contrôler pendant la réalisation.
+
+Preuves locales dans le dossier de conception courant : `lot-8-manifest.json`,
+`lot-8-arbres.json`, `lot-8-verification.json`, `lot-8-document-avant.json`,
+`lot-8-document-apres.json`, `lot-8-enregistrement.json`, exports `lot-8-A-*.png`
+et `lot-8-B-*.png`. Aucune modification du code du jeu : L7E reste le dernier lot
+intégré dans `557061e` ; treize lots réalisés sur dix-huit, cinq restants.
+Le choix A/B ou une demande de combinaison reste attendu avant développement.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -2692,7 +2777,8 @@ CI GitHub, push, fusion et déploiement ne sont pas réalisés par ce lot.
 | L7C | Implémenté et vérifié localement | Conception validée ; spirale retenue explicitement pour les distances | Deux vues persistantes, gestes et moteur conservés, bilans par camp ; recette ci-dessous | CI complète, fusion et déploiement distincts |
 | L7D | A implémentée et vérifiée localement | A choisie explicitement après reprise depuis les rapports actuels | 15 PHP / 98 assertions ; cinq parcours navigateur consolidés ; bilan ci-dessous | CI complète, fusion et déploiement distincts |
 | L7E | A implémentée et vérifiée localement | Page 36 A validée explicitement après reprise de la messagerie et des classements | 90 PHP / 569 assertions ; neuf parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
-| L8 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
+| L8 | Propositions A/B préparées | Choix attendu | Figcraft pages 38/39 ; 92 cadres et 512 commandes reliées ; conception seulement | Choisir une direction avant réalisation |
+| L9 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
 Les commits restent sur `feature/refonte-visuelle` ; L1B A est enregistré dans
@@ -2706,7 +2792,7 @@ L6 A est enregistré dans `811ef2d`, réalisé et vérifié localement.
 L7A A est enregistrée dans `730b447` ; recette ci-dessus. Vue générale conservée.
 L7B page 29 est intégrée localement dans `81807df` ; L7C est enregistré dans `50f3965`, réalisé selon la
 validation finale et la décision de géographie. L7D A est intégré dans `5523ac4`.
-L7E page 36 A est validée explicitement, intégrée et vérifiée localement ;
+L7E page 36 A est validée explicitement, intégrée dans `557061e` et vérifiée localement ;
 la messagerie et les classements existants restent la base de leur présentation.
 Le plan reste à 18 ensembles : treize sont réalisés, cinq restent à traiter.
 Vue générale avait été finalisée en avance ; L7A est désormais complet localement. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.

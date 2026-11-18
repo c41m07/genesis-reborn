@@ -153,7 +153,13 @@ protection consultables au clavier/toucher, retour de recherche contextualisé.
 formats 1440/768/390/320, sombre/clair, clavier et accès sans JavaScript.
 Compilation, lint complet et contrôle du diff réussis ; bilan et limites dans le suivi.
 Treize ensembles sur 18 sont réalisés ; cinq restent à traiter, à partir de L8.
-L7D est enregistré dans `5523ac4`.
+L7D est enregistré dans `5523ac4`, L7E dans `557061e`. L8 dispose maintenant de deux
+propositions Figcraft : page 38 A « Continuité claire » et page 39 B « Immersion et
+comparaison ». Accueil, accès/confirmation/récupération, univers et états associés ;
+92 cadres et 512 commandes reliées, deux plans cliquables, couverture A/B équivalente.
+Exports ordinateur/mobile et contrôles de présentation vérifiés dans la maquette.
+Comptes, participations et calendriers fictifs ; aucun envoi ni code du jeu modifié.
+Choix attendu avant réalisation de L8.
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026
