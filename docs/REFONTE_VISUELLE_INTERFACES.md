@@ -1358,6 +1358,71 @@ existante ou modification de données habituelles. Performance non mesurée ;
 ces contrôles ne constituent pas un audit RGAA. CI GitHub, fusion et déploiement
 restent distincts.
 
+## L6 — Événements et Défis, deux propositions préparées — 18 novembre 2026
+
+L5 A est enregistré dans `9eb316e`. Le lot conserve les trois routes existantes :
+`/evenements`, `/evenements/defis` et `/evenements/defis/{id}`. Complexité :
+conception **3/5**, réalisation **4/5** ; contexte d’univers, périodes, seuils et
+états des récompenses. Sources ciblées examinées : contrôleurs des pages et fiches,
+`ChallengeQueryService`, les trois templates, résumé de défi, navigation,
+pagination, objectifs du planificateur et documentation d’architecture courante.
+
+Deux pages ajoutées au même document Figcraft :
+
+- **20 · L6 · A — Événements en lignes** : annonces et bonus en lignes, dates
+  regroupées à droite ; défis avec objectif, progression/récompense et accès
+  rapprochés. Fiche avec objectif/récompense à gauche et participation/action à
+  droite sur grand écran. Une colonne sur tablette/mobile.
+- **21 · L6 · B — Événements en cartes** : deux cartes par ligne sur ordinateur,
+  informations successives dans chaque carte. Fiche avec objectif/récompense,
+  puis participation, y compris sur ordinateur. Une colonne sur tablette/mobile.
+
+Événements et Défis restent des pages dédiées avec navigation secondaire commune
+repliable sur mobile. En cours et À venir restent deux sections du même document
+d’annonces, accessibles par leurs ancres ; aucun nouvel onglet ou filtre ne
+remplace une tâche autonome. La fiche garde son URL et le retour vers les défis.
+Aucun formulaire d’inscription, classement collectif supplémentaire, bouton de
+récupération manuelle ou nouveau compte à rebours n’est proposé.
+
+**38 cadres** : deux listes et quatre illustrations de fiche (défi guidé avec
+boîte, rotation Top 3, clôture avec objet en attente, annulation sans objet), à
+1440/768/390 px en A/B, plus deux planches d’états. Noms, pourcentages, objectifs,
+contributions, contenus et dates sont fictifs ; aucun événement réel n’est créé
+ni aucune valeur d’équilibrage modifiée.
+
+Les listes utilisent le fuseau personnel ; les dates des fiches restent
+explicitement en UTC, avec début prévu/effectif et fin distincts. Objectif
+collectif, minimum individuel et contenu complet de boîte restent visibles,
+y compris les ressources à zéro. Top 3/ex æquo, seuil, contribution positive,
+objectif non atteint, attente de démarrage, clôture en cours, objet disponible/
+en attente/utilisé et annulation avec récompense déjà acquise sont explicités.
+Les liens de participation gardent leur objectif : exploration/combat sur la
+carte, transport entre ses propres colonies, inventaire pour un objet déjà attribué.
+Les sorties hors du lot sont simulées par la planche d’états, sauf l’inventaire
+relié à sa conception approuvée.
+
+Les deux paginations d’annonces restent indépendantes par 25, comme celle des
+défis ; états vides et anciens liens conservés. Le panneau global Événements,
+ses compteurs et actualisations restent hors du lot. Structures grises sauvegardées
+avant la couleur ; styles propres au lot dans la continuité des références.
+Les dix-neuf pages précédentes sont conservées. Aucun code du jeu L6 n’est modifié ;
+les propositions attendent leur propre choix et la recette du jeu reste à faire.
+
+Contrôle du document : **38 cadres et 250 liens** vers des destinations existantes ;
+aucun texte hors cadre, superposé ou coupé par son parent. Empreintes des dix-neuf
+pages antérieures inchangées. Après précision du texte des découvertes comptées,
+les douze cadres concernés sont revérifiés : aucun défaut. Exports relus :
+annonces sur ordinateur, défis en cartes, fiche guidée mobile, rotation sur
+ordinateur, annulation mobile et clôture sur tablette. Horaires cohérents entre
+listes en Europe/Paris et fiches UTC ; dates des états clos/annulés antérieures
+aux illustrations actives.
+
+Preuves près du `.figcraft` : `lot-6-manifest.json`, `lot-6-preservation-avant.json`,
+`lot-6-verification.json`, `lot-6-verification-textes.json` et
+`lot-6-{A,B}-{events,challenges,guided,weekly,closed,cancelled}-{largeur}.png`.
+Version finale `L6 - propositions A B pour validation`, page A sélectionnée.
+Ces vérifications de conception ne constituent ni une recette du jeu ni un audit RGAA.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -1373,7 +1438,8 @@ restent distincts.
 | L3 | A implémentée et vérifiée localement | A choisie explicitement | 22 PHP, sept parcours navigateur et 50 captures | CI, intégration et déploiement distincts |
 | L4 | A implémentée et vérifiée localement | A choisie explicitement | 34 PHP, six parcours navigateur consolidés et 52 captures | CI, intégration et déploiement distincts |
 | L5 | A implémentée et vérifiée localement | A choisie explicitement | 44 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
-| L6 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
+| L6 | Propositions A/B préparées | Choix attendu | 38 cadres à 1440/768/390 px ; objectifs et états documentés | Conception seulement ; réalisation après choix |
+| L7A à L11 | Inventorié, sauf Vue générale déjà finalisée | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
 Les commits restent sur `feature/refonte-visuelle` ; L1B A est enregistré dans
@@ -1382,7 +1448,8 @@ La Vue générale est finalisée dans `6b3bb70`, avant L2C (compositions),
 à la demande de l’utilisateur. L2C A est enregistré dans `da86685` ; L2 est donc complet localement.
 L3 A est enregistré dans `16a9173`, réalisé et vérifié localement.
 L4 A est enregistré dans `e13e588`, réalisé et vérifié localement.
-L5 A est réalisé localement ; L6 constitue le prochain ensemble.
+L5 A est enregistré dans `9eb316e`, réalisé et vérifié localement.
+L6 attend le choix A/B dans les pages Figcraft 20/21.
 Le plan reste à 18 ensembles : sept sont réalisés, onze restent à traiter.
 Vue générale constitue aussi une avance ciblée de L7A, sans valider tout ce lot. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
 Les validations précédentes restent limitées à leurs lots.

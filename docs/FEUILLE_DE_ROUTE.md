@@ -88,7 +88,10 @@ fiches actives/terminées/abandonnées, 38 cadres. A est ensuite choisie et réa
 listes en lignes, minimums visibles et progression/don rapprochés, menus mobiles
 communs. 44 tests PHP / 239 assertions, trois parcours navigateur et 66 captures ;
 contrôles statiques et compilation réussis. **Sept ensembles réalisés sur 18,
-onze restants**. Prochain ensemble : Événements et défis (L6).
+onze restants**. L5 est enregistré dans `9eb316e`. Événements et Défis (L6) est
+préparé dans Figcraft, pages 20/21 : lignes et participation rapprochée (A),
+ou cartes et fiche verticale (B). Deux listes et quatre états de fiche,
+38 cadres ; choix attendu avant modification du jeu L6.
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026
