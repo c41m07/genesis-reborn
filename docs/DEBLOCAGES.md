@@ -4,7 +4,7 @@ Lot 1 fusionné dans `dev` par la [PR #69](https://github.com/c41m07/genesis-reb
 
 ## Lecture
 
-Les tableaux donnent les conditions complètes : toutes appartiennent au rang demandé, sauf les cinq passerelles explicites ci-dessous. Aucun autre rang du même élément, aucune ancienne spécialisation ni recherche implicite ne s’ajoute. Les libellés de famille ci-dessous gardent leurs variantes dans le jeu.
+Les tableaux donnent les conditions complètes et indiquent les exceptions où un autre rang intervient. Les libellés de famille ci-dessous gardent leurs variantes dans le jeu.
 
 Les conditions sont initiales et permanentes après acquisition selon cette grille. Elles ne changent pas pendant les améliorations. Recherches : accès du joueur dans l’univers, depuis toute colonie après déblocage, sans laboratoire local permanent. Bâtiments, vaisseaux et défenses : accès du joueur sur la colonie concernée. Prix, plafonds, durées et conditions de mission restent applicables.
 
@@ -27,18 +27,29 @@ mémorisés. Aucun changement de version du registre ni requalification supplém
 Les coûts, durées et plafonds restent conservés ; l’effet sur les délais de
 progression de cette révision n’est pas mesuré.
 
-Pour les huit autres familles, les conditions suivantes s’appliquent dans chacun des trois rangs :
+Pour le Piège à antimatière, le chantier et le bunker, les conditions suivantes s’appliquent dans chacun des trois rangs :
 
 | Famille | Conditions du même rang |
 |---|---|
 | Piège à antimatière (`mine_antimatter`) | Raffinerie d’hydrogène 5 + Génie civil colonial 2 |
 | Chantier d’assemblage (`shipyard`) | Mine à ciel ouvert 2 + Atelier de nanofabrication 2 |
 | Bunker de défense (`fortress`) | Mine à ciel ouvert 1 + Atelier de nanofabrication 1 |
-| Dépôt de minerais (`storage_metal`) | Mine à ciel ouvert 5 |
-| Coffre de nanomatériaux (`storage_nano`) | Atelier de nanofabrication 5 |
-| Réservoir cryogénique (`storage_hydrogen`) | Raffinerie d’hydrogène 5 |
-| Batterie de colonie (`storage_electricity`) | Centrale nucléaire 5 |
-| Cage magnétique (`storage_antimatter`) | Piège à antimatière 5 |
+
+Les cinq stockages suivent la même progression sur la colonie.
+
+| Rang du stockage | Conditions de déblocage initial | Niveau maximum pour les nouvelles commandes |
+|---|---|---|
+| Basique | Producteur de la ressource Basique 5 | 5 |
+| Intermédiaire | Producteur de la ressource Intermédiaire 5 + même stockage Basique 5 | 5 |
+| Supérieur | Producteur de la ressource Supérieur 5 + même stockage Basique 5 + même stockage Intermédiaire 5 | Illimité |
+
+| Stockage (nom de famille) | Producteur correspondant |
+|---|---|
+| Dépôt de minerais (`storage_metal`) | Mine à ciel ouvert |
+| Coffre de nanomatériaux (`storage_nano`) | Atelier de nanofabrication |
+| Réservoir cryogénique (`storage_hydrogen`) | Raffinerie d’hydrogène |
+| Batterie de colonie (`storage_electricity`) | Centrale nucléaire |
+| Cage magnétique (`storage_antimatter`) | Piège à antimatière |
 
 ## Recherches — 19
 
@@ -120,11 +131,11 @@ Toutes les conditions appartiennent au rang demandé.
 
 • Métal 2 + nano 2 → chantier 1 → chasseur et sonde, sans recherche supplémentaire.
 
-• Producteur d’hydrogène 5 sur la colonie + Génie civil colonial 2 dans l’univers → piège à antimatière du même rang. Le piège 5 ouvre ensuite le stockage d’antimatière du même rang.
+• Producteur d’hydrogène 5 sur la colonie + Génie civil colonial 2 dans l’univers → piège à antimatière du même rang. Le piège 5 remplit le prérequis de production du stockage d’antimatière du même rang.
 
 • Mine de métal 1 + atelier de nanofabrication 1 → bunker 1 → défense anti-léger, sans chantier, laboratoire ni recherche supplémentaire.
 
-• Chaque stockage exige son producteur du même rang au niveau 5 ; aucun stockage précédent.
+• Chaque stockage exige son producteur du même rang au niveau 5. Les rangs avancés exigent aussi le niveau 5 du même stockage dans chacun des rangs précédents. Les accès déjà acquis, les niveaux existants et les commandes déjà payées sont conservés.
 
 Le test de parcours explore les 156 profils (150 existants et 6 nouveaux) depuis les entrées libres avec leurs plafonds réels. Il vérifie l’accessibilité et les cycles, sans prétendre mesurer le financement ou un délai de progression.
 

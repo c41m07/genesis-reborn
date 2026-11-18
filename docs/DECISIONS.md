@@ -1942,3 +1942,13 @@ prérequis initial de la recherche. Les accès au piège déjà acquis sont cons
 Aux rangs Intermédiaire et Supérieur, le déblocage du producteur d’hydrogène
 exige déjà la même recherche au niveau 5. Le seuil 2 du piège reste explicite
 pour les trois rangs.
+
+## Progression des stockages — 18 novembre 2026
+
+Pour les cinq ressources, chaque stockage conserve le producteur local du
+même rang au niveau 5 comme prérequis initial. L’Intermédiaire exige aussi le
+stockage Basique de la même ressource au niveau 5. Le Supérieur exige ses
+stockages Basique et Intermédiaire au niveau 5. Le niveau maximum des nouvelles
+commandes est 5 en Basique et en Intermédiaire. Le Supérieur reste illimité.
+Les accès acquis, les niveaux existants, leur capacité et les opérations déjà
+payées sont conservés. Le registre garde sa version actuelle.
