@@ -2291,6 +2291,62 @@ Fichiers du lot : `app/assets/app.js`, `app/assets/controllers/galaxy_v2_control
 navigation/bilan, les scénarios navigateur carte/simulateur et la documentation
 README, architecture, décisions, règles, durées/carburant, inventaire et feuille de route.
 
+## L7D — Rapports et archives, propositions préparées — 18 novembre 2026
+
+Complexité **3/5 en conception, 4/5 à l’implémentation**. Lecture ciblée des trois
+contrôleurs de rapports, de `ReportArchiveService` et des gabarits liste, combat,
+espionnage, transport et retour. Les droits, archives personnelles, pagination
+de 50 rapports, filtres et redirections restent les références fonctionnelles.
+
+Le fichier Figcraft de bureau courant contient deux nouvelles pages :
+
+- **34 · L7D · A — Lecture directe** : rapports en lignes sur ordinateur,
+  type/date/cible/verdict repérables, archivage en bout de ligne ; détails de combat
+  organisés autour des effectifs avant le butin.
+- **35 · L7D · B — Journal de missions** : cartes sur deux colonnes à grande largeur,
+  statut et commandes Ouvrir/Archiver distincts ; bilan de mission et butin avant
+  les effectifs. Sur téléphone, les deux propositions passent sur une colonne.
+
+Les propositions gardent le menu, le logo et la barre de ressources validés.
+Actifs/Archives sont deux vues proches de la même liste, les types sont des filtres,
+et chaque détail conserve sa vraie page et son lien de retour avec contexte.
+Effectifs/Rounds/Reconstruction sont des ancres du même rapport de combat : les
+cadres séparés illustrent ses sections, sans proposer de nouvelles routes.
+Les compléments de recherche peuvent se déplier sur téléphone ; les informations
+nécessaires au verdict restent visibles. Aucune nouvelle statistique non lue
+par les services actuels n’est requise.
+
+Couverture commune : sélection individuelle/collective, archivage/restauration
+personnels, pagination, recherche, filtres, résultat vide, période invalide,
+sélection absente et rapport inaccessible. Combat : camps, rangs, arrivée,
+engagés/pertes/survivants, rounds, reconstruction et occupation conditionnelles.
+Espionnage : relevé daté, catégories obtenues, catégories inconnues distinctes de
+zéro, détection sans renseignement et reprise dans le simulateur. Transport :
+expéditeur/destinataire, trajet, envoyé/livré/retour prévu, dépôt et pertes au
+retour seulement quand le snapshot les fournit.
+
+Les chiffres et noms des rapports sont fictifs. Les exemples de combat ne sont
+pas des rapports privés extraits de la partie. Les commandes de prototype relient
+les états illustrés ; filtres, saisies, changement de round et sélection ne
+constituent pas un moteur fonctionnel de recherche dans Figcraft. Leur validation
+réelle interviendra pendant l’implémentation de la proposition choisie.
+
+Vérifications de conception : **44 cadres**, ordinateur 1440, tablette 768 et
+téléphone 390 px ; détails des rounds et planches d’états en 1440/390.
+**382 commandes reliées**, destinations vérifiées, aucune collision de texte ou
+sortie de cadre détectée après ajustement des colonnes et titres. Examen visuel
+d’exports de listes A/B et de détails sur téléphone. Les 28 pages précédentes,
+dont Vue générale et page 29, restent conservées. Les cibles dessinées mesurent
+au moins 44 px ; les textes, variables et contrastes réutilisent la référence.
+Ces contrôles ne constituent ni une recette du jeu ni un audit RGAA.
+
+Preuves locales dans le dossier de conception indiqué au début :
+`lot-7D-manifest.json`, `lot-7D-arbres.json`, `lot-7D-verification.json` et exports
+`lot-7D-A-*.png` / `lot-7D-B-*.png`. Le document natif est enregistré et ouvert
+sur la proposition A. Aucun écran du lot L7D n’est encore implémenté ; choix
+utilisateur attendu. Le lot L7C est enregistré dans `50f3965` ; la branche reste
+`feature/refonte-visuelle`, sans push ni déploiement.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -2323,7 +2379,7 @@ L4 A est enregistré dans `e13e588`, réalisé et vérifié localement.
 L5 A est enregistré dans `9eb316e`, réalisé et vérifié localement.
 L6 A est enregistré dans `811ef2d`, réalisé et vérifié localement.
 L7A A est enregistrée dans `730b447` ; recette ci-dessus. Vue générale conservée.
-L7B page 29 est intégrée localement dans `81807df` ; L7C est réalisé selon la
+L7B page 29 est intégrée localement dans `81807df` ; L7C est enregistré dans `50f3965`, réalisé selon la
 validation finale et la décision de géographie. L7D attend le choix A/B.
 Le plan reste à 18 ensembles : onze sont réalisés, sept restent à traiter.
 Vue générale avait été finalisée en avance ; L7A est désormais complet localement. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
