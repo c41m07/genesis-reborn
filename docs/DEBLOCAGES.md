@@ -14,9 +14,9 @@ Les conditions sont initiales et permanentes après acquisition selon cette gril
 |---|---|---|---|
 | Mine à ciel ouvert (`mine_metal`) | Aucun | Même bâtiment Basique 25 + Ingénierie de chantier automatisée 5 | Même bâtiment Basique 50 + même bâtiment Intermédiaire 25 + Planification industrielle intégrée 5 |
 | Atelier de nanofabrication (`mine_nano`) | Aucun | Même bâtiment Basique 25 + Ingénierie de chantier automatisée 5 | Même bâtiment Basique 50 + même bâtiment Intermédiaire 25 + Planification industrielle intégrée 5 |
-| Raffinerie d’hydrogène (`mine_hydrogen`) | Aucun | Même bâtiment Basique 25 + Ingénierie de chantier automatisée 5 | Même bâtiment Basique 50 + même bâtiment Intermédiaire 25 + Planification industrielle intégrée 5 |
+| Raffinerie d’hydrogène (`mine_hydrogen`) | Génie civil colonial 3 | Même bâtiment Basique 25 + Ingénierie de chantier automatisée 3 | Même bâtiment Basique 50 + même bâtiment Intermédiaire 25 + Planification industrielle intégrée 3 |
 | Centrale nucléaire (`power_plant`) | Aucun | Même bâtiment Basique 25 + Ingénierie de chantier automatisée 5 | Même bâtiment Basique 50 + même bâtiment Intermédiaire 25 + Planification industrielle intégrée 5 |
-| Laboratoire colonial (`lab`) | Aucun | Laboratoire colonial Basique 25 + Génie civil colonial Basique 5 | Laboratoire colonial Basique 25 + Institut de recherche orbitale Intermédiaire 25 + Ingénierie de chantier automatisée Intermédiaire 5 |
+| Laboratoire colonial (`lab`) | Aucun | Laboratoire colonial Basique 10 + Génie civil colonial 5 | Laboratoire colonial Basique 10 + Institut de recherche orbitale Intermédiaire 10 + Ingénierie de chantier automatisée 5 |
 
 Les quatre producteurs utilisent la recherche industrielle du rang à débloquer.
 Le laboratoire utilise celle du rang précédent : exiger une recherche du rang
@@ -27,13 +27,15 @@ mémorisés. Aucun changement de version du registre ni requalification supplém
 Les coûts, durées et plafonds restent conservés ; l’effet sur les délais de
 progression de cette révision n’est pas mesuré.
 
-Pour le Piège à antimatière, le chantier et le bunker, les conditions suivantes s’appliquent dans chacun des trois rangs :
+| Famille | Conditions du même rang | En plus pour l’Intermédiaire | En plus pour le Supérieur |
+|---|---|---|---|
+| Piège à antimatière (`mine_antimatter`) | Raffinerie d’hydrogène 5 + recherche industrielle 5 | — | — |
+| Chantier d’assemblage (`shipyard`) | Mine de métal 2 + producteur de nano 2 | Chantier Basique 20 | Chantiers Basique et Intermédiaire 20 |
+| Bunker de défense (`fortress`) | Mine de métal 1 + producteur de nano 1 | Bunker Basique 8 | Bunkers Basique et Intermédiaire 8 |
 
-| Famille | Conditions du même rang |
-|---|---|
-| Piège à antimatière (`mine_antimatter`) | Raffinerie d’hydrogène 5 + Génie civil colonial 2 |
-| Chantier d’assemblage (`shipyard`) | Mine à ciel ouvert 2 + Atelier de nanofabrication 2 |
-| Bunker de défense (`fortress`) | Mine à ciel ouvert 1 + Atelier de nanofabrication 1 |
+La recherche industrielle s’appelle Génie civil colonial en Basique,
+Ingénierie de chantier automatisée en Intermédiaire et Planification
+industrielle intégrée en Supérieur.
 
 Les cinq stockages suivent la même progression sur la colonie.
 
@@ -129,11 +131,11 @@ Toutes les conditions appartiennent au rang demandé.
 
 ## Parcours
 
-• Métal 2 + nano 2 → chantier 1 → chasseur et sonde, sans recherche supplémentaire.
+• En Basique, métal 2 + nano 2 → chantier 1 → chasseur et sonde.
 
-• Producteur d’hydrogène 5 sur la colonie + Génie civil colonial 2 dans l’univers → piège à antimatière du même rang. Le piège 5 remplit le prérequis de production du stockage d’antimatière du même rang.
+• Producteur d’hydrogène 5 sur la colonie + recherche industrielle 5 dans l’univers → piège à antimatière du même rang. Le piège 5 remplit le prérequis de production du stockage d’antimatière du même rang.
 
-• Mine de métal 1 + atelier de nanofabrication 1 → bunker 1 → défense anti-léger, sans chantier, laboratoire ni recherche supplémentaire.
+• En Basique, mine de métal 1 + atelier de nanofabrication 1 → bunker 1 → défense anti-léger.
 
 • Chaque stockage exige son producteur du même rang au niveau 5. Les rangs avancés exigent aussi le niveau 5 du même stockage dans chacun des rangs précédents. Les accès déjà acquis, les niveaux existants et les commandes déjà payées sont conservés.
 

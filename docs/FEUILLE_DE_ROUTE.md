@@ -45,6 +45,14 @@ navigateur ciblés réussissent. Publication et fusion conditionnelle autorisée
 La CI complète sur la dernière révision est requise avant fusion ; aucune migration de données
 ni livraison Alpha. Les recommandations précédentes ne remplacent pas cette décision.
 
+## Équilibrage de la progression des bâtiments — 18 novembre 2026
+
+Débits et consommation électrique du nano doublés. Nouveaux seuils pour la
+raffinerie d’hydrogène, le piège à antimatière, le chantier, le bunker et le
+laboratoire. Les cartes et le guide existants présentent les niveaux requis.
+Le graphe des 156 profils est vérifié avec les plafonds de référence. Les délais
+réels de progression ne sont pas mesurés. [Grille des déblocages](DEBLOCAGES.md#bâtiments--13)
+
 ## Progression des stockages — 18 novembre 2026
 
 Les cinq stockages avancés exigent le niveau 5 de chacun de leurs rangs

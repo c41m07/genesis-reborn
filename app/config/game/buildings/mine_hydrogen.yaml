@@ -12,7 +12,15 @@
   "production_resource": "hydrogen",
   "provisional": true,
   "tier_unlock_requirements": {
-    "basic": {},
+    "basic": {
+      "technologies": [
+        {
+          "slug": "engineering_foundations",
+          "tier": "basic",
+          "level": 3
+        }
+      ]
+    },
     "intermediate": {
       "buildings": [
         {
@@ -25,7 +33,7 @@
         {
           "slug": "engineering_foundations",
           "tier": "intermediate",
-          "level": 5
+          "level": 3
         }
       ]
     },
@@ -46,7 +54,7 @@
         {
           "slug": "engineering_foundations",
           "tier": "superior",
-          "level": 5
+          "level": 3
         }
       ]
     }
