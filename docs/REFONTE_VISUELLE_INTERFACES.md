@@ -1677,6 +1677,89 @@ exports actualisés et document bureau sauvegardé sur B. Preuves :
 `lot-7B-manifest.json`. Aucun code du jeu modifié ; le choix de la proposition
 révisée reste attendu avant réalisation.
 
+### Nouvelles propositions depuis B : usage fréquent — 18 novembre 2026
+
+L’utilisateur demande deux nouvelles propositions depuis L7B-B à quatre cartes,
+pour les améliorations répétées : information décisive directement lisible,
+composition agréable et actions faciles à retrouver. La base B à quatre cartes
+reste conservée. Les nouvelles propositions sont dans deux pages distinctes :
+
+- **26 · L7B · A — Actions directes** : petite illustration en tête, gains et
+  consommations mis en évidence, coûts avec stock disponible, actions alignées.
+  Trois résumés de files au-dessus du catalogue, à garder accessibles au défilement.
+  Filtres de catégorie visibles sur ordinateur.
+- **27 · L7B · B — Lecture comparée** : petite illustration près du nom, gains
+  directement lisibles, tableau Ressource / Coût / Stock identique entre cartes.
+  Suivi des files en bas de l’espace pendant le défilement et filtre de catégorie
+  compact. Il devra rester au-dessus de la navigation mobile sans couvrir de champ.
+
+Les deux conservent **4 cartes à 1440 px, 2 à 768 px et une colonne au téléphone**.
+Les détails des files s’ouvrent sur demande sans déplacer les cartes. Guide,
+fiche d’information et confirmation d’annulation gardent la direction de la base B ;
+les scénarios secondaires du nouveau prototype renvoient à leur planche d’états.
+Les adresses actuelles, groupes, rangs, filtres et formulaires sont conservés.
+Aucun moteur d’amélioration automatique ni achat groupé de niveaux n’est proposé.
+
+Complexité de conception et de réalisation **4/5** : affichage des niveaux déjà
+programmés, coût électrique ponctuel, gains/consommations, quantités, actualisation,
+réponses de soumission et maintien du focus/contexte. Analyse ciblée complémentaire :
+`ColonyView`, action d’ajout, `OperationCalculator`, `CatalogueInsights`, contexte de
+production, files, contrôleur de quantité et aperçu serveur de construction.
+
+Les intentions de confort à implémenter après choix sont :
+
+- Afficher séparément niveau actuel, prochain niveau proposé et niveaux en file.
+  Après ajout, le niveau réel ne monte pas immédiatement ; cible, coût et gain
+  portent sur le prochain niveau après ceux déjà programmés.
+- Montrer les coûts complets, dont l’électricité ponctuelle, les stocks et un manque
+  chiffré. Séparer cette dépense de la consommation horaire supplémentaire du bâtiment.
+  Garder gains du prochain niveau, durée de traitement et blocages directement visibles.
+- Conserver la carte et la place du bouton après la réponse serveur, ainsi que filtre,
+  rang, quantité et position de lecture. Retour du focus cohérent et confirmation
+  accessible ; aucune réussite anticipée avant validation serveur.
+- Préserver la clé de requête, empêcher une double soumission accidentelle, puis
+  permettre un nouvel ajout volontaire. Refus de capacité, vacances, file pleine et
+  prérequis restent ceux du serveur ; le manque n’est pas indiqué seulement par couleur.
+- Pour les unités, distinguer possédé et quantité saisie ; montrer coût et durée du
+  lot renvoyés par l’aperçu existant. Max reste calculé par le serveur. Le cadre de
+  quantité montre une saisie de cinq chasseurs, sans prétendre que cinq est le maximum.
+- Garder recherche commune, compteur de commandes sur 30, progression et fin de file,
+  annulation dédiée, vols et arrivées même à zéro. Une alerte indispensable reste
+  visible dans le contexte. Sans JavaScript, formulaires, redirection vers la carte,
+  détails et confirmations conservent leur parcours.
+
+**46 cadres** : quatre catalogues à trois formats pour chaque option, puis premier
+et deuxième ajout, quantité saisie, manque de ressources et détail des files à
+1440/390 px, plus deux planches d’états. Deux ajouts successifs montrent niveau
+actuel 0, puis un et deux niveaux programmés, avec cible 2 puis 3. Les boutons
+restent exactement aux mêmes coordonnées dans ces trois états, vérifiés pour A/B
+sur ordinateur et téléphone. Il s’agit du comportement proposé, pas d’une fonction
+déjà implémentée dans le jeu.
+
+Les valeurs illustratives sont calculées par les services actuels : `GameCatalog`,
+`OperationCalculator`, `CatalogueInsights` et `ResourceService`, sur des objets
+synthétiques en position 3, sans événements/vacances et avec infrastructure de
+base définie. Le contexte de production fourni évite toute lecture des effectifs.
+**Aucune connexion de base ouverte**, vérifiée avant/après ; aucune commande de jeu,
+migration, import ou notification. Le fichier `lot-7B-usage-donnees.json` conserve
+ce contexte et les résultats, dont prix/durée des niveaux 1 à 3 et lot de cinq unités.
+Ce ne sont pas les données d’un joueur ni une mesure de performance.
+
+Vérification native des **46 cadres et 1 580 interactions définies** : destinations
+présentes, aucun débordement ou texte coupé ; cinq libellés de recherche raccourcis
+sans perte de sens, puis les trois vues concernées revérifiées sans chevauchement.
+La grille est vérifiée dans l’état fermé et le panneau au premier plan dans les
+états superposés. **25 pages précédentes identiques** avant/après création ; les
+ajustements suivants ne concernent que les nouveaux cadres. Examen visuel des deux
+compositions ordinateur et des cartes au téléphone. Les schémas gris sont
+sauvegardés avant la couleur ; variables et composants sont propres à cette étape.
+
+Preuves dans le dossier de visualisation : `lot-7B-usage-manifest.json`,
+`lot-7B-usage-preservation.json`, `lot-7B-usage-verification.json`,
+`lot-7B-usage-verification-textes.json`, exports `lot-7B-usage-*.png` et cartes
+mobiles exportées séparément. Le code du jeu est inchangé. Le choix A/B reste
+attendu avant réalisation ; tests du jeu, CI, fusion et déploiement restent distincts.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -1694,7 +1777,7 @@ révisée reste attendu avant réalisation.
 | L5 | A implémentée et vérifiée localement | A choisie explicitement | 44 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
 | L6 | A implémentée et vérifiée localement | A choisie explicitement | 32 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
 | L7A | A implémentée et vérifiée localement | A choisie explicitement ; Vue générale conservée | 51 PHP, sept parcours navigateur et 43 captures | CI, intégration et déploiement distincts |
-| L7B | Propositions A/B préparées | Choix attendu | 50 cadres ; 23 pages précédentes conservées | Réalisation après choix |
+| L7B | Nouvelles propositions A/B depuis B à quatre cartes | Choix attendu, pages 26/27 | 46 cadres ; boutons stables après deux ajouts ; 25 pages précédentes conservées | Réalisation après choix |
 | L7C à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 

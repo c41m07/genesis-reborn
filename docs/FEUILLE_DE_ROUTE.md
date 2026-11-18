@@ -104,6 +104,11 @@ Recherche, Chantier, Défenses, Guide technologique et confirmation d’annulati
 Propositions Figcraft pages 24/25 : familles en lignes et suivi à droite (A), ou
 quatre cartes par ligne sur ordinateur et activité en bandeau (B). Les quatre
 vues B adaptées sont vérifiées ; les 46 autres cadres sont conservés. Choix attendu.
+À la demande de l’utilisateur, deux nouvelles propositions depuis cette B sont
+préparées dans les pages 26/27 : gains et actions directs avec suivi au-dessus (A),
+ou lecture Coût/Stock et suivi en bas (B). Quatre cartes sur ordinateur, informations
+décisives visibles et boutons stables après deux ajouts ; 46 nouveaux cadres
+vérifiés. Choix de cette nouvelle direction attendu avant code du jeu.
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026
