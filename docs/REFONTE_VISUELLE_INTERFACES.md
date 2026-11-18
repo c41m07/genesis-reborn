@@ -2548,8 +2548,60 @@ idempotence, actualisation des non-lus et calculs de classement restent à prés
 Preuves locales : `lot-7E-manifest.json`, `lot-7E-arbres.json`,
 `lot-7E-verification.json` et exports `lot-7E-A-*.png` / `B-*.png` dans le dossier
 de conception courant. Fichier natif enregistré et ouvert sur la page 36 A.
-Choix utilisateur attendu avant implémentation. Le code du jeu reste celui du
-lot L7D ; six lots restent à réaliser sur les dix-huit prévus.
+Cette première version attendait un choix avant implémentation. La direction A
+et les demandes de reprise ultérieures sont consignées ci-dessous. Le code du jeu
+reste celui du lot L7D ; six lots restent à réaliser sur les dix-huit prévus.
+
+## L7E — A retenue, messagerie et classements repris depuis l’existant — 18 novembre 2026
+
+L’utilisateur retient A, mais demande de conserver les classements joueurs/guildes,
+puis le design de sa messagerie. La page **36 A** est ajustée dans ce sens ;
+il ne s’agit pas d’un nouveau choix A/B. Cette reprise reste à examiner avant
+implémentation. La page 37 B et les lots précédents sont conservés.
+
+Complexité **3/5** pour cette reprise de conception : examen ciblé des gabarits
+`player/leaderboard.html.twig`, `player/messages.html.twig`,
+`player/_message_contacts.html.twig`, des styles de classement/messagerie et du
+contrôleur de classement. Aucun traitement de jeu ni accès aux données n’est modifié.
+
+- **Classement joueurs** : tableau actuel conservé, avec les cinq catégories,
+  les évolutions de place et de points, les repères de relation, la protection et
+  les actions de contact/signalement. Sur téléphone, Rang/Commandant/Total/Actions
+  restent visibles ; les autres catégories sont dépliables dans la ligne.
+- **Classement guildes** : toutes les colonnes sont conservées, dont les effectifs,
+  scores par catégorie, total, évolutions et médiane des points des joueurs.
+  Le tableau défile horizontalement sur les petites largeurs ; un état supplémentaire
+  permet aussi d’examiner les dernières colonnes dans le prototype.
+- **Messagerie** : panneaux contacts/conversation bordés, recherche de joueur,
+  avatar et titre de l’échange, bulles reçues bleues et envoyées brunes/dorées,
+  repères dorés de non-lus et bouton d’envoi doré repris du design actuel.
+  Les métadonnées « Conversation privée », le canal de guilde et Global sont
+  conservés, sans inventer de présence ni d’accusé de lecture.
+- **Lecture et rédaction** : historique défilant, zone de saisie et bouton côte
+  à côte, raccourci Ctrl + Entrée, aide Markdown et signalement des messages reçus.
+  Les espacements et libellés sont ajustés sur téléphone.
+
+Les conversations restent les états d’une même messagerie ; recherche de messages,
+classements, profils et signalements de joueur gardent leur rôle de pages dédiées.
+Les détails de score sur téléphone et l’aide restent des contenus dépliables.
+L’actualisation illustrée du classement est corrigée à **00 h, heure de Paris**,
+conformément au comportement actuel, sans changement de cadence métier.
+
+Vérifications : **25 cadres A repris**, soit **70 cadres** pour L7E au total
+(37 A et 33 B), **499 commandes reliées** et destinations contrôlées. Les tableaux
+joueurs/guildes disposent chacun des formats 1440/768/390. Aucun dépassement de texte
+ou chevauchement détecté dans les cadres repris, en tenant compte des zones défilantes.
+Examen visuel des exports messagerie et classements sur ordinateur/téléphone ;
+libellé d’envoi et emplacement de la protection corrigés sur téléphone.
+Ces contrôles portent sur les maquettes ; aucune recette du jeu ni conformité RGAA
+globale n’est annoncée. Aucun message envoyé et aucun code applicatif modifié.
+
+Preuves dans le dossier de conception courant : `lot-7E-manifest.json`,
+`lot-7E-classements-manifest.json`, `lot-7E-messagerie-manifest.json`,
+`lot-7E-reprise-verification.json`, `lot-7E-reprise-arbres.json` et exports
+`lot-7E-reprise-A-*.png`. Les captures historiques de la messagerie ont servi de
+repères visuels, complétés par la lecture des styles actuels ; elles ne sont pas
+présentées comme une nouvelle recette du jeu. Fichier natif enregistré sur la page 36 A.
 
 ## Reprise et états de couverture
 
@@ -2571,7 +2623,7 @@ lot L7D ; six lots restent à réaliser sur les dix-huit prévus.
 | L7B | Page 29 implémentée et vérifiée localement | Version consolidée validée explicitement | 20 PHP, six parcours navigateur consolidés et 30 captures ; bilan ci-dessus | CI complète, intégration et déploiement distincts |
 | L7C | Implémenté et vérifié localement | Conception validée ; spirale retenue explicitement pour les distances | Deux vues persistantes, gestes et moteur conservés, bilans par camp ; recette ci-dessous | CI complète, fusion et déploiement distincts |
 | L7D | A implémentée et vérifiée localement | A choisie explicitement après reprise depuis les rapports actuels | 15 PHP / 98 assertions ; cinq parcours navigateur consolidés ; bilan ci-dessous | CI complète, fusion et déploiement distincts |
-| L7E | Propositions A/B préparées | Choix attendu | Figcraft pages 36/37, 66 cadres et 403 commandes reliées ; conception seulement | Valider une direction avant développement |
+| L7E | A reprise depuis la messagerie et les classements actuels | A retenue ; ajustements demandés réalisés en maquette | Figcraft page 36 A, B conservée ; 70 cadres et 499 commandes reliées ; conception seulement | Examiner la reprise avant développement |
 | L8 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
@@ -2586,7 +2638,8 @@ L6 A est enregistré dans `811ef2d`, réalisé et vérifié localement.
 L7A A est enregistrée dans `730b447` ; recette ci-dessus. Vue générale conservée.
 L7B page 29 est intégrée localement dans `81807df` ; L7C est enregistré dans `50f3965`, réalisé selon la
 validation finale et la décision de géographie. L7D A est intégré dans `5523ac4`.
-L7E dispose de deux propositions ; aucun choix implicite n’est retenu.
+L7E : A est retenue explicitement ; messagerie et classements sont repris depuis
+l’existant à la demande de l’utilisateur. Cette reprise reste à examiner avant développement.
 Le plan reste à 18 ensembles : douze sont réalisés, six restent à traiter.
 Vue générale avait été finalisée en avance ; L7A est désormais complet localement. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
 Les validations précédentes restent limitées à leurs lots.
