@@ -8,7 +8,7 @@
         <h1>{{ {overview:'Vue générale',buildings:'Bâtiments',technologies:'Recherche',ships:'Chantier spatial',defenses:'Défenses'}[section] }}<span>.</span></h1>
         {% if section == 'overview' %}<p>Agir sur la colonie active, suivre tout l’empire.</p>{% endif %}
     </div>
-    {% if section != 'overview' %}<a class="quiet-button" href="{{ path('app_map_v2') }}">{{ ui.icon('galaxy') }} Explorer la galaxie {{ ui.icon('arrow') }}</a>{% endif %}
+    {% if section != 'overview' %}{% include 'ui/development_navigation.html.twig' %}{% endif %}
 </div>
 <div class="colony-layout colony-layout--integrated"><div class="colony-content">
 {% if section=='overview' %}
@@ -50,7 +50,14 @@
 </div>
 {% include 'colony/_journal.html.twig' %}
 {% else %}
-<div class="colony-catalog-workspace" data-controller="catalog-sticky"><div class="catalog-operations-rail" data-catalog-sticky-target="rail"><section class="colony-catalog-activity dashboard-activity" aria-label="Activité et files de la colonie active">{% include 'ui/colony_queues.html.twig' %}</section><aside class="colony-catalog-aside">{% include 'ui/flights.html.twig' %}{% include 'ui/incoming_attacks.html.twig' %}</aside></div>{% include 'colony/_catalog.html.twig' %}</div>
+<div class="colony-catalog-workspace catalog-workspace" data-controller="catalog-sticky">
+    <div class="catalog-operations-rail" data-catalog-sticky-target="rail" aria-label="Suivi des files et des flottes">
+        {% include 'ui/colony_queues.html.twig' %}
+        {% include 'ui/flights.html.twig' %}
+        {% include 'ui/incoming_attacks.html.twig' with {incoming_catalog:true} %}
+    </div>
+    {% include 'colony/_catalog.html.twig' %}
+</div>
 {% endif %}
 
 </div></div></div>{% endblock %}

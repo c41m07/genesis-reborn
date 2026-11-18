@@ -32,8 +32,6 @@ test('Le catalogue affiche les gains par niveau, consommations et tourelles spé
   await expect(compact).toHaveAttribute('aria-checked','true');
   await compact.click();
   const metalBenefits=page.locator('#item-mine_metal-basic .card-benefits');
-  await expect(metalBenefits).not.toHaveAttribute('open');
-  await metalBenefits.locator('summary').click();
   await expect(metalBenefits).toHaveAttribute('open','');
   await expect(metalBenefits).toContainText('Consommation électrique');
   await expect(metalBenefits.locator('.card-benefit-consumption')).toContainText(/−\d[\d ,]* \/ h/);
@@ -41,7 +39,7 @@ test('Le catalogue affiche les gains par niveau, consommations et tourelles spé
   await expect(page.locator('#item-mine_metal-basic .costs [title^="Antimatière :"]')).toHaveCount(0);
   await metalBenefits.locator('summary').click();
   const antimatterBenefits=page.locator('#item-mine_antimatter-basic .card-benefits');
-  await antimatterBenefits.locator('summary').click();
+  await expect(antimatterBenefits).toHaveAttribute('open','');
   await expect(antimatterBenefits).toContainText('Consommation d’hydrogène');
   await antimatterBenefits.locator('summary').click();
   for(const slug of ['lab','shipyard','fortress'])await expect(page.locator('#item-'+slug+'-basic .card-benefits')).toContainText(/[+]\d+(?:,\d+)? %/);
@@ -66,8 +64,7 @@ test('Le catalogue affiche les gains par niveau, consommations et tourelles spé
     await expect(card.locator('dialog')).toContainText('Défense fixe spécialisée contre '+targets);
     await page.keyboard.press('Escape');
     const benefits=card.locator('.card-benefits');
-    await expect(benefits).not.toHaveAttribute('open');
-    await benefits.locator('summary').click();
+    await expect(benefits).toHaveAttribute('open','');
     await expect(benefits).toContainText(targets);
     await benefits.locator('summary').click();
     await expect(benefits).not.toHaveAttribute('open');

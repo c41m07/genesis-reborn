@@ -63,3 +63,4 @@ import './styles/account-workspace.css';
 import './styles/guild-project-workspace.css';
 import './styles/event-workspace.css';
 import './styles/colony-workspace.css';
+import './styles/catalogue-workspace.css';

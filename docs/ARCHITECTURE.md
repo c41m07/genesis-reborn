@@ -205,6 +205,19 @@ commune restent disponibles dans les pages de colonie ; les quantités du
 catalogue sont chargées par groupe, sans lecture SQL par carte. Ces données
 restent locales à l’appel et ne servent jamais d’autorisation d’écriture.
 Le calcul et l’endpoint de la barre de ressources restent inchangés.
+Les quatre catalogues utilisent `catalogue-workspace.css` pour la grille de quatre
+cartes et sa disposition en lignes, avec les mêmes panneaux de rang et formulaires.
+Les trois files, vols et arrivées occupent un bandeau fixe sous les ressources ;
+leurs détails natifs réutilisent les données et liens d’annulation existants.
+`catalog-sticky` gère l’ouverture exclusive, Échap et la hauteur du bandeau, puis
+nettoie ses observateurs et écouteurs. `colony-live` préserve les panneaux ouverts
+et restaure leur défilement après insertion, en plus des protections de saisie.
+Le contrôleur de quantité couvre le rang complet pour actualiser le prix et la
+durée affichés. Le devis conserve ses champs exécutables et ajoute `displayCosts`,
+`displayDuration` et `missingResources` pour expliquer une unité indisponible.
+Ces données de présentation n’autorisent jamais une commande ; la validation et
+les calculs serveur existants restent requis. Les lectures de `ColonyView`, la
+barre de ressources et ses actualisations sont conservées.
 Les cartes Bâtiments et Vaisseaux transmettent un contexte économique immuable, préparé après
 la synchronisation des files, aux calculs nominaux de ResourceService. Ce contexte
 regroupe les lectures d’événements et de vacances pour cette préparation seulement ;

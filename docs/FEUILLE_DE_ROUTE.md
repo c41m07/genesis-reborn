@@ -120,7 +120,11 @@ Les coûts sont ensuite limités à cinq colonnes par rangée, et chaque ressour
 manquante est détaillée dans le bouton indisponible. Sur téléphone, les coûts du
 mode en lignes prennent toute la largeur. Vérification ciblée : 44 écrans,
 172 cartes/lignes et 464 montants conservés ; 31 captures actualisées.
-Validation de la reprise attendue avant intégration.
+La page 29 est ensuite validée et réalisée localement : quatre cartes sur ordinateur,
+vraies lignes, gains ouverts, coûts/manques et bandeau des files/flottes dépliable.
+Vérifications : 20 PHP / 2 298 assertions, six parcours navigateur consolidés,
+30 captures réelles, compilation et lints. Dix ensembles sur 18 sont réalisés.
+L7C (Galaxie et simulateur) reprend la conception A/B avant toute réalisation.
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026

@@ -1964,6 +1964,52 @@ téléphone. Les pages, cadres, interrupteurs et zones de suivi fixe sont prése
 `lot-7B-couts-page29-verification.json`. Maquette enregistrée dans Figcraft ;
 validation de l’utilisateur attendue avant réalisation dans le jeu.
 
+### Réalisation L7B — page 29 validée, 18 novembre 2026
+
+L’utilisateur valide la version consolidée et demande son intégration puis le lot
+suivant. Réalisation **4/5** : présentation des quatre catalogues, formulaires de
+quantité, trois files, vols/arrivées et actualisations partagées. La branche commune
+est conservée conformément à sa décision, sans nouvelle récupération réseau.
+
+`catalogue-workspace.css` raccorde les cartes et les vraies lignes au même HTML :
+quatre colonnes sur ordinateur, deux sur tablette, une sur téléphone ; cinq coûts
+maximum par rangée et nom complet/montant de chaque manque dans le bouton.
+Les gains sont ouverts initialement ; niveaux, files, prérequis et informations
+de rang restent disponibles. Les consommations sont rouges et négatives.
+
+Les cinq cellules du bandeau restent sous les ressources à toutes les largeurs.
+Elles ouvrent les listes complètes et les liens d’annulation déjà autorisés ; un
+seul panneau est ouvert, Échap restitue le focus. Les fragments conservent panneau,
+rang, mode, position de lecture et formulaires modifiés. Les détails de flottes et
+les arrivées utilisent leurs préparations existantes, sans nouvelle information
+privée. La Vue générale conserve son rendu. Le Guide et la confirmation d’annulation
+sont examinés et conservés ; la navigation commune Développement rejoint le Guide.
+
+Les quantités modifiées actualisent coûts et durée du lot depuis le serveur,
+avec des réponses obsolètes ignorées et soumission suspendue pendant le devis.
+Les champs historiques du devis restent inchangés ; trois champs de présentation
+sont ajoutés pour afficher le prix d’une unité indisponible et ses manques.
+Adaptation mineure de composition : les catégories existantes restent des boutons
+de filtre, afin de conserver leurs accès et comportements.
+
+Vérifications réalisées : validation Compose, lint PHP/YAML/Twig/conteneur, puis
+lint ciblé des 13 gabarits après finalisation ; compilation des assets réussie.
+**20 tests PHP / 2 298 assertions** ciblent maximums, gains par niveau et fiches.
+**Six parcours navigateur distincts consolidés** vérifient les liens ciblés,
+consommations, 156 fiches, gains avec files, responsive et actions du catalogue.
+Les deux nouveaux parcours sont relancés avec succès après les corrections finales
+de libellé accessible et de contraste clair. Formats 1440/768/390/320, thème clair,
+contrôles Axe ciblés, devis ×5, cinq manques et maintien du suivi au défilement.
+**30 captures réelles** sont conservées dans `captures-jeu-L7B-page29/` près du
+document Figcraft et dans `output/playwright/catalogue-workspace/` (ignoré).
+
+La commande habituelle de test navigateur a rencontré l’épuisement des sous-réseaux
+Docker. La recette s’est exécutée avec le même script et un sous-réseau privé explicite,
+dans un projet jetable ; aucun réseau existant n’a été supprimé. Aucune migration
+sur la base habituelle, nouvelle dépendance, CI GitHub, fusion ou livraison.
+Le contrôle ciblé ne constitue pas un audit RGAA complet. Le lot suivant est L7C :
+cartes classique/V2 et simulateur, soumis à un nouveau choix A/B.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -1981,7 +2027,7 @@ validation de l’utilisateur attendue avant réalisation dans le jeu.
 | L5 | A implémentée et vérifiée localement | A choisie explicitement | 44 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
 | L6 | A implémentée et vérifiée localement | A choisie explicitement | 32 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
 | L7A | A implémentée et vérifiée localement | A choisie explicitement ; Vue générale conservée | 51 PHP, sept parcours navigateur et 43 captures | CI, intégration et déploiement distincts |
-| L7B | Cartes/lignes et suivi dépliable consolidés | Validation attendue, page 29 | 53 cadres modèle et 16 aperçus de rangs ; coûts sur cinq colonnes, manque dans le bouton ; deux menus mobiles | Réalisation après validation |
+| L7B | Page 29 implémentée et vérifiée localement | Version consolidée validée explicitement | 20 PHP, six parcours navigateur consolidés et 30 captures ; bilan ci-dessus | CI complète, intégration et déploiement distincts |
 | L7C à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
@@ -1994,7 +2040,7 @@ L4 A est enregistré dans `e13e588`, réalisé et vérifié localement.
 L5 A est enregistré dans `9eb316e`, réalisé et vérifié localement.
 L6 A est enregistré dans `811ef2d`, réalisé et vérifié localement.
 L7A A est enregistrée dans `730b447` ; recette ci-dessus. Vue générale conservée.
-Le plan reste à 18 ensembles : neuf sont réalisés, neuf restent à traiter.
+Le plan reste à 18 ensembles : dix sont réalisés, huit restent à traiter.
 Vue générale avait été finalisée en avance ; L7A est désormais complet localement. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
 Les validations précédentes restent limitées à leurs lots.
 Aucun push, PR, fusion ou déploiement n’est autorisé par le seul changement de
