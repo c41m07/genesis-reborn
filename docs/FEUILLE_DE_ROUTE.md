@@ -124,22 +124,18 @@ La page 29 est ensuite validée et réalisée localement : quatre cartes sur ord
 vraies lignes, gains ouverts, coûts/manques et bandeau des files/flottes dépliable.
 Vérifications : 20 PHP / 2 298 assertions, six parcours navigateur consolidés,
 30 captures réelles, compilation et lints. Dix ensembles sur 18 sont réalisés.
-L7C (Galaxie et simulateur) reprend la conception A/B avant toute réalisation.
-Ses deux propositions sont préparées dans Figcraft : page 30 « Exploration cadrée »
-et page 31 « Carte immersive », 50 cadres en trois formats, états et détails compris.
-Cartes schématiques ; le moteur 3D existant sera conservé. Choix utilisateur attendu.
-Une étude complémentaire en page 32 montre les 80 systèmes de la galaxie locale :
-huit bras conservés, échelle actuelle et étude de spirale avec de nouvelles distances.
-Onze cadres et un aperçu interactif sont vérifiés, avec destination vide par défaut
-et mouvements fictifs identifiés. La première proposition A n’était pas à l’échelle.
-Adopter une spirale physiquement cohérente changerait les distances et demande une
-décision produit ; aucun code de carte ni donnée du jeu n’est modifié.
-L’utilisateur apprécie les deux vues à l’échelle. La page 33 ajoute 18 états
-d’exploration avec repères cumulables, système solaire et globe repris du moteur.
-Les aperçus exécutent zoom, glissement, pincement, navigation et animations avec pause.
-Les quatre bilans du simulateur des pages 30/31 adoptent une lecture de rapport de
-combat : engagés, pertes et survivants par unité et par camp. Vérifications ciblées
-sur quatre largeurs ; conception et distances restent à valider avant intégration.
+L7C est ensuite validé et réalisé localement. Les deux dispositions sont conservées :
+Spirale réelle et Grille de repérage. Décision explicite : la spirale fixe les
+distances communes des nouveaux devis et replis ; les vols existants conservent
+durées et carburants figés. Le moteur visuel reste animé et interactif aux trois
+niveaux, avec repères, signaux inconnus sur noir et flèches de flotte. Le simulateur
+affiche les bilans par camp, unité et rang. Recette : 126 PHP ciblés, cinq parcours
+navigateur consolidés ; cartes à 80 systèmes sur quatre largeurs et contrôles
+d’accessibilité ciblés. Onze ensembles sur 18 sont réalisés localement.
+L7D (Rapports et archives) dispose des propositions Figcraft page 34 A « Lecture
+directe » et page 35 B « Journal de missions » : 44 cadres, 382 commandes reliées,
+listes/archives et détails de combat, espionnage et transport. Données fictives,
+choix attendu avant réalisation. Sept lots restent à réaliser, dont L7D.
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026

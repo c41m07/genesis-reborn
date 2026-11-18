@@ -113,8 +113,8 @@ Les liens du prototype simulent la navigation et n’exécutent aucune action du
 | L11 | Wiki : accueil, chapitre, recherche et références | 3/5 · 3/5 | Pages déjà séparées, anciens fragments et formules dépliables. |
 | L12 | Cohérence, erreurs et composants communs restants | 4/5 · 4/5 | Revue transversale ; adaptations communes rattachées au lot consommateur. |
 
-Le tableau comporte **18 lots prévus** : huit ensembles réalisés localement
-(L1A/L1B/L1C, L2, L3, L4, L5 et L6), dix restants. Certains ensembles complexes seront
+Le tableau comporte **18 lots prévus** : onze ensembles réalisés localement
+(L1A/L1B/L1C, L2, L3, L4, L5, L6, L7A, L7B et L7C), sept restants. Certains ensembles complexes seront
 subdivisés pendant leur analyse ;
 ce total ne fixe donc pas le nombre final de livraisons. Les complexités seront
 réévaluées avant chaque sous-tâche. À la demande de l’utilisateur, les lots de
@@ -2225,6 +2225,72 @@ Preuves dans le dossier de conception courant : `genesis-galaxie-interactive.htm
 dépendance ou règle d’équilibrage n’est modifié. Réalisation L7C, CI, fusion et
 déploiement restent à effectuer après validation de la conception et des distances.
 
+## L7C — réalisation locale validée — 18 novembre 2026
+
+Complexité **4/5** : la décision explicite sur les distances touche les devis,
+rappels et replis, en plus du rendu interactif. La spirale fixe une seule
+géographie serveur ; la seconde disposition s’appelle **Grille de repérage**.
+La préférence locale est séparée par participation. Les identifiants SQL et les
+routes publiques restent conservés ; aucune migration de base existante.
+
+`GalaxyGeometry` centralise la projection. `MovementCalculator` l’utilise pour
+les nouveaux devis et l’information jusqu’à l’entrée d’un système. Le déplacement
+local, les vitesses et coefficients de carburant restent conservés. Les anciens
+vols gardent leurs secondes et carburants figés ; un nouveau repli utilise le point
+physique atteint, interpolé entre les extrémités. Un ancien point intermédiaire
+sans géométrie identifiable est refusé pour ne pas produire de devis trompeur.
+
+La carte reprend les astres, textures, orbites et animations existants. Commandes
+et fiches sortent du canvas pour rester lisibles dans le flux de la page. Recherche
+et liste restent les accès clavier ; zoom, déplacement, pincement, retour système,
+rotation du globe, pause, cadrage global et recentrage sont conservés ou ajoutés.
+Les 80 systèmes réels sont affichés sans couper les suivants sur une carte plus
+grande. La maison personnelle est permanente ; les quarts de relation restent
+cumulables. Numéros au survol/focus, inconnus sur disque noir et flèches de flotte
+orientées. Les renseignements inconnus restent filtrés avant envoi au navigateur.
+La destination n’est pas sélectionnée automatiquement.
+
+Le simulateur garde sa préparation et ses dix résultats reproductibles.
+`CombatSimulationView` compte les unités restantes par camp, type et rang, sans
+confondre structure et effectifs. Les bilans affichent **Engagés / Pertes /
+Survivants**, pertes rouges négatives et arrivée explicite. Les rounds et points
+de structure restent dans des détails secondaires. Les tables deviennent des
+lignes lisibles sur téléphone, sans modifier les calculs ni la validation serveur.
+
+Vérifications : **126 tests PHP et 4 375 753 assertions**, couvrant géographie, carburant, navigation,
+simulation, rappels, stationnement et départ d’orbite ; cinq parcours navigateur
+consolidés sur base temporaire. Carte à 80 systèmes en 1440, 768, 390 et 320 px,
+persistance des deux vues, confidentialité, absence de départ involontaire,
+navigation carte/système/globe, rotation, pincement, retour/focus et mouvement
+réduit. Recette du simulateur avec conservation des effectifs, thèmes clair/sombre,
+reproductibilité et parcours sans JavaScript ; rappel confirmé sans double effet.
+Contrôle axe ciblé du nouvel espace carte sans anomalie sérieuse/critique, sans
+revendiquer un audit RGAA. Compilation, validation Compose, lints PHP/Twig/YAML/
+conteneur et `git diff --check` réussis. Aucun test sur la base habituelle.
+
+Le premier passage a révélé une mini-carte dessinée alors que masquée et un nom
+accessible différent du texte Pause/Animer ; corrigés et parcours concernés
+relancés. Les essais de clic ont été adaptés au canvas désormais dans une page
+défilante. L’instance habituelle de base de test étant indisponible et les plages
+Docker automatiques occupées, les contrôles ont utilisé des projets jetables et
+leurs propres réseaux ; aucun changement de configuration globale.
+
+Preuves locales : `output/playwright/catalogue-workspace/l7c-map-verification.log`,
+`l7c-final-browser.log`, `l7c-verification.log`, `l7c-lint.log`, `l7c-assets.log`,
+captures de `recette-finale-l7c/` et `app/test-results/`. Les échecs intermédiaires
+restent dans les journaux ; le résultat final fait foi pour les parcours corrigés.
+CI GitHub, PR, fusion et déploiement ne sont pas exécutés.
+
+Fichiers du lot : `app/assets/app.js`, `app/assets/controllers/galaxy_v2_controller.js`,
+`app/assets/styles/galaxy-workspace.css`, `app/assets/styles/combat-simulation.css`,
+`app/src/Controller/ColonyController.php`, `CombatSimulationController.php`,
+`app/src/Service/Fleet/GalaxyGeometry.php`, `MovementCalculator.php`,
+`FleetNavigation.php`, `app/src/Service/Combat/CombatSimulationView.php`,
+`app/templates/universe/map_v2.html.twig`, `app/templates/combat/simulation.html.twig`,
+`_simulation_trial.html.twig`, les tests PHP de géographie/mouvement/carburant/
+navigation/bilan, les scénarios navigateur carte/simulateur et la documentation
+README, architecture, décisions, règles, durées/carburant, inventaire et feuille de route.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -2243,8 +2309,9 @@ déploiement restent à effectuer après validation de la conception et des dist
 | L6 | A implémentée et vérifiée localement | A choisie explicitement | 32 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
 | L7A | A implémentée et vérifiée localement | A choisie explicitement ; Vue générale conservée | 51 PHP, sept parcours navigateur et 43 captures | CI, intégration et déploiement distincts |
 | L7B | Page 29 implémentée et vérifiée localement | Version consolidée validée explicitement | 20 PHP, six parcours navigateur consolidés et 30 captures ; bilan ci-dessus | CI complète, intégration et déploiement distincts |
-| L7C | Exploration interactive et bilans retravaillés | Spirale et échelle actuelle appréciées ; ajustements demandés | Pages 30/31/32 conservées, page 33 : 18 cadres ; quatre bilans revus ; aperçus testés | Valider la conception finale et décider des distances avant développement |
-| L7D à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
+| L7C | Implémenté et vérifié localement | Conception validée ; spirale retenue explicitement pour les distances | Deux vues persistantes, gestes et moteur conservés, bilans par camp ; recette ci-dessous | CI complète, fusion et déploiement distincts |
+| L7D | Propositions A/B préparées | Choix utilisateur attendu | Pages Figcraft 34/35, 44 cadres et 382 commandes reliées ; conception seulement | Choisir la présentation avant réalisation |
+| L7E à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
 Les commits restent sur `feature/refonte-visuelle` ; L1B A est enregistré dans
@@ -2256,8 +2323,9 @@ L4 A est enregistré dans `e13e588`, réalisé et vérifié localement.
 L5 A est enregistré dans `9eb316e`, réalisé et vérifié localement.
 L6 A est enregistré dans `811ef2d`, réalisé et vérifié localement.
 L7A A est enregistrée dans `730b447` ; recette ci-dessus. Vue générale conservée.
-L7B page 29 est intégrée localement dans `81807df` ; L7C attend son choix A/B.
-Le plan reste à 18 ensembles : dix sont réalisés, huit restent à traiter.
+L7B page 29 est intégrée localement dans `81807df` ; L7C est réalisé selon la
+validation finale et la décision de géographie. L7D attend le choix A/B.
+Le plan reste à 18 ensembles : onze sont réalisés, sept restent à traiter.
 Vue générale avait été finalisée en avance ; L7A est désormais complet localement. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
 Les validations précédentes restent limitées à leurs lots.
 Aucun push, PR, fusion ou déploiement n’est autorisé par le seul changement de

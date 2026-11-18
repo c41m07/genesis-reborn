@@ -35,7 +35,7 @@ export default class extends Controller {
         'searchInput', 'searchResults', 'searchClear', 'searchStatus', 'tooltip', 'systemBack', 'planetBack',
         'systemPanel', 'systemContent', 'systemPanelToggle', 'planetPanel', 'planetContent', 'minimapWrap',
         'minimapCanvas', 'fleetLog', 'motionToggle', 'galaxySelect', 'mapHelp',
-        'mapMode', 'mapModeLabel', 'legend', 'filterToggle', 'mapSettings',
+        'mapMode', 'mapModeLabel', 'legend', 'filterToggle', 'mapSettings', 'layoutButton',
     ];
 
     static values = { map: Object, reducedMotion: Boolean };
@@ -43,7 +43,7 @@ export default class extends Controller {
     connect() {
         this.gameMap = this.mapValue;
         this.solarLayoutCache = null;
-        this.systems = this.gameMap.systems.filter((system) => Number(system.number) <= 80).map((system) => ({ ...system, planets: system.planets || [] }));
+        this.systems = this.gameMap.systems.map((system) => ({ ...system, planets: system.planets || [] }));
         this.systemById = new Map(this.systems.map((system) => [Number(system.id), system]));
         this.flights = (this.gameMap.flights || []).map((flight) => ({
             ...flight,
@@ -56,6 +56,18 @@ export default class extends Controller {
         this.selectedPlanet = null;
         this.mode = 'galaxy';
         this.mapMode = 'exploration';
+        this.layout = 'spiral';
+        this.layoutStorageKey = 'genesis-galaxy-layout:' + this.element.dataset.layoutKey;
+        try {
+            const savedLayout = localStorage.getItem(this.layoutStorageKey);
+            if (['spiral', 'grid'].includes(savedLayout)) this.layout = savedLayout;
+        } catch {
+            // Le refus du stockage local ne doit pas empêcher l’accès à la carte.
+        }
+        this.systemScale = 1;
+        this.systemCamera = { x: 0, y: 0 };
+        this.planetScale = 1;
+        this.pointers = new Map();
         this.hiddenMarkers = new Set();
         this.updateLegend();
         this.element.querySelector('.gv2-legend').open = false;
@@ -73,6 +85,7 @@ export default class extends Controller {
         this.motionReduced = this.reducedMotionValue || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         this.random = this.seededRandom((Number(this.galaxySelectTarget.value) || 1) * 7919);
         this.projectSystems();
+        this.updateLayoutButtons();
         this.makeDecorativeStars();
         this.bindEvents();
         this.resizeObserver = new ResizeObserver(() => this.resize());
@@ -188,35 +201,13 @@ export default class extends Controller {
         };
     }
 
-    galaxySystemPosition(branch, slot) {
-        const progress = .26 + slot / 9 * .74;
-        // Le fond et les systèmes suivent exactement la même courbe.
-        return this.galaxyArmPoint(branch, progress);
-    }
-
     projectSystems() {
+        // La géographie physique vient du serveur ; le décor ne crée aucun faux système.
+        this.galaxyExtentX = Number(this.gameMap.geometry.extent) * 100;
+        this.galaxyExtentY = this.galaxyExtentX;
+        this.decorativeSystems = [];
         if (!this.systems.length) return;
-        // Chaque bras porte dix numéros consécutifs, sans modifier les coordonnées de jeu.
-        this.layoutScale = clamp(Math.sqrt(this.systems.length / 24), .7, 1.8);
-        this.galaxyExtentX = 2100 * this.layoutScale;
-        this.galaxyExtentY = 2100 * this.layoutScale;
-        const knownNumbers = new Set(this.systems.map((system) => Number(system.number)));
-        this.decorativeSystems = Array.from({ length: 80 }, (_, index) => {
-            const number = index + 1;
-            if (knownNumbers.has(number)) return null;
-            const branch = Math.floor(index / 10);
-            const slot = index % 10;
-            return {
-                number,
-                ...this.galaxySystemPosition(branch, slot),
-            };
-        }).filter(Boolean);
         this.systems.forEach((system) => {
-            const number = Number(system.number);
-            const index = Math.max(0, number - 1);
-            const branch = Math.floor(index / 10);
-            const slot = index % 10;
-            Object.assign(system, this.galaxySystemPosition(branch, slot));
             const random = this.seededRandom(Number(system.id) * 7919 + 47);
             system.starColor = starColors[Math.floor(random() * starColors.length)];
             system.starRadius = .65 + random() * 1.6;
@@ -244,6 +235,7 @@ export default class extends Controller {
                 };
             });
         });
+        this.projectLayout();
         // La caméra et la mini-carte partagent le centre géométrique de l’ellipse.
         this.systemBounds = { minX: -this.galaxyExtentX, maxX: this.galaxyExtentX, minY: -this.galaxyExtentY, maxY: this.galaxyExtentY };
         this.flights.forEach((flight) => {
@@ -251,6 +243,43 @@ export default class extends Controller {
             flight.destinationSystem = this.systemById.get(Number(flight.destinationSystemId));
             flight.trail = [];
         });
+    }
+
+    projectLayout() {
+        if (!this.systems.length) return;
+        const centerX = (Math.min(...this.systems.map(s => Number(s.x))) + Math.max(...this.systems.map(s => Number(s.x)))) / 2;
+        const centerY = (Math.min(...this.systems.map(s => Number(s.y))) + Math.max(...this.systems.map(s => Number(s.y)))) / 2;
+        for (const system of this.systems) {
+            system.wx = (this.layout === 'spiral' ? Number(system.physical.x) : Number(system.x) - centerX) * 100;
+            system.wy = (this.layout === 'spiral' ? Number(system.physical.y) : Number(system.y) - centerY) * 100;
+        }
+    }
+
+    changeLayout(event) {
+        const layout = event.currentTarget.dataset.layout;
+        if (!['spiral', 'grid'].includes(layout) || this.mode !== 'galaxy') return;
+        this.layout = layout;
+        this.projectLayout();
+        this.hasUserCamera = false;
+        this.fitGalaxy();
+        this.hoveredSystem = null;
+        this.tooltipTarget.hidden = true;
+        this.flights.forEach(flight => { flight.trail = []; });
+        this.updateLayoutButtons();
+        this.drawFrame(0);
+        try {
+            localStorage.setItem(this.layoutStorageKey, layout);
+        } catch {
+            // La préférence reste valable dans la page même sans stockage persistant.
+        }
+    }
+
+    updateLayoutButtons() {
+        this.layoutButtonTargets.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.layout === this.layout)));
+        this.element.dataset.layout = this.layout;
+        this.element.querySelector('.gv2-layout-note').textContent = this.layout === 'grid'
+            ? 'Grille de repérage : écarts visuels indicatifs, distances calculées dans la spirale.'
+            : 'Spirale réelle : les écarts entre systèmes représentent leurs distances hyperspatiales.';
     }
 
     getBounds(points) {
@@ -302,6 +331,8 @@ export default class extends Controller {
     }
 
     unbindEvents() {
+        this.pointers.clear();
+        this.pinch = null;
         this.sceneTarget.removeEventListener('pointerdown', this.pointerDownHandler);
         this.sceneTarget.removeEventListener('pointermove', this.pointerMoveHandler);
         this.sceneTarget.removeEventListener('pointerleave', this.pointerLeaveHandler);
@@ -349,21 +380,16 @@ export default class extends Controller {
         } : (this.systemBounds || { minX: -extent, maxX: extent, minY: -extent, maxY: extent });
         const mobile = this.width <= 720;
         const viewport = {
-            left: mobile ? 24 : (this.width >= 900 ? 350 : this.width * .23),
-            right: this.width - (mobile ? 24 : 54),
-            top: mobile ? 160 : 76,
-            bottom: this.height - (mobile ? 112 : 54),
+            left: 28,
+            right: this.width - 28,
+            top: 32,
+            bottom: this.height - 44,
         };
         const availableWidth = Math.max(160, viewport.right - viewport.left);
         const availableHeight = Math.max(160, viewport.bottom - viewport.top);
         const spanX = Math.max(extent * .9, bounds.maxX - bounds.minX + extent * .22);
         const spanY = Math.max(extent * .9, bounds.maxY - bounds.minY + extent * .22);
-        let closest = Infinity;
-        points.forEach((point, index) => {
-            for (const other of points.slice(index + 1)) closest = Math.min(closest, Math.hypot(point.wx - other.wx, point.wy - other.wy));
-        });
-        const readingZoom = Number.isFinite(closest) && closest > 0 ? 32 / closest : 0;
-        this.baseZoom = clamp(Math.max(Math.min(availableWidth / spanX, availableHeight / spanY), readingZoom), .025, .8);
+        this.baseZoom = clamp(Math.min(availableWidth / spanX, availableHeight / spanY), .025, .8);
         let centerX = (bounds.minX + bounds.maxX) / 2;
         let centerY = (bounds.minY + bounds.maxY) / 2;
         if ((bounds.maxX - bounds.minX) * this.baseZoom > availableWidth * 1.15 || (bounds.maxY - bounds.minY) * this.baseZoom > availableHeight * 1.15) {
@@ -467,7 +493,7 @@ export default class extends Controller {
         }
         ctx.setLineDash([]);
         ctx.restore();
-        this.drawSpiralArms(ctx);
+        if (this.layout === 'spiral') this.drawSpiralArms(ctx);
 
         for (const nebula of this.nebulae) {
             const point = this.galaxyPoint(nebula);
@@ -532,7 +558,7 @@ export default class extends Controller {
                 ctx.fillRect(point.x - haloRadius, point.y - haloRadius, haloRadius * 2, haloRadius * 2);
             }
             const diskRadius = radius + (isHovered ? 8 : 5);
-            this.drawSystemDisk(ctx, system, point, diskRadius, isHovered);
+            if (system.known) this.drawSystemDisk(ctx, system, point, diskRadius, isHovered);
             if (isHovered || system === this.focusedSystem) {
                 const label = system.galaxy + ':' + system.number;
                 ctx.font = isHovered || this.systems.length <= 48 ? '600 13px "JetBrains Mono", monospace' : '12px "JetBrains Mono", monospace';
@@ -682,7 +708,7 @@ export default class extends Controller {
     }
 
     drawSystemMarkers(ctx, system, point, isHovered) {
-        if (system.known && !isHovered) return;
+        // La colonie personnelle reste identifiable sans survol ; les quarts sont cumulables.
         const markers = this.systemMarkers(system);
         if (markers.length) this.drawMarkers(ctx, markers, point.x, system.known ? point.y - 21 : point.y, !system.known);
     }
@@ -691,12 +717,15 @@ export default class extends Controller {
         ctx.save();
         if (centered) {
             ctx.beginPath();
-            ctx.arc(x, y, 9, 0, Math.PI * 2);
-            ctx.fillStyle = '#050910';
+            ctx.arc(x, y, 11, 0, Math.PI * 2);
+            ctx.fillStyle = '#000000';
             ctx.fill();
+            ctx.strokeStyle = '#ffda66';
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
             ctx.textBaseline = 'middle';
         }
-        ctx.font = '600 14px "Chakra Petch", sans-serif';
+        ctx.font = centered ? '700 18px "Chakra Petch", sans-serif' : '600 14px "Chakra Petch", sans-serif';
         ctx.textAlign = 'center';
         const widths = markers.map((marker) => Math.max(18, ctx.measureText(marker.symbol).width + 8));
         let left = x - widths.reduce((sum, width) => sum + width, 0) / 2;
@@ -907,7 +936,6 @@ export default class extends Controller {
             let progress = this.flightProgress(flight, now);
             let from = origin, to = destination;
             if (flight.status === 'returning' && !flight.recallRoute && !flight.forwardRoute) {
-                progress = 1 - progress;
                 from = destination;
                 to = origin;
             }
@@ -959,7 +987,9 @@ export default class extends Controller {
             }
             ctx.globalAlpha = 1;
             ctx.translate(x, y);
-            ctx.rotate(Math.atan2(dy, dx));
+            const tangentX = (1 - progress) * (cx - a.x) + progress * (b.x - cx);
+            const tangentY = (1 - progress) * (cy - a.y) + progress * (b.y - cy);
+            ctx.rotate(Math.atan2(tangentY, tangentX));
             ctx.shadowColor = color;
             ctx.shadowBlur = 10;
             ctx.fillStyle = color;
@@ -975,8 +1005,17 @@ export default class extends Controller {
     }
 
     drawMinimap() {
-        if (!this.systems.length || !this.minimapContext) return;
+        if (!this.systems.length || !this.minimapContext || this.minimapWrapTarget.hidden) return;
         const rect = this.minimapCanvasTarget.getBoundingClientRect();
+        if (rect.width <= 16 || rect.height <= 16) return;
+        // Un changement de largeur pendant la vue planète peut avoir laissé le canvas masqué à 1 px.
+        const pixelWidth = Math.round(rect.width * this.dpr);
+        const pixelHeight = Math.round(rect.height * this.dpr);
+        if (this.minimapCanvasTarget.width !== pixelWidth || this.minimapCanvasTarget.height !== pixelHeight) {
+            this.minimapCanvasTarget.width = pixelWidth;
+            this.minimapCanvasTarget.height = pixelHeight;
+            this.minimapContext.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+        }
         const width = rect.width, height = rect.height, ctx = this.minimapContext;
         ctx.clearRect(0, 0, width, height);
         ctx.fillStyle = 'rgba(3,8,16,.98)';
@@ -1057,10 +1096,21 @@ export default class extends Controller {
         if (event.button !== undefined && event.button !== 0) return;
         if (event.target.closest('button, input, select, textarea, a, .gv2-hud, .gv2-map-settings, .gv2-map-controls, .gv2-minimap, .gv2-flight-log, .gv2-system-panel, .gv2-planet-panel')) return;
         const point = this.canvasPoint(event);
+        if (!this.pointers.size) this.suppressSystemClick = false;
+        this.pointers.set(event.pointerId, point);
+        if (this.pointers.size === 2) {
+            const [first, second] = [...this.pointers.values()];
+            this.pinch = { distance: Math.hypot(first.x - second.x, first.y - second.y) };
+            this.drag = null;
+            this.suppressSystemClick = true;
+            event.currentTarget.setPointerCapture?.(event.pointerId);
+            return;
+        }
         this.drag = {
             pointerId: event.pointerId,
             startX: point.x, startY: point.y,
             cameraX: this.camera.x, cameraY: this.camera.y,
+            systemX: this.systemCamera.x, systemY: this.systemCamera.y, lastX: point.x,
             moved: false,
         };
         event.currentTarget.setPointerCapture?.(event.pointerId);
@@ -1076,6 +1126,14 @@ export default class extends Controller {
 
     pointerMove(event) {
         const point = this.canvasPoint(event);
+        if (this.pointers.has(event.pointerId)) this.pointers.set(event.pointerId, point);
+        if (this.pinch && this.pointers.size === 2) {
+            const [first, second] = [...this.pointers.values()];
+            const distance = Math.hypot(first.x - second.x, first.y - second.y);
+            this.zoomAt(distance / Math.max(1, this.pinch.distance), { x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 });
+            this.pinch.distance = distance;
+            return;
+        }
         if (this.mode === 'galaxy' && !this.drag && event.target.closest('.gv2-hud, .gv2-map-settings, .gv2-map-controls, .gv2-minimap, .gv2-flight-log')) {
             const hadHover = this.hoveredSystem !== null;
             this.hoveredSystem = null;
@@ -1092,7 +1150,15 @@ export default class extends Controller {
                 this.camera.y = this.drag.cameraY - dy / this.zoom;
                 this.hasUserCamera = true;
                 this.startLoop();
+            } else if (this.drag.moved && this.mode === 'system') {
+                this.systemCamera.x = this.drag.systemX + dx;
+                this.systemCamera.y = this.drag.systemY + dy;
+                this.drawFrame(0);
+            } else if (this.drag.moved && this.mode === 'planet' && this.selectedPlanet) {
+                this.selectedPlanet.visual.rotation += (point.x - this.drag.lastX) * .012;
+                this.drawFrame(0);
             }
+            this.drag.lastX = point.x;
             return;
         }
         if (this.mode === 'galaxy') {
@@ -1104,11 +1170,21 @@ export default class extends Controller {
     }
 
     pointerUp(event) {
+        this.pointers.delete(event.pointerId);
+        if (this.pinch || event.type === 'pointercancel') {
+            this.pinch = null;
+            this.drag = null;
+            this.suppressSystemClick = true;
+            return;
+        }
         if (!this.drag || this.drag.pointerId !== event.pointerId) return;
         const moved = this.drag.moved;
         const point = this.canvasPoint(event);
         this.drag = null;
-        if (moved) return;
+        if (moved) {
+            this.suppressSystemClick = true;
+            return;
+        }
         if (this.mode === 'galaxy') {
             const system = this.nearestSystem(point);
             if (system) this.focusSystem(system);
@@ -1225,12 +1301,8 @@ export default class extends Controller {
                 distanceLabel = 'Trajet intergalactique indisponible';
             } else {
                 const sameSystem = Number(origin.systemId) === Number(system.id);
-                const localDistance = sameSystem
-                    ? Math.abs(10 - Number(origin.position)) * 10
-                    : 100 - Number(origin.position) * 10;
-                const hyperDistance = sameSystem ? 0 : Math.hypot(Number(system.x) - Number(origin.x), Number(system.y) - Number(origin.y)) * 100;
-                const distanceAu = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(localDistance + hyperDistance);
-                distanceLabel = sameSystem ? 'Système de votre colonie de départ' : 'Distance indicative depuis ' + origin.planetCoordinates + ' : ' + distanceAu + ' UA';
+                const distanceAu = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(system.distanceFromOrigin);
+                distanceLabel = sameSystem ? 'Système de votre colonie de départ' : 'Jusqu’à l’entrée du système depuis ' + origin.planetCoordinates + ' : ' + distanceAu + ' UA';
             }
         }
         this.renderSystemHover(system, distanceLabel);
@@ -1251,10 +1323,34 @@ export default class extends Controller {
         event.preventDefault();
         const rect = this.sceneTarget.getBoundingClientRect();
         const x = event.clientX - rect.left, y = event.clientY - rect.top;
+        this.zoomAt(event.deltaY < 0 ? 1.12 : .89, { x, y });
+    }
+
+    zoomAt(factor, point = { x: this.width / 2, y: this.height / 2 }) {
+        if (this.mode === 'planet') {
+            this.planetScale = clamp(this.planetScale * factor, .6, 2.5);
+            this.drawFrame(0);
+            this.startLoop();
+            return;
+        }
+        if (this.mode === 'system') {
+            const next = clamp(this.systemScale * factor, .6, 3);
+            const ratio = next / this.systemScale;
+            const centerX = this.solarLayoutCache?.centerX ?? this.width / 2;
+            const centerY = this.solarLayoutCache?.centerY ?? this.height / 2;
+            this.systemCamera.x = point.x - centerX - (point.x - centerX - this.systemCamera.x) * ratio;
+            this.systemCamera.y = point.y - centerY - (point.y - centerY - this.systemCamera.y) * ratio;
+            this.systemScale = next;
+            this.drawFrame(0);
+            this.startLoop();
+            return;
+        }
+        if (this.mode !== 'galaxy') return;
+        const { x, y } = point;
         const previousZoom = Math.max(.001, this.zoom);
         const cursorWorldX = this.camera.x + (x - this.width / 2) / previousZoom;
         const cursorWorldY = this.camera.y + (y - this.height / 2) / previousZoom;
-        const nextZoom = clamp(previousZoom * (event.deltaY < 0 ? 1.12 : .89), Math.max(.025, this.baseZoom * .2), Math.min(2.6, this.baseZoom * 8));
+        const nextZoom = clamp(previousZoom * factor, Math.max(.025, this.baseZoom * .2), Math.min(2.6, this.baseZoom * 8));
         this.camera.x = cursorWorldX - (x - this.width / 2) / nextZoom;
         this.camera.y = cursorWorldY - (y - this.height / 2) / nextZoom;
         this.zoom = this.targetZoom = nextZoom;
@@ -1265,6 +1361,10 @@ export default class extends Controller {
 
     focusSystem(system, planetId = null) {
         if (!system) return;
+        if (this.selectedSystem?.id !== system.id) {
+            this.systemScale = 1;
+            this.systemCamera = { x: 0, y: 0 };
+        }
         this.selectedSystem = system;
         this.selectedPlanet = null;
         this.savedCamera = { camera: { ...this.camera }, zoom: this.targetZoom };
@@ -1282,6 +1382,12 @@ export default class extends Controller {
         this.locationTarget.textContent = system.name;
         this.coordinatesTarget.textContent = system.galaxy + ':' + system.number;
         this.mapHelpTarget.textContent = system.known ? 'Cliquez sur une planète pour sa vue rapprochée ; utilisez la liste pour sa fiche.' : 'Ce signal n’est pas cartographié. Une sonde peut l’explorer.';
+        if (!system.known) {
+            this.mode = 'galaxy';
+            this.setCanvasMode('galaxy');
+            this.drawFrame(0);
+            return;
+        }
         const destinationZoom = clamp(this.baseZoom * 2.9, .25, 1.25);
         this.mode = this.motionReduced ? 'system' : 'transition-to-system';
         this.setCanvasMode('system');
@@ -1353,6 +1459,7 @@ export default class extends Controller {
     }
 
     setCanvasMode(mode) {
+        this.element.dataset.view = mode;
         this.galaxyCanvasTarget.classList.toggle('is-active', mode === 'galaxy');
         this.systemCanvasTarget.classList.toggle('is-active', mode === 'system');
         this.planetCanvasTarget.classList.toggle('is-active', mode === 'planet');
@@ -1481,6 +1588,7 @@ export default class extends Controller {
     }
 
     systemCanvasClick(event) {
+        if (this.suppressSystemClick) return;
         if (this.mode !== 'system') return;
         const planet = this.nearestPlanet(this.canvasPoint(event));
         if (!planet) return;
@@ -1489,6 +1597,7 @@ export default class extends Controller {
     }
 
     systemCanvasDoubleClick(event) {
+        if (this.suppressSystemClick) return;
         if (this.mode !== 'system') return;
         const planet = this.nearestPlanet(this.canvasPoint(event));
         if (!planet) return;
@@ -1536,23 +1645,27 @@ export default class extends Controller {
         this.drawSystemBackdrop(ctx, system);
         if (!system) return;
         const mobile = this.width <= 720;
-        const panelWidth = this.systemPanelTarget.hidden ? this.planetPanelTarget.offsetWidth : this.systemPanelTarget.offsetWidth;
         const bounds = {
-            left: mobile ? 24 : 64,
-            right: mobile ? this.width - 24 : Math.max(260, this.width - panelWidth - 48),
-            top: mobile ? 150 : 96,
-            bottom: this.height - (mobile ? 88 : 46),
+            left: 24,
+            right: this.width - 24,
+            top: 40,
+            bottom: this.height - 40,
         };
         const key = [system.id, this.width, this.height, bounds.right].join(':');
         if (this.solarLayoutCache?.key !== key) this.solarLayoutCache = { key, ...this.buildSolarLayout(system.planets, bounds) };
         this.advanceSolarLayout(this.solarLayoutCache, dt);
-        const { centerX, centerY, positions } = this.solarLayoutCache;
+        const { centerX: layoutX, centerY: layoutY, positions } = this.solarLayoutCache;
+        const centerX = layoutX + this.systemCamera.x;
+        const centerY = layoutY + this.systemCamera.y;
         ctx.save();
         ctx.translate(centerX, centerY);
         ctx.scale(mobile ? .45 : .65, mobile ? .45 : .65);
         this.drawStar(ctx, 0, 0, system.starColor || '#ffe28c', this.elapsed);
         ctx.restore();
-        for (const { planet, x, y, radius, aspect } of positions) {
+        for (const { planet, x: baseX, y: baseY, radius: orbitRadius, aspect } of positions) {
+            const x = centerX + (baseX - layoutX) * this.systemScale;
+            const y = centerY + (baseY - layoutY) * this.systemScale;
+            const radius = orbitRadius * this.systemScale;
             const visual = planet.visual;
             visual.sx = x;
             visual.sy = y;
@@ -1727,8 +1840,8 @@ export default class extends Controller {
         if (!planet) return;
         const visual = planet.visual;
         if (!visual.sphereCanvas) this.preparePlanetTexture(planet);
-        const radius = Math.min(this.width, this.height) * .27;
-        const x = this.width * .59, y = this.height * .53;
+        const radius = Math.min(this.width, this.height) * .27 * this.planetScale;
+        const x = this.width * .5, y = this.height * .5;
         const color = visual.palette.glow;
         for (let i = 5; i >= 0; i--) {
             const glowRadius = radius + 7 + i * 9;
@@ -2069,15 +2182,34 @@ export default class extends Controller {
     }
 
     zoomIn() {
-        this.targetZoom = clamp(this.targetZoom * 1.2, Math.max(.025, this.baseZoom * .2), Math.min(2.6, this.baseZoom * 8));
-        if (this.motionReduced) this.zoom = this.targetZoom;
-        this.startLoop();
+        this.zoomAt(1.2);
     }
 
     zoomOut() {
-        this.targetZoom = clamp(this.targetZoom * .83, Math.max(.025, this.baseZoom * .2), Math.min(2.6, this.baseZoom * 8));
-        if (this.motionReduced) this.zoom = this.targetZoom;
-        this.startLoop();
+        this.zoomAt(.83);
+    }
+
+    fitView() {
+        if (this.mode === 'galaxy') {
+            this.hasUserCamera = false;
+            this.fitGalaxy();
+        } else if (this.mode === 'system') {
+            this.systemScale = 1;
+            this.systemCamera = { x: 0, y: 0 };
+        } else if (this.mode === 'planet') {
+            this.planetScale = 1;
+        }
+        this.drawFrame(0);
+    }
+
+    centerHome() {
+        if (this.mode !== 'galaxy') return;
+        const home = this.systems.find(system => system.planets.some(planet => planet.ownedByCurrentPlayer));
+        if (!home) return;
+        this.camera = { x: home.wx, y: home.wy };
+        this.zoom = this.targetZoom = Math.min(2.6, this.baseZoom * 2);
+        this.hasUserCamera = true;
+        this.drawFrame(0);
     }
 
     toggleMotion() {
@@ -2091,9 +2223,10 @@ export default class extends Controller {
     updateMotionButton() {
         if (!this.hasMotionToggleTarget) return;
         this.motionToggleTarget.setAttribute('aria-pressed', String(this.motionReduced));
-        this.motionToggleTarget.setAttribute('aria-label', this.motionReduced ? 'Réactiver les animations' : 'Réduire les animations');
+        this.motionToggleTarget.setAttribute('aria-label', this.motionReduced ? 'Animer la galaxie et les planètes' : 'Pause des animations');
         this.motionToggleTarget.title = this.motionReduced ? 'Animations réduites' : 'Réduire les animations';
         this.motionToggleTarget.classList.toggle('is-reduced', this.motionReduced);
+        this.motionToggleTarget.textContent = this.motionReduced ? 'Animer' : 'Pause';
     }
 
     minimapPointer(event) {

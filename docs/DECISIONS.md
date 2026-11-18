@@ -1,5 +1,24 @@
 # Décisions et ambiguïtés — 21 octobre 2026
 
+## Géographie de la galaxie — décision explicite du 18 novembre 2026
+
+L’utilisateur choisit la **spirale réelle comme géographie des distances pour tous
+les joueurs**. La seconde disposition est une **grille de repérage** : ses écarts
+visuels ne représentent pas l’échelle physique. Changer de vue ne change jamais
+le devis, la durée ou le carburant d’un trajet.
+
+`GalaxyGeometry` projette les coordonnées historiques sans les réécrire en base.
+Les 80 systèmes de référence occupent huit bras de dix positions, dans une étendue
+de 15 unités physiques ; une unité vaut 100 UA. Les nouvelles distances
+hyperspatiales sont les distances euclidiennes entre ces positions. Les sorties
+et entrées de système, vitesses et coefficients de consommation restent inchangés.
+Les vols déjà lancés gardent leurs durées et carburants figés ; un nouveau repli
+utilise la position physique atteinte et la nouvelle géographie. Aucun recalcul
+des réservations existantes ni migration de base n’est nécessaire.
+
+La réalisation locale L7C conserve les deux dispositions, le moteur animé existant
+et les protections de visibilité. CI, fusion et déploiement restent distincts.
+
 ## Grille de coûts retenue — décision explicite du 16 novembre 2026
 
 L’utilisateur retient B40/60, I30/50/20 et S25/35/30/10 en parts de valeur

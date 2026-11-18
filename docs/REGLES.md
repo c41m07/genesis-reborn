@@ -121,10 +121,16 @@ identique dans les trois rangs. À 50 % de vitesse, le carburant du trajet est d
 par deux ; le maintien des missions qui le facturent reste indépendant de ce choix.
 Aucun coût horaire supplémentaire pour le stationnement sur une colonie possédée.
 Les réservations historiques restent conservées ; les coefficients des nouveaux
-départs sont figés pour leurs rappels et replis. Vitesses, distances, réservoirs,
+départs sont figés pour leurs rappels et replis. Vitesses, réservoirs,
 soutes et usages des unités déjà possédées restent conservés.
 
-UA universelle. Intra-système : abs(positionB-positionA) × 10. Inter-systèmes : sortie 100−positionA×10, hyperespace hypot(dx,dy)×100, entrée 100−positionB×10. Temps par segment = distance / (vitesse minimale de flotte × ratio). Ratio entre 0.1 et 1. Aller-retour symétrique. Carburant aller + stationnement + retour réservé avant départ. Consommation proportionnelle au ratio de vitesse. Chaque vaisseau possède un petit réservoir exclusivement pour le carburant ; les soutes cargo peuvent embarquer le fret et le carburant supplémentaire. Consommation d'orbite horaire indépendante du ratio. Navigation inter-galaxies non définie et refusée jusqu'à spécification.
+UA universelle. Intra-système : abs(positionB-positionA) × 10. Inter-systèmes : sortie 100−positionA×10, hyperespace hypot(dx physique,dy physique)×100 selon la spirale réelle de `GalaxyGeometry`, entrée 100−positionB×10. Temps par segment = distance / (vitesse minimale de flotte × ratio). Ratio entre 0.1 et 1. Aller-retour symétrique. Carburant aller + stationnement + retour réservé avant départ. Consommation proportionnelle au ratio de vitesse. Chaque vaisseau possède un petit réservoir exclusivement pour le carburant ; les soutes cargo peuvent embarquer le fret et le carburant supplémentaire. Consommation d'orbite horaire indépendante du ratio. Navigation inter-galaxies non définie et refusée jusqu'à spécification.
+
+Depuis la décision explicite du 18 novembre 2026, les nouveaux trajets utilisent
+la géographie physique en spirale. La grille est une disposition de repérage ;
+le choix de vue ne change aucun devis. Les coordonnées persistées restent des
+identifiants historiques. Les vols existants gardent leurs durées et réservations ;
+les nouveaux replis partent de la position physique atteinte.
 
 ## Combat (PDF 1 p.6–8, PDF 2 p.2–6)
 Cadence confirmée par Kévin le 01/11/2026 : un round réel par minute, jusqu’à 10 rounds; les renforts rejoignent le prochain round non résolu selon leur heure d’arrivée. Le premier round commence à +60 secondes; les suivants à +120, jusqu’au 10e à +600. Une flotte arrivée exactement au début d’un round est traitée avant ce round et peut y participer, notamment à +600 secondes avant le 10e round. Le combat se clôt immédiatement dès qu’un camp est éliminé; toute flotte arrivée après cette clôture repart sans rejoindre le combat. Le moteur persiste et résout les rounds en temps réel selon cette cadence. L’Alpha conserve un round par minute, jusqu’à dix rounds ou clôture anticipée; voir l’audit de combat et les tests récents.

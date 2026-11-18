@@ -5,16 +5,11 @@
 {% set relation_labels = {own:'Votre monde', allied:'Joueur allié', enemy:'Joueur ennemi', neutral:'Joueur neutre', npc:'Faction PNJ', uninhabited:'Inhabitée'} %}
 {% set relation_symbols = {own:'⌂', allied:'⬟', enemy:'⚔', neutral:'⬟', npc:'◆', uninhabited:'○'} %}
 {% include 'ui/galaxy_tabs.html.twig' %}
-<h1 class="visually-hidden">Carte interactive de la galaxie</h1>
+<div class="page-heading"><h1>Galaxie</h1></div>
 
-<div class="galaxy-v2" data-controller="galaxy-v2" data-surveillance-galaxy="{{ selected_galaxy.id|default(0) }}" data-action="keydown->galaxy-v2#navigateBack"
+<div class="galaxy-v2 gv2-workspace" data-view="galaxy" data-layout-key="{{ membership.id }}" data-controller="galaxy-v2" data-surveillance-galaxy="{{ selected_galaxy.id|default(0) }}" data-action="keydown->galaxy-v2#navigateBack"
      data-galaxy-v2-map-value="{{ galaxy_v2_json|e('html_attr') }}"
      data-galaxy-v2-reduced-motion-value="{{ preferences.reducedMotion|default(false)?'true':'false' }}">
-    <div class="gv2-scene" data-galaxy-v2-target="scene">
-        <canvas class="gv2-canvas gv2-canvas--galaxy is-active" data-galaxy-v2-target="galaxyCanvas" aria-label="Carte animée de la galaxie. Glissez pour déplacer, molette pour zoomer, cliquez sur un système pour l’examiner."></canvas>
-        <canvas class="gv2-canvas gv2-canvas--system" data-galaxy-v2-target="systemCanvas" aria-label="Vue du système solaire. Cliquez sur une planète pour ouvrir sa vue rapprochée ; sa fiche est accessible dans la liste."></canvas>
-        <canvas class="gv2-canvas gv2-canvas--planet" data-galaxy-v2-target="planetCanvas" aria-label="Vue rapprochée de la planète"></canvas>
-        <div class="gv2-scanlines" aria-hidden="true"></div><div class="gv2-vignette" aria-hidden="true"></div>
         <div class="gv2-hud">
             <div class="gv2-locator"><span class="gv2-live-dot"></span><span data-galaxy-v2-target="location">{{ selected_galaxy.name|default(membership.universe.name) }}</span></div>
             <form class="gv2-galaxy-form" method="get" action="{{ path('app_map_v2') }}">
@@ -33,6 +28,39 @@
             </div>
             <div class="gv2-coordinate" aria-live="polite" data-galaxy-v2-target="coordinates">{% if selected_galaxy %}{{ selected_galaxy.coordinateCode() }}{% else %}—{% endif %}</div>
         </div>
+    <div class="gv2-layout-modes" role="group" aria-label="Disposition de la galaxie">
+        <button type="button" data-layout="spiral" data-galaxy-v2-target="layoutButton" data-action="click->galaxy-v2#changeLayout" aria-pressed="true">Spirale réelle</button>
+        <button type="button" data-layout="grid" data-galaxy-v2-target="layoutButton" data-action="click->galaxy-v2#changeLayout" aria-pressed="false">Grille de repérage</button>
+    </div>
+    <p class="gv2-layout-note">Distances physiques communes aux deux vues.</p>
+    <nav class="gv2-breadcrumbs" aria-label="Retour dans la carte">
+        <button type="button" class="gv2-back" data-galaxy-v2-target="systemBack" data-action="click->galaxy-v2#toGalaxy" hidden>‹ Galaxie</button>
+        <button type="button" class="gv2-back" data-galaxy-v2-target="planetBack" data-action="click->galaxy-v2#toSystem" hidden>‹ Système</button>
+    </nav>
+        <div class="gv2-map-controls">
+            <button type="button" aria-label="Zoomer" data-action="click->galaxy-v2#zoomIn">+</button>
+            <button type="button" aria-label="Dézoomer" data-action="click->galaxy-v2#zoomOut">−</button>
+            <button type="button" aria-pressed="false" data-galaxy-v2-target="motionToggle" data-action="click->galaxy-v2#toggleMotion" title="Réduire ou rétablir les animations">◌</button>
+            <button type="button" data-action="click->galaxy-v2#fitView">Vue entière</button>
+            <button type="button" class="gv2-home" data-action="click->galaxy-v2#centerHome">Ma colonie</button>
+        </div>
+    <div class="gv2-scene" data-galaxy-v2-target="scene">
+        <canvas class="gv2-canvas gv2-canvas--galaxy is-active" data-galaxy-v2-target="galaxyCanvas" aria-label="Carte animée de la galaxie. Glissez pour déplacer, molette pour zoomer, cliquez sur un système pour l’examiner."></canvas>
+        <canvas class="gv2-canvas gv2-canvas--system" data-galaxy-v2-target="systemCanvas" aria-label="Vue du système solaire. Cliquez sur une planète pour ouvrir sa vue rapprochée ; sa fiche est accessible dans la liste."></canvas>
+        <canvas class="gv2-canvas gv2-canvas--planet" data-galaxy-v2-target="planetCanvas" aria-label="Vue rapprochée de la planète"></canvas>
+        <div class="gv2-scanlines" aria-hidden="true"></div><div class="gv2-vignette" aria-hidden="true"></div>
+        <div class="gv2-tooltip" role="status" data-galaxy-v2-target="tooltip" hidden></div>
+
+        <div class="gv2-minimap" data-galaxy-v2-target="minimapWrap">
+            <span>CARTE LOCALE</span><canvas data-galaxy-v2-target="minimapCanvas" aria-label="Mini-carte interactive ; cliquez pour déplacer la caméra"></canvas>
+        </div>
+    </div>
+        <div class="gv2-map-help" data-galaxy-v2-target="mapHelp">Glisser pour naviguer · Molette pour zoomer · Cliquer sur un système pour l’examiner</div>
+    <ul class="gv2-visible-legend" aria-label="Repères de la carte">
+        <li class="gv2-marker--own">⌂ Vos colonies</li><li class="gv2-marker--allied">↗ Allié</li>
+        <li class="gv2-marker--enemy">↙ Ennemi</li><li class="gv2-marker--npc">↖ PNJ</li>
+        <li class="gv2-marker--neutral">↘ Neutre / libre</li><li class="gv2-marker--unknown">? Inexploré</li>
+    </ul>
         <section class="gv2-map-settings is-collapsed" aria-label="Affichage de la carte" data-galaxy-v2-target="mapSettings">
             <button type="button" class="gv2-filter-toggle" data-galaxy-v2-target="filterToggle" data-action="click->galaxy-v2#toggleMapFilters" aria-expanded="false" aria-controls="gv2-filter-content">Filtres · <span data-galaxy-v2-target="mapModeLabel">Exploration</span></button>
             <div id="gv2-filter-content">
@@ -49,10 +77,6 @@
             </details>
             </div>
         </section>
-        <button type="button" class="gv2-back" data-galaxy-v2-target="systemBack" data-action="click->galaxy-v2#toGalaxy" hidden>‹ Galaxie</button>
-        <button type="button" class="gv2-back" data-galaxy-v2-target="planetBack" data-action="click->galaxy-v2#toSystem" hidden>‹ Système</button>
-        <div class="gv2-tooltip" role="status" data-galaxy-v2-target="tooltip" hidden></div>
-
         <aside class="gv2-system-panel is-collapsed" aria-label="Informations sur le système sélectionné" data-galaxy-v2-target="systemPanel" hidden>
             <button type="button" class="gv2-sheet-toggle" data-galaxy-v2-target="systemPanelToggle" data-action="click->galaxy-v2#toggleSystemPanel" aria-expanded="false" aria-controls="gv2-system-content" aria-label="Afficher les informations du système">Planètes du système</button>
             <div id="gv2-system-content" data-galaxy-v2-target="systemContent"></div>
@@ -61,22 +85,12 @@
             <div data-galaxy-v2-target="planetContent"></div>
         </aside>
 
-        <div class="gv2-minimap" data-galaxy-v2-target="minimapWrap">
-            <span>CARTE LOCALE</span><canvas data-galaxy-v2-target="minimapCanvas" aria-label="Mini-carte interactive ; cliquez pour déplacer la caméra"></canvas>
-        </div>
         <details class="gv2-flight-log {{ galaxy_v2_flights is empty?'is-empty':'' }}" {{ galaxy_v2_flights is not empty?'open':'' }}>
             <summary><span class="gv2-live-dot" aria-hidden="true"></span>Journal de flotte<span class="visually-hidden" data-galaxy-v2-empty-label {% if galaxy_v2_flights is not empty %}hidden{% endif %}> · aucune mission</span></summary>
             <div data-galaxy-v2-target="fleetLog">
                 {% include 'universe/_fleet_log.html.twig' %}
             </div>
         </details>
-        <div class="gv2-map-controls">
-            <button type="button" aria-label="Zoomer" data-action="click->galaxy-v2#zoomIn">+</button>
-            <button type="button" aria-label="Dézoomer" data-action="click->galaxy-v2#zoomOut">−</button>
-            <button type="button" aria-pressed="false" data-galaxy-v2-target="motionToggle" data-action="click->galaxy-v2#toggleMotion" title="Réduire ou rétablir les animations">◌</button>
-        </div>
-        <div class="gv2-map-help" data-galaxy-v2-target="mapHelp">Glisser pour naviguer · Molette pour zoomer · Cliquer sur un système pour l’examiner</div>
-    </div>
 
     {% for row in systems %}
         {% set system = row.system %}

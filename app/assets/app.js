@@ -12,6 +12,8 @@ import './styles/admin-dashboard.css';
 import './styles/admin-notifications.css';
 import './styles/admin-console.css';
 import './styles/galaxy-v2.css';
+import './styles/galaxy-workspace.css';
+import './styles/combat-simulation.css';
 import './styles/resource-strip.css';
 import './styles/quantity.css';
 import './styles/catalogue-details.css';

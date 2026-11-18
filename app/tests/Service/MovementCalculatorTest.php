@@ -8,10 +8,10 @@ use PHPUnit\Framework\TestCase;
 final class MovementCalculatorTest extends TestCase
 {
     private function ships(): array { return [['quantity'=>7,'speed_system'=>50,'speed_galaxy'=>500,'fuel_travel_system'=>.5,'fuel_travel_galaxy'=>2,'fuel_orbit'=>.3,'cargo_capacity'=>50000]]; }
-    public function testDocument3ExampleInverseAndSymmetry(): void
+    public function testSpiralDistanceInverseFuelAndSymmetry(): void
     {
         $c=new MovementCalculator();$a=[1,1,3,5,3];$b=[2,1,7,9,7];$q=$c->quote($a,$b,$this->ships(),.8,1,'inverse',1/6);$r=$c->quote($b,$a,$this->ships(),.8,1,'inverse',1/6);
-        self::assertEqualsWithDelta(665.7,$q['distance'],.02);self::assertEqualsWithDelta(10337.25,$q['one_way_fuel'],.3);self::assertEqualsWithDelta(20674.85,$q['total_fuel'],.6);
+        self::assertEqualsWithDelta(863.1520624839687,$q['distance'],1e-8);self::assertEqualsWithDelta(13792.661093469453,$q['one_way_fuel'],1e-8);self::assertEqualsWithDelta(27585.672186938904,$q['total_fuel'],1e-8);
         self::assertSame($q['distance'],$r['distance']);self::assertSame($q['seconds'],$r['seconds']);self::assertSame($q['total_fuel'],$r['total_fuel']);
     }
     public function testBothExplicitFuelPoliciesAndLowerSpeed(): void
@@ -72,7 +72,7 @@ final class MovementCalculatorTest extends TestCase
     {
         $calculator=new MovementCalculator();$origin=[40,1,27,9,4];
         foreach([[1,1,0,0,4],[80,1,27,21,4]] as $index=>$target){
-            foreach(['capital'=>[31538,16421],'probe'=>[124,105]] as $slug=>$expected){
+            foreach(['capital'=>[22327,31574],'probe'=>[112,124]] as $slug=>$expected){
                 $ships=[$this->ship($slug)];
                 $outbound=$calculator->quote($origin,$target,$ships,1,1,'proportional');
                 $return=$calculator->quote($target,$origin,$ships,1,1,'proportional');

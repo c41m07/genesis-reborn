@@ -57,7 +57,12 @@ test('Simulateur : dix combats reproductibles, détails accessibles et aucune mu
  await expect(result).toContainText('7 victoires donnent 70 %, sans garantir cette probabilité réelle');
  const first=await result.innerText(),trial=trials.first(),summary=trial.locator(':scope > summary');
  await summary.focus();await page.keyboard.press('Enter');await expect(trial).toHaveAttribute('open','');
- await trial.getByText('Pertes et survivants fictifs',{exact:true}).focus();await page.keyboard.press('Space');
+ await expect(trial.getByRole('heading',{name:'Camp attaquant',exact:true})).toBeVisible();
+ await expect(trial.getByRole('heading',{name:'Camp défenseur',exact:true})).toBeVisible();
+ await expect(trial.locator('.simulation-losses')).toHaveCount(2);
+ const unitTotals=await trial.locator('.simulation-losses tbody tr').evaluateAll(rows=>rows.map(row=>[...row.querySelectorAll('td')].map(cell=>Number(cell.textContent.replace('−','-')))));
+ for(const [initial,lost,remaining] of unitTotals)expect(initial).toBe(-lost+remaining);
+ await trial.getByText('Structure détaillée des survivants',{exact:true}).focus();await page.keyboard.press('Space');
  await expect(trial.locator('ul').first()).toBeVisible();
  await summary.click();await expect(trial).not.toHaveAttribute('open','');
  await page.getByRole('checkbox',{name:/Je confirme les hypothèses/}).check();

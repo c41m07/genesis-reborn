@@ -130,6 +130,7 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   await labelSearch.fill('');
   await expect.poll(() => page.evaluate(() => window.galaxyCoordinateLabels)).toEqual([]);
   expect(homePoint).toBeTruthy();
+  await page.locator('.gv2-canvas--galaxy').scrollIntoViewIfNeeded();
   const galaxyBounds = await page.locator('.gv2-canvas--galaxy').boundingBox();
   await page.mouse.move(galaxyBounds.x + homePoint.x, galaxyBounds.y + homePoint.y);
   await expect(page.locator('.gv2-tooltip-title')).toHaveText(homeSystem.name);
@@ -191,6 +192,7 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
     }
     return null;
   }, planets);
+  await page.locator('.gv2-canvas--system').scrollIntoViewIfNeeded();
   const clickable = await findClickablePlanet(homeSystem.planets);
   expect(clickable, 'une planète dessinée doit être accessible au clic').toBeTruthy();
   await page.mouse.click(clickable.x, clickable.y);
@@ -232,6 +234,7 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   await expect(page.locator('#gv2-filter-content')).toBeHidden();
   await expect(emptyJournal).toBeVisible();
   await expect(page.locator('.incoming-attack-panel')).toHaveCount(0);
+  await page.locator('.gv2-canvas--galaxy').scrollIntoViewIfNeeded();
   const mobileMarkers = await page.evaluate(() => {
     const canvas = document.querySelector('.gv2-canvas--galaxy');
     const rect = canvas.getBoundingClientRect();
@@ -246,7 +249,7 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   await page.keyboard.press('Enter');
   await expect(filters).toHaveAttribute('aria-expanded', 'true');
   await expect(page.locator('.gv2-tooltip')).toBeHidden();
-  await expect(emptyJournal).toBeHidden();
+  await expect(emptyJournal).toBeVisible();
   await expect(page.locator('[data-galaxy-v2-target="legend"]')).toBeVisible();
   await page.getByRole('button', { name: 'PNJ', exact: true }).click();
   await expect(page.locator('[data-galaxy-v2-target="legend"]')).toContainText('niveaux 1–3');
@@ -260,20 +263,16 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   await mobileSearch.fill(homeSystem.name);
   await page.locator('.gv2-search-results button').filter({ hasText: homeSystem.name }).first().click();
   const sheet = page.locator('.gv2-sheet-toggle');
-  await expect(sheet).toHaveAttribute('aria-expanded', 'false');
-  await expect(page.locator('#gv2-system-content')).toBeHidden();
+  await expect(sheet).toBeHidden();
+  await expect(page.locator('#gv2-system-content')).toBeVisible();
   await page.screenshot({ path: 'output/playwright/galaxy-solar-mobile.png' });
-  await sheet.focus();
-  await page.keyboard.press('Enter');
-  await expect(sheet).toHaveAttribute('aria-expanded', 'true');
   await expect(page.locator('.gv2-system-panel .gv2-planet-list .gv2-marker--own')).toBeVisible();
   await page.locator('.gv2-system-panel .gv2-system-legend summary').click();
   await expect(page.locator('.gv2-system-panel .gv2-system-legend ul')).toBeVisible();
   await page.screenshot({ path: 'output/playwright/galaxy-planets-mobile.png' });
   await page.locator('.gv2-system-panel .gv2-system-legend summary').click();
-  await sheet.click();
-  await expect(sheet).toHaveAttribute('aria-expanded', 'false');
-  await expect(page.locator('#gv2-system-content')).toBeHidden();
+  await expect(page.locator('#gv2-system-content')).toBeVisible();
+  await page.locator('.gv2-canvas--system').scrollIntoViewIfNeeded();
   const mobilePlanet = await findClickablePlanet(homeSystem.planets);
   expect(mobilePlanet, 'une planète doit rester visible au-dessus du panneau mobile').toBeTruthy();
   await page.touchscreen.tap(mobilePlanet.x, mobilePlanet.y);
@@ -281,7 +280,7 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   await expect(page.locator('.gv2-planet-panel')).toContainText(mobilePlanet.name);
   await page.locator('.gv2-planet-panel').getByRole('button', { name: /Revenir au système/ }).tap();
   await expect(page.locator('.gv2-canvas--system')).toHaveClass(/is-active/);
-  await expect(sheet).toHaveAttribute('aria-expanded', 'true');
+  await expect(sheet).toBeHidden();
   await expect(page.locator('.gv2-system-panel .gv2-panel-heading')).toContainText(homeSystem.name);
   await expect(page.locator('.gv2-planet-choice').filter({ hasText: mobilePlanet.name })).toBeFocused();
 

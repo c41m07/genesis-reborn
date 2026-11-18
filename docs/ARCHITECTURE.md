@@ -319,11 +319,20 @@ Les ressources restent visibles sous la barre de contexte. Sur mobile, leur
 défilement horizontal est conservé pendant les actualisations. Les dates viennent
 du serveur ; les animations Stimulus ne décident ni des durées ni des résultats.
 
-Les cartes /carte et /carte-v2 utilisent les coordonnées persistées et ne révèlent
-que les planètes des systèmes découverts. Les flottes affichées sont celles du joueur.
+Les cartes /carte et /carte-v2 gardent les identifiants de coordonnées persistés et
+ne révèlent que les planètes des systèmes découverts. `GalaxyGeometry` prépare les
+positions physiques de la spirale ; `MovementCalculator::distances` prépare la
+distance jusqu’à l’entrée du système depuis la colonie de départ. Le JSON V2 expose
+`physical`, `distanceFromOrigin` et la version de géométrie sans nouvelle lecture
+par système. Les règles de visibilité existantes des flottes restent appliquées
+avant sérialisation.
 Textures, nébuleuses, anneaux et lunes de la V2 sont cosmétiques et déterministes.
 Les missions rapides réutilisent les contrôles serveur existants. La V2 permet
-recherche, zoom, déplacement, mini-carte et transitions ; elle arrête ses animations
+recherche, zoom, déplacement, mini-carte et transitions. Ses dispositions Spirale
+réelle et Grille de repérage partagent les distances serveur ; le choix d’affichage
+est conservé localement par participation. Les fiches restent dans le flux de la
+page, hors du canvas ; le pincement agit aux trois niveaux et le globe se tourne
+par glissement. Elle arrête ses animations
 hors écran et respecte la réduction des mouvements. La carte classique reste le
 repli sans canvas/JavaScript. L’arbre technologique conserve les éléments verrouillés
 pour expliquer leurs prérequis, indépendamment du masquage du catalogue.
@@ -490,6 +499,20 @@ garde son tag NULL, aucun signalement inventé. make lint confirme aussi le sch�
 local migré. Aucun serveur Alpha n’est concerné.
 
 ## Navigation et rappel volontaire — lot G
+
+Depuis L7C, `GalaxyGeometry` est la source commune des distances hyperspatiales des
+devis et replis. Les tableaux de coordonnées des trajets figés restent historiques ;
+`FleetNavigation` projette leurs extrémités avant d’interpoler le point atteint.
+Les secondes et carburants déjà enregistrés ne sont pas recalculés. Les nouveaux
+points physiques portent `geometry: spiral-v1`, afin de ne pas les confondre avec
+une ancienne position de grille. Un ancien point entre systèmes sans géométrie
+identifiable est refusé pour le repli, plutôt que converti arbitrairement.
+
+Le simulateur prépare ses bilans d’affichage dans `CombatSimulationView`, après
+les dix calculs existants. Les survivants sont comptés par camp, unité et rang ;
+leurs points de structure ne deviennent jamais des effectifs. Twig affiche les
+engagés, pertes et survivants, puis les rounds et structures en détails secondaires.
+Les résultats bruts, paramètres et contrôles serveur restent conservés.
 
 FleetNavigation fige au départ les coordonnées, portions système/hyperespace,
 durées et carburant du devis existant. Son checkpoint active est enregistré avant

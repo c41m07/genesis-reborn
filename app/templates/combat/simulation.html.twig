@@ -1,7 +1,7 @@
 {% extends 'base.html.twig' %}
 {% block title %}Simulateur de combat · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="strategic-page">
+<div class="strategic-page simulation-workspace">
 <div class="page-heading"><div><h1>Simulateur de combat</h1><p>Dix combats avec la même configuration et des graines distinctes, pour une estimation sans garantie.</p></div><a class="secondary" href="{{ path('app_fleet_prepare') }}">Préparer une mission</a></div>
 <p class="panel">Deux camps paramétrés, sans occupation ni intervention future non saisie. Limite : {{ max_units }} unités au total et budget de calcul borné. Aucun vaisseau envoyé, aucune ressource dépensée. Les pertes calculées restent fictives.</p>
 <form method="get" class="panel"><label for="simulation-own">Reprendre mes vaisseaux disponibles</label><select id="simulation-own" name="own_planet">{% for planet in planets %}<option value="{{ planet.id }}">{{ planet.name }}</option>{% endfor %}</select>{% if intel %}<input type="hidden" name="report" value="{{ intel.id }}">{% endif %}<button class="secondary">Charger mes forces</button></form>
