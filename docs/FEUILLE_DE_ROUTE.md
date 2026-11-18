@@ -125,6 +125,9 @@ vraies lignes, gains ouverts, coûts/manques et bandeau des files/flottes dépli
 Vérifications : 20 PHP / 2 298 assertions, six parcours navigateur consolidés,
 30 captures réelles, compilation et lints. Dix ensembles sur 18 sont réalisés.
 L7C (Galaxie et simulateur) reprend la conception A/B avant toute réalisation.
+Ses deux propositions sont préparées dans Figcraft : page 30 « Exploration cadrée »
+et page 31 « Carte immersive », 50 cadres en trois formats, états et détails compris.
+Cartes schématiques ; le moteur 3D existant sera conservé. Choix utilisateur attendu.
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026

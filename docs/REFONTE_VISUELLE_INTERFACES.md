@@ -2010,6 +2010,81 @@ sur la base habituelle, nouvelle dépendance, CI GitHub, fusion ou livraison.
 Le contrôle ciblé ne constitue pas un audit RGAA complet. Le lot suivant est L7C :
 cartes classique/V2 et simulateur, soumis à un nouveau choix A/B.
 
+Commit de réalisation : `81807df`. Fichiers de ce lot :
+
+- Présentation : `app/assets/app.js`, `app/assets/styles/catalogue-workspace.css`,
+  `app/templates/colony/_catalog.html.twig`, `app/templates/colony/show.html.twig`,
+  `app/templates/player/technology_tree.html.twig`, `app/templates/ui/building_cards.html.twig`,
+  `app/templates/ui/catalogue_benefits.html.twig`, `app/templates/ui/colony_queues.html.twig`,
+  `app/templates/ui/flights.html.twig`, `app/templates/ui/incoming_attacks.html.twig`
+  et `app/templates/ui/development_navigation.html.twig`.
+- Actualisation : contrôleurs `building_catalog`, `catalog_sticky`, `colony_live`,
+  `construction_quantity` et `incoming_attacks` dans `app/assets/controllers/` ;
+  `app/src/Service/Queue/QueueService.php` pour les données du devis.
+- Régression : `app/tests/browser/catalogue-workspace.spec.mjs` et
+  `app/tests/browser/catalogue-cleanup.spec.mjs` ; documentation dans `README.md`,
+  `docs/ARCHITECTURE.md`, le présent suivi, la feuille de route et l’inventaire.
+
+## L7C — Galaxie et simulateur, propositions préparées — 18 novembre 2026
+
+Conception **4/5**, réalisation estimée **4/5**. Sources ciblées : routes et préparation
+de carte dans `ColonyController`, cartes classique/V2, actions rapides et conquête,
+contrôleurs de sélection/recherche/navigation, `CombatSimulationController`, formulaires,
+résultats et détails de combat. Les lectures découvertes/propriétaire/univers, les
+missions conditionnelles, la surveillance autorisée et les règles de simulation restent
+à conserver. Aucun code de ces interfaces n’est modifié avant le nouveau choix.
+
+Deux pages sont ajoutées au document Figcraft courant, sans rétablir les anciennes
+pages retirées ni modifier la page 29 :
+
+- **30 · L7C · A — Exploration cadrée** : commandes au-dessus, carte et fiche de
+  sélection séparées sur ordinateur ; fiche sous la carte sur téléphone. Positions
+  classiques en lignes et deux camps côte à côte dans le simulateur sur grand écran.
+  Résultats en liste compacte. Bénéfice : lecture continue des informations et actions
+  sans recouvrir la carte. Limite : surface visuelle de carte plus réduite.
+- **31 · L7C · B — Carte immersive** : commandes et fiche ancrées dans une carte
+  plus large, avec fiche basse sur téléphone. Positions classiques en cartes ; camps
+  de simulation empilés et combats en cartes sur ordinateur. Bénéfice : place donnée
+  à l’exploration et groupes plus larges. Limite : la fiche recouvre une partie de la
+  scène et la préparation du simulateur demande davantage de défilement.
+
+Chaque proposition comporte **25 cadres** : carte, système exploré, planète PNJ,
+système inconnu, liste classique, préparation et résultats en 1440/768/390 ; détails
+de combat et planche des états en ordinateur/téléphone. Les trois destinations restent
+les vraies pages `/carte-v2`, `/carte` et `/simulateur`. La sélection et les fiches
+restent des états d’une carte ; préparation et résultats restent le même formulaire
+et sa réponse, sans nouvelle séparation par URL. Rechargement, retour arrière,
+clavier, visibilité des découvertes et conservation des forces devront être vérifiés
+dans le jeu après le choix.
+
+Les contenus utilisent les champs existants : départ, coordonnées, type de cible,
+PNJ/occupation, sondes/vitesse, hypothèses, recherches, défenses/forteresse, graine,
+limite de 500 unités et série de dix combats. Les exemples géographiques sont fictifs.
+Le résultat montré vient du moteur existant, exécuté hors base sur un scénario
+synthétique : huit chasseurs basiques face à deux chasseurs intermédiaires arrivant
+au round 2, un canon anti-léger et une forteresse de niveau 3 ; sept victoires et trois
+défaites avec les graines 12345 à 12354. Pertes, survivants et rounds reprennent cette
+sortie ; aucune moyenne de pertes ni probabilité garantie n’est ajoutée.
+
+Recommandation : **A**, pour consulter les cibles et préparer une action avec des
+informations stables. B reste une alternative donnant davantage de place à la scène.
+Les deux réutilisent menu, ressources, identité et variables du document courant.
+Une version native conserve les structures grises avant leur mise en couleur.
+
+Vérification de conception : **50 cadres**, trois formats, **546 commandes reliées**
+et leurs destinations réellement inspectées, huit fermetures par Échap et quatre
+panneaux mobiles configurés pour défiler. Aucun débordement ou chevauchement de texte
+visible détecté ; examen visuel des cartes A/B, de la fiche mobile, de la préparation
+et des résultats. Les pages précédentes et les 71 cadres de la page 29 sont conservés.
+Les 50 captures sont exportées et le fichier natif est enregistré.
+
+Limites du prototype : carte schématique ; zoom, glisser, modes de carte et saisies
+illustrés. Ils ne sont pas exécutés dans Figcraft : le moteur de carte actuel sera
+conservé lors de l’intégration. Les actions simulées n’envoient aucune flotte. Ce
+contrôle de conception ne valide ni les parcours du jeu L7C ni une conformité RGAA.
+Preuves locales : `lot-7C-donnees.json`, `lot-7C-manifest.json`,
+`lot-7C-verification.json` et `lot-7C-*.png`. **Choix utilisateur attendu.**
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -2028,7 +2103,8 @@ cartes classique/V2 et simulateur, soumis à un nouveau choix A/B.
 | L6 | A implémentée et vérifiée localement | A choisie explicitement | 32 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
 | L7A | A implémentée et vérifiée localement | A choisie explicitement ; Vue générale conservée | 51 PHP, sept parcours navigateur et 43 captures | CI, intégration et déploiement distincts |
 | L7B | Page 29 implémentée et vérifiée localement | Version consolidée validée explicitement | 20 PHP, six parcours navigateur consolidés et 30 captures ; bilan ci-dessus | CI complète, intégration et déploiement distincts |
-| L7C à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
+| L7C | Deux propositions préparées | Choix A/B attendu, pages 30/31 | 50 cadres, 546 commandes reliées et captures ; aucune réalisation du jeu | Choisir la direction avant développement |
+| L7D à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
 Les commits restent sur `feature/refonte-visuelle` ; L1B A est enregistré dans
@@ -2040,6 +2116,7 @@ L4 A est enregistré dans `e13e588`, réalisé et vérifié localement.
 L5 A est enregistré dans `9eb316e`, réalisé et vérifié localement.
 L6 A est enregistré dans `811ef2d`, réalisé et vérifié localement.
 L7A A est enregistrée dans `730b447` ; recette ci-dessus. Vue générale conservée.
+L7B page 29 est intégrée localement dans `81807df` ; L7C attend son choix A/B.
 Le plan reste à 18 ensembles : dix sont réalisés, huit restent à traiter.
 Vue générale avait été finalisée en avance ; L7A est désormais complet localement. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
 Les validations précédentes restent limitées à leurs lots.
