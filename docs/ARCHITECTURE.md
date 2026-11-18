@@ -261,6 +261,14 @@ rangs sur mobile, avec les rôles et en-têtes accessibles conservés. Aucun nou
 contrôleur JavaScript, aucune lecture ou écriture supplémentaire : formulaires,
 versions, empreinte de disponibilité et contrôle exact de l’envoi restent existants.
 
+L3 A réorganise les fragments existants de l’Inventaire. `inventory-workspace.css`
+est limité à `.inventory-redesign` : stock/utilisation, contenu/destination et
+attente chronologique. `ui/space_navigation` accepte un compteur optionnel par
+lien pour reprendre la navigation mobile commune ; sans compteur, son rendu est
+conservé. `inventory-review` garde ses targets, formulaires et gestion du focus ;
+le sélecteur reste masqué sans JavaScript et tous les formulaires sont alors visibles.
+Les données de `InventoryPageView`, les POST, CSRF et clés de requête restent inchangés.
+
 Les actualisations des colonies et de Flottes demandent JSON avec `X-Genesis-Live: 1` et
 `Accept: application/json`. La route conserve ses contrôles, synchronisations
 et préparation GameShell, puis renvoie les fragments privés sans cache.

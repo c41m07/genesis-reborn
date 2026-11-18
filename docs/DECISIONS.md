@@ -2022,3 +2022,16 @@ versions, CSRF, accord sur les manques et nouvelle vérification des disponibili
 restent existants. Charger prépare la mission sans l’envoyer. Cette validation
 termine L2 localement ; elle ne valide pas les lots suivants.
 [Recette et limites](REFONTE_VISUELLE_INTERFACES.md).
+
+
+## Refonte visuelle L3 : proposition A — 18 novembre 2026
+
+L’utilisateur choisit A (« j’aime bien le A ») pour l’Inventaire. Stock et opération
+à accélérer sont rapprochés ; contenu et destination de chaque boîte sont côte
+à côte sur grand écran. L’attente conserve son ordre et sa pagination. Le menu
+mobile commun garde les trois pages et leurs compteurs.
+
+Confirmations, accès, contenu attribué, capacité commune et promotion automatique
+restent existants. La revue est conservée avec JavaScript, les formulaires serveur
+restent accessibles sans JavaScript. Aucune valeur de jeu n’est modifiée.
+[Recette et limites](REFONTE_VISUELLE_INTERFACES.md).

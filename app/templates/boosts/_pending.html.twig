@@ -1,8 +1,11 @@
-<section id="inventory-pending" class="panel inventory-pending" aria-labelledby="inventory-pending-title">
+<section id="inventory-pending" class="inventory-pending" aria-labelledby="inventory-pending-title">
+<div class="panel inventory-pending-summary">
 <div class="section-heading"><h2 id="inventory-pending-title">Ordre d’arrivée dans l’inventaire</h2><span class="badge">{{ pending_boost_count }}</span></div>
-{% if pending_boost_count>0 %}<p class="boost-pending" role="status">{{ pending_boost_count }} bonus en attente. Dès qu’une place se libère, la récompense la plus ancienne rejoint votre inventaire.</p>
-<ol class="inventory-pending-list" start="{{ (pending_page-1)*25+1 }}">{% for item in pending_items %}<li data-pending-item="{{ item.id }}"><strong>{{ item.kind=='resource_box' ? item.payload.label|default('Boîte de ressources') : 'Boost de réduction de durée' }}</strong><br>
-{{ {event:'Événement',risk_mission:'Mission à risque',guild_project:'Projet collectif'}[item.sourceType]|default('Récompense') }} · <time datetime="{{ item.earnedAt|date('c') }}">{{ item.earnedAt|date('d/m/Y H:i',preferences.timezone) }}</time></li>{% endfor %}</ol>
+{% if pending_boost_count>0 %}<p class="boost-pending" role="status">{{ pending_boost_count }} bonus en attente. Dès qu’une place se libère, la récompense la plus ancienne rejoint votre inventaire.</p>{% else %}<p>Aucune récompense en attente. Les récompenses gagnées restent conservées même si l’inventaire est plein.</p>{% endif %}
+</div>
+{% if pending_boost_count>0 %}
+<ol class="inventory-pending-list" start="{{ (pending_page-1)*25+1 }}">{% for item in pending_items %}<li data-pending-item="{{ item.id }}"><strong>{{ item.kind=='resource_box' ? item.payload.label|default('Boîte de ressources') : 'Boost de réduction de durée' }}</strong>
+<p>{{ {event:'Événement',risk_mission:'Mission à risque',guild_project:'Projet collectif'}[item.sourceType]|default('Récompense') }} · <time datetime="{{ item.earnedAt|date('c') }}">{{ item.earnedAt|date('d/m/Y H:i',preferences.timezone) }}</time></p></li>{% endfor %}</ol>
 {% if pending_pages>1 %}<nav class="ui-tabs space-navigation" aria-label="Pages des récompenses en attente">{% if pending_page>1 %}<a href="{{ path('app_inventory_pending',{page:pending_page-1}) }}">Récompenses précédentes</a>{% endif %}<span>Page {{ pending_page }} / {{ pending_pages }}</span>{% if pending_page<pending_pages %}<a href="{{ path('app_inventory_pending',{page:pending_page+1}) }}">Récompenses suivantes</a>{% endif %}</nav>{% endif %}
-{% else %}<p>Aucune récompense en attente. Les récompenses gagnées restent conservées même si l’inventaire est plein.</p>{% endif %}
+{% endif %}
 </section>

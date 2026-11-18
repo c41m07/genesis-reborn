@@ -1025,7 +1025,7 @@ Aucune base habituelle modifiée, dépendance installée, règle changée ou mig
 existante appliquée. CI GitHub, fusion et déploiement distincts ; pas d’audit RGAA
 global ni de mesure de performance annoncée.
 
-## L3 — Inventaire, propositions à choisir — 18 novembre 2026
+## L3 — Inventaire, proposition A retenue — 18 novembre 2026
 
 L2C A est enregistré dans `da86685`. Le prochain lot conserve les trois pages
 existantes : `/boosts`, `/inventaire/boites`, `/inventaire/recompenses`.
@@ -1080,12 +1080,56 @@ preuves près du `.figcraft` : `lot-3-manifest.json`, `lot-3-verification.json`,
 `lot-3-{A,B}-{boosts,boxes,pending,review-boost,review-box}-{largeur}.png`.
 Ce contrôle de conception ne constitue pas une recette du jeu ni un audit RGAA.
 
-**Choix A/B attendu avant modification du code de L3.** La réalisation devra
-conserver les champs et jetons, les confirmations et le focus, les lectures
-ciblées, le refus sans consommation en cas de stockage insuffisant et les
-protections contre le double envoi. Recette des trois pages dans les deux thèmes,
-clavier/mobile/sans JavaScript, contexte et erreurs ; contrôles Make adaptés,
-puis CI complète avant toute fusion.
+L’utilisateur choisit **A** (« j’aime bien le A »). Cette validation est enregistrée
+dans la version Figcraft `L3 - A validee par utilisateur`, sans modification des
+maquettes précédentes ni validation implicite du prochain lot.
+
+### Réalisation A et vérifications locales
+
+Stock et opération choisie sont côte à côte sur grand écran, puis empilés. Chaque
+boîte garde contenu et formulaire sur une ligne large, puis une colonne sur mobile.
+La capacité occupe toute la largeur sur les trois pages. L’attente conserve son
+ordre natif, sa numérotation et sa pagination, avec une ligne par récompense.
+Les tâches gardent leurs URL ; le choix d’opération filtre une même tâche et
+l’aide complémentaire reste dépliable. Les anciens fragments restent accessibles.
+
+`inventory-workspace.css` est limité à `.inventory-redesign`. Le menu natif partagé
+est étendu à l’Inventaire : ses compteurs sont optionnels dans `ui/space_navigation`,
+les autres consommateurs gardent leurs libellés. Le choix d’opération et la revue
+réutilisent `inventory-review` sans changement du contrôleur. Sans JavaScript,
+le menu est ouvert et tous les formulaires d’opérations restent disponibles.
+Méthodes, actions, noms de champs et CSRF comparés avant/après : identiques.
+Aucun contrôleur PHP, service, calcul, chargement ou règle de jeu n’est modifié.
+
+Contrôles réussis :
+
+- `make validate`, `make lint-static` (201 Twig, 80 YAML, PHP et conteneur),
+  `make assets`, syntaxe JavaScript et `git diff --check`.
+- **22 tests PHP / 318 assertions**, pile MariaDB jetable propre au lot :
+  `InventoryPagesTest`, `BoostSystemTest`, `ResourceBoxTest`. Isolation, CSRF,
+  capacité commune, lectures ciblées, historique utilisé exclu, ordre/pagination,
+  dépôt intégral ou refus, rejeu et promotion de la plus ancienne attente couverts.
+- **Sept parcours navigateur distincts réussis** dès le premier passage : état
+  vide/plein et effet configuré ; boosts sur file puis flotte ; pages et fragments ;
+  nouvelle recette A ; ouverture unique sur colonie choisie ; stockage/vacances ;
+  consommation sans JavaScript. Les assertions existantes sont conservées.
+- Après finitions du repère de page active et de la jauge, seule la nouvelle recette
+  visuelle est relancée : réussite. Données synthétiques d’attente passées et ordonnées.
+- Trois pages et deux revues à 1440/768/390/320 px, thèmes sombre et clair, aucun
+  débordement ; Axe sans violation à 390 px, y compris vide et vacances. Opérations
+  de deux colonies visibles au choix, noms longs, contenu regroupé, compteurs,
+  clavier/historique/rechargement, focus initial et retour après Échap vérifiés.
+  Aucune consommation pendant une annulation ; formulaires natifs confirmés par
+  les parcours sans JavaScript. Ces contrôles ne constituent pas un audit RGAA.
+
+**50 captures finales réelles** : trois pages, deux confirmations et états vide/
+vacances. Dossiers `output/playwright/inventory-workspace/captures-jeu-L3-A/` et
+`captures-jeu-L3-A/` près du fichier Figcraft, avec index JSON ; journaux conservés.
+Fichiers principaux : `boosts/{index,_boosts,_resource_boxes,_pending}`, navigation
+Inventaire et menu commun, style/import, nouveau `inventory-workspace.spec.mjs`.
+Documentation synchronisée dans le même lot. Aucune dépendance installée, base
+habituelle modifiée ou migration existante appliquée. CI GitHub, fusion et
+déploiement restent distincts ; performance non mesurée.
 
 ## Reprise et états de couverture
 
@@ -1099,7 +1143,7 @@ puis CI complète avant toute fusion.
 | L2A | A implémentée et vérifiée localement | A choisie explicitement | 59 tests PHP, 15 parcours navigateur consolidés et 40 captures ; bilan ci-dessus | CI complète et intégration distinctes |
 | L2B | A implémentée et vérifiée localement | A choisie explicitement | 60 tests PHP, 14 parcours navigateur consolidés et 24 captures | CI complète et intégration distinctes |
 | L2C | A implémentée et vérifiée localement | A choisie explicitement | 27 PHP, cinq parcours navigateur consolidés et 36 captures | CI, intégration et déploiement distincts |
-| L3 | Deux propositions préparées | Choix A/B attendu | Pages 14/15, 32 cadres et contrôle du document ; code inchangé | Recette du jeu après implémentation |
+| L3 | A implémentée et vérifiée localement | A choisie explicitement | 22 PHP, sept parcours navigateur et 50 captures | CI, intégration et déploiement distincts |
 | L4 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
@@ -1107,8 +1151,8 @@ Les commits restent sur `feature/refonte-visuelle` ; L1B A est enregistré dans
 `1e390a9`, L1C A dans `1a33d14`, L2A A dans `ff6c324`, L2B A dans `88d68e3`.
 La Vue générale est finalisée dans `6b3bb70`, avant L2C (compositions),
 à la demande de l’utilisateur. L2C A est enregistré dans `da86685` ; L2 est donc complet localement.
-L3 est préparé dans Figcraft et attend son choix A/B.
-Le plan reste à 18 ensembles : quatre sont réalisés, quatorze restent à traiter.
+L3 A est réalisé et vérifié localement ; L4 constitue le prochain ensemble.
+Le plan reste à 18 ensembles : cinq sont réalisés, treize restent à traiter.
 Vue générale constitue aussi une avance ciblée de L7A, sans valider tout ce lot. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
 Les validations précédentes restent limitées à leurs lots.
 Aucun push, PR, fusion ou déploiement n’est autorisé par le seul changement de

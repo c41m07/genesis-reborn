@@ -257,3 +257,20 @@ sont côte à côte lorsque la largeur suffit, puis empilés. Les colonnes Deman
 Chargeable et Manquant deviennent des libellés visibles sur chaque groupe mobile.
 Les manques conservent texte et couleur ; le lien de chantier reste souligné.
 Les styles sont limités à `.fleet-compositions`, sans changer les règles de chargement.
+
+
+### Inventaire — proposition A validée pour L3
+
+La capacité commune occupe toute la largeur sur Boosts, Boîtes de ressources et
+Récompenses en attente. La navigation mobile réutilise le menu natif partagé et
+conserve les compteurs ; ceux-ci sont optionnels pour les autres espaces.
+Le choix d’opération reste un filtre de la même tâche, dans la page Boosts.
+Stock et utilisation sont côte à côte lorsque la largeur suffit. Le sélecteur
+reste masqué sans JavaScript : les formulaires de toutes les opérations restent
+alors visibles. Les revues existantes conservent leurs boutons et le retour du focus.
+
+Chaque boîte garde contenu et destination ensemble, sur deux colonnes puis une.
+Toutes les ressources attribuées restent visibles, y compris les valeurs nulles.
+Les conditions d’ouverture restent près du bouton. L’attente conserve une liste
+ordonnée native, sa numérotation et sa pagination, avec une ligne par récompense.
+L’aide complémentaire reste dépliable. Les styles sont limités à `.inventory-redesign`.

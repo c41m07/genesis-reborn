@@ -58,3 +58,4 @@ import './styles/guild-control.css';
 import './styles/fleet-workspace.css';
 import './styles/fleet-harbour.css';
 import './styles/fleet-compositions.css';
+import './styles/inventory-workspace.css';
