@@ -12,7 +12,7 @@
         </form>
     </div>
     {% if research_requires_laboratory|default(false) %}
-        <p class="requirement">Pour lancer une recherche ici, construisez un <a href="{{ path('app_colony', {id: planet.id, section: 'buildings', focusItem: 1}) }}#item-lab-basic">Laboratoire colonial de niveau 1</a>.</p>
+        <p>Pour lancer une recherche ici, construisez un <a href="{{ path('app_colony', {id: planet.id, section: 'buildings', focusItem: 1}) }}#item-lab-basic">Laboratoire colonial de niveau 1</a>.</p>
     {% endif %}
     <nav class="catalog-filters ui-tabs" aria-label="Filtrer le catalogue">
         {% set filter_options = catalog_filter_options[group] %}
