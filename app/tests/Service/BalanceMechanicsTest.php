@@ -154,10 +154,26 @@ final class BalanceMechanicsTest extends TestCase
         self::assertSame([],$checker->check($checker->forTier($definition,'superior'),['lab'=>['superior'=>4]],['naval_engineering'=>['superior'=>3]]));
     }
 
-    public function testResourceAndStorageBuildingsHaveNoConfiguredLevelCap(): void
+    public function testOnlyTheFirstTwoStorageRanksHaveALevelCap(): void
     {
-        $catalog=$this->catalog();
-        foreach($catalog->all('buildings') as $building)if(isset($building['production_resource'])||isset($building['storage_resource']))self::assertArrayNotHasKey('max_level',$building,$building['slug']);
+        $catalog = $this->catalog();
+        $caps = ['basic' => 5, 'intermediate' => 5, 'superior' => null];
+
+        foreach ($catalog->all('buildings') as $building) {
+            if (!isset($building['production_resource']) && !isset($building['storage_resource'])) {
+                continue;
+            }
+            foreach ($caps as $tier => $cap) {
+                $definition = $catalog->withTier($building, $tier);
+                $expected = isset($building['storage_resource']) ? $cap : null;
+                $profile = $building['slug'].'/'.$tier;
+                if ($expected === null) {
+                    self::assertArrayNotHasKey('max_level', $definition, $profile);
+                } else {
+                    self::assertSame($expected, $definition['max_level'], $profile);
+                }
+            }
+        }
     }
 
     public function testLaboratoryLevelOneAppliesTheSharedDiminishingResearchTimeReduction(): void

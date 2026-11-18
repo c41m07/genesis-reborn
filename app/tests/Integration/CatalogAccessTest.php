@@ -312,6 +312,52 @@ final class CatalogAccessTest extends KernelTestCase
         return [['buildings','shipyard'],['technologies','shield_harmonics'],['ships','capital'],['defenses','ground_turret_anti_capital']];
     }
 
+    #[\PHPUnit\Framework\Attributes\DataProvider('cappedStorageRanks')]
+    public function testStorageCapAppliesToCardsAndNewOrders(string $tier, int $level): void
+    {
+        $this->level('buildings', 'mine_metal', 5, $tier);
+        if ($tier === 'intermediate') {
+            // Un niveau historique au-dessus du plafond satisfait toujours le seuil du rang suivant.
+            $this->level('buildings', 'storage_metal', 6, 'basic');
+        }
+        $this->level('buildings', 'storage_metal', $level, $tier);
+        $queue = self::getContainer()->get(QueueService::class);
+        $queue->synchronize($this->membership);
+
+        $cards = self::getContainer()->get(ColonyView::class)->data($this->membership, $this->planet, true, 'buildings')['cards']['buildings'];
+        $storageCards = array_filter($cards, static fn (array $card): bool => $card['definition']['slug'] === 'storage_metal');
+        $storageCards = array_column($storageCards, null, 'tier');
+        self::assertSame($level, $storageCards[$tier]['level']);
+        self::assertTrue($storageCards[$tier]['maximum']);
+        self::assertSame([], $storageCards[$tier]['failures']);
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('Niveau maximum atteint.');
+        $queue->add($this->membership, $this->planet, 'buildings', 'storage_metal', 1, str_repeat('1', 32), $tier);
+    }
+
+    public static function cappedStorageRanks(): iterable
+    {
+        yield 'Basique au plafond' => ['basic', 5];
+        yield 'Basique au-dessus du plafond' => ['basic', 6];
+        yield 'Intermédiaire au plafond' => ['intermediate', 5];
+    }
+
+    public function testSuperiorStorageStillAcceptsAnUpgradePastFive(): void
+    {
+        $this->level('buildings', 'mine_metal', 5, 'superior');
+        $this->level('buildings', 'storage_metal', 5, 'basic');
+        $this->level('buildings', 'storage_metal', 5, 'intermediate');
+        $this->level('buildings', 'storage_metal', 5, 'superior');
+
+        $queue = self::getContainer()->get(QueueService::class);
+        $queue->add($this->membership, $this->planet, 'buildings', 'storage_metal', 1, str_repeat('1', 32), 'superior');
+        $item = $this->em->getRepository(QueueItem::class)->findOneBy(['planet' => $this->planet, 'itemSlug' => 'storage_metal']);
+        self::assertNotNull($item);
+        self::assertSame('superior', $item->tier);
+        self::assertSame(6, $item->itemLevel);
+    }
+
     public function testPermanentAccessDoesNotBypassResearchLevelCaps():void
     {
         $this->level('technologies','tactical_intelligence',5);$this->level('buildings','lab',3);$this->level('technologies','naval_engineering',2);

@@ -45,6 +45,13 @@ navigateur ciblés réussissent. Publication et fusion conditionnelle autorisée
 La CI complète sur la dernière révision est requise avant fusion ; aucune migration de données
 ni livraison Alpha. Les recommandations précédentes ne remplacent pas cette décision.
 
+## Progression des stockages — 18 novembre 2026
+
+Les cinq stockages avancés exigent le niveau 5 de chacun de leurs rangs
+précédents. Les nouvelles commandes Basiques et Intermédiaires sont plafonnées
+à 5. Les cartes et les fiches existantes affichent les conditions de la colonie
+et le plafond du rang. Voir [la grille](DEBLOCAGES.md#bâtiments--13).
+
 ## Prérequis du Piège à antimatière — 18 novembre 2026
 
 Le [déblocage par rang](DEBLOCAGES.md#bâtiments--13) exige le producteur

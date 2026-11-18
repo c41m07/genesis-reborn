@@ -1,6 +1,11 @@
 {
   "slug": "storage_electricity",
   "label": "Batterie de colonie",
+  "tier_max_levels": {
+    "basic": 5,
+    "intermediate": 5,
+    "superior": null
+  },
   "base_build_time": 180,
   "build_time_scaling": 1.6,
   "costs_base": {
@@ -27,6 +32,11 @@
           "slug": "power_plant",
           "tier": "intermediate",
           "level": 5
+        },
+        {
+          "slug": "storage_electricity",
+          "tier": "basic",
+          "level": 5
         }
       ]
     },
@@ -35,6 +45,16 @@
         {
           "slug": "power_plant",
           "tier": "superior",
+          "level": 5
+        },
+        {
+          "slug": "storage_electricity",
+          "tier": "basic",
+          "level": 5
+        },
+        {
+          "slug": "storage_electricity",
+          "tier": "intermediate",
           "level": 5
         }
       ]

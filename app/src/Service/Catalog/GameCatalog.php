@@ -129,6 +129,15 @@ final class GameCatalog
         $definition['_tier']=$tier;
         $definition['_tier_factor']=$factor;
         $definition['_tier_label']=$this->tiers()[$tier]['label'];
+        $tierMaxLevels = $definition['tier_max_levels'] ?? [];
+        if (array_key_exists($tier, $tierMaxLevels)) {
+            // Le guide distingue les rangs sans plafond par l’absence de la clé.
+            if ($tierMaxLevels[$tier] === null) {
+                unset($definition['max_level']);
+            } else {
+                $definition['max_level'] = $tierMaxLevels[$tier];
+            }
+        }
         $definition['label']=$definition['tier_labels'][$tier]??$definition['label'];
         $definition['description']=$definition['tier_descriptions'][$tier]??$definition['description']??'';
         if(array_key_exists('base_attack',$definition)){

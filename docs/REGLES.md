@@ -85,10 +85,17 @@ Laboratoire colonial Basique 25 + Institut de recherche orbitale Intermédiaire 
 et Ingénierie de chantier automatisée Intermédiaire 5. La recherche du rang
 précédent évite un cycle ; le plafond du laboratoire reste 25.
 
-Les stockages exigent leur producteur niveau 5, le chantier métal 2 et nano 2,
-et le bunker métal 1 et nano 1, toujours dans le rang demandé. Le Piège à
-antimatière exige le producteur d’hydrogène niveau 5 sur la colonie et la
-recherche Génie civil colonial niveau 2 dans l’univers, tous deux du rang demandé.
+Chaque stockage exige son producteur du même rang niveau 5 sur la colonie.
+L’Intermédiaire exige aussi le même stockage Basique niveau 5. Le Supérieur
+exige les deux rangs précédents de ce stockage au niveau 5. Les nouvelles
+commandes sont plafonnées à 5 en Basique et en Intermédiaire. Le Supérieur a
+une progression sans plafond. Les niveaux historiques, leur capacité et les
+commandes déjà payées sont conservés.
+
+Le chantier exige métal 2 et nano 2, et le bunker métal 1 et nano 1, toujours
+dans le rang demandé. Le Piège à antimatière exige le producteur d’hydrogène
+niveau 5 sur la colonie et la recherche Génie civil colonial niveau 2 dans
+l’univers, tous deux du rang demandé.
 Le laboratoire niveau 1 du même rang sert au déblocage initial de cette recherche.
 Les accès déjà acquis restent conservés ; cette révision ne change pas la version
 du registre et ne nécessite aucune nouvelle requalification. Coûts, durées,
@@ -170,7 +177,7 @@ Les profils de coûts par rang sont pré-calibrés par famille dans les catalogu
 
 La puissance dépend de la spécialité : la production et le stockage utilisent l’effet par niveau propre au bâtiment; les technologies appliquent leur bonus au champ concerné; vaisseaux et défenses renforcent structure, bouclier et attaque; les vaisseaux améliorent aussi vitesse, réservoir et soute. Précision, suivi et esquive gardent leurs valeurs de base; la signature n’est pas divisée. Depuis R14, chaque écart de rang ajoute ou retire 30 points de pourcentage après application du contre, avec une chance bornée entre 15 % et 95 %. Les stats positives entières sont arrondies vers le haut. Le nombre de tirs de base reste entier ; les technologies de cadence accordent une chance de tir supplémentaire, sans bonus implicite de cadence lié au rang.
 
-Les bonus technologiques en pourcentage qui étaient à +5 % par niveau passent à **+1 % par niveau et niveau maximum 25**. Le laboratoire et le chantier spatial passent à **2 % par niveau, maximum 25**, conservant leur maximum Basique de 50 %. Les bonus de rang sont multipliés puis composés : une technologie à 25 niveaux dans chacun des trois rangs produit les facteurs 1,25 × 1,3125 × 1,390625 = **2,281494×**. Les bâtiments de production de ressources et de stockage n’ont plus de niveau maximum.
+Les bonus technologiques en pourcentage qui étaient à +5 % par niveau passent à **+1 % par niveau et niveau maximum 25**. Le laboratoire et le chantier spatial passent à **2 % par niveau, maximum 25**, conservant leur maximum Basique de 50 %. Les bonus de rang sont multipliés puis composés : une technologie à 25 niveaux dans chacun des trois rangs produit les facteurs 1,25 × 1,3125 × 1,390625 = **2,281494×**. Les bâtiments de production de ressources et les stockages Supérieurs ont une progression sans plafond. Les stockages Basiques et Intermédiaires sont plafonnés à 5 pour les nouvelles commandes.
 
 Depuis la décision du 6 novembre 2026, les prérequis servent uniquement au déblocage initial de chaque rang, dès le niveau 1. Aucun nouveau prérequis pendant les améliorations. L’accès acquis reste conservé pour le joueur sur cette colonie (bâtiments, vaisseaux, défenses), ou dans cet univers (recherches). Les [conditions par rang et leurs raisons](DEBLOCAGES.md) remplacent les anciens paliers sans cumuler leurs exigences. Les seuils hors plafond sont corrigés ; comptes, niveaux, rangs, unités, files et accès historiques sont conservés par un registre persistant. Coûts, ressources, durées et plafonds restent applicables. Migration et reprise doivent être effectuées avant réouverture ; elles ne sont pas appliquées automatiquement.
 

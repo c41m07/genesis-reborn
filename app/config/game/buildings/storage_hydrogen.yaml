@@ -1,6 +1,11 @@
 {
   "slug": "storage_hydrogen",
   "label": "Réservoir cryogénique",
+  "tier_max_levels": {
+    "basic": 5,
+    "intermediate": 5,
+    "superior": null
+  },
   "base_build_time": 180,
   "build_time_scaling": 1.6,
   "costs_base": {
@@ -27,6 +32,11 @@
           "slug": "mine_hydrogen",
           "tier": "intermediate",
           "level": 5
+        },
+        {
+          "slug": "storage_hydrogen",
+          "tier": "basic",
+          "level": 5
         }
       ]
     },
@@ -35,6 +45,16 @@
         {
           "slug": "mine_hydrogen",
           "tier": "superior",
+          "level": 5
+        },
+        {
+          "slug": "storage_hydrogen",
+          "tier": "basic",
+          "level": 5
+        },
+        {
+          "slug": "storage_hydrogen",
+          "tier": "intermediate",
           "level": 5
         }
       ]
