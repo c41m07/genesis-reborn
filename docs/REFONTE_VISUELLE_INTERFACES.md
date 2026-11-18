@@ -113,8 +113,8 @@ Les liens du prototype simulent la navigation et n’exécutent aucune action du
 | L11 | Wiki : accueil, chapitre, recherche et références | 3/5 · 3/5 | Pages déjà séparées, anciens fragments et formules dépliables. |
 | L12 | Cohérence, erreurs et composants communs restants | 4/5 · 4/5 | Revue transversale ; adaptations communes rattachées au lot consommateur. |
 
-Le tableau comporte **18 lots prévus** : douze ensembles réalisés localement
-(L1A/L1B/L1C, L2, L3, L4, L5, L6, L7A, L7B, L7C et L7D), six restants. Certains ensembles complexes seront
+Le tableau comporte **18 lots prévus** : treize ensembles réalisés localement
+(L1A/L1B/L1C, L2, L3, L4, L5, L6, L7A, L7B, L7C, L7D et L7E), cinq restants. Certains ensembles complexes seront
 subdivisés pendant leur analyse ;
 ce total ne fixe donc pas le nombre final de livraisons. Les complexités seront
 réévaluées avant chaque sous-tâche. À la demande de l’utilisateur, les lots de
@@ -2556,8 +2556,9 @@ reste celui du lot L7D ; six lots restent à réaliser sur les dix-huit prévus.
 
 L’utilisateur retient A, mais demande de conserver les classements joueurs/guildes,
 puis le design de sa messagerie. La page **36 A** est ajustée dans ce sens ;
-il ne s’agit pas d’un nouveau choix A/B. Cette reprise reste à examiner avant
-implémentation. La page 37 B et les lots précédents sont conservés.
+il ne s’agit pas d’un nouveau choix A/B. L’utilisateur valide ensuite explicitement
+« 36.L7E-A » et autorise son intégration locale. La page 37 B et les lots précédents
+sont conservés.
 
 Complexité **3/5** pour cette reprise de conception : examen ciblé des gabarits
 `player/leaderboard.html.twig`, `player/messages.html.twig`,
@@ -2603,6 +2604,73 @@ Preuves dans le dossier de conception courant : `lot-7E-manifest.json`,
 repères visuels, complétés par la lecture des styles actuels ; elles ne sont pas
 présentées comme une nouvelle recette du jeu. Fichier natif enregistré sur la page 36 A.
 
+## L7E — Réalisation de la page 36 A validée — 18 novembre 2026
+
+Complexité **4/5** : messages privés, non-lus, rédaction, contextes de recherche,
+classements et profils. La reprise conserve les gabarits et services existants ;
+aucune nouvelle requête, modification métier, migration ou dépendance.
+
+- **Messagerie conservée et affinée** : titre puis liens de recherche, contacts à
+  gauche sur ordinateur, panneaux empilés jusqu’à 1 050 px ; bulles bleues/dorées,
+  avatar, sélection active, non-lus et bouton d’envoi existants conservés. Recherche
+  de destinataire sur une ligne et rédaction dans le panneau de conversation.
+- **Lecture et rédaction** : le contrôleur de fil utilise le même seuil que les
+  panneaux pour garder la saisie accessible sur tablette. L’actualisation des
+  contacts conserve le focus, le texte saisi et la position du fil. Ctrl + Entrée,
+  Markdown, validation native, idempotence et envoi sans JavaScript sont conservés.
+- **Recherche dédiée** : filtres sur deux colonnes puis une sur téléphone, résultats
+  en lignes et lecture complète repliable ; retour vers le privé ou le canal recherché.
+  Aucun marquage en lecture lors de la recherche.
+- **Classements conservés** : cinq catégories, évolutions, relations, actions et
+  pagination inchangées. La protection se consulte aussi au clavier/toucher avec
+  `details`. Les catégories secondaires restent dépliables sur téléphone ; le tableau
+  des guildes conserve ses huit colonnes et sa médiane dans une région défilante.
+- **Profils et signalements** : scores/rangs publics en lignes ; accès à la guilde
+  et à la conversation conservés, signalement existant harmonisé. Le menu principal
+  identifie aussi la recherche, le profil public et le formulaire de signalement.
+
+Navigation : les conversations restent les états d’une même messagerie ; recherche,
+classement, profil et signalement conservent leurs URL dédiées. Les détails de score,
+protection et Markdown utilisent des contenus dépliables natifs. Le sommaire
+automatique est désactivé sur ces parcours. Les profils de guilde L1B sont réutilisés.
+
+Adaptations techniques : les libellés réels, noms longs, dates et badges déterminent
+la hauteur des lignes. Les anciens styles sans retour à la ligne ont été corrigés
+sur le tableau joueurs mobile ; un contrôle du débordement de chaque cellule
+complète désormais celui de la largeur de page. Les contrastes des dates, liens de
+recherche et légendes du classement sont renforcés en clair. Les redirections après
+refus serveur de la messagerie restent celles de l’existant ; aucun brouillon
+persistant après navigation ou refus serveur n’est ajouté.
+
+Vérifications locales : **90 tests PHP / 569 assertions** (`SocialMessageSubmission`,
+`GlobalMessage`, `PublicProfiles`, `GuildTagPlayerReport`, `StrategicTools`) et
+**neuf parcours navigateur distincts consolidés après corrections** : signalement,
+fil long, trois canaux/Markdown/doubles envois, envoi sans JavaScript, profils,
+recherche/non-lus/actualisation, puis classements/protection/colonnes des guildes.
+Formats 1440/768/390/320 et thèmes sombre/clair ; contrôles axe ciblés, clavier,
+accès sans JavaScript et captures réelles. Aucun dépassement de cellule conservé
+sur le scénario joueurs contrôlé. Ces contrôles ne constituent pas un audit RGAA.
+
+`make validate`, `make lint` complet (205 Twig, YAML, PHP, conteneur et schéma),
+`make assets`, contrôles syntaxiques JavaScript et `git diff --check` réussissent.
+Les tests PHP ont été lancés directement avec `APP_DEBUG=1` sur la base réservée
+`database-test/genesis_v2_test` : l’attente Compose du service de test échouait sur
+son contrôle de santé préexistant, sans empêcher ces connexions. Ce n’est pas un
+`make test` complet. Les parcours navigateur utilisent leur projet éphémère, avec
+messagerie externe neutralisée ; aucune donnée de la base habituelle n’est modifiée.
+
+Preuves : `output/playwright/social-refonte/l7e-php.log`, `l7e-assets.log`,
+`l7e-browser-final.log` (huit parcours réussis, un défaut de contraste ensuite corrigé),
+`l7e-classements-mobile.log` (dernier parcours et contrôle de cellules réussis),
+captures `recette-finale/` et `recette-classements-mobile/`. Les journaux antérieurs
+conservent les échecs de préparation/contraste ; ils ne sont pas présentés comme
+une réussite globale. La dernière modification du classement est vérifiée par son
+parcours ciblé ; les huit autres parcours réussis ne sont pas relancés sans besoin.
+
+L7E est réalisé et vérifié localement sur `feature/refonte-visuelle`.
+**Treize lots sur dix-huit réalisés ; cinq restants**, à partir de L8.
+CI GitHub, push, fusion et déploiement ne sont pas réalisés par ce lot.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -2623,7 +2691,7 @@ présentées comme une nouvelle recette du jeu. Fichier natif enregistré sur la
 | L7B | Page 29 implémentée et vérifiée localement | Version consolidée validée explicitement | 20 PHP, six parcours navigateur consolidés et 30 captures ; bilan ci-dessus | CI complète, intégration et déploiement distincts |
 | L7C | Implémenté et vérifié localement | Conception validée ; spirale retenue explicitement pour les distances | Deux vues persistantes, gestes et moteur conservés, bilans par camp ; recette ci-dessous | CI complète, fusion et déploiement distincts |
 | L7D | A implémentée et vérifiée localement | A choisie explicitement après reprise depuis les rapports actuels | 15 PHP / 98 assertions ; cinq parcours navigateur consolidés ; bilan ci-dessous | CI complète, fusion et déploiement distincts |
-| L7E | A reprise depuis la messagerie et les classements actuels | A retenue ; ajustements demandés réalisés en maquette | Figcraft page 36 A, B conservée ; 70 cadres et 499 commandes reliées ; conception seulement | Examiner la reprise avant développement |
+| L7E | A implémentée et vérifiée localement | Page 36 A validée explicitement après reprise de la messagerie et des classements | 90 PHP / 569 assertions ; neuf parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L8 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
@@ -2638,9 +2706,9 @@ L6 A est enregistré dans `811ef2d`, réalisé et vérifié localement.
 L7A A est enregistrée dans `730b447` ; recette ci-dessus. Vue générale conservée.
 L7B page 29 est intégrée localement dans `81807df` ; L7C est enregistré dans `50f3965`, réalisé selon la
 validation finale et la décision de géographie. L7D A est intégré dans `5523ac4`.
-L7E : A est retenue explicitement ; messagerie et classements sont repris depuis
-l’existant à la demande de l’utilisateur. Cette reprise reste à examiner avant développement.
-Le plan reste à 18 ensembles : douze sont réalisés, six restent à traiter.
+L7E page 36 A est validée explicitement, intégrée et vérifiée localement ;
+la messagerie et les classements existants restent la base de leur présentation.
+Le plan reste à 18 ensembles : treize sont réalisés, cinq restent à traiter.
 Vue générale avait été finalisée en avance ; L7A est désormais complet localement. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
 Les validations précédentes restent limitées à leurs lots.
 Aucun push, PR, fusion ou déploiement n’est autorisé par le seul changement de

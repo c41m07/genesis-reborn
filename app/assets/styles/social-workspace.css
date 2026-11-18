@@ -1,0 +1,481 @@
+/* L7E A : conserver les tableaux et les bulles, sans étendre ces règles aux guildes L1B. */
+.social-workspace {
+    min-width: 0;
+}
+
+body.authenticated[data-theme=light] .social-workspace {
+    --muted: #53606b;
+}
+
+.social-workspace :is(h1,h2,p,a,th,td) {
+    overflow-wrap: anywhere;
+}
+
+.social-workspace p a:not(.primary,.secondary) {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.social-page-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 0 0 24px;
+}
+
+.social-workspace :is(.primary,.secondary) {
+    min-height: 44px;
+    font-size: 13px;
+}
+
+.social-page-actions > .secondary {
+    border-color: transparent;
+    background: transparent;
+    color: var(--accent);
+}
+
+body.authenticated[data-theme=light] .social-page-actions > .secondary {
+    color: var(--text);
+}
+
+.social-workspace :is(a,button,input,select,textarea,summary,[tabindex]):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+
+body.authenticated .social-workspace .inbox-layout {
+    grid-template-columns: 312px minmax(0,1fr);
+    align-items: stretch;
+}
+
+body.authenticated .social-workspace .inbox-sidebar {
+    min-width: 0;
+}
+
+body.authenticated .social-workspace .message-search {
+    margin: 0;
+    padding: 16px;
+}
+
+body.authenticated .social-workspace .message-search > div {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+body.authenticated .social-workspace .message-search input {
+    flex: 1;
+    min-width: 0;
+    width: 0;
+    margin: 0;
+}
+
+body.authenticated .social-workspace .message-search button {
+    flex-shrink: 0;
+}
+
+body.authenticated .social-workspace .message-pane {
+    scroll-margin-top: 155px;
+}
+
+body.authenticated .social-workspace .message-pane-heading {
+    padding: 18px 16px;
+}
+
+body.authenticated .social-workspace .message-pane-heading > div:last-child {
+    min-width: 0;
+}
+
+body.authenticated .social-workspace .message-pane-heading h2 {
+    font-size: 19px;
+    line-height: 1.4;
+}
+
+body.authenticated .social-workspace .message-avatar {
+    border-radius: 50%;
+    background: color-mix(in srgb,var(--accent) 12%,var(--panel));
+    color: var(--accent);
+}
+
+body.authenticated .social-workspace .message-thread {
+    min-height: 0;
+    height: min(45vh,480px);
+}
+
+body.authenticated .social-workspace .message-compose {
+    position: static;
+    margin: 0 12px;
+    padding: 12px 0;
+    border: 0;
+    border-top: 1px solid var(--line);
+    border-radius: 0;
+    background: var(--panel);
+}
+
+body.authenticated .social-workspace .message-compose textarea {
+    min-height: 84px;
+}
+
+body.authenticated .social-workspace .message-compose button {
+    flex-shrink: 0;
+}
+
+body.authenticated .social-workspace .message-markdown-help {
+    margin: 0;
+}
+
+body.authenticated .social-workspace .message-markdown-help summary {
+    min-height: 44px;
+    padding-block: 12px;
+}
+
+body.authenticated .social-workspace .inbox-item {
+    min-height: 72px;
+    border-inline-start: 2px solid transparent;
+}
+
+body.authenticated .social-workspace .inbox-item.active {
+    border-inline-start-color: var(--accent);
+    background: color-mix(in srgb,var(--accent) 12%,var(--panel));
+}
+
+body.authenticated .social-workspace .inbox-item-copy {
+    flex: 1;
+}
+
+body.authenticated .social-workspace .inbox-item-copy strong {
+    white-space: normal;
+}
+
+body.authenticated .social-workspace .message-pane .message-placeholder {
+    min-height: 360px;
+}
+
+body.authenticated .social-workspace .ranking-table {
+    margin: 0;
+}
+
+body.authenticated .leaderboard-workspace > .table-scroll {
+    padding: 0;
+}
+
+body.authenticated .social-workspace .ranking-table tbody td:first-child .ranking-change {
+    display: block;
+    margin-top: 10px;
+}
+
+body.authenticated .social-workspace .ranking-table :is(th,td) {
+    padding: 18px 10px;
+}
+
+body.authenticated .social-workspace .ranking-table th {
+    vertical-align: top;
+}
+
+body.authenticated .social-workspace .ranking-table .ranking-sort-heading {
+    padding: 0;
+}
+
+body.authenticated .social-workspace .ranking-sort {
+    min-height: 64px;
+    padding: 12px 8px;
+    font-size: 12px;
+}
+
+body.authenticated .social-workspace .ranking-table tbody td {
+    font-variant-numeric: tabular-nums;
+}
+
+body.authenticated .social-workspace .ranking-table [data-category] {
+    text-align: right;
+    white-space: nowrap;
+}
+
+body.authenticated .social-workspace .ranking-table [data-category] .ranking-change {
+    display: block;
+    margin-top: 10px;
+}
+
+body.authenticated .social-workspace .ranking-table tbody tr[aria-current=true] {
+    background: color-mix(in srgb,var(--accent) 12%,var(--panel));
+}
+
+body.authenticated .social-workspace .ranking-table tbody td:last-child {
+    white-space: nowrap;
+}
+
+body.authenticated .social-workspace :is(.leaderboard-contact,.leaderboard-report) {
+    width: 44px;
+    height: 44px;
+    margin: 0;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    vertical-align: middle;
+}
+
+body.authenticated .social-workspace .ranking-table--guilds {
+    min-width: 1000px;
+    table-layout: auto;
+}
+
+.social-scroll-hint {
+    display: none;
+}
+
+body.authenticated[data-theme=light] .leaderboard-workspace .ranking-label {
+    color: var(--text);
+}
+
+.leaderboard-workspace > nav:last-child {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.leaderboard-workspace .ranking-context {
+    margin-bottom: 14px;
+}
+
+.leaderboard-workspace .ranking-extra summary {
+    min-height: 44px;
+    padding-block: 12px;
+    cursor: pointer;
+}
+
+.leaderboard-workspace .ranking-extra a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+}
+
+.leaderboard-workspace .ranking-protection {
+    display: inline-block;
+    vertical-align: middle;
+    font-weight: 400;
+}
+
+.leaderboard-workspace .ranking-protection summary {
+    display: inline-grid;
+    place-items: center;
+    min-width: 44px;
+    min-height: 44px;
+    cursor: pointer;
+    list-style: none;
+}
+
+.leaderboard-workspace .ranking-protection summary::-webkit-details-marker {
+    display: none;
+}
+
+.leaderboard-workspace .ranking-protection p {
+    max-width: 220px;
+    margin: 4px 0;
+    font-size: 12px;
+}
+
+body.authenticated .social-workspace .social-profile-scores {
+    display: block;
+}
+
+body.authenticated .social-workspace .social-profile-scores > div {
+    display: grid;
+    grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+    align-items: baseline;
+    gap: 16px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--line);
+}
+
+body.authenticated .social-workspace .social-profile-scores dd {
+    margin: 0;
+    text-align: right;
+    font-weight: 700;
+}
+
+body.authenticated .social-workspace .social-profile-scores dt {
+    font-size: 13px;
+}
+
+.public-player-profile.social-profile-page {
+    max-width: none;
+}
+
+.public-player-profile > .panel {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.public-player-profile > .panel h2 {
+    font-size: 20px;
+}
+
+.message-search-workspace .search-filters {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 16px;
+}
+
+.message-search-workspace .search-filters > :is(button,p) {
+    grid-column: 1/-1;
+}
+
+.message-search-workspace .search-filters label {
+    display: grid;
+    align-content: start;
+    gap: 8px;
+    min-width: 0;
+}
+
+.message-search-workspace .search-filters :is(input,select) {
+    width: 100%;
+    margin: 0;
+}
+
+.message-search-workspace .search-filters > button {
+    justify-self: start;
+}
+
+.message-search-workspace .message-search-result {
+    margin: 0;
+    padding: 20px 0;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.message-search-workspace .message-search-result h2 {
+    font-size: 16px;
+}
+
+.message-search-workspace .message-search-result > time {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.message-search-workspace .message-search-result > p {
+    white-space: pre-wrap;
+}
+
+.message-search-workspace .message-search-result details {
+    margin-block: 12px;
+}
+
+.message-search-workspace .message-search-result summary {
+    min-height: 44px;
+    padding-block: 12px;
+    cursor: pointer;
+}
+
+.player-report-workspace .player-report-form {
+    max-width: 760px;
+}
+
+@media (max-width: 1050px) {
+    body.authenticated .social-workspace .inbox-layout {
+        display: grid;
+        grid-template-columns: minmax(0,1fr);
+    }
+
+    /* L’ordre reste celui du document : contacts puis échange, comme dans la maquette A. */
+    body.authenticated .social-workspace .inbox-sidebar {
+        order: 0;
+        max-height: 220px;
+        overflow: auto;
+    }
+
+    body.authenticated .social-workspace .message-pane {
+        order: 0;
+    }
+
+    body.authenticated .social-workspace .ranking-table--guilds {
+        min-width: 1000px;
+        table-layout: auto;
+    }
+
+    .social-scroll-hint {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+    }
+
+}
+
+@media (max-width: 760px) {
+    body.authenticated .social-workspace .ranking-table--players {
+        width: 100%;
+        min-width: 0;
+        table-layout: fixed;
+    }
+
+    body.authenticated .social-workspace .ranking-table--players :is(th,td) {
+        padding: 14px 4px;
+        white-space: normal;
+    }
+
+    body.authenticated .social-workspace .ranking-table--players th:nth-child(1) {
+        width: 12%;
+    }
+
+    body.authenticated .social-workspace .ranking-table--players th:nth-child(2) {
+        width: 38%;
+    }
+
+    body.authenticated .social-workspace .ranking-table--players th:nth-child(3) {
+        width: 22%;
+    }
+
+    body.authenticated .social-workspace .ranking-table--players th:last-child {
+        width: 28%;
+    }
+
+    body.authenticated .social-workspace .ranking-table--players .ranking-sort {
+        box-sizing: border-box;
+        width: 100%;
+        min-width: 0;
+        padding: 8px 4px;
+        white-space: normal;
+    }
+
+    body.authenticated .social-workspace .ranking-table--players [data-category] {
+        white-space: normal;
+    }
+
+    body.authenticated .social-workspace .ranking-table--players tbody td:last-child {
+        white-space: normal;
+    }
+
+    body.authenticated .social-workspace .ranking-table--players .ranking-change {
+        font-size: 10px;
+        white-space: nowrap;
+    }
+
+    body.authenticated .social-workspace .ranking-table--guilds {
+        width: 1000px;
+        min-width: 1000px;
+        table-layout: auto;
+    }
+
+    .message-search-workspace .search-filters {
+        grid-template-columns: minmax(0,1fr);
+    }
+
+    .social-page-actions {
+        gap: 8px;
+    }
+
+    body.authenticated .social-workspace .social-profile-scores dd {
+        font-size: 14px;
+    }
+
+    body.authenticated .social-workspace .message-compose button .icon {
+        display: none;
+    }
+
+}

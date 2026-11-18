@@ -704,6 +704,19 @@ Les classements utilisent des liens GET dans les cinq en-têtes, avec aria-sort,
 sans changer les calculs, rangs ou pagination côté serveur. Les libellés des
 cases d’archivage restent dans le nom accessible, hors de l’affichage visuel.
 
+Le lot L7E A conserve les gabarits et lectures de messagerie, classements et profils.
+`social-workspace.css` limite la nouvelle présentation aux cinq pages du lot, sans
+modifier les profils de guilde L1B. Les scores du profil public sont présentés en
+lignes ; le tableau des guildes garde toutes ses colonnes dans une région défilante.
+La protection déjà fournie au classement est consultable dans un `details` natif,
+sans nouvelle lecture ni exposition d’information. Les liens de la recherche vers
+la messagerie gardent leur interlocuteur ou canal. Le menu reste actif sur les
+sous-pages de recherche, de profil public et de signalement.
+
+Le seuil de 1 050 px du contrôleur `message-thread` suit l’empilement des deux
+panneaux. L’historique conserve son défilement et la rédaction son contrôleur
+anti-doublon ; aucun service métier, requête, jeton ou format de message n’est changé.
+
 L’aperçu de guilde appelle guildConversation(guild, 3), qui limite les résultats
 en base aux trois plus récents (date puis identifiant), affichés dans leur ordre
 chronologique. Il ne marque pas le canal lu. Les boutons de départ/dissolution

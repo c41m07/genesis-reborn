@@ -146,7 +146,13 @@ actuel. Figcraft page 36 A est ajustée : tableaux complets, évolutions, média
 bulles bleues/dorées et panneaux de messagerie conservés ; page 37 B préservée.
 70 cadres et 499 commandes reliées au total ; les 25 cadres repris sont vérifiés,
 avec examen visuel sur ordinateur/mobile. Maquettes et données fictives seulement,
-aucun message envoyé ; reprise à examiner avant développement.
+aucun message envoyé dans les maquettes. L’utilisateur valide ensuite la page 36 A.
+L7E est intégré localement : messagerie conservée, profils en lignes, tableaux et
+protection consultables au clavier/toucher, retour de recherche contextualisé.
+90 PHP / 569 assertions et neuf parcours navigateur consolidés après corrections,
+formats 1440/768/390/320, sombre/clair, clavier et accès sans JavaScript.
+Compilation, lint complet et contrôle du diff réussis ; bilan et limites dans le suivi.
+Treize ensembles sur 18 sont réalisés ; cinq restent à traiter, à partir de L8.
 L7D est enregistré dans `5523ac4`.
 CI GitHub, fusion et déploiement restent distincts.
 

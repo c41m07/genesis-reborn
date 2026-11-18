@@ -10,7 +10,7 @@
 'app_guilds':'guilde','app_guild_create':'guilde','app_guild_members':'guilde','app_guild_ranks':'guilde','app_guild_management':'guilde','app_personal_relations':'diplomatie','app_guild_profile_edit':'guilde','app_guild_public_profile':'guilde',
 'app_boosts':'inventaire','app_inventory_boxes':'inventaire','app_inventory_pending':'inventaire','app_game_challenges':'evenements','app_game_events':'evenements','app_challenge':'defi','app_diplomacy':'diplomatie','app_messages':'messages',
 'app_guild_projects_available':'projets','app_guild_projects_history':'projets','app_guild_projects':'projets','app_guild_project':'projet-detail','app_leaderboard':'classements','app_combat_reports':'rapports',
-'app_combat_report':'rapport-combat','app_espionage_report':'rapport-espionnage','app_transport_report':'rapport-transport','app_player_report':'signaler-commandant',
+'app_combat_report':'rapport-combat','app_espionage_report':'rapport-espionnage','app_transport_report':'rapport-transport','app_player_report':'signaler-commandant','app_player_public_profile':'profil-commandant',
 'app_queue_cancel_preview':'annuler-file','app_fleet_recall':'rappeler-flotte','app_planet_abandon':'abandon-colonie',
 'app_wiki':'wiki','app_wiki_chapter':'wiki','app_wiki_search':'wiki','app_wiki_reference':'wiki','app_legal_mentions':'documents-legaux','app_legal_terms':'documents-legaux',
 'app_legal_privacy':'documents-legaux','app_legal_cookies':'documents-legaux','app_access_denied':'erreurs'
@@ -59,7 +59,7 @@
     {route:'app_leaderboard',label:'Classements',icon:'research'},
     {route:'app_game_events',label:'Événements',icon:'clock'}
 ] %}
-{% set active = route==item.route or (item.route=='app_guilds' and route in guildRoutes) or (item.route=='app_diplomacy' and route=='app_personal_relations') or (item.route=='app_game_events' and route in ['app_game_challenges','app_challenge']) %}
+{% set active = route==item.route or (item.route=='app_guilds' and route in guildRoutes) or (item.route=='app_diplomacy' and route=='app_personal_relations') or (item.route=='app_game_events' and route in ['app_game_challenges','app_challenge']) or (item.route=='app_messages' and route=='app_message_search') or (item.route=='app_leaderboard' and route in ['app_player_public_profile','app_player_report']) %}
 <a href="{{ path(item.route) }}"{% if active %} class="active" aria-current="page"{% endif %}>{{ ui.icon(item.icon) }}<span>{{ item.label }}</span>{% if item.route=='app_messages' %}<span class="message-unread-dot" data-message-notifications-target="badge" role="img" aria-label="Messages non lus" {% if not chrome.unreadMessages|default(0) %}hidden{% endif %}></span>{% endif %}</a>
 {% endfor %}
 <div class="nav-section-label">Compte</div>
