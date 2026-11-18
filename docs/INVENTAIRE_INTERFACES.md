@@ -54,6 +54,9 @@ Les autres écrans restent inventoriés, sans validation implicite. Aucune CI Gi
 L7C dispose de deux propositions Figcraft (pages 30/31) : cartes classique/V2,
 sélections, préparation du simulateur et résultats. 50 cadres et 546 commandes
 reliées vérifiés dans la conception seulement ; choix A/B attendu avant développement.
+La page 32 complète cette comparaison avec huit cadres à 80 systèmes : galaxie en
+huit bras conservée et vue à l’échelle facultative, sans changement des coordonnées
+ni des règles de distance. Aperçu interactif vérifié ; direction toujours à valider.
 Les états visibles supplémentaires sont recensés ensuite.
 
 Les états du suivi sont : Inventorié → Analysé → Propositions préparées → En

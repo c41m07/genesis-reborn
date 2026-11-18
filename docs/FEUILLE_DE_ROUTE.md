@@ -128,6 +128,10 @@ L7C (Galaxie et simulateur) reprend la conception A/B avant toute réalisation.
 Ses deux propositions sont préparées dans Figcraft : page 30 « Exploration cadrée »
 et page 31 « Carte immersive », 50 cadres en trois formats, états et détails compris.
 Cartes schématiques ; le moteur 3D existant sera conservé. Choix utilisateur attendu.
+Une étude complémentaire en page 32 montre les 80 systèmes de la galaxie locale :
+huit bras conservés, distance réelle affichée et vue à l’échelle facultative.
+Huit cadres et un aperçu interactif sont vérifiés ; aucune direction supplémentaire
+n’est approuvée et aucun code de carte n’est modifié.
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026
