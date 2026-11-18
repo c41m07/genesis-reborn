@@ -1809,6 +1809,65 @@ Preuves : `lot-7B-base-manifest.json`, `lot-7B-base-preservation.json`,
 visualisation. Maquette native sauvegardée. Le code du jeu est inchangé ; validation
 de cette reprise attendue. Aucune CI, fusion ou mise en production revendiquée.
 
+### Ajustements demandés : lignes, interrupteurs et suivi dépliable — 18 novembre 2026
+
+La page **29 · L7B · Cartes et lignes · Suivi dépliable** consolide les dernières
+corrections. Elle remplace la version à valider de la page 28 ; les versions
+précédentes restent conservées. Le choix de cette reprise reste attendu avant code.
+Complexité **4/5** : vues interchangeables, suivi fixe, fenêtres dépliables,
+annulation et contexte de recherche/flottes, avec actualisation et focus à préserver.
+
+- Retrait des « Dispo » des cartes : les stocks restent dans la barre de ressources.
+  Coûts, gains, durée et raisons de refus restent lisibles ; le manque chiffré reste
+  une exigence de l’intégration, sans ajouter un second affichage des stocks.
+- Interrupteurs à piste/curseur pour les verrouillés et le mode condensé. Le
+  condensé devient un vrai affichage en lignes, avec rang, niveau/quantité, gains,
+  coût et action. Les cartes illustrées gardent quatre colonnes sur ordinateur.
+  Le prototype représente le basculement avec une quantité de cinq conservée.
+- Suivi des trois files sous les ressources pendant le défilement. Les vaisseaux
+  et les défenses continuent de partager leur file actuelle. Le nombre de commandes
+  sur 30 reste distinct du nombre d’unités. Recherche commune et colonie de lancement
+  sont identifiées ; fin de file visible en tête de chaque panneau.
+- Un clic ouvre le panneau correspondant, avec toutes ses entrées et « Annuler… ».
+  Hauteur bornée et défilement interne pour conserver titre et fermeture accessibles.
+  Le bilan d’annulation reste une page dédiée : dépendances, estimation de 25 % dans
+  le stockage disponible et nouvelle validation serveur, sans nouvelle règle.
+  Les exemples du premier niveau et du second ont des bilans distincts.
+- Les flottes personnelles montrent état, route, échéance, composition et fret ;
+  accès à leur gestion conservé. Les entrantes gardent les informations autorisées.
+  L’exemple hostile n’affiche ni heure de départ ni progression inventée, et le
+  signal d’impact reste visible quand le panneau est fermé.
+
+Confort prévu à l’intégration : un seul panneau ouvert, fermeture par le déclencheur,
+la commande de fermeture ou Échap, retour du focus, maintien du panneau et de sa
+lecture pendant les actualisations. Le passage cartes/lignes doit conserver
+filtre, rang, quantité et élément lu. Les formulaires, parcours sans JavaScript,
+permissions, confirmations et protections de soumission restent ceux du jeu.
+
+Sources ciblées revérifiées : `colony_queues.html.twig`, `flights.html.twig`,
+`incoming_attacks_list.html.twig`, détails des flottes, confirmation d’annulation,
+`CatalogFilters`, contrôleur du suivi et estimation du remboursement dans
+`QueueService`. Les données synthétiques déjà calculées par les services sont
+réutilisées ; aucun accès à une base ni aucune commande de jeu.
+
+**53 cadres vérifiés** : quatre catalogues en cartes/lignes sur ordinateur/mobile,
+exemples tablette, verrouillés masqués, quantité, panneaux de files/flottes,
+bilans d’annulation distincts et états complémentaires. Deux aperçus natifs bornés
+à 1440×900 et 390×844 placent le catalogue dans une zone défilante, tandis que les
+ressources et le suivi restent à l’extérieur. Ils permettent d’essayer le suivi
+fixe dans le prototype ; le CSS sticky du jeu reste à implémenter après validation.
+
+Contrôle de la géométrie et des destinations : aucun débordement, texte coupé ou
+chevauchement visible détecté. Les zones volontairement défilantes sont vérifiées
+avec leurs limites de visibilité. Revue visuelle des cartes, lignes, interrupteurs
+et panneaux mobiles. Aucun ancien composant ou variable partagé n’est modifié ;
+les empreintes des pages de référence 1 et 28 sont identiques avant/après création.
+
+Preuves : `lot-7B-pilotage-manifest.json`, `lot-7B-pilotage-preservation.json`,
+`lot-7B-pilotage-verification.json` et exports `lot-7B-pilotage-*.png` dans le dossier
+de visualisation. Maquette native sauvegardée ; code du jeu inchangé. Contrôles des
+maquettes et du diff uniquement, sans CI, fusion ou déploiement revendiqué.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -1826,7 +1885,7 @@ de cette reprise attendue. Aucune CI, fusion ou mise en production revendiquée.
 | L5 | A implémentée et vérifiée localement | A choisie explicitement | 44 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
 | L6 | A implémentée et vérifiée localement | A choisie explicitement | 32 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
 | L7A | A implémentée et vérifiée localement | A choisie explicitement ; Vue générale conservée | 51 PHP, sept parcours navigateur et 43 captures | CI, intégration et déploiement distincts |
-| L7B | Design actuel et Actions directes consolidés | Validation attendue, page 28 | 27 cadres ; grandes images et rangs conservés ; boutons stables après deux ajouts | Réalisation après validation |
+| L7B | Cartes/lignes et suivi dépliable consolidés | Validation attendue, page 29 | 53 cadres vérifiés ; interrupteurs, files/flottes, bilans et deux aperçus défilables | Réalisation après validation |
 | L7C à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 

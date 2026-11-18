@@ -36,7 +36,9 @@ la base est conservée. Deux nouvelles propositions pour les actions répétées
 désormais dans les pages 26/27 : gains/coûts directement lisibles, files compactes
 et boutons stables après ajout. À la demande de l’utilisateur, une version consolidée
 page 28 reprend désormais le design actuel avec les apports d’Actions directes.
-Les quatre catalogues et leurs états sont représentés ; validation de cette reprise attendue.
+La page 29 intègre ensuite les corrections demandées : interrupteurs, affichage
+en lignes, suivi fixe et files/flottes dépliables, sans stocks répétés dans les cartes.
+Les quatre catalogues et leurs états sont représentés ; validation de la page 29 attendue.
 Les autres écrans restent inventoriés, sans validation implicite. Aucune CI GitHub, fusion ou livraison n’est revendiquée.
 Les états visibles supplémentaires sont recensés ensuite.
 

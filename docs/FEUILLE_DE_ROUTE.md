@@ -110,7 +110,10 @@ ou lecture Coût/Stock et suivi en bas (B). Quatre cartes sur ordinateur, inform
 décisives visibles et boutons stables après deux ajouts ; 46 nouveaux cadres
 vérifiés. L’utilisateur demande ensuite de conserver le design actuel des quatre
 catalogues en y appliquant Actions directes : version consolidée page 28, 27 cadres
-vérifiés, grandes images/rangs conservés et validation attendue avant intégration.
+vérifiés, grandes images/rangs conservés. Les corrections suivantes sont consolidées
+page 29 : stocks retirés des cartes, interrupteurs, vrai mode en lignes, suivi fixe
+et panneaux de files/flottes avec annulation. 53 cadres vérifiés et deux aperçus
+défilables ; validation de cette reprise attendue avant intégration.
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026
