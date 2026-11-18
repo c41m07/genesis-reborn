@@ -1,5 +1,11 @@
 # Progression, carburant et unités économiques
 
+## Suite du chantier
+
+Le rééquilibrage des deux premiers rangs est détaillé dans la
+[grille courante](COUTS.md). Les résultats ci-dessous documentent les lots
+du 16 novembre et leurs états de livraison.
+
 ## Périmètre et état — 16 novembre 2026
 
 Mission issue du prompt utilisateur : nouvelles grilles, nouvelles durées et

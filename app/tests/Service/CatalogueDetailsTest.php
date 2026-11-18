@@ -82,7 +82,7 @@ final class CatalogueDetailsTest extends KernelTestCase
         $rows=array_column($insights->benefits($reactor,'buildings',1,$this->planet,[],[]),null,'label');
         self::assertEqualsWithDelta(202.5,$rows['Production de antimatière']['after']-$rows['Production de antimatière']['before'],1e-8);
         self::assertEqualsWithDelta(810,$rows['Consommation d’hydrogène']['after']-$rows['Consommation d’hydrogène']['before'],1e-8);
-        self::assertEqualsWithDelta(405,$rows['Consommation électrique']['after']-$rows['Consommation électrique']['before'],1e-8);
+        self::assertEqualsWithDelta(202.5,$rows['Consommation électrique']['after']-$rows['Consommation électrique']['before'],1e-8);
     }
 
     public function testFactoryBenefitsExcludeLevelsAlreadyQueued():void

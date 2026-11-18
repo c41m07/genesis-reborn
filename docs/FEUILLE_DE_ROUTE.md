@@ -1,5 +1,13 @@
 # Roadmap Genesis Reborn
 
+## Équilibrage des prix et de l’antimatière
+
+La [grille de référence](COUTS.md) passe à B48/52 et I35/35/30. Les prix
+Supérieurs et les 156 budgets restent identiques. La consommation directe
+du piège Basique passe à 90 électricité/h par niveau à vitesse ×1. Les
+[simulations](EQUILIBRAGE.md#équilibrage-des-prix-basiques-et-intermédiaires)
+mesurent la pression sur les stocks dans des parcours sans raid ni échange.
+
 ## Préavis de détection des attaques — 18 novembre 2026
 
 Le [préavis des attaques entrantes](REGLES.md#préavis-dattaque-et-visibilité--lot-h)
@@ -54,6 +62,10 @@ raffinerie d’hydrogène, le piège à antimatière, le chantier, le bunker et 
 laboratoire. Les cartes et le guide existants présentent les niveaux requis.
 Le graphe des 156 profils est vérifié avec les plafonds de référence. Les délais
 réels de progression ne sont pas mesurés. [Grille des déblocages](DEBLOCAGES.md#bâtiments--13)
+
+La consommation directe du piège à antimatière est ramenée à 90 électricité/h
+par niveau Basique à vitesse ×1. Le coût total de production de 1 AM, hydrogène
+inclus, rejoint celui de 8 H, 4 M ou 2 N à plein rendement.
 
 ## Progression des stockages — 18 novembre 2026
 

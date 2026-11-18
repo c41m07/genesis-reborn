@@ -14,7 +14,7 @@ final class EconomicUnitCatalogTest extends TestCase
         $catalog = new GameCatalog(dirname(__DIR__, 2).'/config/game');
         $universe = new Universe();$universe->slug = 'civil-x1';$universe->name = 'Unités civiles';
         $calculator = new OperationCalculator($catalog);
-        $prices = ['basic'=>[320,240,0,0], 'intermediate'=>[300,250,50,0], 'superior'=>[312,219,94,248]];
+        $prices = ['basic'=>[384,208,0,0], 'intermediate'=>[350,175,75,0], 'superior'=>[312,219,94,248]];
         foreach (['hydrogen_collector'=>[100,20,20,30,900,'mine_hydrogen','vector_propulsion',1],
             'solar_satellite'=>[40,0,0,40,450,'power_plant','engineering_foundations',2]] as $slug=>$reference) {
             [$hp,$shield,$evasion,$signature,$production,$building,$research,$researchLevel] = $reference;
