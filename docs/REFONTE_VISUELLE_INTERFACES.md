@@ -102,7 +102,7 @@ Les liens du prototype simulent la navigation et n’exécutent aucune action du
 | L4 | Identifiants, préférences, vacances, suppression | 3/5 · 5/5 | Compte commun, empire actif, authentification et confirmations. |
 | L5 | Projets en cours/disponibles/historique et détail | 3/5 · 4/5 | Dons définitifs, paliers, minimums et récompenses acquises. |
 | L6 | Événements/bonus, défis/rotations et détail | 3/5 · 4/5 | Visibilité, filtres, périodes et panneau commun. |
-| L7A | Vue générale, colonies/comparaison et abandon | 3/5 · 4/5 | Conserver la référence approuvée ; examiner les autres états et confirmations. |
+| L7A | Vue générale, colonies/comparaison et abandon | 4/5 · 4/5 | Conserver la référence approuvée ; examiner les autres états et confirmations. |
 | L7B | Bâtiments, Recherche, Chantier, Défenses, Guide | 3/5 · 4/5 | Filtres, prérequis, files et préparation ciblée. |
 | L7C | Cartes classique/V2 et simulateur | 4/5 · 4/5 | Découvertes, confidentialité, clavier et parcours préparation/résultats. |
 | L7D | Rapports, archives et détails | 3/5 · 4/5 | Participation, confidentialité, pagination et ancres utiles. |
@@ -1470,6 +1470,72 @@ Aucune dépendance installée, migration sur base existante ou donnée habituell
 modifiée. Performance non mesurée ; ces contrôles ne constituent pas un audit
 RGAA. CI GitHub, fusion et déploiement restent distincts.
 
+## L7A — Colonies, comparaison et abandon, propositions préparées — 18 novembre 2026
+
+L6 A est enregistré dans `811ef2d`. Vue générale, déjà finalisée dans `6b3bb70`,
+reste conservée comme référence ; aucune nouvelle version A/B n’est produite pour
+elle. Le reste de L7A concerne `/planetes`, sa présentation `?view=table` et
+`/planetes/{id}/abandonner`. Conception réévaluée à **4/5**, réalisation **4/5** :
+bilan d’une action irréversible, confidentialité des refus et confirmation périmée.
+Sources ciblées examinées : actions de liste/renommage, contrôleur et service
+d’abandon, templates, fiche de ressources/vaisseaux, contrôleur de comparaison,
+styles et documentation actuelle de l’abandon.
+
+Deux pages ajoutées au même document Figcraft :
+
+- **22 · L7A · A — Colonies en lignes** : cartes horizontales sur grand écran,
+  illustration/identité, informations et accès rapprochés. Comparaison en tableau ;
+  bilan et confirmation d’abandon côte à côte sur grand écran, puis empilés.
+- **23 · L7A · B — Colonies en cartes** : deux cartes par ligne sur ordinateur,
+  illustration puis informations et actions. Comparaison en fiches par colonie ;
+  bilan complet puis confirmation de l’abandon. Une colonne sur tablette/mobile.
+
+Cartes et comparaison restent deux présentations d’un même ensemble, avec les
+paramètres existants `view=table` et `resource`. Le choix d’une ressource conserve
+les cinq possibilités : Métal, Nano, Hydrogène, Antimatière et Électricité.
+Sur grand écran, les cinq ressources restent visibles ; sur format étroit, dont
+la tablette de 768 px, la sélection conserve une lecture confortable. Stocks /
+capacités, soldes nets horaires et commandes en file restent présents. Il ne
+s’agit ni d’une nouvelle page métier ni d’un nouveau tri.
+
+Renommer reste un dépliable dans la carte, avec nom prérempli et limite actuelle.
+Bonus/malus et fiche des stocks/vaisseaux restent des informations complémentaires
+accessibles au clavier et au toucher. Liens de gestion, sélection, bâtiments,
+chantier, flottes et Vue générale conservés. L’abandon reste une page autonome :
+conséquences, ressources, bâtiments, défenses, vaisseaux, fret et commandes annulées
+visibles avant confirmation. Aucun nouveau formulaire de suppression ni modale
+intermédiaire n’est ajouté.
+
+**32 cadres** : colonies, renommage ouvert, comparaison, bilan d’abandon et bilan
+bloqué à 1440/768/390 px pour A/B, plus deux planches d’états. Deux colonies et
+nombres fictifs ; bandeau des nouvelles maquettes cohérent avec les stocks du
+comparatif et du bilan. Illustration existante réutilisée sans modification.
+Le bilan reprend l’absence de remboursement/transfert, la conservation des
+recherches/historiques et l’absence de nouveau kit lors d’une recolonisation par
+le même compte dans cet univers. Le nom retapé, la participation, la version,
+le CSRF et la clé de requête restent existants.
+
+Les états précisent : dernière colonie, opérations bloquantes sans détail privé,
+commandes dépendant d’une autre colonie avec liens de gestion, nom incorrect,
+bilan périmé, rejeu, stocks variables, capacité dépassée, ancienneté inconnue et
+absence de colonie. Le service de bilan synchronise les files sous verrou avant
+l’affichage : cet effet métier existant devra être préservé à la réalisation.
+Aucun bilan réel ni abandon n’est exécuté pour dessiner les maquettes.
+
+Structures grises sauvegardées avant la couleur ; variables propres au lot.
+Vérification native des **32 cadres et 428 interactions** : destinations présentes,
+aucun débordement de texte, chevauchement de texte ou texte coupé par son parent
+détecté. Empreintes des vingt et une pages précédentes identiques, dont Vue générale.
+Exports examinés : colonies A/B et comparaison A/B sur ordinateur, renommage et
+abandon A sur mobile, comparaison A sur mobile et abandon bloqué A sur tablette.
+Ces vérifications portent sur la conception, pas sur le fonctionnement du jeu.
+
+Preuves dans le dossier de visualisation de cette mission :
+`lot-7A-manifest.json`, `lot-7A-preservation-avant.json`,
+`lot-7A-verification.json` et exports `lot-7A-*.png`. Document natif sauvegardé,
+page A sélectionnée. Les propositions attendent leur propre choix ; aucun code
+du jeu L7A n’est modifié.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -1486,7 +1552,8 @@ RGAA. CI GitHub, fusion et déploiement restent distincts.
 | L4 | A implémentée et vérifiée localement | A choisie explicitement | 34 PHP, six parcours navigateur consolidés et 52 captures | CI, intégration et déploiement distincts |
 | L5 | A implémentée et vérifiée localement | A choisie explicitement | 44 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
 | L6 | A implémentée et vérifiée localement | A choisie explicitement | 32 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
-| L7A à L11 | Inventorié, sauf Vue générale déjà finalisée | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
+| L7A | Propositions A/B préparées pour le périmètre restant | Choix attendu ; Vue générale conservée | 32 cadres, 428 interactions ; 21 pages précédentes conservées | Conception seulement ; réalisation après choix |
+| L7B à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
 Les commits restent sur `feature/refonte-visuelle` ; L1B A est enregistré dans
@@ -1496,7 +1563,8 @@ La Vue générale est finalisée dans `6b3bb70`, avant L2C (compositions),
 L3 A est enregistré dans `16a9173`, réalisé et vérifié localement.
 L4 A est enregistré dans `e13e588`, réalisé et vérifié localement.
 L5 A est enregistré dans `9eb316e`, réalisé et vérifié localement.
-L6 A est réalisé localement ; L7A constitue le prochain ensemble.
+L6 A est enregistré dans `811ef2d`, réalisé et vérifié localement.
+L7A attend le choix A/B dans les pages Figcraft 22/23, en conservant Vue générale.
 Le plan reste à 18 ensembles : huit sont réalisés, dix restent à traiter.
 Vue générale constitue aussi une avance ciblée de L7A, sans valider tout ce lot. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
 Les validations précédentes restent limitées à leurs lots.
