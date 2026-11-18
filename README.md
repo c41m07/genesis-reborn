@@ -597,10 +597,10 @@ nécessite accord explicite et sauvegarde vérifiée ; aucun déploiement Alpha.
 ### Détection des attaques et confidentialité des déplacements
 
 Analyse tactique additionne les niveaux de ses trois rangs pour le seul préavis
-d’attaque : min(5 + 5 × niveaux, 120 minutes, 50 % du trajet). L’espionnage et
+d’attaque : min(30 + 5 × niveaux, 75 % du trajet aller), en minutes. L’espionnage et
 la détection des sondes à l’arrivée conservent leurs effets pondérés actuels.
 Les plafonds du catalogue de l’univers sont pris en compte pour les informations
-de progression ; à 5/5/5, le préavis théorique atteint 80 minutes.
+de progression ; à 5/5/5, le préavis théorique atteint 105 minutes.
 
 Le cadre [Flottes entrantes](docs/FLOTTES_ENTRANTES.md) regroupe les arrivées d’autres
 commandants sur vos colonies : transports, renforts, orbites et attaques détectées.

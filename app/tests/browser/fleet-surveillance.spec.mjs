@@ -61,7 +61,7 @@ test('Une attaque apparaît au seuil sans recharger, avec focus préservé et do
   const before=await page.evaluate(galaxy=>fetch('/flottes/surveillance?galaxy='+galaxy).then(r=>r.json()),data.galaxy);
   expect(before.flights).toEqual([]);expect(before.html).not.toContain('Source confidentielle');
   const focus=page.getByRole('navigation',{name:'Navigation des flottes'}).getByRole('link',{name:'Préparer une mission',exact:true});await focus.focus();
-  runIsolatedSql(data.project,'UPDATE fleet SET arrival_at=DATE_ADD(UTC_TIMESTAMP(),INTERVAL 4 MINUTE) WHERE id='+data.fleet);
+  runIsolatedSql(data.project,'UPDATE fleet SET arrival_at=DATE_ADD(UTC_TIMESTAMP(),INTERVAL 29 MINUTE) WHERE id='+data.fleet);
   const warning=page.locator('[data-incoming-attack="'+data.fleet+'"]');
   await expect(warning).toBeVisible({timeout:15000});await expect(focus).toBeFocused();
   await expect(warning.locator('[data-incoming-progress]')).toHaveCount(0);
@@ -96,7 +96,7 @@ test('Carte tactile : détection synchronisée, vue conservée, horloge serveur 
   await page.locator('#gv2-search-results button').first().tap();
   await page.getByRole('button',{name:/Vue rapprochée/}).tap();
   await expect(page.locator('.gv2-canvas--planet.is-active')).toBeVisible();
-  runIsolatedSql(data.project,'UPDATE fleet SET arrival_at=DATE_ADD(UTC_TIMESTAMP(),INTERVAL 4 MINUTE) WHERE id='+data.fleet);
+  runIsolatedSql(data.project,'UPDATE fleet SET arrival_at=DATE_ADD(UTC_TIMESTAMP(),INTERVAL 29 MINUTE) WHERE id='+data.fleet);
   await expect(page.locator('.incoming-attack-panel')).toHaveCount(0);
   const entry=page.locator('[data-flight-id="'+data.fleet+'"]');await expect(entry).toBeAttached({timeout:15000});
   await expect(page.locator('.gv2-canvas--planet.is-active')).toBeVisible();

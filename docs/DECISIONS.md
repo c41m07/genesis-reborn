@@ -1437,7 +1437,7 @@ les signalements figurent ci-dessous. Voir le [suivi](EVOLUTIONS_INTERFACES_FLOT
 
 ### Précisions confirmées dans la même session
 
-- Préavis d’attaque : niveau effectif = somme simple des trois rangs pour ce seul
+- Préavis d’attaque (règle historique, révisée le 18 novembre 2026) : niveau effectif = somme simple des trois rangs pour ce seul
   préavis. Formule validée : min(5 + 5 × niveau effectif, 120 minutes,
   50 % de la durée totale du trajet). Les effets pondérés sur l’espionnage et la
   détection à l’arrivée sont conservés. À la détection : planète ciblée et
@@ -1789,6 +1789,15 @@ du catalogue par défaut ; chantier spatial basique 3, laboratoire basique 2,
 prérequis des autres rangs, coûts, durées, plafonds et bonus restent conservés.
 Les surcharges explicites d’univers ne sont pas modifiées. Pas de migration,
 de modification des données de jeu ou de déploiement Alpha.
+
+## Préavis de détection des attaques — 18 novembre 2026
+
+Le préavis est de 30 minutes, plus 5 minutes par niveau cumulé des trois rangs
+d’Analyse tactique. Il est limité à 75 % du trajet aller, arrondis à la seconde
+inférieure. Cette décision retire l’ancien plafond fixe de deux heures.
+Le départ enregistré et l’arrivée actuelle déterminent le trajet pris en compte,
+y compris pour les vols déjà partis. Les droits d’affichage et les effets
+d’Analyse tactique sur l’espionnage suivent les règles existantes.
 
 ## 16 novembre 2026 — bunker accessible et unités civiles par rang
 

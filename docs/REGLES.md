@@ -675,8 +675,10 @@ d’un repli vers une colonie dont le système n’a pas été découvert.
 Pour le défenseur, une attaque en trajet aller n’est visible qu’à partir de sa
 détection. Niveau effectif = somme simple des niveaux d’Analyse tactique,
 Cartographie des opérations et Réseau de connaissance du champ de bataille.
-Préavis = min(300 + 300 × niveau effectif, 7200, moitié de la durée du trajet),
-en secondes entières, arrondi vers le bas pour ne pas dépasser 50 % du trajet.
+Préavis = min(1 800 + 300 × niveau effectif, 75 % de la durée du trajet aller),
+en secondes entières, arrondi vers le bas. Pour un trajet de 100 minutes, le
+préavis est de 30 minutes sans recherche, 60 minutes avec 6 niveaux et
+75 minutes à partir de 9 niveaux.
 Le trajet pris en compte va du départ enregistré à l’arrivée actuelle ;
 un boost ou un ajustement d’échéance recalcule donc immédiatement ce seuil.
 Aucun coût, temps de voyage ou effet de boost n’est modifié par cette lecture.
@@ -700,8 +702,8 @@ Leur périmètre préexistant de suivi des attaques alliées reste soumis à ces
 découvertes ; le seuil protège le destinataire d’une attaque.
 Aucun changement aux relations ou conditions d’attaque, défense et stationnement.
 
-Les trois plafonds de référence sont 5/5/5, soit 15 niveaux et 80 minutes de préavis
-théorique ; le plafond de 2 heures n’est pas atteint dans cette configuration.
+Les trois plafonds de référence sont 5/5/5, soit 15 niveaux et 105 minutes de
+préavis théorique avant application de la limite liée au trajet.
 Les surcharges propres à l’univers sont résolues comme dans la file de recherche.
 La somme pour le préavis n’altère pas la pondération actuelle de l’espionnage.
 
