@@ -102,7 +102,8 @@ L7A est enregistré dans `730b447`. **Neuf ensembles réalisés sur 18, neuf res
 L7B porte ensuite sur Bâtiments,
 Recherche, Chantier, Défenses, Guide technologique et confirmation d’annulation.
 Propositions Figcraft pages 24/25 : familles en lignes et suivi à droite (A), ou
-cartes et activité en bandeau (B). 50 cadres vérifiés ; choix attendu.
+quatre cartes par ligne sur ordinateur et activité en bandeau (B). Les quatre
+vues B adaptées sont vérifiées ; les 46 autres cadres sont conservés. Choix attendu.
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026

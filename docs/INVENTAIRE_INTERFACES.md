@@ -31,6 +31,8 @@ L6 A est également choisi, implémenté et vérifié localement ; ses propositi
 restent dans les pages 20/21. L7A A est également choisi, implémenté et vérifié localement pour les
 colonies/comparaison et l’abandon ; propositions dans les pages 22/23 et Vue générale conservée.
 L7B est préparé dans les pages 24/25 pour les catalogues, le guide et l’annulation.
+B est adaptée à quatre cartes par ligne sur ordinateur, à la demande de l’utilisateur ;
+le choix de la proposition révisée reste attendu.
 Les autres écrans restent inventoriés, sans validation implicite. Aucune CI GitHub, fusion ou livraison n’est revendiquée.
 Les états visibles supplémentaires sont recensés ensuite.
 

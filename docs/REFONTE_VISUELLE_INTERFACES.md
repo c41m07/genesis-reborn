@@ -1611,7 +1611,7 @@ Deux pages ajoutées au même document Figcraft bureau :
 - **24 · L7B · A — Développement en lignes** : familles horizontales sur grand écran,
   illustration et informations rapprochées, activité de la colonie à droite.
   Guide avec détail latéral ; bilan d’annulation avec confirmation rapprochée.
-- **25 · L7B · B — Développement en cartes** : deux familles par ligne sur ordinateur,
+- **25 · L7B · B — Développement en cartes** : quatre familles par ligne sur ordinateur,
   activité en bandeau à trois colonnes ; détail du guide et confirmation après
   leur contenu. Les deux options passent à une colonne sur tablette/mobile.
 
@@ -1654,6 +1654,28 @@ Preuves dans le dossier de visualisation : `lot-7B-manifest.json`,
 `lot-7B-verification-fenetres.json`, `lot-7B-verification-liens.json` et exports
 `lot-7B-*.png`. Document natif sauvegardé. Conception uniquement ; le code du
 jeu L7B attend le choix explicite entre A et B.
+
+### Ajustement demandé : quatre cartes sur ordinateur — 18 novembre 2026
+
+L’utilisateur demande quatre cartes par ligne sur ordinateur. La proposition B
+est adaptée dans les quatre catalogues de la page 25 ; A, le guide, les fenêtres,
+la confirmation et les formats tablette/mobile sont conservés. Complexité **3/5** :
+densité des cartes, libellés longs, trois rangs et quantités à maintenir lisibles.
+Quatre familles réelles illustrent chaque catalogue. Illustrations de 120 px,
+titres de 18 px, textes principaux de 14 px, rangs abrégés comme dans le catalogue
+et actions alignées en bas. Les prérequis des éléments verrouillés restent visibles ;
+leur affichage est activé dans ces exemples. Le changement porte sur la composition,
+sans nouvelle règle ni nouvelle action de jeu.
+
+Vérification native des quatre vues à 1440 px : quatre cartes visibles, même ligne,
+espacements vérifiés, aucun débordement, chevauchement ou texte coupé détecté.
+Les **46 autres cadres L7B ont des empreintes identiques** avant/après. Les
+anciennes cartes de ces quatre cadres sont conservées masquées pour le retour
+arrière ; les nouveaux liens visent les états existants. Examen visuel de Bâtiments,
+exports actualisés et document bureau sauvegardé sur B. Preuves :
+`lot-7B-B-4cartes-preservation.json`, `lot-7B-B-4cartes-verification.json` et
+`lot-7B-manifest.json`. Aucun code du jeu modifié ; le choix de la proposition
+révisée reste attendu avant réalisation.
 
 ## Reprise et états de couverture
 
