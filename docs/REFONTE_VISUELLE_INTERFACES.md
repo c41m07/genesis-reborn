@@ -113,8 +113,8 @@ Les liens du prototype simulent la navigation et n’exécutent aucune action du
 | L11 | Wiki : accueil, chapitre, recherche et références | 3/5 · 3/5 | Pages déjà séparées, anciens fragments et formules dépliables. |
 | L12 | Cohérence, erreurs et composants communs restants | 4/5 · 4/5 | Revue transversale ; adaptations communes rattachées au lot consommateur. |
 
-Le tableau comporte **18 lots prévus** : onze ensembles réalisés localement
-(L1A/L1B/L1C, L2, L3, L4, L5, L6, L7A, L7B et L7C), sept restants. Certains ensembles complexes seront
+Le tableau comporte **18 lots prévus** : douze ensembles réalisés localement
+(L1A/L1B/L1C, L2, L3, L4, L5, L6, L7A, L7B, L7C et L7D), six restants. Certains ensembles complexes seront
 subdivisés pendant leur analyse ;
 ce total ne fixe donc pas le nombre final de livraisons. Les complexités seront
 réévaluées avant chaque sous-tâche. À la demande de l’utilisateur, les lots de
@@ -2420,6 +2420,69 @@ Fichiers versionnés de ce lot : ce suivi, `FEUILLE_DE_ROUTE.md` et
 `INVENTAIRE_INTERFACES.md`. Aucun template, style ou traitement du jeu n’est modifié.
 Choix A/B attendu avant implémentation ; sept lots restent à réaliser.
 
+## L7D — réalisation locale A — 18 novembre 2026
+
+**Choix utilisateur : A**, puis demande explicite d’intégrer le lot et de passer
+au suivant. Complexité **4/5** : gabarits communs à la surveillance administrative,
+variantes historiques, tableaux responsives et préservation des droits de lecture.
+
+Le rapport de combat garde sa vraie page. Le bilan du camp regroupe les unités
+enregistrées, y compris les renforts, avant reconstruction. Les tableaux restent
+séparés par camp avec flotte, unité, rang, effectifs et arrivée. Le premier round
+est ouvert ; chaque autre round est dépliable sans JavaScript. Les huit champs
+du détail restent accessibles sur téléphone, sans défilement horizontal imposé.
+Les ancres parcourent le même rapport. Butin, reconstruction et tous les états
+de conquête existants restent présents ; les pertes sont rouges et négatives.
+
+Le centre conserve type, critères, archives et page dans les liens. Les filtres
+occupent une barre plus compacte. La sélection de la page gère le tout/partiel
+et son compteur ; le serveur conserve ses contrôles et sa limite de 50 rapports.
+Sans JavaScript, cases individuelles, archivage et restauration restent disponibles.
+Le lien Réinitialiser est corrigé : les critères étaient réinjectés dans son URL ;
+il les efface maintenant en gardant type et vue active/archives.
+
+Les renseignements obtenus sont ouverts et repliables par catégorie ; catégories
+inconnues et catégories connues vides restent distinguées. Stocks, taux, capacités,
+niveaux et anciens formats gardent leurs données. Un rapport détecté ne révèle
+aucun renseignement. Les transports conservent envoyé, livré, retour prévu,
+déposé et perdu au retour, avec affichage des deux derniers uniquement après retour.
+Les deux décimales des ressources et les valeurs exactes des quantités sont conservées.
+
+Vérifications : **15 tests PHP / 98 assertions**, comprenant le présentateur et
+les archives (droits, univers, contexte de navigation, lecture des résumés sans
+hydrater les preuves complètes). **Cinq parcours navigateur consolidés** : archives
+personnelles et sélection au clavier ; renseignements, rangs, format historique,
+inconnus et détection ; conquête réelle en base temporaire et refus à un autre
+commandant ; bilan historique et comparaison détaillée des camps ; transport,
+retour filtré, effacement des critères, thèmes clair/sombre et lecture sans JavaScript.
+Les rapports de combat et de transport sont capturés en 1440/768/390/320 px,
+sans débordement. Contrôles axe ciblés du centre d’archives et du transport sans
+anomalie sérieuse/critique ; aucun audit RGAA complet revendiqué.
+
+`make validate`, `make lint` (PHP, Twig, YAML, conteneur et schéma), `make assets`
+et `git diff --check` réussissent. Les essais modifiant l’état utilisent uniquement
+des projets et bases jetables. Le test SQL des résumés exige le mode debug : il a
+été relancé avec APP_DEBUG=1 dans son conteneur temporaire, sans configuration globale.
+Les vérifications initiales ont révélé une largeur minimale de cellule héritée
+et le style flex des anciennes listes de définitions sur les grands nombres ;
+les corrections sont isolées au nouvel espace. Les trois parcours touchés ont été
+relancés après correction, sans affaiblir les contrôles de largeur ou de contenu.
+
+Fichiers : `CombatReportPresenter.php`, `combat/report.html.twig` et ses trois
+fragments `_report_units`, `_report_round`, `_report_reconstruction`,
+`combat/reports.html.twig`, `espionage/report.html.twig`, `transport/report.html.twig`
+et `_details.html.twig`, `report_selection_controller.js`, `report-workspace.css`,
+`assets/app.js`, les cinq fichiers de tests concernés, README, architecture,
+feuille de route, inventaire et présent suivi. Aucun contrôleur d’action, règle
+de jeu, table, permission ou dépendance n’est modifié.
+
+Preuves locales : `output/playwright/rapports-refonte/`, notamment
+`l7d-combat-verification.log` (15 PHP), `l7d-recette-validee.log` (trois parcours
+de tableaux après corrections), `l7d-verification.log` (archives/espionnage),
+`l7d-lint.log`, `l7d-assets.log` et captures `recette-validee/` / `recette/`.
+Les échecs intermédiaires restent identifiés dans leurs journaux ; ils ne sont pas
+présentés comme des contrôles réussis. CI GitHub, fusion et déploiement restent distincts.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -2439,7 +2502,7 @@ Choix A/B attendu avant implémentation ; sept lots restent à réaliser.
 | L7A | A implémentée et vérifiée localement | A choisie explicitement ; Vue générale conservée | 51 PHP, sept parcours navigateur et 43 captures | CI, intégration et déploiement distincts |
 | L7B | Page 29 implémentée et vérifiée localement | Version consolidée validée explicitement | 20 PHP, six parcours navigateur consolidés et 30 captures ; bilan ci-dessus | CI complète, intégration et déploiement distincts |
 | L7C | Implémenté et vérifié localement | Conception validée ; spirale retenue explicitement pour les distances | Deux vues persistantes, gestes et moteur conservés, bilans par camp ; recette ci-dessous | CI complète, fusion et déploiement distincts |
-| L7D | Propositions A/B préparées | Choix utilisateur attendu | Pages Figcraft 34/35 reprises depuis les rapports actuels, 62 cadres et 578 commandes reliées ; conception seulement | Choisir la présentation avant réalisation |
+| L7D | A implémentée et vérifiée localement | A choisie explicitement après reprise depuis les rapports actuels | 15 PHP / 98 assertions ; cinq parcours navigateur consolidés ; bilan ci-dessous | CI complète, fusion et déploiement distincts |
 | L7E à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
@@ -2453,8 +2516,8 @@ L5 A est enregistré dans `9eb316e`, réalisé et vérifié localement.
 L6 A est enregistré dans `811ef2d`, réalisé et vérifié localement.
 L7A A est enregistrée dans `730b447` ; recette ci-dessus. Vue générale conservée.
 L7B page 29 est intégrée localement dans `81807df` ; L7C est enregistré dans `50f3965`, réalisé selon la
-validation finale et la décision de géographie. L7D attend le choix A/B.
-Le plan reste à 18 ensembles : onze sont réalisés, sept restent à traiter.
+validation finale et la décision de géographie. L7D A est implémenté localement.
+Le plan reste à 18 ensembles : douze sont réalisés, six restent à traiter.
 Vue générale avait été finalisée en avance ; L7A est désormais complet localement. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
 Les validations précédentes restent limitées à leurs lots.
 Aucun push, PR, fusion ou déploiement n’est autorisé par le seul changement de

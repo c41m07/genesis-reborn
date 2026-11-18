@@ -449,6 +449,22 @@ La table report_archive est unique sur participation/type/id ; archived_at nulla
 conserve l’état restauré. Aucun rapport source supprimé ou modifié. Les vues
 administratives et preuves restent indépendantes de ce filtrage personnel.
 
+Depuis L7D A, `CombatReportPresenter` enrichit sa présentation avec `rows_by_side`,
+les totaux engagés/perdus/restants par camp et les décomptes de tirs/pertes du round.
+Ces lectures utilisent le même instantané, sans rejouer le combat ni nouvelle requête.
+Le total inclut les renforts enregistrés et reste calculé avant reconstruction.
+Les fragments Twig `_report_units`, `_report_round` et `_report_reconstruction`
+conservent rangs, flottes et statistiques. Les rounds sont des `details` natifs ;
+le premier est ouvert. Les tableaux s’adaptent en lignes sur mobile avec leurs
+libellés et leur sémantique, et restent dans la page du rapport.
+
+`report_selection_controller` sélectionne uniquement les cases déjà présentes
+dans la page de rapports. Il affiche le nombre de sélections, gère l’état partiel
+et désactive la commande collective vide. Les actions individuelles, le formulaire
+sans JavaScript, les jetons et la validation transactionnelle restent ceux existants.
+Le lien d’effacement retire les critères de recherche en conservant type et archives.
+Les styles sont isolés dans `report-workspace.css` ; aucune migration ni dépendance.
+
 AdminInterventionService::ships utilise rôle actif, verrous administrateur puis
 participation/univers/planète, reçu ActionGuard et catalogue. Le stock idle est
 créé si nécessaire ; chaque quantité reste dans l’entier SQL signé. L’audit

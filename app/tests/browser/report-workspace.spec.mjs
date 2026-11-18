@@ -1,0 +1,70 @@
+import { test, expect } from './support/isolated-test.mjs';
+import { queryIsolatedSql, runIsolatedSql } from './support/game-fixtures.mjs';
+import AxeBuilder from '@axe-core/playwright';
+
+test('Rapports A : transport complet, retour filtré, effacement, thèmes et lecture sans JavaScript', async ({ page, browser }, info) => {
+    test.setTimeout(180000);
+    const suffix = crypto.randomUUID().slice(0, 8);
+    const email = `report-workspace-${suffix}@example.test`;
+    const password = crypto.randomUUID() + 'aA1!';
+    await page.goto('/inscription');
+    await page.getByLabel('Adresse email').fill(email);
+    await page.getByLabel('Nom de commandant').fill('Rapports-' + suffix);
+    await page.getByLabel('Mot de passe (12 caractères minimum)', { exact: true }).fill(password);
+    await page.getByLabel('Confirmer le mot de passe').fill(password);
+    await page.getByRole('button', { name: 'Créer mon compte' }).click();
+    await page.getByLabel('Adresse email').fill(email);
+    await page.getByLabel('Mot de passe', { exact: true }).fill(password);
+    await page.getByRole('button', { name: /Connexion/ }).click();
+    await page.locator('.universe-card').first().getByRole('button').click();
+    await expect(page).toHaveURL(/planetes\/\d+$/);
+    const project = process.env.BROWSER_ROUTER;
+    const [planet, member, planetName] = queryIsolatedSql(project, `SELECT pl.id, pl.owner_id, pl.name FROM planet pl JOIN player_universe pu ON pu.id=pl.owner_id JOIN player p ON p.id=pu.player_id WHERE p.email='${email}' LIMIT 1`).split('\t');
+    runIsolatedSql(project, `INSERT INTO fleet(player_universe_id,home_planet_id,destination_id,status,mission,speed_ratio,cargo,reserved_fuel,orbit_fuel,orbit_duration_seconds,travel_seconds,dispatch_token) VALUES(${Number(member)},${Number(planet)},${Number(planet)},'completed','transport',1,'{}',0,0,0,0,'')`);
+    const fleet = Number(queryIsolatedSql(project, 'SELECT MAX(id) FROM fleet'));
+    const snapshot = { sender: 'Nova', recipient: 'Orion', origin: 'Horizon · A:43:3', destination: 'Équinoxe · A:44:2', sent: { metal: 2000, nano: 800 }, delivered: { metal: 1500, nano: 800 }, returned: { metal: 500 }, returned_at: '2026-11-18T14:06:00+01:00', returned_deposited: { metal: 450 }, return_overflow: { metal: 50 } };
+    runIsolatedSql(project, `INSERT INTO transport_report(fleet_id,sender_id,recipient_id,status,snapshot,created_at,resolved_at) VALUES(${fleet},${Number(member)},${Number(member)},'delivered','${JSON.stringify(snapshot).replaceAll("'", "''")}','2026-11-18 13:45:00','2026-11-18 13:50:00')`);
+    const id = Number(queryIsolatedSql(project, 'SELECT MAX(id) FROM transport_report'));
+    const errors = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await page.goto('/rapports?type=economy');
+    await page.getByLabel('Nom actuel de planète').fill(planetName);
+    await page.getByRole('button', { name: 'Rechercher les rapports' }).click();
+    await expect(page).toHaveURL(/planet=/);
+    await page.locator(`a[href*="/rapports/transport/${id}"]`).click();
+    const reportUrl = page.url();
+    const row = page.locator('.report-resource-table tbody tr').filter({ hasText: 'Métal' });
+    await expect(row.locator('[data-label="Envoyé"]')).toHaveText('2 000,00');
+    await expect(row.locator('[data-label="Livré"]')).toHaveText('1 500,00');
+    await expect(row.locator('[data-label="Déposé au retour"]')).toHaveText('450,00');
+    await expect(row.locator('[data-label="Perdu au retour"]')).toHaveText('−50,00');
+    for (const width of [1440, 768, 390, 320]) {
+        await page.setViewportSize({ width, height: 1000 });
+        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+        for (const cell of await row.locator('td').all()) await expect(cell).toBeVisible();
+        await page.screenshot({ path: info.outputPath(`transport-A-${width}.png`), fullPage: true, animations: 'disabled' });
+    }
+    for (const theme of ['dark', 'light']) {
+        await page.evaluate(theme => { document.documentElement.dataset.theme = theme; }, theme);
+        expect((await new AxeBuilder({ page }).include('.report-workspace').analyze()).violations.filter(v => ['serious', 'critical'].includes(v.impact))).toEqual([]);
+        await page.screenshot({ path: info.outputPath(`transport-A-${theme}.png`), fullPage: true, animations: 'disabled' });
+    }
+    await page.getByRole('link', { name: 'Retour aux rapports' }).click();
+    await expect(page.getByLabel('Nom actuel de planète')).toHaveValue(planetName);
+    await expect(page).toHaveURL(/type=economy/);
+    await page.getByRole('link', { name: 'Réinitialiser les filtres' }).click();
+    await expect(page.getByLabel('Nom actuel de planète')).toHaveValue('');
+    expect(new URL(page.url()).searchParams.has('planet')).toBe(false);
+    expect(new URL(page.url()).searchParams.get('type')).toBe('economy');
+    const context = await browser.newContext({ storageState: await page.context().storageState(), javaScriptEnabled: false, viewport: { width: 390, height: 1000 } });
+    const plain = await context.newPage();
+    await plain.goto(reportUrl);
+    await expect(plain.locator('.report-resource-table [data-label="Perdu au retour"]').first()).toHaveText('−50,00');
+    expect(await plain.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+    await plain.screenshot({ path: info.outputPath('transport-A-sans-javascript.png'), fullPage: true });
+    await plain.goto('/rapports?type=economy');
+    await expect(plain.getByRole('button', { name: 'Archiver la sélection', exact: true })).toBeEnabled();
+    await expect(plain.getByRole('checkbox', { name: 'Tout sélectionner sur cette page' })).toBeHidden();
+    await context.close();
+    expect(errors).toEqual([]);
+});

@@ -136,8 +136,11 @@ L7D (Rapports et archives) est repris après refus des deux premières propositi
 Les pages 34 A « Rapport actuel affiné » et 35 B « Camps en vis-à-vis » reprennent
 les vrais tableaux, comparaisons VS et statistiques des rapports existants, avec
 le socle UI validé. 62 cadres et 578 commandes reliées ; exemple de combat calculé
-sans base, contrôles de conservation et de présentation. Les deux directions
-restent à choisir avant réalisation. Sept lots restent à réaliser, dont L7D.
+sans base, contrôles de conservation et de présentation. L’utilisateur choisit ensuite A et autorise sa réalisation : bilans et rounds
+complets, lecture mobile, sélection, archives et renseignements sont intégrés
+localement. Vérifications : 15 PHP / 98 assertions, cinq parcours navigateur
+consolidés, compilation et lint complet. Douze ensembles sur 18 sont réalisés ;
+six restent à réaliser, à partir de L7E.
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026

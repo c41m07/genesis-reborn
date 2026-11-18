@@ -1,0 +1,25 @@
+{% for side, sideLabel in {own:'Votre camp', enemy:'Camp adverse'} %}
+    <section class="report-unit-camp report-unit-camp--{{ side }}" aria-labelledby="report-units-{{ side }}">
+        <h3 id="report-units-{{ side }}">{{ sideLabel }}</h3>
+        {% if rows_by_side[side] %}
+            <table class="data-table combat-losses report-unit-table" role="table">
+                <caption class="visually-hidden">{{ sideLabel }} · effectifs et pertes avant reconstruction</caption>
+                <thead><tr><th scope="col">Unité et flotte</th><th scope="col">Rang</th><th scope="col">Engagés</th><th scope="col">Pertes</th><th scope="col">Survivants</th><th scope="col">Arrivée</th></tr></thead>
+                <tbody>
+                {% for row in rows_by_side[side] %}
+                    <tr>
+                        <th scope="row">{{ row.unit }}<small>{{ row.label }}</small></th>
+                        <td data-label="Rang" class="report-unit-tier">{{ tier_labels[row.tier]|default(row.tier) }}</td>
+                        <td data-label="Engagés">{{ row.initial|quantity(0) }}</td>
+                        <td data-label="Pertes" class="{{ row.lost ? 'report-loss' : 'muted' }}">{{ row.lost ? '−' : '' }}{{ row.lost|quantity(0) }}</td>
+                        <td data-label="Survivants" class="{{ row.remaining ? 'report-survivors' : 'muted' }}">{{ row.remaining|quantity(0) }}</td>
+                        <td data-label="Arrivée" class="report-unit-arrival">R{{ row.round }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="muted">Aucune unité engagée dans ce camp.</p>
+        {% endif %}
+    </section>
+{% endfor %}

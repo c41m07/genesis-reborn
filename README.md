@@ -552,6 +552,15 @@ Rapports actifs / Archives personnelles restent conservés en navigation.
 L’archivage individuel ou par sélection est personnel et restaurable ; les preuves
 et l’accès autorisé aux rapports restent conservés.
 
+La présentation A garde les effectifs par flotte, unité et rang, puis la comparaison
+des camps à chaque round. Le premier round est ouvert ; les suivants sont dépliables.
+Les pertes sont rouges et négatives, les survivants restent comptés avant reconstruction.
+Sur téléphone, les lignes montrent tous les chiffres sans défilement horizontal.
+Les renseignements obtenus sont ouverts par catégorie ; les catégories non obtenues
+restent explicitement inconnues. Le transport distingue livré, retourné, déposé et
+perdu au retour. La sélection de tous les rapports de la page est disponible avec
+JavaScript ; l’archivage individuel et par cases reste utilisable sans lui.
+
 La fiche administrative d’un joueur permet d’attribuer des vaisseaux au stock
 au sol d’une colonie choisie : type, rang, quantité entière, motif et confirmation.
 L’attribution est contrôlée côté serveur, journalisée et protégée contre le rejeu.

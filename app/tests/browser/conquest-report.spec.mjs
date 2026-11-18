@@ -85,7 +85,7 @@ test('Conquête PNJ : rapport détaillé, résultat, responsive et confidentiali
   const reportUrl = page.url();
   await expect(page.getByRole('heading', { name: 'Rapport de combat', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Effectifs et pertes', exact: true })).toBeVisible();
-  const losses = page.getByRole('region', { name: 'Bilan des pertes, défilement horizontal' });
+  const losses = page.getByRole('region', { name: 'Bilan des pertes', exact: true });
   await expect(losses).toBeVisible();
   expect(await page.locator('main table tbody tr').count()).toBeGreaterThan(0);
   await losses.focus();

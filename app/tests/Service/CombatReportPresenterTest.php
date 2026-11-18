@@ -49,6 +49,11 @@ final class CombatReportPresenterTest extends TestCase
         self::assertSame(0, $view['round_details'][1]['enemy'][0]['end']);
         self::assertNull($view['round_details'][1]['own'][0]['accuracy']);
         self::assertSame(1, $view['rows'][0]['lost']);
+        self::assertSame(['initial' => 3, 'lost' => 1, 'remaining' => 2], $view['totals']['own']);
+        self::assertSame(['initial' => 2, 'lost' => 2, 'remaining' => 0], $view['totals']['enemy']);
+        self::assertCount(2, $view['rows_by_side']['own']);
+        self::assertSame(3, $first['shots_count']);
+        self::assertSame(2, $first['lost_count']);
     }
 
     public function testDefenderSeesOwnDefensesOnLeftAndReconstructionAfterLosses(): void
@@ -67,6 +72,7 @@ final class CombatReportPresenterTest extends TestCase
         self::assertSame(1, $view['round_details'][0]['own'][0]['hits']);
         self::assertSame(3, $view['reconstruction'][0]['rebuilt']);
         self::assertSame(7, $view['reconstruction'][0]['permanent']);
+        self::assertSame(['initial' => 10, 'lost' => 10, 'remaining' => 0], $view['totals']['own']);
         $attackerView = (new CombatReportPresenter())->present($snapshot, [$round], 7);
         self::assertCount(1, $attackerView['round_details'][0]['own']);
         self::assertCount(2, $attackerView['round_details'][0]['enemy']);
@@ -78,5 +84,14 @@ final class CombatReportPresenterTest extends TestCase
         $view = (new CombatReportPresenter())->present($snapshot, [], 7);
         self::assertSame([], $view['round_details']);
         self::assertSame(2, $view['rows'][0]['lost']);
+        self::assertSame(['initial' => 2, 'lost' => 2, 'remaining' => 0], $view['totals']['own']);
+    }
+
+    public function testEmptyHistoricalReportKeepsEmptyCampsAndNoRoundSummary(): void
+    {
+        $view = (new CombatReportPresenter())->present([], [], 7);
+        self::assertSame(['own' => [], 'enemy' => []], $view['rows_by_side']);
+        self::assertSame(['initial' => 0, 'lost' => 0, 'remaining' => 0], $view['totals']['own']);
+        self::assertSame([], $view['round_details']);
     }
 }
