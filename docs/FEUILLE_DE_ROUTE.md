@@ -140,7 +140,11 @@ sans base, contrôles de conservation et de présentation. L’utilisateur chois
 complets, lecture mobile, sélection, archives et renseignements sont intégrés
 localement. Vérifications : 15 PHP / 98 assertions, cinq parcours navigateur
 consolidés, compilation et lint complet. Douze ensembles sur 18 sont réalisés ;
-six restent à réaliser, à partir de L7E.
+six restent à réaliser, à partir de L7E. Ce prochain lot dispose des propositions
+Figcraft page 36 A « Échanges et tableaux » et page 37 B « Conversation et lecture » :
+66 cadres et 403 commandes reliées, messagerie/canaux/recherche, classements et
+profils publics, signalements et états. Données fictives, aucun message envoyé ;
+choix attendu avant développement. L7D est enregistré dans `5523ac4`.
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026

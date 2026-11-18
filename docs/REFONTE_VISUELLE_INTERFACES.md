@@ -2483,6 +2483,74 @@ de tableaux après corrections), `l7d-verification.log` (archives/espionnage),
 Les échecs intermédiaires restent identifiés dans leurs journaux ; ils ne sont pas
 présentés comme des contrôles réussis. CI GitHub, fusion et déploiement restent distincts.
 
+## L7E — Messages, classements et profils, propositions préparées — 18 novembre 2026
+
+Complexité **4/5** : canaux, non-lus, contenus privés, composition et signalements,
+scores quotidiens et données publiques. Lecture ciblée de `SocialMessageController`,
+`MessageSearchController`, `LeaderboardController`, `PublicProfileController`,
+`PlayerReportController`, des gabarits associés et du contrôleur de rédaction.
+Les profils de guilde déjà traités dans L1B sont réutilisés, sans nouvelle refonte.
+
+Les deux nouvelles pages du fichier Figcraft courant sont :
+
+- **36 · L7E · A — Échanges et tableaux** : conversations visibles à gauche sur
+  ordinateur, échange à droite ; classement en tableau à grande largeur et lignes
+  adaptées au téléphone ; profil public en relevé de scores. Continuité avec les
+  rapports A et les listes déjà validées.
+- **37 · L7E · B — Conversation et lecture** : échange au premier plan avec retour
+  identifié vers les conversations ; classements et profil regroupés dans des
+  encadrés donnant davantage de place aux informations détaillées.
+
+Le menu, les ressources, les couleurs et la typographie reprennent le socle validé.
+Privé/Guilde/Global restent les contextes GET de la même messagerie ; la liste et
+l’échange sont deux états d’un même parcours. Recherche des messages, profil public,
+classement et signalement d’un commandant gardent leurs pages dédiées et leur
+contexte de retour. Joueurs/Guildes sont les vues du classement ; catégorie et tri
+sélectionnent le même ensemble quotidien. Signalement d’un message et aide Markdown
+sont des compléments secondaires. Les cadres du prototype ne créent pas de routes.
+
+Couverture commune : boîte vide, sélection de conversation, recherche d’un
+destinataire, privé, guilde, Global, composition, recherche dans les messages et
+résultats, profil public, classements joueurs/guildes, choix des cinq catégories
+et de l’ordre, actions par commandant et signalements. Les actions de contact et
+signalement ne sont pas proposées sur sa propre ligne. Les non-lus restent liés
+aux échanges privés et de guilde ; Global ne reçoit ni notification ni compteur.
+La recherche ne marque pas lu ; ouvrir la conversation conserve son comportement.
+
+Les champs reprennent les limites actuelles : message 2 000 caractères, motif d’un
+message 500, commentaire d’un signalement de joueur 1 000. Ctrl + Entrée et Markdown
+sans images restent identifiés. Les états couvrent absence de guilde, empire non
+piloté, contenu modéré, recherche vide, envoi refusé et profil inaccessible.
+La conservation de saisie/focus lors des actualisations devra être vérifiée à
+l’implémentation ; les redirections d’erreur existantes de la messagerie demandent
+une attention particulière. Aucune garantie de brouillon persistant n’est ajoutée.
+
+Les profils ne montrent que les données publiques déjà préparées : pseudonyme,
+guilde accessible, cinq scores et rangs, date du relevé. Les points de flotte
+incluent les défenses fixes. Pas de stock, composition de flotte ou position privée
+ajoutés. Les exemples de commandants, messages, dates et scores sont fictifs ;
+les boutons d’envoi et de signalement relient des états dessinés, sans aucun envoi réel.
+
+Vérifications de conception : **66 cadres**, **403 commandes reliées**, formats
+1440/768/390 pour les cinq vues principales ; états complémentaires en 1440/390
+ou panneaux compacts. Destinations contrôlées, profils de guilde L1B reliés,
+couverture A/B équivalente, aucun dépassement ou chevauchement de texte détecté.
+Examen d’exports des conversations, classements et profils sur ordinateur/mobile.
+Les pages précédentes restent conservées, y compris la page 34 A validée.
+Ces contrôles ne constituent ni une recette du jeu ni un audit RGAA complet.
+
+Les listes du prototype utilisent quelques exemples, sans moteur réel de recherche,
+de tri ou de pagination ; certaines options utilisent un panneau compact illustratif.
+Le raccord aux identifiants de chaque commandant et la conservation du contexte
+seront vérifiés pendant le développement. Les jetons, permissions, modération,
+idempotence, actualisation des non-lus et calculs de classement restent à préserver.
+
+Preuves locales : `lot-7E-manifest.json`, `lot-7E-arbres.json`,
+`lot-7E-verification.json` et exports `lot-7E-A-*.png` / `B-*.png` dans le dossier
+de conception courant. Fichier natif enregistré et ouvert sur la page 36 A.
+Choix utilisateur attendu avant implémentation. Le code du jeu reste celui du
+lot L7D ; six lots restent à réaliser sur les dix-huit prévus.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -2503,7 +2571,8 @@ présentés comme des contrôles réussis. CI GitHub, fusion et déploiement res
 | L7B | Page 29 implémentée et vérifiée localement | Version consolidée validée explicitement | 20 PHP, six parcours navigateur consolidés et 30 captures ; bilan ci-dessus | CI complète, intégration et déploiement distincts |
 | L7C | Implémenté et vérifié localement | Conception validée ; spirale retenue explicitement pour les distances | Deux vues persistantes, gestes et moteur conservés, bilans par camp ; recette ci-dessous | CI complète, fusion et déploiement distincts |
 | L7D | A implémentée et vérifiée localement | A choisie explicitement après reprise depuis les rapports actuels | 15 PHP / 98 assertions ; cinq parcours navigateur consolidés ; bilan ci-dessous | CI complète, fusion et déploiement distincts |
-| L7E à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
+| L7E | Propositions A/B préparées | Choix attendu | Figcraft pages 36/37, 66 cadres et 403 commandes reliées ; conception seulement | Valider une direction avant développement |
+| L8 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
 Les commits restent sur `feature/refonte-visuelle` ; L1B A est enregistré dans
@@ -2516,7 +2585,8 @@ L5 A est enregistré dans `9eb316e`, réalisé et vérifié localement.
 L6 A est enregistré dans `811ef2d`, réalisé et vérifié localement.
 L7A A est enregistrée dans `730b447` ; recette ci-dessus. Vue générale conservée.
 L7B page 29 est intégrée localement dans `81807df` ; L7C est enregistré dans `50f3965`, réalisé selon la
-validation finale et la décision de géographie. L7D A est implémenté localement.
+validation finale et la décision de géographie. L7D A est intégré dans `5523ac4`.
+L7E dispose de deux propositions ; aucun choix implicite n’est retenu.
 Le plan reste à 18 ensembles : douze sont réalisés, six restent à traiter.
 Vue générale avait été finalisée en avance ; L7A est désormais complet localement. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
 Les validations précédentes restent limitées à leurs lots.
