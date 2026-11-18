@@ -152,14 +152,18 @@ protection consultables au clavier/toucher, retour de recherche contextualisé.
 90 PHP / 569 assertions et neuf parcours navigateur consolidés après corrections,
 formats 1440/768/390/320, sombre/clair, clavier et accès sans JavaScript.
 Compilation, lint complet et contrôle du diff réussis ; bilan et limites dans le suivi.
-Treize ensembles sur 18 sont réalisés ; cinq restent à traiter, à partir de L8.
-L7D est enregistré dans `5523ac4`, L7E dans `557061e`. L8 dispose maintenant de deux
-propositions Figcraft : page 38 A « Continuité claire » et page 39 B « Immersion et
-comparaison ». Accueil, accès/confirmation/récupération, univers et états associés ;
-92 cadres et 512 commandes reliées, deux plans cliquables, couverture A/B équivalente.
-Exports ordinateur/mobile et contrôles de présentation vérifiés dans la maquette.
-Comptes, participations et calendriers fictifs ; aucun envoi ni code du jeu modifié.
-Choix attendu avant réalisation de L8.
+L7D est enregistré dans `5523ac4`, L7E dans `557061e`. Après les deux propositions
+Figcraft de L8 (92 cadres et 512 commandes), l’utilisateur valide la page 38 A
+« Continuité claire ». Elle est intégrée localement : accueil avec aperçu du jeu,
+formulaires partageant un panneau illustré sur ordinateur et direct sur mobile,
+cartes d’univers avec leurs neuf règles complètes. Les contrats d’accès, réponses
+neutres, calendriers UTC et fermeture à 24 heures restent conservés.
+23 PHP / 244 assertions et 16 parcours navigateur distincts consolidés après
+corrections, avec formats 1440/768/390/320, thèmes sombre/clair, clavier et accès
+sans JavaScript. Compilation, lint complet et contrôle du diff réussis ; preuves
+et limites dans le suivi de refonte. Aucune migration sur la base habituelle.
+**Quatorze ensembles sur 18 sont réalisés ; quatre restent à traiter**, à partir
+de L9 (feedback, patchnotes et documents complémentaires).
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026

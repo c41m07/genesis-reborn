@@ -1,0 +1,6 @@
+<nav class="entry-public-navigation" aria-label="Accès au compte">
+    {% if route != 'app_access_denied' %}
+        <a class="entry-public-login {{ route == 'app_register' ? 'entry-mobile-action' : '' }}" href="{{ path('app_login') }}"{% if route == 'app_login' %} aria-current="page"{% endif %}>Se connecter</a>
+    {% endif %}
+    <a class="primary public-login {{ route != 'app_register' ? 'entry-mobile-action' : '' }}" href="{{ path('app_register') }}"{% if route == 'app_register' %} aria-current="page"{% endif %}>Créer un compte</a>
+</nav>

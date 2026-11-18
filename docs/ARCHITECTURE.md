@@ -722,6 +722,27 @@ en base aux trois plus récents (date puis identifiant), affichés dans leur ord
 chronologique. Il ne marque pas le canal lu. Les boutons de départ/dissolution
 sont visibles dans Ma guilde avec leurs services et jetons CSRF existants.
 
+### Accueil, accès au compte et univers — L8 A
+
+`security/layout.html.twig` rassemble la présentation des formulaires de connexion,
+inscription, récupération et confirmation ; chaque tâche conserve sa route et son
+gabarit. Le contexte illustré est masqué à 1 050 px et moins, pour placer directement
+le formulaire sur les petits écrans. Les refus d’accès conservent leur gabarit et
+leur retour prioritaire selon le rôle, sans contexte illustré avant cette action.
+
+`entry-workspace.css` limite les styles aux conteneurs de ces pages et à leur
+navigation publique. Les cartes d’univers conservent les neuf paramètres préparés
+par `UniverseController` et `GameCatalog` ; aucune lecture supplémentaire n’est
+ajoutée. Le bandeau d’absence d’empire utilise les participations actives déjà
+fournies. Les limites de flotte sont écrites en entier, sans abréviation à déplier.
+
+Les formulaires, champs, contrôleurs de visibilité du mot de passe, thèmes d’erreur,
+CSRF, réponses neutres, redirections et services restent ceux de l’existant. Les
+messages de résultat sont affichés par le socle commun au-dessus du contenu. Les
+calendriers UTC et le bandeau de fermeture à 24 heures gardent leurs contrôleurs,
+leur horloge serveur et leur actualisation. Les métadonnées publiques et les
+réponses techniques ne sont pas modifiées.
+
 ## Présentations de guildes
 
 `GuildProfile` conserve description, références d’images et version dans une table dédiée, rattachée à la guilde avec suppression en cascade de la ligne. Les lectures des guildes existantes n’ajoutent pas de jointure à cette table. Les profils de joueurs ne transmettent aux templates qu’une liste explicite des informations publiques, avec les scores du classement quotidien.

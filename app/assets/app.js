@@ -68,3 +68,4 @@ import './styles/colony-workspace.css';
 import './styles/catalogue-workspace.css';
 import './styles/report-workspace.css';
 import './styles/social-workspace.css';
+import './styles/entry-workspace.css';

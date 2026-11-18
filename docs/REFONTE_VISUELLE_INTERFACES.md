@@ -2752,9 +2752,80 @@ contrôler pendant la réalisation.
 Preuves locales dans le dossier de conception courant : `lot-8-manifest.json`,
 `lot-8-arbres.json`, `lot-8-verification.json`, `lot-8-document-avant.json`,
 `lot-8-document-apres.json`, `lot-8-enregistrement.json`, exports `lot-8-A-*.png`
-et `lot-8-B-*.png`. Aucune modification du code du jeu : L7E reste le dernier lot
-intégré dans `557061e` ; treize lots réalisés sur dix-huit, cinq restants.
-Le choix A/B ou une demande de combinaison reste attendu avant développement.
+et `lot-8-B-*.png`. Au terme de cette préparation, aucun code du jeu n’est modifié :
+L7E reste alors le dernier lot intégré dans `557061e`.
+L’utilisateur valide ensuite explicitement **A** (« je valide le A »).
+
+## L8 A — Accueil, accès et univers intégrés — 18 novembre 2026
+
+La page **38 A — Continuité claire** est réalisée sur `feature/refonte-visuelle`.
+Complexité maintenue à **4/5** après vérification des contrats d’authentification.
+L’accueil rapproche le texte et l’aperçu réel de la colonie, puis présente la galaxie.
+Les tâches d’accès conservent leurs pages dédiées et partagent un panneau avec
+contexte illustré sur ordinateur ; à 1 050 px et moins, le formulaire devient direct.
+Les cartes d’univers restent complètes, à deux colonnes sur grand écran et empilées
+sur téléphone. L’absence d’empire est expliquée sans stock ou colonie inventés.
+Les cinq vitesses, deux limites et deux fonctionnalités restent visibles ; la limite
+de flotte est écrite en entier avec séparateurs de milliers. Les noms longs et les
+libellés de boutons peuvent revenir à la ligne.
+
+Les services, permissions, champs, CSRF, réponses neutres, quotas, mémorisation,
+liens uniques et redirections restent inchangés. La confirmation d’adresse reste
+explicite : le GET affiche le formulaire, le POST contrôle le lien. Les calendriers
+UTC, l’horloge serveur et le seuil de fermeture à 24 heures sont conservés. Les
+métadonnées publiques, le `noindex` de connexion et les réponses techniques ne sont
+pas modifiés. Aucun email réel, migration existante ou changement d’équilibrage.
+
+Adaptations : les messages de résultat restent au-dessus du contenu dans le socle
+commun ; le premier empire conserve la navigation autorisée déjà disponible.
+L’accès refusé garde sa présentation ciblée et son retour prioritaire selon le rôle.
+Le bouton œil existant est conservé. Les actions dorées et le texte secondaire sont
+ajustés pour le contraste dans les deux thèmes. Le sommaire automatique est désactivé
+sur ces tâches courtes, sans modifier la navigation des autres lots.
+
+Fichiers concernés :
+
+- `app/templates/base.html.twig`, `public/home.html.twig`,
+  `ui/public_entry_navigation.html.twig` et `universe/index.html.twig` ;
+- dans `app/templates/security/` : `layout.html.twig`, `login.html.twig`,
+  `register.html.twig`, `password_reset_request.html.twig`, `password_reset.html.twig`,
+  `password_reset_invalid.html.twig`, `email_verification_request.html.twig`,
+  `email_verification.html.twig`, `email_verification_invalid.html.twig` et
+  `access_denied.html.twig` ;
+- `app/assets/styles/entry-workspace.css`, importé depuis `app/assets/app.js` ;
+- `app/tests/browser/entry-refonte.spec.mjs` ; README, architecture, feuille de route
+  et présent suivi synchronisés dans le même lot.
+
+Vérifications locales : **23 tests PHP / 244 assertions** (`PublicSeo`,
+`SecurityHeaders`, `EmailVerification`, `Authentication`, `PasswordReset`,
+`UniverseClosingClock`) et **16 parcours navigateur distincts consolidés** après
+corrections. Les quatorze parcours existants couvrent les formulaires, clavier,
+absence de JavaScript, refus selon le rôle, confirmation, récupération, jeton à
+usage unique, fermeture et entrée dans un univers. Les deux nouveaux complètent
+les accès directs, huit écrans ou états publics, les deux palettes, les neuf règles
+des univers, noms longs, ouverture programmée, indisponibilité et reprise d’empire.
+Formats 1440/768/390/320 pour ces compléments, cinq tailles jusqu’à 1920 pour les
+contrôles existants. Axe ciblé, focus, erreurs liées et captures réelles ; ces
+vérifications ne constituent pas un audit RGAA complet.
+
+`make validate`, `make lint` complet (207 Twig, 80 YAML, PHP, conteneur et schéma),
+`make assets`, syntaxe du nouveau scénario JavaScript et `git diff --check` réussissent.
+PHP est lancé directement avec `APP_DEBUG=1` dans la base réservée aux tests ; ce
+n’est pas un `make test` complet. Les scénarios navigateur utilisent des projets
+éphémères séparés, avec messagerie externe neutralisée, sans modifier la base habituelle.
+
+Preuves : `output/playwright/entry-refonte/php.log`, `lint-final.log`,
+`assets-final.log`, `browser.log` (13 des 14 parcours existants réussis),
+`browser-final.log` (refus joueur corrigé réussi), `entry-final.log` (univers réussi)
+et `entry-public-final.log` (accès publics réussi). Les journaux intermédiaires
+conservent les défauts de contraste et de préparation des nouveaux scénarios ; ils
+ne sont pas présentés comme des réussites globales. Captures dans `recette-initiale/`,
+`recette-finale/`, `recette-acces/` et `recette-publique-finale/`, avec examen visuel
+de l’accueil, des formulaires et des univers sur ordinateur/mobile.
+
+**Quatorze lots sur dix-huit réalisés localement ; quatre restants**, à partir de
+L9 (feedback, patchnotes et documents complémentaires). CI GitHub, push, fusion
+et déploiement restent distincts et ne sont pas réalisés par ce lot.
 
 ## Reprise et états de couverture
 
@@ -2777,7 +2848,7 @@ Le choix A/B ou une demande de combinaison reste attendu avant développement.
 | L7C | Implémenté et vérifié localement | Conception validée ; spirale retenue explicitement pour les distances | Deux vues persistantes, gestes et moteur conservés, bilans par camp ; recette ci-dessous | CI complète, fusion et déploiement distincts |
 | L7D | A implémentée et vérifiée localement | A choisie explicitement après reprise depuis les rapports actuels | 15 PHP / 98 assertions ; cinq parcours navigateur consolidés ; bilan ci-dessous | CI complète, fusion et déploiement distincts |
 | L7E | A implémentée et vérifiée localement | Page 36 A validée explicitement après reprise de la messagerie et des classements | 90 PHP / 569 assertions ; neuf parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
-| L8 | Propositions A/B préparées | Choix attendu | Figcraft pages 38/39 ; 92 cadres et 512 commandes reliées ; conception seulement | Choisir une direction avant réalisation |
+| L8 | A implémentée et vérifiée localement | Page 38 A validée explicitement | 23 PHP / 244 assertions ; 16 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L9 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
@@ -2794,7 +2865,8 @@ L7B page 29 est intégrée localement dans `81807df` ; L7C est enregistré dans 
 validation finale et la décision de géographie. L7D A est intégré dans `5523ac4`.
 L7E page 36 A est validée explicitement, intégrée dans `557061e` et vérifiée localement ;
 la messagerie et les classements existants restent la base de leur présentation.
-Le plan reste à 18 ensembles : treize sont réalisés, cinq restent à traiter.
+L8 page 38 A est validée explicitement, réalisée et vérifiée localement ; bilan ci-dessus.
+Le plan reste à 18 ensembles : quatorze sont réalisés, quatre restent à traiter.
 Vue générale avait été finalisée en avance ; L7A est désormais complet localement. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
 Les validations précédentes restent limitées à leurs lots.
 Aucun push, PR, fusion ou déploiement n’est autorisé par le seul changement de
