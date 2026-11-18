@@ -1905,6 +1905,38 @@ consommations rouges négatives, aucune coupure ou collision détectée. Preuves
 `lot-7B-rangs-*.png`. Le modèle reste la page 29 ; la page 30 sert à son examen.
 Le code du jeu est inchangé ; intégration après validation de la maquette.
 
+### Correction du support : rangs dans les écrans de la page 29 — 18 novembre 2026
+
+L’utilisateur précise que le support à modifier est **29 · L7B · Cartes et lignes ·
+Suivi dépliable**, et non une planche séparée. La reprise part de l’état actuel du
+document, après le retrait de pages par l’utilisateur. Aucune page n’est ajoutée
+ou rétablie. Complexité **4/5** : adaptation des écrans, contrôle des ressources,
+liaisons entre rangs et modes, avec préservation du travail présent.
+
+**16 aperçus sont intégrés directement à la page 29** : Bâtiments et Recherche,
+rangs intermédiaire/supérieur, cartes/lignes, ordinateur/téléphone. Ils reprennent
+les cadres existants, avec leur menu, leurs ressources, les trois files, les flottes
+et les interrupteurs. La première famille illustre le rang ; les autres familles
+restent des repères de composition. Ce sont des états d’exemple, sans action de jeu.
+
+Les coûts calculés précédemment sont présentés dans ces écrans, jusqu’à cinq
+ressources. Les prix sont alignés comme dans le modèle, les consommations sont
+rouges et négatives et le manque est indiqué par ressource, avec des groupes de
+chiffres insécables. Le bouton est présenté indisponible lorsque les stocks fictifs
+ne suffisent pas. Aucun calcul métier ou règle de validation du jeu n’est modifié.
+
+Les contrôles Basique/Interm./Sup. de la première famille conduisent aux aperçus
+correspondants. Deux menus de rang sont prévus pour les lignes sur téléphone ;
+l’interrupteur Condensé conserve le rang montré. Les huit cadres sources gardent
+leur apparence et leurs données : seules leurs destinations de rang évoluent.
+
+Vérification ciblée des 16 aperçus : aucun débordement, chevauchement ou texte coupé
+visible détecté ; coûts et appartenance à la page 29 contrôlés. Le document garde
+les mêmes pages qu’avant l’intervention. Preuves : `lot-7B-rangs-page29-manifest.json`,
+`lot-7B-rangs-page29-verification.json` et captures `lot-7B-page29-*.png`. La référence
+courante est exclusivement la page 29 ; la comparaison précédente est écartée.
+Le code du jeu est inchangé ; aucune CI, intégration ou publication revendiquée.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -1922,7 +1954,7 @@ Le code du jeu est inchangé ; intégration après validation de la maquette.
 | L5 | A implémentée et vérifiée localement | A choisie explicitement | 44 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
 | L6 | A implémentée et vérifiée localement | A choisie explicitement | 32 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
 | L7A | A implémentée et vérifiée localement | A choisie explicitement ; Vue générale conservée | 51 PHP, sept parcours navigateur et 43 captures | CI, intégration et déploiement distincts |
-| L7B | Cartes/lignes et suivi dépliable consolidés | Validation attendue, page 29 | 53 cadres vérifiés et 8 comparaisons de rangs ; consommations négatives, modes et suivi | Réalisation après validation |
+| L7B | Cartes/lignes et suivi dépliable consolidés | Validation attendue, page 29 | 53 cadres modèle et 16 aperçus de rangs dans la page 29 ; deux menus mobiles | Réalisation après validation |
 | L7C à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 

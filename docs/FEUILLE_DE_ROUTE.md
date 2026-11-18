@@ -113,8 +113,9 @@ catalogues en y appliquant Actions directes : version consolidée page 28, 27 ca
 vérifiés, grandes images/rangs conservés. Les corrections suivantes sont consolidées
 page 29 : stocks retirés des cartes, interrupteurs, vrai mode en lignes, suivi fixe
 et panneaux de files/flottes avec annulation. 53 cadres vérifiés et deux aperçus
-défilables. Les consommations deviennent rouges et négatives ; huit comparaisons
-Intermédiaire/Supérieur (page 30) montrent jusqu’à cinq ressources en cartes/lignes.
+défilables. Les consommations deviennent rouges et négatives. Après précision de
+l’utilisateur, 16 aperçus Intermédiaire/Supérieur reprennent directement les écrans
+de la page 29, avec leurs files et interrupteurs, en cartes/lignes sur ordinateur/mobile.
 Validation de la reprise attendue avant intégration.
 CI GitHub, fusion et déploiement restent distincts.
 
