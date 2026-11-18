@@ -175,6 +175,13 @@ patchnotes dépliables et documents conservés avec six ancres de confidentialit
 corrections ; compilation, lint et contrôle du diff réussis. Les contrôles de
 capture privée, quota, absence de JavaScript, publication et lecture sont conservés.
 **Quinze ensembles sur 18 réalisés ; trois restants** : L10, L11, L12.
+L9 A est enregistré dans `dafe1ca`. L10 débute par le sous-lot L10A : accueil de la
+console, quatre espaces de navigation existants et liste des joueurs. Deux propositions
+Figcraft, pages 42 A « Console directe » et 43 B « Pilotage et fiches », sont préparées :
+68 cadres, 894 liens, parité et présentation contrôlées. Données et actions fictives,
+aucun code administratif modifié. Choix attendu avant réalisation ; les autres
+rubriques administratives seront traitées par sous-lots, sans augmenter le compte
+des dix-huit ensembles ni déclarer L10 terminé.
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026

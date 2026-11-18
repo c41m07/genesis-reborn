@@ -2966,6 +2966,87 @@ examinés visuellement après les ajustements de largeur et de contraste.
 **Quinze lots sur dix-huit réalisés localement ; trois restants** : L10, L11, L12.
 Aucun push, CI GitHub, fusion, migration habituelle ou déploiement réalisé par ce lot.
 
+## L10A — Console, espaces et joueurs : propositions A/B — 19 novembre 2026
+
+L9 A est enregistré dans **`dafe1ca`**, avec arbre propre après commit. L10 couvre
+toute l’administration et reste un seul ensemble du plan des dix-huit lots. Il est
+traité par sous-lots cohérents pour permettre les validations avant réalisation.
+Le premier porte sur **trois vues logiques** : accueil de la console, page d’un
+espace (quatre variantes existantes) et liste des joueurs. Les fiches détaillées,
+interventions, modération, univers, animation et exploitation restent aux suites
+du lot ; leurs pages ne sont pas fusionnées dans cet accueil.
+
+Complexité **4/5** : navigation commune, données privées de comptes et actions sur
+les droits. Plan ciblé : examiner layout/navigation et leurs usages, conserver les
+routes des espaces, les lectures ciblées et les contrats de recherche ; représenter
+les états et confirmations ; vérifier les cadres puis attendre le choix avant code.
+Sources : `admin/layout`, `_navigation`, `_page_navigation`, `index`, `group`,
+`section`, `sections/players`, `_players_results`, pagination ; rubriques concernées
+d’`AdminController`, `AdminReadRepository`, `AdminService`, `admin-list` et guide
+d’interface. La fiche joueur est examinée pour repérer sa destination et ses effets
+de consultation, sans ouvrir de fiche réelle ni proposer sa réécriture dans L10A.
+
+Nouvelles pages du fichier Figcraft de bureau :
+
+- **42 · L10A · A — Console directe** : panneaux proches de l’accueil actuel,
+  rubriques en cartes et tableau des comptes à six colonnes sur ordinateur. Sur
+  mobile, les informations des comptes sont empilées sans retirer de champ.
+  Bénéfice : densité et comparaison entre comptes ; limite : lecture des colonnes
+  à adapter soigneusement aux écrans étroits.
+- **43 · L10A · B — Pilotage et fiches** : priorité en tête, rubriques en lignes et
+  comptes présentés en fiches, avec état, rôle, courriel, présence et actions.
+  Bénéfice : lecture individuelle plus explicite ; limite : hauteur supérieure
+  pour parcourir plusieurs comptes.
+
+Couverture équivalente : **68 cadres, 34 par direction**, **894 liens inspectés**
+et six départs de prototype. Accueil, espace joueurs et liste en 1440/768/390 ;
+autres espaces et recherche filtrée en 1440/390. États en 390 : absence de résultat,
+recherche indisponible, pagination, noms longs, compte courant, confirmations de
+promotion/retrait de rôle/suspension, retour simulé, refus, accueil sans priorité,
+relais indisponible, dernières actions et menu. Les deux comptes joueurs de
+l’exemple ouvrent une confirmation de promotion portant leur propre nom.
+Le menu garde retour au jeu, déconnexion et identité visuelle, y compris sur mobile.
+Chaque direction possède un plan de comparaison ; `M` y revient dans le prototype.
+
+Navigation conservée : cinq entrées principales et quatre espaces avec vraies pages,
+puis liens secondaires. Les quatre indicateurs, priorités, accès rapides, missions,
+événements et derniers audits restent fondés sur les données actuellement préparées.
+Un relais indisponible reste « à vérifier », sans zéro trompeur. Aucun nouvel
+indicateur ou chargement global n’est proposé. Les filtres joueurs restent une
+recherche GET par pseudo/courriel, état et rôle ; pagination serveur de 50 lignes,
+tri et paramètres conservés. Sans JavaScript, Rechercher reste disponible ; une
+erreur d’actualisation garde les derniers résultats et les champs saisis.
+
+Garde-fous : `ROLE_ADMIN`, CSRF, contrôles serveur et journalisation conservés ;
+aucune action sur le compte courant dans la liste, aucune suspension d’un autre
+administrateur. Les protections de rôle courant, cible et dernier administrateur
+actif restent dans le service. Les dialogues dessinés illustrent les confirmations
+du navigateur existantes ; la réactivation ne reçoit pas de confirmation ajoutée.
+Les actions ne deviennent pas des liens GET. Aucune promotion, suspension ou autre
+intervention réelle n’est exécutée dans ce lot de conception.
+
+Vérifications : limites des textes, chevauchements, parité et destinations inspectés ;
+**aucun signalement restant**. Douze exports des trois vues principales en 1440/390
+ont été examinés. Les 36 pages antérieures restent inchangées en noms et nombres de
+cadres ; le fichier compte 38 pages et conserve ses 348 variables. Fichier natif
+enregistré sur le plan A ; état de la fenêtre de bureau vérifié, fichier propre.
+
+Limites : données, comptes et dates fictifs ; champs dessinés, choix de filtres et
+opérations simulés, avec quatre comptes représentatifs. Le cadre « Destinations
+conservées » identifie les pages des sous-lots suivants, sans constituer une nouvelle
+page du jeu. Les scénarios de noms longs servent à comparer la lecture ; les valeurs
+réelles et les noms de cible devront provenir des formulaires serveur conservés.
+L’accessibilité, les thèmes réels, permissions, concurrence et comportements seront
+vérifiés lors de l’intégration ; cette maquette ne constitue pas une recette du jeu.
+
+Preuves dans le dossier de conception : `lot-10A-manifest.json`, `lot-10A-plan.json`,
+`lot-10A-verification.json`, `lot-10A-document-avant.json`,
+`lot-10A-document-apres.json`, `lot-10A-enregistrement.json` et exports
+`lot-10A-A-*.png` / `lot-10A-B-*.png`. Seuls le suivi, l’inventaire et la feuille de
+route sont actualisés après le commit L9 ; `git diff --check` est le contrôle adapté.
+Le choix A/B est attendu avant réalisation de L10A. **Quinze ensembles réalisés
+sur dix-huit ; trois restants**, L10 n’est pas déclaré complet par sa conception.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -2989,7 +3070,8 @@ Aucun push, CI GitHub, fusion, migration habituelle ou déploiement réalisé pa
 | L7E | A implémentée et vérifiée localement | Page 36 A validée explicitement après reprise de la messagerie et des classements | 90 PHP / 569 assertions ; neuf parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L8 | A implémentée et vérifiée localement | Page 38 A validée explicitement | 23 PHP / 244 assertions ; 16 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L9 | A implémentée et vérifiée localement | Page 40 A validée explicitement | 7 PHP / 127 assertions ; 5 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
-| L10 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
+| L10 | Premier sous-lot L10A en A/B préparé | Choix attendu pour L10A | Pages 42/43 ; 68 cadres et 894 liens inspectés ; conception seulement | Réalisation L10A puis autres rubriques administratives |
+| L11 | Inventorié | Aucune nouvelle | Non engagé pour cette refonte | Examiner le wiki sans recommencer ses pages dédiées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
 Les commits restent sur `feature/refonte-visuelle` ; L1B A est enregistré dans
