@@ -6,7 +6,7 @@ Lot 1 fusionné dans `dev` par la [PR #69](https://github.com/c41m07/genesis-reb
 
 Les tableaux donnent les conditions complètes et indiquent les exceptions où un autre rang intervient. Les libellés de famille ci-dessous gardent leurs variantes dans le jeu.
 
-Les conditions sont initiales et permanentes après acquisition selon cette grille. Elles ne changent pas pendant les améliorations. Recherches : accès du joueur dans l’univers, depuis toute colonie après déblocage, sans laboratoire local permanent. Bâtiments, vaisseaux et défenses : accès du joueur sur la colonie concernée. Prix, plafonds, durées et conditions de mission restent applicables.
+Les conditions sont initiales et permanentes après acquisition selon cette grille. Elles ne changent pas pendant les améliorations. Recherches : déblocage partagé dans l’univers. Chaque ajout exige aussi le laboratoire du rang commandé, au niveau 1 minimum sur la colonie de lancement. Bâtiments, vaisseaux et défenses : accès du joueur sur la colonie concernée. Prix, plafonds, durées et conditions de mission restent applicables.
 
 ## Bâtiments — 13
 

@@ -1,5 +1,12 @@
 # Roadmap Genesis Reborn
 
+## Laboratoire local pour lancer une recherche — 18 novembre 2026
+
+Le catalogue Recherche indique, sur le rang déjà débloqué, quel laboratoire
+local manque pour lancer la commande. Le lien ouvre sa fiche sur la même
+colonie. La file commune et les fiches restent consultables.
+La [règle de lancement](REGLES.md) s’applique aussi côté serveur.
+
 ## Équilibrage des prix et de l’antimatière
 
 La [grille de référence](COUTS.md) passe à B48/52 et I35/35/30. Les prix

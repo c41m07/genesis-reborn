@@ -362,7 +362,7 @@ l’accès à de nouvelles commandes. Le registre est requalifié explicitement,
 sans réattribuer un accès à partir d’une ancienne possession, clé ou commande.
 Après acquisition selon cette grille, les accès restent permanents dans leur
 portée actuelle : recherches par joueur/univers, autres catégories par joueur/colonie.
-Le laboratoire est une condition initiale ; il n’est pas requis localement après déblocage.
+Le laboratoire était une condition initiale, sans obligation locale après déblocage. La décision du 18 novembre ajoute un minimum local pour les nouvelles commandes.
 
 Le [suivi](PROGRESSION_CARBURANT_UNITES.md) distingue cette implémentation des
 lots durées/carburant, unités économiques et simulations. La redistribution
@@ -1997,3 +1997,16 @@ par AM et 0,25 électricité par H produit en raffinerie, le coût total atteint
 2 électricité par AM. Il correspond au coût de production de 8 H, 4 M ou 2 N.
 Les facteurs de rang continuent de s’appliquer à la production et à la
 consommation. Les débits ci-dessus sont ceux du catalogue de référence.
+
+## Laboratoire local pour lancer une recherche — 18 novembre 2026
+
+Toute nouvelle commande exige un laboratoire du même rang que la recherche,
+au niveau 1 ou plus sur sa colonie de lancement. Les déblocages et les niveaux
+de recherche sont partagés dans l’empire au sein du même univers. Les
+laboratoires avancés demandent la recherche du rang précédent et les niveaux
+locaux de la grille. Les constructions utilisent les technologies de l’empire
+selon leurs propres prérequis.
+
+La file reste commune. La colonie de lancement finance la commande et
+fournit les bonus de durée. Les commandes déjà payées poursuivent leur
+exécution avec leur coût et leur durée enregistrés.

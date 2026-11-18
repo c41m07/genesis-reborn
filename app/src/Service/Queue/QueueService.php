@@ -86,6 +86,10 @@ final class QueueService
             }
             $buildings = $this->repo->levelsByTier(PlanetBuilding::class, ['planet' => $planet]);
             $technologies = $this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $membership]);
+            if ($group === 'technologies' && !$this->access->hasLocalResearchLaboratory($buildings, $tier)) {
+                $laboratory = $this->catalog->getTierForUniverse($membership->universe, 'buildings', 'lab', $tier);
+                throw new \DomainException($laboratory['label'] . ' de niveau 1 requis sur cette colonie pour lancer cette recherche.');
+            }
             $level = 1;
             $previousLevel = null;
             if (in_array($group, ['buildings', 'technologies'], true)) {

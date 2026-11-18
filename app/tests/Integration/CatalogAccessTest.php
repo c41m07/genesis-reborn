@@ -40,11 +40,22 @@ final class CatalogAccessTest extends KernelTestCase
         $this->em->flush();
     }
 
-    private function level(string $group,string $slug,int $level,string $tier='basic'):object
+    private function level(string $group, string $slug, int $level, string $tier = 'basic', ?Planet $planet = null): PlanetBuilding|PlayerTechnology
     {
-        $row=$group==='buildings'?new PlanetBuilding():new PlayerTechnology();
-        if($group==='buildings')$row->planet=$this->planet;else $row->playerUniverse=$this->membership;
-        $row->slug=$slug;$row->tier=$tier;$row->level=$level;$this->em->persist($row);$this->em->flush();return $row;
+        if ($group === 'buildings') {
+            $row = new PlanetBuilding();
+            $row->planet = $planet ?? $this->planet;
+        } else {
+            $row = new PlayerTechnology();
+            $row->playerUniverse = $this->membership;
+        }
+
+        $row->slug = $slug;
+        $row->tier = $tier;
+        $row->level = $level;
+        $this->em->persist($row);
+        $this->em->flush();
+        return $row;
     }
 
     #[\PHPUnit\Framework\Attributes\DataProvider('bunkerTiers')]
@@ -113,6 +124,8 @@ final class CatalogAccessTest extends KernelTestCase
         self::assertTrue($access->acquired($this->membership,$this->other,'technologies','naval_engineering','basic'));
         foreach([$lab,$mine,$nano,$engineering,$naval] as $row)$this->em->remove($row);$this->em->flush();
         $queue->add($this->membership,$this->planet,'buildings','shipyard',1,str_repeat('a',32));
+        // Le niveau 1 local suffit pour lancer une recherche déjà débloquée au laboratoire de niveau 2.
+        $this->level('buildings', 'lab', 1, planet: $this->other);
         $queue->add($this->membership,$this->other,'technologies','naval_engineering',1,str_repeat('b',32));
         self::assertSame(2,$this->em->getRepository(QueueItem::class)->count());
         $cards=self::getContainer()->get(ColonyView::class)->data($this->membership,$this->planet,true,'buildings')['cards'];
@@ -127,6 +140,57 @@ final class CatalogAccessTest extends KernelTestCase
         $tree=self::getContainer()->get(\App\Service\Colony\CatalogueInsights::class)->tree([],[],$this->membership,$this->planet);
         $nodes=array_merge(...array_values($tree));$node=array_values(array_filter($nodes,static fn($n)=>$n['key']==='buildings:shipyard-basic'))[0];
         self::assertTrue($node['available']);self::assertTrue($node['acquired']);
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('researchRanks')]
+    public function testUnlockedResearchRequiresALaboratoryOfItsRankOnTheStartingColony(string $tier, string $laboratoryLabel): void
+    {
+        $this->level('buildings', 'lab', 10, $tier);
+        if ($tier !== 'basic') {
+            $this->level('buildings', 'lab', 10, planet: $this->other);
+        }
+        $queue = self::getContainer()->get(QueueService::class);
+        $queue->synchronize($this->membership);
+        $access = self::getContainer()->get(CatalogAccess::class);
+        self::assertTrue($access->acquired($this->membership, $this->other, 'technologies', 'engineering_foundations', $tier));
+
+        $connection = $this->em->getConnection();
+        $stocksQuery = 'SELECT current_stock FROM planet_resource WHERE planet_id = ? ORDER BY resource_type';
+        $stocks = $connection->fetchFirstColumn($stocksQuery, [$this->other->id]);
+        $colonyId = $this->other->id;
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage($laboratoryLabel . ' de niveau 1 requis sur cette colonie');
+        try {
+            $queue->add($this->membership, $this->other, 'technologies', 'engineering_foundations', 1, str_repeat('5', 32), $tier);
+        } finally {
+            self::assertSame(0, (int) $connection->fetchOne('SELECT COUNT(*) FROM queue_item'));
+            self::assertSame($stocks, $connection->fetchFirstColumn($stocksQuery, [$colonyId]));
+        }
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('researchRanks')]
+    public function testLevelOneLaboratoryCanStartAnEmpireUnlockOfItsRank(string $tier, string $laboratoryLabel): void
+    {
+        // Le niveau 2 sur la première colonie débloque l’architecture navale pour tout l’univers.
+        $this->level('buildings', 'lab', 2, $tier);
+        $this->level('technologies', 'engineering_foundations', 2, $tier);
+        $this->level('buildings', 'lab', 1, $tier, $this->other);
+
+        $queue = self::getContainer()->get(QueueService::class);
+        $queue->add($this->membership, $this->other, 'technologies', 'naval_engineering', 1, str_repeat('6', 32), $tier);
+
+        $item = $this->em->getRepository(QueueItem::class)->findOneBy(['planet' => $this->other]);
+        self::assertNotNull($item, $laboratoryLabel . ' de niveau 1 doit suffire après le déblocage.');
+        self::assertSame($tier, $item->tier);
+        self::assertSame(1, $item->itemLevel);
+    }
+
+    public static function researchRanks(): iterable
+    {
+        yield 'Basique' => ['basic', 'Laboratoire colonial'];
+        yield 'Intermédiaire' => ['intermediate', 'Institut de recherche orbitale'];
+        yield 'Supérieur' => ['superior', 'Complexe scientifique planétaire'];
     }
 
     public static function industrialBuildingRanks(): iterable

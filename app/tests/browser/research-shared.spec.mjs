@@ -34,8 +34,21 @@ test('Une recherche ajoutée depuis une autre colonie rejoint la même file et l
     await page.locator('#item-engineering_foundations-basic').getByRole('button', { name: /Rechercher le niveau 1/ }).click();
     await expect(queue).toContainText('Recherche commune');
     await expect(queue).toContainText('depuis Aster');
+    runIsolatedSql(project, `DELETE FROM planet_building WHERE planet_id=${two} AND slug='lab'`);
+    await page.setViewportSize({ width: 390, height: 900 });
     await page.goto(`/planetes/${two}?section=technologies`);
     const card = page.locator('#item-engineering_foundations-basic');
+    await expect(card).toBeVisible();
+    await expect(card.getByRole('button', { name: /Rechercher le niveau 2/ })).toHaveCount(0);
+    const laboratoryLink = card.getByRole('link', { name: 'Laboratoire colonial de niveau 1', exact: true });
+    await expect(laboratoryLink).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+    await laboratoryLink.press('Enter');
+    await expect(page).toHaveURL(new RegExp(`/planetes/${two}\\?section=buildings.*#item-lab-basic`));
+    await expect(page.locator('#item-lab-basic').getByRole('button', { name: /Améliorer au niveau 1/ })).toBeVisible();
+
+    runIsolatedSql(project, `INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${two},'lab','basic',1)`);
+    await page.goto(`/planetes/${two}?section=technologies`);
     await expect(card.getByRole('button', { name: /Rechercher le niveau 2/ })).toBeVisible();
     await card.getByRole('button', { name: /Rechercher le niveau 2/ }).click();
     expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM queue_item WHERE player_universe_id=${membership} AND queue_type='research'`)).toBe('2');
@@ -62,6 +75,24 @@ test('Une recherche ajoutée depuis une autre colonie rejoint la même file et l
     await page.goto(`/planetes/${one}?section=technologies`);
     await expect(queue.locator('.operation-idle')).toContainText('Aucune commande en cours');
     await expect(page.locator('#item-engineering_foundations-basic').getByRole('button', { name: /Rechercher le niveau 1/ })).toBeVisible();
+});
+
+test('Une recherche avancée débloquée dans l’empire demande son laboratoire local', async ({ page }) => {
+    const { one, two, project } = await colonies(page);
+    runIsolatedSql(project, `INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${one},'lab','intermediate',1)`);
+    await page.goto(`/planetes/${two}?section=technologies`);
+    await page.locator('#building-tab-engineering_foundations-intermediate').click();
+
+    const research = page.locator('#item-engineering_foundations-intermediate');
+    await expect(research).toBeVisible();
+    await expect(research.getByRole('button', { name: /Rechercher le niveau 1/ })).toHaveCount(0);
+    await research.getByRole('link', { name: 'Institut de recherche orbitale de niveau 1', exact: true }).click();
+    await expect(page.locator('#item-lab-intermediate').getByRole('heading', { name: 'Institut de recherche orbitale', exact: true })).toBeVisible();
+
+    runIsolatedSql(project, `INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${two},'lab','intermediate',1)`);
+    await page.goto(`/planetes/${two}?section=technologies`);
+    await page.locator('#building-tab-engineering_foundations-intermediate').click();
+    await expect(research.getByRole('button', { name: /Rechercher le niveau 1/ })).toBeEnabled();
 });
 
 test('Les anciennes recherches parallèles restent actives et les commandes payées attendent sans changement', async ({ page }, info) => {
