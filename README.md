@@ -724,7 +724,11 @@ Le lot Événements garde `/evenements` comme entrée **Événements et bonus** 
 place **Défis et rotations** sur `/evenements/defis`. Les fiches de défi gardent
 leurs adresses et leurs objectifs. Les événements en cours et à venir disposent
 chacun de leur pagination ; les défis sont également présentés par pages de 25.
-Le panneau commun conserve ses informations et son compteur. Aucune règle de
+Annonces et défis sont présentés en lignes ; la participation est placée à côté
+de l’objectif sur grand écran, puis en dessous sur mobile. Le menu commun est
+repliable sur mobile et reste ouvert sans JavaScript. Les dates des fiches
+restent en UTC, le contenu complet des boîtes et les états des objets restent
+consultables. Le panneau commun conserve ses informations et son compteur. Aucune règle de
 production, de contribution ou de récompense ne change. [Bilan de navigation](docs/NAVIGATION_PAGES_DEDIEES.md).
 
 Le lot Administration sépare la liste des univers, leur création et leur fiche de

@@ -2064,3 +2064,17 @@ Versions, CSRF, restrictions de vacances, minimums, présence à la clôture et 
 unique de récompense restent inchangés. Cette validation ne modifie aucune
 valeur de jeu et ne valide pas les lots suivants.
 [Recette et limites](REFONTE_VISUELLE_INTERFACES.md).
+
+
+## Refonte visuelle L6 : proposition A — 18 novembre 2026
+
+L’utilisateur choisit A pour Événements et Défis : listes en lignes et fiche
+avec objectif/récompense et participation rapprochés sur grand écran. Le menu
+secondaire se replie sur mobile et reste ouvert sans JavaScript. Les trois
+adresses, ancres, paginations, conditions et destinations des actions sont conservées.
+
+Le panneau global des événements reste hors du lot. Le résumé partagé avec
+l’administration n’est pas modifié ; ni les calculs, règles de contribution,
+seuils, dates, récompenses ou traitements différés. Un objet déjà acquis reste
+accessible après annulation. Cette validation ne valide pas les lots suivants.
+[Recette et limites](REFONTE_VISUELLE_INTERFACES.md).

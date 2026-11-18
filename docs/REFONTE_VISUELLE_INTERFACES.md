@@ -113,8 +113,8 @@ Les liens du prototype simulent la navigation et n’exécutent aucune action du
 | L11 | Wiki : accueil, chapitre, recherche et références | 3/5 · 3/5 | Pages déjà séparées, anciens fragments et formules dépliables. |
 | L12 | Cohérence, erreurs et composants communs restants | 4/5 · 4/5 | Revue transversale ; adaptations communes rattachées au lot consommateur. |
 
-Le tableau comporte **18 lots prévus** : sept ensembles réalisés localement
-(L1A/L1B/L1C, L2, L3, L4 et L5), onze restants. Certains ensembles complexes seront
+Le tableau comporte **18 lots prévus** : huit ensembles réalisés localement
+(L1A/L1B/L1C, L2, L3, L4, L5 et L6), dix restants. Certains ensembles complexes seront
 subdivisés pendant leur analyse ;
 ce total ne fixe donc pas le nombre final de livraisons. Les complexités seront
 réévaluées avant chaque sous-tâche. À la demande de l’utilisateur, les lots de
@@ -1358,7 +1358,7 @@ existante ou modification de données habituelles. Performance non mesurée ;
 ces contrôles ne constituent pas un audit RGAA. CI GitHub, fusion et déploiement
 restent distincts.
 
-## L6 — Événements et Défis, deux propositions préparées — 18 novembre 2026
+## L6 — Événements et Défis, proposition A retenue — 18 novembre 2026
 
 L5 A est enregistré dans `9eb316e`. Le lot conserve les trois routes existantes :
 `/evenements`, `/evenements/defis` et `/evenements/defis/{id}`. Complexité :
@@ -1405,8 +1405,7 @@ Les deux paginations d’annonces restent indépendantes par 25, comme celle des
 défis ; états vides et anciens liens conservés. Le panneau global Événements,
 ses compteurs et actualisations restent hors du lot. Structures grises sauvegardées
 avant la couleur ; styles propres au lot dans la continuité des références.
-Les dix-neuf pages précédentes sont conservées. Aucun code du jeu L6 n’est modifié ;
-les propositions attendent leur propre choix et la recette du jeu reste à faire.
+Les dix-neuf pages précédentes sont conservées à l’issue de la conception.
 
 Contrôle du document : **38 cadres et 250 liens** vers des destinations existantes ;
 aucun texte hors cadre, superposé ou coupé par son parent. Empreintes des dix-neuf
@@ -1423,6 +1422,54 @@ Preuves près du `.figcraft` : `lot-6-manifest.json`, `lot-6-preservation-avant.
 Version finale `L6 - propositions A B pour validation`, page A sélectionnée.
 Ces vérifications de conception ne constituent ni une recette du jeu ni un audit RGAA.
 
+L’utilisateur choisit **A** (« j’aime bien le A »). Validation conservée dans
+Figcraft `L6 - A validee par utilisateur`, sans modification des pages antérieures.
+
+### Réalisation A et vérifications locales
+
+Les trois pages gardent leurs URL. Annonces en lignes avec dates à droite ; défis
+avec identité/objectif, progression/récompense et accès rapprochés. Sur la fiche,
+l’objectif est à gauche et la participation à droite à partir de 1201 px ; les
+panneaux s’empilent ensuite. Le menu secondaire réutilise le composant natif,
+ouvert sans JavaScript. En cours/À venir restent deux sections d’un même document,
+avec leurs ancres et paginations indépendantes.
+
+`event-workspace.css` est limité à `.event-redesign`. Le résumé partagé avec
+l’administration reste inchangé. Les liens d’exploration/combat/transport sont
+déplacés avec leurs conditions existantes ; aucun accès, calcul, chargement,
+contrôleur JavaScript ou service PHP n’est modifié. Les dates, seuils, boîtes,
+états personnels et l’ordre de priorité objet attribué/annulation restent existants.
+Le panneau global, ses compteurs et ses actualisations restent hors du lot.
+
+Contrôles réussis :
+
+- `make validate`, `make lint-static` (201 Twig, 80 YAML, PHP et conteneur),
+  `make assets`, syntaxe JavaScript et `git diff --check`.
+- **32 tests PHP / 175 assertions** sur une pile MariaDB jetable : `EventPagesTest`,
+  `WeeklyRotationTest`, `AdminEventPlannerTest`. Isolation, filtres, pagination,
+  absence de chargement d’historique sur l’entrée, objectifs/seuils, classement
+  ex æquo, annulation et conservation des récompenses acquises couverts.
+- **Trois parcours navigateur réussis dès le premier passage** : pages/thèmes/
+  anciens liens et sans JavaScript ; publication guidée puis attribution réelle
+  d’une boîte dans la pile de test et ouverture ; recette A des états. Les
+  assertions existantes sont conservées ; seul le menu mobile est ouvert avant
+  d’en parcourir les liens. Après finition des lignes de boîte sur mobile et du
+  lien de retour, seule la recette A est relancée : réussite.
+- Six vues/états à 1440/768/390/320 px et deux thèmes, sans débordement ; Axe
+  sans violation dans l’espace à 390 px. Boîte complète avec ressource à zéro,
+  Top 3 et classement personnel, transport sans objectif global, planification,
+  objectif collectif manqué, minimum individuel manqué, objet disponible/en attente/
+  utilisé et objet acquis avant annulation vérifiés. Clavier, focus, historique et
+  rechargement conservés. Les dates UTC des fiches et le fuseau des listes restent distincts.
+
+**66 captures réelles finales**, indexées dans
+`output/playwright/event-workspace/captures-jeu-L6-A/` et `captures-jeu-L6-A/` près
+du fichier Figcraft. Nouveau `event-workspace.spec.mjs` et adaptation ciblée de
+`event-pages.spec.mjs`. README, architecture, guide et suivi synchronisés.
+Aucune dépendance installée, migration sur base existante ou donnée habituelle
+modifiée. Performance non mesurée ; ces contrôles ne constituent pas un audit
+RGAA. CI GitHub, fusion et déploiement restent distincts.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -1438,7 +1485,7 @@ Ces vérifications de conception ne constituent ni une recette du jeu ni un audi
 | L3 | A implémentée et vérifiée localement | A choisie explicitement | 22 PHP, sept parcours navigateur et 50 captures | CI, intégration et déploiement distincts |
 | L4 | A implémentée et vérifiée localement | A choisie explicitement | 34 PHP, six parcours navigateur consolidés et 52 captures | CI, intégration et déploiement distincts |
 | L5 | A implémentée et vérifiée localement | A choisie explicitement | 44 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
-| L6 | Propositions A/B préparées | Choix attendu | 38 cadres à 1440/768/390 px ; objectifs et états documentés | Conception seulement ; réalisation après choix |
+| L6 | A implémentée et vérifiée localement | A choisie explicitement | 32 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
 | L7A à L11 | Inventorié, sauf Vue générale déjà finalisée | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
@@ -1449,8 +1496,8 @@ La Vue générale est finalisée dans `6b3bb70`, avant L2C (compositions),
 L3 A est enregistré dans `16a9173`, réalisé et vérifié localement.
 L4 A est enregistré dans `e13e588`, réalisé et vérifié localement.
 L5 A est enregistré dans `9eb316e`, réalisé et vérifié localement.
-L6 attend le choix A/B dans les pages Figcraft 20/21.
-Le plan reste à 18 ensembles : sept sont réalisés, onze restent à traiter.
+L6 A est réalisé localement ; L7A constitue le prochain ensemble.
+Le plan reste à 18 ensembles : huit sont réalisés, dix restent à traiter.
 Vue générale constitue aussi une avance ciblée de L7A, sans valider tout ce lot. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
 Les validations précédentes restent limitées à leurs lots.
 Aucun push, PR, fusion ou déploiement n’est autorisé par le seul changement de

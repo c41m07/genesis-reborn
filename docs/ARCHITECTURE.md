@@ -833,6 +833,16 @@ sur les pages suivantes. Les exclusions d’archivage restent celles des listes
 actuelles ; une ancienne fiche archivée reste accessible selon ses droits existants.
 `ChallengeQueryService::view` garde les calculs métier et lectures personnelles.
 
+L6 A réorganise les trois templates de pages et leur navigation. Le style
+`event-workspace.css` reste limité à `.event-redesign` : annonces avec dates à
+droite, défis en lignes et fiche avec participation à droite à partir de 1201 px,
+puis une colonne. Le menu natif partagé conserve `page` sur les listes et
+`location` sur la fiche, et reste ouvert sans JavaScript. Le résumé
+`events/_challenge_summary` partagé avec l’administration n’est pas modifié.
+Les liens de participation gardent leurs conditions et destinations ; un objet
+déjà attribué reste présenté avant le cas d’annulation. Aucun nouveau calcul,
+contrôleur JavaScript, chargement ou traitement métier n’est ajouté.
+
 `EventPanelService` réutilise les mêmes critères, sans changer son périmètre
 commun : annonces/bonus applicables et occurrences en cours ou programmées.
 Il conserve toutes ses informations, son compteur fermé et ses comptes à rebours ;

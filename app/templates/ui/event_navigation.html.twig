@@ -1,6 +1,14 @@
-<nav class="ui-tabs space-navigation" aria-label="Navigation des événements">
+{% set eventDestinations = [] %}
+{% set currentLabel = '' %}
 {% for destination in [{route:'app_game_events',label:'Événements et bonus'},{route:'app_game_challenges',label:'Défis et rotations'}] %}
-{% set active=route==destination.route or destination.route=='app_game_challenges' and route=='app_challenge' %}
-<a href="{{ path(destination.route) }}"{% if active %} class="active" aria-current="{{ route=='app_challenge' ? 'location' : 'page' }}"{% endif %}>{{ destination.label }}</a>
+{% set active = route == destination.route or destination.route == 'app_game_challenges' and route == 'app_challenge' %}
+{% set eventDestinations = eventDestinations|merge([destination|merge({active:active})]) %}
+{% if active %}{% set currentLabel = destination.label %}{% endif %}
 {% endfor %}
-</nav>
+{% include 'ui/space_navigation.html.twig' with {
+    destinations:eventDestinations,
+    navigationLabel:'Navigation des événements',
+    currentLabel:currentLabel,
+    currentAriaValue:route == 'app_challenge' ? 'location' : 'page',
+    compact:true
+} only %}

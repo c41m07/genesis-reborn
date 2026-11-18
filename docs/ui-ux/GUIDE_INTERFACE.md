@@ -299,3 +299,15 @@ active avec progression à gauche et don à droite, puis une colonne ; aucun
 formulaire sur une fiche close ou pendant les vacances. Maximums de don en texte,
 libellés et confirmations existants. Styles limités à `.project-redesign` ;
 [recette et captures](../REFONTE_VISUELLE_INTERFACES.md).
+
+## Événements et Défis — proposition A du lot L6
+
+Deux listes dédiées et une fiche par défi, avec menu secondaire natif partagé.
+Annonces et bonus en lignes, dates regroupées ; défis avec identité, progression/
+récompense et accès rapprochés sur grand écran. Fiche avec objectif/récompense
+à gauche et participation/action à droite ; une colonne sur tablette/mobile.
+Sections En cours/À venir sur le même document, avec ancres et paginations
+indépendantes. Les données personnelles et les états des objets restent visibles,
+y compris un objet déjà acquis avant annulation. Les dates UTC des fiches et le
+résumé utilisé par l’administration sont conservés. Styles limités à
+`.event-redesign` ; [recette et captures](../REFONTE_VISUELLE_INTERFACES.md).

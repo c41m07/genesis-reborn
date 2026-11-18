@@ -61,3 +61,4 @@ import './styles/fleet-compositions.css';
 import './styles/inventory-workspace.css';
 import './styles/account-workspace.css';
 import './styles/guild-project-workspace.css';
+import './styles/event-workspace.css';
