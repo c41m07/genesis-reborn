@@ -113,8 +113,9 @@ Les liens du prototype simulent la navigation et n’exécutent aucune action du
 | L11 | Wiki : accueil, chapitre, recherche et références | 3/5 · 3/5 | Pages déjà séparées, anciens fragments et formules dépliables. |
 | L12 | Cohérence, erreurs et composants communs restants | 4/5 · 4/5 | Revue transversale ; adaptations communes rattachées au lot consommateur. |
 
-Le tableau comporte **18 lots prévus** : trois lots réalisés localement (L1A/L1B/L1C),
-15 restants. Certains ensembles complexes seront subdivisés pendant leur analyse ;
+Le tableau comporte **18 lots prévus** : cinq ensembles réalisés localement
+(L1A/L1B/L1C, L2 et L3), treize restants. Certains ensembles complexes seront
+subdivisés pendant leur analyse ;
 ce total ne fixe donc pas le nombre final de livraisons. Les complexités seront
 réévaluées avant chaque sous-tâche. À la demande de l’utilisateur, les lots de
 cette mission se poursuivent par commits sur la branche commune, sans fusion
@@ -1131,6 +1132,77 @@ Documentation synchronisée dans le même lot. Aucune dépendance installée, ba
 habituelle modifiée ou migration existante appliquée. CI GitHub, fusion et
 déploiement restent distincts ; performance non mesurée.
 
+## L4 — Mon compte, deux propositions préparées — 18 novembre 2026
+
+L3 A est enregistré dans `16a9173`. Le lot suivant conserve quatre pages dédiées :
+`/profil`, `/profil/preferences`, `/profil/vacances`, `/profil/supprimer`.
+Complexité : conception **3/5**, réalisation **5/5** en raison des confirmations,
+de la déconnexion et des portées compte/univers. Sources ciblées examinées :
+les quatre templates et leur navigation, `ProfileController`, `PreferencesController`,
+`VacationController`, `ProfileType`, `PreferencesType`, leurs données de formulaire,
+`ProfileService`, `AccountDeletionService` et les conditions de `VacationPolicy`.
+Aucun audit global ni chantier métier rouvert.
+
+Deux pages ajoutées au même document Figcraft de bureau :
+
+- **16 · L4 · A — Compte structuré** : champs et confirmation côte à côte sur
+  ordinateur pour les identifiants, les vacances et la suppression. Préférences
+  regroupées, avec raccourcis et réception des transports en deux colonnes larges.
+  Sections empilées sur tablette/mobile ; les champs proches restent en deux
+  colonnes lorsque leur largeur le permet.
+- **17 · L4 · B — Compte en sections** : champs puis confirmation en sections
+  successives ; préférences et champs toujours empilés, même sur ordinateur.
+  Même contenu et mêmes conditions dans les deux propositions.
+
+Les quatre tâches conservent leurs URL, formulaires et liens de retour existants.
+La navigation secondaire commune garde la page active identifiable et se replie
+sur mobile. Le mot de passe facultatif reste un dépliable dans le formulaire
+unique des identifiants : les cadres fermé/ouvert représentent le même état de
+page, pas deux tâches ni deux formulaires. Les vacances inactives/actives restent
+également deux états de la même page. Aucun onglet JavaScript ne remplace les
+pages dédiées ; les formulaires serveur restent prévus sans JavaScript.
+
+La portée reste explicite : identifiants et préférences communs à tous les
+univers ; vacances limitées à l’empire de l’univers sélectionné ; suppression
+définitive du compte dans tous les univers. Un profil enregistré ferme la session
+courante et demande une reconnexion. Le mot de passe actuel est obligatoire ;
+les deux champs de remplacement restent facultatifs, jamais préremplis.
+Préférences conservées : thème, fuseau horaire, deux vitesses, réception des
+transports et trois options de lecture, avec un seul enregistrement.
+
+Les conditions actuelles de vacances sont reprises : minimum 48 heures, maximum
+90 jours, délai de 15 jours, flottes rentrées et règles d’orbite/inactivité.
+Aucune date de fin saisissable ajoutée. L’indisponibilité, le refus d’activation,
+l’absence d’univers et la sortie avant 48 heures sont explicités dans les états.
+La suppression garde mot de passe, case de confirmation, portée sur tous les
+univers, conversion des empires, conservation des historiques et refus du dernier
+administrateur actif ou d’une conversion impossible. Ces actions sont simulées
+et ces protections devront être vérifiées dans le jeu après le choix utilisateur.
+
+**38 cadres** : quatre pages, mot de passe déplié et vacances actives, chacun à
+1440/768/390 px et dans les deux options, plus deux planches d’états. Données
+fictives et mots de passe vides. Structures grises enregistrées avant mise en
+couleur ; variables propres au lot et boutons réutilisables, dont une action de
+suppression distincte. Les quinze pages précédentes, dont Vue générale, sont
+conservées intégralement.
+
+Contrôle du document : **38 cadres et 268 liens** vers une destination existante ;
+aucun texte hors cadre, superposé ou coupé par son parent. Empreintes des quinze
+pages antérieures inchangées, dont la référence Vue générale. Exports relus :
+identifiants A/B sur ordinateur, mot de passe déplié sur mobile, préférences sur
+tablette/mobile, vacances actives sur mobile et suppression sur ordinateur/mobile.
+Manifestes et preuves conservés près du `.figcraft` : `lot-4-manifest.json`,
+`lot-4-preservation-avant.json`, `lot-4-verification.json` et
+`lot-4-{A,B}-{profile,preferences,vacation,delete,profile-password,vacation-active}-{largeur}.png`.
+Après précision de deux textes (vitesse par défaut et caractères du nom), les
+huit cadres concernés sont revérifiés : aucun défaut de limites ou superposition ;
+rapport complémentaire `lot-4-verification-textes.json`. Version sauvegardée :
+`L4 - propositions A B pour validation`.
+Ces contrôles de conception ne constituent ni une recette du jeu ni un audit RGAA.
+
+Les propositions attendent le choix explicite de l’utilisateur. Aucun code du
+jeu L4 n’est modifié, aucune action de compte réelle ni migration n’est exécutée.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -1144,14 +1216,16 @@ déploiement restent distincts ; performance non mesurée.
 | L2B | A implémentée et vérifiée localement | A choisie explicitement | 60 tests PHP, 14 parcours navigateur consolidés et 24 captures | CI complète et intégration distinctes |
 | L2C | A implémentée et vérifiée localement | A choisie explicitement | 27 PHP, cinq parcours navigateur consolidés et 36 captures | CI, intégration et déploiement distincts |
 | L3 | A implémentée et vérifiée localement | A choisie explicitement | 22 PHP, sept parcours navigateur et 50 captures | CI, intégration et déploiement distincts |
-| L4 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
+| L4 | Propositions A/B préparées | Choix attendu | 38 cadres à 1440/768/390 px ; états et confirmations documentés | Conception seulement ; réalisation après choix |
+| L5 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
 Les commits restent sur `feature/refonte-visuelle` ; L1B A est enregistré dans
 `1e390a9`, L1C A dans `1a33d14`, L2A A dans `ff6c324`, L2B A dans `88d68e3`.
 La Vue générale est finalisée dans `6b3bb70`, avant L2C (compositions),
 à la demande de l’utilisateur. L2C A est enregistré dans `da86685` ; L2 est donc complet localement.
-L3 A est réalisé et vérifié localement ; L4 constitue le prochain ensemble.
+L3 A est enregistré dans `16a9173`, réalisé et vérifié localement.
+L4 attend le choix A/B dans les pages Figcraft 16/17.
 Le plan reste à 18 ensembles : cinq sont réalisés, treize restent à traiter.
 Vue générale constitue aussi une avance ciblée de L7A, sans valider tout ce lot. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
 Les validations précédentes restent limitées à leurs lots.

@@ -74,7 +74,11 @@ compteurs, capacité commune en largeur, choix guidé des boosts, boîtes en lig
 et attente chronologique. 22 tests PHP / 318 assertions, sept parcours navigateur
 et 50 captures ; contrôles statiques et compilation réussis. Les maquettes
 précédentes sont préservées. **Cinq ensembles réalisés sur 18, treize restants**.
-Le prochain ensemble est Mon compte / préférences / vacances / suppression (L4).
+L3 est enregistré dans `16a9173`. Mon compte / préférences / vacances / suppression
+(L4) est préparé dans Figcraft, pages 16/17 : Compte structuré (A) ou Compte en
+sections (B). Quatre pages existantes et deux états détaillés à 1440/768/390 px,
+plus les planches de confirmations, soit 38 cadres. Les quinze pages précédentes
+sont conservées. Le choix A/B reste attendu avant toute modification du jeu L4.
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026
