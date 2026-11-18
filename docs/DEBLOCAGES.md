@@ -1,4 +1,4 @@
-# Déblocages initiaux permanents — grille actualisée le 17 novembre 2026
+# Déblocages initiaux permanents — grille actualisée le 18 novembre 2026
 
 Lot 1 fusionné dans `dev` par la [PR #69](https://github.com/c41m07/genesis-reborn/pull/69), après CI complète réussie. Voir le [suivi de mission](PROGRESSION_CARBURANT_UNITES.md) pour les vérifications et l’état réel de l’intégration. Aucune activation sur la base de jeu ni publication Alpha annoncée.
 
@@ -31,7 +31,7 @@ Pour les huit autres familles, les conditions suivantes s’appliquent dans chac
 
 | Famille | Conditions du même rang |
 |---|---|
-| Piège à antimatière (`mine_antimatter`) | Raffinerie d’hydrogène 3 + Laboratoire colonial 2 |
+| Piège à antimatière (`mine_antimatter`) | Raffinerie d’hydrogène 5 + Génie civil colonial 2 |
 | Chantier d’assemblage (`shipyard`) | Mine à ciel ouvert 2 + Atelier de nanofabrication 2 |
 | Bunker de défense (`fortress`) | Mine à ciel ouvert 1 + Atelier de nanofabrication 1 |
 | Dépôt de minerais (`storage_metal`) | Mine à ciel ouvert 5 |
@@ -120,7 +120,7 @@ Toutes les conditions appartiennent au rang demandé.
 
 • Métal 2 + nano 2 → chantier 1 → chasseur et sonde, sans recherche supplémentaire.
 
-• Hydrogène 3 + laboratoire 2 → piège à antimatière ; piège 5 → stockage d’antimatière.
+• Producteur d’hydrogène 5 sur la colonie + Génie civil colonial 2 dans l’univers → piège à antimatière du même rang. Le piège 5 ouvre ensuite le stockage d’antimatière du même rang.
 
 • Mine de métal 1 + atelier de nanofabrication 1 → bunker 1 → défense anti-léger, sans chantier, laboratoire ni recherche supplémentaire.
 

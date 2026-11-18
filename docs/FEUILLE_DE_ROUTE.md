@@ -45,6 +45,12 @@ navigateur ciblés réussissent. Publication et fusion conditionnelle autorisée
 La CI complète sur la dernière révision est requise avant fusion ; aucune migration de données
 ni livraison Alpha. Les recommandations précédentes ne remplacent pas cette décision.
 
+## Prérequis du Piège à antimatière — 18 novembre 2026
+
+Le [déblocage par rang](DEBLOCAGES.md#bâtiments--13) exige le producteur
+d’hydrogène niveau 5 sur la colonie et la recherche industrielle du même rang
+au niveau 2. Les accès acquis sont conservés.
+
 ## Prérequis des producteurs et du laboratoire — 17 novembre 2026
 
 Grille validée implémentée : quatre producteurs Intermédiaires après Basique 25

@@ -85,9 +85,11 @@ Laboratoire colonial Basique 25 + Institut de recherche orbitale Intermédiaire 
 et Ingénierie de chantier automatisée Intermédiaire 5. La recherche du rang
 précédent évite un cycle ; le plafond du laboratoire reste 25.
 
-Les huit autres bâtiments gardent leurs conditions du même rang : les stockages
-exigent leur producteur 5, le chantier métal 2 + nano 2, le piège hydrogène 3 +
-laboratoire 2 et le bunker métal 1 + nano 1, sans recherche supplémentaire.
+Les stockages exigent leur producteur niveau 5, le chantier métal 2 et nano 2,
+et le bunker métal 1 et nano 1, toujours dans le rang demandé. Le Piège à
+antimatière exige le producteur d’hydrogène niveau 5 sur la colonie et la
+recherche Génie civil colonial niveau 2 dans l’univers, tous deux du rang demandé.
+Le laboratoire niveau 1 du même rang sert au déblocage initial de cette recherche.
 Les accès déjà acquis restent conservés ; cette révision ne change pas la version
 du registre et ne nécessite aucune nouvelle requalification. Coûts, durées,
 plafonds et surcharges d’univers restent applicables. L’effet de ces nouveaux
