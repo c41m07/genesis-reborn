@@ -25,6 +25,12 @@ final class ProgressionOperationsReference
                 $data[$group][$slug][$field] = $seconds;
             }
         }
+        foreach ($data['buildings'] as $slug => $definition) {
+            if (isset($definition['storage_resource'])) {
+                // À la date de l’étude, les trois rangs de stockage étaient sans plafond.
+                unset($data['buildings'][$slug]['tier_max_levels']);
+            }
+        }
         foreach ($reference['fuel_profiles'] as $slug => $profile) {
             $data['ships'][$slug] = array_replace($data['ships'][$slug], $profile);
         }
