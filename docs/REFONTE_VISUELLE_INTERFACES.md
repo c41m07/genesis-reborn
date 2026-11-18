@@ -1253,6 +1253,65 @@ Aucun changement de configuration globale, dépendance installée, donnée habit
 modifiée ou migration sur une base existante. Ces contrôles ciblés ne constituent
 pas un audit RGAA ; performance non mesurée, CI GitHub/fusion/déploiement distincts.
 
+## L5 — Projets collectifs, deux propositions préparées — 18 novembre 2026
+
+L4 A est enregistré dans `e13e588`. Le lot conserve les trois listes dédiées
+`/guildes/projets`, `/guildes/projets/disponibles`, `/guildes/projets/historique`
+et la fiche `/guildes/projets/{id}`. Complexité : conception **3/5**, réalisation
+**4/5**, avec droits de lancement, dons définitifs, versions, univers et minimums.
+Sources ciblées examinées : contrôleur, préparation des listes/fiches, service,
+règles de projets, six templates et deux navigations ; guide courant des projets.
+Les lectures ciblées, pagination et contrôles métier ne sont pas repensés.
+
+Deux pages ajoutées au même document Figcraft :
+
+- **18 · L5 · A — Projets en lignes** : identité, financement du palier et
+  contribution personnelle alignés sur grand écran. Modèles disponibles en lignes,
+  avec conditions utiles et lancement rapprochés. Sur la fiche active, progression
+  à gauche et choix de colonie/don à droite ; une colonne sur tablette/mobile.
+- **19 · L5 · B — Projets en cartes** : deux cartes par ligne sur ordinateur,
+  informations successives dans chaque carte. La fiche place la progression
+  avant le formulaire de contribution, y compris sur ordinateur. Une colonne
+  sur tablette/mobile. Même contenu, minimums et restrictions dans les deux options.
+
+Les listes et la fiche restent des pages autonomes, avec navigation de guilde
+commune puis navigation des projets, toutes deux compactes sur mobile. Les
+contributions et les conditions/paliers restent des dépliables natifs de la fiche.
+Les ancres et paginations existantes sont conservées ; aucune modale ni étape
+supplémentaire n’est ajoutée au don. Le bouton annonce le prélèvement définitif
+sur la colonie choisie. Les minimums personnels utiles à la décision restent visibles.
+
+**38 cadres** : trois listes et une fiche illustrée dans ses trois statuts actif,
+terminé et abandonné à 1440/768/390 px pour A/B, plus deux planches d’états.
+Les nombres et modèles sont fictifs, sans modèle actif créé ni valeur de jeu modifiée.
+Une fiche illustre chaque statut ; les autres exemples et les actions de
+lancement/don renvoient aux états simulés du prototype.
+
+Les états explicitent : absence de guilde, fonctionnalité désactivée, listes vides,
+vacances, permissions de lancement, modèle déjà utilisé, minimums par ressource,
+présence à la clôture, boost déjà gagné, récompense en cours de distribution,
+inventaire plein, abandon sans remboursement, version périmée, stock insuffisant,
+colonie étrangère et ordre/pagination des contributions. Les validations serveur
+et la distribution différée restent à vérifier dans le jeu après choix utilisateur.
+
+Structures grises sauvegardées avant la couleur. Variables propres au lot et
+boutons réutilisables dans la continuité des références. Les dix-sept pages
+antérieures sont conservées, dont Vue générale et Mon compte A.
+Contrôles de conception : **38 cadres, 478 liens** vers des destinations existantes,
+aucun texte hors cadre, chevauchement ou découpage par un parent. Les empreintes
+des dix-sept pages précédentes sont inchangées. Après élargissement du bouton
+Membres, les 24 cadres ordinateur/tablette sont revérifiés : aucun défaut.
+Listes A/B sur ordinateur, fiche active sur ordinateur/mobile, modèles sur tablette,
+historique mobile et fiche terminée relus visuellement. Les contributions fictives
+des listes et des fiches de bilan concordent.
+
+Preuves près du `.figcraft` : `lot-5-manifest.json`, `lot-5-preservation-avant.json`,
+`lot-5-verification.json`, `lot-5-verification-navigation.json` et
+`lot-5-{A,B}-{ongoing,available,history,detail,completed,abandoned}-{largeur}.png`.
+Versions de structure et de navigation conservées dans le document.
+Ces contrôles de conception ne constituent pas une recette du jeu ni un audit RGAA.
+Les propositions attendent leur propre choix ; aucun code du jeu L5 n’est modifié.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -1267,7 +1326,8 @@ pas un audit RGAA ; performance non mesurée, CI GitHub/fusion/déploiement dist
 | L2C | A implémentée et vérifiée localement | A choisie explicitement | 27 PHP, cinq parcours navigateur consolidés et 36 captures | CI, intégration et déploiement distincts |
 | L3 | A implémentée et vérifiée localement | A choisie explicitement | 22 PHP, sept parcours navigateur et 50 captures | CI, intégration et déploiement distincts |
 | L4 | A implémentée et vérifiée localement | A choisie explicitement | 34 PHP, six parcours navigateur consolidés et 52 captures | CI, intégration et déploiement distincts |
-| L5 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
+| L5 | Propositions A/B préparées | Choix attendu | 38 cadres à 1440/768/390 px ; statuts et confirmations documentés | Conception seulement ; réalisation après choix |
+| L6 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
 Les commits restent sur `feature/refonte-visuelle` ; L1B A est enregistré dans
@@ -1275,7 +1335,8 @@ Les commits restent sur `feature/refonte-visuelle` ; L1B A est enregistré dans
 La Vue générale est finalisée dans `6b3bb70`, avant L2C (compositions),
 à la demande de l’utilisateur. L2C A est enregistré dans `da86685` ; L2 est donc complet localement.
 L3 A est enregistré dans `16a9173`, réalisé et vérifié localement.
-L4 A est réalisé localement ; L5 constitue le prochain ensemble.
+L4 A est enregistré dans `e13e588`, réalisé et vérifié localement.
+L5 attend le choix A/B dans les pages Figcraft 18/19.
 Le plan reste à 18 ensembles : six sont réalisés, douze restent à traiter.
 Vue générale constitue aussi une avance ciblée de L7A, sans valider tout ce lot. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
 Les validations précédentes restent limitées à leurs lots.

@@ -82,7 +82,9 @@ sont conservées. A est ensuite choisie et réalisée : champs/informations et
 confirmation rapprochés, préférences regroupées, menu mobile commun. 34 tests PHP
 / 209 assertions, six parcours navigateur consolidés et 52 captures ; contrôles
 statiques et compilation réussis. **Six ensembles réalisés sur 18, douze restants**.
-Prochain ensemble : Projets collectifs (L5).
+L4 est enregistré dans `e13e588`. Projets collectifs (L5) est préparé dans Figcraft,
+pages 18/19 : Projets en lignes (A) ou Projets en cartes (B), trois listes et
+fiches actives/terminées/abandonnées, 38 cadres. Choix attendu avant réalisation.
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026
