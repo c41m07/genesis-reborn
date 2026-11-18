@@ -104,7 +104,10 @@ Le code comprend :
   identifiants, préférences et suppression concernent tous les univers ; les
   vacances concernent seulement l’empire de l’univers sélectionné. Le changement
   de mot de passe reste facultatif dans Mes identifiants ; l’enregistrement ferme
-  toujours la session. Les anciennes adresses et actions restent utilisables.
+  toujours la session. Sur grand écran, champs et confirmation sont côte à côte ;
+  ils s’empilent sur mobile, avec le menu commun repliable. Les préférences restent
+  enregistrées en une fois et les formulaires fonctionnent sans JavaScript.
+  Les anciennes adresses et actions restent utilisables.
   L’inventaire ouvre Boosts (`/boosts`), puis relie Boîtes de ressources
   (`/inventaire/boites`) et Récompenses en attente (`/inventaire/recompenses`).
   La capacité commune reste visible ; la file d’attente est paginée par 25. Un sélecteur

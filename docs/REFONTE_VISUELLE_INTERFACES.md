@@ -113,8 +113,8 @@ Les liens du prototype simulent la navigation et n’exécutent aucune action du
 | L11 | Wiki : accueil, chapitre, recherche et références | 3/5 · 3/5 | Pages déjà séparées, anciens fragments et formules dépliables. |
 | L12 | Cohérence, erreurs et composants communs restants | 4/5 · 4/5 | Revue transversale ; adaptations communes rattachées au lot consommateur. |
 
-Le tableau comporte **18 lots prévus** : cinq ensembles réalisés localement
-(L1A/L1B/L1C, L2 et L3), treize restants. Certains ensembles complexes seront
+Le tableau comporte **18 lots prévus** : six ensembles réalisés localement
+(L1A/L1B/L1C, L2, L3 et L4), douze restants. Certains ensembles complexes seront
 subdivisés pendant leur analyse ;
 ce total ne fixe donc pas le nombre final de livraisons. Les complexités seront
 réévaluées avant chaque sous-tâche. À la demande de l’utilisateur, les lots de
@@ -1132,7 +1132,7 @@ Documentation synchronisée dans le même lot. Aucune dépendance installée, ba
 habituelle modifiée ou migration existante appliquée. CI GitHub, fusion et
 déploiement restent distincts ; performance non mesurée.
 
-## L4 — Mon compte, deux propositions préparées — 18 novembre 2026
+## L4 — Mon compte, proposition A retenue — 18 novembre 2026
 
 L3 A est enregistré dans `16a9173`. Le lot suivant conserve quatre pages dédiées :
 `/profil`, `/profil/preferences`, `/profil/vacances`, `/profil/supprimer`.
@@ -1200,8 +1200,58 @@ rapport complémentaire `lot-4-verification-textes.json`. Version sauvegardée :
 `L4 - propositions A B pour validation`.
 Ces contrôles de conception ne constituent ni une recette du jeu ni un audit RGAA.
 
-Les propositions attendent le choix explicite de l’utilisateur. Aucun code du
-jeu L4 n’est modifié, aucune action de compte réelle ni migration n’est exécutée.
+L’utilisateur choisit **A** (« j’aime bien le A »). Validation conservée dans la
+version Figcraft `L4 - A validee par utilisateur`. Il demande de conserver la
+méthode et l’organisation A/B actuelles pour les lots suivants.
+
+### Réalisation A et vérifications locales
+
+Profil, vacances et suppression présentent les informations à gauche et leur
+confirmation à droite à partir de 1201 px, puis une colonne. Les préférences
+regroupent affichage/horloge, raccourcis, réception et confort, avec un seul
+bouton d’enregistrement. Le formulaire de profil reste unique : le découpage
+en panneaux ne crée pas deux validations. Le mot de passe facultatif reste un
+`details` natif, fermé au départ et ouvert après un formulaire invalide.
+
+Les cinq templates réutilisent `ui/space_navigation` pour le menu mobile.
+`account-workspace.css` est limité à `.account-redesign`. Aucun contrôleur PHP,
+service, DTO, formulaire Symfony ou contrôleur JavaScript n’est modifié. Noms des
+champs, méthodes/actions, CSRF et contexte de participation sont conservés.
+Les quatre pages et les ancres historiques restent utilisables. Le compte et
+les préférences restent globaux, les vacances limitées à l’univers sélectionné.
+
+Contrôles locaux :
+
+- `make validate`, `make lint-static` (201 Twig, 80 YAML, PHP et conteneur),
+  `make assets`, syntaxe JavaScript et `git diff --check` réussis.
+- **34 tests PHP / 209 assertions** sur une pile MariaDB jetable : préférences,
+  service et politique de vacances, contrôleur des vacances, suppression et
+  mise à jour du profil. Isolation, minimum de 48 h, délai de 15 jours, refus
+  serveur, absence d’univers, mots de passe, dernier administrateur, combat et
+  rollback d’une conversion sur plusieurs univers sont couverts.
+- Six parcours navigateur concernés : profil/refus/reconnexion ; suppression
+  confirmée et autre session fermée ; quatre pages/thèmes/historique/anciens
+  liens ; formulaires sans JavaScript ; persistance des préférences ; recette A.
+  Les tests existants gardent leurs assertions ; le menu mobile est ouvert avant
+  d’examiner ses liens. Quatre réussites au premier passage, puis reprise ciblée.
+- La recette A vérifie 1440/768/390/320 px, thèmes sombre/clair, confirmation à
+  droite ou sous le contenu, mot de passe déplié, champs conservés après erreur,
+  mots de passe vides, clavier/rechargement/retour et absence de débordement.
+  Axe ne signale aucune violation dans l’espace à 390 px. Le contraste des
+  erreurs Symfony en thème clair a été corrigé sans retirer de vérification.
+- La pile navigateur habituelle désactive les vacances : ce refus est vérifié.
+  Une pile dédiée les active uniquement pour ce test synthétique : activation
+  disponible et vacances récentes avec sortie bloquée avant 48 h sont vérifiées.
+  La sortie autorisée est exercée par le parcours sans JavaScript existant.
+
+**52 captures réelles finales**, avec index : quatre pages, mot de passe déplié,
+vacances actives, compte sans univers et erreur de profil. Dossiers
+`output/playwright/account-workspace/captures-jeu-L4-A/` et `captures-jeu-L4-A/`
+près du fichier Figcraft. Recette `account-workspace.spec.mjs`, parcours clavier
+adapté dans `profile-forms.spec.mjs` ; README, architecture, guide et suivi synchronisés.
+Aucun changement de configuration globale, dépendance installée, donnée habituelle
+modifiée ou migration sur une base existante. Ces contrôles ciblés ne constituent
+pas un audit RGAA ; performance non mesurée, CI GitHub/fusion/déploiement distincts.
 
 ## Reprise et états de couverture
 
@@ -1216,7 +1266,7 @@ jeu L4 n’est modifié, aucune action de compte réelle ni migration n’est ex
 | L2B | A implémentée et vérifiée localement | A choisie explicitement | 60 tests PHP, 14 parcours navigateur consolidés et 24 captures | CI complète et intégration distinctes |
 | L2C | A implémentée et vérifiée localement | A choisie explicitement | 27 PHP, cinq parcours navigateur consolidés et 36 captures | CI, intégration et déploiement distincts |
 | L3 | A implémentée et vérifiée localement | A choisie explicitement | 22 PHP, sept parcours navigateur et 50 captures | CI, intégration et déploiement distincts |
-| L4 | Propositions A/B préparées | Choix attendu | 38 cadres à 1440/768/390 px ; états et confirmations documentés | Conception seulement ; réalisation après choix |
+| L4 | A implémentée et vérifiée localement | A choisie explicitement | 34 PHP, six parcours navigateur consolidés et 52 captures | CI, intégration et déploiement distincts |
 | L5 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
@@ -1225,8 +1275,8 @@ Les commits restent sur `feature/refonte-visuelle` ; L1B A est enregistré dans
 La Vue générale est finalisée dans `6b3bb70`, avant L2C (compositions),
 à la demande de l’utilisateur. L2C A est enregistré dans `da86685` ; L2 est donc complet localement.
 L3 A est enregistré dans `16a9173`, réalisé et vérifié localement.
-L4 attend le choix A/B dans les pages Figcraft 16/17.
-Le plan reste à 18 ensembles : cinq sont réalisés, treize restent à traiter.
+L4 A est réalisé localement ; L5 constitue le prochain ensemble.
+Le plan reste à 18 ensembles : six sont réalisés, douze restent à traiter.
 Vue générale constitue aussi une avance ciblée de L7A, sans valider tout ce lot. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
 Les validations précédentes restent limitées à leurs lots.
 Aucun push, PR, fusion ou déploiement n’est autorisé par le seul changement de

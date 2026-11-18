@@ -274,3 +274,17 @@ Toutes les ressources attribuées restent visibles, y compris les valeurs nulles
 Les conditions d’ouverture restent près du bouton. L’attente conserve une liste
 ordonnée native, sa numérotation et sa pagination, avec une ligne par récompense.
 L’aide complémentaire reste dépliable. Les styles sont limités à `.inventory-redesign`.
+
+## Mon compte — proposition A du lot L4
+
+Quatre pages dédiées : identifiants, préférences, vacances et suppression.
+Navigation secondaire commune repliable sur mobile, ouverte sans JavaScript.
+Sur grand écran, le profil, les vacances et la suppression rapprochent les
+informations et leur confirmation ; une colonne sur tablette/mobile.
+Le profil garde un seul formulaire, son mot de passe facultatif dépliable et
+la confirmation par mot de passe actuel. Les préférences gardent un seul
+bouton d’enregistrement. Portées distinctes visibles : réglages communs au
+compte, vacances de l’univers sélectionné, suppression dans tous les univers.
+Actions irréversibles identifiables, labels/focus/erreurs conservés ; styles
+isolés dans `account-workspace.css`. Résultats de recette et captures dans le
+[suivi de refonte](../REFONTE_VISUELLE_INTERFACES.md).

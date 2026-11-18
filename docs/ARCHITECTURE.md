@@ -269,6 +269,15 @@ conservé. `inventory-review` garde ses targets, formulaires et gestion du focus
 le sélecteur reste masqué sans JavaScript et tous les formulaires sont alors visibles.
 Les données de `InventoryPageView`, les POST, CSRF et clés de requête restent inchangés.
 
+L4 A utilise le même menu natif dans `ui/account_navigation`. Le style
+`account-workspace.css`, limité à `.account-redesign`, dispose information et
+confirmation côte à côte sur grand écran, puis empilées. Profil et préférences
+conservent chacun un formulaire Symfony unique ; les panneaux ne constituent
+pas des étapes séparées. Le dépliable de mot de passe reste natif et s’ouvre
+après erreur. Les quatre URL, ancres historiques, POST, CSRF, identifiants de
+participation, champs et contrôles métier restent existants. Aucun nouveau
+contrôleur JavaScript ou chargement métier n’est ajouté.
+
 Les actualisations des colonies et de Flottes demandent JSON avec `X-Genesis-Live: 1` et
 `Accept: application/json`. La route conserve ses contrôles, synchronisations
 et préparation GameShell, puis renvoie les fragments privés sans cache.

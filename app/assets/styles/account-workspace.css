@@ -1,0 +1,278 @@
+/* L4 A : la présentation du compte reste isolée des autres formulaires. */
+body.authenticated .account-redesign {
+    --account-control-border: #526d87;
+    --account-action-text: #090f1b;
+    --account-danger: #ffa3a3;
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+}
+
+body.authenticated[data-theme="light"] .account-redesign {
+    --muted: #526170;
+    --account-control-border: #6a7b88;
+    --account-action-text: #fff;
+    --account-danger: #9a2929;
+}
+
+body.authenticated .account-redesign .account-panel {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 20px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--panel);
+}
+
+body.authenticated .account-redesign .account-section {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+body.authenticated .account-redesign .account-section legend {
+    max-width: 100%;
+    margin-bottom: 24px;
+    padding: 0;
+    color: var(--text);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+body.authenticated .account-redesign h2 {
+    margin: 0 0 24px;
+    font-size: 22px;
+    line-height: 1.5;
+}
+
+.account-redesign .account-workspace,
+.account-redesign .account-preference-columns {
+    display: grid;
+    gap: 20px;
+    align-items: start;
+}
+
+.account-redesign .account-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.account-redesign .account-grid > div,
+.account-redesign .account-workspace > *,
+.account-redesign .account-preference-columns > * {
+    min-width: 0;
+}
+
+body.authenticated .account-redesign :is(input:not([type="checkbox"]), select) {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    margin: 8px 0 0;
+    border-color: var(--account-control-border);
+    font-size: 16px;
+}
+
+body.authenticated .account-redesign label {
+    display: block;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+body.authenticated .account-redesign .help-text {
+    margin: 16px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+body.authenticated .account-redesign .profile-notice {
+    margin: 0 0 20px;
+    padding: 20px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--accent) 14%, var(--panel));
+    color: var(--text);
+}
+
+body.authenticated .account-redesign .profile-password {
+    margin-top: 28px;
+    padding: 0;
+    border: 0;
+}
+
+body.authenticated .account-redesign .profile-password summary {
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid var(--account-control-border);
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.account-redesign .profile-password[open] > summary {
+    margin-bottom: 24px;
+}
+
+.account-redesign .profile-password p {
+    color: var(--muted);
+}
+
+body.authenticated .account-redesign :is(button, .space-navigation > a) {
+    min-height: 44px;
+    font-size: 14px;
+    white-space: normal;
+}
+
+body.authenticated .account-redesign .primary {
+    border-color: var(--gold);
+    background: var(--gold);
+    color: var(--account-action-text);
+}
+
+body.authenticated .account-redesign .secondary {
+    border-color: var(--account-control-border);
+    background: transparent;
+    color: var(--text);
+}
+
+body.authenticated .account-redesign .account-confirmation :is(.primary, .secondary, .danger) {
+    width: 100%;
+    margin: 28px 0 0;
+}
+
+body.authenticated .account-redesign .account-delete-form {
+    display: grid;
+    gap: 16px;
+}
+
+body.authenticated .account-redesign .account-delete-form input:not([type="checkbox"]) {
+    margin: 0;
+}
+
+body.authenticated .account-redesign .account-delete-form .danger {
+    border-color: var(--account-danger);
+    background: transparent;
+    color: var(--account-danger);
+}
+
+body.authenticated .account-redesign .sensitive-actions h2 {
+    color: var(--account-danger);
+}
+
+body.authenticated .account-redesign .account-section .preference-toggle,
+body.authenticated .account-redesign .preference-toggle {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin: 0 0 20px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+body.authenticated .account-redesign :is(.preference-toggle, .account-delete-confirmation) input {
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    min-height: 18px;
+    margin: 3px 0 0;
+    accent-color: var(--accent);
+}
+
+body.authenticated .account-redesign :is(.preference-toggle label, .account-delete-confirmation) {
+    min-height: 44px;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+body.authenticated .account-redesign .account-delete-confirmation {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+body.authenticated .account-redesign .account-preferences-form > .account-panel,
+body.authenticated .account-redesign .account-preference-columns {
+    margin-bottom: 20px;
+}
+
+.account-redesign .account-shortcuts {
+    display: grid;
+    gap: 24px;
+}
+
+body.authenticated .account-redesign .account-preferences-save {
+    width: min(100%, 330px);
+}
+
+body.authenticated .account-redesign .space-navigation > a {
+    border: 1px solid var(--account-control-border);
+    border-radius: 5px;
+}
+
+body.authenticated .account-redesign .space-navigation.space-navigation > a[aria-current="page"] {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, var(--panel));
+    color: var(--accent);
+}
+
+body.authenticated .account-redesign .space-navigation-menu-label {
+    color: var(--text);
+}
+
+.account-redesign .vacation-information :is(dt, dd) {
+    margin: 0 0 8px;
+}
+
+.account-redesign #vacation-rules {
+    margin: 24px 0 0;
+    padding-left: 20px;
+}
+
+.account-redesign #vacation-rules li + li {
+    margin-top: 12px;
+}
+
+.account-redesign .form-error {
+    margin-bottom: 20px;
+    padding: 16px;
+    border: 1px solid var(--account-danger);
+    border-radius: 5px;
+    color: var(--account-danger);
+}
+
+/* Symfony rend aussi les erreurs de champ en liste, hors du résumé d’erreur. */
+body.authenticated .account-redesign form ul,
+body.authenticated .account-redesign form ul li,
+body.authenticated .account-redesign .form-error p {
+    color: var(--account-danger);
+    font-size: 14px;
+}
+
+@media (min-width: 1201px) {
+    .account-redesign .account-workspace {
+        grid-template-columns: minmax(0, 1fr) 330px;
+    }
+
+    .account-redesign .account-preference-columns {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    body.authenticated .account-redesign .account-panel {
+        padding: 18px;
+    }
+
+    .account-redesign .account-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 24px;
+    }
+
+    body.authenticated .account-redesign .account-preferences-save {
+        width: 100%;
+    }
+}

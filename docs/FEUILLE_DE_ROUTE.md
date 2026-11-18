@@ -78,7 +78,11 @@ L3 est enregistré dans `16a9173`. Mon compte / préférences / vacances / suppr
 (L4) est préparé dans Figcraft, pages 16/17 : Compte structuré (A) ou Compte en
 sections (B). Quatre pages existantes et deux états détaillés à 1440/768/390 px,
 plus les planches de confirmations, soit 38 cadres. Les quinze pages précédentes
-sont conservées. Le choix A/B reste attendu avant toute modification du jeu L4.
+sont conservées. A est ensuite choisie et réalisée : champs/informations et
+confirmation rapprochés, préférences regroupées, menu mobile commun. 34 tests PHP
+/ 209 assertions, six parcours navigateur consolidés et 52 captures ; contrôles
+statiques et compilation réussis. **Six ensembles réalisés sur 18, douze restants**.
+Prochain ensemble : Projets collectifs (L5).
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026

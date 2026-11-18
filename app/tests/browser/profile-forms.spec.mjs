@@ -117,6 +117,7 @@ test('Compte : quatre pages, états actifs, thèmes, historique et anciens liens
         expect((await page.goto(url)).status()).toBe(200);await expect(page.locator('h1')).toHaveText(title);
         await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
         await expect(page.locator('.sidebar a[href="/profil"]')).toHaveClass(/active/);
+        if (width <= 600) await page.locator('.account-redesign .space-navigation-menu > summary').click();
         const current=page.getByRole('navigation',{name:'Compte et préférences'}).locator('[aria-current="page"]');
         await expect(current).toHaveCount(1);await expect(current).toHaveAttribute('href',url);
         expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
@@ -125,7 +126,9 @@ test('Compte : quatre pages, états actifs, thèmes, historique et anciens liens
       await page.screenshot({path:testInfo.outputPath(`account-delete-${theme}-${width}.png`),fullPage:true});
     }
   }
-  await page.goto('/profil');await page.getByRole('navigation',{name:'Compte et préférences'}).getByRole('link',{name:'Mode vacances',exact:true}).focus();
+  await page.goto('/profil');
+  await page.locator('.account-redesign .space-navigation-menu > summary').click();
+  await page.getByRole('navigation',{name:'Compte et préférences'}).getByRole('link',{name:'Mode vacances',exact:true}).focus();
   await page.keyboard.press('Enter');await expect(page).toHaveURL(/profil\/vacances$/);
   await page.reload();await expect(page.locator('#vacances-info')).toBeVisible();await page.goBack();await expect(page.locator('h1')).toHaveText('Mes identifiants');
   for (const hash of ['vacances-info','vacances','vacation-heading']) {

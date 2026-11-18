@@ -2035,3 +2035,18 @@ Confirmations, accès, contenu attribué, capacité commune et promotion automat
 restent existants. La revue est conservée avec JavaScript, les formulaires serveur
 restent accessibles sans JavaScript. Aucune valeur de jeu n’est modifiée.
 [Recette et limites](REFONTE_VISUELLE_INTERFACES.md).
+
+
+## Refonte visuelle L4 : proposition A — 18 novembre 2026
+
+L’utilisateur choisit A pour Mon compte : identifiants et confirmation rapprochés,
+préférences regroupées, conditions et action des vacances côte à côte sur grand
+écran, conséquences et confirmation de suppression distinctes. Une colonne sur
+mobile, avec navigation commune. Les quatre URL et les formulaires restent existants.
+
+Les réglages communs au compte restent distincts des vacances de l’univers choisi.
+Mot de passe actuel, reconnexion après profil, minimums/délais de vacances et
+confirmation de suppression dans tous les univers sont conservés. Aucune règle
+métier n’est modifiée. L’utilisateur confirme vouloir conserver la méthode A/B
+actuelle pour les lots suivants ; ses choix répétés ne les valident pas d’avance.
+[Recette et limites](REFONTE_VISUELLE_INTERFACES.md).
