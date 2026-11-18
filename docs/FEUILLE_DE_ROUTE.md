@@ -162,14 +162,19 @@ neutres, calendriers UTC et fermeture à 24 heures restent conservés.
 corrections, avec formats 1440/768/390/320, thèmes sombre/clair, clavier et accès
 sans JavaScript. Compilation, lint complet et contrôle du diff réussis ; preuves
 et limites dans le suivi de refonte. Aucune migration sur la base habituelle.
-**Quatorze ensembles sur 18 sont réalisés ; quatre restent à traiter**, à partir
-de L9 (feedback, patchnotes et documents complémentaires).
+L8 porte alors le bilan à quatorze ensembles sur 18, avant L9 (feedback, patchnotes
+et documents complémentaires).
 L9 possède deux propositions Figcraft, pages 40 A « Lecture directe » et 41 B
 « Repères de lecture » : 66 cadres et 782 liens, couverture équivalente, contrôles
 de présentation et exports ordinateur/mobile vérifiés. Formulaire, états de capture,
 patchnotes dépliables et quatre documents juridiques existants sont représentés.
-Cette préparation est une conception avec données fictives, sans envoi ni code du
-jeu modifié. Le choix A/B reste attendu avant l’intégration de L9.
+L’utilisateur valide ensuite la page 40 A, intégrée localement : formulaire à deux
+colonnes sur ordinateur, aperçu local agrandissable sans pré-envoi de fichier,
+patchnotes dépliables et documents conservés avec six ancres de confidentialité.
+7 tests PHP / 127 assertions et 5 parcours navigateur distincts consolidés après
+corrections ; compilation, lint et contrôle du diff réussis. Les contrôles de
+capture privée, quota, absence de JavaScript, publication et lecture sont conservés.
+**Quinze ensembles sur 18 réalisés ; trois restants** : L10, L11, L12.
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026

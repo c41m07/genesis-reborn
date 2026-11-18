@@ -743,6 +743,28 @@ calendriers UTC et le bandeau de fermeture à 24 heures gardent leurs contrôleu
 leur horloge serveur et leur actualisation. Les métadonnées publiques et les
 réponses techniques ne sont pas modifiées.
 
+### Feedback, patchnotes et documents — L9 A
+
+`information-workspace.css` complète les styles d’accès communs dans les seuls
+conteneurs L9. Le feedback garde un formulaire POST multipart unique : champs du
+retour, contexte et capture, puis action d’envoi dans l’ordre du document. Sur
+ordinateur, contexte et capture occupent la colonne de droite ; l’affichage se
+réunit à 1 150 px et moins. Les contrôleurs et lectures serveur ne sont pas modifiés.
+
+`feedback-attachment` prépare seulement un aperçu local : URL temporaire du fichier,
+décodage de l’image et agrandissement dans un dialogue natif. Le type annoncé et le
+budget de décodage limitent l’aperçu, sans remplacer la validation serveur. Une
+génération écarte les décodages périmés ; retrait, remplacement et déconnexion ferment
+le dialogue et révoquent l’URL. Une image non décodable reste sélectionnée pour que
+le serveur puisse décider de son acceptation. Sans JavaScript, le champ fichier et
+l’envoi restent disponibles. Aucun aperçu n’est téléversé avant la soumission.
+
+Les patchnotes conservent leur `details` natif, le contenu échappé avec sauts de ligne,
+le filtrage des publications et l’effet de lecture du contrôleur. Les documents
+publics gardent leur contenu et leurs métadonnées ; seules six ancres sont ajoutées
+à la confidentialité. Le socle affiche sur ces pages la navigation publique L8
+pour les visiteurs et conserve le contexte habituel des comptes connectés.
+
 ## Présentations de guildes
 
 `GuildProfile` conserve description, références d’images et version dans une table dédiée, rattachée à la guilde avec suppression en cascade de la ligne. Les lectures des guildes existantes n’ajoutent pas de jointure à cette table. Les profils de joueurs ne transmettent aux templates qu’une liste explicite des informations publiques, avec les scores du classement quotidien.

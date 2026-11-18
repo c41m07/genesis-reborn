@@ -2904,9 +2904,67 @@ dossier de conception. Aucun code du jeu modifié ; seuls le présent suivi, la 
 de route et l’inventaire sont actualisés. `git diff --check` constitue le contrôle
 du lot documentaire ; aucune suite applicative inchangée n’est relancée.
 
-L8 A reste le dernier lot réalisé. **Quatorze lots sur dix-huit réalisés ; quatre
-restants.** L9 attend le choix de direction avant intégration ; L10 à L12 ne sont
-pas engagés par cette préparation.
+À la fin de cette conception, L8 A reste le dernier lot réalisé : quatorze lots sur
+dix-huit, quatre restants. L’utilisateur valide ensuite A ; réalisation ci-dessous.
+L10 à L12 ne sont pas engagés par cette préparation.
+
+## L9 A — Lecture directe intégrée — 19 novembre 2026
+
+La page **40 A** est validée explicitement puis réalisée sur `feature/refonte-visuelle`.
+Complexité initiale **3/5**, réévaluée à **4/5** devant le conflit de largeur avec
+les styles partagés antérieurs. Les corrections restent limitées aux conteneurs L9,
+sans changement de service ni de données. Le formulaire unique conserve l’ordre des champs puis de l’envoi ;
+sur ordinateur, contexte et capture passent à droite, avec le bouton sous le retour.
+À 1 150 px et moins, les groupes sont empilés. Tous les champs, règles
+de capture, erreurs et saisies conservées restent ceux de l’existant.
+
+L’aperçu d’image est agrandissable dans un dialogue natif, fermable par Échap ; le
+retrait ramène le focus au champ. Les URL temporaires sont révoquées au retrait,
+remplacement et départ du contrôleur. Les décodages obsolètes sont ignorés. Cet
+aperçu ne téléverse aucun fichier : le serveur garde sa validation et l’accès privé
+auteur/administrateur. L’envoi sans JavaScript, le quota et les refus sont conservés.
+
+Les patchnotes restent des cartes avec `details` natifs et contenu échappé. Le
+contrôleur conserve les publications datées et l’enregistrement de lecture. Les
+documents gardent leur contenu ; six identifiants d’ancre sont ajoutés à la
+confidentialité. Les visiteurs retrouvent l’en-tête L8, les comptes connectés leur
+contexte existant. Les liens inclus dans les textes sont soulignés, y compris en
+clair, sans dépendre uniquement de leur couleur. Aucun changement juridique.
+
+Fichiers : `app/templates/feedback/create.html.twig`, `patchnotes/index.html.twig`,
+`legal/page.html.twig`, `legal/confidentialite.html.twig` et `base.html.twig` ;
+`app/assets/controllers/feedback_attachment_controller.js`,
+`app/assets/styles/information-workspace.css`, import dans `app/assets/app.js` ;
+`app/tests/browser/information-refonte.spec.mjs` et cinq documents de suivi
+(README, architecture, feuille de route, inventaire et présent bilan).
+
+Vérifications locales : **7 tests PHP / 127 assertions** (`PublicSeoTest`,
+`PatchNoteControllerTest`) ; **5 parcours navigateur distincts consolidés après
+corrections**. Couverture : aperçu/remplacement/retrait/déconnexion-reconnexion,
+image non décodable, dialogue et focus ; envoi sans JS, format refusé, saisies et
+contexte conservés, trois retours acceptés puis quota, accès auteur/autre compte/admin ;
+publication future/brouillon masqués, lecture et échappement du contenu ; quatre
+documents publics, métadonnées, navigation et ancres, contexte connecté ; parcours
+SEO public existant. Formats 1440/768/390/320 et deux thèmes pour L9, clavier,
+captures réelles et axe ciblé, sans prétendre à un audit RGAA complet.
+
+`make validate`, `make lint` complet (207 Twig, 80 YAML, PHP, conteneur et schéma),
+`make assets`, syntaxe des deux nouveaux fichiers JavaScript et `git diff --check`
+réussissent. PHP est lancé directement avec `APP_DEBUG=1` dans la base réservée
+aux tests ; ce n’est pas un `make test` complet. Les navigateurs utilisent des
+projets et bases éphémères, avec messagerie externe neutralisée.
+
+Preuves : `output/playwright/information-refonte/php.log`, `lint.log`,
+`assets-final.log`, `browser.log` (trois parcours réussis), `browser-final.log`
+(aperçu et documents corrigés réussis), `feedback-final.log` (envoi et droits réussis)
+et `layout-final.log` (aperçu et largeur complète du formulaire réussis).
+Les échecs intermédiaires de contraste et de préparation du scénario restent dans
+les journaux et ne sont pas présentés comme une réussite globale. Captures dans
+`recette/`, `recette-finale/`, `recette-feedback/` et `recette-largeur/`. L’aperçu et les documents sont
+examinés visuellement après les ajustements de largeur et de contraste.
+
+**Quinze lots sur dix-huit réalisés localement ; trois restants** : L10, L11, L12.
+Aucun push, CI GitHub, fusion, migration habituelle ou déploiement réalisé par ce lot.
 
 ## Reprise et états de couverture
 
@@ -2930,7 +2988,7 @@ pas engagés par cette préparation.
 | L7D | A implémentée et vérifiée localement | A choisie explicitement après reprise depuis les rapports actuels | 15 PHP / 98 assertions ; cinq parcours navigateur consolidés ; bilan ci-dessous | CI complète, fusion et déploiement distincts |
 | L7E | A implémentée et vérifiée localement | Page 36 A validée explicitement après reprise de la messagerie et des classements | 90 PHP / 569 assertions ; neuf parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L8 | A implémentée et vérifiée localement | Page 38 A validée explicitement | 23 PHP / 244 assertions ; 16 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
-| L9 | Propositions A/B préparées | Choix attendu | Pages Figcraft 40/41 ; 66 cadres et 782 liens vérifiés ; conception seulement | Choisir la direction avant intégration |
+| L9 | A implémentée et vérifiée localement | Page 40 A validée explicitement | 7 PHP / 127 assertions ; 5 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L10 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
@@ -2948,7 +3006,8 @@ validation finale et la décision de géographie. L7D A est intégré dans `5523
 L7E page 36 A est validée explicitement, intégrée dans `557061e` et vérifiée localement ;
 la messagerie et les classements existants restent la base de leur présentation.
 L8 page 38 A est validée explicitement, réalisée et vérifiée localement ; bilan ci-dessus.
-Le plan reste à 18 ensembles : quatorze sont réalisés, quatre restent à traiter.
+L9 page 40 A est validée explicitement, réalisée et vérifiée localement ; bilan ci-dessus.
+Le plan reste à 18 ensembles : quinze sont réalisés, trois restent à traiter.
 Vue générale avait été finalisée en avance ; L7A est désormais complet localement. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
 Les validations précédentes restent limitées à leurs lots.
 Aucun push, PR, fusion ou déploiement n’est autorisé par le seul changement de

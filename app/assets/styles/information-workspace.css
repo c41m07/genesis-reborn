@@ -1,0 +1,380 @@
+/* L9 A : présentation des informations, sans modifier leurs règles de publication ou d’envoi. */
+.information-workspace {
+    min-width: 0;
+}
+
+.information-workspace h1 {
+    font-size: 30px;
+    line-height: 1.4;
+}
+
+.information-workspace > p,
+.information-workspace .page-heading p,
+.information-workspace > header > p {
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--muted);
+}
+
+.information-workspace :is(p,li,a,summary,h2) {
+    overflow-wrap: anywhere;
+}
+
+.feedback-workspace .feedback-layout {
+    display: grid;
+    grid-template-columns: minmax(0,1.8fr) minmax(0,1fr);
+    grid-template-areas: "primary context" "actions context";
+    column-gap: 24px;
+    align-items: start;
+    margin-top: 28px;
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+}
+
+/* Dépasser la largeur du formulaire historique sans modifier les autres pages approuvées. */
+body.ui-refined[data-ui-page="feedback"] .feedback-workspace .feedback-layout {
+    max-width: none;
+    margin-inline: 0;
+}
+
+.feedback-workspace .secondary {
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--line);
+}
+
+.feedback-workspace .account-section {
+    min-width: 0;
+    margin: 0;
+    padding: 24px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: var(--panel);
+}
+
+.feedback-workspace .account-section legend {
+    padding: 0 8px;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.feedback-workspace .feedback-primary {
+    grid-area: primary;
+    border-bottom: 0;
+    border-radius: 7px 7px 0 0;
+    height: 100%;
+}
+
+.feedback-workspace .feedback-context {
+    grid-area: context;
+    display: grid;
+    gap: 24px;
+    min-width: 0;
+}
+
+.feedback-workspace .feedback-actions {
+    grid-area: actions;
+    padding: 0 24px 24px;
+    border: 1px solid var(--line);
+    border-top: 0;
+    border-radius: 0 0 7px 7px;
+    background: var(--panel);
+}
+
+.feedback-workspace .account-grid {
+    display: grid;
+    grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+    gap: 16px;
+    margin: 20px 0;
+}
+
+.feedback-workspace label {
+    display: block;
+    margin: 18px 0 8px;
+    font-size: 12px;
+    line-height: 1.5;
+    font-weight: 700;
+}
+
+.feedback-workspace :is(input:not([type=hidden]),select,textarea) {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    margin: 0;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    font: inherit;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--text);
+    background: var(--bg);
+}
+
+.feedback-workspace textarea {
+    min-height: 160px;
+    resize: vertical;
+}
+
+.feedback-workspace input[type=file] {
+    padding: 8px;
+    font-size: 12px;
+}
+
+.feedback-workspace input[type=file]::file-selector-button {
+    min-height: 36px;
+    max-width: 100%;
+    margin-right: 8px;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    color: var(--text);
+    background: var(--panel);
+}
+
+.feedback-workspace :is(.field-help,fieldset > p,.feedback-actions p) {
+    margin: 10px 0 16px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--muted);
+}
+
+.feedback-workspace [role=status]:empty {
+    margin: 0;
+}
+
+.feedback-workspace .feedback-actions .primary {
+    width: 100%;
+}
+
+.feedback-workspace .feedback-errors {
+    margin-top: 24px;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.feedback-workspace .feedback-errors h2 {
+    margin-top: 0;
+    font-size: 18px;
+}
+
+.feedback-workspace .feedback-preview {
+    margin: 18px 0;
+}
+
+.feedback-workspace .feedback-preview :is(img,figcaption) {
+    display: block;
+    max-width: 100%;
+}
+
+.feedback-workspace .feedback-preview img {
+    max-height: 260px;
+    margin-inline: auto;
+    object-fit: contain;
+}
+
+.feedback-workspace .feedback-preview figcaption {
+    margin: 10px 0;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.feedback-preview-dialog {
+    box-sizing: border-box;
+    width: min(1000px,calc(100% - 32px));
+    max-height: calc(100% - 32px);
+    padding: 24px;
+    overflow: auto;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    color: var(--text);
+    background: var(--panel);
+}
+
+.feedback-preview-dialog::backdrop {
+    background: #000b;
+}
+
+.feedback-preview-dialog h2 {
+    margin-top: 0;
+    font-size: 20px;
+}
+
+.feedback-preview-dialog img {
+    display: block;
+    max-width: 100%;
+    max-height: 65vh;
+    margin: 16px auto;
+    object-fit: contain;
+}
+
+.information-workspace.patchnotes-workspace .patchnote-card {
+    min-width: 0;
+    margin-bottom: 20px;
+    padding: 24px;
+}
+
+.patchnotes-workspace .patchnote-card h2 {
+    font-size: 23px;
+    line-height: 1.4;
+}
+
+.patchnotes-workspace .patchnote-card p {
+    font-size: 14px;
+    line-height: 1.65;
+}
+
+.patchnotes-workspace .patchnote-card .muted {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.patchnotes-workspace .patchnote-details > summary {
+    box-sizing: border-box;
+    min-height: 48px;
+    margin-top: 18px;
+    padding: 14px;
+    font-size: 13px;
+    line-height: 1.5;
+    font-weight: 700;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    color: var(--text);
+    background: var(--bg);
+}
+
+.patchnotes-workspace .patchnote-content {
+    padding: 22px 0 0;
+    font-size: 14px;
+    line-height: 1.75;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.information-workspace.legal-page {
+    max-width: 940px;
+    margin-inline: auto;
+}
+
+.information-workspace.legal-page > :is(header,aside,.legal-content,.legal-links) {
+    margin-bottom: 24px;
+}
+
+.information-workspace.legal-page .panel {
+    padding: 28px;
+}
+
+.information-workspace.legal-page > aside {
+    border-left: 3px solid var(--gold);
+}
+
+.information-workspace.legal-page :is(p,li) {
+    font-size: 15px;
+    line-height: 1.65;
+}
+
+.information-workspace.legal-page :is(p,li) a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.information-workspace.legal-page h2 {
+    margin: 30px 0 14px;
+    font-size: 21px;
+    line-height: 1.45;
+    scroll-margin-top: 110px;
+}
+
+.information-workspace.legal-page > aside h2 {
+    margin-top: 0;
+    font-size: 17px;
+}
+
+.information-workspace .legal-links {
+    display: grid;
+    grid-template-columns: repeat(4,minmax(0,1fr));
+    gap: 10px;
+}
+
+.information-workspace .legal-links a,
+.information-workspace .legal-contents a {
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    min-height: 46px;
+    padding: 12px;
+    font-size: 13px;
+    line-height: 1.5;
+    font-weight: 600;
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+}
+
+.information-workspace .legal-links a[aria-current=page] {
+    border-color: var(--accent);
+    background: var(--panel);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+.information-workspace .legal-contents ul {
+    display: grid;
+    grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+    gap: 8px;
+    padding: 0;
+    list-style: none;
+}
+
+.information-workspace .legal-contents li {
+    margin: 0;
+}
+
+.information-workspace .legal-back-top {
+    margin-top: 20px;
+}
+
+body[data-theme=light] .information-workspace a:not(.primary) {
+    color: #3c5968;
+}
+
+@media (max-width: 1150px) {
+    .feedback-workspace .feedback-layout {
+        grid-template-columns: minmax(0,1fr);
+        grid-template-areas: "primary" "context" "actions";
+        gap: 20px;
+    }
+
+    .feedback-workspace :is(.feedback-primary,.feedback-actions) {
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        padding: 24px;
+    }
+}
+
+@media (max-width: 760px) {
+    .information-workspace h1 {
+        font-size: 26px;
+    }
+
+    .feedback-workspace :is(.account-section,.feedback-actions),
+    .information-workspace.legal-page .panel,
+    .information-workspace.patchnotes-workspace .patchnote-card {
+        padding: 18px;
+    }
+
+    .feedback-workspace .account-grid,
+    .information-workspace .legal-contents ul {
+        grid-template-columns: minmax(0,1fr);
+    }
+
+    .information-workspace .legal-links {
+        grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+    }
+}

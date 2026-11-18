@@ -17,7 +17,7 @@
 } %}
 {% set presentationPage = route == 'app_colony' ? (section == 'overview' ? 'vue-generale' : 'catalogues') : presentationPages[route]|default('') %}
 {% set refinedPresentation = presentationPage != '' and presentationPage != 'catalogues' %}
-{% set entryPublicPage = not app.user and route in ['app_home','app_login','app_register','app_password_reset_request','app_password_reset','app_email_verify_request','app_email_verify','app_access_denied'] %}
+{% set entryPublicPage = not app.user and route in ['app_home','app_login','app_register','app_password_reset_request','app_password_reset','app_email_verify_request','app_email_verify','app_access_denied','app_legal_mentions','app_legal_terms','app_legal_privacy','app_legal_cookies'] %}
 
 {% set unreadPatchNote = app.user and latest_patch_note_id() > (app.user.preferences.last_patch_note_read_id|default(0)) %}
 {% set preferences = {'timezone':'Europe/Paris','reducedMotion':false,'realtimeNotifications':true,'theme':'dark'}|merge(app.user ? app.user.preferences|default({}) : {}) %}
