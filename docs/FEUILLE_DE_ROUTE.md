@@ -108,7 +108,9 @@ vues B adaptées sont vérifiées ; les 46 autres cadres sont conservés. Choix 
 préparées dans les pages 26/27 : gains et actions directs avec suivi au-dessus (A),
 ou lecture Coût/Stock et suivi en bas (B). Quatre cartes sur ordinateur, informations
 décisives visibles et boutons stables après deux ajouts ; 46 nouveaux cadres
-vérifiés. Choix de cette nouvelle direction attendu avant code du jeu.
+vérifiés. L’utilisateur demande ensuite de conserver le design actuel des quatre
+catalogues en y appliquant Actions directes : version consolidée page 28, 27 cadres
+vérifiés, grandes images/rangs conservés et validation attendue avant intégration.
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026

@@ -34,7 +34,9 @@ L7B est préparé dans les pages 24/25 pour les catalogues, le guide et l’annu
 B est adaptée à quatre cartes par ligne sur ordinateur, à la demande de l’utilisateur ;
 la base est conservée. Deux nouvelles propositions pour les actions répétées sont
 désormais dans les pages 26/27 : gains/coûts directement lisibles, files compactes
-et boutons stables après ajout. Le choix de ces nouvelles A/B reste attendu.
+et boutons stables après ajout. À la demande de l’utilisateur, une version consolidée
+page 28 reprend désormais le design actuel avec les apports d’Actions directes.
+Les quatre catalogues et leurs états sont représentés ; validation de cette reprise attendue.
 Les autres écrans restent inventoriés, sans validation implicite. Aucune CI GitHub, fusion ou livraison n’est revendiquée.
 Les états visibles supplémentaires sont recensés ensuite.
 

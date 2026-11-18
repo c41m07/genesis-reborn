@@ -1760,6 +1760,55 @@ Preuves dans le dossier de visualisation : `lot-7B-usage-manifest.json`,
 mobiles exportées séparément. Le code du jeu est inchangé. Le choix A/B reste
 attendu avant réalisation ; tests du jeu, CI, fusion et déploiement restent distincts.
 
+### Consolidation demandée : design actuel et Actions directes — 18 novembre 2026
+
+L’utilisateur préfère les cartes actuelles des Bâtiments, de la Recherche, du
+Chantier spatial et des Défenses. Il demande de les reprendre dans l’esprit de
+L7B A « Actions directes ». Cette correction remplace le choix attendu entre les
+pages 26/27 par une **version consolidée en page 28**, à valider avant intégration.
+Les anciennes propositions sont conservées, sans approbation implicite.
+
+Sources ciblées revérifiées : `building_cards.html.twig`, `building-catalog.css`,
+`_catalog.html.twig`, bénéfices et sprite de pictogrammes. Les captures locales
+existantes servent de référence visuelle ; la structure actuelle est confirmée
+par les templates et styles. Complexité réévaluée à **4/5** pour la conception
+et l’intégration : composants, illustrations, parcours du prototype, rangs,
+files, quantités, actualisations et maintien du contexte.
+
+Repères conservés : rangs en tête avec compte possédé et verrous, grandes images
+16/9 existantes, titre centré, information à proximité, coûts avec pictogrammes,
+surface sombre et action au texte doré. Quatre cartes sur ordinateur, deux sur
+tablette, une sur téléphone. Le mode condensé existant masque les images tout en
+gardant les informations décisives. Les logos et SVG d’identité sont inchangés.
+
+Apports d’Actions directes : niveau réel distinct de la prochaine cible et des
+niveaux programmés, gains/consommations ouverts, coût complet et stock disponible,
+manque chiffré et prérequis près de l’action, boutons alignés et stables après deux
+ajouts. Les trois files sont résumées au-dessus ; le détail s’ouvre sur demande.
+Les catégories filtrent le même catalogue, les rangs restent des onglets de carte,
+et les quatre tâches gardent leurs pages et URL. Fiche d’information et suivi des
+files restent des fenêtres ; guide et annulation conservent leurs propositions
+précédentes. Aucun changement métier ou automatisme supplémentaire.
+
+**27 cadres** : quatre catalogues à 1440/768/390, premier/deuxième ajout, quantité,
+manque, mode condensé, files et fiche d’information à 1440/390, plus une planche de
+principes et états complémentaires. Données synthétiques reprises des résultats
+déjà calculés par les services du jeu ; aucun nouvel accès à la base. Les réponses
+du prototype sont simulées ; maintien du focus, validation serveur, accès,
+annulations et repli sans JavaScript restent à vérifier lors de l’intégration.
+
+Vérifications natives : 27 cadres, 4/2/1 colonnes, illustrations 16/9 sous les rangs,
+absence de texte coupé ou de chevauchement et boutons stables sur ordinateur/mobile
+dans les trois états d’ajout. Les 27 pages antérieures sont préservées ; comparaison
+de leur structure, géométrie, textes, couleurs, typographie, composants et liens.
+Les panneaux superposés sont contrôlés séparément du contenu qu’ils recouvrent.
+Examen visuel des bâtiments, de la recherche et du chantier, dont une carte mobile.
+
+Preuves : `lot-7B-base-manifest.json`, `lot-7B-base-preservation.json`,
+`lot-7B-base-verification.json` et exports `lot-7B-base-*.png` dans le dossier de
+visualisation. Maquette native sauvegardée. Le code du jeu est inchangé ; validation
+de cette reprise attendue. Aucune CI, fusion ou mise en production revendiquée.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -1777,7 +1826,7 @@ attendu avant réalisation ; tests du jeu, CI, fusion et déploiement restent di
 | L5 | A implémentée et vérifiée localement | A choisie explicitement | 44 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
 | L6 | A implémentée et vérifiée localement | A choisie explicitement | 32 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
 | L7A | A implémentée et vérifiée localement | A choisie explicitement ; Vue générale conservée | 51 PHP, sept parcours navigateur et 43 captures | CI, intégration et déploiement distincts |
-| L7B | Nouvelles propositions A/B depuis B à quatre cartes | Choix attendu, pages 26/27 | 46 cadres ; boutons stables après deux ajouts ; 25 pages précédentes conservées | Réalisation après choix |
+| L7B | Design actuel et Actions directes consolidés | Validation attendue, page 28 | 27 cadres ; grandes images et rangs conservés ; boutons stables après deux ajouts | Réalisation après validation |
 | L7C à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
