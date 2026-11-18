@@ -132,10 +132,12 @@ niveaux, avec repères, signaux inconnus sur noir et flèches de flotte. Le simu
 affiche les bilans par camp, unité et rang. Recette : 126 PHP ciblés, cinq parcours
 navigateur consolidés ; cartes à 80 systèmes sur quatre largeurs et contrôles
 d’accessibilité ciblés. Onze ensembles sur 18 sont réalisés localement.
-L7D (Rapports et archives) dispose des propositions Figcraft page 34 A « Lecture
-directe » et page 35 B « Journal de missions » : 44 cadres, 382 commandes reliées,
-listes/archives et détails de combat, espionnage et transport. Données fictives,
-choix attendu avant réalisation. Sept lots restent à réaliser, dont L7D.
+L7D (Rapports et archives) est repris après refus des deux premières propositions.
+Les pages 34 A « Rapport actuel affiné » et 35 B « Camps en vis-à-vis » reprennent
+les vrais tableaux, comparaisons VS et statistiques des rapports existants, avec
+le socle UI validé. 62 cadres et 578 commandes reliées ; exemple de combat calculé
+sans base, contrôles de conservation et de présentation. Les deux directions
+restent à choisir avant réalisation. Sept lots restent à réaliser, dont L7D.
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026

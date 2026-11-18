@@ -2291,7 +2291,10 @@ Fichiers du lot : `app/assets/app.js`, `app/assets/controllers/galaxy_v2_control
 navigation/bilan, les scénarios navigateur carte/simulateur et la documentation
 README, architecture, décisions, règles, durées/carburant, inventaire et feuille de route.
 
-## L7D — Rapports et archives, propositions préparées — 18 novembre 2026
+## L7D — premières propositions refusées — 18 novembre 2026
+
+**État historique : l’utilisateur refuse ces deux propositions. Elles sont remplacées
+par la reprise ci-dessous dans les mêmes pages 34/35.**
 
 Complexité **3/5 en conception, 4/5 à l’implémentation**. Lecture ciblée des trois
 contrôleurs de rapports, de `ReportArchiveService` et des gabarits liste, combat,
@@ -2347,6 +2350,76 @@ sur la proposition A. Aucun écran du lot L7D n’est encore implémenté ; choi
 utilisateur attendu. Le lot L7C est enregistré dans `50f3965` ; la branche reste
 `feature/refonte-visuelle`, sans push ni déploiement.
 
+## L7D — reprise depuis les rapports actuels — 18 novembre 2026
+
+L’utilisateur ne retient aucune des premières propositions et demande de repartir
+des rapports actuels et de l’UI/UX déjà réalisée. La conception reprend donc les
+gabarits et styles réels : `combat/reports`, `combat/report`, `espionage/report`,
+`transport/_details`, `mission-reports.css` et `report-archives.css`. Les captures
+de recette existantes sont des références visuelles historiques, confrontées aux
+sources actuelles, et non de nouvelles captures du jeu réalisées pour ce lot.
+Complexité de conception : **3/5**, sans modification des données ni du jeu.
+
+Les deux pages sont **remplacées sur place**, après enregistrement d’une version
+de l’état refusé ; aucune autre page n’est remplacée. Le menu, les ressources et
+les variables des écrans validés sont repris. Les nouveaux choix sont :
+
+- **34 · L7D · A — Rapport actuel affiné** : bilan global en tableaux, lignes par
+  flotte/unité/rang, camps séparés par des titres explicites, comparaison VS des
+  statistiques à chaque round. Le centre des rapports reste une liste compacte.
+- **35 · L7D · B — Camps en vis-à-vis** : mêmes informations, comparaison des camps
+  dès le bilan des pertes, dans l’esprit du simulateur validé ; sur téléphone les
+  camps se suivent. Le centre conserve aussi les lignes, avec repère de focus.
+
+Les deux directions conservent le détail utile du rapport actuel : engagés,
+pertes, survivants, arrivée, puis début/pertes/fin, tirs, touchés, ratés et précision
+pour chaque unité du round. L’absence de tir affiche une précision indéterminée,
+distincte de 0 %. Les pertes sont rouges et négatives ; les zéros restent neutres.
+Sur téléphone, identité/rang/flotte précèdent trois effectifs, puis les statistiques
+de tirs : les valeurs ne sont plus cachées dans la largeur d’un tableau.
+Le premier round est ouvert ; les autres sont illustrés comme dépliables, avec
+accès à leur détail complet. Résumé, effectifs, rounds et reconstruction restent
+des ancres d’un même rapport ; les cadres de détail ne créent pas de routes.
+
+Le centre reprend les filtres de type et les vrais champs planète, participant,
+du/au. Les états Combats/Économie/Espionnage sont distincts dans le prototype,
+sans envoyer le filtre vers un rapport de détail. Sélection, archives et restauration
+restent personnels. Les aides sont limitées aux informations utiles ; les commandes
+secondaires ne prennent plus toutes la largeur de l’écran sur ordinateur.
+
+Espionnage A reprend les cartes de ressources et catégories actuelles ; B les
+présente en relevé compact. Stock, production, capacité, rangs et niveaux restent
+distincts ; catégories absentes et catégories vides ne sont pas confondues.
+Le cas détecté ne révèle aucun renseignement. Transport conserve envoyé, livré,
+retour prévu, déposé et perdu au retour, avec un trajet plus visuel dans B.
+
+L’exemple de combat est calculé **sans base** par `CombatSimulator`, puis présenté
+par `CombatReportPresenter` : 8 rounds, 9 unités de votre camp, 1 perte et
+8 survivants ; le renfort adverse commence au round 2 et le colonisateur sans tir
+reste distingué. Les contrôles vérifient début − pertes = fin et tirs = touchés +
+ratés pour chaque ligne. Butin, état d’occupation, renseignements et transport
+sont des illustrations synthétiques supplémentaires, non des résultats du moteur
+de simulation et non des rapports privés extraits de la partie.
+
+Vérifications de conception : **62 cadres**, **578 commandes reliées**, trois
+formats pour les pages principales (1440, 768, 390) et états complémentaires en
+1440/390. Vérification des destinations, des ancres, des limites et des collisions
+de texte ; contrôle visuel des rapports et listes A/B sur ordinateur/téléphone.
+Les ajustements portent notamment sur les colonnes de tirs, les libellés courts
+et le pied du menu dans les petits cadres. Les autres pages Figcraft sont conservées.
+Ces vérifications concernent les maquettes, pas une recette du jeu ni un audit RGAA.
+Les champs et actions de Figcraft relient des états illustrés ; ils n’exécutent
+aucune recherche, écriture, mission ou simulation dans la partie.
+
+Preuves dans le dossier de conception courant : `lot-7D-reprise-donnees.json`,
+`lot-7D-reprise-manifest.json`, `lot-7D-reprise-arbres.json`,
+`lot-7D-reprise-verification.json` et `lot-7D-reprise-A-*.png` / `B-*.png`.
+Le fichier natif reste le même et s’ouvre sur le nouveau rapport A de la page 34.
+Les anciennes propositions restent dans l’historique enregistré.
+Fichiers versionnés de ce lot : ce suivi, `FEUILLE_DE_ROUTE.md` et
+`INVENTAIRE_INTERFACES.md`. Aucun template, style ou traitement du jeu n’est modifié.
+Choix A/B attendu avant implémentation ; sept lots restent à réaliser.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -2366,7 +2439,7 @@ utilisateur attendu. Le lot L7C est enregistré dans `50f3965` ; la branche rest
 | L7A | A implémentée et vérifiée localement | A choisie explicitement ; Vue générale conservée | 51 PHP, sept parcours navigateur et 43 captures | CI, intégration et déploiement distincts |
 | L7B | Page 29 implémentée et vérifiée localement | Version consolidée validée explicitement | 20 PHP, six parcours navigateur consolidés et 30 captures ; bilan ci-dessus | CI complète, intégration et déploiement distincts |
 | L7C | Implémenté et vérifié localement | Conception validée ; spirale retenue explicitement pour les distances | Deux vues persistantes, gestes et moteur conservés, bilans par camp ; recette ci-dessous | CI complète, fusion et déploiement distincts |
-| L7D | Propositions A/B préparées | Choix utilisateur attendu | Pages Figcraft 34/35, 44 cadres et 382 commandes reliées ; conception seulement | Choisir la présentation avant réalisation |
+| L7D | Propositions A/B préparées | Choix utilisateur attendu | Pages Figcraft 34/35 reprises depuis les rapports actuels, 62 cadres et 578 commandes reliées ; conception seulement | Choisir la présentation avant réalisation |
 | L7E à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
