@@ -1921,3 +1921,15 @@ sans changement de version du registre ni nouvelle reprise. Les huit autres
 bâtiments, recherches, unités, défenses, prix, durées, effets et plafonds restent
 conservés ; les surcharges d’univers ne sont pas réécrites. Aucun effet sur les
 délais de progression n’est annoncé sans mesure, aucune activation Alpha.
+
+## Prérequis du Piège à antimatière — 18 novembre 2026
+
+Pour chaque rang du piège, la colonie doit avoir le producteur d’hydrogène
+du même rang au niveau 5 et le joueur doit avoir la recherche Génie civil colonial
+du même rang au niveau 2 dans l’univers. Cette décision remplace la condition
+hydrogène 3 et laboratoire 2. Le laboratoire niveau 1 du même rang reste le
+prérequis initial de la recherche. Les accès au piège déjà acquis sont conservés.
+
+Aux rangs Intermédiaire et Supérieur, le déblocage du producteur d’hydrogène
+exige déjà la même recherche au niveau 5. Le seuil 2 du piège reste explicite
+pour les trois rangs.
