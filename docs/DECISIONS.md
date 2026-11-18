@@ -2078,3 +2078,18 @@ l’administration n’est pas modifié ; ni les calculs, règles de contributio
 seuils, dates, récompenses ou traitements différés. Un objet déjà acquis reste
 accessible après annulation. Cette validation ne valide pas les lots suivants.
 [Recette et limites](REFONTE_VISUELLE_INTERFACES.md).
+
+## Refonte visuelle L7A : proposition A — 18 novembre 2026
+
+L’utilisateur choisit A pour Planètes, sa comparaison et l’abandon : colonies
+horizontales sur ordinateur, comparaison en tableau, bilan complet et confirmation
+côte à côte sur grand écran. Une colonne sur tablette/mobile ; le comparatif y
+montre la ressource sélectionnée parmi les cinq existantes. La Vue générale
+finalisée précédemment est conservée.
+
+Cartes et comparaison gardent leur adresse et les paramètres existants ; renommer
+reste un dépliable et l’abandon une page dédiée. Formulaires, confirmations,
+conditions d’accès, conséquences et contrôles transactionnels sont conservés.
+La consultation du bilan garde sa synchronisation des files sous verrou.
+Cette validation ne valide pas les lots suivants.
+[Recette et limites](REFONTE_VISUELLE_INTERFACES.md).

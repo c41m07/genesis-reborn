@@ -561,6 +561,14 @@ contrôle possède le focus. Les clés privées ne sont pas ajoutées à la cart
 
 
 ### Abandon : transition transactionnelle sans migration
+L7A A compose uniquement les templates de liste/comparaison et de bilan avec
+`colony-workspace.css`, limité à `.colony-redesign`. Colonies en lignes, tableau
+avec filtre existant et confirmation à côté des pertes sur grand écran, puis
+empilés sur format étroit. Les contrôleurs, préparations groupées et services
+restent inchangés ; en particulier, consulter le bilan conserve la synchronisation
+sous verrou décrite ci-dessous. Les formulaires serveur et la Vue générale
+restent ceux de leurs domaines.
+
 ColonyAbandonmentService verrouille participation, univers et planète, puis
 synchronise les files avant le bilan. planetHasActiveFleet contrôle toutes les
 références d’origine, destination et repli sans filtrage de visibilité ; seul un

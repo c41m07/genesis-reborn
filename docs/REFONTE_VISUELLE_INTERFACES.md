@@ -1533,8 +1533,66 @@ Ces vérifications portent sur la conception, pas sur le fonctionnement du jeu.
 Preuves dans le dossier de visualisation de cette mission :
 `lot-7A-manifest.json`, `lot-7A-preservation-avant.json`,
 `lot-7A-verification.json` et exports `lot-7A-*.png`. Document natif sauvegardé,
-page A sélectionnée. Les propositions attendent leur propre choix ; aucun code
-du jeu L7A n’est modifié.
+page A sélectionnée lors de cette étape de conception. Le choix et la réalisation
+sont consignés ci-dessous.
+
+### Réalisation L7A A — 18 novembre 2026
+
+L’utilisateur retient explicitement A. La version native « L7A - A validee par
+utilisateur » conserve ce choix. Réalisation limitée aux deux vues et à
+`colony-workspace.css`, importé par l’entrée existante. Aucun contrôleur, service,
+calcul de production, permission ou règle d’abandon ne change. La Vue générale
+et le bandeau commun des ressources ne sont pas modifiés.
+
+- `/planetes` : une colonie par ligne sur grand écran, avec illustration existante,
+  identité/informations au centre et accès à droite ; une colonne sinon.
+  Nom ouvrant le panneau de stocks/vaisseaux, renommage, bonus/malus,
+  acquisition et raccourcis conservent leurs informations et destinations.
+- `?view=table` : tableau sémantique, cinq ressources sur grand écran ; ressource
+  sélectionnée sur format étroit, y compris 768 px. Paramètres GET, historique,
+  rechargement et formulaire sans JavaScript conservés. L’ordre historique
+  et l’avertissement de capacité dépassée restent ceux de l’existant.
+- L’abandon conserve ses conséquences et pertes complètes : ressources, bâtiments,
+  défenses, vaisseaux, fret et commandes. Confirmation à droite sur grand écran,
+  sous le bilan sinon ; aucun formulaire quand un motif bloque l’abandon.
+  Les quatre champs de protection et le nom attendu restent inchangés.
+
+Les dimensions suivent le contenu réel plutôt que des hauteurs fixes de maquette.
+Les libellés viennent du catalogue actuel. Les textes du comparatif se replient
+sur petit écran ; couleurs et actions sont limitées au nouvel espace.
+
+Vérifications locales réussies : `make validate`, `make lint-static` (201 Twig,
+80 YAML, PHP et conteneur), `make assets`, syntaxe des deux tests navigateur et
+`git diff --check`. **51 tests PHP / 417 assertions** : `ColonyAbandonmentTest`,
+`AbsenceJournalTest` et `GameplayAccessTest`, sur une MariaDB privée jetable.
+Dernier passage navigateur complet : **sept parcours réussis** avec
+`colony-abandonment.spec.mjs` et `colony-workspace.spec.mjs`.
+
+Recette : deux thèmes réels, quatre formats (1440/768/390/320), cartes, comparaison,
+renommage, cinq ressources, capacité dépassée, noms longs, acquisition inconnue,
+contenu des pertes, champs protégés, dernière colonie et absence de confirmation
+bloquée. Clavier, toucher, focus, panneau des stocks/vaisseaux, bonus/malus,
+historique/rechargement et formulaires sans JavaScript vérifiés. Abandon réussi,
+nom incorrect, rejeu, refus sans révéler une sonde, dépendance d’une autre colonie
+et deux abandons réellement simultanés conservent une colonie et une seule trace.
+Axe porte sur les nouveaux espaces dans les deux thèmes ; le repli sans JavaScript
+est vérifié nativement, sans y injecter Axe. Le test existant charge désormais la
+vraie feuille du thème clair et contrôle aussi le panneau de confirmation.
+
+**43 captures réelles** du dernier passage complet, dans
+`captures-jeu-L7A-A/` du dossier de visualisation et, en copie ignorée,
+`output/playwright/colony-workspace/captures-jeu-L7A-A/`. Examen visuel ciblé du
+bureau, de la comparaison mobile et du bilan ; index JSON et journaux conservés.
+L’option existante `data-page-sections="disabled"` évite un sommaire automatique
+sur la liste ou le bilan, sans toucher au contrôleur partagé.
+
+Le pool automatique Docker était saturé. Les mêmes contrôles utilisent un
+complément Compose local ignoré, limité au réseau privé jetable
+`10.240.18.0/24`, vérifié libre : aucune configuration globale ni aucun réseau
+existant retiré. Le lanceur navigateur reprend le script du dépôt avec ce seul
+complément. Aucun test ne vise la base habituelle. Aucune dépendance installée,
+migration sur base existante ni action de jeu habituelle. Performance non mesurée ;
+ces contrôles ne constituent pas un audit RGAA. CI, fusion et déploiement distincts.
 
 ## Reprise et états de couverture
 
@@ -1552,7 +1610,7 @@ du jeu L7A n’est modifié.
 | L4 | A implémentée et vérifiée localement | A choisie explicitement | 34 PHP, six parcours navigateur consolidés et 52 captures | CI, intégration et déploiement distincts |
 | L5 | A implémentée et vérifiée localement | A choisie explicitement | 44 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
 | L6 | A implémentée et vérifiée localement | A choisie explicitement | 32 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
-| L7A | Propositions A/B préparées pour le périmètre restant | Choix attendu ; Vue générale conservée | 32 cadres, 428 interactions ; 21 pages précédentes conservées | Conception seulement ; réalisation après choix |
+| L7A | A implémentée et vérifiée localement | A choisie explicitement ; Vue générale conservée | 51 PHP, sept parcours navigateur et 43 captures | CI, intégration et déploiement distincts |
 | L7B à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
@@ -1564,9 +1622,9 @@ L3 A est enregistré dans `16a9173`, réalisé et vérifié localement.
 L4 A est enregistré dans `e13e588`, réalisé et vérifié localement.
 L5 A est enregistré dans `9eb316e`, réalisé et vérifié localement.
 L6 A est enregistré dans `811ef2d`, réalisé et vérifié localement.
-L7A attend le choix A/B dans les pages Figcraft 22/23, en conservant Vue générale.
-Le plan reste à 18 ensembles : huit sont réalisés, dix restent à traiter.
-Vue générale constitue aussi une avance ciblée de L7A, sans valider tout ce lot. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
+L7A A est réalisée ; sa recette est consignée ci-dessus. Vue générale conservée.
+Le plan reste à 18 ensembles : neuf sont réalisés, neuf restent à traiter.
+Vue générale avait été finalisée en avance ; L7A est désormais complet localement. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
 Les validations précédentes restent limitées à leurs lots.
 Aucun push, PR, fusion ou déploiement n’est autorisé par le seul changement de
 branche. La mission globale reste non terminée.

@@ -731,6 +731,14 @@ restent en UTC, le contenu complet des boîtes et les états des objets restent
 consultables. Le panneau commun conserve ses informations et son compteur. Aucune règle de
 production, de contribution ou de récompense ne change. [Bilan de navigation](docs/NAVIGATION_PAGES_DEDIEES.md).
 
+Le lot Colonies L7A retient A : colonies en lignes sur ordinateur, informations et
+raccourcis rapprochés, comparaison des stocks/capacités et soldes horaires en
+tableau. Sur tablette/mobile, le sélecteur garde une ressource à la fois.
+Renommer reste dépliable ; le bilan complet de l’abandon et sa confirmation sont
+rapprochés sur grand écran, puis empilés. Les formulaires restent utilisables
+sans JavaScript. La Vue générale déjà validée est conservée, ainsi que les
+règles et contrôles serveur de l’abandon.
+
 Le lot Administration sépare la liste des univers, leur création et leur fiche de
 configuration/calendrier. Les quatre familles du catalogue disposent de pages
 propres, d’une recherche transversale et d’une fiche par entrée. Les événements

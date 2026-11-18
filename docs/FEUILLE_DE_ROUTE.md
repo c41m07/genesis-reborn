@@ -94,11 +94,12 @@ ou cartes et fiche verticale (B). Deux listes et quatre états de fiche,
 38 cadres. A est ensuite choisie et réalisée : listes en lignes, participation
 rapprochée, menu mobile commun. 32 tests PHP / 175 assertions, trois parcours
 navigateur et 66 captures ; contrôles statiques et compilation réussis.
-**Huit ensembles réalisés sur 18, dix restants**. L7A porte ensuite sur les
-colonies, leur comparaison et le bilan d’abandon ; Vue générale est déjà finalisée.
-L6 est enregistré dans `811ef2d`. Propositions L7A dans Figcraft, pages 22/23 :
-colonies en lignes et comparaison en tableau (A), ou cartes et comparaison en
-fiches (B). Bilan et confirmation rapprochés ou successifs, 32 cadres ; choix attendu.
+L6 est enregistré dans `811ef2d`. L7A A est également réalisé et vérifié localement :
+colonies en lignes, comparaison adaptée aux formats étroits et bilan d’abandon
+avec confirmation rapprochée. Vue générale conservée. 51 PHP / 417 assertions,
+sept parcours navigateur et 43 captures ; contrôles statiques et compilation réussis.
+**Neuf ensembles réalisés sur 18, neuf restants**. L7B porte ensuite sur Bâtiments,
+Recherche, Chantier, Défenses, Guide technologique et confirmation d’annulation.
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026

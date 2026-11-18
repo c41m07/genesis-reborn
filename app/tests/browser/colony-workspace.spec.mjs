@@ -1,0 +1,197 @@
+import { test, expect } from './support/isolated-test.mjs';
+import { prepareOwnedColony, revealVirginPlanet, queryIsolatedSql, runIsolatedSql } from './support/game-fixtures.mjs';
+import AxeBuilder from '@axe-core/playwright';
+
+async function enter(page) {
+  const suffix = crypto.randomUUID().slice(0, 8);
+  const email = `colonies-a-${suffix}@example.test`;
+  const password = crypto.randomUUID() + 'aA1!';
+  await page.goto('/inscription');
+  await page.getByLabel('Adresse email').fill(email);
+  await page.getByLabel('Nom de commandant').fill('Colonies-' + suffix);
+  await page.getByLabel('Mot de passe (12 caractères minimum)', { exact: true }).fill(password);
+  await page.getByLabel('Confirmer le mot de passe').fill(password);
+  await page.getByRole('button', { name: 'Créer mon compte' }).click();
+  await page.getByLabel('Adresse email').fill(email);
+  await page.getByLabel('Mot de passe', { exact: true }).fill(password);
+  await page.getByRole('button', { name: /Connexion/ }).click();
+  await page.locator('.universe-card').filter({ has: page.getByRole('heading', { name: /Omega/ }) }).getByRole('button').click();
+  await expect(page).toHaveURL(/planetes\/\d+$/);
+  const project = process.env.BROWSER_ROUTER;
+  const planet = Number(page.url().split('/').pop());
+  const member = Number(queryIsolatedSql(project, `SELECT current_player_universe_id FROM player WHERE email='${email}'`));
+  return { project, planet, member, email };
+}
+
+async function capture(page, info, key, theme, width, audit = true) {
+  await expect(page.locator('.page-contents')).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  for (const panel of await page.locator('.colony-redesign .panel:visible').all()) {
+    expect(await panel.evaluate(el => el.scrollWidth <= el.clientWidth + 1), `${key} ${theme} ${width} ${await panel.getAttribute('class')}`).toBe(true);
+  }
+  if (audit && width === 390) expect((await new AxeBuilder({ page }).include('.colony-redesign').analyze()).violations).toEqual([]);
+  if (width !== 320) {
+    await page.evaluate(() => { document.activeElement?.blur(); window.scrollTo({ top: 0, behavior: 'instant' }); });
+    await page.screenshot({ path: info.outputPath(`jeu-L7A-A-${key}-${theme}-${width}.png`), fullPage: true, animations: 'disabled' });
+    if (width === 390) await page.screenshot({ path: info.outputPath(`jeu-L7A-A-${key}-${theme}-390-ecran.png`), animations: 'disabled' });
+  }
+}
+
+test('L7A A : colonies, renommage, comparaison et bilan complets sur quatre formats', async ({ page }, info) => {
+  test.setTimeout(240000);
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  const user = await enter(page);
+  const other = revealVirginPlanet(user.project, user.email);
+  runIsolatedSql(user.project, `UPDATE planet SET owner_id=${user.member},name='Orion',acquired_at=NULL WHERE id=${other.id}`);
+  runIsolatedSql(user.project, `UPDATE planet SET name='Horizon' WHERE id=${user.planet}`);
+  prepareOwnedColony(user.project, user.email, { stock: 9000 });
+  runIsolatedSql(user.project, `INSERT INTO player_technology(player_universe_id,slug,tier,level) VALUES (${user.member},'colonial_expansion','basic',1) ON DUPLICATE KEY UPDATE level=GREATEST(level,1)`);
+  runIsolatedSql(user.project, `INSERT INTO planet_building(planet_id,slug,tier,level) VALUES (${user.planet},'mine_metal','basic',4) ON DUPLICATE KEY UPDATE level=4`);
+  runIsolatedSql(user.project, `INSERT INTO planet_defense(planet_id,slug,tier,quantity) VALUES (${user.planet},'ground_turret_anti_light','basic',3)`);
+  runIsolatedSql(user.project, `INSERT INTO fleet(player_universe_id,home_planet_id,status,mission,speed_ratio,cargo,reserved_fuel,orbit_fuel,orbit_duration_seconds,travel_seconds,dispatch_token) VALUES (${user.member},${user.planet},'idle','idle',1,'{"metal":200,"hydrogen":50}',0,0,0,0,'')`);
+  const fleet = Number(queryIsolatedSql(user.project, `SELECT MAX(id) FROM fleet WHERE home_planet_id=${user.planet}`));
+  runIsolatedSql(user.project, `INSERT INTO fleet_ship(fleet_id,slug,tier,quantity) VALUES (${fleet},'fighter','basic',5)`);
+  runIsolatedSql(user.project, `INSERT INTO queue_item(planet_id,player_universe_id,queue_type,item_slug,tier,item_level,quantity,duration_seconds,started_at,queued_at,dispatch_token,paid_costs) VALUES (${user.planet},${user.member},'building','mine_metal','basic',5,1,86400,UTC_TIMESTAMP(),UTC_TIMESTAMP(),'${crypto.randomUUID()}','{"metal":500}')`);
+  const abandon = `/planetes/${user.planet}/abandonner`;
+  for (const theme of ['dark', 'light']) {
+    runIsolatedSql(user.project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${user.email}'`);
+    for (const width of [1440, 768, 390, 320]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/planetes');
+      await expect(page.locator('.planet-index-card')).toHaveCount(2);
+      const card = page.locator('#planet-' + user.planet);
+      await expect(card.getByRole('link', { name: 'Bâtiments', exact: true })).toHaveAttribute('href', `/planetes/${user.planet}?section=buildings`);
+      await expect(card.getByRole('link', { name: 'Chantier', exact: true })).toHaveAttribute('href', `/planetes/${user.planet}?section=ships`);
+      await expect(card.getByRole('link', { name: 'Flotte', exact: true })).toHaveAttribute('href', `/flottes?origin=${user.planet}`);
+      await expect(page.locator('#planet-' + other.id)).toContainText('Ancienneté approximative');
+      const art = await card.locator('.planet-index-art').boundingBox();
+      const actions = await card.locator('.planet-index-actions').boundingBox();
+      if (width === 1440) expect(actions.x).toBeGreaterThan(art.x + art.width);
+      else expect(actions.y).toBeGreaterThan(art.y + art.height);
+      await capture(page, info, 'planetes', theme, width);
+      await card.locator('.planet-rename summary').click();
+      await expect(card.getByLabel('Nouveau nom')).toHaveValue('Horizon');
+      await expect(card.getByLabel('Nouveau nom')).toHaveAttribute('maxlength', '80');
+      await capture(page, info, 'renommage', theme, width);
+      await card.locator('.planet-production summary').click();
+      await expect(card.locator('.planet-production')).toContainText('Effets de la position orbitale');
+      await expect(card.locator('.planet-production dl')).not.toBeEmpty();
+      await page.goto('/planetes?view=table&resource=metal');
+      await expect(page.locator('.colony-comparison tbody tr')).toHaveCount(2);
+      if (width === 1440) await expect(page.locator('.colony-comparison td[data-resource="nano"]').first()).toBeVisible();
+      else await expect(page.locator('.colony-comparison td[data-resource="nano"]').first()).toBeHidden();
+      await expect(page.locator('.colony-comparison tbody tr').filter({ has: page.getByRole('link', { name: 'Horizon', exact: true }) })).toContainText('1 commande en file');
+      await capture(page, info, 'comparaison', theme, width);
+      await page.goto(abandon);
+      for (const title of ['Un abandon définitif', 'Bilan des pertes', 'Ressources', 'Bâtiments', 'Défenses', 'Vaisseaux présents', 'Ressources embarquées présentes', 'Commandes annulées sans remboursement', 'Confirmer l’abandon']) {
+        await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible();
+      }
+      await expect(page.locator('.colony-abandon-panel')).toContainText(`Flotte ${fleet}`);
+      await expect(page.locator('.colony-abandon-panel')).toContainText('Mine à ciel ouvert');
+      await expect(page.locator('.colony-abandon-panel')).toContainText('Chasseur de patrouille');
+      await expect(page.locator('.abandon-loss-grid dl > div')).toHaveCount(5);
+      await expect(page.locator('.abandon-confirmation input[type="hidden"]')).toHaveCount(4);
+      const losses = await page.locator('.colony-abandon-panel').boundingBox();
+      const confirmation = await page.locator('.colony-abandon-confirmation').boundingBox();
+      if (width === 1440) expect(confirmation.x).toBeGreaterThanOrEqual(losses.x + losses.width);
+      else expect(confirmation.y).toBeGreaterThanOrEqual(losses.y + losses.height);
+      await capture(page, info, 'abandon', theme, width);
+    }
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  // Le nom long et le dépassement de capacité sont des états existants, créés dans la seule base jetable.
+  const longName = 'Étoile'.repeat(13);
+  runIsolatedSql(user.project, `UPDATE planet SET name='${longName}' WHERE id=${user.planet}`);
+  runIsolatedSql(user.project, `UPDATE planet_resource SET current_stock=100000000,last_updated_at=UTC_TIMESTAMP() WHERE planet_id=${user.planet} AND resource_type='metal'`);
+  await page.goto('/planetes');
+  await capture(page, info, 'nom-long', 'light', 390);
+  await page.goto('/planetes?view=table&resource=metal');
+  await expect(page.locator('.storage-warning').first()).toBeVisible();
+  await capture(page, info, 'capacite-depassee', 'light', 390);
+  await page.goto(abandon);
+  await capture(page, info, 'abandon-nom-long', 'light', 390);
+  expect(errors).toEqual([]);
+});
+
+test('L7A A : clavier, toucher, historique et formulaires sans JavaScript', async ({ page, browser }, info) => {
+  test.setTimeout(180000);
+  page.setDefaultTimeout(15000);
+  const user = await enter(page);
+  await page.goto('/planetes');
+  const card = page.locator('#planet-' + user.planet);
+  const trigger = card.locator('.empire-name');
+  await trigger.focus();
+  const details = page.getByRole('region', { name: /Vaisseaux et ressources de/ });
+  await expect(details).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(details).toBeHidden();
+  await expect(trigger).toBeFocused();
+  const rename = card.locator('.planet-rename summary');
+  await rename.focus();
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Tab');
+  await expect(card.getByLabel('Nouveau nom')).toBeFocused();
+  await card.getByLabel('Nouveau nom').fill('Horizon renommé');
+  await page.keyboard.press('Tab');
+  const save = card.getByRole('button', { name: /Enregistrer le nom de/ });
+  await expect(save).toBeFocused();
+  expect(await save.evaluate(el => el.matches(':focus-visible') && getComputedStyle(el).outlineStyle !== 'none')).toBe(true);
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(new RegExp(`/planetes#planet-${user.planet}$`));
+  await expect(page.locator('#planet-' + user.planet + ' h2')).toHaveText('Horizon renommé');
+  await page.getByRole('link', { name: 'Comparer les colonies', exact: true }).click();
+  await page.setViewportSize({ width: 768, height: 900 });
+  const select = page.getByLabel('Ressource à comparer');
+  for (const resource of ['nano', 'hydrogen', 'antimatter', 'electricity']) {
+    await select.selectOption(resource);
+    await expect(page).toHaveURL(new RegExp('resource=' + resource));
+    await expect(page.locator(`.colony-comparison td[data-resource="${resource}"]`)).toBeVisible();
+  }
+  await page.goBack();
+  await expect(select).toHaveValue('antimatter');
+  await page.reload();
+  await expect(select).toHaveValue('antimatter');
+  const link = page.locator('.colony-comparison th[scope="row"] a');
+  await link.focus();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(new RegExp(`/planetes/${user.planet}$`));
+  await page.goBack();
+  await expect(page).toHaveURL(/view=table/);
+  const touchContext = await browser.newContext({ storageState: await page.context().storageState(), viewport: { width: 390, height: 900 }, hasTouch: true, isMobile: true });
+  try {
+    const touch = await touchContext.newPage();
+    await touch.goto('/planetes');
+    await touch.locator('.empire-name').tap();
+    await expect(touch.getByRole('region', { name: /Vaisseaux et ressources de/ })).toBeVisible();
+    await touch.keyboard.press('Escape');
+    await touch.locator('.planet-production summary').tap();
+    await expect(touch.locator('.planet-production dl')).toBeVisible();
+  } finally {
+    await touchContext.close();
+  }
+  const context = await browser.newContext({ storageState: await page.context().storageState(), javaScriptEnabled: false, viewport: { width: 390, height: 900 }, hasTouch: true });
+  try {
+    const plain = await context.newPage();
+    plain.setDefaultTimeout(15000);
+    await plain.goto('/planetes?view=table&resource=metal');
+    await plain.getByLabel('Ressource à comparer').selectOption('electricity');
+    await plain.getByRole('button', { name: 'Comparer cette ressource', exact: true }).tap();
+    await expect(plain).toHaveURL(/view=table&resource=electricity/);
+    await expect(plain.locator('.colony-comparison td[data-resource="electricity"]')).toBeVisible();
+    await plain.getByRole('link', { name: 'Cartes', exact: true }).tap();
+    await plain.locator('.planet-rename summary').tap();
+    await plain.getByLabel('Nouveau nom').fill('Horizon sans script');
+    await plain.getByRole('button', { name: /Enregistrer le nom de/ }).tap();
+    await expect(plain.locator('.planet-index-title h2')).toHaveText('Horizon sans script');
+    await plain.getByRole('link', { name: /Préparer l’abandon de/ }).tap();
+    await expect(plain.getByRole('alert')).toContainText('au moins une planète');
+    await expect(plain.locator('.abandon-confirmation')).toHaveCount(0);
+    // Axe injecte du JavaScript ; ce parcours de repli vérifie les formulaires et libellés natifs.
+    await capture(plain, info, 'derniere-colonie-sans-script', 'dark', 390, false);
+    await plain.getByRole('link', { name: 'Retour aux planètes', exact: true }).tap();
+    await expect(plain).toHaveURL(/\/planetes$/);
+  } finally {
+    await context.close();
+  }
+});

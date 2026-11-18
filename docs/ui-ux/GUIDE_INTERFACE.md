@@ -311,3 +311,19 @@ indépendantes. Les données personnelles et les états des objets restent visib
 y compris un objet déjà acquis avant annulation. Les dates UTC des fiches et le
 résumé utilisé par l’administration sont conservés. Styles limités à
 `.event-redesign` ; [recette et captures](../REFONTE_VISUELLE_INTERFACES.md).
+
+## Colonies — proposition A du lot L7A
+
+Planètes conserve deux présentations du même ensemble : cartes et comparaison,
+avec `view=table` et `resource`. Cartes horizontales sur grand écran : illustration
+existante, identité et informations, puis actions ; une colonne sur tablette/mobile.
+Renommage et bonus/malus restent dépliables, stocks/vaisseaux dans le panneau
+existant utilisable au clavier et au toucher. Comparatif sémantique à cinq ressources
+sur grand écran, à une ressource sélectionnée sur format étroit, avec formulaire
+GET de repli sans JavaScript.
+
+L’abandon garde une page dédiée, son bilan complet et ses refus sans divulgation.
+Confirmation à droite sur grand écran, sous le bilan sinon ; aucune information
+nécessaire n’est cachée. Le nom, les champs de protection et les destinations
+existantes sont conservés. Styles limités à `.colony-redesign`, sans modification
+de la Vue générale ; [recette et captures](../REFONTE_VISUELLE_INTERFACES.md).
