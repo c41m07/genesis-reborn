@@ -1,11 +1,21 @@
 # Décisions et ambiguïtés — 21 octobre 2026
 
-## Grille de coûts retenue — décision explicite du 16 novembre 2026
+## Équilibrage des prix des deux premiers rangs
+
+L’utilisateur valide les parts de valeur **B48/52/0/0, I35/35/30/0 et S25/35/30/10**
+pour les 52 fiches du catalogue de référence. Le Basique réduit la pression sur
+le nano et l’Intermédiaire transfère une part du coût vers l’antimatière. Les prix
+Supérieurs et les 156 budgets de base sont conservés, ainsi que les paiements
+enregistrés et la priorité des surcharges. La [grille détaillée](COUTS.md) et les
+[simulations](EQUILIBRAGE.md#équilibrage-des-prix-basiques-et-intermédiaires)
+documentent les prix et les parcours comparés.
+
+## Grille de coûts retenue le 16 novembre 2026, référence historique
 
 L’utilisateur retient B40/60, I30/50/20 et S25/35/30/10 en parts de valeur
 métal/nano/antimatière/hydrogène après lecture des simulations. Cette décision
 remplace les recommandations et statuts « candidat non activé » des études précédentes.
-Les [tableaux courants](COUTS.md) couvrent les 52 familles et 156 profils, civils inclus.
+Le catalogue couvre 52 familles et 156 profils, civils inclus.
 Les budgets réels de base sont exactement conservés, sans nouveau facteur de rang.
 
 Les courbes, réductions, deux étapes d’arrondi par ressource, durées, taxe E, bonus,
@@ -1978,3 +1988,12 @@ de l’atelier de nanofabrication à 180, 270 et 405 unités par heure et par ni
 pour les rangs Basique, Intermédiaire et Supérieur, en position 5 et à vitesse ×1.
 La production brute des usines de même rang et de même niveau retrouve le ratio
 8 hydrogène : 4 métal : 2 nano : 1 antimatière dans ces conditions.
+
+## Consommation électrique de l’antimatière
+
+L’utilisateur valide une consommation directe de 0,025 électricité par seconde
+et par niveau Basique pour le piège. À plein rendement, avec 4 H consommés
+par AM et 0,25 électricité par H produit en raffinerie, le coût total atteint
+2 électricité par AM. Il correspond au coût de production de 8 H, 4 M ou 2 N.
+Les facteurs de rang continuent de s’appliquer à la production et à la
+consommation. Les débits ci-dessus sont ceux du catalogue de référence.

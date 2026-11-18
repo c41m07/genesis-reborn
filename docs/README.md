@@ -31,11 +31,11 @@ une seule référence par sujet ; les anciens bilans ne décrivent pas l’état
 | Comprendre le worker, le notifier et les garanties de livraison | [Worker et notifier](WORKER_NOTIFIER.md) |
 | Régler le référencement et Search Console | [SEO](REFERENCEMENT.md) |
 | Consulter les profils de combat, production et vitesse | [EQUILIBRAGE](EQUILIBRAGE.md) |
-| Consulter les 156 profils de coûts B40/I30/S25 retenus | [Grille commune](COUTS.md) |
+| Consulter les 156 profils de coûts B48/I35/S25 retenus | [Grille commune](COUTS.md) |
 | Comprendre les déblocages par rang | [Déblocages initiaux](DEBLOCAGES.md) |
 | Comparer les durées, taxes électriques et carburants par classe | [Grilles et mesures du 15 novembre](DUREES_CARBURANT.md) |
 | Comparer les parcours financés, flottes, reconstructions et prix candidats | [Simulations économiques et militaires](SIMULATIONS_PROGRESSION_ECONOMIE.md) |
-| Étudier B40/60, I30/50/20 et S25/35/30/10 sans activation | [Grille proposée et comparaisons](SIMULATIONS_GRILLE_PROPOSEE.md) |
+| Consulter l’étude historique B40/60, I30/50/20 et S25/35/30/10 | [Grille proposée et comparaisons](SIMULATIONS_GRILLE_PROPOSEE.md) |
 | Isoler les changements de prix Basiques et Intermédiaires | [Comparaison par rang](SIMULATIONS_COUTS_PAR_RANG.md) |
 | Suivre l’évolution de progression, carburant et unités économiques | [Lots, vérifications et activation](PROGRESSION_CARBURANT_UNITES.md) |
 | Déployer récolteurs et satellites, comprendre leurs places et pertes | [Unités économiques](UNITES_ECONOMIQUES.md) |

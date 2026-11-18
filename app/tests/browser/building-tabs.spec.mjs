@@ -49,7 +49,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(tab('basic').locator('.building-rank-up')).toHaveCount(0);
     await expect(tab('basic')).toHaveAccessibleDescription(/Ressources insuffisantes/);
     await expect(family.locator('.card-stock-badge, .tier-label')).toHaveCount(0);
-    await expect(panel('basic').locator('.costs')).toContainText('1,23 M');
+    await expect(panel('basic').locator('.costs')).toContainText('1,47 M');
     await expect(panel('basic').locator('.costs > span').first()).toHaveAttribute('aria-label', /Métal : [\d ]+/);
     await expect(panel('basic').getByRole('button',{name:/^Manque [\d ]+ Métal/})).toBeDisabled();
     await expect(panel('basic').locator('.catalog-card-art img')).toHaveCSS('filter','none');
@@ -60,7 +60,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(panel('intermediate').locator('img')).toHaveAttribute('src', /power_plant__intermediate.webp$/);
     await expect(panel('intermediate').locator('.catalog-card-heading > h3')).toHaveText('Complexe énergétique à antimatière');
     await expect(panel('intermediate').locator('form [name="tier"]')).toHaveValue('intermediate');
-    await expect(panel('intermediate').locator('.costs > span').first()).toContainText('900');
+    await expect(panel('intermediate').locator('.costs > span').first()).toContainText('1 050');
     await page.keyboard.press('ArrowRight');
     await expect(tab('superior')).toBeFocused();
     await expect(panel('superior')).toBeVisible();

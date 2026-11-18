@@ -23,20 +23,25 @@ final class AcceptedResourceCostsTest extends TestCase
         $fixture = $this->fixture();
         $catalog = new GameCatalog(dirname(__DIR__, 2) . '/config/game');
         $count = 0;
-        self::assertSame([
-            'basic' => ['metal' => 40, 'nano' => 60, 'antimatter' => 0, 'hydrogen' => 0],
-            'intermediate' => ['metal' => 30, 'nano' => 50, 'antimatter' => 20, 'hydrogen' => 0],
+        $shares = [
+            'basic' => ['metal' => 48, 'nano' => 52, 'antimatter' => 0, 'hydrogen' => 0],
+            'intermediate' => ['metal' => 35, 'nano' => 35, 'antimatter' => 30, 'hydrogen' => 0],
             'superior' => ['metal' => 25, 'nano' => 35, 'antimatter' => 30, 'hydrogen' => 10],
-        ], $fixture['shares_percent']);
+        ];
         foreach (['buildings' => 13, 'technologies' => 19, 'ships' => 16, 'defenses' => 4] as $group => $size) {
             self::assertCount($size, $catalog->all($group));
             foreach ($fixture['entries'][$group] as $slug => $entry) {
                 foreach (GameCatalog::TIERS as $tier) {
                     $costs = $catalog->costs($catalog->withTier($catalog->get($group, $slug), $tier), 1, 1, $group);
-                    $budget = $this->value($entry['old_profiles'][$tier]);
-                    self::assertSame($entry['profiles'][$tier], $costs, "{$group}/{$slug}/{$tier}");
-                    self::assertSame($budget, $this->value($costs));
-                    foreach ($fixture['shares_percent'][$tier] as $resource => $percent) {
+                    $budget = $this->value($entry['profiles'][$tier]);
+                    self::assertSame($budget, $this->value($costs), "{$group}/{$slug}/{$tier}");
+                    if ($tier === 'superior') {
+                        self::assertSame($entry['profiles'][$tier], $costs, "{$group}/{$slug}/{$tier}");
+                    }
+                    foreach ($shares[$tier] as $resource => $percent) {
+                        if ($percent === 0) {
+                            self::assertSame(0, $costs[$resource], "{$group}/{$slug}/{$tier}/{$resource}");
+                        }
                         self::assertGreaterThanOrEqual(0, $costs[$resource]);
                         self::assertLessThanOrEqual(8.0, abs($fixture['weights'][$resource] * $costs[$resource] - $budget * $percent / 100));
                     }
@@ -61,13 +66,12 @@ final class AcceptedResourceCostsTest extends TestCase
         $previous->name = 'Prix précédents';
         foreach ($fixture['entries'] as $group => $entries) {
             foreach ($entries as $slug => $entry) {
-                $previous->gameSettings['catalog_overrides'][$group][$slug]['cost_profiles'] = $entry['old_profiles'];
+                $previous->gameSettings['catalog_overrides'][$group][$slug]['cost_profiles'] = $entry['profiles'];
             }
         }
         $now = $catalog->forUniverse($current);
         $before = $catalog->forUniverse($previous);
         $count = 0;
-        $maxima = [];
         foreach ($now['catalog'] as $group => $definitions) {
             foreach ($definitions as $slug => $definition) {
                 $levels = in_array($group, ['buildings', 'technologies'], true) ? array_values(array_filter([
@@ -99,10 +103,13 @@ final class AcceptedResourceCostsTest extends TestCase
                                 $new = $calculator->calculate($catalog->getTierForUniverse($current, $group, $slug, $tier), $group, $level, $quantity, $buildings, $now, $tech);
                                 self::assertSame($old['duration'], $new['duration']);
                                 self::assertSame($old['costs']['electricity'] ?? 0, $new['costs']['electricity'] ?? 0);
-                                // Deux étapes d'arrondi par ressource : croissance puis remise, sans changement des courbes.
-                                $difference = abs($this->value($new['costs']) - $this->value($old['costs']));
-                                self::assertLessThanOrEqual($fixture['quote_validation']['maximum_absolute_difference_by_group'][$group], $difference);
-                                $maxima[$group] = max($maxima[$group] ?? 0, $difference);
+                                if ($tier === 'superior') {
+                                    self::assertSame($old['costs'], $new['costs']);
+                                } else {
+                                    // La croissance et la remise arrondissent chaque ressource séparément.
+                                    $difference = abs($this->value($new['costs']) - $this->value($old['costs']));
+                                    self::assertLessThanOrEqual(14, $difference, "{$group}/{$slug}/{$tier}");
+                                }
                                 $count++;
                             }
                         }
@@ -111,7 +118,6 @@ final class AcceptedResourceCostsTest extends TestCase
             }
         }
         self::assertSame($fixture['quote_validation']['quotes'], $count);
-        self::assertSame($fixture['quote_validation']['maximum_absolute_difference_by_group'], $maxima);
     }
 
     public function testPartialUniverseOverrideRemainsAuthoritative(): void

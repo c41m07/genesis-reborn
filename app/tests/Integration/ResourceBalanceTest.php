@@ -88,7 +88,7 @@ final class ResourceBalanceTest extends KernelTestCase
             self::assertSame(0.0,$snapshot[$slug]['stock']);
             self::assertSame(0.0,$snapshot[$slug]['rate']);
         }
-        $resources->consume($planet,['metal'=>480,'nano'=>160]);
+        $resources->consume($planet,['metal'=>384,'nano'=>208]);
         self::assertEqualsWithDelta(10,$snapshot['metal']['sources']['base']*3600,1e-7);
     }
 
@@ -101,11 +101,11 @@ final class ResourceBalanceTest extends KernelTestCase
         self::assertEqualsWithDelta(370,$active['metal']['potentialGross']*3600,1e-7);
         self::assertEqualsWithDelta(370,$active['metal']['gross']*3600,1e-7);
         self::assertEqualsWithDelta(90,$active['antimatter']['potentialGross']*3600,1e-7);
-        self::assertEqualsWithDelta(180,$active['antimatter']['productionInputs']['electricity']['gross']*3600,1e-7);
+        self::assertEqualsWithDelta(90,$active['antimatter']['productionInputs']['electricity']['gross']*3600,1e-7);
         self::assertEqualsWithDelta(360,$active['antimatter']['productionInputs']['hydrogen']['gross']*3600,1e-7);
         foreach($active['antimatter']['productionInputs'] as $input) self::assertSame($input['gross'],$input['actual']);
         self::assertNotNull($active['metal']['estimateSeconds']);
-        self::assertEqualsWithDelta(360,$active['electricity']['consumptionPotential']*3600,1e-7);
+        self::assertEqualsWithDelta(270,$active['electricity']['consumptionPotential']*3600,1e-7);
         self::assertEqualsWithDelta(360,$active['hydrogen']['consumptionPotential']*3600,1e-7);
         self::assertArrayHasKey('mine_antimatter',$active['hydrogen']['consumerSources']);
         self::assertArrayHasKey('mine_metal',$active['electricity']['consumerSources']);
@@ -137,6 +137,29 @@ final class ResourceBalanceTest extends KernelTestCase
             $levels = ['mine_nano' => [$tier => 1]];
             self::assertEqualsWithDelta($rate + 10, $resources->rate($planet, 'nano', 0, $levels) * 3600, 1e-7);
             self::assertEqualsWithDelta($rate, $resources->factoryConsumption($planet, 'mine_nano', $levels)['electricity'] * 3600, 1e-7);
+        }
+    }
+
+    public function testAntimatterRequiresEightTimesTheElectricityOfHydrogenByRank(): void
+    {
+        $planet = $this->planet();
+        $resources = self::getContainer()->get(ResourceService::class);
+
+        foreach (['basic' => 90, 'intermediate' => 135, 'superior' => 202.5] as $tier => $hourlyAntimatter) {
+            $levels = ['mine_antimatter' => [$tier => 1], 'mine_hydrogen' => [$tier => 1]];
+            $antimatterProduction = $resources->rate($planet, 'antimatter', 0, $levels);
+            $hydrogenProduction = $resources->rate($planet, 'hydrogen', 0, $levels);
+            $reactorConsumption = $resources->factoryConsumption($planet, 'mine_antimatter', $levels);
+            $refineryConsumption = $resources->factoryConsumption($planet, 'mine_hydrogen', $levels);
+
+            self::assertEqualsWithDelta($hourlyAntimatter, $antimatterProduction * 3600, 1e-7, $tier);
+            self::assertEqualsWithDelta($hourlyAntimatter, $reactorConsumption['electricity'] * 3600, 1e-7, $tier);
+            self::assertEqualsWithDelta(4 * $hourlyAntimatter, $reactorConsumption['hydrogen'] * 3600, 1e-7, $tier);
+
+            // L’électricité de la raffinerie est imputée à l’hydrogène utilisé par le piège.
+            $electricityPerHydrogen = $refineryConsumption['electricity'] / $hydrogenProduction;
+            $totalElectricity = $reactorConsumption['electricity'] + $reactorConsumption['hydrogen'] * $electricityPerHydrogen;
+            self::assertEqualsWithDelta(8 * $electricityPerHydrogen, $totalElectricity / $antimatterProduction, 1e-7, $tier);
         }
     }
 

@@ -1,9 +1,9 @@
 # Synthèse de conception
 
-## Répartition des prix retenue — 16 novembre 2026
+## Répartition des prix courante
 
 Les 156 profils par défaut utilisent les parts de valeur M/N/A/H suivantes :
-Basique 40/60/0/0, Intermédiaire 30/50/20/0 et Supérieur 25/35/30/10.
+Basique 48/52/0/0, Intermédiaire 35/35/30/0 et Supérieur 25/35/30/10.
 La valeur est M×2 + N×4 + A×8 + H ; il ne s’agit pas de quantités brutes ni d’un marché.
 Les quantités sont entières et conservent le budget de base propre à chaque profil,
 y compris ceux des défenses. Les courbes et arrondis après croissance/remises restent
@@ -186,7 +186,7 @@ Les coûts de recherche par niveau conservent la croissance ×2 et les durées d
 
 Les technologies de combat couvrent structure, bouclier, attaque, précision, suivi, esquive, signature, cadence de tir, vitesse, réservoir et soute. Le tir supplémentaire est une chance indépendante par tir de base pour conserver une résolution entière et éviter des valeurs de tirs fractionnaires.
 
-Pour les effets discrets de colonisation, chaque rang contribue son quota pondéré, puis les fractions de colonies sont arrondies vers le bas; la limite de colonies configurée par l’univers reste prioritaire. Les productions et capacités de stockage de plusieurs bâtiments-rangs s’additionnent, car chaque rang fonctionne comme une installation distincte. Les coûts des ressources non énergétiques suivent les budgets de valeur par famille; l’électricité n’est pas facturée lors de la construction. Les usines reçoivent un rendement de secours minimal de 10 % en déficit électrique, selon une simulation segmentée hors connexion; la production d’antimatière est limitée par l’hydrogène et s’arrête sans apport. La consommation électrique nominale des extracteurs est configurée à 0,05/s/niveau; depuis la décision du 9 novembre, l’usine d’antimatière consomme 4 H par A produite.
+Pour les effets discrets de colonisation, chaque rang contribue son quota pondéré, puis les fractions de colonies sont arrondies vers le bas; la limite de colonies configurée par l’univers reste prioritaire. Les productions et capacités de stockage de plusieurs bâtiments-rangs s’additionnent, car chaque rang fonctionne comme une installation distincte. Les coûts des ressources non énergétiques suivent les budgets de valeur par famille; l’électricité n’est pas facturée lors de la construction. Les usines reçoivent un rendement de secours minimal de 10 % en déficit électrique, selon une simulation segmentée hors connexion; la production d’antimatière est limitée par l’hydrogène et s’arrête sans apport. La consommation électrique de référence par niveau Basique est de 0,05/s pour le métal, le nano et l’hydrogène, et de 0,025/s pour le piège à antimatière. Celui-ci consomme aussi 4 H par AM produite.
 
 
 ### Research et art temporaire
@@ -263,7 +263,7 @@ Les rangs multiplient ces capacités par 1 / 1,25 / 1,5625 avec arrondi supérie
 
 ## Production des bâtiments — cadence A, 5 novembre 2026
 
-En position 5, dans un univers ×1 et à plein rendement, les productions Basiques par niveau sont de 360 métal/h, 180 nano/h, 720 hydrogène/h, 90 antimatière/h et 1 080 électricité/h pour la centrale. Le métal, le nano, l’hydrogène et l’antimatière consomment chacun 180 électricité/h par niveau. Le piège consomme aussi 4 H par A produite. Les rangs s’additionnent et gardent les facteurs de production et consommation **1 / 1,5 / 2,25**. Les bonus de position et la production passive restent appliqués séparément. Les prix du niveau 1 sont 480 M + 160 N pour les trois producteurs directs, 360 M + 120 N pour le réacteur et 1 440 M + 480 N pour la centrale. Les durées du niveau 1 Basique sont respectivement 1 min, 2 min et 2 min ; les courbes de niveaux et les réductions sont conservées. Les budgets du réacteur et de la centrale sont déclinés sur les autres rangs avec les facteurs de coût existants, sans changer les parts de ressources. Le [bilan historique du 9 novembre](EQUILIBRAGE.md#référence-historique--production-du-9-novembre-2026) précise les 84,16 jours de construction cumulés jusqu’au niveau 80 et les limites de cette mesure.
+En position 5, dans un univers ×1 et à plein rendement, les productions Basiques par niveau sont de 360 métal/h, 180 nano/h, 720 hydrogène/h, 90 antimatière/h et 1 080 électricité/h pour la centrale. Le métal, le nano et l’hydrogène consomment chacun 180 électricité/h par niveau Basique. Le piège consomme directement 90 électricité/h et 360 hydrogène/h. En comptant l’électricité nécessaire à la production des 4 H par AM, une unité d’antimatière coûte 2 électricité à plein rendement, comme 8 H, 4 M ou 2 N. Les rangs s’additionnent et gardent les facteurs de production et consommation **1 / 1,5 / 2,25**. Les bonus de position et la production passive restent appliqués séparément. Les prix du niveau 1 Basique sont de 384 M + 208 N pour les trois producteurs directs, 288 M + 156 N pour le piège et 1 152 M + 624 N pour la centrale. Les durées du niveau 1 Basique sont respectivement 1 min, 2 min et 2 min ; les courbes de niveaux et les réductions sont conservées. Les budgets du réacteur et de la centrale sont déclinés sur les autres rangs avec les facteurs de coût existants, sans changer les parts de ressources. Le [bilan historique du 9 novembre](EQUILIBRAGE.md#référence-historique--production-du-9-novembre-2026) précise les 84,16 jours de construction cumulés jusqu’au niveau 80 et les limites de cette mesure.
 
 Les coûts des seuls producteurs croissent par niveau de ×1,12 jusqu’à 20, ×1,09 jusqu’à 40, ×1,035 jusqu’à 80, ×1,015 jusqu’à 120, puis ×1,01. Les premiers prix, profils de ressources par rang et arrondis par ressource restent utilisés. Les durées et les effets des laboratoires, chantiers, bunkers et stockages ne reçoivent pas le nouveau facteur de production ; leur calcul reste séparé.
 
@@ -353,8 +353,7 @@ Le classement des guildes additionne les points actuels de bâtiments, recherche
 
 ## Historique : répartition des vaisseaux du 5 novembre 2026
 
-Cette étape est remplacée par la grille commune retenue le 16 novembre, présentée
-en tête de ce document. Les paragraphes suivants décrivent uniquement cette étape historique.
+La grille actuellement en vigueur figure en tête de ce document. Les paragraphes suivants décrivent uniquement cette étape historique.
 
 Les 14 classes utilisent les parts de valeur économique suivantes : T1 60 % métal / 40 % nano ; T2 45 % métal / 45 % nano / 10 % antimatière ; T3 30 % métal / 50 % nano / 20 % antimatière. Le calcul pondère M×2, N×4, A×8 et H×1. Ces pourcentages ne représentent pas les quantités brutes. Les arrondis des trois ressources sont répartis pour conserver exactement la valeur de chaque profil de rang avant recherche ; les profils réels font foi.
 
@@ -793,7 +792,7 @@ univers ne rend pas ce membre en ligne ici ; heures et durées ne sont pas rév�
 
 Le revenu de base total est désormais de **10 métal/h et 10 nano/h**, à vitesse ×1 en position 5, au lieu de 40 métal/h et 20 nano/h. Ce sont des taux de remplacement, pas un revenu additionnel. Les modificateurs de position, d’univers et d’événement existants s’appliquent ; les vacances suspendent toujours la production. Le revenu de base est nul pour l’électricité, l’antimatière et l’hydrogène, conformément à la précision validée le 13 novembre 2026. Les productions des bâtiments, stocks et capacités restent inchangés. Le calcul des gains non matérialisés suit la règle courante déjà validée, sans migration.
 
-À stocks nuls, sans usine, à vitesse ×1 en position 5, 48 h fournissent 480 métal et 480 nano : assez pour les 480 métal et 160 nano d’un premier producteur direct. Cela ne produit aucune électricité et ne garantit pas la résolution de tous les blocages. Le coût électrique ponctuel suit la décision validée ci-dessous.
+À stocks nuls, sans usine, à vitesse ×1 en position 5, 48 h fournissent 480 métal et 480 nano : assez pour les 384 métal et 208 nano d’un premier producteur direct. Cela ne produit aucune électricité et ne garantit pas la résolution de tous les blocages. Le coût électrique ponctuel suit la décision validée ci-dessous.
 
 ### Électricité ponctuelle des opérations — décision du 13 novembre 2026
 
