@@ -2146,6 +2146,85 @@ Preuves locales : `lot-7C-80-manifest.json`, `galaxie-80-verification.json`,
 dossier de conception courant. Aucun code du jeu, règle ou donnée existante n’est
 modifié. **Direction de conception toujours à valider avant développement.**
 
+### Exploration animée, repères et rapports de simulation — 18 novembre 2026
+
+Conception interactive **4/5** : caméra, gestes tactiles, navigation à trois niveaux,
+animations et états privés à préserver. L’utilisateur apprécie la spirale à l’échelle
+et l’échelle actuelle, demande de conserver les vues système/planète du jeu et préfère
+un bilan de simulateur comparable au rapport de combat. Cela ne vaut pas décision
+d’appliquer la nouvelle géographie aux systèmes persistés.
+
+La page Figcraft **33 · L7C · Exploration vivante et repères** ajoute 18 cadres :
+spirale, échelle actuelle, système solaire, planète, signal inconnu et zoom sur la
+colonie, chacun en 1440, 768 et 390 px. Les quatre détails de combat des pages 30/31
+sont retravaillés, sans remplacer la préparation ni la synthèse du simulateur.
+Les pages précédentes restent conservées ; 189 liens représentatifs et 21 survols
+vers deux infobulles sont vérifiés.
+Figcraft illustre des états de parcours : le zoom continu, le déplacement, les gestes
+et les animations s’exécutent dans l’aperçu interactif, pas dans ses captures natives.
+
+L’aperçu d’exploration propose les deux géographies appréciées. La caméra se déplace
+par glissement et se zoome par boutons, molette centrée sur le pointeur et pincement.
+« Vue entière » et « Ma colonie » permettent de retrouver ses repères. Les boutons
+de caméra acceptent aussi les flèches du clavier ; le sélecteur donne accès aux
+80 systèmes sans pointer de petites étoiles. Un clic ouvre un système connu ; un
+clic sur une planète, ou son bouton dans la liste, ouvre le globe. Le fil de navigation
+et Échap permettent de revenir, avec conservation du cadrage galactique et de la
+rotation choisie pour la planète. La destination reste vide jusqu’à une action explicite.
+Repérer un système inexploré vise le système sans inventer une position planétaire.
+
+Les repères reprennent les quarts du moteur actuel : PNJ en haut à gauche, allié en
+haut à droite, neutre/libre en bas à droite et ennemi en bas à gauche. Le cercle des
+colonies personnelles et leur maison restent visibles. Les catégories se cumulent :
+le système d’exemple A:43 contient une colonie personnelle, un allié et un ennemi.
+Un signal inexploré n’a ni liste de planètes ni occupants préparés dans l’aperçu.
+À la demande de l’utilisateur, les numéros de système quittent le fond de carte et
+apparaissent au survol avec les renseignements connus. Sur téléphone, le toucher
+ouvre la fiche ; le sélecteur conserve l’accès clavier à tous les identifiants.
+Le « ? » est agrandi, jaune sur un disque noir opaque à contour fin. Une flèche
+orientée remplace le point de chaque flotte et progresse dans le sens de son trajet.
+Les identifiants et coordonnées proviennent de l’étude précédente ; les occupants
+et deux mouvements sont fictifs et signalés comme tels, sans lecture de données privées.
+
+Quatorze méthodes ciblées de `galaxy_v2_controller.js` sont réutilisées pour les
+orbites, l’étoile, les disques de système, les palettes, textures procédurales, globes,
+anneaux et lune décorative. Le contexte des fiches est amélioré autour de ce rendu.
+Les étoiles, le noyau et les mouvements animent la galaxie sans déplacer les systèmes
+ni modifier leurs distances. Les orbites et la rotation des globes restent animées.
+Pause et reprise sont disponibles ; la préférence de mouvement réduit et l’onglet
+masqué sont respectés. Les coordonnées orbitales, couleurs des mondes, anneaux et
+lune restent des représentations décoratives, sans information de jeu supplémentaire.
+Lors de l’intégration, conserver les actions et conditions existantes des fiches :
+gestion, sondes, colonisation, conquête, renfort et contestation, selon les droits.
+
+Le nouvel aperçu du simulateur conserve les dix résultats déjà calculés par le moteur.
+Chaque combat affiche deux camps distincts, puis une ligne par type et rang d’unité :
+**Engagés / Pertes / Survivants**, avec arrivée R1 ou R2 explicite. Les pertes sont
+rouges et négatives ; les survivants sont comptés comme unités. Les points de structure
+restants sont disponibles dans un détail secondaire, sans se substituer à ce nombre.
+Les rounds restent consultables et leurs tirs sont présentés comme totaux des deux
+camps : aucune statistique par camp absente des données n’est inventée. Les données
+source vérifient les 30 lignes des dix combats : engagés = pertes + survivants, avec
+concordance des pertes brutes du moteur. Aucune perte moyenne, reconstruction ou butin
+simulé n’est ajouté.
+
+Vérifications ciblées : aperçus en 1024, 736, 390 et 320 px ; clic réel sur un système
+et un globe, navigation aller-retour, zoom, molette, glissement, pincement tactile,
+conservation de rotation, choix et effacement de destination, signal inconnu sans
+occupants, animation perceptible et image figée en pause. Dix combats contrôlés aux
+quatre largeurs, détails des rounds et structures accessibles ; aucun débordement
+horizontal ni erreur de script constaté. Les 24 cadres natifs concernés et leurs liens
+sont contrôlés ; vérification visuelle des systèmes, globes et bilans sur téléphone.
+Il s’agit de vérifications de conception, pas d’une recette du jeu ni d’un audit RGAA.
+
+Preuves dans le dossier de conception courant : `genesis-galaxie-interactive.html`,
+`genesis-simulateur-rapport.html`, `galaxie-interactive-reemploi.json`,
+`exploration-interactive-verification.json`, `exploration-scenes.json`,
+`simulateur-rapport-verification.json`, `lot-7C-interactif-manifest.json` et
+`exploration-native-verification.json`. Aucun fichier de code du jeu, donnée de base,
+dépendance ou règle d’équilibrage n’est modifié. Réalisation L7C, CI, fusion et
+déploiement restent à effectuer après validation de la conception et des distances.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -2164,7 +2243,7 @@ modifié. **Direction de conception toujours à valider avant développement.**
 | L6 | A implémentée et vérifiée localement | A choisie explicitement | 32 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
 | L7A | A implémentée et vérifiée localement | A choisie explicitement ; Vue générale conservée | 51 PHP, sept parcours navigateur et 43 captures | CI, intégration et déploiement distincts |
 | L7B | Page 29 implémentée et vérifiée localement | Version consolidée validée explicitement | 20 PHP, six parcours navigateur consolidés et 30 captures ; bilan ci-dessus | CI complète, intégration et déploiement distincts |
-| L7C | Deux propositions et une étude à 80 systèmes préparées | Direction attendue, pages 30/31/32 | 50 cadres A/B, puis onze cadres comparant géographie actuelle et spirale à l’échelle ; aucune réalisation du jeu | Choisir la direction et décider des distances avant développement |
+| L7C | Exploration interactive et bilans retravaillés | Spirale et échelle actuelle appréciées ; ajustements demandés | Pages 30/31/32 conservées, page 33 : 18 cadres ; quatre bilans revus ; aperçus testés | Valider la conception finale et décider des distances avant développement |
 | L7D à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 

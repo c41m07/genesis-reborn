@@ -58,6 +58,11 @@ La page 32 complète cette comparaison avec onze cadres à 80 systèmes : galaxi
 actuelle, échelle actuelle et étude d’une spirale impliquant de nouvelles distances.
 Destination vide par défaut et deux mouvements fictifs identifiés. Aperçu interactif
 vérifié ; géographie et direction restent à valider, sans modification du jeu.
+La page 33 précise les deux vues appréciées : 18 cadres couvrent repères cumulables,
+zoom, système, planète et signal inconnu. Les interactions et animations sont exécutées
+dans l’aperçu ; le moteur visuel actuel est repris. Quatre bilans de simulation des
+pages 30/31 sont regroupés par camp et unité, avec engagés, pertes et survivants.
+Vérifications sur quatre largeurs ; aucune réalisation du jeu ni décision d’équilibrage.
 Les états visibles supplémentaires sont recensés ensuite.
 
 Les états du suivi sont : Inventorié → Analysé → Propositions préparées → En

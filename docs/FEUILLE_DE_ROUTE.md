@@ -134,6 +134,12 @@ Onze cadres et un aperçu interactif sont vérifiés, avec destination vide par 
 et mouvements fictifs identifiés. La première proposition A n’était pas à l’échelle.
 Adopter une spirale physiquement cohérente changerait les distances et demande une
 décision produit ; aucun code de carte ni donnée du jeu n’est modifié.
+L’utilisateur apprécie les deux vues à l’échelle. La page 33 ajoute 18 états
+d’exploration avec repères cumulables, système solaire et globe repris du moteur.
+Les aperçus exécutent zoom, glissement, pincement, navigation et animations avec pause.
+Les quatre bilans du simulateur des pages 30/31 adoptent une lecture de rapport de
+combat : engagés, pertes et survivants par unité et par camp. Vérifications ciblées
+sur quatre largeurs ; conception et distances restent à valider avant intégration.
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026
