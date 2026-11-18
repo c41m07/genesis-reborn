@@ -1970,3 +1970,11 @@ passent de 180/270/405 à 360/540/810. La production passive est indépendante.
 Le lot reprend les stockages déjà livrés dans dev. Le registre conserve sa
 version, les accès acquis restent valides et les commandes payées se terminent
 selon leurs paramètres enregistrés.
+
+### Retour aux débits du nano précédents — 18 novembre 2026
+
+L’utilisateur décide de rétablir la production et la consommation électrique
+de l’atelier de nanofabrication à 180, 270 et 405 unités par heure et par niveau
+pour les rangs Basique, Intermédiaire et Supérieur, en position 5 et à vitesse ×1.
+La production brute des usines de même rang et de même niveau retrouve le ratio
+8 hydrogène : 4 métal : 2 nano : 1 antimatière dans ces conditions.
