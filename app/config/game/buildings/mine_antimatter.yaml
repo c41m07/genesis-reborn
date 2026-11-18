@@ -17,10 +17,12 @@
         {
           "slug": "mine_hydrogen",
           "tier": "basic",
-          "level": 3
-        },
+          "level": 5
+        }
+      ],
+      "technologies": [
         {
-          "slug": "lab",
+          "slug": "engineering_foundations",
           "tier": "basic",
           "level": 2
         }
@@ -31,10 +33,12 @@
         {
           "slug": "mine_hydrogen",
           "tier": "intermediate",
-          "level": 3
-        },
+          "level": 5
+        }
+      ],
+      "technologies": [
         {
-          "slug": "lab",
+          "slug": "engineering_foundations",
           "tier": "intermediate",
           "level": 2
         }
@@ -45,10 +49,12 @@
         {
           "slug": "mine_hydrogen",
           "tier": "superior",
-          "level": 3
-        },
+          "level": 5
+        }
+      ],
+      "technologies": [
         {
-          "slug": "lab",
+          "slug": "engineering_foundations",
           "tier": "superior",
           "level": 2
         }

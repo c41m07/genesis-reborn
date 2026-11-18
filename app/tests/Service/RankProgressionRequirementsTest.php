@@ -12,7 +12,6 @@ final class RankProgressionRequirementsTest extends TestCase
     public static function profiles():iterable
     {
         $buildings=[
-            'mine_antimatter'=>['mine_hydrogen'=>3,'lab'=>2],
             'shipyard'=>['mine_metal'=>2,'mine_nano'=>2],
             'fortress'=>['mine_metal'=>1,'mine_nano'=>1],
             'storage_metal'=>['mine_metal'=>5], 'storage_nano'=>['mine_nano'=>5],
@@ -78,6 +77,16 @@ final class RankProgressionRequirementsTest extends TestCase
                 }
                 yield 'buildings/'.$slug.'/'.$tier=>['buildings',$slug,$tier,$rules];
             }
+            yield 'buildings/mine_antimatter/'.$tier => [
+                'buildings',
+                'mine_antimatter',
+                $tier,
+                [
+                    'buildings' => [['slug' => 'mine_hydrogen', 'tier' => $tier, 'level' => 5]],
+                    'technologies' => [['slug' => 'engineering_foundations', 'tier' => $tier, 'level' => 2]],
+                ],
+            ];
+
             foreach(['buildings'=>$buildings,'technologies'=>$technologies,'ships'=>$ships,'defenses'=>$defenses] as $group=>$entries){
                 foreach($entries as $slug=>$spec){
                     $rules=$group==='buildings'?['buildings'=>$spec]:[
