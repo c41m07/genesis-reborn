@@ -103,7 +103,7 @@ Les liens du prototype simulent la navigation et n’exécutent aucune action du
 | L5 | Projets en cours/disponibles/historique et détail | 3/5 · 4/5 | Dons définitifs, paliers, minimums et récompenses acquises. |
 | L6 | Événements/bonus, défis/rotations et détail | 3/5 · 4/5 | Visibilité, filtres, périodes et panneau commun. |
 | L7A | Vue générale, colonies/comparaison et abandon | 4/5 · 4/5 | Conserver la référence approuvée ; examiner les autres états et confirmations. |
-| L7B | Bâtiments, Recherche, Chantier, Défenses, Guide | 3/5 · 4/5 | Filtres, prérequis, files et préparation ciblée. |
+| L7B | Bâtiments, Recherche, Chantier, Défenses, Guide | 4/5 · 4/5 | Filtres, prérequis, files et préparation ciblée. |
 | L7C | Cartes classique/V2 et simulateur | 4/5 · 4/5 | Découvertes, confidentialité, clavier et parcours préparation/résultats. |
 | L7D | Rapports, archives et détails | 3/5 · 4/5 | Participation, confidentialité, pagination et ancres utiles. |
 | L7E | Messages/recherche, classements et profils | 4/5 · 4/5 | Canaux, non-lus, saisie, destinataires et informations publiques. |
@@ -1594,6 +1594,67 @@ complément. Aucun test ne vise la base habituelle. Aucune dépendance installé
 migration sur base existante ni action de jeu habituelle. Performance non mesurée ;
 ces contrôles ne constituent pas un audit RGAA. CI, fusion et déploiement distincts.
 
+## L7B — Développement, propositions préparées — 18 novembre 2026
+
+L7A A est enregistrée dans `730b447`. Le lot suivant concerne Bâtiments,
+Recherche, Chantier spatial, Défenses et Guide technologique, avec les fiches
+d’information, les files et leur confirmation d’annulation. Conception et
+réalisation **4/5** : familles/rangs, accès définitivement acquis, recherche commune,
+quantités/capacités, actualisations et fenêtres de détail sur petit écran.
+Sources examinées : vues et fragments des catalogues, files et guide, contrôleur,
+préparation ciblée `ColonyView`, catégories `CatalogFilters`, contrôleurs de rangs,
+actualisation et guide, définitions/illustrations des exemples et documentation
+actuelle d’architecture. Aucun nouveau parcours métier n’est inventé.
+
+Deux pages ajoutées au même document Figcraft bureau :
+
+- **24 · L7B · A — Développement en lignes** : familles horizontales sur grand écran,
+  illustration et informations rapprochées, activité de la colonie à droite.
+  Guide avec détail latéral ; bilan d’annulation avec confirmation rapprochée.
+- **25 · L7B · B — Développement en cartes** : deux familles par ligne sur ordinateur,
+  activité en bandeau à trois colonnes ; détail du guide et confirmation après
+  leur contenu. Les deux options passent à une colonne sur tablette/mobile.
+
+Les quatre catalogues gardent leurs URL avec `section` ; le guide garde
+`/technologies`. La navigation secondaire mène à ces destinations existantes.
+Les catégories et rangs filtrent un même catalogue ; les prérequis et gains restent
+complémentaires et dépliables. Les fiches d’information gardent leur fenêtre,
+et les détails du guide gardent leur présentation modale sur format étroit,
+avec fermeture en tête. Aucun détail n’obtient une nouvelle URL dans ce lot.
+L’annulation reste une page dédiée, avec dépendances, estimation à 25 % dans
+la capacité disponible et nouvelle vérification serveur à la confirmation.
+
+**50 cadres** : les quatre catalogues, guide fermé/ouvert, exemple de fiche
+d’information et confirmation d’annulation, à 1440/768/390 px pour A/B ; plus deux
+planches d’états. Illustrations et libellés issus du catalogue présent. Niveaux,
+files, coûts et stocks illustratifs ; aucun calcul d’équilibrage validé par ces
+maquettes. L’exemple détaillé de fiche porte sur Mine à ciel ouvert et celui du
+guide sur Propulseurs vectoriels ; les cas complémentaires sont dirigés vers
+la planche d’états, au lieu d’afficher les données d’un autre élément.
+
+Les états couvrent éléments verrouillés, préférences de rangs, vue condensée,
+ressources insuffisantes, file pleine, vacances, unités civiles et capacité,
+quantité/Max, accès permanent, recherche commune, annulation dépendante,
+filtres sans résultat, guide vide, objectif propre au navigateur et au contexte,
+actualisation sans perte de saisie, clavier et repli sans JavaScript.
+Les arrivées entrantes restent consultables même à zéro. Vue générale et bandeau
+de ressources sont conservés. Les formulaires du prototype sont simulés.
+
+Structures grises sauvegardées avant la couleur ; collection de variables et
+composants propres au lot. Vérification initiale des **50 cadres et 1 118
+interactions définies** : aucune destination manquante, aucun débordement,
+chevauchement ou texte coupé détecté ; empreintes des **23 pages précédentes
+identiques**. Revue visuelle A/B sur ordinateur, domaines du guide sur deux
+colonnes au téléphone et fenêtres de détail avec fermeture en tête. Ajustements
+limités à **14 nouveaux cadres**, revérifiés sans erreur ; liens des exemples
+précisés sans changement de géométrie.
+
+Preuves dans le dossier de visualisation : `lot-7B-manifest.json`,
+`lot-7B-preservation-avant.json`, `lot-7B-verification.json`,
+`lot-7B-verification-fenetres.json`, `lot-7B-verification-liens.json` et exports
+`lot-7B-*.png`. Document natif sauvegardé. Conception uniquement ; le code du
+jeu L7B attend le choix explicite entre A et B.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -1611,7 +1672,8 @@ ces contrôles ne constituent pas un audit RGAA. CI, fusion et déploiement dist
 | L5 | A implémentée et vérifiée localement | A choisie explicitement | 44 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
 | L6 | A implémentée et vérifiée localement | A choisie explicitement | 32 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
 | L7A | A implémentée et vérifiée localement | A choisie explicitement ; Vue générale conservée | 51 PHP, sept parcours navigateur et 43 captures | CI, intégration et déploiement distincts |
-| L7B à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
+| L7B | Propositions A/B préparées | Choix attendu | 50 cadres ; 23 pages précédentes conservées | Réalisation après choix |
+| L7C à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
 Les commits restent sur `feature/refonte-visuelle` ; L1B A est enregistré dans
@@ -1622,7 +1684,7 @@ L3 A est enregistré dans `16a9173`, réalisé et vérifié localement.
 L4 A est enregistré dans `e13e588`, réalisé et vérifié localement.
 L5 A est enregistré dans `9eb316e`, réalisé et vérifié localement.
 L6 A est enregistré dans `811ef2d`, réalisé et vérifié localement.
-L7A A est réalisée ; sa recette est consignée ci-dessus. Vue générale conservée.
+L7A A est enregistrée dans `730b447` ; recette ci-dessus. Vue générale conservée.
 Le plan reste à 18 ensembles : neuf sont réalisés, neuf restent à traiter.
 Vue générale avait été finalisée en avance ; L7A est désormais complet localement. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
 Les validations précédentes restent limitées à leurs lots.

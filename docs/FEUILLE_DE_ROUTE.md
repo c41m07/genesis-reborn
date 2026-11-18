@@ -98,8 +98,11 @@ L6 est enregistré dans `811ef2d`. L7A A est également réalisé et vérifié l
 colonies en lignes, comparaison adaptée aux formats étroits et bilan d’abandon
 avec confirmation rapprochée. Vue générale conservée. 51 PHP / 417 assertions,
 sept parcours navigateur et 43 captures ; contrôles statiques et compilation réussis.
-**Neuf ensembles réalisés sur 18, neuf restants**. L7B porte ensuite sur Bâtiments,
+L7A est enregistré dans `730b447`. **Neuf ensembles réalisés sur 18, neuf restants**.
+L7B porte ensuite sur Bâtiments,
 Recherche, Chantier, Défenses, Guide technologique et confirmation d’annulation.
+Propositions Figcraft pages 24/25 : familles en lignes et suivi à droite (A), ou
+cartes et activité en bandeau (B). 50 cadres vérifiés ; choix attendu.
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026
