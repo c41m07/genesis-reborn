@@ -38,6 +38,8 @@ et boutons stables après ajout. À la demande de l’utilisateur, une version c
 page 28 reprend désormais le design actuel avec les apports d’Actions directes.
 La page 29 intègre ensuite les corrections demandées : interrupteurs, affichage
 en lignes, suivi fixe et files/flottes dépliables, sans stocks répétés dans les cartes.
+Les consommations sont rouges et négatives ; huit planches de comparaison des
+rangs intermédiaire/supérieur sont ajoutées en page 30, avec jusqu’à cinq ressources.
 Les quatre catalogues et leurs états sont représentés ; validation de la page 29 attendue.
 Les autres écrans restent inventoriés, sans validation implicite. Aucune CI GitHub, fusion ou livraison n’est revendiquée.
 Les états visibles supplémentaires sont recensés ensuite.

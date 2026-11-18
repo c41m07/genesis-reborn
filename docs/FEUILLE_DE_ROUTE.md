@@ -113,7 +113,9 @@ catalogues en y appliquant Actions directes : version consolidée page 28, 27 ca
 vérifiés, grandes images/rangs conservés. Les corrections suivantes sont consolidées
 page 29 : stocks retirés des cartes, interrupteurs, vrai mode en lignes, suivi fixe
 et panneaux de files/flottes avec annulation. 53 cadres vérifiés et deux aperçus
-défilables ; validation de cette reprise attendue avant intégration.
+défilables. Les consommations deviennent rouges et négatives ; huit comparaisons
+Intermédiaire/Supérieur (page 30) montrent jusqu’à cinq ressources en cartes/lignes.
+Validation de la reprise attendue avant intégration.
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026

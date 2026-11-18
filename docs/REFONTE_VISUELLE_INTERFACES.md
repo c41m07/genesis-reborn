@@ -1868,6 +1868,43 @@ Preuves : `lot-7B-pilotage-manifest.json`, `lot-7B-pilotage-preservation.json`,
 de visualisation. Maquette native sauvegardée ; code du jeu inchangé. Contrôles des
 maquettes et du diff uniquement, sans CI, fusion ou déploiement revendiqué.
 
+### Complément : consommations négatives et aperçus des rangs — 18 novembre 2026
+
+Complexité : **1/5** pour la présentation des consommations, **3/5** pour les
+comparaisons de rangs (calculs réels, densité des ressources et contenus longs).
+
+Les consommations horaires sont désormais en rouge et précédées de « − » dans
+la version de la page 29, fiches comprises. Modification ciblée de 26 valeurs
+sur 14 cadres : géométrie et 2 456 autres nœuds contrôlés identiques, dont les
+productions et coûts. Les consommations changent de présentation, sans nouveau
+calcul métier ; le coût électrique ponctuel reste distinct de la consommation horaire.
+
+La demande suivante ajoute **8 planches comparatives en page 30**, pour juger
+l’espace des ressources aux rangs intermédiaire et supérieur : bâtiments/recherche
+puis chantier/défenses, en cartes et lignes sur ordinateur et téléphone. Il s’agit
+de références de conception transversales, sans nouvelle page de jeu ni filtre
+global de rang. Dans le jeu, le rang reste choisi sur chaque famille.
+
+Les exemples montrent 3 à 4 ressources pour les bâtiments, 4 à 5 pour les recherches
+et unités. Largeur de carte ordinateur : 274,5 px, soit les quatre colonnes actuelles.
+Les cartes répartissent jusqu’à cinq ressources sur deux rangées, avec des montants
+lisibles et des boutons alignés ; les lignes montrent la liste complète. Deux titres
+longs sont ajustés sur téléphone. Les consommations restent rouges et négatives,
+y compris la valeur fractionnaire de l’exemple supérieur (−445,5 électricité/h).
+
+Libellés, illustrations et valeurs viennent des rangs réels du catalogue. Prix,
+durées et bénéfices sont calculés par les services existants sur un contexte
+synthétique documenté : position 3, prérequis représentés, recherche de niveau 5
+vers 6 et bâtiment de niveau 0 vers 1. Connexion de base fermée avant/après,
+aucune commande de jeu ni écriture métier. Ce ne sont pas les stocks d’un joueur.
+
+Vérification ciblée : huit planches, 136 montants de ressources visibles et huit
+consommations rouges négatives, aucune coupure ou collision détectée. Preuves :
+`lot-7B-pilotage-consommations.json`, `lot-7B-rangs-donnees.json`,
+`lot-7B-rangs-manifest.json`, `lot-7B-rangs-verification.json` et exports
+`lot-7B-rangs-*.png`. Le modèle reste la page 29 ; la page 30 sert à son examen.
+Le code du jeu est inchangé ; intégration après validation de la maquette.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -1885,7 +1922,7 @@ maquettes et du diff uniquement, sans CI, fusion ou déploiement revendiqué.
 | L5 | A implémentée et vérifiée localement | A choisie explicitement | 44 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
 | L6 | A implémentée et vérifiée localement | A choisie explicitement | 32 PHP, trois parcours navigateur et 66 captures | CI, intégration et déploiement distincts |
 | L7A | A implémentée et vérifiée localement | A choisie explicitement ; Vue générale conservée | 51 PHP, sept parcours navigateur et 43 captures | CI, intégration et déploiement distincts |
-| L7B | Cartes/lignes et suivi dépliable consolidés | Validation attendue, page 29 | 53 cadres vérifiés ; interrupteurs, files/flottes, bilans et deux aperçus défilables | Réalisation après validation |
+| L7B | Cartes/lignes et suivi dépliable consolidés | Validation attendue, page 29 | 53 cadres vérifiés et 8 comparaisons de rangs ; consommations négatives, modes et suivi | Réalisation après validation |
 | L7C à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
