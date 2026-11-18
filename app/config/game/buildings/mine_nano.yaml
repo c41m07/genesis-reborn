@@ -51,7 +51,7 @@
       ]
     }
   },
-  "electricity_use_per_level": 0.1,
+  "electricity_use_per_level": 0.05,
   "economy_value_budget": 1600,
   "cost_profiles": {
     "basic": {
@@ -85,5 +85,5 @@
   },
   "description": "Produit nanomatériaux. Une installation locale assure cette fonction sur la colonie.",
   "unlock_requirements": {},
-  "production_per_level": 0.1
+  "production_per_level": 0.05
 }

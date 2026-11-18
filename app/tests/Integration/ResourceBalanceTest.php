@@ -128,12 +128,12 @@ final class ResourceBalanceTest extends KernelTestCase
         self::assertArrayNotHasKey('productionInputs',$resources->snapshot($planet)['antimatter']);
     }
 
-    public function testNanoBuildingsUseTheNewNominalRatesInEveryRank(): void
+    public function testNanoProductionAndElectricityConsumptionByRank(): void
     {
         $planet = $this->planet();
         $resources = self::getContainer()->get(ResourceService::class);
 
-        foreach (['basic' => 360, 'intermediate' => 540, 'superior' => 810] as $tier => $rate) {
+        foreach (['basic' => 180, 'intermediate' => 270, 'superior' => 405] as $tier => $rate) {
             $levels = ['mine_nano' => [$tier => 1]];
             self::assertEqualsWithDelta($rate + 10, $resources->rate($planet, 'nano', 0, $levels) * 3600, 1e-7);
             self::assertEqualsWithDelta($rate, $resources->factoryConsumption($planet, 'mine_nano', $levels)['electricity'] * 3600, 1e-7);

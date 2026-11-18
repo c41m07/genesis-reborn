@@ -170,9 +170,9 @@ La transposition de R14 est contrôlée ; la branche complète ne peut pas être
 
 ### Production et progression des bâtiments — 18 novembre 2026
 
-À position 5 dans un univers ×1, la production de nano et sa consommation
-électrique nominale doublent à tous les rangs. Les deux débits valent désormais
-360, 540 et 810 par niveau et par heure, au plein rendement. La production
+Le doublement initial de la production de nano et de sa consommation électrique
+nominale a été annulé. À position 5 dans un univers ×1, les deux débits sont
+de 180, 270 et 405 par niveau et par heure, à plein rendement. La production
 passive de référence est de 10 nano/h. Les règles de pénurie, de saturation et
 les surcharges d’univers continuent de s’appliquer. Lors d’un déploiement, la
 production en attente depuis le dernier calcul enregistré utilise les nouveaux

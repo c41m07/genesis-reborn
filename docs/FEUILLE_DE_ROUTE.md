@@ -47,7 +47,9 @@ ni livraison Alpha. Les recommandations précédentes ne remplacent pas cette d�
 
 ## Équilibrage de la progression des bâtiments — 18 novembre 2026
 
-Débits et consommation électrique du nano doublés. Nouveaux seuils pour la
+Le doublement des débits du nano a été annulé. La production et la consommation
+électrique reviennent à 180, 270 et 405 par niveau et par heure selon le rang en
+position 5 à vitesse ×1. Nouveaux seuils pour la
 raffinerie d’hydrogène, le piège à antimatière, le chantier, le bunker et le
 laboratoire. Les cartes et le guide existants présentent les niveaux requis.
 Le graphe des 156 profils est vérifié avec les plafonds de référence. Les délais
