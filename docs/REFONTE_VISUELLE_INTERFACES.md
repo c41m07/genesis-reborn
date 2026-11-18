@@ -2827,6 +2827,87 @@ de l’accueil, des formulaires et des univers sur ordinateur/mobile.
 L9 (feedback, patchnotes et documents complémentaires). CI GitHub, push, fusion
 et déploiement restent distincts et ne sont pas réalisés par ce lot.
 
+## L9 — Feedback, patchnotes et documents : propositions A/B — 19 novembre 2026
+
+Départ : `feature/refonte-visuelle`, arbre propre après L8 A (`8933d0e`).
+Complexité **3/5** : formulaire avec capture privée, lecture des publications et
+documents publics. Lecture ciblée des contrôleurs, repositories, gabarits et
+parcours existants de feedback, patchnotes et documents juridiques ; aucune
+reprise des interfaces administratives, réservées à L10.
+
+Deux nouvelles pages sont enregistrées dans le Figcraft de bureau de la mission :
+
+- **40 · L9 · A — Lecture directe** : formulaire proche de l’existant, avec contexte
+  et capture dans un panneau à droite sur ordinateur ; empilement sur mobile.
+  Patchnotes en cartes dépliables et navigation horizontale entre documents.
+  Bénéfice : accès direct aux champs et continuité ; limite : lecture verticale
+  des séries de publications.
+- **41 · L9 · B — Repères de lecture** : choix du type par quatre boutons, formulaire
+  centré, index des versions et navigation latérale entre documents sur ordinateur.
+  Sur mobile, les repères sont placés avant le contenu. Bénéfice : choix du type et
+  repérage des versions plus visibles ; limite : formulaire plus haut et repères
+  supplémentaires avant la lecture sur téléphone.
+
+Couverture équivalente : **66 cadres, 33 par direction**, feedback et patchnotes
+en 1440/768/390, quatre documents publics en 1440/390 ; états complémentaires en
+390 et retour avec capture / patchnote dépliée également en 1440. Les quatre types,
+capture choisie et aperçu, validation, capture refusée, limitation, succès et accès
+sans empire sont représentés. Les trois notes possèdent leur détail et leur retour
+à l’état fermé ; l’absence de publication est couverte. Les cadres légaux principaux
+illustrent le visiteur ; un exemple de confidentialité avec contexte joueur est fourni.
+
+Navigation : feedback reste une tâche sur sa page dédiée ; les patchnotes restent
+une collection avec détails dépliables. L’index B utilise des ancres dans cette
+collection, sans nouvelle route ni notes masquées par un filtrage JavaScript.
+Chaque document conserve son URL. Seule la longue confidentialité reçoit des
+ancres de sections ; les autres textes restent directement lisibles. Deux plans
+cliquables, **782 liens** et six départs de prototype ; `M` revient au plan de la
+direction consultée. Les accès compte, connexion et Vue générale renvoient aux
+cadres déjà approuvés.
+
+Garde-fous pour la réalisation : conserver champs, limites 120 / 5 000 / 500
+caractères, quatre types, trois priorités, capture facultative JPEG/PNG/WebP de
+5 Mo maximum, CSRF, refus après trois retours récents et valeurs saisies après
+erreur. Une capture doit être resélectionnée après un refus serveur. Le fichier
+enregistré reste privé, visible seulement par son auteur ou un administrateur.
+L’aperçu dessiné est local et simulé ; il ne rend pas publique la route des captures.
+Les patchnotes restent limitées aux publications déjà datées, dans l’ordre existant ;
+l’ouverture conserve l’enregistrement de lecture du contrôleur. Le socle joueur
+dessiné donne le contexte ; le composant de ressources existant sera conservé.
+
+Les blocs des textes juridiques existants sont repris intégralement pour le cas
+sans identité privée configurée : 10 mentions, 14 CGU, 26 confidentialité et
+10 cookies. La date du 7 novembre 2026, les passages « À compléter » et le message
+d’information provisoire sont conservés. Aucun nouveau consentement, contenu
+juridique, sanction ou règle n’est proposé. Les contextes connecté/visiteur,
+métadonnées, liens de contact et liens externes restent à préserver dans le jeu.
+
+Vérifications de conception : destinations inspectées, parité A/B, limites des
+textes, chevauchements de textes et chevauchements de cadres contrôlés ; **aucun
+signalement restant**. Les 34 pages antérieures conservent leurs noms et nombres de
+cadres ; le document compte 36 pages et garde les 348 variables existantes. Examen
+visuel des exports ordinateur/mobile de feedback, patchnotes et documents ; fichier
+natif enregistré et fenêtre de bureau observée sur le plan A.
+
+Limites : champs dessinés, choix et navigation simulés, patchnotes et données de
+jeu fictives. Les valeurs longues d’un champ peuvent être abrégées visuellement
+dans la maquette ; leur valeur réelle ne devra pas être tronquée dans les formulaires.
+Les liens de contact et liens externes des paragraphes ne déclenchent aucun envoi
+dans le prototype. Les comportements serveur, thèmes réels, clavier et accessibilité
+seront vérifiés lors de l’intégration après choix ; aucune conformité RGAA globale
+n’est annoncée. Aucun feedback, email ou changement de données réelles effectué.
+
+Preuves locales : `lot-9-manifest.json`, `lot-9-plan.json`, `lot-9-verification.json`,
+`lot-9-document-avant.json`, `lot-9-document-apres.json`, `lot-9-textes-legaux.json`,
+`lot-9-enregistrement.json` et 16 exports `lot-9-A-*.png` / `lot-9-B-*.png` dans le
+dossier de conception. Aucun code du jeu modifié ; seuls le présent suivi, la feuille
+de route et l’inventaire sont actualisés. `git diff --check` constitue le contrôle
+du lot documentaire ; aucune suite applicative inchangée n’est relancée.
+
+L8 A reste le dernier lot réalisé. **Quatorze lots sur dix-huit réalisés ; quatre
+restants.** L9 attend le choix de direction avant intégration ; L10 à L12 ne sont
+pas engagés par cette préparation.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -2849,7 +2930,8 @@ et déploiement restent distincts et ne sont pas réalisés par ce lot.
 | L7D | A implémentée et vérifiée localement | A choisie explicitement après reprise depuis les rapports actuels | 15 PHP / 98 assertions ; cinq parcours navigateur consolidés ; bilan ci-dessous | CI complète, fusion et déploiement distincts |
 | L7E | A implémentée et vérifiée localement | Page 36 A validée explicitement après reprise de la messagerie et des classements | 90 PHP / 569 assertions ; neuf parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L8 | A implémentée et vérifiée localement | Page 38 A validée explicitement | 23 PHP / 244 assertions ; 16 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
-| L9 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
+| L9 | Propositions A/B préparées | Choix attendu | Pages Figcraft 40/41 ; 66 cadres et 782 liens vérifiés ; conception seulement | Choisir la direction avant intégration |
+| L10 à L11 | Inventorié | Aucune nouvelle | Non engagés pour cette refonte | Examiner chaque lot sans recommencer les navigations déjà livrées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
 Les commits restent sur `feature/refonte-visuelle` ; L1B A est enregistré dans
