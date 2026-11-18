@@ -41,6 +41,13 @@ final class CatalogAccess
             $this->catalog->forUniverse($membership->universe)['catalog']);
     }
 
+    /** @param array<string, array<string, int>> $buildings Niveaux de la colonie de lancement. */
+    public function hasLocalResearchLaboratory(array $buildings): bool
+    {
+        // Le déblocage dans l’univers est permanent. L’installation de départ est vérifiée à chaque ajout.
+        return ($buildings['lab']['basic'] ?? 0) >= 1;
+    }
+
     public function captureLocked(PlayerUniverse $membership):void
     {
         // La bascule d'une participation existante relève de la commande explicite,

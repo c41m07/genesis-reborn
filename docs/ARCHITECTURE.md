@@ -54,6 +54,9 @@ La commande `app:catalog:preserve-unlocks` est en lecture seule par défaut ;
 contrôle des surcharges. Aucun changement SQL pour ce lot. L’interface et
 les commandes utilisent le même service d’accès ; les conditions complètes
 sont rangées par rang, y compris Basique, sans héritage d’un autre rang.
+Le lancement d’une recherche vérifie aussi le laboratoire Basique de la
+colonie choisie, à partir des niveaux déjà lus. Le contrôle ne modifie pas
+le registre des déblocages et s’applique uniquement aux nouvelles commandes.
 La reconstruction des empires oubliés conserve son chemin particulier et ne
 crée pas un accès joueur par la seule livraison d’une unité.
 Voir la [grille et la bascule](DEBLOCAGES.md) et le [suivi](PROGRESSION_CARBURANT_UNITES.md).

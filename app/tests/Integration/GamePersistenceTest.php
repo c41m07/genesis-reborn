@@ -1455,7 +1455,8 @@ final class GamePersistenceTest extends KernelTestCase
         self::assertEqualsWithDelta($beforeTwo-$expected['costs']['metal'],$resources->snapshot($two)['metal']['stock'],.000001);
         self::assertSame(['metal'=>111],$first->paidCosts);self::assertSame(['metal'=>222],$other->paidCosts);self::assertSame(['metal'=>333],$waiting->paidCosts);
         self::assertEquals($at,$first->startedAt);self::assertEquals($at,$other->startedAt);
-        $lab->level=1;$this->em->flush();
+        // La perte du laboratoire n’interrompt pas les recherches déjà payées.
+        $this->em->remove($lab);$this->em->flush();
         $clock->sleep(200);$service->synchronize($membership);self::assertEquals($at->modify('+200 seconds'),$waiting->startedAt);self::assertNull($new->startedAt);
         $clock->sleep(50);$service->synchronize($membership);self::assertEquals($at->modify('+250 seconds'),$new->startedAt);
         self::assertSame($expected['duration'],$new->durationSeconds);self::assertSame($expected['costs'],$new->paidCosts);

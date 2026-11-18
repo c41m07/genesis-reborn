@@ -117,7 +117,7 @@ Protocoles de colonisation conserve 80 h au niveau 1 Basique avant réduction. L
 | Laboratoire Basique 25 seul | 58 h 30 min 12 s | 351 100 | 58 h 43 min 32 s |
 | Réduction maximale, laboratoire B/I/S 25 sur la colonie | 24 h | 144 000 | 24 h 5 min 29 s |
 
-La recherche suivante utilise ici les mêmes niveaux de laboratoire sur la même colonie ; une commande ajoutée depuis une autre colonie utilise ses propres bonus locaux. Ces scénarios isolent les durées et la file : le financement est supposé disponible et aucun coût de laboratoire préalable n’est inclus. Ils ne donnent ni un parcours optimal ni un délai garanti depuis un compte neuf. L’accès initial exige les prérequis de la grille ; après acquisition, une autre colonie sans laboratoire peut utiliser cet accès, avec sa réduction locale éventuelle.
+La recherche suivante utilise ici les mêmes niveaux de laboratoire sur la même colonie ; une commande ajoutée depuis une autre colonie utilise ses propres bonus locaux. Ces scénarios isolent les durées et la file : le financement est supposé disponible et aucun coût de laboratoire préalable n’est inclus. Ils ne donnent ni un parcours optimal ni un délai garanti depuis un compte neuf. L’accès initial exige les prérequis de la grille ; après acquisition, une autre colonie peut utiliser cet accès dès le niveau 1 de son Laboratoire colonial Basique, avec sa propre réduction de durée.
 
 ## Carburant par classe
 

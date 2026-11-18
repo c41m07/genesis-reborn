@@ -257,6 +257,7 @@ final class ColonyView
             'resources' => $this->resources->snapshot($planet, true),
             'cards' => $cards,
             'queues' => $queues,
+            'research_requires_laboratory' => $section === 'technologies' && !$this->access->hasLocalResearchLaboratory($buildings),
             'research_parallel_count' => count($researchActive),
             'ships' => $ships,
             'defenses' => $defenses,

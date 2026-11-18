@@ -54,7 +54,7 @@
 
             <section aria-label="Conditions d’accès">
                 <h3>Déblocage initial de ce rang</h3>
-                <p>Ces conditions débloquent le rang dès le niveau 1. Aucun nouveau prérequis ne s’ajoute ensuite. Les coûts, durées et plafonds restent applicables.</p>
+                <p>Ces conditions débloquent le rang dès le niveau 1. {% if group == 'technologies' %}Chaque nouvelle commande exige un Laboratoire colonial de niveau 1 sur la colonie de lancement. {% else %}Aucun nouveau prérequis ne s’ajoute ensuite. {% endif %}Les coûts, durées et plafonds restent applicables.</p>
                 {% if info.acquired|default(false) %}<p class="catalog-info-ready">Accès acquis définitivement {{ group == 'technologies' ? 'dans cet univers' : 'sur cette colonie' }}, même si une condition initiale manque aujourd’hui.</p>{% endif %}
                 {% if info.requirements %}<ul class="catalog-info-access">
                     {% for requirement in info.requirements %}<li class="{{ requirement.unreachable ? 'is-unreachable' : (requirement.met ? 'is-met' : 'is-missing') }}"><span>{{ requirement.met ? '✓ Rempli' : 'À obtenir' }}</span><a href="{{ path('app_colony',{id:planet.id,section:requirement.group,showLockedItems:1,focusItem:1}) }}#item-{{ requirement.slug }}-{{ requirement.rank }}"><strong>{{ requirement.label }}</strong></a> · {{ requirement.tier }}{% if requirement.required is not null %} · niveau {{ requirement.required }} requis (actuel : {{ requirement.current }}){% endif %}{% if requirement.unreachable %}<small class="catalog-info-unreachable">Prérequis actuellement inatteignable : le maximum de ce rang est {{ requirement.maximum }}.</small>{% endif %}</li>{% endfor %}
