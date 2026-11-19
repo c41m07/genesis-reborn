@@ -1,9 +1,9 @@
 <section class="panel admin-section" id="admin-players" aria-labelledby="admin-players-title" data-controller="admin-list">
 <h2 id="admin-players-title">Comptes joueurs</h2><p>Les changements de rôle et les suspensions sont consignés dans le journal. Le compte courant est protégé dans cette liste.</p>
 <form method="get" class="admin-search" data-admin-list-target="form" data-action="input->admin-list#schedule change->admin-list#search submit->admin-list#search">
-<label for="player-search">Rechercher</label><input id="player-search" name="q" type="search" placeholder="Pseudo, courriel…" maxlength="150" value="{{ listFilters.q }}">
-<label for="player-state-filter">État</label><select id="player-state-filter" name="status"><option value="">Tous</option>{% for value,label in {active:'Actif',suspended:'Suspendu'} %}<option value="{{ value }}" {{ listFilters.status == value ? 'selected' : '' }}>{{ label }}</option>{% endfor %}</select>
-<label for="player-role-filter">Rôle</label><select id="player-role-filter" name="role"><option value="">Tous</option>{% for value,label in {admin:'Administrateur',player:'Joueur'} %}<option value="{{ value }}" {{ listFilters.role == value ? 'selected' : '' }}>{{ label }}</option>{% endfor %}</select><button class="secondary">Rechercher</button>
+<div><label for="player-search">Rechercher</label><input id="player-search" name="q" type="search" placeholder="Pseudo, courriel…" maxlength="150" value="{{ listFilters.q }}"></div>
+<div><label for="player-state-filter">État</label><select id="player-state-filter" name="status"><option value="">Tous</option>{% for value,label in {active:'Actif',suspended:'Suspendu'} %}<option value="{{ value }}" {{ listFilters.status == value ? 'selected' : '' }}>{{ label }}</option>{% endfor %}</select></div>
+<div><label for="player-role-filter">Rôle</label><select id="player-role-filter" name="role"><option value="">Tous</option>{% for value,label in {admin:'Administrateur',player:'Joueur'} %}<option value="{{ value }}" {{ listFilters.role == value ? 'selected' : '' }}>{{ label }}</option>{% endfor %}</select></div><button class="secondary">Rechercher</button>
 </form>
 <p role="alert" data-admin-list-target="error" hidden>La recherche a échoué. Réessayez ou rechargez la page.</p>
 {% include 'admin/sections/_players_results.html.twig' %}

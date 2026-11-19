@@ -70,3 +70,4 @@ import './styles/report-workspace.css';
 import './styles/social-workspace.css';
 import './styles/entry-workspace.css';
 import './styles/information-workspace.css';
+import './styles/admin-workspace.css';

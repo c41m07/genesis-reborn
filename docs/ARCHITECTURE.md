@@ -970,6 +970,17 @@ Voir [la recette et les limites](NAVIGATION_PAGES_DEDIEES.md).
 
 ## Pages administratives dédiées — 17 novembre 2026
 
+Le sous-lot visuel L10A ajoute `admin-workspace.css`, limité par la classe de
+corps aux routes d’accueil, de rubrique et de liste des joueurs. Ces pages
+désactivent le sommaire automatique, tout en conservant les redirections des
+anciens fragments. L’accueil étend les missions et événements sur toute la
+largeur ; les informations secondaires des dernières actions restent dépliables.
+La table des comptes garde ses six colonnes HTML et ses en-têtes ; sous 1050 px,
+les cellules sont présentées par compte avec leurs libellés visibles. Le formulaire
+GET et le fragment de résultats gardent `admin-list`, sa pagination serveur,
+ses protections contre les réponses obsolètes et son repli sans JavaScript.
+Aucun service, requête, contrat d’action ou règle de rôle n’est modifié.
+
 La console et ses groupes existants restent en place. `AdminController` expose
 les GET de création et de gestion d’un univers ; les POST historiques gardent
 leurs services, jetons et contrôles. Les brouillons d’erreur sont consommés sur

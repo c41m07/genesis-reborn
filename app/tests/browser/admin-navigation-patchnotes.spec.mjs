@@ -137,7 +137,7 @@ test('Maquette admin : cinq entrées, cartes de rubrique, fil d’Ariane et acc�
   await expect(navigation.locator('.admin-primary-link')).toHaveCount(5);
   await expect(navigation.locator('.admin-navigation-links')).toHaveCount(0);
   await expect(page.locator('.admin-home-actions a')).toHaveCount(4);
-  await expect(page.locator('.admin-home-actions').getByRole('link', { name: 'Préparer un événement', exact: true })).toHaveAttribute('href', '/admin/events/assistant');
+  await expect(page.locator('.admin-home-actions').getByRole('link', { name: /^Préparer un événement/ })).toHaveAttribute('href', '/admin/events/assistant');
   for (const [group, label, cards] of [['players','Joueurs et modération',4],['universe','Univers et activité',3],['events','Animation',5],['ops','Exploitation',4]]) {
     await navigation.getByRole('link', { name: new RegExp('^' + label) }).click();
     await expect(page).toHaveURL(new RegExp('/admin/rubriques/' + group + '$'));

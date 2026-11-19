@@ -169,7 +169,7 @@ test('Administration : rubriques clavier, comptes protégés, confirmations et j
   const targetRow = panel.locator('tr').filter({ hasText: target.email });
   await expect(ownRow.locator('form')).toHaveCount(0);
   await expect(targetRow.getByRole('rowheader')).toContainText(target.username);
-  const promote = targetRow.getByRole('button', { name: 'Accorder les droits d’administration à ' + target.username });
+  const promote = targetRow.getByRole('button', { name: 'Promouvoir admin : accorder les droits d’administration à ' + target.username });
   await decide(page, promote, false, target.username);
   await expect(targetRow).toHaveAttribute('data-filter-role', 'player');
   expect(queryIsolatedSql(process.env.BROWSER_ROUTER, "SELECT COUNT(*) FROM admin_audit_log WHERE action='player_promote_admin'")).toBe('0');
@@ -177,7 +177,7 @@ test('Administration : rubriques clavier, comptes protégés, confirmations et j
   await page.goto('/admin/joueurs');
   await expect(targetRow).toHaveAttribute('data-filter-role', 'admin');
   await expect(targetRow.getByRole('button', { name: /Suspendre/ })).toHaveCount(0);
-  await decide(page, targetRow.getByRole('button', { name: 'Retirer les droits d’administration à ' + target.username }), true, target.username);
+  await decide(page, targetRow.getByRole('button', { name: 'Retirer admin : retirer les droits d’administration à ' + target.username }), true, target.username);
   await page.goto('/admin/joueurs');
   await expect(targetRow).toHaveAttribute('data-filter-role', 'player');
   await decide(page, targetRow.getByRole('button', { name: 'Suspendre le compte ' + target.username }), false, target.username);

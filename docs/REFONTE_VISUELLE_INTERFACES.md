@@ -3044,8 +3044,100 @@ Preuves dans le dossier de conception : `lot-10A-manifest.json`, `lot-10A-plan.j
 `lot-10A-document-apres.json`, `lot-10A-enregistrement.json` et exports
 `lot-10A-A-*.png` / `lot-10A-B-*.png`. Seuls le suivi, l’inventaire et la feuille de
 route sont actualisés après le commit L9 ; `git diff --check` est le contrôle adapté.
-Le choix A/B est attendu avant réalisation de L10A. **Quinze ensembles réalisés
-sur dix-huit ; trois restants**, L10 n’est pas déclaré complet par sa conception.
+Le choix A a ensuite été reçu ; sa réalisation est décrite ci-dessous.
+**Quinze ensembles réalisés sur dix-huit ; trois restants**, L10 reste en cours.
+
+## L10A A — Réalisation locale du 19 novembre 2026
+
+Validation explicite : « je valide A ». Complexité **4/5** : console réservée aux
+administrateurs, données privées et formulaires de rôle/suspension à préserver.
+Le lot conserve les pages dédiées, les cinq entrées principales et la navigation
+secondaire. Les groupes restent des cartes ouvrant les pages existantes ; les
+filtres sélectionnent les mêmes comptes, sans cacher des tâches indépendantes.
+Seules les dernières actions de l’accueil restent dépliables, car secondaires.
+
+L’accueil garde ses quatre indicateurs et l’ordre des priorités existant. Missions
+et événements prennent toute la largeur après les panneaux priorités/accès rapides.
+La liste conserve les six colonnes sur ordinateur ; sous 1050 px, chaque compte
+présente son nom sur toute la largeur puis courriel, présence, état, rôle et actions
+avec leurs libellés. Les filtres GET restent associés à leur champ. Les mêmes POST,
+CSRF, confirmations natives, protections du compte courant et des administrateurs
+restent utilisés. Le nom accessible des boutons de rôle reprend leur texte visible
+et le joueur concerné. Aucune nouvelle requête, permission, règle ou migration.
+
+Fichiers : `admin-workspace.css`, import dans `app.js`, templates administratifs
+`layout`, `index`, `sections/players` et `_players_results`, recette navigateur
+`admin-refonte.spec.mjs` et adaptation des libellés attendus dans deux recettes
+existantes ; README, architecture, inventaire, feuille de route et ce suivi.
+
+Vérifications locales : `make validate`, `make lint`, `make assets` et contrôle du
+diff réussis ; **29 PHP / 312 assertions**, filtrés sur pagination, pages dédiées,
+lectures administratives et interventions, dans la base de test isolée.
+**Six parcours navigateur distincts consolidés** : recherche globale/pagination et
+réponses obsolètes ; rôles/suspensions/confirmations/journal ; menu mobile/clavier ;
+cinq entrées/cartes/accès refusés ; présentation et noms longs ; recherche en erreur
+et filtres sans JavaScript. Thèmes clair/sombre en 1440/768/390, six routes visitées,
+contrôles d’accessibilité ciblés sans signalement sur le contenu en 1440/390.
+**24 captures finales** des six routes dans les deux thèmes, ordinateur/téléphone.
+
+Les premières nouvelles recettes avaient deux erreurs de test (nom fictif supérieur
+à la taille SQL et comparaison de deux représentations de texte différentes).
+Elles ont été corrigées sans alléger les assertions. L’accessibilité a ensuite
+détecté le nom de bouton incohérent ; la lecture des captures a révélé la largeur
+de colonne restée appliquée au nom sur mobile. Corrections ciblées, libellés et
+largeurs contrôlés explicitement, puis relance des seules recettes concernées.
+Preuves : `output/playwright/admin-refonte/`, journaux `php`, `lint-final`,
+`assets-final`, `browser`, `browser-final` et `browser-layout`, captures de
+`recette-largeur`. Les actions utilisent uniquement les bases jetables des tests.
+Pas de CI GitHub, fusion ou déploiement déclaré ; aucun gain de performance mesuré.
+
+## L10B — Fiche joueur et interventions, propositions du 19 novembre 2026
+
+Complexité **4/5**. Sources ciblées : fiche joueur, fragments des deux interventions,
+`AdminPlayerController`, `AdminInterventionService`, règles du catalogue et cadrage
+administratif. La fiche reste une page dédiée par joueur. Les participations aux
+univers restent dans la même fiche ; les deux outils restent dépliables auprès
+de leur colonie, avec leurs champs, motif et confirmation explicite réunis.
+Les dossiers et missions restent des liens vers leurs pages existantes.
+
+Dans le même fichier Figcraft de bureau :
+
+- **44 · L10B · A — Fiche et actions locales** : six repères d’activité en cartes,
+  colonies en lignes et outils ouverts sur place. Lecture comparative de l’activité ;
+  hauteur supérieure des repères sur téléphone.
+- **45 · L10B · B — Lecture par univers** : activité en liste et colonies en cartes
+  côte à côte sur ordinateur. Lecture suivie et comparaison des colonies ; les
+  formulaires disposent de moins de largeur dans ces cartes sur ordinateur.
+
+Couverture équivalente : **48 cadres, 24 par direction**, **758 liens inspectés**,
+six départs de prototype. Fiche, ressources ouvertes et vaisseaux ouverts en
+1440/768/390 ; états en 390 : formulaires renseignés, refus, réussite, demande déjà
+traitée, activité non mesurée, aucune colonie/participation, noms longs et plusieurs
+univers, suspension, menu et destinations conservées. `M` revient au plan ; le plan
+permet de comparer l’autre proposition. Les cinq entrées et les retours au jeu,
+à la liste et à la connexion ouvrent les références déjà présentes.
+
+Les cinq ressources gardent leur stock/capacité et leurs quantités ; les vaisseaux
+gardent type, rang et entier de 1 à 2 147 483 647. Motif obligatoire de 1 000 caractères
+maximum, case de confirmation, POST/CSRF, propriétaire, rôle courant, transactions,
+idempotence et audit restent la référence. L’activité demeure estimée, avec journées
+UTC et aucune reconstitution avant le suivi. Aucune règle d’équilibrage changée.
+Les refus illustrent les retours serveur actuels ; aucune conservation de saisie
+après redirection n’est promise. Aucun nouvel écran de confirmation n’est ajouté.
+
+Vérification de tous les cadres : aucun texte hors parent ni chevauchement, aucune
+destination manquante et parité conservée. Douze exports ordinateur/téléphone des
+trois vues ; aperçus examinés. Les 38 pages antérieures sont conservées en noms et
+nombres de cadres ; 40 pages et 348 variables après ajout. Fichier natif enregistré
+sur le plan A et fenêtre de bureau contrôlée, document propre.
+
+Limites : données et actions fictives, champs dessinés et parcours simulés. Terra
+illustre les deux formulaires ; les outils de Nova et les dossiers/missions mènent
+à un cadre de référence explicite. Les contrôles de sécurité et thèmes réels seront
+recettés lors de la réalisation. Preuves dans le dossier de conception :
+`lot-10B-plan.json`, `lot-10B-manifest.json`, `lot-10B-verification.json`, états du
+document avant/après/enregistrement et `lot-10B-{A,B}-{profile,resources,ships}-*.png`.
+Le choix A/B reste attendu pour L10B. Le plan global reste à **15/18**, L10 en cours.
 
 ## Reprise et états de couverture
 
@@ -3070,7 +3162,7 @@ sur dix-huit ; trois restants**, L10 n’est pas déclaré complet par sa concep
 | L7E | A implémentée et vérifiée localement | Page 36 A validée explicitement après reprise de la messagerie et des classements | 90 PHP / 569 assertions ; neuf parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L8 | A implémentée et vérifiée localement | Page 38 A validée explicitement | 23 PHP / 244 assertions ; 16 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L9 | A implémentée et vérifiée localement | Page 40 A validée explicitement | 7 PHP / 127 assertions ; 5 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
-| L10 | Premier sous-lot L10A en A/B préparé | Choix attendu pour L10A | Pages 42/43 ; 68 cadres et 894 liens inspectés ; conception seulement | Réalisation L10A puis autres rubriques administratives |
+| L10 | L10A A réalisé et vérifié localement ; L10B A/B préparé | A choisi explicitement pour L10A ; choix L10B attendu | 29 PHP / 312 assertions ; six parcours navigateur consolidés ; L10B pages 44/45, 48 cadres et 758 liens | Réalisation L10B puis autres rubriques administratives ; CI, fusion et déploiement distincts |
 | L11 | Inventorié | Aucune nouvelle | Non engagé pour cette refonte | Examiner le wiki sans recommencer ses pages dédiées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
