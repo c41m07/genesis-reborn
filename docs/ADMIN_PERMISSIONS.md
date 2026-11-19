@@ -94,8 +94,12 @@ Vérifications de cet incrément :
 - Compose validé via `make validate`.
 - 4 tests unitaires / 84 assertions réussis, conteneur sans réseau.
 - Syntaxe PHP des quatre fichiers concernés, trois Twig et conteneur Symfony validés.
-- Tests HTTP étendus pour accès anonyme/joueur/admin, lecture répétée et refus POST.
-  Exécution en attente : création du réseau de recette refusée par Docker
-  (`all predefined address pools have been fully subnetted`).
+- Tests HTTP étendus pour accès anonyme/joueur/admin, lecture répétée et refus POST :
+  1 test / 37 assertions réussis sur une MariaDB tmpfs privée. La réponse 405
+  attendue au POST apparaît dans le journal de test, sans constituer un échec.
+  Le blocage initial de pool réseau Docker a été résolu en attendant la fin
+  d'une autre recette ; aucun réseau existant n'a été modifié.
+- Base et réseau `genesis-permissions-review` retirés après recette.
+- `git diff --check` réussi. Les validations sont ciblées, pas une suite complète.
 - Aucun réseau existant modifié, aucun droit attribué à un vrai compte.
 - Pas de recette navigateur, de CI complète, de fusion ni de déploiement.
