@@ -788,3 +788,9 @@ La revue transversale locale de la refonte couvre aussi les menus communs, les
 actualisations, les erreurs et les parcours sans JavaScript. Son périmètre et les
 reprises de tests sont consignés dans le [bilan de refonte](docs/REFONTE_VISUELLE_INTERFACES.md).
 La CI complète reste requise avant toute fusion.
+
+
+Le [socle des capacités administratives](docs/ADMIN_PERMISSIONS.md) distingue
+consultation de fiche, correction des ressources, attribution de vaisseaux
+et intervention sur les flottes,
+sans activer de nouveaux rôles ni changer les comptes existants.

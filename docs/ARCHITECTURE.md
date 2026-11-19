@@ -1180,3 +1180,11 @@ sommaire automatique et ne sont plus repliées par `admin_editors`.
 avec remplacement de l’entrée d’historique ; sans JavaScript, listes et liens
 serveur permettent d’atteindre les mêmes fiches. Aucun changement de schéma,
 dépendance ou chargement global de données de jeu n’est ajouté.
+
+
+## Capacités administratives
+
+La politique fermée `AdminCapabilityPolicy` est partagée par le voter Symfony
+et les interventions sous verrou. Les trois actions de `AdminPlayerController` et le POST intervention flotte
+conservent aussi ROLE_ADMIN. Aucun nouveau rôle ou stockage de permission
+n’est activé. Voir [ADMIN_PERMISSIONS.md](ADMIN_PERMISSIONS.md).

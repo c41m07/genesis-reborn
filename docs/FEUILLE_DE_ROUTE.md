@@ -2069,3 +2069,11 @@ huit tests HTTP / 173 assertions et vérification du diff réussis.
 La [PR #89](https://github.com/c41m07/genesis-reborn/pull/89) consigne la CI complète
 et l’intégration, puis une nouvelle promotion Alpha reprend le dev consolidé. Aucune migration de base existante,
 installation de dépendance ni intervention sur le serveur dans cette reprise.
+
+
+## Administration : socle permissions
+
+Premier périmètre local : fiche joueur et interventions ressources/vaisseaux/flottes.
+Les admins existants conservent leur accès ; aucune délégation activée.
+Matrice de rôles, stockage, révocation et conversion des autres routes restent
+à définir/implémenter avant ouverture. [Suivi](ADMIN_PERMISSIONS.md).

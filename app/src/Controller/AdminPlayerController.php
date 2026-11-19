@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use App\Entity\{AdminAuditLog, Planet, Player, PlayerActivity, PlayerUniverse};
 use App\Service\Player\PlayerActivityService;
+use App\Security\AdminCapability;
 use App\Service\Admin\AdminInterventionService;
 use App\Service\Colony\ResourceService;
 use App\Service\Catalog\GameCatalog;
@@ -17,6 +18,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class AdminPlayerController extends AbstractController
 {
     #[Route('/admin/joueurs/{id}', name: 'app_admin_player', requirements: ['id'=>'\d+'], methods: ['GET'])]
+    #[IsGranted(AdminCapability::PLAYER_VIEW)]
     public function show(int $id, EntityManagerInterface $em, PlayerActivityService $activity, ClockInterface $clock, ResourceService $resources, GameCatalog $catalog): Response
     {
         $player = $em->find(Player::class, $id);
@@ -35,6 +37,7 @@ final class AdminPlayerController extends AbstractController
     }
 
     #[Route('/admin/joueurs/{id}/colonies/{planetId}/ressources', name: 'app_admin_player_resources', requirements: ['id'=>'\d+', 'planetId'=>'\d+'], methods: ['POST'])]
+    #[IsGranted(AdminCapability::RESOURCES_ADJUST)]
     public function resources(int $id, int $planetId, Request $request, EntityManagerInterface $em, AdminInterventionService $interventions): Response
     {
         if (!$this->isCsrfTokenValid('admin_resources_'.$planetId, $request->request->get('_token'))) throw $this->createAccessDeniedException('Formulaire expiré.');
@@ -48,6 +51,7 @@ final class AdminPlayerController extends AbstractController
         return $this->redirectToRoute('app_admin_player', ['id'=>$id, '_fragment'=>'colony-'.$planetId]);
     }
     #[Route('/admin/joueurs/{id}/colonies/{planetId}/vaisseaux', name: 'app_admin_player_ships', requirements: ['id'=>'\d+', 'planetId'=>'\d+'], methods: ['POST'])]
+    #[IsGranted(AdminCapability::SHIPS_GRANT)]
     public function ships(int $id, int $planetId, Request $request, EntityManagerInterface $em, AdminInterventionService $interventions): Response
     {
         if (!$this->isCsrfTokenValid('admin_ships_'.$planetId, $request->request->get('_token'))) throw $this->createAccessDeniedException('Formulaire expiré.');
