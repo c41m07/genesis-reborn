@@ -4926,3 +4926,17 @@ Preuves : `output/ci-refonte/{browser-auth,browser-auth-slow,browser-post422}.lo
 
 Les deux scénarios corrigés réussissent avec les styles ralentis. La nouvelle
 CI complète doit valider la tête finale avant la fusion vers dev.
+
+
+Le même défaut d’attente est relevé dans le lot navigateur 3 de la
+[CI 421](https://github.com/c41m07/genesis-reborn/actions/runs/44573174957) :
+les trois liens de guilde sont mesurés sur une ligne avant le chargement des
+styles après création. Le contrôle attend maintenant la fin du chargement
+avant de vérifier les deux rangées attendues. Le scénario complet de profil,
+inventaire et diplomatie réussit avec les styles de cette navigation ralentis.
+Les valeurs attendues et tous les contrôles restent conservés ; preuve dans
+`output/ci-refonte/browser-guild-ready.log`. Une nouvelle tête doit recevoir
+les cinq contrôles complets avant fusion.
+
+La CI 421 termine avec les quatre autres lots réussis : PHP et navigateur 1, 2, 4.
+Le seul échec est celui de l’attente des styles de guilde corrigée ci-dessus.

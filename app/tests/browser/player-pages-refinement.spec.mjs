@@ -49,7 +49,15 @@ test('Pages validées : diplomatie, profil et inventaire, thèmes, clavier et é
   await page.goto('/guildes/creer');
   await page.getByLabel('Nom de votre nouvelle guilde').fill('Refonte-'+suffix);
   await page.getByLabel('Tag de la guilde',{exact:true}).fill(suffix.slice(0,5));
+  // La redirection après création peut livrer les liens avant les styles de la guilde.
+  const delayedStyle = async route => {
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    await route.continue();
+  };
+  await page.route('**/build/*.css', delayedStyle);
   await page.getByRole('button',{name:'Fonder une guilde'}).click();
+  await page.waitForLoadState('load');
+  await page.unroute('**/build/*.css', delayedStyle);
   await page.setViewportSize({width:1440,height:900});
   const guildActions=page.locator('.guild-hub-actions');
   await expect(guildActions.getByRole('link')).toHaveText(['Consulter les projets','Ouvrir la galaxie','Classement']);
