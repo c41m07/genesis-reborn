@@ -51,6 +51,8 @@ L’orientation confirmée est une stratégie au rythme modéré ; les durées d
 
 ## État du projet
 
+- Administration : la fiche joueur distingue confirmation, suspension et échéances des liens de compte, sans exposer de secret ni prétendre mesurer la réception des emails. [Diagnostic et limites](docs/ADMIN_SUPPORT_COMPTES.md).
+
 - Déblocages initiaux des bâtiments. Le chantier exige ses producteurs de métal et de nano au niveau 2 du même rang et les chantiers précédents au niveau 20. Le bunker demande ces producteurs au niveau 1 et les bunkers précédents au niveau 8. Les laboratoires avancés exigent les laboratoires des rangs précédents au niveau 10. L’hydrogène demande la recherche industrielle du rang au niveau 3, et l’antimatière au niveau 5. [Grille complète des déblocages](docs/DEBLOCAGES.md#bâtiments--13)
 
 - Messagerie : panneaux de contacts et de conversation conservés, bulles reçues bleues et envoyées dorées, zone de rédaction accessible sur ordinateur et mobile. La recherche reste sur sa page dédiée, avec retour vers la conversation sélectionnée. Ctrl + Entrée envoie dans les canaux privé, guilde et Global ; Entrée conserve les sauts de ligne. Markdown sécurisé pour les nouveaux messages seulement, historique conservé en texte ; soumissions répétées protégées côté serveur. CommonMark est une dépendance Composer. [Guide et migration préparée](docs/MESSAGERIE_MARKDOWN.md).
