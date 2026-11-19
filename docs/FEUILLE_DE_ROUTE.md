@@ -194,8 +194,12 @@ création et suivi, avec formulaire en colonne sur ordinateur et après les note
 sur mobile. Validation, lint, compilation, huit PHP / 27 assertions, quatre
 scénarios navigateur consolidés et 18 captures dans les deux thèmes ; filtres,
 brouillon après refus, historique et protections conservés.
-L10E prépare alertes et surveillance des missions dans les pages Figcraft 50 A
-« Surveillance directe » et 51 B « Missions en fiches » : 74 cadres, 1 285 liens
+L10E A « Surveillance directe » (page 50) est validé et réalisé localement :
+alertes, seuils dépliables, tableau/fiches des missions et intervention dépliable.
+Validation, lint, compilation, 34 PHP / 149 assertions, huit scénarios navigateur
+consolidés et 18 captures dans les deux thèmes ; contrôles et rapports conservés.
+L10F prépare liste, création et gestion des univers dans les pages Figcraft 52 A
+« Univers en lignes » et 53 B « Fiches et configuration » : 64 cadres, 1 330 liens
 inspectés, données et opérations fictives. Choix attendu avant réalisation.
 Les autres rubriques administratives seront traitées par sous-lots, sans augmenter
 le compte des dix-huit ensembles ni déclarer L10 terminé.

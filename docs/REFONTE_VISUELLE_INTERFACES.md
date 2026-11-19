@@ -3445,7 +3445,120 @@ page du jeu. Les thèmes, accès et retours serveur devront être recettés apr�
 Preuves dans le dossier de conception : `lot-10E-plan.json`, `lot-10E-manifest.json`,
 `lot-10E-verification.json`, états avant/après/enregistrement et
 `lot-10E-{A,B}-{alerts,missions,detail}-{1440,390}.png`.
-Choix A/B attendu pour L10E ; L10 en cours, plan global **15/18**.
+L10E A est ensuite validé explicitement ; réalisation ci-dessous. L10 reste
+en cours, plan global **15/18**.
+
+## L10E A — Réalisation locale du 19 novembre 2026
+
+Complexité **4/5**, conservée après examen des styles partagés et des écarts de
+recette. Page 50 A retenue. Trois pages dédiées conservées : alertes, liste des
+missions et fiche d’une mission ; les filtres sélectionnent le même relevé et
+gardent leur URL. Les seuils et interventions secondaires se déplient avec
+`<details>` natif ; valeurs actuelles, état, unités, cargaison et avertissements
+restent disponibles sans ouvrir un formulaire. Aucun nouvel onglet ni contrôleur.
+
+La liste garde ses huit colonnes et en-têtes HTML ; sous 1100 px, chaque ligne
+devient une fiche avec ses sept valeurs libellées. La situation précède le départ
+conservé, les unités et le fret, puis les rapports et l’intervention. La quantité
+reste visible auprès du vaisseau et de son rang sur téléphone. Les textes longs
+passent à la ligne. Motif, confirmation, clé de demande, CSRF, version attendue,
+droits, verrous, audits et contrôles métier restent ceux du serveur. Aucune
+requête, période d’actualisation, formule ou valeur d’équilibrage n’est modifiée.
+
+Fichiers du lot :
+
+- `app/templates/admin/layout.html.twig`, `surveillance.html.twig`,
+  `missions.html.twig` et `mission.html.twig` ;
+- `app/assets/app.js` et nouveau `app/assets/styles/admin-surveillance-workspace.css` ;
+- nouveau `app/tests/browser/admin-surveillance-refonte.spec.mjs`, adaptations de
+  `admin-cases-alerts.spec.mjs`, `admin-interventions.spec.mjs` et
+  `admin-missions-notifications.spec.mjs` dans le même répertoire ;
+- `README.md`, `docs/ARCHITECTURE.md`, `docs/FEUILLE_DE_ROUTE.md`,
+  `docs/INVENTAIRE_INTERFACES.md` et le présent suivi.
+
+Vérifications locales :
+
+- `make validate`, `make lint`, `make assets` et `git diff --check` réussis ;
+- **34 tests PHP / 149 assertions**, `AdminInterventionTest` et `AdminCaseTest` ;
+- **huit scénarios navigateur consolidés** : trois nouveaux et cinq existants,
+  couvrant alertes/seuils, univers, missions/états, pagination 50 + 2, clavier,
+  rapports privés, consultation sans mutation, interventions et retour forcé ;
+- actualisation automatique suspendue au focus ou lors d’une sélection, saisie
+  conservée, échec de récupération laissant le dernier relevé, reprise manuelle ;
+- filtres, pagination, état vide et enregistrement des seuils sans JavaScript ;
+- droits/CSRF, demande répétée et formulaire périmé, audit, rapport de combat ou
+  d’espionnage associé à la bonne mission ; aucune garantie nouvelle de concurrence ;
+- **18 captures finales**, trois vues × 1440/768/390 × clair/sombre, contrôles Axe
+  ciblés sans exclusion de règle, formulaires ouverts et fermés, absence de
+  débordement horizontal. Captures ordinateur/mobile examinées, quantité visible
+  dans la composition vérifiée par sa position à l’intérieur du tableau.
+
+Corrections de recette : ancien nom accessible d’un rapport dans un test, nom
+de planète synthétique limité aux 80 caractères du modèle et sélecteurs des
+listes déroulantes. Le motif était encore contraint par le style des champs
+courts : règles séparées puis contrôle réussi. La revue des captures a également
+mené à afficher les trois colonnes d’unités ensemble ; recette visuelle relancée
+avec assertion de position de la quantité. Aucun contrôle n’a été affaibli.
+La sonde de santé du conteneur `database-test` a refusé son propre compte ; la
+base dédiée restait accessible et les tests PHP ont été exécutés directement,
+avec leurs vérifications d’hôte et de nom. Aucune configuration n’a été modifiée.
+
+Preuves : `output/playwright/admin-surveillance-refonte/`, journaux `validate`,
+`lint-final`, `assets-review`, `php-final`, `browser`, `browser-final`,
+`browser-visual`, `browser-review` et captures de `recette-verifiee`.
+Données synthétiques et bases isolées ; aucune intervention sur les flottes ou
+univers habituels. CI GitHub, fusion et déploiement restent distincts ; aucun
+gain de performance mesuré.
+
+## L10F — Gestion des univers, propositions du 19 novembre 2026
+
+Complexité **4/5**. Sources ciblées : liste, création, gestion, calendrier et
+configuration des univers, `AdminController`, `AdminService`,
+`UniverseCreationService` et leurs brouillons actuels. Les trois pages restent
+dédiées, avec leurs URL. Recherche et état restent des filtres ; calendrier et
+règles gardent leurs formulaires distincts sur la même fiche. La suppression
+secondaire reste dépliable, avec ses conséquences et sa confirmation par nom.
+
+Dans le même document Figcraft de bureau :
+
+- **52 · L10F · A — Univers en lignes** : univers sur toute la largeur,
+  calendrier puis configuration dans le fil, champs regroupés sur ordinateur.
+  Bénéfice : lecture régulière ; limite : plus de défilement entre les univers.
+- **53 · L10F · B — Fiches et configuration** : univers en fiches par deux,
+  repères auprès de la création, calendrier à côté des règles sur ordinateur.
+  Bénéfice : réglages rapprochés ; limite : colonne de calendrier plus étroite.
+
+Couverture équivalente : **64 cadres, 32 par direction**, **1 330 liens inspectés**,
+six départs de prototype. Liste, création et gestion en 1440/768/390 ; états en
+390 : filtres, absence de résultat, pagination, nom long, création renseignée/
+refusée/réussie, profils, calendrier renseigné/refusé/enregistré, règles renseignées/
+refusées/enregistrées, valeurs hors plage conservées, univers fermé, confirmation
+de suppression vide/renseignée, refus et suppression simulée, menu et références.
+`M` revient au plan ; comparaison A/B depuis celui-ci. Douze exports des trois
+vues ordinateur/téléphone ; principaux aperçus examinés. Aucun texte hors parent,
+chevauchement ou lien manquant ; parité conservée. Les 46 pages antérieures gardent
+noms et nombres de cadres ; 48 pages et 348 variables après ajout. Document propre,
+enregistré et affiché sur le plan A dans la fenêtre Figcraft de bureau contrôlée.
+
+Contrats actuels à conserver : liste paginée par 50 ; nom 3–100 caractères, code
+unique de 64 au maximum, profils Normal/x2–x10/Alpha ×40/Beta ×20 ; une à cinq
+galaxies, un à cent systèmes et neuf positions par système. La création ouvre
+immédiatement l’univers, avec le calendrier dans sa fiche. Dates en UTC, retrait
+de la fermeture par champ vide, univers fermé non rouvert. Cinq vitesses ×0,01–×40,
+limites de colonies/vaisseaux, fonctionnalités et valeurs historiques hors plage
+conservées sans ajustement automatique. Les brouillons, POST, CSRF et audits
+restent ceux de l’existant. Aucun changement de règle ni valeur proposé.
+
+Limites : données fictives, champs dessinés et opérations simulées. Les saisies
+détaillées portent sur Omega ; le formulaire de création illustre le profil
+Normal. Les autres choix de profil, univers et outils (mesures, catalogues,
+modèles de boîtes) restent des références vers leurs pages actuelles. Delta-2
+conserve son identité après création simulée. Aucun univers réel créé, modifié
+ou supprimé ; thèmes et retours serveur à recetter après choix.
+Preuves dans le dossier de conception : `lot-10F-plan.json`, `lot-10F-manifest.json`,
+`lot-10F-verification.json`, états avant/après/enregistrement et
+`lot-10F-{A,B}-{universes,new,manage}-{1440,390}.png`.
+Choix A/B attendu pour L10F ; L10 en cours, plan global **15/18**.
 
 ## Reprise et états de couverture
 
@@ -3470,7 +3583,7 @@ Choix A/B attendu pour L10E ; L10 en cours, plan global **15/18**.
 | L7E | A implémentée et vérifiée localement | Page 36 A validée explicitement après reprise de la messagerie et des classements | 90 PHP / 569 assertions ; neuf parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L8 | A implémentée et vérifiée localement | Page 38 A validée explicitement | 23 PHP / 244 assertions ; 16 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L9 | A implémentée et vérifiée localement | Page 40 A validée explicitement | 7 PHP / 127 assertions ; 5 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
-| L10 | L10A/B/C/D A réalisés et vérifiés localement ; L10E A/B préparé | A choisi explicitement pour L10A/B/C/D ; choix L10E attendu | Bilan L10D : huit PHP / 27 assertions, quatre scénarios navigateur consolidés, 18 captures ; L10E pages 50/51, 74 cadres et 1 285 liens | Réalisation L10E puis autres rubriques administratives ; CI, fusion et déploiement distincts |
+| L10 | L10A/B/C/D/E A réalisés et vérifiés localement ; L10F A/B préparé | A choisi explicitement pour L10A/B/C/D/E ; choix L10F attendu | Bilan L10E : 34 PHP / 149 assertions, huit scénarios navigateur consolidés, 18 captures ; L10F pages 52/53, 64 cadres et 1 330 liens | Réalisation L10F puis autres rubriques administratives ; CI, fusion et déploiement distincts |
 | L11 | Inventorié | Aucune nouvelle | Non engagé pour cette refonte | Examiner le wiki sans recommencer ses pages dédiées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 

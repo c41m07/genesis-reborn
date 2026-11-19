@@ -1015,6 +1015,18 @@ libres gardent leurs sauts de ligne et l’échappement Twig. Brouillon de créa
 POST, CSRF, clés de demande et état attendu restent ceux d’`AdminCaseController`
 et d’`AdminCaseService`, sans modification de leurs lectures ni de leurs écritures.
 
+L10E ajoute `admin-surveillance-workspace.css`, activé par la classe de corps
+`admin-surveillance-workspace` sur alertes, liste et fiche des missions. Ces trois
+pages dédiées désactivent le sommaire automatique. La table de huit colonnes garde
+ses en-têtes et rôles HTML ; sous 1100 px, les lignes deviennent des fiches avec
+leurs sept valeurs libellées. Les trois colonnes de composition restent visibles
+ensemble. Les seuils et interventions utilisent `<details>` sans contrôleur
+supplémentaire ; valeurs de seuil, état courant et avertissements restent visibles.
+Situation, départ conservé, unités, cargaison et rapports précèdent l’intervention.
+`admin-mission-monitor` conserve son fragment, sa période de vingt secondes et ses
+protections de consultation/erreur. Aucun contrôleur PHP, service, requête,
+autorisation, jeton, version attendue, transaction ou audit n’est modifié.
+
 La console et ses groupes existants restent en place. `AdminController` expose
 les GET de création et de gestion d’un univers ; les POST historiques gardent
 leurs services, jetons et contrôles. Les brouillons d’erreur sont consommés sur

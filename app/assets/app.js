@@ -74,3 +74,4 @@ import './styles/admin-workspace.css';
 import './styles/admin-player-workspace.css';
 import './styles/admin-moderation-workspace.css';
 import './styles/admin-case-workspace.css';
+import './styles/admin-surveillance-workspace.css';
