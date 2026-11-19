@@ -4893,3 +4893,12 @@ ajoutée par le client ne peut pas bloquer l’envoi avant ce contrôle.
 Aucun scénario n’est retiré ou désactivé. Preuves :
 `output/ci-refonte/{assets,lint,geography,browser-targeted,browser-retry,browser-retry-final,browser-last-card}.log`.
 La nouvelle CI complète doit réussir sur la tête finale avant la fusion autorisée.
+
+
+Actualisation complémentaire : la PR #100 est fusionnée dans `dev` pendant la
+recette de reprise. Son commit `0bac6fb` est intégré avant toute fusion de la
+refonte : nouvelles parts des coûts par rang et accélération de la colonisation
+conservées, avec leurs tests et documents. Les conflits des deux suivis sont
+résolus sans retirer la décision de géographie ni les décisions d’équilibrage.
+L’attente de 1 020 métal pour le bâtiment Intermédiaire provient de ce lot amont.
+Les contrôles locaux concernés et la CI complète sont relancés sur cet ensemble.

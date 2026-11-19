@@ -21,8 +21,11 @@ proposé au précédent, sans cumuler les niveaux déjà en file.
 Leur livraison pendant un combat rejoint les renforts locaux avec toute la flotte.
 Le [suivi de mission](docs/PROGRESSION_CARBURANT_UNITES.md) distingue les lots
 préparés, leur intégration, leur activation et les décisions encore ouvertes.
-La [grille de coûts retenue](docs/COUTS.md) est B48/52, I35/35/30 et S25/35/30/10,
+La [grille de coûts retenue](docs/COUTS.md) est B48/52, I34/36/30 et S28/31/31/10,
 en parts de valeur M/N/A/H. Budgets de base conservés et commandes payées inchangées.
+La recherche Protocoles de colonisation passe à 8 h de base, avant bonus et multiplicateurs.
+La [simulation de première colonisation](docs/EQUILIBRAGE.md#première-colonisation-19-novembre-2026)
+se rejoue avec `make -s console CMD=app:balance:simulate-colonization`.
 Les points suivent toujours les quantités brutes des prix courants : le classement
 et les protections liées aux points peuvent évoluer lors de leur recalcul.
 

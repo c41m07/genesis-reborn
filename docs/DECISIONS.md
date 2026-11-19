@@ -19,7 +19,27 @@ des réservations existantes ni migration de base n’est nécessaire.
 La réalisation locale L7C conserve les deux dispositions, le moteur animé existant
 et les protections de visibilité. CI, fusion et déploiement restent distincts.
 
-## Équilibrage des prix des deux premiers rangs
+## Coûts par rang et première colonisation — 19 novembre 2026
+
+L’utilisateur fixe les parts de valeur M/N/A/H à **B48/52/0/0, I34/36/30/0 et
+S28/31/31/10** pour les bâtiments, recherches, vaisseaux, unités civiles et
+défenses. Les profils Basiques et les 156 budgets de base sont conservés.
+Les courbes, remises, prérequis et arrondis des devis restent appliqués.
+
+La famille Expansion coloniale passe de 288 000 à **28 800 s** de base pour
+tous ses niveaux et rangs. La taxe suit la durée effective et garde son arrondi
+par minute entamée. Les paiements, durées et remboursements des commandes déjà
+acceptées restent fondés sur les données enregistrées. Les surcharges d’univers
+gardent leur priorité. L’entretien électrique du piège reste à la valeur fixée
+par le lot précédent.
+
+L’objectif de conception est une deuxième planète vers 48 h avec environ
+trois connexions par jour, sans aide extérieure ni bonus extraordinaires.
+Les hypothèses et temps observés sont documentés dans la
+[simulation de première colonisation](EQUILIBRAGE.md#première-colonisation-19-novembre-2026).
+
+## Équilibrage des prix des deux premiers rangs — référence du 18 novembre 2026
+
 
 L’utilisateur valide les parts de valeur **B48/52/0/0, I35/35/30/0 et S25/35/30/10**
 pour les 52 fiches du catalogue de référence. Le Basique réduit la pression sur

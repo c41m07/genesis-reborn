@@ -60,7 +60,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(panel('intermediate').locator('img')).toHaveAttribute('src', /power_plant__intermediate.webp$/);
     await expect(panel('intermediate').locator('.catalog-card-heading > h3')).toHaveText('Complexe énergétique à antimatière');
     await expect(panel('intermediate').locator('form [name="tier"]')).toHaveValue('intermediate');
-    await expect(panel('intermediate').locator('.costs > span').first()).toContainText('1 050');
+    await expect(panel('intermediate').locator('.costs > span').first()).toContainText('1 020');
     await page.keyboard.press('ArrowRight');
     await expect(tab('superior')).toBeFocused();
     await expect(panel('superior')).toBeVisible();

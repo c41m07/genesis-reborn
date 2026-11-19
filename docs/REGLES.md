@@ -3,11 +3,13 @@
 ## Répartition des prix courante
 
 Les 156 profils par défaut utilisent les parts de valeur M/N/A/H suivantes :
-Basique 48/52/0/0, Intermédiaire 35/35/30/0 et Supérieur 25/35/30/10.
+Basique 48/52/0/0, Intermédiaire 34/36/30/0 et Supérieur 28/31/31/10.
 La valeur est M×2 + N×4 + A×8 + H ; il ne s’agit pas de quantités brutes ni d’un marché.
 Les quantités sont entières et conservent le budget de base propre à chaque profil,
 y compris ceux des défenses. Les courbes et arrondis après croissance/remises restent
-inchangés, comme les durées et la taxe électrique. Les nouveaux prix concernent les
+appliqués. La famille Expansion coloniale (Protocoles de colonisation au rang
+Basique) utilise une base de 28 800 s pour tous ses rangs et niveaux. La taxe
+électrique suit la durée effective avec la formule existante. Les nouveaux prix concernent les
 nouvelles commandes ; les coûts déjà payés restent la référence des annulations et
 résolutions. Les réglages personnalisés d’univers gardent leur priorité.
 La formule de points reste fondée sur les quantités brutes des prix courants,

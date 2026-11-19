@@ -2,9 +2,14 @@
 
 ## Suite du chantier
 
-Le rééquilibrage des deux premiers rangs est détaillé dans la
-[grille courante](COUTS.md). Les résultats ci-dessous documentent les lots
-du 16 novembre et leurs états de livraison.
+La [grille courante](COUTS.md) et la [simulation de première colonisation](EQUILIBRAGE.md#première-colonisation-19-novembre-2026)
+suivent la décision du 19 novembre, préparée dans un worktree dédié à partir de
+`dev` (`5ab6572`). Ce lot revoit les parts Intermédiaires et Supérieures et la
+durée de la recherche de colonisation. Les tests ciblés vérifient les devis,
+les surcharges et le remboursement des recherches historiques. Le parcours
+de 48 h 06 est rejoué sur une base isolée, à horloge contrôlée.
+Les résultats ci-dessous documentent
+les lots du 16 novembre et leurs états de livraison.
 
 ## Périmètre et état — 16 novembre 2026
 

@@ -1,8 +1,49 @@
 # Réglages et études d’équilibrage
 
+## Première colonisation — 19 novembre 2026
+
+Rejouer les parcours hors base avec `make -s console CMD=app:balance:simulate-colonization`.
+La sortie JSON contient les dates de lancement et de fin de chaque opération,
+leurs coûts et le carburant réservé. Le scénario utilise le kit d’inscription
+d’Omega ×1, en position 5, avec une centrale B5, des mines métal/nano B3 et les
+prérequis financés du laboratoire B2, de la batterie et du chantier B2.
+La cible est la position 6 libre du système de départ, déjà découvert. Le vol
+dure 6 min 15 s et réserve 3 H, sans rival ni interception. Aucun don, raid,
+événement, boost ou stock ajouté. La comparaison rétablit les 80 h sur ce
+même catalogue pour la colonne « avant ». Le parcours achète uniquement
+des profils Basiques, identiques de part et d’autre de la bascule.
+
+Les sessions commencent à l’inscription puis toutes les 24, 12 ou 8 h.
+Seuls les lancements attendent une connexion. La production, les opérations payées
+et le vol continuent entre les sessions. Chaque file simulée lance une opération
+à la fois, sans achat anticipé des niveaux en attente. Le jeu permet ces achats,
+ce qui peut raccourcir certaines attentes. Les choix de construction sont fixes.
+
+| Cadence | Avant, sessions de 15 min | Après, 15 min | Avant, sessions de 30 min | Après, 30 min |
+| --- | ---: | ---: | ---: | ---: |
+| 1 connexion/j | 312 h 06 | 168 h 06 | 288 h 06 | 144 h 06 |
+| 2 connexions/j | 240 h 06 | 84 h 06 | 216 h 06 | 72 h 06 |
+| 3 connexions/j | 208 h 06 | 56 h 06 | 200 h 06 | 48 h 06 |
+| Actions dès que possible | 178 h 44 | 33 h 52 | 178 h 44 | 33 h 52 |
+
+À trois sessions de 30 min, la recherche est lancée à 32 h, le colonisateur à
+40 h et le vol à 48 h. Avec 15 min, le premier niveau de chantier entamé à
+16 h occupe encore la file à la fin de la session. Le deuxième niveau est lancé
+à 24 h, la batterie à 32 h et la recherche (46 800 E) à 40 h. Le colonisateur
+est lancé à 48 h et l’arrivée suit la connexion de 56 h. La cible est compatible
+avec le scénario de 30 min, avec huit heures d’écart selon la fenêtre de présence.
+
+Le test d’intégration `testFreshEmpireCanReachASecondPlanetAfterSixEightHourIntervals`
+rejoue le planning de 30 min avec les services persistants, depuis l’inscription
+jusqu’à l’acquisition de la seconde planète à 48 h 06 min 15 s. Il utilise une
+carte minimale en univers ×1 et une horloge contrôlée. Le parcours navigateur
+de colonisation couvre un compte déjà équipé. Les autres cadences restent des
+estimations, et la mise en file anticipée, la concurrence et des horaires
+de connexion plus réalistes restent à comparer.
+
 ## Équilibrage des prix Basiques et Intermédiaires
 
-La grille de valeur passe à B48/52 et I35/35/30. S25/35/30/10 reste appliqué.
+Mesures du 18 novembre 2026 sur B48/52, I35/35/30 et S25/35/30/10.
 À vitesse ×1 en position 5, le parcours économique jusqu’aux niveaux cibles
 B25/I10 passe de 134,3 h à 114,1 h. Les attentes de métal et de nano passent
 respectivement de 14,6 h et 99,9 h à 51,2 h et 54,4 h.
