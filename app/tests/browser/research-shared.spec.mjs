@@ -54,7 +54,7 @@ test('Une recherche ajoutée depuis une autre colonie rejoint la même file et l
     expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM queue_item WHERE player_universe_id=${membership} AND queue_type='research'`)).toBe('2');
     expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM queue_item WHERE player_universe_id=${membership} AND queue_type='research' AND started_at IS NOT NULL`)).toBe('1');
     expect(queryIsolatedSql(project, `SELECT item_level FROM queue_item WHERE planet_id=${two} AND queue_type='research'`)).toBe('2');
-    await queue.locator('summary').click();
+    await queue.locator(':scope > summary').click();
     await expect(queue.locator('.queue-detail-item')).toHaveCount(2);
     await expect(queue.locator('.queue-detail-item').nth(0)).toContainText('En cours · Aster');
     await expect(queue.locator('.queue-detail-item').nth(1)).toContainText('En attente · Beryl');
@@ -105,12 +105,13 @@ test('Les anciennes recherches parallèles restent actives et les commandes pay�
     const historical = queryIsolatedSql(project, `SELECT id,COALESCE(started_at,'waiting'),duration_seconds,paid_costs FROM queue_item WHERE player_universe_id=${membership} ORDER BY id`);
     await page.goto(`/planetes/${two}?section=technologies`);
     const queue = page.locator('[data-queue-type="research"]');
+    await queue.locator(':scope > summary').click();
     await expect(queue.getByRole('status')).toContainText('Les recherches déjà commencées se terminent');
     await page.locator('#item-engineering_foundations-basic').getByRole('button', { name: /Rechercher le niveau 3/ }).click();
     const ids = historical.split('\n').map(row => row.split('\t')[0]).join(',');
     expect(queryIsolatedSql(project, `SELECT id,COALESCE(started_at,'waiting'),duration_seconds,paid_costs FROM queue_item WHERE id IN (${ids}) ORDER BY id`)).toBe(historical);
     expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM queue_item WHERE player_universe_id=${membership} AND started_at IS NOT NULL`)).toBe('2');
-    await queue.locator('summary').click();
+    if (!await queue.evaluate(element => element.open)) await queue.locator(':scope > summary').click();
     await expect(queue.locator('.queue-detail-item')).toHaveCount(4);
     await expect(queue.locator('.queue-detail-item').filter({ hasText: 'En cours' })).toHaveCount(2);
     await expect(queue.locator('.queue-detail-item').filter({ hasText: 'En attente' })).toHaveCount(2);

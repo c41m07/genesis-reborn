@@ -301,7 +301,7 @@ test('Classement quotidien : points figés, gains, pertes et signe égal accessi
   await page.reload();
   await expect(row.locator('[data-category="points"] .ranking-change')).toHaveText(/\(−\d/);
   await page.goto(colonyUrl);
-  await expect(page.locator('.empire-points')).toContainText('Points : −');
+  await expect(page.locator('.overview-points-change')).toContainText('Évolution : −');
   await expect(page.locator('.metric-card').filter({ hasText: 'Classement' })).toContainText('Places : =');
 });
 

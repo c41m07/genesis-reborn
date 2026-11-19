@@ -4859,3 +4859,23 @@ courants, la tête testée et l’éventuelle fusion sont suivis dans la PR ; au
 réussite de CI n’est déduite des seules recettes locales. La fusion attend les
 cinq jobs complets réussis sur la dernière tête, les autres contrôles publiés et
 la vérification finale de la cible.
+
+
+### Reprise après la première CI complète
+
+L’exécution [413](https://github.com/c41m07/genesis-reborn/actions/runs/44551028183)
+sur `a328c29` valide les 1 460 tests PHP (4 443 217 assertions, une mesure
+optionnelle désactivée), les 13 tests Python, le lint, la compilation, la
+sauvegarde/restauration isolée et le premier lot navigateur. Les trois autres
+lots signalent 24 scénarios en échec ; la PR repasse en brouillon et aucune
+fusion n’est effectuée.
+
+Corrections applicatives ciblées : retours à la ligne des grands coûts dans
+les cinq colonnes du mode condensé, nom accessible des rangs fondé sur leur
+libellé et compteur visibles, surface cliquable des noms du classement.
+Les tests suivent les navigations nommées, menus mobiles et files dépliables
+validés. Leurs contrôles métier, permissions, persistance et règles d’accessibilité
+restent actifs. Les tests de projection utilisent un jeu de 80 coordonnées
+exportées de `GalaxyGeometry` pour `spiral-v1` : cadrage, zoom, sélection,
+tracé des bras et alternance spirale/grille conservent les coordonnées physiques.
+La recette locale de reprise et la nouvelle CI complète sont consignées ensuite.

@@ -38,6 +38,10 @@ test('Pages validées : diplomatie, profil et inventaire, thèmes, clavier et é
   await page.keyboard.press('Enter');
   await expect(page.getByRole('group',{name:'Changer de mot de passe',exact:true})).toBeVisible();
   expect(await passwordSummary.evaluate(el=>getComputedStyle(el).outlineStyle)).not.toBe('none');
+  const accountMenu = page.locator('.space-navigation-menu');
+  await accountMenu.locator(':scope > summary').focus();
+  await page.keyboard.press('Enter');
+  await expect(accountMenu).toHaveAttribute('open', '');
   await page.getByRole('navigation',{name:'Compte et préférences'}).getByRole('link',{name:'Suppression du compte',exact:true}).focus();
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/profil\/supprimer$/);

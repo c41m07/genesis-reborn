@@ -135,6 +135,8 @@ body[data-ui-page="catalogues"] :is(#panel-buildings,#panel-technologies,#panel-
 .catalog-workspace .catalog-condensed .card-benefits { grid-area:1/2; margin:0; }
 .catalog-workspace .catalog-condensed .catalog-cost-heading { grid-area:1/3; padding:0; border:0; }
 .catalog-workspace .catalog-condensed .building-costs { grid-area:1/3; margin:26px 0 0; }
+/* Les grands montants restent lisibles dans les cinq colonnes du mode condensé. */
+.catalog-workspace .catalog-condensed .building-costs > span > span { min-width:0; max-width:100%; white-space:normal; overflow-wrap:anywhere; }
 .catalog-workspace .catalog-condensed .build-duration { grid-area:1/3; margin:108px 0 0; }
 .catalog-workspace .catalog-condensed .card-body>form { grid-area:1/4; align-self:end; width:100%; margin:0; padding:0; }
 .catalog-workspace .catalog-condensed .catalog-blocked { grid-area:1/4; align-self:end; margin:0; }

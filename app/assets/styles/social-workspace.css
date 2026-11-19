@@ -479,3 +479,10 @@ body.authenticated .social-workspace .social-profile-scores dt {
     }
 
 }
+
+/* Les noms restent faciles à atteindre dans les lignes compactes du classement. */
+.leaderboard-workspace .ranking-table .public-profile-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+}

@@ -15,16 +15,16 @@ test('Laboratoire débloque une recherche, la file progresse et le résultat est
   // Le laboratoire achevé reste consultable quand le niveau suivant est verrouillé.
   prepareOwnedColony(process.env.BROWSER_ROUTER, email, { showLockedItems: true });
   const lab = () => page.locator('#item-lab-basic');
-  await page.getByRole('link', { name: 'Bâtiments', exact: true }).click(); await lab().getByRole('button', { name: /Améliorer .* niveau 1/ }).click();
+  await page.getByRole('navigation', { name: 'Navigation principale', exact: true }).getByRole('link', { name: 'Bâtiments', exact: true }).click(); await lab().getByRole('button', { name: /Améliorer .* niveau 1/ }).click();
   await expect(page.locator('#building-tab-lab-basic .building-rank-level')).toHaveText('1', { timeout: 30000 });
-  await page.getByRole('link', { name: 'Recherche', exact: true }).click(); await expect(page.locator('.technology-tree')).toHaveCount(0);
+  await page.getByRole('navigation', { name: 'Navigation principale', exact: true }).getByRole('link', { name: 'Recherche', exact: true }).click(); await expect(page.locator('.technology-tree')).toHaveCount(0);
   const research = page.locator('#item-engineering_foundations-basic');
   await expect(research.getByRole('button', { name: /Rechercher le niveau 1/ })).toBeVisible(); await research.getByRole('button', { name: /Rechercher le niveau 1/ }).click();
   const queue = page.locator('.scene-operation[data-queue-type="research"]'); await expect(queue.locator('.operation-name')).toContainText('Génie civil colonial');
   const bar = queue.getByRole('progressbar'), first = Number(await bar.getAttribute('aria-valuenow'));
   await expect.poll(async () => Number(await bar.getAttribute('aria-valuenow')), { timeout: 10000 }).toBeGreaterThan(first);
   await expect.poll(async () => { await page.reload(); return page.locator('#building-tab-engineering_foundations-basic .building-rank-level').textContent(); }, { timeout: 30000, intervals: [500, 1000, 2000] }).toBe('1');
-  await expect(queue.locator('.operation-idle')).toContainText('Aucune commande en cours'); await page.getByRole('link', { name: 'Guide technologique', exact: true }).click(); await expect(page.locator('#tech-engineering_foundations-basic')).toContainText('Niveau 1 / 25');
+  await expect(queue.locator('.operation-idle')).toContainText('Aucune commande en cours'); await page.getByRole('navigation', { name: 'Navigation principale', exact: true }).getByRole('link', { name: 'Guide technologique', exact: true }).click(); await expect(page.locator('#tech-engineering_foundations-basic')).toContainText('Niveau 1 / 25');
   await page.setViewportSize({ width: 390, height: 844 });
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await expect(page.locator('.technology-tree')).toBeVisible();

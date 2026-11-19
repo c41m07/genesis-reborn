@@ -42,7 +42,7 @@ test('Validation 404 : rendu, cinq largeurs, contraste, clavier et retour réel'
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole('heading', { level: 1, name: /Une colonie/ })).toBeVisible();
-  await page.getByRole('link', { name: 'Se connecter', exact: true }).click();
+  await page.getByRole('link', { name: 'Déjà commandant ? Connexion', exact: true }).click();
   await expect(page).toHaveURL(/connexion$/);
   await expect(page.getByRole('heading', { name: 'Reprendre le commandement' })).toBeVisible();
 });

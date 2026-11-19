@@ -142,6 +142,7 @@ test('L7A A : clavier, toucher, historique et formulaires sans JavaScript', asyn
   await expect(page.locator('#planet-' + user.planet + ' h2')).toHaveText('Horizon renommé');
   await page.getByRole('link', { name: 'Comparer les colonies', exact: true }).click();
   await page.setViewportSize({ width: 768, height: 900 });
+  await expect(page.locator('[data-controller~="colony-comparison"]')).toHaveClass(/comparison-ready/);
   const select = page.getByLabel('Ressource à comparer');
   for (const resource of ['nano', 'hydrogen', 'antimatter', 'electricity']) {
     await select.selectOption(resource);

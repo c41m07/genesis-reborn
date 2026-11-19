@@ -42,7 +42,7 @@ test('Construction puis recherche sans client connecté, après redémarrage des
   ]) {
     // L'arrêt précède la commande : sa présence dans l'outbox est vérifiable.
     docker(['stop', '--timeout', '3', 'worker', 'relay', 'notifier']);
-    await page.getByRole('link', { name: link, exact: true }).click();
+    await page.getByRole('navigation', { name: 'Navigation principale', exact: true }).getByRole('link', { name: link, exact: true }).click();
     await page.locator(`#item-${slug}-basic`).getByRole('button', { name: button }).click();
     await expect.poll(() => Number(queryIsolatedSql(project, `SELECT COUNT(*) FROM queue_item WHERE player_universe_id IN (${membership}) AND item_slug='${slug}'`))).toBe(1);
     const previousNotifications = Number(queryIsolatedSql(project, `SELECT COUNT(*) FROM notification WHERE recipient_id IN (${membership})`));
@@ -72,7 +72,7 @@ test('Construction puis recherche sans client connecté, après redémarrage des
     page = await context.newPage();
     await login();
     await page.goto(planetUrl);
-    await page.getByRole('link', { name: link, exact: true }).click();
+    await page.getByRole('navigation', { name: 'Navigation principale', exact: true }).getByRole('link', { name: link, exact: true }).click();
     await expect(page.locator(`#building-tab-${slug}-basic .building-rank-level`)).toHaveText('1');
   }
   await context.close();
