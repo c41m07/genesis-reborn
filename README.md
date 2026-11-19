@@ -51,7 +51,7 @@ L’orientation confirmée est une stratégie au rythme modéré ; les durées d
 
 ## État du projet
 
-- Administration : [fiabilité du catalogue](docs/ADMIN_CATALOGUE_FIABILITE.md), avec source des valeurs, motif, confirmation, rejet des formulaires périmés et journal avant/après.
+- Administration : [fiabilité du catalogue](docs/ADMIN_CATALOGUE_FIABILITE.md), avec source des valeurs, motif, confirmation, rejet des formulaires périmés, journal avant/après et comparaison de devis sans publication.
 
 
 - Déblocages initiaux des bâtiments. Le chantier exige ses producteurs de métal et de nano au niveau 2 du même rang et les chantiers précédents au niveau 20. Le bunker demande ces producteurs au niveau 1 et les bunkers précédents au niveau 8. Les laboratoires avancés exigent les laboratoires des rangs précédents au niveau 10. L’hydrogène demande la recherche industrielle du rang au niveau 3, et l’antimatière au niveau 5. [Grille complète des déblocages](docs/DEBLOCAGES.md#bâtiments--13)

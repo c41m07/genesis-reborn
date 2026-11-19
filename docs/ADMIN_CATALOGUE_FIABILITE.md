@@ -54,9 +54,35 @@ dans ce lot : préserver ses garanties prime sur un gain non mesuré.
 - CI complète, recette visuelle/responsive et performance : non effectuées.
   Aucun push, aucune PR, fusion, migration existante ou publication.
 
+## Incrément : devis par fiche sans publication
+
+Complexité 3/5, même branche. « Comparer le devis » partage la validation
+numérique avec l'enregistrement, copie le catalogue en mémoire et utilise
+OperationCalculator pour comparer l'actuel et la proposition. Coûts, taxe
+électrique, durées et multiplicateurs restent ceux des calculateurs existants.
+
+Scénario : un rang, un niveau 1–100 pour bâtiments/recherches ou une quantité
+1–1 000 pour unités, sans bonus de bâtiment/recherche. L'interface expose
+le coefficient de durée de l'univers et précise les limites : ni stocks,
+ni prérequis/plafonds, ni production planétaire vérifiés. Ce n'est pas un devis
+de colonie réelle ni une garantie de publication.
+
+CSRF, droits admin et empreinte courante restent requis. Aucun motif ni
+confirmation pour la simulation, qui n'écrit aucune donnée de jeu.
+Seule la session garde proposition/résultat pour le retour à la fiche.
+La publication reste distincte et conserve motif, confirmation et verrou.
+
+Validation finale : **23 tests, 263 assertions** réussis sur MariaDB jetable,
+puis Twig (59) et injection du conteneur réussis. Quatre familles/trois rangs,
+taxe électrique, non-mutation après flush/relecture, absence d'audit et de file,
+scénarios/valeurs invalides, contexte périmé, CSRF et refus joueur couverts.
+La première assertion CSRF attendait 403 ; le projet utilise déjà la redirection
+302 vers /acces-refuse, désormais vérifiée. Base/réseau jetables supprimés.
+La recette navigateur reste à exécuter.
+
 ## Suite non livrée par ce lot
 
-Prévisualisation complète et calculée des effets, assistant de grille globale,
+Prévisualisation avec contexte réel des colonies et production, assistant de grille globale,
 brouillons persistants/publication groupée, restauration de versions,
 prérequis et nouveaux paramètres, simulations UI, optimisation des lectures,
 permissions fines, opérations, support et guildes restent des lots distincts.

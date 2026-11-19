@@ -224,6 +224,7 @@ final class AdminController extends AbstractController
                 $catalogues[$group][0]['revision'] = $draft['revision'];
                 $catalogues[$group][0]['reason'] = $draft['reason'];
                 $catalogues[$group][0]['draft'] = true;
+                $catalogues[$group][0]['preview'] = $draft['preview'] ?? null;
                 foreach ($catalogues[$group][0]['fields'] as &$field) {
                     $value = $draft['values'];
                     foreach (explode('.', $field['path']) as $part) $value = is_array($value) ? ($value[$part] ?? null) : null;
@@ -249,6 +250,7 @@ final class AdminController extends AbstractController
         string $slug,
         Request $request,
         CatalogBalanceService $balance,
+        GameRepository $repo,
     ): Response
     {
         $tokenId = 'admin_catalogue_' . $id . '_' . $group . '_' . $slug;
@@ -256,6 +258,26 @@ final class AdminController extends AbstractController
             throw $this->createAccessDeniedException('Formulaire expiré.');
         }
         try {
+            if ($request->request->getBoolean('preview')) {
+                $universe = $repo->find(Universe::class, $id);
+                if (!$universe instanceof Universe) {
+                    throw $this->createNotFoundException('Univers introuvable.');
+                }
+                $preview = $balance->preview(
+                    $universe, $group, $slug, $request->request->all('values'),
+                    $request->request->getString('revision'),
+                    $request->request->getString('preview_tier', 'basic'),
+                    $request->request->getInt('preview_level', 1),
+                    $request->request->getInt('preview_quantity', 1),
+                );
+                $request->getSession()->set('admin_catalogue_draft_'.$id.'_'.$group.'_'.$slug, [
+                    'values' => $request->request->all('values'),
+                    'revision' => $request->request->getString('revision'),
+                    'reason' => $request->request->getString('reason'),
+                    'preview' => $preview,
+                ]);
+                return $this->redirectToRoute('app_admin_catalogue_edit', ['id' => $id, 'group' => $group, 'slug' => $slug]);
+            }
             if (!$request->request->getBoolean('confirmed')) {
                 throw new \DomainException('Confirmez l’application de cette modification à l’univers.');
             }

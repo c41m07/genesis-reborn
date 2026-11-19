@@ -95,4 +95,47 @@ final class CatalogBalanceControllerTest extends WebTestCase
   self::assertSelectorTextContains('.flash.error', 'a changé');
   self::assertSame(1, static::getContainer()->get(EntityManagerInterface::class)->getRepository(\App\Entity\AdminAuditLog::class)->count());
  }
+
+ public function testPreviewNeedsNoConfirmationAndDoesNotWrite(): void
+ {
+  $this->client->loginUser($this->admin);
+  $id = $this->universe->id;
+  $before = $this->universe->gameSettings;
+  $url = '/admin/universes/'.$id.'/catalogue/ships/fighter';
+  $crawler = $this->client->request('GET', $url);
+  $form = $crawler->selectButton('Comparer le devis')->form();
+  $form['values[build_time_base]'] = '900';
+  $form['preview_quantity'] = '3';
+  $this->client->submit($form);
+  self::assertResponseRedirects($url);
+  $this->client->followRedirect();
+  self::assertSelectorTextContains('#preview-heading', 'non enregistrée');
+  self::assertSelectorTextContains('.admin-catalogue-editor', 'stocks disponibles');
+  self::assertSelectorExists('input[name="values[build_time_base]"][value="900"]');
+  $em = static::getContainer()->get(EntityManagerInterface::class);
+  $em->clear();
+  self::assertSame($before, $em->find(Universe::class, $id)->gameSettings);
+  self::assertSame(0, $em->getRepository(\App\Entity\AdminAuditLog::class)->count());
+ }
+
+ public function testPreviewRejectsCsrfAndOrdinaryPlayer(): void
+ {
+  $this->client->loginUser($this->admin);
+  $url = '/admin/universes/'.$this->universe->id.'/catalogue/ships/fighter';
+  $crawler = $this->client->request('GET', $url);
+  $form = $crawler->selectButton('Comparer le devis')->form();
+  $form['_token'] = 'invalid';
+  $this->client->submit($form);
+  self::assertResponseRedirects('/acces-refuse');
+  $player = new Player();
+  $player->email = 'preview-player@example.test';
+  $player->username = 'PreviewPlayer';
+  $player->password = 'test';
+  $em = static::getContainer()->get(EntityManagerInterface::class);
+  $em->persist($player);
+  $em->flush();
+  $this->client->loginUser($player);
+  $this->client->request('POST', $url, ['preview' => '1']);
+  self::assertResponseRedirects('/acces-refuse');
+ }
 }

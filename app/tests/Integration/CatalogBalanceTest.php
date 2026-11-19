@@ -114,4 +114,71 @@ final class CatalogBalanceTest extends KernelTestCase
         self::assertArrayHasKey('costs_scaling', $item['inactive_fields']);
         self::assertArrayHasKey('build_time_scaling', $item['inactive_fields']);
     }
+
+    public function testPreviewUsesGameCalculatorWithoutMutatingOrAuditing(): void
+    {
+        $service = static::getContainer()->get(CatalogBalanceService::class);
+        $universe = $this->universe();
+        $before = $universe->gameSettings;
+        $revision = $service->revision($universe, 'ships', 'fighter');
+        $values = $this->values($service, $universe, 'ships', 'fighter');
+        $values['build_time_base'] *= 2;
+        $values['cost_profiles.basic.metal'] += 10;
+        $preview = $service->preview($universe, 'ships', 'fighter', $values, $revision, 'basic', 1, 3);
+        self::assertGreaterThan($preview['before']['duration'], $preview['after']['duration']);
+        self::assertSame($preview['before']['costs']['metal'] + 30, $preview['after']['costs']['metal']);
+        self::assertSame(100 * (int) ceil($preview['after']['duration'] / 60), $preview['after']['costs']['electricity']);
+        self::assertSame($before, $universe->gameSettings);
+        self::assertSame($revision, $service->revision($universe, 'ships', 'fighter'));
+        $this->em->flush();
+        $this->em->refresh($universe);
+        self::assertSame($before, $universe->gameSettings);
+        self::assertSame(0, $this->em->getRepository(AdminAuditLog::class)->count());
+        self::assertSame(0, $this->em->getRepository(\App\Entity\QueueItem::class)->count());
+    }
+
+    public function testPreviewRejectsInvalidScenarioAndValues(): void
+    {
+        $service = static::getContainer()->get(CatalogBalanceService::class);
+        $universe = $this->universe();
+        $values = $this->values($service, $universe, 'ships', 'fighter');
+        $revision = $service->revision($universe, 'ships', 'fighter');
+        foreach ([['basic', 2, 1], ['basic', 1, 1001], ['invalid', 1, 1], ['basic', 0, 1]] as [$tier, $level, $quantity]) {
+            try {
+                $service->preview($universe, 'ships', 'fighter', $values, $revision, $tier, $level, $quantity);
+                self::fail('Le scénario invalide devait être refusé.');
+            } catch (\DomainException) {
+                self::assertSame(0, $this->em->getRepository(AdminAuditLog::class)->count());
+            }
+        }
+        $values['precision'] = 1001;
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('hors limites');
+        $service->preview($universe, 'ships', 'fighter', $values, $revision, 'basic', 1, 1);
+    }
+
+    public function testPreviewRefusesObsoleteContext(): void
+    {
+        $service = static::getContainer()->get(CatalogBalanceService::class);
+        $universe = $this->universe();
+        $values = $this->values($service, $universe, 'ships', 'fighter');
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('a changé');
+        $service->preview($universe, 'ships', 'fighter', $values, 'obsolete', 'basic', 1, 1);
+    }
+
+    public function testPreviewSupportsAllFamiliesAndTiers(): void
+    {
+        $service = static::getContainer()->get(CatalogBalanceService::class);
+        $universe = $this->universe();
+        foreach (['buildings' => 'mine_metal', 'technologies' => 'weapon_calibration', 'ships' => 'fighter', 'defenses' => 'ground_turret_anti_light'] as $group => $slug) {
+            $values = $this->values($service, $universe, $group, $slug);
+            foreach (GameCatalog::TIERS as $tier) {
+                $preview = $service->preview($universe, $group, $slug, $values, $service->revision($universe, $group, $slug), $tier, 1, 1);
+                self::assertSame($preview['before'], $preview['after']);
+                self::assertGreaterThan(0, $preview['after']['duration']);
+            }
+        }
+        self::assertSame(0, $this->em->getRepository(AdminAuditLog::class)->count());
+    }
 }

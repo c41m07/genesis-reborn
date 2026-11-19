@@ -43,6 +43,33 @@
     <textarea id="catalogue-reason" name="reason" minlength="5" maxlength="1000" required>{{ item.reason|default('') }}</textarea>
     <label><input type="checkbox" name="confirmed" value="1" required> Je confirme cette modification pour {{ universe.name }}.</label>
     <button class="primary">Enregistrer cet équilibrage</button>
+    <fieldset>
+        <legend>Prévisualiser un devis sans enregistrer</legend>
+        <p>Aucun bonus de bâtiment ou de recherche. Multiplicateurs actuels de cet univers. Les prérequis, plafonds de niveau, stocks disponibles et effets de production d’une planète ne sont pas vérifiés par ce devis. Il ne garantit pas que la modification soit publiable.</p>
+        <label for="preview-tier">Rang du devis</label>
+        <select id="preview-tier" name="preview_tier">{% for tier, label in tierLabels %}<option value="{{ tier }}"{% if item.preview.tier|default('basic') == tier %} selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+        {% if group in ['buildings', 'technologies'] %}
+            <label for="preview-level">Niveau du devis</label>
+            <input id="preview-level" name="preview_level" type="number" min="1" max="100" value="{{ item.preview.level|default(1) }}">
+        {% else %}
+            <label for="preview-quantity">Quantité du devis</label>
+            <input id="preview-quantity" name="preview_quantity" type="number" min="1" max="1000" value="{{ item.preview.quantity|default(1) }}">
+        {% endif %}
+        <button class="secondary" name="preview" value="1" formnovalidate>Comparer le devis</button>
+    </fieldset>
+    {% if item.preview|default(null) %}
+        <section aria-labelledby="preview-heading">
+            <h3 id="preview-heading">Comparaison calculée, non enregistrée</h3>
+            <p>{{ tierLabels[item.preview.tier] }} · niveau {{ item.preview.level }} · quantité {{ item.preview.quantity }}. Le devis est indicatif et sera périmé si le catalogue change.</p>
+            <dl>
+                <dt>Coefficient de durée de l’univers</dt><dd>× {{ item.preview.time_multiplier }}</dd>
+                <dt>Durée</dt><dd>Actuel : {{ item.preview.before.duration }} s · Proposé : {{ item.preview.after.duration }} s</dd>
+                {% for resource, label in resourceLabels %}
+                    <dt>{{ label }}</dt><dd>Actuel : {{ item.preview.before.costs[resource]|default(0) }} · Proposé : {{ item.preview.after.costs[resource]|default(0) }}</dd>
+                {% endfor %}
+            </dl>
+        </section>
+    {% endif %}
 </form>
 <form class="admin-catalogue-reset" method="post" action="{{ path('app_admin_catalogue_save', {id: universe.id, group: group, slug: item.slug}) }}">
     <input type="hidden" name="_token" value="{{ csrf_token('admin_catalogue_' ~ universe.id ~ '_' ~ group ~ '_' ~ item.slug) }}">

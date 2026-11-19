@@ -120,7 +120,7 @@ test('Catalogue B : comparaison des rangs, thèmes et formulaires natifs des qua
   for (const [family, slug, fields] of [['buildings', 'power_plant', 14], ['technologies', 'automated_defense_repair', 15], ['ships', 'fighter', 28], ['defenses', 'ground_turret_anti_light', 21]]) {
     await native.goto(`${catalogue}/${family}/${slug}`);
     const form = native.locator('.admin-catalogue-editor');
-    await expect(form.locator('input[type="number"]')).toHaveCount(fields);
+    await expect(form.locator('input[type="number"][name^="values["]')).toHaveCount(fields);
     await expect(form.getByRole('group')).toHaveCount(3);
     const cost = form.getByRole('group', { name: 'Basique', exact: true }).getByRole('spinbutton', { name: 'Métal', exact: true });
     await expect(cost).toHaveAttribute('step', '1');

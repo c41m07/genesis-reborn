@@ -7,12 +7,13 @@ use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Colony\ResourceService;
 use Psr\Clock\ClockInterface;
+use App\Service\Queue\OperationCalculator;
 
 final class CatalogBalanceService
 {
     private const GROUPS=['buildings','technologies','ships','defenses'];
 
-    public function __construct(private GameCatalog $catalog,private GameRepository $repo,private GameManager $manager,private ResourceService $resources,private ClockInterface $clock){}
+    public function __construct(private GameCatalog $catalog,private GameRepository $repo,private GameManager $manager,private ResourceService $resources,private ClockInterface $clock,private OperationCalculator $calculator){}
 
     public function entries(Universe $universe, ?string $family = null, ?string $slugFilter = null, bool $withFields = true):array
     {
@@ -37,11 +38,7 @@ final class CatalogBalanceService
             $this->assertRevision($universe,$group,$slug,$expectedRevision);
             $reason=$this->validateReason($reason);
             $before=$this->catalog->getForUniverse($universe,$group,$slug);
-            $input=$this->flatten($input);$schema=$this->fieldSchema($group,$this->catalog->get($group,$slug));
-            if(array_diff(array_keys($input),array_keys($schema))||array_diff(array_keys($schema),array_keys($input)))throw new \DomainException('Paramètres catalogue incomplets ou inconnus.');
-            $values=[];
-            foreach($schema as $path=>$rule){$raw=$input[$path]??null;$value=filter_var($raw,FILTER_VALIDATE_FLOAT);if($value===false||!is_finite((float)$value)||$value<$rule['min']||$value>$rule['max'])throw new \DomainException('Valeur hors limites pour '.$rule['label'].'.');$values[$path]=$rule['integer']?(int)$value:(float)$value;if($rule['integer']&&(float)$values[$path]!=(float)$value)throw new \DomainException('Un entier est requis pour '.$rule['label'].'.');}
-            if($group==='ships'||$group==='defenses'){if(isset($values['shots_min'],$values['shots_max'])&&$values['shots_min']>$values['shots_max'])throw new \DomainException('Le minimum de tirs ne peut pas dépasser le maximum.');}
+            $values = $this->validatedValues($group, $slug, $input);
             if(isset($values['max_level']))$this->assertMaxLevelCompatible($universe,$group,$slug,$values['max_level']);
             $planets=$this->repo->planets($universe);foreach($planets as $planet){$this->manager->lock($planet);$this->resources->materialize($planet,$this->clock->now());}
             $settings=$universe->gameSettings;$settings['catalog_overrides']??=[];$settings['catalog_overrides'][$group]??=[];$override=$settings['catalog_overrides'][$group][$slug]??[];foreach($values as $path=>$value)$this->write($override,$path,$value);$settings['catalog_overrides'][$group][$slug]=$override;$universe->gameSettings=$settings;
@@ -50,6 +47,68 @@ final class CatalogBalanceService
             foreach($planets as $planet)$this->resources->refreshProduction($planet);
             $this->audit($admin,$universeId,$group,$slug,$values,$before,$this->catalog->getForUniverse($universe,$group,$slug),$reason);$this->manager->flush();
         });
+    }
+
+    /**
+     * Devis hypothétique en mémoire : aucun verrou, écriture ou matérialisation.
+     * Les tableaux proposés sont des copies, jamais une mutation de l'univers géré par Doctrine.
+     */
+    public function preview(Universe $universe, string $group, string $slug, array $input, string $expectedRevision, string $tier, int $level, int $quantity): array
+    {
+        if (!in_array($group, self::GROUPS, true)) {
+            throw new \DomainException('Groupe de catalogue invalide.');
+        }
+        $this->assertRevision($universe, $group, $slug, $expectedRevision);
+        $values = $this->validatedValues($group, $slug, $input);
+        if (!in_array($tier, GameCatalog::TIERS, true) || $level < 1 || $level > 100 || $quantity < 1 || $quantity > 1000) {
+            throw new \DomainException('Scénario invalide : rang connu, niveau de 1 à 100 et quantité de 1 à 1 000 requis.');
+        }
+        $unitGroup = in_array($group, ['ships', 'defenses'], true);
+        if (($unitGroup && $level !== 1) || (!$unitGroup && $quantity !== 1)) {
+            throw new \DomainException('Un bâtiment ou une recherche se simule à l’unité ; les unités se simulent au niveau 1.');
+        }
+        $current = $this->catalog->forUniverse($universe);
+        $proposed = $current;
+        foreach ($values as $path => $value) {
+            $this->write($proposed['catalog'][$group][$slug], $path, $value);
+        }
+        $before = $this->catalog->withTier($current['catalog'][$group][$slug], $tier);
+        $after = $this->catalog->withTier($proposed['catalog'][$group][$slug], $tier);
+        return [
+            'tier' => $tier,
+            'level' => $level,
+            'quantity' => $quantity,
+            'before' => $this->calculator->calculate($before, $group, $level, $quantity, [], $current, []),
+            'after' => $this->calculator->calculate($after, $group, $level, $quantity, [], $proposed, []),
+            'time_multiplier' => $current['multipliers'][match ($group) {
+                'buildings' => 'building_time', 'technologies' => 'research_time', default => 'ship_build_time',
+            }],
+        ];
+    }
+
+    /** Validation numérique et cohérence des tirs communes au devis et à l'écriture. */
+    private function validatedValues(string $group, string $slug, array $input): array
+    {
+        $input = $this->flatten($input);
+        $schema = $this->fieldSchema($group, $this->catalog->get($group, $slug));
+        if (array_diff(array_keys($input), array_keys($schema)) || array_diff(array_keys($schema), array_keys($input))) {
+            throw new \DomainException('Paramètres catalogue incomplets ou inconnus.');
+        }
+        $values = [];
+        foreach ($schema as $path => $rule) {
+            $value = filter_var($input[$path] ?? null, FILTER_VALIDATE_FLOAT);
+            if ($value === false || !is_finite((float) $value) || $value < $rule['min'] || $value > $rule['max']) {
+                throw new \DomainException('Valeur hors limites pour '.$rule['label'].'.');
+            }
+            $values[$path] = $rule['integer'] ? (int) $value : (float) $value;
+            if ($rule['integer'] && (float) $values[$path] !== (float) $value) {
+                throw new \DomainException('Un entier est requis pour '.$rule['label'].'.');
+            }
+        }
+        if (isset($values['shots_min'], $values['shots_max']) && $values['shots_min'] > $values['shots_max']) {
+            throw new \DomainException('Le minimum de tirs ne peut pas dépasser le maximum.');
+        }
+        return $values;
     }
 
     public function reset(Player $admin,int $universeId,string $group,string $slug,string $expectedRevision,string $reason):void
