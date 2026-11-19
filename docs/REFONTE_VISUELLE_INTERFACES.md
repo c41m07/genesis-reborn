@@ -4233,6 +4233,38 @@ aucune annulation, suppression ou attribution réelle n’est exécutée.
 **Choix A/B attendu pour L10L** ; L10 en cours, plan global **15/18**. Patchnotes
 et exploitation attendent leurs sous-lots propres.
 
+## Nettoyage Figcraft validé — 19 novembre 2026
+
+L’utilisateur demande de retirer les variantes écartées avant la vérification
+finale et valide explicitement la liste de 27 pages. Le document passe de
+**60 à 34 pages** : 27 pages retirées, 33 pages conservées et une nouvelle page
+« Fondations · Composants partagés ». Les quatre composants de boutons de la
+page 02 y sont déplacés avec leurs identifiants. Les 48 composants et les
+1 264 instances encore liées à un composant existant sont conservés.
+
+Pages retirées : **02, 05, 07, 09, 11, 13, 15, 17, 19, 21, 23, 35, 37, 39,
+41, 43, 45, 47, 49, 51, 52, 54, 57, 59, 61, 63 et 65**. Les variantes choisies
+restent dans le document, notamment Guildes B, L10F B, L10G B et **L10L A**.
+Vue générale inchangée ; pages 30–33 conservées, car elles contiennent les deux
+vues de galaxie, les études de distance et les éléments du simulateur retravaillé.
+Les propositions écartées et leurs contenus uniques restent dans la copie
+complète vérifiée `genesis-reborn-maquettes-avant-nettoyage-20261119-121800.figcraft`.
+Les captures A/B et bilans antérieurs décrivent l’état historique avant ce tri.
+
+Quatorze liens de comparaison deviennent « Ouvrir la version retenue ». La
+comparaison du document enregistré vérifie **96 826 nœuds conservés**, sans
+modification hors du plan validé. Les 348 variables et leurs valeurs sont
+identiques ; aucun nouveau lien sans destination. Quatre exports avant/après
+(Vue générale, guilde, galaxie et défi) sont identiques. Les marqueurs techniques
+ajoutés aux quatorze libellés modifiés sont contrôlés explicitement.
+
+Preuves dans les artefacts de la conversation :
+`nettoyage-maquettes-{plan,verification,document-avant,document-apres}.json`,
+`nettoyage-maquettes-proposition.html`, copie complète et exports
+`nettoyage-{avant,apres}-{vue-generale,guilde,galaxie,defi}.png`.
+Aucun fichier applicatif ni donnée du jeu n’est modifié par ce nettoyage.
+La validation de L10L A est conservée ; sa réalisation suit ce nettoyage.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
