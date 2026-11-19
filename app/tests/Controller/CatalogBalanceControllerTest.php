@@ -138,4 +138,72 @@ final class CatalogBalanceControllerTest extends WebTestCase
   $this->client->request('POST', $url, ['preview' => '1']);
   self::assertResponseRedirects('/acces-refuse');
  }
+
+ public function testHistoryIsScopedPaginatedEscapedAndReadOnly(): void
+ {
+  $id = $this->universe->id;
+  $beforeSettings = $this->universe->gameSettings;
+  for ($index = 0; $index < 22; ++$index) {
+   $entry = new \App\Entity\AdminAuditLog();
+   $entry->actor = $this->admin;
+   $entry->action = 'universe_catalog_balance';
+   $entry->targetType = 'universe';
+   $entry->targetId = $id;
+   $entry->createdAt = new \DateTimeImmutable('2026-11-19 10:00:00 UTC');
+   $entry->details = ['group' => 'ships', 'slug' => 'fighter', 'reason' => '<script>injection</script>',
+    'before' => ['precision' => 12], 'after' => ['precision' => 13]];
+   if ($index === 21) {
+    $entry->details = ['group' => 'ships', 'slug' => 'fighter', 'values' => ['precision' => 14]];
+   }
+   $this->em->persist($entry);
+  }
+  foreach ([[$id + 999, 'ships', 'fighter'], [$id, 'defenses', 'fighter'], [$id, 'ships', 'different']] as [$target, $family, $slug]) {
+   $entry = new \App\Entity\AdminAuditLog();
+   $entry->action = 'universe_catalog_balance';
+   $entry->targetType = 'universe';
+   $entry->targetId = $target;
+   $entry->createdAt = new \DateTimeImmutable();
+   $entry->details = ['group' => $family, 'slug' => $slug, 'reason' => 'NE_PAS_AFFICHER'];
+   $this->em->persist($entry);
+  }
+  $this->em->flush();
+  $url = '/admin/universes/'.$id.'/catalogue/ships/fighter/historique';
+  $this->client->request('GET', $url);
+  self::assertResponseRedirects('http://genesis-reborn.localhost/connexion');
+  $this->client->loginUser($this->admin);
+  $crawler = $this->client->request('GET', $url);
+  self::assertResponseIsSuccessful();
+  self::assertCount(20, $crawler->filter('details'));
+  self::assertSelectorTextContains('body', 'Non enregistré');
+  self::assertSelectorTextContains('body', 'Motif non enregistré');
+  self::assertStringNotContainsString('NE_PAS_AFFICHER', $this->client->getResponse()->getContent());
+  self::assertStringNotContainsString('<script>injection</script>', $this->client->getResponse()->getContent());
+  self::assertStringContainsString('&lt;script&gt;', $this->client->getResponse()->getContent());
+  self::assertSelectorNotExists('#admin-main form[method=post]');
+  $this->client->click($crawler->filter('a[rel=next]')->link());
+  self::assertResponseIsSuccessful();
+  self::assertSelectorCount(2, 'details');
+  self::assertSelectorNotExists('a[rel=next]');
+  $this->client->request('GET', '/admin/universes/'.$id.'/catalogue/ships/inconnu/historique');
+  self::assertResponseStatusCodeSame(404);
+  $this->client->request('GET', '/admin/universes/999999/catalogue/ships/fighter/historique');
+  self::assertResponseStatusCodeSame(404);
+  $this->em = static::getContainer()->get(EntityManagerInterface::class);
+  $this->em->clear();
+  self::assertSame($beforeSettings, $this->em->find(Universe::class, $id)->gameSettings);
+  self::assertSame(25, $this->em->getRepository(\App\Entity\AdminAuditLog::class)->count());
+ }
+
+ public function testOrdinaryPlayerCannotReadHistory(): void
+ {
+  $player = new Player();
+  $player->email = 'history-player@example.test';
+  $player->username = 'HistoryPlayer';
+  $player->password = 'test';
+  $this->em->persist($player);
+  $this->em->flush();
+  $this->client->loginUser($player);
+  $this->client->request('GET', '/admin/universes/'.$this->universe->id.'/catalogue/ships/fighter/historique');
+  self::assertResponseRedirects('/acces-refuse');
+ }
 }

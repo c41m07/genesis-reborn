@@ -83,7 +83,46 @@ La recette navigateur reste à exécuter.
 ## Suite non livrée par ce lot
 
 Prévisualisation avec contexte réel des colonies et production, assistant de grille globale,
-brouillons persistants/publication groupée, restauration de versions,
+brouillons persistants/publication groupée, application de versions historiques,
 prérequis et nouveaux paramètres, simulations UI, optimisation des lectures,
 permissions fines, opérations, support et guildes restent des lots distincts.
 Ce premier lot ne signifie pas que le chantier complet est terminé.
+
+## Incrément : historique consultable par fiche
+
+Complexité 4/5 à l’analyse, ramenée à 3/5 en excluant les écritures.
+Une page dédiée GET, accessible depuis la fiche et protégée par ROLE_ADMIN,
+présente les traces du journal pour le seul triplet univers/famille/identifiant.
+Le repository filtre en SQL avant LIMIT (20 + 1) et utilise un curseur d’ID
+décroissant. Les comparaisons dépliables rapprochent avant/après/actuel pour
+les champs numériques actuellement modifiables. Aucun acteur ou autre détail
+personnel n’est chargé. Les motifs sont échappés par Twig.
+
+Les anciennes traces sans instantané affichent « Non enregistré », jamais zéro.
+La comparaison n’est ni une preuve que toute modification a été auditée, ni un
+ancien devis reproductible : règles globales, prérequis, contexte des colonies
+et anciennes définitions non modifiables ne sont pas historisés par ce lot.
+L’actuel est celui de la requête ; aucun rafraîchissement ni mutation implicite.
+
+Pas de restauration, publication ni brouillon persistant ajouté. Une future
+application devra sélectionner strictement les champs encore compatibles,
+revalider limites/plafonds et contexte sous verrou, garder l’empreinte concurrente,
+le motif, la confirmation et l’audit atomique existants. Elle ne devra jamais
+injecter une ancienne définition complète dans gameSettings. Le journal n’est
+pas un système de versions immuables ni une sauvegarde autonome.
+
+Aucune migration ou modification des services métier d’écriture. L’index
+existant est temporel ; le coût de recherche JSON sur un gros journal reste
+non mesuré. Un index dédié sera à étudier avant d’annoncer une optimisation.
+Accès direct, navigation paginée, absence de formulaire d’écriture, droits,
+isolation univers/fiche, traces incomplètes et échappement sont couverts par
+les tests ciblés. Recette visuelle/clavier, CI complète et charge réelle restent
+à effectuer.
+
+Validation de cet incrément : make validate, 25 tests / 284 assertions
+(catalogue HTTP, intégration et pages dédiées), 60 templates Twig et injection
+du conteneur réussis. Premier essai bloqué par les caches préexistants non
+inscriptibles : remplacés uniquement dans les conteneurs par des tmpfs éphémères,
+sans changer les permissions locales. L’assertion d’absence de formulaire POST
+a été limitée au contenu principal pour exclure la déconnexion globale.
+Les réponses 404 des identifiants invalides sont attendues et testées.
