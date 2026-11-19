@@ -180,9 +180,13 @@ est validé puis réalisé localement : accueil, quatre espaces existants et com
 joueurs adaptés aux écrans étroits, avec droits et formulaires conservés.
 Validation, lint, compilation, 29 tests PHP / 312 assertions et six parcours
 navigateur consolidés ; 24 captures en thèmes clair/sombre, détails dans le suivi.
-L10B prépare ensuite les fiches joueurs et leurs outils existants dans les pages
-44 A « Fiche et actions locales » et 45 B « Lecture par univers » : 48 cadres,
-758 liens inspectés, données et actions fictives. Choix attendu avant réalisation.
+L10B A « Fiche et actions locales » (page 44) est ensuite validé et réalisé :
+activité par univers en cartes, colonies en lignes et deux interventions dépliables.
+Validation, lint, compilation, 29 PHP / 138 assertions, cinq parcours navigateur
+consolidés et 18 captures finales dans les deux thèmes, sans changement des services.
+L10C prépare signalements et suivi des feedbacks dans les pages Figcraft 46 A
+« Modération lisible » et 47 B « Lecture et suivi » : 58 cadres et 892 liens
+inspectés, données et décisions fictives. Choix attendu avant réalisation.
 Les autres rubriques administratives seront traitées par sous-lots, sans augmenter
 le compte des dix-huit ensembles ni déclarer L10 terminé.
 CI GitHub, fusion et déploiement restent distincts.

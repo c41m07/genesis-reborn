@@ -3137,7 +3137,108 @@ illustre les deux formulaires ; les outils de Nova et les dossiers/missions mèn
 recettés lors de la réalisation. Preuves dans le dossier de conception :
 `lot-10B-plan.json`, `lot-10B-manifest.json`, `lot-10B-verification.json`, états du
 document avant/après/enregistrement et `lot-10B-{A,B}-{profile,resources,ships}-*.png`.
-Le choix A/B reste attendu pour L10B. Le plan global reste à **15/18**, L10 en cours.
+Le choix A a ensuite été reçu ; réalisation et suite ci-dessous. Le plan global
+reste à **15/18**, L10 en cours.
+
+## L10B A — Réalisation locale du 19 novembre 2026
+
+Validation explicite : « je valide le A ». Complexité **4/5** : données privées,
+interventions de ressources et de vaisseaux, permissions et écritures journalisées.
+La page dédiée par joueur est conservée. Les univers restent regroupés dans cette
+fiche ; les outils secondaires restent dépliables sous leur colonie, avec toutes
+les informations nécessaires à la même action. Les dossiers et missions conservent
+leurs vrais liens et paramètres de participation/univers.
+
+Six repères d’activité par univers en cartes : trois colonnes sur ordinateur,
+deux sur tablette, une sur téléphone. Les colonies occupent des lignes complètes.
+Les deux outils natifs gardent leurs champs, contrôles, CSRF, clés de demande,
+motif et confirmation explicite. Les cinq ressources affichent stock/capacité
+auprès du champ, avec un lien accessible ; les deux formulaires rappellent la
+destination précise. Les liens et champs restent utilisables au clavier et sans
+JavaScript. Le sommaire automatique est désactivé pour la fiche, sans retirer les
+fragments de retour. Aucune modification des services, requêtes, règles ou valeurs.
+
+Fichiers : `admin-player-workspace.css`, import `app.js`, templates `admin/player`,
+`admin/layout`, `_resource_intervention`, `_ship_intervention`, recette
+`admin-player-refonte.spec.mjs`, README, architecture, inventaire, feuille de route
+et suivi. Les notes, formulaires et données d’activité restent issus de l’existant.
+
+Contrôles locaux : `make validate`, `make lint`, `make assets`, contrôle du diff ;
+**29 PHP / 138 assertions** (`AdminInterventionTest`, `PlayerActivityTest`) dans
+la base de test isolée. **Cinq parcours navigateur distincts consolidés** :
+ressources (confirmation, ajout, répétition, CSRF et accès refusés, retrait refusé,
+audit) ; présence/temps par univers et refus d’accès ; attribution de vaisseaux
+confirmée, auditée et sans double effet ; présentation à deux univers, noms longs,
+saisie conservée entre ouvertures des outils ; états vides et correction native
+sans JavaScript. La recette vérifie aussi les paramètres des liens de dossiers,
+l’absence d’écriture d’intervention pendant les seules lectures, et les cinq
+champs de ressources. Les tests existants ne sont pas affaiblis.
+
+Thèmes clair/sombre en **1440/768/390**, fiche fermée puis outils de ressources et
+de vaisseaux ouverts : **18 captures finales**. Contrôles d’accessibilité ciblés
+sur ces états, sans signalement ; ce n’est pas un audit RGAA complet. Après lecture
+des captures, titres, alignement/couleur des repères et hauteur des champs de motif
+ont été ajustés pour suivre A ; la recette de présentation a été reprise, avec
+assertions de l’alignement et de la hauteur minimale de 150 px des zones de motif.
+Preuves : `output/playwright/admin-player-refonte/`, journaux `php`, `lint`,
+`assets-final`, `browser` et `browser-final`, captures dans `recette-finale`.
+Les données modifiées par les recettes restent dans leurs bases jetables.
+Pas de migration sur la base habituelle, CI GitHub, fusion ou déploiement ; aucun
+gain de performance annoncé. Les redirections d’erreur gardent leur comportement
+actuel, sans nouvelle conservation de saisie promise.
+
+## L10C — Signalements et feedbacks, propositions du 19 novembre 2026
+
+Complexité **4/5**. Sources : sections de signalements, liste et détail des feedbacks,
+contrôleurs et services de traitement, navigation et cadrage administratif actuels.
+Trois vues existantes : modération des messages/joueurs, liste filtrée des feedbacks,
+fiche de suivi. Les deux catégories de signalement restent dans la même page ; la
+recherche porte uniquement sur les messages. Les cinq entrées principales et les
+liens secondaires de Joueurs et modération sont conservés. Aucun faux changement
+de page par masquage de sections n’est proposé.
+
+Dans le même fichier Figcraft de bureau :
+
+- **46 · L10C · A — Modération lisible** : signalements en panneaux complets,
+  feedbacks en cartes ; sur ordinateur, suivi du feedback en colonne auprès du
+  contenu. Bénéfice : contexte de chaque décision réuni ; limite : hauteur pour
+  parcourir les signalements.
+- **47 · L10C · B — Lecture et suivi** : signalements en colonnes sur ordinateur,
+  feedbacks en lignes ; suivi du feedback après sa description, sa capture et son
+  contexte. Bénéfice : contenu lu avant modification ; limite : accès au formulaire
+  plus bas dans une longue fiche.
+
+Couverture équivalente : **58 cadres, 29 par direction**, **892 liens inspectés**,
+six départs de prototype. Trois vues en 1440/768/390 ; états en 390 : recherche
+des messages, absence de résultat ou de signalement, décisions de message/joueur,
+déjà traité, feedbacks filtrés/vides/paginés/archivés, note renseignée/refusée/
+enregistrée, absence de capture, feedback archivé, textes longs, capture fictive,
+menu et destinations conservées. `M` revient au plan ; celui-ci compare A et B.
+Douze exports des trois vues en 1440/390 ; aperçus examinés. Aucun débordement de
+texte, chevauchement ou lien manquant au contrôle de tous les cadres ; parité
+conservée. Les 40 pages précédentes gardent noms et nombres de cadres ; 42 pages
+et 348 variables après ajout. Fichier enregistré sur le plan A, document propre
+dans la fenêtre de bureau contrôlée.
+
+Garde-fous conservés dans la proposition : seuls les messages signalés sont
+consultables ; classer sans suite et masquer le message gardent leurs POST/CSRF.
+Le signalement de joueur conserve son contexte et sa décision sans sanction
+automatique. Les feedbacks gardent cinq filtres GET, pagination serveur de 50,
+archives exclues par défaut, statut et note interne de 5 000 caractères maximum.
+Le raccourci « Voir les archives » utilise le filtre existant. Consultation et
+suivi restent journalisés ; capture privée autorisée par le serveur, aucun accès
+public supplémentaire. Pas de confirmation ou d’action métier ajoutée.
+
+Limites : contenus et décisions fictifs ; champs dessinés et parcours simulés,
+extraits de listes. Le suivi détaillé illustre le feedback d’Orion ; le second
+feedback conserve son identité mais renvoie au cadre de référence pour son édition.
+La capture est dessinée et identifiée comme fictive ; elle ne représente aucun
+document réel. Les erreurs illustrent la redirection actuelle, sans conservation
+de saisie nouvelle. Les permissions, thèmes et vrais retours serveur seront
+recettés après choix. Preuves : `lot-10C-plan.json`, `lot-10C-manifest.json`,
+`lot-10C-verification.json`, états du document avant/après/enregistrement et
+`lot-10C-{A,B}-{reports,feedbacks,detail}-*.png` dans le dossier de conception.
+Choix A/B attendu pour L10C ; L10 reste en cours, plan global **15/18**.
 
 ## Reprise et états de couverture
 
@@ -3162,7 +3263,7 @@ Le choix A/B reste attendu pour L10B. Le plan global reste à **15/18**, L10 en 
 | L7E | A implémentée et vérifiée localement | Page 36 A validée explicitement après reprise de la messagerie et des classements | 90 PHP / 569 assertions ; neuf parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L8 | A implémentée et vérifiée localement | Page 38 A validée explicitement | 23 PHP / 244 assertions ; 16 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L9 | A implémentée et vérifiée localement | Page 40 A validée explicitement | 7 PHP / 127 assertions ; 5 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
-| L10 | L10A A réalisé et vérifié localement ; L10B A/B préparé | A choisi explicitement pour L10A ; choix L10B attendu | 29 PHP / 312 assertions ; six parcours navigateur consolidés ; L10B pages 44/45, 48 cadres et 758 liens | Réalisation L10B puis autres rubriques administratives ; CI, fusion et déploiement distincts |
+| L10 | L10A A et L10B A réalisés et vérifiés localement ; L10C A/B préparé | A choisi explicitement pour L10A et L10B ; choix L10C attendu | Bilan L10B : 29 PHP / 138 assertions, cinq parcours navigateur consolidés ; L10C pages 46/47, 58 cadres et 892 liens | Réalisation L10C puis autres rubriques administratives ; CI, fusion et déploiement distincts |
 | L11 | Inventorié | Aucune nouvelle | Non engagé pour cette refonte | Examiner le wiki sans recommencer ses pages dédiées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 

@@ -981,6 +981,18 @@ GET et le fragment de résultats gardent `admin-list`, sa pagination serveur,
 ses protections contre les réponses obsolètes et son repli sans JavaScript.
 Aucun service, requête, contrat d’action ou règle de rôle n’est modifié.
 
+L10B étend ce cadre à `app_admin_player` et ajoute `admin-player-workspace.css`,
+limité à `.admin-player-profile`. Les six données d’activité de chaque participation
+restent préparées par le contrôleur actuel, sans nouvelle agrégation. Les colonies
+conservent leurs deux `<details>` natifs et leurs identifiants de fragments ; les
+champs de ressources sont regroupés par deux sur écran large, par un sur mobile.
+Le stock et la capacité sont reliés au champ par `aria-describedby`. Motif, case de
+confirmation, POST, CSRF et clé de demande restent dans chaque formulaire.
+Les redirections après intervention, audits de consultation/écriture et protections
+transactionnelles restent inchangés. Aucune actualisation ou logique JavaScript
+n’est ajoutée à la fiche ; une erreur serveur garde le comportement de redirection
+existant, sans garantie nouvelle de conservation de saisie.
+
 La console et ses groupes existants restent en place. `AdminController` expose
 les GET de création et de gestion d’un univers ; les POST historiques gardent
 leurs services, jetons et contrôles. Les brouillons d’erreur sont consommés sur

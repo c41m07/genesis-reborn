@@ -71,3 +71,4 @@ import './styles/social-workspace.css';
 import './styles/entry-workspace.css';
 import './styles/information-workspace.css';
 import './styles/admin-workspace.css';
+import './styles/admin-player-workspace.css';

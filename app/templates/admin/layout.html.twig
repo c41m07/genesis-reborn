@@ -4,7 +4,7 @@
 {% set adminNotifications = admin_notifications(app.user) %}
 {% set preferences = {timezone:'Europe/Paris'}|merge(app.user.preferences|default({})) %}
 {% set missionPage = currentRoute starts with 'app_admin_mission' %}
-{% set directWorkspace = currentRoute in ['app_admin_index', 'app_admin_group', 'app_admin_players'] %}
+{% set directWorkspace = currentRoute in ['app_admin_index', 'app_admin_group', 'app_admin_players', 'app_admin_player'] %}
 <!DOCTYPE html><html lang="fr"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#090f1b"><meta name="robots" content="noindex">
 <title>{% block title %}Console d’administration · Genesis Reborn{% endblock %}</title>
