@@ -1225,3 +1225,29 @@ thèmes. Les 16 chapitres, 12 formules et deux références complètes sont comp
 aux sources. Une couleur secondaire trop claire a été corrigée dans le Wiki ;
 les contrôles Axe des cinq vues sur trois tailles et deux thèmes passent.
 Plan 17/18 ; L12 et la CI complète avant fusion restent distincts.
+
+## Revue transversale L12 — 19 novembre 2026
+
+Les pages et conceptions validées sont conservées. La navigation principale,
+les menus secondaires et leurs variantes sur tablette/téléphone, le sélecteur de
+colonie, les ressources, les événements, les notifications et les arrivées sont
+rapprochés de leurs consommateurs. Les erreurs génériques 403/404/500 gardent leur
+gabarit autonome, sans chargement de données de jeu ; le refus fonctionnel reste
+contextuel. Les anciens paramètres/fragments et les parcours natifs sont conservés.
+
+**29 scénarios navigateur distincts consolidés**, thèmes sombre/clair et tailles
+1440/768/390/320 selon le composant, avec contrôles supplémentaires jusqu’à 1920
+pour les refus. Menus au clavier, retours du focus, contexte de deuxième colonie,
+actualisations tardives, notification privée réelle, transports entrants, orbites,
+accès refusés et indexation publique sont couverts. Les sélecteurs des anciens
+tests sont adaptés aux menus nommés et suivis dépliables retenus, sans retirer
+les assertions métier. Un correctif CSS ciblé rétablit le menu natif sur les petits écrans : son
+décalage hors écran est neutralisé tant que JavaScript ne pilote pas le volet.
+
+La suite PHP a exécuté 1 443 tests : 143 refus de connexion pendant une interruption
+du service de test et trois anciennes attentes visuelles ; reprise dédiée de
+**179 tests / 1 536 assertions réussie**, sans erreur restante sur ces cas.
+Un seul scénario de mesure optionnelle reste désactivé (REWORK_MEASURE=1).
+Les 13 tests Python passent. Ce bilan consolidé ne prétend pas être une unique
+exécution complète réussie de make test, ni une CI GitHub. Preuves et fichiers
+modifiés dans le suivi de refonte. **18/18 localement ; CI et fusion restent à faire.**

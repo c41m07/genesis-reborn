@@ -256,8 +256,10 @@ nouvelle attente : 70 A « Manuel en lignes » et 71 B « Repères en cartes ».
 recherche et deux références représentés. Les 38 pages précédentes sont préservées,
 40 pages après ajout. L’utilisateur a ensuite validé 70 A : le Wiki est réalisé
 et vérifié localement (4 PHP / 338 assertions, trois parcours navigateur et
-30 captures sur trois tailles et deux thèmes). Le plan passe à **17/18** ; seule
-la revue transversale L12 reste à effectuer.
+30 captures sur trois tailles et deux thèmes). L12 est ensuite vérifié localement :
+29 parcours navigateur distincts, exécution PHP complète puis reprise ciblée
+de 179 tests et 13 tests Python. Le plan est à **18/18 réalisés et vérifiés localement**.
+La CI complète avant fusion reste distincte ; bilan détaillé et limites dans le suivi.
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026

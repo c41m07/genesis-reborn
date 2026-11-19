@@ -776,3 +776,9 @@ sommaire fixe à gauche sur ordinateur et choix de chapitre sur mobile. Chaque
 chapitre garde sa page et ses formules dépliables ; recherche et références
 restent accessibles sans JavaScript. Les textes et règles du manuel sont conservés.
 [Bilan du Wiki et vérifications](docs/REFONTE_VISUELLE_INTERFACES.md).
+
+Sans JavaScript, le menu reste accessible dans la page sur téléphone et tablette.
+La revue transversale locale de la refonte couvre aussi les menus communs, les
+actualisations, les erreurs et les parcours sans JavaScript. Son périmètre et les
+reprises de tests sont consignés dans le [bilan de refonte](docs/REFONTE_VISUELLE_INTERFACES.md).
+La CI complète reste requise avant toute fusion.

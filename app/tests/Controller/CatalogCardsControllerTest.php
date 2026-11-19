@@ -38,7 +38,8 @@ final class CatalogCardsControllerTest extends WebTestCase
             $button=$crawler->filter('#item-'.$slug.'-basic .card-body>form>button');
             self::assertCount(1,$button);
             self::assertNotNull($button->attr('disabled'));
-            self::assertStringStartsWith('Manque ',$button->text());
+            self::assertStringStartsWith('Il manque :',$button->text());
+            self::assertGreaterThan(0, $button->filter('.catalog-missing-resource')->count());
             self::assertStringNotContainsString('Manque',$crawler->filter('#item-'.$slug.'-basic .building-costs')->text());
         }
         $em->getConnection()->executeStatement('UPDATE planet_resource SET current_stock=10000 WHERE planet_id=?',[$planetId]);

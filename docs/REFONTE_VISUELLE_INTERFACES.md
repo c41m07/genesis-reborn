@@ -4679,7 +4679,7 @@ Les propositions non choisies ne sont pas supprimées par cette préparation.
 | L9 | A implémentée et vérifiée localement | Page 40 A validée explicitement | 7 PHP / 127 assertions ; 5 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L10 | Complet localement : A à E en A, F/G en B, H à N en A | Page 68 A validée ; choix précédents conservés | Clôture N : 10 PHP / 271 assertions, huit parcours navigateur consolidés et 43 captures ; bilans des sous-lots conservés | Revue transversale, CI complète, fusion et déploiement distincts |
 | L11 | A implémentée et vérifiée localement | Page 70 A validée explicitement | 4 PHP / 338 assertions, trois parcours navigateur et 30 captures ; bilan ci-dessous | Revue transversale, CI complète, fusion et déploiement distincts |
-| L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
+| L12 | Revue transversale vérifiée localement | Conceptions précédentes conservées ; lot de vérification demandé | 29 parcours navigateur consolidés, suite PHP et reprise dédiée de 179 tests, 13 Python ; bilan ci-dessous | CI complète avant fusion, intégration et déploiement distincts |
 
 Les commits restent sur `feature/refonte-visuelle` ; L1B A est enregistré dans
 `1e390a9`, L1C A dans `1a33d14`, L2A A dans `ff6c324`, L2B A dans `88d68e3`.
@@ -4696,11 +4696,12 @@ L7E page 36 A est validée explicitement, intégrée dans `557061e` et vérifié
 la messagerie et les classements existants restent la base de leur présentation.
 L8 page 38 A est validée explicitement, réalisée et vérifiée localement ; bilan ci-dessus.
 L9 page 40 A est validée explicitement, réalisée et vérifiée localement ; bilan ci-dessus.
-Le plan reste à 18 ensembles : dix-sept sont réalisés localement ; seule la revue transversale L12 reste à traiter.
+Le plan compte **18 ensembles réalisés et vérifiés localement**, dont la revue transversale L12 décrite ci-dessous.
 Vue générale avait été finalisée en avance ; L7A est désormais complet localement. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
 Les validations précédentes restent limitées à leurs lots.
 Aucun push, PR, fusion ou déploiement n’est autorisé par le seul changement de
-branche. La mission globale reste non terminée.
+branche. La réalisation et la vérification locales sont terminées ; la CI complète,
+la fusion et une éventuelle publication restent des étapes distinctes.
 
 
 ## L11 A — Wiki réalisé et vérifié localement, 19 novembre 2026
@@ -4750,3 +4751,87 @@ et `recette/`. Captures de l’application locale, distinctes des exports Figcra
 Ces contrôles ne constituent pas un audit RGAA exhaustif ; performance non mesurée.
 **L11 est complet localement ; plan 17/18.** L12 reste à effectuer. Aucune CI GitHub,
 fusion ou publication n’est annoncée ; les propositions non retenues sont conservées.
+
+## L12 — Recette transversale locale, 19 novembre 2026
+
+Complexité **4/5** : socle partagé, plusieurs rôles et contextes, données privées,
+actualisations, accessibilité et fonctionnement natif. Ce lot de vérification
+conserve les conceptions validées ; aucune nouvelle proposition visuelle n’est
+nécessaire. Un défaut du menu sans JavaScript sur petit écran est corrigé dans
+layout-structure.css ; aucune règle de jeu ne change.
+
+Examen ciblé : menus principal/mobile/secondaire, sélecteur de colonie, barre de
+ressources et bulles, panneau événement/compteurs, notifications privées,
+présence, surveillance des flottes et gabarits d’erreur. Le routeur courant est
+rapproché de l’inventaire : **171 routes applicatives**, une entrée de déconnexion,
+**209 Twig et 55 fichiers d’interaction**, dont le module global CSRF. Six gabarits
+et deux interactions ajoutés pendant les lots sont rattachés à leurs consommateurs.
+Les anciens états génériques de composants déjà traités sont synchronisés avec
+leurs bilans. Les trois scripts historiques sans consommateur visible (hello,
+admin-tabs, admin-editors) sont identifiés et conservés, sans suppression.
+
+### Résultats consolidés
+
+- **29 scénarios navigateur distincts réussis**, avec reprises ciblées. Navigation
+  sans/avec guilde, administration, deuxième colonie, thèmes sombre/clair, tailles
+  1440/768/390/320 selon les composants, refus jusqu’à 1920. Accès directs, retour,
+  rechargement, état actif, noms accessibles, clavier, focus et parcours natifs.
+- Menus principal et secondaire, boucle clavier et retour du focus après Échap ;
+  panneau événement au clavier et fermeture extérieure. Notification privée réelle
+  à la fin d’une construction ; actualisations sans perte de focus et rejet d’une
+  réponse tardive. Les suivis vols/arrivées restent dépliables dans les quatre
+  catalogues, avec une seule ouverture à la fois ; transport, retour propre,
+  demande d’orbite, masquage des sources inconnues et du fret privé conservés.
+- Abonnement HTTP lié à l’empire courant avec réponse privée non stockable ;
+  présence refusée pour jeton invalide, contexte périmé ou inactivité hors limite,
+  puis réponse 204 valide. Les requêtes de test partent du navigateur pour garder
+  l’origine et sa session, sans dépendre de la résolution Node des domaines locaux.
+- **34 états capturés pour le socle** : panneau événement dans les deux thèmes
+  sur quatre tailles, menus sur trois tailles, parcours natifs sur quatre tailles dans les deux
+  thèmes, puis 403/404/500 sur quatre tailles. Le 500 est exercé par
+  l’aperçu natif Symfony, sans provoquer de panne réelle. Erreurs génériques
+  autonomes, sans scripts/styles externes ni détails internes ; refus fonctionnel
+  contextuel conservé. Contrôles Axe ciblés, sans revendication de conformité RGAA
+  exhaustive. Les autres captures des parcours sont conservées avec leurs tests.
+- Suite PHP initiale : **1 443 tests**, 143 erreurs de connexion et trois échecs
+  d’attentes visuelles anciennes. Le service de test a été redémarré pendant cette
+  exécution. Reprise des classes concernées dans une base dédiée au contrôle :
+  **179 tests / 1 536 assertions réussis**. Tous les échecs initiaux sont couverts
+  par cette reprise ; une mesure optionnelle reste volontairement désactivée
+  hors REWORK_MEASURE=1. Ce bilan ne prétend pas être un passage complet unique.
+- **13 tests Python réussis**. make test a d’abord été tenté ; l’application locale
+  habituelle arrêtée empêchait son préparatif. Les suites PHP/Python sont donc
+  lancées avec le conteneur jetable et l’isolation documentée ci-dessus. Validation
+  Compose, lint statique et assets réussis en L11 sur le contenu applicatif conservé ;
+  assets recompilés après le correctif de menu ; syntaxe des scripts navigateur
+  modifiés et git diff --check contrôlés en L12.
+
+Le dernier parcours natif a révélé que le décalage mobile du menu restait appliqué
+sans JavaScript. La correction neutralise uniquement ce décalage avant
+initialisation de la navigation ; les huit combinaisons natives (deux thèmes et
+quatre tailles) et les parcours transversaux concernés réussissent après correction.
+
+Les anciens scénarios ciblent maintenant les menus nommés et leurs ouvertures,
+les ressources manquantes dans le bouton, la priorité de guilde explicitée, les
+arrivées avant les vols sur la Vue générale, le rail sticky et les suivis complets.
+Les assertions de quantités, annulation, confidentialité, permissions, parcours
+sans JavaScript et progression sont conservées ; les nouvelles présentations
+reçoivent des assertions spécifiques. Aucun test n’est supprimé ou ignoré pour
+faire passer la recette. Les essais complémentaires sont séquencés après saturation
+des plages réseau Docker ; aucun réseau étranger à ces essais n’est supprimé.
+
+Fichier applicatif : `app/assets/styles/layout-structure.css` (menu hors écran
+uniquement avec navigation JavaScript prête). Fichiers de tests :
+`CatalogCardsControllerTest.php`, `GalaxyFleetVisibilityTest.php`,
+`PersonalRelationCardTest.php`, `colony.spec.mjs`, `navigation-final.spec.mjs`,
+`ui-journey.spec.mjs`, `fleet-surveillance.spec.mjs` et le nouveau
+`common-shell-validation.spec.mjs`. Documentation : README, feuille de route,
+inventaire, bilan de navigation et présent suivi.
+
+Preuves : `output/playwright/refonte-finale/{make-test,php,php-reprise,python,browser,complements,reprises,natif,natif-corrige,assets}.log`,
+répertoires de captures associés, rapprochement `routes.json` et bilan des cas
+uniques. Les projets de test créés pour ce contrôle sont retirés après exécution.
+Les règles de jeu et les contenus du Wiki sont conservés ; performance non
+mesurée. **18/18 ensembles réalisés et vérifiés localement.** La CI GitHub complète,
+y compris persistance et sauvegarde/restauration isolée, reste nécessaire sur la
+version finale de la PR avant fusion. Aucun push, PR, fusion ou déploiement effectué.

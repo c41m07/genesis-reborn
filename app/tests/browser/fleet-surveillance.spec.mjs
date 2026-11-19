@@ -148,7 +148,6 @@ test('Flottes entrantes : transport neutre, propre retour séparé et demande d�
   for(const [label,url,container] of [
     ['vue-generale','/planetes/'+data.defender.planetId,'.dashboard-secondary'],
     ['flottes','/flottes','#active-missions'],
-    ...['buildings','technologies','ships','defenses'].map(section=>[section,'/planetes/'+data.defender.planetId+'?section='+section,'.colony-catalog-aside']),
   ]) {
     await page.goto(url);
     const ownPanel=page.locator(container+' [data-live-region="active-flights"]');
@@ -180,17 +179,43 @@ test('Flottes entrantes : transport neutre, propre retour séparé et demande d�
     await expect(incomingPanel.getByRole('progressbar')).toBeVisible();
     await page.locator(container).screenshot({path:testInfo.outputPath('cadres-'+label+'.png'),animations:'disabled'});
   }
+  // Dans les catalogues validés, vols et arrivées occupent deux suivis dépliables.
+  for (const section of ['buildings','technologies','ships','defenses']) {
+    await page.goto('/planetes/'+data.defender.planetId+'?section='+section);
+    const rail = page.locator('.catalog-operations-rail');
+    const flights = rail.locator('[data-catalog-disclosure="flights"]');
+    const arrivals = rail.locator('[data-catalog-disclosure="incoming"]');
+    await expect(rail).toHaveCSS('position', 'sticky');
+    await expect(flights.locator(':scope > summary')).toContainText('Vols · 1');
+    await expect(arrivals.locator(':scope > summary')).toContainText('Entrants · 1');
+    await flights.locator(':scope > summary').click();
+    await expect(flights.locator('[data-active-fleet="'+own+'"]')).toBeVisible();
+    await arrivals.locator(':scope > summary').click();
+    await expect(flights).not.toHaveAttribute('open');
+    await expect(arrivals.locator('[data-incoming-attack="'+data.fleet+'"]')).toBeVisible();
+    await expect(page.locator('.incoming-attack-panel')).toHaveCount(1);
+    await expect(arrivals.locator('.flight-route')).toBeVisible();
+    await expect(arrivals.getByRole('progressbar')).toBeVisible();
+    const ownBox = await flights.locator(':scope > summary').boundingBox();
+    const incomingBox = await arrivals.locator(':scope > summary').boundingBox();
+    expect(incomingBox.x).toBeGreaterThanOrEqual(ownBox.x+ownBox.width-1);
+    expect(Math.abs(incomingBox.y-ownBox.y)).toBeLessThan(2);
+    await page.screenshot({path:testInfo.outputPath('cadres-'+section+'.png'),animations:'disabled'});
+  }
   await page.goto('/planetes/'+data.defender.planetId+'?section=buildings');
-  await expect(page.getByRole('heading',{name:/^Flottes en vol/})).toBeVisible();
-  await expect(page.getByRole('heading',{name:/^Flottes entrantes\s+1$/})).toBeVisible();
+  await expect(page.locator('[data-catalog-disclosure="flights"] > summary')).toContainText('Vols · 1');
+  await expect(page.locator('[data-catalog-disclosure="incoming"] > summary')).toContainText('Entrants · 1');
   await expect(page.locator('[data-incoming-attack="'+own+'"]')).toHaveCount(0);
   for(const theme of ['dark','light']) {
     await setTheme(page,data,theme);
     for(const width of [1440,390]) {
       await page.setViewportSize({width,height:1000});
       expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBeTruthy();
-      await expect(page.locator('.colony-catalog-aside [data-live-region="active-flights"]')).toBeVisible();
-      await expect(page.locator('.colony-catalog-aside .incoming-attack-panel')).toBeVisible();
+      const rail = page.locator('.catalog-operations-rail');
+      const arrivals = rail.locator('[data-catalog-disclosure="incoming"]');
+      await expect(rail.locator('[data-live-region="active-flights"]')).toBeVisible();
+      if (await arrivals.getAttribute('open') === null) await arrivals.locator(':scope > summary').click();
+      await expect(arrivals.locator('.incoming-attack-panel')).toBeVisible();
       const violations=(await new AxeBuilder({page}).include('.incoming-attack-panel').analyze()).violations.filter(v=>['serious','critical'].includes(v.impact));
       expect(violations).toEqual([]);
       await page.screenshot({path:testInfo.outputPath(`flottes-entrantes-${theme}-${width}.png`),animations:'disabled'});
