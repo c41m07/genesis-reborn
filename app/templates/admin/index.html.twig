@@ -16,15 +16,15 @@
             <li class="{{ adminNotifications.feedbacks > 0 ? 'requires-attention' : '' }}"><a href="{{ path('app_admin_feedbacks') }}"><span><strong>{{ adminNotifications.feedbacks }} nouveau(x) feedback(s)</strong><small>Retours reçus depuis votre dernière visite</small></span><span aria-hidden="true">→</span></a></li>
         </ul><p class="admin-home-followup"><a href="{{ path('app_admin_cases') }}">{{ activeCaseCount }} dossier(s) actif(s)</a><span aria-hidden="true"> · </span><a href="{{ path('app_admin_operations') }}">{% if operations.outbox_available %}{{ operations.outbox_overdue }} relais à contrôler{% else %}Relais à vérifier{% endif %}</a></p></section>
         <section class="panel"><div class="admin-section-heading"><h2>Accès rapides</h2></div><div class="admin-home-actions">
-            <a class="secondary" href="{{ path('app_admin_event_wizard') }}">Préparer un événement</a>
-            <a class="secondary" href="{{ path('app_admin_missions') }}">Surveiller les flottes <span aria-hidden="true">→</span></a>
-            <a class="secondary" href="{{ path('app_admin_players') }}">Consulter les joueurs <span aria-hidden="true">→</span></a>
-            <a class="secondary" href="{{ path('app_admin_operations') }}">Contrôler les traitements <span aria-hidden="true">→</span></a>
+            <a class="secondary" href="{{ path('app_admin_event_wizard') }}"><span><strong>Préparer un événement</strong><small>Bonus, annonces et défis</small></span><span aria-hidden="true">→</span></a>
+            <a class="secondary" href="{{ path('app_admin_missions') }}"><span><strong>Surveiller les flottes</strong><small>Missions et transports</small></span><span aria-hidden="true">→</span></a>
+            <a class="secondary" href="{{ path('app_admin_players') }}"><span><strong>Consulter les joueurs</strong><small>Comptes et fiches individuelles</small></span><span aria-hidden="true">→</span></a>
+            <a class="secondary" href="{{ path('app_admin_operations') }}"><span><strong>Contrôler les traitements</strong><small>Relais et fonctionnement</small></span><span aria-hidden="true">→</span></a>
         </div><p class="admin-home-note">Les actions courantes restent accessibles sans parcourir toutes les rubriques.</p></section>
-        <section class="panel"><div class="admin-section-heading"><h2>Missions en cours</h2><a href="{{ path('app_admin_missions') }}">Tout voir →</a></div><ul class="admin-monitor-report-list">
+        <section class="panel admin-home-wide"><div class="admin-section-heading"><h2>Missions en cours</h2><a href="{{ path('app_admin_missions') }}">Tout voir →</a></div><ul class="admin-monitor-report-list">
             {% for fleet in fleetOverview.fleets|slice(0,5) %}<li><a href="{{ path('app_admin_mission',{id:fleet.id}) }}"><strong>Flotte n° {{ fleet.id }} · {{ fleetOverview.missions[fleet.mission]|default(fleet.mission) }}</strong><small>{{ fleet.playerUniverse.displayName }} · {{ fleet.playerUniverse.universe.name }} · {{ fleetOverview.statuses[fleet.status]|default(fleet.status) }}</small></a></li>{% else %}<li class="admin-home-empty">Aucune mission en cours.</li>{% endfor %}
         </ul></section>
-        <section class="panel"><div class="admin-section-heading"><h2>Prochains événements</h2><a href="{{ path('app_admin_game_events') }}">Gérer →</a></div><ul class="admin-monitor-report-list">
+        <section class="panel admin-home-wide"><div class="admin-section-heading"><h2>Prochains événements</h2><a href="{{ path('app_admin_game_events') }}">Gérer →</a></div><ul class="admin-monitor-report-list">
             {% for event in upcomingEvents %}<li><a href="{{ path('app_admin_game_events') }}"><strong>{{ event.name }}</strong><small>{{ event.universe ? event.universe.name : 'Tous les univers' }} · {{ event.startsAt|date('d/m/Y H:i', preferences.timezone) }} → {{ event.endsAt|date('d/m/Y H:i', preferences.timezone) }}</small></a></li>{% else %}<li class="admin-home-empty">Aucun événement planifié ou en cours.</li>{% endfor %}
         </ul></section>
     </div>

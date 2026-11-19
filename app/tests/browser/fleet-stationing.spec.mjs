@@ -24,7 +24,9 @@ async function send(page,data) {
   await expect(form.locator('input[value="owned"][name="destination_mode"]')).toBeChecked();
   await expect(form.locator('input[value="npc"][name="destination_mode"]')).toBeDisabled();
   await form.locator('select[name="owned_destination"]').selectOption(String(data.own.id));
-  await form.locator('details[data-fleet-fields-target="cargo"] summary').click();await form.locator('[name="cargo[metal]"]').fill('100');
+  const cargo = form.locator('details[data-fleet-fields-target="cargo"]');
+  if (!(await cargo.evaluate(element => element.open))) await cargo.locator('summary').click();
+  await form.locator('[name="cargo[metal]"]').fill('100');
   await form.getByRole('button',{name:/Vérifier la mission/}).click();await expect(form.locator('.flight-estimate')).toContainText('Carburant aller-retour');
   await expect(form.getByRole('button',{name:/Envoyer la flotte/})).toBeEnabled();await form.getByRole('button',{name:/Envoyer la flotte/}).click();
   await expect(page.getByText(/Flotte envoyée/)).toBeVisible();

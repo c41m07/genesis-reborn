@@ -67,6 +67,19 @@ final class AdminDedicatedPagesTest extends WebTestCase
         }
         $client->request('GET', '/admin/projets-guilde?edit='.$definition->id);
         self::assertResponseRedirects('/admin/projets-guilde/'.$definition->id.'/modifier');
+        // Les boutons de paliers ne valident ni n’enregistrent un brouillon encore vide.
+        $crawler = $client->request('GET', '/admin/projets-guilde/nouveau');
+        $client->submit($crawler->selectButton('Ajouter un palier')->form());
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('#stage-1-name[autofocus]');
+        self::assertSelectorExists('#project-universe option[value=""]');
+        self::assertSame(1, $em->getRepository(GuildProjectDefinition::class)->count([]));
+        $crawler = $client->getCrawler();
+        $client->submit($crawler->selectButton('Retirer le dernier palier')->form());
+        self::assertResponseIsSuccessful();
+        self::assertSelectorNotExists('#stage-1-name');
+        self::assertSelectorExists('#stage-0-name[autofocus]');
+        self::assertSame(1, $em->getRepository(GuildProjectDefinition::class)->count([]));
         $client->request('GET', $base.'/catalogue?q=fighter');
         self::assertSelectorExists('a[href="'.$base.'/catalogue/ships/fighter"]');
         $client->request('GET', $base.'/catalogue/ships/inconnu');

@@ -68,6 +68,8 @@ test('Assistant : bonus annoncé, annulation confirmée et ancien aperçu proté
   test.setTimeout(120000);const own=await enter(page,true);const project=process.env.BROWSER_ROUTER;const name='Bonus guidé '+crypto.randomUUID().slice(0,6);
   await define(page,'bonus',own,name);await page.getByLabel('Bonus de production (%)').fill('15');await page.getByRole('button',{name:'Voir l’aperçu'}).click();await expect(page.locator('main')).toContainText('Production des ressources +15 %');await page.getByRole('link',{name:'← Modifier les réglages'}).click();await expect(page.getByLabel('Nom de l’événement')).toHaveValue(name);await expect(page.getByLabel('Bonus de production (%)')).toHaveValue('15');await page.getByRole('button',{name:'Voir l’aperçu'}).click();const key=page.url().split('/').pop();await page.getByRole('button',{name:'Confirmer et planifier'}).click();
   const id=Number(queryIsolatedSql(project,`SELECT id FROM game_event WHERE JSON_UNQUOTE(JSON_EXTRACT(parameters,'$.guided_key'))='${key}'`));const article=page.locator('article.panel').filter({has:page.getByRole('heading',{name,exact:true})});await expect(article).toContainText('Production +15 %');
+  await article.locator('.admin-event-cancel > summary').focus();await page.keyboard.press('Enter');
+  await expect(article.getByLabel('Motif d’annulation')).toBeVisible();
   await article.getByLabel('Motif d’annulation').fill('Report de la fenêtre');await article.getByRole('button',{name:'Annuler cet événement guidé'}).click();expect(queryIsolatedSql(project,`SELECT status FROM game_event WHERE id=${id}`)).toBe('planned');
   await article.getByRole('checkbox').check();await article.getByRole('button',{name:'Annuler cet événement guidé'}).click();await expect(page.locator('.flash.success')).toContainText('Événement annulé');expect(queryIsolatedSql(project,`SELECT status FROM game_event WHERE id=${id}`)).toBe('cancelled');
 });
@@ -113,6 +115,7 @@ test('Rotations : créer, activer, suivre depuis son univers et annuler sans rec
   for (const key of ['exploration','combat','transport']) {
     await page.goto(`/admin/rotations/${own.universeId}/${key}/modifier`);
     const form=page.locator('form').filter({has:page.locator(`input[name="key"][value="${key}"]`)});
+    await page.locator('.admin-rotation-toggle > summary').focus();await page.keyboard.press('Enter');
     await form.getByLabel('Motif du changement').fill('Préparer une rotation dédiée');await form.getByRole('button',{name:'Désactiver ce modèle'}).click();
   }
   // Préparer un historique terminé pour réserver la semaine courante au modèle créé dans ce scénario.
@@ -129,6 +132,7 @@ test('Rotations : créer, activer, suivre depuis son univers et annuler sans rec
   const article=page.locator('article').filter({has:page.getByRole('heading',{name,exact:true})});await expect(article).toContainText('Désactivé');tick();
   expect(Number(queryIsolatedSql(project,`SELECT COUNT(*) FROM boost_event WHERE universe_id=${own.universeId} AND status IN ('scheduled','active')`))).toBe(0);
   await article.getByRole('link',{name:`Modifier ${name}`,exact:true}).click();
+  await page.locator('.admin-rotation-toggle > summary').focus();await page.keyboard.press('Enter');
   await page.getByLabel('Motif du changement', {exact:true}).fill('Lancement');await page.getByRole('button',{name:'Activer ce modèle',exact:true}).click();tick();
   const id=Number(queryIsolatedSql(project,`SELECT id FROM boost_event WHERE universe_id=${own.universeId} AND status='active'`));
   runIsolatedSql(project,`INSERT INTO boost_event_contribution (event_id,player_universe_id,source_key,value) VALUES (${id},${own.memberId},'own-test',2),(${id},${other.memberId},'peer-test',3);UPDATE boost_event SET total_contribution=5 WHERE id=${id}`);
@@ -153,6 +157,7 @@ test('Rotations : créer, activer, suivre depuis son univers et annuler sans rec
   expect(await post(page,`/admin/rotations/occurrences/${id}/annuler`,{_token:'invalid',confirmed:'1',reason:'Interdit'})).toBe(403);
   await page.goto(`/admin/defis/${id}`);const cancel=page.locator('form[action$="/annuler"]');const data=await cancel.evaluate(f=>Object.fromEntries(new FormData(f)));
   await post(page,`/admin/rotations/occurrences/${id}/annuler`,{...data,reason:'Sans confirmation'});expect(queryIsolatedSql(project,`SELECT status FROM boost_event WHERE id=${id}`)).toBe('active');
+  await page.locator('.admin-challenge-cancel > summary').focus();await page.keyboard.press('Enter');
   await page.getByLabel('Motif d’annulation de la rotation').fill('Fin de l’animation');await page.getByLabel('Je confirme l’annulation de cette occurrence hebdomadaire.').check();await page.getByRole('button',{name:'Annuler cette rotation'}).click();
   await expect(page.locator('main')).toContainText('Annulé');tick();tick();expect(queryIsolatedSql(project,`SELECT status FROM boost_event WHERE id=${id}`)).toBe('cancelled');
   expect(Number(queryIsolatedSql(project,`SELECT COUNT(*) FROM boost_event WHERE universe_id=${own.universeId}`))).toBe(historyCount+1);expect(Number(queryIsolatedSql(project,`SELECT COUNT(*) FROM boost_event_contribution WHERE event_id=${id}`))).toBe(2);

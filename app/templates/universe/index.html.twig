@@ -3,6 +3,7 @@
 {% block title %}Univers · Genesis Reborn{% endblock %}
 
 {% block body %}
+<div class="entry-workspace entry-universes" data-page-sections="disabled">
 <div class="page-heading">
   <div>
     
@@ -11,6 +12,13 @@
   </div>
   <span class="badge">{{ universes|length }} UNIVERS</span>
 </div>
+
+{% if joined is empty %}
+<section class="entry-first-universe" aria-labelledby="first-universe-title">
+  <h2 id="first-universe-title">Choisissez votre univers</h2>
+  <p>Un compte, plusieurs univers indépendants. Aucun empire actif pour le moment.</p>
+</section>
+{% endif %}
 
 <div class="universe-grid">
   {% for u in universes %}
@@ -23,17 +31,17 @@
     {% set shipSpeed = (1 / c.multipliers.ship_build_time)|round(2) %}
     {% set travelSpeed = (1 / c.multipliers.travel_time)|round(2) %}
     <article class="panel universe-card {{ current ? 'universe-card--current' : '' }}" aria-labelledby="universe-{{ u.id }}-title">
-      <div class="mini-planet {{ loop.index == 2 ? 'violet' : '' }}" aria-hidden="true"></div>
+      <h2 id="universe-{{ u.id }}-title">{{ u.name }}</h2>
+      <div class="entry-universe-status">
       {% if accessible %}
-        <span class="badge">OUVERT</span>
+        <span class="entry-universe-state entry-universe-state--open">OUVERT</span>
       {% elseif opensLater %}
-        <span class="badge">OUVERTURE PROGRAMMÉE</span>
+        <span class="entry-universe-state">OUVERTURE PROGRAMMÉE</span>
       {% else %}
-        <span class="badge">INACCESSIBLE</span>
+        <span class="entry-universe-state">INACCESSIBLE</span>
       {% endif %}
       {% if current %}<span class="badge universe-current">Univers actuel</span>{% endif %}
-      <h2 id="universe-{{ u.id }}-title">{{ u.name }}</h2>
-      <p>Consultez les vitesses, les limites et les fonctionnalités avant de rejoindre cet univers.</p>
+      </div>
 
       {% include 'universe/_closing.html.twig' with {universe: u} %}
       <section class="universe-rules" aria-label="Règles de {{ u.name }}">
@@ -48,7 +56,7 @@
         <h3>Limites et fonctionnalités</h3>
         <dl>
           <div><dt>Planètes maximum</dt><dd>{{ c.limits.max_planets }}</dd></div>
-          <div><dt>Vaisseaux maximum par flotte</dt><dd>{{ c.limits.max_fleet_size }}</dd></div>
+          <div><dt>Vaisseaux maximum par flotte</dt><dd>{{ c.limits.max_fleet_size|number_format(0, ',', ' ') }}</dd></div>
           <div><dt>Guildes</dt><dd>{{ c.features.guilds_enabled ? 'Activées' : 'Désactivées' }}</dd></div>
           <div><dt>Conquête JcE</dt><dd>{{ c.features.planet_conquest ? 'Autorisée' : 'Désactivée' }}</dd></div>
         </dl>
@@ -72,5 +80,6 @@
   {% else %}
     <section class="panel empty-state"><h2>Aucun univers disponible</h2><p>Les univers apparaîtront ici dès leur annonce.</p></section>
   {% endfor %}
+</div>
 </div>
 {% endblock %}

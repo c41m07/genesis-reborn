@@ -90,7 +90,8 @@ export default class extends Controller {
 
         const headers = Array.from(table.querySelectorAll('thead th'), (cell) => cell.innerText.trim());
         const rows = this.rowTargets.filter((row) => !row.hidden).map((row) =>
-            Array.from(row.cells, (cell) => this.csvCell(cell.innerText)),
+            // Un détail replié garde sa valeur complète dans l’export de la page.
+            Array.from(row.cells, (cell) => this.csvCell(cell.dataset.csvValue ?? cell.innerText)),
         );
         const csv = [headers.map((cell) => this.csvCell(cell)), ...rows].map((row) => row.join(';')).join('\r\n');
         const blob = new Blob(['\ufeff', csv], { type: 'text/csv;charset=utf-8' });

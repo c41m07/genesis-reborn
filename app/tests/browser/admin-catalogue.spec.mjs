@@ -1,5 +1,7 @@
 import { test, expect } from './support/isolated-test.mjs';
 import { execFileSync } from 'node:child_process';
+import AxeBuilder from '@axe-core/playwright';
+import { queryIsolatedSql, runIsolatedSql } from './support/game-fixtures.mjs';
 
 async function registerAndLogin(page) {
   const id = crypto.randomUUID().slice(0, 8);
@@ -74,4 +76,73 @@ test('Administration catalogue: accès, édition, sauvegarde et restauration res
     await page.setViewportSize({ width, height: 900 });
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
+});
+
+test('Catalogue B : comparaison des rangs, thèmes et formulaires natifs des quatre familles', async ({ page, browser }, testInfo) => {
+  test.setTimeout(180000);
+  const { email, password } = await registerAndLogin(page);
+  const project = process.env.BROWSER_ROUTER;
+  execFileSync('docker', ['compose', '-p', project, '--env-file', '.env.local', 'exec', '-T', 'app', 'php', 'bin/console', 'app:admin:grant', email], { stdio: ['ignore', 'pipe', 'pipe'] });
+  await page.context().clearCookies();
+  await page.goto('/connexion');
+  await page.getByLabel('Adresse email').fill(email);
+  await page.getByLabel('Mot de passe', { exact: true }).fill(password);
+  await page.getByRole('button', { name: /Connexion/ }).click();
+  const universe = Number(queryIsolatedSql(project, "SELECT id FROM universe WHERE slug='omega-1'"));
+  const catalogue = `/admin/universes/${universe}/catalogue`;
+  const before = queryIsolatedSql(project, `SELECT game_settings FROM universe WHERE id=${universe}`);
+  for (const theme of ['dark', 'light']) {
+    runIsolatedSql(project, `UPDATE player SET preferences=JSON_OBJECT('theme','${theme}') WHERE email='${email}'`);
+    for (const width of [1440, 768, 390]) {
+      await page.setViewportSize({ width, height: 900 });
+      for (const [index, route] of [catalogue, `${catalogue}/buildings/power_plant`].entries()) {
+        expect((await page.goto(route)).status()).toBe(200);
+        await expect(page.locator('h1')).toHaveCount(1);
+        await expect(page.locator('.page-contents')).toHaveCount(0);
+        await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
+        await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+        const grid = page.locator(index === 0 ? '.admin-catalogue-grid' : '.admin-catalogue-costs');
+        expect(await grid.evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(width === 1440 ? (index === 0 ? 2 : 3) : 1);
+        const accessibility = await new AxeBuilder({ page }).include('#admin-main').analyze();
+        expect(accessibility.violations).toEqual([]);
+        await page.screenshot({ path: testInfo.outputPath(`catalogue-${index}-${theme}-${width}.png`), fullPage: true, animations: 'disabled' });
+      }
+    }
+  }
+  expect(queryIsolatedSql(project, `SELECT game_settings FROM universe WHERE id=${universe}`)).toBe(before);
+
+  const context = await browser.newContext({ storageState: await page.context().storageState(), javaScriptEnabled: false, viewport: { width: 390, height: 900 } });
+  const native = await context.newPage();
+  for (const [family, slug, fields] of [['buildings', 'power_plant', 16], ['technologies', 'automated_defense_repair', 17], ['ships', 'fighter', 28], ['defenses', 'ground_turret_anti_light', 21]]) {
+    await native.goto(`${catalogue}/${family}/${slug}`);
+    const form = native.locator('.admin-catalogue-editor');
+    await expect(form.locator('input[type="number"]')).toHaveCount(fields);
+    await expect(form.getByRole('group')).toHaveCount(3);
+    const cost = form.getByRole('group', { name: 'Basique', exact: true }).getByRole('spinbutton', { name: 'Métal', exact: true });
+    await expect(cost).toHaveAttribute('step', '1');
+    await expect(cost).toHaveAttribute('aria-describedby', /-range$/);
+    const original = Number(await cost.inputValue());
+    await cost.fill(String(original + 1));
+    await form.getByRole('button', { name: 'Enregistrer cet équilibrage' }).click();
+    await expect(native.locator('.flash[role="status"]')).toContainText('Équilibrage enregistré');
+    await expect(cost).toHaveValue(String(original + 1));
+    await native.reload();
+    await expect(cost).toHaveValue(String(original + 1));
+    await native.getByRole('button', { name: 'Restaurer les valeurs de référence' }).click();
+    await expect(cost).toHaveValue(String(original));
+    await expect(native.locator('.flash[role="status"]')).toContainText('Équilibrage enregistré');
+  }
+  await native.goto(catalogue);
+  await native.getByRole('searchbox', { name: 'Rechercher dans toutes les familles' }).fill('Chasseur');
+  await native.getByRole('button', { name: 'Rechercher', exact: true }).click();
+  await expect(native.locator('.admin-catalogue-grid')).toContainText('Chasseur de patrouille');
+  await native.reload();
+  await expect(native.getByRole('searchbox')).toHaveValue('Chasseur');
+  await native.getByRole('link', { name: 'Modifier Chasseur de patrouille', exact: true }).click();
+  await native.goBack();
+  await expect(native.getByRole('searchbox')).toHaveValue('Chasseur');
+  await native.getByRole('searchbox').fill('Aucun résultat catalogue B');
+  await native.getByRole('button', { name: 'Rechercher', exact: true }).click();
+  await expect(native.getByRole('status')).toHaveText('Aucune entrée ne correspond à cette recherche.');
+  await context.close();
 });

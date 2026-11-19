@@ -1,0 +1,139 @@
+/* L7D A : les rapports conservent leurs tableaux et leur lecture par camp. */
+.report-workspace { gap:24px; }
+.report-workspace > .panel:not(.report-summary) { padding:0; border:0; background:transparent; box-shadow:none; }
+.report-workspace .report-summary { border-left:3px solid var(--green); border-radius:6px; }
+.report-workspace .report-summary--defeat,
+.report-workspace .report-summary--detected { border-left-color:#f4a6a6; }
+.report-workspace .report-section-nav { flex-wrap:wrap; gap:4px 24px; }
+.report-workspace .report-section-nav a { min-height:44px; display:inline-flex; align-items:center; }
+.report-workspace [id^=combat-],
+.report-workspace [id^=round-] { scroll-margin-top:180px; }
+.report-workspace [role=region]:focus-visible { outline:2px solid var(--accent); outline-offset:5px; }
+.report-workspace .report-totals { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:0; }
+.report-workspace .report-totals > div { display:block; min-width:0; padding:0; border:0; }
+.report-workspace .report-totals dt { color:var(--muted); font-size:12px; }
+.report-workspace .report-totals dd { margin:8px 0 0; font-size:24px; font-weight:700; font-variant-numeric:tabular-nums; }
+.report-workspace .report-loss { color:#f4a6a6; }
+.report-workspace .report-survivors { color:#87d8b4; }
+.report-workspace .report-unit-camp h3 { margin:24px 0 12px; color:var(--accent); }
+.report-workspace .report-unit-camp--enemy h3 { color:#f4a6a6; }
+.report-workspace .data-table { width:100%; table-layout:fixed; }
+.report-workspace .data-table th,
+.report-workspace .data-table td { white-space:normal; overflow-wrap:anywhere; vertical-align:top; }
+.report-workspace .data-table td:last-child { min-width:0; }
+.report-workspace .report-unit-table th:first-child { width:36%; }
+.report-workspace .report-unit-table th:nth-child(2) { width:18%; }
+.report-workspace .data-table small { display:block; margin-top:6px; color:var(--muted); font-size:11px; font-weight:400; }
+.report-workspace .report-unit-table th:nth-child(n+3),
+.report-workspace .report-unit-table td:nth-child(n+3) { text-align:right; }
+.report-workspace .report-metrics { grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); margin-top:0; }
+.report-workspace .report-metrics > div { padding:0; background:transparent; }
+.report-workspace .combat-round { margin-top:12px; padding:0; border-radius:6px; }
+.report-workspace .combat-round > summary { display:flex; align-items:center; flex-wrap:wrap; gap:8px 24px; min-height:52px; padding:12px 16px; cursor:pointer; }
+.report-workspace .combat-round > summary::after { content:'⌄'; margin-left:auto; color:var(--accent); }
+.report-workspace .combat-round[open] > summary::after { content:'⌃'; }
+.report-workspace .combat-round > summary h3 { margin:0; font-size:15px; }
+.report-workspace .combat-round > summary span { color:var(--muted); font-size:12px; }
+.report-workspace .combat-round > summary:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+.report-workspace .report-round-content { padding:4px 14px 14px; }
+.report-workspace .table-scroll { overflow:visible; }
+.report-workspace .combat-versus { grid-template-columns:minmax(0,1fr); min-width:0; gap:12px; }
+.report-workspace .combat-side { padding:12px; }
+.report-workspace .combat-vs { padding-top:0; }
+.report-workspace .round-table th:first-child { width:34%; }
+.report-workspace .round-table th,
+.report-workspace .round-table td { padding:10px 4px; }
+.report-workspace .round-table .report-empty-row { text-align:left; font-size:12px; }
+.report-workspace .report-reconstruction-table th:first-child { width:35%; }
+.report-workspace .report-reconstruction-table th:nth-child(2) { width:20%; }
+.report-workspace .report-resource-table th:first-child { width:25%; }
+.report-workspace .intel-section { border-top:1px solid var(--line); padding-block:12px; }
+.report-workspace .intel-section > summary { min-height:44px; display:flex; align-items:center; gap:10px; cursor:pointer; color:var(--accent); }
+.report-workspace .intel-section > summary::after { content:'⌄'; margin-left:auto; }
+.report-workspace .intel-section[open] > summary::after { content:'⌃'; }
+.report-workspace .intel-section > summary h3 { margin:0; font-size:18px; }
+.report-workspace .report-intel-card h4 { font-size:14px; }
+.report-workspace .report-intel-card .intel-facts { margin-bottom:0; }
+.report-workspace .report-intel-card .intel-facts dt { color:var(--muted); }
+.report-workspace .report-intel-card .intel-facts dd { font-variant-numeric:tabular-nums; }
+.report-workspace .intel-unknown { color:var(--muted); font-size:13px; }
+.report-workspace .report-facts > div { border-bottom:1px solid var(--line); }
+
+.reports-workspace .report-center { overflow:visible; }
+.reports-workspace .report-tabs { flex-wrap:wrap; gap:4px 24px; }
+.reports-workspace .report-tabs a { min-height:44px; display:inline-flex; align-items:center; font-size:14px; }
+.reports-workspace .report-search { display:grid; grid-template-columns:1.3fr 1.1fr .8fr .8fr auto; align-items:end; gap:12px; margin:20px 18px 12px; padding:0; background:transparent; border:0; }
+.reports-workspace .report-search label { min-width:0; margin:0; display:grid; gap:6px; font-size:12px; }
+.reports-workspace .report-search input { width:100%; min-width:0; min-height:44px; }
+.reports-workspace .report-search-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.reports-workspace .report-search-actions a,
+.reports-workspace .report-search-actions button { min-height:44px; font-size:13px; }
+.reports-workspace .report-search-help { padding:0 18px 14px; font-size:12px; }
+.reports-workspace .report-selection { display:flex; align-items:center; flex-wrap:wrap; gap:10px 20px; padding:14px 18px; }
+.reports-workspace .report-selection label { display:flex; align-items:center; min-height:44px; gap:10px; margin:0; font-size:13px; }
+.reports-workspace .report-selection [hidden] { display:none; }
+.reports-workspace .report-selection p { margin:0; color:var(--muted); font-size:12px; }
+.reports-workspace .report-selection button { margin-left:auto; }
+.reports-workspace .report-copy strong { white-space:normal; text-overflow:clip; font-size:14px; }
+.reports-workspace .report-copy small { font-size:12px; }
+.reports-workspace .report-row > .badge { font-size:12px; }
+.reports-workspace .report-select input { accent-color:var(--accent); }
+.reports-workspace .report-archive-action { padding:8px 12px; font-size:13px; }
+.reports-workspace .report-row { padding-inline:4px; }
+
+[data-theme=light] .report-workspace .report-loss,
+[data-theme=light] .report-workspace .report-unit-camp--enemy h3 { color:#9a3232; }
+[data-theme=light] .report-workspace .report-survivors { color:#176742; }
+[data-theme=light] .report-workspace .report-summary--defeat,
+[data-theme=light] .report-workspace .report-summary--detected { border-left-color:#9a3232; }
+@media(min-width:1400px) {
+    .report-workspace .combat-versus { grid-template-columns:minmax(0,1fr) 22px minmax(0,1fr); }
+    .report-workspace .combat-vs { padding-top:12px; }
+}
+@media(max-width:1100px) {
+    .reports-workspace .report-search { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .reports-workspace .report-search-actions { grid-column:1/-1; }
+}
+@media(max-width:700px) {
+    .report-workspace .report-heading h1 { font-size:27px; }
+    .report-workspace .report-section-nav { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px 12px; overflow:visible; }
+    .report-workspace .report-section-nav a { padding-inline:0; }
+    .report-workspace .report-totals dd { font-size:22px; }
+    .report-workspace .report-totals dt { font-size:11px; }
+    .report-workspace .data-table { display:block; }
+    .report-workspace .data-table caption { display:block; width:100%; padding-inline:0; }
+    .report-workspace .data-table thead { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+    .report-workspace .data-table tbody { display:block; }
+    .report-workspace .data-table tbody tr { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; padding:16px 0; border-bottom:1px solid var(--line); }
+    .report-workspace .data-table tbody th,
+    .report-workspace .data-table tbody td { width:auto; padding:0; border:0; text-align:left; }
+    .report-workspace .data-table tbody th { grid-column:1/-1; font-size:14px; }
+    .report-workspace .data-table tbody th:first-child { width:auto; }
+    .report-workspace .report-unit-table tbody td:nth-child(n+3) { text-align:left; }
+    .report-workspace .data-table tbody td { font-size:16px; font-weight:600; }
+    .report-workspace .data-table td[data-label]::before { content:attr(data-label); display:block; margin-bottom:5px; color:var(--muted); font-size:11px; font-weight:400; }
+    .report-workspace .report-unit-table .report-unit-tier,
+    .report-workspace .report-unit-table .report-unit-arrival,
+    .report-workspace .report-reconstruction-table .report-unit-tier { grid-column:1/-1; font-size:12px; font-weight:400; }
+    .report-workspace .report-unit-table .report-unit-tier::before,
+    .report-workspace .report-unit-table .report-unit-arrival::before,
+    .report-workspace .report-reconstruction-table .report-unit-tier::before { display:inline; margin-right:8px; }
+    .report-workspace .round-table tbody td:nth-child(n+5) { font-size:12px; font-weight:400; }
+    .report-workspace .round-table tbody td:last-child { grid-column:1/-1; }
+    .report-workspace .round-table tbody td:last-child::before { display:inline; margin-right:8px; }
+    .report-workspace .data-table tbody .report-empty-row { grid-column:1/-1; font-size:12px; }
+    .report-workspace .report-round-content { padding-inline:10px; }
+    .report-workspace .combat-round > summary { gap:6px 16px; padding-inline:12px; }
+    .report-workspace .report-resource-table tbody td:nth-child(n+5) { font-size:14px; }
+    .report-workspace .report-resource-table tbody td:last-child:nth-child(6) { grid-column:2/-1; }
+    .report-workspace .report-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .report-workspace .report-facts > div { gap:5px; }
+    .report-workspace .intel-facts > div { flex-direction:column; align-items:flex-start; }
+    .reports-workspace .report-tabs { gap:4px 16px; }
+    .reports-workspace .report-tabs a { font-size:13px; }
+    .reports-workspace .report-selection button { margin-left:0; }
+    .reports-workspace .report-archive-entry { padding-inline:12px; }
+    .reports-workspace .report-row { gap:8px; }
+    .reports-workspace .report-copy { flex-basis:calc(100% - 50px); }
+    .reports-workspace .report-row > .badge { margin-left:46px; }
+}

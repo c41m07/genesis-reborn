@@ -1,0 +1,190 @@
+/* L2B A : les demandes restent lisibles et les deux périmètres du quai restent distincts. */
+.fleet-harbour .fleet-dock-layout,
+.fleet-harbour .fleet-resume-layout {
+    display: grid;
+    gap: 20px;
+    align-items: start;
+}
+
+.fleet-harbour :is(.panel, .mission-card, form) {
+    min-width: 0;
+}
+
+body.authenticated .fleet-harbour :is(h2, h3, p, li, dd, label, a) {
+    overflow-wrap: anywhere;
+}
+
+body.authenticated .fleet-harbour :is(p, li, label, dt, dd) {
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+body.authenticated .fleet-harbour .panel > h2 {
+    font-size: 22px;
+}
+
+body.authenticated .fleet-harbour [data-live-region="orbit-requests"] .mission-card {
+    display: grid;
+    gap: 20px;
+    margin-top: 16px;
+    padding: 20px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+}
+
+.fleet-harbour .orbit-request-information h3 {
+    margin: 0 0 18px;
+    font-size: 20px;
+}
+
+.fleet-harbour .orbit-request-decision > p {
+    margin-top: 0;
+}
+
+body.authenticated .fleet-harbour .orbit-request-decision .mission-state {
+    display: block;
+}
+
+.fleet-harbour .orbit-request-decision form {
+    margin: 18px 0 0;
+}
+
+.fleet-harbour [data-orbit-deadline] {
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+}
+
+.fleet-harbour .fleet-dock-ship-list,
+.fleet-harbour .fleet-held-list {
+    list-style: none;
+    padding: 0;
+}
+
+.fleet-harbour .fleet-dock-ship-list > li {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding-block: 14px;
+    border-bottom: 1px solid var(--line);
+}
+
+.fleet-harbour .fleet-dock-ship-list strong {
+    flex-shrink: 0;
+}
+
+.fleet-harbour .fleet-held-list > [data-held-fleet] {
+    display: grid;
+    gap: 16px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+}
+
+.fleet-harbour .fleet-held-list h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.fleet-harbour .fleet-held-list details {
+    min-width: 0;
+}
+
+.fleet-harbour .fleet-held-list summary {
+    padding-block: 12px;
+    cursor: pointer;
+    color: var(--accent);
+}
+
+.fleet-harbour .fleet-resume-layout form {
+    display: grid;
+    gap: 12px;
+    margin: 24px 0 0;
+}
+
+body.authenticated .fleet-harbour .fleet-resume-layout :is(label, select) {
+    width: 100%;
+    margin: 0;
+    font-size: 16px;
+}
+
+.fleet-harbour .fleet-resume-layout button {
+    justify-self: start;
+}
+
+.fleet-harbour .fleet-resume-layout .report-facts {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    margin-top: 24px;
+}
+
+body.authenticated .fleet-harbour .fleet-resume-layout .report-facts > div {
+    display: block;
+    min-width: 0;
+}
+
+.fleet-harbour .fleet-resume-layout dt {
+    color: var(--muted);
+}
+
+.fleet-harbour .fleet-resume-layout dd {
+    margin: 6px 0 0;
+    text-align: left;
+    color: var(--text);
+}
+
+.fleet-harbour :is(a, button, summary, select):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+
+@media (min-width: 1101px) {
+    body.authenticated .fleet-harbour [data-live-region="orbit-requests"] .mission-card {
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+        gap: 32px;
+    }
+
+    .fleet-harbour .fleet-dock-layout,
+    .fleet-harbour .fleet-resume-layout:has(.fleet-resume-quote) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .fleet-harbour .fleet-dock-ships {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .fleet-harbour .fleet-hold-reserve {
+        grid-column: 2;
+    }
+
+    .fleet-harbour .fleet-hold-waiting,
+    .fleet-harbour .fleet-dock-layout:not(:has(.fleet-hold-reserve)) > .fleet-dock-ships {
+        grid-column: 1 / -1;
+    }
+
+    .fleet-harbour .fleet-held-list > [data-held-fleet] {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: start;
+    }
+
+    .fleet-harbour .fleet-held-list details {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 600px) {
+    body.authenticated .fleet-harbour [data-live-region="orbit-requests"] .mission-card {
+        padding: 16px;
+    }
+
+    .fleet-harbour .fleet-resume-layout button,
+    .fleet-harbour .fleet-held-list a {
+        width: 100%;
+    }
+
+    .fleet-harbour .orbit-request-decision form > button {
+        flex: 1;
+    }
+}

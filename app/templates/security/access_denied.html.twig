@@ -3,6 +3,7 @@
 {# Le retour au jeu ou à la console doit rester la première action après le lien d’évitement. #}
 {% block incoming_fleets %}{% endblock %}
 {% block body %}
+<div class="entry-workspace entry-denied" data-page-sections="disabled">
 <section class="panel narrow auth-card access-denied-panel" aria-labelledby="access-denied-title">
   
   <h1 id="access-denied-title">Accès refusé</h1>
@@ -17,4 +18,5 @@
     <p><a class="primary" href="{{ path('app_login') }}">Se connecter</a></p>
   {% endif %}
 </section>
+</div>
 {% endblock %}

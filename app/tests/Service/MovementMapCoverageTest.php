@@ -5,6 +5,7 @@ use App\Service\Catalog\GameCatalog;
 use App\Entity\Universe;
 use App\Service\Combat\TechnologyEffectCalculator;
 use App\Service\Fleet\MovementCalculator;
+use App\Service\Fleet\GalaxyGeometry;
 use PHPUnit\Framework\TestCase;
 
 final class MovementMapCoverageTest extends TestCase
@@ -19,7 +20,7 @@ final class MovementMapCoverageTest extends TestCase
             $data=json_decode(file_get_contents($file),true,512,JSON_THROW_ON_ERROR);
             foreach($data['galaxies'] as $index=>$galaxy)$maps[$data['slug'].'/galaxy-'.$index]=$galaxy['solar_systems'];
         }
-        $cases=[];$counts=[];
+        $cases=[];$counts=[];$geometry=new GalaxyGeometry();
         foreach($maps as $name=>$systems){
             $planets=[];
             foreach($systems as $i=>$system)foreach($system['planets'] as $planet)$planets[]=[$i+1,1,$system['coord_x'],$system['coord_y'],$planet['position']];
@@ -29,8 +30,9 @@ final class MovementMapCoverageTest extends TestCase
                 if($origin[0]===$target[0]){
                     $key='local:'.abs($origin[4]-$target[4]);
                 }else{
-                    $squaredDistance=($origin[2]-$target[2])**2+($origin[3]-$target[3])**2;
-                    $key='space:'.($origin[4]+$target[4]).':'.$squaredDistance;
+                    // Un même décalage dans la grille n’a plus la même longueur dans les bras.
+                    $distance = $geometry->distance($origin[2], $origin[3], $target[2], $target[3]);
+                    $key = 'space:'.($origin[4] + $target[4]).':'.sprintf('%.9f', $distance);
                 }
                 $cases[$key]??=['map'=>$name,'origin'=>$origin,'target'=>$target];
             }
@@ -58,8 +60,8 @@ final class MovementMapCoverageTest extends TestCase
                 $type=$local?'local':'space';$maximums[$slug][$type]=max($maximums[$slug][$type]??0,$quote['seconds']);
             }
         }
-        self::assertSame(['local'=>3600,'space'=>43167],$maximums['capital']);
-        self::assertSame(['local'=>60,'space'=>180],$maximums['probe']);
+        self::assertSame(['local'=>3600,'space'=>34274],$maximums['capital']);
+        self::assertSame(['local'=>60,'space'=>169],$maximums['probe']);
     }
 
     public function testReferenceMaximumIsNotAnArtificialCapOnVoluntarilySlowerTravel():void
@@ -67,7 +69,7 @@ final class MovementMapCoverageTest extends TestCase
         $catalog=new GameCatalog(dirname(__DIR__,2).'/config/game');
         $ship=$catalog->withTier($catalog->get('ships','capital'),'basic')+['quantity'=>1];
         $quote=(new MovementCalculator())->quote([1,1,0,0,1],[100,1,27,27,1],[$ship],.1,1,'proportional');
-        self::assertSame(431668,$quote['seconds']);
+        self::assertSame(226547,$quote['seconds']);
         self::assertGreaterThan(43200,$quote['seconds']);
     }
 
@@ -92,7 +94,7 @@ final class MovementMapCoverageTest extends TestCase
                 self::assertLessThanOrEqual($ship['fuel_capacity'],$quote['total_fuel'],"$slug/$tier/$ratio");
             }
         }
-        self::assertEqualsWithDelta(15453.556473629428,$maximumFuel,1e-8);
+        self::assertEqualsWithDelta(11580.05,$maximumFuel,1e-8);
     }
 
     public function testTankResearchIncreasesAutonomyAndAMixedFleetKeepsItsCargoFree():void

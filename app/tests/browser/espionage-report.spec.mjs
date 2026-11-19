@@ -30,12 +30,12 @@ test('Espionnage PNJ : envoyer une sonde et consulter le rapport privé', async 
   runIsolatedSql(process.env.BROWSER_ROUTER, `INSERT INTO player_technology (player_universe_id,slug,tier,level) SELECT owner_id,'naval_engineering','basic',1 FROM planet WHERE id=${planet}`);
   const target = revealNpcPlanet(process.env.BROWSER_ROUTER,email);
   const card = slug => page.locator('#item-'+slug+'-basic');
-  await page.getByRole('link', { name: 'Bâtiments', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Navigation principale', exact: true }).getByRole('link', { name: 'Bâtiments', exact: true }).click();
   await card('shipyard').getByRole('button', { name: /Améliorer .* niveau 1/ }).click();
   accelerateQueuedItem(process.env.BROWSER_ROUTER, email, 'building', 'shipyard');
   await page.reload();
   await expect(page.locator('#building-tab-shipyard-basic .building-rank-level')).toHaveText('1', { timeout: 30000 });
-  await page.getByRole('link', { name: 'Chantier spatial', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Navigation principale', exact: true }).getByRole('link', { name: 'Chantier spatial', exact: true }).click();
   await card('probe').getByRole('button', { name: /Construire/ }).click();
   accelerateQueuedItem(process.env.BROWSER_ROUTER, email, 'shipyard', 'probe');
   await page.reload();

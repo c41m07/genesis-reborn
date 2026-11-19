@@ -4,9 +4,16 @@ Lot 2 fusionné dans dev par la [PR #70](https://github.com/c41m07/genesis-rebor
 
 ## Référence de lecture
 
+**Actualisation du 18 novembre 2026 :** la [décision sur la géographie](DECISIONS.md)
+adopte la spirale réelle pour les nouveaux trajets et replis. Les exemples utilisant
+les anciens écarts de grille sont des références historiques, pas des devis actuels.
+Les coefficients, vitesses et calculs à distance fixée présentés ici restent valables.
+Les vols déjà lancés conservent leurs durées et réservations figées.
+
 Les tableaux concernent le Basique, un univers ×1, avant réduction : niveau 1 pour bâtiments et recherches, une unité pour les vaisseaux et défenses. Ce lot de durées/carburant ne modifiait pas les profils M/N/A/H. La décision
 ultérieure du 16 novembre adopte la [nouvelle répartition](COUTS.md), sans changer
-les durées ni les coefficients présentés ici.
+les durées ni les coefficients de ce lot historique. Le 19 novembre,
+la base de l’Expansion coloniale passe à 8 h pour tous ses rangs.
 
 Les trois rangs multiplient la durée une seule fois : ×1, ×1,25 et ×1,5625. Les multiplicateurs d’univers et rendements décroissants existants restent appliqués à la commande. Le plafond de réduction est de 70 %, le minimum d’une seconde et l’arrondi au supérieur restent en place.
 
@@ -30,7 +37,7 @@ Les trois rangs multiplient la durée une seule fois : ×1, ×1,25 et ×1,5625. 
 
 La courbe reste ×1,1225 aux niveaux 2–20 ; ×1,122 aux niveaux 21–40 ; ×1,0643 aux niveaux 41–80 ; ×1,0353 aux niveaux 81–120 ; ×1,0373 ensuite. Les frontières 20/21, 40/41, 80/81, 100/101 et 120/121 sont vérifiées dans le calculateur réel. Le découpage interne à 100 utilise le même facteur de part et d’autre.
 
-## Recherches
+## Recherches — référence du 15 novembre
 
 | Famille | Ancienne durée | Nouvelle durée | Ancienne taxe E | Nouvelle taxe E |
 | --- | --- | --- | --- | --- |
@@ -108,7 +115,23 @@ Le Capital Basique passe de 432 000 E à 144 000 E sans réduction, soit −288 
 
 ## Occupation de la file commune par la colonisation
 
-Protocoles de colonisation conserve 80 h au niveau 1 Basique avant réduction. Les niveaux suivants conservent la croissance de recherche. Les nouvelles recherches partagent une file par joueur et univers : une commande passée depuis une autre colonie attend aussi cette opération. Les éventuelles recherches parallèles déjà acceptées historiquement restent résolues selon leur chronologie enregistrée.
+Depuis le 19 novembre, la durée de base est de 28 800 s pour la famille Expansion
+coloniale. Les facteurs de rang, la croissance par niveau et la réduction du
+laboratoire local restent en vigueur. Le tableau compare les devis Basiques en univers ×1.
+
+| Niveau | Brut avant → après | Laboratoire Basique 2 avant → après | Taxe avec laboratoire avant → après |
+| --- | ---: | ---: | ---: |
+| 1 | 80 h → 8 h | 77 h 54 min 17 s → 7 h 47 min 26 s | 467 500 → 46 800 E |
+| 2 | 108 h → 10 h 48 min | 105 h 10 min 16 s → 10 h 31 min 02 s | 631 100 → 63 200 E |
+| 3 | 145 h 48 min 01 s → 14 h 34 min 49 s | 141 h 58 min 52 s → 14 h 11 min 54 s | 851 900 → 85 200 E |
+
+Au niveau 1 sans réduction, la taxe passe de 480 000 à 48 000 E. La minute
+entamée explique les écarts à une division exacte par dix. Sur une commande
+déjà payée, la durée et l’électricité enregistrées restent la référence.
+
+Les nouvelles recherches partagent une file par joueur et univers : une commande passée depuis une autre colonie attend aussi cette opération. Les éventuelles recherches parallèles déjà acceptées historiquement restent résolues selon leur chronologie enregistrée.
+
+Le tableau suivant reprend les devis historiques antérieurs au 19 novembre.
 
 | Scénario ×1 | Occupation par le niveau 1 | Taxe E | Avec Génie civil niveau 3 ensuite |
 | --- | --- | --- | --- |
@@ -117,7 +140,7 @@ Protocoles de colonisation conserve 80 h au niveau 1 Basique avant réduction. L
 | Laboratoire Basique 25 seul | 58 h 30 min 12 s | 351 100 | 58 h 43 min 32 s |
 | Réduction maximale, laboratoire B/I/S 25 sur la colonie | 24 h | 144 000 | 24 h 5 min 29 s |
 
-La recherche suivante utilise ici les mêmes niveaux de laboratoire sur la même colonie ; une commande ajoutée depuis une autre colonie utilise ses propres bonus locaux. Ces scénarios isolent les durées et la file : le financement est supposé disponible et aucun coût de laboratoire préalable n’est inclus. Ils ne donnent ni un parcours optimal ni un délai garanti depuis un compte neuf. L’accès initial exige les prérequis de la grille ; après acquisition, une autre colonie sans laboratoire peut utiliser cet accès, avec sa réduction locale éventuelle.
+La recherche suivante utilise ici les mêmes niveaux de laboratoire sur la même colonie ; une commande ajoutée depuis une autre colonie utilise ses propres bonus locaux. Ces scénarios isolent les durées et la file : le financement est supposé disponible et aucun coût de laboratoire préalable n’est inclus. Ils ne donnent ni un parcours optimal ni un délai garanti depuis un compte neuf. L’accès initial exige les prérequis de la grille ; après acquisition, une autre colonie peut utiliser cet accès dès le niveau 1 de son laboratoire du rang recherché, avec sa propre réduction de durée.
 
 ## Carburant par classe
 

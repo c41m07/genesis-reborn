@@ -3,10 +3,14 @@
     <input type="hidden" name="action" value="rank_save">
     <input type="hidden" name="target" value="{{ rank.id|default(0) }}">
     <input type="hidden" name="version" value="{{ rank.version|default(0) }}">
-    <label for="{{ formKey }}-name">Nom du grade</label>
-    <input id="{{ formKey }}-name" name="name" value="{{ rank.name|default('') }}" maxlength="60" required>
-    <label for="{{ formKey }}-position">Priorité du grade</label>
-    <input id="{{ formKey }}-position" name="position" type="number" min="1" max="1000" value="{{ rank.position|default(1) }}" required>
+    <div>
+        <label for="{{ formKey }}-name">Nom du grade</label>
+        <input id="{{ formKey }}-name" name="name" value="{{ rank.name|default('') }}" maxlength="60" required>
+    </div>
+    <div>
+        <label for="{{ formKey }}-position">Priorité du grade</label>
+        <input id="{{ formKey }}-position" name="position" type="number" min="1" max="1000" value="{{ rank.position|default(1) }}" required>
+    </div>
     <fieldset><legend>Permissions déléguées</legend>
         {% for permission,label in rankPermissionLabels %}
             <label for="{{ formKey }}-permission-{{ loop.index }}">
@@ -15,5 +19,5 @@
             </label>
         {% endfor %}
     </fieldset>
-    <button class="secondary">{{ rank ? 'Enregistrer le grade' : 'Créer le grade' }}</button>
+    <button class="primary">{{ rank ? 'Enregistrer le grade' : 'Créer le grade' }}</button>
 </form>

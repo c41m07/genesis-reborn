@@ -1,13 +1,60 @@
 {% extends 'base.html.twig' %}
 {% block title %}{{ editor ? (editing ? 'Modifier la composition' : 'Créer une composition') : 'Mes compositions' }} · Genesis Reborn{% endblock %}
 {% block body %}
-{% include 'ui/fleet_navigation.html.twig' %}
-<div class="strategic-page">
-<div class="page-heading"><div><h1>{{ editor ? (editing ? 'Modifier la composition' : 'Créer une composition') : 'Mes compositions' }}</h1>{% if not editor %}<p>{{ compositions|length }} / 20 dans cet univers. Réutilisables entre vos colonies.</p>{% endif %}</div>{% if not editor %}<a class="primary" href="{{ path('app_fleet_composition_new') }}">Créer une composition</a>{% endif %}</div>
-{% if error %}<p role="alert" class="flash error">{{ error }}</p>{% endif %}
-{% if editor %}{% include 'fleet/_composition_editor.html.twig' %}{% else %}
-<section aria-labelledby="saved-compositions-title"><h2 id="saved-compositions-title">Compositions enregistrées</h2><div class="strategic-grid">{% for composition in compositions %}<article class="panel"><h3>{{ composition.name }}</h3><ul>{% for slug,tiers in composition.ships %}{% for tier,count in tiers %}<li>{{ catalog[slug].label|default(slug) }} · {{ {basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'}[tier] }} : {{ count|quantity(0) }}</li>{% endfor %}{% endfor %}</ul><a class="primary" href="{{ path('app_fleet_composition_load',{id:composition.id}) }}">Vérifier et charger</a><a class="secondary" href="{{ path('app_fleet_composition_edit',{id:composition.id}) }}">Modifier {{ composition.name }}</a>
-<details><summary>Supprimer {{ composition.name }}</summary><form method="post"><input type="hidden" name="_token" value="{{ csrf_token('fleet_compositions') }}"><input type="hidden" name="id" value="{{ composition.id }}"><input type="hidden" name="version" value="{{ composition.version }}"><input type="hidden" name="action" value="delete"><button class="secondary">Supprimer cette composition</button></form></details></article>{% else %}<p class="panel">Aucune composition enregistrée. Créez une composition pour retrouver rapidement vos quantités habituelles.</p>{% endfor %}</div></section>
-{% endif %}
+<div class="strategic-page fleet-redesign fleet-compositions" data-page-sections="disabled">
+    <div class="page-heading">
+        <div>
+            <h1>{{ editor ? (editing ? 'Modifier la composition' : 'Créer une composition') : 'Mes compositions' }}</h1>
+            {% if editor %}
+                <p>Modèles personnels · {{ chrome.membership.universe.name }}</p>
+            {% else %}
+                <p>{{ compositions|length }} / 20 dans cet univers. Réutilisables entre vos colonies.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% include 'ui/fleet_navigation.html.twig' %}
+    {% if error %}<p role="alert" class="flash error">{{ error }}</p>{% endif %}
+    {% if editor %}
+        {% include 'fleet/_composition_editor.html.twig' %}
+        {% if editing %}<p><a href="{{ path('app_fleet_composition_new') }}">Créer une autre composition</a></p>{% endif %}
+    {% else %}
+        <p class="composition-list-actions"><a class="primary" href="{{ path('app_fleet_composition_new') }}">Créer une composition</a></p>
+        <section aria-labelledby="saved-compositions-title">
+            <h2 id="saved-compositions-title" class="visually-hidden">Compositions enregistrées</h2>
+            <div class="composition-list">
+                {% for composition in compositions %}
+                    <article class="panel composition-card" data-composition="{{ composition.id }}">
+                        <div class="composition-description">
+                            <h3>{{ composition.name }}</h3>
+                            <ul>
+                                {% for slug,tiers in composition.ships %}
+                                    {% for tier,count in tiers %}
+                                        <li>{{ catalog[slug].label|default(slug) }} · {{ {basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'}[tier] }} : {{ count|quantity(0) }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="composition-actions">
+                            <a class="primary" href="{{ path('app_fleet_composition_load',{id:composition.id}) }}">Vérifier et charger</a>
+                            <a class="secondary" href="{{ path('app_fleet_composition_edit',{id:composition.id}) }}" aria-label="Modifier {{ composition.name }}">Modifier</a>
+                            <details>
+                                <summary>Supprimer<span class="visually-hidden"> {{ composition.name }}</span></summary>
+                                <form method="post">
+                                    <p>Cette suppression retire le modèle enregistré.</p>
+                                    <input type="hidden" name="_token" value="{{ csrf_token('fleet_compositions') }}">
+                                    <input type="hidden" name="id" value="{{ composition.id }}">
+                                    <input type="hidden" name="version" value="{{ composition.version }}">
+                                    <input type="hidden" name="action" value="delete">
+                                    <button class="secondary">Supprimer cette composition</button>
+                                </form>
+                            </details>
+                        </div>
+                    </article>
+                {% else %}
+                    <p class="panel">Aucune composition enregistrée. Créez une composition pour retrouver rapidement vos quantités habituelles.</p>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
 </div>
 {% endblock %}

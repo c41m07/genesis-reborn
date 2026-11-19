@@ -86,6 +86,10 @@ final class QueueService
             }
             $buildings = $this->repo->levelsByTier(PlanetBuilding::class, ['planet' => $planet]);
             $technologies = $this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $membership]);
+            if ($group === 'technologies' && !$this->access->hasLocalResearchLaboratory($buildings, $tier)) {
+                $laboratory = $this->catalog->getTierForUniverse($membership->universe, 'buildings', 'lab', $tier);
+                throw new \DomainException($laboratory['label'] . ' de niveau 1 requis sur cette colonie pour lancer cette recherche.');
+            }
             $level = 1;
             $previousLevel = null;
             if (in_array($group, ['buildings', 'technologies'], true)) {
@@ -239,6 +243,7 @@ final class QueueService
         $plan = $this->calculator->calculate($definition, $group, 1, max(1, $quantity), $buildings, $config, $technologies);
         $reason = '';
         $missing = [];
+        $missingResources = [];
         if ($maximum === 0) {
             $failures = $this->access->failures($membership, $planet, $group, $definition, $tier, $buildings, $technologies);
             if (count($this->repo->queue($planet, 'shipyard')) >= 30) {
@@ -251,7 +256,10 @@ final class QueueService
                 $stocks = $this->resources->snapshot($planet);
                 foreach ($plan['costs'] as $resource => $amount) {
                     if ($amount > ($stocks[$resource]['stock'] ?? 0)) {
-                        $missing[] = number_format((int) ceil($amount - ($stocks[$resource]['stock'] ?? 0)), 0, ',', ' ') . ' ' . $this->catalog->rules()['resources'][$resource];
+                        $deficit = (int) ceil($amount - ($stocks[$resource]['stock'] ?? 0));
+                        $label = $this->catalog->rules()['resources'][$resource];
+                        $missing[] = number_format($deficit, 0, ',', ' ') . ' ' . $label;
+                        $missingResources[$resource] = ['label' => $label, 'amount' => $deficit];
                     }
                 }
                 $reason = $missing ? 'Ressources manquantes : ' . implode(', ', $missing) . '.' : 'Limite de quantité atteinte.';
@@ -262,6 +270,10 @@ final class QueueService
             'quantity' => $quantity,
             'costs' => $quantity > 0 ? $plan['costs'] : [],
             'duration' => $quantity > 0 ? $plan['duration'] : 0,
+            // Même indisponible, le catalogue explique le prix d’une unité sans changer le devis exécutable.
+            'displayCosts' => $plan['costs'],
+            'displayDuration' => $plan['duration'],
+            'missingResources' => $missingResources,
             'reason' => $reason,
             'unavailableLabel' => $maximum === 0 ? $missing ? 'Manque ' . implode(' · ', $missing) : $reason : '',
         ];

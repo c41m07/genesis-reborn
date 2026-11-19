@@ -39,6 +39,11 @@
           "slug": "mine_nano",
           "tier": "intermediate",
           "level": 2
+        },
+        {
+          "slug": "shipyard",
+          "tier": "basic",
+          "level": 20
         }
       ]
     },
@@ -53,6 +58,16 @@
           "slug": "mine_nano",
           "tier": "superior",
           "level": 2
+        },
+        {
+          "slug": "shipyard",
+          "tier": "basic",
+          "level": 20
+        },
+        {
+          "slug": "shipyard",
+          "tier": "intermediate",
+          "level": 20
         }
       ]
     }
@@ -60,22 +75,22 @@
   "economy_value_budget": 20000,
   "cost_profiles": {
     "basic": {
-      "metal": 4000,
-      "nano": 3000,
+      "metal": 4800,
+      "nano": 2600,
       "antimatter": 0,
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 3751,
-      "nano": 3126,
-      "antimatter": 625,
+      "metal": 4251,
+      "nano": 2250,
+      "antimatter": 938,
       "hydrogen": 0
     },
     "superior": {
-      "metal": 3906,
-      "nano": 2735,
-      "antimatter": 1172,
-      "hydrogen": 3124
+      "metal": 4375,
+      "nano": 2422,
+      "antimatter": 1211,
+      "hydrogen": 3126
     }
   },
   "tier_labels": {

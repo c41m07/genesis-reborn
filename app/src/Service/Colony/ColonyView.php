@@ -39,6 +39,14 @@ final class ColonyView
         $technologies = $this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $membership]);
         $universeConfig = $this->catalog->forUniverse($membership->universe);
         $definitions = $universeConfig['catalog'];
+        $missingResearchLaboratories = [];
+        if ($section === 'technologies') {
+            foreach (GameCatalog::TIERS as $tier) {
+                if (!$this->access->hasLocalResearchLaboratory($buildings, $tier)) {
+                    $missingResearchLaboratories[$tier] = $this->catalog->withTier($definitions['buildings']['lab'], $tier)['label'];
+                }
+            }
+        }
         $cards = [];
         $filterOptions = [];
         $queues = [];
@@ -226,6 +234,7 @@ final class ColonyView
                         'duration' => $operation['duration'],
                         'costs' => $operation['costs'],
                         'failures' => array_values(array_unique($failures)),
+                        'missing_research_laboratory' => $missingResearchLaboratories[$tier] ?? null,
                         'maximum' => isset($definition['max_level']) && $target > $definition['max_level'],
                         'queued' => $queued !== null,
                         'economic' => $economicStates[$slug][$tier] ?? null,

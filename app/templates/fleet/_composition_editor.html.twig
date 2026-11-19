@@ -1,6 +1,37 @@
-<section class="panel"><h2>Quantités souhaitées</h2>
-<form method="post"><input type="hidden" name="_token" value="{{ csrf_token('fleet_compositions') }}"><input type="hidden" name="id" value="{{ editing.id|default(0) }}"><input type="hidden" name="version" value="{{ editing.version|default(0) }}"><input type="hidden" name="request_key" value="{{ app.request.request.get('request_key')|default(request_key()) }}">
-<label for="composition-name">Nom de la composition</label><input id="composition-name" name="name" value="{{ draft.name|default('') }}" maxlength="80" required>
-<div class="table-scroll" tabindex="0" role="region" aria-label="Tableau défilant horizontalement"><table class="data-table composition-editor"><caption>Types, rangs et quantités souhaités</caption><thead><tr><th>Vaisseau</th>{% for tier,label in {basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'} %}<th>{{ label }}</th>{% endfor %}</tr></thead><tbody>
-{% for slug,ship in catalog|filter(ship => ship.mobile is not defined or ship.mobile) %}<tr><th scope="row">{{ ship.label }}</th>{% for tier,label in {basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'} %}<td><label class="visually-hidden" for="composition-{{ slug }}-{{ tier }}">{{ ship.label }} · {{ label }}</label><input id="composition-{{ slug }}-{{ tier }}" name="ships[{{ slug }}][{{ tier }}]" type="number" min="0" max="{{ limit }}" value="{{ draft.ships[slug][tier]|default(0) }}" required></td>{% endfor %}</tr>{% endfor %}</tbody></table></div>
-<p>Enregistrer une composition ne construit et n’envoie aucun vaisseau. Les disponibilités seront vérifiées avant chargement.</p><button class="primary">Enregistrer la composition</button>{% if editing %}<a class="secondary" href="{{ path('app_fleet_composition_new') }}">Créer une autre composition</a>{% endif %}</form></section>
+<section class="panel composition-editor-panel" aria-labelledby="composition-quantities-title">
+    <h2 id="composition-quantities-title">Quantités souhaitées</h2>
+    <form method="post">
+        <input type="hidden" name="_token" value="{{ csrf_token('fleet_compositions') }}">
+        <input type="hidden" name="id" value="{{ editing.id|default(0) }}">
+        <input type="hidden" name="version" value="{{ editing.version|default(0) }}">
+        <input type="hidden" name="request_key" value="{{ app.request.request.get('request_key')|default(request_key()) }}">
+        <div class="composition-name-field">
+            <label for="composition-name">Nom de la composition</label>
+            <input id="composition-name" name="name" value="{{ draft.name|default('') }}" maxlength="80" aria-describedby="composition-name-hint" required>
+            <p id="composition-name-hint">1 à 80 caractères.</p>
+        </div>
+        {# Une seule série de champs : les trois rangs restent réunis par vaisseau sur mobile. #}
+        <div class="composition-table-container">
+            <table class="data-table composition-table composition-editor" role="table">
+                <caption class="visually-hidden">Types, rangs et quantités souhaités</caption>
+                <colgroup><col><col span="3" class="composition-quantity-column"></colgroup>
+                <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Vaisseau</th>{% for tier,label in {basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'} %}<th scope="col" role="columnheader">{{ label }}</th>{% endfor %}</tr></thead>
+                <tbody role="rowgroup">
+                    {% for slug,ship in catalog|filter(ship => ship.mobile is not defined or ship.mobile) %}
+                        <tr role="row">
+                            <th scope="row" role="rowheader">{{ ship.label }}</th>
+                            {% for tier,label in {basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'} %}
+                                <td role="cell">
+                                    <label class="composition-quantity-label" for="composition-{{ slug }}-{{ tier }}"><span class="visually-hidden">{{ ship.label }} · </span>{{ label }}</label>
+                                    <input id="composition-{{ slug }}-{{ tier }}" name="ships[{{ slug }}][{{ tier }}]" type="number" min="0" max="{{ limit }}" value="{{ draft.ships[slug][tier]|default(0) }}" required>
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="composition-editor-note">Enregistrer une composition ne construit et n’envoie aucun vaisseau. Les disponibilités seront vérifiées avant chargement.</p>
+        <button class="primary">Enregistrer la composition</button>
+    </form>
+</section>

@@ -1,7 +1,7 @@
 {% extends 'base.html.twig' %}
 {% block title %}Événements et bonus · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="page-refinement events-space" data-page-sections="disabled">
+<div class="page-refinement events-space event-redesign" data-page-sections="disabled">
 <div class="page-heading"><div><h1>Événements et bonus</h1><p>Les rendez-vous en cours et à venir dans votre univers. Horaires : {{ preferences.timezone }}.</p></div><a class="primary" href="{{ path('app_game_challenges') }}">Consulter les défis et rotations</a></div>
 {% include 'ui/event_navigation.html.twig' %}
 {% set typeLabels = {'production_bonus':'Bonus de production','construction_speed':'Vitesse de construction','research_speed':'Vitesse de recherche','fleet_speed':'Vitesse des flottes','special':'Événement spécial','reward':'Récompense','announcement':'Annonce'} %}
@@ -13,10 +13,12 @@
 {% for event in listing.rows %}
     {% set upcoming = eventGroup=='upcoming' %}
     <article class="panel event-card" aria-labelledby="event-{{ event.id }}-title">
-        <div class="event-meta"><span class="badge {{ upcoming ? '' : 'event-active' }}">{{ upcoming ? 'À venir' : 'En cours' }}</span><span class="muted">{{ typeLabels[event.type]|default(event.type|replace({'_':' '})|capitalize) }} · {{ event.universe ? event.universe.name : 'Tous les univers' }}</span></div>
+        <div class="event-description-column">
         <h3 id="event-{{ event.id }}-title">{{ event.name }}</h3>
+        <div class="event-meta"><span class="badge {{ upcoming ? '' : 'event-active' }}">{{ upcoming ? 'À venir' : 'En cours' }}</span><span class="muted">{{ typeLabels[event.type]|default(event.type|replace({'_':' '})|capitalize) }} · {{ event.universe ? event.universe.name : 'Tous les univers' }}</span></div>
         {% if event.description %}<p class="event-description">{{ event.description }}</p>{% endif %}
         {% if event.type == 'production_bonus' %}<p class="event-effect">Production des ressources : <strong>+{{ event.parameters.percentage }} %</strong></p>{% endif %}
+        </div>
         <dl class="event-period"><div><dt>Début</dt><dd><time datetime="{{ event.startsAt|date('c', 'UTC') }}">{{ event.startsAt|date('d/m/Y à H:i', preferences.timezone) }}</time></dd></div><div><dt>Fin</dt><dd><time datetime="{{ event.endsAt|date('c', 'UTC') }}">{{ event.endsAt|date('d/m/Y à H:i', preferences.timezone) }}</time></dd></div></dl>
     </article>
 {% else %}<p>{{ eventGroup=='current' ? 'Aucun événement en cours dans cet univers.' : 'Aucun événement à venir annoncé.' }}</p>

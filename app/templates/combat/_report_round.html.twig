@@ -1,0 +1,39 @@
+<details class="combat-round" {{ first_round ? 'open' : '' }}>
+    <summary>
+        <h3 id="round-{{ round.number }}">Round {{ round.number }}</h3>
+        <span>{{ round.shots_count|quantity(0) }} tirs · {{ round.lost_count|quantity(0) }} {{ round.lost_count > 1 ? 'pertes' : 'perte' }}</span>
+    </summary>
+    <div class="report-round-content">
+        <div class="table-scroll" role="region" tabindex="0" aria-label="Round {{ round.number }}, comparaison des camps">
+            <div class="combat-versus">
+            {% for side, sideLabel in {own:'Votre camp', enemy:'Camp adverse'} %}
+                {% if side == 'enemy' %}<span class="combat-vs" aria-hidden="true">VS</span>{% endif %}
+                <section class="combat-side combat-side--{{ side }}">
+                    <h4>{{ sideLabel }}</h4>
+                    <table class="data-table round-table" role="table">
+                        <caption class="visually-hidden">{{ sideLabel }} · Round {{ round.number }}</caption>
+                        <thead><tr><th scope="col">Vaisseau / défense</th><th scope="col">Début</th><th scope="col">Pertes</th><th scope="col">Fin</th><th scope="col">Tirs</th><th scope="col">Touchés</th><th scope="col">Ratés</th><th scope="col"><abbr title="Taux de tirs réussis">Préc.</abbr></th></tr></thead>
+                        <tbody>
+                        {% for row in round[side] %}
+                            <tr>
+                                <th scope="row">{{ row.unit }}<small>{{ row.label }} · {{ tier_labels[row.tier]|default(row.tier) }}</small></th>
+                                <td data-label="Début">{{ row.start|quantity(0) }}</td>
+                                <td data-label="Pertes" class="{{ row.round_lost ? 'report-loss' : 'muted' }}">{{ row.round_lost ? '−' : '' }}{{ row.round_lost|quantity(0) }}</td>
+                                <td data-label="Fin" class="{{ row.end ? 'report-survivors' : 'muted' }}">{{ row.end|quantity(0) }}</td>
+                                <td data-label="Tirs">{{ row.shots|quantity(0) }}</td>
+                                <td data-label="Touchés">{{ row.hits|quantity(0) }}</td>
+                                <td data-label="Ratés">{{ row.misses|quantity(0) }}</td>
+                                <td data-label="Précision">{% if row.accuracy is null %}<span aria-label="Aucun tir">—</span>{% else %}{{ row.accuracy }} %{% endif %}</td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="8" class="report-empty-row">Aucune unité présente dans ce camp à ce round.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </section>
+            {% endfor %}
+            </div>
+        </div>
+        <p class="report-table-note">Début / fin : effectifs · Pertes : destructions de ce round · Tirs : armes principales et secondaires · Préc. : proportion de tirs touchés.</p>
+    </div>
+</details>

@@ -804,7 +804,7 @@ final class GamePersistenceTest extends KernelTestCase
         $this->clock();$p=$this->player();$planet=$this->join($p,'omega-1');$m=$p->currentPlayerUniverse;$q=self::getContainer()->get(QueueService::class);
         $q->add($m,$planet,'buildings','mine_metal',1,str_repeat('a',32));$q->add($m,$planet,'buildings','mine_metal',1,str_repeat('b',32));
         $items=$this->em->getRepository(QueueItem::class)->findBy([],['id'=>'ASC']);$id=$items[0]->id;
-        self::assertSame(['metal'=>320,'nano'=>240,'antimatter'=>0,'hydrogen'=>0],$items[0]->paidCosts);
+        self::assertSame(['metal'=>384,'nano'=>208,'antimatter'=>0,'hydrogen'=>0],$items[0]->paidCosts);
         $paid=['metal'=>0,'nano'=>0,'antimatter'=>0,'hydrogen'=>0];foreach($items as $item)foreach($item->paidCosts as $resource=>$amount)$paid[$resource]+=$amount;
         $resources=[];$before=[];foreach($this->em->getRepository(PlanetResource::class)->findBy(['planet'=>$planet]) as $resource){$resources[$resource->resourceType]=$resource;$before[$resource->resourceType]=$resource->currentStock;}
         // Modifier les nouveaux prix ne doit pas changer les coûts déjà payés.
@@ -817,7 +817,7 @@ final class GamePersistenceTest extends KernelTestCase
         $this->clock();$player=$this->player();$planet=$this->join($player,'omega-1');
         $membership=$player->currentPlayerUniverse;$universe=$membership->universe;
         $queue=self::getContainer()->get(QueueService::class);$catalog=self::getContainer()->get(GameCatalog::class);
-        $old=['metal'=>480,'nano'=>160,'antimatter'=>0,'hydrogen'=>0];
+        $old=['metal'=>320,'nano'=>240,'antimatter'=>0,'hydrogen'=>0];
         $universe->gameSettings['catalog_overrides']['buildings']['mine_metal']['cost_profiles']['basic']=$old;
         $this->em->flush();
         $queue->add($membership,$planet,'buildings','mine_metal',1,str_repeat('a',32));
@@ -828,7 +828,7 @@ final class GamePersistenceTest extends KernelTestCase
         unset($universe->gameSettings['catalog_overrides']['buildings']['mine_metal']['cost_profiles']);
         $this->em->flush();
         $definition=$catalog->getTierForUniverse($universe,'buildings','mine_metal','basic');
-        self::assertSame(['metal'=>320,'nano'=>240,'antimatter'=>0,'hydrogen'=>0],$catalog->costs($definition,1,1,'buildings'));
+        self::assertSame(['metal'=>384,'nano'=>208,'antimatter'=>0,'hydrogen'=>0],$catalog->costs($definition,1,1,'buildings'));
         self::assertSame($old,$item->paidCosts);self::assertEquals($finish,$item->finishAt());
         $stocks=[];$before=[];
         foreach($this->em->getRepository(PlanetResource::class)->findBy(['planet'=>$planet]) as $resource){
@@ -847,9 +847,9 @@ final class GamePersistenceTest extends KernelTestCase
         $ship=new FleetShip();$ship->fleet=$fleet;$ship->slug='fighter';$ship->tier='basic';$ship->quantity=1;
         // Les points utilisent les quantités de ressources du profil courant, sans pondération M/N/A/H.
         $scores=self::getContainer()->get(\App\Service\Player\LeaderboardService::class);
-        self::assertSame(21,$scores->fleetPoints($fleet,[$ship]));
+        self::assertSame(22,$scores->fleetPoints($fleet,[$ship]));
         $ship->quantity=100;
-        self::assertSame(2100,$scores->fleetPoints($fleet,[$ship]));
+        self::assertSame(2220,$scores->fleetPoints($fleet,[$ship]));
     }
 
     public function testCancellationRefundRespectsStorageCapacity():void
@@ -1419,14 +1419,166 @@ final class GamePersistenceTest extends KernelTestCase
         $queues->add($membership,$one,'technologies','colonial_expansion',1,str_repeat('a',32));
         $queues->add($membership,$two,'technologies','engineering_foundations',1,str_repeat('b',32));
         [$colony,$following]=$this->em->getRepository(QueueItem::class)->findBy(['playerUniverse'=>$membership],['id'=>'ASC']);
-        self::assertSame(280457,$colony->durationSeconds);self::assertSame(467500,$colony->paidCosts['electricity']);
+        self::assertSame(28046,$colony->durationSeconds);self::assertSame(46800,$colony->paidCosts['electricity']);
         self::assertNull($following->startedAt);$finish=$colony->finishAt();$paid=$colony->paidCosts;
         $clock->sleep($colony->durationSeconds-1);$queues->synchronize($membership);
         self::assertNull($following->startedAt);
         $clock->sleep(2);$queues->synchronize($membership);
         self::assertEquals($finish,$following->startedAt);
-        self::assertSame($paid,$colony->paidCosts);self::assertSame(280457,$colony->durationSeconds);
+        self::assertSame($paid,$colony->paidCosts);self::assertSame(28046,$colony->durationSeconds);
         self::assertSame(1,$this->em->getRepository(PlayerTechnology::class)->findOneBy(['playerUniverse'=>$membership,'slug'=>'colonial_expansion'])->level);
+    }
+
+    public function testFreshEmpireCanReachASecondPlanetAfterSixEightHourIntervals(): void
+    {
+        $clock = $this->clock();
+        $started = $clock->now();
+
+        // Une carte minimale fixe les positions et garantit la disponibilité de la cible.
+        // Le joueur, son kit, ses commandes et ses stocks passent par les services de jeu.
+        $universe = new Universe();
+        $universe->slug = 'colonization-journey';
+        $universe->name = 'Colonisation ×1';
+        $galaxy = new \App\Entity\Galaxy();
+        $galaxy->universe = $universe;
+        $galaxy->name = 'Galaxie 1';
+        $system = new \App\Entity\SolarSystem();
+        $system->galaxy = $galaxy;
+        $system->name = 'Système de départ';
+        $system->coordX = 0;
+        $system->coordY = 0;
+        $origin = new Planet();
+        $origin->solarSystem = $system;
+        $origin->position = 5;
+        $origin->name = 'Position 5';
+        foreach ([$universe, $galaxy, $system, $origin] as $entity) {
+            $this->em->persist($entity);
+        }
+        $this->em->flush();
+
+        $player = $this->player('ColonizationJourney');
+        self::assertSame($origin, $this->join($player, $universe->slug));
+        $membership = $player->currentPlayerUniverse;
+        $target = new Planet();
+        $target->solarSystem = $system;
+        $target->position = 6;
+        $target->name = 'Position 6';
+        $this->em->persist($target);
+        $this->em->flush();
+
+        // Rejouer la cadence de 30 min sur les services persistants et les dates réelles de la file.
+        $schedule = [
+            [0, 'buildings', 'power_plant'],
+            [120, 'buildings', 'power_plant'],
+            [255, 'buildings', 'power_plant'],
+            [407, 'buildings', 'power_plant'],
+            [577, 'buildings', 'power_plant'],
+            [768, 'buildings', 'mine_metal'],
+            [828, 'buildings', 'mine_metal'],
+            [896, 'buildings', 'mine_metal'],
+            [972, 'buildings', 'mine_nano'],
+            [1032, 'buildings', 'mine_nano'],
+            [1100, 'buildings', 'mine_nano'],
+            [28800, 'buildings', 'lab'],
+            [29040, 'buildings', 'lab'],
+            [29040, 'technologies', 'engineering_foundations'],
+            [29633, 'technologies', 'engineering_foundations'],
+            [30422, 'technologies', 'naval_engineering'],
+            [57600, 'buildings', 'shipyard'],
+            [59353, 'buildings', 'storage_electricity'],
+            [86400, 'buildings', 'shipyard'],
+            [115200, 'technologies', 'colonial_expansion'],
+            [144000, 'ships', 'colony_ship'],
+        ];
+        $queues = self::getContainer()->get(QueueService::class);
+        foreach ($schedule as $index => [$second, $group, $slug]) {
+            $clock->sleep($started->getTimestamp() + $second - $clock->now()->getTimestamp());
+            $queues->add($membership, $origin, $group, $slug, 1, md5('colonization-' . $index));
+        }
+
+        $clock->sleep($started->getTimestamp() + 48 * 3600 - $clock->now()->getTimestamp());
+        $fleets = self::getContainer()->get(\App\Service\Fleet\FleetService::class);
+        $fleets->send($membership, $origin, 'colonize', $target->id, ['colony_ship' => ['basic' => 1]], 1, [], str_repeat('f', 32));
+        $mission = $this->em->getRepository(Fleet::class)->findOneBy(['playerUniverse' => $membership, 'status' => 'traveling']);
+        self::assertSame(375, $mission->travelSeconds);
+        self::assertNull($target->owner);
+        $clock->sleep(375);
+        $fleets->arrive($mission->id, $mission->dispatchToken);
+        $this->em->refresh($target);
+        self::assertSame($membership, $target->owner);
+        self::assertEquals($started->modify('+48 hours 375 seconds'), $target->acquiredAt);
+        self::assertSame(2, $this->em->getRepository(Planet::class)->count(['owner' => $membership]));
+    }
+
+    public function testPaidColonizationResearchKeepsItsOldScheduleAndRefundAfterTheBaseChanges(): void
+    {
+        [$clock, $player, $planet, , $queues] = $this->researchColonies();
+        $membership = $player->currentPlayerUniverse;
+        $universe = $membership->universe;
+        $universe->gameSettings['multipliers']['research_time'] = 1;
+        $universe->gameSettings['catalog_overrides']['technologies']['colonial_expansion']['research_time_base'] = 288000;
+        $this->em->getRepository(PlanetBuilding::class)->findOneBy(['planet' => $planet, 'slug' => 'lab'])->level = 2;
+        $resources = self::getContainer()->get(ResourceService::class);
+        foreach (['storage_electricity' => 12, 'storage_metal' => 1, 'storage_nano' => 1] as $slug => $level) {
+            $storage = new PlanetBuilding();
+            $storage->planet = $planet;
+            $storage->slug = $slug;
+            $storage->level = $level;
+            // Ce stock de test isole le paiement historique, sans simuler sa progression.
+            $storage->tier = 'superior';
+            $this->em->persist($storage);
+        }
+        foreach (['engineering_foundations' => 2, 'naval_engineering' => 1] as $slug => $level) {
+            $technology = new PlayerTechnology();
+            $technology->playerUniverse = $membership;
+            $technology->slug = $slug;
+            $technology->level = $level;
+            $this->em->persist($technology);
+        }
+        foreach ($this->em->getRepository(PlanetResource::class)->findBy(['planet' => $planet]) as $resource) {
+            $resource->currentStock = match ($resource->resourceType) {
+                'electricity' => 1200000,
+                'metal' => 25000,
+                default => 10000,
+            };
+        }
+        $this->em->flush();
+        $queues->add($membership, $planet, 'technologies', 'colonial_expansion', 1, str_repeat('a', 32));
+        $queues->add($membership, $planet, 'technologies', 'colonial_expansion', 1, str_repeat('b', 32));
+        [$active, $waiting] = $this->em->getRepository(QueueItem::class)->findBy(['playerUniverse' => $membership], ['id' => 'ASC']);
+        $activeFinish = $active->finishAt();
+        $waitingId = $waiting->id;
+        $waitingDuration = $waiting->durationSeconds;
+        $waitingPaid = $waiting->paidCosts;
+
+        // Seuls les nouveaux devis héritent de la base révisée après le retrait de la surcharge.
+        unset($universe->gameSettings['catalog_overrides']['technologies']['colonial_expansion']);
+        $this->em->flush();
+        $queues->synchronize($membership);
+        $this->em->refresh($active);
+        $this->em->refresh($waiting);
+        self::assertEquals($activeFinish, $active->finishAt());
+        self::assertSame(280457, $active->durationSeconds);
+        self::assertSame(467500, $active->paidCosts['electricity']);
+        self::assertNull($waiting->startedAt);
+        self::assertSame(378616, $waitingDuration);
+        self::assertSame(631100, $waitingPaid['electricity']);
+
+        $clock->sleep($active->durationSeconds + 1);
+        $queues->synchronize($membership);
+        $this->em->refresh($waiting);
+        self::assertEquals($activeFinish, $waiting->startedAt);
+        self::assertSame($waitingDuration, $waiting->durationSeconds);
+        self::assertSame($waitingPaid, $waiting->paidCosts);
+
+        $before = $resources->snapshot($planet);
+        $queues->cancel($membership, $waitingId, str_repeat('c', 32));
+        $queues->cancel($membership, $waitingId, str_repeat('d', 32));
+        $after = $resources->snapshot($planet);
+        foreach ($waitingPaid as $resource => $amount) {
+            self::assertEqualsWithDelta($before[$resource]['stock'] + $amount * 0.25, $after[$resource]['stock'], 1e-6);
+        }
+        self::assertSame(0, $this->em->getRepository(QueueItem::class)->count(['playerUniverse' => $membership]));
     }
 
     private function recordedResearch(Planet $planet,string $slug,int $level,int $duration,\DateTimeImmutable $at,bool $active,array $paid=['metal'=>123]): QueueItem
@@ -1455,7 +1607,8 @@ final class GamePersistenceTest extends KernelTestCase
         self::assertEqualsWithDelta($beforeTwo-$expected['costs']['metal'],$resources->snapshot($two)['metal']['stock'],.000001);
         self::assertSame(['metal'=>111],$first->paidCosts);self::assertSame(['metal'=>222],$other->paidCosts);self::assertSame(['metal'=>333],$waiting->paidCosts);
         self::assertEquals($at,$first->startedAt);self::assertEquals($at,$other->startedAt);
-        $lab->level=1;$this->em->flush();
+        // La perte du laboratoire n’interrompt pas les recherches déjà payées.
+        $this->em->remove($lab);$this->em->flush();
         $clock->sleep(200);$service->synchronize($membership);self::assertEquals($at->modify('+200 seconds'),$waiting->startedAt);self::assertNull($new->startedAt);
         $clock->sleep(50);$service->synchronize($membership);self::assertEquals($at->modify('+250 seconds'),$new->startedAt);
         self::assertSame($expected['duration'],$new->durationSeconds);self::assertSame($expected['costs'],$new->paidCosts);

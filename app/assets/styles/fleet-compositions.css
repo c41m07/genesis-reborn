@@ -1,0 +1,300 @@
+/* L2C A : un modèle par ligne, les mêmes champs et liens à toutes les largeurs. */
+.fleet-compositions :is(.panel, form, .composition-description, .composition-actions) {
+    min-width: 0;
+}
+
+body.authenticated .fleet-compositions :is(h1, h2, h3, p, a, summary, th, td) {
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+body.authenticated .fleet-compositions :is(p, li, label, th, td) {
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+body.authenticated .fleet-compositions p > a:not(.primary):not(.secondary) {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+body.authenticated .fleet-compositions .panel {
+    padding: 20px;
+}
+
+body.authenticated .fleet-compositions .panel h2 {
+    margin: 0 0 24px;
+    font-size: 22px;
+}
+
+.fleet-compositions .composition-list-actions {
+    margin: 0 0 20px;
+}
+
+.fleet-compositions .composition-list-actions .primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    min-width: 250px;
+}
+
+.fleet-compositions .composition-list {
+    display: grid;
+    gap: 16px;
+}
+
+.fleet-compositions .composition-card {
+    display: grid;
+    gap: 24px;
+    margin: 0;
+}
+
+body.authenticated .fleet-compositions .composition-card h3 {
+    margin: 0 0 18px;
+    color: var(--text);
+    font-size: 20px;
+}
+
+.fleet-compositions .composition-description ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.fleet-compositions .composition-description li + li {
+    margin-top: 4px;
+}
+
+.fleet-compositions .composition-actions {
+    display: grid;
+    gap: 10px;
+    align-content: start;
+}
+
+.fleet-compositions .composition-actions :is(a, button) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+}
+
+.fleet-compositions .composition-actions details {
+    min-width: 0;
+}
+
+body.authenticated .fleet-compositions .composition-actions summary {
+    min-height: 44px;
+    padding: 10px;
+    border: 1px solid var(--fleet-control-border);
+    border-radius: 5px;
+    color: var(--text);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.fleet-compositions .composition-actions summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+
+.fleet-compositions .composition-actions form {
+    margin-top: 14px;
+}
+
+body.authenticated .fleet-compositions .composition-actions form p {
+    margin: 0 0 12px;
+    font-size: 13px;
+}
+
+.fleet-compositions .composition-name-field {
+    margin-bottom: 28px;
+}
+
+body.authenticated .fleet-compositions .composition-name-field > label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+body.authenticated .fleet-compositions :is(input, select) {
+    min-width: 0;
+    width: 100%;
+    margin: 0;
+    padding: 10px;
+    font-size: 16px;
+}
+
+body.authenticated .fleet-compositions #composition-name-hint {
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.fleet-compositions .composition-table-container {
+    min-width: 0;
+}
+
+body.authenticated .fleet-compositions .composition-table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+}
+
+.fleet-compositions .composition-quantity-column {
+    width: 105px;
+}
+
+body.authenticated .fleet-compositions .composition-table :is(th, td) {
+    min-width: 0;
+    padding: 14px 8px;
+    text-align: left;
+    vertical-align: middle;
+}
+
+body.authenticated .fleet-compositions .composition-table tr > :first-child {
+    padding-left: 0;
+}
+
+body.authenticated .fleet-compositions .composition-table tr > :last-child {
+    padding-right: 0;
+}
+
+.fleet-compositions .composition-table thead th {
+    color: var(--muted);
+    font-weight: 700;
+}
+
+body.authenticated .fleet-compositions .composition-table tbody th {
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.fleet-compositions .composition-mobile-label {
+    display: none;
+}
+
+/* Les libellés restent accessibles dans le tableau et deviennent visibles par unité sur mobile. */
+.fleet-compositions .composition-quantity-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+body.authenticated .fleet-compositions .composition-editor-note {
+    margin: 28px 0 24px;
+}
+
+.fleet-compositions .composition-load-layout {
+    display: grid;
+    gap: 20px;
+    align-items: start;
+}
+
+.fleet-compositions .composition-origin-panel form {
+    display: grid;
+    gap: 20px;
+}
+
+body.authenticated .fleet-compositions .composition-missing {
+    color: var(--fleet-error);
+    font-weight: 700;
+}
+
+.fleet-compositions .composition-availability > p {
+    margin: 24px 0;
+}
+
+.fleet-compositions .composition-load-action {
+    display: flex;
+    justify-content: center;
+    margin-top: 24px;
+    text-align: center;
+}
+
+@media (min-width: 701px) {
+    .fleet-compositions .composition-card {
+        grid-template-columns: minmax(0, 1fr) 300px;
+    }
+
+    .fleet-compositions .composition-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .fleet-compositions .composition-actions > .primary {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (min-width: 1201px) {
+    .fleet-compositions .composition-load-layout {
+        grid-template-columns: 330px minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    body.authenticated .fleet-compositions .panel {
+        padding: 18px;
+    }
+
+    .fleet-compositions .composition-list-actions .primary,
+    .fleet-compositions .composition-editor-panel button {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .fleet-compositions .composition-table,
+    .fleet-compositions .composition-table tbody {
+        display: block;
+    }
+
+    /* Conserver les en-têtes dans l’arbre accessible, sans imposer de défilement horizontal. */
+    .fleet-compositions .composition-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+    }
+
+    .fleet-compositions .composition-table colgroup {
+        display: none;
+    }
+
+    .fleet-compositions .composition-table tbody tr {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        padding-block: 20px;
+        border-top: 1px solid var(--line);
+    }
+
+    body.authenticated .fleet-compositions .composition-table tbody :is(th, td) {
+        display: block;
+        padding: 0;
+        border: 0;
+    }
+
+    .fleet-compositions .composition-table tbody th {
+        grid-column: 1 / -1;
+    }
+
+    body.authenticated .fleet-compositions .composition-quantity-label,
+    body.authenticated .fleet-compositions .composition-mobile-label {
+        position: static;
+        display: block;
+        width: auto;
+        height: auto;
+        margin: 0 0 8px;
+        overflow: visible;
+        clip-path: none;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.5;
+    }
+}

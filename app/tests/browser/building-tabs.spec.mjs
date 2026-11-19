@@ -49,9 +49,9 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(tab('basic').locator('.building-rank-up')).toHaveCount(0);
     await expect(tab('basic')).toHaveAccessibleDescription(/Ressources insuffisantes/);
     await expect(family.locator('.card-stock-badge, .tier-label')).toHaveCount(0);
-    await expect(panel('basic').locator('.costs')).toContainText('1,23 M');
+    await expect(panel('basic').locator('.costs')).toContainText('1,47 M');
     await expect(panel('basic').locator('.costs > span').first()).toHaveAttribute('aria-label', /Métal : [\d ]+/);
-    await expect(panel('basic').getByRole('button',{name:/^Manque [\d ]+ Métal/})).toBeDisabled();
+    await expect(panel('basic').getByRole('button',{name:/^Il manque :.*Métal : [\d ]+/})).toBeDisabled();
     await expect(panel('basic').locator('.catalog-card-art img')).toHaveCSS('filter','none');
     await expect(panel('basic').locator('form [name="tier"]')).toHaveValue('basic');
     await tab('intermediate').click();
@@ -60,7 +60,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(panel('intermediate').locator('img')).toHaveAttribute('src', /power_plant__intermediate.webp$/);
     await expect(panel('intermediate').locator('.catalog-card-heading > h3')).toHaveText('Complexe énergétique à antimatière');
     await expect(panel('intermediate').locator('form [name="tier"]')).toHaveValue('intermediate');
-    await expect(panel('intermediate').locator('.costs > span').first()).toContainText('900');
+    await expect(panel('intermediate').locator('.costs > span').first()).toContainText('1 020');
     await page.keyboard.press('ArrowRight');
     await expect(tab('superior')).toBeFocused();
     await expect(panel('superior')).toBeVisible();
@@ -94,27 +94,23 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(page.getByRole('button', { name: 'Production', exact: true })).toHaveAttribute('aria-pressed', 'true');
     await expect(toggle).toHaveAttribute('aria-checked', 'true');
     await page.getByRole('button', { name: 'Tous', exact: true }).click();
-    for (const [width, columns] of [[1920, 4], [1600, 3], [1440, 2], [768, 1], [390, 1], [320, 1]]) {
+    for (const [width, columns] of [[1920, 4], [1600, 4], [1440, 4], [768, 2], [390, 1], [320, 1]]) {
         await page.setViewportSize({ width, height: 1000 });
-        const activity = page.locator('.colony-catalog-activity');
+        const rail = page.locator('.catalog-operations-rail');
         const catalog = page.locator('.colony-catalog-workspace > .colony-catalog');
-        const flights = page.locator('.colony-catalog-aside');
-        const activityBox = await activity.boundingBox();
-        const catalogBox = await catalog.boundingBox();
-        if (width > 1250) {
-            const flightsBox = await flights.boundingBox();
-            expect(activityBox.x).toBeGreaterThan(catalogBox.x);
-            expect(flightsBox.y).toBeGreaterThanOrEqual(activityBox.y + activityBox.height);
-            expect(Math.abs(flightsBox.x - activityBox.x)).toBeLessThan(2);
-        } else {
-            expect(activityBox.y + activityBox.height).toBeLessThanOrEqual(catalogBox.y);
-        }
-        await expect(flights).toBeVisible();
-        await expect(flights.locator('[data-live-region="active-flights"] + .incoming-attacks .incoming-attack-panel')).toHaveCount(1);
-        if (width <= 740) {
-            const flightsBox = await flights.boundingBox();
-            expect(flightsBox.y).toBeGreaterThanOrEqual(catalogBox.y + catalogBox.height - 1);
-        }
+        await expect(rail).toHaveCSS('position', 'sticky');
+        await expect(rail.locator('[data-queue-type] > summary')).toHaveCount(3);
+        await expect(rail.locator('[data-catalog-disclosure="flights"] > summary')).toBeVisible();
+        await expect(rail.locator('[data-catalog-disclosure="incoming"] > summary')).toBeVisible();
+        await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+        const railBox = await rail.boundingBox(), catalogBox = await catalog.boundingBox();
+        expect(railBox.y + railBox.height).toBeLessThanOrEqual(catalogBox.y);
+        await page.evaluate(() => window.scrollTo({ top: 900, behavior: 'instant' }));
+        await expect.poll(async () => {
+            const rect = await rail.boundingBox();
+            const top = await rail.evaluate(element => Number.parseFloat(getComputedStyle(element).top));
+            return Math.abs(rect.y - top);
+        }).toBeLessThanOrEqual(1);
 
         await tab('superior').click();
         const firstRow = await page.locator('.building-card:visible').evaluateAll(cards => {
@@ -126,7 +122,8 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
         await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('object-fit', 'cover');
         const positions = await family.getByRole('tab').evaluateAll(tabs => tabs.map(tab => Math.round(tab.getBoundingClientRect().top)));
         expect(new Set(positions).size).toBe(1);
-        await expect(tab('intermediate')).toHaveAccessibleName(/Intermédiaire/);
+        await expect(tab('intermediate')).toHaveAccessibleName(/Interm\./);
+        await expect(tab('intermediate')).toHaveAccessibleDescription(/Intermédiaire/);
         const overflow = await family.getByRole('tab').evaluateAll(tabs => tabs.filter(tab => tab.scrollWidth > tab.clientWidth).map(tab => ({ label: tab.innerText, available: tab.clientWidth, content: tab.scrollWidth })));
         expect(overflow, `Onglets à ${width} px`).toEqual([]);
         const costs = await panel('superior').locator('.costs > span').evaluateAll(spans => spans.map(span => Math.round(span.getBoundingClientRect().top)));
@@ -165,7 +162,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await fallback.getByRole('switch', { name: 'Afficher les éléments verrouillés' }).click();
     await expect(fallback.locator('#item-power_plant-superior')).toBeVisible();
     await expect(fallback.locator('#item-power_plant-superior .catalog-card-art img')).toHaveCSS('filter','grayscale(1)');
-    await expect(fallback.locator('#item-power_plant-basic').getByRole('button',{name:/^Manque/})).toBeDisabled();
+    await expect(fallback.locator('#item-power_plant-basic').getByRole('button',{name:/^Il manque :/})).toBeDisabled();
     await noScript.close();
     for (const theme of ['dark','light']) {
         sql(`UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
@@ -174,7 +171,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
             await page.goto(`${path}?section=buildings#item-power_plant-basic`);
             await page.reload();
             await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
-            await expect(panel('basic').getByRole('button',{name:/^Manque/})).toBeDisabled();
+            await expect(panel('basic').getByRole('button',{name:/^Il manque :/})).toBeDisabled();
             expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
             await family.screenshot({path:`output/playwright/catalogue-bloque-${theme}-${width}.png`});
             await tab('superior').click();
@@ -289,7 +286,7 @@ test('Recherche, chantier et défenses partagent les onglets et préservent leur
         await page.setViewportSize({ width: 1920, height: 1000 });
         await page.screenshot({ path: `output/playwright/catalogue-${group}-tabs.png`, fullPage: true });
         if (group === 'defenses') {
-            await panel('basic').getByRole('button', { name: 'Construire', exact: true }).click();
+            await panel('basic').getByRole('button', { name: /^Construire(?: 3)?$/ }).click();
             await expect.poll(() => queryIsolatedSql(process.env.BROWSER_ROUTER, `SELECT quantity FROM queue_item WHERE planet_id=${planet} AND item_slug='ground_turret_anti_light' AND tier='basic'`)).toBe('3');
         }
         await page.goto(`${path}?section=${group}&showLockedItems=0#item-${slug}-superior`);

@@ -1,0 +1,187 @@
+/* Page 29 validée : le suivi reste commun aux cartes et à l’affichage en lignes. */
+.development-navigation { display:flex; flex-wrap:wrap; gap:8px; }
+.development-navigation .secondary { min-height:44px; font-size:12px; }
+.development-navigation [aria-current=page] { background:var(--active,#173341); color:var(--accent); border-color:var(--accent); }
+body[data-ui-page="catalogues"] .catalog-workspace { display:block; }
+body[data-ui-page="catalogues"] .catalog-workspace .catalog-operations-rail {
+    --catalog-sticky-top:calc(var(--topbar-height,68px) + var(--resource-stack-height,88px));
+    position:sticky;
+    top:var(--catalog-sticky-top);
+    z-index:21;
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:8px;
+    max-height:none;
+    overflow:visible;
+    scrollbar-gutter:auto;
+    padding:8px 0;
+    background:var(--bg);
+}
+.catalog-workspace .catalog-queue-ribbon {
+    grid-column:span 3;
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:8px;
+    padding:0;
+    background:none;
+    border:0;
+    min-width:0;
+}
+.catalog-queue-ribbon>p { grid-column:1/-1; margin:0; }
+.catalog-workspace .catalog-queue-ribbon .scene-operation,
+.catalog-workspace .catalog-flight-cell,
+.catalog-workspace .incoming-attacks { margin:0; padding:0; min-width:0; border:0; display:block; }
+.catalog-workspace .catalog-disclosure { min-width:0; }
+.catalog-workspace .catalog-follow-summary {
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:5px;
+    min-height:86px;
+    padding:10px;
+    border:1px solid var(--line);
+    border-radius:5px;
+    background:var(--panel);
+    color:var(--text);
+    cursor:pointer;
+    list-style:none;
+    font-size:12px;
+}
+.catalog-follow-summary::-webkit-details-marker { display:none; }
+.catalog-follow-summary>span { color:var(--muted); font-size:11px; overflow-wrap:anywhere; }
+.catalog-follow-summary .operation-progress { margin:0; }
+.catalog-follow-summary .progress-track { height:3px; }
+.catalog-follow-summary .progress-times { font-size:10px; margin-top:3px; }
+.catalog-follow-summary .progress-times strong { font-size:10px; }
+.catalog-disclosure[open]>.catalog-follow-summary { border-color:var(--accent); }
+.catalog-disclosure.has-hostile>.catalog-follow-summary { color:#ffa3a3; border-color:#a65b63; }
+.catalog-disclosure.has-hostile>.catalog-follow-summary>span { color:inherit; }
+.catalog-workspace .catalog-follow-panel {
+    position:absolute;
+    top:100%;
+    right:0;
+    width:min(700px,100%);
+    max-height:max(160px,calc(100dvh - var(--catalog-sticky-top) - var(--catalog-ribbon-height,110px) - 16px));
+    overflow:auto;
+    overscroll-behavior:contain;
+    padding:22px;
+    border:1px solid var(--line);
+    border-radius:6px;
+    background:var(--panel);
+    box-shadow:0 16px 36px #0008;
+}
+.catalog-follow-panel .queue-details>summary { display:none; }
+.catalog-follow-panel .queue-detail-list { max-height:none; }
+.catalog-follow-panel .queue-detail-item { gap:16px; }
+.catalog-follow-panel .queue-detail-item a { min-height:44px; display:inline-flex; align-items:center; }
+.catalog-follow-panel .section-heading { gap:12px; }
+.catalog-follow-panel .flight-operations { padding:0; border:0; box-shadow:none; background:none; }
+.catalog-workspace>.colony-catalog { margin-top:8px; }
+.catalog-workspace .catalog-section-title { justify-content:flex-end; gap:20px; }
+.catalog-workspace .building-visibility button { font-size:12px; }
+body[data-ui-page="catalogues"] :is(#panel-buildings,#panel-technologies,#panel-ships,#panel-defenses) .building-grid {
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    align-items:stretch;
+    gap:18px;
+}
+.catalog-workspace .building-card { display:flex; flex-direction:column; }
+.catalog-workspace .building-card .card-body { padding:14px; }
+.catalog-workspace .building-rank-tab { min-height:44px; }
+.catalog-workspace .building-rank-full { display:none; }
+.catalog-workspace .building-rank-short { display:inline; }
+.catalog-workspace .building-card .catalog-card-heading h3 { font-size:16px; line-height:1.45; margin-bottom:8px; }
+.catalog-workspace .catalog-level { text-align:center; font-size:14px; font-weight:700; margin:0 0 6px; }
+.catalog-workspace .catalog-queued { text-align:center; color:var(--muted); font-size:11px; margin:0 0 12px; }
+.catalog-workspace .building-card .build-duration { font-size:12px; min-height:24px; margin:10px 0; }
+.catalog-workspace .building-card .build-duration>span { padding:0; border:0; background:none; color:var(--muted); font-weight:400; text-shadow:none; font-size:12px!important; }
+.catalog-workspace .catalog-cost-heading { font-size:11px; color:var(--muted); margin:0 0 8px; padding-top:12px; border-top:1px solid var(--line); font-weight:700; }
+.catalog-workspace .building-card .building-costs { gap:4px; margin-bottom:14px; min-height:0; }
+.catalog-workspace .building-card .building-costs>span { font-size:14px; }
+.catalog-workspace .building-card .building-costs strong { font-size:inherit; color:inherit; }
+.catalog-workspace .building-card .building-costs small { font-size:11px; }
+.catalog-workspace .building-costs .icon { width:18px; height:18px; }
+.catalog-workspace .building-costs:has(>span:nth-child(4)) .cost-label-full { display:none; }
+.catalog-workspace .building-costs:has(>span:nth-child(4)) .cost-label-short { display:inline; }
+.catalog-workspace .building-card .card-benefits { padding:10px; margin-bottom:14px; }
+.catalog-workspace .card-benefits-content>div { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.catalog-workspace .card-benefits-content>div>span { min-width:0; }
+.catalog-workspace .card-benefits-content>div>strong { flex-shrink:0; margin:0; }
+.catalog-workspace .building-card .card-body>form { padding-top:12px; }
+.catalog-workspace .building-card .card-body>.requirement { margin-top:auto; font-size:12px; }
+.catalog-workspace .catalog-blocked-action { min-height:44px; margin-top:12px; color:var(--muted); background:var(--panel); }
+.catalog-workspace .catalog-blocked { margin-top:auto; }
+.catalog-workspace .catalog-blocked>.requirement { font-size:12px; }
+.catalog-workspace .catalog-build-action { min-height:44px; text-align:left; font-size:13px; white-space:normal; }
+.catalog-workspace .building-card .catalog-build-action:disabled { text-align:left; justify-content:flex-start; }
+.catalog-workspace .catalog-missing-resource { display:block; margin-top:3px; font-variant-numeric:tabular-nums; }
+.catalog-workspace .building-card .catalog-build-action.has-missing-resources { color:#ffa3a3; background:var(--panel); padding:12px; }
+.catalog-workspace .quantity-status { display:block; margin:6px 0; }
+
+/* Un même formulaire et les mêmes données changent de disposition ; rien n’est dupliqué. */
+body[data-ui-page="catalogues"] :is(#panel-buildings,#panel-technologies,#panel-ships,#panel-defenses).catalog-condensed .building-grid { grid-template-columns:minmax(0,1fr); }
+.catalog-workspace .catalog-condensed .building-card { position:relative; }
+.catalog-workspace .catalog-condensed .building-rank-tabs { position:absolute; top:58px; left:14px; width:250px; z-index:1; }
+.catalog-workspace .catalog-condensed .building-rank { min-height:174px; }
+.catalog-workspace .catalog-condensed .card-body {
+    display:grid;
+    grid-template-columns:250px minmax(160px,1fr) minmax(210px,1fr) minmax(210px,1fr);
+    gap:0 22px;
+    align-items:start;
+}
+.catalog-workspace .catalog-condensed .catalog-card-heading { grid-area:1/1; display:flex; }
+.catalog-workspace .catalog-condensed .catalog-card-heading h3 { text-align:left; font-size:15px; }
+.catalog-workspace .catalog-condensed .catalog-level { grid-area:1/1; margin:100px 0 0; text-align:left; font-size:12px; }
+.catalog-workspace .catalog-condensed .catalog-queued { grid-area:1/1; margin:124px 0 0; text-align:left; }
+.catalog-workspace .catalog-condensed .card-benefits { grid-area:1/2; margin:0; }
+.catalog-workspace .catalog-condensed .catalog-cost-heading { grid-area:1/3; padding:0; border:0; }
+.catalog-workspace .catalog-condensed .building-costs { grid-area:1/3; margin:26px 0 0; }
+/* Les grands montants restent lisibles dans les cinq colonnes du mode condensé. */
+.catalog-workspace .catalog-condensed .building-costs > span > span { min-width:0; max-width:100%; white-space:normal; overflow-wrap:anywhere; }
+.catalog-workspace .catalog-condensed .build-duration { grid-area:1/3; margin:108px 0 0; }
+.catalog-workspace .catalog-condensed .card-body>form { grid-area:1/4; align-self:end; width:100%; margin:0; padding:0; }
+.catalog-workspace .catalog-condensed .catalog-blocked { grid-area:1/4; align-self:end; margin:0; }
+.catalog-workspace .catalog-condensed .catalog-level-complete { grid-area:1/2; }
+.catalog-workspace .catalog-condensed .economic-unit { grid-column:2; }
+.catalog-workspace .catalog-condensed .building-card .catalog-card-art { display:none; }
+
+body[data-theme=light] .catalog-disclosure.has-hostile>.catalog-follow-summary,
+body[data-theme=light] .catalog-workspace .building-card .catalog-build-action.has-missing-resources { color:#a32939; }
+body[data-theme=light] .catalog-workspace { --muted:#566374; }
+body[data-theme=light] .catalog-workspace .card-benefits>summary,
+body[data-theme=light] .catalog-workspace .card-benefits>summary::after { color:#315a45; }
+@media(max-width:1199px) {
+    body[data-ui-page="catalogues"] :is(#panel-buildings,#panel-technologies,#panel-ships,#panel-defenses) .building-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .catalog-workspace .catalog-condensed .building-rank-tabs { width:250px; }
+    .catalog-workspace .catalog-condensed .card-body { grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+    .catalog-workspace .catalog-condensed .catalog-card-heading { grid-area:1/1/2/3; min-height:42px; }
+    .catalog-workspace .catalog-condensed .catalog-level { grid-area:2/1/3/3; margin:44px 0 0; }
+    .catalog-workspace .catalog-condensed .catalog-queued { grid-area:3/1/4/3; margin:0; }
+    .catalog-workspace .catalog-condensed .card-benefits { grid-area:4/1; }
+    .catalog-workspace .catalog-condensed .catalog-cost-heading { grid-area:4/2; }
+    .catalog-workspace .catalog-condensed .building-costs { grid-area:4/2; margin-top:26px; }
+    .catalog-workspace .catalog-condensed .build-duration { grid-area:5/1/6/3; margin:0; }
+    .catalog-workspace .catalog-condensed .card-body>form,
+    .catalog-workspace .catalog-condensed .catalog-blocked { grid-area:6/1/7/3; }
+    .catalog-workspace .catalog-condensed .catalog-level-complete { grid-area:4/1; }
+}
+@media(max-width:600px) {
+    .development-navigation { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; }
+    .development-navigation .secondary { text-align:center; justify-content:center; font-size:11px; }
+    body[data-ui-page="catalogues"] :is(#panel-buildings,#panel-technologies,#panel-ships,#panel-defenses) .building-grid { grid-template-columns:minmax(0,1fr); }
+    body[data-ui-page="catalogues"] .catalog-workspace .catalog-operations-rail { grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
+    .catalog-workspace .catalog-queue-ribbon { grid-column:1/-1; gap:6px; }
+    .catalog-workspace .catalog-follow-summary { padding:8px; min-height:64px; font-size:10px; }
+    .catalog-workspace .catalog-follow-summary>span { font-size:10px; }
+    .catalog-workspace .catalog-follow-summary .progress-times { display:none; }
+    .catalog-workspace .catalog-follow-panel { padding:16px; }
+    .catalog-workspace .catalog-section-title { justify-content:space-between; gap:8px; }
+    .catalog-workspace .building-visibility button { font-size:11px; }
+    .catalog-workspace .catalog-condensed .card-body { gap:14px 0; }
+    .catalog-workspace .catalog-condensed .card-benefits { grid-area:4/1/5/3; }
+    .catalog-workspace .catalog-condensed .catalog-cost-heading { grid-area:5/1/6/3; }
+    .catalog-workspace .catalog-condensed .building-costs { grid-area:5/1/6/3; margin-top:26px; }
+    .catalog-workspace .catalog-condensed .build-duration { grid-area:6/1/7/3; }
+    .catalog-workspace .catalog-condensed .card-body>form,
+    .catalog-workspace .catalog-condensed .catalog-blocked { grid-area:7/1/8/3; }
+    .catalog-workspace .catalog-condensed .catalog-level-complete { grid-area:4/1/5/3; }
+}

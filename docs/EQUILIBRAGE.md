@@ -1,9 +1,67 @@
 # Réglages et études d’équilibrage
 
-## Répartition retenue — 16 novembre 2026
+## Première colonisation — 19 novembre 2026
+
+Rejouer les parcours hors base avec `make -s console CMD=app:balance:simulate-colonization`.
+La sortie JSON contient les dates de lancement et de fin de chaque opération,
+leurs coûts et le carburant réservé. Le scénario utilise le kit d’inscription
+d’Omega ×1, en position 5, avec une centrale B5, des mines métal/nano B3 et les
+prérequis financés du laboratoire B2, de la batterie et du chantier B2.
+La cible est la position 6 libre du système de départ, déjà découvert. Le vol
+dure 6 min 15 s et réserve 3 H, sans rival ni interception. Aucun don, raid,
+événement, boost ou stock ajouté. La comparaison rétablit les 80 h sur ce
+même catalogue pour la colonne « avant ». Le parcours achète uniquement
+des profils Basiques, identiques de part et d’autre de la bascule.
+
+Les sessions commencent à l’inscription puis toutes les 24, 12 ou 8 h.
+Seuls les lancements attendent une connexion. La production, les opérations payées
+et le vol continuent entre les sessions. Chaque file simulée lance une opération
+à la fois, sans achat anticipé des niveaux en attente. Le jeu permet ces achats,
+ce qui peut raccourcir certaines attentes. Les choix de construction sont fixes.
+
+| Cadence | Avant, sessions de 15 min | Après, 15 min | Avant, sessions de 30 min | Après, 30 min |
+| --- | ---: | ---: | ---: | ---: |
+| 1 connexion/j | 312 h 06 | 168 h 06 | 288 h 06 | 144 h 06 |
+| 2 connexions/j | 240 h 06 | 84 h 06 | 216 h 06 | 72 h 06 |
+| 3 connexions/j | 208 h 06 | 56 h 06 | 200 h 06 | 48 h 06 |
+| Actions dès que possible | 178 h 44 | 33 h 52 | 178 h 44 | 33 h 52 |
+
+À trois sessions de 30 min, la recherche est lancée à 32 h, le colonisateur à
+40 h et le vol à 48 h. Avec 15 min, le premier niveau de chantier entamé à
+16 h occupe encore la file à la fin de la session. Le deuxième niveau est lancé
+à 24 h, la batterie à 32 h et la recherche (46 800 E) à 40 h. Le colonisateur
+est lancé à 48 h et l’arrivée suit la connexion de 56 h. La cible est compatible
+avec le scénario de 30 min, avec huit heures d’écart selon la fenêtre de présence.
+
+Le test d’intégration `testFreshEmpireCanReachASecondPlanetAfterSixEightHourIntervals`
+rejoue le planning de 30 min avec les services persistants, depuis l’inscription
+jusqu’à l’acquisition de la seconde planète à 48 h 06 min 15 s. Il utilise une
+carte minimale en univers ×1 et une horloge contrôlée. Le parcours navigateur
+de colonisation couvre un compte déjà équipé. Les autres cadences restent des
+estimations, et la mise en file anticipée, la concurrence et des horaires
+de connexion plus réalistes restent à comparer.
+
+## Équilibrage des prix Basiques et Intermédiaires
+
+Mesures du 18 novembre 2026 sur B48/52, I35/35/30 et S25/35/30/10.
+À vitesse ×1 en position 5, le parcours économique jusqu’aux niveaux cibles
+B25/I10 passe de 134,3 h à 114,1 h. Les attentes de métal et de nano passent
+respectivement de 14,6 h et 99,9 h à 51,2 h et 54,4 h.
+
+Depuis la même infrastructure, le financement de 100 chasseurs Intermédiaires
+passe de 3,6 h d’attente de nano à 4,8 h d’attente d’antimatière. Dans le parcours
+jusqu’au Supérieur 10, son premier accès passe de 81,8 h à 65,7 h. Une flotte
+composée de 50 chasseurs, 10 frégates et 2 cuirassés Supérieurs demande 21,4 h
+d’attente d’antimatière et 0,8 h d’hydrogène avec la nouvelle grille.
+
+Les simulations sont hors base et excluent raids, échanges et carburant des
+flottes actives. Les attentes par ressource peuvent se chevaucher entre
+files. Les prix détaillés et les budgets conservés sont dans [COUTS.md](COUTS.md).
+
+## Répartition retenue le 16 novembre 2026, référence historique
 
 Après les études, l’utilisateur retient B40/60, I30/50/20 et S25/35/30/10.
-La [grille courante](COUTS.md) conserve exactement les 156 budgets de base et tous
+Cette grille conservait exactement les 156 budgets de base et tous
 les paramètres hors prix. Cette décision remplace les recommandations préalables
 ci-dessous, conservées comme résultats datés. Les courbes et arrondis habituels restent
 appliqués ; paiements existants et surcharges d’univers restent préservés.
@@ -168,7 +226,22 @@ La transposition de R14 est contrôlée ; la branche complète ne peut pas être
 
 ## Production des bâtiments
 
-### Production confirmée — 9 novembre 2026
+### Production et progression des bâtiments — 18 novembre 2026
+
+Le doublement initial de la production de nano et de sa consommation électrique
+nominale a été annulé. À position 5 dans un univers ×1, les deux débits sont
+de 180, 270 et 405 par niveau et par heure, à plein rendement. La production
+passive de référence est de 10 nano/h. Les règles de pénurie, de saturation et
+les surcharges d’univers continuent de s’appliquer. Lors d’un déploiement, la
+production en attente depuis le dernier calcul enregistré utilise les nouveaux
+débits de référence. Les nouveaux déblocages sont détaillés dans la [grille courante](DEBLOCAGES.md#bâtiments--13).
+
+Le piège à antimatière consomme directement 90 électricité/h par niveau Basique
+pour une production de 90 AM/h à vitesse ×1. Ses 360 H/h représentent
+90 électricité/h de plus lorsqu’ils viennent d’une raffinerie à plein rendement.
+Le total de référence est de 2 électricité par AM, comme pour 8 H, 4 M ou 2 N.
+
+### Référence historique — production du 9 novembre 2026
 
 L’utilisateur confirme le candidat et son rythme après comparaison avec le catalogue actuel. Le lot est préparé sur `codex/equilibrage-production-basique`, issue de `dev`, sans fusion ni déploiement. Valeurs à vitesse ×1, position 5, à plein rendement et hors production passive :
 

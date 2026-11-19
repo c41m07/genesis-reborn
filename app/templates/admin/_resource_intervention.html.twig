@@ -1,9 +1,25 @@
 <details class="admin-resource-intervention" id="colony-{{ planet.id }}"><summary>Corriger les ressources de {{ planet.name }}</summary>
+<p class="admin-intervention-destination">Destination : {{ planet.name }} · {{ planet.coordinates() }} · {{ row.membership.universe.name }} · {{ player.username }}</p>
 <p>Ajout ou retrait sur cette colonie uniquement. La correction entière est refusée si un stock devient négatif ou dépasse un entrepôt.</p>
 <form method="post" action="{{ path('app_admin_player_resources',{id:player.id,planetId:planet.id}) }}" class="admin-intervention-form">
 <input type="hidden" name="_token" value="{{ csrf_token('admin_resources_'~planet.id) }}"><input type="hidden" name="request_key" value="{{ stocks[planet.id].request_key }}">
-<label for="resource-operation-{{ planet.id }}">Type de correction</label><select id="resource-operation-{{ planet.id }}" name="operation"><option value="add">Ajouter</option><option value="remove">Retirer</option></select>
-{% for slug,stock in stocks[planet.id].resources %}<label for="resource-{{ planet.id }}-{{ slug }}">{{ stock.label }} — stock {{ stock.stock|quantity(2) }} / {{ stock.capacity|quantity(0) }}</label><input id="resource-{{ planet.id }}-{{ slug }}" name="amounts[{{ slug }}]" type="number" min="0" step="0.01" value="0" required>{% endfor %}
-<label for="resource-reason-{{ planet.id }}">Motif de la correction (obligatoire)</label><textarea id="resource-reason-{{ planet.id }}" name="reason" maxlength="1000" required></textarea>
+<div class="admin-intervention-field">
+    <label for="resource-operation-{{ planet.id }}">Type de correction</label>
+    <select id="resource-operation-{{ planet.id }}" name="operation"><option value="add">Ajouter</option><option value="remove">Retirer</option></select>
+</div>
+<div class="admin-intervention-resources">
+    {% for slug,stock in stocks[planet.id].resources %}
+        <div class="admin-intervention-field">
+            <label for="resource-{{ planet.id }}-{{ slug }}">{{ stock.label }}</label>
+            <input id="resource-{{ planet.id }}-{{ slug }}" name="amounts[{{ slug }}]" type="number" min="0" step="0.01" value="0" required aria-describedby="resource-stock-{{ planet.id }}-{{ slug }}">
+            <small id="resource-stock-{{ planet.id }}-{{ slug }}">Stock {{ stock.stock|quantity(2) }} / {{ stock.capacity|quantity(0) }}</small>
+        </div>
+    {% endfor %}
+</div>
+<div class="admin-intervention-field">
+    <label for="resource-reason-{{ planet.id }}">Motif de la correction (obligatoire)</label>
+    <textarea id="resource-reason-{{ planet.id }}" name="reason" maxlength="1000" required aria-describedby="resource-reason-limit-{{ planet.id }}"></textarea>
+    <small id="resource-reason-limit-{{ planet.id }}">1 000 caractères maximum</small>
+</div>
 <label class="admin-intervention-confirm"><input type="checkbox" name="confirmed" value="1" required> Je confirme les quantités, la colonie et le motif indiqués.</label>
-<button class="secondary" type="submit">Appliquer la correction</button></form></details>
+<button class="primary" type="submit">Appliquer la correction</button></form></details>

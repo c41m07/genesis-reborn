@@ -44,11 +44,13 @@ test('Routes de navigation utilisables sans débordement aux trois tailles', asy
       if (route.startsWith('/diplomatie')) await expect(page.locator('.diplomacy-page nav[aria-label="Navigation de diplomatie"]>a')).toHaveCount(1);
       const checks = [
         ['.sidebar nav>a', 12],
-        ['.catalog-card h3', width <= 740 ? 13 : 14],
+        ['.catalog-card h3', 16],
         ['.catalog-card .secondary', width <= 740 ? 11 : 12],
-        ['.catalog-card .requirement', 11],
+        ['.catalog-card .requirement:not(.card-body > .requirement)', 11],
+        ['.catalog-card .card-body > .requirement', 12],
         ['.progress-times', 11],
-        ['.ui-tabs:not(.alliance-tabs):not(.page-refinement .ui-tabs)>a, .ui-tabs:not(.alliance-tabs)>button, .building-rank-tab', width <= 740 ? 11 : 12],
+        ['.ui-tabs:not(.alliance-tabs):not(:is(.page-refinement, .fleet-redesign, .account-redesign, .inventory-redesign, .project-redesign, .event-redesign) .ui-tabs)>a, .ui-tabs:not(.alliance-tabs)>button, .building-rank-tab', width <= 740 ? 11 : 12],
+        [':is(.fleet-redesign, .account-redesign, .inventory-redesign, .project-redesign, .event-redesign) .space-navigation>a', 14],
         ['.diplomacy-page .alliance-tabs>a', 14],
         ['.page-refinement .ui-tabs:not(.alliance-tabs)>a', 14],
         ['.catalog-card input[type="number"], .message-search input', width <= 1050 ? 16 : 14],
@@ -63,9 +65,7 @@ test('Routes de navigation utilisables sans débordement aux trois tailles', asy
             ? [{ selector, expected: `${size}px`, actual: style.fontSize }] : [];
         })
       ), checks);
-      for (const font of fonts) {
-        expect(font.actual, `${font.selector} : ${theme}, ${width}px`).toBe(font.expected);
-      }
+      expect(fonts.filter(font => font.actual !== font.expected), `${route} : ${theme}, ${width}px`).toEqual([]);
       if (route.includes('section=buildings')) {
         await page.screenshot({ path: `output/playwright/typography-${theme}-${width}.png`, animations: 'disabled' });
       }

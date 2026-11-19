@@ -40,17 +40,29 @@ final class CatalogAccessTest extends KernelTestCase
         $this->em->flush();
     }
 
-    private function level(string $group,string $slug,int $level,string $tier='basic'):object
+    private function level(string $group, string $slug, int $level, string $tier = 'basic', ?Planet $planet = null): PlanetBuilding|PlayerTechnology
     {
-        $row=$group==='buildings'?new PlanetBuilding():new PlayerTechnology();
-        if($group==='buildings')$row->planet=$this->planet;else $row->playerUniverse=$this->membership;
-        $row->slug=$slug;$row->tier=$tier;$row->level=$level;$this->em->persist($row);$this->em->flush();return $row;
+        if ($group === 'buildings') {
+            $row = new PlanetBuilding();
+            $row->planet = $planet ?? $this->planet;
+        } else {
+            $row = new PlayerTechnology();
+            $row->playerUniverse = $this->membership;
+        }
+
+        $row->slug = $slug;
+        $row->tier = $tier;
+        $row->level = $level;
+        $this->em->persist($row);
+        $this->em->flush();
+        return $row;
     }
 
     #[\PHPUnit\Framework\Attributes\DataProvider('bunkerTiers')]
-    public function testBunkerCanBeQueuedWithOnlyItsSameRankMines(string $tier):void
+    public function testBunkerCanBeQueuedWithItsMinesAndPreviousRanks(string $tier):void
     {
         $this->level('buildings','mine_metal',1,$tier);$this->level('buildings','mine_nano',1,$tier);
+        $this->preparePreviousBunkers($tier);
         self::assertSame(0,$this->em->getRepository(PlayerTechnology::class)->count(['playerUniverse'=>$this->membership,'slug'=>'structural_armor']));
         foreach(['shipyard','lab'] as $slug)self::assertSame(0,$this->em->getRepository(PlanetBuilding::class)->count(['planet'=>$this->planet,'slug'=>$slug]));
         self::getContainer()->get(QueueService::class)->add($this->membership,$this->planet,'buildings','fortress',1,str_repeat('2',32),$tier);
@@ -68,6 +80,7 @@ final class CatalogAccessTest extends KernelTestCase
     public function testBunkerRequiresBothMinesOfTheSameRank(string $tier,int $metal,int $nano,string $missing):void
     {
         $this->level('buildings','mine_metal',$metal,$tier);$this->level('buildings','mine_nano',$nano,$tier);
+        $this->preparePreviousBunkers($tier);
         // Des mines d’un autre rang ne doivent pas ouvrir l’accès demandé.
         foreach(array_diff(['basic','intermediate','superior'],[$tier]) as $otherTier){
             $this->level('buildings','mine_metal',5,$otherTier);$this->level('buildings','mine_nano',5,$otherTier);
@@ -78,6 +91,16 @@ final class CatalogAccessTest extends KernelTestCase
         $this->expectExceptionMessage($catalog->withTier($catalog->get('buildings',$missing),$tier)['label']);
         try {self::getContainer()->get(QueueService::class)->add($this->membership,$this->planet,'buildings','fortress',1,str_repeat('2',32),$tier);}
         finally {self::assertSame(0,(int)$connection->fetchOne('SELECT COUNT(*) FROM queue_item WHERE item_slug=?',['fortress']));}
+    }
+
+    private function preparePreviousBunkers(string $tier): void
+    {
+        if ($tier !== 'basic') {
+            $this->level('buildings', 'fortress', 8, 'basic');
+        }
+        if ($tier === 'superior') {
+            $this->level('buildings', 'fortress', 8, 'intermediate');
+        }
     }
 
     public static function missingBunkerBuildings():array
@@ -101,6 +124,8 @@ final class CatalogAccessTest extends KernelTestCase
         self::assertTrue($access->acquired($this->membership,$this->other,'technologies','naval_engineering','basic'));
         foreach([$lab,$mine,$nano,$engineering,$naval] as $row)$this->em->remove($row);$this->em->flush();
         $queue->add($this->membership,$this->planet,'buildings','shipyard',1,str_repeat('a',32));
+        // Le niveau 1 local suffit pour lancer une recherche déjà débloquée au laboratoire de niveau 2.
+        $this->level('buildings', 'lab', 1, planet: $this->other);
         $queue->add($this->membership,$this->other,'technologies','naval_engineering',1,str_repeat('b',32));
         self::assertSame(2,$this->em->getRepository(QueueItem::class)->count());
         $cards=self::getContainer()->get(ColonyView::class)->data($this->membership,$this->planet,true,'buildings')['cards'];
@@ -117,36 +142,90 @@ final class CatalogAccessTest extends KernelTestCase
         self::assertTrue($node['available']);self::assertTrue($node['acquired']);
     }
 
-    public static function industrialBuildingRanks(): iterable
+    #[\PHPUnit\Framework\Attributes\DataProvider('researchRanks')]
+    public function testUnlockedResearchRequiresALaboratoryOfItsRankOnTheStartingColony(string $tier, string $laboratoryLabel): void
     {
-        foreach (['mine_metal', 'mine_nano', 'mine_hydrogen', 'power_plant', 'lab'] as $slug) {
-            foreach (['intermediate', 'superior'] as $tier) {
-                yield $slug.'/'.$tier => [$slug, $tier];
-            }
+        $this->level('buildings', 'lab', 10, $tier);
+        if ($tier !== 'basic') {
+            $this->level('buildings', 'lab', 10, planet: $this->other);
+        }
+        $queue = self::getContainer()->get(QueueService::class);
+        $queue->synchronize($this->membership);
+        $access = self::getContainer()->get(CatalogAccess::class);
+        self::assertTrue($access->acquired($this->membership, $this->other, 'technologies', 'engineering_foundations', $tier));
+
+        $connection = $this->em->getConnection();
+        $stocksQuery = 'SELECT current_stock FROM planet_resource WHERE planet_id = ? ORDER BY resource_type';
+        $stocks = $connection->fetchFirstColumn($stocksQuery, [$this->other->id]);
+        $colonyId = $this->other->id;
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage($laboratoryLabel . ' de niveau 1 requis sur cette colonie');
+        try {
+            $queue->add($this->membership, $this->other, 'technologies', 'engineering_foundations', 1, str_repeat('5', 32), $tier);
+        } finally {
+            self::assertSame(0, (int) $connection->fetchOne('SELECT COUNT(*) FROM queue_item'));
+            self::assertSame($stocks, $connection->fetchFirstColumn($stocksQuery, [$colonyId]));
         }
     }
 
-    #[\PHPUnit\Framework\Attributes\DataProvider('industrialBuildingRanks')]
-    public function testIndustrialRankRequiresResearchAndKeepsItsLocalAccess(string $slug, string $tier): void
+    #[\PHPUnit\Framework\Attributes\DataProvider('researchRanks')]
+    public function testLevelOneLaboratoryCanStartAnEmpireUnlockOfItsRank(string $tier, string $laboratoryLabel): void
     {
-        $isLaboratory = $slug === 'lab';
-        $basicLevel = $tier === 'superior' && !$isLaboratory ? 50 : 25;
-        $parents = [$this->level('buildings', $slug, $basicLevel)];
-        if ($tier === 'superior') {
-            $parents[] = $this->level('buildings', $slug, 25, 'intermediate');
+        // Le niveau 2 sur la première colonie débloque l’architecture navale pour tout l’univers.
+        $this->level('buildings', 'lab', 2, $tier);
+        $this->level('technologies', 'engineering_foundations', 2, $tier);
+        $this->level('buildings', 'lab', 1, $tier, $this->other);
+
+        $queue = self::getContainer()->get(QueueService::class);
+        $queue->add($this->membership, $this->other, 'technologies', 'naval_engineering', 1, str_repeat('6', 32), $tier);
+
+        $item = $this->em->getRepository(QueueItem::class)->findOneBy(['planet' => $this->other]);
+        self::assertNotNull($item, $laboratoryLabel . ' de niveau 1 doit suffire après le déblocage.');
+        self::assertSame($tier, $item->tier);
+        self::assertSame(1, $item->itemLevel);
+    }
+
+    public static function researchRanks(): iterable
+    {
+        yield 'Basique' => ['basic', 'Laboratoire colonial'];
+        yield 'Intermédiaire' => ['intermediate', 'Institut de recherche orbitale'];
+        yield 'Supérieur' => ['superior', 'Complexe scientifique planétaire'];
+    }
+
+    public static function industrialBuildingRanks(): iterable
+    {
+        foreach (['mine_metal', 'mine_nano', 'power_plant'] as $slug) {
+            yield $slug.'/intermediate' => [$slug, 'intermediate', ['basic' => 25], 'intermediate', 5];
+            yield $slug.'/superior' => [$slug, 'superior', ['basic' => 50, 'intermediate' => 25], 'superior', 5];
         }
-        $researchTier = $isLaboratory ? ($tier === 'intermediate' ? 'basic' : 'intermediate') : $tier;
-        $research = $this->level('technologies', 'engineering_foundations', 4, $researchTier);
+        yield 'mine_hydrogen/basic' => ['mine_hydrogen', 'basic', [], 'basic', 3];
+        yield 'mine_hydrogen/intermediate' => ['mine_hydrogen', 'intermediate', ['basic' => 25], 'intermediate', 3];
+        yield 'mine_hydrogen/superior' => ['mine_hydrogen', 'superior', ['basic' => 50, 'intermediate' => 25], 'superior', 3];
+        yield 'lab/intermediate' => ['lab', 'intermediate', ['basic' => 10], 'basic', 5];
+        yield 'lab/superior' => ['lab', 'superior', ['basic' => 10, 'intermediate' => 10], 'intermediate', 5];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('industrialBuildingRanks')]
+    public function testIndustrialRankRequiresResearchAndKeepsItsLocalAccess(
+        string $slug, string $tier, array $previousLevels, string $researchTier, int $requiredResearchLevel,
+    ): void {
+        $parents = [];
+        foreach ($previousLevels as $previousTier => $level) {
+            $parents[] = $this->level('buildings', $slug, $level, $previousTier);
+        }
+        $research = $this->level('technologies', 'engineering_foundations', $requiredResearchLevel - 1, $researchTier);
         $queue = self::getContainer()->get(QueueService::class);
         $access = self::getContainer()->get(CatalogAccess::class);
         $queue->synchronize($this->membership);
         self::assertFalse($access->acquired($this->membership, $this->planet, 'buildings', $slug, $tier));
 
-        $research->level = 5;
+        $research->level = $requiredResearchLevel;
         $this->em->flush();
         $queue->synchronize($this->membership);
         self::assertTrue($access->acquired($this->membership, $this->planet, 'buildings', $slug, $tier));
-        self::assertFalse($access->acquired($this->membership, $this->other, 'buildings', $slug, $tier));
+        // La recherche est partagée dans l’univers. Les prérequis de bâtiments restent locaux.
+        self::assertSame($previousLevels === [], $access->acquired($this->membership, $this->other, 'buildings', $slug, $tier));
 
         // La nouvelle grille ne retire pas un accès acquis si ses conditions disparaissent.
         foreach ([...$parents, $research] as $row) {
@@ -161,15 +240,13 @@ final class CatalogAccessTest extends KernelTestCase
     }
 
     #[\PHPUnit\Framework\Attributes\DataProvider('industrialBuildingRanks')]
-    public function testDirectIndustrialConstructionRejectsInsufficientResearch(string $slug, string $tier): void
-    {
-        $isLaboratory = $slug === 'lab';
-        $this->level('buildings', $slug, $tier === 'superior' && !$isLaboratory ? 50 : 25);
-        if ($tier === 'superior') {
-            $this->level('buildings', $slug, 25, 'intermediate');
+    public function testDirectIndustrialConstructionRejectsInsufficientResearch(
+        string $slug, string $tier, array $previousLevels, string $researchTier, int $requiredResearchLevel,
+    ): void {
+        foreach ($previousLevels as $previousTier => $level) {
+            $this->level('buildings', $slug, $level, $previousTier);
         }
-        $researchTier = $isLaboratory ? ($tier === 'intermediate' ? 'basic' : 'intermediate') : $tier;
-        $this->level('technologies', 'engineering_foundations', 4, $researchTier);
+        $this->level('technologies', 'engineering_foundations', $requiredResearchLevel - 1, $researchTier);
         $connection = $this->em->getConnection();
         $this->expectException(\DomainException::class);
         $this->expectExceptionMessage('Déblocage initial');
@@ -310,6 +387,52 @@ final class CatalogAccessTest extends KernelTestCase
     public static function historicalOperations():array
     {
         return [['buildings','shipyard'],['technologies','shield_harmonics'],['ships','capital'],['defenses','ground_turret_anti_capital']];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('cappedStorageRanks')]
+    public function testStorageCapAppliesToCardsAndNewOrders(string $tier, int $level): void
+    {
+        $this->level('buildings', 'mine_metal', 5, $tier);
+        if ($tier === 'intermediate') {
+            // Un niveau historique au-dessus du plafond satisfait toujours le seuil du rang suivant.
+            $this->level('buildings', 'storage_metal', 6, 'basic');
+        }
+        $this->level('buildings', 'storage_metal', $level, $tier);
+        $queue = self::getContainer()->get(QueueService::class);
+        $queue->synchronize($this->membership);
+
+        $cards = self::getContainer()->get(ColonyView::class)->data($this->membership, $this->planet, true, 'buildings')['cards']['buildings'];
+        $storageCards = array_filter($cards, static fn (array $card): bool => $card['definition']['slug'] === 'storage_metal');
+        $storageCards = array_column($storageCards, null, 'tier');
+        self::assertSame($level, $storageCards[$tier]['level']);
+        self::assertTrue($storageCards[$tier]['maximum']);
+        self::assertSame([], $storageCards[$tier]['failures']);
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('Niveau maximum atteint.');
+        $queue->add($this->membership, $this->planet, 'buildings', 'storage_metal', 1, str_repeat('1', 32), $tier);
+    }
+
+    public static function cappedStorageRanks(): iterable
+    {
+        yield 'Basique au plafond' => ['basic', 5];
+        yield 'Basique au-dessus du plafond' => ['basic', 6];
+        yield 'Intermédiaire au plafond' => ['intermediate', 5];
+    }
+
+    public function testSuperiorStorageStillAcceptsAnUpgradePastFive(): void
+    {
+        $this->level('buildings', 'mine_metal', 5, 'superior');
+        $this->level('buildings', 'storage_metal', 5, 'basic');
+        $this->level('buildings', 'storage_metal', 5, 'intermediate');
+        $this->level('buildings', 'storage_metal', 5, 'superior');
+
+        $queue = self::getContainer()->get(QueueService::class);
+        $queue->add($this->membership, $this->planet, 'buildings', 'storage_metal', 1, str_repeat('1', 32), 'superior');
+        $item = $this->em->getRepository(QueueItem::class)->findOneBy(['planet' => $this->planet, 'itemSlug' => 'storage_metal']);
+        self::assertNotNull($item);
+        self::assertSame('superior', $item->tier);
+        self::assertSame(6, $item->itemLevel);
     }
 
     public function testPermanentAccessDoesNotBypassResearchLevelCaps():void

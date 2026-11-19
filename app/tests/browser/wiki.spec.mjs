@@ -23,6 +23,9 @@ test('Wiki : chapitres serveur, contenu complet, formules au clavier et sources 
   test.setTimeout(150000);await enter(page);
   await expect(page.locator('.wiki-chapter-card')).toHaveCount(guide.length);
   await expect(page.locator('.wiki-chapter,.wiki-formula')).toHaveCount(0);
+  for (const section of guide) {
+    await expect(page.locator('#wiki-'+section.id+' .wiki-chapter-preview')).toContainText(section.paragraphs[0].slice(0,160));
+  }
   await page.setViewportSize({width:1440,height:900});
   for(const [index,section] of guide.entries()) {
     const link=page.locator(`.wiki-summary a[href="${chapterPath(section.id)}"]`);
@@ -97,7 +100,7 @@ test('Wiki : recherche globale, anciennes adresses, retour arrière et parcours 
 });
 
 test('Wiki : rendu mobile et bureau, thèmes, navigation active et accès depuis la colonie',async({page},testInfo)=>{
-  test.setTimeout(150000);const {email}=await enter(page);
+  test.setTimeout(240000);const {email}=await enter(page);
   await page.goto('/univers');await page.locator('article.universe-card').first().getByRole('button').click();await expect(page).toHaveURL(/planetes\/\d+$/);
   const home=page.url(),membership=await page.locator('body').getAttribute('data-menu-notifications-membership-value');
   expect(Number(membership)).toBeGreaterThan(0);await expect(page.getByRole('link',{name:'Comprendre le jeu : consulter le wiki',exact:true})).toHaveCount(0);
@@ -115,9 +118,12 @@ test('Wiki : rendu mobile et bureau, thèmes, navigation active et accès depuis
         if(width<1100) {await expect(page.getByLabel('Choisir un chapitre')).toBeVisible();await expect(page.getByRole('navigation',{name:'Sommaire du wiki'})).toBeHidden();}
         else {await expect(page.getByRole('navigation',{name:'Sommaire du wiki'})).toBeVisible();expect(await page.locator('.wiki-navigation').evaluate(element=>getComputedStyle(element).position)).toBe('sticky');}
         await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-        if(['home','chapter'].includes(name)&&width!==768) {await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));await page.screenshot({path:testInfo.outputPath(`wiki-${name}-${theme}-${width}.png`),animations:'disabled'});}
+        if(name==='home') expect((await page.locator('.wiki-card-grid').first().evaluate(element=>getComputedStyle(element).gridTemplateColumns)).split(' ').length).toBe(1);
+        expect((await new AxeBuilder({page}).include('main').analyze()).violations).toEqual([]);
+        await page.evaluate(()=>{if(document.activeElement instanceof HTMLElement) document.activeElement.blur();window.scrollTo({top:0,left:0,behavior:'instant'});});
+        await expect.poll(()=>page.evaluate(()=>window.scrollY)).toBe(0);
+        await page.screenshot({path:testInfo.outputPath(`wiki-${name}-${theme}-${width}.png`),fullPage:true,animations:'disabled'});
       }
-      expect((await new AxeBuilder({page}).include('main').analyze()).violations).toEqual([]);
     }
   }
   await page.goto(home);await expect(page).toHaveURL(home);

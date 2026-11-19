@@ -53,9 +53,24 @@ export default class extends Controller {
                 }
                 const next = doc.querySelector(`[data-live-region="${region.dataset.liveRegion}"]`);
                 if (next) {
+                    // Les panneaux du suivi restent ouverts après la mise à jour de leur contenu.
+                    const panelScrolls = [];
+                    for (const disclosure of region.querySelectorAll('details[data-catalog-disclosure][open]')) {
+                        const key = disclosure.dataset.catalogDisclosure;
+                        const replacement = [...next.querySelectorAll('details[data-catalog-disclosure]')]
+                            .find(candidate => candidate.dataset.catalogDisclosure === key);
+                        if (replacement) {
+                            replacement.open = true;
+                            const oldPanel = disclosure.querySelector('.catalog-follow-panel');
+                            const newPanel = replacement.querySelector('.catalog-follow-panel');
+                            if (oldPanel && newPanel) panelScrolls.push([newPanel, oldPanel.scrollTop]);
+                        }
+                    }
                     const left = region.scrollLeft;
                     region.replaceWith(next);
                     next.scrollLeft = left;
+                    // Le défilement ne peut être restauré qu’une fois le panneau remis dans la page.
+                    panelScrolls.forEach(([panel, top]) => { panel.scrollTop = top; });
                 }
             }
             this.pendingRefresh = deferred;

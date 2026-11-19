@@ -1,35 +1,59 @@
 {% extends 'admin/layout.html.twig' %}
 {% block title %}{{ editing ? 'Modifier '~editing.name : 'Créer un modèle de projet' }} · Administration{% endblock %}
 {% block body %}
-<div class="page-heading"><h1>{{ editing ? 'Modifier '~editing.name : 'Créer un modèle de projet' }}</h1><p>Des paliers financés par les membres, avec une récompense unique par joueur et modèle de projet.</p></div>
+<div class="page-heading"><div><h1 id="project-definition-title">{{ editing ? 'Modifier '~editing.name : 'Créer un modèle de projet' }}</h1><p>Des paliers financés par les membres, avec une récompense unique par joueur et modèle de projet.</p></div></div>
 <p><a class="secondary" href="{{ path('app_admin_guild_projects') }}">Tous les modèles de projets</a></p>
-<section class="panel" aria-labelledby="project-definition-title">
-    <h2 id="project-definition-title">{{ editing ? 'Modifier le modèle' : 'Créer un modèle' }}</h2>
-    <p>Aucun modèle n’est actif par défaut. Les projets déjà lancés conservent leurs conditions, même si vous modifiez ou désactivez leur modèle.</p>
-    <form method="post" action="{{ editing ? path('app_admin_guild_project_edit',{id:editing.id}) : path('app_admin_guild_project_new') }}" class="admin-event-form">
+<section aria-labelledby="project-definition-title">
+    <p class="admin-project-warning"><strong>Aucun modèle n’est actif par défaut.</strong>Les projets déjà lancés conservent leurs conditions, même si vous modifiez ou désactivez leur modèle.</p>
+    <form method="post" action="{{ editing ? path('app_admin_guild_project_edit',{id:editing.id}) : path('app_admin_guild_project_new') }}" class="admin-event-form admin-project-form">
         <input type="hidden" name="_token" value="{{ csrf_token('guild_project_definition_'~(editing.id|default(0))) }}"><input type="hidden" name="version" value="{{ draft.version }}">
-        <div class="form-grid">
-            <label for="project-name">Nom du projet<input id="project-name" name="name" maxlength="120" required value="{{ draft.name }}"></label>
-            <label for="project-universe">Univers<select id="project-universe" name="universe_id" required{% if editing %} disabled{% endif %}><option value="">Choisir</option>{% for universe in universes %}<option value="{{ universe.id }}"{% if draft.universe_id==universe.id %} selected{% endif %}>{{ universe.name }}</option>{% endfor %}</select></label>
+        <section class="panel" aria-labelledby="project-identity-title">
+            <h2 id="project-identity-title">Identité du modèle</h2>
+            <div class="admin-project-fields">
+                <div class="admin-project-field">
+                    <label for="project-name">Nom du projet</label><input id="project-name" name="name" maxlength="120" required value="{{ draft.name }}">
+                </div>
+                <div class="admin-project-field">
+                    <label for="project-universe">Univers</label><select id="project-universe" name="universe_id" required{% if editing %} disabled{% endif %}><option value="">Choisir</option>{% for universe in universes %}<option value="{{ universe.id }}"{% if draft.universe_id==universe.id %} selected{% endif %}>{{ universe.name }}</option>{% endfor %}</select>
+                </div>
+                <div class="admin-project-field">
+                    <label for="project-description">Description</label><textarea id="project-description" name="description" maxlength="2000">{{ draft.description }}</textarea>
+                </div>
+            </div>
             {% if editing %}<input type="hidden" name="universe_id" value="{{ draft.universe_id }}">{% endif %}
-        </div>
-        <label for="project-description">Description<textarea id="project-description" name="description" maxlength="2000">{{ draft.description }}</textarea></label>
-        <h3>Paliers successifs</h3>
-        <p>Les membres financent un palier à la fois. Une quantité à zéro signifie que cette ressource n’est pas demandée.</p>
-        {% for stage in draft.stages %}
-            <fieldset><legend>Palier {{ loop.index }}</legend>
-                <label for="stage-{{ loop.index0 }}-name">Nom du palier {{ loop.index }}<input id="stage-{{ loop.index0 }}-name" name="stages[{{ loop.index0 }}][name]" required maxlength="80" value="{{ stage.name|default('') }}"{% if focusStage is same as(loop.index0) %} autofocus{% endif %}></label>
-                <div class="form-grid">{% for resource,label in resources %}<label for="stage-{{ loop.parent.loop.index0 }}-{{ resource }}">{{ label }} · palier {{ loop.parent.loop.index }}<input id="stage-{{ loop.parent.loop.index0 }}-{{ resource }}" type="number" name="stages[{{ loop.parent.loop.index0 }}][costs][{{ resource }}]" min="0" max="1000000000" step="1" value="{{ stage.costs[resource]|default(0) }}"></label>{% endfor %}</div>
-            </fieldset>
-        {% endfor %}
-        <div class="guild-hub-actions"><button class="secondary" name="intent" value="add_stage" formnovalidate{% if draft.stages|length>=10 %} disabled{% endif %}>Ajouter un palier</button><button class="secondary" name="intent" value="remove_stage" formnovalidate{% if draft.stages|length<=1 %} disabled{% endif %}>Retirer le dernier palier</button></div>
-        <fieldset><legend>Minimums pour gagner le boost</legend>
-            <p>Chaque minimum positif doit être atteint par le joueur sur l’ensemble des paliers. Il doit encore appartenir à la guilde à la fin. Une valeur à zéro n’ajoute pas de condition sur cette ressource.</p>
-            <div class="form-grid">{% for resource,label in resources %}<label for="minimum-{{ resource }}">Minimum {{ label }}<input id="minimum-{{ resource }}" type="number" name="minimums[{{ resource }}]" min="0" max="10000000000" step="1" value="{{ draft.minimums[resource]|default(0) }}"></label>{% endfor %}</div>
+        </section>
+        <section class="panel" aria-labelledby="project-stages-title">
+            <h2 id="project-stages-title">Paliers successifs</h2>
+            <p>Les membres financent un palier à la fois. Prévoyez un à dix paliers, chacun avec au moins une quantité positive. Zéro signifie que cette ressource n’est pas demandée.</p>
+            {% for stage in draft.stages %}
+                <fieldset class="admin-project-stage"><legend>Palier {{ loop.index }}</legend>
+                    <div class="admin-project-field">
+                        <label for="stage-{{ loop.index0 }}-name">Nom du palier {{ loop.index }}</label><input id="stage-{{ loop.index0 }}-name" name="stages[{{ loop.index0 }}][name]" required maxlength="80" value="{{ stage.name|default('') }}"{% if focusStage is same as(loop.index0) %} autofocus{% endif %}>
+                    </div>
+                    <div class="admin-project-resources">
+                        {% for resource, label in resources %}
+                            <div class="admin-project-field">
+                                <label for="stage-{{ loop.parent.loop.index0 }}-{{ resource }}">{{ label }} · palier {{ loop.parent.loop.index }}</label><input id="stage-{{ loop.parent.loop.index0 }}-{{ resource }}" type="number" name="stages[{{ loop.parent.loop.index0 }}][costs][{{ resource }}]" min="0" max="1000000000" step="1" value="{{ stage.costs[resource]|default(0) }}">
+                            </div>
+                        {% endfor %}
+                    </div>
+                </fieldset>
+            {% endfor %}
+            <div class="admin-project-actions"><button class="secondary" name="intent" value="add_stage" formnovalidate{% if draft.stages|length>=10 %} disabled{% endif %}>Ajouter un palier</button><button class="secondary" name="intent" value="remove_stage" formnovalidate{% if draft.stages|length<=1 %} disabled{% endif %}>Retirer le dernier palier</button></div>
+        </section>
+        <fieldset class="panel"><legend>Minimums pour gagner le boost</legend>
+            <p>Chaque minimum positif doit être atteint par le joueur sur l’ensemble des paliers. Il doit encore appartenir à la guilde à la fin. Au moins un minimum doit être positif ; zéro n’ajoute pas de condition sur cette ressource.</p>
+            <div class="admin-project-resources">
+                {% for resource, label in resources %}
+                    <div class="admin-project-field">
+                        <label for="minimum-{{ resource }}">Minimum {{ label }}</label><input id="minimum-{{ resource }}" type="number" name="minimums[{{ resource }}]" min="0" max="10000000000" step="1" value="{{ draft.minimums[resource]|default(0) }}">
+                    </div>
+                {% endfor %}
+            </div>
         </fieldset>
-        <label><input type="checkbox" name="enabled" value="1"{% if draft.enabled %} checked{% endif %}> Disponible pour de nouveaux lancements</label>
+        <label class="admin-project-availability"><input type="checkbox" name="enabled" value="1"{% if draft.enabled %} checked{% endif %}> Disponible pour de nouveaux lancements</label>
         <p>Un seul boost standard par joueur et modèle, même après changement de guilde. Les dons ne sont pas remboursés. Aucun bonus permanent n’est accordé.</p>
-        <button class="primary" name="intent" value="save">Enregistrer le modèle</button>{% if editing %} <a href="{{ path('app_admin_guild_projects') }}">Annuler la modification</a>{% endif %}
+        <div class="admin-project-actions"><button class="primary" name="intent" value="save">Enregistrer le modèle</button>{% if editing %}<a class="secondary" href="{{ path('app_admin_guild_projects') }}">Annuler la modification</a>{% endif %}</div>
     </form>
 </section>
 {% endblock %}

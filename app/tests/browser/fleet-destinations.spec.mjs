@@ -4,6 +4,14 @@ import { prepareOwnedColony, revealVirginPlanet, revealNpcPlanet, runIsolatedSql
 
 test.use({ hasTouch: true });
 
+async function openFleetNavigation(page) {
+  const menu = page.locator('.space-navigation-menu');
+  const summary = menu.locator('summary');
+  if (await summary.isVisible() && !(await menu.evaluate(element => element.open))) {
+    await summary.click();
+  }
+}
+
 async function prepare(page) {
   const id = crypto.randomUUID().slice(0, 8);
   const email = 'details-' + id + '@example.test';
@@ -148,6 +156,7 @@ test('Les pages Flottes gardent navigation, historique et saisies pendant les ac
         await expect(page.locator('h1')).toHaveText(title);
         await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
         await expect(page.locator('.sidebar a[href="/flottes"]')).toHaveClass(/active/);
+        await openFleetNavigation(page);
         const current=page.getByRole('navigation',{name:'Navigation des flottes'}).locator('[aria-current="page"]');
         await expect(current).toHaveCount(1);
         await expect(current).toHaveAttribute('href', url.includes('compositions') ? '/flottes/compositions' : url);
@@ -163,6 +172,7 @@ test('Les pages Flottes gardent navigation, historique et saisies pendant les ac
   const refreshed=page.waitForResponse(r=>new URL(r.url()).pathname==='/flottes/preparer'&&r.request().headers()['x-genesis-live']==='1');
   await page.evaluate(()=>window.dispatchEvent(new CustomEvent('genesis:refresh')));await refreshed;
   await expect(input).toHaveValue('2');await expect(input).toBeFocused();
+  await openFleetNavigation(page);
   const nav=page.getByRole('navigation',{name:'Navigation des flottes'});
   await nav.getByRole('link',{name:'Demandes d’orbite',exact:true}).focus();await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/flottes\/orbites$/);await page.reload();await expect(page.locator('h1')).toHaveText('Demandes d’orbite');

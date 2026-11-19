@@ -1,10 +1,26 @@
 {% extends 'base.html.twig' %}
 {% block title %}{{ pageTitle }} · Genesis Reborn{% endblock %}
 {% block body %}
-<article class="wiki-guide legal-page" aria-labelledby="legal-title">
+<article class="wiki-guide legal-page entry-workspace information-workspace" aria-labelledby="legal-title" data-page-sections="disabled">
   <header><h1 id="legal-title">{{ pageTitle }}</h1><p>Dernière mise à jour : <time datetime="2026-11-07">7 novembre 2026</time>.</p></header>
-  <aside class="panel" aria-label="État de cette information"><h2>Information provisoire et incomplète</h2><p>Cette page présente les informations disponibles à ce jour. Certains éléments obligatoires restent à compléter : cette publication ne signifie pas que les mentions légales ou l’information sur les données personnelles sont complètes.</p><p>Pour une question ou une demande : <a href="mailto:contact@genesis-reborn.fr">contact@genesis-reborn.fr</a>.</p></aside>
   {% include 'legal/_navigation.html.twig' %}
-  <div class="panel">{% include 'legal/' ~ page ~ '.html.twig' %}</div>
+  <aside class="panel" aria-label="État de cette information"><h2>Information provisoire et incomplète</h2><p>Cette page présente les informations disponibles à ce jour. Certains éléments obligatoires restent à compléter : cette publication ne signifie pas que les mentions légales ou l’information sur les données personnelles sont complètes.</p><p>Pour une question ou une demande : <a href="mailto:contact@genesis-reborn.fr">contact@genesis-reborn.fr</a>.</p></aside>
+  <div class="panel legal-content">
+    {% if page == 'confidentialite' %}
+      <nav class="legal-contents" aria-labelledby="legal-contents-title">
+        <h2 id="legal-contents-title">Dans cette page</h2>
+        <ul>
+          <li><a href="#responsable-contact">Responsable et contact</a></li>
+          <li><a href="#donnees-utilisations">Données et utilisations</a></li>
+          <li><a href="#destinataires-prestataires">Destinataires et prestataires</a></li>
+          <li><a href="#conservation">Conservation</a></li>
+          <li><a href="#droits">Vos droits</a></li>
+          <li><a href="#mineurs">Joueurs mineurs</a></li>
+        </ul>
+      </nav>
+    {% endif %}
+    {% include 'legal/' ~ page ~ '.html.twig' %}
+    <a class="secondary legal-back-top" href="#legal-title">Revenir en haut</a>
+  </div>
 </article>
 {% endblock %}

@@ -1,0 +1,95 @@
+/* L10M A : rédaction puis publication dans un formulaire continu. */
+body.admin-console.admin-patchnotes-workspace .admin-content {
+    overflow-wrap: anywhere;
+}
+
+body.admin-console.admin-patchnotes-workspace :is(.admin-patchnote-list, .admin-patchnote-form, .admin-patchnote-filters, .admin-patchnote-actions) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+    max-width: none;
+}
+
+body.admin-console.admin-patchnotes-workspace .admin-patchnote-list {
+    padding: 0;
+    list-style: none;
+}
+
+body.admin-console.admin-patchnotes-workspace .panel {
+    min-width: 0;
+    padding: 22px;
+    border-radius: 6px;
+}
+
+body.admin-console.admin-patchnotes-workspace :is(.admin-patchnote-list, .admin-patchnote-form) .panel {
+    margin: 0;
+}
+
+body.admin-console.admin-patchnotes-workspace .panel h2 {
+    margin-top: 0;
+    font-size: 21px;
+    line-height: 1.5;
+}
+
+body.admin-console.admin-patchnotes-workspace .admin-patchnote-field {
+    display: grid;
+    min-width: 0;
+    gap: 8px;
+    margin-bottom: 22px;
+}
+
+body.admin-console.admin-patchnotes-workspace .admin-patchnote-field label {
+    margin: 0;
+    font-size: 14px;
+}
+
+body.admin-console.admin-patchnotes-workspace .admin-patchnote-field :is(input, select, textarea) {
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    margin: 0;
+    padding: 12px;
+    font-size: 14px;
+}
+
+body.admin-console.admin-patchnotes-workspace .admin-patchnote-field small {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+body.admin-console.admin-patchnotes-workspace .admin-patchnote-field textarea {
+    min-height: 150px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: inherit;
+    resize: vertical;
+}
+
+body.admin-console.admin-patchnotes-workspace .admin-patchnote-actions :is(a, button),
+body.admin-console.admin-patchnotes-workspace .admin-patchnote-filters button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 46px;
+    font-size: 14px;
+    text-align: left;
+    white-space: normal;
+}
+
+body.admin-console.admin-patchnotes-workspace :is(a, button, input, select, textarea):focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+}
+
+@media (max-width: 760px) {
+    body.admin-console.admin-patchnotes-workspace .panel {
+        padding: 18px;
+    }
+
+    body.admin-console.admin-patchnotes-workspace .admin-patchnote-field :is(input, select, textarea) {
+        font-size: 16px;
+    }
+}

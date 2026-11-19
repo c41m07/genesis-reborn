@@ -20,7 +20,7 @@
         {
           "slug": "lab",
           "tier": "basic",
-          "level": 25
+          "level": 10
         }
       ],
       "technologies": [
@@ -36,12 +36,12 @@
         {
           "slug": "lab",
           "tier": "basic",
-          "level": 25
+          "level": 10
         },
         {
           "slug": "lab",
           "tier": "intermediate",
-          "level": 25
+          "level": 10
         }
       ],
       "technologies": [
@@ -56,22 +56,22 @@
   "economy_value_budget": 10000,
   "cost_profiles": {
     "basic": {
-      "metal": 2000,
-      "nano": 1500,
+      "metal": 2400,
+      "nano": 1300,
       "antimatter": 0,
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 1877,
-      "nano": 1563,
-      "antimatter": 313,
+      "metal": 2127,
+      "nano": 1126,
+      "antimatter": 469,
       "hydrogen": 0
     },
     "superior": {
-      "metal": 1954,
-      "nano": 1367,
-      "antimatter": 586,
-      "hydrogen": 1564
+      "metal": 2187,
+      "nano": 1211,
+      "antimatter": 606,
+      "hydrogen": 1562
     }
   },
   "tier_labels": {

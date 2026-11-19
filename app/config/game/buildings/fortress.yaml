@@ -45,6 +45,11 @@
           "slug": "mine_nano",
           "tier": "intermediate",
           "level": 1
+        },
+        {
+          "slug": "fortress",
+          "tier": "basic",
+          "level": 8
         }
       ]
     },
@@ -59,6 +64,16 @@
           "slug": "mine_nano",
           "tier": "superior",
           "level": 1
+        },
+        {
+          "slug": "fortress",
+          "tier": "basic",
+          "level": 8
+        },
+        {
+          "slug": "fortress",
+          "tier": "intermediate",
+          "level": 8
         }
       ]
     }
@@ -66,21 +81,21 @@
   "economy_value_budget": 12000,
   "cost_profiles": {
     "basic": {
-      "metal": 2400,
-      "nano": 1800,
+      "metal": 2880,
+      "nano": 1560,
       "antimatter": 0,
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 2251,
-      "nano": 1875,
-      "antimatter": 375,
+      "metal": 2549,
+      "nano": 1350,
+      "antimatter": 563,
       "hydrogen": 0
     },
     "superior": {
-      "metal": 2345,
-      "nano": 1641,
-      "antimatter": 703,
+      "metal": 2625,
+      "nano": 1453,
+      "antimatter": 727,
       "hydrogen": 1876
     }
   },

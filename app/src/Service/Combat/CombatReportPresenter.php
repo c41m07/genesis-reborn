@@ -4,6 +4,17 @@ namespace App\Service\Combat;
 /** Présente les données enregistrées, sans rejouer ni modifier le combat. */
 final class CombatReportPresenter
 {
+    /**
+     * @return array{
+     *     rows: list<array<string, mixed>>,
+     *     rows_by_side: array{own: list<array<string, mixed>>, enemy: list<array<string, mixed>>},
+     *     totals: array<string, array{initial: int, lost: int, remaining: int}>,
+     *     round_details: list<array<string, mixed>>,
+     *     reconstruction: list<array<string, mixed>>,
+     *     viewer_defends: bool,
+     *     viewer_verdict: ?string
+     * }
+     */
     public function present(array $snapshot, array $rounds, int $membershipId): array
     {
         $viewerCamp = 'defenders';
@@ -70,7 +81,11 @@ final class CombatReportPresenter
                 $row['accuracy'] = $row['shots'] > 0 ? round(100 * $row['hits'] / $row['shots']) : null;
                 $sides[$row['side']][] = $row;
             }
-            $details[] = ['number' => $number] + $sides;
+            $details[] = [
+                'number' => $number,
+                'shots_count' => array_sum(array_column($rows, 'shots')),
+                'lost_count' => array_sum(array_column($rows, 'round_lost')),
+            ] + $sides;
         }
 
         $reconstruction = [];
@@ -87,7 +102,30 @@ final class CombatReportPresenter
         }
         unset($row);
 
-        return ['rows' => array_values($groups), 'round_details' => $details, 'reconstruction' => array_values($reconstruction), 'viewer_defends' => $viewerDefends, 'viewer_verdict'=>$viewerVerdict];
+        $rowsBySide = ['own' => [], 'enemy' => []];
+        $totals = [
+            'own' => ['initial' => 0, 'lost' => 0, 'remaining' => 0],
+            'enemy' => ['initial' => 0, 'lost' => 0, 'remaining' => 0],
+        ];
+        // Le bilan compte les unités avant reconstruction, selon les camps déjà déterminés.
+        // Il inclut les renforts enregistrés, même s’ils arrivent après le premier round.
+        foreach ($groups as $group) {
+            $group['remaining'] = max(0, $group['initial'] - $group['lost']);
+            $rowsBySide[$group['side']][] = $group;
+            foreach (['initial', 'lost', 'remaining'] as $field) {
+                $totals[$group['side']][$field] += $group[$field];
+            }
+        }
+
+        return [
+            'rows' => array_values($groups),
+            'rows_by_side' => $rowsBySide,
+            'totals' => $totals,
+            'round_details' => $details,
+            'reconstruction' => array_values($reconstruction),
+            'viewer_defends' => $viewerDefends,
+            'viewer_verdict' => $viewerVerdict,
+        ];
     }
 
     private function addGroup(array &$groups, array &$units, array $unit, string $owner, string $role, string $side, string $label, int $round, array $snapshot): void

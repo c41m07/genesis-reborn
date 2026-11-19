@@ -69,6 +69,11 @@ async function inspectPage(page, user, row, width, theme) {
     await expect(active).toHaveAttribute('href', row.entry);
   } else await expect(page.locator('.header-tools a[href="/wiki"]')).toHaveAttribute('aria-current', row.url === '/wiki' ? 'page' : 'location');
   if (row.space) {
+    const space = page.getByRole('navigation', { name: row.space, exact: true, includeHidden: true });
+    const menu = page.locator('.space-navigation-menu:not([open])').filter({ has: space });
+    if (await menu.count()) {
+      await menu.locator(':scope > summary').click();
+    }
     const active = page.getByRole('navigation', {
       name: row.space,
       exact: true
@@ -192,6 +197,11 @@ test('Recette finale : espaces sans guilde, colonie active, thèmes, clavier et 
     }
   }
   await page.goto('/flottes');
+  // Sur mobile, ouvrir le menu natif avant de parcourir ses liens au clavier.
+  const fleetMenu = page.locator('.space-navigation-menu');
+  await fleetMenu.locator('summary').focus();
+  await page.keyboard.press('Enter');
+  await expect(fleetMenu).toHaveAttribute('open', '');
   const prepare = page.getByRole('navigation', {
     name: 'Navigation des flottes',
     exact: true

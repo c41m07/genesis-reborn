@@ -1,0 +1,198 @@
+/* L10A : accueil, entrées des espaces et comptes. Les autres pages gardent leur présentation. */
+body.admin-workspace .admin-content {
+    min-width: 0;
+}
+
+body.admin-workspace :is(a, button, input, select, summary):focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+}
+
+body.admin-workspace .admin-home-wide {
+    grid-column: 1 / -1;
+}
+
+body.admin-workspace .admin-home-actions a {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    min-height: 68px;
+    text-align: left;
+}
+
+body.admin-workspace .admin-home-actions :is(strong, small) {
+    display: block;
+}
+
+body.admin-workspace .admin-home-actions small {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 400;
+}
+
+body.admin-workspace .admin-section-heading {
+    flex-wrap: wrap;
+}
+
+body.admin-workspace :is(.admin-section-heading a, .admin-home-audit summary, .admin-breadcrumbs a, .admin-secondary-nav a, .admin-sidebar-footer a, .admin-sidebar-footer button) {
+    min-height: 44px;
+    align-content: center;
+}
+
+body.admin-workspace .admin-module-card {
+    overflow-wrap: anywhere;
+}
+
+body.admin-workspace #admin-players .admin-search {
+    display: grid;
+    grid-template-columns: minmax(180px, 2fr) repeat(2, minmax(130px, 1fr)) auto;
+    gap: 14px;
+    align-items: end;
+    margin: 24px 0;
+}
+
+body.admin-workspace #admin-players .admin-search > div {
+    display: grid;
+    gap: 7px;
+    min-width: 0;
+}
+
+body.admin-workspace #admin-players .admin-search :is(input, select, button) {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    min-height: 46px;
+    margin: 0;
+}
+
+body.admin-workspace .admin-players-table {
+    table-layout: fixed;
+    width: 100%;
+    min-width: 0;
+    font-size: 12px;
+}
+
+body.admin-workspace .admin-players-table :is(th, td) {
+    padding: 14px 10px;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+body.admin-workspace .admin-players-table th:nth-child(1) { width: 16%; }
+body.admin-workspace .admin-players-table th:nth-child(2) { width: 19%; }
+body.admin-workspace .admin-players-table th:nth-child(3) { width: 15%; }
+body.admin-workspace .admin-players-table th:nth-child(4) { width: 9%; }
+body.admin-workspace .admin-players-table th:nth-child(5) { width: 12%; }
+body.admin-workspace .admin-players-table th:nth-child(6) { width: 29%; }
+
+body.admin-workspace .admin-cell-value {
+    min-width: 0;
+}
+
+body.admin-workspace .admin-player-action-list {
+    display: grid;
+    gap: 8px;
+}
+
+body.admin-workspace .admin-player-actions form {
+    display: block;
+    margin: 0;
+}
+
+body.admin-workspace .admin-players-table .admin-player-actions {
+    display: table-cell;
+}
+
+body.admin-workspace .admin-player-actions button {
+    min-height: 44px;
+    width: 100%;
+    padding: 10px;
+    font-size: 12px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+body.admin-workspace .admin-player-name a {
+    display: block;
+    min-height: 44px;
+}
+
+body.admin-workspace .admin-players-table .badge {
+    max-width: 100%;
+    font-size: 12px;
+    letter-spacing: normal;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 1050px) {
+    body.admin-workspace #admin-players .admin-search {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* Les six colonnes restent dans le HTML ; la lecture passe par compte dès que l'espace manque. */
+    body.admin-workspace .admin-players-table,
+    body.admin-workspace .admin-players-table tbody {
+        display: block;
+    }
+
+    body.admin-workspace .admin-players-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+    }
+
+    body.admin-workspace .admin-players-table tr:not([hidden]) {
+        display: block;
+        margin-bottom: 16px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    body.admin-workspace .admin-players-table tbody th.admin-player-name {
+        display: block;
+        width: auto;
+        font-size: 16px;
+    }
+
+    body.admin-workspace .admin-players-table caption {
+        display: block;
+        width: auto;
+    }
+
+    body.admin-workspace .admin-players-table td[data-label] {
+        display: grid;
+        grid-template-columns: 90px minmax(0, 1fr);
+        gap: 12px;
+        width: auto;
+    }
+
+    body.admin-workspace .admin-players-table td[data-label]::before {
+        content: attr(data-label);
+        color: var(--muted);
+    }
+
+    body.admin-workspace .admin-players-table td[colspan] {
+        display: block;
+    }
+}
+
+@media (max-width: 760px) {
+    body.admin-workspace #admin-players .admin-search {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.admin-workspace #admin-players .admin-search :is(input, select) {
+        font-size: 16px;
+    }
+
+    body.admin-workspace .admin-players-table {
+        font-size: 14px;
+    }
+}

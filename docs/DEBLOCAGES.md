@@ -1,12 +1,12 @@
-# Déblocages initiaux permanents — grille actualisée le 17 novembre 2026
+# Déblocages initiaux permanents — grille actualisée le 18 novembre 2026
 
 Lot 1 fusionné dans `dev` par la [PR #69](https://github.com/c41m07/genesis-reborn/pull/69), après CI complète réussie. Voir le [suivi de mission](PROGRESSION_CARBURANT_UNITES.md) pour les vérifications et l’état réel de l’intégration. Aucune activation sur la base de jeu ni publication Alpha annoncée.
 
 ## Lecture
 
-Les tableaux donnent les conditions complètes : toutes appartiennent au rang demandé, sauf les cinq passerelles explicites ci-dessous. Aucun autre rang du même élément, aucune ancienne spécialisation ni recherche implicite ne s’ajoute. Les libellés de famille ci-dessous gardent leurs variantes dans le jeu.
+Les tableaux donnent les conditions complètes et indiquent les exceptions où un autre rang intervient. Les libellés de famille ci-dessous gardent leurs variantes dans le jeu.
 
-Les conditions sont initiales et permanentes après acquisition selon cette grille. Elles ne changent pas pendant les améliorations. Recherches : accès du joueur dans l’univers, depuis toute colonie après déblocage, sans laboratoire local permanent. Bâtiments, vaisseaux et défenses : accès du joueur sur la colonie concernée. Prix, plafonds, durées et conditions de mission restent applicables.
+Les conditions sont initiales et permanentes après acquisition selon cette grille. Elles ne changent pas pendant les améliorations. Recherches : déblocage partagé dans l’univers. Chaque ajout exige aussi le laboratoire du rang commandé, au niveau 1 minimum sur la colonie de lancement. Bâtiments, vaisseaux et défenses : accès du joueur sur la colonie concernée. Prix, plafonds, durées et conditions de mission restent applicables.
 
 ## Bâtiments — 13
 
@@ -14,9 +14,9 @@ Les conditions sont initiales et permanentes après acquisition selon cette gril
 |---|---|---|---|
 | Mine à ciel ouvert (`mine_metal`) | Aucun | Même bâtiment Basique 25 + Ingénierie de chantier automatisée 5 | Même bâtiment Basique 50 + même bâtiment Intermédiaire 25 + Planification industrielle intégrée 5 |
 | Atelier de nanofabrication (`mine_nano`) | Aucun | Même bâtiment Basique 25 + Ingénierie de chantier automatisée 5 | Même bâtiment Basique 50 + même bâtiment Intermédiaire 25 + Planification industrielle intégrée 5 |
-| Raffinerie d’hydrogène (`mine_hydrogen`) | Aucun | Même bâtiment Basique 25 + Ingénierie de chantier automatisée 5 | Même bâtiment Basique 50 + même bâtiment Intermédiaire 25 + Planification industrielle intégrée 5 |
+| Raffinerie d’hydrogène (`mine_hydrogen`) | Génie civil colonial 3 | Même bâtiment Basique 25 + Ingénierie de chantier automatisée 3 | Même bâtiment Basique 50 + même bâtiment Intermédiaire 25 + Planification industrielle intégrée 3 |
 | Centrale nucléaire (`power_plant`) | Aucun | Même bâtiment Basique 25 + Ingénierie de chantier automatisée 5 | Même bâtiment Basique 50 + même bâtiment Intermédiaire 25 + Planification industrielle intégrée 5 |
-| Laboratoire colonial (`lab`) | Aucun | Laboratoire colonial Basique 25 + Génie civil colonial Basique 5 | Laboratoire colonial Basique 25 + Institut de recherche orbitale Intermédiaire 25 + Ingénierie de chantier automatisée Intermédiaire 5 |
+| Laboratoire colonial (`lab`) | Aucun | Laboratoire colonial Basique 10 + Génie civil colonial 5 | Laboratoire colonial Basique 10 + Institut de recherche orbitale Intermédiaire 10 + Ingénierie de chantier automatisée 5 |
 
 Les quatre producteurs utilisent la recherche industrielle du rang à débloquer.
 Le laboratoire utilise celle du rang précédent : exiger une recherche du rang
@@ -27,18 +27,31 @@ mémorisés. Aucun changement de version du registre ni requalification supplém
 Les coûts, durées et plafonds restent conservés ; l’effet sur les délais de
 progression de cette révision n’est pas mesuré.
 
-Pour les huit autres familles, les conditions suivantes s’appliquent dans chacun des trois rangs :
+| Famille | Conditions du même rang | En plus pour l’Intermédiaire | En plus pour le Supérieur |
+|---|---|---|---|
+| Piège à antimatière (`mine_antimatter`) | Raffinerie d’hydrogène 5 + recherche industrielle 5 | — | — |
+| Chantier d’assemblage (`shipyard`) | Mine de métal 2 + producteur de nano 2 | Chantier Basique 20 | Chantiers Basique et Intermédiaire 20 |
+| Bunker de défense (`fortress`) | Mine de métal 1 + producteur de nano 1 | Bunker Basique 8 | Bunkers Basique et Intermédiaire 8 |
 
-| Famille | Conditions du même rang |
+La recherche industrielle s’appelle Génie civil colonial en Basique,
+Ingénierie de chantier automatisée en Intermédiaire et Planification
+industrielle intégrée en Supérieur.
+
+Les cinq stockages suivent la même progression sur la colonie.
+
+| Rang du stockage | Conditions de déblocage initial | Niveau maximum pour les nouvelles commandes |
+|---|---|---|
+| Basique | Producteur de la ressource Basique 5 | 5 |
+| Intermédiaire | Producteur de la ressource Intermédiaire 5 + même stockage Basique 5 | 5 |
+| Supérieur | Producteur de la ressource Supérieur 5 + même stockage Basique 5 + même stockage Intermédiaire 5 | Illimité |
+
+| Stockage (nom de famille) | Producteur correspondant |
 |---|---|
-| Piège à antimatière (`mine_antimatter`) | Raffinerie d’hydrogène 3 + Laboratoire colonial 2 |
-| Chantier d’assemblage (`shipyard`) | Mine à ciel ouvert 2 + Atelier de nanofabrication 2 |
-| Bunker de défense (`fortress`) | Mine à ciel ouvert 1 + Atelier de nanofabrication 1 |
-| Dépôt de minerais (`storage_metal`) | Mine à ciel ouvert 5 |
-| Coffre de nanomatériaux (`storage_nano`) | Atelier de nanofabrication 5 |
-| Réservoir cryogénique (`storage_hydrogen`) | Raffinerie d’hydrogène 5 |
-| Batterie de colonie (`storage_electricity`) | Centrale nucléaire 5 |
-| Cage magnétique (`storage_antimatter`) | Piège à antimatière 5 |
+| Dépôt de minerais (`storage_metal`) | Mine à ciel ouvert |
+| Coffre de nanomatériaux (`storage_nano`) | Atelier de nanofabrication |
+| Réservoir cryogénique (`storage_hydrogen`) | Raffinerie d’hydrogène |
+| Batterie de colonie (`storage_electricity`) | Centrale nucléaire |
+| Cage magnétique (`storage_antimatter`) | Piège à antimatière |
 
 ## Recherches — 19
 
@@ -118,13 +131,13 @@ Toutes les conditions appartiennent au rang demandé.
 
 ## Parcours
 
-• Métal 2 + nano 2 → chantier 1 → chasseur et sonde, sans recherche supplémentaire.
+• En Basique, métal 2 + nano 2 → chantier 1 → chasseur et sonde.
 
-• Hydrogène 3 + laboratoire 2 → piège à antimatière ; piège 5 → stockage d’antimatière.
+• Producteur d’hydrogène 5 sur la colonie + recherche industrielle 5 dans l’univers → piège à antimatière du même rang. Le piège 5 remplit le prérequis de production du stockage d’antimatière du même rang.
 
-• Mine de métal 1 + atelier de nanofabrication 1 → bunker 1 → défense anti-léger, sans chantier, laboratoire ni recherche supplémentaire.
+• En Basique, mine de métal 1 + atelier de nanofabrication 1 → bunker 1 → défense anti-léger.
 
-• Chaque stockage exige son producteur du même rang au niveau 5 ; aucun stockage précédent.
+• Chaque stockage exige son producteur du même rang au niveau 5. Les rangs avancés exigent aussi le niveau 5 du même stockage dans chacun des rangs précédents. Les accès déjà acquis, les niveaux existants et les commandes déjà payées sont conservés.
 
 Le test de parcours explore les 156 profils (150 existants et 6 nouveaux) depuis les entrées libres avec leurs plafonds réels. Il vérifie l’accessibilité et les cycles, sans prétendre mesurer le financement ou un délai de progression.
 

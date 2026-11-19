@@ -1,0 +1,274 @@
+{
+  "revision": "5ab65726ed504d52db55f50cc3a3b3cd6c9b0db0",
+  "research_time_base": 288000,
+  "profiles": {
+    "buildings": {
+      "fortress": {
+        "basic": {"metal": 2880, "nano": 1560, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 2625, "nano": 1312, "antimatter": 563, "hydrogen": 0},
+        "superior": {"metal": 2345, "nano": 1641, "antimatter": 703, "hydrogen": 1876}
+      },
+      "lab": {
+        "basic": {"metal": 2400, "nano": 1300, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 2189, "nano": 1095, "antimatter": 469, "hydrogen": 0},
+        "superior": {"metal": 1954, "nano": 1367, "antimatter": 586, "hydrogen": 1564}
+      },
+      "mine_antimatter": {
+        "basic": {"metal": 288, "nano": 156, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 264, "nano": 131, "antimatter": 56, "hydrogen": 0},
+        "superior": {"metal": 235, "nano": 164, "antimatter": 70, "hydrogen": 189}
+      },
+      "mine_hydrogen": {
+        "basic": {"metal": 384, "nano": 208, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 350, "nano": 175, "antimatter": 75, "hydrogen": 0},
+        "superior": {"metal": 312, "nano": 219, "antimatter": 94, "hydrogen": 250}
+      },
+      "mine_metal": {
+        "basic": {"metal": 384, "nano": 208, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 350, "nano": 175, "antimatter": 75, "hydrogen": 0},
+        "superior": {"metal": 312, "nano": 219, "antimatter": 94, "hydrogen": 248}
+      },
+      "mine_nano": {
+        "basic": {"metal": 384, "nano": 208, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 350, "nano": 175, "antimatter": 75, "hydrogen": 0},
+        "superior": {"metal": 312, "nano": 219, "antimatter": 94, "hydrogen": 250}
+      },
+      "power_plant": {
+        "basic": {"metal": 1152, "nano": 624, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 1050, "nano": 525, "antimatter": 225, "hydrogen": 0},
+        "superior": {"metal": 938, "nano": 656, "antimatter": 281, "hydrogen": 752}
+      },
+      "shipyard": {
+        "basic": {"metal": 4800, "nano": 2600, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 4375, "nano": 2188, "antimatter": 938, "hydrogen": 0},
+        "superior": {"metal": 3906, "nano": 2735, "antimatter": 1172, "hydrogen": 3124}
+      },
+      "storage_antimatter": {
+        "basic": {"metal": 1201, "nano": 650, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 1096, "nano": 547, "antimatter": 235, "hydrogen": 0},
+        "superior": {"metal": 978, "nano": 684, "antimatter": 293, "hydrogen": 784}
+      },
+      "storage_electricity": {
+        "basic": {"metal": 1201, "nano": 650, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 1096, "nano": 547, "antimatter": 235, "hydrogen": 0},
+        "superior": {"metal": 978, "nano": 684, "antimatter": 293, "hydrogen": 784}
+      },
+      "storage_hydrogen": {
+        "basic": {"metal": 1201, "nano": 650, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 1096, "nano": 547, "antimatter": 235, "hydrogen": 0},
+        "superior": {"metal": 978, "nano": 684, "antimatter": 293, "hydrogen": 784}
+      },
+      "storage_metal": {
+        "basic": {"metal": 1201, "nano": 650, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 1096, "nano": 547, "antimatter": 235, "hydrogen": 0},
+        "superior": {"metal": 978, "nano": 684, "antimatter": 293, "hydrogen": 784}
+      },
+      "storage_nano": {
+        "basic": {"metal": 1201, "nano": 650, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 1096, "nano": 547, "antimatter": 235, "hydrogen": 0},
+        "superior": {"metal": 978, "nano": 684, "antimatter": 293, "hydrogen": 784}
+      }
+    },
+    "technologies": {
+      "automated_defense_repair": {
+        "basic": {"metal": 960, "nano": 520, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 876, "nano": 437, "antimatter": 188, "hydrogen": 0},
+        "superior": {"metal": 782, "nano": 547, "antimatter": 235, "hydrogen": 624}
+      },
+      "colonial_expansion": {
+        "basic": {"metal": 5280, "nano": 2860, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 4814, "nano": 2407, "antimatter": 1031, "hydrogen": 0},
+        "superior": {"metal": 4298, "nano": 3009, "antimatter": 1289, "hydrogen": 3438}
+      },
+      "cryogenic_reserves": {
+        "basic": {"metal": 2400, "nano": 1300, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 2190, "nano": 1094, "antimatter": 469, "hydrogen": 0},
+        "superior": {"metal": 1954, "nano": 1368, "antimatter": 586, "hydrogen": 1562}
+      },
+      "engineering_foundations": {
+        "basic": {"metal": 960, "nano": 520, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 876, "nano": 437, "antimatter": 188, "hydrogen": 0},
+        "superior": {"metal": 782, "nano": 547, "antimatter": 235, "hydrogen": 624}
+      },
+      "evasive_navigation": {
+        "basic": {"metal": 1440, "nano": 780, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 1314, "nano": 657, "antimatter": 281, "hydrogen": 0},
+        "superior": {"metal": 1172, "nano": 821, "antimatter": 352, "hydrogen": 938}
+      },
+      "intelligence_countermeasures": {
+        "basic": {"metal": 1440, "nano": 780, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 1314, "nano": 657, "antimatter": 281, "hydrogen": 0},
+        "superior": {"metal": 1172, "nano": 821, "antimatter": 352, "hydrogen": 938}
+      },
+      "modular_cargo_bays": {
+        "basic": {"metal": 2400, "nano": 1300, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 2190, "nano": 1094, "antimatter": 469, "hydrogen": 0},
+        "superior": {"metal": 1954, "nano": 1368, "antimatter": 586, "hydrogen": 1562}
+      },
+      "nanomaterial_synthesis": {
+        "basic": {"metal": 960, "nano": 520, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 876, "nano": 437, "antimatter": 188, "hydrogen": 0},
+        "superior": {"metal": 782, "nano": 547, "antimatter": 235, "hydrogen": 624}
+      },
+      "naval_engineering": {
+        "basic": {"metal": 960, "nano": 520, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 876, "nano": 437, "antimatter": 188, "hydrogen": 0},
+        "superior": {"metal": 782, "nano": 547, "antimatter": 235, "hydrogen": 624}
+      },
+      "rapid_fire_cycle": {
+        "basic": {"metal": 5760, "nano": 3120, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 5250, "nano": 2625, "antimatter": 1125, "hydrogen": 0},
+        "superior": {"metal": 4688, "nano": 3282, "antimatter": 1406, "hydrogen": 3752}
+      },
+      "shield_harmonics": {
+        "basic": {"metal": 3840, "nano": 2080, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 3500, "nano": 1750, "antimatter": 750, "hydrogen": 0},
+        "superior": {"metal": 3125, "nano": 2188, "antimatter": 937, "hydrogen": 2502}
+      },
+      "signature_masking": {
+        "basic": {"metal": 960, "nano": 520, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 876, "nano": 437, "antimatter": 188, "hydrogen": 0},
+        "superior": {"metal": 782, "nano": 547, "antimatter": 235, "hydrogen": 624}
+      },
+      "signature_reduction": {
+        "basic": {"metal": 1440, "nano": 780, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 1314, "nano": 657, "antimatter": 281, "hydrogen": 0},
+        "superior": {"metal": 1172, "nano": 821, "antimatter": 352, "hydrogen": 938}
+      },
+      "structural_armor": {
+        "basic": {"metal": 3840, "nano": 2080, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 3500, "nano": 1750, "antimatter": 750, "hydrogen": 0},
+        "superior": {"metal": 3125, "nano": 2188, "antimatter": 937, "hydrogen": 2502}
+      },
+      "tactical_intelligence": {
+        "basic": {"metal": 1201, "nano": 650, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 1095, "nano": 547, "antimatter": 235, "hydrogen": 0},
+        "superior": {"metal": 978, "nano": 685, "antimatter": 293, "hydrogen": 782}
+      },
+      "target_acquisition": {
+        "basic": {"metal": 960, "nano": 520, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 876, "nano": 437, "antimatter": 188, "hydrogen": 0},
+        "superior": {"metal": 782, "nano": 547, "antimatter": 235, "hydrogen": 624}
+      },
+      "vector_propulsion": {
+        "basic": {"metal": 2400, "nano": 1300, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 2190, "nano": 1094, "antimatter": 469, "hydrogen": 0},
+        "superior": {"metal": 1954, "nano": 1368, "antimatter": 586, "hydrogen": 1562}
+      },
+      "weapon_calibration": {
+        "basic": {"metal": 5760, "nano": 3120, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 5250, "nano": 2625, "antimatter": 1125, "hydrogen": 0},
+        "superior": {"metal": 4688, "nano": 3282, "antimatter": 1406, "hydrogen": 3752}
+      },
+      "weapons_engineering": {
+        "basic": {"metal": 5760, "nano": 3120, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 5250, "nano": 2625, "antimatter": 1125, "hydrogen": 0},
+        "superior": {"metal": 4688, "nano": 3282, "antimatter": 1406, "hydrogen": 3752}
+      }
+    },
+    "ships": {
+      "battleship": {
+        "basic": {"metal": 52921, "nano": 28665, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 48235, "nano": 24118, "antimatter": 10336, "hydrogen": 0},
+        "superior": {"metal": 43068, "nano": 30148, "antimatter": 12920, "hydrogen": 34456}
+      },
+      "bomber": {
+        "basic": {"metal": 5161, "nano": 2795, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 4705, "nano": 2353, "antimatter": 1008, "hydrogen": 0},
+        "superior": {"metal": 4201, "nano": 2941, "antimatter": 1260, "hydrogen": 3362}
+      },
+      "capital": {
+        "basic": {"metal": 90612, "nano": 49082, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 82590, "nano": 41295, "antimatter": 17698, "hydrogen": 0},
+        "superior": {"metal": 73741, "nano": 51619, "antimatter": 22123, "hydrogen": 58992}
+      },
+      "colony_ship": {
+        "basic": {"metal": 9600, "nano": 5200, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 8752, "nano": 4375, "antimatter": 1875, "hydrogen": 0},
+        "superior": {"metal": 7812, "nano": 5469, "antimatter": 2344, "hydrogen": 6250}
+      },
+      "corvette": {
+        "basic": {"metal": 6720, "nano": 3640, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 6125, "nano": 3062, "antimatter": 1313, "hydrogen": 0},
+        "superior": {"metal": 5469, "nano": 3829, "antimatter": 1641, "hydrogen": 4374}
+      },
+      "cruiser": {
+        "basic": {"metal": 29215, "nano": 15825, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 26632, "nano": 13315, "antimatter": 5707, "hydrogen": 0},
+        "superior": {"metal": 23776, "nano": 16643, "antimatter": 7133, "hydrogen": 19022}
+      },
+      "destroyer": {
+        "basic": {"metal": 20213, "nano": 10949, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 18426, "nano": 9212, "antimatter": 3948, "hydrogen": 0},
+        "superior": {"metal": 16451, "nano": 11515, "antimatter": 4935, "hydrogen": 13160}
+      },
+      "fighter": {
+        "basic": {"metal": 1440, "nano": 780, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 1314, "nano": 657, "antimatter": 281, "hydrogen": 0},
+        "superior": {"metal": 1172, "nano": 821, "antimatter": 352, "hydrogen": 936}
+      },
+      "frigate": {
+        "basic": {"metal": 10934, "nano": 5923, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 9968, "nano": 4984, "antimatter": 2136, "hydrogen": 0},
+        "superior": {"metal": 8899, "nano": 6230, "antimatter": 2670, "hydrogen": 7120}
+      },
+      "heavy_fighter": {
+        "basic": {"metal": 3552, "nano": 1924, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 3239, "nano": 1619, "antimatter": 694, "hydrogen": 0},
+        "superior": {"metal": 2892, "nano": 2025, "antimatter": 868, "hydrogen": 2312}
+      },
+      "hydrogen_collector": {
+        "basic": {"metal": 384, "nano": 208, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 350, "nano": 175, "antimatter": 75, "hydrogen": 0},
+        "superior": {"metal": 312, "nano": 219, "antimatter": 94, "hydrogen": 248}
+      },
+      "interceptor": {
+        "basic": {"metal": 1764, "nano": 956, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 1609, "nano": 805, "antimatter": 345, "hydrogen": 0},
+        "superior": {"metal": 1438, "nano": 1007, "antimatter": 431, "hydrogen": 1150}
+      },
+      "probe": {
+        "basic": {"metal": 240, "nano": 130, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 219, "nano": 110, "antimatter": 47, "hydrogen": 0},
+        "superior": {"metal": 196, "nano": 138, "antimatter": 59, "hydrogen": 156}
+      },
+      "solar_satellite": {
+        "basic": {"metal": 384, "nano": 208, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 350, "nano": 175, "antimatter": 75, "hydrogen": 0},
+        "superior": {"metal": 312, "nano": 219, "antimatter": 94, "hydrogen": 248}
+      },
+      "stealth_fighter": {
+        "basic": {"metal": 5856, "nano": 3172, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 5339, "nano": 2669, "antimatter": 1144, "hydrogen": 0},
+        "superior": {"metal": 4766, "nano": 3336, "antimatter": 1430, "hydrogen": 3814}
+      },
+      "transport": {
+        "basic": {"metal": 5760, "nano": 3120, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 5252, "nano": 2625, "antimatter": 1125, "hydrogen": 0},
+        "superior": {"metal": 4688, "nano": 3282, "antimatter": 1407, "hydrogen": 3748}
+      }
+    },
+    "defenses": {
+      "ground_turret_anti_light": {
+        "basic": {"metal": 1200, "nano": 650, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 875, "nano": 438, "antimatter": 187, "hydrogen": 0},
+        "superior": {"metal": 625, "nano": 437, "antimatter": 188, "hydrogen": 500}
+      },
+      "ground_turret_anti_escort": {
+        "basic": {"metal": 4320, "nano": 2340, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 3152, "nano": 1575, "antimatter": 675, "hydrogen": 0},
+        "superior": {"metal": 2251, "nano": 1575, "antimatter": 675, "hydrogen": 1802}
+      },
+      "ground_turret_anti_heavy": {
+        "basic": {"metal": 11280, "nano": 6110, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 8225, "nano": 4112, "antimatter": 1763, "hydrogen": 0},
+        "superior": {"metal": 5875, "nano": 4113, "antimatter": 1762, "hydrogen": 4700}
+      },
+      "ground_turret_anti_capital": {
+        "basic": {"metal": 30720, "nano": 16640, "antimatter": 0, "hydrogen": 0},
+        "intermediate": {"metal": 22400, "nano": 11200, "antimatter": 4800, "hydrogen": 0},
+        "superior": {"metal": 16000, "nano": 11200, "antimatter": 4800, "hydrogen": 12800}
+      }
+    }
+  }
+}

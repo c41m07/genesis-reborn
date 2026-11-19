@@ -1,13 +1,15 @@
 # Synthèse de conception
 
-## Répartition des prix retenue — 16 novembre 2026
+## Répartition des prix courante
 
 Les 156 profils par défaut utilisent les parts de valeur M/N/A/H suivantes :
-Basique 40/60/0/0, Intermédiaire 30/50/20/0 et Supérieur 25/35/30/10.
+Basique 48/52/0/0, Intermédiaire 34/36/30/0 et Supérieur 28/31/31/10.
 La valeur est M×2 + N×4 + A×8 + H ; il ne s’agit pas de quantités brutes ni d’un marché.
 Les quantités sont entières et conservent le budget de base propre à chaque profil,
 y compris ceux des défenses. Les courbes et arrondis après croissance/remises restent
-inchangés, comme les durées et la taxe électrique. Les nouveaux prix concernent les
+appliqués. La famille Expansion coloniale (Protocoles de colonisation au rang
+Basique) utilise une base de 28 800 s pour tous ses rangs et niveaux. La taxe
+électrique suit la durée effective avec la formule existante. Les nouveaux prix concernent les
 nouvelles commandes ; les coûts déjà payés restent la référence des annulations et
 résolutions. Les réglages personnalisés d’univers gardent leur priorité.
 La formule de points reste fondée sur les quantités brutes des prix courants,
@@ -68,26 +70,36 @@ cours bloque l’opération entière jusqu’à sa résolution. Le dernier admin
 actif doit désigner un successeur avant de supprimer son compte.
 
 ## Colonie
-Métal, électricité, antimatière, hydrogène et nano par planète. La simulation intègre les stocks par segments entre épuisement et capacité. Les usines adaptent leur rendement à l’électricité disponible avec un plancher de 10 % ; l’antimatière exige aussi de l’hydrogène. Coûts et durées sont autoritaires côté serveur. Les coûts des trois rangs suivent des profils par catégorie avec budgets de valeur constants. Technologies par PlayerUniverse : le laboratoire est un prérequis initial, sans obligation locale permanente après déblocage. La file de recherche est commune au joueur dans l’univers.
+Métal, électricité, antimatière, hydrogène et nano par planète. La simulation intègre les stocks par segments entre épuisement et capacité. Les usines adaptent leur rendement à l’électricité disponible avec un plancher de 10 % ; l’antimatière exige aussi de l’hydrogène. Coûts et durées sont autoritaires côté serveur. Les coûts des trois rangs suivent des profils par catégorie avec budgets de valeur constants. Les technologies sont débloquées par joueur et par univers. Chaque nouvelle commande de recherche exige aussi un laboratoire du même rang au niveau 1 ou plus sur la colonie de lancement. La file de recherche est commune au joueur dans l’univers.
 
-### Prérequis par rang — grille actualisée le 17 novembre 2026
+### Prérequis par rang — grille actualisée le 18 novembre 2026
 
 Chaque famille utilise la [grille complète des prérequis](DEBLOCAGES.md).
-Les quatre producteurs de départ (métal, nano, hydrogène et centrale) sont libres
-au rang Basique. Leur Intermédiaire exige le même bâtiment Basique 25 et
-Ingénierie de chantier automatisée Intermédiaire 5. Leur Supérieur exige le même
-bâtiment Basique 50, son Intermédiaire 25 et Planification industrielle intégrée
-Supérieure 5.
+Le métal, le nano et la centrale sont libres au rang Basique. Leur
+Intermédiaire exige le même bâtiment Basique 25 et Ingénierie de chantier
+automatisée 5. Leur Supérieur exige le même bâtiment Basique 50, son
+Intermédiaire 25 et Planification industrielle intégrée 5. L’hydrogène
+utilise les mêmes seuils de bâtiments et exige sa recherche industrielle
+du même rang au niveau 3, dès le Basique.
 
-Le laboratoire reste libre en Basique. Son Intermédiaire exige Laboratoire
-colonial Basique 25 + Génie civil colonial Basique 5. Son Supérieur exige
-Laboratoire colonial Basique 25 + Institut de recherche orbitale Intermédiaire 25
-et Ingénierie de chantier automatisée Intermédiaire 5. La recherche du rang
-précédent évite un cycle ; le plafond du laboratoire reste 25.
+Le laboratoire reste libre en Basique. Son Intermédiaire exige le laboratoire
+Basique 10 et Génie civil colonial 5. Son Supérieur exige les laboratoires
+Basique et Intermédiaire 10 et Ingénierie de chantier automatisée 5. La
+recherche du rang précédent évite un cycle. Le laboratoire est plafonné à 25.
 
-Les huit autres bâtiments gardent leurs conditions du même rang : les stockages
-exigent leur producteur 5, le chantier métal 2 + nano 2, le piège hydrogène 3 +
-laboratoire 2 et le bunker métal 1 + nano 1, sans recherche supplémentaire.
+Chaque stockage exige son producteur du même rang niveau 5 sur la colonie.
+L’Intermédiaire exige aussi le même stockage Basique niveau 5. Le Supérieur
+exige les deux rangs précédents de ce stockage au niveau 5. Les nouvelles
+commandes sont plafonnées à 5 en Basique et en Intermédiaire. Le Supérieur a
+une progression sans plafond. Les niveaux historiques, leur capacité et les
+commandes déjà payées sont conservés.
+
+Le chantier exige métal 2 et nano 2, et le bunker métal 1 et nano 1,
+dans le rang demandé. Pour les rangs avancés, le même bâtiment doit
+atteindre le niveau 20 (chantier) ou 8 (bunker) dans chaque rang précédent.
+Le Piège à antimatière exige le producteur d’hydrogène 5 sur la colonie et
+la recherche industrielle 5 dans l’univers, tous deux du rang demandé.
+Le laboratoire niveau 1 du même rang sert au déblocage initial de cette recherche.
 Les accès déjà acquis restent conservés ; cette révision ne change pas la version
 du registre et ne nécessite aucune nouvelle requalification. Coûts, durées,
 plafonds et surcharges d’univers restent applicables. L’effet de ces nouveaux
@@ -121,10 +133,16 @@ identique dans les trois rangs. À 50 % de vitesse, le carburant du trajet est d
 par deux ; le maintien des missions qui le facturent reste indépendant de ce choix.
 Aucun coût horaire supplémentaire pour le stationnement sur une colonie possédée.
 Les réservations historiques restent conservées ; les coefficients des nouveaux
-départs sont figés pour leurs rappels et replis. Vitesses, distances, réservoirs,
+départs sont figés pour leurs rappels et replis. Vitesses, réservoirs,
 soutes et usages des unités déjà possédées restent conservés.
 
-UA universelle. Intra-système : abs(positionB-positionA) × 10. Inter-systèmes : sortie 100−positionA×10, hyperespace hypot(dx,dy)×100, entrée 100−positionB×10. Temps par segment = distance / (vitesse minimale de flotte × ratio). Ratio entre 0.1 et 1. Aller-retour symétrique. Carburant aller + stationnement + retour réservé avant départ. Consommation proportionnelle au ratio de vitesse. Chaque vaisseau possède un petit réservoir exclusivement pour le carburant ; les soutes cargo peuvent embarquer le fret et le carburant supplémentaire. Consommation d'orbite horaire indépendante du ratio. Navigation inter-galaxies non définie et refusée jusqu'à spécification.
+UA universelle. Intra-système : abs(positionB-positionA) × 10. Inter-systèmes : sortie 100−positionA×10, hyperespace hypot(dx physique,dy physique)×100 selon la spirale réelle de `GalaxyGeometry`, entrée 100−positionB×10. Temps par segment = distance / (vitesse minimale de flotte × ratio). Ratio entre 0.1 et 1. Aller-retour symétrique. Carburant aller + stationnement + retour réservé avant départ. Consommation proportionnelle au ratio de vitesse. Chaque vaisseau possède un petit réservoir exclusivement pour le carburant ; les soutes cargo peuvent embarquer le fret et le carburant supplémentaire. Consommation d'orbite horaire indépendante du ratio. Navigation inter-galaxies non définie et refusée jusqu'à spécification.
+
+Depuis la décision explicite du 18 novembre 2026, les nouveaux trajets utilisent
+la géographie physique en spirale. La grille est une disposition de repérage ;
+le choix de vue ne change aucun devis. Les coordonnées persistées restent des
+identifiants historiques. Les vols existants gardent leurs durées et réservations ;
+les nouveaux replis partent de la position physique atteinte.
 
 ## Combat (PDF 1 p.6–8, PDF 2 p.2–6)
 Cadence confirmée par Kévin le 01/11/2026 : un round réel par minute, jusqu’à 10 rounds; les renforts rejoignent le prochain round non résolu selon leur heure d’arrivée. Le premier round commence à +60 secondes; les suivants à +120, jusqu’au 10e à +600. Une flotte arrivée exactement au début d’un round est traitée avant ce round et peut y participer, notamment à +600 secondes avant le 10e round. Le combat se clôt immédiatement dès qu’un camp est éliminé; toute flotte arrivée après cette clôture repart sans rejoindre le combat. Le moteur persiste et résout les rounds en temps réel selon cette cadence. L’Alpha conserve un round par minute, jusqu’à dix rounds ou clôture anticipée; voir l’audit de combat et les tests récents.
@@ -168,7 +186,7 @@ Les profils de coûts par rang sont pré-calibrés par famille dans les catalogu
 
 La puissance dépend de la spécialité : la production et le stockage utilisent l’effet par niveau propre au bâtiment; les technologies appliquent leur bonus au champ concerné; vaisseaux et défenses renforcent structure, bouclier et attaque; les vaisseaux améliorent aussi vitesse, réservoir et soute. Précision, suivi et esquive gardent leurs valeurs de base; la signature n’est pas divisée. Depuis R14, chaque écart de rang ajoute ou retire 30 points de pourcentage après application du contre, avec une chance bornée entre 15 % et 95 %. Les stats positives entières sont arrondies vers le haut. Le nombre de tirs de base reste entier ; les technologies de cadence accordent une chance de tir supplémentaire, sans bonus implicite de cadence lié au rang.
 
-Les bonus technologiques en pourcentage qui étaient à +5 % par niveau passent à **+1 % par niveau et niveau maximum 25**. Le laboratoire et le chantier spatial passent à **2 % par niveau, maximum 25**, conservant leur maximum Basique de 50 %. Les bonus de rang sont multipliés puis composés : une technologie à 25 niveaux dans chacun des trois rangs produit les facteurs 1,25 × 1,3125 × 1,390625 = **2,281494×**. Les bâtiments de production de ressources et de stockage n’ont plus de niveau maximum.
+Les bonus technologiques en pourcentage qui étaient à +5 % par niveau passent à **+1 % par niveau et niveau maximum 25**. Le laboratoire et le chantier spatial passent à **2 % par niveau, maximum 25**, conservant leur maximum Basique de 50 %. Les bonus de rang sont multipliés puis composés : une technologie à 25 niveaux dans chacun des trois rangs produit les facteurs 1,25 × 1,3125 × 1,390625 = **2,281494×**. Les bâtiments de production de ressources et les stockages Supérieurs ont une progression sans plafond. Les stockages Basiques et Intermédiaires sont plafonnés à 5 pour les nouvelles commandes.
 
 Depuis la décision du 6 novembre 2026, les prérequis servent uniquement au déblocage initial de chaque rang, dès le niveau 1. Aucun nouveau prérequis pendant les améliorations. L’accès acquis reste conservé pour le joueur sur cette colonie (bâtiments, vaisseaux, défenses), ou dans cet univers (recherches). Les [conditions par rang et leurs raisons](DEBLOCAGES.md) remplacent les anciens paliers sans cumuler leurs exigences. Les seuils hors plafond sont corrigés ; comptes, niveaux, rangs, unités, files et accès historiques sont conservés par un registre persistant. Coûts, ressources, durées et plafonds restent applicables. Migration et reprise doivent être effectuées avant réouverture ; elles ne sont pas appliquées automatiquement.
 
@@ -176,7 +194,7 @@ Les coûts de recherche par niveau conservent la croissance ×2 et les durées d
 
 Les technologies de combat couvrent structure, bouclier, attaque, précision, suivi, esquive, signature, cadence de tir, vitesse, réservoir et soute. Le tir supplémentaire est une chance indépendante par tir de base pour conserver une résolution entière et éviter des valeurs de tirs fractionnaires.
 
-Pour les effets discrets de colonisation, chaque rang contribue son quota pondéré, puis les fractions de colonies sont arrondies vers le bas; la limite de colonies configurée par l’univers reste prioritaire. Les productions et capacités de stockage de plusieurs bâtiments-rangs s’additionnent, car chaque rang fonctionne comme une installation distincte. Les coûts des ressources non énergétiques suivent les budgets de valeur par famille; l’électricité n’est pas facturée lors de la construction. Les usines reçoivent un rendement de secours minimal de 10 % en déficit électrique, selon une simulation segmentée hors connexion; la production d’antimatière est limitée par l’hydrogène et s’arrête sans apport. La consommation électrique nominale des extracteurs est configurée à 0,05/s/niveau; depuis la décision du 9 novembre, l’usine d’antimatière consomme 4 H par A produite.
+Pour les effets discrets de colonisation, chaque rang contribue son quota pondéré, puis les fractions de colonies sont arrondies vers le bas; la limite de colonies configurée par l’univers reste prioritaire. Les productions et capacités de stockage de plusieurs bâtiments-rangs s’additionnent, car chaque rang fonctionne comme une installation distincte. Les coûts des ressources non énergétiques suivent les budgets de valeur par famille; l’électricité n’est pas facturée lors de la construction. Les usines reçoivent un rendement de secours minimal de 10 % en déficit électrique, selon une simulation segmentée hors connexion; la production d’antimatière est limitée par l’hydrogène et s’arrête sans apport. La consommation électrique de référence par niveau Basique est de 0,05/s pour le métal, le nano et l’hydrogène, et de 0,025/s pour le piège à antimatière. Celui-ci consomme aussi 4 H par AM produite.
 
 
 ### Research et art temporaire
@@ -253,7 +271,7 @@ Les rangs multiplient ces capacités par 1 / 1,25 / 1,5625 avec arrondi supérie
 
 ## Production des bâtiments — cadence A, 5 novembre 2026
 
-Depuis la décision confirmée du 9 novembre 2026, les productions Basiques par niveau à vitesse ×1 et position 5 sont : métal 360/h, nano 180/h, hydrogène 720/h, antimatière 90/h et centrale 1 080 électricité/h. Chaque extracteur consomme 180 électricité/h ; le réacteur consomme aussi 4 H par A produite. Les rangs s’additionnent et gardent les facteurs de production et consommation **1 / 1,5 / 2,25**. Les bonus de position et la production passive restent appliqués séparément. Les prix du niveau 1 sont 480 M + 160 N pour les trois producteurs directs, 360 M + 120 N pour le réacteur et 1 440 M + 480 N pour la centrale. Les durées du niveau 1 Basique sont respectivement 1 min, 2 min et 2 min ; les courbes de niveaux et les réductions sont conservées. Les budgets du réacteur et de la centrale sont déclinés sur les autres rangs avec les facteurs de coût existants, sans changer les parts de ressources. Le [bilan courant](EQUILIBRAGE.md#production-des-batiments) précise les 84,16 jours cumulés jusqu’à 80 confirmés par l’utilisateur, leur périmètre et leurs limites.
+En position 5, dans un univers ×1 et à plein rendement, les productions Basiques par niveau sont de 360 métal/h, 180 nano/h, 720 hydrogène/h, 90 antimatière/h et 1 080 électricité/h pour la centrale. Le métal, le nano et l’hydrogène consomment chacun 180 électricité/h par niveau Basique. Le piège consomme directement 90 électricité/h et 360 hydrogène/h. En comptant l’électricité nécessaire à la production des 4 H par AM, une unité d’antimatière coûte 2 électricité à plein rendement, comme 8 H, 4 M ou 2 N. Les rangs s’additionnent et gardent les facteurs de production et consommation **1 / 1,5 / 2,25**. Les bonus de position et la production passive restent appliqués séparément. Les prix du niveau 1 Basique sont de 384 M + 208 N pour les trois producteurs directs, 288 M + 156 N pour le piège et 1 152 M + 624 N pour la centrale. Les durées du niveau 1 Basique sont respectivement 1 min, 2 min et 2 min ; les courbes de niveaux et les réductions sont conservées. Les budgets du réacteur et de la centrale sont déclinés sur les autres rangs avec les facteurs de coût existants, sans changer les parts de ressources. Le [bilan historique du 9 novembre](EQUILIBRAGE.md#référence-historique--production-du-9-novembre-2026) précise les 84,16 jours de construction cumulés jusqu’au niveau 80 et les limites de cette mesure.
 
 Les coûts des seuls producteurs croissent par niveau de ×1,12 jusqu’à 20, ×1,09 jusqu’à 40, ×1,035 jusqu’à 80, ×1,015 jusqu’à 120, puis ×1,01. Les premiers prix, profils de ressources par rang et arrondis par ressource restent utilisés. Les durées et les effets des laboratoires, chantiers, bunkers et stockages ne reçoivent pas le nouveau facteur de production ; leur calcul reste séparé.
 
@@ -343,8 +361,7 @@ Le classement des guildes additionne les points actuels de bâtiments, recherche
 
 ## Historique : répartition des vaisseaux du 5 novembre 2026
 
-Cette étape est remplacée par la grille commune retenue le 16 novembre, présentée
-en tête de ce document. Les paragraphes suivants décrivent uniquement cette étape historique.
+La grille actuellement en vigueur figure en tête de ce document. Les paragraphes suivants décrivent uniquement cette étape historique.
 
 Les 14 classes utilisent les parts de valeur économique suivantes : T1 60 % métal / 40 % nano ; T2 45 % métal / 45 % nano / 10 % antimatière ; T3 30 % métal / 50 % nano / 20 % antimatière. Le calcul pondère M×2, N×4, A×8 et H×1. Ces pourcentages ne représentent pas les quantités brutes. Les arrondis des trois ressources sont répartis pour conserver exactement la valeur de chaque profil de rang avant recherche ; les profils réels font foi.
 
@@ -398,7 +415,7 @@ s’appliquent toujours. Les joueurs retrouvent les rotations dans Événements 
 
 ## File de recherche commune
 
-Dans un même univers, toutes les colonies d’un joueur partagent une file de recherche de 30 commandes maximum. Chaque ajout paie ses coûts sur la colonie choisie et utilise son laboratoire pour calculer la durée à cet instant. Les niveaux déjà en file sont pris en compte depuis toutes les colonies ; les commandes sont exécutées successivement, sans nouveau calcul de leurs coûts ou durées au démarrage.
+Dans un même univers, toutes les colonies d’un joueur partagent une file de recherche de 30 commandes maximum. Chaque ajout exige un laboratoire du même rang au niveau 1 ou plus sur la colonie choisie. Il paie ses coûts sur cette colonie et utilise ses bonus de laboratoire pour calculer la durée à cet instant. Les niveaux déjà en file sont pris en compte depuis toutes les colonies ; les commandes sont exécutées successivement, sans nouveau calcul de leurs coûts ou durées au démarrage.
 
 Les recherches historiquement actives en parallèle terminent leur travail sans être annulées. La suite de la file attend la fin de toutes ces recherches, puis fonctionne avec une seule recherche active. Les univers restent indépendants. Annulations, remboursements, vacances et captures conservent leurs règles ; la colonie d’origine de chaque commande reste enregistrée.
 
@@ -673,8 +690,10 @@ d’un repli vers une colonie dont le système n’a pas été découvert.
 Pour le défenseur, une attaque en trajet aller n’est visible qu’à partir de sa
 détection. Niveau effectif = somme simple des niveaux d’Analyse tactique,
 Cartographie des opérations et Réseau de connaissance du champ de bataille.
-Préavis = min(300 + 300 × niveau effectif, 7200, moitié de la durée du trajet),
-en secondes entières, arrondi vers le bas pour ne pas dépasser 50 % du trajet.
+Préavis = min(1 800 + 300 × niveau effectif, 75 % de la durée du trajet aller),
+en secondes entières, arrondi vers le bas. Pour un trajet de 100 minutes, le
+préavis est de 30 minutes sans recherche, 60 minutes avec 6 niveaux et
+75 minutes à partir de 9 niveaux.
 Le trajet pris en compte va du départ enregistré à l’arrivée actuelle ;
 un boost ou un ajustement d’échéance recalcule donc immédiatement ce seuil.
 Aucun coût, temps de voyage ou effet de boost n’est modifié par cette lecture.
@@ -698,8 +717,8 @@ Leur périmètre préexistant de suivi des attaques alliées reste soumis à ces
 découvertes ; le seuil protège le destinataire d’une attaque.
 Aucun changement aux relations ou conditions d’attaque, défense et stationnement.
 
-Les trois plafonds de référence sont 5/5/5, soit 15 niveaux et 80 minutes de préavis
-théorique ; le plafond de 2 heures n’est pas atteint dans cette configuration.
+Les trois plafonds de référence sont 5/5/5, soit 15 niveaux et 105 minutes de
+préavis théorique avant application de la limite liée au trajet.
 Les surcharges propres à l’univers sont résolues comme dans la file de recherche.
 La somme pour le préavis n’altère pas la pondération actuelle de l’espionnage.
 
@@ -781,7 +800,7 @@ univers ne rend pas ce membre en ligne ici ; heures et durées ne sont pas rév�
 
 Le revenu de base total est désormais de **10 métal/h et 10 nano/h**, à vitesse ×1 en position 5, au lieu de 40 métal/h et 20 nano/h. Ce sont des taux de remplacement, pas un revenu additionnel. Les modificateurs de position, d’univers et d’événement existants s’appliquent ; les vacances suspendent toujours la production. Le revenu de base est nul pour l’électricité, l’antimatière et l’hydrogène, conformément à la précision validée le 13 novembre 2026. Les productions des bâtiments, stocks et capacités restent inchangés. Le calcul des gains non matérialisés suit la règle courante déjà validée, sans migration.
 
-À stocks nuls, sans usine, à vitesse ×1 en position 5, 48 h fournissent 480 métal et 480 nano : assez pour les 480 métal et 160 nano d’un premier producteur direct. Cela ne produit aucune électricité et ne garantit pas la résolution de tous les blocages. Le coût électrique ponctuel suit la décision validée ci-dessous.
+À stocks nuls, sans usine, à vitesse ×1 en position 5, 48 h fournissent 480 métal et 480 nano : assez pour les 384 métal et 208 nano d’un premier producteur direct. Cela ne produit aucune électricité et ne garantit pas la résolution de tous les blocages. Le coût électrique ponctuel suit la décision validée ci-dessous.
 
 ### Électricité ponctuelle des opérations — décision du 13 novembre 2026
 

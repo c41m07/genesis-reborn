@@ -1,0 +1,281 @@
+/* L10C : signalements complets, feedbacks en cartes et suivi auprès de leur contenu. */
+body.admin-console.admin-moderation-workspace .admin-content {
+    overflow-wrap: anywhere;
+}
+
+body.admin-console.admin-moderation-workspace .admin-report-card {
+    margin: 20px 0 0;
+    padding: 22px;
+    border-radius: 6px;
+}
+
+body.admin-console.admin-moderation-workspace .admin-report-card h3 {
+    margin: 0 0 14px;
+    font-size: 19px;
+}
+
+body.admin-console.admin-moderation-workspace .admin-report-card :is(p, blockquote) {
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+body.admin-console.admin-moderation-workspace .admin-report-card blockquote {
+    margin: 20px 0;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+    white-space: pre-wrap;
+}
+
+body.admin-console.admin-moderation-workspace .admin-report-card form {
+    display: grid;
+    gap: 12px;
+    margin-top: 22px;
+}
+
+body.admin-console.admin-moderation-workspace #admin-reports .admin-search {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    margin: 22px 0;
+}
+
+body.admin-console.admin-moderation-workspace #report-search {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    min-height: 48px;
+    margin: 0;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-admin-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-admin-metrics article {
+    min-width: 0;
+    min-height: 110px;
+    padding: 18px;
+    border-radius: 6px;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-admin-metrics span {
+    font-size: 12px;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-admin-metrics strong {
+    font-size: 28px;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-admin-filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px 16px;
+    padding: 20px;
+    border-radius: 6px;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-admin-filters > label {
+    min-width: 0;
+    gap: 8px;
+    color: var(--text);
+}
+
+body.admin-console.admin-moderation-workspace :is(.feedback-admin-filters input, .feedback-admin-filters select, .feedback-manage-card select) {
+    min-height: 48px;
+    margin: 0;
+    font-size: 14px;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-admin-filters button {
+    grid-column: 1 / -1;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-admin-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin: 24px 0;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-admin-card {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    border-radius: 6px;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-admin-card-top {
+    flex-wrap: wrap;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-admin-card h2 {
+    margin: 16px 0 8px;
+    font-size: 21px;
+    line-height: 1.4;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-admin-meta {
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-status {
+    font-size: 12px;
+}
+
+/* Les couleurs claires du thème sombre ne permettent pas de lire les états sur fond blanc. */
+body.admin-console.admin-moderation-workspace[data-theme="light"] .status-open {
+    color: #805719;
+}
+
+body.admin-console.admin-moderation-workspace[data-theme="light"] .status-in_progress {
+    color: #285b82;
+}
+
+body.admin-console.admin-moderation-workspace[data-theme="light"] .status-resolved {
+    color: #1c6848;
+}
+
+body.admin-console.admin-moderation-workspace[data-theme="light"] .status-rejected {
+    color: #9a2633;
+}
+
+body.admin-console.admin-moderation-workspace[data-theme="light"] .status-archived {
+    color: #535f66;
+}
+
+/* Les priorités historiques imposent !important ; la surcharge reste limitée à ces libellés en thème clair. */
+body.admin-console.admin-moderation-workspace[data-theme="light"] .priority-high {
+    color: #9a2633 !important;
+}
+
+body.admin-console.admin-moderation-workspace[data-theme="light"] .priority-medium {
+    color: #805719 !important;
+}
+
+body.admin-console.admin-moderation-workspace[data-theme="light"] .priority-low {
+    color: #1c6848 !important;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-admin-open {
+    display: block;
+    margin-top: auto;
+    padding: 18px 0 4px;
+    min-height: 46px;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-admin-empty {
+    grid-column: 1 / -1;
+    padding: 28px;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-detail-heading {
+    align-items: flex-start;
+    margin: 24px 0;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-detail-heading > div {
+    flex: 1;
+    min-width: 0;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-detail-heading > .feedback-status {
+    flex: 0 0 auto;
+    align-self: flex-start;
+    white-space: nowrap;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-detail-grid {
+    grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr);
+    gap: 20px;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-detail-main {
+    min-width: 0;
+    gap: 20px;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-detail-card {
+    padding: 22px;
+    border-radius: 6px;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-detail-card h2 {
+    font-size: 20px;
+    line-height: 1.4;
+    margin-bottom: 20px;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-description {
+    font-size: 14px;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-facts :is(dt, dd) {
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-screenshot {
+    width: 100%;
+    max-height: 480px;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-manage-card {
+    position: static;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-manage-card form {
+    gap: 14px;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-manage-card label {
+    color: var(--text);
+}
+
+body.admin-console.admin-moderation-workspace .feedback-manage-card textarea {
+    min-height: 200px;
+    margin: 0;
+    font-size: 14px;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-manage-card small {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+body.admin-console.admin-moderation-workspace :is(.admin-report-card button, .feedback-admin-filters button, .feedback-manage-card button, .feedback-archive-link a) {
+    min-height: 46px;
+    width: 100%;
+    white-space: normal;
+}
+
+body.admin-console.admin-moderation-workspace .feedback-back-link {
+    min-height: 46px;
+    display: inline-flex;
+    align-items: center;
+}
+
+@media (max-width: 1100px) {
+    body.admin-console.admin-moderation-workspace :is(.feedback-admin-list, .feedback-detail-grid) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.admin-console.admin-moderation-workspace .feedback-admin-filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 760px) {
+    body.admin-console.admin-moderation-workspace .feedback-admin-filters {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.admin-console.admin-moderation-workspace :is(.admin-report-card, .feedback-detail-card) {
+        padding: 18px;
+    }
+
+    body.admin-console.admin-moderation-workspace :is(#report-search, .feedback-admin-filters input, .feedback-admin-filters select, .feedback-manage-card select, .feedback-manage-card textarea) {
+        font-size: 16px;
+    }
+}

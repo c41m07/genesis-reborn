@@ -1,12 +1,49 @@
 {% extends 'base.html.twig' %}
 {% block title %}Charger {{ composition.name }} · Genesis Reborn{% endblock %}
 {% block body %}
-{% include 'ui/fleet_navigation.html.twig' %}
-<div class="strategic-page"><div class="page-heading"><h1>Charger {{ composition.name }}</h1><a class="secondary" href="{{ path('app_fleet_compositions') }}">Mes compositions</a></div>
-<form class="panel" method="get"><label for="composition-origin">Colonie de départ</label><select id="composition-origin" name="origin">{% for world in planets %}<option value="{{ world.id }}" {{ planet and planet.id==world.id ? 'selected' : '' }}>{{ world.name }}</option>{% endfor %}</select><button class="secondary">Vérifier cette colonie</button></form>
-{% if plan %}<section class="panel"><h2>Disponibilités de {{ planet.name }}</h2><div class="table-scroll" tabindex="0" role="region" aria-label="Tableau défilant horizontalement"><table class="data-table"><thead><tr><th>Vaisseau</th><th>Demandé</th><th>Chargeable</th><th>Manquant</th></tr></thead><tbody>{% for row in plan.rows %}<tr><th scope="row">{{ catalog[row.slug].label|default(row.slug) }} · {{ {basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'}[row.tier] }}</th><td>{{ row.requested|quantity(0) }}</td><td>{{ row.available|quantity(0) }}</td><td>{{ row.missing|quantity(0) }}</td></tr>{% endfor %}</tbody></table></div>
-<p>Le chargement prépare le formulaire de mission. L’envoi demandera toujours une vérification et une confirmation distinctes.</p>
-{% if plan.missing %}<p role="status">Des vaisseaux manquent. Vous pouvez modifier la composition ou accepter explicitement les quantités disponibles.</p>{% endif %}
-{% if plan.available %}<a class="primary" href="{{ path('app_fleet_prepare',{composition:composition.id,origin:planet.id,confirmation:plan.fingerprint,adjust:plan.missing?'1':'0'}) }}">{{ plan.missing ? 'Accepter les quantités disponibles et préparer' : 'Charger exactement cette composition' }}</a>{% else %}<p>Aucun vaisseau de cette composition n’est disponible ici. <a href="{{ path('app_colony',{id:planet.id,section:'ships'}) }}">Construire au chantier spatial</a></p>{% endif %}
-</section>{% endif %}</div>
+<div class="strategic-page fleet-redesign fleet-compositions" data-page-sections="disabled">
+    <div class="page-heading"><div><h1>Charger {{ composition.name }}</h1><p>Modèles personnels · {{ chrome.membership.universe.name }}</p></div></div>
+    {% include 'ui/fleet_navigation.html.twig' %}
+    <div class="composition-load-layout">
+        <section class="panel composition-origin-panel">
+            <h2>Colonie de départ</h2>
+            <form method="get">
+                <label class="visually-hidden" for="composition-origin">Colonie de départ</label>
+                <select id="composition-origin" name="origin">
+                    {% for world in planets %}<option value="{{ world.id }}" {{ planet and planet.id==world.id ? 'selected' : '' }}>{{ world.name }}</option>{% endfor %}
+                </select>
+                <button class="secondary">Vérifier cette colonie</button>
+            </form>
+        </section>
+        {% if plan %}
+            <section class="panel composition-availability" aria-labelledby="composition-availability-title">
+                <h2 id="composition-availability-title">Disponibilités de {{ planet.name }}</h2>
+                <div class="composition-table-container">
+                    <table class="data-table composition-table" role="table">
+                        <caption class="visually-hidden">Vaisseaux demandés, chargeables et manquants</caption>
+                        <colgroup><col><col span="3" class="composition-quantity-column"></colgroup>
+                        <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Vaisseau</th><th scope="col" role="columnheader">Demandé</th><th scope="col" role="columnheader">Chargeable</th><th scope="col" role="columnheader">Manquant</th></tr></thead>
+                        <tbody role="rowgroup">
+                            {% for row in plan.rows %}
+                                <tr role="row">
+                                    <th scope="row" role="rowheader">{{ catalog[row.slug].label|default(row.slug) }} · {{ {basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'}[row.tier] }}</th>
+                                    <td role="cell"><span class="composition-mobile-label" aria-hidden="true">Demandé</span>{{ row.requested|quantity(0) }}</td>
+                                    <td role="cell"><span class="composition-mobile-label" aria-hidden="true">Chargeable</span>{{ row.available|quantity(0) }}</td>
+                                    <td role="cell" class="{{ row.missing ? 'composition-missing' : '' }}"><span class="composition-mobile-label" aria-hidden="true">Manquant</span>{{ row.missing|quantity(0) }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if plan.missing %}<p class="composition-missing" role="status">Des vaisseaux manquent. Vous pouvez modifier la composition ou accepter explicitement les quantités disponibles.</p>{% endif %}
+                <p>Le chargement prépare le formulaire de mission. L’envoi demandera toujours une vérification et une confirmation distinctes.</p>
+                {% if plan.available %}
+                    <a class="primary composition-load-action" href="{{ path('app_fleet_prepare',{composition:composition.id,origin:planet.id,confirmation:plan.fingerprint,adjust:plan.missing?'1':'0'}) }}">{{ plan.missing ? 'Accepter les quantités disponibles et préparer' : 'Charger exactement cette composition' }}</a>
+                {% else %}
+                    <p>Aucun vaisseau de cette composition n’est disponible ici. <a href="{{ path('app_colony',{id:planet.id,section:'ships'}) }}">Construire au chantier spatial</a></p>
+                {% endif %}
+            </section>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

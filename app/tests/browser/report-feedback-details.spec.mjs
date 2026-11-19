@@ -1,5 +1,6 @@
 import { test, expect } from './support/isolated-test.mjs';
 import { execFileSync } from 'node:child_process';
+import { writeFile } from 'node:fs/promises';
 import { runIsolatedSql, queryIsolatedSql } from './support/game-fixtures.mjs';
 
 const quote = value => "'" + String(value).replaceAll("'", "''") + "'";
@@ -43,6 +44,8 @@ test('Renseignements : rangs actuels, ancien format, ressources et détection', 
     WHERE p.email=${quote(email)} LIMIT 1`);
   const id = queryIsolatedSql(project, 'SELECT MAX(id) FROM espionage_report');
   await page.goto(`/rapports/espionnage/${id}`);
+  await expect(page.locator('.intel-section[open]')).toHaveCount(5);
+  for(const summary of await page.locator('.intel-section > summary').all()) { await summary.focus(); await page.keyboard.press('Enter'); }
   await expect(page.locator('.intel-section[open]')).toHaveCount(0);
   for(const summary of await page.locator('.intel-section > summary').all()) { await summary.focus(); await page.keyboard.press('Enter'); }
   await expect(page.locator('.intel-section[open]')).toHaveCount(5);
@@ -58,6 +61,12 @@ test('Renseignements : rangs actuels, ancien format, ressources et détection', 
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
   await page.screenshot({ path: testInfo.outputPath('intel-390.png'), fullPage: true, animations: 'disabled' });
+  delete snapshot.research;
+  delete snapshot.fleets;
+  runIsolatedSql(project, `UPDATE espionage_report SET snapshot=${quote(JSON.stringify(snapshot))}, intel_categories=3 WHERE id=${Number(id)}`);
+  await page.reload();
+  await expect(page.locator('.intel-unknown')).toContainText('Recherches, Flottes');
+  await expect(page.locator('.intel-section')).toHaveCount(3);
   runIsolatedSql(project, `UPDATE espionage_report SET result='detected', intel_categories=0, snapshot='{}' WHERE id=${Number(id)}`);
   await page.reload();
   await expect(page.getByRole('status')).toContainText('Sondes détectées');
@@ -89,12 +98,21 @@ test('Combats : filtre économique, pertes lisibles et défilement clavier', asy
   await expect(page.getByRole('rowheader', { name: 'Escadre de défense' })).toBeVisible();
   await expect(page.getByRole('cell', { name: '12,00 k', exact: true })).toBeVisible();
   await expect(page.getByRole('cell', { name: '12,00 k', exact: true }).locator('abbr')).toHaveAttribute('title', '12 000');
-  await expect(page.getByRole('cell', { name: '1 234', exact: true })).toBeVisible();
-  const losses = page.getByRole('region', { name: 'Bilan des pertes, défilement horizontal' });
+  await expect(page.getByRole('cell', { name: '−1 234', exact: true })).toBeVisible();
+  const losses = page.getByRole('region', { name: 'Bilan des pertes', exact: true });
   await losses.focus();
   await expect(losses).toBeFocused();
   for (const width of [1280, 768, 390]) {
     await page.setViewportSize({ width, height: 900 });
+    if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)) {
+      const overflow = await page.locator('main').evaluate(main => [...main.querySelectorAll('*')].map(element => {
+        const rect = element.getBoundingClientRect();
+        return { tag: element.tagName, class: element.className, text: element.textContent.trim().slice(0, 60), left: rect.left, right: rect.right, width: rect.width };
+      }).filter(box => box.width > 1 && box.left >= 0 && box.right > innerWidth + 1).slice(-20));
+      const proofPath = testInfo.outputPath(`debordement-${width}.json`);
+      await writeFile(proofPath, JSON.stringify(overflow));
+      await testInfo.attach(`debordement-${width}`, { path: proofPath, contentType: 'application/json' });
+    }
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
   await page.screenshot({ path: testInfo.outputPath('combat-detail-390.png'), fullPage: true, animations: 'disabled' });
@@ -124,18 +142,20 @@ test('Combats : filtre économique, pertes lisibles et défilement clavier', asy
   await expect(own.getByRole('row')).toHaveCount(5);
   await expect(enemy.getByRole('row')).toHaveCount(2);
   const intermediate = own.getByRole('row').filter({ hasText: 'Chasseur intermédiaire' });
-  await expect(intermediate.getByRole('cell')).toHaveText(['2', '1', '1', '1', '1', '0', '100 %']);
+  await expect(intermediate.getByRole('cell')).toHaveText(['2', '−1', '1', '1', '1', '0', '100 %']);
   const rebuilt = page.getByRole('table', { name: 'Bilan des défenses planétaires par type et par rang', exact: true });
-  await expect(rebuilt.getByRole('row').filter({ hasText: 'Tourelle ionique' }).getByRole('cell')).toHaveText(['Intermédiaire', '10', '3', '7']);
-  const versus = page.getByRole('region', { name: 'Round 1, comparaison des camps, défilement horizontal', exact: true });
+  await expect(rebuilt.getByRole('row').filter({ hasText: 'Tourelle ionique' }).getByRole('cell')).toHaveText(['Intermédiaire', '10', '3', '−7']);
+  const versus = page.getByRole('region', { name: 'Round 1, comparaison des camps', exact: true });
   for (const width of [1440, 768, 390, 320]) {
     await page.setViewportSize({ width, height: 900 });
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    await expect(own.getByRole('row').filter({ hasText: 'Chasseur intermédiaire' }).locator('[data-label="Précision"]')).toBeVisible();
+    expect(await versus.evaluate(element => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
+    await page.screenshot({ path: testInfo.outputPath(`rapport-A-${width}.png`), fullPage: true, animations: 'disabled' });
   }
   await versus.focus();
   await expect(versus).toBeFocused();
-  await page.keyboard.press('ArrowRight');
-  await expect.poll(() => versus.evaluate(element => element.scrollLeft)).toBeGreaterThan(0);
+  await expect(own.getByRole('row').filter({ hasText: 'Chasseur intermédiaire' }).getByRole('cell')).toHaveCount(7);
   await page.screenshot({ path: testInfo.outputPath('combat-versus-320.png'), fullPage: true, animations: 'disabled' });
 });
 

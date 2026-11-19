@@ -40,6 +40,20 @@ lecture complète repliable d’un résultat long utilise le même rendu sécuri
 que la conversation. La modération montre le texte source échappé et la
 recherche porte sur cette source.
 
+## Présentation L7E A — 18 novembre 2026
+
+La page 36 A validée conserve les deux panneaux et les couleurs des bulles
+existantes. Les contacts sont à gauche sur grand écran et au-dessus de l’échange
+jusqu’à 1 050 px, dans une zone défilante de 220 px maximum. La zone de rédaction
+reste dans le panneau de conversation ; le contrôleur de fil utilise ce même seuil
+pour amener la saisie dans la fenêtre à l’ouverture sur tablette et téléphone.
+
+Les liens de recherche sont regroupés sous le titre. La recherche dédiée conserve
+ses filtres, sa pagination et sa lecture sans marquage ; son lien Messagerie retourne
+vers le privé sélectionné ou le canal de guilde/Global recherché. L’actualisation des
+contacts conserve le contrôleur existant : elle ne remplace ni le fil ni le formulaire.
+Elle ne fournit pas de brouillon persistant après navigation ou échec serveur.
+
 ## Sécurité et données
 
 Ajout de league/commonmark autorisé explicitement : version verrouillée 2.10.7,

@@ -1,13 +1,37 @@
-<p>{{ trial.rounds_played }} rounds joués.</p>
-<details><summary>Pertes et survivants fictifs</summary>
-<ul>{% for unit,count in trial.losses %}
-{% set parts=unit|split(':') %}{% set tier=parts|last in ['intermediate','superior'] ? parts|last : 'basic' %}{% set slug=tier=='basic' ? parts|last : parts[parts|length-2] %}
-<li>{{ parts[0]=='attacker' ? 'Attaquant' : 'Défenseur' }} · {{ unit_labels[slug].label|default(slug) }} · {{ tier_labels[tier] }} : {{ count }} perdu(s)</li>
-{% else %}<li>Aucune perte dans ce combat.</li>{% endfor %}</ul>
-<ul>{% for unit in trial.survivors %}
-<li>{{ unit.role=='attacker' ? 'Attaquant' : 'Défenseur' }} · {{ unit_labels[unit.slug].label|default(unit.slug) }} · {{ tier_labels[unit.tier] }} · structure {{ unit.hp|quantity(0) }}</li>
-{% else %}<li>Aucun survivant dans ce combat.</li>{% endfor %}</ul>
-</details>
+<p>{{ trial.rounds_played }} rounds joués · pertes fictives, aucune unité réellement détruite.</p>
+<div class="simulation-versus">
+    {% for camp,title in {attacker:'Camp attaquant',defender:'Camp défenseur'} %}
+        {% set report = trial.report[camp] %}
+        <section class="simulation-camp" aria-labelledby="simulation-camp-{{ trial.seed }}-{{ camp }}">
+            <h3 id="simulation-camp-{{ trial.seed }}-{{ camp }}">{{ title }}</h3>
+            {% if report.rows %}
+                <table class="data-table simulation-losses">
+                    <caption class="visually-hidden">{{ title }} · effectifs par type et rang</caption>
+                    <thead><tr><th scope="col">Unité</th><th scope="col">Engagés</th><th scope="col">Pertes</th><th scope="col">Survivants</th></tr></thead>
+                    <tbody>
+                    {% for row in report.rows %}
+                        <tr data-simulation-unit="{{ row.slug }}" data-simulation-tier="{{ row.tier }}">
+                            <th scope="row">{{ row.label }}<small>{{ tier_labels[row.tier] }} · arrivée R{{ row.arrival }}</small></th>
+                            <td data-label="Engagés">{{ row.initial|quantity(0) }}</td>
+                            <td data-label="Pertes" class="{{ row.lost ? 'report-loss' : '' }}">{{ row.lost ? '−' : '' }}{{ row.lost|quantity(0) }}</td>
+                            <td data-label="Survivants" class="{{ row.remaining ? 'simulation-survivors' : '' }}">{{ row.remaining|quantity(0) }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                <p class="muted simulation-total">{{ report.initial|quantity(0) }} engagés · {{ report.lost|quantity(0) }} {{ report.lost > 1 ? 'perdus' : 'perdu' }} · {{ report.remaining|quantity(0) }} survivants</p>
+            {% else %}
+                <p>Aucune unité dans ce camp.</p>
+            {% endif %}
+        </section>
+    {% endfor %}
+</div>
 <details><summary>Rounds et tirs</summary>
+<p class="muted">Total des deux camps, par round.</p>
 {% for round in trial.rounds %}<h3>Round {{ round.number }}</h3><p>{{ round.shots }} tirs · {{ round.hits }} impacts · {{ round.destroyed }} destructions</p>{% endfor %}
+</details>
+<details><summary>Structure détaillée des survivants</summary>
+    <ul>{% for unit in trial.survivors %}
+        <li>{{ unit.camp == 'attacker' ? 'Attaque' : 'Défense' }} · {{ unit_labels[unit.slug].label|default(unit.slug) }} · {{ tier_labels[unit.tier] }} · structure restante {{ unit.hp|quantity(0) }}</li>
+    {% else %}<li>Aucun survivant dans ce combat.</li>{% endfor %}</ul>
 </details>

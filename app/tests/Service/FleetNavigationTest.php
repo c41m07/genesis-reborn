@@ -27,14 +27,16 @@ final class FleetNavigationTest extends TestCase
     public function testHyperlanePointAndFuelUseTheFrozenRoute(): void
     {
         $nav=new FleetNavigation();$c=new MovementCalculator();$at=new \DateTimeImmutable();
-        $origin=[1,1,0,0,2];$target=[2,1,1,0,8];$q=$c->quote($origin,$target,$this->ships(),1,1,'proportional');
+        // Un vol lancé sur l’ancienne grille conserve ses portions et ses coûts figés.
+        $origin=[1,1,0,0,2];$target=[2,1,1,0,8];$q=$c->quoteDistances(100,100,false,$this->ships(),1,1,'proportional');
         self::assertSame(720,$q['seconds']);self::assertEqualsWithDelta(150,$q['one_way_fuel'],.000001);
         $state=$nav->freeze($origin,$target,$this->ships(),1,'proportional',$q,$at);$result=$nav->traveled($state,.5);
-        self::assertNull($result['point']['system_id']);self::assertEqualsWithDelta(.2,$result['point']['x'],.000001);
+        self::assertNull($result['point']['system_id']);self::assertEqualsWithDelta(4.237697558980969,$result['point']['x'],.000001);
+        self::assertEqualsWithDelta(2.197845138205041,$result['point']['y'],.000001);
         self::assertEqualsWithDelta(90,$result['fuel'],.000001);
         $d=$nav->distances($result['point'],[2,1,1,0,5]);
         $return=$c->quoteDistances($d['normal'],$d['hyper'],$d['same'],$this->ships(),1,1,'proportional');
-        self::assertEqualsWithDelta(90,$return['one_way_fuel'],.000001);self::assertSame(468,$return['seconds']);
+        self::assertEqualsWithDelta(67.10631070142685,$return['one_way_fuel'],.000001);self::assertSame(304,$return['seconds']);
     }
     public function testFallbackCannotInventIntergalacticTravel(): void
     {

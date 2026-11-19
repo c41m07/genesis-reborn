@@ -153,11 +153,16 @@ test('Orbite neutre : demande au départ, accord clavier, suivi et retrait tacti
     await expect(card.locator('[data-orbit-deadline]')).toHaveText(/h.*min.*s/);
     const violations=(await new AxeBuilder({page:hostPage}).include('[data-live-region="orbit-requests"]').analyze()).violations.filter(v=>['serious','critical'].includes(v.impact));
     expect(violations).toEqual([]);
-    await hostPage.evaluate(()=>document.body.dataset.theme='light');
+    // Le thème clair charge une feuille dédiée : modifier seulement l'attribut produirait un thème hybride.
+    runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','light') WHERE email='${host.email}'`);
+    await hostPage.reload();
+    await expect(hostPage.locator('body')).toHaveAttribute('data-theme', 'light');
     const lightViolations=(await new AxeBuilder({page:hostPage}).include('[data-live-region="orbit-requests"]').analyze()).violations.filter(v=>['serious','critical'].includes(v.impact));
     expect(lightViolations).toEqual([]);
     await hostPage.screenshot({path:testInfo.outputPath('orbite-neutre-clair.png'),fullPage:true,animations:'disabled'});
-    await hostPage.evaluate(()=>document.body.dataset.theme='dark');
+    runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(preferences,'$.theme','dark') WHERE email='${host.email}'`);
+    await hostPage.reload();
+    await expect(hostPage.locator('body')).toHaveAttribute('data-theme', 'dark');
     const accept=card.getByRole('button',{name:/Accepter l’orbite/});
     await accept.focus();await hostPage.waitForTimeout(5500);await expect(accept).toBeFocused();
     expect(await accept.evaluate(e=>e.matches(':focus-visible') && getComputedStyle(e).outlineStyle!=='none')).toBeTruthy();

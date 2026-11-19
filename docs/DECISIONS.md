@@ -1,11 +1,60 @@
 # Décisions et ambiguïtés — 21 octobre 2026
 
-## Grille de coûts retenue — décision explicite du 16 novembre 2026
+## Géographie de la galaxie — décision explicite du 18 novembre 2026
+
+L’utilisateur choisit la **spirale réelle comme géographie des distances pour tous
+les joueurs**. La seconde disposition est une **grille de repérage** : ses écarts
+visuels ne représentent pas l’échelle physique. Changer de vue ne change jamais
+le devis, la durée ou le carburant d’un trajet.
+
+`GalaxyGeometry` projette les coordonnées historiques sans les réécrire en base.
+Les 80 systèmes de référence occupent huit bras de dix positions, dans une étendue
+de 15 unités physiques ; une unité vaut 100 UA. Les nouvelles distances
+hyperspatiales sont les distances euclidiennes entre ces positions. Les sorties
+et entrées de système, vitesses et coefficients de consommation restent inchangés.
+Les vols déjà lancés gardent leurs durées et carburants figés ; un nouveau repli
+utilise la position physique atteinte et la nouvelle géographie. Aucun recalcul
+des réservations existantes ni migration de base n’est nécessaire.
+
+La réalisation locale L7C conserve les deux dispositions, le moteur animé existant
+et les protections de visibilité. CI, fusion et déploiement restent distincts.
+
+## Coûts par rang et première colonisation — 19 novembre 2026
+
+L’utilisateur fixe les parts de valeur M/N/A/H à **B48/52/0/0, I34/36/30/0 et
+S28/31/31/10** pour les bâtiments, recherches, vaisseaux, unités civiles et
+défenses. Les profils Basiques et les 156 budgets de base sont conservés.
+Les courbes, remises, prérequis et arrondis des devis restent appliqués.
+
+La famille Expansion coloniale passe de 288 000 à **28 800 s** de base pour
+tous ses niveaux et rangs. La taxe suit la durée effective et garde son arrondi
+par minute entamée. Les paiements, durées et remboursements des commandes déjà
+acceptées restent fondés sur les données enregistrées. Les surcharges d’univers
+gardent leur priorité. L’entretien électrique du piège reste à la valeur fixée
+par le lot précédent.
+
+L’objectif de conception est une deuxième planète vers 48 h avec environ
+trois connexions par jour, sans aide extérieure ni bonus extraordinaires.
+Les hypothèses et temps observés sont documentés dans la
+[simulation de première colonisation](EQUILIBRAGE.md#première-colonisation-19-novembre-2026).
+
+## Équilibrage des prix des deux premiers rangs — référence du 18 novembre 2026
+
+
+L’utilisateur valide les parts de valeur **B48/52/0/0, I35/35/30/0 et S25/35/30/10**
+pour les 52 fiches du catalogue de référence. Le Basique réduit la pression sur
+le nano et l’Intermédiaire transfère une part du coût vers l’antimatière. Les prix
+Supérieurs et les 156 budgets de base sont conservés, ainsi que les paiements
+enregistrés et la priorité des surcharges. La [grille détaillée](COUTS.md) et les
+[simulations](EQUILIBRAGE.md#équilibrage-des-prix-basiques-et-intermédiaires)
+documentent les prix et les parcours comparés.
+
+## Grille de coûts retenue le 16 novembre 2026, référence historique
 
 L’utilisateur retient B40/60, I30/50/20 et S25/35/30/10 en parts de valeur
 métal/nano/antimatière/hydrogène après lecture des simulations. Cette décision
 remplace les recommandations et statuts « candidat non activé » des études précédentes.
-Les [tableaux courants](COUTS.md) couvrent les 52 familles et 156 profils, civils inclus.
+Le catalogue couvre 52 familles et 156 profils, civils inclus.
 Les budgets réels de base sont exactement conservés, sans nouveau facteur de rang.
 
 Les courbes, réductions, deux étapes d’arrondi par ressource, durées, taxe E, bonus,
@@ -352,7 +401,7 @@ l’accès à de nouvelles commandes. Le registre est requalifié explicitement,
 sans réattribuer un accès à partir d’une ancienne possession, clé ou commande.
 Après acquisition selon cette grille, les accès restent permanents dans leur
 portée actuelle : recherches par joueur/univers, autres catégories par joueur/colonie.
-Le laboratoire est une condition initiale ; il n’est pas requis localement après déblocage.
+Le laboratoire était une condition initiale, sans obligation locale après déblocage. La décision du 18 novembre ajoute un minimum local pour les nouvelles commandes.
 
 Le [suivi](PROGRESSION_CARBURANT_UNITES.md) distingue cette implémentation des
 lots durées/carburant, unités économiques et simulations. La redistribution
@@ -1437,7 +1486,7 @@ les signalements figurent ci-dessous. Voir le [suivi](EVOLUTIONS_INTERFACES_FLOT
 
 ### Précisions confirmées dans la même session
 
-- Préavis d’attaque : niveau effectif = somme simple des trois rangs pour ce seul
+- Préavis d’attaque (règle historique, révisée le 18 novembre 2026) : niveau effectif = somme simple des trois rangs pour ce seul
   préavis. Formule validée : min(5 + 5 × niveau effectif, 120 minutes,
   50 % de la durée totale du trajet). Les effets pondérés sur l’espionnage et la
   détection à l’arrivée sont conservés. À la détection : planète ciblée et
@@ -1790,6 +1839,15 @@ prérequis des autres rangs, coûts, durées, plafonds et bonus restent conserv�
 Les surcharges explicites d’univers ne sont pas modifiées. Pas de migration,
 de modification des données de jeu ou de déploiement Alpha.
 
+## Préavis de détection des attaques — 18 novembre 2026
+
+Le préavis est de 30 minutes, plus 5 minutes par niveau cumulé des trois rangs
+d’Analyse tactique. Il est limité à 75 % du trajet aller, arrondis à la seconde
+inférieure. Cette décision retire l’ancien plafond fixe de deux heures.
+Le départ enregistré et l’arrivée actuelle déterminent le trajet pris en compte,
+y compris pour les vols déjà partis. Les droits d’affichage et les effets
+d’Analyse tactique sur l’espionnage suivent les règles existantes.
+
 ## 16 novembre 2026 — bunker accessible et unités civiles par rang
 
 Décision explicite utilisateur, appliquée directement sur dev local : le chantier
@@ -1921,3 +1979,245 @@ sans changement de version du registre ni nouvelle reprise. Les huit autres
 bâtiments, recherches, unités, défenses, prix, durées, effets et plafonds restent
 conservés ; les surcharges d’univers ne sont pas réécrites. Aucun effet sur les
 délais de progression n’est annoncé sans mesure, aucune activation Alpha.
+
+## Refonte visuelle L1A : proposition B — 17 novembre 2026
+
+Après présentation des deux compositions Figcraft, l’utilisateur choisit B
+(« j’aime bien la B ») pour Ma guilde, Membres et Relations entre commandants.
+La Vue générale de référence reste conservée dans le document de bureau.
+
+L’accueil privilégie le canal et ses trois derniers échanges, puis la présentation
+et les projets. Les membres gardent leur tableau et leurs attributions ; les
+relations personnelles utilisent deux colonnes de cartes sur ordinateur et une
+sur mobile. Sur les trois pages concernées, les liens secondaires sont regroupés
+dans « Pages de l’espace » sur mobile, avec indication de la page courante et
+navigation native sans JavaScript. Les vraies pages existantes restent les
+destinations ; cette décision n’ajoute ni donnée métier, ni permission, ni règle.
+
+Cette validation permet la réalisation locale de L1A ; les autres lots attendent
+leurs propres propositions et choix. [Périmètre, vérifications et limites](REFONTE_VISUELLE_INTERFACES.md).
+
+## Refonte visuelle L1B : proposition A — 17 novembre 2026
+
+L’utilisateur choisit A (« j’aime bien le A ») pour Trouver une guilde, Créer une
+guilde et Présentation consultée. La liste privilégie les lignes larges et leurs
+actions ; le formulaire dispose d’une aide latérale sur ordinateur, placée après
+les champs sur mobile. La fiche garde une bannière immersive, puis description
+et commandant en sections successives. Les destinations secondaires restent
+visibles sur mobile.
+
+Nom et tag sont conservés après erreur et rechargement dans le contexte de
+l’empire, puis effacés après réussite. La recherche par nom, le recrutement ouvert,
+les droits, médias et règles de création restent inchangés. Les lots ultérieurs
+attendent leur propre conception et validation. [Suivi du lot](REFONTE_VISUELLE_INTERFACES.md).
+
+## Refonte visuelle L1C : proposition A — 17 novembre 2026
+
+L’utilisateur choisit A (« j’aime bien le A ») pour Grades et permissions,
+Gestion, Personnalisation et Relations entre guildes. Grades à gauche et édition
+à droite, tag/transfert visibles, dissolution distinguée, fichiers sous la
+description et traités en lignes. Le menu mobile reprend celui de l’espace.
+
+Une confirmation dépliable précède transfert, départ et dissolution, y compris
+sans JavaScript. Les conséquences affichées, droits délégués, vérifications de
+version, limites de fichiers et règles de signature restent inchangés. Cette
+validation porte uniquement sur L1C ; [suivi et vérifications](REFONTE_VISUELLE_INTERFACES.md).
+
+## Refonte visuelle L2A : proposition A — 17 novembre 2026
+
+L’utilisateur choisit A (« j’aime bien le A ») pour Missions actives, les trois
+étapes de préparation et le rappel. Les missions personnelles utilisent des
+lignes larges sur ordinateur/tablette, puis une colonne sur mobile. Les arrivées
+suivent les vols personnels. Pendant la préparation, suivi des missions et
+arrivées restent à droite sur grand écran, après le formulaire sur petit écran.
+
+Les étapes restent dans le même formulaire ; résumé et estimation sont rapprochés
+avant l’envoi. Le menu mobile conserve les cinq pages existantes et reste ouvert
+sans JavaScript. Les détails personnels utilisent un bouton explicite ; le rappel
+conserve son devis et sa confirmation. Orbites, quai et compositions attendent
+leur propre conception et validation. Aucune règle d’envoi, de carburant, de
+visibilité ou de rappel n’est modifiée. [Suivi du lot](REFONTE_VISUELLE_INTERFACES.md).
+
+## Refonte visuelle L2B : proposition A — 17 novembre 2026
+
+L’utilisateur choisit A (« j’aime bien le A ») pour Demandes d’orbite, À quai et
+stationnements, et Reprendre le stationnement. Les demandes deviennent des
+lignes directement lisibles, avec échéance et actions à droite sur grand écran.
+Au quai, unités et réserve de la colonie sont côte à côte, puis viennent les
+stationnements de tout l’empire. La reprise rapproche choix de base et devis.
+
+Les pages conservent leurs URL et le menu mobile commun. Réponses orbitales,
+carburant/fret, déchargement dans les capacités disponibles, origine perdue,
+versions et confirmation de reprise gardent leurs règles. L’ancien mode
+dépliable reste pris en charge par le contrôleur d’actualisation. Cette validation
+porte sur L2B ; les compositions attendent leur choix. [Suivi](REFONTE_VISUELLE_INTERFACES.md).
+
+
+## Vue générale : finaliser la référence conservée — 18 novembre 2026
+
+L’utilisateur demande sa finalisation avant les compositions de flotte. La page
+Figcraft validée reste la référence : alertes avant la bannière, points et quatre
+accès de l’empire intégrés, activité locale à gauche, arrivées puis vols personnels
+à droite, journal en pleine largeur. Sur petit écran, ces blocs se suivent dans
+cet ordre. Les catalogues conservent leur disposition.
+
+La page garde son URL et ses liens vers les tâches dédiées. Les files, le journal,
+les confirmations et les règles de confidentialité restent ceux du jeu. La barre
+de ressources et le bouton global des événements restent dans leur composant
+commun. Aucune valeur d’équilibrage n’est décidée par cette finalisation.
+[Recette et limites](REFONTE_VISUELLE_INTERFACES.md).
+
+
+## Refonte visuelle L2C : proposition A — 18 novembre 2026
+
+L’utilisateur choisit A (« le A est bien ») pour les compositions de flotte :
+liste en lignes, éditeur en tableau sur ordinateur et trois rangs réunis par
+vaisseau sur mobile, choix de colonie et disponibilités rapprochés. Les quatre
+vues gardent leurs URL et le menu commun à Flottes.
+
+Les modèles restent personnels et limités à vingt par empire/univers. Quantités,
+versions, CSRF, accord sur les manques et nouvelle vérification des disponibilités
+restent existants. Charger prépare la mission sans l’envoyer. Cette validation
+termine L2 localement ; elle ne valide pas les lots suivants.
+[Recette et limites](REFONTE_VISUELLE_INTERFACES.md).
+
+
+## Refonte visuelle L3 : proposition A — 18 novembre 2026
+
+L’utilisateur choisit A (« j’aime bien le A ») pour l’Inventaire. Stock et opération
+à accélérer sont rapprochés ; contenu et destination de chaque boîte sont côte
+à côte sur grand écran. L’attente conserve son ordre et sa pagination. Le menu
+mobile commun garde les trois pages et leurs compteurs.
+
+Confirmations, accès, contenu attribué, capacité commune et promotion automatique
+restent existants. La revue est conservée avec JavaScript, les formulaires serveur
+restent accessibles sans JavaScript. Aucune valeur de jeu n’est modifiée.
+[Recette et limites](REFONTE_VISUELLE_INTERFACES.md).
+
+
+## Refonte visuelle L4 : proposition A — 18 novembre 2026
+
+L’utilisateur choisit A pour Mon compte : identifiants et confirmation rapprochés,
+préférences regroupées, conditions et action des vacances côte à côte sur grand
+écran, conséquences et confirmation de suppression distinctes. Une colonne sur
+mobile, avec navigation commune. Les quatre URL et les formulaires restent existants.
+
+Les réglages communs au compte restent distincts des vacances de l’univers choisi.
+Mot de passe actuel, reconnexion après profil, minimums/délais de vacances et
+confirmation de suppression dans tous les univers sont conservés. Aucune règle
+métier n’est modifiée. L’utilisateur confirme vouloir conserver la méthode A/B
+actuelle pour les lots suivants ; ses choix répétés ne les valident pas d’avance.
+[Recette et limites](REFONTE_VISUELLE_INTERFACES.md).
+
+
+## Refonte visuelle L5 : proposition A — 18 novembre 2026
+
+L’utilisateur choisit A pour les projets collectifs : listes en lignes, minimums
+visibles avant lancement, progression et don rapprochés sur la fiche active.
+Les menus communs de guilde et de projets restent disponibles sur mobile.
+Les trois listes et la fiche gardent leurs URL, paginations et dépliables utiles.
+
+Les dons restent définitifs, limités au palier courant et à une colonie autorisée.
+Versions, CSRF, restrictions de vacances, minimums, présence à la clôture et clé
+unique de récompense restent inchangés. Cette validation ne modifie aucune
+valeur de jeu et ne valide pas les lots suivants.
+[Recette et limites](REFONTE_VISUELLE_INTERFACES.md).
+
+
+## Refonte visuelle L6 : proposition A — 18 novembre 2026
+
+L’utilisateur choisit A pour Événements et Défis : listes en lignes et fiche
+avec objectif/récompense et participation rapprochés sur grand écran. Le menu
+secondaire se replie sur mobile et reste ouvert sans JavaScript. Les trois
+adresses, ancres, paginations, conditions et destinations des actions sont conservées.
+
+Le panneau global des événements reste hors du lot. Le résumé partagé avec
+l’administration n’est pas modifié ; ni les calculs, règles de contribution,
+seuils, dates, récompenses ou traitements différés. Un objet déjà acquis reste
+accessible après annulation. Cette validation ne valide pas les lots suivants.
+[Recette et limites](REFONTE_VISUELLE_INTERFACES.md).
+
+## Refonte visuelle L7A : proposition A — 18 novembre 2026
+
+L’utilisateur choisit A pour Planètes, sa comparaison et l’abandon : colonies
+horizontales sur ordinateur, comparaison en tableau, bilan complet et confirmation
+côte à côte sur grand écran. Une colonne sur tablette/mobile ; le comparatif y
+montre la ressource sélectionnée parmi les cinq existantes. La Vue générale
+finalisée précédemment est conservée.
+
+Cartes et comparaison gardent leur adresse et les paramètres existants ; renommer
+reste un dépliable et l’abandon une page dédiée. Formulaires, confirmations,
+conditions d’accès, conséquences et contrôles transactionnels sont conservés.
+La consultation du bilan garde sa synchronisation des files sous verrou.
+Cette validation ne valide pas les lots suivants.
+[Recette et limites](REFONTE_VISUELLE_INTERFACES.md).
+
+## Prérequis du Piège à antimatière — 18 novembre 2026
+
+Pour chaque rang du piège, la colonie doit avoir le producteur d’hydrogène
+du même rang au niveau 5 et le joueur doit avoir la recherche Génie civil colonial
+du même rang au niveau 2 dans l’univers. Cette décision remplace la condition
+hydrogène 3 et laboratoire 2. Le laboratoire niveau 1 du même rang reste le
+prérequis initial de la recherche. Les accès au piège déjà acquis sont conservés.
+
+Aux rangs Intermédiaire et Supérieur, le déblocage du producteur d’hydrogène
+exige déjà la même recherche au niveau 5. Le seuil 2 du piège reste explicite
+pour les trois rangs.
+
+## Progression des stockages — 18 novembre 2026
+
+Pour les cinq ressources, chaque stockage conserve le producteur local du
+même rang au niveau 5 comme prérequis initial. L’Intermédiaire exige aussi le
+stockage Basique de la même ressource au niveau 5. Le Supérieur exige ses
+stockages Basique et Intermédiaire au niveau 5. Le niveau maximum des nouvelles
+commandes est 5 en Basique et en Intermédiaire. Le Supérieur reste illimité.
+Les accès acquis, les niveaux existants, leur capacité et les opérations déjà
+payées sont conservés. Le registre garde sa version actuelle.
+
+## Équilibrage de la progression des bâtiments — 18 novembre 2026
+
+L’utilisateur valide la grille présentée avant implémentation. L’hydrogène exige
+la recherche industrielle du même rang au niveau 3 (et ses raffineries des
+rangs précédents aux niveaux 25 puis 50/25). Le piège à antimatière exige cette
+recherche au niveau 5 et la raffinerie du même rang au niveau 5. Le chantier
+demande le niveau 20 de chacun de ses rangs précédents, le bunker le niveau 8,
+en plus des producteurs de métal et de nano du rang visé. Le laboratoire avancé
+demande le niveau 10 de chacun de ses rangs précédents et la recherche
+industrielle du rang précédent au niveau 5.
+
+La production et la consommation électrique du nano doublent à tous les rangs.
+À position 5 dans un univers ×1, les débits nominaux par niveau et par heure
+passent de 180/270/405 à 360/540/810. La production passive est indépendante.
+Le lot reprend les stockages déjà livrés dans dev. Le registre conserve sa
+version, les accès acquis restent valides et les commandes payées se terminent
+selon leurs paramètres enregistrés.
+
+### Retour aux débits du nano précédents — 18 novembre 2026
+
+L’utilisateur décide de rétablir la production et la consommation électrique
+de l’atelier de nanofabrication à 180, 270 et 405 unités par heure et par niveau
+pour les rangs Basique, Intermédiaire et Supérieur, en position 5 et à vitesse ×1.
+La production brute des usines de même rang et de même niveau retrouve le ratio
+8 hydrogène : 4 métal : 2 nano : 1 antimatière dans ces conditions.
+
+## Consommation électrique de l’antimatière
+
+L’utilisateur valide une consommation directe de 0,025 électricité par seconde
+et par niveau Basique pour le piège. À plein rendement, avec 4 H consommés
+par AM et 0,25 électricité par H produit en raffinerie, le coût total atteint
+2 électricité par AM. Il correspond au coût de production de 8 H, 4 M ou 2 N.
+Les facteurs de rang continuent de s’appliquer à la production et à la
+consommation. Les débits ci-dessus sont ceux du catalogue de référence.
+
+## Laboratoire local pour lancer une recherche — 18 novembre 2026
+
+Toute nouvelle commande exige un laboratoire du même rang que la recherche,
+au niveau 1 ou plus sur sa colonie de lancement. Les déblocages et les niveaux
+de recherche sont partagés dans l’empire au sein du même univers. Les
+laboratoires avancés demandent la recherche du rang précédent et les niveaux
+locaux de la grille. Les constructions utilisent les technologies de l’empire
+selon leurs propres prérequis.
+
+La file reste commune. La colonie de lancement finance la commande et
+fournit les bonus de durée. Les commandes déjà payées poursuivent leur
+exécution avec leur coût et leur durée enregistrés.

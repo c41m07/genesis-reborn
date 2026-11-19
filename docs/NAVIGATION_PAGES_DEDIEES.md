@@ -1172,3 +1172,82 @@ des 15 phases.
 Les contrôles d’accessibilité sont ciblés, sans audit complet RGAA ni lecteur
 d’écran réel. Performance non mesurée. Aucune migration de base existante,
 installation de dépendance ou livraison Alpha autorisée ou réalisée par ce lot.
+
+## Patchnotes administratives — L10M A, 19 novembre 2026
+
+Réalisation locale sur `feature/refonte-visuelle`, d’après la page Figcraft 66 A.
+La liste `/admin/patchnotes` garde recherche, filtre d’état et pagination par 50.
+Les tâches de rédaction disposent de `/admin/patchnotes/nouvelle` et de l’édition
+GET `/admin/patchnotes/{id}`. La confirmation GET
+`/admin/patchnotes/{id}/supprimer` indique la conséquence avant de soumettre l’ancien
+POST `/admin/patchnotes/{id}/delete`. Les anciens POST de création/édition et jetons
+restent acceptés. GET et retour d’annulation ne suppriment aucune note.
+
+Le formulaire conserve la rédaction puis la publication, sans sections masquées.
+Les champs requis, limites et dates UTC sont vérifiés avant mutation ; les erreurs
+422 conservent le brouillon. Aucun chargement de liste dans les pages de formulaire.
+Navigation active, liens directs, rechargement, retour et parcours sans JavaScript
+vérifiés. Brouillons privés, publications datées et lecture joueur conservés.
+Bilan : 20 PHP / 142 assertions, six parcours navigateur consolidés ; preuves dans
+le [suivi de refonte](REFONTE_VISUELLE_INTERFACES.md). Les vérifications locales
+ne valent ni CI complète, ni fusion, ni déploiement.
+
+## Clôture administrative — L10N A, 19 novembre 2026
+
+Sécurité, État des traitements, Journal et Brouillons juridiques conservent leurs
+URL dédiées et leur navigation commune. La présentation en fiches sous 1200 px
+réutilise le même tableau ; les filtres et exports ne doublent aucune ligne.
+Les détails JSON se déplient sans tronquer les exports. Recherche de sécurité et
+export visible sont progressifs ; examen et export complet gardent leur parcours
+natif. Les rapports partagés et l’alias `/admin/transports` restent conservés.
+Le relevé ne relance aucun service ni mission ; les brouillons restent privés.
+
+L10 est complet localement : 10 PHP / 271 assertions et huit parcours navigateur
+consolidés pour cette clôture ; les bilans des sous-lots précédents restent valables
+dans leur périmètre. Wiki : propositions 70 A / 71 B préparées à la suite, choix
+différé avant réalisation. Plan 16/18 ; recette transversale, CI complète, fusion
+et déploiement restent des étapes distinctes.
+
+## Wiki — L11 A, 19 novembre 2026
+
+La page 70 A est validée et réalisée sur les URL existantes : accueil, chapitre,
+recherche et deux références. Les tâches de lecture restent des pages dédiées ;
+les formules et sections de référence restent dépliables, sans masquer les
+informations nécessaires au choix d’un chapitre. L’accueil présente les chapitres
+en lignes avec un extrait borné à 160 caractères et une éventuelle ellipse.
+Sommaire fixe à gauche sur ordinateur ; sélecteur GET natif sur tablette/mobile.
+Les anciens paramètres et fragments, le retour arrière, les droits et le contexte
+de colonie restent conservés. Aucun texte source ni règle de jeu ne change.
+
+Vérifications : validation Compose, lint statique, compilation, 4 PHP / 338
+assertions et trois parcours navigateur ; 30 captures, trois tailles et deux
+thèmes. Les 16 chapitres, 12 formules et deux références complètes sont comparés
+aux sources. Une couleur secondaire trop claire a été corrigée dans le Wiki ;
+les contrôles Axe des cinq vues sur trois tailles et deux thèmes passent.
+Plan 17/18 ; L12 et la CI complète avant fusion restent distincts.
+
+## Revue transversale L12 — 19 novembre 2026
+
+Les pages et conceptions validées sont conservées. La navigation principale,
+les menus secondaires et leurs variantes sur tablette/téléphone, le sélecteur de
+colonie, les ressources, les événements, les notifications et les arrivées sont
+rapprochés de leurs consommateurs. Les erreurs génériques 403/404/500 gardent leur
+gabarit autonome, sans chargement de données de jeu ; le refus fonctionnel reste
+contextuel. Les anciens paramètres/fragments et les parcours natifs sont conservés.
+
+**29 scénarios navigateur distincts consolidés**, thèmes sombre/clair et tailles
+1440/768/390/320 selon le composant, avec contrôles supplémentaires jusqu’à 1920
+pour les refus. Menus au clavier, retours du focus, contexte de deuxième colonie,
+actualisations tardives, notification privée réelle, transports entrants, orbites,
+accès refusés et indexation publique sont couverts. Les sélecteurs des anciens
+tests sont adaptés aux menus nommés et suivis dépliables retenus, sans retirer
+les assertions métier. Un correctif CSS ciblé rétablit le menu natif sur les petits écrans : son
+décalage hors écran est neutralisé tant que JavaScript ne pilote pas le volet.
+
+La suite PHP a exécuté 1 443 tests : 143 refus de connexion pendant une interruption
+du service de test et trois anciennes attentes visuelles ; reprise dédiée de
+**179 tests / 1 536 assertions réussie**, sans erreur restante sur ces cas.
+Un seul scénario de mesure optionnelle reste désactivé (REWORK_MEASURE=1).
+Les 13 tests Python passent. Ce bilan consolidé ne prétend pas être une unique
+exécution complète réussie de make test, ni une CI GitHub. Preuves et fichiers
+modifiés dans le suivi de refonte. **18/18 localement ; CI et fusion restent à faire.**

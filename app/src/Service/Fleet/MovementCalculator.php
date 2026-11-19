@@ -2,7 +2,11 @@
 namespace App\Service\Fleet;
 final class MovementCalculator
 {
-    /** Coordinates use [system-id, galaxy-id, x, y, planet-position]; null position is an exploration at the system border. */
+    public function __construct(private readonly GalaxyGeometry $geometry = new GalaxyGeometry())
+    {
+    }
+
+    /** Coordonnées : [système, galaxie, x de grille, y de grille, position] ; null cible l’entrée du système. */
     public function quote(array $origin,array $target,array $ships,float $ratio,float $timeMultiplier,string $fuelPolicy,float $orbitHours=0): array
     {
         if(!is_finite($ratio) || $ratio<.1 || $ratio>1 || !is_finite($timeMultiplier) || $timeMultiplier<=0 || !is_finite($orbitHours) || $orbitHours<0) throw new \DomainException('Vitesse ou durée invalide.');
@@ -10,10 +14,26 @@ final class MovementCalculator
         if($origin[1]!==$target[1]) throw new \DomainException('Les voyages inter-galaxies ne sont pas encore définis.');
         if(!in_array($fuelPolicy,['proportional','inverse'],true)) throw new \DomainException('Départs en attente du choix de la règle de carburant.');
         foreach([$origin[4],$target[4]] as $pos) if($pos!==null && ($pos<1 || $pos>9)) throw new \DomainException('Position invalide.');
-        $same=$origin[0]===$target[0];
-        $normal=$same ? abs(($target[4]??10)-$origin[4])*10 : (100-$origin[4]*10)+($target[4]===null?0:100-$target[4]*10);
-        $hyper=$same ? 0 : hypot($target[2]-$origin[2],$target[3]-$origin[3])*100;
-        return $this->quoteDistances($normal,$hyper,$same,$ships,$ratio,$timeMultiplier,$fuelPolicy,$orbitHours);
+        $distances = $this->distances($origin, $target);
+        $quote = $this->quoteDistances($distances['normal'], $distances['hyper'], $distances['same'], $ships, $ratio, $timeMultiplier, $fuelPolicy, $orbitHours);
+        $quote['distance_geometry'] = GalaxyGeometry::SPIRAL;
+
+        return $quote;
+    }
+
+    /** @return array{normal: int|float, hyper: int|float, same: bool} Lecture sans flotte ni effet de bord. */
+    public function distances(array $origin, array $target): array
+    {
+        if ($origin[1] !== $target[1]) {
+            throw new \DomainException('Les voyages inter-galaxies ne sont pas encore définis.');
+        }
+
+        $same = $origin[0] === $target[0];
+        $normal = $same ? abs(($target[4] ?? 10) - $origin[4]) * 10
+            : (100 - $origin[4] * 10) + ($target[4] === null ? 0 : 100 - $target[4] * 10);
+        $hyper = $same ? 0 : $this->geometry->distance($origin[2], $origin[3], $target[2], $target[3]);
+
+        return ['normal' => $normal, 'hyper' => $hyper, 'same' => $same];
     }
 
     public function quoteDistances(int|float $normal,int|float $hyper,bool $same,array $ships,float $ratio,float $timeMultiplier,string $fuelPolicy,float $orbitHours=0): array

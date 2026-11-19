@@ -1,0 +1,433 @@
+/* L7A A : seuls la liste, le comparatif et le bilan d’abandon changent de composition. */
+body.authenticated.ui-refined .colony-redesign {
+    --colony-control-border: #526d87;
+    --colony-action-text: #090f1b;
+    --colony-danger: #ffaaaa;
+}
+
+body.authenticated.ui-refined[data-theme="light"] .colony-redesign {
+    --muted: #526170;
+    --colony-control-border: #6a7b88;
+    --colony-action-text: #fff;
+    --colony-danger: #a22e3d;
+}
+
+body.authenticated.ui-refined .colony-redesign .panel {
+    min-width: 0;
+    margin: 0;
+    padding: 20px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--panel);
+    box-shadow: none;
+}
+
+body.authenticated.ui-refined .colony-redesign :is(p, dt, dd, li, label, input, select, summary) {
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.colony-redesign :is(h1, h2, h3, p, a, button, dt, dd, li) {
+    overflow-wrap: anywhere;
+}
+
+body.authenticated.ui-refined .colony-redesign :where(.primary, .secondary, .quiet-button, .planet-index-shortcuts a, .planet-abandon-link, .ui-tabs a) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 44px;
+    padding: 10px 14px;
+    border: 1px solid var(--colony-control-border);
+    border-radius: 5px;
+    background: transparent;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.6;
+    text-align: left;
+    text-decoration: none;
+    white-space: normal;
+}
+
+body.authenticated.ui-refined .colony-redesign .primary {
+    border-color: var(--gold);
+    background: var(--gold);
+    color: var(--colony-action-text);
+}
+
+body.authenticated.ui-refined .colony-redesign :is(.planet-abandon-link, .danger) {
+    border-color: var(--colony-danger);
+    background: transparent;
+    color: var(--colony-danger);
+}
+
+.colony-redesign :is(a, button, input, select, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+
+body.authenticated.ui-refined .colony-redesign .ui-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 24px 0;
+    padding: 0;
+    border: 0;
+}
+
+body.authenticated.ui-refined .colony-redesign .ui-tabs a[aria-current] {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, var(--panel));
+    color: var(--text);
+}
+
+body.authenticated.ui-refined .colony-redesign .planet-index-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+}
+
+body.authenticated.ui-refined .colony-redesign .planet-index-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 28px;
+    overflow: visible;
+}
+
+body.authenticated.ui-refined .colony-redesign .planet-index-art {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    margin: 0 auto;
+    background: transparent;
+}
+
+.colony-redesign .planet-index-art::after {
+    content: none;
+}
+
+body.authenticated.ui-refined .colony-redesign .planet-index-art img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+body.authenticated.ui-refined .colony-redesign .planet-index-body {
+    min-width: 0;
+    padding: 0;
+}
+
+body.authenticated.ui-refined .colony-redesign .planet-index-title {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+}
+
+body.authenticated.ui-refined .colony-redesign .planet-index-title h2 {
+    margin: 0;
+    font-size: 22px;
+    line-height: 1.5;
+}
+
+.colony-redesign .planet-index-title .empire-name {
+    color: var(--accent);
+    max-width: 100%;
+    font: inherit;
+    text-align: left;
+}
+
+body.authenticated.ui-refined .colony-redesign .planet-index-title p {
+    margin: 12px 0 0;
+    color: var(--muted);
+}
+
+body.authenticated.ui-refined .colony-redesign .badge {
+    justify-self: start;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--gold);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+body.authenticated.ui-refined .colony-redesign .planet-index-body > dl {
+    display: grid;
+    gap: 20px;
+    margin: 28px 0;
+}
+
+body.authenticated.ui-refined .colony-redesign .planet-index-body dl > div {
+    display: flex;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    padding: 0;
+    border: 0;
+}
+
+body.authenticated.ui-refined .colony-redesign .planet-index-body :is(dt, dd) {
+    margin: 0;
+    color: var(--text);
+    text-align: left;
+}
+
+.colony-redesign .planet-index-body dt::after {
+    content: " :";
+}
+
+body.authenticated.ui-refined .colony-redesign .planet-index-body > .muted {
+    margin: 0 0 28px;
+    color: var(--muted);
+}
+
+body.authenticated.ui-refined .colony-redesign :is(.planet-rename, .planet-production) {
+    margin: 20px 0 0;
+    padding: 0;
+    border: 1px solid var(--colony-control-border);
+    border-radius: 5px;
+    background: transparent;
+}
+
+.colony-redesign :is(.planet-rename, .planet-production) > summary {
+    min-height: 44px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.colony-redesign .planet-rename form {
+    display: grid;
+    gap: 14px;
+    padding: 12px 14px 18px;
+}
+
+.colony-redesign .planet-rename :is(input, button) {
+    width: 100%;
+    min-width: 0;
+}
+
+.colony-redesign .planet-production > :is(p, dl) {
+    margin: 16px 14px 20px;
+}
+
+body.authenticated.ui-refined .colony-redesign .planet-production dl {
+    display: grid;
+    gap: 14px;
+}
+
+.colony-redesign .planet-index-actions {
+    display: flex;
+    flex-direction: column;
+    align-self: stretch;
+    min-width: 0;
+    gap: 24px;
+}
+
+body.authenticated.ui-refined .colony-redesign .planet-index-shortcuts {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+body.authenticated.ui-refined .colony-redesign .planet-index-card .planet-abandon-link {
+    display: inline-flex;
+    font-size: 14px;
+    text-align: left;
+    margin-top: auto;
+    width: 100%;
+}
+
+body.authenticated.ui-refined .colony-redesign .planet-index-shortcuts a {
+    width: 100%;
+}
+
+body.authenticated.ui-refined .colony-redesign .colony-resource-picker {
+    display: grid;
+    gap: 12px;
+    width: 330px;
+    max-width: 100%;
+    margin: 24px 0;
+}
+
+.colony-redesign .colony-resource-picker select {
+    width: 100%;
+    min-height: 44px;
+    margin: 0;
+}
+
+body.authenticated.ui-refined .colony-redesign .colony-comparison {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+}
+
+.colony-redesign .colony-comparison caption {
+    padding: 0 0 24px;
+    color: var(--muted);
+    font-size: 14px;
+    text-align: left;
+}
+
+body.authenticated.ui-refined .colony-redesign .colony-comparison :is(th, td) {
+    min-width: 0;
+    padding: 24px 10px;
+    vertical-align: top;
+    white-space: normal;
+    font-size: 12px;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+body.authenticated.ui-refined .colony-redesign .colony-comparison th:first-child {
+    width: 16%;
+}
+
+body.authenticated.ui-refined .colony-redesign .colony-comparison td strong {
+    display: block;
+    font-size: 12px;
+    line-height: 1.6;
+    white-space: normal;
+}
+
+.colony-redesign :is(.colony-comparison-coordinates, .colony-comparison-rate) {
+    display: block;
+    margin-top: 14px;
+    color: var(--muted);
+}
+
+.colony-redesign .colony-comparison th[scope="row"] > a {
+    font-size: 16px;
+}
+
+.colony-redesign .colony-comparison .storage-warning {
+    display: block;
+    margin-top: 12px;
+}
+
+body.authenticated.ui-refined .colony-redesign .colony-abandon-return {
+    margin: 0 0 24px;
+}
+
+.colony-redesign .colony-abandon-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 20px;
+}
+
+body.authenticated.ui-refined .colony-redesign :is(.colony-abandon-panel, .colony-abandon-confirmation) {
+    max-width: none;
+}
+
+body.authenticated.ui-refined .colony-redesign :is(.colony-abandon-panel, .colony-abandon-confirmation) h2 {
+    margin: 0 0 28px;
+    font-size: 22px;
+    line-height: 1.5;
+}
+
+body.authenticated.ui-refined .colony-redesign .colony-abandon-panel :is(h3, h2:not(:first-child)) {
+    margin-top: 28px;
+}
+
+.colony-redesign #abandon-consequences {
+    color: var(--colony-danger);
+}
+
+body.authenticated.ui-refined .colony-redesign .colony-abandon-panel > p {
+    margin: 20px 0;
+}
+
+body.authenticated.ui-refined .colony-redesign .abandon-loss-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+}
+
+.colony-redesign .abandon-loss-grid > section {
+    padding: 0;
+    border: 0;
+}
+
+.colony-redesign .abandon-loss-grid h3 {
+    margin: 0 0 20px;
+    font-size: 18px;
+}
+
+.colony-redesign .abandon-blockers {
+    border-color: var(--colony-danger);
+}
+
+body.authenticated.ui-refined .colony-redesign .abandon-confirmation {
+    gap: 18px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.colony-redesign .abandon-confirmation :is(label, p) {
+    margin: 0;
+}
+
+.colony-redesign .abandon-confirmation input[type="text"] {
+    min-height: 44px;
+    max-width: none;
+}
+
+.colony-redesign .abandon-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 24px;
+}
+
+body.authenticated.ui-refined .colony-redesign .abandon-actions > * {
+    justify-content: flex-start;
+    width: 100%;
+    min-height: 44px;
+    font-size: 14px;
+    text-align: left;
+    white-space: normal;
+}
+
+@media (min-width: 1201px) {
+    body.authenticated.ui-refined .colony-redesign .planet-index-card {
+        grid-template-columns: 150px minmax(0, 1fr) 300px;
+    }
+
+    .colony-redesign .colony-abandon-layout {
+        grid-template-columns: minmax(0, 1fr) 330px;
+    }
+}
+
+/* Le même filtre reste utilisable avec son formulaire GET, même sans JavaScript. */
+@media (max-width: 1200px) {
+    body.authenticated.ui-refined .colony-redesign .colony-comparison [data-resource]:not(.is-selected-resource) {
+        display: none;
+    }
+
+    body.authenticated.ui-refined .colony-redesign .colony-comparison th:first-child {
+        width: 30%;
+    }
+
+    .colony-redesign .colony-comparison th[data-resource] {
+        width: 44%;
+    }
+}
+
+@media (max-width: 600px) {
+    body.authenticated.ui-refined .colony-redesign .panel {
+        padding: 18px;
+    }
+
+    .colony-redesign .page-heading > .quiet-button {
+        width: 100%;
+    }
+
+    body.authenticated.ui-refined .colony-redesign .colony-comparison :is(th, td) {
+        padding: 20px 5px;
+    }
+}

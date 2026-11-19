@@ -1,6 +1,11 @@
 {
   "slug": "storage_metal",
   "label": "Dépôt de minerais",
+  "tier_max_levels": {
+    "basic": 5,
+    "intermediate": 5,
+    "superior": null
+  },
   "base_build_time": 180,
   "build_time_scaling": 1.6,
   "costs_base": {
@@ -27,6 +32,11 @@
           "slug": "mine_metal",
           "tier": "intermediate",
           "level": 5
+        },
+        {
+          "slug": "storage_metal",
+          "tier": "basic",
+          "level": 5
         }
       ]
     },
@@ -36,6 +46,16 @@
           "slug": "mine_metal",
           "tier": "superior",
           "level": 5
+        },
+        {
+          "slug": "storage_metal",
+          "tier": "basic",
+          "level": 5
+        },
+        {
+          "slug": "storage_metal",
+          "tier": "intermediate",
+          "level": 5
         }
       ]
     }
@@ -43,22 +63,22 @@
   "economy_value_budget": 5000,
   "cost_profiles": {
     "basic": {
-      "metal": 1001,
-      "nano": 750,
+      "metal": 1201,
+      "nano": 650,
       "antimatter": 0,
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 940,
-      "nano": 783,
-      "antimatter": 156,
+      "metal": 1064,
+      "nano": 563,
+      "antimatter": 235,
       "hydrogen": 0
     },
     "superior": {
-      "metal": 978,
-      "nano": 684,
-      "antimatter": 293,
-      "hydrogen": 784
+      "metal": 1095,
+      "nano": 606,
+      "antimatter": 303,
+      "hydrogen": 782
     }
   },
   "tier_labels": {

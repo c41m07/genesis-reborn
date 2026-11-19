@@ -46,8 +46,9 @@ final class ClassFuelTest extends TestCase
             $ship=$this->ship($slug,$tier,7);
             self::assertEquals($normal,$ship['fuel_travel_system']);
             self::assertEquals($hyper,$ship['fuel_travel_galaxy']);self::assertEquals($orbit,$ship['fuel_orbit']);
-            $fast=$calculator->quote([1,1,0,0,5],[2,1,1,0,5],[$ship],1,1,'proportional',2);
-            $slow=$calculator->quote([1,1,0,0,5],[2,1,1,0,5],[$ship],.5,1,'proportional',2);
+            // Le barème par classe est contrôlé sur des distances fixes, indépendamment de la carte.
+            $fast=$calculator->quoteDistances(100,100,false,[$ship],1,1,'proportional',2);
+            $slow=$calculator->quoteDistances(100,100,false,[$ship],.5,1,'proportional',2);
             self::assertEqualsWithDelta(7*2*(100*$normal+100*$hyper)+7*2*$orbit,$fast['total_fuel'],1e-8);
             self::assertEqualsWithDelta($fast['one_way_fuel']/2,$slow['one_way_fuel'],1e-8);
             self::assertSame($fast['orbit_fuel'],$slow['orbit_fuel']);
@@ -58,15 +59,15 @@ final class ClassFuelTest extends TestCase
     public function testPromptReferencesAndMixedFleetUseRealMovementCalculation(): void
     {
         $calculator=new MovementCalculator();$origin=[1,1,0,0,5];$near=[2,1,1,0,5];
-        foreach (['probe'=>10,'fighter'=>50,'transport'=>100,'capital'=>500] as $slug=>$expected) {
+        foreach (['probe'=>5.42126214028537,'fighter'=>27.10631070142685,'transport'=>54.2126214028537,'capital'=>271.0631070142685] as $slug=>$expected) {
             $quote=$calculator->quote($origin,$near,[$this->ship($slug)],1,1,'proportional');
-            self::assertEquals($expected,$quote['total_fuel']);
+            self::assertEqualsWithDelta($expected,$quote['total_fuel'],1e-8);
         }
         $ships=[$this->ship('fighter','basic',20)];$distant=[2,1,10,0,5];
-        self::assertEquals(8200,$calculator->quote($origin,$distant,$ships,1,1,'proportional')['total_fuel']);
-        self::assertEquals(82000,$calculator->quote($origin,$distant,$this->legacy()->forFleet($this->fleet(),$ships),1,1,'proportional')['total_fuel']);
+        self::assertEqualsWithDelta(3930.388053944605,$calculator->quote($origin,$distant,$ships,1,1,'proportional')['total_fuel'],1e-8);
+        self::assertEqualsWithDelta(39303.88053944605,$calculator->quote($origin,$distant,$this->legacy()->forFleet($this->fleet(),$ships),1,1,'proportional')['total_fuel'],1e-8);
         $mixed=[$this->ship('probe','basic',2),$this->ship('capital','superior',3),$this->ship('transport','intermediate',4)];
-        self::assertEquals(1920,$calculator->quote($origin,$near,$mixed,1,1,'proportional')['total_fuel']);
+        self::assertEqualsWithDelta(1040.8823309347908,$calculator->quote($origin,$near,$mixed,1,1,'proportional')['total_fuel'],1e-8);
     }
 
     public function testFrozenProfilesSurviveLaterCatalogChangesAndKeepOtherStatistics(): void

@@ -1,0 +1,386 @@
+/* L2A A : les composants partagés conservent leur présentation hors de cet espace. */
+body.authenticated .fleet-redesign {
+    --fleet-control-border: #526d87;
+    --fleet-action-text: #090f1b;
+    --fleet-error: #ffa3a3;
+}
+
+body.authenticated[data-theme="light"] .fleet-redesign {
+    --muted: #526170;
+    --fleet-control-border: #6a7b88;
+    --fleet-action-text: #fff;
+    --fleet-error: #9a2929;
+}
+
+body.authenticated .fleet-redesign :is(input, select, .secondary) {
+    border-color: var(--fleet-control-border);
+}
+
+body.authenticated .fleet-redesign .secondary {
+    background: transparent;
+    color: var(--text);
+}
+
+body.authenticated .fleet-redesign .primary {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--fleet-action-text);
+}
+
+body.authenticated .fleet-redesign :is(button, .primary, .secondary, .space-navigation > a) {
+    min-height: 44px;
+    font-size: 14px;
+}
+
+.fleet-redesign .space-navigation-menu-label {
+    color: var(--text);
+}
+
+body.authenticated .fleet-redesign .operation-type {
+    font-size: 18px;
+    flex-wrap: wrap;
+    overflow-wrap: anywhere;
+}
+
+.fleet-redesign .fleet-id {
+    font-size: 13px;
+    color: var(--muted);
+}
+
+body.authenticated .fleet-redesign .operation-heading .badge {
+    font-size: 11px;
+}
+
+body.authenticated[data-theme="light"] .fleet-redesign .flight-operation .badge.returning {
+    color: var(--text);
+}
+
+body.authenticated .fleet-redesign .space-navigation > a {
+    border-color: var(--fleet-control-border);
+    border-radius: 5px;
+}
+
+body.authenticated .fleet-redesign .space-navigation.space-navigation > a[aria-current="page"] {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, var(--panel));
+    color: var(--accent);
+}
+
+body.authenticated .fleet-redesign #active-missions {
+    max-width: none;
+    margin-inline: 0;
+}
+
+body.authenticated .fleet-redesign .flight-operations {
+    padding: 20px;
+    min-width: 0;
+}
+
+body.authenticated .fleet-redesign .flight-operation {
+    margin-top: 16px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-inline-start-width: 3px;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--panel) 75%, var(--bg));
+}
+
+.fleet-redesign .flight-operation :is(.flight-route, .flight-progress-row, .combat-timers) {
+    min-width: 0;
+}
+
+body.authenticated .fleet-redesign .flight-details-action .empire-name {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid var(--fleet-control-border);
+    border-radius: 5px;
+    background: transparent;
+    color: var(--text);
+    font-size: 14px;
+    text-align: left;
+}
+
+body.authenticated .fleet-redesign .fleet-form {
+    border-color: var(--line);
+    background: var(--panel);
+}
+
+body.authenticated .fleet-redesign .fleet-wizard-header,
+body.authenticated .fleet-redesign .fleet-wizard-steps,
+body.authenticated .fleet-redesign .fleet-wizard-panel {
+    padding: 20px;
+}
+
+body.authenticated .fleet-redesign .fleet-wizard-steps {
+    gap: 8px;
+    padding-top: 0;
+}
+
+body.authenticated .fleet-redesign .fleet-wizard-steps > span {
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--muted);
+    font-size: 13px;
+    flex-wrap: wrap;
+}
+
+body.authenticated .fleet-redesign .fleet-wizard-steps > span.active {
+    background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+    border-color: var(--accent);
+    color: var(--text);
+}
+
+.fleet-redesign .fleet-wizard-steps i {
+    flex: 0 0 22px;
+}
+
+body.authenticated .fleet-redesign .fleet-wizard-panel h3 {
+    font-size: 22px;
+    margin-bottom: 16px;
+}
+
+.fleet-redesign .fleet-wizard-panel h3:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
+}
+
+body.authenticated .fleet-redesign .quantity-choice {
+    padding-block: 12px;
+    border-bottom: 1px solid var(--line);
+}
+
+.fleet-redesign .fleet-ship-info {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+body.authenticated .fleet-redesign .fleet-ship-info strong {
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+body.authenticated .fleet-redesign .fleet-ship-info small {
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+body.authenticated .fleet-redesign .fleet-ship-choice {
+    border: 0;
+}
+
+body.authenticated .fleet-redesign .fleet-ship-choice input {
+    width: 96px;
+    max-width: none;
+    flex: 0 0 96px;
+    margin: 0;
+}
+
+body.authenticated .fleet-redesign .fleet-wizard-note,
+body.authenticated .fleet-redesign .fleet-mission-summary,
+body.authenticated .fleet-redesign .flight-estimate {
+    border-color: var(--line);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+}
+
+body.authenticated .fleet-redesign .fleet-wizard-error,
+body.authenticated .fleet-redesign .flight-estimate.error {
+    background: color-mix(in srgb, var(--fleet-error) 8%, var(--panel));
+    border: 1px solid var(--fleet-error);
+    color: var(--fleet-error);
+    font-size: 14px;
+}
+
+.fleet-redesign .fleet-review-grid {
+    display: grid;
+    gap: 20px;
+    margin-block: 20px;
+}
+
+.fleet-redesign .fleet-review-grid > div {
+    min-width: 0;
+}
+
+.fleet-redesign .fleet-review-grid h4 {
+    margin: 0 0 14px;
+    font-size: 18px;
+}
+
+body.authenticated .fleet-redesign .fleet-review-grid :is(.fleet-mission-summary, .flight-estimate) {
+    margin: 0;
+    padding: 16px;
+}
+
+.fleet-redesign .fleet-review-grid dl {
+    grid-template-columns: minmax(0, 1fr);
+    margin: 0;
+    gap: 18px;
+}
+
+body.authenticated .fleet-redesign .fleet-review-grid dl > div {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+}
+
+body.authenticated .fleet-redesign .fleet-review-grid dt {
+    font-size: 14px;
+    color: var(--muted);
+}
+
+body.authenticated .fleet-redesign .fleet-review-grid dd {
+    margin: 6px 0 0;
+    font-size: 14px;
+    text-align: left;
+    color: var(--text);
+}
+
+.fleet-redesign .fleet-recall-panel {
+    max-width: none;
+}
+
+.fleet-redesign .fleet-recall-panel .report-facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 32px;
+}
+
+body.authenticated .fleet-redesign .space-navigation-menu .space-navigation {
+    margin-block: 0;
+}
+
+@media (min-width: 701px) {
+    body.authenticated .fleet-redesign #active-missions [data-active-fleet] {
+        display: grid;
+        grid-template-columns: 200px minmax(0, 1fr);
+        gap: 12px 24px;
+    }
+
+    .fleet-redesign #active-missions [data-active-fleet] > .operation-heading {
+        grid-column: 1;
+        grid-row: 1 / span 2;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        margin: 0;
+    }
+
+    .fleet-redesign #active-missions [data-active-fleet] > .flight-ownership {
+        grid-column: 1;
+        grid-row: 3;
+        margin: 0;
+    }
+
+    .fleet-redesign #active-missions [data-active-fleet] > .flight-route {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    .fleet-redesign #active-missions [data-active-fleet] > .combat-timers {
+        grid-column: 2;
+    }
+
+    .fleet-redesign #active-missions [data-active-fleet] > .flight-progress-row {
+        grid-column: 2;
+        grid-row: 3 / span 2;
+        align-self: end;
+    }
+
+    .fleet-redesign #active-missions [data-active-fleet] > .flight-details-action {
+        grid-column: 1;
+        grid-row: 4;
+    }
+
+    .fleet-redesign #active-missions [data-active-fleet] > p:not(.flight-ownership) {
+        grid-column: 2;
+    }
+}
+
+@media (min-width: 1101px) {
+    body.authenticated .fleet-redesign .fleet-workspace {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 330px;
+        gap: 20px;
+        align-items: start;
+    }
+
+    .fleet-redesign .fleet-review-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 1100px) {
+    body.authenticated .fleet-redesign .fleet-workspace {
+        display: flex;
+        flex-direction: column;
+    }
+
+    body.authenticated .fleet-redesign .fleet-operations-rail {
+        order: 0;
+        width: 100%;
+    }
+}
+
+@media (max-width: 700px) {
+    .fleet-redesign .fleet-recall-panel .report-facts {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.authenticated .fleet-redesign .flight-progress-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    body.authenticated .fleet-redesign .flight-progress-row .fleet-recall-link {
+        margin: 10px 0 0;
+    }
+}
+
+@media (max-width: 600px) {
+    body.authenticated .fleet-redesign .fleet-wizard-header,
+    body.authenticated .fleet-redesign .fleet-wizard-steps,
+    body.authenticated .fleet-redesign .fleet-wizard-panel,
+    body.authenticated .fleet-redesign .flight-operations {
+        padding: 16px;
+    }
+
+    body.authenticated .fleet-redesign .space-navigation-menu .space-navigation {
+        margin-top: 10px;
+    }
+
+    body.authenticated .fleet-redesign .fleet-wizard-steps > span {
+        padding: 8px 5px;
+        font-size: 11px;
+    }
+
+    .fleet-redesign .quantity-choice {
+        align-items: flex-end;
+    }
+
+    body.authenticated .fleet-redesign .fleet-ship-choice {
+        display: grid;
+        grid-template-columns: 28px minmax(0, 1fr);
+        gap: 8px;
+    }
+
+    .fleet-redesign .fleet-ship-icon {
+        width: 28px;
+        height: 28px;
+    }
+
+    body.authenticated .fleet-redesign .fleet-ship-choice input {
+        grid-column: 1 / -1;
+        width: 100%;
+    }
+
+    .fleet-redesign .fleet-wizard-actions > button {
+        width: 100%;
+    }
+}

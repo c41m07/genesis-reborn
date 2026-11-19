@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-    static targets = ['content', 'status'];
+    static targets = ['content', 'status', 'count', 'preview'];
     static values = { url: String, membership: Number, now: String, panel: { type: Boolean, default: true } };
 
     connect() {
@@ -49,6 +49,12 @@ export default class extends Controller {
                 content.innerHTML = data.html;
                 this.lastHtml = data.html;
                 const count = content.querySelectorAll('[data-incoming-attack]').length;
+                if (this.hasCountTarget) {
+                    const threats = content.querySelectorAll('[data-incoming-kind="attack"][data-incoming-attack]').length;
+                    this.countTarget.textContent = `Entrants · ${count}`;
+                    this.previewTarget.textContent = threats ? `${threats} attaque(s) détectée(s) ⌄` : 'Détails des arrivées ⌄';
+                    this.countTarget.closest('details').classList.toggle('has-hostile', threats > 0);
+                }
                 const signature = [...content.querySelectorAll('[data-incoming-attack]')].map(row => row.dataset.incomingAttack).join(',');
                 if (this.signature !== undefined && signature !== this.signature) {
                     const threats = content.querySelectorAll('[data-incoming-attack][data-incoming-kind="attack"]').length;

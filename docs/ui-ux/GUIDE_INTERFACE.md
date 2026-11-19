@@ -143,3 +143,187 @@ La référence visuelle commune est le filtre de catalogue : pastilles arrondies
 ### Ajustements des en-têtes et rapports
 
 Les surtitres `eyebrow` sont retirés des pages. Les métadonnées utiles (dates, versions, identifiants et coordonnées) restent présentes sous une présentation ordinaire. La galaxie interactive n’affiche plus les paragraphes `gv2-access-help`. Les filtres du centre de rapports conservent leur présentation antérieure en onglets soulignés ; ils constituent une exception au style commun en pastilles.
+
+### Guildes et relations — composition B validée pour L1A
+
+Ma guilde, Membres et Relations entre commandants utilisent les compositions
+de `guild-workspace.css` : bannière compacte, canal en action principale,
+échanges prioritaires, membres en tableau adaptatif et relations en cartes.
+Les surfaces, polices et couleurs reprennent les variables du jeu ; les repères
+de relation comportent toujours du texte, et les initiales sont décoratives.
+Les images personnalisées restent celles de la guilde ; l’emblème existant
+sert de repli. Aucun visuel ou logo d’identité n’est remplacé.
+
+Sur ces pages, le menu « Pages de l’espace » indique la page active sous 600 px
+et déplie les liens réels. Il reste ouvert sans JavaScript ; Échap ferme le menu
+et rend le focus au résumé. Le changement de format replace le focus sur un
+élément visible. Une seule destination diplomatique reste directement affichée
+pour les joueurs sans guilde. Le thème clair reprend ses variables existantes.
+Ces choix restent limités au [lot L1A](../REFONTE_VISUELLE_INTERFACES.md).
+
+### Découverte et création de guilde — composition A validée pour L1B
+
+`guild-discovery.css` compose les résultats en lignes et aligne Présentation,
+Contact et Adhésion sur ordinateur ; les actions sont empilées sur mobile. La
+création garde les labels et aides à proximité des champs, avec une aide latérale
+sur ordinateur. Les liens de l’espace restent visibles, sans menu supplémentaire.
+La fiche conserve le nom de guilde comme titre principal, ses visuels réels ou
+l’emblème de repli, puis présentation et commandant en sections successives.
+Les thèmes utilisent les variables existantes. Le brouillon de nom/tag est
+échappé et conservé après erreur ; il ne remplace pas la validation serveur.
+
+### Gestion de guilde — composition A validée pour L1C
+
+`guild-control.css` conserve les grades à gauche sur ordinateur puis au-dessus
+du formulaire sur petit écran. Nom, priorité et sept permissions restent dans le
+même formulaire. Les réglages de tag/transfert sont visibles ; les actions
+sensibles utilisent un dépliable décrivant leurs conséquences avant l’envoi.
+Les membres consultent les grades et disposent du départ, selon les droits
+existants. Les traités restent en lignes avec relation actuelle et proposition
+distinctes. Description et fichiers restent groupés dans le formulaire de
+personnalisation ; les fichiers s’empilent sur mobile.
+
+Le menu natif est partagé dans `space-navigation-menu.css`. Sans JavaScript,
+les liens restent dépliés ; son comportement au clavier, au redimensionnement et
+au retour de focus reste celui validé en L1A. Les confirmations utilisent le
+comportement natif de `details`, sans nouvelle dépendance.
+
+### Missions et préparation — composition A validée pour L2A
+
+`fleet-workspace.css` reste limité à `.fleet-redesign` : missions, préparation et
+rappel. Les vols personnels utilisent des lignes à deux colonnes sur grand écran,
+puis une colonne sur mobile ; le bouton Composition et fret reste distinct du
+rappel. Les composants de Vue générale et des catalogues gardent leur disposition.
+Les arrivées conservent leur panneau séparé, même vide.
+
+La préparation place ses trois missions résumées et ses arrivées à droite sur
+grand écran, après le formulaire sur petit écran. Résumé et estimation sont côte
+à côte lorsque la largeur suffit. Le fret est déplié pour les missions qui le
+permettent. Le changement explicite d’étape place le focus sur son titre ; les
+erreurs ciblent toujours le champ concerné. Une actualisation ne prend pas le
+focus. Le menu mobile reprend `space-navigation-menu` et ses liens serveur ;
+sans JavaScript, le menu et les trois étapes restent lisibles. Les confirmations
+et états de blocage de devis conservent leurs contrôleurs existants.
+
+### Orbites, quai et reprise — composition A validée pour L2B
+
+`fleet-harbour.css` étend le socle L2A à ces trois destinations. Les demandes
+sont visibles sans ouverture préalable ; origine/statut et échéance/actions
+occupent deux colonnes sur grand écran, puis une sur mobile. Le compteur garde
+son actualisation même sans dépliable. Aucune réponse n’est présentée lorsque
+le serveur ne l’autorise plus.
+
+Le quai place les unités et la réserve côte à côte sur ordinateur. Les
+stationnements en attente gardent une section large portant « tout l’empire » ;
+leurs détails restent dépliables. En l’absence de réserve, les unités reprennent
+la largeur disponible. La reprise garde choix et devis sur deux colonnes, puis
+les empile sur petit écran. Le calcul ne soumet pas la confirmation ; erreurs,
+versions, liens serveur et formulaires sans JavaScript sont conservés.
+
+
+### Vue générale — référence validée, finalisation du 18 novembre 2026
+
+La page existante conserve son URL. Une alerte de stockage ou de production
+précède la bannière ; elle disparaît en vacances. La bannière regroupe la colonie
+active, les points quotidiens de l’empire et quatre accès : Planètes, Classement,
+Flottes et Guilde. Les chiffres proviennent des données existantes ; la maquette
+ne fournit aucune valeur de jeu. Les points sont répartis en quatre colonnes,
+puis deux sur petit écran.
+
+L’activité de la colonie reste à gauche sur grand écran ; chaque file offre un
+lien vers sa page dédiée, même à vide. Les détails et annulations conservent leur
+comportement. Les arrivées précèdent les vols personnels dans la colonne de
+suivi. Sur petit écran : activité, arrivées, vols, journal. Le journal reste en
+pleine largeur. Aucune rubrique n’est remplacée par un faux onglet JavaScript.
+
+Les composants partagés conservent leurs liens dans les en-têtes, y compris
+après actualisation. Le bouton global des événements et la barre de ressources
+restent dans leur emplacement commun. Ces adaptations à la maquette évitent de
+modifier le fonctionnement des autres vues. Le style est limité à `.overview-page`.
+
+
+### Compositions de flotte — proposition A validée pour L2C
+
+Un modèle par ligne sur ordinateur : contenu à gauche, chargement et gestion à
+droite. Sur petit écran, les actions suivent le contenu. La suppression conserve
+sa confirmation native ; Modifier garde le nom du modèle dans son nom accessible.
+La création, la modification et le chargement restent des pages dédiées, avec
+le menu mobile commun à Flottes. La liste garde sa propre page d’entrée.
+
+L’éditeur conserve un tableau sur grand écran et regroupe les trois rangs sous
+chaque vaisseau sur mobile. Une seule série de champs est rendue ; libellés,
+en-têtes et rôles restent accessibles. Le choix de colonie et ses disponibilités
+sont côte à côte lorsque la largeur suffit, puis empilés. Les colonnes Demandé,
+Chargeable et Manquant deviennent des libellés visibles sur chaque groupe mobile.
+Les manques conservent texte et couleur ; le lien de chantier reste souligné.
+Les styles sont limités à `.fleet-compositions`, sans changer les règles de chargement.
+
+
+### Inventaire — proposition A validée pour L3
+
+La capacité commune occupe toute la largeur sur Boosts, Boîtes de ressources et
+Récompenses en attente. La navigation mobile réutilise le menu natif partagé et
+conserve les compteurs ; ceux-ci sont optionnels pour les autres espaces.
+Le choix d’opération reste un filtre de la même tâche, dans la page Boosts.
+Stock et utilisation sont côte à côte lorsque la largeur suffit. Le sélecteur
+reste masqué sans JavaScript : les formulaires de toutes les opérations restent
+alors visibles. Les revues existantes conservent leurs boutons et le retour du focus.
+
+Chaque boîte garde contenu et destination ensemble, sur deux colonnes puis une.
+Toutes les ressources attribuées restent visibles, y compris les valeurs nulles.
+Les conditions d’ouverture restent près du bouton. L’attente conserve une liste
+ordonnée native, sa numérotation et sa pagination, avec une ligne par récompense.
+L’aide complémentaire reste dépliable. Les styles sont limités à `.inventory-redesign`.
+
+## Mon compte — proposition A du lot L4
+
+Quatre pages dédiées : identifiants, préférences, vacances et suppression.
+Navigation secondaire commune repliable sur mobile, ouverte sans JavaScript.
+Sur grand écran, le profil, les vacances et la suppression rapprochent les
+informations et leur confirmation ; une colonne sur tablette/mobile.
+Le profil garde un seul formulaire, son mot de passe facultatif dépliable et
+la confirmation par mot de passe actuel. Les préférences gardent un seul
+bouton d’enregistrement. Portées distinctes visibles : réglages communs au
+compte, vacances de l’univers sélectionné, suppression dans tous les univers.
+Actions irréversibles identifiables, labels/focus/erreurs conservés ; styles
+isolés dans `account-workspace.css`. Résultats de recette et captures dans le
+[suivi de refonte](../REFONTE_VISUELLE_INTERFACES.md).
+
+## Projets collectifs — proposition A du lot L5
+
+Trois listes dédiées et une fiche par projet. Deux menus natifs partagés : guilde,
+puis projets ; repliables sur mobile et ouverts sans JavaScript. Listes en lignes
+sur grand écran : identité, financement et minimums personnels. Modèles avec
+conditions de récompense visibles avant lancement ; paliers dépliables. Fiche
+active avec progression à gauche et don à droite, puis une colonne ; aucun
+formulaire sur une fiche close ou pendant les vacances. Maximums de don en texte,
+libellés et confirmations existants. Styles limités à `.project-redesign` ;
+[recette et captures](../REFONTE_VISUELLE_INTERFACES.md).
+
+## Événements et Défis — proposition A du lot L6
+
+Deux listes dédiées et une fiche par défi, avec menu secondaire natif partagé.
+Annonces et bonus en lignes, dates regroupées ; défis avec identité, progression/
+récompense et accès rapprochés sur grand écran. Fiche avec objectif/récompense
+à gauche et participation/action à droite ; une colonne sur tablette/mobile.
+Sections En cours/À venir sur le même document, avec ancres et paginations
+indépendantes. Les données personnelles et les états des objets restent visibles,
+y compris un objet déjà acquis avant annulation. Les dates UTC des fiches et le
+résumé utilisé par l’administration sont conservés. Styles limités à
+`.event-redesign` ; [recette et captures](../REFONTE_VISUELLE_INTERFACES.md).
+
+## Colonies — proposition A du lot L7A
+
+Planètes conserve deux présentations du même ensemble : cartes et comparaison,
+avec `view=table` et `resource`. Cartes horizontales sur grand écran : illustration
+existante, identité et informations, puis actions ; une colonne sur tablette/mobile.
+Renommage et bonus/malus restent dépliables, stocks/vaisseaux dans le panneau
+existant utilisable au clavier et au toucher. Comparatif sémantique à cinq ressources
+sur grand écran, à une ressource sélectionnée sur format étroit, avec formulaire
+GET de repli sans JavaScript.
+
+L’abandon garde une page dédiée, son bilan complet et ses refus sans divulgation.
+Confirmation à droite sur grand écran, sous le bilan sinon ; aucune information
+nécessaire n’est cachée. Le nom, les champs de protection et les destinations
+existantes sont conservés. Styles limités à `.colony-redesign`, sans modification
+de la Vue générale ; [recette et captures](../REFONTE_VISUELLE_INTERFACES.md).
