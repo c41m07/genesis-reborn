@@ -819,3 +819,4 @@ d'attribution ni activation de profils délégués. Voir [les permissions](docs/
 
 La recherche administrative différée préserve désormais un point de reprise
 clavier si un résultat focalisé est remplacé. [Recette ciblée et limites](docs/ADMIN_ACCESSIBILITE_RECHERCHE.md).
+Une fondation interne de reçus/réservations de confirmation est préparée, sans route ni transport activés ; la migration est distincte de son application. Voir [les limites de cette tranche](docs/ADMIN_SUPPORT_COMPTES.md).
