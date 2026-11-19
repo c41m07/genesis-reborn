@@ -3676,7 +3676,108 @@ effectives seront recettés après choix. Preuves dans le dossier de conception 
 `lot-10G-references.json`, `lot-10G-plan.json`, `lot-10G-manifest.json`,
 `lot-10G-verification.json`, états avant/après/enregistrement et
 `lot-10G-{A,B}-{metrics,catalogue,edit}-{1440,390}.png`.
-Choix A/B attendu pour L10G ; L10 en cours, plan global **15/18**.
+L10G B est ensuite validé explicitement ; réalisation ci-dessous.
+
+## L10G B — Réalisation locale du 19 novembre 2026
+
+Complexité **4/5**. Page 55 B retenue : progression et attentes côte à côte,
+ressources en fiches, entrées par deux et coûts des trois rangs rapprochés sur
+ordinateur. Sous 1200 px, ces ensembles reviennent sur une colonne. Les quatre
+ancres parcourent le même relevé ; famille, recherche et fiche restent des pages
+à URL stable. L’enregistrement et la restauration gardent leurs deux formulaires.
+
+Le schéma actuel fournit toujours les champs, valeurs, bornes et pas. Les coûts
+sont regroupés dans des `<fieldset>` par rang ; les noms des ressources sont en
+français et les bornes sont associées aux champs. Les 82 champs des quatre fiches
+de référence sont conservés : centrale, drones réparateurs, chasseur et canon
+laser anti-léger. Les ressources gardent leurs quatre indicateurs, leurs
+dénominateurs et la différence entre « Non disponible », « Non applicable » et
+zéro. Le retour aux univers vise directement leur liste.
+
+Fichiers du lot : `admin/layout`, `universe_metrics`, `catalogue`,
+`_catalogue_form`, `app/assets/app.js`, nouveau `admin-balance-workspace.css`,
+les scénarios `admin-catalogue` et `admin-universe-metrics`, README, architecture,
+feuille de route, inventaire et présent suivi. Aucun contrôleur PHP, service,
+chargement, formule d’équilibrage ou comportement JavaScript ne change.
+
+Vérifications locales :
+
+- `make validate`, `make lint-static` et `make assets` réussis ; le lint utilise
+  des conteneurs ponctuels sans dépendances, l’application habituelle étant arrêtée.
+  Le schéma de la base habituelle n’a pas été contrôlé ;
+- **13 tests PHP / 76 assertions** : catalogue côté HTTP et métier, isolation
+  des surcharges, CSRF, refus d’accès, valeurs/plages/tirs, files déjà payées,
+  matérialisation puis recalcul de production, mesures sans écriture,
+  ressources paginées et données manquantes ;
+- **trois scénarios navigateur distincts réussis**, dont le scénario de mesures
+  complété et repassé : quatre familles enregistrées puis restaurées sans
+  JavaScript, recherche globale/vide, rechargement et retour arrière, accès
+  refusés, univers fermé, 26 colonies réparties sur deux pages, actualisation
+  conservant la page et univers sans colonies ;
+- lecture des mesures sans changement des stocks ; consultation des catalogues
+  sans modification des réglages. Les colonies sans données ne deviennent pas
+  des stocks nuls ; les pourcentages ne sont pas plafonnés artificiellement ;
+- **19 captures distinctes** : trois vues × 1440/768/390 × clair/sombre, plus
+  l’état fermé. Absence de débordement horizontal et Axe ciblé sans exclusion de
+  règle ; lien d’évitement, accès clavier aux ancres et noms des champs vérifiés.
+  Aperçus ordinateur/mobile et clair/sombre examinés.
+
+Preuves locales : `output/playwright/admin-balance-refonte/`, `php.log`,
+`browser.log`, `browser-mesures-final.log`, dossiers `recette` et
+`recette-mesures-finale`. Le premier passage navigateur réussit, puis les cas de
+pagination/données absentes sont ajoutés au scénario de mesures et vérifiés.
+Les tests utilisent leurs bases isolées ; aucune migration ou opération de jeu
+n’a été exécutée sur la base habituelle. CI GitHub, fusion et déploiement restent
+distincts. Aucun gain de performance annoncé, aucun audit RGAA exhaustif.
+
+## L10H — Modèles de boîtes, propositions du 19 novembre 2026
+
+Complexité **4/5**. Sources ciblées : `AdminResourceBoxController`,
+`ResourceBoxPolicy`, template, navigation et contrats d’attribution des boîtes.
+Une seule page et un seul formulaire sont conservés : cinq plafonds et les
+quinze quantités des trois formats doivent être validés ensemble. Les ancres
+parcourent les parties de cette même tâche ; aucune création de sous-page ou
+d’onglet masquant une saisie. Ce petit sous-lot termine les réglages des univers
+avant les interfaces d’animation.
+
+Dans le même document Figcraft de bureau :
+
+- **56 · L10H · A — Plafonds puis formats** : plafonds regroupés en tête, puis
+  petite, moyenne et grande boîte côte à côte sur ordinateur. Lecture par format,
+  proche du formulaire actuel ; comparer une ressource avec son plafond demande
+  de revenir au premier panneau. Une colonne sur téléphone ;
+- **57 · L10H · B — Comparaison par ressource** : chaque ressource rapproche
+  son plafond et ses trois quantités. Comparaison directe sur ordinateur,
+  deux champs par ligne sur tablette et un sur téléphone. Les formats sont
+  répartis entre cinq groupes ; lecture d’une boîte entière moins directe.
+
+Recommandation **B** pour vérifier les plafonds au plus près des trois valeurs.
+Les deux gardent motif et confirmation communs, leurs vingt quantités et les
+mêmes retours. Aucun format, filtre, tirage aléatoire ou enregistrement partiel
+n’est ajouté. Les boîtes gagnées et récompenses annoncées gardent leur contenu.
+
+Couverture équivalente : **26 cadres, 13 par direction**, **740 liens inspectés**,
+six départs de prototype et six exports en 1440/768/390. Saisie renseignée,
+confirmation d’enregistrement, plafond dépassé, boîte vide, quantité invalide,
+motif ou confirmation manquant, menu et destinations de référence. Les champs
+dessinés mènent à une saisie d’exemple ; les trois repères défilent dans la page
+et `M` revient au plan. Aucun échange avec le serveur du jeu. Les références
+numériques viennent de `ResourceBoxPolicy` ; les changements montrés restent
+fictifs. Le serveur accepte zéro pour une ressource, exige une boîte non vide,
+deux décimales au plus et un motif de 1 000 caractères maximum ; aucun contrôle
+d’univers fermé n’est inventé.
+
+Contrôle natif des **2 434 nœuds**, aucun débordement, texte superposé ou lien
+manquant ; parité des champs et valeurs. Les 50 pages antérieures gardent noms
+et nombres de cadres ; 52 pages après ajout, variables existantes réutilisées.
+Ordinateur et téléphone examinés ; texte indicatif du motif adapté au formulaire.
+Fichier enregistré, document propre, page 56 A affichée dans la fenêtre de bureau
+confirmée au premier plan. Preuves : `lot-10H-{plan,manifest,verification}.json`,
+états avant/après/enregistrement et `lot-10H-{A,B}-boxes-{1440,768,390}.png` dans
+le dossier de conception. Les propositions restent des maquettes ; la recette
+du formulaire réel et des deux thèmes attend le choix.
+
+**Choix A/B attendu pour L10H** ; L10 en cours, plan global **15/18**.
 
 ## Reprise et états de couverture
 
@@ -3701,7 +3802,7 @@ Choix A/B attendu pour L10G ; L10 en cours, plan global **15/18**.
 | L7E | A implémentée et vérifiée localement | Page 36 A validée explicitement après reprise de la messagerie et des classements | 90 PHP / 569 assertions ; neuf parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L8 | A implémentée et vérifiée localement | Page 38 A validée explicitement | 23 PHP / 244 assertions ; 16 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L9 | A implémentée et vérifiée localement | Page 40 A validée explicitement | 7 PHP / 127 assertions ; 5 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
-| L10 | L10A à L10E réalisés en A, L10F réalisé en B ; L10G A/B préparé | Choix précédents conservés ; B choisi explicitement pour L10F, choix L10G attendu | Bilan L10F : trois PHP / 143 assertions, huit scénarios navigateur consolidés, 18 captures ; L10G pages 54/55, 64 cadres et 1 580 liens | Réalisation L10G puis autres rubriques administratives ; CI, fusion et déploiement distincts |
+| L10 | L10A à L10E réalisés en A, L10F et L10G réalisés en B ; L10H A/B préparé | Choix précédents conservés ; B choisi explicitement pour L10G, choix L10H attendu | Bilan L10G : 13 PHP / 76 assertions, trois scénarios navigateur consolidés, 19 captures ; L10H pages 56/57, 26 cadres et 740 liens | Choix et réalisation L10H puis rubriques d’animation et d’exploitation ; CI, fusion et déploiement distincts |
 | L11 | Inventorié | Aucune nouvelle | Non engagé pour cette refonte | Examiner le wiki sans recommencer ses pages dédiées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 

@@ -1051,6 +1051,17 @@ transversale porte sur le catalogue de configuration fini de l’univers ; une
 liste ne construit aucun champ d’édition. Les écritures d’équilibrage réutilisent
 les transactions, matérialisations et validations existantes.
 
+L10G B ajoute `admin-balance-workspace.css`, limité aux mesures et catalogues
+par la classe de page `admin-balance-workspace`. Progression et attentes sont
+rapprochées ; chaque ressource garde ses quatre indicateurs et ses dénominateurs
+dans une liste de définitions. Les entrées restent des fiches par deux. Le
+fragment `_catalogue_form` regroupe les champs existants de `cost_profiles` par
+rang, sans changer noms, valeurs, bornes, pas ou jetons. Des `<fieldset>` nomment
+les trois rangs et les bornes sont associées aux champs par `aria-describedby`.
+Sous 1200 px, les colonnes reviennent sur une seule. Les quatre ancres des mesures
+parcourent le même relevé ; famille, recherche et édition gardent leurs URL.
+Les contrôleurs, services, lectures et écritures ne sont pas modifiés.
+
 Les contrôleurs Événements, Projets et Rotations séparent les GET de liste et de
 formulaire. Les anciens POST restent acceptés. L’assistant et les interdictions
 de réécriture des événements guidés restent inchangés. L’édition de rotation

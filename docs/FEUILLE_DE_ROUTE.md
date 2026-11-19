@@ -202,9 +202,14 @@ L10F B « Fiches et configuration » (page 53) est validé et réalisé localeme
 liste par deux, repères de création, calendrier auprès des règles. Validation,
 lint, compilation, trois PHP / 143 assertions, huit scénarios navigateur
 consolidés et 18 captures dans les deux thèmes ; règles et formulaires conservés.
-L10G prépare mesures, familles et édition des catalogues dans les pages Figcraft
-54 A « Mesures et valeurs directes » et 55 B « Comparaison et fiches » :
-64 cadres, 1 580 liens inspectés. Choix attendu avant réalisation.
+L10G B « Comparaison et fiches » (page 55) est validé et réalisé localement :
+mesures en colonnes, ressources en fiches, catalogue par deux et coûts des trois
+rangs rapprochés. Validation Compose, lint statique et compilation réussis ;
+13 PHP / 76 assertions, trois parcours navigateur consolidés et 19 captures.
+Lecture seule, pagination, données indisponibles, quatre familles et opérations
+sans JavaScript vérifiées. L10H propose les modèles de boîtes : page 56 A
+« Plafonds puis formats » et 57 B « Comparaison par ressource », 26 cadres,
+740 liens inspectés et six exports. Choix attendu avant réalisation.
 Les autres rubriques administratives seront traitées par sous-lots, sans augmenter
 le compte des dix-huit ensembles ni déclarer L10 terminé.
 CI GitHub, fusion et déploiement restent distincts.

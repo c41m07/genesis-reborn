@@ -7,6 +7,20 @@
 {% if editing %}<section class="panel"><h2>Valeurs de {{ item.label }}</h2><p>La production est matérialisée puis recalculée à l’enregistrement. Les références peuvent être restaurées pour cette entrée.</p>{% include 'admin/_catalogue_form.html.twig' %}</section>
 {% else %}
 <form method="get" action="{{ path('app_admin_catalogue',{id:universe.id}) }}" class="admin-page-search" role="search"><label for="catalogue-query">Rechercher dans toutes les familles</label><input id="catalogue-query" name="q" type="search" maxlength="150" value="{{ query }}" placeholder="Nom, identifiant ou rang"><button class="primary">Rechercher</button>{% if query %}<a href="{{ path('app_admin_catalogue_group',{id:universe.id,group:group}) }}">Effacer la recherche</a>{% endif %}</form>
-{% set resultCount = 0 %}<div class="admin-module-grid">{% for family,items in catalogues %}{% for entry in items %}{% set resultCount=resultCount+1 %}<article class="panel"><p class="eyebrow">{{ groupLabels[family] }}</p><h2>{{ entry.label }}</h2><p><code>{{ entry.slug }}</code></p><p>{{ entry.tier_labels|join(' · ') }}</p><a class="secondary" href="{{ path('app_admin_catalogue_edit',{id:universe.id,group:family,slug:entry.slug}) }}">Modifier {{ entry.label }}</a></article>{% endfor %}{% endfor %}</div>{% if resultCount==0 %}<p class="panel" role="status">Aucune entrée ne correspond à cette recherche.</p>{% endif %}
+{% set resultCount = 0 %}
+<div class="admin-module-grid admin-catalogue-grid">
+    {% for family, items in catalogues %}
+        {% for entry in items %}
+            {% set resultCount = resultCount + 1 %}
+            <article class="panel">
+                <h2>{{ entry.label }}</h2>
+                <p class="admin-catalogue-reference">{{ groupLabels[family] }} · <code>{{ entry.slug }}</code></p>
+                <p>{{ entry.tier_labels|join(' · ') }}</p>
+                <a class="secondary" href="{{ path('app_admin_catalogue_edit', {id: universe.id, group: family, slug: entry.slug}) }}">Modifier {{ entry.label }}</a>
+            </article>
+        {% endfor %}
+    {% endfor %}
+</div>
+{% if resultCount == 0 %}<p class="panel" role="status">Aucune entrée ne correspond à cette recherche.</p>{% endif %}
 {% endif %}
 {% endblock %}
