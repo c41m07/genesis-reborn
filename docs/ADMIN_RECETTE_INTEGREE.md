@@ -104,3 +104,52 @@ non exécutée et revue globale différée en lecture seule. Aucun push, fusion
 dans dev, déploiement ou correction audit. Le fichier généré reference.php
 reste exclu et intact. La référence b3bc705 demeure disponible indépendamment
 de cette nouvelle recette.
+
+## Complément navigateur V2 et préparation de publication
+
+Dev distant vérifié par git ls-remote : 8be1fd9bbc574c5839d1d9a72874ac9bceb164a6,
+inchangé au moment de cette recette. Aucun fetch forcé ni modification de dev.
+
+- Six contrôles clavier Chromium rejoués sur V2 : tous réussis (2,4 s),
+  à 1366 et 390 px.
+- Recette navigateur réelle additionnelle : un parcours réussi (9,1 s)
+  à 1366 et 390 px. Compte synthétique inscrit puis vérifié/promu uniquement
+  dans la DB jetable. Matrice de permissions, exploitation, diagnostic de
+  fiche joueur, historique catalogue vide et retour vers la fiche consultés.
+- Comparaison de devis soumise puis recalculée sans sauvegarde. Valeurs
+  game_settings et nombre de traces catalogue identiques avant/après.
+- Huit captures générées sous app/test-results ; ces artefacts temporaires
+  ne sont pas versionnés et pourront être remplacés par un prochain test.
+- Premier essai corrigé : URL de test /admin/operations erronée, remplacée
+  par la vraie route /admin/exploitation. Ce n’était pas une panne applicative.
+- Second essai : une attente de persistance du devis au rechargement a échoué.
+  Vérification du contrôleur : le brouillon est consommé au premier GET.
+  La recette finale constate sa disparition puis un recalcul réussi.
+  Limite UX observée : recharger perd l’aperçu temporaire ; aucune correction
+  de comportement n’a été faite dans cette campagne.
+- La restauration historique complète n’a pas été parcourue dans Chromium :
+  aucune trace compatible préparée dans cette fixture. Sa validation reste
+  celle des tests HTTP/PHP précédents, pas une validation navigateur.
+
+Isolation : projet Docker genesis-browser-test-1795126346-220163, app/DB/broker
+privés, port loopback 18799, aucun réseau habituel raccordé, mailer null,
+pas de worker/relay/notifier. Les 60 migrations ont été appliquées sur la base
+vide en mémoire jusqu’à Version20261120000100 avant import synthétique.
+Ce parcours n’atteste pas la migration d’une base existante ni le temps réel.
+Projet, réseau et lien node_modules temporaire supprimés après test.
+Le scénario ad hoc n’est pas ajouté à la CI : il dépend de ce montage privé.
+
+### Avant publication autorisée
+
+1. Confirmer le périmètre accepté et les limites : renvoi non raccordé,
+   délégation inactive, aucun replay métier ; ne pas annoncer le panel complet.
+2. Réconcilier la branche de publication avec dev distant et les lots locaux ;
+   préserver les historiques, refaire les tests concernés après toute évolution.
+3. Préparer une PR en brouillon uniquement avec autorisation de publication,
+   puis CI complète sur son dernier SHA avant toute fusion.
+4. Vérifier sur une copie autorisée la compatibilité des deux migrations,
+   sauvegarde/restauration et procédure de retour ; aucune base réelle modifiée ici.
+5. Compléter la recette navigateur d’une trace compatible/restauration préparée,
+   ainsi que les parcours temps réel requis. La revue globale reste séparée,
+   strictement en lecture seule. Les corrections audit restent hors de ce lot.
+6. Obtenir l’autorisation distincte de fusion/déploiement ; aucun push réalisé.
