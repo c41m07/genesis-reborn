@@ -63,3 +63,44 @@ Le panel complet n’est pas déclaré terminé :
 Aucune migration sur une base existante n’est autorisée par cette recette.
 La CI complète et les validations requises par AGENTS restent nécessaires
 avant toute proposition de fusion.
+
+## Recette V2 locale : cycle support et orientation des relais
+
+La référence verte b3bc705 reste conservée sur recette/admin-integration.
+La branche recette/admin-integration-v2 utilise le même worktree dédié et
+assemble localement, sans réécrire les sources :
+- support fa996dd35941ea681fd51115436bb2138b08900f, incluant 1475301 ;
+- exploitation 4d0cb811f63e8a74e3f6788a8d922e241fa1f9eb ;
+- assemblage de code V2 : 7838ab6.
+
+Seul conflit supplémentaire : ajouts indépendants du README, tous conservés.
+Aucun changement de permission ni arbitrage de règle métier dans cette recette.
+
+Vérifications de la V2 :
+- Compose valide ; suite admin/catalogue/comptes intégrée : 136 tests,
+  1 173 assertions en 80,728 secondes.
+- Diagnostic outbox additionnel : 2 tests, 120 assertions.
+  Total des deux exécutions PHP distinctes : 138 tests, 1 293 assertions.
+- Les migrations Version20261119235900 puis Version20261120000100 sont
+  exécutées ensemble dans le test gardé sur database-test/genesis_v2_test.
+  La réservation est utilisable après ces deux migrations. Aucun schéma réel
+  n’est modifié ; ceci ne vaut pas répétition d’une migration de production.
+- Concurrence entre processus, propriété du reçu, expiration sans remise en
+  file et interruptions avant/après faux transport sont couvertes sans envoi.
+- Lint PHP global src/tests/migrations, 80 fichiers YAML, 214 templates Twig,
+  injection du conteneur, diff : réussis.
+- 13 tests Python de sauvegarde réussis. Les états failed/timeout imprimés
+  sont les fixtures attendues, pas un contrôle de sauvegarde réelle.
+- Base et réseau privés genesis-admin-integration-test supprimés à l’issue.
+
+La compilation des assets et les six tests clavier de la recette initiale
+restent le dernier passage frontend : ces sources n’ont pas changé, ils ne
+sont pas annoncés comme rejoués en V2. Le template diagnostic modifié est
+couvert par les tests HTTP et le lint, sans nouvelle recette visuelle.
+
+Le périmètre complet reste ouvert : renvoi administratif non raccordé,
+délégation inactive, aucune reprise/replay de traitement réel, CI complète
+non exécutée et revue globale différée en lecture seule. Aucun push, fusion
+dans dev, déploiement ou correction audit. Le fichier généré reference.php
+reste exclu et intact. La référence b3bc705 demeure disponible indépendamment
+de cette nouvelle recette.
