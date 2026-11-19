@@ -2088,3 +2088,8 @@ Premier périmètre local : fiche joueur et interventions ressources/vaisseaux/f
 Les admins existants conservent leur accès ; aucune délégation activée.
 Matrice de rôles, stockage, révocation et conversion des autres routes restent
 à définir/implémenter avant ouverture. [Suivi](ADMIN_PERMISSIONS.md).
+## Accessibilité administration : recherche différée
+
+Correctif local ciblé du focus perdu après remplacement AJAX, reproduit puis
+vérifié dans Chromium sur fixture. Six scénarios aux largeurs ordinateur/mobile
+et assets validés ; recette complète/CI non réalisées. [Suivi](ADMIN_ACCESSIBILITE_RECHERCHE.md).

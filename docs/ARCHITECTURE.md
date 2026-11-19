@@ -1205,3 +1205,9 @@ La page GET `/admin/permissions` réutilise `AdminCapability::definitions()` :
 sa liste est aussi celle reconnue par la politique. Le contrôleur garde les
 deux contrôles ROLE_ADMIN et PLAYER_VIEW, sans accès à une cible ni écriture.
 La navigation la place dans Exploitation ; aucun accès délégué n'est activé.
+## Focus de la recherche administrative
+
+`admin-list` relève le focus avant remplacement des résultats. S’il était dans
+la zone remplacée, le bilan actualisé reçoit le focus sans scroll forcé ;
+la saisie et les éléments extérieurs ne sont pas déplacés. Les protections
+de génération et erreurs sont conservées. [Recette](ADMIN_ACCESSIBILITE_RECHERCHE.md).
