@@ -28,7 +28,7 @@ final class AdminOperationsDiagnosticTest extends WebTestCase
         $admin->password = 'test';
         $admin->roles = ['ROLE_ADMIN'];
         $em->persist($admin);
-        foreach (['occupation', 'reconstruction', 'unknown_diagnostic'] as $kind) {
+        foreach (['occupation', 'reconstruction', 'unknown_diagnostic', 'fleet'] as $kind) {
             $message = new OutboxMessage();
             $message->kind = $kind;
             $message->targetId = 987654;
@@ -49,6 +49,13 @@ final class AdminOperationsDiagnosticTest extends WebTestCase
         self::assertSelectorTextContains('.admin-operations', 'Non collectés sur cette page');
         self::assertStringNotContainsString('secret-', $client->getResponse()->getContent());
         self::assertSelectorNotExists('.admin-operations form[method=post]');
+        self::assertSelectorTextContains('.admin-operations', 'Examen humain requis');
+        self::assertSelectorTextContains('.admin-operations', 'Publication à vérifier');
+        self::assertSelectorTextContains('.admin-operations', 'Exécution métier : non déterminable');
+        self::assertSelectorExists('.admin-operations a[href="/admin/flottes/987654"]');
+        // Recharger le diagnostic ne doit pas retirer ni republier un message.
+        $client->request('GET', '/admin/exploitation');
+        self::assertResponseIsSuccessful();
         $em = self::getContainer()->get(EntityManagerInterface::class);
         self::assertSame($before, $em->getConnection()->fetchAllAssociative('SELECT * FROM outbox_message ORDER BY id'));
     }
