@@ -1,0 +1,24 @@
+.simulation-workspace .simulation-form>.strategic-grid { gap:20px; }
+.simulation-workspace .simulation-form>.strategic-grid>section { min-width:0; padding:16px; border:1px solid var(--line); border-radius:6px; background:var(--bg); }
+.simulation-workspace .simulation-trial { margin-top:12px; border:1px solid var(--line); border-radius:6px; padding:0 16px 16px; }
+.simulation-workspace .simulation-trial>summary { min-height:48px; padding-block:12px; }
+.simulation-workspace .simulation-versus { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin:16px 0; }
+.simulation-workspace .simulation-camp { min-width:0; padding:16px; border:1px solid var(--line); border-radius:6px; background:var(--bg); }
+.simulation-workspace .simulation-losses { width:100%; table-layout:fixed; font-variant-numeric:tabular-nums; }
+.simulation-workspace .simulation-losses th:first-child { width:43%; }
+.simulation-workspace .simulation-losses th { overflow-wrap:anywhere; }
+.simulation-workspace .simulation-losses small { display:block; color:var(--muted); font-size:12px; font-weight:400; }
+.simulation-workspace .simulation-survivors { color:#87d8b4; }
+body[data-theme=light] .simulation-workspace .simulation-survivors { color:#176742; }
+.simulation-workspace .simulation-total { margin-top:12px; font-size:12px; }
+@media(max-width:1100px) { .simulation-workspace .simulation-versus { grid-template-columns:1fr; } }
+@media(max-width:600px) {
+    .simulation-workspace .simulation-camp { padding:12px; }
+    .simulation-workspace .simulation-losses,
+    .simulation-workspace .simulation-losses tbody { display:block; }
+    .simulation-workspace .simulation-losses thead { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+    .simulation-workspace .simulation-losses tbody tr { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); margin-top:14px; }
+    .simulation-workspace .simulation-losses tbody th { grid-column:1/-1; width:auto; padding:0 0 8px; border:0; }
+    .simulation-workspace .simulation-losses td { text-align:left; padding:4px 0 10px; font-size:22px; }
+    .simulation-workspace .simulation-losses td::before { content:attr(data-label); display:block; color:var(--muted); font-size:12px; }
+}

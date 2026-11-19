@@ -56,9 +56,12 @@ test('Mesures par univers : accès admin, lecture seule, données manquantes et 
   await expect(page.getByRole('link', { name: 'Aller au contenu', exact: true })).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.locator('#admin-main')).toBeFocused();
-  const table = page.getByRole('region', { name: 'Ressources des colonies observées, tableau défilant' });
-  await table.focus();
-  await expect(table).toBeFocused();
+  const resources = page.getByRole('region', { name: 'Ressources et productivité', exact: true });
+  const resourcesLink = page.getByRole('navigation', { name: 'Mesures de l’univers' }).getByRole('link', { name: 'Ressources', exact: true });
+  await resourcesLink.focus();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/#metrics-resources$/);
+  await expect(resources.locator('.admin-resource-observation')).toHaveCount(5);
   for (const theme of ['dark', 'light']) {
     runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END, '$.theme', '${theme}') WHERE email='${email}'`);
     await page.reload();
@@ -66,17 +69,46 @@ test('Mesures par univers : accès admin, lecture seule, données manquantes et 
     for (const width of [1440, 768, 390]) {
       await page.setViewportSize({ width, height: 900 });
       await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+      for (const grid of ['.admin-observation-comparison', '.admin-observation-resources']) {
+        expect(await page.locator(grid).evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(width === 1440 ? 2 : 1);
+      }
+      const audit = await new AxeBuilder({ page }).include('#admin-main').analyze();
+      expect(audit.violations).toEqual([]);
+      await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+      await page.screenshot({ path: testInfo.outputPath(`mesures-${theme}-${width}.png`), fullPage: true, animations: 'disabled' });
     }
-    const audit = await new AxeBuilder({ page }).include('#admin-main').analyze();
-    expect(audit.violations).toEqual([]);
   }
   expect(stocks()).toBe(before);
   runIsolatedSql(project, `UPDATE universe SET status='closed' WHERE id=${universe}`);
   await page.reload();
   await expect(page.locator('main')).toContainText('Univers fermé.');
-  await expect(table).toContainText('Non applicable');
+  await expect(resources).toContainText('Non applicable');
   expect(stocks()).toBe(before);
   await page.screenshot({ path: testInfo.outputPath('mesures-mobile.png'), fullPage: true });
+  // Les colonies sans lignes de ressources doivent rester indisponibles, jamais devenir des stocks nuls.
+  const membership = Number(queryIsolatedSql(project, `SELECT pu.id FROM player_universe pu JOIN player p ON p.id=pu.player_id WHERE p.email='${email}'`));
+  const freePlanets = queryIsolatedSql(project, `SELECT p.id FROM planet p JOIN solar_system s ON s.id=p.solar_system_id JOIN galaxy g ON g.id=s.galaxy_id WHERE g.universe_id=${universe} AND p.owner_id IS NULL ORDER BY p.id LIMIT 25`).split(/\s+/).map(Number);
+  expect(freePlanets).toHaveLength(25);
+  runIsolatedSql(project, `UPDATE planet SET owner_id=${membership} WHERE id IN (${freePlanets.join(',')})`);
+  const nativeContext = await browser.newContext({ storageState: await page.context().storageState(), javaScriptEnabled: false, viewport: { width: 390, height: 900 } });
+  const native = await nativeContext.newPage();
+  await native.goto(url);
+  await expect(native.locator('#metrics-resources')).toContainText('26 colonies possédées');
+  await expect(native.locator('#metrics-resources')).toContainText('colonie(s) non exploitable(s)');
+  await native.getByRole('link', { name: 'Page suivante', exact: true }).click();
+  await expect(native).toHaveURL(/page=2#metrics-resources$/);
+  await expect(native.locator('#metrics-resources')).toContainText('Page 2 sur 2');
+  await native.getByRole('link', { name: 'Actualiser le relevé', exact: true }).click();
+  await expect(native).toHaveURL(/page=2$/);
+  await native.getByRole('link', { name: 'Page précédente', exact: true }).click();
+  await expect(native.locator('#metrics-resources')).toContainText('Page 1 sur 2');
+  expect(stocks()).toBe(before);
+  const emptyUniverse = Number(queryIsolatedSql(project, `SELECT id FROM universe WHERE id<>${universe} ORDER BY id LIMIT 1`));
+  await native.goto(`/admin/universes/${emptyUniverse}/mesures`);
+  await expect(native.locator('#metrics-resources')).toContainText('Aucune colonie exploitable');
+  await expect(native.locator('.admin-resource-observation')).toHaveCount(0);
+  await expect(native.locator('#metrics-progression')).toContainText('Non disponible');
+  await nativeContext.close();
   const missing = await page.goto('/admin/universes/2147483647/mesures');
   expect(missing.status()).toBe(404);
 });

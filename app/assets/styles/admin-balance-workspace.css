@@ -1,0 +1,180 @@
+/* L10G B : comparer les relevés et les rangs, sans modifier leurs données. */
+body.admin-console.admin-balance-workspace .admin-content {
+    overflow-wrap: anywhere;
+}
+
+body.admin-console.admin-balance-workspace :is(.admin-observation-comparison, .admin-observation-resources, .admin-catalogue-grid, .catalog-balance-grid) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 20px;
+}
+
+body.admin-console.admin-balance-workspace .admin-observation-comparison {
+    margin-bottom: 20px;
+}
+
+body.admin-console.admin-balance-workspace :is(.panel, .admin-resource-observation) {
+    min-width: 0;
+    padding: 22px;
+    border-radius: 6px;
+}
+
+body.admin-console.admin-balance-workspace .admin-observation-comparison > .panel,
+body.admin-console.admin-balance-workspace .admin-catalogue-grid > .panel {
+    margin: 0;
+}
+
+body.admin-console.admin-balance-workspace :is(.panel h2, .admin-resource-observation h3) {
+    margin-top: 0;
+    font-size: 21px;
+    line-height: 1.4;
+}
+
+body.admin-console.admin-balance-workspace .admin-resource-observation {
+    border: 1px solid var(--line);
+}
+
+body.admin-console.admin-balance-workspace .universe-observations :is(section, h2) {
+    scroll-margin-top: 24px;
+}
+
+body.admin-console.admin-balance-workspace .universe-observations dl {
+    display: block;
+    margin: 24px 0;
+}
+
+body.admin-console.admin-balance-workspace .universe-observations dt {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+body.admin-console.admin-balance-workspace .universe-observations dd {
+    margin: 6px 0 22px;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+body.admin-console.admin-balance-workspace .admin-resource-observation dl {
+    margin-bottom: 0;
+}
+
+body.admin-console.admin-balance-workspace .admin-resource-observation dd:last-child {
+    margin-bottom: 0;
+}
+
+body.admin-console.admin-balance-workspace :is(.admin-page-navigation, .admin-balance-actions) {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin: 24px 0;
+}
+
+body.admin-console.admin-balance-workspace :is(.admin-page-navigation a, .admin-balance-actions a, .admin-catalogue-grid .secondary) {
+    display: flex;
+    align-items: center;
+    min-height: 46px;
+    text-align: left;
+}
+
+body.admin-console.admin-balance-workspace .admin-balance-actions {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+body.admin-console.admin-balance-workspace .admin-catalogue-reference {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+body.admin-console.admin-balance-workspace .admin-page-search {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    margin: 28px 0 20px;
+}
+
+body.admin-console.admin-balance-workspace .admin-catalogue-costs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 28px;
+}
+
+body.admin-console.admin-balance-workspace .admin-catalogue-costs fieldset {
+    display: grid;
+    min-width: 0;
+    gap: 22px;
+    padding: 0;
+    margin: 0;
+    border: 0;
+}
+
+body.admin-console.admin-balance-workspace .admin-catalogue-costs legend {
+    padding: 0 0 20px;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+body.admin-console.admin-balance-workspace .admin-balance-field {
+    display: grid;
+    min-width: 0;
+    gap: 8px;
+}
+
+body.admin-console.admin-balance-workspace .admin-balance-field label,
+body.admin-console.admin-balance-workspace .admin-page-search label {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+body.admin-console.admin-balance-workspace .admin-balance-field small {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+body.admin-console.admin-balance-workspace :is(.admin-balance-field input, .admin-page-search input) {
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    padding: 12px;
+    margin: 0;
+    font-size: 14px;
+}
+
+body.admin-console.admin-balance-workspace .admin-catalogue-editor h3 {
+    margin-top: 32px;
+}
+
+body.admin-console.admin-balance-workspace :is(.admin-catalogue-editor button, .admin-catalogue-reset button) {
+    width: 100%;
+    min-height: 46px;
+    text-align: left;
+}
+
+body.admin-console.admin-balance-workspace .admin-catalogue-reset {
+    margin-top: 16px;
+}
+
+@media (max-width: 1200px) {
+    body.admin-console.admin-balance-workspace :is(.admin-observation-comparison, .admin-observation-resources, .admin-catalogue-grid, .catalog-balance-grid, .admin-catalogue-costs) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 760px) {
+    body.admin-console.admin-balance-workspace :is(.panel, .admin-resource-observation) {
+        padding: 18px;
+    }
+
+    body.admin-console.admin-balance-workspace .admin-page-navigation {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    body.admin-console.admin-balance-workspace :is(.admin-balance-field input, .admin-page-search input) {
+        font-size: 16px;
+    }
+}

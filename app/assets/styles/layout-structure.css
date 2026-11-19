@@ -110,3 +110,10 @@
 .message-pane{height:100%;min-height:0}
 .message-thread{min-height:0}
 @media(max-width:740px){.inbox-layout{height:auto;min-height:0}.inbox-sidebar{max-height:220px}.message-pane{height:340px;min-height:340px}.message-thread{min-height:0}}
+
+@media (max-width: 1020px) {
+    /* Le menu reste dans la page tant que JavaScript ne peut pas ouvrir le volet. */
+    .authenticated:not(.nav-ready) .sidebar {
+        transform: none;
+    }
+}

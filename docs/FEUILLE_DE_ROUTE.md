@@ -11,6 +11,272 @@ par les services de jeu dans une base de test, avec une horloge contrôlée.
 Les variations d’horaire, la mise en file avancée et les réglages propres
 aux univers restent à vérifier séparément.
 
+## Refonte visuelle avec Figcraft — 17 novembre 2026
+
+Préparation depuis `dev` à `e7acc17` sur `feature/refonte-visuelle`.
+L’[inventaire initial](INVENTAIRE_INTERFACES.md) recense 170 routes du projet,
+200 gabarits et 53 contrôleurs d’interaction après le premier lot, avec les
+variantes et lots associés. Les navigations par pages déjà livrées sont conservées.
+Après présentation de deux propositions Figcraft à 1440/768/390 px, l’utilisateur
+a choisi B pour Ma guilde / Membres / Relations entre commandants. Ce lot est
+implémenté localement : échanges prioritaires, membres et cartes de relations,
+menu de l’espace mobile utilisable sans JavaScript. Les contrôles ciblés et
+captures réelles figurent dans le [suivi de refonte](REFONTE_VISUELLE_INTERFACES.md).
+CI GitHub et fusion restent à effectuer. Les autres lots attendent leur propre
+conception et validation ; la mission globale n’est pas terminée.
+
+À la demande de l’utilisateur, la branche commune `feature/refonte-visuelle`
+accueille les prochains lots par commits locaux, sans publication implicite.
+Le tableau détaillé compte **18 lots prévus**, dont L1A, L1B et L1C réalisés localement.
+L1B retient A après validation : Trouver une guilde, Créer une guilde et
+Présentation consultée. Résultats en lignes, formulaire accompagné et fiche
+immersive ; nom/tag conservés après erreur et rechargement dans le seul empire
+concerné. Les contrôles ciblés et captures réelles sont consignés dans le suivi.
+Les deux propositions restent dans les pages Figcraft 04 et 05 ; Vue générale
+et B du premier lot préservées. Les 15 lots restants attendent leur propre cycle
+de conception et validation. CI GitHub et fusion restent distinctes.
+
+L1B est enregistré dans `1e390a9`, L1C A dans `1a33d14`. L1C retient A après validation : Grades,
+Gestion, Personnalisation et Relations entre guildes, confirmations natives avant
+transfert/départ/dissolution et menu mobile partagé. 83 tests PHP ciblés réussis ;
+une reprise navigateur corrige le focus au changement de format et passe sur les
+six parcours concernés, après 14 succès au premier passage. Captures réelles
+et limites dans le suivi ; aucune CI GitHub ou intégration revendiquée. Les deux
+propositions restent dans Figcraft, pages 06/07. **Trois lots réalisés localement,
+15 restants** dans le plan principal. L2 est découpé autour du parcours de flotte.
+
+L2A : Missions actives, les trois étapes complètes de préparation et le rappel.
+A est choisie et réalisée : lignes compactes, préparation guidée et menu mobile
+partagé. 59 tests PHP / 713 assertions, 15 parcours navigateur consolidés et
+40 captures réelles ; contrôles statiques et compilation réussis. Les contrastes
+et le libellé accessible du rappel ont été corrigés sans affaiblir les tests.
+Les maquettes restent dans les pages 08/09 ; les références antérieures sont
+préservées. L2 reste partiellement réalisé : orbites, quai et reprise composent
+L2B, puis les compositions L2C. Ces sous-lots suivront leur propre choix A/B.
+Détails et limites dans le suivi de refonte ; CI et intégration restent distinctes.
+
+L2A A est enregistré dans `ff6c324`. L2B retient A après validation : Orbites,
+Quai et Reprise du stationnement. Demandes directement lisibles, unités/réserve
+côte à côte, stationnements de tout l’empire et choix/devis rapprochés.
+60 tests PHP / 471 assertions, 14 parcours navigateur consolidés et 24 captures ;
+contrôles statiques et compilation réussis. Les références Figcraft restent
+conservées. À la demande de l’utilisateur, la finalisation de la Vue générale
+déjà maquettée devient prioritaire avant les compositions L2C.
+
+Complément du 18 novembre : Vue générale finalisée depuis la référence conservée.
+Alertes avant la bannière, points et accès regroupés, liens des files, arrivées
+avant les vols et journal préservé. 28 tests PHP / 562 assertions (une mesure
+optionnelle ignorée), huit parcours navigateur consolidés et dix captures ;
+contrôles statiques et compilation réussis. Les autres vues de L7 restent dans
+leur propre périmètre. L2C reste soumis au choix A/B ; CI et intégration distinctes.
+Vue générale est enregistrée dans `6b3bb70`, L2B dans `88d68e3`.
+Les propositions L2C sont prêtes dans Figcraft, pages 12/13 : modèles en lignes
+(A) ou en cartes (B), liste/création/modification/chargement, 26 cadres contrôlés.
+Après choix explicite de A (« le A est bien »), les quatre vues sont implémentées
+et vérifiées : 27 tests PHP / 372 assertions, cinq parcours navigateur consolidés,
+36 captures réelles et contrôles statiques/compilation réussis. L2 est désormais
+complet localement : **quatre ensembles réalisés sur 18, quatorze restants**.
+La finalisation anticipée de Vue générale ne valide pas le reste de L7A.
+Le commit L2C est `da86685`. Les propositions L3 sont préparées dans Figcraft,
+pages 14/15 : Inventaire guidé (A) ou Inventaire en cartes (B). Trois pages,
+deux fenêtres de confirmation et leurs états sont déclinés en 32 cadres contrôlés.
+A est ensuite choisie (« j’aime bien le A ») et réalisée : menu mobile avec
+compteurs, capacité commune en largeur, choix guidé des boosts, boîtes en lignes
+et attente chronologique. 22 tests PHP / 318 assertions, sept parcours navigateur
+et 50 captures ; contrôles statiques et compilation réussis. Les maquettes
+précédentes sont préservées. **Cinq ensembles réalisés sur 18, treize restants**.
+L3 est enregistré dans `16a9173`. Mon compte / préférences / vacances / suppression
+(L4) est préparé dans Figcraft, pages 16/17 : Compte structuré (A) ou Compte en
+sections (B). Quatre pages existantes et deux états détaillés à 1440/768/390 px,
+plus les planches de confirmations, soit 38 cadres. Les quinze pages précédentes
+sont conservées. A est ensuite choisie et réalisée : champs/informations et
+confirmation rapprochés, préférences regroupées, menu mobile commun. 34 tests PHP
+/ 209 assertions, six parcours navigateur consolidés et 52 captures ; contrôles
+statiques et compilation réussis. **Six ensembles réalisés sur 18, douze restants**.
+L4 est enregistré dans `e13e588`. Projets collectifs (L5) est préparé dans Figcraft,
+pages 18/19 : Projets en lignes (A) ou Projets en cartes (B), trois listes et
+fiches actives/terminées/abandonnées, 38 cadres. A est ensuite choisie et réalisée :
+listes en lignes, minimums visibles et progression/don rapprochés, menus mobiles
+communs. 44 tests PHP / 239 assertions, trois parcours navigateur et 66 captures ;
+contrôles statiques et compilation réussis. **Sept ensembles réalisés sur 18,
+onze restants**. L5 est enregistré dans `9eb316e`. Événements et Défis (L6) est
+préparé dans Figcraft, pages 20/21 : lignes et participation rapprochée (A),
+ou cartes et fiche verticale (B). Deux listes et quatre états de fiche,
+38 cadres. A est ensuite choisie et réalisée : listes en lignes, participation
+rapprochée, menu mobile commun. 32 tests PHP / 175 assertions, trois parcours
+navigateur et 66 captures ; contrôles statiques et compilation réussis.
+L6 est enregistré dans `811ef2d`. L7A A est également réalisé et vérifié localement :
+colonies en lignes, comparaison adaptée aux formats étroits et bilan d’abandon
+avec confirmation rapprochée. Vue générale conservée. 51 PHP / 417 assertions,
+sept parcours navigateur et 43 captures ; contrôles statiques et compilation réussis.
+L7A est enregistré dans `730b447`. **Neuf ensembles réalisés sur 18, neuf restants**.
+L7B porte ensuite sur Bâtiments,
+Recherche, Chantier, Défenses, Guide technologique et confirmation d’annulation.
+Propositions Figcraft pages 24/25 : familles en lignes et suivi à droite (A), ou
+quatre cartes par ligne sur ordinateur et activité en bandeau (B). Les quatre
+vues B adaptées sont vérifiées ; les 46 autres cadres sont conservés. Choix attendu.
+À la demande de l’utilisateur, deux nouvelles propositions depuis cette B sont
+préparées dans les pages 26/27 : gains et actions directs avec suivi au-dessus (A),
+ou lecture Coût/Stock et suivi en bas (B). Quatre cartes sur ordinateur, informations
+décisives visibles et boutons stables après deux ajouts ; 46 nouveaux cadres
+vérifiés. L’utilisateur demande ensuite de conserver le design actuel des quatre
+catalogues en y appliquant Actions directes : version consolidée page 28, 27 cadres
+vérifiés, grandes images/rangs conservés. Les corrections suivantes sont consolidées
+page 29 : stocks retirés des cartes, interrupteurs, vrai mode en lignes, suivi fixe
+et panneaux de files/flottes avec annulation. 53 cadres vérifiés et deux aperçus
+défilables. Les consommations deviennent rouges et négatives. Après précision de
+l’utilisateur, 16 aperçus Intermédiaire/Supérieur reprennent directement les écrans
+de la page 29, avec leurs files et interrupteurs, en cartes/lignes sur ordinateur/mobile.
+Les coûts sont ensuite limités à cinq colonnes par rangée, et chaque ressource
+manquante est détaillée dans le bouton indisponible. Sur téléphone, les coûts du
+mode en lignes prennent toute la largeur. Vérification ciblée : 44 écrans,
+172 cartes/lignes et 464 montants conservés ; 31 captures actualisées.
+La page 29 est ensuite validée et réalisée localement : quatre cartes sur ordinateur,
+vraies lignes, gains ouverts, coûts/manques et bandeau des files/flottes dépliable.
+Vérifications : 20 PHP / 2 298 assertions, six parcours navigateur consolidés,
+30 captures réelles, compilation et lints. Dix ensembles sur 18 sont réalisés.
+L7C est ensuite validé et réalisé localement. Les deux dispositions sont conservées :
+Spirale réelle et Grille de repérage. Décision explicite : la spirale fixe les
+distances communes des nouveaux devis et replis ; les vols existants conservent
+durées et carburants figés. Le moteur visuel reste animé et interactif aux trois
+niveaux, avec repères, signaux inconnus sur noir et flèches de flotte. Le simulateur
+affiche les bilans par camp, unité et rang. Recette : 126 PHP ciblés, cinq parcours
+navigateur consolidés ; cartes à 80 systèmes sur quatre largeurs et contrôles
+d’accessibilité ciblés. Onze ensembles sur 18 sont réalisés localement.
+L7D (Rapports et archives) est repris après refus des deux premières propositions.
+Les pages 34 A « Rapport actuel affiné » et 35 B « Camps en vis-à-vis » reprennent
+les vrais tableaux, comparaisons VS et statistiques des rapports existants, avec
+le socle UI validé. 62 cadres et 578 commandes reliées ; exemple de combat calculé
+sans base, contrôles de conservation et de présentation. L’utilisateur choisit ensuite A et autorise sa réalisation : bilans et rounds
+complets, lecture mobile, sélection, archives et renseignements sont intégrés
+localement. Vérifications : 15 PHP / 98 assertions, cinq parcours navigateur
+consolidés, compilation et lint complet. Douze ensembles sur 18 sont réalisés ;
+six restent à réaliser, à partir de L7E. L’utilisateur retient la proposition A,
+avec reprise des classements joueurs/guildes et de la messagerie depuis leur design
+actuel. Figcraft page 36 A est ajustée : tableaux complets, évolutions, médiane,
+bulles bleues/dorées et panneaux de messagerie conservés ; page 37 B préservée.
+70 cadres et 499 commandes reliées au total ; les 25 cadres repris sont vérifiés,
+avec examen visuel sur ordinateur/mobile. Maquettes et données fictives seulement,
+aucun message envoyé dans les maquettes. L’utilisateur valide ensuite la page 36 A.
+L7E est intégré localement : messagerie conservée, profils en lignes, tableaux et
+protection consultables au clavier/toucher, retour de recherche contextualisé.
+90 PHP / 569 assertions et neuf parcours navigateur consolidés après corrections,
+formats 1440/768/390/320, sombre/clair, clavier et accès sans JavaScript.
+Compilation, lint complet et contrôle du diff réussis ; bilan et limites dans le suivi.
+L7D est enregistré dans `5523ac4`, L7E dans `557061e`. Après les deux propositions
+Figcraft de L8 (92 cadres et 512 commandes), l’utilisateur valide la page 38 A
+« Continuité claire ». Elle est intégrée localement : accueil avec aperçu du jeu,
+formulaires partageant un panneau illustré sur ordinateur et direct sur mobile,
+cartes d’univers avec leurs neuf règles complètes. Les contrats d’accès, réponses
+neutres, calendriers UTC et fermeture à 24 heures restent conservés.
+23 PHP / 244 assertions et 16 parcours navigateur distincts consolidés après
+corrections, avec formats 1440/768/390/320, thèmes sombre/clair, clavier et accès
+sans JavaScript. Compilation, lint complet et contrôle du diff réussis ; preuves
+et limites dans le suivi de refonte. Aucune migration sur la base habituelle.
+L8 porte alors le bilan à quatorze ensembles sur 18, avant L9 (feedback, patchnotes
+et documents complémentaires).
+L9 possède deux propositions Figcraft, pages 40 A « Lecture directe » et 41 B
+« Repères de lecture » : 66 cadres et 782 liens, couverture équivalente, contrôles
+de présentation et exports ordinateur/mobile vérifiés. Formulaire, états de capture,
+patchnotes dépliables et quatre documents juridiques existants sont représentés.
+L’utilisateur valide ensuite la page 40 A, intégrée localement : formulaire à deux
+colonnes sur ordinateur, aperçu local agrandissable sans pré-envoi de fichier,
+patchnotes dépliables et documents conservés avec six ancres de confidentialité.
+7 tests PHP / 127 assertions et 5 parcours navigateur distincts consolidés après
+corrections ; compilation, lint et contrôle du diff réussis. Les contrôles de
+capture privée, quota, absence de JavaScript, publication et lecture sont conservés.
+**Quinze ensembles sur 18 réalisés ; trois restants** : L10, L11, L12.
+L9 A est enregistré dans `dafe1ca`. L10A A « Console directe » (page Figcraft 42)
+est validé puis réalisé localement : accueil, quatre espaces existants et comptes
+joueurs adaptés aux écrans étroits, avec droits et formulaires conservés.
+Validation, lint, compilation, 29 tests PHP / 312 assertions et six parcours
+navigateur consolidés ; 24 captures en thèmes clair/sombre, détails dans le suivi.
+L10B A « Fiche et actions locales » (page 44) est ensuite validé et réalisé :
+activité par univers en cartes, colonies en lignes et deux interventions dépliables.
+Validation, lint, compilation, 29 PHP / 138 assertions, cinq parcours navigateur
+consolidés et 18 captures finales dans les deux thèmes, sans changement des services.
+L10C A « Modération lisible » (page 46) est validé et réalisé localement :
+signalements complets, feedbacks en cartes, suivi en colonne et accès aux archives
+avec filtres conservés. Validation, lint, compilation, 39 PHP / 331 assertions,
+six scénarios navigateur consolidés et 18 captures dans les deux thèmes ; bilan
+et corrections de contraste dans le suivi.
+L10D A « Dossiers en lignes » (page 48) est validé et réalisé localement : liste,
+création et suivi, avec formulaire en colonne sur ordinateur et après les notes
+sur mobile. Validation, lint, compilation, huit PHP / 27 assertions, quatre
+scénarios navigateur consolidés et 18 captures dans les deux thèmes ; filtres,
+brouillon après refus, historique et protections conservés.
+L10E A « Surveillance directe » (page 50) est validé et réalisé localement :
+alertes, seuils dépliables, tableau/fiches des missions et intervention dépliable.
+Validation, lint, compilation, 34 PHP / 149 assertions, huit scénarios navigateur
+consolidés et 18 captures dans les deux thèmes ; contrôles et rapports conservés.
+L10F B « Fiches et configuration » (page 53) est validé et réalisé localement :
+liste par deux, repères de création, calendrier auprès des règles. Validation,
+lint, compilation, trois PHP / 143 assertions, huit scénarios navigateur
+consolidés et 18 captures dans les deux thèmes ; règles et formulaires conservés.
+L10G B « Comparaison et fiches » (page 55) est validé et réalisé localement :
+mesures en colonnes, ressources en fiches, catalogue par deux et coûts des trois
+rangs rapprochés. Validation Compose, lint statique et compilation réussis ;
+13 PHP / 76 assertions, trois parcours navigateur consolidés et 19 captures.
+Lecture seule, pagination, données indisponibles, quatre familles et opérations
+sans JavaScript vérifiées. L10H A « Plafonds puis formats » (page 56) est validé
+et réalisé localement : vingt quantités dans un formulaire, trois formats en
+colonnes et confirmation conservée après refus. Validation, lint statique,
+compilation et 10 PHP / 30 assertions réussis ; deux parcours navigateur
+consolidés, dont la recette finale avec six captures clair/sombre en trois formats.
+L10I A « Parcours direct » (page 58) est validé et réalisé localement : événements
+et modèles en pleine largeur, formulaires réguliers, aperçu continu et annulation
+guidée dépliable. Validation Compose, lint statique, compilation et 22 PHP /
+247 assertions réussis ; sept scénarios navigateur consolidés et trente captures
+finales dans les deux thèmes, en trois formats. Formulaires sans JavaScript,
+refus, conservation des saisies et historique paginé vérifiés.
+L10J A « Paliers dans le fil » (page 60) est validé et réalisé localement : liste
+en pleine largeur, identité, paliers et minimums dans un formulaire, ressources
+sur cinq/deux/une colonnes. Le brouillon accepte l’ajout/retrait avant le choix
+d’univers. Validation Compose, lint statique, compilation et 37 PHP / 224 assertions
+réussis ; trois scénarios navigateur consolidés et vingt captures ciblées.
+L10K A « Réglages dans le fil » (page 62) est validé et réalisé localement :
+liste en pleine largeur, formulaire en trois sections et activation dépliable.
+Validation Compose, lint statique, compilation et 11 PHP / 185 assertions réussis ;
+quatre scénarios navigateur consolidés et vingt et une captures administratives.
+Saisies après refus, versions, univers, activation motivée et plafond vérifiés.
+L10L A « Suivi dans le fil » (page 64) est validé et réalisé localement : liste
+et filtres en pleine largeur, tableau puis fiches sous 1200 px, annulations
+natives dépliables. Validation Compose, lint statique, compilation et 27 PHP /
+150 assertions réussis ; cinq scénarios navigateur consolidés et dix-neuf captures
+ciblées. Filtres, paginations 50 + 2, clavier, contrastes ciblés et parcours sans
+JavaScript vérifiés, avec contributions conservées après retrait.
+Nettoyage Figcraft validé : 27 variantes retirées, 34 pages après tri, composants
+et références Galaxie/Simulateur préservés ; copie complète vérifiée conservée.
+L10M A « Rédaction dans le fil » (page 66) est validé et réalisé localement :
+quatre pages, rédaction puis publication, validation partagée et confirmation
+native. Validation Compose, lint statique, compilation et 20 PHP / 142 assertions
+réussis ; six parcours navigateur consolidés et vingt-cinq captures ciblées.
+Brouillon privé, publication/lecture, filtres et pagination 50 + 2, droits, CSRF,
+erreurs conservées et suppression sans JavaScript vérifiés.
+L10N A « Contrôle en lignes » (page 68) est validé et réalisé localement :
+Sécurité, traitements, journal et quatre brouillons juridiques. Validation Compose,
+lint statique, compilation et 10 PHP / 271 assertions réussis ; huit parcours
+navigateur consolidés et 43 captures ciblées. Exports CSV complets même avec les
+détails fermés, filtres, pagination, examen natif et accès privés vérifiés.
+Les rapports administratifs et anciennes destinations de transport sont conservés
+après examen et reprise de leur recette. L10 est complet localement ; le plan
+passe à **16/18 ensembles réalisés**. Les vérifications globales restent en L12.
+À la demande de l’utilisateur, les deux propositions Wiki sont préparées sans
+nouvelle attente : 70 A « Manuel en lignes » et 71 B « Repères en cartes ».
+102 cadres, 2 064 liens inspectés, seize exports ; 16 chapitres, 12 formules,
+recherche et deux références représentés. Les 38 pages précédentes sont préservées,
+40 pages après ajout. L’utilisateur a ensuite validé 70 A : le Wiki est réalisé
+et vérifié localement (4 PHP / 338 assertions, trois parcours navigateur et
+30 captures sur trois tailles et deux thèmes). L12 est ensuite vérifié localement :
+29 parcours navigateur distincts, exécution PHP complète puis reprise ciblée
+de 179 tests et 13 tests Python. Le plan est à **18/18 réalisés et vérifiés localement**.
+La CI complète avant fusion reste distincte ; bilan détaillé et limites dans le suivi.
+La fusion autorisée vers `dev` est préparée dans la [PR #99](https://github.com/c41m07/genesis-reborn/pull/99),
+après actualisation des sept nouveaux commits de `dev` et 104 tests PHP ciblés.
+Les résultats de CI et la tête à fusionner sont suivis dans la PR.
+CI GitHub, fusion et déploiement restent distincts.
+
+
 ## Laboratoire local pour lancer une recherche — 18 novembre 2026
 
 Le catalogue Recherche indique, sur le rang déjà débloqué, quel laboratoire

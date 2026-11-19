@@ -30,10 +30,13 @@ export default class extends Controller {
     update() {
         if (!this.next || this.contentTarget.contains(document.activeElement)) return;
         this.contentTarget.innerHTML = this.next.orbitHtml;
-        if (this.hasDetailsTarget) {
-            const count = this.contentTarget.querySelectorAll('[data-orbit-request]').length;
+        const count = this.contentTarget.querySelectorAll('[data-orbit-request]').length;
+        if (this.hasCountTarget) {
             this.countTarget.textContent = count;
-            if (count > 0) this.detailsTarget.open = true;
+        }
+        // Les anciennes vues dépliables gardent leur comportement ; le compteur sert aussi à la liste directe.
+        if (this.hasDetailsTarget && count > 0) {
+            this.detailsTarget.open = true;
         }
         this.version = this.next.orbitVersion; this.next = null; this.tick();
     }

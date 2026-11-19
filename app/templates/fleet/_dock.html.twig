@@ -1,7 +1,17 @@
-<div data-live-region="fleet-holds">
-<section class="panel"><h2>Vaisseaux mobiles à quai</h2><p>Disponibles au départ de la colonie active.</p>
-{% for row in idle %}<ul>{% for ship in row.ships %}<li>{{ catalog[ship.slug].tier_labels[ship.tier]|default(catalog[ship.slug].label) }} : {{ ship.quantity|quantity(0) }}</li>{% endfor %}</ul>{% else %}<p>Aucun vaisseau mobile disponible sur cette colonie.</p>{% endfor %}
-<a class="secondary" href="{{ path('app_fleet_prepare') }}">Préparer un départ</a></section>
+<div class="fleet-dock-layout" data-live-region="fleet-holds">
+    <section class="panel fleet-dock-ships" aria-labelledby="dock-ships-title">
+        <h2 id="dock-ships-title">Vaisseaux mobiles à quai</h2>
+        <p>Disponibles au départ de la colonie active.</p>
+        {% for row in idle %}
+            <ul class="fleet-dock-ship-list">
+                {% for ship in row.ships %}
+                    <li><span>{{ catalog[ship.slug].tier_labels[ship.tier]|default(catalog[ship.slug].label) }}</span><strong>{{ ship.quantity|quantity(0) }}</strong></li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Aucun vaisseau mobile disponible sur cette colonie.</p>
+        {% endfor %}
+        <a class="primary" href="{{ path('app_fleet_prepare') }}">Préparer un départ</a>
+    </section>
 {% include 'fleet/holds.html.twig' %}
-{% if held_fleets is empty %}<p class="panel">Aucun stationnement en attente dans votre empire.</p>{% endif %}
 </div>

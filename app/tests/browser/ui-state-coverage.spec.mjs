@@ -74,10 +74,7 @@ test('Les écrans métier se chargent, restent stables et exposent un arbre acce
     }
     if (route === '/flottes/orbites') {
       const orbit = page.locator('[data-live-region="orbit-requests"]');
-      await expect(orbit.locator('summary')).toContainText('Demandes en cours : 0');
-      await expect(orbit.getByText('Aucune demande d’orbite envoyée ou reçue en cours.', { exact: true })).toBeHidden();
-      await orbit.locator('summary').focus();
-      await page.keyboard.press('Enter');
+      await expect(orbit.locator('[data-orbit-requests-target="count"]')).toHaveText('0');
       await expect(page.getByText('Aucune demande d’orbite envoyée ou reçue en cours.', { exact: true })).toBeVisible();
     }
     if (route === '/rapports') await expect(page.getByRole('heading', { name: 'Aucun rapport dans cette catégorie' })).toBeVisible();

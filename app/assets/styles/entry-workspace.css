@@ -1,0 +1,600 @@
+/* L8 A : les pages d’accès partagent une présentation, sans changer leurs formulaires. */
+.entry-workspace {
+    min-width: 0;
+}
+
+body[data-theme=light] :is(.entry-workspace,.entry-public-header) {
+    --muted: #53606b;
+}
+
+.entry-workspace :is(h1,h2,h3,p,a,label,dt,dd) {
+    overflow-wrap: anywhere;
+}
+
+.entry-workspace :is(a,button,input,select,textarea,summary):focus-visible,
+.entry-public-navigation a:focus-visible,
+.entry-access .auth-form:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
+}
+
+.entry-workspace :is(.primary,.secondary),
+.entry-public-navigation a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 48px;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 12px 16px;
+    font-size: 13px;
+    line-height: 1.5;
+    white-space: normal;
+    border-radius: 5px;
+}
+
+/* Le fond doré reste clair dans les deux thèmes pour garder le libellé foncé lisible. */
+.entry-workspace .primary,
+.entry-public-navigation .primary {
+    background: #e7b76b;
+    color: #101723;
+    border: 1px solid #e7b76b;
+    font-weight: 700;
+}
+
+.entry-workspace .primary:hover,
+.entry-public-navigation .primary:hover {
+    filter: brightness(1.06);
+}
+
+.entry-public-header .brand > span:last-child {
+    display: grid;
+    gap: 4px;
+}
+
+.public-page .entry-public-header .brand strong {
+    display: block;
+    margin-left: 0;
+    font-size: 12px;
+    letter-spacing: .28em;
+}
+
+.entry-public-header .public-tagline {
+    margin-inline: auto;
+    padding-inline: 20px;
+    font-size: 11px;
+    color: var(--muted);
+}
+
+.entry-public-navigation {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.entry-public-navigation .entry-public-login {
+    color: var(--accent);
+    font-weight: 700;
+    background: var(--bg);
+}
+
+body[data-theme=light] .entry-public-navigation .entry-public-login {
+    color: var(--text);
+}
+
+.entry-hero {
+    display: grid;
+    grid-template-columns: minmax(0,.9fr) minmax(0,1.1fr);
+    align-items: center;
+    gap: 64px;
+}
+
+.entry-home-copy {
+    min-width: 0;
+}
+
+.entry-eyebrow {
+    margin: 0 0 24px;
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.entry-home .entry-home-copy h1 {
+    margin: 0;
+    font-size: clamp(36px,3.35vw,50px);
+    line-height: 1.35;
+    letter-spacing: -.02em;
+}
+
+.entry-home-copy h1 em {
+    color: var(--text);
+    font-style: normal;
+}
+
+.entry-home-copy .lead {
+    max-width: 45ch;
+    margin: 24px 0;
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--muted);
+}
+
+.entry-home-actions {
+    display: grid;
+    gap: 10px;
+    justify-items: start;
+}
+
+.entry-home-actions a {
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.entry-text-link {
+    padding: 8px 12px;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+body.ui-refined[data-ui-page="accueil-public"] .entry-home .public-hero-preview {
+    grid-area: auto;
+    align-self: center;
+    margin: 0;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: var(--panel);
+    box-shadow: none;
+}
+
+.entry-home .public-hero-preview a {
+    display: block;
+}
+
+.entry-home .public-hero-preview img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.entry-game-introduction {
+    margin-top: 76px;
+}
+
+.entry-home :is(.entry-game-introduction h2,.entry-exploration-copy h2) {
+    font-size: 27px;
+    line-height: 1.4;
+}
+
+.entry-home :is(.entry-game-introduction p,.entry-exploration-copy p) {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.65;
+}
+
+body.ui-refined[data-ui-page="accueil-public"] .entry-home .public-previews article {
+    display: grid;
+    grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+    gap: 48px;
+    align-items: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+body.ui-refined[data-ui-page="accueil-public"] .entry-home .public-previews article > a {
+    grid-area: auto;
+    display: block;
+}
+
+.entry-exploration-copy {
+    min-width: 0;
+}
+
+.entry-home .public-previews img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.entry-exploration-copy .secondary {
+    margin-top: 16px;
+    border-color: transparent;
+    background: transparent;
+    color: var(--accent);
+}
+
+.entry-access-layout {
+    display: grid;
+    grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+    gap: clamp(36px,6vw,96px);
+    align-items: start;
+}
+
+.entry-access-context {
+    min-width: 0;
+    padding-top: 24px;
+}
+
+.entry-access-context .entry-context-title {
+    margin: 0 0 24px;
+    font-size: 42px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--text);
+}
+
+.entry-access-context > p:not(.entry-context-title) {
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--muted);
+}
+
+.entry-access-context img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    margin-top: 24px;
+    border-radius: 5px;
+}
+
+.entry-workspace .entry-access-panel {
+    box-sizing: border-box;
+    min-width: 0;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 28px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: var(--panel);
+}
+
+.entry-workspace .entry-access-panel h1,
+.entry-denied .access-denied-panel h1 {
+    margin: 0 0 12px;
+    font-size: 25px;
+    line-height: 1.4;
+}
+
+.entry-access-panel > p {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.65;
+}
+
+.entry-access-panel .auth-form {
+    display: grid;
+    gap: 10px;
+    margin: 24px 0 0;
+    min-width: 0;
+}
+
+.entry-access-panel .auth-form > div:not(.password-field,.preference-toggle,.auth-field-errors),
+.entry-access-panel .auth-form > div > div:not(.password-field,.auth-field-errors) {
+    display: grid;
+    gap: 10px;
+    min-width: 0;
+}
+
+.entry-access-panel .auth-form label {
+    display: block;
+    margin: 8px 0 0;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+.entry-access-panel .auth-form input:not([type=hidden],[type=checkbox]) {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 12px;
+    font-size: 16px;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+}
+
+.entry-access-panel .auth-form .password-field {
+    min-width: 0;
+    position: relative;
+}
+
+.entry-access-panel .auth-form .password-field input {
+    padding-right: 54px;
+}
+
+.entry-access-panel .password-toggle {
+    position: absolute;
+    inset: 2px 2px auto auto;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 8px;
+    border: 0;
+    border-radius: 3px;
+    color: var(--text);
+    background: transparent;
+}
+
+.entry-access-panel .password-toggle[hidden] {
+    display: none;
+}
+
+.entry-access-panel .preference-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 4px 0;
+}
+
+.entry-access-panel .preference-toggle input {
+    flex-shrink: 0;
+    width: 22px;
+    height: 44px;
+    margin: 0;
+    accent-color: var(--gold);
+}
+
+.entry-access-panel .preference-toggle label {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    margin: 0;
+    font-weight: 400;
+}
+
+.entry-access-panel :is(.help-text,.form-help,.help,small) {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--muted);
+}
+
+.entry-access-panel .auth-field-errors {
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.entry-access-panel .auth-field-errors ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.entry-access-panel .auth-form > .primary {
+    margin-top: 12px;
+    width: 100%;
+}
+
+.entry-access-links {
+    display: grid;
+    gap: 6px;
+    margin-top: 12px;
+}
+
+.entry-access-links a,
+.entry-access-panel .auth-back a {
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    min-height: 44px;
+    padding: 10px 12px;
+    color: var(--accent);
+    font-size: 13px;
+    line-height: 1.5;
+    font-weight: 600;
+    border-radius: 5px;
+    background: var(--bg);
+}
+
+.entry-access-panel .auth-back {
+    margin: 16px 0 0;
+}
+
+.entry-access-panel .auth-back a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.entry-denied .access-denied-panel {
+    max-width: 760px;
+    margin-inline: auto;
+}
+
+.entry-denied .access-denied-panel p {
+    font-size: 14px;
+    line-height: 1.65;
+}
+
+.entry-universes .universe-grid {
+    max-width: none;
+    gap: 20px;
+    align-items: stretch;
+}
+
+.entry-universes .universe-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 18px;
+}
+
+.entry-universes .universe-card h2 {
+    margin: 0;
+    font-size: 23px;
+    line-height: 1.4;
+}
+
+.entry-universe-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 0 20px;
+}
+
+.entry-universe-state {
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.entry-universe-state--open {
+    color: var(--green);
+}
+
+.entry-universes .universe-rules {
+    margin-top: 0;
+    flex: 1;
+}
+
+.entry-universes .universe-rules h3 {
+    margin: 0 0 10px;
+    padding: 16px 0 0;
+    border: 0;
+    font-size: 15px;
+}
+
+.entry-universes .universe-rules dl > div {
+    display: grid;
+    grid-template-columns: minmax(0,1fr) auto;
+    gap: 16px;
+    align-items: baseline;
+    padding: 12px 0;
+    font-size: 13px;
+    line-height: 1.5;
+    border-bottom: 1px solid var(--line);
+}
+
+.entry-universes .universe-rules dt {
+    color: var(--muted);
+}
+
+.entry-universes .universe-rules dd {
+    white-space: nowrap;
+    color: var(--text);
+}
+
+.entry-universes .universe-card > form {
+    margin-top: 20px;
+}
+
+.entry-universes .universe-availability,
+.entry-universes .universe-closing p {
+    max-width: none;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.entry-universes .universe-opening-timer span {
+    font-size: 11px;
+}
+
+.entry-first-universe {
+    padding: 18px;
+    margin-bottom: 24px;
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 5px;
+    background: var(--panel);
+}
+
+.entry-first-universe h2 {
+    margin: 0 0 8px;
+    font-size: 18px;
+}
+
+.entry-first-universe p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.entry-universes .empty-state {
+    grid-column: 1/-1;
+}
+
+body[data-theme=light] .entry-workspace :is(.entry-text-link,.entry-eyebrow,.entry-access-links a,.auth-back a,.entry-exploration-copy .secondary,.universe-current,.universe-opening-timer strong) {
+    color: var(--text);
+}
+
+body[data-theme=light] .entry-universe-state--open {
+    color: #256347;
+}
+
+@media (max-width: 1050px) {
+    .entry-public-header .public-tagline,
+    .entry-access-context {
+        display: none;
+    }
+
+    .entry-access-layout {
+        grid-template-columns: minmax(0,1fr);
+        max-width: 720px;
+        margin-inline: auto;
+    }
+
+    .entry-hero {
+        grid-template-columns: minmax(0,1fr);
+        gap: 36px;
+    }
+}
+
+@media (max-width: 760px) {
+    .entry-public-navigation > a:not(.entry-mobile-action) {
+        display: none;
+    }
+
+    .entry-public-navigation {
+        gap: 0;
+    }
+
+    .entry-public-navigation a {
+        padding-inline: 10px;
+        font-size: 12px;
+    }
+
+    .entry-home .entry-home-copy h1 {
+        font-size: 32px;
+    }
+
+    .entry-home-actions {
+        justify-items: stretch;
+    }
+
+    .entry-game-introduction {
+        margin-top: 42px;
+    }
+
+    body.ui-refined[data-ui-page="accueil-public"] .entry-home .public-previews article {
+        grid-template-columns: minmax(0,1fr);
+        gap: 20px;
+    }
+
+    .entry-workspace .entry-access-panel {
+        padding: 22px;
+    }
+
+    .entry-workspace .entry-access-panel h1 {
+        font-size: 23px;
+    }
+
+    .entry-universes .universe-grid {
+        grid-template-columns: minmax(0,1fr);
+    }
+}

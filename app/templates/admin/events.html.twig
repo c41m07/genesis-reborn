@@ -1,10 +1,40 @@
 {% extends 'admin/layout.html.twig' %}
 {% block title %}Événements · Console d’administration{% endblock %}
 {% block body %}
-<section class="page-heading"><h1>Événements</h1><p>Planifiez des événements globaux ou associés à un univers.</p></section>
-<div class="admin-home-actions admin-event-models"><a class="secondary" href="{{ path('app_admin_event_wizard') }}">Créer un événement guidé</a><a class="secondary" href="{{ path('app_admin_game_event_new') }}">Création avancée</a><a class="secondary" href="{{ path('app_admin_challenges') }}">Suivre les défis et contributions</a></div>
-<nav aria-label="Listes des événements"><a href="{{ path('app_admin_game_events') }}"{% if not archived %} aria-current="page"{% endif %}>Événements courants</a> · <a href="{{ path('app_admin_game_events',{archived:1}) }}"{% if archived %} aria-current="page"{% endif %}>Historique des retraits</a></nav>
+{% set statusLabels = {'draft': 'Brouillon', 'planned': 'Planifié', 'active': 'En cours', 'finished': 'Terminé', 'cancelled': 'Annulé'} %}
+<section class="page-heading"><div><h1>Événements</h1><p>Planifiez des événements globaux ou associés à un univers.</p></div></section>
+<div class="admin-home-actions admin-event-models"><a class="primary" href="{{ path('app_admin_event_wizard') }}">Créer un événement guidé</a><a class="secondary" href="{{ path('app_admin_game_event_new') }}">Création avancée</a><a class="secondary" href="{{ path('app_admin_challenges') }}">Suivre les défis et contributions</a></div>
+<nav class="admin-page-navigation admin-event-list-navigation" aria-label="Listes des événements"><a href="{{ path('app_admin_game_events') }}"{% if not archived %} aria-current="page"{% endif %}>Événements courants</a><a href="{{ path('app_admin_game_events',{archived:1}) }}"{% if archived %} aria-current="page"{% endif %}>Historique des retraits</a></nav>
 <h2>{{ archived ? 'Historique des retraits' : 'Événements enregistrés' }}</h2>
-{% for event in events %}<article class="panel">{% if archived %}<h3>{{ event.name }}</h3><p>{{ event.description }}</p><p>Retiré le {{ event.parameters.archived_at|date('d/m/Y H:i','UTC') }} UTC. Historique conservé.</p>{% elseif event.parameters.guided_key|default('') %}{% include 'admin/_guided_event.html.twig' %}{% else %}<h3>{{ event.name }}</h3><p>{{ event.description }}</p><p><span class="badge">{{ event.status }}</span> · {{ event.visibleToPlayers ? 'Visible aux joueurs' : 'Masqué aux joueurs' }}</p><a class="secondary" href="{{ path('app_admin_game_event_edit',{id:event.id}) }}">Modifier {{ event.name }}</a><p>Univers : {{ event.universe ? event.universe.name : 'Global' }} · {{ event.startsAt|date('d/m/Y H:i') }} → {{ event.endsAt|date('d/m/Y H:i') }}</p><form method="post" action="{{ path('app_admin_game_event_cancel',{id:event.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('game_event_cancel_'~event.id) }}"><button class="secondary">Annuler l’événement</button></form>{% if event.status=='draft' %}<form method="post" action="{{ path('app_admin_game_event_delete',{id:event.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('game_event_delete_'~event.id) }}"><button class="danger">Supprimer le brouillon</button></form>{% endif %}{% endif %}{% if not archived and not event.parameters.challenge_id|default(null) %}{% include 'admin/_event_removal.html.twig' with {challengeRemoval:false,removalId:event.id} only %}{% endif %}</article>{% else %}<p class="panel">Aucun événement pour le moment.</p>{% endfor %}
+<div class="admin-events-list">
+{% for event in events %}
+    <article class="panel">
+        {% if archived %}
+            <h3>{{ event.name }}</h3><p class="admin-case-text">{{ event.description }}</p>
+            <p>Retiré le {{ event.parameters.archived_at|date('d/m/Y H:i','UTC') }} UTC. Historique conservé.</p>
+        {% elseif event.parameters.guided_key|default('') %}
+            {% include 'admin/_guided_event.html.twig' %}
+        {% else %}
+            <h3>{{ event.name }}</h3><p class="admin-case-text">{{ event.description }}</p>
+            <p><span class="badge">{{ statusLabels[event.status]|default(event.status) }}</span> · {{ event.visibleToPlayers ? 'Visible aux joueurs' : 'Masqué aux joueurs' }}</p>
+            <p>Univers : {{ event.universe ? event.universe.name : 'Global' }} · {{ event.startsAt|date('d/m/Y H:i') }} → {{ event.endsAt|date('d/m/Y H:i') }}</p>
+            <div class="admin-event-actions">
+                <a class="secondary" href="{{ path('app_admin_game_event_edit', {id: event.id}) }}">Modifier {{ event.name }}</a>
+                <form method="post" action="{{ path('app_admin_game_event_cancel', {id: event.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('game_event_cancel_' ~ event.id) }}"><button class="secondary">Annuler l’événement</button>
+                </form>
+                {% if event.status == 'draft' %}
+                    <form method="post" action="{{ path('app_admin_game_event_delete', {id: event.id}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('game_event_delete_' ~ event.id) }}"><button class="danger">Supprimer le brouillon</button>
+                    </form>
+                {% endif %}
+            </div>
+        {% endif %}
+        {% if not archived and not event.parameters.challenge_id|default(null) %}
+            {% include 'admin/_event_removal.html.twig' with {challengeRemoval: false, removalId: event.id} only %}
+        {% endif %}
+    </article>
+{% else %}<p class="panel">Aucun événement pour le moment.</p>{% endfor %}
+</div>
 {% if pages > 1 %}<nav class="admin-mission-pages" aria-label="Pagination des événements">{% if page > 1 %}<a class="secondary" href="{{ path('app_admin_game_events',{archived:archived ? 1 : 0,page:page-1}) }}">Page précédente</a>{% endif %}<span>Page {{ page }} / {{ pages }}</span>{% if page < pages %}<a class="secondary" href="{{ path('app_admin_game_events',{archived:archived ? 1 : 0,page:page+1}) }}">Page suivante</a>{% endif %}</nav>{% endif %}
 {% endblock %}

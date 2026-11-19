@@ -73,6 +73,9 @@
     {% elseif currentRoute == 'app_admin_feedback' %}{% set detailLabel = feedback.title %}
     {% elseif currentRoute == 'app_admin_case' %}{% set detailLabel = 'Dossier n° '~caseFile.id %}
     {% elseif currentRoute == 'app_admin_case_new' %}{% set detailLabel = 'Nouveau dossier' %}
+    {% elseif currentRoute == 'app_admin_patchnote_new' %}{% set detailLabel = 'Nouvelle patchnote' %}
+    {% elseif currentRoute == 'app_admin_patchnote_edit' %}{% set detailLabel = 'Modifier '~editing.title %}
+    {% elseif currentRoute == 'app_admin_patchnote_remove' %}{% set detailLabel = 'Supprimer '~note.title %}
     {% elseif currentRoute == 'app_admin_challenge' %}{% set detailLabel = challenge.name %}
     {% elseif currentRoute == 'app_admin_mission' %}{% set detailLabel = 'Flotte n° '~fleet.id %}
     {% elseif currentRoute in ['app_admin_mission_combat','app_admin_mission_espionage'] %}

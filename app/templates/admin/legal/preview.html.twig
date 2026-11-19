@@ -1,7 +1,7 @@
 {% extends 'admin/layout.html.twig' %}
 {% block title %}Aperçu privé · {{ pageTitle }} · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="wiki-guide">
+<div class="admin-legal-preview">
   <header><h1>{{ pageTitle }}</h1><p class="flash">Aperçu privé réservé aux administrateurs. Brouillon du 7 novembre 2026 : texte non publié, champs à compléter et engagements à vérifier avant publication.</p></header>
   <nav class="panel" aria-label="Brouillons juridiques">
     <ul>{% for slug, label in pages %}<li><a href="{{ path('app_admin_legal_preview', {page: slug}) }}" {% if page == slug %}aria-current="page"{% endif %}>{{ label }}</a></li>{% endfor %}</ul>

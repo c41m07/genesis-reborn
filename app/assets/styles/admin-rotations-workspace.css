@@ -1,0 +1,116 @@
+/* L10K A : identité, conditions et enregistrement gardent un seul formulaire. */
+body.admin-console.admin-rotations-workspace .admin-content {
+    overflow-wrap: anywhere;
+}
+
+body.admin-console.admin-rotations-workspace :is(.admin-rotation-models, .admin-rotation-form, .admin-rotation-fields, .admin-rotation-universe, .admin-rotation-actions) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    max-width: none;
+    gap: 22px;
+}
+
+body.admin-console.admin-rotations-workspace .panel {
+    min-width: 0;
+    padding: 22px;
+    border-radius: 6px;
+}
+
+body.admin-console.admin-rotations-workspace :is(.admin-rotation-form, .admin-rotation-models) > .panel {
+    margin: 0;
+}
+
+body.admin-console.admin-rotations-workspace .panel :is(h2, h3) {
+    margin-top: 0;
+    font-size: 21px;
+    line-height: 1.5;
+}
+
+body.admin-console.admin-rotations-workspace .admin-rotation-field {
+    display: grid;
+    min-width: 0;
+    gap: 8px;
+}
+
+body.admin-console.admin-rotations-workspace .admin-rotation-field label {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+body.admin-console.admin-rotations-workspace .admin-rotation-field :is(input, select, textarea) {
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    padding: 12px;
+    margin: 0;
+    font-size: 14px;
+}
+
+body.admin-console.admin-rotations-workspace .admin-rotation-field textarea {
+    min-height: 150px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: inherit;
+    resize: vertical;
+}
+
+body.admin-console.admin-rotations-workspace :is(button, .admin-rotation-actions a, .admin-rotation-models a) {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 46px;
+    font-size: 14px;
+    text-align: left;
+    white-space: normal;
+}
+
+body.admin-console.admin-rotations-workspace .admin-rotation-enabled {
+    display: flex;
+    align-items: start;
+    min-height: 44px;
+    gap: 10px;
+    margin: 0;
+    font-size: 14px;
+}
+
+body.admin-console.admin-rotations-workspace .admin-rotation-enabled input {
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    min-height: 18px;
+    margin: 0;
+    accent-color: var(--accent);
+}
+
+body.admin-console.admin-rotations-workspace .admin-rotation-toggle > summary {
+    min-height: 46px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+body.admin-console.admin-rotations-workspace .admin-rotation-toggle form {
+    display: grid;
+    max-width: none;
+    gap: 22px;
+    margin-top: 22px;
+}
+
+body.admin-console.admin-rotations-workspace :is(a, button, input, select, textarea, summary):focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+}
+
+@media (max-width: 760px) {
+    body.admin-console.admin-rotations-workspace .panel {
+        padding: 18px;
+    }
+
+    body.admin-console.admin-rotations-workspace .admin-rotation-field :is(input, select, textarea) {
+        font-size: 16px;
+    }
+}

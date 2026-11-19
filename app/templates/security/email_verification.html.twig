@@ -1,3 +1,10 @@
-{% extends 'base.html.twig' %}
+{% extends 'security/layout.html.twig' %}
+{% set access_heading_id = 'verification-title' %}
 {% block title %}Confirmer mon adresse — Genesis Reborn{% endblock %}
-{% block body %}<section class="panel narrow auth-card"><h1>Confirmer mon adresse email</h1><form method="post"><input type="hidden" name="_token" value="{{ csrf_token('email_verify') }}"><button class="primary">Confirmer mon adresse</button></form></section>{% endblock %}
+{% block access_content %}
+<h1 id="verification-title">Confirmer mon adresse email</h1>
+<form method="post" class="auth-form">
+    <input type="hidden" name="_token" value="{{ csrf_token('email_verify') }}">
+    <button class="primary full" type="submit">Confirmer mon adresse</button>
+</form>
+{% endblock %}

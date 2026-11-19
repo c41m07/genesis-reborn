@@ -5,11 +5,12 @@
 {% block body %}
 <div class="universe-observations">
 <div class="page-heading"><div><h1>Mesures de l’univers</h1><p>{{ universe.name }} · Relevé du {{ metrics.observedAt|date('d/m/Y H:i:s', 'UTC') }} UTC.</p></div></div>
-<p><a class="secondary" href="{{ path('app_admin_index') }}#admin-universe-{{ universe.id }}">Retour aux univers</a> <a class="secondary" href="{{ path('app_admin_universe_metrics', {id: universe.id, page: metrics.resources.page}) }}">Actualiser le relevé</a></p>
+<div class="admin-balance-actions"><a class="secondary" href="{{ path('app_admin_universes') }}#admin-universe-{{ universe.id }}">Retour aux univers</a> <a class="secondary" href="{{ path('app_admin_universe_metrics', {id: universe.id, page: metrics.resources.page}) }}">Actualiser le relevé</a></div>
 <p>Observation en lecture seule. Ces mesures n’appliquent aucun changement d’équilibrage. Elles représentent les données encore conservées, pas un historique complet.</p>
 {% if metrics.closed %}<p role="status"><strong>Univers fermé.</strong> Les stocks conservés sont affichés sans simuler une production après fermeture. Les files restantes ne constituent pas un incident d’exploitation.</p>{% endif %}
-<nav class="ui-tabs" aria-label="Mesures de l’univers"><a href="#metrics-progression">Progression</a> <a href="#metrics-wait">Attentes</a> <a href="#metrics-resources">Ressources</a> <a href="#metrics-recovery">Après les pertes</a></nav>
+<nav class="admin-page-navigation" aria-label="Mesures de l’univers"><a href="#metrics-progression">Progression</a> <a href="#metrics-wait">Attentes</a> <a href="#metrics-resources">Ressources</a> <a href="#metrics-recovery">Après les pertes</a></nav>
 
+<div class="admin-observation-comparison">
 <section class="panel" id="metrics-progression" aria-labelledby="progression-title">
 <h2 id="progression-title">Progression et ancienneté</h2>
 <dl>
@@ -37,6 +38,7 @@
 <p>Les commandes terminées ou annulées disparaissent de ces mesures. Une échéance atteinte indique un traitement à vérifier ; elle ne prouve pas une panne. Les files parallèles ne sont pas additionnées en un temps d’attente global.</p>
 {% if metrics.queues.invalidDates %}<p role="status">{{ metrics.queues.invalidDates }} commande(s) avec dates ou durée incohérentes exclue(s) des calculs temporels.</p>{% endif %}
 </section>
+</div>
 
 <section class="panel" id="metrics-resources" aria-labelledby="resources-title">
 <h2 id="resources-title">Ressources et productivité</h2>
@@ -44,9 +46,19 @@
 <p>{{ metrics.closed ? 'Stocks conservés, sans projection de production.' : 'Projection actuelle du moteur de production, sans enregistrer les stocks.' }} Les décomptes ci-dessous concernent uniquement les colonies observées de cette page, classées par identifiant ; ce n’est pas un échantillon aléatoire.</p>
 {% if metrics.resources.unavailable %}<p role="status">{{ metrics.resources.unavailable }} colonie(s) non exploitable(s) sur cette page : données de ressources incomplètes ou datées dans le futur, ou propriété modifiée pendant le relevé.</p>{% endif %}
 {% if metrics.resources.observed %}
-<div class="table-wrap" role="region" tabindex="0" aria-label="Ressources des colonies observées, tableau défilant"><table><caption>Indicateurs de tension économique sur les colonies observées</caption><thead><tr><th scope="col">Ressource</th><th scope="col">Stock médian (% de capacité)</th><th scope="col">Colonies à stock nul</th><th scope="col">Production nette négative</th><th scope="col">Productivité inférieure à 100 %</th></tr></thead><tbody>
-{% for row in metrics.resources.rows %}<tr><th scope="row">{{ row.label }}</th><td>{{ row.stockPercent is null ? 'Non disponible' : row.stockPercent|number_format(1, ',', ' ') ~ ' %' }}</td><td>{{ row.empty }} / {{ metrics.resources.observed }}</td><td>{% if row.rateObserved %}{{ row.negativeRate }} / {{ row.rateObserved }}{% else %}Non applicable{% endif %}</td><td>{% if row.productivityObserved %}{{ row.reducedProductivity }} / {{ row.productivityObserved }}{% else %}Non applicable{% endif %}</td></tr>{% endfor %}
-</tbody></table></div>
+<div class="admin-observation-resources">
+{% for row in metrics.resources.rows %}
+<article class="admin-resource-observation" aria-labelledby="resource-observation-{{ loop.index }}">
+<h3 id="resource-observation-{{ loop.index }}">{{ row.label }}</h3>
+<dl>
+  <dt>Stock médian (% de capacité)</dt><dd>{{ row.stockPercent is null ? 'Non disponible' : row.stockPercent|number_format(1, ',', ' ') ~ ' %' }}</dd>
+  <dt>Colonies à stock nul</dt><dd>{{ row.empty }} / {{ metrics.resources.observed }}</dd>
+  <dt>Production nette négative</dt><dd>{% if row.rateObserved %}{{ row.negativeRate }} / {{ row.rateObserved }}{% else %}Non applicable{% endif %}</dd>
+  <dt>Productivité inférieure à 100 %</dt><dd>{% if row.productivityObserved %}{{ row.reducedProductivity }} / {{ row.productivityObserved }}{% else %}Non applicable{% endif %}</dd>
+</dl>
+</article>
+{% endfor %}
+</div>
 {% else %}<p>Aucune colonie exploitable sur cette page. Les valeurs ne sont pas assimilées à des stocks nuls.</p>{% endif %}
 <p>Un stock nul ou une productivité réduite signale une tension à examiner, pas une commande refusée démontrée. Les demandes impossibles faute de ressources ne sont pas historisées. La productivité n’est définie que pour les ressources produites par des usines présentes ; l’électricité n’a pas cet indicateur.</p>
 <nav aria-label="Pages des observations de ressources">{% if metrics.resources.page > 1 %}<a class="secondary" href="{{ path('app_admin_universe_metrics', {id: universe.id, page: metrics.resources.page - 1}) }}#metrics-resources">Page précédente</a>{% endif %} {% if metrics.resources.page < metrics.resources.pages %}<a class="secondary" href="{{ path('app_admin_universe_metrics', {id: universe.id, page: metrics.resources.page + 1}) }}#metrics-resources">Page suivante</a>{% endif %}</nav>

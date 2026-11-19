@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Service\Combat\PlayerCombatSimulation;
+use App\Service\Combat\CombatSimulationView;
 use App\Service\Universe\UniverseContext;
 use App\Repository\GameRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -13,9 +14,10 @@ use Symfony\Component\RateLimiter\RateLimiterFactory;
 final class CombatSimulationController extends AbstractController
 {
     #[Route('/simulateur',name:'app_combat_simulation',methods:['GET','POST'])]
-    public function index(Request $request,UniverseContext $context,PlayerCombatSimulation $simulation,GameRepository $repo,#[Autowire(service:'limiter.combat_simulation')] RateLimiterFactory $limiter): Response
+    public function index(Request $request,UniverseContext $context,PlayerCombatSimulation $simulation,GameRepository $repo,CombatSimulationView $simulationView,#[Autowire(service:'limiter.combat_simulation')] RateLimiterFactory $limiter): Response
     {
         $owner=$context->membership();$result=null;$error=null;$intel=null;$forces=[];$seed='42';$status=200;
+        $choices = $simulation->choices($owner);
         $reportId=$request->isMethod('POST')?$request->request->getInt('report'):$request->query->getInt('report');
         try {
             if($reportId) {$intel=$simulation->intel($owner,$reportId);$forces['defender']=$intel['forces'];}
@@ -26,11 +28,11 @@ final class CombatSimulationController extends AbstractController
                 if($request->request->get('assumptions')!=='1') throw new \DomainException('Confirmez les hypothèses avant de simuler.');
                 $number=filter_var($seed,FILTER_VALIDATE_INT);
                 if($number===false) throw new \DomainException('Graine invalide.');
-                $result=$simulation->runBatch($owner,$forces,$number);
+                $result = $simulationView->prepare($simulation->runBatch($owner, $forces, $number), $forces, $choices);
             } elseif($request->query->getInt('own_planet')) $forces['attacker']=$simulation->own($owner,$request->query->getInt('own_planet'));
         } catch(\DomainException $e) {$error=$e->getMessage();$status=422;}
         $response=$this->render('combat/simulation.html.twig',[
-            'membership'=>$owner,'choices'=>$simulation->choices($owner),'forces'=>$forces,'seed'=>$seed,'result'=>$result,'error'=>$error,'intel'=>$intel,
+            'membership'=>$owner,'choices'=>$choices,'forces'=>$forces,'seed'=>$seed,'result'=>$result,'error'=>$error,'intel'=>$intel,
             'sources'=>$intel?$simulation->provenance($owner,$forces,$intel):[],'planets'=>$repo->planets($owner->universe,$owner),'max_units'=>PlayerCombatSimulation::MAX_UNITS,
         ],new Response(status:$status));
         $response->headers->set('Cache-Control','private, no-store');return $response;

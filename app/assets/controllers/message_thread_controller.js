@@ -15,7 +15,8 @@ export default class extends Controller {
         this.fitViewport();
         this.frame = window.requestAnimationFrame(() => {
             this.element.scrollTop = this.element.scrollHeight;
-            if (window.matchMedia('(max-width: 740px)').matches) {
+            // Le seuil suit la disposition empilée contacts/conversation du lot L7E.
+            if (window.matchMedia('(max-width: 1050px)').matches) {
                 this.frame = window.requestAnimationFrame(() => {
                     const pane = this.element.closest('.message-pane');
                     (pane?.querySelector('.message-compose') ?? this.element).scrollIntoView({ block: 'end', behavior: 'instant' });
@@ -27,7 +28,7 @@ export default class extends Controller {
     fitViewport() {
         const pane = this.element.closest('.message-pane');
         if (!pane) return;
-        if (window.matchMedia('(max-width: 740px)').matches) {
+        if (window.matchMedia('(max-width: 1050px)').matches) {
             this.element.style.maxHeight = '';
             return;
         }

@@ -93,6 +93,13 @@ Les grades de guilde ne donnent aucun pouvoir sur les relations personnelles d�
 
 ## Projets collectifs : participer
 
+La présentation A du lot L5 aligne identité, financement et minimums sur grand
+écran ; elle s’empile sur mobile. Sur une fiche active, la progression et le don
+sont rapprochés. Les deux menus communs se replient sur mobile et restent ouverts
+sans JavaScript. Les minimums d’un modèle sont visibles avant son lancement ;
+seul le détail des paliers est dépliable. Les pages, droits et règles ci-dessous
+restent les mêmes. [Recette et limites](REFONTE_VISUELLE_INTERFACES.md).
+
 Un projet utilise un modèle défini par l’administration pour son univers. Le dirigeant ou un membre ayant `projects.start` peut le lancer depuis **Projets collectifs → Projets disponibles**. Tous les membres peuvent ensuite contribuer depuis une colonie leur appartenant.
 
 Le lancement fige le nom, la description, les coûts de chaque palier et les minimums de récompense. Une modification administrative ultérieure ne change pas un projet en cours. Un modèle désactivé cesse d’être proposé aux nouveaux lancements ; les projets déjà lancés continuent.
@@ -182,5 +189,19 @@ Avant le commit final de la fonctionnalité : `make validate`, `make lint` avec 
 Le nom d’une guilde dans le classement et son centre de guilde ouvre sa page. Le lien « Consulter la page de la guilde » existe aussi dans l’équipage. Les noms des commandants du classement, de la messagerie et des membres ouvrent leurs profils dans le même univers, sans informations privées ni effectifs militaires.
 
 Le commandant peut choisir « Personnaliser la guilde » : description en texte simple (2 000 caractères), logo JPEG/PNG/WebP (1 Mo, 512×512 maximum) et bannière (2 Mo, 1920×640 maximum). Sans nouveau fichier, l’image actuelle reste conservée. Après une erreur, le texte est conservé ; les fichiers doivent être sélectionnés de nouveau. Un formulaire périmé est refusé plutôt que d’écraser une autre modification. Aucun grade délégué ne donne ce droit.
+
+### Gestion et confirmations — réalisation locale L1C
+
+Sur la branche de refonte visuelle, **Ma guilde → Gestion** affiche directement
+le tag et le choix du successeur pour le commandant. Sélectionner un autre membre
+puis ouvrir **Vérifier le transfert** permet de lire les conséquences avant
+**Transférer le commandement**. Sans autre membre, le choix et l’envoi sont désactivés.
+
+Le commandant ouvre **Examiner la dissolution** avant de dissoudre ; un autre
+membre ouvre **Examiner le départ** avant de quitter. Les avertissements restent
+visibles avant l’envoi. Ces confirmations fonctionnent sans JavaScript et ne
+changent ni les droits, ni les conséquences sur les dons, projets et récompenses.
+Le [suivi de refonte](REFONTE_VISUELLE_INTERFACES.md) distingue les vérifications
+locales, la CI requise avant fusion et le déploiement, non réalisé pour ce lot.
 
 Ce nouveau lot nécessite sa migration et son stockage persistant avant activation sur une base existante ; voir le [suivi](PROFILS_JOUEURS_GUILDES.md). Aucun déploiement Alpha n’est annoncé.

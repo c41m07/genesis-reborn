@@ -47,6 +47,8 @@ test('Espaces distincts, pages directes, historique et anciennes adresses compat
     await plain.getByRole('button',{name:'Fonder une guilde',exact:true}).click();
     await expect(plain).toHaveURL(/\/guildes$/);
     await plain.getByRole('navigation',{name:'Navigation de guilde'}).getByRole('link',{name:'Gestion',exact:true}).click();
+    await expect(plain.getByRole('button',{name:'Dissoudre la guilde',exact:true})).not.toBeVisible();
+    await plain.getByText('Examiner la dissolution', { exact: true }).click();
     await expect(plain.getByRole('button',{name:'Dissoudre la guilde',exact:true})).toBeVisible();
     await expect(plain.getByRole('navigation',{name:'Navigation principale'}).getByRole('link',{name:'Ma guilde',exact:true})).toHaveAttribute('aria-current','page');
   } finally { await noScript.close(); }

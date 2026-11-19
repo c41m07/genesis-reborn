@@ -46,6 +46,7 @@ test('Événements : pages, thèmes, navigation, anciens liens et accès sans Ja
         await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
         await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
         await expect(page.locator('.sidebar a[href="/evenements"]')).toHaveAttribute('aria-current', 'page');
+        if (width <= 600) await page.locator('.event-redesign .space-navigation-menu > summary').click();
         await expect(page.getByRole('navigation', { name: 'Navigation des événements', exact: true }).locator('[aria-current]')).toHaveCount(1);
         await expect(page.locator('.page-contents')).toHaveCount(0);
         await expect(page.locator('.event-drawer-title')).toBeVisible();
@@ -58,6 +59,7 @@ test('Événements : pages, thèmes, navigation, anciens liens et accès sans Ja
     }
   }
   await page.goto('/evenements');
+  await page.locator('.event-redesign .space-navigation-menu > summary').click();
   const navigation = page.getByRole('navigation', { name: 'Navigation des événements', exact: true });
   await navigation.getByRole('link', { name: 'Défis et rotations', exact: true }).focus();
   await page.keyboard.press('Enter');

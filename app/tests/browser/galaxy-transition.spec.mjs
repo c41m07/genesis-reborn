@@ -6,6 +6,9 @@ const controllerSource = readFileSync('app/assets/controllers/galaxy_v2_controll
   .replace("import { Controller } from '@hotwired/stimulus';", 'class Controller {}');
 const { default: GalaxyController } = await import('data:text/javascript;base64,' + Buffer.from(controllerSource).toString('base64'));
 
+// Coordonnées exportées de GalaxyGeometry (spiral-v1), indépendantes du dessin JavaScript.
+const referenceSystems = JSON.parse(readFileSync('app/tests/Fixtures/galaxy-spiral-reference.json', 'utf8'));
+
 // Simulation de l'horloge : une animation ancienne ne doit pas annuler un retour plus récent.
 test('Les fins d’animation de la carte respectent une navigation plus récente', () => {
   const previousWindow = globalThis.window;
@@ -88,7 +91,7 @@ for (const motionReduced of [false, true]) {
 }
 
 
-test('Seule la maison apparaît au survol des systèmes possédés et le point inconnu reste centré', () => {
+test('La maison reste visible sans survol et le point inconnu reste centré', () => {
   const calls = [];
   const state = {
     hiddenMarkers: new Set(), systemMarkers: GalaxyController.prototype.systemMarkers,
@@ -104,13 +107,15 @@ test('Seule la maison apparaît au survol des systèmes possédés et le point i
 
   const known = { known: true, planets: ['own', 'uninhabited', 'allied', 'neutral', 'npc', 'enemy'].map(relation => ({ relation })) };
   GalaxyController.prototype.drawSystemMarkers.call(state, null, known, point, false);
-  expect(calls).toHaveLength(1);
-  GalaxyController.prototype.drawSystemMarkers.call(state, null, known, point, true);
+  expect(calls).toHaveLength(2);
   expect(calls[1][1].map(marker => marker.symbol)).toEqual(['⌂']);
   expect(calls[1].slice(2)).toEqual([120, 69, false]);
+  GalaxyController.prototype.drawSystemMarkers.call(state, null, known, point, true);
+  expect(calls[2][1].map(marker => marker.symbol)).toEqual(['⌂']);
+  expect(calls[2].slice(2)).toEqual([120, 69, false]);
   state.hiddenMarkers.add('own');
   GalaxyController.prototype.drawSystemMarkers.call(state, null, known, point, true);
-  expect(calls).toHaveLength(2);
+  expect(calls).toHaveLength(3);
   expect(state.systemMarkers({ known: true, planets: [{ relation: 'enemy' }] })).toEqual([]);
 });
 
@@ -172,12 +177,13 @@ test('Le clic utilise la position réellement dessinée, accepte le bord et igno
 test('Le premier clic ouvre directement la planète et un glissement ne déclenche aucune ouverture', () => {
   const opened = [];
   const state = {
-    mode: 'system', drag: { pointerId: 1, moved: false },
+    mode: 'system', drag: { pointerId: 1, moved: false }, pointers: new Map([[1, { x: 20, y: 30 }]]),
     canvasPoint: () => ({ x: 20, y: 30 }), nearestPlanet: () => ({ id: 7 }),
     selectPlanetById(id) { opened.push(id); }, enterPlanetView() { opened.push('planet'); },
   };
   GalaxyController.prototype.pointerUp.call(state, { pointerId: 1 });
   expect(opened).toEqual([7, 'planet']);
+  expect(state.pointers.size).toBe(0);
   state.drag = { pointerId: 1, moved: true };
   GalaxyController.prototype.pointerUp.call(state, { pointerId: 1 });
   expect(opened).toEqual([7, 'planet']);
@@ -218,32 +224,41 @@ test('Les planètes avancent sur leurs orbites à leur vitesse et respectent la 
 });
 
 for (const [width, height] of [[320, 548], [390, 548], [1052, 454]]) {
-  test('Le cadrage rend les dix systèmes d’un même bras lisibles à ' + width + ' px sans changer leurs coordonnées', () => {
+  test('Le cadrage conserve la géographie réelle et le zoom permet de sélectionner chaque système à ' + width + ' px', () => {
     const state = {
-      width, height, galaxyExtentX: 1470, galaxyExtentY: 1470,
-      galaxyArmPoint: GalaxyController.prototype.galaxyArmPoint,
+      width, height, galaxyExtentX: 1500, galaxyExtentY: 1500, mode: 'galaxy', layout: 'spiral',
+      projectLayout: GalaxyController.prototype.projectLayout,
+      galaxyPoint: GalaxyController.prototype.galaxyPoint,
+      drawFrame() {}, startLoop() {},
+      systems: structuredClone(referenceSystems.slice(0, 10)).map(system => ({ ...system, known: true, planets: [] })),
     };
-    state.systems = Array.from({ length: 10 }, (_, index) => ({
-      x: index * 50, y: -index * 20, known: true, planets: index === 0 ? [{ ownedByCurrentPlayer: true }] : [],
-      ...GalaxyController.prototype.galaxySystemPosition.call(state, Math.floor(index / 10), index % 10),
-    }));
+    state.projectLayout();
     GalaxyController.prototype.fitGalaxy.call(state);
-    const points = state.systems.map(system => ({ x: width / 2 + (system.wx - state.camera.x) * state.zoom, y: height / 2 + (system.wy - state.camera.y) * state.zoom }));
-    for (const [index, point] of points.entries()) {
-      expect(point.x).toBeGreaterThan(12);
-      expect(point.x).toBeLessThan(width - 12);
-      expect(point.y).toBeGreaterThan(width <= 720 ? 134 : 76);
-      expect(point.y).toBeLessThan(height - 64);
-      expect(state.systems[index].x).toBe(index * 50);
-      expect(state.systems[index].y).toBe(-index * 20);
-      for (const other of points.slice(index + 1)) expect(Math.hypot(point.x - other.x, point.y - other.y)).toBeGreaterThanOrEqual(31.99);
+    for (const [index, system] of state.systems.entries()) {
+      const point = state.galaxyPoint(system);
+      expect(point.x).toBeGreaterThan(28);
+      expect(point.x).toBeLessThan(width - 28);
+      expect(point.y).toBeGreaterThan(32);
+      expect(point.y).toBeLessThan(height - 44);
+      expect(system.x).toBe(referenceSystems[index].x);
+      expect(system.y).toBe(referenceSystems[index].y);
+      expect(system.physical).toEqual(referenceSystems[index].physical);
     }
-    const camera = { x: 17, y: 29 };
-    state.hasUserCamera = true; state.camera = camera; state.zoom = 1.3; state.targetZoom = 1.4;
+    // Le zoom rapproche les systèmes sans déplacer le point visé ni altérer les distances.
+    const anchor = state.galaxyPoint(state.systems[5]);
+    const before = Math.hypot(state.systems[1].wx - state.systems[0].wx, state.systems[1].wy - state.systems[0].wy) * state.zoom;
+    GalaxyController.prototype.zoomAt.call(state, 4, anchor);
+    expect(state.galaxyPoint(state.systems[5]).x).toBeCloseTo(anchor.x, 8);
+    expect(state.galaxyPoint(state.systems[5]).y).toBeCloseTo(anchor.y, 8);
+    expect(Math.hypot(state.systems[1].wx - state.systems[0].wx, state.systems[1].wy - state.systems[0].wy) * state.zoom).toBeCloseTo(before * 4);
+    for (const system of state.systems) {
+      expect(GalaxyController.prototype.nearestSystem.call(state, state.galaxyPoint(system))).toBe(system);
+    }
+    const camera = state.camera, zoom = state.zoom;
     GalaxyController.prototype.fitGalaxy.call(state);
     expect(state.camera).toBe(camera);
-    expect(state.zoom).toBe(1.3);
-    expect(state.targetZoom).toBe(1.4);
+    expect(state.zoom).toBe(zoom);
+    expect(state.targetZoom).toBe(zoom);
   });
 }
 
@@ -256,7 +271,7 @@ test('Tous les systèmes restent sur le tracé réellement dessiné des huit bra
     stroke() { if (!paths.includes(path)) paths.push(path); },
   };
   const state = {
-    galaxyExtentX: 1470, galaxyExtentY: 1470, zoom: 1,
+    galaxyExtentX: 1500, galaxyExtentY: 1500, zoom: 1,
     galaxyArmPoint: GalaxyController.prototype.galaxyArmPoint,
     galaxyPoint: point => ({ x: point.wx, y: point.wy }),
   };
@@ -264,7 +279,8 @@ test('Tous les systèmes restent sur le tracé réellement dessiné des huit bra
   expect(paths).toHaveLength(8);
   paths.forEach((points, branch) => {
     for (let slot = 0; slot < 10; slot += 1) {
-      const system = GalaxyController.prototype.galaxySystemPosition.call(state, branch, slot);
+      const physical = referenceSystems[branch * 10 + slot].physical;
+      const system = { wx: physical.x * 100, wy: physical.y * 100 };
       let distance = Infinity;
       for (let index = 1; index < points.length; index += 1) {
         const a = points[index - 1], b = points[index];
@@ -277,22 +293,27 @@ test('Tous les systèmes restent sur le tracé réellement dessiné des huit bra
   });
 });
 
-test('Les dizaines consécutives sont projetées sur leur propre bras', () => {
+test('Les deux vues utilisent les coordonnées du serveur sans modifier la géographie ni les identifiants', () => {
   const state = {
-    systems: Array.from({ length: 80 }, (_, index) => ({ id: index + 1, number: index + 1, x: index * 10, y: -index, planets: [] })),
-    flights: [],
+    systems: structuredClone(referenceSystems).map(system => ({ ...system, planets: [] })),
+    flights: [], gameMap: { geometry: { extent: 15 } }, layout: 'spiral',
     seededRandom: GalaxyController.prototype.seededRandom,
-    galaxyArmPoint: GalaxyController.prototype.galaxyArmPoint,
-    galaxySystemPosition: GalaxyController.prototype.galaxySystemPosition,
+    projectLayout: GalaxyController.prototype.projectLayout,
   };
   GalaxyController.prototype.projectSystems.call(state);
-  for (const number of [1, 10, 11, 20, 21, 30, 71, 80]) {
-    const system = state.systems[number - 1];
-    const expected = state.galaxyArmPoint(Math.floor((number - 1) / 10), .26 + ((number - 1) % 10) / 9 * .74);
-    expect(system.wx).toBeCloseTo(expected.wx);
-    expect(system.wy).toBeCloseTo(expected.wy);
-    expect(system.x).toBe((number - 1) * 10);
-    expect(system.y).toBe(-(number - 1));
+  expect(state.decorativeSystems).toEqual([]);
+  expect(state.galaxyExtentX).toBe(1500);
+  for (const layout of ['spiral', 'grid', 'spiral']) {
+    state.layout = layout;
+    state.projectLayout();
+    for (const [index, system] of state.systems.entries()) {
+      const reference = referenceSystems[index];
+      expect(system.wx).toBeCloseTo((layout === 'spiral' ? reference.physical.x : reference.x - 13.5) * 100);
+      expect(system.wy).toBeCloseTo((layout === 'spiral' ? reference.physical.y : reference.y - 10.5) * 100);
+      expect(system.x).toBe(reference.x);
+      expect(system.y).toBe(reference.y);
+      expect(system.physical).toEqual(reference.physical);
+    }
   }
 });
 

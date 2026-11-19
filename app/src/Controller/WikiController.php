@@ -22,7 +22,7 @@ final class WikiController extends AbstractController
         }
         $query = $this->query($request);
         if ($query !== '') return $this->redirectToRoute('app_wiki_search', ['q'=>$query]);
-        return $this->render('wiki/index.html.twig', $this->pageData());
+        return $this->render('wiki/index.html.twig', $this->pageData(true));
     }
 
     #[Route('/wiki/chapitres/{chapter}', name: 'app_wiki_chapter', methods: ['GET'])]
@@ -61,10 +61,10 @@ final class WikiController extends AbstractController
         return mb_substr(trim($request->query->getString('q')), 0, 150);
     }
 
-    /** @return array{chapters:list<array{id:string,title:string,part:string}>,chapterDestinations:array<string,string>,currentChapter:null,source:null,query:string} */
-    private function pageData(): array
+    /** @return array{chapters:list<array{id:string,title:string,part:string,preview?:string}>,chapterDestinations:array<string,string>,currentChapter:null,source:null,query:string} */
+    private function pageData(bool $withPreviews = false): array
     {
-        $chapters = $this->manual->chapters();
+        $chapters = $this->manual->chapters($withPreviews);
         $destinations = [];
         foreach ($chapters as $chapter) $destinations[$chapter['id']] = $this->generateUrl('app_wiki_chapter', ['chapter'=>$chapter['id']]);
         return ['chapters'=>$chapters, 'chapterDestinations'=>$destinations, 'currentChapter'=>null, 'source'=>null, 'query'=>''];

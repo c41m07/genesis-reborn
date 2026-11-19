@@ -23,8 +23,10 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
   await expect(page.locator('.catalog-operations-rail')).toBeVisible();
   await expect(page.locator('.catalog-operations-rail')).toHaveCSS('position','sticky');
   await page.setViewportSize({width:390,height:900});
-  await expect(page.locator('.catalog-operations-rail')).toHaveCSS('display','contents');
-  await expect(page.locator('.colony-catalog-activity')).toBeVisible();
+  await expect(page.locator('.catalog-operations-rail')).toHaveCSS('display','grid');
+  await expect(page.locator('.catalog-operations-rail')).toHaveCSS('position','sticky');
+  await expect(page.locator('.catalog-queue-ribbon')).toBeVisible();
+  await expect(page.locator('.catalog-operations-rail [data-catalog-disclosure]')).toHaveCount(5);
   await page.setViewportSize({width:1440,height:900});
   await expect(page.locator('.catalog-operations-rail')).toBeVisible();
   await page.goto('/wiki');
@@ -78,7 +80,7 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
   const build=page.locator('#item-mine_metal-basic').getByRole('button',{name:/Améliorer au niveau/});
   await build.click(); await build.click();
   const queue=page.locator('[data-queue-type="building"]');
-  await queue.locator('summary').click();
+  await queue.locator(':scope > summary').click();
   await queue.getByRole('link',{name:/Préparer l’annulation/}).first().click();
   await expect(page.getByRole('heading',{name:'Commandes concernées'})).toBeVisible();
   await expect(page.locator('main')).toContainText('Dépendance annulée');
@@ -124,6 +126,7 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
         }
         if(path==='/profil/preferences') {
           await expect(page.locator('#vacances-info')).toHaveCount(0);
+          if (width === 390) await page.locator('.space-navigation-menu > summary').click();
           await expect(page.getByRole('navigation',{name:'Compte et préférences'}).getByRole('link',{name:'Mode vacances',exact:true})).toHaveAttribute('href','/profil/vacances');
         }
         if(path==='/profil/vacances') await expect(page.locator('#vacances-info')).toBeVisible();

@@ -4,6 +4,12 @@ Lot 2 fusionné dans dev par la [PR #70](https://github.com/c41m07/genesis-rebor
 
 ## Référence de lecture
 
+**Actualisation du 18 novembre 2026 :** la [décision sur la géographie](DECISIONS.md)
+adopte la spirale réelle pour les nouveaux trajets et replis. Les exemples utilisant
+les anciens écarts de grille sont des références historiques, pas des devis actuels.
+Les coefficients, vitesses et calculs à distance fixée présentés ici restent valables.
+Les vols déjà lancés conservent leurs durées et réservations figées.
+
 Les tableaux concernent le Basique, un univers ×1, avant réduction : niveau 1 pour bâtiments et recherches, une unité pour les vaisseaux et défenses. Ce lot de durées/carburant ne modifiait pas les profils M/N/A/H. La décision
 ultérieure du 16 novembre adopte la [nouvelle répartition](COUTS.md), sans changer
 les durées ni les coefficients de ce lot historique. Le 19 novembre,

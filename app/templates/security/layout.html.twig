@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="entry-workspace entry-access" data-page-sections="disabled">
+    <div class="entry-access-layout">
+        <div class="entry-access-context">
+            <p class="entry-context-title">Votre empire<br>commence ici.</p>
+            <p>Explorez des systèmes inconnus, développez vos colonies et préparez votre flotte. Chaque décision dessine votre avenir.</p>
+            <img src="{{ asset('art/genesis-reborn-planet.png') }}" alt="" width="1448" height="1086">
+        </div>
+        <section class="panel auth-card entry-access-panel" aria-labelledby="{{ access_heading_id }}">
+            {% block access_content %}{% endblock %}
+        </section>
+    </div>
+</div>
+{% endblock %}

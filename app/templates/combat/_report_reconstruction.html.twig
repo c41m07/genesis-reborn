@@ -1,0 +1,19 @@
+<section class="panel" id="combat-reconstruction" aria-labelledby="combat-reconstruction-title">
+    <h2 id="combat-reconstruction-title">Reconstruction après combat</h2>
+    <p class="muted">La reconstruction intervient après le verdict et ne change pas l’issue du combat.</p>
+    <table class="data-table report-reconstruction-table" role="table">
+        <caption class="visually-hidden">Bilan des défenses planétaires par type et par rang</caption>
+        <thead><tr><th scope="col">Défense</th><th scope="col">Rang</th><th scope="col">Détruites</th><th scope="col">Reconstruites</th><th scope="col">Pertes définitives</th></tr></thead>
+        <tbody>
+        {% for row in reconstruction %}
+            <tr>
+                <th scope="row">{{ row.unit }}</th>
+                <td data-label="Rang" class="report-unit-tier">{{ tier_labels[row.tier]|default(row.tier) }}</td>
+                <td data-label="Détruites">{{ row.lost|quantity(0) }}</td>
+                <td data-label="Reconstruites" class="{{ row.rebuilt ? 'report-survivors' : 'muted' }}">{{ row.rebuilt|quantity(0) }}</td>
+                <td data-label="Définitives" class="{{ row.permanent ? 'report-loss' : 'muted' }}">{{ row.permanent ? '−' : '' }}{{ row.permanent|quantity(0) }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>

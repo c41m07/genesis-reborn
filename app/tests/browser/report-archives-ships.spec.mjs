@@ -54,6 +54,14 @@ test('Archives personnelles : sélection, restauration, ordre mixte, clavier et 
   await expect(entries.first().getByRole('checkbox')).toBeFocused();
   await page.keyboard.press('Space');
   await entries.last().getByRole('checkbox').check();
+  await expect(page.locator('.report-selection [role="status"]')).toContainText('2 rapports sélectionnés');
+  const selectAll = page.getByRole('checkbox', { name: 'Tout sélectionner sur cette page' });
+  await expect(selectAll).toBeChecked();
+  await selectAll.uncheck();
+  await expect(page.getByRole('button', { name: 'Archiver la sélection', exact: true })).toBeDisabled();
+  await selectAll.focus();
+  await page.keyboard.press('Space');
+  await expect(entries.locator('input[type="checkbox"]:checked')).toHaveCount(2);
   await page.getByRole('button', { name: 'Archiver la sélection', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Aucun rapport dans cette catégorie' })).toBeVisible();
   await page.getByRole('link', { name: 'Archives personnelles', exact: true }).click();

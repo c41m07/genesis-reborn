@@ -80,6 +80,7 @@ test('Alertes : trois signaux, dossier relié et seuils propres à l’univers',
   await page.getByRole('link',{name:'Ouvrir un dossier pour ce signal'}).first().click();await page.getByRole('button',{name:'Créer le dossier',exact:true}).click();
   await expect(page.locator('main')).toContainText('Signal observé');const caseUrl=page.url();
   await page.goto(`/admin/surveillance?universe=${own.universeId}`);await expect(page.locator(`a[href='${new URL(caseUrl).pathname}']`)).toBeVisible();
+  await page.locator('.admin-surveillance-thresholds summary').click();
   await page.getByLabel('Retard de mission supérieur à (minutes)').fill('10');await page.getByLabel('Transports entre deux joueurs en 24 h').fill('6');await page.getByLabel('Attaques contre un joueur en 24 h').fill('11');await page.getByRole('button',{name:'Enregistrer les seuils'}).click();
   await expect(page.locator('main')).toContainText('Aucun signal ne dépasse');
   const stored=JSON.parse(queryIsolatedSql(project,`SELECT game_settings FROM universe WHERE id=${own.universeId}`));expect(stored.admin_surveillance).toEqual({late_minutes:10,transport_count:6,attack_count:11});

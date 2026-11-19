@@ -1,0 +1,205 @@
+/* L11 A : accueil en lignes, lecture continue et sommaire à gauche. */
+body.ui-refined[data-ui-page="wiki"] .wiki-pages {
+    max-width: none;
+    margin-inline: 0;
+    overflow-wrap: anywhere;
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+/* Les aperçus et intertitres gardent un contraste lisible en thème clair. */
+body.ui-refined[data-ui-page="wiki"][data-theme="light"] .wiki-pages {
+    --muted: #526170;
+}
+
+body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-intro h1 {
+    font-size: 32px;
+    line-height: 1.4;
+}
+
+body.ui-refined[data-ui-page="wiki"] .wiki-pages :is(.wiki-lead, .wiki-chapter p, .wiki-chapter li) {
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-layout {
+    display: grid;
+    grid-template-columns: 258px minmax(0, 1fr);
+    align-items: start;
+    gap: 22px;
+}
+
+body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-card-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+}
+
+body.ui-refined[data-ui-page="wiki"] .wiki-pages :is(.panel, .wiki-chapter, .wiki-summary) {
+    min-width: 0;
+    padding: 22px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--panel);
+}
+
+body.ui-refined[data-ui-page="wiki"] .wiki-pages :is(.wiki-chapter-card, .wiki-search-result) {
+    margin: 0;
+}
+
+body.ui-refined[data-ui-page="wiki"] .wiki-pages :is(h2, .wiki-chapter-card h3) {
+    font-size: 21px;
+    line-height: 1.5;
+}
+
+body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-chapter-preview {
+    margin: 18px 0;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+body.ui-refined[data-ui-page="wiki"] .wiki-pages :is(.wiki-space-navigation, .wiki-search, .wiki-chapter-pagination) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+}
+
+body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-space-navigation {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-block: 24px;
+}
+
+body.ui-refined[data-ui-page="wiki"] .wiki-pages :is(a, button, summary) {
+    min-height: 46px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-size: 14px;
+}
+
+body.ui-refined[data-ui-page="wiki"] .wiki-pages :is(.wiki-start a, .wiki-chapter-card > a, .wiki-chapter-pagination a) {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 12px;
+}
+
+body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-start {
+    margin: 0 0 22px;
+}
+
+body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-search :is(input, button),
+body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-chapter-picker :is(select, button) {
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    margin: 0;
+    font-size: 14px;
+}
+
+body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-search label {
+    font-size: 14px;
+}
+
+body.ui-refined[data-ui-page="wiki"] .wiki-pages :is(a, button, input, select, summary):focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+}
+
+body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-summary :is(h2, h3) {
+    margin-top: 0;
+}
+
+body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-summary h3 {
+    margin-top: 22px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-summary ol {
+    display: grid;
+    gap: 10px;
+    padding: 0;
+    list-style: none;
+}
+
+body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-summary a {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    text-decoration: none;
+}
+
+body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-summary a[aria-current] {
+    background: var(--bg);
+    color: var(--accent);
+}
+
+body.ui-refined[data-ui-page="wiki"] .wiki-pages summary {
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font-weight: 700;
+    line-height: 1.6;
+    cursor: pointer;
+}
+
+body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-reference,
+body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-formula {
+    max-width: 100%;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-search-results {
+    display: grid;
+    gap: 22px;
+}
+
+@media (max-width: 1099px) {
+    body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-layout {
+        display: block;
+    }
+
+    body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-space-navigation {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-chapter-picker {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+    }
+
+    body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-chapter-picker :is(select, button) {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 760px) {
+    body.ui-refined[data-ui-page="wiki"] .wiki-pages :is(.panel, .wiki-chapter) {
+        padding: 18px;
+    }
+
+    /* Les aperçus et intertitres gardent un contraste lisible en thème clair. */
+body.ui-refined[data-ui-page="wiki"][data-theme="light"] .wiki-pages {
+    --muted: #526170;
+}
+
+body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-intro h1 {
+        font-size: 26px;
+    }
+
+    body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-space-navigation {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-search input {
+        font-size: 16px;
+    }
+}

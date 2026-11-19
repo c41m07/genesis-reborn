@@ -1,0 +1,5 @@
+<nav class="development-navigation" aria-label="Développement de la colonie">
+    {% for key,label in {buildings:'Bâtiments',technologies:'Recherche',ships:'Chantier spatial',defenses:'Défenses',tree:'Guide technologique'} %}
+        <a class="secondary" href="{{ key == 'tree' ? path('app_technology_tree') : path('app_colony',{id:planet.id,section:key}) }}"{% if section|default('tree') == key %} aria-current="page"{% endif %}>{{ label }}</a>
+    {% endfor %}
+</nav>

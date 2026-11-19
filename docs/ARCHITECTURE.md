@@ -148,8 +148,11 @@ masquée pour simuler une page. La recherche reste utilisable sans JavaScript.
 `WikiManual` lit les sources uniques `docs/wiki.json`, `docs/REGLES.md` et
 `docs/DECISIONS.md`. Le JSON fini du manuel est décodé une fois par préparation ;
 seules les métadonnées du sommaire et le contenu demandé vont au template.
-L’accueil ne prépare aucun corps de chapitre ; une fiche n’en transmet qu’un ;
-la recherche parcourt le document de référence et ne transmet que des extraits
+L’accueil ne transmet aucun corps complet : `chapters(true)` ajoute seulement
+un aperçu du premier paragraphe, borné à 160 caractères plus une éventuelle
+ellipse. Les autres pages gardent `chapters()` sans aperçu pour leur sommaire.
+Une fiche ne transmet qu’un corps de chapitre ; la recherche parcourt le document
+de référence et ne transmet que des extraits
 bornés à 240 caractères. Aucun chargement de données de jeu, schéma ou dépendance
 n’est ajouté. Aucun gain de performance mesuré n’est revendiqué.
 
@@ -208,6 +211,19 @@ commune restent disponibles dans les pages de colonie ; les quantités du
 catalogue sont chargées par groupe, sans lecture SQL par carte. Ces données
 restent locales à l’appel et ne servent jamais d’autorisation d’écriture.
 Le calcul et l’endpoint de la barre de ressources restent inchangés.
+Les quatre catalogues utilisent `catalogue-workspace.css` pour la grille de quatre
+cartes et sa disposition en lignes, avec les mêmes panneaux de rang et formulaires.
+Les trois files, vols et arrivées occupent un bandeau fixe sous les ressources ;
+leurs détails natifs réutilisent les données et liens d’annulation existants.
+`catalog-sticky` gère l’ouverture exclusive, Échap et la hauteur du bandeau, puis
+nettoie ses observateurs et écouteurs. `colony-live` préserve les panneaux ouverts
+et restaure leur défilement après insertion, en plus des protections de saisie.
+Le contrôleur de quantité couvre le rang complet pour actualiser le prix et la
+durée affichés. Le devis conserve ses champs exécutables et ajoute `displayCosts`,
+`displayDuration` et `missingResources` pour expliquer une unité indisponible.
+Ces données de présentation n’autorisent jamais une commande ; la validation et
+les calculs serveur existants restent requis. Les lectures de `ColonyView`, la
+barre de ressources et ses actualisations sont conservées.
 Les cartes Bâtiments et Vaisseaux transmettent un contexte économique immuable, préparé après
 la synchronisation des files, aux calculs nominaux de ResourceService. Ce contexte
 regroupe les lectures d’événements et de vacances pour cette préparation seulement ;
@@ -237,6 +253,50 @@ Les services métier restent communs ; les anciens paramètres et fragments sont
 maintenus par les transitions décrites dans [le suivi](NAVIGATION_PAGES_DEDIEES.md).
 Le paramètre `fleet` situe un vol autorisé avant la lecture bornée des détails.
 
+L2A A ajoute `fleet-workspace.css`, limité à `.fleet-redesign` sur Missions,
+Préparer et Rappel. Les vols gardent leur composant partagé et leurs données :
+`fleet_page == missions` distingue le bouton de détails du titre, y compris dans
+les fragments actualisés. Le rendu de Vue générale et des catalogues est conservé.
+La navigation réutilise `ui/space_navigation` et son menu natif pour ces trois
+destinations. `fleet-wizard` déplace le focus vers le titre uniquement après un
+changement explicite d’étape ; la connexion du contrôleur ne prend pas le focus.
+Le devis reste sous `fleet-preview`, avec son blocage d’envoi existant. Aucune
+lecture, validation ou transaction de Flottes n’est changée.
+
+L2B étend `.fleet-redesign` aux orbites, au quai et à la reprise ;
+`fleet-harbour.css` limite leur composition à `.fleet-harbour`. La réserve reste
+distincte des unités à quai et des stationnements de tout l’empire, sans lecture
+supplémentaire ni agrégation métier. Les formulaires GET de devis et POST de
+confirmation gardent leurs contrats. Les demandes ne sont plus dans un dépliable ;
+`orbit-requests` actualise leur compteur indépendamment du target `details`, qui
+reste accepté pour les anciennes vues. Les garde-fous de focus, d’échéance et
+de contexte restent ceux du contrôleur et des services existants.
+
+L2C étend le menu et `.fleet-redesign` aux compositions. `fleet-compositions.css`
+reste limité à `.fleet-compositions` : lignes pour les modèles, tableau d’édition
+et choix/disponibilités côte à côte lorsque la largeur suffit. Chaque champ est
+rendu une seule fois ; les lignes du tableau deviennent des groupes de trois
+rangs sur mobile, avec les rôles et en-têtes accessibles conservés. Aucun nouveau
+contrôleur JavaScript, aucune lecture ou écriture supplémentaire : formulaires,
+versions, empreinte de disponibilité et contrôle exact de l’envoi restent existants.
+
+L3 A réorganise les fragments existants de l’Inventaire. `inventory-workspace.css`
+est limité à `.inventory-redesign` : stock/utilisation, contenu/destination et
+attente chronologique. `ui/space_navigation` accepte un compteur optionnel par
+lien pour reprendre la navigation mobile commune ; sans compteur, son rendu est
+conservé. `inventory-review` garde ses targets, formulaires et gestion du focus ;
+le sélecteur reste masqué sans JavaScript et tous les formulaires sont alors visibles.
+Les données de `InventoryPageView`, les POST, CSRF et clés de requête restent inchangés.
+
+L4 A utilise le même menu natif dans `ui/account_navigation`. Le style
+`account-workspace.css`, limité à `.account-redesign`, dispose information et
+confirmation côte à côte sur grand écran, puis empilées. Profil et préférences
+conservent chacun un formulaire Symfony unique ; les panneaux ne constituent
+pas des étapes séparées. Le dépliable de mot de passe reste natif et s’ouvre
+après erreur. Les quatre URL, ancres historiques, POST, CSRF, identifiants de
+participation, champs et contrôles métier restent existants. Aucun nouveau
+contrôleur JavaScript ou chargement métier n’est ajouté.
+
 Les actualisations des colonies et de Flottes demandent JSON avec `X-Genesis-Live: 1` et
 `Accept: application/json`. La route conserve ses contrôles, synchronisations
 et préparation GameShell, puis renvoie les fragments privés sans cache.
@@ -265,11 +325,20 @@ Les ressources restent visibles sous la barre de contexte. Sur mobile, leur
 défilement horizontal est conservé pendant les actualisations. Les dates viennent
 du serveur ; les animations Stimulus ne décident ni des durées ni des résultats.
 
-Les cartes /carte et /carte-v2 utilisent les coordonnées persistées et ne révèlent
-que les planètes des systèmes découverts. Les flottes affichées sont celles du joueur.
+Les cartes /carte et /carte-v2 gardent les identifiants de coordonnées persistés et
+ne révèlent que les planètes des systèmes découverts. `GalaxyGeometry` prépare les
+positions physiques de la spirale ; `MovementCalculator::distances` prépare la
+distance jusqu’à l’entrée du système depuis la colonie de départ. Le JSON V2 expose
+`physical`, `distanceFromOrigin` et la version de géométrie sans nouvelle lecture
+par système. Les règles de visibilité existantes des flottes restent appliquées
+avant sérialisation.
 Textures, nébuleuses, anneaux et lunes de la V2 sont cosmétiques et déterministes.
 Les missions rapides réutilisent les contrôles serveur existants. La V2 permet
-recherche, zoom, déplacement, mini-carte et transitions ; elle arrête ses animations
+recherche, zoom, déplacement, mini-carte et transitions. Ses dispositions Spirale
+réelle et Grille de repérage partagent les distances serveur ; le choix d’affichage
+est conservé localement par participation. Les fiches restent dans le flux de la
+page, hors du canvas ; le pincement agit aux trois niveaux et le globe se tourne
+par glissement. Elle arrête ses animations
 hors écran et respecte la réduction des mouvements. La carte classique reste le
 repli sans canvas/JavaScript. L’arbre technologique conserve les éléments verrouillés
 pour expliquer leurs prérequis, indépendamment du masquage du catalogue.
@@ -295,6 +364,16 @@ descriptions et utilités de jeu. Les valeurs d’exécution restent celles du c
 applicatif ; ce fichier documentaire n’est pas importé dans la base.
 
 ## Colonies et journal d’absence — lot C
+
+La Vue générale finalisée reprend la maquette conservée : alertes avant la bannière,
+points et quatre raccourcis dans celle-ci, activité locale puis arrivées et vols de
+l’empire, journal en pleine largeur. `empire-overview.css` est limité à
+`.overview-page` sur cette destination ; les catalogues gardent leur disposition.
+Les liens des files mènent aux pages existantes et sont rendus aussi dans le fragment
+`queues`. `_overview_attention.html.twig` réutilise les ressources déjà préparées :
+sa région, présente même vide, est incluse seulement dans la réponse d’actualisation
+de la Vue générale. Le contrôleur existant diffère son remplacement pendant le focus.
+La barre de ressources conserve son rendu, ses calculs et son actualisation.
 
 Planet.acquiredAt est nullable : les quatre transferts de propriété existants
 appellent acquireBy dans leurs transactions et gardes de rejeu. Une attribution
@@ -376,6 +455,22 @@ La table report_archive est unique sur participation/type/id ; archived_at nulla
 conserve l’état restauré. Aucun rapport source supprimé ou modifié. Les vues
 administratives et preuves restent indépendantes de ce filtrage personnel.
 
+Depuis L7D A, `CombatReportPresenter` enrichit sa présentation avec `rows_by_side`,
+les totaux engagés/perdus/restants par camp et les décomptes de tirs/pertes du round.
+Ces lectures utilisent le même instantané, sans rejouer le combat ni nouvelle requête.
+Le total inclut les renforts enregistrés et reste calculé avant reconstruction.
+Les fragments Twig `_report_units`, `_report_round` et `_report_reconstruction`
+conservent rangs, flottes et statistiques. Les rounds sont des `details` natifs ;
+le premier est ouvert. Les tableaux s’adaptent en lignes sur mobile avec leurs
+libellés et leur sémantique, et restent dans la page du rapport.
+
+`report_selection_controller` sélectionne uniquement les cases déjà présentes
+dans la page de rapports. Il affiche le nombre de sélections, gère l’état partiel
+et désactive la commande collective vide. Les actions individuelles, le formulaire
+sans JavaScript, les jetons et la validation transactionnelle restent ceux existants.
+Le lien d’effacement retire les critères de recherche en conservant type et archives.
+Les styles sont isolés dans `report-workspace.css` ; aucune migration ni dépendance.
+
 AdminInterventionService::ships utilise rôle actif, verrous administrateur puis
 participation/univers/planète, reçu ActionGuard et catalogue. Le stock idle est
 créé si nécessaire ; chaque quantité reste dans l’entier SQL signé. L’audit
@@ -426,6 +521,20 @@ garde son tag NULL, aucun signalement inventé. make lint confirme aussi le sch�
 local migré. Aucun serveur Alpha n’est concerné.
 
 ## Navigation et rappel volontaire — lot G
+
+Depuis L7C, `GalaxyGeometry` est la source commune des distances hyperspatiales des
+devis et replis. Les tableaux de coordonnées des trajets figés restent historiques ;
+`FleetNavigation` projette leurs extrémités avant d’interpoler le point atteint.
+Les secondes et carburants déjà enregistrés ne sont pas recalculés. Les nouveaux
+points physiques portent `geometry: spiral-v1`, afin de ne pas les confondre avec
+une ancienne position de grille. Un ancien point entre systèmes sans géométrie
+identifiable est refusé pour le repli, plutôt que converti arbitrairement.
+
+Le simulateur prépare ses bilans d’affichage dans `CombatSimulationView`, après
+les dix calculs existants. Les survivants sont comptés par camp, unité et rang ;
+leurs points de structure ne deviennent jamais des effectifs. Twig affiche les
+engagés, pertes et survivants, puis les rounds et structures en détails secondaires.
+Les résultats bruts, paramètres et contrôles serveur restent conservés.
 
 FleetNavigation fige au départ les coordonnées, portions système/hyperespace,
 durées et carburant du devis existant. Son checkpoint active est enregistré avant
@@ -510,6 +619,14 @@ contrôle possède le focus. Les clés privées ne sont pas ajoutées à la cart
 
 
 ### Abandon : transition transactionnelle sans migration
+L7A A compose uniquement les templates de liste/comparaison et de bilan avec
+`colony-workspace.css`, limité à `.colony-redesign`. Colonies en lignes, tableau
+avec filtre existant et confirmation à côté des pertes sur grand écran, puis
+empilés sur format étroit. Les contrôleurs, préparations groupées et services
+restent inchangés ; en particulier, consulter le bilan conserve la synchronisation
+sous verrou décrite ci-dessous. Les formulaires serveur et la Vue générale
+restent ceux de leurs domaines.
+
 ColonyAbandonmentService verrouille participation, univers et planète, puis
 synchronise les files avant le bilan. planetHasActiveFleet contrôle toutes les
 références d’origine, destination et repli sans filtrage de visibilité ; seul un
@@ -593,10 +710,66 @@ Les classements utilisent des liens GET dans les cinq en-têtes, avec aria-sort,
 sans changer les calculs, rangs ou pagination côté serveur. Les libellés des
 cases d’archivage restent dans le nom accessible, hors de l’affichage visuel.
 
+Le lot L7E A conserve les gabarits et lectures de messagerie, classements et profils.
+`social-workspace.css` limite la nouvelle présentation aux cinq pages du lot, sans
+modifier les profils de guilde L1B. Les scores du profil public sont présentés en
+lignes ; le tableau des guildes garde toutes ses colonnes dans une région défilante.
+La protection déjà fournie au classement est consultable dans un `details` natif,
+sans nouvelle lecture ni exposition d’information. Les liens de la recherche vers
+la messagerie gardent leur interlocuteur ou canal. Le menu reste actif sur les
+sous-pages de recherche, de profil public et de signalement.
+
+Le seuil de 1 050 px du contrôleur `message-thread` suit l’empilement des deux
+panneaux. L’historique conserve son défilement et la rédaction son contrôleur
+anti-doublon ; aucun service métier, requête, jeton ou format de message n’est changé.
+
 L’aperçu de guilde appelle guildConversation(guild, 3), qui limite les résultats
 en base aux trois plus récents (date puis identifiant), affichés dans leur ordre
 chronologique. Il ne marque pas le canal lu. Les boutons de départ/dissolution
 sont visibles dans Ma guilde avec leurs services et jetons CSRF existants.
+
+### Accueil, accès au compte et univers — L8 A
+
+`security/layout.html.twig` rassemble la présentation des formulaires de connexion,
+inscription, récupération et confirmation ; chaque tâche conserve sa route et son
+gabarit. Le contexte illustré est masqué à 1 050 px et moins, pour placer directement
+le formulaire sur les petits écrans. Les refus d’accès conservent leur gabarit et
+leur retour prioritaire selon le rôle, sans contexte illustré avant cette action.
+
+`entry-workspace.css` limite les styles aux conteneurs de ces pages et à leur
+navigation publique. Les cartes d’univers conservent les neuf paramètres préparés
+par `UniverseController` et `GameCatalog` ; aucune lecture supplémentaire n’est
+ajoutée. Le bandeau d’absence d’empire utilise les participations actives déjà
+fournies. Les limites de flotte sont écrites en entier, sans abréviation à déplier.
+
+Les formulaires, champs, contrôleurs de visibilité du mot de passe, thèmes d’erreur,
+CSRF, réponses neutres, redirections et services restent ceux de l’existant. Les
+messages de résultat sont affichés par le socle commun au-dessus du contenu. Les
+calendriers UTC et le bandeau de fermeture à 24 heures gardent leurs contrôleurs,
+leur horloge serveur et leur actualisation. Les métadonnées publiques et les
+réponses techniques ne sont pas modifiées.
+
+### Feedback, patchnotes et documents — L9 A
+
+`information-workspace.css` complète les styles d’accès communs dans les seuls
+conteneurs L9. Le feedback garde un formulaire POST multipart unique : champs du
+retour, contexte et capture, puis action d’envoi dans l’ordre du document. Sur
+ordinateur, contexte et capture occupent la colonne de droite ; l’affichage se
+réunit à 1 150 px et moins. Les contrôleurs et lectures serveur ne sont pas modifiés.
+
+`feedback-attachment` prépare seulement un aperçu local : URL temporaire du fichier,
+décodage de l’image et agrandissement dans un dialogue natif. Le type annoncé et le
+budget de décodage limitent l’aperçu, sans remplacer la validation serveur. Une
+génération écarte les décodages périmés ; retrait, remplacement et déconnexion ferment
+le dialogue et révoquent l’URL. Une image non décodable reste sélectionnée pour que
+le serveur puisse décider de son acceptation. Sans JavaScript, le champ fichier et
+l’envoi restent disponibles. Aucun aperçu n’est téléversé avant la soumission.
+
+Les patchnotes conservent leur `details` natif, le contenu échappé avec sauts de ligne,
+le filtrage des publications et l’effet de lecture du contrôleur. Les documents
+publics gardent leur contenu et leurs métadonnées ; seules six ancres sont ajoutées
+à la confidentialité. Le socle affiche sur ces pages la navigation publique L8
+pour les visiteurs et conserve le contexte habituel des comptes connectés.
 
 ## Présentations de guildes
 
@@ -629,6 +802,53 @@ Lot 1 publié dans la [PR #75](https://github.com/c41m07/genesis-reborn/pull/75)
 grades, gestion et création ; liens directs, anciennes adresses conservées et
 lectures adaptées à chaque page. Voir le [suivi des lots](NAVIGATION_PAGES_DEDIEES.md) pour les
 choix, vérifications et limites. CI, fusion et déploiement restent distincts.
+
+Le lot visuel L1A validé en B réutilise `DiplomacyPageView` et les mêmes POST,
+sans changement de préparation des données. `ui/space_navigation.html.twig`
+reçoit les destinations autorisées et leur état actif ; les consommateurs de
+guilde passent toujours par `ui/guild_navigation.html.twig`. Le mode compact
+est activé seulement sur Ma guilde, Membres et Relations entre commandants
+(dans ce dernier cas, si deux destinations sont disponibles).
+
+Le HTML contient un `details` ouvert : les liens serveur restent accessibles
+sans JavaScript. `space_navigation_controller.js` adapte son ouverture au seuil
+de 600 px, ferme sur Échap et replace le focus lorsque le format masque son
+élément. Son écouteur de changement de format est retiré à la déconnexion.
+`guild-workspace.css`, chargé après les styles existants, limite les compositions
+et couleurs aux trois pages L1A. Le socle commun et la barre de ressources sont
+conservés. [Suivi de réalisation locale](REFONTE_VISUELLE_INTERFACES.md).
+
+L1B, validé en A, ajoute `guild-discovery.css` limité à la recherche/création sans
+guilde et à la présentation consultée. Les résultats gardent leur fragment commun
+et leurs POST ; les adaptations d’adhésion sont conditionnées à l’absence de
+guilde. La partie traités du fragment ne change pas. Les liens secondaires restent
+visibles sur mobile, sans contrôleur supplémentaire ni nouvelle route.
+
+`DiplomacyController` conserve en session le nom/tag d’une création refusée,
+dans une clé liée à la participation et à l’univers. Les valeurs sont bornées à
+120/10 caractères, au-delà des maxima valides 60/5, pour ne pas rendre valide une
+valeur trop longue après troncature. Les champs Twig restent échappés ; le brouillon
+survit aux GET et n’est pas un état métier. Une création réussie le retire. Le
+contrôle CSRF précède son écriture ; services, validations et transactions restent
+inchangés. Les tests couvrent rechargement, isolement, CSRF et bornes.
+
+L1C, validé en A, réutilise les données préparées pour grades, gestion,
+personnalisation et traités. `guild-control.css` limite leurs compositions à
+`.guild-control`. Le style du menu natif est extrait de `guild-workspace.css`
+vers `space-navigation-menu.css` pour les consommateurs L1A/L1C ; le contrôleur
+Stimulus et le HTML ouvert sans JavaScript restent communs. Le contrôleur garde
+la trace d’une perte de focus causée par le masquage CSS du résumé : selon l’ordre
+des événements navigateur, elle peut précéder le signal de changement de format.
+Le focus rejoint alors la page active sur ordinateur, sans modifier celui d’un
+champ situé hors du menu.
+
+Tag et transfert sont des formulaires distincts. Les confirmations dépliables de
+transfert, départ et dissolution ne changent ni l’URL, ni les champs d’action,
+ni le CSRF : elles précèdent uniquement l’envoi. Les services vérifient toujours
+le commandant actuel, la cible, l’univers, les versions et leurs verrous. Les
+formulaires de traités conservent `relation_id`, `relation_version`, `status` et
+`treaty_action`, avec les mêmes conditions d’affichage. Aucun nouveau chargement
+de données ni traitement serveur n’est introduit par ce lot.
 
 
 ### Inventaire par destination
@@ -695,6 +915,16 @@ personnelle est lue séparément et reste complète. Les identités sont limité
 les colonies nécessaires au don ; les données communes du bandeau restent celles
 de `GameShell`. Aucune actualisation périodique ni nouvelle écriture de lecture.
 
+L5 A conserve cette préparation et réorganise seulement les templates.
+`guild-project-workspace.css` est limité à `.project-redesign` : listes en lignes,
+modèles avec minimums visibles et fiche active avec don à droite à partir de
+1201 px, puis une colonne. Les formulaires gardent leurs méthodes, actions,
+champs, CSRF et versions ; les maximums existants sont aussi indiqués en texte.
+Les deux menus réutilisent `ui/space_navigation`, ouvert sans JavaScript. Son
+option `currentAriaValue` conserve `location` sur une fiche de projet et reste
+`page` par défaut pour les autres espaces. Aucun nouveau service, contrôleur
+JavaScript, chargement ou calcul métier n’est ajouté.
+
 Les deux navigations gardent l’espace guilde et la destination projet actifs.
 `page_sections` ne crée pas de sommaire sur ces pages. Il oriente les anciens
 fragments de liste à l’ouverture et au changement de fragment, en conservant la
@@ -725,6 +955,16 @@ sur les pages suivantes. Les exclusions d’archivage restent celles des listes
 actuelles ; une ancienne fiche archivée reste accessible selon ses droits existants.
 `ChallengeQueryService::view` garde les calculs métier et lectures personnelles.
 
+L6 A réorganise les trois templates de pages et leur navigation. Le style
+`event-workspace.css` reste limité à `.event-redesign` : annonces avec dates à
+droite, défis en lignes et fiche avec participation à droite à partir de 1201 px,
+puis une colonne. Le menu natif partagé conserve `page` sur les listes et
+`location` sur la fiche, et reste ouvert sans JavaScript. Le résumé
+`events/_challenge_summary` partagé avec l’administration n’est pas modifié.
+Les liens de participation gardent leurs conditions et destinations ; un objet
+déjà attribué reste présenté avant le cas d’annulation. Aucun nouveau calcul,
+contrôleur JavaScript, chargement ou traitement métier n’est ajouté.
+
 `EventPanelService` réutilise les mêmes critères, sans changer son périmètre
 commun : annonces/bonus applicables et occurrences en cours ou programmées.
 Il conserve toutes ses informations, son compteur fermé et ses comptes à rebours ;
@@ -735,6 +975,73 @@ document des annonces ; les nouveaux écrans désactivent le sommaire automatiqu
 Voir [la recette et les limites](NAVIGATION_PAGES_DEDIEES.md).
 
 ## Pages administratives dédiées — 17 novembre 2026
+
+Le sous-lot visuel L10A ajoute `admin-workspace.css`, limité par la classe de
+corps aux routes d’accueil, de rubrique et de liste des joueurs. Ces pages
+désactivent le sommaire automatique, tout en conservant les redirections des
+anciens fragments. L’accueil étend les missions et événements sur toute la
+largeur ; les informations secondaires des dernières actions restent dépliables.
+La table des comptes garde ses six colonnes HTML et ses en-têtes ; sous 1050 px,
+les cellules sont présentées par compte avec leurs libellés visibles. Le formulaire
+GET et le fragment de résultats gardent `admin-list`, sa pagination serveur,
+ses protections contre les réponses obsolètes et son repli sans JavaScript.
+Aucun service, requête, contrat d’action ou règle de rôle n’est modifié.
+
+L10B étend ce cadre à `app_admin_player` et ajoute `admin-player-workspace.css`,
+limité à `.admin-player-profile`. Les six données d’activité de chaque participation
+restent préparées par le contrôleur actuel, sans nouvelle agrégation. Les colonies
+conservent leurs deux `<details>` natifs et leurs identifiants de fragments ; les
+champs de ressources sont regroupés par deux sur écran large, par un sur mobile.
+Le stock et la capacité sont reliés au champ par `aria-describedby`. Motif, case de
+confirmation, POST, CSRF et clé de demande restent dans chaque formulaire.
+Les redirections après intervention, audits de consultation/écriture et protections
+transactionnelles restent inchangés. Aucune actualisation ou logique JavaScript
+n’est ajoutée à la fiche ; une erreur serveur garde le comportement de redirection
+existant, sans garantie nouvelle de conservation de saisie.
+
+L10C ajoute `admin-moderation-workspace.css`, limité aux trois routes de modération,
+liste et détail des feedbacks. La classe `admin-moderation-workspace` active ces
+styles ; ces pages désactivent aussi le sommaire automatique. Le filtre local
+`admin-filter` reste attaché aux seuls signalements de messages. Les signalements
+de joueurs conservent leur section et leur contexte serveur. Les feedbacks gardent
+leurs filtres GET, lectures et pagination dans `AdminReadRepository` ; le lien
+d’archives change uniquement `status` et remet `page` à 1. La fiche garde le même
+POST et la même capture autorisée, avec le suivi en colonne sur écran large.
+Les couleurs d’état/priorité sont adaptées au fond blanc du thème clair. Aucun
+service, contrôle d’accès, audit ou contrat de modération n’est modifié.
+
+L10D ajoute `admin-case-workspace.css`, activé par `admin-case-workspace` sur
+les trois GET de liste, création et détail des dossiers. Ces pages désactivent
+le sommaire automatique et conservent leurs URL distinctes. La liste garde une
+seule destination par résultat et ses filtres GET, y compris les portées de
+participation/flotte. La fiche place observations et notes dans une colonne,
+le formulaire dans une seconde sur grand écran ; l’ordre de lecture devient
+linéaire sous 1100 px. Les aides de longueur sont reliées aux champs ; les textes
+libres gardent leurs sauts de ligne et l’échappement Twig. Brouillon de création,
+POST, CSRF, clés de demande et état attendu restent ceux d’`AdminCaseController`
+et d’`AdminCaseService`, sans modification de leurs lectures ni de leurs écritures.
+
+L10E ajoute `admin-surveillance-workspace.css`, activé par la classe de corps
+`admin-surveillance-workspace` sur alertes, liste et fiche des missions. Ces trois
+pages dédiées désactivent le sommaire automatique. La table de huit colonnes garde
+ses en-têtes et rôles HTML ; sous 1100 px, les lignes deviennent des fiches avec
+leurs sept valeurs libellées. Les trois colonnes de composition restent visibles
+ensemble. Les seuils et interventions utilisent `<details>` sans contrôleur
+supplémentaire ; valeurs de seuil, état courant et avertissements restent visibles.
+Situation, départ conservé, unités, cargaison et rapports précèdent l’intervention.
+`admin-mission-monitor` conserve son fragment, sa période de vingt secondes et ses
+protections de consultation/erreur. Aucun contrôleur PHP, service, requête,
+autorisation, jeton, version attendue, transaction ou audit n’est modifié.
+
+L10F B ajoute `admin-universe-workspace.css`, limité par `admin-universe-workspace`
+aux GET de liste, création et gestion des univers. Les fiches de liste sont
+regroupées par deux sur grand écran ; la création place ses repères auprès du
+formulaire, et la gestion place calendrier et configuration dans deux colonnes.
+Sous 1200 px, ces ensembles reviennent sur une colonne. Les fragments existants
+de calendrier et de règles, les cibles `admin-speed`, les identifiants d’ancres,
+les POST et la confirmation de suppression gardent leurs contrats.
+Le fragment de création reste utilisé sur sa seule page dédiée. Aucun service,
+chargement, réglage de jeu ou comportement JavaScript n’est modifié.
 
 La console et ses groupes existants restent en place. `AdminController` expose
 les GET de création et de gestion d’un univers ; les POST historiques gardent
@@ -749,6 +1056,114 @@ facultatifs limitent famille, entrée et préparation des champs. La recherche
 transversale porte sur le catalogue de configuration fini de l’univers ; une
 liste ne construit aucun champ d’édition. Les écritures d’équilibrage réutilisent
 les transactions, matérialisations et validations existantes.
+
+L10G B ajoute `admin-balance-workspace.css`, limité aux mesures et catalogues
+par la classe de page `admin-balance-workspace`. Progression et attentes sont
+rapprochées ; chaque ressource garde ses quatre indicateurs et ses dénominateurs
+dans une liste de définitions. Les entrées restent des fiches par deux. Le
+fragment `_catalogue_form` regroupe les champs existants de `cost_profiles` par
+rang, sans changer noms, valeurs, bornes, pas ou jetons. Des `<fieldset>` nomment
+les trois rangs et les bornes sont associées aux champs par `aria-describedby`.
+Sous 1200 px, les colonnes reviennent sur une seule. Les quatre ancres des mesures
+parcourent le même relevé ; famille, recherche et édition gardent leurs URL.
+Les contrôleurs, services, lectures et écritures ne sont pas modifiés.
+
+L10H A ajoute `admin-boxes-workspace.css`, limité à `app_admin_resource_boxes`.
+Le formulaire conserve ses vingt champs numériques, son motif, sa confirmation
+et son jeton. Cinq plafonds précèdent trois `<fieldset>` de formats, puis le
+motif et la confirmation. Les trois ancres parcourent cette même page. Sous
+1200 px, les formats reviennent sur une colonne ; les plafonds passent par deux
+colonnes puis une sur téléphone. `admin-editors` ne replie plus ce formulaire
+et le sommaire automatique est désactivé sur cette page. Une réponse de refus
+conserve aussi la case soumise ; le serveur continue de contrôler sa valeur.
+`AdminResourceBoxController` et `ResourceBoxPolicy` ne sont pas modifiés.
+
+L10I A ajoute `admin-events-workspace.css`, limité aux cinq routes GET des
+événements : liste, assistant, aperçu, création et édition avancées. Liste et
+choix de modèle restent sur toute la largeur. Les champs se placent par deux
+sur ordinateur, avec nom guidé et descriptions sur toute la largeur ; sous
+1200 px, ils reviennent sur une colonne. L’aperçu garde une lecture continue.
+`<details>` replie seulement le formulaire d’annulation guidée ; ses conséquences
+restent visibles et une ouverture/fermeture conserve le motif saisi. Le retrait
+commun garde son fragment et ses contrôles. Le sommaire automatique est désactivé
+sur ces pages. Les types et statuts ont des libellés français, sans changer les
+valeurs soumises. Les noms de champs, contraintes, jetons et URL restent les mêmes.
+Le libellé Description avancée est associé explicitement à son champ, même après
+une erreur. Aucun contrôleur, service, chargement ni comportement JavaScript
+n’est modifié ; les formulaires restent utilisables sans JavaScript.
+
+L10J A ajoute `admin-projects-workspace.css`, limité aux trois routes des modèles
+de projets de guilde. Liste, création et édition conservent leurs URL et leurs
+lectures ciblées. Un formulaire contient identité, paliers et minimums dans le
+fil ; chaque palier reste un `<fieldset>` nommé. Les cinq ressources s’affichent
+sur cinq colonnes, puis deux sous 1200 px et une sous 760 px. Les libellés sont
+associés explicitement aux champs ; le focus d’ajout/retrait est conservé.
+`AdminGuildProjectController` accepte le choix d’univers vide comme contexte non
+encore choisi pendant la préparation du brouillon, afin que `formnovalidate`
+permette l’ajout/retrait avant cette saisie. L’enregistrement reste soumis à la
+validation d’un univers existant, des paliers, minimums, version et permissions.
+Aucune écriture n’est ajoutée aux étapes de préparation. Les noms des champs,
+jetons, limites et services métier conservent leurs contrats.
+
+L10K A ajoute `admin-rotations-workspace.css`, limité aux trois routes des modèles
+hebdomadaires. La liste conserve son filtre d’univers et l’ordre des modèles.
+Création et édition utilisent un formulaire avec trois sections nommées :
+identité, objectif/attribution, durée/enregistrement. Les champs facultatifs
+restent visibles ; valeurs, contraintes, jetons et empreinte sont conservés.
+L’activation rapide garde un formulaire distinct dans un `<details>` natif ; ses
+conséquences restent visibles et son motif survit à l’ouverture/fermeture.
+La navigation commune et l’absence de sommaire automatique sont préservées.
+Aucun contrôleur, service, chargement ou comportement JavaScript n’est modifié.
+Les occurrences existantes gardent leur définition et leurs récompenses figées.
+
+L10L A ajoute `admin-challenges-workspace.css`, limité à la liste et à la fiche
+des défis. Les filtres GET et les deux paginations de cinquante gardent leurs
+contrats. Le tableau s’affiche au-dessus de 1200 px ; les fiches individuelles
+prennent le relais sur tablette et téléphone. Les deux présentations réutilisent
+les mêmes lignes déjà préparées ; la présentation masquée est retirée de l’arbre
+d’accessibilité par `display: none`. Ce double balisage est borné à cinquante
+participants, sans nouvelle lecture. Le libellé de récompense est partagé par
+une macro locale. Le fragment de suivi partagé avec le jeu reste inchangé.
+Les annulations guidées et hebdomadaires se déplient nativement, avec conséquences
+visibles, motifs, confirmations et jetons conservés. Le sommaire automatique est
+désactivé. Aucun contrôleur, service ou traitement JavaScript n’est modifié ;
+la consultation conserve sa journalisation administrative existante.
+
+L10M A sépare les patchnotes administratives : liste, création, édition et
+confirmation de suppression. Les anciennes adresses POST et leurs jetons restent
+acceptés ; les nouvelles destinations GET ont une navigation active et un fil
+d’Ariane. Liste et formulaires chargent seulement les données de leur page.
+`PatchNoteEditor` prépare le brouillon et valide tous les champs avant de modifier
+l’entité gérée par Doctrine : champs requis, limites 160/40/500, statut et date
+UTC stricte (minutes ou secondes). Une date impossible ou mal formée est refusée
+avec une réponse 422, sans mutation ni audit de réussite ; le formulaire conserve
+ses valeurs. Brouillon sans date, publication immédiate si date vide, visibilité
+à l’échéance si date future : contrats existants conservés. La confirmation GET
+n’efface rien ; son bouton soumet l’ancien POST protégé par rôle et CSRF.
+Les écritures et actions d’audit conservent leur ordre ; aucune garantie nouvelle
+de concurrence ou d’idempotence n’est annoncée. `admin-patchnotes-workspace.css`
+reste limité à ces routes, sans repli automatique du formulaire ni sommaire ajouté.
+Les champs HTML natifs restent utilisables sans JavaScript ; l’affichage joueur,
+le texte échappé et l’enregistrement de lecture restent inchangés.
+
+L10N A ajoute `admin-ops-workspace.css` aux quatre routes d’exploitation.
+Un seul tableau par liste conserve ses lignes et ses rôles explicites ; sous
+1200 px, le même balisage prend la présentation en fiches. Recherche, comptage
+et export ne dupliquent donc aucune entrée selon la taille d’écran. Les détails
+d’audit utilisent un `<details>` natif ; `data-csv-value` conserve le JSON complet
+pour l’export de la page, indépendamment de son état replié. Le contrôleur commun
+`admin_filter` lit cet attribut facultatif et conserve le comportement précédent
+pour les autres cellules. La neutralisation des formules CSV reste appliquée.
+Les outils purement locaux de sécurité et l’export visible ne sont révélés que
+par leur contrôleur ; liste, examen et export serveur restent disponibles sans
+JavaScript. Les limites de collecte et l’audit de consultation restent inchangés.
+Les indicateurs occupent quatre, deux puis une colonne. Les brouillons gardent
+leur texte et leurs tableaux défilants natifs ; quatre noms de régions de la
+confidentialité sont distingués pour l’accessibilité. Contrôleurs, services,
+permissions, jetons, transactions et en-têtes privés ne sont pas modifiés.
+Les rapports administratifs de combat/espionnage conservent les lecteurs partagés
+validés en L7D/L10E. L’ancienne liste de transports redirige toujours vers les
+missions filtrées ; les notifications restent un endpoint JSON privé.
 
 Les contrôleurs Événements, Projets et Rotations séparent les GET de liste et de
 formulaire. Les anciens POST restent acceptés. L’assistant et les interdictions

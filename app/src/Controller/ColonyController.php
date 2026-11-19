@@ -9,6 +9,7 @@ use App\Service\Colony\{ColonyView, GameShell, ResourceService, LiveRegionRespon
 use App\Service\Queue\QueueService;
 use App\Service\Player\{LeaderboardService, PreferencesService, RelationResolver};
 use App\Service\Catalog\GameCatalog;
+use App\Service\Fleet\{GalaxyGeometry, MovementCalculator};
 use App\Manager\GameManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{Request, Response, JsonResponse};
@@ -27,6 +28,8 @@ final class ColonyController extends AbstractController
         private \App\Service\Fleet\FleetVisibility $visibility,
         private GameShell $shell,
         private LiveRegionResponse $liveResponses,
+        private GalaxyGeometry $galaxyGeometry,
+        private MovementCalculator $movementCalculator,
     )
     {
     }
@@ -154,6 +157,10 @@ final class ColonyController extends AbstractController
             'active-flights' => 'ui/flights.html.twig',
         ];
         $templates[$data['section'] === 'overview' ? 'journal' : 'catalog'] = $data['section'] === 'overview' ? 'colony/_journal.html.twig' : 'colony/_catalog.html.twig';
+        if ($data['section'] === 'overview') {
+            // Réutiliser les ressources déjà préparées ; le bandeau conserve son propre rendu.
+            $templates['overview-attention'] = 'colony/_overview_attention.html.twig';
+        }
         $regions = [];
         foreach ($templates as $name => $template) {
             $regions[$name] = $this->renderView($template, $data);
@@ -463,6 +470,15 @@ final class ColonyController extends AbstractController
             $mapSystems = [];
             foreach ($systems as $row) {
                 $system = $row['system'];
+                $originSystem = $mapOrigin?->solarSystem;
+                $distanceFromOrigin = null;
+                if ($originSystem !== null && $originSystem->galaxy->id === $system->galaxy->id) {
+                    $distances = $this->movementCalculator->distances(
+                        [$originSystem->id, $originSystem->galaxy->id, $originSystem->coordX, $originSystem->coordY, $mapOrigin->position],
+                        [$system->id, $system->galaxy->id, $system->coordX, $system->coordY, null],
+                    );
+                    $distanceFromOrigin = $distances['normal'] + $distances['hyper'];
+                }
                 $mapSystems[] = [
                     'id' => $system->id,
                     'name' => $system->name,
@@ -471,6 +487,8 @@ final class ColonyController extends AbstractController
                     'number' => $system->number(),
                     'x' => $system->coordX,
                     'y' => $system->coordY,
+                    'physical' => $this->galaxyGeometry->position($system->coordX, $system->coordY),
+                    'distanceFromOrigin' => $distanceFromOrigin,
                     'known' => $row['known'],
                     'planets' => array_map(fn(Planet $planet): array => [
                         'id' => $planet->id,
@@ -487,6 +505,7 @@ final class ColonyController extends AbstractController
             }
             $flights = $this->visibility->forMap($m, $selectedGalaxy);
             $galaxyV2Json = json_encode([
+                'geometry' => ['name' => GalaxyGeometry::SPIRAL, 'extent' => GalaxyGeometry::EXTENT, 'unitsToAu' => GalaxyGeometry::UNITS_TO_AU],
                 'systems' => $mapSystems,
                 'origin' => $mapOrigin ? [
                     'planetName' => $mapOrigin->name,

@@ -1,8 +1,9 @@
 {% extends 'base.html.twig' %}
 {% block title %}Rappeler une flotte · Genesis Reborn{% endblock %}
 {% block body %}
-{% include 'ui/fleet_navigation.html.twig' %}
+<div class="fleet-redesign fleet-recall-page" data-page-sections="disabled">
 <div class="page-heading"><div><h1>Rappeler la flotte #{{ fleet.id }}</h1><p>Vérifiez le retour avant de confirmer le rappel.</p></div></div>
+{% include 'ui/fleet_navigation.html.twig' %}
 <section class="panel fleet-recall-panel" aria-labelledby="recall-title">
 <h2 id="recall-title">Retour de la flotte</h2>
 <p>Origine historique : {{ fleet.homePlanet.name }} · {{ fleet.homePlanet.coordinates() }}.</p>
@@ -27,4 +28,5 @@
 {% endif %}
 <p><a href="{{ path('app_fleets') }}">Revenir aux flottes</a></p>
 </section>
+</div>
 {% endblock %}

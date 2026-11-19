@@ -83,6 +83,10 @@ test('Le dirigeant crée un grade, le délègue et les droits restent contrôlé
       expect(result.violations).toEqual([]);
     }
     await memberPage.goto('/diplomatie/commandants');
+    const spaceMenu = memberPage.locator('.space-navigation-menu:not([open])');
+    if (await spaceMenu.count()) {
+      await spaceMenu.locator('summary').click();
+    }
     await expect(memberPage.getByRole('navigation', { name: 'Navigation de diplomatie' }).getByRole('link', { name: 'Relations entre commandants', exact: true })).toBeVisible();
     await memberContext.route('**/activite/presence',route=>route.fulfill({status:204}));
     const project=process.env.BROWSER_ROUTER;

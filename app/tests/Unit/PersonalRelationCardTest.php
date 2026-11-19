@@ -51,7 +51,9 @@ final class PersonalRelationCardTest extends TestCase
     public function testGuildPriorityIsExplainedInsteadOfCallingAnAllyAnEnemy(): void
     {
         $html = $this->card('enemies', false, 'allies');
-        self::assertStringContainsString('>Allié<', $html);
+        self::assertStringContainsString('Relation actuelle : Allié · guilde', $html);
+        self::assertStringContainsString('commander-card--allied', $html);
+        self::assertStringNotContainsString('commander-card--enemy', $html);
         self::assertStringContainsString('les liens de guilde sont prioritaires', $html);
         self::assertStringNotContainsString('>Rival personnel<', $html);
     }

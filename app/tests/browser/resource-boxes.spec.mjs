@@ -85,6 +85,103 @@ test('Admin : formats plafonnés, saisie conservée et modification journalisée
   await page.setViewportSize({width:390,height:900});expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);await page.screenshot({path:testInfo.outputPath('box-settings-390.png'),fullPage:true});
 });
 
+test('Admin boîtes A : trois formats, thèmes et formulaire natif avec refus serveur', async ({ page, browser }, testInfo) => {
+  test.setTimeout(180000);
+  const own = await enter(page, true);
+  const project = process.env.BROWSER_ROUTER;
+  const url = `/admin/universes/${own.universeId}/boites`;
+  const box = addBox(project, own, 'preserved-box');
+  const payloadBefore = queryIsolatedSql(project, `SELECT payload FROM player_boost WHERE id=${box}`);
+  const state = () => queryIsolatedSql(project, `SELECT id,game_settings FROM universe ORDER BY id`);
+  const before = state();
+  runIsolatedSql(project, `UPDATE universe SET name='${'UniversInterstellaireSansEspace'.repeat(4).slice(0, 100)}' WHERE id=${own.universeId}`);
+  for (const theme of ['dark', 'light']) {
+    runIsolatedSql(project, `UPDATE player SET preferences=JSON_OBJECT('theme','${theme}') WHERE id=${own.playerId}`);
+    for (const width of [1440, 768, 390]) {
+      await page.setViewportSize({ width, height: 900 });
+      expect((await page.goto(url)).status()).toBe(200);
+      await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
+      await expect(page.locator('h1')).toHaveCount(1);
+      await expect(page.locator('.page-contents, .page-editor')).toHaveCount(0);
+      await expect(page.locator('.resource-box-settings input[type="number"]')).toHaveCount(20);
+      await expect(page.locator('.resource-box-settings fieldset')).toHaveCount(5);
+      expect(await page.locator('.admin-box-templates').evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(width === 1440 ? 3 : 1);
+      expect(await page.locator('.admin-box-caps').evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(width === 1440 ? 5 : width === 768 ? 2 : 1);
+      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+      expect((await new AxeBuilder({ page }).include('#admin-main').analyze()).violations).toEqual([]);
+      await page.screenshot({ path: testInfo.outputPath(`boites-${theme}-${width}.png`), fullPage: true, animations: 'disabled' });
+    }
+  }
+  expect(state()).toBe(before);
+  const sections = page.getByRole('navigation', { name: 'Réglages des boîtes de ressources' });
+  await sections.getByRole('link', { name: 'Modèles', exact: true }).scrollIntoViewIfNeeded();
+  await sections.getByRole('link', { name: 'Modèles', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/#box-templates$/);
+  await expect(page.locator('.admin-box-templates')).toBeInViewport();
+  await expect(page.locator('.resource-box-settings input[type="number"]').first()).toBeEnabled();
+
+  const context = await browser.newContext({ storageState: await page.context().storageState(), javaScriptEnabled: false, viewport: { width: 390, height: 900 } });
+  const native = await context.newPage();
+  await native.goto(url);
+  const form = native.locator('.resource-box-settings');
+  const metal = form.locator('[name="templates[small][metal]"]');
+  await metal.fill('20001');
+  await native.getByLabel('Motif du changement').fill('Recette des modèles A');
+  await native.getByRole('checkbox').check();
+  await native.getByRole('button', { name: 'Enregistrer les modèles de boîtes' }).click();
+  await expect(native.locator('.flash.error')).toContainText('dépasse le plafond');
+  await expect(metal).toHaveValue('20001');
+  await expect(native.getByLabel('Motif du changement')).toHaveValue('Recette des modèles A');
+  await expect(native.getByRole('checkbox')).toBeChecked();
+  expect(state()).toBe(before);
+
+  const values = await form.evaluate(element => Object.fromEntries(new FormData(element)));
+  values['templates[small][metal]'] = '4000';
+  // Les envois directs vérifient les refus serveur, indépendamment des contraintes HTML.
+  const request = changes => native.evaluate(async ({ url, values }) => {
+    const response = await fetch(url, { method: 'POST', body: new URLSearchParams(values) });
+    return { status: response.status, html: await response.text() };
+  }, { url, values: { ...values, ...changes } });
+  const emptyBox = Object.fromEntries(Object.keys(values).filter(key => key.startsWith('templates[small]')).map(key => [key, '0']));
+  for (const [changes, message] of [
+    [{ 'caps[metal]': '-1' }, 'Quantité invalide pour Métal'],
+    [{ 'templates[small][metal]': '1.234' }, 'Quantité invalide pour Métal'],
+    [emptyBox, 'Une boîte doit contenir au moins une ressource'],
+    [{ reason: '' }, 'Le motif est obligatoire'],
+    [{ confirmed: '0' }, 'Confirmez les nouveaux modèles'],
+  ]) {
+    const response = await request(changes);
+    expect(response.status).toBe(422);
+    expect(response.html).toContain(message);
+    expect(state()).toBe(before);
+  }
+  expect((await request({ _token: 'invalid' })).status).toBe(403);
+  expect(state()).toBe(before);
+  await metal.fill('4500');
+  await native.getByRole('button', { name: 'Enregistrer les modèles de boîtes' }).click();
+  await expect(native.locator('.flash.success')).toContainText('Modèles et plafonds enregistrés');
+  await expect(metal).toHaveValue('4500');
+  await native.reload();
+  await expect(metal).toHaveValue('4500');
+  const after = JSON.parse(queryIsolatedSql(project, `SELECT game_settings FROM universe WHERE id=${own.universeId}`));
+  expect(after.resource_boxes.templates.small.metal).toBe(4500);
+  expect(queryIsolatedSql(project, `SELECT payload FROM player_boost WHERE id=${box}`)).toBe(payloadBefore);
+  expect(Number(queryIsolatedSql(project, `SELECT COUNT(*) FROM admin_audit_log WHERE action='resource_box_settings' AND target_id=${own.universeId}`))).toBe(1);
+  const otherRows = value => value.split('\n').filter(row => !row.startsWith(`${own.universeId}\t`));
+  expect(otherRows(state())).toEqual(otherRows(before));
+  await native.getByRole('link', { name: '← Retour aux univers', exact: true }).click();
+  await expect(native).toHaveURL(/\/admin\/univers$/);
+  await native.goBack();
+  await expect(metal).toHaveValue('4500');
+  await context.close();
+  const anonymous = await browser.newContext();
+  const anonymousPage = await anonymous.newPage();
+  await anonymousPage.goto(url);
+  await expect(anonymousPage).toHaveURL(/connexion/);
+  await anonymous.close();
+});
+
 
 test('Inventaire sans JavaScript : ouverture native et contrôles serveur conservés', async ({ page, browser }) => {
   const own = await enter(page);

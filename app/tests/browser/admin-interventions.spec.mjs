@@ -77,6 +77,7 @@ test('Flotte admin : accélération, formulaire périmé, rappel et journal', as
   runIsolatedSql(project,`INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) VALUES (${id},'transport','basic',1)`);
   const token=queryIsolatedSql(project,`SELECT dispatch_token FROM fleet WHERE id=${id}`);
   await page.goto(`/admin/flottes/${id}`);
+  await page.locator('.admin-mission-intervention summary').click();
   const form=page.locator('.admin-intervention-form');
   await expect(page.locator('body')).not.toContainText(token);
   const version=await form.locator('[name=expected_version]').inputValue();expect(version).not.toBe(token);
@@ -86,7 +87,7 @@ test('Flotte admin : accélération, formulaire périmé, rappel et journal', as
   const fresh=await form.evaluate(f=>Object.fromEntries(new FormData(f)));
   await post(page,`/admin/flottes/${id}/intervention`,{...fresh,expected_version:version,confirmed:'1',reason:'Ancienne fiche'});
   expect(Number(queryIsolatedSql(project,`SELECT COUNT(*) FROM admin_audit_log WHERE action='admin_fleet_reschedule' AND target_id=${id}`))).toBe(1);
-  await page.reload();await form.locator('[name=operation]').selectOption('recall');await form.getByLabel('Motif de l’intervention (obligatoire)').fill('Rappel de contrôle');await form.getByRole('checkbox').check();await form.getByRole('button').click();
+  await page.reload();await page.locator('.admin-mission-intervention summary').click();await form.locator('[name=operation]').selectOption('recall');await form.getByLabel('Motif de l’intervention (obligatoire)').fill('Rappel de contrôle');await form.getByRole('checkbox').check();await form.getByRole('button').click();
   await expect(page.locator('.flash.success')).toContainText('Intervention sur la flotte');
   expect(queryIsolatedSql(project,`SELECT status FROM fleet WHERE id=${id}`)).toBe('returning');
   expect(Number(queryIsolatedSql(project,`SELECT COUNT(*) FROM admin_audit_log WHERE action='admin_fleet_recall' AND target_id=${id}`))).toBe(1);
@@ -117,6 +118,7 @@ test('Flotte bloquée : alerte de traitement, retour forcé protégé et journal
   }
   const link=health.getByRole('link',{name:`Flotte n° ${id}`,exact:true});
   await link.focus();await expect(link).toBeFocused();await page.keyboard.press('Enter');
+  await page.locator('.admin-mission-intervention summary').click();
   const form=page.locator('.admin-intervention-form');
   await form.getByLabel('Action',{exact:true}).selectOption('force_return');
   await form.getByLabel('Motif de l’intervention (obligatoire)').fill('Retour du transport bloqué');

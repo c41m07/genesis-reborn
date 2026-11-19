@@ -224,6 +224,89 @@ final class GuildTagPlayerReportTest extends WebTestCase
         self::assertSelectorTextContains('section[aria-label="Relations entre commandants"] h2','Alliances et rivalités');
     }
 
+    public function testCreationDraftSurvivesReloadAndStaysScopedUntilSuccess(): void
+    {
+        $service = self::getContainer()->get(DiplomacyService::class);
+        $service->create($this->target->currentPlayerUniverse, 'Guilde existante', 'USED');
+        $crawler = $this->client->request('GET', '/guildes/creer');
+        $name = 'Une "guilde" <script>alert(1)</script>';
+        $this->client->submit($crawler->selectButton('Fonder une guilde')->form([
+            'name' => $name,
+            'tag' => 'USED',
+        ]));
+        self::assertResponseRedirects('/guildes/creer');
+        $crawler = $this->client->followRedirect();
+        self::assertSelectorTextContains('[role="alert"]', 'Ce tag est déjà utilisé');
+        self::assertSame($name, $crawler->filter('#guild-name')->attr('value'));
+        self::assertSelectorNotExists('.guild-create script');
+        $crawler = $this->client->request('GET', '/guildes/creer');
+        self::assertSame($name, $crawler->filter('#guild-name')->attr('value'));
+
+        $this->client->loginUser($this->admin);
+        $crawler = $this->client->request('GET', '/guildes/creer');
+        self::assertSame('', $crawler->filter('#guild-name')->attr('value'));
+        $this->client->loginUser($this->reporter);
+        // L'échec transactionnel a détaché les anciennes fixtures : relire avant une nouvelle action métier.
+        $foreignUniverse = $this->em->find(Universe::class, $this->foreign->currentPlayerUniverse->universe->id);
+        $foreignUniverse->gameSettings['features']['guilds_enabled'] = true;
+        $this->em->flush();
+        $universes = self::getContainer()->get(UniverseService::class);
+        $omegaId = $this->target->currentPlayerUniverse->universe->id;
+        $universes->select($this->em->find(Player::class, $this->reporter->id), $foreignUniverse->id);
+        $crawler = $this->client->request('GET', '/guildes/creer');
+        self::assertSame('', $crawler->filter('#guild-name')->attr('value'));
+        $universes->select($this->em->find(Player::class, $this->reporter->id), $omegaId);
+        $crawler = $this->client->request('GET', '/guildes/creer');
+        self::assertSame($name, $crawler->filter('#guild-name')->attr('value'));
+
+        $this->client->submit($crawler->selectButton('Fonder une guilde')->form(['tag' => 'NEW']));
+        self::assertResponseRedirects('/guildes');
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('h2', $name);
+        $service->disband($this->em->find(Player::class, $this->reporter->id)->currentPlayerUniverse);
+        $crawler = $this->client->request('GET', '/guildes/creer');
+        self::assertSame('', $crawler->filter('#guild-name')->attr('value'));
+        self::assertSame('', $crawler->filter('#guild-tag')->attr('value'));
+    }
+
+    public function testInvalidCsrfDoesNotReplaceCreationDraft(): void
+    {
+        $crawler = $this->client->request('GET', '/guildes/creer');
+        $this->client->submit($crawler->selectButton('Fonder une guilde')->form([
+            'name' => 'Nom conservé',
+            'tag' => 'X',
+        ]));
+        self::assertResponseRedirects('/guildes/creer');
+        $this->client->request('POST', '/guildes/creer', [
+            '_token' => 'invalid', 'action' => 'create', 'name' => 'Autre nom', 'tag' => 'OK',
+        ]);
+        self::assertResponseStatusCodeSame(403);
+        $crawler = $this->client->request('GET', '/guildes/creer');
+        self::assertSame('Nom conservé', $crawler->filter('#guild-name')->attr('value'));
+        self::assertSame('X', $crawler->filter('#guild-tag')->attr('value'));
+        self::assertSame(0, $this->em->getRepository(Guild::class)->count([]));
+    }
+
+    public function testOversizedCreationDraftRemainsInvalidAndBounded(): void
+    {
+        $crawler = $this->client->request('GET', '/guildes/creer');
+        $form = $crawler->selectButton('Fonder une guilde')->form([
+            'name' => str_repeat('É', 1000),
+            'tag' => str_repeat('A', 1000),
+        ]);
+        $this->client->submit($form);
+        $crawler = $this->client->followRedirect();
+        $name = $crawler->filter('#guild-name')->attr('value');
+        $tag = $crawler->filter('#guild-tag')->attr('value');
+        self::assertGreaterThan(60, mb_strlen($name));
+        self::assertLessThanOrEqual(120, mb_strlen($name));
+        self::assertGreaterThan(5, mb_strlen($tag));
+        self::assertLessThanOrEqual(10, mb_strlen($tag));
+        $this->client->submit($crawler->selectButton('Fonder une guilde')->form());
+        self::assertResponseRedirects('/guildes/creer');
+        self::assertSame(0, $this->em->getRepository(Guild::class)->count([]));
+    }
+
     public function testGuildNavigationSeparatesMembersAndRanksWithoutGrantingPermissions(): void
     {
         $service=self::getContainer()->get(DiplomacyService::class);

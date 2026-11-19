@@ -1,0 +1,206 @@
+/* L10B : la fiche conserve ses participations et les outils propres à chaque colonie. */
+body.admin-workspace .admin-player-profile {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+body.admin-workspace .admin-player-profile .page-heading {
+    margin: 24px 0;
+}
+
+body.admin-workspace .admin-player-profile .admin-player-back {
+    display: inline-flex;
+    align-items: center;
+    min-height: 46px;
+}
+
+body.admin-workspace .admin-player-profile .admin-monitor-note {
+    margin: 0 0 26px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+body.admin-workspace .admin-player-profile .admin-player-membership {
+    margin: 0 0 24px;
+    padding: 22px;
+}
+
+body.admin-workspace .admin-player-profile .admin-player-membership > h2 {
+    margin: 0;
+    font-size: 23px;
+    line-height: 1.4;
+}
+
+body.admin-workspace .admin-player-profile .admin-player-membership > h3 {
+    margin: 26px 0 18px;
+    font-size: 19px;
+}
+
+body.admin-workspace .admin-player-profile .admin-player-activity {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin: 22px 0 28px;
+}
+
+body.admin-workspace .admin-player-profile .admin-player-activity > div {
+    display: block;
+    min-width: 0;
+    min-height: 136px;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+}
+
+body.admin-workspace .admin-player-profile .admin-player-activity dt {
+    margin: 0 0 12px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.5;
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+body.admin-workspace .admin-player-profile .admin-player-activity dd {
+    float: none;
+    margin: 0;
+    color: var(--text);
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.5;
+    text-align: left;
+}
+
+body.admin-workspace .admin-player-profile .admin-player-colonies {
+    display: grid;
+    gap: 16px;
+    margin: 20px 0;
+    padding: 0;
+    list-style: none;
+}
+
+body.admin-workspace .admin-player-profile .admin-player-colonies > li {
+    min-width: 0;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+}
+
+body.admin-workspace .admin-player-profile .admin-player-colonies h4 {
+    margin: 0 0 18px;
+    font-size: 17px;
+}
+
+body.admin-workspace .admin-player-profile .admin-resource-intervention > summary {
+    min-height: 46px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+body.admin-workspace .admin-player-profile .admin-resource-intervention[open] > summary {
+    background: var(--panel);
+}
+
+body.admin-workspace .admin-player-profile .admin-resource-intervention > p {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+body.admin-workspace .admin-player-profile .admin-resource-intervention .admin-intervention-destination {
+    color: var(--gold);
+    font-weight: 700;
+}
+
+body.admin-workspace .admin-player-profile .admin-intervention-form {
+    gap: 22px;
+    max-width: none;
+    margin: 22px 0;
+}
+
+body.admin-workspace .admin-player-profile .admin-intervention-field {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+}
+
+body.admin-workspace .admin-player-profile .admin-intervention-resources {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 16px;
+}
+
+body.admin-workspace .admin-player-profile .admin-intervention-form :is(input:not([type="checkbox"]), select, textarea) {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    min-height: 48px;
+    padding: 12px;
+    font-size: 14px;
+}
+
+body.admin-workspace .admin-player-profile .admin-intervention-field small {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+/* La zone de motif doit primer sur la hauteur des formulaires administratifs historiques. */
+body.admin-console.admin-workspace .admin-player-profile .admin-intervention-form textarea {
+    min-height: 150px;
+    resize: vertical;
+}
+
+body.admin-workspace .admin-player-profile .admin-intervention-confirm {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    min-height: 44px;
+    padding: 10px 0;
+    line-height: 1.6;
+}
+
+body.admin-workspace .admin-player-profile .admin-intervention-confirm input {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+}
+
+body.admin-workspace .admin-player-profile .admin-player-links {
+    display: grid;
+    gap: 12px;
+}
+
+body.admin-workspace .admin-player-profile :is(.admin-player-links a, .admin-intervention-form button) {
+    width: 100%;
+    min-height: 46px;
+    white-space: normal;
+    text-align: left;
+}
+
+@media (max-width: 1050px) {
+    body.admin-workspace .admin-player-profile .admin-player-activity {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 760px) {
+    body.admin-workspace .admin-player-profile .admin-player-membership {
+        padding: 18px;
+    }
+
+    body.admin-workspace .admin-player-profile :is(.admin-player-activity, .admin-intervention-resources) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.admin-workspace .admin-player-profile .admin-intervention-form :is(input:not([type="checkbox"]), select, textarea) {
+        font-size: 16px;
+    }
+}

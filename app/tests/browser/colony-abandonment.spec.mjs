@@ -58,10 +58,14 @@ for(const touch of [false,true]) test('Abandon confirmé : pertes, trace et cont
     await expect(page.locator('.resource-planet strong')).toHaveText(user.name);
     await expect(page.locator('.resource-planet strong')).toHaveAttribute('title',user.name);
     for(const theme of ['dark','light']) {
-      await page.evaluate(value=>document.body.dataset.theme=value,theme);
-      expect((await new AxeBuilder({page}).include('.colony-abandon-panel').analyze()).violations.filter(v=>['serious','critical'].includes(v.impact))).toEqual([]);
+      // Le thème clair charge aussi une feuille de styles : changer l’attribut seul ne reproduit pas son rendu.
+      runIsolatedSql(user.project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${user.email}'`);
+      await page.reload();
+      await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
+      expect((await new AxeBuilder({page}).include('.colony-redesign').analyze()).violations.filter(v=>['serious','critical'].includes(v.impact))).toEqual([]);
     }
-    await page.evaluate(()=>document.body.dataset.theme='dark');
+    runIsolatedSql(user.project, `UPDATE player SET preferences=JSON_SET(preferences,'$.theme','dark') WHERE email='${user.email}'`);
+    await page.reload();
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBeTruthy();
     const input=page.getByLabel('Retapez le nom de la colonie pour confirmer',{exact:true});
     await input.fill('Nom incorrect');

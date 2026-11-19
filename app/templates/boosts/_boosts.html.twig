@@ -1,16 +1,22 @@
-<section id="inventory-boosts" class="panel inventory-bonuses" aria-labelledby="available-bonuses-title">
-    <h2 id="available-bonuses-title">Bonus disponibles</h2>
-    {% if boost_count == 0 %}<div class="empty-state"><h3>Aucun bonus disponible</h3><p>Les récompenses de vos missions, événements et projets de guilde apparaîtront ici.</p></div>{% endif %}
-    {% if boost_count > 0 %}
-        <article class="mission-card"><div><h3>Boost de réduction de durée</h3><p>Réduit de {{ duration_reduction_percent|number_format(2, ',', ' ') }} % le temps restant d’une opération active.</p></div><span class="badge">Quantité : {{ boost_count }}</span></article>
-    {% endif %}
-<section class="boost-information" aria-labelledby="boost-use-title">
+<section id="inventory-boosts" class="inventory-bonuses" aria-labelledby="available-bonuses-title">
+    <h2 id="available-bonuses-title" class="visually-hidden">Bonus disponibles</h2>
+    <div class="inventory-boost-layout">
+        <article class="panel mission-card inventory-boost-stock">
+            {% if boost_count == 0 %}
+                <div class="empty-state"><h3>Aucun bonus disponible</h3><p>Les récompenses de vos missions, événements et projets de guilde apparaîtront ici.</p></div>
+            {% else %}
+                <div><h3>Boost de réduction de durée</h3><p>Réduit de {{ duration_reduction_percent|number_format(2, ',', ' ') }} % le temps restant d’une opération active.</p></div>
+                <span class="badge">Quantité : {{ boost_count }}</span>
+            {% endif %}
+        </article>
+<section class="panel inventory-boost-use" aria-labelledby="boost-use-title">
     <h2 id="boost-use-title">Utiliser un boost</h2>
     {% if vacation %}<p role="status">Les accélérations sont indisponibles pendant les vacances.</p>
     {% elseif boost_count == 0 %}<p>Aucun boost de réduction de durée disponible pour accélérer une opération.</p>
     {% else %}
-        <p>Choisissez l’opération à accélérer. Chaque utilisation consomme un bonus.</p>
+        <p>Chaque utilisation consomme un bonus.</p>
         {% if active_queues is not empty or active_fleets is not empty %}
+        {# Le sélecteur est activé par la revue JavaScript ; sinon tous les formulaires restent accessibles. #}
         <div data-inventory-review-target="picker" hidden>
             <label for="inventory-operation">Opération à accélérer</label>
             <select id="inventory-operation" data-inventory-review-target="selection" data-action="change->inventory-review#choose">
@@ -28,7 +34,7 @@
                 <form method="post" action="{{ path('app_boost_use', {type:'queue', id:item.id}) }}" data-action="submit->inventory-review#review" data-review-title="Vérifier l’accélération" data-review-copy="{{ row.label }} · {{ item.planet.name }} : utiliser un boost pour retirer {{ duration_reduction_percent|number_format(2, ',', ' ') }} % du temps restant." data-review-confirm="Utiliser un boost">
                     <input type="hidden" name="_token" value="{{ csrf_token('boost-queue-' ~ item.id) }}">
                     <input type="hidden" name="request_key" value="{{ request_key() }}">
-                    <button class="secondary">Utiliser un boost pour {{ row.label }}</button>
+                    <button class="primary">Utiliser un boost pour {{ row.label }}</button>
                 </form>
             </article>
         {% endfor %}
@@ -39,11 +45,12 @@
                 <form method="post" action="{{ path('app_boost_use', {type:'fleet', id:fleet.id}) }}" data-action="submit->inventory-review#review" data-review-title="Vérifier l’accélération" data-review-copy="Flotte n° {{ fleet.id }} : utiliser un boost pour retirer {{ duration_reduction_percent|number_format(2, ',', ' ') }} % du temps restant." data-review-confirm="Utiliser un boost">
                     <input type="hidden" name="_token" value="{{ csrf_token('boost-fleet-' ~ fleet.id) }}">
                     <input type="hidden" name="request_key" value="{{ request_key() }}">
-                    <button class="secondary">Utiliser un boost pour la flotte n° {{ fleet.id }}</button>
+                    <button class="primary">Utiliser un boost pour la flotte n° {{ fleet.id }}</button>
                 </form>
             </article>
         {% endfor %}
         {% if active_queues is empty and active_fleets is empty %}<p>Aucune opération active à accélérer. Les commandes en attente et les occupations ne peuvent pas être accélérées.</p><div class="empty-next-actions">{% if chrome.planet %}<a class="secondary" href="{{ path('app_colony',{id:chrome.planet.id,section:'buildings'}) }}">Choisir une construction</a>{% endif %}<a class="secondary" href="{{ path('app_fleet_prepare') }}">Préparer une mission</a></div>{% endif %}
     {% endif %}
 </section>
+    </div>
 </section>

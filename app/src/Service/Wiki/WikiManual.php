@@ -7,17 +7,33 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 /** Source unique du manuel ; aucune lecture ou écriture de données de jeu. */
 final class WikiManual
 {
+    private const PREVIEW_LENGTH = 160;
+
     /** @var list<array<string,mixed>>|null */
     private ?array $sections = null;
 
     public function __construct(#[Autowire('%kernel.project_dir%')] private readonly string $projectDirectory) {}
 
-    /** @return list<array{id:string,title:string,part:string}> */
-    public function chapters(): array
+    /** @return list<array{id:string,title:string,part:string,preview?:string}> */
+    public function chapters(bool $withPreviews = false): array
     {
-        return array_map(static fn(array $section): array => [
-            'id' => $section['id'], 'title' => $section['title'], 'part' => $section['part'],
-        ], $this->sections());
+        return array_map(static function (array $section) use ($withPreviews): array {
+            $chapter = [
+                'id' => $section['id'],
+                'title' => $section['title'],
+                'part' => $section['part'],
+            ];
+
+            // Seul l’accueil reçoit un extrait borné, sans transmettre les corps des chapitres.
+            if ($withPreviews) {
+                $paragraph = $section['paragraphs'][0] ?? '';
+                $chapter['preview'] = mb_substr($paragraph, 0, self::PREVIEW_LENGTH);
+                if (mb_strlen($paragraph) > self::PREVIEW_LENGTH) {
+                    $chapter['preview'] .= '…';
+                }
+            }
+            return $chapter;
+        }, $this->sections());
     }
 
     /** @return array<string,mixed>|null */

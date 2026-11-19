@@ -1,0 +1,52 @@
+/* L7C : commandes et fiches autour du moteur visuel existant. */
+.shell--galaxy-v2:has(.gv2-workspace) { display:block; overflow:visible!important; padding:24px!important; }
+.gv2-workspace { --line:#2c4057; --panel:#101b2b; --bg:#080f19; --text:#e7eef6; --muted:#aabbd0; --accent:#77d5e9; min-height:0; overflow:visible; border:1px solid var(--line); border-radius:8px; background:var(--bg); }
+.gv2-workspace .gv2-hud { position:relative; inset:auto; padding:16px; flex-wrap:wrap; pointer-events:auto; z-index:9; }
+.gv2-workspace .gv2-search { width:min(360px,100%); }
+.gv2-workspace .gv2-layout-modes,
+.gv2-workspace .gv2-breadcrumbs,
+.gv2-workspace .gv2-map-controls { display:flex; position:static; flex-wrap:wrap; gap:8px; padding:0 16px 12px; }
+.gv2-workspace .gv2-layout-modes button,
+.gv2-workspace .gv2-back,
+.gv2-workspace .gv2-map-controls button { position:static; width:auto; min-width:44px; height:auto; min-height:44px; margin:0; padding:8px 12px; font:500 14px Manrope,system-ui,sans-serif; letter-spacing:normal; text-transform:none; background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:5px; }
+.gv2-workspace .gv2-layout-modes button[aria-pressed=true] { color:var(--accent); background:var(--active,#173341); border-color:var(--accent); }
+.gv2-workspace .gv2-layout-note { padding:0 16px 12px; margin:0; color:var(--muted); font-size:12px; }
+.gv2-workspace .gv2-scene { position:relative; inset:auto; height:560px; border-block:1px solid var(--line); border-radius:0; }
+.gv2-workspace .gv2-map-help { position:static; transform:none; max-width:none; padding:8px 16px; text-align:left; }
+.gv2-workspace .gv2-visible-legend { display:flex; flex-wrap:wrap; gap:8px 18px; margin:0; padding:4px 16px 16px; list-style:none; font-size:12px; }
+.gv2-workspace .gv2-map-settings { position:static; width:auto; max-width:none; max-height:none; margin:0 16px 16px; }
+.gv2-workspace .gv2-map-settings .gv2-legend ul { max-height:none; grid-template-columns:repeat(3,minmax(0,1fr)); }
+.gv2-workspace .gv2-system-panel,
+.gv2-workspace .gv2-planet-panel { position:static; width:auto; max-height:none; overflow:visible; margin:0 16px 16px; padding:16px; background:var(--panel); border:1px solid var(--line); box-shadow:none; backdrop-filter:none; animation:none; }
+.gv2-workspace .gv2-system-panel>[data-galaxy-v2-target=systemContent] { overflow:visible; padding:0; }
+.gv2-workspace .gv2-system-panel.is-collapsed>[data-galaxy-v2-target=systemContent] { display:block; }
+.gv2-workspace .gv2-sheet-toggle { display:none; }
+.gv2-workspace .gv2-planet-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; border:0; }
+.gv2-workspace .gv2-planet-list li { min-width:0; border:1px solid var(--line); border-radius:5px; padding:6px 10px; }
+.gv2-workspace .gv2-flight-log,
+.gv2-workspace .gv2-flight-log.is-empty:not([open]) { position:static; width:auto; min-width:0; max-width:none; max-height:none; overflow:visible; margin:0 16px 16px; }
+.galaxy-v2.gv2-workspace:has(.gv2-map-settings:not(.is-collapsed)) .gv2-flight-log { visibility:visible; }
+.gv2-workspace .gv2-minimap { width:130px; top:auto; bottom:12px; left:12px; }
+.gv2-workspace .gv2-minimap canvas { height:68px; }
+.gv2-workspace[data-view=system] .gv2-layout-modes,
+.gv2-workspace[data-view=planet] .gv2-layout-modes,
+.gv2-workspace[data-view=system] .gv2-layout-note,
+.gv2-workspace[data-view=planet] .gv2-layout-note,
+.gv2-workspace[data-view=system] .gv2-home,
+.gv2-workspace[data-view=planet] .gv2-home { display:none; }
+.gv2-workspace .gv2-breadcrumbs:has(>[hidden]):not(:has(>button:not([hidden]))) { display:none; }
+@media(max-width:740px) {
+    .shell--galaxy-v2:has(.gv2-workspace) { padding:12px!important; }
+    .gv2-workspace .gv2-hud { gap:10px; padding:12px; }
+    .gv2-workspace .gv2-search { width:100%; }
+    .gv2-workspace .gv2-scene { height:440px; }
+    .gv2-workspace .gv2-map-help { display:block; }
+    .gv2-workspace .gv2-layout-modes { padding-inline:12px; }
+    .gv2-workspace .gv2-layout-modes button { flex:1; }
+    .gv2-workspace .gv2-planet-list { grid-template-columns:1fr; }
+    .gv2-workspace .gv2-map-settings { display:block; }
+    .gv2-workspace .gv2-map-settings .gv2-legend ul { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .gv2-workspace .gv2-minimap { width:100px; }
+    .gv2-workspace .gv2-system-panel,
+    .gv2-workspace .gv2-planet-panel { margin-inline:12px; padding:12px; }
+}

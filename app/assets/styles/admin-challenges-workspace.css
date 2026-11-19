@@ -1,0 +1,205 @@
+/* L10L A : suivi puis contributions ; les actions restent dépliables. */
+body.admin-console.admin-challenges-workspace .admin-content {
+    overflow-wrap: anywhere;
+}
+
+body.admin-console.admin-challenges-workspace :is(.admin-challenges-list, .admin-challenge-filters, .admin-challenge-actions) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    max-width: none;
+    gap: 22px;
+}
+
+body.admin-console.admin-challenges-workspace .panel {
+    min-width: 0;
+    padding: 22px;
+    border-radius: 6px;
+}
+
+body.admin-console.admin-challenges-workspace .panel :is(h2, h3) {
+    margin-top: 0;
+    font-size: 21px;
+    line-height: 1.5;
+}
+
+body.admin-console.admin-challenges-workspace .admin-challenge-field {
+    display: grid;
+    min-width: 0;
+    gap: 8px;
+}
+
+body.admin-console.admin-challenges-workspace .admin-challenge-field label {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+body.admin-console.admin-challenges-workspace .admin-challenge-field :is(input, select, textarea) {
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    padding: 12px;
+    margin: 0;
+    font-size: 14px;
+}
+
+body.admin-console.admin-challenges-workspace .admin-challenge-field textarea {
+    min-height: 150px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: inherit;
+    resize: vertical;
+}
+
+body.admin-console.admin-challenges-workspace :is(button, .admin-challenge-actions a, .admin-challenges-list a) {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 46px;
+    font-size: 14px;
+    text-align: left;
+    white-space: normal;
+}
+
+body.admin-console.admin-challenges-workspace .admin-challenge-cancel > summary {
+    min-height: 46px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+body.admin-console.admin-challenges-workspace .admin-challenge-cancel form {
+    display: grid;
+    max-width: none;
+    gap: 22px;
+    margin-top: 22px;
+}
+
+body.admin-console.admin-challenges-workspace :is(a, button, input, select, textarea, summary):focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+}
+
+@media (max-width: 760px) {
+    body.admin-console.admin-challenges-workspace .panel {
+        padding: 18px;
+    }
+
+    body.admin-console.admin-challenges-workspace .admin-challenge-field :is(input, select, textarea) {
+        font-size: 16px;
+    }
+}
+
+body.admin-console.admin-challenges-workspace :is(.admin-challenges-list, .admin-contribution-cards) {
+    padding: 0;
+    list-style: none;
+}
+body.admin-console.admin-challenges-workspace .admin-challenge-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+body.admin-console.admin-challenges-workspace .admin-challenge-filters button {
+    grid-column: 1 / -1;
+}
+body.admin-console.admin-challenges-workspace .admin-challenges-list .panel {
+    margin: 0;
+}
+body.admin-console.admin-challenges-workspace .admin-challenges-list a {
+    display: flex;
+    align-items: center;
+    min-height: 46px;
+}
+body.admin-console.admin-challenges-workspace .admin-challenge-list-navigation {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin: 24px 0;
+}
+body.admin-console.admin-challenges-workspace .admin-challenge-list-navigation a {
+    min-height: 46px;
+    display: flex;
+    align-items: center;
+}
+body.admin-console.admin-challenges-workspace .report-facts {
+    grid-template-columns: minmax(0, 1fr);
+}
+body.admin-console.admin-challenges-workspace .report-facts > div {
+    border: 0;
+    padding: 0;
+    background: transparent;
+}
+body.admin-console.admin-challenges-workspace .report-facts dt {
+    font-size: 13px;
+}
+body.admin-console.admin-challenges-workspace .admin-contribution-cards {
+    display: none;
+}
+body.admin-console.admin-challenges-workspace :is(.admin-challenge-cancel form, .event-removal-form) {
+    max-width: none;
+    gap: 18px;
+}
+body.admin-console.admin-challenges-workspace .admin-intervention-form textarea {
+    width: 100%;
+    min-height: 150px;
+    font-size: 14px;
+    border-radius: 6px;
+}
+body.admin-console.admin-challenges-workspace .admin-intervention-form :is(label, button) {
+    font-size: 14px;
+}
+body.admin-console.admin-challenges-workspace .admin-intervention-form label:has(input[type="checkbox"]) {
+    display: flex;
+    align-items: start;
+    gap: 10px;
+    min-height: 44px;
+}
+body.admin-console.admin-challenges-workspace .admin-intervention-form input[type="checkbox"] {
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    min-height: 18px;
+    margin: 0;
+}
+body.admin-console.admin-challenges-workspace .account-section > summary {
+    min-height: 46px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    cursor: pointer;
+}
+@media (max-width: 1200px) {
+    body.admin-console.admin-challenges-workspace .admin-contribution-table {
+        display: none;
+    }
+    body.admin-console.admin-challenges-workspace .admin-contribution-cards {
+        display: grid;
+        gap: 18px;
+    }
+    body.admin-console.admin-challenges-workspace .admin-contribution-cards article {
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+    }
+    body.admin-console.admin-challenges-workspace .admin-contribution-cards dl {
+        display: grid;
+        gap: 14px;
+        margin: 0;
+    }
+    body.admin-console.admin-challenges-workspace .admin-contribution-cards dt {
+        color: var(--muted);
+        font-size: 13px;
+    }
+    body.admin-console.admin-challenges-workspace .admin-contribution-cards dd {
+        margin: 5px 0 0;
+    }
+}
+@media (max-width: 760px) {
+    body.admin-console.admin-challenges-workspace :is(.admin-challenge-filters, .admin-challenge-list-navigation) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    body.admin-console.admin-challenges-workspace .admin-intervention-form textarea {
+        font-size: 16px;
+    }
+}

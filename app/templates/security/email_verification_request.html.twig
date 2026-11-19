@@ -1,3 +1,13 @@
-{% extends 'base.html.twig' %}
+{% extends 'security/layout.html.twig' %}
+{% form_theme form 'form/registration_errors.html.twig' %}
+{% set access_heading_id = 'verification-request-title' %}
 {% block title %}Recevoir un lien de confirmation — Genesis Reborn{% endblock %}
-{% block body %}<section class="panel narrow auth-card"><h1>Recevoir un nouveau lien</h1>{{ form_start(form) }}{{ form_row(form.email) }}<button class="primary">Envoyer le lien de confirmation</button>{{ form_end(form) }}<a href="{{ path('app_login') }}">Retour à la connexion</a></section>{% endblock %}
+{% block access_content %}
+<h1 id="verification-request-title">Recevoir un nouveau lien</h1>
+{{ form_start(form, {attr: {class: 'auth-form'}}) }}
+    {{ form_errors(form) }}
+    {{ form_row(form.email) }}
+    <button class="primary full" type="submit">Envoyer le lien de confirmation</button>
+{{ form_end(form) }}
+<p class="auth-back"><a href="{{ path('app_login') }}">Retour à la connexion</a></p>
+{% endblock %}

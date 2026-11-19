@@ -312,7 +312,9 @@ final class GalaxyFleetVisibilityTest extends WebTestCase
         self::assertStringNotContainsString('has-hostile',$data['html']);
         $this->client->request('GET','/planetes/'.$target->id);self::assertSelectorTextContains('#incoming-attacks-heading','Flottes entrantes 3');
         self::assertSelectorCount(1,'.incoming-attack-panel');
-        self::assertSelectorExists('.dashboard-secondary [data-live-region="active-flights"] + .incoming-attacks .panel.flight-operations');
+        // La vue générale validée place les arrivées avant les vols propres.
+        self::assertSelectorExists('.dashboard-secondary > .incoming-attacks .panel.flight-operations');
+        self::assertSelectorExists('.dashboard-secondary > .incoming-attacks + [data-live-region="active-flights"]');
     }
 
     public function testIncomingPanelExcludesOwnFlightsReturnsSpiesAndAlliedThirdPartyRoutes(): void

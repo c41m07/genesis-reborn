@@ -1,5 +1,24 @@
 # Décisions et ambiguïtés — 21 octobre 2026
 
+## Géographie de la galaxie — décision explicite du 18 novembre 2026
+
+L’utilisateur choisit la **spirale réelle comme géographie des distances pour tous
+les joueurs**. La seconde disposition est une **grille de repérage** : ses écarts
+visuels ne représentent pas l’échelle physique. Changer de vue ne change jamais
+le devis, la durée ou le carburant d’un trajet.
+
+`GalaxyGeometry` projette les coordonnées historiques sans les réécrire en base.
+Les 80 systèmes de référence occupent huit bras de dix positions, dans une étendue
+de 15 unités physiques ; une unité vaut 100 UA. Les nouvelles distances
+hyperspatiales sont les distances euclidiennes entre ces positions. Les sorties
+et entrées de système, vitesses et coefficients de consommation restent inchangés.
+Les vols déjà lancés gardent leurs durées et carburants figés ; un nouveau repli
+utilise la position physique atteinte et la nouvelle géographie. Aucun recalcul
+des réservations existantes ni migration de base n’est nécessaire.
+
+La réalisation locale L7C conserve les deux dispositions, le moteur animé existant
+et les protections de visibilité. CI, fusion et déploiement restent distincts.
+
 ## Coûts par rang et première colonisation — 19 novembre 2026
 
 L’utilisateur fixe les parts de valeur M/N/A/H à **B48/52/0/0, I34/36/30/0 et
@@ -20,6 +39,7 @@ Les hypothèses et temps observés sont documentés dans la
 [simulation de première colonisation](EQUILIBRAGE.md#première-colonisation-19-novembre-2026).
 
 ## Équilibrage des prix des deux premiers rangs — référence du 18 novembre 2026
+
 
 L’utilisateur valide les parts de valeur **B48/52/0/0, I35/35/30/0 et S25/35/30/10**
 pour les 52 fiches du catalogue de référence. Le Basique réduit la pression sur
@@ -1959,6 +1979,178 @@ sans changement de version du registre ni nouvelle reprise. Les huit autres
 bâtiments, recherches, unités, défenses, prix, durées, effets et plafonds restent
 conservés ; les surcharges d’univers ne sont pas réécrites. Aucun effet sur les
 délais de progression n’est annoncé sans mesure, aucune activation Alpha.
+
+## Refonte visuelle L1A : proposition B — 17 novembre 2026
+
+Après présentation des deux compositions Figcraft, l’utilisateur choisit B
+(« j’aime bien la B ») pour Ma guilde, Membres et Relations entre commandants.
+La Vue générale de référence reste conservée dans le document de bureau.
+
+L’accueil privilégie le canal et ses trois derniers échanges, puis la présentation
+et les projets. Les membres gardent leur tableau et leurs attributions ; les
+relations personnelles utilisent deux colonnes de cartes sur ordinateur et une
+sur mobile. Sur les trois pages concernées, les liens secondaires sont regroupés
+dans « Pages de l’espace » sur mobile, avec indication de la page courante et
+navigation native sans JavaScript. Les vraies pages existantes restent les
+destinations ; cette décision n’ajoute ni donnée métier, ni permission, ni règle.
+
+Cette validation permet la réalisation locale de L1A ; les autres lots attendent
+leurs propres propositions et choix. [Périmètre, vérifications et limites](REFONTE_VISUELLE_INTERFACES.md).
+
+## Refonte visuelle L1B : proposition A — 17 novembre 2026
+
+L’utilisateur choisit A (« j’aime bien le A ») pour Trouver une guilde, Créer une
+guilde et Présentation consultée. La liste privilégie les lignes larges et leurs
+actions ; le formulaire dispose d’une aide latérale sur ordinateur, placée après
+les champs sur mobile. La fiche garde une bannière immersive, puis description
+et commandant en sections successives. Les destinations secondaires restent
+visibles sur mobile.
+
+Nom et tag sont conservés après erreur et rechargement dans le contexte de
+l’empire, puis effacés après réussite. La recherche par nom, le recrutement ouvert,
+les droits, médias et règles de création restent inchangés. Les lots ultérieurs
+attendent leur propre conception et validation. [Suivi du lot](REFONTE_VISUELLE_INTERFACES.md).
+
+## Refonte visuelle L1C : proposition A — 17 novembre 2026
+
+L’utilisateur choisit A (« j’aime bien le A ») pour Grades et permissions,
+Gestion, Personnalisation et Relations entre guildes. Grades à gauche et édition
+à droite, tag/transfert visibles, dissolution distinguée, fichiers sous la
+description et traités en lignes. Le menu mobile reprend celui de l’espace.
+
+Une confirmation dépliable précède transfert, départ et dissolution, y compris
+sans JavaScript. Les conséquences affichées, droits délégués, vérifications de
+version, limites de fichiers et règles de signature restent inchangés. Cette
+validation porte uniquement sur L1C ; [suivi et vérifications](REFONTE_VISUELLE_INTERFACES.md).
+
+## Refonte visuelle L2A : proposition A — 17 novembre 2026
+
+L’utilisateur choisit A (« j’aime bien le A ») pour Missions actives, les trois
+étapes de préparation et le rappel. Les missions personnelles utilisent des
+lignes larges sur ordinateur/tablette, puis une colonne sur mobile. Les arrivées
+suivent les vols personnels. Pendant la préparation, suivi des missions et
+arrivées restent à droite sur grand écran, après le formulaire sur petit écran.
+
+Les étapes restent dans le même formulaire ; résumé et estimation sont rapprochés
+avant l’envoi. Le menu mobile conserve les cinq pages existantes et reste ouvert
+sans JavaScript. Les détails personnels utilisent un bouton explicite ; le rappel
+conserve son devis et sa confirmation. Orbites, quai et compositions attendent
+leur propre conception et validation. Aucune règle d’envoi, de carburant, de
+visibilité ou de rappel n’est modifiée. [Suivi du lot](REFONTE_VISUELLE_INTERFACES.md).
+
+## Refonte visuelle L2B : proposition A — 17 novembre 2026
+
+L’utilisateur choisit A (« j’aime bien le A ») pour Demandes d’orbite, À quai et
+stationnements, et Reprendre le stationnement. Les demandes deviennent des
+lignes directement lisibles, avec échéance et actions à droite sur grand écran.
+Au quai, unités et réserve de la colonie sont côte à côte, puis viennent les
+stationnements de tout l’empire. La reprise rapproche choix de base et devis.
+
+Les pages conservent leurs URL et le menu mobile commun. Réponses orbitales,
+carburant/fret, déchargement dans les capacités disponibles, origine perdue,
+versions et confirmation de reprise gardent leurs règles. L’ancien mode
+dépliable reste pris en charge par le contrôleur d’actualisation. Cette validation
+porte sur L2B ; les compositions attendent leur choix. [Suivi](REFONTE_VISUELLE_INTERFACES.md).
+
+
+## Vue générale : finaliser la référence conservée — 18 novembre 2026
+
+L’utilisateur demande sa finalisation avant les compositions de flotte. La page
+Figcraft validée reste la référence : alertes avant la bannière, points et quatre
+accès de l’empire intégrés, activité locale à gauche, arrivées puis vols personnels
+à droite, journal en pleine largeur. Sur petit écran, ces blocs se suivent dans
+cet ordre. Les catalogues conservent leur disposition.
+
+La page garde son URL et ses liens vers les tâches dédiées. Les files, le journal,
+les confirmations et les règles de confidentialité restent ceux du jeu. La barre
+de ressources et le bouton global des événements restent dans leur composant
+commun. Aucune valeur d’équilibrage n’est décidée par cette finalisation.
+[Recette et limites](REFONTE_VISUELLE_INTERFACES.md).
+
+
+## Refonte visuelle L2C : proposition A — 18 novembre 2026
+
+L’utilisateur choisit A (« le A est bien ») pour les compositions de flotte :
+liste en lignes, éditeur en tableau sur ordinateur et trois rangs réunis par
+vaisseau sur mobile, choix de colonie et disponibilités rapprochés. Les quatre
+vues gardent leurs URL et le menu commun à Flottes.
+
+Les modèles restent personnels et limités à vingt par empire/univers. Quantités,
+versions, CSRF, accord sur les manques et nouvelle vérification des disponibilités
+restent existants. Charger prépare la mission sans l’envoyer. Cette validation
+termine L2 localement ; elle ne valide pas les lots suivants.
+[Recette et limites](REFONTE_VISUELLE_INTERFACES.md).
+
+
+## Refonte visuelle L3 : proposition A — 18 novembre 2026
+
+L’utilisateur choisit A (« j’aime bien le A ») pour l’Inventaire. Stock et opération
+à accélérer sont rapprochés ; contenu et destination de chaque boîte sont côte
+à côte sur grand écran. L’attente conserve son ordre et sa pagination. Le menu
+mobile commun garde les trois pages et leurs compteurs.
+
+Confirmations, accès, contenu attribué, capacité commune et promotion automatique
+restent existants. La revue est conservée avec JavaScript, les formulaires serveur
+restent accessibles sans JavaScript. Aucune valeur de jeu n’est modifiée.
+[Recette et limites](REFONTE_VISUELLE_INTERFACES.md).
+
+
+## Refonte visuelle L4 : proposition A — 18 novembre 2026
+
+L’utilisateur choisit A pour Mon compte : identifiants et confirmation rapprochés,
+préférences regroupées, conditions et action des vacances côte à côte sur grand
+écran, conséquences et confirmation de suppression distinctes. Une colonne sur
+mobile, avec navigation commune. Les quatre URL et les formulaires restent existants.
+
+Les réglages communs au compte restent distincts des vacances de l’univers choisi.
+Mot de passe actuel, reconnexion après profil, minimums/délais de vacances et
+confirmation de suppression dans tous les univers sont conservés. Aucune règle
+métier n’est modifiée. L’utilisateur confirme vouloir conserver la méthode A/B
+actuelle pour les lots suivants ; ses choix répétés ne les valident pas d’avance.
+[Recette et limites](REFONTE_VISUELLE_INTERFACES.md).
+
+
+## Refonte visuelle L5 : proposition A — 18 novembre 2026
+
+L’utilisateur choisit A pour les projets collectifs : listes en lignes, minimums
+visibles avant lancement, progression et don rapprochés sur la fiche active.
+Les menus communs de guilde et de projets restent disponibles sur mobile.
+Les trois listes et la fiche gardent leurs URL, paginations et dépliables utiles.
+
+Les dons restent définitifs, limités au palier courant et à une colonie autorisée.
+Versions, CSRF, restrictions de vacances, minimums, présence à la clôture et clé
+unique de récompense restent inchangés. Cette validation ne modifie aucune
+valeur de jeu et ne valide pas les lots suivants.
+[Recette et limites](REFONTE_VISUELLE_INTERFACES.md).
+
+
+## Refonte visuelle L6 : proposition A — 18 novembre 2026
+
+L’utilisateur choisit A pour Événements et Défis : listes en lignes et fiche
+avec objectif/récompense et participation rapprochés sur grand écran. Le menu
+secondaire se replie sur mobile et reste ouvert sans JavaScript. Les trois
+adresses, ancres, paginations, conditions et destinations des actions sont conservées.
+
+Le panneau global des événements reste hors du lot. Le résumé partagé avec
+l’administration n’est pas modifié ; ni les calculs, règles de contribution,
+seuils, dates, récompenses ou traitements différés. Un objet déjà acquis reste
+accessible après annulation. Cette validation ne valide pas les lots suivants.
+[Recette et limites](REFONTE_VISUELLE_INTERFACES.md).
+
+## Refonte visuelle L7A : proposition A — 18 novembre 2026
+
+L’utilisateur choisit A pour Planètes, sa comparaison et l’abandon : colonies
+horizontales sur ordinateur, comparaison en tableau, bilan complet et confirmation
+côte à côte sur grand écran. Une colonne sur tablette/mobile ; le comparatif y
+montre la ressource sélectionnée parmi les cinq existantes. La Vue générale
+finalisée précédemment est conservée.
+
+Cartes et comparaison gardent leur adresse et les paramètres existants ; renommer
+reste un dépliable et l’abandon une page dédiée. Formulaires, confirmations,
+conditions d’accès, conséquences et contrôles transactionnels sont conservés.
+La consultation du bilan garde sa synchronisation des files sous verrou.
+Cette validation ne valide pas les lots suivants.
+[Recette et limites](REFONTE_VISUELLE_INTERFACES.md).
 
 ## Prérequis du Piège à antimatière — 18 novembre 2026
 

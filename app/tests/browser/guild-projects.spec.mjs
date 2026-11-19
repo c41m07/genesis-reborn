@@ -104,6 +104,9 @@ test('Les membres financent deux paliers et le traitement attribue les boosts un
           await page.goto(url);
           await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
           await expect(page.locator('.sidebar a[href="/guildes"]')).toHaveAttribute('aria-current', 'page');
+          if (width <= 600) {
+            for (const summary of await page.locator('.project-redesign > .space-navigation-menu > summary').all()) await summary.click();
+          }
           await expect(page.getByRole('navigation', { name: 'Navigation de guilde', exact: true }).getByRole('link', { name: 'Projets collectifs', exact: true })).toHaveAttribute('aria-current', 'page');
           await expect(page.getByRole('navigation', { name: 'Navigation des projets collectifs', exact: true }).locator('[aria-current]')).toHaveCount(1);
           await expect(page.locator('.page-contents')).toHaveCount(0);

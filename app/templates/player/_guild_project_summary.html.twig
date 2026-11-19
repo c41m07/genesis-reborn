@@ -1,10 +1,23 @@
-<article class="panel guild-project" aria-labelledby="project-title-{{ project.id }}">
-<h2 id="project-title-{{ project.id }}"><a href="{{ path('app_guild_project',{id:project.id}) }}">{{ project.snapshot.name }}</a></h2>
-<p class="project-started">Lancé le <time datetime="{{ project.startedAt|date('c') }}">{{ project.startedAt|date('d/m/Y',preferences.timezone) }}</time></p>
-<p class="badge">{{ project.status=='completed' ? 'Terminé' : (project.status=='abandoned' ? 'Abandonné' : 'En cours') }}</p>
-{% if project.status=='active' %}<h3>Palier {{ project.stageIndex+1 }} sur {{ project.snapshot.stages|length }} · {{ project.snapshot.stages[project.stageIndex].name }}</h3>
-{% for resource,remaining in row.remaining %}{% set total=project.snapshot.stages[project.stageIndex].costs[resource] %}<label>{{ resources[resource] }} : {{ project.progress[resource]|default(0) }} / {{ total }}<progress max="{{ total }}" value="{{ project.progress[resource]|default(0) }}">{{ project.progress[resource]|default(0) }} / {{ total }}</progress></label>{% endfor %}{% endif %}
-<h3>Votre contribution et les minimums</h3><ul>{% for resource,minimum in project.snapshot.minimums %}<li>{{ resources[resource] }} : {{ row.own[resource]|default(0) }} / {{ minimum }}</li>{% endfor %}</ul>
-{% if row.rewarded %}<p>Vous avez déjà gagné le boost de ce modèle de projet.</p>{% endif %}
-<a class="secondary" href="{{ path('app_guild_project',{id:project.id}) }}">{{ project.status=='active' ? 'Consulter et contribuer' : 'Consulter le bilan' }}</a>
+<article class="panel guild-project project-summary" aria-labelledby="project-title-{{ project.id }}">
+    <div class="project-identity">
+        <h2 id="project-title-{{ project.id }}"><a href="{{ path('app_guild_project',{id:project.id}) }}">{{ project.snapshot.name }}</a></h2>
+        <p class="project-started">Lancé le <time datetime="{{ project.startedAt|date('c') }}">{{ project.startedAt|date('d/m/Y',preferences.timezone) }}</time></p>
+        <p class="badge {{ project.status }}">{{ project.status=='completed' ? 'Terminé' : (project.status=='abandoned' ? 'Abandonné' : 'En cours') }}</p>
+    </div>
+    <div class="project-stage">
+        {% if project.status=='active' %}
+            <h3>Palier {{ project.stageIndex+1 }} sur {{ project.snapshot.stages|length }} · {{ project.snapshot.stages[project.stageIndex].name }}</h3>
+            {% for resource,remaining in row.remaining %}{% set total=project.snapshot.stages[project.stageIndex].costs[resource] %}<label>{{ resources[resource] }} : {{ project.progress[resource]|default(0) }} / {{ total }}<progress max="{{ total }}" value="{{ project.progress[resource]|default(0) }}">{{ project.progress[resource]|default(0) }} / {{ total }}</progress></label>{% endfor %}
+        {% elseif project.status=='completed' %}
+            <p>{{ project.rewardsDeliveredAt ? 'Distribution des récompenses terminée.' : 'Récompenses en cours de distribution.' }}</p>
+        {% else %}
+            <p>Le projet n’accepte plus de dons. Les contributions restent conservées.</p>
+        {% endif %}
+    </div>
+    <div class="project-personal">
+        <h3>Votre contribution et les minimums</h3>
+        <ul>{% for resource,minimum in project.snapshot.minimums %}<li>{{ resources[resource] }} : {{ row.own[resource]|default(0) }} / {{ minimum }}</li>{% endfor %}</ul>
+        {% if row.rewarded %}<p>Vous avez déjà gagné le boost de ce modèle de projet.</p>{% elseif project.status=='active' %}<p>{{ row.qualified ? 'Minimums atteints. Restez membre jusqu’à la fin pour recevoir le boost.' : 'Atteignez tous les minimums et restez membre jusqu’à la fin pour recevoir le boost.' }}</p>{% endif %}
+        <a class="secondary" href="{{ path('app_guild_project',{id:project.id}) }}">{{ project.status=='active' ? 'Consulter et contribuer' : 'Consulter le bilan' }}</a>
+    </div>
 </article>

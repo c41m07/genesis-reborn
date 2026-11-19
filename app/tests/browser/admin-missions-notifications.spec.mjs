@@ -63,7 +63,7 @@ test('Admin : nouveautés personnelles, total, actualisation et archives masqué
   await expect(page.locator('.admin-sidebar [data-category="players"]')).toHaveText('3');
   await page.goto('/admin');
   await expect(page.getByRole('link',{name:'Examiner les incidents',exact:true})).toHaveAttribute('href','/admin/securite');
-  await expect(page.locator('.admin-home-actions').getByRole('link',{name:'Préparer un événement',exact:true})).toHaveAttribute('href','/admin/events/assistant');
+  await expect(page.locator('.admin-home-actions').getByRole('link',{name:/^Préparer un événement/})).toHaveAttribute('href','/admin/events/assistant');
   await page.goto('/');
   await expect(totalBadge(page)).toHaveText('4');
   await page.goto('/admin/moderation');
@@ -142,10 +142,15 @@ test('Admin : huit missions, univers, statuts, pagination, clavier et responsive
     const axe = await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();
     expect(axe.violations).toEqual([]);
   }
-  const region = page.getByRole('region', {name:'Historique des missions, tableau défilant'});
+  const region = page.getByRole('region', {name:'Historique des missions', exact:true});
   await region.focus();
-  await page.keyboard.press('ArrowRight');
-  await expect.poll(() => region.evaluate(node => node.scrollLeft)).toBeGreaterThan(0);
+  await expect(region).toBeFocused();
+  // Le tableau devient des fiches complètes : les sept valeurs restent lisibles sans défilement latéral.
+  await expect(region.locator('tbody tr').first().locator('td[data-label]')).toHaveCount(7);
+  expect(await region.evaluate(node => node.scrollWidth <= node.clientWidth)).toBe(true);
+  await region.locator('tbody tr').first().getByRole('link').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', {name:/^Flotte n°/,level:1})).toBeVisible();
   await peer.close();
 });
 
@@ -190,7 +195,7 @@ test('Surveillance : fiches privées, transports unifiés, rapports et consultat
   await expect(page.getByRole('heading', {name:'Rapport du transport',exact:true})).toBeVisible();
   await expect(page.getByRole('region', {name:'Composition actuelle de la flotte'}).getByRole('cell', {name:'3',exact:true})).toBeVisible();
   await expect(page.getByRole('status')).toContainText('Échéance dépassée');
-  await expect(page.getByRole('region', {name:'Ressources transportées, défilement horizontal'})).toContainText('80,00');
+  await expect(page.getByRole('region', {name:'Ressources transportées',exact:true})).toContainText('80,00');
   expect(queryIsolatedSql(project, `SELECT MD5(CONCAT(status,dispatch_token,cargo,reserved_fuel)) FROM fleet WHERE id=${transportId}`)).toBe(before);
   expect(Number(queryIsolatedSql(project, `SELECT COUNT(*) FROM admin_audit_log WHERE action='admin_fleet_view' AND target_id=${transportId}`))).toBeGreaterThan(0);
   for (const width of [1440,768,390]) {
@@ -224,7 +229,7 @@ test('Accueil admin : rubriques séparées, anciens liens, clavier et thèmes ac
   await page.goto('/admin#admin-universes');
   await expect(page).toHaveURL(/admin\/univers#admin-universes$/);
   await expect(page.locator('#admin-universes')).toBeVisible();
-  const routes = {'joueurs':'Joueurs','univers':'Univers','moderation':'Modération','securite':'Sécurité','exploitation':'Exploitation','journal':'Journal des actions'};
+  const routes = {'joueurs':'Joueurs','univers':'Univers','moderation':'Modération','securite':'Sécurité','exploitation':'État des traitements','journal':'Journal des actions'};
   for (const [route,title] of Object.entries(routes)) {
     await page.goto('/admin/' + route);
     await expect(page.getByRole('heading', {name:title,exact:true,level:1})).toBeVisible();

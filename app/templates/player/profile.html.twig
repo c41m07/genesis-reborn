@@ -1,18 +1,26 @@
 {% extends 'base.html.twig' %}
 {% block title %}Mes identifiants · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="page-refinement profile-page account-space" data-page-sections="disabled">
+<div class="page-refinement profile-page account-space account-redesign" data-page-sections="disabled">
 <div class="page-heading"><div><h1>Mes identifiants</h1><p>Les identifiants de votre compte sont communs à tous vos univers.</p></div></div>
 {% include 'ui/account_navigation.html.twig' %}
 <p class="profile-notice">Toute modification enregistrée ferme cette session : reconnectez-vous ensuite avec vos identifiants.</p>
-<section class="panel account-panel" aria-label="Modifier mon profil">
-    {{ form_start(form) }}
+{# Les deux panneaux appartiennent au même formulaire : le mot de passe actuel confirme toutes les modifications. #}
+{{ form_start(form, {attr: {class: 'account-profile-form'}}) }}
     {% if form.vars.submitted and not form.vars.valid %}<div class="form-error" role="alert"><strong>Profil non enregistré.</strong><p>Vérifiez les champs signalés puis réessayez.</p>{{ form_errors(form) }}</div>{% endif %}
-    <fieldset class="account-section"><legend>Identifiants</legend><div class="account-grid">{{ form_row(form.email) }}{{ form_row(form.username) }}</div></fieldset>
-    <details class="profile-password" {% if form.vars.submitted and not form.vars.valid %}open{% endif %}><summary>Changer de mot de passe — facultatif</summary><fieldset class="account-section"><legend class="visually-hidden">Changer de mot de passe</legend><p>Facultatif. Laissez ces deux champs vides pour conserver votre mot de passe.</p>{{ form_errors(form.newPassword) }}<div class="account-grid">{{ form_row(form.newPassword.first) }}{{ form_row(form.newPassword.second) }}</div></fieldset></details>
-    <fieldset class="account-section"><legend>Confirmer la modification</legend>{{ form_row(form.currentPassword, {help: 'Votre mot de passe actuel est nécessaire pour enregistrer le profil.'}) }}</fieldset>
-    <button class="primary full">Enregistrer mes identifiants</button>{{ form_end(form) }}
-</section>
-
+    <div class="account-workspace">
+        <section class="panel account-panel account-identifiers" aria-label="Modifier mon profil">
+            <fieldset class="account-section"><legend>Identifiants</legend><div class="account-grid">{{ form_row(form.email) }}{{ form_row(form.username) }}</div></fieldset>
+            <details class="profile-password" {% if form.vars.submitted and not form.vars.valid %}open{% endif %}>
+                <summary>Changer de mot de passe — facultatif</summary>
+                <fieldset class="account-section"><legend class="visually-hidden">Changer de mot de passe</legend><p>Laissez les deux champs vides pour conserver votre mot de passe. En cas de remplacement : 12 à 128 caractères.</p>{{ form_errors(form.newPassword) }}<div class="account-grid">{{ form_row(form.newPassword.first) }}{{ form_row(form.newPassword.second) }}</div></fieldset>
+            </details>
+        </section>
+        <section class="panel account-panel account-confirmation" aria-label="Confirmation des identifiants">
+            <fieldset class="account-section"><legend>Confirmer la modification</legend>{{ form_row(form.currentPassword, {help: 'Votre mot de passe actuel est nécessaire pour enregistrer le profil.'}) }}</fieldset>
+            <button class="primary full">Enregistrer mes identifiants</button>
+        </section>
+    </div>
+{{ form_end(form) }}
 </div>
 {% endblock %}

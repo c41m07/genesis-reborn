@@ -1,0 +1,198 @@
+/* L10D : les observations et notes restent réunies, avec leur formulaire de suivi. */
+body.admin-console.admin-case-workspace .admin-content {
+    overflow-wrap: anywhere;
+}
+
+body.admin-console.admin-case-workspace .page-heading > div {
+    min-width: 0;
+}
+
+body.admin-console.admin-case-workspace .admin-case-back {
+    display: inline-flex;
+    align-items: center;
+    min-height: 46px;
+    margin-bottom: 24px;
+}
+
+body.admin-console.admin-case-workspace .admin-case-scope {
+    padding: 14px 18px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+body.admin-console.admin-case-workspace .feedback-admin-filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+body.admin-console.admin-case-workspace .feedback-admin-filters label {
+    min-width: 0;
+    color: var(--text);
+}
+
+body.admin-console.admin-case-workspace .feedback-admin-filters button {
+    grid-column: 1 / -1;
+}
+
+body.admin-console.admin-case-workspace .admin-case-results {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+body.admin-console.admin-case-workspace .admin-case-list {
+    display: grid;
+    gap: 18px;
+    padding: 0;
+    margin: 20px 0;
+}
+
+body.admin-console.admin-case-workspace .admin-case-list > li {
+    padding: 20px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--panel);
+}
+
+body.admin-console.admin-case-workspace .admin-case-list a {
+    display: grid;
+    gap: 12px;
+    min-height: 46px;
+    padding: 0;
+}
+
+body.admin-console.admin-case-workspace .admin-case-list strong {
+    color: var(--text);
+    font-size: 18px;
+    line-height: 1.5;
+}
+
+body.admin-console.admin-case-workspace .admin-case-list small {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+body.admin-console.admin-case-workspace .admin-case-list a > span {
+    padding: 12px 0 0;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+body.admin-console.admin-case-workspace .admin-case-detail-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 20px;
+}
+
+body.admin-console.admin-case-workspace .admin-case-main {
+    display: grid;
+    min-width: 0;
+    gap: 20px;
+}
+
+body.admin-console.admin-case-workspace .panel:not(.admin-case-results) {
+    min-width: 0;
+    margin: 0;
+    padding: 22px;
+    border-radius: 6px;
+}
+
+body.admin-console.admin-case-workspace .panel h2 {
+    margin: 0 0 20px;
+    font-size: 21px;
+    line-height: 1.4;
+}
+
+body.admin-console.admin-case-workspace .admin-case-text {
+    white-space: pre-wrap;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+body.admin-console.admin-case-workspace .admin-case-main ol li {
+    padding: 20px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+body.admin-console.admin-case-workspace .admin-case-main ol strong {
+    color: var(--gold);
+}
+
+body.admin-console.admin-case-workspace .admin-case-main .panel > a {
+    display: block;
+    min-height: 46px;
+    padding: 12px 0;
+}
+
+body.admin-console.admin-case-workspace .admin-case-form {
+    max-width: none;
+    gap: 22px;
+    margin: 0;
+}
+
+body.admin-console.admin-case-workspace .admin-case-field {
+    display: grid;
+    min-width: 0;
+    gap: 8px;
+}
+
+body.admin-console.admin-case-workspace :is(.feedback-admin-filters input, .feedback-admin-filters select, .admin-case-form input:not([type="hidden"]), .admin-case-form select, .admin-case-form textarea) {
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    margin: 0;
+    padding: 12px;
+    font-size: 14px;
+}
+
+/* La zone de texte doit primer sur la hauteur commune des champs ci-dessus. */
+body.admin-console.admin-case-workspace .admin-intervention-form.admin-case-form textarea {
+    min-height: 200px;
+    resize: vertical;
+}
+
+body.admin-console.admin-case-workspace .admin-case-field small,
+body.admin-console.admin-case-workspace .admin-case-form > p {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+body.admin-console.admin-case-workspace :is(.admin-case-form button, .feedback-admin-filters button, .admin-mission-pages a) {
+    min-height: 46px;
+    white-space: normal;
+}
+
+body.admin-console.admin-case-workspace .admin-case-form button {
+    width: 100%;
+    text-align: left;
+}
+
+@media (max-width: 1100px) {
+    body.admin-console.admin-case-workspace .admin-case-detail-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 760px) {
+    body.admin-console.admin-case-workspace .feedback-admin-filters {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.admin-console.admin-case-workspace .panel:not(.admin-case-results) {
+        padding: 18px;
+    }
+
+    body.admin-console.admin-case-workspace :is(.feedback-admin-filters input, .feedback-admin-filters select, .admin-case-form input:not([type="hidden"]), .admin-case-form select, .admin-case-form textarea) {
+        font-size: 16px;
+    }
+}

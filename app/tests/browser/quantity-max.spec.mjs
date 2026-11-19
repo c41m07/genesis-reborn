@@ -20,7 +20,7 @@ async function enter(page) {
     return { email, planet, project: process.env.BROWSER_ROUTER };
 }
 
-test('Construction : Max dépasse 100, ajuste la saisie et refuse un achat lorsque le maximum devient nul', async ({ page }, info) => {
+test('Construction : Max dépasse 100, ajuste la saisie et refuse un achat lorsque le maximum devient nul', async ({ page, browser }, info) => {
     test.setTimeout(120000);
     const { email, planet, project } = await enter(page);
     runIsolatedSql(project, `INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'shipyard','basic',1)`);
@@ -45,16 +45,24 @@ test('Construction : Max dépasse 100, ajuste la saisie et refuse un achat lorsq
     runIsolatedSql(project, `UPDATE planet_resource SET current_stock=0,last_updated_at=UTC_TIMESTAMP() WHERE planet_id=${planet}`);
     await maximum.click();
     await expect(panel.getByRole('status')).toContainText('Ressources manquantes : 240 Métal, 130 Nano, 200 Électricité.');
-    await expect(panel.getByRole('button', { name: 'Manque 240 Métal · 130 Nano · 200 Électricité', exact:true })).toBeDisabled();
+    await expect(panel.getByRole('button', { name: /^Il manque :/ })).toBeDisabled();
+    await expect(panel.locator('.catalog-missing-resource')).toHaveText(['Métal : 240', 'Nano : 130', 'Électricité : 200']);
     expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM queue_item WHERE planet_id=${planet}`)).toBe('0');
     prepareOwnedColony(project, email, { stock: 150000 });
     await maximum.click();
     await expect.poll(async () => Number(await input.inputValue())).toBeGreaterThan(100);
-    await input.fill('999999');
-    await panel.getByRole('button', { name: /Construire/ }).click();
-    await expect(page.locator('.flash.success')).toContainText('Quantité ajustée au maximum constructible');
+    // Le navigateur bloque une valeur supérieure à max avant l’envoi. Le parcours
+    // natif sans JavaScript permet de vérifier aussi le plafonnement côté serveur.
+    const nativeContext = await browser.newContext({ javaScriptEnabled: false, storageState: await page.context().storageState(), viewport: { width: 390, height: 900 } });
+    const nativePage = await nativeContext.newPage();
+    await nativePage.goto(`/planetes/${planet}?section=ships`);
+    const nativePanel = nativePage.locator('#item-probe-basic');
+    await nativePanel.getByLabel('Quantité', { exact: true }).fill('999999');
+    await nativePanel.getByRole('button', { name: /Construire/ }).click();
+    await expect(nativePage.locator('.flash.success')).toContainText('Quantité ajustée au maximum constructible');
     await expect.poll(() => Number(queryIsolatedSql(project, `SELECT COALESCE(MAX(quantity),0) FROM queue_item WHERE planet_id=${planet} AND item_slug='probe'`))).toBeGreaterThan(100);
     expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM planet_resource WHERE planet_id=${planet} AND current_stock<0`)).toBe('0');
+    await nativeContext.close();
 });
 
 test('Flotte et fret : Max conserve les autres champs, réserve le carburant et reste utilisable au clavier sur mobile', async ({ page }, info) => {
@@ -77,7 +85,8 @@ test('Flotte et fret : Max conserve les autres champs, réserve le carburant et 
     await form.getByRole('button', { name: /Choisir la destination/ }).click();
     await form.locator('[name="mission"]').selectOption('transport');
     await form.getByLabel('Destination personnalisée', { exact: true }).check();await form.locator('[name="coordinates"]').fill(planetCoordinates(project, target));
-    await form.locator('[data-fleet-fields-target="cargo"] > summary').click();
+    const cargo = form.locator('[data-fleet-fields-target="cargo"]');
+    if (!(await cargo.evaluate(element => element.open))) await cargo.locator('summary').click();
     const metal = form.locator('[name="cargo[metal]"]'), hydrogen = form.locator('[name="cargo[hydrogen]"]');
     const hydrogenMax = form.locator('[data-fleet-quantity-target="cargoMax"][data-input-id$="-hydrogen"]');
     await expect(hydrogenMax).toBeEnabled();
