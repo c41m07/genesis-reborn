@@ -3892,7 +3892,116 @@ Champs dessinés, pas de saisie clavier réelle ; boutons de navigation actifs e
 `M` pour revenir au plan. La gestion des défis, modèles de projets, rotations,
 patchnotes et exploitation attend ses lots propres.
 
-**Choix A/B attendu pour L10I** ; L10 en cours, plan global **15/18**.
+L10I A est ensuite validé explicitement ; réalisation ci-dessous.
+
+## L10I A — Réalisation locale du 19 novembre 2026
+
+La page **58 A « Parcours direct »** est validée explicitement. Complexité
+**4/5** : présentation de cinq vues reliées à des écritures protégées. La liste,
+l’assistant, l’aperçu et la création/édition avancée gardent leurs pages dédiées.
+Courants/historique restent deux lectures du même ensemble ; aucun onglet
+JavaScript ou nouveau chargement général n’est ajouté. L’annulation guidée
+se déplie sur son événement : elle reste secondaire et ses conséquences sont
+lisibles avant ouverture. Le retrait commun conserve son dépliable existant.
+
+Réalisation ciblée : liste et trois modèles en pleine largeur, champs réguliers
+par deux sur ordinateur et sur une colonne sous 1200 px, description sur toute
+la largeur, aperçu continu. Les boutons principaux sont identifiables ; statuts
+et types sont affichés en français, avec leurs valeurs soumises inchangées.
+Le sommaire automatique est désactivé pour ces cinq vues. Le libellé visible des
+liens de modèle fait partie de leur nom accessible. Le champ Description avancée
+garde un libellé explicite après un retour d’erreur. L’ouverture/fermeture de
+l’annulation ne perd pas le motif en cours de saisie.
+
+Fichiers concernés : `admin/layout.html.twig`, `events.html.twig`,
+`_guided_event.html.twig`, `event_form.html.twig`, `event_wizard.html.twig`,
+`event_preview.html.twig`, `assets/app.js`, nouveau
+`assets/styles/admin-events-workspace.css`, scénario
+`admin-events-refonte.spec.mjs` et adaptation clavier de
+`admin-event-wizard.spec.mjs`. README, architecture, inventaire et feuille de
+route sont synchronisés. Aucun contrôleur, service, schéma, dépendance, réglage
+ou règle de jeu n’est modifié. Les jetons, clés d’aperçu, options, contraintes,
+permissions, transactions et validations serveur conservent leurs contrats.
+
+Vérifications locales :
+
+- `make validate`, `make assets` et `make lint-static` réussis. Le lint statique
+  utilise le conteneur applicatif sans ses services habituels ; aucune validation
+  de schéma de la base courante n’est annoncée.
+- **22 tests PHP / 247 assertions** : `AdminEventPlannerTest`, `GameEventTest`,
+  `AdminDedicatedPagesTest` et `AdminPaginationTest`, sur environnement isolé.
+- **Sept scénarios navigateur distincts consolidés** : quatre parcours existants
+  assistant/retrait, formulaire responsive et deux nouveaux parcours. Lecture
+  des cinq vues sur 1440/768/390 dans les thèmes clair/sombre, clavier,
+  annulation dépliable, Axe sans exclusion et absence de débordement.
+- Sans JavaScript : erreur de dates et saisies conservées, création/édition,
+  rechargement, annulation avancée, suppression d’un brouillon synthétique,
+  aperçu/modification/planification, aperçu expiré et historique en 50 + 2 lignes.
+  Les GET de lecture n’écrivent pas d’événement dans le scénario contrôlé.
+- **Trente captures finales**. La relecture visuelle a corrigé la taille des
+  statuts, le bouton de suppression, l’alignement du titre et la hauteur des
+  descriptions ; les deux nouveaux scénarios sont revérifiés après compilation.
+
+Deux échecs initiaux ont révélé un nom accessible ne contenant pas le libellé
+visible et un libellé Description incluant la valeur du textarea après erreur.
+Les deux causes ont été corrigées sans retirer d’assertion. Les premières
+exécutions ne sont pas présentées comme réussies. Preuves dans
+`output/playwright/admin-events-refonte/` : journaux `validate`, `assets`,
+`assets-final`, `php`, `browser`, `browser-final`, `browser-rendu-final` et
+`lint-twig-final` ; captures
+dans `recette-rendu-final`. Les bases sont jetables et isolées ; aucune migration
+ou opération sur la base habituelle. CI GitHub, fusion, activation locale et
+déploiement restent distincts. Aucun gain de performance ou audit RGAA complet
+n’est annoncé.
+
+## L10J — Modèles de projets de guilde, propositions du 19 novembre 2026
+
+Complexité **4/5**. Sources ciblées : `AdminGuildProjectController`,
+`GuildProjectDefinitionService`, `GuildProjectRules`, liste et formulaire
+existants. Les pages dédiées restent liste, création et édition ; les paliers
+sont des sections du même formulaire. Aucun filtre, recherche, suppression,
+synthèse calculée en direct ou action de jeu inexistante n’est ajouté.
+
+Dans le même document Figcraft de bureau :
+
+- **60 · L10J · A — Paliers dans le fil** : modèles sur toute la largeur,
+  identité puis paliers successifs et minimums. Cinq coûts par ligne sur
+  ordinateur ; avantage : lecture régulière et place pour les nombres ; limite :
+  défilement plus long quand il y a beaucoup de paliers.
+- **61 · L10J · B — Paliers et minimums** : modèles par deux, paliers auprès des
+  minimums sur ordinateur. Avantage : comparaison rapprochée ; limite : paliers
+  plus étroits. Les colonnes reviennent dans le fil sur tablette et téléphone.
+
+Recommandation **A** pour la saisie répétée de cinq ressources et des noms de
+paliers. Les deux conservent identité, description, disponibilité, un à dix
+paliers, cinq coûts par palier et cinq minimums. Chaque palier et l’ensemble des
+minimums exigent une valeur positive ; un minimum ne dépasse pas le coût total
+correspondant. L’univers est figé en édition. Un modèle est désactivé par défaut ;
+les projets déjà lancés gardent leur définition. Ajout et retrait du dernier
+palier conservent le brouillon sans enregistrer ; le serveur vérifie version,
+univers, nom, bornes et droits. Récompense unique et conséquences restent visibles.
+
+Couverture équivalente : **54 cadres, 27 par direction**, **706 liens inspectés**,
+six départs de prototype. Liste, création et édition en 1440/768/390 ; états vide,
+page 2, formulaire rempli, ajout/retrait, dix paliers, quantités et minimums
+invalides, doublon, version périmée, résultat, modèle désactivé, contenu long,
+menu, plan et références en 390. **Douze exports** ordinateur/téléphone ;
+présentations principales examinées visuellement.
+
+Contrôle natif des **5 130 nœuds** : aucun débordement, texte superposé ou lien
+manquant ; parité des champs et valeurs vérifiée. Les 54 pages précédentes
+conservent noms et nombres de cadres ; 56 pages après ajout, 348 variables
+réutilisées. Document enregistré proprement, page 60 A affichée dans la fenêtre
+de bureau. Preuves : `lot-10J-{plan,manifest,verification}.json`, états avant/après/
+enregistrement et `lot-10J-{A,B}-{models,new,edit}-{1440,390}.png` dans le dossier
+d’artefacts de la conversation.
+
+Les champs sont dessinés et les clics ouvrent des états d’exemple ; les saisies
+ne s’accumulent pas réellement entre cadres. Enregistrement, erreurs et accès
+protégés ont des planches de référence. Aucune écriture de projet n’est effectuée.
+Les variantes ne sont pas encore intégrées. **Choix A/B attendu pour L10J** ;
+L10 reste en cours, plan global **15/18**. Défis, rotations, patchnotes et
+exploitation attendent leurs sous-lots propres.
 
 ## Reprise et états de couverture
 
@@ -3917,7 +4026,7 @@ patchnotes et exploitation attend ses lots propres.
 | L7E | A implémentée et vérifiée localement | Page 36 A validée explicitement après reprise de la messagerie et des classements | 90 PHP / 569 assertions ; neuf parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L8 | A implémentée et vérifiée localement | Page 38 A validée explicitement | 23 PHP / 244 assertions ; 16 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L9 | A implémentée et vérifiée localement | Page 40 A validée explicitement | 7 PHP / 127 assertions ; 5 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
-| L10 | L10A à L10E réalisés en A, L10F/G en B et L10H en A ; L10I A/B préparé | Choix précédents conservés ; A choisi explicitement pour L10H, choix L10I attendu | Bilan L10H : 10 PHP / 30 assertions, deux parcours navigateur consolidés, six captures finales ; L10I pages 58/59, 70 cadres et 944 liens | Choix et réalisation L10I puis autres rubriques d’animation et d’exploitation ; CI, fusion et déploiement distincts |
+| L10 | L10A à L10E réalisés en A, L10F/G en B et L10H/I en A ; L10J A/B préparé | Choix précédents conservés ; A choisi explicitement pour L10I, choix L10J attendu | Bilan L10I : 22 PHP / 247 assertions, sept parcours navigateur consolidés, trente captures finales ; L10J pages 60/61, 54 cadres et 706 liens | Choix et réalisation L10J puis autres rubriques d’animation et d’exploitation ; CI, fusion et déploiement distincts |
 | L11 | Inventorié | Aucune nouvelle | Non engagé pour cette refonte | Examiner le wiki sans recommencer ses pages dédiées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 

@@ -212,9 +212,15 @@ et réalisé localement : vingt quantités dans un formulaire, trois formats en
 colonnes et confirmation conservée après refus. Validation, lint statique,
 compilation et 10 PHP / 30 assertions réussis ; deux parcours navigateur
 consolidés, dont la recette finale avec six captures clair/sombre en trois formats.
-L10I propose les événements : 58 A « Parcours direct » et 59 B « Fiches et
-préparation », 70 cadres, 944 liens inspectés et vingt exports. Liste, assistant,
-aperçus et édition avancée attendent le choix avant réalisation.
+L10I A « Parcours direct » (page 58) est validé et réalisé localement : événements
+et modèles en pleine largeur, formulaires réguliers, aperçu continu et annulation
+guidée dépliable. Validation Compose, lint statique, compilation et 22 PHP /
+247 assertions réussis ; sept scénarios navigateur consolidés et trente captures
+finales dans les deux thèmes, en trois formats. Formulaires sans JavaScript,
+refus, conservation des saisies et historique paginé vérifiés.
+L10J prépare les modèles de projets de guilde : 60 A « Paliers dans le fil » et
+61 B « Paliers et minimums », 54 cadres, 706 liens inspectés et douze exports.
+Liste, création et édition attendent le choix avant réalisation.
 Les autres rubriques administratives seront traitées par sous-lots, sans augmenter
 le compte des dix-huit ensembles ni déclarer L10 terminé.
 CI GitHub, fusion et déploiement restent distincts.

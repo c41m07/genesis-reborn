@@ -1,0 +1,204 @@
+/* L10I A : liste, réglages et aperçu dans le fil de leurs pages dédiées. */
+body.admin-console.admin-events-workspace .admin-content {
+    overflow-wrap: anywhere;
+}
+
+body.admin-console.admin-events-workspace :is(.panel, .admin-event-model-choices article) {
+    min-width: 0;
+    padding: 22px;
+    border-radius: 6px;
+}
+
+body.admin-console.admin-events-workspace .panel :is(h2, h3) {
+    font-size: 21px;
+    line-height: 1.5;
+}
+
+body.admin-console.admin-events-workspace :is(.admin-events-list, .admin-event-model-choices, .admin-event-actions) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+}
+
+body.admin-console.admin-events-workspace .admin-events-list > .panel,
+body.admin-console.admin-events-workspace .admin-event-actions form {
+    margin: 0;
+}
+
+body.admin-console.admin-events-workspace .admin-event-model-choices article {
+    border: 1px solid var(--line);
+}
+
+body.admin-console.admin-events-workspace :is(.admin-event-model-choices h3, .admin-events-list h3) {
+    margin-top: 0;
+}
+
+body.admin-console.admin-events-workspace .admin-event-list-navigation {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin: 24px 0;
+}
+
+body.admin-console.admin-events-workspace :is(.admin-event-list-navigation a, .admin-event-model-choices a, .admin-event-actions a, .admin-event-models a) {
+    display: flex;
+    align-items: center;
+    min-height: 46px;
+}
+
+body.admin-console.admin-events-workspace :is(.admin-event-form, .admin-event-wizard-form) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    max-width: none;
+    gap: 22px;
+    margin-top: 24px;
+}
+
+body.admin-console.admin-events-workspace :is(.admin-event-field, .admin-event-form > label) {
+    display: grid;
+    min-width: 0;
+    gap: 8px;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+body.admin-console.admin-events-workspace .admin-event-field label {
+    margin: 0;
+    font-size: 14px;
+}
+
+body.admin-console.admin-events-workspace :is(.admin-event-wide, .admin-event-description, .admin-event-form > button, .admin-event-visibility) {
+    grid-column: 1 / -1;
+}
+
+body.admin-console.admin-events-workspace .admin-intervention-form {
+    max-width: none;
+    gap: 12px;
+}
+
+body.admin-console.admin-events-workspace :is(input:not([type="hidden"]):not([type="checkbox"]), select, textarea) {
+    width: 100%;
+    min-width: 0;
+    padding: 12px;
+    margin: 0;
+    font-size: 14px;
+}
+
+body.admin-console.admin-events-workspace :is(input:not([type="hidden"]):not([type="checkbox"]), select) {
+    min-height: 48px;
+}
+
+body.admin-console.admin-events-workspace textarea {
+    min-height: 150px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: inherit;
+    resize: vertical;
+}
+
+body.admin-console.admin-events-workspace :is(.admin-event-visibility, .admin-intervention-confirm, .event-removal-form > label:has(input[type="checkbox"])) {
+    display: flex;
+    align-items: start;
+    min-height: 44px;
+    gap: 10px;
+    font-size: 14px;
+}
+
+body.admin-console.admin-events-workspace input[type="checkbox"] {
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    min-height: 18px;
+    margin: 0;
+    accent-color: var(--accent);
+}
+
+body.admin-console.admin-events-workspace button {
+    min-height: 46px;
+    font-size: 14px;
+    white-space: normal;
+}
+
+body.admin-console.admin-events-workspace button.danger {
+    padding: 12px 16px;
+    border: 1px solid #c65664;
+    border-radius: 5px;
+    background: #a73543;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+body.admin-console.admin-events-workspace button.danger:hover {
+    background: #8f2834;
+}
+
+body.admin-console.admin-events-workspace .admin-events-list .badge {
+    font-size: 13px;
+    line-height: 1.6;
+    letter-spacing: normal;
+}
+
+body.admin-console.admin-events-workspace :is(.admin-event-actions button, .admin-confirm-plan, .admin-event-form > button, .admin-event-wizard-form > button) {
+    width: 100%;
+    text-align: left;
+}
+
+body.admin-console.admin-events-workspace :is(.admin-event-cancel, .account-section) {
+    margin-top: 18px;
+}
+
+body.admin-console.admin-events-workspace :is(.admin-event-cancel, .account-section) > summary {
+    min-height: 46px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+body.admin-console.admin-events-workspace :is(a, button, input, select, textarea, summary):focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+}
+
+body.admin-console.admin-events-workspace .report-facts {
+    grid-template-columns: minmax(0, 1fr);
+    margin: 24px 0;
+}
+
+body.admin-console.admin-events-workspace .report-facts > div {
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    padding: 0;
+}
+
+body.admin-console.admin-events-workspace .report-facts dt {
+    margin-bottom: 6px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+@media (max-width: 1200px) {
+    body.admin-console.admin-events-workspace :is(.admin-event-form, .admin-event-wizard-form) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 760px) {
+    body.admin-console.admin-events-workspace :is(.panel, .admin-event-model-choices article) {
+        padding: 18px;
+    }
+
+    body.admin-console.admin-events-workspace .admin-event-list-navigation {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.admin-console.admin-events-workspace :is(input:not([type="hidden"]):not([type="checkbox"]), select, textarea) {
+        font-size: 16px;
+    }
+}

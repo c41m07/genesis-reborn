@@ -1072,6 +1072,20 @@ et le sommaire automatique est désactivé sur cette page. Une réponse de refus
 conserve aussi la case soumise ; le serveur continue de contrôler sa valeur.
 `AdminResourceBoxController` et `ResourceBoxPolicy` ne sont pas modifiés.
 
+L10I A ajoute `admin-events-workspace.css`, limité aux cinq routes GET des
+événements : liste, assistant, aperçu, création et édition avancées. Liste et
+choix de modèle restent sur toute la largeur. Les champs se placent par deux
+sur ordinateur, avec nom guidé et descriptions sur toute la largeur ; sous
+1200 px, ils reviennent sur une colonne. L’aperçu garde une lecture continue.
+`<details>` replie seulement le formulaire d’annulation guidée ; ses conséquences
+restent visibles et une ouverture/fermeture conserve le motif saisi. Le retrait
+commun garde son fragment et ses contrôles. Le sommaire automatique est désactivé
+sur ces pages. Les types et statuts ont des libellés français, sans changer les
+valeurs soumises. Les noms de champs, contraintes, jetons et URL restent les mêmes.
+Le libellé Description avancée est associé explicitement à son champ, même après
+une erreur. Aucun contrôleur, service, chargement ni comportement JavaScript
+n’est modifié ; les formulaires restent utilisables sans JavaScript.
+
 Les contrôleurs Événements, Projets et Rotations séparent les GET de liste et de
 formulaire. Les anciens POST restent acceptés. L’assistant et les interdictions
 de réécriture des événements guidés restent inchangés. L’édition de rotation
