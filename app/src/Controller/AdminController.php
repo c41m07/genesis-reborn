@@ -220,9 +220,12 @@ final class AdminController extends AbstractController
         if ($slug !== null) {
             $draft = $request->getSession()->remove('admin_catalogue_draft_'.$id.'_'.$group.'_'.$slug);
             // Un échec ne perd pas les saisies et ne modifie jamais les valeurs de référence.
-            if (is_array($draft)) {
+            if (is_array($draft) && isset($draft['values'], $draft['revision'], $draft['reason']) && !$request->query->getBoolean('reload')) {
+                $catalogues[$group][0]['revision'] = $draft['revision'];
+                $catalogues[$group][0]['reason'] = $draft['reason'];
+                $catalogues[$group][0]['draft'] = true;
                 foreach ($catalogues[$group][0]['fields'] as &$field) {
-                    $value = $draft;
+                    $value = $draft['values'];
                     foreach (explode('.', $field['path']) as $part) $value = is_array($value) ? ($value[$part] ?? null) : null;
                     if (is_scalar($value)) $field['value'] = $value;
                 }
@@ -253,15 +256,18 @@ final class AdminController extends AbstractController
             throw $this->createAccessDeniedException('Formulaire expiré.');
         }
         try {
+            if (!$request->request->getBoolean('confirmed')) {
+                throw new \DomainException('Confirmez l’application de cette modification à l’univers.');
+            }
             if ($request->request->getBoolean('reset')) {
-                $balance->reset($this->getUser(), $id, $group, $slug);
+                $balance->reset($this->getUser(), $id, $group, $slug, $request->request->getString('revision'), $request->request->getString('reason'));
             } else {
-                $balance->save($this->getUser(), $id, $group, $slug, $request->request->all('values'));
+                $balance->save($this->getUser(), $id, $group, $slug, $request->request->all('values'), $request->request->getString('revision'), $request->request->getString('reason'));
             }
             $request->getSession()->remove('admin_catalogue_draft_'.$id.'_'.$group.'_'.$slug);
             $this->addFlash('success', 'Équilibrage enregistré pour cet univers.');
         } catch (\DomainException $error) {
-            $request->getSession()->set('admin_catalogue_draft_'.$id.'_'.$group.'_'.$slug, $request->request->all('values'));
+            $request->getSession()->set('admin_catalogue_draft_'.$id.'_'.$group.'_'.$slug, ['values' => $request->request->all('values'), 'revision' => $request->request->getString('revision'), 'reason' => $request->request->getString('reason')]);
             $this->addFlash('error', $error->getMessage());
         }
         return $this->redirectToRoute('app_admin_catalogue_edit', ['id' => $id, 'group' => $group, 'slug' => $slug]);

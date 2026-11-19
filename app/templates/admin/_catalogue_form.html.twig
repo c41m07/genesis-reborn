@@ -3,14 +3,18 @@
     <div class="admin-balance-field">
         <label for="{{ fieldId }}">{{ label }}</label>
         <input id="{{ fieldId }}" type="number" name="values[{{ field.path|split('.')|join('][') }}]" value="{{ field.value }}" min="{{ field.min }}" max="{{ field.max }}" step="{{ field.integer ? '1' : '0.01' }}" aria-describedby="{{ fieldId }}-range" required>
+        <small>{{ field.overridden ? 'Surcharge de cet univers' : 'Catalogue de référence' }} · Référence : {{ field.reference }}</small>
         <small id="{{ fieldId }}-range">{{ field.min|number_format(field.min < 1 and field.min > 0 ? 2 : 0, ',', ' ') }} à {{ field.max|number_format(0, ',', ' ') }} · {{ field.integer ? 'entier' : 'pas de 0,01' }}</small>
     </div>
 {% endmacro %}
 {% import _self as editor %}
+{% if item.inactive_fields %}<details><summary>Paramètres historiques non modifiables</summary><ul>{% for explanation in item.inactive_fields %}<li>{{ explanation }}</li>{% endfor %}</ul></details>{% endif %}
 {% set tierLabels = {'basic': 'Basique', 'intermediate': 'Intermédiaire', 'superior': 'Supérieur'} %}
 {% set resourceLabels = {'metal': 'Métal', 'nano': 'Nano', 'antimatter': 'Antimatière', 'hydrogen': 'Hydrogène', 'electricity': 'Électricité'} %}
 <form class="admin-catalogue-editor" method="post" action="{{ path('app_admin_catalogue_save', {id: universe.id, group: group, slug: item.slug}) }}">
     <input type="hidden" name="_token" value="{{ csrf_token('admin_catalogue_' ~ universe.id ~ '_' ~ group ~ '_' ~ item.slug) }}">
+    <input type="hidden" name="revision" value="{{ item.revision }}">
+    {% if item.draft|default(false) %}<p role="status">Votre saisie est conservée. Si le catalogue a changé, <a href="{{ path('app_admin_catalogue_edit', {id: universe.id, group: group, slug: item.slug, reload: 1}) }}">abandonnez cette saisie et rechargez les valeurs actuelles</a>.</p>{% endif %}
     <div class="catalog-balance-grid">
         {% for field in item.fields|filter(field => not (field.path starts with 'cost_profiles.')) %}
             {{ editor.field(field, group, item.slug, field.label) }}
@@ -35,10 +39,18 @@
             {% endfor %}
         </div>
     {% endif %}
+    <label for="catalogue-reason">Motif de la modification</label>
+    <textarea id="catalogue-reason" name="reason" minlength="5" maxlength="1000" required>{{ item.reason|default('') }}</textarea>
+    <label><input type="checkbox" name="confirmed" value="1" required> Je confirme cette modification pour {{ universe.name }}.</label>
     <button class="primary">Enregistrer cet équilibrage</button>
 </form>
 <form class="admin-catalogue-reset" method="post" action="{{ path('app_admin_catalogue_save', {id: universe.id, group: group, slug: item.slug}) }}">
     <input type="hidden" name="_token" value="{{ csrf_token('admin_catalogue_' ~ universe.id ~ '_' ~ group ~ '_' ~ item.slug) }}">
     <input type="hidden" name="reset" value="1">
+    <input type="hidden" name="revision" value="{{ item.revision }}">
+    <p>Cette action supprime les surcharges de cette fiche pour cet univers. Elle ne restaure pas une version historique.</p>
+    <label for="catalogue-reset-reason">Motif du retour aux références</label>
+    <textarea id="catalogue-reset-reason" name="reason" minlength="5" maxlength="1000" required></textarea>
+    <label><input type="checkbox" name="confirmed" value="1" required> Je confirme le retour aux références pour cette fiche.</label>
     <button class="secondary">Restaurer les valeurs de référence</button>
 </form>
