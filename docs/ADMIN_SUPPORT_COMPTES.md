@@ -77,3 +77,49 @@ Aucun envoi réel, push, fusion, déploiement ou CI déclenché dans ce lot.
 La recette visuelle/clavier et la CI complète restent distinctes des tests HTTP.
 Les trois sources Work citées par AGENTS.md sont absentes du dépôt ; aucune
 lecture de ces sources externes ni synchronisation du wiki n’est revendiquée.
+
+
+## Incrément : retrouver les inscriptions à confirmer
+
+Complexité 3/5 : filtre serveur et pagination de comptes privés.
+La liste propose désormais Adresse email : Toutes / Confirmée / À confirmer.
+Ce critère se combine au rôle, à la recherche et à la suspension avant LIMIT.
+La valeur `status=active` conserve son contrat « non suspendu » et son libellé
+est précisé en conséquence. Une ligne non suspendue mais non confirmée indique
+« Adresse à confirmer » plutôt que « Actif ». Aucun statut de compte n’est changé.
+Le formulaire GET, les fragments AJAX et les liens de pagination conservent
+le critère ; aucun chargement global ni nouvelle colonne n’est ajouté.
+
+### Pourquoi le renvoi administratif attend un lot de fiabilisation
+
+Lecture de `SecurityController::resendVerification` et
+`EmailVerificationService::sendWelcomeAndVerification` :
+
+1. La limite publique est attachée à l’IP dans le contrôleur, pas au compte
+   dans un service partagé. Un appel admin direct la contournerait.
+2. L’invalidation des anciens jetons et la création du suivant se font sous
+   verrou, mais le transport intervient ensuite, hors transaction. Deux
+   renvois peuvent donc créer/invalider des liens dans un ordre différent
+   de leur réception. C’est un risque déduit du code, pas une course reproduite.
+3. Aucun reçu persistant de demande admin, ni clé idempotente commune, ni état
+   d’envoi par compte n’existe. Un arrêt après acceptation SMTP ne permet pas
+   de décider sans risque si un réessai serait un doublon.
+4. Le service retourne un booléen d’acceptation de transport, pas une preuve
+   de réception. Les logs sont expurgés et non corrélables au compte depuis
+   cette fiche. Réutiliser ces logs comme un historique serait trompeur.
+
+Le lot préalable devra définir un cycle de demande commun public/admin,
+un cooldown atomique par compte, les transitions et reçus idempotents,
+les états inconnus après interruption, puis tests de concurrence réelle et
+transport simulé. Une éventuelle migration sera préparée, non appliquée sur
+base existante sans sauvegarde et autorisation. L’audit conservera motif,
+acteur, cible et résultat sans token, adresse, corps ou erreur SMTP brute.
+Pas de faux bouton « envoyé », de contournement du parcours public ou de
+modification opportuniste de l’authentification dans cet incrément.
+
+Vérifications de l’incrément : syntaxe PHP des deux fichiers applicatifs et du
+test, Twig des deux fragments réussis ; 5 tests / 252 assertions réussis
+(`AdminAccountDiagnosticTest`, `AdminPaginationTest`, `AdminDedicatedPagesTest`).
+Fixture de 52 comptes en attente : 50 + 2 résultats, critères combinés, retour
+fragmentaire sans cache et conservation du filtre dans la pagination.
+Recette visuelle/clavier à effectuer, aucune conformité globale revendiquée.

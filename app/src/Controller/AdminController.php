@@ -63,6 +63,7 @@ final class AdminController extends AbstractController
         $listFilters = [
             'q' => mb_substr(trim($request->query->getString('q')), 0, 150),
             'status' => in_array($request->query->getString('status'), ['active', 'suspended', 'scheduled', 'closed'], true) ? $request->query->getString('status') : '',
+            'verification' => in_array($request->query->getString('verification'), ['confirmed', 'pending'], true) ? $request->query->getString('verification') : '',
             'role' => in_array($request->query->getString('role'), ['admin', 'player'], true) ? $request->query->getString('role') : '',
             'action' => mb_substr($request->query->getString('action'), 0, 80),
         ];

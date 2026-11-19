@@ -2078,3 +2078,7 @@ sans envoi ni correction de progression. Renvoi administrateur sécurisé,
 historique persistant des emails et interventions métier restent à réaliser.
 Intégration, CI complète et déploiement non effectués.
 Voir [ADMIN_SUPPORT_COMPTES.md](ADMIN_SUPPORT_COMPTES.md).
+
+Incrément support : recherche des inscriptions non confirmées depuis la liste,
+combinable au rôle et à la suspension, avant pagination. Le renvoi administratif
+attend le cycle commun idempotent documenté ; aucun email réel envoyé.

@@ -139,4 +139,42 @@ final class AdminAccountDiagnosticTest extends WebTestCase
         self::assertSelectorTextContains('[data-account-link="verification"]', 'Non nécessaire');
         self::assertSelectorNotExists('#account-diagnostic a[href="/inscription/renvoyer"]');
     }
+    public function testPendingFilterIsAppliedBeforePaginationAndCombinedWithStatus(): void
+    {
+        $client = self::createClient([], ['HTTP_HOST' => 'genesis-reborn.localhost']);
+        $em = $this->resetSchema();
+        $admin = $this->player($em, 'FilterAdmin', true, true);
+        for ($index = 0; $index < 52; ++$index) {
+            $pending = $this->player($em, 'PendingFilter'.$index);
+            if ($index === 0) {
+                $pending->lockedAt = new \DateTimeImmutable();
+            }
+        }
+        $em->flush();
+        $reads = self::getContainer()->get(\App\Repository\AdminReadRepository::class);
+        $filters = ['q' => '', 'status' => '', 'role' => '', 'verification' => 'pending'];
+        self::assertSame(52, $reads->players($filters, 1)['total']);
+        self::assertCount(50, $reads->players($filters, 1)['entries']);
+        self::assertCount(2, $reads->players($filters, 2)['entries']);
+        self::assertSame(1, $reads->players(array_replace($filters, ['status' => 'suspended']), 1)['total']);
+        self::assertSame(51, $reads->players(array_replace($filters, ['status' => 'active']), 1)['total']);
+        self::assertSame(0, $reads->players(array_replace($filters, ['role' => 'admin']), 1)['total']);
+        self::assertSame(1, $reads->players(array_replace($filters, ['verification' => 'confirmed']), 1)['total']);
+        $client->loginUser($admin);
+        $crawler = $client->request('GET', '/admin/joueurs?verification=pending&page=2');
+        self::assertResponseIsSuccessful();
+        self::assertCount(2, $crawler->filter('tr[data-admin-filter-target="row"]'));
+        self::assertSelectorExists('#player-verification-filter option[value="pending"][selected]');
+        self::assertSelectorTextContains('.admin-player-status', 'Adresse à confirmer');
+        self::assertSelectorExists('a[href*="verification=pending"]');
+        $crawler = $client->request('GET', '/admin/joueurs?verification=pending&status=suspended', [], [], ['HTTP_X_GENESIS_ADMIN_LIST' => '1']);
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $crawler->filter('tr[data-admin-filter-target="row"]'));
+        self::assertSelectorTextContains('.admin-player-status', 'Suspendu');
+        self::assertTrue($client->getResponse()->headers->hasCacheControlDirective('no-store'));
+        $crawler = $client->request('GET', '/admin/joueurs?verification=invalid');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('[role="status"]', '53 résultats');
+    }
+
 }

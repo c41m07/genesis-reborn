@@ -51,7 +51,7 @@ L’orientation confirmée est une stratégie au rythme modéré ; les durées d
 
 ## État du projet
 
-- Administration : la fiche joueur distingue confirmation, suspension et échéances des liens de compte, sans exposer de secret ni prétendre mesurer la réception des emails. [Diagnostic et limites](docs/ADMIN_SUPPORT_COMPTES.md).
+- Administration : la liste filtre les adresses confirmées ou en attente et la fiche joueur distingue confirmation, suspension et échéances des liens de compte, sans exposer de secret ni prétendre mesurer la réception des emails. [Diagnostic et limites](docs/ADMIN_SUPPORT_COMPTES.md).
 
 - Déblocages initiaux des bâtiments. Le chantier exige ses producteurs de métal et de nano au niveau 2 du même rang et les chantiers précédents au niveau 20. Le bunker demande ces producteurs au niveau 1 et les bunkers précédents au niveau 8. Les laboratoires avancés exigent les laboratoires des rangs précédents au niveau 10. L’hydrogène demande la recherche industrielle du rang au niveau 3, et l’antimatière au niveau 5. [Grille complète des déblocages](docs/DEBLOCAGES.md#bâtiments--13)
 

@@ -1190,3 +1190,7 @@ lectures bornées). `AdminAccountDiagnosticService` compare à une même horloge
 et distingue compte confirmé et lien résiduel. Le panneau de la fiche joueur
 réutilise les droits et la trace de consultation ; il ne réalise aucun envoi
 ni écriture de jeton. Voir [le périmètre et les limites](ADMIN_SUPPORT_COMPTES.md).
+
+`AdminReadRepository::players` applique aussi le critère `verification` avant
+pagination ; `AdminController` n’admet que `confirmed` et `pending`. Les
+fragments et liens GET gardent ce critère, indépendamment de la suspension.
