@@ -21,13 +21,29 @@
                 {% set count = leveled ? card.level : card.quantity %}
                 {% set compactCount = leveled ? count|number_format(0, ',', ' ') : count|compact_number %}
                 {% set stockStatus = leveled ? 'Niveau '~card.level : card.quantity|number_format(0, ',', ' ')~' unités possédées' %}
-                {% set upgradeable = not vacation and not locked and not card.maximum and affordable and not queueFull and not card.capacity_full|default(false) %}
+                {% set missingLocalLaboratory = card.missing_research_laboratory|default(null) %}
+                {% set upgradeable = not missingLocalLaboratory and not vacation and not locked and not card.maximum and affordable and not queueFull and not card.capacity_full|default(false) %}
                 {% set tabId = 'building-tab-'~slug~'-'~card.tier %}
                 <a id="{{ tabId }}" href="#item-{{ slug }}-{{ card.tier }}" class="building-rank-tab {{ locked ? 'is-locked' : '' }}" data-building-catalog-target="tab" data-tier="{{ card.tier }}" data-locked="{{ locked ? 'true' : 'false' }}" data-action="building-catalog#select keydown->building-catalog#navigate" aria-labelledby="{{ tabId }}-name {{ tabId }}-count" aria-describedby="{{ tabId }}-status" {% if locked and not show_locked_items %}hidden{% endif %}>
                     <span id="{{ tabId }}-name"><span class="building-rank-full">{{ card.definition._tier_label }}</span><span class="building-rank-short">{{ {basic:'Basique',intermediate:'Interm.',superior:'Sup.'}[card.tier] }}</span></span>
                     {# Le verrou porte sur les nouvelles commandes, pas sur les possessions conservées. #}
                     <span class="building-rank-indicators" aria-hidden="true">{% if locked and count == 0 %}<span id="{{ tabId }}-count" class="building-rank-cross">×</span>{% else %}{% if upgradeable %}<span class="building-rank-up">{{ ui.icon('arrow') }}</span>{% endif %}<span id="{{ tabId }}-count" class="building-rank-level" title="{{ count|number_format(0, ',', ' ') }} {{ leveled ? 'niveaux' : 'unités possédées' }}">{{ compactCount }}</span>{% endif %}</span>
-                    <span id="{{ tabId }}-status" hidden>{{ card.definition._tier_label }} · {{ locked ? (count > 0 ? stockStatus~' · ' : '')~'Rang verrouillé, consulter les prérequis' : stockStatus~(upgradeable ? (group=='buildings' ? ' · Amélioration disponible' : (group=='technologies' ? ' · Recherche disponible' : ' · Construction d’une unité disponible')) : (card.maximum ? ' · Niveau maximum atteint' : (vacation ? ' · Mode vacances, commandes suspendues' : (queueFull ? ' · File pleine' : (card.capacity_full|default(false) ? ' · Aucune place de satellite disponible' : ' · Ressources insuffisantes'))))) }}</span>
+                    <span id="{{ tabId }}-status" hidden>
+                        {{ card.definition._tier_label }} ·
+                        {% if locked %}
+                            {% if count > 0 %}{{ stockStatus }} · {% endif %}Rang verrouillé, consulter les prérequis
+                        {% else %}
+                            {{ stockStatus }} ·
+                            {% if card.maximum %}Niveau maximum atteint
+                            {% elseif missingLocalLaboratory %}{{ missingLocalLaboratory }} de niveau 1 requis sur cette colonie
+                            {% elseif upgradeable %}{{ {buildings:'Amélioration disponible', technologies:'Recherche disponible'}[group]|default('Construction d’une unité disponible') }}
+                            {% elseif vacation %}Mode vacances, commandes suspendues
+                            {% elseif queueFull %}File pleine
+                            {% elseif card.capacity_full|default(false) %}Aucune place de satellite disponible
+                            {% else %}Ressources insuffisantes
+                            {% endif %}
+                        {% endif %}
+                    </span>
                 </a>
             {% endfor %}
         </nav>
@@ -51,6 +67,14 @@
                     {% if card.maximum or card.failures or vacation %}<div class="catalog-blocked">{% endif %}
                     {% if card.maximum %}<p class="requirement complete">{{ ui.icon('check') }} Niveau maximum atteint</p>
                     {% elseif card.failures %}<p class="requirement">{{ ui.icon('diplomacy') }} <span>Nécessite : {% for requirement in card.details.requirements|filter(requirement => not requirement.met) %}<a href="{{ path('app_colony',{id:planet.id,section:requirement.group,showLockedItems:1,focusItem:1}) }}#item-{{ requirement.slug }}-{{ requirement.rank }}">{{ requirement.label }} · {{ requirement.tier }}{% if requirement.required is not null %} · niveau {{ requirement.required }}{% endif %}</a>{% if not loop.last %}, {% endif %}{% else %}{{ card.failures|join(', ') }}{% endfor %}</span></p>
+                    {% elseif card.missing_research_laboratory|default(null) %}
+                        <p class="requirement">
+                            {{ ui.icon('diplomacy') }}
+                            <span>Installez le bâtiment
+                                <a href="{{ path('app_colony', {id: planet.id, section: 'buildings', showLockedItems: 1, focusItem: 1, _fragment: 'item-lab-' ~ card.tier}) }}">{{ card.missing_research_laboratory }} de niveau 1</a>
+                                sur cette colonie pour lancer la recherche.
+                            </span>
+                        </p>
                     {% elseif vacation %}<p class="requirement">Mode vacances : les constructions et recherches sont suspendues.</p>
                     {% else %}
                         {% set missingResources = [] %}

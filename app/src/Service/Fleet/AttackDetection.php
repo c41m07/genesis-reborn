@@ -9,10 +9,18 @@ final class AttackDetection
 {
     public function __construct(private GameRepository $repo,private GameCatalog $catalog) {}
 
-    public static function warningSeconds(int $level,int $travelSeconds): int
+    public static function warningSeconds(int $level, int $travelSeconds): int
     {
-        // Dès 23 niveaux cumulés, le plafond de deux heures est atteint ; ce n’est pas un plafond de recherche.
-        return min(300+300*max(0,min(23,$level)),7200,intdiv(max(0,$travelSeconds),2));
+        $travelSeconds = max(0, $travelSeconds);
+        // Calculer les trois quarts en secondes entières, même pour le trajet
+        // maximal utilisé pour afficher le préavis théorique dans le catalogue.
+        $travelCap = intdiv($travelSeconds, 4) * 3 + intdiv(($travelSeconds % 4) * 3, 4);
+        $secondsPerLevel = 300;
+
+        // Au-delà de ce niveau, le préavis atteint déjà le plafond du trajet.
+        $usefulLevel = min(max(0, $level), intdiv($travelCap, $secondsPerLevel));
+
+        return min(1800 + $secondsPerLevel * $usefulLevel, $travelCap);
     }
 
     public function level(PlayerUniverse $member): int

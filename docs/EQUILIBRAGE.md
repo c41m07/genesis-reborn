@@ -1,9 +1,26 @@
 # Réglages et études d’équilibrage
 
-## Répartition retenue — 16 novembre 2026
+## Équilibrage des prix Basiques et Intermédiaires
+
+La grille de valeur passe à B48/52 et I35/35/30. S25/35/30/10 reste appliqué.
+À vitesse ×1 en position 5, le parcours économique jusqu’aux niveaux cibles
+B25/I10 passe de 134,3 h à 114,1 h. Les attentes de métal et de nano passent
+respectivement de 14,6 h et 99,9 h à 51,2 h et 54,4 h.
+
+Depuis la même infrastructure, le financement de 100 chasseurs Intermédiaires
+passe de 3,6 h d’attente de nano à 4,8 h d’attente d’antimatière. Dans le parcours
+jusqu’au Supérieur 10, son premier accès passe de 81,8 h à 65,7 h. Une flotte
+composée de 50 chasseurs, 10 frégates et 2 cuirassés Supérieurs demande 21,4 h
+d’attente d’antimatière et 0,8 h d’hydrogène avec la nouvelle grille.
+
+Les simulations sont hors base et excluent raids, échanges et carburant des
+flottes actives. Les attentes par ressource peuvent se chevaucher entre
+files. Les prix détaillés et les budgets conservés sont dans [COUTS.md](COUTS.md).
+
+## Répartition retenue le 16 novembre 2026, référence historique
 
 Après les études, l’utilisateur retient B40/60, I30/50/20 et S25/35/30/10.
-La [grille courante](COUTS.md) conserve exactement les 156 budgets de base et tous
+Cette grille conservait exactement les 156 budgets de base et tous
 les paramètres hors prix. Cette décision remplace les recommandations préalables
 ci-dessous, conservées comme résultats datés. Les courbes et arrondis habituels restent
 appliqués ; paiements existants et surcharges d’univers restent préservés.
@@ -168,7 +185,22 @@ La transposition de R14 est contrôlée ; la branche complète ne peut pas être
 
 ## Production des bâtiments
 
-### Production confirmée — 9 novembre 2026
+### Production et progression des bâtiments — 18 novembre 2026
+
+Le doublement initial de la production de nano et de sa consommation électrique
+nominale a été annulé. À position 5 dans un univers ×1, les deux débits sont
+de 180, 270 et 405 par niveau et par heure, à plein rendement. La production
+passive de référence est de 10 nano/h. Les règles de pénurie, de saturation et
+les surcharges d’univers continuent de s’appliquer. Lors d’un déploiement, la
+production en attente depuis le dernier calcul enregistré utilise les nouveaux
+débits de référence. Les nouveaux déblocages sont détaillés dans la [grille courante](DEBLOCAGES.md#bâtiments--13).
+
+Le piège à antimatière consomme directement 90 électricité/h par niveau Basique
+pour une production de 90 AM/h à vitesse ×1. Ses 360 H/h représentent
+90 électricité/h de plus lorsqu’ils viennent d’une raffinerie à plein rendement.
+Le total de référence est de 2 électricité par AM, comme pour 8 H, 4 M ou 2 N.
+
+### Référence historique — production du 9 novembre 2026
 
 L’utilisateur confirme le candidat et son rythme après comparaison avec le catalogue actuel. Le lot est préparé sur `codex/equilibrage-production-basique`, issue de `dev`, sans fusion ni déploiement. Valeurs à vitesse ×1, position 5, à plein rendement et hors production passive :
 

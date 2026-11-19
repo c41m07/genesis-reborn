@@ -19,12 +19,22 @@ des réservations existantes ni migration de base n’est nécessaire.
 La réalisation locale L7C conserve les deux dispositions, le moteur animé existant
 et les protections de visibilité. CI, fusion et déploiement restent distincts.
 
-## Grille de coûts retenue — décision explicite du 16 novembre 2026
+## Équilibrage des prix des deux premiers rangs
+
+L’utilisateur valide les parts de valeur **B48/52/0/0, I35/35/30/0 et S25/35/30/10**
+pour les 52 fiches du catalogue de référence. Le Basique réduit la pression sur
+le nano et l’Intermédiaire transfère une part du coût vers l’antimatière. Les prix
+Supérieurs et les 156 budgets de base sont conservés, ainsi que les paiements
+enregistrés et la priorité des surcharges. La [grille détaillée](COUTS.md) et les
+[simulations](EQUILIBRAGE.md#équilibrage-des-prix-basiques-et-intermédiaires)
+documentent les prix et les parcours comparés.
+
+## Grille de coûts retenue le 16 novembre 2026, référence historique
 
 L’utilisateur retient B40/60, I30/50/20 et S25/35/30/10 en parts de valeur
 métal/nano/antimatière/hydrogène après lecture des simulations. Cette décision
 remplace les recommandations et statuts « candidat non activé » des études précédentes.
-Les [tableaux courants](COUTS.md) couvrent les 52 familles et 156 profils, civils inclus.
+Le catalogue couvre 52 familles et 156 profils, civils inclus.
 Les budgets réels de base sont exactement conservés, sans nouveau facteur de rang.
 
 Les courbes, réductions, deux étapes d’arrondi par ressource, durées, taxe E, bonus,
@@ -371,7 +381,7 @@ l’accès à de nouvelles commandes. Le registre est requalifié explicitement,
 sans réattribuer un accès à partir d’une ancienne possession, clé ou commande.
 Après acquisition selon cette grille, les accès restent permanents dans leur
 portée actuelle : recherches par joueur/univers, autres catégories par joueur/colonie.
-Le laboratoire est une condition initiale ; il n’est pas requis localement après déblocage.
+Le laboratoire était une condition initiale, sans obligation locale après déblocage. La décision du 18 novembre ajoute un minimum local pour les nouvelles commandes.
 
 Le [suivi](PROGRESSION_CARBURANT_UNITES.md) distingue cette implémentation des
 lots durées/carburant, unités économiques et simulations. La redistribution
@@ -1456,7 +1466,7 @@ les signalements figurent ci-dessous. Voir le [suivi](EVOLUTIONS_INTERFACES_FLOT
 
 ### Précisions confirmées dans la même session
 
-- Préavis d’attaque : niveau effectif = somme simple des trois rangs pour ce seul
+- Préavis d’attaque (règle historique, révisée le 18 novembre 2026) : niveau effectif = somme simple des trois rangs pour ce seul
   préavis. Formule validée : min(5 + 5 × niveau effectif, 120 minutes,
   50 % de la durée totale du trajet). Les effets pondérés sur l’espionnage et la
   détection à l’arrivée sont conservés. À la détection : planète ciblée et
@@ -1809,6 +1819,15 @@ prérequis des autres rangs, coûts, durées, plafonds et bonus restent conserv�
 Les surcharges explicites d’univers ne sont pas modifiées. Pas de migration,
 de modification des données de jeu ou de déploiement Alpha.
 
+## Préavis de détection des attaques — 18 novembre 2026
+
+Le préavis est de 30 minutes, plus 5 minutes par niveau cumulé des trois rangs
+d’Analyse tactique. Il est limité à 75 % du trajet aller, arrondis à la seconde
+inférieure. Cette décision retire l’ancien plafond fixe de deux heures.
+Le départ enregistré et l’arrivée actuelle déterminent le trajet pris en compte,
+y compris pour les vols déjà partis. Les droits d’affichage et les effets
+d’Analyse tactique sur l’espionnage suivent les règles existantes.
+
 ## 16 novembre 2026 — bunker accessible et unités civiles par rang
 
 Décision explicite utilisateur, appliquée directement sur dev local : le chantier
@@ -2112,3 +2131,73 @@ conditions d’accès, conséquences et contrôles transactionnels sont conserv�
 La consultation du bilan garde sa synchronisation des files sous verrou.
 Cette validation ne valide pas les lots suivants.
 [Recette et limites](REFONTE_VISUELLE_INTERFACES.md).
+
+## Prérequis du Piège à antimatière — 18 novembre 2026
+
+Pour chaque rang du piège, la colonie doit avoir le producteur d’hydrogène
+du même rang au niveau 5 et le joueur doit avoir la recherche Génie civil colonial
+du même rang au niveau 2 dans l’univers. Cette décision remplace la condition
+hydrogène 3 et laboratoire 2. Le laboratoire niveau 1 du même rang reste le
+prérequis initial de la recherche. Les accès au piège déjà acquis sont conservés.
+
+Aux rangs Intermédiaire et Supérieur, le déblocage du producteur d’hydrogène
+exige déjà la même recherche au niveau 5. Le seuil 2 du piège reste explicite
+pour les trois rangs.
+
+## Progression des stockages — 18 novembre 2026
+
+Pour les cinq ressources, chaque stockage conserve le producteur local du
+même rang au niveau 5 comme prérequis initial. L’Intermédiaire exige aussi le
+stockage Basique de la même ressource au niveau 5. Le Supérieur exige ses
+stockages Basique et Intermédiaire au niveau 5. Le niveau maximum des nouvelles
+commandes est 5 en Basique et en Intermédiaire. Le Supérieur reste illimité.
+Les accès acquis, les niveaux existants, leur capacité et les opérations déjà
+payées sont conservés. Le registre garde sa version actuelle.
+
+## Équilibrage de la progression des bâtiments — 18 novembre 2026
+
+L’utilisateur valide la grille présentée avant implémentation. L’hydrogène exige
+la recherche industrielle du même rang au niveau 3 (et ses raffineries des
+rangs précédents aux niveaux 25 puis 50/25). Le piège à antimatière exige cette
+recherche au niveau 5 et la raffinerie du même rang au niveau 5. Le chantier
+demande le niveau 20 de chacun de ses rangs précédents, le bunker le niveau 8,
+en plus des producteurs de métal et de nano du rang visé. Le laboratoire avancé
+demande le niveau 10 de chacun de ses rangs précédents et la recherche
+industrielle du rang précédent au niveau 5.
+
+La production et la consommation électrique du nano doublent à tous les rangs.
+À position 5 dans un univers ×1, les débits nominaux par niveau et par heure
+passent de 180/270/405 à 360/540/810. La production passive est indépendante.
+Le lot reprend les stockages déjà livrés dans dev. Le registre conserve sa
+version, les accès acquis restent valides et les commandes payées se terminent
+selon leurs paramètres enregistrés.
+
+### Retour aux débits du nano précédents — 18 novembre 2026
+
+L’utilisateur décide de rétablir la production et la consommation électrique
+de l’atelier de nanofabrication à 180, 270 et 405 unités par heure et par niveau
+pour les rangs Basique, Intermédiaire et Supérieur, en position 5 et à vitesse ×1.
+La production brute des usines de même rang et de même niveau retrouve le ratio
+8 hydrogène : 4 métal : 2 nano : 1 antimatière dans ces conditions.
+
+## Consommation électrique de l’antimatière
+
+L’utilisateur valide une consommation directe de 0,025 électricité par seconde
+et par niveau Basique pour le piège. À plein rendement, avec 4 H consommés
+par AM et 0,25 électricité par H produit en raffinerie, le coût total atteint
+2 électricité par AM. Il correspond au coût de production de 8 H, 4 M ou 2 N.
+Les facteurs de rang continuent de s’appliquer à la production et à la
+consommation. Les débits ci-dessus sont ceux du catalogue de référence.
+
+## Laboratoire local pour lancer une recherche — 18 novembre 2026
+
+Toute nouvelle commande exige un laboratoire du même rang que la recherche,
+au niveau 1 ou plus sur sa colonie de lancement. Les déblocages et les niveaux
+de recherche sont partagés dans l’empire au sein du même univers. Les
+laboratoires avancés demandent la recherche du rang précédent et les niveaux
+locaux de la grille. Les constructions utilisent les technologies de l’empire
+selon leurs propres prérequis.
+
+La file reste commune. La colonie de lancement finance la commande et
+fournit les bonus de durée. Les commandes déjà payées poursuivent leur
+exécution avec leur coût et leur durée enregistrés.

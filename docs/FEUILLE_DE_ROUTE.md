@@ -262,6 +262,27 @@ de 179 tests et 13 tests Python. Le plan est à **18/18 réalisés et vérifiés
 La CI complète avant fusion reste distincte ; bilan détaillé et limites dans le suivi.
 CI GitHub, fusion et déploiement restent distincts.
 
+## Laboratoire local pour lancer une recherche — 18 novembre 2026
+
+Le catalogue Recherche indique, sur le rang déjà débloqué, quel laboratoire
+local manque pour lancer la commande. Le lien ouvre sa fiche sur la même
+colonie. La file commune et les fiches restent consultables.
+La [règle de lancement](REGLES.md) s’applique aussi côté serveur.
+
+## Équilibrage des prix et de l’antimatière
+
+La [grille de référence](COUTS.md) passe à B48/52 et I35/35/30. Les prix
+Supérieurs et les 156 budgets restent identiques. La consommation directe
+du piège Basique passe à 90 électricité/h par niveau à vitesse ×1. Les
+[simulations](EQUILIBRAGE.md#équilibrage-des-prix-basiques-et-intermédiaires)
+mesurent la pression sur les stocks dans des parcours sans raid ni échange.
+
+## Préavis de détection des attaques — 18 novembre 2026
+
+Le [préavis des attaques entrantes](REGLES.md#préavis-dattaque-et-visibilité--lot-h)
+passe à 30 minutes plus 5 minutes par niveau cumulé d’Analyse tactique, dans la
+limite de 75 % du trajet aller. Le seuil est recalculé lorsque l’arrivée change.
+
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026
 
 Lot 1 fusionné dans `dev` par la [PR #69](https://github.com/c41m07/genesis-reborn/pull/69)
@@ -300,6 +321,33 @@ Les contrôles locaux, les relances des cas corrigés, les lints et six parcours
 navigateur ciblés réussissent. Publication et fusion conditionnelle autorisées dans la [PR #73](https://github.com/c41m07/genesis-reborn/pull/73).
 La CI complète sur la dernière révision est requise avant fusion ; aucune migration de données
 ni livraison Alpha. Les recommandations précédentes ne remplacent pas cette décision.
+
+## Équilibrage de la progression des bâtiments — 18 novembre 2026
+
+Le doublement des débits du nano a été annulé. La production et la consommation
+électrique reviennent à 180, 270 et 405 par niveau et par heure selon le rang en
+position 5 à vitesse ×1. Nouveaux seuils pour la
+raffinerie d’hydrogène, le piège à antimatière, le chantier, le bunker et le
+laboratoire. Les cartes et le guide existants présentent les niveaux requis.
+Le graphe des 156 profils est vérifié avec les plafonds de référence. Les délais
+réels de progression ne sont pas mesurés. [Grille des déblocages](DEBLOCAGES.md#bâtiments--13)
+
+La consommation directe du piège à antimatière est ramenée à 90 électricité/h
+par niveau Basique à vitesse ×1. Le coût total de production de 1 AM, hydrogène
+inclus, rejoint celui de 8 H, 4 M ou 2 N à plein rendement.
+
+## Progression des stockages — 18 novembre 2026
+
+Les cinq stockages avancés exigent le niveau 5 de chacun de leurs rangs
+précédents. Les nouvelles commandes Basiques et Intermédiaires sont plafonnées
+à 5. Les cartes et les fiches existantes affichent les conditions de la colonie
+et le plafond du rang. Voir [la grille](DEBLOCAGES.md#bâtiments--13).
+
+## Prérequis du Piège à antimatière — 18 novembre 2026
+
+Le [déblocage par rang](DEBLOCAGES.md#bâtiments--13) exige le producteur
+d’hydrogène niveau 5 sur la colonie et la recherche industrielle du même rang
+au niveau 2. Les accès acquis sont conservés.
 
 ## Prérequis des producteurs et du laboratoire — 17 novembre 2026
 

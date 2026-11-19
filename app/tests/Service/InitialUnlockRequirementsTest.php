@@ -17,10 +17,11 @@ final class InitialUnlockRequirementsTest extends TestCase
                 $requirements=$checker->forTier($base,$tier);
                 foreach([1,2,3,6,10,25,80,120,200] as $level)self::assertSame($requirements,$checker->forTier($base,$tier,$level));
                 foreach(['buildings','technologies'] as $kind)foreach($requirements[$kind]??[] as $r){
-                    $parent=$catalog->get($kind,$r['slug']);$rank=$r['tier']??'basic';
+                    $rank = $r['tier'] ?? 'basic';
+                    $parent = $catalog->withTier($catalog->get($kind, $r['slug']), $rank);
                     self::assertLessThanOrEqual($parent['effect']['tier_max_levels'][$rank]??$parent['max_level']??PHP_INT_MAX,$r['level'],"$group/$slug/$tier");
                 }
-                $pending[$group.':'.$slug.':'.$tier]=[$group,$slug,$tier,$base,$requirements];
+                $pending[$group.':'.$slug.':'.$tier]=[$group,$slug,$tier,$catalog->withTier($base, $tier),$requirements];
             }
         }
         self::assertCount(156,$pending);

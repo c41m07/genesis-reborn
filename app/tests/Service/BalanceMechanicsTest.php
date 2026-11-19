@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 final class BalanceMechanicsTest extends TestCase
 {
     // Références : ln(1 + 2 × investissement pondéré) / ln(3), poids 1/1,25/1,5625.
-    // Plafonds communs aux trois rangs ; profils de combat R14 et coûts retenus le 16 novembre.
+    // Plafonds communs aux trois rangs ; profils de combat R14 et coûts du catalogue courant.
     private function catalog(): GameCatalog
     {
         return new GameCatalog(dirname(__DIR__, 2) . '/config/game');
@@ -59,7 +59,7 @@ final class BalanceMechanicsTest extends TestCase
         );
 
         self::assertSame(159, $plan['duration']);
-        self::assertSame(['metal'=>1157,'nano'=>868,'antimatter'=>0,'hydrogen'=>0,'electricity'=>300],$plan['costs']);
+        self::assertSame(['metal'=>1388,'nano'=>752,'antimatter'=>0,'hydrogen'=>0,'electricity'=>300],$plan['costs']);
     }
 
     public function testTierCostProfilesIncreaseNonMetalValueShareWithoutPricingElectricity(): void
@@ -75,8 +75,8 @@ final class BalanceMechanicsTest extends TestCase
     public function testTierCostProfilesScaleTheReferenceBudget(): void
     {
         $catalog=$this->catalog();$fighter=$catalog->get('ships','fighter');$expected=[
-            'basic'=>['metal'=>1200,'nano'=>900,'antimatter'=>0,'hydrogen'=>0],
-            'intermediate'=>['metal'=>1124,'nano'=>938,'antimatter'=>188,'hydrogen'=>0],
+            'basic'=>['metal'=>1440,'nano'=>780,'antimatter'=>0,'hydrogen'=>0],
+            'intermediate'=>['metal'=>1314,'nano'=>657,'antimatter'=>281,'hydrogen'=>0],
             'superior'=>['metal'=>1172,'nano'=>821,'antimatter'=>352,'hydrogen'=>936],
         ];
         foreach($expected as $tier=>$costs)self::assertSame($costs,$catalog->costs($catalog->withTier($fighter,$tier)));
@@ -154,10 +154,26 @@ final class BalanceMechanicsTest extends TestCase
         self::assertSame([],$checker->check($checker->forTier($definition,'superior'),['lab'=>['superior'=>4]],['naval_engineering'=>['superior'=>3]]));
     }
 
-    public function testResourceAndStorageBuildingsHaveNoConfiguredLevelCap(): void
+    public function testOnlyTheFirstTwoStorageRanksHaveALevelCap(): void
     {
-        $catalog=$this->catalog();
-        foreach($catalog->all('buildings') as $building)if(isset($building['production_resource'])||isset($building['storage_resource']))self::assertArrayNotHasKey('max_level',$building,$building['slug']);
+        $catalog = $this->catalog();
+        $caps = ['basic' => 5, 'intermediate' => 5, 'superior' => null];
+
+        foreach ($catalog->all('buildings') as $building) {
+            if (!isset($building['production_resource']) && !isset($building['storage_resource'])) {
+                continue;
+            }
+            foreach ($caps as $tier => $cap) {
+                $definition = $catalog->withTier($building, $tier);
+                $expected = isset($building['storage_resource']) ? $cap : null;
+                $profile = $building['slug'].'/'.$tier;
+                if ($expected === null) {
+                    self::assertArrayNotHasKey('max_level', $definition, $profile);
+                } else {
+                    self::assertSame($expected, $definition['max_level'], $profile);
+                }
+            }
+        }
     }
 
     public function testLaboratoryLevelOneAppliesTheSharedDiminishingResearchTimeReduction(): void

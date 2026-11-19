@@ -17,12 +17,14 @@
         {
           "slug": "mine_hydrogen",
           "tier": "basic",
-          "level": 3
-        },
+          "level": 5
+        }
+      ],
+      "technologies": [
         {
-          "slug": "lab",
+          "slug": "engineering_foundations",
           "tier": "basic",
-          "level": 2
+          "level": 5
         }
       ]
     },
@@ -31,12 +33,14 @@
         {
           "slug": "mine_hydrogen",
           "tier": "intermediate",
-          "level": 3
-        },
+          "level": 5
+        }
+      ],
+      "technologies": [
         {
-          "slug": "lab",
+          "slug": "engineering_foundations",
           "tier": "intermediate",
-          "level": 2
+          "level": 5
         }
       ]
     },
@@ -45,30 +49,32 @@
         {
           "slug": "mine_hydrogen",
           "tier": "superior",
-          "level": 3
-        },
+          "level": 5
+        }
+      ],
+      "technologies": [
         {
-          "slug": "lab",
+          "slug": "engineering_foundations",
           "tier": "superior",
-          "level": 2
+          "level": 5
         }
       ]
     }
   },
   "hydrogen_per_output": 4,
-  "electricity_use_per_level": 0.05,
+  "electricity_use_per_level": 0.025,
   "economy_value_budget": 1200,
   "cost_profiles": {
     "basic": {
-      "metal": 240,
-      "nano": 180,
+      "metal": 288,
+      "nano": 156,
       "antimatter": 0,
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 226,
-      "nano": 188,
-      "antimatter": 37,
+      "metal": 264,
+      "nano": 131,
+      "antimatter": 56,
       "hydrogen": 0
     },
     "superior": {

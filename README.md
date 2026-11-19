@@ -5,7 +5,9 @@ par rang, avec requalification explicite des accès existants. Les quatre produc
 de départ demandent Basique 25 et recherche industrielle Intermédiaire 5 pour
 l’Intermédiaire, puis Basique 50, Intermédiaire 25 et recherche Supérieure 5 pour
 le Supérieur. Le laboratoire utilise la recherche du rang précédent et reste à
-25/25 pour son Supérieur ; les accès déjà acquis sont conservés. Les [durées et
+25/25 pour son Supérieur ; les accès déjà acquis sont conservés. Le Piège à
+antimatière se débloque avec le producteur d’hydrogène niveau 5 et la recherche
+Génie civil colonial niveau 2, tous deux du rang visé. Les [durées et
 consommations de carburant](docs/DUREES_CARBURANT.md) sont révisées par famille,
 avec conservation des commandes payées et des coefficients des missions lancées.
 Les [unités économiques](docs/UNITES_ECONOMIQUES.md) ajoutent des récolteurs mobiles
@@ -19,7 +21,7 @@ proposé au précédent, sans cumuler les niveaux déjà en file.
 Leur livraison pendant un combat rejoint les renforts locaux avec toute la flotte.
 Le [suivi de mission](docs/PROGRESSION_CARBURANT_UNITES.md) distingue les lots
 préparés, leur intégration, leur activation et les décisions encore ouvertes.
-La [grille de coûts retenue](docs/COUTS.md) est B40/60, I30/50/20 et S25/35/30/10,
+La [grille de coûts retenue](docs/COUTS.md) est B48/52, I35/35/30 et S25/35/30/10,
 en parts de valeur M/N/A/H. Budgets de base conservés et commandes payées inchangées.
 Les points suivent toujours les quantités brutes des prix courants : le classement
 et les protections liées aux points peuvent évoluer lors de leur recalcul.
@@ -46,7 +48,7 @@ L’orientation confirmée est une stratégie au rythme modéré ; les durées d
 
 ## État du projet
 
-- Bunker de défense : mine de métal 1 + atelier de nanofabrication 1 dans le rang demandé, sans chantier, laboratoire ni recherche supplémentaire. Le chantier spatial conserve métal 2 + nano 2 de son rang. Coûts, durées, plafonds et bonus défensifs conservés ; les surcharges propres aux univers restent applicables.
+- Déblocages initiaux des bâtiments. Le chantier exige ses producteurs de métal et de nano au niveau 2 du même rang et les chantiers précédents au niveau 20. Le bunker demande ces producteurs au niveau 1 et les bunkers précédents au niveau 8. Les laboratoires avancés exigent les laboratoires des rangs précédents au niveau 10. L’hydrogène demande la recherche industrielle du rang au niveau 3, et l’antimatière au niveau 5. [Grille complète des déblocages](docs/DEBLOCAGES.md#bâtiments--13)
 
 - Messagerie : panneaux de contacts et de conversation conservés, bulles reçues bleues et envoyées dorées, zone de rédaction accessible sur ordinateur et mobile. La recherche reste sur sa page dédiée, avec retour vers la conversation sélectionnée. Ctrl + Entrée envoie dans les canaux privé, guilde et Global ; Entrée conserve les sauts de ligne. Markdown sécurisé pour les nouveaux messages seulement, historique conservé en texte ; soumissions répétées protégées côté serveur. CommonMark est une dépendance Composer. [Guide et migration préparée](docs/MESSAGERIE_MARKDOWN.md).
 
@@ -75,13 +77,14 @@ Le code comprend :
 - Vue générale : alertes de la colonie avant la bannière, points et quatre raccourcis de l’empire regroupés ; accès aux bâtiments, à la recherche et aux chantiers depuis les files, puis suivi des arrivées et des vols personnels. Le journal conserve sa consultation explicite.
 - Classements joueurs : en-têtes cliquables pour les points totaux (par défaut), bâtiments, recherche, flotte et nombre de planètes ; rang et variation propres à chaque catégorie, tri global croissant ou décroissant avant pagination de 50 lignes, catégorie et sens conservés entre pages et au retour d’un signalement. Les colonnes non interactives des guildes ne portent pas de flèche de tri. Scores et guildes figés jusqu’au prochain minuit, heure de Paris (été/hiver inclus). Les écarts comparent les deux derniers calculs : dans le tableau joueur, (+N) en vert, (−N) en rouge, (= 0) si inchangé, (—) sans comparaison. Les signes et libellés accessibles complètent les couleurs. Les protections de combat restent en temps réel. Le relais existant initialise et actualise les instantanés persistés ; une lecture rattrape aussi une échéance manquée. Nouveaux joueurs et guildes apparaissent au prochain calcul.
 - Équilibrage des ressources : première planète à 10 000 de chaque ressource, colonies à 5 000 hors électricité selon le rang, stockage de base à 10 000 ; productions passives M10/E0/A0/H0/N10 par heure à position 5, univers ×1. Les règles s’appliquent directement au déploiement, sans date à configurer, y compris à toute la production en attente depuis le dernier calcul enregistré. Les stocks existants et leurs surplus sont conservés. Voir [les règles et la transition](docs/REGLES.md#ressources-initiales-et-production-passive--décision-du-10-novembre-2026).
+- Pour débloquer un stockage, le producteur de la ressource doit atteindre le niveau 5 au même rang. Les stockages Intermédiaire et Supérieur exigent aussi le niveau 5 de chaque rang précédent du même stockage. Les nouvelles améliorations sont plafonnées à 5 en Basique et en Intermédiaire. Le Supérieur reste illimité. Voir [la grille des déblocages](docs/DEBLOCAGES.md#bâtiments--13).
 - Interface partagée : les événements occupent leur propre zone sous la barre de ressources et défilent avec la page. Carte V2 : numéro, nom et statut des planètes alignés selon l’espace disponible ; les coordonnées des systèmes restent dans les panneaux et ne sont dessinées sur la carte qu’au survol ou au focus clavier d’un résultat de recherche de système.
 - Suivi des pages Bâtiments, Recherche, Chantier spatial et Défenses : activité en haut sur mobile et tablette ; flottes en vol masquées sur mobile (jusqu’à 740 px), conservées sur tablette. À partir de 1 251 px, activité et flottes sont regroupées à droite, activité au-dessus. L’ordre de lecture et l’actualisation en direct sont conservés.
-- Recherche : une file commune par joueur et par univers, accessible depuis toutes ses colonies, avec 30 commandes maximum. Chaque ajout utilise les ressources et le laboratoire de la colonie choisie ; coûts et durée restent fixés à cet instant. Les recherches déjà actives en parallèle sont conservées ; les suivantes attendent leur fin avant de se succéder.
+- Recherche : une file commune par joueur et par univers, accessible depuis toutes ses colonies, avec 30 commandes maximum. Chaque ajout exige un laboratoire de niveau 1 du même rang sur la colonie choisie. Le déblocage du rang est partagé dans l’univers. Coûts et durée sont fixés à la commande, à partir des ressources et des bonus de la colonie de lancement. Les recherches déjà actives en parallèle sont conservées ; les suivantes attendent leur fin avant de se succéder.
 - Boutons Max : lots de vaisseaux et défenses selon les ressources disponibles, sans plafond fixe de 100 ; sélection des vaisseaux dans les stocks et la limite de flotte de l’univers ; fret par ressource selon les stocks, les autres chargements et la soute restante après réservation du carburant. Les saisies excessives sont réduites automatiquement et revérifiées côté serveur.
 - Affichage des quantités : format compact dès 10 000, avec deux décimales et les suffixes k, M, Md et Bn ; valeur exacte au survol (et au focus des abréviations). Les niveaux, coordonnées, rangs, dates, durées et champs de saisie gardent leur format habituel.
 - Univers, colonies et ressources ; bâtiments, recherches, rangs et files de production ; progression traitée pendant la déconnexion.
-  - Production des usines rééquilibrée le 9 novembre : débits Basiques M360/N180/H720/A90 par heure et par niveau à position de référence, réacteur à 4 H/A et centrale à 1 080 électricité/h/niveau. Prix et temps de base révisés ; courbes et rangs conservés. Voir les [valeurs, simulations et limites](docs/EQUILIBRAGE.md#production-des-batiments). Cette intégration sur branche de travail ne vaut pas déploiement de l’Alpha.
+  - À position 5 en univers ×1, les producteurs Basiques fournissent, par niveau et par heure, 360 métal, 180 nano, 720 hydrogène et 90 antimatière. La centrale fournit 1 080 électricité. La production et la consommation électrique du nano sont de 180, 270 et 405 par niveau et par heure selon le rang. Le piège consomme directement 1 électricité et 4 hydrogène par antimatière produite, soit 2 électricité en incluant la production de cet hydrogène à plein rendement. [Valeurs de référence](docs/EQUILIBRAGE.md#production-et-progression-des-bâtiments--18-novembre-2026)
   - Guide technologique sans graphe : un domaine à la fois (économie, recherche, flotte, défense), six cartes initiales puis affichage des suivantes à la demande. Rang basique par défaut, recherche dans tous les domaines, filtres par rang et état. La sélection conserve les filtres ; les prérequis réels et étapes précédentes sont consultables dans la fiche, avec les déblocages regroupés par domaine et la prochaine étape conseillée. Un objectif peut être suivi dans ce navigateur, séparément par participation et colonie. Les accès permanents et les fiches sans JavaScript restent conservés.
   - Sur mobile, les cinq stocks restent visibles sur une seule ligne à droite de « Colonie active » sous forme compacte. Un clic sur la colonie déplie les stocks exacts, débits, rendements et jauges de stockage ; un second clic les replie.
   - Typographie du jeu harmonisée entre les thèmes : petits textes des catalogues et des files agrandis, champs de saisie à 16 px sur mobile et tablette, messages à 13 px. Les grands titres et les stocks mobiles compacts conservent leurs tailles.
@@ -624,10 +627,10 @@ nécessite accord explicite et sauvegarde vérifiée ; aucun déploiement Alpha.
 ### Détection des attaques et confidentialité des déplacements
 
 Analyse tactique additionne les niveaux de ses trois rangs pour le seul préavis
-d’attaque : min(5 + 5 × niveaux, 120 minutes, 50 % du trajet). L’espionnage et
+d’attaque : min(30 + 5 × niveaux, 75 % du trajet aller), en minutes. L’espionnage et
 la détection des sondes à l’arrivée conservent leurs effets pondérés actuels.
 Les plafonds du catalogue de l’univers sont pris en compte pour les informations
-de progression ; à 5/5/5, le préavis théorique atteint 80 minutes.
+de progression ; à 5/5/5, le préavis théorique atteint 105 minutes.
 
 Le cadre [Flottes entrantes](docs/FLOTTES_ENTRANTES.md) regroupe les arrivées d’autres
 commandants sur vos colonies : transports, renforts, orbites et attaques détectées.

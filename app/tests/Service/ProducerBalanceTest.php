@@ -22,6 +22,17 @@ final class ProducerBalanceTest extends TestCase
     protected function setUp():void
     {
         $this->catalog=\App\Tests\Support\ResourceCostReference::historicalCatalog();
+        // Les scénarios figés du 9 novembre utilisent les débits de leur catalogue de référence.
+        $referenceDefinitions = ProducerBalanceReference::fixture()['definitions'];
+        $referenceNano = $referenceDefinitions['mine_nano'];
+        $property = new \ReflectionProperty(GameCatalog::class, 'data');
+        $data = $property->getValue($this->catalog);
+        foreach (['production_per_level', 'electricity_use_per_level'] as $field) {
+            $data['buildings']['mine_nano'][$field] = $referenceNano[$field];
+        }
+        $data['buildings']['mine_antimatter']['electricity_use_per_level'] =
+            $referenceDefinitions['mine_antimatter']['electricity_use_per_level'];
+        $property->setValue($this->catalog, $data);
         $repository=$this->createStub(EntityRepository::class);$repository->method('findBy')->willReturn([]);
         $em=$this->createStub(EntityManagerInterface::class);$em->method('getRepository')->willReturn($repository);
         $repo=new GameRepository($em);$manager=new GameManager($em);$clock=new MockClock('2026-11-09T12:00:00Z');
