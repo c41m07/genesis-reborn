@@ -326,3 +326,52 @@ et peut avoir accepté un message avant l’exception. Restent aussi la relectur
 d’éligibilité immédiatement avant transport, stratégie de confidentialité du
 payload, intégration du parcours public/inscription, droits/CSRF/audit admin,
 et résolution opérateur des états indéterminés. Le bouton reste fermé.
+
+
+## Preuve supplémentaire par pannes injectées (tests seulement)
+
+Aucun adaptateur de production inutilisé n’est ajouté. Le harnais de tests
+simule les frontières du futur adaptateur autour du cycle existant. Une panne
+Doctrine `onFlush` avant commit de revendication vérifie un rollback réel :
+aucun secret propriétaire retourné, état réservé en base, aucune lease ni
+empreinte propriétaire persistée ; nouvelle unité de travail puis revendication
+possible. Un objet Doctrine muté avant rollback ne sert jamais de preuve.
+
+Quatre scénarios supplémentaires : arrêt avant préparation, après préparation
+fictive mais avant transport, exception ambiguë pendant l’appel factice, et
+arrêt après acceptation fictive avant finalisation. Les deux premiers comptent
+zéro appel de transport ; les deux suivants exactement un. Après passage en
+indéterminé, deux reprises ne peuvent plus revendiquer et n’effectuent aucun
+appel supplémentaire ; une nouvelle clé reste bloquée après cooldown. Les
+arrêts ne produisent pas de faux succès et le propriétaire tardif ne peut plus
+faire passer le reçu en accepté.
+
+Ce harnais ne génère pas de vrai jeton, ne prépare pas de vrai email et
+n’appelle pas le service public. Il prouve les transitions du reçu et leur
+résistance aux scénarios simulés, pas la délivrabilité ou le raccordement au
+mailer historique. `VerificationRequestReservationTest` : **11 tests / 83
+assertions réussis**, comprenant migrations jetables et compétition réelle
+multiprocessus déjà ajoutées. Base et réseau dédiés supprimés après recette.
+Aucun fichier applicatif ni migration supplémentaire dans cette passe.
+
+### Décisions opérationnelles encore nécessaires avant raccordement
+
+- Politique commune : durée de cooldown par compte et éventuel quota glissant
+  additionnel, appliqués à inscription/public/admin ; ne pas reprendre les
+  300 secondes de fixture comme décision de production.
+- Lease du worker : durée bornée compatible avec timeout transport et arrêt
+  du worker ; l’expiration ne déclenche jamais automatiquement un nouvel envoi.
+- Rétention : durée des reçus terminaux et fenêtre contractuelle de replay.
+  Pas de purge avant définition de cette fenêtre ; les reçus indéterminés ne
+  doivent pas être purgés pour débloquer implicitement un compte.
+- Résolution manuelle : qui peut examiner un résultat indéterminé, quelles
+  preuves de transport sont disponibles et quelle confirmation autorise un
+  nouvel essai avec risque explicite de doublon. Ni « reçu par le joueur » ni
+  « certainement non envoyé » ne peuvent être déduits d’une simple exception.
+- Données privées : décider si la préparation reste éphémère ou si un payload
+  durable est indispensable ; protection et suppression à définir avant de
+  stocker une adresse ou un lien d’activation dans une file.
+- Intégration : motif/acteur/audit admin, droits/CSRF, réponse publique neutre,
+  remplacement du retry aveugle du mailer pour ce nouveau circuit, sauvegarde
+  vérifiée et application autorisée des deux migrations. Aucune de ces actions
+  n’est activée par les tests présents.

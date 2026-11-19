@@ -163,6 +163,108 @@ final class VerificationRequestReservationTest extends KernelTestCase
         self::assertNull($em->find(VerificationDeliveryRequest::class, $id)->claimHash);
     }
 
+    public function testFailedClaimCommitNeverReturnsOwnershipAndCanBeRetried(): void
+    {
+        [$em, $player] = $this->fixture();
+        $clock = new MockClock('2026-11-19T12:00:00Z');
+        $manager = new \App\Manager\GameManager($em);
+        $reservations = new VerificationRequestReservation($em, $manager, new \App\Repository\VerificationDeliveryRequestRepository($em), $clock);
+        $id = $reservations->reserve($player->id, str_repeat('a', 64), 300)['request_id'];
+        $lifecycle = new \App\Service\Player\VerificationRequestLifecycle($em, $manager, $clock);
+        $failure = new class {
+            public function onFlush(): void
+            {
+                throw new \RuntimeException('Panne simulée avant commit.');
+            }
+        };
+        $em->getEventManager()->addEventListener([\Doctrine\ORM\Events::onFlush], $failure);
+        $claimReturned = false;
+        try {
+            $lifecycle->claim($id, 60);
+            $claimReturned = true;
+        } catch (\RuntimeException $exception) {
+            self::assertSame('Panne simulée avant commit.', $exception->getMessage());
+        }
+        self::assertFalse($claimReturned);
+        // Nouvelle unité de travail : ne pas croire l'objet mémoire muté avant
+        // rollback, ni réutiliser un EntityManager fermé après échec de flush.
+        self::ensureKernelShutdown();
+        self::bootKernel();
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $receipt = $em->find(VerificationDeliveryRequest::class, $id);
+        self::assertSame('reserved', $receipt->state);
+        self::assertNull($receipt->claimHash);
+        self::assertNull($receipt->leaseExpiresAt);
+        $lifecycle = new \App\Service\Player\VerificationRequestLifecycle($em, new \App\Manager\GameManager($em), $clock);
+        self::assertSame('claimed', $lifecycle->claim($id, 60)['result']);
+    }
+
+    public static function deliveryFaults(): array
+    {
+        return [
+            'arrêt après revendication avant préparation' => ['before_prepare', 0],
+            'arrêt après préparation avant transport' => ['before_send', 0],
+            'exception ambiguë pendant transport' => ['during_send', 1],
+            'arrêt après acceptation avant finalisation' => ['after_send', 1],
+        ];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('deliveryFaults')]
+    public function testInterruptedFakeDeliveryIsNeverAutomaticallyRetried(string $fault, int $expectedCalls): void
+    {
+        [$em, $player] = $this->fixture();
+        $clock = new MockClock('2026-11-19T12:00:00Z');
+        $manager = new \App\Manager\GameManager($em);
+        $reservations = new VerificationRequestReservation($em, $manager, new \App\Repository\VerificationDeliveryRequestRepository($em), $clock);
+        $lifecycle = new \App\Service\Player\VerificationRequestLifecycle($em, $manager, $clock);
+        $id = $reservations->reserve($player->id, str_repeat('a', 64), 300)['request_id'];
+        $claim = $lifecycle->claim($id, 60);
+        self::assertSame('claimed', $claim['result']);
+        $calls = 0;
+        $fakeTransport = static function () use (&$calls, $fault): void {
+            ++$calls;
+            if ($fault === 'during_send') {
+                throw new \RuntimeException('Acceptation distante inconnue.');
+            }
+        };
+        // Harnais de test seulement : pas de jeton réel, pas de mailer, aucun
+        // raccordement au service public. Le payload préparé est fictif.
+        try {
+            if ($fault === 'before_prepare') {
+                throw new \RuntimeException('Arrêt avant préparation.');
+            }
+            $prepared = ['synthetic' => true];
+            if ($fault === 'before_send') {
+                throw new \RuntimeException('Arrêt avant transport.');
+            }
+            $fakeTransport();
+            if ($fault === 'after_send') {
+                throw new \RuntimeException('Arrêt avant finalisation.');
+            }
+            self::fail('Une panne doit interrompre chaque scénario.');
+        } catch (\RuntimeException) {
+            if ($fault === 'during_send') {
+                self::assertSame('completed', $lifecycle->complete($id, $claim['claim_token'], 'unknown')['result']);
+            }
+            // Les arrêts francs ne publient pas de résultat : seule l'échéance
+            // future les rend indéterminés. Aucun succès inventé après coup.
+        }
+        $clock->sleep(60);
+        $lifecycle->expire($id);
+        self::assertSame('unknown', $em->find(VerificationDeliveryRequest::class, $id)->state);
+        for ($attempt = 0; $attempt < 2; ++$attempt) {
+            $retry = $lifecycle->claim($id, 60);
+            self::assertSame('unavailable', $retry['result']);
+            if ($retry['result'] === 'claimed') {
+                $fakeTransport();
+            }
+        }
+        self::assertSame($expectedCalls, $calls);
+        self::assertSame('conflict', $lifecycle->complete($id, $claim['claim_token'], 'transport_accepted')['result']);
+        $clock->sleep(3600);
+        self::assertSame('blocked', $reservations->reserve($player->id, str_repeat('b', 64), 300)['result']);
+    }
+
     public function testTwoProcessesReserveOnlyOnce(): void
     {
         [$em, $player] = $this->fixture();
