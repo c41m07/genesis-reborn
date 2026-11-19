@@ -1,0 +1,168 @@
+/* L10J A : un seul formulaire, avec les paliers puis les minimums dans le fil. */
+body.admin-console.admin-projects-workspace .admin-content {
+    overflow-wrap: anywhere;
+}
+
+body.admin-console.admin-projects-workspace :is(.admin-project-list, .admin-project-form) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    max-width: none;
+    gap: 20px;
+}
+
+body.admin-console.admin-projects-workspace .panel {
+    min-width: 0;
+    padding: 22px;
+    margin: 0;
+    border-radius: 6px;
+}
+
+body.admin-console.admin-projects-workspace .panel :is(h2, h3) {
+    margin-top: 0;
+    font-size: 21px;
+    line-height: 1.5;
+}
+
+body.admin-console.admin-projects-workspace :is(.admin-project-list a, .admin-project-actions a, .admin-project-form button) {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 46px;
+    font-size: 14px;
+    text-align: left;
+    white-space: normal;
+}
+
+body.admin-console.admin-projects-workspace .admin-project-warning {
+    padding: 18px;
+    margin: 24px 0 20px;
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--gold);
+    border-radius: 6px;
+    background: var(--panel);
+}
+
+body.admin-console.admin-projects-workspace .admin-project-warning strong {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--gold);
+}
+
+body.admin-console.admin-projects-workspace :is(.admin-project-fields, .admin-project-field, .admin-project-actions) {
+    display: grid;
+    min-width: 0;
+    gap: 22px;
+}
+
+body.admin-console.admin-projects-workspace .admin-project-field {
+    gap: 8px;
+}
+
+body.admin-console.admin-projects-workspace .admin-project-field label {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+body.admin-console.admin-projects-workspace .admin-project-field :is(input, select, textarea) {
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    padding: 12px;
+    margin: 0;
+    font-size: 14px;
+}
+
+body.admin-console.admin-projects-workspace .admin-project-field textarea {
+    min-height: 150px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: inherit;
+    resize: vertical;
+}
+
+body.admin-console.admin-projects-workspace .admin-project-resources {
+    display: grid;
+    clear: both;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    min-width: 0;
+    gap: 18px;
+}
+
+body.admin-console.admin-projects-workspace fieldset {
+    min-width: 0;
+    padding: 18px;
+    margin: 22px 0;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+}
+
+body.admin-console.admin-projects-workspace fieldset.panel {
+    padding: 22px;
+    margin: 0;
+}
+
+body.admin-console.admin-projects-workspace legend {
+    float: left;
+    width: 100%;
+    padding: 0;
+    margin: 0 0 24px;
+    color: var(--text);
+    font-size: 21px;
+    line-height: 1.5;
+    font-weight: 700;
+}
+
+body.admin-console.admin-projects-workspace .admin-project-stage .admin-project-field {
+    clear: both;
+    margin-bottom: 22px;
+}
+
+body.admin-console.admin-projects-workspace .admin-project-resources .admin-project-field {
+    margin: 0;
+}
+
+body.admin-console.admin-projects-workspace .admin-project-availability {
+    display: flex;
+    align-items: start;
+    min-height: 44px;
+    gap: 10px;
+    margin: 0;
+    font-size: 14px;
+}
+
+body.admin-console.admin-projects-workspace .admin-project-availability input {
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    min-height: 18px;
+    margin: 0;
+    accent-color: var(--accent);
+}
+
+body.admin-console.admin-projects-workspace :is(a, button, input, select, textarea):focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+}
+
+@media (max-width: 1200px) {
+    body.admin-console.admin-projects-workspace .admin-project-resources {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 760px) {
+    body.admin-console.admin-projects-workspace :is(.panel, fieldset.panel) {
+        padding: 18px;
+    }
+
+    body.admin-console.admin-projects-workspace .admin-project-resources {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.admin-console.admin-projects-workspace .admin-project-field :is(input, select, textarea) {
+        font-size: 16px;
+    }
+}

@@ -218,9 +218,14 @@ guidée dépliable. Validation Compose, lint statique, compilation et 22 PHP /
 247 assertions réussis ; sept scénarios navigateur consolidés et trente captures
 finales dans les deux thèmes, en trois formats. Formulaires sans JavaScript,
 refus, conservation des saisies et historique paginé vérifiés.
-L10J prépare les modèles de projets de guilde : 60 A « Paliers dans le fil » et
-61 B « Paliers et minimums », 54 cadres, 706 liens inspectés et douze exports.
-Liste, création et édition attendent le choix avant réalisation.
+L10J A « Paliers dans le fil » (page 60) est validé et réalisé localement : liste
+en pleine largeur, identité, paliers et minimums dans un formulaire, ressources
+sur cinq/deux/une colonnes. Le brouillon accepte l’ajout/retrait avant le choix
+d’univers. Validation Compose, lint statique, compilation et 37 PHP / 224 assertions
+réussis ; trois scénarios navigateur consolidés et vingt captures ciblées.
+L10K prépare les rotations hebdomadaires : 62 A « Réglages dans le fil » et
+63 B « Conditions et programmation », 54 cadres, 774 liens inspectés et douze
+exports. Liste, création, édition et activation attendent le choix.
 Les autres rubriques administratives seront traitées par sous-lots, sans augmenter
 le compte des dix-huit ensembles ni déclarer L10 terminé.
 CI GitHub, fusion et déploiement restent distincts.

@@ -1086,6 +1086,19 @@ Le libellé Description avancée est associé explicitement à son champ, même 
 une erreur. Aucun contrôleur, service, chargement ni comportement JavaScript
 n’est modifié ; les formulaires restent utilisables sans JavaScript.
 
+L10J A ajoute `admin-projects-workspace.css`, limité aux trois routes des modèles
+de projets de guilde. Liste, création et édition conservent leurs URL et leurs
+lectures ciblées. Un formulaire contient identité, paliers et minimums dans le
+fil ; chaque palier reste un `<fieldset>` nommé. Les cinq ressources s’affichent
+sur cinq colonnes, puis deux sous 1200 px et une sous 760 px. Les libellés sont
+associés explicitement aux champs ; le focus d’ajout/retrait est conservé.
+`AdminGuildProjectController` accepte le choix d’univers vide comme contexte non
+encore choisi pendant la préparation du brouillon, afin que `formnovalidate`
+permette l’ajout/retrait avant cette saisie. L’enregistrement reste soumis à la
+validation d’un univers existant, des paliers, minimums, version et permissions.
+Aucune écriture n’est ajoutée aux étapes de préparation. Les noms des champs,
+jetons, limites et services métier conservent leurs contrats.
+
 Les contrôleurs Événements, Projets et Rotations séparent les GET de liste et de
 formulaire. Les anciens POST restent acceptés. L’assistant et les interdictions
 de réécriture des événements guidés restent inchangés. L’édition de rotation

@@ -33,7 +33,17 @@ final class AdminGuildProjectController extends AbstractController
         $focusStage=null;
         if($request->isMethod('POST')) {
             if(!$this->isCsrfTokenValid('guild_project_definition_'.$id,$request->request->get('_token'))) throw $this->createAccessDeniedException('Formulaire expiré.');
-            $draft=['name'=>$request->request->getString('name'),'description'=>$request->request->getString('description'),'universe_id'=>$request->request->getInt('universe_id'),'enabled'=>$request->request->getBoolean('enabled'),'version'=>$request->request->getInt('version'),'stages'=>array_values($request->request->all('stages')),'minimums'=>$request->request->all('minimums')];
+            // L’ajout et le retrait de paliers acceptent un brouillon dont l’univers n’est pas encore choisi.
+            $universeId = $request->request->get('universe_id') === '' ? 0 : $request->request->getInt('universe_id');
+            $draft = [
+                'name' => $request->request->getString('name'),
+                'description' => $request->request->getString('description'),
+                'universe_id' => $universeId,
+                'enabled' => $request->request->getBoolean('enabled'),
+                'version' => $request->request->getInt('version'),
+                'stages' => array_values($request->request->all('stages')),
+                'minimums' => $request->request->all('minimums'),
+            ];
             try {
                 $intent=$request->request->getString('intent','save');
                 if($intent==='add_stage') {

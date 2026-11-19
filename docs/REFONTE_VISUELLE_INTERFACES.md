@@ -3999,9 +3999,123 @@ d’artefacts de la conversation.
 Les champs sont dessinés et les clics ouvrent des états d’exemple ; les saisies
 ne s’accumulent pas réellement entre cadres. Enregistrement, erreurs et accès
 protégés ont des planches de référence. Aucune écriture de projet n’est effectuée.
-Les variantes ne sont pas encore intégrées. **Choix A/B attendu pour L10J** ;
+L10J A est ensuite validé explicitement ; réalisation ci-dessous. À ce stade,
 L10 reste en cours, plan global **15/18**. Défis, rotations, patchnotes et
 exploitation attendent leurs sous-lots propres.
+
+## L10J A — Réalisation locale du 19 novembre 2026
+
+La page **60 A « Paliers dans le fil »** est validée explicitement. Complexité
+**4/5** : formulaire versionné, paliers ajoutés/retirés côté serveur et conditions
+de récompense. Liste, création et édition gardent leurs pages dédiées. Identité,
+paliers et minimums forment les sections du même formulaire ; aucun onglet ou
+nouveau chargement général n’est ajouté. Le menu commun conserve l’espace actif.
+
+La liste occupe toute la largeur. Le formulaire suit identité, paliers successifs,
+minimums puis disponibilité et enregistrement. Les cinq ressources sont disposées
+sur cinq colonnes sur ordinateur, deux sur tablette et une sur téléphone. Les
+champs conservent leurs libellés, noms, valeurs, bornes, pas, jetons et focus.
+Le repère de palier reste dans chaque libellé de ressource, pour distinguer les
+champs à l’oral. Les précisions sur une quantité positive par palier et au moins
+un minimum positif décrivent les validations existantes, sans changer les règles.
+Les `<fieldset>` nomment les paliers ; les labels explicites restent stables
+lorsqu’un brouillon revient après erreur. L’univers reste désactivé en édition,
+avec son champ caché et son contrôle serveur existants.
+
+Une recette a révélé un défaut ancien de préparation : « Ajouter un palier »
+dans un formulaire entièrement vide échouait, car le choix d’univers vide était
+lu comme un entier. Le contrôleur conserve désormais ce choix comme contexte
+non encore renseigné. Ajout et retrait avec `formnovalidate` restent des étapes
+sans écriture ; l’enregistrement exige toujours un univers existant et toutes
+les autres validations. Un test HTTP reproduit ajout/retrait à vide et vérifie
+que le nombre de modèles ne change pas. Aucun service, verrou, règle, valeur
+d’équilibrage, migration, dépendance ou configuration globale n’est modifié.
+
+Fichiers : `admin/guild_project_list.html.twig`, `admin/guild_projects.html.twig`,
+`admin/layout.html.twig`, `AdminGuildProjectController.php`, `assets/app.js`,
+nouveau `assets/styles/admin-projects-workspace.css`,
+`AdminDedicatedPagesTest.php` et nouveau `admin-projects-refonte.spec.mjs`.
+README, architecture, inventaire et feuille de route sont synchronisés.
+
+Vérifications locales :
+
+- `make validate`, `make assets` et `make lint-static` réussis. Le lint statique
+  utilise le conteneur applicatif sans ses services habituels ; aucun contrôle
+  du schéma de la base courante n’est annoncé.
+- **37 tests PHP / 224 assertions** : `GuildProjectRulesTest`, `GuildProjectTest`
+  et `AdminDedicatedPagesTest`. Quantités et minimums, refus d’accès, ancien
+  formulaire, maintien des projets lancés et nouvelle préparation vide couverts.
+- **Trois scénarios navigateur distincts consolidés** : parcours existant des
+  modèles, recette visuelle et recette sans JavaScript. Trois vues sur
+  1440/768/390 en clair/sombre, dix-huit captures de rendu et deux d’états natifs,
+  Axe sans exclusion, noms longs, navigation active et absence de débordement.
+- Sans JavaScript : ajout dans un formulaire vide, conservation des saisies et
+  de la disponibilité après refus, création puis désactivation par édition,
+  refus d’une version périmée, rechargement, retour arrière, limites de un/dix
+  paliers, ajout/retrait avec focus, préparation sans écriture et pagination
+  en 50 + 3 modèles synthétiques.
+
+Le premier passage comporte deux scénarios réussis et l’échec à vide décrit
+ci-dessus. Ce dernier est corrigé puis revérifié sans affaiblir les assertions.
+Les deux scénarios réussis sur le contenu inchangé sont conservés dans le bilan.
+Preuves : `output/playwright/admin-projects-refonte/`, journaux `validate`,
+`assets`, `lint`, `lint-final`, `php`, `php-final`, `browser` et `browser-final` ;
+captures dans `recette` et `recette-finale`. Les données et bases de test sont
+isolées et jetables ; aucune migration ou action sur la base habituelle.
+CI GitHub, fusion, activation locale et déploiement restent distincts. Aucun gain
+de performance ou audit RGAA exhaustif n’est annoncé.
+
+## L10K — Rotations hebdomadaires, propositions du 19 novembre 2026
+
+Complexité **4/5**. Sources ciblées : `AdminWeeklyRotationController`,
+`WeeklyRotationService`, modèles du catalogue, objectifs de l’assistant et deux
+templates actuels. Les pages dédiées liste, création et édition restent en place.
+Le choix d’univers filtre les modèles ; il n’est pas une nouvelle page de tâche.
+L’activation rapide reste un formulaire distinct avec son motif, présenté
+sur demande dans la fiche. Aucun tri, pagination, suppression ou déplacement de
+l’ordre des modèles n’est ajouté.
+
+Dans le même document Figcraft de bureau :
+
+- **62 · L10K · A — Réglages dans le fil** : modèles sur toute la largeur,
+  identité, conditions puis durée et motif dans le fil. Avantage : place pour
+  les consignes et les conditions ; limite : page plus longue.
+- **63 · L10K · B — Conditions et programmation** : modèles par deux, conditions
+  auprès de la durée, de l’activation et du motif sur ordinateur. Avantage :
+  préparation rapprochée ; limite : explications dans une colonne plus étroite.
+  Les deux reviennent dans le fil sur tablette et téléphone.
+
+Recommandation **A** pour lire les conditions du Top 3 et du seuil avant
+l’enregistrement. Les deux gardent trois objectifs, trois formats et trois modes
+d’attribution distincts, les champs facultatifs visibles et leurs contraintes,
+le motif requis et la version. Valeurs d’exemple reprises des modèles actuels :
+168 heures, dix découvertes pour le Top 3, seuil de 5 000 dégâts et toute
+contribution positive pour les transports entre ses propres colonies. Un univers
+et une clé ne sont pas déplacés par l’édition. Les occurrences programmées ne
+sont pas réécrites. La création garde l’activation cochée par défaut, comme le code.
+
+Couverture équivalente : **54 cadres, 27 par direction**, **774 liens inspectés**,
+six départs de prototype. Liste, création et édition en 1440/768/390 ; vide,
+changement d’univers, création remplie, seuil/tous les contributeurs, objectif
+manquant, version périmée, activation dépliée/renseignée, désactivation, limite
+de trente modèles, contenu long, choix, erreurs, résultats, menu et références
+en 390. **Douze exports** ordinateur/téléphone examinés sur les vues principales.
+
+Contrôle natif des **3 330 nœuds** : aucun débordement, texte superposé ou lien
+manquant ; parité des champs et valeurs entre A/B vérifiée. Les 56 pages
+précédentes conservent noms et nombres de cadres ; 58 pages après ajout,
+348 variables réutilisées. Document enregistré proprement, page 62 A affichée
+dans la fenêtre de bureau. Preuves : `lot-10K-{plan,manifest,verification}.json`,
+états avant/après/enregistrement et
+`lot-10K-{A,B}-{models,new,edit}-{1440,390}.png` dans les artefacts de la conversation.
+
+Les champs sont dessinés ; sélecteurs et boutons parcourent des états d’exemple
+ou des planches de référence. Les saisies ne sont pas cumulées et aucun modèle
+ou occurrence n’est écrit. L’activation d’un modèle désactivé mène à la planche de
+résultat. Le lien Occurrences et historique est référencé avec son univers ; la
+gestion détaillée et l’annulation restent au sous-lot Défis.
+**Choix A/B attendu pour L10K** ; L10 en cours, plan global **15/18**. Défis,
+patchnotes et exploitation attendent leurs sous-lots propres.
 
 ## Reprise et états de couverture
 
@@ -4026,7 +4140,7 @@ exploitation attendent leurs sous-lots propres.
 | L7E | A implémentée et vérifiée localement | Page 36 A validée explicitement après reprise de la messagerie et des classements | 90 PHP / 569 assertions ; neuf parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L8 | A implémentée et vérifiée localement | Page 38 A validée explicitement | 23 PHP / 244 assertions ; 16 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L9 | A implémentée et vérifiée localement | Page 40 A validée explicitement | 7 PHP / 127 assertions ; 5 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
-| L10 | L10A à L10E réalisés en A, L10F/G en B et L10H/I en A ; L10J A/B préparé | Choix précédents conservés ; A choisi explicitement pour L10I, choix L10J attendu | Bilan L10I : 22 PHP / 247 assertions, sept parcours navigateur consolidés, trente captures finales ; L10J pages 60/61, 54 cadres et 706 liens | Choix et réalisation L10J puis autres rubriques d’animation et d’exploitation ; CI, fusion et déploiement distincts |
+| L10 | L10A à L10E réalisés en A, L10F/G en B et L10H/I/J en A ; L10K A/B préparé | Choix précédents conservés ; A choisi explicitement pour L10J, choix L10K attendu | Bilan L10J : 37 PHP / 224 assertions, trois parcours navigateur consolidés, vingt captures ciblées ; L10K pages 62/63, 54 cadres et 774 liens | Choix et réalisation L10K puis autres rubriques d’animation et d’exploitation ; CI, fusion et déploiement distincts |
 | L11 | Inventorié | Aucune nouvelle | Non engagé pour cette refonte | Examiner le wiki sans recommencer ses pages dédiées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
