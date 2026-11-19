@@ -122,7 +122,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
         await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('object-fit', 'cover');
         const positions = await family.getByRole('tab').evaluateAll(tabs => tabs.map(tab => Math.round(tab.getBoundingClientRect().top)));
         expect(new Set(positions).size).toBe(1);
-        await expect(tab('intermediate')).toHaveAccessibleName(/^Interm\./);
+        await expect(tab('intermediate')).toHaveAccessibleName(/Interm\./);
         await expect(tab('intermediate')).toHaveAccessibleDescription(/Intermédiaire/);
         const overflow = await family.getByRole('tab').evaluateAll(tabs => tabs.filter(tab => tab.scrollWidth > tab.clientWidth).map(tab => ({ label: tab.innerText, available: tab.clientWidth, content: tab.scrollWidth })));
         expect(overflow, `Onglets à ${width} px`).toEqual([]);
@@ -162,7 +162,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await fallback.getByRole('switch', { name: 'Afficher les éléments verrouillés' }).click();
     await expect(fallback.locator('#item-power_plant-superior')).toBeVisible();
     await expect(fallback.locator('#item-power_plant-superior .catalog-card-art img')).toHaveCSS('filter','grayscale(1)');
-    await expect(fallback.locator('#item-power_plant-basic').getByRole('button',{name:/^Manque/})).toBeDisabled();
+    await expect(fallback.locator('#item-power_plant-basic').getByRole('button',{name:/^Il manque :/})).toBeDisabled();
     await noScript.close();
     for (const theme of ['dark','light']) {
         sql(`UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
@@ -171,7 +171,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
             await page.goto(`${path}?section=buildings#item-power_plant-basic`);
             await page.reload();
             await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
-            await expect(panel('basic').getByRole('button',{name:/^Manque/})).toBeDisabled();
+            await expect(panel('basic').getByRole('button',{name:/^Il manque :/})).toBeDisabled();
             expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
             await family.screenshot({path:`output/playwright/catalogue-bloque-${theme}-${width}.png`});
             await tab('superior').click();

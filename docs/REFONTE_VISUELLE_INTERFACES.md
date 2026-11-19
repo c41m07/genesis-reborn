@@ -4879,3 +4879,17 @@ restent actifs. Les tests de projection utilisent un jeu de 80 coordonnées
 exportées de `GalaxyGeometry` pour `spiral-v1` : cadrage, zoom, sélection,
 tracé des bras et alternance spirale/grille conservent les coordonnées physiques.
 La recette locale de reprise et la nouvelle CI complète sont consignées ensuite.
+
+
+Recette de reprise réussie : compilation, lint statique et conteneur Symfony,
+**25 tests de carte et 17 scénarios navigateur distincts** après consolidation
+des reprises. La persistance est activée pour le parcours hors connexion ;
+les deux thèmes et cinq tailles sont couverts par le scénario transversal.
+Les cartes de bâtiments vérifient quatre colonnes sur ordinateur, le suivi
+sticky, les rangs, l’historique, l’actualisation, l’alignement et le parcours natif.
+Le test de quantité conserve les protections du navigateur et vérifie le
+plafonnement serveur dans un contexte sans JavaScript, où la limite HTML
+ajoutée par le client ne peut pas bloquer l’envoi avant ce contrôle.
+Aucun scénario n’est retiré ou désactivé. Preuves :
+`output/ci-refonte/{assets,lint,geography,browser-targeted,browser-retry,browser-retry-final,browser-last-card}.log`.
+La nouvelle CI complète doit réussir sur la tête finale avant la fusion autorisée.
