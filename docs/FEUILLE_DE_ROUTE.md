@@ -1,5 +1,16 @@
 # Roadmap Genesis Reborn
 
+## Coûts par rang et première colonisation — 19 novembre 2026
+
+La [grille de référence](COUTS.md) passe à B48/52, I34/36/30 et S28/31/31/10.
+La base de la recherche de colonisation passe à 8 h. Les
+[mesures à cadence de connexion fixe](EQUILIBRAGE.md#première-colonisation-19-novembre-2026)
+situent l’arrivée entre 48 h 06 et 56 h 06 pour trois sessions quotidiennes de
+15 à 30 min dans le scénario étudié. Le parcours à 48 h 06 est aussi rejoué
+par les services de jeu dans une base de test, avec une horloge contrôlée.
+Les variations d’horaire, la mise en file avancée et les réglages propres
+aux univers restent à vérifier séparément.
+
 ## Laboratoire local pour lancer une recherche — 18 novembre 2026
 
 Le catalogue Recherche indique, sur le rang déjà débloqué, quel laboratoire
@@ -7,9 +18,9 @@ local manque pour lancer la commande. Le lien ouvre sa fiche sur la même
 colonie. La file commune et les fiches restent consultables.
 La [règle de lancement](REGLES.md) s’applique aussi côté serveur.
 
-## Équilibrage des prix et de l’antimatière
+## Équilibrage des prix et de l’antimatière — 18 novembre 2026
 
-La [grille de référence](COUTS.md) passe à B48/52 et I35/35/30. Les prix
+La grille du 18 novembre passe à B48/52 et I35/35/30. Les prix
 Supérieurs et les 156 budgets restent identiques. La consommation directe
 du piège Basique passe à 90 électricité/h par niveau à vitesse ×1. Les
 [simulations](EQUILIBRAGE.md#équilibrage-des-prix-basiques-et-intermédiaires)

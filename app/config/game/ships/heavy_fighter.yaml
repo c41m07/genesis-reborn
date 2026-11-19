@@ -99,16 +99,16 @@
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 3239,
-      "nano": 1619,
+      "metal": 3145,
+      "nano": 1666,
       "antimatter": 694,
       "hydrogen": 0
     },
     "superior": {
-      "metal": 2892,
-      "nano": 2025,
-      "antimatter": 868,
-      "hydrogen": 2312
+      "metal": 3239,
+      "nano": 1793,
+      "antimatter": 897,
+      "hydrogen": 2314
     }
   },
   "tier_labels": {

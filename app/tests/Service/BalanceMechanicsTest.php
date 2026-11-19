@@ -76,8 +76,8 @@ final class BalanceMechanicsTest extends TestCase
     {
         $catalog=$this->catalog();$fighter=$catalog->get('ships','fighter');$expected=[
             'basic'=>['metal'=>1440,'nano'=>780,'antimatter'=>0,'hydrogen'=>0],
-            'intermediate'=>['metal'=>1314,'nano'=>657,'antimatter'=>281,'hydrogen'=>0],
-            'superior'=>['metal'=>1172,'nano'=>821,'antimatter'=>352,'hydrogen'=>936],
+            'intermediate'=>['metal'=>1276,'nano'=>676,'antimatter'=>281,'hydrogen'=>0],
+            'superior'=>['metal'=>1314,'nano'=>727,'antimatter'=>363,'hydrogen'=>940],
         ];
         foreach($expected as $tier=>$costs)self::assertSame($costs,$catalog->costs($catalog->withTier($fighter,$tier)));
     }
@@ -183,7 +183,7 @@ final class BalanceMechanicsTest extends TestCase
         $research = $universe['catalog']['technologies']['colonial_expansion'];
         $plan = (new OperationCalculator($catalog))->calculate($research, 'technologies', 1, 1, ['lab' => 1], $universe);
 
-        self::assertSame(284190, $plan['duration']);
+        self::assertSame(28419, $plan['duration']);
     }
 
     public function testResearchNamesAreDistinctAndEveryCombatShipHasOneSpecialistTurret(): void

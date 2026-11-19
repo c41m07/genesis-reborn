@@ -16,7 +16,7 @@ final class OperationDurationTest extends TestCase
             'buildings' => ['mine_metal'=>60,'mine_nano'=>60,'mine_hydrogen'=>60,'power_plant'=>120,
                 'mine_antimatter'=>120,'storage_metal'=>180,'storage_nano'=>180,'storage_hydrogen'=>180,
                 'storage_electricity'=>180,'storage_antimatter'=>180,'lab'=>240,'fortress'=>360,'shipyard'=>1800],
-            'technologies' => ['engineering_foundations'=>600,'naval_engineering'=>900,'colonial_expansion'=>288000,
+            'technologies' => ['engineering_foundations'=>600,'naval_engineering'=>900,'colonial_expansion'=>28800,
                 'nanomaterial_synthesis'=>1200,'weapons_engineering'=>1800,'tactical_intelligence'=>1200,
                 'modular_cargo_bays'=>1800,'vector_propulsion'=>2700,'weapon_calibration'=>2700,
                 'structural_armor'=>3600,'target_acquisition'=>3600,'cryogenic_reserves'=>2700,
@@ -75,7 +75,7 @@ final class OperationDurationTest extends TestCase
         }
         $colony=$calculator->calculate($catalog->getTierForUniverse($universe,'technologies','colonial_expansion','basic'),
             'technologies',1,1,['lab'=>$maximum],$config);
-        self::assertSame(86400,$colony['duration']);self::assertSame(144000,$colony['costs']['electricity']);
+        self::assertSame(8640,$colony['duration']);self::assertSame(14400,$colony['costs']['electricity']);
     }
 
     public function testDefensesKeepTheirDurationDespiteAllBuildingAndResearchBonuses(): void
