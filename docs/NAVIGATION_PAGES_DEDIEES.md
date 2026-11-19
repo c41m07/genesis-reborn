@@ -1172,3 +1172,22 @@ des 15 phases.
 Les contrôles d’accessibilité sont ciblés, sans audit complet RGAA ni lecteur
 d’écran réel. Performance non mesurée. Aucune migration de base existante,
 installation de dépendance ou livraison Alpha autorisée ou réalisée par ce lot.
+
+## Patchnotes administratives — L10M A, 19 novembre 2026
+
+Réalisation locale sur `feature/refonte-visuelle`, d’après la page Figcraft 66 A.
+La liste `/admin/patchnotes` garde recherche, filtre d’état et pagination par 50.
+Les tâches de rédaction disposent de `/admin/patchnotes/nouvelle` et de l’édition
+GET `/admin/patchnotes/{id}`. La confirmation GET
+`/admin/patchnotes/{id}/supprimer` indique la conséquence avant de soumettre l’ancien
+POST `/admin/patchnotes/{id}/delete`. Les anciens POST de création/édition et jetons
+restent acceptés. GET et retour d’annulation ne suppriment aucune note.
+
+Le formulaire conserve la rédaction puis la publication, sans sections masquées.
+Les champs requis, limites et dates UTC sont vérifiés avant mutation ; les erreurs
+422 conservent le brouillon. Aucun chargement de liste dans les pages de formulaire.
+Navigation active, liens directs, rechargement, retour et parcours sans JavaScript
+vérifiés. Brouillons privés, publications datées et lecture joueur conservés.
+Bilan : 20 PHP / 142 assertions, six parcours navigateur consolidés ; preuves dans
+le [suivi de refonte](REFONTE_VISUELLE_INTERFACES.md). Les vérifications locales
+ne valent ni CI complète, ni fusion, ni déploiement.

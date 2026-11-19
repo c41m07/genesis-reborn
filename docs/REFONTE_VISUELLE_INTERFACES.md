@@ -4364,8 +4364,121 @@ Document enregistré proprement et page 66 A affichée dans la fenêtre de burea
 Preuves : `lot-10M-{plan,manifest,verification}.json`, état d’enregistrement et
 `lot-10M-{A,B}-{notes,new,edit,delete}-{1440,390}.png` dans les artefacts de la
 conversation. Champs dessinés et parcours simulés, sans cumul des saisies ;
-les exemples Alpha-X.Y.Z sont fictifs. **Choix A/B attendu avant réalisation**.
+les exemples Alpha-X.Y.Z sont fictifs. L10M A est ensuite validé explicitement ; réalisation ci-dessous.
 L10 reste en cours ; exploitation, wiki et revue transversale restent à traiter.
+
+## L10M A — Réalisation locale du 19 novembre 2026
+
+La page **66 A — Rédaction dans le fil** est validée explicitement. Complexité
+**4/5** : présentation et séparation des pages, validation des écritures et
+confirmation d’une suppression. La liste garde recherche titre/version, filtre
+d’état et pagination de cinquante. Création, édition et confirmation disposent
+de vraies pages GET ; aucun formulaire complet n’est préparé pour la liste.
+Les six champs de rédaction/publication occupent toute la largeur. Le formulaire
+n’est plus replié par `admin_editors` ; le sommaire automatique est désactivé.
+Navigation de groupe active et fil d’Ariane complétés pour les nouvelles pages.
+
+`PatchNoteEditor` partage la préparation et la validation entre création/édition.
+Champs obligatoires, longueurs 160/40/500, statut et date UTC sont contrôlés avant
+mutation de l’entité. Dates impossibles, mal formées ou avec caractère nul
+produisent un refus compréhensible ; les autres saisies restent dans le formulaire
+avec réponse 422. Brouillon sans date conservée ; publié avec date vide immédiatement
+visible, avec date future visible à cette échéance. Les anciennes adresses POST,
+rôles, jetons et catégories d’audit sont conservés. La page de confirmation GET
+n’efface rien ; son bouton soumet l’ancien POST. Aucun nouvel équilibrage, schéma,
+verrou ou mécanisme d’idempotence n’est ajouté. L’affichage joueur et sa lecture
+restent inchangés ; aucune publication réelle n’a été effectuée hors recette.
+
+Écarts de présentation utiles : champs natifs HTML au lieu des champs dessinés,
+contenu détaillé avec douze lignes, date de publication visible dans la liste et
+liens d’action nommés par leur patchnote pour les lecteurs d’écran. Les aides du
+thème clair ont été corrigées après un contraste insuffisant repéré par axe.
+Styles limités à `admin-patchnotes-workspace.css`, sans modification du thème global.
+
+Fichiers principaux : `PatchNoteController`, nouveau `PatchNoteEditor`, liste et
+deux nouveaux templates administratifs, navigation/layout, styles/import ; tests
+PHP et navigateur ciblés. README, architecture, navigation, inventaire, feuille
+de route et présent suivi sont synchronisés dans le même lot.
+
+Vérifications locales sur données synthétiques et bases isolées :
+
+- `make validate`, `make lint-static`, `make assets` et `git diff --check` réussis.
+- **20 tests PHP / 142 assertions** : contrôleur, validation du brouillon et
+  pagination administrative. Dates invalides, limites multioctets, absence de
+  mutation après refus, publication/dépublication, anciens POST, audit, rôles,
+  jetons invalides et identifiant absent vérifiés.
+- **Six parcours navigateur consolidés** : navigation mobile, console organisée,
+  cycle brouillon/publication/lecture, quatre pages dans les deux thèmes, parcours
+  natif sans JavaScript et affichage joueur L9. Deux adaptations de sélecteur et
+  de client HTTP local corrigées dans la recette ; les trois scénarios concernés
+  ont ensuite réussi. Aucune assertion affaiblie ni exclusion axe ajoutée.
+- **Vingt-cinq captures ciblées** : quatre pages en clair/sombre et
+  1440/768/390, plus état vide mobile. Long titre sans espaces, résumé long,
+  absence de débordement, liens directs, rechargement, retour arrière et clavier.
+  Les captures des scénarios existants sont comptées séparément.
+- Sans JavaScript : filtres, **52 notes paginées 50 + 2**, erreur serveur conservant
+  les champs sans écriture, édition/création natives, annulation de la confirmation
+  puis suppression explicite avec audit. Brouillons et notes futures restent
+  absents de la vue joueur ; contenu échappé et état de lecture vérifiés.
+
+Preuves : `output/playwright/admin-patchnotes-refonte/`, journaux PHP, lint,
+compilation et recettes initiale/finale. Le premier passage a révélé le contraste
+clair et les erreurs de recette décrites ; les reprises ciblées ont réussi.
+CI GitHub complète, fusion et déploiement restent distincts. Aucun audit RGAA
+exhaustif ni gain de performance mesuré n’est annoncé. L10 reste en cours.
+
+## L10N — Exploitation, propositions du 19 novembre 2026
+
+Complexité **4/5**. Sources ciblées : rubriques Sécurité, État des traitements et
+Journal, leurs services/repositories et contrôleurs, export CSV et aperçu privé
+des quatre brouillons juridiques. Les quatre tâches gardent leurs URL dédiées.
+Les recherches restent des filtres de leur liste ; les détails de relais/journal
+peuvent se déplier. Les textes juridiques restent des documents de lecture,
+sans nouveau formulaire ni publication. Leurs contenus ne sont pas réécrits.
+
+Dans le document Figcraft de bureau :
+
+- **68 · L10N · A — Contrôle en lignes** : tableaux sur ordinateur et fiches sur
+  tablette/téléphone ; indicateurs des traitements sur quatre colonnes et lecture
+  juridique dans le fil. Avantage : comparaison dense et grandes listes lisibles ;
+  limite : davantage de défilement pour les documents.
+- **69 · L10N · B — Contrôle en fiches** : incidents, journal et voyages en fiches
+  par deux sur ordinateur ; indicateurs par deux et navigation juridique à gauche
+  du document. Avantage : contexte regroupé par entrée ; limite : colonnes plus
+  étroites et longues listes moins denses. Retour dans le fil sur petits écrans.
+
+Recommandation **A** pour comparer les événements d’exploitation. Contrats visibles :
+Sécurité garde les **50 incidents les plus récents** et ses filtres locaux avec
+JavaScript, sans prétendre rechercher dans l’historique entier. Sans JavaScript,
+liste et examen restent accessibles ; les filtres locaux devront être présentés
+progressivement. La visite conserve le marqueur de nouveautés consultées ; examiner
+conserve l’historique et demande le jeton existant. Le journal garde recherche
+serveur, filtre d’action, pagination et les deux exports (visible avec JavaScript,
+complet côté serveur), avec neutralisation CSV. Le relevé des traitements distingue
+signal récent, ancien, absent et inconnu ; vingt voyages et vingt relais au maximum,
+seuils par univers et aucune reprise automatique. Les quatre brouillons gardent
+leur caractère privé, non indexable et sans stockage en cache ; pages publiques
+inchangées. Aucun diagnostic de production ni avis juridique nouveau n’est donné.
+
+Couverture équivalente : **56 cadres, 28 par direction**, **700 liens inspectés**,
+six départs de prototype et **seize exports** ordinateur/téléphone. Quatre pages
+en 1440/768/390 ; trois autres documents, filtres/vide/examen/refus, relais dépliés,
+collecte inconnue, pagination/vide/erreur/détails du journal, références et menu en
+390. Les exemples de listes représentent des extraits, pas cinquante copies.
+Contrôle natif des **3 551 nœuds** : aucun débordement, texte superposé, chevauchement
+de cadres ou destination manquante ; parité des champs entre A/B vérifiée.
+Les textes des quatre brouillons, légendes de tableaux comprises, sont comparés
+aux sources puis aux **douze cadres juridiques natifs** et conservés intégralement.
+Les 36 pages précédentes gardent noms et nombres de cadres ; 38 pages après ajout,
+348 variables conservées. Document enregistré proprement et page 68 A affichée.
+
+Preuves : `lot-10N-{plan,manifest,verification}.json`, contrôles des textes juridiques
+et état d’enregistrement ; `lot-10N-{A,B}-{security,operations,audit,legal}-{1440,390}.png`
+dans les artefacts de la conversation. Champs dessinés et parcours simulés, sans
+saisie cumulée. Examen, export et collecte restent des exemples : aucune donnée
+privée réelle exportée, aucun service relancé ni texte publié. **Choix A/B attendu
+avant réalisation**. L10 en cours, plan global **15/18** ; wiki et revue transversale
+restent à traiter après les derniers écrans administratifs.
 
 ## Reprise et états de couverture
 
@@ -4390,7 +4503,7 @@ L10 reste en cours ; exploitation, wiki et revue transversale restent à traiter
 | L7E | A implémentée et vérifiée localement | Page 36 A validée explicitement après reprise de la messagerie et des classements | 90 PHP / 569 assertions ; neuf parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L8 | A implémentée et vérifiée localement | Page 38 A validée explicitement | 23 PHP / 244 assertions ; 16 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L9 | A implémentée et vérifiée localement | Page 40 A validée explicitement | 7 PHP / 127 assertions ; 5 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
-| L10 | L10A à L10E réalisés en A, L10F/G en B et L10H à L10L en A ; L10M A/B préparé | Choix précédents conservés ; page 64 A validée pour L10L, choix L10M attendu | Bilan L10L : 27 PHP / 150 assertions, cinq parcours navigateur consolidés, dix-neuf captures ; L10M pages 66/67, 48 cadres et 640 liens | Choix et réalisation L10M puis exploitation ; CI, fusion et déploiement distincts |
+| L10 | L10A à L10E réalisés en A, L10F/G en B et L10H à L10M en A ; L10N A/B préparé | Choix précédents conservés ; page 66 A validée pour L10M, choix L10N attendu | Bilan L10M : 20 PHP / 142 assertions, six parcours navigateur consolidés, vingt-cinq captures ; L10N pages 68/69, 56 cadres et 700 liens | Choix et réalisation Exploitation puis wiki ; CI, fusion et déploiement distincts |
 | L11 | Inventorié | Aucune nouvelle | Non engagé pour cette refonte | Examiner le wiki sans recommencer ses pages dédiées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 

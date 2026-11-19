@@ -1123,6 +1123,23 @@ visibles, motifs, confirmations et jetons conservés. Le sommaire automatique es
 désactivé. Aucun contrôleur, service ou traitement JavaScript n’est modifié ;
 la consultation conserve sa journalisation administrative existante.
 
+L10M A sépare les patchnotes administratives : liste, création, édition et
+confirmation de suppression. Les anciennes adresses POST et leurs jetons restent
+acceptés ; les nouvelles destinations GET ont une navigation active et un fil
+d’Ariane. Liste et formulaires chargent seulement les données de leur page.
+`PatchNoteEditor` prépare le brouillon et valide tous les champs avant de modifier
+l’entité gérée par Doctrine : champs requis, limites 160/40/500, statut et date
+UTC stricte (minutes ou secondes). Une date impossible ou mal formée est refusée
+avec une réponse 422, sans mutation ni audit de réussite ; le formulaire conserve
+ses valeurs. Brouillon sans date, publication immédiate si date vide, visibilité
+à l’échéance si date future : contrats existants conservés. La confirmation GET
+n’efface rien ; son bouton soumet l’ancien POST protégé par rôle et CSRF.
+Les écritures et actions d’audit conservent leur ordre ; aucune garantie nouvelle
+de concurrence ou d’idempotence n’est annoncée. `admin-patchnotes-workspace.css`
+reste limité à ces routes, sans repli automatique du formulaire ni sommaire ajouté.
+Les champs HTML natifs restent utilisables sans JavaScript ; l’affichage joueur,
+le texte échappé et l’enregistrement de lecture restent inchangés.
+
 Les contrôleurs Événements, Projets et Rotations séparent les GET de liste et de
 formulaire. Les anciens POST restent acceptés. L’assistant et les interdictions
 de réécriture des événements guidés restent inchangés. L’édition de rotation

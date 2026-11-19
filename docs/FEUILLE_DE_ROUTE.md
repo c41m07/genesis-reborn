@@ -236,11 +236,17 @@ ciblées. Filtres, paginations 50 + 2, clavier, contrastes ciblés et parcours s
 JavaScript vérifiés, avec contributions conservées après retrait.
 Nettoyage Figcraft validé : 27 variantes retirées, 34 pages après tri, composants
 et références Galaxie/Simulateur préservés ; copie complète vérifiée conservée.
-L10M prépare les patchnotes : 66 A « Rédaction dans le fil » et 67 B « Texte et
-publication », 48 cadres, 640 liens inspectés, seize exports. Liste, création,
-édition et confirmation de suppression proposées dans des pages dédiées ; choix
-attendu avant réalisation. Le document compte désormais 36 pages, dont ces deux
-propositions encore à départager.
+L10M A « Rédaction dans le fil » (page 66) est validé et réalisé localement :
+quatre pages, rédaction puis publication, validation partagée et confirmation
+native. Validation Compose, lint statique, compilation et 20 PHP / 142 assertions
+réussis ; six parcours navigateur consolidés et vingt-cinq captures ciblées.
+Brouillon privé, publication/lecture, filtres et pagination 50 + 2, droits, CSRF,
+erreurs conservées et suppression sans JavaScript vérifiés.
+L10N prépare Exploitation : 68 A « Contrôle en lignes » et 69 B « Contrôle en
+fiches ». Sécurité, traitements, journal/export et quatre brouillons juridiques
+conservent leurs tâches et destinations. 56 cadres, 700 liens inspectés et seize
+exports ; choix attendu avant réalisation. Les 36 pages précédentes sont
+préservées ; 38 pages après ajout. Wiki et revue transversale restent à traiter.
 Les autres rubriques administratives seront traitées par sous-lots, sans augmenter
 le compte des dix-huit ensembles ni déclarer L10 terminé.
 CI GitHub, fusion et déploiement restent distincts.

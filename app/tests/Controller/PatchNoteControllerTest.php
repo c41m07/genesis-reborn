@@ -41,6 +41,96 @@ final class PatchNoteControllerTest extends WebTestCase
         self::assertResponseRedirects('/acces-refuse');
     }
 
+    public function testDedicatedPagesAndLegacyPostsKeepValidationAuditAndPublication(): void
+    {
+        $this->client->loginUser($this->player(['ROLE_ADMIN']));
+        $crawler = $this->client->request('GET', '/admin/patchnotes/nouvelle');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorCount(1, '.admin-patchnote-form');
+        $token = $crawler->filter('input[name="_token"]')->attr('value');
+        $values = ['_token' => $token, 'title' => 'Note de recette', 'version' => 'Alpha-test', 'summary' => 'Résumé', 'content' => '<script>texte</script>', 'status' => 'published', 'publishedAt' => '2030-02-28T12:15'];
+        $this->client->request('POST', '/admin/patchnotes', array_replace($values, ['title' => '']));
+        self::assertResponseStatusCodeSame(422);
+        self::assertInputValueSame('version', 'Alpha-test');
+        self::assertInputValueSame('publishedAt', '2030-02-28T12:15');
+        self::assertSelectorTextContains('[role="alert"]', 'Tous les champs');
+        self::assertSame(0, self::getContainer()->get(EntityManagerInterface::class)->getRepository(PatchNote::class)->count([]));
+        $this->client->request('POST', '/admin/patchnotes', $values);
+        self::assertResponseRedirects('/admin/patchnotes');
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $note = $em->getRepository(PatchNote::class)->findOneBy(['version' => 'Alpha-test']);
+        $id = $note->id;
+        self::assertSame('2030-02-28T12:15:00+00:00', $note->publishedAt->format('c'));
+        $crawler = $this->client->request('GET', '/admin/patchnotes/'.$id);
+        self::assertResponseIsSuccessful();
+        self::assertInputValueSame('publishedAt', '2030-02-28T12:15');
+        self::assertSelectorTextContains('[aria-label="Fil d’Ariane"]', 'Modifier Note de recette');
+        $values['_token'] = $crawler->filter('input[name="_token"]')->attr('value');
+        $this->client->request('POST', '/admin/patchnotes/'.$id, array_replace($values, ['publishedAt' => '2026-02-30T12:00', 'title' => 'Modification refusée']));
+        self::assertResponseStatusCodeSame(422);
+        self::assertInputValueSame('title', 'Modification refusée');
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        self::assertSame('Note de recette', $em->find(PatchNote::class, $id)->title);
+        self::assertSame(1, $em->getRepository(\App\Entity\AdminAuditLog::class)->count(['targetType' => 'patch_note']));
+        $this->client->request('POST', '/admin/patchnotes/'.$id, array_replace($values, ['status' => 'draft']));
+        self::assertResponseRedirects('/admin/patchnotes');
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        self::assertNull($em->find(PatchNote::class, $id)->publishedAt);
+        self::assertSame(1, $em->getRepository(\App\Entity\AdminAuditLog::class)->count(['action' => 'patchnote_unpublished']));
+        $this->client->request('POST', '/admin/patchnotes/'.$id, array_replace($values, ['publishedAt' => '']));
+        self::assertResponseRedirects('/admin/patchnotes');
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        self::assertNotNull($em->find(PatchNote::class, $id)->publishedAt);
+        self::assertSame(1, $em->getRepository(\App\Entity\AdminAuditLog::class)->count(['action' => 'patchnote_published']));
+        $this->client->request('GET', '/admin/patchnotes');
+        self::assertSelectorCount(0, '.admin-patchnote-form');
+        self::assertSelectorCount(1, '.admin-patchnote-list article');
+        $crawler = $this->client->request('GET', '/admin/patchnotes/'.$id.'/supprimer');
+        self::assertResponseIsSuccessful();
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        self::assertNotNull($em->find(PatchNote::class, $id));
+        $deleteToken = $crawler->filter('input[name="_token"]')->attr('value');
+        $this->client->request('POST', '/admin/patchnotes/'.$id.'/delete', ['_token' => 'invalid']);
+        self::assertResponseRedirects('/acces-refuse');
+        $this->client->followRedirect();
+        self::assertResponseStatusCodeSame(403);
+        $this->client->request('POST', '/admin/patchnotes/'.$id.'/delete', ['_token' => $deleteToken]);
+        self::assertResponseRedirects('/admin/patchnotes');
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        self::assertNull($em->find(PatchNote::class, $id));
+        self::assertSame(1, $em->getRepository(\App\Entity\AdminAuditLog::class)->count(['action' => 'patchnote_deleted']));
+    }
+
+    public function testAllNewDestinationsAndWritesRemainAdminOnly(): void
+    {
+        $note = new PatchNote();
+        $this->em->persist($note);
+        $this->em->flush();
+        $id = $note->id;
+        $this->client->loginUser($this->player());
+        foreach ([['GET', '/admin/patchnotes/nouvelle'], ['GET', '/admin/patchnotes/'.$id], ['GET', '/admin/patchnotes/'.$id.'/supprimer'], ['POST', '/admin/patchnotes'], ['POST', '/admin/patchnotes/nouvelle'], ['POST', '/admin/patchnotes/'.$id], ['POST', '/admin/patchnotes/'.$id.'/delete']] as [$method, $url]) {
+            $this->client->request($method, $url);
+            self::assertResponseRedirects('/acces-refuse');
+        }
+    }
+
+    public function testCreationAndEditingRejectInvalidTokens(): void
+    {
+        $note = new PatchNote();
+        $this->em->persist($note);
+        $this->em->flush();
+        $id = $note->id;
+        $this->client->loginUser($this->player(['ROLE_ADMIN']));
+        foreach (['/admin/patchnotes', '/admin/patchnotes/nouvelle', '/admin/patchnotes/'.$id] as $url) {
+            $this->client->request('POST', $url, ['_token' => 'invalid']);
+            self::assertResponseRedirects('/acces-refuse');
+            $this->client->followRedirect();
+            self::assertResponseStatusCodeSame(403);
+        }
+        $this->client->request('GET', '/admin/patchnotes/999999');
+        self::assertResponseStatusCodeSame(404);
+    }
+
     private function player(array $roles = []): Player
     {
         $player = new Player(); $player->email=uniqid('patch-', true).'@example.test'; $player->username=uniqid('Patch'); $player->password='test'; $player->roles=$roles;
