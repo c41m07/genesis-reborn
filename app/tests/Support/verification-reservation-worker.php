@@ -20,6 +20,13 @@ while (!is_file($argv[3].'/go')) {
 }
 $em = $container->get(Doctrine\ORM\EntityManagerInterface::class);
 $service = new App\Service\Player\VerificationRequestReservation($em, new App\Manager\GameManager($em), new App\Repository\VerificationDeliveryRequestRepository($em), $container->get(Psr\Clock\ClockInterface::class));
-$result = $service->reserve((int) $argv[1], $argv[2], 300);
+if (($argv[5] ?? '') === 'claim') {
+    $lifecycle = new App\Service\Player\VerificationRequestLifecycle($em, new App\Manager\GameManager($em), $container->get(Psr\Clock\ClockInterface::class));
+    $result = $lifecycle->claim((int) $argv[1], 60);
+    // Le test de compétition n'a besoin ni d'afficher ni de conserver le secret.
+    unset($result['claim_token']);
+} else {
+    $result = $service->reserve((int) $argv[1], $argv[2], 300);
+}
 echo json_encode($result, JSON_THROW_ON_ERROR);
 $kernel->shutdown();

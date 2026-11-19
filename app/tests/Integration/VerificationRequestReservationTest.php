@@ -102,6 +102,12 @@ final class VerificationRequestReservationTest extends KernelTestCase
         foreach ($migration->getSql() as $query) {
             $connection->executeStatement($query->getStatement(), $query->getParameters(), $query->getTypes());
         }
+        require_once dirname(__DIR__, 2).'/migrations/Version20261120000100.php';
+        $lifecycleMigration = new \DoctrineMigrations\Version20261120000100($connection, new \Psr\Log\NullLogger());
+        $lifecycleMigration->up(new \Doctrine\DBAL\Schema\Schema());
+        foreach ($lifecycleMigration->getSql() as $query) {
+            $connection->executeStatement($query->getStatement(), $query->getParameters(), $query->getTypes());
+        }
         $service = new VerificationRequestReservation($em, new \App\Manager\GameManager($em), new \App\Repository\VerificationDeliveryRequestRepository($em), self::getContainer()->get(ClockInterface::class));
         self::assertSame('reserved', $service->reserve($player->id, str_repeat('a', 64), 300)['result']);
         self::assertSame('replayed', $service->reserve($player->id, str_repeat('a', 64), 300)['result']);
@@ -111,18 +117,70 @@ final class VerificationRequestReservationTest extends KernelTestCase
         $connection->executeStatement('DROP TABLE verification_delivery_request');
     }
 
+    public function testLifecycleOwnershipReplayAndExpiryNeverRequeues(): void
+    {
+        [$em, $player] = $this->fixture();
+        $clock = new MockClock('2026-11-19T12:00:00Z');
+        $manager = new \App\Manager\GameManager($em);
+        $reservations = new VerificationRequestReservation($em, $manager, new \App\Repository\VerificationDeliveryRequestRepository($em), $clock);
+        $lifecycle = new \App\Service\Player\VerificationRequestLifecycle($em, $manager, $clock);
+        $id = $reservations->reserve($player->id, str_repeat('a', 64), 300)['request_id'];
+        $claim = $lifecycle->claim($id, 60);
+        self::assertSame('claimed', $claim['result']);
+        $receipt = $em->find(VerificationDeliveryRequest::class, $id);
+        self::assertNotSame($claim['claim_token'], $receipt->claimHash);
+        self::assertSame('unavailable', $lifecycle->claim($id, 60)['result']);
+        self::assertSame('rejected', $lifecycle->complete($id, str_repeat('0', 64), 'transport_accepted')['result']);
+        self::assertSame('completed', $lifecycle->complete($id, $claim['claim_token'], 'transport_accepted')['result']);
+        self::assertSame('replayed', $lifecycle->complete($id, $claim['claim_token'], 'transport_accepted')['result']);
+        self::assertSame('conflict', $lifecycle->complete($id, $claim['claim_token'], 'cancelled')['result']);
+        $clock->sleep(300);
+        $id = $reservations->reserve($player->id, str_repeat('b', 64), 300)['request_id'];
+        $claim = $lifecycle->claim($id, 60);
+        $clock->sleep(59);
+        self::assertSame('unchanged', $lifecycle->expire($id)['result']);
+        $clock->sleep(1);
+        self::assertSame('expired_unknown', $lifecycle->expire($id)['result']);
+        self::assertSame('unknown', $em->find(VerificationDeliveryRequest::class, $id)->state);
+        self::assertSame('conflict', $lifecycle->complete($id, $claim['claim_token'], 'transport_accepted')['result']);
+        self::assertSame('unavailable', $lifecycle->claim($id, 60)['result']);
+        $clock->sleep(3600);
+        self::assertSame('blocked', $reservations->reserve($player->id, str_repeat('c', 64), 300)['result']);
+        self::assertSame('missing', $lifecycle->claim(2147483647, 60)['result']);
+    }
+
+    public function testClaimCancelsNewlyIneligibleAccountWithoutOwnerToken(): void
+    {
+        [$em, $player] = $this->fixture();
+        $clock = new MockClock();
+        $manager = new \App\Manager\GameManager($em);
+        $reservations = new VerificationRequestReservation($em, $manager, new \App\Repository\VerificationDeliveryRequestRepository($em), $clock);
+        $id = $reservations->reserve($player->id, str_repeat('a', 64), 300)['request_id'];
+        $player->lockedAt = $clock->now();
+        $em->flush();
+        $lifecycle = new \App\Service\Player\VerificationRequestLifecycle($em, $manager, $clock);
+        self::assertSame(['result' => 'cancelled'], $lifecycle->claim($id, 60));
+        self::assertNull($em->find(VerificationDeliveryRequest::class, $id)->claimHash);
+    }
+
     public function testTwoProcessesReserveOnlyOnce(): void
     {
         [$em, $player] = $this->fixture();
-        foreach ([true, false] as $sameKey) {
+        foreach (['same_key', 'different_keys', 'claim'] as $scenario) {
+            $sameKey = $scenario !== 'different_keys';
             $em->createQuery('DELETE FROM App\\Entity\\VerificationDeliveryRequest')->execute();
+            $targetId = $player->id;
+            if ($scenario === 'claim') {
+                $service = new VerificationRequestReservation($em, new \App\Manager\GameManager($em), new \App\Repository\VerificationDeliveryRequestRepository($em), self::getContainer()->get(ClockInterface::class));
+                $targetId = $service->reserve($player->id, str_repeat('c', 64), 300)['request_id'];
+            }
             $directory = sys_get_temp_dir().'/verification-reservation-'.bin2hex(random_bytes(8));
             mkdir($directory, 0700);
             $processes = [];
             try {
                 for ($index = 0; $index < 2; ++$index) {
                     $key = str_repeat($sameKey || $index === 0 ? 'a' : 'b', 64);
-                    $process = new Process([PHP_BINARY, __DIR__.'/../Support/verification-reservation-worker.php', (string) $player->id, $key, $directory, (string) $index]);
+                    $process = new Process([PHP_BINARY, __DIR__.'/../Support/verification-reservation-worker.php', (string) $targetId, $key, $directory, (string) $index, $scenario]);
                     $process->setTimeout(20);
                     $process->start();
                     $processes[] = $process;
@@ -144,8 +202,10 @@ final class VerificationRequestReservationTest extends KernelTestCase
                 }
                 $outcomes = array_column($results, 'result');
                 sort($outcomes);
-                self::assertSame($sameKey ? ['replayed', 'reserved'] : ['blocked', 'reserved'], $outcomes);
-                self::assertSame($results[0]['request_id'], $results[1]['request_id']);
+                self::assertSame($scenario === 'claim' ? ['claimed', 'unavailable'] : ($sameKey ? ['replayed', 'reserved'] : ['blocked', 'reserved']), $outcomes);
+                if ($scenario !== 'claim') {
+                    self::assertSame($results[0]['request_id'], $results[1]['request_id']);
+                }
                 self::assertSame(1, $em->getRepository(VerificationDeliveryRequest::class)->count([]));
             } finally {
                 foreach ($processes as $process) {

@@ -796,3 +796,5 @@ Le diagnostic support distingue le renvoi inutile, la suspension et le renvoi ad
 Le service de confirmation sépare préparation sous verrou et transport : une confirmation constatée sous verrou n’entraîne plus l’envoi d’un lien non enregistré. Cette correction ne constitue pas encore le renvoi administratif idempotent.
 
 Une fondation interne de reçus/réservations de confirmation est préparée, sans route ni transport activés ; la migration est distincte de son application. Voir [les limites de cette tranche](docs/ADMIN_SUPPORT_COMPTES.md).
+
+Le cycle interne de reçu prévoit maintenant une revendication propriétaire et une expiration indéterminée sans réenvoi automatique. Il demeure débranché du mailer et des routes administratives/publiques.

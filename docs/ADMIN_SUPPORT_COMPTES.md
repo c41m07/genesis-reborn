@@ -277,3 +277,52 @@ PHP des six nouveaux fichiers, conteneur Symfony, Compose et diff réussis.
 Le réseau/base `genesis-admin-support-test` ont été supprimés après recette.
 Aucun mail réel, migration d’une base habituelle, push, fusion ou déploiement.
 La CI complète et l’intégration des lots restent à effectuer séparément.
+
+
+## Cycle de revendication du reçu (toujours sans transport)
+
+Incrément séparé après `6c93274`, complexité 5/5. Aucune route, commande ou
+consommateur Messenger n’utilise encore ce service. Les réservations sont
+revendiquées atomiquement par `VerificationRequestLifecycle` : état réservé
+vers traitement, secret aléatoire remis une seule fois au demandeur et hachage
+seul conservé. Durée interne de lease explicite, entre 1 et 3 600 secondes.
+
+Ordre de verrouillage commun : compte puis reçu. L’orientation compte depuis
+l’identifiant du reçu est une lecture hors transaction ; existence, compte et
+états sont revérifiés sous verrou. Une suspension ou confirmation acquise
+avant revendication annule la demande sans produire de secret propriétaire.
+Une seconde revendication ne reçoit jamais le secret du premier worker.
+
+La finalisation exige le secret correspondant et un résultat explicite :
+acceptation du transport, annulation avant transport, ou indéterminé. Un appel
+répété du propriétaire avec le même résultat est sans effet ; un résultat
+contradictoire ou un autre propriétaire est refusé. Les tests simulent ces
+résultats : ils ne prouvent aucun envoi ou acceptation SMTP réelle.
+
+À l’échéance exacte, une tentative en traitement devient indéterminée, jamais
+réservée de nouveau. La méthode `expire` est explicite ; claim/complete contrôlent
+aussi cette échéance. Un worker tardif ne peut plus inscrire un succès après
+expiration. L’indéterminé continue de bloquer toute nouvelle réservation.
+Une demande jamais revendiquée reste réservée : aucune purge ni annulation
+arbitraire de ce cas n’est ajoutée. Le secret n’est ni loggé ni inclus dans les
+résultats du worker de test de compétition.
+
+Migration additionnelle `Version20261120000100` préparée et appliquée seulement
+dans la base jetable après la migration de reçu. Aucun schéma habituel changé.
+Les deux migrations restent à appliquer selon les règles de sauvegarde et
+validation du dépôt lors d’une future intégration autorisée.
+
+Recette : 15 tests / 162 assertions réussis (cycle/réservation, confirmation,
+diagnostic). Parmi eux, deux processus synchronisés revendiquent le même reçu :
+un seul obtient `claimed`, l’autre `unavailable`. Couverture du mauvais secret,
+replay et résultat contradictoire, seuil d’expiration, refus du succès tardif,
+compte devenu suspendu et absence de reprise après délai. PHP, Compose,
+conteneur et diff vérifiés séparément ; aucun mail réel.
+
+Prochain pas concret : un adaptateur de transport factice liant une revendication
+à la préparation du jeton, avec pannes injectées avant/après commit/transport.
+Ne pas connecter le mailer existant directement : il réessaie les exceptions
+et peut avoir accepté un message avant l’exception. Restent aussi la relecture
+d’éligibilité immédiatement avant transport, stratégie de confidentialité du
+payload, intégration du parcours public/inscription, droits/CSRF/audit admin,
+et résolution opérateur des états indéterminés. Le bouton reste fermé.
