@@ -157,6 +157,7 @@ test('Rotations : créer, activer, suivre depuis son univers et annuler sans rec
   expect(await post(page,`/admin/rotations/occurrences/${id}/annuler`,{_token:'invalid',confirmed:'1',reason:'Interdit'})).toBe(403);
   await page.goto(`/admin/defis/${id}`);const cancel=page.locator('form[action$="/annuler"]');const data=await cancel.evaluate(f=>Object.fromEntries(new FormData(f)));
   await post(page,`/admin/rotations/occurrences/${id}/annuler`,{...data,reason:'Sans confirmation'});expect(queryIsolatedSql(project,`SELECT status FROM boost_event WHERE id=${id}`)).toBe('active');
+  await page.locator('.admin-challenge-cancel > summary').focus();await page.keyboard.press('Enter');
   await page.getByLabel('Motif d’annulation de la rotation').fill('Fin de l’animation');await page.getByLabel('Je confirme l’annulation de cette occurrence hebdomadaire.').check();await page.getByRole('button',{name:'Annuler cette rotation'}).click();
   await expect(page.locator('main')).toContainText('Annulé');tick();tick();expect(queryIsolatedSql(project,`SELECT status FROM boost_event WHERE id=${id}`)).toBe('cancelled');
   expect(Number(queryIsolatedSql(project,`SELECT COUNT(*) FROM boost_event WHERE universe_id=${own.universeId}`))).toBe(historyCount+1);expect(Number(queryIsolatedSql(project,`SELECT COUNT(*) FROM boost_event_contribution WHERE event_id=${id}`))).toBe(2);

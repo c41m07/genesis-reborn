@@ -228,9 +228,19 @@ liste en pleine largeur, formulaire en trois sections et activation dépliable.
 Validation Compose, lint statique, compilation et 11 PHP / 185 assertions réussis ;
 quatre scénarios navigateur consolidés et vingt et une captures administratives.
 Saisies après refus, versions, univers, activation motivée et plafond vérifiés.
-L10L prépare les défis et contributions : 64 A « Suivi dans le fil » et 65 B
-« Suivi et contributions », 66 cadres, 970 liens inspectés et douze exports.
-Liste, suivi, contributions et actions attendent le choix.
+L10L A « Suivi dans le fil » (page 64) est validé et réalisé localement : liste
+et filtres en pleine largeur, tableau puis fiches sous 1200 px, annulations
+natives dépliables. Validation Compose, lint statique, compilation et 27 PHP /
+150 assertions réussis ; cinq scénarios navigateur consolidés et dix-neuf captures
+ciblées. Filtres, paginations 50 + 2, clavier, contrastes ciblés et parcours sans
+JavaScript vérifiés, avec contributions conservées après retrait.
+Nettoyage Figcraft validé : 27 variantes retirées, 34 pages après tri, composants
+et références Galaxie/Simulateur préservés ; copie complète vérifiée conservée.
+L10M prépare les patchnotes : 66 A « Rédaction dans le fil » et 67 B « Texte et
+publication », 48 cadres, 640 liens inspectés, seize exports. Liste, création,
+édition et confirmation de suppression proposées dans des pages dédiées ; choix
+attendu avant réalisation. Le document compte désormais 36 pages, dont ces deux
+propositions encore à départager.
 Les autres rubriques administratives seront traitées par sous-lots, sans augmenter
 le compte des dix-huit ensembles ni déclarer L10 terminé.
 CI GitHub, fusion et déploiement restent distincts.

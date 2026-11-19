@@ -4230,7 +4230,8 @@ dans la fenêtre de bureau. Preuves : `lot-10L-{plan,manifest,verification}.json
 conversation. Les champs sont dessinés ; les boutons ouvrent des états d’exemple
 ou des références, sans cumuler les saisies. Les montants de boîte sont fictifs ;
 aucune annulation, suppression ou attribution réelle n’est exécutée.
-**Choix A/B attendu pour L10L** ; L10 en cours, plan global **15/18**. Patchnotes
+L10L A est ensuite validé explicitement ; réalisation ci-dessous. À ce stade,
+L10 reste en cours, plan global **15/18**. Patchnotes
 et exploitation attendent leurs sous-lots propres.
 
 ## Nettoyage Figcraft validé — 19 novembre 2026
@@ -4265,6 +4266,107 @@ Preuves dans les artefacts de la conversation :
 Aucun fichier applicatif ni donnée du jeu n’est modifié par ce nettoyage.
 La validation de L10L A est conservée ; sa réalisation suit ce nettoyage.
 
+## L10L A — Réalisation locale du 19 novembre 2026
+
+Le choix **A** est validé explicitement. Complexité **3/5** pour cette réalisation
+centrée sur la présentation ; les traitements sensibles existants sont conservés.
+La liste garde ses pages courantes et historiques, ses filtres GET et ses liens
+directs. Les titres restent cliquables, sans ajouter un deuxième lien redondant.
+La fiche présente le suivi puis les contributions : tableau sémantique au-dessus
+de 1200 px, fiches nommées sur tablette/téléphone. Les deux réutilisent le même
+résultat paginé de cinquante participants ; la présentation masquée est également
+absente de l’arbre d’accessibilité. Aucun chargement supplémentaire n’est ajouté.
+
+Les annulations guidées et hebdomadaires utilisent un `<details>` natif. Leurs
+conséquences restent visibles ; motifs et confirmations conservent leurs noms,
+contraintes, URL POST et jetons. Le retrait et le fragment de suivi commun au jeu
+ne sont pas modifiés. Navigation commune et formulaires sans JavaScript conservés,
+sommaire automatique désactivé sur ces deux pages. Contrôleurs, services, règles,
+récompenses et audit administratif restent inchangés ; consulter une fiche écrit
+toujours son entrée de journal existante.
+
+Fichiers applicatifs concernés : trois templates administratifs (layout, liste,
+fiche), import dans `app.js`, feuille `admin-challenges-workspace.css`, nouvelle
+recette `admin-challenges-refonte.spec.mjs` et ouverture du dépliable adaptée dans
+la recette hebdomadaire existante. Documentation synchronisée dans README,
+architecture, feuille de route, inventaire et présent suivi.
+
+Vérifications locales, avec données synthétiques et bases de recette isolées :
+
+- `make validate`, `make lint-static` et `make assets` réussis ; lint exécuté dans
+  un conteneur ponctuel sans dépendances démarrées. `git diff --check` avant commit.
+- `AdminEventPlannerTest|WeeklyRotationTest|AdminPaginationTest` : **27 tests PHP,
+  150 assertions**, tous réussis.
+- **Cinq scénarios navigateur consolidés** : deux nouveaux parcours L10L et trois
+  parcours existants (assistant défi, suppression/retrait et rotation complète).
+  Un sélecteur initial ambigu entre les deux listes de faits a été précisé ;
+  le parcours de rendu a ensuite réussi sans affaiblir les assertions.
+- **Dix-neuf captures ciblées** : liste, défi guidé et rotation en clair/sombre,
+  1440/768/390, plus état vide mobile. Titres sans espaces de 120 caractères,
+  absence de débordement, tableau/fiches, clavier et axe ciblé sans exclusion
+  vérifiés. Les captures des trois anciennes recettes s’ajoutent séparément.
+- Sans JavaScript : filtres et retour/rechargement, 52 défis et 52 contributeurs
+  paginés **50 + 2**, refus d’annuler sans confirmation puis annulation valide,
+  retrait conservant les 52 contributions et historique sans action disponible.
+  Ouverture/fermeture du dépliable conserve le motif ; consultations de rendu
+  conservent définitions et contributions et gardent leur audit.
+
+Preuves : `output/playwright/admin-challenges-refonte/`, journaux PHP, validation,
+lint, compilation et recettes initiale/finale. Les contrôles sont ciblés : aucune
+CI GitHub complète, fusion ou publication n’est exécutée. Aucun gain de performance
+ni audit RGAA exhaustif n’est annoncé. L10 reste en cours, plan global **15/18**.
+
+## L10M — Patchnotes, propositions du 19 novembre 2026
+
+Complexité **4/5**. Sources ciblées : `PatchNoteController`, `PatchNoteRepository`,
+`PatchNote`, formulaire administratif actuel et affichage joueur. Le formulaire
+actuel mélange création et éditeurs dans une liste ; l’édition ne valide pas
+encore complètement les champs et la lecture de date peut échouer. La confirmation
+de suppression actuelle dépend de JavaScript. Ces limites sont identifiées,
+sans les présenter comme déjà corrigées par une maquette.
+
+Les deux directions proposent quatre pages GET : liste `/admin/patchnotes`,
+création `/admin/patchnotes/nouvelle`, édition `/admin/patchnotes/{id}` et
+confirmation `/admin/patchnotes/{id}/supprimer`. Ce sont des tâches autonomes,
+avec formulaire ou conséquence propre ; elles ne deviennent pas des sections
+masquées de la liste. Les URL POST existantes seraient conservées. La réalisation
+devra valider champs et dates côté serveur, conserver les saisies après refus,
+les accès et jetons, puis vérifier la confirmation également sans JavaScript.
+Ces pages et corrections restent proposées, non implémentées.
+
+Dans le document Figcraft de bureau :
+
+- **66 · L10M · A — Rédaction dans le fil** : liste et rédaction en pleine largeur,
+  publication à la suite. Avantage : espace pour les longs contenus ; limite :
+  les conditions de publication sont plus bas dans le formulaire.
+- **67 · L10M · B — Texte et publication** : liste par deux, rédaction à gauche et
+  publication à droite sur ordinateur. Avantage : statut et date proches du
+  texte ; limite : largeur réduite. Retour dans le fil sous 1200 px.
+
+Recommandation **A** pour la rédaction de notes longues. Les deux conservent les
+six champs : titre (160), version (40), résumé (500), contenu en texte simple,
+statut et date UTC. Brouillon sans date conservée ; publié sans date immédiatement
+visible, avec date future visible à partir de celle-ci. Recherche titre/version,
+filtre d’état et pagination de cinquante conservés. Le lien joueur `/patchnotes`
+ouvre les notes effectivement publiées et peut les marquer lues ; ce n’est pas
+un aperçu de brouillon. Aucune publication ni suppression réelle n’est exécutée.
+
+Couverture équivalente : **48 cadres, 24 par direction**, **640 liens inspectés**
+et six départs de prototype. Quatre vues principales en 1440/768/390 ; états vide,
+filtré, seconde page, formulaire renseigné, publié, programmé, erreur, contenu long,
+résultat, menu et références en 390. **Seize exports** ordinateur/téléphone des
+quatre vues principales, examinés sur les présentations représentatives.
+Contrôle natif des **2 400 nœuds** sans débordement, texte superposé ni destination
+manquante ; parité des champs entre A/B vérifiée. Les 34 pages issues du nettoyage
+sont préservées ; **36 pages** après ajout, 348 variables conservées.
+Document enregistré proprement et page 66 A affichée dans la fenêtre de bureau.
+
+Preuves : `lot-10M-{plan,manifest,verification}.json`, état d’enregistrement et
+`lot-10M-{A,B}-{notes,new,edit,delete}-{1440,390}.png` dans les artefacts de la
+conversation. Champs dessinés et parcours simulés, sans cumul des saisies ;
+les exemples Alpha-X.Y.Z sont fictifs. **Choix A/B attendu avant réalisation**.
+L10 reste en cours ; exploitation, wiki et revue transversale restent à traiter.
+
 ## Reprise et états de couverture
 
 | Périmètre | État | Validation | Réalisation / vérifications | Limite restante |
@@ -4288,7 +4390,7 @@ La validation de L10L A est conservée ; sa réalisation suit ce nettoyage.
 | L7E | A implémentée et vérifiée localement | Page 36 A validée explicitement après reprise de la messagerie et des classements | 90 PHP / 569 assertions ; neuf parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L8 | A implémentée et vérifiée localement | Page 38 A validée explicitement | 23 PHP / 244 assertions ; 16 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L9 | A implémentée et vérifiée localement | Page 40 A validée explicitement | 7 PHP / 127 assertions ; 5 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
-| L10 | L10A à L10E réalisés en A, L10F/G en B et L10H à L10K en A ; L10L A/B préparé | Choix précédents conservés ; A choisi explicitement pour L10K, choix L10L attendu | Bilan L10K : 11 PHP / 185 assertions, quatre parcours navigateur consolidés, vingt et une captures administratives ; L10L pages 64/65, 66 cadres et 970 liens | Choix et réalisation L10L puis patchnotes et exploitation ; CI, fusion et déploiement distincts |
+| L10 | L10A à L10E réalisés en A, L10F/G en B et L10H à L10L en A ; L10M A/B préparé | Choix précédents conservés ; page 64 A validée pour L10L, choix L10M attendu | Bilan L10L : 27 PHP / 150 assertions, cinq parcours navigateur consolidés, dix-neuf captures ; L10M pages 66/67, 48 cadres et 640 liens | Choix et réalisation L10M puis exploitation ; CI, fusion et déploiement distincts |
 | L11 | Inventorié | Aucune nouvelle | Non engagé pour cette refonte | Examiner le wiki sans recommencer ses pages dédiées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 

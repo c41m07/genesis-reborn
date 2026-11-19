@@ -1110,6 +1110,19 @@ La navigation commune et l’absence de sommaire automatique sont préservées.
 Aucun contrôleur, service, chargement ou comportement JavaScript n’est modifié.
 Les occurrences existantes gardent leur définition et leurs récompenses figées.
 
+L10L A ajoute `admin-challenges-workspace.css`, limité à la liste et à la fiche
+des défis. Les filtres GET et les deux paginations de cinquante gardent leurs
+contrats. Le tableau s’affiche au-dessus de 1200 px ; les fiches individuelles
+prennent le relais sur tablette et téléphone. Les deux présentations réutilisent
+les mêmes lignes déjà préparées ; la présentation masquée est retirée de l’arbre
+d’accessibilité par `display: none`. Ce double balisage est borné à cinquante
+participants, sans nouvelle lecture. Le libellé de récompense est partagé par
+une macro locale. Le fragment de suivi partagé avec le jeu reste inchangé.
+Les annulations guidées et hebdomadaires se déplient nativement, avec conséquences
+visibles, motifs, confirmations et jetons conservés. Le sommaire automatique est
+désactivé. Aucun contrôleur, service ou traitement JavaScript n’est modifié ;
+la consultation conserve sa journalisation administrative existante.
+
 Les contrôleurs Événements, Projets et Rotations séparent les GET de liste et de
 formulaire. Les anciens POST restent acceptés. L’assistant et les interdictions
 de réécriture des événements guidés restent inchangés. L’édition de rotation
