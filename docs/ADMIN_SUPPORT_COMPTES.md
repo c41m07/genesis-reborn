@@ -123,3 +123,65 @@ test, Twig des deux fragments réussis ; 5 tests / 252 assertions réussis
 Fixture de 52 comptes en attente : 50 + 2 résultats, critères combinés, retour
 fragmentaire sans cache et conservation du filtre dans la pagination.
 Recette visuelle/clavier à effectuer, aucune conformité globale revendiquée.
+
+
+## Reprise : état d’action explicite et contrat du renvoi
+
+Complexité 2/5 pour l’incrément de lecture livré ; 5/5 pour le futur cycle
+d’envoi partagé. La fiche distingue maintenant renvoi inutile (adresse déjà
+confirmée), compte suspendu (le renvoi ne résout pas cette restriction), et
+renvoi administratif indisponible. Le lien public n’est proposé que pour une
+adresse non confirmée sans suspension. Ce filtre d’affichage n’est pas un
+nouveau contrôle du service public et ne modifie aucune permission.
+
+### Faisabilité et défauts à traiter ensemble
+
+Le renvoi est réalisable, mais pas en branchant un nouveau contrôleur sur le
+service existant. Relecture de `sendWelcomeAndVerification` : si le compte est
+confirmé entre le premier contrôle et l’acquisition du verrou, le retour de la
+closure n’arrête pas le code appelant ; celui-ci peut encore construire puis
+envoyer le lien non enregistré. Risque statique, pas course reproduite ici.
+`AccountMailDelivery` réessaie trois fois une exception de transport ; une
+exception après acceptation distante reste ambiguë. Un reçu local ne peut pas
+rendre SMTP exactement-une-fois. Ces points complètent les limites précédentes.
+
+Contrat proposé pour un prochain lot, non implémenté dans cette tranche :
+
+1. Une demande publique ou admin passe par le même service. Sous verrou du
+   compte, relire confirmation/suspension, contrôler un cooldown par compte
+   et une clé de demande unique. Même clé : retourner le même reçu ; autre
+   clé pendant le cooldown : aucun nouveau jeton ni nouvel envoi. La durée du
+   cooldown reste une décision à fixer, pas une valeur inventée dans le code.
+2. Persister atomiquement un reçu et une intention d’envoi. Le reçu contient
+   identifiant interne, acteur/cible, origine, motif borné, dates et état ; ni
+   adresse, token, URL, corps de mail, ni exception SMTP brute dans l’audit.
+   La charge confidentielle nécessaire à l’envoi est distincte du journal.
+   Sa protection, rétention et suppression doivent être définies avant stockage.
+3. Un worker revendique la demande par transition conditionnelle. Relecture
+   d’éligibilité avant transport ; une demande devenue inutile est annulée.
+   Un message livré deux fois au worker ne crée pas deux envois simultanés.
+4. États distincts : demandée, prise en charge, acceptée par le transport,
+   annulée, résultat indéterminé. Ne jamais afficher « reçu par le joueur ».
+   Après interruption autour de SMTP : résultat indéterminé sans réessai
+   automatique aveugle. Un identifiant idempotent côté fournisseur peut réduire
+   ce risque seulement si son contrat et sa disponibilité sont vérifiés.
+5. Le renvoi public doit utiliser ce même cycle dès l’ouverture de l’action
+   admin, sinon cooldown et invalidations restent contournables entre parcours.
+   Revoir aussi les appels d’inscription et les confirmations concurrentes.
+6. Tests requis avant activation : deux processus synchronisés en base isolée,
+   doubles requêtes publiques/admin, double consommation worker, confirmation
+   ou suspension concurrente, panne avant/après transaction et transport,
+   refus CSRF/droits, confidentialité du rendu/audit. Mailer factice uniquement.
+
+Aucune migration ni outbox de mail n’a été ajoutée ici. Aucun bouton d’envoi,
+worker, modification du service public ou promesse de concurrence garantie.
+La nouvelle donnée `activation_action` est un état de présentation, jamais
+une autorisation réutilisable pour écrire. Les droits ROLE_ADMIN et le journal
+de consultation existants sont inchangés.
+
+Validation de cette reprise : `make validate`, lint Twig et `git diff --check`
+réussis ; `AdminAccountDiagnosticTest` et `AdminDedicatedPagesTest` : 4 tests,
+212 assertions. Mailer mock avec `send` attendu zéro fois, comptes synthétiques
+et base tmpfs privée supprimée après recette. Les 404 attendus sont les tests
+d’accès absent. Pas de test de concurrence nouveau : aucun cycle d’envoi n’a
+été modifié. Pas de recette visuelle, CI complète ni publication.

@@ -16,5 +16,10 @@
         <div><dt>Réception des emails</dt><dd>Non mesurable depuis cette fiche.</dd></div>
     </dl>
     <p>La présence d’un lien ne prouve ni l’envoi ni la réception du mail. L’absence de lien ne permet pas de distinguer une demande jamais faite d’un lien utilisé ou remplacé.</p>
-    {% if not account_diagnostic.verified_at %}<p>Pour réessayer, orienter le joueur vers le <a href="{{ path('app_email_verify_request') }}">formulaire de renvoi du lien de confirmation</a>. Cette consultation ne déclenche aucun envoi.</p>{% endif %}
+    <p data-account-action="activation">
+        {% if account_diagnostic.activation_action == 'not_required' %}Aucun renvoi nécessaire : adresse déjà confirmée.
+        {% elseif account_diagnostic.activation_action == 'suspended' %}Compte suspendu : un lien de confirmation ne lève pas la suspension. Examiner d’abord le motif de suspension.
+        {% else %}Renvoi depuis l’administration indisponible : utiliser le parcours public ci-dessous.{% endif %}
+    </p>
+    {% if account_diagnostic.activation_action == 'unavailable' %}<p>Pour réessayer, orienter le joueur vers le <a href="{{ path('app_email_verify_request') }}">formulaire de renvoi du lien de confirmation</a>. Cette consultation ne déclenche aucun envoi.</p>{% endif %}
 </section>

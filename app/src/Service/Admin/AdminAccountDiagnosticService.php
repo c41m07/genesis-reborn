@@ -12,7 +12,7 @@ final class AdminAccountDiagnosticService
     {
     }
 
-    /** @return array{verified_at: ?\DateTimeImmutable, locked_at: ?\DateTimeImmutable, verification: array{state: string, expires_at: ?\DateTimeImmutable}, password_reset: array{state: string, expires_at: ?\DateTimeImmutable}} */
+    /** @return array{verified_at: ?\DateTimeImmutable, locked_at: ?\DateTimeImmutable, verification: array{state: string, expires_at: ?\DateTimeImmutable}, activation_action: string, password_reset: array{state: string, expires_at: ?\DateTimeImmutable}} */
     public function snapshot(Player $player): array
     {
         $expirations = $this->repository->latestExpirations($player);
@@ -21,6 +21,10 @@ final class AdminAccountDiagnosticService
         return [
             'verified_at' => $player->emailVerifiedAt,
             'locked_at' => $player->lockedAt,
+            // Cet état informe le support ; il n'autorise jamais une mutation.
+            'activation_action' => $player->emailVerifiedAt !== null
+                ? 'not_required'
+                : ($player->lockedAt !== null ? 'suspended' : 'unavailable'),
             // Une confirmation déjà acquise prime sur un éventuel ancien jeton résiduel.
             'verification' => $player->emailVerifiedAt !== null
                 ? ['state' => 'not_required', 'expires_at' => null]

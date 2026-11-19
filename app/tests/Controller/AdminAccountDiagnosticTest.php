@@ -50,6 +50,7 @@ final class AdminAccountDiagnosticTest extends WebTestCase
         $other = $this->player($em, 'Other');
         $service = self::getContainer()->get(AdminAccountDiagnosticService::class);
         $snapshot = $service->snapshot($player);
+        self::assertSame('unavailable', $snapshot['activation_action']);
         self::assertSame('absent', $snapshot['verification']['state']);
         self::assertSame('absent', $snapshot['password_reset']['state']);
         $verification = new EmailVerificationToken();
@@ -78,6 +79,7 @@ final class AdminAccountDiagnosticTest extends WebTestCase
         $player->lockedAt = $now;
         $em->flush();
         $snapshot = $service->snapshot($player);
+        self::assertSame('not_required', $snapshot['activation_action']);
         self::assertSame('not_required', $snapshot['verification']['state']);
         self::assertNull($snapshot['verification']['expires_at']);
         self::assertSame('expired', $snapshot['password_reset']['state']);
@@ -122,12 +124,22 @@ final class AdminAccountDiagnosticTest extends WebTestCase
         self::assertSelectorTextContains('[data-account-link="verification"]', 'Non expiré');
         self::assertSelectorTextContains('#account-diagnostic', 'ne prouve ni l’envoi ni la réception');
         self::assertSelectorExists('#account-diagnostic a[href="/inscription/renvoyer"]');
+        self::assertSelectorTextContains('[data-account-action="activation"]', 'Renvoi depuis l’administration indisponible');
         self::assertStringNotContainsString($token->tokenHash, $client->getResponse()->getContent());
         self::assertStringNotContainsString($player->password, $client->getResponse()->getContent());
         self::assertStringNotContainsString($player->email, $client->getResponse()->getContent());
         self::assertNull($player->emailVerifiedAt);
         self::assertSame(1, $em->getRepository(EmailVerificationToken::class)->count(['player' => $player]));
         self::assertSame(1, $em->getRepository(AdminAuditLog::class)->count(['action' => 'admin_player_view', 'targetId' => $player->id]));
+        // Une suspension ne se résout pas en sollicitant un nouveau lien.
+        $player = $em->find(Player::class, $player->id);
+        $player->lockedAt = new \DateTimeImmutable();
+        $em->flush();
+        $client->request('GET', $url);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('[data-account-action="activation"]', 'ne lève pas la suspension');
+        self::assertSelectorNotExists('#account-diagnostic a[href="/inscription/renvoyer"]');
+        self::assertSame(1, $em->getRepository(EmailVerificationToken::class)->count(['player' => $player]));
         // L'affichage ne doit pas proposer de renvoi pour une adresse déjà confirmée.
         $player = $em->find(Player::class, $player->id);
         $player->emailVerifiedAt = new \DateTimeImmutable();
