@@ -4,6 +4,7 @@ namespace App\Controller;
 use App\Entity\{AdminAuditLog, Planet, Player, PlayerActivity, PlayerUniverse};
 use App\Service\Player\PlayerActivityService;
 use App\Service\Admin\AdminInterventionService;
+use App\Service\Admin\AdminAccountDiagnosticService;
 use App\Service\Colony\ResourceService;
 use App\Service\Catalog\GameCatalog;
 use Doctrine\ORM\EntityManagerInterface;
@@ -17,7 +18,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class AdminPlayerController extends AbstractController
 {
     #[Route('/admin/joueurs/{id}', name: 'app_admin_player', requirements: ['id'=>'\d+'], methods: ['GET'])]
-    public function show(int $id, EntityManagerInterface $em, PlayerActivityService $activity, ClockInterface $clock, ResourceService $resources, GameCatalog $catalog): Response
+    public function show(int $id, EntityManagerInterface $em, PlayerActivityService $activity, ClockInterface $clock, ResourceService $resources, GameCatalog $catalog, AdminAccountDiagnosticService $diagnostic): Response
     {
         $player = $em->find(Player::class, $id);
         if (!$player) throw $this->createNotFoundException('Joueur introuvable.');
@@ -31,7 +32,7 @@ final class AdminPlayerController extends AbstractController
         $entry = new AdminAuditLog();
         $entry->actor = $this->getUser();$entry->action = 'admin_player_view';$entry->targetType = 'player';$entry->targetId = $id;$entry->createdAt = $clock->now();
         $em->persist($entry);$em->flush();
-        return $this->render('admin/player.html.twig', ['player'=>$player, 'memberships'=>$memberships, 'stocks'=>$stocks, 'ship_catalog'=>$catalog->all('ships'), 'ship_tiers'=>$catalog->tiers()]);
+        return $this->render('admin/player.html.twig', ['player'=>$player, 'account_diagnostic'=>$diagnostic->snapshot($player), 'memberships'=>$memberships, 'stocks'=>$stocks, 'ship_catalog'=>$catalog->all('ships'), 'ship_tiers'=>$catalog->tiers()]);
     }
 
     #[Route('/admin/joueurs/{id}/colonies/{planetId}/ressources', name: 'app_admin_player_resources', requirements: ['id'=>'\d+', 'planetId'=>'\d+'], methods: ['POST'])]

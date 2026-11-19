@@ -67,3 +67,8 @@ Le suivi des chantiers Alpha porte le nom SUIVI_ALPHA.md ; ses notes locales
 sont conservées.
 
 - [Étude du coût électrique des opérations](ETUDE_COUT_ELECTRIQUE.md) : coût de 100 E par minute entamée validé, hypothèses et effets des lots, rangs et vitesses.
+
+
+## Support des comptes
+
+[Diagnostic administratif des comptes](ADMIN_SUPPORT_COMPTES.md) : états privés, protections, tests et sous-lots restant à réaliser.

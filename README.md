@@ -53,6 +53,7 @@ L’orientation confirmée est une stratégie au rythme modéré ; les durées d
 
 - Administration : [fiabilité du catalogue](docs/ADMIN_CATALOGUE_FIABILITE.md), avec source des valeurs, motif, confirmation, rejet des formulaires périmés, journal avant/après et comparaison de devis sans publication.
 
+- Administration : la liste filtre les adresses confirmées ou en attente et la fiche joueur distingue confirmation, suspension et échéances des liens de compte, sans exposer de secret ni prétendre mesurer la réception des emails. [Diagnostic et limites](docs/ADMIN_SUPPORT_COMPTES.md).
 
 - Déblocages initiaux des bâtiments. Le chantier exige ses producteurs de métal et de nano au niveau 2 du même rang et les chantiers précédents au niveau 20. Le bunker demande ces producteurs au niveau 1 et les bunkers précédents au niveau 8. Les laboratoires avancés exigent les laboratoires des rangs précédents au niveau 10. L’hydrogène demande la recherche industrielle du rang au niveau 3, et l’antimatière au niveau 5. [Grille complète des déblocages](docs/DEBLOCAGES.md#bâtiments--13)
 
@@ -800,3 +801,6 @@ sont signalées et ne peuvent pas être restaurées. Les nouvelles versions comp
 compatibles peuvent être prévisualisées puis réappliquées après confirmation et
 motif, avec contrôle de concurrence et journalisation.
 [Périmètre et limites](docs/ADMIN_CATALOGUE_FIABILITE.md).
+Le diagnostic support distingue le renvoi inutile, la suspension et le renvoi administratif indisponible ; voir [le périmètre et le contrat de fiabilisation](docs/ADMIN_SUPPORT_COMPTES.md). Aucun envoi administratif direct n’est activé.
+
+Le service de confirmation sépare préparation sous verrou et transport : une confirmation constatée sous verrou n’entraîne plus l’envoi d’un lien non enregistré. Cette correction ne constitue pas encore le renvoi administratif idempotent.

@@ -1180,3 +1180,17 @@ sommaire automatique et ne sont plus repliées par `admin_editors`.
 avec remplacement de l’entrée d’historique ; sans JavaScript, listes et liens
 serveur permettent d’atteindre les mêmes fiches. Aucun changement de schéma,
 dépendance ou chargement global de données de jeu n’est ajouté.
+
+
+## Diagnostic privé des comptes — lot support
+
+`AdminAccountDiagnosticRepository` sélectionne uniquement la dernière échéance
+des liens de confirmation et de réinitialisation du compte consulté (deux
+lectures bornées). `AdminAccountDiagnosticService` compare à une même horloge
+et distingue compte confirmé et lien résiduel. Le panneau de la fiche joueur
+réutilise les droits et la trace de consultation ; il ne réalise aucun envoi
+ni écriture de jeton. Voir [le périmètre et les limites](ADMIN_SUPPORT_COMPTES.md).
+
+`AdminReadRepository::players` applique aussi le critère `verification` avant
+pagination ; `AdminController` n’admet que `confirmed` et `pending`. Les
+fragments et liens GET gardent ce critère, indépendamment de la suspension.
