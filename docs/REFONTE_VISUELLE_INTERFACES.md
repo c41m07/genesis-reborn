@@ -4114,8 +4114,124 @@ ou des planches de référence. Les saisies ne sont pas cumulées et aucun modè
 ou occurrence n’est écrit. L’activation d’un modèle désactivé mène à la planche de
 résultat. Le lien Occurrences et historique est référencé avec son univers ; la
 gestion détaillée et l’annulation restent au sous-lot Défis.
-**Choix A/B attendu pour L10K** ; L10 en cours, plan global **15/18**. Défis,
+L10K A est ensuite validé explicitement ; réalisation ci-dessous. À ce stade,
+L10 est en cours, plan global **15/18**. Défis,
 patchnotes et exploitation attendent leurs sous-lots propres.
+
+## L10K A — Réalisation locale du 19 novembre 2026
+
+La page **62 A « Réglages dans le fil »** est validée explicitement. Complexité
+**4/5** : contexte d’univers, définition versionnée, activation séparée et règles
+figées des occurrences. Liste, création et édition gardent leurs URL ; le filtre
+sélectionne les modèles d’un univers. Le formulaire conserve trois sections dans
+le fil : identité, objectif/attribution, durée/enregistrement. L’activation rapide
+est une action secondaire dépliable, avec conséquences visibles avant ouverture.
+Aucune séparation artificielle par onglets JavaScript n’est ajoutée.
+
+La liste et les réglages occupent la largeur disponible. Les labels sont associés
+aux champs ; les conditions du Top 3, du seuil et des contributions positives
+restent visibles. Les valeurs facultatives ne sont pas masquées. Le lien de
+retour reste sur une ligne entière, pour laisser la place aux noms longs.
+L’activation garde son formulaire, son motif obligatoire et sa cible ; ouvrir
+et refermer le `<details>` conserve la saisie. Les trois objectifs, formats et
+modes d’attribution conservent leurs valeurs ; bornes, pas, durées, activation par
+défaut, jetons, version et univers restent identiques. Aucun contrôleur, service,
+verrou, réglage, règle, schéma, dépendance ou code JavaScript n’est modifié.
+
+Fichiers : `admin/weekly_rotations.html.twig`, `weekly_rotation_form.html.twig`,
+`admin/layout.html.twig`, `assets/app.js`, nouveau
+`assets/styles/admin-rotations-workspace.css`, adaptation clavier de
+`admin-event-wizard.spec.mjs` et nouveau `admin-rotations-refonte.spec.mjs`.
+README, architecture, inventaire et feuille de route sont synchronisés.
+
+Vérifications locales :
+
+- `make validate`, `make assets` et `make lint-static` réussis ; lint Twig ciblé
+  après l’ajustement final du lien de retour. Le lint statique utilise le
+  conteneur applicatif sans les services habituels ; aucun contrôle du schéma
+  de la base courante n’est annoncé.
+- **11 tests PHP / 185 assertions** : `WeeklyRotationTest` et
+  `AdminDedicatedPagesTest`. Versions, univers, occurrences figées, activation,
+  permissions et annulation sans recréation couverts.
+- **Quatre scénarios navigateur distincts consolidés** : parcours complet de
+  rotation existant, édition périmée/création native existante, rendu des trois
+  vues et nouveau parcours sans JavaScript. Axe sans exclusion sur les vues
+  concernées, clavier, navigation active, noms longs et absence de débordement.
+- **Vingt et une captures administratives** : trois vues sur 1440/768/390 dans
+  les deux thèmes, activation dépliée et états erreur/vide. Le rendu est repris
+  après le dernier ajustement du lien de retour ; le focus revient au motif
+  pour la capture prise après le contrôle automatisé d’accessibilité.
+- Sans JavaScript : Top 3 sans objectif et découvertes non entières refusés,
+  consignes/motif/activation conservés, durée de 1,5 h enregistrée, motif blanc
+  refusé, activation motivée, rechargement et retour arrière, univers vide et
+  liens conservant son contexte, trente modèles visibles et création suivante
+  refusée sans altérer la définition existante.
+
+Les deux premières recettes nouvelles échouaient dans leur préparation SQL :
+les univers sans réglage peuvent stocker un tableau JSON vide, sur lequel
+l’ajout d’une clé nommée ne s’appliquait pas. Les seules fixtures normalisent ce
+JSON et vérifient les données préparées avant de poursuivre. Toutes les assertions
+sont conservées ; les deux scénarios repassent. Les deux parcours existants
+réussis sont conservés dans le bilan, sans présenter les premiers échecs comme
+réussis. Preuves : `output/playwright/admin-rotations-refonte/`, journaux
+`validate`, `assets`, `lint`, `lint-twig-final`, `php`, `browser`, `browser-final`
+et `browser-rendu-final` ; captures dans `recette-rendu-final` et `recette-finale`.
+Les bases et données de test sont isolées ; aucune migration ou action sur la
+base habituelle. CI GitHub, fusion, activation locale et déploiement restent
+distincts. Aucun gain de performance ou audit RGAA exhaustif n’est annoncé.
+
+## L10L — Défis et contributions, propositions du 19 novembre 2026
+
+Complexité **4/5**. Sources ciblées : `AdminChallengeController`,
+`ChallengeQueryService`, fragment de suivi partagé, annulation guidée,
+`WeeklyRotationService`, retrait administratif et templates concernés. Liste et
+fiche restent des pages dédiées ; univers, état et historique sélectionnent le
+même ensemble. Défis et contributions restent paginés par cinquante. Les actions
+secondaires se déplient dans la fiche, avec leurs conséquences visibles.
+L’assistant et les modèles de rotations restent dans leurs pages validées.
+
+Dans le même document Figcraft de bureau :
+
+- **64 · L10L · A — Suivi dans le fil** : liste en pleine largeur, suivi puis
+  contributions en tableau sur ordinateur, fiches sur tablette/téléphone.
+  Avantage : place pour les noms, montants et longues listes ; limite : il faut
+  descendre pour rapprocher participants et conditions du défi.
+- **65 · L10L · B — Suivi et contributions** : résultats par deux, suivi à gauche
+  des contributions en fiches sur ordinateur. Avantage : conditions et joueurs
+  visibles ensemble ; limite : colonnes plus étroites et fiches moins denses
+  lorsqu’il y a de nombreux participants. Retour dans le fil sous 1200 px.
+
+Recommandation **A** pour conserver une lecture efficace des cinquante
+contributions par page. Les deux gardent objectif, dates UTC prévues/effectives,
+progression, minimum individuel guidé, contenu figé des boîtes et conditions
+propres aux rotations. Un défi en cours ne montre pas des récompenses déjà
+attribuées par anticipation. Les états terminés illustrent disponible, attente
+et utilisé. Annulation guidée et de son annonce, annulation hebdomadaire sans
+recréation, suppression d’un défi inutilisé et retrait avec historique gardent
+leurs distinctions. Motifs, confirmations, accès, jetons et validations serveur
+restent nécessaires. La consultation d’une fiche écrit son journal existant ;
+elle n’est pas présentée comme une lecture sans aucun effet de bord.
+
+Couverture équivalente : **66 cadres, 33 par direction**, **970 liens inspectés**,
+six départs de prototype. Liste, défi guidé et rotation en 1440/768/390 ; filtres,
+vide, cinquante défis, seconde page, historique, défi terminé, retiré, planifié,
+en attente, cinquante contributions et seconde page, absence de contribution,
+annulations/retrait ouverts et renseignés, contenu long, erreurs, résultats,
+menu et références en 390. **Douze exports** ordinateur/téléphone des vues
+principales ; présentations représentatives examinées visuellement.
+
+Contrôle natif des **5 046 nœuds** : aucun débordement, texte superposé ou lien
+manquant ; parité des champs et valeurs entre A/B vérifiée. Les 58 pages
+précédentes conservent noms et nombres de cadres ; 60 pages après ajout,
+348 variables réutilisées. Document enregistré proprement, page 64 A affichée
+dans la fenêtre de bureau. Preuves : `lot-10L-{plan,manifest,verification}.json`,
+états avant/après/enregistrement et
+`lot-10L-{A,B}-{challenges,guided,weekly}-{1440,390}.png` dans les artefacts de la
+conversation. Les champs sont dessinés ; les boutons ouvrent des états d’exemple
+ou des références, sans cumuler les saisies. Les montants de boîte sont fictifs ;
+aucune annulation, suppression ou attribution réelle n’est exécutée.
+**Choix A/B attendu pour L10L** ; L10 en cours, plan global **15/18**. Patchnotes
+et exploitation attendent leurs sous-lots propres.
 
 ## Reprise et états de couverture
 
@@ -4140,7 +4256,7 @@ patchnotes et exploitation attendent leurs sous-lots propres.
 | L7E | A implémentée et vérifiée localement | Page 36 A validée explicitement après reprise de la messagerie et des classements | 90 PHP / 569 assertions ; neuf parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L8 | A implémentée et vérifiée localement | Page 38 A validée explicitement | 23 PHP / 244 assertions ; 16 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L9 | A implémentée et vérifiée localement | Page 40 A validée explicitement | 7 PHP / 127 assertions ; 5 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
-| L10 | L10A à L10E réalisés en A, L10F/G en B et L10H/I/J en A ; L10K A/B préparé | Choix précédents conservés ; A choisi explicitement pour L10J, choix L10K attendu | Bilan L10J : 37 PHP / 224 assertions, trois parcours navigateur consolidés, vingt captures ciblées ; L10K pages 62/63, 54 cadres et 774 liens | Choix et réalisation L10K puis autres rubriques d’animation et d’exploitation ; CI, fusion et déploiement distincts |
+| L10 | L10A à L10E réalisés en A, L10F/G en B et L10H à L10K en A ; L10L A/B préparé | Choix précédents conservés ; A choisi explicitement pour L10K, choix L10L attendu | Bilan L10K : 11 PHP / 185 assertions, quatre parcours navigateur consolidés, vingt et une captures administratives ; L10L pages 64/65, 66 cadres et 970 liens | Choix et réalisation L10L puis patchnotes et exploitation ; CI, fusion et déploiement distincts |
 | L11 | Inventorié | Aucune nouvelle | Non engagé pour cette refonte | Examiner le wiki sans recommencer ses pages dédiées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 

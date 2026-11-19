@@ -1,13 +1,24 @@
 {% extends 'admin/layout.html.twig' %}
 {% block title %}Rotations hebdomadaires · Console{% endblock %}
 {% block body %}
-<div class="page-heading"><h1>Rotations hebdomadaires</h1><a class="primary" href="{{ path('app_admin_weekly_rotation_new',{universe:universe.id}) }}">Créer un modèle hebdomadaire</a></div>
+<div class="page-heading"><h1>Rotations hebdomadaires</h1></div>
+<p class="admin-rotation-actions"><a class="primary" href="{{ path('app_admin_weekly_rotation_new', {universe: universe.id}) }}">Créer un modèle hebdomadaire</a></p>
 <p>Une occurrence par univers et par semaine, le lundi à 00 h UTC. Les modèles actifs alternent dans l’ordre ci-dessous. Les changements concernent les semaines non encore programmées ; les occurrences existantes gardent leurs règles et récompenses.</p>
-<form method="get" class="feedback-admin-filters"><label for="rotation-universe">Univers à gérer</label><select id="rotation-universe" name="universe">{% for item in universes %}<option value="{{ item.id }}"{{ item.id==universe.id?' selected':'' }}>{{ item.name }}</option>{% endfor %}</select><button class="secondary">Afficher cet univers</button></form>
-<p><a href="{{ path('app_admin_challenges',{universe:universe.id}) }}">Occurrences et historique de cet univers</a></p>
-<section class="panel"><h2>Modèles de {{ universe.name }}</h2>
-{% for definition in definitions %}<article class="account-section"><h3>{{ definition.name }}</h3><p>{{ definition.enabled ? 'Actif' : 'Désactivé' }} · {{ objectives[definition.objective].label }} · {{ formats[definition.format] }} · {{ definition.duration_seconds / 3600 }} h</p>
-<p>{{ reward_modes[definition.reward_mode] }}{% if definition.global_goal|default(null) %} · Objectif global : {{ definition.global_goal|quantity(2) }}{% endif %}{% if definition.threshold_value|default(null) %} · Seuil individuel : {{ definition.threshold_value|quantity(2) }}{% endif %} · Un boost par participant éligible.</p>
-<a class="secondary" href="{{ path('app_admin_weekly_rotation_edit',{id:universe.id,key:definition.key}) }}">Modifier {{ definition.name }}</a></article>{% else %}<p>Aucun modèle.</p>{% endfor %}
+<form method="get" class="panel admin-rotation-universe">
+    <div class="admin-rotation-field"><label for="rotation-universe">Univers à gérer</label><select id="rotation-universe" name="universe">{% for item in universes %}<option value="{{ item.id }}"{{ item.id==universe.id?' selected':'' }}>{{ item.name }}</option>{% endfor %}</select></div>
+    <button class="secondary">Afficher cet univers</button>
+</form>
+<p class="admin-rotation-actions"><a class="secondary" href="{{ path('app_admin_challenges', {universe: universe.id}) }}">Occurrences et historique de cet univers</a></p>
+<section aria-labelledby="rotation-models-title"><h2 id="rotation-models-title">Modèles de {{ universe.name }}</h2>
+<div class="admin-rotation-models">
+{% for definition in definitions %}
+    <article class="panel">
+        <h3>{{ definition.name }}</h3>
+        <p>{{ definition.enabled ? 'Actif' : 'Désactivé' }} · {{ objectives[definition.objective].label }} · {{ formats[definition.format] }} · {{ definition.duration_seconds / 3600 }} h</p>
+        <p>{{ reward_modes[definition.reward_mode] }}{% if definition.global_goal|default(null) %} · Objectif global : {{ definition.global_goal|quantity(2) }}{% endif %}{% if definition.threshold_value|default(null) %} · Seuil individuel : {{ definition.threshold_value|quantity(2) }}{% endif %} · Un boost par participant éligible.</p>
+        <a class="secondary" href="{{ path('app_admin_weekly_rotation_edit', {id: universe.id, key: definition.key}) }}">Modifier {{ definition.name }}</a>
+    </article>
+{% else %}<p class="panel">Aucun modèle.</p>{% endfor %}
+</div>
 <p>Désactiver un modèle ne supprime et n’annule aucune occurrence déjà programmée. L’annulation d’une occurrence se fait depuis sa fiche et conserve contributions et récompenses acquises.</p></section>
 {% endblock %}

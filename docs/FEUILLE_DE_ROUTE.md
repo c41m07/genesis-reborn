@@ -223,9 +223,14 @@ en pleine largeur, identité, paliers et minimums dans un formulaire, ressources
 sur cinq/deux/une colonnes. Le brouillon accepte l’ajout/retrait avant le choix
 d’univers. Validation Compose, lint statique, compilation et 37 PHP / 224 assertions
 réussis ; trois scénarios navigateur consolidés et vingt captures ciblées.
-L10K prépare les rotations hebdomadaires : 62 A « Réglages dans le fil » et
-63 B « Conditions et programmation », 54 cadres, 774 liens inspectés et douze
-exports. Liste, création, édition et activation attendent le choix.
+L10K A « Réglages dans le fil » (page 62) est validé et réalisé localement :
+liste en pleine largeur, formulaire en trois sections et activation dépliable.
+Validation Compose, lint statique, compilation et 11 PHP / 185 assertions réussis ;
+quatre scénarios navigateur consolidés et vingt et une captures administratives.
+Saisies après refus, versions, univers, activation motivée et plafond vérifiés.
+L10L prépare les défis et contributions : 64 A « Suivi dans le fil » et 65 B
+« Suivi et contributions », 66 cadres, 970 liens inspectés et douze exports.
+Liste, suivi, contributions et actions attendent le choix.
 Les autres rubriques administratives seront traitées par sous-lots, sans augmenter
 le compte des dix-huit ensembles ni déclarer L10 terminé.
 CI GitHub, fusion et déploiement restent distincts.

@@ -80,3 +80,4 @@ import './styles/admin-balance-workspace.css';
 import './styles/admin-boxes-workspace.css';
 import './styles/admin-events-workspace.css';
 import './styles/admin-projects-workspace.css';
+import './styles/admin-rotations-workspace.css';

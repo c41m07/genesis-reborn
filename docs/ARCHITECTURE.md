@@ -1099,6 +1099,17 @@ validation d’un univers existant, des paliers, minimums, version et permission
 Aucune écriture n’est ajoutée aux étapes de préparation. Les noms des champs,
 jetons, limites et services métier conservent leurs contrats.
 
+L10K A ajoute `admin-rotations-workspace.css`, limité aux trois routes des modèles
+hebdomadaires. La liste conserve son filtre d’univers et l’ordre des modèles.
+Création et édition utilisent un formulaire avec trois sections nommées :
+identité, objectif/attribution, durée/enregistrement. Les champs facultatifs
+restent visibles ; valeurs, contraintes, jetons et empreinte sont conservés.
+L’activation rapide garde un formulaire distinct dans un `<details>` natif ; ses
+conséquences restent visibles et son motif survit à l’ouverture/fermeture.
+La navigation commune et l’absence de sommaire automatique sont préservées.
+Aucun contrôleur, service, chargement ou comportement JavaScript n’est modifié.
+Les occurrences existantes gardent leur définition et leurs récompenses figées.
+
 Les contrôleurs Événements, Projets et Rotations séparent les GET de liste et de
 formulaire. Les anciens POST restent acceptés. L’assistant et les interdictions
 de réécriture des événements guidés restent inchangés. L’édition de rotation
