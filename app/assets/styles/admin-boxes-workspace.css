@@ -1,0 +1,147 @@
+/* L10H A : les plafonds et les trois formats gardent un seul formulaire. */
+body.admin-console.admin-boxes-workspace .admin-content {
+    overflow-wrap: anywhere;
+}
+
+body.admin-console.admin-boxes-workspace .admin-box-sections {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin: 24px 0;
+}
+
+body.admin-console.admin-boxes-workspace .admin-box-sections a {
+    display: flex;
+    align-items: center;
+    min-height: 46px;
+}
+
+body.admin-console.admin-boxes-workspace .resource-box-settings {
+    display: grid;
+    max-width: none;
+    gap: 20px;
+}
+
+body.admin-console.admin-boxes-workspace .resource-box-settings .panel {
+    display: block;
+    min-width: 0;
+    padding: 22px;
+    margin: 0;
+    border-radius: 6px;
+    scroll-margin-top: 24px;
+}
+
+body.admin-console.admin-boxes-workspace .resource-box-settings legend {
+    float: left;
+    width: 100%;
+    padding: 0;
+    margin: 0 0 24px;
+    font-size: 21px;
+    line-height: 1.5;
+    font-weight: 700;
+    color: var(--text);
+}
+
+body.admin-console.admin-boxes-workspace :is(.admin-box-caps, .admin-box-fields) {
+    display: grid;
+    clear: both;
+    min-width: 0;
+    gap: 22px;
+}
+
+body.admin-console.admin-boxes-workspace .admin-box-caps {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 18px;
+}
+
+body.admin-console.admin-boxes-workspace .admin-box-templates {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+    gap: 20px;
+    scroll-margin-top: 24px;
+}
+
+body.admin-console.admin-boxes-workspace .admin-box-field {
+    display: grid;
+    min-width: 0;
+    gap: 8px;
+}
+
+body.admin-console.admin-boxes-workspace .admin-box-field label {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+body.admin-console.admin-boxes-workspace :is(.admin-box-field input, .admin-box-field textarea) {
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    padding: 12px;
+    margin: 0;
+    font-size: 14px;
+}
+
+body.admin-console.admin-boxes-workspace .admin-box-field textarea {
+    min-height: 150px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: inherit;
+    resize: vertical;
+}
+
+body.admin-console.admin-boxes-workspace :is(#box-amount-help, #box-reason-help) {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+body.admin-console.admin-boxes-workspace #box-amount-help {
+    margin: 20px 0 0;
+}
+
+body.admin-console.admin-boxes-workspace .admin-intervention-confirm {
+    align-items: start;
+    min-height: 44px;
+    font-size: 14px;
+}
+
+body.admin-console.admin-boxes-workspace .admin-intervention-confirm input {
+    width: 22px;
+    height: 22px;
+    min-height: 22px;
+    margin: 0;
+}
+
+body.admin-console.admin-boxes-workspace .resource-box-settings button {
+    width: 100%;
+    min-height: 46px;
+    text-align: left;
+}
+
+@media (max-width: 1200px) {
+    body.admin-console.admin-boxes-workspace .admin-box-caps {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    body.admin-console.admin-boxes-workspace .admin-box-templates {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 760px) {
+    body.admin-console.admin-boxes-workspace :is(.admin-box-caps, .admin-box-sections) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.admin-console.admin-boxes-workspace .resource-box-settings .panel {
+        padding: 18px;
+    }
+
+    body.admin-console.admin-boxes-workspace :is(.admin-box-field input, .admin-box-field textarea) {
+        font-size: 16px;
+    }
+}

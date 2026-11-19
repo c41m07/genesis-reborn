@@ -1062,6 +1062,16 @@ Sous 1200 px, les colonnes reviennent sur une seule. Les quatre ancres des mesur
 parcourent le même relevé ; famille, recherche et édition gardent leurs URL.
 Les contrôleurs, services, lectures et écritures ne sont pas modifiés.
 
+L10H A ajoute `admin-boxes-workspace.css`, limité à `app_admin_resource_boxes`.
+Le formulaire conserve ses vingt champs numériques, son motif, sa confirmation
+et son jeton. Cinq plafonds précèdent trois `<fieldset>` de formats, puis le
+motif et la confirmation. Les trois ancres parcourent cette même page. Sous
+1200 px, les formats reviennent sur une colonne ; les plafonds passent par deux
+colonnes puis une sur téléphone. `admin-editors` ne replie plus ce formulaire
+et le sommaire automatique est désactivé sur cette page. Une réponse de refus
+conserve aussi la case soumise ; le serveur continue de contrôler sa valeur.
+`AdminResourceBoxController` et `ResourceBoxPolicy` ne sont pas modifiés.
+
 Les contrôleurs Événements, Projets et Rotations séparent les GET de liste et de
 formulaire. Les anciens POST restent acceptés. L’assistant et les interdictions
 de réécriture des événements guidés restent inchangés. L’édition de rotation

@@ -3777,7 +3777,122 @@ confirmée au premier plan. Preuves : `lot-10H-{plan,manifest,verification}.json
 le dossier de conception. Les propositions restent des maquettes ; la recette
 du formulaire réel et des deux thèmes attend le choix.
 
-**Choix A/B attendu pour L10H** ; L10 en cours, plan global **15/18**.
+L10H A est ensuite validé explicitement ; réalisation ci-dessous.
+
+## L10H A — Réalisation locale du 19 novembre 2026
+
+Complexité **4/5**. Page 56 A retenue : cinq plafonds en tête, puis petite,
+moyenne et grande boîte en colonnes sur ordinateur, motif et confirmation en fin
+de formulaire. Sous 1200 px, les formats reviennent sur une colonne ; les plafonds
+passent par deux colonnes puis une sous 760 px. Les trois ancres parcourent cette
+même tâche. Une page et un POST communs sont conservés pour valider ensemble les
+plafonds et les modèles. Le formulaire n’est plus replié par `admin-editors` ;
+aucun sommaire automatique ne s’ajoute à ses trois repères.
+
+Les vingt quantités gardent noms, valeurs, bornes et pas. L’aide commune est
+associée aux champs et rappelle qu’un modèle ne peut pas être entièrement vide.
+Le motif et le libellé de confirmation restent lisibles avec un univers long, dans
+les deux thèmes. Après refus, la case de confirmation conserve maintenant la
+valeur soumise, comme dans la maquette ; elle n’est jamais cochée automatiquement
+sur un formulaire neuf. Le serveur conserve ses contrôles existants. Aucun
+contrôleur PHP, service, valeur de référence, droit, verrou, jeton ou audit ne change.
+
+Fichiers modifiés :
+
+- `app/templates/admin/layout.html.twig`, `resource_boxes.html.twig` ;
+- `app/assets/app.js`, nouveau `app/assets/styles/admin-boxes-workspace.css` ;
+- `app/tests/browser/resource-boxes.spec.mjs` ;
+- README, architecture, feuille de route, inventaire et présent suivi.
+
+Vérifications locales :
+
+- `make validate`, `make lint-static`, `make assets` et `git diff --check` réussis.
+  Lint en conteneurs ponctuels sans dépendances ; le schéma de la base habituelle
+  n’a pas été contrôlé ;
+- **10 tests PHP / 30 assertions**, dont ouverture, stockage, vacances, droits,
+  consommation unique et conservation du contenu des boîtes déjà gagnées ;
+- **deux parcours navigateur consolidés** : le scénario administratif existant
+  passe avant l’ajustement du style du motif, puis la recette complète passe sur
+  la version finale. Six captures finales, 1440/768/390 × clair/sombre, grille,
+  champs et groupes nommés, absence de débordement, Axe ciblé sans exclusion ;
+- parcours clavier vers les modèles, retour aux univers, retour arrière et
+  rechargement ; enregistrement natif sans JavaScript après erreur de plafond,
+  quantité, motif et confirmation conservés ;
+- envois directs distincts du parcours natif : valeurs négatives, précision
+  excessive, boîte vide, motif manquant, confirmation absente et CSRF invalide
+  refusés sans changer les réglages ; accès anonyme renvoyé à la connexion ;
+- lecture sans écriture, modification limitée à l’univers choisi, un seul audit
+  d’enregistrement et contenu d’une boîte déjà gagnée conservé.
+
+La recette a fait corriger le style natif du motif et agrandir son libellé de
+confirmation. Son contrôle clavier amène le lien dans la vue avant activation ;
+les envois directs passent par le navigateur pour réutiliser la résolution du
+nom local du projet de test. L’assertion de visibilité et les refus serveur sont
+conservés. Les deux premiers passages du nouveau scénario ne sont pas présentés
+comme réussis. Preuves : `output/playwright/admin-boxes-refonte/`, journaux
+`validate`, `assets`, `php`, `browser`, `browser-final`, `browser-valide` et captures
+dans `recette-validee`. Les bases sont isolées, aucune opération ou migration sur
+la base habituelle. CI GitHub, fusion et déploiement restent distincts ; aucun
+gain de performance ni conformité RGAA exhaustive annoncé.
+
+## L10I — Événements, propositions du 19 novembre 2026
+
+Complexité **4/5**. Sources ciblées : contrôleurs des événements et de l’assistant,
+`AdminEventPlanner`, `GameEventService`, retrait administratif, lectures paginées,
+templates et scénarios actuels. Les pages dédiées restent liste, assistant,
+aperçu et création/édition avancée. Modèle et historique restent des choix dans
+leurs parcours ; aucune recherche ou statistique inexistante n’est ajoutée.
+L’annulation guidée et le retrait peuvent se déplier sur l’événement concerné.
+Leurs cadres séparés illustrent les états dépliés, pas de nouvelles routes.
+
+Dans le même document Figcraft de bureau :
+
+- **58 · L10I · A — Parcours direct** : événements et modèles sur toute la
+  largeur, champs dans un formulaire régulier et aperçu continu. Contexte et
+  conséquences restent dans le fil ; limite : défilement plus long ;
+- **59 · L10I · B — Fiches et préparation** : événements par deux, trois modèles
+  en colonnes, identité/effet auprès de la portée et du calendrier, synthèse de
+  confirmation à côté de l’aperçu sur ordinateur. Lecture plus compacte ; limite :
+  colonnes plus étroites et informations réparties entre panneaux.
+
+Recommandation **A** pour la lecture de descriptions et d’actions différentes
+selon le type d’événement. Les deux reviennent sur une colonne sur téléphone et
+couvrent les mêmes champs et protections. Préparation, aperçu puis confirmation
+restent des étapes distinctes ; aucun événement guidé publié n’est éditable par
+le formulaire avancé. Les horaires guidés sont en UTC. Les anciennes actions
+d’annulation et de suppression de brouillon sont conservées, avec leurs propres
+contrôles. Le retrait commun garde motif, confirmation et distinction entre
+suppression définitive et conservation de l’historique.
+
+Couverture équivalente : **70 cadres, 35 par direction**, **944 liens inspectés**,
+six départs de prototype. Liste, choix du modèle, réglages de bonus, aperçu et
+création avancée en 1440/768/390 ; édition avancée, annonce et défi avec boîte,
+leurs aperçus, historique, liste vide, pagination, annulation/retrait renseignés,
+erreurs, résultats, choix, menu et références en 390. Vingt exports ordinateur/
+téléphone des cinq vues principales ; aperçus représentatifs examinés.
+
+Les erreurs et résultats communs sont des planches de référence, pas une série
+de messages affichés simultanément dans le jeu. Dates passées, univers de défi
+fermé, durée et découvertes invalides, modèle de boîte modifié après aperçu,
+aperçu expiré et accès protégés restent identifiables. Le défi conserve ses
+trois objectifs réels, contribution minimale, un objet par joueur éligible,
+récompense à la clôture si l’objectif est atteint et fin annoncée fixe en cas
+d’attente. Les trois modèles, sept types et cinq statuts existants sont recensés.
+Les montants des boîtes proviennent des références actuelles ; aucune publication,
+annulation, suppression ou modification réelle n’a été exécutée.
+
+Contrôle natif des **3 502 nœuds**, aucun débordement, texte superposé ou lien
+manquant, parité des champs et valeurs. Les 52 pages précédentes gardent noms et
+nombres de cadres ; 54 pages après ajout, variables réutilisées. Les repères de
+visibilité et les dates de l’annonce de défi ont été rendus cohérents avec son
+état fictif avant enregistrement. Document propre, page 58 A affichée dans la
+fenêtre de bureau. Preuves : `lot-10I-{plan,manifest,verification}.json`, états
+avant/après/enregistrement et `lot-10I-{A,B}-{events,models,bonus,preview,advanced}-{1440,390}.png`.
+Champs dessinés, pas de saisie clavier réelle ; boutons de navigation actifs et
+`M` pour revenir au plan. La gestion des défis, modèles de projets, rotations,
+patchnotes et exploitation attend ses lots propres.
+
+**Choix A/B attendu pour L10I** ; L10 en cours, plan global **15/18**.
 
 ## Reprise et états de couverture
 
@@ -3802,7 +3917,7 @@ du formulaire réel et des deux thèmes attend le choix.
 | L7E | A implémentée et vérifiée localement | Page 36 A validée explicitement après reprise de la messagerie et des classements | 90 PHP / 569 assertions ; neuf parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L8 | A implémentée et vérifiée localement | Page 38 A validée explicitement | 23 PHP / 244 assertions ; 16 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L9 | A implémentée et vérifiée localement | Page 40 A validée explicitement | 7 PHP / 127 assertions ; 5 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
-| L10 | L10A à L10E réalisés en A, L10F et L10G réalisés en B ; L10H A/B préparé | Choix précédents conservés ; B choisi explicitement pour L10G, choix L10H attendu | Bilan L10G : 13 PHP / 76 assertions, trois scénarios navigateur consolidés, 19 captures ; L10H pages 56/57, 26 cadres et 740 liens | Choix et réalisation L10H puis rubriques d’animation et d’exploitation ; CI, fusion et déploiement distincts |
+| L10 | L10A à L10E réalisés en A, L10F/G en B et L10H en A ; L10I A/B préparé | Choix précédents conservés ; A choisi explicitement pour L10H, choix L10I attendu | Bilan L10H : 10 PHP / 30 assertions, deux parcours navigateur consolidés, six captures finales ; L10I pages 58/59, 70 cadres et 944 liens | Choix et réalisation L10I puis autres rubriques d’animation et d’exploitation ; CI, fusion et déploiement distincts |
 | L11 | Inventorié | Aucune nouvelle | Non engagé pour cette refonte | Examiner le wiki sans recommencer ses pages dédiées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 

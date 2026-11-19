@@ -207,9 +207,14 @@ mesures en colonnes, ressources en fiches, catalogue par deux et coûts des troi
 rangs rapprochés. Validation Compose, lint statique et compilation réussis ;
 13 PHP / 76 assertions, trois parcours navigateur consolidés et 19 captures.
 Lecture seule, pagination, données indisponibles, quatre familles et opérations
-sans JavaScript vérifiées. L10H propose les modèles de boîtes : page 56 A
-« Plafonds puis formats » et 57 B « Comparaison par ressource », 26 cadres,
-740 liens inspectés et six exports. Choix attendu avant réalisation.
+sans JavaScript vérifiées. L10H A « Plafonds puis formats » (page 56) est validé
+et réalisé localement : vingt quantités dans un formulaire, trois formats en
+colonnes et confirmation conservée après refus. Validation, lint statique,
+compilation et 10 PHP / 30 assertions réussis ; deux parcours navigateur
+consolidés, dont la recette finale avec six captures clair/sombre en trois formats.
+L10I propose les événements : 58 A « Parcours direct » et 59 B « Fiches et
+préparation », 70 cadres, 944 liens inspectés et vingt exports. Liste, assistant,
+aperçus et édition avancée attendent le choix avant réalisation.
 Les autres rubriques administratives seront traitées par sous-lots, sans augmenter
 le compte des dix-huit ensembles ni déclarer L10 terminé.
 CI GitHub, fusion et déploiement restent distincts.
