@@ -277,3 +277,101 @@ PHP des six nouveaux fichiers, conteneur Symfony, Compose et diff réussis.
 Le réseau/base `genesis-admin-support-test` ont été supprimés après recette.
 Aucun mail réel, migration d’une base habituelle, push, fusion ou déploiement.
 La CI complète et l’intégration des lots restent à effectuer séparément.
+
+
+## Cycle de revendication du reçu (toujours sans transport)
+
+Incrément séparé après `6c93274`, complexité 5/5. Aucune route, commande ou
+consommateur Messenger n’utilise encore ce service. Les réservations sont
+revendiquées atomiquement par `VerificationRequestLifecycle` : état réservé
+vers traitement, secret aléatoire remis une seule fois au demandeur et hachage
+seul conservé. Durée interne de lease explicite, entre 1 et 3 600 secondes.
+
+Ordre de verrouillage commun : compte puis reçu. L’orientation compte depuis
+l’identifiant du reçu est une lecture hors transaction ; existence, compte et
+états sont revérifiés sous verrou. Une suspension ou confirmation acquise
+avant revendication annule la demande sans produire de secret propriétaire.
+Une seconde revendication ne reçoit jamais le secret du premier worker.
+
+La finalisation exige le secret correspondant et un résultat explicite :
+acceptation du transport, annulation avant transport, ou indéterminé. Un appel
+répété du propriétaire avec le même résultat est sans effet ; un résultat
+contradictoire ou un autre propriétaire est refusé. Les tests simulent ces
+résultats : ils ne prouvent aucun envoi ou acceptation SMTP réelle.
+
+À l’échéance exacte, une tentative en traitement devient indéterminée, jamais
+réservée de nouveau. La méthode `expire` est explicite ; claim/complete contrôlent
+aussi cette échéance. Un worker tardif ne peut plus inscrire un succès après
+expiration. L’indéterminé continue de bloquer toute nouvelle réservation.
+Une demande jamais revendiquée reste réservée : aucune purge ni annulation
+arbitraire de ce cas n’est ajoutée. Le secret n’est ni loggé ni inclus dans les
+résultats du worker de test de compétition.
+
+Migration additionnelle `Version20261120000100` préparée et appliquée seulement
+dans la base jetable après la migration de reçu. Aucun schéma habituel changé.
+Les deux migrations restent à appliquer selon les règles de sauvegarde et
+validation du dépôt lors d’une future intégration autorisée.
+
+Recette : 15 tests / 162 assertions réussis (cycle/réservation, confirmation,
+diagnostic). Parmi eux, deux processus synchronisés revendiquent le même reçu :
+un seul obtient `claimed`, l’autre `unavailable`. Couverture du mauvais secret,
+replay et résultat contradictoire, seuil d’expiration, refus du succès tardif,
+compte devenu suspendu et absence de reprise après délai. PHP, Compose,
+conteneur et diff vérifiés séparément ; aucun mail réel.
+
+Prochain pas concret : un adaptateur de transport factice liant une revendication
+à la préparation du jeton, avec pannes injectées avant/après commit/transport.
+Ne pas connecter le mailer existant directement : il réessaie les exceptions
+et peut avoir accepté un message avant l’exception. Restent aussi la relecture
+d’éligibilité immédiatement avant transport, stratégie de confidentialité du
+payload, intégration du parcours public/inscription, droits/CSRF/audit admin,
+et résolution opérateur des états indéterminés. Le bouton reste fermé.
+
+
+## Preuve supplémentaire par pannes injectées (tests seulement)
+
+Aucun adaptateur de production inutilisé n’est ajouté. Le harnais de tests
+simule les frontières du futur adaptateur autour du cycle existant. Une panne
+Doctrine `onFlush` avant commit de revendication vérifie un rollback réel :
+aucun secret propriétaire retourné, état réservé en base, aucune lease ni
+empreinte propriétaire persistée ; nouvelle unité de travail puis revendication
+possible. Un objet Doctrine muté avant rollback ne sert jamais de preuve.
+
+Quatre scénarios supplémentaires : arrêt avant préparation, après préparation
+fictive mais avant transport, exception ambiguë pendant l’appel factice, et
+arrêt après acceptation fictive avant finalisation. Les deux premiers comptent
+zéro appel de transport ; les deux suivants exactement un. Après passage en
+indéterminé, deux reprises ne peuvent plus revendiquer et n’effectuent aucun
+appel supplémentaire ; une nouvelle clé reste bloquée après cooldown. Les
+arrêts ne produisent pas de faux succès et le propriétaire tardif ne peut plus
+faire passer le reçu en accepté.
+
+Ce harnais ne génère pas de vrai jeton, ne prépare pas de vrai email et
+n’appelle pas le service public. Il prouve les transitions du reçu et leur
+résistance aux scénarios simulés, pas la délivrabilité ou le raccordement au
+mailer historique. `VerificationRequestReservationTest` : **11 tests / 83
+assertions réussis**, comprenant migrations jetables et compétition réelle
+multiprocessus déjà ajoutées. Base et réseau dédiés supprimés après recette.
+Aucun fichier applicatif ni migration supplémentaire dans cette passe.
+
+### Décisions opérationnelles encore nécessaires avant raccordement
+
+- Politique commune : durée de cooldown par compte et éventuel quota glissant
+  additionnel, appliqués à inscription/public/admin ; ne pas reprendre les
+  300 secondes de fixture comme décision de production.
+- Lease du worker : durée bornée compatible avec timeout transport et arrêt
+  du worker ; l’expiration ne déclenche jamais automatiquement un nouvel envoi.
+- Rétention : durée des reçus terminaux et fenêtre contractuelle de replay.
+  Pas de purge avant définition de cette fenêtre ; les reçus indéterminés ne
+  doivent pas être purgés pour débloquer implicitement un compte.
+- Résolution manuelle : qui peut examiner un résultat indéterminé, quelles
+  preuves de transport sont disponibles et quelle confirmation autorise un
+  nouvel essai avec risque explicite de doublon. Ni « reçu par le joueur » ni
+  « certainement non envoyé » ne peuvent être déduits d’une simple exception.
+- Données privées : décider si la préparation reste éphémère ou si un payload
+  durable est indispensable ; protection et suppression à définir avant de
+  stocker une adresse ou un lien d’activation dans une file.
+- Intégration : motif/acteur/audit admin, droits/CSRF, réponse publique neutre,
+  remplacement du retry aveugle du mailer pour ce nouveau circuit, sauvegarde
+  vérifiée et application autorisée des deux migrations. Aucune de ces actions
+  n’est activée par les tests présents.

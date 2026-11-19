@@ -24,6 +24,15 @@ class VerificationDeliveryRequest
     #[ORM\Column(length: 24)]
     public string $state = 'reserved';
 
+    #[ORM\Column(length: 64, nullable: true)]
+    public ?string $claimHash = null;
+
+    #[ORM\Column(nullable: true)]
+    public ?\DateTimeImmutable $leaseExpiresAt = null;
+
+    #[ORM\Column(nullable: true)]
+    public ?\DateTimeImmutable $resolvedAt = null;
+
     #[ORM\Column]
     public \DateTimeImmutable $requestedAt;
 
