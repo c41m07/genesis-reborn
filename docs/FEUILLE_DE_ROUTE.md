@@ -260,6 +260,9 @@ et vérifié localement (4 PHP / 338 assertions, trois parcours navigateur et
 29 parcours navigateur distincts, exécution PHP complète puis reprise ciblée
 de 179 tests et 13 tests Python. Le plan est à **18/18 réalisés et vérifiés localement**.
 La CI complète avant fusion reste distincte ; bilan détaillé et limites dans le suivi.
+La fusion autorisée vers `dev` est préparée dans la [PR #99](https://github.com/c41m07/genesis-reborn/pull/99),
+après actualisation des sept nouveaux commits de `dev` et 104 tests PHP ciblés.
+Les résultats de CI et la tête à fusionner sont suivis dans la PR.
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Laboratoire local pour lancer une recherche — 18 novembre 2026

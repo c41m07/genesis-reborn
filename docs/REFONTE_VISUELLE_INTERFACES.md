@@ -4835,3 +4835,27 @@ Les règles de jeu et les contenus du Wiki sont conservés ; performance non
 mesurée. **18/18 ensembles réalisés et vérifiés localement.** La CI GitHub complète,
 y compris persistance et sauvegarde/restauration isolée, reste nécessaire sur la
 version finale de la PR avant fusion. Aucun push, PR, fusion ou déploiement effectué.
+
+## Préparation de la fusion vers dev — 19 novembre 2026
+
+L’utilisateur autorise la CI complète et la fusion conditionnelle vers `dev`.
+La [PR #99](https://github.com/c41m07/genesis-reborn/pull/99) regroupe les ensembles
+validés. La branche est actualisée depuis `dev` à `5ab6572` : sept commits de
+prérequis, progression, prix, nano/antimatière et détection sont conservés. Les
+conflits de décisions et de feuille de route sont résolus en gardant les deux
+ensembles ; la grille de coûts précédente conserve son marquage historique.
+Les bilans locaux antérieurs restent ceux des versions indiquées dans leurs lots.
+
+Après cette actualisation : **104 tests PHP / 19 412 assertions**, avec la seule
+mesure optionnelle désactivée. Contrôles ciblés sur accès au catalogue, laboratoire
+local, cartes, préparation de colonie, visibilité des flottes, fiches et sources
+du Wiki. Base MariaDB jetable réservée à ce contrôle ; preuves dans
+`output/ci-refonte/php.log`. Aucun rééquilibrage supplémentaire n’est introduit.
+
+Les protections distantes de `dev` sont vérifiées : PR obligatoire, branche à jour,
+cinq jobs quality requis, règles appliquées aux administrateurs et force push
+interdit. Le passage de la PR en prête à relire lance la CI complète. Les résultats
+courants, la tête testée et l’éventuelle fusion sont suivis dans la PR ; aucune
+réussite de CI n’est déduite des seules recettes locales. La fusion attend les
+cinq jobs complets réussis sur la dernière tête, les autres contrôles publiés et
+la vérification finale de la cible.
