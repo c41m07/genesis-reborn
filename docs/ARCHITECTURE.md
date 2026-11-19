@@ -993,6 +993,17 @@ transactionnelles restent inchangés. Aucune actualisation ou logique JavaScript
 n’est ajoutée à la fiche ; une erreur serveur garde le comportement de redirection
 existant, sans garantie nouvelle de conservation de saisie.
 
+L10C ajoute `admin-moderation-workspace.css`, limité aux trois routes de modération,
+liste et détail des feedbacks. La classe `admin-moderation-workspace` active ces
+styles ; ces pages désactivent aussi le sommaire automatique. Le filtre local
+`admin-filter` reste attaché aux seuls signalements de messages. Les signalements
+de joueurs conservent leur section et leur contexte serveur. Les feedbacks gardent
+leurs filtres GET, lectures et pagination dans `AdminReadRepository` ; le lien
+d’archives change uniquement `status` et remet `page` à 1. La fiche garde le même
+POST et la même capture autorisée, avec le suivi en colonne sur écran large.
+Les couleurs d’état/priorité sont adaptées au fond blanc du thème clair. Aucun
+service, contrôle d’accès, audit ou contrat de modération n’est modifié.
+
 La console et ses groupes existants restent en place. `AdminController` expose
 les GET de création et de gestion d’un univers ; les POST historiques gardent
 leurs services, jetons et contrôles. Les brouillons d’erreur sont consommés sur

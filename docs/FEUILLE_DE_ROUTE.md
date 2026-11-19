@@ -184,9 +184,14 @@ L10B A « Fiche et actions locales » (page 44) est ensuite validé et réalisé
 activité par univers en cartes, colonies en lignes et deux interventions dépliables.
 Validation, lint, compilation, 29 PHP / 138 assertions, cinq parcours navigateur
 consolidés et 18 captures finales dans les deux thèmes, sans changement des services.
-L10C prépare signalements et suivi des feedbacks dans les pages Figcraft 46 A
-« Modération lisible » et 47 B « Lecture et suivi » : 58 cadres et 892 liens
-inspectés, données et décisions fictives. Choix attendu avant réalisation.
+L10C A « Modération lisible » (page 46) est validé et réalisé localement :
+signalements complets, feedbacks en cartes, suivi en colonne et accès aux archives
+avec filtres conservés. Validation, lint, compilation, 39 PHP / 331 assertions,
+six scénarios navigateur consolidés et 18 captures dans les deux thèmes ; bilan
+et corrections de contraste dans le suivi.
+L10D prépare liste, création et suivi des dossiers dans les pages Figcraft 48 A
+« Dossiers en lignes » et 49 B « Lecture chronologique » : 58 cadres, 864 liens
+inspectés, données et opérations fictives. Choix attendu avant réalisation.
 Les autres rubriques administratives seront traitées par sous-lots, sans augmenter
 le compte des dix-huit ensembles ni déclarer L10 terminé.
 CI GitHub, fusion et déploiement restent distincts.
