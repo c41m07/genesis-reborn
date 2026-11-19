@@ -49,6 +49,11 @@ async function describedErrors(page) {
 }
 
 test('Erreurs de formulaire : messages liés aux champs et navigation clavier', async ({ page }, testInfo) => {
+  // Une réponse 422 peut livrer les erreurs avant ses styles, surtout sur une connexion lente.
+  await page.route('**/build/*.css', async route => {
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    await route.continue();
+  });
   await page.goto('/connexion');
   const email = page.getByLabel('Adresse email');
   await expect(email).toBeFocused();
@@ -57,6 +62,7 @@ test('Erreurs de formulaire : messages liés aux champs et navigation clavier', 
   await email.fill(`unknown-${crypto.randomUUID().slice(0, 8)}@example.test`);
   await page.getByLabel('Mot de passe', { exact: true }).fill('Incorrect-Password-2026!');
   await page.getByRole('button', { name: /Connexion/ }).click();
+  await page.waitForLoadState('load');
   await expect(page.getByRole('alert')).toContainText('Connexion impossible');
   await describedErrors(page);
   await page.setViewportSize({ width: 390, height: 900 });
@@ -71,17 +77,25 @@ test('Erreurs de formulaire : messages liés aux champs et navigation clavier', 
   const registration = page.waitForResponse(response => response.url().endsWith('/inscription') && response.request().method() === 'POST');
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   expect((await registration).status()).toBe(422);
+  await page.waitForLoadState('load');
   await expect(page.getByRole('alert').filter({ hasText: 'Les mots de passe ne correspondent pas.' })).toBeVisible();
   await describedErrors(page);
   await expect(page.getByLabel('Adresse email')).toHaveValue('adresse-invalide');
   await expect(page.getByLabel('Nom de commandant')).toHaveValue('!!');
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  const layout = await page.evaluate(() => ({
+    ready: document.readyState,
+    width: document.documentElement.scrollWidth,
+    styles: [...document.querySelectorAll('link[rel="stylesheet"]')].map(link => ({ href: link.href, loaded: Boolean(link.sheet) })),
+    offenders: [...document.querySelectorAll('body *')].map(element => ({ tag: element.tagName, className: String(element.className), right: element.getBoundingClientRect().right })).filter(element => element.right > innerWidth + 1).slice(0, 12),
+  }));
+  expect(layout.width, JSON.stringify(layout)).toBeLessThanOrEqual(390);
   await page.screenshot({ path: testInfo.outputPath('register-error-390.png'), fullPage: true, animations: 'disabled' });
 
   await page.goto('/mot-de-passe/oublie');
   await page.getByLabel('Adresse email').fill('email-invalide');
   await page.locator('form').evaluate(form => { form.noValidate = true; });
   await page.getByRole('button', { name: 'Envoyer le lien' }).click();
+  await page.waitForLoadState('load');
   await expect(page.getByRole('alert')).toBeVisible();
   await describedErrors(page);
   await page.screenshot({ path: testInfo.outputPath('reset-request-error-390.png'), fullPage: true, animations: 'disabled' });

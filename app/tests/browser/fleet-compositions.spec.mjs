@@ -24,6 +24,8 @@ async function enter(page) {
 }
 
 async function checkView(page, info, key, theme, width) {
+  // Une erreur de formulaire est lisible avant la fin du chargement de ses styles.
+  await page.waitForLoadState('load');
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   for (const selector of ['.composition-card', '.composition-table', '.composition-origin-panel']) {
     for (const element of await page.locator(selector).all()) {
@@ -125,6 +127,11 @@ test('L2C A : quatre vues adaptatives, rangs réunis, saisie conservée et liens
   await page.getByRole('link', { name: 'Créer une composition', exact: true }).click();
   const requestKey = await page.locator('[name="request_key"]').inputValue();
   await page.getByLabel('Nom de la composition', { exact: true }).fill('Brouillon conservé');
+  const delayedStyle = async route => {
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    await route.continue();
+  };
+  await page.route('**/build/*.css', delayedStyle);
   const rejected = page.waitForResponse(response => response.request().method() === 'POST' && response.url().endsWith('/flottes/compositions/creer'));
   await page.getByRole('button', { name: 'Enregistrer la composition' }).click();
   expect((await rejected).status()).toBe(422);
@@ -132,6 +139,7 @@ test('L2C A : quatre vues adaptatives, rangs réunis, saisie conservée et liens
   await expect(page.getByLabel('Nom de la composition', { exact: true })).toHaveValue('Brouillon conservé');
   await expect(page.locator('[name="request_key"]')).toHaveValue(requestKey);
   await checkView(page, info, 'erreur', 'light', 390);
+  await page.unroute('**/build/*.css', delayedStyle);
 
   await page.goto(`/flottes/compositions/${composition}/charger?origin=${home}`);
   await page.getByLabel('Colonie de départ', { exact: true }).selectOption(String(second.id));

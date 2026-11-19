@@ -4902,3 +4902,27 @@ conservées, avec leurs tests et documents. Les conflits des deux suivis sont
 résolus sans retirer la décision de géographie ni les décisions d’équilibrage.
 L’attente de 1 020 métal pour le bâtiment Intermédiaire provient de ce lot amont.
 Les contrôles locaux concernés et la CI complète sont relancés sur cet ensemble.
+
+
+### Synchronisation des contrôles visuels après réponse 422
+
+La [CI 418](https://github.com/c41m07/genesis-reborn/actions/runs/44566864882)
+sur `62c640c` valide les 1 463 tests PHP (4 443 243 assertions, une mesure
+optionnelle désactivée), 13 Python, sauvegarde/restauration et les lots navigateur
+3 et 4. Deux mesures de largeur échouent après un formulaire refusé : inscription
+et composition de flotte. Aucun problème métier ni suppression de contrôle n’est
+retenu pour expliquer ces échecs.
+
+La cause est reproduite en retardant la feuille de style de 1,5 s : le document
+est encore `interactive`, le lien CSS n’a pas de `sheet` et l’image d’inscription
+porte sa largeur intrinsèque à 1 456 px sur un écran de 390 px. Les trois reprises
+sans ralentissement réussissent ; le ralentissement reproduit l’échec.
+Les deux recettes attendent désormais le chargement du document avant de mesurer
+le rendu. Les seuils de largeur et les contrôles de clavier, erreurs, saisies,
+jetons et accès restent inchangés. Le retard CSS est conservé dans les scénarios
+concernés pour vérifier cette synchronisation. Aucune modification applicative
+ou règle de jeu supplémentaire n’est nécessaire.
+Preuves : `output/ci-refonte/{browser-auth,browser-auth-slow,browser-post422}.log`.
+
+Les deux scénarios corrigés réussissent avec les styles ralentis. La nouvelle
+CI complète doit valider la tête finale avant la fusion vers dev.
