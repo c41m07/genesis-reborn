@@ -189,8 +189,13 @@ signalements complets, feedbacks en cartes, suivi en colonne et accès aux archi
 avec filtres conservés. Validation, lint, compilation, 39 PHP / 331 assertions,
 six scénarios navigateur consolidés et 18 captures dans les deux thèmes ; bilan
 et corrections de contraste dans le suivi.
-L10D prépare liste, création et suivi des dossiers dans les pages Figcraft 48 A
-« Dossiers en lignes » et 49 B « Lecture chronologique » : 58 cadres, 864 liens
+L10D A « Dossiers en lignes » (page 48) est validé et réalisé localement : liste,
+création et suivi, avec formulaire en colonne sur ordinateur et après les notes
+sur mobile. Validation, lint, compilation, huit PHP / 27 assertions, quatre
+scénarios navigateur consolidés et 18 captures dans les deux thèmes ; filtres,
+brouillon après refus, historique et protections conservés.
+L10E prépare alertes et surveillance des missions dans les pages Figcraft 50 A
+« Surveillance directe » et 51 B « Missions en fiches » : 74 cadres, 1 285 liens
 inspectés, données et opérations fictives. Choix attendu avant réalisation.
 Les autres rubriques administratives seront traitées par sous-lots, sans augmenter
 le compte des dix-huit ensembles ni déclarer L10 terminé.

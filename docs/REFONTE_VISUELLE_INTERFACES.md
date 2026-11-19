@@ -3344,7 +3344,108 @@ restent des destinations de référence. La confidentialité, les thèmes et vra
 retours serveur seront recettés après choix. Preuves : `lot-10D-plan.json`,
 `lot-10D-manifest.json`, `lot-10D-verification.json`, états du document avant/après/
 enregistrement et `lot-10D-{A,B}-{cases,new,detail}-*.png` dans le dossier de conception.
-Choix A/B attendu pour L10D ; L10 en cours, plan global **15/18**.
+L10D A est ensuite validé explicitement ; réalisation ci-dessous. L10 reste
+en cours, plan global **15/18**.
+
+## L10D A — Réalisation locale du 19 novembre 2026
+
+Complexité **4/5**. La page 48 A est retenue pour la liste, la création et la
+fiche des dossiers. Trois pages dédiées conservées : tâches autonomes avec accès
+direct, rechargement et formulaires propres. Les filtres GET sélectionnent le
+même ensemble ; observations, notes et ajout de suivi appartiennent au même
+dossier. Le suivi accompagne l’historique en colonne sur ordinateur, puis vient
+après celui-ci sous 1100 px. Aucun nouvel onglet ni mécanisme d’actualisation.
+
+Changements ciblés : `layout.html.twig`, `cases.html.twig`, `case_new.html.twig`,
+`case.html.twig`, import dans `app.js` et `admin-case-workspace.css` limité aux
+trois routes. Résultats en lignes avec une seule destination par dossier,
+contexte de participation/flotte visible sans chargement supplémentaire,
+champs et aides reliés, saisies longues lisibles et zone de notes de 200 px.
+Les titres sans espaces passent à la ligne. Les états, univers, auteurs, dates,
+observations, notes et liens joueur/flotte restent directement disponibles.
+Les services et contrôleurs ne changent pas : mêmes droits, CSRF, cohérence
+des contextes, demandes idempotentes, état attendu, transactions et audits.
+Le brouillon de création est conservé après refus ; le suivi garde son retour
+serveur actuel et ne promet pas une conservation supplémentaire de saisie.
+
+Vérifications locales :
+
+- `make validate`, `make lint`, `make assets` et `git diff --check` réussis ;
+- huit tests PHP ciblés `AdminCaseTest`, **27 assertions** ;
+- quatre scénarios navigateur consolidés : deux parcours existants dossiers/
+  alertes et deux nouvelles recettes `admin-case-refonte.spec.mjs` ;
+- création, contexte et liens, refus sur univers incohérent sans perte de titre/
+  observations, notes conservées, doubles envois, état périmé, clôture et historique,
+  CSRF et accès non administrateur ;
+- filtres et pagination 50 + 2, portée participation/flotte et recherche conservées
+  au retour/rechargement, absence de résultat, parcours sans JavaScript ;
+- **18 captures finales**, trois vues × 1440/768/390 × clair/sombre : une seule
+  colonne sur écrans étroits, aucun débordement horizontal, textes échappés,
+  contrôles Axe ciblés sans exclusion de règle. Captures ordinateur/mobile examinées.
+
+La première recette a relevé une hauteur de textarea écrasée par la spécificité
+des champs communs et un sélecteur de test trop strict. Correction ciblée du style
+et du sélecteur, recompilation et reprise réussie des deux scénarios concernés.
+La présentation des trois petits templates modifiés a ensuite été développée
+pour leur lisibilité, puis le lint relancé avec succès.
+Preuves : `output/playwright/admin-case-refonte/`, journaux `php`, `lint-final`,
+`assets-final`, `browser`, `browser-final` et captures de `recette-finale`.
+Données synthétiques en environnement isolé ; aucun dossier habituel modifié.
+CI GitHub, fusion et déploiement restent distincts ; aucun gain de performance mesuré.
+
+## L10E — Alertes et missions, propositions du 19 novembre 2026
+
+Complexité **4/5**. Sources ciblées : `AdminCaseController`, `AdminCaseService`,
+`AdminMissionController`, vues de surveillance, liste et fiche des missions,
+instantané de départ et rapports actuels. Alertes, liste des missions et fiche
+gardent leurs pages et URL ; les filtres restent des filtres du même relevé.
+L’instantané et les réglages/interventions secondaires peuvent se déplier
+sur place, sans cacher l’état de la mission ni la cargaison nécessaire au contrôle.
+
+Dans le même document Figcraft de bureau :
+
+- **50 · L10E · A — Surveillance directe** : missions dans un tableau de huit
+  colonnes sur ordinateur, fiches sur écrans étroits. Seuils et intervention
+  dépliables, valeurs et repères essentiels visibles. Bénéfice : comparaison des
+  missions ; limite : place plus étroite pour les noms et les trajets.
+- **51 · L10E · B — Missions en fiches** : mêmes informations en fiches,
+  réglages et formulaire d’intervention ouverts dans le fil. Bénéfice : lecture
+  détaillée et contrôles accessibles ; limite : page plus longue.
+
+Couverture équivalente : **74 cadres, 37 par direction**, **1 285 liens inspectés**,
+six départs de prototype. Alertes, liste et fiche en 1440/768/390 ; états en 390 :
+seuils ouverts/enregistrés/refusés, aucun signal, dossier relié avec nouvel élément
+après clôture, missions filtrées/vides, historique, pagination, actualisation
+réussie/indisponible, départ conservé/absent, intervention ouverte/renseignée/
+enregistrée/refusée/périmée, échéance dépassée, retour, mission terminée, combat,
+accord attendu, espionnage, bilan du transport, menu et destinations conservées.
+`M` revient au plan et permet la comparaison A/B. Douze exports des trois vues
+ordinateur/téléphone ; principaux aperçus examinés. Aucun texte hors parent,
+chevauchement ou lien manquant dans les cadres inspectés ; parité conservée.
+Les 44 pages antérieures gardent leurs noms et nombres de cadres ; 46 pages et
+348 variables après ajout. Fichier enregistré, document propre et plan A affiché
+dans la fenêtre de bureau contrôlée.
+
+Contrats à conserver après choix : signaux de répétition sur 24 h, exclusions
+actuelles, regroupement par paire pour les transports et par cible pour les
+attaques, limites de 100 par catégorie. Seuils par univers : retard 1–10 080 min,
+compteurs 1–100 000. Missions : recherche joueur/cible, univers, mission, état,
+pagination 50 et relevé actualisé toutes les 20 s avec protections de consultation.
+Départ conservé distinct de l’état courant ; réserves comprises dans l’hydrogène.
+Motif et confirmation, CSRF, clé de demande, version, contrôles des combats,
+du rappel et du retour forcé restent ceux du serveur ; aucune livraison forcée
+immédiate ni modification de composition/cargaison. Rapports et audits gardent
+leurs accès administratifs. Aucune règle de jeu ni valeur d’équilibrage modifiée.
+
+Limites : données fictives, champs dessinés et actions simulées ; extraits de listes.
+Le formulaire renseigné illustre la flotte 84. Les autres identités, sécurité,
+univers et rapports non détaillés renvoient aux cadres de référence ou aux vues
+déjà validées. Le bilan du transport illustre un état de la fiche, pas une nouvelle
+page du jeu. Les thèmes, accès et retours serveur devront être recettés après choix.
+Preuves dans le dossier de conception : `lot-10E-plan.json`, `lot-10E-manifest.json`,
+`lot-10E-verification.json`, états avant/après/enregistrement et
+`lot-10E-{A,B}-{alerts,missions,detail}-{1440,390}.png`.
+Choix A/B attendu pour L10E ; L10 en cours, plan global **15/18**.
 
 ## Reprise et états de couverture
 
@@ -3369,7 +3470,7 @@ Choix A/B attendu pour L10D ; L10 en cours, plan global **15/18**.
 | L7E | A implémentée et vérifiée localement | Page 36 A validée explicitement après reprise de la messagerie et des classements | 90 PHP / 569 assertions ; neuf parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L8 | A implémentée et vérifiée localement | Page 38 A validée explicitement | 23 PHP / 244 assertions ; 16 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L9 | A implémentée et vérifiée localement | Page 40 A validée explicitement | 7 PHP / 127 assertions ; 5 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
-| L10 | L10A/B/C A réalisés et vérifiés localement ; L10D A/B préparé | A choisi explicitement pour L10A/B/C ; choix L10D attendu | Bilan L10C : 39 PHP / 331 assertions, six scénarios navigateur consolidés ; L10D pages 48/49, 58 cadres et 864 liens | Réalisation L10D puis autres rubriques administratives ; CI, fusion et déploiement distincts |
+| L10 | L10A/B/C/D A réalisés et vérifiés localement ; L10E A/B préparé | A choisi explicitement pour L10A/B/C/D ; choix L10E attendu | Bilan L10D : huit PHP / 27 assertions, quatre scénarios navigateur consolidés, 18 captures ; L10E pages 50/51, 74 cadres et 1 285 liens | Réalisation L10E puis autres rubriques administratives ; CI, fusion et déploiement distincts |
 | L11 | Inventorié | Aucune nouvelle | Non engagé pour cette refonte | Examiner le wiki sans recommencer ses pages dédiées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 

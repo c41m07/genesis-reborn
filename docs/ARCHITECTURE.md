@@ -1004,6 +1004,17 @@ POST et la même capture autorisée, avec le suivi en colonne sur écran large.
 Les couleurs d’état/priorité sont adaptées au fond blanc du thème clair. Aucun
 service, contrôle d’accès, audit ou contrat de modération n’est modifié.
 
+L10D ajoute `admin-case-workspace.css`, activé par `admin-case-workspace` sur
+les trois GET de liste, création et détail des dossiers. Ces pages désactivent
+le sommaire automatique et conservent leurs URL distinctes. La liste garde une
+seule destination par résultat et ses filtres GET, y compris les portées de
+participation/flotte. La fiche place observations et notes dans une colonne,
+le formulaire dans une seconde sur grand écran ; l’ordre de lecture devient
+linéaire sous 1100 px. Les aides de longueur sont reliées aux champs ; les textes
+libres gardent leurs sauts de ligne et l’échappement Twig. Brouillon de création,
+POST, CSRF, clés de demande et état attendu restent ceux d’`AdminCaseController`
+et d’`AdminCaseService`, sans modification de leurs lectures ni de leurs écritures.
+
 La console et ses groupes existants restent en place. `AdminController` expose
 les GET de création et de gestion d’un univers ; les POST historiques gardent
 leurs services, jetons et contrôles. Les brouillons d’erreur sont consommés sur
