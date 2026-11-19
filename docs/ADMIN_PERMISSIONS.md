@@ -65,3 +65,37 @@ Aucun test navigateur ni CI complète revendiqué.
 La première reprise a révélé un appel commun de flotte non raccordé ; il
 a été ajouté explicitement (aucune permission implicite de repli).
 Aucune recette réelle, migration, attribution, push, fusion ou publication.
+
+## Finition : matrice consultable sans délégation
+
+Complexité 3/5. La page dédiée GET `/admin/permissions`, dans Exploitation,
+décrit les quatre capacités raccordées, leurs effets, leurs cibles et leurs
+garanties. Une page stable est préférable à un formulaire d'attribution fictif :
+consultation directe et rechargement restent possibles sans JavaScript.
+La liste fermée utilisée par la politique fournit aussi les lignes de la matrice.
+Aucun compte ni univers n'est chargé par ce contrôleur ; les compteurs communs
+du gabarit admin conservent leur fonctionnement existant.
+
+Les deux contrôles ROLE_ADMIN et PLAYER_VIEW sont maintenus. La page n'a aucune
+route d'écriture, ne permet aucune attribution et n'annonce pas de séparation
+par univers. Les profils partiels restent non activés : ouvrir seulement une
+fiche sans réduire ses stocks, formulaires et participations serait trompeur.
+La consultation de la fiche joueur est présentée comme journalisée, pas comme
+une opération sans effet de bord.
+
+Les tests unitaires vérifient désormais toute la liste, les descriptions et
+l'absence de fuite de décision entre deux acteurs successifs. Un rôle historique
+dans le token ne remplace pas les rôles courants. Suspension et révocation sont
+rejouées pour chaque capacité. Tout sujet non nul, y compris un identifiant ou
+un tableau d'univers, est refusé ; ceci ne prouve pas une isolation par univers
+déléguée, qui n'est pas implémentée.
+
+Vérifications de cet incrément :
+- Compose validé via `make validate`.
+- 4 tests unitaires / 84 assertions réussis, conteneur sans réseau.
+- Syntaxe PHP des quatre fichiers concernés, trois Twig et conteneur Symfony validés.
+- Tests HTTP étendus pour accès anonyme/joueur/admin, lecture répétée et refus POST.
+  Exécution en attente : création du réseau de recette refusée par Docker
+  (`all predefined address pools have been fully subnetted`).
+- Aucun réseau existant modifié, aucun droit attribué à un vrai compte.
+- Pas de recette navigateur, de CI complète, de fusion ni de déploiement.

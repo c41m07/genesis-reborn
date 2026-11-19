@@ -50,4 +50,45 @@ final class AdminCapabilityTest extends TestCase
         $actor->roles = [];
         self::assertSame(VoterInterface::ACCESS_DENIED, $voter->vote($token, null, [AdminCapability::PLAYER_VIEW]));
     }
+    public function testDefinitionsCoverTheClosedMatrixWithoutGrantingRoles(): void
+    {
+        self::assertSame([
+            AdminCapability::PLAYER_VIEW,
+            AdminCapability::RESOURCES_ADJUST,
+            AdminCapability::SHIPS_GRANT,
+            AdminCapability::FLEET_INTERVENE,
+        ], AdminCapability::all());
+        foreach (AdminCapability::definitions() as $definition) {
+            foreach (['label', 'effect', 'scope', 'safeguards'] as $field) {
+                self::assertNotEmpty($definition[$field]);
+            }
+        }
+    }
+
+    public function testDecisionsDoNotLeakBetweenActorsOrUnsupportedScopes(): void
+    {
+        $voter = new AdminCapabilityVoter(new AdminCapabilityPolicy());
+        $admin = new Player();
+        $admin->roles = ['ROLE_ADMIN'];
+        $ordinary = new Player();
+        // Le rôle du token ne doit pas remplacer les droits courants de l'acteur.
+        $adminToken = new UsernamePasswordToken($admin, 'main', ['ROLE_ADMIN']);
+        $forgedToken = new UsernamePasswordToken($ordinary, 'main', ['ROLE_ADMIN']);
+        foreach (AdminCapability::all() as $capability) {
+            self::assertSame(VoterInterface::ACCESS_GRANTED, $voter->vote($adminToken, null, [$capability]));
+            self::assertSame(VoterInterface::ACCESS_DENIED, $voter->vote($forgedToken, null, [$capability]));
+            self::assertSame(VoterInterface::ACCESS_GRANTED, $voter->vote($adminToken, null, [$capability]));
+            // Aucun identifiant d'univers ou de cible ne constitue une portée autorisée.
+            foreach ([1, '1', [], ['universe_id' => 1], new \stdClass()] as $subject) {
+                self::assertSame(VoterInterface::ACCESS_DENIED, $voter->vote($adminToken, $subject, [$capability]));
+            }
+            $admin->lockedAt = new \DateTimeImmutable();
+            self::assertSame(VoterInterface::ACCESS_DENIED, $voter->vote($adminToken, null, [$capability]));
+            $admin->lockedAt = null;
+            $admin->roles = [];
+            self::assertSame(VoterInterface::ACCESS_DENIED, $voter->vote($adminToken, null, [$capability]));
+            $admin->roles = ['ROLE_ADMIN'];
+        }
+    }
+
 }

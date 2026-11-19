@@ -1188,3 +1188,8 @@ La politique fermée `AdminCapabilityPolicy` est partagée par le voter Symfony
 et les interventions sous verrou. Les trois actions de `AdminPlayerController` et le POST intervention flotte
 conservent aussi ROLE_ADMIN. Aucun nouveau rôle ou stockage de permission
 n’est activé. Voir [ADMIN_PERMISSIONS.md](ADMIN_PERMISSIONS.md).
+
+La page GET `/admin/permissions` réutilise `AdminCapability::definitions()` :
+sa liste est aussi celle reconnue par la politique. Le contrôleur garde les
+deux contrôles ROLE_ADMIN et PLAYER_VIEW, sans accès à une cible ni écriture.
+La navigation la place dans Exploitation ; aucun accès délégué n'est activé.

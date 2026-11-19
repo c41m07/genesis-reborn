@@ -794,3 +794,7 @@ Le [socle des capacités administratives](docs/ADMIN_PERMISSIONS.md) distingue
 consultation de fiche, correction des ressources, attribution de vaisseaux
 et intervention sur les flottes,
 sans activer de nouveaux rôles ni changer les comptes existants.
+
+La matrice descriptive `/admin/permissions` est accessible dans Exploitation.
+Elle expose les quatre capacités raccordées et leurs limites, sans formulaire
+d'attribution ni activation de profils délégués. Voir [les permissions](docs/ADMIN_PERMISSIONS.md).

@@ -55,7 +55,11 @@ final class AdminCapabilityControllerTest extends WebTestCase
         $url = '/admin/joueurs/'.$ordinary->id;
         $client->request('GET', $url);
         self::assertResponseRedirects('http://genesis-reborn.localhost/connexion');
+        $client->request('GET', '/admin/permissions');
+        self::assertResponseRedirects('http://genesis-reborn.localhost/connexion');
         $client->loginUser($ordinary);
+        $client->request('GET', '/admin/permissions');
+        self::assertResponseRedirects('/acces-refuse');
         $client->request('GET', $url);
         self::assertResponseRedirects('/acces-refuse');
         $client->request('POST', $url.'/colonies/1/ressources');
@@ -63,6 +67,19 @@ final class AdminCapabilityControllerTest extends WebTestCase
         $client->request('POST', $url.'/colonies/1/vaisseaux');
         self::assertResponseRedirects('/acces-refuse');
         $client->loginUser($admin);
+        $client->request('GET', '/admin/permissions');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('h1', 'Permissions administratives');
+        self::assertSelectorCount(4, 'tr[data-capability]');
+        self::assertSelectorTextContains('main', 'ne sont pas délégués');
+        self::assertSelectorCount(0, 'main form');
+        self::assertSame(0, $em->getRepository(AdminAuditLog::class)->count(['action' => 'admin_resources_adjust']));
+        // Une lecture répétée n'attribue aucun droit et ne crée aucune intervention.
+        $client->request('GET', '/admin/permissions');
+        self::assertResponseIsSuccessful();
+        self::assertSame(['ROLE_ADMIN', 'ROLE_USER'], $admin->getRoles());
+        $client->request('POST', '/admin/permissions');
+        self::assertResponseStatusCodeSame(405);
         $client->request('GET', $url);
         self::assertResponseIsSuccessful();
         self::assertSame(1, $em->getRepository(AdminAuditLog::class)->count(['action' => 'admin_player_view']));
