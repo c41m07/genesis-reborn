@@ -67,6 +67,7 @@ final class AdminOperationsService
                     'due_at' => $dueAt,
                     'overdue_seconds' => max(0, $now->getTimestamp() - $dueAt->getTimestamp()),
                     'due' => $dueAt <= $now,
+                    'diagnostic' => OutboxDiagnostic::describe((string) $row['kind'], $dueAt <= $now),
                 ];
             }
             usort($byKind, static fn(array $a, array $b): int => ($b['delay_seconds'] ?? -1) <=> ($a['delay_seconds'] ?? -1) ?: strcmp($a['kind'], $b['kind']));
