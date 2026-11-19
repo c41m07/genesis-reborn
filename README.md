@@ -51,6 +51,9 @@ L’orientation confirmée est une stratégie au rythme modéré ; les durées d
 
 ## État du projet
 
+- Administration : [fiabilité du catalogue](docs/ADMIN_CATALOGUE_FIABILITE.md), avec source des valeurs, motif, confirmation, rejet des formulaires périmés, journal avant/après et comparaison de devis sans publication.
+
+
 - Déblocages initiaux des bâtiments. Le chantier exige ses producteurs de métal et de nano au niveau 2 du même rang et les chantiers précédents au niveau 20. Le bunker demande ces producteurs au niveau 1 et les bunkers précédents au niveau 8. Les laboratoires avancés exigent les laboratoires des rangs précédents au niveau 10. L’hydrogène demande la recherche industrielle du rang au niveau 3, et l’antimatière au niveau 5. [Grille complète des déblocages](docs/DEBLOCAGES.md#bâtiments--13)
 
 - Messagerie : panneaux de contacts et de conversation conservés, bulles reçues bleues et envoyées dorées, zone de rédaction accessible sur ordinateur et mobile. La recherche reste sur sa page dédiée, avec retour vers la conversation sélectionnée. Ctrl + Entrée envoie dans les canaux privé, guilde et Global ; Entrée conserve les sauts de ligne. Markdown sécurisé pour les nouveaux messages seulement, historique conservé en texte ; soumissions répétées protégées côté serveur. CommonMark est une dépendance Composer. [Guide et migration préparée](docs/MESSAGERIE_MARKDOWN.md).
@@ -788,3 +791,12 @@ La revue transversale locale de la refonte couvre aussi les menus communs, les
 actualisations, les erreurs et les parcours sans JavaScript. Son périmètre et les
 reprises de tests sont consignés dans le [bilan de refonte](docs/REFONTE_VISUELLE_INTERFACES.md).
 La CI complète reste requise avant toute fusion.
+
+### Historique du catalogue administratif
+
+Chaque fiche propose un historique paginé en lecture seule, avec comparaison
+avant/après/actuel des champs modifiables. Les anciennes traces incomplètes
+sont signalées et ne peuvent pas être restaurées. Les nouvelles versions complètes
+compatibles peuvent être prévisualisées puis réappliquées après confirmation et
+motif, avec contrôle de concurrence et journalisation.
+[Périmètre et limites](docs/ADMIN_CATALOGUE_FIABILITE.md).
