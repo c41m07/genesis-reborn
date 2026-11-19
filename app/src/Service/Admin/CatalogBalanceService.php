@@ -27,10 +27,10 @@ final class CatalogBalanceService
         return $result;
     }
 
-    public function save(Player $admin,int $universeId,string $group,string $slug,array $input,string $expectedRevision,string $reason):void
+    public function save(Player $admin,int $universeId,string $group,string $slug,array $input,string $expectedRevision,string $reason,?int $restoreSource = null):void
     {
         if(!in_array($group,self::GROUPS,true))throw new \DomainException('Groupe de catalogue invalide.');
-        $this->manager->transaction(function()use($admin,$universeId,$group,$slug,$input,$expectedRevision,$reason):void{
+        $this->manager->transaction(function()use($admin,$universeId,$group,$slug,$input,$expectedRevision,$reason,$restoreSource):void{
             $universe=$this->repo->find(Universe::class,$universeId);
             if(!$universe instanceof Universe||$universe->status==='closed')throw new \DomainException('Univers introuvable ou fermé.');
             $this->manager->lock($universe);
@@ -38,6 +38,11 @@ final class CatalogBalanceService
             $this->assertRevision($universe,$group,$slug,$expectedRevision);
             $reason=$this->validateReason($reason);
             $before=$this->catalog->getForUniverse($universe,$group,$slug);
+            // La source historique est relue après le verrou : aucun champ reçu du navigateur
+            // ne peut remplacer les valeurs approuvées dans l’aperçu.
+            if ($restoreSource !== null) {
+                $input = $this->historicalValues($universe, $group, $slug, $restoreSource);
+            }
             $values = $this->validatedValues($group, $slug, $input);
             if(isset($values['max_level']))$this->assertMaxLevelCompatible($universe,$group,$slug,$values['max_level']);
             $planets=$this->repo->planets($universe);foreach($planets as $planet){$this->manager->lock($planet);$this->resources->materialize($planet,$this->clock->now());}
@@ -45,7 +50,7 @@ final class CatalogBalanceService
             $this->advanceRevision($universe,$group,$slug);
             $this->manager->flush();
             foreach($planets as $planet)$this->resources->refreshProduction($planet);
-            $this->audit($admin,$universeId,$group,$slug,$values,$before,$this->catalog->getForUniverse($universe,$group,$slug),$reason);$this->manager->flush();
+            $this->audit($admin,$universeId,$group,$slug,$values,$before,$this->catalog->getForUniverse($universe,$group,$slug),$reason,$restoreSource);$this->manager->flush();
         });
     }
 
@@ -125,6 +130,78 @@ final class CatalogBalanceService
             $this->advanceRevision($universe,$group,$slug);
             $this->audit($admin,$universeId,$group,$slug,['reset_to_reference'=>true],$before,$this->catalog->getForUniverse($universe,$group,$slug),$reason);$this->manager->flush();
         });
+    }
+
+
+    /**
+     * Restauration partielle volontaire : seuls les champs éditables de la fiche sont repris.
+     * Le contexte non restauré est conservé et doit rester strictement compatible.
+     */
+    private function restorationContext(Universe $universe, string $group, string $slug): array
+    {
+        $config = $this->catalog->forUniverse($universe);
+        unset($config['catalog']);
+        $definition = $this->catalog->getForUniverse($universe, $group, $slug);
+        foreach (array_keys($this->fieldSchema($group, $this->catalog->get($group, $slug))) as $path) {
+            $this->write($definition, $path, null);
+        }
+        return [
+            'reference' => $this->catalog->get($group, $slug),
+            'rules' => $this->catalog->rules(),
+            'tiers' => $this->catalog->tiers(),
+            'universe' => $config,
+            'fixed_definition' => $definition,
+        ];
+    }
+
+    public function historicalValues(Universe $universe, string $group, string $slug, int $source): array
+    {
+        $entry = $this->repo->find(AdminAuditLog::class, $source);
+        if (!$entry instanceof AdminAuditLog || $entry->action !== 'universe_catalog_balance'
+            || $entry->targetType !== 'universe' || $entry->targetId !== $universe->id
+            || ($entry->details['group'] ?? null) !== $group || ($entry->details['slug'] ?? null) !== $slug) {
+            throw new \DomainException('Version introuvable pour cette fiche et cet univers.');
+        }
+        $version = $entry->details['version'] ?? [];
+        $schema = $this->fieldSchema($group, $this->catalog->get($group, $slug));
+        if (($version['format'] ?? null) !== 1 || ($version['fields'] ?? null) !== array_keys($schema)
+            || !is_array($entry->details['before'] ?? null) || !is_array($entry->details['after'] ?? null)
+            || !is_array($version['context'] ?? null)) {
+            throw new \DomainException('Trace ancienne ou incomplète : restauration indisponible.');
+        }
+        // JSON sans conservation des fractions nulles neutralise 1/1.0 après stockage Doctrine.
+        if (json_encode($version['context'], JSON_THROW_ON_ERROR) !== json_encode($this->restorationContext($universe, $group, $slug), JSON_THROW_ON_ERROR)) {
+            throw new \DomainException('Le contexte de règles ou de référence a changé : restauration incompatible.');
+        }
+        $values = [];
+        foreach ($schema as $path => $rule) {
+            if (!$this->has($entry->details['before'], $path) || !$this->has($entry->details['after'], $path)) {
+                throw new \DomainException('Instantané incomplet : restauration indisponible.');
+            }
+            $values[$path] = $this->read($entry->details['after'], $path);
+        }
+        return $this->validatedValues($group, $slug, $values);
+    }
+
+    public function previewRestoration(Universe $universe, string $group, string $slug, int $source): array
+    {
+        if ($universe->status === 'closed') {
+            throw new \DomainException('Univers fermé.');
+        }
+        $values = $this->historicalValues($universe, $group, $slug, $source);
+        if (isset($values['max_level'])) {
+            $this->assertMaxLevelCompatible($universe, $group, $slug, $values['max_level']);
+        }
+        $revision = $this->revision($universe, $group, $slug);
+        $fields = $this->entries($universe, $group, $slug)[$group][0]['fields'];
+        $comparison = [];
+        foreach ($fields as $path => $field) {
+            $comparison[] = ['label' => $field['label'], 'before' => $field['value'], 'after' => $values[$path]];
+        }
+        return [
+            'revision' => $revision, 'comparison' => $comparison,
+            'quote' => $this->preview($universe, $group, $slug, $values, $revision, 'basic', 1, 1),
+        ];
     }
 
     private function fieldSchema(string $group,array $definition):array
@@ -218,7 +295,7 @@ final class CatalogBalanceService
         return $reason;
     }
 
-    private function audit(Player $admin, int $universeId, string $group, string $slug, array $values, array $before, array $after, string $reason): void
+    private function audit(Player $admin, int $universeId, string $group, string $slug, array $values, array $before, array $after, string $reason, ?int $restoreSource = null): void
     {
         $entry = new AdminAuditLog();
         $entry->actor = $admin;
@@ -232,6 +309,12 @@ final class CatalogBalanceService
             'before' => $before,
             'after' => $after,
             'reason' => $reason,
+            'restore_source' => $restoreSource,
+            'version' => [
+                'format' => 1,
+                'context' => $this->restorationContext($this->repo->find(Universe::class, $universeId), $group, $slug),
+                'fields' => array_keys($this->fieldSchema($group, $this->catalog->get($group, $slug))),
+            ],
         ];
         $entry->createdAt = $this->clock->now();
         $this->manager->save($entry);

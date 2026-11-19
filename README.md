@@ -796,5 +796,7 @@ La CI complète reste requise avant toute fusion.
 
 Chaque fiche propose un historique paginé en lecture seule, avec comparaison
 avant/après/actuel des champs modifiables. Les anciennes traces incomplètes
-sont signalées. Aucune restauration automatique n’est proposée.
+sont signalées et ne peuvent pas être restaurées. Les nouvelles versions complètes
+compatibles peuvent être prévisualisées puis réappliquées après confirmation et
+motif, avec contrôle de concurrence et journalisation.
 [Périmètre et limites](docs/ADMIN_CATALOGUE_FIABILITE.md).

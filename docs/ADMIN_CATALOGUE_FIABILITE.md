@@ -126,3 +126,53 @@ inscriptibles : remplacés uniquement dans les conteneurs par des tmpfs éphém�
 sans changer les permissions locales. L’assertion d’absence de formulaire POST
 a été limitée au contenu principal pour exclure la déconnexion globale.
 Les réponses 404 des identifiants invalides sont attendues et testées.
+
+## Incrément : réapplication contrôlée des versions complètes
+
+Complexité 4/5. Les nouveaux enregistrements et retours aux références ajoutent
+un format de version 1 au journal : liste exacte des champs modifiables,
+définitions effectives avant/après, référence YAML, règles globales, rangs,
+configuration d’univers (multiplicateurs, limites, fonctionnalités) et définition
+hors champs modifiables. Aucun état de joueur, secret ou donnée de planète n’est
+capturé. Les anciennes traces ne sont pas complétées rétroactivement.
+
+La restauration signifie réappliquer **l’état après** la trace, uniquement comme
+surcharges des champs éditables. Ce n’est ni restaurer toute la configuration
+historique ni supprimer les surcharges comme le retour aux références.
+Tout changement de référence/règles/contexte capturé ou champ manquant bloque
+la restauration ; aucun essai de conversion silencieuse. Les traces restent
+consultables lorsqu’elles ne peuvent plus être réappliquées.
+
+Parcours dédié : GET affiche tableau complet et devis basique niveau 1/quantité 1
+sans bonus et conserve l’empreinte dans la session ; POST exige cet aperçu,
+CSRF, motif et confirmation explicite. Le rôle admin est contrôlé pour les deux
+méthodes. Le service relit la version limitée à l’univers/famille/fiche après
+le verrou et l’empreinte, valide les valeurs et plafonds existants, matérialise
+les ressources puis applique via la transaction de sauvegarde existante.
+L’audit inclut la source historique et le nouvel avant/après. Aucun champ
+historique du navigateur n’est utilisé pour publier. Un rejeu de confirmation
+est refusé ; les formulaires périmés restent refusés.
+
+Une consultation ou annulation n’écrit aucune donnée de jeu. La session
+d’aperçu peut être remplacée par une nouvelle consultation explicite. Les
+opérations en file conservent leurs coûts et durées précédemment payés.
+Pas de migration : données de version dans le JSON du journal existant.
+
+Limites : les anciennes traces ne deviennent pas restaurables ; aucune
+publication groupée, aucun brouillon persistant multi-fiches, aucune garantie
+de reconstitution d’un ancien moteur de calcul. Le mécanisme de journal
+n’est pas rendu immuable face à une modification directe en base. Les contrôles
+de concurrence testés séquentiellement ne prouvent pas une course multiprocessus.
+Aucune des corrections de l’audit produit n’appartient à ce lot.
+
+Validation finale restauration : 29 tests / 316 assertions, 61 templates Twig,
+injection du conteneur, Compose et diff réussis. Sont couverts : aperçu sans
+écriture, réapplication d’une version complète issue de la DB, source ignorée
+depuis les champs du navigateur, audit source/avant/après, refus des traces
+anciennes/incomplètes/étrangères et du contexte changé, CSRF, rôle, confirmation,
+rejeu et plafond rendu incompatible par progression après l’aperçu (rollback
+sans modification des paramètres ni ajout d’audit catalogue).
+Corrections de recette : noms qualifiés/regex de route altérés à l’écriture,
+comptage distinct des audits catalogue et sécurité CSRF, fixture à plafond réel
+(forteresse plutôt que centrale sans max_level). Suite finale réussie.
+Recette navigateur et CI complète restent non exécutées.

@@ -181,4 +181,89 @@ final class CatalogBalanceTest extends KernelTestCase
         }
         self::assertSame(0, $this->em->getRepository(AdminAuditLog::class)->count());
     }
+
+    public function testVersionRestorationIsValidatedAuditedAndRejectsReplay(): void
+    {
+        $service = self::getContainer()->get(CatalogBalanceService::class);
+        $universe = $this->universe();
+        $values = $this->values($service, $universe, 'ships', 'fighter');
+        $values['precision'] = 80;
+        $service->save($this->admin, $universe->id, 'ships', 'fighter', $values, $service->revision($universe, 'ships', 'fighter'), 'Version initiale');
+        $source = $this->em->getRepository(AdminAuditLog::class)->findOneBy([], ['id' => 'DESC'])->id;
+        $values['precision'] = 90;
+        $service->save($this->admin, $universe->id, 'ships', 'fighter', $values, $service->revision($universe, 'ships', 'fighter'), 'Version suivante');
+        $before = $universe->gameSettings;
+        $preview = $service->previewRestoration($universe, 'ships', 'fighter', $source);
+        self::assertSame($before, $universe->gameSettings);
+        self::assertSame(2, $this->em->getRepository(AdminAuditLog::class)->count());
+        $service->save($this->admin, $universe->id, 'ships', 'fighter', ['precision' => 999], $preview['revision'], 'Restauration vérifiée', $source);
+        self::assertSame(80.0, self::getContainer()->get(GameCatalog::class)->getForUniverse($universe, 'ships', 'fighter')['precision']);
+        $audit = $this->em->getRepository(AdminAuditLog::class)->findOneBy([], ['id' => 'DESC']);
+        self::assertSame($source, $audit->details['restore_source']);
+        self::assertSame(90.0, $audit->details['before']['precision']);
+        self::assertSame(80.0, $audit->details['after']['precision']);
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('a changé');
+        $service->save($this->admin, $universe->id, 'ships', 'fighter', [], $preview['revision'], 'Rejeu interdit', $source);
+    }
+
+    public function testVersionRejectsOldIncompleteForeignAndChangedContext(): void
+    {
+        $service = self::getContainer()->get(CatalogBalanceService::class);
+        $universe = $this->universe();
+        $service->save($this->admin, $universe->id, 'ships', 'fighter', $this->values($service, $universe, 'ships', 'fighter'), $service->revision($universe, 'ships', 'fighter'), 'Version complète');
+        $audit = $this->em->getRepository(AdminAuditLog::class)->findOneBy([], ['id' => 'DESC']);
+        $details = $audit->details;
+        foreach (['old', 'incomplete', 'foreign', 'context'] as $case) {
+            $audit->details = $details;
+            $audit->targetId = $universe->id;
+            if ($case === 'old') unset($audit->details['version']);
+            if ($case === 'incomplete') unset($audit->details['after']['precision']);
+            if ($case === 'foreign') $audit->targetId = $this->universe('omega-1')->id;
+            if ($case === 'context') $audit->details['version']['context']['rules'] = [];
+            try {
+                $service->previewRestoration($universe, 'ships', 'fighter', $audit->id);
+                self::fail('Version invalide acceptée : '.$case);
+            } catch (\DomainException $error) {
+                self::assertNotEmpty($error->getMessage());
+            }
+        }
+    }
+
+    public function testRestorationRechecksPlayerLevelsAfterPreviewAndRollsBack(): void
+    {
+        $service = self::getContainer()->get(CatalogBalanceService::class);
+        $universe = $this->universe();
+        $values = $this->values($service, $universe, 'buildings', 'fortress');
+        $values['max_level'] = 1;
+        $service->save($this->admin, $universe->id, 'buildings', 'fortress', $values, $service->revision($universe, 'buildings', 'fortress'), 'Version niveau un');
+        $source = $this->em->getRepository(AdminAuditLog::class)->findOneBy([], ['id' => 'DESC'])->id;
+        $values['max_level'] = 3;
+        $service->save($this->admin, $universe->id, 'buildings', 'fortress', $values, $service->revision($universe, 'buildings', 'fortress'), 'Version niveau trois');
+        $preview = $service->previewRestoration($universe, 'buildings', 'fortress', $source);
+        $data = new RegistrationData();
+        $data->email = 'restore-builder@example.test';
+        $data->username = 'RestoreBuilder';
+        $data->plainPassword = 'Long-test-password-2026';
+        $player = self::getContainer()->get(RegistrationService::class)->register($data);
+        self::getContainer()->get(UniverseService::class)->select($player, $universe->id);
+        $planet = $this->em->getRepository(\App\Entity\Planet::class)->findOneBy(['owner' => $player->currentPlayerUniverse]);
+        $plant = new PlanetBuilding();
+        $plant->planet = $planet;
+        $plant->slug = 'fortress';
+        $plant->level = 2;
+        $this->em->persist($plant);
+        $this->em->flush();
+        $connection = $this->em->getConnection();
+        $settings = $connection->fetchOne('SELECT game_settings FROM universe WHERE id = ?', [$universe->id]);
+        $audits = $connection->fetchOne('SELECT COUNT(*) FROM admin_audit_log');
+        try {
+            $service->save($this->admin, $universe->id, 'buildings', 'fortress', [], $preview['revision'], 'Refus après progression', $source);
+            self::fail('Le plafond incompatible a été restauré.');
+        } catch (\DomainException $error) {
+            self::assertStringContainsString('bâtiments existants', $error->getMessage());
+        }
+        self::assertSame($settings, $connection->fetchOne('SELECT game_settings FROM universe WHERE id = ?', [$universe->id]));
+        self::assertSame($audits, $connection->fetchOne('SELECT COUNT(*) FROM admin_audit_log'));
+    }
 }

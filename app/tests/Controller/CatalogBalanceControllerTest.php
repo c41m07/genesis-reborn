@@ -205,5 +205,52 @@ final class CatalogBalanceControllerTest extends WebTestCase
   $this->client->loginUser($player);
   $this->client->request('GET', '/admin/universes/'.$this->universe->id.'/catalogue/ships/fighter/historique');
   self::assertResponseRedirects('/acces-refuse');
+  $this->client->request('GET', '/admin/universes/'.$this->universe->id.'/catalogue/ships/fighter/restaurer/1');
+  self::assertResponseRedirects('/acces-refuse');
+  $this->client->request('POST', '/admin/universes/'.$this->universe->id.'/catalogue/ships/fighter/restaurer/1');
+  self::assertResponseRedirects('/acces-refuse');
+ }
+
+ public function testRestorationRequiresPreviewCsrfAndConfirmationAndPublishesOnce(): void
+ {
+  $this->client->loginUser($this->admin);
+  $id = $this->universe->id;
+  $edit = '/admin/universes/'.$id.'/catalogue/ships/fighter';
+  foreach ([80, 90] as $precision) {
+   $crawler = $this->client->request('GET', $edit);
+   $form = $crawler->filter('form.admin-catalogue-editor')->form();
+   $form['values[precision]'] = (string) $precision;
+   $form['reason'] = 'Version de recette';
+   $form['confirmed']->tick();
+   $this->client->submit($form);
+  }
+  $this->em = static::getContainer()->get(EntityManagerInterface::class);
+  $source = $this->em->getRepository(\App\Entity\AdminAuditLog::class)->findOneBy([], ['id' => 'ASC'])->id;
+  $url = $edit.'/restaurer/'.$source;
+  $crawler = $this->client->request('GET', $url);
+  self::assertResponseIsSuccessful();
+  self::assertSelectorTextContains('h1', 'trace #'.$source);
+  $form = $crawler->filter('form.admin-catalogue-restore')->form();
+  $form['reason'] = 'Restauration de recette';
+  $form['confirmed']->tick();
+  $valid = $form->getPhpValues();
+  $invalid = $valid;
+  $invalid['_token'] = 'invalid';
+  $this->client->request('POST', $url, $invalid);
+  self::assertResponseRedirects('/acces-refuse');
+  $invalid = $valid;
+  unset($invalid['confirmed']);
+  $this->client->request('POST', $url, $invalid);
+  self::assertResponseRedirects($edit.'/historique');
+  // L’aperçu seul et les deux refus n’ajoutent aucun audit.
+  self::assertSame(2, static::getContainer()->get(EntityManagerInterface::class)->getRepository(\App\Entity\AdminAuditLog::class)->count(['action' => 'universe_catalog_balance']));
+  $this->client->request('POST', $url, $valid);
+  self::assertResponseRedirects($edit.'/historique');
+  $this->em = static::getContainer()->get(EntityManagerInterface::class);
+  $this->em->clear();
+  self::assertSame(80.0, static::getContainer()->get(GameCatalog::class)->getForUniverse($this->em->find(Universe::class, $id), 'ships', 'fighter')['precision']);
+  self::assertSame(3, $this->em->getRepository(\App\Entity\AdminAuditLog::class)->count(['action' => 'universe_catalog_balance']));
+  $this->client->request('POST', $url, $valid);
+  self::assertSame(3, static::getContainer()->get(EntityManagerInterface::class)->getRepository(\App\Entity\AdminAuditLog::class)->count(['action' => 'universe_catalog_balance']));
  }
 }
