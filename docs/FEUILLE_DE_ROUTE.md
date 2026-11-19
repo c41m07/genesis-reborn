@@ -2082,3 +2082,9 @@ Voir [ADMIN_SUPPORT_COMPTES.md](ADMIN_SUPPORT_COMPTES.md).
 Incrément support : recherche des inscriptions non confirmées depuis la liste,
 combinable au rôle et à la suspension, avant pagination. Le renvoi administratif
 attend le cycle commun idempotent documenté ; aucun email réel envoyé.
+## Administration : socle permissions
+
+Premier périmètre local : fiche joueur et interventions ressources/vaisseaux/flottes.
+Les admins existants conservent leur accès ; aucune délégation activée.
+Matrice de rôles, stockage, révocation et conversion des autres routes restent
+à définir/implémenter avant ouverture. [Suivi](ADMIN_PERMISSIONS.md).

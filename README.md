@@ -804,3 +804,12 @@ motif, avec contrôle de concurrence et journalisation.
 Le diagnostic support distingue le renvoi inutile, la suspension et le renvoi administratif indisponible ; voir [le périmètre et le contrat de fiabilisation](docs/ADMIN_SUPPORT_COMPTES.md). Aucun envoi administratif direct n’est activé.
 
 Le service de confirmation sépare préparation sous verrou et transport : une confirmation constatée sous verrou n’entraîne plus l’envoi d’un lien non enregistré. Cette correction ne constitue pas encore le renvoi administratif idempotent.
+
+Le [socle des capacités administratives](docs/ADMIN_PERMISSIONS.md) distingue
+consultation de fiche, correction des ressources, attribution de vaisseaux
+et intervention sur les flottes,
+sans activer de nouveaux rôles ni changer les comptes existants.
+
+La matrice descriptive `/admin/permissions` est accessible dans Exploitation.
+Elle expose les quatre capacités raccordées et leurs limites, sans formulaire
+d'attribution ni activation de profils délégués. Voir [les permissions](docs/ADMIN_PERMISSIONS.md).
