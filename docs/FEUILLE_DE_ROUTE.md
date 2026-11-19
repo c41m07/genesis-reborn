@@ -242,13 +242,20 @@ native. Validation Compose, lint statique, compilation et 20 PHP / 142 assertion
 réussis ; six parcours navigateur consolidés et vingt-cinq captures ciblées.
 Brouillon privé, publication/lecture, filtres et pagination 50 + 2, droits, CSRF,
 erreurs conservées et suppression sans JavaScript vérifiés.
-L10N prépare Exploitation : 68 A « Contrôle en lignes » et 69 B « Contrôle en
-fiches ». Sécurité, traitements, journal/export et quatre brouillons juridiques
-conservent leurs tâches et destinations. 56 cadres, 700 liens inspectés et seize
-exports ; choix attendu avant réalisation. Les 36 pages précédentes sont
-préservées ; 38 pages après ajout. Wiki et revue transversale restent à traiter.
-Les autres rubriques administratives seront traitées par sous-lots, sans augmenter
-le compte des dix-huit ensembles ni déclarer L10 terminé.
+L10N A « Contrôle en lignes » (page 68) est validé et réalisé localement :
+Sécurité, traitements, journal et quatre brouillons juridiques. Validation Compose,
+lint statique, compilation et 10 PHP / 271 assertions réussis ; huit parcours
+navigateur consolidés et 43 captures ciblées. Exports CSV complets même avec les
+détails fermés, filtres, pagination, examen natif et accès privés vérifiés.
+Les rapports administratifs et anciennes destinations de transport sont conservés
+après examen et reprise de leur recette. L10 est complet localement ; le plan
+passe à **16/18 ensembles réalisés**. Les vérifications globales restent en L12.
+À la demande de l’utilisateur, les deux propositions Wiki sont préparées sans
+nouvelle attente : 70 A « Manuel en lignes » et 71 B « Repères en cartes ».
+102 cadres, 2 064 liens inspectés, seize exports ; 16 chapitres, 12 formules,
+recherche et deux références représentés. Les 38 pages précédentes sont préservées,
+40 pages après ajout. Le choix Wiki est différé ; sa réalisation et la revue
+transversale restent à effectuer.
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026

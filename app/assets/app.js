@@ -83,3 +83,4 @@ import './styles/admin-projects-workspace.css';
 import './styles/admin-rotations-workspace.css';
 import './styles/admin-challenges-workspace.css';
 import './styles/admin-patchnotes-workspace.css';
+import './styles/admin-ops-workspace.css';

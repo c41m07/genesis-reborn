@@ -4476,9 +4476,182 @@ Preuves : `lot-10N-{plan,manifest,verification}.json`, contrôles des textes jur
 et état d’enregistrement ; `lot-10N-{A,B}-{security,operations,audit,legal}-{1440,390}.png`
 dans les artefacts de la conversation. Champs dessinés et parcours simulés, sans
 saisie cumulée. Examen, export et collecte restent des exemples : aucune donnée
-privée réelle exportée, aucun service relancé ni texte publié. **Choix A/B attendu
-avant réalisation**. L10 en cours, plan global **15/18** ; wiki et revue transversale
-restent à traiter après les derniers écrans administratifs.
+privée réelle exportée, aucun service relancé ni texte publié. L10N A est ensuite validé explicitement ; réalisation ci-dessous. À ce stade,
+le Wiki et la revue transversale restent à traiter.
+
+## L10N A — Réalisation et clôture locale de L10, 19 novembre 2026
+
+L’utilisateur conserve **68 A — Contrôle en lignes**, demande de finir L10 et
+de préparer les propositions Wiki à la suite sans nouvelle attente. Le choix
+Wiki est différé ; cette consigne n’autorise pas son intégration par anticipation.
+Complexité **4/5** : affichage responsive, contrôleur partagé d’export, accès
+privés et continuité des routes administratives.
+
+Sécurité, État des traitements, Journal et Brouillons juridiques gardent leurs
+pages et leur navigation. Les tableaux utilisent le même balisage en ordinateur
+et en fiches sous 1200 px, avec rôles explicites et libellés de cellule ; pas de
+double liste susceptible de fausser recherche, compteur ou CSV. Les détails JSON
+du journal sont repliables nativement. L’export visible lit leur valeur entière
+via un attribut facultatif, même lorsque le détail est fermé ; les cellules sans
+cet attribut conservent l’ancien comportement. La neutralisation CSV reste active.
+
+Les filtres de sécurité restent locaux aux cinquante incidents affichés ; ils
+sont révélés seulement avec JavaScript. Sans celui-ci, liste et examen restent
+accessibles. Le même principe cache l’export visible sans masquer l’export complet
+serveur. Les indicateurs des traitements occupent quatre/deux/une colonnes et un
+lien permet de relire le relevé. Collectes, seuils, limites de vingt, consultations
+et absence de relance automatique sont conservés. Les quatre brouillons gardent
+leur corps de texte et leurs en-têtes privés ; les quatre régions de tableau de
+la confidentialité reçoivent des noms distincts après le contrôle axe.
+
+Écarts utiles avec les champs dessinés : tableaux et confirmations HTML natifs,
+JSON dépliable dans toutes les tailles, filtres locaux progressifs et conservation
+du défilement horizontal des tableaux juridiques pour garder leur structure.
+Les titres de colonnes et avertissements ont une taille explicite de 14 px.
+Aucun contrôleur PHP, service métier, schéma, permission, jeton ou traitement
+transactionnel n’est modifié. Les logos et SVG d’identité restent conservés.
+
+Les dernières lignes administratives encore marquées « inventoriées » ont été
+rapprochées de leurs consommateurs et des bilans précédents : rapports de combat
+et renseignement réutilisant les lecteurs L7D/L10E, notifications JSON privées,
+ancien `/admin/transports` redirigeant vers les missions filtrées. Leur recette
+existante a été reprise. Le template historique de transports reste conservé,
+sans le présenter comme une page rendue. Les états documentaires des gabarits
+administratifs déjà traités ont été remis en cohérence avec leurs lots ; cela
+ne remplace pas la revue transversale L12.
+
+Fichiers : feuille `admin-ops-workspace.css`, import, `admin_filter`, layout et
+gabarit de rubrique, Sécurité, relevé, résultats d’audit, présentation juridique
+et noms des quatre régions ; recette dédiée et deux recettes existantes adaptées.
+README, architecture, inventaire, navigation, feuille de route et présent suivi
+sont synchronisés. Les sources du Wiki ne sont pas modifiées dans ce lot.
+
+Liste des fichiers applicatifs et de recette :
+
+- `app/assets/app.js`, `app/assets/styles/admin-ops-workspace.css`,
+  `app/assets/controllers/admin_filter_controller.js` ;
+- `app/templates/admin/layout.html.twig`, `app/templates/admin/section.html.twig`,
+  `app/templates/admin/sections/security.html.twig`,
+  `app/templates/admin/sections/operations.html.twig`,
+  `app/templates/admin/sections/_audit_results.html.twig`,
+  `app/templates/admin/legal/preview.html.twig`,
+  `app/templates/admin/legal/confidentialite.html.twig` ;
+- `app/tests/browser/admin-operations-refonte.spec.mjs`,
+  `app/tests/browser/admin-accounts-flights.spec.mjs`,
+  `app/tests/browser/admin-missions-notifications.spec.mjs`.
+
+Les six documents modifiés sont `README.md`, `docs/ARCHITECTURE.md`,
+`docs/FEUILLE_DE_ROUTE.md`, `docs/INVENTAIRE_INTERFACES.md`,
+`docs/NAVIGATION_PAGES_DEDIEES.md` et le présent fichier.
+
+Vérifications locales avec données synthétiques et bases isolées :
+
+- `make validate`, `make lint-static`, `make assets` et `git diff --check` réussis.
+- **10 tests PHP / 271 assertions** : `AdminOperationsServiceTest`,
+  `AdminLegalPreviewControllerTest`, `AdminPaginationTest`, `AdminDedicatedPagesTest`.
+  Collectes inconnues et signaux, absence de jetons dans le diagnostic, accès
+  juridiques privés, en-têtes et destinations vérifiés.
+- **Huit parcours navigateur consolidés** : recherche globale/export complet,
+  comptes protégés et journal, relais, nouveautés personnelles, accueil, sept
+  pages d’exploitation, CSV/parcours natif, rapports et alias transports.
+- **43 captures ciblées** : Sécurité, relevé, Journal et quatre documents en
+  sombre/clair, 1440/768/390, plus journal vide. Après interaction, la capture
+  revient instantanément en haut pour éviter de déplacer artificiellement les
+  en-têtes fixes dans les images complètes. Champs longs, absence de débordement,
+  tableau/fiches et axe sans exclusion vérifiés.
+- CSV de page **50 lignes**, JSON complet avec détail fermé en ordinateur/mobile,
+  échappement des valeurs de formule ; export serveur des **52 lignes filtrées**,
+  pagination **50 + 2**, focus conservé et erreur de recherche sans perte de saisie.
+- Sans JavaScript : filtres locaux et export de page cachés, recherche et export
+  complet disponibles, examen conservant l’incident avec audit, navigation des
+  quatre documents et retour/rechargement. La consultation du relevé ne modifie
+  pas la flotte synthétique ; les marqueurs de nouveautés gardent leur portée
+  personnelle et les contrôles d’accès restent actifs.
+
+Le premier passage a signalé les régions juridiques homonymes et un ancien
+sélecteur de recette devenu trop strict sur un raccourci d’accueil. Noms et
+sélecteur ont été corrigés, assertions conservées, puis scénarios repris avec
+succès. Les contrôles de rendu ont été renouvelés après les dernières tailles
+de texte et la stabilisation des captures ; les autres contrôles inchangés
+n’ont pas été relancés sans motif. Preuves :
+`output/playwright/admin-operations-refonte/`, journaux initial/final/captures,
+rapports conservés, PHP, compilation et lint.
+
+**L10 est complet localement ; plan global 16/18.** CI GitHub complète, fusion
+et déploiement ne sont pas exécutés. Les contrôles ciblés ne constituent pas un
+audit RGAA exhaustif ; performance non mesurée. Le Wiki choisi reste à réaliser,
+puis la vérification transversale L12.
+
+## L11 — Wiki, propositions du 19 novembre 2026
+
+Préparées à la suite sur demande explicite, sans interrompre le travail pour
+attendre un nouveau choix. Complexité **4/5** pour la conception complète :
+16 chapitres, douze formules, références longues et compatibilité historique.
+Sources ciblées : `WikiController`, `WikiManual`, six templates Wiki,
+`wiki_chapters`, `docs/wiki.json` et titres/intro des deux documents de référence.
+L’organisation déjà séparée est conservée : accueil, chapitre, recherche globale,
+Règles de référence et Décisions du projet. Aucune page monolithique n’est recréée.
+
+Dans le même document Figcraft :
+
+- **70 · L11 · A — Manuel en lignes** : accueil en lignes avec aperçu de chaque
+  chapitre, sommaire à gauche sur ordinateur et lecture continue. Avantage :
+  continuité avec le manuel actuel et place pour les titres ; limite : accueil
+  plus long à parcourir.
+- **71 · L11 · B — Repères en cartes** : accueil en cartes par deux et sommaire
+  à droite sur ordinateur, même largeur principale de lecture. Avantage : davantage
+  de sujets rapprochés à l’accueil ; limite : cartes plus étroites et sommaire
+  déplacé par rapport à l’existant. Sur tablette et téléphone, les deux directions
+  utilisent le sélecteur de chapitre natif et un contenu dans le fil.
+
+Recommandation **A** pour préserver le repérage déjà connu. Les aperçus d’accueil
+proviennent du premier paragraphe existant. Tous les paragraphes et étapes des
+16 chapitres, explications, variables, formules et exemples sont repris des sources
+sans modification de règle. Les deux références conservent leurs introductions
+et tous leurs titres de section : **37 pour les règles, 62 pour les décisions**.
+Le prototype illustre l’ouverture de leur première section seulement ; les autres
+boutons mènent à cet état représentatif, sans prétendre reproduire chaque ouverture.
+Les sources restent à conserver intégralement dans l’application.
+
+Couverture équivalente : **102 cadres, 51 par direction**, **2 064 liens inspectés**
+et six départs de prototype. Accueil, chapitre de production, recherche et règles
+en 1440/768/390 ; quinze autres chapitres, douze formules ouvertes, décisions,
+deux références ouvertes, recherche vide/sans terme, ancien fragment, menu, absence
+d’empire, aide et référence de refus en 390. Les anciens liens avec ancre restent
+une transition vers de vraies pages ; recherche bornée à 150 caractères, précédent/
+suivant et détails natifs prévus sans JavaScript. Le Wiki reste réservé aux comptes
+connectés, y compris sans empire. Les champs dessinés ouvrent des états exemples,
+sans saisie cumulée ; le sélecteur représente un choix illustratif.
+
+**Seize exports** ordinateur/téléphone des quatre vues principales. Contrôle natif
+des **8 142 nœuds** sans débordement, texte superposé ou cadre chevauché ; champs
+équivalents entre A/B et six destinations externes vérifiées présentes. Contrôle
+des contenus sur **32 vues de chapitre** (16 par direction) et les douze états de
+formules par direction ; les textes et exemples sont présents. La hauteur des
+boutons est adaptée au texte réellement replié pour les titres longs de référence.
+Les 38 pages précédentes conservent leurs noms et nombres de cadres ; **40 pages**
+après ajout, 348 variables réutilisées. Document enregistré proprement, page 70 A
+affichée. L’appellation Nano est harmonisée avec l’interface actuelle.
+
+Preuves : `lot-11-{plan,manifest,verification,contenus-verification}.json`, état
+d’enregistrement et `lot-11-{A,B}-{home,chapter,search,rules}-{1440,390}.png` dans
+les artefacts de la conversation. La mise en page ne constitue pas une nouvelle
+validation des données d’équilibrage ni du contenu documentaire. **Choix différé
+par l’utilisateur ; aucune réalisation du Wiki dans le jeu pour ce lot.**
+
+### Pages à contrôler par l’utilisateur
+
+| Page Figcraft | État et contenu à parcourir |
+| --- | --- |
+| **68 · L10N · A — Contrôle en lignes** | A déjà retenue et réalisée ; Sécurité, traitements, Journal et quatre brouillons juridiques, ordinateur/mobile |
+| **69 · L10N · B — Contrôle en fiches** | Variante de comparaison conservée pour examen ; mêmes destinations et états |
+| **70 · L11 · A — Manuel en lignes** | Proposition Wiki A ; accueil, chapitre avec formules, recherche et deux références, puis autres chapitres au sommaire |
+| **71 · L11 · B — Repères en cartes** | Proposition Wiki B ; mêmes contenus, organisation alternative sur ordinateur |
+
+Dans chaque page, le plan du prototype ouvre les vues principales ; **M** revient
+au plan. Pour comparer efficacement : accueil ordinateur, chapitre production et
+une formule ouverte, recherche avec/sans résultat, référence ouverte et mobile.
+Les propositions non choisies ne sont pas supprimées par cette préparation.
 
 ## Reprise et états de couverture
 
@@ -4503,8 +4676,8 @@ restent à traiter après les derniers écrans administratifs.
 | L7E | A implémentée et vérifiée localement | Page 36 A validée explicitement après reprise de la messagerie et des classements | 90 PHP / 569 assertions ; neuf parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L8 | A implémentée et vérifiée localement | Page 38 A validée explicitement | 23 PHP / 244 assertions ; 16 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L9 | A implémentée et vérifiée localement | Page 40 A validée explicitement | 7 PHP / 127 assertions ; 5 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
-| L10 | L10A à L10E réalisés en A, L10F/G en B et L10H à L10M en A ; L10N A/B préparé | Choix précédents conservés ; page 66 A validée pour L10M, choix L10N attendu | Bilan L10M : 20 PHP / 142 assertions, six parcours navigateur consolidés, vingt-cinq captures ; L10N pages 68/69, 56 cadres et 700 liens | Choix et réalisation Exploitation puis wiki ; CI, fusion et déploiement distincts |
-| L11 | Inventorié | Aucune nouvelle | Non engagé pour cette refonte | Examiner le wiki sans recommencer ses pages dédiées |
+| L10 | Complet localement : A à E en A, F/G en B, H à N en A | Page 68 A validée ; choix précédents conservés | Clôture N : 10 PHP / 271 assertions, huit parcours navigateur consolidés et 43 captures ; bilans des sous-lots conservés | Revue transversale, CI complète, fusion et déploiement distincts |
+| L11 | Propositions A/B préparées et vérifiées dans Figcraft | Choix différé demandé explicitement | Pages 70/71 ; 102 cadres, 2 064 liens, seize exports ; 16 chapitres et douze formules par direction | Choix et réalisation dans le jeu, puis recette du Wiki |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
 Les commits restent sur `feature/refonte-visuelle` ; L1B A est enregistré dans
@@ -4522,7 +4695,7 @@ L7E page 36 A est validée explicitement, intégrée dans `557061e` et vérifié
 la messagerie et les classements existants restent la base de leur présentation.
 L8 page 38 A est validée explicitement, réalisée et vérifiée localement ; bilan ci-dessus.
 L9 page 40 A est validée explicitement, réalisée et vérifiée localement ; bilan ci-dessus.
-Le plan reste à 18 ensembles : quinze sont réalisés, trois restent à traiter.
+Le plan reste à 18 ensembles : seize sont réalisés localement ; Wiki et revue transversale restent à traiter.
 Vue générale avait été finalisée en avance ; L7A est désormais complet localement. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
 Les validations précédentes restent limitées à leurs lots.
 Aucun push, PR, fusion ou déploiement n’est autorisé par le seul changement de

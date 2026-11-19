@@ -276,9 +276,11 @@ test('Relais admin : échéance, retard, nature inconnue et lecture mobile sans 
     await expect(row).toBeVisible();
     await row.scrollIntoViewIfNeeded();
     if(width===390) {
-      const region=details.getByRole('region',{name:'Relais en attente, tableau défilant'});
-      await region.focus();await page.keyboard.press('ArrowRight');
-      await expect.poll(()=>region.evaluate(el=>el.scrollLeft)).toBeGreaterThan(0);
+      // Les cinq cellules deviennent une fiche ; toutes les valeurs restent accessibles.
+      await expect(row.locator('th, td')).toHaveCount(5);
+      await expect(row.locator('[data-label="Nature"]')).toContainText('diagnostic_test');
+      await expect(row.locator('[data-label="Cible"]')).toContainText('#987654');
+      expect(await row.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
     }
     await page.screenshot({path:testInfo.outputPath(`pending-relays-${width}.png`),animations:'disabled'});
   }

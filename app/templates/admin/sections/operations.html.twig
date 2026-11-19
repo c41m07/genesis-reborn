@@ -1,9 +1,10 @@
 <section class="panel admin-operations">
   <h2>État des opérations</h2><p>État relevé le {{ operations.captured_at|date('d/m/Y H:i:s', 'UTC') }} UTC. Actualisez la page pour relire les signaux.</p>
+  <p class="admin-ops-actions"><a class="secondary" href="{{ path('app_admin_operations') }}">Actualiser le relevé</a></p>
   <div class="admin-operations-grid">
     <article class="admin-operation-card"><h3>Base de données</h3><span class="admin-operation-status {{ operations.database_healthy ? 'is-healthy' : 'is-missing' }}">{{ operations.database_healthy ? 'Disponible' : 'Indisponible' }}</span></article>
     {% for process in operations.processes %}<article class="admin-operation-card"><h3>{{ process.name }}</h3><span class="admin-operation-status {{ process.status == 'healthy' ? 'is-healthy' : (process.status == 'stale' ? 'is-stale' : 'is-missing') }}">{% if process.status == 'healthy' %}Signal récent{% elseif process.status == 'unknown' %}État inconnu{% elseif process.status == 'stale' %}Signal ancien{% else %}Aucun signal{% endif %}</span><p>{% if process.status == 'unknown' %}Signal illisible ou horodatage incohérent{% elseif process.age_seconds is not null %}Dernier signal il y a {{ process.age_seconds }} s{% else %}Aucun battement de vie reçu{% endif %}</p></article>{% endfor %}
-    <article class="admin-operation-card"><h3>Relais en attente</h3>
+    <article class="admin-operation-card admin-operation-card--outbox"><h3>Relais en attente</h3>
       {% if operations.outbox_available %}
         <strong>{{ operations.outbox_total }}</strong><p>{{ operations.outbox_overdue }} à échéance atteinte</p>
         <p>Files : {{ operations.outbox.queue }} · Flottes : {{ operations.outbox.fleet }} · Combats : {{ operations.outbox.combat }} · Univers : {{ operations.outbox.universe }} · Notifications : {{ operations.outbox.notification }} · Récompenses de guilde : {{ operations.outbox.guild_project|default(0) }} · Autres : {{ operations.outbox.other }}</p>
@@ -17,14 +18,14 @@
   {% elseif health.total %}
     <p class="admin-monitor-warning" role="status">{{ health.total }} flotte(s) à contrôler : {{ health.unscheduled }} sans planification et {{ health.overdue }} en retard. Une flotte peut cumuler les deux anomalies, même lorsque les processus tournent et qu’aucun relais n’attend.</p>
     <div class="table-wrap" role="region" tabindex="0" aria-label="Voyages des flottes à contrôler">
-      <table><caption>Les 20 voyages anormaux les plus anciens</caption>
-        <thead><tr><th scope="col">Flotte</th><th scope="col">Mission</th><th scope="col">État</th><th scope="col">Échéance UTC</th><th scope="col">Anomalie</th></tr></thead>
-        <tbody>{% for fleet in health.pending %}<tr>
-          <th scope="row"><a href="{{ path('app_admin_mission', {id:fleet.id}) }}">Flotte n° {{ fleet.id }}</a></th>
-          <td>{{ {explore:'Exploration',spy:'Espionnage',transport:'Transport',attack:'Attaque',conquer:'Conquête',defend:'Défense',orbit:'Mise en orbite',station:'Stationnement',colonize:'Colonisation'}[fleet.mission]|default(fleet.mission) }}</td>
-          <td>{{ fleet.status == 'returning' ? 'Retour' : 'Aller' }}</td>
-          <td>{{ fleet.due_at|date('d/m/Y H:i:s', 'UTC') }}</td>
-          <td>{% if fleet.unscheduled %}Planification absente{% endif %}{% if fleet.unscheduled and fleet.overdue %} · {% endif %}{% if fleet.overdue %}Retard supérieur à {{ fleet.late_minutes }} min{% endif %}</td>
+      <table class="admin-ops-table" role="table"><caption>Les 20 voyages anormaux les plus anciens</caption>
+        <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Flotte</th><th scope="col" role="columnheader">Mission</th><th scope="col" role="columnheader">État</th><th scope="col" role="columnheader">Échéance UTC</th><th scope="col" role="columnheader">Anomalie</th></tr></thead>
+        <tbody role="rowgroup">{% for fleet in health.pending %}<tr role="row">
+          <th scope="row" role="rowheader"><a href="{{ path('app_admin_mission', {id:fleet.id}) }}">Flotte n° {{ fleet.id }}</a></th>
+          <td role="cell" data-label="Mission">{{ {explore:'Exploration',spy:'Espionnage',transport:'Transport',attack:'Attaque',conquer:'Conquête',defend:'Défense',orbit:'Mise en orbite',station:'Stationnement',colonize:'Colonisation'}[fleet.mission]|default(fleet.mission) }}</td>
+          <td role="cell" data-label="État">{{ fleet.status == 'returning' ? 'Retour' : 'Aller' }}</td>
+          <td role="cell" data-label="Échéance UTC">{{ fleet.due_at|date('d/m/Y H:i:s', 'UTC') }}</td>
+          <td role="cell" data-label="Anomalie">{% if fleet.unscheduled %}Planification absente{% endif %}{% if fleet.unscheduled and fleet.overdue %} · {% endif %}{% if fleet.overdue %}Retard supérieur à {{ fleet.late_minutes }} min{% endif %}</td>
         </tr>{% endfor %}</tbody>
       </table>
     </div>
@@ -35,9 +36,9 @@
     <p>Une ligne attend sa publication vers le transport ou le canal de notification. Elle ne prouve pas un échec du traitement. Les 20 échéances les plus anciennes sont affichées au maximum ; actualisez la page pour un nouveau relevé.</p>
     {% if operations.outbox_pending %}
     <div class="table-wrap" role="region" tabindex="0" aria-label="Relais en attente, tableau défilant">
-      <table><caption>Relais classés par échéance, puis identifiant</caption>
-        <thead><tr><th scope="col">Identifiant</th><th scope="col">Nature</th><th scope="col">Cible</th><th scope="col">Échéance UTC</th><th scope="col">Attente après échéance</th></tr></thead>
-        <tbody>{% for message in operations.outbox_pending %}<tr><td>#{{ message.id }}</td><td>{{ message.kind=='guild_project' ? 'Récompenses de guilde' : message.kind }}</td><td>#{{ message.target_id }}</td><td><time datetime="{{ message.due_at|date('c', 'UTC') }}">{{ message.due_at|date('d/m/Y H:i:s', 'UTC') }}</time></td><td>{{ message.due ? message.overdue_seconds ~ ' s' : 'Échéance future' }}</td></tr>{% endfor %}</tbody>
+      <table class="admin-ops-table" role="table"><caption>Relais classés par échéance, puis identifiant</caption>
+        <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Identifiant</th><th scope="col" role="columnheader">Nature</th><th scope="col" role="columnheader">Cible</th><th scope="col" role="columnheader">Échéance UTC</th><th scope="col" role="columnheader">Attente après échéance</th></tr></thead>
+        <tbody role="rowgroup">{% for message in operations.outbox_pending %}<tr role="row"><th scope="row" role="rowheader">#{{ message.id }}</th><td role="cell" data-label="Nature">{{ message.kind=='guild_project' ? 'Récompenses de guilde' : message.kind }}</td><td role="cell" data-label="Cible">#{{ message.target_id }}</td><td role="cell" data-label="Échéance UTC"><time datetime="{{ message.due_at|date('c', 'UTC') }}">{{ message.due_at|date('d/m/Y H:i:s', 'UTC') }}</time></td><td role="cell" data-label="Attente après échéance">{{ message.due ? message.overdue_seconds ~ ' s' : 'Échéance future' }}</td></tr>{% endfor %}</tbody>
       </table>
     </div>
     {% else %}<p>Aucun relais en attente lors du relevé.</p>{% endif %}

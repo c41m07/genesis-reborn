@@ -1,9 +1,29 @@
 <div data-admin-list-target="results" data-controller="admin-filter">
-<p role="status">{{ listPage.total }} résultat{{ listPage.total == 1 ? '' : 's' }} · 50 lignes maximum par page</p>
-<div class="admin-audit-actions"><button type="button" class="secondary" data-action="click->admin-filter#exportCsv">Exporter les lignes visibles en CSV</button> <a class="secondary" href="{{ path('app_admin_audit', listFilters|merge({export:'all'})) }}">Exporter tous les résultats en CSV</a></div>
-<div class="table-wrap" role="region" tabindex="0" aria-label="Tableau défilant horizontalement"><table><caption>Journal des actions administratives</caption><thead><tr><th scope="col">Date</th><th scope="col">Administrateur</th><th scope="col">Action</th><th scope="col">Cible</th><th scope="col">Détails</th></tr></thead><tbody>
-{% for entry in auditLogs %}<tr data-admin-filter-target="row" data-filter-action="{{ entry.action }}"><td>{{ entry.createdAt|date('d/m/Y H:i:s') }}</td><td>{{ entry.actor ? entry.actor.username : 'Compte supprimé' }}</td><td>{{ entry.action }}</td><td>{{ entry.targetType }} #{{ entry.targetId }}</td><td>{{ entry.details|json_encode(constant('JSON_UNESCAPED_UNICODE')) }}</td></tr>{% endfor %}
-</tbody></table></div>
-<p {% if auditLogs %}hidden{% endif %} data-admin-filter-target="empty">{{ auditLogs or listFilters.q != '' or listFilters.action != '' ? 'Aucune entrée ne correspond à cette recherche.' : 'Aucune action consignée.' }}</p>
-{% include 'admin/sections/_list_pagination.html.twig' %}
+    <p role="status">{{ listPage.total }} résultat{{ listPage.total == 1 ? '' : 's' }} · 50 lignes maximum par page</p>
+    <div class="admin-audit-actions">
+        <button type="button" class="secondary" data-admin-filter-target="tools" data-action="click->admin-filter#exportCsv" hidden>Exporter les lignes visibles en CSV</button>
+        <a class="secondary" href="{{ path('app_admin_audit', listFilters|merge({export: 'all'})) }}">Exporter tous les résultats en CSV</a>
+    </div>
+    <div class="table-wrap" role="region" tabindex="0" aria-label="Journal des actions administratives">
+        <table class="admin-ops-table" role="table">
+            <caption>Journal des actions administratives</caption>
+            <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Date</th><th scope="col" role="columnheader">Administrateur</th><th scope="col" role="columnheader">Action</th><th scope="col" role="columnheader">Cible</th><th scope="col" role="columnheader">Détails</th></tr></thead>
+            <tbody role="rowgroup">
+                {% for entry in auditLogs %}
+                    {% set details = entry.details|json_encode(constant('JSON_UNESCAPED_UNICODE')) %}
+                    <tr role="row" data-admin-filter-target="row" data-filter-action="{{ entry.action }}">
+                        <th scope="row" role="rowheader">{{ entry.createdAt|date('d/m/Y H:i:s') }}</th>
+                        <td role="cell" data-label="Administrateur">{{ entry.actor ? entry.actor.username : 'Compte supprimé' }}</td>
+                        <td role="cell" data-label="Action">{{ entry.action }}</td>
+                        <td role="cell" data-label="Cible">{{ entry.targetType }} #{{ entry.targetId }}</td>
+                        <td role="cell" data-label="Détails" data-csv-value="{{ details|e('html_attr') }}">
+                            <details><summary>Déplier les détails</summary><p class="admin-audit-details">{{ details }}</p></details>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <p {% if auditLogs %}hidden{% endif %} data-admin-filter-target="empty">{{ auditLogs or listFilters.q != '' or listFilters.action != '' ? 'Aucune entrée ne correspond à cette recherche.' : 'Aucune action consignée.' }}</p>
+    {% include 'admin/sections/_list_pagination.html.twig' %}
 </div>

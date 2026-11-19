@@ -1191,3 +1191,19 @@ vérifiés. Brouillons privés, publications datées et lecture joueur conservé
 Bilan : 20 PHP / 142 assertions, six parcours navigateur consolidés ; preuves dans
 le [suivi de refonte](REFONTE_VISUELLE_INTERFACES.md). Les vérifications locales
 ne valent ni CI complète, ni fusion, ni déploiement.
+
+## Clôture administrative — L10N A, 19 novembre 2026
+
+Sécurité, État des traitements, Journal et Brouillons juridiques conservent leurs
+URL dédiées et leur navigation commune. La présentation en fiches sous 1200 px
+réutilise le même tableau ; les filtres et exports ne doublent aucune ligne.
+Les détails JSON se déplient sans tronquer les exports. Recherche de sécurité et
+export visible sont progressifs ; examen et export complet gardent leur parcours
+natif. Les rapports partagés et l’alias `/admin/transports` restent conservés.
+Le relevé ne relance aucun service ni mission ; les brouillons restent privés.
+
+L10 est complet localement : 10 PHP / 271 assertions et huit parcours navigateur
+consolidés pour cette clôture ; les bilans des sous-lots précédents restent valables
+dans leur périmètre. Wiki : propositions 70 A / 71 B préparées à la suite, choix
+différé avant réalisation. Plan 16/18 ; recette transversale, CI complète, fusion
+et déploiement restent des étapes distinctes.

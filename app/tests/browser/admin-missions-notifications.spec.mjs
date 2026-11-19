@@ -63,7 +63,7 @@ test('Admin : nouveautés personnelles, total, actualisation et archives masqué
   await expect(page.locator('.admin-sidebar [data-category="players"]')).toHaveText('3');
   await page.goto('/admin');
   await expect(page.getByRole('link',{name:'Examiner les incidents',exact:true})).toHaveAttribute('href','/admin/securite');
-  await expect(page.locator('.admin-home-actions').getByRole('link',{name:'Préparer un événement',exact:true})).toHaveAttribute('href','/admin/events/assistant');
+  await expect(page.locator('.admin-home-actions').getByRole('link',{name:/^Préparer un événement/})).toHaveAttribute('href','/admin/events/assistant');
   await page.goto('/');
   await expect(totalBadge(page)).toHaveText('4');
   await page.goto('/admin/moderation');
@@ -229,7 +229,7 @@ test('Accueil admin : rubriques séparées, anciens liens, clavier et thèmes ac
   await page.goto('/admin#admin-universes');
   await expect(page).toHaveURL(/admin\/univers#admin-universes$/);
   await expect(page.locator('#admin-universes')).toBeVisible();
-  const routes = {'joueurs':'Joueurs','univers':'Univers','moderation':'Modération','securite':'Sécurité','exploitation':'Exploitation','journal':'Journal des actions'};
+  const routes = {'joueurs':'Joueurs','univers':'Univers','moderation':'Modération','securite':'Sécurité','exploitation':'État des traitements','journal':'Journal des actions'};
   for (const [route,title] of Object.entries(routes)) {
     await page.goto('/admin/' + route);
     await expect(page.getByRole('heading', {name:title,exact:true,level:1})).toBeVisible();

@@ -1140,6 +1140,25 @@ reste limité à ces routes, sans repli automatique du formulaire ni sommaire aj
 Les champs HTML natifs restent utilisables sans JavaScript ; l’affichage joueur,
 le texte échappé et l’enregistrement de lecture restent inchangés.
 
+L10N A ajoute `admin-ops-workspace.css` aux quatre routes d’exploitation.
+Un seul tableau par liste conserve ses lignes et ses rôles explicites ; sous
+1200 px, le même balisage prend la présentation en fiches. Recherche, comptage
+et export ne dupliquent donc aucune entrée selon la taille d’écran. Les détails
+d’audit utilisent un `<details>` natif ; `data-csv-value` conserve le JSON complet
+pour l’export de la page, indépendamment de son état replié. Le contrôleur commun
+`admin_filter` lit cet attribut facultatif et conserve le comportement précédent
+pour les autres cellules. La neutralisation des formules CSV reste appliquée.
+Les outils purement locaux de sécurité et l’export visible ne sont révélés que
+par leur contrôleur ; liste, examen et export serveur restent disponibles sans
+JavaScript. Les limites de collecte et l’audit de consultation restent inchangés.
+Les indicateurs occupent quatre, deux puis une colonne. Les brouillons gardent
+leur texte et leurs tableaux défilants natifs ; quatre noms de régions de la
+confidentialité sont distingués pour l’accessibilité. Contrôleurs, services,
+permissions, jetons, transactions et en-têtes privés ne sont pas modifiés.
+Les rapports administratifs de combat/espionnage conservent les lecteurs partagés
+validés en L7D/L10E. L’ancienne liste de transports redirige toujours vers les
+missions filtrées ; les notifications restent un endpoint JSON privé.
+
 Les contrôleurs Événements, Projets et Rotations séparent les GET de liste et de
 formulaire. Les anciens POST restent acceptés. L’assistant et les interdictions
 de réécriture des événements guidés restent inchangés. L’édition de rotation
