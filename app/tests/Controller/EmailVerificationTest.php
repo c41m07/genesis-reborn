@@ -73,6 +73,30 @@ final class EmailVerificationTest extends WebTestCase
         (new PlayerUserChecker())->checkPreAuth($saved);
     }
 
+    public function testConfirmationDiscoveredUnderLockDoesNotSendAnUnpersistedLink(): void
+    {
+        [$em, $player] = $this->pendingAccount();
+        $mailer = $this->createMock(MailerInterface::class);
+        $mailer->expects(self::never())->method('send');
+        self::getContainer()->set(MailerInterface::class, $mailer);
+
+        // État Doctrine volontairement périmé : simule une confirmation
+        // acquise après lecture du compte, avant le refresh sous verrou.
+        // Ce test déterministe n'est pas une preuve de concurrence simultanée.
+        $metadata = $em->getClassMetadata(Player::class);
+        $em->getConnection()->update(
+            $metadata->getTableName(),
+            [$metadata->getColumnName('emailVerifiedAt') => '2026-11-19 12:00:00'],
+            ['id' => $player->id],
+        );
+        self::assertNull($player->emailVerifiedAt);
+
+        $service = self::getContainer()->get(EmailVerificationService::class);
+        self::assertTrue($service->sendWelcomeAndVerification($player));
+        self::assertNotNull($player->emailVerifiedAt);
+        self::assertSame(0, $em->getRepository(EmailVerificationToken::class)->count(['player' => $player]));
+    }
+
     public function testConfirmationRequiresExplicitPostAndCsrfToken(): void
     {
         $client = self::createClient();

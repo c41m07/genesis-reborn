@@ -792,3 +792,5 @@ reprises de tests sont consignés dans le [bilan de refonte](docs/REFONTE_VISUEL
 La CI complète reste requise avant toute fusion.
 
 Le diagnostic support distingue le renvoi inutile, la suspension et le renvoi administratif indisponible ; voir [le périmètre et le contrat de fiabilisation](docs/ADMIN_SUPPORT_COMPTES.md). Aucun envoi administratif direct n’est activé.
+
+Le service de confirmation sépare préparation sous verrou et transport : une confirmation constatée sous verrou n’entraîne plus l’envoi d’un lien non enregistré. Cette correction ne constitue pas encore le renvoi administratif idempotent.

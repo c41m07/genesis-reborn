@@ -185,3 +185,33 @@ réussis ; `AdminAccountDiagnosticTest` et `AdminDedicatedPagesTest` : 4 tests,
 et base tmpfs privée supprimée après recette. Les 404 attendus sont les tests
 d’accès absent. Pas de test de concurrence nouveau : aucun cycle d’envoi n’a
 été modifié. Pas de recette visuelle, CI complète ni publication.
+
+
+## Fondation technique : préparation avant transport
+
+Complexité 3/5. `EmailVerificationService` prépare maintenant le jeton et un
+instantané privé du destinataire dans une méthode transactionnelle distincte.
+L’état confirmé est relu après verrou/refresh. Un retour nul de cette étape
+arrête réellement le transport : aucun lien non enregistré ni message de
+bienvenue n’est envoyé. Génération et échéance du jeton sont calculées après
+l’acquisition du verrou. L’expiration de 24 heures et le contrat booléen public
+sont conservés ; `true` sur compte déjà confirmé reste un résultat sans envoi,
+pas une preuve d’acceptation SMTP. Aucun jeton clair n’est persisté ou journalisé.
+
+La régression est reproduite de manière déterministe : une mise à jour SQL de
+la confirmation laisse l’objet Doctrine périmé avant l’appel du service. Le
+même test avec l’ancien service échoue car le mailer factice est appelé ;
+avec le correctif il réussit et aucun jeton n’est créé. Cela ne prouve pas la
+sécurité de deux renvois simultanés, dont la course reste ouverte.
+
+Contrôles : 16 tests / 171 assertions réussis (confirmation, réinitialisation,
+diagnostic admin), syntaxe PHP, Compose et diff. Les échecs `account_mail.failed`
+sont simulés dans les tests existants. Base privée tmpfs et mailer factice ;
+aucun mail réel, migration, serveur production ou service habituel utilisé.
+
+Reste avant ouverture du bouton admin : reçu persistant idempotent, cooldown
+atomique commun aux appels publics/admin/inscription, état inconnu en cas de
+crash autour de SMTP, transport séparé revendiqué une seule fois et tests
+multi-processus. Aucun de ces invariants n’est déclaré acquis par ce correctif.
+Pas de migration ni nouvelle table dans cette tranche. Le panneau continue
+honnêtement d’afficher le renvoi administratif comme indisponible.
