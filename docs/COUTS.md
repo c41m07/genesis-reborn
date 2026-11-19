@@ -1,14 +1,12 @@
 # Grille de coûts commune — métal, nano, antimatière et hydrogène
 
-La répartition de valeur **B48/52, I35/35/30, S25/35/30/10**
+La répartition de valeur **B48/52, I34/36/30, S28/31/31/10**
 (métal / nano / antimatière / hydrogène) s’applique aux bâtiments, recherches,
 vaisseaux et défenses, y compris les deux familles civiles. Les budgets réels
-des 156 profils de base sont conservés exactement. Les prix Supérieurs sont
-reconduits à l’identique.
+des 156 profils de base sont conservés exactement. Les 52 profils Basiques sont reconduits à l’identique.
 
-Les [simulations du nouvel équilibrage](EQUILIBRAGE.md#équilibrage-des-prix-basiques-et-intermédiaires)
-comparent les attentes de métal, de nano et d’antimatière. Les parcours
-simulés donnent un ordre de grandeur pour des stratégies définies.
+Les [études de progression](EQUILIBRAGE.md) donnent des ordres de grandeur
+pour des stratégies et des grilles datées.
 
 Les nouvelles commandes emploient le profil courant. Les commandes déjà payées
 conservent coûts, durée, résultat et remboursement calculé sur leur paiement.
@@ -21,8 +19,8 @@ L’état d’intégration et de mise en ligne est séparé dans le [suivi](PROG
 | Rang | Métal | Nano | Antimatière | Hydrogène |
 |---|---:|---:|---:|---:|
 | Basique | 48 % | 52 % | 0 % | 0 % |
-| Intermédiaire | 35 % | 35 % | 30 % | 0 % |
-| Supérieur | 25 % | 35 % | 30 % | 10 % |
+| Intermédiaire | 34 % | 36 % | 30 % | 0 % |
+| Supérieur | 28 % | 31 % | 31 % | 10 % |
 
 Il s’agit de parts de **valeur économique** : métal ×2, nano ×4, antimatière ×8, hydrogène ×1. Ce ne sont pas des pourcentages des quantités brutes. Chaque quantité est entière ; les arrondis sont choisis conjointement pour approcher la répartition et conserver **exactement la valeur réelle du profil de base de chaque rang**, avant croissance des niveaux et recherches.
 
@@ -36,77 +34,80 @@ Chaque cellule indique **métal / nano / antimatière / hydrogène** pour le niv
 
 | Famille | Élément | T1 | T2 | T3 |
 |---|---|---|---|---|
-| buildings | Bunker de défense | 2 880 / 1 560 / 0 / 0 | 2 625 / 1 312 / 563 / 0 | 2 345 / 1 641 / 703 / 1 876 |
-| buildings | Laboratoire colonial | 2 400 / 1 300 / 0 / 0 | 2 189 / 1 095 / 469 / 0 | 1 954 / 1 367 / 586 / 1 564 |
-| buildings | Piège à antimatière | 288 / 156 / 0 / 0 | 264 / 131 / 56 / 0 | 235 / 164 / 70 / 189 |
-| buildings | Raffinerie d’hydrogène | 384 / 208 / 0 / 0 | 350 / 175 / 75 / 0 | 312 / 219 / 94 / 250 |
-| buildings | Mine à ciel ouvert | 384 / 208 / 0 / 0 | 350 / 175 / 75 / 0 | 312 / 219 / 94 / 248 |
-| buildings | Atelier de nanofabrication | 384 / 208 / 0 / 0 | 350 / 175 / 75 / 0 | 312 / 219 / 94 / 250 |
-| buildings | Centrale nucléaire | 1 152 / 624 / 0 / 0 | 1 050 / 525 / 225 / 0 | 938 / 656 / 281 / 752 |
-| buildings | Chantier d’assemblage | 4 800 / 2 600 / 0 / 0 | 4 375 / 2 188 / 938 / 0 | 3 906 / 2 735 / 1 172 / 3 124 |
-| buildings | Cage magnétique | 1 201 / 650 / 0 / 0 | 1 096 / 547 / 235 / 0 | 978 / 684 / 293 / 784 |
-| buildings | Batterie de colonie | 1 201 / 650 / 0 / 0 | 1 096 / 547 / 235 / 0 | 978 / 684 / 293 / 784 |
-| buildings | Réservoir cryogénique | 1 201 / 650 / 0 / 0 | 1 096 / 547 / 235 / 0 | 978 / 684 / 293 / 784 |
-| buildings | Dépôt de minerais | 1 201 / 650 / 0 / 0 | 1 096 / 547 / 235 / 0 | 978 / 684 / 293 / 784 |
-| buildings | Coffre de nanomatériaux | 1 201 / 650 / 0 / 0 | 1 096 / 547 / 235 / 0 | 978 / 684 / 293 / 784 |
-| technologies | Drones réparateurs | 960 / 520 / 0 / 0 | 876 / 437 / 188 / 0 | 782 / 547 / 235 / 624 |
-| technologies | Protocoles de colonisation | 5 280 / 2 860 / 0 / 0 | 4 814 / 2 407 / 1 031 / 0 | 4 298 / 3 009 / 1 289 / 3 438 |
-| technologies | Réservoirs cryogéniques | 2 400 / 1 300 / 0 / 0 | 2 190 / 1 094 / 469 / 0 | 1 954 / 1 368 / 586 / 1 562 |
-| technologies | Génie civil colonial | 960 / 520 / 0 / 0 | 876 / 437 / 188 / 0 | 782 / 547 / 235 / 624 |
-| technologies | Manœuvres d’évitement | 1 440 / 780 / 0 / 0 | 1 314 / 657 / 281 / 0 | 1 172 / 821 / 352 / 938 |
-| technologies | Discipline du secret | 1 440 / 780 / 0 / 0 | 1 314 / 657 / 281 / 0 | 1 172 / 821 / 352 / 938 |
-| technologies | Soute compartimentée | 2 400 / 1 300 / 0 / 0 | 2 190 / 1 094 / 469 / 0 | 1 954 / 1 368 / 586 / 1 562 |
-| technologies | Métallurgie des nanomatériaux | 960 / 520 / 0 / 0 | 876 / 437 / 188 / 0 | 782 / 547 / 235 / 624 |
-| technologies | Architecture navale | 960 / 520 / 0 / 0 | 876 / 437 / 188 / 0 | 782 / 547 / 235 / 624 |
-| technologies | Séquenceur de salves | 5 760 / 3 120 / 0 / 0 | 5 250 / 2 625 / 1 125 / 0 | 4 688 / 3 282 / 1 406 / 3 752 |
-| technologies | Générateurs de bouclier accordés | 3 840 / 2 080 / 0 / 0 | 3 500 / 1 750 / 750 / 0 | 3 125 / 2 188 / 937 / 2 502 |
-| technologies | Écran de brouillage | 960 / 520 / 0 / 0 | 876 / 437 / 188 / 0 | 782 / 547 / 235 / 624 |
-| technologies | Revêtement absorbant | 1 440 / 780 / 0 / 0 | 1 314 / 657 / 281 / 0 | 1 172 / 821 / 352 / 938 |
-| technologies | Blindage multicouche | 3 840 / 2 080 / 0 / 0 | 3 500 / 1 750 / 750 / 0 | 3 125 / 2 188 / 937 / 2 502 |
-| technologies | Analyse tactique | 1 201 / 650 / 0 / 0 | 1 095 / 547 / 235 / 0 | 978 / 685 / 293 / 782 |
-| technologies | Télémétrie de poursuite | 960 / 520 / 0 / 0 | 876 / 437 / 188 / 0 | 782 / 547 / 235 / 624 |
-| technologies | Propulseurs vectoriels | 2 400 / 1 300 / 0 / 0 | 2 190 / 1 094 / 469 / 0 | 1 954 / 1 368 / 586 / 1 562 |
-| technologies | Viseurs balistiques | 5 760 / 3 120 / 0 / 0 | 5 250 / 2 625 / 1 125 / 0 | 4 688 / 3 282 / 1 406 / 3 752 |
-| technologies | Canons à énergie focalisée | 5 760 / 3 120 / 0 / 0 | 5 250 / 2 625 / 1 125 / 0 | 4 688 / 3 282 / 1 406 / 3 752 |
-| ships | Cuirassé de ligne | 52 921 / 28 665 / 0 / 0 | 48 235 / 24 118 / 10 336 / 0 | 43 068 / 30 148 / 12 920 / 34 456 |
-| ships | Bombardier tactique | 5 161 / 2 795 / 0 / 0 | 4 705 / 2 353 / 1 008 / 0 | 4 201 / 2 941 / 1 260 / 3 362 |
-| ships | Vaisseau capital | 90 612 / 49 082 / 0 / 0 | 82 590 / 41 295 / 17 698 / 0 | 73 741 / 51 619 / 22 123 / 58 992 |
-| ships | Vaisseau colonisateur | 9 600 / 5 200 / 0 / 0 | 8 752 / 4 375 / 1 875 / 0 | 7 812 / 5 469 / 2 344 / 6 250 |
-| ships | Corvette de patrouille | 6 720 / 3 640 / 0 / 0 | 6 125 / 3 062 / 1 313 / 0 | 5 469 / 3 829 / 1 641 / 4 374 |
-| ships | Croiseur de combat | 29 215 / 15 825 / 0 / 0 | 26 632 / 13 315 / 5 707 / 0 | 23 776 / 16 643 / 7 133 / 19 022 |
-| ships | Destroyer d’escorte | 20 213 / 10 949 / 0 / 0 | 18 426 / 9 212 / 3 948 / 0 | 16 451 / 11 515 / 4 935 / 13 160 |
-| ships | Chasseur de patrouille | 1 440 / 780 / 0 / 0 | 1 314 / 657 / 281 / 0 | 1 172 / 821 / 352 / 936 |
-| ships | Frégate d’escorte | 10 934 / 5 923 / 0 / 0 | 9 968 / 4 984 / 2 136 / 0 | 8 899 / 6 230 / 2 670 / 7 120 |
-| ships | Chasseur lourd | 3 552 / 1 924 / 0 / 0 | 3 239 / 1 619 / 694 / 0 | 2 892 / 2 025 / 868 / 2 312 |
-| ships | Récolteur atmosphérique | 384 / 208 / 0 / 0 | 350 / 175 / 75 / 0 | 312 / 219 / 94 / 248 |
-| ships | Intercepteur atmosphérique | 1 764 / 956 / 0 / 0 | 1 609 / 805 / 345 / 0 | 1 438 / 1 007 / 431 / 1 150 |
-| ships | Sonde de reconnaissance | 240 / 130 / 0 / 0 | 219 / 110 / 47 / 0 | 196 / 138 / 59 / 156 |
-| ships | Satellite héliocapteur | 384 / 208 / 0 / 0 | 350 / 175 / 75 / 0 | 312 / 219 / 94 / 248 |
-| ships | Chasseur furtif | 5 856 / 3 172 / 0 / 0 | 5 339 / 2 669 / 1 144 / 0 | 4 766 / 3 336 / 1 430 / 3 814 |
-| ships | Cargo de ligne | 5 760 / 3 120 / 0 / 0 | 5 252 / 2 625 / 1 125 / 0 | 4 688 / 3 282 / 1 407 / 3 748 |
-| defenses | Canon laser anti-capital | 30 720 / 16 640 / 0 / 0 | 22 400 / 11 200 / 4 800 / 0 | 16 000 / 11 200 / 4 800 / 12 800 |
-| defenses | Canon laser anti-escorteur | 4 320 / 2 340 / 0 / 0 | 3 152 / 1 575 / 675 / 0 | 2 251 / 1 575 / 675 / 1 802 |
-| defenses | Canon laser anti-lourd | 11 280 / 6 110 / 0 / 0 | 8 225 / 4 112 / 1 763 / 0 | 5 875 / 4 113 / 1 762 / 4 700 |
-| defenses | Canon laser anti-léger | 1 200 / 650 / 0 / 0 | 875 / 438 / 187 / 0 | 625 / 437 / 188 / 500 |
+| buildings | Bunker de défense | 2 880 / 1 560 / 0 / 0 | 2 549 / 1 350 / 563 / 0 | 2 625 / 1 453 / 727 / 1 876 |
+| buildings | Laboratoire colonial | 2 400 / 1 300 / 0 / 0 | 2 127 / 1 126 / 469 / 0 | 2 187 / 1 211 / 606 / 1 562 |
+| buildings | Piège à antimatière | 288 / 156 / 0 / 0 | 256 / 135 / 56 / 0 | 262 / 145 / 73 / 187 |
+| buildings | Raffinerie d’hydrogène | 384 / 208 / 0 / 0 | 340 / 180 / 75 / 0 | 350 / 194 / 97 / 250 |
+| buildings | Mine à ciel ouvert | 384 / 208 / 0 / 0 | 340 / 180 / 75 / 0 | 350 / 194 / 97 / 248 |
+| buildings | Atelier de nanofabrication | 384 / 208 / 0 / 0 | 340 / 180 / 75 / 0 | 350 / 194 / 97 / 250 |
+| buildings | Centrale nucléaire | 1 152 / 624 / 0 / 0 | 1 020 / 540 / 225 / 0 | 1 049 / 581 / 291 / 750 |
+| buildings | Chantier d’assemblage | 4 800 / 2 600 / 0 / 0 | 4 251 / 2 250 / 938 / 0 | 4 375 / 2 422 / 1 211 / 3 126 |
+| buildings | Cage magnétique | 1 201 / 650 / 0 / 0 | 1 064 / 563 / 235 / 0 | 1 095 / 606 / 303 / 782 |
+| buildings | Batterie de colonie | 1 201 / 650 / 0 / 0 | 1 064 / 563 / 235 / 0 | 1 095 / 606 / 303 / 782 |
+| buildings | Réservoir cryogénique | 1 201 / 650 / 0 / 0 | 1 064 / 563 / 235 / 0 | 1 095 / 606 / 303 / 782 |
+| buildings | Dépôt de minerais | 1 201 / 650 / 0 / 0 | 1 064 / 563 / 235 / 0 | 1 095 / 606 / 303 / 782 |
+| buildings | Coffre de nanomatériaux | 1 201 / 650 / 0 / 0 | 1 064 / 563 / 235 / 0 | 1 095 / 606 / 303 / 782 |
+| technologies | Drones réparateurs | 960 / 520 / 0 / 0 | 850 / 450 / 188 / 0 | 877 / 485 / 242 / 626 |
+| technologies | Protocoles de colonisation | 5 280 / 2 860 / 0 / 0 | 4 676 / 2 476 / 1 031 / 0 | 4 814 / 2 665 / 1 332 / 3 438 |
+| technologies | Réservoirs cryogéniques | 2 400 / 1 300 / 0 / 0 | 2 126 / 1 126 / 469 / 0 | 2 188 / 1 211 / 606 / 1 562 |
+| technologies | Génie civil colonial | 960 / 520 / 0 / 0 | 850 / 450 / 188 / 0 | 877 / 485 / 242 / 626 |
+| technologies | Manœuvres d’évitement | 1 440 / 780 / 0 / 0 | 1 276 / 676 / 281 / 0 | 1 313 / 727 / 364 / 936 |
+| technologies | Discipline du secret | 1 440 / 780 / 0 / 0 | 1 276 / 676 / 281 / 0 | 1 313 / 727 / 364 / 936 |
+| technologies | Soute compartimentée | 2 400 / 1 300 / 0 / 0 | 2 126 / 1 126 / 469 / 0 | 2 188 / 1 211 / 606 / 1 562 |
+| technologies | Métallurgie des nanomatériaux | 960 / 520 / 0 / 0 | 850 / 450 / 188 / 0 | 877 / 485 / 242 / 626 |
+| technologies | Architecture navale | 960 / 520 / 0 / 0 | 850 / 450 / 188 / 0 | 877 / 485 / 242 / 626 |
+| technologies | Séquenceur de salves | 5 760 / 3 120 / 0 / 0 | 5 100 / 2 700 / 1 125 / 0 | 5 251 / 2 907 / 1 453 / 3 750 |
+| technologies | Générateurs de bouclier accordés | 3 840 / 2 080 / 0 / 0 | 3 400 / 1 800 / 750 / 0 | 3 500 / 1 937 / 969 / 2 500 |
+| technologies | Écran de brouillage | 960 / 520 / 0 / 0 | 850 / 450 / 188 / 0 | 877 / 485 / 242 / 626 |
+| technologies | Revêtement absorbant | 1 440 / 780 / 0 / 0 | 1 276 / 676 / 281 / 0 | 1 313 / 727 / 364 / 936 |
+| technologies | Blindage multicouche | 3 840 / 2 080 / 0 / 0 | 3 400 / 1 800 / 750 / 0 | 3 500 / 1 937 / 969 / 2 500 |
+| technologies | Analyse tactique | 1 201 / 650 / 0 / 0 | 1 063 / 563 / 235 / 0 | 1 095 / 606 / 303 / 784 |
+| technologies | Télémétrie de poursuite | 960 / 520 / 0 / 0 | 850 / 450 / 188 / 0 | 877 / 485 / 242 / 626 |
+| technologies | Propulseurs vectoriels | 2 400 / 1 300 / 0 / 0 | 2 126 / 1 126 / 469 / 0 | 2 188 / 1 211 / 606 / 1 562 |
+| technologies | Viseurs balistiques | 5 760 / 3 120 / 0 / 0 | 5 100 / 2 700 / 1 125 / 0 | 5 251 / 2 907 / 1 453 / 3 750 |
+| technologies | Canons à énergie focalisée | 5 760 / 3 120 / 0 / 0 | 5 100 / 2 700 / 1 125 / 0 | 5 251 / 2 907 / 1 453 / 3 750 |
+| ships | Cuirassé de ligne | 52 921 / 28 665 / 0 / 0 | 46 857 / 24 807 / 10 336 / 0 | 48 236 / 26 702 / 13 351 / 34 456 |
+| ships | Bombardier tactique | 5 161 / 2 795 / 0 / 0 | 4 571 / 2 420 / 1 008 / 0 | 4 705 / 2 605 / 1 302 / 3 362 |
+| ships | Vaisseau capital | 90 612 / 49 082 / 0 / 0 | 80 230 / 42 475 / 17 698 / 0 | 82 591 / 45 720 / 22 860 / 58 992 |
+| ships | Vaisseau colonisateur | 9 600 / 5 200 / 0 / 0 | 8 500 / 4 501 / 1 875 / 0 | 8 750 / 4 844 / 2 422 / 6 250 |
+| ships | Corvette de patrouille | 6 720 / 3 640 / 0 / 0 | 5 949 / 3 150 / 1 313 / 0 | 6 125 / 3 391 / 1 696 / 4 374 |
+| ships | Croiseur de combat | 29 215 / 15 825 / 0 / 0 | 25 870 / 13 696 / 5 707 / 0 | 26 629 / 14 741 / 7 371 / 19 020 |
+| ships | Destroyer d’escorte | 20 213 / 10 949 / 0 / 0 | 17 898 / 9 476 / 3 948 / 0 | 18 424 / 10 199 / 5 100 / 13 158 |
+| ships | Chasseur de patrouille | 1 440 / 780 / 0 / 0 | 1 276 / 676 / 281 / 0 | 1 314 / 727 / 363 / 940 |
+| ships | Frégate d’escorte | 10 934 / 5 923 / 0 / 0 | 9 684 / 5 126 / 2 136 / 0 | 9 967 / 5 518 / 2 759 / 7 120 |
+| ships | Chasseur lourd | 3 552 / 1 924 / 0 / 0 | 3 145 / 1 666 / 694 / 0 | 3 239 / 1 793 / 897 / 2 314 |
+| ships | Récolteur atmosphérique | 384 / 208 / 0 / 0 | 340 / 180 / 75 / 0 | 350 / 194 / 97 / 248 |
+| ships | Intercepteur atmosphérique | 1 764 / 956 / 0 / 0 | 1 563 / 828 / 345 / 0 | 1 610 / 891 / 446 / 1 150 |
+| ships | Sonde de reconnaissance | 240 / 130 / 0 / 0 | 213 / 113 / 47 / 0 | 220 / 122 / 61 / 156 |
+| ships | Satellite héliocapteur | 384 / 208 / 0 / 0 | 340 / 180 / 75 / 0 | 350 / 194 / 97 / 248 |
+| ships | Chasseur furtif | 5 856 / 3 172 / 0 / 0 | 5 185 / 2 746 / 1 144 / 0 | 5 337 / 2 955 / 1 478 / 3 812 |
+| ships | Cargo de ligne | 5 760 / 3 120 / 0 / 0 | 5 100 / 2 701 / 1 125 / 0 | 5 252 / 2 907 / 1 453 / 3 752 |
+| defenses | Canon laser anti-capital | 30 720 / 16 640 / 0 / 0 | 21 760 / 11 520 / 4 800 / 0 | 17 920 / 9 920 / 4 960 / 12 800 |
+| defenses | Canon laser anti-escorteur | 4 320 / 2 340 / 0 / 0 | 3 060 / 1 621 / 675 / 0 | 2 520 / 1 395 / 698 / 1 800 |
+| defenses | Canon laser anti-lourd | 11 280 / 6 110 / 0 / 0 | 7 989 / 4 230 / 1 763 / 0 | 6 580 / 3 642 / 1 821 / 4 702 |
+| defenses | Canon laser anti-léger | 1 200 / 650 / 0 / 0 | 851 / 450 / 187 / 0 | 700 / 388 / 194 / 498 |
 
-Exemple : le Chasseur T3 coûte désormais **1 172 M + 821 N + 352 A + 936 H**, pour une valeur toujours égale à **9 380**.
+Exemple : le Chasseur T3 coûte **1 314 M + 727 N + 363 A + 940 H**, pour une valeur toujours égale à **9 380**.
 
 L’hydrogène payé à la construction ou à la recherche est une dépense industrielle consommée lors de la commande. Il ne remplit pas le réservoir d’un vaisseau et ne remplace pas le carburant réservé pour une mission. La conversion d’antimatière consomme toujours son hydrogène séparément.
 
 ## Prix réels après croissance et recherches
 
-Les courbes de coûts, durées, réductions technologiques et règles d’arrondi restent inchangées. Chaque ressource est arrondie séparément après application de la croissance et des réductions : conserver exactement la valeur d’un profil de base ne garantit pas une égalité parfaite de tous les prix arrondis aux niveaux suivants.
+Les courbes de coût et de durée, les réductions technologiques et les règles d’arrondi restent en vigueur. Chaque ressource est arrondie séparément après application de la croissance et des réductions : conserver exactement la valeur d’un profil de base ne garantit pas une égalité parfaite de tous les prix arrondis aux niveaux suivants.
 
-La référence `tests/Fixtures/resource-costs-2026-11-16.json` conserve les profils
-historiques et la grille précédant ce rééquilibrage. Les tests comparent les
-156 budgets de base et les 3 636 devis aux frontières des courbes, en lots de
-1/10/100 et avec ou sans réductions. À bonus égal, les durées et la taxe électrique
-restent identiques. Les deux arrondis par ressource (croissance puis réduction)
-peuvent entraîner de petits écarts de valeur après application des courbes.
+La référence `app/tests/Fixtures/resource-costs-2026-11-19.json` fige les
+profils et la base de recherche de `dev` avant le lot. L’écart maximal aux
+nouvelles parts T2/T3 est de 0,147 point de pourcentage. Le budget de chacun
+des 156 profils de base est conservé exactement. Sur les 3 636 devis comparés
+(frontières des courbes, lots de 1/10/100, avec ou sans réductions), l’écart
+pondéré maximal est de 12 pour les bâtiments, 9 pour les recherches, 9 pour
+les vaisseaux et 0 pour les défenses. La taxe E est exclue de cette mesure.
+Elle suit la [durée effective](DUREES_CARBURANT.md#occupation-de-la-file-commune-par-la-colonisation),
+dont la seule nouvelle base est celle de l’Expansion coloniale.
 
-La redistribution porte sur les `cost_profiles`. Le même lot réduit l’entretien
-électrique direct du piège à antimatière. Les anciennes études sont rejouées
-avec leurs prix et références de l’époque.
+La redistribution porte sur les `cost_profiles`. L’entretien électrique direct
+du piège à antimatière conserve le réglage du 18 novembre. Les études datées
+gardent leurs prix et références d’origine.
 
 ## Démarrage et déblocages
 
@@ -132,8 +133,8 @@ Les nouvelles commandes utilisent les nouveaux prix de base. Les coûts déjà p
 La formule de classement reste inchangée : un point par tranche complète de 100
 ressources brutes de profil, sans pondération M/N/A/H. La redistribution peut donc
 changer les points des possessions existantes lors des nouveaux calculs, malgré un
-budget économique pondéré conservé. Un chasseur B seul passe par exemple de 21 à
-22 points ; les protections qui utilisent ces points peuvent aussi évoluer. Les
+budget économique pondéré conservé. Avec cette grille, un chasseur T3 seul passe par exemple de 32 à 33 points.
+Les protections qui utilisent ces points peuvent aussi évoluer. Les
 classements quotidiens déjà calculés restent figés jusqu’à leur actualisation normale,
 sans réécriture de données par ce lot.
 

@@ -123,6 +123,26 @@ final class FundedProgressionSimulationTest extends TestCase
         self::assertSame((float) ($quote['costs']['electricity'] + $following['plan']['costs']['electricity']), $result['metrics']['spent']['electricity']);
     }
 
+    public function testIntermittentSessionsDelayPurchasesButNotProductionOrCompletion(): void
+    {
+        $result = $this->simulation->run($this->universe, [
+            ['group' => 'buildings', 'slug' => 'mine_metal', 'level' => 2],
+        ], [
+            'trace' => true,
+            'session_interval' => 3600,
+            'session_seconds' => 30,
+        ]);
+        [$first, $second] = $result['operations'];
+        self::assertSame('complete', $result['status']);
+        self::assertSame(0, $first['started_at']);
+        self::assertSame(60, $first['completed_at']);
+        self::assertSame(3600, $second['started_at']);
+        self::assertSame(3668, $second['completed_at']);
+        self::assertGreaterThan(0, $result['metrics']['production']['metal']);
+        self::assertSame(0, $result['metrics']['vacation_seconds']);
+        self::assertSame(3540, $result['metrics']['queue_session_wait_seconds']['building']);
+    }
+
     public function testVacationsPauseTheRunningQueueWithoutChangingItsPaidDuration(): void
     {
         $buildings = ['lab' => ['basic' => 1]];

@@ -2,7 +2,7 @@
   "slug": "colonial_expansion",
   "label": "Protocoles de colonisation",
   "max_level": 15,
-  "research_time_base": 288000,
+  "research_time_base": 28800,
   "research_time_scaling": 1.8,
   "costs_base": {
     "metal": 9350,
@@ -82,15 +82,15 @@
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 4814,
-      "nano": 2407,
+      "metal": 4676,
+      "nano": 2476,
       "antimatter": 1031,
       "hydrogen": 0
     },
     "superior": {
-      "metal": 4298,
-      "nano": 3009,
-      "antimatter": 1289,
+      "metal": 4814,
+      "nano": 2665,
+      "antimatter": 1332,
       "hydrogen": 3438
     }
   },

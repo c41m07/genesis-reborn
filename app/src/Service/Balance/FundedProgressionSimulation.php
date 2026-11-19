@@ -47,7 +47,8 @@ final class FundedProgressionSimulation
      *   initial?:array{buildings?:array,technologies?:array,units?:array,defenses?:array,stocks?:array,access?:list<string>},
      *   calendar?:list<array{from:int,until:int,multiplier?:float,vacation?:bool}>,
      *   position?:int,colony?:bool,trace?:bool,auto_storage?:bool,
-     *   max_seconds?:int,minimum_seconds?:int,stock_multiplier?:float
+     *   max_seconds?:int,minimum_seconds?:int,stock_multiplier?:float,
+     *   session_interval?:positive-int,session_seconds?:int
      * } $options
      * @return array<string,mixed> Bilan, jalons et état final ; les dates sont des secondes relatives.
      */
@@ -61,6 +62,11 @@ final class FundedProgressionSimulation
         $minimum = (int) ($options['minimum_seconds'] ?? 0);
         if ($limit < 1 || $minimum < 0 || $minimum > $limit) {
             throw new \InvalidArgumentException('Horizon de scénario invalide.');
+        }
+        $interval = $options['session_interval'] ?? null;
+        $sessionSeconds = $options['session_seconds'] ?? 0;
+        if ($interval !== null && ($interval < 1 || $sessionSeconds < 0 || $sessionSeconds >= $interval)) {
+            throw new \InvalidArgumentException('Cadence de connexion invalide.');
         }
         $status = 'complete';
         $iterations = 0;
@@ -82,18 +88,29 @@ final class FundedProgressionSimulation
                 // Le jeu exige le retour des flottes avant les vacances ; ne pas inventer un vol mis en pause.
                 throw new \DomainException('Un calendrier de vacances ne peut pas interrompre une mission en vol.');
             }
-            // Les décisions ont lieu aux fins de commandes, frontières de flux et dates finançables.
-            // Chaque intervalle est intégré par le moteur réel ; aucun taux négatif n'est extrapolé au-delà de zéro.
-            if (!$context->onVacation && $this->startReady()) {
+            // Une absence décale uniquement les nouveaux achats et départs. Les échéances et
+            // la production restent traitées à leur date, comme pendant une session.
+            $sessionOffset = $interval === null ? 0 : $this->time % $interval;
+            $outsideSession = $interval !== null && $sessionOffset > $sessionSeconds;
+            $canIssueOrders = !$context->onVacation && !$outsideSession;
+            if ($canIssueOrders && $this->startReady()) {
                 continue;
+            }
+            if (!$canIssueOrders) {
+                $this->waiting = [];
             }
             $point = $this->resources->project($this->planet, $this->buildings, $this->stocks, 0, $context);
             $step = $this->nextStep($point, $limit, $minimum, $context->onVacation);
+            if ($interval !== null) {
+                $sessionBoundary = $outsideSession ? $interval : $sessionSeconds + 1;
+                $untilBoundary = min($limit - $this->time, $sessionBoundary - $sessionOffset);
+                $step = min($step ?? $untilBoundary, $untilBoundary);
+            }
             if ($step === null) {
                 $status = 'blocked';
                 break;
             }
-            $this->advance($step, $context);
+            $this->advance($step, $context, $outsideSession);
         }
         $point = $this->resources->project($this->planet, $this->buildings, $this->stocks, 0, $this->context());
         $pending = [];
@@ -179,6 +196,9 @@ final class FundedProgressionSimulation
             'missions_completed' => 0,
             'exported_resources' => $zeros,
         ];
+        if (isset($options['session_interval'])) {
+            $this->metrics['queue_session_wait_seconds'] = array_fill_keys(array_keys($this->queues), 0);
+        }
     }
 
     private function addGoal(array $goal): void
@@ -355,8 +375,16 @@ final class FundedProgressionSimulation
     private function missionQuote(array $goal): array
     {
         $kind = $goal['mission'];
-        if (!in_array($kind, ['spy', 'transport', 'orbit'], true)) {
+        if (!in_array($kind, ['spy', 'transport', 'orbit', 'colonize'], true)) {
             throw new \InvalidArgumentException('Mission de parcours non prise en charge.');
+        }
+        if ($kind === 'colonize') {
+            $effect = $this->config['catalog']['technologies']['colonial_expansion']['effect'];
+            $limit = GameCatalog::colonyLimit($this->technologies['colonial_expansion'] ?? [], $effect, $this->config['limits']['max_planets']);
+            // Le scénario suit une seule colonie d'origine et consomme l'unique colonisateur à l'arrivée.
+            if ($limit < 2 || array_sum($goal['composition']['colony_ship'] ?? []) !== 1 || count($goal['composition']) !== 1) {
+                throw new \DomainException('Le scénario exige un emplacement libre et un colonisateur seul.');
+            }
         }
         $ships = $this->combatUnits->ships($this->planet->solarSystem->galaxy->universe, $goal['composition'], $this->technologies);
         foreach ($ships as $ship) {
@@ -377,7 +405,10 @@ final class FundedProgressionSimulation
         }
         $costs = $cargo;
         $costs['hydrogen'] = ($costs['hydrogen'] ?? 0) + $quote['total_fuel'];
-        $seconds = $kind === 'spy' ? $quote['seconds'] : 2 * $quote['seconds'] + (int) round(($goal['orbit_hours'] ?? 0) * 3600);
+        // Le vol de colonisation aboutit à l'arrivée ; le carburant aller-retour est réservé au départ.
+        $seconds = in_array($kind, ['spy', 'colonize'], true)
+            ? $quote['seconds']
+            : 2 * $quote['seconds'] + (int) round(($goal['orbit_hours'] ?? 0) * 3600);
         return ['duration' => $seconds, 'costs' => $costs, 'navigation' => $quote];
     }
 
@@ -539,7 +570,7 @@ final class FundedProgressionSimulation
             } elseif ($group === 'defenses') {
                 $this->defenses[$slug][$tier] = ($this->defenses[$slug][$tier] ?? 0) + $node['quantity'];
             } else {
-                if ($node['mission']['mission'] !== 'spy') {
+                if (!in_array($node['mission']['mission'], ['spy', 'colonize'], true)) {
                     foreach ($node['mission']['composition'] as $ship => $tiers) {
                         foreach ($tiers as $rank => $quantity) {
                             $this->units[$ship][$rank] += $quantity;
@@ -647,7 +678,7 @@ final class FundedProgressionSimulation
         return is_finite($next) ? max(1, min($limit - $this->time, (int) $next)) : null;
     }
 
-    private function advance(int $seconds, CatalogueProductionContext $context): void
+    private function advance(int $seconds, CatalogueProductionContext $context, bool $outsideSession): void
     {
         foreach ($this->queues as $queue => $id) {
             if ($context->onVacation) {
@@ -666,7 +697,8 @@ final class FundedProgressionSimulation
                     }
                 }
             } elseif (array_filter($this->nodes, fn(array $node): bool => $node['status'] === 'planned' && $this->queue($node['group']) === $queue) !== []) {
-                $this->metrics['queue_dependency_wait_seconds'][$queue] += $seconds;
+                $metric = $outsideSession ? 'queue_session_wait_seconds' : 'queue_dependency_wait_seconds';
+                $this->metrics[$metric][$queue] += $seconds;
             }
         }
         if ($context->onVacation) {
