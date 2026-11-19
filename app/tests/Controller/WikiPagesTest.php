@@ -63,6 +63,27 @@ final class WikiPagesTest extends WebTestCase
         self::assertNull($this->player->currentPlayerUniverse);
     }
 
+    public function testHomePreviewsAreBoundedAndOnlyPreparedWhenRequested(): void
+    {
+        $this->client->loginUser($this->player);
+        $crawler = $this->client->request('GET', '/wiki');
+        $manual = self::getContainer()->get(WikiManual::class);
+        foreach ($manual->chapters() as $chapter) {
+            self::assertArrayNotHasKey('preview', $chapter);
+            self::assertArrayNotHasKey('paragraphs', $chapter);
+            self::assertArrayNotHasKey('calculations', $chapter);
+        }
+        foreach ($manual->chapters(true) as $chapter) {
+            $paragraph = $manual->chapter($chapter['id'])['paragraphs'][0];
+            self::assertLessThanOrEqual(161, mb_strlen($chapter['preview']));
+            self::assertStringStartsWith(mb_substr($paragraph, 0, 160), $chapter['preview']);
+            self::assertSame($chapter['preview'], $crawler->filter('#wiki-'.$chapter['id'].' .wiki-chapter-preview')->text());
+            self::assertSame('Lire le chapitre '.$chapter['title'], $crawler->filter('#wiki-'.$chapter['id'].' > a')->attr('aria-label'));
+        }
+        self::assertSelectorCount(0, '.wiki-calculation');
+        self::assertNull($this->player->currentPlayerUniverse);
+    }
+
     public function testLegacyQueryParametersRedirectAndSearchLinksToDedicatedChapters(): void
     {
         $this->client->loginUser($this->player);

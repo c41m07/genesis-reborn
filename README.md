@@ -771,3 +771,8 @@ conservent l’assistant guidé ; création avancée et édition ont leurs pages
 Les modèles de projets de guilde et de rotations séparent liste, création et
 modification. Les occurrences déjà programmées gardent leur configuration.
 [Bilan et compatibilité](docs/NAVIGATION_PAGES_DEDIEES.md).
+Le Wiki L11 reprend la proposition 70 A : accueil en lignes avec aperçus courts,
+sommaire fixe à gauche sur ordinateur et choix de chapitre sur mobile. Chaque
+chapitre garde sa page et ses formules dépliables ; recherche et références
+restent accessibles sans JavaScript. Les textes et règles du manuel sont conservés.
+[Bilan du Wiki et vérifications](docs/REFONTE_VISUELLE_INTERFACES.md).

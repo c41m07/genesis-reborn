@@ -145,8 +145,11 @@ masquée pour simuler une page. La recherche reste utilisable sans JavaScript.
 `WikiManual` lit les sources uniques `docs/wiki.json`, `docs/REGLES.md` et
 `docs/DECISIONS.md`. Le JSON fini du manuel est décodé une fois par préparation ;
 seules les métadonnées du sommaire et le contenu demandé vont au template.
-L’accueil ne prépare aucun corps de chapitre ; une fiche n’en transmet qu’un ;
-la recherche parcourt le document de référence et ne transmet que des extraits
+L’accueil ne transmet aucun corps complet : `chapters(true)` ajoute seulement
+un aperçu du premier paragraphe, borné à 160 caractères plus une éventuelle
+ellipse. Les autres pages gardent `chapters()` sans aperçu pour leur sommaire.
+Une fiche ne transmet qu’un corps de chapitre ; la recherche parcourt le document
+de référence et ne transmet que des extraits
 bornés à 240 caractères. Aucun chargement de données de jeu, schéma ou dépendance
 n’est ajouté. Aucun gain de performance mesuré n’est revendiqué.
 

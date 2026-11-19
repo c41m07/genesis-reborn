@@ -1,13 +1,28 @@
 {% extends 'wiki/layout.html.twig' %}
 {% block title %}Wiki du jeu · Genesis Reborn{% endblock %}
-{% block wiki_intro %}<p class="wiki-lead">De votre première colonie aux calculs d’une bataille : comprendre vos choix, préparer votre empire.</p><p><a class="primary" href="{{ path('app_wiki_chapter',{chapter:chapters[0].id}) }}">Commencer le manuel</a></p>{% endblock %}
+{% block wiki_intro %}<p class="wiki-lead">De votre première colonie aux calculs d’une bataille : comprendre vos choix, préparer votre empire.</p>{% endblock %}
 {% block wiki_content %}
-
+<p class="wiki-start"><a class="primary" href="{{ path('app_wiki_chapter', {chapter: chapters[0].id}) }}">Commencer le manuel</a></p>
 {% set currentPart = '' %}
 {% for chapter in chapters %}
-  {% if chapter.part != currentPart %}{% if not loop.first %}</div></section>{% endif %}<section class="wiki-part"><h2>{{ chapter.part }}</h2><div class="wiki-card-grid">{% set currentPart=chapter.part %}{% endif %}
-  <article class="panel wiki-chapter-card" id="wiki-{{ chapter.id }}" aria-labelledby="wiki-title-{{ chapter.id }}"><h3 id="wiki-title-{{ chapter.id }}"><a href="{{ path('app_wiki_chapter',{chapter:chapter.id}) }}">{{ chapter.title }}</a></h3><p>Lire le chapitre <span aria-hidden="true">→</span></p></article>
-  {% if loop.last %}</div></section>{% endif %}
+    {% if chapter.part != currentPart %}
+        {% if not loop.first %}</div></section>{% endif %}
+        <section class="wiki-part"><h2>{{ chapter.part }}</h2><div class="wiki-card-grid">
+        {% set currentPart = chapter.part %}
+    {% endif %}
+    <article class="panel wiki-chapter-card" id="wiki-{{ chapter.id }}" aria-labelledby="wiki-title-{{ chapter.id }}">
+        <h3 id="wiki-title-{{ chapter.id }}">{{ chapter.title }}</h3>
+        <p class="wiki-chapter-preview">{{ chapter.preview }}</p>
+        <a class="secondary" href="{{ path('app_wiki_chapter', {chapter: chapter.id}) }}" aria-label="Lire le chapitre {{ chapter.title }}">Lire le chapitre</a>
+    </article>
+    {% if loop.last %}</div></section>{% endif %}
 {% endfor %}
-<section class="panel wiki-reading-help"><h2>À chaque question son chapitre</h2><p>Choisissez un sujet dans le sommaire ou recherchez un terme dans tout le manuel. Ouvrez les formules et les exemples quand vous en avez besoin.</p><details><summary>Comment utiliser ce manuel</summary><p>Les règles se lisent directement ; les formules et leurs exemples se déplient à votre rythme.</p><p>Les chiffres sont des références ou des exemples dont les hypothèses sont précisées. Les fiches et aperçus de votre univers donnent les coûts, bonus et durées applicables à vos actions. Les documents de référence conservent aussi l’historique du projet : les décisions récentes remplacent les anciens réglages.</p></details></section>
+<section class="panel wiki-reading-help">
+    <h2>À chaque question son chapitre</h2>
+    <p>Choisissez un sujet dans le sommaire ou recherchez un terme dans tout le manuel. Ouvrez les formules et les exemples quand vous en avez besoin.</p>
+    <details><summary>Comment utiliser ce manuel</summary>
+        <p>Les règles se lisent directement ; les formules et leurs exemples se déplient à votre rythme.</p>
+        <p>Les chiffres sont des références ou des exemples dont les hypothèses sont précisées. Les fiches et aperçus de votre univers donnent les coûts, bonus et durées applicables à vos actions. Les documents de référence conservent aussi l’historique du projet : les décisions récentes remplacent les anciens réglages.</p>
+    </details>
+</section>
 {% endblock %}

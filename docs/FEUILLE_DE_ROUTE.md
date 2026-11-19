@@ -254,8 +254,10 @@ passe à **16/18 ensembles réalisés**. Les vérifications globales restent en 
 nouvelle attente : 70 A « Manuel en lignes » et 71 B « Repères en cartes ».
 102 cadres, 2 064 liens inspectés, seize exports ; 16 chapitres, 12 formules,
 recherche et deux références représentés. Les 38 pages précédentes sont préservées,
-40 pages après ajout. Le choix Wiki est différé ; sa réalisation et la revue
-transversale restent à effectuer.
+40 pages après ajout. L’utilisateur a ensuite validé 70 A : le Wiki est réalisé
+et vérifié localement (4 PHP / 338 assertions, trois parcours navigateur et
+30 captures sur trois tailles et deux thèmes). Le plan passe à **17/18** ; seule
+la revue transversale L12 reste à effectuer.
 CI GitHub, fusion et déploiement restent distincts.
 
 ## Progression, carburant et unités économiques — mission du 15 novembre 2026

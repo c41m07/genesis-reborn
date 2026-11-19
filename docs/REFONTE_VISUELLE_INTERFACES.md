@@ -4636,8 +4636,9 @@ affichée. L’appellation Nano est harmonisée avec l’interface actuelle.
 Preuves : `lot-11-{plan,manifest,verification,contenus-verification}.json`, état
 d’enregistrement et `lot-11-{A,B}-{home,chapter,search,rules}-{1440,390}.png` dans
 les artefacts de la conversation. La mise en page ne constitue pas une nouvelle
-validation des données d’équilibrage ni du contenu documentaire. **Choix différé
-par l’utilisateur ; aucune réalisation du Wiki dans le jeu pour ce lot.**
+validation des données d’équilibrage ni du contenu documentaire. Le choix était
+différé à cette étape ; **70 A a ensuite été validée explicitement et réalisée**,
+comme décrit ci-dessous.
 
 ### Pages à contrôler par l’utilisateur
 
@@ -4645,7 +4646,7 @@ par l’utilisateur ; aucune réalisation du Wiki dans le jeu pour ce lot.**
 | --- | --- |
 | **68 · L10N · A — Contrôle en lignes** | A déjà retenue et réalisée ; Sécurité, traitements, Journal et quatre brouillons juridiques, ordinateur/mobile |
 | **69 · L10N · B — Contrôle en fiches** | Variante de comparaison conservée pour examen ; mêmes destinations et états |
-| **70 · L11 · A — Manuel en lignes** | Proposition Wiki A ; accueil, chapitre avec formules, recherche et deux références, puis autres chapitres au sommaire |
+| **70 · L11 · A — Manuel en lignes** | A validée et réalisée ; accueil, chapitre avec formules, recherche et deux références, puis autres chapitres au sommaire |
 | **71 · L11 · B — Repères en cartes** | Proposition Wiki B ; mêmes contenus, organisation alternative sur ordinateur |
 
 Dans chaque page, le plan du prototype ouvre les vues principales ; **M** revient
@@ -4677,7 +4678,7 @@ Les propositions non choisies ne sont pas supprimées par cette préparation.
 | L8 | A implémentée et vérifiée localement | Page 38 A validée explicitement | 23 PHP / 244 assertions ; 16 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L9 | A implémentée et vérifiée localement | Page 40 A validée explicitement | 7 PHP / 127 assertions ; 5 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L10 | Complet localement : A à E en A, F/G en B, H à N en A | Page 68 A validée ; choix précédents conservés | Clôture N : 10 PHP / 271 assertions, huit parcours navigateur consolidés et 43 captures ; bilans des sous-lots conservés | Revue transversale, CI complète, fusion et déploiement distincts |
-| L11 | Propositions A/B préparées et vérifiées dans Figcraft | Choix différé demandé explicitement | Pages 70/71 ; 102 cadres, 2 064 liens, seize exports ; 16 chapitres et douze formules par direction | Choix et réalisation dans le jeu, puis recette du Wiki |
+| L11 | A implémentée et vérifiée localement | Page 70 A validée explicitement | 4 PHP / 338 assertions, trois parcours navigateur et 30 captures ; bilan ci-dessous | Revue transversale, CI complète, fusion et déploiement distincts |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 
 Les commits restent sur `feature/refonte-visuelle` ; L1B A est enregistré dans
@@ -4695,8 +4696,57 @@ L7E page 36 A est validée explicitement, intégrée dans `557061e` et vérifié
 la messagerie et les classements existants restent la base de leur présentation.
 L8 page 38 A est validée explicitement, réalisée et vérifiée localement ; bilan ci-dessus.
 L9 page 40 A est validée explicitement, réalisée et vérifiée localement ; bilan ci-dessus.
-Le plan reste à 18 ensembles : seize sont réalisés localement ; Wiki et revue transversale restent à traiter.
+Le plan reste à 18 ensembles : dix-sept sont réalisés localement ; seule la revue transversale L12 reste à traiter.
 Vue générale avait été finalisée en avance ; L7A est désormais complet localement. Les sous-lots ne sont pas comptés comme des ensembles supplémentaires.
 Les validations précédentes restent limitées à leurs lots.
 Aucun push, PR, fusion ou déploiement n’est autorisé par le seul changement de
 branche. La mission globale reste non terminée.
+
+
+## L11 A — Wiki réalisé et vérifié localement, 19 novembre 2026
+
+**70 · A — Manuel en lignes** validée explicitement. Complexité 3/5 : conservation
+des pages, des sources uniques et des contrôles existants ; adaptation ciblée de
+l’accueil et styles limités au Wiki. Aucun nouveau parcours métier ni dépendance.
+
+L’accueil présente ses 16 chapitres en lignes, regroupés par partie, avec un
+aperçu du premier paragraphe et une action de lecture nommée par chapitre.
+`WikiManual::chapters(true)` ne transmet que les métadonnées et un extrait de
+160 caractères, suivi d’une ellipse si nécessaire ; les sommaires des autres
+pages gardent `chapters()` sans aperçu. Les chapitres restent des pages autonomes,
+avec précédent/suivant et formules natives ; les références sont entièrement
+conservées, échappées et dépliables. Le sommaire gauche reste sticky sur ordinateur,
+puis laisse place au sélecteur GET sur tablette/mobile. Navigation en 4/2/1 colonnes,
+boutons adaptés aux titres longs et focus visible. Les détails d’aide sont gardés.
+
+Écarts utiles avec la maquette : les liens et formulaires sont de vrais contrôles
+natifs ; les références ouvrent chacune leurs sections réelles, au lieu du seul
+état illustratif du prototype. Les aperçus sont bornés explicitement, et un lien
+par ligne évite deux cibles de lecture équivalentes. Aucune modification de
+`docs/wiki.json`, `docs/REGLES.md` ou `docs/DECISIONS.md` ni réécriture des contenus.
+
+Fichiers : `app.js`, `wiki-workspace.css`, `WikiController`, `WikiManual`,
+`wiki/index.html.twig`, `WikiPagesTest.php` et `wiki.spec.mjs`. README, architecture,
+feuille de route, inventaire et bilan de navigation sont synchronisés.
+
+Vérifications locales :
+
+- `make validate`, `make lint-static`, `make assets` et `git diff --check` réussis.
+- **4 PHP / 338 assertions** : accès connecté sans empire, extraits bornés et
+  préparés uniquement sur demande, 16 chapitres, recherche, échappement et chemins
+  de référence limités ; pas de création de participation.
+- **Trois parcours navigateur** : tous les paragraphes, étapes et 12 formules
+  comparés aux sources ; références reconstruites intégralement, recherches,
+  absence de résultat, anciens paramètres/fragments, retour/rechargement,
+  contexte de colonie, clavier et parcours sans JavaScript.
+- **30 captures réelles** : cinq vues (accueil, chapitre/formules ouvertes,
+  recherche, règles et décisions), 1440/768/390 et deux thèmes. Aucun débordement,
+  accueil en une colonne et sommaire/sélecteur vérifiés ; Axe sur chaque combinaison.
+  Le premier passage a repéré un contraste de 4,41 pour les nouveaux extraits en
+  thème clair : couleur secondaire ajustée localement, puis recette relancée.
+
+Preuves : `output/playwright/wiki-refonte/{validate,lint,assets,php,browser}.log`
+et `recette/`. Captures de l’application locale, distinctes des exports Figcraft.
+Ces contrôles ne constituent pas un audit RGAA exhaustif ; performance non mesurée.
+**L11 est complet localement ; plan 17/18.** L12 reste à effectuer. Aucune CI GitHub,
+fusion ou publication n’est annoncée ; les propositions non retenues sont conservées.

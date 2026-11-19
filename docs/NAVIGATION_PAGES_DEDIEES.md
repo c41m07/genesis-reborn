@@ -1207,3 +1207,21 @@ consolidés pour cette clôture ; les bilans des sous-lots précédents restent 
 dans leur périmètre. Wiki : propositions 70 A / 71 B préparées à la suite, choix
 différé avant réalisation. Plan 16/18 ; recette transversale, CI complète, fusion
 et déploiement restent des étapes distinctes.
+
+## Wiki — L11 A, 19 novembre 2026
+
+La page 70 A est validée et réalisée sur les URL existantes : accueil, chapitre,
+recherche et deux références. Les tâches de lecture restent des pages dédiées ;
+les formules et sections de référence restent dépliables, sans masquer les
+informations nécessaires au choix d’un chapitre. L’accueil présente les chapitres
+en lignes avec un extrait borné à 160 caractères et une éventuelle ellipse.
+Sommaire fixe à gauche sur ordinateur ; sélecteur GET natif sur tablette/mobile.
+Les anciens paramètres et fragments, le retour arrière, les droits et le contexte
+de colonie restent conservés. Aucun texte source ni règle de jeu ne change.
+
+Vérifications : validation Compose, lint statique, compilation, 4 PHP / 338
+assertions et trois parcours navigateur ; 30 captures, trois tailles et deux
+thèmes. Les 16 chapitres, 12 formules et deux références complètes sont comparés
+aux sources. Une couleur secondaire trop claire a été corrigée dans le Wiki ;
+les contrôles Axe des cinq vues sur trois tailles et deux thèmes passent.
+Plan 17/18 ; L12 et la CI complète avant fusion restent distincts.
