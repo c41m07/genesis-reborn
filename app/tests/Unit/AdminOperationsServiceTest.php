@@ -95,4 +95,49 @@ final class AdminOperationsServiceTest extends TestCase
         self::assertSame([],$health['pending']);
     }
 
+
+    public function testKnownKindsAndUtcDeadlinesAreReportedWithoutMutation(): void
+    {
+        $db = $this->createMock(Connection::class);
+        $db->expects(self::never())->method('executeStatement');
+        $db->method('fetchOne')->willReturn(1);
+        $db->method('fetchAssociative')->willReturn(['total'=>0, 'unscheduled'=>0, 'overdue'=>0]);
+        $db->method('fetchAllAssociative')->willReturnCallback(static function (string $sql, array $params = []): array {
+            if (!str_contains($sql, 'GROUP BY')) return [];
+            self::assertSame('2030-01-01 00:00:00', $params['now']);
+            return [
+                ['kind'=>'occupation', 'total'=>3, 'overdue'=>2, 'oldest_due_at'=>'2029-12-31 23:58:00'],
+                ['kind'=>'reconstruction', 'total'=>1, 'overdue'=>0, 'oldest_due_at'=>'2030-01-01 01:00:00'],
+                ['kind'=>'unexpected', 'total'=>1, 'overdue'=>1, 'oldest_due_at'=>'2029-12-31 23:55:00'],
+            ];
+        });
+        $snapshot = (new AdminOperationsService($db, new MockClock('2030-01-01T01:00:00+01:00'), '/nonexistent-signals'))->snapshot();
+        self::assertSame(3, $snapshot['outbox']['occupation']);
+        self::assertSame(1, $snapshot['outbox']['reconstruction']);
+        self::assertSame(1, $snapshot['outbox']['other']);
+        self::assertSame(2, $snapshot['outbox_future']);
+        self::assertSame('UTC', $snapshot['captured_at']->getTimezone()->getName());
+        self::assertSame('unexpected', $snapshot['outbox_by_kind'][0]['kind']);
+        self::assertFalse($snapshot['outbox_by_kind'][0]['known']);
+        self::assertSame(300, $snapshot['outbox_by_kind'][0]['delay_seconds']);
+        self::assertSame(120, $snapshot['outbox_by_kind'][1]['delay_seconds']);
+        self::assertTrue($snapshot['outbox_by_kind'][1]['known']);
+        self::assertSame(0, $snapshot['outbox_by_kind'][2]['delay_seconds']);
+    }
+
+    public function testPartialCollectionDoesNotExposeMisleadingSummary(): void
+    {
+        $db = $this->createStub(Connection::class);
+        $db->method('fetchOne')->willReturn(1);
+        $db->method('fetchAllAssociative')->willReturnCallback(static function (string $sql): array {
+            if (str_contains($sql, 'GROUP BY')) {
+                return [['kind'=>'queue', 'total'=>2, 'overdue'=>2, 'oldest_due_at'=>'2029-01-01 00:00:00']];
+            }
+            throw new \RuntimeException('Diagnostic détail indisponible');
+        });
+        $snapshot = (new AdminOperationsService($db, new MockClock('2030-01-01T00:00:00Z'), '/nonexistent-signals'))->snapshot();
+        self::assertFalse($snapshot['outbox_available']);
+        self::assertNull($snapshot['outbox_future']);
+        self::assertSame([], $snapshot['outbox_by_kind']);
+    }
 }
