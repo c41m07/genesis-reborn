@@ -198,9 +198,13 @@ L10E A « Surveillance directe » (page 50) est validé et réalisé localement 
 alertes, seuils dépliables, tableau/fiches des missions et intervention dépliable.
 Validation, lint, compilation, 34 PHP / 149 assertions, huit scénarios navigateur
 consolidés et 18 captures dans les deux thèmes ; contrôles et rapports conservés.
-L10F prépare liste, création et gestion des univers dans les pages Figcraft 52 A
-« Univers en lignes » et 53 B « Fiches et configuration » : 64 cadres, 1 330 liens
-inspectés, données et opérations fictives. Choix attendu avant réalisation.
+L10F B « Fiches et configuration » (page 53) est validé et réalisé localement :
+liste par deux, repères de création, calendrier auprès des règles. Validation,
+lint, compilation, trois PHP / 143 assertions, huit scénarios navigateur
+consolidés et 18 captures dans les deux thèmes ; règles et formulaires conservés.
+L10G prépare mesures, familles et édition des catalogues dans les pages Figcraft
+54 A « Mesures et valeurs directes » et 55 B « Comparaison et fiches » :
+64 cadres, 1 580 liens inspectés. Choix attendu avant réalisation.
 Les autres rubriques administratives seront traitées par sous-lots, sans augmenter
 le compte des dix-huit ensembles ni déclarer L10 terminé.
 CI GitHub, fusion et déploiement restent distincts.

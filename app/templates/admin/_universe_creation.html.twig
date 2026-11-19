@@ -1,6 +1,5 @@
 <article class="panel admin-create-universe" id="admin-universe-create" tabindex="-1" aria-labelledby="universe-create-title" {% if universeCreationDraft %}aria-describedby="universe-create-error"{% endif %}>
-    <h2 id="universe-create-title">Créer un univers</h2>
-    <p>Le nouvel univers est ouvert immédiatement. Le profil définit les vitesses de production et les durées; chaque système comporte neuf positions planétaires.</p>
+    <h2 id="universe-create-title">Identité et carte</h2>
     {% if universeCreationDraft %}<p class="admin-draft-notice" id="universe-create-error">{{ universeCreationDraft.error|default('Cet univers n’a pas été créé.') }} Vos saisies sont conservées pour correction.</p>{% endif %}
     <form method="post" action="{{ path('app_admin_universe_create') }}">
         <input type="hidden" name="_token" value="{{ csrf_token('admin_create_universe') }}">

@@ -1,8 +1,23 @@
 <section class="panel admin-section" id="admin-universes" aria-labelledby="admin-universes-title">
 <div class="admin-section-heading"><div><h2 id="admin-universes-title">Tous les univers</h2><p>Planning, fréquentation et configuration, réunis au même endroit.</p></div><a class="secondary" href="{{ path('app_admin_universe_new') }}">Créer un univers</a></div>
-<form method="get" class="admin-page-search"><label for="universe-search">Rechercher un univers</label><input id="universe-search" type="search" name="q" value="{{ listFilters.q }}" maxlength="150" placeholder="Nom ou code"><label for="universe-state-filter">État</label><select id="universe-state-filter" name="status">{% for value,label in {'':'Tous','active':'Actif','scheduled':'Planifié','closed':'Fermé'} %}<option value="{{ value }}"{% if listFilters.status==value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select><button class="secondary">Rechercher</button></form>
+<form method="get" class="admin-page-search">
+    <div class="admin-universe-search-field">
+        <label for="universe-search">Rechercher un univers</label>
+        <input id="universe-search" type="search" name="q" value="{{ listFilters.q }}" maxlength="150" placeholder="Nom ou code">
+    </div>
+    <div class="admin-universe-search-field">
+        <label for="universe-state-filter">État</label>
+        <select id="universe-state-filter" name="status">
+            {% for value, label in {'': 'Tous', 'active': 'Actif', 'scheduled': 'Planifié', 'closed': 'Fermé'} %}
+                <option value="{{ value }}"{% if listFilters.status == value %} selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button class="secondary">Rechercher</button>
+</form>
 <p>Vous pouvez planifier ou retirer une date de fermeture. Un univers déjà fermé reste fermé.</p>
 
+<div class="admin-universes-grid">
 {% for universe in universes %}{% set config = universeConfigs[universe.id] %}{% set selectedSpeedProfile = 'custom' %}{% set selectedSpeedProfileLabel = 'Personnalisé' %}
 {% for profile in universeProfiles %}
   {% set profileDuration = (1 / profile.speed)|round(3) %}
@@ -12,6 +27,7 @@
 {% endfor %}
 {% set isScheduled = universe.status == 'active' and universe.startsAt and universe.startsAt > date() %}{% set isClosingSoon = universe.endsAt and universe.endsAt > date() and universe.endsAt < date('+7 days') %}{% set hasIncompleteConfig = universeConfigs[universe.id].multipliers is empty or universeConfigs[universe.id].limits is empty %}<article class="panel admin-universe-card" id="admin-universe-{{ universe.id }}" tabindex="-1" aria-labelledby="universe-title-{{ universe.id }}" data-admin-filter-target="row" data-filter-status="{{ isScheduled ? 'scheduled' : universe.status }}"><div class="admin-universe-heading"><div><h3 id="universe-title-{{ universe.id }}">{{ universe.name }}</h3><code>{{ universe.slug }}</code></div><span class="admin-status-badge admin-status-badge--{{ isScheduled ? 'scheduled' : universe.status }}">{{ isScheduled ? 'Planifié' : (universe.status == 'active' ? 'Ouvert' : 'Fermé') }}</span></div><div class="admin-universe-facts"><span><small>Joueurs</small><strong>{{ universePlayerCounts[universe.id]|default(0) }}</strong></span><span><small>Ouverture</small><strong>{{ universe.startsAt ? universe.startsAt|date('d/m/Y H:i', 'UTC')~' UTC' : (universe.status == 'active' ? 'Immédiate' : 'Non définie') }}</strong></span><span><small>Fermeture</small><strong>{{ universe.endsAt ? universe.endsAt|date('d/m/Y H:i', 'UTC')~' UTC' : 'Aucune' }}</strong></span><span><small>Profil</small><strong>{{ selectedSpeedProfileLabel }}</strong></span></div>{% if isClosingSoon or universe.status == 'closed' or hasIncompleteConfig %}<div class="admin-universe-alerts">{% if isClosingSoon %}<span class="is-warning">Fermeture dans moins de 7 jours</span>{% endif %}{% if universe.status == 'closed' %}<span>Univers fermé</span>{% endif %}{% if hasIncompleteConfig %}<span class="is-warning">Configuration à vérifier</span>{% endif %}</div>{% endif %}<p><a class="secondary" href="{{ path('app_admin_catalogue',{id:universe.id}) }}">Équilibrer les catalogues de cet univers</a> <a class="secondary" href="{{ path('app_admin_universe_metrics',{id:universe.id}) }}">Observer les mesures de cet univers</a></p><p><a class="primary" href="{{ path('app_admin_universe_manage',{id:universe.id}) }}">Gérer {{ universe.name }}</a></p></article>{% else %}<p>Aucun univers ne correspond à cette recherche.</p>{% endfor %}
 <p hidden data-admin-filter-target="empty">Aucun univers ne correspond à cette recherche.</p>
+</div>
 </section>
 
 {% include 'admin/_list_pagination.html.twig' with {listing:universePage, route:'app_admin_universes',filters:{q:listFilters.q,status:listFilters.status}} only %}

@@ -2,5 +2,17 @@
 {% block title %}Créer un univers · Administration{% endblock %}
 {% block body %}
 <div class="page-heading"><h1>Créer un univers</h1><a class="secondary" href="{{ path('app_admin_universes') }}">Tous les univers</a></div>
-{% include 'admin/_universe_creation.html.twig' %}
+<div class="admin-universe-create-layout">
+    <aside class="panel admin-universe-create-help">
+        <h2>Avant de créer</h2>
+        <p>Le nouvel univers est ouvert immédiatement. Le profil définit les vitesses de production et les durées.</p>
+        <ul>
+            <li>1 à 5 galaxies.</li>
+            <li>1 à 100 systèmes par galaxie.</li>
+            <li>Neuf positions planétaires par système.</li>
+        </ul>
+        <p>Le calendrier se règle ensuite dans la fiche de l’univers.</p>
+    </aside>
+    {% include 'admin/_universe_creation.html.twig' %}
+</div>
 {% endblock %}

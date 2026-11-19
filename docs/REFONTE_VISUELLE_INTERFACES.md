@@ -3558,7 +3558,125 @@ ou supprimé ; thèmes et retours serveur à recetter après choix.
 Preuves dans le dossier de conception : `lot-10F-plan.json`, `lot-10F-manifest.json`,
 `lot-10F-verification.json`, états avant/après/enregistrement et
 `lot-10F-{A,B}-{universes,new,manage}-{1440,390}.png`.
-Choix A/B attendu pour L10F ; L10 en cours, plan global **15/18**.
+L10F B est ensuite validé explicitement ; réalisation ci-dessous. L10 reste
+en cours, plan global **15/18**.
+
+## L10F B — Réalisation locale du 19 novembre 2026
+
+Complexité **4/5**. Page 53 B retenue : liste en fiches par deux sur grand écran,
+repères auprès de la création, calendrier à gauche de la configuration. Sous
+1200 px, ces ensembles reviennent sur une colonne. Les trois pages dédiées
+conservent leurs URL : recherche et état sont des filtres, calendrier et règles
+gardent leurs propres formulaires dans la fiche. La suppression secondaire
+reste dans son `<details>` avec le nom de confirmation et les conséquences.
+
+Les niveaux de titres, noms longs, dates et profils restent lisibles. Le formulaire
+de création est présenté comme « Identité et carte » ; les repères rappellent
+l’ouverture immédiate et la structure de la carte, sans saisie dupliquée. La fiche
+garde ses quatre informations de synthèse et ses accès aux outils de l’univers.
+Les fragments du calendrier et des règles, leurs cibles `admin-speed`, POST,
+CSRF, brouillons, contrôles d’état et audits restent inchangés. Aucun service,
+chargement ou comportement JavaScript, aucune règle ni valeur de jeu ne change.
+
+Fichiers du lot :
+
+- `app/templates/admin/layout.html.twig`, `sections/universes.html.twig`,
+  `universe_new.html.twig`, `_universe_creation.html.twig` et `universe_manage.html.twig` ;
+- `app/assets/app.js` et nouveau `app/assets/styles/admin-universe-workspace.css` ;
+- nouveau `app/tests/browser/admin-universe-refonte.spec.mjs` ;
+- `README.md`, `docs/ARCHITECTURE.md`, `docs/FEUILLE_DE_ROUTE.md`,
+  `docs/INVENTAIRE_INTERFACES.md` et le présent suivi.
+
+Vérifications locales :
+
+- `make validate`, `make lint`, `make assets` et `git diff --check` réussis ;
+- **trois tests PHP / 143 assertions** : pages dédiées et accès, calendrier/
+  réglages journalisés, conservation des seuils de surveillance ;
+- **huit scénarios navigateur consolidés** : six existants et deux nouveaux ;
+- création, code déjà utilisé et brouillon conservé, dates UTC refusées puis
+  enregistrées, retrait d’une fermeture, paramètres fermés non modifiables ;
+- profils cohérents, passage en personnalisé, références hors plage conservées,
+  erreur avec saisie conservée, limites/fonctionnalités et surcharges de catalogue
+  conservées, CSRF et accès, anciens liens/ancres et retour arrière ;
+- parcours sans JavaScript : filtres et pagination 50 + 2, recherche conservée,
+  état vide, création d’une petite carte de neuf positions, calendrier et règles.
+  Le profil ne remplit pas les vitesses sans JavaScript ; saisie explicite vérifiée.
+  Une confirmation de suppression erronée est refusée sans retirer l’univers ;
+- **18 captures**, trois vues × 1440/768/390 × clair/sombre, Axe ciblé sans
+  exclusion de règle, cases à cocher de 18 px, absence de débordement horizontal,
+  formulaire de suppression accessible au clavier. Captures ordinateur/mobile
+  examinées ; lectures sans modification des réglages ni nouvel audit d’écriture.
+
+La nouvelle recette a nécessité deux corrections de test : libellé exact « Page
+suivante » et lecture directe du contenu de `<noscript>`, que la recherche de texte
+habituelle de Playwright exclut. L’absence de remplissage automatique puis
+l’enregistrement des cinq vitesses saisies sans JavaScript sont vérifiés ; aucune
+assertion métier n’est retirée. Aucun correctif de comportement n’a été nécessaire.
+Preuves : `output/playwright/admin-universe-refonte/`, journaux `validate`, `lint`,
+`assets`, `php`, `browser`, `browser-native`, `browser-native-final`, captures de
+`recette` et parcours final de `recette-native-finale`. Bases et données isolées ;
+aucun univers habituel créé, réglé ou supprimé. CI GitHub, fusion et déploiement
+restent distincts ; aucun gain de performance mesuré.
+
+## L10G — Mesures et catalogues, propositions du 19 novembre 2026
+
+Complexité **4/5**. Sources ciblées : `UniverseMetricsService`, mesures de l’univers,
+`AdminController`, `CatalogBalanceService`, familles et formulaire de catalogue.
+Les mesures restent une page d’observation, avec quatre ancres dans le même
+relevé ; famille, recherche et fiche d’entrée gardent leurs pages actuelles.
+Enregistrer et restaurer restent deux formulaires de la même entrée. Aucun
+onglet ne remplace ces pages, aucune information essentielle n’est masquée.
+
+Dans le même document Figcraft de bureau :
+
+- **54 · L10G · A — Mesures et valeurs directes** : mesures dans le fil,
+  ressources en tableau sur ordinateur, entrées en lignes et coûts par rang
+  successifs. Bénéfice : lecture régulière ; limite : défilement plus long.
+- **55 · L10G · B — Comparaison et fiches** : progression et attentes en colonnes,
+  ressources en fiches, catalogue par deux, coûts des trois rangs côte à côte
+  sur ordinateur. Bénéfice : comparaison des valeurs ; limite : colonnes plus étroites.
+
+Couverture équivalente : **64 cadres, 32 par direction**, **1 580 liens inspectés**,
+six départs de prototype. Mesures, famille et fiche en 1440/768/390 ; états en
+390 : absence de données, univers fermé, colonies non exploitables, deuxième
+page, dates incohérentes, quatre familles, recherche globale/vide, fiches de
+technologie/vaisseau/défense, saisie/enregistrement/restauration, refus sur univers
+fermé, paramètres incomplets, tirs incohérents et valeur hors limites, menu et
+références. Les quatre ancres parcourent chaque relevé ; `M` revient au plan.
+Douze exports ordinateur/téléphone des trois vues, principaux aperçus examinés.
+Aucun texte hors parent, chevauchement ou lien manquant ; parité conservée.
+Les 48 pages antérieures gardent noms et nombres de cadres ; 50 pages et
+348 variables après ajout. Fichier enregistré, document propre et plan A affiché
+dans la fenêtre de bureau contrôlée.
+
+Les 52 entrées et leurs noms de rang proviennent des références actuelles du
+catalogue. Les quatre fiches d’exemple reprennent leurs **82 champs** issus du
+schéma : centrale, drones réparateurs, chasseur de patrouille et canon laser
+anti-léger. Types, pas et plages sont conservés ; grandes bornes écrites en
+chiffres lisibles. Les valeurs de référence ne sont pas des relevés de surcharges
+d’un univers réel, ni des propositions d’équilibrage. L’extraction n’a pas démarré
+le jeu ni lu sa base ; mesures et états renseignés restent fictifs.
+
+Contrats à conserver après choix : observation sans écriture, distinction entre
+zéro et donnée indisponible, périodes/commandes réellement conservées ; ressources
+limitées à **25 colonies par page**, dans l’ordre des identifiants, décomptes et
+dénominateurs de la page visibles. Un univers fermé garde les stocks sans
+projection ; aucune durée de progression ou de récupération n’est inventée.
+Recherche de catalogue sur les quatre familles, valeurs limitées à l’univers,
+coûts/durées déjà en file conservés, validation des champs/plages/entiers et des
+tirs, éventuelles limites de niveau compatibles avec les données existantes.
+Brouillons, restauration, mises à jour des stocks/production, verrous, CSRF et
+audits restent ceux du serveur. Aucune de ces opérations n’a été exécutée ici.
+
+Limites : champs dessinés et opérations simulées. La centrale seule illustre une
+saisie et des retours détaillés ; les autres entrées gardent leurs destinations
+de référence. Les refus illustrent les contrôles actuels du serveur.
+Les thèmes, retours serveur et lectures
+effectives seront recettés après choix. Preuves dans le dossier de conception :
+`lot-10G-references.json`, `lot-10G-plan.json`, `lot-10G-manifest.json`,
+`lot-10G-verification.json`, états avant/après/enregistrement et
+`lot-10G-{A,B}-{metrics,catalogue,edit}-{1440,390}.png`.
+Choix A/B attendu pour L10G ; L10 en cours, plan global **15/18**.
 
 ## Reprise et états de couverture
 
@@ -3583,7 +3701,7 @@ Choix A/B attendu pour L10F ; L10 en cours, plan global **15/18**.
 | L7E | A implémentée et vérifiée localement | Page 36 A validée explicitement après reprise de la messagerie et des classements | 90 PHP / 569 assertions ; neuf parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L8 | A implémentée et vérifiée localement | Page 38 A validée explicitement | 23 PHP / 244 assertions ; 16 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
 | L9 | A implémentée et vérifiée localement | Page 40 A validée explicitement | 7 PHP / 127 assertions ; 5 parcours navigateur consolidés ; bilan ci-dessus | CI complète, fusion et déploiement distincts |
-| L10 | L10A/B/C/D/E A réalisés et vérifiés localement ; L10F A/B préparé | A choisi explicitement pour L10A/B/C/D/E ; choix L10F attendu | Bilan L10E : 34 PHP / 149 assertions, huit scénarios navigateur consolidés, 18 captures ; L10F pages 52/53, 64 cadres et 1 330 liens | Réalisation L10F puis autres rubriques administratives ; CI, fusion et déploiement distincts |
+| L10 | L10A à L10E réalisés en A, L10F réalisé en B ; L10G A/B préparé | Choix précédents conservés ; B choisi explicitement pour L10F, choix L10G attendu | Bilan L10F : trois PHP / 143 assertions, huit scénarios navigateur consolidés, 18 captures ; L10G pages 54/55, 64 cadres et 1 580 liens | Réalisation L10G puis autres rubriques administratives ; CI, fusion et déploiement distincts |
 | L11 | Inventorié | Aucune nouvelle | Non engagé pour cette refonte | Examiner le wiki sans recommencer ses pages dédiées |
 | L12 | Inventorié ; socle partiellement analysé | Aucune validation globale | Revue transversale non exécutée | Inventorié ne signifie pas vérifié |
 

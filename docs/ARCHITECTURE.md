@@ -1027,6 +1027,16 @@ Situation, départ conservé, unités, cargaison et rapports précèdent l’int
 protections de consultation/erreur. Aucun contrôleur PHP, service, requête,
 autorisation, jeton, version attendue, transaction ou audit n’est modifié.
 
+L10F B ajoute `admin-universe-workspace.css`, limité par `admin-universe-workspace`
+aux GET de liste, création et gestion des univers. Les fiches de liste sont
+regroupées par deux sur grand écran ; la création place ses repères auprès du
+formulaire, et la gestion place calendrier et configuration dans deux colonnes.
+Sous 1200 px, ces ensembles reviennent sur une colonne. Les fragments existants
+de calendrier et de règles, les cibles `admin-speed`, les identifiants d’ancres,
+les POST et la confirmation de suppression gardent leurs contrats.
+Le fragment de création reste utilisé sur sa seule page dédiée. Aucun service,
+chargement, réglage de jeu ou comportement JavaScript n’est modifié.
+
 La console et ses groupes existants restent en place. `AdminController` expose
 les GET de création et de gestion d’un univers ; les POST historiques gardent
 leurs services, jetons et contrôles. Les brouillons d’erreur sont consommés sur
