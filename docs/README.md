@@ -10,6 +10,7 @@ une seule référence par sujet ; les anciens bilans ne décrivent pas l’état
 | --- | --- |
 | Suivre la fiabilité, les devis et l’historique du catalogue admin | [Catalogue administratif](ADMIN_CATALOGUE_FIABILITE.md) |
 | Suivre le diagnostic complémentaire des relais admin | [Exploitation administrative](ADMIN_EXPLOITATION_DIAGNOSTIC.md) |
+| Consulter les guildes depuis l’administration | [Consultation des guildes](ADMIN_GUILDES_CONSULTATION.md) |
 | Consulter les huit lots de navigation intégrés et leur recette finale | [Navigation et lots](NAVIGATION_PAGES_DEDIEES.md) |
 | Choisir les propositions Figcraft et suivre la nouvelle refonte visuelle | [Refonte visuelle des interfaces](REFONTE_VISUELLE_INTERFACES.md) |
 | Retrouver toutes les routes, gabarits, interactions et variantes à examiner | [Inventaire des interfaces](INVENTAIRE_INTERFACES.md) |

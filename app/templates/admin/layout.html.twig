@@ -16,7 +16,7 @@
 {% set challengesWorkspace = currentRoute in ['app_admin_challenges', 'app_admin_challenge'] %}
 {% set patchnotesWorkspace = currentRoute starts with 'app_admin_patchnote' %}
 {% set opsWorkspace = currentRoute in ['app_admin_security', 'app_admin_permissions', 'app_admin_operations', 'app_admin_audit', 'app_admin_legal_preview'] %}
-{% set directWorkspace = opsWorkspace or patchnotesWorkspace or challengesWorkspace or rotationsWorkspace or projectsWorkspace or eventsWorkspace or boxesWorkspace or balanceWorkspace or universeWorkspace or surveillanceWorkspace or caseWorkspace or moderationWorkspace or currentRoute in ['app_admin_index', 'app_admin_group', 'app_admin_players', 'app_admin_player'] %}
+{% set directWorkspace = opsWorkspace or patchnotesWorkspace or challengesWorkspace or rotationsWorkspace or projectsWorkspace or eventsWorkspace or boxesWorkspace or balanceWorkspace or universeWorkspace or surveillanceWorkspace or caseWorkspace or moderationWorkspace or currentRoute in ['app_admin_index', 'app_admin_group', 'app_admin_players', 'app_admin_player', 'app_admin_guild_directory', 'app_admin_guild_detail'] %}
 <!DOCTYPE html><html lang="fr"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#090f1b"><meta name="robots" content="noindex">
 <title>{% block title %}Console d’administration · Genesis Reborn{% endblock %}</title>

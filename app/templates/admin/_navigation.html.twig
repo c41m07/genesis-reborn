@@ -2,6 +2,7 @@
 {# Les liens restent disponibles sans JavaScript, y compris sur mobile. #}
 {% set navigationGroups = [
     {key:'players', label:'Joueurs et modération', description:'Les comptes, les retours et leur suivi au même endroit.', icon:'user', items:[
+        {route:'app_admin_guild_directory', label:'Guildes actives', description:'Membres, direction, diplomatie et projets lancés.', matches:['app_admin_guild_directory','app_admin_guild_detail']},
         {route:'app_admin_players', label:'Joueurs', description:'Comptes, activité et fiches individuelles.', matches:['app_admin_players','app_admin_player']},
         {route:'app_admin_reports', label:'Signalements', description:'Messages signalés et décisions de modération.', matches:['app_admin_reports'], category:'reports'},
         {route:'app_admin_feedbacks', label:'Feedbacks', description:'Retours des joueurs et suivi des réponses.', prefix:'app_admin_feedback', category:'feedbacks'},
