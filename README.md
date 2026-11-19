@@ -788,3 +788,7 @@ La revue transversale locale de la refonte couvre aussi les menus communs, les
 actualisations, les erreurs et les parcours sans JavaScript. Son périmètre et les
 reprises de tests sont consignés dans le [bilan de refonte](docs/REFONTE_VISUELLE_INTERFACES.md).
 La CI complète reste requise avant toute fusion.
+
+
+La recherche administrative différée préserve désormais un point de reprise
+clavier si un résultat focalisé est remplacé. [Recette ciblée et limites](docs/ADMIN_ACCESSIBILITE_RECHERCHE.md).

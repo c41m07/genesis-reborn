@@ -2069,3 +2069,10 @@ huit tests HTTP / 173 assertions et vérification du diff réussis.
 La [PR #89](https://github.com/c41m07/genesis-reborn/pull/89) consigne la CI complète
 et l’intégration, puis une nouvelle promotion Alpha reprend le dev consolidé. Aucune migration de base existante,
 installation de dépendance ni intervention sur le serveur dans cette reprise.
+
+
+## Accessibilité administration : recherche différée
+
+Correctif local ciblé du focus perdu après remplacement AJAX, reproduit puis
+vérifié dans Chromium sur fixture. Six scénarios aux largeurs ordinateur/mobile
+et assets validés ; recette complète/CI non réalisées. [Suivi](ADMIN_ACCESSIBILITE_RECHERCHE.md).

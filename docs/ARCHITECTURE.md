@@ -1180,3 +1180,11 @@ sommaire automatique et ne sont plus repliées par `admin_editors`.
 avec remplacement de l’entrée d’historique ; sans JavaScript, listes et liens
 serveur permettent d’atteindre les mêmes fiches. Aucun changement de schéma,
 dépendance ou chargement global de données de jeu n’est ajouté.
+
+
+## Focus de la recherche administrative
+
+`admin-list` relève le focus avant remplacement des résultats. S’il était dans
+la zone remplacée, le bilan actualisé reçoit le focus sans scroll forcé ;
+la saisie et les éléments extérieurs ne sont pas déplacés. Les protections
+de génération et erreurs sont conservées. [Recette](ADMIN_ACCESSIBILITE_RECHERCHE.md).
