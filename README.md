@@ -794,3 +794,5 @@ La CI complète reste requise avant toute fusion.
 Le diagnostic support distingue le renvoi inutile, la suspension et le renvoi administratif indisponible ; voir [le périmètre et le contrat de fiabilisation](docs/ADMIN_SUPPORT_COMPTES.md). Aucun envoi administratif direct n’est activé.
 
 Le service de confirmation sépare préparation sous verrou et transport : une confirmation constatée sous verrou n’entraîne plus l’envoi d’un lien non enregistré. Cette correction ne constitue pas encore le renvoi administratif idempotent.
+
+Une fondation interne de reçus/réservations de confirmation est préparée, sans route ni transport activés ; la migration est distincte de son application. Voir [les limites de cette tranche](docs/ADMIN_SUPPORT_COMPTES.md).

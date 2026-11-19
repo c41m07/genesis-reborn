@@ -215,3 +215,65 @@ crash autour de SMTP, transport séparé revendiqué une seule fois et tests
 multi-processus. Aucun de ces invariants n’est déclaré acquis par ce correctif.
 Pas de migration ni nouvelle table dans cette tranche. Le panneau continue
 honnêtement d’afficher le renvoi administratif comme indisponible.
+
+
+## Fondation persistante de réservation (non exposée)
+
+Complexité 5/5. `VerificationRequestReservation` et le reçu
+`VerificationDeliveryRequest` préparent le cycle commun sans ouvrir de route,
+sans créer de jeton et sans envoyer de mail. L’ancien parcours public ne les
+appelle pas encore : aucune protection du renvoi public actuel n’est annoncée.
+
+La réservation exige une transaction propre. Elle relit le compte sous verrou
+pessimiste puis effectue des lectures courantes verrouillées des reçus, y compris
+en isolation REPEATABLE READ. Un compte inexistant, confirmé ou suspendu est
+refusé avant toute création. La clé aléatoire de 64 caractères hexadécimaux est
+hachée ; unicité SQL par compte et clé. Une répétition retourne le même reçu,
+sans prolonger le délai. Une autre clé est bloquée par toute demande non
+terminale ou tout cooldown non expiré. Seuls `transport_accepted` et `cancelled`
+sont terminaux : état inconnu, réservé ou indéterminé reste bloquant même après
+expiration du délai. Cela privilégie l’absence de doublon à une reprise aveugle.
+
+La durée de cooldown est un paramètre interne obligatoire borné entre 1 et
+86 400 secondes, pas un paramètre de formulaire ni une nouvelle règle produit.
+L’intégration devra fixer une politique commune et non modifiable par le
+client. Les 300 secondes des tests ne constituent pas cette décision.
+
+Le reçu ne stocke qu’identité interne du compte, hachage de clé, état et dates.
+Ni adresse, jeton, contenu, URL ni erreur de transport. Il ne représente ni une
+autorisation admin ni une preuve d’envoi. Aucun changement de droit ou nouveau
+point d’accès. Le motif/acteur d’une future commande admin reste à intégrer au
+journal autorisé existant sans transformer ce reçu en journal de contenu.
+
+Migration `Version20261119235900` préparée, aucune application à une base
+existante. Pas de purge automatique : effacer trop tôt les reçus supprimerait
+l’idempotence. Avant activation restent nécessaires : politique de rétention,
+revendication/transition du worker, résultat indéterminé après crash, circuit
+public/inscription commun, autorisation et CSRF admin, présentation et tests
+complets. Ne pas mettre le bouton admin en service avec cette seule fondation.
+
+
+### Recette de la réservation
+
+13 tests / 142 assertions réussis : réservation, confirmation et diagnostic
+admin. La réservation couvre replay, nouvelle clé bloquée, frontière exacte du
+cooldown, état réservé/indéterminé toujours bloquant après délai, compte absent,
+confirmé/suspendu, entrées invalides et refus de transaction externe.
+Deux processus PHP distincts, deux connexions MariaDB, barrière de départ
+commune : une seule ligne avec la même clé (réservé/rejoué), puis avec deux clés
+(réservé/bloqué), même identifiant de reçu retourné. C’est un test de concurrence
+réelle de réservation, pas de transport ni de reprise après crash.
+
+La première version commençait par une lecture non verrouillée et le test a
+révélé SQLSTATE 1020 ; la première lecture est désormais elle-même verrouillée.
+La suite finale passe sans changement d’isolation serveur ni retry masquant
+l’erreur. Le service inutilisé est construit explicitement dans les tests
+(plutôt que rendu public dans le conteneur). La migration `up` a été exécutée
+uniquement dans la base jetable, puis réservation/replay vérifiés dessus.
+La fixture retire sa table de migration avant la reconstruction ORM suivante,
+car leurs noms de contrainte FK diffèrent.
+
+PHP des six nouveaux fichiers, conteneur Symfony, Compose et diff réussis.
+Le réseau/base `genesis-admin-support-test` ont été supprimés après recette.
+Aucun mail réel, migration d’une base habituelle, push, fusion ou déploiement.
+La CI complète et l’intégration des lots restent à effectuer séparément.
