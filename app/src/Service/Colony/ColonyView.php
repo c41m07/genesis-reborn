@@ -253,6 +253,14 @@ final class ColonyView
             'station_waiting',
         ]], ['arrivalAt' => 'ASC']);
         $combatEvents = $this->repo->fleetCombatEvents($membership, $activeFleets);
+        $resourceSnapshot = $this->resources->snapshot($planet, true);
+        // Un seul relevé cohérent pour les montants manquants et les délais de toutes les cartes.
+        if (isset($cards[$section])) {
+            foreach ($cards[$section] as $index => $card) {
+                $cards[$section][$index]['payment'] = ResourceWaitEstimate::forCosts($card['costs'], $resourceSnapshot);
+            }
+        }
+
         return [
             'fleet_details' => $this->empireDetails->fleets($membership, $activeFleets),
             'catalog_filter_options' => $filterOptions,
@@ -263,7 +271,7 @@ final class ColonyView
             'membership' => $membership,
             'planet' => $planet,
             'planets' => $this->repo->planets($membership->universe, $membership),
-            'resources' => $this->resources->snapshot($planet, true),
+            'resources' => $resourceSnapshot,
             'cards' => $cards,
             'queues' => $queues,
             'research_parallel_count' => count($researchActive),

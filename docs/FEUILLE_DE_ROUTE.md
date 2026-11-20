@@ -2093,3 +2093,18 @@ Matrice de rôles, stockage, révocation et conversion des autres routes restent
 Correctif local ciblé du focus perdu après remplacement AJAX, reproduit puis
 vérifié dans Chromium sur fixture. Six scénarios aux largeurs ordinateur/mobile
 et assets validés ; recette complète/CI non réalisées. [Suivi](ADMIN_ACCESSIBILITE_RECHERCHE.md).
+
+## Estimation de paiement dans les catalogues
+
+Lot autonome de complexité 3/5. Les coûts et les stocks existants alimentent
+un calcul partagé entre le rendu initial et l'estimation de quantité.
+Le bloc adjacent à l'action bloquée n'ajoute pas de requête au rendu et ne
+modifie ni les prix, ni les ressources, ni la règle d'acceptation serveur.
+L'ancien délai est retiré dès édition de quantité ou recalcul en cours.
+
+Vérifications ciblées : 5 tests PHPUnit / 6 assertions, syntaxe PHP/JS, lint
+Twig du gabarit partagé, Compose, compilation des assets et diff. 2 scénarios
+Chromium sur base jetable : délai initial et actualisé, invalidation à la saisie,
+survol, fermeture au clavier, toucher à 390 px, conservation des validations
+de quantité et du fret. Instance et réseau privés supprimés après recette.
+Aucune mesure de performances, CI intégrale ni recette du site réel.
