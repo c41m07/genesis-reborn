@@ -843,4 +843,4 @@ La [matrice des permissions](docs/ADMIN_PERMISSIONS.md) documente les contrôles
 
   Mesures des corps de réponses HTTP sur Chromium local et données de test : les quatre bâtiments passent de 2 039 868 à 562 058 octets à 1 366 px (DPR 1) et 390 px (DPR 2), et les dix-neuf recherches de 6 579 746 à 1 949 746 octets à 1 366 px (DPR 1). Ces chiffres décrivent les mêmes images, pas la page entière, le temps de chargement ou le LCP.
 
-- **Bonus des bâtiments au dernier niveau** : les fiches Laboratoire, Chantier et Bunker indiquent l’effet cumulé des niveaux acquis, même si le maximum de ce rang est atteint ou déjà en file. Les niveaux en attente ne comptent pas dans cet effet ; aucun changement de règle ou de plafond.
+- **Effets acquis au dernier niveau** : les fiches de bâtiments et de recherches gardent dans le tableau de progression les effets chiffrés acquis, dans leurs unités d’origine, quand le rang est au maximum ou que son dernier niveau est en file. Seule la colonne « Actuellement » reste, sans créditer la file. Pour les productions et stockages, la fiche précise qu’il s’agit de totaux de la colonie ; aucun changement de règle ou de plafond.

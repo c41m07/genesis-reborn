@@ -216,6 +216,8 @@ final class ColonyView
                             $target = max($target, $queueItem->itemLevel + 1);
                         }
                     }
+                    $maxLevel = ($group === 'technologies' ? ($definition['effect']['tier_max_levels'][$tier] ?? null) : null) ?? $definition['max_level'] ?? null;
+                    $maximum = $maxLevel !== null && $target > $maxLevel;
                     $failures = $this->access->failures($membership, $planet, $group, $definition, $tier, $buildings, $technologies);
                     if ($group === 'defenses') {
                         $level = 0;
@@ -224,7 +226,7 @@ final class ColonyView
                     $cards[$group][] = [
                         'filter_category' => $this->filters->category($group, $base),
                         'details' => $this->details->describe($definition, $group, $target, $planet, $buildings, $technologies, $productionContext),
-                        'benefits' => $this->insights->benefits($definition, $group, $target, $planet, $buildings, $technologies, $productionContext),
+                        'benefits' => $this->insights->benefits($definition, $group, $maximum ? null : $target, $planet, $buildings, $technologies, $productionContext),
                         'unlocks' => $this->insights->unlocks($group, $slug, $target, $tier, $membership->universe),
                         'definition' => $definition,
                         'tier' => $tier,
@@ -235,7 +237,8 @@ final class ColonyView
                         'costs' => $operation['costs'],
                         'failures' => array_values(array_unique($failures)),
                         'missing_research_laboratory' => $missingResearchLaboratories[$tier] ?? null,
-                        'maximum' => isset($definition['max_level']) && $target > $definition['max_level'],
+                        'maximum' => $maximum,
+                        'max_level' => $maxLevel,
                         'queued' => $queued !== null,
                         'economic' => $economicStates[$slug][$tier] ?? null,
                         'capacity_full' => isset($definition['economic_unit']) && !($definition['mobile'] ?? true)

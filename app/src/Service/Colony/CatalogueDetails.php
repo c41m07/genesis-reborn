@@ -115,58 +115,14 @@ final class CatalogueDetails
                 'fortress' => 'Augmente la structure des défenses au sol de cette colonie.',
                 default => $itemDefinition['description'] ?? '',
             };
-            // Passer le plafond ferme la progression mais ne change pas les niveaux acquis.
-            // Le bonus est cumulé sur les trois rangs de la colonie, jamais sur la file.
-            $rows = [];
-            if (isset($itemDefinition['max_level']) && $target > $itemDefinition['max_level']) {
-                $bonus = $this->currentRankedBuildingBonus($itemDefinition, $levels[$slug] ?? [], $rules);
-                if ($bonus !== null) {
-                    $rows[] = $bonus;
-                }
-            }
             $sections[] = $this->section('Fonctionnement', match ($slug) {
                 'lab' => ['Les trois rangs contribuent ensemble à la réduction du temps de recherche, avec des rendements décroissants.', 'La recherche est partagée entre vos colonies de cet univers, mais le laboratoire utilisé est celui de la colonie où elle est lancée.', 'Les durées des opérations déjà en file restent celles enregistrées à leur lancement.'],
                 'shipyard' => ['Les trois rangs contribuent ensemble à la réduction du temps de construction des vaisseaux, avec des rendements décroissants.', 'Les défenses partagent la file du chantier, mais ne bénéficient pas de cette réduction de durée.', 'Les durées des opérations déjà en file restent celles enregistrées à leur lancement.'],
                 'fortress' => ['Les trois rangs contribuent ensemble au bonus de structure des défenses au sol. Ce bonus se combine avec vos recherches de blindage.', 'Le bunker ne tire pas lui-même. Il ne renforce ni la structure des vaisseaux ni les boucliers des défenses.'],
                 default => [],
-            }, $rows);
+            });
         }
         return ['intro' => $intro, 'scope' => 'Cette colonie · rangs développés séparément', 'sections' => $sections];
-    }
-
-    /** @return array{label: string, value: float, unit: string}|null */
-    private function currentRankedBuildingBonus(array $definition, array|int $levels, array $rules): ?array
-    {
-        $slug = $definition['slug'];
-        $label = match ($slug) {
-            'lab' => 'Réduction du temps de recherche',
-            'shipyard' => 'Réduction du temps de construction des vaisseaux',
-            'fortress' => 'Structure supplémentaire des défenses',
-            default => null,
-        };
-        if ($label === null) {
-            return null;
-        }
-
-        $maxLevel = (int) $definition['max_level'];
-        if ($slug === 'fortress') {
-            $effect = $definition['effect'] ?? [];
-            if (($effect['targets'] ?? null) !== 'ground_defenses' || ($effect['stat'] ?? null) !== 'hp') {
-                return null;
-            }
-            // Comme le combat, le bunker utilise le maximum de la fiche de référence.
-            $maxLevel = (int) ($this->catalog->get('buildings', 'fortress')['max_level'] ?? 25);
-            $cap = (float) ($effect['max_bonus'] ?? 25);
-        } else {
-            // Même plafond et même courbe partagée que le calcul des durées d’opération.
-            $cap = (float) ($rules['time_reduction_max_percent'] ?? 70);
-        }
-
-        return [
-            'label' => $label . ' · bonus cumulé actuel',
-            'value' => GameCatalog::diminishingBonus($levels, $cap, $maxLevel),
-            'unit' => '%',
-        ];
     }
 
     private function technology(
@@ -276,13 +232,14 @@ final class CatalogueDetails
         $after[$itemDefinition['_tier']] = min($target, $tierCap);
         $current = $limit($ranks);
         $next = $limit($after);
+        $capped = $target > $tierCap;
         return $this->section('Emplacements de colonies', [
             'Chaque niveau ajoute directement +1 emplacement de colonie.',
             'Limites : ' . $caps . '. Maximum : 31 planètes au total, planète de départ incluse.',
-            $current >= $cap ? 'Le plafond de cet univers est atteint.' : ($next > $current ? 'Le prochain niveau apporte +1 emplacement.' : 'Le plafond global est atteint.'),
+            $current >= $cap ? 'Le plafond de cet univers est atteint.' : ($capped ? 'Ce rang ne propose plus de niveau suivant.' : ($next > $current ? 'Le prochain niveau apporte +1 emplacement.' : 'Le plafond global est atteint.')),
             'La planète de départ, les colonies fondées et les planètes conquises occupent toutes un emplacement.',
             'Fonder une colonie exige une planète vierge connue et consomme un vaisseau colonie. Une conquête exige un vaisseau colonie survivant et une cible PNJ conquérable.',
-        ], [['label' => 'Limite totale actuelle', 'value' => $current, 'unit' => 'colonies'], ['label' => 'Limite après ce niveau', 'value' => $next, 'unit' => 'colonies'], ['label' => 'Plafond de cet univers', 'value' => $cap, 'unit' => 'colonies']]);
+        ], [['label' => 'Limite totale actuelle', 'value' => $current, 'unit' => 'colonies'], ...($capped ? [] : [['label' => 'Limite après ce niveau', 'value' => $next, 'unit' => 'colonies']]), ['label' => 'Plafond de cet univers', 'value' => $cap, 'unit' => 'colonies']]);
     }
 
     private function unit(

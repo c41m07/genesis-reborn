@@ -1,5 +1,5 @@
 {% set info = card.details %}
-{% set buildingMaximumPending = group == 'buildings' and card.maximum and card.level < d.max_level %}
+{% set maximumPending = card.maximum and card.level < card.max_level %}
 <div class="catalog-info" data-controller="catalog-info">
     <button class="catalog-info-trigger" type="button" data-action="catalog-info#open" aria-haspopup="dialog" aria-label="Informations sur {{ d.label }}">i</button>
     <dialog class="catalog-info-dialog" data-catalog-info-target="dialog" data-action="click->catalog-info#outside" aria-labelledby="catalog-info-title-{{ group }}-{{ d.slug }}-{{ card.tier }}">
@@ -16,15 +16,15 @@
                     <h3>Progression de ce rang</h3>
                     <dl class="catalog-info-stats catalog-info-progression">
                         <div><dt>Niveau actuel</dt><dd>{{ card.level }}</dd></div>
-                        {% if buildingMaximumPending %}
+                        {% if maximumPending %}
                             <div><dt>Maximum en file</dt><dd>Le dernier niveau n’est pas encore acquis.</dd></div>
                         {% else %}
                             <div><dt>{{ card.maximum ? 'Progression terminée' : 'Niveau visé' }}</dt><dd>{{ card.maximum ? 'Niveau maximum atteint' : card.target }}</dd></div>
                         {% endif %}
-                        <div><dt>Niveau maximum</dt><dd>{{ d.max_level|default('Sans limite') }}</dd></div>
+                        <div><dt>Niveau maximum</dt><dd>{{ card.max_level|default('Sans limite') }}</dd></div>
                         <div><dt>Rang</dt><dd>{{ d._tier_label }}</dd></div>
                     </dl>
-                    {% if buildingMaximumPending %}
+                    {% if maximumPending %}
                         <p class="catalog-info-note">Les effets actuels n’incluent pas les niveaux en file.</p>
                     {% elseif card.queued %}
                         <p class="catalog-info-note">Une amélioration de ce rang est déjà en file. Les gains et le coût ci-dessous concernent le niveau visé après les niveaux déjà programmés.</p>
@@ -34,11 +34,12 @@
                         <ul class="catalog-info-benefits">
                             {% for benefit in card.benefits %}<li>{% if benefit.text is defined %}{% if benefit.label is defined %}<strong>{{ benefit.label }}</strong> · {% endif %}{{ benefit.text }}{% else %}<strong>{{ benefit.label }}</strong> · {% include 'ui/catalogue_benefit_value.html.twig' with {benefit: benefit} only %}{% endif %}</li>{% endfor %}
                         </ul>
-                        {% if group == 'technologies' or d.slug in ['lab','shipyard','fortress'] %}
-                            <div class="catalog-info-table-wrap"><table class="catalog-info-table"><caption>Effet cumulé des rangs</caption><thead><tr><th scope="col">Effet</th><th scope="col">Actuellement</th><th scope="col">Après ce niveau</th></tr></thead><tbody>
-                                {% for benefit in card.benefits %}{% if benefit.before is defined %}<tr><th scope="row">{{ benefit.label }}</th><td>{{ (benefit.unit in ['%', 's', 'UA/s'] ? benefit.before|number_format(2,',',' ')|trim('0','right')|trim(',','right') : benefit.before|quantity(2, true)) }} {{ benefit.unit }}</td><td>{{ (benefit.unit in ['%', 's', 'UA/s'] ? benefit.after|number_format(2,',',' ')|trim('0','right')|trim(',','right') : benefit.after|quantity(2, true)) }} {{ benefit.unit }}</td></tr>{% endif %}{% endfor %}
-                            </tbody></table></div>
-                        {% endif %}
+                    {% endif %}
+                    {% set effectRows = card.benefits|filter(benefit => benefit.before is defined) %}
+                    {% if effectRows and (card.maximum or group == 'technologies' or d.slug in ['lab','shipyard','fortress']) %}
+                        <div class="catalog-info-table-wrap"><table class="catalog-info-table"><caption>{{ card.maximum and group == 'buildings' and (d.production_resource is defined or d.storage_resource is defined) ? 'Totaux actuels de la colonie' : 'Effet cumulé des rangs' }}</caption><thead><tr><th scope="col">Effet</th><th scope="col">Actuellement</th>{% if not card.maximum %}<th scope="col">Après ce niveau</th>{% endif %}</tr></thead><tbody>
+                            {% for benefit in effectRows %}<tr><th scope="row">{{ benefit.label }}</th><td>{{ (benefit.unit in ['%', 's', 'UA/s'] ? benefit.before|number_format(2,',',' ')|trim('0','right')|trim(',','right') : benefit.before|quantity(2, true)) }} {{ benefit.unit }}</td>{% if not card.maximum %}<td>{{ (benefit.unit in ['%', 's', 'UA/s'] ? benefit.after|number_format(2,',',' ')|trim('0','right')|trim(',','right') : benefit.after|quantity(2, true)) }} {{ benefit.unit }}</td>{% endif %}</tr>{% endfor %}
+                        </tbody></table></div>
                     {% endif %}
                 </section>
             {% else %}
