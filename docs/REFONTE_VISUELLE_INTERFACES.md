@@ -4940,3 +4940,28 @@ les cinq contrôles complets avant fusion.
 
 La CI 421 termine avec les quatre autres lots réussis : PHP et navigateur 1, 2, 4.
 Le seul échec est celui de l’attente des styles de guilde corrigée ci-dessus.
+
+
+## Galaxie — distinguer sélection et entrée dans un système
+
+Complexité **3/5** : même moteur et même plan de données, mais états de caméra,
+focus et navigation communs entre carte, système et planète. Pas de changement
+des distances, règles ou permissions. La fiche contextuelle est un volet, pas
+une page ni une modale : on garde la carte, ses commandes, le lien natif avec
+la liste et la position du joueur. Le volet occupe la droite sur ordinateur et
+reste borné en bas de la scène sur mobile, sans redimensionner le canvas.
+
+Clic, geste et recherche d’un système affichent la fiche seule ; « Entrer dans
+le système » centre le système cartographié et ouvre sa vue orbitale. Échap
+ferme la fiche et replace le focus sur la recherche. Le retour après une entrée
+rétablit la caméra utilisée avant celle-ci. Un signal inconnu ne révèle pas
+de planètes et conserve l’accès à l’exploration existante.
+
+
+Recette locale : `make validate`, compilation des assets, lint Twig et 29
+tests Galaxie réussis (26 vérifications du contrôleur et trois parcours
+Chromium sur base jetable). Les parcours couvrent notamment le clic et le
+tactile, le clavier, la conservation du cadre mesuré sur la mini-carte, les
+commandes +/− à 390 et 320 px, la légende, l’aller-retour Carte/Liste avec et
+sans JavaScript et le zoom/pincement de la planète. Les quatre largeurs 1440,
+768, 390 et 320 px ont été parcourues. CI GitHub et déploiement non exécutés.
