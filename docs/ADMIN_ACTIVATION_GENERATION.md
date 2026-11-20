@@ -315,3 +315,13 @@ de clé, la coordination des autres émetteurs, un contrat de révocation
 assumé et la revue de traces du vrai transport. La décision de remettre
 n'est pas une preuve de livraison, et le marqueur durable n'établit pas
 précisément quand un transport externe a commencé.
+
+Recette locale : **60 tests / 425 assertions** avec les régressions
+historiques/admin. Deux processus ont arbitré le même claim ; la
+révocation avant l'étape de remise n'a déclenché aucun appel, celle
+pendant le double de transport n'a pas fait disparaître son acceptation.
+Panne d'audit après acceptation factice : aucun succès persisté ni
+possibilité de remettre de nouveau. Retour tardif après échéance :
+indéterminé dans reçu et journal. Migration montée/descendue sur la
+base jetable seulement ; réseau et base retirés. Lint PHP, conteneur,
+Compose et diff vérifiés. Tests ciblés, pas de CI complète revendiquée.
