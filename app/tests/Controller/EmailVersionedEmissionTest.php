@@ -99,7 +99,7 @@ final class EmailVersionedEmissionTest extends WebTestCase
     {
         $links = [];
         $transport = $this->createMock(VerificationEmissionTransport::class);
-        $transport->expects(self::exactly(2))->method('confirmation')->with('writer-portal@example.test', self::matchesRegularExpression('/^[A-Za-z0-9_-]{43}$/D'))
+        $transport->expects(self::exactly(2))->method('confirmation')->with('writer-portal@example.test', self::matchesRegularExpression('/^[A-Za-z0-9_-]{43}$/D'), 'WriterPortal')
             ->willReturnCallback(static function (#[\SensitiveParameter] string $address, #[\SensitiveParameter] string $link) use (&$links): VerificationRecoveryOutcome {
                 $links[] = $link;
                 return VerificationRecoveryOutcome::TransportAccepted;

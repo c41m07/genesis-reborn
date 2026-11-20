@@ -695,3 +695,47 @@ sur processus indépendants, anonymisation et profil sur ancien schéma.
 Confirmation et écriture V10 désactivée/activée en tests factices
 revalidées. PHP lint, conteneur, Compose et diff vérifiés ; base/réseau
 retirés. Aucun nouveau schéma, SMTP, prod, push, fusion ou déploiement.
+
+## Adaptateur de remise SMTP directe, non raccordé
+
+Contrat vérifié dans la version installée **Symfony Mailer 7.4.19** :
+`TransportInterface::send()` retourne `SentMessage|null`, contrairement
+à `MailerInterface::send()` qui peut déléguer à un bus. Le nouveau port
+versionné n'utilise ni ce bus ni `AccountMailDelivery` (les réessais historiques
+restent confinés au mode historique). Il appelle une seule fois un transport
+SMTP direct par message et n'a ni boucle ni repli. NullTransport, transports
+composites et message non productible sont refusés *avant* appel. Ne pas
+interpréter le SentMessage synthétique de NullTransport comme une remise.
+
+Une prise en charge explicite du transport est `transport_accepted`, jamais
+une preuve de livraison/boîte de réception. Un retour null ou une exception
+après appel reste `unknown` ; seule la non-remise certaine avant appel est
+`not_dispatched`. L'adaptateur ne journalise ni MIME, lien, jeton, adresse, DSN
+ni détails d'exception. Les sujets et modèles sont mutualisés avec la voie
+historique. La bienvenue demeure un message séparé sans lien. Le destinataire
+et le nom utilisés sont ceux de l'instantané serveur établi sous le verrou,
+pas d'une adresse POST ou d'une recherche tardive.
+
+`SymfonyVerificationEmissionTransport` est exclu de l'autodécouverte.
+Le futur assemblage explicite `forSingleSmtp` n'accepte qu'un DSN SMTP direct
+TLS avec vérification du certificat, sans bus, dispatcher ni logger
+d'application. Sa construction n'ouvre pas de connexion. Aucun DSN réel
+ni fournisseur/clé ne sont injectés dans ce palier ; l'opt-in reste fermé.
+Le constructeur qui accepte un transport n'est utilisé que pour les doubles
+dans cette recette. Cette preuve ne couvre pas les journaux des serveurs
+SMTP, des relais ou le proxy.
+
+Ce port concerne l'émission versionnée qui possède déjà l'instantané
+destinataire. Le port de récupération admin actuel ne reçoit qu'un
+identifiant joueur et un lien : ne pas le connecter en recherchant
+l'adresse plus tard. Avant de le raccorder, transmettre un instantané
+contrôlé au point de remise, puis vérifier configuration autorisée,
+expéditeur/URL, traces et procédure d'arrêt. Aucun envoi réel ici.
+
+**9 tests purs / 34 assertions**, uniquement doubles SMTP et NullTransport
+sans réseau : message/URL/unique destinataire, classification, composite
+refusé, modèle distinct et aucune seconde tentative. **37 tests / 312
+assertions** avec les régressions HTTP anciennes et versionnées sur
+MariaDB jetable retirée. Compose, PHP lint, conteneur et diff contrôlés.
+Pas de nouveau paramètre, migration, adresse configurée, SMTP effectif,
+commit distant, fusion ou déploiement.
