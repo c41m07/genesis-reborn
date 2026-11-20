@@ -337,3 +337,38 @@ ne pas l’annoncer vert. Les preuves navigateur/actifs de V5 ne sont pas
 annoncées comme rejouées pour cet attribut de mapping. Aucun claim support
 ultérieur inclus, aucune clé d’activation, SMTP, modification de CI, réelle
 donnée, fusion, push ou déploiement.
+
+### Sauvegarde/restauration séquentielle et limite navigateur
+
+Référence de code testée : a261395 (V5 corrigée), aucune modification
+des scripts du dépôt. La suite navigateur exhaustive officielle n’a pas
+été lancée. Son Compose branche l’app et Mercure sur Traefik partagé
+publié sur toutes les interfaces au port 80. Ses fixtures attendent
+ce routage et certaines appellent 127.0.0.1:80 directement. Le faire
+fonctionner à l’identique sur un port loopback dédié exigerait de modifier
+le montage ou le lanceur ; aucun changement de routage ni de CI.
+Le dernier navigateur local reste la preuve ciblée V5 (6 clavier + 1 parcours).
+
+L’enveloppe officielle make test-backup a été tentée et s’arrête avant
+migration, dump ou restauration : Docker ne permet pas le second réseau
+simultané, « all predefined address pools have been fully subnetted ».
+Aucun réseau existant ni pool modifié ; nettoyage du test contrôlé.
+
+Une variante locale séquentielle a conservé scripts/db-backup.sh et
+scripts/db-restore.sh et leur contrôle RESTORE_CONFIRM. Elle n’est pas
+l’enveloppe officielle. Avec deux noms de projet jetables distincts,
+sans port exposé, sans Traefik et sans consommateur :
+- source synthétique migrée et alimentée avec les fixtures du test ;
+- archive privée gzip vérifiée, empreinte de la source inchangée après
+  sauvegarde, puis source et réseau retirés avant de créer la cible ;
+- restauration uniquement sur la cible jetable portant la confirmation
+  de son nom ; la table marqueur de la cible n’est pas dans l’archive ;
+- **63 tables identiques** par empreinte ; compte synthétique, mot de
+  passe, stocks, niveaux de bâtiment/recherche, vaisseaux, construction
+  en attente et outbox vérifiés après restauration ;
+- aucun consommateur ou SMTP, bases/networks/archives temporaires retirés.
+
+Le résultat atteste un aller-retour synthétique local, pas un résultat GitHub,
+une recette de données réelles ni un succès de l’enveloppe simultanée.
+Aucun push, fusion ou déploiement. Le code et la référence a261395 sont
+préservés.
