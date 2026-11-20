@@ -121,7 +121,15 @@ test('Catalogue B : comparaison des rangs, thèmes et formulaires natifs des qua
     await native.goto(`${catalogue}/${family}/${slug}`);
     const form = native.locator('.admin-catalogue-editor');
     await expect(form.locator('input[type="number"][name^="values["]')).toHaveCount(fields);
-    await expect(form.getByRole('group')).toHaveCount(3);
+    await expect(form.getByRole('group')).toHaveCount(4);
+    for (const rank of ['Basique', 'Intermédiaire', 'Supérieur']) {
+      await expect(form.getByRole('group', { name: rank, exact: true }).getByRole('spinbutton', { name: 'Métal', exact: true })).toBeVisible();
+    }
+    const quote = form.getByRole('group', { name: 'Prévisualiser un devis sans enregistrer', exact: true });
+    await expect(quote.getByLabel('Rang du devis', { exact: true })).toBeVisible();
+    const quantityField = ['buildings', 'technologies'].includes(family) ? 'Niveau du devis' : 'Quantité du devis';
+    await expect(quote.getByRole('spinbutton', { name: quantityField, exact: true })).toBeVisible();
+    await expect(quote.getByRole('button', { name: 'Comparer le devis', exact: true })).toBeVisible();
     const cost = form.getByRole('group', { name: 'Basique', exact: true }).getByRole('spinbutton', { name: 'Métal', exact: true });
     await expect(cost).toHaveAttribute('step', '1');
     await expect(cost).toHaveAttribute('aria-describedby', /-range$/);

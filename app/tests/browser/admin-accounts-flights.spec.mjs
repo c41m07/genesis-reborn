@@ -152,7 +152,9 @@ test('Administration : rubriques clavier, comptes protégés, confirmations et j
   const navigation = page.getByRole('navigation', { name: 'Console d’administration' });
   await navigation.getByRole('link', { name: /^Joueurs et modération/ }).click();
   await expect(page).toHaveURL(/admin\/rubriques\/players$/);
-  await expect(page.locator('.admin-module-card')).toHaveCount(4);
+  const modules = page.locator('.admin-module-card');
+  await expect(modules.getByRole('heading', { level: 2 })).toHaveText(['Guildes actives', 'Joueurs', 'Signalements', 'Feedbacks', 'Dossiers']);
+  await expect(modules.filter({ has: page.getByRole('heading', { name: 'Guildes actives', exact: true }) })).toHaveAttribute('href', '/admin/guildes');
   const playersLink = navigation.getByRole('link', { name: 'Joueurs', exact: true });
   await playersLink.focus();
   await page.keyboard.press('Tab');
@@ -265,9 +267,13 @@ test('Relais admin : échéance, retard, nature inconnue et lecture mobile sans 
   await page.goto('/admin/exploitation');
   const details=page.locator('.admin-operations details');
   await details.locator('summary').focus();await page.keyboard.press('Enter');
-  const row=details.getByRole('row').filter({hasText:'diagnostic_test'});
-  await expect(row).toContainText('#987654');
-  await expect(row).toContainText(/3\d{2} s/);
+  const relayId = Number(queryIsolatedSql(process.env.BROWSER_ROUTER, "SELECT id FROM outbox_message WHERE kind='diagnostic_test' AND target_id=987654"));
+  expect(relayId).toBeGreaterThan(0);
+  const rows = details.getByRole('region', { name: 'Relais en attente, tableau défilant' });
+  const row = rows.getByRole('row').filter({ has: page.getByRole('rowheader', { name: '#'+relayId, exact: true }) });
+  await expect(row.getByRole('cell', { name: '#987654', exact: true })).toBeVisible();
+  await expect(row.getByRole('cell', { name: /3\d{2} s/ })).toBeVisible();
+  await expect(row.getByRole('cell', { name: /Examen humain requis.*Aucune reprise proposée/ })).toBeVisible();
   await expect(details).toContainText('ne sont pas enregistrées');
   await expect(details).not.toContainText(token);
   for(const width of [1440,768,390]) {
@@ -276,8 +282,8 @@ test('Relais admin : échéance, retard, nature inconnue et lecture mobile sans 
     await expect(row).toBeVisible();
     await row.scrollIntoViewIfNeeded();
     if(width===390) {
-      // Les cinq cellules deviennent une fiche ; toutes les valeurs restent accessibles.
-      await expect(row.locator('th, td')).toHaveCount(5);
+      // La fiche mobile conserve les six colonnes, diagnostic compris.
+      await expect(row.locator('th, td')).toHaveCount(6);
       await expect(row.locator('[data-label="Nature"]')).toContainText('diagnostic_test');
       await expect(row.locator('[data-label="Cible"]')).toContainText('#987654');
       expect(await row.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
