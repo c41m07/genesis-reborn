@@ -51,7 +51,7 @@ final class MixedVerificationLinkReader
             $player = $this->em->createQuery('SELECT p FROM App\Entity\Player p WHERE p.id = :id')
                 ->setParameter('id', $playerId)->setLockMode(LockMode::PESSIMISTIC_WRITE)
                 ->setHint(Query::HINT_REFRESH, true)->getOneOrNullResult();
-            if (!$player instanceof Player || $player->emailVerifiedAt !== null || $player->lockedAt !== null) {
+            if (!$player instanceof Player || $player->emailVerifiedAt !== null) {
                 return false;
             }
 
@@ -74,7 +74,9 @@ final class MixedVerificationLinkReader
                     $generation->state = 'revoked';
                 }
             } else {
-                if (!$generation instanceof PlayerVerificationGeneration || $generation->state !== 'active') {
+                // La voie historique ne filtre pas la suspension ; ne pas
+                // lui imposer la règle spécifique à la génération versionnée.
+                if ($player->lockedAt !== null || !$generation instanceof PlayerVerificationGeneration || $generation->state !== 'active') {
                     return false;
                 }
                 $current = new VerificationLinkGeneration(

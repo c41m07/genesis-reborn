@@ -69,7 +69,7 @@ final class EmailVerificationService
         });
     }
 
-    public function verify(string $plainToken): bool
+    public function verify(#[\SensitiveParameter] string $plainToken): bool
     {
         if (!preg_match('/^[A-Za-z0-9_-]{40,50}$/', $plainToken)) return false;
         return $this->manager->transaction(function () use ($plainToken): bool {
