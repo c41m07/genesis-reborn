@@ -1,0 +1,25 @@
+{% extends 'admin/layout.html.twig' %}
+{% block title %}Aperçu fictif de délégation · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="page-heading"><div><p class="eyebrow">Exploitation · Lecture seule</p>
+<h1>Aperçu fictif de délégation</h1>
+<p>Simulation uniquement. Aucun droit n’est accordé et aucun univers réel n’est consulté.</p></div>
+<a class="secondary" href="{{ path('app_admin_permissions') }}">Retour à la matrice</a></div>
+<nav class="panel" aria-label="Périmètres fictifs">
+    {% for key, label in {a: 'Univers fictif A', b: 'Univers fictif B'} %}
+        <a href="{{ path('app_admin_permissions_preview', {scope: key}) }}"{% if scope == key %} aria-current="page"{% endif %}>{{ label }}</a>
+    {% endfor %}
+</nav>
+<section class="panel" aria-labelledby="delegation-projection-title">
+    <h2 id="delegation-projection-title">{{ projection.name }}</h2>
+    {% for profile in projection.profiles %}
+        <h3>{{ profile.label }}</h3>
+        <p>{{ profile.example }}</p>
+        <p><strong>Non affiché :</strong> {{ profile.excluded }}</p>
+    {% endfor %}
+</section>
+<section class="panel">
+    <h2>Décisions encore ouvertes</h2>
+    <p>Qui pourrait déléguer, à qui, quels champs seraient visibles, pour combien de temps et comment prévenir les conflits d’intérêts. Cet aperçu ne décide aucun de ces points.</p>
+</section>
+{% endblock %}
