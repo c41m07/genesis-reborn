@@ -22,4 +22,13 @@
         {% else %}Renvoi depuis l’administration indisponible : utiliser le parcours public ci-dessous.{% endif %}
     </p>
     {% if account_diagnostic.activation_action == 'unavailable' %}<p>Pour réessayer, orienter le joueur vers le <a href="{{ path('app_email_verify_request') }}">formulaire de renvoi du lien de confirmation</a>. Cette consultation ne déclenche aucun envoi.</p>{% endif %}
+    {% if activation_enabled and account_diagnostic.activation_action == 'unavailable' %}
+        <form method="post" action="{{ path('app_admin_player_activation', {id: player.id}) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('admin_activation_' ~ player.id) }}">
+            <input type="hidden" name="request_key" value="{{ activation_request_key }}">
+            <p>Mode expérimental : aucun transport réel raccordé. Motif : assistance à l’activation. Cette demande sera journalisée.</p>
+            <label><input type="checkbox" name="confirmed" value="1" required> Je confirme la demande de renvoi.</label>
+            <button type="submit">Demander le renvoi d’activation</button>
+        </form>
+    {% endif %}
 </section>
