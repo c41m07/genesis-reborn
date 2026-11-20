@@ -28,4 +28,32 @@ final class AdminDelegationPreviewTest extends TestCase
         self::assertSame($atlas, AdminDelegationPreview::project('a'));
         self::assertSame([], array_intersect(array_column($atlas['profiles'], 'example'), array_column($boreal['profiles'], 'example')));
     }
+
+    public function testObserverFixtureProjectsOnlyStatusInSelectedUniverse(): void
+    {
+        foreach (['a' => 'En attente', 'b' => 'Résolu'] as $scope => $state) {
+            $result = AdminDelegationPreview::observeFixture($scope, 'active');
+            self::assertSame(['decision', 'detail', 'remaining_minutes', 'status'], array_keys($result));
+            self::assertSame('allowed', $result['decision']);
+            self::assertSame($state, $result['status']);
+            self::assertSame(15, $result['remaining_minutes']);
+            self::assertStringNotContainsString('SUP-', json_encode($result, JSON_THROW_ON_ERROR));
+        }
+    }
+
+    public function testObserverFixtureShowsDurationAndReasonsWithoutAnyStatusOnRefusal(): void
+    {
+        foreach (['a', 'b'] as $scope) {
+            foreach (['expired' => 'écoulée', 'revoked' => 'révoqué', 'outside' => 'ne couvre pas'] as $scenario => $reason) {
+                $result = AdminDelegationPreview::observeFixture($scope, $scenario);
+                self::assertSame($scenario, $result['decision']);
+                self::assertSame(0, $result['remaining_minutes']);
+                self::assertNull($result['status']);
+                self::assertStringContainsString($reason, $result['detail']);
+                self::assertStringNotContainsString('SUP-', json_encode($result, JSON_THROW_ON_ERROR));
+            }
+        }
+        self::assertNull(AdminDelegationPreview::observeFixture('other', 'active'));
+        self::assertNull(AdminDelegationPreview::observeFixture('a', 'unknown'));
+    }
 }
