@@ -25,4 +25,13 @@ class VerificationRecoveryEvent
 
     #[ORM\Column(nullable: true)]
     public ?int $generationVersion = null;
+
+    #[ORM\Column(type: 'bigint', nullable: true)]
+    public ?int $handoffAt = null;
+
+    #[ORM\Column(length: 24, nullable: true)]
+    public ?string $deliveryOutcome = null;
+
+    #[ORM\Column(type: 'bigint', nullable: true)]
+    public ?int $deliveryResolvedAt = null;
 }

@@ -9,7 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
 
 /** Cycle interne sans transport : ne remplace pas les droits d'une route admin. */
-final class VerificationRequestLifecycle
+final class VerificationRequestLifecycle implements VerificationRecoveryDeliveryBinding
 {
     public function __construct(private EntityManagerInterface $em, private GameManager $manager, private ClockInterface $clock)
     {
@@ -94,17 +94,119 @@ final class VerificationRequestLifecycle
 
             // Ne jamais laisser la possession vivre après la génération.
             $leaseEnd = $now->setTimestamp(min($now->getTimestamp() + $leaseSeconds, (int) $generation['expires_at']));
-            return $this->startClaim($request, $leaseEnd) + ['generation_version' => (int) $generation['version']];
+            return $this->startClaim($request, $leaseEnd, 'recovery_dispatching') + ['generation_version' => (int) $generation['version']];
         });
     }
 
+    public function prepareRecoveryDelivery(
+        int $requestId,
+        #[\SensitiveParameter] string $claimToken,
+        #[\SensitiveParameter] VerificationLinkKeyResolver $keys,
+    ): array {
+        return $this->locked($requestId, function (VerificationDeliveryRequest $request, Player $player) use ($claimToken, $keys): array {
+            if (!$this->ownsClaim($request, $claimToken) || $request->state !== 'recovery_dispatching') {
+                return ['result' => 'unavailable'];
+            }
+            if ($this->expireLease($request)) {
+                return ['result' => 'unknown'];
+            }
+            $db = $this->em->getConnection();
+            $event = $db->fetchAssociative(
+                'SELECT original_request_id, generation_version, request_key_hash, handoff_at, delivery_outcome FROM verification_recovery_event WHERE recovery_request_id = ? FOR UPDATE',
+                [$request->id],
+            );
+            if ($event === false || $event['handoff_at'] !== null || $event['delivery_outcome'] !== null) {
+                // Un autre appel possédant la même clé peut déjà être en transport.
+                return ['result' => 'unavailable'];
+            }
+            $now = $this->clock->now();
+            $original = $db->fetchAssociative(
+                'SELECT state, resolved_at FROM verification_delivery_request WHERE id = ? AND player_id = ? FOR UPDATE',
+                [(int) $event['original_request_id'], $player->id],
+            );
+            $row = $db->fetchAssociative(
+                'SELECT version, algorithm, key_id, nonce, expires_at, fingerprint, state FROM player_verification_generation WHERE player_id = ? FOR UPDATE',
+                [$player->id],
+            );
+            if ($player->emailVerifiedAt !== null || $player->lockedAt !== null
+                || !hash_equals($request->requestKeyHash, $event['request_key_hash'])
+                || $original === false || $original['state'] !== 'unknown' || $original['resolved_at'] === null
+                || $row === false || $row['state'] !== 'active' || (int) $row['version'] !== (int) $event['generation_version']
+                || $db->fetchOne('SELECT id FROM player_email_verification_token WHERE player_id = ? AND expires_at > ? LIMIT 1 FOR UPDATE',
+                    [$player->id, $now->format('Y-m-d H:i:s')]) !== false) {
+                return ['result' => $this->finishRecovery($request, VerificationRecoveryOutcome::NotDispatched, $now)];
+            }
+            $current = new VerificationLinkGeneration(
+                $player->id, (int) $row['version'], (int) $row['algorithm'], $row['key_id'],
+                $row['nonce'], (int) $row['expires_at'], $row['fingerprint'],
+            );
+            $link = (new VersionedVerificationLink($this->clock))->reproduce($current, $keys);
+            // La résolution de clé peut avoir franchi l'échéance du bail.
+            if ($this->expireLease($request)) {
+                return ['result' => 'unknown'];
+            }
+            if ($link === null) {
+                return ['result' => $this->finishRecovery($request, VerificationRecoveryOutcome::NotDispatched, $this->clock->now())];
+            }
+
+            // Point de remise durable, à usage unique. Le lien ne sort de la
+            // transaction qu'après commit ; le port n'est appelé qu'ensuite.
+            $db->update('verification_recovery_event', ['handoff_at' => $this->clock->now()->getTimestamp()], ['recovery_request_id' => $request->id]);
+            return ['result' => 'handoff', 'player_id' => $player->id, 'link' => $link];
+        });
+    }
+
+    public function completeRecoveryDelivery(
+        int $requestId,
+        #[\SensitiveParameter] string $claimToken,
+        VerificationRecoveryOutcome $outcome,
+    ): string {
+        $result = $this->locked($requestId, function (VerificationDeliveryRequest $request) use ($claimToken, $outcome): array {
+            if (!$this->ownsClaim($request, $claimToken) || $request->state !== 'recovery_dispatching') {
+                return ['result' => 'unavailable'];
+            }
+            if ($this->expireLease($request)) {
+                return ['result' => 'unknown'];
+            }
+            $event = $this->em->getConnection()->fetchAssociative(
+                'SELECT handoff_at, delivery_outcome FROM verification_recovery_event WHERE recovery_request_id = ? FOR UPDATE',
+                [$request->id],
+            );
+            if ($event === false || $event['handoff_at'] === null || $event['delivery_outcome'] !== null) {
+                return ['result' => 'unavailable'];
+            }
+
+            return ['result' => $this->finishRecovery($request, $outcome, $this->clock->now())];
+        });
+
+        return $result['result'];
+    }
+
+    private function ownsClaim(VerificationDeliveryRequest $request, #[\SensitiveParameter] string $claimToken): bool
+    {
+        return preg_match('/\A[a-f0-9]{64}\z/', $claimToken) === 1
+            && $request->claimHash !== null && hash_equals($request->claimHash, hash('sha256', $claimToken));
+    }
+
+    private function finishRecovery(VerificationDeliveryRequest $request, VerificationRecoveryOutcome $outcome, \DateTimeImmutable $now): string
+    {
+        $request->state = $outcome === VerificationRecoveryOutcome::NotDispatched ? 'cancelled' : $outcome->value;
+        $request->resolvedAt = $now;
+        $this->em->getConnection()->executeStatement(
+            'UPDATE verification_recovery_event SET delivery_outcome = ?, delivery_resolved_at = ? WHERE recovery_request_id = ? AND delivery_outcome IS NULL',
+            [$outcome->value, $now->getTimestamp(), $request->id],
+        );
+
+        return $outcome->value;
+    }
+
     /** @return array{result: string, claim_token: string} */
-    private function startClaim(VerificationDeliveryRequest $request, \DateTimeImmutable $leaseEnd): array
+    private function startClaim(VerificationDeliveryRequest $request, \DateTimeImmutable $leaseEnd, string $state = 'dispatching'): array
     {
         $token = bin2hex(random_bytes(32));
         $request->claimHash = hash('sha256', $token);
         $request->leaseExpiresAt = $leaseEnd;
-        $request->state = 'dispatching';
+        $request->state = $state;
 
         // Seul le propriétaire reçoit ce secret éphémère de possession.
         return ['result' => 'claimed', 'claim_token' => $token];
@@ -129,7 +231,7 @@ final class VerificationRequestLifecycle
             throw new \InvalidArgumentException('Résultat de traitement invalide.');
         }
         return $this->locked($requestId, function (VerificationDeliveryRequest $request) use ($claimToken, $outcome): array {
-            if ($request->claimHash === null || !hash_equals($request->claimHash, hash('sha256', $claimToken))) {
+            if ($request->state === 'recovery_dispatching' || !$this->ownsClaim($request, $claimToken)) {
                 return ['result' => 'rejected'];
             }
             $this->expireLease($request);
@@ -154,13 +256,18 @@ final class VerificationRequestLifecycle
 
     private function expireLease(VerificationDeliveryRequest $request): bool
     {
-        if ($request->state !== 'dispatching' || ($request->leaseExpiresAt !== null && $request->leaseExpiresAt > $this->clock->now())) {
+        if (!in_array($request->state, ['dispatching', 'recovery_dispatching'], true)
+            || ($request->leaseExpiresAt !== null && $request->leaseExpiresAt > $this->clock->now())) {
             return false;
         }
         // Une lease expirée ne prouve pas l'absence d'envoi : jamais de remise
         // en file automatique. Un ancien worker ne peut plus publier un succès.
-        $request->state = 'unknown';
-        $request->resolvedAt = $this->clock->now();
+        if ($request->state === 'recovery_dispatching') {
+            $this->finishRecovery($request, VerificationRecoveryOutcome::Unknown, $this->clock->now());
+        } else {
+            $request->state = 'unknown';
+            $request->resolvedAt = $this->clock->now();
+        }
         return true;
     }
 

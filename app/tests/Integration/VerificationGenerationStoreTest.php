@@ -8,7 +8,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
-use DoctrineMigrations\{Version20261120000200, Version20261120000300, Version20261120000400};
+use DoctrineMigrations\{Version20261120000200, Version20261120000300, Version20261120000400, Version20261120000500};
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Clock\MockClock;
 use Symfony\Component\Process\Process;
@@ -30,7 +30,8 @@ final class VerificationGenerationStoreTest extends KernelTestCase
         require_once dirname(__DIR__, 2).'/migrations/Version20261120000200.php';
         require_once dirname(__DIR__, 2).'/migrations/Version20261120000300.php';
         require_once dirname(__DIR__, 2).'/migrations/Version20261120000400.php';
-        $versions = [Version20261120000200::class, Version20261120000300::class, Version20261120000400::class];
+        require_once dirname(__DIR__, 2).'/migrations/Version20261120000500.php';
+        $versions = [Version20261120000200::class, Version20261120000300::class, Version20261120000400::class, Version20261120000500::class];
         foreach ($direction === 'up' ? $versions : array_reverse($versions) as $version) {
             $migration = new $version($db, new \Psr\Log\NullLogger());
             $migration->{$direction}(new Schema());
@@ -83,7 +84,7 @@ final class VerificationGenerationStoreTest extends KernelTestCase
         $processes = [];
         try {
             foreach (['a' => $first, 'b' => $second] as $side => $operation) {
-                $proc = new Process([PHP_BINARY, dirname(__DIR__).'/Support/verification-generation-worker.php', (string) $playerId, $operation, $dir, $side, (string) $rowId], input: in_array($operation, ['consume', 'mixed'], true) ? (is_array($link) ? $link[$side] : $link) : null, timeout: 20);
+                $proc = new Process([PHP_BINARY, dirname(__DIR__).'/Support/verification-generation-worker.php', (string) $playerId, $operation, $dir, $side, (string) $rowId], input: in_array($operation, ['consume', 'mixed', 'prepare-handoff'], true) ? (is_array($link) ? $link[$side] : $link) : null, timeout: 20);
                 $proc->start();
                 $processes[] = $proc;
             }
@@ -434,7 +435,7 @@ final class VerificationGenerationStoreTest extends KernelTestCase
         [$db, $player, , , $original, , $id] = $this->recoveryFixture();
         $snapshot = $db->fetchAssociative('SELECT * FROM verification_delivery_request WHERE id = ?', [$original->id]);
         self::assertEqualsCanonicalizing(['claimed', 'unavailable'], $this->race($player->id, 'claim-recovery', 'claim-recovery', $id));
-        self::assertSame('dispatching', $db->fetchOne('SELECT state FROM verification_delivery_request WHERE id = ?', [$id]));
+        self::assertSame('recovery_dispatching', $db->fetchOne('SELECT state FROM verification_delivery_request WHERE id = ?', [$id]));
         self::assertSame($snapshot, $db->fetchAssociative('SELECT * FROM verification_delivery_request WHERE id = ?', [$original->id]));
     }
 
@@ -447,10 +448,13 @@ final class VerificationGenerationStoreTest extends KernelTestCase
         self::assertSame($clock->now()->modify('+30 seconds')->format('Y-m-d H:i:s'), $db->fetchOne('SELECT lease_expires_at FROM verification_delivery_request WHERE id = ?', [$id]));
         self::assertSame('rejected', $lifecycle->complete($id, str_repeat('f', 64), 'transport_accepted')['result']);
         // Double de test : aucune mise en file ni destinataire ; résultat tardif.
-        $fakeSend = static fn (string $link): bool => strlen($link) === 43;
-        self::assertTrue($fakeSend($codec->reproduce($generation, $keys)));
-        $clock->sleep(30);
-        self::assertSame('conflict', $lifecycle->complete($id, $claim['claim_token'], 'transport_accepted')['result']);
+        $fake = $this->createMock(\App\Service\Player\VerificationRecoveryTransport::class);
+        $fake->expects(self::once())->method('handoff')->with(self::isInt(), $codec->reproduce($generation, $keys))
+            ->willReturnCallback(static function () use ($clock): \App\Service\Player\VerificationRecoveryOutcome {
+                $clock->sleep(30);
+                return \App\Service\Player\VerificationRecoveryOutcome::TransportAccepted;
+            });
+        self::assertSame('unknown', (new \App\Service\Player\VerificationRecoveryDeliveryAdapter())->deliver($id, $claim['claim_token'], $lifecycle, $keys, $fake));
         self::assertSame('unknown', $db->fetchOne('SELECT state FROM verification_delivery_request WHERE id = ?', [$id]));
         self::assertSame('unknown', $db->fetchOne('SELECT state FROM verification_delivery_request WHERE id = ?', [$original->id]));
         self::assertSame('unavailable', $lifecycle->claimRecovery($id, 120)['result']);
@@ -506,5 +510,79 @@ final class VerificationGenerationStoreTest extends KernelTestCase
         self::assertSame('recovery_reserved', $db->fetchOne('SELECT state FROM verification_delivery_request WHERE id = ?', [$id]));
         self::assertNull($db->fetchOne('SELECT claim_hash FROM verification_delivery_request WHERE id = ?', [$id]));
         self::assertEqualsCanonicalizing(['claimed', 'unavailable'], $this->race($player->id, 'claim-recovery', 'claim-recovery', $id));
+    }
+
+    public function testDeliveryBeforeRevocationNeverHandsOffAndAuditsNonDispatch(): void
+    {
+        [$db, $player, , $store, $original, $generation, $id, $lifecycle, , $keys] = $this->recoveryFixture();
+        $claim = $lifecycle->claimRecovery($id, 120);
+        self::assertSame(['result' => 'unavailable'], $lifecycle->prepareRecoveryDelivery($id, str_repeat('b', 64), $keys));
+        self::assertNull($db->fetchOne('SELECT handoff_at FROM verification_recovery_event WHERE recovery_request_id = ?', [$id]));
+        self::assertTrue($store->revoke($player->id, $generation->version));
+        $fake = $this->createMock(\App\Service\Player\VerificationRecoveryTransport::class);
+        $fake->expects(self::never())->method('handoff');
+        $adapter = new \App\Service\Player\VerificationRecoveryDeliveryAdapter();
+        self::assertSame('not_dispatched', $adapter->deliver($id, $claim['claim_token'], $lifecycle, $keys, $fake));
+        self::assertSame('cancelled', $db->fetchOne('SELECT state FROM verification_delivery_request WHERE id = ?', [$id]));
+        self::assertSame('not_dispatched', $db->fetchOne('SELECT delivery_outcome FROM verification_recovery_event WHERE recovery_request_id = ?', [$id]));
+        self::assertNull($db->fetchOne('SELECT handoff_at FROM verification_recovery_event WHERE recovery_request_id = ?', [$id]));
+        self::assertSame('unknown', $db->fetchOne('SELECT state FROM verification_delivery_request WHERE id = ?', [$original->id]));
+    }
+
+    public function testHandoffCommitsOnceEvenIfGenerationIsRevokedDuringTransport(): void
+    {
+        [$db, $player, , $store, $original, $generation, $id, $lifecycle, $codec, $keys] = $this->recoveryFixture();
+        $claim = $lifecycle->claimRecovery($id, 120);
+        $link = $codec->reproduce($generation, $keys);
+        $adapter = new \App\Service\Player\VerificationRecoveryDeliveryAdapter();
+        $fake = $this->createMock(\App\Service\Player\VerificationRecoveryTransport::class);
+        $fake->expects(self::once())->method('handoff')->with($player->id, $link)->willReturnCallback(
+            function () use ($db, $player, $store, $generation, $adapter, $id, $lifecycle, $keys, $fake, $claim): \App\Service\Player\VerificationRecoveryOutcome {
+                self::assertFalse($db->isTransactionActive());
+                self::assertSame('unavailable', $adapter->deliver($id, $claim['claim_token'], $lifecycle, $keys, $fake));
+                self::assertTrue($store->revoke($player->id, $generation->version));
+                return \App\Service\Player\VerificationRecoveryOutcome::TransportAccepted;
+            },
+        );
+        self::assertSame('transport_accepted', $adapter->deliver($id, $claim['claim_token'], $lifecycle, $keys, $fake));
+        self::assertSame('transport_accepted', $db->fetchOne('SELECT state FROM verification_delivery_request WHERE id = ?', [$id]));
+        $event = $db->fetchAssociative('SELECT * FROM verification_recovery_event WHERE recovery_request_id = ?', [$id]);
+        self::assertSame('transport_accepted', $event['delivery_outcome']);
+        self::assertNotNull($event['delivery_resolved_at']);
+        self::assertStringNotContainsString($link, json_encode($event, JSON_THROW_ON_ERROR));
+        self::assertSame('unknown', $db->fetchOne('SELECT state FROM verification_delivery_request WHERE id = ?', [$original->id]));
+    }
+
+    public function testTwoOwnersUsingSameClaimCanCommitOnlyOneHandoff(): void
+    {
+        [$db, $player, , , , , $id, $lifecycle] = $this->recoveryFixture();
+        $claim = $lifecycle->claimRecovery($id, 120);
+        self::assertEqualsCanonicalizing(['handoff', 'unavailable'], $this->race($player->id, 'prepare-handoff', 'prepare-handoff', $id, $claim['claim_token']));
+        self::assertNotNull($db->fetchOne('SELECT handoff_at FROM verification_recovery_event WHERE recovery_request_id = ?', [$id]));
+        self::assertNull($db->fetchOne('SELECT delivery_outcome FROM verification_recovery_event WHERE recovery_request_id = ?', [$id]));
+        self::assertSame('rejected', $lifecycle->complete($id, $claim['claim_token'], 'transport_accepted')['result']);
+    }
+
+    public function testAuditFailureRollsBackReceiptOutcomeAfterFakeAcceptance(): void
+    {
+        [$db, , , , , , $id, $lifecycle, , $keys] = $this->recoveryFixture();
+        $claim = $lifecycle->claimRecovery($id, 120);
+        $fake = $this->createMock(\App\Service\Player\VerificationRecoveryTransport::class);
+        $fake->expects(self::once())->method('handoff')->willReturnCallback(function () use ($db): \App\Service\Player\VerificationRecoveryOutcome {
+            // Installation après le point de remise, dans cette seule fixture.
+            $db->executeStatement("CREATE TRIGGER fixture_deny_delivery BEFORE UPDATE ON verification_recovery_event FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'synthetic delivery audit failure'");
+            return \App\Service\Player\VerificationRecoveryOutcome::TransportAccepted;
+        });
+        try {
+            (new \App\Service\Player\VerificationRecoveryDeliveryAdapter())->deliver($id, $claim['claim_token'], $lifecycle, $keys, $fake);
+            self::fail('Un succès aurait été annoncé malgré l’échec d’audit.');
+        } catch (\Doctrine\DBAL\Exception $e) {
+            self::assertStringContainsString('synthetic delivery audit failure', $e->getMessage());
+        } finally {
+            $db->executeStatement('DROP TRIGGER fixture_deny_delivery');
+        }
+        self::assertNotNull($db->fetchOne('SELECT handoff_at FROM verification_recovery_event WHERE recovery_request_id = ?', [$id]));
+        self::assertNull($db->fetchOne('SELECT delivery_outcome FROM verification_recovery_event WHERE recovery_request_id = ?', [$id]));
+        self::assertSame('recovery_dispatching', $db->fetchOne('SELECT state FROM verification_delivery_request WHERE id = ?', [$id]));
     }
 }

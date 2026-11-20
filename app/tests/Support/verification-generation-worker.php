@@ -38,6 +38,7 @@ $result = match ($argv[2]) {
     'prepare' => $store->prepare($player, 'fixture', $clock->now()->modify('+'.($argv[4] === 'a' ? '60' : '120').' minutes'), $keys)?->version,
     'revoke' => $store->revoke($player, $id),
     'consume' => $store->consume($player, $id, stream_get_contents(STDIN)),
+    'prepare-handoff' => (new App\Service\Player\VerificationRequestLifecycle($em, new App\Manager\GameManager($em), $clock))->prepareRecoveryDelivery($id, stream_get_contents(STDIN), $keys)['result'],
     'claim-recovery' => (new App\Service\Player\VerificationRequestLifecycle($em, new App\Manager\GameManager($em), $clock))->claimRecovery($id, 120)['result'],
     'mixed' => (new App\Service\Player\MixedVerificationLinkReader($em, new App\Manager\GameManager($em), $codec, $clock))->confirm(stream_get_contents(STDIN)),
     'reserve-recovery' => (new App\Service\Player\VerificationRecoveryOrchestrator($db, $clock, $codec))->reserve($player, $id, str_repeat($argv[4], 64), 300, $keys),

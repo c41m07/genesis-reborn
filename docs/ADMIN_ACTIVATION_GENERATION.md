@@ -276,3 +276,42 @@ pas un transport déjà engagé : il faut encore décider le contrat pour une
 révocation volontaire qui survient après le claim, drainer les anciens
 émetteurs, et choisir l'audit de remise et la politique de clés. Ne pas
 relier ce palier à V5 si sa recette est figée.
+
+## Adaptateur de remise interne, non raccordé
+
+Le port `VerificationRecoveryTransport` n'a pas d'implémentation réelle.
+`VerificationRecoveryDeliveryAdapter` ne possède ni clé, ni destinataire,
+ni accès applicatif. Les trois états de son port sont : accepté par
+transport (pas reçu), non remis avec preuve positive, ou indéterminé.
+Une exception ne prouve jamais l'absence de remise ; aucun message
+d'exception du transport n'est répété par l'adaptateur.
+
+La migration additive `Version20261120000500` ajoute au journal le point
+de remise, l'issue et sa date. Le claim récupération passe à un état
+distinct `recovery_dispatching` : le cycle générique ne peut pas annoncer
+un succès à sa place. Sous le verrou compte, la préparation vérifie le
+claim courant, sa lease, le journal lié, le reçu initial indéterminé et
+la génération active de la même version. Une génération révoquée avant
+cette préparation empêche le passage au transport et produit une annulation
+auditée `not_dispatched`. Le résolveur factice reconstruit le même lien,
+sans réécriture d'échéance. Seul le premier appel inscrit et commit le
+point de remise ; aucun autre détenteur du même claim n'obtient le lien.
+
+Le transport reçoit le lien **hors transaction et après commit**. Une
+révocation qui survient après ce point, y compris dans l'intervalle
+avant l'appel effectif au transport, rend le lien invalide mais ne permet
+pas d'empêcher ni d'annuler cette remise. Ne pas annoncer « aucun mail »
+dans ce cas. Un arrêt après le point de remise, ou un audit d'issue qui
+échoue après un retour de transport, ne réarme jamais le reçu. Après
+expiration de la lease, seule l'issue indéterminée est écrite ; aucun
+résultat tardif ne peut devenir un succès. L'issue et l'état du nouveau
+reçu sont réglés ensemble, sans modifier le reçu initial. Un audit ne
+contient ni lien, empreinte du lien, nonce, adresse ou clé.
+
+Ce lot reste sur une branche distincte de V5. Aucun point d'entrée,
+configuration, clé réelle, SMTP ou changement public. Une activation
+nécessiterait la preuve d'identité/autorisation du parcours, la politique
+de clé, la coordination des autres émetteurs, un contrat de révocation
+assumé et la revue de traces du vrai transport. La décision de remettre
+n'est pas une preuve de livraison, et le marqueur durable n'établit pas
+précisément quand un transport externe a commencé.

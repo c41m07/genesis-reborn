@@ -21,7 +21,7 @@ final class VersionedVerificationLink
         int $version,
         string $keyId,
         \DateTimeImmutable $expiresAt,
-        VerificationLinkKeyResolver $keys,
+        #[\SensitiveParameter] VerificationLinkKeyResolver $keys,
     ): VerificationLinkGeneration {
         $expiry = $expiresAt->getTimestamp();
         if ($playerId < 1 || $version < 1 || !preg_match('/\A[A-Za-z0-9_-]{1,32}\z/', $keyId)
@@ -41,7 +41,7 @@ final class VersionedVerificationLink
     }
 
     /** Ne crée jamais de génération de secours et ne prolonge pas le lien. */
-    public function reproduce(VerificationLinkGeneration $current, VerificationLinkKeyResolver $keys): ?string
+    public function reproduce(VerificationLinkGeneration $current, #[\SensitiveParameter] VerificationLinkKeyResolver $keys): ?string
     {
         if (!$this->isCurrentFormatAndUnexpired($current)) {
             return null;
