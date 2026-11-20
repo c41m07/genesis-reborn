@@ -454,3 +454,44 @@ valide ne reprend pas l'ancien contexte. Clé falsifiée et expiration
 à la frontière ne réservent rien ; le formulaire frais fonctionne,
 un seul passage factice et ancien reçu intact. Compose, conteneur
 Symfony, lint PHP et diff validés. Aucune modification de V6.
+
+## Composition applicative optionnelle, aucune mise en service
+
+`AdminActivationRecoveryAction` compose la préparation de formulaire,
+le contexte de session, la récupération sous verrou, la revendication et
+l'adaptateur de remise. L'alias du vrai conteneur vise cette composition ;
+aucune substitution de contrôleur et plus aucune orchestration manuelle
+dans la fixture HTTP. Le mode ordinaire V7 délègue à l'implémentation
+existante sans regarder de reçu ni écrire de contexte de récupération.
+
+| Garde-fou admin existant | Autorisation du mode de récupération | Fournisseur du mode | Résultat |
+| --- | --- | --- | --- |
+| Désactivé | N'importe laquelle | N'importe lequel | Formulaire absent et POST 404. |
+| Activé | Désactivée (défaut) | Absent ou présent | Comportement ordinaire V7 ; le fournisseur de récupération est ignoré. |
+| Activé | Activée | Absent ou incomplet | Aucun formulaire ni tentative, POST 404, aucun fallback. Un couple incomplet ne peut pas être construit. |
+| Activé | Activée | Couple explicite | Contexte du dernier reçu indéterminé de la cible ; sélection et autorisation revérifiées sous verrou avant réservation. |
+
+Le défaut versionné du nouveau drapeau est 0 ; le paramètre
+`provider` est explicitement null. Aucun couple fournisseur n'est
+autodécouvert ; aucun fournisseur concret, secret ou réglage
+d'environnement réel n'a été créé. Ce drapeau n'attribue pas de droit :
+le rôle existant, le CSRF, la confirmation et le garde transactionnel
+demeurent nécessaires. Le conteneur de recette fournit deux doubles
+dans le même couple, sans affecter un autre conteneur.
+
+Si le mode sélectionné ne trouve pas de dernier reçu admissible, ne pas
+répartir vers l'ancienne voie : le contexte reste absent et aucune
+récupération ne peut être engagée. Si le reçu change après l'affichage
+du formulaire, le mauvais reçu ne peut pas être choisi. Les résultats
+audités ne contiennent ni lien, ni clé ; le contrôleur n'annonce pas
+de réception effective. La confirmation historique/public et les
+routes ne sont pas modifiées. Avant toute exposition effective,
+persistent les décisions de clés, bascule des écrivains, contrôle
+des traces de l'adaptateur réel et gouvernance opérationnelle.
+
+**61 tests / 463 assertions** sur MariaDB jetable : matrice démontée,
+mode V7 ordinaire et défaut inchangé ; vrai formulaire HTTP avec doubles
+et contexte de session, rôle, refus/CSRF, même lien factice remis une
+seule fois et audit durable. Compose, conteneur, PHP lint et diff
+vérifiés ; DB/réseau privés retirés. Pas de migration dans ce lot, ni
+SMTP, activation, push, fusion ou modification de V7.
