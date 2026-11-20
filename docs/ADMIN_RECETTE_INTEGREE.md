@@ -531,3 +531,36 @@ Aucun autre lot, conflit, nouvelle route, migration ou modification CI.
 Pas d’écrivain versionné ni de transport réel ajouté, aucune vraie clé.
 La suite PHP exhaustive reste un résultat de V6 seulement. Navigateur
 exhaustif, CI GitHub, activation, push, fusion dev et déploiement non faits.
+
+
+## Recette V10 : émission versionnée désactivée par défaut
+
+Branche chore/recette-integration-admin-v10, worktree distinct. Assemblage
+00a354ee963cbba7ff6ba2103da0466730a90ea1, parents 804369c et 89b1203
+(avec 3dca301). Aucun autre lot.
+
+- Les routes inscription/renvoi gardent le comportement historique tant que
+  l’écrivain est désactivé. Les deux bascules publiques valent 0 et le
+  fournisseur versionné est absent de la configuration livrée. Pas d’envoi
+  versionné automatique, ni de modification de droits ou de route. Les
+  envois historiques déjà prévus par les formulaires ne sont pas supprimés.
+- Dans les tests HTTP, une configuration incomplète refuse l’émission,
+  sans repli historique ni génération/reçu. Avec transport fictif, le
+  même lien peut être renvoyé après le délai ; l’absence d’accusé n’autorise
+  pas une seconde remise ambiguë. Après remplacement de l’adresse, l’ancien
+  lien est refusé et le compte reste non confirmé. Cette preuve ne couvre pas
+  le retour à l’adresse initiale (A vers B vers A).
+- MariaDB jetable : 64 migrations jusqu’à 00500, montée 00600, descente puis
+  remontée. Les trois nouvelles colonnes apparaissent uniquement à 00600 ;
+  le lien historique synthétique est inchangé, 65 migrations au dernier état.
+  La descente technique retire les colonnes versionnées : ce n’est pas une
+  recommandation de rollback sur des données réelles. La suite HTTP
+  reconstruit son propre schéma sur une seconde base jetable séquentielle.
+- 18 tests ciblés / 192 assertions, 227 agrégés / 2 254 assertions.
+  Lints PHP, 216 Twig, 80 YAML, conteneur, Compose et diff verts. Le
+  conteneur et le réseau privés sont retirés.
+
+Candidat local seulement. Pas de fournisseur, de clé ou de SMTP réel, de
+test Chromium supplémentaire, de suite exhaustive V10, de CI GitHub, de
+push, de fusion dev ni de déploiement. La recette PHP exhaustive citée
+précédemment concerne V6 uniquement.
