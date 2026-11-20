@@ -95,22 +95,54 @@ final class FleetRecallTest extends WebTestCase
     }
     public static function missions(): array { return array_map(fn($m)=>[$m],['explore','colonize','transport','attack','conquer','defend','orbit','spy']); }
 
-    public function testBoostedFlightKeepsActualProgressAndOldMessagesAreObsolete(): void
+    public function testHistoricallyBoostedFlightKeepsActualProgressAndOldMessagesAreObsolete(): void
     {
-        $f=$this->send();$m=$this->player->currentPlayerUniverse;
-        foreach([1,2] as $n) { $boost=new PlayerBoost();$boost->playerUniverse=$m;$boost->sourceType='admin';$boost->sourceKey='recall-test-'.$n;$boost->earnedAt=$this->clock->now();$this->em->persist($boost); }
-        $this->em->flush();$this->clock->sleep(max(1,(int)floor($f->travelSeconds/4)));
-        $nav=self::getContainer()->get(FleetNavigation::class);$before=$nav->progress($f,$this->clock->now());$tokens=[$f->dispatchToken];
-        $boosts=self::getContainer()->get(\App\Service\Boost\BoostUseService::class);
-        $boosts->useOnFleet($m,$f->id,str_repeat('c',32));$tokens[]=$f->dispatchToken;
-        self::assertEqualsWithDelta($before,$nav->progress($f,$this->clock->now()),.000001);
-        $this->clock->sleep(1);$beforeSecond=$nav->progress($f,$this->clock->now());
-        $boosts->useOnFleet($m,$f->id,str_repeat('d',32));$tokens[]=$f->dispatchToken;
-        self::assertEqualsWithDelta($beforeSecond,$nav->progress($f,$this->clock->now()),.000001);
-        $service=self::getContainer()->get(FleetRecallService::class);$q=$service->preview($m,$f);
-        self::assertGreaterThan($before,$q['progress']);$service->recall($m,$f->id,null,$q['version'],str_repeat('b',32));
-        foreach($tokens as $old) { self::getContainer()->get(FleetService::class)->arrive($f->id,$old);self::assertSame('returning',$f->status); }
-        self::assertSame(2,$this->em->getRepository(PlayerBoost::class)->count(['status'=>'used']));
+        $fleet = $this->send();
+        $membership = $this->player->currentPlayerUniverse;
+        $this->clock->sleep(max(1, (int) floor($fleet->travelSeconds / 4)));
+        $navigation = self::getContainer()->get(FleetNavigation::class);
+        $fleetService = self::getContainer()->get(FleetService::class);
+        $manager = self::getContainer()->get(\App\Manager\GameManager::class);
+        $tokens = [$fleet->dispatchToken];
+        $originalProgress = $navigation->progress($fleet, $this->clock->now());
+
+        // Représenter une trajectoire déjà accélérée, sans repasser par l’inventaire.
+        foreach ([1, 2] as $index) {
+            $now = $this->clock->now();
+            $previousProgress = $navigation->progress($fleet, $now);
+            $remaining = $fleet->arrivalAt->getTimestamp() - $now->getTimestamp();
+            $deadline = $now->modify('+'.max(1, (int) ceil($remaining * .75)).' seconds');
+            $manager->transaction(function () use ($manager, $fleetService, $fleet, $membership, $index, $now, $deadline): void {
+                $manager->lock($membership);
+                $manager->lock($membership->universe);
+                $manager->lock($fleet->homePlanet);
+                $manager->lock($fleet);
+                $fleetService->rescheduleForAdministrationLocked($fleet, $deadline);
+                $boost = new PlayerBoost();
+                $boost->playerUniverse = $membership;
+                $boost->sourceType = 'event';
+                $boost->sourceKey = 'recall-test-'.$index;
+                $boost->earnedAt = $now;
+                $boost->status = 'used';
+                $boost->usedAt = $now;
+                $boost->operationType = 'fleet';
+                $boost->operationId = $fleet->id;
+                $this->em->persist($boost);
+            });
+            $tokens[] = $fleet->dispatchToken;
+            self::assertEqualsWithDelta($previousProgress, $navigation->progress($fleet, $now), .000001);
+            $this->clock->sleep(1);
+        }
+
+        $service = self::getContainer()->get(FleetRecallService::class);
+        $quote = $service->preview($membership, $fleet);
+        self::assertGreaterThan($originalProgress, $quote['progress']);
+        $service->recall($membership, $fleet->id, null, $quote['version'], str_repeat('b', 32));
+        foreach ($tokens as $obsoleteToken) {
+            $fleetService->arrive($fleet->id, $obsoleteToken);
+            self::assertSame('returning', $fleet->status);
+        }
+        self::assertSame(2, $this->em->getRepository(PlayerBoost::class)->count(['status' => 'used', 'operationType' => 'fleet']));
     }
 
     public function testOrbitRecallConsumesOnlyItsElapsedShareAndPendingOrbitReturns(): void

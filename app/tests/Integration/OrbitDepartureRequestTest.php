@@ -116,10 +116,17 @@ final class OrbitDepartureRequestTest extends WebTestCase
         self::assertSame('withdrawn',$f->navigation['orbit_request']['status']);
         $this->expectException(\DomainException::class);self::getContainer()->get(FleetService::class)->decideOrbit($this->peer->currentPlayerUniverse,$f->id,true,$key);
     }
-    public function testBoostChangesDeadlineButKeepsDecisionKeyAndOldArrivalIsObsolete(): void
+    public function testAdministrativeReschedulingKeepsDecisionKeyAndObsoletesOldArrival(): void
     {
         $f=$this->send('orbit');$key=$this->request()['key'];$oldToken=$f->dispatchToken;
-        self::getContainer()->get(FleetService::class)->reschedulePlayerBoost($f,$f->departureAt->modify('+10 seconds'));$this->em->flush();
+        $manager = self::getContainer()->get(\App\Manager\GameManager::class);
+        $manager->transaction(function () use ($manager, $f): void {
+            $manager->lock($f->playerUniverse);
+            $manager->lock($f->playerUniverse->universe);
+            $manager->lock($f->homePlanet);
+            $manager->lock($f);
+            self::getContainer()->get(FleetService::class)->rescheduleForAdministrationLocked($f, $f->departureAt->modify('+10 seconds'));
+        });
         self::assertSame($key,$this->request()['key']);self::assertSame($f->arrivalAt->format(DATE_ATOM),$this->request()['expires_at']);
         $this->clock->sleep(11);self::getContainer()->get(FleetService::class)->arrive($f->id,$oldToken);self::assertSame('traveling',$f->status);
         self::getContainer()->get(FleetService::class)->arrive($f->id,$f->dispatchToken);self::assertSame('returning',$f->status);

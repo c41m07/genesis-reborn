@@ -903,16 +903,6 @@ final class GameRepository
         return $this->em->createQueryBuilder()->select('q')->from(QueueItem::class, 'q')->where('q.playerUniverse = :membership')->andWhere('q.startedAt IS NOT NULL')->setParameter('membership', $membership)->orderBy('q.startedAt', 'ASC')->getQuery()->getResult();
     }
 
-    public function activeFleetsForBoost(PlayerUniverse $membership): array
-    {
-        return $this->em->createQueryBuilder()->select('f')->from(Fleet::class, 'f')->where('f.playerUniverse = :membership')->andWhere('f.status IN (:statuses)')->andWhere('f.arrivalAt IS NOT NULL')->setParameter('membership', $membership)->setParameter('statuses', [
-            'traveling',
-            'returning',
-            'defending',
-            'orbiting',
-        ])->orderBy('f.arrivalAt', 'ASC')->getQuery()->getResult();
-    }
-
     public function boostsFor(PlayerUniverse $membership): array
     {
         return $this->all(PlayerBoost::class, ['playerUniverse' => $membership], ['earnedAt' => 'ASC', 'id' => 'ASC']);

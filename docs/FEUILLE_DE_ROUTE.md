@@ -2093,3 +2093,12 @@ Matrice de rôles, stockage, révocation et conversion des autres routes restent
 Correctif local ciblé du focus perdu après remplacement AJAX, reproduit puis
 vérifié dans Chromium sur fixture. Six scénarios aux largeurs ordinateur/mobile
 et assets validés ; recette complète/CI non réalisées. [Suivi](ADMIN_ACCESSIBILITE_RECHERCHE.md).
+
+
+## Inventaire : retrait de l’accélération des flottes
+
+La branche indépendante retire uniquement la flotte des cibles d’un boost
+d’inventaire. L’ancien formulaire reçoit un refus explicite et les commandes
+actives, objets, récompenses en attente et attributions restent inchangés.
+Pour les vols déjà accélérés, échéance, réserves, historique et règles de rappel
+sont conservés. Ni migration ni changement du calcul de trajet.
