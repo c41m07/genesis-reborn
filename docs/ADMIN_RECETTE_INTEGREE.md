@@ -620,3 +620,35 @@ e072aae11f663db47283d8d79ed52083b13f4495 ; aucun pilote exécuté ou
 autorisé par V12. Reprise d’exploitation et délégation d’accès réelles
 restent fermées. Pas de changement de droits, de push, de fusion dans
 dev, ni de déploiement.
+
+
+## Recette V13 : pilotes séparés avec capture SMTP privée
+
+Branche chore/recette-integration-admin-v13, worktree distinct. Code exact
+36e5abc360bdf32a57b0500abb2ae3e94ce4b87e, descendant de V12 e64cf2c avec
+755ff7c puis 36e5abc. Aucun contrat de délégation ni prototype de relance.
+
+- Sans opt-in, les deux pilotes sont ignorés avant toute préparation
+  (contrôle en conteneur sans réseau). Pas de changement de configuration
+  du conteneur livré, de routes, de migrations, de Compose, de CI ou de
+  configuration des environnements. L’inscription historique demeure le
+  défaut et l’activation admin demeure indisponible par défaut.
+- Inscription : 1 test / 26 assertions. Deux mails capturés (confirmation
+  et bienvenue), GET sans confirmation, POST confirme et consomme une fois.
+- Renvoi admin : 1 test / 34 assertions. Une seule remise au destinataire
+  déjà associé au compte synthétique ; une adresse ajoutée au formulaire
+  est ignorée. Le reçu initial reste intact et le second est audité ; le
+  lien confirme une seule fois.
+- Deux bases MariaDB tmpfs vierges successives, deux captures MailHog
+  mémoire, réseaux Docker internes, un seul réseau par conteneur, zéro
+  port publié et aucune remise externe. Images en cache, pas de pull.
+- Agrégée distincte sans capture : PHPUnit 251 tests, 2 361 assertions,
+  2 ignorés (les pilotes opt-in, réussis séparément), 0 échec. Lints PHP
+  du delta, 216 Twig, 80 YAML, conteneur, Compose et diff verts.
+  Bases, captures et réseaux successifs retirés ; aucun message gardé.
+
+Le pilote utilise HTTP dans le kernel Symfony, pas Chromium ou un proxy
+réel. Il ne prouve ni arrivée dans une boîte réelle, ni configuration TLS
+ou confidentialité des journaux proxy/APM. Aucune suite PHP exhaustive V13
+(dernier résultat exhaustif : V12), ni CI GitHub, attribution réelle,
+reprise opérationnelle, push, fusion dev ou déploiement.
