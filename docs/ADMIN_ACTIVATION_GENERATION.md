@@ -446,3 +446,11 @@ le même administrateur et son propre CSRF, puis exerce une falsification,
 l'expiration et une soumission fraîche avec une seule remise factice.
 Aucun SMTP, nouveau secret, permission, configuration, intégration de
 V6 ou changement public.
+
+Recette exécutée après libération de V6 : **15 tests / 125 assertions**
+(HTTP admin, confirmation publique, contexte pur), MariaDB privée puis
+retirée. La même identité avec un autre cookie et son propre CSRF
+valide ne reprend pas l'ancien contexte. Clé falsifiée et expiration
+à la frontière ne réservent rien ; le formulaire frais fonctionne,
+un seul passage factice et ancien reçu intact. Compose, conteneur
+Symfony, lint PHP et diff validés. Aucune modification de V6.
