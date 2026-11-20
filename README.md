@@ -798,3 +798,5 @@ sans activer de nouveaux rôles ni changer les comptes existants.
 La matrice descriptive `/admin/permissions` est accessible dans Exploitation.
 Elle expose les quatre capacités raccordées et leurs limites, sans formulaire
 d'attribution ni activation de profils délégués. Voir [les permissions](docs/ADMIN_PERMISSIONS.md).
+
+La matrice des permissions propose un aperçu de délégation sur deux univers fictifs, sans attribution de droits ni lecture de données réelles. Voir [les permissions administratives](docs/ADMIN_PERMISSIONS.md).

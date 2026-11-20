@@ -103,3 +103,35 @@ Vérifications de cet incrément :
 - `git diff --check` réussi. Les validations sont ciblées, pas une suite complète.
 - Aucun réseau existant modifié, aucun droit attribué à un vrai compte.
 - Pas de recette navigateur, de CI complète, de fusion ni de déploiement.
+
+## Aperçu fictif de délégation (aucune délégation réelle)
+
+Branche feature/admin-apercu-delegation, depuis 78763ba. Complexité 3/5 :
+projection pure, GET uniquement, sans changement de politique ni de schéma.
+La matrice existante reste intacte ; un lien ouvre un aperçu séparé pour des
+administrateurs déjà autorisés par ROLE_ADMIN et PLAYER_VIEW.
+
+Deux échantillons en code, A (Atlas) et B (Boréal), sans dépôt ni entité.
+La projection autorise seulement le nom fictif du périmètre et trois cartes
+contenant chacune un libellé, un exemple et la limite de ce qui est montré.
+Aucun identifiant d’univers réel n’est accepté et seule la fiche sélectionnée
+est rendue ; les liens A/B sont des repères, pas des données d’un autre univers.
+
+| Profil illustratif | A montre | B montre | Aucun des deux ne montre |
+| --- | --- | --- | --- |
+| Support | SUP-A17, en attente | SUP-B62, résolu | Adresse, identité, lien d’activation, secret ou état de sécurité du compte |
+| Modération | MOD-A23, à examiner | MOD-B73, classé | Auteur, message, preuve, décision ou sanction |
+| Exploitation | OPS-A31, échéance dépassée | OPS-B89, échéance future | Donnée joueur, jeton, charge utile, détail réseau ou reprise |
+
+Ces champs sont pédagogiques, pas une matrice validée de données réelles.
+Reste à décider : délégants, bénéficiaires, champs et finalités, portée/durée,
+révocation, conflits d’intérêts et audit. Aucun bouton d’attribution, aucun
+nouveau rôle, aucun voter ni contrôle métier modifié.
+
+Recette : 6 tests et 178 assertions, dont GET refusé aux visiteurs/joueurs,
+GET admin, sélection aller/retour A/B sans fuite, portée invalide 404,
+POST 405, absence de formulaire et état des rôles/journal inchangé sur les GET
+autorisés. La projection pure teste aussi les valeurs hors liste et la forme
+fermée. Compose, lint PHP (4 fichiers), Twig admin (61), conteneur, diff
+validés. MariaDB synthétique privée et réseau supprimés.
+Pas de recette navigateur, CI complète, intégration, push ou déploiement.

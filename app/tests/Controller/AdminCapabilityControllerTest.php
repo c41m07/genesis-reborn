@@ -57,7 +57,11 @@ final class AdminCapabilityControllerTest extends WebTestCase
         self::assertResponseRedirects('http://genesis-reborn.localhost/connexion');
         $client->request('GET', '/admin/permissions');
         self::assertResponseRedirects('http://genesis-reborn.localhost/connexion');
+        $client->request('GET', '/admin/permissions/apercu/a');
+        self::assertResponseRedirects('http://genesis-reborn.localhost/connexion');
         $client->loginUser($ordinary);
+        $client->request('GET', '/admin/permissions/apercu/b');
+        self::assertResponseRedirects('/acces-refuse');
         $client->request('GET', '/admin/permissions');
         self::assertResponseRedirects('/acces-refuse');
         $client->request('GET', $url);
@@ -78,6 +82,34 @@ final class AdminCapabilityControllerTest extends WebTestCase
         $client->request('GET', '/admin/permissions');
         self::assertResponseIsSuccessful();
         self::assertSame(['ROLE_ADMIN', 'ROLE_USER'], $admin->getRoles());
+        self::assertSelectorExists('main a[href="/admin/permissions/apercu/a"]');
+        $db = $em->getConnection();
+        $rolesBefore = $db->fetchAllAssociative('SELECT id, roles FROM player ORDER BY id');
+        $auditBefore = $db->fetchOne('SELECT COUNT(*) FROM admin_audit_log');
+        foreach ([
+            ['a', 'Atlas', ['SUP-A17', 'MOD-A23', 'OPS-A31'], ['Boréal', 'SUP-B62', 'MOD-B73', 'OPS-B89']],
+            ['b', 'Boréal', ['SUP-B62', 'MOD-B73', 'OPS-B89'], ['Atlas', 'SUP-A17', 'MOD-A23', 'OPS-A31']],
+        ] as [$scope, $name, $expected, $excluded]) {
+            $client->request('GET', '/admin/permissions/apercu/'.$scope);
+            self::assertResponseIsSuccessful();
+            self::assertSelectorTextContains('h1', 'Aperçu fictif de délégation');
+            self::assertSelectorTextContains('#delegation-projection-title', $name);
+            self::assertSelectorExists('main nav a[aria-current="page"][href="/admin/permissions/apercu/'.$scope.'"]');
+            self::assertSelectorCount(0, 'main form');
+            $html = $client->getResponse()->getContent();
+            foreach ($expected as $value) {
+                self::assertStringContainsString($value, $html);
+            }
+            foreach ([...$excluded, 'CapabilityPlayer', 'capability-player@example.test'] as $value) {
+                self::assertStringNotContainsString($value, $html);
+            }
+        }
+        self::assertSame($rolesBefore, $db->fetchAllAssociative('SELECT id, roles FROM player ORDER BY id'));
+        self::assertSame($auditBefore, $db->fetchOne('SELECT COUNT(*) FROM admin_audit_log'));
+        $client->request('GET', '/admin/permissions/apercu/314');
+        self::assertResponseStatusCodeSame(404);
+        $client->request('POST', '/admin/permissions/apercu/a');
+        self::assertResponseStatusCodeSame(405);
         $client->request('POST', '/admin/permissions');
         self::assertResponseStatusCodeSame(405);
         $client->request('GET', $url);
