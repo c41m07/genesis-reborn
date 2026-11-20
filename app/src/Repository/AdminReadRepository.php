@@ -67,6 +67,11 @@ final class AdminReadRepository
         if ($filters['status'] !== '') {
             $query->andWhere($filters['status'] === 'suspended' ? 'p.lockedAt IS NOT NULL' : 'p.lockedAt IS NULL');
         }
+        // Filtrer avant pagination pour retrouver aussi les inscriptions anciennes bloquées.
+        $verification = $filters['verification'] ?? '';
+        if (in_array($verification, ['confirmed', 'pending'], true)) {
+            $query->andWhere($verification === 'confirmed' ? 'p.emailVerifiedAt IS NOT NULL' : 'p.emailVerifiedAt IS NULL');
+        }
         if ($filters['role'] !== '') {
             $query->andWhere('p.roles ' . ($filters['role'] === 'admin' ? 'LIKE' : 'NOT LIKE') . ' :role')->setParameter('role', '%"ROLE_ADMIN"%');
         }
