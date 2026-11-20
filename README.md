@@ -838,3 +838,7 @@ La [matrice des permissions](docs/ADMIN_PERMISSIONS.md) documente les contrôles
 - **Navigation Galaxie** : le système choisi est conservé entre les vues carte et liste, y compris via les liens natifs ; le retour à la galaxie enlève la sélection.
 
 - **Visuel de l’accueil** : le navigateur choisit un aperçu WebP de la colonie parmi quatre tailles ; le PNG original reste accessible au clic et sert de repli. À 390 px (DPR 1) et 1366 px (DPR 1), Chromium local a reçu respectivement 18 244 et 42 394 octets au lieu de 837 479 octets. Ce sont des tailles de fichiers servis, pas des temps de chargement mesurés.
+
+- **Visuels du jeu et des catalogues** : la vue de colonie, la liste des planètes, l’accès au compte et l’aperçu de galaxie servent du WebP en priorité, avec le PNG de repli. Quatre illustrations basiques de bâtiments et dix-neuf de recherches ont une variante de 768 px ; le navigateur garde la version de 1 448 px pour les écrans denses et le chargement différé reste actif. Les SVG et les autres rangs sont inchangés. Les originaux restent aux mêmes URL ; cliquer sur l’aperçu de galaxie ouvre toujours le PNG original.
+
+  Mesures des corps de réponses HTTP sur Chromium local et données de test : les quatre bâtiments passent de 2 039 868 à 562 058 octets à 1 366 px (DPR 1) et 390 px (DPR 2), et les dix-neuf recherches de 6 579 746 à 1 949 746 octets à 1 366 px (DPR 1). Ces chiffres décrivent les mêmes images, pas la page entière, le temps de chargement ou le LCP.

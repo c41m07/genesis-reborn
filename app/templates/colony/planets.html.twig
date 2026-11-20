@@ -59,7 +59,7 @@
                 {% set detail_id='planet-details-'~world.id %}
                 {% set detail_label='Vaisseaux et ressources de '~world.name %}
                 <article data-controller="hover-details" data-action="focusout->hover-details#blur keydown->hover-details#escape" id="planet-{{ world.id }}" aria-labelledby="planet-title-{{ world.id }}" class="panel planet-index-card {{ chrome.planet and world.id==chrome.planet.id?'is-current':'' }}">
-                    <div class="planet-index-art"><img src="{{ asset('art/planet-desert.png') }}" alt="" aria-hidden="true"></div>
+                    <div class="planet-index-art"><picture><source type="image/webp" srcset="{{ asset('art/planet-desert.webp') }}"><img src="{{ asset('art/planet-desert.png') }}" alt="" aria-hidden="true"></picture></div>
                     <div class="planet-index-body">
                         <div class="planet-index-title">
                             <div>

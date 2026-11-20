@@ -96,7 +96,7 @@ button,.primary,.secondary,summary,.galaxy-spy-link{min-height:24px}
 .catalog-card.card--ships .card-benefits-content strong,.catalog-card.card--defenses .card-benefits-content strong{overflow-wrap:anywhere;font-size:11px;margin-top:4px;color:#c7e9d5}
 .catalog-card.card--ships .card-benefits-content p,.catalog-card.card--defenses .card-benefits-content p{grid-column:1/-1}
 @media(max-width:460px){.catalog-card.card--ships .card-benefits,.catalog-card.card--defenses .card-benefits{padding:8px}.catalog-card.card--ships .card-benefits-content,.catalog-card.card--defenses .card-benefits-content{gap:6px}.catalog-card.card--ships .card-benefits-content>div,.catalog-card.card--defenses .card-benefits-content>div{padding:7px}}
-.colony-banner>.colony-scene{z-index:0;object-position:center 55%}
+.colony-banner .colony-scene{z-index:0;object-position:center 55%}
 .colony-banner:before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,#091322e6 0%,#09132299 42%,#09132212 100%)}
 .planet-index-art{overflow:hidden}
 .planet-index-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:none}
