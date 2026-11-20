@@ -10,7 +10,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 final class AccountDeletionService
 {
-    public function __construct(private GameManager $manager, private GameRepository $repo, private EntityManagerInterface $em, private EmpireConversionService $conversion, private UserPasswordHasherInterface $hasher, private ClockInterface $clock, private \App\Service\Colony\ResourceService $resources) {}
+    public function __construct(private GameManager $manager, private GameRepository $repo, private EntityManagerInterface $em, private EmpireConversionService $conversion, private UserPasswordHasherInterface $hasher, private ClockInterface $clock, private \App\Service\Colony\ResourceService $resources, private PlayerEmailAddressChange $addressChange) {}
 
     public function delete(Player $player,string $password,bool $confirmed): void
     {
@@ -34,7 +34,7 @@ final class AccountDeletionService
             foreach ([EmailVerificationToken::class,PasswordResetToken::class] as $class) {
                 foreach ($this->repo->all($class,['player'=>$player]) as $token) $this->manager->remove($token);
             }
-            $player->email='deleted-'.$player->id.'-'.bin2hex(random_bytes(12)).'@deleted.invalid';
+            $this->addressChange->changeLocked($player,'deleted-'.$player->id.'-'.bin2hex(random_bytes(12)).'@deleted.invalid');
             $player->username='Compte supprimé #'.$player->id;
             $player->password=$this->hasher->hashPassword($player,bin2hex(random_bytes(32)));
             $player->emailVerifiedAt=null;$player->roles=[];$player->preferences=[];
