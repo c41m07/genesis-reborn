@@ -72,12 +72,14 @@ final class SecurityController extends AbstractController
     }
 
     #[Route('/inscription/confirmer/{token}', name: 'app_email_verify', methods: ['GET', 'POST'])]
-    public function verifyEmail(Request $request, string $token, EmailVerificationService $service): Response
+    public function verifyEmail(Request $request, #[\SensitiveParameter] string $token, EmailVerificationService $service, \App\Service\Player\MixedVerificationLinkReader $mixedReader, #[Autowire('%env(bool:EMAIL_VERIFICATION_MIXED_READER_ENABLED)%')] bool $mixedReaderEnabled): Response
     {
         $headers = ['Referrer-Policy' => 'no-referrer', 'Cache-Control' => 'no-store'];
-        if ($request->isMethod('GET')) return $this->render('security/email_verification.html.twig', ['token' => $token], new Response(headers: $headers));
+        if ($request->isMethod('GET')) return $this->render('security/email_verification.html.twig', [], new Response(headers: $headers));
         if (!$this->isCsrfTokenValid('email_verify', $request->request->get('_token'))) return $this->render('security/email_verification_invalid.html.twig', [], new Response(status: 403, headers: $headers));
-        if (!$service->verify($token)) {
+        // Le lecteur peut rester actif pendant un retour arrière des envois.
+        $verified = $mixedReaderEnabled ? $mixedReader->confirm($token) : $service->verify($token);
+        if (!$verified) {
             return $this->render('security/email_verification_invalid.html.twig', [], new Response(status: 400, headers: $headers));
         }
         $this->addFlash('success', 'Adresse email confirmée. Vous pouvez vous connecter.');

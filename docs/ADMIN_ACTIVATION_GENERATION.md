@@ -495,3 +495,47 @@ et contexte de session, rôle, refus/CSRF, même lien factice remis une
 seule fois et audit durable. Compose, conteneur, PHP lint et diff
 vérifiés ; DB/réseau privés retirés. Pas de migration dans ce lot, ni
 SMTP, activation, push, fusion ou modification de V7.
+
+## Raccordement du seul lecteur au POST de confirmation
+
+`EMAIL_VERIFICATION_MIXED_READER_ENABLED` est à 0 par défaut.
+La sélection ne s'exerce qu'après le CSRF du POST déjà existant
+`app_email_verify`. Pas de nouvelle route, de lecture avant confirmation,
+de clé de dérivation, de fournisseur ou de transport. GET reste sans effet
+sur le compte ; POST maintient 403 pour CSRF invalide, 400 générique pour
+lien inutilisable et la redirection de succès vers la connexion. Les
+en-têtes no-store et no-referrer sont inchangés. Le jeton d'URL n'était pas
+utilisé par Twig : il n'est plus passé en variable au gabarit.
+
+Le mode éteint appelle le lecteur historique comme avant. Le mode
+sélectionné vérifie les deux tables sous le même verrou. Une suspension
+ne change pas le traitement du lien historique ; elle interdit une
+confirmation versionnée. L'adresse et l'état de suspension ne sont
+pas réécrits par ce raccordement. La consommation, l'expiration,
+la révocation et l'ambiguïté demeurent des décisions fail-closed.
+
+Le `RouterListener` Symfony émettait potentiellement les paramètres de route
+et l'URL brute au logger. Le décorateur applicatif retire ces deux champs
+uniquement pour `app_email_verify`, avant transmission au logger suivant.
+Il conserve le nom de route et la méthode, et laisse les autres routes
+intactes. Les arguments jeton sont signalés sensibles dans le contrôleur
+et les deux lecteurs. Cette preuve vise le journal de routage applicatif
+et les réponses HTTP ; elle n'audite ni le proxy, ni les journaux HTTP
+externes, ni un futur transport SMTP.
+
+Option non activée dans un environnement réel. Avant tout changement
+d'exploitation, disposer du schéma versionné et confirmer séparément
+sa migration sur copie. Le lecteur ne dépend pas du garde-fou de
+remise : en rollback futur, couper les écrivains d'abord et garder le
+lecteur tant que des liens doivent rester valides. Ce palier ne crée
+et ne modifie aucune génération dans les parcours publics d'inscription
+ou de renvoi ; l'étape d'émission n'est pas traitée.
+
+**53 tests / 442 assertions** sur base jetable avec régressions admin et
+d'intégration. Fixtures HTTP historiques/versionnées, suspension,
+CSRF, GET non consommant, mode désactivé, rejeu, ambiguïté, révocation et
+expiration ; aucun mailer réel. Le test de journal utilise le vrai
+`RouterListener` et vérifie aussi une autre route ; le conteneur compilé
+relie bien le décorateur à ce listener. PHP lint, Symfony, Compose et
+diff vérifiés. Base et réseau retirés. Aucun nouveau fichier de migration,
+config réelle, production, push, fusion ou déploiement.
