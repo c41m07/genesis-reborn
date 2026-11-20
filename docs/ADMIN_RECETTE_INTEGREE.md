@@ -496,3 +496,38 @@ Pour une vraie délégation, la simulation ne remplace pas l’accord sur
 délégants, bénéficiaires, données, durée, révocation et audit. Le diagnostic
 d’exploitation reste sans relance. Aucun push, fusion dev, déploiement,
 CI modifiée, SMTP ou donnée non synthétique.
+
+## Recette V9 : lecteur mixte désactivé, liens historiques conservés
+
+Branche chore/recette-integration-admin-v9, worktree distinct.
+Assemblage e44514527725c000214ce437162cf679521de555, parents exacts
+99f57429c960b7cc160c5c24b732e8772ad2f765 (V8) et
+6de3fa3e31fa971c4f945a6f62c4ad84ea12632d (lecteur et journal).
+Aucun autre lot, conflit, nouvelle route, migration ou modification CI.
+
+- Le lecteur mixte est à 0 dans la configuration versionnée ; le POST
+  historique reste le défaut. Le GET ne confirme rien. Fermeture par défaut
+  et compatibilité historique vérifiées avec compte suspendu ; la suspension
+  demeure après confirmation. La recette du lecteur activé en test confirme
+  aussi cette compatibilité et refuse les générations suspendues, révoquées,
+  ambiguës, expirées ou déjà utilisées.
+- Test du RouterListener : le contexte de la confirmation n’envoie ni URL
+  ni paramètres au journal applicatif de routage ; les diagnostics des
+  autres routes sont conservés. Le conteneur compilé confirme l’injection
+  de VerificationRouteLogRedactor dans RouterListener. Le lien n’est
+  pas rendu dans le HTML testé ; no-store et no-referrer sont conservés.
+  Cela ne prouve pas la confidentialité des accès Apache/proxy, APM,
+  historique navigateur ou journaux d’infrastructure, à examiner avant
+  toute ouverture réelle.
+- Recette confirmation/journal : 11 tests et 115 assertions (10,106 s).
+  Agrégée support/panneau/droits : 215 tests et 2 141 assertions
+  (132,021 s). PHP, 216 Twig, 80 YAML, conteneur, Compose et diff verts.
+- Chromium réel ciblé, 1 scénario aux largeurs 1 366 et 390 px (6,4 s),
+  sur compte suspendu synthétique : GET sans effet et en-têtes vérifiés,
+  POST historique réussi, suspension conservée, seconde soumission 400.
+  Base jetable neuve à 00500 (64 migrations déjà existantes) et loopback
+  privé sans Traefik partagé. Bases/réseaux successifs nettoyés.
+
+Pas d’écrivain versionné ni de transport réel ajouté, aucune vraie clé.
+La suite PHP exhaustive reste un résultat de V6 seulement. Navigateur
+exhaustif, CI GitHub, activation, push, fusion dev et déploiement non faits.
