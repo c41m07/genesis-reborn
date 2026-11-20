@@ -91,6 +91,9 @@ final class AdminPlayerController extends AbstractController
             $message = match ($result) {
                 'transport_accepted' => 'Mail accepté par le transport. Sa réception n’est pas confirmée.',
                 'not_dispatched' => 'Aucun mail envoyé : le transport administratif n’est pas raccordé.',
+                'recovery_not_dispatched' => 'Aucun renvoi pris en charge par le transport.',
+                'too_early' => 'Le délai de récupération n’est pas écoulé.',
+                'legacy_active', 'generation_unavailable' => 'La récupération n’est pas disponible pour ce compte.',
                 'replayed' => 'Cette demande a déjà été enregistrée. Aucun nouvel envoi.',
                 'blocked' => 'Demande bloquée : délai en cours ou résultat précédent non résolu.',
                 'ineligible', 'cancelled' => 'Le compte ne nécessite pas ou ne permet pas ce renvoi.',

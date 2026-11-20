@@ -5,7 +5,7 @@ namespace App\Tests\Controller;
 use App\Entity\{AdminAuditLog, Player, VerificationDeliveryRequest};
 use App\Manager\GameManager;
 use App\Repository\VerificationDeliveryRequestRepository;
-use App\Service\Admin\{AdminActivationAction, AdminActivationContextAction, AdminActivationFormContext, AdminActivationTransport};
+use App\Service\Admin\{AdminActivationAction, AdminActivationFormContext, AdminActivationRecoveryAction, AdminActivationRecoveryProvider, AdminActivationService, AdminActivationTransport};
 use App\Service\Player\{VerificationGenerationStore, VerificationLinkKeyResolver, VerificationRecoveryDeliveryAdapter, VerificationRecoveryOrchestrator, VerificationRecoveryOutcome, VerificationRecoveryTransport, VerificationRequestLifecycle, VerificationRequestReservation, VersionedVerificationLink};
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -21,13 +21,17 @@ final class AdminActivationTest extends WebTestCase
     {
         parent::tearDown();
         putenv('ADMIN_ACTIVATION_ENABLED=0');
+        putenv('ADMIN_ACTIVATION_RECOVERY_ENABLED=0');
+        $_ENV['ADMIN_ACTIVATION_RECOVERY_ENABLED'] = $_SERVER['ADMIN_ACTIVATION_RECOVERY_ENABLED'] = '0';
         $_ENV['ADMIN_ACTIVATION_ENABLED'] = $_SERVER['ADMIN_ACTIVATION_ENABLED'] = '0';
     }
 
-    private function fixture(bool $enabled = true): array
+    private function fixture(bool $enabled = true, bool $recoveryEnabled = false): array
     {
         putenv('ADMIN_ACTIVATION_ENABLED='.($enabled ? '1' : '0'));
         $_ENV['ADMIN_ACTIVATION_ENABLED'] = $_SERVER['ADMIN_ACTIVATION_ENABLED'] = $enabled ? '1' : '0';
+        putenv('ADMIN_ACTIVATION_RECOVERY_ENABLED='.($recoveryEnabled ? '1' : '0'));
+        $_ENV['ADMIN_ACTIVATION_RECOVERY_ENABLED'] = $_SERVER['ADMIN_ACTIVATION_RECOVERY_ENABLED'] = $recoveryEnabled ? '1' : '0';
         $client = self::createClient([], ['HTTP_HOST' => 'genesis-reborn.localhost']);
         $client->disableReboot();
         $em = self::getContainer()->get(EntityManagerInterface::class);
@@ -154,9 +158,9 @@ final class AdminActivationTest extends WebTestCase
         self::assertSame('cancelled', $em->getRepository(VerificationDeliveryRequest::class)->findOneBy([])->state);
     }
 
-    public function testAdminFormExercisesRecoveryOnlyWithTestContainerSubstitution(): void
+    public function testAdminFormExercisesRecoveryWithOnlyProviderDoubles(): void
     {
-        [$client, $em, $admin, $target, $ordinary] = $this->fixture(false);
+        [$client, $em, $admin, $target, $ordinary] = $this->fixture(true, true);
         $db = $em->getConnection();
         $clock = new MockClock('2030-01-01T00:00:00Z');
         $manager = new GameManager($em);
@@ -182,50 +186,15 @@ final class AdminActivationTest extends WebTestCase
 
         $transport = $this->createMock(VerificationRecoveryTransport::class);
         $transport->expects(self::once())->method('handoff')->with($target->id, $expected)->willReturn(VerificationRecoveryOutcome::TransportAccepted);
-        // Aucun fournisseur ni changement de politique dans le conteneur réel.
-        // Cette composition n'existe que dans la recette, pour un reçu connu.
-        $contexts = new AdminActivationFormContext($clock);
-        $requests = self::getContainer()->get(RequestStack::class);
-        $action = new class($contexts, $requests, $target->id, $oldId, static function (Player $actor, int $playerId, int $expectedId, #[\SensitiveParameter] string $key) use ($recovery, $lifecycle, $adapter, $keys, $transport): string {
-            $reserved = $recovery->reserveForAdmin($actor->id, $playerId, $expectedId, $key, 300, $keys);
-            if ($reserved['result'] !== 'reserved') {
-                return $reserved['result'];
-            }
-            $id = $reserved['request_id'];
-            $claim = $lifecycle->claimRecovery($id, 120);
-            return $claim['result'] === 'claimed' ? $adapter->deliver($id, $claim['claim_token'], $lifecycle, $keys, $transport) : $claim['result'];
-        }) implements AdminActivationContextAction {
-            public function __construct(
-                private AdminActivationFormContext $contexts,
-                private RequestStack $requests,
-                private int $targetId,
-                private int $receiptId,
-                private \Closure $run,
-            ) {
-            }
-
-            public function isEnabled(): bool
-            {
-                return true;
-            }
-
-            public function prepareFormKey(Player $actor, int $playerId): ?string
-            {
-                return $playerId === $this->targetId
-                    ? $this->contexts->issue($this->requests->getSession(), $actor->id, $playerId, $this->receiptId)
-                    : null;
-            }
-
-            public function request(Player $actor, int $playerId, #[\SensitiveParameter] string $key): string
-            {
-                $expected = $this->contexts->expectedReceipt($this->requests->getSession(), $actor->id, $playerId, $key);
-                if ($expected === null) {
-                    throw new \DomainException('Formulaire périmé. Rechargez la fiche.');
-                }
-
-                return ($this->run)($actor, $playerId, $expected, $key);
-            }
-        };
+        // Composition réelle ; seuls le transport, le trousseau et le
+        // temps sont contrôlés par la fixture. Aucun contrôleur substitué.
+        $action = new AdminActivationRecoveryAction(
+            self::getContainer()->get(AdminActivationService::class),
+            new AdminActivationFormContext($clock),
+            self::getContainer()->get(RequestStack::class),
+            $recovery, $lifecycle, $adapter, true,
+            new AdminActivationRecoveryProvider($keys, $transport),
+        );
         self::getContainer()->set(AdminActivationAction::class, $action);
 
         $page = '/admin/joueurs/'.$target->id;
@@ -293,5 +262,73 @@ final class AdminActivationTest extends WebTestCase
         self::assertStringNotContainsString($data['request_key'], json_encode($event, JSON_THROW_ON_ERROR));
         self::assertStringNotContainsString($expected, json_encode($db->fetchAllAssociative('SELECT details FROM admin_audit_log'), JSON_THROW_ON_ERROR));
         self::assertSame($snapshot, $db->fetchAssociative('SELECT * FROM verification_delivery_request WHERE id = ?', [$oldId]));
+    }
+
+    public function testRecoveryOptInWithoutProviderNeverFallsBackToOrdinaryAction(): void
+    {
+        [$client, $em, $admin, $target] = $this->fixture(true, true);
+        $normal = $this->createMock(AdminActivationTransport::class);
+        $normal->expects(self::never())->method('deliver');
+        self::getContainer()->set(AdminActivationTransport::class, $normal);
+        $client->loginUser($admin);
+        $client->request('GET', '/admin/joueurs/'.$target->id);
+        self::assertSelectorNotExists('form[action$="/activation"]');
+        $client->request('POST', '/admin/joueurs/'.$target->id.'/activation', ['confirmed' => '1', 'request_key' => str_repeat('a', 64)]);
+        self::assertResponseStatusCodeSame(404);
+        self::assertSame(0, (int) $em->getConnection()->fetchOne('SELECT COUNT(*) FROM verification_delivery_request'));
+    }
+
+    public function testProviderCannotBeBuiltWithOnlyOneHalf(): void
+    {
+        $transport = $this->createStub(VerificationRecoveryTransport::class);
+        $this->expectException(\TypeError::class);
+        /** @phpstan-ignore argument.type (défaut volontaire du couple) */
+        new AdminActivationRecoveryProvider(null, $transport);
+    }
+
+    public function testTransportConfigurationAloneCannotEnableRecovery(): void
+    {
+        [$client, $em, $admin, $target] = $this->fixture(false, true);
+        $keys = $this->createStub(VerificationLinkKeyResolver::class);
+        $transport = $this->createMock(VerificationRecoveryTransport::class);
+        $transport->expects(self::never())->method('handoff');
+        $container = self::getContainer();
+        $action = new AdminActivationRecoveryAction(
+            $container->get(AdminActivationService::class),
+            $container->get(AdminActivationFormContext::class),
+            $container->get(RequestStack::class),
+            $container->get(VerificationRecoveryOrchestrator::class),
+            $container->get(VerificationRequestLifecycle::class),
+            $container->get(VerificationRecoveryDeliveryAdapter::class),
+            true,
+            new AdminActivationRecoveryProvider($keys, $transport),
+        );
+        self::assertFalse($action->isEnabled());
+        self::assertSame('disabled', $action->request($admin, $target->id, str_repeat('a', 64)));
+        self::assertSame(0, (int) $em->getConnection()->fetchOne('SELECT COUNT(*) FROM verification_delivery_request'));
+    }
+
+    public function testProviderDoesNotSelectRecoveryWithoutExplicitCapability(): void
+    {
+        [$client, $em, $admin, $target] = $this->fixture(true, false);
+        $keys = $this->createMock(VerificationLinkKeyResolver::class);
+        $keys->expects(self::never())->method('resolve');
+        $transport = $this->createMock(VerificationRecoveryTransport::class);
+        $transport->expects(self::never())->method('handoff');
+        $container = self::getContainer();
+        $action = new AdminActivationRecoveryAction(
+            $container->get(AdminActivationService::class),
+            $container->get(AdminActivationFormContext::class),
+            $container->get(RequestStack::class),
+            $container->get(VerificationRecoveryOrchestrator::class),
+            $container->get(VerificationRequestLifecycle::class),
+            $container->get(VerificationRecoveryDeliveryAdapter::class),
+            false,
+            new AdminActivationRecoveryProvider($keys, $transport),
+        );
+        self::assertTrue($action->isEnabled());
+        self::assertSame('not_dispatched', $action->request($admin, $target->id, str_repeat('d', 64)));
+        self::assertSame(0, (int) $em->getConnection()->fetchOne('SELECT COUNT(*) FROM verification_recovery_event'));
+        self::assertSame('cancelled', $em->getConnection()->fetchOne('SELECT state FROM verification_delivery_request'));
     }
 }

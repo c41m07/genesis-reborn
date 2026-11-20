@@ -15,6 +15,21 @@ final class VerificationRecoveryOrchestrator
     ) {
     }
 
+    /** Donnée de préparation seulement ; jamais rendue dans le formulaire. */
+    public function candidateForForm(int $playerId): ?int
+    {
+        $candidate = $this->db->fetchAssociative(
+            'SELECT r.id, r.state, r.resolved_at FROM verification_delivery_request r
+             INNER JOIN player p ON p.id = r.player_id
+             WHERE r.player_id = ? AND p.email_verified_at IS NULL AND p.locked_at IS NULL
+             ORDER BY r.id DESC LIMIT 1',
+            [$playerId],
+        );
+        return $candidate !== false && $candidate['state'] === 'unknown' && $candidate['resolved_at'] !== null
+            ? (int) $candidate['id']
+            : null;
+    }
+
     /**
      * L'identité du joueur doit provenir d'un parcours autorisé, jamais d'un
      * identifiant saisi librement. La possession du reçu ne fait pas autorité.
