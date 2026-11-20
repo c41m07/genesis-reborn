@@ -406,3 +406,40 @@ Le nouveau transport et le fournisseur de clés ne sont pas raccordés.
 
 Aucune délégation opérationnelle, reprise métier ni activation réelle.
 Aucun push, fusion dev, déploiement, utilisation d’une base réelle ou SMTP.
+
+## Recette V7 : contexte protégé du formulaire d’activation
+
+Branche chore/recette-integration-admin-v7, worktree dédié.
+Assemblage 9a32dcbe7ab86f866a0d7afcd98ae9baa1a87136, parents directs V6
+cb81b0f9fa65f017685282d85b4d2cdd2baa971f et support
+b3e1c2ec227359fdcc06e74d7d9a936fef276a13, chaîne vérifiée
+e319179 → 1647a49 → 56dfb087 → b3e1c2e. Aucun conflit.
+
+Le formulaire conserve une clé opaque ; sa variante contextuelle est liée
+à la session, à l’acteur, au compte et au reçu attendu, avec fenêtre de
+120 secondes. Le contrôle partagé du compte administrateur sous verrous
+vérifie rôle courant, adresse confirmée et absence de suspension. Ce contexte
+de session n’accorde aucun droit à lui seul. Aucune nouvelle route, migration,
+permission, clé ou transport concret ; la configuration lie toujours
+l’interface au service par défaut, désactivé par défaut et avec transport
+indisponible. Variante contextuelle active uniquement dans la substitution
+de test. Aucun prototype de relance ou de délégation intégré.
+
+- Recette formulaire/permissions : **10 tests, 161 assertions** (6,233 s).
+  HTML du formulaire, clé sans identifiant de reçu ni lien exposé,
+  refus sans confirmation et CSRF invalide, refus d’une clé empruntée
+  avec CSRF valide dans une autre session, refus à l’expiration et
+  rechargement du formulaire, remise factice unique après confirmation.
+  La seconde soumission ne renvoie rien ; le reçu initial reste inchangé.
+  Le service désactivé répond 404 et ne crée aucun reçu.
+- Recette ciblée agrégée : **204 tests, 2 008 assertions** (115,262 s),
+  incluant comptes, droits, récupération en concurrence, panel, catalogue
+  et diagnostic. Lint PHP, 216 Twig, 80 YAML, conteneur, Compose et diff OK.
+- Un seul projet MariaDB jetable pour les tests, supprimé après exécution.
+  Les vérifications d’interface sont des tests HTTP/DOM ; Chromium n’est
+  pas annoncé comme rejoué en V7. Aucun SMTP ou configuration réelle.
+
+La suite PHP exhaustive (1 554 tests, 4 444 352 assertions, mesure
+optionnelle ignorée) reste une preuve de V6 seulement. La recette navigateur
+officielle et la CI GitHub ne sont pas acquises sur V7. Aucun push,
+fusion dev, déploiement, transport réel ni ouverture des droits.
