@@ -94,4 +94,26 @@ final class VersionedVerificationLinkTest extends TestCase
         $this->expectException(\DomainException::class);
         (new VersionedVerificationLink($clock))->generate(1, 1, 'unknown', $clock->now()->modify('+10 seconds'), $this->keys([]));
     }
+
+    public function testResolverExceptionCannotLeakContextOrProduceFallback(): void
+    {
+        $clock = new MockClock();
+        $codec = new VersionedVerificationLink($clock);
+        $expiry = $clock->now()->modify('+1 hour');
+        $generation = $codec->generate(5, 1, 'test-1', $expiry, $this->keys(['test-1' => str_repeat('a', 32)]));
+        $unavailable = new class implements VerificationLinkKeyResolver {
+            public function resolve(string $keyId): ?string
+            {
+                throw new \RuntimeException('fictitious-confidential-resolver-context');
+            }
+        };
+        self::assertNull($codec->reproduce($generation, $unavailable));
+        try {
+            $codec->generate(5, 2, 'test-1', $expiry, $unavailable);
+            self::fail('Une génération a été créée malgré la défaillance.');
+        } catch (\DomainException $error) {
+            self::assertSame('Clé de confirmation indisponible.', $error->getMessage());
+            self::assertNull($error->getPrevious());
+        }
+    }
 }

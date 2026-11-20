@@ -21,7 +21,7 @@ final class VerificationRequestReservation
     }
 
     /** @return array{result: string, request_id: ?int, state: ?string} */
-    public function reserve(int $playerId, string $requestKey, int $cooldownSeconds, ?int $adminId = null): array
+    public function reserve(int $playerId, string $requestKey, int $cooldownSeconds, ?int $adminId = null, ?int $generationVersion = null): array
     {
         // Le contrôleur fournit une clé aléatoire stable lors des doubles
         // soumissions ; ce n'est ni un jeton d'activation ni une autorisation.
@@ -31,7 +31,7 @@ final class VerificationRequestReservation
         if ($this->em->getConnection()->isTransactionActive()) {
             throw new \LogicException('La réservation exige sa propre transaction.');
         }
-        return $this->manager->transaction(function () use ($playerId, $requestKey, $cooldownSeconds, $adminId): array {
+        return $this->manager->transaction(function () use ($playerId, $requestKey, $cooldownSeconds, $adminId, $generationVersion): array {
             $admin = null;
             if ($adminId !== null) {
                 (new VerificationAdminActorGuard())->lockAndCheck($this->em->getConnection(), $adminId, $playerId);
@@ -52,6 +52,17 @@ final class VerificationRequestReservation
             if ($player->emailVerifiedAt !== null || $player->lockedAt !== null) {
                 return $this->result('ineligible');
             }
+            if ($generationVersion !== null) {
+                $row = $this->em->getConnection()->fetchAssociative(
+                    'SELECT version, state, expires_at, recipient_fingerprint, fingerprint FROM player_verification_generation WHERE player_id = ? FOR UPDATE',
+                    [$playerId],
+                );
+                if ($row === false || (int) $row['version'] !== $generationVersion || $row['state'] !== 'active'
+                    || (int) $row['expires_at'] <= $this->clock->now()->getTimestamp()
+                    || !VerificationRecipientBinding::matches($row['recipient_fingerprint'], $player->email, $row['fingerprint'])) {
+                    return $this->result('ineligible');
+                }
+            }
             $hash = hash('sha256', $requestKey);
             $existing = $this->requests->byKey($player, $hash);
             if ($existing !== null) {
@@ -65,6 +76,7 @@ final class VerificationRequestReservation
             $request = new VerificationDeliveryRequest();
             $request->player = $player;
             $request->requestKeyHash = $hash;
+            $request->versionedGenerationVersion = $generationVersion;
             $request->requestedAt = $now;
             $request->cooldownUntil = $now->modify('+'.$cooldownSeconds.' seconds');
             $this->manager->save($request);

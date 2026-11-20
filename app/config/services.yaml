@@ -10,6 +10,7 @@ parameters:
     env(ADMIN_ACTIVATION_ENABLED): '0'
     env(ADMIN_ACTIVATION_RECOVERY_ENABLED): '0'
     env(EMAIL_VERIFICATION_MIXED_READER_ENABLED): '0'
+    env(EMAIL_VERIFICATION_VERSIONED_WRITER_ENABLED): '0'
     env(LEGAL_PUBLISHER_NAME): ''
     env(MAILER_FROM): 'no-reply@genesis-reborn.local'
     env(EMPIRE_INACTIVITY_WARNINGS_ENABLED): '0'
@@ -40,6 +41,10 @@ services:
         arguments:
             $provider: null
     App\Service\Admin\AdminActivationTransport: '@App\Service\Admin\UnavailableAdminActivationTransport'
+
+    App\Service\Player\EmailVerificationEmissionSelector:
+        arguments:
+            $provider: null
 
     Psr\Clock\ClockInterface: '@clock'
 

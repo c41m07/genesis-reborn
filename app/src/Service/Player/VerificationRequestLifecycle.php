@@ -98,6 +98,54 @@ final class VerificationRequestLifecycle implements VerificationRecoveryDelivery
         });
     }
 
+    /**
+     * Instantané privé de remise, après validation du claim et du lien
+     * destinataire/génération. Une seule sortie autorisée avant transport.
+     *
+     * @return array{email: string, username: string, link: string}|null
+     */
+    public function prepareVersionedEmission(
+        int $requestId,
+        #[\SensitiveParameter] string $claimToken,
+        #[\SensitiveParameter] VerificationLinkKeyResolver $keys,
+    ): ?array {
+        $result = $this->locked($requestId, function (VerificationDeliveryRequest $request, Player $player) use ($claimToken, $keys): array {
+            if (!$this->ownsClaim($request, $claimToken) || $request->state !== 'dispatching'
+                || $request->versionedGenerationVersion === null || $request->emissionHandoffAt !== null
+                || $this->expireLease($request) || $player->lockedAt !== null || $player->emailVerifiedAt !== null) {
+                return [];
+            }
+            $db = $this->em->getConnection();
+            $now = $this->clock->now();
+            $row = $db->fetchAssociative(
+                'SELECT version, algorithm, key_id, nonce, expires_at, fingerprint, recipient_fingerprint, state FROM player_verification_generation WHERE player_id = ? FOR UPDATE',
+                [$player->id],
+            );
+            if ($row === false || $row['state'] !== 'active' || (int) $row['version'] !== $request->versionedGenerationVersion
+                || !VerificationRecipientBinding::matches($row['recipient_fingerprint'], $player->email, $row['fingerprint'])
+                || $db->fetchOne('SELECT id FROM player_email_verification_token WHERE player_id = ? AND expires_at > ? LIMIT 1 FOR UPDATE',
+                    [$player->id, $now->format('Y-m-d H:i:s')]) !== false) {
+                return [];
+            }
+            $current = new VerificationLinkGeneration(
+                $player->id, (int) $row['version'], (int) $row['algorithm'], $row['key_id'],
+                $row['nonce'], (int) $row['expires_at'], $row['fingerprint'],
+            );
+            $link = (new VersionedVerificationLink($this->clock))->reproduce($current, $keys);
+            if ($link === null || $this->expireLease($request)) {
+                return [];
+            }
+
+            // Garder la limite la plus courte. Le transport est appelé après
+            // commit ; un changement d'adresse ultérieur invalide ce lien.
+            $request->leaseExpiresAt = $now->setTimestamp(min($current->expiresAt, $request->leaseExpiresAt->getTimestamp()));
+            $request->emissionHandoffAt = $this->clock->now()->getTimestamp();
+            return ['email' => $player->email, 'username' => $player->username, 'link' => $link];
+        });
+
+        return isset($result['email']) ? $result : null;
+    }
+
     public function prepareRecoveryDelivery(
         int $requestId,
         #[\SensitiveParameter] string $claimToken,
@@ -125,13 +173,14 @@ final class VerificationRequestLifecycle implements VerificationRecoveryDelivery
                 [(int) $event['original_request_id'], $player->id],
             );
             $row = $db->fetchAssociative(
-                'SELECT version, algorithm, key_id, nonce, expires_at, fingerprint, state FROM player_verification_generation WHERE player_id = ? FOR UPDATE',
+                'SELECT version, algorithm, key_id, nonce, expires_at, fingerprint, recipient_fingerprint, state FROM player_verification_generation WHERE player_id = ? FOR UPDATE',
                 [$player->id],
             );
             if ($player->emailVerifiedAt !== null || $player->lockedAt !== null
                 || !hash_equals($request->requestKeyHash, $event['request_key_hash'])
                 || $original === false || $original['state'] !== 'unknown' || $original['resolved_at'] === null
                 || $row === false || $row['state'] !== 'active' || (int) $row['version'] !== (int) $event['generation_version']
+                || !VerificationRecipientBinding::matches($row['recipient_fingerprint'], $player->email, $row['fingerprint'])
                 || $db->fetchOne('SELECT id FROM player_email_verification_token WHERE player_id = ? AND expires_at > ? LIMIT 1 FOR UPDATE',
                     [$player->id, $now->format('Y-m-d H:i:s')]) !== false) {
                 return ['result' => $this->finishRecovery($request, VerificationRecoveryOutcome::NotDispatched, $now)];
@@ -237,6 +286,9 @@ final class VerificationRequestLifecycle implements VerificationRecoveryDelivery
             $this->expireLease($request);
             if ($request->state !== 'dispatching') {
                 return ['result' => $request->state === $outcome ? 'replayed' : 'conflict'];
+            }
+            if ($request->versionedGenerationVersion !== null && $outcome === 'transport_accepted' && $request->emissionHandoffAt === null) {
+                return ['result' => 'rejected'];
             }
             // Le demandeur devra attester l'acceptation effective du transport.
             // Ce service ne l'effectue pas et n'atteste jamais la réception.

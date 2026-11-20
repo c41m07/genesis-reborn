@@ -15,25 +15,58 @@ final class VerificationGenerationStore
     ) {
     }
 
-    public function prepare(int $playerId, string $keyId, \DateTimeImmutable $expiry, VerificationLinkKeyResolver $keys): ?VerificationLinkGeneration
+    /** @deprecated Préférer prepareForEmission() pour distinguer les refus sans bascule de voie. */
+    public function prepare(int $playerId, string $keyId, \DateTimeImmutable $expiry, #[\SensitiveParameter] VerificationLinkKeyResolver $keys): ?VerificationLinkGeneration
     {
-        return $this->withPendingPlayer($playerId, function () use ($playerId, $keyId, $expiry, $keys): ?VerificationLinkGeneration {
-            // L'ancien service ne sait pas partager sa génération. Ne pas
-            // écraser une empreinte historique encore valide ni ajouter de lien concurrent.
+        return $this->prepareForEmission($playerId, $keyId, $expiry, $keys)['generation'];
+    }
+
+    /**
+     * Écrivain unique des générations, sans choisir un ancien émetteur ni
+     * effectuer de remise. Le lien brut ne passe pas la limite de ce service.
+     *
+     * @return array{result: string, generation: ?VerificationLinkGeneration}
+     */
+    public function prepareForEmission(
+        int $playerId,
+        string $keyId,
+        \DateTimeImmutable $expiry,
+        #[\SensitiveParameter] VerificationLinkKeyResolver $keys,
+    ): array {
+        return $this->withPendingPlayer($playerId, function (array $player) use ($playerId, $keyId, $expiry, $keys): array {
+            // Un lien historique encore valide ne peut pas être reproduit ;
+            // ne pas réinterpréter, supprimer ou remplacer son empreinte.
             $now = $this->clock->now();
             $legacy = $this->db->fetchOne('SELECT id FROM player_email_verification_token WHERE player_id = ? AND expires_at > ? LIMIT 1 FOR UPDATE', [$playerId, $now->format('Y-m-d H:i:s')]);
             if ($legacy !== false) {
-                return null;
+                return $this->preparation('legacy_active');
             }
             $row = $this->current($playerId);
             if ($row !== false && $row['state'] === 'active' && (int) $row['expires_at'] > $now->getTimestamp()) {
-                return $this->hydrate($playerId, $row);
+                $current = $this->hydrate($playerId, $row);
+                // Le nouvel identifiant de clé proposé ne remplace pas celui
+                // de la génération courante. Une clé retirée ne la fait pas tourner.
+                if (!VerificationRecipientBinding::matches($row['recipient_fingerprint'], $player['email'], $row['fingerprint'])
+                    || $this->links->reproduce($current, $keys) === null) {
+                    return $this->preparation('generation_unavailable');
+                }
+
+                return $this->preparation('reused', $current);
             }
             if ($row !== false && !in_array($row['state'], ['active', 'revoked'], true)) {
-                return null;
+                return $this->preparation('generation_unavailable');
             }
 
-            $generation = $this->links->generate($playerId, $row === false ? 1 : (int) $row['version'] + 1, $keyId, $expiry, $keys);
+            try {
+                $generation = $this->links->generate($playerId, $row === false ? 1 : (int) $row['version'] + 1, $keyId, $expiry, $keys);
+            } catch (\DomainException) {
+                // Pas de génération ni de lien de secours en l'absence de clé.
+                return $this->preparation('key_unavailable');
+            }
+            if ($generation->expiresAt <= $this->clock->now()->getTimestamp()) {
+                // Le temps de résolution de la clé a franchi l'échéance prévue.
+                return $this->preparation('generation_unavailable');
+            }
             $data = [
                 'version' => $generation->version,
                 'algorithm' => $generation->algorithm,
@@ -41,6 +74,7 @@ final class VerificationGenerationStore
                 'nonce' => $generation->nonce,
                 'expires_at' => $generation->expiresAt,
                 'fingerprint' => $generation->fingerprint,
+                'recipient_fingerprint' => VerificationRecipientBinding::fingerprint($player['email'], $generation->fingerprint),
                 'state' => 'active',
             ];
             if ($row === false) {
@@ -49,8 +83,14 @@ final class VerificationGenerationStore
                 $this->db->update('player_verification_generation', $data, ['player_id' => $playerId]);
             }
 
-            return $generation;
-        });
+            return $this->preparation('created', $generation);
+        }) ?? $this->preparation('ineligible');
+    }
+
+    /** @return array{result: string, generation: ?VerificationLinkGeneration} */
+    private function preparation(string $result, ?VerificationLinkGeneration $generation = null): array
+    {
+        return ['result' => $result, 'generation' => $generation];
     }
 
     public function revoke(int $playerId, int $version): bool
@@ -62,9 +102,10 @@ final class VerificationGenerationStore
 
     public function consume(int $playerId, int $version, #[\SensitiveParameter] string $link): bool
     {
-        return $this->withPendingPlayer($playerId, function () use ($playerId, $version, $link): bool {
+        return $this->withPendingPlayer($playerId, function (array $player) use ($playerId, $version, $link): bool {
             $row = $this->current($playerId);
             if ($row === false || $row['state'] !== 'active' || (int) $row['version'] !== $version
+                || !VerificationRecipientBinding::matches($row['recipient_fingerprint'], $player['email'], $row['fingerprint'])
                 || !$this->links->matches($this->hydrate($playerId, $row), $link)) {
                 return false;
             }
@@ -119,8 +160,8 @@ final class VerificationGenerationStore
         return $this->db->transactional(function () use ($playerId, $operation): mixed {
             // Le verrou compte est pris avant toute ligne enfant, même si
             // aucune génération n'existe encore. Ne rien préparer sur un cache ORM.
-            $player = $this->db->fetchAssociative('SELECT email_verified_at, locked_at FROM player WHERE id = ? FOR UPDATE', [$playerId]);
-            return $player !== false && $player['email_verified_at'] === null && $player['locked_at'] === null ? $operation() : null;
+            $player = $this->db->fetchAssociative('SELECT email, email_verified_at, locked_at FROM player WHERE id = ? FOR UPDATE', [$playerId]);
+            return $player !== false && $player['email_verified_at'] === null && $player['locked_at'] === null ? $operation($player) : null;
         });
     }
 

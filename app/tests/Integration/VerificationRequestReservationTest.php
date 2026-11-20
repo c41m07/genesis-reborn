@@ -110,6 +110,13 @@ final class VerificationRequestReservationTest extends KernelTestCase
         foreach ($lifecycleMigration->getSql() as $query) {
             $connection->executeStatement($query->getStatement(), $query->getParameters(), $query->getTypes());
         }
+        require_once dirname(__DIR__, 2).'/migrations/Version20261120000600.php';
+        $connection->executeStatement('ALTER TABLE player_verification_generation DROP recipient_fingerprint');
+        $recipientMigration = new \DoctrineMigrations\Version20261120000600($connection, new \Psr\Log\NullLogger());
+        $recipientMigration->up(new \Doctrine\DBAL\Schema\Schema());
+        foreach ($recipientMigration->getSql() as $query) {
+            $connection->executeStatement($query->getStatement());
+        }
         $service = new VerificationRequestReservation($em, new \App\Manager\GameManager($em), new \App\Repository\VerificationDeliveryRequestRepository($em), self::getContainer()->get(ClockInterface::class));
         self::assertSame('reserved', $service->reserve($player->id, str_repeat('a', 64), 300)['result']);
         self::assertSame('replayed', $service->reserve($player->id, str_repeat('a', 64), 300)['result']);

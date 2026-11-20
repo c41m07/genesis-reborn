@@ -354,6 +354,7 @@ Les fichiers `.env`, `.env.local`, `.env.prod` et les secrets sont exclus par [.
 | `MAILER_DSN`, `MAILER_FROM`, `DEFAULT_URI` | Transport SMTP, expéditeur et URL absolue des liens, notamment ceux des mails. |
 | `ADMIN_ACTIVATION_RECOVERY_ENABLED` | Mode de récupération admin éteint par défaut ; exige aussi le garde-fou admin existant et un fournisseur explicitement raccordé, absent du conteneur livré. Voir [la recette et les limites](docs/ADMIN_ACTIVATION_GENERATION.md). |
 | `EMAIL_VERIFICATION_MIXED_READER_ENABLED` | Lecteur mixte de confirmation éteint par défaut et indépendant de l’envoi ; schéma versionné requis avant tout usage. Voir [la recette](docs/ADMIN_ACTIVATION_GENERATION.md). |
+| `EMAIL_VERIFICATION_VERSIONED_WRITER_ENABLED` | Écrivain versionné d’inscription et de renvoi éteint par défaut. Nécessite lecteur mixte et couple expéditeur/résolveur autorisé (absent du conteneur livré). Voir [les limites de recette](docs/ADMIN_ACTIVATION_GENERATION.md). |
 | `EMPIRE_INACTIVITY_WARNINGS_ENABLED` | `0` par défaut ; interdit les envois d'inactivité, même avec `--send`. Textes révisés validés et valeur `1` autorisée localement le 8 novembre 2026. Voir [EXPLOITATION.md](docs/EXPLOITATION.md#avertissements-dinactivité-j14j27). |
 | `FORGOTTEN_EMPIRES_ENABLED` | `0` par défaut ; active le cycle d'inactivité, les vacances, la conversion PNJ et les occupations JcE. Valeur `1` autorisée localement le 8 novembre 2026. |
 | `MERCURE_URL`, `MERCURE_PUBLIC_URL` | Adresse interne de publication et adresse accessible au navigateur. |

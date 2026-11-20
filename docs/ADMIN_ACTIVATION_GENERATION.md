@@ -539,3 +539,124 @@ expiration ; aucun mailer réel. Le test de journal utilise le vrai
 relie bien le décorateur à ce listener. PHP lint, Symfony, Compose et
 diff vérifiés. Base et réseau retirés. Aucun nouveau fichier de migration,
 config réelle, production, push, fusion ou déploiement.
+
+## Écrivain unique et préparation durable, sans raccordement public
+
+`VerificationGenerationStore::prepareForEmission` est l'unique point
+d'écriture de génération versionnée. Sous le verrou du compte et dans la
+même transaction, il relit l'éligibilité et le lien historique, puis crée
+ou réutilise la génération. `prepare` ne fait que déléguer à ce chemin.
+Le résultat retourne un état et, en cas de succès, les métadonnées de
+génération ; aucun lien en clair ni effet de transport.
+
+| État | Décision |
+| --- | --- |
+| `created` | Nouvelle génération : aucune génération utilisable auparavant, aucun lien historique encore actif. |
+| `reused` | Même génération reproductible, même empreinte et échéance ; un autre identifiant de clé proposé ne la fait pas tourner. |
+| `legacy_active` | Lien historique encore valide : ni reprise sous format versionné, ni remplacement, ni suppression. |
+| `key_unavailable` | Aucune clé pour créer : pas d'écriture ni d'ancienne voie de secours. |
+| `generation_unavailable` | Génération non reproductible, format/état non utilisable ou échéance dépassée pendant la préparation : pas de remplacement silencieux. |
+| `ineligible` | Compte absent/suspendu/confirmé : aucune émission. |
+
+Une exception de résolution de clé devient une indisponibilité, sans
+répéter ses détails dans la réponse. Le resolver doit rester local et
+borné : il est consulté durant la transaction. Un échec de préparation
+sur un compte venant d'être créé ne le confirme ni ne lui forge une
+empreinte historique. La stratégie de récupération de liens hérités
+reste explicite au plan de bascule, sans réinterprétation de leur hash.
+
+Aucun raccordement de l'inscription ou du formulaire de renvoi ici.
+Leur lecteur, écrivain, messages, limitation publique et transport restent
+comme avant le palier. Il serait dangereux d'appeler cette préparation
+depuis une seule des deux routes ou de revenir silencieusement à l'ancien
+émetteur lorsqu'une clé manque. Le prochain câblage devra sélectionner
+le même writer/remetteur pour les deux entrées après vérification du
+lecteur, protéger le mode contre l'autre émetteur et gérer le parcours
+historique de façon explicite. Drainer les anciens binaires avant
+toute activation ; aucun mélange de modes n'est garanti par ce commit.
+Aucun secret/transport réel, migration nouvelle, configuration ou envoi.
+
+Avant l'émission réelle, rattacher l'adresse au moment de la préparation
+et traiter sa modification/suppression sous le même verrou. Ne pas
+rechercher un destinataire modifié après coup pour un lien déjà préparé.
+La préparation seule ne réserve pas une remise et n'atteste pas de
+dépôt SMTP.
+
+**51 tests / 402 assertions**, dont une course de deux écrivains sur
+connexions séparées puis une course écrivain/lecteur, conservation exacte
+de l'empreinte/échéance, héritage et clé d'ancienne génération
+indisponible. Une inscription créée par le vrai RegistrationService
+reste pendante si le résolveur factice échoue : aucune génération,
+ancien hash ou reçu n'est créé. Régressions de confirmation/inscription/
+renvoi mode par défaut, codec (6 tests purs / 25 assertions), lint PHP,
+Compose, conteneur et diff validés. Base/réseau privés retirés.
+
+## Sélecteur commun d'émission, désactivé
+
+L'inscription et le renvoi public passent tous deux par
+`EmailVerificationEmissionSelector`. En mode éteint (défaut versionné),
+les deux délèguent à l'écrivain historique avec les mêmes arguments.
+Le limiteur IP 5/h, les flashes, le CSRF et les redirections des
+formulaires restent ceux de la voie existante.
+
+Si le mode nouveau est sélectionné, il exige le lecteur mixte et un
+couple complet de transport/résolveur explicitement injecté. Ce couple
+est null dans le conteneur livré, ne peut pas être construit avec un
+seul élément, et n'est pas autodécouvert. En cas d'absence, aucun repli
+sur l'écrivain historique. La règle proposée pour la recette est la
+gestion d'échec déjà visible à l'inscription : le compte reste en
+attente, son avertissement existant s'affiche, aucune confirmation
+ni bienvenue ne sont revendiquées si la remise n'a pas pu commencer.
+Le renvoi conserve la même réponse générique, compte existant ou non.
+Aucun changement d'environnement réel ni de politique d'adresse.
+
+Quand le mode est exercé avec doubles : création/réutilisation d'une
+génération, réservation d'un reçu qui porte sa version, claim puis point
+de remise durable unique. La sortie du transport n'atteste pas une
+réception. Un résultat ambigu reste indéterminé et ne part pas en
+rejeu. Le message de bienvenue est séparé et sans lien ; une seule
+tentative après un passage de confirmation, même si sa remise de
+confirmation est ambiguë. Il n'est jamais envoyé par le formulaire
+de renvoi. Le cooldown existant du compte sérialise les demandes en
+plus du limiteur IP ; un autre renvoi autorisé après le délai réutilise
+le même lien/l'échéance, sans nouveau lien.
+
+### Adresse du compte et migration
+
+`Version20261120000600` ajoute seulement l'empreinte destinataire et
+les deux champs version/point de remise du reçu. L'empreinte est
+calculée à partir de l'adresse courante et de l'empreinte du lien ;
+aucune nouvelle copie de l'adresse en clair n'est écrite. Réservation,
+lecteur et point de remise revérifient l'adresse sous le verrou
+commun. Le destinataire est capturé en mémoire à la remise, pas
+fourni par POST ni recherché après coup par le transport. Un lien
+préparé avant une modification d'adresse est refusé pour la nouvelle
+adresse ; aucun changement d'adresse ne prolonge ni ne recrée la
+génération. Si la règle future exige une invalidation permanente
+même si l'ancienne adresse est restaurée, il faudra intégrer une
+révocation explicite ou une révision d'adresse dans les écritures de
+profil. Ne pas déduire de cette preuve une gouvernance de profil
+qui n'a pas été modifiée.
+
+Les anciens liens historiques ne sont ni convertis ni réinterprétés.
+Une génération versionnée sans liaison destinataire est refusée, jamais
+complétée rétroactivement à partir de l'adresse courante sans preuve.
+Les générations créées en recette sont toutes liées. Avant une
+bascule réelle, sauvegarder et tester le schéma sur copie, drainer tous
+anciens émetteurs, décider la fenêtre historique et ne pas mélanger
+des processus aux réglages d'écriture divergents. Pour revenir en
+arrière après un futur véritable envoi, couper l'émission puis
+laisser le lecteur mixte reconnaître les liens actifs jusqu'à leur
+échéance/révocation. Ne pas remettre l'ancien émetteur en face
+de ces liens actifs ni exécuter un down destructif par défaut.
+Ce lot ne décide aucune configuration SMTP, clé ou date de bascule.
+
+**81 tests / 660 assertions** sur MariaDB jetable : inscription/renvoi
+réels avec transport factice, bienvenue et limiteur inchangés,
+mode incomplet fermé, résultat ambigu non répété, changement d'adresse
+refusé au POST et aucune conversion d'héritage. Les courses de deux
+connexions confirment un seul point de remise ; le DDL 00600 monte et
+redescend en fixture, les colonnes du reçu disparaissent au retour et
+les empreintes historiques restent intactes. Régressions V9,
+Compose, PHP lint, Symfony et diff contrôlés. Base et réseau retirés.
+Aucun SMTP réel, secret, réglage réel, production, fusion ou déploiement.
