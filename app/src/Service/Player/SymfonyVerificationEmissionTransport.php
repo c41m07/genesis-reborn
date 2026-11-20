@@ -10,7 +10,7 @@ use Symfony\Component\Mime\Email;
 
 /** Remise directe et volontaire, jamais résolue implicitement par le conteneur. */
 #[Exclude]
-final class SymfonyVerificationEmissionTransport implements VerificationEmissionTransport
+final class SymfonyVerificationEmissionTransport implements VerificationEmissionTransport, VerificationRecoveryTransport
 {
     /**
      * Entrée d'injection pour les doubles. Un transport opérationnel doit
@@ -57,6 +57,11 @@ final class SymfonyVerificationEmissionTransport implements VerificationEmission
         }
 
         return $this->sendOnce($message);
+    }
+
+    public function handoff(#[\SensitiveParameter] string $address, #[\SensitiveParameter] string $link, string $username): VerificationRecoveryOutcome
+    {
+        return $this->confirmation($address, $link, $username);
     }
 
     public function welcome(#[\SensitiveParameter] string $address, string $username): void

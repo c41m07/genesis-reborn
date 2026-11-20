@@ -185,7 +185,7 @@ final class AdminActivationTest extends WebTestCase
         $clock->sleep(300);
 
         $transport = $this->createMock(VerificationRecoveryTransport::class);
-        $transport->expects(self::once())->method('handoff')->with($target->id, $expected)->willReturn(VerificationRecoveryOutcome::TransportAccepted);
+        $transport->expects(self::once())->method('handoff')->with($target->email, $expected, $target->username)->willReturn(VerificationRecoveryOutcome::TransportAccepted);
         // Composition réelle ; seuls le transport, le trousseau et le
         // temps sont contrôlés par la fixture. Aucun contrôleur substitué.
         $action = new AdminActivationRecoveryAction(

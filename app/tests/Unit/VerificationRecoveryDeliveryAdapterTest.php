@@ -16,9 +16,9 @@ final class VerificationRecoveryDeliveryAdapterTest extends TestCase
         $keys = $this->createStub(VerificationLinkKeyResolver::class);
         $claims = $this->createMock(VerificationRecoveryDeliveryBinding::class);
         $claims->expects(self::once())->method('prepareRecoveryDelivery')->with(7, $claim, $keys)
-            ->willReturn(['result' => 'handoff', 'player_id' => 12, 'link' => $link]);
+            ->willReturn(['result' => 'handoff', 'email' => 'recovery-adapter@example.test', 'username' => 'RecoveryAdapter', 'link' => $link]);
         $transport = $this->createMock(VerificationRecoveryTransport::class);
-        $expect = $transport->expects(self::once())->method('handoff')->with(12, $link);
+        $expect = $transport->expects(self::once())->method('handoff')->with('recovery-adapter@example.test', $link, 'RecoveryAdapter');
         if ($transportOutcome === null) {
             $expect->willThrowException(new \RuntimeException('factice: '.$link));
         } else {

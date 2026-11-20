@@ -20,7 +20,7 @@ final class VerificationRecoveryDeliveryAdapter
         // La remise commence après commit. Une révocation qui arrive maintenant
         // invalide le lien, mais ne peut pas annuler un transport déjà lancé.
         try {
-            $outcome = $transport->handoff($prepared['player_id'], $prepared['link']);
+            $outcome = $transport->handoff($prepared['email'], $prepared['link'], $prepared['username']);
         } catch (\Throwable) {
             // Une exception ne prouve ni absence de remise ni acceptation.
             // Ne reporter ni message d'exception ni contexte porteur du lien.

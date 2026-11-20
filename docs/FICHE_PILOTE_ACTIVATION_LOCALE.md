@@ -114,3 +114,41 @@ capture/dépendance absente sans fallback, host SMTP différent, mode
 admin visible, contenu ou destinataire inattendu. Ne pas compenser
 par un SMTP externe. Le vrai pilote d'une boîte contrôlée à distance
 ou d'une préproduction, si un jour demandé, reste hors de ce test.
+
+## Pilote distinct : récupération admin
+
+Même préparation de conteneurs `--pull=never` qu'au-dessus, mais refaire
+un réseau interne et une DB tmpfs **vierge** ; ne pas réutiliser le premier
+compte ou sa capture. Ce test ne lance aucune inscription. Il utilise
+des comptes/roles synthétiques et un seul destinataire .test. Activer
+uniquement dans le processus `GENESIS_LOCAL_ADMIN_ACTIVATION_PILOT`
+et le mode `GENESIS_LOCAL_ACTIVATION_CAPTURE` de SMTP privé. Si la capture
+privée n'est pas disponible, arrêter ce pilote. Le transport historique
+est un double interdit d'appel.
+
+```sh
+php bin/phpunit --do-not-record-test-run-history tests/Controller/LocalAdminActivationRecoveryPilotTest.php
+```
+
+Le fournisseur local n'existe que dans la WebTestCase ; le conteneur
+livré garde son défaut fermé. Le test injecte ses gardes admin et son
+lecteur dans ce seul processus, génère une clé fictive en mémoire et
+prépare un reçu initial indéterminé par le vrai cycle **sans** remettre
+ce premier message. Anonyme, joueur sans ROLE_ADMIN, absence de
+confirmation et CSRF invalide ne font rien. Le vrai formulaire de la
+fiche crée un contexte frais et ses deux soumissions ne provoquent
+qu'une remise. Une adresse ajoutée au POST ne modifie pas le destinataire
+capturé ; seul l'instantané revérifié sous verrou l'alimente.
+
+**Résultat : 1 test / 34 assertions**, SMTP réel exclusivement vers
+MailHog isolé en mémoire, exactement une confirmation et aucune
+bienvenue. Reçu initial intact, nouveau résultat audité sans lien,
+lien du mail accepté une seule fois via POST/CSRF, rejeu refusé.
+Aucune arrivée en boîte réelle, pas de proxy/TLS de production audité.
+
+Régressions hors opt-in : **66 tests / 472 assertions, 1 ignoré** (ce
+pilote nécessite son opt-in). Contrats SMTP/admin, courses, révocation et
+chemin normal revalidés. Lint PHP et conteneur. Réseau interne sans port
+publié, DB tmpfs, rien téléchargé, capture/DB/réseau retirés et leur
+absence vérifiée. Aucune donnée ni configuration du projet habituel,
+Alpha, dev, Internet, rôle réel ou CI touchés.

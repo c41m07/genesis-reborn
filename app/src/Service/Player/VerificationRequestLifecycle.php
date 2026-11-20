@@ -201,7 +201,9 @@ final class VerificationRequestLifecycle implements VerificationRecoveryDelivery
             // Point de remise durable, à usage unique. Le lien ne sort de la
             // transaction qu'après commit ; le port n'est appelé qu'ensuite.
             $db->update('verification_recovery_event', ['handoff_at' => $this->clock->now()->getTimestamp()], ['recovery_request_id' => $request->id]);
-            return ['result' => 'handoff', 'player_id' => $player->id, 'link' => $link];
+            // Instantané du même compte verrouillé et lié à la génération ;
+            // le transport ne reçoit pas d'identifiant à relire plus tard.
+            return ['result' => 'handoff', 'email' => $player->email, 'username' => $player->username, 'link' => $link];
         });
     }
 

@@ -726,7 +726,7 @@ dans cette recette. Cette preuve ne couvre pas les journaux des serveurs
 SMTP, des relais ou le proxy.
 
 Ce port concerne l'émission versionnée qui possède déjà l'instantané
-destinataire. Le port de récupération admin actuel ne reçoit qu'un
+destinataire. À ce palier, le port de récupération admin ne recevait qu'un
 identifiant joueur et un lien : ne pas le connecter en recherchant
 l'adresse plus tard. Avant de le raccorder, transmettre un instantané
 contrôlé au point de remise, puis vérifier configuration autorisée,
@@ -739,3 +739,13 @@ assertions** avec les régressions HTTP anciennes et versionnées sur
 MariaDB jetable retirée. Compose, PHP lint, conteneur et diff contrôlés.
 Pas de nouveau paramètre, migration, adresse configurée, SMTP effectif,
 commit distant, fusion ou déploiement.
+
+### Instantané destinataire de récupération (recette locale suivante)
+
+Le point de remise de récupération fournit désormais l'adresse et le nom
+courants du compte verrouillé après revalidation du lien destinataire,
+pas son identifiant. Le port ne relit aucun compte et ne reçoit aucune
+adresse POST. L'adaptateur SMTP direct peut alors réutiliser le modèle de
+confirmation sans envoyer de bienvenue ; aucun alias, fournisseur, secret,
+paramètre réel ou route nouvelle. Le défaut reste fermé. Voir la
+[preuve SMTP exclusivement interne](FICHE_PILOTE_ACTIVATION_LOCALE.md#pilote-distinct--récupération-admin).

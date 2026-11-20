@@ -458,7 +458,7 @@ final class VerificationGenerationStoreTest extends KernelTestCase
         self::assertSame('rejected', $lifecycle->complete($id, str_repeat('f', 64), 'transport_accepted')['result']);
         // Double de test : aucune mise en file ni destinataire ; résultat tardif.
         $fake = $this->createMock(\App\Service\Player\VerificationRecoveryTransport::class);
-        $fake->expects(self::once())->method('handoff')->with(self::isInt(), $codec->reproduce($generation, $keys))
+        $fake->expects(self::once())->method('handoff')->with(self::isString(), $codec->reproduce($generation, $keys), self::isString())
             ->willReturnCallback(static function () use ($clock): \App\Service\Player\VerificationRecoveryOutcome {
                 $clock->sleep(30);
                 return \App\Service\Player\VerificationRecoveryOutcome::TransportAccepted;
@@ -545,7 +545,7 @@ final class VerificationGenerationStoreTest extends KernelTestCase
         $link = $codec->reproduce($generation, $keys);
         $adapter = new \App\Service\Player\VerificationRecoveryDeliveryAdapter();
         $fake = $this->createMock(\App\Service\Player\VerificationRecoveryTransport::class);
-        $fake->expects(self::once())->method('handoff')->with($player->id, $link)->willReturnCallback(
+        $fake->expects(self::once())->method('handoff')->with($player->email, $link, $player->username)->willReturnCallback(
             function () use ($db, $player, $store, $generation, $adapter, $id, $lifecycle, $keys, $fake, $claim): \App\Service\Player\VerificationRecoveryOutcome {
                 self::assertFalse($db->isTransactionActive());
                 self::assertSame('unavailable', $adapter->deliver($id, $claim['claim_token'], $lifecycle, $keys, $fake));
@@ -631,8 +631,8 @@ final class VerificationGenerationStoreTest extends KernelTestCase
 
         $captured = null;
         $transport = $this->createMock(\App\Service\Player\VerificationRecoveryTransport::class);
-        $transport->expects(self::once())->method('handoff')->with($player->id, $expected)->willReturnCallback(
-            static function (int $playerId, #[\SensitiveParameter] string $link) use ($db, &$captured): \App\Service\Player\VerificationRecoveryOutcome {
+        $transport->expects(self::once())->method('handoff')->with($player->email, $expected, $player->username)->willReturnCallback(
+            static function (#[\SensitiveParameter] string $address, #[\SensitiveParameter] string $link) use ($db, &$captured): \App\Service\Player\VerificationRecoveryOutcome {
                 self::assertFalse($db->isTransactionActive());
                 $captured = $link;
                 return \App\Service\Player\VerificationRecoveryOutcome::TransportAccepted;
