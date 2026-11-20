@@ -5,12 +5,14 @@ namespace App\Tests\Controller;
 use App\Entity\{AdminAuditLog, Player, VerificationDeliveryRequest};
 use App\Manager\GameManager;
 use App\Repository\VerificationDeliveryRequestRepository;
-use App\Service\Admin\{AdminActivationAction, AdminActivationTransport};
+use App\Service\Admin\{AdminActivationAction, AdminActivationContextAction, AdminActivationFormContext, AdminActivationTransport};
 use App\Service\Player\{VerificationGenerationStore, VerificationLinkKeyResolver, VerificationRecoveryDeliveryAdapter, VerificationRecoveryOrchestrator, VerificationRecoveryOutcome, VerificationRecoveryTransport, VerificationRequestLifecycle, VerificationRequestReservation, VersionedVerificationLink};
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Clock\MockClock;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Mailer\MailerInterface;
 
 final class AdminActivationTest extends WebTestCase
@@ -182,17 +184,24 @@ final class AdminActivationTest extends WebTestCase
         $transport->expects(self::once())->method('handoff')->with($target->id, $expected)->willReturn(VerificationRecoveryOutcome::TransportAccepted);
         // Aucun fournisseur ni changement de politique dans le conteneur réel.
         // Cette composition n'existe que dans la recette, pour un reçu connu.
-        $action = new class(static function (Player $actor, int $playerId, #[\SensitiveParameter] string $key) use ($recovery, $lifecycle, $adapter, $keys, $transport, $oldId): string {
-            $reserved = $recovery->reserveForAdmin($actor->id, $playerId, $oldId, $key, 300, $keys);
+        $contexts = new AdminActivationFormContext($clock);
+        $requests = self::getContainer()->get(RequestStack::class);
+        $action = new class($contexts, $requests, $target->id, $oldId, static function (Player $actor, int $playerId, int $expectedId, #[\SensitiveParameter] string $key) use ($recovery, $lifecycle, $adapter, $keys, $transport): string {
+            $reserved = $recovery->reserveForAdmin($actor->id, $playerId, $expectedId, $key, 300, $keys);
             if ($reserved['result'] !== 'reserved') {
                 return $reserved['result'];
             }
             $id = $reserved['request_id'];
             $claim = $lifecycle->claimRecovery($id, 120);
             return $claim['result'] === 'claimed' ? $adapter->deliver($id, $claim['claim_token'], $lifecycle, $keys, $transport) : $claim['result'];
-        }) implements AdminActivationAction {
-            public function __construct(private \Closure $run)
-            {
+        }) implements AdminActivationContextAction {
+            public function __construct(
+                private AdminActivationFormContext $contexts,
+                private RequestStack $requests,
+                private int $targetId,
+                private int $receiptId,
+                private \Closure $run,
+            ) {
             }
 
             public function isEnabled(): bool
@@ -200,9 +209,21 @@ final class AdminActivationTest extends WebTestCase
                 return true;
             }
 
+            public function prepareFormKey(Player $actor, int $playerId): ?string
+            {
+                return $playerId === $this->targetId
+                    ? $this->contexts->issue($this->requests->getSession(), $actor->id, $playerId, $this->receiptId)
+                    : null;
+            }
+
             public function request(Player $actor, int $playerId, #[\SensitiveParameter] string $key): string
             {
-                return ($this->run)($actor, $playerId, $key);
+                $expected = $this->contexts->expectedReceipt($this->requests->getSession(), $actor->id, $playerId, $key);
+                if ($expected === null) {
+                    throw new \DomainException('Formulaire périmé. Rechargez la fiche.');
+                }
+
+                return ($this->run)($actor, $playerId, $expected, $key);
             }
         };
         self::getContainer()->set(AdminActivationAction::class, $action);
@@ -227,6 +248,29 @@ final class AdminActivationTest extends WebTestCase
         self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM verification_delivery_request'));
         self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM verification_recovery_event'));
 
+        self::assertCount(0, $form->filter('input[name*="receipt"], input[name*="original"]'));
+        $client->request('POST', $post, array_replace($data, ['request_key' => str_repeat('d', 64), 'confirmed' => '1']));
+        $client->followRedirect();
+        self::assertStringContainsString('Formulaire périmé.', $client->getResponse()->getContent());
+
+        // Même administrateur, autre cookie de session et son propre CSRF
+        // valide : la clé empruntée au premier formulaire est refusée.
+        $otherBrowser = new KernelBrowser($client->getKernel(), ['HTTP_HOST' => 'genesis-reborn.localhost']);
+        $otherBrowser->disableReboot();
+        $otherBrowser->loginUser($admin);
+        $otherForm = $otherBrowser->request('GET', $page)->filter('form[action$="/activation"]');
+        $otherCsrf = $otherForm->filter('[name="_token"]')->attr('value');
+        $otherBrowser->request('POST', $post, ['_token' => $otherCsrf, 'request_key' => $data['request_key'], 'confirmed' => '1']);
+        $otherBrowser->followRedirect();
+        self::assertStringContainsString('Formulaire périmé.', $otherBrowser->getResponse()->getContent());
+
+        $clock->sleep(120);
+        $client->request('POST', $post, $data + ['confirmed' => '1']);
+        $fresh = $client->followRedirect()->filter('form[action$="/activation"]');
+        self::assertStringContainsString('Formulaire périmé.', $client->getResponse()->getContent());
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM verification_recovery_event'));
+        $data = ['_token' => $fresh->filter('[name="_token"]')->attr('value'), 'request_key' => $fresh->filter('[name="request_key"]')->attr('value')];
+
         $data['confirmed'] = '1';
         $client->request('POST', $post, $data);
         self::assertResponseRedirects($page.'#account-diagnostic');
@@ -246,6 +290,7 @@ final class AdminActivationTest extends WebTestCase
         self::assertSame('transport_accepted', $event['delivery_outcome']);
         self::assertSame(1, (int) $db->fetchOne("SELECT COUNT(*) FROM admin_audit_log WHERE action = 'admin_activation_recovery_requested' AND actor_id = ?", [$admin->id]));
         self::assertStringNotContainsString($expected, json_encode($event, JSON_THROW_ON_ERROR));
+        self::assertStringNotContainsString($data['request_key'], json_encode($event, JSON_THROW_ON_ERROR));
         self::assertStringNotContainsString($expected, json_encode($db->fetchAllAssociative('SELECT details FROM admin_audit_log'), JSON_THROW_ON_ERROR));
         self::assertSame($snapshot, $db->fetchAssociative('SELECT * FROM verification_delivery_request WHERE id = ?', [$oldId]));
     }

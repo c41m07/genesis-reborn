@@ -414,3 +414,35 @@ du reçu tiers/inconnu. Recette HTTP factice et régressions historiques
 vertes ; Compose, PHP lint, conteneur et diff vérifiés. DB et réseau
 jetables retirés. Aucun schéma ajouté, SMTP, activation, changement de
 V6, push, fusion ni déploiement.
+
+## Contexte serveur court du formulaire, branche de recette
+
+Le contexte reprend le mécanisme du signalement joueur et de l'aperçu du
+catalogue : clé opaque déjà prévue par le formulaire, valeurs conservées
+dans une poche de session dédiée à la fiche et au POST d'activation.
+Le registre associe l'acteur, le compte cible et le reçu attendu, avec
+une fenêtre de 120 secondes et 20 entrées au maximum. Le lien avec la
+session est vérifié aussi après régénération d'identifiant (qui peut
+conserver les attributs). La clé opaque n'est pas un lien d'activation
+ni un droit ; elle ne remplace pas CSRF, confirmation et revérification
+transactionnelle. Le registre ne contient ni lien, ni clé de service,
+ni donnée d'un reçu tiers. La reprise autorisée dans la même session
+retrouve le même reçu pour permettre l'idempotence et ne prolonge
+jamais l'échéance.
+
+Dans cette branche, seule la substitution WebTestCase implémente
+`AdminActivationContextAction` ; l'alias vers le vrai fournisseur demeure
+inchangé. Le contrôleur partage la préparation et la validation du
+formulaire avec cette fixture, sans nouvel endpoint ni nouvelle donnée
+visible. Le POST n'accepte aucun champ de sélection de reçu. Contexte
+absent, falsifié, périmé, autre acteur/cible/session : même message de
+rechargement et aucune réservation ni remise. La valeur 120 secondes
+est le seuil de cette recette, pas une activation de politique réelle.
+
+Les tests purs `AdminActivationFormContextTest` vérifient la falsification,
+les liaisons et la régénération de session, le rejeu borné, l'échéance et
+la limite de rétention. La fixture HTTP ajoute un second navigateur avec
+le même administrateur et son propre CSRF, puis exerce une falsification,
+l'expiration et une soumission fraîche avec une seule remise factice.
+Aucun SMTP, nouveau secret, permission, configuration, intégration de
+V6 ou changement public.
