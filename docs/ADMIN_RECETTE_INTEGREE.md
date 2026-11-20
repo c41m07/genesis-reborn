@@ -372,3 +372,37 @@ Le résultat atteste un aller-retour synthétique local, pas un résultat GitHub
 une recette de données réelles ni un succès de l’enveloppe simultanée.
 Aucun push, fusion ou déploiement. Le code et la référence a261395 sont
 préservés.
+
+## Recette V6 : remise de récupération sans transport réel
+
+Branche chore/recette-integration-admin-v6, worktree distinct.
+Assemblage 9c6f8704fc5dd0f0c617c5aeb40d81483c4bf18b :
+96d6a6ce8b1022e5e68b06dabc9f7a58fee07b75 (V5 corrigée et recette sauvegarde)
+et ab7ae053f10354bfca95552b66f4bcb0adf02f14 (preuve de bout en bout).
+Chaîne vérifiée depuis 702896c : 7a3c20c, 9797e50, a298f64, ab7ae05.
+Pas de conflit, l’index explicite V5 reste présent. Ni prototype exploitation
+ni multi-liens. Aucun changement de configuration, contrôleur, Twig ou CI ;
+activation admin indisponible par défaut et parcours public inchangé.
+Le nouveau transport et le fournisseur de clés ne sont pas raccordés.
+
+- E2E synthétique seul : 1 test / 30 assertions en 1,669 s. Recette choisie
+  agrégée support/panneau/droits : 198 tests / 1 949 assertions en 115,929 s,
+  comprenant l’E2E. Lints PHP, 216 Twig, 80 YAML, conteneur, Compose, diff OK.
+- Chromium réel synthétique sur loopback dédié : 1 scénario à 1 366 et 390 px,
+  8,1 s. Compte non confirmé, renvoi admin indisponible, aucun formulaire,
+  POST 404, aucun reçu ni événement créé ; matrice et aperçu fictif intacts.
+  Aucun Traefik partagé, transport ni clé réelle.
+- Base neuve migrée : 64 migrations jusqu’à 00500. Descente à 00400 retirant
+  les trois champs de remise, puis remontée à 00500 ; 64 migrations et
+  aucune restante. Empreintes des liens historiques synthétiques inchangées.
+  Le comparateur read-only ne propose toujours que l’historique Doctrine
+  non mappé ; cette table est conservée et aucun schema:update n’a été lancé.
+- Les projets PHP et navigateur privés ont été retirés après vérification.
+
+| Prêt localement | À sécuriser avant activation | Preuves manquantes |
+| --- | --- | --- |
+| Diagnostic, aperçu fictif et socle serveur : réservation, remise unique, résultat audité, lecteur mixte en E2E factice. | Valider un fournisseur de clés et son cycle de rotation, raccorder un transport autorisé, maintenir neutralité publique et désactivation par défaut, documenter les incidents sans réessai automatique. | Pas de preuve SMTP ou de réception réelle, ni de raccordement public/admin, ni de migration sur copie de base existante. |
+| Recette ciblée PHP/Chromium V6, migration 00500 aller-retour, sauvegarde séquentielle et suite PHP complète sur la seule V5 corrigée. | Préparer CI de la version publiée, politique de rollback applicatif préservant l’historique, contrôles d’accès et d’alerte avant ouverture. | PHP exhaustif V6 non rejoué, navigateur officiel exhaustif et enveloppe sauvegarde à deux réseaux toujours non validés localement, CI GitHub non exécutée. |
+
+Aucune délégation opérationnelle, reprise métier ni activation réelle.
+Aucun push, fusion dev, déploiement, utilisation d’une base réelle ou SMTP.
