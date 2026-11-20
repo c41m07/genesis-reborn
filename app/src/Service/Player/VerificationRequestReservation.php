@@ -34,17 +34,9 @@ final class VerificationRequestReservation
         return $this->manager->transaction(function () use ($playerId, $requestKey, $cooldownSeconds, $adminId): array {
             $admin = null;
             if ($adminId !== null) {
-                // Ordre stable, même lorsque deux admins se ciblent mutuellement.
-                $ids = array_unique([$playerId, $adminId]);
-                sort($ids);
-                foreach ($ids as $id) {
-                    $locked = $this->em->find(Player::class, $id, LockMode::PESSIMISTIC_WRITE);
-                    if ($locked instanceof Player) {
-                        $this->em->refresh($locked, LockMode::PESSIMISTIC_WRITE);
-                    }
-                }
+                (new VerificationAdminActorGuard())->lockAndCheck($this->em->getConnection(), $adminId, $playerId);
                 $admin = $this->em->find(Player::class, $adminId);
-                if (!$admin instanceof Player || !in_array('ROLE_ADMIN', $admin->roles, true) || $admin->lockedAt !== null || $admin->emailVerifiedAt === null) {
+                if (!$admin instanceof Player) {
                     throw new \DomainException('Action administrative non autorisée.');
                 }
             }

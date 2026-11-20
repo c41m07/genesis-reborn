@@ -28,6 +28,33 @@ final class VerificationRecoveryOrchestrator
         int $delaySeconds,
         VerificationLinkKeyResolver $keys,
     ): array {
+        return $this->reserveLocked($playerId, $originalId, $requestKey, $delaySeconds, $keys);
+    }
+
+    /**
+     * Le reçu attendu vient du contexte serveur, pas d'un champ de formulaire.
+     * Une intention périmée ne doit pas s'appliquer au nouveau reçu du compte.
+     * @return array{result: string, request_id: ?int}
+     */
+    public function reserveForAdmin(
+        int $adminId,
+        int $playerId,
+        int $expectedOriginalId,
+        #[\SensitiveParameter] string $requestKey,
+        int $delaySeconds,
+        #[\SensitiveParameter] VerificationLinkKeyResolver $keys,
+    ): array {
+        return $this->reserveLocked($playerId, $expectedOriginalId, $requestKey, $delaySeconds, $keys, $adminId);
+    }
+
+    private function reserveLocked(
+        int $playerId,
+        int $originalId,
+        #[\SensitiveParameter] string $requestKey,
+        int $delaySeconds,
+        #[\SensitiveParameter] VerificationLinkKeyResolver $keys,
+        ?int $adminId = null,
+    ): array {
         if (!preg_match('/\A[a-f0-9]{64}\z/', $requestKey) || $delaySeconds < 1 || $delaySeconds > 86400) {
             throw new \InvalidArgumentException('Paramètres de récupération invalides.');
         }
@@ -36,7 +63,10 @@ final class VerificationRecoveryOrchestrator
         }
 
         $hash = hash('sha256', $requestKey);
-        return $this->db->transactional(function () use ($playerId, $originalId, $hash, $delaySeconds, $keys): array {
+        return $this->db->transactional(function () use ($playerId, $originalId, $hash, $delaySeconds, $keys, $adminId): array {
+            if ($adminId !== null) {
+                (new VerificationAdminActorGuard())->lockAndCheck($this->db, $adminId, $playerId);
+            }
             $player = $this->db->fetchAssociative('SELECT email_verified_at, locked_at FROM player WHERE id = ? FOR UPDATE', [$playerId]);
             if ($player === false || $player['email_verified_at'] !== null || $player['locked_at'] !== null) {
                 return $this->result('ineligible');
@@ -102,6 +132,16 @@ final class VerificationRecoveryOrchestrator
             ]);
             $id = (int) $this->db->lastInsertId();
             $this->db->update('verification_recovery_event', ['recovery_request_id' => $id], ['original_request_id' => $originalId]);
+            if ($adminId !== null) {
+                $this->db->insert('admin_audit_log', [
+                    'actor_id' => $adminId,
+                    'action' => 'admin_activation_recovery_requested',
+                    'target_type' => 'player',
+                    'target_id' => $playerId,
+                    'created_at' => $date,
+                    'details' => json_encode(['request_id' => $id, 'reason' => 'activation_support'], JSON_THROW_ON_ERROR),
+                ]);
+            }
 
             return $this->result('reserved', $id);
         });

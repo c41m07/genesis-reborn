@@ -344,3 +344,113 @@ sur une branche de preuve séparée de V5.
 
 Résultat : **1 test, 30 assertions**, MariaDB jetable, montée et retour
 des migrations dans la fixture. Base et réseau de preuve retirés.
+
+## Recette HTTP du formulaire admin existant, branche hors V6
+
+Le contrôleur prend une interface `AdminActivationAction`. L'alias du
+vrai conteneur pointe toujours vers `AdminActivationService`, sans
+changement de décision, config de fournisseur ni valeur d'activation :
+le formulaire reste absent et le POST 404 par défaut. L'ancien transport
+par défaut continue de prouver la non-remise lorsqu'il est exercé seul.
+Aucune route, migration ou modification du parcours public n'a été ajoutée.
+
+Seule la WebTestCase remplace cet alias pour composer la récupération avec
+les composants réels et un reçu synthétique connu. Le garde ROLE_ADMIN,
+le CSRF propre au compte cible et la confirmation explicite sont ceux du
+vrai formulaire et contrôleur. Dans sa première version, la fixture repasse par la revérification
+d'acteur de la réservation existante avant la récupération et ne fournit
+qu'un résolveur de test et un transport factice. Cette composition ne doit
+pas être copiée comme fournisseur réel : elle connaît le reçu de fixture
+et sa revue d'acteur est une transaction séparée. Un branchement réel
+devrait sélectionner le reçu côté serveur et lier la revérification
+d'acteur, l'autorisation et la réservation dans une même transaction,
+en plus des conditions de clés, révocation et déploiement précédentes.
+
+Recette MariaDB jetable : **41 tests / 331 assertions** avec HTTP admin,
+confirmation publique et cycle d'intégration. Anonyme et simple joueur
+refusés, CSRF invalide et absence de confirmation sans effet, double
+soumission et nouvelle clé sans nouvelle remise, un seul passage factice
+et reçu initial intact. Le lien de fixture n'est dans aucun HTML,
+flash affiché, en-tête de redirection ni audit SQL vérifié. Cette recette
+ne prouve pas la confidentialité des logs réseau ou du futur transport.
+Validations PHP, Compose, conteneur Symfony et diff ; base/réseau retirés.
+Aucun navigateur partagé, port réseau exposé, Traefik, SMTP, secret réel,
+push, fusion ou modification de V6.
+
+## Ciblage et contrôle de l'acteur dans une transaction
+
+`reserveForAdmin` prend un acteur, le compte cible et le reçu attendu
+issu d'un contexte serveur. Aucun champ/routage HTTP n'a été ajouté.
+La politique préexistante est partagée : rôle courant ROLE_ADMIN,
+adresse vérifiée, absence de suspension ; aucune confiance dans la
+copie de session. Le contrôle commute les deux lignes compte dans
+l'ordre croissant des identifiants avant toute lecture des reçus.
+L'ancienne réservation normale réutilise le même garde et ne change
+pas ses droits. Tous les chemins appelants doivent conserver cet ordre.
+
+La transaction relit le reçu par (compte, reçu) et exige qu'il soit
+encore le dernier reçu admissible, sans choisir silencieusement son
+successeur. Absence et reçu appartenant à un autre compte ont la même
+réponse. Le rejeu d'une intention enregistrée ne réserve rien de plus.
+Un succès enregistre l'identité de l'acteur dans l'audit administratif
+avec le nouveau numéro de reçu et un motif fermé. L'audit, le journal,
+le lien entre reçus et la réservation sont commis ensemble ; aucun
+lien, adresse, clé ou empreinte du lien n'est renvoyé par le sélecteur.
+Le reçu indéterminé d'origine est intact.
+
+Le test HTTP s'appuie maintenant sur cette entrée défensive, toujours
+uniquement via sa substitution de conteneur. Une éventuelle future
+ouverture doit décider comment établir le contexte serveur de
+l'intention, maintenir le garde-fou et décider le comportement d'une
+révocation de droits intervenant *après* le commit. Ce lot sérialise
+les décisions au moment de réserver ; il n'annule pas un traitement
+déjà commis. Aucun nouvel accès effectif ni permission réelle.
+
+**55 tests / 428 assertions** : les tests à deux connexions observent
+une lecture verrouillée en attente avant de commettre soit la révocation
+du rôle, soit un successeur du reçu ; aucune récupération n'est alors
+réservée. Les tests ajoutés vérifient également le refus indiscernable
+du reçu tiers/inconnu. Recette HTTP factice et régressions historiques
+vertes ; Compose, PHP lint, conteneur et diff vérifiés. DB et réseau
+jetables retirés. Aucun schéma ajouté, SMTP, activation, changement de
+V6, push, fusion ni déploiement.
+
+## Contexte serveur court du formulaire, branche de recette
+
+Le contexte reprend le mécanisme du signalement joueur et de l'aperçu du
+catalogue : clé opaque déjà prévue par le formulaire, valeurs conservées
+dans une poche de session dédiée à la fiche et au POST d'activation.
+Le registre associe l'acteur, le compte cible et le reçu attendu, avec
+une fenêtre de 120 secondes et 20 entrées au maximum. Le lien avec la
+session est vérifié aussi après régénération d'identifiant (qui peut
+conserver les attributs). La clé opaque n'est pas un lien d'activation
+ni un droit ; elle ne remplace pas CSRF, confirmation et revérification
+transactionnelle. Le registre ne contient ni lien, ni clé de service,
+ni donnée d'un reçu tiers. La reprise autorisée dans la même session
+retrouve le même reçu pour permettre l'idempotence et ne prolonge
+jamais l'échéance.
+
+Dans cette branche, seule la substitution WebTestCase implémente
+`AdminActivationContextAction` ; l'alias vers le vrai fournisseur demeure
+inchangé. Le contrôleur partage la préparation et la validation du
+formulaire avec cette fixture, sans nouvel endpoint ni nouvelle donnée
+visible. Le POST n'accepte aucun champ de sélection de reçu. Contexte
+absent, falsifié, périmé, autre acteur/cible/session : même message de
+rechargement et aucune réservation ni remise. La valeur 120 secondes
+est le seuil de cette recette, pas une activation de politique réelle.
+
+Les tests purs `AdminActivationFormContextTest` vérifient la falsification,
+les liaisons et la régénération de session, le rejeu borné, l'échéance et
+la limite de rétention. La fixture HTTP ajoute un second navigateur avec
+le même administrateur et son propre CSRF, puis exerce une falsification,
+l'expiration et une soumission fraîche avec une seule remise factice.
+Aucun SMTP, nouveau secret, permission, configuration, intégration de
+V6 ou changement public.
+
+Recette exécutée après libération de V6 : **15 tests / 125 assertions**
+(HTTP admin, confirmation publique, contexte pur), MariaDB privée puis
+retirée. La même identité avec un autre cookie et son propre CSRF
+valide ne reprend pas l'ancien contexte. Clé falsifiée et expiration
+à la frontière ne réservent rien ; le formulaire frais fonctionne,
+un seul passage factice et ancien reçu intact. Compose, conteneur
+Symfony, lint PHP et diff validés. Aucune modification de V6.

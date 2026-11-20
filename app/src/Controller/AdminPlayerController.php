@@ -20,7 +20,7 @@ final class AdminPlayerController extends AbstractController
 {
     #[Route('/admin/joueurs/{id}', name: 'app_admin_player', requirements: ['id'=>'\d+'], methods: ['GET'])]
     #[IsGranted(AdminCapability::PLAYER_VIEW)]
-    public function show(int $id, EntityManagerInterface $em, PlayerActivityService $activity, ClockInterface $clock, ResourceService $resources, GameCatalog $catalog, AdminAccountDiagnosticService $diagnostic, \App\Service\Admin\AdminActivationService $activation): Response
+    public function show(int $id, EntityManagerInterface $em, PlayerActivityService $activity, ClockInterface $clock, ResourceService $resources, GameCatalog $catalog, AdminAccountDiagnosticService $diagnostic, \App\Service\Admin\AdminActivationAction $activation): Response
     {
         $player = $em->find(Player::class, $id);
         if (!$player) throw $this->createNotFoundException('Joueur introuvable.');
@@ -34,7 +34,13 @@ final class AdminPlayerController extends AbstractController
         $entry = new AdminAuditLog();
         $entry->actor = $this->getUser();$entry->action = 'admin_player_view';$entry->targetType = 'player';$entry->targetId = $id;$entry->createdAt = $clock->now();
         $em->persist($entry);$em->flush();
-        return $this->render('admin/player.html.twig', ['activation_enabled'=>$activation->isEnabled(), 'activation_request_key'=>bin2hex(random_bytes(32)), 'player'=>$player, 'account_diagnostic'=>$diagnostic->snapshot($player), 'memberships'=>$memberships, 'stocks'=>$stocks, 'ship_catalog'=>$catalog->all('ships'), 'ship_tiers'=>$catalog->tiers()]);
+        $activationEnabled = $activation->isEnabled();
+        $activationKey = bin2hex(random_bytes(32));
+        if ($activationEnabled && $activation instanceof \App\Service\Admin\AdminActivationContextAction) {
+            $activationKey = $activation->prepareFormKey($this->getUser(), $id);
+            $activationEnabled = $activationKey !== null;
+        }
+        return $this->render('admin/player.html.twig', ['activation_enabled'=>$activationEnabled, 'activation_request_key'=>$activationKey, 'player'=>$player, 'account_diagnostic'=>$diagnostic->snapshot($player), 'memberships'=>$memberships, 'stocks'=>$stocks, 'ship_catalog'=>$catalog->all('ships'), 'ship_tiers'=>$catalog->tiers()]);
     }
 
     #[Route('/admin/joueurs/{id}/colonies/{planetId}/ressources', name: 'app_admin_player_resources', requirements: ['id'=>'\d+', 'planetId'=>'\d+'], methods: ['POST'])]
@@ -69,7 +75,7 @@ final class AdminPlayerController extends AbstractController
     }
 
     #[Route('/admin/joueurs/{id}/activation', name: 'app_admin_player_activation', requirements: ['id' => '\\d+'], methods: ['POST'])]
-    public function activation(int $id, Request $request, \App\Service\Admin\AdminActivationService $activation): Response
+    public function activation(int $id, Request $request, \App\Service\Admin\AdminActivationAction $activation): Response
     {
         if (!$activation->isEnabled()) {
             throw $this->createNotFoundException();
