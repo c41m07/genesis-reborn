@@ -834,3 +834,5 @@ l'exécution métier du seul état de l'outbox et n'expose aucune action de repr
 Les identifiants de relais du diagnostic ouvrent une inspection ciblée en lecture seule ; elle distingue les événements périmés sans autoriser leur reprise. Voir [le périmètre exploitation](docs/ADMIN_EXPLOITATION_DIAGNOSTIC.md).
 
 La [matrice des permissions](docs/ADMIN_PERMISSIONS.md) documente les contrôles existants du seul rôle administrateur, sans attribution ni délégation.
+
+- **Navigation Galaxie** : le système choisi est conservé entre les vues carte et liste, y compris via les liens natifs ; le retour à la galaxie enlève la sélection.

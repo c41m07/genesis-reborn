@@ -507,6 +507,7 @@ final class ColonyController extends AbstractController
             $galaxyV2Json = json_encode([
                 'geometry' => ['name' => GalaxyGeometry::SPIRAL, 'extent' => GalaxyGeometry::EXTENT, 'unitsToAu' => GalaxyGeometry::UNITS_TO_AU],
                 'systems' => $mapSystems,
+                'selectedSystemId' => $selectedId > 0 ? $selectedSystem['system']->id : null,
                 'origin' => $mapOrigin ? [
                     'planetName' => $mapOrigin->name,
                     'planetCoordinates' => $mapOrigin->coordinates(),
@@ -531,6 +532,7 @@ final class ColonyController extends AbstractController
             'map_fleet_limit' => $mapFleetLimit,
             'systems' => $systems,
             'selected_system' => $selectedSystem,
+            'selected_system_id' => $selectedId > 0 ? $selectedSystem['system']->id : null,
             'galaxies' => $galaxies,
             'selected_galaxy' => $selectedGalaxy,
             'galaxy_v2_json' => $galaxyV2Json,
