@@ -28,7 +28,7 @@ final class VersionedVerificationLink
             || $expiry <= $this->clock->now()->getTimestamp()) {
             throw new \InvalidArgumentException('Paramètres de génération invalides.');
         }
-        $key = $keys->resolve($keyId);
+        $key = $this->resolveKey($keys, $keyId);
         if ($key === null || strlen($key) < 32) {
             throw new \DomainException('Clé de confirmation indisponible.');
         }
@@ -46,7 +46,7 @@ final class VersionedVerificationLink
         if (!$this->isCurrentFormatAndUnexpired($current)) {
             return null;
         }
-        $key = $keys->resolve($current->keyId);
+        $key = $this->resolveKey($keys, $current->keyId);
         if ($key === null || strlen($key) < 32) {
             return null;
         }
@@ -61,6 +61,17 @@ final class VersionedVerificationLink
         return $this->isCurrentFormatAndUnexpired($current)
             && preg_match('/\A[A-Za-z0-9_-]{43}\z/', $link) === 1
             && hash_equals($current->fingerprint, hash('sha256', $link));
+    }
+
+    private function resolveKey(#[\SensitiveParameter] VerificationLinkKeyResolver $keys, string $keyId): ?string
+    {
+        try {
+            return $keys->resolve($keyId);
+        } catch (\Exception) {
+            // Défaillance du fournisseur : ne pas inclure son contexte, qui
+            // pourrait mentionner un secret, ni proposer une autre clé.
+            return null;
+        }
     }
 
     private function isCurrentFormatAndUnexpired(VerificationLinkGeneration $current): bool

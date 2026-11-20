@@ -760,4 +760,75 @@ final class VerificationGenerationStoreTest extends KernelTestCase
         self::assertSame($expected, $service->reserveForAdmin($admin->id, $player->id, 2147483647, $key, 300, $keys));
         self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM verification_recovery_event'));
     }
+
+    public function testWriterAndMixedReaderSerializeAcrossConnections(): void
+    {
+        [$em, $db, $player, $clock, $store, $codec, $keys] = $this->fixture();
+        $this->up($db);
+        self::assertEqualsCanonicalizing(['created', 'reused'], $this->race($player->id, 'writer', 'writer'));
+        self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM player_verification_generation'));
+        $stored = $db->fetchAssociative('SELECT * FROM player_verification_generation');
+        $prepared = $store->prepareForEmission($player->id, 'fixture', $clock->now()->modify('+1 day'), $keys);
+        self::assertSame('reused', $prepared['result']);
+        self::assertSame((int) $stored['expires_at'], $prepared['generation']->expiresAt);
+        $link = $codec->reproduce($prepared['generation'], $keys);
+        [$writer, $confirmed] = $this->race($player->id, 'writer', 'mixed', 0, $link);
+        self::assertContains($writer, ['reused', 'ineligible']);
+        self::assertTrue($confirmed);
+        $saved = $db->fetchAssociative('SELECT * FROM player_verification_generation');
+        self::assertSame(array_replace($stored, ['state' => 'consumed']), $saved);
+        self::assertSame(['result' => 'ineligible', 'generation' => null], $store->prepareForEmission($player->id, 'fixture', $clock->now()->modify('+1 day'), $keys));
+        self::assertFalse($this->mixed($em, $codec, $clock)->confirm($link));
+    }
+
+    public function testWriterDoesNotReinterpretHistoricalLinkOrRotateWhenKeyUnavailable(): void
+    {
+        [$em, $db, $player, $clock, $store, $codec, $keys] = $this->fixture();
+        $this->up($db);
+        $legacy = new EmailVerificationToken();
+        $legacy->player = $player;
+        $legacy->tokenHash = hash('sha256', 'synthetic-historical-link');
+        $legacy->expiresAt = $clock->now()->modify('+1 hour');
+        $em->persist($legacy);
+        $em->flush();
+        $before = $db->fetchAssociative('SELECT * FROM player_email_verification_token');
+        self::assertSame(['result' => 'legacy_active', 'generation' => null], $store->prepareForEmission($player->id, 'fixture', $clock->now()->modify('+1 day'), $keys));
+        $clock->sleep(3600);
+        $new = $store->prepareForEmission($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        self::assertSame('created', $new['result']);
+        self::assertSame($before, $db->fetchAssociative('SELECT * FROM player_email_verification_token'));
+        $current = $db->fetchAssociative('SELECT * FROM player_verification_generation');
+        $rotatedKeys = new class implements VerificationLinkKeyResolver {
+            public function resolve(string $keyId): ?string
+            {
+                return $keyId === 'new-key' ? str_repeat('n', 32) : null;
+            }
+        };
+        self::assertSame(['result' => 'generation_unavailable', 'generation' => null], $store->prepareForEmission($player->id, 'new-key', $clock->now()->modify('+1 day'), $rotatedKeys));
+        self::assertSame($current, $db->fetchAssociative('SELECT * FROM player_verification_generation'));
+        self::assertNotNull($codec->reproduce($new['generation'], $keys));
+    }
+
+    public function testNewRegistrationRemainsPendingWhenVersionedWriterHasNoKey(): void
+    {
+        [, $db, , $clock, $store] = $this->fixture();
+        $this->up($db);
+        $data = new \App\Validator\DTO\RegistrationData();
+        $data->email = 'writer-registration@example.test';
+        $data->username = 'WriterRegistration';
+        $data->plainPassword = 'Fixture-Only-2026!';
+        $player = self::getContainer()->get(\App\Service\Player\RegistrationService::class)->register($data);
+        $keys = new class implements VerificationLinkKeyResolver {
+            public function resolve(string $keyId): ?string
+            {
+                throw new \RuntimeException('synthetic resolver unavailable');
+            }
+        };
+        self::assertSame(['result' => 'key_unavailable', 'generation' => null], $store->prepareForEmission($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys));
+        self::assertSame($player->id, (int) $db->fetchOne('SELECT id FROM player WHERE email = ?', [$data->email]));
+        self::assertNull($db->fetchOne('SELECT email_verified_at FROM player WHERE id = ?', [$player->id]));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM player_verification_generation'));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM player_email_verification_token'));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM verification_delivery_request'));
+    }
 }
