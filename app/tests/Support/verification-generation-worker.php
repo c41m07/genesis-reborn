@@ -38,6 +38,7 @@ $result = match ($argv[2]) {
     'prepare' => $store->prepare($player, 'fixture', $clock->now()->modify('+'.($argv[4] === 'a' ? '60' : '120').' minutes'), $keys)?->version,
     'revoke' => $store->revoke($player, $id),
     'consume' => $store->consume($player, $id, stream_get_contents(STDIN)),
+    'mixed' => (new App\Service\Player\MixedVerificationLinkReader($em, new App\Manager\GameManager($em), $codec, $clock))->confirm(stream_get_contents(STDIN)),
     'recover' => $store->recordRecovery($player, $id, str_repeat($argv[4], 64), 300),
 };
 echo json_encode($result, JSON_THROW_ON_ERROR);

@@ -8,7 +8,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
-use DoctrineMigrations\Version20261120000200;
+use DoctrineMigrations\{Version20261120000200, Version20261120000300};
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Clock\MockClock;
 use Symfony\Component\Process\Process;
@@ -28,10 +28,14 @@ final class VerificationGenerationStoreTest extends KernelTestCase
     private function migrate(Connection $db, string $direction): void
     {
         require_once dirname(__DIR__, 2).'/migrations/Version20261120000200.php';
-        $migration = new Version20261120000200($db, new \Psr\Log\NullLogger());
-        $migration->{$direction}(new Schema());
-        foreach ($migration->getSql() as $query) {
-            $db->executeStatement($query->getStatement());
+        require_once dirname(__DIR__, 2).'/migrations/Version20261120000300.php';
+        $versions = [Version20261120000200::class, Version20261120000300::class];
+        foreach ($direction === 'up' ? $versions : array_reverse($versions) as $version) {
+            $migration = new $version($db, new \Psr\Log\NullLogger());
+            $migration->{$direction}(new Schema());
+            foreach ($migration->getSql() as $query) {
+                $db->executeStatement($query->getStatement());
+            }
         }
     }
 
@@ -71,14 +75,14 @@ final class VerificationGenerationStoreTest extends KernelTestCase
         $this->db = $db;
     }
 
-    private function race(int $playerId, string $first, string $second, int $rowId = 0, ?string $link = null): array
+    private function race(int $playerId, string $first, string $second, int $rowId = 0, string|array|null $link = null): array
     {
         $dir = sys_get_temp_dir().'/verification-generation-'.bin2hex(random_bytes(8));
         mkdir($dir, 0700);
         $processes = [];
         try {
             foreach (['a' => $first, 'b' => $second] as $side => $operation) {
-                $proc = new Process([PHP_BINARY, dirname(__DIR__).'/Support/verification-generation-worker.php', (string) $playerId, $operation, $dir, $side, (string) $rowId], input: $operation === 'consume' ? $link : null, timeout: 20);
+                $proc = new Process([PHP_BINARY, dirname(__DIR__).'/Support/verification-generation-worker.php', (string) $playerId, $operation, $dir, $side, (string) $rowId], input: in_array($operation, ['consume', 'mixed'], true) ? (is_array($link) ? $link[$side] : $link) : null, timeout: 20);
                 $proc->start();
                 $processes[] = $proc;
             }
@@ -179,5 +183,133 @@ final class VerificationGenerationStoreTest extends KernelTestCase
         self::assertSame('replayed', $store->recordRecovery($player->id, $original->id, str_repeat($winner, 64), 300));
         self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM verification_recovery_event'));
         self::assertSame($snapshot, $db->fetchAssociative('SELECT * FROM verification_delivery_request WHERE id = ?', [$original->id]));
+    }
+
+    private function mixed(EntityManagerInterface $em, VersionedVerificationLink $codec, MockClock $clock): \App\Service\Player\MixedVerificationLinkReader
+    {
+        return new \App\Service\Player\MixedVerificationLinkReader($em, new \App\Manager\GameManager($em), $codec, $clock);
+    }
+
+    public function testMixedReaderConfirmsLegacyAndVersionedWithoutKeyAtReadTime(): void
+    {
+        [$em, $db, $legacyPlayer, $clock, $store, $codec, $keys] = $this->fixture();
+        $this->up($db);
+        $versioned = new Player();
+        $versioned->email = 'versioned@example.test';
+        $versioned->username = 'Versioned';
+        $versioned->password = 'synthetic';
+        $em->persist($versioned);
+        $legacy = new EmailVerificationToken();
+        $legacyLink = str_repeat('l', 43);
+        $legacy->player = $legacyPlayer;
+        $legacy->tokenHash = hash('sha256', $legacyLink);
+        $legacy->expiresAt = $clock->now()->modify('+1 hour');
+        $em->persist($legacy);
+        $em->flush();
+        $generation = $store->prepare($versioned->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        $link = $codec->reproduce($generation, $keys);
+        $reader = $this->mixed($em, $codec, $clock);
+        self::assertFalse($reader->confirm('invalid-format'));
+        self::assertTrue($reader->confirm($legacyLink));
+        self::assertNotNull($legacyPlayer->emailVerifiedAt);
+        self::assertNull($versioned->emailVerifiedAt);
+        self::assertNull($legacy->id); // Suppression cohérente avec l'ORM.
+        self::assertTrue($reader->confirm($link)); // Aucun résolveur fourni.
+        self::assertNotNull($versioned->emailVerifiedAt);
+        self::assertFalse($reader->confirm($legacyLink));
+        self::assertFalse($reader->confirm($link));
+        self::assertSame('consumed', $db->fetchOne('SELECT state FROM player_verification_generation'));
+    }
+
+    public function testMixedReaderRejectsRevokedExpiredAmbiguousAndLockedStates(): void
+    {
+        [$em, $db, $player, $clock, $store, $codec, $keys] = $this->fixture();
+        $this->up($db);
+        $generation = $store->prepare($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        $link = $codec->reproduce($generation, $keys);
+        $reader = $this->mixed($em, $codec, $clock);
+
+        $legacy = new EmailVerificationToken();
+        $legacy->player = $player;
+        $legacy->tokenHash = $generation->fingerprint;
+        $legacy->expiresAt = $clock->now()->modify('+1 hour');
+        $em->persist($legacy);
+        $em->flush();
+        self::assertFalse($reader->confirm($link)); // Empreinte présente dans les deux familles.
+        $em->remove($legacy);
+        $em->flush();
+
+        $loaded = $em->find(PlayerVerificationGeneration::class, $player->id);
+        self::assertSame('active', $loaded->state);
+        self::assertTrue($store->revoke($player->id, $generation->version));
+        self::assertFalse($reader->confirm($link));
+        self::assertSame('revoked', $loaded->state); // Refresh de l'identity map.
+
+        $next = $store->prepare($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        $nextLink = $codec->reproduce($next, $keys);
+        self::assertFalse($reader->confirm($link));
+        $db->update('player', ['locked_at' => '2030-01-01 00:00:00'], ['id' => $player->id]);
+        self::assertFalse($reader->confirm($nextLink));
+        self::assertNotNull($player->lockedAt);
+        $db->update('player', ['locked_at' => null], ['id' => $player->id]);
+        $clock->sleep(3600);
+        self::assertFalse($reader->confirm($nextLink));
+        self::assertNull($player->emailVerifiedAt);
+    }
+
+    public function testConcurrentMixedReadersConsumeAtMostOnce(): void
+    {
+        [$em, $db, $player, $clock, $store, $codec, $keys] = $this->fixture();
+        $this->up($db);
+        $generation = $store->prepare($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        $link = $codec->reproduce($generation, $keys);
+        self::assertEqualsCanonicalizing([false, true], $this->race($player->id, 'mixed', 'mixed', $generation->version, $link));
+        self::assertFalse($this->mixed($em, $codec, $clock)->confirm($link));
+        self::assertNotNull($player->emailVerifiedAt);
+        self::assertSame('consumed', $db->fetchOne('SELECT state FROM player_verification_generation'));
+    }
+
+    public function testMixedReaderSerializesBothFamiliesForSameAccount(): void
+    {
+        [$em, $db, $player, $clock, $store, $codec, $keys] = $this->fixture();
+        $this->up($db);
+        $generation = $store->prepare($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        $vLink = $codec->reproduce($generation, $keys);
+        // Représente une donnée inattendue si un ancien écrivain n'a pas
+        // encore été arrêté ; aucun endpoint ne crée cet état dans le test.
+        $legacyLink = str_repeat('l', 43);
+        $legacy = new EmailVerificationToken();
+        $legacy->player = $player;
+        $legacy->tokenHash = hash('sha256', $legacyLink);
+        $legacy->expiresAt = $clock->now()->modify('+1 hour');
+        $em->persist($legacy);
+        $em->flush();
+        [$historic, $versioned] = $this->race($player->id, 'mixed', 'mixed', 0, ['a' => $legacyLink, 'b' => $vLink]);
+        self::assertNotSame($historic, $versioned);
+        self::assertSame($historic ? 'revoked' : 'consumed', $db->fetchOne('SELECT state FROM player_verification_generation'));
+        self::assertSame($historic ? 0 : 1, (int) $db->fetchOne('SELECT COUNT(*) FROM player_email_verification_token'));
+        $reader = $this->mixed($em, $codec, $clock);
+        self::assertFalse($reader->confirm($legacyLink));
+        self::assertFalse($reader->confirm($vLink));
+    }
+
+    public function testMixedReaderDoesNotExposeRawLinkInDeliberateRejectionTrace(): void
+    {
+        [$em, $db, , $clock, , $codec] = $this->fixture();
+        $this->up($db);
+        $link = str_repeat('w', 43);
+        $old = ini_get('zend.exception_ignore_args');
+        ini_set('zend.exception_ignore_args', '0');
+        $db->beginTransaction();
+        try {
+            $this->mixed($em, $codec, $clock)->confirm($link);
+            self::fail('Transaction externe acceptée.');
+        } catch (\LogicException $error) {
+            self::assertInstanceOf(\SensitiveParameterValue::class, $error->getTrace()[0]['args'][0]);
+            self::assertStringNotContainsString($link, (string) $error);
+        } finally {
+            $db->rollBack();
+            ini_set('zend.exception_ignore_args', $old);
+        }
     }
 }

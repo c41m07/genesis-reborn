@@ -140,3 +140,45 @@ sont des processus/connecteurs distincts derrière une barrière ; ils ne
 font aucun appel mail. Base et réseau privés retirés. Compose, conteneur
 Symfony, lint PHP et diff vérifiés. Aucun SMTP, configuration de clés,
 appel public, push, intégration ou déploiement.
+
+## Lecteur mixte interne, non raccordé
+
+`MixedVerificationLinkReader::confirm()` recherche l'empreinte dans
+les deux familles ; un résultat absent ou ambigu est refusé. Il ne prend
+pas un identifiant de joueur fourni par le client et n'a besoin d'aucune
+clé de dérivation. Les empreintes versionnées utilisent l'index unique
+additif `Version20261120000300`, recette montée/retour sur la base jetable
+uniquement. L'index historique est inchangé.
+
+La recherche initiale est non autorisante et hors transaction : elle indique
+seulement quel compte verrouiller. La transaction verrouille et relit
+le compte, puis les enfants, avec rafraîchissement des objets Doctrine.
+Confirmation atomique avec retrait de la ligne du seul lien historique
+consommé, ou marquage consommé de la génération active. Si deux familles
+existent exceptionnellement pour le compte, les deux confirmations ne
+peuvent pas gagner ; la réussite historique révoque aussi la génération
+active, une réussite versionnée laisse les empreintes historiques intactes.
+Le compte confirmé ne peut consommer aucun autre lien. Un compte suspendu
+est refusé par ce lecteur ; le lecteur historique actuellement branché n'a
+pas été modifié. Ce refus doit être validé comme règle produit avant branchement.
+
+Le lien brut n'est ni paramètre SQL ni champ d'audit. L'exception synthétique
+de transaction externe a vérifié la protection SensitiveParameter dans
+la trace PHP. Cette preuve n'audite pas les journaux proxy/serveur HTTP :
+il n'y a aucune route nouvelle, et les paramètres SQL portent l'empreinte,
+pas le lien brut. La validation d'usage reste la possession du lien ;
+un futur contrôleur doit conserver le POST, le CSRF, le no-store/no-referrer
+et les réponses neutres existantes.
+
+Recette : **37 tests / 250 assertions**, dont confirmation des deux familles,
+courses même lien et deux familles pour un compte, ancien lien révoqué,
+expiration, suspension revue après mise à jour SQL, cache d'identité Doctrine,
+collision entre familles refusée, traces PHP et régressions historiques.
+Courses réelles sur deux processus/connexions ; commandes migrations up/down,
+Compose, conteneur, lint PHP et diff vérifiés. DB/réseau jetables retirés.
+
+Aucun raccordement HTTP, résolveur réel, réglage, secret ou envoi réel.
+Avant branchement, confirmer la politique de suspension, borner le passage
+au lecteur mixte, drainer les anciens émetteurs et valider le plan de rollback.
+La migration d'index doit d'abord précontrôler les doublons et être appliquée
+après autorisation explicite et sauvegarde si une base existante est concernée.

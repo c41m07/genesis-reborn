@@ -7,6 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 /** Une ligne par compte ; la version reste avant le remplacement suivant. */
 #[ORM\Entity]
 #[ORM\Table(name: 'player_verification_generation')]
+#[ORM\UniqueConstraint(name: 'verification_generation_fingerprint_unique', columns: ['fingerprint'])]
 class PlayerVerificationGeneration
 {
     #[ORM\Id, ORM\OneToOne(targetEntity: Player::class)]
