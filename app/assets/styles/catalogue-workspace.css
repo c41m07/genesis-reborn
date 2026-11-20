@@ -185,3 +185,8 @@ body[data-theme=light] .catalog-workspace .card-benefits>summary::after { color:
     .catalog-workspace .catalog-condensed .catalog-blocked { grid-area:7/1/8/3; }
     .catalog-workspace .catalog-condensed .catalog-level-complete { grid-area:4/1/5/3; }
 }
+
+/* Le délai reste lisible en dehors du bouton de construction désactivé. */
+.catalog-wait { margin-top: 6px; }
+.catalog-wait > button { width: 100%; text-align: left; white-space: normal; }
+.catalog-wait-info { inset: auto; margin: 0; max-width: min(24rem, calc(100vw - 24px)); padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--text); }

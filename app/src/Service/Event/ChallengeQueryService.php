@@ -4,6 +4,7 @@ namespace App\Service\Event;
 use App\Entity\{BoostEvent, PlayerBoost, PlayerUniverse, Universe};
 use App\Repository\GameRepository;
 use App\Service\Admin\AdminEventPlanner;
+use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
 
@@ -12,7 +13,7 @@ final class ChallengeQueryService
     public const STATUSES=['scheduled'=>'Planifié','active'=>'En cours','closed'=>'Terminé','cancelled'=>'Annulé'];
     public function __construct(private EntityManagerInterface $em,private GameRepository $repo,private ClockInterface $clock) {}
 
-    public function view(BoostEvent $event,?PlayerUniverse $membership=null): array
+    public function view(BoostEvent $event,?PlayerUniverse $membership=null,bool $includePersonalRank=true): array
     {
         $guided=(bool)($event->configuration['guided'] ?? false);$objective=AdminEventPlanner::OBJECTIVES[$event->templateKey] ?? ['label'=>$event->templateKey,'help'=>''];
         $score=$membership ? $this->repo->boostEventContributionTotal($event,$membership) : 0;
@@ -21,7 +22,7 @@ final class ChallengeQueryService
         if ($event->status==='scheduled' && $event->scheduledAt<=$this->clock->now()) $status='En attente de démarrage';
         if ($event->status==='active' && $event->endsAt && $event->endsAt<=$this->clock->now()) $status='Clôture en cours';
         $rank=null;
-        if ($membership && $score>0 && $event->rewardMode==='top3') {
+        if ($includePersonalRank && $membership && $score>0 && $event->rewardMode==='top3') {
             $rank=1+(int)$this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM (SELECT SUM(value) AS score FROM boost_event_contribution WHERE event_id=:event GROUP BY player_universe_id HAVING SUM(value)>:score) ranked',['event'=>$event->id,'score'=>$score]);
         }
         return ['event'=>$event,'guided'=>$guided,'weekly'=>str_starts_with($event->eventKey,'weekly-'),'rank'=>$rank,'name'=>$event->configuration['name'] ?? 'Rotation hebdomadaire · '.$objective['label'],
@@ -32,6 +33,100 @@ final class ChallengeQueryService
             'goal_reached'=>$event->globalGoal!==null && $event->totalContribution >= $event->globalGoal,
             'progress'=>$event->globalGoal>0 ? min(100,100*$event->totalContribution/$event->globalGoal) : 0,
             'expected_end'=>$event->endsAt ?? $event->scheduledAt->modify('+'.$event->durationSeconds.' seconds')];
+    }
+
+    /**
+     * Classement réservé aux participations ayant contribué à ce défi.
+     * La fiche a déjà validé la visibilité de ce défi et ne reçoit aucune donnée administrative.
+     *
+     * @return array{rows: list<array{rank: int, contribution: float, commander: ?string, is_viewer: bool}>, page: int, pages: int,
+     *     total: int, viewer_rank: int, viewer_contribution: float}|null
+     */
+    public function contributionRanking(BoostEvent $event, PlayerUniverse $viewer, int $page): ?array
+    {
+        if ($event->id === null || $viewer->id === null
+            || $event->universe->id !== $viewer->universe->id || !$viewer->isPlayerControlled()) {
+            return null;
+        }
+
+        // Revalider l'univers et la participation en base. Seul le pseudo public d'un joueur actuel sort ;
+        // une contribution historique reste au classement sans divulguer son ancien pseudo.
+        // Le rang ne départage pas les ex æquo ; l'identifiant interne ne stabilise que la pagination.
+        $rows = $this->em->getConnection()->fetchAllAssociative(
+            <<<'SQL'
+                WITH allowed_event AS (
+                    SELECT e.id, e.universe_id, viewer.id AS viewer_id
+                    FROM boost_event e
+                    INNER JOIN player_universe viewer
+                        ON viewer.id = :viewer AND viewer.universe_id = e.universe_id
+                        AND viewer.player_id IS NOT NULL AND viewer.forgotten_at IS NULL
+                    WHERE e.id = :event
+                ),
+                scores AS (
+                    SELECT c.player_universe_id, SUM(c.value) AS score
+                    FROM allowed_event e
+                    INNER JOIN boost_event_contribution c ON c.event_id = e.id
+                    INNER JOIN player_universe m ON m.id = c.player_universe_id AND m.universe_id = e.universe_id
+                    GROUP BY c.player_universe_id
+                    HAVING SUM(c.value) > 0
+                ),
+                ranked AS (
+                    SELECT player_universe_id, score,
+                        RANK() OVER (ORDER BY score DESC) AS place,
+                        ROW_NUMBER() OVER (ORDER BY score DESC, player_universe_id ASC) AS row_position
+                    FROM scores
+                ),
+                pagination AS (
+                    SELECT COUNT(*) AS total, GREATEST(1, CEIL(COUNT(*) / 25)) AS pages
+                    FROM scores
+                ),
+                requested_page AS (
+                    SELECT total, pages, LEAST(GREATEST(:page, 1), pages) AS current_page
+                    FROM pagination
+                )
+                SELECT paging.total, paging.pages, paging.current_page,
+                    item.place, item.score, commander.username AS commander,
+                    item.player_universe_id = e.viewer_id AS is_viewer,
+                    own.place AS viewer_rank, own.score AS viewer_score
+                FROM allowed_event e
+                CROSS JOIN requested_page paging
+                INNER JOIN ranked own ON own.player_universe_id = e.viewer_id
+                LEFT JOIN ranked item ON item.row_position > (paging.current_page - 1) * 25
+                    AND item.row_position <= paging.current_page * 25
+                LEFT JOIN player_universe current_member ON current_member.id = item.player_universe_id
+                    AND current_member.universe_id = e.universe_id AND current_member.forgotten_at IS NULL
+                LEFT JOIN player commander ON commander.id = current_member.player_id
+                ORDER BY item.row_position
+                SQL,
+            ['event' => $event->id, 'viewer' => $viewer->id, 'page' => $page],
+            ['event' => ParameterType::INTEGER, 'viewer' => ParameterType::INTEGER, 'page' => ParameterType::INTEGER],
+        );
+        if ($rows === []) {
+            return null;
+        }
+
+        $summary = $rows[0];
+        $entries = [];
+        foreach ($rows as $row) {
+            if ($row['place'] === null) {
+                continue;
+            }
+            $entries[] = [
+                'rank' => (int) $row['place'],
+                'contribution' => (float) $row['score'],
+                'commander' => $row['commander'],
+                'is_viewer' => (bool) $row['is_viewer'],
+            ];
+        }
+
+        return [
+            'rows' => $entries,
+            'page' => (int) $summary['current_page'],
+            'pages' => (int) $summary['pages'],
+            'total' => (int) $summary['total'],
+            'viewer_rank' => (int) $summary['viewer_rank'],
+            'viewer_contribution' => (float) $summary['viewer_score'],
+        ];
     }
 
     public function forPlayer(PlayerUniverse $membership): array
