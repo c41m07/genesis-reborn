@@ -564,3 +564,28 @@ Candidat local seulement. Pas de fournisseur, de clé ou de SMTP réel, de
 test Chromium supplémentaire, de suite exhaustive V10, de CI GitHub, de
 push, de fusion dev ni de déploiement. La recette PHP exhaustive citée
 précédemment concerne V6 uniquement.
+
+
+## Recette V11 : révocation après changement d’adresse
+
+Branche chore/recette-integration-admin-v11, worktree distinct. Assemblage
+04674aa94afd3733168f35b1f071aabd61a8b689, parents V10 (12a0288) et
+f34e554. Aucun autre lot.
+
+- Sur fixtures, une génération révoquée lors d’un changement d’adresse ne
+  redevient pas utilisable quand l’adresse initiale revient. Les tests
+  vérifient aussi le verrou concurrent, le retour arrière atomique
+  (adresse et état du lien conservés), et l’anonymisation (génération
+  révoquée, suppression des jetons historiques inchangée).
+- Formulaires et mode historique vérifiés de nouveau ; les bascules restent
+  désactivées et aucun fournisseur versionné n’est configuré. La preuve
+  d’ancien schéma reste verte. Aucun changement dans les migrations, les
+  routes, les permissions ni la CI. L’aller-retour de 00600 reste la preuve
+  V10, portant sur le même fichier de migration.
+- Tests ciblés : 58 / 485 assertions. Agrégée support/panneau/profil :
+  240 / 2 317 assertions. Lints PHP, 216 Twig, 80 YAML, conteneur,
+  Compose et diff verts. Base et réseau jetables retirés.
+
+Recette locale seulement. Pas de Chromium ou PHP exhaustif V11, CI GitHub,
+transport réel, clé, push, fusion dev ni déploiement. Ce lot ne met pas en
+service l’émission ou la récupération d’activation.
