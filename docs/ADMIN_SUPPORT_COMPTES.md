@@ -375,3 +375,72 @@ Aucun fichier applicatif ni migration supplémentaire dans cette passe.
   remplacement du retry aveugle du mailer pour ce nouveau circuit, sauvegarde
   vérifiée et application autorisée des deux migrations. Aucune de ces actions
   n’est activée par les tests présents.
+
+## Raccordement administratif expérimental, désactivé par défaut
+
+Complexité 4/5. La route POST `/admin/joueurs/{id}/activation` est désormais
+testable avec le cycle de reçu. Le paramètre `ADMIN_ACTIVATION_ENABLED` vaut
+0 par défaut : formulaire absent et POST 404. Même avec ce paramètre à 1,
+le transport livré `UnavailableAdminActivationTransport` ne construit aucun
+jeton et n'appelle aucun mailer : il retourne strictement `not_dispatched`.
+Ce lot n'est donc **pas un renvoi opérationnel** et ne doit pas être présenté
+comme tel. Le transport acceptant n'existe que comme double de test.
+
+ROLE_ADMIN existant, CSRF et confirmation explicite restent requis. Le service
+revérifie rôle courant, suspension et confirmation du compte administrateur
+sous verrou ; les verrous acteur/cible sont pris dans l'ordre des identifiants.
+La cible doit rester non confirmée et non suspendue. La réservation et son
+audit initial sont atomiques ; motif fermé et identifiant de reçu seulement,
+sans email, jeton, clé d'idempotence ni message d'exception dans l'audit.
+Le résultat fait l'objet d'un second audit. Si cet audit échoue après la
+transition, aucun succès n'est garanti au demandeur : le reçu fait foi et
+l'idempotence interdit un second appel du transport pour la même demande.
+
+Le prototype admin utilise 300 secondes de refroidissement et une revendication
+de 120 secondes. Ce ne sont pas de nouveaux paramètres publics.
+Inscription, service de confirmation et messages publics sont **inchangés**.
+La cadence publique existante est de cinq demandes par heure et par IP
+(fenêtre glissante, clé verification + IP), pas un délai par compte.
+
+### Limite avant tout transport réel
+
+La voie publique peut remplacer le jeton pendant un envoi administratif.
+Le verrou de réservation seul ne protège pas la période SMTP. Il faut donc
+une coordination commune du cycle public/admin avant raccordement d'un vrai
+transport, sans imposer arbitrairement cinq minutes au parcours public.
+Il faut aussi décider quotas, rétention et résolution humaine des reçus,
+puis autoriser séparément toute migration sur une base existante.
+
+`not_dispatched` n'est admis que si l'adaptateur prouve qu'aucun appel de remise
+n'a eu lieu. Il devient cancelled, sans annonce de mail envoyé.
+Une exception, un délai expiré ou un résultat inattendu devient unknown :
+aucune relance automatique ni reclassement en « non envoyé ». Un transport
+acceptant signifie seulement prise en charge, jamais livraison au destinataire.
+
+Récupération manuelle : le diagnostic existant et le formulaire public restent
+accessibles, mais il n'existe pas encore de commande sûre de résolution d'un
+reçu unknown. Ne pas effacer le reçu ni le réarmer pour débloquer une relance.
+Avant un transport réel, il faut un protocole d'arrêt/contrôle du worker et de
+rapprochement avec le fournisseur, puis une décision auditée de nouvelle
+demande. Une absence de trace SMTP ne prouve pas la non-remise. Le formulaire
+public peut renouveler un lien, mais invalide l'ancien : il ne constitue pas
+une résolution fiable d'une remise concurrente indéterminée. Tant que ce
+contrat n'est pas défini, le garde-fou désactivé et l'adaptateur sans envoi
+empêchent de créer ce risque pour les comptes réels.
+
+### Recette locale de ce lot
+
+- Compose, conteneur Symfony et Twig ciblé valides ; diff sans erreur.
+- Activation : 6 tests / 37 assertions (garde-fou, anonyme/joueur, CSRF,
+  confirmation, double soumission, refroidissement, audit, exception ambiguë,
+  absence de secret, rôle révoqué en base malgré objet périmé, cible confirmée,
+  preuve de non-départ du transport par défaut).
+- Fondation reçus : 11 tests / 83 assertions, y compris processus réellement
+  concurrents et pannes injectées précédemment documentées.
+- Confirmation publique et diagnostic : 9 tests / 114 assertions.
+- Total : **26 tests / 234 assertions**, base MariaDB jetable et mailer factice ;
+  base et réseau privés retirés après recette.
+- Aucune recette navigateur ou CI complète revendiquée. Aucun mail réel,
+  rôle attribué, changement public/signup, migration sur base existante,
+  publication, fusion ou déploiement. La modification préexistante de
+  `app/config/reference.php` est conservée hors commit.

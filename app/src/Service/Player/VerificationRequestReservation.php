@@ -9,7 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\DBAL\LockMode;
 use Psr\Clock\ClockInterface;
 
-/** Fondation interne : ni route publique, ni autorisation admin, ni envoi. */
+/** Réservation interne sans envoi ; acteur administratif revérifié sous verrou. */
 final class VerificationRequestReservation
 {
     public function __construct(
@@ -21,9 +21,9 @@ final class VerificationRequestReservation
     }
 
     /** @return array{result: string, request_id: ?int, state: ?string} */
-    public function reserve(int $playerId, string $requestKey, int $cooldownSeconds): array
+    public function reserve(int $playerId, string $requestKey, int $cooldownSeconds, ?int $adminId = null): array
     {
-        // Le futur contrôleur fournit une clé aléatoire stable lors des doubles
+        // Le contrôleur fournit une clé aléatoire stable lors des doubles
         // soumissions ; ce n'est ni un jeton d'activation ni une autorisation.
         if (!preg_match('/^[a-f0-9]{64}$/D', $requestKey) || $cooldownSeconds < 1 || $cooldownSeconds > 86400) {
             throw new \InvalidArgumentException('Paramètres de réservation invalides.');
@@ -31,7 +31,23 @@ final class VerificationRequestReservation
         if ($this->em->getConnection()->isTransactionActive()) {
             throw new \LogicException('La réservation exige sa propre transaction.');
         }
-        return $this->manager->transaction(function () use ($playerId, $requestKey, $cooldownSeconds): array {
+        return $this->manager->transaction(function () use ($playerId, $requestKey, $cooldownSeconds, $adminId): array {
+            $admin = null;
+            if ($adminId !== null) {
+                // Ordre stable, même lorsque deux admins se ciblent mutuellement.
+                $ids = array_unique([$playerId, $adminId]);
+                sort($ids);
+                foreach ($ids as $id) {
+                    $locked = $this->em->find(Player::class, $id, LockMode::PESSIMISTIC_WRITE);
+                    if ($locked instanceof Player) {
+                        $this->em->refresh($locked, LockMode::PESSIMISTIC_WRITE);
+                    }
+                }
+                $admin = $this->em->find(Player::class, $adminId);
+                if (!$admin instanceof Player || !in_array('ROLE_ADMIN', $admin->roles, true) || $admin->lockedAt !== null || $admin->emailVerifiedAt === null) {
+                    throw new \DomainException('Action administrative non autorisée.');
+                }
+            }
             // Première lecture déjà verrouillée : ne pas créer un snapshot
             // périmé avant d’attendre le compte détenu par un autre demandeur.
             $player = $this->em->find(Player::class, $playerId, LockMode::PESSIMISTIC_WRITE);
@@ -61,6 +77,17 @@ final class VerificationRequestReservation
             $request->cooldownUntil = $now->modify('+'.$cooldownSeconds.' seconds');
             $this->manager->save($request);
             $this->manager->flush();
+            if ($admin !== null) {
+                $audit = new \App\Entity\AdminAuditLog();
+                $audit->actor = $admin;
+                $audit->action = 'admin_activation_requested';
+                $audit->targetType = 'player';
+                $audit->targetId = $playerId;
+                $audit->createdAt = $now;
+                // Motif fermé : aucun texte libre pouvant contenir un secret.
+                $audit->details = ['request_id' => $request->id, 'reason' => 'activation_support'];
+                $this->manager->save($audit);
+            }
             return $this->result('reserved', $request);
         });
     }
