@@ -344,3 +344,35 @@ sur une branche de preuve séparée de V5.
 
 Résultat : **1 test, 30 assertions**, MariaDB jetable, montée et retour
 des migrations dans la fixture. Base et réseau de preuve retirés.
+
+## Recette HTTP du formulaire admin existant, branche hors V6
+
+Le contrôleur prend une interface `AdminActivationAction`. L'alias du
+vrai conteneur pointe toujours vers `AdminActivationService`, sans
+changement de décision, config de fournisseur ni valeur d'activation :
+le formulaire reste absent et le POST 404 par défaut. L'ancien transport
+par défaut continue de prouver la non-remise lorsqu'il est exercé seul.
+Aucune route, migration ou modification du parcours public n'a été ajoutée.
+
+Seule la WebTestCase remplace cet alias pour composer la récupération avec
+les composants réels et un reçu synthétique connu. Le garde ROLE_ADMIN,
+le CSRF propre au compte cible et la confirmation explicite sont ceux du
+vrai formulaire et contrôleur. La fixture repasse par la revérification
+d'acteur de la réservation existante avant la récupération et ne fournit
+qu'un résolveur de test et un transport factice. Cette composition ne doit
+pas être copiée comme fournisseur réel : elle connaît le reçu de fixture
+et sa revue d'acteur est une transaction séparée. Un branchement réel
+devrait sélectionner le reçu côté serveur et lier la revérification
+d'acteur, l'autorisation et la réservation dans une même transaction,
+en plus des conditions de clés, révocation et déploiement précédentes.
+
+Recette MariaDB jetable : **41 tests / 331 assertions** avec HTTP admin,
+confirmation publique et cycle d'intégration. Anonyme et simple joueur
+refusés, CSRF invalide et absence de confirmation sans effet, double
+soumission et nouvelle clé sans nouvelle remise, un seul passage factice
+et reçu initial intact. Le lien de fixture n'est dans aucun HTML,
+flash affiché, en-tête de redirection ni audit SQL vérifié. Cette recette
+ne prouve pas la confidentialité des logs réseau ou du futur transport.
+Validations PHP, Compose, conteneur Symfony et diff ; base/réseau retirés.
+Aucun navigateur partagé, port réseau exposé, Traefik, SMTP, secret réel,
+push, fusion ou modification de V6.

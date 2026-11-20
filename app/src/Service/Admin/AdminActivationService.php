@@ -8,7 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
-final class AdminActivationService
+final class AdminActivationService implements AdminActivationAction
 {
     public function __construct(
         private VerificationRequestReservation $reservations,
@@ -25,7 +25,7 @@ final class AdminActivationService
         return $this->enabled;
     }
 
-    public function request(Player $actor, int $playerId, string $key): string
+    public function request(Player $actor, int $playerId, #[\SensitiveParameter] string $key): string
     {
         if (!$this->enabled) {
             return 'disabled';

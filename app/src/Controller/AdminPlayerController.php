@@ -20,7 +20,7 @@ final class AdminPlayerController extends AbstractController
 {
     #[Route('/admin/joueurs/{id}', name: 'app_admin_player', requirements: ['id'=>'\d+'], methods: ['GET'])]
     #[IsGranted(AdminCapability::PLAYER_VIEW)]
-    public function show(int $id, EntityManagerInterface $em, PlayerActivityService $activity, ClockInterface $clock, ResourceService $resources, GameCatalog $catalog, AdminAccountDiagnosticService $diagnostic, \App\Service\Admin\AdminActivationService $activation): Response
+    public function show(int $id, EntityManagerInterface $em, PlayerActivityService $activity, ClockInterface $clock, ResourceService $resources, GameCatalog $catalog, AdminAccountDiagnosticService $diagnostic, \App\Service\Admin\AdminActivationAction $activation): Response
     {
         $player = $em->find(Player::class, $id);
         if (!$player) throw $this->createNotFoundException('Joueur introuvable.');
@@ -69,7 +69,7 @@ final class AdminPlayerController extends AbstractController
     }
 
     #[Route('/admin/joueurs/{id}/activation', name: 'app_admin_player_activation', requirements: ['id' => '\\d+'], methods: ['POST'])]
-    public function activation(int $id, Request $request, \App\Service\Admin\AdminActivationService $activation): Response
+    public function activation(int $id, Request $request, \App\Service\Admin\AdminActivationAction $activation): Response
     {
         if (!$activation->isEnabled()) {
             throw $this->createNotFoundException();
