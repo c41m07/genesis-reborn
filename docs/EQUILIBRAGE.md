@@ -1,5 +1,36 @@
 # Réglages et études d’équilibrage
 
+## Expérience : kit T1 et récompenses quotidiennes
+
+Le kit T1 de la première planète des nouveaux comptes et le barème quotidien
+expérimental constituent un même lot. Stocks initiaux : 5 000 métal, nano,
+hydrogène et antimatière, 0 électricité. Le reste des dotations existantes,
+des capacités et des taux reste inchangé. Le barème ajustable se trouve dans
+`daily_reward_experiment` (catalogue) ; il ne débite jamais une planète.
+
+| Jour de retrait | Métal | Nano |
+| --- | ---: | ---: |
+| J1 | 500 | 250 |
+| J2 | 750 | 400 |
+| J3 | 1 000 | 500 |
+| J4 | 1 250 | 650 |
+| J5 | 1 500 | 750 |
+| J6 | 1 750 | 900 |
+| J7 | 2 500 | 1 250 |
+
+Le simulateur historique décrit ci-dessous reste une référence avec le kit
+10 000, pas une prédiction automatique avec le nouveau kit. Un rejeu contrôlé
+de l’arbre b503f120, en Omega ×1 position 5 et cadences fixes, a comparé le kit
+T1 sans prime au kit de référence : 56 h 06 min 15 s au lieu de 48 h 06 min 15 s
+à trois sessions de 30 min ; 72 h 06 min 15 s au lieu de 56 h 06 min 15 s à
+trois sessions de 15 min. La première centrale démarre à H0 sans électricité.
+Avec le barème expérimental et une autre priorité d’achats, le même modèle a
+atteint 48 h 06 min 15 s à 00 h et 08 h Europe/Paris, mais pas à 22 h (56 h
+06 min 15 s). Il ne s’agit pas d’une garantie : les horaires des retraits et les
+fenêtres de jeu changent le résultat. Aucun système saisonnier n’est livré
+par ce lot. Les effets compétitifs, le cumul J7 et les échanges restent à
+mesurer avant de fixer les montants.
+
 ## Première colonisation — 19 novembre 2026
 
 Rejouer les parcours hors base avec `make -s console CMD=app:balance:simulate-colonization`.

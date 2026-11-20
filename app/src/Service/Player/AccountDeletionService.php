@@ -39,6 +39,8 @@ final class AccountDeletionService
             $player->password=$this->hasher->hashPassword($player,bin2hex(random_bytes(32)));
             $player->emailVerifiedAt=null;$player->roles=[];$player->preferences=[];
             $player->currentPlayerUniverse=null;$player->lockedAt=$this->clock->now();
+            $player->firstPlanetStarterPending=false;
+            $this->em->getConnection()->delete('daily_reward_claim', ['player_id' => $player->id]);
             $entry=new AdminAuditLog();$entry->actor=$player;$entry->action='player_account_deleted';$entry->targetType='player';
             $entry->targetId=$player->id;$entry->createdAt=$this->clock->now();$entry->details=['empires'=>'forgotten','identity'=>'erased'];
             $this->manager->save($entry);

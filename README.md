@@ -522,6 +522,21 @@ Le destinataire enregistré peut ouvrir ce rapport depuis le transport en cours 
 
 Installation ou mise à jour : la migration `Version20261107150000` crée l’historique des transports ; son application sur chaque base active nécessite une validation explicite. Elle a été appliquée à la base locale le 7 novembre 2026 après sauvegarde vérifiée. Les anciens transports déjà en vol restent limités au propriétaire initial (l’expéditeur).
 
+## Récompense quotidienne et nouvelle inscription
+
+Depuis la Vue générale, **Récompense quotidienne** présente le lot et la planète
+qui le recevra dans l’univers actif. Le bouton **Récupérer** retire au maximum un
+lot par compte et par date civile de Paris, sans nouvelle connexion. Un jour
+manqué laisse le cycle en pause ; après J7, le retrait suivant reprend à J1.
+Si le métal ou le nano ne tient pas dans les stocks, le lot n’est ni retiré ni
+perdu. Libérez l’espace indiqué et réessayez.
+
+Uniquement à sa première attribution de planète, un compte issu d’une nouvelle
+inscription reçoit un kit de départ de 5 000 métal, nano, hydrogène et antimatière,
+et 0 électricité. Les comptes déjà inscrits, même non activés, les stocks
+existants et les kits des planètes colonisées ne sont pas modifiés. Le barème
+quotidien expérimental est décrit dans [Équilibrage](docs/EQUILIBRAGE.md).
+
 ## Pages juridiques
 
 Le nom public de l’éditeur et du responsable des données se renseigne avec `LEGAL_PUBLISHER_NAME` dans `.env.local` (local) ou `.env.prod` (serveur), hors Git. En son absence, les pages restent disponibles et signalent l’identité manquante. Adresse et téléphone de publication restent à compléter ; ne pas annoncer une conformité juridique sur la seule présence de ces pages.

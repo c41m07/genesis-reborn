@@ -628,6 +628,15 @@ final class GameRepository
         return $this->em->createQueryBuilder()->select('DISTINCT l')->from(CombatLog::class, 'l')->join('l.combatEvent', 'e')->join('e.planet', 'p')->leftJoin(CombatParticipant::class, 'cp', 'WITH', 'cp.combatEvent = e')->where('cp.playerUniverse = :membership')->orWhere('p.owner = :membership')->setParameter('membership', $membership)->orderBy('l.resolvedAt', 'DESC')->setMaxResults(max(1, min(100, $limit)))->getQuery()->getResult();
     }
 
+    /** @return list<PlanetResource> Lecture courante pour un dépôt sous verrou de planète. */
+    public function lockedPlanetResources(Planet $planet): array
+    {
+        return $this->em->createQueryBuilder()->select('resource')->from(PlanetResource::class, 'resource')
+            ->where('resource.planet = :planet')->setParameter('planet', $planet)->orderBy('resource.id', 'ASC')
+            ->getQuery()->setLockMode(\Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE)
+            ->setHint(\Doctrine\ORM\Query::HINT_REFRESH, true)->getResult();
+    }
+
     public function planets(Universe $u, ?PlayerUniverse $owner = null, bool $freeOnly = false): array
     {
         $q = $this->em->createQueryBuilder()->select('p', 's', 'g')->from(Planet::class, 'p')->join('p.solarSystem', 's')->join('s.galaxy', 'g')->where('g.universe = :u')->setParameter('u', $u)->orderBy('p.id', 'ASC');

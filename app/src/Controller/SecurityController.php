@@ -43,7 +43,7 @@ final class SecurityController extends AbstractController
         $form=$this->createForm(RegistrationType::class,new RegistrationData());$form->handleRequest($request);
         if($form->isSubmitted() && $form->isValid()) {
             try {
-                $player=$service->register($form->getData());
+                $player=$service->register($form->getData(), starterEligible: true);
                 if (!$verification->sendWelcomeAndVerification($player)) {
                     $this->addFlash('warning', 'Votre compte est créé, mais le mail de confirmation n’a pas pu être envoyé. Réessayez avec le formulaire de renvoi.');
                     return $this->redirectToRoute('app_email_verify_request');

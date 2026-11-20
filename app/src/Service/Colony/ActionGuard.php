@@ -22,27 +22,27 @@ final class ActionGuard
     {
     }
 
-    public function lock(PlayerUniverse $membership, Planet $planet): void
+    public function lock(PlayerUniverse $membership, Planet $planet, bool $currentReads = false): void
     {
-        $this->lockMembership($membership);
-        $this->manager->lock($planet);
+        $this->lockMembership($membership, $currentReads);
+        $this->lockEntity($planet, $currentReads);
         if ($planet->owner?->id !== $membership->id || $planet->solarSystem->galaxy->universe->id !== $membership->universe->id) {
             throw new \DomainException('Cette planète ne vous appartient pas dans cet univers.');
         }
     }
 
-    public function lockMembership(PlayerUniverse $membership): void
+    public function lockMembership(PlayerUniverse $membership, bool $currentReads = false): void
     {
-        $this->lockMembershipForProcessing($membership);
+        $this->lockMembershipForProcessing($membership, $currentReads);
         $this->activity->assertCanControl($membership);
     }
 
     // Un empire oublié ne reçoit plus d’ordres du joueur, mais ses commandes déjà payées peuvent finir.
-    public function lockMembershipForProcessing(PlayerUniverse $membership): void
+    public function lockMembershipForProcessing(PlayerUniverse $membership, bool $currentReads = false): void
     {
         // Garder cet ordre commun à toutes les colonies : participation, univers, puis planète chez l’appelant.
-        $this->manager->lock($membership);
-        $this->manager->lock($membership->universe);
+        $this->lockEntity($membership, $currentReads);
+        $this->lockEntity($membership->universe, $currentReads);
         if (!$membership->universe->isAccessible($this->clock->now())) {
             throw new \DomainException('Univers inaccessible.');
         }
@@ -55,6 +55,15 @@ final class ActionGuard
         if ($planet->owner?->id !== $membership->id || $planet->solarSystem->galaxy->universe->id !== $membership->universe->id) {
             throw new \DomainException('Cette planète ne correspond plus à la commande.');
         }
+    }
+
+    private function lockEntity(object $entity, bool $currentReads): void
+    {
+        if ($currentReads) {
+            $this->manager->lockCurrent($entity);
+            return;
+        }
+        $this->manager->lock($entity);
     }
 
     public function receipt(PlayerUniverse $membership, string $key): bool

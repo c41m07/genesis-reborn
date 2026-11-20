@@ -24,6 +24,12 @@ final class GameManager
         $this->em->refresh($entity);
     }
 
+    /** Verrouille et hydrate d’une seule lecture courante, sans ouvrir d’instantané MVCC. */
+    public function lockCurrent(object $entity): void
+    {
+        $this->em->refresh($entity, LockMode::PESSIMISTIC_WRITE);
+    }
+
     public function save(object $entity): void
     {
         $this->em->persist($entity);
