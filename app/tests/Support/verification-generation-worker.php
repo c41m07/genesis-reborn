@@ -41,6 +41,13 @@ $result = match ($argv[2]) {
     'prepare-handoff' => (new App\Service\Player\VerificationRequestLifecycle($em, new App\Manager\GameManager($em), $clock))->prepareRecoveryDelivery($id, stream_get_contents(STDIN), $keys)['result'],
     'claim-recovery' => (new App\Service\Player\VerificationRequestLifecycle($em, new App\Manager\GameManager($em), $clock))->claimRecovery($id, 120)['result'],
     'mixed' => (new App\Service\Player\MixedVerificationLinkReader($em, new App\Manager\GameManager($em), $codec, $clock))->confirm(stream_get_contents(STDIN)),
+    'reserve-recovery-admin' => (function () use ($db, $clock, $codec, $player, $id, $keys, $argv): array {
+        try {
+            return (new App\Service\Player\VerificationRecoveryOrchestrator($db, $clock, $codec))->reserveForAdmin((int) $argv[6], $player, $id, str_repeat('a', 64), 300, $keys);
+        } catch (DomainException $e) {
+            return ['result' => 'denied'];
+        }
+    })(),
     'reserve-recovery' => (new App\Service\Player\VerificationRecoveryOrchestrator($db, $clock, $codec))->reserve($player, $id, str_repeat($argv[4], 64), 300, $keys),
     'recover' => $store->recordRecovery($player, $id, str_repeat($argv[4], 64), 300),
 };

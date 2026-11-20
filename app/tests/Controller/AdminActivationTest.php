@@ -182,14 +182,8 @@ final class AdminActivationTest extends WebTestCase
         $transport->expects(self::once())->method('handoff')->with($target->id, $expected)->willReturn(VerificationRecoveryOutcome::TransportAccepted);
         // Aucun fournisseur ni changement de politique dans le conteneur réel.
         // Cette composition n'existe que dans la recette, pour un reçu connu.
-        $action = new class(static function (Player $actor, int $playerId, #[\SensitiveParameter] string $key) use ($reservations, $recovery, $lifecycle, $adapter, $keys, $transport, $oldId): string {
-            // Dans cette fixture, l'initial unknown impose un blocage du
-            // chemin normal. On conserve son contrôle réel d'acteur en base.
-            $normal = $reservations->reserve($playerId, $key, 300, $actor->id);
-            if ($normal['result'] !== 'blocked') {
-                return $normal['result'] === 'replayed' ? 'replayed' : 'ineligible';
-            }
-            $reserved = $recovery->reserve($playerId, $oldId, $key, 300, $keys);
+        $action = new class(static function (Player $actor, int $playerId, #[\SensitiveParameter] string $key) use ($recovery, $lifecycle, $adapter, $keys, $transport, $oldId): string {
+            $reserved = $recovery->reserveForAdmin($actor->id, $playerId, $oldId, $key, 300, $keys);
             if ($reserved['result'] !== 'reserved') {
                 return $reserved['result'];
             }
@@ -250,6 +244,7 @@ final class AdminActivationTest extends WebTestCase
         self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM verification_recovery_event'));
         $event = $db->fetchAssociative('SELECT * FROM verification_recovery_event');
         self::assertSame('transport_accepted', $event['delivery_outcome']);
+        self::assertSame(1, (int) $db->fetchOne("SELECT COUNT(*) FROM admin_audit_log WHERE action = 'admin_activation_recovery_requested' AND actor_id = ?", [$admin->id]));
         self::assertStringNotContainsString($expected, json_encode($event, JSON_THROW_ON_ERROR));
         self::assertStringNotContainsString($expected, json_encode($db->fetchAllAssociative('SELECT details FROM admin_audit_log'), JSON_THROW_ON_ERROR));
         self::assertSame($snapshot, $db->fetchAssociative('SELECT * FROM verification_delivery_request WHERE id = ?', [$oldId]));

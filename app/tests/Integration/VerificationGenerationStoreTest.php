@@ -650,4 +650,114 @@ final class VerificationGenerationStoreTest extends KernelTestCase
         self::assertSame('consumed', $db->fetchOne('SELECT state FROM player_verification_generation WHERE player_id = ?', [$player->id]));
         self::assertSame($snapshot, $db->fetchAssociative('SELECT * FROM verification_delivery_request WHERE id = ?', [$originalId]));
     }
+
+    private function syntheticAdmin(EntityManagerInterface $em, MockClock $clock): Player
+    {
+        $admin = new Player();
+        $admin->email = 'admin-recovery@example.test';
+        $admin->username = 'RecoveryAdmin';
+        $admin->password = 'synthetic';
+        $admin->roles = ['ROLE_ADMIN'];
+        $admin->emailVerifiedAt = $clock->now();
+        $em->persist($admin);
+        $em->flush();
+
+        return $admin;
+    }
+
+    /** Le processus enfant tente la même lecture verrouillée que l'appel réel. */
+    private function raceAdminWhileHoldingAccount(Connection $db, int $lockedId, int $adminId, int $playerId, int $originalId, callable $mutate): array
+    {
+        $dir = sys_get_temp_dir().'/verification-admin-recovery-'.bin2hex(random_bytes(8));
+        mkdir($dir, 0700);
+        $proc = new Process([
+            PHP_BINARY, dirname(__DIR__).'/Support/verification-generation-worker.php', (string) $playerId,
+            'reserve-recovery-admin', $dir, 'a', (string) $originalId, (string) $adminId,
+        ], timeout: 20);
+        $db->beginTransaction();
+        try {
+            $db->fetchOne('SELECT id FROM player WHERE id = ? FOR UPDATE', [$lockedId]);
+            $proc->start();
+            $limit = microtime(true) + 10;
+            while (!is_file($dir.'/ready-a')) {
+                if (microtime(true) > $limit) {
+                    self::fail('Processus de réservation non prêt.');
+                }
+                usleep(10000);
+            }
+            touch($dir.'/go');
+            do {
+                $reads = array_filter($db->fetchAllAssociative('SHOW FULL PROCESSLIST'), static fn (array $row): bool =>
+                    preg_match('/SELECT roles, email_verified_at, locked_at FROM player WHERE id = [\x27"]?'.$lockedId.'[\x27"]? FOR UPDATE/', (string) ($row['Info'] ?? '')) === 1);
+                if ($reads !== []) {
+                    break;
+                }
+                if (microtime(true) > $limit) {
+                    self::fail('La lecture verrouillée du processus n’a pas été observée.');
+                }
+                usleep(10000);
+            } while (true);
+            $mutate();
+            $db->commit();
+            $proc->wait();
+            self::assertTrue($proc->isSuccessful(), $proc->getErrorOutput());
+            return json_decode($proc->getOutput(), true, flags: JSON_THROW_ON_ERROR);
+        } finally {
+            if ($db->isTransactionActive()) {
+                $db->rollBack();
+            }
+            $proc->stop();
+            foreach (glob($dir.'/*') as $file) {
+                unlink($file);
+            }
+            rmdir($dir);
+        }
+    }
+
+    public function testAdminRecoveryWaitingOnActorLockSeesCommittedRevocation(): void
+    {
+        [$em, $db, $player, $clock, $store, , $keys] = $this->fixture();
+        $this->up($db);
+        $admin = $this->syntheticAdmin($em, $clock);
+        $original = $this->unknown($em, $player, $clock);
+        $store->prepare($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        $response = $this->raceAdminWhileHoldingAccount($db, $admin->id, $admin->id, $player->id, $original->id,
+            static fn (): int => $db->update('player', ['roles' => '[]'], ['id' => $admin->id]));
+        self::assertSame(['result' => 'denied'], $response);
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM verification_recovery_event'));
+        self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM verification_delivery_request'));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM admin_audit_log'));
+    }
+
+    public function testAdminRecoveryWaitingOnTargetLockDoesNotRetargetNewReceipt(): void
+    {
+        [$em, $db, $player, $clock, $store, , $keys] = $this->fixture();
+        $this->up($db);
+        $admin = $this->syntheticAdmin($em, $clock);
+        $original = $this->unknown($em, $player, $clock);
+        $store->prepare($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        $response = $this->raceAdminWhileHoldingAccount($db, $player->id, $admin->id, $player->id, $original->id,
+            static fn (): int => $db->insert('verification_delivery_request', [
+                'player_id' => $player->id, 'request_key_hash' => str_repeat('a', 64), 'state' => 'unknown',
+                'requested_at' => '2029-12-31 23:53:00', 'resolved_at' => '2029-12-31 23:54:00', 'cooldown_until' => '2029-12-31 23:58:00',
+            ]));
+        self::assertSame(['result' => 'blocked', 'request_id' => null], $response);
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM verification_recovery_event'));
+        self::assertSame(2, (int) $db->fetchOne('SELECT COUNT(*) FROM verification_delivery_request'));
+        self::assertSame('unknown', $db->fetchOne('SELECT state FROM verification_delivery_request WHERE id = ?', [$original->id]));
+    }
+
+    public function testAdminRecoverySelectorDoesNotDistinguishForeignFromUnknownReceipt(): void
+    {
+        [$em, $db, $player, $clock, , $codec, $keys] = $this->fixture();
+        $this->up($db);
+        $admin = $this->syntheticAdmin($em, $clock);
+        $foreign = $this->unknown($em, $admin, $clock);
+        $service = new \App\Service\Player\VerificationRecoveryOrchestrator($db, $clock, $codec);
+        $key = str_repeat('d', 64);
+        $expected = ['result' => 'ineligible', 'request_id' => null];
+        self::assertSame($expected, $service->reserveForAdmin($admin->id, $player->id, $foreign->id, $key, 300, $keys));
+        self::assertSame($expected, $service->reserveForAdmin($admin->id, $player->id, 2147483647, $key, 300, $keys));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM verification_recovery_event'));
+    }
 }

@@ -357,7 +357,7 @@ Aucune route, migration ou modification du parcours public n'a été ajoutée.
 Seule la WebTestCase remplace cet alias pour composer la récupération avec
 les composants réels et un reçu synthétique connu. Le garde ROLE_ADMIN,
 le CSRF propre au compte cible et la confirmation explicite sont ceux du
-vrai formulaire et contrôleur. La fixture repasse par la revérification
+vrai formulaire et contrôleur. Dans sa première version, la fixture repasse par la revérification
 d'acteur de la réservation existante avant la récupération et ne fournit
 qu'un résolveur de test et un transport factice. Cette composition ne doit
 pas être copiée comme fournisseur réel : elle connaît le reçu de fixture
@@ -376,3 +376,41 @@ ne prouve pas la confidentialité des logs réseau ou du futur transport.
 Validations PHP, Compose, conteneur Symfony et diff ; base/réseau retirés.
 Aucun navigateur partagé, port réseau exposé, Traefik, SMTP, secret réel,
 push, fusion ou modification de V6.
+
+## Ciblage et contrôle de l'acteur dans une transaction
+
+`reserveForAdmin` prend un acteur, le compte cible et le reçu attendu
+issu d'un contexte serveur. Aucun champ/routage HTTP n'a été ajouté.
+La politique préexistante est partagée : rôle courant ROLE_ADMIN,
+adresse vérifiée, absence de suspension ; aucune confiance dans la
+copie de session. Le contrôle commute les deux lignes compte dans
+l'ordre croissant des identifiants avant toute lecture des reçus.
+L'ancienne réservation normale réutilise le même garde et ne change
+pas ses droits. Tous les chemins appelants doivent conserver cet ordre.
+
+La transaction relit le reçu par (compte, reçu) et exige qu'il soit
+encore le dernier reçu admissible, sans choisir silencieusement son
+successeur. Absence et reçu appartenant à un autre compte ont la même
+réponse. Le rejeu d'une intention enregistrée ne réserve rien de plus.
+Un succès enregistre l'identité de l'acteur dans l'audit administratif
+avec le nouveau numéro de reçu et un motif fermé. L'audit, le journal,
+le lien entre reçus et la réservation sont commis ensemble ; aucun
+lien, adresse, clé ou empreinte du lien n'est renvoyé par le sélecteur.
+Le reçu indéterminé d'origine est intact.
+
+Le test HTTP s'appuie maintenant sur cette entrée défensive, toujours
+uniquement via sa substitution de conteneur. Une éventuelle future
+ouverture doit décider comment établir le contexte serveur de
+l'intention, maintenir le garde-fou et décider le comportement d'une
+révocation de droits intervenant *après* le commit. Ce lot sérialise
+les décisions au moment de réserver ; il n'annule pas un traitement
+déjà commis. Aucun nouvel accès effectif ni permission réelle.
+
+**55 tests / 428 assertions** : les tests à deux connexions observent
+une lecture verrouillée en attente avant de commettre soit la révocation
+du rôle, soit un successeur du reçu ; aucune récupération n'est alors
+réservée. Les tests ajoutés vérifient également le refus indiscernable
+du reçu tiers/inconnu. Recette HTTP factice et régressions historiques
+vertes ; Compose, PHP lint, conteneur et diff vérifiés. DB et réseau
+jetables retirés. Aucun schéma ajouté, SMTP, activation, changement de
+V6, push, fusion ni déploiement.
