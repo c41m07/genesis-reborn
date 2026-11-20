@@ -305,3 +305,35 @@ reference.php reste hors commit. La sauvegarde/restauration end-to-end
 officielle et la CI complète restent à faire, de même qu’une suite PHP
 complète avec la configuration correcte. Pas de migration réelle, émission,
 rejeu, attribution de droits, push, fusion dev ou déploiement.
+
+### Correctif de mapping et nouveau passage PHP complet
+
+Branche distincte fix/admin-index-recuperation depuis V5 9da06af.
+Commit d’implémentation 75c3fedcce99855b49424952dacfd26158ae2b89 :
+l’entité déclare le nom de l’index unique que la migration avait déjà
+posé. Relation OneToOne, nullable et ON DELETE SET NULL inchangés.
+Aucune migration historique réécrite et aucune migration ajoutée.
+
+Sur base MariaDB jetable migrée, une seule contrainte unique nommée
+verification_recovery_request_unique couvre recovery_request_id ; le
+comportement SET NULL est conservé. La comparaison SchemaTool en lecture
+seule ramène V4 et V5 corrigée au même seul écart : la table
+doctrine_migration_versions, historique géré par Doctrine Migrations
+et non mappé comme entité. Ne pas supprimer cette table. Aucun SQL du
+comparateur appliqué et aucun schema:update lancé.
+
+Après transmission correcte de la valeur Mercure éphémère dans le lanceur
+privé, le passage exhaustif est réussi : 1 533 tests recensés, 4 444 168
+assertions, aucun échec, un test ignoré (mesure optionnelle activable par
+REWORK_MEASURE=1), en 11 min 41,713 s. Les assertions d’idempotence du
+socle de récupération sont incluses (réservations répétées et concurrence
+limitée). Lint PHP global, 216 Twig, 80 YAML, conteneur et Compose réussis.
+Toutes les bases et réseaux temporaires de cette étape ont été retirés.
+
+La suite navigateur exhaustive, la vérification officielle de
+sauvegarde/restauration de bout en bout et la CI complète restent à faire.
+Le contrôle de schéma générique peut toujours voir l’historique non mappé ;
+ne pas l’annoncer vert. Les preuves navigateur/actifs de V5 ne sont pas
+annoncées comme rejouées pour cet attribut de mapping. Aucun claim support
+ultérieur inclus, aucune clé d’activation, SMTP, modification de CI, réelle
+donnée, fusion, push ou déploiement.
