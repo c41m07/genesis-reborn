@@ -95,6 +95,8 @@ final class VerificationRequestReservationTest extends KernelTestCase
         [$em, $player] = $this->fixture();
         // fixture() a vérifié l'hôte et la base jetables avant toute DDL.
         $connection = $em->getConnection();
+        // La nouvelle table d'audit dépend de ce reçu dans le schéma ORM.
+        $connection->executeStatement('DROP TABLE verification_recovery_event');
         $connection->executeStatement('DROP TABLE verification_delivery_request');
         require_once dirname(__DIR__, 2).'/migrations/Version20261119235900.php';
         $migration = new \DoctrineMigrations\Version20261119235900($connection, new \Psr\Log\NullLogger());
