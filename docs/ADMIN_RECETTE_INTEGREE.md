@@ -443,3 +443,56 @@ La suite PHP exhaustive (1 554 tests, 4 444 352 assertions, mesure
 optionnelle ignorée) reste une preuve de V6 seulement. La recette navigateur
 officielle et la CI GitHub ne sont pas acquises sur V7. Aucun push,
 fusion dev, déploiement, transport réel ni ouverture des droits.
+
+## Recette V8 : composition inactive et aperçu défensif
+
+Branche chore/recette-integration-admin-v8, worktree distinct.
+Assemblages fd18ad6435b3e71edc594d0672cdc19adb43af48 et ccf52480688b0ef2323f5c16f2a787710fffdfe0 ; seuls les parents directs
+de V7 58484375e98e4b042dc30f6f1ba346cbbcaf8a83, du support
+cdcf9b2b7301b4206d4f836794e7857dadcb5e3a et de l’aperçu
+a2aeedf1b7985e4e76a18a419bde5a42bfe99b4b sont inclus. Aucun conflit.
+
+Composition : les deux bascules versionnées sont à 0. Le fournisseur
+livré est null, son type exclu de l’autodécouverte, et le transport du
+chemin ordinaire reste indisponible. Aucun fournisseur de clé, destinataire,
+secret d’activation ni SMTP réel configuré ou utilisé. Un opt-in récupération
+sans le fournisseur complet ferme aussi le formulaire, sans reprendre la
+voie ordinaire. Le parcours public, les routes, le voter et le schéma
+n’ont pas changé. Aucun droit ni rôle créé ou attribué.
+
+- HTTP ciblé/permissions : 14 tests et 179 assertions (8,011 s). Absence
+  de fournisseur, impossibilité d’en monter une moitié seulement, refus
+  en configuration incomplète, confirmation, CSRF, fraîcheur et remise
+  unique avec fournisseur de test uniquement.
+- Agrégée PHP : 210 tests et 2 068 assertions (116,450 s). PHP, 216 Twig,
+  80 YAML, conteneur, Compose et diff verts. Les erreurs attendues des
+  scénarios de refus n’ont conduit à aucun échec.
+- Chromium réel ciblé : un scénario (9,8 s) sur 1 366 et 390 px. Renvoi
+  indisponible, pas de formulaire, POST 404, aucun reçu ou événement ajouté.
+  L’aperçu distingue les trois refus et le statut du cas actif par univers
+  fictif, sans statut d’un univers refusé, formulaire ni attribution.
+- Base navigatrice neuve à 00500 (64 migrations), aucun Traefik partagé.
+  Bases et réseaux de recette successifs et liens temporaires nettoyés.
+
+### Entre la candidate locale et la mise en service
+
+Pour publier une version encore désactivée : valider la cible et le diff
+final, autoriser la publication séparément, exécuter la CI du dernier SHA,
+vérifier les migrations et le retour applicatif sur une copie autorisée
+avec sauvegarde/restauration. La suite PHP exhaustive sur V6 n’est pas une
+preuve de V8 ; navigateur exhaustif, sauvegarde officielle à deux réseaux
+et CI GitHub n’ont pas été rejoués pour V8.
+
+Pour ouvrir le renvoi : décider explicitement du fournisseur de clés, de
+la conservation et rotation des générations et du transport autorisé ;
+préparer un essai de préproduction avec comptes destinataires autorisés,
+journal et alertes sans secret, preuve d’acceptation distincte de la
+réception, exercice du délai, de la révocation, des coupures et du mécanisme
+d’arrêt sans duplicata ni effacement de l’historique. Ne pas allumer les
+bascules avant ce contrôle. Aucune activation par ce lot. Toute évolution
+du parcours public reste un chantier distinct.
+
+Pour une vraie délégation, la simulation ne remplace pas l’accord sur
+délégants, bénéficiaires, données, durée, révocation et audit. Le diagnostic
+d’exploitation reste sans relance. Aucun push, fusion dev, déploiement,
+CI modifiée, SMTP ou donnée non synthétique.
