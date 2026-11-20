@@ -842,3 +842,12 @@ La [matrice des permissions](docs/ADMIN_PERMISSIONS.md) documente les contrôles
 - **Visuels du jeu et des catalogues** : la vue de colonie, la liste des planètes, l’accès au compte et l’aperçu de galaxie servent du WebP en priorité, avec le PNG de repli. Quatre illustrations basiques de bâtiments et dix-neuf de recherches ont une variante de 768 px ; le navigateur garde la version de 1 448 px pour les écrans denses et le chargement différé reste actif. Les SVG et les autres rangs sont inchangés. Les originaux restent aux mêmes URL ; cliquer sur l’aperçu de galaxie ouvre toujours le PNG original.
 
   Mesures des corps de réponses HTTP sur Chromium local et données de test : les quatre bâtiments passent de 2 039 868 à 562 058 octets à 1 366 px (DPR 1) et 390 px (DPR 2), et les dix-neuf recherches de 6 579 746 à 1 949 746 octets à 1 366 px (DPR 1). Ces chiffres décrivent les mêmes images, pas la page entière, le temps de chargement ou le LCP.
+
+### Estimation des ressources manquantes
+
+Dans Bâtiments, Recherche, Chantier spatial et Défenses, le délai de paiement
+est donné au rythme net observé sur la colonie. La dernière ressource disponible
+fixe l'estimation ; un coût au-delà du stockage ou un débit net nul/négatif
+est signalé à la place. Le délai ne prédit pas les dépenses ou changements de
+production futurs. Le bouton d'information reste distinct de l'action bloquée :
+sa limite s'affiche au survol, au clavier ou au toucher.

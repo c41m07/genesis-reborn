@@ -47,6 +47,32 @@ test('Construction : Max dépasse 100, ajuste la saisie et refuse un achat lorsq
     await expect(panel.getByRole('status')).toContainText('Ressources manquantes : 240 Métal, 130 Nano, 200 Électricité.');
     await expect(panel.getByRole('button', { name: /^Il manque :/ })).toBeDisabled();
     await expect(panel.locator('.catalog-missing-resource')).toHaveText(['Métal : 240', 'Nano : 130', 'Électricité : 200']);
+    const wait = panel.locator('.catalog-wait > button');
+    await expect(wait).toContainText(/Délai (estimé|indisponible)/);
+    await page.reload();
+    await expect(wait).toContainText(/Délai (estimé|indisponible)/);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await wait.hover();
+    await expect(panel.locator('.catalog-wait-info')).toBeVisible();
+    await wait.focus();
+    await page.keyboard.press('Escape');
+    await expect(panel.locator('.catalog-wait-info')).toBeHidden();
+    await expect(wait).toBeFocused();
+    await input.fill('2');
+    await expect(wait).toBeHidden();
+    await input.press('Tab');
+    await expect(wait).toBeVisible();
+
+    const touch = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 900 }, storageState: await page.context().storageState() });
+    try {
+        const touchPage = await touch.newPage();
+        await touchPage.goto('/planetes/' + planet + '?section=ships');
+        const touchPanel = touchPage.locator('#item-probe-basic');
+        await touchPanel.locator('.catalog-wait > button').tap();
+        await expect(touchPanel.locator('.catalog-wait-info')).toBeVisible();
+    } finally {
+        await touch.close();
+    }
     expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM queue_item WHERE planet_id=${planet}`)).toBe('0');
     prepareOwnedColony(project, email, { stock: 150000 });
     await maximum.click();
