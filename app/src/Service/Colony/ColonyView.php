@@ -216,6 +216,8 @@ final class ColonyView
                             $target = max($target, $queueItem->itemLevel + 1);
                         }
                     }
+                    $maxLevel = ($group === 'technologies' ? ($definition['effect']['tier_max_levels'][$tier] ?? null) : null) ?? $definition['max_level'] ?? null;
+                    $maximum = $maxLevel !== null && $target > $maxLevel;
                     $failures = $this->access->failures($membership, $planet, $group, $definition, $tier, $buildings, $technologies);
                     if ($group === 'defenses') {
                         $level = 0;
@@ -224,7 +226,7 @@ final class ColonyView
                     $cards[$group][] = [
                         'filter_category' => $this->filters->category($group, $base),
                         'details' => $this->details->describe($definition, $group, $target, $planet, $buildings, $technologies, $productionContext),
-                        'benefits' => $this->insights->benefits($definition, $group, $target, $planet, $buildings, $technologies, $productionContext),
+                        'benefits' => $this->insights->benefits($definition, $group, $maximum ? null : $target, $planet, $buildings, $technologies, $productionContext),
                         'unlocks' => $this->insights->unlocks($group, $slug, $target, $tier, $membership->universe),
                         'definition' => $definition,
                         'tier' => $tier,
@@ -235,7 +237,8 @@ final class ColonyView
                         'costs' => $operation['costs'],
                         'failures' => array_values(array_unique($failures)),
                         'missing_research_laboratory' => $missingResearchLaboratories[$tier] ?? null,
-                        'maximum' => isset($definition['max_level']) && $target > $definition['max_level'],
+                        'maximum' => $maximum,
+                        'max_level' => $maxLevel,
                         'queued' => $queued !== null,
                         'economic' => $economicStates[$slug][$tier] ?? null,
                         'capacity_full' => isset($definition['economic_unit']) && !($definition['mobile'] ?? true)
@@ -253,6 +256,14 @@ final class ColonyView
             'station_waiting',
         ]], ['arrivalAt' => 'ASC']);
         $combatEvents = $this->repo->fleetCombatEvents($membership, $activeFleets);
+        $resourceSnapshot = $this->resources->snapshot($planet, true);
+        // Un seul relevé cohérent pour les montants manquants et les délais de toutes les cartes.
+        if (isset($cards[$section])) {
+            foreach ($cards[$section] as $index => $card) {
+                $cards[$section][$index]['payment'] = ResourceWaitEstimate::forCosts($card['costs'], $resourceSnapshot);
+            }
+        }
+
         return [
             'fleet_details' => $this->empireDetails->fleets($membership, $activeFleets),
             'catalog_filter_options' => $filterOptions,
@@ -263,7 +274,7 @@ final class ColonyView
             'membership' => $membership,
             'planet' => $planet,
             'planets' => $this->repo->planets($membership->universe, $membership),
-            'resources' => $this->resources->snapshot($planet, true),
+            'resources' => $resourceSnapshot,
             'cards' => $cards,
             'queues' => $queues,
             'research_parallel_count' => count($researchActive),

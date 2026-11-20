@@ -140,6 +140,19 @@ test('Flottes entrantes : transport neutre, propre retour séparé et demande d�
   await expect(page.locator('[data-incoming-attacks-target="status"]')).toContainText('1 flotte');
   const payload=await page.evaluate(()=>fetch('/flottes/surveillance').then(r=>r.json()));
   expect(JSON.stringify(payload)).not.toContain('987654321');expect(JSON.stringify(payload)).not.toContain('Source confidentielle');
+  const reportLink = incoming.getByRole('link', {name: 'Consulter le récapitulatif du transport', exact: true});
+  await expect(reportLink).toHaveCount(0);
+  // Le rapport est une fixture indépendante de la cargaison privée de la flotte.
+  runIsolatedSql(data.project,
+    'INSERT INTO transport_report (fleet_id,sender_id,recipient_id,status,snapshot,created_at) VALUES ('+
+    data.fleet+','+data.attacker.memberId+','+data.defender.memberId+",'traveling',"+
+    "JSON_OBJECT('sender','Expéditeur de test','recipient','Destinataire de test','origin','Colonie de test','destination','Cible de test',"+
+    "'sent',JSON_OBJECT('metal',123),'delivered',JSON_OBJECT(),'returned',JSON_OBJECT()),UTC_TIMESTAMP())",
+  );
+  const reportId = Number(queryIsolatedSql(data.project, 'SELECT id FROM transport_report WHERE fleet_id='+data.fleet));
+  expect(reportId).toBeGreaterThan(0);
+  await expect(reportLink).toHaveAttribute('href', '/rapports/transport/'+reportId, {timeout: 15000});
+  await expect(focus).toBeFocused();
   const token=crypto.randomUUID();
   runIsolatedSql(data.project,"INSERT INTO fleet(player_universe_id,home_planet_id,destination_id,destination_system_id,status,mission,speed_ratio,cargo,reserved_fuel,orbit_fuel,orbit_duration_seconds,travel_seconds,departure_at,arrival_at,dispatch_token) SELECT "+data.defender.memberId+","+data.defender.planetId+",id,solar_system_id,'returning','transport',1,'{}',0,0,0,10800,DATE_SUB(UTC_TIMESTAMP(),INTERVAL 1 HOUR),DATE_ADD(UTC_TIMESTAMP(),INTERVAL 2 HOUR),'"+token+"' FROM planet WHERE id="+data.attacker.planetId);
   const own=Number(queryIsolatedSql(data.project,"SELECT id FROM fleet WHERE dispatch_token='"+token+"'"));
@@ -221,8 +234,27 @@ test('Flottes entrantes : transport neutre, propre retour séparé et demande d�
       await page.screenshot({path:testInfo.outputPath(`flottes-entrantes-${theme}-${width}.png`),animations:'disabled'});
     }
   }
+  await page.goto('/flottes');
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({width, height: 844});
+    await expect(reportLink).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth+1)).toBeTruthy();
+  }
+  const colonyLink = incoming.getByRole('link', {name: 'Ouvrir la colonie '+data.target, exact: true});
+  await colonyLink.focus();
+  await page.keyboard.press('Tab');
+  await expect(reportLink).toBeFocused();
+  expect(await reportLink.evaluate(element => element.matches(':focus-visible')
+    && getComputedStyle(element).outlineStyle === 'solid')).toBeTruthy();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(new RegExp('/rapports/transport/'+reportId+'$'));
+  await expect(page.getByRole('heading', {name: 'Rapport de transport', exact: true})).toBeVisible();
+  await expect(page.getByRole('table', {name: 'Quantités envoyées, livrées et retournées'})).toContainText('123,00');
+  await page.goBack();
+  await expect(reportLink).toBeVisible();
   runIsolatedSql(data.project,"UPDATE fleet SET mission='orbit',status='orbit_pending',arrival_at=NULL WHERE id="+data.fleet);
   await expect(incoming).toContainText('Demande d’orbite à traiter',{timeout:15000});
+  await expect(reportLink).toHaveCount(0);
   await expect(incoming.locator('time')).toHaveCount(0);
   await incoming.getByRole('link',{name:'Consulter la demande d’orbite',exact:true}).click();
   await expect(page).toHaveURL(new RegExp('/flottes/orbites[?]colony='+data.defender.planetId+'$'));

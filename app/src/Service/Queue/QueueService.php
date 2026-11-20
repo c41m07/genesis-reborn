@@ -7,7 +7,7 @@ use App\Manager\GameManager;
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Requirement\RequirementChecker;
-use App\Service\Colony\{ResourceService, ActionGuard};
+use App\Service\Colony\{ResourceService, ActionGuard, ResourceWaitEstimate};
 use Psr\Clock\ClockInterface;
 use Symfony\Component\Uid\Uuid;
 use App\Service\Player\VacationCalendar;
@@ -244,6 +244,7 @@ final class QueueService
         $reason = '';
         $missing = [];
         $missingResources = [];
+        $paymentWait = null;
         if ($maximum === 0) {
             $failures = $this->access->failures($membership, $planet, $group, $definition, $tier, $buildings, $technologies);
             if (count($this->repo->queue($planet, 'shipyard')) >= 30) {
@@ -253,14 +254,11 @@ final class QueueService
             } elseif ($this->economicUnits->constructionLimit($planet, $definition, $buildings) === 0) {
                 $reason = 'Aucune place de satellite disponible dans la centrale de ce rang.';
             } else {
-                $stocks = $this->resources->snapshot($planet);
-                foreach ($plan['costs'] as $resource => $amount) {
-                    if ($amount > ($stocks[$resource]['stock'] ?? 0)) {
-                        $deficit = (int) ceil($amount - ($stocks[$resource]['stock'] ?? 0));
-                        $label = $this->catalog->rules()['resources'][$resource];
-                        $missing[] = number_format($deficit, 0, ',', ' ') . ' ' . $label;
-                        $missingResources[$resource] = ['label' => $label, 'amount' => $deficit];
-                    }
+                $payment = ResourceWaitEstimate::forCosts($plan['costs'], $this->resources->snapshot($planet));
+                $missingResources = $payment['missing'];
+                $paymentWait = $payment['paymentWait'];
+                foreach ($missingResources as $resource) {
+                    $missing[] = number_format($resource['amount'], 0, ',', ' ') . ' ' . $resource['label'];
                 }
                 $reason = $missing ? 'Ressources manquantes : ' . implode(', ', $missing) . '.' : 'Limite de quantité atteinte.';
             }
@@ -274,6 +272,7 @@ final class QueueService
             'displayCosts' => $plan['costs'],
             'displayDuration' => $plan['duration'],
             'missingResources' => $missingResources,
+            'paymentWait' => $paymentWait,
             'reason' => $reason,
             'unavailableLabel' => $maximum === 0 ? $missing ? 'Manque ' . implode(' · ', $missing) : $reason : '',
         ];

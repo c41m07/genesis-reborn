@@ -587,6 +587,37 @@ final class GameRepository
         return $query->orderBy('r.createdAt', 'DESC')->addOrderBy('r.id', 'DESC')->setFirstResult((max(1, $page) - 1) * 50)->setMaxResults(50)->getQuery()->getResult();
     }
 
+    /**
+     * @param list<int> $fleetIds
+     * @return array<int, int> Identifiant du rapport par flotte entrante.
+     */
+    public function incomingTransportReportIds(PlayerUniverse $recipient, array $fleetIds): array
+    {
+        if ($fleetIds === []) {
+            return [];
+        }
+
+        // Le propriétaire actuel de la colonie peut voir l'arrivée sans être le
+        // destinataire enregistré du fret. Ne charger ni le contenu ni les autres rapports.
+        $rows = $this->em->createQueryBuilder()
+            ->select('IDENTITY(report.fleet) AS fleetId', 'report.id AS reportId')
+            ->from(\App\Entity\TransportReport::class, 'report')
+            ->join('report.sender', 'sender')
+            ->where('IDENTITY(report.fleet) IN (:fleets)')
+            ->andWhere('report.recipient = :recipient')
+            ->andWhere('sender.universe = :universe')
+            ->setParameter('fleets', $fleetIds)
+            ->setParameter('recipient', $recipient)
+            ->setParameter('universe', $recipient->universe)
+            ->getQuery()->getArrayResult();
+
+        $ids = [];
+        foreach ($rows as $row) {
+            $ids[(int) $row['fleetId']] = (int) $row['reportId'];
+        }
+        return $ids;
+    }
+
     public function espionageReportsFor(PlayerUniverse $membership, int $limit = 50): array
     {
         return $this->em->createQueryBuilder()->select('r')->from(\App\Entity\EspionageReport::class, 'r')->where('r.sender = :membership')->setParameter('membership', $membership)->orderBy('r.createdAt', 'DESC')->setMaxResults(max(1, min(100, $limit)))->getQuery()->getResult();
