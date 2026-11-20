@@ -28,7 +28,7 @@ final class AdminOperationsDiagnosticTest extends WebTestCase
         $admin->password = 'test';
         $admin->roles = ['ROLE_ADMIN'];
         $em->persist($admin);
-        foreach (['occupation', 'reconstruction', 'unknown_diagnostic', 'fleet'] as $kind) {
+        foreach (['occupation', 'reconstruction', 'unknown_diagnostic', 'fleet', 'queue'] as $kind) {
             $message = new OutboxMessage();
             $message->kind = $kind;
             $message->targetId = 987654;
@@ -40,7 +40,33 @@ final class AdminOperationsDiagnosticTest extends WebTestCase
         $before = $em->getConnection()->fetchAllAssociative('SELECT * FROM outbox_message ORDER BY id');
         $client->request('GET', '/admin/exploitation');
         self::assertResponseRedirects('http://genesis-reborn.localhost/connexion');
+        $queueMessage = $em->getRepository(OutboxMessage::class)->findOneBy(['kind' => 'queue']);
+        $inspectionUrl = '/admin/exploitation/relais/'.$queueMessage->id;
+        $client->request('GET', $inspectionUrl);
+        self::assertResponseRedirects('http://genesis-reborn.localhost/connexion');
+        $player = new Player();
+        $player->username = 'OrdinaryOpsReader';
+        $player->email = 'ordinary-ops@example.test';
+        $player->password = 'test';
+        $em->persist($player);
+        $em->flush();
+        $client->loginUser($player);
+        $client->request('GET', $inspectionUrl);
+        self::assertResponseRedirects('/acces-refuse');
         $client->loginUser($admin);
+        $auditBefore = (int) self::getContainer()->get(EntityManagerInterface::class)->getConnection()->fetchOne('SELECT COUNT(*) FROM admin_audit_log');
+        $client->request('GET', $inspectionUrl);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('h1', 'Diagnostic du relais');
+        self::assertSelectorTextContains('.panel', 'Commande absente');
+        self::assertSelectorTextContains('.panel', 'Aucune relance autorisée');
+        self::assertStringNotContainsString('secret-', $client->getResponse()->getContent());
+        self::assertSelectorNotExists('#admin-main .panel form');
+        self::assertSame($auditBefore, (int) self::getContainer()->get(EntityManagerInterface::class)->getConnection()->fetchOne('SELECT COUNT(*) FROM admin_audit_log'));
+        $client->request('POST', $inspectionUrl);
+        self::assertResponseStatusCodeSame(405);
+        $client->request('GET', '/admin/exploitation/relais/999999999');
+        self::assertResponseStatusCodeSame(404);
         $client->request('GET', '/admin/exploitation');
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('.admin-operations', 'Occupations : 1');
