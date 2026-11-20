@@ -1,6 +1,6 @@
 import { test, expect } from './support/isolated-test.mjs';
 
-test('L’état Espionnage sans flotte conduit au chantier réel', async ({ page }) => {
+test('L’état Espionnage sans flotte conduit au chantier réel', async ({ page, browser }) => {
   const id = crypto.randomUUID().slice(0, 8);
   const email = 'fleet-empty-' + id + '@example.test';
   const password = 'Browser-test-2026!';
@@ -51,6 +51,50 @@ test('L’état Espionnage sans flotte conduit au chantier réel', async ({ page
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/planetes\/\d+\?section=ships/);
   await expect(page.getByRole('heading', { name: /Chantier spatial/ })).toBeVisible();
+
+  const colony = new URL(page.url()).pathname;
+  // Le raccourci Espionnage révèle déjà les verrouillés ; vérifier aussi l’ouverture directe.
+  await page.goto(colony+'?section=ships');
+  const catalog = page.locator('#panel-ships');
+  const help = catalog.locator('[data-shipyard-empty]');
+  const assembly = help.getByRole('link', { name: 'Voir le chantier d’assemblage' });
+  const reveal = help.getByRole('link', { name: 'Voir les vaisseaux verrouillés' });
+  await expect(help.getByRole('status')).toContainText('Aucun vaisseau débloqué sur cette colonie.');
+  await expect(assembly).toHaveAttribute('href', colony+'?section=buildings&showLockedItems=1&focusItem=1#item-shipyard-basic');
+  await expect(reveal).toHaveAttribute('href', colony+'?section=ships&showLockedItems=1');
+
+  const emptyFilter = catalog.locator('[data-catalog-empty]');
+  const filters = catalog.getByRole('navigation', { name: 'Filtrer le catalogue' });
+  await filters.locator('button:not([data-category="all"])').first().click();
+  await expect(help).toBeHidden();
+  await expect(emptyFilter).toBeVisible();
+  await filters.locator('button[data-category="all"]').click();
+  await expect(help).toBeVisible();
+  await expect(emptyFilter).toBeHidden();
+  const visibility = catalog.getByRole('switch', { name: 'Afficher les éléments verrouillés' });
+  await visibility.click();
+  await expect(visibility).toHaveAttribute('aria-checked', 'true');
+  await expect(help).toBeHidden();
+  await expect(catalog.locator('#item-fighter-basic')).toBeVisible();
+  await visibility.click();
+  await expect(help).toBeVisible();
+
+  const noScript = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 844 }, storageState: await page.context().storageState() });
+  try {
+    const native = await noScript.newPage();
+    await native.goto(colony+'?section=ships');
+    const nativeHelp = native.locator('[data-shipyard-empty]');
+    await expect(nativeHelp).toBeVisible();
+    await nativeHelp.getByRole('link', { name: 'Voir les vaisseaux verrouillés' }).click();
+    await expect(nativeHelp).toBeHidden();
+    await expect(native.locator('#item-fighter-basic').getByText(/Nécessite :/)).toBeVisible();
+    await native.goto(colony+'?section=ships');
+    await nativeHelp.getByRole('link', { name: 'Voir le chantier d’assemblage' }).click();
+    await expect(native).toHaveURL(new RegExp(colony+'[?].*#item-shipyard-basic$'));
+    await expect(native.locator('#item-shipyard-basic')).toBeVisible();
+  } finally {
+    await noScript.close();
+  }
 
   const menuToggle = page.getByRole('button', { name: 'Plus' });
   await menuToggle.click();
