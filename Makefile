@@ -9,8 +9,9 @@ configure: ## Générer les secrets locaux sans écraser l'existant
 doctor: ## Vérifier Docker et les réseaux partagés
 	docker compose version
 	docker network inspect traefik_network mail_network --format '{{.Name}}'
-validate: ## Valider Compose sans afficher les secrets
+validate: ## Valider Compose local et le modèle de production sans afficher les secrets
 	$(DC) config --quiet
+	APP_ENV_FILE=.env.prod.example docker compose --env-file .env.prod.example -f compose.prod.yaml config --quiet
 build: ## Construire PHP Apache
 	$(DC) build
 start: doctor ## Démarrer sans migration ni import

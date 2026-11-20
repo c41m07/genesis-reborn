@@ -344,7 +344,7 @@ Ouvrir [l’adresse locale du jeu](http://genesis-reborn.localhost), puis créer
 
 ## Configuration et variables d’environnement
 
-Les fichiers `.env`, `.env.local`, `.env.prod` et les secrets sont exclus par [.gitignore](.gitignore) ; seuls les modèles sont versionnés. Ne pas publier leur contenu. Le modèle serveur est [.env.prod.example](.env.prod.example) ; sa préparation est décrite dans le guide de déploiement.
+Les fichiers `.env`, `.env.local`, `.env.prod` et les secrets sont exclus par [.gitignore](.gitignore) ; seuls les modèles sont versionnés. Ne pas publier leur contenu. Pour une installation neuve, partir du [modèle serveur](.env.prod.example). Avant une mise à jour, comparer les clés du modèle à celles du fichier privé selon le [guide de déploiement](docs/DEPLOIEMENT.md#mettre-à-jour-la-configuration-de-production).
 
 | Variables | Usage |
 | --- | --- |
@@ -428,7 +428,7 @@ git diff --check
 ```
 
 - `make assets` compile les assets de production en lançant `npm run build` depuis `app/`.
-- `make validate` valide Compose sans afficher les secrets.
+- `make validate` valide le Compose local et le Compose de production avec son modèle, sans afficher les secrets.
 - `make lint` contrôle PHP, Twig, YAML, le conteneur Symfony et le schéma Doctrine de la base configurée.
 - `make lint-static` reprend les contrôles de `make lint` sans la validation du schéma SQL ; il peut s’exécuter sans base via un conteneur ponctuel, comme dans la CI légère.
 - `make test` utilise `database-test` et `genesis_v2_test` en mémoire, un transport Messenger en mémoire et un transport mail nul ; il lance aussi les tests Python des sauvegardes. Lancer une seule suite PHP à la fois sur cette base. PHPUnit est limité à 512 Mo pour ce seul processus, sans changer PHP pour le jeu.
