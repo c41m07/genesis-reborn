@@ -248,6 +248,18 @@ final class GameRepository
         return array_map('intval', array_column($rows, 'total', 'status'));
     }
 
+    /** @return list<array{id: int, name: string}> */
+    public function recruitingGuildDirectory(PlayerUniverse $viewer): array
+    {
+        // Dans le modèle actuel, le recrutement est ouvert aux guildes actives
+        // du même univers. La découverte ne charge ni dirigeants ni membres.
+        return $this->em->createQueryBuilder()->select('guild.id AS id', 'guild.name AS name')
+            ->from(\App\Entity\Guild::class, 'guild')
+            ->where('guild.universe = :universe')->andWhere('guild.archivedAt IS NULL')
+            ->setParameter('universe', $viewer->universe)->orderBy('guild.id', 'ASC')
+            ->setMaxResults(6)->getQuery()->getArrayResult();
+    }
+
     /** @return list<\App\Entity\Guild> Recherche bornée avant chargement des équipages. */
     public function searchGuilds(PlayerUniverse $viewer, string $search, ?\App\Entity\Guild $own): array
     {

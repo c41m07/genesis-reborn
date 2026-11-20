@@ -1,1 +1,17 @@
 {% include 'player/_guild_search.html.twig' with {discoverySearch: true} %}
+
+{% if search is empty %}
+<section class="panel" aria-labelledby="guild-recruitment-title">
+    <h2 id="guild-recruitment-title">Guildes qui recrutent</h2>
+    {% if recruitingGuilds %}
+        <p>Quelques guildes ouvertes au recrutement dans cet univers. Utilisez la recherche pour en trouver d’autres.</p>
+        <ul>
+            {% for guild in recruitingGuilds %}
+                <li><a href="{{ path('app_guild_public_profile', {id:guild.id}) }}">{{ guild.name }}</a></li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Aucune guilde ouverte au recrutement dans cet univers pour le moment.</p>
+    {% endif %}
+</section>
+{% endif %}
