@@ -104,7 +104,12 @@ Vérifications de cet incrément :
 - Aucun réseau existant modifié, aucun droit attribué à un vrai compte.
 - Pas de recette navigateur, de CI complète, de fusion ni de déploiement.
 
-## Aperçu fictif de délégation (aucune délégation réelle)
+## Historique : aperçu fictif reporté hors de la livraison dev
+
+Les deux sections suivantes décrivent les recettes historiques uniquement.
+Le candidat de livraison dev retire l’aperçu, ses liens et son code de
+simulation. Seule la matrice de lecture du rôle administrateur existant
+est maintenue ; aucun profil délégué ni écran d’attribution ne sont inclus.
 
 Branche feature/admin-apercu-delegation, depuis 78763ba. Complexité 3/5 :
 projection pure, GET uniquement, sans changement de politique ni de schéma.

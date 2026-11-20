@@ -4,7 +4,7 @@
 <div class="page-heading"><div><p class="eyebrow">Exploitation</p><h1>Permissions administratives</h1><p>Matrice du périmètre raccordé, sans attribution ni modification de droits.</p></div></div>
 <section class="panel" aria-labelledby="permission-status">
     <h2 id="permission-status">Accès actuel</h2>
-    <p>Ces quatre capacités sont réservées aux administrateurs non suspendus. Les joueurs et les visiteurs n’en disposent pas. Les profils support, modérateur et opérateur ne sont pas délégués.</p>
+    <p>Ces quatre capacités sont réservées aux administrateurs non suspendus. Les joueurs et les visiteurs n’en disposent pas. Aucun autre rôle administratif n’est attribué depuis cet écran.</p>
     <p>La portée indique la cible contrôlée lors de l’action, pas une restriction d’administration à un univers. Les autres pages restent protégées par le rôle administrateur existant.</p>
 </section>
 <section class="panel" aria-labelledby="permission-matrix-title">
@@ -25,10 +25,5 @@
             </tbody>
         </table>
     </div>
-</section>
-<section class="panel" aria-labelledby="permission-limits">
-    <h2 id="permission-limits">Avant une délégation</h2>
-    <p><a href="{{ path('app_admin_permissions_preview', {scope: 'a'}) }}">Voir l’aperçu sur des univers fictifs</a></p>
-    <p>Il reste à définir les profils et leur portée, raccorder toutes les routes et les services, limiter les données visibles, puis vérifier la révocation et la protection du dernier administrateur. Ajouter un nom de capacité aux préférences ou aux rôles d’un joueur n’accorde aucun droit.</p>
 </section>
 {% endblock %}

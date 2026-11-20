@@ -74,7 +74,7 @@ sont conservées.
 ## Support des comptes
 
 [Diagnostic administratif des comptes](ADMIN_SUPPORT_COMPTES.md) : états privés, protections, tests et sous-lots restant à réaliser.
-- [Capacités administratives](ADMIN_PERMISSIONS.md) : premier périmètre, compatibilité et conditions avant délégation.
+- [Capacités administratives](ADMIN_PERMISSIONS.md) : matrice de lecture et garanties du rôle administrateur existant.
 - [Recherche admin au clavier](ADMIN_ACCESSIBILITE_RECHERCHE.md) : focus après réponse différée et recette isolée.
 
 - [Recette intégrée locale des lots admin](ADMIN_RECETTE_INTEGREE.md) : références, validations et limites avant fusion.
