@@ -57,8 +57,21 @@ final class FleetVisibility
         foreach ($this->repo->all(FleetShip::class, ['fleet'=>$visible]) as $ship) {
             $shipsByFleet[$ship->fleet->id][] = $ship;
         }
+        $transportIds = [];
+        foreach ($visible as $fleet) {
+            if ($fleet->mission === 'transport') {
+                $transportIds[] = $fleet->id;
+            }
+        }
+        $reportIds = $this->repo->incomingTransportReportIds($viewer, $transportIds);
         $rows = [];
-        foreach ($visible as $fleet) $rows[] = $this->row($viewer, $fleet, $known, $shipsByFleet[$fleet->id] ?? []);
+        foreach ($visible as $fleet) {
+            $row = $this->row($viewer, $fleet, $known, $shipsByFleet[$fleet->id] ?? []);
+            if (isset($reportIds[$fleet->id])) {
+                $row['transportReportId'] = $reportIds[$fleet->id];
+            }
+            $rows[] = $row;
+        }
         return $rows;
     }
 

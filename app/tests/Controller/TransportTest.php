@@ -226,6 +226,53 @@ final class TransportTest extends WebTestCase
         $this->client->followRedirect();self::assertResponseIsSuccessful();self::assertSelectorTextContains('h1', 'Surveillance des missions');
     }
 
+    public function testIncomingTransportLinksToTheExistingReportForItsOriginalRecipient(): void
+    {
+        $this->client->disableReboot();
+        $fleet = $this->send();
+        $report = $this->em->getRepository(TransportReport::class)->findOneBy(['fleet' => $fleet]);
+        $fleetId = $fleet->id;
+        $targetId = $this->target->id;
+        $reportPath = '/rapports/transport/'.$report->id;
+        $link = '[data-incoming-attack="'.$fleetId.'"] a[href="'.$reportPath.'"]';
+        $newOwner = $this->player('NextOwner');
+        $this->client->loginUser($this->recipient);
+
+        $this->client->request('GET', '/flottes');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains($link, 'Consulter le récapitulatif du transport');
+
+        $this->client->request('GET', '/flottes/surveillance');
+        self::assertResponseIsSuccessful();
+        $payload = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        $panel = new \Symfony\Component\DomCrawler\Crawler($payload['html']);
+        self::assertCount(1, $panel->filter($link));
+        self::assertCount(0, $panel->filter('.report-resource-table'));
+
+        $this->client->request('GET', $reportPath);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('h2', 'Transport en route');
+        $amounts = $this->client->getCrawler()->filter('.report-resource-table td[data-label="Envoyé"]')->each(
+            static fn (\Symfony\Component\DomCrawler\Crawler $amount): string => $amount->text(),
+        );
+        self::assertContains('123,00', $amounts);
+        self::assertContains('67,00', $amounts);
+
+        // La visibilité de l'arrivée suit la colonie ; celle du rapport ne se transfère pas.
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $target = $em->find(Planet::class, $targetId);
+        $newOwner = $em->find(Player::class, $newOwner->id);
+        $target->owner = $newOwner->currentPlayerUniverse;
+        $em->flush();
+        $this->client->loginUser($newOwner);
+        $this->client->request('GET', '/flottes/surveillance');
+        self::assertResponseIsSuccessful();
+        $payload = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        $panel = new \Symfony\Component\DomCrawler\Crawler($payload['html']);
+        self::assertCount(1, $panel->filter('[data-incoming-attack="'.$fleetId.'"]'));
+        self::assertCount(0, $panel->filter($link));
+    }
+
     public function testExcessCargoIsReducedToTheRemainingBayWithoutUsingFuelTanks(): void
     {
         foreach($this->em->getRepository(PlanetResource::class)->findBy(['planet'=>$this->origin]) as $resource) {
