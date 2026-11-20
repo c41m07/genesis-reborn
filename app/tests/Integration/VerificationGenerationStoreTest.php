@@ -858,4 +858,118 @@ final class VerificationGenerationStoreTest extends KernelTestCase
         self::assertNotNull($db->fetchOne('SELECT emission_handoff_at FROM verification_delivery_request WHERE id = ?', [$id]));
         self::assertSame('completed', $lifecycle->complete($id, $claim['claim_token'], 'transport_accepted')['result']);
     }
+
+    private function setProfileFixturePassword(EntityManagerInterface $em, Player $player): void
+    {
+        $hasher = self::getContainer()->get(\Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface::class);
+        $player->password = $hasher->hashPassword($player, 'Fixture-Only-2026!');
+        $em->flush();
+    }
+
+    private function updateFixtureProfile(Player $player, string $email): void
+    {
+        $data = new \App\Validator\DTO\ProfileData();
+        $data->email = $email;
+        $data->username = $player->username;
+        $data->currentPassword = 'Fixture-Only-2026!';
+        self::getContainer()->get(\App\Service\Player\ProfileService::class)->update($player, $data);
+    }
+
+    public function testBusinessProfileAddressRoundTripCannotResurrectVersionedLink(): void
+    {
+        [$em, $db, $player, $clock, $store, $codec, $keys] = $this->fixture();
+        $this->up($db);
+        $this->setProfileFixturePassword($em, $player);
+        $initialAddress = $player->email;
+        $generation = $store->prepare($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        $link = $codec->reproduce($generation, $keys);
+
+        $this->updateFixtureProfile($player, ' '.strtoupper($initialAddress).' ');
+        self::assertSame('active', $db->fetchOne('SELECT state FROM player_verification_generation'));
+        $this->updateFixtureProfile($player, 'writer-transition-b@example.test');
+        self::assertSame('revoked', $db->fetchOne('SELECT state FROM player_verification_generation'));
+        $this->updateFixtureProfile($player, $initialAddress);
+        self::assertSame('revoked', $db->fetchOne('SELECT state FROM player_verification_generation'));
+        self::assertFalse($this->mixed($em, $codec, $clock)->confirm($link));
+        self::assertNull($db->fetchOne('SELECT email_verified_at FROM player WHERE id = ?', [$player->id]));
+        $next = $store->prepare($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        self::assertSame(2, $next->version);
+        self::assertNotSame($generation->fingerprint, $next->fingerprint);
+        self::assertFalse($this->mixed($em, $codec, $clock)->confirm($link));
+    }
+
+    public function testProfileRollbackPreservesBothAddressAndActiveVersionedLink(): void
+    {
+        [$em, $db, $player, $clock, $store, , $keys] = $this->fixture();
+        $this->up($db);
+        $this->setProfileFixturePassword($em, $player);
+        $initialAddress = $player->email;
+        $store->prepare($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        $snapshot = $db->fetchAssociative('SELECT * FROM player_verification_generation');
+        $db->executeStatement("CREATE TRIGGER fixture_deny_address BEFORE UPDATE ON player FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'synthetic address write rejected'");
+        try {
+            $this->updateFixtureProfile($player, 'writer-transition-b@example.test');
+            self::fail('Le changement d’adresse devait échouer.');
+        } catch (\Doctrine\DBAL\Exception $error) {
+            self::assertStringContainsString('synthetic address write rejected', $error->getMessage());
+        } finally {
+            $db->executeStatement('DROP TRIGGER fixture_deny_address');
+        }
+        self::assertSame($initialAddress, $db->fetchOne('SELECT email FROM player WHERE id = ?', [$player->id]));
+        self::assertSame($snapshot, $db->fetchAssociative('SELECT * FROM player_verification_generation'));
+    }
+
+    public function testProfileAndVersionedConfirmationShareAccountLock(): void
+    {
+        [$em, $db, $player, $clock, $store, $codec, $keys] = $this->fixture();
+        $this->up($db);
+        $this->setProfileFixturePassword($em, $player);
+        $initialAddress = $player->email;
+        $generation = $store->prepare($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        $link = $codec->reproduce($generation, $keys);
+        [$profile, $confirmed] = $this->race($player->id, 'profile-address', 'mixed', $generation->version, $link);
+        self::assertSame('changed', $profile);
+        self::assertSame('writer-transition-b@example.test', $db->fetchOne('SELECT email FROM player WHERE id = ?', [$player->id]));
+        self::assertSame($confirmed ? 'consumed' : 'revoked', $db->fetchOne('SELECT state FROM player_verification_generation'));
+        // Même après rétablissement de A, aucun ordre de la course ne
+        // laisse un lien utilisable après le changement effectif.
+        $em->clear();
+        $this->updateFixtureProfile($em->find(Player::class, $player->id), $initialAddress);
+        self::assertFalse($this->mixed($em, $codec, $clock)->confirm($link));
+    }
+
+    public function testAnonymizationRevokesVersionedWithoutChangingLegacyRemoval(): void
+    {
+        [$em, $db, $player, $clock, $store, , $keys] = $this->fixture();
+        $this->up($db);
+        $this->setProfileFixturePassword($em, $player);
+        $store->prepare($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        $legacy = new EmailVerificationToken();
+        $legacy->player = $player;
+        $legacy->tokenHash = hash('sha256', 'synthetic-legacy');
+        $legacy->expiresAt = $clock->now()->modify('+1 hour');
+        $em->persist($legacy);
+        $em->flush();
+        self::getContainer()->get(\App\Service\Player\AccountDeletionService::class)->delete($player, 'Fixture-Only-2026!', true);
+        self::assertSame('revoked', $db->fetchOne('SELECT state FROM player_verification_generation'));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM player_email_verification_token'));
+        self::assertStringEndsWith('@deleted.invalid', $db->fetchOne('SELECT email FROM player WHERE id = ?', [$player->id]));
+    }
+
+    public function testProfileOnLegacySchemaDoesNotTouchHistoricalFingerprint(): void
+    {
+        [$em, $db, $player, $clock] = $this->fixture(); // Aucun schéma de génération ajouté.
+        self::assertFalse($db->createSchemaManager()->tablesExist(['player_verification_generation']));
+        $this->setProfileFixturePassword($em, $player);
+        $legacy = new EmailVerificationToken();
+        $legacy->player = $player;
+        $legacy->tokenHash = hash('sha256', 'synthetic-legacy');
+        $legacy->expiresAt = $clock->now()->modify('+1 hour');
+        $em->persist($legacy);
+        $em->flush();
+        $before = $db->fetchAssociative('SELECT * FROM player_email_verification_token');
+        $this->updateFixtureProfile($player, 'writer-transition-b@example.test');
+        self::assertSame('writer-transition-b@example.test', $db->fetchOne('SELECT email FROM player WHERE id = ?', [$player->id]));
+        self::assertSame($before, $db->fetchAssociative('SELECT * FROM player_email_verification_token'));
+    }
 }

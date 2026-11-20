@@ -632,10 +632,9 @@ commun. Le destinataire est capturé en mémoire à la remise, pas
 fourni par POST ni recherché après coup par le transport. Un lien
 préparé avant une modification d'adresse est refusé pour la nouvelle
 adresse ; aucun changement d'adresse ne prolonge ni ne recrée la
-génération. Si la règle future exige une invalidation permanente
-même si l'ancienne adresse est restaurée, il faudra intégrer une
-révocation explicite ou une révision d'adresse dans les écritures de
-profil. Ne pas déduire de cette preuve une gouvernance de profil
+génération. Ce palier seul n'assurait pas une invalidation permanente
+même si l'ancienne adresse était restaurée. Le palier ci-dessous ajoute
+la révocation explicite aux écritures de profil. Ne pas déduire de cette preuve une gouvernance de profil
 qui n'a pas été modifiée.
 
 Les anciens liens historiques ne sont ni convertis ni réinterprétés.
@@ -660,3 +659,39 @@ redescend en fixture, les colonnes du reçu disparaissent au retour et
 les empreintes historiques restent intactes. Régressions V9,
 Compose, PHP lint, Symfony et diff contrôlés. Base et réseau retirés.
 Aucun SMTP réel, secret, réglage réel, production, fusion ou déploiement.
+
+## Révocation irréversible lors d'un changement d'adresse métier
+
+Inventaire des écritures d'adresse existantes : `RegistrationService`
+(initialisation d'un compte neuf, y compris la commande de démo),
+`ProfileService` (changement authentifié) et `AccountDeletionService`
+(anonymisation après confirmation). Aucun autre écrivain applicatif
+d'adresse n'a été trouvé dans app/src, migrations ou scripts consultés.
+Les interventions SQL ad hoc ne font pas partie des chemins métier.
+
+Profil et anonymisation appellent `PlayerEmailAddressChange` depuis
+leur transaction et après leur verrou/rafraîchissement du compte.
+Pour une adresse réellement différente, l'état actif de la génération
+versionnée devient révoqué avant commit. Une normalisation sans
+changement n'a aucun effet. Le helper n'ouvre pas de deuxième
+transaction et ne modifie aucun jeton historique ; le retrait historique
+déjà fait par l'anonymisation reste inchangé. Aucun recontrôle de
+mot de passe ni règle historique de `emailVerifiedAt` n'est remplacé.
+Sur ancien schéma sans table de génération, il n'y a aucun lien
+versionné à révoquer et la mutation normale reste possible.
+
+Le rollback restaure l'adresse et la génération dans la même transaction.
+A→B→A ne restaure pas un lien révoqué : une demande ultérieure peut
+créer une nouvelle version, pas ressusciter l'ancienne. Une confirmation
+qui a déjà obtenu le verrou avant le changement peut consommer le lien
+de A ; si le changement obtient le verrou en premier, cette consommation
+est refusée. Un transport engagé ne s'annule pas sur le réseau, mais
+le lien non consommé ne redevient pas valide. Aucun écouteur global,
+nouveau champ, stockage brut d'adresse, secret ou réglage d'exploitation.
+
+**65 tests / 519 assertions** sur MariaDB jetable : profil A→B→A, retour
+de transaction quand l'écriture d'adresse échoue, course lecteur/profil
+sur processus indépendants, anonymisation et profil sur ancien schéma.
+Confirmation et écriture V10 désactivée/activée en tests factices
+revalidées. PHP lint, conteneur, Compose et diff vérifiés ; base/réseau
+retirés. Aucun nouveau schéma, SMTP, prod, push, fusion ou déploiement.

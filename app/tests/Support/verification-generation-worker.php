@@ -8,7 +8,8 @@ use Symfony\Component\Clock\MockClock;
 
 $kernel = new App\Kernel('test', true);
 $kernel->boot();
-$em = $kernel->getContainer()->get('test.service_container')->get(EntityManagerInterface::class);
+$container = $kernel->getContainer()->get('test.service_container');
+$em = $container->get(EntityManagerInterface::class);
 $db = $em->getConnection();
 $params = $db->getParams();
 if (($params['host'] ?? '') !== 'database-test' || ($params['dbname'] ?? '') !== 'genesis_v2_test') {
@@ -42,6 +43,15 @@ $result = match ($argv[2]) {
     'prepare-emission' => (new App\Service\Player\VerificationRequestLifecycle($em, new App\Manager\GameManager($em), $clock))->prepareVersionedEmission($id, stream_get_contents(STDIN), $keys) !== null,
     'prepare-handoff' => (new App\Service\Player\VerificationRequestLifecycle($em, new App\Manager\GameManager($em), $clock))->prepareRecoveryDelivery($id, stream_get_contents(STDIN), $keys)['result'],
     'claim-recovery' => (new App\Service\Player\VerificationRequestLifecycle($em, new App\Manager\GameManager($em), $clock))->claimRecovery($id, 120)['result'],
+    'profile-address' => (function () use ($container, $em, $player): string {
+        $p = $em->find(App\Entity\Player::class, $player);
+        $data = new App\Validator\DTO\ProfileData();
+        $data->email = 'writer-transition-b@example.test';
+        $data->username = $p->username;
+        $data->currentPassword = 'Fixture-Only-2026!';
+        $container->get(App\Service\Player\ProfileService::class)->update($p, $data);
+        return 'changed';
+    })(),
     'mixed' => (new App\Service\Player\MixedVerificationLinkReader($em, new App\Manager\GameManager($em), $codec, $clock))->confirm(stream_get_contents(STDIN)),
     'reserve-recovery-admin' => (function () use ($db, $clock, $codec, $player, $id, $keys, $argv): array {
         try {
