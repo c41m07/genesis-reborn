@@ -232,3 +232,44 @@ body.authenticated .event-redesign > .inline-link {
         width: 100%;
     }
 }
+
+
+.event-redesign .event-ranking {
+    margin-block-start: 18px;
+    min-width: 0;
+}
+
+.event-redesign .event-ranking-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+.event-redesign .event-ranking-table :is(th, td) {
+    padding: 10px 6px;
+    border-block-end: 1px solid var(--line);
+    overflow-wrap: anywhere;
+    text-align: start;
+}
+
+.event-redesign .event-ranking-table :is(th, td):first-child {
+    width: 18%;
+}
+
+.event-redesign .event-ranking-table :is(th, td):last-child {
+    width: 35%;
+    text-align: end;
+}
+
+.event-redesign .event-ranking-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    margin-block-start: 14px;
+}
+
+.event-redesign .event-ranking-pagination a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}

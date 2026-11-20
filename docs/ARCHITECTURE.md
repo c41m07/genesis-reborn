@@ -969,6 +969,24 @@ contrôleur JavaScript, chargement ou traitement métier n’est ajouté.
 commun : annonces/bonus applicables et occurrences en cours ou programmées.
 Il conserve toutes ses informations, son compteur fermé et ses comptes à rebours ;
 il ne charge aucun historique de défis. Les pages n’ajoutent pas de sondage.
+
+La fiche d’un défi existant réserve le classement aux participations de
+l’univers ayant une contribution positive dans ce défi. Le contrôle et le
+classement paginé sont réalisés côté serveur sur la même lecture ; un score
+égal donne le même rang, sans départage de récompense ni mise à jour.
+Le départ d'un joueur ne retire pas le score historique : sa ligne n'affiche
+plus son pseudo. Les lignes ne contiennent jamais d'identifiant, de courriel
+ni d'état de récompense d’un autre joueur. La réponse est privée et non
+stockable. Le tableau sous la participation conserve l’objectif et les
+actions à leur emplacement ; trois colonnes souples et des liens natifs
+permettent de consulter la même fiche sur mobile et sans JavaScript.
+Complexité 3/5. Recette locale isolée : 33 tests / 215 assertions (fiches,
+permissions, pagination et régressions d’attribution), lints PHP/Twig et
+conteneur, validation Compose et compilation des assets réussis. Chromium
+rejoue la fiche dans les deux thèmes à 1 440, 768, 390 et 320 px,
+avec contrôle des débordements et analyse axe à 390 px ; pagination au
+clavier vérifiée. Aucun test ni modification en production.
+
 L’ancien fragment `#page-section-0` du sommaire des défis est orienté côté navigateur
 vers la nouvelle liste. `#events-current` et `#events-upcoming` restent sur le
 document des annonces ; les nouveaux écrans désactivent le sommaire automatique.
