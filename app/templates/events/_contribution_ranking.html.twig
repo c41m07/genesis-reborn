@@ -1,0 +1,32 @@
+<section class="panel event-ranking" id="event-ranking" aria-labelledby="event-ranking-title">
+    <h2 id="event-ranking-title">Classement des contributions</h2>
+    <table class="event-ranking-table" aria-labelledby="event-ranking-title">
+        <thead><tr>
+            <th scope="col">Rang</th>
+            <th scope="col">Commandant</th>
+            <th scope="col">Contribution</th>
+        </tr></thead>
+        <tbody>
+        {% for row in ranking.rows %}
+            <tr>
+                <td>{{ row.rank }}</td>
+                <th scope="row">
+                    {{ row.commander ?? 'Ancien participant' }}{% if row.is_viewer %} <span class="muted">(vous)</span>{% endif %}
+                </th>
+                <td>{{ row.contribution|quantity(2) }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% if ranking.pages > 1 %}
+        <nav class="event-ranking-pagination" aria-label="Pages du classement des contributions">
+            {% if ranking.page > 1 %}
+                <a class="secondary" rel="prev" href="{{ path('app_challenge', {id: event_id, ranking_page: ranking.page - 1, _fragment: 'event-ranking'}) }}">Page précédente</a>
+            {% endif %}
+            <span>Page {{ ranking.page }} / {{ ranking.pages }}</span>
+            {% if ranking.page < ranking.pages %}
+                <a class="secondary" rel="next" href="{{ path('app_challenge', {id: event_id, ranking_page: ranking.page + 1, _fragment: 'event-ranking'}) }}">Page suivante</a>
+            {% endif %}
+        </nav>
+    {% endif %}
+</section>

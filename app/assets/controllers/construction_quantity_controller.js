@@ -2,14 +2,20 @@ import { Controller } from '@hotwired/stimulus';
 import { compactNumber, exactNumber } from '../quantity.js';
 
 export default class extends Controller {
-    static targets = ['input', 'max', 'submit', 'status', 'label', 'arrow', 'form', 'cost', 'costHeading', 'duration'];
+    static targets = ['input', 'max', 'submit', 'status', 'label', 'arrow', 'form', 'cost', 'costHeading', 'duration', 'wait', 'waitText'];
     static values = { url: String };
 
     connect() { this.maxTarget.hidden = false; }
     disconnect() { this.abort?.abort(); }
-    change() {
+    invalidate() {
+        // Une ancienne estimation ne doit plus être présentée dès que la quantité change.
+        this.abort?.abort();
         this.inputTarget.removeAttribute('max');
         this.formTarget.dataset.dirty = 'true';
+        this.updateWait(null);
+    }
+    change() {
+        this.invalidate();
         this.refresh(false);
     }
     maximum() { this.refresh(true); }
@@ -20,6 +26,7 @@ export default class extends Controller {
         this.maxTarget.disabled = true;
         this.submitTarget.disabled = true;
         this.statusTarget.textContent = 'Calcul du coût et du maximum…';
+        this.updateWait(null);
         try {
             const url = new URL(this.urlValue, window.location.origin);
             for (const name of ['group', 'slug', 'tier']) url.searchParams.set(name, this.formTarget.elements[name].value);
@@ -27,7 +34,7 @@ export default class extends Controller {
             const response = await fetch(url, { signal: abort.signal, headers: { Accept: 'application/json' } });
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'Maximum indisponible. Réessayez.');
-            if (abort.signal.aborted) return false;
+            if (abort.signal.aborted || this.abort !== abort || !this.element.isConnected) return false;
             const requested = Number(this.inputTarget.value);
             const maximum = data.maximum;
             this.inputTarget.max = String(maximum);
@@ -36,6 +43,7 @@ export default class extends Controller {
             this.statusTarget.textContent = maximum === 0 ? data.reason :
                 (requested > maximum && !maximize ? 'Quantité ajustée. ' : '') + 'Maximum constructible : ' + exactNumber(maximum) + '.';
             this.renderPreview(data);
+            this.updateWait(data.paymentWait);
             this.submitTarget.disabled = maximum === 0;
             const missing = Object.values(data.missingResources ?? {});
             this.submitTarget.classList.toggle('has-missing-resources', missing.length > 0);
@@ -50,10 +58,21 @@ export default class extends Controller {
             this.formTarget.dataset.dirty = 'true';
             return true;
         } catch (error) {
-            if (error.name !== 'AbortError') this.statusTarget.textContent = error.message;
+            if (error.name !== 'AbortError' && !abort.signal.aborted && this.abort === abort && this.element.isConnected) {
+                this.statusTarget.textContent = error.message;
+            }
             return false;
         } finally {
             if (this.abort === abort) this.maxTarget.disabled = false;
+        }
+    }
+
+    updateWait(text) {
+        this.waitTextTarget.textContent = text ?? '';
+        this.waitTarget.hidden = !text;
+        const panel = this.waitTarget.querySelector('[popover]');
+        if (!text && typeof panel?.hidePopover === 'function' && panel.matches(':popover-open')) {
+            panel.hidePopover();
         }
     }
 

@@ -2,7 +2,7 @@
 
 namespace App\Tests\Controller;
 
-use App\Entity\{BoostEvent, GameEvent, Player, PlayerBoost, Universe};
+use App\Entity\{BoostEvent, BoostEventContribution, GameEvent, Player, PlayerBoost, PlayerUniverse, Universe};
 use App\Repository\GameRepository;
 use App\Service\Player\RegistrationService;
 use App\Service\Universe\{UniverseImporter, UniverseService};
@@ -205,6 +205,98 @@ final class EventPagesTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorTextSame('h1', 'Défi archivé');
         self::assertSame(0, $this->em->getRepository(PlayerBoost::class)->count([]));
+    }
+
+    public function testContributionRankingIsRestrictedToThisEventsContributorsAndKeepsTiesAcrossPages(): void
+    {
+        $event = $this->challenge('Défi classé', 'active');
+        $event->rewardMode = 'all_contributors';
+        $event->endsAt = $this->clock->now()->modify('+1 day');
+        $other = $this->challenge('Autre défi');
+        $viewer = $this->player->currentPlayerUniverse;
+
+        // Deux scores égaux en tête, puis autant de scores égaux de rang 3 que nécessaire
+        // pour que le même rang soit affiché de part et d'autre de la pagination.
+        $this->addContribution($event, $viewer, 'viewer-a', 482);
+        $this->addContribution($event, $viewer, 'viewer-b', 251);
+        $this->addContribution($event, $this->newContributor('PremierExAequo'), 'tie', 733);
+        $former = $this->newContributor('AliasHistorique');
+        $former->detachPlayer($this->clock->now());
+        $this->addContribution($event, $former, 'former', 211);
+        for ($i = 0; $i < 24; ++$i) {
+            $this->addContribution($event, $this->newContributor('Commandant'.$i), 'rank-'.$i, 211);
+        }
+        $nonContributor = $this->newContributor('AutreEvenement');
+        $this->addContribution($other, $nonContributor, 'other', 917);
+        $this->em->flush();
+        $path = '/evenements/defis/'.$event->id;
+
+        $first = $this->client->request('GET', $path);
+        self::assertResponseIsSuccessful();
+        self::assertTrue($this->client->getResponse()->headers->hasCacheControlDirective('private'));
+        self::assertTrue($this->client->getResponse()->headers->hasCacheControlDirective('no-store'));
+        self::assertSelectorTextContains('.event-participation', 'Votre classement : #1');
+        self::assertSelectorTextContains('.event-participation', '733');
+        self::assertSelectorCount(25, '#event-ranking tbody tr');
+        self::assertSame(['1', '1', '3'], $first->filter('#event-ranking tbody tr td:first-child')->slice(0, 3)->each(
+            static fn ($cell): string => $cell->text(),
+        ));
+        self::assertSelectorTextContains('#event-ranking', 'PremierExAequo');
+        self::assertSelectorTextContains('#event-ranking', '(vous)');
+        self::assertSelectorTextContains('#event-ranking', 'Ancien participant');
+        self::assertSelectorTextNotContains('#event-ranking', 'AliasHistorique');
+        self::assertSelectorTextNotContains('#event-ranking', '@example.test');
+        self::assertSelectorTextNotContains('#event-ranking', 'AutreEvenement');
+        self::assertSelectorTextNotContains('#event-ranking', '917');
+
+        $second = $this->client->click($first->filter('#event-ranking nav a[rel="next"]')->link());
+        self::assertResponseIsSuccessful();
+        self::assertSelectorCount(2, '#event-ranking tbody tr');
+        self::assertSame(['3', '3'], $second->filter('#event-ranking tbody tr td:first-child')->each(
+            static fn ($cell): string => $cell->text(),
+        ));
+        self::assertSelectorTextContains('#event-ranking nav', 'Page 2 / 2');
+        self::assertSelectorTextContains('.event-participation', 'Votre classement : #1');
+        $this->client->request('GET', $path.'?ranking_page=999999');
+        self::assertSelectorTextContains('#event-ranking nav', 'Page 2 / 2');
+
+        // Être dans le même univers et avoir joué à un autre événement ne suffit pas.
+        $this->client->loginUser($nonContributor->player);
+        $this->client->request('GET', $path.'?ranking_page=2');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('.event-participation');
+        self::assertSelectorNotExists('#event-ranking');
+        self::assertSelectorTextNotContains('main', 'PremierExAequo');
+        self::assertSelectorTextNotContains('main', '733');
+        self::assertSame(0, $this->em->getRepository(PlayerBoost::class)->count([]));
+    }
+
+    private function newContributor(string $name): PlayerUniverse
+    {
+        $player = new Player();
+        $player->username = $name;
+        $player->email = strtolower($name).'@example.test';
+        $player->password = 'fixture-unused';
+        $player->emailVerifiedAt = $this->clock->now();
+        $membership = new PlayerUniverse();
+        $membership->universe = $this->player->currentPlayerUniverse->universe;
+        $membership->joinedAt = $this->clock->now();
+        $membership->player = $player;
+        $player->currentPlayerUniverse = $membership;
+        $this->em->persist($player);
+        $this->em->persist($membership);
+
+        return $membership;
+    }
+
+    private function addContribution(BoostEvent $event, PlayerUniverse $membership, string $source, float $value): void
+    {
+        $contribution = new BoostEventContribution();
+        $contribution->event = $event;
+        $contribution->playerUniverse = $membership;
+        $contribution->sourceKey = $source;
+        $contribution->value = $value;
+        $this->em->persist($contribution);
     }
 
     public function testAnonymousAndMissingEmpireCannotOpenEventPages(): void
