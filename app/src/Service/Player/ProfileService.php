@@ -7,7 +7,7 @@ use App\Validator\DTO\ProfileData;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 final class ProfileService
 {
-    public function __construct(private GameManager $manager,private GameRepository $repo,private UserPasswordHasherInterface $hasher) {}
+    public function __construct(private GameManager $manager,private GameRepository $repo,private UserPasswordHasherInterface $hasher, private PlayerEmailAddressChange $addressChange) {}
     public function update(Player $player,ProfileData $data):void
     {
         $this->manager->transaction(function()use($player,$data){
@@ -18,7 +18,7 @@ final class ProfileService
                 $existing=$this->repo->one(Player::class,[$field=>$value]);
                 if($existing && $existing->id!==$player->id) throw new \DomainException('Cette adresse email ou ce pseudo est déjà utilisé.');
             }
-            $player->email=$email;$player->username=$name;
+            $this->addressChange->changeLocked($player,$email);$player->username=$name;
             if($data->newPassword!==null && $data->newPassword!=='') $player->password=$this->hasher->hashPassword($player,$data->newPassword);
         });
     }

@@ -51,6 +51,13 @@ L’orientation confirmée est une stratégie au rythme modéré ; les durées d
 
 ## État du projet
 
+- Administration : [fiabilité du catalogue](docs/ADMIN_CATALOGUE_FIABILITE.md), avec source des valeurs, motif, confirmation, rejet des formulaires périmés, journal avant/après et comparaison de devis sans publication.
+
+- Administration : la liste filtre les adresses confirmées ou en attente et la fiche joueur distingue confirmation, suspension et échéances des liens de compte, sans exposer de secret ni prétendre mesurer la réception des emails. [Diagnostic et limites](docs/ADMIN_SUPPORT_COMPTES.md).
+- Administration : [diagnostic des relais](docs/ADMIN_EXPLOITATION_DIAGNOSTIC.md) en lecture seule, échéances par nature et limites des indicateurs explicites.
+- Administration : [consultation des guildes actives](docs/ADMIN_GUILDES_CONSULTATION.md), membres/direction, diplomatie et projets lancés, en lecture seule et par univers.
+
+
 - Déblocages initiaux des bâtiments. Le chantier exige ses producteurs de métal et de nano au niveau 2 du même rang et les chantiers précédents au niveau 20. Le bunker demande ces producteurs au niveau 1 et les bunkers précédents au niveau 8. Les laboratoires avancés exigent les laboratoires des rangs précédents au niveau 10. L’hydrogène demande la recherche industrielle du rang au niveau 3, et l’antimatière au niveau 5. [Grille complète des déblocages](docs/DEBLOCAGES.md#bâtiments--13)
 
 - Messagerie : panneaux de contacts et de conversation conservés, bulles reçues bleues et envoyées dorées, zone de rédaction accessible sur ordinateur et mobile. La recherche reste sur sa page dédiée, avec retour vers la conversation sélectionnée. Ctrl + Entrée envoie dans les canaux privé, guilde et Global ; Entrée conserve les sauts de ligne. Markdown sécurisé pour les nouveaux messages seulement, historique conservé en texte ; soumissions répétées protégées côté serveur. CommonMark est une dépendance Composer. [Guide et migration préparée](docs/MESSAGERIE_MARKDOWN.md).
@@ -345,6 +352,9 @@ Les fichiers `.env`, `.env.local`, `.env.prod` et les secrets sont exclus par [.
 | `DATABASE_URL`, `DB_PASSWORD`, `DB_ROOT_PASSWORD`, `DB_HOST_PORT` | Connexion MariaDB, secrets du service local et port d’accès depuis l’hôte. |
 | `MESSENGER_TRANSPORT_DSN`, `RABBITMQ_PASSWORD` | Transport des traitements asynchrones. |
 | `MAILER_DSN`, `MAILER_FROM`, `DEFAULT_URI` | Transport SMTP, expéditeur et URL absolue des liens, notamment ceux des mails. |
+| `ADMIN_ACTIVATION_RECOVERY_ENABLED` | Mode de récupération admin éteint par défaut ; exige aussi le garde-fou admin existant et un fournisseur explicitement raccordé, absent du conteneur livré. Voir [la recette et les limites](docs/ADMIN_ACTIVATION_GENERATION.md). |
+| `EMAIL_VERIFICATION_MIXED_READER_ENABLED` | Lecteur mixte de confirmation éteint par défaut et indépendant de l’envoi ; schéma versionné requis avant tout usage. Voir [la recette](docs/ADMIN_ACTIVATION_GENERATION.md). |
+| `EMAIL_VERIFICATION_VERSIONED_WRITER_ENABLED` | Écrivain versionné d’inscription et de renvoi éteint par défaut. Nécessite lecteur mixte et couple expéditeur/résolveur autorisé (absent du conteneur livré). Voir [les limites de recette](docs/ADMIN_ACTIVATION_GENERATION.md). |
 | `EMPIRE_INACTIVITY_WARNINGS_ENABLED` | `0` par défaut ; interdit les envois d'inactivité, même avec `--send`. Textes révisés validés et valeur `1` autorisée localement le 8 novembre 2026. Voir [EXPLOITATION.md](docs/EXPLOITATION.md#avertissements-dinactivité-j14j27). |
 | `FORGOTTEN_EMPIRES_ENABLED` | `0` par défaut ; active le cycle d'inactivité, les vacances, la conversion PNJ et les occupations JcE. Valeur `1` autorisée localement le 8 novembre 2026. |
 | `MERCURE_URL`, `MERCURE_PUBLIC_URL` | Adresse interne de publication et adresse accessible au navigateur. |
@@ -788,3 +798,37 @@ La revue transversale locale de la refonte couvre aussi les menus communs, les
 actualisations, les erreurs et les parcours sans JavaScript. Son périmètre et les
 reprises de tests sont consignés dans le [bilan de refonte](docs/REFONTE_VISUELLE_INTERFACES.md).
 La CI complète reste requise avant toute fusion.
+
+### Historique du catalogue administratif
+
+Chaque fiche propose un historique paginé en lecture seule, avec comparaison
+avant/après/actuel des champs modifiables. Les anciennes traces incomplètes
+sont signalées et ne peuvent pas être restaurées. Les nouvelles versions complètes
+compatibles peuvent être prévisualisées puis réappliquées après confirmation et
+motif, avec contrôle de concurrence et journalisation.
+[Périmètre et limites](docs/ADMIN_CATALOGUE_FIABILITE.md).
+Le diagnostic support distingue le renvoi inutile, la suspension et le renvoi administratif indisponible ; voir [le périmètre et le contrat de fiabilisation](docs/ADMIN_SUPPORT_COMPTES.md). Aucun envoi administratif direct n’est activé.
+
+Le service de confirmation sépare préparation sous verrou et transport : une confirmation constatée sous verrou n’entraîne plus l’envoi d’un lien non enregistré. Cette correction ne constitue pas encore le renvoi administratif idempotent.
+
+Le [socle des capacités administratives](docs/ADMIN_PERMISSIONS.md) distingue
+consultation de fiche, correction des ressources, attribution de vaisseaux
+et intervention sur les flottes,
+sans activer de nouveaux rôles ni changer les comptes existants.
+
+La matrice descriptive `/admin/permissions` est accessible dans Exploitation.
+Elle expose les quatre capacités raccordées et leurs limites, sans formulaire
+d'attribution ni activation de profils délégués. Voir [les permissions](docs/ADMIN_PERMISSIONS.md).
+
+La recherche administrative différée préserve désormais un point de reprise
+clavier si un résultat focalisé est remplacé. [Recette ciblée et limites](docs/ADMIN_ACCESSIBILITE_RECHERCHE.md).
+Une fondation interne de reçus/réservations de confirmation est préparée, sans route ni transport activés ; la migration est distincte de son application. Voir [les limites de cette tranche](docs/ADMIN_SUPPORT_COMPTES.md).
+
+Le cycle interne de reçu prévoit maintenant une revendication propriétaire et une expiration indéterminée sans réenvoi automatique. Il demeure débranché du mailer et des routes administratives/publiques.
+Le diagnostic d'exploitation indique pour chaque relais affiché l'attention
+requise et propose la fiche des cibles de nature flotte. Il ne déduit jamais
+l'exécution métier du seul état de l'outbox et n'expose aucune action de reprise.
+
+Les identifiants de relais du diagnostic ouvrent une inspection ciblée en lecture seule ; elle distingue les événements périmés sans autoriser leur reprise. Voir [le périmètre exploitation](docs/ADMIN_EXPLOITATION_DIAGNOSTIC.md).
+
+La [matrice des permissions](docs/ADMIN_PERMISSIONS.md) documente les contrôles existants du seul rôle administrateur, sans attribution ni délégation.

@@ -1,0 +1,26 @@
+{% extends 'admin/layout.html.twig' %}
+{% block title %}Historique · {{ item.label }} · {{ universe.name }}{% endblock %}
+{% block body %}
+<div class="page-heading"><div><p class="eyebrow">{{ universe.name }} · Lecture seule</p><h1>Historique de {{ item.label }}</h1>
+<p>Comparaison des champs actuellement modifiables. Aucun état n’est appliqué.</p></div>
+<a class="secondary" href="{{ path('app_admin_catalogue_edit', {id: universe.id, group: group, slug: item.slug}) }}">Retour à la fiche</a></div>
+<p class="panel">Les traces anciennes peuvent être incomplètes. « Non enregistré » ne signifie pas zéro.
+Les règles globales, prérequis et bonus de colonie ne sont pas archivés ici : ces valeurs ne reconstituent pas un ancien devis et ne garantissent pas une restauration compatible.</p>
+{% for version in page.rows %}
+<section class="panel">
+<h2>Trace #{{ version.id }} · {{ version.created_at|date('d/m/Y H:i', 'Europe/Paris') }}</h2>
+<p>{{ version.reason }}</p>
+{% if version.restorable %}<a class="secondary" href="{{ path('app_admin_catalogue_restore', {id: universe.id, group: group, slug: item.slug, source: version.id}) }}">Préparer la restauration de l’état après cette trace</a>{% else %}<p>Trace sans version complète : consultation uniquement.</p>{% endif %}
+<details><summary>Comparer avant, après et actuel</summary>
+<div class="table-scroll"><table class="admin-ops-table">
+<caption>Champs de la fiche, trace #{{ version.id }}</caption>
+<thead><tr><th scope="col">Champ</th><th scope="col">Avant</th><th scope="col">Après</th><th scope="col">Actuel à l’ouverture</th></tr></thead>
+<tbody>{% for field in version.comparison %}<tr><th scope="row">{{ field.label }}</th><td>{{ field.before is null ? 'Non enregistré' : field.before }}</td><td>{{ field.after is null ? 'Non enregistré' : field.after }}</td><td>{{ field.current }}</td></tr>{% endfor %}</tbody>
+</table></div>
+</details></section>
+{% else %}<p role="status">Aucune trace enregistrée pour cette fiche dans cet univers.</p>{% endfor %}
+<nav aria-label="Pagination de l’historique">
+{% if app.request.query.get('before') %}<a href="{{ path('app_admin_catalogue_history', {id: universe.id, group: group, slug: item.slug}) }}">Traces les plus récentes</a>{% endif %}
+{% if page.next %}<a rel="next" href="{{ path('app_admin_catalogue_history', {id: universe.id, group: group, slug: item.slug, before: page.next}) }}">Traces plus anciennes</a>{% endif %}
+</nav>
+{% endblock %}

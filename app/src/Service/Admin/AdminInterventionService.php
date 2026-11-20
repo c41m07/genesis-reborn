@@ -9,12 +9,13 @@ use App\Service\Colony\{ActionGuard, ResourceService};
 use App\Service\Fleet\FleetService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
+use App\Security\{AdminCapability, AdminCapabilityPolicy};
 
 final class AdminInterventionService
 {
     public function __construct(private EntityManagerInterface $em, private GameManager $manager, private GameRepository $repo, private GameCatalog $catalog,
         private ActionGuard $guard, private ResourceService $resources, private FleetService $fleets, private ClockInterface $clock,
-        private \App\Service\Combat\LocalGarrison $garrison, private \App\Service\Queue\QueueService $queues) {}
+        private \App\Service\Combat\LocalGarrison $garrison, private \App\Service\Queue\QueueService $queues, private AdminCapabilityPolicy $capabilities) {}
 
     public function resources(Player $actor, int $playerId, Planet $planet, string $operation, array $amounts, string $reason, string $requestKey): bool
     {
@@ -28,7 +29,7 @@ final class AdminInterventionService
         }
         if (array_sum($values) <= 0) throw new \DomainException('Indiquez au moins une quantité supérieure à zéro.');
         return $this->manager->transaction(function () use ($actor, $playerId, $planet, $operation, $values, $reason, $requestKey): bool {
-            $this->authorize($actor);
+            $this->authorize($actor, AdminCapability::RESOURCES_ADJUST);
             $membership = $planet->owner;
             if (!$membership) throw new \DomainException('Cette colonie ne possède plus de joueur.');
             $this->guard->lock($membership, $planet);
@@ -54,7 +55,7 @@ final class AdminInterventionService
         $reason = $this->reason($reason);
         if (!preg_match('/^[1-9][0-9]{0,9}$/D', $quantity) || (int) $quantity > 2147483647) throw new \DomainException('Quantité invalide : indiquez un entier de 1 à 2147483647.');
         return $this->manager->transaction(function () use ($actor, $playerId, $planet, $slug, $tier, $quantity, $reason, $requestKey): bool {
-            $this->authorize($actor);
+            $this->authorize($actor, AdminCapability::SHIPS_GRANT);
             $membership = $planet->owner;
             if (!$membership) throw new \DomainException('Cette colonie ne possède plus de joueur.');
             $this->guard->lock($membership, $planet);
@@ -90,7 +91,7 @@ final class AdminInterventionService
         if (!in_array($operation, ['reschedule', 'recall', 'force_return'], true)) throw new \DomainException('Intervention inconnue.');
         if ($operation === 'reschedule' && ($seconds < 1 || $seconds > 31536000)) throw new \DomainException('Le délai doit être compris entre une seconde et un an.');
         return $this->manager->transaction(function () use ($actor, $fleet, $operation, $seconds, $reason, $expectedVersion, $requestKey): bool {
-            $this->authorize($actor);
+            $this->authorize($actor, AdminCapability::FLEET_INTERVENE);
             $this->guard->lock($fleet->playerUniverse, $fleet->homePlanet);
             $this->manager->lock($fleet);
             if (!$this->guard->receipt($fleet->playerUniverse, $requestKey)) return false;
@@ -110,10 +111,13 @@ final class AdminInterventionService
         });
     }
 
-    private function authorize(Player $actor): void
+    private function authorize(Player $actor, string $capability): void
     {
         $this->manager->lock($actor);
-        if (!in_array('ROLE_ADMIN', $actor->getRoles(), true) || $actor->lockedAt !== null) throw new \DomainException('Droits administrateur requis.');
+        // Recalculer sur l'acteur rafraîchi sous verrou, jamais sur une décision du contrôleur.
+        if (!$this->capabilities->allows($actor, $capability)) {
+            throw new \DomainException('Droits administrateur requis.');
+        }
     }
 
     private function reason(string $reason): string

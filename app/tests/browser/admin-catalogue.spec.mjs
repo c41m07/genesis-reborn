@@ -67,8 +67,12 @@ test('Administration catalogue: accès, édition, sauvegarde et restauration res
   const cost = firstEntry.locator('form').first().locator('input[type="number"]').first();
   const original = Number(await cost.inputValue());
   await cost.fill(String(original + 1));
+  await firstEntry.getByLabel('Motif de la modification').fill('Recette navigateur isolée');
+  await firstEntry.getByRole('checkbox', { name: /Je confirme cette modification/ }).check();
   await firstEntry.getByRole('button', { name: 'Enregistrer cet équilibrage' }).click();
   await expect(page.locator('.flash[role="status"]')).toContainText('Équilibrage enregistré');
+  await firstEntry.getByLabel('Motif du retour aux références').fill('Fin de recette isolée');
+  await firstEntry.getByRole('checkbox', { name: /Je confirme le retour/ }).check();
   await firstEntry.getByRole('button', { name: 'Restaurer les valeurs de référence' }).click();
   await expect(page.locator('.flash[role="status"]')).toContainText('Équilibrage enregistré');
 
@@ -113,21 +117,25 @@ test('Catalogue B : comparaison des rangs, thèmes et formulaires natifs des qua
 
   const context = await browser.newContext({ storageState: await page.context().storageState(), javaScriptEnabled: false, viewport: { width: 390, height: 900 } });
   const native = await context.newPage();
-  for (const [family, slug, fields] of [['buildings', 'power_plant', 16], ['technologies', 'automated_defense_repair', 17], ['ships', 'fighter', 28], ['defenses', 'ground_turret_anti_light', 21]]) {
+  for (const [family, slug, fields] of [['buildings', 'power_plant', 14], ['technologies', 'automated_defense_repair', 15], ['ships', 'fighter', 28], ['defenses', 'ground_turret_anti_light', 21]]) {
     await native.goto(`${catalogue}/${family}/${slug}`);
     const form = native.locator('.admin-catalogue-editor');
-    await expect(form.locator('input[type="number"]')).toHaveCount(fields);
+    await expect(form.locator('input[type="number"][name^="values["]')).toHaveCount(fields);
     await expect(form.getByRole('group')).toHaveCount(3);
     const cost = form.getByRole('group', { name: 'Basique', exact: true }).getByRole('spinbutton', { name: 'Métal', exact: true });
     await expect(cost).toHaveAttribute('step', '1');
     await expect(cost).toHaveAttribute('aria-describedby', /-range$/);
     const original = Number(await cost.inputValue());
     await cost.fill(String(original + 1));
+    await form.getByLabel('Motif de la modification').fill('Recette sans JavaScript');
+    await form.getByRole('checkbox', { name: /Je confirme cette modification/ }).check();
     await form.getByRole('button', { name: 'Enregistrer cet équilibrage' }).click();
     await expect(native.locator('.flash[role="status"]')).toContainText('Équilibrage enregistré');
     await expect(cost).toHaveValue(String(original + 1));
     await native.reload();
     await expect(cost).toHaveValue(String(original + 1));
+    await native.getByLabel('Motif du retour aux références').fill('Fin de recette sans JavaScript');
+    await native.getByRole('checkbox', { name: /Je confirme le retour/ }).check();
     await native.getByRole('button', { name: 'Restaurer les valeurs de référence' }).click();
     await expect(cost).toHaveValue(String(original));
     await expect(native.locator('.flash[role="status"]')).toContainText('Équilibrage enregistré');

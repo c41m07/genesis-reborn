@@ -2069,3 +2069,27 @@ huit tests HTTP / 173 assertions et vérification du diff réussis.
 La [PR #89](https://github.com/c41m07/genesis-reborn/pull/89) consigne la CI complète
 et l’intégration, puis une nouvelle promotion Alpha reprend le dev consolidé. Aucune migration de base existante,
 installation de dépendance ni intervention sur le serveur dans cette reprise.
+
+
+## Administration — support comptes (branche indépendante)
+
+Première tranche : diagnostic privé des états de compte et des liens conservés,
+sans envoi ni correction de progression. Renvoi administrateur sécurisé,
+historique persistant des emails et interventions métier restent à réaliser.
+Intégration, CI complète et déploiement non effectués.
+Voir [ADMIN_SUPPORT_COMPTES.md](ADMIN_SUPPORT_COMPTES.md).
+
+Incrément support : recherche des inscriptions non confirmées depuis la liste,
+combinable au rôle et à la suspension, avant pagination. Le renvoi administratif
+attend le cycle commun idempotent documenté ; aucun email réel envoyé.
+## Administration : socle permissions
+
+Premier périmètre local : fiche joueur et interventions ressources/vaisseaux/flottes.
+Les admins existants conservent leur accès ; aucune délégation activée.
+Matrice de rôles, stockage, révocation et conversion des autres routes restent
+à définir/implémenter avant ouverture. [Suivi](ADMIN_PERMISSIONS.md).
+## Accessibilité administration : recherche différée
+
+Correctif local ciblé du focus perdu après remplacement AJAX, reproduit puis
+vérifié dans Chromium sur fixture. Six scénarios aux largeurs ordinateur/mobile
+et assets validés ; recette complète/CI non réalisées. [Suivi](ADMIN_ACCESSIBILITE_RECHERCHE.md).

@@ -1180,3 +1180,34 @@ sommaire automatique et ne sont plus repliées par `admin_editors`.
 avec remplacement de l’entrée d’historique ; sans JavaScript, listes et liens
 serveur permettent d’atteindre les mêmes fiches. Aucun changement de schéma,
 dépendance ou chargement global de données de jeu n’est ajouté.
+
+
+## Diagnostic privé des comptes — lot support
+
+`AdminAccountDiagnosticRepository` sélectionne uniquement la dernière échéance
+des liens de confirmation et de réinitialisation du compte consulté (deux
+lectures bornées). `AdminAccountDiagnosticService` compare à une même horloge
+et distingue compte confirmé et lien résiduel. Le panneau de la fiche joueur
+réutilise les droits et la trace de consultation ; il ne réalise aucun envoi
+ni écriture de jeton. Voir [le périmètre et les limites](ADMIN_SUPPORT_COMPTES.md).
+
+`AdminReadRepository::players` applique aussi le critère `verification` avant
+pagination ; `AdminController` n’admet que `confirmed` et `pending`. Les
+fragments et liens GET gardent ce critère, indépendamment de la suspension.
+## Capacités administratives
+
+La politique fermée `AdminCapabilityPolicy` est partagée par le voter Symfony
+et les interventions sous verrou. Les trois actions de `AdminPlayerController` et le POST intervention flotte
+conservent aussi ROLE_ADMIN. Aucun nouveau rôle ou stockage de permission
+n’est activé. Voir [ADMIN_PERMISSIONS.md](ADMIN_PERMISSIONS.md).
+
+La page GET `/admin/permissions` réutilise `AdminCapability::definitions()` :
+sa liste est aussi celle reconnue par la politique. Le contrôleur garde les
+deux contrôles ROLE_ADMIN et PLAYER_VIEW, sans accès à une cible ni écriture.
+La navigation la place dans Exploitation ; aucun accès délégué n'est activé.
+## Focus de la recherche administrative
+
+`admin-list` relève le focus avant remplacement des résultats. S’il était dans
+la zone remplacée, le bilan actualisé reçoit le focus sans scroll forcé ;
+la saisie et les éléments extérieurs ne sont pas déplacés. Les protections
+de génération et erreurs sont conservées. [Recette](ADMIN_ACCESSIBILITE_RECHERCHE.md).
