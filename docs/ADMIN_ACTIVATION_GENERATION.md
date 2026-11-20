@@ -243,3 +243,104 @@ le journal ; le claim générique ne revendique pas le nouveau reçu.
 Montée/retour des migrations uniquement sur la base jetable ; base
 et réseau retirés, Compose, conteneur, PHP lint et diff contrôlés.
 Aucun mail réel, nouveau paramètre, push, merge ou déploiement.
+
+## Claim spécifique, non raccordé
+
+`VerificationRequestLifecycle::claimRecovery()` est l'unique chemin qui
+peut passer `recovery_reserved` à `dispatching`. Il utilise la possession
+existante (secret bref, uniquement son empreinte en base), mais exige en
+plus sous verrou du compte :
+
+- compte en attente, actif ; liaison unique du nouveau reçu au journal,
+  même clé de demande et version présente ;
+- reçu initial du même compte toujours résolu/indéterminé ;
+- génération courante active, version attendue, algorithme connu, échéance
+  future ; aucun lien historique encore valable.
+
+Avant toute possession, un prérequis manquant annule seulement le nouveau
+reçu (`cancelled`), sans prétendre qu'un envoi ambigu a échoué. Si le
+reçu porte des traces incohérentes de possession, son état devient
+`unknown` et il n'est pas repris. Aucun
+transport n'est possible avant commit réussi du claim. Le bail ne dépasse
+pas l'échéance du lien et, une fois expiré, l'état devient `unknown`, jamais
+remis en file ou réécrit en succès. Le reçu initial n'est jamais modifié.
+Un claim concurrent perd sans obtenir de secret. Le résultat ne contient
+que la version et le secret de possession, aucun lien, adresse, clé ou nonce.
+
+Pas de migration, clé, adaptateur applicatif, worker ou chemin HTTP dans
+ce palier. Les clés n'interviennent pas dans la revendication, qui n'émet
+aucun lien. Le futur adaptateur doit produire le lien uniquement après
+vérification du claim et de la même génération, et distinguer la
+non-remise certaine d'un résultat ambigu. Un verrou SQL de claim n'arrête
+pas un transport déjà engagé : il faut encore décider le contrat pour une
+révocation volontaire qui survient après le claim, drainer les anciens
+émetteurs, et choisir l'audit de remise et la politique de clés. Ne pas
+relier ce palier à V5 si sa recette est figée.
+
+## Adaptateur de remise interne, non raccordé
+
+Le port `VerificationRecoveryTransport` n'a pas d'implémentation réelle.
+`VerificationRecoveryDeliveryAdapter` ne possède ni clé, ni destinataire,
+ni accès applicatif. Les trois états de son port sont : accepté par
+transport (pas reçu), non remis avec preuve positive, ou indéterminé.
+Une exception ne prouve jamais l'absence de remise ; aucun message
+d'exception du transport n'est répété par l'adaptateur.
+
+La migration additive `Version20261120000500` ajoute au journal le point
+de remise, l'issue et sa date. Le claim récupération passe à un état
+distinct `recovery_dispatching` : le cycle générique ne peut pas annoncer
+un succès à sa place. Sous le verrou compte, la préparation vérifie le
+claim courant, sa lease, le journal lié, le reçu initial indéterminé et
+la génération active de la même version. Une génération révoquée avant
+cette préparation empêche le passage au transport et produit une annulation
+auditée `not_dispatched`. Le résolveur factice reconstruit le même lien,
+sans réécriture d'échéance. Seul le premier appel inscrit et commit le
+point de remise ; aucun autre détenteur du même claim n'obtient le lien.
+
+Le transport reçoit le lien **hors transaction et après commit**. Une
+révocation qui survient après ce point, y compris dans l'intervalle
+avant l'appel effectif au transport, rend le lien invalide mais ne permet
+pas d'empêcher ni d'annuler cette remise. Ne pas annoncer « aucun mail »
+dans ce cas. Un arrêt après le point de remise, ou un audit d'issue qui
+échoue après un retour de transport, ne réarme jamais le reçu. Après
+expiration de la lease, seule l'issue indéterminée est écrite ; aucun
+résultat tardif ne peut devenir un succès. L'issue et l'état du nouveau
+reçu sont réglés ensemble, sans modifier le reçu initial. Un audit ne
+contient ni lien, empreinte du lien, nonce, adresse ou clé.
+
+Ce lot reste sur une branche distincte de V5. Aucun point d'entrée,
+configuration, clé réelle, SMTP ou changement public. Une activation
+nécessiterait la preuve d'identité/autorisation du parcours, la politique
+de clé, la coordination des autres émetteurs, un contrat de révocation
+assumé et la revue de traces du vrai transport. La décision de remettre
+n'est pas une preuve de livraison, et le marqueur durable n'établit pas
+précisément quand un transport externe a commencé.
+
+Recette locale : **60 tests / 425 assertions** avec les régressions
+historiques/admin. Deux processus ont arbitré le même claim ; la
+révocation avant l'étape de remise n'a déclenché aucun appel, celle
+pendant le double de transport n'a pas fait disparaître son acceptation.
+Panne d'audit après acceptation factice : aucun succès persisté ni
+possibilité de remettre de nouveau. Retour tardif après échéance :
+indéterminé dans reçu et journal. Migration montée/descendue sur la
+base jetable seulement ; réseau et base retirés. Lint PHP, conteneur,
+Compose et diff vérifiés. Tests ciblés, pas de CI complète revendiquée.
+
+## Recette synthétique de câblage de bout en bout
+
+Le test d'intégration `testExplicitRecoveryGoesFromUnknownToOneAuditedDeliveryAndMixedConfirmation`
+compose les composants réels : génération, réservation et claim du premier
+reçu, clôture en indéterminé, attente de la limite de récupération, nouveau
+reçu, claim dédié, remise unique, audit puis confirmation via le lecteur
+mixte. Le port de transport et le résolveur de clé n'ont que des doubles
+dans la recette. Le lien capturé reste en mémoire et ne figure pas dans
+l'audit ; la remise a lieu hors transaction. La confirmation consomme le
+lien une seule fois et l'empreinte/échéance et le premier reçu ne sont pas
+réécrits par la récupération.
+
+Ce n'est pas un test HTTP ni une validation SMTP, d'un parcours public
+ou d'une clé réelle. Aucun changement de code applicatif : ce test est
+sur une branche de preuve séparée de V5.
+
+Résultat : **1 test, 30 assertions**, MariaDB jetable, montée et retour
+des migrations dans la fixture. Base et réseau de preuve retirés.
