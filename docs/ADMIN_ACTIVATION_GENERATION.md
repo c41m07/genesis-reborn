@@ -73,3 +73,70 @@ scripts et adaptateurs de preuve précédents ne sont pas inclus dans ce lot.
 - Compose, validateur de conteneur Symfony, lint PHP ciblé et diff contrôlés.
   Pas de garantie DB ou concurrence concernant la nouvelle génération, pas
   de navigateur ni CI complète, aucune modification d'env ni publication.
+
+## Persistance additive isolée
+
+La migration `Version20261120000200` ajoute deux tables, sans modifier
+les lignes des jetons historiques ni des reçus existants. Elle n'a été
+exécutée (montée et retour) que sur MariaDB jetable. Aucune autre base
+n'a été ouverte. Ne jamais exécuter le down pour un rollback applicatif :
+il efface les générations et l'audit ajoutés. Conserver ces tables pour
+un retour arrière compatible, suspendre/drainer les émetteurs et garder
+le futur lecteur compatible tant que les liens versionnés peuvent être
+utilisés ; le contrôleur historique seul ne sait pas lire la nouvelle table.
+
+- `player_verification_generation` : clé primaire = joueur, version
+  monotone à chaque remplacement, état actif/révoqué/consommé. Pas de lien
+  ni de clé en base. La préparation garde chaque génération active non
+  expirée telle quelle, même si la nouvelle demande propose une échéance
+  différente. Si un lien historique valide existe, elle refuse de préparer
+  un lien nouveau ; elle ne nettoie pas non plus les empreintes expirées.
+  Le composant n'empêche pas l'ancien émetteur de créer un lien *après*
+  la préparation versionnée : les émetteurs doivent donc être drainés et
+  remplacés ensemble avant d'appeler cette persistance.
+- `VerificationGenerationStore` prend le verrou du compte avant toute ligne
+  enfant, et relit directement SQL. Les mutations sont réservées à un compte
+  non suspendu/non confirmé. Révocation et consommation visent une version,
+  pas une génération périmée ; en consommation, confirmer le compte et
+  épuiser le lien se fait dans la même transaction. Le service ne doit
+  être branché qu'après vérification des autorisations et de la politique
+  de révocation. Rafraîchir tout objet Player déjà chargé après l'écriture
+  SQL (sans quoi l'EntityManager peut refléter un état périmé).
+- `verification_recovery_event` : intention unique par reçu initial,
+  enregistrée après le délai explicite et le cooldown du dernier reçu
+  `unknown`. Elle contient seulement référence, empreinte de clé de
+  demande et horodatage. Même clé = rejeu, autre clé = bloquée. La ligne
+  originale n'est jamais réécrite. Ce journal ne réserve, n'enfile ni
+  n'envoie de mail ; il ne prétend pas donner une reprise transport sûre.
+
+### Assemblage restant
+
+- Réponse publique neutre et limiteur 5/h/IP inchangés ; choisir/quitter
+  la fenêtre des jetons historiques avec le plan de bascule. Le nouveau
+  lecteur devra rechercher l'empreinte dans les deux chemins sans rattacher
+  le lien au mauvais joueur et vérifier/consommer la génération active
+  sous le verrou commun. Examiner un index d'empreinte avant d'ajouter
+  un routage qui ignore l'identifiant de joueur.
+- Définir l'identité et l'autorisation de l'acteur de récupération/révocation,
+  et le cas d'une reprise après interruption avant revendication. Fournir au
+  futur orchestrateur une transaction commune pour événement + nouveau reçu
+  revendicable et leur audit d'issue ; ne pas simplement enchaîner la méthode
+  actuelle avec un envoi. Elle ouvre et clôt sa propre transaction et ne
+  garantit que l'intention, pas l'ordre de remise.
+- Intégrer une politique de clé et d'expiration approuvée. Le délai de
+  récupération est fourni à l'appel interne, pas exposé publiquement ;
+  les timestamps DATETIME historiques doivent utiliser le même fuseau
+  applicatif dans tous les processus. Idempotence d'envoi, purge et
+  compatibilité du lecteur ne sont pas traitées ici.
+
+### Recette additionnelle
+
+32 tests / 214 assertions avec les régressions activation publique,
+route admin désactivée, reçu et codec. Quatre tests ajoutés : montée et
+retour préservant l'empreinte historique, concurrence de deux préparations
+avec échéances distinctes, course révocation/consommation après remplacement
+et concurrence de deux intentions après résultat inconnu. Les workers
+sont des processus/connecteurs distincts derrière une barrière ; ils ne
+font aucun appel mail. Base et réseau privés retirés. Compose, conteneur
+Symfony, lint PHP et diff vérifiés. Aucun SMTP, configuration de clés,
+appel public, push, intégration ou déploiement.
