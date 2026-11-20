@@ -325,3 +325,22 @@ possibilité de remettre de nouveau. Retour tardif après échéance :
 indéterminé dans reçu et journal. Migration montée/descendue sur la
 base jetable seulement ; réseau et base retirés. Lint PHP, conteneur,
 Compose et diff vérifiés. Tests ciblés, pas de CI complète revendiquée.
+
+## Recette synthétique de câblage de bout en bout
+
+Le test d'intégration `testExplicitRecoveryGoesFromUnknownToOneAuditedDeliveryAndMixedConfirmation`
+compose les composants réels : génération, réservation et claim du premier
+reçu, clôture en indéterminé, attente de la limite de récupération, nouveau
+reçu, claim dédié, remise unique, audit puis confirmation via le lecteur
+mixte. Le port de transport et le résolveur de clé n'ont que des doubles
+dans la recette. Le lien capturé reste en mémoire et ne figure pas dans
+l'audit ; la remise a lieu hors transaction. La confirmation consomme le
+lien une seule fois et l'empreinte/échéance et le premier reçu ne sont pas
+réécrits par la récupération.
+
+Ce n'est pas un test HTTP ni une validation SMTP, d'un parcours public
+ou d'une clé réelle. Aucun changement de code applicatif : ce test est
+sur une branche de preuve séparée de V5.
+
+Résultat : **1 test, 30 assertions**, MariaDB jetable, montée et retour
+des migrations dans la fixture. Base et réseau de preuve retirés.

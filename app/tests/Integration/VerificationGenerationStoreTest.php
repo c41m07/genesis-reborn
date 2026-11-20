@@ -585,4 +585,69 @@ final class VerificationGenerationStoreTest extends KernelTestCase
         self::assertNull($db->fetchOne('SELECT delivery_outcome FROM verification_recovery_event WHERE recovery_request_id = ?', [$id]));
         self::assertSame('recovery_dispatching', $db->fetchOne('SELECT state FROM verification_delivery_request WHERE id = ?', [$id]));
     }
+
+    public function testExplicitRecoveryGoesFromUnknownToOneAuditedDeliveryAndMixedConfirmation(): void
+    {
+        [$em, $db, $player, $clock, $store, $codec, $keys] = $this->fixture();
+        $this->up($db);
+        $manager = new \App\Manager\GameManager($em);
+        $reservations = new \App\Service\Player\VerificationRequestReservation(
+            $em, $manager, new \App\Repository\VerificationDeliveryRequestRepository($em), $clock,
+        );
+        $lifecycle = new \App\Service\Player\VerificationRequestLifecycle($em, $manager, $clock);
+        $recovery = new \App\Service\Player\VerificationRecoveryOrchestrator($db, $clock, $codec);
+        $adapter = new \App\Service\Player\VerificationRecoveryDeliveryAdapter();
+
+        $generation = $store->prepare($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        $expected = $codec->reproduce($generation, $keys);
+        self::assertNotNull($expected);
+        $original = $reservations->reserve($player->id, str_repeat('a', 64), 300);
+        self::assertSame('reserved', $original['result']);
+        $originalId = $original['request_id'];
+        $oldClaim = $lifecycle->claim($originalId, 120);
+        self::assertSame('claimed', $oldClaim['result']);
+        self::assertSame('completed', $lifecycle->complete($originalId, $oldClaim['claim_token'], 'unknown')['result']);
+        $snapshot = $db->fetchAssociative('SELECT * FROM verification_delivery_request WHERE id = ?', [$originalId]);
+
+        $requestKey = str_repeat('b', 64);
+        self::assertSame('too_early', $recovery->reserve($player->id, $originalId, $requestKey, 300, $keys)['result']);
+        $clock->sleep(300);
+        $reserved = $recovery->reserve($player->id, $originalId, $requestKey, 300, $keys);
+        self::assertSame('reserved', $reserved['result']);
+        $id = $reserved['request_id'];
+        self::assertNotSame($originalId, $id);
+        self::assertSame(['result' => 'replayed', 'request_id' => $id], $recovery->reserve($player->id, $originalId, $requestKey, 300, $keys));
+        $claim = $lifecycle->claimRecovery($id, 120);
+        self::assertSame('claimed', $claim['result']);
+
+        $captured = null;
+        $transport = $this->createMock(\App\Service\Player\VerificationRecoveryTransport::class);
+        $transport->expects(self::once())->method('handoff')->with($player->id, $expected)->willReturnCallback(
+            static function (int $playerId, #[\SensitiveParameter] string $link) use ($db, &$captured): \App\Service\Player\VerificationRecoveryOutcome {
+                self::assertFalse($db->isTransactionActive());
+                $captured = $link;
+                return \App\Service\Player\VerificationRecoveryOutcome::TransportAccepted;
+            },
+        );
+        self::assertSame('transport_accepted', $adapter->deliver($id, $claim['claim_token'], $lifecycle, $keys, $transport));
+        self::assertSame('unavailable', $adapter->deliver($id, $claim['claim_token'], $lifecycle, $keys, $transport));
+        self::assertSame('transport_accepted', $db->fetchOne('SELECT state FROM verification_delivery_request WHERE id = ?', [$id]));
+        $audit = $db->fetchAssociative('SELECT * FROM verification_recovery_event WHERE recovery_request_id = ?', [$id]);
+        self::assertSame($originalId, (int) $audit['original_request_id']);
+        self::assertSame($generation->version, (int) $audit['generation_version']);
+        self::assertSame('transport_accepted', $audit['delivery_outcome']);
+        self::assertNotNull($audit['handoff_at']);
+        self::assertNotNull($audit['delivery_resolved_at']);
+        self::assertSame($generation->expiresAt, (int) $db->fetchOne('SELECT expires_at FROM player_verification_generation WHERE player_id = ?', [$player->id]));
+        self::assertSame($generation->fingerprint, $db->fetchOne('SELECT fingerprint FROM player_verification_generation WHERE player_id = ?', [$player->id]));
+        self::assertStringNotContainsString($expected, json_encode($audit, JSON_THROW_ON_ERROR));
+
+        self::assertNotNull($captured);
+        $reader = $this->mixed($em, $codec, $clock);
+        self::assertTrue($reader->confirm($captured));
+        self::assertFalse($reader->confirm($captured));
+        self::assertNotNull($player->emailVerifiedAt);
+        self::assertSame('consumed', $db->fetchOne('SELECT state FROM player_verification_generation WHERE player_id = ?', [$player->id]));
+        self::assertSame($snapshot, $db->fetchAssociative('SELECT * FROM verification_delivery_request WHERE id = ?', [$originalId]));
+    }
 }
