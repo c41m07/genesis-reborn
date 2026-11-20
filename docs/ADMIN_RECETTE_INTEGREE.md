@@ -252,3 +252,56 @@ Aucune écriture d’attribution, politique, rôle ou ouverture de donnée réel
 La projection pure ne lit aucun compte ni univers. La délégation opérationnelle,
 le renvoi réel et la reprise métier demeurent non raccordés. Pas de CI complète,
 répétition de migration sur base existante, push, fusion dev ni déploiement.
+
+## Recette V5 : socle serveur de récupération
+
+Branche chore/recette-integration-admin-v5, worktree distinct et V4 conservée.
+Assemblage ba8ca872881a2aea10d27970b0e8777d41e4eebb, parents
+911cb282a310b4be8d670ebb48117e7259402bc5 et
+702896cdbd9456ba01efca6afc8387c086db2d12. Chaîne support vérifiée :
+3594a06 → f9f6bea → d9b9c4b → 5fed895 → 702896c.
+Aucun conflit. Aucun lot multi-liens ou expérimental d’exploitation.
+Pas de diff dans configuration, contrôleurs, Twig ou CI : parcours public
+inchangé ; activation admin désactivée par défaut et transport indisponible.
+Aucune clé d’activation fournie et aucun SMTP réel.
+
+- Suite PHP exhaustive locale : 1 533 tests, 4 444 165 assertions,
+  1 échec et 1 ignoré, 11 min 48,672 s. Le seul échec est
+  GameplayAccessTest::testNotificationCookieAuthorizesOnlyCurrentMembership :
+  le lanceur de test laissait le placeholder Mercure de 232 bits, insuffisant.
+- Après passage de la valeur Mercure générée pour le projet jetable, la recette
+  agrégée parcours admin/catalogue, comptes, relais et GameplayAccessTest
+  est verte : 177 tests / 1 773 assertions en 101,708 s. Le scénario autrefois
+  en échec y passe. La suite exhaustive n’a pas été rejouée après cette
+  correction de lancement ; elle ne doit pas être annoncée comme verte.
+- make validate, make assets (après recréation du dossier build vide dans
+  le seul worktree V5), lint PHP global, 216 Twig, 80 YAML, conteneur et
+  git diff --check réussis. 13 tests Python de sauvegarde réussis.
+- Chromium : six scénarios clavier et un parcours réel de l’aperçu fictif
+  à 1 366 et 390 px réussis ; pas de campagne navigateur complète.
+
+### Migrations et synchronisation du schéma
+
+Sur base navigateur en mémoire : 63 migrations jusqu’à Version20261120000400,
+sans exécution indisponible. Les trois migrations additives V5 (00200, 00300,
+00400) ont été annulées vers 00100, puis réappliquées. Deux tables, deux
+colonnes de récupération et l’index unique attendus vérifiés. L’empreinte,
+le rattachement et l’expiration d’un lien historique synthétique restent
+identiques ; Doctrine confirme zéro migration en attente. La descente DDL
+peut supprimer les nouvelles traces : cette recette ne constitue pas une
+procédure de rollback de production.
+
+doctrine:schema:validate : mapping valide, base non synchronisée (exit 2).
+Comparaison distincte en lecture seule avec l’API SchemaTool : une proposition
+commune déjà présente en V4 et une seule supplémentaire en V5, le renommage
+de l’index unique existant de verification_recovery_event.recovery_request_id,
+de verification_recovery_request_unique vers UNIQ_7A5471A947B645A9.
+Pas de colonne, table ou contrainte unique manquante dans le delta V5.
+Aucun schema:update exécuté, aucune proposition SQL appliquée. Examiner
+l’alignement du nom d’index et l’écart hérité avant de déclarer le contrôle vert.
+
+Bases, réseaux et liens temporaires V5 retirés. Le fichier Symfony généré
+reference.php reste hors commit. La sauvegarde/restauration end-to-end
+officielle et la CI complète restent à faire, de même qu’une suite PHP
+complète avec la configuration correcte. Pas de migration réelle, émission,
+rejeu, attribution de droits, push, fusion dev ou déploiement.
