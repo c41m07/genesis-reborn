@@ -7,14 +7,10 @@ use App\Repository\GameRepository;
 use Psr\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Email;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Twig\Environment;
 
 final class EmailVerificationService
 {
-    public function __construct(private GameManager $manager, private GameRepository $repo, private MailerInterface $mailer, private UrlGeneratorInterface $urls, private ClockInterface $clock, private LoggerInterface $logger, #[Autowire('%env(DEFAULT_URI)%')] private string $baseUrl, #[Autowire('%env(MAILER_FROM)%')] private string $sender, private Environment $twig) {}
+    public function __construct(private GameManager $manager, private GameRepository $repo, private MailerInterface $mailer, private ClockInterface $clock, private LoggerInterface $logger, private VerificationEmailMessageFactory $messages) {}
 
     public function sendWelcomeAndVerification(Player $player, bool $welcome = true): bool
     {
@@ -24,16 +20,12 @@ final class EmailVerificationService
             // mais aucune acceptation de transport n'est revendiquée ici.
             return true;
         }
-        $plainToken = $prepared['token'];
-        $url = rtrim($this->baseUrl, '/') . $this->urls->generate('app_email_verify', ['token' => $plainToken]);
-        $messages = [['Confirmez votre adresse email', "Pour activer votre compte Genesis Reborn, utilisez ce lien valable 24 heures :\n$url", 'emails/verification.html.twig']];
-        if ($welcome) $messages[] = ['Bienvenue dans Genesis Reborn', "Bienvenue, {$prepared['username']} ! Votre compte a été créé. Un second message contient le lien de confirmation de votre adresse.", 'emails/welcome.html.twig'];
         $delivery = new AccountMailDelivery($this->mailer, $this->logger);
-        $verificationSent = false;
-        foreach ($messages as [$subject, $body, $template]) {
-            $sent = $delivery->send((new Email())->from($this->sender)->to($prepared['email'])->subject($subject)->text($body)
-                ->html($this->twig->render($template, ['username' => $prepared['username'], 'actionUrl' => $url])), $template === 'emails/verification.html.twig' ? 'verification' : 'welcome');
-            if ($template === 'emails/verification.html.twig') $verificationSent = $sent;
+        $verificationSent = $delivery->send(
+            $this->messages->confirmation($prepared['email'], $prepared['token'], $prepared['username']), 'verification',
+        );
+        if ($welcome) {
+            $delivery->send($this->messages->welcome($prepared['email'], $prepared['username']), 'welcome');
         }
         return $verificationSent;
     }

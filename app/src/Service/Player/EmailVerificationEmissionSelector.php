@@ -58,7 +58,7 @@ final class EmailVerificationEmissionSelector
         }
 
         try {
-            $outcome = $this->provider->transport->confirmation($snapshot['email'], $snapshot['link']);
+            $outcome = $this->provider->transport->confirmation($snapshot['email'], $snapshot['link'], $snapshot['username']);
         } catch (\Throwable) {
             // Une exception peut survenir après une remise : pas de retry.
             $outcome = VerificationRecoveryOutcome::Unknown;
