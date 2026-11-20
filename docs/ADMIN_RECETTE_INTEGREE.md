@@ -221,3 +221,34 @@ Recette PHP de régression ciblée : 30 tests / 383 assertions, Twig admin
 avant cet assemblage, pas le dernier SHA. Les projets navigateur, DB et
 réseaux de recette ont été nettoyés. Le fichier Symfony généré reference.php
 reste seul modifié, hors commit. Pas de CI complète.
+
+## Recette V4 : aperçu fictif des permissions
+
+Branche chore/recette-integration-admin-v4, worktree dédié. Assemblage
+365b12052a66166d8147badbabfab882fdb8c2b6, parents
+bc9f97f0228def00fdcdc81f616b37fee9575669 (V3) et
+f5934f00436d0e2f3ed4f2fb58463d2a69635b7f (aperçu).
+Seuls les conflits additifs README/layout ont été résolus : les entrées
+existantes de guildes restent intactes et l’aperçu relève d’Exploitation.
+Aucune expérience multi-liens ni évolution de support supplémentaire intégrée.
+
+- Suite PHP ciblée agrégée admin/catalogue, comptes et outbox : 147 tests et
+  1 477 assertions en 85,040 s. Lint des 66 Twig admin, conteneur, Compose et
+  diff réussis. La suite vérifie aussi l’accès anonyme/joueur/admin.
+- Six scénarios de recherche au clavier Chromium réussis, 2,6 s.
+- Parcours Chromium réel, 5,8 s : matrice à quatre capacités, lien vers
+  l’aperçu, A puis B, rechargement et retour à la matrice, à 1366 et 390 px.
+  Aucune autre fixture affichée hors du périmètre actif, aucun formulaire,
+  aucun défilement horizontal global ; portée inconnue 404 et POST 405.
+  La page annonce explicitement une simulation ; les trois exemples
+  n’activent aucun profil. Rôles stockés et total du journal inchangés.
+- MariaDB de recette et projet navigateur distincts et jetables, exécutés
+  séquentiellement ; 60 migrations sur base navigateur vide, sans SMTP ni
+  donnée réelle. Les deux projets et leurs réseaux ont été retirés.
+  Les quatre captures de l’aperçu sont des artefacts locaux de test non
+  versionnés. Le scénario ad hoc n’est pas ajouté à la CI.
+
+Aucune écriture d’attribution, politique, rôle ou ouverture de donnée réelle.
+La projection pure ne lit aucun compte ni univers. La délégation opérationnelle,
+le renvoi réel et la reprise métier demeurent non raccordés. Pas de CI complète,
+répétition de migration sur base existante, push, fusion dev ni déploiement.
