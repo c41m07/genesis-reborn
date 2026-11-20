@@ -589,3 +589,34 @@ f34e554. Aucun autre lot.
 Recette locale seulement. Pas de Chromium ou PHP exhaustif V11, CI GitHub,
 transport réel, clé, push, fusion dev ni déploiement. Ce lot ne met pas en
 service l’émission ou la récupération d’activation.
+
+
+## Recette V12 : adaptateur e-mail testé, activation toujours fermée
+
+Branche chore/recette-integration-admin-v12, worktree distinct. Code
+3ca1020c3c98b2acd8da81658609b1431b5d0df3, parents 6a910cc (V11) et
+1f96fb2 (support). Aucun autre lot produit.
+
+- L’adaptateur Symfony est vérifié avec transport factice et transport nul.
+  Le transport versionné n’est pas appelé en configuration par défaut :
+  écrivain et lecteur versionnés restent désactivés, fournisseur absent,
+  aucun vrai secret ni DSN utilisé. Les formulaires historiques restent
+  en place. Le port historique de renvoi admin reste indisponible ;
+  l’adaptateur de remise ne le raccorde pas.
+- 27 tests ciblés / 228 assertions et 249 agrégés / 2 353 assertions.
+  Lints PHP, 216 Twig, 80 YAML, conteneur, Compose et diff verts.
+- Suite PHP exhaustive sur le même code, après redémarrage d’une base
+  jetable vierge : 1 597 tests, 4 444 708 assertions, zéro échec, 1 mesure
+  facultative ignorée (REWORK_MEASURE), 12 min 27 s. Bases et réseaux
+  séquentiels retirés. Ni navigateur exhaustif (Traefik partagé exclu)
+  ni CI GitHub ; pas de nouveau scénario Chromium ou de migration.
+
+Avant un vrai flux : décider le fournisseur et les clés/rotation,
+vérifier le câblage du parcours autorisé, confidentialité des journaux
+proxy/application/APM, non-duplication, observation et arrêt en
+préproduction autorisée et synthétique. Le runbook indépendant
+docs/PREPRODUCTION_ACTIVATION.md est documenté à
+e072aae11f663db47283d8d79ed52083b13f4495 ; aucun pilote exécuté ou
+autorisé par V12. Reprise d’exploitation et délégation d’accès réelles
+restent fermées. Pas de changement de droits, de push, de fusion dans
+dev, ni de déploiement.
