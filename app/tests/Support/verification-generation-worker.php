@@ -39,6 +39,7 @@ $result = match ($argv[2]) {
     'revoke' => $store->revoke($player, $id),
     'consume' => $store->consume($player, $id, stream_get_contents(STDIN)),
     'mixed' => (new App\Service\Player\MixedVerificationLinkReader($em, new App\Manager\GameManager($em), $codec, $clock))->confirm(stream_get_contents(STDIN)),
+    'reserve-recovery' => (new App\Service\Player\VerificationRecoveryOrchestrator($db, $clock, $codec))->reserve($player, $id, str_repeat($argv[4], 64), 300, $keys),
     'recover' => $store->recordRecovery($player, $id, str_repeat($argv[4], 64), 300),
 };
 echo json_encode($result, JSON_THROW_ON_ERROR);

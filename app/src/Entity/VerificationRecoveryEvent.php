@@ -18,4 +18,11 @@ class VerificationRecoveryEvent
 
     #[ORM\Column(type: 'bigint')]
     public int $recordedAt;
+
+    #[ORM\OneToOne(targetEntity: VerificationDeliveryRequest::class)]
+    #[ORM\JoinColumn(name: 'recovery_request_id', nullable: true, onDelete: 'SET NULL')]
+    public ?VerificationDeliveryRequest $recoveryRequest = null;
+
+    #[ORM\Column(nullable: true)]
+    public ?int $generationVersion = null;
 }

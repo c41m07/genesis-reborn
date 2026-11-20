@@ -182,3 +182,64 @@ Avant branchement, confirmer la politique de suspension, borner le passage
 au lecteur mixte, drainer les anciens émetteurs et valider le plan de rollback.
 La migration d'index doit d'abord précontrôler les doublons et être appliquée
 après autorisation explicite et sauvegarde si une base existante est concernée.
+
+## Orchestrateur interne de récupération, sans exécution
+
+`VerificationRecoveryOrchestrator` réunit dans une transaction le journal
+d'intention, le nouveau reçu distinct et leur relation. La migration
+additive `Version20261120000400` ajoute l'identifiant unique (facultatif
+pour les anciennes intentions) et la version de génération au journal.
+La ligne du reçu d'origine n'est jamais modifiée. Le journal contient
+références, horodatage, version et empreinte de la demande ; ni le lien
+ni l'empreinte du lien, ni nonce, ni clé ou adresse. Un même identifiant
+de demande retrouve le même reçu ; une demande concurrente différente
+pour le même reçu initial est bloquée.
+
+Le verrou du compte précède toute lecture verrouillée des reçus et de la
+génération. Le reçu d'origine doit être le dernier du compte, indéterminé
+et résolu, le délai et le cooldown écoulés pour réserver une première
+fois. L'identité du compte est l'entrée de confiance, pas le numéro de
+reçu. Un futur parcours doit établir cette autorité sans permettre de
+choisir un compte arbitraire ni révéler son existence.
+
+### Refus et reprise
+
+- Un compte suspendu ou confirmé ne produit ni journal ni reçu. Un
+  reçu d'un autre compte est refusé sans révéler son état.
+- Un lien historique valide suspend la voie nouvelle (`legacy_active`).
+  Aucun renvoi ni rotation de secours. Le parcours historique reste
+  inchangé par ce lot ; ne pas l'appeler automatiquement depuis cette
+  voie lors de la bascule. L'échéance historique passée, réserver
+  seulement si la génération courante est déjà active et reproductible.
+- Génération absente, expirée, révoquée ou non reproductible : refus,
+  aucun remplacement ou prolongement. Un journal ancien sans reçu
+  associé n'est pas une preuve de réservation et bloque ; ne pas
+  l'adopter automatiquement.
+- La réservation est `recovery_reserved`, laquelle n'est pas
+  revendicable par le cycle générique. Aucun transport, tâche en file
+  ni clé réelle. Ne pas convertir ce nouvel état en `reserved` :
+  le prochain incrément devra vérifier sous verrou le lien journal-reçu,
+  la version active et l'éligibilité juste avant revendication, et
+  traiter la décision de remise et son audit sous le contrat validé.
+  La preuve de non-écrasement ne dispense ni de cette vérification ni du
+  drainage des anciens émetteurs.
+
+Candidat V5 **sans activation** : chaîne 3594a06 → codec → persistance →
+lecteur mixte → ce lot, schéma et tests inclus, sans route, alias réel
+de clé, configuration ni worker. Les migrations restent non exécutées
+sur une base existante. Pour un rollback applicatif, conserver les
+colonnes/tables du journal ; les down ne sont que la preuve sur base
+jetable et retireraient l'audit de récupération.
+
+### Recette
+
+**40 tests / 279 assertions** sur MariaDB privée : deux processus
+obtiennent une seule réservation ; un INSERT de reçu délibérément
+rejeté par déclencheur de fixture annule l'intention déjà insérée ;
+le nouvel essai est possible sans écraser `unknown`. Refus compte
+tiers/suspendu, avant délai, historique et échéance de génération.
+Aucune modification de l'échéance ni fuite de contenu de lien dans
+le journal ; le claim générique ne revendique pas le nouveau reçu.
+Montée/retour des migrations uniquement sur la base jetable ; base
+et réseau retirés, Compose, conteneur, PHP lint et diff contrôlés.
+Aucun mail réel, nouveau paramètre, push, merge ou déploiement.

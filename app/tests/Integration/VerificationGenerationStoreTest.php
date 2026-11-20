@@ -8,7 +8,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
-use DoctrineMigrations\{Version20261120000200, Version20261120000300};
+use DoctrineMigrations\{Version20261120000200, Version20261120000300, Version20261120000400};
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Clock\MockClock;
 use Symfony\Component\Process\Process;
@@ -29,7 +29,8 @@ final class VerificationGenerationStoreTest extends KernelTestCase
     {
         require_once dirname(__DIR__, 2).'/migrations/Version20261120000200.php';
         require_once dirname(__DIR__, 2).'/migrations/Version20261120000300.php';
-        $versions = [Version20261120000200::class, Version20261120000300::class];
+        require_once dirname(__DIR__, 2).'/migrations/Version20261120000400.php';
+        $versions = [Version20261120000200::class, Version20261120000300::class, Version20261120000400::class];
         foreach ($direction === 'up' ? $versions : array_reverse($versions) as $version) {
             $migration = new $version($db, new \Psr\Log\NullLogger());
             $migration->{$direction}(new Schema());
@@ -311,5 +312,106 @@ final class VerificationGenerationStoreTest extends KernelTestCase
             $db->rollBack();
             ini_set('zend.exception_ignore_args', $old);
         }
+    }
+
+    private function unknown(EntityManagerInterface $em, Player $player, MockClock $clock): VerificationDeliveryRequest
+    {
+        $original = new VerificationDeliveryRequest();
+        $original->player = $player;
+        $original->requestKeyHash = hash('sha256', 'original');
+        $original->state = 'unknown';
+        $original->requestedAt = $clock->now()->modify('-10 minutes');
+        $original->cooldownUntil = $clock->now()->modify('-5 minutes');
+        $original->resolvedAt = $clock->now()->modify('-5 minutes');
+        $em->persist($original);
+        $em->flush();
+        return $original;
+    }
+
+    public function testRecoveryReserveRacesAndLinksOneNewReceiptToUnchangedUnknown(): void
+    {
+        [$em, $db, $player, $clock, $store, $codec, $keys] = $this->fixture();
+        $this->up($db);
+        $original = $this->unknown($em, $player, $clock);
+        $old = $db->fetchAssociative('SELECT * FROM verification_delivery_request WHERE id = ?', [$original->id]);
+        $generation = $store->prepare($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        $fingerprint = $generation->fingerprint;
+        $link = $codec->reproduce($generation, $keys);
+        $results = $this->race($player->id, 'reserve-recovery', 'reserve-recovery', $original->id);
+        self::assertEqualsCanonicalizing(['reserved', 'blocked'], array_column($results, 'result'));
+        $winner = $results[0]['result'] === 'reserved' ? 0 : 1;
+        $id = $results[$winner]['request_id'];
+        self::assertNotSame($id, $original->id);
+        $service = new \App\Service\Player\VerificationRecoveryOrchestrator($db, $clock, $codec);
+        self::assertSame(['result' => 'replayed', 'request_id' => $id], $service->reserve($player->id, $original->id, str_repeat($winner === 0 ? 'a' : 'b', 64), 300, $keys));
+        $event = $db->fetchAssociative('SELECT * FROM verification_recovery_event');
+        self::assertSame($id, (int) $event['recovery_request_id']);
+        self::assertSame($generation->version, (int) $event['generation_version']);
+        self::assertSame('recovery_reserved', $db->fetchOne('SELECT state FROM verification_delivery_request WHERE id = ?', [$id]));
+        self::assertSame(2, (int) $db->fetchOne('SELECT COUNT(*) FROM verification_delivery_request'));
+        self::assertSame($old, $db->fetchAssociative('SELECT * FROM verification_delivery_request WHERE id = ?', [$original->id]));
+        self::assertSame($generation->expiresAt, (int) $db->fetchOne('SELECT expires_at FROM player_verification_generation'));
+        $serialized = json_encode($event, JSON_THROW_ON_ERROR);
+        self::assertStringNotContainsString($link, $serialized);
+        self::assertStringNotContainsString($fingerprint, $serialized);
+        self::assertStringNotContainsString($generation->nonce, $serialized);
+        $lifecycle = new \App\Service\Player\VerificationRequestLifecycle($em, new \App\Manager\GameManager($em), $clock);
+        self::assertNotSame('claimed', $lifecycle->claim($id, 120)['result']);
+    }
+
+    public function testRecoveryReserveRollsBackJournalWhenReceiptInsertFails(): void
+    {
+        [$em, $db, $player, $clock, $store, $codec, $keys] = $this->fixture();
+        $this->up($db);
+        $original = $this->unknown($em, $player, $clock);
+        $store->prepare($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        $service = new \App\Service\Player\VerificationRecoveryOrchestrator($db, $clock, $codec);
+        $db->executeStatement("CREATE TRIGGER fixture_deny_recovery BEFORE INSERT ON verification_delivery_request FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'synthetic receipt insert failure'");
+        try {
+            $service->reserve($player->id, $original->id, str_repeat('e', 64), 300, $keys);
+            self::fail('La réservation devait échouer après l’insertion du journal.');
+        } catch (\Doctrine\DBAL\Exception $e) {
+            self::assertStringContainsString('synthetic receipt insert failure', $e->getMessage());
+        } finally {
+            $db->executeStatement('DROP TRIGGER fixture_deny_recovery');
+        }
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM verification_recovery_event'));
+        self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM verification_delivery_request'));
+        self::assertSame('unknown', $db->fetchOne('SELECT state FROM verification_delivery_request WHERE id = ?', [$original->id]));
+        self::assertSame('reserved', $service->reserve($player->id, $original->id, str_repeat('e', 64), 300, $keys)['result']);
+    }
+
+    public function testRecoveryReserveRefusesOtherAccountSuspensionLegacyAndExpiredGeneration(): void
+    {
+        [$em, $db, $player, $clock, $store, $codec, $keys] = $this->fixture();
+        $this->up($db);
+        $other = new Player();
+        $other->email = 'other-recovery@example.test';
+        $other->username = 'OtherRecovery';
+        $other->password = 'synthetic';
+        $em->persist($other);
+        $em->flush();
+        $original = $this->unknown($em, $player, $clock);
+        $generation = $store->prepare($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        $service = new \App\Service\Player\VerificationRecoveryOrchestrator($db, $clock, $codec);
+        $key = str_repeat('f', 64);
+        self::assertSame('ineligible', $service->reserve($other->id, $original->id, $key, 300, $keys)['result']);
+        self::assertSame('too_early', $service->reserve($player->id, $original->id, $key, 301, $keys)['result']);
+        $db->update('player', ['locked_at' => '2030-01-01 00:00:00'], ['id' => $player->id]);
+        self::assertSame('ineligible', $service->reserve($player->id, $original->id, $key, 300, $keys)['result']);
+        $db->update('player', ['locked_at' => null], ['id' => $player->id]);
+        $legacy = new EmailVerificationToken();
+        $legacy->player = $player;
+        $legacy->tokenHash = hash('sha256', 'synthetic-legacy');
+        $legacy->expiresAt = $clock->now()->modify('+1 hour');
+        $em->persist($legacy);
+        $em->flush();
+        self::assertSame('legacy_active', $service->reserve($player->id, $original->id, $key, 300, $keys)['result']);
+        $clock->sleep(3600);
+        self::assertSame('generation_unavailable', $service->reserve($player->id, $original->id, $key, 300, $keys)['result']);
+        self::assertSame($generation->expiresAt, (int) $db->fetchOne('SELECT expires_at FROM player_verification_generation'));
+        self::assertSame($legacy->tokenHash, $db->fetchOne('SELECT token_hash FROM player_email_verification_token'));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM verification_recovery_event'));
+        self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM verification_delivery_request'));
     }
 }
