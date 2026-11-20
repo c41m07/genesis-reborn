@@ -851,3 +851,5 @@ fixe l'estimation ; un coût au-delà du stockage ou un débit net nul/négatif
 est signalé à la place. Le délai ne prédit pas les dépenses ou changements de
 production futurs. Le bouton d'information reste distinct de l'action bloquée :
 sa limite s'affiche au survol, au clavier ou au toucher.
+
+- **Effets acquis au dernier niveau** : les fiches de bâtiments et de recherches gardent dans le tableau de progression les effets chiffrés acquis, dans leurs unités d’origine, quand le rang est au maximum ou que son dernier niveau est en file. Seule la colonne « Actuellement » reste, sans créditer la file. Pour les productions et stockages, la fiche précise qu’il s’agit de totaux de la colonie ; aucun changement de règle ou de plafond.
