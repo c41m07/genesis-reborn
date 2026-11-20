@@ -6,6 +6,26 @@ const controllerSource = readFileSync('app/assets/controllers/galaxy_v2_controll
   .replace("import { Controller } from '@hotwired/stimulus';", 'class Controller {}');
 const { default: GalaxyController } = await import('data:text/javascript;base64,' + Buffer.from(controllerSource).toString('base64'));
 
+// Le vrai retour Galaxie synchronise le lien natif, même dans ces tests sans Stimulus ni DOM.
+function listNavigationFixture() {
+  const listLink = {
+    href: 'https://genesis.example.test/carte?galaxy=1&system=2',
+    setAttribute(name, value) {
+      expect(name).toBe('href');
+      this.href = new URL(value, this.href).href;
+    },
+  };
+  return {
+    listLink,
+    controllerTargets: {
+      element: {
+        parentElement: { querySelector: selector => selector === '[data-galaxy-list-link]' ? listLink : null },
+      },
+      syncListLink: GalaxyController.prototype.syncListLink,
+    },
+  };
+}
+
 // Coordonnées exportées de GalaxyGeometry (spiral-v1), indépendantes du dessin JavaScript.
 const referenceSystems = JSON.parse(readFileSync('app/tests/Fixtures/galaxy-spiral-reference.json', 'utf8'));
 
@@ -15,7 +35,9 @@ test('Les fins d’animation de la carte respectent une navigation plus récente
   const callbacks = [];
   globalThis.window = { setTimeout: callback => callbacks.push(callback) };
   const target = () => ({ hidden: false, textContent: '' });
+  const { listLink, controllerTargets } = listNavigationFixture();
   const state = {
+    ...controllerTargets,
     motionReduced: false, selectedPlanet: { id: 1, name: 'Planète', coordinates: '1:1:1' },
     selectedSystem: { name: 'Système', galaxy: '1', number: 1 },
     systemPanelTarget: target(), planetPanelTarget: target(), systemBackTarget: target(), planetBackTarget: target(),
@@ -34,6 +56,7 @@ test('Les fins d’animation de la carte respectent une navigation plus récente
     callbacks.shift()();
     expect(state.mode).toBe('transition-to-galaxy');
     expect(state.systemPanelTarget.hidden).toBe(true);
+    expect(listLink.href).toBe('https://genesis.example.test/carte?galaxy=1');
     GalaxyController.prototype.enterPlanetView.call(state);
     callbacks.shift()();
     expect(state.mode).toBe('planet');
@@ -65,7 +88,9 @@ for (const motionReduced of [false, true]) {
   for (const mode of ['system', 'planet', 'transition-to-planet']) {
     test(`La croix planète revient à la galaxie depuis ${mode}, mouvement réduit ${motionReduced}`, () => {
       const target = () => ({ hidden: false, textContent: '' });
+      const { listLink, controllerTargets } = listNavigationFixture();
       const state = {
+        ...controllerTargets,
         mode, motionReduced, selectedPlanet: { id: 1 }, selectedSystem: { id: 2 },
         systemPanelTarget: target(), planetPanelTarget: target(), systemBackTarget: target(), planetBackTarget: target(),
         minimapWrapTarget: { hidden: true }, fleetLogTarget: { parentElement: { hidden: true } },
@@ -84,6 +109,7 @@ for (const motionReduced of [false, true]) {
       expect(state.minimapWrapTarget.hidden).toBe(false);
       expect(state.selectedPlanet).toBeNull();
       expect(state.selectedSystem).toBeNull();
+      expect(listLink.href).toBe('https://genesis.example.test/carte?galaxy=1');
       expect(state.camera).toEqual({ x: 12, y: 24 });
       expect(state.targetZoom).toBe(0.8);
     });
