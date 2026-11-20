@@ -31,18 +31,99 @@ final class VerificationRequestLifecycle
                 $request->resolvedAt = $this->clock->now();
                 return ['result' => 'cancelled'];
             }
-            $token = bin2hex(random_bytes(32));
-            $request->claimHash = hash('sha256', $token);
-            $request->leaseExpiresAt = $this->clock->now()->modify('+'.$leaseSeconds.' seconds');
-            $request->state = 'dispatching';
-            // Seul le futur worker propriétaire reçoit ce secret éphémère.
-            // Aucun jeton de confirmation, adresse ou mail n'est produit ici.
-            return ['result' => 'claimed', 'claim_token' => $token];
+            return $this->startClaim($request, $this->clock->now()->modify('+'.$leaseSeconds.' seconds'));
         });
     }
 
+    /** @return array{result: string, claim_token?: string, generation_version?: int} */
+    public function claimRecovery(int $requestId, int $leaseSeconds): array
+    {
+        if ($leaseSeconds < 1 || $leaseSeconds > 3600) {
+            throw new \InvalidArgumentException('Durée de revendication invalide.');
+        }
+
+        return $this->locked($requestId, function (VerificationDeliveryRequest $request, Player $player) use ($leaseSeconds): array {
+            $this->expireLease($request);
+            if ($request->state !== 'recovery_reserved') {
+                return ['result' => 'unavailable'];
+            }
+            $now = $this->clock->now();
+            if ($request->claimHash !== null || $request->leaseExpiresAt !== null || $request->resolvedAt !== null) {
+                // Un reçu incohérent pourrait avoir été remis. Ne pas relancer
+                // ni affirmer qu'aucun transport n'a été possible.
+                $request->state = 'unknown';
+                $request->resolvedAt = $now;
+                return ['result' => 'unavailable'];
+            }
+            if ($player->emailVerifiedAt !== null || $player->lockedAt !== null) {
+                return $this->cancelRecovery($request, $now);
+            }
+
+            $db = $this->em->getConnection();
+            // Le compte est déjà verrouillé : toute décision sur ses enfants
+            // est sérialisée avec le lecteur, la révocation et la réservation.
+            $event = $db->fetchAssociative(
+                'SELECT original_request_id, generation_version, request_key_hash FROM verification_recovery_event WHERE recovery_request_id = ? FOR UPDATE',
+                [$request->id],
+            );
+            if ($event === false || $event['generation_version'] === null || !hash_equals($request->requestKeyHash, $event['request_key_hash'])) {
+                return $this->cancelRecovery($request, $now);
+            }
+            $original = $db->fetchAssociative(
+                'SELECT state, resolved_at FROM verification_delivery_request WHERE id = ? AND player_id = ? FOR UPDATE',
+                [(int) $event['original_request_id'], $player->id],
+            );
+            if ($original === false || $original['state'] !== 'unknown' || $original['resolved_at'] === null) {
+                return $this->cancelRecovery($request, $now);
+            }
+
+            $generation = $db->fetchAssociative(
+                'SELECT version, algorithm, expires_at, state FROM player_verification_generation WHERE player_id = ? FOR UPDATE',
+                [$player->id],
+            );
+            if ($generation === false || $generation['state'] !== 'active'
+                || (int) $generation['algorithm'] !== VersionedVerificationLink::ALGORITHM_V1
+                || (int) $generation['version'] !== (int) $event['generation_version']
+                || (int) $generation['expires_at'] <= $now->getTimestamp()
+                || $db->fetchOne(
+                    'SELECT id FROM player_email_verification_token WHERE player_id = ? AND expires_at > ? LIMIT 1 FOR UPDATE',
+                    [$player->id, $now->format('Y-m-d H:i:s')],
+                ) !== false) {
+                return $this->cancelRecovery($request, $now);
+            }
+
+            // Ne jamais laisser la possession vivre après la génération.
+            $leaseEnd = $now->setTimestamp(min($now->getTimestamp() + $leaseSeconds, (int) $generation['expires_at']));
+            return $this->startClaim($request, $leaseEnd) + ['generation_version' => (int) $generation['version']];
+        });
+    }
+
+    /** @return array{result: string, claim_token: string} */
+    private function startClaim(VerificationDeliveryRequest $request, \DateTimeImmutable $leaseEnd): array
+    {
+        $token = bin2hex(random_bytes(32));
+        $request->claimHash = hash('sha256', $token);
+        $request->leaseExpiresAt = $leaseEnd;
+        $request->state = 'dispatching';
+
+        // Seul le propriétaire reçoit ce secret éphémère de possession.
+        return ['result' => 'claimed', 'claim_token' => $token];
+    }
+
     /** @return array{result: string} */
-    public function complete(int $requestId, string $claimToken, string $outcome): array
+    private function cancelRecovery(VerificationDeliveryRequest $request, \DateTimeImmutable $now): array
+    {
+        // Avant toute possession, aucun transport n'a été possible dans ce circuit.
+        $request->state = 'cancelled';
+        $request->claimHash = null;
+        $request->leaseExpiresAt = null;
+        $request->resolvedAt = $now;
+
+        return ['result' => 'cancelled'];
+    }
+
+    /** @return array{result: string} */
+    public function complete(int $requestId, #[\SensitiveParameter] string $claimToken, string $outcome): array
     {
         if (!preg_match('/^[a-f0-9]{64}$/D', $claimToken) || !in_array($outcome, ['transport_accepted', 'cancelled', 'unknown'], true)) {
             throw new \InvalidArgumentException('Résultat de traitement invalide.');

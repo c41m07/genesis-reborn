@@ -414,4 +414,97 @@ final class VerificationGenerationStoreTest extends KernelTestCase
         self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM verification_recovery_event'));
         self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM verification_delivery_request'));
     }
+
+    private function recoveryFixture(int $lifetime = 3600): array
+    {
+        [$em, $db, $player, $clock, $store, $codec, $keys] = $this->fixture();
+        $this->up($db);
+        $original = $this->unknown($em, $player, $clock);
+        $generation = $store->prepare($player->id, 'fixture', $clock->now()->modify('+'.$lifetime.' seconds'), $keys);
+        $reservation = (new \App\Service\Player\VerificationRecoveryOrchestrator($db, $clock, $codec))
+            ->reserve($player->id, $original->id, str_repeat('e', 64), 300, $keys);
+        self::assertSame('reserved', $reservation['result']);
+        $lifecycle = new \App\Service\Player\VerificationRequestLifecycle($em, new \App\Manager\GameManager($em), $clock);
+
+        return [$db, $player, $clock, $store, $original, $generation, $reservation['request_id'], $lifecycle, $codec, $keys];
+    }
+
+    public function testRecoveryClaimOnlyOneOwnerAcrossConcurrentProcesses(): void
+    {
+        [$db, $player, , , $original, , $id] = $this->recoveryFixture();
+        $snapshot = $db->fetchAssociative('SELECT * FROM verification_delivery_request WHERE id = ?', [$original->id]);
+        self::assertEqualsCanonicalizing(['claimed', 'unavailable'], $this->race($player->id, 'claim-recovery', 'claim-recovery', $id));
+        self::assertSame('dispatching', $db->fetchOne('SELECT state FROM verification_delivery_request WHERE id = ?', [$id]));
+        self::assertSame($snapshot, $db->fetchAssociative('SELECT * FROM verification_delivery_request WHERE id = ?', [$original->id]));
+    }
+
+    public function testRecoveryClaimLimitsLeaseAndDoesNotPublishLateFakeOutcome(): void
+    {
+        [$db, , $clock, , $original, $generation, $id, $lifecycle, $codec, $keys] = $this->recoveryFixture(30);
+        $claim = $lifecycle->claimRecovery($id, 120);
+        self::assertSame('claimed', $claim['result']);
+        self::assertSame($generation->version, $claim['generation_version']);
+        self::assertSame($clock->now()->modify('+30 seconds')->format('Y-m-d H:i:s'), $db->fetchOne('SELECT lease_expires_at FROM verification_delivery_request WHERE id = ?', [$id]));
+        self::assertSame('rejected', $lifecycle->complete($id, str_repeat('f', 64), 'transport_accepted')['result']);
+        // Double de test : aucune mise en file ni destinataire ; résultat tardif.
+        $fakeSend = static fn (string $link): bool => strlen($link) === 43;
+        self::assertTrue($fakeSend($codec->reproduce($generation, $keys)));
+        $clock->sleep(30);
+        self::assertSame('conflict', $lifecycle->complete($id, $claim['claim_token'], 'transport_accepted')['result']);
+        self::assertSame('unknown', $db->fetchOne('SELECT state FROM verification_delivery_request WHERE id = ?', [$id]));
+        self::assertSame('unknown', $db->fetchOne('SELECT state FROM verification_delivery_request WHERE id = ?', [$original->id]));
+        self::assertSame('unavailable', $lifecycle->claimRecovery($id, 120)['result']);
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('staleRecoveryCases')]
+    public function testRecoveryClaimCancelsBeforeTransportWhenStateChanges(string $change): void
+    {
+        [$db, $player, $clock, $store, $original, $generation, $id, $lifecycle] = $this->recoveryFixture(30);
+        match ($change) {
+            'suspended' => $db->update('player', ['locked_at' => '2030-01-01 00:00:00'], ['id' => $player->id]),
+            'expired' => $clock->sleep(30),
+            'revoked' => $store->revoke($player->id, $generation->version),
+            'wrong_version' => $db->update('verification_recovery_event', ['generation_version' => 2], ['recovery_request_id' => $id]),
+            'broken_binding' => $db->update('verification_recovery_event', ['request_key_hash' => str_repeat('b', 64)], ['recovery_request_id' => $id]),
+            'initial_not_unknown' => $db->update('verification_delivery_request', ['state' => 'cancelled'], ['id' => $original->id]),
+            'legacy_active' => $db->insert('player_email_verification_token', ['player_id' => $player->id, 'token_hash' => str_repeat('b', 64), 'expires_at' => '2030-01-01 00:30:00']),
+        };
+        $snapshot = $db->fetchAssociative('SELECT * FROM verification_delivery_request WHERE id = ?', [$original->id]);
+        self::assertSame(['result' => 'cancelled'], $lifecycle->claimRecovery($id, 120));
+        self::assertSame('cancelled', $db->fetchOne('SELECT state FROM verification_delivery_request WHERE id = ?', [$id]));
+        self::assertNull($db->fetchOne('SELECT claim_hash FROM verification_delivery_request WHERE id = ?', [$id]));
+        self::assertSame($snapshot, $db->fetchAssociative('SELECT * FROM verification_delivery_request WHERE id = ?', [$original->id]));
+    }
+
+    public static function staleRecoveryCases(): iterable
+    {
+        foreach (['suspended', 'expired', 'revoked', 'wrong_version', 'broken_binding', 'initial_not_unknown', 'legacy_active'] as $case) {
+            yield $case => [$case];
+        }
+    }
+
+    public function testInconsistentPriorPossessionIsNeverClassifiedAsCancelled(): void
+    {
+        [$db, , , , , , $id, $lifecycle] = $this->recoveryFixture();
+        $db->update('verification_delivery_request', ['claim_hash' => str_repeat('a', 64)], ['id' => $id]);
+        self::assertSame('unavailable', $lifecycle->claimRecovery($id, 120)['result']);
+        self::assertSame('unknown', $db->fetchOne('SELECT state FROM verification_delivery_request WHERE id = ?', [$id]));
+    }
+
+    public function testRecoveryClaimRollbackDoesNotIssuePossession(): void
+    {
+        [$db, $player, , , , , $id, $lifecycle] = $this->recoveryFixture();
+        $db->executeStatement("CREATE TRIGGER fixture_deny_claim BEFORE UPDATE ON verification_delivery_request FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'synthetic claim persistence failure'");
+        try {
+            $lifecycle->claimRecovery($id, 120);
+            self::fail('Un claim a été retourné malgré l’échec de validation.');
+        } catch (\Doctrine\DBAL\Exception $e) {
+            self::assertStringContainsString('synthetic claim persistence failure', $e->getMessage());
+        } finally {
+            $db->executeStatement('DROP TRIGGER fixture_deny_claim');
+        }
+        self::assertSame('recovery_reserved', $db->fetchOne('SELECT state FROM verification_delivery_request WHERE id = ?', [$id]));
+        self::assertNull($db->fetchOne('SELECT claim_hash FROM verification_delivery_request WHERE id = ?', [$id]));
+        self::assertEqualsCanonicalizing(['claimed', 'unavailable'], $this->race($player->id, 'claim-recovery', 'claim-recovery', $id));
+    }
 }

@@ -243,3 +243,36 @@ le journal ; le claim générique ne revendique pas le nouveau reçu.
 Montée/retour des migrations uniquement sur la base jetable ; base
 et réseau retirés, Compose, conteneur, PHP lint et diff contrôlés.
 Aucun mail réel, nouveau paramètre, push, merge ou déploiement.
+
+## Claim spécifique, non raccordé
+
+`VerificationRequestLifecycle::claimRecovery()` est l'unique chemin qui
+peut passer `recovery_reserved` à `dispatching`. Il utilise la possession
+existante (secret bref, uniquement son empreinte en base), mais exige en
+plus sous verrou du compte :
+
+- compte en attente, actif ; liaison unique du nouveau reçu au journal,
+  même clé de demande et version présente ;
+- reçu initial du même compte toujours résolu/indéterminé ;
+- génération courante active, version attendue, algorithme connu, échéance
+  future ; aucun lien historique encore valable.
+
+Avant toute possession, un prérequis manquant annule seulement le nouveau
+reçu (`cancelled`), sans prétendre qu'un envoi ambigu a échoué. Si le
+reçu porte des traces incohérentes de possession, son état devient
+`unknown` et il n'est pas repris. Aucun
+transport n'est possible avant commit réussi du claim. Le bail ne dépasse
+pas l'échéance du lien et, une fois expiré, l'état devient `unknown`, jamais
+remis en file ou réécrit en succès. Le reçu initial n'est jamais modifié.
+Un claim concurrent perd sans obtenir de secret. Le résultat ne contient
+que la version et le secret de possession, aucun lien, adresse, clé ou nonce.
+
+Pas de migration, clé, adaptateur applicatif, worker ou chemin HTTP dans
+ce palier. Les clés n'interviennent pas dans la revendication, qui n'émet
+aucun lien. Le futur adaptateur doit produire le lien uniquement après
+vérification du claim et de la même génération, et distinguer la
+non-remise certaine d'un résultat ambigu. Un verrou SQL de claim n'arrête
+pas un transport déjà engagé : il faut encore décider le contrat pour une
+révocation volontaire qui survient après le claim, drainer les anciens
+émetteurs, et choisir l'audit de remise et la politique de clés. Ne pas
+relier ce palier à V5 si sa recette est figée.
