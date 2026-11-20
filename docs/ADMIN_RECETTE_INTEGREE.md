@@ -153,3 +153,71 @@ Le scénario ad hoc n’est pas ajouté à la CI : il dépend de ce montage priv
    ainsi que les parcours temps réel requis. La revue globale reste séparée,
    strictement en lecture seule. Les corrections audit restent hors de ce lot.
 6. Obtenir l’autorisation distincte de fusion/déploiement ; aucun push réalisé.
+
+## Recette V3 : inspection préalable à la reprise
+
+Branche locale recette/admin-integration-v3, worktree distinct. Assemblage
+2e59447 : parents 623959c (recette V2) et a4fb6a0 (inspection en lecture seule).
+Aucun conflit dans ce premier assemblage. Branches V1/V2 inchangées, aucun
+push, fusion vers dev ou changement de CI.
+
+### Première marche du candidat queue : preuve automatique, sans nouvelle route
+
+Le service existant QueueService::complete traite une demande jetonnée mais
+réconcilie tout le membre, toutes colonies et files confondues. Cette portée
+est nécessaire à l’ordre chronologique des fins, aux dépendances, aux
+consommations de ressources et au démarrage de la recherche suivante.
+Ne pas remplacer ce service par un achèvement direct de l’élément.
+
+La prochaine marche consiste à éprouver un unique membre synthétique en
+lançant, sur le service existant et sans admin ni transport réel, deux workers
+sur le même couple identifiant de commande / génération de dispatch. Prévoir
+deux colonies et plusieurs files, une opération liée et une voie de traitement
+normale concurrente. Établir une photographie des résultats métier, pas
+seulement un compteur d’appels : niveaux/quantités, ressources, commandes
+restantes et nouveaux événements. Comparer ordre et résultat à un traitement
+ordinaire unique, y compris génération périmée, cible retirée et transaction
+annulée. Un succès du test prouverait ce scénario précis, pas un replay.
+
+Une reprise future doit ensuite décider si l’interface indique honnêtement
+« réconcilier le membre » ou renonce à une action strictement par élément.
+La preuve doit porter sur état courant sous les verrous du métier, jeton et
+périmètre inchangés, absence de double effet et séparation entre relai publié,
+effet SQL durable et état indéterminé. Un reçu durable lié à la génération
+(et pas seulement au clic) et une décision/audit cohérents avec la transaction
+sont nécessaires. Une interruption après publication ne doit jamais
+déclencher de republication automatique ; tester cette coupure et une écriture
+refusée. Conserver droits existants, CSRF, confirmation et motif au futur
+raccordement seulement.
+
+Coût estimé : niveau 5/5. Premier incrément de preuves : environ 1–2 jours
+de développement et recette isolée ; raccordement sûr conditionnel : 2–4
+jours supplémentaires, hors CI complète, selon les écarts de concurrence et
+la nécessité d’une migration de reçu. Estimation de travail, pas engagement.
+La V3 n’ajoute ni reçu, ni bouton, ni replay, ni changement de règle métier.
+
+### Vérifications et ajout support protégé
+
+Phase diagnostic seule (2e59447) : 140 tests PHP / 1 383 assertions, Twig
+admin (65), injection du conteneur et Compose réussis. Six tests clavier
+Chromium et un parcours réel d’inspection à 1366 et 390 px réussis : lien
+depuis Exploitation, absence de commande, aucun bouton de relance ou jeton,
+aucun débordement horizontal, navigation retour/rechargement et relevés
+outbox/journal inchangés. Base navigateur jetable migrée en mémoire (60
+migrations). Aucun service de transport réel.
+
+Après cette validation, intégration autorisée du support
+3594a064fba044731037f2316619983c4b2c2041 (parent fa996dd) en 00919d9.
+Conflit de signature sur la fiche joueur : maintien de PLAYER_VIEW ET
+des dépendances diagnostic et activation. Activation désactivée par défaut
+(ADMIN_ACTIVATION_ENABLED=0) et transport indisponible câblé, sans SMTP.
+Aucun incrément de coordination public/admin supplémentaire.
+
+Après intégration support : parcours Chromium d’inspection rejoué et
+diagnostic d’un compte non confirmé vérifié dans le montage jetable. Le
+formulaire est absent, la route POST retourne 404, aucun reçu n’est écrit.
+Recette PHP de régression ciblée : 30 tests / 383 assertions, Twig admin
+(65), injection et diff réussis. Les chiffres 140/1383 concernent le SHA
+avant cet assemblage, pas le dernier SHA. Les projets navigateur, DB et
+réseaux de recette ont été nettoyés. Le fichier Symfony généré reference.php
+reste seul modifié, hors commit. Pas de CI complète.
