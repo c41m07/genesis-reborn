@@ -6,7 +6,7 @@ use App\Entity\{Galaxy, Planet, SolarSystem, Universe};
 use App\Manager\GameManager;
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
-use App\Service\Colony\{CatalogueInsights, CatalogueProductionContext, EconomicUnitCapacity, ResourceService};
+use App\Service\Colony\{CatalogueDetails, CatalogueInsights, CatalogueProductionContext, EconomicUnitCapacity, ResourceService};
 use App\Service\Combat\TechnologyEffectCalculator;
 use App\Service\Event\GameEventService;
 use App\Service\Player\VacationCalendar;
@@ -19,6 +19,7 @@ final class CatalogueQueuedBenefitsTest extends TestCase
 {
     private GameCatalog $catalog;
     private CatalogueInsights $insights;
+    private CatalogueDetails $details;
     private Planet $planet;
     private CatalogueProductionContext $context;
 
@@ -32,7 +33,10 @@ final class CatalogueQueuedBenefitsTest extends TestCase
         $capacity = new EconomicUnitCapacity($repo, $this->catalog);
         $resources = new ResourceService($repo, $manager, $this->catalog, $clock, new GameEventService($repo, $manager, $clock), new VacationCalendar($repo, $clock), $capacity);
         $requirements = new RequirementChecker($this->catalog);
-        $this->insights = new CatalogueInsights($this->catalog, $resources, $requirements, new TechnologyEffectCalculator($this->catalog), new CatalogAccess($repo, $this->catalog, $requirements));
+        $access = new CatalogAccess($repo, $this->catalog, $requirements);
+        $technologyEffects = new TechnologyEffectCalculator($this->catalog);
+        $this->insights = new CatalogueInsights($this->catalog, $resources, $requirements, $technologyEffects, $access);
+        $this->details = new CatalogueDetails($this->catalog, $resources, $technologyEffects, $requirements, $access, $capacity);
         $universe = new Universe();$universe->slug = 'queued-benefits';$universe->name = 'Gains en file';
         $galaxy = new Galaxy();$galaxy->universe = $universe;$system = new SolarSystem();$system->galaxy = $galaxy;
         $this->planet = new Planet();$this->planet->solarSystem = $system;$this->planet->position = 5;
@@ -64,6 +68,24 @@ final class CatalogueQueuedBenefitsTest extends TestCase
             $expected = $slug==='fortress' ? [3.325929489262224, 4.33466996041087] : [3.8898329580604964, 5.135404612491324];
             self::assertEqualsWithDelta($expected[0], $rows[$label]['before'], 1e-10);
             self::assertEqualsWithDelta($expected[1], $rows[$label]['after'], 1e-10);
+        }
+    }
+
+    public function testCappedBuildingDetailsKeepTheBonusFromAcquiredLevelsOnly(): void
+    {
+        foreach (['lab', 'shipyard', 'fortress'] as $slug) {
+            $definition = $this->catalog->withTier($this->catalog->get('buildings', $slug), 'basic');
+            $maximum = $definition['max_level'];
+            $levels = [$slug => ['basic' => $maximum - 1, 'intermediate' => 2, 'superior' => 3]];
+            $normal = $this->details->describe($definition, 'buildings', $maximum, $this->planet, $levels, [], $this->context);
+            self::assertSame([], $normal['sections'][0]['rows'], $slug);
+            $capped = $this->details->describe($definition, 'buildings', $maximum + 1, $this->planet, $levels, [], $this->context);
+            $rows = $capped['sections'][0]['rows'];
+            self::assertCount(1, $rows, $slug);
+            self::assertSame('%', $rows[0]['unit'], $slug);
+            $expected = $this->insights->benefits($definition, 'buildings', $maximum, $this->planet, $levels, [], $this->context)[0];
+            self::assertSame($expected['before'], $rows[0]['value'], $slug);
+            self::assertGreaterThan($rows[0]['value'], $expected['after'], $slug);
         }
     }
 

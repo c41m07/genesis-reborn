@@ -1,4 +1,5 @@
 {% set info = card.details %}
+{% set buildingMaximumPending = group == 'buildings' and card.maximum and card.level < d.max_level %}
 <div class="catalog-info" data-controller="catalog-info">
     <button class="catalog-info-trigger" type="button" data-action="catalog-info#open" aria-haspopup="dialog" aria-label="Informations sur {{ d.label }}">i</button>
     <dialog class="catalog-info-dialog" data-catalog-info-target="dialog" data-action="click->catalog-info#outside" aria-labelledby="catalog-info-title-{{ group }}-{{ d.slug }}-{{ card.tier }}">
@@ -15,11 +16,19 @@
                     <h3>Progression de ce rang</h3>
                     <dl class="catalog-info-stats catalog-info-progression">
                         <div><dt>Niveau actuel</dt><dd>{{ card.level }}</dd></div>
-                        <div><dt>{{ card.maximum ? 'Progression terminée' : 'Niveau visé' }}</dt><dd>{{ card.maximum ? 'Niveau maximum atteint' : card.target }}</dd></div>
+                        {% if buildingMaximumPending %}
+                            <div><dt>Maximum en file</dt><dd>Le dernier niveau n’est pas encore acquis.</dd></div>
+                        {% else %}
+                            <div><dt>{{ card.maximum ? 'Progression terminée' : 'Niveau visé' }}</dt><dd>{{ card.maximum ? 'Niveau maximum atteint' : card.target }}</dd></div>
+                        {% endif %}
                         <div><dt>Niveau maximum</dt><dd>{{ d.max_level|default('Sans limite') }}</dd></div>
                         <div><dt>Rang</dt><dd>{{ d._tier_label }}</dd></div>
                     </dl>
-                    {% if card.queued %}<p class="catalog-info-note">Une amélioration de ce rang est déjà en file. Les gains et le coût ci-dessous concernent le niveau visé après les niveaux déjà programmés.</p>{% endif %}
+                    {% if buildingMaximumPending %}
+                        <p class="catalog-info-note">Les effets actuels n’incluent pas les niveaux en file.</p>
+                    {% elseif card.queued %}
+                        <p class="catalog-info-note">Une amélioration de ce rang est déjà en file. Les gains et le coût ci-dessous concernent le niveau visé après les niveaux déjà programmés.</p>
+                    {% endif %}
                     {% if not card.maximum and card.benefits %}
                         <h3>Gain du niveau {{ card.target }}</h3>
                         <ul class="catalog-info-benefits">
