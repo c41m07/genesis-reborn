@@ -33,7 +33,7 @@ final class VerificationGenerationStore
         \DateTimeImmutable $expiry,
         #[\SensitiveParameter] VerificationLinkKeyResolver $keys,
     ): array {
-        return $this->withPendingPlayer($playerId, function () use ($playerId, $keyId, $expiry, $keys): array {
+        return $this->withPendingPlayer($playerId, function (array $player) use ($playerId, $keyId, $expiry, $keys): array {
             // Un lien historique encore valide ne peut pas être reproduit ;
             // ne pas réinterpréter, supprimer ou remplacer son empreinte.
             $now = $this->clock->now();
@@ -46,7 +46,8 @@ final class VerificationGenerationStore
                 $current = $this->hydrate($playerId, $row);
                 // Le nouvel identifiant de clé proposé ne remplace pas celui
                 // de la génération courante. Une clé retirée ne la fait pas tourner.
-                if ($this->links->reproduce($current, $keys) === null) {
+                if (!VerificationRecipientBinding::matches($row['recipient_fingerprint'], $player['email'], $row['fingerprint'])
+                    || $this->links->reproduce($current, $keys) === null) {
                     return $this->preparation('generation_unavailable');
                 }
 
@@ -73,6 +74,7 @@ final class VerificationGenerationStore
                 'nonce' => $generation->nonce,
                 'expires_at' => $generation->expiresAt,
                 'fingerprint' => $generation->fingerprint,
+                'recipient_fingerprint' => VerificationRecipientBinding::fingerprint($player['email'], $generation->fingerprint),
                 'state' => 'active',
             ];
             if ($row === false) {
@@ -100,9 +102,10 @@ final class VerificationGenerationStore
 
     public function consume(int $playerId, int $version, #[\SensitiveParameter] string $link): bool
     {
-        return $this->withPendingPlayer($playerId, function () use ($playerId, $version, $link): bool {
+        return $this->withPendingPlayer($playerId, function (array $player) use ($playerId, $version, $link): bool {
             $row = $this->current($playerId);
             if ($row === false || $row['state'] !== 'active' || (int) $row['version'] !== $version
+                || !VerificationRecipientBinding::matches($row['recipient_fingerprint'], $player['email'], $row['fingerprint'])
                 || !$this->links->matches($this->hydrate($playerId, $row), $link)) {
                 return false;
             }
@@ -157,8 +160,8 @@ final class VerificationGenerationStore
         return $this->db->transactional(function () use ($playerId, $operation): mixed {
             // Le verrou compte est pris avant toute ligne enfant, même si
             // aucune génération n'existe encore. Ne rien préparer sur un cache ORM.
-            $player = $this->db->fetchAssociative('SELECT email_verified_at, locked_at FROM player WHERE id = ? FOR UPDATE', [$playerId]);
-            return $player !== false && $player['email_verified_at'] === null && $player['locked_at'] === null ? $operation() : null;
+            $player = $this->db->fetchAssociative('SELECT email, email_verified_at, locked_at FROM player WHERE id = ? FOR UPDATE', [$playerId]);
+            return $player !== false && $player['email_verified_at'] === null && $player['locked_at'] === null ? $operation($player) : null;
         });
     }
 

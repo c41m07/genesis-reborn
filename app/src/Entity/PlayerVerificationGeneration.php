@@ -32,6 +32,9 @@ class PlayerVerificationGeneration
     #[ORM\Column(length: 64)]
     public string $fingerprint;
 
+    #[ORM\Column(length: 64, nullable: true)]
+    public ?string $recipientFingerprint = null;
+
     #[ORM\Column(length: 16)]
     public string $state;
 }

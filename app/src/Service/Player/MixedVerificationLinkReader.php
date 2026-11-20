@@ -76,7 +76,8 @@ final class MixedVerificationLinkReader
             } else {
                 // La voie historique ne filtre pas la suspension ; ne pas
                 // lui imposer la règle spécifique à la génération versionnée.
-                if ($player->lockedAt !== null || !$generation instanceof PlayerVerificationGeneration || $generation->state !== 'active') {
+                if ($player->lockedAt !== null || !$generation instanceof PlayerVerificationGeneration || $generation->state !== 'active'
+                    || !VerificationRecipientBinding::matches($generation->recipientFingerprint, $player->email, $generation->fingerprint)) {
                     return false;
                 }
                 $current = new VerificationLinkGeneration(

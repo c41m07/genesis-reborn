@@ -8,7 +8,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
-use DoctrineMigrations\{Version20261120000200, Version20261120000300, Version20261120000400, Version20261120000500};
+use DoctrineMigrations\{Version20261120000200, Version20261120000300, Version20261120000400, Version20261120000500, Version20261120000600};
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Clock\MockClock;
 use Symfony\Component\Process\Process;
@@ -31,7 +31,13 @@ final class VerificationGenerationStoreTest extends KernelTestCase
         require_once dirname(__DIR__, 2).'/migrations/Version20261120000300.php';
         require_once dirname(__DIR__, 2).'/migrations/Version20261120000400.php';
         require_once dirname(__DIR__, 2).'/migrations/Version20261120000500.php';
-        $versions = [Version20261120000200::class, Version20261120000300::class, Version20261120000400::class, Version20261120000500::class];
+        require_once dirname(__DIR__, 2).'/migrations/Version20261120000600.php';
+        if ($direction === 'up') {
+            // Le schéma de base ORM contient déjà les deux colonnes du
+            // reçu ; les remettre à l'état précédent pour tester le DDL.
+            $db->executeStatement('ALTER TABLE verification_delivery_request DROP versioned_generation_version, DROP emission_handoff_at');
+        }
+        $versions = [Version20261120000200::class, Version20261120000300::class, Version20261120000400::class, Version20261120000500::class, Version20261120000600::class];
         foreach ($direction === 'up' ? $versions : array_reverse($versions) as $version) {
             $migration = new $version($db, new \Psr\Log\NullLogger());
             $migration->{$direction}(new Schema());
@@ -84,7 +90,7 @@ final class VerificationGenerationStoreTest extends KernelTestCase
         $processes = [];
         try {
             foreach (['a' => $first, 'b' => $second] as $side => $operation) {
-                $proc = new Process([PHP_BINARY, dirname(__DIR__).'/Support/verification-generation-worker.php', (string) $playerId, $operation, $dir, $side, (string) $rowId], input: in_array($operation, ['consume', 'mixed', 'prepare-handoff'], true) ? (is_array($link) ? $link[$side] : $link) : null, timeout: 20);
+                $proc = new Process([PHP_BINARY, dirname(__DIR__).'/Support/verification-generation-worker.php', (string) $playerId, $operation, $dir, $side, (string) $rowId], input: in_array($operation, ['consume', 'mixed', 'prepare-handoff', 'prepare-emission'], true) ? (is_array($link) ? $link[$side] : $link) : null, timeout: 20);
                 $proc->start();
                 $processes[] = $proc;
             }
@@ -132,6 +138,9 @@ final class VerificationGenerationStoreTest extends KernelTestCase
         self::assertSame($snapshot, $db->fetchAssociative('SELECT * FROM player_email_verification_token WHERE id = ?', [$legacy->id]));
         self::assertFalse($db->createSchemaManager()->tablesExist(['player_verification_generation']));
         self::assertFalse($db->createSchemaManager()->tablesExist(['verification_recovery_event']));
+        $receiptColumns = $db->createSchemaManager()->listTableColumns('verification_delivery_request');
+        self::assertArrayNotHasKey('versioned_generation_version', $receiptColumns);
+        self::assertArrayNotHasKey('emission_handoff_at', $receiptColumns);
     }
 
     public function testConcurrentPreparationPreservesSingleGenerationAndExpiry(): void
@@ -830,5 +839,23 @@ final class VerificationGenerationStoreTest extends KernelTestCase
         self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM player_verification_generation'));
         self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM player_email_verification_token'));
         self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM verification_delivery_request'));
+    }
+
+    public function testVersionedEmissionCanHandOffOnlyOnceAcrossConnections(): void
+    {
+        [$em, $db, $player, $clock, $store, , $keys] = $this->fixture();
+        $this->up($db);
+        $link = $store->prepare($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        $manager = new \App\Manager\GameManager($em);
+        $reservations = new \App\Service\Player\VerificationRequestReservation(
+            $em, $manager, new \App\Repository\VerificationDeliveryRequestRepository($em), $clock,
+        );
+        $lifecycle = new \App\Service\Player\VerificationRequestLifecycle($em, $manager, $clock);
+        $id = $reservations->reserve($player->id, str_repeat('c', 64), 300, generationVersion: $link->version)['request_id'];
+        $claim = $lifecycle->claim($id, 120);
+        self::assertSame('rejected', $lifecycle->complete($id, $claim['claim_token'], 'transport_accepted')['result']);
+        self::assertEqualsCanonicalizing([false, true], $this->race($player->id, 'prepare-emission', 'prepare-emission', $id, $claim['claim_token']));
+        self::assertNotNull($db->fetchOne('SELECT emission_handoff_at FROM verification_delivery_request WHERE id = ?', [$id]));
+        self::assertSame('completed', $lifecycle->complete($id, $claim['claim_token'], 'transport_accepted')['result']);
     }
 }

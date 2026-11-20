@@ -8,6 +8,7 @@ use App\Validator\DTO\PasswordResetRequestData;
 use App\Validator\DTO\PasswordResetData;
 use App\Service\Player\RegistrationService;
 use App\Service\Player\EmailVerificationService;
+use App\Service\Player\EmailVerificationEmissionSelector;
 use App\Validator\DTO\RegistrationData;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{Request,Response};
@@ -36,7 +37,7 @@ final class SecurityController extends AbstractController
     #[Route('/deconnexion',name:'app_logout',methods:['POST'])]
     public function logout(): never { throw new \LogicException('Intercepté par Symfony Security.'); }
     #[Route('/inscription',name:'app_register',methods:['GET','POST'])]
-    public function register(Request $request,RegistrationService $service,EmailVerificationService $verification): Response
+    public function register(Request $request,RegistrationService $service,EmailVerificationEmissionSelector $verification): Response
     {
         if($this->getUser()) return $this->redirectToRoute('app_home');
         $form=$this->createForm(RegistrationType::class,new RegistrationData());$form->handleRequest($request);
@@ -56,7 +57,7 @@ final class SecurityController extends AbstractController
     }
 
     #[Route('/inscription/renvoyer', name: 'app_email_verify_request', methods: ['GET', 'POST'])]
-    public function resendVerification(Request $request, EmailVerificationService $service, \App\Repository\GameRepository $repo, #[Autowire(service: 'limiter.password_reset_request')] RateLimiterFactory $limiterFactory): Response
+    public function resendVerification(Request $request, EmailVerificationEmissionSelector $service, \App\Repository\GameRepository $repo, #[Autowire(service: 'limiter.password_reset_request')] RateLimiterFactory $limiterFactory): Response
     {
         $form = $this->createForm(PasswordResetRequestType::class, new PasswordResetRequestData());
         $form->handleRequest($request);

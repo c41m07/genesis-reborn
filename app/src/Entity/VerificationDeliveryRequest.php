@@ -28,6 +28,12 @@ class VerificationDeliveryRequest
     public ?string $claimHash = null;
 
     #[ORM\Column(nullable: true)]
+    public ?int $versionedGenerationVersion = null;
+
+    #[ORM\Column(type: 'bigint', nullable: true)]
+    public ?int $emissionHandoffAt = null;
+
+    #[ORM\Column(nullable: true)]
     public ?\DateTimeImmutable $leaseExpiresAt = null;
 
     #[ORM\Column(nullable: true)]

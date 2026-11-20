@@ -82,7 +82,7 @@ final class VerificationRecoveryOrchestrator
             if ($adminId !== null) {
                 (new VerificationAdminActorGuard())->lockAndCheck($this->db, $adminId, $playerId);
             }
-            $player = $this->db->fetchAssociative('SELECT email_verified_at, locked_at FROM player WHERE id = ? FOR UPDATE', [$playerId]);
+            $player = $this->db->fetchAssociative('SELECT email, email_verified_at, locked_at FROM player WHERE id = ? FOR UPDATE', [$playerId]);
             if ($player === false || $player['email_verified_at'] !== null || $player['locked_at'] !== null) {
                 return $this->result('ineligible');
             }
@@ -119,7 +119,8 @@ final class VerificationRecoveryOrchestrator
                 return $this->result('legacy_active');
             }
             $row = $this->db->fetchAssociative('SELECT * FROM player_verification_generation WHERE player_id = ? FOR UPDATE', [$playerId]);
-            if ($row === false || $row['state'] !== 'active' || (int) $row['expires_at'] <= $now->getTimestamp()) {
+            if ($row === false || $row['state'] !== 'active' || (int) $row['expires_at'] <= $now->getTimestamp()
+                || !VerificationRecipientBinding::matches($row['recipient_fingerprint'], $player['email'], $row['fingerprint'])) {
                 return $this->result('generation_unavailable');
             }
             $generation = new VerificationLinkGeneration(
