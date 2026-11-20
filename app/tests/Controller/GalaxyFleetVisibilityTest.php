@@ -308,6 +308,7 @@ final class GalaxyFleetVisibilityTest extends WebTestCase
         self::assertStringContainsString('Flottes entrantes <span class="badge">3</span>',$data['html']);
         foreach($fleets as $fleet)self::assertStringContainsString('data-incoming-attack="'.$fleet->id.'"',$data['html']);
         self::assertStringContainsString('Transport',$data['html']);self::assertStringContainsString('Défense',$data['html']);self::assertStringContainsString('Mise en orbite',$data['html']);
+        self::assertStringNotContainsString('Consulter le récapitulatif du transport', $data['html']);
         self::assertStringContainsString('Arrivée dans',$data['html']);self::assertStringNotContainsString('Impact dans',$data['html']);
         self::assertStringNotContainsString('has-hostile',$data['html']);
         $this->client->request('GET','/planetes/'.$target->id);self::assertSelectorTextContains('#incoming-attacks-heading','Flottes entrantes 3');

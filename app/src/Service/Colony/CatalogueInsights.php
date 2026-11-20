@@ -22,7 +22,7 @@ final class CatalogueInsights
     public function benefits(
         array $definition,
         string $group,
-        int $target,
+        ?int $target,
         Planet $planet,
         array $levels,
         array $technologies,
@@ -33,26 +33,31 @@ final class CatalogueInsights
         $factor = GameCatalog::tierFactor($tier);
         $slug = $definition['slug'];
         if ($group === 'buildings') {
-            // Le niveau proposé inclut déjà la file : comparer seulement le dernier
-            // passage de niveau, pour les productions comme pour les bonus et stockages.
+            // Sans projection, les deux lectures utilisent les rangs acquis, jamais la file.
             $rankedLevels = $levels[$slug] ?? [];
             if (is_numeric($rankedLevels)) {
                 $rankedLevels = ['basic' => (int) $rankedLevels];
             }
-            $rankedLevels[$tier] = max(0, $target - 1);
+            if ($target !== null) {
+                // Pour un gain, comparer uniquement le dernier niveau proposé.
+                $rankedLevels[$tier] = max(0, $target - 1);
+            }
             $levels[$slug] = $rankedLevels;
             $next = $levels;
-            $next[$slug][$tier] = $target;
+            if ($target !== null) {
+                $next[$slug][$tier] = $target;
+            }
             if (isset($definition['production_resource'])) {
                 $benefitResource = $definition['production_resource'];
+                $production = $this->resources->rate($planet, $benefitResource, 0, $levels, $context) * 3600;
                 $result = [[
                     'label' => 'Production de ' . mb_strtolower($this->catalog->rules()['resources'][$benefitResource]),
-                    'before' => $this->resources->rate($planet, $benefitResource, 0, $levels, $context) * 3600,
-                    'after' => $this->resources->rate($planet, $benefitResource, 0, $next, $context) * 3600,
+                    'before' => $production,
+                    'after' => $target === null ? $production : $this->resources->rate($planet, $benefitResource, 0, $next, $context) * 3600,
                     'unit' => '/ h',
                 ]];
                 $beforeUse = $this->resources->factoryConsumption($planet, $slug, $levels, $context);
-                $afterUse = $this->resources->factoryConsumption($planet, $slug, $next, $context);
+                $afterUse = $target === null ? $beforeUse : $this->resources->factoryConsumption($planet, $slug, $next, $context);
                 foreach (['electricity' => 'Consommation électrique', 'hydrogen' => 'Consommation d’hydrogène'] as $resource => $label) {
                     if (max($beforeUse[$resource], $afterUse[$resource]) > 0) {
                         $result[] = [
@@ -68,17 +73,17 @@ final class CatalogueInsights
             }
             if (isset($definition['storage_resource'])) {
                 $benefitResource = $definition['storage_resource'];
+                $capacity = $this->resources->capacity($planet, $benefitResource, $levels);
                 return [[
                     'label' => 'Stockage de ' . mb_strtolower($this->catalog->rules()['resources'][$benefitResource]),
-                    'before' => $this->resources->capacity($planet, $benefitResource, $levels),
-                    'after' => $this->resources->capacity($planet, $benefitResource, $next),
+                    'before' => $capacity,
+                    'after' => $target === null ? $capacity : $this->resources->capacity($planet, $benefitResource, $next),
                     'unit' => '',
                 ]];
             }
             if (in_array($slug, ['lab', 'shipyard'], true)) {
                 $maxLevel = max(1, (int) ($definition['max_level'] ?? 25));
-                $afterRanks = $levels[$slug] ?? [];
-                $afterRanks[$tier] = $target;
+                $afterRanks = $next[$slug];
                 $cap = (float) ($this->catalog->rules()['time_reduction_max_percent'] ?? 70);
                 $before = GameCatalog::diminishingBonus($levels[$slug] ?? [], $cap, $maxLevel);
                 $after = GameCatalog::diminishingBonus($afterRanks, $cap, $maxLevel);
@@ -91,9 +96,12 @@ final class CatalogueInsights
             }
             if ($slug === 'fortress') {
                 $effect = $definition['effect'] ?? [];
-                $maxLevel = max(1, (int) ($definition['max_level'] ?? 25));
-                $afterRanks = $levels[$slug] ?? [];
-                $afterRanks[$tier] = $target;
+                if ($target === null && (($effect['targets'] ?? null) !== 'ground_defenses' || ($effect['stat'] ?? null) !== 'hp')) {
+                    return [];
+                }
+                // Le combat utilise le niveau de référence du bunker pour le bonus acquis.
+                $maxLevel = max(1, (int) (($target === null ? $this->catalog->get('buildings', $slug) : $definition)['max_level'] ?? 25));
+                $afterRanks = $next[$slug];
                 $cap = (float) ($effect['max_bonus'] ?? 25);
                 return [[
                     'label' => 'Structure supplémentaire des défenses',
@@ -166,7 +174,7 @@ final class CatalogueInsights
 
     private function technologyBenefits(
         array $definition,
-        int $target,
+        ?int $target,
         array $levels,
         Planet $planet,
     ): array
@@ -178,11 +186,15 @@ final class CatalogueInsights
         if (is_numeric($ranks)) {
             $ranks = ['basic' => (int) $ranks];
         }
-        $target = min($target, (int) ($effect['tier_max_levels'][$tier] ?? $definition['max_level'] ?? $target));
-        // Compare uniquement le niveau proposé au dernier niveau déjà programmé.
-        $ranks[$tier] = max(0, $target - 1);
+        if ($target !== null) {
+            $target = min($target, (int) ($effect['tier_max_levels'][$tier] ?? $definition['max_level'] ?? $target));
+            // Compare uniquement le niveau proposé au dernier niveau déjà programmé.
+            $ranks[$tier] = max(0, $target - 1);
+        }
         $afterRanks = $ranks;
-        $afterRanks[$tier] = $target;
+        if ($target !== null) {
+            $afterRanks[$tier] = $target;
+        }
         $maxLevel = max(1, (int) ($definition['max_level'] ?? 25));
         $type = $effect['type'] ?? null;
         if (in_array($slug, ['signature_masking', 'intelligence_countermeasures', 'tactical_intelligence'], true)) {

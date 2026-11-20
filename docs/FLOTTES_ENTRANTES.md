@@ -61,6 +61,28 @@ contrat d’accueil, droit de combat, coût, trajet ou état de flotte n’est m
 Les attributs et le format d’actualisation existants restent compatibles avec
 les pages déjà ouvertes. Aucune dépendance, migration ou livraison Alpha.
 
+## Récapitulatif du transport entrant — 20 novembre 2026
+
+« Consulter le récapitulatif du transport » ouvre le rapport économique existant,
+dans sa page dédiée. Le panneau, sur ordinateur comme sur mobile, ne duplique
+pas le bilan. Un seul chargement groupé récupère les identifiants des rapports
+pour les arrivées de transport visibles dont le joueur est le destinataire
+enregistré au départ. Un changement de propriétaire de la colonie ne transfère
+pas ce droit. Aucun lien n’est présenté si le rapport historique est absent ;
+aucun rapport n’est reconstitué. La route conserve sa vérification des participants.
+
+| Mission non hostile | Action du destinataire | Composition / fret |
+|---|---|---|
+| Transport | Rapport économique depuis l’arrivée visible, réservé aux participants enregistrés du même univers | Composition détaillée et carburant privés ; fret expédié, livré ou retourné dans le rapport économique, pas dans le panneau |
+| Défense / renfort | Résumé de l’arrivée vers sa colonie, sans nouveau lien | Composition détaillée et fret privés |
+| Mise en orbite | Résumé et demande d’orbite selon l’autorisation existante | Composition détaillée et fret privés |
+| Stationnement | Missions entre colonies du même commandant | Détails pour le propriétaire, pas de destinataire tiers |
+| Exploration / colonisation | Pas de destinataire joueur d’une colonie occupée | Pas de partage tiers de composition ni de fret |
+
+L’espionnage demeure privé pendant le trajet, même entre alliés ; la détection
+des attaques et des conquêtes conserve ses règles. La carte, les détails privés,
+les relations, les autorisations d’envoi et le calcul du transport ne changent pas.
+
 ## Vérifications de l’extension initiale
 
 - 32 tests PHP ciblés / 1 113 assertions réussis : arrivées neutres et alliées,

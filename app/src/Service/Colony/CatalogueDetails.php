@@ -232,13 +232,14 @@ final class CatalogueDetails
         $after[$itemDefinition['_tier']] = min($target, $tierCap);
         $current = $limit($ranks);
         $next = $limit($after);
+        $capped = $target > $tierCap;
         return $this->section('Emplacements de colonies', [
             'Chaque niveau ajoute directement +1 emplacement de colonie.',
             'Limites : ' . $caps . '. Maximum : 31 planètes au total, planète de départ incluse.',
-            $current >= $cap ? 'Le plafond de cet univers est atteint.' : ($next > $current ? 'Le prochain niveau apporte +1 emplacement.' : 'Le plafond global est atteint.'),
+            $current >= $cap ? 'Le plafond de cet univers est atteint.' : ($capped ? 'Ce rang ne propose plus de niveau suivant.' : ($next > $current ? 'Le prochain niveau apporte +1 emplacement.' : 'Le plafond global est atteint.')),
             'La planète de départ, les colonies fondées et les planètes conquises occupent toutes un emplacement.',
             'Fonder une colonie exige une planète vierge connue et consomme un vaisseau colonie. Une conquête exige un vaisseau colonie survivant et une cible PNJ conquérable.',
-        ], [['label' => 'Limite totale actuelle', 'value' => $current, 'unit' => 'colonies'], ['label' => 'Limite après ce niveau', 'value' => $next, 'unit' => 'colonies'], ['label' => 'Plafond de cet univers', 'value' => $cap, 'unit' => 'colonies']]);
+        ], [['label' => 'Limite totale actuelle', 'value' => $current, 'unit' => 'colonies'], ...($capped ? [] : [['label' => 'Limite après ce niveau', 'value' => $next, 'unit' => 'colonies']]), ['label' => 'Plafond de cet univers', 'value' => $cap, 'unit' => 'colonies']]);
     }
 
     private function unit(
