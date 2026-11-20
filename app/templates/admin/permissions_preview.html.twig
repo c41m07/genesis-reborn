@@ -10,8 +10,23 @@
         <a href="{{ path('app_admin_permissions_preview', {scope: key}) }}"{% if scope == key %} aria-current="page"{% endif %}>{{ label }}</a>
     {% endfor %}
 </nav>
+<section class="panel" aria-labelledby="observer-simulation-title">
+    <h2 id="observer-simulation-title">Simulation : observateur support</h2>
+    <p>Le droit fictif couvre un seul univers. Le compteur est simulé ; aucun accès ni prolongation n’est possible.</p>
+    <nav aria-label="Scénarios de l’observateur support">
+        {% for key, label in observer_scenarios %}
+            <a href="{{ path('app_admin_permissions_preview', {scope: scope, scenario: key}) }}"{% if scenario == key %} aria-current="page"{% endif %}>{{ label }}</a>
+        {% endfor %}
+    </nav>
+    <p role="status"><strong>{{ observer.status is null ? 'Refus simulé' : 'Lecture simulée' }}</strong> : {{ observer.detail }}</p>
+    <dl>
+        <dt>Durée restante dans la simulation</dt><dd>{{ observer.remaining_minutes }} min</dd>
+        {% if observer.status is not null %}<dt>Statut fictif visible</dt><dd data-observer-state>{{ observer.status }}</dd>{% endif %}
+    </dl>
+</section>
 <section class="panel" aria-labelledby="delegation-projection-title">
     <h2 id="delegation-projection-title">{{ projection.name }}</h2>
+    <p>Les exemples ci-dessous décrivent les métiers ; ils ne sont pas des données de la projection de l’observateur ci-dessus.</p>
     {% for profile in projection.profiles %}
         <h3>{{ profile.label }}</h3>
         <p>{{ profile.example }}</p>

@@ -135,3 +135,37 @@ autorisés. La projection pure teste aussi les valeurs hors liste et la forme
 fermée. Compose, lint PHP (4 fichiers), Twig admin (61), conteneur, diff
 validés. MariaDB synthétique privée et réseau supprimés.
 Pas de recette navigateur, CI complète, intégration, push ou déploiement.
+
+## Aperçu interactif de l’observateur support
+
+Branche feature/admin-apercu-observateur depuis V7 5848437. Complexité 3/5.
+Le GET d’aperçu existant propose quatre simulations par univers fictif :
+actif, expiré, révoqué et hors périmètre. Le scénario actif affiche 15 min
+restantes sur une horloge d’exemple et un seul statut fermé. Les refus
+affichent une raison, une durée accessible nulle et aucun statut. Aucune
+information de l’univers non sélectionné, même en cas de refus. Portée et
+scénario sont des listes fermées ; une valeur inconnue est refusée.
+
+Les trois cartes historiques servent à expliquer les métiers, séparément
+de la projection de l’observateur. L’interface précise que ni le compteur,
+ni l’accès ne sont réels. Ce lot reprend seulement les invariants d’univers
+et de fraîcheur de la preuve bf29982, pas un acteur, un stockage ou une
+politique d’accès en production. Toujours le GET protégé par ROLE_ADMIN
+et PLAYER_VIEW ; aucun routeur nouveau, formulaire, action de délégation,
+écriture, lecture de données réelles, migration ou vote modifié.
+
+Décisions avant un vrai raccordement (valeurs prudentes à confirmer) :
+1. Gouvernance : délégant explicitement nommé par le propriétaire, un
+   bénéficiaire distinct, aucun droit de retransmettre ou d’auto-attribuer.
+2. Données : un seul univers, statut fermé agrégé seulement, exclure
+   identifiants et champs libres ; masquer les résultats à faible effectif
+   tant que le seuil de divulgation n’a pas été décidé.
+3. Durée et contrôle : fenêtre courte sans renouvellement automatique,
+   révocation immédiate et preuve de fraîcheur à chaque lecture ; journal
+   minimal sans contenu sensible. Les 15 min de la fixture ne fixent pas
+   une durée de gouvernance.
+
+7 tests / 142 assertions, dont états des deux univers et politique actuelle
+inchangée. Lint PHP, Twig, conteneur, Compose et diff réussis. Tests en
+conteneur sans réseau ; aucune DB ou recette HTTP/Chromium utilisée.
+Pas d’intégration à V7, de push, fusion, CI ou déploiement.

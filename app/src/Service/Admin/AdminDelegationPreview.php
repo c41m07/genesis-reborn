@@ -31,4 +31,48 @@ final class AdminDelegationPreview
             ],
         ];
     }
+
+    public const OBSERVER_SCENARIOS = [
+        'active' => 'Droit actif',
+        'expired' => 'Droit expiré',
+        'revoked' => 'Droit révoqué',
+        'outside' => 'Hors périmètre',
+    ];
+
+    /** @return array{decision: string, detail: string, remaining_minutes: int, status: ?string}|null */
+    public static function observeFixture(string $scope, string $scenario): ?array
+    {
+        if (!isset(self::SAMPLES[$scope], self::OBSERVER_SCENARIOS[$scenario])) {
+            return null;
+        }
+
+        // Horloge et droit d’exemple : aucun acteur, compte ni univers réel
+        // n’est pris depuis la session ou le catalogue.
+        $now = 15;
+        $grant = [
+            'scope' => $scenario === 'outside' ? ($scope === 'a' ? 'b' : 'a') : $scope,
+            'start' => 0,
+            'end' => $scenario === 'expired' ? $now : 30,
+            'revoked' => $scenario === 'revoked',
+        ];
+        $decision = match (true) {
+            $grant['scope'] !== $scope => 'outside',
+            $grant['revoked'] => 'revoked',
+            $now < $grant['start'] || $now >= $grant['end'] => 'expired',
+            default => 'allowed',
+        };
+
+        // Sur un refus, ne rien projeter du ticket ni de l’autre univers.
+        return [
+            'decision' => $decision,
+            'detail' => match ($decision) {
+                'outside' => 'Le droit d’exemple ne couvre pas cet univers. Aucun statut affiché.',
+                'revoked' => 'Le droit d’exemple a été révoqué. Aucun statut affiché.',
+                'expired' => 'La durée du droit d’exemple est écoulée. Aucun statut affiché.',
+                default => 'Le droit d’exemple est actif dans cet univers. Seul le statut est affiché.',
+            },
+            'remaining_minutes' => $decision === 'allowed' ? $grant['end'] - $now : 0,
+            'status' => $decision === 'allowed' ? ($scope === 'a' ? 'En attente' : 'Résolu') : null,
+        ];
+    }
 }
