@@ -2,7 +2,7 @@ import { test, expect } from './support/isolated-test.mjs';
 
 test.use({ hasTouch: true });
 
-test('GalaxieV2 relie la galaxie, le système et la planète sans casser la carte classique', async ({ page }) => {
+test('GalaxieV2 relie la galaxie, le système et la planète sans casser la carte classique', async ({ page, browser }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   // Observer les coordonnées réellement dessinées pour exercer le clic natif sur le canvas.
   await page.addInitScript(() => {
@@ -284,6 +284,37 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   await expect(page.locator('.gv2-system-panel .gv2-panel-heading')).toContainText(homeSystem.name);
   await expect(page.locator('.gv2-planet-choice').filter({ hasText: mobilePlanet.name })).toBeFocused();
 
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/carte-v2');
+  const current = JSON.parse(await map.getAttribute('data-galaxy-v2-map-value'));
+  const selected = current.systems.slice(1).find(system => system.number === 49) ?? current.systems[1];
+  expect(selected, 'la fixture doit proposer un système différent du système par défaut').toBeTruthy();
+  const coordinates = selected.galaxy + ':' + selected.number;
+  await page.getByRole('searchbox', { name: 'Rechercher un système ou une planète connue' }).fill(selected.name);
+  await page.locator('.gv2-search-results button').filter({ hasText: selected.name }).first().click();
+  await expect(page.locator('.gv2-system-panel').getByRole('heading', { name: coordinates, exact: true })).toBeVisible();
+  const list = page.getByRole('link', { name: 'Liste des systèmes', exact: true });
+  await expect(list).toHaveAttribute('href', new RegExp('[?&]system='+selected.id+'$'));
+  await list.click();
+  await expect(page.locator('#selected-system-title')).toContainText(coordinates + ' ·');
+  await expect(page.getByLabel('Système', { exact: true })).toHaveValue(String(selected.id));
+  const listUrl = page.url();
+  await page.getByRole('link', { name: 'Carte interactive', exact: true }).click();
+  await expect(page.locator('.gv2-system-panel').getByRole('heading', { name: coordinates, exact: true })).toBeVisible();
+  await page.locator('[data-galaxy-v2-target="systemBack"]').click();
+  await expect(list).toHaveAttribute('href', /[?]galaxy=\d+$/);
+
+  const native = await browser.newContext({ javaScriptEnabled: false, storageState: await page.context().storageState() });
+  try {
+    const fallback = await native.newPage();
+    await fallback.goto(listUrl);
+    await expect(fallback.locator('#selected-system-title')).toContainText(coordinates + ' ·');
+    await fallback.getByRole('link', { name: 'Carte interactive', exact: true }).click();
+    await fallback.getByRole('link', { name: 'Liste des systèmes', exact: true }).click();
+    await expect(fallback.locator('#selected-system-title')).toContainText(coordinates + ' ·');
+  } finally {
+    await native.close();
+  }
   expect(pageErrors).toEqual([]);
 
 

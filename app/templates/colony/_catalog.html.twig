@@ -15,6 +15,15 @@
         {% set filter_options = catalog_filter_options[group] %}
         {% for key,label in filter_options %}<button type="button" data-action="click->catalog-filter#apply" data-category="{{ key }}" aria-pressed="{{ key=='all'?'true':'false' }}">{{ label }}</button>{% endfor %}
     </nav>
+    {% if group == 'ships' %}
+        {# Les familles utilisent la même disponibilité par rang ; garder cette aide visible sans Stimulus. #}
+        {% set show_shipyard_help = items|length > 0 and not show_locked_items and not (items|filter(card => not card.failures or card.maximum)|length) %}
+        <div data-shipyard-empty{% if not show_shipyard_help %} hidden{% endif %}>
+            <p role="status">Aucun vaisseau débloqué sur cette colonie. Consultez les conditions de construction pour savoir quoi développer.</p>
+            <p><a href="{{ path('app_colony', {id:planet.id, section:'ships', showLockedItems:1}) }}">Voir les vaisseaux verrouillés</a> ·
+                <a href="{{ path('app_colony', {id:planet.id, section:'buildings', showLockedItems:1, focusItem:1, _fragment:'item-shipyard-basic'}) }}">Voir le chantier d’assemblage</a></p>
+        </div>
+    {% endif %}
     <p data-catalog-empty hidden role="status">Aucun élément accessible dans ce filtre. Activez l’affichage des éléments verrouillés pour explorer cette catégorie.</p>
     <div class="catalog-grid building-grid">{% include 'ui/building_cards.html.twig' %}</div>
 </section>

@@ -109,6 +109,8 @@ export default class extends Controller {
         this.updateFlightTimers();
         this.fleetRefreshHandler = event => this.refreshVisibleFleets(event.detail);
         window.addEventListener('genesis:visible-fleets', this.fleetRefreshHandler);
+        const initialSystem = this.systemById.get(Number(this.gameMap.selectedSystemId));
+        if (initialSystem) this.focusSystem(initialSystem);
         this.startLoop();
     }
 
@@ -1359,6 +1361,17 @@ export default class extends Controller {
         this.startLoop();
     }
 
+    syncListLink(system) {
+        // Les deux vues utilisent l'identifiant validé par le serveur, jamais
+        // le numéro local affiché qui peut être partagé entre deux galaxies.
+        const listLink = this.element.parentElement.querySelector('[data-galaxy-list-link]');
+        if (!listLink) return;
+        const url = new URL(listLink.href);
+        if (system) url.searchParams.set('system', system.id);
+        else url.searchParams.delete('system');
+        listLink.setAttribute('href', url.pathname + url.search + url.hash);
+    }
+
     focusSystem(system, planetId = null) {
         if (!system) return;
         if (this.selectedSystem?.id !== system.id) {
@@ -1366,6 +1379,7 @@ export default class extends Controller {
             this.systemCamera = { x: 0, y: 0 };
         }
         this.selectedSystem = system;
+        this.syncListLink(system);
         this.selectedPlanet = null;
         this.savedCamera = { camera: { ...this.camera }, zoom: this.targetZoom };
         this.systemContentTarget.replaceChildren();
@@ -1430,6 +1444,7 @@ export default class extends Controller {
     }
 
     toGalaxy() {
+        this.syncListLink(null);
         this.mode = this.motionReduced ? 'galaxy' : 'transition-to-galaxy';
         this.setCanvasMode('galaxy');
         this.systemPanelTarget.hidden = true;

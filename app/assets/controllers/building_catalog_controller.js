@@ -1,4 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
+import { syncCatalogEmptyState } from '../catalog_empty_state.js';
 
 // Conserve les choix pendant le remplacement du catalogue par l’actualisation automatique.
 const catalogStates = new Map();
@@ -146,8 +147,7 @@ export default class extends Controller {
                 document.getElementById(tab.hash.slice(1)).hidden = !active;
             });
         });
-        const empty = this.element.querySelector('[data-catalog-empty]');
-        if (empty) empty.hidden = this.familyTargets.some(family => !family.hidden);
+        syncCatalogEmptyState(this.element, this.familyTargets, this.state.category);
         this.state.showLocked = this.showLockedValue;
         catalogStates.set(this.stateKey, this.state);
     }

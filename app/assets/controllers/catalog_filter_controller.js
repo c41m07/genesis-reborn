@@ -1,4 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
+import { syncCatalogEmptyState } from '../catalog_empty_state.js';
 
 export default class extends Controller {
     static targets = ['card'];
@@ -12,7 +13,6 @@ export default class extends Controller {
         this.cardTargets.forEach((card) => {
             card.hidden = card.dataset.catalogVisible === 'false' || (category !== 'all' && card.dataset.category !== category);
         });
-        const empty = this.element.querySelector('[data-catalog-empty]');
-        if (empty) empty.hidden = this.cardTargets.some(card => !card.hidden);
+        syncCatalogEmptyState(this.element, this.cardTargets, category);
     }
 }

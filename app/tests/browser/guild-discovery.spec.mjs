@@ -2,7 +2,7 @@ import { test, expect } from './support/isolated-test.mjs';
 import { queryIsolatedSql, runIsolatedSql } from './support/game-fixtures.mjs';
 import AxeBuilder from '@axe-core/playwright';
 
-async function enterUniverse(page, name, email) {
+async function enterUniverse(page, name, email, universe = /Omega/) {
   const password = crypto.randomUUID() + 'aA1!';
   await page.goto('/inscription');
   await page.getByLabel('Adresse email').fill(email);
@@ -13,7 +13,7 @@ async function enterUniverse(page, name, email) {
   await page.getByLabel('Adresse email').fill(email);
   await page.getByLabel('Mot de passe', { exact: true }).fill(password);
   await page.getByRole('button', { name: /Connexion/ }).click();
-  await page.locator('.universe-card').filter({ has: page.getByRole('heading', { name: /Omega/ }) })
+  await page.locator('.universe-card').filter({ has: page.getByRole('heading', { name: universe }) })
     .getByRole('button').click();
   await expect(page).toHaveURL(/planetes\/\d+$/);
 }
@@ -151,13 +151,20 @@ test('L1B A : recherche, création conservée, présentation et adhésion native
     await page.goto('/guildes?q=A');
     await expect(page.getByRole('status')).toHaveText('Saisissez au moins deux caractères.');
     await page.goto('/guildes');
-    await expect(page.locator('.guild-card')).toHaveCount(0);
+    const directory = page.getByRole('region', { name: 'Guildes qui recrutent', exact: true });
+    await expect(directory.getByRole('link', { name: guildName, exact: true })).toHaveAttribute('href', '/guildes/' + guildId);
+    await expect(directory.getByRole('link')).toHaveCount(2);
+    await expect(directory.locator('form')).toHaveCount(0);
+    await expect(page.getByRole('searchbox', { name: 'Rechercher une guilde', exact: true })).toBeVisible();
 
     const nativeContext = await browser.newContext({ baseURL, javaScriptEnabled: false,
       viewport: { width: 390, height: 844 }, storageState: await page.context().storageState() });
     try {
       const native = await nativeContext.newPage();
+      await native.goto('/guildes');
+      await expect(native.getByRole('region', { name: 'Guildes qui recrutent', exact: true }).getByRole('link', { name: guildName, exact: true })).toBeVisible();
       await native.goto('/guildes?q=Vig');
+      await expect(native.getByRole('region', { name: 'Guildes qui recrutent', exact: true })).toHaveCount(0);
       const first = native.locator('.guild-card').first();
       await first.locator('summary').click();
       await expect(first.locator('details li')).toContainText('Orion-' + suffix);
@@ -181,5 +188,56 @@ test('L1B A : recherche, création conservée, présentation et adhésion native
   } finally {
     await ownerContext.close();
     await otherContext.close();
+  }
+});
+
+test('Annuaire initial : seuls les profils actifs du même univers sont proposés', async ({ page, browser, baseURL }) => {
+  const suffix = crypto.randomUUID().slice(0, 8);
+  const project = process.env.BROWSER_ROUTER;
+  const ownerContext = await browser.newContext({ baseURL });
+  const foreignContext = await browser.newContext({ baseURL });
+  try {
+    const owner = await ownerContext.newPage();
+    const foreign = await foreignContext.newPage();
+    const guildName = 'Guilde active ' + suffix;
+    const archivedName = 'Guilde archivée ' + suffix;
+    const foreignName = 'Guilde hors univers ' + suffix;
+    await enterUniverse(owner, 'Annuaire-' + suffix, 'annuaire-owner-' + suffix + '@example.test');
+    await createGuild(owner, guildName, 'A' + suffix.slice(0, 4));
+    const guildId = Number(queryIsolatedSql(project, "SELECT id FROM guild WHERE name='"+guildName+"'"));
+    expect(guildId).toBeGreaterThan(0);
+    runIsolatedSql(project, "INSERT INTO guild(universe_id,leader_id,name,archived_at) SELECT universe_id,leader_id,'"+archivedName+"',UTC_TIMESTAMP() FROM guild WHERE id="+guildId);
+    const foreignEmail = 'annuaire-foreign-' + suffix + '@example.test';
+    await enterUniverse(foreign, 'Étranger-' + suffix, foreignEmail, /Turbo/);
+    runIsolatedSql(project, "INSERT INTO guild(universe_id,leader_id,name) SELECT membership.universe_id,membership.id,'"+foreignName+"' FROM player_universe membership JOIN player owner ON owner.id=membership.player_id WHERE owner.email='"+foreignEmail+"'");
+    expect(Number(queryIsolatedSql(project, "SELECT id FROM guild WHERE name='"+foreignName+"'"))).toBeGreaterThan(0);
+
+    await enterUniverse(page, 'Visiteur-' + suffix, 'annuaire-visitor-' + suffix + '@example.test');
+    await page.goto('/guildes');
+    const directory = page.getByRole('region', { name: 'Guildes qui recrutent', exact: true });
+    await expect(directory.getByRole('link', { name: guildName, exact: true })).toHaveAttribute('href', '/guildes/' + guildId);
+    await expect(directory).not.toContainText(archivedName);
+    await expect(directory).not.toContainText(foreignName);
+    await expect(directory).not.toContainText('Annuaire-' + suffix);
+    expect(await directory.getByRole('link').count()).toBeLessThanOrEqual(6);
+
+    const nativeContext = await browser.newContext({ baseURL, javaScriptEnabled: false,
+      viewport: { width: 390, height: 844 }, storageState: await page.context().storageState() });
+    try {
+      const native = await nativeContext.newPage();
+      await native.goto('/guildes');
+      const suggestions = native.getByRole('region', { name: 'Guildes qui recrutent', exact: true });
+      await expect(suggestions.getByRole('link', { name: guildName, exact: true })).toBeVisible();
+      const search = native.getByRole('searchbox', { name: 'Rechercher une guilde', exact: true });
+      await search.fill(guildName);
+      await native.getByRole('button', { name: 'Rechercher', exact: true }).click();
+      await expect(suggestions).toHaveCount(0);
+      await expect(native.getByRole('region', { name: 'Résultats de recherche de guildes' }).getByRole('link', { name: guildName, exact: true })).toBeVisible();
+    } finally {
+      await nativeContext.close();
+    }
+  } finally {
+    await ownerContext.close();
+    await foreignContext.close();
   }
 });
