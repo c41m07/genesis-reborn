@@ -7,6 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 /** Intention explicite conservée séparément du résultat d'envoi initial. */
 #[ORM\Entity]
 #[ORM\Table(name: 'verification_recovery_event')]
+#[ORM\UniqueConstraint(name: 'verification_recovery_request_unique', columns: ['recovery_request_id'])]
 class VerificationRecoveryEvent
 {
     #[ORM\Id, ORM\OneToOne(targetEntity: VerificationDeliveryRequest::class)]
