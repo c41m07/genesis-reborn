@@ -904,3 +904,35 @@ rollback du reçu et du stock puis reprise unique, destination passée
 à un autre propriétaire, régressions des flottes, et dossier Balise 17
 toujours consultable alors que la suite est ouverte. Pas de recette
 RabbitMQ réelle de ce nouveau message à ce stade.
+
+### Recettes transport et réaffectation privées
+
+Vrai RabbitMQ sur le premier raccordement du convoi : une victoire
+privée crée un droit/outbox, un premier jeton reçu trop tôt est
+replanifié (pas de crédit), puis le convoi règle le lot exact de
+41,5 M / 0,5 N / 3,5 AM. L'événement d'origine a été volontairement
+relayé seulement après le règlement : il reste sans effet. Huit
+réceptions, une reprise, sept acquittements ; aucune écriture
+dans le combat, le rapport, la notification ou la Fleet publics.
+
+La réaffectation interne ne modifie rien en vol ou lorsque le dépôt
+est seulement plein. Après attestation à un point devenu non
+possédé, seul le même empire peut choisir une autre colonie
+effectivement à lui et joignable depuis ce point. Le nouveau
+trajet part de cette position, avec nouveau jeton et génération.
+Sans origine possédée au moment de la victoire, le premier choix
+part au contraire de l’ancre civile attestée ; rien n’a été expédié
+avant ce choix. Si une position manque, rester en attente. Le
+changement de destination ne crédite rien et l’ancien jeton ne
+peut jamais créditer la nouvelle destination.
+
+Recette sur le delta de réaffectation : 85 tests / 685 assertions
+sur MariaDB. Deux connexions ont attendu simultanément le même
+verrou de participation pour chaque course : arrivée automatique
+contre réclamation, puis arrivée devenue invalide contre
+réaffectation. Vérifiés : un seul dépôt, trajet natif depuis
+l’ancienne position véritable, jeton obsolète muet après la
+nouvelle échéance, et rejet de l’outbox laissant le premier
+droit intact et reprenable. Ni ce delta, ni la reprise manuelle
+n’ont été réexécutés sur RabbitMQ à ce stade. Garde de pilote
+locale ajoutée séparément, sans aucun appelant ni route.
