@@ -43,6 +43,8 @@
     margin: 0;
     pointer-events: none;
 }
+/* Le tiroir ouvert volontairement dans la barre haute passe devant l’aide. */
+.authenticated:has(.topbar .event-drawer[open]) .first-steps-popup-enhanced { z-index: 22; }
 .first-steps-popup-enhanced > summary {
     position: absolute;
     right: 0;

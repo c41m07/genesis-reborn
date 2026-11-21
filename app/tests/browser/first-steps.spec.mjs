@@ -27,6 +27,7 @@ async function register(page, { closeDaily = true } = {}) {
         await expect(popup).not.toHaveAttribute('open', '');
         await dialog.getByRole('button', { name: 'Plus tard', exact: true }).click();
         await expect(dialog).toBeHidden();
+        await expect(popup).not.toHaveAttribute('open', '');
     }
 
     return email;
@@ -41,6 +42,8 @@ test('Premiers pas : conseil facultatif et progression après la fin réelle de 
     const popup = page.locator('.first-steps-popup');
     const summary = popup.locator('summary');
     const guideLink = popup.getByRole('link', { name: 'Guide complet et remboursements', exact: true });
+    await expect(popup).not.toHaveAttribute('open', '');
+    await summary.press('Enter');
     await expect(popup).toHaveAttribute('open', '');
     await expect(popup).toContainText('0/12');
     await expect(popup).toContainText('Mine à ciel ouvert');
@@ -233,7 +236,8 @@ test('Premiers pas : panneau non modal, images à la demande et reprise par Pré
     const overview = page.url();
     const popup = page.locator('.first-steps-popup');
     const summary = popup.locator('summary');
-    await expect(popup).toHaveAttribute('open', '');
+    await expect(popup).not.toHaveAttribute('open', '');
+    await summary.press('Enter');
     await expect(popup.getByText('Validation :')).toBeVisible();
     for (const [width, height] of [[1440, 900], [850, 900], [390, 844]]) {
         await page.setViewportSize({ width, height });
@@ -328,9 +332,10 @@ test('Premiers pas : panneau non modal, images à la demande et reprise par Pré
     await popup.getByRole('link', { name: 'Guide complet et remboursements' }).click();
 
     const grid = page.locator('.first-steps-grid');
-    for (const [width, columns] of [[1440, 4], [850, 2], [390, 1]]) {
+    for (const [width, columns] of [[390, 1], [1440, 4], [850, 2], [390, 1]]) {
         await page.setViewportSize({ width, height: 900 });
-        expect(await grid.evaluate(node => getComputedStyle(node).gridTemplateColumns.split(' ').length)).toBe(columns);
+        // Le viewport peut changer avant que Chromium ait appliqué la nouvelle media query.
+        await expect.poll(() => grid.evaluate(node => getComputedStyle(node).gridTemplateColumns.trim().split(/\s+/).length)).toBe(columns);
         if (captures && width === 1440) {
             const visibleImages = grid.locator('img').and(page.locator('.first-steps-grid > li:nth-child(-n+4) img'));
             await visibleImages.evaluateAll(async images => {
@@ -361,7 +366,7 @@ test('Premiers pas : panneau non modal, images à la demande et reprise par Pré
 
 
 for (const exit of ['refus temporaire', 'lot déjà retiré', 'aucun dialogue natif']) {
-    test('Premiers pas reprend quand Quotidiennes ne s’ouvre pas : ' + exit, async ({ page }) => {
+    test('Premiers pas attend la flèche même si Quotidiennes ne s’ouvre pas : ' + exit, async ({ page }) => {
         if (exit === 'aucun dialogue natif') {
             await page.addInitScript(() => { HTMLDialogElement.prototype.showModal = undefined; });
         } else {
@@ -371,7 +376,8 @@ for (const exit of ['refus temporaire', 'lot déjà retiré', 'aucun dialogue na
                     '<dialog id="daily-reward-dialog" data-daily-reward-ui-target="dialog">Lot déjà récupéré</dialog>' }));
         }
         await register(page, { closeDaily: false });
-        await expect(page.locator('.first-steps-popup')).toHaveAttribute('open', '');
+        const popup = page.locator('.first-steps-popup');
+        await expect(popup).not.toHaveAttribute('open', '');
         await expect(page.locator('dialog[open]')).toHaveCount(0);
         const gift = page.locator('.topbar').getByRole('link', { name: 'Quotidiennes', exact: true });
         if (exit === 'lot déjà retiré') {
@@ -379,22 +385,22 @@ for (const exit of ['refus temporaire', 'lot déjà retiré', 'aucun dialogue na
         } else {
             await expect(gift).toBeVisible();
         }
+        await popup.locator('summary').press('Enter');
+        await expect(popup.getByRole('heading', { name: 'Mine à ciel ouvert' })).toBeVisible();
     });
 }
 
-test('La languette de jeu ne charge ni étape ni image avant son ouverture hors Vue générale', async ({ page }) => {
-    await register(page);
-    // Vue générale conserve sa première ouverture : l’isoler des mesures des pages fermées.
-    const autoImage = page.locator('.first-steps-popup figure:visible img');
-    await expect(autoImage).toBeVisible();
-    await expect.poll(() => autoImage.evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
+test('La languette de jeu ne charge ni étape ni image avant son ouverture, même en Vue générale', async ({ page }) => {
     const requests = [];
     page.on('request', request => {
         const path = new URL(request.url()).pathname;
         if (path === '/premiers-pas/panneau' || path.startsWith('/art/first-steps/')) requests.push(path);
     });
+    await register(page);
+    expect(requests).toHaveLength(0);
     const overview = new URL(page.url());
     const pages = [
+        overview.pathname,
         overview.pathname + '?section=buildings',
         overview.pathname + '?section=technologies',
         '/flottes',
@@ -492,6 +498,7 @@ test('Un guide fermé relit le jalon acquis dans un autre onglet, puis masque un
     const overview = new URL(page.url()).pathname;
     const popup = page.locator('.first-steps-popup');
     const arrow = popup.locator('summary');
+    await arrow.press('Enter');
     await expect(popup.getByRole('heading', { name: 'Mine à ciel ouvert' })).toBeVisible();
     await popup.getByRole('button', { name: 'Fermer', exact: true }).click();
     const reads = [];
@@ -571,6 +578,7 @@ test('Les douze gestes ont leur carte annotée ; l’agrandissement reste dans l
     await register(page);
     const popup = page.locator('.first-steps-popup');
     const arrow = popup.locator('summary');
+    await arrow.press('Enter');
     const project = process.env.BROWSER_ROUTER;
     const colony = Number(new URL(page.url()).pathname.split('/').pop());
     const member = Number(queryIsolatedSql(project, 'SELECT owner_id FROM planet WHERE id=' + colony));
@@ -662,6 +670,7 @@ test('La deuxième vue reste accessible tant que la première image attend', asy
     try {
         await register(page);
         const popup = page.locator('.first-steps-popup');
+        await popup.locator('summary').press('Enter');
         const first = popup.locator('figure').nth(0);
         const second = popup.locator('figure').nth(1);
         await expect(first.getByText('Améliorer au niveau 1', { exact: false }).first()).toBeVisible();
@@ -678,4 +687,47 @@ test('La deuxième vue reste accessible tant que la première image attend', asy
     } finally {
         release();
     }
+});
+
+test('Événements passe devant le guide volontairement ouvert et restaure son propre focus', async ({ page }) => {
+    await register(page);
+    runIsolatedSql(process.env.BROWSER_ROUTER, "INSERT INTO game_event (name,description,type,status,starts_at,ends_at,parameters,visible_to_players) VALUES " +
+        [1, 2, 3, 4].map(number => "('Priorité Événements " + number + "','Annonce de recette privée','announcement','active',UTC_TIMESTAMP()-INTERVAL 1 HOUR,UTC_TIMESTAMP()+INTERVAL 1 HOUR,'{}',1)").join(','));
+    await page.setViewportSize({ width: 390, height: 620 });
+    await page.reload();
+    const popup = page.locator('.first-steps-popup');
+    const arrow = popup.locator('summary');
+    await expect(popup).not.toHaveAttribute('open', '');
+    await arrow.press('Enter');
+    await expect(popup.getByRole('heading', { name: 'Mine à ciel ouvert' })).toBeVisible();
+
+    const events = page.locator('.topbar .event-drawer');
+    const toggle = events.locator('summary');
+    await toggle.click();
+    const eventsLink = events.getByRole('link', { name: 'Voir les événements', exact: true });
+    await expect(eventsLink).toBeVisible();
+    await eventsLink.scrollIntoViewIfNeeded();
+    const eventPoint = await eventsLink.boundingBox();
+    const guideBox = await popup.locator('[data-first-steps-guide-fragment]').boundingBox();
+    // Le lien est bien dans la zone de superposition ; le tiroir reçoit le clic à cet endroit.
+    const overlapX = eventPoint.x + eventPoint.width / 2;
+    const overlapY = eventPoint.y + eventPoint.height / 2;
+    expect(overlapX).toBeGreaterThan(guideBox.x);
+    expect(overlapX).toBeLessThan(guideBox.x + guideBox.width);
+    expect(overlapY).toBeGreaterThan(guideBox.y);
+    expect(overlapY).toBeLessThan(guideBox.y + guideBox.height);
+    expect(await eventsLink.evaluate(node => {
+        const rect = node.getBoundingClientRect();
+        return node.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2));
+    })).toBe(true);
+
+    await eventsLink.focus();
+    await page.keyboard.press('Escape');
+    await expect(toggle).toBeFocused();
+    await expect(events).not.toHaveAttribute('open', '');
+    await expect(popup).toHaveAttribute('open', '');
+    await toggle.click();
+    await eventsLink.click();
+    await expect(page).toHaveURL(/\/evenements$/);
+    await expect(popup).not.toHaveAttribute('open', '');
 });

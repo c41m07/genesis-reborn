@@ -26,7 +26,7 @@
     </section>
     <button class="primary account-preferences-save">Enregistrer les paramètres</button>
 {{ form_end(form) }}
-<form method="post" action="{{ path('app_first_steps_preference') }}" class="panel account-panel account-preferences-form" data-turbo="false">
+<form method="post" action="{{ path('app_first_steps_preference') }}" class="panel account-panel first-steps-preference-form" data-turbo="false">
     <fieldset class="account-section">
         <legend>Guide Premiers pas</legend>
         <input type="hidden" name="_token" value="{{ csrf_token('first-steps-preference') }}">

@@ -3,42 +3,18 @@ import '../styles/first-steps-guide.css';
 
 export default class extends Controller {
     static targets = ['summary', 'fallback', 'content', 'status', 'closeButton', 'slide', 'controls', 'previous', 'next', 'position'];
-    static values = { scope: String, url: String, autoOpen: Boolean, defer: Boolean };
+    static values = { scope: String, url: String };
 
     connect() {
         this.element.classList.add('first-steps-popup-enhanced');
         this.wasOpen = false;
         this.clearPanel();
         this.reflectDisclosure();
-        if (this.element.open) {
-            this.rememberOpened();
-        } else if (this.autoOpenValue && !this.read(this.openKey())) {
-            const daily = document.querySelector('[data-controller~="daily-reward-ui"]');
-            if (this.deferValue && daily && daily.dataset.dailyRewardUiInitialPrompt !== 'finished') {
-                // Attendre la fin de l’essai, même si aucune fenêtre n’a pu être ouverte.
-                this.afterDaily = (event) => {
-                    if (event.target !== daily) return;
-                    document.removeEventListener('genesis:daily-reward-prompt-finished', this.afterDaily);
-                    this.showFirstVisit();
-                };
-                document.addEventListener('genesis:daily-reward-prompt-finished', this.afterDaily);
-            } else {
-                this.showFirstVisit();
-            }
-        }
+        if (this.element.open) this.rememberOpened();
     }
 
     disconnect() {
-        if (this.afterDaily) document.removeEventListener('genesis:daily-reward-prompt-finished', this.afterDaily);
-        this.afterDaily = null;
         this.cancelPending();
-    }
-
-    showFirstVisit() {
-        if (!this.element.isConnected || this.read(this.openKey()) || document.getElementById('daily-reward-dialog')?.open) return;
-        // Ne jamais déplacer le focus lors d’une ouverture proposée.
-        this.element.open = true;
-        this.rememberOpened();
     }
 
     reflectDisclosure() {
@@ -60,7 +36,6 @@ export default class extends Controller {
             return;
         }
 
-        this.write(this.openKey(), '1');
         // Une autre page peut avoir fait progresser ou désactivé le guide pendant sa fermeture.
         if (!this.pending) this.loadPanel();
     }
@@ -203,10 +178,6 @@ export default class extends Controller {
         // Les commandes et le texte ne dépendent ni de la réponse de l’image ni de son décodage.
         const illustration = this.slideTargets[index].querySelector('img[data-src]');
         if (illustration && !illustration.hasAttribute('src')) illustration.src = illustration.dataset.src;
-    }
-
-    openKey() {
-        return 'genesis:first-steps:seen:' + this.scopeValue;
     }
 
     slideKey() {

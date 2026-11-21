@@ -1,8 +1,6 @@
 <details class="first-steps-popup" data-controller="first-steps-guide"
          data-first-steps-guide-scope-value="{{ planet.owner.id }}"
          data-first-steps-guide-url-value="{{ path('app_first_steps_panel', {colony: planet.id}) }}"
-         data-first-steps-guide-auto-open-value="{{ autoOpen ? 'true' : 'false' }}"
-         data-first-steps-guide-defer-value="{{ deferDaily ? 'true' : 'false' }}"
          data-action="toggle->first-steps-guide#rememberOpened keydown.esc->first-steps-guide#closeFromKeyboard">
     <summary class="quiet-button" data-first-steps-guide-target="summary" aria-label="Ouvrir Premiers pas"
              aria-controls="first-steps-popup-panel" title="Ouvrir Premiers pas"><span aria-hidden="true">‹</span></summary>
