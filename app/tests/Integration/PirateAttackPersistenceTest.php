@@ -303,6 +303,92 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertSame(1, $this->stock($stock->id));
     }
 
+    public function testActualCarrierLossLeavesInsufficientFuelAndCannotBeOverwrittenByRetry(): void
+    {
+        [$owner, $origin, $fighter, $probe, $campaign] = $this->startFundedDefeat(keepOneLowCapacitySurvivor: true);
+        $this->advanceTo($campaign->nextAt);
+        $this->service->processDue($campaign->id, $campaign->dispatchToken);
+        self::assertNotSame('attacker_wins', $campaign->report['outcome']);
+        self::assertSame('return_fuel_insufficient', $this->service->statusFor($owner, 'signal')['state']);
+        self::assertSame('insufficient_hydrogen', $campaign->timeline['pilot_return']['state']);
+        self::assertEquals(1, $campaign->timeline['pilot_return']['carried']);
+        self::assertSame(['fighter' => ['basic' => 1]], $campaign->reservedShips);
+        self::assertArrayNotHasKey('pilot_blocked_return', $campaign->timeline);
+        self::assertNull($campaign->nextAt);
+        self::assertNull($campaign->dispatchToken);
+        self::assertNull($campaign->timeline['returnDue']);
+        $db = $this->em->getConnection();
+        $events = (int) $db->fetchOne("SELECT COUNT(*) FROM outbox_message WHERE kind = 'pirate_attack'");
+        self::assertSame(2, $events, 'L’arrivée et le combat, jamais un troisième ordre pour un faux retour.');
+        $stock = $this->resourceStock($origin->id, 'hydrogen');
+        try {
+            $this->service->launchWithOmegaPilotFuel($owner, $origin, 'signal', 1, ['fighter' => ['basic' => 1]]);
+            self::fail('Une relance ne doit pas écraser les survivants retenus.');
+        } catch (\DomainException $error) {
+            self::assertStringContainsString('survivants', $error->getMessage());
+        }
+        $persisted = json_decode($db->fetchOne('SELECT reserved_ships FROM pirate_attack_campaign WHERE id = ?', [$campaign->id]), true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame(['fighter' => ['basic' => 1]], $persisted);
+        self::assertSame($stock, $this->resourceStock($origin->id, 'hydrogen'));
+        self::assertSame($events, (int) $db->fetchOne("SELECT COUNT(*) FROM outbox_message WHERE kind = 'pirate_attack'"));
+        self::assertSame(1, $this->stock($probe->id));
+    }
+
+    public function testActualLossOfEveryShipLeavesNoReturnAndPermitsRetryWithoutAnotherScout(): void
+    {
+        [$owner, $origin, $fighter, $probe, $campaign] = $this->startFundedDefeat(keepOneLowCapacitySurvivor: false);
+        $this->advanceTo($campaign->nextAt);
+        $this->service->processDue($campaign->id, $campaign->dispatchToken);
+        self::assertSame('defender_wins', $campaign->report['outcome']);
+        self::assertSame([], $campaign->reservedShips);
+        self::assertSame('retryable', $this->service->statusFor($owner, 'signal')['state']);
+        self::assertArrayNotHasKey('pilot_blocked_return', $campaign->timeline);
+        self::assertArrayNotHasKey('pilot_return', $campaign->timeline);
+        self::assertNull($campaign->nextAt);
+        $hydrogen = $this->resourceStock($origin->id, 'hydrogen');
+        $proof = $campaign->scenario;
+        self::assertTrue($this->service->launchWithOmegaPilotFuel($owner, $origin, 'signal', 1, ['fighter' => ['basic' => 1]]));
+        self::assertSame(2, $campaign->timeline['pilot_attack_fuel']['attempt']);
+        self::assertSame($proof, $campaign->scenario);
+        self::assertLessThan($hydrogen, $this->resourceStock($origin->id, 'hydrogen'));
+        self::assertSame(1, $this->stock($probe->id));
+    }
+
+    private function startFundedDefeat(bool $keepOneLowCapacitySurvivor): array
+    {
+        // L'adversaire a son vrai profil gelé pendant le vol ; le catalogue joueur synthétique
+        // varie ensuite, pour éprouver la perte d'un porteur sans toucher une règle réelle.
+        $enemy = ['hp' => 1000000, 'shield' => 0, 'base_attack' => 1200, 'precision' => 300, 'tracking' => 300,
+            'shots_min' => 1, 'shots_max' => 1];
+        [$owner, $origin, $fighter, $probe] = $this->fixture(omega: true, scoutPaid: true, scoutOpponentOverride: $enemy);
+        $this->finishRecon();
+        $owner->universe->gameSettings['catalog_overrides']['ships']['fighter'] = $keepOneLowCapacitySurvivor
+            ? ['hp' => 1000000, 'shield' => 0, 'base_attack' => 1, 'fuel_capacity' => 1, 'cargo_capacity' => 0]
+            : ['hp' => 1, 'shield' => 0, 'base_attack' => 1];
+        $fleet = ['fighter' => ['basic' => 1]];
+        if ($keepOneLowCapacitySurvivor) {
+            $this->addShips($fighter->fleet, 'heavy_fighter', 1);
+            $owner->universe->gameSettings['catalog_overrides']['ships']['heavy_fighter'] =
+                ['hp' => 1, 'shield' => 0, 'base_attack' => 1, 'signature' => 150];
+            $fleet['heavy_fighter'] = ['basic' => 1];
+        }
+        $this->em->flush();
+        self::assertTrue($this->service->launchWithOmegaPilotFuel($owner, $origin, 'signal', 0, $fleet));
+        $campaign = $this->campaign();
+        $report = $campaign->reconnaissance->battleProofFor($owner, $this->clock->now());
+        $scenario = $report['prepared']->battleForServer();
+        $campaign->timeline['seed'] = $this->findSeed($campaign, $scenario, static function (array $result) use ($keepOneLowCapacitySurvivor): bool {
+            $lost = $keepOneLowCapacitySurvivor ? ['escort:heavy_fighter' => 1] : ['escort:fighter' => 1];
+
+            return $result['outcome'] !== 'attacker_wins' && $result['losses'] === $lost;
+        });
+        $this->em->flush();
+        $this->advanceTo($campaign->nextAt);
+        $this->service->processDue($campaign->id, $campaign->dispatchToken);
+
+        return [$owner, $origin, $fighter, $probe, $campaign];
+    }
+
     private function startFundedVictory(): array
     {
         [$owner, $origin, $stock, , $other] = $this->fixture(omega: true, scoutPaid: true);
@@ -1312,10 +1398,13 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $this->em->getConnection()->executeStatement("DELETE FROM outbox_message WHERE kind = 'pirate_reconnaissance'");
     }
 
-    private function fixture(?PirateBattleScenario $scenario = null, ?string $definition = null, bool $legacy = false, bool $omega = false, ?array $frozenCosts = null, bool $scoutPaid = false): array
+    private function fixture(?PirateBattleScenario $scenario = null, ?string $definition = null, bool $legacy = false, bool $omega = false, ?array $frozenCosts = null, bool $scoutPaid = false, ?array $scoutOpponentOverride = null): array
     {
         $u = new Universe();
         $u->slug = $u->name = $omega ? 'omega-1' : 'pirate-attack-test';
+        if ($scoutOpponentOverride !== null) {
+            $u->gameSettings['catalog_overrides']['ships']['fighter'] = $scoutOpponentOverride;
+        }
         $g = new Galaxy();
         $g->universe = $u;
         $g->name = 'Galaxie synthétique';
