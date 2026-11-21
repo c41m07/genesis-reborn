@@ -157,7 +157,7 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   await expect(systemPanel).toContainText(homeSystem.name);
   await expect(enterSystem).toBeVisible();
   const rightPanel = await systemPanel.boundingBox();
-  expect(rightPanel.x).toBeGreaterThan(galaxyBounds.x + galaxyBounds.width / 2);
+  expect(rightPanel.x).toBeGreaterThanOrEqual(galaxyBounds.x + galaxyBounds.width);
   expect(await readCamera()).toEqual(preselection);
   await page.keyboard.press('Escape');
   await expect(systemPanel).toBeHidden();
@@ -302,7 +302,7 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   const zoomIn = page.getByRole('button', { name: 'Zoomer', exact: true });
   const zoomOut = page.getByRole('button', { name: 'Dézoomer', exact: true });
   expect(mobilePanel.height).toBeLessThan(mobileBounds.height / 2);
-  expect(mobilePanel.y).toBeGreaterThan(mobileBounds.y + mobileBounds.height / 2);
+  expect(mobilePanel.y + mobilePanel.height).toBeLessThanOrEqual(mobileBounds.y);
   expect(await readCamera()).toEqual(mobileCamera);
   await zoomIn.tap();
   const mobileZoomed = await readCamera();
