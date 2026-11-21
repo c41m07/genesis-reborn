@@ -8,7 +8,9 @@
 {% for fleet in fleets %}
 {% set hostile = fleet.mission in ['attack', 'conquer'] %}
 {% set pendingOrbit = fleet.mission == 'orbit' and fleet.status == 'orbit_pending' %}
-<article class="flight-operation{{ hostile ? ' is-hostile' : '' }}" data-incoming-attack="{{ fleet.id }}" data-incoming-kind="{{ hostile ? 'attack' : 'arrival' }}" data-mission="{{ fleet.mission }}">
+{% set detail = fleet.incomingDetail|default(null) %}
+{% set detail_id = 'incoming-fleet-details-'~fleet.id %}
+<article class="flight-operation{{ hostile ? ' is-hostile' : '' }}" data-incoming-attack="{{ fleet.id }}" data-incoming-kind="{{ hostile ? 'attack' : 'arrival' }}" data-mission="{{ fleet.mission }}"{% if detail %} data-controller="hover-details" data-action="pointerenter->hover-details#enter pointerleave->hover-details#leave focusout->hover-details#blur keydown->hover-details#escape click->hover-details#card"{% endif %}>
 <div class="operation-heading"><span class="operation-type">{{ ui.icon('fleet') }} {{ fleet.missionLabel }}</span><span class="badge">{{ hostile ? 'ATTAQUE DÉTECTÉE' : (pendingOrbit ? 'À ACCEPTER' : 'ALLER') }}</span></div>
 <p class="flight-ownership">{{ fleet.ownerName }} · Flotte entrante</p>
 <div class="flight-route"><span>{{ fleet.originName }}{% if fleet.originCoordinates %}<small>{{ fleet.originCoordinates }}</small>{% endif %}</span>{{ ui.icon('arrow') }}<span>{{ fleet.destinationName }}<small>{{ fleet.destinationCoordinates }}</small></span></div>
@@ -30,6 +32,12 @@
 <a class="inline-link" href="{{ path('app_transport_report', {id: fleet.transportReportId}) }}">Consulter le récapitulatif du transport {{ ui.icon('arrow') }}</a>
 {% endif %}
 {% if fleet.mission == 'orbit' %}<a class="inline-link" href="{{ path('app_fleet_orbits',{colony:fleet.destinationPlanetId}) }}">Consulter la demande d’orbite {{ ui.icon('arrow') }}</a>{% endif %}</div>
+{% if detail %}
+<div class="flight-details-action" data-incoming-detail>
+{% include 'ui/empire_details_trigger.html.twig' with {detail_name:'Composition et fret',detail_label:'Flotte entrante '~fleet.id} %}
+{% include 'ui/empire_details.html.twig' with {detail:detail,detail_label:'Composition et fret',detail_id:detail_id,fleet_detail:true} only %}
+</div>
+{% endif %}
 </article>
 {% else %}<p class="flight-idle incoming-empty-message">Aucune flotte entrante visible vers vos colonies.</p>{% endfor %}
 </section>

@@ -99,6 +99,8 @@ export default class extends Controller {
 
     blur() {
         queueMicrotask(() => {
+            // Un fragment actualisé peut retirer la fiche avant la fin du focusout.
+            if (!this.hasPanelTarget || !this.hasTriggerTarget) return;
             if (!this.panelTarget.contains(document.activeElement) && document.activeElement !== this.triggerTarget) this.hide();
         });
     }

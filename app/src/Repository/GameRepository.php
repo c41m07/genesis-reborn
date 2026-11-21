@@ -618,6 +618,50 @@ final class GameRepository
         return $ids;
     }
 
+    /**
+     * @param list<int> $fleetIds
+     * @return array<int, array{ships:array, freight:array}> Seules les quantités au départ.
+     */
+    public function incomingFleetDepartureDetails(PlayerUniverse $recipient, array $fleetIds): array
+    {
+        if ($fleetIds === []) {
+            return [];
+        }
+
+        // Relire l’hôte actuel et l’identité au départ dans la même requête. La
+        // trace complète (carburant, coordonnées, etc.) ne quitte pas la base.
+        $rows = $this->em->getConnection()->fetchAllAssociative(
+            <<<'SQL'
+                SELECT f.id, JSON_EXTRACT(trace.snapshot, '$.ships') AS ships,
+                       JSON_EXTRACT(trace.snapshot, '$.freight') AS freight
+                FROM fleet_mission_trace trace
+                JOIN fleet f ON f.id = trace.fleet_id AND f.player_universe_id = trace.sender_id
+                JOIN planet target ON target.id = f.destination_id AND target.owner_id = trace.recipient_id
+                WHERE f.id IN (:fleets)
+                  AND trace.universe_id = :universe AND trace.recipient_id = :recipient
+                  AND trace.target_was_player = 1 AND trace.mission = f.mission
+                  AND f.status = 'traveling' AND f.mission IN ('transport', 'defend', 'orbit')
+                  AND (f.mission <> 'transport' OR EXISTS (
+                      SELECT 1 FROM transport_report r
+                      WHERE r.fleet_id = f.id AND r.sender_id = f.player_universe_id
+                        AND r.recipient_id = trace.recipient_id AND r.status = 'traveling'
+                  ))
+                SQL,
+            ['fleets' => $fleetIds, 'universe' => $recipient->universe->id, 'recipient' => $recipient->id],
+            ['fleets' => ArrayParameterType::INTEGER],
+        );
+
+        $details = [];
+        foreach ($rows as $row) {
+            $ships = json_decode((string) $row['ships'], true);
+            $freight = json_decode((string) $row['freight'], true);
+            if (is_array($ships) && array_is_list($ships) && is_array($freight)) {
+                $details[(int) $row['id']] = ['ships' => $ships, 'freight' => $freight];
+            }
+        }
+        return $details;
+    }
+
     public function espionageReportsFor(PlayerUniverse $membership, int $limit = 50): array
     {
         return $this->em->createQueryBuilder()->select('r')->from(\App\Entity\EspionageReport::class, 'r')->where('r.sender = :membership')->setParameter('membership', $membership)->orderBy('r.createdAt', 'DESC')->setMaxResults(max(1, min(100, $limit)))->getQuery()->getResult();

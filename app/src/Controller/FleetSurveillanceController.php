@@ -17,7 +17,7 @@ final class FleetSurveillanceController extends AbstractController
     {
         $member=$context->membership();
         $payload=['membership'=>$member->id,'serverNow'=>$clock->now()->format(DATE_ATOM),
-            'html'=>$this->renderView('ui/incoming_attacks_list.html.twig',['attacks'=>$visibility->incoming($member)])];
+            'html'=>$this->renderView('ui/incoming_attacks_list.html.twig',['attacks'=>$visibility->incoming($member, includeDetails: !$request->query->has('galaxy'))])];
         if($request->query->getBoolean('orbits')) {
             $colony=null;
             if($request->query->has('colony')) {
