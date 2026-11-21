@@ -35,7 +35,7 @@ test('Rail : suit le véritable objectif, garde le contexte et ne déplace pas l
     const project = process.env.BROWSER_ROUTER;
     const eventName = createEvent(project);
     await page.reload();
-    const rail = page.locator('.header-context-rail');
+    const rail = page.getByRole('region', { name: 'Suivi du commandement', exact: true });
     const goal = rail.locator('.header-technology-goal');
     const drawer = rail.locator('.event-drawer');
     const summary = drawer.locator('summary');

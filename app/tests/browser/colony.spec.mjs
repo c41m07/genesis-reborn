@@ -21,6 +21,32 @@ async function enter(page,prefix='E2E') {
   await page.locator('article.universe-card').first().getByRole('button').click();await expect(page).toHaveURL(/planetes\/\d+$/);
   return {email,password,username:`${prefix}-${id}`};
 }
+async function expectStickyGameHeader(page, scrollTop) {
+  const geometry = () => page.evaluate(() => {
+    const bounds = selector => document.querySelector(selector).getBoundingClientRect();
+    const topbar = bounds('.topbar'), stack = bounds('.resource-event-stack');
+    const rail = bounds('.header-context-rail'), resources = bounds('.resource-strip');
+    const edges = [topbar.top, topbar.bottom, stack.top, rail.top, rail.bottom, resources.top, resources.bottom, stack.bottom];
+    return {
+      moved: window.scrollY > 0,
+      edges: edges.map(Math.round),
+      gaps: [stack.top - topbar.bottom, rail.top - stack.top, resources.top - rail.bottom, stack.bottom - resources.bottom].map(Math.round),
+      railHeight: Math.round(rail.height),
+    };
+  });
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  });
+  const initial = await geometry();
+  expect(initial.moved).toBe(false);
+  expect(initial.gaps).toEqual([0, 0, 0, 0]);
+  expect(initial.railHeight).toBeGreaterThanOrEqual(44);
+  await page.evaluate(top => window.scrollTo({ top, behavior: 'instant' }), scrollTop);
+  // Le défilement doit être réel et toutes les jonctions de l’en-tête rester fixes.
+  await expect.poll(geometry).toEqual({ ...initial, moved: true });
+}
+
 test('Inscription, connexion, menus, ressources fixes et rendu responsive', async ({page}) => {
   const errors=[];page.on('pageerror',e=>errors.push(e.message));await enter(page);
   await expect(page.locator('.dashboard-metrics .metric-card')).toHaveCount(4);await expect(page.getByRole('heading',{name:'Mes planètes',exact:true})).toHaveCount(0);await expect(page.locator('.dashboard-activity')).toBeVisible();await expect(page.locator('.dashboard-secondary [data-live-region="active-flights"]')).toBeVisible();await expect(page.locator('.dashboard-journal')).toBeVisible();
@@ -28,7 +54,8 @@ test('Inscription, connexion, menus, ressources fixes et rendu responsive', asyn
   await page.getByRole('navigation',{name:'Navigation principale',exact:true}).getByRole('link',{name:'Recherche',exact:true}).click();await expect(page.locator('#panel-technologies')).toBeVisible();await expect(page.locator('#panel-buildings')).toHaveCount(0);
   await page.getByRole('navigation',{name:'Navigation principale',exact:true}).getByRole('link',{name:'Chantier spatial',exact:true}).focus();await page.keyboard.press('Enter');await expect(page.locator('#panel-ships')).toBeVisible();
   await page.getByRole('navigation',{name:'Navigation principale',exact:true}).getByRole('link',{name:'Bâtiments',exact:true}).click();await expect(page.locator('#panel-buildings')).toBeVisible();
-  await page.waitForLoadState('load');await page.evaluate(()=>window.scrollTo({top:1200,behavior:'instant'}));await expect.poll(()=>page.locator('.resource-strip').evaluate(el=>Math.round(el.getBoundingClientRect().top))).toBe(await page.locator('.topbar').evaluate(el=>Math.round(el.getBoundingClientRect().height)));
+  await page.waitForLoadState('load');
+  await expectStickyGameHeader(page, 1200);
   await page.getByRole('link',{name:'Vue générale',exact:true}).click();await expect(page.locator('.section-tabs,.inventory-panel,.colony-catalog')).toHaveCount(0);
   await page.evaluate(async()=>{await document.fonts.ready;document.activeElement?.blur();window.scrollTo({top:0,behavior:'instant'})});
   await page.setViewportSize({width:390,height:844});await page.evaluate(()=>{document.activeElement?.blur();window.scrollTo({top:0,behavior:'instant'})});await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await expect.poll(()=>page.locator('.sidebar').evaluate(el=>el.getBoundingClientRect().right)).toBeLessThanOrEqual(0);
@@ -40,7 +67,8 @@ test('Inscription, connexion, menus, ressources fixes et rendu responsive', asyn
   for(const stock of await page.locator('[data-resource-target="stock"]').all()) {const r=await stock.boundingBox();expect(r).not.toBeNull();expect(r.x).toBeGreaterThanOrEqual(0);expect(r.x+r.width).toBeLessThanOrEqual(390);}
   await resourceToggle.click();await expect(page.locator('#resource-details')).toBeHidden();
 
-  await page.evaluate(()=>window.scrollTo({top:900,behavior:'instant'}));await expect.poll(()=>page.locator('.resource-strip').evaluate(el=>Math.round(el.getBoundingClientRect().top))).toBe(await page.locator('.topbar').evaluate(el=>Math.round(el.getBoundingClientRect().height)));await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
+  await expectStickyGameHeader(page, 900);
+  await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
   await page.getByRole('navigation',{name:'Navigation mobile'}).getByRole('button',{name:'Plus'}).click();await page.keyboard.press('Shift+Tab');await expect(page.getByRole('button',{name:'Déconnexion'})).toBeFocused();await page.keyboard.press('Tab');await expect(page.locator('.brand').first()).toBeFocused();await page.keyboard.press('Escape');await expect(page.getByRole('navigation',{name:'Navigation mobile'}).getByRole('button',{name:'Plus'})).toHaveAttribute('aria-expanded','false');await page.getByRole('navigation',{name:'Navigation mobile'}).getByRole('button',{name:'Plus'}).click();await page.getByRole('navigation',{name:'Navigation principale'}).getByRole('link',{name:'Galaxie',exact:true}).click();await page.getByRole('link',{name:'Liste des systèmes',exact:true}).click();await expect(page.getByRole('heading',{name:'Galaxie',exact:true})).toBeVisible();await page.getByText(/Parcourir les autres systèmes/).click();await expect(page.getByText('Signal non cartographié').first()).toBeVisible();await page.getByRole('navigation',{name:'Navigation mobile'}).getByRole('button',{name:'Plus'}).click();await page.getByRole('link',{name:'Rapports',exact:true}).click();await expect(page.getByRole('heading',{name:'Rapports',exact:true})).toBeVisible();await expect(page.getByRole('heading',{name:'Aucun rapport dans cette catégorie'})).toBeVisible();expect(errors).toEqual([]);
 });
 test('Construction réelle, notification privée et actualisation sans rechargement', async ({page}) => {

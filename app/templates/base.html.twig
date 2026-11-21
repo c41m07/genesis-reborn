@@ -78,10 +78,10 @@
 {% if chrome.resources or showTechnologyGoal or showEventDrawer %}
 <div class="resource-event-stack" data-controller="resource-stack">
     {% if showTechnologyGoal or showEventDrawer %}
-    <div class="header-context-rail">
+    <section class="header-context-rail" aria-label="Suivi du commandement">
         {% if showTechnologyGoal %}{% include 'ui/header_technology_goal.html.twig' %}{% endif %}
         {% if showEventDrawer %}{% include 'ui/event_drawer.html.twig' %}{% endif %}
-    </div>
+    </section>
     {% endif %}
     {% if chrome.resources %}{% include 'ui/resource_strip.html.twig' %}{% endif %}
 </div>
