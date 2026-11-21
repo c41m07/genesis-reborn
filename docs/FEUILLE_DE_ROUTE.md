@@ -1,5 +1,14 @@
 # Roadmap Genesis Reborn
 
+## Kit T1 et récompense quotidienne (expérimentation)
+
+Le kit T1 de la première planète des nouveaux comptes et le bouton quotidien
+forment un lot indivisible. Le clic est attaché au compte et à la date civile
+de Paris ; la planète reste celle annoncée dans l’univers actif. La place doit
+permettre de transférer le lot entier, sans consommation du jour en cas
+d’insuffisance. Le barème métal/nano ×10 reste expérimental. Aucun changement
+des kits de colonisation, de la production ou des comptes existants.
+
 ## Coûts par rang et première colonisation — 19 novembre 2026
 
 La [grille de référence](COUTS.md) passe à B48/52, I34/36/30 et S28/31/31/10.

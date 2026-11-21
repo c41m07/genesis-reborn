@@ -20,6 +20,8 @@ class Player implements UserInterface, PasswordAuthenticatedUserInterface
     public array $roles = [];
     #[ORM\Column(type: 'json')]
     public array $preferences = [];
+    #[ORM\Column(options: ['default' => false])]
+    public bool $firstPlanetStarterPending = false;
     #[ORM\Column(nullable: true)]
     public ?\DateTimeImmutable $lockedAt = null;
     #[ORM\ManyToOne(targetEntity: PlayerUniverse::class)]

@@ -8,7 +8,11 @@
         <h1>{{ {overview:'Vue générale',buildings:'Bâtiments',technologies:'Recherche',ships:'Chantier spatial',defenses:'Défenses'}[section] }}<span>.</span></h1>
         {% if section == 'overview' %}<p>Agir sur la colonie active, suivre tout l’empire.</p>{% endif %}
     </div>
-    {% if section != 'overview' %}{% include 'ui/development_navigation.html.twig' %}{% endif %}
+    {% if section == 'overview' %}
+        <a class="quiet-button" href="{{ path('app_daily_reward', {colony: planet.id}) }}">Récompense quotidienne</a>
+    {% else %}
+        {% include 'ui/development_navigation.html.twig' %}
+    {% endif %}
 </div>
 <div class="colony-layout colony-layout--integrated"><div class="colony-content">
 {% if section=='overview' %}
