@@ -10,6 +10,7 @@ use App\Service\Boost\BoostEventService;
 use App\Service\Notification\NotificationService;
 use Symfony\Component\Uid\Uuid;
 use Psr\Clock\ClockInterface;
+use App\Service\Player\FirstStepRewardPolicy;
 use App\Service\Player\FirstSteps;
 use App\Service\Player\VacationCalendar;
 final class FleetService
@@ -106,13 +107,17 @@ final class FleetService
             return ['arrival_at'=>$this->clock->now()->modify('+'.$q['seconds'].' seconds')->format(DATE_ATOM)]+array_intersect_key($q,array_flip(['distance','normal_distance','hyper_distance','seconds','one_way_fuel','orbit_fuel','total_fuel','stored_fuel_used','planet_fuel','fuel_capacity','cargo_capacity','freight_capacity','composition','freight','cargo_available','cargo_maximum','ship_available','ship_adjusted','adjusted']));
         });
     }
-    public function send(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo,string $key,float $orbitHours=0,bool $requireExactComposition=false): bool
+    public function send(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo,string $key,float $orbitHours=0,bool $requireExactComposition=false, bool $tutorialSpy=false): bool
     {
-        return $this->manager->transaction(function()use($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$key,$orbitHours,$requireExactComposition){
+        return $this->manager->transaction(function()use($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$key,$orbitHours,$requireExactComposition,$tutorialSpy){
             $this->guard->lock($m,$origin);$this->queues->synchronize($m);if(!$this->guard->receipt($m,$key)) return false;
             $q=$this->quote($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$orbitHours);
             if($requireExactComposition && $q['ship_adjusted']) throw new \DomainException('La composition n’est plus disponible exactement. Vérifiez à nouveau les quantités avant envoi.');
             if($q['target'] instanceof Planet) $this->manager->lock($q['target']);
+            if ($tutorialSpy && ($mission !== 'spy' || !FirstStepRewardPolicy::isNativeNpc($q['target'] instanceof Planet ? $q['target'] : null)
+                || $q['ship_adjusted'] || $q['composition'] !== ['probe' => ['basic' => 1]])) {
+                throw new \DomainException('Pour l’exercice guidé, choisissez un monde PNJ découvert et envoyez exactement une Sonde de reconnaissance basique.');
+            }
             if($mission==='transport') { if(!$q['target']->owner) throw new \DomainException('Cette planète n’accepte plus vos transports.');$this->manager->lock($q['target']->owner->player);if(!$this->transports->canReceive($m,$q['target'])) throw new \DomainException('Cette planète n’accepte plus vos transports.'); }
             if($mission==='station' && $q['target']->owner?->id!==$m->id) throw new \DomainException('Cette colonie ne vous appartient plus.');
             if($q['idle']) $this->manager->lock($q['idle']);
@@ -120,6 +125,7 @@ final class FleetService
             if($q['idle']) $q['idle']->storedFuel-=$q['stored_fuel_used'];
             $cargo=$q['freight'];$cargo['hydrogen']=($cargo['hydrogen']??0)+$q['total_fuel'];
             $f=new Fleet();$f->playerUniverse=$m;$f->homePlanet=$origin;$f->destination=$q['target'] instanceof Planet?$q['target']:null;$f->destinationSystem=$q['system'];$f->status='traveling';$f->mission=$mission;$f->speedRatio=$ratio;$f->cargo=$cargo;$f->reservedFuel=$q['total_fuel'];$f->orbitFuel=$q['orbit_fuel'];$f->orbitDurationSeconds=$mission==='defend' && $q['target'] instanceof Planet && $this->occupations->activeFor($q['target'])!==null?(int)round($this->occupations->reinforcementHours($q['target'])*3600):($mission==='conquer' && $this->occupations->isEnabled()?\App\Service\Combat\OccupationPolicy::DURATION_SECONDS:(int)round($orbitHours*3600));$f->travelSeconds=$q['seconds'];$f->departureAt=$this->clock->now();$f->arrivalAt=$this->clock->now()->modify('+'.$f->travelSeconds.' seconds');$f->navigation=$this->navigation->freeze($this->coords($origin->solarSystem,$origin->position),$this->coords($q['system'],$q['target'] instanceof Planet?$q['target']->position:null),$q['movement_ships'],$ratio,$this->catalog->rules()['fuel_ratio_policy'],$q,$f->departureAt);$this->manager->save($f);$this->manager->flush();
+            $f->firstStepsSpy = $tutorialSpy;
             if($mission==='station') $f->navigation['station']=['leg_fuel'=>$q['one_way_fuel']];
             foreach($q['composition'] as $slug=>$tiers)foreach($tiers as $tier=>$quantity) {
                 $stock=$this->repo->one(FleetShip::class,['fleet'=>$q['idle'],'slug'=>$slug,'tier'=>$tier]);$stock->quantity-=$quantity;
@@ -289,13 +295,24 @@ final class FleetService
                 $f->status='orbit_pending';$f->arrivalAt=null;$f->dispatchToken=Uuid::v4()->toRfc4122();$this->combats->notifyOrbitRequest($f);
                 return;
             } elseif($f->mission==='spy') {
+                if ($f->firstStepsSpy && $f->destination !== null) {
+                    // Une cible devenue une colonie pendant le vol ne doit jamais être espionnée par le tutoriel.
+                    $this->manager->lock($f->destination);
+                    if (!FirstStepRewardPolicy::isNativeNpc($f->destination)) {
+                        $this->startReturn($f, $f->arrivalAt);
+                        $this->notifications->enqueue($m, 'La cible n’est plus un monde PNJ. Votre sonde rentre sans rapport d’exercice.', journalKind: 'spy');
+                        return;
+                    }
+                }
                 $probes=$this->repo->all(FleetShip::class,['fleet'=>$f,'slug'=>'probe']);
                 $probeCount=array_sum(array_map(static fn($probe)=>$probe->quantity,$probes));
                 if($probeCount<1) throw new \LogicException('Sondes d’espionnage absentes à l’arrivée.');
                 $report = $this->espionage->resolve($f,$probeCount);
+                $guidedProbeConsumed = $f->firstStepsSpy && count($probes) === 1
+                    && $probes[0]->tier === 'basic' && $probes[0]->quantity === 1;
                 foreach($probes as $probe)$probe->quantity=0;
-                // Le rapport vient d'être enregistré, mais un échec de l'arrivée doit annuler aussi le jalon.
-                $this->firstSteps->recordNpcEspionageReport($f, $report);
+                // Un échec de l'arrivée annule aussi la perte, la preuve et la restitution éventuelle.
+                $this->firstSteps->recordNpcEspionageReport($f, $report, $guidedProbeConsumed);
                 if ($report->result === 'success' && $report->intelCategories > 0) $this->boostGrants->awardRiskMission($m,$f);
             } elseif($f->mission==='explore') {
                 $d=$this->repo->one(PlayerDiscovery::class,['playerUniverse'=>$m,'solarSystem'=>$f->destinationSystem]);

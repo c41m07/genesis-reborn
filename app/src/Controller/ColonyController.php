@@ -7,7 +7,7 @@ use App\Repository\GameRepository;
 use App\Service\Universe\UniverseContext;
 use App\Service\Colony\{CatalogueInsights, ColonyView, GameShell, ResourceService, LiveRegionResponse};
 use App\Service\Queue\QueueService;
-use App\Service\Player\{LeaderboardService, PreferencesService, RelationResolver};
+use App\Service\Player\{FirstStepsView, LeaderboardService, PreferencesService, RelationResolver};
 use App\Service\Catalog\GameCatalog;
 use App\Service\Fleet\{GalaxyGeometry, MovementCalculator};
 use App\Manager\GameManager;
@@ -104,6 +104,7 @@ final class ColonyController extends AbstractController
         GameCatalog $catalog,
         \App\Service\Notification\JournalService $journal,
         \App\Service\Colony\EmpireDetails $details,
+        FirstStepsView $firstSteps,
     ): Response
     {
         $p = $this->owned($id);
@@ -114,6 +115,7 @@ final class ColonyController extends AbstractController
             $data['show_locked_items'] = $request->query->getBoolean('showLockedItems');
         }
         if ($section === 'overview') {
+            $data['training'] = $firstSteps->progress($m, $data['building_levels'], $data['technology_levels']);
             if ($request->headers->get('X-Genesis-Live') !== '1') {
                 $journal->open($m);
             }
@@ -138,6 +140,8 @@ final class ColonyController extends AbstractController
             $data['empire_rank'] = $rank;
             $data['empire_guild'] = $relations->guild($m);
             $data['guilds_enabled'] = (bool) ($features['guilds_enabled'] ?? false);
+        } elseif ($request->query->has('tutorial')) {
+            $data['training_hint'] = $firstSteps->catalogHint($request->query->getString('tutorial'), $section, $p, $data['building_levels'], $data['resources']);
         }
         if ($request->headers->get('X-Genesis-Live') === '1' && $request->getPreferredFormat() === 'json') {
             return $this->liveRegions($request, $data + ['section' => $section]);
@@ -160,6 +164,7 @@ final class ColonyController extends AbstractController
         if ($data['section'] === 'overview') {
             // Réutiliser les ressources déjà préparées ; le bandeau conserve son propre rendu.
             $templates['overview-attention'] = 'colony/_overview_attention.html.twig';
+            $templates['first-steps-overview'] = 'player/_first_steps_overview.html.twig';
         }
         $regions = [];
         foreach ($templates as $name => $template) {
@@ -307,13 +312,24 @@ final class ColonyController extends AbstractController
                 (string) $request->request->get('slug'),
                 $quantity,
                 (string) $request->request->get('request_key'),
-                (string) $request->request->get('tier', 'basic')
+                (string) $request->request->get('tier', 'basic'),
+                guided: $request->request->getBoolean('guided_first_step'),
             );
             $this->addFlash('success', 'Commande enregistrée dans la file.' . ($actualQuantity > 0 && $actualQuantity < $quantity ? ' Quantité ajustée au maximum constructible : ' . $actualQuantity . '.' : ''));
         } catch (\DomainException $e) {
             $this->addFlash('error', $e->getMessage());
         }
-        return $this->redirectToRoute('app_colony', ['id' => $id, 'section' => $this->section((string) $request->request->get('section', 'overview')), '_fragment' => 'item-' . (string) $request->request->get('slug', '') . '-' . (string) $request->request->get('tier', 'basic')]);
+        $section = $this->section($request->request->getString('section', 'overview'));
+        $slug = $request->request->getString('slug');
+        $tier = $request->request->getString('tier', 'basic');
+        $return = ['id' => $id, 'section' => $section, '_fragment' => 'item-'.$slug.'-'.$tier];
+        if ($request->request->getBoolean('guided_first_step') && $tier === 'basic'
+            && (($section === 'buildings' && $slug === 'mine_metal') || ($section === 'technologies' && $slug === 'engineering_foundations'))) {
+            // Garder la fiche guidée après un refus (stocks changés, etc.) pour une nouvelle tentative.
+            $return += ['tutorial' => $slug, 'showLockedItems' => 1, 'focusItem' => 1];
+        }
+
+        return $this->redirectToRoute('app_colony', $return);
     }
     #[Route('/planetes/{id}/file/{itemId}/annulation', name: 'app_queue_cancel_preview', methods: ['GET'], requirements: ['id' => '\d+', 'itemId' => '\d+'])]
     public function cancellationPreview(

@@ -18,7 +18,13 @@ use App\Entity\PlayerTechnology;
 use App\Entity\PlayerUniverse;
 use App\Entity\QueueItem;
 use App\Entity\Universe;
+use App\Service\Player\FirstStep;
+use App\Service\Player\FirstStepRewards;
+use App\Service\Player\FirstStepRewardPolicy;
 use App\Service\Player\FirstSteps;
+use App\Service\Player\FirstStepsView;
+use App\Service\Colony\ResourceService;
+use PHPUnit\Framework\Attributes\DataProvider;
 use App\Service\Player\PirateExercise;
 use App\Service\Player\RegistrationService;
 use App\Service\Queue\QueueService;
@@ -368,6 +374,157 @@ final class FirstStepsTest extends KernelTestCase
         self::assertSame(['pirate_exercise' => true], $this->guide->completed($membership));
     }
 
+    public function testPaidGuideRewardsWaitForRealCompletionAndRemainPendingUntilAnAtomicClaim(): void
+    {
+        $player = $this->player();
+        [$membership, $planet] = $this->select($player, 'omega-1');
+        $rewards = self::getContainer()->get(FirstStepRewards::class);
+        $this->seedBuilding($planet, 'lab');
+        $view = self::getContainer()->get(FirstStepsView::class);
+        $recognized = $view->progress($membership, ['lab' => ['basic' => 1]], []);
+        self::assertTrue($recognized['existing']['laboratory']);
+        self::assertSame([], $rewards->available($membership));
+        self::assertSame([], $this->guide->completed($membership));
+        $levels = ['mine_metal' => ['basic' => 1], 'power_plant' => ['basic' => 1], 'mine_nano' => ['basic' => 1]];
+        $pendingStorage = $view->progress($membership, $levels, []);
+        self::assertSame('metal_storage', $pendingStorage['next']);
+        self::assertSame('laboratory', $pendingStorage['parallel']);
+        $levels['lab']['basic'] = 1;
+        self::assertSame('research', $view->progress($membership, $levels, [])['parallel']);
+
+        $cancelled = $this->order($membership, $planet, 'buildings', 'mine_metal', '1', guided: true);
+        $cancelledId = $cancelled->id;
+        $cancelledToken = $cancelled->dispatchToken;
+        $this->queues->cancel($membership, $cancelledId, str_repeat('2', 32));
+        $this->clock->sleep($cancelled->durationSeconds + 1);
+        $this->queues->complete($cancelledId, $cancelledToken);
+        self::assertSame([], $rewards->available($membership));
+
+        $mine = $this->order($membership, $planet, 'buildings', 'mine_metal', '3', guided: true);
+        $paidMine = FirstStepRewardPolicy::paidRefund($mine);
+        self::assertSame(['metal' => 96, 'nano' => 52], $paidMine);
+        self::assertTrue($mine->firstStepsGuided);
+        $this->queues->complete($mine->id, $mine->dispatchToken);
+        self::assertSame([], $rewards->available($membership));
+        $this->clock->sleep($mine->durationSeconds + 1);
+        $mineId = $mine->id;
+        $mineToken = $mine->dispatchToken;
+        $this->queues->complete($mineId, $mineToken);
+        $this->queues->complete($mineId, $mineToken);
+        self::assertCount(1, $rewards->available($membership));
+
+        $technology = $this->order($membership, $planet, 'technologies', 'engineering_foundations', '4', guided: true);
+        $paidResearch = FirstStepRewardPolicy::paidRefund($technology);
+        self::assertSame(['metal' => 240, 'nano' => 130], $paidResearch);
+        $this->clock->sleep($technology->durationSeconds + 1);
+        $this->queues->complete($technology->id, $technology->dispatchToken);
+        self::assertCount(2, $rewards->available($membership));
+
+        $resourceRows = $this->entityManager->getRepository(PlanetResource::class);
+        $metal = $resourceRows->findOneBy(['planet' => $planet, 'resourceType' => 'metal']);
+        $nano = $resourceRows->findOneBy(['planet' => $planet, 'resourceType' => 'nano']);
+        $metal->currentStock = 10000;
+        $nano->currentStock = 8000;
+        $metal->lastUpdatedAt = $nano->lastUpdatedAt = $this->clock->now();
+        $this->entityManager->flush();
+        $resources = self::getContainer()->get(ResourceService::class);
+        $stocks = $resources->snapshot($planet);
+        self::assertSame('full', $rewards->claim($membership, $planet, FirstStep::MetalMine));
+        self::assertSame($stocks['nano']['stock'], $resources->snapshot($planet)['nano']['stock'], 'Ne pas verser les nanos seuls.');
+        self::assertCount(2, $rewards->available($membership));
+
+        $metal->currentStock = 8000;
+        $this->entityManager->flush();
+        $before = $resources->snapshot($planet);
+        self::assertSame('claimed', $rewards->claim($membership, $planet, FirstStep::MetalMine));
+        self::assertSame('unavailable', $rewards->claim($membership, $planet, FirstStep::MetalMine));
+        self::assertEquals($before['metal']['stock'] + $paidMine['metal'], $resources->snapshot($planet)['metal']['stock']);
+        self::assertEquals($before['nano']['stock'] + $paidMine['nano'], $resources->snapshot($planet)['nano']['stock']);
+        self::assertCount(1, $rewards->available($membership));
+
+        [$other, $otherPlanet] = $this->select($player, 'turbo-1');
+        self::assertSame('unavailable', $rewards->claim($other, $otherPlanet, FirstStep::Research));
+        $otherMine = $this->order($other, $otherPlanet, 'buildings', 'mine_metal', '5', guided: true);
+        $this->clock->sleep($otherMine->durationSeconds + 1);
+        $this->queues->complete($otherMine->id, $otherMine->dispatchToken);
+        self::assertSame(['metal_mine' => true], $this->guide->completed($other));
+        self::assertSame([], $rewards->available($other), 'Pas de deuxième crédit ailleurs malgré une nouvelle preuve locale.');
+        self::assertCount(1, $rewards->available($membership));
+    }
+
+    #[DataProvider('guidedSpies')]
+    public function testGuidedNpcSpyReplacesOneConsumedProbeOnceForEitherReport(int $seed, string $expected): void
+    {
+        [$membership, $origin] = $this->select($this->player(), 'omega-1');
+        $target = $this->pickFreeKnownPlanet($origin);
+        $target->npcPlanet = true;
+        $target->conquestLevel = 5;
+        $this->seedShips($membership, $origin, 'probe', 2);
+        self::getContainer()->set(\Random\Randomizer::class, new \Random\Randomizer(new \Random\Engine\Mt19937($seed)));
+        $service = self::getContainer()->get(FleetService::class);
+        $reports = $this->entityManager->getRepository(EspionageReport::class);
+        $idle = $this->entityManager->getRepository(Fleet::class)->findOneBy(['playerUniverse' => $membership, 'status' => 'idle']);
+        $ship = $this->entityManager->getRepository(FleetShip::class);
+        $idleProbe = $ship->findOneBy(['fleet' => $idle, 'slug' => 'probe']);
+
+        $flight = $this->launchPlanetMission($service, $membership, $origin, $target, 'spy', 'probe', 'a', guided: true);
+        self::assertTrue($flight->firstStepsSpy);
+        self::assertSame(1, $idleProbe->quantity);
+        self::assertSame([], $this->guide->completed($membership));
+        $token = $flight->dispatchToken;
+        $this->clock->sleep($flight->travelSeconds + 1);
+        $service->arrive($flight->id, $token);
+        $service->arrive($flight->id, $token);
+        self::assertSame($expected, $reports->findOneBy(['sender' => $membership])?->result);
+        self::assertSame(0, $ship->findOneBy(['fleet' => $flight, 'slug' => 'probe'])?->quantity, 'La sonde en vol a vraiment été consumée.');
+        self::assertSame(2, $idleProbe->quantity, 'Une seule a été recréée au hangar.');
+        self::assertSame(['espionage' => true], $this->guide->completed($membership));
+
+        $repeat = $this->launchPlanetMission($service, $membership, $origin, $target, 'spy', 'probe', 'b', guided: true);
+        $this->clock->sleep($repeat->travelSeconds + 1);
+        $service->arrive($repeat->id, $repeat->dispatchToken);
+        self::assertSame(1, $idleProbe->quantity, 'Aucun deuxième remplacement après un nouveau rapport.');
+        $ordinary = $this->launchPlanetMission($service, $membership, $origin, $target, 'spy', 'probe', 'c');
+        $this->clock->sleep($ordinary->travelSeconds + 1);
+        $service->arrive($ordinary->id, $ordinary->dispatchToken);
+        self::assertFalse($ordinary->firstStepsSpy);
+        self::assertSame(0, $idleProbe->quantity, 'Le déroulement de l’espionnage normal est inchangé.');
+    }
+
+    public function testGuidedSpyReturnsItsOriginalProbeIfTargetStopsBeingNpc(): void
+    {
+        [$membership, $origin] = $this->select($this->player(), 'omega-1');
+        $target = $this->pickFreeKnownPlanet($origin);
+        $target->npcPlanet = true;
+        $this->seedShips($membership, $origin, 'probe', 1);
+        $service = self::getContainer()->get(FleetService::class);
+        $reports = $this->entityManager->getRepository(EspionageReport::class);
+
+        $flight = $this->launchPlanetMission($service, $membership, $origin, $target, 'spy', 'probe', 'c', guided: true);
+        $target->npcPlanet = false;
+        $this->entityManager->flush();
+        $this->clock->sleep($flight->travelSeconds + 1);
+        $service->arrive($flight->id, $flight->dispatchToken);
+        self::assertSame('returning', $flight->status);
+        self::assertSame(0, $reports->count(['sender' => $membership]));
+        self::assertSame([], $this->guide->completed($membership));
+        self::assertSame(0, (int) $this->entityManager->getConnection()->fetchOne(
+            'SELECT COUNT(*) FROM first_step_reward WHERE player_id = ?',
+            [$membership->player->id],
+        ));
+
+        $this->clock->sleep($flight->travelSeconds + 1);
+        $service->arrive($flight->id, $flight->dispatchToken);
+        $idle = $this->entityManager->getRepository(Fleet::class)->findOneBy(['playerUniverse' => $membership, 'status' => 'idle']);
+        self::assertSame(1, $this->entityManager->getRepository(FleetShip::class)->findOneBy(['fleet' => $idle, 'slug' => 'probe'])?->quantity);
+    }
+
+    public static function guidedSpies(): iterable
+    {
+        yield 'rapport détecté' => [50, 'detected'];
+        yield 'rapport non détecté' => [30, 'success'];
+    }
+
     private function pickFreeKnownPlanet(Planet $origin, ?Planet $excluded = null): Planet
     {
         $planets = $this->entityManager->getRepository(Planet::class)->findBy(['solarSystem' => $origin->solarSystem, 'owner' => null], ['id' => 'ASC']);
@@ -397,9 +554,9 @@ final class FirstStepsTest extends KernelTestCase
         $this->entityManager->flush();
     }
 
-    private function launchPlanetMission(FleetService $service, PlayerUniverse $membership, Planet $origin, Planet $target, string $mission, string $ship, string $key): Fleet
+    private function launchPlanetMission(FleetService $service, PlayerUniverse $membership, Planet $origin, Planet $target, string $mission, string $ship, string $key, bool $guided = false): Fleet
     {
-        self::assertFalse($service->send($membership, $origin, $mission, $target->id, [$ship => 1], .5, [], str_repeat($key, 32), requireExactComposition: true));
+        self::assertFalse($service->send($membership, $origin, $mission, $target->id, [$ship => 1], .5, [], str_repeat($key, 32), requireExactComposition: true, tutorialSpy: $guided));
         $flight = $this->entityManager->getRepository(Fleet::class)->findOneBy([
             'playerUniverse' => $membership,
             'destination' => $target,
@@ -463,9 +620,9 @@ final class FirstStepsTest extends KernelTestCase
         $this->entityManager->flush();
     }
 
-    private function order(PlayerUniverse $membership, Planet $planet, string $group, string $slug, string $key): QueueItem
+    private function order(PlayerUniverse $membership, Planet $planet, string $group, string $slug, string $key, bool $guided = false): QueueItem
     {
-        self::assertSame(1, $this->queues->add($membership, $planet, $group, $slug, 1, str_repeat($key, 32)));
+        self::assertSame(1, $this->queues->add($membership, $planet, $group, $slug, 1, str_repeat($key, 32), guided: $guided));
         $order = $this->entityManager->getRepository(QueueItem::class)->findOneBy(['planet' => $planet, 'itemSlug' => $slug]);
         self::assertNotNull($order);
         self::assertNotNull($order->startedAt);

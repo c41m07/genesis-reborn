@@ -22,6 +22,7 @@ final class FirstSteps
         private GameManager $manager,
         private ActionGuard $guard,
         private ClockInterface $clock,
+        private FirstStepRewards $rewards,
     ) {
     }
 
@@ -42,6 +43,7 @@ final class FirstSteps
         $step = FirstStep::forCompletedQueue($item, $shipConstructed);
         if ($step !== null) {
             $this->record($item->playerUniverse, $step, $finishedAt);
+            $this->rewards->recordPaidGuideOrder($item);
         }
     }
 
@@ -60,7 +62,7 @@ final class FirstSteps
         $this->record($membership, FirstStep::Exploration, $fleet->arrivalAt);
     }
 
-    public function recordNpcEspionageReport(Fleet $fleet, EspionageReport $report): void
+    public function recordNpcEspionageReport(Fleet $fleet, EspionageReport $report, bool $guidedProbeConsumed = false): void
     {
         $target = $fleet->destination;
         $membership = $fleet->playerUniverse;
@@ -74,6 +76,9 @@ final class FirstSteps
 
         // Un rapport « détecté » confirme le parcours d'apprentissage, pas l'obtention de renseignements.
         $this->record($membership, FirstStep::Espionage, $report->createdAt);
+        if ($guidedProbeConsumed && $report->probesSent === 1) {
+            $this->rewards->replaceConsumedProbe($fleet);
+        }
     }
 
     /** Appelé uniquement après l'acquisition d'une planète encore libre, dans la transaction d'arrivée. */

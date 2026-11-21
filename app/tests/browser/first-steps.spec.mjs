@@ -1,6 +1,8 @@
 import { test, expect } from './support/isolated-test.mjs';
 import { accelerateQueuedItem, queryIsolatedSql } from './support/game-fixtures.mjs';
 
+test.use({ keepDailyRewardPrompt: true });
+
 async function register(page) {
     const id = crypto.randomUUID().slice(0, 8);
     const email = 'first-steps-' + id + '@example.test';
@@ -16,6 +18,12 @@ async function register(page) {
     await page.getByRole('button', { name: /Connexion/ }).click();
     await page.locator('.universe-card').filter({ has: page.getByRole('heading', { name: /Omega/ }) }).getByRole('button').click();
     await expect(page).toHaveURL(/planetes\/\d+$/);
+    const dailyPrompt = page.locator('[data-daily-reward-ui-auto-open-value="true"]');
+    if (await dailyPrompt.count()) {
+        const dialog = page.getByRole('dialog', { name: 'Récompense quotidienne' });
+        await dialog.getByRole('button', { name: 'Plus tard', exact: true }).click();
+        await expect(dialog).toBeHidden();
+    }
 
     return email;
 }
@@ -24,8 +32,13 @@ test('Premiers pas : conseil facultatif et progression après la fin réelle de 
     test.setTimeout(120000);
     const email = await register(page);
     const overview = page.url();
+    await expect(page.locator('.topbar .universe-context + .header-technology-goal')).toBeVisible();
+    const overviewGuide = page.getByRole('region', { name: 'Premiers pas', exact: true });
+    await expect(overviewGuide).toContainText('0 sur 12');
+    await expect(overviewGuide).toContainText('Mine à ciel ouvert');
+    await overviewGuide.screenshot({ path: info.outputPath('premiers-pas-vue-generale-desktop.png'), animations: 'disabled' });
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.getByRole('link', { name: 'Premiers pas', exact: true }).click();
+    await page.getByRole('link', { name: 'Voir le guide Premiers pas et les remboursements', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Premiers pas', exact: true })).toBeVisible();
     const guide = page.getByRole('region', { name: 'Développer sa colonie et explorer', exact: true });
     const progress = guide.getByRole('progressbar', { name: 'Progression des premiers pas', exact: true });
@@ -33,37 +46,47 @@ test('Premiers pas : conseil facultatif et progression après la fin réelle de 
     await expect(progress).toHaveAttribute('value', '0');
     await expect(next.getByRole('heading', { name: 'Mine à ciel ouvert', exact: true })).toBeVisible();
     await expect(guide.getByRole('heading', { name: 'Première recherche', exact: true })).toBeVisible();
-    await expect(progress).toHaveAttribute('max', '9');
+    await expect(progress).toHaveAttribute('max', '12');
     await expect(guide.getByRole('link', { name: 'Ouvrir la fiche de la sonde', exact: true })).toHaveAttribute('href', /section=ships.*#item-probe-basic$/);
     const explore = guide.getByRole('listitem').filter({ has: page.getByRole('heading', { name: 'Premier système exploré', exact: true }) });
     await expect(explore).toContainText('consomme une sonde à l’arrivée');
     await expect(explore).toContainText('en construire une autre au chantier pour l’espionnage');
     await expect(explore.getByRole('link', { name: 'Préparer une exploration', exact: true })).toHaveAttribute('href', /\/flottes\/preparer\?mission=explore&origin=\d+$/);
     const espionage = guide.getByRole('listitem').filter({ has: page.getByRole('heading', { name: 'Premier rapport d’espionnage PNJ', exact: true }) });
-    await expect(espionage).toContainText('« Détecté » signifie qu’aucun renseignement n’a été obtenu');
+    await expect(espionage).toContainText('Un rapport « Détecté » ne contient aucun renseignement');
     await expect(espionage).toContainText('La sonde envoyée est consommée à l’arrivée');
     await expect(espionage.getByRole('link', { name: 'Consulter les rapports d’espionnage', exact: true })).toHaveAttribute('href', '/rapports?type=espionage');
     await espionage.getByRole('link', { name: 'Préparer un espionnage PNJ', exact: true }).click();
-    await expect(page).toHaveURL(/\/flottes\/preparer\?mission=spy&origin=\d+$/);
+    await expect(page).toHaveURL(/\/flottes\/preparer\?mission=spy&origin=\d+&tutorial=1$/);
+    await expect(page.getByRole('heading', { name: 'Premiers pas : espionnage PNJ', exact: true })).toBeVisible();
     await page.goto('/premiers-pas');
     const colonization = guide.getByRole('listitem').filter({ has: page.getByRole('heading', { name: 'Première colonisation', exact: true }) });
-    await expect(colonization).toContainText('sans avoir validé les autres étapes du guide');
-    await expect(colonization).toContainText('« Inhabitée », ni occupée ni PNJ');
+    await expect(colonization).toContainText('sans avoir à terminer le guide');
+    await expect(colonization).toContainText('planète découverte et inhabitée, non PNJ');
     await expect(colonization.getByRole('link', { name: 'Ouvrir la fiche du Vaisseau colonisateur', exact: true })).toHaveAttribute('href', /section=ships.*#item-colony_ship-basic$/);
     await colonization.getByRole('link', { name: 'Préparer une colonisation', exact: true }).click();
     await expect(page).toHaveURL(/\/flottes\/preparer\?mission=colonize&origin=\d+$/);
     await page.goto('/premiers-pas');
     await expect(progress).toHaveAttribute('value', '0');
+    const storage = guide.getByRole('listitem').filter({ has: page.getByRole('heading', { name: 'Dépôt de minerais', exact: true }) });
+    await storage.getByRole('link', { name: 'Ouvrir le Dépôt de minerais', exact: true }).click();
+    const storageHelp = page.getByRole('complementary', { name: 'Conseil Premiers pas', exact: true });
+    await expect(storageHelp).toContainText(/10\s000 unités de métal de capacité totale, dont 1\s000 protégées/);
+    await expect(storageHelp).toContainText(/110\s000 unités au total, dont 11\s000 protégées/);
+    await expect(storageHelp).toContainText('Mine à ciel ouvert niveau 5');
+    await storageHelp.screenshot({ path: info.outputPath('premiers-pas-depot-mobile.png'), animations: 'disabled' });
+    await page.goto('/premiers-pas');
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
     await page.screenshot({ path: info.outputPath('premiers-pas-mobile.png'), animations: 'disabled' });
 
     // Le guide ne bloque pas le reste du jeu avant la première construction.
     await page.getByRole('link', { name: 'Retour à la vue générale', exact: true }).click();
     await expect(page).toHaveURL(overview);
-    await page.getByRole('link', { name: 'Premiers pas', exact: true }).click();
+    await page.getByRole('link', { name: 'Voir le guide Premiers pas et les remboursements', exact: true }).click();
     await next.getByRole('link', { name: 'Ouvrir la Mine à ciel ouvert', exact: true }).click();
     await expect(page).toHaveURL(/section=buildings.*#item-mine_metal-basic$/);
     const card = page.locator('#item-mine_metal-basic');
+    await expect(card.getByRole('complementary', { name: 'Conseil Premiers pas' })).toContainText('paie le prix normal');
     await card.getByRole('button', { name: /Améliorer .* niveau 1/ }).click();
     await page.goto('/premiers-pas');
     await expect(progress).toHaveAttribute('value', '0');
@@ -75,8 +98,13 @@ test('Premiers pas : conseil facultatif et progression après la fin réelle de 
     await expect(page.locator('#building-tab-mine_metal-basic .building-rank-level')).toHaveText('1');
     await page.goto('/premiers-pas');
     await expect(progress).toHaveAttribute('value', '1');
+    const refunds = page.getByRole('region', { name: 'Remboursements disponibles', exact: true });
+    await expect(refunds).toContainText('96 métal et 52 nanos');
+    await refunds.getByRole('button', { name: 'Récupérer : Mine à ciel ouvert', exact: true }).click();
+    await expect(refunds).toHaveCount(0);
+    await expect(page.getByRole('status').filter({ hasText: 'Remboursement ajouté aux stocks' })).toBeVisible();
     await expect(guide.getByRole('listitem').filter({ has: page.getByRole('heading', { name: 'Mine à ciel ouvert', exact: true }) })).toContainText('Terminé');
-    await expect(next.getByRole('heading', { name: 'Centrale nucléaire', exact: true })).toBeVisible();
+    await expect(next.getByRole('heading', { name: 'Centrale nucléaire et bilan énergie', exact: true })).toBeVisible();
 
     const native = await browser.newContext({ baseURL, storageState: await page.context().storageState(), javaScriptEnabled: false });
     try {

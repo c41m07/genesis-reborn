@@ -34,6 +34,8 @@ class QueueItem
     public ?self $dependsOn = null;
     #[ORM\Column(type: 'json', nullable: true)]
     public ?array $paidCosts = null;
+    #[ORM\Column(options: ['default' => false])]
+    public bool $firstStepsGuided = false;
     public function finishAt(): ?\DateTimeImmutable
     {
         return $this->startedAt?->modify('+'.$this->durationSeconds.' seconds');

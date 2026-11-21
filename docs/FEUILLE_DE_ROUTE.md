@@ -2224,3 +2224,41 @@ inscrite dans la table existante, séparément pour chaque empire.
 Le briefing seul ne valide rien. Aucun vaisseau, carburant, stock, butin,
 journal de bataille réel, récompense ni progression de campagne. Refaire
 l’exercice n’ajoute pas de preuve et ne débloque rien dans le jeu.
+
+### Premiers pas : parcours guidé et pilote de remboursement
+
+Le guide et sa carte Vue générale proposent un ordre sans verrou :
+mine, énergie, nanos, Dépôt de minerais, laboratoire, recherche,
+chantier d’assemblage, sonde, exploration, espionnage PNJ, exercice pirate,
+puis première colonie. Les bâtiments basiques déjà présents sur la colonie
+active et les recherches basiques déjà apprises sont reconnus pour l’affichage
+sans écrire de preuve ni réserver de remboursement. Le Dépôt basique niveau 1
+demande une Mine à ciel ouvert basique niveau 5 dans la grille de base ; le
+laboratoire et le reste du parcours restent accessibles en parallèle. La fiche
+du Dépôt distingue la capacité totale et la part protégée du pillage en
+réutilisant la projection existante. La colonisation n’est jamais conditionnée
+par les étapes du guide.
+
+Une commande de la Mine à ciel ouvert ou de Génie civil colonial de niveau 1
+basique lancée dans la fiche guidée paie normalement le prix et attend la fin
+réelle. La preuve et la réservation suivent la même transaction. Le compte
+peut recevoir au plus un remboursement par étape, calculé sur son paiement
+en métal et nanos, à 25 % arrondis vers le bas, plafonnés à 96/52 pour la
+mine et à 240/130 pour la recherche, jamais rétroactivement. Le lot reste
+visible dans le guide de l’empire d’obtention et se récupère sur une colonie
+contrôlée de cet empire. Un stock plein ne consomme pas le droit et ne produit
+pas de versement partiel. Aucun autre remboursement de ressources.
+
+Le premier espionnage guidé s’envoie avec exactement une sonde basique vers
+un PNJ natif connu, jamais un joueur ni un empire oublié. Si la cible cesse
+d’être éligible avant l’arrivée, la mission guidée n’exécute pas l’espionnage.
+Un rapport effectivement produit avec perte réelle de la sonde restaure une
+sonde au hangar de départ, détectée ou non, une seule fois par compte.
+Un rapport « détecté » peut ne contenir aucun renseignement ; le pilote ne
+change pas les résultats tactiques, les sondes consommées en dehors du guide
+ni la campagne à venir. Aucun barème de progression cible n’est mesuré ici.
+
+Déploiement local futur : appliquer normalement en base dédiée la migration
+additive `Version20261120000830` (drapeaux à faux pour les actions existantes,
+registre des droits vide). Ne pas annuler une migration pour supprimer les
+preuves de crédits, même déjà consommés.

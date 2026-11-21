@@ -1,0 +1,16 @@
+<section class="panel account-panel" aria-labelledby="overview-first-steps-title" data-live-region="first-steps-overview">
+    <h2 id="overview-first-steps-title">Premiers pas</h2>
+    <p><strong>{{ training.completed|length }} sur {{ training.hints|length }}</strong> étapes dans cet univers. Le parcours est facultatif.</p>
+    {% if training.next %}
+        {% set hint = training.hints[training.next] %}
+        <p><strong>Conseil : {{ hint.title }}</strong>. {{ hint.explanation }}</p>
+        {% include 'player/_first_steps_action.html.twig' with {step: training.next, guide: hint, colony: planet, actionStyle: 'primary'} only %}
+        {% if training.parallel %}
+            <p>Le Dépôt demande une Mine de niveau 5 dans la grille de base. Vous pouvez continuer le parcours en attendant.</p>
+            {% include 'player/_first_steps_action.html.twig' with {step: training.parallel, guide: training.hints[training.parallel], colony: planet} only %}
+        {% endif %}
+    {% else %}
+        <p>Tous les objectifs sont terminés. Vous continuez à jouer librement.</p>
+    {% endif %}
+    <a href="{{ path('app_first_steps') }}">Voir le guide Premiers pas et les remboursements</a>
+</section>

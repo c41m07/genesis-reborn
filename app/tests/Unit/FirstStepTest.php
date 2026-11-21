@@ -39,7 +39,10 @@ final class FirstStepTest extends TestCase
         yield 'amélioration mine' => ['building', 'mine_metal', 'basic', 3, FirstStep::MetalMine];
         yield 'centrale' => ['building', 'power_plant', 'basic', 1, FirstStep::PowerPlant];
         yield 'atelier nano' => ['building', 'mine_nano', 'basic', 1, FirstStep::NanoWorkshop];
-        yield 'autre installation' => ['building', 'lab', 'basic', 1, null];
+        yield 'laboratoire déjà reconstruit' => ['building', 'lab', 'basic', 1, FirstStep::Laboratory];
+        yield 'dépôt de minerais' => ['building', 'storage_metal', 'basic', 1, FirstStep::MetalStorage];
+        yield 'chantier' => ['building', 'shipyard', 'basic', 1, FirstStep::AssemblyYard];
+        yield 'autre installation' => ['building', 'fortress', 'basic', 1, null];
         yield 'autre rang' => ['building', 'mine_nano', 'intermediate', 1, null];
         yield 'recherche au choix' => ['research', 'vector_propulsion', 'basic', 1, FirstStep::Research];
         yield 'aucun niveau terminé' => ['research', 'vector_propulsion', 'basic', 0, null];
@@ -47,6 +50,7 @@ final class FirstStepTest extends TestCase
         yield 'sans preuve de crédit au hangar' => ['shipyard', 'probe', 'basic', null, null];
         yield 'vaisseau crédité' => ['shipyard', 'probe', 'basic', null, FirstStep::Ship, true];
         yield 'défense au chantier' => ['shipyard', 'ground_turret_anti_light', 'basic', null, null, false];
+        yield 'chasseur ordinaire ne remplace pas la sonde' => ['shipyard', 'fighter', 'basic', null, null, true];
         yield 'lot vide non construit' => ['shipyard', 'probe', 'basic', null, null, true, 0];
     }
 }
