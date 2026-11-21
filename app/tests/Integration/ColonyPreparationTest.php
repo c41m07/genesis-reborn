@@ -408,7 +408,10 @@ final class ColonyPreparationTest extends KernelTestCase
         $this->em->flush();
         $withoutOrigin = $comparison->forPlanets($this->membership, [$this->planet]);
         self::assertNull($withoutOrigin['researchOrigin']);
-        self::assertEquals($view['research'], $withoutOrigin['research']);
+        self::assertSame($view['research']['label'], $withoutOrigin['research']['label']);
+        self::assertSame($view['research']['level'], $withoutOrigin['research']['level']);
+        self::assertSame('waiting', $withoutOrigin['research']['status']);
+        self::assertNull($withoutOrigin['research']['finish']);
         self::assertArrayNotHasKey($other->id, $withoutOrigin['local']);
 
         // Une lecture ne purge pas l’ordre échu, ne démarre pas l’attente et ne retouche pas l’origine.

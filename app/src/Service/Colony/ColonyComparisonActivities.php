@@ -59,9 +59,15 @@ final class ColonyComparisonActivities
         $researchOrigin = (int) ($head['ownerId'] ?? 0) === $membership->id && isset($visible[$originId])
             ? $originId
             : null;
+        $researchSummary = $head === null ? null : $this->summarize($research, $catalogue, $now, $paused, $head);
+        if ($researchSummary !== null && $researchOrigin === null) {
+            // Le traitement ne termine pas une recherche dont l’origine n’appartient plus à cet empire.
+            $researchSummary['status'] = 'waiting';
+            $researchSummary['finish'] = null;
+        }
         return [
             'local' => $local,
-            'research' => $head === null ? null : $this->summarize($research, $catalogue, $now, $paused, $head),
+            'research' => $researchSummary,
             // Une ancienne origine n’est plus une colonie affichable et son identité ne sort pas du service.
             'researchOrigin' => $researchOrigin,
         ];
