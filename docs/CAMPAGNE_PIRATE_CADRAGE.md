@@ -378,11 +378,12 @@ d’un ancien jeton, valeur exacte d’un cas impair, stockage à capacité
 exacte, colonie transférée, fermeture puis rejeu. Carburant, cadence
 publique, difficulté et nombre de missions restent distincts.
 
-## V1 : socle des premières rencontres, après l’exercice distinct de Premiers pas
+## V1 : vingt vraies rencontres préparées, après l’exercice distinct de Premiers pas
 
-Le catalogue privé prépare les trois premières définitions éditoriales.
-La cible de vingt rencontres demande encore un calibrage séparé ;
-aucune limite finale à trois n’est imposée.
+Le catalogue privé prépare vingt rencontres éditoriales réparties en
+cinq chapitres, sans modifier l’exercice antérieur. Les trois premières
+définitions et leurs formations restent inchangées. Aucun nombre de
+chapitres ou de niveaux ne suffit à autoriser un lancement.
 `PirateCampaignCatalogue::prepareForServer` assemble un instantané prix/
 effectifs et un scénario de combat assorti à l'aide de la fabrique native.
 Il reprend les contres, la recharge et le nombre de rounds du catalogue,
@@ -418,3 +419,55 @@ ni mission réelle, ni équivalent de la première rencontre.
 Aucun déclencheur, emplacement, règle de déblocage, qualification de
 l'univers, génération adaptative ou procédure de refus de convoi
 n'est ajouté. Le catalogue et ses textes sont préparés, pas jouables.
+
+### Chapitres de la V1 et tests tactiques
+
+| Chapitre | Clés dans l’ordre | Fil civil |
+| --- | --- | --- |
+| Les appels interrompus | 1–3 | La balise de secours appelle à l’aide, l’escorte perd le contact, puis le dernier relais local est libéré. |
+| Les routes trompeuses | 4–8 | Identifiants volés, faux relevés et routes falsifiées isolent des pilotes et des réfugiés. |
+| La guerre des relais | 9–13 | Secours en tenaille et états-majors pirates coupent une chaîne de liaisons civiles. |
+| L’arsenal des exilés | 14–16 | Remonter jusqu’à l’arsenal et rendre aux navettes leurs codes de route authentiques. |
+| La nuit sur le réseau | 17–20 | Quatre écrans différents protègent des capitaux pirates ; le récit se ferme quand le réseau civil répond à nouveau. |
+
+Les formations locales sont celles du tableau de calibrage : toutes les
+onze familles de combat Basique sont présentes, avec deux capitaux à
+la finale. Les noms du tableau qui révèlent une famille ou un nombre
+(la passe, le verrou, le premier capital, ses écrans) ne sont montrés
+qu’après l’intel : avant, titres et signaux restent neutres. Le dernier
+chapitre porte aussi un titre public neutre ; « Les Capitaux noirs »
+était un intitulé de travail, pas un indice en jeu. L’interface future
+ne doit pas recommander une liste exacte de vaisseaux ni afficher un
+taux de victoire issu du benchmark. Les conseils parlent de rôles
+et de contres après le vrai rapport.
+
+Le test de difficulté utilise le moteur R14 et le catalogue en Omega ×1,
+des flottes et technologies synthétiques et des lots fixes de 64 graines.
+Les chiffres suivants sont des choix candidats de test pour le cadrage,
+pas des paramètres d’activation ni des garanties :
+
+- **#6, #7, #10 :** comparaison prudente à quatre lourds et deux
+  patrouilleurs, quatre corvettes et deux intercepteurs, puis deux
+  destroyers et un lourd respectivement. Chaque cas a gagné 64/64,
+  sans destruction totale observée. Les profils plus justes du tableau
+  sont volontairement plus risqués ; l’indice reste qualitatif, et
+  attendre de s’équiper reste un choix.
+- **#17 et #18 :** les mélanges de destroyers, lourds et corvettes **sans
+  bombardier** gagnent aussi 64/64 aux budgets métal 217 384 et
+  224 488, proches des exemples à bombardiers (217 965 et 225 069).
+  Sur #17, une formation sans destroyer peut gagner avec davantage
+  d’attrition. Sur #20, une variante sans bombardier et à budget plus
+  bas a gagné 63/64 avec une destruction totale : la composition
+  compte, mais aucun écran n’est une assurance de victoire.
+- Les tests gardent la valeur catalogue figée et **50 % exactement**
+  par ressource sans plafond ni électricité. Le devis final de
+  148 470 métal + 80 422 nano n’est pas un paiement : au stockage
+  de base, même à vide, il ne tient pas ; un Dépôt de minerais
+  Basique 2 et un stockage nano Basique 1 suffisent à vide.
+  L’interface de combat ne doit pas faire de ce seuil de réception
+  un prérequis. Dépôt, politique de refus et arrondi restent à décider.
+
+Les délais de déblocage des itinéraires avancés n’ont pas été simulés.
+Aucun point de passage ne rend obligatoire de construire son propre
+capital. On n’ajoute ni calendrier, ni sélection automatique,
+ni politique de remise de convoyage par ce catalogue.

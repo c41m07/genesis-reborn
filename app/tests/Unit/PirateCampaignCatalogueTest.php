@@ -7,7 +7,7 @@ namespace App\Tests\Unit;
 use App\Entity\{Galaxy, Player, PlayerUniverse, SolarSystem, Universe};
 use App\Service\Catalog\GameCatalog;
 use App\Service\Combat\{CombatSimulator, CombatUnitFactory, TechnologyEffectCalculator};
-use App\Service\PirateCampaign\{PirateCampaignCatalogue, PirateCampaignMoment, PirateDistressSite};
+use App\Service\PirateCampaign\{PirateCampaignCatalogue, PirateCampaignMoment, PirateConvoyQuote, PirateDistressSite, PiratePreparedEncounter};
 use PHPUnit\Framework\TestCase;
 
 final class PirateCampaignCatalogueTest extends TestCase
@@ -45,6 +45,95 @@ final class PirateCampaignCatalogueTest extends TestCase
             self::assertSame($this->catalogue->all('combat_modifiers')['modifiers'], $battle['modifiers']);
             self::assertSame('{}', json_encode($prepared, JSON_THROW_ON_ERROR));
         }
+    }
+
+    public function testAllTwentyDefinitionsRoundTripWithExactBasicFleetsAndNoRewardCap(): void
+    {
+        $expected = [
+            'balise_17' => ['fighter' => 1],
+            'escorte_interceptee' => ['fighter' => 2, 'interceptor' => 1],
+            'derniere_liaison' => ['heavy_fighter' => 1, 'bomber' => 1],
+            'balises_volees' => ['corvette' => 1, 'fighter' => 2],
+            'porteurs_de_brume' => ['fighter' => 2, 'interceptor' => 2, 'stealth_fighter' => 1],
+            'refuge_sous_escorte' => ['frigate' => 1, 'interceptor' => 2],
+            'noeud_fausses_routes' => ['corvette' => 2, 'stealth_fighter' => 2],
+            'corridor_des_ombres' => ['frigate' => 2, 'stealth_fighter' => 1, 'fighter' => 2],
+            'briseur_de_relais' => ['destroyer' => 1, 'frigate' => 1, 'fighter' => 2],
+            'couper_le_commandement' => ['cruiser' => 1, 'frigate' => 1],
+            'secours_en_tenaille' => ['destroyer' => 2, 'frigate' => 1, 'interceptor' => 2],
+            'cuirasse_de_la_passe' => ['battleship' => 1, 'frigate' => 1, 'fighter' => 2],
+            'deux_croiseurs_du_verrou' => ['cruiser' => 2, 'stealth_fighter' => 1, 'corvette' => 2],
+            'arsenal_des_exiles' => ['battleship' => 2, 'destroyer' => 1, 'interceptor' => 2],
+            'signal_noye' => ['battleship' => 2, 'cruiser' => 1, 'frigate' => 2, 'stealth_fighter' => 2],
+            'bastion_des_faussaires' => ['battleship' => 3, 'destroyer' => 2, 'frigate' => 2],
+            'premier_capital_noir' => ['capital' => 1, 'battleship' => 1, 'cruiser' => 1, 'frigate' => 2, 'destroyer' => 1, 'corvette' => 1],
+            'cuirasse_et_son_ecran' => ['capital' => 1, 'battleship' => 1, 'frigate' => 4, 'stealth_fighter' => 2, 'destroyer' => 2],
+            'deux_ombres_sur_orbite' => ['capital' => 2, 'frigate' => 2, 'destroyer' => 2],
+            'la_nuit_se_brise' => ['capital' => 2, 'battleship' => 1, 'cruiser' => 1, 'frigate' => 2, 'stealth_fighter' => 2],
+        ];
+        self::assertCount(20, $this->campaign->keys());
+        self::assertSame(array_keys($expected), $this->campaign->keys());
+        $chapters = $this->campaign->chapters();
+        self::assertSame([3, 5, 5, 3, 4], array_map(static fn (array $chapter): int => count($chapter['keys']), $chapters));
+        self::assertSame(array_keys($expected), array_merge(...array_column($chapters, 'keys')));
+        self::assertCount(5, array_unique(array_column($chapters, 'title')));
+
+        $u = $this->universe();
+        $engine = new CombatSimulator();
+        $testEscort = $this->units->ships($u, ['fighter' => ['basic' => 2]], []);
+        $families = [];
+        $last = 0;
+        foreach ($expected as $key => $flat) {
+            $prepared = $this->campaign->prepareForServer($key, $u);
+            $scout = $prepared->encounterForServer();
+            self::assertEquals(array_map(static fn (int $n): array => ['basic' => $n], $flat), $scout->composition(), $key);
+            $families = array_merge($families, array_keys($scout->composition()));
+            $restored = PiratePreparedEncounter::restore($scout, $prepared->checkpoint());
+            self::assertSame($key, $restored->definitionKey());
+            self::assertSame($prepared->battleForServer()->snapshot(), $restored->battleForServer()->snapshot());
+            $native = $restored->battleForServer()->resolve($engine, $testEscort, 31);
+            self::assertContains($native['outcome'], ['attacker_wins', 'defender_wins', 'draw']);
+
+            $costs = $scout->buildCosts();
+            self::assertGreaterThan($last, $costs['metal'], 'Le benchmark ordonne les propositions par valeur de coque, pas par condition de progression.');
+            $last = $costs['metal'];
+            $half = PirateConvoyQuote::halfOfFrozenCatalogue($scout)->exactParts();
+            foreach ($half as $resource => $part) {
+                self::assertSame($costs[$resource], 2 * $part['whole'] + (int) $part['extra_half']);
+            }
+        }
+        self::assertEqualsCanonicalizing(
+            ['fighter', 'interceptor', 'heavy_fighter', 'bomber', 'corvette', 'stealth_fighter', 'frigate', 'destroyer', 'cruiser', 'battleship', 'capital'],
+            array_values(array_unique($families)),
+        );
+        $finale = $this->campaign->prepareForServer('la_nuit_se_brise', $u)->encounterForServer();
+        self::assertSame(2, $finale->composition()['capital']['basic']);
+        self::assertSame(
+            ['metal' => ['whole' => 148470, 'extra_half' => false], 'nano' => ['whole' => 80422, 'extra_half' => false]],
+            array_intersect_key(PirateConvoyQuote::halfOfFrozenCatalogue($finale)->exactParts(), array_fill_keys(['metal', 'nano'], true)),
+        );
+    }
+
+    public function testEveryEarlySignalAndTitleKeepTheThreatAndAdvicePrivate(): void
+    {
+        [$owner, $site] = $this->ownerAndSite();
+        foreach ($this->campaign->keys() as $key) {
+            foreach ([PirateCampaignMoment::Signal, PirateCampaignMoment::ReconnaissanceEnRoute] as $moment) {
+                $preview = $this->campaign->narrativeFor($key, $site, $owner, $moment);
+                self::assertSame(['title', 'message', 'guidance'], array_keys($preview));
+                self::assertDoesNotMatchRegularExpression(
+                    '/chasseur|intercepteur|bombardier|corvette|frégate|destroyer|croiseur|cuirassé|capital|furtif/ui',
+                    implode(' ', $preview),
+                    $key,
+                );
+            }
+            $intel = $this->campaign->narrativeFor($key, $site, $owner, PirateCampaignMoment::RenseignementRecu);
+            self::assertNotEmpty($intel['guidance']);
+            self::assertDoesNotMatchRegularExpression('/[0-9]+\\s*(%|destroyers?|chasseurs?|bombardiers?|intercepteurs?)/ui', $intel['guidance']);
+        }
+        $firstCapital = $this->campaign->narrativeFor('premier_capital_noir', $site, $owner, PirateCampaignMoment::RenseignementRecu);
+        self::assertSame('Le premier capital noir', $firstCapital['title']);
+        self::assertStringContainsString('croiseurs et cuirassés', $firstCapital['guidance']);
     }
 
     public function testFrozenEncounterDoesNotFollowLaterCatalogueChanges(): void
