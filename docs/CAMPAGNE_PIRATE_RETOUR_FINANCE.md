@@ -31,3 +31,17 @@ Aucun formulaire, autorisation d’accès, trajet de repli manuel, migration ou
 exposition du pilote n’est ouvert par cette tranche. La future commande de repli
 devra relire une preuve courante du worker et des profils de mouvement
 authentifiés sous verrou, sans reconstituer des données historiques.
+
+## Données natives préparées pour une future commande de repli
+
+Les nouvelles réservations enregistrent le reçu d’attaque version 2. Les mêmes
+profils côté serveur que ceux du devis fournissent la vitesse en système et
+hors système, la consommation dans chacun de ces trajets et le coût d’orbite.
+Les capacités fret/réservoir déjà figées sont réutilisées, sans stocker les
+données de combat dans ce profil. Seules les quantités réellement survivantes
+peuvent être projetées par le lecteur interne.
+
+Un reçu 1 reste valide pour terminer un retour d’origine. Il n’est jamais
+éligible au mouvement de repli et ne gagne aucune nouvelle information en
+relisant le catalogue courant. Le snapshot 2 ne crée ni devis web, ni départ,
+ni consommateur de la preuve de retour bloqué.

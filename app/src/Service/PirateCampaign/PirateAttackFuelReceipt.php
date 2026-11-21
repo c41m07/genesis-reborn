@@ -10,7 +10,15 @@ use Symfony\Component\DependencyInjection\Attribute\Exclude;
 #[Exclude]
 final readonly class PirateAttackFuelReceipt
 {
+    private const ORIGINAL_CAPACITY_ONLY = 1;
+    private const NATIVE_MOVEMENT = 2;
+    private const MOTION_FIELDS = [
+        'speed_system' => true, 'speed_galaxy' => true,
+        'fuel_travel_system' => false, 'fuel_travel_galaxy' => false, 'fuel_orbit' => false,
+    ];
+
     private function __construct(
+        private int $version,
         public int $attempt,
         public int $originId,
         public array $origin,
@@ -27,21 +35,22 @@ final readonly class PirateAttackFuelReceipt
         $porters = array_map(static fn (array $ship): array => [
             'slug' => $ship['slug'], 'tier' => $ship['tier'], 'quantity' => $ship['quantity'],
             'cargo_capacity' => $ship['cargo_capacity'], 'fuel_capacity' => $ship['fuel_capacity'] ?? 0,
-        ], $profiles);
-        $record = new self($attempt, $originId, $origin, $site, $porters, $budget, $fromHold, $fromPlanet);
+        ] + array_intersect_key($ship, self::MOTION_FIELDS), $profiles);
+        $record = new self(self::NATIVE_MOVEMENT, $attempt, $originId, $origin, $site, $porters, $budget, $fromHold, $fromPlanet);
 
         return self::read($record->checkpoint());
     }
 
     public static function read(array $record): self
     {
+        $version = $record['version'] ?? null;
         $origin = $record['origin'] ?? null;
         $site = $record['site'] ?? null;
         $total = self::amount($record['total'] ?? null);
         $leg = self::amount($record['leg'] ?? null);
         $hold = self::amount($record['hold'] ?? null);
         $planet = self::amount($record['planet'] ?? null);
-        if (($record['version'] ?? null) !== 1 || !is_int($record['attempt'] ?? null) || $record['attempt'] < 1
+        if (!in_array($version, [self::ORIGINAL_CAPACITY_ONLY, self::NATIVE_MOVEMENT], true) || !is_int($record['attempt'] ?? null) || $record['attempt'] < 1
             || !is_int($record['planet_id'] ?? null) || $record['planet_id'] < 1
             || !self::coords($origin, 5) || !self::coords($site, 4) || $origin[1] !== $site[1]
             || $total === null || $leg === null || $hold === null || $planet === null
@@ -63,7 +72,7 @@ final readonly class PirateAttackFuelReceipt
         }
         $seen = [];
         $capacity = 0.0;
-        foreach ($porters as $ship) {
+        foreach ($porters as $index => $ship) {
             if (!is_array($ship) || !is_string($ship['slug'] ?? null) || !is_string($ship['tier'] ?? null)
                 || !is_int($ship['quantity'] ?? null) || $ship['quantity'] < 1
                 || self::amount($ship['cargo_capacity'] ?? null) === null
@@ -71,6 +80,20 @@ final readonly class PirateAttackFuelReceipt
                 || isset($seen[$ship['slug']][$ship['tier']])) {
                 throw new \DomainException('Profil de portage de départ invalide.');
             }
+            if ($version === self::NATIVE_MOVEMENT) {
+                foreach (self::MOTION_FIELDS as $field => $mustBePositive) {
+                    $value = self::amount($ship[$field] ?? null);
+                    if ($value === null || ($mustBePositive && $value <= 0.0)) {
+                        throw new \DomainException('Les paramètres de mouvement natifs du départ ne sont pas attestés.');
+                    }
+                }
+            }
+            $allowed = array_fill_keys(['slug', 'tier', 'quantity', 'cargo_capacity', 'fuel_capacity'], true);
+            if ($version === self::NATIVE_MOVEMENT) {
+                $allowed += self::MOTION_FIELDS;
+            }
+            // Une preuve historique ne devient pas éligible en relisant des champs ajoutés a posteriori.
+            $porters[$index] = array_intersect_key($ship, $allowed);
             $seen[$ship['slug']][$ship['tier']] = true;
             $capacity += ($ship['cargo_capacity'] + $ship['fuel_capacity']) * $ship['quantity'];
         }
@@ -78,13 +101,13 @@ final readonly class PirateAttackFuelReceipt
             throw new \DomainException('La capacité de départ ne correspond pas aux porteurs figés.');
         }
 
-        return new self($record['attempt'], $record['planet_id'], $origin, $site, $porters, $budget, $hold, $planet);
+        return new self($version, $record['attempt'], $record['planet_id'], $origin, $site, $porters, $budget, $hold, $planet);
     }
 
     public function checkpoint(): array
     {
         return [
-            'version' => 1, 'attempt' => $this->attempt, 'planet_id' => $this->originId,
+            'version' => $this->version, 'attempt' => $this->attempt, 'planet_id' => $this->originId,
             'origin' => $this->origin, 'site' => $this->site, 'porters' => $this->porters,
             'leg_seconds' => $this->budget->legSeconds, 'leg' => $this->budget->legHydrogen,
             'orbit' => $this->budget->orbitHydrogen, 'total' => $this->budget->initialHydrogen,
@@ -114,6 +137,16 @@ final readonly class PirateAttackFuelReceipt
         }
 
         return $porters;
+    }
+
+    /**
+     * Données serveur uniquement pour un futur repli. Le reçu historique reste utilisable
+     * pour terminer son retour initial, sans reconstruire une vitesse ou un coût de mouvement.
+     * @return list<array<string,mixed>>|null
+     */
+    public function survivorMovement(array $survivors): ?array
+    {
+        return $this->version === self::NATIVE_MOVEMENT ? $this->survivorPorters($survivors) : null;
     }
 
     private static function coords(mixed $value, int $size): bool

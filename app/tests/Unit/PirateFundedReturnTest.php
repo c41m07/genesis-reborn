@@ -61,6 +61,10 @@ final class PirateFundedReturnTest extends TestCase
             ['slug' => 'fighter', 'tier' => 'basic', 'quantity' => 1, 'cargo_capacity' => 1, 'fuel_capacity' => 1],
         ];
 
+        $nativeMotion = ['speed_system' => 100, 'speed_galaxy' => 200, 'fuel_travel_system' => 0.1,
+            'fuel_travel_galaxy' => 0.2, 'fuel_orbit' => 0.4];
+        $profiles = array_map(static fn (array $ship): array => $ship + $nativeMotion, $profiles);
+
         return PirateAttackFuelReceipt::forDeparture(1, 400, [2, 7, 8, 9, 4], [2, 7, 8, 9], $profiles, $budget, 3.0, 8.0);
     }
 }

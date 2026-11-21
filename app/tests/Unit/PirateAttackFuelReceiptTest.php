@@ -26,6 +26,46 @@ final class PirateAttackFuelReceiptTest extends TestCase
         self::assertArrayNotHasKey('survivors', $json);
     }
 
+    public function testVersionedMovementUsesOnlyFrozenNativeFieldsAndSurvivingQuantities(): void
+    {
+        $receipt = $this->fixture();
+        $checkpoint = $receipt->checkpoint();
+        self::assertSame(2, $checkpoint['version']);
+        $move = $receipt->survivorMovement(['fighter' => ['basic' => 1]]);
+        self::assertSame(1, $move[0]['quantity']);
+        self::assertSame(114, $move[0]['speed_system']);
+        self::assertSame(802, $move[0]['speed_galaxy']);
+        self::assertSame(0.07, $move[0]['fuel_travel_system']);
+        self::assertSame(0.24, $move[0]['fuel_travel_galaxy']);
+        self::assertSame(0.025, $move[0]['fuel_orbit']);
+        self::assertArrayNotHasKey('hp', $move[0]);
+        self::assertArrayNotHasKey('catalogue', $move[0]);
+
+        // Les données mouvement tentées sur une ancienne preuve ne constituent jamais une preuve rétroactive.
+        $legacy = PirateAttackFuelReceipt::read(array_replace($checkpoint, ['version' => 1]));
+        self::assertSame(114, $receipt->survivorMovement(['fighter' => ['basic' => 1]])[0]['speed_system']);
+        self::assertNull($legacy->survivorMovement(['fighter' => ['basic' => 1]]));
+        self::assertSame(3.0, $legacy->survivorPorters(['fighter' => ['basic' => 1]])[0]['cargo_capacity']);
+        self::assertArrayNotHasKey('speed_system', $legacy->checkpoint()['porters'][0]);
+    }
+
+    public function testMissingOrMalformedNativeMotionCannotBecomeAnEligibleReceipt(): void
+    {
+        $receipt = $this->fixture()->checkpoint();
+        $bad = $receipt;
+        unset($bad['porters'][0]['speed_system']);
+        $other = $receipt;
+        $other['porters'][0]['fuel_travel_galaxy'] = '0.24';
+        foreach ([$bad, $other] as $record) {
+            try {
+                PirateAttackFuelReceipt::read($record);
+                self::fail('Les valeurs mouvement de départ sont strictes.');
+            } catch (\DomainException $error) {
+                self::assertStringContainsString('mouvement natifs', $error->getMessage());
+            }
+        }
+    }
+
     #[DataProvider('invalidChanges')]
     public function testMalformedPrivateReceiptCannotBeUsed(array $changes): void
     {
@@ -55,7 +95,9 @@ final class PirateAttackFuelReceiptTest extends TestCase
             'orbit_hydrogen' => 2, 'round_trip_with_orbit_hydrogen' => 11, 'total_capacity' => 16,
         ]);
         $profiles = [
-            ['slug' => 'fighter', 'tier' => 'basic', 'quantity' => 2, 'cargo_capacity' => 3.0, 'fuel_capacity' => 5.0],
+            ['slug' => 'fighter', 'tier' => 'basic', 'quantity' => 2, 'cargo_capacity' => 3.0, 'fuel_capacity' => 5.0,
+                'speed_system' => 114, 'speed_galaxy' => 802, 'fuel_travel_system' => 0.07,
+                'fuel_travel_galaxy' => 0.24, 'fuel_orbit' => 0.025, 'hp' => 58, 'catalogue' => 'fixture'],
         ];
 
         return PirateAttackFuelReceipt::forDeparture(2, 52, [8, 2, -1, 0, 4], [9, 2, 1, 0], $profiles, $budget, 1.5, 9.5);

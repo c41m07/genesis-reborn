@@ -101,6 +101,19 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertSame(1, (int) $db->fetchOne("SELECT COUNT(*) FROM outbox_message WHERE kind = 'pirate_attack'"));
         self::assertSame(0, (int) $db->fetchOne("SELECT COUNT(*) FROM fleet WHERE status <> 'idle'"));
         self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_convoy_delivery'));
+
+        // Le snapshot de mouvement vient des mêmes profils natifs que le devis et non du catalogue futur.
+        $member->universe->gameSettings['catalog_overrides']['ships']['fighter'] = ['speed_system' => 12, 'fuel_travel_system' => 9.0];
+        $this->em->flush();
+        $this->em->clear();
+        $saved = PirateAttackFuelReceipt::read($this->campaign()->timeline['pilot_attack_fuel']);
+        $carry = $saved->survivorMovement(['fighter' => ['basic' => 1]])[0];
+        foreach (['speed_system', 'speed_galaxy', 'fuel_travel_system', 'fuel_travel_galaxy', 'fuel_orbit', 'cargo_capacity', 'fuel_capacity'] as $field) {
+            self::assertEquals($units[0][$field], $carry[$field], 'Profil figé : '.$field);
+        }
+        self::assertSame(1, $carry['quantity']);
+        self::assertNotEquals(12, $carry['speed_system']);
+        self::assertNotEquals(9.0, $carry['fuel_travel_system']);
     }
 
     public function testFundedAttackRequiresTheNativeReconnaissanceReceipt(): void
