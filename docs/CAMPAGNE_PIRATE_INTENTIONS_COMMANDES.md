@@ -28,3 +28,21 @@ sous verrou avant paiement ; une empreinte envoyée par le client n’est
 jamais cette preuve. L’empreinte ne dépend pas de l’heure d’affichage.
 Aucune action, route, formulaire ou écriture n’est activé par le modèle
 de sélection.
+
+### Préparation native privée
+
+Le service d’attaque dev est seulement une entrée interne. Pour la première
+mission, le même verrou et la même relecture sans attente du compte que le
+scout empêchent un changement de participation entre l’aperçu et le débit.
+Le système historique doit rester connu et joignable ; un vrai rapport payé
+est nécessaire. Le retour d’une tentative précédente doit être résolu sans
+survivants retenus avant de proposer une nouvelle escorte.
+
+Les quantités présentées sont celles du hangar, limitées aux coques
+mobiles admises par les attaques et à la limite de l’univers. L’aperçu
+n’engage ni stock ni ordre. Le devis est calculé par le même constructeur
+natif que le départ financé, y compris l’orbite et les deux sources exactes
+d’H₂. Le CSRF final lie aussi l’instantané du rapport, l’origine, le site,
+la tentative et les profils moteur relus sous verrou. Seule cette
+composition approuvée peut être transmise au moteur. Aucun nouveau
+bouton, déclencheur, transport ou route n’est ouvert par ce raccordement.

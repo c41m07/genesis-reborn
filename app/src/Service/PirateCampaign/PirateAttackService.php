@@ -90,6 +90,115 @@ final class PirateAttackService
         return $this->start($membership, $origin, $missionKey, $expectedPreviousAttempt, $composition, null, true, true, true);
     }
 
+    /** @return array{attempt:int, options:PiratePilotCommandOptions}|null */
+    public function pilotAttackOptionsLocked(PlayerUniverse $member, Planet $origin, string $key): ?array
+    {
+        $state = $this->pilotAttackReadyLocked($member, $origin, $key);
+        if ($state === null) {
+            return null;
+        }
+        $idle = $this->idleFleet($member, $origin);
+        if ($idle === null) {
+            return null;
+        }
+        $this->manager->lockCurrent($idle);
+        $availability = [];
+        foreach ($this->repository->all(FleetShip::class, ['fleet' => $idle]) as $row) {
+            $this->manager->lockCurrent($row);
+            if ($row->quantity < 1) {
+                continue;
+            }
+            try {
+                $ship = $this->catalog->getTierForUniverse($member->universe, 'ships', $row->slug, $row->tier);
+            } catch (\DomainException) {
+                continue; // Une ancienne coque inconnue n’est pas une option de départ.
+            }
+            if (($ship['mobile'] ?? true) && (!isset($ship['allowed_missions']) || in_array('attack', $ship['allowed_missions'], true))) {
+                $availability[$row->slug.':'.$row->tier] = $row->quantity;
+            }
+        }
+        $limit = (int) $this->catalog->forUniverse($member->universe)['limits']['max_fleet_size'];
+        if ($availability === [] || $limit < 1 || $limit > PiratePilotCommandOptions::MAX_QUANTITY
+            || count($availability) > PiratePilotCommandOptions::MAX_OPTIONS) {
+            return null;
+        }
+
+        return ['attempt' => $state['attempt'], 'options' => PiratePilotCommandOptions::escort($availability, $limit)];
+    }
+
+    /**
+     * Aucun départ/stock : lisible seulement dans un contexte propriétaire verrouillé de ce pilote.
+     * Le devis et le futur débit utilisent exactement le même constructeur natif des profils et du trajet.
+     * @return array{quote:array{seconds:int,hydrogen:float,orbit:float,hold:float,planet:float},world:string}|null
+     */
+    public function pilotAttackQuoteLocked(PlayerUniverse $member, Planet $origin, string $key, int $expectedAttempt, array $composition): ?array
+    {
+        $state = $this->pilotAttackReadyLocked($member, $origin, $key);
+        if ($state === null || $state['attempt'] !== $expectedAttempt) {
+            return null;
+        }
+        try {
+            [, , $units, $seconds, $debit] = $this->lockedLaunchInput($member, $origin, $state['proof']['system'], $composition, true);
+            [$budget, $payment, $originCoords, $targetCoords] = $debit;
+        } catch (\DomainException) {
+            return null;
+        }
+        if ($payment['planet_fuel'] > 0.0) {
+            $this->repository->lockedPlanetResources($origin);
+            $stocks = $this->resources->snapshot($origin);
+            if (($stocks['hydrogen']['stock'] ?? 0.0) < $payment['planet_fuel']) {
+                return null;
+            }
+        }
+        $world = hash('sha256', json_encode([
+            'version' => 1, 'universe' => $member->universe->id, 'mission' => $key,
+            'report_id' => $state['id'], 'reported_at' => $state['proof']['reportedAt']->format(DATE_ATOM),
+            'origin' => $originCoords, 'target' => $targetCoords, 'attempt' => $expectedAttempt,
+            'scenario' => $state['scenario'], 'escort_profiles' => $units,
+        ], JSON_THROW_ON_ERROR | JSON_PRESERVE_ZERO_FRACTION));
+
+        return ['quote' => [
+            'seconds' => $seconds, 'hydrogen' => $budget->initialHydrogen, 'orbit' => $budget->orbitHydrogen,
+            'hold' => $payment['stored_fuel_used'], 'planet' => $payment['planet_fuel'],
+        ], 'world' => $world];
+    }
+
+    private function pilotAttackReadyLocked(PlayerUniverse $member, Planet $origin, string $key): ?array
+    {
+        $at = $this->now();
+        if ($key !== PiratePilotSignal::FIRST_KEY || $member->universe->slug !== 'omega-1' || $member->id === null
+            || !$member->isPlayerControlled() || !$member->universe->isAccessible($at) || $origin->owner?->id !== $member->id
+            || $origin->solarSystem->galaxy->universe->id !== $member->universe->id || $member->player->lockedAt !== null) {
+            return null;
+        }
+        try {
+            $this->vacations->assertCanSendFleet($member);
+            $recon = $this->repository->ownPirateReconnaissance($member, $key, $at);
+            $proof = $recon?->battleProofFor($member, $at);
+            if ($proof === null || $recon->pilotScoutFuelFor($member, $at) === null) {
+                return null; // Aucun aperçu ni sélection d’escorte sur un rapport absent ou non payé.
+            }
+            $previous = $this->repository->one(PirateAttackCampaign::class, ['reconnaissance' => $recon]);
+            $attempt = 0;
+            $scenario = $proof['prepared']->battleForServer()->snapshot();
+            if ($previous !== null) {
+                $this->manager->lockCurrent($previous);
+                if (!self::usesPrivateArrival($previous) || ($previous->timeline['convoy_pilot'] ?? null) !== true
+                    || !isset($previous->timeline['pilot_attack_fuel']) || $previous->returnBlocked || $previous->reservedShips !== []
+                    || ($previous->timeline['state'] ?? null) !== 'retryable' || ($previous->timeline['won'] ?? null) !== false
+                    || !is_int($attempt = $previous->timeline['attempt'] ?? null) || $attempt < 1
+                    || $attempt >= PiratePilotCommandOptions::MAX_QUANTITY) {
+                    return null;
+                }
+                $scenario = $this->scenarioFromReport($proof['prepared'], $previous)->snapshot();
+            }
+        } catch (\LogicException) {
+            return null;
+        }
+
+        return ['id' => $recon->id, 'attempt' => $attempt, 'proof' => $proof, 'scenario' => $scenario];
+    }
+
     private function start(
         PlayerUniverse $membership,
         Planet $origin,

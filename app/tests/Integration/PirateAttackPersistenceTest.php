@@ -5,20 +5,29 @@ declare(strict_types=1);
 namespace App\Tests\Integration;
 
 use App\Entity\{Fleet, FleetShip, Galaxy, PirateAttackCampaign, PirateConvoyDelivery, PirateReconnaissance, Planet, PlanetResource, Player, PlayerDiscovery, PlayerUniverse, SolarSystem, Universe};
+use App\Manager\GameManager;
+use App\Repository\GameRepository;
+use App\Service\Colony\ActionGuard;
 use App\Message\{PirateAttackDue, PirateConvoyDue, PirateSurvivorsDue};
 use App\MessageHandler\{PirateAttackDueHandler, PirateSurvivorsDueHandler};
 use App\Service\Catalog\GameCatalog;
 use App\Service\Combat\{CombatSimulator, CombatUnitFactory};
 use App\Service\Fleet\MovementCalculator;
 use App\Service\Notification\OutboxRelay;
-use App\Service\PirateCampaign\{PirateAttackFuelReceipt, PirateAttackService, PirateBattleScenario, PirateCampaignCatalogue, PirateCampaignPresenter, PirateCampaignProgress, PirateCampaignSequence, PirateConvoyDeliveryService, PirateConvoyDispatchToken, PirateDistressSite, PirateEncounterSnapshot, PiratePreparedEncounter, PirateReconnaissanceService, PirateSurvivorRecoveryService};
+use App\Service\PirateCampaign\{PirateAttackFuelReceipt, PirateAttackService, PirateBattleScenario, PirateCampaignCatalogue, PirateCampaignPresenter, PirateCampaignProgress, PirateCampaignSequence, PirateConvoyDeliveryService, PirateConvoyDispatchToken, PirateDistressSite, PirateEncounterSnapshot, PiratePilotAttackCommand, PiratePilotGate, PiratePilotSignalResolver, PiratePreparedEncounter, PirateReconnaissanceService, PirateSurvivorRecoveryService};
 use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Clock\MockClock;
+use Symfony\Component\HttpFoundation\{Request, RequestStack};
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 use Symfony\Component\Messenger\Exception\RecoverableMessageHandlingException;
 use Symfony\Component\Process\Process;
+use Symfony\Component\Security\Csrf\CsrfTokenManager;
+use Symfony\Component\Security\Csrf\TokenStorage\SessionTokenStorage;
 
 final class PirateAttackPersistenceTest extends KernelTestCase
 {
@@ -55,6 +64,64 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         }
         self::assertSame(3, (int) $db->fetchOne('SELECT quantity FROM fleet_ship WHERE id = ?', [$fighter->id]));
         self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_attack_campaign'));
+    }
+
+    public function testPilotAttackSameNativePriceDoesNotAuthorizeAnotherExactComposition(): void
+    {
+        [$owner, $home, $fighter] = $this->fixture(omega: true, scoutPaid: true, missionKey: 'balise_17');
+        $owner->player->currentPlayerUniverse = $owner;
+        $second = $this->addShips($fighter->fleet, 'interceptor', 3);
+        $catalog = self::getContainer()->get(GameCatalog::class);
+        $profile = $catalog->getTierForUniverse($owner->universe, 'ships', 'fighter', 'basic');
+        // Deux compositions réellement différentes mais de mêmes durée, débit et orbite.
+        $owner->universe->gameSettings['catalog_overrides']['ships']['interceptor'] = array_intersect_key($profile,
+            array_fill_keys(['speed_system', 'speed_galaxy', 'fuel_travel_system', 'fuel_travel_galaxy', 'fuel_orbit',
+                'cargo_capacity', 'fuel_capacity'], true));
+        $this->em->flush();
+        $security = $this->createStub(Security::class);
+        $security->method('getUser')->willReturn($owner->player);
+        $request = new Request();
+        $request->setSession(new Session(new MockArraySessionStorage()));
+        $stack = new RequestStack();
+        $stack->push($request);
+        $csrf = new CsrfTokenManager(null, new SessionTokenStorage($stack));
+        $manager = self::getContainer()->get(GameManager::class);
+        $resolver = new PiratePilotSignalResolver(self::getContainer()->get(GameRepository::class), $manager);
+        $command = new PiratePilotAttackCommand(new PiratePilotGate('dev', true, $owner->universe->id), $security, $this->clock, $csrf,
+            $this->em, $manager, self::getContainer()->get(ActionGuard::class), $resolver, $this->service);
+
+        $firstChoice = ['escort' => [1 => '2']];
+        $secondChoice = ['escort' => [2 => '2']];
+        self::assertNull($command->options($home, 1), 'Pas de composition proposée avant le rapport réellement remis.');
+        self::assertNull($command->preview($home, 1, $firstChoice));
+        $this->finishRecon();
+        $available = $command->options($home, 1);
+        self::assertSame(0, $available['attempt']);
+        self::assertSame('fighter:basic', $available['options']->escortKey(1));
+        self::assertSame('interceptor:basic', $available['options']->escortKey(2));
+        $a = $command->preview($home, 1, $firstChoice);
+        $b = $command->preview($home, 1, $secondChoice);
+        self::assertNotNull($a);
+        self::assertNotNull($b);
+        self::assertSame($a['quote'], $b['quote']);
+        $csrfForA = $csrf->getToken($a['intent']->csrfId())->getValue();
+        $db = $this->em->getConnection();
+        $hydrogen = $this->resourceStock($home->id, 'hydrogen');
+        self::assertFalse($command->execute($home, 1, $secondChoice, $csrfForA));
+        self::assertFalse($command->execute($home, 1, $firstChoice + ['origin' => '27'], $csrfForA));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_attack_campaign'));
+        self::assertSame($hydrogen, $this->resourceStock($home->id, 'hydrogen'));
+        self::assertSame(3, $this->stock($fighter->id));
+        self::assertSame(3, $this->stock($second->id));
+
+        self::assertTrue($command->execute($home, 1, $firstChoice, $csrfForA));
+        self::assertFalse($command->execute($home, 1, $firstChoice, $csrfForA));
+        self::assertSame(['fighter' => ['basic' => 2]], $this->campaign()->reservedShips);
+        self::assertSame(1, $this->stock($fighter->id));
+        self::assertSame(3, $this->stock($second->id));
+        self::assertEqualsWithDelta($hydrogen - $a['quote']['planet'], $this->resourceStock($home->id, 'hydrogen'), 1e-9);
+        self::assertSame(1, (int) $db->fetchOne("SELECT COUNT(*) FROM outbox_message WHERE kind = 'pirate_attack'"));
+        self::assertSame(0, (int) $db->fetchOne("SELECT COUNT(*) FROM fleet WHERE status <> 'idle'"));
     }
 
     public function testPayingAttackUsesNativeRoundTripAndOrbitWithoutTakingFreightOrRepeatingDebit(): void
@@ -1664,7 +1731,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $this->em->getConnection()->executeStatement("DELETE FROM outbox_message WHERE kind = 'pirate_reconnaissance'");
     }
 
-    private function fixture(?PirateBattleScenario $scenario = null, ?string $definition = null, bool $legacy = false, bool $omega = false, ?array $frozenCosts = null, bool $scoutPaid = false, ?array $scoutOpponentOverride = null): array
+    private function fixture(?PirateBattleScenario $scenario = null, ?string $definition = null, bool $legacy = false, bool $omega = false, ?array $frozenCosts = null, bool $scoutPaid = false, ?array $scoutOpponentOverride = null, string $missionKey = 'signal'): array
     {
         $u = new Universe();
         $u->slug = $u->name = $omega ? 'omega-1' : 'pirate-attack-test';
@@ -1709,7 +1776,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
                 $this->em->persist($stock);
             }
             $this->em->flush();
-            $recon->launchDefinedWithOmegaPilotFuel($member, $p, $s, $site, 'signal', $definition ?? 'balise_17', true);
+            $recon->launchDefinedWithOmegaPilotFuel($member, $p, $s, $site, $missionKey, $definition ?? 'balise_17', true);
         } elseif ($definition !== null) {
             $recon->launchDefined($member, $p, $s, $site, 'signal', $definition);
         } else {
