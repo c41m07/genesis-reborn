@@ -32,8 +32,10 @@ final class TechnologyGuideStep
         $ancestors[$key] = true;
         // Un déblocage permanent ne réintroduit pas ses conditions historiques, mais le labo local reste nécessaire.
         $requirements = $node['acquired'] ? [] : $node['prerequisites'];
-        if ($node['localRequirement'] !== null) {
-            $requirements[] = $node['localRequirement'];
+        $localLaboratory = $node['localRequirement'];
+        if ($localLaboratory !== null && !in_array(self::key($localLaboratory), array_map(self::key(...), $requirements), true)) {
+            // Ne jamais remplacer un seuil de catalogue supérieur par le minimum local du même labo.
+            $requirements[] = $localLaboratory;
         }
         $missing = array_filter($requirements, static fn (array $requirement): bool => !$requirement['met']);
         // Le tri stable garde l’ordre du catalogue à écart égal ; une référence à un vaisseau n’a pas de niveau.

@@ -128,6 +128,7 @@ final class TechnologyGuideStepTest extends TestCase
         self::assertSame($goal['recommendation'], $indexed['technologies:signature_reduction-basic']['recommendation']);
         $technologies['nanomaterial_synthesis']['basic'] = 3;
         self::assertSame('lab', $compact($levels, $technologies)['recommendation']['requirement']['slug']);
+        self::assertSame(7, $compact([], $technologies)['recommendation']['requirement']['level']);
         $levels['lab']['basic'] = 7;
         self::assertSame(['state' => 'prerequisites_met'], $compact($levels, $technologies)['recommendation']);
         $membership->catalogUnlocks[CatalogAccess::key($planet, 'technologies', 'signature_reduction', 'basic')] = true;
