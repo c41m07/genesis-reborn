@@ -37,15 +37,26 @@ test('Premiers pas : conseil facultatif et progression après la fin réelle de 
     const email = await register(page);
     const overview = page.url();
     await expect(page.locator('.topbar .universe-context + .header-technology-goal')).toBeVisible();
-    const overviewGuide = page.getByRole('region', { name: 'Premiers pas', exact: true });
-    await expect(overviewGuide).toContainText('0 sur 12');
-    await expect(overviewGuide).toContainText('Mine à ciel ouvert');
-    const guideLink = overviewGuide.getByRole('link', { name: 'Voir le guide Premiers pas et les remboursements', exact: true });
+    await expect(page.locator('#overview-first-steps-title')).toHaveCount(0);
+    const popup = page.locator('.first-steps-popup');
+    const summary = popup.locator('summary');
+    const guideLink = popup.getByRole('link', { name: 'Guide complet et remboursements', exact: true });
+    await expect(popup).toHaveAttribute('open', '');
+    await expect(popup).toContainText('0/12');
+    await expect(popup).toContainText('Mine à ciel ouvert');
+    // Faire la même requête que le contrôleur live depuis le navigateur et sa session.
+    const refresh = await page.evaluate(async () => {
+        const response = await fetch(location.href, { headers: { 'X-Genesis-Live': '1', Accept: 'application/json' } });
+        return { ok: response.ok, type: response.headers.get('Content-Type'), text: await response.text() };
+    });
+    expect(refresh.ok).toBe(true);
+    expect(refresh.type).toContain('application/json');
+    expect(refresh.text).not.toContain('first-steps-overview');
     await page.setViewportSize({ width: 1440, height: 900 });
-    expect((await guideLink.boundingBox())?.height).toBeGreaterThanOrEqual(44);
-    await overviewGuide.screenshot({ path: info.outputPath('premiers-pas-vue-generale-desktop.png'), animations: 'disabled' });
+    await expect(summary).toHaveAttribute('aria-controls', 'first-steps-popup-panel');
+    expect((await summary.boundingBox())?.width).toBeGreaterThanOrEqual(44);
     await page.setViewportSize({ width: 390, height: 844 });
-    expect((await guideLink.boundingBox())?.height).toBeGreaterThanOrEqual(44);
+    expect((await summary.boundingBox())?.height).toBeGreaterThanOrEqual(44);
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
     await guideLink.focus();
     await expect(guideLink).toBeFocused();
@@ -93,7 +104,8 @@ test('Premiers pas : conseil facultatif et progression après la fin réelle de 
     // Le guide ne bloque pas le reste du jeu avant la première construction.
     await page.getByRole('link', { name: 'Retour à la vue générale', exact: true }).click();
     await expect(page).toHaveURL(overview);
-    await page.getByRole('link', { name: 'Voir le guide Premiers pas et les remboursements', exact: true }).click();
+    await summary.click();
+    await guideLink.click();
     await next.getByRole('link', { name: 'Ouvrir la Mine à ciel ouvert', exact: true }).click();
     await expect(page).toHaveURL(/section=buildings.*#item-mine_metal-basic$/);
     const card = page.locator('#item-mine_metal-basic');
@@ -264,9 +276,15 @@ test('Premiers pas : panneau non modal, images à la demande et reprise par Pré
     await page.keyboard.press('Escape');
     await expect(popup).not.toHaveAttribute('open', '');
     await expect(summary).toBeFocused();
+    await expect(summary).toHaveAttribute('aria-label', 'Ouvrir Premiers pas');
+    await expect(summary).toHaveAttribute('aria-expanded', 'false');
+    const tabBox = await summary.boundingBox();
+    expect(tabBox.x + tabBox.width).toBeCloseTo(1440, 0);
+    if (captures) await page.screenshot({ path: captures + '/GENESIS_PREMIERS_PAS_LANGUETTE_PC.png', animations: 'disabled' });
     await page.reload();
     await expect(popup).not.toHaveAttribute('open', '');
-    await summary.click();
+    await summary.press('Enter');
+    await expect(summary).toHaveAttribute('aria-expanded', 'true');
     await expect(popup.locator('output')).toHaveText('2 sur 2');
     await expect(page.locator('dialog[open]')).toHaveCount(0);
 
@@ -294,8 +312,12 @@ test('Premiers pas : panneau non modal, images à la demande et reprise par Pré
     await expect(setting).not.toBeChecked();
     await page.goto(overview);
     await expect(popup).toHaveCount(0);
-    await expect(page.getByText('Guide désactivé.')).toBeVisible();
-    await page.getByRole('link', { name: 'Réactiver dans Préférences' }).click();
+    await expect(page.locator('#overview-first-steps-title')).toHaveCount(0);
+    await page.locator('.topbar').getByRole('link', { name: 'Paramètres', exact: true }).click();
+    await page.getByRole('link', { name: 'Voir le guide complet et les remboursements', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Premiers pas', exact: true })).toBeVisible();
+    await page.goBack();
+    await expect(setting).not.toBeChecked();
     await setting.check();
     await page.getByRole('button', { name: 'Enregistrer le réglage du guide' }).click();
     await expect(setting).toBeChecked();

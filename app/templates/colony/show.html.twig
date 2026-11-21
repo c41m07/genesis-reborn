@@ -19,7 +19,6 @@
 <div class="colony-layout colony-layout--integrated"><div class="colony-content">
 {% if section=='overview' %}
 {% include 'colony/_overview_attention.html.twig' %}
-{% include 'player/_first_steps_overview.html.twig' %}
 {% if (preferences.firstStepsGuide ?? true) and training.next %}
     {% include 'player/_first_steps_popup.html.twig' with {training: training, planet: planet, deferDaily: rewardHeader.autoOpen} only %}
 {% endif %}

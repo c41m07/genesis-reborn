@@ -1,4 +1,3 @@
-{% import 'ui/macros.html.twig' as ui %}
 {% set step = training.next %}
 {% set guide = training.hints[step] %}
 {% set example = training.examples[step] %}
@@ -7,8 +6,9 @@
          data-first-steps-guide-scope-value="{{ planet.owner.id }}"
          data-first-steps-guide-defer-value="{{ deferDaily ? 'true' : 'false' }}"
          data-action="toggle->first-steps-guide#rememberOpened keydown.esc->first-steps-guide#closeFromKeyboard">
-    <summary class="quiet-button" data-first-steps-guide-target="summary">{{ ui.icon('overview') }} Premiers pas · Aide</summary>
-    <section class="panel first-steps-popup-panel" aria-labelledby="first-steps-popup-title">
+    <summary class="quiet-button" data-first-steps-guide-target="summary" aria-label="Ouvrir Premiers pas"
+             aria-controls="first-steps-popup-panel" title="Ouvrir Premiers pas"><span aria-hidden="true">‹</span></summary>
+    <section class="panel first-steps-popup-panel" id="first-steps-popup-panel" aria-labelledby="first-steps-popup-title">
         <header class="first-steps-popup-heading">
             <div>
                 <p class="first-steps-popup-eyebrow">PREMIERS PAS · {{ training.completed|length }}/{{ training.hints|length }}</p>

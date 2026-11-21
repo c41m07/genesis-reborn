@@ -9,6 +9,7 @@ export default class extends Controller {
         this.element.classList.add('first-steps-popup-enhanced');
         this.closeButtonTarget.hidden = false;
         this.controlsTarget.hidden = false;
+        this.reflectDisclosure();
         this.index = Math.max(0, Math.min(this.slideTargets.length - 1, Number(this.read(this.slideKey())) || 0));
         if (this.element.open) {
             this.rememberOpened();
@@ -40,7 +41,15 @@ export default class extends Controller {
         this.rememberOpened();
     }
 
+    reflectDisclosure() {
+        const label = this.element.open ? 'Fermer Premiers pas' : 'Ouvrir Premiers pas';
+        this.summaryTarget.setAttribute('aria-expanded', String(this.element.open));
+        this.summaryTarget.setAttribute('aria-label', label);
+        this.summaryTarget.title = label;
+    }
+
     rememberOpened() {
+        this.reflectDisclosure();
         if (!this.element.open) return;
         this.write(this.openKey(), '1');
         this.switchSlide(this.index);
@@ -48,6 +57,7 @@ export default class extends Controller {
 
     close() {
         this.element.open = false;
+        this.reflectDisclosure();
         this.summaryTarget.focus();
     }
 

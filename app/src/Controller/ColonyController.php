@@ -114,8 +114,12 @@ final class ColonyController extends AbstractController
         if ($section !== 'overview' && $request->query->has('showLockedItems')) {
             $data['show_locked_items'] = $request->query->getBoolean('showLockedItems');
         }
+        $isLiveJson = $request->headers->get('X-Genesis-Live') === '1' && $request->getPreferredFormat() === 'json';
         if ($section === 'overview') {
-            $data['training'] = $firstSteps->progress($m, $data['building_levels'], $data['technology_levels']);
+            if (!$isLiveJson && ($this->getUser()->preferences['firstStepsGuide'] ?? true)) {
+                // Le panneau est rendu sur la page complète, plus dans les fragments actualisés.
+                $data['training'] = $firstSteps->progress($m, $data['building_levels'], $data['technology_levels']);
+            }
             if ($request->headers->get('X-Genesis-Live') !== '1') {
                 $journal->open($m);
             }
@@ -143,7 +147,7 @@ final class ColonyController extends AbstractController
         } elseif ($request->query->has('tutorial')) {
             $data['training_hint'] = $firstSteps->catalogHint($request->query->getString('tutorial'), $section, $p, $data['building_levels'], $data['resources']);
         }
-        if ($request->headers->get('X-Genesis-Live') === '1' && $request->getPreferredFormat() === 'json') {
+        if ($isLiveJson) {
             return $this->liveRegions($request, $data + ['section' => $section]);
         }
         return $this->render('colony/show.html.twig', $data + ['section' => $section]);
@@ -164,7 +168,6 @@ final class ColonyController extends AbstractController
         if ($data['section'] === 'overview') {
             // Réutiliser les ressources déjà préparées ; le bandeau conserve son propre rendu.
             $templates['overview-attention'] = 'colony/_overview_attention.html.twig';
-            $templates['first-steps-overview'] = 'player/_first_steps_overview.html.twig';
         }
         $regions = [];
         foreach ($templates as $name => $template) {

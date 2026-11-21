@@ -22,25 +22,37 @@
 
 .first-steps-popup { margin-block: 8px 16px; }
 .first-steps-popup > summary {
-    width: fit-content;
+    width: 44px;
     min-height: 44px;
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    margin-inline-start: auto;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    font-size: 2rem;
+    line-height: 1;
     cursor: pointer;
 }
 .first-steps-popup > summary::-webkit-details-marker { display: none; }
 .first-steps-popup-enhanced {
     position: fixed;
     bottom: 16px;
-    right: 16px;
-    width: min(440px, calc(100vw - 32px));
+    right: 0;
+    width: min(488px, calc(100vw - 10px));
+    min-height: 44px;
     z-index: 24;
     margin: 0;
     pointer-events: none;
 }
+.first-steps-popup-enhanced > summary {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
+}
+.first-steps-popup[open] > summary span { transform: rotate(180deg); }
 .first-steps-popup-enhanced > summary, .first-steps-popup-enhanced > section { pointer-events: auto; }
+.first-steps-popup-enhanced > section { margin-inline-end: 48px; }
 .first-steps-popup-panel {
     max-height: min(62dvh, 580px);
     display: flex;
@@ -87,7 +99,7 @@
     .first-steps .first-steps-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
 @media(max-width: 740px) {
-    .first-steps-popup-enhanced { bottom: calc(78px + env(safe-area-inset-bottom)); right: 10px; width: min(420px, calc(100vw - 20px)); }
+    .first-steps-popup-enhanced { bottom: calc(78px + env(safe-area-inset-bottom)); width: min(468px, calc(100vw - 8px)); }
     .first-steps-popup-panel { max-height: 62dvh; padding: 12px; }
     .first-steps-gallery img { height: min(110px, 17dvh); }
     .first-steps-popup-actions a { font-size: .87rem; }
