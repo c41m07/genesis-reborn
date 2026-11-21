@@ -237,7 +237,7 @@ test('Premiers pas : panneau non modal, images à la demande et reprise par Pré
     await expect(popup.getByText('Validation :')).toBeVisible();
     for (const [width, height] of [[1440, 900], [850, 900], [390, 844]]) {
         await page.setViewportSize({ width, height });
-        const panel = popup.locator('.first-steps-popup-panel');
+        const panel = popup.locator('[data-first-steps-guide-fragment]');
         const content = panel.locator('.first-steps-popup-content');
         const box = await panel.boundingBox();
         expect(box.x).toBeGreaterThanOrEqual(0);
@@ -484,4 +484,83 @@ test('Le dernier vrai jalon masque la languette dans cet empire, sans retirer le
     await expect(popup.locator('summary')).toBeVisible();
     // Le fragment d’un onglet de l’ancien univers ne réutilise pas sa colonie dans le nouveau.
     expect(await page.evaluate(async url => (await fetch(url, { redirect: 'manual' })).status, panelUrl)).toBe(404);
+});
+
+test('Un guide fermé relit le jalon acquis dans un autre onglet, puis masque une désactivation', async ({ page }) => {
+    test.setTimeout(120000);
+    const email = await register(page);
+    const overview = new URL(page.url()).pathname;
+    const popup = page.locator('.first-steps-popup');
+    const arrow = popup.locator('summary');
+    await expect(popup.getByRole('heading', { name: 'Mine à ciel ouvert' })).toBeVisible();
+    await popup.getByRole('button', { name: 'Fermer', exact: true }).click();
+    const reads = [];
+    page.on('request', request => {
+        if (new URL(request.url()).pathname === '/premiers-pas/panneau') reads.push(request.url());
+    });
+    const other = await page.context().newPage();
+    try {
+        await other.goto(overview + '?section=buildings&focusItem=1&tutorial=mine_metal#item-mine_metal-basic');
+        await other.locator('#item-mine_metal-basic').getByRole('button', { name: 'Améliorer au niveau 1', exact: true }).click();
+        accelerateQueuedItem(process.env.BROWSER_ROUTER, email, 'building', 'mine_metal');
+        await other.goto(overview + '?section=buildings');
+        await expect(other.locator('#building-tab-mine_metal-basic .building-rank-level')).toHaveText('1');
+        expect(reads).toHaveLength(0);
+
+        await arrow.press('Enter');
+        await expect(popup.getByRole('heading', { name: 'Centrale nucléaire et bilan énergie' })).toBeVisible();
+        expect(reads).toHaveLength(1);
+        await popup.getByRole('button', { name: 'Fermer', exact: true }).click();
+        await other.goto('/profil/preferences');
+        await other.getByRole('checkbox', { name: 'Afficher le guide Premiers pas' }).uncheck();
+        await other.getByRole('button', { name: 'Enregistrer le réglage du guide' }).click();
+        await expect(other.getByRole('status').filter({ hasText: 'Guide désactivé' })).toBeVisible();
+        expect(reads).toHaveLength(1);
+
+        await arrow.press('Enter');
+        await expect(popup).toBeHidden();
+        await expect(page.locator('#main')).toBeFocused();
+        await expect(arrow).not.toBeVisible();
+        expect(reads).toHaveLength(2);
+    } finally {
+        await other.close();
+    }
+});
+
+test('Le guide qui échoue reste réessayable et un 204 tardif ne déplace pas un focus extérieur', async ({ page }) => {
+    await register(page);
+    const overview = new URL(page.url()).pathname;
+    await page.goto(overview + '?section=buildings');
+    const popup = page.locator('.first-steps-popup');
+    const arrow = popup.locator('summary');
+    let requests = 0;
+    let release;
+    const hold = new Promise(resolve => { release = resolve; });
+    await page.route('**/premiers-pas/panneau?*', async route => {
+        requests++;
+        if (requests === 1) {
+            await route.fulfill({ status: 503 });
+        } else {
+            await hold;
+            await route.fulfill({ status: 204 });
+        }
+    });
+    try {
+        await arrow.press('Enter');
+        await expect(popup.getByRole('status')).toContainText('Impossible de charger');
+        await expect(popup.getByRole('link', { name: 'Guide complet et remboursements' })).toBeVisible();
+        await page.keyboard.press('Escape');
+        await expect(arrow).toBeFocused();
+        await expect(popup).not.toHaveAttribute('open', '');
+        await arrow.press('Enter');
+        await expect(popup.getByRole('status')).toContainText('Chargement');
+        const outside = page.locator('.topbar').getByRole('link', { name: 'Paramètres' });
+        await outside.focus();
+        release();
+        await expect(popup).toBeHidden();
+        await expect(outside).toBeFocused();
+        expect(requests).toBe(2);
+    } finally {
+        release();
+    }
 });

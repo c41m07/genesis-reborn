@@ -107,3 +107,6 @@
 @media(max-width: 600px) {
     .first-steps .first-steps-grid { grid-template-columns: minmax(0,1fr); }
 }
+
+/* Un état expiré ou la zone remplacée restent réellement absents de l’affichage. */
+.first-steps-popup[hidden], .first-steps-popup-mount > [hidden] { display: none; }

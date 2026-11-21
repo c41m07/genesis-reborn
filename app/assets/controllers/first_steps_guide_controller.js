@@ -2,11 +2,13 @@ import { Controller } from '@hotwired/stimulus';
 import '../styles/first-steps-guide.css';
 
 export default class extends Controller {
-    static targets = ['summary', 'mount', 'status', 'closeButton', 'slide', 'illustration', 'controls', 'previous', 'next', 'position'];
+    static targets = ['summary', 'fallback', 'content', 'status', 'closeButton', 'slide', 'illustration', 'controls', 'previous', 'next', 'position'];
     static values = { scope: String, url: String, autoOpen: Boolean, defer: Boolean };
 
     connect() {
         this.element.classList.add('first-steps-popup-enhanced');
+        this.wasOpen = false;
+        this.clearPanel();
         this.reflectDisclosure();
         if (this.element.open) {
             this.rememberOpened();
@@ -48,13 +50,27 @@ export default class extends Controller {
 
     rememberOpened() {
         this.reflectDisclosure();
-        if (!this.element.open) {
+        const open = this.element.open;
+        if (open === this.wasOpen) return;
+        this.wasOpen = open;
+
+        if (!open) {
             this.cancelPending();
+            this.clearPanel();
             return;
         }
 
         this.write(this.openKey(), '1');
-        if (!this.step && !this.pending) this.loadPanel();
+        // Une autre page peut avoir fait progresser ou désactivé le guide pendant sa fermeture.
+        if (!this.pending) this.loadPanel();
+    }
+
+    clearPanel() {
+        this.contentTarget.replaceChildren();
+        this.contentTarget.hidden = true;
+        this.fallbackTarget.hidden = false;
+        this.statusTarget.hidden = true;
+        this.step = null;
     }
 
     async loadPanel() {
@@ -71,7 +87,7 @@ export default class extends Controller {
             });
             if (request.signal.aborted || !this.element.open) return;
             if (response.status === 204) {
-                this.setStatus('Aucune étape à afficher. Le guide complet reste accessible.');
+                this.hideUnavailableGuide();
                 return;
             }
             if (!response.ok) throw new Error('Guide indisponible');
@@ -83,10 +99,12 @@ export default class extends Controller {
             if (!panel?.dataset.firstStepsGuideStep) throw new Error('Étape indisponible');
 
             this.step = panel.dataset.firstStepsGuideStep;
-            const fallbackHadFocus = this.mountTarget.contains(document.activeElement);
-            this.mountTarget.replaceChildren(panel);
+            const fallbackHadFocus = this.fallbackTarget.contains(document.activeElement);
+            this.contentTarget.replaceChildren(panel);
+            this.contentTarget.hidden = false;
             // Le lien natif reste le même choix si le joueur l’a déjà atteint au clavier.
             if (fallbackHadFocus) panel.querySelector('[data-first-steps-guide-return]')?.focus();
+            this.fallbackTarget.hidden = true;
             this.closeButtonTarget.hidden = false;
             const count = this.slideTargets.length;
             if (this.hasControlsTarget) this.controlsTarget.hidden = count < 2;
@@ -97,6 +115,20 @@ export default class extends Controller {
         } finally {
             if (this.pending === request) this.pending = null;
         }
+    }
+
+    hideUnavailableGuide() {
+        if (this.element.contains(document.activeElement)) {
+            const main = document.getElementById('main');
+            if (main) {
+                // Retirer le contrôle actif sans ajouter un arrêt permanent à la tabulation.
+                if (!main.hasAttribute('tabindex')) main.tabIndex = -1;
+                main.focus({ preventScroll: true });
+            }
+        }
+        this.element.open = false;
+        this.element.hidden = true;
+        this.rememberOpened();
     }
 
     setStatus(message) {
@@ -112,9 +144,8 @@ export default class extends Controller {
 
     close() {
         this.element.open = false;
-        this.cancelPending();
-        this.reflectDisclosure();
         this.summaryTarget.focus();
+        this.rememberOpened();
     }
 
     closeFromKeyboard(event) {

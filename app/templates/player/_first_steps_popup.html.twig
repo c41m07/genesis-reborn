@@ -7,9 +7,10 @@
     <summary class="quiet-button" data-first-steps-guide-target="summary" aria-label="Ouvrir Premiers pas"
              aria-controls="first-steps-popup-panel" title="Ouvrir Premiers pas"><span aria-hidden="true">‹</span></summary>
     <div id="first-steps-popup-panel" class="first-steps-popup-mount" data-first-steps-guide-target="mount">
-        <div class="panel first-steps-popup-panel">
+        <div class="panel first-steps-popup-panel" data-first-steps-guide-target="fallback">
             <p role="status" data-first-steps-guide-target="status" hidden></p>
             <a href="{{ path('app_first_steps') }}">Guide complet et remboursements</a>
         </div>
+        <div data-first-steps-guide-target="content" hidden></div>
     </div>
 </details>
