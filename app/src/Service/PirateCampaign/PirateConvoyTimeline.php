@@ -248,7 +248,12 @@ final class PirateConvoyTimeline
         if ($value === null) {
             return null;
         }
-        $date = is_string($value) ? \DateTimeImmutable::createFromFormat(DATE_ATOM, $value) : false;
+        try {
+            $date = is_string($value) ? \DateTimeImmutable::createFromFormat(DATE_ATOM, $value) : false;
+        } catch (\ValueError $error) {
+            // PHP refuse notamment l’octet nul avant même de renvoyer un résultat de parsing.
+            throw new \DomainException('Date du droit de convoi invalide.', previous: $error);
+        }
         if ($date === false || $date->format(DATE_ATOM) !== $value) {
             throw new \DomainException('Date du droit de convoi invalide.');
         }

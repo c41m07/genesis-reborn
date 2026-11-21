@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Service\PirateCampaign;
 
 use App\Entity\Player;
-use App\Repository\PirateCampaignReadRepository;
+use App\Repository\{PirateCampaignReadRepository, PirateConvoyReadRepository};
 use Psr\Clock\ClockInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\DependencyInjection\Attribute\When;
@@ -21,6 +21,8 @@ final readonly class PiratePilotLocalReader
         private PirateCampaignReadRepository $repository,
         private PirateCampaignCatalogue $catalogue,
         private PirateCampaignWorkspace $workspace,
+        private PirateConvoyReadRepository $convoys,
+        private PirateConvoyDossierProjection $convoyProjection,
     ) {
     }
 
@@ -53,8 +55,17 @@ final readonly class PiratePilotLocalReader
         }
 
         // Les requêtes de détail revérifient la possession, la sélection et l'univers frais.
-        $rows = $this->repository->ownedRows($viewer, $this->catalogue->keys(), $at);
+        $keys = $this->catalogue->keys();
+        $rows = $this->repository->ownedRows($viewer, $keys, $at);
+        $dossier = $this->workspace->forViewer($viewer, $rows, $at, $missionNumber);
+        if ($dossier === null) {
+            return null;
+        }
 
-        return $this->workspace->forViewer($viewer, $rows, $at, $missionNumber);
+        // Un droit se lit seulement après autorisation du dossier ; ne pas en inférer une victoire.
+        $visible = $this->convoyProjection->visibleKeys($dossier, $keys);
+        $rights = $this->convoys->forOwnedDossier($viewer, $visible, $at);
+
+        return $dossier + ['convoy' => $this->convoyProjection->forDossier($viewer, $dossier, $keys, $rights, $at)];
     }
 }

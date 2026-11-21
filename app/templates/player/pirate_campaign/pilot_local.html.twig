@@ -29,13 +29,14 @@
             {% endfor %}
         </ul>
     </nav>
+    {% include 'player/pirate_campaign/_convoy_status.html.twig' with {convoy: dossier.convoy, selected: dossier.selected} only %}
     {% if dossier.signal_pending %}
         <section class="panel" aria-labelledby="pirate-signal-title">
             <h2 id="pirate-signal-title">Mission {{ dossier.selected }}</h2>
             <p>Le signal n’est pas encore localisé.</p>
         </section>
     {% elseif dossier.briefing is not null %}
-        {# L’ancien devis suppose que rien n’a été versé ; la projection durable n’est pas branchée ici. #}
+        {# La section convoi ci-dessus affiche le seul état durable ; ne pas répéter l’ancien devis indicatif. #}
         {% include 'player/pirate_campaign/_briefing.html.twig' with {briefing: dossier.briefing|merge({quote: null})} only %}
     {% endif %}
 </main>

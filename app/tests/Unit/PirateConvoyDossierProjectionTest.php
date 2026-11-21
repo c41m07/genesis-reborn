@@ -88,6 +88,23 @@ final class PirateConvoyDossierProjectionTest extends TestCase
         }
     }
 
+    public function testOneInvalidDurableDateDoesNotHideTheOtherOwnedDossier(): void
+    {
+        $viewer = $this->viewer();
+        $broken = $this->right($viewer, self::KEYS[0], 70);
+        $valid = $this->right($viewer, self::KEYS[1], 85);
+        $property = new \ReflectionProperty(PirateConvoyDelivery::class, 'checkpoint');
+        $invalid = $broken['right']->timeline()->checkpoint();
+        $invalid['transition_at'] .= "\\0";
+        $property->setValue($broken['right'], $invalid);
+
+        $result = (new PirateConvoyDossierProjection())->forDossier(
+            $viewer, $this->dossier(1), self::KEYS, [$broken, $valid], $this->at(100),
+        );
+        self::assertNull($result['selected_reward']);
+        self::assertSame(['mission' => 2, 'state' => 'unassigned'], $result['oldest_pending']);
+    }
+
     private function advance(PirateConvoyDelivery $right, string $target): PirateConvoyDelivery
     {
         $timeline = $right->timeline();

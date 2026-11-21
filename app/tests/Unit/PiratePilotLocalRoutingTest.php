@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Tests\Unit;
 
 use App\Controller\PiratePilotLocalController;
-use App\Repository\PirateCampaignReadRepository;
-use App\Service\PirateCampaign\{PirateCampaignCatalogue, PirateCampaignWorkspace, PiratePilotLocalReader};
+use App\Repository\{PirateCampaignReadRepository, PirateConvoyReadRepository};
+use App\Service\PirateCampaign\{PirateCampaignCatalogue, PirateCampaignWorkspace, PirateConvoyDossierProjection, PiratePilotLocalReader};
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
 use Symfony\Bundle\FrameworkBundle\Routing\AttributeRouteControllerLoader;
@@ -39,8 +39,9 @@ final class PiratePilotLocalRoutingTest extends TestCase
         $repository = (new \ReflectionClass(PirateCampaignReadRepository::class))->newInstanceWithoutConstructor();
         $catalogue = (new \ReflectionClass(PirateCampaignCatalogue::class))->newInstanceWithoutConstructor();
         $workspace = (new \ReflectionClass(PirateCampaignWorkspace::class))->newInstanceWithoutConstructor();
+        $convoys = (new \ReflectionClass(PirateConvoyReadRepository::class))->newInstanceWithoutConstructor();
         $reader = new PiratePilotLocalReader($security, $clock, PiratePilotLocalReader::configuredGate('dev', '0', '0'),
-            $repository, $catalogue, $workspace);
+            $repository, $catalogue, $workspace, $convoys, new PirateConvoyDossierProjection());
 
         $response = (new PiratePilotLocalController())->dossier($reader, 123);
         self::assertSame(404, $response->getStatusCode());
