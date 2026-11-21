@@ -33,14 +33,14 @@ final readonly class PiratePilotAttackCommand
 
     public function options(Planet $origin, int $mission): ?array
     {
-        return $this->withActivePilot($origin, $mission, fn (Player $account, PlayerUniverse $member): ?array =>
-            $this->attack->pilotAttackOptionsLocked($member, $origin, PiratePilotSignal::FIRST_KEY));
+        return $this->withActivePilot($origin, $mission, fn (Player $account, PlayerUniverse $member, PiratePilotSignal $signal): ?array =>
+            $this->attack->pilotAttackOptionsLocked($member, $origin, $signal->key));
     }
 
     public function preview(Planet $origin, int $mission, ?array $submitted): ?array
     {
         return $this->withActivePilot($origin, $mission,
-            fn (Player $account, PlayerUniverse $member): ?array => $this->prepareLocked($account, $member, $origin, $submitted));
+            fn (Player $account, PlayerUniverse $member, PiratePilotSignal $signal): ?array => $this->prepareLocked($account, $member, $origin, $signal, $submitted));
     }
 
     public function execute(Planet $origin, int $mission, ?array $submitted, string $token): bool
@@ -49,21 +49,21 @@ final readonly class PiratePilotAttackCommand
             return false;
         }
 
-        return $this->withActivePilot($origin, $mission, function (Player $account, PlayerUniverse $member) use ($origin, $submitted, $token): bool {
-            $plan = $this->prepareLocked($account, $member, $origin, $submitted);
+        return $this->withActivePilot($origin, $mission, function (Player $account, PlayerUniverse $member, PiratePilotSignal $signal) use ($origin, $submitted, $token): bool {
+            $plan = $this->prepareLocked($account, $member, $origin, $signal, $submitted);
             if ($plan === null || !$this->csrf->isTokenValid(new CsrfToken($plan['intent']->csrfId(), $token))) {
                 return false;
             }
 
             return $this->attack->launchWithOmegaPilotFuel(
-                $member, $origin, PiratePilotSignal::FIRST_KEY, $plan['attempt'], $plan['selection']->composition,
+                $member, $origin, $signal->key, $plan['attempt'], $plan['selection']->composition,
             );
         }) === true;
     }
 
-    private function prepareLocked(Player $account, PlayerUniverse $member, Planet $origin, ?array $submitted): ?array
+    private function prepareLocked(Player $account, PlayerUniverse $member, Planet $origin, PiratePilotSignal $signal, ?array $submitted): ?array
     {
-        $state = $this->attack->pilotAttackOptionsLocked($member, $origin, PiratePilotSignal::FIRST_KEY);
+        $state = $this->attack->pilotAttackOptionsLocked($member, $origin, $signal->key);
         if ($state === null) {
             return null;
         }
@@ -75,12 +75,13 @@ final readonly class PiratePilotAttackCommand
         if ($selection === null) {
             return null;
         }
-        $native = $this->attack->pilotAttackQuoteLocked($member, $origin, PiratePilotSignal::FIRST_KEY, $state['attempt'], $selection->composition);
+        $native = $this->attack->pilotAttackQuoteLocked($member, $origin, $signal->key, $state['attempt'], $selection->composition);
         if ($native === null || !$this->gate->admits($account, $member, $this->clock->now())) {
             return null;
         }
         $intent = $selection->confirmation(
-            $account->id, $member->id, $origin->id, 1, $state['attempt'], $native['world'], $native['quote'],
+            $account->id, $member->id, $origin->id, $signal->ordinal, $state['attempt'],
+            hash('sha256', $signal->progress.$native['world']), $native['quote'],
         );
 
         return ['selection' => $selection, 'quote' => $native['quote'], 'attempt' => $state['attempt'], 'intent' => $intent];
@@ -88,7 +89,7 @@ final readonly class PiratePilotAttackCommand
 
     private function withActivePilot(Planet $origin, int $mission, \Closure $callback): mixed
     {
-        if ($mission !== 1 || $origin->id === null || !$this->gate->isLocallyEnabled()) {
+        if ($mission < 1 || $origin->id === null || !$this->gate->isLocallyEnabled()) {
             return null;
         }
         $account = $this->security->getUser();
@@ -97,7 +98,7 @@ final readonly class PiratePilotAttackCommand
         }
         $member = $account->currentPlayerUniverse;
 
-        return $this->manager->transaction(function () use ($origin, $account, $member, $callback): mixed {
+        return $this->manager->transaction(function () use ($origin, $account, $member, $mission, $callback): mixed {
             try {
                 $this->guard->lock($member, $origin, currentReads: true);
                 // Même ordre et même relecture sans attente que le scout. Une commande de compte
@@ -118,12 +119,12 @@ final readonly class PiratePilotAttackCommand
                 || $origin->npcPlanet || !$this->gate->admits($account, $member, $at)) {
                 return null;
             }
-            $signal = $this->signals->resolveLocked($member, $origin, $at);
+            $signal = $this->signals->resolveLocked($member, $origin, $at, $mission);
             if ($signal === null || $signal->allowsFirstScout) {
                 return null;
             }
 
-            return $callback($account, $member);
+            return $callback($account, $member, $signal);
         });
     }
 }

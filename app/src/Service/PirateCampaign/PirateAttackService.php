@@ -166,7 +166,7 @@ final class PirateAttackService
     private function pilotAttackReadyLocked(PlayerUniverse $member, Planet $origin, string $key): ?array
     {
         $at = $this->now();
-        if ($key !== PiratePilotSignal::FIRST_KEY || $member->universe->slug !== 'omega-1' || $member->id === null
+        if ($member->universe->slug !== 'omega-1' || $member->id === null
             || !$member->isPlayerControlled() || !$member->universe->isAccessible($at) || $origin->owner?->id !== $member->id
             || $origin->solarSystem->galaxy->universe->id !== $member->universe->id || $member->player->lockedAt !== null) {
             return null;
@@ -175,7 +175,8 @@ final class PirateAttackService
             $this->vacations->assertCanSendFleet($member);
             $recon = $this->repository->ownPirateReconnaissance($member, $key, $at);
             $proof = $recon?->battleProofFor($member, $at);
-            if ($proof === null || $recon->pilotScoutFuelFor($member, $at) === null) {
+            if ($proof === null || ($recon->narrativeContextFor($member, $at)['key'] ?? null) !== $key
+                || $recon->pilotScoutFuelFor($member, $at) === null) {
                 return null; // Aucun aperçu ni sélection d’escorte sur un rapport absent ou non payé.
             }
             $previous = $this->repository->one(PirateAttackCampaign::class, ['reconnaissance' => $recon]);

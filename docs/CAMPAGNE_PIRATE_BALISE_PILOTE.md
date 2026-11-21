@@ -14,17 +14,18 @@ neutre. Une ancienne preuve sans profil ne donne pas de nouveau premier
 départ. Les appels ne renvoient pas de coordonnées au navigateur et ne
 modifient aucune donnée.
 
-Ce socle ne traite que le premier signal « Le silence de Balise 17 ». Ce
-n’est ni une règle de placement des 19 autres missions, ni un nouveau
-prérequis de progression. La garde pilote, l’intention de scout, les routes,
-la navigation et la première recette authentifiée sont des étapes séparées.
+La première ancre concerne « Le silence de Balise 17 ». Les signaux suivants
+reprennent le dernier site de victoire seulement s'il est toujours connu,
+possédé et joignable, sinon le système découvert de la colonie active. Une
+reconnaissance existante garde toujours son système historique : si ce système
+ne peut plus être utilisé, aucun déplacement ni nouveau départ n’est simulé.
 
 ## Première intention de scout, sans route
 
 Le service n’existe qu’en environnement Symfony dev et ne lit le compte
-qu’après l’opt-in local explicite. Il ne traite que l’ordinal 1 et reçoit la
-colonie active résolue par un futur adaptateur serveur, jamais un choix du
-formulaire. Les champs de destination, de profil, de coût et de durée sont
+qu’après l’opt-in local explicite. Il ne traite que l’ordinal canonique
+réellement en cours parmi les vingt et reçoit la colonie active résolue par
+un futur adaptateur serveur, jamais un choix du formulaire. Les champs de destination, de profil, de coût et de durée sont
 rejetés : il n’y a aucun choix POST pour le scout.
 
 Les verrous jeu sont ceux du lanceur natif. Le compte et sa sélection sont
@@ -45,3 +46,14 @@ Aucune route POST, aucun bouton, pas de trajet sur compte réel ni activation
 du pilote dans ce périmètre. Les champs du devis ne constituent pas une
 preuve que la sonde est partie. Le futur adaptateur ne projettera ni l’objet
 d’intention, ni sa coordonnée privée, ni les paramètres par défaut du pilote.
+
+## Progression canonique et état final
+
+Le lecteur de commandes réutilise la même séquence que le dossier. La victoire
+réelle et remise de la mission précédente ouvrent la suivante, sans attendre
+un convoi ou un retour d’escorte. Un ancien dossier reste consultable, mais ne
+réarme ni scout ni attaque. Un renseignement concerne uniquement sa propre
+mission. Le CSRF contient l’ordinal, la clé canonique et la preuve de progression,
+en plus du contexte, du devis et, pour l’attaque, de la composition précise.
+Après la vingtième victoire, aucune nouvelle commande de rencontre n’est proposée.
+Aucune lecture ne crédite un convoi ni ne modifie un retour.

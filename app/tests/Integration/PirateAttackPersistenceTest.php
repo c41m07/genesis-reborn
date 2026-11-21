@@ -6,7 +6,7 @@ namespace App\Tests\Integration;
 
 use App\Entity\{Fleet, FleetShip, Galaxy, PirateAttackCampaign, PirateConvoyDelivery, PirateReconnaissance, Planet, PlanetResource, Player, PlayerDiscovery, PlayerUniverse, SolarSystem, Universe};
 use App\Manager\GameManager;
-use App\Repository\GameRepository;
+use App\Repository\{GameRepository, PirateCampaignReadRepository};
 use App\Service\Colony\ActionGuard;
 use App\Message\{PirateAttackDue, PirateConvoyDue, PirateSurvivorsDue};
 use App\MessageHandler\{PirateAttackDueHandler, PirateSurvivorsDueHandler};
@@ -14,7 +14,7 @@ use App\Service\Catalog\GameCatalog;
 use App\Service\Combat\{CombatSimulator, CombatUnitFactory};
 use App\Service\Fleet\MovementCalculator;
 use App\Service\Notification\OutboxRelay;
-use App\Service\PirateCampaign\{PirateAttackFuelReceipt, PirateAttackService, PirateBattleScenario, PirateCampaignCatalogue, PirateCampaignPresenter, PirateCampaignProgress, PirateCampaignSequence, PirateConvoyDeliveryService, PirateConvoyDispatchToken, PirateDistressSite, PirateEncounterSnapshot, PiratePilotAttackCommand, PiratePilotGate, PiratePilotSignalResolver, PiratePreparedEncounter, PirateReconnaissanceService, PirateSurvivorRecoveryService};
+use App\Service\PirateCampaign\{PirateAttackFuelReceipt, PirateAttackService, PirateBattleScenario, PirateCampaignCatalogue, PirateCampaignPresenter, PirateCampaignProgress, PirateCampaignSequence, PirateConvoyDeliveryService, PirateConvoyDispatchToken, PirateDistressSite, PirateEncounterSnapshot, PiratePilotAttackCommand, PiratePilotCampaignOrder, PiratePilotGate, PiratePilotScoutCommand, PiratePilotSignalResolver, PiratePreparedEncounter, PirateReconnaissanceService, PirateSurvivorRecoveryService};
 use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -86,7 +86,10 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $stack->push($request);
         $csrf = new CsrfTokenManager(null, new SessionTokenStorage($stack));
         $manager = self::getContainer()->get(GameManager::class);
-        $resolver = new PiratePilotSignalResolver(self::getContainer()->get(GameRepository::class), $manager);
+        $campaignCatalogue = self::getContainer()->get(PirateCampaignCatalogue::class);
+        $resolver = new PiratePilotSignalResolver(self::getContainer()->get(GameRepository::class), $manager,
+            new PirateCampaignReadRepository($this->em), $campaignCatalogue,
+            new PiratePilotCampaignOrder($campaignCatalogue, new PirateCampaignSequence($campaignCatalogue, new PirateCampaignProgress($campaignCatalogue))));
         $command = new PiratePilotAttackCommand(new PiratePilotGate('dev', true, $owner->universe->id), $security, $this->clock, $csrf,
             $this->em, $manager, self::getContainer()->get(ActionGuard::class), $resolver, $this->service);
 
@@ -519,6 +522,95 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertArrayNotHasKey('pilot_recovery', $saved);
         self::assertSame('held_before_return', $saved['pilot_blocked_return']['phase']);
         self::assertSame(0, (int) $db->fetchOne("SELECT COUNT(*) FROM outbox_message WHERE kind = 'pirate_survivors'"));
+    }
+
+    public function testNextPilotScoutReusesThenFallsBackFromKnownAnchorWithoutUsingThePreviousReport(): void
+    {
+        [$owner, $home, $stock, , $other] = $this->fixture(omega: true, scoutPaid: true, missionKey: 'balise_17');
+        $owner->player->currentPlayerUniverse = $owner;
+        $this->em->flush();
+        $this->finishRecon();
+        self::assertTrue($this->service->launchWithOmegaPilotFuel($owner, $home, 'balise_17', 0, ['fighter' => ['basic' => 2]]));
+        $first = $this->campaign();
+        $proof = $first->reconnaissance->battleProofFor($owner, $this->clock->now());
+        $first->timeline['seed'] = $this->seedWithVictory($first, $proof['prepared']->battleForServer());
+        $this->em->flush();
+        $this->advanceTo($first->nextAt);
+        $this->service->processDue($first->id, $first->dispatchToken);
+        $this->advanceTo($first->nextAt);
+        $this->service->processDue($first->id, $first->dispatchToken);
+        self::assertSame('attacker_wins', $first->report['outcome']);
+        self::assertSame('returning', $first->timeline['state']);
+        $db = $this->em->getConnection();
+        self::assertSame(1, (int) $db->fetchOne("SELECT COUNT(*) FROM outbox_message WHERE kind = 'pirate_convoy'"));
+
+        $active = $this->createReplacementColony($owner, $home);
+        $newSystem = new SolarSystem();
+        $newSystem->galaxy = $home->solarSystem->galaxy;
+        $newSystem->name = 'Second système synthétique';
+        $newSystem->coordX = 1;
+        $newSystem->coordY = 0;
+        $active->solarSystem = $newSystem;
+        $known = new PlayerDiscovery();
+        $known->playerUniverse = $owner;
+        $known->solarSystem = $newSystem;
+        $hangar = new Fleet();
+        $hangar->playerUniverse = $owner;
+        $hangar->homePlanet = $active;
+        foreach ([$newSystem, $known, $hangar] as $object) {
+            $this->em->persist($object);
+        }
+        $probe = $this->addShips($hangar, 'probe', 2);
+        $this->addShips($hangar, 'fighter', 3);
+        $this->em->flush();
+        $this->stampStocks($active->id, ['hydrogen' => 100.0]);
+
+        $security = $this->createStub(Security::class);
+        $security->method('getUser')->willReturn($owner->player);
+        $request = new Request();
+        $request->setSession(new Session(new MockArraySessionStorage()));
+        $stack = new RequestStack();
+        $stack->push($request);
+        $csrf = new CsrfTokenManager(null, new SessionTokenStorage($stack));
+        $manager = self::getContainer()->get(GameManager::class);
+        $guard = self::getContainer()->get(ActionGuard::class);
+        $campaignCatalogue = self::getContainer()->get(PirateCampaignCatalogue::class);
+        $resolver = new PiratePilotSignalResolver(self::getContainer()->get(GameRepository::class), $manager,
+            new PirateCampaignReadRepository($this->em), $campaignCatalogue,
+            new PiratePilotCampaignOrder($campaignCatalogue, new PirateCampaignSequence($campaignCatalogue, new PirateCampaignProgress($campaignCatalogue))));
+        $gate = new PiratePilotGate('dev', true, $owner->universe->id);
+        $scout = new PiratePilotScoutCommand($gate, $security, $this->clock, $csrf, $this->em, $manager, $guard, $resolver,
+            self::getContainer()->get(PirateReconnaissanceService::class));
+        $attack = new PiratePilotAttackCommand($gate, $security, $this->clock, $csrf, $this->em, $manager, $guard, $resolver, $this->service);
+
+        self::assertNull($scout->preview($active, 1));
+        self::assertNull($scout->preview($active, 3));
+        self::assertNull($attack->options($active, 1));
+        self::assertNull($attack->options($active, 2), 'Le rapport de A ne remplace pas celui de B.');
+        $decision = $manager->transaction(function () use ($guard, $owner, $active, $resolver) {
+            $guard->lock($owner, $active, currentReads: true);
+
+            return $resolver->resolveLocked($owner, $active, $this->clock->now(), 2);
+        });
+        self::assertSame($home->solarSystem->id, $decision->system->id, 'L’ancre de la victoire est encore connue, possédée et joignable.');
+        $quote = $scout->preview($active, 2);
+        self::assertNotNull($quote, 'Ni le retour ni le convoi de A ne bloquent B.');
+        $staleToken = $csrf->getToken($quote['intent']->csrfId())->getValue();
+        $home->owner = $other;
+        $this->em->flush();
+        $fallback = $scout->preview($active, 2);
+        self::assertNotNull($fallback);
+        self::assertFalse($scout->execute($active, 2, [], $staleToken), 'Le site lu à la confirmation a réellement changé.');
+        $freshToken = $csrf->getToken($fallback['intent']->csrfId())->getValue();
+        self::assertTrue($scout->execute($active, 2, [], $freshToken));
+        $secondKey = $campaignCatalogue->keys()[1];
+        self::assertSame($active->solarSystem->id, (int) $db->fetchOne('SELECT system_id FROM pirate_reconnaissance WHERE mission_key = ?', [$secondKey]));
+        self::assertSame($home->solarSystem->id, (int) $db->fetchOne("SELECT system_id FROM pirate_reconnaissance WHERE mission_key = 'balise_17'"));
+        self::assertSame(1, $this->stock($probe->id));
+        self::assertNull($attack->options($active, 2), 'Le scout B ne doit pas autoriser une attaque avant son propre rapport.');
+        $this->finishRecon();
+        self::assertNotNull($attack->options($active, 2));
+        self::assertSame(1, (int) $db->fetchOne("SELECT COUNT(*) FROM outbox_message WHERE kind = 'pirate_convoy'"));
     }
 
     public function testPrivateRecoveryConcurrencyConsumesTheEvidenceExactlyOnce(): void

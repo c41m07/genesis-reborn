@@ -7,7 +7,7 @@ namespace App\Tests\Unit;
 use App\Entity\{Galaxy, PirateAttackCampaign, PirateReconnaissance, Player, PlayerUniverse, SolarSystem, Universe};
 use App\Service\Catalog\GameCatalog;
 use App\Service\Combat\{CombatUnitFactory, TechnologyEffectCalculator};
-use App\Service\PirateCampaign\{PirateCampaignCatalogue, PirateCampaignProgress, PirateCampaignSequence};
+use App\Service\PirateCampaign\{PirateCampaignCatalogue, PirateCampaignProgress, PirateCampaignSequence, PiratePilotCampaignOrder};
 use PHPUnit\Framework\TestCase;
 
 final class PirateCampaignSequenceTest extends TestCase
@@ -80,6 +80,37 @@ final class PirateCampaignSequenceTest extends TestCase
         self::assertNull($sequence->forViewer($owner, [$row], $this->at(20)));
         $owner->forgottenAt = $this->at(19);
         self::assertNull($sequence->forViewer($owner, [$row], $this->at(19)));
+    }
+
+    public function testCommandsOnlyFollowCanonicalVictoryEvenWhenReturnIsStillTraveling(): void
+    {
+        [$viewer, $site, $catalogue, $sequence] = $this->fixture();
+        $order = new PiratePilotCampaignOrder($catalogue, $sequence);
+        $first = $this->mission($viewer, $site, $catalogue, 0);
+        $later = $this->mission($viewer, $site, $catalogue, 2);
+        self::assertNull($order->choose($viewer, [$later], 3, $this->at(22)), 'Une victoire isolée ne permet pas de sauter une mission.');
+        self::assertNull($order->choose($viewer, [$first], 2, $this->at(19)), 'Ni l’heure, ni un retour apparent n’ouvrent la mission avant victoire.');
+        $next = $order->choose($viewer, [$first], 2, $this->at(21));
+        self::assertSame(2, $next['ordinal']);
+        self::assertSame($catalogue->keys()[1], $next['key']);
+        self::assertTrue($next['isNew'], 'Le renseignement de A ne constitue pas le rapport de B.');
+        self::assertSame($first['reconnaissance'], $next['preceding']);
+        self::assertNull($order->choose($viewer, [$first], 1, $this->at(21)), 'L’historique ne remet pas le scout ou l’attaque en action.');
+        self::assertNull($order->choose($viewer, [$first], 3, $this->at(21)));
+    }
+
+    public function testTwentiethVictoryEndsCommandsButDoesNotEraseTheHistory(): void
+    {
+        [$viewer, $site, $catalogue, $sequence] = $this->fixture();
+        $order = new PiratePilotCampaignOrder($catalogue, $sequence);
+        $all = array_map(fn ($index) => $this->mission($viewer, $site, $catalogue, $index), range(0, 19));
+        $notYet = array_slice($all, 0, 19);
+        $last = $order->choose($viewer, $notYet, 20, $this->at(23));
+        self::assertSame($catalogue->keys()[19], $last['key']);
+        self::assertTrue($last['isNew']);
+        self::assertNull($order->choose($viewer, $all, 20, $this->at(23)));
+        self::assertNull($order->choose($viewer, $all, 21, $this->at(23)));
+        self::assertCount(20, $sequence->forViewer($viewer, $all, $this->at(23))['consultable']);
     }
 
     /** @return array{PlayerUniverse, SolarSystem, PirateCampaignCatalogue, PirateCampaignSequence} */

@@ -39,8 +39,8 @@ final readonly class PiratePilotScoutCommand
             return null;
         }
 
-        return $this->manager->transaction(function () use ($scope, $activeOrigin): ?array {
-            $plan = $this->prepareLocked($scope[0], $scope[1], $activeOrigin);
+        return $this->manager->transaction(function () use ($scope, $activeOrigin, $missionNumber): ?array {
+            $plan = $this->prepareLocked($scope[0], $scope[1], $activeOrigin, $missionNumber);
             // L'intention reste un objet d'adaptation serveur, jamais un champ fourni par le joueur.
             return $plan === null ? null : ['quote' => $plan['quote'], 'intent' => $plan['intent']];
         });
@@ -62,9 +62,9 @@ final readonly class PiratePilotScoutCommand
             return false;
         }
 
-        return $this->manager->transaction(function () use ($scope, $activeOrigin, $token): bool {
+        return $this->manager->transaction(function () use ($scope, $activeOrigin, $missionNumber, $token): bool {
             [$account, $member] = $scope;
-            $plan = $this->prepareLocked($account, $member, $activeOrigin);
+            $plan = $this->prepareLocked($account, $member, $activeOrigin, $missionNumber);
             if ($plan === null || !$this->csrf->isTokenValid(new CsrfToken($plan['intent']->csrfId(), $token))) {
                 return false;
             }
@@ -72,7 +72,7 @@ final readonly class PiratePilotScoutCommand
             // rien avant le commit externe. Il garde l'unicité, le prélèvement et l'outbox.
             return $this->scout->launchDefinedWithOmegaPilotFuel(
                 $member, $activeOrigin, $plan['signal']->system, $plan['signal']->site,
-                PiratePilotSignal::FIRST_KEY, PiratePilotSignal::FIRST_KEY,
+                $plan['signal']->key, $plan['signal']->key,
             );
         });
     }
@@ -80,7 +80,7 @@ final readonly class PiratePilotScoutCommand
     /** @return array{Player,PlayerUniverse}|null */
     private function readScope(int $missionNumber): ?array
     {
-        if ($missionNumber !== 1 || !$this->gate->isLocallyEnabled()) {
+        if ($missionNumber < 1 || !$this->gate->isLocallyEnabled()) {
             return null;
         }
         $account = $this->security->getUser();
@@ -91,7 +91,7 @@ final readonly class PiratePilotScoutCommand
         return [$account, $account->currentPlayerUniverse];
     }
 
-    private function prepareLocked(Player $account, PlayerUniverse $member, Planet $origin): ?array
+    private function prepareLocked(Player $account, PlayerUniverse $member, Planet $origin, int $ordinal): ?array
     {
         if ($origin->id === null) {
             return null;
@@ -120,7 +120,7 @@ final readonly class PiratePilotScoutCommand
             || $origin->npcPlanet || !$this->gate->admits($account, $member, $at)) {
             return null;
         }
-        $signal = $this->signals->resolveLocked($member, $origin, $at);
+        $signal = $this->signals->resolveLocked($member, $origin, $at, $ordinal);
         if ($signal === null || !$signal->allowsFirstScout) {
             return null;
         }
@@ -129,7 +129,7 @@ final readonly class PiratePilotScoutCommand
             return null; // L'univers peut avoir fermé pendant les derniers verrous de devis.
         }
         $digest = hash('sha256', json_encode([
-            'version' => 1, 'universe' => $member->universe->id, 'mission' => PiratePilotSignal::FIRST_KEY,
+            'version' => 1, 'universe' => $member->universe->id, 'mission' => $signal->key, 'progress' => $signal->progress,
             'origin' => [$origin->solarSystem->id, $origin->solarSystem->galaxy->id, $origin->solarSystem->coordX,
                 $origin->solarSystem->coordY, $origin->position],
             'site' => [$signal->system->id, $signal->system->galaxy->id, $signal->system->coordX, $signal->system->coordY],
@@ -137,7 +137,7 @@ final readonly class PiratePilotScoutCommand
         ], JSON_THROW_ON_ERROR | JSON_PRESERVE_ZERO_FRACTION));
 
         return ['signal' => $signal, 'quote' => $quote, 'intent' => new PiratePilotCommandIntent(
-            $account->id, $member->id, $origin->id, 1, 0, $digest,
+            $account->id, $member->id, $origin->id, $signal->ordinal, 0, $digest,
             PiratePilotCommandOptions::noChoices(PiratePilotCommandAction::Reconnaissance),
         )];
     }

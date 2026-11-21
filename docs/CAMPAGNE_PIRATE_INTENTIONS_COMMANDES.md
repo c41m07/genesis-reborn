@@ -31,8 +31,8 @@ de sélection.
 
 ### Préparation native privée
 
-Le service d’attaque dev est seulement une entrée interne. Pour la première
-mission, le même verrou et la même relecture sans attente du compte que le
+Le service d’attaque dev est seulement une entrée interne. Pour la mission
+canonique en cours, le même verrou et la même relecture sans attente du compte que le
 scout empêchent un changement de participation entre l’aperçu et le débit.
 Le système historique doit rester connu et joignable ; un vrai rapport payé
 est nécessaire. Le retour d’une tentative précédente doit être résolu sans

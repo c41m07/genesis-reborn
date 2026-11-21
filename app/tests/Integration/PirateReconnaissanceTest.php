@@ -7,12 +7,12 @@ namespace App\Tests\Integration;
 use App\Entity\{Fleet, FleetShip, Galaxy, Guild, GuildMember, PirateReconnaissance, Planet, PlanetResource, Player, PlayerDiscovery, PlayerUniverse, SolarSystem, Universe};
 use App\Manager\GameManager;
 use App\Message\PirateReconnaissanceDue;
-use App\Repository\GameRepository;
+use App\Repository\{GameRepository, PirateCampaignReadRepository};
 use App\Service\Colony\ActionGuard;
 use App\MessageHandler\PirateReconnaissanceDueHandler;
 use App\Service\Fleet\{FleetService, FleetVisibility};
 use App\Service\Notification\OutboxRelay;
-use App\Service\PirateCampaign\{PirateDistressSite, PirateEncounterSnapshot, PiratePilotGate, PiratePilotScoutCommand, PiratePilotSignalResolver, PirateReconnaissanceService};
+use App\Service\PirateCampaign\{PirateCampaignCatalogue, PirateCampaignProgress, PirateCampaignSequence, PirateDistressSite, PirateEncounterSnapshot, PiratePilotCampaignOrder, PiratePilotGate, PiratePilotScoutCommand, PiratePilotSignalResolver, PirateReconnaissanceService};
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\DBAL\Schema\Schema;
@@ -137,7 +137,10 @@ final class PirateReconnaissanceTest extends KernelTestCase
         $requests->push($request);
         $csrf = new CsrfTokenManager(null, new SessionTokenStorage($requests));
         $manager = self::getContainer()->get(GameManager::class);
-        $resolver = new PiratePilotSignalResolver(self::getContainer()->get(GameRepository::class), $manager);
+        $campaignCatalogue = self::getContainer()->get(PirateCampaignCatalogue::class);
+        $resolver = new PiratePilotSignalResolver(self::getContainer()->get(GameRepository::class), $manager,
+            new PirateCampaignReadRepository($this->em), $campaignCatalogue,
+            new PiratePilotCampaignOrder($campaignCatalogue, new PirateCampaignSequence($campaignCatalogue, new PirateCampaignProgress($campaignCatalogue))));
 
         return [new PiratePilotScoutCommand(
             new PiratePilotGate('dev', $enabled, $member->universe->id), $security, $this->clock, $csrf,
