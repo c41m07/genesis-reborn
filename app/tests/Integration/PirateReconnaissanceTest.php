@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration;
 
-use App\Entity\{Fleet, FleetShip, Galaxy, Guild, GuildMember, Planet, Player, PlayerDiscovery, PlayerUniverse, SolarSystem, Universe};
+use App\Entity\{Fleet, FleetShip, Galaxy, Guild, GuildMember, PirateReconnaissance, Planet, PlanetResource, Player, PlayerDiscovery, PlayerUniverse, SolarSystem, Universe};
 use App\Message\PirateReconnaissanceDue;
 use App\MessageHandler\PirateReconnaissanceDueHandler;
 use App\Service\Fleet\{FleetService, FleetVisibility};
@@ -118,6 +118,8 @@ final class PirateReconnaissanceTest extends KernelTestCase
         self::assertSame($detected, $report['detected']);
         self::assertNull($this->service->statusFor($ally, 'test-signal'));
         self::assertSame(['status', 'departed_at', 'due_at', 'reported_at', 'composition', 'detected'], array_keys($report));
+        $legacy = $this->em->find(PirateReconnaissance::class, $message->missionId);
+        self::assertNull($legacy->pilotScoutFuelFor($member, $this->clock->now()));
 
         $this->clock->sleep(18);
         $handler($message);
@@ -237,9 +239,88 @@ final class PirateReconnaissanceTest extends KernelTestCase
         self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_reconnaissance'));
     }
 
-    public function testConcurrentDeparturesDebitOnlyOneProbeAndIssueOneOutbox(): void
+    #[DataProvider('outcomes')]
+    public function testOmegaPilotConsumesNativeRoundTripFromHoldThenGroundWithoutRefund(bool $detected): void
     {
-        [$member, $home, $system, $stock] = $this->fixture();
+        [$member, $home, , $stock, $ally] = $this->fixture(omega: true);
+        $this->preparePilotFuel($home, $stock, 10.0);
+        $target = $home->solarSystem;
+        $native = self::getContainer()->get(FleetService::class)
+            ->quote($member, $home, 'explore', $target->id, ['probe' => ['basic' => 1]], 1.0);
+        $site = PirateDistressSite::inExistingSystem($member, $target);
+        self::assertTrue($this->service->launchDefinedWithOmegaPilotFuel($member, $home, $target, $site, 'balise_17', 'balise_17', $detected));
+        self::assertFalse($this->service->launchDefinedWithOmegaPilotFuel($member, $home, $target, $site, 'balise_17', 'balise_17', !$detected));
+        $db = $this->em->getConnection();
+        $event = $db->fetchAssociative("SELECT target_id, token, due_at FROM outbox_message WHERE kind = 'pirate_reconnaissance'");
+        $mission = $this->em->find(PirateReconnaissance::class, (int) $event['target_id']);
+        self::assertNull($mission->pilotScoutFuelFor($member, $this->clock->now()));
+        self::assertSame(2, (int) $db->fetchOne('SELECT quantity FROM fleet_ship WHERE id = ?', [$stock->id]));
+        self::assertSame(0.0, (float) $db->fetchOne('SELECT stored_fuel FROM fleet WHERE id = ?', [$stock->fleet->id]));
+        self::assertEqualsWithDelta(10.0 - $native['planet_fuel'], $this->pilotGroundStock($home->id), 1e-10);
+        self::assertSame($native['seconds'], (new \DateTimeImmutable($event['due_at']))->getTimestamp() - $this->clock->now()->getTimestamp());
+        $this->clock->sleep($native['seconds']);
+        $this->service->deliver($mission->id, $event['token']);
+        $this->service->deliver($mission->id, $event['token']);
+        $receipt = $mission->pilotScoutFuelFor($member, $this->clock->now());
+        self::assertSame($native['total_fuel'], $receipt->reserved);
+        self::assertSame($native['stored_fuel_used'], $receipt->fromHold);
+        self::assertSame($native['planet_fuel'], $receipt->fromPlanet);
+        self::assertSame($detected, $mission->projectFor($member, $this->clock->now())['detected']);
+        self::assertNull($mission->pilotScoutFuelFor($ally, $this->clock->now()));
+        self::assertArrayNotHasKey('pilot_scout_fuel', $mission->projectFor($member, $this->clock->now()));
+        self::assertEqualsWithDelta(10.0 - $native['planet_fuel'], $this->pilotGroundStock($home->id), 1e-10);
+        self::assertSame(0, (int) $db->fetchOne("SELECT COUNT(*) FROM fleet WHERE status <> 'idle'"));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM espionage_report'));
+    }
+
+    #[DataProvider('pilotModes')]
+    public function testOmegaPilotHydrogenRollsBackWhenInsufficientOrOutboxFails(bool $canPay): void
+    {
+        [$member, $home, , $stock] = $this->fixture(omega: true);
+        $ground = $canPay ? 10.0 : 0.0;
+        $this->preparePilotFuel($home, $stock, $ground);
+        $db = $this->em->getConnection();
+        if ($canPay) {
+            $db->executeStatement("CREATE TRIGGER scout_fuel_reject_outbox BEFORE INSERT ON outbox_message FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'fixture scout outbox failure'");
+        }
+        $target = $home->solarSystem;
+        try {
+            $this->service->launchDefinedWithOmegaPilotFuel($member, $home, $target, PirateDistressSite::inExistingSystem($member, $target),
+                'balise_17', 'balise_17');
+            self::fail('La sonde et ses stocks ne doivent pas partir sans tout le carburant et son événement.');
+        } catch (DriverException|\DomainException $error) {
+            if ($canPay) {
+                self::assertInstanceOf(DriverException::class, $error);
+                self::assertStringContainsString('fixture scout outbox failure', $error->getMessage());
+            } else {
+                self::assertInstanceOf(\DomainException::class, $error);
+                self::assertStringContainsString('Ressources insuffisantes', $error->getMessage());
+            }
+        } finally {
+            if ($canPay) {
+                $db->executeStatement('DROP TRIGGER IF EXISTS scout_fuel_reject_outbox');
+            }
+        }
+        self::assertSame($ground, $this->pilotGroundStock($home->id));
+        self::assertSame(0.4, (float) $db->fetchOne('SELECT stored_fuel FROM fleet WHERE id = ?', [$stock->fleet->id]));
+        self::assertSame(3, (int) $db->fetchOne('SELECT quantity FROM fleet_ship WHERE id = ?', [$stock->id]));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_reconnaissance'));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM outbox_message'));
+    }
+
+    public static function pilotModes(): array
+    {
+        return [[false], [true]];
+    }
+
+    #[DataProvider('pilotModes')]
+    public function testConcurrentDeparturesDebitOnlyOneProbeAndIssueOneOutbox(bool $pilot): void
+    {
+        [$member, $home, $system, $stock] = $this->fixture(omega: $pilot);
+        if ($pilot) {
+            $this->preparePilotFuel($home, $stock, 10.0);
+            $system = $home->solarSystem;
+        }
         $db = $this->em->getConnection();
         $directory = sys_get_temp_dir().'/genesis-pirate-race-'.bin2hex(random_bytes(8));
         mkdir($directory, 0700);
@@ -250,7 +331,7 @@ final class PirateReconnaissanceTest extends KernelTestCase
             // Garder le verrou commun jusqu'à ce que les deux connexions soient réellement en attente.
             $db->fetchOne('SELECT id FROM player_universe WHERE id = ? FOR UPDATE', [$member->id]);
             $shared = ['now' => $this->clock->now()->format(DATE_ATOM), 'member' => $member->id,
-                'origin' => $home->id, 'system' => $system->id, 'barrier' => $barrier];
+                'origin' => $home->id, 'system' => $system->id, 'pilot' => $pilot, 'barrier' => $barrier];
             foreach ([0, 1] as $index) {
                 $worker = new Process([PHP_BINARY, dirname(__DIR__).'/Support/concurrent_pirate_reconnaissance.php',
                     json_encode($shared + ['ready' => $directory.'/'.$index], JSON_THROW_ON_ERROR)]);
@@ -293,6 +374,10 @@ final class PirateReconnaissanceTest extends KernelTestCase
             self::assertSame(2, (int) $db->fetchOne('SELECT quantity FROM fleet_ship WHERE id = ?', [$stock->id]));
             self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_reconnaissance'));
             self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM outbox_message'));
+            if ($pilot) {
+                self::assertEqualsWithDelta(9.2, $this->pilotGroundStock($home->id), 1e-10);
+                self::assertSame(0.0, (float) $db->fetchOne('SELECT stored_fuel FROM fleet WHERE id = ?', [$stock->fleet->id]));
+            }
         } finally {
             if ($db->isTransactionActive()) {
                 $db->rollBack();
@@ -314,12 +399,14 @@ final class PirateReconnaissanceTest extends KernelTestCase
         [$member, $home, $system, $stock] = $this->fixture();
         $db = $this->em->getConnection();
         // Rejouer les migrations de campagne depuis le schéma historique, sans toucher aux tables métier.
+        $db->executeStatement('DROP TABLE pirate_convoy_delivery');
         $db->executeStatement('DROP TABLE pirate_attack_campaign');
         $db->executeStatement('DROP TABLE pirate_reconnaissance');
         require_once dirname(__DIR__, 2).'/migrations/Version20261120000900.php';
         require_once dirname(__DIR__, 2).'/migrations/Version20261120000930.php';
         require_once dirname(__DIR__, 2).'/migrations/Version20261120000950.php';
-        foreach ([\DoctrineMigrations\Version20261120000900::class, \DoctrineMigrations\Version20261120000930::class, \DoctrineMigrations\Version20261120000950::class] as $class) {
+        require_once dirname(__DIR__, 2).'/migrations/Version20261120001000.php';
+        foreach ([\DoctrineMigrations\Version20261120000900::class, \DoctrineMigrations\Version20261120000930::class, \DoctrineMigrations\Version20261120000950::class, \DoctrineMigrations\Version20261120001000::class] as $class) {
             $migration = new $class($db, new NullLogger());
             $migration->up(new Schema());
             foreach ($migration->getSql() as $query) {
@@ -327,11 +414,32 @@ final class PirateReconnaissanceTest extends KernelTestCase
             }
         }
         self::assertTrue((new SchemaValidator($this->em))->schemaInSyncWithMetadata());
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_convoy_delivery'));
         self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_attack_campaign'));
         self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_reconnaissance'));
         self::assertSame(3, (int) $db->fetchOne('SELECT quantity FROM fleet_ship WHERE id = ?', [$stock->id]));
         self::assertTrue($this->service->launch($member, $home, $system, PirateDistressSite::inExistingSystem($member, $system), 'test-migration', $this->encounter()));
         self::assertSame('traveling', $this->service->statusFor($member, 'test-migration')['status']);
+    }
+
+    private function preparePilotFuel(Planet $home, FleetShip $probe, float $stockOnGround): void
+    {
+        $probe->fleet->storedFuel = 0.4;
+        foreach (['metal', 'nano', 'antimatter', 'hydrogen', 'electricity'] as $name) {
+            $stock = new PlanetResource();
+            $stock->planet = $home;
+            $stock->resourceType = $name;
+            $stock->currentStock = $name === 'hydrogen' ? $stockOnGround : 0.0;
+            $stock->lastUpdatedAt = $this->clock->now();
+            $this->em->persist($stock);
+        }
+        $this->em->flush();
+    }
+
+    private function pilotGroundStock(int $planetId): float
+    {
+        return (float) $this->em->getConnection()->fetchOne(
+            'SELECT current_stock FROM planet_resource WHERE planet_id = ? AND resource_type = ?', [$planetId, 'hydrogen']);
     }
 
     private function encounter(): PirateEncounterSnapshot
@@ -340,10 +448,10 @@ final class PirateReconnaissanceTest extends KernelTestCase
     }
 
     /** @return array{PlayerUniverse, Planet, SolarSystem, FleetShip, PlayerUniverse} */
-    private function fixture(): array
+    private function fixture(bool $omega = false): array
     {
         $universe = new Universe();
-        $universe->slug = $universe->name = 'pirate-recon-test';
+        $universe->slug = $universe->name = $omega ? 'omega-1' : 'pirate-recon-test';
         $universe->gameSettings = ['multipliers' => ['travel_time' => 2.5]];
         $galaxy = new Galaxy();
         $galaxy->universe = $universe;

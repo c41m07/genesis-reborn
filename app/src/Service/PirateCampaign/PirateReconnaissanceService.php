@@ -126,7 +126,6 @@ final class PirateReconnaissanceService
             // Doctrine et le relais travaillent à la seconde ; ne pas créer deux échéances différentes.
             $departedAt = $now->setTimestamp($now->getTimestamp());
             $seconds = $flight['leg_seconds'];
-            $dueAt = $departedAt->modify('+'.$seconds.' seconds');
             $token = Uuid::v4()->toRfc4122();
 
             // Le prix, l'ennemi et le profil de combat prennent le même contexte d'univers
@@ -136,10 +135,18 @@ final class PirateReconnaissanceService
             if ($budget !== null) {
                 $fuelReceipt = PirateScoutFuelReceipt::forDeparture($origin->id, $budget, $paid['stored_fuel_used'], $paid['planet_fuel']);
                 if ($fuelReceipt->fromPlanet > 0.0) {
+                    $this->repository->lockedPlanetResources($origin);
                     $this->resources->consume($origin, ['hydrogen' => $fuelReceipt->fromPlanet]);
+                }
+                // Le temps d'attente des stocks n'est pas un début de vol ; une fermeture annule le débit préparé.
+                $actual = $this->clock->now()->setTimezone(new \DateTimeZone('UTC'));
+                $departedAt = $actual->setTimestamp($actual->getTimestamp());
+                if (!$membership->universe->isAccessible($departedAt)) {
+                    throw new \DomainException('L’univers s’est fermé avant le départ de la sonde.');
                 }
                 $idle->storedFuel -= $fuelReceipt->fromHold;
             }
+            $dueAt = $departedAt->modify('+'.$seconds.' seconds');
 
             // Le hangar n'a plus la sonde durant le vol. Sa perte est actée par le rapport, sans retour ni restitution.
             --$probe->quantity;
