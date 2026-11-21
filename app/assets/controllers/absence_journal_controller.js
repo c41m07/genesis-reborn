@@ -11,6 +11,7 @@ export default class extends Controller {
         this.onVisibility = () => this.consultIfVisible();
         document.addEventListener('visibilitychange', this.onVisibility);
         window.addEventListener('focus', this.onVisibility);
+        document.addEventListener('close', this.onVisibility, true);
         this.observer = new IntersectionObserver(entries => {
             this.entryVisible = entries.at(-1).intersectionRatio >= 0.5;
             this.consultIfVisible();
@@ -22,14 +23,15 @@ export default class extends Controller {
         this.observer?.disconnect();
         document.removeEventListener('visibilitychange', this.onVisibility);
         window.removeEventListener('focus', this.onVisibility);
+        document.removeEventListener('close', this.onVisibility, true);
         this.request?.abort();
     }
 
     async consultIfVisible() {
-        if (!this.entryVisible || document.visibilityState !== 'visible' || !document.hasFocus() || this.request) return;
+        if (!this.entryVisible || document.visibilityState !== 'visible' || !document.hasFocus()
+            || document.querySelector('dialog:modal') || this.request) return;
 
         const form = this.formTarget;
-        const startedAt = performance.now();
         const request = this.request = new AbortController();
         this.element.dataset.journalConsultation = 'pending';
         try {
@@ -47,8 +49,8 @@ export default class extends Controller {
             this.element.dataset.journalConsultation = 'read';
             this.statusTarget.textContent = 'Journal consulté.';
             if (!form.contains(document.activeElement)) form.hidden = true;
-            window.dispatchEvent(new CustomEvent('genesis:journal-consulted', {
-                detail: { membership: this.membershipValue, unread, startedAt },
+            window.dispatchEvent(new CustomEvent('genesis:journal-state', {
+                detail: { membership: this.membershipValue, unread, observedAt: performance.now() },
             }));
         } catch (error) {
             if (error.name === 'AbortError') return;

@@ -9,21 +9,14 @@ export default class extends Controller {
         this.onAdmin = event => { this.adminValue = Number(event.detail.count) || 0; this.render(); };
         this.onActivity = event => {
             this.latestNoticeValue = Math.max(this.latestNoticeValue, Number(event.detail?.notificationId) || 0);
-            if (event.detail?.journal === true) {
-                this.lastJournalActivityAt = performance.now();
-                this.unreadJournalValue = true;
-            }
+        };
+        this.onJournalState = ({ detail }) => {
+            if (detail.membership !== this.membershipValue || detail.observedAt < (this.journalObservedAt ?? 0)) return;
+            this.journalObservedAt = detail.observedAt;
+            this.unreadJournalValue = detail.unread;
             this.render();
         };
-        this.onJournalConsulted = ({ detail }) => {
-            if (detail.membership !== this.membershipValue) return;
-            // Une activité reçue pendant le POST doit rester signalée, même si sa réponse arrive ensuite.
-            if (detail.unread || (this.lastJournalActivityAt ?? 0) <= detail.startedAt) {
-                this.unreadJournalValue = detail.unread;
-            }
-            this.render();
-        };
-        window.addEventListener('genesis:journal-consulted', this.onJournalConsulted);
+        window.addEventListener('genesis:journal-state', this.onJournalState);
         window.addEventListener('genesis:message-count', this.onMessages);
         window.addEventListener('genesis:admin-count', this.onAdmin);
         window.addEventListener('genesis:refresh', this.onActivity);
@@ -31,7 +24,7 @@ export default class extends Controller {
     }
 
     disconnect() {
-        window.removeEventListener('genesis:journal-consulted', this.onJournalConsulted);
+        window.removeEventListener('genesis:journal-state', this.onJournalState);
         window.removeEventListener('genesis:message-count', this.onMessages);
         window.removeEventListener('genesis:admin-count', this.onAdmin);
         window.removeEventListener('genesis:refresh', this.onActivity);

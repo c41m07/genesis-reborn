@@ -399,11 +399,14 @@ de la participation, journalAvailableAt ordonne strictement les nouveaux lots,
 même pour deux ouvertures dans une seconde. Le ticket signé à durée courte lie
 la borne du lot à la participation et à la planète ; les cinq lignes affichées
 ne constituent pas une liste d’identifiants transmise au serveur. Le POST protégé
-par CSRF ne marque que les lignes non consultées jusqu’à cette borne, sans retirer
+par CSRF revérifie la possession de la planète et la participation active sous
+verrou, puis marque les lignes non consultées jusqu’à cette borne, sans retirer
 l’historique. Le contrôleur Stimulus ne lance l’action qu’à l’apparition de la
 première ligne dans l’onglet actif ; un formulaire natif reste disponible.
 Le contenu acquitté reste lisible sur la page courante. La réponse met à jour
-le témoin mobile sans effacer une arrivée signalée pendant la consultation.
+le témoin mobile. Les signaux Mercure ne rallument pas seuls le témoin :
+l’actualisation privée déjà utilisée par le menu lit les événements encore non
+consultés en base, sans ajouter de requête réseau indépendante.
 
 EmpireDetails ne produit que les données des planètes et flottes du propriétaire
 dans son univers. Les snapshots de stocks restent calculés en lecture seule.

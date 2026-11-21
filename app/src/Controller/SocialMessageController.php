@@ -1,6 +1,7 @@
 <?php
 namespace App\Controller;
 
+use App\Service\Notification\JournalService;
 use App\Entity\{Guild,PlayerUniverse};
 use App\Repository\GameRepository;
 use App\Service\Player\{RelationResolver,SocialMessageService};
@@ -14,10 +15,24 @@ use Symfony\Component\Uid\Uuid;
 final class SocialMessageController extends AbstractController
 {
     #[Route('/messages/non-lus', name: 'app_messages_unread', methods: ['GET'])]
-    public function unread(Request $request, UniverseContext $context, SocialMessageService $messages, RelationResolver $relations, GameRepository $repo): Response
+    public function unread(Request $request, UniverseContext $context, SocialMessageService $messages, RelationResolver $relations, GameRepository $repo, JournalService $journal): Response
     {
         $membership = $context->membership();
-        return $this->json(['unread' => $messages->unreadPrivateCount($membership) + $messages->unreadGuildCount($membership), 'conversations' => $this->renderView('player/_message_contacts.html.twig', ['contacts' => $repo->messageContacts($membership), 'guild' => $relations->guild($membership), 'unreadGuild' => $messages->unreadGuildCount($membership), 'peer' => $repo->find(PlayerUniverse::class, $request->query->getInt('with')), 'activeChannel' => in_array($request->query->getString('channel'), ['global', 'guild'], true) ? $request->query->getString('channel') : 'private'])], headers: ['Cache-Control' => 'no-store']);
+        $unreadGuild = $messages->unreadGuildCount($membership);
+        // Cette actualisation existe déjà dans le menu. Le signal Mercure réveille la lecture,
+        // mais ne prouve pas qu’un événement relayé tardivement reste non consulté.
+        return $this->json([
+            'unread' => $messages->unreadPrivateCount($membership) + $unreadGuild,
+            'journalUnread' => $journal->unreadCount($membership) > 0,
+            'membership' => $membership->id,
+            'conversations' => $this->renderView('player/_message_contacts.html.twig', [
+                'contacts' => $repo->messageContacts($membership),
+                'guild' => $relations->guild($membership),
+                'unreadGuild' => $unreadGuild,
+                'peer' => $repo->find(PlayerUniverse::class, $request->query->getInt('with')),
+                'activeChannel' => in_array($request->query->getString('channel'), ['global', 'guild'], true) ? $request->query->getString('channel') : 'private',
+            ]),
+        ], headers: ['Cache-Control' => 'private, no-store']);
     }
 
     #[Route('/messages', name: 'app_messages', methods: ['GET', 'POST'])]

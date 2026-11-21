@@ -2,8 +2,10 @@
 
 namespace App\Service\Notification;
 
-use App\Entity\{Notification, PlayerUniverse};
+use App\Entity\{Notification, Planet, Player, PlayerUniverse};
 use App\Manager\GameManager;
+use App\Service\Colony\ActionGuard;
+use Doctrine\DBAL\Exception\LockWaitTimeoutException;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use Psr\Clock\ClockInterface;
@@ -20,6 +22,7 @@ final class JournalService
         private GameManager $manager,
         private ClockInterface $clock,
         private UriSigner $signer,
+        private ActionGuard $guard,
     ) {
     }
 
@@ -90,19 +93,33 @@ final class JournalService
         return ['notifications' => $notifications, 'availableCount' => (int) $snapshot['total'], 'ticket' => $ticket];
     }
 
-    public function consult(PlayerUniverse $membership, int $planetId, string $ticket): int
+    public function consult(Player $player, PlayerUniverse $membership, Planet $planet, string $ticket): int
     {
         if (strlen($ticket) > 300 || !str_starts_with($ticket, self::TICKET_PATH . '?') || !$this->signer->check($ticket)) {
             throw new \DomainException('Consultation expirée. Rouvrez la Vue générale.');
         }
         parse_str((string) parse_url($ticket, PHP_URL_QUERY), $claims);
-        if (($claims['member'] ?? null) !== (string) $membership->id || ($claims['planet'] ?? null) !== (string) $planetId) {
+        if (($claims['member'] ?? null) !== (string) $membership->id || ($claims['planet'] ?? null) !== (string) $planet->id) {
             throw new \DomainException('Consultation inaccessible.');
         }
 
-        return $this->manager->transaction(function () use ($membership, $claims): int {
-            $this->manager->lockCurrent($membership);
-            $this->assertAccessible($membership);
+        $unread = $this->manager->transaction(function () use ($player, $membership, $planet, $claims): ?int {
+            try {
+                $this->guard->lock($membership, $planet, currentReads: true);
+                // Même ordre que la récompense quotidienne : ne pas attendre un compte
+                // qui tient déjà son verrou lors d’un changement d’univers ou d’un effacement.
+                $account = $this->em->getConnection()->fetchAssociative(
+                    'SELECT current_player_universe_id, locked_at FROM player WHERE id = ? FOR UPDATE NOWAIT',
+                    [$player->id],
+                );
+            } catch (\DomainException | LockWaitTimeoutException) {
+                return null;
+            }
+            if ($membership->player?->id !== $player->id || !$account || $account['locked_at'] !== null
+                || (int) $account['current_player_universe_id'] !== $membership->id) {
+                return null;
+            }
+
             // Les écritures portent sur le lot affiché, pas sur ce qui est arrivé depuis.
             $this->pending($membership)->update(Notification::class, 'n')->set('n.consultedAt', ':now')
                 ->andWhere('n.journalAvailableAt <= :through')->setParameter('through', $claims['through'])
@@ -110,6 +127,10 @@ final class JournalService
 
             return $this->unreadCount($membership);
         });
+        if ($unread === null) {
+            throw new \DomainException('Consultation inaccessible. Rouvrez la Vue générale.');
+        }
+        return $unread;
     }
 
     private function pending(PlayerUniverse $membership): QueryBuilder

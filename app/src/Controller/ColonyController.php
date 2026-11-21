@@ -180,13 +180,13 @@ final class ColonyController extends AbstractController
     #[Route('/planetes/{id}/journal/consulter', name: 'app_journal_consult', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function consultJournal(int $id, Request $request, JournalService $journal): Response
     {
-        $this->owned($id);
+        $planet = $this->owned($id);
         $membership = $this->context->membership();
         if ((string) $request->request->get('membership') !== (string) $membership->id || !$this->isCsrfTokenValid('journal-' . $membership->id, $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Formulaire expiré. Rouvrez le journal.');
         }
         try {
-            $unread = $journal->consult($membership, $id, $request->request->getString('journal_ticket'));
+            $unread = $journal->consult($this->getUser(), $membership, $planet, $request->request->getString('journal_ticket'));
         } catch (\DomainException $error) {
             throw $this->createNotFoundException($error->getMessage());
         }

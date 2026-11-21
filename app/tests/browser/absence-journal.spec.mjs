@@ -55,7 +55,13 @@ test('Journal : cinq entrées, acquittement à la lecture et repli clavier sans 
 
   // Une autre consultation de la page libère une arrivée sans modifier le lot capturé par l’onglet.
   insert(late, "'arrival'");
-  expect((await page.request.get(overview)).ok()).toBe(true);
+  const native = await browser.newContext({
+    baseURL, javaScriptEnabled: false, storageState: await page.context().storageState(),
+    viewport: { width: 390, height: 844 },
+  });
+  const fallback = await native.newPage();
+  await fallback.goto(overview);
+  await expect(fallback.locator('[data-journal-notice]').first()).toContainText(late);
   const ack = page.waitForResponse(r => r.request().method() === 'POST' && r.url().endsWith('/journal/consulter'));
   await page.bringToFront();
   await notices.first().scrollIntoViewIfNeeded();
@@ -68,13 +74,8 @@ test('Journal : cinq entrées, acquittement à la lecture et repli clavier sans 
   await expect(notices.first()).toContainText(initial.at(-1));
   expect(posts).toHaveLength(1);
 
-  const native = await browser.newContext({
-    baseURL, javaScriptEnabled: false, storageState: await page.context().storageState(),
-    viewport: { width: 390, height: 844 },
-  });
   try {
-    const fallback = await native.newPage();
-    await fallback.goto(overview);
+    await fallback.reload();
     await expect(fallback.locator('[data-journal-notice]')).toHaveCount(1);
     await expect(fallback.locator('[data-journal-notice]')).toContainText(late);
     const consult = fallback.getByRole('button', { name: 'Marquer le journal comme consulté' });

@@ -7,6 +7,7 @@ use App\Service\Notification\{JournalService,NotificationService};
 use App\Service\Player\RegistrationService;
 use App\Service\Universe\{UniverseImporter,UniverseService};
 use App\Validator\DTO\RegistrationData;
+use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -227,6 +228,52 @@ final class AbsenceJournalTest extends WebTestCase
         self::assertSame(6, (int) $connection->fetchOne('SELECT COUNT(*) FROM notification WHERE consulted_at IS NOT NULL'));
         self::assertNull($connection->fetchOne('SELECT consulted_at FROM notification WHERE id = ?', [$nonJournal->id]));
         self::assertSame(8, $this->em->getRepository(Notification::class)->count([]));
+    }
+
+    public function testConsultationRefusesBusyAccountAndStaleManagedContext(): void
+    {
+        $this->overview();
+        $notice = $this->notice('Encore en attente au changement de contexte');
+        $this->overview();
+        $form = $this->client->getCrawler()->filter('form[action$="/journal/consulter"]')->form();
+        $ticket = $form->getPhpValues()['journal_ticket'];
+        $player = $this->em->find(Player::class, $this->player->id);
+        $membership = $player->currentPlayerUniverse;
+        $planet = $this->em->find(Planet::class, $this->home->id);
+        $journal = static::getContainer()->get(JournalService::class);
+        $connection = $this->em->getConnection();
+        $other = DriverManager::getConnection($connection->getParams());
+        try {
+            $other->beginTransaction();
+            $other->fetchOne('SELECT id FROM player WHERE id = ? FOR UPDATE', [$player->id]);
+            $this->assertJournalConsultationRefused($journal, $player, $membership, $planet, $ticket);
+            $other->rollBack();
+            self::assertNull($connection->fetchOne('SELECT consulted_at FROM notification WHERE id = ?', [$notice->id]));
+
+            // Simule le commit d’un autre onglet alors que cette requête a encore les objets précédents.
+            $other->executeStatement('UPDATE player SET current_player_universe_id = NULL WHERE id = ?', [$player->id]);
+            $this->assertJournalConsultationRefused($journal, $player, $membership, $planet, $ticket);
+            self::assertNull($connection->fetchOne('SELECT consulted_at FROM notification WHERE id = ?', [$notice->id]));
+            $other->executeStatement('UPDATE player SET current_player_universe_id = ? WHERE id = ?', [$membership->id, $player->id]);
+            $other->executeStatement('UPDATE planet SET owner_id = NULL WHERE id = ?', [$planet->id]);
+            $this->assertJournalConsultationRefused($journal, $player, $membership, $planet, $ticket);
+            self::assertNull($connection->fetchOne('SELECT consulted_at FROM notification WHERE id = ?', [$notice->id]));
+        } finally {
+            if ($other->isTransactionActive()) {
+                $other->rollBack();
+            }
+            $other->close();
+        }
+    }
+
+    private function assertJournalConsultationRefused(JournalService $journal, Player $player, PlayerUniverse $membership, Planet $planet, string $ticket): void
+    {
+        try {
+            $journal->consult($player, $membership, $planet, $ticket);
+            self::fail('Le ticket ne devait pas être validé.');
+        } catch (\DomainException $error) {
+            self::assertStringContainsString('Consultation inaccessible', $error->getMessage());
+        }
     }
 
     public function testAllColonyListsUseTheSameAcquisitionOrderWithoutInventingLegacyDates(): void

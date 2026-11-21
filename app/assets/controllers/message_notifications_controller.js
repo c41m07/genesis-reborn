@@ -17,8 +17,11 @@ export default class extends Controller {
         this.abort?.abort();
     }
 
-    async refresh() {
+    async refresh(event) {
+        if (event?.detail?.journal === true) this.journalRefreshPending = true;
         if (document.hidden || this.loading) return;
+        const observedAt = performance.now();
+        this.journalRefreshPending = false;
         this.loading = true;
         this.abort = new AbortController();
         try {
@@ -30,10 +33,17 @@ export default class extends Controller {
             const data = await response.json();
             for (const badge of this.badgeTargets) badge.hidden = data.unread === 0;
             window.dispatchEvent(new CustomEvent('genesis:message-count', { detail: { count: data.unread } }));
+            window.dispatchEvent(new CustomEvent('genesis:journal-state', {
+                detail: { membership: data.membership, unread: data.journalUnread, observedAt },
+            }));
             if (this.hasConversationsTarget && !this.conversationsTarget.contains(document.activeElement)) {
                 this.conversationsTarget.innerHTML = data.conversations;
             }
         } catch { /* La prochaine actualisation réessaiera. */ }
-        finally { this.loading = false; }
+        finally {
+            this.loading = false;
+            // Coalescer les signaux reçus pendant une seule requête, sans multiplier les polls.
+            if (this.journalRefreshPending && !this.abort.signal.aborted) this.refresh();
+        }
     }
 }
