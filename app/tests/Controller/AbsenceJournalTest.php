@@ -198,7 +198,7 @@ final class AbsenceJournalTest extends WebTestCase
         self::assertSelectorTextNotContains('.dashboard-journal', 'Message hors journal');
         $form = $this->client->getCrawler()->filter('form[action$="/journal/consulter"]')->form();
 
-        $membership = $this->player->currentPlayerUniverse;
+        $membership = $this->em->find(PlayerUniverse::class, $this->player->currentPlayerUniverse->id);
         $repo = static::getContainer()->get(GameRepository::class);
         $other = array_values(array_filter($repo->planets($membership->universe, null, true), static fn (Planet $p): bool => !$p->npcPlanet))[0];
         $other->owner = $membership;
