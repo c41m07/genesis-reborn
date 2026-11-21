@@ -75,16 +75,22 @@ class PirateReconnaissance
         ];
     }
 
-    /** Sous le verrou de l'entité : l'unique rapport clôt aussi la réservation de sonde. */
-    public function reportWhenDue(PlayerUniverse $membership, string $token, \DateTimeImmutable $at): void
+    /** Sous verrou : renvoie le délai de rattrapage seulement pour un jeton valide reçu trop tôt. */
+    public function reportWhenDue(PlayerUniverse $membership, string $token, \DateTimeImmutable $at): ?int
     {
         if (!$this->belongsTo($membership, $at) || $this->reportedAt !== null
-            || $at < $this->dueAt || !hash_equals($this->dispatchToken, $token)) {
-            return;
+            || !hash_equals($this->dispatchToken, $token)) {
+            return null;
+        }
+        if ($at < $this->dueAt) {
+            // Une seconde au minimum évite la boucle immédiate ; les échéances en base sont à la seconde.
+            return max(1000, ($this->dueAt->getTimestamp() - $at->getTimestamp()) * 1000);
         }
 
         // Garder l'heure de remise réelle, sans prétendre que le worker a exécuté à l'heure théorique.
         $this->reportedAt = $at;
+
+        return null;
     }
 
     /**

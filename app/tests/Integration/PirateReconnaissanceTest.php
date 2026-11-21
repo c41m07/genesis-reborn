@@ -18,6 +18,7 @@ use Psr\Log\NullLogger;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Clock\MockClock;
+use Symfony\Component\Messenger\Exception\RecoverableMessageHandlingException;
 use Symfony\Component\Messenger\Stamp\DelayStamp;
 use Symfony\Component\Process\Process;
 
@@ -97,7 +98,14 @@ final class PirateReconnaissanceTest extends KernelTestCase
         $ally = $this->em->find(PlayerUniverse::class, $ally->id);
         $handler = self::getContainer()->get(PirateReconnaissanceDueHandler::class);
         $this->clock->sleep($quote['seconds'] - 1);
-        $handler($message);
+        $handler(new PirateReconnaissanceDue($message->missionId, 'obsolete-before'));
+        try {
+            $handler($message);
+            self::fail('Le jeton valide précoce doit être porté par le rejeu natif.');
+        } catch (RecoverableMessageHandlingException $error) {
+            self::assertSame(1000, $error->getRetryDelay());
+        }
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM outbox_message'));
         self::assertSame($travel, $this->service->statusFor($member, 'test-signal'));
         $this->clock->sleep(1);
         $handler(new PirateReconnaissanceDue($message->missionId, 'obsolete'));

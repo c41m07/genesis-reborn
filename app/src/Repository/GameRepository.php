@@ -988,6 +988,20 @@ final class GameRepository
             ->getOneOrNullResult();
     }
 
+    /** Relire sous verrou uniquement la mission rattachée à la participation déjà verrouillée. */
+    public function lockPirateReconnaissance(int $id, PlayerUniverse $membership): ?PirateReconnaissance
+    {
+        return $this->em->createQueryBuilder()
+            ->select('recon')->from(PirateReconnaissance::class, 'recon')
+            ->where('recon.id = :id AND recon.membership = :membership')
+            ->setParameter('id', $id)
+            ->setParameter('membership', $membership)
+            ->getQuery()
+            ->setLockMode(LockMode::PESSIMISTIC_WRITE)
+            ->setHint(Query::HINT_REFRESH, true)
+            ->getOneOrNullResult();
+    }
+
     /** Traiter seulement l'agrégat encore présent et rattaché à la participation verrouillée. */
     public function lockPirateAttack(int $id, PlayerUniverse $membership): ?PirateAttackCampaign
     {

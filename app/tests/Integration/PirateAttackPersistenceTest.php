@@ -110,6 +110,15 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertSame($travelSeconds, $returnDue->getTimestamp() - $due->getTimestamp());
 
         $return = new PirateAttackDue($campaign->id, $campaign->dispatchToken);
+        $this->advanceTo($returnDue->modify('-1 second'));
+        $handler($message); // Ancien message du combat : aucune nouvelle tentative ni aucun nouveau report.
+        try {
+            $handler($return);
+            self::fail('Le retour précoce doit être replanifié sans remettre la réserve.');
+        } catch (RecoverableMessageHandlingException $error) {
+            self::assertSame(1000, $error->getRetryDelay());
+        }
+        self::assertSame(1, $this->stock($stock->id));
         $this->advanceTo($returnDue);
         $handler($return);
         $handler($return);

@@ -141,11 +141,17 @@ automatique depuis une page, une connexion ou un ancien univers.
 - L'outbox du départ utilise un nouveau type privé et le relais habituel.
   À réception le worker relit participation, univers puis mission sous
   verrou et vérifie le jeton, l'échéance et l'absence de rapport. Un
-  message trop tôt ou obsolète n'écrit rien ; un message arrivé trop tôt
-  n'est pas replanifié dans ce socle et le relais normal porte le délai.
-  Avant mise en jeu, un événement valide reçu trop tôt doit être replanifié
-  ou rattrapable à l'échéance avec le même jeton, sans remise anticipée :
-  vérifier transport et worker sur horloges décalées. La date du rapport est la date réelle du traitement. Après remise, le rapport est le même au
+  message trop tôt ou obsolète n'écrit rien. Pour un jeton courant reçu
+  trop tôt, le worker rend le délai restant à Messenger via
+  RecoverableMessageHandlingException : DelayStamp diffère le même message
+  et conserve son jeton, au moins une seconde, sans créer de nouvelle
+  ligne d'outbox. Les jetons obsolètes ou consommés ne provoquent pas
+  de rejeu. La date du rapport est la date réelle du traitement.
+  La recette locale avec RabbitMQ et MariaDB privés envoie volontairement
+  le bon message avant terme, sans relayer d’abord l’outbox originale :
+  le worker fait un retry retardé et ne rend le rapport qu’à l’échéance.
+  L’outbox d’origine est ensuite relayée comme doublon, sans deuxième
+  rapport ni deuxième sonde débitée. Le circuit standard et ses messages de flotte ne sont pas modifiés. Après remise, le rapport est le même au
   rejeu. La composition figée est identique détecté, non détecté, ou
   lorsqu'aucune détection n'a été renseignée. La donnée de détection
   existe pour les scénarios internes, sans nouveau calcul ni jet global.
@@ -265,9 +271,10 @@ existants. Aucune route, politique universelle, prime ou convoi.
 4. **Rejeu.** L'outbox attaque et retour transporte un jeton distinct par
    phase. Un jeton obsolète ou déjà consommé ne modifie rien. Un message
    valide d'attaque/retour reçu trop tôt demande à Messenger de rejouer
-   le même jeton après le temps restant, sans résultat anticipé. Le
-   rattrapage de la reconnaissance reste séparé. Tester transport et worker
-   avec un vrai broker et des horloges décalées avant toute ouverture.
+   le même jeton après le temps restant, sans résultat anticipé. La
+   reconnaissance suit la même convention sans toucher aux messages Fleet.
+   Tester aussi avec un vrai broker des séquences attaque/retour complètes
+   et des horloges décalées avant toute ouverture.
 
 La projection interne est réservée au compte propriétaire dans sa
 participation accessible et ne renvoie ni coordonnées, jetons, graine, coût

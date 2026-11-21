@@ -138,20 +138,22 @@ final class PirateReconnaissanceService
         return $quote['seconds'];
     }
 
-    public function deliver(int $missionId, string $token): void
+    /** Retourne des millisecondes seulement si Messenger doit reprendre ce même jeton. */
+    public function deliver(int $missionId, string $token): ?int
     {
-        $mission = $this->repository->find(PirateReconnaissance::class, $missionId);
-        if ($mission === null) {
-            return;
+        $membership = $this->repository->find(PirateReconnaissance::class, $missionId)?->membership();
+        if ($membership === null) {
+            return null;
         }
 
-        $this->manager->transaction(function () use ($mission, $token): void {
-            // Le worker suit le même ordre que le départ, et ne lit jamais le hangar au retour.
-            $membership = $mission->membership();
+        return $this->manager->transaction(function () use ($missionId, $membership, $token): ?int {
+            // Le verrou de participation précède la lecture courante ; ne pas créer un instantané
+            // paresseux dans la transaction avant ce verrou, ni relire le hangar en arrivant.
             $this->manager->lockCurrent($membership);
             $this->manager->lockCurrent($membership->universe);
-            $this->manager->lockCurrent($mission);
-            $mission->reportWhenDue($membership, $token, $this->clock->now());
+            $mission = $this->repository->lockPirateReconnaissance($missionId, $membership);
+
+            return $mission?->reportWhenDue($membership, $token, $this->clock->now());
         });
     }
 
