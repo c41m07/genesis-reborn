@@ -53,6 +53,7 @@
 }
 .first-steps-popup-heading, .first-steps-popup-footer { flex-shrink: 0; }
 .first-steps-popup-content { min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 4px; }
+.first-steps-popup-content:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 5px; }
 .first-steps-popup-content p { margin: 0 0 8px; line-height: 1.48; }
 .first-steps-popup-footer { padding-top: 8px; border-top: 1px solid var(--line); }
 .first-steps-popup-footer > a { margin-bottom: 6px; }

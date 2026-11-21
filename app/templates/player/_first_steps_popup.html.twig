@@ -16,7 +16,7 @@
             </div>
             <button type="button" hidden class="quiet-button" data-first-steps-guide-target="closeButton" data-action="first-steps-guide#close">Fermer</button>
         </header>
-        <div class="first-steps-popup-content">
+        <div class="first-steps-popup-content" role="region" aria-label="Instructions et illustrations" tabindex="0">
             <p>{{ guide.explanation }}</p>
             <p><strong>À faire :</strong> {{ guide.action }}</p>
             <p><strong>Validation :</strong> {{ example[2] }}</p>

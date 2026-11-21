@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import { test, expect } from './support/isolated-test.mjs';
 import { accelerateQueuedItem, queryIsolatedSql } from './support/game-fixtures.mjs';
 
@@ -222,6 +223,25 @@ test('Premiers pas : panneau non modal, images à la demande et reprise par Pré
     const summary = popup.locator('summary');
     await expect(popup).toHaveAttribute('open', '');
     await expect(popup.getByText('Validation :')).toBeVisible();
+    for (const [width, height] of [[1440, 900], [850, 900], [390, 844]]) {
+        await page.setViewportSize({ width, height });
+        const panel = popup.locator('.first-steps-popup-panel');
+        const content = panel.locator('.first-steps-popup-content');
+        const box = await panel.boundingBox();
+        expect(box.x).toBeGreaterThanOrEqual(0);
+        expect(box.x + box.width).toBeLessThanOrEqual(width);
+        await expect.poll(() => content.evaluate(element => element.scrollWidth - element.clientWidth)).toBeLessThanOrEqual(1);
+        expect((await new AxeBuilder({ page }).include('.first-steps-popup').analyze()).violations).toEqual([]);
+    }
+    // Une petite fenêtre force le défilement : le clavier doit atteindre la zone textuelle.
+    await page.setViewportSize({ width: 390, height: 620 });
+    const scrollRegion = popup.getByRole('region', { name: 'Instructions et illustrations', exact: true });
+    await scrollRegion.focus();
+    await expect(scrollRegion).toBeFocused();
+    await page.keyboard.press('PageDown');
+    await expect.poll(() => scrollRegion.evaluate(element => element.scrollTop)).toBeGreaterThan(0);
+    await scrollRegion.evaluate(element => { element.scrollTop = 0; });
+    await page.setViewportSize({ width: 1440, height: 900 });
     const first = popup.locator('figure').nth(0).locator('img');
     const second = popup.locator('figure').nth(1).locator('img');
     await expect(first).toHaveAttribute('src', /mine_metal/);
