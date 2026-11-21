@@ -837,7 +837,7 @@ Les identifiants de relais du diagnostic ouvrent une inspection ciblée en lectu
 
 La [matrice des permissions](docs/ADMIN_PERMISSIONS.md) documente les contrôles existants du seul rôle administrateur, sans attribution ni délégation.
 
-- **Navigation Galaxie** : le système choisi est conservé entre les vues carte et liste, y compris via les liens natifs ; le retour à la galaxie ou la fermeture de la fiche enlève la sélection.
+- **Navigation Galaxie** : l’aperçu d’un système occupe une colonne réservée à droite sur ordinateur ou un volet compact au-dessus de la carte sur mobile. Il ne masque aucun repère et le clic ne recadre pas la carte. Le système choisi est conservé entre les vues carte et liste, y compris via les liens natifs ; le retour à la galaxie ou la fermeture de la fiche enlève la sélection.
 
 - **Visuel de l’accueil** : le navigateur choisit un aperçu WebP de la colonie parmi quatre tailles ; le PNG original reste accessible au clic et sert de repli. À 390 px (DPR 1) et 1366 px (DPR 1), Chromium local a reçu respectivement 18 244 et 42 394 octets au lieu de 837 479 octets. Ce sont des tailles de fichiers servis, pas des temps de chargement mesurés.
 
