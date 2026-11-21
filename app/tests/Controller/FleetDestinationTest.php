@@ -136,31 +136,78 @@ final class FleetDestinationTest extends WebTestCase
 
     public function testMissionsAreBoundedAndDirectLinksLocateTheCorrectPage(): void
     {
-        $flights=[];
-        for ($i=0;$i<33;$i++) {
-            $fleet=new Fleet();$fleet->playerUniverse=$this->player->currentPlayerUniverse;
-            $fleet->homePlanet=$this->home;$fleet->destination=$this->enemy;$fleet->mission='transport';
-            $fleet->status='traveling';$fleet->departureAt=new \DateTimeImmutable();$fleet->arrivalAt=new \DateTimeImmutable('+1 day');
-            $this->em->persist($fleet);$flights[]=$fleet;
+        $member = $this->player->currentPlayerUniverse;
+        $universes = static::getContainer()->get(UniverseService::class);
+        $universes->select($this->player, $this->foreign->owner->universe->id);
+        $otherMembership = $this->player->currentPlayerUniverse;
+        $otherHome = $this->em->getRepository(Planet::class)->findOneBy(['owner' => $otherMembership]);
+        $universes->select($this->player, $member->universe->id);
+
+        $now = new \DateTimeImmutable();
+        $arrives = $now->modify('+1 day');
+        $create = function (PlayerUniverse $owner, Planet $origin, Planet $destination, string $status = 'traveling') use ($now, $arrives): Fleet {
+            $flight = new Fleet();
+            $flight->playerUniverse = $owner;
+            $flight->homePlanet = $origin;
+            $flight->destination = $destination;
+            $flight->mission = 'transport';
+            $flight->status = $status;
+            $flight->departureAt = $now;
+            $flight->arrivalAt = $arrives;
+            $this->em->persist($flight);
+            return $flight;
+        };
+        $flights = [];
+        for ($i = 0; $i < 32; ++$i) {
+            $flights[] = $create($member, $i % 2 === 0 ? $this->home : $this->own, $this->enemy);
         }
-        $foreign=new Fleet();$foreign->playerUniverse=$this->foreign->owner;$foreign->homePlanet=$this->foreign;
-        $foreign->status='traveling';$foreign->arrivalAt=new \DateTimeImmutable('+1 day');$this->em->persist($foreign);
+        // Le retour appartient toujours à cet empire, mais l’origine n’est plus à lui.
+        $lostOrigin = $create($member, $this->neutral, $this->enemy, 'returning');
+        $lostOrigin->returnPlanet = $this->home;
+        $foreignPlayer = $create($this->ally->owner, $this->ally, $this->enemy);
+        $foreignUniverse = $create($otherMembership, $otherHome, $this->foreign);
         $this->em->flush();
-        $this->client->request('GET','/planetes/'.$this->home->id);
-        $this->client->request('GET','/flottes');self::assertResponseIsSuccessful();
-        self::assertSelectorCount(30,'[data-active-fleet]');
-        self::assertSelectorTextContains('[data-live-region="mission-pagination"]','Page 1 / 2');
-        self::assertSelectorNotExists('[data-active-fleet="'.$foreign->id.'"]');
-        $this->client->request('GET','/flottes',['fleet'=>$flights[32]->id]);self::assertResponseIsSuccessful();
-        self::assertSelectorCount(3,'[data-active-fleet]');
-        self::assertSelectorExists('[data-active-fleet="'.$flights[32]->id.'"]');
-        self::assertSelectorTextContains('[data-live-region="mission-pagination"]','Page 2 / 2');
-        $this->client->request('GET','/flottes',['fleet'=>$foreign->id]);self::assertResponseIsSuccessful();
-        self::assertSelectorCount(30,'[data-active-fleet]');
-        self::assertSelectorNotExists('[data-active-fleet="'.$foreign->id.'"]');
-        $this->client->request('GET','/flottes/preparer');self::assertResponseIsSuccessful();
-        self::assertSelectorCount(3,'[data-live-region="mission-summary"] li');
-        self::assertSelectorTextSame('[data-live-region="mission-summary"] .badge','33');
+
+        $activeIds = static fn (\Symfony\Component\DomCrawler\Crawler $page): array => $page
+            ->filter('[data-active-fleet]')
+            ->each(static fn ($row): int => (int) $row->attr('data-active-fleet'));
+        $ids = static fn (array $rows): array => array_map(static fn (Fleet $item): int => $item->id, $rows);
+        $pageOne = $ids(array_slice($flights, 0, 30));
+        $pageTwo = [$flights[30]->id, $flights[31]->id, $lostOrigin->id];
+
+        foreach ([$this->home, $this->own] as $colony) {
+            $this->client->request('GET', '/planetes/'.$colony->id);
+            $full = $this->client->request('GET', '/flottes');
+            self::assertResponseIsSuccessful();
+            self::assertSame($pageOne, $activeIds($full));
+            self::assertSelectorTextSame('[data-live-region="active-flights"] h2 .badge', '33');
+            self::assertSelectorTextContains('[data-live-region="active-flights"]', 'Toutes vos colonies · univers actif');
+            self::assertSelectorTextContains('[data-live-region="mission-pagination"]', 'Page 1 / 2');
+
+            $query = ['fleet' => $flights[31]->id];
+            $focused = $this->client->request('GET', '/flottes', $query);
+            self::assertResponseIsSuccessful();
+            self::assertSame($pageTwo, $activeIds($focused));
+            self::assertSelectorTextContains('[data-live-region="mission-pagination"]', 'Page 2 / 2');
+
+            $this->client->request('GET', '/flottes', $query, [], ['HTTP_X_GENESIS_LIVE' => '1', 'HTTP_ACCEPT' => 'application/json']);
+            self::assertResponseIsSuccessful();
+            $regions = json_decode($this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR)['regions'];
+            $fragment = new \Symfony\Component\DomCrawler\Crawler($regions['active-flights']);
+            self::assertSame($pageTwo, $activeIds($fragment));
+            self::assertStringContainsString('Toutes vos colonies · univers actif', $regions['active-flights']);
+            self::assertStringContainsString('Page 2 / 2', $regions['mission-pagination']);
+
+            $this->client->request('GET', '/flottes/preparer');
+            self::assertResponseIsSuccessful();
+            self::assertSelectorCount(3, '[data-live-region="mission-summary"] li');
+            self::assertSelectorTextSame('[data-live-region="mission-summary"] .badge', '16');
+        }
+        foreach ([$foreignPlayer, $foreignUniverse] as $inaccessible) {
+            $result = $this->client->request('GET', '/flottes', ['fleet' => $inaccessible->id]);
+            self::assertResponseIsSuccessful();
+            self::assertSame($pageOne, $activeIds($result));
+        }
     }
 
     public function testFleetRefreshReusesTheFullPageRegionsWithoutChangingTheResourceStrip(): void
@@ -277,8 +324,8 @@ final class FleetDestinationTest extends WebTestCase
             self::assertSelectorTextContains('[data-live-region="mission-summary"] .badge','2');
             self::assertSelectorNotExists('[data-orbit-request]');
             $this->client->request('GET','/flottes');self::assertResponseIsSuccessful();
-            foreach([$flight,$orbit] as $visible) self::assertSelectorExists('[data-active-fleet="'.$visible->id.'"]');
-            foreach([$hiddenFlight,$hiddenOrbit,$foreignFlight] as $hidden) self::assertSelectorNotExists('[data-active-fleet="'.$hidden->id.'"]');
+            foreach([$flight,$orbit,$hiddenFlight,$hiddenOrbit] as $visible) self::assertSelectorExists('[data-active-fleet="'.$visible->id.'"]');
+            self::assertSelectorNotExists('[data-active-fleet="'.$foreignFlight->id.'"]');
             $this->client->request('GET','/flottes/orbites');self::assertResponseIsSuccessful();
             foreach([$orbit,$incoming] as $visible) self::assertSelectorExists('[data-orbit-request="'.$visible->id.'"]');
             foreach([$hiddenOrbit,$hiddenIncoming] as $hidden) self::assertSelectorNotExists('[data-orbit-request="'.$hidden->id.'"]');

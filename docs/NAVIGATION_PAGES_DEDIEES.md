@@ -252,7 +252,7 @@ connecteur sur cet endpoint. Aucun déploiement n’a été effectué.
 
 | Adresse | Objectif |
 | --- | --- |
-| `/flottes` | Missions actives de la colonie, par pages de 30 |
+| `/flottes` | Missions personnelles de toutes les colonies de l’empire actif, par pages de 30 |
 | `/flottes/preparer` | Composition → Destination → Confirmation, avec résumé de trois missions |
 | `/flottes/orbites` | Demandes envoyées et reçues de la colonie active |
 | `/flottes/quai` | Vaisseaux et réserves de la colonie, stationnements en attente de tout l’empire |
@@ -273,8 +273,9 @@ restent utiles dans la liste détaillée et les rapports de combat ne changent p
 
 `FleetPageView` prépare uniquement les lectures de la page choisie. La préparation
 charge les vaisseaux de la colonie, les choix de destination et trois missions
-sans composition, fret ni combats détaillés. La liste enrichit au plus 30
-missions. La requête des orbites filtre la colonie avant la préparation des lignes. Les orbites et stationnements sont préparés sur leur destination.
+de cette colonie, sans composition, fret ni combats détaillés. La liste enrichit
+au plus 30 missions de la participation active, y compris les retours dont
+l’origine n’est plus possédée. La requête des orbites filtre la colonie avant la préparation des lignes. Les orbites et stationnements sont préparés sur leur destination.
 La limite de 20 compositions par empire/univers reste inchangée. Aucun gain
 chiffré de performance n’est revendiqué.
 

@@ -154,17 +154,21 @@ final class GameRepository
         return false;
     }
 
-    /** @return array{fleets:list<Fleet>,count:int,page:int,pages:int} Missions de la colonie, bornées avant enrichissement. */
-    public function fleetMissionPage(PlayerUniverse $owner, ?Planet $colony, int $page, int $limit = 30, int $focusId = 0): array
+    /** @return array{fleets:list<Fleet>,count:int,page:int,pages:int} Missions personnelles, bornées avant enrichissement. */
+    public function fleetMissionPage(PlayerUniverse $owner, ?Planet $colony, int $page, int $limit = 30, int $focusId = 0, bool $allColonies = false): array
     {
-        if (!$colony) {
+        // Une colonie manquante n’élargit jamais le résumé local à l’empire.
+        if (!$allColonies && !$colony) {
             return ['fleets' => [], 'count' => 0, 'page' => 1, 'pages' => 1];
         }
         $limit = max(1, min(30, $limit));
         $query = $this->em->createQueryBuilder()->select('fleet')->from(Fleet::class, 'fleet')
-            ->where('fleet.playerUniverse = :owner')->andWhere('fleet.homePlanet = :colony')
-            ->andWhere('fleet.status IN (:states)')->setParameter('owner', $owner)->setParameter('colony', $colony)
+            ->where('fleet.playerUniverse = :owner')
+            ->andWhere('fleet.status IN (:states)')->setParameter('owner', $owner)
             ->setParameter('states', ['traveling', 'returning', 'attacking', 'defending', 'orbiting', 'orbit_pending', 'occupying']);
+        if (!$allColonies) {
+            $query->andWhere('fleet.homePlanet = :colony')->setParameter('colony', $colony);
+        }
         $count = (int) (clone $query)->select('COUNT(fleet.id)')->getQuery()->getSingleScalarResult();
         $pages = max(1, (int) ceil($count / $limit));
         if ($focusId > 0) {
