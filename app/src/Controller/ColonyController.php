@@ -2,10 +2,10 @@
 
 namespace App\Controller;
 
-use App\Entity\{Planet, PlayerDiscovery, Fleet, FleetShip};
+use App\Entity\{Planet, PlanetBuilding, PlayerTechnology, PlayerDiscovery, Fleet, FleetShip};
 use App\Repository\GameRepository;
 use App\Service\Universe\UniverseContext;
-use App\Service\Colony\{ColonyView, GameShell, ResourceService, LiveRegionResponse};
+use App\Service\Colony\{CatalogueInsights, ColonyView, GameShell, ResourceService, LiveRegionResponse};
 use App\Service\Queue\QueueService;
 use App\Service\Player\{LeaderboardService, PreferencesService, RelationResolver};
 use App\Service\Catalog\GameCatalog;
@@ -209,7 +209,7 @@ final class ColonyController extends AbstractController
         return $this->render('player/technology_tree.html.twig', $view->data($membership, $planet, section: 'tree') + ['tree_standalone' => true]);
     }
     #[Route('/planetes/{id}/objectif-technologique', name: 'app_technology_goal_summary', methods: ['GET'], requirements: ['id' => '\d+'])]
-    public function technologyGoalSummary(int $id, Request $request, GameCatalog $catalog): JsonResponse
+    public function technologyGoalSummary(int $id, Request $request, GameCatalog $catalog, CatalogueInsights $insights): JsonResponse
     {
         // Le navigateur choisit la clé, mais le catalogue et la colonie restent vérifiés côté serveur.
         $planet = $this->owned($id);
@@ -223,10 +223,19 @@ final class ColonyController extends AbstractController
             return $this->json(['goal' => null], 200, $headers);
         }
 
-        // La même variante de catalogue que le Guide fournit le nom et le rang, sans calculer le graphe.
-        $definition = $catalog->getTierForUniverse($planet->solarSystem->galaxy->universe, $group, $slug, $tier);
+        // Lecture seule de deux jeux de niveaux acquis. Les files ne valident pas un niveau à l’avance.
+        $membership = $this->context->membership();
+        $goal = $insights->goalSummary(
+            $membership,
+            $planet,
+            $group,
+            $slug,
+            $tier,
+            $this->repo->levelsByTier(PlanetBuilding::class, ['planet' => $planet]),
+            $this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $membership]),
+        );
 
-        return $this->json(['goal' => ['label' => $definition['label'], 'tier' => $definition['_tier_label']]], 200, $headers);
+        return $this->json(['goal' => $goal], 200, $headers);
     }
 
     #[Route('/planetes/{id}/renommer', name: 'app_planet_rename', methods: ['POST'], requirements: ['id' => '\d+'])]

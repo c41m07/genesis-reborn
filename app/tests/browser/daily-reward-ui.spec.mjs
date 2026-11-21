@@ -145,7 +145,7 @@ test('Quotidiennes : le cookie de mémorisation ne lance pas la fenêtre', async
     await expect(page.locator('.topbar').getByRole('link', { name: 'Quotidiennes', exact: true })).toBeVisible();
 });
 
-test('Barre du jeu : alertes, droits, focus et infobulles au-dessus du vrai rail', async ({ page, browser, baseURL }) => {
+test('Barre du jeu : encarts, cinq raccourcis, droits, focus et infobulles', async ({ page, browser, baseURL }) => {
     const member = await newMember(page, { asAdmin: true });
     const header = page.locator('.topbar');
     const closeAvailable = tab => tab.getByRole('dialog', { name: 'Récompense quotidienne' })
@@ -164,6 +164,7 @@ test('Barre du jeu : alertes, droits, focus et infobulles au-dessus du vrai rail
     } finally {
         await other.close();
     }
+    runIsolatedSql(process.env.BROWSER_ROUTER, "INSERT INTO game_event (name,description,type,status,starts_at,ends_at,parameters,visible_to_players) VALUES ('Annonce de composition des encarts','','announcement','active',UTC_TIMESTAMP()-INTERVAL 1 HOUR,UTC_TIMESTAMP()+INTERVAL 1 HOUR,'{}',1)");
     await page.reload();
     const wiki = header.getByRole('link', { name: 'Wiki', exact: true });
     const mail = header.getByRole('link', { name: 'Messages', exact: true });
@@ -171,29 +172,48 @@ test('Barre du jeu : alertes, droits, focus et infobulles au-dessus du vrai rail
     const admin = header.getByRole('link', { name: /^Admin/ });
     await expect(admin).toHaveAttribute('href', /admin/);
     await expect(mail).toHaveAttribute('aria-description', '1 message non lu');
-    await expect(page.locator('.resource-event-stack .event-drawer')).toBeVisible();
+    const guide = header.locator('.universe-context + .header-technology-goal');
+    const events = header.locator('.header-technology-goal + .event-drawer-wrap:has(+ .header-tools) summary');
     const order = header.locator('[data-header-tooltip]:visible');
+    await expect(events).toBeVisible();
     expect(await order.evaluateAll(nodes => nodes.map(node => node.dataset.headerTooltip))).toEqual([
         'Quotidiennes', 'Messages', 'Wiki', 'Feedback', 'Admin',
     ]);
-    const tooltipOverRail = () => wiki.evaluate(node => {
+    const visibleTooltip = () => wiki.evaluate(node => {
         const rect = node.getBoundingClientRect();
         const y = rect.bottom + 10;
         const tooltip = getComputedStyle(node, '::after');
         const hit = document.elementFromPoint(rect.left + rect.width / 2, y);
         return tooltip.content === '"Wiki"' && tooltip.display === 'block' && hit === node;
     });
-    for (const width of [1440, 390, 360]) {
+    for (const width of [1440, 1280, 1024, 768, 390, 360]) {
         await page.setViewportSize({ width, height: 844 });
-        await expect(admin).toBeInViewport();
+        for (const control of [guide, events, ...(await order.all())]) {
+            await expect(control).toBeInViewport({ ratio: 1 });
+            const visibleAtCentre = await control.evaluate(node => {
+                const rect = node.getBoundingClientRect();
+                return node.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2));
+            });
+            expect(visibleAtCentre).toBe(true);
+        }
+        await guide.focus();
+        await page.keyboard.press('Tab');
+        await expect(events).toBeFocused();
+        await page.keyboard.press('Enter');
+        await expect(header.getByText('Annonce de composition des encarts', { exact: true })).toBeVisible();
+        await page.keyboard.press('Escape');
+        await expect(events).toBeFocused();
+        await page.keyboard.press('Tab');
+        await expect(gift).toBeFocused();
         await mail.focus();
         await page.keyboard.press('Tab');
         await expect(wiki).toBeFocused();
-        await expect.poll(tooltipOverRail).toBe(true);
+        await expect.poll(visibleTooltip).toBe(true);
         await page.keyboard.press('Escape');
         await expect(wiki).toBeFocused();
-        await expect.poll(tooltipOverRail).toBe(false);
+        await expect.poll(visibleTooltip).toBe(false);
         expect(await header.evaluate(node => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     }
     await expect(gift).toBeVisible();
     await mail.focus();

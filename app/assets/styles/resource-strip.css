@@ -21,27 +21,18 @@ body[data-theme="light"] .resource-strip .resource-protection-legend{color:#2263
 
 .resource-strip .storage-meter:focus-visible{outline:2px solid var(--accent)}
 
-.header-context-rail{position:relative;display:flex;align-items:center;gap:8px;padding:5px 24px;min-width:0;z-index:1}
-/* Les commandes de ressources restent sous le détail du tiroir, même à leur z-index local. */
-.resource-event-stack > .resource-strip{isolation:isolate}
-/* Sans JavaScript, réserver aussi le rail de 54 px dans les décalages sticky. */
-.app-frame:has(> .resource-event-stack > .header-context-rail):has(> .resource-event-stack > .resource-strip){--resource-stack-height:142px}
-.header-technology-goal{display:flex;align-items:center;gap:8px;min-width:0;min-height:44px;padding:3px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--text);text-decoration:none}
-.header-technology-goal>.icon{flex:none;color:var(--accent)}
-.header-technology-goal-label{display:grid;min-width:0;gap:1px;font-size:11px}
-.header-technology-goal-label>span{color:var(--text)}
-.header-technology-goal-label>strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
-.header-technology-goal:hover strong{text-decoration:underline}
-.header-technology-goal:focus-visible,.event-drawer summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.event-drawer-wrap{margin-left:auto;flex:none}
+/* Sans JavaScript, réserver la hauteur habituelle des ressources dans les catalogues. */
+.app-frame:has(> .resource-event-stack > .resource-strip){--resource-stack-height:88px}
+.event-drawer summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.topbar > .event-drawer-wrap{flex:none}
 .event-drawer{border:1px solid #397b82;border-radius:6px;background:#10272d;color:#e7f5f4}
 .event-drawer summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 14px;font-size:11px;font-weight:700;letter-spacing:.04em;color:#a7ece5}
 .event-drawer summary::-webkit-details-marker{display:none}
 .event-drawer summary>span:first-child{display:flex;align-items:center;gap:9px}
 .event-drawer summary i{width:7px;height:7px;border-radius:50%;background:#77d5c8;box-shadow:0 0 9px #77d5c899}
 .event-drawer-count{display:grid;place-items:center;min-width:21px;height:21px;border-radius:50%;background:#21494f;color:#d5faf5;font-size:10px}
-/* Le panneau recouvre le contenu sans déplacer la bande ni agrandir le cadre sticky. */
-.event-drawer-list{position:absolute;top:100%;right:24px;width:min(420px,calc(100% - 48px));max-height:min(55dvh,480px);overflow:auto;padding:2px 14px 11px;border:1px solid #397b82;border-radius:6px;background:#10272d;box-shadow:0 8px 22px #02081066}
+/* Rattaché à la topbar, le panneau recouvre les ressources sans passer derrière ni modifier le flux. */
+.event-drawer-list{position:absolute;top:100%;right:24px;z-index:1;width:min(420px,calc(100% - 48px));max-height:min(55dvh,480px);overflow:auto;padding:2px 14px 11px;border:1px solid #397b82;border-radius:6px;background:#10272d;box-shadow:0 8px 22px #02081066}
 .event-drawer-item{display:block;padding:11px 0;border-bottom:1px solid #397b823d}
 .event-drawer-item>div{min-width:0}
 .event-drawer-item strong{display:block;overflow-wrap:anywhere}
@@ -59,9 +50,6 @@ body[data-theme="light"] :is(.event-drawer,.event-drawer-list){background:#e8f7f
 body[data-theme="light"] .event-drawer summary,body[data-theme="light"] .event-drawer-item strong{color:#174d4b}
 body[data-theme="light"] .event-drawer-item small,body[data-theme="light"] .event-drawer-item p{color:#526d70}
 @media(max-width:740px){
-    .header-context-rail{padding-inline:10px}
-    .header-technology-goal{flex:1}
-    .header-technology-goal-label>strong{white-space:normal;overflow-wrap:anywhere;line-height:1.25}
     .event-drawer summary{gap:6px;padding-inline:8px}
     .event-drawer-list{right:10px;width:min(420px,calc(100% - 20px))}
     .event-drawer-item{gap:8px}.event-drawer-item time{font-size:10px}
