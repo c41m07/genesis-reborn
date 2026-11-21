@@ -10,9 +10,9 @@ final class ResourceWaitEstimate
     /**
      * @param array<string, int|float> $costs
      * @param array<string, array{label: string, stock: float, capacity: float, rate: float}> $resources
-     * @return array{missing: array<string, array{label: string, amount: int}>, paymentWait: ?string}
+     * @return array{missing: array<string, array{label: string, amount: int}>, paymentWait: ?string, paymentEstimate: ?array{observedAt: int, deadline: int, resource: string}}
      */
-    public static function forCosts(array $costs, array $resources): array
+    public static function forCosts(array $costs, array $resources, \DateTimeImmutable $observedAt): array
     {
         $missing = [];
         $blockers = [];
@@ -39,7 +39,8 @@ final class ResourceWaitEstimate
             // Le snapshot expose un débit par seconde. Le stock non arrondi
             // sert au délai ; l'arrondi des quantités affichées ne le modifie pas.
             $seconds = ceil($deficit / $resource['rate']);
-            if (!is_finite($seconds) || $seconds >= PHP_INT_MAX) {
+            // Garder l'échéance représentable en secondes Unix, même dans le navigateur.
+            if (!is_finite($seconds) || $seconds > 253402300799 - $observedAt->getTimestamp()) {
                 $blockers[] = $label.' : délai non calculable';
                 continue;
             }
@@ -54,6 +55,11 @@ final class ResourceWaitEstimate
             'paymentWait' => $blockers !== []
                 ? 'Délai indisponible : '.implode(' ; ', $blockers).'.'
                 : ($slowest > 0 ? 'Délai estimé : '.self::duration($slowest).' ('.$limitingResource.').' : null),
+            'paymentEstimate' => $blockers === [] && $slowest > 0 ? [
+                'observedAt' => $observedAt->getTimestamp(),
+                'deadline' => $observedAt->getTimestamp() + $slowest,
+                'resource' => $limitingResource,
+            ] : null,
         ];
     }
 

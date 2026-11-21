@@ -25,6 +25,9 @@
         </div>
     {% endif %}
     <p data-catalog-empty hidden role="status">Aucun élément accessible dans ce filtre. Activez l’affichage des éléments verrouillés pour explorer cette catégorie.</p>
-    <div class="catalog-grid building-grid">{% include 'ui/building_cards.html.twig' %}</div>
+    <div class="catalog-grid building-grid" data-controller="resource-eta"
+         data-action="resource-eta:change->resource-eta#changed visibilitychange@document->resource-eta#resume pageshow@window->resource-eta#resume">
+        {% include 'ui/building_cards.html.twig' %}
+    </div>
 </section>
 {% endif %}{% endfor %}</div>

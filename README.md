@@ -837,7 +837,7 @@ Les identifiants de relais du diagnostic ouvrent une inspection ciblée en lectu
 
 La [matrice des permissions](docs/ADMIN_PERMISSIONS.md) documente les contrôles existants du seul rôle administrateur, sans attribution ni délégation.
 
-- **Navigation Galaxie** : le système choisi est conservé entre les vues carte et liste, y compris via les liens natifs ; le retour à la galaxie ou la fermeture de la fiche enlève la sélection.
+- **Navigation Galaxie** : l’aperçu d’un système occupe une colonne réservée à droite sur ordinateur ou un volet compact au-dessus de la carte sur mobile. Il ne masque aucun repère et le clic ne recadre pas la carte. Le système choisi est conservé entre les vues carte et liste, y compris via les liens natifs ; le retour à la galaxie ou la fermeture de la fiche enlève la sélection.
 
 - **Visuel de l’accueil** : le navigateur choisit un aperçu WebP de la colonie parmi quatre tailles ; le PNG original reste accessible au clic et sert de repli. À 390 px (DPR 1) et 1366 px (DPR 1), Chromium local a reçu respectivement 18 244 et 42 394 octets au lieu de 837 479 octets. Ce sont des tailles de fichiers servis, pas des temps de chargement mesurés.
 
@@ -851,7 +851,10 @@ Dans Bâtiments, Recherche, Chantier spatial et Défenses, le délai de paiement
 est donné au rythme net observé sur la colonie. La dernière ressource disponible
 fixe l'estimation ; un coût au-delà du stockage ou un débit net nul/négatif
 est signalé à la place. Le délai ne prédit pas les dépenses ou changements de
-production futurs. Le bouton d'information reste distinct de l'action bloquée :
-sa limite s'affiche au survol, au clavier ou au toucher.
+production futurs. Le délai et les causes éventuelles sont regroupés dans
+« Il manque ». Le compteur se met à jour sans requête périodique ; à échéance
+il invite à vérifier les stocks et ne débloque pas lui-même la commande.
+Sans JavaScript, l'estimation du dernier chargement reste lisible. L’aide
+reste accessible au survol, au clavier et au toucher.
 
 - **Effets acquis au dernier niveau** : les fiches de bâtiments et de recherches gardent dans le tableau de progression les effets chiffrés acquis, dans leurs unités d’origine, quand le rang est au maximum ou que son dernier niveau est en file. Seule la colonne « Actuellement » reste, sans créditer la file. Pour les productions et stockages, la fiche précise qu’il s’agit de totaux de la colonie ; aucun changement de règle ou de plafond.

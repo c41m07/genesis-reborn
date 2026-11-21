@@ -1275,7 +1275,7 @@ export default class extends Controller {
         }
         const hint = document.createElement('p');
         hint.className = 'gv2-tooltip-hint';
-        hint.textContent = 'Cliquer pour ouvrir le système';
+        hint.textContent = 'Cliquer pour afficher la fiche du système';
         const nodes = [title, coordinates, state];
         if (facts.childElementCount) nodes.push(facts);
         if (distanceLabel) {
@@ -1377,7 +1377,7 @@ export default class extends Controller {
         if (this.mode !== 'galaxy' || !system) return;
         this.planetReturnView = null;
         this.prepareSystemPanel(system);
-        // La fiche est superposée à la carte : la sélection ne touche ni
+        // La fiche reste en dehors de la scène : la sélection ne touche ni
         // la caméra ni les dimensions de la scène, même sur petit écran.
         this.hoveredSystem = null;
         this.tooltipTarget.hidden = true;
