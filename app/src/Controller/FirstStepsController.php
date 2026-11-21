@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\{Planet, PlanetBuilding, PlayerTechnology};
+use App\Entity\{Planet, PlanetBuilding, Player, PlayerTechnology};
 use App\Repository\GameRepository;
 use App\Service\Player\FirstStep;
 use App\Service\Player\FirstSteps;
 use App\Service\Player\FirstStepsView;
 use App\Service\Player\FirstStepRewards;
 use App\Service\Player\PirateExercise;
+use App\Service\Player\PreferencesService;
 use App\Service\Universe\UniverseContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -41,6 +42,47 @@ final class FirstStepsController extends AbstractController
             'trainingPlanet' => $planet,
             'trainingRewards' => $rewards->available($membership),
         ], new Response(headers: ['Cache-Control' => 'private, no-store']));
+    }
+
+    #[Route('/premiers-pas/panneau', name: 'app_first_steps_panel', methods: ['GET'])]
+    public function panel(Request $request, UniverseContext $context, FirstStepsView $view, GameRepository $repo): Response
+    {
+        $membership = $context->membership();
+        $player = $membership->player;
+        $planet = $repo->find(Planet::class, $request->query->getInt('colony'));
+        if ($player->lockedAt !== null || $player->emailVerifiedAt === null || !$planet instanceof Planet
+            || $planet->owner?->id !== $membership->id
+            || $planet->solarSystem->galaxy->universe->id !== $membership->universe->id) {
+            throw $this->createNotFoundException('Planète inaccessible.');
+        }
+
+        $response = new Response(headers: ['Cache-Control' => 'private, no-store']);
+        // Une page restée ouverte peut viser un guide désactivé ou maintenant terminé.
+        $panel = ($player->preferences['firstStepsGuide'] ?? true) ? $view->panel($membership, $planet) : null;
+        if ($panel === null) {
+            return $response->setStatusCode(Response::HTTP_NO_CONTENT);
+        }
+
+        return $this->render('player/_first_steps_panel.html.twig', ['panel' => $panel, 'planet' => $planet], $response);
+    }
+
+    #[Route('/premiers-pas/preference', name: 'app_first_steps_preference', methods: ['POST'])]
+    public function guidePreference(Request $request, PreferencesService $preferences): Response
+    {
+        $player = $this->getUser();
+        $setting = $request->request->getString('guide_enabled');
+        if (!$player instanceof Player || !in_array($setting, ['0', '1'], true)
+            || !$this->isCsrfTokenValid('first-steps-preference', $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException('Formulaire expiré. Rouvrez le guide.');
+        }
+
+        $enabled = $setting === '1';
+        $preferences->setFirstStepsGuide($player, $enabled);
+        $this->addFlash('success', $enabled
+            ? 'Guide réactivé. Vous retrouverez vos étapes déjà acquises.'
+            : 'Guide désactivé. Vous pouvez le réactiver dans Préférences sans perdre votre progression.');
+
+        return $this->redirectToRoute('app_preferences', status: Response::HTTP_SEE_OTHER);
     }
 
     #[Route('/premiers-pas/recuperer', name: 'app_first_steps_claim', methods: ['POST'])]
@@ -87,9 +129,11 @@ final class FirstStepsController extends AbstractController
             'membership' => $membership,
             'exerciseTokenId' => $tokenId,
             'report' => $report,
+            'firstStepsExerciseInResponse' => $report !== null,
         ], new Response(headers: ['Cache-Control' => 'private, no-store']));
 
         if ($report !== null) {
+            // Ne pas accorder le jalon si le rapport n'a pas pu être rendu.
             $firstSteps->recordPirateExercise($membership);
         }
 
