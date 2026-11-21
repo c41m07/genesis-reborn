@@ -81,12 +81,12 @@
                     {% if card.economic|default(null) %}{% include 'ui/economic_units.html.twig' with {state:card.economic,definition:d} %}{% endif %}
                     {% if card.maximum or card.failures or vacation %}<div class="catalog-blocked">{% endif %}
                     {% if card.maximum %}<p class="requirement complete">{{ ui.icon('check') }} Niveau maximum atteint</p>
-                    {% elseif card.failures %}<p class="requirement">{{ ui.icon('diplomacy') }} <span>Nécessite : {% for requirement in card.details.requirements|filter(requirement => not requirement.met) %}<a href="{{ path('app_colony',{id:planet.id,section:requirement.group,showLockedItems:1,focusItem:1}) }}#item-{{ requirement.slug }}-{{ requirement.rank }}">{{ requirement.label }} · {{ requirement.tier }}{% if requirement.required is not null %} · niveau {{ requirement.required }}{% endif %}</a>{% if not loop.last %}, {% endif %}{% else %}{{ card.failures|join(', ') }}{% endfor %}</span></p>
+                    {% elseif card.failures %}<p class="requirement">{{ ui.icon('diplomacy') }} <span>Nécessite : {% for requirement in card.details.requirements|filter(requirement => not requirement.met) %}<a href="{{ catalogue_item_url(planet.id, requirement.group, requirement.slug, requirement.rank) }}">{{ requirement.label }} · {{ requirement.tier }}{% if requirement.required is not null %} · niveau {{ requirement.required }}{% endif %}</a>{% if not loop.last %}, {% endif %}{% else %}{{ card.failures|join(', ') }}{% endfor %}</span></p>
                     {% elseif card.missing_research_laboratory|default(null) %}
                         <p class="requirement">
                             {{ ui.icon('diplomacy') }}
                             <span>Installez le bâtiment
-                                <a href="{{ path('app_colony', {id: planet.id, section: 'buildings', showLockedItems: 1, focusItem: 1, _fragment: 'item-lab-' ~ card.tier}) }}">{{ card.missing_research_laboratory }} de niveau 1</a>
+                                <a href="{{ catalogue_item_url(planet.id, 'buildings', 'lab', card.tier) }}">{{ card.missing_research_laboratory }} de niveau 1</a>
                                 sur cette colonie pour lancer la recherche.
                             </span>
                         </p>
