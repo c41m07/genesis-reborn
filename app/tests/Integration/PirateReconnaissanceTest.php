@@ -313,12 +313,13 @@ final class PirateReconnaissanceTest extends KernelTestCase
     {
         [$member, $home, $system, $stock] = $this->fixture();
         $db = $this->em->getConnection();
-        // Rejouer les deux migrations de campagne depuis le schéma historique, sans toucher aux tables métier.
+        // Rejouer les migrations de campagne depuis le schéma historique, sans toucher aux tables métier.
         $db->executeStatement('DROP TABLE pirate_attack_campaign');
         $db->executeStatement('DROP TABLE pirate_reconnaissance');
         require_once dirname(__DIR__, 2).'/migrations/Version20261120000900.php';
         require_once dirname(__DIR__, 2).'/migrations/Version20261120000930.php';
-        foreach ([\DoctrineMigrations\Version20261120000900::class, \DoctrineMigrations\Version20261120000930::class] as $class) {
+        require_once dirname(__DIR__, 2).'/migrations/Version20261120000950.php';
+        foreach ([\DoctrineMigrations\Version20261120000900::class, \DoctrineMigrations\Version20261120000930::class, \DoctrineMigrations\Version20261120000950::class] as $class) {
             $migration = new $class($db, new NullLogger());
             $migration->up(new Schema());
             foreach ($migration->getSql() as $query) {

@@ -26,7 +26,9 @@ final class PirateCampaignCatalogueTest extends TestCase
     public function testTheThreePreparedEncountersUseTheCalibratedCatalogueAndDoNotSerialize(): void
     {
         $universe = $this->universe();
-        self::assertSame(['balise_17', 'escorte_interceptee', 'derniere_liaison'], $this->campaign->keys());
+        $keys = $this->campaign->keys();
+        self::assertSame(['balise_17', 'escorte_interceptee', 'derniere_liaison'], array_slice($keys, 0, 3));
+        self::assertSame($keys, array_values(array_unique($keys)));
         $expected = [
             'balise_17' => [['fighter' => ['basic' => 1]], 1440, 780],
             'escorte_interceptee' => [['fighter' => ['basic' => 2], 'interceptor' => ['basic' => 1]], 4644, 2516],

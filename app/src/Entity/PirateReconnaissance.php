@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
-use App\Service\PirateCampaign\PirateEncounterSnapshot;
+use App\Service\PirateCampaign\{PirateDistressSite, PirateEncounterSnapshot, PiratePreparedEncounter};
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
@@ -25,6 +25,10 @@ class PirateReconnaissance
     #[ORM\Column(type: 'json')]
     private array $buildCosts;
 
+    // Nullable : un ancien rapport ne permet pas de reconstituer les anciennes statistiques de combat.
+    #[ORM\Column(type: 'json', nullable: true)]
+    private ?array $preparedEncounter = null;
+
     public function __construct(
         #[ORM\ManyToOne, ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
         private PlayerUniverse $membership,
@@ -42,8 +46,12 @@ class PirateReconnaissance
         private string $dispatchToken,
         #[ORM\Column(nullable: true)]
         private ?bool $detected,
-        PirateEncounterSnapshot $encounter,
+        PirateEncounterSnapshot|PiratePreparedEncounter $encounter,
     ) {
+        if ($encounter instanceof PiratePreparedEncounter) {
+            $this->preparedEncounter = $encounter->checkpoint();
+            $encounter = $encounter->encounterForServer();
+        }
         $this->composition = $encounter->composition();
         $this->buildCosts = $encounter->buildCosts();
     }
@@ -64,14 +72,32 @@ class PirateReconnaissance
     /** Renseignement effectivement remis. Réservé à la commande privée, jamais à une vue. */
     public function battleProofFor(PlayerUniverse $membership, \DateTimeImmutable $at): ?array
     {
-        if (!$this->belongsTo($membership, $at) || $this->reportedAt === null || $this->reportedAt > $at) {
+        if (!$this->belongsTo($membership, $at) || $this->reportedAt === null || $this->reportedAt > $at || $at < $this->dueAt) {
             return null;
         }
+
+        if ($this->preparedEncounter === null) {
+            return null;
+        }
+        $encounter = PirateEncounterSnapshot::freeze($this->composition, $this->buildCosts);
 
         return [
             'reportedAt' => $this->reportedAt,
             'system' => $this->system,
-            'encounter' => PirateEncounterSnapshot::freeze($this->composition, $this->buildCosts),
+            'prepared' => PiratePreparedEncounter::restore($encounter, $this->preparedEncounter),
+        ];
+    }
+
+    /** @return array{key: string, site: PirateDistressSite}|null Récit interne, sans effectifs, coût ou coordonnées. */
+    public function narrativeContextFor(PlayerUniverse $membership, \DateTimeImmutable $at): ?array
+    {
+        if (!$this->belongsTo($membership, $at) || $at < $this->departedAt || $this->preparedEncounter === null) {
+            return null;
+        }
+
+        return [
+            'key' => $this->preparedEncounter['definition'],
+            'site' => PirateDistressSite::inExistingSystem($membership, $this->system),
         ];
     }
 
@@ -103,14 +129,16 @@ class PirateReconnaissance
             return null;
         }
 
+        $reported = $this->reportedAt !== null && $at >= $this->dueAt && $at >= $this->reportedAt;
+
         return [
-            'status' => $this->reportedAt !== null ? 'reported' : 'traveling',
+            'status' => $reported ? 'reported' : 'traveling',
             'departed_at' => $this->departedAt->format(DATE_ATOM),
             'due_at' => $this->dueAt->format(DATE_ATOM),
-            'reported_at' => $this->reportedAt?->format(DATE_ATOM),
+            'reported_at' => $reported ? $this->reportedAt->format(DATE_ATOM) : null,
             // Être repéré ne change pas le renseignement de cette rencontre, isolée de l'espionnage courant.
-            'composition' => $this->reportedAt !== null ? $this->composition : null,
-            'detected' => $this->reportedAt !== null ? $this->detected : null,
+            'composition' => $reported ? $this->composition : null,
+            'detected' => $reported ? $this->detected : null,
         ];
     }
 }

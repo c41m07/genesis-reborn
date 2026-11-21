@@ -28,27 +28,55 @@ final class PirateReconnaissanceService
         private FleetHold $hold,
         private VacationCalendar $vacations,
         private ClockInterface $clock,
+        private PirateCampaignCatalogue $campaign,
     ) {
     }
 
-    /**
-     * Commande interne seulement : clé, poste, instantané et éventuel fait de détection proviennent
-     * du scénario serveur. Aucun formulaire ou mécanisme public ne crée de mission dans ce lot.
-     */
+    /** Une définition serveur explicite, pas un choix ou une autorisation de joueur. */
+    public function launchDefined(
+        PlayerUniverse $membership,
+        Planet $origin,
+        SolarSystem $system,
+        PirateDistressSite $site,
+        string $missionKey,
+        string $definitionKey,
+        ?bool $detected = null,
+    ): bool {
+        return $this->start(
+            $membership, $origin, $system, $site, $missionKey,
+            fn (): PiratePreparedEncounter => $this->campaign->prepareForServer($definitionKey, $membership->universe),
+            $detected,
+        );
+    }
+
+    /** Source interne synthétique ; une preuve ancienne sans profil ne permet qu'un rapport. */
     public function launch(
         PlayerUniverse $membership,
         Planet $origin,
         SolarSystem $system,
         PirateDistressSite $site,
         string $missionKey,
-        PirateEncounterSnapshot $encounter,
+        PirateEncounterSnapshot|PiratePreparedEncounter $encounter,
         ?bool $detected = null,
+    ): bool {
+        return $this->start($membership, $origin, $system, $site, $missionKey, static fn () => $encounter, $detected);
+    }
+
+    /** @param \Closure(): (PirateEncounterSnapshot|PiratePreparedEncounter) $capture */
+    private function start(
+        PlayerUniverse $membership,
+        Planet $origin,
+        SolarSystem $system,
+        PirateDistressSite $site,
+        string $missionKey,
+        \Closure $capture,
+        ?bool $detected,
     ): bool {
         if (!preg_match('/^[a-z0-9][a-z0-9_-]{0,63}$/D', $missionKey)) {
             throw new \DomainException('Identifiant de mission pirate invalide.');
         }
 
-        return $this->manager->transaction(function () use ($membership, $origin, $system, $site, $missionKey, $encounter, $detected): bool {
+        return $this->manager->transaction(function () use ($membership, $origin, $system, $site, $missionKey, $capture, $detected): bool {
             // Même ordre que les commandes de flotte ; la participation sérialise aussi deux origines différentes.
             $this->guard->lock($membership, $origin, true);
             if ($membership->player->lockedAt !== null || $site->signalFor($membership) === null || !$site->matchesSystem($system)) {
@@ -75,6 +103,10 @@ final class PirateReconnaissanceService
             $seconds = $this->flightSeconds($membership, $origin, $system);
             $dueAt = $departedAt->modify('+'.$seconds.' seconds');
             $token = Uuid::v4()->toRfc4122();
+
+            // Le prix, l'ennemi et le profil de combat prennent le même contexte d'univers
+            // et sont persistés ensemble, avant toute modification du hangar ou remise du rapport.
+            $encounter = $capture();
 
             // Le hangar n'a plus la sonde durant le vol. Sa perte est actée par le rapport, sans retour ni restitution.
             --$probe->quantity;

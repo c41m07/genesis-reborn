@@ -378,9 +378,11 @@ d’un ancien jeton, valeur exacte d’un cas impair, stockage à capacité
 exacte, colonie transférée, fermeture puis rejeu. Carburant, cadence
 publique, difficulté et nombre de missions restent distincts.
 
-## V1 : trois vraies rencontres, après l’exercice distinct de Premiers pas
+## V1 : socle des premières rencontres, après l’exercice distinct de Premiers pas
 
-Le catalogue privé fournit trois définitions éditoriales immuables.
+Le catalogue privé prépare les trois premières définitions éditoriales.
+La cible de vingt rencontres demande encore un calibrage séparé ;
+aucune limite finale à trois n’est imposée.
 `PirateCampaignCatalogue::prepareForServer` assemble un instantané prix/
 effectifs et un scénario de combat assorti à l'aide de la fabrique native.
 Il reprend les contres, la recharge et le nombre de rounds du catalogue,
@@ -393,12 +395,19 @@ ne choisit aucun système et ne crée aucune mission ou vague automatique.
 | L’escorte interceptée | La route de ravitaillement reste coupée et l’escorte ne répond plus. | 2 chasseurs de patrouille, 1 intercepteur | 4 chasseurs : premiers risques de pertes même si le combat est gagné. |
 | La dernière liaison | Le dernier relais civil est brouillé et les escortes ne se coordonnent plus. | 1 chasseur lourd, 1 bombardier | Les intercepteurs sont un contre utile ; ne pas envoyer des patrouilleurs seuls à l’aveugle. |
 
-Le futur orchestrateur devra conserver le même scénario préparé pour la
-même rencontre et toutes ses tentatives. La composition, son coût
-catalogue et les profils figés restent internes. La projection de
-narration renvoie uniquement le texte au détenteur du poste privé ; le
-futur écran devra s'appuyer sur les preuves réelles de mission et le
-rapport autorisé pour afficher composition, prix, dates et disponibilité.
+Le lancement interne explicite conserve le scénario préparé au départ
+de la reconnaissance, dans la même transaction que la sonde et l’outbox.
+Toute tentative relit exclusivement ce profil, même si les prix, les
+statistiques ou les coefficients du catalogue changent ensuite. La composition, son coût
+catalogue et les profils figés ne sont pas sérialisés par la préparation.
+Le projecteur interne associe la narration au rapport de reconnaissance
+réellement remis, puis au résultat effectivement enregistré d'une attaque
+rattachée à cette même reconnaissance. Il ne montre avant remise aucun
+effectif, et le récit ne transporte ni prix ni échéance inventée. Un
+ancien rapport sans profil reste lisible via sa projection d'origine,
+mais ne peut plus lancer d'attaque ; la migration ne reconstitue rien.
+Le futur écran utilisera la lecture autorisée et les dates déterminées
+par la mission plutôt qu'une phase provenant du client.
 Le conseil sur les intercepteurs n'apparaît qu'après remise de l'intel.
 Les phrases de défaite/nul ne déduisent pas qu'un vaisseau a survécu :
 le retour a sa propre phrase et exige un trajet de survivants réel.

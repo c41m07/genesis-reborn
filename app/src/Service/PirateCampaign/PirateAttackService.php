@@ -34,7 +34,7 @@ final class PirateAttackService
     }
 
     /**
-     * Le scénario et sa cadence sont fournis par le serveur au premier départ seulement.
+     * Le scénario ne vient que du rapport figé ; la cadence interne peut être fournie au premier départ.
      * Le N° précédent attendu rend une commande obsolète incapable de relancer après une défaite.
      * @param array<string,array<string,int>> $composition forces réellement disponibles
      */
@@ -44,10 +44,9 @@ final class PirateAttackService
         string $missionKey,
         int $expectedPreviousAttempt,
         array $composition,
-        ?PirateBattleScenario $initialScenario = null,
         ?int $initialRoundSeconds = null,
     ): bool {
-        return $this->manager->transaction(function () use ($membership, $origin, $missionKey, $expectedPreviousAttempt, $composition, $initialScenario, $initialRoundSeconds): bool {
+        return $this->manager->transaction(function () use ($membership, $origin, $missionKey, $expectedPreviousAttempt, $composition, $initialRoundSeconds): bool {
             // Verrous conquis dans le même ordre pour les commandes natales : empire, univers, planète.
             $this->guard->lock($membership, $origin, true);
             if ($membership->player->lockedAt !== null) {
@@ -58,7 +57,7 @@ final class PirateAttackService
             $recon = $this->repository->ownPirateReconnaissance($membership, $missionKey, $now);
             $proof = $recon?->battleProofFor($membership, $now);
             if ($proof === null) {
-                throw new \DomainException('Le rapport de reconnaissance privé doit être arrivé.');
+                throw new \DomainException('Le rapport de reconnaissance privé et son scénario figé doivent être disponibles.');
             }
 
             $campaign = $this->repository->one(PirateAttackCampaign::class, ['reconnaissance' => $recon]);
@@ -67,20 +66,19 @@ final class PirateAttackService
                 if ($campaign->timeline['attempt'] !== $expectedPreviousAttempt) {
                     return false;
                 }
-                if ($initialScenario !== null || $initialRoundSeconds !== null) {
-                    throw new \DomainException('Une nouvelle tentative ne change pas le scénario révélé.');
+                if ($initialRoundSeconds !== null) {
+                    throw new \DomainException('Une nouvelle tentative ne change pas la cadence figée.');
                 }
-                $scenario = PirateBattleScenario::fromSnapshot($proof['encounter'], $campaign->scenario);
+                $scenario = $this->scenarioFromReport($proof['prepared'], $campaign);
                 $timeline = PirateAttackTimeline::fromCheckpoint($scenario, $proof['reportedAt'], $campaign->timeline);
             } else {
                 if ($expectedPreviousAttempt !== 0) {
                     return false;
                 }
-                if ($initialScenario === null || $initialRoundSeconds === null || $initialRoundSeconds < 1) {
+                if ($initialRoundSeconds === null || $initialRoundSeconds < 1) {
                     throw new \DomainException('Paramètres internes de campagne absents.');
                 }
-                // La première préparation est liée au rapport réellement enregistré, pas à une composition client.
-                $scenario = PirateBattleScenario::fromSnapshot($proof['encounter'], $initialScenario->snapshot());
+                $scenario = $proof['prepared']->battleForServer();
                 $timeline = PirateAttackTimeline::afterReport($scenario, $proof['reportedAt']);
                 $campaign = new PirateAttackCampaign();
                 $campaign->reconnaissance = $recon;
@@ -115,6 +113,17 @@ final class PirateAttackService
 
             return true;
         });
+    }
+
+    private function scenarioFromReport(PiratePreparedEncounter $prepared, PirateAttackCampaign $campaign): PirateBattleScenario
+    {
+        $scenario = $prepared->battleForServer();
+        if ($scenario->snapshot() !== $campaign->scenario) {
+            // Ne jamais substituer un adversaire en recomposant depuis les prix ou le catalogue courant.
+            throw new \LogicException('La tentative ne correspond pas au scénario de reconnaissance figé.');
+        }
+
+        return $scenario;
     }
 
     private function lockedLaunchInput(PlayerUniverse $membership, Planet $origin, SolarSystem $system, array $composition): array
@@ -197,7 +206,7 @@ final class PirateAttackService
             if ($campaign->nextAt > $now) {
                 return ($campaign->nextAt->getTimestamp() - $now->getTimestamp()) * 1000;
             }
-            $scenario = PirateBattleScenario::fromSnapshot($proof['encounter'], $campaign->scenario);
+            $scenario = $this->scenarioFromReport($proof['prepared'], $campaign);
             $timeline = PirateAttackTimeline::fromCheckpoint($scenario, $proof['reportedAt'], $campaign->timeline);
             $attempt = $campaign->timeline['attempt'];
 

@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration;
 
-use App\Entity\{Fleet, FleetShip, Galaxy, PirateAttackCampaign, Planet, Player, PlayerDiscovery, PlayerUniverse, SolarSystem, Universe};
+use App\Entity\{Fleet, FleetShip, Galaxy, PirateAttackCampaign, PirateReconnaissance, Planet, Player, PlayerDiscovery, PlayerUniverse, SolarSystem, Universe};
 use App\Message\PirateAttackDue;
 use App\MessageHandler\PirateAttackDueHandler;
 use App\Service\Combat\CombatSimulator;
 use App\Service\Notification\OutboxRelay;
-use App\Service\PirateCampaign\{PirateAttackService, PirateBattleScenario, PirateDistressSite, PirateEncounterSnapshot, PirateReconnaissanceService};
+use App\Service\PirateCampaign\{PirateAttackService, PirateBattleScenario, PirateCampaignCatalogue, PirateCampaignProgress, PirateDistressSite, PirateEncounterSnapshot, PiratePreparedEncounter, PirateReconnaissanceService};
 use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -44,10 +44,9 @@ final class PirateAttackPersistenceTest extends KernelTestCase
     public function testNoPersistentAttackBeforeReport(): void
     {
         [$member, $home, $fighter] = $this->fixture();
-        $scenario = $this->scenario();
         $db = $this->em->getConnection();
         try {
-            $this->service->launch($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]], $scenario, 3);
+            $this->service->launch($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]], 3);
             self::fail('La preuve de reconnaissance doit être reçue.');
         } catch (\DomainException $error) {
             self::assertStringContainsString('rapport', $error->getMessage());
@@ -56,15 +55,72 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_attack_campaign'));
     }
 
+    public function testCatalogueProfileAndCostsSurviveChangesBeforeRevealAndFirstAttack(): void
+    {
+        [$member, $home, $stock, $probe, $ally] = $this->fixture(definition: 'balise_17');
+        $db = $this->em->getConnection();
+        $row = $db->fetchAssociative('SELECT prepared_encounter, build_costs FROM pirate_reconnaissance');
+        $preparedAtLaunch = json_decode($row['prepared_encounter'], true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame(1440, json_decode($row['build_costs'], true, flags: JSON_THROW_ON_ERROR)['metal']);
+
+        // Modifier le catalogue en vigueur pendant le vol de la sonde, puis relire toutes les preuves.
+        $member->universe->gameSettings['catalog_overrides']['ships']['fighter'] = [
+            'base_attack' => 50000,
+            'cost_profiles' => ['basic' => ['metal' => 2345]],
+        ];
+        $this->em->flush();
+        $future = self::getContainer()->get(PirateCampaignCatalogue::class)->prepareForServer('balise_17', $member->universe);
+        self::assertSame(2345, $future->encounterForServer()->buildCosts()['metal']);
+        self::assertNotSame($preparedAtLaunch['scenario']['units'][0]['base_attack'], $future->battleForServer()->snapshot()['units'][0]['base_attack']);
+        $this->finishRecon();
+
+        $mId = $member->id;
+        $pId = $home->id;
+        $allyId = $ally->id;
+        $this->em->clear();
+        $member = $this->em->find(PlayerUniverse::class, $mId);
+        $home = $this->em->find(Planet::class, $pId);
+        $ally = $this->em->find(PlayerUniverse::class, $allyId);
+        $recon = $this->em->getRepository(PirateReconnaissance::class)->findOneBy(['membership' => $member, 'missionKey' => 'signal']);
+        $progress = new PirateCampaignProgress(self::getContainer()->get(PirateCampaignCatalogue::class));
+        self::assertNull($progress->forViewer($ally, $recon, null, $this->clock->now()));
+        $report = $progress->forViewer($member, $recon, null, $this->clock->now());
+        self::assertSame('RenseignementRecu', $report['phase']);
+        self::assertSame(['fighter' => ['basic' => 1]], $report['composition']);
+        self::assertArrayNotHasKey('cost', $report);
+
+        self::assertTrue($this->service->launch($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]], 3));
+        $attack = $this->campaign();
+        self::assertSame($preparedAtLaunch['scenario'], $attack->scenario);
+        self::assertSame(1, $this->stock($stock->id));
+        self::assertSame(1, $this->stock($probe->id));
+        self::assertSame('AttaqueEngagee', $progress->forViewer($member, $recon, $attack, $this->clock->now())['phase']);
+    }
+
+    public function testLegacyReportWithoutFrozenProfilesCannotStartAnAttack(): void
+    {
+        [$member, $home, $fighter] = $this->fixture(legacy: true);
+        $this->finishRecon();
+        self::assertSame('reported', self::getContainer()->get(PirateReconnaissanceService::class)->statusFor($member, 'signal')['status']);
+        try {
+            $this->service->launch($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]], 3);
+            self::fail('L’ancien rapport ne doit pas être complété à partir du catalogue courant.');
+        } catch (\DomainException $error) {
+            self::assertStringContainsString('scénario figé', $error->getMessage());
+        }
+        self::assertSame(3, $this->stock($fighter->id));
+        self::assertSame(0, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM pirate_attack_campaign'));
+    }
+
     public function testReservationRealLossAndSurvivorsReturnAtSeparateDeadlines(): void
     {
-        [$member, $home, $stock, $probe, $ally] = $this->fixture();
-        $this->finishRecon();
         $scenario = $this->scenario(400);
+        [$member, $home, $stock, $probe, $ally] = $this->fixture($scenario);
+        $this->finishRecon();
         $db = $this->em->getConnection();
         $fleet = ['fighter' => ['basic' => 2]];
-        self::assertTrue($this->service->launch($member, $home, 'signal', 0, $fleet, $scenario, 3));
-        self::assertFalse($this->service->launch($member, $home, 'signal', 0, $fleet, $scenario, 3));
+        self::assertTrue($this->service->launch($member, $home, 'signal', 0, $fleet, 3));
+        self::assertFalse($this->service->launch($member, $home, 'signal', 0, $fleet, 3));
         self::assertSame(1, $this->stock($stock->id));
         self::assertSame(1, $this->stock($probe->id));
         self::assertSame(0, (int) $db->fetchOne("SELECT COUNT(*) FROM fleet WHERE status <> 'idle'"));
@@ -133,10 +189,10 @@ final class PirateAttackPersistenceTest extends KernelTestCase
 
     public function testInvalidDestinationKeepsSurvivorsReservedAndVictoryTerminal(): void
     {
-        [$member, $home, $stock, $probe, $ally] = $this->fixture();
-        $this->finishRecon();
         $win = $this->scenario(enemyHp: 1);
-        self::assertTrue($this->service->launch($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]], $win, 5));
+        [$member, $home, $stock, $probe, $ally] = $this->fixture($win);
+        $this->finishRecon();
+        self::assertTrue($this->service->launch($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]], 5));
         $campaign = $this->campaign();
         $campaign->timeline['seed'] = $this->seedWithVictory($campaign, $win);
         $this->em->flush();
@@ -163,7 +219,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $db = $this->em->getConnection();
         $db->executeStatement("CREATE TRIGGER pirate_attack_test_reject_outbox BEFORE INSERT ON outbox_message FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'fixture attack outbox failure'");
         try {
-            $this->service->launch($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]], $this->scenario(), 3);
+            $this->service->launch($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]], 3);
             self::fail('La réservation sans phase planifiée doit être annulée.');
         } catch (DriverException $error) {
             self::assertStringContainsString('fixture attack outbox failure', $error->getMessage());
@@ -178,7 +234,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
     {
         [$member, $home, $stock] = $this->fixture();
         $this->finishRecon();
-        self::assertTrue($this->service->launch($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]], $this->scenario(), 3));
+        self::assertTrue($this->service->launch($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]], 3));
         $campaign = $this->campaign();
         $token = $campaign->dispatchToken;
         $target = $campaign->id;
@@ -212,10 +268,10 @@ final class PirateAttackPersistenceTest extends KernelTestCase
 
     public function testConcurrentReturnDoesNotInstallSurvivorsTwice(): void
     {
-        [$member, $home, $stock] = $this->fixture();
-        $this->finishRecon();
         $win = $this->scenario(enemyHp: 1);
-        self::assertTrue($this->service->launch($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]], $win, 5));
+        [$member, $home, $stock] = $this->fixture($win);
+        $this->finishRecon();
+        self::assertTrue($this->service->launch($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]], 5));
         $campaign = $this->campaign();
         $campaign->timeline['seed'] = $this->seedWithVictory($campaign, $win);
         $this->em->flush();
@@ -349,7 +405,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $this->em->getConnection()->executeStatement("DELETE FROM outbox_message WHERE kind = 'pirate_reconnaissance'");
     }
 
-    private function fixture(): array
+    private function fixture(?PirateBattleScenario $scenario = null, ?string $definition = null, bool $legacy = false): array
     {
         $u = new Universe();
         $u->slug = $u->name = 'pirate-attack-test';
@@ -379,8 +435,15 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $fighter = $this->addShips($idle, 'fighter', 3);
         $probe = $this->addShips($idle, 'probe', 2);
         $this->em->flush();
-        self::getContainer()->get(PirateReconnaissanceService::class)
-            ->launch($member, $p, $s, PirateDistressSite::inExistingSystem($member, $s), 'signal', $this->encounter());
+        $recon = self::getContainer()->get(PirateReconnaissanceService::class);
+        $site = PirateDistressSite::inExistingSystem($member, $s);
+        if ($definition !== null) {
+            $recon->launchDefined($member, $p, $s, $site, 'signal', $definition);
+        } else {
+            $encounter = $this->encounter();
+            $source = $legacy ? $encounter : new PiratePreparedEncounter('balise_17', $encounter, $scenario ?? $this->scenario());
+            $recon->launch($member, $p, $s, $site, 'signal', $source);
+        }
 
         return [$member, $p, $fighter, $probe, $other];
     }
