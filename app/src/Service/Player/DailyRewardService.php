@@ -84,13 +84,8 @@ final class DailyRewardService
         });
     }
 
-    private function day(): \DateTimeImmutable
-    {
-        return $this->clock->now()->setTimezone(new \DateTimeZone('Europe/Paris'))->setTime(0, 0);
-    }
-
-    /** @return array{date:string,claimed:bool,slot:int,reward:array{metal:int,nano:int}} */
-    private function statusAt(Player $player, \DateTimeImmutable $day, bool $forUpdate = false): array
+    /** @return list<array{metal:int,nano:int}> */
+    public function schedule(): array
     {
         $schedule = $this->catalog->rules()['daily_reward_experiment'] ?? null;
         if (!is_array($schedule) || !array_is_list($schedule) || count($schedule) !== 7) {
@@ -102,6 +97,18 @@ final class DailyRewardService
                 throw new \LogicException('Le barème quotidien exige des quantités positives de métal et nano.');
             }
         }
+        return $schedule;
+    }
+
+    private function day(): \DateTimeImmutable
+    {
+        return $this->clock->now()->setTimezone(new \DateTimeZone('Europe/Paris'))->setTime(0, 0);
+    }
+
+    /** @return array{date:string,claimed:bool,slot:int,reward:array{metal:int,nano:int}} */
+    private function statusAt(Player $player, \DateTimeImmutable $day, bool $forUpdate = false): array
+    {
+        $schedule = $this->schedule();
         // En écriture, relire le dernier reçu sous verrou après le compte, sans l’instantané
         // de lecture que les vérifications de jeu ont pu ouvrir avant celui-ci.
         $last = $this->em->getConnection()->fetchAssociative(

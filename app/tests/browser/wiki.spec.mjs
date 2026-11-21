@@ -104,7 +104,7 @@ test('Wiki : rendu mobile et bureau, thèmes, navigation active et accès depuis
   await page.goto('/univers');await page.locator('article.universe-card').first().getByRole('button').click();await expect(page).toHaveURL(/planetes\/\d+$/);
   const home=page.url(),membership=await page.locator('body').getAttribute('data-menu-notifications-membership-value');
   expect(Number(membership)).toBeGreaterThan(0);await expect(page.getByRole('link',{name:'Comprendre le jeu : consulter le wiki',exact:true})).toHaveCount(0);
-  await page.getByRole('link',{name:'Consulter le wiki',exact:true}).click();await expect(page.getByRole('heading',{name:'Wiki du jeu',exact:true})).toBeVisible();
+  await page.locator('.topbar').getByRole('link',{name:'Wiki',exact:true}).click();await expect(page.getByRole('heading',{name:'Wiki du jeu',exact:true})).toBeVisible();
   const routes=[['home','/wiki'],['chapter',chapterPath('calcul-production')],['search','/wiki/recherche?q=colonisation'],['rules','/wiki/references/regles'],['decisions','/wiki/references/decisions']];
   for(const theme of ['dark','light']) {
     runIsolatedSql(process.env.BROWSER_ROUTER,`UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);

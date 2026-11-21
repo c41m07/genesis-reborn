@@ -134,7 +134,7 @@ final class DailyRewardTest extends WebTestCase
         self::assertSelectorTextContains('section[aria-labelledby="daily-reward-heading"]', $planet->name);
         self::assertSelectorTextContains('section[aria-labelledby="daily-reward-heading"]', 'form-reward');
         $this->client->submitForm('Récupérer');
-        self::assertResponseRedirects('/recompense-quotidienne?colony='.$planet->id, 303);
+        self::assertResponseRedirects('/recompense-quotidienne?colony='.$planet->id.'#daily-reward-heading', 303);
         $this->client->followRedirect();
         self::assertSelectorTextContains('[role="status"].flash', 'Jour 1 récupéré');
         self::assertSelectorNotExists('button[type="submit"][aria-describedby="daily-reward-rules"]');
@@ -143,6 +143,32 @@ final class DailyRewardTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h2#daily-reward-heading', 'Jour 2 sur 7');
         self::assertSelectorExists('button[type="submit"][aria-describedby="daily-reward-rules"]');
+    }
+
+    public function testPanelReadsTheParisDateWithoutCachingAndOnlyForTheOwnedColony(): void
+    {
+        [$universe, $owned] = $this->map('panel-reward');
+        [, $distant] = $this->map('panel-foreign');
+        $player = $this->player('PanelReward', true);
+        $this->select($player, $universe);
+        $this->client->loginUser($player);
+
+        $panel = '/recompense-quotidienne/panneau?colony=';
+        $this->client->request('GET', $panel.$distant->id);
+        self::assertResponseStatusCodeSame(404);
+
+        $crawler = $this->client->request('GET', $panel.$owned->id);
+        self::assertResponseIsSuccessful();
+        self::assertTrue($this->client->getResponse()->headers->hasCacheControlDirective('no-store'));
+        self::assertTrue($this->client->getResponse()->headers->hasCacheControlDirective('private'));
+        self::assertSelectorCount(7, '#daily-reward-dialog li');
+        self::assertSame('2026-12-01', $crawler->filter('input[name="claim_date"]')->attr('value'));
+        self::assertSame(0, $this->em->getRepository(DailyRewardClaim::class)->count());
+
+        $this->clock->sleep(60);
+        $crawler = $this->client->request('GET', $panel.$owned->id);
+        self::assertSame('2026-12-02', $crawler->filter('input[name="claim_date"]')->attr('value'));
+        self::assertSame(0, $this->em->getRepository(DailyRewardClaim::class)->count());
     }
 
     public function testConcurrentDailyClaimsUseOneReceiptAndOneDeposit(): void
