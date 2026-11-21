@@ -9,7 +9,7 @@ use App\Manager\GameManager;
 use App\Message\PirateAttackDue;
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
-use App\Service\Colony\ActionGuard;
+use App\Service\Colony\{ActionGuard, ResourceService};
 use App\Service\Combat\{CombatSimulator, CombatUnitFactory};
 use App\Service\Fleet\{FleetHold, MovementCalculator};
 use App\Service\Player\VacationCalendar;
@@ -30,6 +30,8 @@ final class PirateAttackService
         private CombatSimulator $simulator,
         private MovementCalculator $movement,
         private FleetHold $hold,
+        private PirateFlightQuote $flightQuote,
+        private ResourceService $resources,
         private VacationCalendar $vacations,
         private ClockInterface $clock,
         private PirateConvoyDeliveryService $convoys,
@@ -74,6 +76,20 @@ final class PirateAttackService
         return $this->start($membership, $origin, $missionKey, $expectedPreviousAttempt, $composition, null, true, true);
     }
 
+    /**
+     * Départ du futur pilote : rapport scout payé, aucune flotte publique ni fret de mission.
+     * Le dossier et le routeur n'exposent pas cette commande.
+     */
+    public function launchWithOmegaPilotFuel(
+        PlayerUniverse $membership,
+        Planet $origin,
+        string $missionKey,
+        int $expectedPreviousAttempt,
+        array $composition,
+    ): bool {
+        return $this->start($membership, $origin, $missionKey, $expectedPreviousAttempt, $composition, null, true, true, true);
+    }
+
     private function start(
         PlayerUniverse $membership,
         Planet $origin,
@@ -83,8 +99,9 @@ final class PirateAttackService
         ?int $initialRoundSeconds,
         bool $arrivalFlow,
         bool $convoyPilot,
+        bool $fundedPilot = false,
     ): bool {
-        return $this->manager->transaction(function () use ($membership, $origin, $missionKey, $expectedPreviousAttempt, $composition, $initialRoundSeconds, $arrivalFlow, $convoyPilot): bool {
+        return $this->manager->transaction(function () use ($membership, $origin, $missionKey, $expectedPreviousAttempt, $composition, $initialRoundSeconds, $arrivalFlow, $convoyPilot, $fundedPilot): bool {
             // Verrous conquis dans le même ordre pour les commandes natales : empire, univers, planète.
             $this->guard->lock($membership, $origin, true);
             if ($convoyPilot && $membership->universe->slug !== 'omega-1') {
@@ -101,6 +118,10 @@ final class PirateAttackService
                 throw new \DomainException('Le rapport de reconnaissance privé et son scénario figé doivent être disponibles.');
             }
 
+            if ($fundedPilot && $recon->pilotScoutFuelFor($membership, $now) === null) {
+                throw new \DomainException('Le rapport de la sonde avec prélèvement natif doit être disponible.');
+            }
+
             $campaign = $this->repository->one(PirateAttackCampaign::class, ['reconnaissance' => $recon]);
             if ($campaign !== null) {
                 $this->manager->lockCurrent($campaign);
@@ -108,7 +129,8 @@ final class PirateAttackService
                     return false;
                 }
                 if ($initialRoundSeconds !== null || $arrivalFlow !== self::usesPrivateArrival($campaign)
-                    || $convoyPilot !== (($campaign->timeline['convoy_pilot'] ?? null) === true)) {
+                    || $convoyPilot !== (($campaign->timeline['convoy_pilot'] ?? null) === true)
+                    || $fundedPilot !== isset($campaign->timeline['pilot_attack_fuel'])) {
                     throw new \DomainException('Une nouvelle tentative ne change pas la cadence figée.');
                 }
                 $scenario = $this->scenarioFromReport($proof['prepared'], $campaign);
@@ -128,7 +150,24 @@ final class PirateAttackService
                 $campaign->roundSeconds = $arrivalFlow ? PirateCombatSchedule::ROUND_SECONDS : $initialRoundSeconds;
             }
 
-            [$stock, $combatUnits, $seconds] = $this->lockedLaunchInput($membership, $origin, $proof['system'], $composition);
+            [$idle, $stock, $combatUnits, $seconds, $debit] = $this->lockedLaunchInput($membership, $origin, $proof['system'], $composition, $fundedPilot);
+            $fuelReceipt = null;
+            if ($debit !== null) {
+                [$budget, $payment, $originCoords, $targetCoords] = $debit;
+                $fuelReceipt = PirateAttackFuelReceipt::forDeparture(
+                    $expectedPreviousAttempt + 1, $origin->id, $originCoords, $targetCoords, $combatUnits, $budget,
+                    $payment['stored_fuel_used'], $payment['planet_fuel'],
+                );
+                if ($fuelReceipt->fromPlanet > 0.0) {
+                    $this->repository->lockedPlanetResources($origin);
+                    $this->resources->consume($origin, ['hydrogen' => $fuelReceipt->fromPlanet]);
+                }
+                $now = $this->now();
+                if (!$membership->universe->isAccessible($now)) {
+                    throw new \DomainException('L’univers s’est fermé avant le départ de l’attaque.');
+                }
+                $idle->storedFuel -= $fuelReceipt->fromHold;
+            }
             $arrivalAt = $now->modify('+'.$seconds.' seconds');
             // Pour le flux V2, cette borne est indépendante du résultat ; seule l’arrivée est ordonnée au départ.
             $rounds = $campaign->scenario['rounds'];
@@ -153,6 +192,9 @@ final class PirateAttackService
             if ($convoyPilot) {
                 $campaign->timeline['convoy_pilot'] = true;
             }
+            if ($fuelReceipt !== null) {
+                $campaign->timeline['pilot_attack_fuel'] = $fuelReceipt->checkpoint();
+            }
             $campaign->reservedShips = $composition;
             $campaign->report = null;
             $campaign->returnBlocked = false;
@@ -175,7 +217,7 @@ final class PirateAttackService
         return $scenario;
     }
 
-    private function lockedLaunchInput(PlayerUniverse $membership, Planet $origin, SolarSystem $system, array $composition): array
+    private function lockedLaunchInput(PlayerUniverse $membership, Planet $origin, SolarSystem $system, array $composition, bool $fundedPilot): array
     {
         if ($composition === []) {
             throw new \DomainException('Une flotte doit être choisie.');
@@ -186,6 +228,8 @@ final class PirateAttackService
         }
         $this->manager->lockCurrent($idle);
         $stock = [];
+        $config = $this->catalog->forUniverse($membership->universe);
+        $sizeAvailable = (int) $config['limits']['max_fleet_size'];
         foreach ($composition as $slug => $ranks) {
             if (!is_string($slug) || !is_array($ranks) || $ranks === []) {
                 throw new \DomainException('Composition d’attaque invalide.');
@@ -202,6 +246,12 @@ final class PirateAttackService
                 if ($ship->quantity < $count) {
                     throw new \DomainException('Vaisseaux indisponibles dans le hangar.');
                 }
+                if ($fundedPilot) {
+                    if ($count > $sizeAvailable) {
+                        throw new \DomainException('Composition trop grande pour un départ pilote.');
+                    }
+                    $sizeAvailable -= $count;
+                }
                 $stock[] = [$ship, $count];
             }
         }
@@ -213,19 +263,26 @@ final class PirateAttackService
             }
         }
 
-        // Ce point ne fixe pas le carburant futur ; il évite déjà de laisser du fret embarqué sans vaisseaux porteurs.
-        $this->hold->departure($idle, $composition, 0.0);
         $home = $origin->solarSystem;
-        $quote = $this->movement->quote(
-            [$home->id, $home->galaxy->id, $home->coordX, $home->coordY, $origin->position],
-            [$system->id, $system->galaxy->id, $system->coordX, $system->coordY, null],
-            $ships,
-            1.0,
-            $this->catalog->forUniverse($membership->universe)['multipliers']['travel_time'],
-            $this->catalog->rules()['fuel_ratio_policy'],
-        );
+        $originCoords = [$home->id, $home->galaxy->id, $home->coordX, $home->coordY, $origin->position];
+        $targetCoords = [$system->id, $system->galaxy->id, $system->coordX, $system->coordY];
+        $rules = $this->catalog->rules();
+        $timeMultiplier = $config['multipliers']['travel_time'];
+        if ($fundedPilot) {
+            // Même fenêtre d'orbite maximale que FleetService::quote pour une attaque ; jamais la latence du worker.
+            $windowHours = (int) ($rules['combat_window_seconds'] ?? 600) / 3600;
+            $budget = PirateCampaignFuel::expedition($this->flightQuote->compare(
+                $originCoords, $targetCoords, $ships, 1.0, $timeMultiplier, $rules['fuel_ratio_policy'], $windowHours,
+            ));
+            $payment = $this->hold->departure($idle, $composition, $budget->amountForDeparture());
 
-        return [$stock, $ships, $quote['seconds']];
+            return [$idle, $stock, $ships, $budget->legSeconds, [$budget, $payment, $originCoords, $targetCoords]];
+        }
+        // Compatibilité des anciens agrégats privés ; leur fret doit toujours tenir dans les coques restantes.
+        $this->hold->departure($idle, $composition, 0.0);
+        $quote = $this->movement->quote($originCoords, [...$targetCoords, null], $ships, 1.0, $timeMultiplier, $rules['fuel_ratio_policy']);
+
+        return [$idle, $stock, $ships, $quote['seconds'], null];
     }
 
     /** Retourne uniquement un délai de rejeu si le bon message a été reçu trop tôt. */
@@ -360,7 +417,7 @@ final class PirateAttackService
             'losses' => $result['losses'],
         ];
         $campaign->timeline = $timeline->checkpoint() + array_intersect_key($campaign->timeline,
-            ['arrival_flow' => true, 'arrival_observed' => true, 'convoy_pilot' => true]);
+            ['arrival_flow' => true, 'arrival_observed' => true, 'convoy_pilot' => true, 'pilot_attack_fuel' => true]);
         $this->schedule($campaign, $timeline->returnDueAt());
     }
 
@@ -409,7 +466,7 @@ final class PirateAttackService
         }
         $campaign->reservedShips = [];
         $campaign->timeline = $timeline->checkpoint() + array_intersect_key($campaign->timeline,
-            ['arrival_flow' => true, 'arrival_observed' => true, 'convoy_pilot' => true]);
+            ['arrival_flow' => true, 'arrival_observed' => true, 'convoy_pilot' => true, 'pilot_attack_fuel' => true]);
         $this->schedule($campaign, null);
     }
 

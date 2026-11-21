@@ -7,9 +7,11 @@ namespace App\Tests\Integration;
 use App\Entity\{Fleet, FleetShip, Galaxy, PirateAttackCampaign, PirateConvoyDelivery, PirateReconnaissance, Planet, PlanetResource, Player, PlayerDiscovery, PlayerUniverse, SolarSystem, Universe};
 use App\Message\{PirateAttackDue, PirateConvoyDue};
 use App\MessageHandler\PirateAttackDueHandler;
-use App\Service\Combat\CombatSimulator;
+use App\Service\Catalog\GameCatalog;
+use App\Service\Combat\{CombatSimulator, CombatUnitFactory};
+use App\Service\Fleet\MovementCalculator;
 use App\Service\Notification\OutboxRelay;
-use App\Service\PirateCampaign\{PirateAttackService, PirateBattleScenario, PirateCampaignCatalogue, PirateCampaignProgress, PirateCampaignSequence, PirateConvoyDeliveryService, PirateConvoyDispatchToken, PirateDistressSite, PirateEncounterSnapshot, PiratePreparedEncounter, PirateReconnaissanceService};
+use App\Service\PirateCampaign\{PirateAttackFuelReceipt, PirateAttackService, PirateBattleScenario, PirateCampaignCatalogue, PirateCampaignProgress, PirateCampaignSequence, PirateConvoyDeliveryService, PirateConvoyDispatchToken, PirateDistressSite, PirateEncounterSnapshot, PiratePreparedEncounter, PirateReconnaissanceService};
 use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -53,6 +55,131 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         }
         self::assertSame(3, (int) $db->fetchOne('SELECT quantity FROM fleet_ship WHERE id = ?', [$fighter->id]));
         self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_attack_campaign'));
+    }
+
+    public function testPayingAttackUsesNativeRoundTripAndOrbitWithoutTakingFreightOrRepeatingDebit(): void
+    {
+        [$member, $home, $fighter, $probe, $other] = $this->fixture(omega: true, scoutPaid: true);
+        $this->finishRecon();
+        $this->stampStocks($home->id, ['hydrogen' => 100.0]);
+        $idle = $fighter->fleet;
+        $idle->storedFuel = 0.5;
+        $idle->cargo = ['hydrogen' => 0.25];
+        $this->em->flush();
+        $composition = ['fighter' => ['basic' => 2]];
+        $system = $home->solarSystem;
+        $originCoords = [$system->id, $system->galaxy->id, $system->coordX, $system->coordY, $home->position];
+        $targetCoords = array_slice($originCoords, 0, 4);
+        $units = self::getContainer()->get(CombatUnitFactory::class)->ships($member->universe, $composition, []);
+        $catalog = self::getContainer()->get(GameCatalog::class);
+        $native = self::getContainer()->get(MovementCalculator::class)->quote($originCoords, [...$targetCoords, null], $units,
+            1.0, $catalog->forUniverse($member->universe)['multipliers']['travel_time'],
+            $catalog->rules()['fuel_ratio_policy'], (int) $catalog->rules()['combat_window_seconds'] / 3600);
+        self::assertGreaterThan(0, $native['orbit_fuel']);
+        self::assertTrue($this->service->launchWithOmegaPilotFuel($member, $home, 'signal', 0, $composition));
+        self::assertFalse($this->service->launchWithOmegaPilotFuel($member, $home, 'signal', 0, $composition));
+
+        $campaign = $this->campaign();
+        $receipt = PirateAttackFuelReceipt::read($campaign->timeline['pilot_attack_fuel']);
+        self::assertSame(1, $receipt->attempt);
+        self::assertSame($home->id, $receipt->originId);
+        self::assertSame($originCoords, $receipt->origin);
+        self::assertSame($targetCoords, $receipt->site);
+        self::assertSame($native['one_way_fuel'], $receipt->budget->legHydrogen);
+        self::assertSame($native['orbit_fuel'], $receipt->budget->orbitHydrogen);
+        self::assertSame($native['total_fuel'], $receipt->budget->initialHydrogen);
+        self::assertSame($native['seconds'], $campaign->arrivalAt->getTimestamp() - $campaign->departedAt->getTimestamp());
+        self::assertEqualsWithDelta(100.0 - ($native['total_fuel'] - 0.5), $this->resourceStock($home->id, 'hydrogen'), 1e-9);
+        self::assertSame(0.5, $receipt->fromHold);
+        self::assertSame(0.0, $idle->storedFuel);
+        self::assertSame(['hydrogen' => 0.25], $idle->cargo);
+        self::assertSame(1, $this->stock($fighter->id));
+        self::assertSame(1, $this->stock($probe->id));
+        self::assertNull($this->service->statusFor($other, 'signal'));
+        self::assertArrayNotHasKey('pilot_attack_fuel', $this->service->statusFor($member, 'signal'));
+        $db = $this->em->getConnection();
+        self::assertSame(1, (int) $db->fetchOne("SELECT COUNT(*) FROM outbox_message WHERE kind = 'pirate_attack'"));
+        self::assertSame(0, (int) $db->fetchOne("SELECT COUNT(*) FROM fleet WHERE status <> 'idle'"));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_convoy_delivery'));
+    }
+
+    public function testFundedAttackRequiresTheNativeReconnaissanceReceipt(): void
+    {
+        [$member, $home, $fighter] = $this->fixture(omega: true, definition: 'balise_17');
+        $this->finishRecon();
+        try {
+            $this->service->launchWithOmegaPilotFuel($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]]);
+            self::fail('Un rapport de fixture non payé ne doit pas amorcer l’expédition pilote.');
+        } catch (\DomainException $error) {
+            self::assertStringContainsString('prélèvement natif', $error->getMessage());
+        }
+        self::assertSame(3, $this->stock($fighter->id));
+        self::assertSame(0, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM pirate_attack_campaign'));
+    }
+
+    public function testFundedAttackDoesNotPayFromFreightWhenPlanetAndHoldAreEmpty(): void
+    {
+        [$member, $home, $fighter] = $this->fixture(omega: true, scoutPaid: true);
+        $this->finishRecon();
+        $this->stampStocks($home->id, ['hydrogen' => 0.0]);
+        $idle = $fighter->fleet;
+        $idle->cargo = ['hydrogen' => 100.0];
+        $this->em->flush();
+        try {
+            $this->service->launchWithOmegaPilotFuel($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]]);
+            self::fail('Le fret n’est pas un moyen de paiement du vol.');
+        } catch (\DomainException $error) {
+            self::assertStringContainsString('Ressources insuffisantes', $error->getMessage());
+        }
+        $db = $this->em->getConnection();
+        self::assertSame(100, (int) json_decode($db->fetchOne('SELECT cargo FROM fleet WHERE id = ?', [$idle->id]), true)['hydrogen']);
+        self::assertSame(3, $this->stock($fighter->id));
+        self::assertSame(0.0, $this->resourceStock($home->id, 'hydrogen'));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM outbox_message'));
+    }
+
+    public function testFundedAttackRefusesLeavingFreightWithoutSufficientLocalPorters(): void
+    {
+        [$member, $home, $fighter] = $this->fixture(omega: true, scoutPaid: true);
+        $this->finishRecon();
+        $this->stampStocks($home->id, ['hydrogen' => 100.0]);
+        $idle = $fighter->fleet;
+        $idle->cargo = ['metal' => 400.0];
+        $this->em->flush();
+        try {
+            $this->service->launchWithOmegaPilotFuel($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]]);
+            self::fail('Les porteurs restants ne peuvent pas garder ce fret.');
+        } catch (\DomainException $error) {
+            self::assertStringContainsString('vaisseaux restants', $error->getMessage());
+        }
+        self::assertSame(3, $this->stock($fighter->id));
+        self::assertSame(100.0, $this->resourceStock($home->id, 'hydrogen'));
+        self::assertSame(0, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM pirate_attack_campaign'));
+    }
+
+    public function testFundedAttackRollsBackBothHydrogenSourcesAndForcesWhenOutboxFails(): void
+    {
+        [$member, $home, $fighter] = $this->fixture(omega: true, scoutPaid: true);
+        $this->finishRecon();
+        $this->stampStocks($home->id, ['hydrogen' => 100.0]);
+        $idle = $fighter->fleet;
+        $idle->storedFuel = 0.5;
+        $this->em->flush();
+        $db = $this->em->getConnection();
+        $db->executeStatement("CREATE TRIGGER pirate_attack_test_reject_outbox BEFORE INSERT ON outbox_message FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'fixture funded attack outbox failure'");
+        try {
+            $this->service->launchWithOmegaPilotFuel($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]]);
+            self::fail('Le départ ne peut pas délier prélèvement, réserve et ordre.');
+        } catch (DriverException $error) {
+            self::assertStringContainsString('fixture funded attack outbox failure', $error->getMessage());
+        } finally {
+            $db->executeStatement('DROP TRIGGER IF EXISTS pirate_attack_test_reject_outbox');
+        }
+        self::assertSame(3, $this->stock($fighter->id));
+        self::assertSame(100.0, $this->resourceStock($home->id, 'hydrogen'));
+        self::assertSame(0.5, (float) $db->fetchOne('SELECT stored_fuel FROM fleet WHERE id = ?', [$idle->id]));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_attack_campaign'));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM outbox_message'));
     }
 
     public function testCatalogueProfileAndCostsSurviveChangesBeforeRevealAndFirstAttack(): void
@@ -1047,7 +1174,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $this->em->getConnection()->executeStatement("DELETE FROM outbox_message WHERE kind = 'pirate_reconnaissance'");
     }
 
-    private function fixture(?PirateBattleScenario $scenario = null, ?string $definition = null, bool $legacy = false, bool $omega = false, ?array $frozenCosts = null): array
+    private function fixture(?PirateBattleScenario $scenario = null, ?string $definition = null, bool $legacy = false, bool $omega = false, ?array $frozenCosts = null, bool $scoutPaid = false): array
     {
         $u = new Universe();
         $u->slug = $u->name = $omega ? 'omega-1' : 'pirate-attack-test';
@@ -1079,7 +1206,18 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $this->em->flush();
         $recon = self::getContainer()->get(PirateReconnaissanceService::class);
         $site = PirateDistressSite::inExistingSystem($member, $s);
-        if ($definition !== null) {
+        if ($scoutPaid) {
+            foreach (['metal', 'nano', 'antimatter', 'hydrogen', 'electricity'] as $slug) {
+                $stock = new PlanetResource();
+                $stock->planet = $p;
+                $stock->resourceType = $slug;
+                $stock->currentStock = $slug === 'hydrogen' ? 100.0 : 0.0;
+                $stock->lastUpdatedAt = $this->clock->now();
+                $this->em->persist($stock);
+            }
+            $this->em->flush();
+            $recon->launchDefinedWithOmegaPilotFuel($member, $p, $s, $site, 'signal', $definition ?? 'balise_17', true);
+        } elseif ($definition !== null) {
             $recon->launchDefined($member, $p, $s, $site, 'signal', $definition);
         } else {
             $encounter = $frozenCosts === null ? $this->encounter()

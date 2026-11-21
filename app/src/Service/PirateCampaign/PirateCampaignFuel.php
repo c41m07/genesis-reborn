@@ -15,6 +15,7 @@ final readonly class PirateCampaignFuel
         public float $legHydrogen,
         public float $orbitHydrogen,
         public float $initialHydrogen,
+        public float $totalCapacity,
         private bool $scouting,
     ) {
     }
@@ -46,7 +47,7 @@ final readonly class PirateCampaignFuel
             throw new \DomainException('Devis de carburant privé incomplet ou non transportable.');
         }
 
-        return new self($seconds, $leg, $orbit, $total, $scouting);
+        return new self($seconds, $leg, $orbit, $total, $capacity, $scouting);
     }
 
     /**
