@@ -102,7 +102,7 @@ test('Retour joueur : erreur, saisies conservées, pièce jointe et suivi admin'
   const { email, password } = await enter(page);
   await join(page);
   const sourceUrl = page.url();
-  await page.getByRole('link', { name: 'Envoyer un feedback', exact: true }).click();
+  await page.locator('.topbar').getByRole('link', { name: 'Feedback', exact: true }).click();
   await expect(page.getByLabel('Lien de la page concernée')).toHaveValue(sourceUrl);
   const contextUrl = new URL('/galaxie?system=2', sourceUrl).href;
   await page.getByLabel('Lien de la page concernée').fill(contextUrl);

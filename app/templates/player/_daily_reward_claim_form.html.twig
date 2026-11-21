@@ -1,0 +1,7 @@
+<form method="post" action="{{ path('app_daily_reward_claim') }}" data-turbo="false">
+    <input type="hidden" name="_token" value="{{ csrf_token(tokenId) }}">
+    <input type="hidden" name="membership" value="{{ planet.owner.id }}">
+    <input type="hidden" name="colony" value="{{ planet.id }}">
+    <input type="hidden" name="claim_date" value="{{ status.date }}">
+    <button class="primary" type="submit" aria-describedby="{{ rulesId }}">{{ submitLabel }}</button>
+</form>

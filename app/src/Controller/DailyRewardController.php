@@ -37,6 +37,26 @@ final class DailyRewardController extends AbstractController
         ])->setPrivate()->setMaxAge(0);
     }
 
+    #[Route('/recompense-quotidienne/panneau', name: 'app_daily_reward_panel', methods: ['GET'])]
+    public function panel(Request $request): Response
+    {
+        $membership = $this->context->membership();
+        $planet = $this->ownedPlanet($membership, $request->query->getInt('colony'));
+        $status = $this->rewards->status($this->player());
+
+        // Le fragment transporte un jeton de session et un état daté à Paris, jamais une réponse réutilisable en cache.
+        $response = $this->render('player/_daily_reward_dialog.html.twig', [
+            'planet' => $planet,
+            'status' => $status,
+            'schedule' => $this->rewards->schedule(),
+            'tokenId' => $this->tokenId($membership, $planet, $status['date']),
+        ]);
+        $response->setPrivate()->setMaxAge(0);
+        $response->headers->addCacheControlDirective('no-store');
+
+        return $response;
+    }
+
     #[Route('/recompense-quotidienne', name: 'app_daily_reward_claim', methods: ['POST'])]
     public function claim(Request $request): Response
     {
@@ -61,6 +81,8 @@ final class DailyRewardController extends AbstractController
         $destination = ['colony' => $planet->id];
         switch ($result['state']) {
             case 'claimed':
+                // Le lien d’ancrage transfère le focus au résultat même en navigation native.
+                $destination['_fragment'] = 'daily-reward-heading';
                 $this->addFlash('success', 'Jour '.$result['slot'].' récupéré : le lot est dans les stocks de '.$planet->name.'.');
                 break;
             case 'already':

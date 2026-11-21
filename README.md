@@ -524,7 +524,16 @@ Installation ou mise à jour : la migration `Version20261107150000` crée l’hi
 
 ## Récompense quotidienne et nouvelle inscription
 
-Depuis la Vue générale, **Récompense quotidienne** présente le lot et la planète
+La fenêtre des **Quotidiennes** affiche le cycle de sept jours à la première
+page de jeu après une connexion volontaire, si le lot est disponible. **Plus tard**
+ou Échap ferment sans retrait ; le cadeau en haut permet de rouvrir la fenêtre.
+Le cadeau disparaît après le retrait. L’enveloppe ne s’affiche que pour des
+messages non lus ; la messagerie reste accessible dans le menu. Les raccourcis
+du haut affichent leur nom au survol ou au clavier ; Admin reste réservé aux
+comptes autorisés.
+
+Sans JavaScript, le cadeau ouvre le formulaire natif. Depuis la Vue générale,
+**Récompense quotidienne** présente aussi le lot et la planète
 qui le recevra dans l’univers actif. Le bouton **Récupérer** retire au maximum un
 lot par compte et par date civile de Paris, sans nouvelle connexion. Un jour
 manqué laisse le cycle en pause ; après J7, le retrait suivant reprend à J1.
