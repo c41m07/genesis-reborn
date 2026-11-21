@@ -186,7 +186,10 @@ body[data-theme=light] .catalog-workspace .card-benefits>summary::after { color:
     .catalog-workspace .catalog-condensed .catalog-level-complete { grid-area:4/1/5/3; }
 }
 
-/* Le délai reste lisible en dehors du bouton de construction désactivé. */
-.catalog-wait { margin-top: 6px; }
-.catalog-wait > button { width: 100%; text-align: left; white-space: normal; }
+/* Un seul cadre pour le déficit et son délai ; le bouton d’aide reste indépendant. */
+.catalog-payment:has(> .has-missing-resources) { border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
+.catalog-workspace .building-card .catalog-payment > .has-missing-resources { border: 0; background: transparent; }
+.catalog-wait:not([hidden]) { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 8px 4px 12px; }
+.catalog-wait > span { min-width: 0; overflow-wrap: anywhere; font-size: 13px; font-variant-numeric: tabular-nums; color: var(--text); }
+.catalog-wait > button { flex: 0 0 44px; min-width: 44px; min-height: 44px; padding: 0; }
 .catalog-wait-info { inset: auto; margin: 0; max-width: min(24rem, calc(100vw - 24px)); padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--text); }

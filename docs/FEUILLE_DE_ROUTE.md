@@ -2109,6 +2109,11 @@ survol, fermeture au clavier, toucher à 390 px, conservation des validations
 de quantité et du fret. Instance et réseau privés supprimés après recette.
 Aucune mesure de performances, CI intégrale ni recette du site réel.
 
+Suivi du 21 novembre : regroupement de l'estimation dans « Il manque ». Le
+relevé du serveur ancre un compteur local commun, sans requête récurrente.
+L'échéance invite à vérifier les stocks sans activer la commande ; les raisons
+de blocage et l'estimation statique restent lisibles sans JavaScript.
+
 
 ## Inventaire : retrait de l’accélération des flottes
 
