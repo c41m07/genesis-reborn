@@ -85,20 +85,48 @@ final class PirateAttackTimeline
         $result = $this->scenario->resolve($simulator, $this->playerUnits, $this->seed);
         $survivors = array_values(array_filter($result['survivors'], static fn (array $unit): bool => $unit['camp'] === 'escort'));
         $returnDueAt = $survivors === [] ? null : $planReturnAt($survivors, $at);
-        if ($survivors !== [] && (!$returnDueAt instanceof \DateTimeImmutable || $returnDueAt <= $this->combatDueAt)) {
+        if ($survivors !== [] && !$returnDueAt instanceof \DateTimeImmutable) {
             throw new \DomainException('Échéance de retour invalide pour les survivants de l’escorte.');
         }
+        $this->finish($at, $result['outcome'], $returnDueAt);
 
+        return $result;
+    }
+
+    /** Enregistre seulement le résultat préparé dont le dernier round est atteint. */
+    public function recordPreparedResolution(
+        int $attemptNumber,
+        \DateTimeImmutable $at,
+        \DateTimeImmutable $lastRoundDue,
+        string $outcome,
+        ?\DateTimeImmutable $returnDueAt,
+    ): void {
+        if ($attemptNumber !== $this->attemptNumber || $this->state !== 'scheduled'
+            || $at < $lastRoundDue || $lastRoundDue > $this->combatDueAt
+            || !in_array($outcome, ['attacker_wins', 'defender_wins', 'draw'], true)) {
+            throw new \LogicException('Le résultat préparé ne correspond pas à la tentative ou à son échéance.');
+        }
+        // Le retour démarre seulement lors de l'application réelle, même si le round était déjà dû.
+        if ($returnDueAt !== null && $returnDueAt <= $at) {
+            throw new \DomainException('Échéance de retour invalide pour les survivants de l’escorte.');
+        }
+        $this->combatDueAt = $lastRoundDue;
+        $this->finish($at, $outcome, $returnDueAt);
+    }
+
+    private function finish(\DateTimeImmutable $at, string $outcome, ?\DateTimeImmutable $returnDueAt): void
+    {
+        if ($returnDueAt !== null && $returnDueAt <= $this->combatDueAt) {
+            throw new \DomainException('Échéance de retour invalide pour les survivants de l’escorte.');
+        }
         $this->combatResolvedAt = $at;
-        $this->won = $result['outcome'] === 'attacker_wins';
+        $this->won = $outcome === 'attacker_wins';
         $this->returnDueAt = $returnDueAt;
         if ($returnDueAt !== null) {
             $this->state = 'returning';
         } else {
             $this->close($at);
         }
-
-        return $result;
     }
 
     /** À appeler avec l'installation atomique future des survivants, pas au moment où leur retour est planifié. */

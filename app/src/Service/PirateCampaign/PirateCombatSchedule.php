@@ -8,8 +8,8 @@ namespace App\Service\PirateCampaign;
 final class PirateCombatSchedule
 {
     // Même cadence que CombatEventService et REGLES : première action à +60 s, dix rounds au plus.
-    private const ROUND_SECONDS = 60;
-    private const MAX_ROUNDS = 10;
+    public const ROUND_SECONDS = 60;
+    public const MAX_ROUNDS = 10;
 
     /**
      * Reprend un résultat natif terminal déjà calculé côté serveur. Ne simule ni ne montre le résultat.

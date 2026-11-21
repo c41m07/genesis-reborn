@@ -346,6 +346,113 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         }
     }
 
+    public function testPrivateArrivalHasAnOpaqueTwoRoundResultWithAtomicRecovery(): void
+    {
+        $scenario = $this->scenario(enemyHp: 150, rounds: 10);
+        [$member, $home, $ship, $probe, $ally] = $this->fixture($scenario);
+        $memberId = $member->id;
+        $shipId = $ship->id;
+        $probeId = $probe->id;
+        $this->finishRecon();
+        self::assertTrue($this->service->launchWithPrivateArrival($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]]));
+        $attack = $this->campaign();
+        $attack->timeline['seed'] = $this->findSeed($attack, $scenario, static fn (array $result): bool =>
+            $result['rounds_played'] === 2 && $result['outcome'] === 'attacker_wins');
+        $this->em->flush();
+        $arrivalId = $attack->id;
+        $arrivalToken = $attack->dispatchToken;
+        $arrival = $attack->arrivalAt;
+        self::assertEquals($arrival, $attack->nextAt);
+        $this->advanceTo($arrival->modify('-1 second'));
+        self::assertSame(1000, $this->service->processDue($arrivalId, $arrivalToken));
+        self::assertArrayNotHasKey('opaque_battle', $this->campaign()->timeline);
+        self::assertNull($this->service->statusFor($member, 'signal')['next_at']);
+
+        // Même si la réception survient après le dernier round nominal, elle ne publie pas de résultat.
+        $confirmed = $arrival->modify('+150 seconds');
+        $this->advanceTo($confirmed);
+        $this->service->processDue($arrivalId, $arrivalToken);
+        $attack = $this->campaign();
+        $sealed = $attack->timeline;
+        $combatToken = $attack->dispatchToken;
+        self::assertNotSame($arrivalToken, $combatToken);
+        self::assertEquals($arrival->modify('+120 seconds'), $attack->nextAt);
+        self::assertSame($confirmed->format(DATE_ATOM), $sealed['arrival_observed']);
+        self::assertNull($attack->report);
+        self::assertSame(1, $this->stock($shipId));
+        self::assertSame(['fighter' => ['basic' => 2]], $attack->reservedShips);
+        self::assertSame('combat_in_progress', $this->service->statusFor($member, 'signal')['state']);
+        self::assertNull($this->service->statusFor($member, 'signal')['next_at']);
+        self::assertNull($this->service->statusFor($ally, 'signal'));
+        $this->service->processDue($arrivalId, $arrivalToken);
+        self::assertSame($sealed, $this->campaign()->timeline);
+
+        $db = $this->em->getConnection();
+        $outbox = (int) $db->fetchOne('SELECT COUNT(*) FROM outbox_message');
+        $db->executeStatement("CREATE TRIGGER v2_attack_reject_return BEFORE INSERT ON outbox_message FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'fixture v2 outbox failure'");
+        try {
+            $this->service->processDue($arrivalId, $combatToken);
+            self::fail('La publication doit échouer avec l’ordre de retour.');
+        } catch (DriverException $error) {
+            self::assertStringContainsString('fixture v2 outbox failure', $error->getMessage());
+        } finally {
+            $db->executeStatement('DROP TRIGGER IF EXISTS v2_attack_reject_return');
+        }
+        $row = $db->fetchAssociative('SELECT report, timeline, dispatch_token FROM pirate_attack_campaign');
+        self::assertNull($row['report']);
+        self::assertSame($sealed, json_decode($row['timeline'], true, flags: JSON_THROW_ON_ERROR));
+        self::assertSame($combatToken, $row['dispatch_token']);
+        self::assertSame($outbox, (int) $db->fetchOne('SELECT COUNT(*) FROM outbox_message'));
+        self::assertSame(1, $this->stock($shipId));
+
+        self::ensureKernelShutdown();
+        self::bootKernel();
+        self::getContainer()->set('clock', $this->clock);
+        $this->em = self::getContainer()->get(EntityManagerInterface::class);
+        $this->service = self::getContainer()->get(PirateAttackService::class);
+        $member = $this->em->find(PlayerUniverse::class, $memberId);
+        $processedAt = $confirmed->modify('+4 seconds');
+        $this->advanceTo($processedAt);
+        $this->service->processDue($arrivalId, $combatToken);
+        $this->service->processDue($arrivalId, $combatToken);
+        $attack = $this->campaign();
+        self::assertSame(['outcome' => 'attacker_wins', 'rounds_played' => 2, 'losses' => ['pirates:fixture_raider' => 1]], $attack->report);
+        self::assertSame($processedAt->format(DATE_ATOM), $attack->timeline['resolved']);
+        self::assertArrayNotHasKey('opaque_battle', $attack->timeline);
+        self::assertSame('returning', $this->service->statusFor($member, 'signal')['state']);
+        $returnToken = $attack->dispatchToken;
+        self::assertEquals($processedAt->modify('+'.$attack->travelSeconds.' seconds'), $attack->nextAt);
+        $this->advanceTo($attack->nextAt);
+        $this->service->processDue($arrivalId, $returnToken);
+        $this->service->processDue($arrivalId, $returnToken);
+        self::assertSame(3, $this->stock($shipId));
+        self::assertSame(1, $this->stock($probeId));
+        self::assertSame('won', $this->service->statusFor($member, 'signal')['state']);
+    }
+
+    public function testPrivateArrivalUsesTenRoundsIfNeededWithoutPrePublishingDefeat(): void
+    {
+        [$member, $home, $ship] = $this->fixture($this->scenario(rounds: 10));
+        $this->finishRecon();
+        self::assertTrue($this->service->launchWithPrivateArrival($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]]));
+        $attack = $this->campaign();
+        $arrival = $attack->arrivalAt;
+        $this->advanceTo($arrival);
+        $this->service->processDue($attack->id, $attack->dispatchToken);
+        $attack = $this->campaign();
+        $battleToken = $attack->dispatchToken;
+        self::assertEquals($arrival->modify('+600 seconds'), $attack->nextAt);
+        $this->advanceTo($arrival->modify('+599 seconds'));
+        self::assertSame(1000, $this->service->processDue($attack->id, $battleToken));
+        self::assertNull($this->service->statusFor($member, 'signal')['report']);
+        self::assertNull($this->service->statusFor($member, 'signal')['next_at']);
+        $this->advanceTo($arrival->modify('+600 seconds'));
+        $this->service->processDue($attack->id, $battleToken);
+        self::assertSame(10, $this->campaign()->report['rounds_played']);
+        self::assertSame('defender_wins', $this->campaign()->report['outcome']);
+        self::assertSame(1, $this->stock($ship->id));
+    }
+
     private function campaign(): PirateAttackCampaign
     {
         return $this->em->getRepository(PirateAttackCampaign::class)->findOneBy([]);
@@ -356,14 +463,14 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         return (int) $this->em->getConnection()->fetchOne('SELECT quantity FROM fleet_ship WHERE id = ?', [$id]);
     }
 
-    private function scenario(int $enemyAttack = 0, int $enemyHp = 100000000): PirateBattleScenario
+    private function scenario(int $enemyAttack = 0, int $enemyHp = 100000000, int $rounds = 1): PirateBattleScenario
     {
         return PirateBattleScenario::freeze($this->encounter(), [[
             'slug' => 'fixture_raider', 'tier' => 'basic', 'quantity' => 1,
             'hp' => $enemyHp, 'shield' => 0, 'precision' => 300, 'tracking' => 300,
             'evasion' => 0, 'signature' => 20, 'base_attack' => $enemyAttack,
             'shots_min' => 1, 'shots_max' => 1,
-        ]], [], 1, 0);
+        ]], [], $rounds, 0);
     }
 
     private function encounter(): PirateEncounterSnapshot

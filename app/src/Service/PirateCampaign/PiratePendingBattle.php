@@ -15,6 +15,7 @@ final class PiratePendingBattle
     private function __construct(
         private readonly int $attempt,
         private readonly \DateTimeImmutable $arrivedAt,
+        private readonly \DateTimeImmutable $nominalArrivalAt,
         private readonly \DateTimeImmutable $dueAt,
         private readonly array $payload,
     ) {
@@ -33,6 +34,7 @@ final class PiratePendingBattle
         array $units,
         int $seed,
         CombatSimulator $simulator,
+        ?\DateTimeImmutable $nominalArrivalAt = null,
     ): ?self {
         if ($arrivedAt === null || $at < $arrivedAt) {
             return null;
@@ -40,6 +42,10 @@ final class PiratePendingBattle
 
         // Les colonnes et le calcul natif de phase travaillent à la seconde.
         $arrivedAt = $arrivedAt->setTimestamp($arrivedAt->getTimestamp());
+        $nominalArrivalAt ??= $arrivedAt;
+        if ($nominalArrivalAt > $arrivedAt) {
+            throw new \DomainException('Une arrivée ne peut pas être confirmée avant la fin du trajet.');
+        }
         $result = $scenario->resolve($simulator, $units, $seed);
         $survivors = [];
         foreach ($result['survivors'] as $unit) {
@@ -53,7 +59,7 @@ final class PiratePendingBattle
             $survivors[$slug][$tier] = ($survivors[$slug][$tier] ?? 0) + 1;
         }
 
-        return self::record($attempt, $arrivedAt, [
+        return self::record($attempt, $arrivedAt, $nominalArrivalAt, [
             'outcome' => $result['outcome'],
             'rounds_played' => $result['rounds_played'],
             'losses' => $result['losses'],
@@ -61,16 +67,16 @@ final class PiratePendingBattle
         ]);
     }
 
-    private static function record(int $attempt, \DateTimeImmutable $arrivedAt, array $payload): self
+    private static function record(int $attempt, \DateTimeImmutable $arrivedAt, \DateTimeImmutable $nominalArrivalAt, array $payload): self
     {
-        if ($attempt < 1) {
-            throw new \DomainException('Le résultat préparé exige un numéro de tentative.');
+        if ($attempt < 1 || $nominalArrivalAt > $arrivedAt) {
+            throw new \DomainException('Le résultat préparé exige une tentative et une arrivée cohérentes.');
         }
-        $schedule = (new PirateCombatSchedule())->afterArrival($arrivedAt, $arrivedAt, $payload);
+        $schedule = (new PirateCombatSchedule())->afterArrival($nominalArrivalAt, $arrivedAt, $payload);
 
         self::assertValidCounts($payload['losses'], $payload['survivors']);
 
-        return new self($attempt, $arrivedAt, $schedule['resolution_due'], $payload);
+        return new self($attempt, $arrivedAt, $nominalArrivalAt, $schedule['resolution_due'], $payload);
     }
 
     /** Rejeter un checkpoint corrompu plutôt que d'appliquer une restitution partielle. */
@@ -115,7 +121,7 @@ final class PiratePendingBattle
      */
     public function takeWhenDue(int $attempt, \DateTimeImmutable $at): ?array
     {
-        if ($this->consumed || $attempt !== $this->attempt || $at < $this->dueAt) {
+        if ($this->consumed || $attempt !== $this->attempt || $at < $this->dueAt || $at < $this->arrivedAt) {
             return null;
         }
 
@@ -127,7 +133,7 @@ final class PiratePendingBattle
     /**
      * Données privées uniquement : jamais réutiliser comme modèle de vue. Le futur stockage devra
      * conserver le marqueur dans la transaction d'application pour empêcher un double prélèvement.
-     * @return array{version:1,attempt:int,arrived_at:string,consumed:bool,payload:array}
+     * @return array{version:1,attempt:int,arrived_at:string,nominal_arrival_at:string,consumed:bool,payload:array}
      */
     public function checkpointForPersistence(): array
     {
@@ -135,6 +141,7 @@ final class PiratePendingBattle
             'version' => 1,
             'attempt' => $this->attempt,
             'arrived_at' => $this->arrivedAt->format(DATE_ATOM),
+            'nominal_arrival_at' => $this->nominalArrivalAt->format(DATE_ATOM),
             'consumed' => $this->consumed,
             'payload' => $this->payload,
         ];
@@ -144,19 +151,26 @@ final class PiratePendingBattle
     public static function fromPrivateCheckpoint(array $data): self
     {
         if (($data['version'] ?? null) !== 1 || !is_int($data['attempt'] ?? null)
-            || !is_string($data['arrived_at'] ?? null) || !is_bool($data['consumed'] ?? null)
+            || !is_string($data['arrived_at'] ?? null) || !is_string($data['nominal_arrival_at'] ?? null) || !is_bool($data['consumed'] ?? null)
             || !is_array($data['payload']['losses'] ?? null) || !is_array($data['payload']['survivors'] ?? null)) {
             throw new \DomainException('Le checkpoint privé du combat n’est pas reconnu.');
         }
-        $arrivedAt = \DateTimeImmutable::createFromFormat(DATE_ATOM, $data['arrived_at']);
-        if ($arrivedAt === false || $arrivedAt->format(DATE_ATOM) !== $data['arrived_at']) {
-            throw new \DomainException('La preuve d’arrivée du combat n’est pas reconnue.');
-        }
-
+        $arrivedAt = self::parseTime($data['arrived_at']);
+        $nominalArrivalAt = self::parseTime($data['nominal_arrival_at']);
         $payload = array_intersect_key($data['payload'], array_flip(['outcome', 'rounds_played', 'losses', 'survivors']));
-        $battle = self::record($data['attempt'], $arrivedAt, $payload);
+        $battle = self::record($data['attempt'], $arrivedAt, $nominalArrivalAt, $payload);
         $battle->consumed = $data['consumed'];
 
         return $battle;
+    }
+
+    private static function parseTime(string $value): \DateTimeImmutable
+    {
+        $date = \DateTimeImmutable::createFromFormat(DATE_ATOM, $value);
+        if ($date === false || $date->format(DATE_ATOM) !== $value) {
+            throw new \DomainException('La date interne du combat ne peut pas être relue.');
+        }
+
+        return $date;
     }
 }

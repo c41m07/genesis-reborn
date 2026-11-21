@@ -48,7 +48,12 @@ final class PirateCampaignProgress
                     // Le trajet donne une heure prévue, sans affirmer qu'un worker a traité l'arrivée.
                     $dates['attack_arrival_due'] = $attack->arrivalAt->format(DATE_ATOM);
                 }
-                if ($phase === PirateCampaignMoment::AttaqueEngagee && isset($attack->timeline['combatDue'])) {
+                $observed = $attack->timeline['arrival_observed'] ?? null;
+                if (is_string($observed) && new \DateTimeImmutable($observed) <= $at) {
+                    $dates['attack_arrival_observed'] = $observed;
+                }
+                if ($phase === PirateCampaignMoment::AttaqueEngagee && !isset($attack->timeline['arrival_flow'])
+                    && isset($attack->timeline['combatDue'])) {
                     $dates['combat_due'] = $attack->timeline['combatDue'];
                 } elseif ($phase !== PirateCampaignMoment::AttaqueEngagee) {
                     $dates['combat_reported'] = $attack->timeline['resolved'];

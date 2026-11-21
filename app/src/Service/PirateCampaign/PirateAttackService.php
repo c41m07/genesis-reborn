@@ -19,6 +19,8 @@ use Symfony\Component\Uid\Uuid;
 /** Orchestration interne, sans route existante ni création de flotte publique. */
 final class PirateAttackService
 {
+    private const ARRIVAL_FLOW = 2;
+
     public function __construct(
         private GameManager $manager,
         private GameRepository $repository,
@@ -46,7 +48,30 @@ final class PirateAttackService
         array $composition,
         ?int $initialRoundSeconds = null,
     ): bool {
-        return $this->manager->transaction(function () use ($membership, $origin, $missionKey, $expectedPreviousAttempt, $composition, $initialRoundSeconds): bool {
+        return $this->start($membership, $origin, $missionKey, $expectedPreviousAttempt, $composition, $initialRoundSeconds, false);
+    }
+
+    /** Entrée serveur privée et explicite ; seul le nouveau flux utilise l'arrivée et le dernier round réel. */
+    public function launchWithPrivateArrival(
+        PlayerUniverse $membership,
+        Planet $origin,
+        string $missionKey,
+        int $expectedPreviousAttempt,
+        array $composition,
+    ): bool {
+        return $this->start($membership, $origin, $missionKey, $expectedPreviousAttempt, $composition, null, true);
+    }
+
+    private function start(
+        PlayerUniverse $membership,
+        Planet $origin,
+        string $missionKey,
+        int $expectedPreviousAttempt,
+        array $composition,
+        ?int $initialRoundSeconds,
+        bool $arrivalFlow,
+    ): bool {
+        return $this->manager->transaction(function () use ($membership, $origin, $missionKey, $expectedPreviousAttempt, $composition, $initialRoundSeconds, $arrivalFlow): bool {
             // Verrous conquis dans le même ordre pour les commandes natales : empire, univers, planète.
             $this->guard->lock($membership, $origin, true);
             if ($membership->player->lockedAt !== null) {
@@ -66,7 +91,7 @@ final class PirateAttackService
                 if ($campaign->timeline['attempt'] !== $expectedPreviousAttempt) {
                     return false;
                 }
-                if ($initialRoundSeconds !== null) {
+                if ($initialRoundSeconds !== null || $arrivalFlow !== self::usesPrivateArrival($campaign)) {
                     throw new \DomainException('Une nouvelle tentative ne change pas la cadence figée.');
                 }
                 $scenario = $this->scenarioFromReport($proof['prepared'], $campaign);
@@ -75,7 +100,7 @@ final class PirateAttackService
                 if ($expectedPreviousAttempt !== 0) {
                     return false;
                 }
-                if ($initialRoundSeconds === null || $initialRoundSeconds < 1) {
+                if (!$arrivalFlow && ($initialRoundSeconds === null || $initialRoundSeconds < 1)) {
                     throw new \DomainException('Paramètres internes de campagne absents.');
                 }
                 $scenario = $proof['prepared']->battleForServer();
@@ -83,14 +108,15 @@ final class PirateAttackService
                 $campaign = new PirateAttackCampaign();
                 $campaign->reconnaissance = $recon;
                 $campaign->scenario = $scenario->snapshot();
-                $campaign->roundSeconds = $initialRoundSeconds;
+                $campaign->roundSeconds = $arrivalFlow ? PirateCombatSchedule::ROUND_SECONDS : $initialRoundSeconds;
             }
 
             [$stock, $combatUnits, $seconds] = $this->lockedLaunchInput($membership, $origin, $proof['system'], $composition);
             $arrivalAt = $now->modify('+'.$seconds.' seconds');
-            // Borne de résolution interne. Une vraie cadence et ses clôtures anticipées restent à valider avant l'ouverture.
+            // Pour le flux V2, cette borne est indépendante du résultat ; seule l’arrivée est ordonnée au départ.
             $rounds = $campaign->scenario['rounds'];
-            if ($campaign->roundSeconds > intdiv(2147483647, $rounds)) {
+            if (($arrivalFlow && $rounds > PirateCombatSchedule::MAX_ROUNDS)
+                || $campaign->roundSeconds > intdiv(2147483647, $rounds)) {
                 throw new \DomainException('Durée interne du combat trop grande.');
             }
             $combatDueAt = $arrivalAt->modify('+'.($campaign->roundSeconds * $rounds).' seconds');
@@ -104,12 +130,15 @@ final class PirateAttackService
             $campaign->departedAt = $now;
             $campaign->arrivalAt = $arrivalAt;
             $campaign->timeline = $timeline->checkpoint();
+            if ($arrivalFlow) {
+                $campaign->timeline['arrival_flow'] = self::ARRIVAL_FLOW;
+            }
             $campaign->reservedShips = $composition;
             $campaign->report = null;
             $campaign->returnBlocked = false;
             $this->manager->save($campaign);
             $this->manager->flush();
-            $this->schedule($campaign, $combatDueAt);
+            $this->schedule($campaign, $arrivalFlow ? $arrivalAt : $combatDueAt);
 
             return true;
         });
@@ -210,7 +239,9 @@ final class PirateAttackService
             $timeline = PirateAttackTimeline::fromCheckpoint($scenario, $proof['reportedAt'], $campaign->timeline);
             $attempt = $campaign->timeline['attempt'];
 
-            if ($timeline->state() === 'scheduled') {
+            if ($timeline->state() === 'scheduled' && self::usesPrivateArrival($campaign)) {
+                $this->processPrivateArrivalOrBattle($campaign, $timeline, $attempt, $scenario, $now);
+            } elseif ($timeline->state() === 'scheduled') {
                 $this->resolveBattle($campaign, $timeline, $attempt, $now);
             } elseif ($timeline->state() === 'returning') {
                 $this->settleReturn($campaign, $timeline, $membership, $attempt, $now);
@@ -218,6 +249,50 @@ final class PirateAttackService
 
             return null;
         });
+    }
+
+    private function processPrivateArrivalOrBattle(
+        PirateAttackCampaign $campaign,
+        PirateAttackTimeline $timeline,
+        int $attempt,
+        PirateBattleScenario $scenario,
+        \DateTimeImmutable $now,
+    ): void {
+        if (!isset($campaign->timeline['opaque_battle'])) {
+            if ($campaign->nextAt != $campaign->arrivalAt || $now < $campaign->arrivalAt
+                || isset($campaign->timeline['arrival_observed'])) {
+                throw new \LogicException('L’ordre d’arrivée privée ne correspond pas à cette tentative.');
+            }
+            // Le calcul appartient à l'arrivée effectivement traitée ; une arrivée tardive rattrape la
+            // cadence nominale sans antidater une écriture. Ni stock ni rapport ne change à cette phase.
+            $pending = PiratePendingBattle::prepareAfterArrival($attempt, $now, $now, $scenario,
+                $campaign->timeline['units'], $campaign->timeline['seed'], $this->simulator, $campaign->arrivalAt);
+            $campaign->timeline['arrival_observed'] = $now->format(DATE_ATOM);
+            $campaign->timeline['opaque_battle'] = $pending->checkpointForPersistence();
+            $this->schedule($campaign, $pending->workerDueAt());
+
+            return;
+        }
+
+        $pending = PiratePendingBattle::fromPrivateCheckpoint($campaign->timeline['opaque_battle']);
+        if ($campaign->nextAt != $pending->workerDueAt()) {
+            throw new \LogicException('L’ordre de résolution ne correspond pas à son échéance figée.');
+        }
+        $result = $pending->takeWhenDue($attempt, $now);
+        if ($result === null) {
+            throw new \LogicException('L’ordre de résolution ne correspond pas au résultat privé de cette tentative.');
+        }
+        $survivors = $result['survivors'];
+        $return = $survivors === [] ? null : $now->modify('+'.$campaign->travelSeconds.' seconds');
+        $timeline->recordPreparedResolution($attempt, $now, $pending->workerDueAt(), $result['outcome'], $return);
+        // Retirer le checkpoint ET changer de jeton dans la transaction du rapport.
+        // Si l'outbox/stock échoue, le checkpoint initial reste intact et reprenable.
+        $this->publishBattle($campaign, $timeline, $result, $survivors);
+    }
+
+    private static function usesPrivateArrival(PirateAttackCampaign $campaign): bool
+    {
+        return ($campaign->timeline['arrival_flow'] ?? null) === self::ARRIVAL_FLOW;
     }
 
     private function resolveBattle(PirateAttackCampaign $campaign, PirateAttackTimeline $timeline, int $attempt, \DateTimeImmutable $now): void
@@ -232,7 +307,6 @@ final class PirateAttackService
             return;
         }
 
-        // En remplaçant la réserve initiale par les survivants, les pertes sont définitives dans la même transaction.
         $survivors = [];
         foreach ($result['survivors'] as $unit) {
             if ($unit['camp'] !== 'escort') {
@@ -241,8 +315,18 @@ final class PirateAttackService
             $slug = $unit['slug'];
             $tier = $unit['tier'];
             $survivors[$slug][$tier] = ($survivors[$slug][$tier] ?? 0) + 1;
-            if ($survivors[$slug][$tier] > ($campaign->reservedShips[$slug][$tier] ?? 0)) {
-                throw new \LogicException('Les survivants dépassent la réserve privée de départ.');
+        }
+        $this->publishBattle($campaign, $timeline, $result, $survivors);
+    }
+
+    private function publishBattle(PirateAttackCampaign $campaign, PirateAttackTimeline $timeline, array $result, array $survivors): void
+    {
+        // En remplaçant la réserve initiale par les survivants, les pertes deviennent définitives avec le rapport.
+        foreach ($survivors as $slug => $tiers) {
+            foreach ($tiers as $tier => $quantity) {
+                if ($quantity > ($campaign->reservedShips[$slug][$tier] ?? 0)) {
+                    throw new \LogicException('Les survivants dépassent la réserve privée de départ.');
+                }
             }
         }
         $campaign->reservedShips = $survivors;
@@ -251,7 +335,8 @@ final class PirateAttackService
             'rounds_played' => $result['rounds_played'],
             'losses' => $result['losses'],
         ];
-        $campaign->timeline = $timeline->checkpoint();
+        $campaign->timeline = $timeline->checkpoint() + array_intersect_key($campaign->timeline,
+            ['arrival_flow' => true, 'arrival_observed' => true]);
         $this->schedule($campaign, $timeline->returnDueAt());
     }
 
@@ -299,7 +384,8 @@ final class PirateAttackService
             }
         }
         $campaign->reservedShips = [];
-        $campaign->timeline = $timeline->checkpoint();
+        $campaign->timeline = $timeline->checkpoint() + array_intersect_key($campaign->timeline,
+            ['arrival_flow' => true, 'arrival_observed' => true]);
         $this->schedule($campaign, null);
     }
 
@@ -343,9 +429,13 @@ final class PirateAttackService
 
         return [
             'attempt' => $campaign->timeline['attempt'],
-            'state' => $campaign->returnBlocked ? 'return_blocked' : $campaign->timeline['state'],
+            'state' => $campaign->returnBlocked ? 'return_blocked'
+                : ($campaign->report === null && self::usesPrivateArrival($campaign) && isset($campaign->timeline['arrival_observed'])
+                    ? 'combat_in_progress' : $campaign->timeline['state']),
             'arrival_at' => $campaign->arrivalAt->format(DATE_ATOM),
-            'next_at' => $campaign->nextAt?->format(DATE_ATOM),
+            // En V2, nextAt varie avec le résultat opaque. Même une date seule informerait sur l'issue.
+            'next_at' => self::usesPrivateArrival($campaign) && $campaign->report === null
+                ? null : $campaign->nextAt?->format(DATE_ATOM),
             'report' => $campaign->report,
         ];
     }

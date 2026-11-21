@@ -23,6 +23,7 @@ final readonly class PirateCampaignPresenter
         'scout_reported' => 'Rapport de reconnaissance reçu',
         'attack_departure' => 'Départ de l’escorte',
         'attack_arrival_due' => 'Arrivée prévue de l’escorte',
+        'attack_arrival_observed' => 'Arrivée de l’escorte confirmée',
         'combat_due' => 'Échéance prévue du combat',
         'combat_reported' => 'Rapport de combat reçu',
         'return_due' => 'Retour prévu des survivants',
@@ -100,6 +101,10 @@ final readonly class PirateCampaignPresenter
             && isset($progress['dates']['attack_arrival_due'])
             && $at < new \DateTimeImmutable($progress['dates']['attack_arrival_due'])) {
             $narrative['message'] = 'Votre escorte est en route vers le poste civil.';
+        } elseif ($progress['phase'] === PirateCampaignMoment::AttaqueEngagee->name
+            && isset($progress['dates']['attack_arrival_observed'])) {
+            $status = 'Combat en cours';
+            $narrative['message'] = 'L’escorte est arrivée. Le relais attend l’issue du combat.';
         }
 
         return $this->view(

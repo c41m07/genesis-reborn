@@ -40,7 +40,7 @@ final class PiratePendingBattleTest extends TestCase
             $this->scenario(), [$this->unit('fighter', 400)], 31, new CombatSimulator());
         self::assertEquals($this->at(130), $prepared->workerDueAt(), 'Le retard ne décale pas l’arrivée fournie par le worker.');
         $before = json_decode(json_encode($prepared->checkpointForPersistence(), JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
-        self::assertSame(['version', 'attempt', 'arrived_at', 'consumed', 'payload'], array_keys($before));
+        self::assertSame(['version', 'attempt', 'arrived_at', 'nominal_arrival_at', 'consumed', 'payload'], array_keys($before));
         self::assertSame(['outcome', 'rounds_played', 'losses', 'survivors'], array_keys($before['payload']));
         self::assertFalse($before['consumed']);
 

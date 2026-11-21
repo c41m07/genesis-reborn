@@ -127,6 +127,33 @@ final class PirateCampaignPresenterTest extends TestCase
         self::assertStringContainsString('Aucun vaisseau perdu', $this->render($noReturn));
     }
 
+    public function testOpaqueArrivalShowsOnlyTheConfirmedArrivalAndNotThePrivateBattleDeadline(): void
+    {
+        [$player, , , $recon, $attack, $presenter] = $this->fixture();
+        $recon->reportWhenDue($player, 'fixture-pirate-job', $this->at(32));
+        $attack->departedAt = $this->at(40);
+        $attack->arrivalAt = $this->at(60);
+        $attack->nextAt = $this->at(180);
+        $attack->timeline = [
+            'state' => 'scheduled',
+            'arrival_flow' => 2,
+            'arrival_observed' => $this->at(63)->format(DATE_ATOM),
+            'combatDue' => $this->at(660)->format(DATE_ATOM),
+            'opaque_battle' => ['payload' => ['outcome' => 'attacker_wins', 'rounds_played' => 2]],
+        ];
+        $playerView = $presenter->forProgress($player, $recon, $attack, $this->at(181));
+        self::assertSame('Combat en cours', $playerView['status']);
+        self::assertNull($playerView['losses']);
+        self::assertNull($playerView['return']);
+        $html = $this->render($playerView);
+        self::assertStringContainsString('Arrivée de l’escorte confirmée', $html);
+        self::assertStringContainsString($this->at(63)->format(DATE_ATOM), $html);
+        self::assertStringNotContainsString($this->at(180)->format(DATE_ATOM), $html);
+        self::assertStringNotContainsString($this->at(660)->format(DATE_ATOM), $html);
+        self::assertStringNotContainsString('attacker_wins', $html);
+        self::assertStringNotContainsString('Retour prévu', $html);
+    }
+
     public function testForeignAccountParticipationUniverseAndForeignAttemptRenderNothingPrivate(): void
     {
         [$player, $site, , $recon, $attack, $presenter] = $this->fixture();
