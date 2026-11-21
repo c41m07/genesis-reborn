@@ -97,7 +97,7 @@
 .first-steps-gesture-frame {
     display: block;
     position: relative;
-    width: min(100%, var(--guide-fit-width));
+    width: min(72%, var(--guide-fit-width), calc(var(--guide-native-width) * .8));
     margin: 5px auto 8px;
 }
 .first-steps-gesture-frame--expanded { width: min(100%, var(--guide-native-width)); }
@@ -135,7 +135,7 @@
 @media(max-width: 740px) {
     .first-steps-popup-enhanced { bottom: calc(78px + env(safe-area-inset-bottom)); width: min(468px, calc(100vw - 8px)); }
     .first-steps-popup-panel { max-height: 62dvh; padding: 12px; }
-    .first-steps-gesture-frame:not(.first-steps-gesture-frame--expanded) { width: min(100%, var(--guide-mobile-fit-width)); }
+    .first-steps-gesture-frame:not(.first-steps-gesture-frame--expanded) { width: min(72%, var(--guide-mobile-fit-width), calc(var(--guide-native-width) * .8)); }
     .first-steps-popup-actions a { font-size: .87rem; }
 }
 @media(max-width: 600px) {

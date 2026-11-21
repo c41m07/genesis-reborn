@@ -623,6 +623,20 @@ test('Les douze gestes ont leur carte annotée ; l’agrandissement reste dans l
             await expect(popup).toHaveAttribute('open', '');
             await expect(zoom).toHaveAttribute('aria-expanded', 'false');
         }
+        if (step === 'pirate_exercise') {
+            for (const width of [390, 1440]) {
+                await page.setViewportSize({ width, height: 900 });
+                const initial = (await picture.boundingBox()).width;
+                await zoom.press('Enter');
+                const collapse = active.getByRole('button', { name: 'Réduire l’image', exact: true });
+                await expect(collapse).toBeFocused();
+                await expect.poll(async () => (await picture.boundingBox()).width).toBeGreaterThan(initial + 20);
+                await page.keyboard.press('Escape');
+                await expect(zoom).toBeFocused();
+                await expect.poll(async () => (await picture.boundingBox()).width).toBeCloseTo(initial, 0);
+            }
+            await page.setViewportSize({ width: 390, height: 844 });
+        }
 
         await expect(popup.getByRole('button', { name: 'Suivant', exact: true })).toBeInViewport();
         if (step !== 'colonization') {
@@ -632,5 +646,36 @@ test('Les douze gestes ont leur carte annotée ; l’agrandissement reste dans l
                 + member + ",'" + step + "',UTC_TIMESTAMP())");
             await arrow.press('Enter');
         }
+    }
+});
+
+test('La deuxième vue reste accessible tant que la première image attend', async ({ page }) => {
+    let release;
+    const hold = new Promise(resolve => { release = resolve; });
+    let firstRequested = 0;
+    await page.route('**/art/first-steps/mine-fiche.webp', async route => {
+        firstRequested++;
+        // Une réponse qui n’arrive jamais ne doit arrêter ni le texte ni la navigation.
+        await hold;
+        await route.abort().catch(() => {});
+    });
+    try {
+        await register(page);
+        const popup = page.locator('.first-steps-popup');
+        const first = popup.locator('figure').nth(0);
+        const second = popup.locator('figure').nth(1);
+        await expect(first.getByText('Améliorer au niveau 1', { exact: false }).first()).toBeVisible();
+        await expect.poll(() => firstRequested).toBe(1);
+        expect(await first.locator('img').evaluate(img => img.complete)).toBe(false);
+        await expect(second.locator('img')).not.toHaveAttribute('src', /.+/);
+
+        await popup.getByRole('button', { name: 'Suivant', exact: true }).click();
+        await expect(popup.locator('output')).toHaveText('2 sur 2');
+        await expect(first).toBeHidden();
+        await expect(first.locator('img')).not.toHaveAttribute('src', /.+/);
+        await expect(second.getByText('Niveau actuel 1', { exact: false })).toBeVisible();
+        await expect.poll(() => second.locator('img').evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
+    } finally {
+        release();
     }
 });

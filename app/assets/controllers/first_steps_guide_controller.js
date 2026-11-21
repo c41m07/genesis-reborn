@@ -189,15 +189,20 @@ export default class extends Controller {
         this.index = index;
         for (const [item, slide] of this.slideTargets.entries()) {
             slide.hidden = item !== index;
-            if (slide.hidden) this.setZoom(slide, false);
+            if (slide.hidden) {
+                this.setZoom(slide, false);
+                // Débrancher l’image masquée même si sa réponse n’est pas encore arrivée.
+                slide.querySelector('img[data-src]')?.removeAttribute('src');
+            }
         }
-        const illustration = this.slideTargets[index].querySelector('img[data-src]');
-        // Les autres images restent sans source jusqu’à une demande du joueur.
-        if (illustration && !illustration.hasAttribute('src')) illustration.src = illustration.dataset.src;
         if (this.hasPositionTarget) this.positionTarget.textContent = index + 1 + ' sur ' + this.slideTargets.length;
         if (this.hasPreviousTarget) this.previousTarget.setAttribute('aria-disabled', String(index === 0));
         if (this.hasNextTarget) this.nextTarget.setAttribute('aria-disabled', String(index === this.slideTargets.length - 1));
         this.write(this.slideKey(), String(index));
+
+        // Les commandes et le texte ne dépendent ni de la réponse de l’image ni de son décodage.
+        const illustration = this.slideTargets[index].querySelector('img[data-src]');
+        if (illustration && !illustration.hasAttribute('src')) illustration.src = illustration.dataset.src;
     }
 
     openKey() {
