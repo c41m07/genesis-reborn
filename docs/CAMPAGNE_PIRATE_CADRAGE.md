@@ -620,3 +620,43 @@ aucune date d’issue anticipée, aucun résultat visible au joueur avant
 l’arrivée, ni dans ce lot à aucun moment. Le moteur pirate continue de
 fonctionner à sa borne actuelle ; ni les jetons, ni le traitement des
 rounds et retours, ni la chronologie des combats ordinaires ne sont changés.
+
+## Recette du trajet et du retour avec un vrai broker
+
+Sur la branche locale, la reconnaissance, la résolution de combat et le
+retour privés ont été exécutés par le transport `async` de Messenger,
+alimenté par `OutboxRelay`, sur MariaDB et RabbitMQ jetables. Le réseau
+Compose était interne, sans port ni publication de messagerie ; 71
+migrations sur base vide et la validation du schéma ont réussi. Les deux
+missions utilisaient un adversaire synthétique, un aller et un retour
+de 60 s (plancher natif) et un round de 3 s **de fixture**, pas une
+proposition de cadence normale.
+
+- Deux reconnaissances privées réellement remises et une seule sonde
+  retirée par mission. Les durées ont été observées sur l’horloge réelle.
+- À chacune des deux phases de combat et de retour, réception précoce
+  du bon jeton, replanification Messenger, aucune écriture anticipée ;
+  le relais a également transmis la copie de l’outbox. Les copies
+  obsolètes et les doublons n’ont pas réécrit le rapport ni le stock.
+  18 réceptions, dont 4 reprises différées et 14 acquittements.
+- Chaque rapport de défaite atteste la perte d’un des deux chasseurs
+  partis. Le hangar valide passe de 3 à 1 au départ puis à 2 au retour.
+  Pour l’autre mission, l’origine rendue invalide pendant le retour
+  conserve un survivant réservé, ne remplit aucun hangar et ne
+  redirige rien. Aucune flotte active, aucun combat ou rapport
+  d’espionnage standard, aucune notification et aucun convoi.
+- Cette recette couvre l’origine invalide sur le vrai broker, pas une
+  panne RabbitMQ ou un rollback injecté sur le worker ; les tests
+  MariaDB avec faute injectée et concurrence restent complémentaires.
+
+Point de conception avant une clôture au vrai nombre de rounds :
+`PirateAttackService` enregistre une arrivée **prévue**, mais la seule
+première échéance worker est actuellement la borne de résolution.
+Déclencher plus tôt nécessite d’abord une preuve d’arrivée et un jeton
+de phase, puis un choix : effectuer des rounds privés au fil de l’eau
+comme le moteur natif, ou geler un calcul interne après l’arrivée et
+ne l’appliquer/révéler qu’à l’échéance du dernier round. Dans les deux
+cas, prévoir reprise après retard sans avancer l’horloge, enregistrement
+atomique du rapport/pertes et du retour, et aucune lecture anticipant
+l’issue par sa durée. Le test broker est vert sur le comportement
+actuel ; aucun horaire ni migration de production n’est changé.
