@@ -145,17 +145,6 @@ final class FleetService
             return $q['adjusted'];
         });
     }
-    public function reschedulePlayerBoost(Fleet $fleet, \DateTimeImmutable $arrivalAt): void
-    {
-        $this->vacations->assertCanSendFleet($fleet->playerUniverse);
-        if (!in_array($fleet->status, ['traveling', 'returning', 'defending', 'orbiting'], true) || !$fleet->arrivalAt) {
-            throw new \DomainException('Mission chronométrée active introuvable.');
-        }
-        $this->navigation->reschedule($fleet,$this->clock->now());
-        $fleet->arrivalAt = $arrivalAt;
-        $this->schedule($fleet);
-    }
-
     private function schedule(Fleet $f): void
     {
         $this->dispatch->schedule($f);

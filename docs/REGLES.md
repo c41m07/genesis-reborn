@@ -300,6 +300,8 @@ Le nombre maximum de vaisseaux par flotte est fixé par défaut à **1 000 000**
 
 L’inventaire peut contenir **100 objets disponibles** par joueur et par univers, boosts et boîtes de ressources confondus. Les récompenses supplémentaires restent en attente et rejoignent l’inventaire de la plus ancienne à la plus récente lorsqu’une place se libère. Cette capacité remplace la limite précédente de 3 emplacements.
 
+**Boosts d’inventaire** : seules les commandes actives de la file de construction, de recherche ou de production (vaisseaux et défenses inclus) peuvent être accélérées. Les missions de flotte restent éligibles aux récompenses prévues mais pas à l’utilisation d’un boost. Une accélération de flotte déjà enregistrée n’est ni annulée, ni recalculée, ni remboursée.
+
 #### Boîtes de ressources — décisions du 8 novembre, réalisation du 9 novembre 2026
 
 Le contenu annoncé est fixe, sans tirage aléatoire, et reste figé dans chaque

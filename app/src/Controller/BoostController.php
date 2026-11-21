@@ -49,14 +49,16 @@ final class BoostController extends AbstractController
             throw $this->createAccessDeniedException('Formulaire expiré.');
         }
 
+        // Un formulaire ouvert avant le retrait garde une réponse explicite, sans reçu ni écriture de jeu.
+        if ($type === 'fleet') {
+            $this->addFlash('error', 'Les boosts de l’inventaire ne s’appliquent plus aux missions de flotte.');
+            return $this->redirectToRoute('app_boosts');
+        }
+
         try {
             $membership = $context->membership();
             $requestKey = (string) $request->request->get('request_key');
-            if ($type === 'queue') {
-                $boosts->useOnQueue($membership, $id, $requestKey);
-            } else {
-                $boosts->useOnFleet($membership, $id, $requestKey);
-            }
+            $boosts->useOnQueue($membership, $id, $requestKey);
             $this->addFlash('success', 'Boost appliqué : ' . number_format($grants->durationReductionRatio() * 100, 2, ',', ' ') . ' % du temps restant a été retiré.');
         } catch (\DomainException $exception) {
             $this->addFlash('error', $exception->getMessage());

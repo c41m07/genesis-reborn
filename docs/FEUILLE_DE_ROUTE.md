@@ -2108,3 +2108,12 @@ Chromium sur base jetable : délai initial et actualisé, invalidation à la sai
 survol, fermeture au clavier, toucher à 390 px, conservation des validations
 de quantité et du fret. Instance et réseau privés supprimés après recette.
 Aucune mesure de performances, CI intégrale ni recette du site réel.
+
+
+## Inventaire : retrait de l’accélération des flottes
+
+La branche indépendante retire uniquement la flotte des cibles d’un boost
+d’inventaire. L’ancien formulaire reçoit un refus explicite et les commandes
+actives, objets, récompenses en attente et attributions restent inchangés.
+Pour les vols déjà accélérés, échéance, réserves, historique et règles de rappel
+sont conservés. Ni migration ni changement du calcul de trajet.

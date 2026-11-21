@@ -88,7 +88,7 @@ test('Inventaire : état vide, capacité pleine, attente et effet configuré', a
   await page.screenshot({ path: testInfo.outputPath('inventory-full-390.png'), fullPage: true, animations: 'disabled' });
 });
 
-test('Inventaire : appliquer un boost à une file puis à une flotte', async ({ page }, testInfo) => {
+test('Inventaire : accélérer une file sans proposer la flotte en cours', async ({ page }, testInfo) => {
   const email = await enter(page);
   const project = process.env.BROWSER_ROUTER;
   const membershipId = Number(queryIsolatedSql(project, `SELECT pu.id FROM player_universe pu JOIN player p ON p.id=pu.player_id WHERE p.email='${email}'`));
@@ -102,6 +102,8 @@ test('Inventaire : appliquer un boost à une file puis à une flotte', async ({ 
   runIsolatedSql(project, `INSERT INTO fleet (player_universe_id,home_planet_id,destination_system_id,status,mission,speed_ratio,cargo,reserved_fuel,orbit_fuel,orbit_duration_seconds,departure_at,arrival_at,travel_seconds,dispatch_token)
     SELECT ${membershipId},${planetId},solar_system_id,'traveling','explore',1,'{}',0,0,0,UTC_TIMESTAMP(),DATE_ADD(UTC_TIMESTAMP(),INTERVAL 1 HOUR),3600,UUID() FROM planet WHERE id=${planetId}`);
   const fleetId = Number(queryIsolatedSql(project, `SELECT id FROM fleet WHERE player_universe_id=${membershipId} AND status='traveling'`));
+  const fleetState = () => queryIsolatedSql(project, `SELECT arrival_at, travel_seconds, reserved_fuel, orbit_fuel, dispatch_token, navigation FROM fleet WHERE id=${fleetId}`);
+  const initialFleet = fleetState();
   await page.goto('/boosts');
   for (const width of [1440, 768, 390]) {
     await page.setViewportSize({ width, height: 900 });
@@ -140,13 +142,11 @@ test('Inventaire : appliquer un boost à une file puis à une flotte', async ({ 
   await expect(page.getByRole('status')).toContainText('Boost appliqué');
   expect(Number(queryIsolatedSql(project, `SELECT duration_seconds FROM queue_item WHERE id=${queueId}`))).toBeLessThan(3000);
   expect(queryIsolatedSql(project, `SELECT status FROM player_boost WHERE source_key='use-fleet'`)).toBe('available');
-  await page.getByLabel('Opération à accélérer').selectOption('fleet-' + fleetId);
-  await page.locator(`form[action$="/fleet/${fleetId}"]`).getByRole('button').click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Utiliser un boost', exact: true }).click();
-  await expect(page.getByRole('status')).toContainText('Boost appliqué');
-  expect(Number(queryIsolatedSql(project, `SELECT TIMESTAMPDIFF(SECOND,UTC_TIMESTAMP(),arrival_at) FROM fleet WHERE id=${fleetId}`))).toBeLessThan(2800);
-  expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM player_boost WHERE player_universe_id=${membershipId} AND status='used'`)).toBe('2');
-  await expect(page.getByRole('heading', { name: 'Aucun bonus disponible' })).toBeVisible();
+  await expect(page.getByText(/Les missions de flotte ne sont pas accélérables/)).toBeVisible();
+  await expect(page.locator('option[value="fleet-' + fleetId + '"]')).toHaveCount(0);
+  await expect(page.locator(`form[action$="/fleet/${fleetId}"]`)).toHaveCount(0);
+  expect(fleetState()).toBe(initialFleet);
+  expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM player_boost WHERE player_universe_id=${membershipId} AND status='used'`)).toBe('1');
 });
 
 
