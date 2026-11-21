@@ -34,8 +34,10 @@ async function register(page, { closeDaily = true } = {}) {
 }
 
 async function openIllustrations(popup) {
+    // La classe signale la connexion de Stimulus et l'initialisation synchrone de details.open.
+    await expect(popup).toHaveClass(/first-steps-popup-enhanced/);
     const preview = popup.locator('.first-steps-preview');
-    if (await preview.isVisible()) {
+    if (await popup.evaluate(element => element.open)) {
         await preview.getByRole('button', { name: 'Voir l’étape illustrée', exact: true }).press('Enter');
     } else {
         await popup.locator('summary').press('Enter');
@@ -401,6 +403,54 @@ for (const exit of ['refus temporaire', 'lot déjà retiré', 'aucun dialogue na
         await expect(popup.getByRole('heading', { name: 'Mine à ciel ouvert' })).toBeVisible();
     });
 }
+
+test('Un clic natif avant Stimulus reste une ouverture volontaire du guide', async ({ page }) => {
+    await register(page);
+    const overview = new URL(page.url()).pathname;
+    let resume;
+    const javascriptReady = new Promise(resolve => { resume = resolve; });
+    const chunks = /\/build\/.*\.js(?:\?.*)?$/;
+    const hold = async route => { await javascriptReady; await route.continue(); };
+    await page.route(chunks, hold);
+    try {
+        await page.goto(overview, { waitUntil: 'commit' });
+        const popup = page.locator('.first-steps-popup');
+        const arrow = popup.locator('summary');
+        await expect(arrow).toBeVisible();
+        await expect(popup).not.toHaveClass(/first-steps-popup-enhanced/);
+        await arrow.press('Enter');
+        await expect(popup).toHaveAttribute('open', '');
+        await expect(popup.getByRole('link', { name: 'Guide complet et remboursements' })).toBeVisible();
+        resume();
+        await expect(popup.locator('[data-first-steps-guide-fragment]')).toBeVisible();
+        await expect(popup.locator('.first-steps-preview')).toBeHidden();
+        await expect(arrow).toBeFocused();
+    } finally {
+        resume();
+        await page.unroute(chunks, hold);
+    }
+});
+
+test('Sur Galaxie, l’aperçu et ses commandes restent hors de la carte', async ({ page }) => {
+    await register(page);
+    await page.goto('/carte-v2');
+    const popup = page.locator('.first-steps-popup');
+    const preview = popup.locator('.first-steps-preview');
+    const canvas = page.locator('.gv2-canvas--galaxy');
+    for (const width of [1440, 390]) {
+        await page.setViewportSize({ width, height: 844 });
+        await expect(preview).toBeVisible();
+        await expect(preview.getByRole('button', { name: 'Voir l’étape illustrée' })).toBeEnabled();
+        await expect.poll(async () => {
+            const [panel, map] = await Promise.all([popup.boundingBox(), canvas.boundingBox()]);
+            return panel !== null && map !== null && panel.y + panel.height <= map.y;
+        }).toBe(true);
+    }
+    await openIllustrations(popup);
+    await popup.getByRole('button', { name: 'Fermer', exact: true }).click();
+    await expect(popup).not.toHaveAttribute('open', '');
+    await expect(popup.locator('summary')).toBeFocused();
+});
 
 test('L’aperçu ne charge ni fragment ni image et reste fermé dans le même onglet après fermeture', async ({ page }) => {
     const requests = [];

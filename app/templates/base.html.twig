@@ -95,8 +95,14 @@
     {% include 'ui/resource_strip.html.twig' %}
 </div>
 {% endif %}
-<main id="main" class="shell {{ route=='app_map_v2'?'shell--galaxy-v2':'' }}">{% if chrome.membership and route != 'app_universes' %}{% include 'universe/_closing.html.twig' with {universe: chrome.membership.universe} %}{% endif %}{% for type,messages in app.flashes %}{% for message in messages %}<div class="flash {{ type }}" role="{{ type=='error'?'alert':'status' }}">{{ message }}</div>{% endfor %}{% endfor %}{% block incoming_fleets %}{% if chrome.membership %}{% include 'ui/incoming_attacks.html.twig' with {incoming_panel:false} %}{% endif %}{% endblock %}{% block body %}{% endblock %}</main>
-{% if firstStepsPreview %}
+<main id="main" class="shell {{ route=='app_map_v2'?'shell--galaxy-v2':'' }}">{% if chrome.membership and route != 'app_universes' %}{% include 'universe/_closing.html.twig' with {universe: chrome.membership.universe} %}{% endif %}{% for type,messages in app.flashes %}{% for message in messages %}<div class="flash {{ type }}" role="{{ type=='error'?'alert':'status' }}">{{ message }}</div>{% endfor %}{% endfor %}{% block incoming_fleets %}{% if chrome.membership %}{% include 'ui/incoming_attacks.html.twig' with {incoming_panel:false} %}{% endif %}{% endblock %}
+    {# Sur Galaxie, le panneau de départ ne doit pas recouvrir la surface de la carte. #}
+    {% if firstStepsPreview and route == 'app_map_v2' %}
+        {% include 'player/_first_steps_popup.html.twig' with {planet: chrome.planet, preview: firstStepsPreview} only %}
+    {% endif %}
+    {% block body %}{% endblock %}
+</main>
+{% if firstStepsPreview and route != 'app_map_v2' %}
     {% include 'player/_first_steps_popup.html.twig' with {planet: chrome.planet, preview: firstStepsPreview} only %}
 {% endif %}
 <footer class="footer {{ route=='app_map_v2'?'footer--galaxy-v2':'' }}"><span>GENESIS REBORN</span><span>Explorez. Développez. Écrivez votre histoire.</span>{% include 'legal/_navigation.html.twig' %}</footer>

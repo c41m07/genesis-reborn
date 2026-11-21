@@ -153,3 +153,12 @@
 .first-steps-preview p:not(.first-steps-popup-eyebrow) { margin-bottom: 8px; }
 .first-steps-preview h2 { overflow-wrap: anywhere; }
 body:has(#daily-reward-dialog[open]) .first-steps-popup--preview { visibility: hidden; }
+
+/* La carte utilise tout son canvas : placer l’aperçu et son bouton hors de cette surface. */
+.shell--galaxy-v2 > .first-steps-popup--preview {
+    position: relative;
+    inset: auto;
+    margin: 0 0 8px auto;
+    max-width: 100%;
+}
+.shell--galaxy-v2 > .first-steps-popup--preview .first-steps-popup-panel { margin-top: 0; }

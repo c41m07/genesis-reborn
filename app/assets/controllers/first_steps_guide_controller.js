@@ -8,10 +8,12 @@ export default class extends Controller {
     connect() {
         this.element.classList.add('first-steps-popup-enhanced');
         this.wasOpen = false;
-        this.previewOnly = !this.readCollapsed();
+        // Si la languette native a déjà été ouverte avant Stimulus, honorer ce clic explicite.
+        const openedNatively = this.element.open;
+        this.previewOnly = !openedNatively && !this.readCollapsed();
         this.clearPanel();
         // L’étape du shell est déjà disponible : ne charger ni fragment ni images par défaut.
-        this.element.open = this.previewOnly;
+        this.element.open = openedNatively || this.previewOnly;
         this.rememberOpened();
     }
 
