@@ -36,9 +36,16 @@ test('Premiers pas : conseil facultatif et progression après la fin réelle de 
     const overviewGuide = page.getByRole('region', { name: 'Premiers pas', exact: true });
     await expect(overviewGuide).toContainText('0 sur 12');
     await expect(overviewGuide).toContainText('Mine à ciel ouvert');
+    const guideLink = overviewGuide.getByRole('link', { name: 'Voir le guide Premiers pas et les remboursements', exact: true });
+    await page.setViewportSize({ width: 1440, height: 900 });
+    expect((await guideLink.boundingBox())?.height).toBeGreaterThanOrEqual(44);
     await overviewGuide.screenshot({ path: info.outputPath('premiers-pas-vue-generale-desktop.png'), animations: 'disabled' });
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.getByRole('link', { name: 'Voir le guide Premiers pas et les remboursements', exact: true }).click();
+    expect((await guideLink.boundingBox())?.height).toBeGreaterThanOrEqual(44);
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+    await guideLink.focus();
+    await expect(guideLink).toBeFocused();
+    await guideLink.press('Enter');
     await expect(page.getByRole('heading', { name: 'Premiers pas', exact: true })).toBeVisible();
     const guide = page.getByRole('region', { name: 'Développer sa colonie et explorer', exact: true });
     const progress = guide.getByRole('progressbar', { name: 'Progression des premiers pas', exact: true });
