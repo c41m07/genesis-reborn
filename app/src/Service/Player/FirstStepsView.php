@@ -242,13 +242,15 @@ final class FirstStepsView
 
     public function hasPending(PlayerUniverse $membership, Planet $planet, bool $exerciseInResponse = false): bool
     {
-        return count($this->firstSteps->guideEvidence($membership, $planet, $exerciseInResponse)) < count(FirstStep::cases());
+        return $this->preview($membership, $planet, $exerciseInResponse) !== null;
     }
 
-    /** @return array{next:string,guide:array,count:int,total:int,slides:list<array{caption:string,image?:array{file:string,width:int,height:int,alt:string,x?:float,y?:float}}>,validation:string}|null */
-    public function panel(PlayerUniverse $membership, Planet $planet): ?array
+    /**
+     * @return array{next:string,guide:array,count:int,total:int,validation:string}|null
+     */
+    public function preview(PlayerUniverse $membership, Planet $planet, bool $exerciseInResponse = false): ?array
     {
-        $done = $this->firstSteps->guideEvidence($membership, $planet);
+        $done = $this->firstSteps->guideEvidence($membership, $planet, $exerciseInResponse);
         foreach (FirstStep::cases() as $step) {
             if (!isset($done[$step->value])) {
                 return [
@@ -256,13 +258,20 @@ final class FirstStepsView
                     'guide' => self::HINTS[$step->value],
                     'count' => count($done),
                     'total' => count(FirstStep::cases()),
-                    'slides' => self::GESTURES[$step->value],
                     'validation' => self::EXAMPLES[$step->value][2],
                 ];
             }
         }
 
         return null;
+    }
+
+    /** @return array{next:string,guide:array,count:int,total:int,slides:list<array{caption:string,image?:array{file:string,width:int,height:int,alt:string,x?:float,y?:float}}>,validation:string}|null */
+    public function panel(PlayerUniverse $membership, Planet $planet): ?array
+    {
+        $preview = $this->preview($membership, $planet);
+
+        return $preview === null ? null : $preview + ['slides' => self::GESTURES[$preview['next']]];
     }
 
     /** @param array<string, array<string, int>> $buildings @param array<string, array<string, int>> $technologies */

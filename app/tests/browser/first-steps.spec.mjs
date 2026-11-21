@@ -24,13 +24,23 @@ async function register(page, { closeDaily = true } = {}) {
         const dialog = page.getByRole('dialog', { name: 'Récompense quotidienne' });
         const popup = page.locator('.first-steps-popup');
         await expect(dialog).toBeVisible();
-        await expect(popup).not.toHaveAttribute('open', '');
+        await expect(popup.locator('.first-steps-preview')).toBeHidden();
         await dialog.getByRole('button', { name: 'Plus tard', exact: true }).click();
         await expect(dialog).toBeHidden();
-        await expect(popup).not.toHaveAttribute('open', '');
+        await expect(popup.locator('.first-steps-preview')).toBeVisible();
     }
 
     return email;
+}
+
+async function openIllustrations(popup) {
+    const preview = popup.locator('.first-steps-preview');
+    if (await preview.isVisible()) {
+        await preview.getByRole('button', { name: 'Voir l’étape illustrée', exact: true }).press('Enter');
+    } else {
+        await popup.locator('summary').press('Enter');
+    }
+    await expect(popup.locator('[data-first-steps-guide-fragment]')).toBeVisible();
 }
 
 test('Premiers pas : conseil facultatif et progression après la fin réelle de la mine', async ({ page, browser, baseURL }, info) => {
@@ -42,8 +52,8 @@ test('Premiers pas : conseil facultatif et progression après la fin réelle de 
     const popup = page.locator('.first-steps-popup');
     const summary = popup.locator('summary');
     const guideLink = popup.getByRole('link', { name: 'Guide complet et remboursements', exact: true });
-    await expect(popup).not.toHaveAttribute('open', '');
-    await summary.press('Enter');
+    await expect(popup.locator('.first-steps-preview')).toBeVisible();
+    await openIllustrations(popup);
     await expect(popup).toHaveAttribute('open', '');
     await expect(popup).toContainText('0/12');
     await expect(popup).toContainText('Mine à ciel ouvert');
@@ -107,7 +117,8 @@ test('Premiers pas : conseil facultatif et progression après la fin réelle de 
     // Le guide ne bloque pas le reste du jeu avant la première construction.
     await page.getByRole('link', { name: 'Retour à la vue générale', exact: true }).click();
     await expect(page).toHaveURL(overview);
-    await summary.click();
+    await expect(popup.locator('.first-steps-preview')).toBeVisible();
+    await openIllustrations(popup);
     await guideLink.click();
     await next.getByRole('link', { name: 'Ouvrir la Mine à ciel ouvert', exact: true }).click();
     await expect(page).toHaveURL(/section=buildings.*#item-mine_metal-basic$/);
@@ -236,8 +247,7 @@ test('Premiers pas : panneau non modal, images à la demande et reprise par Pré
     const overview = page.url();
     const popup = page.locator('.first-steps-popup');
     const summary = popup.locator('summary');
-    await expect(popup).not.toHaveAttribute('open', '');
-    await summary.press('Enter');
+    await openIllustrations(popup);
     await expect(popup.getByText('Validation :')).toBeVisible();
     for (const [width, height] of [[1440, 900], [850, 900], [390, 844]]) {
         await page.setViewportSize({ width, height });
@@ -300,7 +310,8 @@ test('Premiers pas : panneau non modal, images à la demande et reprise par Pré
         await staleSettings.goto('/profil/preferences');
         await expect(staleSettings.getByRole('checkbox', { name: 'Afficher le guide Premiers pas' })).toBeChecked();
         await page.goto(overview);
-        await summary.click();
+        await expect(popup.locator('.first-steps-preview')).toBeVisible();
+        await openIllustrations(popup);
         await popup.getByRole('button', { name: 'Désactiver le guide', exact: true }).click();
         await expect(page).toHaveURL(/profil\/preferences/);
         // Enregistrer un autre réglage depuis la page devenue ancienne ne réactive pas l’aide.
@@ -326,8 +337,8 @@ test('Premiers pas : panneau non modal, images à la demande et reprise par Pré
     await page.getByRole('button', { name: 'Enregistrer le réglage du guide' }).click();
     await expect(setting).toBeChecked();
     await page.goto(overview);
-    await expect(popup).not.toHaveAttribute('open', '');
-    await summary.click();
+    await expect(popup.locator('.first-steps-preview')).toBeVisible();
+    await openIllustrations(popup);
     await expect(popup.locator('output')).toHaveText('2 sur 2');
     await popup.getByRole('link', { name: 'Guide complet et remboursements' }).click();
 
@@ -366,7 +377,7 @@ test('Premiers pas : panneau non modal, images à la demande et reprise par Pré
 
 
 for (const exit of ['refus temporaire', 'lot déjà retiré', 'aucun dialogue natif']) {
-    test('Premiers pas attend la flèche même si Quotidiennes ne s’ouvre pas : ' + exit, async ({ page }) => {
+    test('Premiers pas affiche son aperçu même si Quotidiennes ne s’ouvre pas : ' + exit, async ({ page }) => {
         if (exit === 'aucun dialogue natif') {
             await page.addInitScript(() => { HTMLDialogElement.prototype.showModal = undefined; });
         } else {
@@ -377,7 +388,8 @@ for (const exit of ['refus temporaire', 'lot déjà retiré', 'aucun dialogue na
         }
         await register(page, { closeDaily: false });
         const popup = page.locator('.first-steps-popup');
-        await expect(popup).not.toHaveAttribute('open', '');
+        await expect(popup.locator('.first-steps-preview')).toBeVisible();
+        await expect(popup.locator('img[src]')).toHaveCount(0);
         await expect(page.locator('dialog[open]')).toHaveCount(0);
         const gift = page.locator('.topbar').getByRole('link', { name: 'Quotidiennes', exact: true });
         if (exit === 'lot déjà retiré') {
@@ -385,12 +397,12 @@ for (const exit of ['refus temporaire', 'lot déjà retiré', 'aucun dialogue na
         } else {
             await expect(gift).toBeVisible();
         }
-        await popup.locator('summary').press('Enter');
+        await openIllustrations(popup);
         await expect(popup.getByRole('heading', { name: 'Mine à ciel ouvert' })).toBeVisible();
     });
 }
 
-test('La languette de jeu ne charge ni étape ni image avant son ouverture, même en Vue générale', async ({ page }) => {
+test('L’aperçu ne charge ni fragment ni image et reste fermé dans le même onglet après fermeture', async ({ page }) => {
     const requests = [];
     page.on('request', request => {
         const path = new URL(request.url()).pathname;
@@ -410,6 +422,33 @@ test('La languette de jeu ne charge ni étape ni image avant son ouverture, mêm
     ];
     const popup = page.locator('.first-steps-popup');
     const arrow = popup.locator('summary');
+    const preview = popup.locator('.first-steps-preview');
+    for (const width of [1440, 390]) {
+        await page.setViewportSize({ width, height: 844 });
+        await expect(preview).toBeVisible();
+        await expect(arrow).not.toBeFocused();
+        await expect(popup.locator('img[src]')).toHaveCount(0);
+        await expect.poll(() => preview.getByRole('heading', { name: 'Mine à ciel ouvert' }).evaluate(node => {
+            const box = node.getBoundingClientRect();
+            const underneath = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+            return underneath !== null && !node.closest('.first-steps-popup').contains(underneath);
+        })).toBe(true);
+        expect((await new AxeBuilder({ page }).include('.first-steps-popup').analyze()).violations).toEqual([]);
+    }
+    expect(requests).toHaveLength(0);
+    await arrow.press('Enter');
+    await expect(popup).not.toHaveAttribute('open', '');
+    await page.reload();
+    await expect(popup).not.toHaveAttribute('open', '');
+    const other = await page.context().newPage();
+    try {
+        await other.goto('/flottes');
+        await expect(other.locator('.first-steps-preview')).toBeVisible();
+        await expect(other.locator('.first-steps-popup img[src]')).toHaveCount(0);
+    } finally {
+        await other.close();
+    }
+
     for (const [index, location] of pages.entries()) {
         await page.setViewportSize(index % 2 ? { width: 390, height: 844 } : { width: 1440, height: 900 });
         const before = requests.length;
@@ -498,7 +537,7 @@ test('Un guide fermé relit le jalon acquis dans un autre onglet, puis masque un
     const overview = new URL(page.url()).pathname;
     const popup = page.locator('.first-steps-popup');
     const arrow = popup.locator('summary');
-    await arrow.press('Enter');
+    await openIllustrations(popup);
     await expect(popup.getByRole('heading', { name: 'Mine à ciel ouvert' })).toBeVisible();
     await popup.getByRole('button', { name: 'Fermer', exact: true }).click();
     const reads = [];
@@ -553,7 +592,7 @@ test('Le guide qui échoue reste réessayable et un 204 tardif ne déplace pas u
         }
     });
     try {
-        await arrow.press('Enter');
+        await popup.getByRole('button', { name: 'Voir l’étape illustrée', exact: true }).press('Enter');
         await expect(popup.getByRole('status')).toContainText('Impossible de charger');
         await expect(popup.getByRole('link', { name: 'Guide complet et remboursements' })).toBeVisible();
         await page.keyboard.press('Escape');
@@ -578,7 +617,7 @@ test('Les douze gestes ont leur carte annotée ; l’agrandissement reste dans l
     await register(page);
     const popup = page.locator('.first-steps-popup');
     const arrow = popup.locator('summary');
-    await arrow.press('Enter');
+    await openIllustrations(popup);
     const project = process.env.BROWSER_ROUTER;
     const colony = Number(new URL(page.url()).pathname.split('/').pop());
     const member = Number(queryIsolatedSql(project, 'SELECT owner_id FROM planet WHERE id=' + colony));
@@ -670,7 +709,7 @@ test('La deuxième vue reste accessible tant que la première image attend', asy
     try {
         await register(page);
         const popup = page.locator('.first-steps-popup');
-        await popup.locator('summary').press('Enter');
+        await openIllustrations(popup);
         const first = popup.locator('figure').nth(0);
         const second = popup.locator('figure').nth(1);
         await expect(first.getByText('Améliorer au niveau 1', { exact: false }).first()).toBeVisible();
@@ -696,9 +735,8 @@ test('Événements passe devant le guide volontairement ouvert et restaure son p
     await page.setViewportSize({ width: 390, height: 620 });
     await page.reload();
     const popup = page.locator('.first-steps-popup');
-    const arrow = popup.locator('summary');
-    await expect(popup).not.toHaveAttribute('open', '');
-    await arrow.press('Enter');
+    await expect(popup.locator('.first-steps-preview')).toBeVisible();
+    await openIllustrations(popup);
     await expect(popup.getByRole('heading', { name: 'Mine à ciel ouvert' })).toBeVisible();
 
     const events = page.locator('.topbar .event-drawer');
@@ -729,5 +767,6 @@ test('Événements passe devant le guide volontairement ouvert et restaure son p
     await toggle.click();
     await eventsLink.click();
     await expect(page).toHaveURL(/\/evenements$/);
-    await expect(popup).not.toHaveAttribute('open', '');
+    await expect(popup.locator('.first-steps-preview')).toBeVisible();
+    await expect(popup.locator('img[src]')).toHaveCount(0);
 });

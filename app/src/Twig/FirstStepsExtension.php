@@ -17,10 +17,11 @@ final class FirstStepsExtension extends AbstractExtension
 
     public function getFunctions(): array
     {
-        return [new TwigFunction('first_steps_available', $this->available(...))];
+        return [new TwigFunction('first_steps_preview', $this->preview(...))];
     }
 
-    public function available(?Player $player, ?PlayerUniverse $membership, ?Planet $planet, bool $exerciseInResponse = false): bool
+    /** @return array{next:string,guide:array,count:int,total:int,validation:string}|null */
+    public function preview(?Player $player, ?PlayerUniverse $membership, ?Planet $planet, bool $exerciseInResponse = false): ?array
     {
         // Réutiliser la colonie du shell, jamais les données de la fiche consultée par un tiers.
         if ($player?->id === null || $player->lockedAt !== null || $player->emailVerifiedAt === null
@@ -28,9 +29,9 @@ final class FirstStepsExtension extends AbstractExtension
             || $membership->player?->id !== $player->id || $planet?->id === null
             || $planet->owner?->id !== $membership->id
             || $planet->solarSystem->galaxy->universe->id !== $membership->universe->id) {
-            return false;
+            return null;
         }
 
-        return $this->view->hasPending($membership, $planet, $exerciseInResponse);
+        return $this->view->preview($membership, $planet, $exerciseInResponse);
     }
 }

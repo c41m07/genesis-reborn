@@ -2,15 +2,17 @@ import { Controller } from '@hotwired/stimulus';
 import '../styles/first-steps-guide.css';
 
 export default class extends Controller {
-    static targets = ['summary', 'fallback', 'content', 'status', 'closeButton', 'slide', 'controls', 'previous', 'next', 'position'];
+    static targets = ['summary', 'preview', 'fallback', 'content', 'status', 'closeButton', 'slide', 'controls', 'previous', 'next', 'position'];
     static values = { scope: String, url: String };
 
     connect() {
         this.element.classList.add('first-steps-popup-enhanced');
         this.wasOpen = false;
+        this.previewOnly = !this.readCollapsed();
         this.clearPanel();
-        this.reflectDisclosure();
-        if (this.element.open) this.rememberOpened();
+        // L’étape du shell est déjà disponible : ne charger ni fragment ni images par défaut.
+        this.element.open = this.previewOnly;
+        this.rememberOpened();
     }
 
     disconnect() {
@@ -32,15 +34,38 @@ export default class extends Controller {
 
         if (!open) {
             this.cancelPending();
+            if (!this.element.hidden) this.storeCollapsed(true);
+            this.previewOnly = false;
             this.clearPanel();
             return;
         }
 
+        if (this.previewOnly) {
+            this.element.classList.add('first-steps-popup--preview');
+            this.previewTarget.hidden = false;
+            this.fallbackTarget.hidden = true;
+            return;
+        }
+
+        this.storeCollapsed(false);
         // Une autre page peut avoir fait progresser ou désactivé le guide pendant sa fermeture.
         if (!this.pending) this.loadPanel();
     }
 
+    showIllustrations() {
+        if (!this.element.open || !this.previewOnly) return;
+        const moveFocus = this.previewTarget.contains(document.activeElement);
+        this.previewOnly = false;
+        this.element.classList.remove('first-steps-popup--preview');
+        this.previewTarget.hidden = true;
+        this.fallbackTarget.hidden = false;
+        if (moveFocus) this.fallbackTarget.querySelector('a')?.focus({ preventScroll: true });
+        this.loadPanel();
+    }
+
     clearPanel() {
+        this.element.classList.remove('first-steps-popup--preview');
+        this.previewTarget.hidden = true;
         this.contentTarget.replaceChildren();
         this.contentTarget.hidden = true;
         this.fallbackTarget.hidden = false;
@@ -78,7 +103,7 @@ export default class extends Controller {
             this.contentTarget.replaceChildren(panel);
             this.contentTarget.hidden = false;
             // Le lien natif reste le même choix si le joueur l’a déjà atteint au clavier.
-            if (fallbackHadFocus) panel.querySelector('[data-first-steps-guide-return]')?.focus();
+            if (fallbackHadFocus) panel.querySelector('[data-first-steps-guide-return]')?.focus({ preventScroll: true });
             this.fallbackTarget.hidden = true;
             this.closeButtonTarget.hidden = false;
             const count = this.slideTargets.length;
@@ -178,6 +203,21 @@ export default class extends Controller {
         // Les commandes et le texte ne dépendent ni de la réponse de l’image ni de son décodage.
         const illustration = this.slideTargets[index].querySelector('img[data-src]');
         if (illustration && !illustration.hasAttribute('src')) illustration.src = illustration.dataset.src;
+    }
+
+    collapsedKey() {
+        return 'genesis:first-steps:collapsed:' + this.scopeValue;
+    }
+
+    readCollapsed() {
+        try { return window.sessionStorage.getItem(this.collapsedKey()) === '1'; } catch { return false; }
+    }
+
+    storeCollapsed(collapsed) {
+        try {
+            if (collapsed) window.sessionStorage.setItem(this.collapsedKey(), '1');
+            else window.sessionStorage.removeItem(this.collapsedKey());
+        } catch { /* Le panneau reste fonctionnel si le navigateur refuse le stockage. */ }
     }
 
     slideKey() {
