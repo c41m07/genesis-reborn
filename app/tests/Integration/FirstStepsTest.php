@@ -102,6 +102,61 @@ final class FirstStepsTest extends KernelTestCase
         self::assertSame(['metal_mine' => true], $this->guide->completed($membership));
     }
 
+    public function testExercisePresentationDoesNotGrantProofBeforeSuccessfulResponse(): void
+    {
+        [$membership, $planet] = $this->select($this->player(), 'omega-1');
+        foreach (FirstStep::cases() as $step) {
+            if ($step !== FirstStep::PirateExercise) {
+                $this->entityManager->getConnection()->insert('first_step_completion', [
+                    'player_universe_id' => $membership->id,
+                    'step_key' => $step->value,
+                    'completed_at' => '2026-12-01 08:00:00',
+                ]);
+            }
+        }
+        $view = self::getContainer()->get(FirstStepsView::class);
+        self::assertTrue($view->hasPending($membership, $planet));
+        self::assertFalse($view->hasPending($membership, $planet, exerciseInResponse: true));
+        self::assertArrayNotHasKey(FirstStep::PirateExercise->value, $this->guide->completed($membership));
+        self::assertTrue($view->hasPending($membership, $planet));
+    }
+
+    public function testHistoricCompletionDoesNotCombineSeveralColoniesOrCreateProofs(): void
+    {
+        [$membership, $home] = $this->select($this->player(), 'omega-1');
+        $second = $this->pickFreeKnownPlanet($home);
+        $second->owner = $membership;
+        $this->entityManager->flush();
+
+        $connection = $this->entityManager->getConnection();
+        foreach (FirstStep::cases() as $step) {
+            if (in_array($step, [FirstStep::MetalMine, FirstStep::Laboratory], true)) {
+                continue;
+            }
+            $connection->insert('first_step_completion', [
+                'player_universe_id' => $membership->id,
+                'step_key' => $step->value,
+                'completed_at' => '2026-12-01 08:00:00',
+            ]);
+        }
+        $this->seedBuilding($home, 'mine_metal');
+        $this->seedBuilding($second, 'lab');
+        $view = self::getContainer()->get(FirstStepsView::class);
+
+        // Chaque colonie seule ne couvre pas encore les deux derniers bâtiments historiques.
+        self::assertTrue($view->hasPending($membership, $home));
+        self::assertTrue($view->hasPending($membership, $second));
+        self::assertSame('metal_mine', $view->panel($membership, $second)['next']);
+        self::assertSame('metal_mine', $view->progress($membership, ['lab' => ['basic' => 1]], [])['next']);
+
+        $this->seedBuilding($home, 'lab');
+        self::assertFalse($view->hasPending($membership, $home));
+        self::assertFalse($view->hasPending($membership, $second));
+        self::assertNull($view->panel($membership, $second));
+        self::assertNull($view->progress($membership, ['lab' => ['basic' => 1]], [])['next']);
+        self::assertCount(10, $this->guide->completed($membership));
+    }
+
     public function testResearchOnlyCountsAfterTheLevelExists(): void
     {
         [$membership, $planet] = $this->select($this->player(), 'omega-1');

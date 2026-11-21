@@ -1,0 +1,109 @@
+.first-steps.panel { max-width: none; }
+.first-steps .first-steps-grid {
+    display: grid;
+    grid-template-columns: repeat(4,minmax(0,1fr));
+    gap: 14px;
+    align-items: stretch;
+    list-style: none;
+    padding-inline: 0;
+}
+
+.first-steps-grid .first-step { min-width: 0; margin: 0; position: relative; }
+.first-steps-card-index { position: absolute; top: 18px; left: 18px; padding: 4px 6px; border-radius: 5px; background: #101b2bdc; color: #e7eef6; font-size: .74rem; font-weight: 750; }
+.first-steps-grid .first-step h3 { overflow-wrap: anywhere; }
+.first-steps-grid .first-steps-card-art {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 7;
+    object-fit: cover;
+    border-radius: 7px;
+    margin-bottom: 10px;
+}
+
+.first-steps-popup { margin-block: 8px 16px; }
+.first-steps-popup > summary {
+    width: 44px;
+    min-height: 44px;
+    margin-inline-start: auto;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+}
+.first-steps-popup > summary::-webkit-details-marker { display: none; }
+.first-steps-popup-enhanced {
+    position: fixed;
+    bottom: 16px;
+    right: 0;
+    width: min(488px, calc(100vw - 10px));
+    min-height: 44px;
+    z-index: 24;
+    margin: 0;
+    pointer-events: none;
+}
+.first-steps-popup-enhanced > summary {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
+}
+.first-steps-popup[open] > summary span { transform: rotate(180deg); }
+.first-steps-popup-enhanced > summary, .first-steps-popup-enhanced > .first-steps-popup-mount { pointer-events: auto; }
+.first-steps-popup-enhanced > .first-steps-popup-mount { margin-inline-end: 48px; }
+.first-steps-popup-panel {
+    max-height: min(62dvh, 580px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin-top: 6px;
+    padding: 16px;
+    border-top: 2px solid var(--accent);
+    box-shadow: 0 10px 34px #02071177;
+}
+.first-steps-popup-heading, .first-steps-popup-footer { flex-shrink: 0; }
+.first-steps-popup-content { min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 4px; }
+.first-steps-popup-content:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 5px; }
+.first-steps-popup-content p { margin: 0 0 8px; line-height: 1.48; }
+.first-steps-popup-footer { padding-top: 8px; border-top: 1px solid var(--line); }
+.first-steps-popup-footer > a { margin-bottom: 6px; }
+.first-steps-popup-footer .first-steps-gallery-controls { margin-bottom: 7px; }
+.first-steps-popup-panel h2 { margin: 0 0 8px; }
+.first-steps-popup-heading, .first-steps-gallery-controls, .first-steps-popup-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+.first-steps-popup-eyebrow { color: var(--accent); font-size: .78rem; margin: 0; font-weight: 750; letter-spacing: .06em; }
+.first-steps-popup-panel [hidden] { display: none !important; }
+.first-steps-gallery { margin-bottom: 12px; }
+.first-steps-gallery figure { margin: 0 0 5px; }
+.first-steps-gallery img {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    border-radius: 7px;
+    background: var(--bg);
+    margin-bottom: 6px;
+}
+.first-steps-gallery figcaption { color: var(--muted); font-size: .9rem; line-height: 1.42; }
+.first-steps-popup-panel button { min-height: 42px; }
+.first-steps-popup-panel button[aria-disabled=true] { opacity: .65; cursor: default; }
+.first-steps-popup-panel form { margin: 0; }
+.first-steps-paused { margin-block: 12px; }
+@media(max-width: 1180px) {
+    .first-steps .first-steps-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media(max-width: 740px) {
+    .first-steps-popup-enhanced { bottom: calc(78px + env(safe-area-inset-bottom)); width: min(468px, calc(100vw - 8px)); }
+    .first-steps-popup-panel { max-height: 62dvh; padding: 12px; }
+    .first-steps-popup-actions a { font-size: .87rem; }
+}
+@media(max-width: 600px) {
+    .first-steps .first-steps-grid { grid-template-columns: minmax(0,1fr); }
+}

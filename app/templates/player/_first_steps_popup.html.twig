@@ -1,0 +1,15 @@
+<details class="first-steps-popup" data-controller="first-steps-guide"
+         data-first-steps-guide-scope-value="{{ planet.owner.id }}"
+         data-first-steps-guide-url-value="{{ path('app_first_steps_panel', {colony: planet.id}) }}"
+         data-first-steps-guide-auto-open-value="{{ autoOpen ? 'true' : 'false' }}"
+         data-first-steps-guide-defer-value="{{ deferDaily ? 'true' : 'false' }}"
+         data-action="toggle->first-steps-guide#rememberOpened keydown.esc->first-steps-guide#closeFromKeyboard">
+    <summary class="quiet-button" data-first-steps-guide-target="summary" aria-label="Ouvrir Premiers pas"
+             aria-controls="first-steps-popup-panel" title="Ouvrir Premiers pas"><span aria-hidden="true">‹</span></summary>
+    <div id="first-steps-popup-panel" class="first-steps-popup-mount" data-first-steps-guide-target="mount">
+        <div class="panel first-steps-popup-panel">
+            <p role="status" data-first-steps-guide-target="status" hidden></p>
+            <a href="{{ path('app_first_steps') }}">Guide complet et remboursements</a>
+        </div>
+    </div>
+</details>

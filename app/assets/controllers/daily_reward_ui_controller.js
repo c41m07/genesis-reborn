@@ -6,9 +6,13 @@ export default class extends Controller {
     static values = { autoOpen: Boolean, panelUrl: String };
 
     connect() {
-        if (!this.autoOpenValue || !this.hasGiftTarget || !this.canOpenDialog()) return;
+        if (!this.autoOpenValue) return;
         // La décision d’ouverture appartient au rendu serveur, pas à cet onglet.
         this.autoOpenValue = false;
+        if (!this.hasGiftTarget || !this.canOpenDialog()) {
+            this.finishInitialPrompt();
+            return;
+        }
         void this.loadPanel(this.giftTarget, false);
     }
 
@@ -33,6 +37,7 @@ export default class extends Controller {
         if (this.pending) return;
         const request = new AbortController();
         this.pending = request;
+        let waitingForClose = false;
         try {
             // Chaque ouverture relit le jour civil et l’état du compte sur le serveur, sans scrutation.
             const response = await fetch(this.panelUrlValue, {
@@ -55,12 +60,23 @@ export default class extends Controller {
             }
             this.mountTarget.replaceChildren(dialog);
             dialog.showModal();
+            if (!explicit) {
+                waitingForClose = true;
+                dialog.addEventListener('close', () => this.finishInitialPrompt(), { once: true });
+            }
         } catch {
             // Une ouverture automatique ne doit jamais empêcher d’entrer sur la page de jeu.
             if (explicit && !request.signal.aborted && link.isConnected) window.location.assign(link.href);
         } finally {
             if (this.pending === request) this.pending = null;
+            if (!explicit && !waitingForClose) this.finishInitialPrompt();
         }
+    }
+
+    finishInitialPrompt() {
+        // Le repère DOM couvre aussi la sortie synchrone précédant la connexion du guide.
+        this.element.dataset.dailyRewardUiInitialPrompt = 'finished';
+        this.element.dispatchEvent(new CustomEvent('genesis:daily-reward-prompt-finished', { bubbles: true }));
     }
 
     close() {
