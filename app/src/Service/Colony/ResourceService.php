@@ -198,7 +198,7 @@ final class ResourceService
         return $result;
     }
 
-    public function snapshot(Planet $planet,bool $includeEconomy=false): array
+    public function snapshot(Planet $planet,bool $includeEconomy=false,?\DateTimeImmutable $observedAt=null): array
     {
         $levels=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);$rows=[];foreach($this->repo->all(PlanetResource::class,['planet'=>$planet]) as $resource)$rows[$resource->resourceType]=$resource;
         $protectedRatio=max(0.0,min(1.0,(float)($this->catalog->rules()['combat_loot_protected_storage_ratio']??0.1)));
@@ -212,7 +212,7 @@ final class ResourceService
             if($includeEconomy) $result[$slug]+= ['gross'=>0.0,'consumption'=>0.0,'uncredited'=>0.0,'sources'=>[],'consumptionSources'=>[],'estimateSeconds'=>null,'potentialGross'=>0.0,'potentialSources'=>[],'productionInputs'=>[],'consumptionPotential'=>0.0,'consumerSources'=>[]];
         }
         if($rows===[])return $result;
-        $anchor=$rows['electricity']->lastUpdatedAt??array_values($rows)[0]->lastUpdatedAt;$now=$this->clock->now();$stocks=[];foreach($rows as $slug=>$resource)$stocks[$slug]=$resource->currentStock;$simulation=$this->simulateRange($planet,$levels,$stocks,$anchor<$now?$anchor:$now,$now,$economicInventory);
+        $anchor=$rows['electricity']->lastUpdatedAt??array_values($rows)[0]->lastUpdatedAt;$now=$observedAt??$this->clock->now();$stocks=[];foreach($rows as $slug=>$resource)$stocks[$slug]=$resource->currentStock;$simulation=$this->simulateRange($planet,$levels,$stocks,$anchor<$now?$anchor:$now,$now,$economicInventory);
         foreach($this->catalog->rules()['resources'] as $slug=>$label){
             $result[$slug]['stock']=max(0.0,(float)($simulation['stocks'][$slug]??0));
             $result[$slug]['rate']=(float)($simulation['rates'][$slug]??0.0);

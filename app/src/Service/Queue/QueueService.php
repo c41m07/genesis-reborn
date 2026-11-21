@@ -245,6 +245,7 @@ final class QueueService
         $missing = [];
         $missingResources = [];
         $paymentWait = null;
+        $paymentEstimate = null;
         if ($maximum === 0) {
             $failures = $this->access->failures($membership, $planet, $group, $definition, $tier, $buildings, $technologies);
             if (count($this->repo->queue($planet, 'shipyard')) >= 30) {
@@ -254,9 +255,11 @@ final class QueueService
             } elseif ($this->economicUnits->constructionLimit($planet, $definition, $buildings) === 0) {
                 $reason = 'Aucune place de satellite disponible dans la centrale de ce rang.';
             } else {
-                $payment = ResourceWaitEstimate::forCosts($plan['costs'], $this->resources->snapshot($planet));
+                $observedAt = $this->clock->now();
+                $payment = ResourceWaitEstimate::forCosts($plan['costs'], $this->resources->snapshot($planet, observedAt: $observedAt), $observedAt);
                 $missingResources = $payment['missing'];
                 $paymentWait = $payment['paymentWait'];
+                $paymentEstimate = $payment['paymentEstimate'];
                 foreach ($missingResources as $resource) {
                     $missing[] = number_format($resource['amount'], 0, ',', ' ') . ' ' . $resource['label'];
                 }
@@ -273,6 +276,7 @@ final class QueueService
             'displayDuration' => $plan['duration'],
             'missingResources' => $missingResources,
             'paymentWait' => $paymentWait,
+            'paymentEstimate' => $paymentEstimate,
             'reason' => $reason,
             'unavailableLabel' => $maximum === 0 ? $missing ? 'Manque ' . implode(' · ', $missing) : $reason : '',
         ];

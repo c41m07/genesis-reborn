@@ -35,18 +35,28 @@ final class CatalogCardsControllerTest extends WebTestCase
         foreach(['buildings'=>'mine_metal','technologies'=>'engineering_foundations','ships'=>'probe','defenses'=>'ground_turret_anti_light'] as $group=>$slug) {
             $crawler=$client->request('GET','/planetes/'.$planetId.'?section='.$group);
             self::assertResponseIsSuccessful();
-            $button=$crawler->filter('#item-'.$slug.'-basic .card-body>form>button');
+            $card = $crawler->filter('#item-'.$slug.'-basic .card-body');
+            $paymentPanel = $card->filter('form[method="post"] > .catalog-payment');
+            self::assertCount(1, $paymentPanel);
+            $button = $paymentPanel->filter('button.catalog-build-action');
             self::assertCount(1,$button);
+            self::assertSame('submit', $button->attr('type') ?? 'submit');
             self::assertNotNull($button->attr('disabled'));
             self::assertStringStartsWith('Il manque :',$button->text());
             self::assertGreaterThan(0, $button->filter('.catalog-missing-resource')->count());
-            self::assertStringNotContainsString('Manque',$crawler->filter('#item-'.$slug.'-basic .building-costs')->text());
+            $wait = $paymentPanel->filter('.catalog-wait:not([hidden]) > [data-resource-eta-target="timer"]');
+            self::assertCount(1, $wait);
+            self::assertMatchesRegularExpression('/^Délai (estimé|indisponible) : .+\.$/u', $wait->text());
+            self::assertCount(1, $card->filter('[data-resource-eta-target="timer"]'));
+            self::assertStringNotContainsString('Manque', $card->filter('.building-costs')->text());
         }
         $em->getConnection()->executeStatement('UPDATE planet_resource SET current_stock=10000 WHERE planet_id=?',[$planetId]);
         $em->clear();
         $client->request('GET','/planetes/'.$planetId.'?section=buildings');
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('#item-mine_metal-basic .card-body>form>button','Améliorer au niveau 1');
-        self::assertSelectorNotExists('#item-mine_metal-basic .card-body>form>button[disabled]');
+        $payment = '#item-mine_metal-basic .card-body form[method="post"] > .catalog-payment';
+        self::assertSelectorTextContains($payment.' > button.catalog-build-action', 'Améliorer au niveau 1');
+        self::assertSelectorNotExists($payment.' > button.catalog-build-action[disabled]');
+        self::assertSelectorNotExists($payment.' .catalog-wait:not([hidden])');
     }
 }

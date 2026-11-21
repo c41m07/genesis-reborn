@@ -7,6 +7,7 @@ use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Queue\{OperationCalculator, QueueService};
 use App\Service\Requirement\CatalogAccess;
+use Psr\Clock\ClockInterface;
 
 final class ColonyView
 {
@@ -22,6 +23,7 @@ final class ColonyView
         private CatalogFilters $filters,
         private EmpireDetails $empireDetails,
         private EconomicUnitCapacity $economicUnits,
+        private ClockInterface $clock,
     )
     {
     }
@@ -256,11 +258,12 @@ final class ColonyView
             'station_waiting',
         ]], ['arrivalAt' => 'ASC']);
         $combatEvents = $this->repo->fleetCombatEvents($membership, $activeFleets);
-        $resourceSnapshot = $this->resources->snapshot($planet, true);
+        $observedAt = $this->clock->now();
+        $resourceSnapshot = $this->resources->snapshot($planet, true, $observedAt);
         // Un seul relevé cohérent pour les montants manquants et les délais de toutes les cartes.
         if (isset($cards[$section])) {
             foreach ($cards[$section] as $index => $card) {
-                $cards[$section][$index]['payment'] = ResourceWaitEstimate::forCosts($card['costs'], $resourceSnapshot);
+                $cards[$section][$index]['payment'] = ResourceWaitEstimate::forCosts($card['costs'], $resourceSnapshot, $observedAt);
             }
         }
 
