@@ -237,7 +237,10 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertNotSame([], $campaign->reservedShips);
         self::assertSame(1, $this->stock($stock->id));
         self::assertNull($this->service->statusFor($other, 'signal'));
-        $ownerView = self::getContainer()->get(PirateCampaignPresenter::class)->forProgress($owner, $campaign->reconnaissance, $campaign, $this->clock->now());
+        $catalog = self::getContainer()->get(PirateCampaignCatalogue::class);
+        $presenter = new PirateCampaignPresenter($catalog, new PirateCampaignProgress($catalog), self::getContainer()->get(GameCatalog::class));
+        $ownerView = $presenter->forProgress($owner, $campaign->reconnaissance, $campaign, $this->clock->now());
+        self::assertNotNull($ownerView);
         self::assertStringNotContainsString('pilot_blocked_return', json_encode($ownerView, JSON_THROW_ON_ERROR));
         self::assertStringNotContainsString('return_settled', json_encode($ownerView, JSON_THROW_ON_ERROR));
         self::assertSame(1, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM pirate_convoy_delivery'));
@@ -265,7 +268,8 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertSame($campaign->timeline['pilot_attack_fuel']['origin'], $evidence['position']);
         self::assertSame($this->clock->now()->format(DATE_ATOM), $evidence['observed_at']);
         self::assertSame('return_blocked', $this->service->statusFor($owner, 'signal')['state']);
-        $progress = self::getContainer()->get(PirateCampaignProgress::class)->forViewer($owner, $campaign->reconnaissance, $campaign, $this->clock->now());
+        $projector = new PirateCampaignProgress(self::getContainer()->get(PirateCampaignCatalogue::class));
+        $progress = $projector->forViewer($owner, $campaign->reconnaissance, $campaign, $this->clock->now());
         self::assertSame('blocked', $progress['returning']);
         self::assertArrayNotHasKey('return_settled', $progress['dates']);
         self::assertNull($this->service->statusFor($other, 'signal'));
