@@ -2150,3 +2150,20 @@ le rail. Aucune règle économique, aucun déblocage ni aucune migration ne chan
 Parcours concernés : bandeau de ressources et navigation directe des catalogues,
 coque commune claire/sombre et sans JavaScript, tiroir des événements, suivi
 des objectifs du Guide et pages sans empire.
+
+### Premiers pas : fondation économie et recherche
+
+Quatre étapes facultatives expliquent quoi faire, pourquoi et vers quelle fiche
+aller : mine de métal comme premier conseil, centrale, nanos et une première
+recherche au choix. Le lien est dans Vue générale ; aucune étape ne conditionne
+une autre action du jeu.
+
+La fin réellement appliquée d’une construction ou amélioration basique ciblée,
+ou d’une recherche, inscrit une preuve unique par participation et jalon dans
+la transaction de la file. Stock, propriété et date de fin des files ne
+changent pas. Pas de rattrapage depuis les niveaux déjà présents, ni de prime,
+ni de pseudo-événement. La migration ajoute uniquement la table vide.
+
+Les futurs chapitres de vaisseau, exploration, espionnage, colonisation et
+entraînement pirate restent séparés ; leurs preuves, règles et récompenses ne
+sont pas ajoutées ici.

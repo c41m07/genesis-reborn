@@ -10,6 +10,7 @@ use App\Service\Requirement\RequirementChecker;
 use App\Service\Colony\{ResourceService, ActionGuard, ResourceWaitEstimate};
 use Psr\Clock\ClockInterface;
 use Symfony\Component\Uid\Uuid;
+use App\Service\Player\FirstSteps;
 use App\Service\Player\VacationCalendar;
 
 /**
@@ -33,6 +34,7 @@ final class QueueService
         private \App\Service\Player\EmpireReconstructionScheduler $reconstruction,
         private \App\Service\Colony\EconomicUnitCapacity $economicUnits,
         private \App\Service\Combat\LocalGarrison $garrison,
+        private FirstSteps $firstSteps,
     )
     {
     }
@@ -458,6 +460,7 @@ final class QueueService
             default => isset($this->catalog->all('defenses')[$item->itemSlug]) ? 'defenses' : 'ships',
         };
         $this->notifications->enqueue($membership, 'Terminé : ' . $this->catalog->getTierForUniverse($membership->universe, $group, $item->itemSlug, $item->tier)['label'] . ' sur ' . $planet->name . '.', journalKind: 'queue');
+        $this->firstSteps->recordQueueCompletion($item, $finish);
         $this->reconstruction->afterCompletionLocked($item);
         $queueType = $item->queueType;
         $this->manager->remove($item);

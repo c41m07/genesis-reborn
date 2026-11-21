@@ -1,0 +1,69 @@
+{% extends 'base.html.twig' %}
+{% block title %}Premiers pas · Genesis Reborn{% endblock %}
+
+{% block body %}
+{% set colony = chrome.planet %}
+{% set instructions = {
+    metal_mine: {
+        title: 'Mine à ciel ouvert',
+        explanation: 'Le métal sert à construire vos premières installations. La mine est un bon point de départ : vous pouvez lancer sa construction avant la centrale.',
+        action: 'Dans Bâtiments, ouvrez la Mine à ciel ouvert. Lancez la construction du rang basique, puis attendez la fin de la file.',
+        label: 'Ouvrir la Mine à ciel ouvert', section: 'buildings', item: 'mine_metal'
+    },
+    power_plant: {
+        title: 'Centrale nucléaire',
+        explanation: 'Elle fournit de l’électricité. Un manque d’énergie réduit le rendement des installations qui en consomment.',
+        action: 'Ouvrez sa fiche dans Bâtiments. Consultez le prix et le délai, puis lancez le rang basique quand vos ressources le permettent.',
+        label: 'Ouvrir la Centrale nucléaire', section: 'buildings', item: 'power_plant'
+    },
+    nano_workshop: {
+        title: 'Atelier de nanofabrication',
+        explanation: 'Les nanos complètent le métal pour de nombreux bâtiments et recherches.',
+        action: 'Dans Bâtiments, ouvrez l’Atelier de nanofabrication et terminez sa construction au rang basique.',
+        label: 'Ouvrir l’Atelier de nanofabrication', section: 'buildings', item: 'mine_nano'
+    },
+    research: {
+        title: 'Première recherche',
+        explanation: 'Les recherches améliorent votre empire ou ouvrent de nouvelles possibilités dans cet univers.',
+        action: 'Choisissez une recherche accessible. Par exemple, Génie civil colonial demande d’abord un Laboratoire colonial de niveau 1.',
+        label: 'Ouvrir la fiche Génie civil colonial', section: 'technologies', item: 'engineering_foundations'
+    }
+} %}
+<div class="page-heading">
+    <div>
+        <h1>Premiers pas</h1>
+        <p>Un guide facultatif pour comprendre quoi construire et où cliquer. Jouez dans l’ordre qui vous convient.</p>
+    </div>
+    {% if colony %}
+        <a class="quiet-button" href="{{ path('app_colony', {id: colony.id}) }}">Retour à la vue générale</a>
+    {% endif %}
+</div>
+<section class="panel account-panel first-steps" aria-labelledby="first-steps-heading">
+    <h2 id="first-steps-heading">Installer sa colonie</h2>
+    <p><strong>{{ completed|length }} sur {{ steps|length }}</strong> étapes terminées dans <strong>{{ chrome.membership.universe.name }}</strong>.</p>
+    <progress value="{{ completed|length }}" max="{{ steps|length }}" aria-label="Progression des premiers pas">{{ completed|length }} sur {{ steps|length }}</progress>
+    {% if not colony %}
+        <p>Vous n’avez pas de colonie active. Vous pouvez tout de même consulter le guide.</p>
+    {% endif %}
+    <ol class="first-steps-list">
+        {% for step in steps %}
+            {% set guide = instructions[step.value] %}
+            {% set done = completed[step.value]|default(false) %}
+            <li class="first-step{{ step == next ? ' first-step--next' : '' }}">
+                <h3>{{ guide.title }}</h3>
+                <p class="first-step-status"><strong>{{ done ? 'Terminé' : (step == next ? 'Prochaine étape conseillée' : 'À faire') }}</strong></p>
+                <p>{{ guide.explanation }}</p>
+                <p>{{ guide.action }}</p>
+                {% if colony and not done %}
+                    <a class="{{ step == next ? 'primary' : 'secondary' }}" href="{{ path('app_colony', {id: colony.id, section: guide.section, showLockedItems: 1, focusItem: 1}) }}#item-{{ guide.item }}-basic">{{ guide.label }}</a>
+                    {% if step.value == 'research' %}
+                        <a class="secondary" href="{{ path('app_colony', {id: colony.id, section: 'buildings', showLockedItems: 1, focusItem: 1}) }}#item-lab-basic">Ouvrir le Laboratoire colonial</a>
+                    {% endif %}
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ol>
+    <p>Une étape se valide à la fin réelle de la construction, de l’amélioration ou de la recherche, pas à sa mise en file. Les niveaux déjà présents ne sont pas automatiquement repris.</p>
+    {% if next is null %}<p><strong>Installation terminée.</strong> Vous pouvez poursuivre librement votre découverte du jeu.</p>{% endif %}
+</section>
+{% endblock %}

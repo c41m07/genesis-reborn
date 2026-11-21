@@ -6,7 +6,10 @@
 <div class="page-heading">
     <div>
         <h1>{{ {overview:'Vue générale',buildings:'Bâtiments',technologies:'Recherche',ships:'Chantier spatial',defenses:'Défenses'}[section] }}<span>.</span></h1>
-        {% if section == 'overview' %}<p>Agir sur la colonie active, suivre tout l’empire.</p>{% endif %}
+        {% if section == 'overview' %}
+            <p>Agir sur la colonie active, suivre tout l’empire.</p>
+            <p class="overview-first-steps"><a class="text-button" href="{{ path('app_first_steps') }}">Premiers pas</a></p>
+        {% endif %}
     </div>
     {% if section == 'overview' %}
         <a class="quiet-button" href="{{ path('app_daily_reward', {colony: planet.id}) }}">Récompense quotidienne</a>
