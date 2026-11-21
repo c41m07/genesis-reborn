@@ -863,3 +863,44 @@ laisser le droit ou le prochain trajet rejouable. Restent à recetter :
 réaffectation en vol, origine supprimée ou perdue, ancien propriétaire,
 stock juste sous/au seuil et deux opérations concurrentes. Le contrat
 pur ne crée ni trajet réel, ni dépôt, ni commande ou route.
+
+### Premier raccordement durable du convoi (interne)
+
+La table additive conserve un droit par progression de combat, pas par
+numéro d’essai. La preuve de victoire V2, l’identité d’origine, le lot
+exact, le trajet versionné et le reçu appartiennent au même droit.
+Une phase en cours a un UUID neuf lié à sa génération ; un ancien
+message ne peut ni déposer ni changer le trajet. Aucune ancienne
+victoire n’est parcourue ou recréée lors de la migration.
+
+L’entrée interne distincte pour le pilote Omega n’a aucune route
+appelante aujourd’hui. Le service de victoire crée droit et événement
+privé dans la transaction du vrai rapport, sans dépôt. Le premier
+trajet suit la géométrie native et la vitesse d’un cargo Basique,
+sans inscrire de Fleet ni facturer un transport civil au joueur.
+Une destination initiale non attestée ou injoignable laisse le droit
+en attente, sans départ fabriqué. À l’arrivée, le worker vérifie
+possession et participation actuelles et tente le dépôt entier.
+S’il échoue faute de place, le même propriétaire peut redemander
+le dépôt sur cette même colonie, sans nouveau trajet. Si celle-ci
+est perdue, le lot reste entier : aucun transfert au nouveau
+propriétaire. La mise en route d’une seconde destination n’est pas
+implémentée dans ce sous-lot.
+
+Après Balise 17, la mission 2 devient courante dès la victoire ;
+le lot de la mission 1 reste attaché à son droit historique et ne
+conditionne aucune progression. Avant raccordement de la page, la
+fiche historique devra rendre l’état réel du convoi et ne plus
+afficher uniquement le devis lorsqu’un reçu existe. Pas de choix
+de destination ou de bouton de reprise actuellement visible.
+
+Recette MariaDB synthétique sur ce lot : 82 tests / 635 assertions,
+72 migrations sur base vide, validation schéma et conteneur.
+Vérifiés : absence de rapport et de convoi avant publication, un seul droit,
+échéance précoce rejouée et arrivée tardive, réception en mémoire par
+Messenger issue de l’outbox, lot 41,5 M / 0,5 N / 3,5 AM exact,
+stock court d’un demi sans autre dépôt, libération exacte de la place,
+rollback du reçu et du stock puis reprise unique, destination passée
+à un autre propriétaire, régressions des flottes, et dossier Balise 17
+toujours consultable alors que la suite est ouverte. Pas de recette
+RabbitMQ réelle de ce nouveau message à ce stade.
