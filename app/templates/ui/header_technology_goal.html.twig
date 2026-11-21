@@ -1,5 +1,6 @@
 {% import 'ui/macros.html.twig' as ui %}
 <a class="header-technology-goal" href="{{ path('app_technology_tree') }}"
+   aria-label="Guide techno : choisir un objectif"
    data-controller="header-technology-goal"
    data-header-technology-goal-storage-key-value="technology-goal:{{ chrome.membership.id }}:{{ chrome.planet.id }}"
    data-header-technology-goal-url-value="{{ path('app_technology_goal_summary',{id:chrome.planet.id}) }}"
@@ -7,6 +8,9 @@
     {{ ui.icon('research') }}
     <span class="header-technology-goal-label">
         <span>Guide techno</span>
-        <strong data-header-technology-goal-target="label" aria-live="polite">Choisir un objectif</strong>
+        <span class="header-technology-goal-step" aria-live="polite">
+            <strong data-header-technology-goal-target="label">Choisir un objectif</strong>
+            <small data-header-technology-goal-target="progress" hidden></small>
+        </span>
     </span>
 </a>

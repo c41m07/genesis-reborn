@@ -25,13 +25,14 @@ async function expectStickyGameHeader(page, scrollTop) {
   const geometry = () => page.evaluate(() => {
     const bounds = selector => document.querySelector(selector).getBoundingClientRect();
     const topbar = bounds('.topbar'), stack = bounds('.resource-event-stack');
-    const rail = bounds('.header-context-rail'), resources = bounds('.resource-strip');
-    const edges = [topbar.top, topbar.bottom, stack.top, rail.top, rail.bottom, resources.top, resources.bottom, stack.bottom];
+    const trigger = bounds('.topbar .event-drawer summary'), resources = bounds('.resource-strip');
+    const edges = [topbar.top, topbar.bottom, stack.top, trigger.top, trigger.bottom, resources.top, resources.bottom, stack.bottom];
     return {
       moved: window.scrollY > 0,
       edges: edges.map(Math.round),
-      gaps: [stack.top - topbar.bottom, rail.top - stack.top, resources.top - rail.bottom, stack.bottom - resources.bottom].map(Math.round),
-      railHeight: Math.round(rail.height),
+      gaps: [stack.top - topbar.bottom, resources.top - stack.top, stack.bottom - resources.bottom].map(Math.round),
+      triggerHeight: Math.round(trigger.height),
+      triggerWithinTopbar: trigger.top >= topbar.top && trigger.bottom <= topbar.bottom,
     };
   });
   await page.evaluate(async () => {
@@ -40,8 +41,9 @@ async function expectStickyGameHeader(page, scrollTop) {
   });
   const initial = await geometry();
   expect(initial.moved).toBe(false);
-  expect(initial.gaps).toEqual([0, 0, 0, 0]);
-  expect(initial.railHeight).toBeGreaterThanOrEqual(44);
+  expect(initial.gaps).toEqual([0, 0, 0]);
+  expect(initial.triggerHeight).toBeGreaterThanOrEqual(44);
+  expect(initial.triggerWithinTopbar).toBe(true);
   await page.evaluate(top => window.scrollTo({ top, behavior: 'instant' }), scrollTop);
   // Le défilement doit être réel et toutes les jonctions de l’en-tête rester fixes.
   await expect.poll(geometry).toEqual({ ...initial, moved: true });
@@ -49,6 +51,10 @@ async function expectStickyGameHeader(page, scrollTop) {
 
 test('Inscription, connexion, menus, ressources fixes et rendu responsive', async ({page}) => {
   const errors=[];page.on('pageerror',e=>errors.push(e.message));await enter(page);
+  // Le rail ne contient plus le Guide : créer un événement visible pour tester toutes les jonctions sticky.
+  runIsolatedSql(process.env.BROWSER_ROUTER, "INSERT INTO game_event (name,description,type,status,starts_at,ends_at,parameters,visible_to_players) VALUES ('Annonce de recette sticky','','announcement','active',UTC_TIMESTAMP()-INTERVAL 1 HOUR,UTC_TIMESTAMP()+INTERVAL 1 HOUR,'{}',1)");
+  await page.reload();
+  await expect(page.getByRole('region', { name: 'Événements de l’univers' })).toBeVisible();
   await expect(page.locator('.dashboard-metrics .metric-card')).toHaveCount(4);await expect(page.getByRole('heading',{name:'Mes planètes',exact:true})).toHaveCount(0);await expect(page.locator('.dashboard-activity')).toBeVisible();await expect(page.locator('.dashboard-secondary [data-live-region="active-flights"]')).toBeVisible();await expect(page.locator('.dashboard-journal')).toBeVisible();
   await expect(page.locator('[data-resource-target="stock"]')).toHaveCount(5);
   await page.getByRole('navigation',{name:'Navigation principale',exact:true}).getByRole('link',{name:'Recherche',exact:true}).click();await expect(page.locator('#panel-technologies')).toBeVisible();await expect(page.locator('#panel-buildings')).toHaveCount(0);

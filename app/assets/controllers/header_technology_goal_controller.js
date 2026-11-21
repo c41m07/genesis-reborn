@@ -1,8 +1,9 @@
 import { Controller } from '@hotwired/stimulus';
+import { technologyGuideGoal } from '../technology_guide.js';
 
 export default class extends Controller {
     static values = { storageKey: String, url: String };
-    static targets = ['label'];
+    static targets = ['label', 'progress'];
 
     initialize() {
         this.fallbackLabel = this.labelTarget.textContent;
@@ -49,7 +50,7 @@ export default class extends Controller {
         if (guide?.dataset.technologyGraphStorageKeyValue === this.storageKeyValue) {
             // Sur la page du Guide, les libellés sont déjà rendus : ne pas les demander à nouveau.
             const node = guide.querySelector(`[data-node-key="${CSS.escape(key)}"]`);
-            this.render(node ? { label: node.dataset.label, tier: node.dataset.tierLabel } : null);
+            this.render(technologyGuideGoal(node));
             return;
         }
 
@@ -71,8 +72,23 @@ export default class extends Controller {
     }
 
     render(goal) {
-        this.labelTarget.textContent = goal?.label && goal?.tier
-            ? `${goal.label} · ${goal.tier}`
-            : this.fallbackLabel;
+        const recommendation = goal?.recommendation;
+        const step = recommendation?.state === 'step' ? recommendation.requirement : null;
+        const label = step?.label ?? ({
+            acquired: 'Objectif atteint',
+            prerequisites_met: 'Prérequis atteints',
+            unavailable: 'Ouvrir le Guide',
+        }[recommendation?.state] ?? this.fallbackLabel);
+        const progress = step ? `${step.current}/${step.level}` : '';
+
+        this.labelTarget.textContent = label;
+        this.progressTarget.hidden = !progress;
+        this.progressTarget.textContent = progress;
+
+        // Le texte complet reste accessible si un long nom de recherche est abrégé dans la barre.
+        const summary = [label, progress ? `niveau ${step.current} sur ${step.level}` : ''].filter(Boolean).join(' · ');
+        const detail = goal ? ` · Objectif : ${goal.label} (${goal.tier})` : '';
+        this.element.title = summary + detail;
+        this.element.setAttribute('aria-label', `Guide techno · ${summary}${detail}`);
     }
 }
