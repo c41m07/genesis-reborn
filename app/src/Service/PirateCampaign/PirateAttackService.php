@@ -32,6 +32,7 @@ final class PirateAttackService
         private FleetHold $hold,
         private VacationCalendar $vacations,
         private ClockInterface $clock,
+        private PirateConvoyDeliveryService $convoys,
     ) {
     }
 
@@ -48,7 +49,7 @@ final class PirateAttackService
         array $composition,
         ?int $initialRoundSeconds = null,
     ): bool {
-        return $this->start($membership, $origin, $missionKey, $expectedPreviousAttempt, $composition, $initialRoundSeconds, false);
+        return $this->start($membership, $origin, $missionKey, $expectedPreviousAttempt, $composition, $initialRoundSeconds, false, false);
     }
 
     /** Entrée serveur privée et explicite ; seul le nouveau flux utilise l'arrivée et le dernier round réel. */
@@ -59,7 +60,18 @@ final class PirateAttackService
         int $expectedPreviousAttempt,
         array $composition,
     ): bool {
-        return $this->start($membership, $origin, $missionKey, $expectedPreviousAttempt, $composition, null, true);
+        return $this->start($membership, $origin, $missionKey, $expectedPreviousAttempt, $composition, null, true, false);
+    }
+
+    /** Entrée interne explicite, que ni le dossier ni aucune route ne peuvent appeler aujourd'hui. */
+    public function launchWithOmegaPilotConvoy(
+        PlayerUniverse $membership,
+        Planet $origin,
+        string $missionKey,
+        int $expectedPreviousAttempt,
+        array $composition,
+    ): bool {
+        return $this->start($membership, $origin, $missionKey, $expectedPreviousAttempt, $composition, null, true, true);
     }
 
     private function start(
@@ -70,10 +82,14 @@ final class PirateAttackService
         array $composition,
         ?int $initialRoundSeconds,
         bool $arrivalFlow,
+        bool $convoyPilot,
     ): bool {
-        return $this->manager->transaction(function () use ($membership, $origin, $missionKey, $expectedPreviousAttempt, $composition, $initialRoundSeconds, $arrivalFlow): bool {
+        return $this->manager->transaction(function () use ($membership, $origin, $missionKey, $expectedPreviousAttempt, $composition, $initialRoundSeconds, $arrivalFlow, $convoyPilot): bool {
             // Verrous conquis dans le même ordre pour les commandes natales : empire, univers, planète.
             $this->guard->lock($membership, $origin, true);
+            if ($convoyPilot && $membership->universe->slug !== 'omega-1') {
+                throw new \DomainException('Le pilote de convoi est réservé à Omega.');
+            }
             if ($membership->player->lockedAt !== null) {
                 throw new \DomainException('Compte verrouillé.');
             }
@@ -91,7 +107,8 @@ final class PirateAttackService
                 if ($campaign->timeline['attempt'] !== $expectedPreviousAttempt) {
                     return false;
                 }
-                if ($initialRoundSeconds !== null || $arrivalFlow !== self::usesPrivateArrival($campaign)) {
+                if ($initialRoundSeconds !== null || $arrivalFlow !== self::usesPrivateArrival($campaign)
+                    || $convoyPilot !== (($campaign->timeline['convoy_pilot'] ?? null) === true)) {
                     throw new \DomainException('Une nouvelle tentative ne change pas la cadence figée.');
                 }
                 $scenario = $this->scenarioFromReport($proof['prepared'], $campaign);
@@ -132,6 +149,9 @@ final class PirateAttackService
             $campaign->timeline = $timeline->checkpoint();
             if ($arrivalFlow) {
                 $campaign->timeline['arrival_flow'] = self::ARRIVAL_FLOW;
+            }
+            if ($convoyPilot) {
+                $campaign->timeline['convoy_pilot'] = true;
             }
             $campaign->reservedShips = $composition;
             $campaign->report = null;
@@ -240,7 +260,7 @@ final class PirateAttackService
             $attempt = $campaign->timeline['attempt'];
 
             if ($timeline->state() === 'scheduled' && self::usesPrivateArrival($campaign)) {
-                $this->processPrivateArrivalOrBattle($campaign, $timeline, $attempt, $scenario, $now);
+                $this->processPrivateArrivalOrBattle($campaign, $timeline, $attempt, $scenario, $membership, $now);
             } elseif ($timeline->state() === 'scheduled') {
                 $this->resolveBattle($campaign, $timeline, $attempt, $now);
             } elseif ($timeline->state() === 'returning') {
@@ -256,6 +276,7 @@ final class PirateAttackService
         PirateAttackTimeline $timeline,
         int $attempt,
         PirateBattleScenario $scenario,
+        PlayerUniverse $membership,
         \DateTimeImmutable $now,
     ): void {
         if (!isset($campaign->timeline['opaque_battle'])) {
@@ -288,6 +309,9 @@ final class PirateAttackService
         // Retirer le checkpoint ET changer de jeton dans la transaction du rapport.
         // Si l'outbox/stock échoue, le checkpoint initial reste intact et reprenable.
         $this->publishBattle($campaign, $timeline, $result, $survivors);
+        if ($result['outcome'] === 'attacker_wins') {
+            $this->convoys->awardInVictoryTransaction($campaign, $membership, $now);
+        }
     }
 
     private static function usesPrivateArrival(PirateAttackCampaign $campaign): bool
@@ -336,7 +360,7 @@ final class PirateAttackService
             'losses' => $result['losses'],
         ];
         $campaign->timeline = $timeline->checkpoint() + array_intersect_key($campaign->timeline,
-            ['arrival_flow' => true, 'arrival_observed' => true]);
+            ['arrival_flow' => true, 'arrival_observed' => true, 'convoy_pilot' => true]);
         $this->schedule($campaign, $timeline->returnDueAt());
     }
 
@@ -385,7 +409,7 @@ final class PirateAttackService
         }
         $campaign->reservedShips = [];
         $campaign->timeline = $timeline->checkpoint() + array_intersect_key($campaign->timeline,
-            ['arrival_flow' => true, 'arrival_observed' => true]);
+            ['arrival_flow' => true, 'arrival_observed' => true, 'convoy_pilot' => true]);
         $this->schedule($campaign, null);
     }
 

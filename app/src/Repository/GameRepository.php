@@ -1017,6 +1017,23 @@ final class GameRepository
             ->getOneOrNullResult();
     }
 
+    /** Portée immutable du droit, relue après verrou de la participation et de son univers. */
+    public function lockPirateConvoy(int $id, PlayerUniverse $membership): ?\App\Entity\PirateConvoyDelivery
+    {
+        return $this->em->createQueryBuilder()
+            ->select('delivery')->from(\App\Entity\PirateConvoyDelivery::class, 'delivery')
+            ->where('delivery.id = :id AND delivery.membershipId = :membership')
+            ->andWhere('delivery.ownerId = :owner AND delivery.universeId = :universe')
+            ->setParameter('id', $id)
+            ->setParameter('membership', $membership->id)
+            ->setParameter('owner', $membership->player?->id)
+            ->setParameter('universe', $membership->universe->id)
+            ->getQuery()
+            ->setLockMode(LockMode::PESSIMISTIC_WRITE)
+            ->setHint(Query::HINT_REFRESH, true)
+            ->getOneOrNullResult();
+    }
+
     public function outbox(bool $notifications): array
     {
         return $this->em->createQueryBuilder()->select('o')->from(OutboxMessage::class, 'o')->where($notifications ? 'o.kind = :kind' : 'o.kind IN (:kind)')->setParameter('kind', $notifications ? 'notification' : [
@@ -1029,6 +1046,7 @@ final class GameRepository
             'reconstruction',
             \App\Message\PirateReconnaissanceDue::KIND,
             \App\Message\PirateAttackDue::KIND,
+            \App\Message\PirateConvoyDue::KIND,
         ])->orderBy('o.id', 'ASC')->setMaxResults(100)->getQuery()->getResult();
     }
 

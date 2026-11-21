@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration;
 
-use App\Entity\{Fleet, FleetShip, Galaxy, PirateAttackCampaign, PirateConvoyDelivery, PirateReconnaissance, Planet, Player, PlayerDiscovery, PlayerUniverse, SolarSystem, Universe};
-use App\Message\PirateAttackDue;
+use App\Entity\{Fleet, FleetShip, Galaxy, PirateAttackCampaign, PirateConvoyDelivery, PirateReconnaissance, Planet, PlanetResource, Player, PlayerDiscovery, PlayerUniverse, SolarSystem, Universe};
+use App\Message\{PirateAttackDue, PirateConvoyDue};
 use App\MessageHandler\PirateAttackDueHandler;
 use App\Service\Combat\CombatSimulator;
 use App\Service\Notification\OutboxRelay;
-use App\Service\PirateCampaign\{PirateAttackService, PirateBattleScenario, PirateCampaignCatalogue, PirateCampaignProgress, PirateConvoyDispatchToken, PirateDistressSite, PirateEncounterSnapshot, PiratePreparedEncounter, PirateReconnaissanceService};
+use App\Service\PirateCampaign\{PirateAttackService, PirateBattleScenario, PirateCampaignCatalogue, PirateCampaignProgress, PirateCampaignSequence, PirateConvoyDeliveryService, PirateConvoyDispatchToken, PirateDistressSite, PirateEncounterSnapshot, PiratePreparedEncounter, PirateReconnaissanceService};
 use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -509,6 +509,157 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         }
     }
 
+    public function testPilotConvoyIsScheduledOnlyAfterVictoryAndRetriesTheWholeLotAtTheSameColony(): void
+    {
+        [$owner, $home, $ally, $attack, $event] = $this->pilotVictoryWithConvoy();
+        $service = self::getContainer()->get(PirateConvoyDeliveryService::class);
+        $db = $this->em->getConnection();
+        $right = $this->em->find(PirateConvoyDelivery::class, (int) $event['target_id']);
+        $due = $right->timeline()->chronology()['due_at'];
+        self::assertGreaterThan(new \DateTimeImmutable($attack->timeline['resolved']), $due);
+        self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_convoy_delivery'));
+        $catalogue = self::getContainer()->get(PirateCampaignCatalogue::class);
+        $sequence = new PirateCampaignSequence($catalogue, new PirateCampaignProgress($catalogue));
+        self::assertSame([
+            'current_mission' => 'escorte_interceptee', 'next_signal' => 'escorte_interceptee', 'consultable' => ['balise_17'],
+        ], $sequence->forViewer($owner, [['reconnaissance' => $attack->reconnaissance, 'attack' => $attack]], $this->clock->now()));
+        self::assertSame(0, (int) $db->fetchOne("SELECT COUNT(*) FROM fleet WHERE status <> 'idle'"));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM transport_report'));
+        self::assertNull($service->retryDeposit($ally, $right->id));
+
+        $this->advanceTo($due->modify('-1 second'));
+        self::assertNull($service->processDue($right->id, 'fixture-obsolete'));
+        self::assertSame(1000, $service->processDue($right->id, $event['token']));
+        self::assertSame('traveling', $right->timeline()->state());
+        self::assertSame(0.0, $this->resourceStock($home->id, 'metal'));
+        self::assertGreaterThanOrEqual(1, self::getContainer()->get(OutboxRelay::class)->run());
+        $sent = self::getContainer()->get('messenger.transport.async')->getSent();
+        self::assertCount(1, array_filter($sent, static fn ($envelope): bool => $envelope->getMessage() instanceof PirateConvoyDue));
+        $home = $this->em->find(Planet::class, $home->id);
+        $owner = $this->em->find(PlayerUniverse::class, $owner->id);
+        $right = $this->em->find(PirateConvoyDelivery::class, $right->id);
+
+        $late = $due->modify('+7 seconds');
+        $this->advanceTo($late);
+        $capacity = self::getContainer()->get(\App\Service\Colony\ResourceService::class)->capacity($home, 'metal', []);
+        $this->stampStocks($home->id, ['metal' => $capacity - 41, 'nano' => 0.0, 'antimatter' => 0.0]);
+        $service->processDue($right->id, $event['token']);
+        $service->processDue($right->id, $event['token']);
+        self::assertSame('waiting_capacity', $right->timeline()->state());
+        self::assertEquals($late, $right->timeline()->chronology()['arrived_at']);
+        self::assertSame($capacity - 41, $this->resourceStock($home->id, 'metal'));
+        self::assertSame(0.0, $this->resourceStock($home->id, 'nano'), 'Une autre ressource du lot ne peut pas être versée seule.');
+        self::assertSame(0.0, $this->resourceStock($home->id, 'antimatter'));
+        $this->stampStocks($home->id, ['metal' => $capacity - 41.5]);
+        self::assertSame('settled', $service->retryDeposit($owner, $right->id));
+        self::assertSame('settled', $service->retryDeposit($owner, $right->id));
+        self::assertSame($capacity, $this->resourceStock($home->id, 'metal'));
+        self::assertSame(0.5, $this->resourceStock($home->id, 'nano'));
+        self::assertSame(3.5, $this->resourceStock($home->id, 'antimatter'));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM outbox_message'));
+    }
+
+    public function testConvoyReceiptFailureRollsBackWholeDepositAndCanBeReplayed(): void
+    {
+        [, $home, , , $event] = $this->pilotVictoryWithConvoy();
+        $rightId = (int) $event['target_id'];
+        $homeId = $home->id;
+        $right = $this->em->find(PirateConvoyDelivery::class, $rightId);
+        $this->advanceTo($right->timeline()->chronology()['due_at']);
+        $this->stampStocks($homeId, ['metal' => 0.0, 'nano' => 0.0, 'antimatter' => 0.0]);
+        $db = $this->em->getConnection();
+        $db->executeStatement("CREATE TRIGGER convoy_reject_receipt BEFORE UPDATE ON pirate_convoy_delivery FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'fixture refused convoy receipt'");
+        try {
+            self::getContainer()->get(PirateConvoyDeliveryService::class)->processDue($rightId, $event['token']);
+            self::fail('Le reçu doit échouer avec le dépôt.');
+        } catch (DriverException $error) {
+            self::assertStringContainsString('fixture refused convoy receipt', $error->getMessage());
+        } finally {
+            $db->executeStatement('DROP TRIGGER IF EXISTS convoy_reject_receipt');
+        }
+        self::assertSame(0.0, $this->resourceStock($homeId, 'metal'));
+        self::assertSame(0.0, $this->resourceStock($homeId, 'nano'));
+        self::assertNull($db->fetchOne('SELECT settled_at FROM pirate_convoy_delivery WHERE id = ?', [$rightId]));
+        self::assertSame($event['token'], $db->fetchOne('SELECT dispatch_token FROM pirate_convoy_delivery WHERE id = ?', [$rightId]));
+        self::ensureKernelShutdown();
+        self::bootKernel();
+        self::getContainer()->set('clock', $this->clock);
+        $this->em = self::getContainer()->get(EntityManagerInterface::class);
+        $service = self::getContainer()->get(PirateConvoyDeliveryService::class);
+        $service->processDue($rightId, $event['token']);
+        $service->processDue($rightId, $event['token']);
+        self::assertSame(41.5, $this->resourceStock($homeId, 'metal'));
+        self::assertSame(0.5, $this->resourceStock($homeId, 'nano'));
+        self::assertSame('settled', $this->em->find(PirateConvoyDelivery::class, $rightId)->timeline()->state());
+    }
+
+    public function testConvoyAttestsLostDestinationWithoutTransferringToNewOwner(): void
+    {
+        [, $home, $ally, , $event] = $this->pilotVictoryWithConvoy();
+        $right = $this->em->find(PirateConvoyDelivery::class, (int) $event['target_id']);
+        $this->advanceTo($right->timeline()->chronology()['due_at']);
+        $home->owner = $ally;
+        $this->em->flush();
+        $this->stampStocks($home->id, ['metal' => 0.0, 'nano' => 0.0, 'antimatter' => 0.0]);
+        $service = self::getContainer()->get(PirateConvoyDeliveryService::class);
+        $service->processDue($right->id, $event['token']);
+        $service->processDue($right->id, $event['token']);
+        self::assertSame('destination_lost', $right->timeline()->state());
+        self::assertSame($home->position, $right->timeline()->attestedPositionForDeparture()[4]);
+        self::assertSame(0.0, $this->resourceStock($home->id, 'metal'));
+        self::assertNull($service->retryDeposit($ally, $right->id));
+    }
+
+    /** @return array{PlayerUniverse,Planet,PlayerUniverse,PirateAttackCampaign,array} */
+    private function pilotVictoryWithConvoy(): array
+    {
+        [$member, $home, , , $other] = $this->fixture($this->scenario(enemyHp: 1, rounds: 10), omega: true,
+            frozenCosts: ['metal' => 83, 'nano' => 1, 'antimatter' => 7, 'electricity' => 100]);
+        foreach (['metal', 'nano', 'antimatter', 'hydrogen', 'electricity'] as $name) {
+            $stock = new PlanetResource();
+            $stock->planet = $home;
+            $stock->resourceType = $name;
+            $stock->lastUpdatedAt = $this->clock->now();
+            $this->em->persist($stock);
+        }
+        $this->em->flush();
+        $this->finishRecon();
+        self::assertTrue($this->service->launchWithOmegaPilotConvoy($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]]));
+        $attack = $this->campaign();
+        $this->advanceTo($attack->nextAt);
+        $this->service->processDue($attack->id, $attack->dispatchToken);
+        $db = $this->em->getConnection();
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_convoy_delivery'));
+        $attack = $this->campaign();
+        $this->advanceTo($attack->nextAt);
+        $token = $attack->dispatchToken;
+        $this->service->processDue($attack->id, $token);
+        $this->service->processDue($attack->id, $token);
+        $attack = $this->campaign();
+        self::assertSame('attacker_wins', $attack->report['outcome']);
+        $event = $db->fetchAssociative("SELECT target_id, token FROM outbox_message WHERE kind = 'pirate_convoy'");
+        self::assertIsArray($event);
+
+        return [$member, $home, $other, $attack, $event];
+    }
+
+    private function stampStocks(int $planetId, array $amounts): void
+    {
+        $db = $this->em->getConnection();
+        $db->executeStatement('UPDATE planet_resource SET last_updated_at = ? WHERE planet_id = ?',
+            [$this->clock->now()->format('Y-m-d H:i:s'), $planetId]);
+        foreach ($amounts as $resource => $amount) {
+            $db->executeStatement('UPDATE planet_resource SET current_stock = ? WHERE planet_id = ? AND resource_type = ?',
+                [(string) $amount, $planetId, $resource]);
+        }
+    }
+
+    private function resourceStock(int $planetId, string $resource): float
+    {
+        return (float) $this->em->getConnection()->fetchOne(
+            'SELECT current_stock FROM planet_resource WHERE planet_id = ? AND resource_type = ?', [$planetId, $resource]);
+    }
+
     private function campaign(): PirateAttackCampaign
     {
         return $this->em->getRepository(PirateAttackCampaign::class)->findOneBy([]);
@@ -568,10 +719,10 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $this->em->getConnection()->executeStatement("DELETE FROM outbox_message WHERE kind = 'pirate_reconnaissance'");
     }
 
-    private function fixture(?PirateBattleScenario $scenario = null, ?string $definition = null, bool $legacy = false): array
+    private function fixture(?PirateBattleScenario $scenario = null, ?string $definition = null, bool $legacy = false, bool $omega = false, ?array $frozenCosts = null): array
     {
         $u = new Universe();
-        $u->slug = $u->name = 'pirate-attack-test';
+        $u->slug = $u->name = $omega ? 'omega-1' : 'pirate-attack-test';
         $g = new Galaxy();
         $g->universe = $u;
         $g->name = 'Galaxie synthétique';
@@ -603,7 +754,8 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         if ($definition !== null) {
             $recon->launchDefined($member, $p, $s, $site, 'signal', $definition);
         } else {
-            $encounter = $this->encounter();
+            $encounter = $frozenCosts === null ? $this->encounter()
+                : PirateEncounterSnapshot::freeze($this->encounter()->composition(), $frozenCosts);
             $source = $legacy ? $encounter : new PiratePreparedEncounter('balise_17', $encounter, $scenario ?? $this->scenario());
             $recon->launch($member, $p, $s, $site, 'signal', $source);
         }

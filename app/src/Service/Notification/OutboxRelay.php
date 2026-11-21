@@ -8,7 +8,7 @@ use App\Repository\GameRepository;
 use App\Integration\Mercure\PublisherInterface;
 use App\Message\{QueueItemFinished, FleetArrived, CombatEventDue, UniverseClosureDue, OccupationDue, EmpireReconstructionDue, GuildProjectRewardsDue};
 use Symfony\Component\Messenger\{MessageBusInterface, Stamp\DelayStamp};
-use App\Message\{PirateAttackDue, PirateReconnaissanceDue};
+use App\Message\{PirateAttackDue, PirateConvoyDue, PirateReconnaissanceDue};
 use Psr\Clock\ClockInterface;
 
 /**
@@ -43,6 +43,7 @@ final class OutboxRelay
                         'queue' => new QueueItemFinished($outboxMessage->targetId, $outboxMessage->token),
                         PirateReconnaissanceDue::KIND => new PirateReconnaissanceDue($outboxMessage->targetId, $outboxMessage->token),
                         PirateAttackDue::KIND => new PirateAttackDue($outboxMessage->targetId, $outboxMessage->token),
+                        PirateConvoyDue::KIND => new PirateConvoyDue($outboxMessage->targetId, $outboxMessage->token),
                         'fleet' => new FleetArrived($outboxMessage->targetId, $outboxMessage->token),
                         'combat' => new CombatEventDue($outboxMessage->targetId, $outboxMessage->token),
                         'reconstruction' => new EmpireReconstructionDue($outboxMessage->targetId, $outboxMessage->token),

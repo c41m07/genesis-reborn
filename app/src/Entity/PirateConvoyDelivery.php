@@ -73,7 +73,7 @@ class PirateConvoyDelivery
             || $wonAt === false || $wonAt->format(DATE_ATOM) !== $time || $wonAt != $now
             || $observedAt === false || $observedAt->format(DATE_ATOM) !== $arrival || $observedAt > $wonAt
             || !in_array($attack->timeline['state'] ?? null, ['returning', 'won'], true)
-            || $owner->id === null || $owner->player?->id === null || $owner->player->lockedAt !== null
+            || $owner->id === null || $owner->player?->id === null
             || $owner->universe->id === null || !$owner->universe->isAccessible($now)) {
             throw new \DomainException('Le convoi exige une victoire V2 réelle et un propriétaire actif.');
         }
