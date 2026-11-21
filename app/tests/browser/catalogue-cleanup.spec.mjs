@@ -32,20 +32,28 @@ test('Le catalogue affiche les gains par niveau, consommations et tourelles spé
   await expect(compact).toHaveAttribute('aria-checked','true');
   await compact.click();
   const metalBenefits=page.locator('#item-mine_metal-basic .card-benefits');
-  await expect(metalBenefits).toHaveAttribute('open','');
+  await expect(metalBenefits).not.toHaveAttribute('open');
+  await expect(metalBenefits.locator('.card-benefits-content')).toBeHidden();
+  await metalBenefits.locator('summary').press('Enter');
+  await expect(metalBenefits.locator('.card-benefits-content')).toBeVisible();
   await expect(metalBenefits).toContainText('Consommation électrique');
   await expect(metalBenefits.locator('.card-benefit-consumption')).toContainText(/−\d[\d ,]* \/ h/);
   await expect(metalBenefits.locator('.card-benefit-consumption strong')).toHaveCSS('color','rgb(240, 139, 139)');
   await expect(page.locator('#item-mine_metal-basic .costs [title^="Antimatière :"]')).toHaveCount(0);
   await metalBenefits.locator('summary').click();
   const antimatterBenefits=page.locator('#item-mine_antimatter-basic .card-benefits');
-  await expect(antimatterBenefits).toHaveAttribute('open','');
-  await expect(antimatterBenefits).toContainText('Consommation d’hydrogène');
+  await expect(antimatterBenefits).not.toHaveAttribute('open');
   await antimatterBenefits.locator('summary').click();
+  await expect(antimatterBenefits.locator('.card-benefits-content')).toBeVisible();
+  await expect(antimatterBenefits).toContainText('Consommation d’hydrogène');
   for(const slug of ['lab','shipyard','fortress'])await expect(page.locator('#item-'+slug+'-basic .card-benefits')).toContainText(/[+]\d+(?:,\d+)? %/);
 
   await page.goto(planetPath+'?section=technologies');
   await expect(page.locator('.building-rank')).toHaveCount(57);
+  const researchBenefits=page.locator('#item-engineering_foundations-basic .card-benefits');
+  await expect(researchBenefits).not.toHaveAttribute('open');
+  await researchBenefits.locator('summary').press('Space');
+  await expect(researchBenefits.locator('.card-benefits-content')).toBeVisible();
   await expect(page.locator('#item-engineering_foundations-basic .card-benefits')).toContainText('Réduction du temps de construction des bâtiments');
   await expect(page.locator('#item-nanomaterial_synthesis-basic .card-benefits')).toContainText('Réduction du coût de construction des bâtiments');
   await expect(page.locator('#item-naval_engineering-basic .card-benefits')).toContainText('Réduction du coût de construction des vaisseaux');
@@ -53,6 +61,11 @@ test('Le catalogue affiche les gains par niveau, consommations et tourelles spé
   for(const [slug,expected] of Object.entries(levelOneEffects))await expect(page.locator('#item-'+slug+'-basic .card-benefits')).toContainText(expected);
 
   await page.goto(planetPath+'?section=ships');
+  const shipBenefits=page.locator('#item-fighter-basic .card-benefits');
+  await expect(shipBenefits).not.toHaveAttribute('open');
+  await expect(shipBenefits.locator('.card-benefits-content')).toBeHidden();
+  await shipBenefits.locator('summary').click();
+  await expect(shipBenefits.locator('.card-benefits-content')).toBeVisible();
   await page.goto(planetPath+'?section=defenses');
   const groups={ground_turret_anti_light:['anti-léger','intercepteur, chasseur, chasseur lourd, chasseur furtif'],ground_turret_anti_escort:['anti-escorteur','corvette, frégate, destroyer'],ground_turret_anti_heavy:['anti-lourd','croiseur, cuirassé'],ground_turret_anti_capital:['anti-capital','vaisseau capital']};
   await expect(page.locator('.building-rank')).toHaveCount(12);
@@ -64,7 +77,9 @@ test('Le catalogue affiche les gains par niveau, consommations et tourelles spé
     await expect(card.locator('dialog')).toContainText('Défense fixe spécialisée contre '+targets);
     await page.keyboard.press('Escape');
     const benefits=card.locator('.card-benefits');
-    await expect(benefits).toHaveAttribute('open','');
+    await expect(benefits).not.toHaveAttribute('open');
+    await benefits.locator('summary').click();
+    await expect(benefits.locator('.card-benefits-content')).toBeVisible();
     await expect(benefits).toContainText(targets);
     await benefits.locator('summary').click();
     await expect(benefits).not.toHaveAttribute('open');

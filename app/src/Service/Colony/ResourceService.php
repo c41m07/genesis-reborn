@@ -8,6 +8,10 @@ use Psr\Clock\ClockInterface;
 use App\Service\Player\VacationCalendar;
 final class ResourceService
 {
+    /** Même ordre d’affichage dans le bandeau et le formulaire de fret, sans incidence sur les calculs. */
+    public const DISPLAY_ORDER = ['metal', 'nano', 'hydrogen', 'antimatter', 'electricity'];
+
+
     public function __construct(private GameRepository $repo,private GameManager $manager,private GameCatalog $catalog,private ClockInterface $clock,private \App\Service\Event\GameEventService $events,private VacationCalendar $vacations,private EconomicUnitCapacity $economicUnits) {}
     public static function stock(float $stock,float $rate,\DateTimeImmutable $last,\DateTimeImmutable $now,float $cap): float
     {

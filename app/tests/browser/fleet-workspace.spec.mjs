@@ -99,6 +99,12 @@ test('L2A A : missions en lignes, trois étapes, devis et rappel sur ordinateur 
       await expect(form.getByRole('heading', { name: 'Choisissez la destination' })).toBeFocused();
       await form.locator('[name="mission"]').selectOption('transport');
       await form.locator('[name="owned_destination"]').selectOption(String(data.target.id));
+      const cargo = form.locator('details[data-fleet-fields-target="cargo"]');
+      await expect(cargo).toHaveAttribute('open', '');
+      await expect(cargo.locator('input').first()).toBeVisible();
+      const order = await page.locator('.resource-strip [data-compact-resource]').evaluateAll(items => items.map(item => item.dataset.compactResource));
+      expect(order).toEqual(['metal', 'nano', 'hydrogen', 'antimatter', 'electricity']);
+      expect(await cargo.locator('input[data-resource]').evaluateAll(inputs => inputs.map(input => input.dataset.resource))).toEqual(order);
       await form.locator('[name="cargo[metal]"]').fill('1000');
       await checkLayout(page, width);
       await capture(page, testInfo, 'destination', theme, width);
