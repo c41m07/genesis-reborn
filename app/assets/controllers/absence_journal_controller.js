@@ -2,7 +2,6 @@ import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
     static targets = ['entry', 'form', 'status'];
-    static values = { membership: Number };
 
     connect() {
         if (!this.hasEntryTarget || !this.hasFormTarget || !window.IntersectionObserver) return;
@@ -43,15 +42,13 @@ export default class extends Controller {
                 signal: request.signal,
             });
             if (!response.ok || response.redirected) throw new Error('Consultation indisponible');
-            const { unread } = await response.json();
             if (request.signal.aborted || !this.element.isConnected) return;
 
             this.element.dataset.journalConsultation = 'read';
             this.statusTarget.textContent = 'Journal consulté.';
             if (!form.contains(document.activeElement)) form.hidden = true;
-            window.dispatchEvent(new CustomEvent('genesis:journal-state', {
-                detail: { membership: this.membershipValue, unread, observedAt: performance.now() },
-            }));
+            // L’accusé du POST confirme l’écriture ; le voyant relit l’état courant par son canal habituel.
+            window.dispatchEvent(new CustomEvent('genesis:journal-consulted'));
         } catch (error) {
             if (error.name === 'AbortError') return;
             delete this.element.dataset.journalConsultation;

@@ -11,8 +11,7 @@ export default class extends Controller {
             this.latestNoticeValue = Math.max(this.latestNoticeValue, Number(event.detail?.notificationId) || 0);
         };
         this.onJournalState = ({ detail }) => {
-            if (detail.membership !== this.membershipValue || detail.observedAt < (this.journalObservedAt ?? 0)) return;
-            this.journalObservedAt = detail.observedAt;
+            if (detail.membership !== this.membershipValue || typeof detail.unread !== 'boolean') return;
             this.unreadJournalValue = detail.unread;
             this.render();
         };
