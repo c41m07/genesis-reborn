@@ -36,3 +36,27 @@ vaisseaux et reliquat au dernier point atteint. Ne jamais réutiliser l’ancien
 preuve pour imaginer une seconde commande : elle est consommée et tout futur
 nouveau départ exige une attestation distincte du worker. Le présent incrément
 ne crée ni cette commande, ni cette attestation renouvelable.
+
+## Raccordement interne au worker
+
+Le service du pilote Omega calcule un devis privé sous verrou, puis le recalcule
+au départ et n’accepte que le digest approuvé. La source reste l’attestation du
+vrai retour V2 : mêmes compte, participation, monde, tentative et révision,
+profils mouvement V2 et vaisseaux survivants exacts. Aucun prix, date, profil,
+solde ou coordonnée client ne peut autoriser l’action. L’heure de départ utilise
+le premier instant UTC entier qui n’est pas antérieur à l’heure réelle sous
+verrou. L’intégralité de la durée reste à parcourir.
+
+Un checkpoint prive l’ancienne preuve de toute nouvelle commande et écrit
+simultanément l’outbox du type privé. La prise en charge anticipée reprend le
+même jeton, et tous les doublons après résolution sont sans effet. À l’issue,
+la même participation doit posséder la colonie et celle-ci doit correspondre
+au point réellement parcouru. La capacité actualisée du hangar est vérifiée
+avant toute écriture de vaisseaux ou de reliquat. Aucun stock planétaire, fret,
+convoi, joueur tiers ni flotte publique n’est modifié. Si le hangar ne peut
+pas recevoir le lot entier, ou si la colonie est devenue indisponible pendant
+le vol, le lot et le solde demeurent au point attesté par le trajet ; il n’y a
+ni redirection automatique ni deuxième commande attachée à l’ancienne preuve.
+
+Ce raccordement ne crée aucune route, commande joueur, activation d’univers,
+navigation ou migration. Le traitement production du pilote n’est pas ouvert.

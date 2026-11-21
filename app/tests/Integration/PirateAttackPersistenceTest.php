@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace App\Tests\Integration;
 
 use App\Entity\{Fleet, FleetShip, Galaxy, PirateAttackCampaign, PirateConvoyDelivery, PirateReconnaissance, Planet, PlanetResource, Player, PlayerDiscovery, PlayerUniverse, SolarSystem, Universe};
-use App\Message\{PirateAttackDue, PirateConvoyDue};
-use App\MessageHandler\PirateAttackDueHandler;
+use App\Message\{PirateAttackDue, PirateConvoyDue, PirateSurvivorsDue};
+use App\MessageHandler\{PirateAttackDueHandler, PirateSurvivorsDueHandler};
 use App\Service\Catalog\GameCatalog;
 use App\Service\Combat\{CombatSimulator, CombatUnitFactory};
 use App\Service\Fleet\MovementCalculator;
 use App\Service\Notification\OutboxRelay;
-use App\Service\PirateCampaign\{PirateAttackFuelReceipt, PirateAttackService, PirateBattleScenario, PirateCampaignCatalogue, PirateCampaignPresenter, PirateCampaignProgress, PirateCampaignSequence, PirateConvoyDeliveryService, PirateConvoyDispatchToken, PirateDistressSite, PirateEncounterSnapshot, PiratePreparedEncounter, PirateReconnaissanceService};
+use App\Service\PirateCampaign\{PirateAttackFuelReceipt, PirateAttackService, PirateBattleScenario, PirateCampaignCatalogue, PirateCampaignPresenter, PirateCampaignProgress, PirateCampaignSequence, PirateConvoyDeliveryService, PirateConvoyDispatchToken, PirateDistressSite, PirateEncounterSnapshot, PiratePreparedEncounter, PirateReconnaissanceService, PirateSurvivorRecoveryService};
 use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -314,6 +314,249 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertSame($token, $row['dispatch_token']);
         self::assertNotSame([], json_decode($row['reserved_ships'], true, flags: JSON_THROW_ON_ERROR));
         self::assertSame(1, $this->stock($stock->id));
+    }
+
+    public function testPrivateRecoveryRequotesAndDeliversTheLotAndOnlyItsNativeRemainder(): void
+    {
+        [$owner, $target, $other, $campaign, $recovery] = $this->recoverableFundedSurvivors();
+        $id = $campaign->id;
+        self::assertNull($recovery->preview($other, $id, 1, 1, $target->id));
+        self::assertNull($recovery->preview($owner, $id, 1, 2, $target->id));
+        self::assertNull($recovery->preview($owner, $id, 1, 1, $campaign->originId));
+
+        $first = $recovery->preview($owner, $id, 1, 1, $target->id);
+        self::assertNotNull($first);
+        self::assertGreaterThan(0, $first['remaining']);
+        self::assertGreaterThan(0, $first['hydrogen']);
+        $db = $this->em->getConnection();
+        self::assertSame(0, (int) $db->fetchOne("SELECT COUNT(*) FROM outbox_message WHERE kind = 'pirate_survivors'"));
+        $owner->universe->gameSettings['multipliers']['travel_time'] = 2.0;
+        $this->em->flush();
+        self::assertFalse($recovery->launch($owner, $id, 1, 1, $target->id, $first['digest']));
+        $current = $recovery->preview($owner, $id, 1, 1, $target->id);
+        self::assertNotNull($current);
+        self::assertNotSame($first['digest'], $current['digest']);
+        $start = $this->clock->now()->modify('+12 seconds');
+        $this->advanceTo($start);
+        self::assertTrue($recovery->launch($owner, $id, 1, 1, $target->id, $current['digest']));
+        $saved = $campaign->timeline['pilot_recovery'];
+        self::assertSame($start->format(DATE_ATOM), $saved['departure']);
+        $due = new \DateTimeImmutable($saved['due']);
+        self::assertSame($current['seconds'], $due->getTimestamp() - $start->getTimestamp());
+        self::assertSame(2, $saved['generation']);
+        self::assertFalse($recovery->launch($owner, $id, 1, 1, $target->id, $current['digest']));
+        self::assertNull($recovery->preview($owner, $id, 1, 1, $target->id));
+        $event = $db->fetchAssociative("SELECT target_id, token, due_at FROM outbox_message WHERE kind = 'pirate_survivors'");
+        self::assertSame($id, (int) $event['target_id']);
+        self::assertSame($saved['token'], $event['token']);
+        self::assertSame($due->format('Y-m-d H:i:s'), $event['due_at']);
+        self::assertSame(1, (int) $db->fetchOne("SELECT COUNT(*) FROM outbox_message WHERE kind = 'pirate_survivors'"));
+        self::assertNull($recovery->processDue($id, str_repeat('0', 36)));
+        $this->advanceTo($due->modify('-1 second'));
+        $message = new PirateSurvivorsDue($id, $event['token']);
+        $handler = self::getContainer()->get(PirateSurvivorsDueHandler::class);
+        try {
+            $handler($message);
+            self::fail('Un événement précoce doit être replanifié.');
+        } catch (RecoverableMessageHandlingException $error) {
+            self::assertSame(1000, $error->getRetryDelay());
+        }
+        $survivors = $campaign->reservedShips['fighter']['basic'];
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM fleet WHERE home_planet_id = ?', [$target->id]));
+        $at = $due->modify('+9 seconds');
+        $this->advanceTo($at);
+        $handler($message);
+        $handler($message);
+        self::assertSame('delivered', $campaign->timeline['pilot_recovery']['state']);
+        self::assertSame($at->format(DATE_ATOM), $campaign->timeline['pilot_recovery']['observed']);
+        self::assertSame($at->format(DATE_ATOM), $campaign->timeline['settled']);
+        self::assertSame([], $campaign->reservedShips);
+        self::assertFalse($campaign->returnBlocked);
+        $idle = $db->fetchAssociative('SELECT id, stored_fuel, cargo FROM fleet WHERE home_planet_id = ?', [$target->id]);
+        self::assertEqualsWithDelta($current['remaining'], (float) $idle['stored_fuel'], 1e-9);
+        self::assertSame([], json_decode($idle['cargo'], true, flags: JSON_THROW_ON_ERROR));
+        self::assertSame($survivors, (int) $db->fetchOne("SELECT quantity FROM fleet_ship WHERE fleet_id = ? AND slug = 'fighter'", [(int) $idle['id']]));
+        self::assertSame(0.0, $this->resourceStock($target->id, 'hydrogen'));
+        self::assertSame(0, (int) $db->fetchOne("SELECT COUNT(*) FROM fleet WHERE status <> 'idle'"));
+    }
+
+    public function testPrivateRecoveryRecordsLostDestinationWithoutDepositingOrRenewingOldProof(): void
+    {
+        [$owner, $target, $other, $campaign, $recovery] = $this->recoverableFundedSurvivors();
+        $id = $campaign->id;
+        $quote = $recovery->preview($owner, $id, 1, 1, $target->id);
+        self::assertTrue($recovery->launch($owner, $id, 1, 1, $target->id, $quote['digest']));
+        $job = $campaign->timeline['pilot_recovery'];
+        $target->owner = $other;
+        $this->em->flush();
+        $this->advanceTo(new \DateTimeImmutable($job['due']));
+        $recovery->processDue($id, $job['token']);
+        $recovery->processDue($id, $job['token']);
+        $terminal = $campaign->timeline['pilot_recovery'];
+        self::assertSame('destination_lost', $terminal['state']);
+        self::assertSame($job['destination'], $terminal['destination']);
+        self::assertEquals($quote['remaining'], $terminal['initial'] - $terminal['cost']);
+        self::assertTrue($campaign->returnBlocked);
+        self::assertNotSame([], $campaign->reservedShips);
+        self::assertNull($recovery->preview($owner, $id, 1, 1, $target->id));
+        $db = $this->em->getConnection();
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM fleet WHERE home_planet_id = ?', [$target->id]));
+        self::assertSame(0.0, $this->resourceStock($target->id, 'hydrogen'));
+    }
+
+    public function testPrivateRecoveryAtReducedCapacityCannotDepositShipsOrFuelSeparately(): void
+    {
+        [$owner, $target, , $campaign, $recovery] = $this->recoverableFundedSurvivors();
+        $id = $campaign->id;
+        $quote = $recovery->preview($owner, $id, 1, 1, $target->id);
+        self::assertTrue($recovery->launch($owner, $id, 1, 1, $target->id, $quote['digest']));
+        self::assertGreaterThan(0.0, $quote['remaining']);
+        $job = $campaign->timeline['pilot_recovery'];
+        $owner->universe->gameSettings['catalog_overrides']['ships']['fighter'] = ['fuel_capacity' => 0, 'cargo_capacity' => 0];
+        $this->em->flush();
+        $this->advanceTo(new \DateTimeImmutable($job['due']));
+        $recovery->processDue($id, $job['token']);
+        self::assertSame('capacity_blocked', $campaign->timeline['pilot_recovery']['state']);
+        self::assertNotSame([], $campaign->reservedShips);
+        self::assertTrue($campaign->returnBlocked);
+        self::assertSame(0, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM fleet WHERE home_planet_id = ?', [$target->id]));
+        self::assertSame(0.0, $this->resourceStock($target->id, 'hydrogen'));
+    }
+
+    public function testPrivateRecoveryOutboxFailureDoesNotConsumeTheAttestation(): void
+    {
+        [$owner, $target, , $campaign, $recovery] = $this->recoverableFundedSurvivors();
+        $id = $campaign->id;
+        $quote = $recovery->preview($owner, $id, 1, 1, $target->id);
+        $db = $this->em->getConnection();
+        $db->executeStatement("CREATE TRIGGER pirate_recovery_test_outbox BEFORE INSERT ON outbox_message FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'fixture repli outbox failure'");
+        try {
+            $recovery->launch($owner, $id, 1, 1, $target->id, $quote['digest']);
+            self::fail('Une preuve de départ ne peut survivre à l’échec de son outbox.');
+        } catch (DriverException $error) {
+            self::assertStringContainsString('fixture repli outbox failure', $error->getMessage());
+        } finally {
+            $db->executeStatement('DROP TRIGGER IF EXISTS pirate_recovery_test_outbox');
+        }
+        $saved = json_decode($db->fetchOne('SELECT timeline FROM pirate_attack_campaign WHERE id = ?', [$id]), true, flags: JSON_THROW_ON_ERROR);
+        self::assertArrayNotHasKey('pilot_recovery', $saved);
+        self::assertSame('held_before_return', $saved['pilot_blocked_return']['phase']);
+        self::assertSame(0, (int) $db->fetchOne("SELECT COUNT(*) FROM outbox_message WHERE kind = 'pirate_survivors'"));
+    }
+
+    public function testPrivateRecoveryConcurrencyConsumesTheEvidenceExactlyOnce(): void
+    {
+        [$owner, $target, , $campaign, $recovery] = $this->recoverableFundedSurvivors();
+        $id = $campaign->id;
+        $quote = $recovery->preview($owner, $id, 1, 1, $target->id);
+        $db = $this->em->getConnection();
+        $dir = sys_get_temp_dir().'/gens-recovery-'.bin2hex(random_bytes(8));
+        mkdir($dir, 0700);
+        $barrier = $dir.'/start';
+        $clockFile = $dir.'/clock';
+        $first = $this->clock->now();
+        $late = $first->modify('+45 seconds')->modify('+800000 microseconds');
+        file_put_contents($clockFile, $first->format('Y-m-d\\TH:i:s.uP'));
+        $data = ['clock_file' => $clockFile, 'owner' => $owner->id,
+            'campaign' => $id, 'target' => $target->id, 'digest' => $quote['digest']];
+        $workers = $ids = $results = [];
+        $db->beginTransaction();
+        try {
+            $db->fetchOne('SELECT id FROM player_universe WHERE id = ? FOR UPDATE', [$owner->id]);
+            for ($index = 0; $index < 2; ++$index) {
+                $input = $data + ['barrier' => $barrier, 'ready' => $dir.'/ready-'.$index];
+                $proc = new Process([PHP_BINARY, dirname(__DIR__).'/Support/concurrent_pirate_recovery.php', json_encode($input, JSON_THROW_ON_ERROR)]);
+                $proc->setTimeout(25);
+                $proc->start();
+                $workers[] = $proc;
+                $deadline = microtime(true) + 12;
+                while (!is_file($input['ready']) && microtime(true) < $deadline) {
+                    usleep(10000);
+                }
+                self::assertFileExists($input['ready'], $proc->getErrorOutput());
+                $ids[] = (int) file_get_contents($input['ready']);
+            }
+            touch($barrier);
+            $deadline = microtime(true) + 12;
+            do {
+                $blocked = 0;
+                foreach ($db->fetchAllAssociative('SHOW FULL PROCESSLIST') as $row) {
+                    if (in_array((int) $row['Id'], $ids, true) && str_contains(strtoupper($row['Info'] ?? ''), 'FOR UPDATE')) {
+                        ++$blocked;
+                    }
+                }
+                if ($blocked === 2) {
+                    break;
+                }
+                usleep(10000);
+            } while (microtime(true) < $deadline);
+            self::assertSame(2, $blocked, 'Deux transactions réellement concurrentes sur la preuve.');
+            file_put_contents($clockFile, $late->format('Y-m-d\\TH:i:s.uP'));
+            $db->commit();
+            foreach ($workers as $proc) {
+                self::assertSame(0, $proc->wait(), $proc->getOutput().$proc->getErrorOutput());
+                $results[] = json_decode(trim($proc->getOutput()), true, flags: JSON_THROW_ON_ERROR);
+            }
+        } finally {
+            if ($db->isTransactionActive()) {
+                $db->rollBack();
+            }
+            foreach ($workers as $proc) {
+                if ($proc->isRunning()) {
+                    $proc->stop();
+                }
+            }
+            foreach (glob($dir.'/*') ?: [] as $file) {
+                unlink($file);
+            }
+            rmdir($dir);
+        }
+        sort($results);
+        self::assertSame([false, true], $results);
+        self::assertSame(1, (int) $db->fetchOne("SELECT COUNT(*) FROM outbox_message WHERE kind = 'pirate_survivors'"));
+        $persisted = json_decode($db->fetchOne('SELECT timeline FROM pirate_attack_campaign WHERE id = ?', [$id]), true, flags: JSON_THROW_ON_ERROR);
+        $start = new \DateTimeImmutable($persisted['pilot_recovery']['departure']);
+        $due = new \DateTimeImmutable($persisted['pilot_recovery']['due']);
+        self::assertEquals($first->modify('+46 seconds'), $start);
+        self::assertSame($quote['seconds'], $due->getTimestamp() - $start->getTimestamp());
+    }
+
+    public function testPrivateRecoveryInstallFailureLeavesTravelAndEverySurvivorReplayable(): void
+    {
+        [$owner, $target, , $campaign, $recovery] = $this->recoverableFundedSurvivors();
+        $id = $campaign->id;
+        $quote = $recovery->preview($owner, $id, 1, 1, $target->id);
+        self::assertTrue($recovery->launch($owner, $id, 1, 1, $target->id, $quote['digest']));
+        $job = $campaign->timeline['pilot_recovery'];
+        $this->advanceTo(new \DateTimeImmutable($job['due']));
+        $db = $this->em->getConnection();
+        $db->executeStatement("CREATE TRIGGER pirate_recovery_test_install BEFORE INSERT ON fleet_ship FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'fixture repli install failure'");
+        try {
+            $recovery->processDue($id, $job['token']);
+            self::fail('Une remise incomplète ne peut consommer ni carburant ni vaisseau.');
+        } catch (DriverException $error) {
+            self::assertStringContainsString('fixture repli install failure', $error->getMessage());
+        } finally {
+            $db->executeStatement('DROP TRIGGER IF EXISTS pirate_recovery_test_install');
+        }
+        $row = $db->fetchAssociative('SELECT timeline, reserved_ships FROM pirate_attack_campaign WHERE id = ?', [$id]);
+        self::assertEquals($job, json_decode($row['timeline'], true, flags: JSON_THROW_ON_ERROR)['pilot_recovery']);
+        self::assertNotSame([], json_decode($row['reserved_ships'], true, flags: JSON_THROW_ON_ERROR));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM fleet WHERE home_planet_id = ?', [$target->id]));
+    }
+
+    /** @return array{PlayerUniverse, Planet, PlayerUniverse, PirateAttackCampaign, PirateSurvivorRecoveryService} */
+    private function recoverableFundedSurvivors(): array
+    {
+        [$owner, $origin, , $other, $campaign] = $this->startFundedVictory();
+        $next = $this->createReplacementColony($owner, $origin);
+        $origin->owner = $other;
+        $this->em->flush();
+        $this->advanceTo($campaign->nextAt);
+        $this->service->processDue($campaign->id, $campaign->dispatchToken);
+        self::assertSame('held_before_return', $campaign->timeline['pilot_blocked_return']['phase']);
+
+        return [$owner, $next, $other, $campaign, self::getContainer()->get(PirateSurvivorRecoveryService::class)];
     }
 
     public function testActualCarrierLossLeavesInsufficientFuelAndCannotBeOverwrittenByRetry(): void

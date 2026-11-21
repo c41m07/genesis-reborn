@@ -57,6 +57,8 @@ final readonly class PirateSurvivorRecoveryLeg
             || !is_string($token) || !Uuid::isValid($token) || strlen($token) !== 36
             || !is_int($seconds) || $seconds < 1 || $seconds > 2147483647
             || !$cutoff instanceof \DateTimeImmutable || $cutoff->getTimestamp() - $now->getTimestamp() !== $seconds
+            || $now->getOffset() !== 0 || $cutoff->getOffset() !== 0
+            || $now->format('u') !== '000000' || $cutoff->format('u') !== '000000'
             || !is_finite($proof->remainingHydrogen) || $proof->remainingHydrogen < 0
             || (!is_int($cost) && !is_float($cost)) || !is_finite($cost) || $cost < 0 || $cost > $proof->remainingHydrogen) {
             throw new \DomainException('La preuve ou le devis de repli ne correspond pas au lot survivant.');

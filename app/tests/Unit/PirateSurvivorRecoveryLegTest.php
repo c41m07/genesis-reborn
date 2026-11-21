@@ -67,6 +67,13 @@ final class PirateSurvivorRecoveryLegTest extends TestCase
         }
     }
 
+    public function testSubsecondInputCannotShortenTheElapsedLeg(): void
+    {
+        $t = new \DateTimeImmutable('2026-11-20T20:00:00.800000Z');
+        $this->expectException(\DomainException::class);
+        $this->order($t, Uuid::v4()->toRfc4122(), ['arrival_at' => new \DateTimeImmutable('2026-11-20T20:01:30Z')]);
+    }
+
     private function order(\DateTimeImmutable $t, string $token, array $override = []): PirateSurvivorRecoveryLeg
     {
         $proof = new PirateBlockedReturnEvidence(
